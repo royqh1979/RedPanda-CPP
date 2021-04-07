@@ -15,6 +15,8 @@ public:
                     bool inProject, bool isNew,
                     QTabWidget* parentPageControl);
 
+    ~Editor();
+
     FileEncodingType encodingType() const;
     void setFileEncodingType(FileEncodingType type);
     FileEncodingType fileEncoding() const;

@@ -12,6 +12,7 @@ MainWindow::MainWindow(QWidget *parent)
                                  ui->EditorPanelSplitter,
                                  ui->EditorPanel);
     setupActions();
+    ui->EditorTabsRight->setVisible(false);
 }
 
 MainWindow::~MainWindow()
@@ -27,4 +28,10 @@ void MainWindow::setupActions() {
 void MainWindow::on_actionNew_triggered()
 {
     mEditorList->NewEditor("",etAuto,false,true);
+}
+
+void MainWindow::on_EditorTabsLeft_tabCloseRequested(int index)
+{
+    Editor* editor = mEditorList->GetEditor(index,ui->EditorTabsLeft);
+    mEditorList->CloseEditor(editor);
 }

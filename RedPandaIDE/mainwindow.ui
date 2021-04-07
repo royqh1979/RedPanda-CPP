@@ -15,6 +15,18 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QHBoxLayout" name="horizontalLayout">
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
+     <number>0</number>
+    </property>
     <item>
      <widget class="QSplitter" name="splitter">
       <property name="orientation">
@@ -28,6 +40,18 @@
         </sizepolicy>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout">
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
         <item>
          <widget class="QSplitter" name="splitter_2">
           <property name="orientation">
@@ -62,6 +86,21 @@
             </sizepolicy>
            </property>
            <layout class="QVBoxLayout" name="verticalLayout_2">
+            <property name="spacing">
+             <number>0</number>
+            </property>
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
             <item>
              <widget class="QSplitter" name="EditorPanelSplitter">
               <property name="orientation">
@@ -71,8 +110,18 @@
                <property name="currentIndex">
                 <number>-1</number>
                </property>
+               <property name="tabsClosable">
+                <bool>true</bool>
+               </property>
               </widget>
-              <widget class="QTabWidget" name="EditorTabsRight"/>
+              <widget class="QTabWidget" name="EditorTabsRight">
+               <property name="enabled">
+                <bool>true</bool>
+               </property>
+               <property name="tabsClosable">
+                <bool>true</bool>
+               </property>
+              </widget>
              </widget>
             </item>
            </layout>

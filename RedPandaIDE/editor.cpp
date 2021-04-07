@@ -1,6 +1,7 @@
 #include "editor.h"
 
 #include <QtCore/QFileInfo>
+#include <QVariant>
 #include <memory>
 
 using namespace std;
@@ -31,7 +32,12 @@ Editor::Editor(QObject *parent, const QString& filename,
         else
             mFileEncoding = mEncodingType;
     }
+    mTextEdit->setProperty("editor",QVariant::fromValue<intptr_t>((intptr_t)this));
+}
 
+Editor::~Editor() {
+    int index = mParentPageControl->indexOf(mTextEdit);
+    mParentPageControl->removeTab(index);
 }
 
 void Editor::loadFile() {

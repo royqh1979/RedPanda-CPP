@@ -26,6 +26,10 @@ public:
                      bool inProject, bool newFile,
                      QTabWidget* page=NULL);
 
+    Editor* GetEditor(int index=-1, QTabWidget* tabsWidget=NULL) const;
+
+    bool CloseEditor(Editor* editor, bool transferFocus=true, bool force=false);
+
 private:
     QTabWidget* GetNewEditorPageControl();
 

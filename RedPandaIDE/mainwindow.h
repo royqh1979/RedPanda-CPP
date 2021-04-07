@@ -20,6 +20,8 @@ public:
 private slots:
     void on_actionNew_triggered();
 
+    void on_EditorTabsLeft_tabCloseRequested(int index);
+
 private:
     void setupActions();
 

@@ -1,5 +1,6 @@
 #include "editorlist.h"
 #include "editor.h"
+#include <QVariant>
 
 EditorList::EditorList(QTabWidget* leftPageWidget,
       QTabWidget* rightPageWidget,
@@ -31,3 +32,25 @@ QTabWidget*  EditorList::GetNewEditorPageControl() {
     return mLeftPageWidget;
 }
 
+Editor* EditorList::GetEditor(int index, QTabWidget* tabsWidget) const {
+    QTabWidget* selectedWidget;
+    if (tabsWidget == NULL) {
+        selectedWidget = mLeftPageWidget; // todo: get focused widget
+    } else {
+        selectedWidget = tabsWidget;
+    }
+    QWidget* textEdit;
+    if (index == -1) {
+        textEdit = selectedWidget->currentWidget();
+    } else {
+        textEdit =selectedWidget->widget(index);
+    }
+    QVariant pop = textEdit->property("editor");
+    Editor *editor = (Editor*)pop.value<intptr_t>();
+    return editor;
+}
+
+bool EditorList::CloseEditor(Editor* editor, bool transferFocus, bool force) {
+    delete editor;
+    return true;
+}
