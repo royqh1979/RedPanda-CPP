@@ -1,14 +1,14 @@
 #ifndef EDITORLIST_H
 #define EDITORLIST_H
 
-#include <QObject>
 #include <QTabWidget>
 #include <QSplitter>
 #include <QWidget>
+#include "utils.h"
 
-class EditorList : public QObject
+class Editor;
+class EditorList
 {
-    Q_OBJECT
 public:
     enum ShowType{
         lstNone,
@@ -16,11 +16,19 @@ public:
         lstRight,
         lstBoth
     };
-    explicit EditorList(QObject *parent = nullptr);
 
+    explicit EditorList(QTabWidget* leftPageWidget,
+                        QTabWidget* rightPageWidget,
+                        QSplitter* splitter,
+                        QWidget* panel);
 
+    Editor* NewEditor(const QString& filename, FileEncodingType encoding,
+                     bool inProject, bool newFile,
+                     QTabWidget* page=NULL);
 
-signals:
+private:
+    QTabWidget* GetNewEditorPageControl();
+
 
 private:
     ShowType mLayout;

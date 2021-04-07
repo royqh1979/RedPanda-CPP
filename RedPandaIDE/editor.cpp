@@ -1,6 +1,9 @@
 #include "editor.h"
 
 #include <QtCore/QFileInfo>
+#include <memory>
+
+using namespace std;
 
 
 Editor::Editor(QObject *parent, const QString& filename,
@@ -15,12 +18,18 @@ Editor::Editor(QObject *parent, const QString& filename,
   mParentPageControl(parentPageControl)
 {
     mTextEdit = new QsciScintilla();
+    if (mFilename.isEmpty()) {
+        mFilename = tr("untitled") + "1";
+    }
     QFileInfo fileInfo(mFilename);
     mParentPageControl->addTab(mTextEdit,fileInfo.fileName());
     if (!isNew) {
         loadFile();
     } else {
-        mFileEncoding = etAscii;
+        if (mEncodingType == etAuto)
+            mFileEncoding = etAscii;
+        else
+            mFileEncoding = mEncodingType;
     }
 
 }
@@ -36,14 +45,44 @@ void Editor::loadFile() {
     }
     switch(mFileEncoding) {
         case etUTF8:
-            mTextEdit->setText(UTF8toQString(ba));
+            mTextEdit->setText(QString::fromUtf8(ba));
             break;
         case etUTF8Bom:
-            mTextEdit->setText(UTF8toQString(ba.mid(3)));
+            mTextEdit->setText(QString::fromUtf8(ba.mid(3)));
             break;
         default:
-            mTextEdit->setText(QString(ba));
+            mTextEdit->setText(QString::fromLocal8Bit(ba));
     }
+}
+
+void Editor::saveFile(const QString &filename) {
+    if (mEncodingType!=etAuto && mEncodingType!=mFileEncoding)  {
+        mFileEncoding = mEncodingType;
+    }
+    if (mEncodingType ==etAuto && mFileEncoding == etAscii) {
+        if (!isTextAllAscii(mTextEdit->text())) {
+            mFileEncoding = etAnsi;
+        }
+        //todo: update status bar, and set fileencoding using configurations
+    }
+    QFile file(filename);
+    QByteArray ba;
+    switch(mFileEncoding) {
+        case etUTF8:
+            ba = mTextEdit->text().toUtf8();
+            break;
+        case etUTF8Bom:
+            ba.resize(3);
+            ba[0]=0xEF;
+            ba[1]=0xBB;
+            ba[2]=0xBF;
+            ba.append(mTextEdit->text().toUtf8());
+            break;
+        default:
+            ba = mTextEdit->text().toLocal8Bit();
+    }
+    file.write(ba);
+    file.close();
 }
 
 FileEncodingType Editor::encodingType() const {

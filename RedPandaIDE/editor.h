@@ -23,6 +23,7 @@ public:
     bool isNew() const;
 
     void loadFile();
+    void saveFile(const QString& filename);
 
 signals:
 

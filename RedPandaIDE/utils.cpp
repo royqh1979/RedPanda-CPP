@@ -50,10 +50,13 @@ FileEncodingType GetFileEncodingType(const QByteArray& content){
     return etUTF8;
 }
 
-QString UTF8toQString(const QByteArray& ba){
-    QTextCodec* tc = QTextCodec::codecForName("UTF-8");
-    if (tc == NULL)
-        return QString();
-    else
-        return tc->toUnicode(ba);
+bool isTextAllAscii(const QString& text) {
+    for (QChar c:text) {
+        if (c.unicode()>127) {
+            return false;
+        }
+    }
+    return true;
 }
+
+

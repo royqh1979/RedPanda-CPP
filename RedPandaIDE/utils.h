@@ -14,6 +14,6 @@ enum FileEncodingType {
 
 FileEncodingType GetFileEncodingType(const QByteArray& content);
 
-QString UTF8toQString(const QByteArray& ba);
+bool isTextAllAscii(const QString& text);
 
 #endif // UTILS_H
