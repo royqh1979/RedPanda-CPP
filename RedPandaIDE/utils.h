@@ -4,15 +4,14 @@
 class QByteArray;
 class QString;
 
-enum FileEncodingType {
-    etAuto,
-    etUTF8,
-    etAscii,
-    etAnsi,
-    etUTF8Bom
-};
+#define ENCODING_AUTO_DETECT "AUTO"
+#define ENCODING_UTF8   "UTF-8"
+#define ENCODING_UTF8_BOM "UTF-8 BOM"
+#define ENCODING_SYSTEM_DEFAULT   "SYSTEM"
+#define ENCODING_ASCII  "ASCII"
 
-FileEncodingType GetFileEncodingType(const QByteArray& content);
+
+const QByteArray GetFileEncodingType(const QByteArray& content);
 
 bool isTextAllAscii(const QString& text);
 

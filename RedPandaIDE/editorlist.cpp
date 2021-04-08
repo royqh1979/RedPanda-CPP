@@ -15,24 +15,24 @@ EditorList::EditorList(QTabWidget* leftPageWidget,
 
 }
 
-Editor* EditorList::NewEditor(const QString& filename, FileEncodingType encoding,
+Editor* EditorList::newEditor(const QString& filename, const QByteArray& encoding,
                  bool inProject, bool newFile,
                  QTabWidget* page) {
     QTabWidget * parentPageControl = NULL;
     if (page == NULL)
-        parentPageControl = GetNewEditorPageControl();
+        parentPageControl = getNewEditorPageControl();
     else
         parentPageControl = page;
     return new Editor(parentPageControl,filename,encoding,inProject,newFile,parentPageControl);
     //UpdateLayout;
 }
 
-QTabWidget*  EditorList::GetNewEditorPageControl() {
+QTabWidget*  EditorList::getNewEditorPageControl() {
     //todo: return widget depends on layout
     return mLeftPageWidget;
 }
 
-Editor* EditorList::GetEditor(int index, QTabWidget* tabsWidget) const {
+Editor* EditorList::getEditor(int index, QTabWidget* tabsWidget) const {
     QTabWidget* selectedWidget;
     if (tabsWidget == NULL) {
         selectedWidget = mLeftPageWidget; // todo: get focused widget
@@ -50,7 +50,7 @@ Editor* EditorList::GetEditor(int index, QTabWidget* tabsWidget) const {
     return editor;
 }
 
-bool EditorList::CloseEditor(Editor* editor, bool transferFocus, bool force) {
+bool EditorList::closeEditor(Editor* editor, bool transferFocus, bool force) {
     delete editor;
     return true;
 }

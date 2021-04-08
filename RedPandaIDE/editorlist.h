@@ -22,16 +22,16 @@ public:
                         QSplitter* splitter,
                         QWidget* panel);
 
-    Editor* NewEditor(const QString& filename, FileEncodingType encoding,
+    Editor* newEditor(const QString& filename, const QByteArray& encoding,
                      bool inProject, bool newFile,
                      QTabWidget* page=NULL);
 
-    Editor* GetEditor(int index=-1, QTabWidget* tabsWidget=NULL) const;
+    Editor* getEditor(int index=-1, QTabWidget* tabsWidget=NULL) const;
 
-    bool CloseEditor(Editor* editor, bool transferFocus=true, bool force=false);
+    bool closeEditor(Editor* editor, bool transferFocus=true, bool force=false);
 
 private:
-    QTabWidget* GetNewEditorPageControl();
+    QTabWidget* getNewEditorPageControl();
 
 
 private:

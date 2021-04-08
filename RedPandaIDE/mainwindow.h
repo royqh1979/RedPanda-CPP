@@ -8,6 +8,7 @@ namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
 class EditorList;
+class QLabel;
 
 class MainWindow : public QMainWindow
 {
@@ -17,10 +18,14 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+    void updateStatusBarForEncoding();
+
 private slots:
     void on_actionNew_triggered();
 
     void on_EditorTabsLeft_tabCloseRequested(int index);
+
+    void on_actionOpen_triggered();
 
 private:
     void setupActions();
@@ -28,5 +33,9 @@ private:
 private:
     Ui::MainWindow *ui;
     EditorList* mEditorList;
+    QLabel* mFileInfoStatus;
+    QLabel* mFileEncodingStatus;
 };
+
+extern MainWindow* pMainWindow;
 #endif // MAINWINDOW_H

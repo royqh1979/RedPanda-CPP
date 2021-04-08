@@ -11,7 +11,12 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>Red Panda C++</string>
+  </property>
+  <property name="windowIcon">
+   <iconset>
+    <normalon>:/icons/images/devcpp.ico</normalon>
+   </iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QHBoxLayout" name="horizontalLayout">
@@ -173,6 +178,10 @@
     </property>
     <addaction name="actionNew"/>
     <addaction name="actionOpen"/>
+    <addaction name="separator"/>
+    <addaction name="actionSave"/>
+    <addaction name="actionSaveAs"/>
+    <addaction name="actionSave_All"/>
    </widget>
    <addaction name="menuFile"/>
   </widget>
@@ -189,15 +198,60 @@
    </attribute>
    <addaction name="actionNew"/>
    <addaction name="actionOpen"/>
+   <addaction name="actionSave"/>
+   <addaction name="actionSave_All"/>
   </widget>
   <action name="actionNew">
+   <property name="icon">
+    <iconset>
+     <normalon>:/icons/images/newlook24/050-newsrc.bmp</normalon>
+    </iconset>
+   </property>
    <property name="text">
     <string>New</string>
    </property>
   </action>
   <action name="actionOpen">
+   <property name="icon">
+    <iconset>
+     <normalon>:/icons/images/newlook24/053-open.bmp</normalon>
+    </iconset>
+   </property>
    <property name="text">
     <string>Open...</string>
+   </property>
+  </action>
+  <action name="actionSave">
+   <property name="icon">
+    <iconset>
+     <normalon>:/icons/images/newlook24/070-save.bmp</normalon>
+    </iconset>
+   </property>
+   <property name="text">
+    <string>Save</string>
+   </property>
+  </action>
+  <action name="actionSaveAs">
+   <property name="icon">
+    <iconset>
+     <normalon>:/icons/images/newlook24/072-saveas.bmp</normalon>
+    </iconset>
+   </property>
+   <property name="text">
+    <string>Save As...</string>
+   </property>
+   <property name="toolTip">
+    <string>Save As</string>
+   </property>
+  </action>
+  <action name="actionSave_All">
+   <property name="icon">
+    <iconset>
+     <normalon>:/icons/images/newlook24/071-saveall.bmp</normalon>
+    </iconset>
+   </property>
+   <property name="text">
+    <string>Save All</string>
    </property>
   </action>
  </widget>

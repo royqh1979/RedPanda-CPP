@@ -13,12 +13,14 @@ SOURCES += \
     editorlist.cpp \
     main.cpp \
     mainwindow.cpp \
+    settings.cpp \
     utils.cpp
 
 HEADERS += \
     editor.h \
     editorlist.h \
     mainwindow.h \
+    settings.h \
     utils.h
 
 FORMS += \
@@ -33,3 +35,6 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 LIBS += -L$$PWD -lqscintilla2_qt5
+
+RESOURCES += \
+    icons.qrc
