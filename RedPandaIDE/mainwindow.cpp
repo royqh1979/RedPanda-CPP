@@ -47,7 +47,6 @@ void MainWindow::setupActions() {
 void MainWindow::on_actionNew_triggered()
 {
     Editor * editor=mEditorList->newEditor("",ENCODING_AUTO_DETECT,false,true);
-    editor->textEdit()->setFocus();
     updateStatusBarForEncoding();
 }
 

@@ -95,7 +95,7 @@ void Editor::saveFile(const QString &filename) {
     file.close();
 }
 
-bool Editor::save() {
+bool Editor::save(bool force, bool reparse) {
 
     return true;
 }

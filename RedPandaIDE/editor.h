@@ -26,9 +26,10 @@ public:
 
     void loadFile();
     void saveFile(const QString& filename);
-    bool save();
+    bool save(bool force=false, bool reparse=true);
 
     QsciScintilla* textEdit();
+    QTabWidget* pageControl();
 signals:
 
 private:

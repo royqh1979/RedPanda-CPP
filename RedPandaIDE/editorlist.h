@@ -17,6 +17,14 @@ public:
         lstBoth
     };
 
+    class UpdateLocker {
+    public:
+        UpdateLocker(EditorList* editorList);
+        ~UpdateLocker();
+    private:
+        EditorList* mEditorList;
+    };
+
     explicit EditorList(QTabWidget* leftPageWidget,
                         QTabWidget* rightPageWidget,
                         QSplitter* splitter,
@@ -30,8 +38,14 @@ public:
 
     bool closeEditor(Editor* editor, bool transferFocus=true, bool force=false);
 
+    bool closeAll(bool force = false);
+
+    void beginUpdate();
+    void endUpdate();
+
 private:
-    QTabWidget* getNewEditorPageControl();
+    QTabWidget* getNewEditorPageControl() const;
+    QTabWidget* getFocusedPageControl() const;
 
 
 private:
