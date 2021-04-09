@@ -9,6 +9,7 @@ Settings::Settings():
 
     // default values for editors
     setDefault(EDITOR_DEFAULT_ENCODING, QTextCodec::codecForLocale()->name());
+    setDefault(EDITOR_AUTO_INDENT,true);
 }
 
 

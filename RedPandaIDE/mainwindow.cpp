@@ -3,6 +3,7 @@
 #include "editorlist.h"
 #include "editor.h"
 
+#include <QCloseEvent>
 #include <QLabel>
 
 MainWindow* pMainWindow;
@@ -62,4 +63,15 @@ void MainWindow::on_actionOpen_triggered()
     if (editor != NULL) {
         editor->save();
     }
+}
+
+void MainWindow::closeEvent(QCloseEvent *event) {
+    if (!mEditorList->closeAll(true)) {
+        event->ignore();
+        return ;
+    }
+
+    delete mEditorList;
+    event->accept();
+    return;
 }

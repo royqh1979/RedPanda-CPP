@@ -20,6 +20,7 @@ public:
 
     void updateStatusBarForEncoding();
 
+
 private slots:
     void on_actionNew_triggered();
 
@@ -35,6 +36,10 @@ private:
     EditorList* mEditorList;
     QLabel* mFileInfoStatus;
     QLabel* mFileEncodingStatus;
+
+   // QWidget interface
+protected:
+    void closeEvent(QCloseEvent *event) override;
 };
 
 extern MainWindow* pMainWindow;

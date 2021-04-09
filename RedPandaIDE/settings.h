@@ -4,6 +4,8 @@
 #include <QSettings>
 
 #define EDITOR_DEFAULT_ENCODING "editor/default_encoding"
+#define EDITOR_AUTO_INDENT "editor/default_auto_indent"
+
 
 class Settings
 {

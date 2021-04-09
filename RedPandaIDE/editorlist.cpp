@@ -13,7 +13,6 @@ EditorList::UpdateLocker::~UpdateLocker() {
     mEditorList->endUpdate();
 }
 
-}
 EditorList::EditorList(QTabWidget* leftPageWidget,
       QTabWidget* rightPageWidget,
       QSplitter* splitter,
@@ -62,10 +61,7 @@ Editor* EditorList::getEditor(int index, QTabWidget* tabsWidget) const {
     if (index<0 || index >= selectedWidget->count()) {
         return NULL;
     }
-    QWidget* textEdit = selectedWidget->widget(index);
-    QVariant pop = textEdit->property("editor");
-    Editor *editor = (Editor*)pop.value<intptr_t>();
-    return editor;
+    return (Editor*)selectedWidget->widget(index);
 }
 
 bool EditorList::closeEditor(Editor* editor, bool transferFocus, bool force) {
@@ -74,7 +70,7 @@ bool EditorList::closeEditor(Editor* editor, bool transferFocus, bool force) {
         return false;
     if (force) {
         editor->save(true,false);
-    } else if ( (editor->textEdit()->isModified()) && (!editor->textEdit()->text().isEmpty())) {
+    } else if ( (editor->isModified()) && (!editor->text().isEmpty())) {
         // ask user if he wants to save
         QMessageBox::StandardButton reply;
         reply = QMessageBox::question(pMainWindow,QObject::tr("Save"),QObject::tr("Save changes to %s?"),
@@ -88,7 +84,9 @@ bool EditorList::closeEditor(Editor* editor, bool transferFocus, bool force) {
         }
     }
 
-    if (transferFocus && editor-)
+    if (transferFocus && (editor->pageControl()->currentWidget()==editor)) {
+        //todo: activate & focus the previous editor
+    }
 
     delete editor;
     return true;
@@ -111,5 +109,16 @@ void EditorList::endUpdate() {
 
 bool EditorList::closeAll(bool force) {
     UpdateLocker locker(this);
+    while (mLeftPageWidget->count()>0) {
+        if (!closeEditor(getEditor(0,mLeftPageWidget),false,force)) {
+            return false;
+        }
+    }
+    while (mRightPageWidget->count()>0) {
+        if (!closeEditor(getEditor(0,mRightPageWidget),false,force)) {
+            return false;
+        }
+    }
 
+    return true;
 }

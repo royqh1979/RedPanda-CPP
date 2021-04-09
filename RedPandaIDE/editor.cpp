@@ -1,32 +1,35 @@
 #include "editor.h"
 
 #include <QtCore/QFileInfo>
+#include <QFont>
 #include <QTextCodec>
 #include <QVariant>
+#include <QWheelEvent>
 #include <memory>
 #include "settings.h"
 #include "mainwindow.h"
+#include <Qsci/qscilexercpp.h>
 
 using namespace std;
 
 
-Editor::Editor(QObject *parent, const QString& filename,
+Editor::Editor(QWidget *parent, const QString& filename,
                   const QByteArray& encoding,
                   bool inProject, bool isNew,
                   QTabWidget* parentPageControl):
-  QObject(parent),
+  QsciScintilla(parent),
   mFilename(filename),
   mEncodingOption(encoding),
   mInProject(inProject),
   mIsNew(isNew),
   mParentPageControl(parentPageControl)
 {
-    mTextEdit = new QsciScintilla();
     if (mFilename.isEmpty()) {
         mFilename = tr("untitled") + "1";
     }
     QFileInfo fileInfo(mFilename);
-    mParentPageControl->addTab(mTextEdit,fileInfo.fileName());
+    if (mParentPageControl!=NULL)
+        mParentPageControl->addTab(this,fileInfo.fileName());
     if (!isNew) {
         loadFile();
     } else {
@@ -35,12 +38,24 @@ Editor::Editor(QObject *parent, const QString& filename,
         else
             mFileEncoding = mEncodingOption;
     }
-    mTextEdit->setProperty("editor",QVariant::fromValue<intptr_t>((intptr_t)this));
+
+    //
+    QsciLexerCPP *lexer = new QsciLexerCPP();
+    lexer->setHighlightEscapeSequences(true);
+    this->setLexer(lexer);
+    this->setAutoIndent(pSettings->value(EDITOR_AUTO_INDENT).toBool());
+
 }
 
 Editor::~Editor() {
-    int index = mParentPageControl->indexOf(mTextEdit);
-    mParentPageControl->removeTab(index);
+    if (mParentPageControl!=NULL) {
+        int index = mParentPageControl->indexOf(this);
+        mParentPageControl->removeTab(index);
+    }
+    this->setParent(0);
+
+    delete this->lexer();
+    this->setLexer(NULL);
 }
 
 void Editor::loadFile() {
@@ -53,14 +68,14 @@ void Editor::loadFile() {
         mFileEncoding = mEncodingOption;
     }
     if (mFileEncoding == ENCODING_UTF8) {
-        mTextEdit->setText(QString::fromUtf8(ba));
+        this->setText(QString::fromUtf8(ba));
     } else if (mFileEncoding == ENCODING_UTF8_BOM) {
-        mTextEdit->setText(QString::fromUtf8(ba.mid(3)));
+        this->setText(QString::fromUtf8(ba.mid(3)));
     } else if (mFileEncoding == ENCODING_ASCII) {
-        mTextEdit->setText(QString::fromLatin1(ba));
+        this->setText(QString::fromLatin1(ba));
     }else {
         QTextCodec*codec = QTextCodec::codecForName(mFileEncoding);
-        mTextEdit->setText(codec->toUnicode(ba));
+        this->setText(codec->toUnicode(ba));
     }
 }
 
@@ -69,7 +84,7 @@ void Editor::saveFile(const QString &filename) {
         mFileEncoding = mEncodingOption;
     }
     if (mEncodingOption == ENCODING_AUTO_DETECT && mFileEncoding == ENCODING_ASCII) {
-        if (!isTextAllAscii(mTextEdit->text())) {
+        if (!isTextAllAscii(this->text())) {
             mFileEncoding = pSettings->value(EDITOR_DEFAULT_ENCODING).toByteArray();
         }
         pMainWindow->updateStatusBarForEncoding();
@@ -78,18 +93,18 @@ void Editor::saveFile(const QString &filename) {
     QFile file(filename);
     QByteArray ba;
     if (mFileEncoding == ENCODING_UTF8) {
-        ba = mTextEdit->text().toUtf8();
+        ba = this->text().toUtf8();
     } else if (mFileEncoding == ENCODING_UTF8_BOM) {
             ba.resize(3);
             ba[0]=0xEF;
             ba[1]=0xBB;
             ba[2]=0xBF;
-            ba.append(mTextEdit->text().toUtf8());
+            ba.append(this->text().toUtf8());
     } else if (mFileEncoding == ENCODING_ASCII) {
-        ba = mTextEdit->text().toLatin1();
+        ba = this->text().toLatin1();
     } else {
         QTextCodec* codec = QTextCodec::codecForName(mFileEncoding);
-        ba = codec->fromUnicode(mTextEdit->text());
+        ba = codec->fromUnicode(this->text());
     }
     file.write(ba);
     file.close();
@@ -118,6 +133,17 @@ bool Editor::inProject() const {
 bool Editor::isNew() const {
     return mIsNew;
 }
-QsciScintilla* Editor::textEdit() {
-    return mTextEdit;
+
+QTabWidget* Editor::pageControl() {
+    return mParentPageControl;
+}
+
+void Editor::wheelEvent(QWheelEvent *event) {
+    if ( (event->modifiers() & Qt::ControlModifier)!=0) {
+        if (event->angleDelta().y()>0) {
+            this->zoomIn();
+        } else {
+            this->zoomOut();
+        }
+    }
 }
