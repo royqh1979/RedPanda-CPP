@@ -107,7 +107,6 @@ Editor::Editor(QWidget *parent, const QString& filename,
     connect(this, SIGNAL(linesChanged()),
             this,SLOT(onLinesChanged()));
 
-    this->toggleComment
 }
 
 Editor::~Editor() {
@@ -241,6 +240,11 @@ bool Editor::saveAs(){
     //todo: update windows caption
     //todo: update class browser;
     return true;
+}
+
+void Editor::activate()
+{
+    this->mParentPageControl->setCurrentWidget(this);
 }
 
 const QByteArray& Editor::encodingOption() const noexcept{

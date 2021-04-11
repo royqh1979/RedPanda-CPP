@@ -46,6 +46,7 @@ public:
     void saveFile(const QString& filename);
     bool save(bool force=false, bool reparse=true);
     bool saveAs();
+    void activate();
 
     QTabWidget* pageControl() noexcept;
 

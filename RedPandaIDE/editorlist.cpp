@@ -5,14 +5,6 @@
 #include <mainwindow.h>
 #include <iconv.h>
 
-EditorList::UpdateLocker::UpdateLocker(EditorList* editorList): mEditorList(editorList){
-    mEditorList->beginUpdate();
-}
-
-EditorList::UpdateLocker::~UpdateLocker() {
-    mEditorList->endUpdate();
-}
-
 EditorList::EditorList(QTabWidget* leftPageWidget,
       QTabWidget* rightPageWidget,
       QSplitter* splitter,
@@ -65,7 +57,10 @@ Editor* EditorList::getEditor(int index, QTabWidget* tabsWidget) const {
 }
 
 bool EditorList::closeEditor(Editor* editor, bool transferFocus, bool force) {
-    UpdateLocker locker(this); // use RAII to correctly pause/resume update of the panel widget
+    beginUpdate();
+    auto end = finally([this] {
+        this->endUpdate();
+    });
     if (editor == NULL)
         return false;
     if (force) {
@@ -109,7 +104,10 @@ void EditorList::endUpdate() {
 }
 
 bool EditorList::closeAll(bool force) {
-    UpdateLocker locker(this);
+    beginUpdate();
+    auto end = finally([this] {
+        this->endUpdate();
+    });
     while (mLeftPageWidget->count()>0) {
         if (!closeEditor(getEditor(0,mLeftPageWidget),false,force)) {
             return false;

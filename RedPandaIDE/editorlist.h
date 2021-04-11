@@ -17,14 +17,6 @@ public:
         lstBoth
     };
 
-    class UpdateLocker {
-    public:
-        UpdateLocker(EditorList* editorList);
-        ~UpdateLocker();
-    private:
-        EditorList* mEditorList;
-    };
-
     explicit EditorList(QTabWidget* leftPageWidget,
                         QTabWidget* rightPageWidget,
                         QSplitter* splitter,

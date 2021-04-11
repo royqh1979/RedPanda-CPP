@@ -56,6 +56,9 @@ void MainWindow::updateStatusBarForEditingInfo(int line,int col,int lines,int ch
 void MainWindow::openFiles(const QStringList &files)
 {
     mEditorList->beginUpdate();
+    auto end = finally([this] {
+        this->mEditorList->endUpdate();
+    });
     for (QString file:files) {
         openFile(file);
     }
@@ -66,12 +69,12 @@ void MainWindow::openFile(const QString &filename)
 {
     Editor* editor = mEditorList->findOpenedEditor(filename);
     if (editor!=nullptr) {
-        editor->setFocus();
+        editor->activate();
         return;
     }
     editor = mEditorList->newEditor(filename,ENCODING_AUTO_DETECT,
                                     false,false);
-    editor->setFocus();
+    editor->activate();
     this->updateStatusBarForEncoding();
 }
 
@@ -83,6 +86,7 @@ void MainWindow::setupActions() {
 void MainWindow::on_actionNew_triggered()
 {
     Editor * editor=mEditorList->newEditor("",ENCODING_AUTO_DETECT,false,true);
+    editor->activate();
     updateStatusBarForEncoding();
 }
 
