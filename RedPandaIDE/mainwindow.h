@@ -21,7 +21,9 @@ public:
     void updateStatusBarForEncoding();
     void updateStatusBarForEditingInfo(int line,int col,int lines,int charCount);
 
-
+protected:
+    void openFiles(const QStringList& files);
+    void openFile(const QString& filename);
 private slots:
     void on_actionNew_triggered();
 

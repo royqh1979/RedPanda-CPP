@@ -2,8 +2,11 @@
 #include "ui_mainwindow.h"
 #include "editorlist.h"
 #include "editor.h"
+#include "systemconsts.h"
+#include "settings.h"
 
 #include <QCloseEvent>
+#include <QFileDialog>
 #include <QLabel>
 
 MainWindow* pMainWindow;
@@ -50,6 +53,28 @@ void MainWindow::updateStatusBarForEditingInfo(int line,int col,int lines,int ch
     }
 }
 
+void MainWindow::openFiles(const QStringList &files)
+{
+    mEditorList->beginUpdate();
+    for (QString file:files) {
+        openFile(file);
+    }
+    mEditorList->endUpdate();
+}
+
+void MainWindow::openFile(const QString &filename)
+{
+    Editor* editor = mEditorList->findOpenedEditor(filename);
+    if (editor!=nullptr) {
+        editor->setFocus();
+        return;
+    }
+    editor = mEditorList->newEditor(filename,ENCODING_AUTO_DETECT,
+                                    false,false);
+    editor->setFocus();
+    this->updateStatusBarForEncoding();
+}
+
 void MainWindow::setupActions() {
 
 }
@@ -69,10 +94,11 @@ void MainWindow::on_EditorTabsLeft_tabCloseRequested(int index)
 
 void MainWindow::on_actionOpen_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
-    if (editor != NULL) {
-        //editor->save();
-    }
+    QString selectedFileFilter = pSystemConsts->defaultFileFilter();
+    QStringList files = QFileDialog::getOpenFileNames(pMainWindow,
+        tr("Open"), QString(), pSystemConsts->defaultFileFilters().join(";;"),
+        &selectedFileFilter);
+    openFiles(files);
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {

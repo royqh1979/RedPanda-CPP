@@ -6,6 +6,19 @@
 #include <QTabWidget>
 #include <Qsci/qsciscintilla.h>
 
+class SaveException: public std::exception {
+
+public:
+    explicit SaveException(const QString& reason);
+    explicit SaveException(const QString&& reason);
+    // exception interface
+    const QString& reason() const noexcept;
+public:
+    const char *what() const noexcept override;
+private:
+    QString mReason;
+};
+
 class Editor : public QsciScintilla
 {
     Q_OBJECT
@@ -22,19 +35,19 @@ public:
     Editor& operator=(const Editor&) = delete;
     Editor& operator=(const Editor&&) = delete;
 
-    const QByteArray& encodingOption() const;
-    void setEncodingOption(const QByteArray& encoding);
-    const QByteArray& fileEncoding() const;
-    const QString& filename();
-    bool inProject() const;
-    bool isNew() const;
+    const QByteArray& encodingOption() const noexcept;
+    void setEncodingOption(const QByteArray& encoding) noexcept;
+    const QByteArray& fileEncoding() const noexcept;
+    const QString& filename() const noexcept;
+    bool inProject() const noexcept;
+    bool isNew() const noexcept;
 
     void loadFile();
     void saveFile(const QString& filename);
     bool save(bool force=false, bool reparse=true);
     bool saveAs();
 
-    QTabWidget* pageControl();
+    QTabWidget* pageControl() noexcept;
 
     void updateCaption(const QString& newCaption=QString());
 
@@ -42,9 +55,9 @@ signals:
 
 
 protected slots:
-    void onModificationChanged(bool status);
-    void onCursorPositionChanged(int line, int index);
-    void onLinesChanged();
+    void onModificationChanged(bool status) ;
+    void onCursorPositionChanged(int line, int index) ;
+    void onLinesChanged() ;
 
 private:
     QByteArray mEncodingOption; // the encoding type set by the user

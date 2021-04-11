@@ -8,12 +8,26 @@
 #include <memory>
 #include "settings.h"
 #include "mainwindow.h"
+#include "systemconsts.h"
 #include <Qsci/qscilexercpp.h>
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QDebug>
 
 using namespace std;
+
+SaveException::SaveException(const QString& reason) {
+    mReason = reason;
+}
+SaveException::SaveException(const QString&& reason) {
+    mReason = reason;
+}
+const QString& SaveException::reason() const  noexcept{
+    return mReason;
+}
+const char *SaveException::what() const noexcept {
+    return mReason.toLocal8Bit();
+}
 
 
 Editor::Editor(QWidget *parent, const QString& filename,
@@ -92,6 +106,8 @@ Editor::Editor(QWidget *parent, const QString& filename,
             this, SLOT(onCursorPositionChanged(int,int)));
     connect(this, SIGNAL(linesChanged()),
             this,SLOT(onLinesChanged()));
+
+    this->toggleComment
 }
 
 Editor::~Editor() {
@@ -107,7 +123,13 @@ Editor::~Editor() {
 
 void Editor::loadFile() {
     QFile file(mFilename);
-    QByteArray content=file.read(file.bytesAvailable());
+    if (!file.open(QFile::ReadOnly)) {
+        QMessageBox::information(pMainWindow,
+                                 tr("Error"),
+                                 QString(tr("Can't Open File %1:%2")).arg(mFilename).arg(file.errorString()));
+    }
+    QByteArray content=file.readAll();
+    file.close();
     if (mEncodingOption == ENCODING_AUTO_DETECT) {
         mFileEncoding = GuessTextEncoding(content);
     } else {
@@ -119,6 +141,8 @@ void Editor::loadFile() {
         this->setText(QString::fromUtf8(content.mid(3)));
     } else if (mFileEncoding == ENCODING_ASCII) {
         this->setText(QString::fromLatin1(content));
+    } else if (mFileEncoding == ENCODING_SYSTEM_DEFAULT) {
+        this->setText(QString::fromLocal8Bit(content));
     }else {
         QTextCodec*codec = QTextCodec::codecForName(mFileEncoding);
         this->setText(codec->toUnicode(content));
@@ -148,30 +172,42 @@ void Editor::saveFile(const QString &filename) {
             ba.append(this->text().toUtf8());
     } else if (mFileEncoding == ENCODING_ASCII) {
         ba = this->text().toLatin1();
+    } else if (mFileEncoding == ENCODING_SYSTEM_DEFAULT) {
+        ba = this->text().toLocal8Bit();
     } else {
         QTextCodec* codec = QTextCodec::codecForName(mFileEncoding);
         ba = codec->fromUnicode(this->text());
     }
-    file.open(QFile::WriteOnly);
-    file.write(ba);
-    file.close();
+    if (file.open(QFile::WriteOnly)) {
+        if (file.write(ba)<0) {
+            throw SaveException(QString(tr("Failed to Save file %1: %2")).arg(filename).arg(file.errorString()));
+        }
+        file.close();
+    } else {
+        throw SaveException(QString(tr("Failed to Open file %1: %2")).arg(filename).arg(file.errorString()));
+    }
 }
 
 bool Editor::save(bool force, bool reparse) {
     if (this->mIsNew) {
         return saveAs();
     }
-    QFile file(mFilename);
     QFileInfo info(mFilename);
+    //is this file writable;
     if (!force && !info.isWritable()) {
         QMessageBox::information(pMainWindow,tr("Fail"),
                                  QString(QObject::tr("File %s is not writable!")));
         return false;
     }
-    //is this file read-only?
     if (this->isModified() || force) {
-        saveFile(mFilename);
-        setModified(false);
+        try {
+            saveFile(mFilename);
+            setModified(false);
+        }  catch (SaveException& exception) {
+            QMessageBox::information(pMainWindow,tr("Fail"),
+                                     exception.reason());
+            return false;
+        }
     }
 
     if (reparse) {
@@ -181,15 +217,23 @@ bool Editor::save(bool force, bool reparse) {
 }
 
 bool Editor::saveAs(){
+    QString selectedFileFilter = pSystemConsts->defaultFileFilter();
     QString newName = QFileDialog::getSaveFileName(pMainWindow,
-                                                   tr("Save As"));
+        tr("Save As"), QString(), pSystemConsts->defaultFileFilters().join(";;"),
+        &selectedFileFilter);
     if (newName.isEmpty()) {
         return false;
     }
-    saveFile(newName);
-    mFilename = newName;
-    mIsNew = false;
-    setModified(false);
+    try {
+        saveFile(mFilename);
+        mFilename = newName;
+        mIsNew = false;
+        setModified(false);
+    }  catch (SaveException& exception) {
+        QMessageBox::information(pMainWindow,tr("Fail"),
+                                 exception.reason());
+        return false;
+    }
 
     //todo: update (reassign highlighter)
     //todo: remove old file from parser and reparse file
@@ -199,26 +243,26 @@ bool Editor::saveAs(){
     return true;
 }
 
-const QByteArray& Editor::encodingOption() const {
+const QByteArray& Editor::encodingOption() const noexcept{
     return mEncodingOption;
 }
-void Editor::setEncodingOption(const QByteArray& encoding) {
+void Editor::setEncodingOption(const QByteArray& encoding) noexcept{
     mEncodingOption = encoding;
 }
-const QByteArray& Editor::fileEncoding() const {
+const QByteArray& Editor::fileEncoding() const noexcept{
     return mFileEncoding;
 }
-const QString& Editor::filename() {
+const QString& Editor::filename() const noexcept{
     return mFilename;
 }
-bool Editor::inProject() const {
+bool Editor::inProject() const noexcept{
     return mInProject;
 }
-bool Editor::isNew() const {
+bool Editor::isNew() const noexcept {
     return mIsNew;
 }
 
-QTabWidget* Editor::pageControl() {
+QTabWidget* Editor::pageControl() noexcept{
     return mParentPageControl;
 }
 
@@ -232,17 +276,15 @@ void Editor::wheelEvent(QWheelEvent *event) {
     }
 }
 
-void Editor::onModificationChanged(bool status) {
+void Editor::onModificationChanged(bool) {
     updateCaption();
 }
 
-void Editor::onCursorPositionChanged(int line, int index)
-{
+void Editor::onCursorPositionChanged(int line, int index) {
     pMainWindow->updateStatusBarForEditingInfo(line,index+1,lines(),text().length());
 }
 
-void Editor::onLinesChanged()
-{
+void Editor::onLinesChanged() {
     qDebug()<<"lala"<<lines();
 }
 

@@ -123,3 +123,20 @@ bool EditorList::closeAll(bool force) {
 
     return true;
 }
+
+Editor* EditorList::findOpenedEditor(const QString &filename)
+{
+    for (int i=0;i<mLeftPageWidget->count();i++) {
+        Editor* e = static_cast<Editor*>(mLeftPageWidget->widget(i));
+        if (e->filename() == filename) {
+            return e;
+        }
+    }
+    for (int i=0;i<mRightPageWidget->count();i++) {
+        Editor* e = static_cast<Editor*>(mRightPageWidget->widget(i));
+        if (e->filename() == filename) {
+            return e;
+        }
+    }
+    return nullptr;
+}

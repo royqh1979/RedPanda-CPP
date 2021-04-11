@@ -1,14 +1,17 @@
 #include "mainwindow.h"
 #include "settings.h"
+#include "systemconsts.h"
 #include <QApplication>
 
 int main(int argc, char *argv[])
 {
-    QApplication a(argc, argv);
-    Settings s;
-    pSettings = &s;
-    MainWindow w;
-    pMainWindow = &w;
-    w.show();
-    return a.exec();
+    QApplication app(argc, argv);
+    SystemConsts systemConsts;
+    pSystemConsts = &systemConsts;
+    Settings settings;
+    pSettings = &settings;
+    MainWindow mainWindow;
+    pMainWindow = &mainWindow;
+    mainWindow.show();
+    return app.exec();
 }

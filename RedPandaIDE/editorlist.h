@@ -40,6 +40,8 @@ public:
 
     bool closeAll(bool force = false);
 
+    Editor* findOpenedEditor(const QString& filename);
+
     void beginUpdate();
     void endUpdate();
 

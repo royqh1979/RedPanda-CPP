@@ -14,6 +14,7 @@ SOURCES += \
     main.cpp \
     mainwindow.cpp \
     settings.cpp \
+    systemconsts.cpp \
     utils.cpp
 
 HEADERS += \
@@ -21,6 +22,7 @@ HEADERS += \
     editorlist.h \
     mainwindow.h \
     settings.h \
+    systemconsts.h \
     utils.h
 
 FORMS += \
