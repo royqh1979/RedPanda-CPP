@@ -61,7 +61,7 @@ void MainWindow::on_actionOpen_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor != NULL) {
-        editor->save();
+        //editor->save();
     }
 }
 
@@ -74,4 +74,20 @@ void MainWindow::closeEvent(QCloseEvent *event) {
     delete mEditorList;
     event->accept();
     return;
+}
+
+void MainWindow::on_actionSave_triggered()
+{
+    Editor * editor = mEditorList->getEditor();
+    if (editor != NULL) {
+        editor->save();
+    }
+}
+
+void MainWindow::on_actionSaveAs_triggered()
+{
+    Editor * editor = mEditorList->getEditor();
+    if (editor != NULL) {
+        editor->saveAs();
+    }
 }

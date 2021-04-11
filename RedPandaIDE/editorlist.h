@@ -10,7 +10,7 @@ class Editor;
 class EditorList
 {
 public:
-    enum ShowType{
+    enum class ShowType{
         lstNone,
         lstLeft,
         lstRight,

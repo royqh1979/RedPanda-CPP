@@ -9,6 +9,9 @@
 #include "settings.h"
 #include "mainwindow.h"
 #include <Qsci/qscilexercpp.h>
+#include <QFileDialog>
+#include <QMessageBox>
+#include <QDebug>
 
 using namespace std;
 
@@ -28,8 +31,10 @@ Editor::Editor(QWidget *parent, const QString& filename,
         mFilename = tr("untitled") + "1";
     }
     QFileInfo fileInfo(mFilename);
-    if (mParentPageControl!=NULL)
-        mParentPageControl->addTab(this,fileInfo.fileName());
+    if (mParentPageControl!=NULL) {
+        mParentPageControl->addTab(this,QString());
+        updateCaption();
+    }
     if (!isNew) {
         loadFile();
     } else {
@@ -45,6 +50,9 @@ Editor::Editor(QWidget *parent, const QString& filename,
     this->setLexer(lexer);
     this->setAutoIndent(pSettings->value(EDITOR_AUTO_INDENT).toBool());
 
+    // connect will fail if use new function pointer syntax
+    connect(this,SIGNAL(modificationChanged(bool)),
+            this,SLOT(onModificationChanged(bool)));
 }
 
 Editor::~Editor() {
@@ -59,23 +67,22 @@ Editor::~Editor() {
 }
 
 void Editor::loadFile() {
-    QStringList strs;
     QFile file(mFilename);
-    QByteArray ba=file.read(file.bytesAvailable());
+    QByteArray content=file.read(file.bytesAvailable());
     if (mEncodingOption == ENCODING_AUTO_DETECT) {
-        mFileEncoding = GetFileEncodingType(ba);
+        mFileEncoding = GuessTextEncoding(content);
     } else {
         mFileEncoding = mEncodingOption;
     }
     if (mFileEncoding == ENCODING_UTF8) {
-        this->setText(QString::fromUtf8(ba));
+        this->setText(QString::fromUtf8(content));
     } else if (mFileEncoding == ENCODING_UTF8_BOM) {
-        this->setText(QString::fromUtf8(ba.mid(3)));
+        this->setText(QString::fromUtf8(content.mid(3)));
     } else if (mFileEncoding == ENCODING_ASCII) {
-        this->setText(QString::fromLatin1(ba));
+        this->setText(QString::fromLatin1(content));
     }else {
         QTextCodec*codec = QTextCodec::codecForName(mFileEncoding);
-        this->setText(codec->toUnicode(ba));
+        this->setText(codec->toUnicode(content));
     }
 }
 
@@ -106,12 +113,50 @@ void Editor::saveFile(const QString &filename) {
         QTextCodec* codec = QTextCodec::codecForName(mFileEncoding);
         ba = codec->fromUnicode(this->text());
     }
+    file.open(QFile::WriteOnly);
     file.write(ba);
     file.close();
 }
 
 bool Editor::save(bool force, bool reparse) {
+    if (this->mIsNew) {
+        return saveAs();
+    }
+    QFile file(mFilename);
+    QFileInfo info(mFilename);
+    if (!force && !info.isWritable()) {
+        QMessageBox::information(pMainWindow,tr("Fail"),
+                                 QString(QObject::tr("File %s is not writable!")));
+        return false;
+    }
+    //is this file read-only?
+    if (this->isModified() || force) {
+        saveFile(mFilename);
+        setModified(false);
+    }
 
+    if (reparse) {
+        //todo: reparse the file
+    }
+    return true;
+}
+
+bool Editor::saveAs(){
+    QString newName = QFileDialog::getSaveFileName(pMainWindow,
+                                                   tr("Save As"));
+    if (newName.isEmpty()) {
+        return false;
+    }
+    saveFile(newName);
+    mFilename = newName;
+    mIsNew = false;
+    setModified(false);
+
+    //todo: update (reassign highlighter)
+    //todo: remove old file from parser and reparse file
+    //todo: unmoniter/ monitor file
+    //todo: update windows caption
+    //todo: update class browser;
     return true;
 }
 
@@ -146,4 +191,28 @@ void Editor::wheelEvent(QWheelEvent *event) {
             this->zoomOut();
         }
     }
+}
+
+void Editor::onModificationChanged(bool status) {
+    qDebug()<<"???";
+    updateCaption();
+}
+
+void Editor::updateCaption(const QString& newCaption) {
+    if (mParentPageControl==NULL) {
+        return;
+    }
+    int index = mParentPageControl->indexOf(this);
+    if (index==-1)
+        return;
+    if (newCaption.isEmpty()) {
+        QString caption = QFileInfo(mFilename).fileName();
+        if (this->isModified()) {
+            caption.append("[*]");
+        }
+        mParentPageControl->setTabText(index,caption);
+    } else {
+        mParentPageControl->setTabText(index,newCaption);
+    }
+
 }

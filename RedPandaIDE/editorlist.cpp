@@ -73,7 +73,8 @@ bool EditorList::closeEditor(Editor* editor, bool transferFocus, bool force) {
     } else if ( (editor->isModified()) && (!editor->text().isEmpty())) {
         // ask user if he wants to save
         QMessageBox::StandardButton reply;
-        reply = QMessageBox::question(pMainWindow,QObject::tr("Save"),QObject::tr("Save changes to %s?"),
+        reply = QMessageBox::question(pMainWindow,QObject::tr("Save"),
+                                      QString(QObject::tr("Save changes to %1?")).arg(editor->filename()),
                                       QMessageBox::Yes|QMessageBox::No|QMessageBox::Cancel);
         if (reply == QMessageBox::Cancel) {
             return false;

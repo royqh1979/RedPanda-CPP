@@ -9,9 +9,7 @@ class QString;
 #define ENCODING_UTF8_BOM "UTF-8 BOM"
 #define ENCODING_SYSTEM_DEFAULT   "SYSTEM"
 #define ENCODING_ASCII  "ASCII"
-
-
-const QByteArray GetFileEncodingType(const QByteArray& content);
+const QByteArray GuessTextEncoding(const QByteArray& text);
 
 bool isTextAllAscii(const QString& text);
 

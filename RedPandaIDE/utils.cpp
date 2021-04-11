@@ -3,11 +3,11 @@
 #include <QString>
 #include <QTextCodec>
 
-const QByteArray GetFileEncodingType(const QByteArray& content){
+const QByteArray GuessTextEncoding(const QByteArray& text){
     bool allAscii;
     int ii;
     int size;
-    const QByteArray& s=content;
+    const QByteArray& s=text;
     size = s.length();
     if ( (size >= 3) && ((unsigned char)s[0]==0xEF) && ((unsigned char)s[1]==0xBB) && ((unsigned char)s[2]==0xBF)) {
         return ENCODING_UTF8_BOM;
