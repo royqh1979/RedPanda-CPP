@@ -216,7 +216,7 @@
   <action name="actionNew">
    <property name="icon">
     <iconset>
-     <normalon>:/icons/images/newlook24/050-newsrc.bmp</normalon>
+     <normalon>:/icons/images/newlook24/050-newsrc.png</normalon>
     </iconset>
    </property>
    <property name="text">
@@ -229,7 +229,7 @@
   <action name="actionOpen">
    <property name="icon">
     <iconset>
-     <normalon>:/icons/images/newlook24/053-open.bmp</normalon>
+     <normalon>:/icons/images/newlook24/053-open.png</normalon>
     </iconset>
    </property>
    <property name="text">
@@ -242,7 +242,7 @@
   <action name="actionSave">
    <property name="icon">
     <iconset>
-     <normalon>:/icons/images/newlook24/070-save.bmp</normalon>
+     <normalon>:/icons/images/newlook24/070-save.png</normalon>
     </iconset>
    </property>
    <property name="text">
@@ -255,7 +255,7 @@
   <action name="actionSaveAs">
    <property name="icon">
     <iconset>
-     <normalon>:/icons/images/newlook24/072-saveas.bmp</normalon>
+     <normalon>:/icons/images/newlook24/072-saveas.png</normalon>
     </iconset>
    </property>
    <property name="text">
@@ -268,7 +268,7 @@
   <action name="actionSave_All">
    <property name="icon">
     <iconset>
-     <normalon>:/icons/images/newlook24/071-saveall.bmp</normalon>
+     <normalon>:/icons/images/newlook24/071-saveall.png</normalon>
     </iconset>
    </property>
    <property name="text">
