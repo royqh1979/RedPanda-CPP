@@ -40,6 +40,16 @@ void MainWindow::updateStatusBarForEncoding() {
     }
 }
 
+void MainWindow::updateStatusBarForEditingInfo(int line,int col,int lines,int charCount)
+{
+    Editor * editor = mEditorList->getEditor();
+    if (editor!=NULL) {
+        mFileInfoStatus->setText(
+            QString(tr("Line: %1  Col: %2  Lines: %3 Chars: %4")).arg(line)
+                    .arg(col).arg(lines).arg(charCount));
+    }
+}
+
 void MainWindow::setupActions() {
 
 }

@@ -47,12 +47,51 @@ Editor::Editor(QWidget *parent, const QString& filename,
     //
     QsciLexerCPP *lexer = new QsciLexerCPP();
     lexer->setHighlightEscapeSequences(true);
+    lexer->setFoldComments(true);
     this->setLexer(lexer);
     this->setAutoIndent(pSettings->value(EDITOR_AUTO_INDENT).toBool());
+    this->setFolding(FoldStyle::BoxedTreeFoldStyle,3);
+
+    //行号显示区域
+    setMarginType(0, QsciScintilla::NumberMargin);
+    setMarginLineNumbers(0, true);
+    setMarginWidth(0,30);
+    //断点设置区域
+    setMarginType(1, QsciScintilla::SymbolMargin);
+    setMarginLineNumbers(1, false);
+    setMarginWidth(1,20);
+    setMarginSensitivity(1, true);    //设置是否可以显示断点
+    setMarginsBackgroundColor(QColor("#bbfaae"));
+    setMarginMarkerMask(1, 0x02);
+//    connect(textEdit, SIGNAL(marginClicked(int, int, Qt::KeyboardModifiers)),this,
+//            SLOT(on_margin_clicked(int, int, Qt::KeyboardModifiers)));
+    markerDefine(QsciScintilla::Circle, 1);
+    setMarkerBackgroundColor(QColor("#ee1111"), 1);
+    //单步执行显示区域
+    setMarginType(2, QsciScintilla::SymbolMargin);
+    setMarginLineNumbers(2, false);
+    setMarginWidth(2, 20);
+    setMarginSensitivity(2, false);
+    setMarginMarkerMask(2, 0x04);
+    markerDefine(QsciScintilla::RightArrow, 2);
+    setMarkerBackgroundColor(QColor("#eaf593"), 2);
+    //自动折叠区域
+    setMarginType(3, QsciScintilla::SymbolMargin);
+    setMarginLineNumbers(3, false);
+    setMarginWidth(3, 15);
+    setMarginSensitivity(3, true);
 
     // connect will fail if use new function pointer syntax
+//    connect(this, &QsciScintilla::modificationChanged,
+//            this, &Editor::onModificationChanged);
+//    connect(this , &QsciScintilla::cursorPositionChanged,
+//            this, &Editor::onCursorPositionChanged);
     connect(this,SIGNAL(modificationChanged(bool)),
             this,SLOT(onModificationChanged(bool)));
+    connect(this , SIGNAL(cursorPositionChanged(int,int)),
+            this, SLOT(onCursorPositionChanged(int,int)));
+    connect(this, SIGNAL(linesChanged()),
+            this,SLOT(onLinesChanged()));
 }
 
 Editor::~Editor() {
@@ -194,8 +233,17 @@ void Editor::wheelEvent(QWheelEvent *event) {
 }
 
 void Editor::onModificationChanged(bool status) {
-    qDebug()<<"???";
     updateCaption();
+}
+
+void Editor::onCursorPositionChanged(int line, int index)
+{
+    pMainWindow->updateStatusBarForEditingInfo(line,index+1,lines(),text().length());
+}
+
+void Editor::onLinesChanged()
+{
+    qDebug()<<"lala"<<lines();
 }
 
 void Editor::updateCaption(const QString& newCaption) {

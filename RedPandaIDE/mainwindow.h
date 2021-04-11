@@ -19,6 +19,7 @@ public:
     ~MainWindow();
 
     void updateStatusBarForEncoding();
+    void updateStatusBarForEditingInfo(int line,int col,int lines,int charCount);
 
 
 private slots:

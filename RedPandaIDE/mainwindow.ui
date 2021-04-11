@@ -115,7 +115,13 @@
                <property name="currentIndex">
                 <number>-1</number>
                </property>
+               <property name="documentMode">
+                <bool>true</bool>
+               </property>
                <property name="tabsClosable">
+                <bool>true</bool>
+               </property>
+               <property name="movable">
                 <bool>true</bool>
                </property>
               </widget>
@@ -123,7 +129,13 @@
                <property name="enabled">
                 <bool>true</bool>
                </property>
+               <property name="documentMode">
+                <bool>true</bool>
+               </property>
                <property name="tabsClosable">
+                <bool>true</bool>
+               </property>
+               <property name="movable">
                 <bool>true</bool>
                </property>
               </widget>
