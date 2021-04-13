@@ -5,18 +5,16 @@
 
 Settings* pSettings;
 
-Settings::Settings():
-    mSettings(QSettings::IniFormat,QSettings::UserScope,"Red Panda C++"),
+Settings::Settings(const QString &filename):
+    mSettings(filename,QSettings::IniFormat),
     mDirs(this),
     mEditor(this)
 {
-
     // default values for editors
     mEditor.setDefault(SETTING_EDITOR_DEFAULT_ENCODING, QTextCodec::codecForLocale()->name());
     mEditor.setDefault(SETTING_EDITOR_AUTO_INDENT,true);
 
 }
-
 
 void Settings::setDefault(const QString&group,const QString &key, const QVariant &value) {
     mSettings.beginGroup(group);
@@ -112,3 +110,11 @@ void Settings::Editor::setAutoIndent(bool indent)
 }
 
 
+
+Settings::CompilerSet::CompilerSet(Settings *settings, int index, const QString& compilerFolder):
+    _Base(settings, "CompilerSet_"+QString(index)),
+
+    mIndex(index)
+{
+
+}

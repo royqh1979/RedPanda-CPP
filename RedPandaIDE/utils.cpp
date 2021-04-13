@@ -1,5 +1,9 @@
 #include "utils.h"
+#include <QApplication>
 #include <QByteArray>
+#include <QFile>
+#include <QFileInfo>
+#include <QSettings>
 #include <QString>
 #include <QTextCodec>
 
@@ -60,3 +64,18 @@ bool isTextAllAscii(const QString& text) {
 }
 
 
+static bool gIsGreenEdition = false;
+static bool gIsGreenEditionInited = false;
+bool isGreenEdition()
+{
+    if (!gIsGreenEditionInited) {
+        QSettings settings("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\RedPanda-C++",
+                           QSettings::NativeFormat);
+        QString regPath = QFileInfo(settings.value("UninstallString").toString()).absolutePath();
+
+        QString appPath = QApplication::instance()->applicationDirPath();
+        gIsGreenEdition = (regPath != appPath);
+        gIsGreenEditionInited = true;
+    }
+    return gIsGreenEdition;
+}

@@ -14,6 +14,8 @@ class QString;
 #define ENCODING_SYSTEM_DEFAULT   "SYSTEM"
 #define ENCODING_ASCII  "ASCII"
 
+bool isGreenEdition();
+
 const QByteArray GuessTextEncoding(const QByteArray& text);
 
 bool isTextAllAscii(const QString& text);

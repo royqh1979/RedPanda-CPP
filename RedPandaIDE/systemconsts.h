@@ -3,6 +3,8 @@
 
 #include <QStringList>
 
+#define APP_SETTSINGS_FILENAME "redpandacpp.ini"
+
 class SystemConsts
 {
 public:

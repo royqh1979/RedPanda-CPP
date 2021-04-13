@@ -14,6 +14,7 @@ SOURCES += \
     main.cpp \
     mainwindow.cpp \
     settings.cpp \
+    settingsdialog.cpp \
     systemconsts.cpp \
     utils.cpp
 
@@ -22,11 +23,13 @@ HEADERS += \
     editorlist.h \
     mainwindow.h \
     settings.h \
+    settingsdialog.h \
     systemconsts.h \
     utils.h
 
 FORMS += \
-    mainwindow.ui
+    mainwindow.ui \
+    settingsdialog.ui
 
 TRANSLATIONS += \
     RedPandaIDE_zh_CN.ts
