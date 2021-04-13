@@ -63,7 +63,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
     lexer->setHighlightEscapeSequences(true);
     lexer->setFoldComments(true);
     this->setLexer(lexer);
-    this->setAutoIndent(pSettings->value(EDITOR_AUTO_INDENT).toBool());
+    this->setAutoIndent(pSettings->editor().autoIndent());
     this->setFolding(FoldStyle::BoxedTreeFoldStyle,3);
 
     //行号显示区域
@@ -154,7 +154,7 @@ void Editor::saveFile(const QString &filename) {
     }
     if (mEncodingOption == ENCODING_AUTO_DETECT && mFileEncoding == ENCODING_ASCII) {
         if (!isTextAllAscii(this->text())) {
-            mFileEncoding = pSettings->value(EDITOR_DEFAULT_ENCODING).toByteArray();
+            mFileEncoding = pSettings->editor().defaultEncoding();
         }
         pMainWindow->updateStatusBarForEncoding();
         //todo: update status bar, and set fileencoding using configurations
