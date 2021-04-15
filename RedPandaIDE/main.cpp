@@ -8,29 +8,24 @@
 #include <QDebug>
 #include <QStandardPaths>
 #include <QMessageBox>
-
-// we have to wrap the following in a function, or it will crash createAppSettings when debug, don't know why
-void showConfigCantWriteMsg(const QString& filename) {
-    QMessageBox::information(nullptr, QObject::tr("Error"),
-        QString(QObject::tr("Can't write to configuration file %1")).arg(filename));
-}
+#include <QStringList>
 
 Settings* createAppSettings(const QString& filepath = QString()) {
-    QString filename("");
-    if (filename.isEmpty()) {
-
-//    //    if (isGreenEdition()) {
-//    //        name = QApplication::applicationDirPath() + QDir::separator() +
-//    //                "config" + QDir::separator() + APP_SETTSINGS_FILENAME;
-//    //    } else {
-        filename = QStandardPaths::standardLocations(QStandardPaths::AppDataLocation)[0]
-            + QDir::separator() + APP_SETTSINGS_FILENAME;
-//    //    }
+    QString filename;
+    if (filepath.isEmpty()) {
+        if (isGreenEdition()) {
+            filename = QApplication::applicationDirPath() + QDir::separator() +
+                    "config" + QDir::separator() + APP_SETTSINGS_FILENAME;
+        } else {
+            filename = QStandardPaths::standardLocations(QStandardPaths::AppDataLocation)[0]
+                + QDir::separator() + APP_SETTSINGS_FILENAME;
+        }
     } else {
         filename = filepath;
     }
 
-    QDir dir = QFileInfo(filename).absoluteDir();
+    QFileInfo fileInfo(filename);
+    QDir dir(fileInfo.absoluteDir());
     if (!dir.exists()) {
         if (!dir.mkpath(dir.absolutePath())) {
             QMessageBox::information(nullptr, QObject::tr("Error"),
@@ -39,10 +34,10 @@ Settings* createAppSettings(const QString& filepath = QString()) {
         }
     }
 
-    QFileInfo fileInfo(filename);
-
     if (fileInfo.exists() && !fileInfo.isWritable()) {
-        showConfigCantWriteMsg(filename);
+        QMessageBox::information(nullptr, QObject::tr("Error"),
+            QString(QObject::tr("Can't write to configuration file %1")).arg(filename));
+
         return nullptr;
     }
     return new Settings(filename);
@@ -59,6 +54,12 @@ int main(int argc, char *argv[])
 
     SystemConsts systemConsts;
     pSystemConsts = &systemConsts;
+
+    Settings::CompilerSet testSet("e:/workspace/contributes/Dev-CPP/MinGW32_GCC92");
+    qDebug() << testSet.binDirs();
+    qDebug() << testSet.CIncludeDirs();
+    qDebug() << testSet.CppIncludeDirs();
+    qDebug() << testSet.LibDirs();
 
     pSettings = createAppSettings();
     if (pSettings == nullptr) {

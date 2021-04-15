@@ -1,8 +1,11 @@
 #include "utils.h"
 #include <QApplication>
 #include <QByteArray>
+#include <QDir>
 #include <QFile>
 #include <QFileInfo>
+#include <QProcess>
+#include <QProcessEnvironment>
 #include <QSettings>
 #include <QString>
 #include <QTextCodec>
@@ -78,4 +81,50 @@ bool isGreenEdition()
         gIsGreenEditionInited = true;
     }
     return gIsGreenEdition;
+}
+
+QByteArray runAndGetOutput(const QString &cmd, const QString& workingDir, const QStringList& arguments, bool inheritEnvironment)
+{
+    QProcess process;
+    QByteArray result;
+    if (inheritEnvironment) {
+        process.setProcessEnvironment(QProcessEnvironment::systemEnvironment());
+    } else {
+        process.setProcessEnvironment(QProcessEnvironment());
+    }
+    process.setWorkingDirectory(workingDir);
+    process.start(cmd,arguments,QIODevice::ReadOnly);
+    process.closeWriteChannel();
+    process.connect(&process,&QProcess::readyReadStandardError,
+                    [&](){
+        result.append(process.readAllStandardError());
+    });
+    process.connect(&process,&QProcess::readyReadStandardOutput,
+                    [&](){
+        result.append(process.readAllStandardOutput());
+    });
+    process.waitForFinished();
+    return result;
+}
+
+bool isNonPrintableAsciiChar(char ch)
+{
+    return (ch>32) or (ch<0);
+}
+
+bool fileExists(const QString &file)
+{
+    return QFileInfo(file).exists();
+}
+
+bool fileExists(const QString &dir, const QString &fileName)
+{
+    QDir dirInfo(dir);
+    return dirInfo.exists(fileName);
+}
+
+bool directoryExists(const QString &file)
+{
+   QFileInfo dir(file);
+   return dir.exists() && dir.isDir();
 }

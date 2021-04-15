@@ -4,6 +4,17 @@
 #include <QStringList>
 
 #define APP_SETTSINGS_FILENAME "redpandacpp.ini"
+#define GCC_PROGRAM     "gcc.exe"
+#define GPP_PROGRAM     "g++.exe"
+#define GDB_PROGRAM     "gdb.exe"
+#define GDB32_PROGRAM   "gdb32.exe"
+#define MAKE_PROGRAM    "mingw32-make.exe"
+#define WINDRES_PROGRAM "windres.exe"
+#define GPROF_PROGRAM   "gprof.exe"
+#define CLEAN_PROGRAM   "rm.exe"
+#define CPP_PROGRAM     "cpp.exe"
+
+#define NULL_FILE       "NUL"
 
 class SystemConsts
 {

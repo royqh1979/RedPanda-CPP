@@ -5,27 +5,40 @@
 #include <vector>
 #include <memory>
 
+/**
+ * use the following command to get gcc's default bin/library folders:
+ * gcc -print-search-dirs
+ */
+
 #define SETTING_DIRS "dirs"
 #define SETTING_EDITOR "editor"
 #define SETTING_EDITOR_DEFAULT_ENCODING "default_encoding"
 #define SETTING_EDITOR_AUTO_INDENT "default_auto_indent"
 
+
+extern const char ValueToChar[28];
+
 class Settings;
 
 typedef struct {
-    int name; // language table index of "Generate debugging info"
-    int section; // language table index of "C options"
+    QString name; // language table index of "Generate debugging info"
+    QString section; // language table index of "C options"
     bool isC;
     bool isCpp; // True (C++ option?) - can be both C and C++ option...
     bool isLinker; // Is it a linker param
     int value; // True
-    QString Setting; // "-g3"
-    QStringList Choices; // replaces "Yes/No" standard choices (max 30 different choices)
-} CompilerOption, *PCompilerOption;
+    QString setting; // "-g3"
+    QStringList choices; // replaces "Yes/No" standard choices (max 30 different choices)
+} CompilerOption;
+
+using PCompilerOption = std::shared_ptr<CompilerOption>;
+
+using CompilerOptionList=std::vector<std::shared_ptr<CompilerOption>>;
 
 class Settings
 {
 private:
+
     class _Base {
     public:
         explicit _Base(Settings* settings, const QString& groupName);
@@ -53,15 +66,87 @@ public:
         void setAutoIndent(bool indent);
     };
 
-    class CompilerSet: public _Base {
+    class CompilerSet {
     public:
-        explicit CompilerSet(Settings *settings, int index, const QString& compilerFolder = QString());
+        explicit CompilerSet(const QString& compilerFolder = QString());
+        explicit CompilerSet(const CompilerSet& set);
+
+        CompilerSet& operator= (const CompilerSet& ) = delete;
+        CompilerSet& operator= (const CompilerSet&& ) = delete;
+
+        //properties
+        void addOption(const QString& name, const QString section, bool isC,
+                bool isCpp, bool isLinker,
+                int value, const QString& setting,
+                const QStringList& choices = QStringList());
+        PCompilerOption& findOption(const QString& setting);
+        char getOptionValue(const QString& setting);
+        void setOption(const QString& setting, char valueChar);
+        void setOption(PCompilerOption& option, char valueChar);
+
+        const QString& CCompilerName() const;
+        void setCCompilerName(const QString& name);
+        const QString& CppCompilerName() const;
+        void setCppCompilerName(const QString& name);
+        const QString& MakeName() const;
+        void setMakeName(const QString& name);
+        const QString& DebuggerName() const;
+        void setDebuggerName(const QString& name);
+        const QString& ProfilerName() const;
+        void setProfilerName(const QString& name);
+
+        QStringList& binDirs();
+        QStringList& CIncludeDirs();
+        QStringList& CppIncludeDirs();
+        QStringList& LibDirs();
+
+        const QString& dumpMachine();
+        void setDumpMachine(const QString& value);
+        const QString& version();
+        void setVersion(const QString& value);
+        const QString& type();
+        void setType(const QString& value);
+        const QString& folder();
+        void setFolder(const QString& value);
+        QStringList& defines();
+        const QString& target();
+        void setTarget(const QString& value);
+
+        bool useCustomCompileParams();
+        void setUseCustomCompileParams(bool value);
+        bool useCustomLinkParams();
+        void setUseCustomLinkParams(bool value);
+        const QString& customCompileParams();
+        void setCustomCompileParams(const QString& value);
+        const QString& customLinkParams();
+        void setCustomLinkParams(const QString& value);
+        bool staticLink();
+        void setStaticLink(bool value);
+        bool autoAddCharsetParams();
+        void setAutoAddCharsetParams(bool value);
+
+        CompilerOptionList& options();
 
     private:
-        int mIndex;
+        int charToValue(char valueChar);
+
+        // Initialization
+        void setProperties(const QString& binDir);
+        void setExecutables();
+        void setDirectories();
+        void setUserInput();
+        void setOptions();
+
+        //Converts options to and from memory format
+        QByteArray getIniOptions();
+        void setIniOptions(const QByteArray& value);
+
+        QByteArray getCompilerOutput(const QString& binDir, const QString& binFile,
+                                     const QStringList& arguments);
+    private:
         // Executables, most are hardcoded
         QString mCCompilerName;
-        QString mCPPCompilerName;
+        QString mCppCompilerName;
         QString mMakeName;
         QString mDebuggerName;
         QString mProfilerName;
@@ -70,7 +155,7 @@ public:
         // Directories, mostly hardcoded too
         QStringList mBinDirs;
         QStringList mCIncludeDirs;
-        QStringList mCPPIncludeDirs;
+        QStringList mCppIncludeDirs;
         QStringList mLibDirs;
 
         // Misc. properties
@@ -79,20 +164,19 @@ public:
         QString mType; // "TDM-GCC", "MinGW"
         QString mName; // "TDM-GCC 4.7.1 Release"
         QString mFolder; // MinGW64, MinGW32
-        QStringList mDefIncludes; // default include dir
-        QStringList fDefines; // list of predefined constants
+        QStringList mDefines; // list of predefined constants
         QString mTarget; // 'X86_64' / 'i686'
 
         // User settings
-        bool mAddCustomCompileParams;
-        bool mAddCustomLinkParams;
+        bool mUseCustomCompileParams;
+        bool mUseCustomLinkParams;
         QString mCustomCompileParams;
         QString mCustomLinkParams;
         bool mStaticLink;
-        bool mAddCharsetParams;
+        bool mAutoAddCharsetParams;
 
         // Options
-        std::vector<std::shared_ptr<CompilerOption>> mOptions;
+        CompilerOptionList mOptions;
     };
 
 public:

@@ -7,6 +7,7 @@
 
 class QByteArray;
 class QString;
+class QStringList;
 
 #define ENCODING_AUTO_DETECT "AUTO"
 #define ENCODING_UTF8   "UTF-8"
@@ -14,11 +15,22 @@ class QString;
 #define ENCODING_SYSTEM_DEFAULT   "SYSTEM"
 #define ENCODING_ASCII  "ASCII"
 
+typedef void (*LineOutputFunc) (const QString& line);
+typedef bool (*CheckAbortFunc) ();
 bool isGreenEdition();
 
 const QByteArray GuessTextEncoding(const QByteArray& text);
 
 bool isTextAllAscii(const QString& text);
+
+QByteArray runAndGetOutput(const QString& cmd, const QString& workingDir, const QStringList& arguments, bool inheritEnvironment = false);
+
+bool isNonPrintableAsciiChar(char ch);
+
+bool fileExists(const QString& file);
+bool fileExists(const QString& dir, const QString& fileName);
+bool directoryExists(const QString& file);
+
 
 template <class F>
 class final_action
