@@ -10,8 +10,12 @@
  * gcc -print-search-dirs
  */
 
-#define SETTING_DIRS "dirs"
-#define SETTING_EDITOR "editor"
+#define SETTING_DIRS "Dirs"
+#define SETTING_EDITOR "Editor"
+#define SETTING_COMPILTER_SETS "CompilerSets"
+#define SETTING_COMPILTER_SETS_DEFAULT_INDEX "defaultIndex"
+#define SETTING_COMPILTER_SETS_COUNT "count"
+#define SETTING_COMPILTER_SET "CompilerSet_%1"
 #define SETTING_EDITOR_DEFAULT_ENCODING "default_encoding"
 #define SETTING_EDITOR_AUTO_INDENT "default_auto_indent"
 
@@ -79,21 +83,23 @@ public:
                 bool isCpp, bool isLinker,
                 int value, const QString& setting,
                 const QStringList& choices = QStringList());
-        PCompilerOption& findOption(const QString& setting);
+        PCompilerOption findOption(const QString& setting);
         char getOptionValue(const QString& setting);
         void setOption(const QString& setting, char valueChar);
         void setOption(PCompilerOption& option, char valueChar);
 
         const QString& CCompilerName() const;
         void setCCompilerName(const QString& name);
-        const QString& CppCompilerName() const;
+        const QString& cppCompilerName() const;
         void setCppCompilerName(const QString& name);
-        const QString& MakeName() const;
+        const QString& makeName() const;
         void setMakeName(const QString& name);
-        const QString& DebuggerName() const;
+        const QString& debuggerName() const;
         void setDebuggerName(const QString& name);
-        const QString& ProfilerName() const;
+        const QString& profilerName() const;
         void setProfilerName(const QString& name);
+        const QString& resourceCompilerName() const;
+        void setResourceCompilerName(const QString& name);
 
         QStringList& binDirs();
         QStringList& CIncludeDirs();
@@ -106,6 +112,8 @@ public:
         void setVersion(const QString& value);
         const QString& type();
         void setType(const QString& value);
+        const QString& name();
+        void setName(const QString& value);
         const QString& folder();
         void setFolder(const QString& value);
         QStringList& defines();
@@ -127,6 +135,10 @@ public:
 
         CompilerOptionList& options();
 
+        //Converts options to and from memory format
+        QByteArray iniOptions() const;
+        void setIniOptions(const QByteArray& value);
+
     private:
         int charToValue(char valueChar);
 
@@ -136,10 +148,6 @@ public:
         void setDirectories();
         void setUserInput();
         void setOptions();
-
-        //Converts options to and from memory format
-        QByteArray getIniOptions();
-        void setIniOptions(const QByteArray& value);
 
         QByteArray getCompilerOutput(const QString& binDir, const QString& binFile,
                                      const QStringList& arguments);
@@ -179,6 +187,34 @@ public:
         CompilerOptionList mOptions;
     };
 
+    typedef std::shared_ptr<CompilerSet> PCompilerSet;
+    typedef std::vector<PCompilerSet> CompilerSetList;
+
+    class CompilerSets {
+    public:
+        explicit CompilerSets(Settings* settings);
+
+        PCompilerSet addSet(const CompilerSet& set);
+        PCompilerSet addSet(const QString& folder=QString());
+
+        void addSets(const QString& folder);
+        void clearSets();
+        void findSets();
+        void saveSets();
+        void loadSets();
+        //properties
+        CompilerSetList& list();
+        int size() const;
+        int defaultIndex() const;
+        void setDefaultIndex(int value);
+    private:
+        void saveSet(int index);
+        PCompilerSet loadSet(int index);
+        CompilerSetList mList;
+        int mDefaultIndex;
+        Settings* mSettings;
+    };
+
 public:
     explicit Settings(const QString& filename);
     explicit Settings(Settings&& settings) = delete;
@@ -192,10 +228,12 @@ public:
 
     Dirs& dirs();
     Editor& editor();
+    CompilerSets& compilerSets();
 private:
     QSettings mSettings;
     Dirs mDirs;
     Editor mEditor;
+    CompilerSets mCompilerSets;
 };
 
 

@@ -30,7 +30,8 @@ bool isNonPrintableAsciiChar(char ch);
 bool fileExists(const QString& file);
 bool fileExists(const QString& dir, const QString& fileName);
 bool directoryExists(const QString& file);
-
+QString includeTrailingPathDelimiter(const QString& path);
+QString excludeTrailingPathDelimiter(const QString& path);
 
 template <class F>
 class final_action

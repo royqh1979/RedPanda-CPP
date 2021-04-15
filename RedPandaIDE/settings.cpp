@@ -16,7 +16,8 @@ Settings* pSettings;
 Settings::Settings(const QString &filename):
     mSettings(filename,QSettings::IniFormat),
     mDirs(this),
-    mEditor(this)
+    mEditor(this),
+    mCompilerSets(this)
 {
     // default values for editors
     mEditor.setDefault(SETTING_EDITOR_DEFAULT_ENCODING, QTextCodec::codecForLocale()->name());
@@ -58,6 +59,11 @@ Settings::Dirs &Settings::dirs()
 Settings::Editor &Settings::editor()
 {
     return mEditor;
+}
+
+Settings::CompilerSets &Settings::compilerSets()
+{
+    return mCompilerSets;
 }
 
 Settings::Dirs::Dirs(Settings *settings):
@@ -184,11 +190,14 @@ void Settings::CompilerSet::addOption(const QString &name, const QString section
     mOptions.push_back(pOption);
 }
 
-PCompilerOption& Settings::CompilerSet::findOption(const QString &setting)
+PCompilerOption Settings::CompilerSet::findOption(const QString &setting)
 {
-    return *std::find_if(mOptions.begin(),mOptions.end(),[setting](PCompilerOption p){
-        return (p->setting == setting);
-    });
+    for (PCompilerOption pOption : mOptions) {
+        if (pOption->setting == setting) {
+            return pOption;
+        }
+    }
+    return PCompilerOption();
 }
 
 char Settings::CompilerSet::getOptionValue(const QString &setting)
@@ -224,7 +233,7 @@ void Settings::CompilerSet::setCCompilerName(const QString &name)
     mCCompilerName = name;
 }
 
-const QString &Settings::CompilerSet::CppCompilerName() const
+const QString &Settings::CompilerSet::cppCompilerName() const
 {
     return mCppCompilerName;
 }
@@ -234,7 +243,7 @@ void Settings::CompilerSet::setCppCompilerName(const QString &name)
     mCppCompilerName = name;
 }
 
-const QString &Settings::CompilerSet::MakeName() const
+const QString &Settings::CompilerSet::makeName() const
 {
     return mMakeName;
 }
@@ -244,7 +253,7 @@ void Settings::CompilerSet::setMakeName(const QString &name)
     mMakeName = name;
 }
 
-const QString &Settings::CompilerSet::DebuggerName() const
+const QString &Settings::CompilerSet::debuggerName() const
 {
     return mDebuggerName;
 }
@@ -254,7 +263,7 @@ void Settings::CompilerSet::setDebuggerName(const QString &name)
     mDebuggerName = name;
 }
 
-const QString &Settings::CompilerSet::ProfilerName() const
+const QString &Settings::CompilerSet::profilerName() const
 {
     return mProfilerName;
 }
@@ -262,6 +271,16 @@ const QString &Settings::CompilerSet::ProfilerName() const
 void Settings::CompilerSet::setProfilerName(const QString &name)
 {
     mProfilerName = name;
+}
+
+const QString &Settings::CompilerSet::resourceCompilerName() const
+{
+    return mResourceCompilerName;
+}
+
+void Settings::CompilerSet::setResourceCompilerName(const QString &name)
+{
+    mResourceCompilerName = name;
 }
 
 QStringList &Settings::CompilerSet::binDirs()
@@ -312,6 +331,16 @@ const QString &Settings::CompilerSet::type()
 void Settings::CompilerSet::setType(const QString& value)
 {
     mType = value;
+}
+
+const QString &Settings::CompilerSet::name()
+{
+    return mName;
+}
+
+void Settings::CompilerSet::setName(const QString &value)
+{
+    mName = value;
 }
 
 const QString &Settings::CompilerSet::folder()
@@ -804,7 +833,7 @@ void Settings::CompilerSet::setOptions()
     addOption(tr("Use pipes instead of temporary files during compilation (-pipe)"), groupName, true, true, false, 0, "-pipe");
 }
 
-QByteArray Settings::CompilerSet::getIniOptions()
+QByteArray Settings::CompilerSet::iniOptions() const
 {
     QByteArray result;
     for (PCompilerOption p:mOptions) {
@@ -833,4 +862,216 @@ QByteArray Settings::CompilerSet::getCompilerOutput(const QString &binDir, const
 bool Settings::CompilerSet::useCustomCompileParams()
 {
     return mUseCustomCompileParams;
+}
+
+Settings::CompilerSets::CompilerSets(Settings *settings):
+    mSettings(settings),
+    mDefaultIndex(-1)
+{
+
+}
+
+Settings::PCompilerSet Settings::CompilerSets::addSet(const Settings::CompilerSet& set)
+{
+    PCompilerSet p=std::make_shared<CompilerSet>(set);
+    mList.push_back(p);
+    return p;
+}
+
+Settings::PCompilerSet Settings::CompilerSets::addSet(const QString &folder)
+{
+    PCompilerSet p=std::make_shared<CompilerSet>(folder);
+    mList.push_back(p);
+    return p;
+}
+
+static void setReleaseOptions(Settings::PCompilerSet& pSet) {
+    PCompilerOption pOption = pSet->findOption("-O");
+    if (pOption) {
+        pSet->setOption(pOption,'a');
+    }
+
+    pOption = pSet->findOption("-s");
+    if (pOption) {
+        pSet->setOption(pOption,'1');
+    }
+}
+
+static void setDebugOptions(Settings::PCompilerSet& pSet) {
+    PCompilerOption pOption = pSet->findOption("-g3");
+    if (pOption) {
+        pSet->setOption(pOption,'1');
+    }
+    pOption = pSet->findOption("-Wall");
+    if (pOption) {
+        pSet->setOption(pOption,'1');
+    }
+    pOption = pSet->findOption("-Wextra");
+    if (pOption) {
+        pSet->setOption(pOption,'1');
+    }
+}
+
+static void setProfileOptions(Settings::PCompilerSet& pSet) {
+    PCompilerOption pOption = pSet->findOption("-pg");
+    if (pOption) {
+        pSet->setOption(pOption,'1');
+    }
+}
+
+void Settings::CompilerSets::addSets(const QString &folder)
+{
+    if (!directoryExists(folder))
+        return;
+    if (!fileExists(includeTrailingPathDelimiter(folder)+"bin"+QDir::separator()+GCC_PROGRAM)) {
+        return;
+    }
+    // Default, release profile
+    PCompilerSet baseSet = addSet(folder);
+    QString baseName = baseSet->name();
+    QString platformName;
+    if (baseSet->target() == "x86_64") {
+        platformName = "64-bit";
+    } else {
+        platformName = "32-bit";
+    }
+    baseSet->setName(baseName + " " + platformName + " Release");
+    setReleaseOptions(baseSet);
+
+    baseSet = addSet(folder);
+    baseSet->setName(baseName + " " + platformName + " Debug");
+    setDebugOptions(baseSet);
+
+    baseSet = addSet(folder);
+    baseSet->setName(baseName + " " + platformName + " Profiling");
+    setProfileOptions(baseSet);
+
+    mDefaultIndex = mList.size() - 2;
+}
+
+void Settings::CompilerSets::clearSets()
+{
+    for (int i=0;i<mList.size();i++) {
+        mSettings->mSettings.beginGroup(QString(SETTING_COMPILTER_SET).arg(i));
+        mSettings->mSettings.remove("");
+        mSettings->mSettings.endGroup();
+    }
+    mList.clear();
+}
+
+void Settings::CompilerSets::findSets()
+{
+    addSets(includeTrailingPathDelimiter(mSettings->dirs().app())+"MinGW32");
+    addSets(includeTrailingPathDelimiter(mSettings->dirs().app())+"MinGW64");
+}
+
+void Settings::CompilerSets::saveSets()
+{
+    for (int i=0;i<mList.size();i++) {
+        saveSet(i);
+    }
+    mSettings->mSettings.beginGroup(SETTING_COMPILTER_SETS);
+    mSettings->mSettings.setValue(SETTING_COMPILTER_SETS_DEFAULT_INDEX,mDefaultIndex);
+    mSettings->mSettings.setValue(SETTING_COMPILTER_SETS_COUNT,mList.size());
+    mSettings->mSettings.endGroup();
+}
+
+void Settings::CompilerSets::loadSets()
+{
+    mList.clear();
+    mSettings->mSettings.beginGroup(SETTING_COMPILTER_SETS);
+    mDefaultIndex =mSettings->mSettings.value(SETTING_COMPILTER_SETS_DEFAULT_INDEX,-1).toInt();
+    int listSize = mSettings->mSettings.value(SETTING_COMPILTER_SETS_COUNT,0).toInt();
+    mSettings->mSettings.endGroup();
+    for (int i=0;i<listSize;i++) {
+        PCompilerSet pSet=loadSet(i);
+        mList.push_back(pSet);
+    }
+}
+
+Settings::CompilerSetList &Settings::CompilerSets::list()
+{
+    return mList;
+}
+
+int Settings::CompilerSets::size() const
+{
+    return mList.size();
+}
+
+int Settings::CompilerSets::defaultIndex() const
+{
+    return mDefaultIndex;
+}
+
+void Settings::CompilerSets::setDefaultIndex(int value)
+{
+    mDefaultIndex = value;
+}
+
+void Settings::CompilerSets::saveSet(int index)
+{
+    PCompilerSet pSet = mList[index];
+    mSettings->mSettings.beginGroup(QString(SETTING_COMPILTER_SET).arg(index));
+    mSettings->mSettings.setValue("ccompiler", pSet->CCompilerName());
+    mSettings->mSettings.setValue("cppcompiler", pSet->cppCompilerName());
+    mSettings->mSettings.setValue("debugger", pSet->debuggerName());
+    mSettings->mSettings.setValue("make", pSet->makeName());
+    mSettings->mSettings.setValue("windres", pSet->resourceCompilerName());
+    mSettings->mSettings.setValue("profiler", pSet->profilerName());
+
+    // Save option string
+    mSettings->mSettings.setValue("Options", pSet->iniOptions());
+
+    // Save extra 'general' options
+    mSettings->mSettings.setValue("useCustomCompileParams", pSet->useCustomCompileParams());
+    mSettings->mSettings.setValue("customCompileParams", pSet->customCompileParams());
+    mSettings->mSettings.setValue("useCustomLinkParams", pSet->useCustomLinkParams());
+    mSettings->mSettings.setValue("customLinkParams", pSet->customLinkParams());
+    mSettings->mSettings.setValue("StaticLink", pSet->staticLink());
+    mSettings->mSettings.setValue("AddCharset", pSet->autoAddCharsetParams());
+
+    // Paths
+    mSettings->mSettings.setValue("Bins",pSet->binDirs());
+    mSettings->mSettings.setValue("C",pSet->CIncludeDirs());
+    mSettings->mSettings.setValue("Cpp",pSet->CppIncludeDirs());
+    mSettings->mSettings.setValue("Libs",pSet->LibDirs());
+
+    mSettings->mSettings.endGroup();
+}
+
+Settings::PCompilerSet Settings::CompilerSets::loadSet(int index)
+{
+    PCompilerSet pSet = std::make_shared<CompilerSet>();
+    mSettings->mSettings.beginGroup(QString(SETTING_COMPILTER_SET).arg(index));
+    pSet->setCCompilerName(mSettings->mSettings.value("ccompiler").toString());
+    pSet->setCppCompilerName(mSettings->mSettings.value("cppcompiler").toString());
+    pSet->setDebuggerName(mSettings->mSettings.value("debugger").toString());
+    pSet->setMakeName(mSettings->mSettings.value("make").toString());
+    pSet->setResourceCompilerName(mSettings->mSettings.value("windres").toString());
+    pSet->setProfilerName(mSettings->mSettings.value("profiler").toString());
+
+    // Save option string
+    pSet->setIniOptions(mSettings->mSettings.value("Options").toByteArray());
+
+    // Save extra 'general' options
+    pSet->setUseCustomCompileParams(mSettings->mSettings.value("useCustomCompileParams").toBool());
+    pSet->setCustomCompileParams(mSettings->mSettings.value("customCompileParams").toString());
+    pSet->setUseCustomLinkParams(mSettings->mSettings.value("useCustomLinkParams").toBool());
+    pSet->setCustomLinkParams(mSettings->mSettings.value("customLinkParams").toString());
+    pSet->setStaticLink(mSettings->mSettings.value("StaticLink").toBool());
+    pSet->setAutoAddCharsetParams(mSettings->mSettings.value("AddCharset").toBool());
+
+    // Paths
+    pSet->binDirs().clear();
+    pSet->binDirs().append(mSettings->mSettings.value("Bins").toStringList());
+    pSet->CIncludeDirs().clear();
+    pSet->CIncludeDirs().append(mSettings->mSettings.value("C").toStringList());
+    pSet->CppIncludeDirs().clear();
+    pSet->CppIncludeDirs().append(mSettings->mSettings.value("Cpp").toStringList());
+    pSet->LibDirs().clear();
+    pSet->LibDirs().append(mSettings->mSettings.value("Libs").toStringList());
+
+    mSettings->mSettings.endGroup();
+    return pSet;
 }

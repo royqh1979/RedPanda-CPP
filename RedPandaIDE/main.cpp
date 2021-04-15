@@ -55,11 +55,11 @@ int main(int argc, char *argv[])
     SystemConsts systemConsts;
     pSystemConsts = &systemConsts;
 
-    Settings::CompilerSet testSet("e:/workspace/contributes/Dev-CPP/MinGW32_GCC92");
-    qDebug() << testSet.binDirs();
-    qDebug() << testSet.CIncludeDirs();
-    qDebug() << testSet.CppIncludeDirs();
-    qDebug() << testSet.LibDirs();
+//    Settings::CompilerSet testSet("e:/workspace/contributes/Dev-CPP/MinGW32_GCC92");
+//    qDebug() << testSet.binDirs();
+//    qDebug() << testSet.CIncludeDirs();
+//    qDebug() << testSet.CppIncludeDirs();
+//    qDebug() << testSet.LibDirs();
 
     pSettings = createAppSettings();
     if (pSettings == nullptr) {
@@ -67,8 +67,15 @@ int main(int argc, char *argv[])
     }
     auto settings = std::unique_ptr<Settings>(pSettings);
 
+    //settings->compilerSets().addSets("e:/workspace/contributes/Dev-CPP/MinGW32_GCC92");
+    settings->compilerSets().loadSets();
+//    qDebug()<<settings->compilerSets().size();
+//    qDebug()<<settings->compilerSets().list().at(0)->binDirs();
     MainWindow mainWindow;
     pMainWindow = &mainWindow;
     mainWindow.show();
-    return app.exec();
+    int retCode = app.exec();
+    // save settings
+    settings->compilerSets().saveSets();
+    return retCode;
 }

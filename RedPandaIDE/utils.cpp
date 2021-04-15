@@ -128,3 +128,20 @@ bool directoryExists(const QString &file)
    QFileInfo dir(file);
    return dir.exists() && dir.isDir();
 }
+
+QString includeTrailingPathDelimiter(const QString &path)
+{
+    if (path.endsWith('/') || path.endsWith(QDir::separator())) {
+        return path;
+    } else {
+        return path + QDir::separator();
+    }
+}
+
+QString excludeTrailingPathDelimiter(const QString &path)
+{
+    int pos = path.length()-1;
+    while (pos>=0 && (path[pos]=='/' || path[pos]==QDir::separator()))
+        pos--;
+    return path.mid(0,pos+1);
+}
