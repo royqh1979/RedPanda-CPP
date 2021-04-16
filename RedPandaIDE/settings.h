@@ -78,7 +78,7 @@ public:
         CompilerSet& operator= (const CompilerSet& ) = delete;
         CompilerSet& operator= (const CompilerSet&& ) = delete;
 
-        //properties
+
         void addOption(const QString& name, const QString section, bool isC,
                 bool isCpp, bool isLinker,
                 int value, const QString& setting,
@@ -88,6 +88,8 @@ public:
         void setOption(const QString& setting, char valueChar);
         void setOption(PCompilerOption& option, char valueChar);
 
+        bool dirsValid(QString& msg);
+        //properties
         const QString& CCompilerName() const;
         void setCCompilerName(const QString& name);
         const QString& cppCompilerName() const;
@@ -202,11 +204,13 @@ public:
         void findSets();
         void saveSets();
         void loadSets();
+        void deleteSet(int index);
         //properties
         CompilerSetList& list();
         int size() const;
         int defaultIndex() const;
         void setDefaultIndex(int value);
+        PCompilerSet defaultSet();
     private:
         void saveSet(int index);
         PCompilerSet loadSet(int index);

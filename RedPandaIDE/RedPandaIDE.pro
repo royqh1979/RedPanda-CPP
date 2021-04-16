@@ -13,8 +13,11 @@ SOURCES += \
     editorlist.cpp \
     main.cpp \
     mainwindow.cpp \
+    settingsdialog/compilersetdirectorieswidget.cpp \
+    settingsdialog/compilersetoptionwidget.cpp \
     settings.cpp \
-    settingsdialog.cpp \
+    settingsdialog/settingsdialog.cpp \
+    settingsdialog/settingswidget.cpp \
     systemconsts.cpp \
     utils.cpp
 
@@ -22,14 +25,19 @@ HEADERS += \
     editor.h \
     editorlist.h \
     mainwindow.h \
+    settingsdialog/compilersetdirectorieswidget.h \
+    settingsdialog/compilersetoptionwidget.h \
     settings.h \
-    settingsdialog.h \
+    settingsdialog/settingsdialog.h \
+    settingsdialog/settingswidget.h \
     systemconsts.h \
     utils.h
 
 FORMS += \
     mainwindow.ui \
-    settingsdialog.ui
+    settingsdialog/compilersetdirectorieswidget.ui \
+    settingsdialog/compilersetoptionwidget.ui \
+    settingsdialog/settingsdialog.ui
 
 TRANSLATIONS += \
     RedPandaIDE_zh_CN.ts

@@ -193,9 +193,16 @@
     <addaction name="separator"/>
     <addaction name="actionSave"/>
     <addaction name="actionSaveAs"/>
-    <addaction name="actionSave_All"/>
+    <addaction name="actionSaveAll"/>
+   </widget>
+   <widget class="QMenu" name="menuTools">
+    <property name="title">
+     <string>Tools</string>
+    </property>
+    <addaction name="actionOptions"/>
    </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuTools"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <widget class="QToolBar" name="toolBar">
@@ -211,7 +218,7 @@
    <addaction name="actionNew"/>
    <addaction name="actionOpen"/>
    <addaction name="actionSave"/>
-   <addaction name="actionSave_All"/>
+   <addaction name="actionSaveAll"/>
   </widget>
   <widget class="QToolBar" name="toolBar_2">
    <property name="windowTitle">
@@ -276,7 +283,7 @@
     <string>Save As</string>
    </property>
   </action>
-  <action name="actionSave_All">
+  <action name="actionSaveAll">
    <property name="icon">
     <iconset>
      <normalon>:/icons/images/newlook24/071-saveall.png</normalon>
@@ -287,6 +294,11 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+Shift+S</string>
+   </property>
+  </action>
+  <action name="actionOptions">
+   <property name="text">
+    <string>Options</string>
    </property>
   </action>
  </widget>

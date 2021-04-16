@@ -9,6 +9,8 @@
 #include <QFileDialog>
 #include <QLabel>
 
+#include <settingsdialog/settingsdialog.h>
+
 MainWindow* pMainWindow;
 
 MainWindow::MainWindow(QWidget *parent)
@@ -130,4 +132,10 @@ void MainWindow::on_actionSaveAs_triggered()
     if (editor != NULL) {
         editor->saveAs();
     }
+}
+
+void MainWindow::on_actionOptions_triggered()
+{
+    SettingsDialog settingsDialog;
+    settingsDialog.exec();
 }

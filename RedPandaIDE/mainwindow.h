@@ -35,6 +35,8 @@ private slots:
 
     void on_actionSaveAs_triggered();
 
+    void on_actionOptions_triggered();
+
 private:
     void setupActions();
 

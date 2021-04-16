@@ -223,6 +223,11 @@ void Settings::CompilerSet::setOption(PCompilerOption &option, char valueChar)
     option->value = charToValue(valueChar);
 }
 
+bool Settings::CompilerSet::dirsValid(QString &msg)
+{
+    return true;
+}
+
 const QString &Settings::CompilerSet::CCompilerName() const
 {
     return mCCompilerName;
@@ -987,6 +992,28 @@ void Settings::CompilerSets::loadSets()
         PCompilerSet pSet=loadSet(i);
         mList.push_back(pSet);
     }
+
+    PCompilerSet pCurrentSet = defaultSet();
+    if (pCurrentSet) {
+        QString msg;
+        if (!pCurrentSet->dirsValid(msg)) {
+
+        }
+    }
+}
+
+void Settings::CompilerSets::deleteSet(int index)
+{
+    // Erase all sections at and above from disk
+    for (int i=index;i<mList.size();i++) {
+        mSettings->mSettings.beginGroup(QString(SETTING_COMPILTER_SET).arg(i));
+        mSettings->mSettings.remove("");
+        mSettings->mSettings.endGroup();
+    }
+    mList.erase(std::begin(mList)+index);
+    for (int i=index;i<mList.size();i++) {
+        saveSet(i);
+    }
 }
 
 Settings::CompilerSetList &Settings::CompilerSets::list()
@@ -1007,6 +1034,14 @@ int Settings::CompilerSets::defaultIndex() const
 void Settings::CompilerSets::setDefaultIndex(int value)
 {
     mDefaultIndex = value;
+}
+
+Settings::PCompilerSet Settings::CompilerSets::defaultSet()
+{
+    if (mDefaultIndex>=0 && mDefaultIndex<mList.size()) {
+        return mList[mDefaultIndex];
+    }
+    return PCompilerSet();
 }
 
 void Settings::CompilerSets::saveSet(int index)
