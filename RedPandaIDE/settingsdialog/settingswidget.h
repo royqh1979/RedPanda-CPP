@@ -14,6 +14,7 @@ public:
     void load();
     void save();
 signals:
+    void settingsChanged(bool changed);
 
 protected:
     virtual void doLoad() = 0;
@@ -21,7 +22,7 @@ protected:
 public:
     const QString& group();
     const QString& name();
-    bool settingsChanged();
+    bool isSettingsChanged();
 public slots:
     void setSettingsChanged();
     void clearSettingsChanged();

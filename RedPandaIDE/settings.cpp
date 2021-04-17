@@ -5,6 +5,7 @@
 #include "utils.h"
 #include <QDir>
 #include "systemconsts.h"
+#include <QDebug>
 
 const char ValueToChar[28] = {'0', '1', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',
                               'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
@@ -43,11 +44,21 @@ void Settings::setValue(const QString& group, const QString &key, const QVariant
     mSettings.setValue(key,value);
 }
 
+void Settings::setValue(const QString &key, const QVariant &value)
+{
+    mSettings.setValue(key,value);
+}
+
 QVariant Settings::value(const QString& group, const QString &key) {
     mSettings.beginGroup(group);
     auto act = finally([this] {
         this->mSettings.endGroup();
     });
+    return mSettings.value(key);
+}
+
+QVariant Settings::value(const QString &key)
+{
     return mSettings.value(key);
 }
 
@@ -71,9 +82,9 @@ Settings::Dirs::Dirs(Settings *settings):
 {
 }
 
-const QString Settings::Dirs::app() const
+QString Settings::Dirs::app() const
 {
-    QApplication::instance()->applicationDirPath();
+    return QApplication::instance()->applicationDirPath();
 }
 
 Settings::_Base::_Base(Settings *settings, const QString &groupName):
@@ -132,23 +143,25 @@ Settings::CompilerSet::CompilerSet(const QString& compilerFolder):
     if (!compilerFolder.isEmpty()) {
         setProperties(compilerFolder+"/bin");
 
+        //manually set the directories
+        setDirectories(compilerFolder);
+
         setExecutables();
 
-        //manually set the directories
-        setDirectories();
-
         setUserInput();
+
+        setDefines();
     }
     setOptions();
 }
 
 Settings::CompilerSet::CompilerSet(const Settings::CompilerSet &set):
-    mCCompilerName(set.mCCompilerName),
-    mCppCompilerName(set.mCppCompilerName),
-    mMakeName(set.mMakeName),
-    mDebuggerName(set.mDebuggerName),
-    mProfilerName(set.mProfilerName),
-    mResourceCompilerName(set.mResourceCompilerName),
+    mCCompiler(set.mCCompiler),
+    mCppCompiler(set.mCppCompiler),
+    mMake(set.mMake),
+    mDebugger(set.mDebugger),
+    mProfiler(set.mProfiler),
+    mResourceCompiler(set.mResourceCompiler),
     mBinDirs(set.mBinDirs),
     mCIncludeDirs(set.mCIncludeDirs),
     mCppIncludeDirs(set.mCppIncludeDirs),
@@ -157,7 +170,6 @@ Settings::CompilerSet::CompilerSet(const Settings::CompilerSet &set):
     mVersion(set.mVersion),
     mType(set.mType),
     mName(set.mName),
-    mFolder(set.mFolder),
     mDefines(set.mDefines),
     mTarget(set.mTarget),
     mUseCustomCompileParams(set.mUseCustomCompileParams),
@@ -228,64 +240,64 @@ bool Settings::CompilerSet::dirsValid(QString &msg)
     return true;
 }
 
-const QString &Settings::CompilerSet::CCompilerName() const
+const QString &Settings::CompilerSet::CCompiler() const
 {
-    return mCCompilerName;
+    return mCCompiler;
 }
 
-void Settings::CompilerSet::setCCompilerName(const QString &name)
+void Settings::CompilerSet::setCCompiler(const QString &name)
 {
-    mCCompilerName = name;
+    mCCompiler = name;
 }
 
-const QString &Settings::CompilerSet::cppCompilerName() const
+const QString &Settings::CompilerSet::cppCompiler() const
 {
-    return mCppCompilerName;
+    return mCppCompiler;
 }
 
-void Settings::CompilerSet::setCppCompilerName(const QString &name)
+void Settings::CompilerSet::setCppCompiler(const QString &name)
 {
-    mCppCompilerName = name;
+    mCppCompiler = name;
 }
 
-const QString &Settings::CompilerSet::makeName() const
+const QString &Settings::CompilerSet::make() const
 {
-    return mMakeName;
+    return mMake;
 }
 
-void Settings::CompilerSet::setMakeName(const QString &name)
+void Settings::CompilerSet::setMake(const QString &name)
 {
-    mMakeName = name;
+    mMake = name;
 }
 
-const QString &Settings::CompilerSet::debuggerName() const
+const QString &Settings::CompilerSet::debugger() const
 {
-    return mDebuggerName;
+    return mDebugger;
 }
 
-void Settings::CompilerSet::setDebuggerName(const QString &name)
+void Settings::CompilerSet::setDebugger(const QString &name)
 {
-    mDebuggerName = name;
+    mDebugger = name;
 }
 
-const QString &Settings::CompilerSet::profilerName() const
+const QString &Settings::CompilerSet::profiler() const
 {
-    return mProfilerName;
+    return mProfiler;
 }
 
-void Settings::CompilerSet::setProfilerName(const QString &name)
+void Settings::CompilerSet::setProfiler(const QString &name)
 {
-    mProfilerName = name;
+    mProfiler = name;
 }
 
-const QString &Settings::CompilerSet::resourceCompilerName() const
+const QString &Settings::CompilerSet::resourceCompiler() const
 {
-    return mResourceCompilerName;
+    return mResourceCompiler;
 }
 
-void Settings::CompilerSet::setResourceCompilerName(const QString &name)
+void Settings::CompilerSet::setResourceCompiler(const QString &name)
 {
-    mResourceCompilerName = name;
+    mResourceCompiler = name;
 }
 
 QStringList &Settings::CompilerSet::binDirs()
@@ -346,16 +358,6 @@ const QString &Settings::CompilerSet::name()
 void Settings::CompilerSet::setName(const QString &value)
 {
     mName = value;
-}
-
-const QString &Settings::CompilerSet::folder()
-{
-    return mFolder;
-}
-
-void Settings::CompilerSet::setFolder(const QString &value)
-{
-    mFolder = value;
 }
 
 QStringList& Settings::CompilerSet::defines()
@@ -490,7 +492,6 @@ void Settings::CompilerSet::setProperties(const QString &binDir)
         delimPos2++;
     mVersion = output.mid(delimPos1,delimPos2-delimPos1);
 
-
     // Find compiler builder
     delimPos1 = delimPos2;
     while ((delimPos1 < output.length()) && !(output[delimPos1] == '('))
@@ -517,7 +518,7 @@ void Settings::CompilerSet::setProperties(const QString &binDir)
     // Set compiler folder
     QDir tmpDir(binDir);
     tmpDir.cdUp();
-    mFolder = tmpDir.path();
+    QString folder = tmpDir.path();
 
     // Obtain compiler target
     arguments.clear();
@@ -525,10 +526,10 @@ void Settings::CompilerSet::setProperties(const QString &binDir)
     mDumpMachine = getCompilerOutput(binDir, GCC_PROGRAM, arguments);
 
     // Add the default directories
-    addExistingDirectory(mBinDirs, mFolder + QDir::separator() + "bin");
-    addExistingDirectory(mLibDirs, mFolder + QDir::separator() + "lib");
-    addExistingDirectory(mCIncludeDirs, mFolder + QDir::separator() + "include");
-    addExistingDirectory(mCppIncludeDirs, mFolder + QDir::separator() + "include");
+    addExistingDirectory(mBinDirs, folder + QDir::separator() + "bin");
+    addExistingDirectory(mLibDirs, folder + QDir::separator() + "lib");
+    addExistingDirectory(mCIncludeDirs, folder + QDir::separator() + "include");
+    addExistingDirectory(mCppIncludeDirs, folder + QDir::separator() + "include");
 
     // Find default directories
     arguments.clear();
@@ -602,15 +603,19 @@ void Settings::CompilerSet::setProperties(const QString &binDir)
         }
     }
 
+}
+
+void Settings::CompilerSet::setDefines() {
     // get default defines
-    arguments.clear();
+    QStringList arguments;
     arguments.append("-dM");
     arguments.append("-E");
     arguments.append("-x");
     arguments.append("c++");
     arguments.append("-std=c++17");
     arguments.append(NULL_FILE);
-    output = getCompilerOutput(binDir,GCC_PROGRAM,arguments);
+    QFileInfo ccompiler(mCCompiler);
+    QByteArray output = getCompilerOutput(ccompiler.absolutePath(),ccompiler.baseName(),arguments);
     // 'cpp.exe -dM -E -x c++ -std=c++17 NUL'
 
     mDefines.clear();
@@ -625,72 +630,72 @@ void Settings::CompilerSet::setProperties(const QString &binDir)
 
 void Settings::CompilerSet::setExecutables()
 {
-    mCCompilerName = GCC_PROGRAM;
-    mCppCompilerName = GPP_PROGRAM;
-    mDebuggerName = GDB_PROGRAM;
-    mMakeName = MAKE_PROGRAM;
-    mResourceCompilerName = WINDRES_PROGRAM;
-    mProfilerName = GPROF_PROGRAM;
+    mCCompiler = findProgramInBinDirs(GCC_PROGRAM);
+    mCppCompiler = findProgramInBinDirs(GPP_PROGRAM);
+    mDebugger = findProgramInBinDirs(GDB_PROGRAM);
+    mMake = findProgramInBinDirs(MAKE_PROGRAM);
+    mResourceCompiler = findProgramInBinDirs(WINDRES_PROGRAM);
+    mProfiler = findProgramInBinDirs(GPROF_PROGRAM);
 }
 
-void Settings::CompilerSet::setDirectories()
+void Settings::CompilerSet::setDirectories(const QString& folder)
 {
     // Try to obtain our target/autoconf folder
     if (!mDumpMachine.isEmpty()) {
         //mingw-w64 bin folder
         addExistingDirectory(mBinDirs,
-            mFolder + QDir::separator() + "lib"
+            folder + QDir::separator() + "lib"
             + QDir::separator() + "gcc" + mDumpMachine
             + QDir::separator() + mVersion);
 
         // Regular include folder
-        addExistingDirectory(mCIncludeDirs, mFolder + QDir::separator() + mDumpMachine + QDir::separator() + "include");
-        addExistingDirectory(mCppIncludeDirs, mFolder + QDir::separator()+ mDumpMachine + QDir::separator() + "include");
+        addExistingDirectory(mCIncludeDirs, folder + QDir::separator() + mDumpMachine + QDir::separator() + "include");
+        addExistingDirectory(mCppIncludeDirs, folder + QDir::separator()+ mDumpMachine + QDir::separator() + "include");
 
         // Other include folder?
         addExistingDirectory(mCIncludeDirs,
-            mFolder + QDir::separator() + "lib" + QDir::separator() + "gcc"
+            folder + QDir::separator() + "lib" + QDir::separator() + "gcc"
             + QDir::separator() + mDumpMachine + QDir::separator()
             + mVersion + QDir::separator() + "include");
         addExistingDirectory(mCppIncludeDirs,
-            mFolder + QDir::separator() + "lib" + QDir::separator() + "gcc"
+            folder + QDir::separator() + "lib" + QDir::separator() + "gcc"
             + QDir::separator() + mDumpMachine + QDir::separator()
             + mVersion + QDir::separator() + "include");
 
         addExistingDirectory(mCIncludeDirs,
-            mFolder + QDir::separator()  + "lib"
+            folder + QDir::separator()  + "lib"
                 + QDir::separator()  + "gcc" + QDir::separator()  + mDumpMachine
                 + QDir::separator() + mVersion + QDir::separator() + "include-fixed");
         addExistingDirectory(mCppIncludeDirs,
-            mFolder + QDir::separator()  + "lib"
+            folder + QDir::separator()  + "lib"
                 + QDir::separator()  + "gcc" + QDir::separator()  + mDumpMachine
                 + QDir::separator() + mVersion + QDir::separator() + "include-fixed");
 
         // C++ only folder (mingw.org)
         addExistingDirectory(mCppIncludeDirs,
-            mFolder + QDir::separator() + "lib" + QDir::separator() + "gcc"
+            folder + QDir::separator() + "lib" + QDir::separator() + "gcc"
             + QDir::separator() + mDumpMachine + QDir::separator() + mVersion
             + QDir::separator() + "include" + QDir::separator() + "c++");
         addExistingDirectory(mCppIncludeDirs,
-            mFolder + QDir::separator() + "lib" + QDir::separator() + "gcc"
+            folder + QDir::separator() + "lib" + QDir::separator() + "gcc"
             + QDir::separator() + mDumpMachine + QDir::separator() + mVersion
             + QDir::separator() + "include" + QDir::separator() + "c++"
             + QDir::separator() + mDumpMachine );
         addExistingDirectory(mCppIncludeDirs,
-            mFolder + QDir::separator() + "lib" + QDir::separator() + "gcc"
+            folder + QDir::separator() + "lib" + QDir::separator() + "gcc"
             + QDir::separator() + mDumpMachine + QDir::separator() + mVersion
             + QDir::separator() + "include" + QDir::separator() + "c++"
             + QDir::separator() + "backward");
 
         // C++ only folder (Mingw-w64)
         addExistingDirectory(mCppIncludeDirs,
-            mFolder + QDir::separator()  + "include" + QDir::separator() + "c++"
+            folder + QDir::separator()  + "include" + QDir::separator() + "c++"
             + QDir::separator()  + mVersion );
         addExistingDirectory(mCppIncludeDirs,
-            mFolder + QDir::separator()  + "include" + QDir::separator() + "c++"
+            folder + QDir::separator()  + "include" + QDir::separator() + "c++"
             + QDir::separator()  + mVersion + QDir::separator() + mDumpMachine );
         addExistingDirectory(mCppIncludeDirs,
-            mFolder + QDir::separator()  + "include" + QDir::separator() + "c++"
+            folder + QDir::separator()  + "include" + QDir::separator() + "c++"
             + QDir::separator()  + mVersion + QDir::separator() + "backward");
     }
 }
@@ -838,6 +843,17 @@ void Settings::CompilerSet::setOptions()
     addOption(tr("Use pipes instead of temporary files during compilation (-pipe)"), groupName, true, true, false, 0, "-pipe");
 }
 
+QString Settings::CompilerSet::findProgramInBinDirs(const QString name)
+{
+    for (const QString& dir : mBinDirs) {
+        QFileInfo f(includeTrailingPathDelimiter(dir) + name);
+        if (f.exists() && f.isExecutable()) {
+            return f.absoluteFilePath();
+        }
+    }
+    return QString();
+}
+
 QByteArray Settings::CompilerSet::iniOptions() const
 {
     QByteArray result;
@@ -966,6 +982,7 @@ void Settings::CompilerSets::clearSets()
 
 void Settings::CompilerSets::findSets()
 {
+    clearSets();
     addSets(includeTrailingPathDelimiter(mSettings->dirs().app())+"MinGW32");
     addSets(includeTrailingPathDelimiter(mSettings->dirs().app())+"MinGW64");
 }
@@ -1044,16 +1061,49 @@ Settings::PCompilerSet Settings::CompilerSets::defaultSet()
     return PCompilerSet();
 }
 
+void Settings::CompilerSets::savePath(const QString& name, const QString& path) {
+    QString s;
+    QString prefix1 = excludeTrailingPathDelimiter(mSettings->mDirs.app()) + "/";
+    QString prefix2 = excludeTrailingPathDelimiter(mSettings->mDirs.app()) + QDir::separator();
+    if (path.startsWith(prefix1, Qt::CaseInsensitive)) {
+        s = "%AppPath%/"+ path.mid(prefix1.length());
+    } else if (path.startsWith(prefix2, Qt::CaseInsensitive)) {
+        s = "%AppPath%/"+ path.mid(prefix2.length());
+    } else {
+        s= path;
+    }
+    mSettings->mSettings.setValue(name,s);
+}
+
+void Settings::CompilerSets::savePathList(const QString& name, const QStringList& pathList) {
+    QStringList sl;
+    for (const QString& path: pathList) {
+        QString s;
+        QString prefix1 = excludeTrailingPathDelimiter(mSettings->mDirs.app()) + "/";
+        QString prefix2 = excludeTrailingPathDelimiter(mSettings->mDirs.app()) + QDir::separator();
+        if (path.startsWith(prefix1, Qt::CaseInsensitive)) {
+            s = "%AppPath%/"+ path.mid(prefix1.length());
+        } else if (path.startsWith(prefix2, Qt::CaseInsensitive)) {
+            s = "%AppPath%/" + path.mid(prefix2.length());
+        } else {
+            s= path;
+        }
+        sl.append(s);
+    }
+    mSettings->mSettings.setValue(name,sl);
+}
+
 void Settings::CompilerSets::saveSet(int index)
 {
     PCompilerSet pSet = mList[index];
     mSettings->mSettings.beginGroup(QString(SETTING_COMPILTER_SET).arg(index));
-    mSettings->mSettings.setValue("ccompiler", pSet->CCompilerName());
-    mSettings->mSettings.setValue("cppcompiler", pSet->cppCompilerName());
-    mSettings->mSettings.setValue("debugger", pSet->debuggerName());
-    mSettings->mSettings.setValue("make", pSet->makeName());
-    mSettings->mSettings.setValue("windres", pSet->resourceCompilerName());
-    mSettings->mSettings.setValue("profiler", pSet->profilerName());
+
+    savePath("ccompiler", pSet->CCompiler());
+    savePath("cppcompiler", pSet->cppCompiler());
+    savePath("debugger", pSet->debugger());
+    savePath("make", pSet->make());
+    savePath("windres", pSet->resourceCompiler());
+    savePath("profiler", pSet->profiler());
 
     // Save option string
     mSettings->mSettings.setValue("Options", pSet->iniOptions());
@@ -1066,25 +1116,56 @@ void Settings::CompilerSets::saveSet(int index)
     mSettings->mSettings.setValue("StaticLink", pSet->staticLink());
     mSettings->mSettings.setValue("AddCharset", pSet->autoAddCharsetParams());
 
+    // Misc. properties
+    mSettings->mSettings.setValue("DumpMachine", pSet->dumpMachine());
+    mSettings->mSettings.setValue("Version", pSet->version());
+    mSettings->mSettings.setValue("Type", pSet->type());
+    mSettings->mSettings.setValue("Name", pSet->name());
+    mSettings->mSettings.setValue("Target", pSet->target());
+
     // Paths
-    mSettings->mSettings.setValue("Bins",pSet->binDirs());
-    mSettings->mSettings.setValue("C",pSet->CIncludeDirs());
-    mSettings->mSettings.setValue("Cpp",pSet->CppIncludeDirs());
-    mSettings->mSettings.setValue("Libs",pSet->LibDirs());
+    savePathList("Bins",pSet->binDirs());
+    savePathList("C",pSet->CIncludeDirs());
+    savePathList("Cpp",pSet->CppIncludeDirs());
+    savePathList("Libs",pSet->LibDirs());
 
     mSettings->mSettings.endGroup();
+}
+
+QString Settings::CompilerSets::loadPath(const QString &name)
+{
+    QString s =  mSettings->mSettings.value(name).toString();
+    QString prefix = "%AppPath%/";
+    if (s.startsWith(prefix)) {
+        s = includeTrailingPathDelimiter(mSettings->mDirs.app()) + s.mid(prefix.length());
+    }
+    return QFileInfo(s).absoluteFilePath();
+}
+
+void Settings::CompilerSets::loadPathList(const QString &name, QStringList& list)
+{
+    list.clear();
+    QStringList sl = mSettings->mSettings.value(name).toStringList();
+    QString prefix = "%AppPath%/";
+    for (QString& s:sl) {
+        if (s.startsWith(prefix)) {
+            s = includeTrailingPathDelimiter(mSettings->mDirs.app()) + s.mid(prefix.length());
+        }
+        list.append(QFileInfo(s).absoluteFilePath());
+    }
 }
 
 Settings::PCompilerSet Settings::CompilerSets::loadSet(int index)
 {
     PCompilerSet pSet = std::make_shared<CompilerSet>();
     mSettings->mSettings.beginGroup(QString(SETTING_COMPILTER_SET).arg(index));
-    pSet->setCCompilerName(mSettings->mSettings.value("ccompiler").toString());
-    pSet->setCppCompilerName(mSettings->mSettings.value("cppcompiler").toString());
-    pSet->setDebuggerName(mSettings->mSettings.value("debugger").toString());
-    pSet->setMakeName(mSettings->mSettings.value("make").toString());
-    pSet->setResourceCompilerName(mSettings->mSettings.value("windres").toString());
-    pSet->setProfilerName(mSettings->mSettings.value("profiler").toString());
+
+    pSet->setCCompiler(loadPath("ccompiler"));
+    pSet->setCppCompiler(loadPath("cppcompiler"));
+    pSet->setDebugger(loadPath("debugger"));
+    pSet->setMake(loadPath("make"));
+    pSet->setResourceCompiler(loadPath("windres"));
+    pSet->setProfiler(loadPath("profiler"));
 
     // Save option string
     pSet->setIniOptions(mSettings->mSettings.value("Options").toByteArray());
@@ -1097,16 +1178,21 @@ Settings::PCompilerSet Settings::CompilerSets::loadSet(int index)
     pSet->setStaticLink(mSettings->mSettings.value("StaticLink").toBool());
     pSet->setAutoAddCharsetParams(mSettings->mSettings.value("AddCharset").toBool());
 
+    pSet->setDumpMachine(mSettings->mSettings.value("DumpMachine").toString());
+    pSet->setVersion(mSettings->mSettings.value("Version").toString());
+    pSet->setType(mSettings->mSettings.value("Type").toString());
+    pSet->setName(mSettings->mSettings.value("Name").toString());
+    pSet->setTarget(mSettings->mSettings.value("Target").toString());
+
+
     // Paths
-    pSet->binDirs().clear();
-    pSet->binDirs().append(mSettings->mSettings.value("Bins").toStringList());
-    pSet->CIncludeDirs().clear();
-    pSet->CIncludeDirs().append(mSettings->mSettings.value("C").toStringList());
-    pSet->CppIncludeDirs().clear();
-    pSet->CppIncludeDirs().append(mSettings->mSettings.value("Cpp").toStringList());
-    pSet->LibDirs().clear();
-    pSet->LibDirs().append(mSettings->mSettings.value("Libs").toStringList());
+    loadPathList("Bins",pSet->binDirs());
+    loadPathList("C",pSet->CIncludeDirs());
+    loadPathList("Cpp",pSet->CppIncludeDirs());
+    loadPathList("Libs",pSet->LibDirs());
 
     mSettings->mSettings.endGroup();
+
+    pSet->setDefines();
     return pSet;
 }

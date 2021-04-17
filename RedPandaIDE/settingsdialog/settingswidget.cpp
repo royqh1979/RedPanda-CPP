@@ -1,6 +1,7 @@
 #include "settingswidget.h"
 
 #include <QCheckBox>
+#include <QComboBox>
 #include <QLineEdit>
 #include <QPlainTextEdit>
 
@@ -23,6 +24,9 @@ void SettingsWidget::init()
     }
     for (QPlainTextEdit* p:findChildren<QPlainTextEdit*>()) {
         connect(p, &QPlainTextEdit::textChanged, this, &SettingsWidget::setSettingsChanged);
+    }
+    for (QComboBox* p: findChildren<QComboBox*>()) {
+        connect(p, QOverload<int>::of(&QComboBox::currentIndexChanged) ,this, &SettingsWidget::setSettingsChanged);
     }
 }
 
@@ -48,7 +52,7 @@ const QString &SettingsWidget::name()
     return mName;
 }
 
-bool SettingsWidget::settingsChanged()
+bool SettingsWidget::isSettingsChanged()
 {
     return mSettingsChanged;
 }
@@ -56,9 +60,11 @@ bool SettingsWidget::settingsChanged()
 void SettingsWidget::setSettingsChanged()
 {
     mSettingsChanged = true;
+    emit settingsChanged(true);
 }
 
 void SettingsWidget::clearSettingsChanged()
 {
     mSettingsChanged = false;
+    emit settingsChanged(false);
 }

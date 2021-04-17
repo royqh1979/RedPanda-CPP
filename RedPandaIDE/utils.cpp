@@ -109,7 +109,7 @@ QByteArray runAndGetOutput(const QString &cmd, const QString& workingDir, const 
 
 bool isNonPrintableAsciiChar(char ch)
 {
-    return (ch>32) or (ch<0);
+    return (ch<=32) and (ch>=0);
 }
 
 bool fileExists(const QString &file)

@@ -68,7 +68,13 @@ int main(int argc, char *argv[])
     auto settings = std::unique_ptr<Settings>(pSettings);
 
     //settings->compilerSets().addSets("e:/workspace/contributes/Dev-CPP/MinGW32_GCC92");
+//    settings->compilerSets().findSets();
+//    settings->compilerSets().saveSets();
     settings->compilerSets().loadSets();
+//    qDebug() << settings->compilerSets().defaultSet()->binDirs();
+//    settings->compilerSets().loadSets();
+//    qDebug() << settings->compilerSets().defaultSet()->defines();
+//    qDebug() << settings->compilerSets().defaultSet()->CCompiler();
 //    qDebug()<<settings->compilerSets().size();
 //    qDebug()<<settings->compilerSets().list().at(0)->binDirs();
     MainWindow mainWindow;
@@ -76,6 +82,6 @@ int main(int argc, char *argv[])
     mainWindow.show();
     int retCode = app.exec();
     // save settings
-    settings->compilerSets().saveSets();
+//    settings->compilerSets().saveSets();
     return retCode;
 }

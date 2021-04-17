@@ -58,7 +58,7 @@ public:
     class Dirs: public _Base {
     public:
         explicit Dirs(Settings * settings);
-        const QString app() const;
+        QString app() const;
     };
 
     class Editor: public _Base {
@@ -90,18 +90,18 @@ public:
 
         bool dirsValid(QString& msg);
         //properties
-        const QString& CCompilerName() const;
-        void setCCompilerName(const QString& name);
-        const QString& cppCompilerName() const;
-        void setCppCompilerName(const QString& name);
-        const QString& makeName() const;
-        void setMakeName(const QString& name);
-        const QString& debuggerName() const;
-        void setDebuggerName(const QString& name);
-        const QString& profilerName() const;
-        void setProfilerName(const QString& name);
-        const QString& resourceCompilerName() const;
-        void setResourceCompilerName(const QString& name);
+        const QString& CCompiler() const;
+        void setCCompiler(const QString& name);
+        const QString& cppCompiler() const;
+        void setCppCompiler(const QString& name);
+        const QString& make() const;
+        void setMake(const QString& name);
+        const QString& debugger() const;
+        void setDebugger(const QString& name);
+        const QString& profiler() const;
+        void setProfiler(const QString& name);
+        const QString& resourceCompiler() const;
+        void setResourceCompiler(const QString& name);
 
         QStringList& binDirs();
         QStringList& CIncludeDirs();
@@ -116,8 +116,6 @@ public:
         void setType(const QString& value);
         const QString& name();
         void setName(const QString& value);
-        const QString& folder();
-        void setFolder(const QString& value);
         QStringList& defines();
         const QString& target();
         void setTarget(const QString& value);
@@ -141,26 +139,31 @@ public:
         QByteArray iniOptions() const;
         void setIniOptions(const QByteArray& value);
 
+        //load hard defines
+        void setDefines();
+
     private:
         int charToValue(char valueChar);
 
         // Initialization
         void setProperties(const QString& binDir);
         void setExecutables();
-        void setDirectories();
+        void setDirectories(const QString& folder);
         void setUserInput();
         void setOptions();
+
+        QString findProgramInBinDirs(const QString name);
 
         QByteArray getCompilerOutput(const QString& binDir, const QString& binFile,
                                      const QStringList& arguments);
     private:
         // Executables, most are hardcoded
-        QString mCCompilerName;
-        QString mCppCompilerName;
-        QString mMakeName;
-        QString mDebuggerName;
-        QString mProfilerName;
-        QString mResourceCompilerName;
+        QString mCCompiler;
+        QString mCppCompiler;
+        QString mMake;
+        QString mDebugger;
+        QString mProfiler;
+        QString mResourceCompiler;
 
         // Directories, mostly hardcoded too
         QStringList mBinDirs;
@@ -173,7 +176,6 @@ public:
         QString mVersion; // "4.7.1"
         QString mType; // "TDM-GCC", "MinGW"
         QString mName; // "TDM-GCC 4.7.1 Release"
-        QString mFolder; // MinGW64, MinGW32
         QStringList mDefines; // list of predefined constants
         QString mTarget; // 'X86_64' / 'i686'
 
@@ -212,7 +214,11 @@ public:
         void setDefaultIndex(int value);
         PCompilerSet defaultSet();
     private:
+        void savePath(const QString& name, const QString& path);
+        void savePathList(const QString& name, const QStringList& pathList);
         void saveSet(int index);
+        QString loadPath(const QString& name);
+        void loadPathList(const QString& name, QStringList& list);
         PCompilerSet loadSet(int index);
         CompilerSetList mList;
         int mDefaultIndex;
@@ -228,7 +234,9 @@ public:
     Settings& operator= (const Settings&& settings) = delete;
     void setDefault(const QString& group, const QString &key, const QVariant &value);
     void setValue(const QString& group, const QString &key, const QVariant &value);
+    void setValue(const QString &key, const QVariant &value);
     QVariant value(const QString& group, const QString &key);
+    QVariant value(const QString &key);
 
     Dirs& dirs();
     Editor& editor();
