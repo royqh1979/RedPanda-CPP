@@ -3,6 +3,7 @@
 #include "settingswidget.h"
 #include "compilersetoptionwidget.h"
 #include <QDebug>
+#include <QMessageBox>
 
 SettingsDialog::SettingsDialog(QWidget *parent) :
     QDialog(parent),
@@ -57,10 +58,7 @@ void SettingsDialog::on_widgetsView_clicked(const QModelIndex &index)
         return;
     int i = index.data(GetWidgetIndexRole).toInt();
     if (i>=0) {
-        if (ui->scrollArea->widget()!=ui->scrollAreaWidgetContents) {
-            //todo save change
-
-        }
+        saveCurrentPageSettings(true);
         SettingsWidget* pWidget = mSettingWidgets[i];
         ui->scrollArea->setWidget(pWidget);
         ui->lblWidgetCaption->setText(QString("%1 > %2").arg(pWidget->group()).arg(pWidget->name()));
@@ -72,4 +70,37 @@ void SettingsDialog::on_widgetsView_clicked(const QModelIndex &index)
 void SettingsDialog::widget_settings_changed(bool value)
 {
     ui->btnApply->setEnabled(value);
+}
+
+void SettingsDialog::on_btnCancle_pressed()
+{
+    this->close();
+}
+
+void SettingsDialog::on_btnApply_pressed()
+{
+    saveCurrentPageSettings(false);
+}
+
+void SettingsDialog::on_btnOk_pressed()
+{
+    saveCurrentPageSettings(false);
+    this->close();
+}
+
+void SettingsDialog::saveCurrentPageSettings(bool confirm)
+{
+    if (ui->scrollArea->widget()!=ui->scrollAreaWidgetContents)
+        return;
+    SettingsWidget* pWidget = (SettingsWidget*) ui->scrollArea->widget();
+    if (!pWidget->isSettingsChanged())
+        return;
+    if (confirm) {
+        if (QMessageBox::information(this,tr("Save Changes"),
+               tr("There are changes in the settings, do you want to save them before swtich to other page?"),
+               QMessageBox::Yes, QMessageBox::No)!=QMessageBox::Yes) {
+        return;
+    }
+    pWidget->save();
+    ui->btnApply->setEnabled(false);
 }
