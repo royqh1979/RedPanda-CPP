@@ -106,7 +106,7 @@ public:
         QStringList& binDirs();
         QStringList& CIncludeDirs();
         QStringList& CppIncludeDirs();
-        QStringList& LibDirs();
+        QStringList& libDirs();
 
         const QString& dumpMachine();
         void setDumpMachine(const QString& value);

@@ -315,7 +315,7 @@ QStringList &Settings::CompilerSet::CppIncludeDirs()
     return mCppIncludeDirs;
 }
 
-QStringList &Settings::CompilerSet::LibDirs()
+QStringList &Settings::CompilerSet::libDirs()
 {
     return mLibDirs;
 }
@@ -871,6 +871,7 @@ void Settings::CompilerSet::setIniOptions(const QByteArray &value)
            break;
        }
        p->value = charToValue(value[i]);
+       i++;
    }
 }
 
@@ -906,7 +907,7 @@ Settings::PCompilerSet Settings::CompilerSets::addSet(const QString &folder)
     return p;
 }
 
-static void setReleaseOptions(Settings::PCompilerSet& pSet) {
+static void setReleaseOptions(Settings::PCompilerSet pSet) {
     PCompilerOption pOption = pSet->findOption("-O");
     if (pOption) {
         pSet->setOption(pOption,'a');
@@ -918,7 +919,7 @@ static void setReleaseOptions(Settings::PCompilerSet& pSet) {
     }
 }
 
-static void setDebugOptions(Settings::PCompilerSet& pSet) {
+static void setDebugOptions(Settings::PCompilerSet pSet) {
     PCompilerOption pOption = pSet->findOption("-g3");
     if (pOption) {
         pSet->setOption(pOption,'1');
@@ -933,7 +934,7 @@ static void setDebugOptions(Settings::PCompilerSet& pSet) {
     }
 }
 
-static void setProfileOptions(Settings::PCompilerSet& pSet) {
+static void setProfileOptions(Settings::PCompilerSet pSet) {
     PCompilerOption pOption = pSet->findOption("-pg");
     if (pOption) {
         pSet->setOption(pOption,'1');
@@ -978,6 +979,7 @@ void Settings::CompilerSets::clearSets()
         mSettings->mSettings.endGroup();
     }
     mList.clear();
+    mDefaultIndex = -1;
 }
 
 void Settings::CompilerSets::findSets()
@@ -1127,7 +1129,7 @@ void Settings::CompilerSets::saveSet(int index)
     savePathList("Bins",pSet->binDirs());
     savePathList("C",pSet->CIncludeDirs());
     savePathList("Cpp",pSet->CppIncludeDirs());
-    savePathList("Libs",pSet->LibDirs());
+    savePathList("Libs",pSet->libDirs());
 
     mSettings->mSettings.endGroup();
 }
@@ -1189,7 +1191,7 @@ Settings::PCompilerSet Settings::CompilerSets::loadSet(int index)
     loadPathList("Bins",pSet->binDirs());
     loadPathList("C",pSet->CIncludeDirs());
     loadPathList("Cpp",pSet->CppIncludeDirs());
-    loadPathList("Libs",pSet->LibDirs());
+    loadPathList("Libs",pSet->libDirs());
 
     mSettings->mSettings.endGroup();
 

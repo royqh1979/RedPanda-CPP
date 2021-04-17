@@ -17,6 +17,7 @@ signals:
     void settingsChanged(bool changed);
 
 protected:
+    void connectInputs();
     virtual void doLoad() = 0;
     virtual void doSave() = 0;
 public:
