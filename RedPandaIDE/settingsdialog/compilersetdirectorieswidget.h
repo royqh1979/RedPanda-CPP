@@ -8,6 +8,7 @@ namespace Ui {
 class CompilerSetDirectoriesWidget;
 }
 
+class QItemSelection;
 
 class CompilerSetDirectoriesWidget : public QWidget
 {
@@ -23,6 +24,15 @@ public:
 
     void setDirList(const QStringList& list);
     QStringList dirList() const;
+
+private slots:
+    void on_btnDelete_pressed();
+
+    void on_btnAdd_pressed();
+
+    void selectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
+
+    void on_btnRemoveInvalid_pressed();
 
 private:
     Ui::CompilerSetDirectoriesWidget *ui;

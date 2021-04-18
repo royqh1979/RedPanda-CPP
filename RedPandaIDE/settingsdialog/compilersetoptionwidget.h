@@ -31,6 +31,7 @@ protected:
     void doSave() override;
 private:
     void reloadCurrentCompilerSet();
+    void saveCurrentCompilerSet();
 
 private slots:
     void on_cbCompilerSet_currentIndexChanged(int index);
@@ -38,6 +39,7 @@ private slots:
     void on_btnAddBlankCompilerSet_pressed();
     void on_btnAddCompilerSetByFolder_pressed();
     void on_btnRenameCompilerSet_pressed();
+    void on_btnRemoveCompilerSet_pressed();
 };
 
 #endif // COMPILERSETOPTIONWIDGET_H

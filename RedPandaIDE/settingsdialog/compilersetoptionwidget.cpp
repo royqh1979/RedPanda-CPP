@@ -59,7 +59,7 @@ void resetOptionTabs(Settings::PCompilerSet pSet,QTabWidget* pTab)
             pTab->addTab(pWidget,pOption->section);
             pWidget->setLayout(new QGridLayout());
         }
-        QGridLayout *pLayout = (QGridLayout*)pWidget->layout();
+        QGridLayout *pLayout = static_cast<QGridLayout*>(pWidget->layout());
         int row = pLayout->rowCount();
         pLayout->addWidget(new QLabel(pOption->name),row,0);
         QComboBox* pCombo = new QComboBox();
@@ -82,7 +82,7 @@ void resetOptionTabs(Settings::PCompilerSet pSet,QTabWidget* pTab)
     }
     for (int i=0;i<pTab->count();i++) {
         QWidget* pWidget = pTab->widget(i);
-        QGridLayout *pLayout = (QGridLayout*)pWidget->layout();
+        QGridLayout *pLayout = static_cast<QGridLayout*>(pWidget->layout());
         int row = pLayout->rowCount();
         QSpacerItem* horizontalSpacer = new QSpacerItem(10, 100, QSizePolicy::Minimum, QSizePolicy::Expanding);
         pLayout->addItem(horizontalSpacer,row,0);
@@ -112,18 +112,33 @@ static void loadCompilerSetSettings(Settings::PCompilerSet pSet, Ui::CompilerSet
 
 void CompilerSetOptionWidget::doLoad()
 {
+    disconnectInputs();
     ui->cbCompilerSet->clear();
+    if (pSettings->compilerSets().list().size()<=0) {
+        ui->btnRenameCompilerSet->setEnabled(false);
+        ui->btnRemoveCompilerSet->setEnabled(false);
+        return;
+    } else {
+        ui->btnRenameCompilerSet->setEnabled(true);
+        ui->btnRemoveCompilerSet->setEnabled(true);
+    }
     int index=pSettings->compilerSets().defaultIndex();
     for (int i=0;i<pSettings->compilerSets().list().size();i++) {
         ui->cbCompilerSet->addItem(pSettings->compilerSets().list()[i]->name());
     }
+    if (index < 0 || index>=ui->cbCompilerSet->count()) {
+        index = 0;
+    }
     ui->cbCompilerSet->setCurrentIndex(index);
-
-    //reloadCurrentCompilerSet();
+    reloadCurrentCompilerSet();
+    connectInputs();
 }
 
 void CompilerSetOptionWidget::doSave()
 {
+    if (pSettings->compilerSets().list().size()>0) {
+        saveCurrentCompilerSet();
+    }
     pSettings->compilerSets().saveSets();
 }
 
@@ -131,8 +146,11 @@ void CompilerSetOptionWidget::on_cbCompilerSet_currentIndexChanged(int index)
 {
     if (index<0)
         return;
+    setSettingsChanged();
     pSettings->compilerSets().setDefaultIndex(index);
+    disconnectInputs();
     reloadCurrentCompilerSet();
+    connectInputs();
 }
 
 void CompilerSetOptionWidget::reloadCurrentCompilerSet()
@@ -145,7 +163,50 @@ void CompilerSetOptionWidget::reloadCurrentCompilerSet()
     mCIncludeDirWidget->setDirList(pSet->CIncludeDirs());
     mCppIncludeDirWidget->setDirList(pSet->CppIncludeDirs());
 
-    connectInputs();
+}
+
+void CompilerSetOptionWidget::saveCurrentCompilerSet()
+{
+    Settings::PCompilerSet pSet = pSettings->compilerSets().defaultSet();
+
+    pSet->setUseCustomCompileParams(ui->chkUseCustomCompilerParams->isChecked());
+    pSet->setCustomCompileParams(ui->txtCustomCompileParams->toPlainText());
+    pSet->setUseCustomLinkParams(ui->chkUseCustomLinkParams->isChecked());
+    pSet->setCustomLinkParams(ui->txtCustomLinkParams->toPlainText());
+    pSet->setStaticLink(ui->chkStaticLink->isChecked());
+    pSet->setAutoAddCharsetParams(ui->chkAutoAddCharset->isChecked());
+
+    pSet->setCCompiler(ui->txtCCompiler->text());
+    pSet->setCppCompiler(ui->txtCppCompiler->text());
+    pSet->setMake(ui->txtMake->text());
+    pSet->setDebugger(ui->txtDebugger->text());
+    pSet->setResourceCompiler(ui->txtResourceCompiler->text());
+    pSet->setProfiler(ui->txtProfiler->text());
+
+    pSet->binDirs()=mBinDirWidget->dirList();
+
+    pSet->libDirs()=mLibDirWidget->dirList();
+    pSet->CIncludeDirs()=mCIncludeDirWidget->dirList();
+    pSet->CppIncludeDirs()=mCppIncludeDirWidget->dirList();
+
+    //read values in the options widget
+    QTabWidget* pTab = ui->optionTabs;
+    for (int i=0;i<pTab->count();i++) {
+        QString section = pTab->tabText(i);
+        QWidget* pWidget = pTab->widget(i);
+        QGridLayout* pLayout = static_cast<QGridLayout*>(pWidget->layout());
+        if (pLayout != nullptr) {
+            for (int j=1;j<pLayout->rowCount()-1;j++) {
+                QString name = static_cast<QLabel *>(pLayout->itemAtPosition(j,0)->widget())->text();
+                QComboBox* pCombo = static_cast<QComboBox *>(pLayout->itemAtPosition(j,1)->widget());
+                for (PCompilerOption pOption: pSet->options()) {
+                    if (pOption->section == section && pOption->name == name) {
+                        pOption->value = pCombo->currentIndex();
+                    }
+                }
+            }
+        }
+    }
 }
 
 void CompilerSetOptionWidget::on_btnFindCompilers_pressed()
@@ -180,8 +241,15 @@ void CompilerSetOptionWidget::on_btnAddCompilerSetByFolder_pressed()
 
 void CompilerSetOptionWidget::on_btnRenameCompilerSet_pressed()
 {
-    QString name = QInputDialog::getText(this,tr("Compiler Set Name"),tr("New name"));
+    QString name = QInputDialog::getText(this,tr("Compiler Set Name"),tr("New name"),QLineEdit::Normal,
+                                         pSettings->compilerSets().defaultSet()->name());
     if (!name.isEmpty())
         pSettings->compilerSets().defaultSet()->setName(name);
+    doLoad();
+}
+
+void CompilerSetOptionWidget::on_btnRemoveCompilerSet_pressed()
+{
+    pSettings->compilerSets().deleteSet(ui->cbCompilerSet->currentIndex());
     doLoad();
 }

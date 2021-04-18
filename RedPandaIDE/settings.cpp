@@ -1033,6 +1033,9 @@ void Settings::CompilerSets::deleteSet(int index)
     for (int i=index;i<mList.size();i++) {
         saveSet(i);
     }
+    if (mDefaultIndex>=mList.size()) {
+        mDefaultIndex = mList.size()-1;
+    }
 }
 
 Settings::CompilerSetList &Settings::CompilerSets::list()

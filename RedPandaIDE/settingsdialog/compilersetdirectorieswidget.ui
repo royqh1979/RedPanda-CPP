@@ -24,7 +24,7 @@
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
-       <widget class="QToolButton" name="toolButton">
+       <widget class="QToolButton" name="btnAdd">
         <property name="toolTip">
          <string>Add</string>
         </property>
@@ -37,12 +37,12 @@
          </iconset>
         </property>
         <property name="autoRaise">
-         <bool>true</bool>
+         <bool>false</bool>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QToolButton" name="toolButton_2">
+       <widget class="QToolButton" name="btnDelete">
         <property name="toolTip">
          <string>Delete</string>
         </property>
@@ -55,12 +55,12 @@
          </iconset>
         </property>
         <property name="autoRaise">
-         <bool>true</bool>
+         <bool>false</bool>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QToolButton" name="toolButton_3">
+       <widget class="QToolButton" name="btnRemoveInvalid">
         <property name="toolTip">
          <string>Remove Invalid</string>
         </property>
@@ -76,7 +76,7 @@
          <enum>Qt::ToolButtonIconOnly</enum>
         </property>
         <property name="autoRaise">
-         <bool>true</bool>
+         <bool>false</bool>
         </property>
        </widget>
       </item>

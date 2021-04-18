@@ -90,7 +90,7 @@ void SettingsDialog::on_btnOk_pressed()
 
 void SettingsDialog::saveCurrentPageSettings(bool confirm)
 {
-    if (ui->scrollArea->widget()!=ui->scrollAreaWidgetContents)
+    if (ui->scrollArea->widget()==ui->scrollAreaWidgetContents)
         return;
     SettingsWidget* pWidget = (SettingsWidget*) ui->scrollArea->widget();
     if (!pWidget->isSettingsChanged())
@@ -99,8 +99,8 @@ void SettingsDialog::saveCurrentPageSettings(bool confirm)
         if (QMessageBox::information(this,tr("Save Changes"),
                tr("There are changes in the settings, do you want to save them before swtich to other page?"),
                QMessageBox::Yes, QMessageBox::No)!=QMessageBox::Yes) {
-        return;
+            return;
+        }
     }
     pWidget->save();
-    ui->btnApply->setEnabled(false);
 }
