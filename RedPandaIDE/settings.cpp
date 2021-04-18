@@ -1021,6 +1021,13 @@ void Settings::CompilerSets::loadSets()
     }
 }
 
+void Settings::CompilerSets::saveDefaultIndex()
+{
+    mSettings->mSettings.beginGroup(SETTING_COMPILTER_SETS);
+    mSettings->mSettings.setValue(SETTING_COMPILTER_SETS_DEFAULT_INDEX,mDefaultIndex);
+    mSettings->mSettings.endGroup();
+}
+
 void Settings::CompilerSets::deleteSet(int index)
 {
     // Erase all sections at and above from disk

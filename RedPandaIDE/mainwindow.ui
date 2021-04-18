@@ -205,7 +205,7 @@
    <addaction name="menuTools"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <widget class="QToolBar" name="toolBar">
+  <widget class="QToolBar" name="toolbarMain">
    <property name="windowTitle">
     <string>toolBar</string>
    </property>
@@ -220,7 +220,7 @@
    <addaction name="actionSave"/>
    <addaction name="actionSaveAll"/>
   </widget>
-  <widget class="QToolBar" name="toolBar_2">
+  <widget class="QToolBar" name="toolbarCompilerSet">
    <property name="windowTitle">
     <string>toolBar_2</string>
    </property>

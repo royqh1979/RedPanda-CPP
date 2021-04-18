@@ -6,6 +6,7 @@
 #include "settings.h"
 
 #include <QCloseEvent>
+#include <QComboBox>
 #include <QFileDialog>
 #include <QLabel>
 
@@ -19,8 +20,8 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
     // status bar
-    mFileInfoStatus=new QLabel(this);
-    mFileEncodingStatus = new QLabel(this);
+    mFileInfoStatus=new QLabel();
+    mFileEncodingStatus = new QLabel();
     mFileInfoStatus->setStyleSheet("margin-left:10px; margin-right:10px");
     mFileEncodingStatus->setStyleSheet("margin-left:10px; margin-right:10px");
     ui->statusbar->addWidget(mFileInfoStatus);
@@ -31,6 +32,12 @@ MainWindow::MainWindow(QWidget *parent)
                                  ui->EditorPanel);
     setupActions();
     ui->EditorTabsRight->setVisible(false);
+
+    mCompilerSet = new QComboBox();
+    ui->toolbarCompilerSet->addWidget(mCompilerSet);
+    connect(mCompilerSet,QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &MainWindow::onCompilerSetChanged);
+    updateCompilerSet();
 }
 
 MainWindow::~MainWindow()
@@ -82,6 +89,19 @@ void MainWindow::openFile(const QString &filename)
 
 void MainWindow::setupActions() {
 
+}
+
+void MainWindow::updateCompilerSet()
+{
+    mCompilerSet->clear();
+    int index=pSettings->compilerSets().defaultIndex();
+    for (int i=0;i<pSettings->compilerSets().list().size();i++) {
+        mCompilerSet->addItem(pSettings->compilerSets().list()[i]->name());
+    }
+    if (index < 0 || index>=mCompilerSet->count()) {
+        index = 0;
+    }
+    mCompilerSet->setCurrentIndex(index);
 }
 
 
@@ -138,4 +158,12 @@ void MainWindow::on_actionOptions_triggered()
 {
     SettingsDialog settingsDialog;
     settingsDialog.exec();
+}
+
+void MainWindow::onCompilerSetChanged(int index)
+{
+    if (index<0)
+        return;
+    pSettings->compilerSets().setDefaultIndex(index);
+    pSettings->compilerSets().saveDefaultIndex();
 }

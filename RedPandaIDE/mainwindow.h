@@ -9,6 +9,7 @@ QT_END_NAMESPACE
 
 class EditorList;
 class QLabel;
+class QComboBox;
 
 class MainWindow : public QMainWindow
 {
@@ -37,14 +38,20 @@ private slots:
 
     void on_actionOptions_triggered();
 
+    // qt will auto bind slots with the prefix "on_"
+    void onCompilerSetChanged(int index);
+
 private:
     void setupActions();
+
+    void updateCompilerSet();
 
 private:
     Ui::MainWindow *ui;
     EditorList* mEditorList;
     QLabel* mFileInfoStatus;
     QLabel* mFileEncodingStatus;
+    QComboBox* mCompilerSet;
 
    // QWidget interface
 protected:

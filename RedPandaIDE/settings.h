@@ -206,6 +206,7 @@ public:
         void findSets();
         void saveSets();
         void loadSets();
+        void saveDefaultIndex();
         void deleteSet(int index);
         //properties
         CompilerSetList& list();
