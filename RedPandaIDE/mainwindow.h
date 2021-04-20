@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 
+
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -10,6 +11,7 @@ QT_END_NAMESPACE
 class EditorList;
 class QLabel;
 class QComboBox;
+class CompilerManager;
 
 class MainWindow : public QMainWindow
 {
@@ -41,6 +43,13 @@ private slots:
     // qt will auto bind slots with the prefix "on_"
     void onCompilerSetChanged(int index);
 
+    void on_actionCompile_triggered();
+
+public slots:
+    void onCompileLog(const QString& msg);
+
+    void onCompileError(const QString& msg);
+
 private:
     void setupActions();
 
@@ -52,6 +61,8 @@ private:
     QLabel* mFileInfoStatus;
     QLabel* mFileEncodingStatus;
     QComboBox* mCompilerSet;
+    CompilerManager* mCompilerManager;
+
 
    // QWidget interface
 protected:

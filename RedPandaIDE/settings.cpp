@@ -137,7 +137,6 @@ void Settings::Editor::setAutoIndent(bool indent)
 
 
 Settings::CompilerSet::CompilerSet(const QString& compilerFolder):
-    mStaticLink(true),
     mAutoAddCharsetParams(true)
 {
     if (!compilerFolder.isEmpty()) {
@@ -176,7 +175,6 @@ Settings::CompilerSet::CompilerSet(const Settings::CompilerSet &set):
     mUseCustomLinkParams(set.mUseCustomLinkParams),
     mCustomCompileParams(set.mCustomCompileParams),
     mCustomLinkParams(set.mCustomLinkParams),
-    mStaticLink(set.mStaticLink),
     mAutoAddCharsetParams(set.mAutoAddCharsetParams)
 {
     // Executables, most are hardcoded
@@ -410,16 +408,6 @@ void Settings::CompilerSet::setCustomLinkParams(const QString &value)
     mCustomLinkParams = value;
 }
 
-bool Settings::CompilerSet::staticLink()
-{
-    return mStaticLink;
-}
-
-void Settings::CompilerSet::setStaticLink(bool value)
-{
-    mStaticLink = value;
-}
-
 bool Settings::CompilerSet::autoAddCharsetParams()
 {
     return mAutoAddCharsetParams;
@@ -526,10 +514,10 @@ void Settings::CompilerSet::setProperties(const QString &binDir)
     mDumpMachine = getCompilerOutput(binDir, GCC_PROGRAM, arguments);
 
     // Add the default directories
-    addExistingDirectory(mBinDirs, folder + QDir::separator() + "bin");
-    addExistingDirectory(mLibDirs, folder + QDir::separator() + "lib");
-    addExistingDirectory(mCIncludeDirs, folder + QDir::separator() + "include");
-    addExistingDirectory(mCppIncludeDirs, folder + QDir::separator() + "include");
+    addExistingDirectory(mBinDirs, includeTrailingPathDelimiter(folder) +  "bin");
+    addExistingDirectory(mLibDirs, includeTrailingPathDelimiter(folder) + "lib");
+    addExistingDirectory(mCIncludeDirs, includeTrailingPathDelimiter(folder) + "include");
+    addExistingDirectory(mCppIncludeDirs, includeTrailingPathDelimiter(folder) + "include");
 
     // Find default directories
     arguments.clear();
@@ -644,59 +632,51 @@ void Settings::CompilerSet::setDirectories(const QString& folder)
     if (!mDumpMachine.isEmpty()) {
         //mingw-w64 bin folder
         addExistingDirectory(mBinDirs,
-            folder + QDir::separator() + "lib"
-            + QDir::separator() + "gcc" + mDumpMachine
-            + QDir::separator() + mVersion);
+            includeTrailingPathDelimiter(folder) + "lib/"
+            "gcc/" + mDumpMachine
+            + "/" + mVersion);
 
         // Regular include folder
-        addExistingDirectory(mCIncludeDirs, folder + QDir::separator() + mDumpMachine + QDir::separator() + "include");
-        addExistingDirectory(mCppIncludeDirs, folder + QDir::separator()+ mDumpMachine + QDir::separator() + "include");
+        addExistingDirectory(mCIncludeDirs, includeTrailingPathDelimiter(folder) + mDumpMachine + "/include");
+        addExistingDirectory(mCppIncludeDirs, includeTrailingPathDelimiter(folder)+ mDumpMachine + "/include");
 
         // Other include folder?
         addExistingDirectory(mCIncludeDirs,
-            folder + QDir::separator() + "lib" + QDir::separator() + "gcc"
-            + QDir::separator() + mDumpMachine + QDir::separator()
-            + mVersion + QDir::separator() + "include");
+            includeTrailingPathDelimiter(folder) + "lib/gcc/"
+            + mDumpMachine + "/" + mVersion + "/include");
         addExistingDirectory(mCppIncludeDirs,
-            folder + QDir::separator() + "lib" + QDir::separator() + "gcc"
-            + QDir::separator() + mDumpMachine + QDir::separator()
-            + mVersion + QDir::separator() + "include");
+            includeTrailingPathDelimiter(folder) + "lib/gcc/"
+            + mDumpMachine + "/" + mVersion + "/include");
 
         addExistingDirectory(mCIncludeDirs,
-            folder + QDir::separator()  + "lib"
-                + QDir::separator()  + "gcc" + QDir::separator()  + mDumpMachine
-                + QDir::separator() + mVersion + QDir::separator() + "include-fixed");
+            includeTrailingPathDelimiter(folder) + "lib/gcc/"
+             + mDumpMachine + "/" + mVersion + "/include-fixed");
         addExistingDirectory(mCppIncludeDirs,
-            folder + QDir::separator()  + "lib"
-                + QDir::separator()  + "gcc" + QDir::separator()  + mDumpMachine
-                + QDir::separator() + mVersion + QDir::separator() + "include-fixed");
+            includeTrailingPathDelimiter(folder) + "lib/gcc/"
+                + mDumpMachine + "/" + mVersion + "/include-fixed");
 
         // C++ only folder (mingw.org)
         addExistingDirectory(mCppIncludeDirs,
-            folder + QDir::separator() + "lib" + QDir::separator() + "gcc"
-            + QDir::separator() + mDumpMachine + QDir::separator() + mVersion
-            + QDir::separator() + "include" + QDir::separator() + "c++");
+            includeTrailingPathDelimiter(folder)  + "lib/gcc/"
+                + mDumpMachine + "/" + mVersion + "/include/c++");
         addExistingDirectory(mCppIncludeDirs,
-            folder + QDir::separator() + "lib" + QDir::separator() + "gcc"
-            + QDir::separator() + mDumpMachine + QDir::separator() + mVersion
-            + QDir::separator() + "include" + QDir::separator() + "c++"
-            + QDir::separator() + mDumpMachine );
+             includeTrailingPathDelimiter(folder)  + "lib/gcc/"
+                 + mDumpMachine + "/" + mVersion + "/include/c++/"
+                 + mDumpMachine);
         addExistingDirectory(mCppIncludeDirs,
-            folder + QDir::separator() + "lib" + QDir::separator() + "gcc"
-            + QDir::separator() + mDumpMachine + QDir::separator() + mVersion
-            + QDir::separator() + "include" + QDir::separator() + "c++"
-            + QDir::separator() + "backward");
+             includeTrailingPathDelimiter(folder)  + "lib/gcc/"
+                 + mDumpMachine + "/" + mVersion + "/include/c++/backward");
 
         // C++ only folder (Mingw-w64)
         addExistingDirectory(mCppIncludeDirs,
-            folder + QDir::separator()  + "include" + QDir::separator() + "c++"
-            + QDir::separator()  + mVersion );
+            includeTrailingPathDelimiter(folder)  + "include/c++/"
+            + mVersion );
         addExistingDirectory(mCppIncludeDirs,
-            folder + QDir::separator()  + "include" + QDir::separator() + "c++"
-            + QDir::separator()  + mVersion + QDir::separator() + mDumpMachine );
+            includeTrailingPathDelimiter(folder)  + "include/c++/"
+            + mVersion + "/backward");
         addExistingDirectory(mCppIncludeDirs,
-            folder + QDir::separator()  + "include" + QDir::separator() + "c++"
-            + QDir::separator()  + mVersion + QDir::separator() + "backward");
+            includeTrailingPathDelimiter(folder)  + "include/c++/"
+            + mVersion + "/" + mDumpMachine);
     }
 }
 
@@ -704,7 +684,6 @@ void Settings::CompilerSet::setUserInput()
 {
     mUseCustomCompileParams = false;
     mUseCustomLinkParams = false;
-    mStaticLink = true;
     mAutoAddCharsetParams = true;
 }
 
@@ -813,6 +792,8 @@ void Settings::CompilerSet::setOptions()
     sl.append("GNU C++17=gnu++17");
     sl.append("GNU C++20=gnu++20");
     addOption(tr("Language standard (-std)"), groupName, true, true, false, 0, "-std=", sl);
+    addOption(tr("Generate debugging information (-g3)"), groupName, true, true, false, 0, "-g3");
+    addOption(tr("Generate profiling info for analysis (-pg)"), groupName, true, true, true, 0, "-pg");
 
     // Warnings
     groupName = tr("Warnings");
@@ -824,23 +805,19 @@ void Settings::CompilerSet::setOptions()
     addOption(tr("Make all warnings into errors (-Werror)"), groupName, true, true, false, 0, "-Werror");
     addOption(tr("Abort compilation on first error (-Wfatal-errors)"), groupName, true, true, false, 0, "-Wfatal-errors");
 
-    // Profiling
-    groupName = tr("Profiling");
-    addOption(tr("Generate profiling info for analysis (-pg)"), groupName, true, true, true, 0, "-pg");
-
     // Linker
     groupName = tr("Linker");
     addOption(tr("Link an Objective C program (-lobjc)"), groupName, false, false, true, 0, "-lobjc");
-    addOption(tr("Do not use standard system libraries (-nostdlib)"), groupName, true, true, true, 0, "-nostdlib");
-    addOption(tr("Do not create a console window (-mwindows)"), groupName,true, true, true, 0, "-mwindows");
+    addOption(tr("Do not use standard system libraries (-nostdlib)"), groupName, false, false, true, 0, "-nostdlib");
+    addOption(tr("Do not create a console window (-mwindows)"), groupName,false, false, true, 0, "-mwindows");
     addOption(tr("Strip executable (-s)"), groupName, false, false, true, 0, "-s");
-    addOption(tr("Generate debugging information (-g3)"), groupName, true, true, true, 0, "-g3");
+    addOption(tr("Link libraries statically (-static)"), groupName, false, false, true, 0, "-static");
 
     // Output
     groupName = tr("Output");
     addOption(tr("-fverbose-asm"), groupName, true, true, false, 0, "-fverbose-asm");
-    addOption(tr("Do not assemble, but output assembler code (-S)"), groupName, true, true, false, 0, "-S");
     addOption(tr("Use pipes instead of temporary files during compilation (-pipe)"), groupName, true, true, false, 0, "-pipe");
+    addOption(tr("Do not assemble, compile and generate the assemble code (-S)"), groupName, true, true, false, 0, "-S");
 }
 
 QString Settings::CompilerSet::findProgramInBinDirs(const QString name)
@@ -877,7 +854,7 @@ void Settings::CompilerSet::setIniOptions(const QByteArray &value)
 
 QByteArray Settings::CompilerSet::getCompilerOutput(const QString &binDir, const QString &binFile, const QStringList &arguments)
 {
-    QByteArray result = runAndGetOutput(binDir + QDir::separator()+binFile, binDir, arguments);
+    QByteArray result = runAndGetOutput(includeTrailingPathDelimiter(binDir)+binFile, binDir, arguments);
     return result.trimmed();
 }
 
@@ -917,6 +894,11 @@ static void setReleaseOptions(Settings::PCompilerSet pSet) {
     if (pOption) {
         pSet->setOption(pOption,'1');
     }
+
+    pOption = pSet->findOption("-static");
+    if (pOption) {
+        pSet->setOption(pOption,'1');
+    }
 }
 
 static void setDebugOptions(Settings::PCompilerSet pSet) {
@@ -932,10 +914,19 @@ static void setDebugOptions(Settings::PCompilerSet pSet) {
     if (pOption) {
         pSet->setOption(pOption,'1');
     }
+    pOption = pSet->findOption("-static");
+    if (pOption) {
+        pSet->setOption(pOption,'1');
+    }
 }
 
 static void setProfileOptions(Settings::PCompilerSet pSet) {
     PCompilerOption pOption = pSet->findOption("-pg");
+    if (pOption) {
+        pSet->setOption(pOption,'1');
+    }
+
+    pOption = pSet->findOption("-static");
     if (pOption) {
         pSet->setOption(pOption,'1');
     }
@@ -1077,9 +1068,9 @@ void Settings::CompilerSets::savePath(const QString& name, const QString& path) 
     QString s;
     QString prefix1 = excludeTrailingPathDelimiter(mSettings->mDirs.app()) + "/";
     QString prefix2 = excludeTrailingPathDelimiter(mSettings->mDirs.app()) + QDir::separator();
-    if (path.startsWith(prefix1, Qt::CaseInsensitive)) {
+    if (path.startsWith(prefix1, PATH_SENSITIVITY)) {
         s = "%AppPath%/"+ path.mid(prefix1.length());
-    } else if (path.startsWith(prefix2, Qt::CaseInsensitive)) {
+    } else if (path.startsWith(prefix2, PATH_SENSITIVITY)) {
         s = "%AppPath%/"+ path.mid(prefix2.length());
     } else {
         s= path;
@@ -1093,9 +1084,9 @@ void Settings::CompilerSets::savePathList(const QString& name, const QStringList
         QString s;
         QString prefix1 = excludeTrailingPathDelimiter(mSettings->mDirs.app()) + "/";
         QString prefix2 = excludeTrailingPathDelimiter(mSettings->mDirs.app()) + QDir::separator();
-        if (path.startsWith(prefix1, Qt::CaseInsensitive)) {
+        if (path.startsWith(prefix1, PATH_SENSITIVITY)) {
             s = "%AppPath%/"+ path.mid(prefix1.length());
-        } else if (path.startsWith(prefix2, Qt::CaseInsensitive)) {
+        } else if (path.startsWith(prefix2, PATH_SENSITIVITY)) {
             s = "%AppPath%/" + path.mid(prefix2.length());
         } else {
             s= path;
@@ -1125,7 +1116,6 @@ void Settings::CompilerSets::saveSet(int index)
     mSettings->mSettings.setValue("customCompileParams", pSet->customCompileParams());
     mSettings->mSettings.setValue("useCustomLinkParams", pSet->useCustomLinkParams());
     mSettings->mSettings.setValue("customLinkParams", pSet->customLinkParams());
-    mSettings->mSettings.setValue("StaticLink", pSet->staticLink());
     mSettings->mSettings.setValue("AddCharset", pSet->autoAddCharsetParams());
 
     // Misc. properties
@@ -1187,7 +1177,6 @@ Settings::PCompilerSet Settings::CompilerSets::loadSet(int index)
     pSet->setCustomCompileParams(mSettings->mSettings.value("customCompileParams").toString());
     pSet->setUseCustomLinkParams(mSettings->mSettings.value("useCustomLinkParams").toBool());
     pSet->setCustomLinkParams(mSettings->mSettings.value("customLinkParams").toString());
-    pSet->setStaticLink(mSettings->mSettings.value("StaticLink").toBool());
     pSet->setAutoAddCharsetParams(mSettings->mSettings.value("AddCharset").toBool());
 
     pSet->setDumpMachine(mSettings->mSettings.value("DumpMachine").toString());

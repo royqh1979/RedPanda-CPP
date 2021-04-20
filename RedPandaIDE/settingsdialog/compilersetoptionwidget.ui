@@ -126,13 +126,6 @@
         <widget class="QPlainTextEdit" name="txtCustomLinkParams"/>
        </item>
        <item>
-        <widget class="QCheckBox" name="chkStaticLink">
-         <property name="text">
-          <string>Statically Link</string>
-         </property>
-        </widget>
-       </item>
-       <item>
         <widget class="QCheckBox" name="chkAutoAddCharset">
          <property name="text">
           <string>Add Charset arguments when calling the compiler</string>

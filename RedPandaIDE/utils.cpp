@@ -1,4 +1,5 @@
 #include "utils.h"
+#include "systemconsts.h"
 #include <QApplication>
 #include <QByteArray>
 #include <QDir>
@@ -9,6 +10,8 @@
 #include <QSettings>
 #include <QString>
 #include <QTextCodec>
+#include <QtGlobal>
+#include <QDebug>
 
 const QByteArray GuessTextEncoding(const QByteArray& text){
     bool allAscii;
@@ -93,8 +96,6 @@ QByteArray runAndGetOutput(const QString &cmd, const QString& workingDir, const 
         process.setProcessEnvironment(QProcessEnvironment());
     }
     process.setWorkingDirectory(workingDir);
-    process.start(cmd,arguments,QIODevice::ReadOnly);
-    process.closeWriteChannel();
     process.connect(&process,&QProcess::readyReadStandardError,
                     [&](){
         result.append(process.readAllStandardError());
@@ -103,7 +104,10 @@ QByteArray runAndGetOutput(const QString &cmd, const QString& workingDir, const 
                     [&](){
         result.append(process.readAllStandardOutput());
     });
-    process.waitForFinished();
+    process.start(cmd,arguments);
+    process.closeWriteChannel();
+
+    process.waitForFinished(-1);
     return result;
 }
 
@@ -134,7 +138,7 @@ QString includeTrailingPathDelimiter(const QString &path)
     if (path.endsWith('/') || path.endsWith(QDir::separator())) {
         return path;
     } else {
-        return path + QDir::separator();
+        return path + "/";
     }
 }
 
@@ -144,4 +148,78 @@ QString excludeTrailingPathDelimiter(const QString &path)
     while (pos>=0 && (path[pos]=='/' || path[pos]==QDir::separator()))
         pos--;
     return path.mid(0,pos+1);
+}
+
+FileType getFileType(const QString &filename)
+{
+    if (filename.endsWith(".c",PATH_SENSITIVITY)) {
+        return FileType::CSource;
+    }
+    if (filename.endsWith(".cpp",PATH_SENSITIVITY)) {
+        return FileType::CppSource;
+    }
+    if (filename.endsWith(".cc",PATH_SENSITIVITY)) {
+        return FileType::CppSource;
+    }
+    if (filename.endsWith(".cxx",PATH_SENSITIVITY)) {
+        return FileType::CppSource;
+    }
+    if (filename.endsWith(".c++",PATH_SENSITIVITY)) {
+        return FileType::CppSource;
+    }
+    if (filename.endsWith(".h",PATH_SENSITIVITY)) {
+        return FileType::CHeader;
+    }
+    if (filename.endsWith(".hpp",PATH_SENSITIVITY)) {
+        return FileType::CppHeader;
+    }
+    if (filename.endsWith(".hh",PATH_SENSITIVITY)) {
+        return FileType::CppHeader;
+    }
+    if (filename.endsWith(".hxx",PATH_SENSITIVITY)) {
+        return FileType::CppHeader;
+    }
+    if (filename.endsWith(".inl",PATH_SENSITIVITY)) {
+        return FileType::CppHeader;
+    }
+    if (filename.endsWith(".res",PATH_SENSITIVITY)) {
+        return FileType::WindowsResourceSource;
+    }
+    return FileType::Other;
+}
+
+
+QString getCompiledExecutableName(const QString filename)
+{
+    QFileInfo info(filename);
+    QString baseName = includeTrailingPathDelimiter(info.absolutePath())+info.baseName();
+    return baseName + EXECUTABE_EXT;
+}
+
+void splitStringArguments(const QString &arguments, QStringList &argumentList)
+{
+    QString word;
+    bool inQuota;
+    inQuota = false;
+    for (QChar ch:arguments) {
+        if (ch == '"') {
+            inQuota = !inQuota;
+        } else if (ch == '\n' || ch == ' ' || ch == '\t' || ch == '\r') {
+            if (!inQuota) {
+                word = word.trimmed();
+                if (!word.isEmpty()) {
+                    argumentList.append(word);
+                }
+                word = "";
+            } else {
+                word.append(ch);
+            }
+        } else {
+            word.append(ch);
+        }
+    }
+    word = word.trimmed();
+    if (!word.isEmpty()) {
+        argumentList.append(word);
+    }
 }

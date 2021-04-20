@@ -14,11 +14,11 @@ Settings* createAppSettings(const QString& filepath = QString()) {
     QString filename;
     if (filepath.isEmpty()) {
         if (isGreenEdition()) {
-            filename = QApplication::applicationDirPath() + QDir::separator() +
-                    "config" + QDir::separator() + APP_SETTSINGS_FILENAME;
+            filename = includeTrailingPathDelimiter(QApplication::applicationDirPath()) +
+                    "config/"  + APP_SETTSINGS_FILENAME;
         } else {
-            filename = QStandardPaths::standardLocations(QStandardPaths::AppDataLocation)[0]
-                + QDir::separator() + APP_SETTSINGS_FILENAME;
+            filename =includeTrailingPathDelimiter(QStandardPaths::standardLocations(QStandardPaths::AppDataLocation)[0])
+                 + APP_SETTSINGS_FILENAME;
         }
     } else {
         filename = filepath;

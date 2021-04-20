@@ -9,6 +9,9 @@ CONFIG += c++14
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    compiler/compiler.cpp \
+    compiler/compilermanager.cpp \
+    compiler/filecompiler.cpp \
     editor.cpp \
     editorlist.cpp \
     main.cpp \
@@ -22,6 +25,9 @@ SOURCES += \
     utils.cpp
 
 HEADERS += \
+    compiler/compiler.h \
+    compiler/compilermanager.h \
+    compiler/filecompiler.h \
     editor.h \
     editorlist.h \
     mainwindow.h \

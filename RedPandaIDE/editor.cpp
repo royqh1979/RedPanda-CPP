@@ -289,7 +289,7 @@ void Editor::onCursorPositionChanged(int line, int index) {
 }
 
 void Editor::onLinesChanged() {
-    qDebug()<<"lala"<<lines();
+    qDebug()<<"Editor lines changed"<<lines();
 }
 
 void Editor::updateCaption(const QString& newCaption) {

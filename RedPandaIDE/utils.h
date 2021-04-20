@@ -4,7 +4,6 @@
 #include <type_traits>
 #include <utility>
 
-
 class QByteArray;
 class QString;
 class QStringList;
@@ -14,6 +13,15 @@ class QStringList;
 #define ENCODING_UTF8_BOM "UTF-8 BOM"
 #define ENCODING_SYSTEM_DEFAULT   "SYSTEM"
 #define ENCODING_ASCII  "ASCII"
+
+enum class FileType{
+    CSource, // c source file (.c)
+    CppSource, // c++ source file (.cpp)
+    CHeader, // c header (.h)
+    CppHeader, // c++ header (.hpp)
+    WindowsResourceSource, // resource source (.res)
+    Other // any others
+};
 
 typedef void (*LineOutputFunc) (const QString& line);
 typedef bool (*CheckAbortFunc) ();
@@ -32,6 +40,9 @@ bool fileExists(const QString& dir, const QString& fileName);
 bool directoryExists(const QString& file);
 QString includeTrailingPathDelimiter(const QString& path);
 QString excludeTrailingPathDelimiter(const QString& path);
+FileType getFileType(const QString& filename);
+QString getCompiledExecutableName(const QString filename);
+void splitStringArguments(const QString& arguments, QStringList& argumentList);
 
 template <class F>
 class final_action

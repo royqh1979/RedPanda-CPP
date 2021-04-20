@@ -96,7 +96,6 @@ static void loadCompilerSetSettings(Settings::PCompilerSet pSet, Ui::CompilerSet
     ui->chkUseCustomLinkParams->setChecked(pSet->useCustomLinkParams());
     ui->txtCustomLinkParams->setPlainText(pSet->customLinkParams());
     ui->txtCustomLinkParams->setEnabled(pSet->useCustomLinkParams());
-    ui->chkStaticLink->setChecked(pSet->staticLink());
     ui->chkAutoAddCharset->setChecked(pSet->autoAddCharsetParams());
 
     //rest tabs in the options widget
@@ -170,18 +169,17 @@ void CompilerSetOptionWidget::saveCurrentCompilerSet()
     Settings::PCompilerSet pSet = pSettings->compilerSets().defaultSet();
 
     pSet->setUseCustomCompileParams(ui->chkUseCustomCompilerParams->isChecked());
-    pSet->setCustomCompileParams(ui->txtCustomCompileParams->toPlainText());
+    pSet->setCustomCompileParams(ui->txtCustomCompileParams->toPlainText().trimmed());
     pSet->setUseCustomLinkParams(ui->chkUseCustomLinkParams->isChecked());
-    pSet->setCustomLinkParams(ui->txtCustomLinkParams->toPlainText());
-    pSet->setStaticLink(ui->chkStaticLink->isChecked());
+    pSet->setCustomLinkParams(ui->txtCustomLinkParams->toPlainText().trimmed());
     pSet->setAutoAddCharsetParams(ui->chkAutoAddCharset->isChecked());
 
-    pSet->setCCompiler(ui->txtCCompiler->text());
-    pSet->setCppCompiler(ui->txtCppCompiler->text());
-    pSet->setMake(ui->txtMake->text());
-    pSet->setDebugger(ui->txtDebugger->text());
-    pSet->setResourceCompiler(ui->txtResourceCompiler->text());
-    pSet->setProfiler(ui->txtProfiler->text());
+    pSet->setCCompiler(ui->txtCCompiler->text().trimmed());
+    pSet->setCppCompiler(ui->txtCppCompiler->text().trimmed());
+    pSet->setMake(ui->txtMake->text().trimmed());
+    pSet->setDebugger(ui->txtDebugger->text().trimmed());
+    pSet->setResourceCompiler(ui->txtResourceCompiler->text().trimmed());
+    pSet->setProfiler(ui->txtProfiler->text().trimmed());
 
     pSet->binDirs()=mBinDirWidget->dirList();
 

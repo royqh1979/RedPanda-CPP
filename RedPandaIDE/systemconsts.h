@@ -14,7 +14,17 @@
 #define CLEAN_PROGRAM   "rm.exe"
 #define CPP_PROGRAM     "cpp.exe"
 
-#define NULL_FILE       "NUL"
+#ifdef Q_OS_WIN
+#   define PATH_SENSITIVITY Qt::CaseInsensitive
+#   define NULL_FILE       "NUL"
+#   define EXECUTABE_EXT   ".exe"
+#elif Q_OS_LINUX
+#   define PATH_SENSITIVITY Qt::CaseSensitive
+#   define NULL_FILE       "/dev/null"
+#   define EXECUTABE_EXT   ""
+#else
+#error "Only support windows and linux now!"
+#endif
 
 class SystemConsts
 {

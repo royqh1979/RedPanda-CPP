@@ -10,7 +10,9 @@
 #include <QFileDialog>
 #include <QLabel>
 
-#include <settingsdialog/settingsdialog.h>
+#include "settingsdialog/settingsdialog.h"
+#include "compiler/compilermanager.h"
+#include <QDebug>
 
 MainWindow* pMainWindow;
 
@@ -38,6 +40,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(mCompilerSet,QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &MainWindow::onCompilerSetChanged);
     updateCompilerSet();
+
+    mCompilerManager = new CompilerManager(this);
 }
 
 MainWindow::~MainWindow()
@@ -166,4 +170,22 @@ void MainWindow::onCompilerSetChanged(int index)
         return;
     pSettings->compilerSets().setDefaultIndex(index);
     pSettings->compilerSets().saveDefaultIndex();
+}
+
+void MainWindow::onCompileLog(const QString &msg)
+{
+    ui->txtCompilerOutput->appendPlainText(msg);
+}
+
+void MainWindow::onCompileError(const QString &msg)
+{
+    qDebug()<<msg;
+}
+
+void MainWindow::on_actionCompile_triggered()
+{
+    Editor * editor = mEditorList->getEditor();
+    if (editor != NULL) {
+        mCompilerManager->compile(editor->filename(),editor->fileEncoding());
+    }
 }

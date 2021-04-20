@@ -128,8 +128,6 @@ public:
         void setCustomCompileParams(const QString& value);
         const QString& customLinkParams();
         void setCustomLinkParams(const QString& value);
-        bool staticLink();
-        void setStaticLink(bool value);
         bool autoAddCharsetParams();
         void setAutoAddCharsetParams(bool value);
 
@@ -184,7 +182,6 @@ public:
         bool mUseCustomLinkParams;
         QString mCustomCompileParams;
         QString mCustomLinkParams;
-        bool mStaticLink;
         bool mAutoAddCharsetParams;
 
         // Options
