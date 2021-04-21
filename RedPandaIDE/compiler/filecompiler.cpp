@@ -30,14 +30,14 @@ bool FileCompiler::prepareForCompile()
     FileType fileType = getFileType(mFileName);
     mArguments= QString(" \"%1\"").arg(mFileName);
     if (!mOnlyCheckSyntax) {
-        QString outputFilename = getCompiledExecutableName(mFileName);
-        mArguments+=QString(" -o \"%1\"").arg(outputFilename);
+        mOutputFile = getCompiledExecutableName(mFileName);
+        mArguments+=QString(" -o \"%1\"").arg(mOutputFile);
 
         //remove the old file it exists
-        QFile outputFile(outputFilename);
+        QFile outputFile(mOutputFile);
         if (outputFile.exists()) {
             if (!outputFile.remove()) {
-                error(tr("Can't delete the old executable file \"%1\".\n").arg(outputFilename));
+                error(tr("Can't delete the old executable file \"%1\".\n").arg(mOutputFile));
                 return false;
             }
         }

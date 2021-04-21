@@ -198,3 +198,67 @@ void MainWindow::on_actionRun_triggered()
         mCompilerManager->run(exeName,"",QFileInfo(exeName).absolutePath());
     }
 }
+
+void MainWindow::on_actionUndo_triggered()
+{
+    Editor * editor = mEditorList->getEditor();
+    if (editor != NULL ) {
+        editor->undo();
+    }
+}
+
+void MainWindow::on_actionRedo_triggered()
+{
+    Editor * editor = mEditorList->getEditor();
+    if (editor != NULL ) {
+        editor->redo();
+    }
+}
+
+void MainWindow::on_actionCut_triggered()
+{
+    Editor * editor = mEditorList->getEditor();
+    if (editor != NULL ) {
+        editor->cut();
+    }
+}
+
+void MainWindow::on_actionSelectAll_triggered()
+{
+    Editor * editor = mEditorList->getEditor();
+    if (editor != NULL ) {
+        editor->selectAll();
+    }
+}
+
+void MainWindow::on_actionCopy_triggered()
+{
+    Editor * editor = mEditorList->getEditor();
+    if (editor != NULL ) {
+        editor->copy();
+    }
+}
+
+void MainWindow::on_actionPaste_triggered()
+{
+    Editor * editor = mEditorList->getEditor();
+    if (editor != NULL ) {
+        editor->paste();
+    }
+}
+
+void MainWindow::on_actionIndent_triggered()
+{
+    Editor * editor = mEditorList->getEditor();
+    if (editor != NULL ) {
+        editor->indent();
+    }
+}
+
+void MainWindow::on_actionUnIndent_triggered()
+{
+    Editor * editor = mEditorList->getEditor();
+    if (editor != NULL ) {
+        editor->unindent();
+    }
+}

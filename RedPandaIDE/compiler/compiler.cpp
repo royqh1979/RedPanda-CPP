@@ -29,7 +29,12 @@ void Compiler::run()
         log("------------------");
         log(tr("- Errors: %1").arg(0));
         log(tr("- Warnings: %1").arg(0));
-        log(tr("- Time Elasped: %1 secs").arg(timer.elapsed() / 1000.0));
+        if (!mOutputFile.isEmpty()) {
+            log(tr("- Output Filename: %1").arg(mOutputFile));
+            QLocale locale = QLocale::system();
+            log(tr("- Output Size: %1").arg(locale.formattedDataSize(QFileInfo(mOutputFile).size())));
+        }
+        log(tr("- Compilation Time: %1 secs").arg(timer.elapsed() / 1000.0));
     }
     this->deleteLater();
     emit compileFinished();

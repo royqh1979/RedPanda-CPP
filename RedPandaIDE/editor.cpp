@@ -62,14 +62,17 @@ Editor::Editor(QWidget *parent, const QString& filename,
     QsciLexerCPP *lexer = new QsciLexerCPP();
     lexer->setHighlightEscapeSequences(true);
     lexer->setFoldComments(true);
+    lexer->setDefaultFont(QFont("Consolas",12));
     this->setLexer(lexer);
     this->setAutoIndent(pSettings->editor().autoIndent());
     this->setFolding(FoldStyle::BoxedTreeFoldStyle,3);
+    this->setTabWidth(4);
 
     //行号显示区域
     setMarginType(0, QsciScintilla::NumberMargin);
     setMarginLineNumbers(0, true);
     setMarginWidth(0,"10");
+    this->onLinesChanged();
     //断点设置区域
     setMarginType(1, QsciScintilla::SymbolMargin);
     setMarginLineNumbers(1, false);

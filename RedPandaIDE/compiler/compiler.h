@@ -46,6 +46,7 @@ protected:
     bool mOnlyCheckSyntax;
     QString mCompiler;
     QString mArguments;
+    QString mOutputFile;
 
 private:
     bool mStop;

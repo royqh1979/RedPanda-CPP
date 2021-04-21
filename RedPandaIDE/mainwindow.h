@@ -47,6 +47,22 @@ private slots:
 
     void on_actionRun_triggered();
 
+    void on_actionUndo_triggered();
+
+    void on_actionRedo_triggered();
+
+    void on_actionCut_triggered();
+
+    void on_actionSelectAll_triggered();
+
+    void on_actionCopy_triggered();
+
+    void on_actionPaste_triggered();
+
+    void on_actionIndent_triggered();
+
+    void on_actionUnIndent_triggered();
+
 public slots:
     void onCompileLog(const QString& msg);
 
