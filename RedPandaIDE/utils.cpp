@@ -12,6 +12,7 @@
 #include <QTextCodec>
 #include <QtGlobal>
 #include <QDebug>
+#include <windows.h>
 
 const QByteArray GuessTextEncoding(const QByteArray& text){
     bool allAscii;
@@ -106,8 +107,7 @@ QByteArray runAndGetOutput(const QString &cmd, const QString& workingDir, const 
     });
     process.start(cmd,arguments);
     process.closeWriteChannel();
-
-    process.waitForFinished(-1);
+    process.waitForFinished();
     return result;
 }
 
@@ -222,4 +222,34 @@ void splitStringArguments(const QString &arguments, QStringList &argumentList)
     if (!word.isEmpty()) {
         argumentList.append(word);
     }
+}
+
+bool programHasConsole(const QString &filename)
+{
+    bool result = false;
+    HANDLE handle = CreateFile(filename.toStdWString().c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+    if (handle != INVALID_HANDLE_VALUE) {
+        IMAGE_DOS_HEADER dos_header;
+        DWORD signature;
+        DWORD bytesread;
+        IMAGE_FILE_HEADER pe_header;
+        IMAGE_OPTIONAL_HEADER opt_header;
+
+        ReadFile(handle, &dos_header, sizeof(dos_header), &bytesread, NULL);
+        SetFilePointer(handle, dos_header.e_lfanew, NULL, 0);
+        ReadFile(handle, &signature, sizeof(signature), &bytesread, NULL);
+        ReadFile(handle, &pe_header, sizeof(pe_header), &bytesread, NULL);
+        ReadFile(handle, &opt_header, sizeof(opt_header), &bytesread, NULL);
+
+        result = (opt_header.Subsystem == IMAGE_SUBSYSTEM_WINDOWS_CUI);
+    }
+    CloseHandle(handle);
+    return result;
+}
+
+QString toLocalPath(const QString &filename)
+{
+    QString newPath {filename};
+    newPath.replace("/",QDir::separator());
+    return newPath;
 }

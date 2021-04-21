@@ -178,6 +178,7 @@ void Compiler::runCommand(const QString &cmd, const QString  &arguments, const Q
     if (!inputText.isEmpty())
         process.write(inputText.toUtf8());
     process.closeWriteChannel();
+    process.waitForStarted(5000);
     while (true) {
         process.waitForFinished(1000);
         if (process.state()!=QProcess::Running) {

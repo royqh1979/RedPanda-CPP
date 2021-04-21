@@ -231,6 +231,7 @@
      <string>Run</string>
     </property>
     <addaction name="actionCompile"/>
+    <addaction name="actionRun"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuRun"/>
@@ -274,6 +275,7 @@
     <bool>false</bool>
    </attribute>
    <addaction name="actionCompile"/>
+   <addaction name="actionRun"/>
   </widget>
   <action name="actionNew">
    <property name="icon">
@@ -359,6 +361,22 @@
    </property>
    <property name="shortcut">
     <string>F9</string>
+   </property>
+  </action>
+  <action name="actionRun">
+   <property name="icon">
+    <iconset>
+     <normalon>:/icons/images/newlook24/069-run.png</normalon>
+    </iconset>
+   </property>
+   <property name="text">
+    <string>Run</string>
+   </property>
+   <property name="toolTip">
+    <string>Run</string>
+   </property>
+   <property name="shortcut">
+    <string>F10</string>
    </property>
   </action>
  </widget>

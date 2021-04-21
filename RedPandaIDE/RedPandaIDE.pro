@@ -11,6 +11,7 @@ CONFIG += c++14
 SOURCES += \
     compiler/compiler.cpp \
     compiler/compilermanager.cpp \
+    compiler/executablerunner.cpp \
     compiler/filecompiler.cpp \
     editor.cpp \
     editorlist.cpp \
@@ -27,6 +28,7 @@ SOURCES += \
 HEADERS += \
     compiler/compiler.h \
     compiler/compilermanager.h \
+    compiler/executablerunner.h \
     compiler/filecompiler.h \
     editor.h \
     editorlist.h \
@@ -53,7 +55,12 @@ qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
-LIBS += -L$$PWD -lqscintilla2_qt5
-
 RESOURCES += \
     icons.qrc
+
+win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../../QScintilla/src/release/ -lqscintilla2_qt5d
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../../QScintilla/src/debug/ -lqscintilla2_qt5d
+else:unix: LIBS += -L$$OUT_PWD/../../QScintilla/src/ -lqscintilla2_qt5d
+
+INCLUDEPATH += $$PWD/../../QScintilla/src
+DEPENDPATH += $$PWD/../../QScintilla/src

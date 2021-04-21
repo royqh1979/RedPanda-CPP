@@ -69,7 +69,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
     //行号显示区域
     setMarginType(0, QsciScintilla::NumberMargin);
     setMarginLineNumbers(0, true);
-    setMarginWidth(0,30);
+    setMarginWidth(0,"10");
     //断点设置区域
     setMarginType(1, QsciScintilla::SymbolMargin);
     setMarginLineNumbers(1, false);
@@ -277,6 +277,7 @@ void Editor::wheelEvent(QWheelEvent *event) {
         } else {
             this->zoomOut();
         }
+        onLinesChanged();
     }
 }
 
@@ -289,6 +290,8 @@ void Editor::onCursorPositionChanged(int line, int index) {
 }
 
 void Editor::onLinesChanged() {
+    this->setMarginWidth(0,QString("0%1").arg(lines()));
+    qDebug()<<marginWidth(0);
     qDebug()<<"Editor lines changed"<<lines();
 }
 

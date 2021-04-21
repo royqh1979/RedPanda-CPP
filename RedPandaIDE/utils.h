@@ -43,6 +43,8 @@ QString excludeTrailingPathDelimiter(const QString& path);
 FileType getFileType(const QString& filename);
 QString getCompiledExecutableName(const QString filename);
 void splitStringArguments(const QString& arguments, QStringList& argumentList);
+bool programHasConsole(const QString& filename);
+QString toLocalPath(const QString& filename);
 
 template <class F>
 class final_action

@@ -185,7 +185,16 @@ void MainWindow::onCompileError(const QString &msg)
 void MainWindow::on_actionCompile_triggered()
 {
     Editor * editor = mEditorList->getEditor();
-    if (editor != NULL) {
+    if (editor != NULL ) {
         mCompilerManager->compile(editor->filename(),editor->fileEncoding());
+    }
+}
+
+void MainWindow::on_actionRun_triggered()
+{
+    Editor * editor = mEditorList->getEditor();
+    if (editor != NULL ) {
+        QString exeName= getCompiledExecutableName(editor->filename());
+        mCompilerManager->run(exeName,"",QFileInfo(exeName).absolutePath());
     }
 }

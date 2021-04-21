@@ -45,6 +45,8 @@ private slots:
 
     void on_actionCompile_triggered();
 
+    void on_actionRun_triggered();
+
 public slots:
     void onCompileLog(const QString& msg);
 
