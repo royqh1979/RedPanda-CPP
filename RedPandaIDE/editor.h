@@ -58,7 +58,7 @@ signals:
 protected slots:
     void onModificationChanged(bool status) ;
     void onCursorPositionChanged(int line, int index) ;
-    void onLinesChanged() ;
+    void onLinesChanged(int startLine, int count) ;
 
 private:
     QByteArray mEncodingOption; // the encoding type set by the user

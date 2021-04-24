@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include "common.h"
 
 
 QT_BEGIN_NAMESPACE
@@ -63,10 +64,15 @@ private slots:
 
     void on_actionUnIndent_triggered();
 
+    void on_actionToggleComment_triggered();
+
+    void on_actionUnfoldAll_triggered();
+
+    void on_actionFoldAll_triggered();
+
 public slots:
     void onCompileLog(const QString& msg);
-
-    void onCompileError(const QString& msg);
+    void onCompileIssue(PCompileIssue issue);
 
 private:
     void setupActions();
@@ -80,7 +86,6 @@ private:
     QLabel* mFileEncodingStatus;
     QComboBox* mCompilerSet;
     CompilerManager* mCompilerManager;
-
 
    // QWidget interface
 protected:

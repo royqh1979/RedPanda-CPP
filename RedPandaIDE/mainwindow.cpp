@@ -42,6 +42,12 @@ MainWindow::MainWindow(QWidget *parent)
     updateCompilerSet();
 
     mCompilerManager = new CompilerManager(this);
+
+    ui->actionIndent->setShortcut(Qt::Key_Tab);
+    ui->actionUnIndent->setShortcut(Qt::Key_Tab | Qt::ShiftModifier);
+
+    ui->tableIssues->setErrorColor(QColor("Red"));
+    ui->tableIssues->setWarningColor(QColor("Orange"));
 }
 
 MainWindow::~MainWindow()
@@ -177,15 +183,16 @@ void MainWindow::onCompileLog(const QString &msg)
     ui->txtCompilerOutput->appendPlainText(msg);
 }
 
-void MainWindow::onCompileError(const QString &msg)
+void MainWindow::onCompileIssue(PCompileIssue issue)
 {
-    qDebug()<<msg;
+    ui->tableIssues->addIssue(issue);
 }
 
 void MainWindow::on_actionCompile_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor != NULL ) {
+        ui->tableIssues->clearIssues();
         mCompilerManager->compile(editor->filename(),editor->fileEncoding());
     }
 }
@@ -260,5 +267,30 @@ void MainWindow::on_actionUnIndent_triggered()
     Editor * editor = mEditorList->getEditor();
     if (editor != NULL ) {
         editor->unindent();
+    }
+}
+
+void MainWindow::on_actionToggleComment_triggered()
+{
+    Editor * editor = mEditorList->getEditor();
+    if (editor != NULL ) {
+        editor->toggleComment();
+    }
+}
+
+void MainWindow::on_actionUnfoldAll_triggered()
+{
+    Editor * editor = mEditorList->getEditor();
+    if (editor != NULL ) {
+        editor->clearFolds();
+    }
+}
+
+void MainWindow::on_actionFoldAll_triggered()
+{
+    Editor * editor = mEditorList->getEditor();
+    if (editor != NULL ) {
+        editor->clearFolds();
+        editor->foldAll();
     }
 }

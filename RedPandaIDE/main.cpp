@@ -9,6 +9,7 @@
 #include <QStandardPaths>
 #include <QMessageBox>
 #include <QStringList>
+#include "common.h"
 
 Settings* createAppSettings(const QString& filepath = QString()) {
     QString filename;
@@ -46,6 +47,9 @@ Settings* createAppSettings(const QString& filepath = QString()) {
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
+
+    qRegisterMetaType<PCompileIssue>("PCompileIssue");
+    qRegisterMetaType<PCompileIssue>("PCompileIssue&");
 
 //load translations
     QTranslator trans;

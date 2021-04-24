@@ -17,6 +17,7 @@ protected:
 private:
     QString mFileName;
     QByteArray mEncoding;
+
 };
 
 #endif // FILECOMPILER_H

@@ -68,11 +68,17 @@ Editor::Editor(QWidget *parent, const QString& filename,
     this->setFolding(FoldStyle::BoxedTreeFoldStyle,3);
     this->setTabWidth(4);
 
+    this->setCaretLineVisible(true);
+    this->setCaretLineBackgroundColor(QColor(0xCCFFFF));
+    this->setMatchedBraceForegroundColor(QColor("Red"));
+
+
+    this->setBraceMatching(BraceMatch::SloppyBraceMatch);
     //行号显示区域
     setMarginType(0, QsciScintilla::NumberMargin);
     setMarginLineNumbers(0, true);
     setMarginWidth(0,"10");
-    this->onLinesChanged();
+    this->onLinesChanged(0,0);
     //断点设置区域
     setMarginType(1, QsciScintilla::SymbolMargin);
     setMarginLineNumbers(1, false);
@@ -107,8 +113,8 @@ Editor::Editor(QWidget *parent, const QString& filename,
             this,SLOT(onModificationChanged(bool)));
     connect(this , SIGNAL(cursorPositionChanged(int,int)),
             this, SLOT(onCursorPositionChanged(int,int)));
-    connect(this, SIGNAL(linesChanged()),
-            this,SLOT(onLinesChanged()));
+    connect(this, SIGNAL(linesChanged(int,int)),
+            this,SLOT(onLinesChanged(int, int)));
 
 }
 
@@ -280,7 +286,7 @@ void Editor::wheelEvent(QWheelEvent *event) {
         } else {
             this->zoomOut();
         }
-        onLinesChanged();
+        onLinesChanged(0,0);
     }
 }
 
@@ -292,10 +298,10 @@ void Editor::onCursorPositionChanged(int line, int index) {
     pMainWindow->updateStatusBarForEditingInfo(line,index+1,lines(),text().length());
 }
 
-void Editor::onLinesChanged() {
+void Editor::onLinesChanged(int startLine, int count) {
     this->setMarginWidth(0,QString("0%1").arg(lines()));
-    qDebug()<<marginWidth(0);
     qDebug()<<"Editor lines changed"<<lines();
+    qDebug()<<startLine<<count;
 }
 
 void Editor::updateCaption(const QString& newCaption) {

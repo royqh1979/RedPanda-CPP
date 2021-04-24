@@ -23,7 +23,8 @@ SOURCES += \
     settingsdialog/settingsdialog.cpp \
     settingsdialog/settingswidget.cpp \
     systemconsts.cpp \
-    utils.cpp
+    utils.cpp \
+    widgets/issuestable.cpp
 
 HEADERS += \
     compiler/compiler.h \
@@ -39,7 +40,9 @@ HEADERS += \
     settingsdialog/settingsdialog.h \
     settingsdialog/settingswidget.h \
     systemconsts.h \
-    utils.h
+    utils.h \
+    common.h \
+    widgets/issuestable.h
 
 FORMS += \
     mainwindow.ui \

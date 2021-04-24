@@ -20,6 +20,8 @@ void Compiler::run()
 {
     emit compileStarted();
     if (prepareForCompile()){
+        mErrorCount = 0;
+        mWarningCount = 0;
         QElapsedTimer timer;
         timer.start();
         runCommand(mCompiler, mArguments, QFileInfo(mCompiler).absolutePath());
@@ -27,8 +29,8 @@ void Compiler::run()
         log("");
         log(tr("Compile Result:"));
         log("------------------");
-        log(tr("- Errors: %1").arg(0));
-        log(tr("- Warnings: %1").arg(0));
+        log(tr("- Errors: %1").arg(mErrorCount));
+        log(tr("- Warnings: %1").arg(mWarningCount));
         if (!mOutputFile.isEmpty()) {
             log(tr("- Output Filename: %1").arg(mOutputFile));
             QLocale locale = QLocale::system();
@@ -36,8 +38,134 @@ void Compiler::run()
         }
         log(tr("- Compilation Time: %1 secs").arg(timer.elapsed() / 1000.0));
     }
-    this->deleteLater();
     emit compileFinished();
+}
+
+QString Compiler::getFileNameFromOutputLine(QString &line) {
+    QString temp;
+    line = line.trimmed();
+    while (true) {
+        int pos;
+        if (line.length() > 2 && line[1]==':') { // full file path at start, ignore this ':'
+            pos = line.indexOf(':',2);
+        } else {
+            pos = line.indexOf(':');
+        }
+        if ( pos < 0) {
+            break;
+        }
+        temp = line.mid(0,pos);
+        line.remove(0,pos+1);
+        if (temp.compare("<stdin>", Qt::CaseInsensitive)!=0 && !QFile(temp).exists()) {
+            continue;
+        }
+
+        if (QFile(temp).fileName() == "ld.exe") { // skip ld.exe
+            continue;
+        } else {
+            break;
+        }
+    }
+    return temp;
+}
+
+int Compiler::getLineNumberFromOutputLine(QString &line)
+{
+    line = line.trimmed();
+    int pos = line.indexOf(':');
+    int result=0;
+    if (pos < 0) {
+        pos = line.indexOf(',');
+    }
+    if (pos>=0) {
+        result = line.mid(0,pos).toInt();
+        line.remove(0,pos+1);
+    }
+    return result;
+}
+
+int Compiler::getColunmnFromOutputLine(QString &line)
+{
+    line = line.trimmed();
+    int pos = line.indexOf(':');
+    int result=0;
+    if (pos < 0) {
+        pos = line.indexOf(',');
+    }
+    if (pos>=0) {
+        result = line.mid(0,pos).toInt();
+        line.remove(0,pos+1);
+    }
+    return result;
+}
+
+CompileIssueType Compiler::getIssueTypeFromOutputLine(QString &line)
+{
+    CompileIssueType result = CompileIssueType::Other;
+    line = line.trimmed();
+    int pos = line.indexOf(':');
+    if (pos>=0) {
+        QString s=line.mid(0,pos);
+        if (s == "error" || s == "fatal error") {
+            mErrorCount += 1;
+            line = tr("[Error] ")+line.mid(pos+1);
+            result = CompileIssueType::Error;
+        } else if (s == "warning") {
+            mWarningCount += 1;
+            line = tr("[Warning] ")+line.mid(pos+1);
+            result = CompileIssueType::Warning;
+        } else if (s == "info") {
+            mWarningCount += 1;
+            line = tr("[Info] ")+line.mid(pos+1);
+            result = CompileIssueType::Info;
+        } else if (s == "note") {
+            mWarningCount += 1;
+            line = tr("[Note] ")+line.mid(pos+1);
+            result = CompileIssueType::Note;
+        }
+    }
+    return result;
+}
+
+void Compiler::processOutput(QString &line)
+{
+    QString inFilePrefix = QString("In file included from ");
+    QString fromPrefix = QString("from ");
+    PCompileIssue issue = std::make_shared<CompileIssue>();
+    QString description;
+    issue->type = CompileIssueType::Other;
+    if (line.startsWith(inFilePrefix)) {
+        line.remove(0,inFilePrefix.length());
+        issue->filename = getFileNameFromOutputLine(line);
+        issue->line = getLineNumberFromOutputLine(line);
+        issue->column = getColunmnFromOutputLine(line);
+        issue->type = getIssueTypeFromOutputLine(line);
+        issue->description = inFilePrefix + issue->filename;
+        emit compileIssue(issue);
+        return;
+    } else if(line.startsWith(fromPrefix)) {
+        line.remove(0,fromPrefix.length());
+        issue->filename = getFileNameFromOutputLine(line);
+        issue->line = getLineNumberFromOutputLine(line);
+        issue->column = getColunmnFromOutputLine(line);
+        issue->type = getIssueTypeFromOutputLine(line);
+        issue->description = "                 from " + issue->filename;
+        emit compileIssue(issue);
+        return;
+    }
+
+    // Ignore code snippets that GCC produces
+    // they always start with a space
+    if (line.length()>0 && line[0] == ' ') {
+        return;
+    }
+    // assume regular main.cpp:line:col: message
+    issue->filename = getFileNameFromOutputLine(line);
+    issue->line = getLineNumberFromOutputLine(line);
+    issue->column = getColunmnFromOutputLine(line);
+    issue->type = getIssueTypeFromOutputLine(line);
+    issue->description = line.trimmed();
+    emit compileIssue(issue);
 }
 
 void Compiler::stopCompile()
@@ -174,7 +302,7 @@ void Compiler::runCommand(const QString &cmd, const QString  &arguments, const Q
     process.setWorkingDirectory(workingDir);
 
     process.connect(&process, &QProcess::readyReadStandardError,[&process,this](){
-        this->log(process.readAllStandardError());
+        this->error(process.readAllStandardError());
     });
     process.connect(&process, &QProcess::readyReadStandardOutput,[&process,this](){
         this->log(process.readAllStandardOutput());
@@ -203,6 +331,10 @@ void Compiler::log(const QString &msg)
 
 void Compiler::error(const QString &msg)
 {
-    emit compileError(msg);
+    emit compileOutput(msg);
+    for (QString& s:msg.split("\n")) {
+        if (!s.isEmpty())
+            processOutput(s);
+    }
 }
 

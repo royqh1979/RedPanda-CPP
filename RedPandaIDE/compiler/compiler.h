@@ -3,6 +3,7 @@
 
 #include <QThread>
 #include "settings.h"
+#include "../common.h"
 
 class Compiler : public QThread
 {
@@ -21,12 +22,17 @@ signals:
     void compileStarted();
     void compileFinished();
     void compileOutput(const QString& msg);
-    void compileError(const QString& errorMsg);
+    void compileIssue(PCompileIssue issue);
 public slots:
     void stopCompile();
 
 protected:
     void run() override;
+    void processOutput(QString& line);
+    virtual QString getFileNameFromOutputLine(QString &line);
+    virtual int getLineNumberFromOutputLine(QString &line);
+    virtual int getColunmnFromOutputLine(QString &line);
+    virtual CompileIssueType getIssueTypeFromOutputLine(QString &line);
 
 protected:
     virtual Settings::PCompilerSet compilerSet() = 0;
@@ -47,6 +53,8 @@ protected:
     QString mCompiler;
     QString mArguments;
     QString mOutputFile;
+    int mErrorCount;
+    int mWarningCount;
 
 private:
     bool mStop;
