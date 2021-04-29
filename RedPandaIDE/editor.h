@@ -4,7 +4,6 @@
 #include <QObject>
 #include <utils.h>
 #include <QTabWidget>
-#include <Qsci/qsciscintilla.h>
 
 class SaveException: public std::exception {
 
@@ -23,6 +22,18 @@ class Editor : public QsciScintilla
 {
     Q_OBJECT
 public:
+    enum MarginNumber {
+        LineNumberMargin = 0,
+        MarkerMargin = 1,
+        FoldMargin = 2,
+    };
+
+    enum MarkerNumber {
+        BreakpointMarker,
+        ErrorMarker,
+        WarningMarker
+    };
+
     explicit Editor(QWidget *parent, const QString& filename,
                     const QByteArray& encoding,
                     bool inProject, bool isNew,QTabWidget* parentPageControl);

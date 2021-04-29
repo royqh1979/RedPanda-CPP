@@ -70,6 +70,8 @@ private slots:
 
     void on_actionFoldAll_triggered();
 
+    void on_tableIssues_doubleClicked(const QModelIndex &index);
+
 public slots:
     void onCompileLog(const QString& msg);
     void onCompileIssue(PCompileIssue issue);

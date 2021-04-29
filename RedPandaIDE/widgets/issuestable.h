@@ -18,6 +18,7 @@ public slots:
 
     void setErrorColor(QColor color);
     void setWarningColor(QColor color);
+    PCompileIssue issue(int row);
 private:
     std::vector<PCompileIssue> mIssues;
     QColor mErrorColor;
@@ -47,6 +48,9 @@ public:
 
 public slots:
     void addIssue(PCompileIssue issue);
+
+    PCompileIssue issue(const QModelIndex& index);
+    PCompileIssue issue(const int row);
 
     void clearIssues();
 

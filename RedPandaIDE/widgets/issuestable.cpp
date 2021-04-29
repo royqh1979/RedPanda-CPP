@@ -7,11 +7,10 @@ IssuesTable::IssuesTable(QWidget *parent):
 {
     mModel = new IssuesModel(this);
     this->setModel(mModel);
-    this->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
     this->horizontalHeader()->setSectionResizeMode(3,QHeaderView::Stretch);
     this->setColumnWidth(0,200);
-    this->setColumnWidth(1,60);
-    this->setColumnWidth(2,60);
+    this->setColumnWidth(1,45);
+    this->setColumnWidth(2,45);
 
 }
 
@@ -62,9 +61,28 @@ void IssuesModel::setWarningColor(QColor color)
     mWarningColor = color;
 }
 
+PCompileIssue IssuesModel::issue(int row)
+{
+    if (row<0 || row>=static_cast<int>(mIssues.size())) {
+        return PCompileIssue();
+    }
+
+    return mIssues[row];
+}
+
 void IssuesTable::addIssue(PCompileIssue issue)
 {
     mModel->addIssue(issue);
+}
+
+PCompileIssue IssuesTable::issue(const QModelIndex &index)
+{
+    return issue(index.row());
+}
+
+PCompileIssue IssuesTable::issue(const int row)
+{
+    return mModel->issue(row);
 }
 
 void IssuesTable::clearIssues()

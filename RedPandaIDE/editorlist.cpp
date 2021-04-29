@@ -4,6 +4,7 @@
 #include <QVariant>
 #include <mainwindow.h>
 #include <iconv.h>
+#include <QDebug>
 
 EditorList::EditorList(QTabWidget* leftPageWidget,
       QTabWidget* rightPageWidget,
@@ -122,7 +123,7 @@ bool EditorList::closeAll(bool force) {
     return true;
 }
 
-Editor* EditorList::findOpenedEditor(const QString &filename)
+Editor* EditorList::getOpenedEditorByFilename(const QString &filename)
 {
     for (int i=0;i<mLeftPageWidget->count();i++) {
         Editor* e = static_cast<Editor*>(mLeftPageWidget->widget(i));
@@ -137,4 +138,16 @@ Editor* EditorList::findOpenedEditor(const QString &filename)
         }
     }
     return nullptr;
+}
+
+Editor *EditorList::getEditorByFilename(const QString &filename)
+{
+    //check if an editor is already openned
+    Editor* e=getOpenedEditorByFilename(filename);
+    if (e!=nullptr)
+        return e;
+    //Todo: check if is in the project
+
+    //Create a new editor
+    return newEditor(filename,ENCODING_AUTO_DETECT,false,false);
 }

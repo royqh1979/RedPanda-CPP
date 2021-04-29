@@ -32,7 +32,9 @@ public:
 
     bool closeAll(bool force = false);
 
-    Editor* findOpenedEditor(const QString& filename);
+    Editor* getOpenedEditorByFilename(const QString& filename);
+
+    Editor* getEditorByFilename(const QString& filename);
 
     void beginUpdate();
     void endUpdate();

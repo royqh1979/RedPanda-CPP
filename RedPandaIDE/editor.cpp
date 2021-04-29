@@ -65,7 +65,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
     lexer->setDefaultFont(QFont("Consolas",12));
     this->setLexer(lexer);
     this->setAutoIndent(pSettings->editor().autoIndent());
-    this->setFolding(FoldStyle::BoxedTreeFoldStyle,3);
+    this->setFolding(FoldStyle::BoxedTreeFoldStyle,FoldMargin);
     this->setTabWidth(4);
 
     this->setCaretLineVisible(true);
@@ -75,34 +75,24 @@ Editor::Editor(QWidget *parent, const QString& filename,
 
     this->setBraceMatching(BraceMatch::SloppyBraceMatch);
     //行号显示区域
-    setMarginType(0, QsciScintilla::NumberMargin);
-    setMarginLineNumbers(0, true);
-    setMarginWidth(0,"10");
+    setMarginType(LineNumberMargin, QsciScintilla::NumberMargin);
+    setMarginLineNumbers(LineNumberMargin, true);
+    setMarginWidth(LineNumberMargin,10);
     this->onLinesChanged(0,0);
     //断点设置区域
-    setMarginType(1, QsciScintilla::SymbolMargin);
-    setMarginLineNumbers(1, false);
-    setMarginWidth(1,20);
-    setMarginSensitivity(1, true);    //设置是否可以显示断点
-    setMarginsBackgroundColor(QColor("#bbfaae"));
-    setMarginMarkerMask(1, 0x02);
+    setMarginType(MarkerMargin, QsciScintilla::SymbolMargin);
+    setMarginLineNumbers(MarkerMargin, false);
+    setMarginWidth(MarkerMargin,20);
+    setMarginSensitivity(MarkerMargin, true);    //set the margin as a selection margin, which is clickable
+
 //    connect(textEdit, SIGNAL(marginClicked(int, int, Qt::KeyboardModifiers)),this,
 //            SLOT(on_margin_clicked(int, int, Qt::KeyboardModifiers)));
-    markerDefine(QsciScintilla::Circle, 1);
-    setMarkerBackgroundColor(QColor("#ee1111"), 1);
-    //单步执行显示区域
-    setMarginType(2, QsciScintilla::SymbolMargin);
-    setMarginLineNumbers(2, false);
-    setMarginWidth(2, 20);
-    setMarginSensitivity(2, false);
-    setMarginMarkerMask(2, 0x04);
-    markerDefine(QsciScintilla::RightArrow, 2);
-    setMarkerBackgroundColor(QColor("#eaf593"), 2);
-    //自动折叠区域
-    setMarginType(3, QsciScintilla::SymbolMargin);
-    setMarginLineNumbers(3, false);
-    setMarginWidth(3, 15);
-    setMarginSensitivity(3, true);
+
+    //markers
+    markerDefine(QsciScintilla::CircledPlus, ErrorMarker);
+    setMarkerForegroundColor(QColor("BLACK"),ErrorMarker);
+    setMarkerBackgroundColor(QColor("RED"),ErrorMarker);
+    markerAdd(1,ErrorMarker);
 
     // connect will fail if use new function pointer syntax
 //    connect(this, &QsciScintilla::modificationChanged,
@@ -254,6 +244,7 @@ bool Editor::saveAs(){
 void Editor::activate()
 {
     this->mParentPageControl->setCurrentWidget(this);
+    this->setFocus();
 }
 
 const QByteArray& Editor::encodingOption() const noexcept{
@@ -296,6 +287,11 @@ void Editor::onModificationChanged(bool) {
 
 void Editor::onCursorPositionChanged(int line, int index) {
     pMainWindow->updateStatusBarForEditingInfo(line,index+1,lines(),text().length());
+    long pos = getCursorPosition();
+    long start = SendScintilla(SCI_WORDSTARTPOSITION,pos,false);
+    long end = SendScintilla(SCI_WORDENDPOSITION,pos,false);
+
+    qDebug()<<start<<end<<text(start,end);
 }
 
 void Editor::onLinesChanged(int startLine, int count) {

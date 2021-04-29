@@ -40,7 +40,7 @@ Qt::ItemFlags CompilerSetDirectoriesWidget::ListModel::flags(const QModelIndex &
     Qt::ItemFlags flags = Qt::NoItemFlags;
     if (index.isValid()) {
         flags = Qt::ItemIsEnabled | Qt::ItemIsDragEnabled | Qt::ItemIsEditable | Qt::ItemIsSelectable ;
-    } else if (index.row() ==-1) {
+    } else if (index.row() == -1) {
         // -1 means it's a drop target?
         flags = Qt::ItemIsDropEnabled;
     }

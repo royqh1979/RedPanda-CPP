@@ -86,7 +86,7 @@ void MainWindow::openFiles(const QStringList &files)
 
 void MainWindow::openFile(const QString &filename)
 {
-    Editor* editor = mEditorList->findOpenedEditor(filename);
+    Editor* editor = mEditorList->getOpenedEditorByFilename(filename);
     if (editor!=nullptr) {
         editor->activate();
         return;
@@ -293,4 +293,18 @@ void MainWindow::on_actionFoldAll_triggered()
         editor->clearFolds();
         editor->foldAll();
     }
+}
+
+void MainWindow::on_tableIssues_doubleClicked(const QModelIndex &index)
+{
+    PCompileIssue issue = ui->tableIssues->issue(index);
+    if (!issue)
+        return;
+
+    Editor * editor = mEditorList->getEditorByFilename(issue->filename);
+    if (editor == nullptr)
+        return;
+
+    editor->setCursorPosition(issue->line-1,issue->column-1);
+    editor->activate();
 }

@@ -60,7 +60,7 @@ QString Compiler::getFileNameFromOutputLine(QString &line) {
             continue;
         }
 
-        if (QFile(temp).fileName() == "ld.exe") { // skip ld.exe
+        if (QFile(temp).fileName() == QLatin1String("ld.exe")) { // skip ld.exe
             continue;
         } else {
             break;

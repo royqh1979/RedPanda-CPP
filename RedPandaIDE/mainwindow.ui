@@ -191,6 +191,9 @@
            <property name="selectionMode">
             <enum>QAbstractItemView::SingleSelection</enum>
            </property>
+           <property name="selectionBehavior">
+            <enum>QAbstractItemView::SelectRows</enum>
+           </property>
           </widget>
          </item>
         </layout>
