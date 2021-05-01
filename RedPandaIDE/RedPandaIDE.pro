@@ -20,7 +20,10 @@ SOURCES += \
     qsynedit/CodeFolding.cpp \
     qsynedit/Constants.cpp \
     qsynedit/MiscClasses.cpp \
+    qsynedit/MiscProcs.cpp \
+    qsynedit/TextBuffer.cpp \
     qsynedit/highlighter/base.cpp \
+    qsynedit/highlighter/composition.cpp \
     qsynedit/highlighter/cpp.cpp \
     settingsdialog/compilersetdirectorieswidget.cpp \
     settingsdialog/compilersetoptionwidget.cpp \
@@ -42,7 +45,10 @@ HEADERS += \
     qsynedit/CodeFolding.h \
     qsynedit/Constants.h \
     qsynedit/MiscClasses.h \
+    qsynedit/MiscProcs.h \
+    qsynedit/TextBuffer.h \
     qsynedit/highlighter/base.h \
+    qsynedit/highlighter/composition.h \
     qsynedit/highlighter/cpp.h \
     settingsdialog/compilersetdirectorieswidget.h \
     settingsdialog/compilersetoptionwidget.h \

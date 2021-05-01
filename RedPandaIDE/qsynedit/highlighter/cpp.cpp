@@ -110,7 +110,7 @@ const QSet<QString> SynEditCppHighlighter::Keywords {
 
     "nullptr",
 };
-SynEditCppHighlighter::SynEditCppHighlighter(QObject *parent): SynHighligterBase(parent)
+SynEditCppHighlighter::SynEditCppHighlighter(QObject *parent): SynHighlighter(parent)
 {
     mAsmAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrAssembler);
     addAttribute(mAsmAttribute);
@@ -1559,4 +1559,14 @@ void SynEditCppHighlighter::resetState()
     mBracketLevel = 0;
     mBraceLevel = 0;
     mParenthesisLevel = 0;
+}
+
+SynHighlighterClass SynEditCppHighlighter::getClass() const
+{
+    return SynHighlighterClass::CppHighlighter;
+}
+
+QString SynEditCppHighlighter::getName() const
+{
+    return "SynCppHighlighter";
 }

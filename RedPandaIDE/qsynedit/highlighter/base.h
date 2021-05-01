@@ -4,8 +4,9 @@
 #include <QColor>
 #include <QObject>
 #include <memory>
-#include <map>
-#include <set>
+#include <QMap>
+#include <QSet>
+#include <QVector>
 
 typedef struct {
     int state;
@@ -18,6 +19,11 @@ enum class SynHighlighterTokenType {
     PreprocessDirective, String, StringEscapeSequence,
     Identifier, Symbol,
     Character, Keyword, Number};
+
+enum class SynHighlighterClass {
+    Composition,
+    CppHighlighter,
+};
 
 class SynHighlighterAttribute : public QObject{
     Q_OBJECT
@@ -59,16 +65,17 @@ private:
 };
 
 typedef std::shared_ptr<SynHighlighterAttribute> PSynHighlighterAttribute;
+using SynHighlighterAttributeList = QVector<PSynHighlighterAttribute>;
 
-class SynHighligterBase : public QObject
+class SynHighlighter : public QObject
 {
     Q_OBJECT
 public:
-    explicit SynHighligterBase(QObject *parent = nullptr);
+    explicit SynHighlighter(QObject *parent = nullptr);
 
-    const std::map<QString, PSynHighlighterAttribute> attributes() const;
+    const QMap<QString, PSynHighlighterAttribute>& attributes() const;
 
-    std::set<QChar> wordBreakChars() const;
+    const QSet<QChar>& wordBreakChars() const;
 
 
 
@@ -85,6 +92,8 @@ public:
     PSynHighlighterAttribute symbolAttribute() const;
 
     virtual bool isIdentChar(const QChar& ch) const;
+
+    virtual SynHighlighterClass getClass() const = 0;
 
     void beginUpdate();
     void endUpdate();
@@ -133,10 +142,13 @@ protected:
     virtual PSynHighlighterAttribute getAttribute(const QString& name) const;
 
 private:
-    std::map<QString,PSynHighlighterAttribute> mAttributes;
+    QMap<QString,PSynHighlighterAttribute> mAttributes;
     int mUpdateCount;
     bool mEnabled;
-    std::set<QChar> mWordBreakChars;
+    QSet<QChar> mWordBreakChars;
 };
+
+using PSynHighlighter = std::shared_ptr<SynHighlighter>;
+using SynHighlighterList = QList<PSynHighlighter>;
 
 #endif // SYNHIGHLIGTERBASE_H

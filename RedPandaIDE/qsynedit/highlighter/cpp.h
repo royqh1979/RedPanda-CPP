@@ -3,7 +3,7 @@
 #include "base.h"
 #include <QSet>
 
-class SynEditCppHighlighter: public SynHighligterBase
+class SynEditCppHighlighter: public SynHighlighter
 {
     Q_OBJECT
 
@@ -199,6 +199,14 @@ public:
     // SynHighligterBase interface
 public:
     void resetState() override;
+
+    // SynHighligterBase interface
+public:
+    SynHighlighterClass getClass() const override;
+
+    // SynHighlighter interface
+public:
+    QString getName() const override;
 };
 
 #endif // SYNEDITCPPHIGHLIGHTER_H

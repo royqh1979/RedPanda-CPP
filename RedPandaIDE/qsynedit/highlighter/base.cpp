@@ -2,19 +2,19 @@
 #include "../Constants.h"
 
 SynHighligterBase::SynHighligterBase(QObject *parent) : QObject(parent),
-    mWordBreakChars{ SynWordBreakChars},
+    mWordBreakChars{ SynWordBreakChars },
     mEnabled(true),
     mUpdateCount(0)
 {
 
 }
 
-std::map<QString, PSynHighlighterAttribute> SynHighligterBase::attributes() const
+const QMap<QString, PSynHighlighterAttribute>& SynHighligterBase::attributes() const
 {
     return mAttributes;
 }
 
-std::set<QChar> SynHighligterBase::wordBreakChars() const
+const QSet<QChar>& SynHighligterBase::wordBreakChars() const
 {
     return mWordBreakChars;
 }
@@ -79,12 +79,7 @@ void SynHighligterBase::endUpdate()
 
 SynRangeState SynHighligterBase::getRangeState() const
 {
-    return 0;
-}
-
-SynRangeState SynHighligterBase::getSpaceRangeState() const
-{
-
+    return {0,0};
 }
 
 int SynHighligterBase::getBraceLevel() const
@@ -104,12 +99,18 @@ int SynHighligterBase::getParenthesisLevel() const
 
 SynHighlighterTokenType SynHighligterBase::getTokenType()
 {
-    return SynHighlighterTokenType::httDefault;
+    return SynHighlighterTokenType::Default;
 }
 
 bool SynHighligterBase::isKeyword(const QString &)
 {
     return false;
+}
+
+void SynHighligterBase::nextToEol()
+{
+    while (!eol())
+        next();
 }
 
 bool SynHighligterBase::isSpaceChar(const QChar &ch)
@@ -137,6 +138,8 @@ bool SynHighligterBase::isIdentChar(const QChar &ch) const
 void SynHighligterBase::addAttribute(PSynHighlighterAttribute attribute)
 {
     mAttributes[attribute->name()]=attribute;
+    connect(attribute.get(), &SynHighlighterAttribute::changed,
+            this, &SynHighligterBase::setAttributesChanged);
 }
 
 void SynHighligterBase::clearAttributes()
@@ -153,7 +156,7 @@ PSynHighlighterAttribute SynHighligterBase::getAttribute(const QString &name) co
 {
     auto search = mAttributes.find(name);
     if (search!=mAttributes.end()) {
-        return search->second;
+        return search.value();
     }
     return PSynHighlighterAttribute();
 }

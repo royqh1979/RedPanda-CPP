@@ -1,9 +1,9 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
-#include <set>
+#include <QSet>
 #include <QChar>
 
-extern const std::set<QChar> SynWordBreakChars;
+extern const QSet<QChar> SynWordBreakChars;
 extern const QChar SynTabChar;
 
 #define SYN_ATTR_COMMENT    0
