@@ -43,6 +43,107 @@ void InternalFillRect(QPainter *painter, const QRect &rcPaint, const QColor& col
     painter->fillRect(rcPaint,color);
 }
 
+
+bool IsPowerOfTwo(int TabWidth) {
+    if (TabWidth<2)
+        return false;
+    int nW = 2;
+    do {
+        if (nW >= TabWidth)
+            break;
+        nW <<= 1;
+    } while (nW<0x10000);
+    return (nW == TabWidth);
+}
+
+QString ConvertTabs1Ex(const QString &Line, int TabWidth, bool &HasTabs) {
+    QString Result = Line;  // increment reference count only
+    int nBeforeTab;
+    if (GetHasTabs(Line, nBeforeTab)) {
+        QChar* pDest;
+        HasTabs = true;
+        pDest = Result.data()+nBeforeTab+1;
+        // this will make a copy of Line
+        // We have at least one tab in the string, and the tab width is 1.
+        // pDest points to the first tab char. We overwrite all tabs with spaces.
+        while (*pDest!=0) {
+            if (*pDest == '\t') {
+                *pDest = ' ';
+            };
+            pDest++;
+        }
+    } else
+        HasTabs = false;
+    return Result;
+}
+
+QString ConvertTabs1(const QString &Line, int TabWidth) {
+    bool HasTabs;
+    return ConvertTabs1Ex(Line, TabWidth, HasTabs);
+}
+
+QString ConvertTabs2nEx(const QString &Line, int TabWidth, bool &HasTabs) {
+    QString Result = Line;  // increment reference count only
+    int DestLen;
+    if (GetHasTabs(Line, DestLen)) {
+        HasTabs = true;
+        int pSrc = 1 + DestLen;
+        // We have at least one tab in the string, and the tab width equals 2^n.
+        // pSrc points to the first tab char in Line. We get the number of tabs
+        // and the length of the expanded string now.
+        int TabCount = 0;
+        int TabMask = (TabWidth - 1) ^ 0x7FFFFFFF;
+        do {
+            if (Line[pSrc] == '\t') {
+                DestLen =  (DestLen + TabWidth) & TabMask;
+                TabCount++;
+            } else
+                DestLen ++ ;
+        } while (pSrc < Line.length());
+        // Set the length of the expanded string.
+        Result.resize(DestLen);
+        DestLen = 0;
+        pSrc = 0;
+        QChar * pDest = Result.data();
+        // We use another TabMask here to get the difference to 2^n.
+        TabMask = TabWidth - 1;
+        do {
+            if (Line[pSrc] == '\t') {
+                int i = TabWidth - (DestLen & TabMask);
+                DestLen += i;
+                //This is used for both drawing and other stuff and is meant to be #9 and not #32
+                do {
+                    *pDest = '\t';
+                    pDest ++ ;
+                    i--;
+                } while (i > 0);
+                TabCount -- ;
+                if (TabCount == 0) {
+                    do {
+                        pSrc++ ;
+                        *pDest = Line[pSrc];
+                        pDest++;
+                    } while (pSrc < Line.length());
+                    return Result;
+                }
+            } else {
+                *pDest = Line[pSrc];
+                pDest ++ ;
+                DestLen ++;
+            }
+            pSrc++;
+        } while (pSrc < Line.length());
+
+    } else
+        HasTabs = false;
+    return Result;
+}
+
+QString ConvertTabs2n(const QString &Line, int TabWidth) {
+    bool HasTabs;
+    return ConvertTabs2nEx(Line, TabWidth, HasTabs);
+}
+
 ConvertTabsProc GetBestConvertTabsProc(int TabWidth)
 {
     if (TabWidth < 2)
@@ -50,7 +151,7 @@ ConvertTabsProc GetBestConvertTabsProc(int TabWidth)
     else if (IsPowerOfTwo(TabWidth))
         return &ConvertTabs2n;
     else
-        return @ConvertTabs;
+        return &ConvertTabs;
 }
 
 QString ConvertTabs(const QString &Line, int TabWidth)
@@ -66,7 +167,7 @@ ConvertTabsProcEx GetBestConvertTabsProcEx(int TabWidth)
     else if (IsPowerOfTwo(TabWidth))
         return &ConvertTabs2nEx;
     else
-        return @ConvertTabsEx;
+        return &ConvertTabsEx;
 }
 
 QString ConvertTabsEx(const QString &Line, int TabWidth, bool &HasTabs)
@@ -90,7 +191,7 @@ QString ConvertTabsEx(const QString &Line, int TabWidth, bool &HasTabs)
                 DestLen ++;
             }
             pSrc++;
-        } while (pSrc<Line.size());
+        } while (pSrc<Line.length());
         // Set the length of the expanded string.
         Result.resize(DestLen);
         DestLen = 0;
@@ -111,7 +212,7 @@ QString ConvertTabsEx(const QString &Line, int TabWidth, bool &HasTabs)
                         pSrc++;
                         *pDest = Line[pSrc];
                         pDest++;
-                    } while (pSrc<Line.size());
+                    } while (pSrc<Line.length());
                     return Result;
                 }
             } else {
@@ -120,7 +221,7 @@ QString ConvertTabsEx(const QString &Line, int TabWidth, bool &HasTabs)
                 DestLen++;
             }
             pSrc++;
-        } while (pSrc<Line.size());
+        } while (pSrc<Line.length());
     } else
         HasTabs = false;
     return Result;
@@ -173,7 +274,7 @@ int CharIndex2CaretPos(int Index, int TabWidth, const QString &Line)
                 Index -= iChar;
                 int pNext = iChar;
                 while (Index > 0) {
-                    if (pNext>=Line.size()) {
+                    if (pNext>=Line.length()) {
                         Result += Index;
                         break;
                     }
@@ -212,7 +313,7 @@ int CaretPos2CharIndex(int Position, int TabWidth, const QString &Line, bool &In
                 // for easier computation go zero-based (mod-operation)
                 Position -=1;
                 while (iPos < Position) {
-                    if (pNext>=Line.size())
+                    if (pNext>=Line.length())
                         break;
                     if (Line[pNext] == '\t') {
                         iPos+=TabWidth;
@@ -235,7 +336,7 @@ int CaretPos2CharIndex(int Position, int TabWidth, const QString &Line, bool &In
 
 int StrScanForCharInSet(const QString &Line, int Start, const QSet<QChar>& AChars)
 {
-    for (int i=Start;i<Line.size();i++) {
+    for (int i=Start;i<Line.length();i++) {
         if (AChars.contains(Line[i])) {
             return i;
         }
@@ -316,17 +417,6 @@ QString DecodeString(const QString &s)
     Result.resize(j);
     return Result;
 }
-
-var
-  i: Integer;
-begin
-  Result := 1;
-  for i := 0 to HighlighterList.Count - 1 do
-    if HighlighterList[i] = Highlighter then
-      Exit
-    else if Assigned(HighlighterList[i]) and (TObject(HighlighterList[i]).ClassType = Highlighter.ClassType) then
-      inc(Result);
-end;
 
 bool InternalEnumHighlighterAttris(PSynHighlighter Highlighter,
                                    bool SkipDuplicates,

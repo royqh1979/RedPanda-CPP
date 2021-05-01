@@ -12,6 +12,7 @@ typedef struct {
     int state;
     int spaceState;
 } SynRangeState;
+
 typedef int SynTokenKind;
 
 enum class SynHighlighterTokenType {
@@ -94,6 +95,7 @@ public:
     virtual bool isIdentChar(const QChar& ch) const;
 
     virtual SynHighlighterClass getClass() const = 0;
+    virtual QString getName() const = 0;
 
     void beginUpdate();
     void endUpdate();

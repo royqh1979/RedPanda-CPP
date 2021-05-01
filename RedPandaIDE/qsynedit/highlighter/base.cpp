@@ -1,7 +1,7 @@
 #include "base.h"
 #include "../Constants.h"
 
-SynHighligterBase::SynHighligterBase(QObject *parent) : QObject(parent),
+SynHighlighter::SynHighlighter(QObject *parent) : QObject(parent),
     mWordBreakChars{ SynWordBreakChars },
     mEnabled(true),
     mUpdateCount(0)
@@ -9,64 +9,64 @@ SynHighligterBase::SynHighligterBase(QObject *parent) : QObject(parent),
 
 }
 
-const QMap<QString, PSynHighlighterAttribute>& SynHighligterBase::attributes() const
+const QMap<QString, PSynHighlighterAttribute>& SynHighlighter::attributes() const
 {
     return mAttributes;
 }
 
-const QSet<QChar>& SynHighligterBase::wordBreakChars() const
+const QSet<QChar>& SynHighlighter::wordBreakChars() const
 {
     return mWordBreakChars;
 }
 
-PSynHighlighterAttribute SynHighligterBase::commentAttribute() const
+PSynHighlighterAttribute SynHighlighter::commentAttribute() const
 {
     return mCommentAttribute;
 }
 
-PSynHighlighterAttribute SynHighligterBase::identifierAttribute() const
+PSynHighlighterAttribute SynHighlighter::identifierAttribute() const
 {
     return mIdentifierAttribute;
 }
 
-PSynHighlighterAttribute SynHighligterBase::keywordAttribute() const
+PSynHighlighterAttribute SynHighlighter::keywordAttribute() const
 {
     return mKeywordAttribute;
 }
 
-PSynHighlighterAttribute SynHighligterBase::stringAttribute() const
+PSynHighlighterAttribute SynHighlighter::stringAttribute() const
 {
     return mStringAttribute;
 }
 
-PSynHighlighterAttribute SynHighligterBase::whitespaceAttribute() const
+PSynHighlighterAttribute SynHighlighter::whitespaceAttribute() const
 {
     return mWhitespaceAttribute;
 }
 
-PSynHighlighterAttribute SynHighligterBase::symbolAttribute() const
+PSynHighlighterAttribute SynHighlighter::symbolAttribute() const
 {
     return mSymbolAttribute;
 }
 
-void SynHighligterBase::onAttributeChanged()
+void SynHighlighter::onAttributeChanged()
 {
     setAttributesChanged();
 }
 
-void SynHighligterBase::setAttributesChanged()
+void SynHighlighter::setAttributesChanged()
 {
     if (mUpdateCount == 0) {
         emit attributesChanged();
     }
 }
 
-void SynHighligterBase::beginUpdate()
+void SynHighlighter::beginUpdate()
 {
     mUpdateCount++;
 }
 
-void SynHighligterBase::endUpdate()
+void SynHighlighter::endUpdate()
 {
     mUpdateCount--;
     if (mUpdateCount == 0) {
@@ -77,48 +77,48 @@ void SynHighligterBase::endUpdate()
     }
 }
 
-SynRangeState SynHighligterBase::getRangeState() const
+SynRangeState SynHighlighter::getRangeState() const
 {
     return {0,0};
 }
 
-int SynHighligterBase::getBraceLevel() const
+int SynHighlighter::getBraceLevel() const
 {
     return 0;
 }
 
-int SynHighligterBase::getBracketLevel() const
+int SynHighlighter::getBracketLevel() const
 {
     return 0;
 }
 
-int SynHighligterBase::getParenthesisLevel() const
+int SynHighlighter::getParenthesisLevel() const
 {
     return 0;
 }
 
-SynHighlighterTokenType SynHighligterBase::getTokenType()
+SynHighlighterTokenType SynHighlighter::getTokenType()
 {
     return SynHighlighterTokenType::Default;
 }
 
-bool SynHighligterBase::isKeyword(const QString &)
+bool SynHighlighter::isKeyword(const QString &)
 {
     return false;
 }
 
-void SynHighligterBase::nextToEol()
+void SynHighlighter::nextToEol()
 {
     while (!eol())
         next();
 }
 
-bool SynHighligterBase::isSpaceChar(const QChar &ch)
+bool SynHighlighter::isSpaceChar(const QChar &ch)
 {
     return ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n';
 }
 
-bool SynHighligterBase::isIdentChar(const QChar &ch) const
+bool SynHighlighter::isIdentChar(const QChar &ch) const
 {
     if (ch == '_') {
         return true;
@@ -135,24 +135,24 @@ bool SynHighligterBase::isIdentChar(const QChar &ch) const
 
 }
 
-void SynHighligterBase::addAttribute(PSynHighlighterAttribute attribute)
+void SynHighlighter::addAttribute(PSynHighlighterAttribute attribute)
 {
     mAttributes[attribute->name()]=attribute;
     connect(attribute.get(), &SynHighlighterAttribute::changed,
-            this, &SynHighligterBase::setAttributesChanged);
+            this, &SynHighlighter::setAttributesChanged);
 }
 
-void SynHighligterBase::clearAttributes()
+void SynHighlighter::clearAttributes()
 {
     mAttributes.clear();
 }
 
-int SynHighligterBase::attributesCount() const
+int SynHighlighter::attributesCount() const
 {
     return mAttributes.size();
 }
 
-PSynHighlighterAttribute SynHighligterBase::getAttribute(const QString &name) const
+PSynHighlighterAttribute SynHighlighter::getAttribute(const QString &name) const
 {
     auto search = mAttributes.find(name);
     if (search!=mAttributes.end()) {

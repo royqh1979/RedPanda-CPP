@@ -13,11 +13,28 @@ using OnCheckMarker = void (*)(PSynSchema Sender,int &StartPos, int &MarkerLen,
 class SynScheme : public QObject {
     Q_OBJECT
 public:
-    explicit SynScheme(QObject& parent=nullptr);
+    explicit SynScheme(QObject* parent=nullptr);
+    QString endExpr() const;
+    void setEndExpr(const QString &endExpr);
+
+    QString getStartExpr() const;
+    void setStartExpr(const QString &value);
+
+    PSynHighlighter getHighlighter() const;
+    void setHighlighter(const PSynHighlighter &highlighter);
+
+    PSynHighlighterAttribute getMarkerAttribute() const;
+
+    QString getSchemeName() const;
+    void setSchemeName(const QString &schemeName);
+
+    int getCaseSensitive() const;
+    void setCaseSensitive(int caseSensitive);
+
 private:
     QString mEndExpr;
     QString StartExpr;
-    PSynHighligterBase mHighlighter;
+    PSynHighlighter mHighlighter;
     PSynHighlighterAttribute mMarkerAttribute;
     QString mSchemeName;
     int mCaseSensitive;
@@ -28,29 +45,18 @@ private slots:
     void MarkerAttriChanged();
 };
 
-public
-  constructor Create(Collection: TCollection); override;
-  destructor Destroy; override;
-published
-  property CaseSensitive: Boolean read fCaseSensitive write SetCaseSensitive
-    default True;
-  property StartExpr: string read fStartExpr write SetStartExpr;
-  property EndExpr: string read fEndExpr write SetEndExpr;
-  property Highlighter: TSynCustomHighlighter read fHighlighter
-    write SetHighlighter;
-  property MarkerAttri: TSynHighlighterAttributes read fMarkerAttri
-    write SetMarkerAttri;
-  property SchemeName: TComponentName read fSchemeName write fSchemeName;
-  property OnCheckStartMarker: TOnCheckMarker read fOnCheckStartMarker write fOnCheckStartMarker;
-  property OnCheckEndMarker: TOnCheckMarker read fOnCheckEndMarker write fOnCheckEndMarker;
-end;
 
 
-class SynHighlightComposition : public SynHighligterBase
+class SynHighlightComposition : public SynHighlighter
 {
     Q_OBJECT
 public:
     explicit SynHighlightComposition(QObject *parent = nullptr);
+
+    // SynHighligterBase interface
+public:
+    SynHighlighterClass getClass() const override;
+    QString getName() const override;
 };
 
 #endif // SYNHIGHLIGHTCOMPOSITION_H
