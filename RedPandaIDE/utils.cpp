@@ -253,3 +253,79 @@ QString toLocalPath(const QString &filename)
     newPath.replace("/",QDir::separator());
     return newPath;
 }
+
+QStringList TextToLines(const QString &text)
+{
+    QTextStream stream(&((QString&)text),QIODevice::ReadOnly);
+    return ReadStreamToLines(&stream);
+}
+
+QStringList ReadFileToLines(const QString& fileName, QTextCodec* codec)
+{
+    QFile file(fileName);
+    if (file.open(QFile::ReadOnly)) {
+        QTextStream stream(&file);
+        stream.setCodec(codec);
+        stream.setAutoDetectUnicode(false);
+        return ReadStreamToLines(&stream);
+    }
+    return QStringList();
+}
+
+QStringList ReadStreamToLines(QTextStream *stream)
+{
+    QStringList list;
+    QString s;
+    while (stream->readLineInto(&s)) {
+        list.append(s);
+    }
+    return list;
+}
+
+void ReadStreamToLines(QTextStream *stream,
+                              LineProcessFunc lineFunc)
+{
+    QString s;
+    while (stream->readLineInto(&s)) {
+        lineFunc(s);
+    }
+}
+
+void TextToLines(const QString &text, LineProcessFunc lineFunc)
+{
+    QTextStream stream(&((QString&)text),QIODevice::ReadOnly);
+    ReadStreamToLines(&stream,lineFunc);
+}
+
+void ReadFileToLines(const QString &fileName, QTextCodec *codec, LineProcessFunc lineFunc)
+{
+    QFile file(fileName);
+    if (file.open(QFile::ReadOnly)) {
+        QTextStream stream(&file);
+        stream.setCodec(codec);
+        stream.setAutoDetectUnicode(false);
+        ReadStreamToLines(&stream, lineFunc);
+    }
+}
+
+BaseError::BaseError(const QString &reason):
+mReason(reason)
+{
+
+}
+
+QString BaseError::reason() const
+{
+    return mReason;
+}
+
+IndexOutOfRange::IndexOutOfRange(int Index):
+BaseError(QObject::tr("Index %1 out of range").arg(Index))
+{
+
+}
+
+FileError::FileError(const QString &reason): BaseError(reason)
+{
+
+}

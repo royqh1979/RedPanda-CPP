@@ -7,6 +7,7 @@
 #include <QSet>
 #include "highlighter/base.h"
 #include <QPaintDevice>
+#include <QTextStream>
 #include <QVector>
 #include <initializer_list>
 //#include <QRect>
@@ -31,14 +32,14 @@ void InternalFillRect(QPainter* painter, const QRect& rcPaint, const QColor& col
 
 // Converting tabs to spaces: To use the function several times it's better
 // to use a function pointer that is set to the fastest conversion function.
-using ConvertTabsProc = QString (*)(const QString& Line, int  TabWidth);
+using ConvertTabsProc = std::function<QString(const QString&, int)>;
 
 ConvertTabsProc GetBestConvertTabsProc(int TabWidth);
 
 // This is the slowest conversion function which can handle TabWidth <> 2^n.
 QString ConvertTabs(const QString& Line, int TabWidth);
 
-using ConvertTabsProcEx = QString (*)(const QString& Line, int  TabWidth, bool& HasTabs);
+using ConvertTabsProcEx = std::function<QString(const QString&, int, bool& )>;
 
 ConvertTabsProcEx GetBestConvertTabsProcEx(int TabWidth);
 // This is the slowest conversion function which can handle TabWidth <> 2^n.
@@ -68,9 +69,9 @@ QString EncodeString(const QString & s);
 // Decodes string, encoded with EncodeString.
 QString DecodeString(const QString& s);
 
-using  HighlighterAttriProc = bool (*) (PSynHighlighter Highlighter,
+using  HighlighterAttriProc = std::function<bool(PSynHighlighter Highlighter,
     PSynHighlighterAttribute Attri, const QString& UniqueAttriName,
-    std::initializer_list<void *> Params);
+    std::initializer_list<void *> Params)>;
 
 // Enums all child highlighters and their attributes of a TSynMultiSyn through a
 // callback function.
@@ -85,4 +86,5 @@ uint16_t CalcFCS(unsigned char* ABuf, int ABufSize);
 
 void SynDrawGradient(QPaintDevice* ACanvas, const QColor& AStartColor, const QColor& AEndColor,
   int ASteps, const QRect& ARect, bool AHorizontal);
+
 #endif // MISCPROCS_H

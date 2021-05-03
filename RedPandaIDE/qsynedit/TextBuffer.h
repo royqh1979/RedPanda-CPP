@@ -3,9 +3,11 @@
 
 #include <QStringList>
 #include "highlighter/base.h"
-#include <QList>
+#include <QVector>
 #include <memory>
 #include "MiscProcs.h"
+#include "../utils.h"
+#include "Types.h"
 
 enum SynEditStringFlag {
     sfHasTabs = 0x0001,
@@ -24,11 +26,14 @@ struct SynEditStringRec {
   int fParenthesisLevel;
   int fBracketLevel;
   int fBraceLevel;
+
+public:
+  explicit SynEditStringRec();
 };
 
 typedef std::shared_ptr<SynEditStringRec> PSynEditStringRec;
 
-typedef QList<PSynEditStringRec> SynEditStringRecList;
+typedef QVector<PSynEditStringRec> SynEditStringRecList;
 
 typedef std::shared_ptr<SynEditStringRecList> PSynEditStringRecList;
 
@@ -36,15 +41,9 @@ class SynEditStringList;
 
 typedef std::shared_ptr<SynEditStringList> PSynEditStringList;
 
-using StringListChangeCallback = void (*) (PSynEditStringList* object, int index, int count);
+using StringListChangeCallback = std::function<void(PSynEditStringList* object, int index, int count)>;
 
-enum class SynEditFileFormat {
-    Windows,
-    Linux,
-    Mac
-};// Windows: CRLF, UNIX: LF, Mac: CR
-
-
+class QFile;
 class SynEditStringList : public QObject
 {  
     Q_OBJECT
@@ -66,6 +65,7 @@ public:
     int count();
     void* getObject(int Index);
     QString text();
+    void setText(const QString& text);
 
     void put(int Index, const QString& s);
     void putObject(int Index, void * AObject);
@@ -75,45 +75,28 @@ public:
 
     int tabWidth();
     void setTabWidth(int value);
-    int Add(const QString& s);
-    int AddStrings(const QStringList& Strings);
+    int add(const QString& s);
+    int addStrings(const QStringList& Strings);
 
     int getTextLength();
-    void Clear();
-    void Delete(int Index);
-    procedure DeleteLines(Index, NumLines: integer);
-    procedure Exchange(Index1, Index2: integer); override;
-    procedure Insert(Index: integer; const S: string); override;
-    procedure InsertLines(Index, NumLines: integer);
-    procedure InsertStrings(Index: integer; NewStrings: TStrings);
-    procedure InsertText(Index: integer; NewText: string);
-    procedure LoadFromFile(const FileName: string); override;
-    procedure SaveToFile(const FileName: string); override;
-    procedure SaveToStream(Stream: TStream); override;
-    procedure LoadFromStream(Stream: TStream); override;
-    property AppendNewLineAtEOF: Boolean read fAppendNewLineAtEOF write fAppendNewLineAtEOF;
-    property FileFormat: TSynEditFileFormat read fFileFormat write fFileFormat;
-    property ExpandedStrings[Index: integer]: string read expandedStrings;
-    property ExpandedStringLengths[Index: integer]: integer read expandedStringLength;
-    property LengthOfLongestLine: integer read lengthOfLongestLine;
-    property Ranges[Index: integer]: TSynEditRange read GetRange write setRange;
-    property ParenthesisLevels[Index: integer]: integer read GetParenthesisLevel write setParenthesisLevel;
-    property BracketLevels[Index: integer]: integer read GetBracketLevel write setBracketLevel;
-    property BraceLevels[Index: integer]: integer read GetBraceLevel write setBraceLevel;
-    property TabWidth: integer read fTabWidth write setTabWidth;
-    property OnChange: TNotifyEvent read fOnChange write fOnChange;
-    property OnChanging: TNotifyEvent read fOnChanging write fOnChanging;
-    property OnCleared: TNotifyEvent read fOnCleared write fOnCleared;
-    property OnDeleted: TStringListChangeEvent read fOnDeleted write fOnDeleted;
-    property OnInserted: TStringListChangeEvent read fOnInserted
-      write fOnInserted;
-    property OnPutted: TStringListChangeEvent read fOnPutted write fOnPutted;
-    property ConvertTabsProc: TConvertTabsProcEx read fConvertTabsProc;
+    void clear();
+    void deleteAt(int Index);
+    void deleteLines(int Index, int NumLines);
+    void Exchange(int Index1, int Index2);
+    void Insert(int Index, const QString& s);
+    void InsertLines(int Index, int NumLines);
+    void InsertStrings(int Index, const QStringList& NewStrings);
+    void InsertText(int Index,const QString& NewText);
+    void LoadFromFile(QFile& file, const QByteArray& encoding, QByteArray& realEncoding);
+    void SaveToFile(QFile& file, const QByteArray& encoding, QByteArray& realEncoding);
 
     bool getAppendNewLineAtEOF() const;
     void setAppendNewLineAtEOF(bool appendNewLineAtEOF);
 
     ConvertTabsProcEx getConvertTabsProc() const;
+
+    FileEndingType getFileEndingType() const;
+    void setFileEndingType(const FileEndingType &fileEndingType);
 
 signals:
     void changed();
@@ -126,22 +109,117 @@ protected:
     QString GetTextStr();
     void SetUpdateState(bool Updating);
     void InsertItem(int Index, const QString& s);
-
+    void PutTextStr(const QString& text);
 
 private:
     SynEditStringRecList mList;
 
     //int mCount;
     //int mCapacity;
-    SynEditFileFormat mFileFormat;
+    FileEndingType mFileEndingType;
     bool mAppendNewLineAtEOF;
     ConvertTabsProcEx mConvertTabsProc;
     int mIndexOfLongestLine;
     int mTabWidth;
     int mUpdateCount;
+
     QString ExpandString(int Index);
 };
 
+enum class SynChangeReason {crInsert, crPaste, crDragDropInsert,
+  //several undo entries can be chained together via the ChangeNumber
+  //see also TCustomSynEdit.[Begin|End]UndoBlock methods
+  crDeleteAfterCursor, crDelete,
+  crLineBreak, crIndent, crUnindent,
+  crSilentDelete, crSilentDeleteAfterCursor,
+  crAutoCompleteBegin, crAutoCompleteEnd,
+  crPasteBegin, crPasteEnd, //for pasting, since it might do a lot of operations
+  crSpecial1Begin, crSpecial1End,
+  crSpecial2Begin, crSpecial2End,
+  crCaret, //just restore the Caret, allowing better Undo behavior
+  crSelection, //restore Selection
+  crNothing,
+  crGroupBreak,
+  crDeleteAll
+  };
+class SynEditUndoItem {
+private:
+    SynChangeReason mChangeReason;
+    SynSelectionMode mChangeSelMode;
+    BufferCoord mChangeStartPos;
+    BufferCoord mChangeEndPos;
+    QString mChangeStr;
+    int mChangeNumber;
+public:
+    SynEditUndoItem(SynChangeReason reason,
+        SynSelectionMode selMode,
+        BufferCoord startPos,
+        BufferCoord endPos,
+        const QString& str,
+        int number);
 
+    SynChangeReason changeReason() const;
+    SynSelectionMode changeSelMode() const;
+    BufferCoord changeStartPos() const;
+    BufferCoord changeEndPos() const;
+    QString changeStr() const;
+    int changeNumber() const;
+};
+using PSynEditUndoItem = std::shared_ptr<SynEditUndoItem>;
+
+class SynEditUndoList {
+public:
+    explicit SynEditUndoList();
+
+    void AddChange(SynChangeReason AReason, const BufferCoord& AStart, const BufferCoord& AEnd,
+      const QString& ChangeText, SynSelectionMode SelMode);
+
+    void AddGroupBreak();
+    void BeginBlock();
+    void Clear();
+    void DeleteItem(int index);
+    void EndBlock();
+    SynChangeReason LastChangeReason();
+    void Lock();
+    PSynEditUndoItem PeekItem();
+    PSynEditUndoItem PopItem();
+    void PushItem(PSynEditUndoItem Item);
+    void Unlock();
+
+    bool CanUndo();
+    int ItemCount();
+
+    int maxUndoActions() const;
+    void setMaxUndoActions(int maxUndoActions);
+    bool initialState();
+    PSynEditUndoItem item(int index);
+    void setInitialState(const bool Value);
+    void setItem(int index, PSynEditUndoItem Value);
+
+    int blockChangeNumber() const;
+    void setBlockChangeNumber(int blockChangeNumber);
+
+    int blockCount() const;
+
+    bool insideRedo() const;
+    void setInsideRedo(bool insideRedo);
+
+    bool fullUndoImposible() const;
+
+signals:
+    void addedUndo();
+
+protected:
+    int mBlockChangeNumber;
+    int mBlockCount;
+    bool mFullUndoImposible;
+    QVector<PSynEditUndoItem> mItems;
+    int mLockCount;
+    int mMaxUndoActions;
+    int mNextChangeNumber;
+    int mInitialChangeNumber;
+    bool mInsideRedo;
+    void EnsureMaxEntries();
+};
 
 #endif // SYNEDITSTRINGLIST_H

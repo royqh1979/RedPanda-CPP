@@ -1,5 +1,7 @@
 #include "MiscProcs.h"
+#include <QFile>
 #include <QPainter>
+#include <QTextStream>
 #include <algorithm>
 
 int MinMax(int x, int mi, int ma)
@@ -437,7 +439,7 @@ bool InternalEnumHighlighterAttris(PSynHighlighter Highlighter,
             QString UniqueAttriName = Highlighter->getName()
                     +  HighlighterList.indexOf(Highlighter) + '.'
                     + pAttr->name();
-            Result = (*highlighterAttriProc)(Highlighter, pAttr,
+            Result = highlighterAttriProc(Highlighter, pAttr,
                                           UniqueAttriName, Params);
             if (!Result)
                 break;

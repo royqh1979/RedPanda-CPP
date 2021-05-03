@@ -21,6 +21,7 @@ SOURCES += \
     qsynedit/Constants.cpp \
     qsynedit/MiscClasses.cpp \
     qsynedit/MiscProcs.cpp \
+    qsynedit/SynEdit.cpp \
     qsynedit/TextBuffer.cpp \
     qsynedit/highlighter/base.cpp \
     qsynedit/highlighter/composition.cpp \
@@ -46,7 +47,9 @@ HEADERS += \
     qsynedit/Constants.h \
     qsynedit/MiscClasses.h \
     qsynedit/MiscProcs.h \
+    qsynedit/SynEdit.h \
     qsynedit/TextBuffer.h \
+    qsynedit/Types.h \
     qsynedit/highlighter/base.h \
     qsynedit/highlighter/composition.h \
     qsynedit/highlighter/cpp.h \

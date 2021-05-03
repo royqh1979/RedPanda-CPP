@@ -3,10 +3,14 @@
 
 #include <type_traits>
 #include <utility>
+#include <functional>
+#include <QString>
 
 class QByteArray;
 class QString;
 class QStringList;
+class QTextStream;
+class QTextCodec;
 
 #define ENCODING_AUTO_DETECT "AUTO"
 #define ENCODING_UTF8   "UTF-8"
@@ -21,6 +25,31 @@ enum class FileType{
     CppHeader, // c++ header (.hpp)
     WindowsResourceSource, // resource source (.res)
     Other // any others
+};
+
+enum class FileEndingType {
+    Windows,
+    Linux,
+    Mac
+};// Windows: CRLF, UNIX: LF, Mac: CR
+
+class BaseError{
+public:
+    explicit BaseError(const QString& reason);
+    QString reason() const;
+
+protected:
+    QString mReason;
+};
+
+class IndexOutOfRange:public BaseError {
+public:
+    explicit IndexOutOfRange(int Index);
+};
+
+class FileError: public BaseError {
+public:
+    explicit FileError(const QString& reason);
 };
 
 typedef void (*LineOutputFunc) (const QString& line);
@@ -45,6 +74,21 @@ QString getCompiledExecutableName(const QString filename);
 void splitStringArguments(const QString& arguments, QStringList& argumentList);
 bool programHasConsole(const QString& filename);
 QString toLocalPath(const QString& filename);
+
+using LineProcessFunc =  std::function<void(const QString&)>;
+
+QStringList ReadStreamToLines(QTextStream* stream);
+
+void ReadStreamToLines(QTextStream* stream, LineProcessFunc lineFunc);
+
+
+QStringList TextToLines(const QString& text);
+
+void TextToLines(const QString& text, LineProcessFunc lineFunc);
+
+QStringList ReadFileToLines(const QString& fileName, QTextCodec* codec);
+
+void ReadFileToLines(const QString& fileName, QTextCodec* codec, LineProcessFunc lineFunc);
 
 template <class F>
 class final_action

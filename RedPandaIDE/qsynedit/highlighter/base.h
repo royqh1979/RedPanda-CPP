@@ -7,6 +7,7 @@
 #include <QMap>
 #include <QSet>
 #include <QVector>
+#include <QVector>
 
 typedef struct {
     int state;
@@ -151,6 +152,6 @@ private:
 };
 
 using PSynHighlighter = std::shared_ptr<SynHighlighter>;
-using SynHighlighterList = QList<PSynHighlighter>;
+using SynHighlighterList = QVector<PSynHighlighter>;
 
 #endif // SYNHIGHLIGTERBASE_H

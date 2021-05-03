@@ -7,8 +7,8 @@
 class SynSchema;
 using PSynSchema = std::shared_ptr<SynSchema>;
 
-using OnCheckMarker = void (*)(PSynSchema Sender,int &StartPos, int &MarkerLen,
-  std::shared_ptr<QString>& MarkerText , int Line);
+using OnCheckMarker = std::function<void(PSynSchema Sender,int &StartPos, int &MarkerLen,
+  std::shared_ptr<QString>& MarkerText , int Line)>;
 
 class SynScheme : public QObject {
     Q_OBJECT
