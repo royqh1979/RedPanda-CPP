@@ -6,7 +6,8 @@
 #include <stdexcept>
 #include "../utils.h"
 
-SynEditStringList::SynEditStringList()
+SynEditStringList::SynEditStringList(QObject* parent):
+    QObject(parent)
 {
     mAppendNewLineAtEOF = true;
     mFileEndingType = FileEndingType::Windows;
@@ -159,7 +160,7 @@ void SynEditStringList::setBraceLevel(int Index, int level)
     endUpdate();
 }
 
-QString SynEditStringList::get(int Index)
+QString SynEditStringList::getString(int Index)
 {
     if (Index<0 || Index>=mList.count()) {
         return QString();
@@ -355,7 +356,7 @@ QString SynEditStringList::GetTextStr()
     return Result;
 }
 
-void SynEditStringList::put(int Index, const QString &s) {
+void SynEditStringList::putString(int Index, const QString &s) {
     if (Index == mList.count()) {
         add(s);
     } else {
@@ -631,7 +632,7 @@ SynEditStringRec::SynEditStringRec():
 }
 
 
-SynEditUndoList::SynEditUndoList()
+SynEditUndoList::SynEditUndoList():QObject()
 {
     mMaxUndoActions = 1024;
     mNextChangeNumber = 1;
@@ -644,7 +645,9 @@ SynEditUndoList::SynEditUndoList()
     mInitialChangeNumber = 0;
 }
 
-void SynEditUndoList::AddChange(SynChangeReason AReason, const BufferCoord &AStart, const BufferCoord &AEnd, const QString &ChangeText, SynSelectionMode SelMode)
+void SynEditUndoList::AddChange(SynChangeReason AReason, const BufferCoord &AStart,
+                                const BufferCoord &AEnd, const QString &ChangeText,
+                                SynSelectionMode SelMode)
 {
     if (mLockCount != 0)
         return;

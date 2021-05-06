@@ -48,7 +48,7 @@ class SynEditStringList : public QObject
 {  
     Q_OBJECT
 public:
-    explicit SynEditStringList();
+    explicit SynEditStringList(QObject* parent=nullptr);
 
     int parenthesisLevels(int Index);
     int bracketLevels(int Index);
@@ -61,13 +61,13 @@ public:
     void setParenthesisLevel(int Index, int level);
     void setBracketLevel(int Index, int level);
     void setBraceLevel(int Index, int level);
-    QString get(int Index);
+    QString getString(int Index);
     int count();
     void* getObject(int Index);
     QString text();
     void setText(const QString& text);
 
-    void put(int Index, const QString& s);
+    void putString(int Index, const QString& s);
     void putObject(int Index, void * AObject);
 
     void beginUpdate();
@@ -167,7 +167,8 @@ public:
 };
 using PSynEditUndoItem = std::shared_ptr<SynEditUndoItem>;
 
-class SynEditUndoList {
+class SynEditUndoList : public QObject {
+    Q_OBJECT
 public:
     explicit SynEditUndoList();
 
@@ -221,5 +222,7 @@ protected:
     bool mInsideRedo;
     void EnsureMaxEntries();
 };
+
+using PSynEditUndoList = std::shared_ptr<SynEditUndoList>;
 
 #endif // SYNEDITSTRINGLIST_H

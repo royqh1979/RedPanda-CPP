@@ -8,6 +8,7 @@
 #include <QSet>
 #include <QVector>
 #include <QVector>
+#include "../Types.h"
 
 typedef struct {
     int state;
@@ -40,17 +41,8 @@ public:
     QString name() const;
     void setName(const QString &name);
 
-    bool bold() const;
-    void setBold(bool bold);
-
-    bool italic() const;
-    void setItalic(bool italic);
-
-    bool underline() const;
-    void setUnderline(bool underline);
-
-    bool strikeOut() const;
-    void setStrikeOut(bool strikeOut);
+    SynFontStyles styles() const;
+    void setStyles(const SynFontStyles &styles);
 
 signals:
     void changed();
@@ -60,10 +52,7 @@ private:
     QColor mBackground;
     QColor mForeground;
     QString mName;
-    bool mBold;
-    bool mItalic;
-    bool mUnderline;
-    bool mStrikeOut;
+    SynFontStyles mStyles;
 };
 
 typedef std::shared_ptr<SynHighlighterAttribute> PSynHighlighterAttribute;

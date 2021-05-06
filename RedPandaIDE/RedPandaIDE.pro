@@ -19,10 +19,12 @@ SOURCES += \
     mainwindow.cpp \
     qsynedit/CodeFolding.cpp \
     qsynedit/Constants.cpp \
+    qsynedit/KeyStrokes.cpp \
     qsynedit/MiscClasses.cpp \
     qsynedit/MiscProcs.cpp \
     qsynedit/SynEdit.cpp \
     qsynedit/TextBuffer.cpp \
+    qsynedit/TextDrawer.cpp \
     qsynedit/highlighter/base.cpp \
     qsynedit/highlighter/composition.cpp \
     qsynedit/highlighter/cpp.cpp \
@@ -45,10 +47,12 @@ HEADERS += \
     mainwindow.h \
     qsynedit/CodeFolding.h \
     qsynedit/Constants.h \
+    qsynedit/KeyStrokes.h \
     qsynedit/MiscClasses.h \
     qsynedit/MiscProcs.h \
     qsynedit/SynEdit.h \
     qsynedit/TextBuffer.h \
+    qsynedit/TextDrawer.h \
     qsynedit/Types.h \
     qsynedit/highlighter/base.h \
     qsynedit/highlighter/composition.h \

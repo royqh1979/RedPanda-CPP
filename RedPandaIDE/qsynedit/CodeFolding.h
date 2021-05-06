@@ -3,73 +3,74 @@
 #include <QColor>
 #include <vector>
 #include <memory>
+#include <QVector>
 
-struct QSynFoldRegion;
-typedef std::shared_ptr<QSynFoldRegion> PSynFoldRegion;
+struct SynEditFoldRegion;
+typedef std::shared_ptr<SynEditFoldRegion> PSynEditFoldRegion;
 
-class QSynFoldRegions {
+class SynEditFoldRegions {
 private:
-    std::vector<PSynFoldRegion> fRegions;
+    std::vector<PSynEditFoldRegion> fRegions;
 public:
     int count();
     int add(bool addEnding, const QChar& openSymbol, const QChar& closeSymbol, const QString& highlight);
-    PSynFoldRegion get(int index);
+    PSynEditFoldRegion get(int index);
 };
-typedef std::shared_ptr<QSynFoldRegions> PSynFoldRegions;
+typedef std::shared_ptr<SynEditFoldRegions> PSynFoldRegions;
 
 
-struct QSynFoldRegion {
+struct SynEditFoldRegion {
     bool addEnding;
-    QSynFoldRegions subFoldRegions;
+    SynEditFoldRegions subFoldRegions;
     QChar openSymbol;
     QChar closeSymbol;
     QString highlight;
 };
 
-struct QSynCodeFolding {
+struct SynEditCodeFolding {
       bool indentGuides;
       bool showCollapsedLine;
       QColor collapsedLineColor;
       QColor folderBarLinesColor;
       QColor indentGuidesColor;
-      QSynFoldRegions foldRegions;
-      QSynCodeFolding();
+      SynEditFoldRegions foldRegions;
+      SynEditCodeFolding();
 };
 
-class QSynEditFoldRange;
-typedef std::shared_ptr<QSynEditFoldRange> PSynEditFoldRange;
-class QSynEditFoldRanges;
-typedef std::shared_ptr<QSynEditFoldRanges> PSynEditFoldRanges;
+class SynEditFoldRange;
+typedef std::shared_ptr<SynEditFoldRange> PSynEditFoldRange;
+class SynEditFoldRanges;
+typedef std::shared_ptr<SynEditFoldRanges> PSynEditFoldRanges;
 
-class QSynEditFoldRanges{
+class SynEditFoldRanges{
 public:
-    std::vector<PSynEditFoldRange> ranges;
+    QVector<PSynEditFoldRange> ranges;
     PSynEditFoldRange foldRange(int index);
     int count();
-    QSynEditFoldRanges();
+    SynEditFoldRanges();
     PSynEditFoldRange addByParts(PSynEditFoldRange aParent, PSynEditFoldRanges aAllFold,
-                               int aFromLine, PSynFoldRegion aFoldRegion, int aToLine);
+                               int aFromLine, PSynEditFoldRegion aFoldRegion, int aToLine);
 
     int remove(int index);
     void addObject(PSynEditFoldRange foldRange);
 };
 
 // A single fold
-class QSynEditFoldRange {
+class SynEditFoldRange {
 public:
     int fromLine; // Beginning line
     int toLine; // End line
     int linesCollapsed; // Number of collapsed lines
-    QSynEditFoldRanges subFoldRanges; // Sub fold ranges
+    SynEditFoldRanges subFoldRanges; // Sub fold ranges
     bool collapsed; // Is collapsed?
     PSynEditFoldRanges allFoldRanges;// TAllFoldRanges pointer
-    PSynFoldRegion foldRegion; // FoldRegion
+    PSynEditFoldRegion foldRegion; // FoldRegion
     int hintMarkLeft;
     PSynEditFoldRange parent;
     bool parentCollapsed();
     void move(int count);
-    explicit QSynEditFoldRange(PSynEditFoldRange aParent, PSynEditFoldRanges aAllFold,
-                      int aFromLine, PSynFoldRegion aFoldRegion, int aToLine);
+    explicit SynEditFoldRange(PSynEditFoldRange aParent, PSynEditFoldRanges aAllFold,
+                      int aFromLine, PSynEditFoldRegion aFoldRegion, int aToLine);
 };
 
 #endif // CODEFOLDING_H

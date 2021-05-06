@@ -329,3 +329,24 @@ FileError::FileError(const QString &reason): BaseError(reason)
 {
 
 }
+
+void decodeKey(const int combinedKey, int &key, Qt::KeyboardModifiers &modifiers)
+{
+    modifiers = Qt::NoModifier;
+    if (combinedKey & Qt::ShiftModifier) {
+        modifiers|=Qt::ShiftModifier;
+    }
+    if (combinedKey & Qt::ControlModifier) {
+        modifiers|=Qt::ControlModifier;
+    }
+    if (combinedKey & Qt::AltModifier) {
+        modifiers|=Qt::AltModifier;
+    }
+    if (combinedKey & Qt::MetaModifier) {
+        modifiers|=Qt::MetaModifier;
+    }
+    if (combinedKey & Qt::KeypadModifier) {
+        modifiers|= Qt::KeypadModifier;
+    }
+    key = combinedKey & ~(Qt::ShiftModifier | Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier | Qt::KeypadModifier);
+}

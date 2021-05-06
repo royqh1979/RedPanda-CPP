@@ -1,13 +1,13 @@
 #include "CodeFolding.h"
 
-int QSynFoldRegions::count()
+int SynEditFoldRegions::count()
 {
     return fRegions.size();
 }
 
-int QSynFoldRegions::add(bool addEnding, const QChar &openSymbol, const QChar &closeSymbol, const QString &highlight)
+int SynEditFoldRegions::add(bool addEnding, const QChar &openSymbol, const QChar &closeSymbol, const QString &highlight)
 {
-    PSynFoldRegion region = std::make_shared<QSynFoldRegion>();
+    PSynEditFoldRegion region = std::make_shared<SynEditFoldRegion>();
     region->addEnding = addEnding;
     region->openSymbol = openSymbol;
     region->closeSymbol = closeSymbol;
@@ -15,12 +15,12 @@ int QSynFoldRegions::add(bool addEnding, const QChar &openSymbol, const QChar &c
     fRegions.push_back(region);
 }
 
-PSynFoldRegion QSynFoldRegions::get(int index)
+PSynEditFoldRegion SynEditFoldRegions::get(int index)
 {
     return fRegions.at(index);
 }
 
-QSynCodeFolding::QSynCodeFolding():
+SynEditCodeFolding::SynEditCodeFolding():
     indentGuides(true),
     showCollapsedLine(true),
     collapsedLineColor(QColor("black")),
@@ -31,7 +31,7 @@ QSynCodeFolding::QSynCodeFolding():
 }
 
 
-bool QSynEditFoldRange::parentCollapsed()
+bool SynEditFoldRange::parentCollapsed()
 {
     PSynEditFoldRange parentFold = parent;
     // Find first parent that is collapsed
@@ -44,13 +44,13 @@ bool QSynEditFoldRange::parentCollapsed()
     return false;
 }
 
-void QSynEditFoldRange::move(int count)
+void SynEditFoldRange::move(int count)
 {
     fromLine += count;
     toLine += count;
 }
 
-QSynEditFoldRange::QSynEditFoldRange(PSynEditFoldRange aParent, PSynEditFoldRanges aAllFold, int aFromLine, PSynFoldRegion aFoldRegion, int aToLine):
+SynEditFoldRange::SynEditFoldRange(PSynEditFoldRange aParent, PSynEditFoldRanges aAllFold, int aFromLine, PSynEditFoldRegion aFoldRegion, int aToLine):
     fromLine(aFromLine),
     toLine(aToLine),
     linesCollapsed(0),
@@ -64,33 +64,33 @@ QSynEditFoldRange::QSynEditFoldRange(PSynEditFoldRange aParent, PSynEditFoldRang
 }
 
 
-PSynEditFoldRange QSynEditFoldRanges::foldRange(int index)
+PSynEditFoldRange SynEditFoldRanges::foldRange(int index)
 {
     return ranges[index];
 }
 
-int QSynEditFoldRanges::count()
+int SynEditFoldRanges::count()
 {
     return ranges.size();
 }
 
-QSynEditFoldRanges::QSynEditFoldRanges()
+SynEditFoldRanges::SynEditFoldRanges()
 {
 
 }
 
-PSynEditFoldRange QSynEditFoldRanges::addByParts(PSynEditFoldRange aParent, PSynEditFoldRanges aAllFold, int aFromLine, PSynFoldRegion aFoldRegion, int aToLine)
+PSynEditFoldRange SynEditFoldRanges::addByParts(PSynEditFoldRange aParent, PSynEditFoldRanges aAllFold, int aFromLine, PSynEditFoldRegion aFoldRegion, int aToLine)
 {
-    PSynEditFoldRange range=std::make_shared<QSynEditFoldRange>(aParent,aAllFold, aFromLine,aFoldRegion,aToLine);
+    PSynEditFoldRange range=std::make_shared<SynEditFoldRange>(aParent,aAllFold, aFromLine,aFoldRegion,aToLine);
     return range;
 }
 
-int QSynEditFoldRanges::remove(int index)
+int SynEditFoldRanges::remove(int index)
 {
     ranges.erase(ranges.begin()+index);
 }
 
-void QSynEditFoldRanges::addObject(PSynEditFoldRange foldRange)
+void SynEditFoldRanges::addObject(PSynEditFoldRange foldRange)
 {
     ranges.push_back(foldRange);
 }

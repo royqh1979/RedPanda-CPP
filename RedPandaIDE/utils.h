@@ -90,6 +90,8 @@ QStringList ReadFileToLines(const QString& fileName, QTextCodec* codec);
 
 void ReadFileToLines(const QString& fileName, QTextCodec* codec, LineProcessFunc lineFunc);
 
+void decodeKey(int combinedKey, int& key, Qt::KeyboardModifiers& modifiers);
+
 template <class F>
 class final_action
 {

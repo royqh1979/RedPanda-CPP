@@ -4,6 +4,7 @@
 #include <QColor>
 #include <QFont>
 #include <QObject>
+#include "Types.h"
 
 enum class SynGutterBorderStyle {
     None,
@@ -99,7 +100,84 @@ private:
     bool mVisible;
     int mWidth;
     int mAutoSizeDigitCount;
+};
+
+using PSynGutter = std::shared_ptr<SynGutter>;
+
+class SynEditMark : public QObject {
+    Q_OBJECT
+public:
+    explicit SynEditMark(QObject* parent = nullptr);
+    int Char() const;
+    void setChar(int value);
+
+    int image() const;
+    void setImage(int image);
+
+    bool visible() const;
+    void setVisible(bool visible);
+
+    int bookmarkNum() const;
+    void setBookmarkNum(int bookmarkNum);
+
+    bool internalImage() const;
+    void setInternalImage(bool internalImage);
+
+    bool isBookmark() const ;
+
+    int line() const;
+    void setLine(int line);
+
+signals:
+    void changed();
+protected:
+    int mLine;
+    int mChar;
+    int mImage;
+    bool mVisible;
+    bool mInternalImage;
+    int mBookmarkNum;
 
 };
 
+using PSynEditMark = std::shared_ptr<SynEditMark>;
+
+using SynEditMarkList = QList<SynEditMark>;
+
+using PSynEditMarkList = std::shared_ptr<SynEditMarkList>;
+
+class SynBookMarkOpt: public QObject {
+    Q_OBJECT
+public:
+    explicit SynBookMarkOpt(QObject* parent=nullptr);
+    PSynIconList bookmarkImages() const;
+    void setBookmarkImages(const PSynIconList &images);
+
+    bool drawBookmarksFirst() const;
+    void setDrawBookmarksFirst(bool drawBookmarksFirst);
+
+    bool enableKeys() const;
+    void setEnableKeys(bool enableKeys);
+
+    bool glyphsVisible() const;
+    void setGlyphsVisible(bool glyphsVisible);
+
+    int leftMargin() const;
+    void setLeftMargin(int leftMargin);
+
+    int xOffset() const;
+    void setXOffset(int xOffset);
+
+signals:
+    void changed();
+private:
+    PSynIconList mBookmarkImages;
+    bool mDrawBookmarksFirst;
+    bool mEnableKeys;
+    bool mGlyphsVisible;
+    int mLeftMargin;
+    int mXOffset;
+};
+
+using PSynBookMarkOpt = std::shared_ptr<SynBookMarkOpt>;
 #endif // MISCCLASSES_H

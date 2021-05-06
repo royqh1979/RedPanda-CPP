@@ -166,51 +166,15 @@ void SynHighlighterAttribute::setChanged()
     emit changed();
 }
 
-bool SynHighlighterAttribute::strikeOut() const
+SynFontStyles SynHighlighterAttribute::styles() const
 {
-    return mStrikeOut;
+    return mStyles;
 }
 
-void SynHighlighterAttribute::setStrikeOut(bool strikeOut)
+void SynHighlighterAttribute::setStyles(const SynFontStyles &styles)
 {
-    if (mStrikeOut!=strikeOut) {
-        mStrikeOut = strikeOut;
-        setChanged();
-    }
-}
-
-bool SynHighlighterAttribute::underline() const
-{
-    return mUnderline;
-}
-
-void SynHighlighterAttribute::setUnderline(bool underline)
-{
-    mUnderline = underline;
-}
-
-bool SynHighlighterAttribute::italic() const
-{
-    return mItalic;
-}
-
-void SynHighlighterAttribute::setItalic(bool italic)
-{
-    if (mItalic!=italic) {
-        mItalic = italic;
-        setChanged();
-    }
-}
-
-bool SynHighlighterAttribute::bold() const
-{
-    return mBold;
-}
-
-void SynHighlighterAttribute::setBold(bool bold)
-{
-    if (mBold!=bold) {
-        mBold = bold;
+    if (mStyles!=styles) {
+        mStyles = styles;
         setChanged();
     }
 }
