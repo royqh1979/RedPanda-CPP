@@ -2,6 +2,7 @@
 #include <QApplication>
 #include <QFontMetrics>
 #include <algorithm>
+#include <cmath>
 
 SynEdit::SynEdit(QWidget *parent, Qt::WindowFlags f) : QFrame(parent,f)
 {
@@ -91,7 +92,6 @@ SynEdit::SynEdit(QWidget *parent, Qt::WindowFlags f) : QFrame(parent,f)
     mScrollHintFormat = SynScrollHintFormat::shfTopLineOnly;
 
     synFontChanged();
-
 }
 
 int SynEdit::displayLineCount()
@@ -128,7 +128,7 @@ void SynEdit::setCaretXYEx(bool CallEnsureCursorPos, BufferCoord value)
 
     if (vTriggerPaint)
         doOnPaintTransient(SynTransientType::ttBefore);
-    int nMaxX = maxScrollWidth() + 1;
+    int nMaxX = mMaxScrollWidth + 1;
     if (value.Line > mLines->count())
         value.Line = mLines->count();
     if (value.Line < 1) {
@@ -253,6 +253,164 @@ void SynEdit::invalidateGutterLines(int FirstLine, int LastLine)
             }
         }
     }
+}
+
+/**
+ * @brief Convert point on the edit (x,y) to (row,column)
+ * @param aX
+ * @param aY
+ * @return
+ */
+DisplayCoord SynEdit::pixelsToNearestRowColumn(int aX, int aY)
+{
+    // Result is in display coordinates
+    float f;
+    f = (aX - mGutterWidth - 2.0) / mCharWidth;
+    // don't return a partially visible last line
+    if (aY >= mLinesInWindow * mTextHeight) {
+        aY = mLinesInWindow * mTextHeight - 1;
+        if (aY < 0)
+            aY = 0;
+    }
+    return {
+      .Column = std::max(1, leftChar() + round(f)),
+      .Row = std::max(1, topLine() + (aY % mTextHeight))
+    };
+}
+
+/**
+ * @brief takes a position in the text and transforms it into
+ *  the row and column it appears to be on the screen
+ * @param p
+ * @return
+ */
+DisplayCoord SynEdit::bufferToDisplayPos(const BufferCoord &p)
+{
+    DisplayCoord result {p.Char,p.Line};
+    // Account for tabs
+    if (p.Line-1 < mLines->count()) {
+        QString s = mLines->getString(p.Line - 1);
+        int l = s.length();
+        int x = 0;
+        for (int i=0;i<p.Char-1;i++) {
+            if (i<=l && s[i] == '\t')
+                x+=mTabWidth - (x % mTabWidth);
+            else
+                x++;
+        }
+        result.Column = x + 1;
+    }
+    // Account for code folding
+    if (mUseCodeFolding)
+        result.Row = foldLineToRow(result.Row);
+    return result;
+}
+
+/**
+ * @brief takes a position on screen and transfrom it into position of text
+ * @param p
+ * @return
+ */
+BufferCoord SynEdit::displayToBufferPos(const DisplayCoord &p)
+{
+    BufferCoord Result{p.Column,p.Row};
+    // Account for code folding
+    if (mUseCodeFolding)
+        Result.Line = foldRowToLine(Result.Line);
+    // Account for tabs
+    if (Result.Line <= mLines->count() ) {
+        QString s = mLines->getString(Result.Line - 1);
+        int l = s.length();
+        int x = 0;
+        int i = 0;
+
+        while (x < p.Column) {
+            if (i < l && s[i] == '\t')
+                x += mTabWidth - (x % mTabWidth);
+            else
+                x += 1;
+            i++;
+        }
+        Result.Char = i;
+    }
+}
+
+int SynEdit::rowToLine(int aRow)
+{
+    return displayToBufferPos({1, aRow}).Line;
+}
+
+int SynEdit::lineToRow(int aLine)
+{
+    return bufferToDisplayPos({1, aLine}).Row;
+}
+
+int SynEdit::foldRowToLine(int Row)
+{
+    int i;
+    int result = Row;
+    for (int i=0;i<mAllFoldRanges.count();i++) {
+        PSynEditFoldRange range = mAllFoldRanges.ranges[i];
+        if (range->collapsed && !range->parentCollapsed() && range->fromLine < result) {
+            result += range->linesCollapsed;
+        }
+    }
+    return result;
+}
+
+int SynEdit::foldLineToRow(int Line)
+{
+    int result = Line;
+    for (int i=mAllFoldRanges.count()-1;i>=0;i--) {
+        PSynEditFoldRange range =mAllFoldRanges.ranges[i];
+        if (range->collapsed && !range->parentCollapsed()) {
+            // Line is found after fold
+            if (range->toLine < Line)
+                result -= range->linesCollapsed;
+            // Inside fold
+            else if (range->fromLine < Line && Line <= range->toLine)
+                result -= Line - range->fromLine;
+        }
+    }
+    return result;
+}
+
+void SynEdit::setDefaultKeystrokes()
+{
+    mKeyStrokes.resetDefaults();
+}
+
+void SynEdit::invalidateLine(int Line)
+{
+    QRect rcInval;
+    if (mPaintLock >0)
+        return;
+    if (Line<1 || Line>mLines.count() || !isVisible())
+        return;
+
+    // invalidate text area of this line
+    if (mUseCodeFolding)
+        Line = foldLineToRow(Line);
+    if (Line >= topLine() && Line <= topLine() + linesInWindow()) {
+        rcInval = { clientLeft() + mGutterWidth,
+                    clientTop() + mTextHeight * (Line - topLine()),
+                    clientWidth(),
+                    mTextHeight};
+        if (mStateFlags.testFlag(SynStateFlag::sfLinesChanging))
+            mInvalidateRect = mInvalidateRect.united(rcInval);
+        else
+            update(rcInval);
+    }
+}
+
+void SynEdit::lockPainter()
+{
+    incPaintLock();
+}
+
+void SynEdit::unlockPainter()
+{
+    decPaintLock();
 }
 
 void SynEdit::clearAreaList(SynEditingAreaList areaList)
@@ -423,6 +581,17 @@ int SynEdit::clientLeft()
 QRect SynEdit::clientRect()
 {
     return QRect(frameRect().left()+frameWidth(),frameRect().top()+frameWidth(), frameRect().width()-2*frameWidth(), frameRect().height()-2*frameWidth());
+}
+
+void SynEdit::synFontChanged()
+{
+    recalcCharExtent();
+    sizeOrFontChanged(true);
+}
+
+void SynEdit::doOnPaintTransient(SynTransientType TransientType)
+{
+    doOnPaintTransientEx(TransientType, false);
 }
 
 void SynEdit::bookMarkOptionsChanged()

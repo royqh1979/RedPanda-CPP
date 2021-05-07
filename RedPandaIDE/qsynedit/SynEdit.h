@@ -161,10 +161,18 @@ public:
 
     void invalidateGutter();
     void invalidateGutterLine(int aLine);
-    //todo:
     void invalidateGutterLines(int FirstLine, int LastLine);
     DisplayCoord pixelsToNearestRowColumn(int aX, int aY);
+    DisplayCoord bufferToDisplayPos(const BufferCoord& p);
+    BufferCoord displayToBufferPos(const DisplayCoord& p);
+    int rowToLine(int aRow);
     int lineToRow(int aLine);
+    int foldRowToLine(int Row);
+    int foldLineToRow(int Line);
+    void setDefaultKeystrokes();
+    void invalidateLine(int Line);
+    void lockPainter();
+    void unlockPainter();
 
 signals:
     void Changed();
@@ -202,6 +210,8 @@ private:
     int clientTop();
     int clientLeft();
     QRect clientRect();
+    void synFontChanged();
+    void doOnPaintTransient(SynTransientType TransientType);
 
     //todo
     void setInternalDisplayXY(const DisplayCoord& aPos);
@@ -304,7 +314,7 @@ private:
     bool mShowSpecChar;
     int mPaintTransientLock;
     bool mIsScrolling;
-    int mPainterLock;
+    //int mPainterLock;
     bool mUndoing;
     // event handlers
     SynPlaceMarkProc mOnClearMark;

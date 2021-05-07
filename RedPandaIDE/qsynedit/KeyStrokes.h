@@ -211,12 +211,14 @@ using SynEditKeyStrokeList = QList<PSynEditKeyStroke>;
 
 class SynEditKeyStrokes {
 public:
-    PSynEditKeyStroke add(int key, Qt::KeyboardModifiers modifiers, SynEditorCommand command);
+    PSynEditKeyStroke add(SynEditorCommand command, int key, Qt::KeyboardModifiers modifiers);
     PSynEditKeyStroke findCommand(SynEditorCommand command);
     PSynEditKeyStroke findKeycode(int key, Qt::KeyboardModifiers modifiers);
     PSynEditKeyStroke findKeycode2(int key, Qt::KeyboardModifiers modifiers,
                                    int key2, Qt::KeyboardModifiers modifiers2);
     PSynEditKeyStroke findKeySequence(const QKeySequence& keySeq);
+    void clear();
+    void resetDefaults();
     SynEditKeyStrokeList mList;
 };
 
