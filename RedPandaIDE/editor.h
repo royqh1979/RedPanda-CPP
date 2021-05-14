@@ -4,6 +4,7 @@
 #include <QObject>
 #include <utils.h>
 #include <QTabWidget>
+#include <Qsci/qsciscintilla.h>
 
 class SaveException: public std::exception {
 

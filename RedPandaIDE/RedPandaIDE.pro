@@ -17,17 +17,6 @@ SOURCES += \
     editorlist.cpp \
     main.cpp \
     mainwindow.cpp \
-    qsynedit/CodeFolding.cpp \
-    qsynedit/Constants.cpp \
-    qsynedit/KeyStrokes.cpp \
-    qsynedit/MiscClasses.cpp \
-    qsynedit/MiscProcs.cpp \
-    qsynedit/SynEdit.cpp \
-    qsynedit/TextBuffer.cpp \
-    qsynedit/TextDrawer.cpp \
-    qsynedit/highlighter/base.cpp \
-    qsynedit/highlighter/composition.cpp \
-    qsynedit/highlighter/cpp.cpp \
     settingsdialog/compilersetdirectorieswidget.cpp \
     settingsdialog/compilersetoptionwidget.cpp \
     settings.cpp \
@@ -45,18 +34,6 @@ HEADERS += \
     editor.h \
     editorlist.h \
     mainwindow.h \
-    qsynedit/CodeFolding.h \
-    qsynedit/Constants.h \
-    qsynedit/KeyStrokes.h \
-    qsynedit/MiscClasses.h \
-    qsynedit/MiscProcs.h \
-    qsynedit/SynEdit.h \
-    qsynedit/TextBuffer.h \
-    qsynedit/TextDrawer.h \
-    qsynedit/Types.h \
-    qsynedit/highlighter/base.h \
-    qsynedit/highlighter/composition.h \
-    qsynedit/highlighter/cpp.h \
     settingsdialog/compilersetdirectorieswidget.h \
     settingsdialog/compilersetoptionwidget.h \
     settings.h \
@@ -84,3 +61,9 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 RESOURCES += \
     icons.qrc
 
+win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../../QScintilla/src/release/ -lqscintilla2_qt5d
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../../QScintilla/src/debug/ -lqscintilla2_qt5d
+else:unix: LIBS += -L$$OUT_PWD/../../QScintilla/src/ -lqscintilla2_qt5d
+
+INCLUDEPATH += $$PWD/../../QScintilla/src
+DEPENDPATH += $$PWD/../../QScintilla/src

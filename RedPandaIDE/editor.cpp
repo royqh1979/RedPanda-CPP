@@ -9,10 +9,10 @@
 #include "settings.h"
 #include "mainwindow.h"
 #include "systemconsts.h"
-#include <Qsci/qscilexercpp.h>
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QDebug>
+#include <Qsci/qscilexercpp.h>
 
 using namespace std;
 
@@ -290,8 +290,9 @@ void Editor::onCursorPositionChanged(int line, int index) {
     long pos = getCursorPosition();
     long start = SendScintilla(SCI_WORDSTARTPOSITION,pos,false);
     long end = SendScintilla(SCI_WORDENDPOSITION,pos,false);
+    long style = SendScintilla(SCI_GETSTYLEAT,pos,false);
 
-    qDebug()<<start<<end<<text(start,end);
+    qDebug()<<start<<end<<style<<text(start,end);
 }
 
 void Editor::onLinesChanged(int startLine, int count) {
