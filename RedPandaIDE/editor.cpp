@@ -89,10 +89,10 @@ Editor::Editor(QWidget *parent, const QString& filename,
 //            SLOT(on_margin_clicked(int, int, Qt::KeyboardModifiers)));
 
     //markers
-    markerDefine(QsciScintilla::CircledPlus, ErrorMarker);
-    setMarkerForegroundColor(QColor("BLACK"),ErrorMarker);
-    setMarkerBackgroundColor(QColor("RED"),ErrorMarker);
-    markerAdd(1,ErrorMarker);
+//    markerDefine(QsciScintilla::CircledPlus, ErrorMarker);
+//    setMarkerForegroundColor(QColor("BLACK"),ErrorMarker);
+//    setMarkerBackgroundColor(QColor("RED"),ErrorMarker);
+//    markerAdd(1,ErrorMarker);
 
     // connect will fail if use new function pointer syntax
 //    connect(this, &QsciScintilla::modificationChanged,
