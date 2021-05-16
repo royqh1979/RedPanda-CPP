@@ -87,4 +87,6 @@ uint16_t CalcFCS(unsigned char* ABuf, int ABufSize);
 void SynDrawGradient(QPaintDevice* ACanvas, const QColor& AStartColor, const QColor& AEndColor,
   int ASteps, const QRect& ARect, bool AHorizontal);
 
+SynFontStyles getFontStyles(const QFont& font);
+
 #endif // MISCPROCS_H

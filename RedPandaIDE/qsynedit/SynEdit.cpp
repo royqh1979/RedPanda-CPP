@@ -334,7 +334,7 @@ DisplayCoord SynEdit::bufferToDisplayPos(const BufferCoord &p)
             if (i<=l && s[i] == '\t')
                 x+=mTabWidth - (x % mTabWidth);
             else
-                x++;
+                x+=charColumns(s[i]);
         }
         result.Column = x + 1;
     }
@@ -366,7 +366,7 @@ BufferCoord SynEdit::displayToBufferPos(const DisplayCoord &p)
             if (i < l && s[i] == '\t')
                 x += mTabWidth - (x % mTabWidth);
             else
-                x += 1;
+                x += charColumns(s[i]);
             i++;
         }
         Result.Char = i;
@@ -548,6 +548,16 @@ void SynEdit::clearUndo()
 {
     mUndoList->Clear();
     mRedoList->Clear();
+}
+
+int SynEdit::charColumns(QChar ch)
+{
+    return std::ceil(fontMetrics().horizontalAdvance(ch) * dpiFactor() / mCharWidth);
+}
+
+double SynEdit::dpiFactor()
+{
+    return fontMetrics().fontDpi() / 96.0;
 }
 
 void SynEdit::clearAreaList(SynEditingAreaList areaList)

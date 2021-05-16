@@ -5,14 +5,14 @@
 #include <QPainter>
 #include <QString>
 #include "Types.h"
+#include "highlighter/base.h"
 
 class SynEdit;
 class SynEditTextPainter
 {
-    struct TokenAccu {
-        int Len;
-        int MaxLen;
-        int CharsBefore;
+    struct SynTokenAccu {
+        int Columns;
+        int ColumnsBefore;
         QString s;
         QColor FG;
         QColor BG;
@@ -26,8 +26,17 @@ public:
     void ComputeSelectionInfo();
     void setDrawingColors(bool Selected);
     int ColumnToXValue(int Col);
-    void PaintToken(const QString& Token, int TokenLen, int CharsBefore,
+    void PaintToken(const QString& Token, int TokenLen, int ColumnsBefore,
                     int First, int Last, bool isSelection);
+    void PaintEditAreas(PSynEditingAreaList areaList);
+    void PaintHighlightToken(bool bFillToEOL);
+    bool TokenIsSpaces(bool& bSpacesTest, const QString& Token, bool& bIsSpaces);
+    void AddHighlightToken(const QString& Token, int ColumnsBefore, int TokenColumns,
+                           int cLine, PSynHighlighterAttribute p_Attri);
+
+    void PaintFoldAttributes();
+    void GetBraceColorAttr(int level, const PSynHighlighterAttribute& attr);
+    void PaintLines();
 private:
     SynEdit* edit;
     QPainter* painter;
@@ -47,6 +56,10 @@ private:
     // painting the background and the text
     QRect rcLine, rcToken;
     int vFirstLine, vLastLine;
+
+    QRect AClip;
+    int aFirstRow, aLastRow, FirstCol, LastCol;
+    SynTokenAccu TokenAccu;
 };
 
 #endif // TEXTPAINTER_H

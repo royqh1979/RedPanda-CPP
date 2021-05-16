@@ -531,3 +531,12 @@ int MulDiv(int a, int b, int c)
     //todo: handle overflow?
     return a*b/c;
 }
+
+SynFontStyles getFontStyles(const QFont &font)
+{
+    SynFontStyles styles;
+    styles.setFlag(SynFontStyle::fsBold, font.bold());
+    styles.setFlag(SynFontStyle::fsItalic, font.italic());
+    styles.setFlag(SynFontStyle::fsUnderline, font.underline());
+    styles.setFlag(SynFontStyle::fsStrikeOut, font.strikeOut());
+}

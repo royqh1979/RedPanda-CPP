@@ -33,4 +33,23 @@ using PSynIcon = std::shared_ptr<QIcon>;
 using SynIconList = QList<PSynIcon>;
 using PSynIconList = std::shared_ptr<SynIconList>;
 
+enum class SynEditingAreaType {
+  eatRectangleBorder,
+  eatWaveUnderLine,
+  eatUnderLine
+};
+
+struct SynEditingArea {
+    int beginX;
+    int endX;
+    QColor color;
+    SynEditingAreaType type;
+};
+
+
+using PSynEditingArea = std::shared_ptr<SynEditingArea>;
+using SynEditingAreaList = QList<PSynEditingArea>;
+using PSynEditingAreaList = std::shared_ptr<SynEditingAreaList>;
+
+
 #endif // TYPES_H

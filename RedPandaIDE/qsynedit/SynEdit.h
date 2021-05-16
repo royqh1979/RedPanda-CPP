@@ -102,20 +102,7 @@ enum class SynReplaceAction {
     raCancel, raSkip, raReplace, raReplaceAll
 };
 
-struct SynEditingArea {
-    int beginX;
-    int endX;
-    QColor color;
-};
 
-
-using PSynEditingArea = std::shared_ptr<SynEditingArea>;
-using SynEditingAreaList = QList<PSynEditingArea>;
-enum class SynEditingAreaType {
-  eatRectangleBorder,
-  eatWaveUnderLine,
-  eatUnderLine
-};
 
 enum class SynTransientType {
     ttBefore, ttAfter
@@ -192,6 +179,8 @@ public:
                               const BufferCoord& ptBefore,
                               const BufferCoord& ptAfter);
     void clearUndo();
+    int charColumns(QChar ch);
+    double dpiFactor();
 
     int topLine() const;
     void setTopLine(int value);
@@ -320,7 +309,6 @@ private:
     int mCharsInWindow;
     int mCharWidth;
     QFont mFontDummy;
-    QColor mColor;
     SynFontSmoothMethod mFontSmoothing;
     bool mMouseMoved;
     /* IME input */
