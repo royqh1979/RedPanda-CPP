@@ -162,6 +162,8 @@ public:
     DisplayCoord pixelsToRowColumn(int aX, int aY);
     DisplayCoord bufferToDisplayPos(const BufferCoord& p);
     BufferCoord displayToBufferPos(const DisplayCoord& p);
+    int charToColumn(int aLine, int aChar);
+    int stringColumns(const QString& line);
     int rowToLine(int aRow);
     int lineToRow(int aLine);
     int foldRowToLine(int Row);
@@ -212,6 +214,8 @@ public:
     int maxScrollWidth() const;
     void setMaxScrollWidth(int Value);
 
+    int tabWidth() const;
+
 signals:
     void Changed();
 
@@ -233,6 +237,9 @@ signals:
 
     void scrolled(SynScrollBarKind ScrollBar);
     void statusChanged(SynStatusChanges changes);
+
+    void fontChanged();
+    void tabSizeChanged();
 
 private:
     void clearAreaList(SynEditingAreaList areaList);
@@ -410,5 +417,7 @@ protected:
 
 friend class SynEditTextPainter;
 };
+
+class
 
 #endif // SYNEDIT_H

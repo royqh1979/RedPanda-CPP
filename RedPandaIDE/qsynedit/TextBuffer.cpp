@@ -4,21 +4,24 @@
 #include <QTextCodec>
 #include <QTextStream>
 #include <stdexcept>
+#include "SynEdit.h"
 #include "../utils.h"
 
-SynEditStringList::SynEditStringList(QObject* parent):
-    QObject(parent)
+SynEditStringList::SynEditStringList(SynEdit *pEdit, QObject *parent):
+      QObject(parent),
+      mEdit(pEdit)
 {
     mAppendNewLineAtEOF = true;
     mFileEndingType = FileEndingType::Windows;
     mIndexOfLongestLine = -1;
     mUpdateCount = 0;
-    setTabWidth(8);
 }
 
 static void ListIndexOutOfBounds(int index) {
     throw IndexOutOfRange(index);
 }
+
+
 
 int SynEditStringList::parenthesisLevels(int Index)
 {
@@ -44,24 +47,24 @@ int SynEditStringList::braceLevels(int Index)
         return 0;
 }
 
-QString SynEditStringList::expandedStrings(int Index)
-{
-    if (Index>=0 && Index < mList.size()) {
-        if (mList[Index]->fFlags & SynEditStringFlag::sfHasNoTabs)
-            return mList[Index]->fString;
-        else
-            return ExpandString(Index);
-    } else
-        return QString();
-}
+//QString SynEditStringList::expandedStrings(int Index)
+//{
+//    if (Index>=0 && Index < mList.size()) {
+//        if (mList[Index]->fFlags & SynEditStringFlag::sfHasNoTabs)
+//            return mList[Index]->fString;
+//        else
+//            return ExpandString(Index);
+//    } else
+//        return QString();
+//}
 
-int SynEditStringList::expandedStringLength(int Index)
+int SynEditStringList::lineColumns(int Index)
 {
     if (Index>=0 && Index < mList.size()) {
-        if (mList[Index]->fFlags & sfExpandedLengthUnknown)
-            return ExpandString(Index).length();
-        else
-            return mList[Index]->fExpandedLength;
+        if (mList[Index]->fColumns == -1) {
+            return calculateLineColumns(Index);
+        } else
+            return mList[Index]->fColumns;
     } else
         return 0;
 }
@@ -73,7 +76,7 @@ int SynEditStringList::lengthOfLongestLine()
         mIndexOfLongestLine = -1;
         if (mList.count() > 0 ) {
             for (int i=0;i<mList.size();i++) {
-                int len = expandedStringLength(i);
+                int len = lineColumns(i);
                 if (len > MaxLen) {
                     MaxLen = len;
                     mIndexOfLongestLine = i;
@@ -82,7 +85,7 @@ int SynEditStringList::lengthOfLongestLine()
         }
     }
     if (mIndexOfLongestLine >= 0)
-      return mList[mIndexOfLongestLine]->fExpandedLength;
+        return mList[mIndexOfLongestLine]->fColumns;
     else
         return 0;
 }
@@ -207,23 +210,6 @@ void SynEditStringList::endUpdate()
     }
 }
 
-int SynEditStringList::tabWidth()
-{
-    return mTabWidth;
-}
-
-void SynEditStringList::setTabWidth(int value)
-{
-    if (value != mTabWidth) {
-        mTabWidth = value;
-        mConvertTabsProc = GetBestConvertTabsProcEx(mTabWidth);
-        mIndexOfLongestLine = -1;
-        for (PSynEditStringRec& line:mList) {
-            line->fExpandedLength = -1;
-            line->fFlags = SynEditStringFlag::sfExpandedLengthUnknown;
-        }
-    }
-}
 
 int SynEditStringList::add(const QString &s)
 {
@@ -365,7 +351,6 @@ void SynEditStringList::putString(int Index, const QString &s) {
         }
         beginUpdate();
         mIndexOfLongestLine = -1;
-        mList[Index]->fFlags = SynEditStringFlag::sfExpandedLengthUnknown;
         mList[Index]->fString = s;
         emit putted(Index,1);
         endUpdate();
@@ -390,24 +375,12 @@ void SynEditStringList::SetUpdateState(bool Updating)
         emit changed();
 }
 
-QString SynEditStringList::ExpandString(int Index)
+int SynEditStringList::calculateLineColumns(int Index)
 {
-    QString Result("");
     PSynEditStringRec line = mList[Index];
-    if (line->fString.isEmpty()) {
-        line->fFlags = SynEditStringFlag::sfHasNoTabs;
-        line->fExpandedLength = 0;
-    } else {
-        bool hasTabs;
-        Result = mConvertTabsProc(line->fString,mTabWidth,hasTabs);
-        line->fExpandedLength = Result.length();
-        if (hasTabs) {
-            line->fFlags = SynEditStringFlag::sfHasTabs;
-        } else {
-            line->fFlags = SynEditStringFlag::sfHasNoTabs;
-        }
-    }
-    return Result;
+
+    line->fColumns = mEdit->stringColumns(line->fString);
+    return line->fColumns;
 }
 
 void SynEditStringList::InsertLines(int Index, int NumLines)
@@ -619,15 +592,22 @@ void SynEditStringList::setFileEndingType(const FileEndingType &fileEndingType)
     mFileEndingType = fileEndingType;
 }
 
+void SynEditStringList::invalidAllLineColumns()
+{
+    mIndexOfLongestLine = -1;
+    for (PSynEditStringRec& line:mList) {
+        line->fColumns = -1;
+    }
+}
+
 SynEditStringRec::SynEditStringRec():
     fString(),
     fObject(nullptr),
     fRange{0,0},
-    fExpandedLength(-1),
+    fColumns(-1),
     fParenthesisLevel(0),
     fBracketLevel(0),
-    fBraceLevel(0),
-    fFlags(SynEditStringFlag::sfExpandedLengthUnknown)
+    fBraceLevel(0)
 {
 }
 

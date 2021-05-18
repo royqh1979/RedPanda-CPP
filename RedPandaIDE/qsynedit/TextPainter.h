@@ -6,6 +6,7 @@
 #include <QString>
 #include "Types.h"
 #include "highlighter/base.h"
+#include "../utils.h"
 
 class SynEdit;
 class SynEditTextPainter
@@ -35,7 +36,7 @@ public:
                            int cLine, PSynHighlighterAttribute p_Attri);
 
     void PaintFoldAttributes();
-    void GetBraceColorAttr(int level, const PSynHighlighterAttribute& attr);
+    void GetBraceColorAttr(int level, PSynHighlighterAttribute &attr);
     void PaintLines();
 private:
     SynEdit* edit;

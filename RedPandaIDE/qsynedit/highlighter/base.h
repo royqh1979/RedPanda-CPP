@@ -112,6 +112,9 @@ public:
     virtual QString languageName();
 
     static bool isSpaceChar(const QChar& ch);
+    bool enabled() const;
+    void setEnabled(bool value);
+
 signals:
     void attributesChanged();
 

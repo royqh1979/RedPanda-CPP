@@ -302,7 +302,8 @@ bool SynEditTextPainter::TokenIsSpaces(bool &bSpacesTest, const QString& Token, 
 // Store the token chars with the attributes in the TokenAccu
 // record. This will paint any chars already stored if there is
 // a (visible) change in the attributes.
-void SynEditTextPainter::AddHighlightToken(const QString &Token, int ColumnsBefore, int TokenColumns, int cLine, PSynHighlighterAttribute p_Attri)
+void SynEditTextPainter::AddHighlightToken(const QString &Token, int ColumnsBefore,
+                                           int TokenColumns, int cLine, PSynHighlighterAttribute p_Attri)
 {
     bool bCanAppend;
     QColor Foreground, Background;
@@ -463,240 +464,213 @@ void SynEditTextPainter::PaintLines()
     // inside the loop. Get only the starting point for this.
     rcLine = AClip;
     rcLine.setBottom((aFirstRow - edit->mTopLine) * edit->mTextHeight);
-    // Make sure the token accumulator string doesn't get reassigned too often.
     TokenAccu.Columns = 0;
     TokenAccu.ColumnsBefore = 0;
-    if (fHighlighter) then begin
-      TokenAccu.MaxLen := Max(128, fCharsInWindow);
-      SetLength(TokenAccu.s, TokenAccu.MaxLen);
-    end;
     // Now loop through all the lines. The indices are valid for Lines.
-    for cRow := aFirstRow to aLastRow do begin
-      vLine := RowToLine(cRow);
-      if (vLine > Lines.Count) and not (Lines.Count = 0) then
-        break;
+    for (cRow = aFirstRow; cRow<=aLastRow; cRow++) {
+        vLine = edit->rowToLine(cRow);
+        if (vLine > edit->mLines->count() && edit->mLines->count() != 0)
+            break;
 
-      // Get the expanded line.
-      sLine := Lines.ExpandedStrings[vLine - 1];
-      // determine whether will be painted with ActiveLineColor
-      bCurrentLine := CaretY = vLine;
-      // Initialize the text and background colors, maybe the line should
-      // use special values for them.
-      colFG := Font.Color;
-      colBG := colEditorBG;
-      bSpecialLine := DoOnSpecialLineColors(vLine, colFG, colBG);
-      if bSpecialLine then begin
-        // The selection colors are just swapped, like seen in Delphi.
-        colSelFG := colBG;
-        colSelBG := colFG;
-      end else begin
-        colSelFG := fSelectedColor.Foreground;
-        colSelBG := fSelectedColor.Background;
-        DoOnEditAreas(vLine, areaList,colBorder,areaType);
-      end;
-
-      // Removed word wrap support
-      vFirstChar := FirstCol;
-      vLastChar := LastCol;
-
-      // Get the information about the line selection. Three different parts
-      // are possible (unselected before, selected, unselected after), only
-      // unselected or only selected means bComplexLine will be FALSE. Start
-      // with no selection, compute based on the visible columns.
-      bComplexLine := FALSE;
-      nLineSelStart := 0;
-      nLineSelEnd := 0;
-      // Does the selection intersect the visible area?
-      if bAnySelection and (cRow >= vSelStart.Row) and (cRow <= vSelEnd.Row) then begin
-        // Default to a fully selected line. This is correct for the smLine
-        // selection mode and a good start for the smNormal mode.
-        nLineSelStart := FirstCol;
-        nLineSelEnd := LastCol + 1;
-        if (fActiveSelectionMode = smColumn) or
-          ((fActiveSelectionMode = smNormal) and (cRow = vSelStart.Row)) then
-          if (vSelStart.Column > LastCol) then begin
-            nLineSelStart := 0;
-            nLineSelEnd := 0;
-          end else if (vSelStart.Column > FirstCol) then begin
-            nLineSelStart := vSelStart.Column;
-            bComplexLine := TRUE;
-          end;
-        if (fActiveSelectionMode = smColumn) or
-          ((fActiveSelectionMode = smNormal) and (cRow = vSelEnd.Row)) then
-          if (vSelEnd.Column < FirstCol) then begin
-            nLineSelStart := 0;
-            nLineSelEnd := 0;
-          end else if (vSelEnd.Column < LastCol) then begin
-            nLineSelEnd := vSelEnd.Column;
-            bComplexLine := TRUE;
-          end;
-  {$IFDEF SYN_MBCSSUPPORT}
-        //todo: nLineSelStart & nLineSelEnd must be buffer coordinates
-        if (fActiveSelectionMode = smColumn) then
-          MBCSGetSelRangeInLineWhenColumnSelectionMode(sLine, nLineSelStart,
-            nLineSelEnd);
-  {$ENDIF}
-      end; //endif bAnySelection
-
-      // Update the rcLine rect to this line.
-      rcLine.Top := rcLine.Bottom;
-      Inc(rcLine.Bottom, fTextHeight);
-
-      bLineSelected := (not bComplexLine) and (nLineSelStart > 0);
-      rcToken := rcLine;
-
-      if not Assigned(fHighlighter) or (not fHighlighter.Enabled) then begin
-        // Remove text already displayed (in previous rows)
-        if (vFirstChar <> FirstCol) or (vLastChar <> LastCol) then
-          sToken := Copy(sLine, vFirstChar, vLastChar - vFirstChar)
-        else
-          sToken := sLine;
-        if fShowSpecChar and (not bLineSelected) and (not bSpecialLine) and (Length(sLine) < vLastChar) then
-          sToken := sToken + SynLineBreakGlyph;
-        nTokenLen := Length(sToken);
-        if bComplexLine then begin
-          SetDrawingColors(FALSE);
-          rcToken.Left := Max(rcLine.Left, ColumnToXValue(FirstCol));
-          rcToken.Right := Min(rcLine.Right, ColumnToXValue(nLineSelStart));
-          PaintToken(sToken, nTokenLen, 0, FirstCol, nLineSelStart,False);
-          rcToken.Left := Max(rcLine.Left, ColumnToXValue(nLineSelEnd));
-          rcToken.Right := Min(rcLine.Right, ColumnToXValue(LastCol));
-          PaintToken(sToken, nTokenLen, 0, nLineSelEnd, LastCol,True);
-          SetDrawingColors(TRUE);
-          rcToken.Left := Max(rcLine.Left, ColumnToXValue(nLineSelStart));
-          rcToken.Right := Min(rcLine.Right, ColumnToXValue(nLineSelEnd));
-          PaintToken(sToken, nTokenLen, 0, nLineSelStart, nLineSelEnd - 1,False);
-        end else begin
-          SetDrawingColors(bLineSelected);
-          PaintToken(sToken, nTokenLen, 0, FirstCol, LastCol,bLineSelected);
-        end;
-      end else begin
-        // Initialize highlighter with line text and range info. It is
-        // necessary because we probably did not scan to the end of the last
-        // line - the internal highlighter range might be wrong.
-        if vLine = 1 then begin
-          fHighlighter.ResetRange;
-          fHighlighter.ResetParenthesisLevel;
-          fHighlighter.ResetBracketLevel;
-          fHighlighter.ResetBraceLevel;
-        end else begin
-          fHighlighter.SetRange(Lines.Ranges[vLine - 2]);
-          fHighlighter.SetParenthesisLevel(Lines.ParenthesisLevels[vLine - 2]);
-          fHighlighter.SetBracketLevel(Lines.BracketLevels[vLine - 2]);
-          fHighlighter.SetBraceLevel(Lines.BraceLevels[vLine - 2]);
-        end;
-        fHighlighter.SetLine(sLine, vLine - 1);
-        // Try to concatenate as many tokens as possible to minimize the count
-        // of ExtTextOut calls necessary. This depends on the selection state
-        // or the line having special colors. For spaces the foreground color
-        // is ignored as well.
-        TokenAccu.Len := 0;
-        nTokenPos := 0;
-        // Test first whether anything of this token is visible.
-        while not fHighlighter.GetEol do begin
-          sToken := fHighlighter.GetToken;
-          // Work-around buggy highlighters which return empty tokens.
-          if sToken = '' then begin
-            fHighlighter.Next;
-            if fHighlighter.GetEol then
-              break;
-            sToken := fHighlighter.GetToken;
-            // Maybe should also test whether GetTokenPos changed...
-            if sToken = '' then
-              raise Exception.Create('The highlighter seems to be in an infinite loop');
-          end;
-          nTokenPos := fHighlighter.GetTokenPos;
-          nTokenLen := Length(sToken);
-          if nTokenPos + nTokenLen >= vFirstChar then begin
-            if nTokenPos + nTokenLen >= vLastChar then begin
-              if nTokenPos >= vLastChar then
-                break; //*** BREAK ***
-
-              nTokenLen := vLastChar - nTokenPos - 1;
-            end;
-            // It's at least partially visible. Get the token attributes now.
-            attr := fHighlighter.GetTokenAttribute;
-            {
-            if (nTokenPos = 0) and (attr = fHighlighter.WhitespaceAttribute) then begin
-              sToken := StringOfChar('.',nTokenLen);
-            end;
+        // Get the line.
+        sLine = edit->mLines->getString(vLine - 1);
+        // determine whether will be painted with ActiveLineColor
+        bCurrentLine = (edit->mCaretY == vLine);
+        // Initialize the text and background colors, maybe the line should
+        // use special values for them.
+        colFG = edit->palette().color(QPalette::Text);
+        colBG = colEditorBG();
+        bSpecialLine = edit->DoOnSpecialLineColors(vLine, colFG, colBG);
+        if (bSpecialLine) {
+            // The selection colors are just swapped, like seen in Delphi.
+            colSelFG = colBG;
+            colSelBG = colFG;
+        } else {
+            colSelFG = edit->mSelectedForeground;
+            colSelBG = edit->mSelectedBackground;
+        }
+        edit->DoOnEditAreas(vLine, areaList);
+        // Removed word wrap support
+        vFirstChar = FirstCol;
+        vLastChar = LastCol;
+        // Get the information about the line selection. Three different parts
+        // are possible (unselected before, selected, unselected after), only
+        // unselected or only selected means bComplexLine will be FALSE. Start
+        // with no selection, compute based on the visible columns.
+        bComplexLine = false;
+        nLineSelStart = 0;
+        nLineSelEnd = 0;
+        // Does the selection intersect the visible area?
+        if (bAnySelection && (cRow >= vSelStart.Row) && (cRow <= vSelEnd.Row)) {
+            // Default to a fully selected line. This is correct for the smLine
+            // selection mode and a good start for the smNormal mode.
+            nLineSelStart = FirstCol;
+            nLineSelEnd = LastCol + 1;
+            if ((edit->mActiveSelectionMode == SynSelectionMode::smColumn) ||
+                ((edit->mActiveSelectionMode == SynSelectionMode::smNormal) && (cRow == vSelStart.Row)) ) {
+                if (vSelStart.Column > LastCol) {
+                    nLineSelStart = 0;
+                    nLineSelEnd = 0;
+                } else if (vSelStart.Column > FirstCol) {
+                    nLineSelStart = vSelStart.Column;
+                    bComplexLine = true;
+                }
             }
-            if sToken = '[' then begin
-              GetBraceColorAttr(fHighlighter.GetBracketLevel,attr);
-            end else if sToken = ']' then begin
-              GetBraceColorAttr(fHighlighter.GetBracketLevel+1,attr);
-            end else if sToken = '(' then begin
-              GetBraceColorAttr(fHighlighter.GetParenthesisLevel,attr);
-            end else if sToken = ')' then begin
-              GetBraceColorAttr(fHighlighter.GetParenthesisLevel+1,attr);
-            end else if sToken = '{' then begin
-              GetBraceColorAttr(fHighlighter.GetBraceLevel,attr);
-            end else if sToken = '}' then begin
-              GetBraceColorAttr(fHighlighter.GetBraceLevel+1,attr);
-            end;
-            AddHighlightToken(sToken, nTokenPos - (vFirstChar - FirstCol),
-              nTokenLen, cRow,attr);
-          end;
-          // Let the highlighter scan the next token.
-          fHighlighter.Next;
-        end;
-        // Don't assume HL.GetTokenPos is valid after HL.GetEOL = True.
-        Inc(nTokenPos, Length(sToken));
-        if fHighlighter.GetEol and (nTokenPos < vLastChar) then begin
-          // Draw text that couldn't be parsed by the highlighter, if any.
-          if nTokenPos < Length(sLine) then begin
-            if nTokenPos + 1 < vFirstChar then
-              nTokenPos := vFirstChar - 1;
-            nTokenLen := Min(Length(sLine), vLastChar) - (nTokenPos + 1);
-            if nTokenLen > 0 then begin
-              sToken := Copy(sLine, nTokenPos + 1, nTokenLen);
-              AddHighlightToken(sToken, nTokenPos - (vFirstChar - FirstCol),
-                nTokenLen, cRow, nil);
-            end;
-          end;
-          // Draw LineBreak glyph.
-          if (eoShowSpecialChars in fOptions) and (not bLineSelected)
-            and (not bSpecialLine) and (Length(sLine) < vLastChar) then begin
-            AddHighlightToken(SynLineBreakGlyph,
-              Length(sLine) - (vFirstChar - FirstCol),
-              Length(SynLineBreakGlyph),cRow, fHighLighter.WhitespaceAttribute);
-          end;
-        end;
+            if ( (edit->mActiveSelectionMode == SynSelectionMode::smColumn) ||
+                ((edit->mActiveSelectionMode == SynSelectionMode::smNormal) && (cRow == vSelEnd.Row)) ) {
+                if (vSelEnd.Column < FirstCol) {
+                    nLineSelStart = 0;
+                    nLineSelEnd = 0;
+                } else if (vSelEnd.Column < LastCol) {
+                    nLineSelEnd = vSelEnd.Column;
+                    bComplexLine = true;
+                }
+            }
+        } //endif bAnySelection
 
-        // Paint folding
-        foldRange := FoldStartAtLine(vLine);
-        if assigned(foldRange) and foldRange.Collapsed then begin
-          sFold := ' ... }';
-          nFold := Length(sFold);
-          Attr := fHighlighter.SymbolAttribute;
-          GetBraceColorAttr(fHighlighter.GetBraceLevel,attr);
-          AddHighlightToken(sFold,Length(sLine)+1 - (vFirstChar - FirstCol)
-            , nFold, cRow, attr);
-          // Compute some helper variables.
-          //nC1 := Max(FirstCol, Length(sLine)+1);
-          //nC2 := Min(LastCol, Length(sLine) +1 + nFold + 1);
-          //SetDrawingColors(FALSE);
-          //PaintToken(sFold,nFold, Length(sLine)+1,nC1, nC2);
-        end;
+        // Update the rcLine rect to this line.
+        rcLine.setTop(rcLine.bottom());
+        rcLine.setBottom(rcLine.bottom()+edit->mTextHeight);
 
-        // Draw anything that's left in the TokenAccu record. Fill to the end
-        // of the invalid area with the correct colors.
-        PaintHighlightToken(TRUE);
+        bLineSelected = (!bComplexLine) && (nLineSelStart > 0);
+        rcToken = rcLine;
+        if (!edit->mHighlighter || !edit->mHighlighter->enabled()) {
+              sToken = sLine;
+              nTokenLen = edit->mLines->lineColumns(vLine-1);
+              if (edit->mShowSpecChar && (!bLineSelected) && (!bSpecialLine) && (nTokenLen < vLastChar)) {
+                  sToken = sToken + SynLineBreakGlyph;
+                  nTokenLen = sToken + edit->charColumns(SynLineBreakGlyph);
+              }
+              if (bComplexLine) {
+                  setDrawingColors(false);
+                  rcToken.setLeft(std::max(rcLine.left(), ColumnToXValue(FirstCol)));
+                  rcToken.setRight(std::min(rcLine.right(), ColumnToXValue(nLineSelStart)));
+                  PaintToken(sToken, nTokenLen, 0, FirstCol, nLineSelStart,false);
+                  rcToken.setLeft(std::max(rcLine.left(), ColumnToXValue(nLineSelEnd)));
+                  rcToken.setRight(std::min(rcLine.right(), ColumnToXValue(LastCol)));
+                  PaintToken(sToken, nTokenLen, 0, nLineSelEnd, LastCol,true);
+                  setDrawingColors(false);
+                  rcToken.setLeft(std::max(rcLine.left(), ColumnToXValue(nLineSelStart)));
+                  rcToken.setRight(std::min(rcLine.right(), ColumnToXValue(nLineSelEnd)));
+                  PaintToken(sToken, nTokenLen, 0, nLineSelStart, nLineSelEnd - 1,false);
+              } else {
+                  setDrawingColors(bLineSelected);
+                  PaintToken(sToken, nTokenLen, 0, FirstCol, LastCol,bLineSelected);
+              }
+        } else {
+            // Initialize highlighter with line text and range info. It is
+            // necessary because we probably did not scan to the end of the last
+            // line - the internal highlighter range might be wrong.
+            if (vLine == 1) {
+                edit->mHighlighter->resetState();
+            } else {
+                edit->mHighlighter->setState(
+                            edit->mLines->ranges(vLine-2),
+                            edit->mLines->braceLevels(vLine-2),
+                            edit->mLines->bracketLevels(vLine-2),
+                            edit->mLines->parenthesisLevels(vLine-2)
+                            );
+                edit->mHighlighter->setLine(sLine, vLine - 1);
+            }
+            // Try to concatenate as many tokens as possible to minimize the count
+            // of ExtTextOut calls necessary. This depends on the selection state
+            // or the line having special colors. For spaces the foreground color
+            // is ignored as well.
+            TokenAccu.Columns = 0;
+            nTokenPos = 0;
+            // Test first whether anything of this token is visible.
+            while (edit->mHighlighter->eol()) {
+                sToken = edit->mHighlighter->getToken();
+                // Work-around buggy highlighters which return empty tokens.
+                if (sToken.isEmpty())  {
+                    edit->mHighlighter->next();
+                    if (edit->mHighlighter->eol())
+                        break;
+                    sToken = edit->mHighlighter->getToken();
+                    // Maybe should also test whether GetTokenPos changed...
+                    if (sToken.isEmpty())
+                        throw BaseError(SynEdit::tr("The highlighter seems to be in an infinite loop"));
+                }
+                nTokenPos = edit->charToColumn(vLine,edit->mHighlighter->getTokenPos());
+                nTokenLen = edit->stringColumns(sToken);
+                if (nTokenPos + nTokenLen >= vFirstChar) {
+                    if (nTokenPos + nTokenLen >= vLastChar) {
+                        if (nTokenPos >= vLastChar)
+                            break; //*** BREAK ***
+                        nTokenLen = vLastChar - nTokenPos - 1;
+                    }
+                    // It's at least partially visible. Get the token attributes now.
+                    attr = edit->mHighlighter->getTokenAttribute();
+                    if (sToken == "[") {
+                      GetBraceColorAttr(edit->mHighlighter->getBracketLevel(),attr);
+                    } else if (sToken == "]") {
+                      GetBraceColorAttr(edit->mHighlighter->getBracketLevel()+1,attr);
+                    } else if (sToken == "(") {
+                      GetBraceColorAttr(edit->mHighlighter->getParenthesisLevel(),attr);
+                    } else if (sToken == ")") {
+                      GetBraceColorAttr(edit->mHighlighter->getParenthesisLevel()+1,attr);
+                    } else if (sToken == "{") {
+                      GetBraceColorAttr(edit->mHighlighter->getBraceLevel(),attr);
+                    } else if (sToken == "}") {
+                      GetBraceColorAttr(edit->mHighlighter->getBraceLevel()+1,attr);
+                    }
+                    AddHighlightToken(sToken, nTokenPos - (vFirstChar - FirstCol),
+                      nTokenLen, vLine,attr);
+                }
+                // Let the highlighter scan the next token.
+                edit->mHighlighter->next();
+            }
+            // Don't assume HL.GetTokenPos is valid after HL.GetEOL == True.
+            nTokenPos += edit->stringColumns(sToken);
+            if (edit->mHighlighter->eol() && (nTokenPos < vLastChar)) {
+                int lineColumns = edit->mLines->lineColumns(vLine-1);
+                // Draw text that couldn't be parsed by the highlighter, if any.
+                if (nTokenPos < lineColumns) {
+                    if (nTokenPos + 1 < vFirstChar)
+                        nTokenPos = vFirstChar - 1;
+                    nTokenLen = std::min(lineColumns, vLastChar) - (nTokenPos + 1);
+                    if (nTokenLen > 0) {
+                        sToken = edit->subStringByColumns(sLine,nTokenPos+1,nTokenLen);
+                        AddHighlightToken(sToken, nTokenPos - (vFirstChar - FirstCol),
+                            edit->stringColumns(sToken), vLine, PSynHighlighterAttribute());
+                    }
+                }
+            // Draw LineBreak glyph.
+            if (edit->mShowSpecChar && (!bLineSelected) &&
+                    (!bSpecialLine) && (edit->mLines->lineColumns(vLine-1) < vLastChar)) {
+                AddHighlightToken(SynLineBreakGlyph,
+                  edit->mLines->lineColumns(vLine-1)  - (vFirstChar - FirstCol),
+                  edit->charColumns(SynLineBreakGlyph),vLine, edit->mHighlighter->whitespaceAttribute());
+            }
+            }
 
-        //Paint editingAreaBorders
-        PaintEditAreas(areaList,colBorder,areaType);
+            // Paint folding
+            foldRange = edit->foldStartAtLine(vLine);
+            if ((foldRange) && foldRange->collapsed) {
+              sFold = " ... } ";
+              nFold = edit->stringColumns(sFold);
+              attr = edit->mHighlighter->symbolAttribute();
+              GetBraceColorAttr(edit->mHighlighter->getBraceLevel(),attr);
+              AddHighlightToken(sFold,edit->mLines->lineColumns(vLine-1)+1 - (vFirstChar - FirstCol)
+                , nFold, vLine, attr);
+            }
 
-      end;
+            // Draw anything that's left in the TokenAccu record. Fill to the end
+            // of the invalid area with the correct colors.
+            PaintHighlightToken(true);
 
-      // Now paint the right edge if necessary. We do it line by line to reduce
-      // the flicker. Should not cost very much anyway, compared to the many
-      // calls to ExtTextOut.
-      if bDoRightEdge then begin
-        Canvas.MoveTo(nRightEdge, rcLine.Top);
-        Canvas.LineTo(nRightEdge, rcLine.Bottom + 1);
-      end;
-      bCurrentLine := False;
-    end; //endfor cRow
+            //Paint editingAreaBorders
+            PaintEditAreas(areaList);
+        }
+
+        // Now paint the right edge if necessary. We do it line by line to reduce
+        // the flicker. Should not cost very much anyway, compared to the many
+        // calls to ExtTextOut.
+        if (bDoRightEdge) {
+            painter->paintEngine(nRightEdge, rcLine.top(),nRightEdge,rcLine.bottom()+1);
+        }
+        bCurrentLine = false;
+    }
 }
 
 

@@ -161,6 +161,19 @@ PSynHighlighterAttribute SynHighlighter::getAttribute(const QString &name) const
     return PSynHighlighterAttribute();
 }
 
+bool SynHighlighter::enabled() const
+{
+    return mEnabled;
+}
+
+void SynHighlighter::setEnabled(bool value)
+{
+    if (value != mEnabled) {
+        mEnabled = value;
+        setAttributesChanged();
+    }
+}
+
 void SynHighlighterAttribute::setChanged()
 {
     emit changed();

@@ -325,19 +325,8 @@ DisplayCoord SynEdit::pixelsToRowColumn(int aX, int aY)
 DisplayCoord SynEdit::bufferToDisplayPos(const BufferCoord &p)
 {
     DisplayCoord result {p.Char,p.Line};
-    // Account for tabs
-    if (p.Line-1 < mLines->count()) {
-        QString s = mLines->getString(p.Line - 1);
-        int l = s.length();
-        int x = 0;
-        for (int i=0;i<p.Char-1;i++) {
-            if (i<=l && s[i] == '\t')
-                x+=mTabWidth - (x % mTabWidth);
-            else
-                x+=charColumns(s[i]);
-        }
-        result.Column = x + 1;
-    }
+    // Account for tabs and charColumns
+    result.Column = charToColumn(p.Line,p.Char);
     // Account for code folding
     if (mUseCodeFolding)
         result.Row = foldLineToRow(result.Row);
@@ -371,6 +360,41 @@ BufferCoord SynEdit::displayToBufferPos(const DisplayCoord &p)
         }
         Result.Char = i;
     }
+}
+
+int SynEdit::charToColumn(int aLine, int aChar)
+{
+    if (aLine < mLines->count()) {
+        QString s = mLines->getString(aLine - 1);
+        int l = s.length();
+        int x = 0;
+        for (int i=0;i<aChar-1;i++) {
+            if (i<=l && s[i] == '\t')
+                x+=mTabWidth - (x % mTabWidth);
+            else
+                x+=charColumns(s[i]);
+        }
+        return x+1;
+    }
+    throw BaseError(SynEdit::tr("Line %1 is out of range").arg(aLine));
+}
+
+int SynEdit::stringColumns(const QString &line)
+{
+    int columns = 0;
+    if (!line.isEmpty()) {
+        int charCols;
+        for (int i=0;i<line.length();i++) {
+            QChar ch = line[i];
+            if (ch == '\t') {
+                charCols = mTabWidth - columns % mTabWidth;
+            } else {
+                charCols = charColumns(ch);
+            }
+            columns+=charCols;
+        }
+    }
+    return columns;
 }
 
 int SynEdit::rowToLine(int aRow)
@@ -1276,6 +1300,11 @@ void SynEdit::sizeOrFontChanged(bool bFont)
 void SynEdit::doChange()
 {
     emit Changed();
+}
+
+int SynEdit::tabWidth() const
+{
+    return mTabWidth;
 }
 
 void SynEdit::paintEvent(QPaintEvent *event)

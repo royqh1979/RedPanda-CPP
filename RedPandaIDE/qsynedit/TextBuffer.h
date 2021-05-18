@@ -21,8 +21,7 @@ struct SynEditStringRec {
   QString fString;
   void * fObject;
   SynRangeState fRange;
-  int fExpandedLength;
-  SynEditStringFlags fFlags;
+  int fColumns;  //
   int fParenthesisLevel;
   int fBracketLevel;
   int fBraceLevel;
@@ -44,17 +43,18 @@ typedef std::shared_ptr<SynEditStringList> PSynEditStringList;
 using StringListChangeCallback = std::function<void(PSynEditStringList* object, int index, int count)>;
 
 class QFile;
+
+class SynEdit;
 class SynEditStringList : public QObject
 {  
     Q_OBJECT
 public:
-    explicit SynEditStringList(QObject* parent=nullptr);
+    explicit SynEditStringList(SynEdit* pEdit,QObject* parent=nullptr);
 
     int parenthesisLevels(int Index);
     int bracketLevels(int Index);
     int braceLevels(int Index);
-    QString expandedStrings(int Index);
-    int expandedStringLength(int Index);
+    int lineColumns(int Index);
     int lengthOfLongestLine();
     SynRangeState ranges(int Index);
     void setRange(int Index, SynRangeState ARange);
@@ -73,8 +73,6 @@ public:
     void beginUpdate();
     void endUpdate();
 
-    int tabWidth();
-    void setTabWidth(int value);
     int add(const QString& s);
     int addStrings(const QStringList& Strings);
 
@@ -97,6 +95,8 @@ public:
 
     FileEndingType getFileEndingType() const;
     void setFileEndingType(const FileEndingType &fileEndingType);
+public slots:
+    void invalidAllLineColumns();
 
 signals:
     void changed();
@@ -114,16 +114,16 @@ protected:
 private:
     SynEditStringRecList mList;
 
+    SynEdit* mEdit;
     //int mCount;
     //int mCapacity;
     FileEndingType mFileEndingType;
     bool mAppendNewLineAtEOF;
     ConvertTabsProcEx mConvertTabsProc;
     int mIndexOfLongestLine;
-    int mTabWidth;
     int mUpdateCount;
 
-    QString ExpandString(int Index);
+    int calculateLineColumns(int Index);
 };
 
 enum class SynChangeReason {crInsert, crPaste, crDragDropInsert,
