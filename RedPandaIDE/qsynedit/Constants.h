@@ -6,6 +6,10 @@
 extern const QSet<QChar> SynWordBreakChars;
 extern const QChar SynTabChar;
 extern const QChar SynSpaceGlyph;
+extern const QChar SynTabGlyph;
+extern const QChar SynLineBreakGlyph;
+extern const QChar SynSoftBreakGlyph;
+
 
 #define MAX_SCROLL 65535
 

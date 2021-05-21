@@ -350,3 +350,16 @@ void decodeKey(const int combinedKey, int &key, Qt::KeyboardModifiers &modifiers
     }
     key = combinedKey & ~(Qt::ShiftModifier | Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier | Qt::KeypadModifier);
 }
+
+void inflateRect(QRect &rect, int delta)
+{
+    inflateRect(rect,delta,delta);
+}
+
+void inflateRect(QRect &rect, int dx, int dy)
+{
+    rect.setLeft(rect.left()-dx);
+    rect.setRight(rect.right()+dx);
+    rect.setTop(rect.top()-dy);
+    rect.setBottom(rect.bottom()+dy);
+}

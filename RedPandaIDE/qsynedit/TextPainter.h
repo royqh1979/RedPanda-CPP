@@ -7,6 +7,7 @@
 #include "Types.h"
 #include "highlighter/base.h"
 #include "../utils.h"
+#include "MiscClasses.h"
 
 class SynEdit;
 class SynEditTextPainter
@@ -21,15 +22,19 @@ class SynEditTextPainter
     };
 
 public:
-    SynEditTextPainter(SynEdit * edit);
+    SynEditTextPainter(SynEdit * edit,int FirstRow, int LastRow,
+                       int FirstCol, int LastCol);
+    void paintTextLines(const QRect& clip);
+    void paintGutter(const QRect& clip);
 
+private:
     QColor colEditorBG();
     void ComputeSelectionInfo();
     void setDrawingColors(bool Selected);
     int ColumnToXValue(int Col);
     void PaintToken(const QString& Token, int TokenLen, int ColumnsBefore,
                     int First, int Last, bool isSelection);
-    void PaintEditAreas(PSynEditingAreaList areaList);
+    void PaintEditAreas(const SynEditingAreaList& areaList);
     void PaintHighlightToken(bool bFillToEOL);
     bool TokenIsSpaces(bool& bSpacesTest, const QString& Token, bool& bIsSpaces);
     void AddHighlightToken(const QString& Token, int ColumnsBefore, int TokenColumns,
@@ -38,6 +43,8 @@ public:
     void PaintFoldAttributes();
     void GetBraceColorAttr(int level, PSynHighlighterAttribute &attr);
     void PaintLines();
+    void drawMark(PSynEditMark aMark,int& aGutterOff, int aMarkRow);
+
 private:
     SynEdit* edit;
     QPainter* painter;

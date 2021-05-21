@@ -56,6 +56,19 @@ void SynGutter::setChanged()
     emit changed();
 }
 
+QColor SynGutter::textColor() const
+{
+    return mTextColor;
+}
+
+void SynGutter::setTextColor(const QColor &value)
+{
+    if (mTextColor!=value) {
+        mTextColor = value;
+        setChanged();
+    }
+}
+
 int SynGutter::width() const
 {
     return mWidth;

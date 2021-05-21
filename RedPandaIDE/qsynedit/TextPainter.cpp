@@ -3,9 +3,276 @@
 #include "Constants.h"
 #include <cmath>
 
-SynEditTextPainter::SynEditTextPainter(SynEdit *edit)
+SynEditTextPainter::SynEditTextPainter(SynEdit *edit, int FirstRow, int LastRow, int FirstCol, int LastCol)
 {
     this->edit = edit;
+    this->aFirstRow = FirstRow;
+    this->aLastRow = LastRow;
+    this->FirstCol = FirstCol;
+    this->LastCol = LastCol;
+}
+
+void SynEditTextPainter::paintTextLines(const QRect& clip)
+{
+    AClip = clip;
+    vFirstLine = edit->rowToLine(aFirstRow);
+    vLastLine = edit->rowToLine(aLastRow);
+    bCurrentLine = false;
+    // If the right edge is visible and in the invalid area, prepare to paint it.
+    // Do this first to realize the pen when getting the dc variable.
+    QString SynTabGlyphString = SynTabGlyph;
+    bDoRightEdge = false;
+    if (edit->mRightEdge > 0) { // column value
+        nRightEdge = edit->mTextOffset + edit->mRightEdge * edit->mCharWidth; // pixel value
+        if (nRightEdge >= AClip.left() &&nRightEdge <= AClip.right()) {
+            bDoRightEdge = true;
+            QPen pen(edit->mRightEdgeColor,1);
+            painter->setPen(pen);
+        }
+    }
+
+    // Paint the visible text lines. To make this easier, compute first the
+    // necessary information about the selected area: is there any visible
+    // selected area, and what are its lines / columns?
+    if (vLastLine >= vFirstLine) {
+      ComputeSelectionInfo();
+      PaintLines();
+    }
+
+    // If anything of the two pixel space before the text area is visible, then
+    // fill it with the component background color.
+    if (AClip.left() < edit->clientLeft()+ edit->mGutterWidth + 2) {
+        rcToken = AClip;
+        rcToken.setLeft( std::max(AClip.left(), edit->mGutterWidth));
+        rcToken.setRight(edit->mGutterWidth + 2);
+        // Paint whole left edge of the text with same color.
+        // (value of WhiteAttribute can vary in e.g. MultiSyn)
+        painter->setPen(Qt::NoPen);
+        painter->setBrush(colEditorBG());
+        painter->drawRect(rcToken);
+        // Adjust the invalid area to not include this area.
+        AClip.setLeft(rcToken.right());
+    }
+    // If there is anything visible below the last line, then fill this as well.
+    rcToken = AClip;
+    rcToken.setTop((aLastRow - edit->mTopLine + 1) * edit->mTextHeight);
+    if (rcToken.top() < rcToken.bottom()) {
+        painter->setPen(Qt::NoPen);
+        painter->setBrush(colEditorBG());
+        painter->drawRect(rcToken);
+        // Draw the right edge if necessary.
+        if (bDoRightEdge) {
+            QPen pen(edit->mRightEdgeColor,1);
+            painter->setPen(pen);
+            painter->drawLine(nRightEdge, rcToken.top(),nRightEdge, rcToken.bottom() + 1);
+        }
+    }
+
+    // This messes with pen colors, so draw after right margin has been drawn
+    PaintFoldAttributes();
+}
+
+void SynEditTextPainter::paintGutter(const QRect& clip)
+{
+    int cRow;
+    int cMark;
+    QRect rcLine, rcFold;
+    QList<int> aGutterOffs;
+    bool bHasOtherMarks;
+    QString s;
+    int vFirstLine;
+    int vLastLine;
+    int vLine;
+    int vMarkRow;
+    int vGutterRow;
+    int vLineTop;
+    QSize TextSize;
+    int x;
+    PSynEditFoldRange FoldRange;
+
+    AClip = clip;
+
+    //todo: Does the following comment still apply?
+    // Changed to use fTextDrawer.BeginDrawing and fTextDrawer.EndDrawing only
+    // when absolutely necessary.  Note: Never change brush / pen / font of the
+    // canvas inside of this block (only through methods of fTextDrawer)!
+    // If we have to draw the line numbers then we don't want to erase
+    // the background first. Do it line by line with TextRect instead
+    // and fill only the area after the last visible line.
+    painter->setBrush(edit->mGutter.color());
+    painter->setPen(Qt::NoPen);
+    rcLine=AClip;
+
+    painter->drawRect(AClip);
+
+    if (edit->mGutter.showLineNumbers()) {
+        if (edit->mGutter.useFontStyle()) {
+            painter->setFont(edit->mGutter.font());
+            painter->setPen(edit->mGutter.textColor());
+        } else {
+            painter->setPen(edit->palette().color(QPalette::Text));
+        }
+        painter->setBrush(edit->mGutter.color());
+
+        // prepare the rect initially
+        rcLine = AClip;
+        rcLine.setRight( std::max(rcLine.right(), edit->mGutterWidth - 2));
+        rcLine.setBottom(rcLine.top());
+        painter->drawRect(AClip);
+
+        // draw each line if it is not hidden by a fold
+        for (int cRow = aFirstRow; cRow <= aLastRow; cRow++) {
+            vLine = edit->rowToLine(cRow);
+            if ((vLine > edit->mLines->count()) && (edit->mLines->count() > 0 ))
+                break;
+            vLineTop = (cRow - edit->mTopLine) * edit->mTextHeight;
+
+            // next line rect
+            rcLine.setTop(vLineTop);
+            rcLine.setBottom(rcLine.top() + edit->mTextHeight);
+
+            s = edit->mGutter.formatLineNumber(vLine);
+
+            if (edit->mOnGutterGetText) {
+                edit->mOnGutterGetText(vLine,s);
+            }
+
+            QRectF textRect;
+            textRect = painter->boundingRect(textRect, Qt::AlignLeft,s);
+            painter->drawText(
+                 (edit->mGutterWidth - edit->mGutter.rightOffset() - 2) - textRect.width(),
+                        rcLine.top() + ((edit->mTextHeight - int(textRect.height())) % 2),
+                        s
+                        );
+        }
+    }
+
+    // Draw the folding lines and squares
+    if (edit->mUseCodeFolding) {
+      for (cRow = aFirstRow; cRow<=aLastRow; cRow++) {
+        vLine = edit->rowToLine(cRow);
+        if ((vLine > edit->mLines->count()) && (edit->mLines->count() != 0))
+            break;
+
+        // Form a rectangle for the square the user can click on
+        //rcFold.Left := Gutter.RealGutterWidth(CharWidth) - Gutter.RightOffset;
+        rcFold.setLeft(edit->mGutterWidth - edit->mGutter.rightOffset());
+        rcFold.setRight(rcFold.left() + edit->mGutter.rightOffset() - 4);
+        rcFold.setTop((cRow - edit->mTopLine) * edit->mTextHeight);
+        rcFold.setBottom(rcFold.top() + edit->mTextHeight);
+
+        painter->setPen(edit->mCodeFolding.folderBarLinesColor);
+
+
+        // Need to paint a line?
+        if (edit->foldAroundLine(vLine)) {
+          x = rcFold.left() + (rcFold.width() % 2);
+          painter->drawLine(x,rcFold.top(), x, rcFold.bottom());
+        }
+
+        // Need to paint a line end?
+        if (edit->foldEndAtLine(vLine)) {
+            x = rcFold.left() + (rcFold.width() % 2);
+            painter->drawLine(x,rcFold.top(), x, rcFold.top() + rcFold.height() % 2);
+            painter->drawLine(x,
+                              rcFold.top() + rcFold.height() % 2,
+                              rcFold.right() - 2 ,
+                              rcFold.top() + rcFold.height() % 2);
+        }
+        // Any fold ranges beginning on this line?
+        FoldRange = edit->foldStartAtLine(vLine);
+        if (FoldRange) {
+            // Draw the bottom part of a line
+            if (!FoldRange->collapsed) {
+                x = rcFold.left() + (rcFold.width() % 2);
+                painter->drawLine(x, rcFold.top() + rcFold.height() % 2,
+                                  x, rcFold.bottom());
+            }
+
+            // make a square rect
+            inflateRect(rcFold,-2, 0);
+            rcFold.setTop(
+                        rcFold.top() + ((edit->mTextHeight - rcFold.width()) % 2));
+            rcFold.setBottom(rcFold.top() + rcFold.width());
+
+            // Paint the square the user can click on
+            painter->setBrush(edit->mGutter.color());
+            painter->setPen(edit->mCodeFolding.folderBarLinesColor);
+            painter->drawRect(rcFold);
+
+            // Paint minus sign
+            painter->drawLine(
+                        rcFold.left() + 2, rcFold.top() + (rcFold.height() % 2 ),
+                        rcFold.right() - 2, rcFold.top() + (rcFold.height() % 2 ));
+            // Paint vertical line of plus sign
+            if (FoldRange->collapsed) {
+                x = rcFold.left() + (rcFold.width() % 2);
+                painter->drawLine(x, rcFold.top() + 2,
+                                  x, rcFold.bottom() + 2);
+            }
+        }
+      }
+    }
+
+//    // the gutter separator if visible
+//    if (edit->mGutter.borderStyle <> gbsNone) and (AClip.Right >= fGutterWidth - 2) then
+//      with Canvas do begin
+//        Pen.Color := fGutter.BorderColor;
+//        Pen.Width := 1;
+//        with AClip do begin
+//          if fGutter.BorderStyle = gbsMiddle then begin
+//            MoveTo(fGutterWidth - 2, Top);
+//            LineTo(fGutterWidth - 2, Bottom);
+//            Pen.Color := fGutter.Color;
+//          end;
+//          MoveTo(fGutterWidth - 1, Top);
+//          LineTo(fGutterWidth - 1, Bottom);
+//        end;
+//      end;
+
+//    // now the gutter marks
+//    if BookMarkOptions.GlyphsVisible and (Marks.Count > 0) and (aLastRow >= aFirstRow) then begin
+//      aGutterOffs := AllocMem((aLastRow - aFirstRow + 1) * SizeOf(integer));
+//      vFirstLine := RowToLine(aFirstRow);
+//      vLastLine := RowToLine(aLastRow);
+//      try
+//        // Instead of making a two pass loop we look while drawing the bookmarks
+//        // whether there is any other mark to be drawn
+//        bHasOtherMarks := FALSE;
+//        for cMark := 0 to Marks.Count - 1 do
+//          with Marks[cMark] do
+//            if Visible and (Line >= vFirstLine) and (Line <= vLastLine) then begin
+//              if IsBookmark <> BookMarkOptions.DrawBookmarksFirst then
+//                bHasOtherMarks := TRUE
+//              else begin
+//                vMarkRow := LineToRow(Line);
+//                if vMarkRow >= aFirstRow then
+//                  DrawMark(Marks[cMark], aGutterOffs[vMarkRow - aFirstRow], vMarkRow);
+//              end
+//            end;
+//        if bHasOtherMarks then
+//          for cMark := 0 to Marks.Count - 1 do
+//            with Marks[cMark] do begin
+//              if Visible and (IsBookmark <> BookMarkOptions.DrawBookmarksFirst)
+//                and (Line >= vFirstLine) and (Line <= vLastLine) then begin
+//                vMarkRow := LineToRow(Line);
+//                if vMarkRow >= aFirstRow then
+//                  DrawMark(Marks[cMark], aGutterOffs[vMarkRow - aFirstRow], vMarkRow);
+//              end;
+//            end;
+//        if Assigned(OnGutterPaint) then
+//          for cRow := aFirstRow to aLastRow do begin
+//            OnGutterPaint(Self, cRow, aGutterOffs[cRow - aFirstRow],
+//              (vGutterRow - TopLine) * LineHeight);
+//          end;
+//      finally
+//        FreeMem(aGutterOffs);
+//      end;
+//    end;
+    for (cRow = aFirstRow; cRow <=aLastRow; cRow++) {
+        vLine = edit->rowToLine(cRow);
+        edit->onGutterPaint(vLine, 0, (cRow - edit->mTopLine) * edit->mTextHeight);
+    }
 }
 
 QColor SynEditTextPainter::colEditorBG()
@@ -127,7 +394,7 @@ void SynEditTextPainter::PaintToken(const QString &Token, int TokenCols, int Col
     }
 }
 
-void SynEditTextPainter::PaintEditAreas(PSynEditingAreaList areaList)
+void SynEditTextPainter::PaintEditAreas(const SynEditingAreaList &areaList)
 {
     QRect rc;
     int x1,x2;
@@ -136,7 +403,7 @@ void SynEditTextPainter::PaintEditAreas(PSynEditingAreaList areaList)
     rc=rcLine;
     rc.setBottom(rc.bottom()-1);
     setDrawingColors(false);
-    for (PSynEditingArea p:*areaList) {
+    for (PSynEditingArea p:areaList) {
         if (p->beginX > LastCol)
           continue;
         if (p->endX < FirstCol)
@@ -393,7 +660,7 @@ void SynEditTextPainter::PaintFoldAttributes()
             LastNonBlank = vLine - 1;
             while (LastNonBlank + 1 < edit->mLines->count() && edit->mLines->getString(LastNonBlank).trimmed().isEmpty())
                 LastNonBlank++;
-            LineIndent = edit->GetLineIndent(edit->mLines->getString(LastNonBlank));
+            LineIndent = edit->getLineIndent(edit->mLines->getString(LastNonBlank));
             // Step horizontal coord
             TabSteps = edit->mTabWidth;
             while (TabSteps < LineIndent) {
@@ -408,7 +675,7 @@ void SynEditTextPainter::PaintFoldAttributes()
     }
 
     if (!edit->mUseCodeFolding)
-        exit;
+        return;
 
     // Paint collapsed lines using changed pen
     if (edit->mCodeFolding.showCollapsedLine) {
@@ -450,11 +717,11 @@ void SynEditTextPainter::PaintLines()
     int vLine;
     QString sLine; // the current line
     QString sToken; // highlighter token info
-    int nTokenPos, nTokenLen;
+    int nTokenStartColumn, nTokenColumnLen;
     PSynHighlighterAttribute attr;
     int vFirstChar;
     int vLastChar;
-    PSynEditingAreaList  areaList;
+    SynEditingAreaList  areaList;
     QColor colBorder;
     PSynEditFoldRange foldRange;
     int nC1,nC2,nFold;
@@ -480,7 +747,7 @@ void SynEditTextPainter::PaintLines()
         // use special values for them.
         colFG = edit->palette().color(QPalette::Text);
         colBG = colEditorBG();
-        bSpecialLine = edit->DoOnSpecialLineColors(vLine, colFG, colBG);
+        bSpecialLine = edit->onSpecialLineColors(vLine, colFG, colBG);
         if (bSpecialLine) {
             // The selection colors are just swapped, like seen in Delphi.
             colSelFG = colBG;
@@ -489,7 +756,7 @@ void SynEditTextPainter::PaintLines()
             colSelFG = edit->mSelectedForeground;
             colSelBG = edit->mSelectedBackground;
         }
-        edit->DoOnEditAreas(vLine, areaList);
+        edit->onEditingAreas(vLine, areaList);
         // Removed word wrap support
         vFirstChar = FirstCol;
         vLastChar = LastCol;
@@ -536,26 +803,26 @@ void SynEditTextPainter::PaintLines()
         rcToken = rcLine;
         if (!edit->mHighlighter || !edit->mHighlighter->enabled()) {
               sToken = sLine;
-              nTokenLen = edit->mLines->lineColumns(vLine-1);
-              if (edit->mShowSpecChar && (!bLineSelected) && (!bSpecialLine) && (nTokenLen < vLastChar)) {
+              nTokenColumnLen = edit->mLines->lineColumns(vLine-1);
+              if (edit->mShowSpecChar && (!bLineSelected) && (!bSpecialLine) && (nTokenColumnLen < vLastChar)) {
                   sToken = sToken + SynLineBreakGlyph;
-                  nTokenLen = sToken + edit->charColumns(SynLineBreakGlyph);
+                  nTokenColumnLen += edit->charColumns(SynLineBreakGlyph);
               }
               if (bComplexLine) {
                   setDrawingColors(false);
                   rcToken.setLeft(std::max(rcLine.left(), ColumnToXValue(FirstCol)));
                   rcToken.setRight(std::min(rcLine.right(), ColumnToXValue(nLineSelStart)));
-                  PaintToken(sToken, nTokenLen, 0, FirstCol, nLineSelStart,false);
+                  PaintToken(sToken, nTokenColumnLen, 0, FirstCol, nLineSelStart,false);
                   rcToken.setLeft(std::max(rcLine.left(), ColumnToXValue(nLineSelEnd)));
                   rcToken.setRight(std::min(rcLine.right(), ColumnToXValue(LastCol)));
-                  PaintToken(sToken, nTokenLen, 0, nLineSelEnd, LastCol,true);
+                  PaintToken(sToken, nTokenColumnLen, 0, nLineSelEnd, LastCol,true);
                   setDrawingColors(false);
                   rcToken.setLeft(std::max(rcLine.left(), ColumnToXValue(nLineSelStart)));
                   rcToken.setRight(std::min(rcLine.right(), ColumnToXValue(nLineSelEnd)));
-                  PaintToken(sToken, nTokenLen, 0, nLineSelStart, nLineSelEnd - 1,false);
+                  PaintToken(sToken, nTokenColumnLen, 0, nLineSelStart, nLineSelEnd - 1,false);
               } else {
                   setDrawingColors(bLineSelected);
-                  PaintToken(sToken, nTokenLen, 0, FirstCol, LastCol,bLineSelected);
+                  PaintToken(sToken, nTokenColumnLen, 0, FirstCol, LastCol,bLineSelected);
               }
         } else {
             // Initialize highlighter with line text and range info. It is
@@ -577,7 +844,7 @@ void SynEditTextPainter::PaintLines()
             // or the line having special colors. For spaces the foreground color
             // is ignored as well.
             TokenAccu.Columns = 0;
-            nTokenPos = 0;
+            nTokenStartColumn = 0;
             // Test first whether anything of this token is visible.
             while (edit->mHighlighter->eol()) {
                 sToken = edit->mHighlighter->getToken();
@@ -591,13 +858,13 @@ void SynEditTextPainter::PaintLines()
                     if (sToken.isEmpty())
                         throw BaseError(SynEdit::tr("The highlighter seems to be in an infinite loop"));
                 }
-                nTokenPos = edit->charToColumn(vLine,edit->mHighlighter->getTokenPos());
-                nTokenLen = edit->stringColumns(sToken);
-                if (nTokenPos + nTokenLen >= vFirstChar) {
-                    if (nTokenPos + nTokenLen >= vLastChar) {
-                        if (nTokenPos >= vLastChar)
+                nTokenStartColumn = edit->charToColumn(vLine,edit->mHighlighter->getTokenPos());
+                nTokenColumnLen = edit->stringColumns(sToken, nTokenStartColumn-1);
+                if (nTokenStartColumn + nTokenColumnLen >= vFirstChar) {
+                    if (nTokenStartColumn + nTokenColumnLen >= vLastChar) {
+                        if (nTokenStartColumn >= vLastChar)
                             break; //*** BREAK ***
-                        nTokenLen = vLastChar - nTokenPos - 1;
+                        nTokenColumnLen = vLastChar - nTokenStartColumn - 1;
                     }
                     // It's at least partially visible. Get the token attributes now.
                     attr = edit->mHighlighter->getTokenAttribute();
@@ -614,25 +881,25 @@ void SynEditTextPainter::PaintLines()
                     } else if (sToken == "}") {
                       GetBraceColorAttr(edit->mHighlighter->getBraceLevel()+1,attr);
                     }
-                    AddHighlightToken(sToken, nTokenPos - (vFirstChar - FirstCol),
-                      nTokenLen, vLine,attr);
+                    AddHighlightToken(sToken, nTokenStartColumn - (vFirstChar - FirstCol),
+                      nTokenColumnLen, vLine,attr);
                 }
                 // Let the highlighter scan the next token.
                 edit->mHighlighter->next();
             }
             // Don't assume HL.GetTokenPos is valid after HL.GetEOL == True.
-            nTokenPos += edit->stringColumns(sToken);
-            if (edit->mHighlighter->eol() && (nTokenPos < vLastChar)) {
+            nTokenStartColumn += edit->stringColumns(sToken,nTokenStartColumn-1);
+            if (edit->mHighlighter->eol() && (nTokenStartColumn < vLastChar)) {
                 int lineColumns = edit->mLines->lineColumns(vLine-1);
                 // Draw text that couldn't be parsed by the highlighter, if any.
-                if (nTokenPos < lineColumns) {
-                    if (nTokenPos + 1 < vFirstChar)
-                        nTokenPos = vFirstChar - 1;
-                    nTokenLen = std::min(lineColumns, vLastChar) - (nTokenPos + 1);
-                    if (nTokenLen > 0) {
-                        sToken = edit->subStringByColumns(sLine,nTokenPos+1,nTokenLen);
-                        AddHighlightToken(sToken, nTokenPos - (vFirstChar - FirstCol),
-                            edit->stringColumns(sToken), vLine, PSynHighlighterAttribute());
+                if (nTokenStartColumn < lineColumns) {
+                    if (nTokenStartColumn + 1 < vFirstChar)
+                        nTokenStartColumn = vFirstChar - 1;
+                    nTokenColumnLen = std::min(lineColumns, vLastChar) - (nTokenStartColumn + 1);
+                    if (nTokenColumnLen > 0) {
+                        sToken = edit->substringByColumns(sLine,nTokenStartColumn+1,nTokenColumnLen);
+                        AddHighlightToken(sToken, nTokenStartColumn - (vFirstChar - FirstCol),
+                            nTokenColumnLen, vLine, PSynHighlighterAttribute());
                     }
                 }
             // Draw LineBreak glyph.
@@ -647,12 +914,12 @@ void SynEditTextPainter::PaintLines()
             // Paint folding
             foldRange = edit->foldStartAtLine(vLine);
             if ((foldRange) && foldRange->collapsed) {
-              sFold = " ... } ";
-              nFold = edit->stringColumns(sFold);
-              attr = edit->mHighlighter->symbolAttribute();
-              GetBraceColorAttr(edit->mHighlighter->getBraceLevel(),attr);
-              AddHighlightToken(sFold,edit->mLines->lineColumns(vLine-1)+1 - (vFirstChar - FirstCol)
-                , nFold, vLine, attr);
+                sFold = " ... } ";
+                nFold = edit->stringColumns(sFold,edit->mLines->lineColumns(vLine-1));
+                attr = edit->mHighlighter->symbolAttribute();
+                GetBraceColorAttr(edit->mHighlighter->getBraceLevel(),attr);
+                AddHighlightToken(sFold,edit->mLines->lineColumns(vLine-1)+1 - (vFirstChar - FirstCol)
+                  , nFold, vLine, attr);
             }
 
             // Draw anything that's left in the TokenAccu record. Fill to the end
@@ -667,10 +934,15 @@ void SynEditTextPainter::PaintLines()
         // the flicker. Should not cost very much anyway, compared to the many
         // calls to ExtTextOut.
         if (bDoRightEdge) {
-            painter->paintEngine(nRightEdge, rcLine.top(),nRightEdge,rcLine.bottom()+1);
+            painter->drawLine(nRightEdge, rcLine.top(),nRightEdge,rcLine.bottom()+1);
         }
         bCurrentLine = false;
     }
+}
+
+void SynEditTextPainter::drawMark(PSynEditMark aMark, int &aGutterOff, int aMarkRow)
+{
+    //todo
 }
 
 

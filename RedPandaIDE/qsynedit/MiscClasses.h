@@ -76,6 +76,9 @@ public:
     QString formatLineNumber(int line);
     int realGutterWidth(int charWidth);
 
+    QColor textColor() const;
+    void setTextColor(const QColor &value);
+
 signals:
     void changed();
 private:
@@ -83,6 +86,7 @@ private:
 private:
     bool mAutoSize;
     QColor mBorderColor;
+    QColor mTextColor;
     QColor mColor;
     int mDigitCount;
     QFont mFont;

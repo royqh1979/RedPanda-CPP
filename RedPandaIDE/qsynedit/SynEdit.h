@@ -125,12 +125,12 @@ using SynPreparePaintHighlightTokenProc = std::function<void(int row,
         SynFontStyles& style, QColor& foreground, QColor& background)>;
 using SynReplaceTextProc = std::function<void(const QString& ASearch, const QString& AReplace,
     int Line, int Column, int wordLen, SynReplaceAction& action)>;
-using SynSpecialLineColorsProc = std::function<void(int Line,
-    bool& Special, QColor& foreground, QColor& backgroundColor)>;
-using SynEditingAreasProc = std::function<void(int Line, SynEditingAreaList& areaList,
-            QColor& borderColor,SynEditingAreaType& areaType)>;
-using SynGutterGetTextProc = std::function<void(int aLine, QString& aText)>;
-using SynTGutterPaintProc = std::function<void(int aLine, int X, int Y)>;
+//using SynSpecialLineColorsProc = std::function<void(int Line,
+//    bool& Special, QColor& foreground, QColor& backgroundColor)>;
+//using SynEditingAreasProc = std::function<void(int Line, SynEditingAreaList& areaList,
+//            QColor& borderColor,SynEditingAreaType& areaType)>;
+//using SynGutterGetTextProc = std::function<void(int aLine, QString& aText)>;
+//using SynTGutterPaintProc = std::function<void(int aLine, int X, int Y)>;
 
 class SynEdit;
 using PSynEdit = std::shared_ptr<SynEdit>;
@@ -163,7 +163,8 @@ public:
     DisplayCoord bufferToDisplayPos(const BufferCoord& p);
     BufferCoord displayToBufferPos(const DisplayCoord& p);
     int charToColumn(int aLine, int aChar);
-    int stringColumns(const QString& line);
+    int stringColumns(const QString& line, int colsBefore);
+    int getLineIndent(const QString& line);
     int rowToLine(int aRow);
     int lineToRow(int aLine);
     int foldRowToLine(int Row);
@@ -241,6 +242,15 @@ signals:
     void fontChanged();
     void tabSizeChanged();
 
+protected:
+    virtual bool onSpecialLineColors(int Line,
+         QColor& foreground, QColor& backgroundColor) ;
+    virtual void onEditingAreas(int Line, SynEditingAreaList& areaList);
+    virtual void onGutterGetText(int aLine, QString& aText);
+    virtual void onGutterPaint(int aLine, int X, int Y);
+
+
+
 private:
     void clearAreaList(SynEditingAreaList areaList);
     void computeCaret(int X, int Y);
@@ -287,6 +297,11 @@ private:
                                const QString& Value, bool AddToUndoList);
     void doOnPaintTransientEx(SynTransientType TransientType, bool Lock);
     void initializeCaret();
+    PSynEditFoldRange foldStartAtLine(int Line);
+    QString substringByColumns(const QString& s, int startColumn, int& colLen);
+    PSynEditFoldRange foldAroundLine(int Line);
+    PSynEditFoldRange foldAroundLineEx(int Line, bool WantCollapsed, bool AcceptFromLine, bool AcceptToLine);
+    PSynEditFoldRange CheckFoldRange(PSynEditFoldRanges FoldRangeToCheck,int Line, bool WantCollapsed, bool AcceptFromLine, bool AcceptToLine);
 
 private slots:
     void bookMarkOptionsChanged();
@@ -400,10 +415,10 @@ private:
     SynProcessCommandProc mOnProcessingUserCommand;
 
     SynReplaceTextProc mOnReplaceText;
-    SynSpecialLineColorsProc mOnSpecialLineColors;
-    SynEditingAreasProc mOnEditingAreas;
-    SynGutterGetTextProc  mOnGutterGetText;
-    SynTGutterPaintProc mOnGutterPaint;
+//    SynSpecialLineColorsProc mOnSpecialLineColors;
+//    SynEditingAreasProc mOnEditingAreas;
+//    SynGutterGetTextProc  mOnGutterGetText;
+//    SynTGutterPaintProc mOnGutterPaint;
     int mGutterWidth;
 
     //caret blink related
@@ -417,7 +432,5 @@ protected:
 
 friend class SynEditTextPainter;
 };
-
-class
 
 #endif // SYNEDIT_H

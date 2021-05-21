@@ -379,7 +379,7 @@ int SynEditStringList::calculateLineColumns(int Index)
 {
     PSynEditStringRec line = mList[Index];
 
-    line->fColumns = mEdit->stringColumns(line->fString);
+    line->fColumns = mEdit->stringColumns(line->fString,0);
     return line->fColumns;
 }
 

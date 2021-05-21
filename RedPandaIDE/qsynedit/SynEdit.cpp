@@ -254,7 +254,7 @@ void SynEdit::invalidateGutterLines(int FirstLine, int LastLine)
     if (!isVisible())
         return;
     if (FirstLine == -1 && LastLine == -1) {
-        rcInval = QRect(clientLeft(), clientTop(), mGutterWidth, clientHeight());
+        rcInval = QRect(0, 0, mGutterWidth, clientHeight());
         if (mStateFlags.testFlag(SynStateFlag::sfLinesChanging))
             mInvalidateRect = mInvalidateRect.united(rcInval);
         else
@@ -274,7 +274,7 @@ void SynEdit::invalidateGutterLines(int FirstLine, int LastLine)
         LastLine = std::min(LastLine, mTopLine + mLinesInWindow);
         // any line visible?
         if (LastLine >= FirstLine) {
-            rcInval = {clientLeft(), clientTop()+mTextHeight * (FirstLine - mTopLine),
+            rcInval = {0, mTextHeight * (FirstLine - mTopLine),
                        mGutterWidth, mTextHeight * (LastLine - mTopLine + 1)};
             if (mStateFlags.testFlag(SynStateFlag::sfLinesChanging)) {
                 mInvalidateRect =  mInvalidateRect.united(rcInval);
@@ -379,22 +379,38 @@ int SynEdit::charToColumn(int aLine, int aChar)
     throw BaseError(SynEdit::tr("Line %1 is out of range").arg(aLine));
 }
 
-int SynEdit::stringColumns(const QString &line)
+int SynEdit::stringColumns(const QString &line, int colsBefore)
 {
-    int columns = 0;
-    if (!line.isEmpty()) {
-        int charCols;
-        for (int i=0;i<line.length();i++) {
-            QChar ch = line[i];
-            if (ch == '\t') {
-                charCols = mTabWidth - columns % mTabWidth;
-            } else {
-                charCols = charColumns(ch);
-            }
-            columns+=charCols;
+    int columns = colsBefore;
+    int charCols;
+    for (int i=0;i<line.length();i++) {
+        QChar ch = line[i];
+        if (ch == '\t') {
+            charCols = mTabWidth - columns % mTabWidth;
+        } else {
+            charCols = charColumns(ch);
+        }
+        columns+=charCols;
+    }
+    return columns-colsBefore;
+}
+
+int SynEdit::getLineIndent(const QString &line)
+{
+    int indents = 0;
+    for (QChar ch:line) {
+        switch(ch.digitValue()) {
+        case '\t':
+            indents+=mTabWidth;
+            break;
+        case ' ':
+            indents+=1;
+            break;
+        default:
+            return indents;
         }
     }
-    return columns;
+    return indents;
 }
 
 int SynEdit::rowToLine(int aRow)
@@ -576,6 +592,8 @@ void SynEdit::clearUndo()
 
 int SynEdit::charColumns(QChar ch)
 {
+    if (ch == ' ')
+        return 1;
     return std::ceil(fontMetrics().horizontalAdvance(ch) * dpiFactor() / mCharWidth);
 }
 
@@ -751,7 +769,7 @@ int SynEdit::clientLeft()
 
 QRect SynEdit::clientRect()
 {
-    return QRect(clientLeft(),clientTop(), clientWidth(), clientHeight());
+    return QRect(0,0, clientWidth(), clientHeight());
 }
 
 void SynEdit::synFontChanged()
@@ -1274,6 +1292,83 @@ void SynEdit::initializeCaret()
     //todo:
 }
 
+PSynEditFoldRange SynEdit::foldStartAtLine(int Line)
+{
+    for (int i = 0; i<mAllFoldRanges.count();i++) {
+        PSynEditFoldRange range = mAllFoldRanges[i];
+        if (range->fromLine == Line ){
+            return range;
+        } else if (range->fromLine>Line)
+            break; // sorted by line. don't bother scanning further
+    }
+}
+
+QString SynEdit::substringByColumns(const QString &s, int startColumn, int &colLen)
+{
+
+    int len = s.length();
+    int columns = 0;
+    int i = 0;
+    int oldColumns;
+    while (columns < startColumn) {
+        oldColumns = columns;
+        if (i < len && s[i] == '\t')
+            columns += mTabWidth - (columns % mTabWidth);
+        else
+            columns += charColumns(s[i]);
+        i++;
+    }
+    QString result;
+    if (i>=len) {
+        colLen = 0;
+        return result;
+    }
+    if (colLen>result.capacity()) {
+        result.resize(colLen);
+    }
+    int j=0;
+    if (i>0) {
+        result[0]=s[i-1];
+        j++;
+    }
+    while (i<len && columns<startColumn+colLen) {
+        result[j]=s[i];
+        if (i < len && s[i] == '\t')
+            columns += mTabWidth - (columns % mTabWidth);
+        else
+            columns += charColumns(s[i]);
+        i++;
+        j++;
+    }
+    result.resize(j);
+    colLen = columns-oldColumns;
+    return result;
+}
+
+PSynEditFoldRange SynEdit::foldAroundLine(int Line)
+{
+    return foldAroundLineEx(Line,false,false,false);
+}
+
+PSynEditFoldRange SynEdit::foldAroundLineEx(int Line, bool WantCollapsed, bool AcceptFromLine, bool AcceptToLine)
+{
+
+}
+
+PSynEditFoldRange SynEdit::CheckFoldRange(PSynEditFoldRanges FoldRangeToCheck, int Line, bool WantCollapsed, bool AcceptFromLine, bool AcceptToLine)
+{
+    for (int i = 0; i< FoldRangeToCheck->count(); i++) {
+        PSynEditFoldRange range = (*FoldRangeToCheck)[i];
+        if (((range->fromLine < Line) || ((range->fromLine <= Line) && AcceptFromLine)) &&
+          ((range->toLine > Line) || ((range->toLine >= Line) && AcceptToLine))) {
+            if (range->collapsed == WantCollapsed) {
+                return range;
+            }
+        }
+    }
+    return PSynEditFoldRange();
+}
+
 void SynEdit::sizeOrFontChanged(bool bFont)
 {
     if (mCharWidth != 0) {
@@ -1307,6 +1402,16 @@ int SynEdit::tabWidth() const
     return mTabWidth;
 }
 
+bool SynEdit::onSpecialLineColors(int, QColor &, QColor &)
+{
+
+}
+
+void SynEdit::onEditingAreas(int, SynEditingAreaList &)
+{
+
+}
+
 void SynEdit::paintEvent(QPaintEvent *event)
 {
     if (mPainterLock>0)
@@ -1320,10 +1425,10 @@ void SynEdit::paintEvent(QPaintEvent *event)
     rcClip = event->rect();
     // columns
     nC1 = mLeftChar;
-    if (rcClip.left() > mGutterWidth + 2 + clientLeft())
-        nC1 += (rcClip.left() - mGutterWidth - 2 - clientLeft()) % mCharWidth;
+    if (rcClip.left() > mGutterWidth + 2 )
+        nC1 += (rcClip.left() - mGutterWidth - 2 ) % mCharWidth;
     nC2 = mLeftChar +
-      (rcClip.right() - mGutterWidth - 2 - clientLeft() + mCharWidth - 1) % mCharWidth;
+      (rcClip.right() - mGutterWidth - 2 + mCharWidth - 1) % mCharWidth;
     // lines
     nL1 = MinMax(mTopLine + rcClip.top() % mTextHeight, mTopLine, displayLineCount());
     nL2 = MinMax(mTopLine + (rcClip.bottom() + mTextHeight - 1) % mTextHeight, 1, displayLineCount());
@@ -1336,23 +1441,23 @@ void SynEdit::paintEvent(QPaintEvent *event)
     });
 
     // First paint paint the text area if it was (partly) invalidated.
-    if (rcClip.right() > mGutterWidth + clientLeft()) {
+    if (rcClip.right() > mGutterWidth ) {
         rcDraw = rcClip;
-        rcDraw.setLeft( std::max(rcDraw.left(), mGutterWidth + clientLeft()));
+        rcDraw.setLeft( std::max(rcDraw.left(), mGutterWidth));
         paintTextLines(rcDraw, nL1, nL2, nC1, nC2);
     }
 
     // Then the gutter area if it was (partly) invalidated.
-    if (rcClip.left() < clientLeft() + mGutterWidth) {
+    if (rcClip.left() < mGutterWidth) {
         rcDraw = rcClip;
-        rcDraw.setRight(clientLeft() + mGutterWidth);
+        rcDraw.setRight(mGutterWidth);
         paintGutter(rcDraw, nL1, nL2);
     }
 
       //PluginsAfterPaint(Canvas, rcClip, nL1, nL2);
       // If there is a custom paint handler call it.
     doOnPaint();
-    doOnPaintTransient(SynTransientType:: ttAfter);
+    doOnPaintTransient(SynTransientType::ttAfter);
 }
 
 int SynEdit::maxScrollWidth() const

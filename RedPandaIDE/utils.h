@@ -5,6 +5,7 @@
 #include <utility>
 #include <functional>
 #include <QString>
+#include <QRect>
 
 class QByteArray;
 class QString;
@@ -91,6 +92,9 @@ QStringList ReadFileToLines(const QString& fileName, QTextCodec* codec);
 void ReadFileToLines(const QString& fileName, QTextCodec* codec, LineProcessFunc lineFunc);
 
 void decodeKey(int combinedKey, int& key, Qt::KeyboardModifiers& modifiers);
+
+void inflateRect(QRect& rect, int delta);
+void inflateRect(QRect& rect, int dx, int dy);
 
 template <class F>
 class final_action
