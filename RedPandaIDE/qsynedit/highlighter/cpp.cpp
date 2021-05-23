@@ -117,7 +117,7 @@ SynEditCppHighlighter::SynEditCppHighlighter(QObject *parent): SynHighlighter(pa
     mCharAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrCharacter);
     addAttribute(mCharAttribute);
     mCommentAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrComment);
-    mCommentAttribute->setItalic(true);
+    mCommentAttribute->setStyles(SynFontStyle::fsItalic);
     addAttribute(mCommentAttribute);
     mClassAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrClass);
     addAttribute(mClassAttribute);
@@ -142,7 +142,7 @@ SynEditCppHighlighter::SynEditCppHighlighter(QObject *parent): SynHighlighter(pa
     mDirecAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrPreprocessor);
     addAttribute(mDirecAttribute);
     mKeyAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrReservedWord);
-    mKeyAttribute->setBold(true);
+    mCommentAttribute->setStyles(SynFontStyle::fsBold);
     addAttribute(mKeyAttribute);
     mWhitespaceAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrSpace);
     addAttribute(mWhitespaceAttribute);

@@ -12,7 +12,8 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QDebug>
-#include <Qsci/qscilexercpp.h>
+#include "qsynedit/highlighter/cpp.h"
+
 
 using namespace std;
 
@@ -34,7 +35,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
                   const QByteArray& encoding,
                   bool inProject, bool isNew,
                   QTabWidget* parentPageControl):
-  QsciScintilla(parent),
+  SynEdit(parent),
   mFilename(filename),
   mEncodingOption(encoding),
   mInProject(inProject),
@@ -58,53 +59,8 @@ Editor::Editor(QWidget *parent, const QString& filename,
             mFileEncoding = mEncodingOption;
     }
 
-    //
-    QsciLexerCPP *lexer = new QsciLexerCPP();
-    lexer->setHighlightEscapeSequences(true);
-    lexer->setFoldComments(true);
-    lexer->setDefaultFont(QFont("Consolas",12));
-    this->setLexer(lexer);
-    this->setAutoIndent(pSettings->editor().autoIndent());
-    this->setFolding(FoldStyle::BoxedTreeFoldStyle,FoldMargin);
-    this->setTabWidth(4);
+    //SynEditCppHighlighter highlighter;
 
-    this->setCaretLineVisible(true);
-    this->setCaretLineBackgroundColor(QColor(0xCCFFFF));
-    this->setMatchedBraceForegroundColor(QColor("Red"));
-
-
-    this->setBraceMatching(BraceMatch::SloppyBraceMatch);
-    //行号显示区域
-    setMarginType(LineNumberMargin, QsciScintilla::NumberMargin);
-    setMarginLineNumbers(LineNumberMargin, true);
-    setMarginWidth(LineNumberMargin,10);
-    this->onLinesChanged(0,0);
-    //断点设置区域
-    setMarginType(MarkerMargin, QsciScintilla::SymbolMargin);
-    setMarginLineNumbers(MarkerMargin, false);
-    setMarginWidth(MarkerMargin,20);
-    setMarginSensitivity(MarkerMargin, true);    //set the margin as a selection margin, which is clickable
-
-//    connect(textEdit, SIGNAL(marginClicked(int, int, Qt::KeyboardModifiers)),this,
-//            SLOT(on_margin_clicked(int, int, Qt::KeyboardModifiers)));
-
-    //markers
-//    markerDefine(QsciScintilla::CircledPlus, ErrorMarker);
-//    setMarkerForegroundColor(QColor("BLACK"),ErrorMarker);
-//    setMarkerBackgroundColor(QColor("RED"),ErrorMarker);
-//    markerAdd(1,ErrorMarker);
-
-    // connect will fail if use new function pointer syntax
-//    connect(this, &QsciScintilla::modificationChanged,
-//            this, &Editor::onModificationChanged);
-//    connect(this , &QsciScintilla::cursorPositionChanged,
-//            this, &Editor::onCursorPositionChanged);
-    connect(this,SIGNAL(modificationChanged(bool)),
-            this,SLOT(onModificationChanged(bool)));
-    connect(this , SIGNAL(cursorPositionChanged(int,int)),
-            this, SLOT(onCursorPositionChanged(int,int)));
-    connect(this, SIGNAL(linesChanged(int,int)),
-            this,SLOT(onLinesChanged(int, int)));
 
 }
 
@@ -115,75 +71,77 @@ Editor::~Editor() {
     }
     this->setParent(0);
 
-    delete this->lexer();
-    this->setLexer(NULL);
 }
 
 void Editor::loadFile() {
     QFile file(mFilename);
-    if (!file.open(QFile::ReadOnly)) {
-        QMessageBox::information(pMainWindow,
-                                 tr("Error"),
-                                 QString(tr("Can't Open File %1:%2")).arg(mFilename).arg(file.errorString()));
-    }
-    QByteArray content=file.readAll();
-    file.close();
-    if (mEncodingOption == ENCODING_AUTO_DETECT) {
-        mFileEncoding = GuessTextEncoding(content);
-    } else {
-        mFileEncoding = mEncodingOption;
-    }
-    if (mFileEncoding == ENCODING_UTF8) {
-        this->setText(QString::fromUtf8(content));
-    } else if (mFileEncoding == ENCODING_UTF8_BOM) {
-        this->setText(QString::fromUtf8(content.mid(3)));
-    } else if (mFileEncoding == ENCODING_ASCII) {
-        this->setText(QString::fromLatin1(content));
-    } else if (mFileEncoding == ENCODING_SYSTEM_DEFAULT) {
-        this->setText(QString::fromLocal8Bit(content));
-    }else {
-        QTextCodec*codec = QTextCodec::codecForName(mFileEncoding);
-        this->setText(codec->toUnicode(content));
-    }
+//    if (!file.open(QFile::ReadOnly)) {
+//        QMessageBox::information(pMainWindow,
+//                                 tr("Error"),
+//                                 QString(tr("Can't Open File %1:%2")).arg(mFilename).arg(file.errorString()));
+//    }
+    this->lines()->LoadFromFile(file,mEncodingOption,mFileEncoding);
+//    QByteArray content=file.readAll();
+//    file.close();
+//    if (mEncodingOption == ENCODING_AUTO_DETECT) {
+//        mFileEncoding = GuessTextEncoding(content);
+//    } else {
+//        mFileEncoding = mEncodingOption;
+//    }
+//    if (mFileEncoding == ENCODING_UTF8) {
+//        this->lines()->load
+//        this->setText(QString::fromUtf8(content));
+//    } else if (mFileEncoding == ENCODING_UTF8_BOM) {
+//        this->setText(QString::fromUtf8(content.mid(3)));
+//    } else if (mFileEncoding == ENCODING_ASCII) {
+//        this->setText(QString::fromLatin1(content));
+//    } else if (mFileEncoding == ENCODING_SYSTEM_DEFAULT) {
+//        this->setText(QString::fromLocal8Bit(content));
+//    }else {
+//        QTextCodec*codec = QTextCodec::codecForName(mFileEncoding);
+//        this->setText(codec->toUnicode(content));
+//    }
 }
 
 void Editor::saveFile(const QString &filename) {
-    if (mEncodingOption!=ENCODING_AUTO_DETECT && mEncodingOption!=mFileEncoding)  {
-        mFileEncoding = mEncodingOption;
-    }
-    if (mEncodingOption == ENCODING_AUTO_DETECT && mFileEncoding == ENCODING_ASCII) {
-        if (!isTextAllAscii(this->text())) {
-            mFileEncoding = pSettings->editor().defaultEncoding();
-        }
-        pMainWindow->updateStatusBarForEncoding();
-        //todo: update status bar, and set fileencoding using configurations
-    }
+//    if (mEncodingOption!=ENCODING_AUTO_DETECT && mEncodingOption!=mFileEncoding)  {
+//        mFileEncoding = mEncodingOption;
+//    }
+//    if (mEncodingOption == ENCODING_AUTO_DETECT && mFileEncoding == ENCODING_ASCII) {
+//        if (!isTextAllAscii(this->text())) {
+//            mFileEncoding = pSettings->editor().defaultEncoding();
+//        }
+//        pMainWindow->updateStatusBarForEncoding();
+//        //todo: update status bar, and set fileencoding using configurations
+//    }
     QFile file(filename);
-    QByteArray ba;
-    if (mFileEncoding == ENCODING_UTF8) {
-        ba = this->text().toUtf8();
-    } else if (mFileEncoding == ENCODING_UTF8_BOM) {
-            ba.resize(3);
-            ba[0]=0xEF;
-            ba[1]=0xBB;
-            ba[2]=0xBF;
-            ba.append(this->text().toUtf8());
-    } else if (mFileEncoding == ENCODING_ASCII) {
-        ba = this->text().toLatin1();
-    } else if (mFileEncoding == ENCODING_SYSTEM_DEFAULT) {
-        ba = this->text().toLocal8Bit();
-    } else {
-        QTextCodec* codec = QTextCodec::codecForName(mFileEncoding);
-        ba = codec->fromUnicode(this->text());
-    }
-    if (file.open(QFile::WriteOnly)) {
-        if (file.write(ba)<0) {
-            throw SaveException(QString(tr("Failed to Save file %1: %2")).arg(filename).arg(file.errorString()));
-        }
-        file.close();
-    } else {
-        throw SaveException(QString(tr("Failed to Open file %1: %2")).arg(filename).arg(file.errorString()));
-    }
+    this->lines()->SaveToFile(file,mEncodingOption,mFileEncoding);
+    pMainWindow->updateStatusBarForEncoding();
+//    QByteArray ba;
+//    if (mFileEncoding == ENCODING_UTF8) {
+//        ba = this->text().toUtf8();
+//    } else if (mFileEncoding == ENCODING_UTF8_BOM) {
+//            ba.resize(3);
+//            ba[0]=0xEF;
+//            ba[1]=0xBB;
+//            ba[2]=0xBF;
+//            ba.append(this->text().toUtf8());
+//    } else if (mFileEncoding == ENCODING_ASCII) {
+//        ba = this->text().toLatin1();
+//    } else if (mFileEncoding == ENCODING_SYSTEM_DEFAULT) {
+//        ba = this->text().toLocal8Bit();
+//    } else {
+//        QTextCodec* codec = QTextCodec::codecForName(mFileEncoding);
+//        ba = codec->fromUnicode(this->text());
+//    }
+//    if (file.open(QFile::WriteOnly)) {
+//        if (file.write(ba)<0) {
+//            throw SaveException(QString(tr("Failed to Save file %1: %2")).arg(filename).arg(file.errorString()));
+//        }
+//        file.close();
+//    } else {
+//        throw SaveException(QString(tr("Failed to Open file %1: %2")).arg(filename).arg(file.errorString()));
+//    }
 }
 
 bool Editor::save(bool force, bool reparse) {
@@ -197,7 +155,7 @@ bool Editor::save(bool force, bool reparse) {
                                  QString(QObject::tr("File %s is not writable!")));
         return false;
     }
-    if (this->isModified() || force) {
+    if (this->modified()|| force) {
         try {
             saveFile(mFilename);
             setModified(false);
@@ -272,10 +230,18 @@ QTabWidget* Editor::pageControl() noexcept{
 
 void Editor::wheelEvent(QWheelEvent *event) {
     if ( (event->modifiers() & Qt::ControlModifier)!=0) {
+        QFont oldFont = font();
+        int size = oldFont.pointSize();
         if (event->angleDelta().y()>0) {
-            this->zoomIn();
+            size = std::max(5,size-1);
+            oldFont.setPointSize(oldFont.pointSize());
+            this->setFont(oldFont);
+            //this->zoomIn();
         } else {
-            this->zoomOut();
+            size = std::min(size+1,50);
+            oldFont.setPointSize(oldFont.pointSize());
+            this->setFont(oldFont);
+            //this->zoomOut();
         }
         onLinesChanged(0,0);
     }
@@ -286,18 +252,12 @@ void Editor::onModificationChanged(bool) {
 }
 
 void Editor::onCursorPositionChanged(int line, int index) {
-    pMainWindow->updateStatusBarForEditingInfo(line,index+1,lines(),text().length());
-    long pos = getCursorPosition();
-    long start = SendScintilla(SCI_WORDSTARTPOSITION,pos,false);
-    long end = SendScintilla(SCI_WORDENDPOSITION,pos,false);
-    long style = SendScintilla(SCI_GETSTYLEAT,pos,false);
+    pMainWindow->updateStatusBarForEditingInfo(line,index+1,lines()->count(),lines()->getTextLength());
 
-    qDebug()<<start<<end<<style<<text(start,end);
 }
 
 void Editor::onLinesChanged(int startLine, int count) {
-    this->setMarginWidth(0,QString("0%1").arg(lines()));
-    qDebug()<<"Editor lines changed"<<lines();
+    qDebug()<<"Editor lines changed"<<lines()->count();
     qDebug()<<startLine<<count;
 }
 
@@ -310,7 +270,7 @@ void Editor::updateCaption(const QString& newCaption) {
         return;
     if (newCaption.isEmpty()) {
         QString caption = QFileInfo(mFilename).fileName();
-        if (this->isModified()) {
+        if (this->modified()) {
             caption.append("[*]");
         }
         mParentPageControl->setTabText(index,caption);

@@ -210,7 +210,7 @@ void MainWindow::on_actionUndo_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor != NULL ) {
-        editor->undo();
+        //editor->undo();
     }
 }
 
@@ -218,7 +218,7 @@ void MainWindow::on_actionRedo_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor != NULL ) {
-        editor->redo();
+        //editor->redo();
     }
 }
 
@@ -226,7 +226,7 @@ void MainWindow::on_actionCut_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor != NULL ) {
-        editor->cut();
+        //editor->cut();
     }
 }
 
@@ -234,7 +234,7 @@ void MainWindow::on_actionSelectAll_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor != NULL ) {
-        editor->selectAll();
+        //editor->selectAll();
     }
 }
 
@@ -242,7 +242,7 @@ void MainWindow::on_actionCopy_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor != NULL ) {
-        editor->copy();
+        //editor->copy();
     }
 }
 
@@ -250,7 +250,7 @@ void MainWindow::on_actionPaste_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor != NULL ) {
-        editor->paste();
+        //editor->paste();
     }
 }
 
@@ -258,7 +258,7 @@ void MainWindow::on_actionIndent_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor != NULL ) {
-        editor->indent();
+        //editor->indent();
     }
 }
 
@@ -266,7 +266,7 @@ void MainWindow::on_actionUnIndent_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor != NULL ) {
-        editor->unindent();
+        //editor->unindent();
     }
 }
 
@@ -274,7 +274,7 @@ void MainWindow::on_actionToggleComment_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor != NULL ) {
-        editor->toggleComment();
+        //editor->toggleComment();
     }
 }
 
@@ -282,7 +282,7 @@ void MainWindow::on_actionUnfoldAll_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor != NULL ) {
-        editor->clearFolds();
+        //editor->clearFolds();
     }
 }
 
@@ -290,8 +290,8 @@ void MainWindow::on_actionFoldAll_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor != NULL ) {
-        editor->clearFolds();
-        editor->foldAll();
+        //editor->clearFolds();
+        //editor->foldAll();
     }
 }
 
@@ -305,6 +305,6 @@ void MainWindow::on_tableIssues_doubleClicked(const QModelIndex &index)
     if (editor == nullptr)
         return;
 
-    editor->setCursorPosition(issue->line-1,issue->column-1);
+    //editor->setCursorPosition(issue->line-1,issue->column-1);
     editor->activate();
 }

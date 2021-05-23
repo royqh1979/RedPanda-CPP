@@ -22,7 +22,7 @@ class SynEditTextPainter
     };
 
 public:
-    SynEditTextPainter(SynEdit * edit,int FirstRow, int LastRow,
+    SynEditTextPainter(SynEdit * edit,QPainter* painter,int FirstRow, int LastRow,
                        int FirstCol, int LastCol);
     void paintTextLines(const QRect& clip);
     void paintGutter(const QRect& clip);

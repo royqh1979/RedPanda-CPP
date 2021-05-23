@@ -1,4 +1,5 @@
 #include "KeyStrokes.h"
+#include <QDebug>
 
 SynEditKeyStroke::SynEditKeyStroke()
 {
@@ -88,10 +89,19 @@ SynKeyError::SynKeyError(const QString &reason):BaseError(reason)
 
 PSynEditKeyStroke SynEditKeyStrokes::add(SynEditorCommand command, int key, Qt::KeyboardModifiers modifiers)
 {
-    PSynEditKeyStroke keyStroke = std::make_shared<SynEditKeyStroke>();
-    keyStroke->setKey(key);
-    keyStroke->setKeyModifiers(modifiers);
-    keyStroke->setCommand(command);
+//    qDebug()<<"add : 1" ;
+//    qDebug() << (int)command;
+////    PSynEditKeyStroke keyStroke = std::make_shared<SynEditKeyStroke>();
+////    qDebug()<<"add : 2";
+////    keyStroke->setKey(key);
+////    qDebug()<<"add : 3";
+////    keyStroke->setKeyModifiers(modifiers);
+////    qDebug()<<"add : 4";
+////    keyStroke->setCommand(command);
+//    qDebug()<<"add : 5";
+//    //mList.append(keyStroke);
+//    qDebug()<<"add : 6";
+
 }
 
 PSynEditKeyStroke SynEditKeyStrokes::findCommand(SynEditorCommand command)
@@ -156,18 +166,33 @@ void SynEditKeyStrokes::clear()
 
 void SynEditKeyStrokes::resetDefaults()
 {
+    return;
+    qDebug()<<"SynEditKeyStrokes: resetDefaults ";
+    qDebug()<<"SynEditKeyStrokes: resetDefaults: clear ";
     clear();
+    qDebug()<<"SynEditKeyStrokes: resetDefaults: add start ";
     add(SynEditorCommand::ecUp, Qt::Key_Up, Qt::NoModifier);
+    qDebug()<<"SynEditKeyStrokes: resetDefaults: add start 0";
     add(SynEditorCommand::ecSelUp, Qt::Key_Up, Qt::ShiftModifier);
+    qDebug()<<"SynEditKeyStrokes: resetDefaults: add start 01";
     add(SynEditorCommand::ecScrollUp, Qt::Key_Up, Qt::ControlModifier);
+    qDebug()<<"SynEditKeyStrokes: resetDefaults: add start 02";
     add(SynEditorCommand::ecDown, Qt::Key_Down, Qt::NoModifier);
+    qDebug()<<"SynEditKeyStrokes: resetDefaults: add start 03";
     add(SynEditorCommand::ecSelDown, Qt::Key_Down, Qt::ShiftModifier);
+    qDebug()<<"SynEditKeyStrokes: resetDefaults: add start 04";
     add(SynEditorCommand::ecScrollDown, Qt::Key_Down, Qt::ControlModifier);
+    qDebug()<<"SynEditKeyStrokes: resetDefaults: add start 05";
     add(SynEditorCommand::ecLeft, Qt::Key_Left, Qt::NoModifier);
+    qDebug()<<"SynEditKeyStrokes: resetDefaults: add start 06";
     add(SynEditorCommand::ecSelLeft, Qt::Key_Left, Qt::ShiftModifier);
     add(SynEditorCommand::ecWordLeft, Qt::Key_Left, Qt::ControlModifier);
+    qDebug()<<"SynEditKeyStrokes: resetDefaults: add start 1";
     add(SynEditorCommand::ecSelWordLeft, Qt::Key_Left, Qt::ShiftModifier|Qt::ControlModifier);
+    qDebug()<<"SynEditKeyStrokes: resetDefaults: add start 2 ";
     add(SynEditorCommand::ecRight, Qt::Key_Right, Qt::NoModifier);
+    qDebug()<<"SynEditKeyStrokes: resetDefaults: add start 3";
+
     add(SynEditorCommand::ecSelRight, Qt::Key_Right, Qt::ShiftModifier);
     add(SynEditorCommand::ecWordRight, Qt::Key_Right, Qt::ControlModifier);
     add(SynEditorCommand::ecSelWordRight, Qt::Key_Right, Qt::ShiftModifier|Qt::ControlModifier);
@@ -240,4 +265,5 @@ void SynEditKeyStrokes::resetDefaults()
     add(SynEditorCommand::ecColumnSelect, Qt::Key_C, Qt::ControlModifier | Qt::ShiftModifier);
     add(SynEditorCommand::ecLineSelect, Qt::Key_L, Qt::ControlModifier | Qt::ShiftModifier);
     add(SynEditorCommand::ecMatchBracket, Qt::Key_B, Qt::ControlModifier | Qt::ShiftModifier);
+    qDebug()<<"SynEditKeyStrokes: resetDefaults: add end ";
 }

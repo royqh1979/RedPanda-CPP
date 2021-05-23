@@ -5,15 +5,21 @@
 #include <cmath>
 #include <QScrollBar>
 #include <QPaintEvent>
+#include <QPainter>
+#include <QTimerEvent>
 #include "highlighter/base.h"
 #include "Constants.h"
+#include "TextPainter.h"
+#include <QDebug>
 
 SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
 {
+    qDebug()<<"init SynEdit:";
     mPaintLock = 0;
     mPainterLock = 0;
     mPainting = false;
-    mLines = std::make_shared<SynEditStringList>();
+    mLines = std::make_shared<SynEditStringList>(this);
+    qDebug()<<"init SynEdit: 1";
     mOrigLines = mLines;
     //fPlugins := TList.Create;
     mMouseMoved = false;
@@ -24,6 +30,8 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
     mLines->connect(mLines.get(), &SynEditStringList::deleted, this, &SynEdit::linesDeleted);
     mLines->connect(mLines.get(), &SynEditStringList::inserted, this, &SynEdit::linesInserted);
     mLines->connect(mLines.get(), &SynEditStringList::putted, this, &SynEdit::linesPutted);
+    qDebug()<<"init SynEdit: 2";
+
 #ifdef Q_OS_WIN
     mFontDummy = QFont("Consolas",10);
 #elif Q_OS_LINUX
@@ -31,12 +39,17 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
 #else
 #error "Not supported!"
 #endif
+    setFont(mFontDummy);
+    qDebug()<<"init SynEdit:3";
+
     mUndoList = std::make_shared<SynEditUndoList>();
     mUndoList->connect(mUndoList.get(), &SynEditUndoList::addedUndo, this, &SynEdit::undoAdded);
     mOrigUndoList = mUndoList;
     mRedoList = std::make_shared<SynEditUndoList>();
     mRedoList->connect(mRedoList.get(), &SynEditUndoList::addedUndo, this, &SynEdit::redoAdded);
     mOrigRedoList = mRedoList;
+    qDebug()<<"init SynEdit: 4";
+
     //DoubleBuffered = false;
     mActiveLineColor = QColor();
     mSelectedBackground = QColor();
@@ -45,6 +58,8 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
     mBookMarkOpt.connect(&mBookMarkOpt, &SynBookMarkOpt::changed, this, &SynEdit::bookMarkOptionsChanged);
     //  fRightEdge has to be set before FontChanged is called for the first time
     mRightEdge = 80;
+    qDebug()<<"init SynEdit: 5";
+
     mGutter.setRightOffset(21);
     mGutter.connect(&mGutter, &SynGutter::changed, this, &SynEdit::gutterChanged);
     mGutterWidth = mGutter.width();
@@ -57,6 +72,9 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
     mInserting = true;
     mMaxScrollWidth = 1024;
     mScrollBars = SynScrollStyle::ssBoth;
+    mExtraLineSpacing = 0;
+    qDebug()<<"init SynEdit: 6";
+
     this->setFrameShape(QFrame::Panel);
     this->setFrameShadow(QFrame::Sunken);
     this->setLineWidth(1);
@@ -64,13 +82,19 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
     mOverwriteCaret = SynEditCaretType::ctBlock;
     mSelectionMode = SynSelectionMode::smNormal;
     mActiveSelectionMode = SynSelectionMode::smNormal;
+    qDebug()<<"init SynEdit: 7";
+
     //stop qt to auto fill background
     setAutoFillBackground(false);
     //fFocusList := TList.Create;
     //fKbdHandler := TSynEditKbdHandler.Create;
     //fMarkList.OnChange := MarkListChange;
+    qDebug()<<"init SynEdit: 7-1";
     setDefaultKeystrokes();
+    qDebug()<<"init SynEdit: 7-2";
     mRightEdgeColor = QColorConstants::Svg::silver;
+    qDebug()<<"init SynEdit: 8";
+
     /* IME input */
     mImeCount = 0;
     mMBCSStepAside = false;
@@ -89,6 +113,8 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
     mOptions = eoAutoIndent | eoDragDropEditing | eoEnhanceEndKey |
             eoScrollPastEol | eoShowScrollHint | eoSmartTabs | eoTabsToSpaces |
             eoSmartTabDelete| eoGroupUndo;
+    qDebug()<<"init SynEdit: 9";
+
     mScrollTimer = new QTimer(this);
     mScrollTimer->setInterval(100);
     connect(mScrollTimer, &QTimer::timeout,this, &SynEdit::scrollTimerHandler);
@@ -96,16 +122,28 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
     mScrollHintColor = QColorConstants::Yellow;
     mScrollHintFormat = SynScrollHintFormat::shfTopLineOnly;
 
+    mContentImage = std::make_shared<QImage>(clientWidth(),clientHeight(),QImage::Format_ARGB32);
+
+    m_blinkTimerId = 0;
+    m_bliknStatus = 0;
+    qDebug()<<"init SynEdit: 10";
+
     synFontChanged();
+    qDebug()<<"init SynEdit: done";
+
 }
 
 int SynEdit::displayLineCount()
 {
+    if (mLines->empty()) {
+        return 0;
+    }
     return lineToRow(mLines->count());
 }
 
 DisplayCoord SynEdit::displayXY()
 {
+    qDebug()<<"displayXY"<<caretXY().Char<<caretXY().Line;
     return bufferToDisplayPos(caretXY());
 }
 
@@ -316,6 +354,14 @@ DisplayCoord SynEdit::pixelsToRowColumn(int aX, int aY)
     };
 }
 
+QPoint SynEdit::RowColumnToPixels(const DisplayCoord &coord)
+{
+    QPoint result;
+    result.setX((coord.Column - 1) * mCharWidth + mTextOffset);
+    result.setY((coord.Row - mTopLine) * mTextHeight);
+    return result;
+}
+
 /**
  * @brief takes a position in the text and transforms it into
  *  the row and column it appears to be on the screen
@@ -324,6 +370,7 @@ DisplayCoord SynEdit::pixelsToRowColumn(int aX, int aY)
  */
 DisplayCoord SynEdit::bufferToDisplayPos(const BufferCoord &p)
 {
+    qDebug()<<"bufferTodisplayPos"<<p.Char<<p.Line;
     DisplayCoord result {p.Char,p.Line};
     // Account for tabs and charColumns
     result.Column = charToColumn(p.Line,p.Char);
@@ -360,11 +407,12 @@ BufferCoord SynEdit::displayToBufferPos(const DisplayCoord &p)
         }
         Result.Char = i;
     }
+    return Result;
 }
 
 int SynEdit::charToColumn(int aLine, int aChar)
 {
-    if (aLine < mLines->count()) {
+    if (aLine <= mLines->count()) {
         QString s = mLines->getString(aLine - 1);
         int l = s.length();
         int x = 0;
@@ -376,6 +424,7 @@ int SynEdit::charToColumn(int aLine, int aChar)
         }
         return x+1;
     }
+    qDebug()<<"Line outof range"<<aLine<<aChar;
     throw BaseError(SynEdit::tr("Line %1 is out of range").arg(aLine));
 }
 
@@ -420,6 +469,7 @@ int SynEdit::rowToLine(int aRow)
 
 int SynEdit::lineToRow(int aLine)
 {
+    qDebug()<<"line to row"<<aLine;
     return bufferToDisplayPos({1, aLine}).Row;
 }
 
@@ -594,12 +644,25 @@ int SynEdit::charColumns(QChar ch)
 {
     if (ch == ' ')
         return 1;
-    return std::ceil(fontMetrics().horizontalAdvance(ch) * dpiFactor() / mCharWidth);
+    return std::ceil((int)(fontMetrics().horizontalAdvance(ch) * dpiFactor()) / (double)mCharWidth);
 }
 
 double SynEdit::dpiFactor()
 {
     return fontMetrics().fontDpi() / 96.0;
+}
+
+void SynEdit::showCaret()
+{
+    m_blinkTimerId = startTimer(100);
+}
+
+void SynEdit::hideCaret()
+{
+    if (m_blinkTimerId!=0) {
+        killTimer(m_blinkTimerId);
+        m_blinkTimerId = 0;
+    }
 }
 
 void SynEdit::clearAreaList(SynEditingAreaList areaList)
@@ -627,16 +690,16 @@ void SynEdit::computeScroll(int X, int Y)
         mLinesInWindow * mTextHeight);
 
     if (X < iScrollBounds.left())
-        mScrollDeltaX = (X - iScrollBounds.left()) % mCharWidth - 1;
+        mScrollDeltaX = (X - iScrollBounds.left()) / mCharWidth - 1;
     else if (X >= iScrollBounds.right())
-        mScrollDeltaX = (X - iScrollBounds.right()) % mCharWidth + 1;
+        mScrollDeltaX = (X - iScrollBounds.right()) / mCharWidth + 1;
     else
         mScrollDeltaX = 0;
 
     if (Y < iScrollBounds.top())
-        mScrollDeltaY = (Y - iScrollBounds.top()) % mTextHeight - 1;
+        mScrollDeltaY = (Y - iScrollBounds.top()) / mTextHeight - 1;
     else if (Y >= iScrollBounds.bottom())
-        mScrollDeltaY = (Y - iScrollBounds.bottom()) % mTextHeight + 1;
+        mScrollDeltaY = (Y - iScrollBounds.bottom()) / mTextHeight + 1;
       else
         mScrollDeltaY = 0;
 
@@ -940,7 +1003,8 @@ void SynEdit::updateScrollbars()
 void SynEdit::updateCaret()
 {
     mStateFlags.setFlag(SynStateFlag::sfCaretChanged,false);
-    //do nothing, because we will draw cursor in the paintEvent
+    //do nothing. Because our caret timer will update the caret periodically
+//    invalidateRect(QRect(0,0,1,1)); //we use a rect of 1-width & 1-height to signal the paintEvent that we only want to redraw the caret
 }
 
 void SynEdit::recalcCharExtent()
@@ -1003,6 +1067,8 @@ void SynEdit::recalcCharExtent()
             mCharWidth = fm.horizontalAdvance("M");
     }
     mTextHeight += mExtraLineSpacing;
+    mCharWidth = mCharWidth * dpiFactor();
+    mTextHeight = mTextHeight * dpiFactor();
 }
 
 QString SynEdit::expandAtWideGlyphs(const QString &S)
@@ -1352,10 +1418,22 @@ PSynEditFoldRange SynEdit::foldAroundLine(int Line)
 
 PSynEditFoldRange SynEdit::foldAroundLineEx(int Line, bool WantCollapsed, bool AcceptFromLine, bool AcceptToLine)
 {
+    // Check global list
+    PSynEditFoldRange Result = checkFoldRange(&mAllFoldRanges, Line, WantCollapsed, AcceptFromLine, AcceptToLine);
 
+    // Found an item in the top level list?
+    if (Result) {
+        while (true) {
+            PSynEditFoldRange ResultChild = checkFoldRange(Result->subFoldRanges.get(), Line, WantCollapsed, AcceptFromLine, AcceptToLine);
+            if (!ResultChild)
+                break;
+            Result = ResultChild; // repeat for this one
+        }
+    }
+    return Result;
 }
 
-PSynEditFoldRange SynEdit::CheckFoldRange(PSynEditFoldRanges FoldRangeToCheck, int Line, bool WantCollapsed, bool AcceptFromLine, bool AcceptToLine)
+PSynEditFoldRange SynEdit::checkFoldRange(SynEditFoldRanges *FoldRangeToCheck, int Line, bool WantCollapsed, bool AcceptFromLine, bool AcceptToLine)
 {
     for (int i = 0; i< FoldRangeToCheck->count(); i++) {
         PSynEditFoldRange range = (*FoldRangeToCheck)[i];
@@ -1369,8 +1447,50 @@ PSynEditFoldRange SynEdit::CheckFoldRange(PSynEditFoldRanges FoldRangeToCheck, i
     return PSynEditFoldRange();
 }
 
+PSynEditFoldRange SynEdit::foldEndAtLine(int Line)
+{
+    for (int i = 0; i<mAllFoldRanges.count();i++) {
+        PSynEditFoldRange range = mAllFoldRanges[i];
+        if (range->toLine == Line ){
+            return range;
+        } else if (range->fromLine>Line)
+            break; // sorted by line. don't bother scanning further
+    }
+    return PSynEditFoldRange();
+}
+
+void SynEdit::paintCaret(QPainter &painter, const QRect rcClip)
+{
+    if (m_bliknStatus!=1)
+        return;
+    SynEditCaretType ct;
+    if (this->mInserting) {
+        ct = mInsertCaret;
+    } else {
+        ct =mOverwriteCaret;
+    }
+    painter.setPen(QColorConstants::Svg::red);
+    painter.setBrush(QColorConstants::Svg::red);
+    switch(ct) {
+    case SynEditCaretType::ctVerticalLine:
+        painter.drawLine(rcClip.left()+1,rcClip.top(),rcClip.left()+1,rcClip.bottom());
+        break;
+    case SynEditCaretType::ctHorizontalLine:
+        painter.drawLine(rcClip.left(),rcClip.bottom()-1,rcClip.right(),rcClip.bottom()-1);
+        break;
+    case SynEditCaretType::ctBlock:
+        painter.drawRect(rcClip);
+        break;
+    case SynEditCaretType::ctHalfBlock:
+        QRect rc=rcClip;
+        rc.setTop(rcClip.top()+rcClip.height() / 2);
+
+    }
+}
+
 void SynEdit::sizeOrFontChanged(bool bFont)
 {
+
     if (mCharWidth != 0) {
         mCharsInWindow = std::max(clientWidth() - mGutterWidth - 2, 0) / mCharWidth;
         mLinesInWindow = clientHeight() / mTextHeight;
@@ -1397,17 +1517,42 @@ void SynEdit::doChange()
     emit Changed();
 }
 
+PSynEditStringList SynEdit::lines() const
+{
+    return mLines;
+}
+
 int SynEdit::tabWidth() const
 {
     return mTabWidth;
 }
 
-bool SynEdit::onSpecialLineColors(int, QColor &, QColor &)
+bool SynEdit::empty()
+{
+    return mLines->empty();
+}
+
+bool SynEdit::onGetSpecialLineColors(int, QColor &, QColor &)
 {
 
 }
 
-void SynEdit::onEditingAreas(int, SynEditingAreaList &)
+void SynEdit::onGetEditingAreas(int, SynEditingAreaList &)
+{
+
+}
+
+void SynEdit::onGutterGetText(int aLine, QString &aText)
+{
+
+}
+
+void SynEdit::onGutterPaint(QPainter &painter, int aLine, int X, int Y)
+{
+
+}
+
+void SynEdit::onPaint(QPainter &)
 {
 
 }
@@ -1419,45 +1564,114 @@ void SynEdit::paintEvent(QPaintEvent *event)
     if (mPainting)
         return;
     mPainting = true;
-    QRect rcClip, rcDraw;
-    int nL1, nL2, nC1, nC2;
-    // Get the invalidated rect. Compute the invalid area in lines / columns.
-    rcClip = event->rect();
-    // columns
-    nC1 = mLeftChar;
-    if (rcClip.left() > mGutterWidth + 2 )
-        nC1 += (rcClip.left() - mGutterWidth - 2 ) % mCharWidth;
-    nC2 = mLeftChar +
-      (rcClip.right() - mGutterWidth - 2 + mCharWidth - 1) % mCharWidth;
-    // lines
-    nL1 = MinMax(mTopLine + rcClip.top() % mTextHeight, mTopLine, displayLineCount());
-    nL2 = MinMax(mTopLine + (rcClip.bottom() + mTextHeight - 1) % mTextHeight, 1, displayLineCount());
 
     // Now paint everything while the caret is hidden.
+    QPainter painter(viewport());
     hideCaret();
-    auto action = finally([this] {
-        updateCaret();
+    //Get the invalidated rect.
+    QRect rcClip = event->rect();
+    DisplayCoord coord = displayXY();
+    QPoint caretPos = RowColumnToPixels(coord);
+    int caretWidth=mCharWidth;
+    if (mCaretY <= mLines->count() && mCaretX <= mLines->getString(mCaretY-1).length()) {
+        caretWidth = charColumns(mLines->getString(mCaretY-1)[mCaretX-1])*mCharWidth;
+    }
+    QRect rcCaret(caretPos.x(),caretPos.y(),caretWidth,
+                  mTextHeight);
+
+    qDebug()<<"Painting";
+    qDebug()<<"Caret rect:"<<rcCaret;
+    qDebug()<<"Clip rect:"<<rcClip;
+
+    auto action = finally([&,this] {
+        //updateCaret();
+        paintCaret(painter, rcCaret);
         mPainting = false;
     });
 
-    // First paint paint the text area if it was (partly) invalidated.
-    if (rcClip.right() > mGutterWidth ) {
-        rcDraw = rcClip;
-        rcDraw.setLeft( std::max(rcDraw.left(), mGutterWidth));
-        paintTextLines(rcDraw, nL1, nL2, nC1, nC2);
+    if (rcClip.width()==1 && rcClip.height()==1) {
+        // only update caret
+        // calculate the needed invalid area for caret
+        painter.drawImage(rcCaret,*mContentImage);
+    } else {
+        QRect rcDraw;
+        int nL1, nL2, nC1, nC2;
+        // Compute the invalid area in lines / columns.
+        // columns
+        nC1 = mLeftChar;
+        if (rcClip.left() > mGutterWidth + 2 )
+            nC1 += (rcClip.left() - mGutterWidth - 2 ) / mCharWidth;
+        nC2 = mLeftChar +
+          (rcClip.right() - mGutterWidth - 2 + mCharWidth - 1) / mCharWidth;
+        // lines
+        nL1 = MinMax(mTopLine + rcClip.top() / mTextHeight, mTopLine, displayLineCount());
+        nL2 = MinMax(mTopLine + (rcClip.bottom() + mTextHeight - 1) / mTextHeight, 1, displayLineCount());
+
+
+
+//        QPainter cachePainter(mContentImage.get());
+//        SynEditTextPainter textPainter(this, &cachePainter,
+//                                       nL1,nL2,nC1,nC2);
+        SynEditTextPainter textPainter(this, &painter,
+                                       nL1,nL2,nC1,nC2);
+        // First paint paint the text area if it was (partly) invalidated.
+        if (rcClip.right() > mGutterWidth ) {
+            rcDraw = rcClip;
+            rcDraw.setLeft( std::max(rcDraw.left(), mGutterWidth));
+            textPainter.paintTextLines(rcDraw);
+            //paintTextLines(rcDraw, nL1, nL2, nC1, nC2);
+        }
+
+        // Then the gutter area if it was (partly) invalidated.
+        if (rcClip.left() < mGutterWidth) {
+            rcDraw = rcClip;
+            rcDraw.setRight(mGutterWidth);
+            //textPainter.paintGutter(rcDraw);
+            //paintGutter(rcDraw, nL1, nL2);
+        }
+
+        //PluginsAfterPaint(Canvas, rcClip, nL1, nL2);
+        // If there is a custom paint handler call it.
+        //onPaint(cachePainter);
+        doOnPaintTransient(SynTransientType::ttAfter);
+        painter.drawImage(rcClip,*mContentImage);
     }
 
-    // Then the gutter area if it was (partly) invalidated.
-    if (rcClip.left() < mGutterWidth) {
-        rcDraw = rcClip;
-        rcDraw.setRight(mGutterWidth);
-        paintGutter(rcDraw, nL1, nL2);
-    }
+}
 
-      //PluginsAfterPaint(Canvas, rcClip, nL1, nL2);
-      // If there is a custom paint handler call it.
-    doOnPaint();
-    doOnPaintTransient(SynTransientType::ttAfter);
+void SynEdit::resizeEvent(QResizeEvent *event)
+{
+    //resize the cache image
+    std::shared_ptr<QImage> image = std::make_shared<QImage>(clientWidth(),clientHeight(),
+                                                            QImage::Format_ARGB32);
+
+    QRect newRect = image->rect().intersected(mContentImage->rect());
+
+    QPainter painter(image.get());
+
+    painter.drawImage(newRect,*mContentImage);
+
+    mContentImage = image;
+
+    sizeOrFontChanged(false);
+}
+
+void SynEdit::timerEvent(QTimerEvent *event)
+{
+    if (event->timerId() == m_blinkTimerId) {
+        m_bliknStatus = 1- m_bliknStatus;
+        invalidateRect(QRect(0,0,1,1));
+    }
+}
+
+bool SynEdit::event(QEvent *event)
+{
+    switch(event->type()) {
+        case QEvent::FontChange:
+        synFontChanged();
+        break;
+    }
+    QAbstractScrollArea::event(event);
 }
 
 int SynEdit::maxScrollWidth() const
@@ -1588,7 +1802,7 @@ void SynEdit::linesInserted(int index, int count)
     invalidateLines(index + 1, INT_MAX);
     invalidateGutterLines(index + 1, INT_MAX);
     if (mOptions.setFlag(SynEditorOption::eoAutoSizeMaxScrollWidth)) {
-        int L = mLines->expandedStringLength(index);
+        int L = mLines->lineColumns(index);
         if (L > mMaxScrollWidth)
           setMaxScrollWidth(L);
     }
@@ -1607,7 +1821,7 @@ void SynEdit::linesPutted(int index, int)
     invalidateLines(index + 1, vEndLine);
 
     if (mOptions.setFlag(SynEditorOption::eoAutoSizeMaxScrollWidth)) {
-        int L = mLines->expandedStringLength(index);
+        int L = mLines->lineColumns(index);
         if (L > mMaxScrollWidth)
           setMaxScrollWidth(L);
     }

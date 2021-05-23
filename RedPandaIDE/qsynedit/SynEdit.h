@@ -141,6 +141,10 @@ class SynEdit : public QAbstractScrollArea
 public:
     explicit SynEdit(QWidget *parent = nullptr);
 
+    /**
+     * @brief how many rows are there in the editor
+     * @return
+     */
     int displayLineCount();
     DisplayCoord displayXY();
     int displayX();
@@ -160,6 +164,7 @@ public:
     void invalidateGutterLines(int FirstLine, int LastLine);
     DisplayCoord pixelsToNearestRowColumn(int aX, int aY);
     DisplayCoord pixelsToRowColumn(int aX, int aY);
+    QPoint RowColumnToPixels(const DisplayCoord& coord);
     DisplayCoord bufferToDisplayPos(const BufferCoord& p);
     BufferCoord displayToBufferPos(const DisplayCoord& p);
     int charToColumn(int aLine, int aChar);
@@ -184,6 +189,8 @@ public:
     void clearUndo();
     int charColumns(QChar ch);
     double dpiFactor();
+    void showCaret();
+    void hideCaret();
 
     int topLine() const;
     void setTopLine(int value);
@@ -217,6 +224,9 @@ public:
 
     int tabWidth() const;
 
+    PSynEditStringList lines() const;
+    bool empty();
+
 signals:
     void Changed();
 
@@ -243,11 +253,13 @@ signals:
     void tabSizeChanged();
 
 protected:
-    virtual bool onSpecialLineColors(int Line,
+    virtual bool onGetSpecialLineColors(int Line,
          QColor& foreground, QColor& backgroundColor) ;
-    virtual void onEditingAreas(int Line, SynEditingAreaList& areaList);
+    virtual void onGetEditingAreas(int Line, SynEditingAreaList& areaList);
     virtual void onGutterGetText(int aLine, QString& aText);
-    virtual void onGutterPaint(int aLine, int X, int Y);
+    virtual void onGutterPaint(QPainter& painter, int aLine, int X, int Y);
+    virtual void onPaint(QPainter& painter);
+
 
 
 
@@ -301,7 +313,9 @@ private:
     QString substringByColumns(const QString& s, int startColumn, int& colLen);
     PSynEditFoldRange foldAroundLine(int Line);
     PSynEditFoldRange foldAroundLineEx(int Line, bool WantCollapsed, bool AcceptFromLine, bool AcceptToLine);
-    PSynEditFoldRange CheckFoldRange(PSynEditFoldRanges FoldRangeToCheck,int Line, bool WantCollapsed, bool AcceptFromLine, bool AcceptToLine);
+    PSynEditFoldRange checkFoldRange(SynEditFoldRanges* FoldRangeToCheck,int Line, bool WantCollapsed, bool AcceptFromLine, bool AcceptToLine);
+    PSynEditFoldRange foldEndAtLine(int Line);
+    void paintCaret(QPainter& painter, const QRect rcClip);
 
 private slots:
     void bookMarkOptionsChanged();
@@ -319,6 +333,7 @@ private slots:
     void doChange();
 
 private:
+    std::shared_ptr<QImage> mContentImage;
     SynEditFoldRanges mAllFoldRanges;
     SynEditCodeFolding mCodeFolding;
     bool mUseCodeFolding;
@@ -431,6 +446,18 @@ protected:
     void paintEvent(QPaintEvent *event) override;
 
 friend class SynEditTextPainter;
+
+// QWidget interface
+protected:
+void resizeEvent(QResizeEvent *event) override;
+
+// QObject interface
+protected:
+void timerEvent(QTimerEvent *event) override;
+
+// QObject interface
+public:
+bool event(QEvent *event) override;
 };
 
 #endif // SYNEDIT_H

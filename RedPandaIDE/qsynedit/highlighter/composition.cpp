@@ -25,7 +25,7 @@ SynScheme::SynScheme(QObject *parent):
     connect(mMarkerAttribute.get(),&SynHighlighterAttribute::changed,
             this, &SynScheme::MarkerAttriChanged);
     mMarkerAttribute->setBackground(QColorConstants::Yellow);
-    mMarkerAttribute->setBold(true);
+    mMarkerAttribute->setStyles(SynFontStyle::fsBold);
 }
 
 QString SynScheme::endExpr() const
@@ -90,4 +90,7 @@ QString SynScheme::ConvertExpression(const QString &Value)
     } else {
         return Value;
     }
+}
+
+void SynScheme::MarkerAttriChanged() {
 }

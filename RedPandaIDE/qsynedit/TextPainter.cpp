@@ -2,10 +2,12 @@
 #include "SynEdit.h"
 #include "Constants.h"
 #include <cmath>
+#include <QDebug>
 
-SynEditTextPainter::SynEditTextPainter(SynEdit *edit, int FirstRow, int LastRow, int FirstCol, int LastCol)
+SynEditTextPainter::SynEditTextPainter(SynEdit *edit, QPainter *painter, int FirstRow, int LastRow, int FirstCol, int LastCol)
 {
     this->edit = edit;
+    this->painter = painter;
     this->aFirstRow = FirstRow;
     this->aLastRow = LastRow;
     this->FirstCol = FirstCol;
@@ -75,20 +77,12 @@ void SynEditTextPainter::paintTextLines(const QRect& clip)
 void SynEditTextPainter::paintGutter(const QRect& clip)
 {
     int cRow;
-    int cMark;
     QRect rcLine, rcFold;
     QList<int> aGutterOffs;
-    bool bHasOtherMarks;
     QString s;
-    int vFirstLine;
-    int vLastLine;
     int vLine;
-    int vMarkRow;
-    int vGutterRow;
     int vLineTop;
-    QSize TextSize;
     int x;
-    PSynEditFoldRange FoldRange;
 
     AClip = clip;
 
@@ -133,15 +127,12 @@ void SynEditTextPainter::paintGutter(const QRect& clip)
 
             s = edit->mGutter.formatLineNumber(vLine);
 
-            if (edit->mOnGutterGetText) {
-                edit->mOnGutterGetText(vLine,s);
-            }
-
+            edit->onGutterGetText(vLine,s);
             QRectF textRect;
             textRect = painter->boundingRect(textRect, Qt::AlignLeft,s);
             painter->drawText(
                  (edit->mGutterWidth - edit->mGutter.rightOffset() - 2) - textRect.width(),
-                        rcLine.top() + ((edit->mTextHeight - int(textRect.height())) % 2),
+                        rcLine.top() + ((edit->mTextHeight - int(textRect.height())) / 2),
                         s
                         );
         }
@@ -166,33 +157,33 @@ void SynEditTextPainter::paintGutter(const QRect& clip)
 
         // Need to paint a line?
         if (edit->foldAroundLine(vLine)) {
-          x = rcFold.left() + (rcFold.width() % 2);
+          x = rcFold.left() + (rcFold.width() / 2);
           painter->drawLine(x,rcFold.top(), x, rcFold.bottom());
         }
 
         // Need to paint a line end?
         if (edit->foldEndAtLine(vLine)) {
-            x = rcFold.left() + (rcFold.width() % 2);
-            painter->drawLine(x,rcFold.top(), x, rcFold.top() + rcFold.height() % 2);
+            x = rcFold.left() + (rcFold.width() / 2);
+            painter->drawLine(x,rcFold.top(), x, rcFold.top() + rcFold.height() / 2);
             painter->drawLine(x,
-                              rcFold.top() + rcFold.height() % 2,
+                              rcFold.top() + rcFold.height() / 2,
                               rcFold.right() - 2 ,
-                              rcFold.top() + rcFold.height() % 2);
+                              rcFold.top() + rcFold.height() / 2);
         }
         // Any fold ranges beginning on this line?
-        FoldRange = edit->foldStartAtLine(vLine);
+        PSynEditFoldRange FoldRange = edit->foldStartAtLine(vLine);
         if (FoldRange) {
             // Draw the bottom part of a line
             if (!FoldRange->collapsed) {
-                x = rcFold.left() + (rcFold.width() % 2);
-                painter->drawLine(x, rcFold.top() + rcFold.height() % 2,
+                x = rcFold.left() + (rcFold.width() / 2);
+                painter->drawLine(x, rcFold.top() + rcFold.height() / 2,
                                   x, rcFold.bottom());
             }
 
             // make a square rect
             inflateRect(rcFold,-2, 0);
             rcFold.setTop(
-                        rcFold.top() + ((edit->mTextHeight - rcFold.width()) % 2));
+                        rcFold.top() + ((edit->mTextHeight - rcFold.width()) / 2));
             rcFold.setBottom(rcFold.top() + rcFold.width());
 
             // Paint the square the user can click on
@@ -202,11 +193,11 @@ void SynEditTextPainter::paintGutter(const QRect& clip)
 
             // Paint minus sign
             painter->drawLine(
-                        rcFold.left() + 2, rcFold.top() + (rcFold.height() % 2 ),
-                        rcFold.right() - 2, rcFold.top() + (rcFold.height() % 2 ));
+                        rcFold.left() + 2, rcFold.top() + (rcFold.height() / 2 ),
+                        rcFold.right() - 2, rcFold.top() + (rcFold.height() / 2 ));
             // Paint vertical line of plus sign
             if (FoldRange->collapsed) {
-                x = rcFold.left() + (rcFold.width() % 2);
+                x = rcFold.left() + (rcFold.width() / 2);
                 painter->drawLine(x, rcFold.top() + 2,
                                   x, rcFold.bottom() + 2);
             }
@@ -271,7 +262,7 @@ void SynEditTextPainter::paintGutter(const QRect& clip)
 //    end;
     for (cRow = aFirstRow; cRow <=aLastRow; cRow++) {
         vLine = edit->rowToLine(cRow);
-        edit->onGutterPaint(vLine, 0, (cRow - edit->mTopLine) * edit->mTextHeight);
+        edit->onGutterPaint(*painter,vLine, 0, (cRow - edit->mTopLine) * edit->mTextHeight);
     }
 }
 
@@ -325,6 +316,7 @@ void SynEditTextPainter::ComputeSelectionInfo()
             bAnySelection = (vEnd.Line >= vFirstLine) and (vStart.Line <= vLastLine);
             if (bAnySelection) {
                 // Transform the selection from text space into screen space
+                qDebug()<<"ComputeSelectionInfo";
                 vSelStart = edit->bufferToDisplayPos(vStart);
                 vSelEnd = edit->bufferToDisplayPos(vEnd);
                 // In the column selection mode sort the begin and end of the selection,
@@ -365,29 +357,30 @@ void SynEditTextPainter::PaintToken(const QString &Token, int TokenCols, int Col
         Last -= ColumnsBefore;
         if (First > TokenCols) {
         } else {
-          painter->setClipRect(rcToken);
-          int tokenColLen=0;
-          startPaint = false;
-          for (int i=0;i<Token.length();i++) {
-              int charCols;
-              if (Token[i] == SynTabChar) {
-                  charCols = edit->mTabWidth - ((ColumnsBefore+tokenColLen) % edit->mTabWidth);
-              } else {
-                  charCols = edit->charColumns(Token[i]);
-              }
-              if (tokenColLen+charCols>=First) {
-                  startPaint = true;
-                  if (tokenColLen+1!=First) {
-                      nX-= (First - tokenColLen - 1) * edit->mCharWidth;
-                  }
-              }
-              painter->drawText(nX,rcToken.bottom(), Token[i]);
+            qDebug()<<"token clip rect:"<<rcToken << Token;
+            painter->setClipRect(rcToken);
+            int tokenColLen=0;
+            startPaint = false;
+            for (int i=0;i<Token.length();i++) {
+                int charCols;
+                if (Token[i] == SynTabChar) {
+                    charCols = edit->mTabWidth - ((ColumnsBefore+tokenColLen) % edit->mTabWidth);
+                } else {
+                    charCols = edit->charColumns(Token[i]);
+                }
+                if (tokenColLen+charCols>=First) {
+                    if (!startPaint && (tokenColLen+1!=First)) {
+                        nX-= (First - tokenColLen - 1) * edit->mCharWidth;
+                    }
+                    startPaint = true;
+                }
+                painter->drawText(nX,rcToken.bottom()-painter->fontMetrics().descent()*edit->dpiFactor() , Token[i]);
 
-              tokenColLen += charCols;
-              nX += charCols * edit->mCharWidth;
-              if (tokenColLen > Last)
-                  break;
-          }
+                tokenColLen += charCols;
+                nX += charCols * edit->mCharWidth;
+                if (tokenColLen > Last)
+                    break;
+            }
         }
 
         rcToken.setLeft(rcToken.right());
@@ -722,9 +715,8 @@ void SynEditTextPainter::PaintLines()
     int vFirstChar;
     int vLastChar;
     SynEditingAreaList  areaList;
-    QColor colBorder;
     PSynEditFoldRange foldRange;
-    int nC1,nC2,nFold;
+    int nFold;
     QString sFold;
 
     // Initialize rcLine for drawing. Note that Top and Bottom are updated
@@ -747,7 +739,7 @@ void SynEditTextPainter::PaintLines()
         // use special values for them.
         colFG = edit->palette().color(QPalette::Text);
         colBG = colEditorBG();
-        bSpecialLine = edit->onSpecialLineColors(vLine, colFG, colBG);
+        bSpecialLine = edit->onGetSpecialLineColors(vLine, colFG, colBG);
         if (bSpecialLine) {
             // The selection colors are just swapped, like seen in Delphi.
             colSelFG = colBG;
@@ -756,7 +748,7 @@ void SynEditTextPainter::PaintLines()
             colSelFG = edit->mSelectedForeground;
             colSelBG = edit->mSelectedBackground;
         }
-        edit->onEditingAreas(vLine, areaList);
+        edit->onGetEditingAreas(vLine, areaList);
         // Removed word wrap support
         vFirstChar = FirstCol;
         vLastChar = LastCol;

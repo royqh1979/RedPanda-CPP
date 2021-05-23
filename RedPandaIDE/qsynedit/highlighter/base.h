@@ -109,7 +109,7 @@ public:
     virtual void setLine(const QString& newLine, int lineNumber) = 0;
     virtual void resetState() = 0;
 
-    virtual QString languageName();
+    virtual QString languageName() = 0;
 
     static bool isSpaceChar(const QChar& ch);
     bool enabled() const;

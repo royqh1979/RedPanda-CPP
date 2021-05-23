@@ -4,7 +4,7 @@
 #include <QObject>
 #include <utils.h>
 #include <QTabWidget>
-#include <Qsci/qsciscintilla.h>
+#include "qsynedit/SynEdit.h"
 
 class SaveException: public std::exception {
 
@@ -19,7 +19,7 @@ private:
     QString mReason;
 };
 
-class Editor : public QsciScintilla
+class Editor : public SynEdit
 {
     Q_OBJECT
 public:

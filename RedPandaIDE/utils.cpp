@@ -363,3 +363,18 @@ void inflateRect(QRect &rect, int dx, int dy)
     rect.setTop(rect.top()-dy);
     rect.setBottom(rect.bottom()+dy);
 }
+
+QString removeLineEnds(const QString &s)
+{
+    if (s.isEmpty())
+        return s;
+    int i = s.length()-1;
+    while ((i>=0) && ((s[i] == '\r') || (s[i]=='\n')))  {
+        i--;
+    };
+    if (i>=0) {
+        return s.left(i+1);
+    } else {
+        return QString();
+    }
+}

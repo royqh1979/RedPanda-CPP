@@ -108,6 +108,16 @@ void SynEditStringList::InsertItem(int Index, const QString &s)
     endUpdate();
 }
 
+void SynEditStringList::addItem(const QString &s)
+{
+    beginUpdate();
+    PSynEditStringRec line = std::make_shared<SynEditStringRec>();
+    line->fString = s;
+    mIndexOfLongestLine = -1;
+    mList.append(line);
+    endUpdate();
+}
+
 ConvertTabsProcEx SynEditStringList::getConvertTabsProc() const
 {
     return mConvertTabsProc;
@@ -232,7 +242,7 @@ int SynEditStringList::addStrings(const QStringList &Strings)
         int FirstAdded = mList.count();
 
         for (const QString& s:Strings) {
-            add(s);
+            addItem(s);
         }
         emit inserted(FirstAdded,Strings.count());
     }
@@ -439,8 +449,8 @@ void SynEditStringList::LoadFromFile(QFile &file, const QByteArray& encoding, QB
 {
     if (!file.open(QFile::ReadOnly | QFile::Text))
         throw FileError(tr("Can't open file '%1' for read!").arg(file.fileName()));
-    if (!file.canReadLine())
-        throw FileError(tr("Can't read from file '%1'!").arg(file.fileName()));
+//    if (!file.canReadLine())
+//        throw FileError(tr("Can't read from file '%1'!").arg(file.fileName()));
     beginUpdate();
     auto action = finally([this]{
         endUpdate();
@@ -448,16 +458,16 @@ void SynEditStringList::LoadFromFile(QFile &file, const QByteArray& encoding, QB
 
     //test for utf8 / utf 8 bom
     if (encoding == ENCODING_AUTO_DETECT) {
-        QByteArray line = file.readLine();
-        QTextCodec* codec;
-        QTextCodec::ConverterState * state;
-        bool needReread = false;
-        bool allAscii = true;
-        //test for BOM
-        if (line.isEmpty()) {
+        if (file.atEnd()) {
             realEncoding = ENCODING_ASCII;
             return;
         }
+        QByteArray line = file.readLine();
+        QTextCodec* codec;
+        QTextCodec::ConverterState state;
+        bool needReread = false;
+        bool allAscii = true;
+        //test for BOM
         if ((line.length()>=3) && ((unsigned char)line[0]==0xEF) && ((unsigned char)line[1]==0xBB) && ((unsigned char)line[2]==0xBF) ) {
             realEncoding = ENCODING_UTF8_BOM;
             line = line.mid(3);
@@ -472,14 +482,14 @@ void SynEditStringList::LoadFromFile(QFile &file, const QByteArray& encoding, QB
                 allAscii = isTextAllAscii(line);
             }
             if (allAscii) {
-                add(QString::fromLatin1(line));
+                addItem(removeLineEnds(QString::fromLatin1(line)));
             } else {
-                QString newLine = codec->toUnicode(line.constData(),line.length(),state);
-                if (state->invalidChars>0) {
+                QString newLine = codec->toUnicode(line.constData(),line.length(),&state);
+                if (state.invalidChars>0) {
                     needReread = true;
                     break;
                 }
-                add(newLine);
+                addItem(removeLineEnds(newLine));
             }
             line = file.readLine();
         } while (!file.atEnd());
@@ -508,7 +518,7 @@ void SynEditStringList::LoadFromFile(QFile &file, const QByteArray& encoding, QB
     QString line;
     clear();
     while (textStream.readLineInto(&line)) {
-        add(line);
+        addItem(removeLineEnds(line));
     }
 }
 
@@ -525,7 +535,7 @@ void SynEditStringList::SaveToFile(QFile &file, const QByteArray& encoding, QByt
     QTextCodec* codec;
     if (realEncoding == ENCODING_UTF8_BOM) {
         codec = QTextCodec::codecForName(ENCODING_UTF8_BOM);
-    } else if (realEncoding == ENCODING_ASCII) {
+    } else if (realEncoding == ENCODING_SYSTEM_DEFAULT) {
         codec = QTextCodec::codecForLocale();
     }
     for (PSynEditStringRec& line:mList) {
@@ -590,6 +600,11 @@ FileEndingType SynEditStringList::getFileEndingType() const
 void SynEditStringList::setFileEndingType(const FileEndingType &fileEndingType)
 {
     mFileEndingType = fileEndingType;
+}
+
+bool SynEditStringList::empty()
+{
+    return count()==0;
 }
 
 void SynEditStringList::invalidAllLineColumns()

@@ -66,7 +66,7 @@ bool EditorList::closeEditor(Editor* editor, bool transferFocus, bool force) {
         return false;
     if (force) {
         editor->save(true,false);
-    } else if ( (editor->isModified()) && (!editor->text().isEmpty())) {
+    } else if ( (editor->modified()) && (!editor->empty())) {
         // ask user if he wants to save
         QMessageBox::StandardButton reply;
         reply = QMessageBox::question(pMainWindow,QObject::tr("Save"),

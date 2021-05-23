@@ -219,6 +219,7 @@ public:
     PSynEditKeyStroke findKeySequence(const QKeySequence& keySeq);
     void clear();
     void resetDefaults();
+private:
     SynEditKeyStrokeList mList;
 };
 

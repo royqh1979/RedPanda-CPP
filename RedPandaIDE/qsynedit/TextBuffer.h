@@ -95,6 +95,8 @@ public:
 
     FileEndingType getFileEndingType() const;
     void setFileEndingType(const FileEndingType &fileEndingType);
+
+    bool empty();
 public slots:
     void invalidAllLineColumns();
 
@@ -109,6 +111,7 @@ protected:
     QString GetTextStr();
     void SetUpdateState(bool Updating);
     void InsertItem(int Index, const QString& s);
+    void addItem(const QString& s);
     void PutTextStr(const QString& text);
 
 private:
