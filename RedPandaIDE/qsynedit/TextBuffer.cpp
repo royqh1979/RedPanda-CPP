@@ -447,7 +447,7 @@ void SynEditStringList::InsertText(int Index, const QString &NewText)
 
 void SynEditStringList::LoadFromFile(QFile &file, const QByteArray& encoding, QByteArray& realEncoding)
 {
-    if (!file.open(QFile::ReadOnly | QFile::Text))
+    if (!file.open(QFile::ReadOnly))
         throw FileError(tr("Can't open file '%1' for read!").arg(file.fileName()));
 //    if (!file.canReadLine())
 //        throw FileError(tr("Can't read from file '%1'!").arg(file.fileName()));
@@ -475,6 +475,13 @@ void SynEditStringList::LoadFromFile(QFile &file, const QByteArray& encoding, QB
         } else {
             realEncoding = ENCODING_UTF8;
             codec = QTextCodec::codecForName(ENCODING_UTF8);
+        }
+        if (line.endsWith("\r\n")) {
+            mFileEndingType = FileEndingType::Windows;
+        } else if (line.endsWith("\n")) {
+            mFileEndingType = FileEndingType::Linux;
+        } else if (line.endsWith("\r")) {
+            mFileEndingType = FileEndingType::Mac;
         }
         clear();
         do {
@@ -529,7 +536,7 @@ void SynEditStringList::LoadFromFile(QFile &file, const QByteArray& encoding, QB
 
 void SynEditStringList::SaveToFile(QFile &file, const QByteArray& encoding, QByteArray& realEncoding)
 {
-    if (!file.open(QFile::WriteOnly | QFile::Truncate | QFile::Text))
+    if (!file.open(QFile::WriteOnly | QFile::Truncate))
         throw FileError(tr("Can't open file '%1' for save!").arg(file.fileName()));
     if (mList.isEmpty())
         return;
@@ -540,6 +547,10 @@ void SynEditStringList::SaveToFile(QFile &file, const QByteArray& encoding, QByt
         codec = QTextCodec::codecForName(ENCODING_UTF8_BOM);
     } else if (realEncoding == ENCODING_SYSTEM_DEFAULT) {
         codec = QTextCodec::codecForLocale();
+    } else if (realEncoding == ENCODING_ASCII) {
+        codec = QTextCodec::codecForLocale();
+    } else {
+        codec = QTextCodec::codecForName(realEncoding);
     }
     for (PSynEditStringRec& line:mList) {
         if (allAscii) {
