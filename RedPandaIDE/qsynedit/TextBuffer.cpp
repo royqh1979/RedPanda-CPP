@@ -491,8 +491,11 @@ void SynEditStringList::LoadFromFile(QFile &file, const QByteArray& encoding, QB
                 }
                 addItem(removeLineEnds(newLine));
             }
+            if (file.atEnd()){
+                break;
+            }
             line = file.readLine();
-        } while (!file.atEnd());
+        } while (true);
         if (!needReread) {
             if (allAscii)
                 realEncoding = ENCODING_ASCII;

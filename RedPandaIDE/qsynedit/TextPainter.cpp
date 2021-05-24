@@ -356,17 +356,15 @@ void SynEditTextPainter::PaintToken(const QString &Token, int TokenCols, int Col
         nX = ColumnToXValue(First);
         First -= ColumnsBefore;
         Last -= ColumnsBefore;
+        QPen oldPen = painter->pen();
+        QPen newPen(painter->brush().color());
+        painter->setPen(newPen);
+        painter->drawRect(rcToken);
+        painter->setPen(oldPen);
         if (First > TokenCols) {
         } else {
-            qDebug()<<"token clip rect:"<<rcToken << Token << First << Last;
-//            painter->setClipRect(rcToken);
             int tokenColLen=0;
             startPaint = false;
-            QPen oldPen = painter->pen();
-            QPen newPen(painter->brush().color());
-            painter->setPen(newPen);
-            painter->drawRect(rcToken);
-            painter->setPen(oldPen);
             for (int i=0;i<Token.length();i++) {
                 int charCols;
                 if (Token[i] == SynTabChar) {
@@ -936,6 +934,7 @@ void SynEditTextPainter::PaintLines()
         // the flicker. Should not cost very much anyway, compared to the many
         // calls to ExtTextOut.
         if (bDoRightEdge) {
+            painter->setPen(edit->mRightEdgeColor);
             painter->drawLine(nRightEdge, rcLine.top(),nRightEdge,rcLine.bottom()+1);
         }
         bCurrentLine = false;

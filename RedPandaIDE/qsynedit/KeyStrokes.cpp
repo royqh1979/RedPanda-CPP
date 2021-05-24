@@ -89,19 +89,12 @@ SynKeyError::SynKeyError(const QString &reason):BaseError(reason)
 
 PSynEditKeyStroke SynEditKeyStrokes::add(SynEditorCommand command, int key, Qt::KeyboardModifiers modifiers)
 {
-//    qDebug()<<"add : 1" ;
-//    qDebug() << (int)command;
-////    PSynEditKeyStroke keyStroke = std::make_shared<SynEditKeyStroke>();
-////    qDebug()<<"add : 2";
-////    keyStroke->setKey(key);
-////    qDebug()<<"add : 3";
-////    keyStroke->setKeyModifiers(modifiers);
-////    qDebug()<<"add : 4";
-////    keyStroke->setCommand(command);
-//    qDebug()<<"add : 5";
-//    //mList.append(keyStroke);
-//    qDebug()<<"add : 6";
-
+    PSynEditKeyStroke keyStroke = std::make_shared<SynEditKeyStroke>();
+    keyStroke->setKey(key);
+    keyStroke->setKeyModifiers(modifiers);
+    keyStroke->setCommand(command);
+    mList.append(keyStroke);
+    return keyStroke;
 }
 
 PSynEditKeyStroke SynEditKeyStrokes::findCommand(SynEditorCommand command)
@@ -166,7 +159,6 @@ void SynEditKeyStrokes::clear()
 
 void SynEditKeyStrokes::resetDefaults()
 {
-    return;
     qDebug()<<"SynEditKeyStrokes: resetDefaults ";
     qDebug()<<"SynEditKeyStrokes: resetDefaults: clear ";
     clear();
