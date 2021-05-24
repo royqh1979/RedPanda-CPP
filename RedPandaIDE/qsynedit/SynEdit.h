@@ -374,6 +374,7 @@ private:
     PSynHighlighter mHighlighter;
     QColor mSelectedForeground;
     QColor mSelectedBackground;
+    QColor mCaretColor;
     QColor mActiveLineColor;
     PSynEditUndoList mUndoList;
     PSynEditUndoList mRedoList;
@@ -414,7 +415,6 @@ private:
 
     PSynEdit  fChainedEditor;
 
-    bool mShowSpecChar;
     int mPaintTransientLock;
     bool mIsScrolling;
     int mPainterLock; // lock counter to prevent repaint while painting
@@ -438,7 +438,7 @@ private:
 
     //caret blink related
     int m_blinkTimerId;
-    int m_bliknStatus;
+    int m_blinkStatus;
 
 
     // QWidget interface

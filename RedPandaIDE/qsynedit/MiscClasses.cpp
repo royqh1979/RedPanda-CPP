@@ -1,15 +1,17 @@
 #include "MiscClasses.h"
 #include "algorithm"
+#include <QDebug>
 
 SynGutter::SynGutter(QObject *parent):
     QObject(parent)
 {
-    mFont = QFont("Courier New",9);
+    mFont = QFont("Courier New",10);
     mColor= QColorConstants::Svg::lightgray;
     mBorderColor = QColorConstants::Transparent;
+    mTextColor = QColorConstants::Svg::black;
     mWidth = 30;
     mShowLineNumbers = true;
-    mDigitCount = 4;
+    mDigitCount = 1;
     mLeadingZeros = false;
     mLeftOffset = 16;
     mRightOffset = 2;
@@ -299,6 +301,7 @@ QColor SynGutter::color() const
 void SynGutter::setColor(const QColor &value)
 {
     if (mColor!=value) {
+        qDebug()<<"mColor"<<value;
         mColor = value;
         setChanged();
     }

@@ -81,26 +81,9 @@ void Editor::loadFile() {
 //                                 QString(tr("Can't Open File %1:%2")).arg(mFilename).arg(file.errorString()));
 //    }
     this->lines()->LoadFromFile(file,mEncodingOption,mFileEncoding);
-//    QByteArray content=file.readAll();
-//    file.close();
-//    if (mEncodingOption == ENCODING_AUTO_DETECT) {
-//        mFileEncoding = GuessTextEncoding(content);
-//    } else {
-//        mFileEncoding = mEncodingOption;
-//    }
-//    if (mFileEncoding == ENCODING_UTF8) {
-//        this->lines()->load
-//        this->setText(QString::fromUtf8(content));
-//    } else if (mFileEncoding == ENCODING_UTF8_BOM) {
-//        this->setText(QString::fromUtf8(content.mid(3)));
-//    } else if (mFileEncoding == ENCODING_ASCII) {
-//        this->setText(QString::fromLatin1(content));
-//    } else if (mFileEncoding == ENCODING_SYSTEM_DEFAULT) {
-//        this->setText(QString::fromLocal8Bit(content));
-//    }else {
-//        QTextCodec*codec = QTextCodec::codecForName(mFileEncoding);
-//        this->setText(codec->toUnicode(content));
-//    }
+    this->setModified(false);
+    updateCaption();
+    pMainWindow->updateStatusBarForEncoding();
 }
 
 void Editor::saveFile(const QString &filename) {
