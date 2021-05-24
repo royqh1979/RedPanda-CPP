@@ -66,7 +66,7 @@ enum SynEditorOption {
   eoAltSetsColumnMode = 0x00000001, //Holding down the Alt Key will put the selection mode into columnar format
   eoAutoIndent = 0x00000002, //Will indent the caret on new lines with the same amount of leading white space as the preceding line
   eoAddIndent = 0x00000004, //Will add one tab width of indent when typing { and :, and remove the same amount when typing }
-  eoAutoSizeMaxScrollWidth = 0x00000008, //Automatically resizes the MaxScrollWidth property when inserting text
+  //eoAutoSizeMaxScrollWidth = 0x00000008, //Automatically resizes the MaxScrollWidth property when inserting text
   //eoDisableScrollArrows = 0x00000010 , //Disables the scroll bar arrow buttons when you can't scroll in that direction any more
   eoDragDropEditing = 0x00000020, //Allows you to select a block of text and drag it within the document to another location
   eoDropFiles = 0x00000040, //Allows the editor accept OLE file drops
@@ -260,9 +260,6 @@ protected:
     virtual void onGutterPaint(QPainter& painter, int aLine, int X, int Y);
     virtual void onPaint(QPainter& painter);
 
-
-
-
 private:
     void clearAreaList(SynEditingAreaList areaList);
     void computeCaret(int X, int Y);
@@ -316,6 +313,7 @@ private:
     PSynEditFoldRange checkFoldRange(SynEditFoldRanges* FoldRangeToCheck,int Line, bool WantCollapsed, bool AcceptFromLine, bool AcceptToLine);
     PSynEditFoldRange foldEndAtLine(int Line);
     void paintCaret(QPainter& painter, const QRect rcClip);
+    int textOffset();
 
 private slots:
     void bookMarkOptionsChanged();
@@ -331,6 +329,7 @@ private slots:
     void undoAdded();
     void sizeOrFontChanged(bool bFont);
     void doChange();
+    void doScrolled(int value);
 
 private:
     std::shared_ptr<QImage> mContentImage;
@@ -369,7 +368,6 @@ private:
     SynScrollHintFormat mScrollHintFormat;
     SynScrollStyle mScrollBars;
     int mTextHeight;
-    int mTextOffset;
     int mTopLine;
     PSynHighlighter mHighlighter;
     QColor mSelectedForeground;
@@ -458,6 +456,11 @@ void timerEvent(QTimerEvent *event) override;
 // QObject interface
 public:
 bool event(QEvent *event) override;
+
+// QWidget interface
+protected:
+void focusInEvent(QFocusEvent *event) override;
+void focusOutEvent(QFocusEvent *event) override;
 };
 
 #endif // SYNEDIT_H

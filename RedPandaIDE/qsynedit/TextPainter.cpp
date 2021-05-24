@@ -25,7 +25,7 @@ void SynEditTextPainter::paintTextLines(const QRect& clip)
     QString SynTabGlyphString = SynTabGlyph;
     bDoRightEdge = false;
     if (edit->mRightEdge > 0) { // column value
-        nRightEdge = edit->mTextOffset + edit->mRightEdge * edit->mCharWidth; // pixel value
+        nRightEdge = edit->textOffset()+ edit->mRightEdge * edit->mCharWidth; // pixel value
         if (nRightEdge >= AClip.left() &&nRightEdge <= AClip.right()) {
             bDoRightEdge = true;
             QPen pen(edit->mRightEdgeColor,1);
@@ -344,7 +344,7 @@ void SynEditTextPainter::setDrawingColors(bool Selected)
 
 int SynEditTextPainter::ColumnToXValue(int Col)
 {
-    return edit->mTextOffset + (Col - 1) * edit->mCharWidth;
+    return edit->textOffset() + (Col - 1) * edit->mCharWidth;
 }
 
 void SynEditTextPainter::PaintToken(const QString &Token, int TokenCols, int ColumnsBefore, int First, int Last, bool)
@@ -358,7 +358,7 @@ void SynEditTextPainter::PaintToken(const QString &Token, int TokenCols, int Col
         Last -= ColumnsBefore;
         if (First > TokenCols) {
         } else {
-            qDebug()<<"token clip rect:"<<rcToken << Token;
+            qDebug()<<"token clip rect:"<<rcToken << Token << First << Last;
 //            painter->setClipRect(rcToken);
             int tokenColLen=0;
             startPaint = false;
@@ -381,10 +381,12 @@ void SynEditTextPainter::PaintToken(const QString &Token, int TokenCols, int Col
                     startPaint = true;
                 }
                 //painter->drawText(nX,rcToken.bottom()-painter->fontMetrics().descent()*edit->dpiFactor() , Token[i]);
-                painter->drawText(nX,rcToken.bottom()-painter->fontMetrics().descent() , Token[i]);
+                if (startPaint) {
+                    painter->drawText(nX,rcToken.bottom()-painter->fontMetrics().descent() , Token[i]);
+                    nX += charCols * edit->mCharWidth;
+                }
 
                 tokenColLen += charCols;
-                nX += charCols * edit->mCharWidth;
                 if (tokenColLen > Last)
                     break;
             }
@@ -664,7 +666,7 @@ void SynEditTextPainter::PaintFoldAttributes()
             // Step horizontal coord
             TabSteps = edit->mTabWidth;
             while (TabSteps < LineIndent) {
-                X = TabSteps * edit->mCharWidth + edit->mTextOffset - 2;
+                X = TabSteps * edit->mCharWidth + edit->textOffset() - 2;
                 TabSteps+=edit->mTabWidth;
 
                 // Move to top of vertical line
