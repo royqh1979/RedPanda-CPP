@@ -1,8 +1,7 @@
 #include "composition.h"
 #include "../Constants.h"
 
-SynHighlightComposition::SynHighlightComposition(QObject *parent):
-    SynHighlighter(parent)
+SynHighlightComposition::SynHighlightComposition()
 {
 
 }
@@ -22,9 +21,7 @@ SynScheme::SynScheme(QObject *parent):
     mCaseSensitive(true)
 {
     mMarkerAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrMarker);
-    connect(mMarkerAttribute.get(),&SynHighlighterAttribute::changed,
-            this, &SynScheme::MarkerAttriChanged);
-    mMarkerAttribute->setBackground(QColorConstants::Yellow);
+    mMarkerAttribute->setForeground(QColorConstants::Yellow);
     mMarkerAttribute->setStyles(SynFontStyle::fsBold);
 }
 

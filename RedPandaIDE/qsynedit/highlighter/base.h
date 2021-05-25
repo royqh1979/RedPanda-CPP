@@ -28,15 +28,13 @@ enum class SynHighlighterClass {
     CppHighlighter,
 };
 
-class SynHighlighterAttribute : public QObject{
-    Q_OBJECT
-public:
-    explicit SynHighlighterAttribute(const QString& name, QObject* parent = nullptr);
-    QColor background() const;
-    void setBackground(const QColor &background);
+enum class SynHighlighterLanguage {
+    Cpp
+};
 
-    QColor foreground() const;
-    void setForeground(const QColor &foreground);
+class SynHighlighterAttribute {
+public:
+    explicit SynHighlighterAttribute(const QString& name);
 
     QString name() const;
     void setName(const QString &name);
@@ -44,13 +42,15 @@ public:
     SynFontStyles styles() const;
     void setStyles(const SynFontStyles &styles);
 
-signals:
-    void changed();
+    QColor foreground() const;
+    void setForeground(const QColor &color);
+
+    QColor background() const;
+    void setBackground(const QColor &background);
+
 private:
-    void setChanged();
-private:
-    QColor mBackground;
     QColor mForeground;
+    QColor mBackground;
     QString mName;
     SynFontStyles mStyles;
 };
@@ -58,11 +58,9 @@ private:
 typedef std::shared_ptr<SynHighlighterAttribute> PSynHighlighterAttribute;
 using SynHighlighterAttributeList = QVector<PSynHighlighterAttribute>;
 
-class SynHighlighter : public QObject
-{
-    Q_OBJECT
+class SynHighlighter {
 public:
-    explicit SynHighlighter(QObject *parent = nullptr);
+    explicit SynHighlighter();
 
     const QMap<QString, PSynHighlighterAttribute>& attributes() const;
 
@@ -87,8 +85,6 @@ public:
     virtual SynHighlighterClass getClass() const = 0;
     virtual QString getName() const = 0;
 
-    void beginUpdate();
-    void endUpdate();
     virtual bool getTokenFinished() const = 0;
     virtual bool isLastLineCommentNotFinished(int state) const = 0;
     virtual bool isLastLineStringNotFinished(int state) const = 0;
@@ -110,17 +106,11 @@ public:
     virtual void resetState() = 0;
 
     virtual QString languageName() = 0;
+    virtual SynHighlighterLanguage language() = 0;
 
     static bool isSpaceChar(const QChar& ch);
     bool enabled() const;
     void setEnabled(bool value);
-
-signals:
-    void attributesChanged();
-
-protected:
-    void onAttributeChanged();
-    void setAttributesChanged();
 
 protected:
     PSynHighlighterAttribute mCommentAttribute;
@@ -138,7 +128,6 @@ protected:
 
 private:
     QMap<QString,PSynHighlighterAttribute> mAttributes;
-    int mUpdateCount;
     bool mEnabled;
     QSet<QChar> mWordBreakChars;
 };

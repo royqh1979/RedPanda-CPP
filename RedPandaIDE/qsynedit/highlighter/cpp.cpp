@@ -110,14 +110,13 @@ const QSet<QString> SynEditCppHighlighter::Keywords {
 
     "nullptr",
 };
-SynEditCppHighlighter::SynEditCppHighlighter(QObject *parent): SynHighlighter(parent)
+SynEditCppHighlighter::SynEditCppHighlighter(): SynHighlighter()
 {
     mAsmAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrAssembler);
     addAttribute(mAsmAttribute);
     mCharAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrCharacter);
     addAttribute(mCharAttribute);
     mCommentAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrComment);
-    mCommentAttribute->setStyles(SynFontStyle::fsItalic);
     addAttribute(mCommentAttribute);
     mClassAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrClass);
     addAttribute(mClassAttribute);
@@ -142,7 +141,6 @@ SynEditCppHighlighter::SynEditCppHighlighter(QObject *parent): SynHighlighter(pa
     mDirecAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrPreprocessor);
     addAttribute(mDirecAttribute);
     mKeyAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrReservedWord);
-    mCommentAttribute->setStyles(SynFontStyle::fsBold);
     addAttribute(mKeyAttribute);
     mWhitespaceAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrSpace);
     addAttribute(mWhitespaceAttribute);
@@ -621,7 +619,6 @@ void SynEditCppHighlighter::numberProc()
     mRun+=1;
     mTokenId = TokenKind::Number;
     bool shouldExit = false;
-    double x=010.140;
     while (mLine[mRun]!=0) {
         switch(mLine[mRun].unicode()) {
         case '\'':
@@ -772,8 +769,13 @@ void SynEditCppHighlighter::numberProc()
                 return;
             }
             break;
+        default:
+            shouldExit=true;
         }
-        mRun+=1;
+        if (shouldExit) {
+            break;
+        }
+        mRun+=1;        
     }
     if (mLine[mRun-1] == '\'') {
         mTokenId = TokenKind::Unknown;
@@ -1162,6 +1164,7 @@ void SynEditCppHighlighter::stringProc()
                 return;
             }
         }
+        mRun+=1;
     }
     mRange.state = RangeState::rsUnknown;
 }
@@ -1569,4 +1572,14 @@ SynHighlighterClass SynEditCppHighlighter::getClass() const
 QString SynEditCppHighlighter::getName() const
 {
     return "SynCppHighlighter";
+}
+
+QString SynEditCppHighlighter::languageName()
+{
+    return "cpp";
+}
+
+SynHighlighterLanguage SynEditCppHighlighter::language()
+{
+    return SynHighlighterLanguage::Cpp;
 }

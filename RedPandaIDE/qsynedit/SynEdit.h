@@ -292,6 +292,7 @@ private:
     QString expandAtWideGlyphs(const QString& S);
     void updateModifiedStatus();
     int scanFrom(int Index);
+    int scanRanges();
     void uncollapse(PSynEditFoldRange FoldRange);
     void foldOnListInserted(int Line, int Count);
     void foldOnListDeleted(int Line, int Count);
@@ -458,6 +459,9 @@ public:
 bool event(QEvent *event) override;
 
 // QWidget interface
+PSynHighlighter highlighter() const;
+void setHighlighter(const PSynHighlighter &highlighter);
+
 protected:
 void focusInEvent(QFocusEvent *event) override;
 void focusOutEvent(QFocusEvent *event) override;

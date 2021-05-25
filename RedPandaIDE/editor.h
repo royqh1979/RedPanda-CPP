@@ -73,13 +73,13 @@ protected slots:
     void onLinesChanged(int startLine, int count) ;
 
 private:
+    static int newfileCount;
     QByteArray mEncodingOption; // the encoding type set by the user
     QByteArray mFileEncoding; // the real encoding of the file (auto detected)
     QString mFilename;
     QTabWidget* mParentPageControl;
     bool mInProject;
     bool mIsNew;
-
 
     // QWidget interface
 protected:

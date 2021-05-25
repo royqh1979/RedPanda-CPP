@@ -1,10 +1,9 @@
 #include "base.h"
 #include "../Constants.h"
 
-SynHighlighter::SynHighlighter(QObject *parent) : QObject(parent),
-    mWordBreakChars{ SynWordBreakChars },
+SynHighlighter::SynHighlighter() :
     mEnabled(true),
-    mUpdateCount(0)
+    mWordBreakChars{ SynWordBreakChars }
 {
 
 }
@@ -47,34 +46,6 @@ PSynHighlighterAttribute SynHighlighter::whitespaceAttribute() const
 PSynHighlighterAttribute SynHighlighter::symbolAttribute() const
 {
     return mSymbolAttribute;
-}
-
-void SynHighlighter::onAttributeChanged()
-{
-    setAttributesChanged();
-}
-
-void SynHighlighter::setAttributesChanged()
-{
-    if (mUpdateCount == 0) {
-        emit attributesChanged();
-    }
-}
-
-void SynHighlighter::beginUpdate()
-{
-    mUpdateCount++;
-}
-
-void SynHighlighter::endUpdate()
-{
-    mUpdateCount--;
-    if (mUpdateCount == 0) {
-        setAttributesChanged();
-    }
-    if (mUpdateCount<0) {
-        throw new std::out_of_range("mUpdateCount in SynHighlighterBase < 0");
-    }
 }
 
 SynRangeState SynHighlighter::getRangeState() const
@@ -129,7 +100,7 @@ bool SynHighlighter::isIdentChar(const QChar &ch) const
     if (ch>='a' && ch <= 'z') {
         return true;
     }
-    if (ch>='A' && ch <= 'A') {
+    if (ch>='A' && ch <= 'Z') {
         return true;
     }
 
@@ -138,8 +109,6 @@ bool SynHighlighter::isIdentChar(const QChar &ch) const
 void SynHighlighter::addAttribute(PSynHighlighterAttribute attribute)
 {
     mAttributes[attribute->name()]=attribute;
-    connect(attribute.get(), &SynHighlighterAttribute::changed,
-            this, &SynHighlighter::setAttributesChanged);
 }
 
 void SynHighlighter::clearAttributes()
@@ -170,13 +139,7 @@ void SynHighlighter::setEnabled(bool value)
 {
     if (value != mEnabled) {
         mEnabled = value;
-        setAttributesChanged();
     }
-}
-
-void SynHighlighterAttribute::setChanged()
-{
-    emit changed();
 }
 
 SynFontStyles SynHighlighterAttribute::styles() const
@@ -188,8 +151,27 @@ void SynHighlighterAttribute::setStyles(const SynFontStyles &styles)
 {
     if (mStyles!=styles) {
         mStyles = styles;
-        setChanged();
     }
+}
+
+QColor SynHighlighterAttribute::foreground() const
+{
+    return mForeground;
+}
+
+void SynHighlighterAttribute::setForeground(const QColor &color)
+{
+    mForeground = color;
+}
+
+QColor SynHighlighterAttribute::background() const
+{
+    return mBackground;
+}
+
+void SynHighlighterAttribute::setBackground(const QColor &background)
+{
+    mBackground = background;
 }
 
 QString SynHighlighterAttribute::name() const
@@ -201,41 +183,13 @@ void SynHighlighterAttribute::setName(const QString &name)
 {
     if (mName!=name) {
         mName = name;
-        setChanged();
     }
 }
 
-QColor SynHighlighterAttribute::foreground() const
-{
-    return mForeground;
-}
-
-void SynHighlighterAttribute::setForeground(const QColor &foreground)
-{
-    if (mForeground!=foreground) {
-        mForeground = foreground;
-        setChanged();
-    }
-}
-
-SynHighlighterAttribute::SynHighlighterAttribute(const QString &name, QObject *parent):
-    QObject(parent),
-    mName(name),
-    mForeground(QColorConstants::Black),
-    mBackground(QColorConstants::White)
+SynHighlighterAttribute::SynHighlighterAttribute(const QString &name):
+    mForeground(QColor()),
+    mBackground(QColor()),
+    mName(name)
 {
 
-}
-
-QColor SynHighlighterAttribute::background() const
-{
-    return mBackground;
-}
-
-void SynHighlighterAttribute::setBackground(const QColor &background)
-{
-    if (mBackground!=background) {
-        mBackground = background;
-        setChanged();
-    }
 }

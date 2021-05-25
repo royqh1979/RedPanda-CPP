@@ -1143,6 +1143,23 @@ int SynEdit::scanFrom(int Index)
     return Result;
 }
 
+int SynEdit::scanRanges()
+{
+    if (mHighlighter && !mLines->empty()) {
+        mHighlighter->resetState();
+        for (int i =0;i<mLines->count();i++) {
+            mHighlighter->setLine(mLines->getString(i), i);
+            qDebug()<<i<<mLines->getString(i);
+            mHighlighter->nextToEol();
+            mLines->setRange(i, mHighlighter->getRangeState());
+            mLines->setParenthesisLevel(i, mHighlighter->getParenthesisLevel());
+            mLines->setBracketLevel(i, mHighlighter->getBracketLevel());
+            mLines->setBraceLevel(i, mHighlighter->getBraceLevel());
+        }
+        qDebug()<<"finished.";
+    }
+}
+
 void SynEdit::uncollapse(PSynEditFoldRange FoldRange)
 {
     FoldRange->linesCollapsed = 0;
@@ -1521,7 +1538,6 @@ void SynEdit::sizeOrFontChanged(bool bFont)
                 gutterChanged();
             else
                 updateScrollbars();
-            initializeCaret();
             mStateFlags.setFlag(SynStateFlag::sfCaretChanged,false);
             invalidate();
         } else
@@ -1543,6 +1559,29 @@ void SynEdit::doScrolled(int)
 {
     mLeftChar = horizontalScrollBar()->value();
     mTopLine = verticalScrollBar()->value();
+    invalidate();
+}
+
+PSynHighlighter SynEdit::highlighter() const
+{
+    return mHighlighter;
+}
+
+void SynEdit::setHighlighter(const PSynHighlighter &highlighter)
+{
+    PSynHighlighter oldHighlighter= mHighlighter;
+    mHighlighter = highlighter;
+    if (oldHighlighter && mHighlighter &&
+            oldHighlighter->language() == highlighter->language()) {
+    } else {
+        recalcCharExtent();
+        mLines->beginUpdate();
+        auto action=finally([this]{
+            mLines->endUpdate();
+        });
+        scanRanges();
+    }
+    sizeOrFontChanged(true);
     invalidate();
 }
 

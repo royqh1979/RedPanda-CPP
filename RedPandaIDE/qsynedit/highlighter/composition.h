@@ -49,9 +49,8 @@ private slots:
 
 class SynHighlightComposition : public SynHighlighter
 {
-    Q_OBJECT
 public:
-    explicit SynHighlightComposition(QObject *parent = nullptr);
+    explicit SynHighlightComposition();
 
     // SynHighligterBase interface
 public:

@@ -13,6 +13,7 @@
 #include <QMessageBox>
 #include <QDebug>
 #include "qsynedit/highlighter/cpp.h"
+#include "HighlighterManager.h"
 
 
 using namespace std;
@@ -30,6 +31,7 @@ const char *SaveException::what() const noexcept {
     return mReason.toLocal8Bit();
 }
 
+int Editor::newfileCount=0;
 
 Editor::Editor(QWidget *parent, const QString& filename,
                   const QByteArray& encoding,
@@ -43,7 +45,8 @@ Editor::Editor(QWidget *parent, const QString& filename,
   mParentPageControl(parentPageControl)
 {
     if (mFilename.isEmpty()) {
-        mFilename = tr("untitled") + "1";
+        newfileCount++;
+        mFilename = tr("untitled") + newfileCount;
     }
     QFileInfo fileInfo(mFilename);
     if (mParentPageControl!=NULL) {
@@ -52,11 +55,13 @@ Editor::Editor(QWidget *parent, const QString& filename,
     }
     if (!isNew) {
         loadFile();
+        setHighlighter(highlighterManager.createHighlighter(mFilename));
     } else {
         if (mEncodingOption == ENCODING_AUTO_DETECT)
             mFileEncoding = ENCODING_ASCII;
         else
             mFileEncoding = mEncodingOption;
+        setHighlighter(highlighterManager.createCppHighlighter());
     }
 
     //SynEditCppHighlighter highlighter;

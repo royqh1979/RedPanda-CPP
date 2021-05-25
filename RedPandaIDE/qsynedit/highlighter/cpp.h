@@ -5,8 +5,6 @@
 
 class SynEditCppHighlighter: public SynHighlighter
 {
-    Q_OBJECT
-
     enum TokenKind {
         Asm = 1,
         Comment,
@@ -50,7 +48,7 @@ class SynEditCppHighlighter: public SynHighlighter
     };
 
 public:
-    explicit SynEditCppHighlighter(QObject* parent = nullptr);
+    explicit SynEditCppHighlighter();
 
     PSynHighlighterAttribute asmAttribute() const;
 
@@ -177,36 +175,18 @@ public:
     int getTokenPos() override;
     void next() override;
     void setLine(const QString &newLine, int lineNumber) override;
-
-    // SynHighligterBase interface
-public:
     int getBraceLevel() const override;
     int getBracketLevel() const override;
     int getParenthesisLevel() const override;
-
-    // SynHighligterBase interface
-public:
     bool isKeyword(const QString &word) override;
-
-    // SynHighligterBase interface
-public:
     SynHighlighterTokenType getTokenType() override;
-
-    // SynHighligterBase interface
-public:
     void setState(SynRangeState rangeState, int braceLevel, int bracketLevel, int parenthesisLevel) override;
-
-    // SynHighligterBase interface
-public:
     void resetState() override;
-
-    // SynHighligterBase interface
-public:
     SynHighlighterClass getClass() const override;
-
-    // SynHighlighter interface
-public:
     QString getName() const override;
+
+    QString languageName() override;
+    SynHighlighterLanguage language() override;
 };
 
 #endif // SYNEDITCPPHIGHLIGHTER_H

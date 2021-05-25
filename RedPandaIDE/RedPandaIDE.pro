@@ -9,6 +9,7 @@ CONFIG += c++14
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    HighlighterManager.cpp \
     compiler/compiler.cpp \
     compiler/compilermanager.cpp \
     compiler/executablerunner.cpp \
@@ -38,6 +39,7 @@ SOURCES += \
     widgets/issuestable.cpp
 
 HEADERS += \
+    HighlighterManager.h \
     compiler/compiler.h \
     compiler/compilermanager.h \
     compiler/executablerunner.h \
