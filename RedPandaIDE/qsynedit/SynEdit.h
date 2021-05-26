@@ -301,7 +301,7 @@ private:
     void rescanForFoldRanges();
     void scanForFoldRanges(PSynEditFoldRanges TopFoldRanges);
     int lineHasChar(int Line, int startChar, QChar character, const QString& highlighterAttrName);
-    void findSubFoldRange(PSynEditFoldRanges TopFoldRanges,int FoldIndex, PSynEditFoldRange Parent);
+    void findSubFoldRange(PSynEditFoldRanges TopFoldRanges,int FoldIndex,PSynEditFoldRanges& parentFoldRanges, PSynEditFoldRange Parent);
     PSynEditFoldRange collapsedFoldStartAtLine(int Line);
     void setSelTextPrimitiveEx(SynSelectionMode PasteMode,
                                const QString& Value, bool AddToUndoList);
@@ -461,6 +461,9 @@ bool event(QEvent *event) override;
 // QWidget interface
 PSynHighlighter highlighter() const;
 void setHighlighter(const PSynHighlighter &highlighter);
+
+bool useCodeFolding() const;
+void setUseCodeFolding(bool value);
 
 protected:
 void focusInEvent(QFocusEvent *event) override;

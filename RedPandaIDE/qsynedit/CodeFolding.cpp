@@ -85,9 +85,17 @@ SynEditFoldRanges::SynEditFoldRanges()
 
 }
 
-PSynEditFoldRange SynEditFoldRanges::addByParts(PSynEditFoldRange aParent, PSynEditFoldRanges aAllFold, int aFromLine, PSynEditFoldRegion aFoldRegion, int aToLine)
+PSynEditFoldRange SynEditFoldRanges::addByParts(PSynEditFoldRange aParent,
+                                                PSynEditFoldRanges aAllFold,
+                                                int aFromLine,
+                                                PSynEditFoldRegion aFoldRegion,
+                                                int aToLine)
 {
     PSynEditFoldRange range=std::make_shared<SynEditFoldRange>(aParent,aAllFold, aFromLine,aFoldRegion,aToLine);
+    mRanges.append(range);
+    if (aAllFold && aAllFold.get()!=this) {
+        aAllFold->add(range);
+    }
     return range;
 }
 

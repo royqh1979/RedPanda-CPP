@@ -125,6 +125,7 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
 
     mContentImage = std::make_shared<QImage>(clientWidth(),clientHeight(),QImage::Format_ARGB32);
 
+    mUseCodeFolding = true;
     m_blinkTimerId = 0;
     m_blinkStatus = 0;
     qDebug()<<"init SynEdit: 10";
@@ -1255,9 +1256,10 @@ void SynEdit::rescanForFoldRanges()
 
 void SynEdit::scanForFoldRanges(PSynEditFoldRanges TopFoldRanges)
 {
+    PSynEditFoldRanges parentFoldRanges = TopFoldRanges;
       // Recursively scan for folds (all types)
       for (int i= 0 ; i< mCodeFolding.foldRegions.count() ; i++ ) {
-          findSubFoldRange(TopFoldRanges, i,PSynEditFoldRange());
+          findSubFoldRange(TopFoldRanges, i,parentFoldRanges,PSynEditFoldRange());
       }
 }
 
@@ -1291,11 +1293,9 @@ int SynEdit::lineHasChar(int Line, int startChar, QChar character, const QString
     return -1;
 }
 
-void SynEdit::findSubFoldRange(PSynEditFoldRanges TopFoldRanges, int FoldIndex, PSynEditFoldRange Parent)
+void SynEdit::findSubFoldRange(PSynEditFoldRanges TopFoldRanges, int FoldIndex,PSynEditFoldRanges& parentFoldRanges, PSynEditFoldRange Parent)
 {
     PSynEditFoldRange  CollapsedFold;
-    PSynEditFoldRanges ParentFoldRanges;
-    ParentFoldRanges = TopFoldRanges;
     int Line = 0;
     QString CurLine;
 
@@ -1330,13 +1330,13 @@ void SynEdit::findSubFoldRange(PSynEditFoldRanges TopFoldRanges, int FoldIndex, 
                 if (lineHasChar(Line,pos,mCodeFolding.foldRegions.get(FoldIndex)->closeSymbol,
                                 mCodeFolding.foldRegions.get(FoldIndex)->highlight)<0) {
                     // Add it to the top list of folds
-                    Parent = ParentFoldRanges->addByParts(
+                    Parent = parentFoldRanges->addByParts(
                       Parent,
                       TopFoldRanges,
                       Line + 1,
                       mCodeFolding.foldRegions.get(FoldIndex),
                       Line + 1);
-                    ParentFoldRanges = Parent->subFoldRanges;
+                    parentFoldRanges = Parent->subFoldRanges;
 
                     // Skip until a newline
                     break;
@@ -1350,6 +1350,11 @@ void SynEdit::findSubFoldRange(PSynEditFoldRanges TopFoldRanges, int FoldIndex, 
                     if (Parent) {
                       Parent->toLine = Line + 1;
                       Parent = Parent->parent;
+                      if (!Parent) {
+                          parentFoldRanges = TopFoldRanges;
+                      } else {
+                          parentFoldRanges = Parent->subFoldRanges;
+                      }
                     }
 
                     // Skip until a newline
@@ -1562,6 +1567,19 @@ void SynEdit::doScrolled(int)
     invalidate();
 }
 
+bool SynEdit::useCodeFolding() const
+{
+    return mUseCodeFolding;
+}
+
+void SynEdit::setUseCodeFolding(bool value)
+{
+    if (mUseCodeFolding!=value) {
+        mUseCodeFolding = value;
+        rescan();
+    }
+}
+
 PSynHighlighter SynEdit::highlighter() const
 {
     return mHighlighter;
@@ -1684,7 +1702,7 @@ void SynEdit::paintEvent(QPaintEvent *event)
         // Then the gutter area if it was (partly) invalidated.
         if (rcClip.left() < mGutterWidth) {
             rcDraw = rcClip;
-            rcDraw.setRight(mGutterWidth+1);
+            rcDraw.setRight(mGutterWidth);
             textPainter.paintGutter(rcDraw);
         }
 

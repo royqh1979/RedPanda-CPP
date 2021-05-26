@@ -11,7 +11,6 @@ IssuesTable::IssuesTable(QWidget *parent):
     this->setColumnWidth(0,200);
     this->setColumnWidth(1,45);
     this->setColumnWidth(2,45);
-
 }
 
 IssuesModel *IssuesTable::issuesModel()
@@ -138,6 +137,20 @@ QVariant IssuesModel::data(const QModelIndex &index, int role) const
         default:
             return QVariant();
         }
+    case Qt::FontRole: {
+        QFont newFont=((IssuesTable *)parent())->font();
+        switch(issue->type) {
+        case CompileIssueType::Error:
+        case CompileIssueType::Warning:
+        {
+            newFont.setBold(true);
+            break;
+        }
+        default:
+            newFont.setBold(issue->line == 0);
+        }
+        return newFont;
+    }
     default:
         return QVariant();
     }

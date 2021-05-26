@@ -53,15 +53,23 @@ Editor::Editor(QWidget *parent, const QString& filename,
         mParentPageControl->addTab(this,QString());
         updateCaption();
     }
+    PSynHighlighter highlighter;
     if (!isNew) {
         loadFile();
-        setHighlighter(highlighterManager.createHighlighter(mFilename));
+        highlighter = highlighterManager.createHighlighter(mFilename);
     } else {
         if (mEncodingOption == ENCODING_AUTO_DETECT)
             mFileEncoding = ENCODING_ASCII;
         else
             mFileEncoding = mEncodingOption;
-        setHighlighter(highlighterManager.createCppHighlighter());
+        highlighter=highlighterManager.createCppHighlighter();
+    }
+
+    if (highlighter) {
+        setHighlighter(highlighter);
+        setUseCodeFolding(true);
+    } else {
+        setUseCodeFolding(false);
     }
 
     //SynEditCppHighlighter highlighter;

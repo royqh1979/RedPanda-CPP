@@ -56,11 +56,12 @@ QString Compiler::getFileNameFromOutputLine(QString &line) {
         }
         temp = line.mid(0,pos);
         line.remove(0,pos+1);
-        if (temp.compare("<stdin>", Qt::CaseInsensitive)!=0 && !QFile(temp).exists()) {
-            continue;
-        }
+        line=line.trimmed();
+//        if (temp.compare("<stdin>", Qt::CaseInsensitive)!=0 && !QFile(temp).exists()) {
+//            continue;
+//        }
 
-        if (QFile(temp).fileName() == QLatin1String("ld.exe")) { // skip ld.exe
+        if (QFileInfo(temp).fileName() == QLatin1String("ld.exe")) { // skip ld.exe
             continue;
         } else {
             break;
@@ -79,7 +80,8 @@ int Compiler::getLineNumberFromOutputLine(QString &line)
     }
     if (pos>=0) {
         result = line.mid(0,pos).toInt();
-        line.remove(0,pos+1);
+        if (result > 0)
+            line.remove(0,pos+1);
     }
     return result;
 }
@@ -138,7 +140,8 @@ void Compiler::processOutput(QString &line)
         line.remove(0,inFilePrefix.length());
         issue->filename = getFileNameFromOutputLine(line);
         issue->line = getLineNumberFromOutputLine(line);
-        issue->column = getColunmnFromOutputLine(line);
+        if (issue->line > 0)
+            issue->column = getColunmnFromOutputLine(line);
         issue->type = getIssueTypeFromOutputLine(line);
         issue->description = inFilePrefix + issue->filename;
         emit compileIssue(issue);
@@ -147,7 +150,8 @@ void Compiler::processOutput(QString &line)
         line.remove(0,fromPrefix.length());
         issue->filename = getFileNameFromOutputLine(line);
         issue->line = getLineNumberFromOutputLine(line);
-        issue->column = getColunmnFromOutputLine(line);
+        if (issue->line > 0)
+            issue->column = getColunmnFromOutputLine(line);
         issue->type = getIssueTypeFromOutputLine(line);
         issue->description = "                 from " + issue->filename;
         emit compileIssue(issue);
@@ -162,7 +166,8 @@ void Compiler::processOutput(QString &line)
     // assume regular main.cpp:line:col: message
     issue->filename = getFileNameFromOutputLine(line);
     issue->line = getLineNumberFromOutputLine(line);
-    issue->column = getColunmnFromOutputLine(line);
+    if (issue->line > 0)
+        issue->column = getColunmnFromOutputLine(line);
     issue->type = getIssueTypeFromOutputLine(line);
     issue->description = line.trimmed();
     emit compileIssue(issue);
@@ -302,10 +307,10 @@ void Compiler::runCommand(const QString &cmd, const QString  &arguments, const Q
     process.setWorkingDirectory(workingDir);
 
     process.connect(&process, &QProcess::readyReadStandardError,[&process,this](){
-        this->error(process.readAllStandardError());
+        this->error(QString::fromLocal8Bit( process.readAllStandardError()));
     });
     process.connect(&process, &QProcess::readyReadStandardOutput,[&process,this](){
-        this->log(process.readAllStandardOutput());
+        this->log(QString::fromLocal8Bit( process.readAllStandardOutput()));
     });
     process.start();
     if (!inputText.isEmpty())

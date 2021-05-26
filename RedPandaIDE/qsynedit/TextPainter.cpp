@@ -130,7 +130,7 @@ void SynEditTextPainter::paintGutter(const QRect& clip)
             QRectF textRect;
             textRect = painter->boundingRect(textRect, Qt::AlignLeft,s);
             painter->drawText(
-                 (edit->mGutterWidth - edit->mGutter.rightOffset() - 2) - textRect.width(),
+                        (edit->mGutterWidth - edit->mGutter.rightOffset() - 2) - textRect.width(),
                         rcLine.bottom() + ((edit->mTextHeight - int(textRect.height())) / 2 - painter->fontMetrics().descent()),
                         s
                         );
@@ -138,71 +138,71 @@ void SynEditTextPainter::paintGutter(const QRect& clip)
     }
 
     // Draw the folding lines and squares
-//    if (edit->mUseCodeFolding) {
-//      for (cRow = aFirstRow; cRow<=aLastRow; cRow++) {
-//        vLine = edit->rowToLine(cRow);
-//        if ((vLine > edit->mLines->count()) && (edit->mLines->count() != 0))
-//            break;
+    if (edit->mUseCodeFolding) {
+      for (cRow = aFirstRow; cRow<=aLastRow; cRow++) {
+        vLine = edit->rowToLine(cRow);
+        if ((vLine > edit->mLines->count()) && (edit->mLines->count() != 0))
+            break;
 
-//        // Form a rectangle for the square the user can click on
-//        //rcFold.Left := Gutter.RealGutterWidth(CharWidth) - Gutter.RightOffset;
-//        rcFold.setLeft(edit->mGutterWidth - edit->mGutter.rightOffset());
-//        rcFold.setRight(rcFold.left() + edit->mGutter.rightOffset() - 4);
-//        rcFold.setTop((cRow - edit->mTopLine) * edit->mTextHeight);
-//        rcFold.setBottom(rcFold.top() + edit->mTextHeight);
+        // Form a rectangle for the square the user can click on
+        //rcFold.Left := Gutter.RealGutterWidth(CharWidth) - Gutter.RightOffset;
+        rcFold.setLeft(edit->mGutterWidth - edit->mGutter.rightOffset());
+        rcFold.setRight(rcFold.left() + edit->mGutter.rightOffset() - 4);
+        rcFold.setTop((cRow - edit->mTopLine) * edit->mTextHeight);
+        rcFold.setBottom(rcFold.top() + edit->mTextHeight);
 
-//        painter->setPen(edit->mCodeFolding.folderBarLinesColor);
+        painter->setPen(edit->mCodeFolding.folderBarLinesColor);
 
 
-//        // Need to paint a line?
-//        if (edit->foldAroundLine(vLine)) {
-//          x = rcFold.left() + (rcFold.width() / 2);
-//          painter->drawLine(x,rcFold.top(), x, rcFold.bottom());
-//        }
+        // Need to paint a line?
+        if (edit->foldAroundLine(vLine)) {
+          x = rcFold.left() + (rcFold.width() / 2);
+          painter->drawLine(x,rcFold.top(), x, rcFold.bottom());
+        }
 
-//        // Need to paint a line end?
-//        if (edit->foldEndAtLine(vLine)) {
-//            x = rcFold.left() + (rcFold.width() / 2);
-//            painter->drawLine(x,rcFold.top(), x, rcFold.top() + rcFold.height() / 2);
-//            painter->drawLine(x,
-//                              rcFold.top() + rcFold.height() / 2,
-//                              rcFold.right() - 2 ,
-//                              rcFold.top() + rcFold.height() / 2);
-//        }
-//        // Any fold ranges beginning on this line?
-//        PSynEditFoldRange FoldRange = edit->foldStartAtLine(vLine);
-//        if (FoldRange) {
-//            // Draw the bottom part of a line
-//            if (!FoldRange->collapsed) {
-//                x = rcFold.left() + (rcFold.width() / 2);
-//                painter->drawLine(x, rcFold.top() + rcFold.height() / 2,
-//                                  x, rcFold.bottom());
-//            }
+        // Need to paint a line end?
+        if (edit->foldEndAtLine(vLine)) {
+            x = rcFold.left() + (rcFold.width() / 2);
+            painter->drawLine(x,rcFold.top(), x, rcFold.top() + rcFold.height() / 2);
+            painter->drawLine(x,
+                              rcFold.top() + rcFold.height() / 2,
+                              rcFold.right() - 2 ,
+                              rcFold.top() + rcFold.height() / 2);
+        }
+        // Any fold ranges beginning on this line?
+        PSynEditFoldRange FoldRange = edit->foldStartAtLine(vLine);
+        if (FoldRange) {
+            // Draw the bottom part of a line
+            if (!FoldRange->collapsed) {
+                x = rcFold.left() + (rcFold.width() / 2);
+                painter->drawLine(x, rcFold.top() + rcFold.height() / 2,
+                                  x, rcFold.bottom());
+            }
 
-//            // make a square rect
-//            inflateRect(rcFold,-2, 0);
-//            rcFold.setTop(
-//                        rcFold.top() + ((edit->mTextHeight - rcFold.width()) / 2));
-//            rcFold.setBottom(rcFold.top() + rcFold.width());
+            // make a square rect
+            inflateRect(rcFold,-2, 0);
+            rcFold.setTop(
+                        rcFold.top() + ((edit->mTextHeight - rcFold.width()) / 2));
+            rcFold.setBottom(rcFold.top() + rcFold.width());
 
-//            // Paint the square the user can click on
-//            painter->setBrush(edit->mGutter.color());
-//            painter->setPen(edit->mCodeFolding.folderBarLinesColor);
-//            painter->drawRect(rcFold);
+            // Paint the square the user can click on
+            painter->setBrush(edit->mGutter.color());
+            painter->setPen(edit->mCodeFolding.folderBarLinesColor);
+            painter->drawRect(rcFold);
 
-//            // Paint minus sign
-//            painter->drawLine(
-//                        rcFold.left() + 2, rcFold.top() + (rcFold.height() / 2 ),
-//                        rcFold.right() - 2, rcFold.top() + (rcFold.height() / 2 ));
-//            // Paint vertical line of plus sign
-//            if (FoldRange->collapsed) {
-//                x = rcFold.left() + (rcFold.width() / 2);
-//                painter->drawLine(x, rcFold.top() + 2,
-//                                  x, rcFold.bottom() + 2);
-//            }
-//        }
-//      }
-//    }
+            // Paint minus sign
+            painter->drawLine(
+                        rcFold.left() + 2, rcFold.top() + (rcFold.height() / 2 ),
+                        rcFold.right() - 2, rcFold.top() + (rcFold.height() / 2 ));
+            // Paint vertical line of plus sign
+            if (FoldRange->collapsed) {
+                x = rcFold.left() + (rcFold.width() / 2);
+                painter->drawLine(x, rcFold.top() + 2,
+                                  x, rcFold.bottom() + 2);
+            }
+        }
+      }
+    }
 
 //    // the gutter separator if visible
 //    if (edit->mGutter.borderStyle <> gbsNone) and (AClip.Right >= fGutterWidth - 2) then
@@ -351,6 +351,7 @@ void SynEditTextPainter::PaintToken(const QString &Token, int TokenCols, int Col
     int nX;
 
     if (Last >= First && rcToken.right() > rcToken.left()) {
+//        qDebug()<<"Paint Token"<<Token<<ColumnsBefore<<TokenCols<<First<<Last;
         nX = ColumnToXValue(First);
         First -= ColumnsBefore;
         Last -= ColumnsBefore;
@@ -574,6 +575,8 @@ void SynEditTextPainter::AddHighlightToken(const QString &Token, int ColumnsBefo
     QColor Foreground, Background;
     SynFontStyles Style;
     bool bSpacesTest,bIsSpaces;
+
+//    qDebug()<<"Add highlight token"<<Token<<ColumnsBefore<<TokenColumns<<cLine;
 
     if (p_Attri) {
         Foreground = p_Attri->foreground();
@@ -861,7 +864,7 @@ void SynEditTextPainter::PaintLines()
                         throw BaseError(SynEdit::tr("The highlighter seems to be in an infinite loop"));
                 }
                 nTokenColumnsBefore = edit->charToColumn(vLine,edit->mHighlighter->getTokenPos()+1)-1;
-                nTokenColumnLen = edit->stringColumns(sToken, nTokenColumnsBefore-1);
+                nTokenColumnLen = edit->stringColumns(sToken, nTokenColumnsBefore);
                 if (nTokenColumnsBefore + nTokenColumnLen >= vFirstChar) {
                     if (nTokenColumnsBefore + nTokenColumnLen >= vLastChar) {
                         if (nTokenColumnsBefore >= vLastChar)

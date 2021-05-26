@@ -179,6 +179,12 @@
          </property>
          <item>
           <widget class="IssuesTable" name="tableIssues">
+           <property name="font">
+            <font>
+             <weight>50</weight>
+             <bold>false</bold>
+            </font>
+           </property>
            <property name="editTriggers">
             <set>QAbstractItemView::NoEditTriggers</set>
            </property>
