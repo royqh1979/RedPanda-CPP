@@ -48,11 +48,6 @@ PSynHighlighterAttribute SynHighlighter::symbolAttribute() const
     return mSymbolAttribute;
 }
 
-SynRangeState SynHighlighter::getRangeState() const
-{
-    return {0,0};
-}
-
 int SynHighlighter::getBraceLevel() const
 {
     return 0;
@@ -189,7 +184,8 @@ void SynHighlighterAttribute::setName(const QString &name)
 SynHighlighterAttribute::SynHighlighterAttribute(const QString &name):
     mForeground(QColor()),
     mBackground(QColor()),
-    mName(name)
+    mName(name),
+    mStyles(SynFontStyle::fsNone)
 {
 
 }

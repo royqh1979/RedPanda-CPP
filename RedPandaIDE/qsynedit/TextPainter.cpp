@@ -40,16 +40,17 @@ void SynEditTextPainter::paintTextLines(const QRect& clip)
       ComputeSelectionInfo();
       PaintLines();
     }
+    //painter->setClipping(false);
 
     // If anything of the two pixel space before the text area is visible, then
     // fill it with the component background color.
-    if (AClip.left() < edit->clientLeft()+ edit->mGutterWidth + 2) {
+    if (AClip.left() <edit->mGutterWidth + 2) {
         rcToken = AClip;
         rcToken.setLeft( std::max(AClip.left(), edit->mGutterWidth));
         rcToken.setRight(edit->mGutterWidth + 2);
         // Paint whole left edge of the text with same color.
         // (value of WhiteAttribute can vary in e.g. MultiSyn)
-        painter->setPen(Qt::NoPen);
+        painter->setPen(colEditorBG());
         painter->setBrush(colEditorBG());
         painter->drawRect(rcToken);
         // Adjust the invalid area to not include this area.
@@ -59,7 +60,7 @@ void SynEditTextPainter::paintTextLines(const QRect& clip)
     rcToken = AClip;
     rcToken.setTop((aLastRow - edit->mTopLine + 1) * edit->mTextHeight);
     if (rcToken.top() < rcToken.bottom()) {
-        painter->setPen(Qt::NoPen);
+        painter->setPen(colEditorBG());
         painter->setBrush(colEditorBG());
         painter->drawRect(rcToken);
         // Draw the right edge if necessary.
@@ -93,7 +94,7 @@ void SynEditTextPainter::paintGutter(const QRect& clip)
     // If we have to draw the line numbers then we don't want to erase
     // the background first. Do it line by line with TextRect instead
     // and fill only the area after the last visible line.
-    painter->setClipRect(AClip);
+    //painter->setClipRect(AClip);
     painter->setBrush(edit->mGutter.color());
     painter->setPen(edit->mGutter.color());
     rcLine=AClip;
@@ -101,20 +102,17 @@ void SynEditTextPainter::paintGutter(const QRect& clip)
     painter->drawRect(AClip);
 
     if (edit->mGutter.showLineNumbers()) {
+        // prepare the rect initially
+        rcLine = AClip;
+        rcLine.setRight( std::max(rcLine.right(), edit->mGutterWidth - 2));
+        rcLine.setBottom(rcLine.top());
+
         if (edit->mGutter.useFontStyle()) {
             painter->setFont(edit->mGutter.font());
             painter->setPen(edit->mGutter.textColor());
         } else {
             painter->setPen(edit->palette().color(QPalette::Text));
         }
-        painter->setBrush(edit->mGutter.color());
-
-        // prepare the rect initially
-        rcLine = AClip;
-        rcLine.setRight( std::max(rcLine.right(), edit->mGutterWidth - 2));
-        rcLine.setBottom(rcLine.top());
-        painter->drawRect(AClip);
-
         // draw each line if it is not hidden by a fold
         for (int cRow = aFirstRow; cRow <= aLastRow; cRow++) {
             vLine = edit->rowToLine(cRow);
@@ -399,7 +397,7 @@ void SynEditTextPainter::PaintEditAreas(const SynEditingAreaList &areaList)
     QRect rc;
     int x1,x2;
     int offset;
-    painter->setClipRect(rcLine);
+    //painter->setClipRect(rcLine);
     rc=rcLine;
     rc.setBottom(rc.bottom()-1);
     setDrawingColors(false);
@@ -477,10 +475,10 @@ void SynEditTextPainter::PaintHighlightToken(bool bFillToEOL)
         if (bSpecialLine && edit->mOptions.testFlag(eoSpecialLineDefaultFg))
             colFG = TokenAccu.FG;
         QFont font = edit->font();
-        font.setBold(TokenAccu.Style | SynFontStyle::fsBold);
-        font.setItalic(TokenAccu.Style | SynFontStyle::fsItalic);
-        font.setStrikeOut(TokenAccu.Style | SynFontStyle::fsStrikeOut);
-        font.setUnderline(TokenAccu.Style | SynFontStyle::fsUnderline);
+        font.setBold(TokenAccu.Style & SynFontStyle::fsBold);
+        font.setItalic(TokenAccu.Style & SynFontStyle::fsItalic);
+        font.setStrikeOut(TokenAccu.Style & SynFontStyle::fsStrikeOut);
+        font.setUnderline(TokenAccu.Style & SynFontStyle::fsUnderline);
         painter->setFont(font);
         // Paint the chars
         if (bComplexToken) {
@@ -543,7 +541,7 @@ void SynEditTextPainter::PaintHighlightToken(bool bFillToEOL)
             rcToken.setRight(rcLine.right());
 //            if (TokenAccu.Len != 0 && TokenAccu.Style != SynFontStyle::fsNone)
 //                AdjustEndRect();
-            painter->setPen(Qt::NoPen);
+            painter->setPen(painter->brush().color());
             painter->drawRect(rcToken);
         }
     }
@@ -587,10 +585,10 @@ void SynEditTextPainter::AddHighlightToken(const QString &Token, int ColumnsBefo
         Style = getFontStyles(edit->font());
     }
 
-    if (Background.isValid() || (edit->mActiveLineColor.isValid() && bCurrentLine)) {
+    if (!Background.isValid() || (edit->mActiveLineColor.isValid() && bCurrentLine)) {
         Background = colEditorBG();
     }
-    if (Background.isValid()) {
+    if (!Foreground.isValid()) {
         Foreground = edit->palette().color(QPalette::Text);
     }
 
@@ -624,18 +622,18 @@ void SynEditTextPainter::AddHighlightToken(const QString &Token, int ColumnsBefo
         TokenAccu.s.append(Token);
         TokenAccu.Columns+=TokenColumns;
     } else {
-      TokenAccu.Columns = TokenColumns;
-      TokenAccu.s = Token;
-      TokenAccu.ColumnsBefore = ColumnsBefore;
-      TokenAccu.FG = Foreground;
-      TokenAccu.BG = Background;
-      TokenAccu.Style = Style;
+        TokenAccu.Columns = TokenColumns;
+        TokenAccu.s = Token;
+        TokenAccu.ColumnsBefore = ColumnsBefore;
+        TokenAccu.FG = Foreground;
+        TokenAccu.BG = Background;
+        TokenAccu.Style = Style;
     }
 }
 
 void SynEditTextPainter::PaintFoldAttributes()
 {
-    int i, TabSteps, LineIndent, LastNonBlank, X, Y, cRow, vLine;
+    int TabSteps, LineIndent, LastNonBlank, X, Y, cRow, vLine;
     QBrush DottedPenDesc;
     // Paint indent guides. Use folds to determine indent value of these
     // Use a separate loop so we can use a custom pen
@@ -702,12 +700,16 @@ void SynEditTextPainter::GetBraceColorAttr(int level, PSynHighlighterAttribute &
     switch(level % 4) {
     case 0:
         attr = edit->mHighlighter->keywordAttribute();
+        break;
     case 1:
         attr = edit->mHighlighter->symbolAttribute();
+        break;
     case 2:
         attr = edit->mHighlighter->stringAttribute();
+        break;
     case 3:
         attr = edit->mHighlighter->identifierAttribute();
+        break;
     }
 }
 
@@ -717,7 +719,7 @@ void SynEditTextPainter::PaintLines()
     int vLine;
     QString sLine; // the current line
     QString sToken; // highlighter token info
-    int nTokenStartColumn, nTokenColumnLen;
+    int nTokenColumnsBefore, nTokenColumnLen;
     PSynHighlighterAttribute attr;
     int vFirstChar;
     int vLastChar;
@@ -837,16 +839,16 @@ void SynEditTextPainter::PaintLines()
                             edit->mLines->bracketLevels(vLine-2),
                             edit->mLines->parenthesisLevels(vLine-2)
                             );
-                edit->mHighlighter->setLine(sLine, vLine - 1);
             }
+            edit->mHighlighter->setLine(sLine, vLine - 1);
             // Try to concatenate as many tokens as possible to minimize the count
             // of ExtTextOut calls necessary. This depends on the selection state
             // or the line having special colors. For spaces the foreground color
             // is ignored as well.
             TokenAccu.Columns = 0;
-            nTokenStartColumn = 0;
+            nTokenColumnsBefore = 0;
             // Test first whether anything of this token is visible.
-            while (edit->mHighlighter->eol()) {
+            while (!edit->mHighlighter->eol()) {
                 sToken = edit->mHighlighter->getToken();
                 // Work-around buggy highlighters which return empty tokens.
                 if (sToken.isEmpty())  {
@@ -858,13 +860,13 @@ void SynEditTextPainter::PaintLines()
                     if (sToken.isEmpty())
                         throw BaseError(SynEdit::tr("The highlighter seems to be in an infinite loop"));
                 }
-                nTokenStartColumn = edit->charToColumn(vLine,edit->mHighlighter->getTokenPos());
-                nTokenColumnLen = edit->stringColumns(sToken, nTokenStartColumn-1);
-                if (nTokenStartColumn + nTokenColumnLen >= vFirstChar) {
-                    if (nTokenStartColumn + nTokenColumnLen >= vLastChar) {
-                        if (nTokenStartColumn >= vLastChar)
+                nTokenColumnsBefore = edit->charToColumn(vLine,edit->mHighlighter->getTokenPos()+1)-1;
+                nTokenColumnLen = edit->stringColumns(sToken, nTokenColumnsBefore-1);
+                if (nTokenColumnsBefore + nTokenColumnLen >= vFirstChar) {
+                    if (nTokenColumnsBefore + nTokenColumnLen >= vLastChar) {
+                        if (nTokenColumnsBefore >= vLastChar)
                             break; //*** BREAK ***
-                        nTokenColumnLen = vLastChar - nTokenStartColumn - 1;
+                        nTokenColumnLen = vLastChar - nTokenColumnsBefore - 1;
                     }
                     // It's at least partially visible. Get the token attributes now.
                     attr = edit->mHighlighter->getTokenAttribute();
@@ -881,24 +883,24 @@ void SynEditTextPainter::PaintLines()
                     } else if (sToken == "}") {
                       GetBraceColorAttr(edit->mHighlighter->getBraceLevel()+1,attr);
                     }
-                    AddHighlightToken(sToken, nTokenStartColumn - (vFirstChar - FirstCol),
+                    AddHighlightToken(sToken, nTokenColumnsBefore - (vFirstChar - FirstCol),
                       nTokenColumnLen, vLine,attr);
                 }
                 // Let the highlighter scan the next token.
                 edit->mHighlighter->next();
             }
             // Don't assume HL.GetTokenPos is valid after HL.GetEOL == True.
-            nTokenStartColumn += edit->stringColumns(sToken,nTokenStartColumn-1);
-            if (edit->mHighlighter->eol() && (nTokenStartColumn < vLastChar)) {
+            nTokenColumnsBefore += edit->stringColumns(sToken,nTokenColumnsBefore-1);
+            if (edit->mHighlighter->eol() && (nTokenColumnsBefore < vLastChar)) {
                 int lineColumns = edit->mLines->lineColumns(vLine-1);
                 // Draw text that couldn't be parsed by the highlighter, if any.
-                if (nTokenStartColumn < lineColumns) {
-                    if (nTokenStartColumn + 1 < vFirstChar)
-                        nTokenStartColumn = vFirstChar - 1;
-                    nTokenColumnLen = std::min(lineColumns, vLastChar) - (nTokenStartColumn + 1);
+                if (nTokenColumnsBefore < lineColumns) {
+                    if (nTokenColumnsBefore + 1 < vFirstChar)
+                        nTokenColumnsBefore = vFirstChar - 1;
+                    nTokenColumnLen = std::min(lineColumns, vLastChar) - (nTokenColumnsBefore + 1);
                     if (nTokenColumnLen > 0) {
-                        sToken = edit->substringByColumns(sLine,nTokenStartColumn+1,nTokenColumnLen);
-                        AddHighlightToken(sToken, nTokenStartColumn - (vFirstChar - FirstCol),
+                        sToken = edit->substringByColumns(sLine,nTokenColumnsBefore+1,nTokenColumnLen);
+                        AddHighlightToken(sToken, nTokenColumnsBefore - (vFirstChar - FirstCol),
                             nTokenColumnLen, vLine, PSynHighlighterAttribute());
                     }
                 }

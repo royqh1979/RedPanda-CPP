@@ -319,6 +319,7 @@ void SynEditCppHighlighter::ansiCProc()
                 }
             } else
                 mRun+=1;
+            break;
         case 9:
         case 32:
             mRange.spaceState = mRange.state;
@@ -1582,4 +1583,9 @@ QString SynEditCppHighlighter::languageName()
 SynHighlighterLanguage SynEditCppHighlighter::language()
 {
     return SynHighlighterLanguage::Cpp;
+}
+
+SynRangeState SynEditCppHighlighter::getRangeState() const
+{
+    return mRange;
 }

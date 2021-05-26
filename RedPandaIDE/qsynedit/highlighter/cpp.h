@@ -187,6 +187,10 @@ public:
 
     QString languageName() override;
     SynHighlighterLanguage language() override;
+
+    // SynHighlighter interface
+public:
+    SynRangeState getRangeState() const override;
 };
 
 #endif // SYNEDITCPPHIGHLIGHTER_H

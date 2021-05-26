@@ -89,7 +89,7 @@ public:
     virtual bool isLastLineCommentNotFinished(int state) const = 0;
     virtual bool isLastLineStringNotFinished(int state) const = 0;
     virtual bool eol() const = 0;
-    virtual SynRangeState getRangeState() const;
+    virtual SynRangeState getRangeState() const = 0;
     virtual int getBraceLevel() const;
     virtual int getBracketLevel() const;
     virtual int getParenthesisLevel() const;

@@ -423,7 +423,7 @@ int SynEdit::charToColumn(int aLine, int aChar)
         QString s = mLines->getString(aLine - 1);
         int l = s.length();
         int x = 0;
-        int len = std::min(aChar - 1,s.length());
+        int len = std::min(aChar-1,s.length());
         for (int i=0;i<len;i++) {
             if (i<=l && s[i] == '\t')
                 x+=mTabWidth - (x % mTabWidth);
@@ -1602,7 +1602,7 @@ bool SynEdit::empty()
 
 bool SynEdit::onGetSpecialLineColors(int, QColor &, QColor &)
 {
-
+    return false;
 }
 
 void SynEdit::onGetEditingAreas(int, SynEditingAreaList &)
