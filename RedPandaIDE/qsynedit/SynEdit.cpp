@@ -679,7 +679,31 @@ void SynEdit::hideCaret()
     if (m_blinkTimerId!=0) {
         killTimer(m_blinkTimerId);
         m_blinkTimerId = 0;
+        m_blinkStatus = 0;
+        updateCaret();
     }
+}
+
+bool SynEdit::IsPointInSelection(const BufferCoord &Value)
+{
+    BufferCoord ptBegin = mBlockBegin;
+    BufferCoord ptEnd = mBlockEnd;
+    if ((Value.Line >= ptBegin.Line) && (Value.Line <= ptEnd.Line) &&
+            ((ptBegin.Line != ptEnd.Line) || (ptBegin.Char != ptEnd.Char))) {
+        if (mActiveSelectionMode == SynSelectionMode::smLine)
+            return true;
+        else if (mActiveSelectionMode == SynSelectionMode::smColumn) {
+            if (ptBegin.Char > ptEnd.Char)
+                return (Value.Char >= ptEnd.Char) && (Value.Char < ptBegin.Char);
+            else if (ptBegin.Char < ptEnd.Char)
+                return (Value.Char >= ptBegin.Char) && (Value.Char < ptEnd.Char);
+            else
+                return false;
+        } else
+            return ((Value.Line > ptBegin.Line) || (Value.Char >= ptBegin.Char)) &&
+      ((Value.Line < ptEnd.Line) || (Value.Char < ptEnd.Char));
+    } else
+        return false;
 }
 
 void SynEdit::clearAreaList(SynEditingAreaList areaList)
@@ -1021,8 +1045,15 @@ void SynEdit::updateScrollbars()
 void SynEdit::updateCaret()
 {
     mStateFlags.setFlag(SynStateFlag::sfCaretChanged,false);
-    //do nothing. Because our caret timer will update the caret periodically
-//    invalidateRect(QRect(0,0,1,1)); //we use a rect of 1-width & 1-height to signal the paintEvent that we only want to redraw the caret
+    DisplayCoord coord = displayXY();
+    QPoint caretPos = RowColumnToPixels(coord);
+    int caretWidth=mCharWidth;
+    if (mCaretY <= mLines->count() && mCaretX <= mLines->getString(mCaretY-1).length()) {
+        caretWidth = charColumns(mLines->getString(mCaretY-1)[mCaretX-1])*mCharWidth;
+    }
+    QRect rcCaret(caretPos.x(),caretPos.y(),caretWidth,
+                  mTextHeight);
+    invalidateRect(rcCaret);
 }
 
 void SynEdit::recalcCharExtent()
@@ -1591,6 +1622,19 @@ void SynEdit::doScrolled(int)
     invalidate();
 }
 
+SynSelectionMode SynEdit::selectionMode() const
+{
+    return mSelectionMode;
+}
+
+void SynEdit::setSelectionMode(SynSelectionMode value)
+{
+    if (mSelectionMode!=value) {
+        mSelectionMode = value;
+        setActiveSelectionMode(value);
+    }
+}
+
 bool SynEdit::useCodeFolding() const
 {
     return mUseCodeFolding;
@@ -1893,6 +1937,11 @@ void SynEdit::ExecuteCommand(SynEditorCommand Command, QChar AChar, void *pData)
         if (!mLines->empty())
             MoveCaretVert(mLines->count()-mCaretY, Command == SynEditorCommand::ecSelEditorBottom);
         break;
+    // goto special line / column position
+    case SynEditorCommand::ecGotoXY:
+    case SynEditorCommand::ecSelGotoXY:
+        if (pData)
+            MoveCaretAndSelection(caretXY(), *((BufferCoord *)(pData)), Command == SynEditorCommand::ecSelGotoXY);
     }
 
 //    procedure SetSelectedTextEmpty;
@@ -2833,7 +2882,6 @@ void SynEdit::paintEvent(QPaintEvent *event)
 
     // Now paint everything while the caret is hidden.
     QPainter painter(viewport());
-    //hideCaret();
     //Get the invalidated rect.
     QRect rcClip = event->rect();
     DisplayCoord coord = displayXY();
@@ -2913,15 +2961,7 @@ void SynEdit::timerEvent(QTimerEvent *event)
 {
     if (event->timerId() == m_blinkTimerId) {
         m_blinkStatus = 1- m_blinkStatus;
-        DisplayCoord coord = displayXY();
-        QPoint caretPos = RowColumnToPixels(coord);
-        int caretWidth=mCharWidth;
-        if (mCaretY <= mLines->count() && mCaretX <= mLines->getString(mCaretY-1).length()) {
-            caretWidth = charColumns(mLines->getString(mCaretY-1)[mCaretX-1])*mCharWidth;
-        }
-        QRect rcCaret(caretPos.x(),caretPos.y(),caretWidth,
-                      mTextHeight);
-        invalidateRect(rcCaret);
+        updateCaret();
     }
 }
 
@@ -2960,6 +3000,82 @@ void SynEdit::keyPressEvent(QKeyEvent *event)
     }
     if (!event->isAccepted()) {
         QAbstractScrollArea::keyPressEvent(event);
+    }
+}
+
+void SynEdit::mousePressEvent(QMouseEvent *event)
+{
+    bool bWasSel = false;
+    bool bStartDrag = false;
+    bool mMouseMoved = false;
+    BufferCoord TmpBegin = mBlockBegin;
+    BufferCoord TmpEnd = mBlockEnd;
+    Qt::MouseButton button = event->button();
+    int X=event->pos().x();
+    int Y=event->pos().y();
+
+    if (button == Qt::LeftButton) {
+        if (selAvail()) {
+            //remember selection state, as it will be cleared later
+            bWasSel = true;
+            mMouseDownX = X;
+            mMouseDownY = Y;
+        }
+    }
+    QAbstractScrollArea::mousePressEvent(event);
+
+    //fKbdHandler.ExecuteMouseDown(Self, Button, Shift, X, Y);
+
+    if (button == Qt::RightButton) {
+        if (mOptions.testFlag(eoRightMouseMovesCursor) &&
+                ( (selAvail() && ! IsPointInSelection(displayToBufferPos(pixelsToRowColumn(X, Y))))
+                  || ! selAvail())) {
+            invalidateSelection();
+            mBlockEnd=mBlockBegin;
+            computeCaret(X,Y);
+        }else {
+            return;
+        }
+    } else if (button == Qt::LeftButton) {
+        if (selAvail()) {
+            //remember selection state, as it will be cleared later
+            bWasSel = true;
+            mMouseDownX = X;
+            mMouseDownY = Y;
+        }
+        computeCaret(X,Y);
+        //I couldn't track down why, but sometimes (and definitely not all the time)
+        //the block positioning is lost.  This makes sure that the block is
+        //maintained in case they started a drag operation on the block
+        mBlockBegin = TmpBegin;
+        mBlockEnd = TmpEnd;
+
+        setMouseTracking(true);
+        //if mousedown occurred in selected block begin drag operation
+        mStateFlags.setFlag(SynStateFlag::sfWaitForDragging,false);
+        if (bWasSel && mOptions.testFlag(eoDragDropEditing) && (X >= mGutterWidth + 2)
+                && (mSelectionMode == SynSelectionMode::smNormal) && IsPointInSelection(displayToBufferPos(pixelsToRowColumn(X, Y))) ) {
+          bStartDrag = true;
+        }
+        if (bStartDrag) {
+            mStateFlags.setFlag(SynStateFlag::sfWaitForDragging);
+        } else {
+            if (!mStateFlags.testFlag(SynStateFlag::sfDblClicked)) {
+                if (event->modifiers() == Qt::ShiftModifier)
+                    //BlockBegin and BlockEnd are restored to their original position in the
+                    //code from above and SetBlockEnd will take care of proper invalidation
+                    setBlockEnd(caretXY());
+                else if (mOptions.testFlag(eoAltSetsColumnMode) &&
+                         (mActiveSelectionMode != SynSelectionMode::smLine)) {
+                    if (event->modifiers() == Qt::AltModifier)
+                        setSelectionMode(SynSelectionMode::smColumn);
+                    else
+                        setSelectionMode(SynSelectionMode::smNormal);
+                }
+                //Selection mode must be set before calling SetBlockBegin
+                setBlockBegin(caretXY());
+             }
+        }
     }
 }
 

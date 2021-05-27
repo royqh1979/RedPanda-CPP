@@ -196,6 +196,7 @@ public:
     double dpiFactor();
     void showCaret();
     void hideCaret();
+    bool IsPointInSelection(const BufferCoord& Value);
 
 // setter && getters
     int topLine() const;
@@ -241,6 +242,9 @@ public:
 
     PSynEditStringList lines() const;
     bool empty();
+
+    SynSelectionMode selectionMode() const;
+    void setSelectionMode(SynSelectionMode value);
 
 signals:
     void Changed();
@@ -486,6 +490,7 @@ bool event(QEvent *event) override;
 void focusInEvent(QFocusEvent *event) override;
 void focusOutEvent(QFocusEvent *event) override;
 void keyPressEvent(QKeyEvent *event) override;
+void mousePressEvent(QMouseEvent *event) override;
 };
 
 #endif // SYNEDIT_H
