@@ -50,9 +50,7 @@ void SynEditTextPainter::paintTextLines(const QRect& clip)
         rcToken.setRight(edit->mGutterWidth + 2);
         // Paint whole left edge of the text with same color.
         // (value of WhiteAttribute can vary in e.g. MultiSyn)
-        painter->setPen(colEditorBG());
-        painter->setBrush(colEditorBG());
-        painter->drawRect(rcToken);
+        painter->fillRect(rcToken,colEditorBG());
         // Adjust the invalid area to not include this area.
         AClip.setLeft(rcToken.right());
     }
@@ -60,9 +58,7 @@ void SynEditTextPainter::paintTextLines(const QRect& clip)
     rcToken = AClip;
     rcToken.setTop((aLastRow - edit->mTopLine + 1) * edit->mTextHeight);
     if (rcToken.top() < rcToken.bottom()) {
-        painter->setPen(colEditorBG());
-        painter->setBrush(colEditorBG());
-        painter->drawRect(rcToken);
+        painter->fillRect(rcToken,colEditorBG());
         // Draw the right edge if necessary.
         if (bDoRightEdge) {
             QPen pen(edit->mRightEdgeColor,1);
@@ -95,12 +91,9 @@ void SynEditTextPainter::paintGutter(const QRect& clip)
     // the background first. Do it line by line with TextRect instead
     // and fill only the area after the last visible line.
     //painter->setClipRect(AClip);
-    painter->setBrush(edit->mGutter.color());
-    painter->setPen(edit->mGutter.color());
+    painter->fillRect(AClip,edit->mGutter.color());
+
     rcLine=AClip;
-
-    painter->drawRect(AClip);
-
     if (edit->mGutter.showLineNumbers()) {
         // prepare the rect initially
         rcLine = AClip;
@@ -355,11 +348,7 @@ void SynEditTextPainter::PaintToken(const QString &Token, int TokenCols, int Col
         nX = ColumnToXValue(First);
         First -= ColumnsBefore;
         Last -= ColumnsBefore;
-        QPen oldPen = painter->pen();
-        QPen newPen(painter->brush().color());
-        painter->setPen(newPen);
-        painter->drawRect(rcToken);
-        painter->setPen(oldPen);
+        painter->fillRect(rcToken,painter->brush());
         if (First > TokenCols) {
         } else {
             int tokenColLen=0;
@@ -520,30 +509,26 @@ void SynEditTextPainter::PaintHighlightToken(bool bFillToEOL)
                 rcToken.setRight(nX1);
 //                if (TokenAccu.Len != 0 && TokenAccu.Style != SynFontStyle::fsNone)
 //                    AdjustEndRect();
-                painter->setPen(Qt::NoPen);
-                painter->drawRect(rcToken);
+                painter->fillRect(rcToken,painter->brush());
                 rcToken.setLeft(nX1);
             }
             if (rcToken.left() < nX2) {
                 setDrawingColors(true);
                 rcToken.setRight(nX2);
-                painter->setPen(Qt::NoPen);
-                painter->drawRect(rcToken);
+                painter->fillRect(rcToken,painter->brush());
                 rcToken.setLeft(nX2);
             }
             if (rcToken.left() < rcLine.right()) {
                 setDrawingColors(false);
                 rcToken.setRight(rcLine.right());
-                painter->setPen(Qt::NoPen);
-                painter->drawRect(rcToken);
+                painter->fillRect(rcToken,painter->brush());
             }
         }  else {
             setDrawingColors(bLineSelected);
             rcToken.setRight(rcLine.right());
 //            if (TokenAccu.Len != 0 && TokenAccu.Style != SynFontStyle::fsNone)
 //                AdjustEndRect();
-            painter->setPen(painter->brush().color());
-            painter->drawRect(rcToken);
+            painter->fillRect(rcToken,painter->brush());
         }
     }
 }

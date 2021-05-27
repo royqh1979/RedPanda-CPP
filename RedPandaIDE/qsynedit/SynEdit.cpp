@@ -214,7 +214,7 @@ void SynEdit::setCaretXYEx(bool CallEnsureCursorPos, BufferCoord value)
         }
     } else {
         if (!mOptions.testFlag(SynEditorOption::eoScrollPastEol))
-            nMaxX = mLines->getString(value.Line-1).length();
+            nMaxX = mLines->getString(value.Line-1).length()+1;
     }
     if ((value.Char > nMaxX) && (! (mOptions.testFlag(SynEditorOption::eoScrollPastEol)) ) )
         value.Char = nMaxX;
@@ -231,12 +231,15 @@ void SynEdit::setCaretXYEx(bool CallEnsureCursorPos, BufferCoord value)
             mStatusChanges.setFlag(SynStatusChange::scCaretX);
         }
         if (mCaretY != value.Line) {
-            if (!mActiveLineColor.isValid()) {
-                invalidateLine(value.Line);
-                invalidateLine(mCaretY);
-            }
+            int oldCaretY = mCaretY;
             mCaretY = value.Line;
+            if (mActiveLineColor.isValid()) {
+                invalidateLine(mCaretY);
+                invalidateLine(oldCaretY);
+            }
             mStatusChanges.setFlag(SynStatusChange::scCaretY);
+        } else {
+            invalidateLine(mCaretY);
         }
         // Call UpdateLastCaretX before DecPaintLock because the event handler it
         // calls could raise an exception, and we don't want fLastCaretX to be
@@ -531,8 +534,8 @@ void SynEdit::invalidateLine(int Line)
     if (mUseCodeFolding)
         Line = foldLineToRow(Line);
     if (Line >= mTopLine && Line <= mTopLine + mLinesInWindow) {
-        rcInval = { clientLeft() + mGutterWidth,
-                    clientTop() + mTextHeight * (Line - mTopLine),
+        rcInval = { mGutterWidth,
+                    mTextHeight * (Line - mTopLine),
                     clientWidth(),
                     mTextHeight};
         if (mStateFlags.testFlag(SynStateFlag::sfLinesChanging))
@@ -1508,7 +1511,6 @@ void SynEdit::paintCaret(QPainter &painter, const QRect rcClip)
         ct =mOverwriteCaret;
     }
     painter.setPen(QColorConstants::Svg::red);
-    painter.setBrush(QColorConstants::Svg::red);
     switch(ct) {
     case SynEditCaretType::ctVerticalLine:
         painter.drawLine(rcClip.left()+1,rcClip.top(),rcClip.left()+1,rcClip.bottom());
@@ -1517,12 +1519,12 @@ void SynEdit::paintCaret(QPainter &painter, const QRect rcClip)
         painter.drawLine(rcClip.left(),rcClip.bottom()-1,rcClip.right(),rcClip.bottom()-1);
         break;
     case SynEditCaretType::ctBlock:
-        painter.drawRect(rcClip);
+        painter.fillRect(rcClip, QColorConstants::Svg::red);
         break;
     case SynEditCaretType::ctHalfBlock:
         QRect rc=rcClip;
         rc.setTop(rcClip.top()+rcClip.height() / 2);
-        painter.drawRect(rcClip);
+        painter.fillRect(rcClip, QColorConstants::Svg::red);
         break;
     }
 }
@@ -1530,6 +1532,28 @@ void SynEdit::paintCaret(QPainter &painter, const QRect rcClip)
 int SynEdit::textOffset()
 {
     return mGutterWidth + 2 - (mLeftChar-1)*mCharWidth;
+}
+
+SynEditorCommand SynEdit::TranslateKeyCode(int key, Qt::KeyboardModifiers modifiers)
+{
+    PSynEditKeyStroke keyStroke = mKeyStrokes.findKeycode2(mLastKey,mLastKeyModifiers,
+                                                           key, modifiers);
+    SynEditorCommand cmd=SynEditorCommand::ecNone;
+    if (keyStroke)
+        cmd = keyStroke->command();
+    else {
+        keyStroke = mKeyStrokes.findKeycode(key,modifiers);
+        if (keyStroke)
+            cmd = keyStroke->command();
+    }
+    if (cmd == SynEditorCommand::ecNone) {
+        mLastKey = key;
+        mLastKeyModifiers = modifiers;
+    } else {
+        mLastKey = 0;
+        mLastKeyModifiers = Qt::NoModifier;
+    }
+    return cmd;
 }
 
 void SynEdit::sizeOrFontChanged(bool bFont)
@@ -1580,6 +1604,20 @@ void SynEdit::setUseCodeFolding(bool value)
     }
 }
 
+QString SynEdit::lineText()
+{
+    if (mCaretY >= 1 && mCaretY <= mLines->count())
+        return mLines->getString(mCaretY - 1);
+    else
+        return QString();
+}
+
+void SynEdit::setLineText(const QString s)
+{
+    if (mCaretY >= 1 && mCaretY <= mLines->count())
+        mLines->putString(mCaretY-1,s);
+}
+
 PSynHighlighter SynEdit::highlighter() const
 {
     return mHighlighter;
@@ -1618,6 +1656,101 @@ bool SynEdit::empty()
     return mLines->empty();
 }
 
+void SynEdit::CommandProcessor(SynEditorCommand Command, QChar AChar, void *pData)
+{
+    // first the program event handler gets a chance to process the command
+    onProcessCommand(Command, AChar, pData);
+    if (Command != SynEditorCommand::ecNone)
+        ExecuteCommand(Command, AChar, pData);
+    onCommandProcessed(Command, AChar, pData);
+}
+
+void SynEdit::MoveCaretHorz(int DX, bool isSelection)
+{
+    BufferCoord ptO = caretXY();
+    BufferCoord ptDst = ptO;
+    QString s = lineText();
+    int nLineLen = s.length();
+    // only moving or selecting one char can change the line
+    bool bChangeY = !mOptions.testFlag(SynEditorOption::eoScrollPastEol);
+    if (bChangeY && (DX == -1) && (ptO.Char == 1) && (ptO.Line > 1)) {
+        // end of previous line
+        ptDst.Line--;
+        ptDst.Char = mLines->getString(ptDst.Line - 1).length() + 1;
+    } else if (bChangeY && (DX == 1) && (ptO.Char > nLineLen) && (ptO.Line < mLines->count())) {
+        // start of next line
+        ptDst.Line++;
+        ptDst.Char=1;
+    } else {
+        ptDst.Char = std::max(1, ptDst.Char + DX);
+        // don't go past last char when ScrollPastEol option not set
+        if ((DX > 0) && bChangeY)
+          ptDst.Char = std::min(ptDst.Char, nLineLen + 1);
+    }
+    // set caret and block begin / end
+    MoveCaretAndSelection(mBlockBegin, ptDst, isSelection);
+}
+
+void SynEdit::MoveCaretAndSelection(const BufferCoord &ptBefore, const BufferCoord &ptAfter, bool isSelection)
+{
+    if (mOptions.testFlag(SynEditorOption::eoGroupUndo) && mUndoList->CanUndo())
+      mUndoList->AddGroupBreak();
+
+    incPaintLock();
+    if (isSelection) {
+      if (!selAvail())
+        setBlockBegin(ptBefore);
+      setBlockEnd(ptAfter);
+    } else
+      setBlockBegin(ptAfter);
+    internalSetCaretXY(ptAfter);
+    decPaintLock();
+}
+
+void SynEdit::MoveCaretToLineStart(bool isSelection)
+{
+    int newX;
+    // home key enhancement
+    if (mOptions.testFlag(SynEditorOption::eoEnhanceHomeKey) && (lineToRow(mCaretY) == displayY())) {
+        QString s = mLines->getString(mCaretY - 1);
+
+        int first_nonblank = 0;
+        int vMaxX = s.length();
+        while ((first_nonblank < vMaxX) && (s[first_nonblank] == ' ' || s[first_nonblank] == '\t')) {
+            first_nonblank++;
+        }
+
+        newX = mCaretX;
+
+        if (newX > first_nonblank)
+            newX = first_nonblank;
+        else
+            newX = 1;
+    } else
+        newX = 1;
+    MoveCaretAndSelection(caretXY(), BufferCoord{newX, mCaretY}, isSelection);
+}
+
+void SynEdit::MoveCaretToLineEnd(bool isSelection)
+{
+    int vNewX;
+    if (mOptions.testFlag(SynEditorOption::eoEnhanceEndKey)) {
+        QString vText = lineText();
+        int vLastNonBlank = vText.length();
+        int vMinX = 0;
+        while ((vLastNonBlank > vMinX) && (vText[vLastNonBlank] == ' ' || vText[vLastNonBlank] =='\t'))
+            vLastNonBlank--;
+        vNewX = mCaretX;
+        if (vNewX > vLastNonBlank)
+            vNewX = vText.length() + 1;
+        else
+            vNewX = vLastNonBlank + 1;
+    } else
+        vNewX = lineText().length() + 1;
+
+    MoveCaretAndSelection(caretXY(), BufferCoord{vNewX, mCaretY}, isSelection);
+}
+
 bool SynEdit::onGetSpecialLineColors(int, QColor &, QColor &)
 {
     return false;
@@ -1640,6 +1773,1015 @@ void SynEdit::onGutterPaint(QPainter &painter, int aLine, int X, int Y)
 
 void SynEdit::onPaint(QPainter &)
 {
+
+}
+
+void SynEdit::onProcessCommand(SynEditorCommand Command, QChar AChar, void *pData)
+{
+
+}
+
+void SynEdit::onCommandProcessed(SynEditorCommand Command, QChar AChar, void *pData)
+{
+
+}
+
+void SynEdit::ExecuteCommand(SynEditorCommand Command, QChar AChar, void *pData)
+{
+    switch(Command) {
+    case SynEditorCommand::ecLeft:
+    case SynEditorCommand::ecSelLeft:
+        MoveCaretHorz(-1, Command == SynEditorCommand::ecSelLeft);
+        break;
+    case SynEditorCommand::ecRight:
+    case SynEditorCommand::ecSelRight:
+        MoveCaretHorz(1, Command == SynEditorCommand::ecSelRight);
+        break;
+    case SynEditorCommand::ecPageLeft:
+    case SynEditorCommand::ecSelPageLeft:
+        MoveCaretHorz(-mCharsInWindow, Command == SynEditorCommand::ecSelPageLeft);
+        break;
+    case SynEditorCommand::ecPageRight:
+    case SynEditorCommand::ecSelPageRight:
+        MoveCaretHorz(mCharsInWindow, Command == SynEditorCommand::ecSelPageRight);
+        break;
+    case SynEditorCommand::ecLineStart:
+    case SynEditorCommand::ecSelLineStart:
+        MoveCaretToLineStart(Command == SynEditorCommand::ecSelLineStart);
+        break;
+    case SynEditorCommand::ecLineEnd:
+    case SynEditorCommand::ecSelLineEnd:
+        MoveCaretToLineEnd(Command == SynEditorCommand::ecSelLineEnd);
+        break;
+    }
+
+//    procedure SetSelectedTextEmpty;
+//    var
+//      vSelText: string;
+//      vUndoBegin, vUndoEnd: TBufferCoord;
+//    begin
+//      vUndoBegin := fBlockBegin;
+//      vUndoEnd := fBlockEnd;
+//      vSelText := SelText;
+//      SetSelTextPrimitive('');
+//      if (vUndoBegin.Line < vUndoEnd.Line) or (
+//        (vUndoBegin.Line = vUndoEnd.Line) and (vUndoBegin.Char < vUndoEnd.Char)) then begin
+//        fUndoList.AddChange(crDelete, vUndoBegin, vUndoEnd, vSelText,
+//          fActiveSelectionMode);
+//      end else begin
+//        fUndoList.AddChange(crDeleteAfterCursor, vUndoBegin, vUndoEnd, vSelText,
+//          fActiveSelectionMode);
+//      end;
+//    end;
+
+//    procedure ForceCaretX(aCaretX: integer);
+//    var
+//      vRestoreScroll: boolean;
+//    begin
+//      vRestoreScroll := not (eoScrollPastEol in fOptions);
+//      Include(fOptions, eoScrollPastEol);
+//      try
+//        InternalCaretX := aCaretX;
+//      finally
+//        if vRestoreScroll then
+//          Exclude(fOptions, eoScrollPastEol);
+//      end;
+//    end;
+
+//  var
+//    CX: Integer;
+//    Len: Integer;
+//    Temp: string;
+//    Temp2: string;
+//    Temp3: AnsiString;
+//    helper: string;
+//    TabBuffer: string;
+//    SpaceBuffer: string;
+//    SpaceCount1: Integer;
+//    SpaceCount2: Integer;
+//    BackCounter: Integer;
+//    OrigBlockBegin: TBufferCoord;
+//    OrigBlockEnd: TBufferCoord;
+//    OrigCaret: TBufferCoord;
+//    MoveDelim: TBufferCoord;
+//    BeginIndex: integer;
+//    EndIndex: integer;
+//    StartOfBlock: TBufferCoord;
+//    CurrentBracketPos, MatchBracketPos: TBufferCoord;
+//    bChangeScroll: boolean;
+//    moveBkm: boolean;
+//    WP: TBufferCoord;
+//    Caret: TBufferCoord;
+//    CaretNew: TBufferCoord;
+//    i, j: integer;
+//  {$IFDEF SYN_MBCSSUPPORT}
+//    s: string;
+//  {$ENDIF}
+//    counter: Integer;
+//    InsDelta: integer;
+//    iUndoBegin, iUndoEnd: TBufferCoord;
+//    vCaretRow: integer;
+//    vTabTrim: integer;
+//    Attr: TSynHighlighterAttributes;
+//    StartPos: Integer;
+//    EndPos: Integer;
+//    tempStr : AnsiString;
+//    nLinesInserted: integer;
+//  begin
+//    IncPaintLock;
+//    try
+//      case Command of
+//        // vertical caret movement or selection
+//        ecUp, ecSelUp: begin
+//            MoveCaretVert(-1, Command = ecSelUp);
+//            Update;
+//          end;
+//        ecDown, ecSelDown: begin
+//            MoveCaretVert(1, Command = ecSelDown);
+//            Update;
+//          end;
+//        ecPageUp, ecSelPageUp, ecPageDown, ecSelPageDown: begin
+//            counter := fLinesInWindow shr Ord(eoHalfPageScroll in fOptions);
+//            if eoScrollByOneLess in fOptions then
+//              Dec(counter);
+//            if (Command in [ecPageUp, ecSelPageUp]) then
+//              counter := -counter;
+//            TopLine := TopLine + counter;
+//            MoveCaretVert(counter, Command in [ecSelPageUp, ecSelPageDown]);
+//            Update;
+//          end;
+//        ecPageTop, ecSelPageTop: begin
+//            CaretNew := DisplayToBufferPos(
+//              DisplayCoord(DisplayX, TopLine));
+//            MoveCaretAndSelection(CaretXY, CaretNew, Command = ecSelPageTop);
+//            Update;
+//          end;
+//        ecPageBottom, ecSelPageBottom: begin
+//            CaretNew := DisplayToBufferPos(
+//              DisplayCoord(DisplayX, TopLine + LinesInWindow - 1));
+//            MoveCaretAndSelection(CaretXY, CaretNew, Command = ecSelPageBottom);
+//            Update;
+//          end;
+//        ecEditorTop, ecSelEditorTop: begin
+//            CaretNew.Char := 1;
+//            CaretNew.Line := 1;
+//            MoveCaretAndSelection(CaretXY, CaretNew, Command = ecSelEditorTop);
+//            Update;
+//          end;
+//        ecEditorBottom, ecSelEditorBottom: begin
+//            CaretNew.Char := 1;
+//            CaretNew.Line := Lines.Count;
+//            if (CaretNew.Line > 0) then
+//              CaretNew.Char := Length(Lines[CaretNew.Line - 1]) + 1;
+//            MoveCaretAndSelection(CaretXY, CaretNew, Command = ecSelEditorBottom);
+//            Update;
+//          end;
+//        // goto special line / column position
+//        ecGotoXY, ecSelGotoXY:
+//          if Assigned(Data) then begin
+//            MoveCaretAndSelection(CaretXY, TBufferCoord(Data^), Command = ecSelGotoXY);
+//            Update;
+//          end;
+//        // word selection
+//        ecWordLeft, ecSelWordLeft: begin
+//            CaretNew := PrevWordPos;
+//            MoveCaretAndSelection(CaretXY, CaretNew, Command = ecSelWordLeft);
+//          end;
+//        ecWordRight, ecSelWordRight: begin
+//            CaretNew := NextWordPos;
+//            MoveCaretAndSelection(CaretXY, CaretNew, Command = ecSelWordRight);
+//          end;
+//        ecSelWord: begin
+//            SetSelWord;
+//          end;
+//        ecSelectAll: begin
+//            SelectAll;
+//          end;
+//        ecDeleteLastChar:
+//          if not ReadOnly then begin
+//            DoOnPaintTransientEx(ttBefore, true);
+//            try
+//              if SelAvail then
+//                SetSelectedTextEmpty
+//              else begin
+//                Temp := LineText;
+//                TabBuffer := Lines.ExpandedStrings[CaretY - 1];
+//                Len := Length(Temp);
+//                Caret := CaretXY;
+//                vTabTrim := 0;
+//                if CaretX > Len + 1 then begin
+//                  helper := '';
+//                  if eoSmartTabDelete in fOptions then begin
+//                    //It's at the end of the line, move it to the length
+//                    if Len > 0 then
+//                      InternalCaretX := Len + 1
+//                    else begin
+//                      //move it as if there were normal spaces there
+//                      SpaceCount1 := CaretX - 1;
+//                      SpaceCount2 := 0;
+//                      // unindent
+//                      if SpaceCount1 > 0 then begin
+//                        BackCounter := CaretY - 2;
+//                        //It's better not to have if statement inside loop
+//                        if (eoTrimTrailingSpaces in Options) and (Len = 0) then
+//                          while BackCounter >= 0 do begin
+//                            SpaceCount2 := LeftSpacesEx(Lines[BackCounter], True);
+//                            if SpaceCount2 < SpaceCount1 then
+//                              break;
+//                            Dec(BackCounter);
+//                          end else
+//                          while BackCounter >= 0 do begin
+//                            SpaceCount2 := LeftSpaces(Lines[BackCounter]);
+//                            if SpaceCount2 < SpaceCount1 then
+//                              break;
+//                            Dec(BackCounter);
+//                          end;
+//                        if (BackCounter = -1) and (SpaceCount2 > SpaceCount1) then
+//                          SpaceCount2 := 0;
+//                      end;
+//                      if SpaceCount2 = SpaceCount1 then
+//                        SpaceCount2 := 0;
+//                      fCaretX := fCaretX - (SpaceCount1 - SpaceCount2);
+//                      UpdateLastCaretX;
+//                      fStateFlags := fStateFlags + [sfCaretChanged];
+//                      StatusChanged([scCaretX]);
+//                    end;
+//                  end else begin
+//                    // only move caret one column
+//                    InternalCaretX := CaretX - 1;
+//                  end;
+//                end else if CaretX = 1 then begin
+//                  // join this line with the last line if possible
+//                  if CaretY > 1 then begin
+//                    InternalCaretY := CaretY - 1;
+//                    InternalCaretX := Length(Lines[CaretY - 1]) + 1;
+//                    Lines.Delete(CaretY);
+//                    DoLinesDeleted(CaretY+1, 1);
+//                    if eoTrimTrailingSpaces in Options then
+//                      Temp := TrimTrailingSpaces(Temp);
+
+//                    LineText := LineText + Temp;
+//                    helper := #13#10;
+//                  end;
+//                end else begin
+//                  // delete text before the caret
+//                  SpaceCount1 := LeftSpaces(Temp);
+//                  SpaceCount2 := 0;
+//                  if (Temp[CaretX - 1] <= #32) and (SpaceCount1 = CaretX - 1) then begin
+//                    if eoSmartTabDelete in fOptions then begin
+//                      // unindent
+//                      if SpaceCount1 > 0 then begin
+//                        BackCounter := CaretY - 2;
+//                        while BackCounter >= 0 do begin
+//                          SpaceCount2 := LeftSpaces(Lines[BackCounter]);
+//                          if SpaceCount2 < SpaceCount1 then
+//                            break;
+//                          Dec(BackCounter);
+//                        end;
+//                        if (BackCounter = -1) and (SpaceCount2 > SpaceCount1) then
+//                          SpaceCount2 := 0;
+//                      end;
+//                      if SpaceCount2 = SpaceCount1 then
+//                        SpaceCount2 := 0;
+//                      helper := Copy(Temp, 1, SpaceCount1 - SpaceCount2);
+//                      Delete(Temp, 1, SpaceCount1 - SpaceCount2);
+//                    end else begin
+//                      SpaceCount2 := SpaceCount1;
+//                      //how much till the next tab column
+//                      BackCounter := (DisplayX - 1) mod FTabWidth;
+//                      if BackCounter = 0 then
+//                        BackCounter := FTabWidth;
+
+//                      SpaceCount1 := 0;
+//                      CX := DisplayX - BackCounter;
+//                      while (SpaceCount1 < FTabWidth) and
+//                        (SpaceCount1 < BackCounter) and
+//                        (TabBuffer[CX] <> #9) do begin
+//                        Inc(SpaceCount1);
+//                        Inc(CX);
+//                      end;
+//  {$IFOPT R+}
+//                      // Avoids an exception when compiled with $R+.
+//                      // 'CX' can be 'Length(TabBuffer)+1', which isn't an AV and evaluates
+//                      //to #0. But when compiled with $R+, Delphi raises an Exception.
+//                      if CX <= Length(TabBuffer) then
+//  {$ENDIF}
+//                        if TabBuffer[CX] = #9 then
+//                          SpaceCount1 := SpaceCount1 + 1;
+
+//                      if SpaceCount2 = SpaceCount1 then begin
+//                        helper := Copy(Temp, 1, SpaceCount1);
+//                        Delete(Temp, 1, SpaceCount1);
+//                      end else begin
+//                        helper := Copy(Temp, SpaceCount2 - SpaceCount1 + 1, SpaceCount1);
+//                        Delete(Temp, SpaceCount2 - SpaceCount1 + 1, SpaceCount1);
+//                      end;
+//                      SpaceCount2 := 0;
+//                    end;
+//                    ProperSetLine(CaretY - 1, Temp);
+//                    fCaretX := fCaretX - (SpaceCount1 - SpaceCount2);
+//                    UpdateLastCaretX;
+//                    fStateFlags := fStateFlags + [sfCaretChanged];
+//                    StatusChanged([scCaretX]);
+//                  end else begin
+//                    // delete char
+//                    counter := 1;
+//  {$IFDEF SYN_MBCSSUPPORT}
+//                    if (CaretX >= 3) and (ByteType(Temp, CaretX - 2) = mbLeadByte) then
+//                      Inc(counter);
+//  {$ENDIF}
+//                    InternalCaretX := CaretX - counter;
+//                    // Stores the previous "expanded" CaretX if the line contains tabs.
+//                    if (eoTrimTrailingSpaces in Options) and (Len <> Length(TabBuffer)) then
+//                      vTabTrim := CharIndex2CaretPos(CaretX, TabWidth, Temp);
+//                    helper := Copy(Temp, CaretX, counter);
+//                    Delete(Temp, CaretX, counter);
+//                    ProperSetLine(CaretY - 1, Temp);
+//                    // Calculates a delta to CaretX to compensate for trimmed tabs.
+//                    if vTabTrim <> 0 then
+//                      if Length(Temp) <> Length(LineText) then
+//                        Dec(vTabTrim, CharIndex2CaretPos(CaretX, TabWidth, LineText))
+//                      else
+//                        vTabTrim := 0;
+//                  end;
+//                end;
+//                if (Caret.Char <> CaretX) or (Caret.Line <> CaretY) then begin
+//                  fUndoList.AddChange(crSilentDelete, CaretXY, Caret, helper,
+//                    smNormal);
+//                  if vTabTrim <> 0 then
+//                    ForceCaretX(CaretX + vTabTrim);
+//                end;
+//              end;
+//              EnsureCursorPosVisible;
+//            finally
+//              DoOnPaintTransientEx(ttAfter, true);
+//            end;
+//          end;
+//        ecDeleteChar:
+//          if not ReadOnly then begin
+//            DoOnPaintTransient(ttBefore);
+
+//            if SelAvail then
+//              SetSelectedTextEmpty
+//            else begin
+//              // Call UpdateLastCaretX. Even though the caret doesn't move, the
+//              // current caret position should "stick" whenever text is modified.
+//              UpdateLastCaretX;
+//              Temp := LineText;
+//              Len := Length(Temp);
+//              if CaretX <= Len then begin
+//                // delete char
+//                counter := 1;
+//  {$IFDEF SYN_MBCSSUPPORT}
+//                if ByteType(Temp, CaretX) = mbLeadByte then
+//                  Inc(counter);
+//  {$ENDIF}
+//                helper := Copy(Temp, CaretX, counter);
+//                Caret.Char := CaretX + counter;
+//                Caret.Line := CaretY;
+//                Delete(Temp, CaretX, counter);
+//                ProperSetLine(CaretY - 1, Temp);
+//              end else begin
+//                // join line with the line after
+//                if CaretY < Lines.Count then begin
+//                  helper := StringOfChar(#32, CaretX - 1 - Len);
+//                  ProperSetLine(CaretY - 1, Temp + helper + Lines[CaretY]);
+//                  Caret.Char := 1;
+//                  Caret.Line := CaretY + 1;
+//                  helper := #13#10;
+//                  Lines.Delete(CaretY);
+//                  if CaretX=1 then
+//                    DoLinesDeleted(CaretY, 1)
+//                  else
+//                    DoLinesDeleted(CaretY + 1, 1);
+//                end;
+//              end;
+//              if (Caret.Char <> CaretX) or (Caret.Line <> CaretY) then begin
+//                fUndoList.AddChange(crSilentDeleteAfterCursor, CaretXY, Caret,
+//                  helper, smNormal);
+//              end;
+//            end;
+//            DoOnPaintTransient(ttAfter);
+//          end;
+//        ecDeleteWord, ecDeleteEOL:
+//          if not ReadOnly then begin
+//            DoOnPaintTransient(ttBefore);
+//            Len := Length(LineText);
+//            if Command = ecDeleteWord then begin
+//              WP := WordEnd;
+//              Temp := LineText;
+//              if (WP.Char < CaretX) or ((WP.Char = CaretX) and (WP.Line < fLines.Count)) then begin
+//                if WP.Char > Len then begin
+//                  Inc(WP.Line);
+//                  WP.Char := 1;
+//                  Temp := Lines[WP.Line - 1];
+//                end else if Temp[WP.Char] <> #32 then
+//                  Inc(WP.Char);
+//              end;
+//  {$IFOPT R+}
+//              Temp := Temp + #0;
+//  {$ENDIF}
+//              if Temp <> '' then
+//                while Temp[WP.Char] = #32 do
+//                  Inc(WP.Char);
+//            end else begin
+//              WP.Char := Len + 1;
+//              WP.Line := CaretY;
+//            end;
+//            if (WP.Char <> CaretX) or (WP.Line <> CaretY) then begin
+//              SetBlockBegin(CaretXY);
+//              SetBlockEnd(WP);
+//              ActiveSelectionMode := smNormal;
+//              helper := SelText;
+//              SetSelTextPrimitive(StringOfChar(' ', CaretX - BlockBegin.Char));
+//              fUndoList.AddChange(crSilentDeleteAfterCursor, CaretXY, WP,
+//                helper, smNormal);
+//              InternalCaretXY := CaretXY;
+//            end;
+//            DoOnPaintTransient(ttAfter);
+//          end;
+//        ecDeleteLastWord, ecDeleteBOL:
+//          if not ReadOnly then begin
+//            DoOnPaintTransient(ttBefore);
+//            if Command = ecDeleteLastWord then
+//              WP := PrevWordPos
+//            else begin
+//              WP.Char := 1;
+//              WP.Line := CaretY;
+//            end;
+//            if (WP.Char <> CaretX) or (WP.Line <> CaretY) then begin
+//              SetBlockBegin(CaretXY);
+//              SetBlockEnd(WP);
+//              ActiveSelectionMode := smNormal;
+//              helper := SelText;
+//              SetSelTextPrimitive('');
+//              fUndoList.AddChange(crSilentDelete, WP, CaretXY, helper,
+//                smNormal);
+//              InternalCaretXY := WP;
+//            end;
+//            DoOnPaintTransient(ttAfter);
+//          end;
+//        ecDeleteLine:
+//          if not ReadOnly and (Lines.Count > 0) and not ((CaretY = Lines.Count) and (Length(Lines[CaretY - 1]) =
+//            0)) then begin
+//            DoOnPaintTransient(ttBefore);
+//            if SelAvail then
+//              SetBlockBegin(CaretXY);
+//            helper := LineText;
+//            if CaretY = Lines.Count then begin
+//              Lines[CaretY - 1] := '';
+//              fUndoList.AddChange(crSilentDeleteAfterCursor, BufferCoord(1, CaretY),
+//                BufferCoord(Length(helper) + 1, CaretY), helper, smNormal);
+//            end else begin
+//              Lines.Delete(CaretY - 1);
+//              helper := helper + #13#10;
+//              fUndoList.AddChange(crSilentDeleteAfterCursor, BufferCoord(1, CaretY),
+//                BufferCoord(1, CaretY + 1), helper, smNormal);
+//              DoLinesDeleted(CaretY, 1);
+//            end;
+//            InternalCaretXY := BufferCoord(1, CaretY); // like seen in the Delphi editor
+//            DoOnPaintTransient(ttAfter);
+//          end;
+//        ecDuplicateLine:
+//          if not ReadOnly and (Lines.Count > 0) then begin
+//            DoOnPaintTransient(ttBefore);
+//            Lines.Insert(CaretY, Lines[CaretY - 1]);
+//            DoLinesInserted(CaretY + 1, 1);
+//            fUndoList.AddChange(crLineBreak, CaretXY, CaretXY, '', smNormal);
+//            InternalCaretXY := BufferCoord(1, CaretY); // like seen in the Delphi editor
+//            DoOnPaintTransient(ttAfter);
+//          end;
+//        ecMoveSelUp:
+//          if not ReadOnly and (Lines.Count > 0) and (BlockBegin.Line > 1) then begin
+//            DoOnPaintTransient(ttBefore);
+
+//            // Backup caret and selection
+//            OrigBlockBegin := BlockBegin;
+//            OrigBlockEnd := BlockEnd;
+
+//            // Delete line above selection
+//            s := Lines[OrigBlockBegin.Line - 2]; // before start, 0 based
+//            Lines.Delete(OrigBlockBegin.Line - 2); // before start, 0 based
+//            DoLinesDeleted(OrigBlockBegin.Line - 1, 1); // before start, 1 based
+
+//            // Insert line below selection
+//            Lines.Insert(OrigBlockEnd.Line - 1, S);
+//            DoLinesInserted(OrigBlockEnd.Line, 1);
+
+//            // Restore caret and selection
+//            SetCaretAndSelection(
+//              BufferCoord(CaretX, CaretY - 1),
+//              BufferCoord(1, OrigBlockBegin.Line - 1), // put start of selection at start of top line
+//              BufferCoord(Length(Lines[OrigBlockEnd.Line - 2]) + 1, OrigBlockEnd.Line - 1));
+//            // put end of selection at end of top line
+
+//        // Retrieve end of line we moved up
+//            MoveDelim := BufferCoord(Length(Lines[OrigBlockEnd.Line - 1]) + 1, OrigBlockEnd.Line);
+
+//            // Support undo, implement as drag and drop
+//            fUndoList.BeginBlock;
+//            try
+//              fUndoList.AddChange(crSelection, // backup original selection
+//                OrigBlockBegin,
+//                OrigBlockEnd,
+//                '',
+//                smNormal);
+//              fUndoList.AddChange(crDragDropInsert,
+//                BlockBegin, // modified
+//                MoveDelim, // put at end of line me moved up
+//                S + #13#10 + SelText,
+//                smNormal);
+//            finally
+//              fUndoList.EndBlock;
+//            end;
+
+//            DoOnPaintTransient(ttAfter);
+//          end;
+//        ecMoveSelDown:
+//          if not ReadOnly and (Lines.Count > 0) and (BlockEnd.Line < Lines.Count) then begin
+//            DoOnPaintTransient(ttBefore);
+
+//            // Backup caret and selection
+//            OrigBlockBegin := BlockBegin;
+//            OrigBlockEnd := BlockEnd;
+
+//            // Delete line below selection
+//            s := Lines[OrigBlockEnd.Line]; // after end, 0 based
+//            Lines.Delete(OrigBlockEnd.Line); // after end, 0 based
+//            DoLinesDeleted(OrigBlockEnd.Line, 1); // before start, 1 based
+
+//            // Insert line above selection
+//            Lines.Insert(OrigBlockBegin.Line - 1, S);
+//            DoLinesInserted(OrigBlockBegin.Line, 1);
+
+//            // Restore caret and selection
+//            SetCaretAndSelection(
+//              BufferCoord(CaretX, CaretY + 1),
+//              BufferCoord(1, OrigBlockBegin.Line + 1),
+//              BufferCoord(Length(Lines[OrigBlockEnd.Line]) + 1, OrigBlockEnd.Line + 1));
+
+//            // Retrieve start of line we moved down
+//            MoveDelim := BufferCoord(1, OrigBlockBegin.Line);
+
+//            // Support undo, implement as drag and drop
+//            fUndoList.BeginBlock;
+//            try
+//              fUndoList.AddChange(crSelection,
+//                OrigBlockBegin,
+//                OrigBlockEnd,
+//                '',
+//                smNormal);
+//              fUndoList.AddChange(crDragDropInsert,
+//                MoveDelim, // put at start of line me moved down
+//                BlockEnd, // modified
+//                SelText + #13#10 + S,
+//                smNormal);
+//            finally
+//              fUndoList.EndBlock;
+//            end;
+
+//            DoOnPaintTransient(ttAfter);
+//          end;
+//        ecClearAll: begin
+//            if not ReadOnly then
+//              ClearAll;
+//          end;
+//        ecInsertLine,
+//          ecLineBreak:
+//          if not ReadOnly then begin
+//            nLinesInserted:=0;
+//            UndoList.BeginBlock;
+//            try
+//              if SelAvail then begin
+//                helper := SelText;
+//                iUndoBegin := fBlockBegin;
+//                iUndoEnd := fBlockEnd;
+//                SetSelTextPrimitive('');
+//                fUndoList.AddChange(crDelete, iUndoBegin, iUndoEnd, helper,
+//                  fActiveSelectionMode);
+//              end;
+//              Temp := LineText;
+//              Temp2 := Temp;
+//              // This is sloppy, but the Right Thing would be to track the column of markers
+//              // too, so they could be moved depending on whether they are after the caret...
+//              InsDelta := Ord(CaretX = 1);
+//              Len := Length(Temp);
+//              if Len > 0 then begin
+//                if Len >= CaretX then begin
+//                  if CaretX > 1 then begin
+
+//                    Temp:= Copy(LineText, 1, CaretX - 1);
+//                    Temp3:=Temp;
+//                    SpaceCount1 := LeftSpacesEx(Temp, true);
+//                    Delete(Temp2, 1, CaretX - 1);
+//                    ProperSetLine(CaretY-1,Temp);
+//                    Lines.Insert(CaretY, GetLeftSpacing(SpaceCount1, true));
+//                    inc(nLinesInserted);
+//                    if (eoAddIndent in Options) and GetHighlighterAttriAtRowCol(BufferCoord(Length(Temp3), CaretY),
+//                      Temp3, Attr) then begin // only add indent to source files
+//                      if Attr <> Highlighter.CommentAttribute then begin // and outside of comments
+//                        if (Temp[Length(Temp)] =':')
+//                          or (
+//                            (Temp[Length(Temp)] ='{')
+//                            and ((Length(Temp2)<=0) or (Temp2[1]<>'}'))
+//                          )then begin // add more indent for these too
+//                          if not (eoTabsToSpaces in Options) then begin
+//                            Lines[CaretY] := Lines[CaretY] + TSynTabChar;
+//                          end else begin
+//                            Lines[CaretY] := Lines[CaretY] + StringOfChar(' ', TabWidth);
+//                          end;
+//                        end;
+//                      end;
+//                    end;
+//                    SpaceCount1 := Length(Lines[CaretY]);
+//                    Lines[CaretY] := Lines[CaretY] + Temp2;
+//                    fUndoList.AddChange(crLineBreak, CaretXY, CaretXY, Temp2,
+//                      smNormal);
+
+//                    if (Length(Temp)>0) and (Temp[Length(Temp)] = '{') and (Length(Temp2)>0) and (Temp2[1]='}') then begin
+//                      Lines.Insert(CaretY, GetLeftSpacing(LeftSpacesEx(Temp, true), true));
+//                      inc(nLinesInserted);
+//                      if (eoAddIndent in Options) then begin;
+//                        if not (eoTabsToSpaces in Options) then begin
+//                          Lines[CaretY] := Lines[CaretY] + TSynTabChar;
+//                        end else begin
+//                          Lines[CaretY] := Lines[CaretY] + StringOfChar(' ', TabWidth);
+//                        end;
+//                      end;
+//                      fUndoList.AddChange(crLineBreak, CaretXY, CaretXY, '',
+//                        smNormal);
+//                      if Command = ecLineBreak then
+//                        InternalCaretXY := BufferCoord(
+//                          Length(Lines[CaretY])+1,
+//                          CaretY + 1);
+//                    end else begin
+//                      if Command = ecLineBreak then
+//                        InternalCaretXY := BufferCoord(
+//                          SpaceCount1+1,
+//                          CaretY + 1);
+//                    end;
+//                  end else begin
+//                    Lines.Insert(CaretY - 1, '');
+//                    inc(nLinesInserted);
+//                    fUndoList.AddChange(crLineBreak, CaretXY, CaretXY, Temp2,
+//                      smNormal);
+//                    if Command = ecLineBreak then
+//                      InternalCaretY := CaretY + 1;
+//                  end;
+//                end else begin
+//                  SpaceCount2 := 0;
+//                  BackCounter := CaretY;
+//                  if eoAutoIndent in Options then begin
+//                    repeat
+//                      Dec(BackCounter);
+//                      Temp := Lines[BackCounter];
+//                      SpaceCount2 := LeftSpaces(Temp);
+//                    until (BackCounter = 0) or (Temp <> '');
+//                  end;
+//                  Lines.Insert(CaretY, '');
+//                  inc(nLinesInserted);
+//                  Caret := CaretXY;
+//                  if Command = ecLineBreak then begin
+//                    if SpaceCount2 > 0 then begin
+//                      Lines[CaretY] := Copy(Lines[BackCounter], 1, SpaceCount2); // copy previous indent
+//                    end;
+//                    if (eoAddIndent in Options) and GetHighlighterAttriAtRowCol(BufferCoord(Length(Temp), CaretY),
+//                      Temp,
+//                      Attr) then begin // only add indent to source files
+//                      if Attr <> Highlighter.CommentAttribute then begin // and outside of comments
+//                        if Temp[Length(Temp)] in ['{', ':'] then begin // add more indent for these too
+//                          if not (eoTabsToSpaces in Options) then begin
+//                            Lines[CaretY] := Lines[CaretY] + TSynTabChar;
+//                            Inc(SpaceCount2, 1);
+//                          end else begin
+//                            Lines[CaretY] := Lines[CaretY] + StringOfChar(' ', TabWidth);
+//                            Inc(SpaceCount2, TabWidth); // update caret counter
+//                          end;
+//                        end;
+//                      end;
+//                    end;
+//                    InternalCaretXY := BufferCoord(SpaceCount2 + 1, CaretY + 1);
+//                  end;
+//                  fUndoList.AddChange(crLineBreak, Caret, Caret, '', smNormal);
+//                end;
+//              end else begin
+//                if fLines.Count = 0 then
+//                  fLines.Add('');
+
+//                SpaceCount2 := 0;
+//                if eoAutoIndent in Options then begin
+//                  BackCounter := CaretY - 1;
+//                  while BackCounter >= 0 do begin
+//                    SpaceCount2 := LeftSpacesEx(Lines[BackCounter], True);
+//                    if Length(Lines[BackCounter]) > 0 then
+//                      break;
+//                    dec(BackCounter);
+//                  end;
+//                end;
+//                Lines.Insert(CaretY - 1, '');
+//                inc(nLinesInserted);
+//                fUndoList.AddChange(crLineBreak, CaretXY, CaretXY, '', smNormal);
+//                if Command = ecLineBreak then begin
+//                  InternalCaretXY := BufferCoord(SpaceCount2 + 1, CaretY + 1);
+//                end;
+//              end;
+//              DoLinesInserted(CaretY - InsDelta, nLinesInserted);
+//              BlockBegin := CaretXY;
+//              BlockEnd := CaretXY;
+//              EnsureCursorPosVisible;
+//              UpdateLastCaretX;
+//            finally
+//              UndoList.EndBlock;
+//            end;
+//          end;
+//        ecTab:
+//          if not ReadOnly then
+//            DoTabKey;
+//        ecShiftTab:
+//          if not ReadOnly then
+//            DoShiftTabKey;
+//        ecComment:
+//          DoComment;
+//        ecUnComment:
+//          DoUncomment;
+//        ecToggleComment:
+//          if not ReadOnly then begin
+//            OrigBlockBegin := BlockBegin;
+//            OrigBlockEnd := BlockEnd;
+
+//            BeginIndex := OrigBlockBegin.Line - 1;
+//            // Ignore the last line the cursor is placed on
+//            if (OrigBlockEnd.Char = 1) and (OrigBlockBegin.Line < OrigBlockEnd.Line) then
+//              EndIndex := max(0, OrigBlockEnd.Line - 2)
+//            else
+//              EndIndex := OrigBlockEnd.Line - 1;
+
+//            // if everything is commented, then uncomment
+//            for I := BeginIndex to EndIndex do begin
+//              if Pos('//', TrimLeft(fLines[i])) <> 1 then begin // not fully commented
+//                DoComment; // comment everything
+//                Exit;
+//              end;
+//            end;
+//            DoUncomment;
+//          end;
+//        ecCommentInline: // toggle inline comment
+//          if not ReadOnly and SelAvail then begin
+//            Temp := SelText;
+
+//            // Check if the selection starts with /* after blanks
+//            StartPos := -1;
+//            I := 1;
+//            while I <= Length(Temp) do begin
+//              if Temp[I] in [#9, #32] then
+//                Inc(I)
+//              else if ((I + 1) <= Length(Temp)) and (Temp[i] = '/') and (Temp[i + 1] = '*') then begin
+//                StartPos := I;
+//                break;
+//              end else
+//                break;
+//            end;
+
+//            // Check if the selection ends with /* after blanks
+//            EndPos := -1;
+//            if StartPos <> -1 then begin
+//              I := Length(Temp);
+//              while I > 0 do begin
+//                if Temp[I] in [#9, #32] then
+//                  Dec(I)
+//                else if ((I - 1) > 0) and (Temp[i] = '/') and (Temp[i - 1] = '*') then begin
+//                  EndPos := I;
+//                  break;
+//                end else
+//                  break;
+//              end;
+//            end;
+
+//            // Keep selection
+//            OrigBlockBegin := BlockBegin;
+//            OrigBlockEnd := BlockEnd;
+
+//            // Toggle based on current comment status
+//            if (StartPos <> -1) and (EndPos <> -1) then begin
+//              SelText := Copy(SelText, StartPos + 2, EndPos - StartPos - 3);
+//              BlockBegin := OrigBlockBegin;
+//              BlockEnd := BufferCoord(OrigBlockEnd.Char - 4, OrigBlockEnd.Line);
+//            end else begin
+//              SelText := '/*' + SelText + '*/';
+//              BlockBegin := BufferCoord(OrigBlockBegin.Char, OrigBlockBegin.Line);
+//              BlockEnd := BufferCoord(OrigBlockEnd.Char + 4, OrigBlockEnd.Line);
+//            end;
+//          end;
+//        ecMatchBracket:
+//          FindMatchingBracket;
+//        ecChar:
+//          // #127 is Ctrl + Backspace, #32 is space
+//          if not ReadOnly and (AChar >= #32) and (AChar <> #127) then begin
+//            //DoOnPaintTransient(ttBefore);
+//            if (InsertMode = False) and (not SelAvail) then begin
+//              SelLength := 1;
+//            end;
+
+//            if eoAddIndent in Options then begin
+
+//              // Remove TabWidth of indent of the current line when typing a }
+//              if AChar in ['}'] then begin
+//                temp := Copy(Lines[CaretY-1],1,CaretX-1);
+//                // and the first nonblank char is this new }
+//                if TrimLeft(temp) = '' then begin
+//                  MatchBracketPos := GetPreviousLeftBracket(CaretX, CaretY);
+//                  if (MatchBracketPos.Line > 0) then begin
+//                    i := 1;
+//                    while (i<=Length(Lines[MatchBracketPos.Line-1])) do begin
+//                      if  not (Lines[MatchBracketPos.Line-1][i] in [#9,#32]) then
+//                        break;
+//                      inc(i);
+//                    end;
+//                    temp := Copy(Lines[MatchBracketPos.Line-1], 1, i-1)
+//                      + Copy(Lines[CaretY - 1],CaretX,MaxInt);
+//                    Lines[CaretY - 1] := temp;
+//                    InternalCaretXY := BufferCoord(i, CaretY);
+//                  end;
+//                end;
+//              end;
+//            end;
+
+//            SelText := AChar;
+
+//            //DoOnPaintTransient(ttAfter);
+//          end;
+//        ecUpperCase,
+//          ecLowerCase,
+//          ecToggleCase,
+//          ecTitleCase,
+//          ecUpperCaseBlock,
+//          ecLowerCaseBlock,
+//          ecToggleCaseBlock:
+//          if not ReadOnly then
+//            DoCaseChange(Command);
+//        ecUndo: begin
+//            if not ReadOnly then
+//              Undo;
+//          end;
+//        ecRedo: begin
+//            if not ReadOnly then
+//              Redo;
+//          end;
+//        ecGotoMarker0..ecGotoMarker9: begin
+//            if BookMarkOptions.EnableKeys then
+//              GotoBookMark(Command - ecGotoMarker0);
+//          end;
+//        ecSetMarker0..ecSetMarker9: begin
+//            if BookMarkOptions.EnableKeys then begin
+//              CX := Command - ecSetMarker0;
+//              if Assigned(Data) then
+//                Caret := TBufferCoord(Data^)
+//              else
+//                Caret := CaretXY;
+//              if assigned(fBookMarks[CX]) then begin
+//                moveBkm := (fBookMarks[CX].Line <> Caret.Line);
+//                ClearBookMark(CX);
+//                if moveBkm then
+//                  SetBookMark(CX, Caret.Char, Caret.Line);
+//              end else
+//                SetBookMark(CX, Caret.Char, Caret.Line);
+//            end; // if BookMarkOptions.EnableKeys
+//          end;
+//        ecCut: begin
+//            if (not ReadOnly) and SelAvail then
+//              CutToClipboard;
+//          end;
+//        ecCopy: begin
+//            CopyToClipboard;
+//          end;
+//        ecPaste: begin
+//            if not ReadOnly then
+//              PasteFromClipboard;
+//          end;
+//        ecScrollUp, ecScrollDown: begin
+//            vCaretRow := DisplayY;
+//            if (vCaretRow < TopLine) or (vCaretRow >= TopLine + LinesInWindow) then
+//              // If the caret is not in view then, like the Delphi editor, move
+//              // it in view and do nothing else
+//              EnsureCursorPosVisible
+//            else begin
+//              if Command = ecScrollUp then begin
+//                TopLine := TopLine - 1;
+//                if vCaretRow > TopLine + LinesInWindow - 1 then
+//                  MoveCaretVert((TopLine + LinesInWindow - 1) - vCaretRow, False);
+//              end else begin
+//                TopLine := TopLine + 1;
+//                if vCaretRow < TopLine then
+//                  MoveCaretVert(TopLine - vCaretRow, False);
+//              end;
+//              EnsureCursorPosVisible;
+//              Update;
+//            end;
+//          end;
+//        ecScrollLeft: begin
+//            LeftChar := LeftChar - 1;
+//            // todo: The following code was commented out because it is not MBCS or hard-tab safe.
+//            //if CaretX > LeftChar + CharsInWindow then
+//            //  InternalCaretX := LeftChar + CharsInWindow;
+//            Update;
+//          end;
+//        ecScrollRight: begin
+//            LeftChar := LeftChar + 1;
+//            // todo: The following code was commented out because it is not MBCS or hard-tab safe.
+//            //if CaretX < LeftChar then
+//            //  InternalCaretX := LeftChar;
+//            Update;
+//          end;
+//        ecInsertMode: begin
+//            InsertMode := TRUE;
+//          end;
+//        ecOverwriteMode: begin
+//            InsertMode := FALSE;
+//          end;
+//        ecToggleMode: begin
+//            InsertMode := not InsertMode;
+//          end;
+//        ecBlockIndent:
+//          if not ReadOnly then
+//            DoBlockIndent;
+//        ecBlockUnindent:
+//          if not ReadOnly then
+//            DoBlockUnindent;
+//        ecNormalSelect:
+//          SelectionMode := smNormal;
+//        ecColumnSelect:
+//          SelectionMode := smColumn;
+//        ecLineSelect:
+//          SelectionMode := smLine;
+//        ecContextHelp: begin
+//            if Assigned(fOnContextHelp) then
+//              fOnContextHelp(self, WordAtCursor);
+//          end;
+//  {$IFDEF SYN_MBCSSUPPORT}
+//        ecImeStr: begin;
+//          if not ReadOnly then begin
+//            SetString(s, PChar(Data), StrLen(Data));
+//            if SelAvail then begin
+//            {
+//              BeginUndoBlock;
+//              try
+//                fUndoList.AddChange(crDelete, fBlockBegin, fBlockEnd, selText,
+//                  smNormal);
+//                StartOfBlock := fBlockBegin;
+//                SetSelTextPrimitive(s);
+//                fUndoList.AddChange(crInsert, fBlockBegin, fBlockEnd, s,
+//                  smNormal);
+//              finally
+//                EndUndoBlock;
+//              end;
+//            }
+//              SetSelTextExternal(s);
+//              InvalidateGutterLines(-1, -1);
+//            end else begin
+//              Temp := LineText;
+//              Len := Length(Temp);
+//              if Len < (CaretX-1) then
+//                Temp := Temp + StringOfChar(#32, (CaretX-1) - Len);
+//              bChangeScroll := not (eoScrollPastEol in fOptions);
+//              try
+//                if bChangeScroll then
+//                  Include(fOptions, eoScrollPastEol);
+//                StartOfBlock := CaretXY;
+//                // Processing of case character covers on LeadByte.
+//                Len := Length(s);
+//                if not fInserting then begin
+//                  i := (CaretX + Len);
+//                  if (ByteType(Temp, i) = mbTrailByte) then begin
+//                    s := s + Temp[i - 1];
+//                    helper := Copy(Temp, CaretX, Len - 1);
+//                  end else
+//                    helper := Copy(Temp, CaretX, Len);
+//                  Delete(Temp, CaretX, Len);
+//                end;
+//                Insert(s, Temp, CaretX);
+//                InternalCaretX := (CaretX + Len);
+//                ProperSetLine(CaretY - 1, Temp);
+//                if fInserting then
+//                  helper := '';
+//                fUndoList.AddChange(crInsert, StartOfBlock, CaretXY, helper,
+//                  smNormal);
+//                if CaretX >= LeftChar + fCharsInWindow then
+//                  LeftChar := LeftChar + min(25, fCharsInWindow - 1);
+//              finally
+//                if bChangeScroll then
+//                  Exclude(fOptions, eoScrollPastEol);
+//              end;
+//            end;
+//          end;
+//            if assigned(fOnImeInput) then
+//              fOnImeInput(self,s);
+//          end;
+//  {$ENDIF}
+//      end;
+//    finally
+//      DecPaintLock;
+//    end;
+//  end;
 
 }
 
@@ -1702,7 +2844,7 @@ void SynEdit::paintEvent(QPaintEvent *event)
         // Then the gutter area if it was (partly) invalidated.
         if (rcClip.left() < mGutterWidth) {
             rcDraw = rcClip;
-            rcDraw.setRight(mGutterWidth);
+            rcDraw.setRight(mGutterWidth-1);
             textPainter.paintGutter(rcDraw);
         }
 
@@ -1765,6 +2907,24 @@ void SynEdit::focusInEvent(QFocusEvent *)
 void SynEdit::focusOutEvent(QFocusEvent *)
 {
     hideCaret();
+}
+
+void SynEdit::keyPressEvent(QKeyEvent *event)
+{
+    SynEditorCommand cmd=TranslateKeyCode(event->key(),event->modifiers());
+    if (cmd!=SynEditorCommand::ecNone) {
+        CommandProcessor(cmd,QChar(),nullptr);
+        event->accept();
+    } else if (!event->text().isEmpty()) {
+        QChar c = event->text().at(0);
+        if (c=='\t' || c.isPrint()) {
+            CommandProcessor(SynEditorCommand::ecChar,c,nullptr);
+            event->accept();
+        }
+    }
+    if (!event->isAccepted()) {
+        QAbstractScrollArea::keyPressEvent(event);
+    }
 }
 
 int SynEdit::maxScrollWidth() const

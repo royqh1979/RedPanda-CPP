@@ -142,10 +142,15 @@ public:
     explicit SynEdit(QWidget *parent = nullptr);
 
     /**
-     * @brief how many rows are there in the editor
+     * Returns how many rows are there in the editor
      * @return
      */
     int displayLineCount();
+
+    /**
+     * @brief displayX
+     * @return
+     */
     DisplayCoord displayXY();
     int displayX();
     int displayY();
@@ -192,6 +197,7 @@ public:
     void showCaret();
     void hideCaret();
 
+// setter && getters
     int topLine() const;
     void setTopLine(int value);
 
@@ -224,6 +230,15 @@ public:
 
     int tabWidth() const;
 
+    PSynHighlighter highlighter() const;
+    void setHighlighter(const PSynHighlighter &highlighter);
+
+    bool useCodeFolding() const;
+    void setUseCodeFolding(bool value);
+
+    QString lineText();
+    void setLineText(const QString s);
+
     PSynEditStringList lines() const;
     bool empty();
 
@@ -253,12 +268,17 @@ signals:
     void tabSizeChanged();
 
 protected:
+
+protected:
     virtual bool onGetSpecialLineColors(int Line,
          QColor& foreground, QColor& backgroundColor) ;
     virtual void onGetEditingAreas(int Line, SynEditingAreaList& areaList);
     virtual void onGutterGetText(int aLine, QString& aText);
     virtual void onGutterPaint(QPainter& painter, int aLine, int X, int Y);
     virtual void onPaint(QPainter& painter);
+    virtual void onProcessCommand(SynEditorCommand Command, QChar AChar, void * pData);
+    virtual void onCommandProcessed(SynEditorCommand Command, QChar AChar, void * pData);
+    virtual void ExecuteCommand(SynEditorCommand Command, QChar AChar, void * pData);
 
 private:
     void clearAreaList(SynEditingAreaList areaList);
@@ -315,6 +335,18 @@ private:
     PSynEditFoldRange foldEndAtLine(int Line);
     void paintCaret(QPainter& painter, const QRect rcClip);
     int textOffset();
+    SynEditorCommand TranslateKeyCode(int key, Qt::KeyboardModifiers modifiers);
+    void CommandProcessor(SynEditorCommand Command, QChar AChar, void * pData);
+    /**
+     * Move the caret to right DX columns
+     * @param DX
+     * @param SelectionCommand
+     */
+    void MoveCaretHorz(int DX, bool isSelection);
+    void MoveCaretAndSelection(const BufferCoord& ptBefore, const BufferCoord& ptAfter,
+                               bool isSelection);
+    void MoveCaretToLineStart(bool isSelection);
+    void MoveCaretToLineEnd(bool isSelection);
 
 private slots:
     void bookMarkOptionsChanged();
@@ -440,34 +472,19 @@ private:
     int m_blinkStatus;
 
 
-    // QWidget interface
-protected:
-    void paintEvent(QPaintEvent *event) override;
+
 
 friend class SynEditTextPainter;
 
 // QWidget interface
 protected:
+void paintEvent(QPaintEvent *event) override;
 void resizeEvent(QResizeEvent *event) override;
-
-// QObject interface
-protected:
 void timerEvent(QTimerEvent *event) override;
-
-// QObject interface
-public:
 bool event(QEvent *event) override;
-
-// QWidget interface
-PSynHighlighter highlighter() const;
-void setHighlighter(const PSynHighlighter &highlighter);
-
-bool useCodeFolding() const;
-void setUseCodeFolding(bool value);
-
-protected:
 void focusInEvent(QFocusEvent *event) override;
 void focusOutEvent(QFocusEvent *event) override;
+void keyPressEvent(QKeyEvent *event) override;
 };
 
 #endif // SYNEDIT_H
