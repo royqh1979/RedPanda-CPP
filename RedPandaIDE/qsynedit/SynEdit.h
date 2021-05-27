@@ -343,6 +343,7 @@ private:
      * @param SelectionCommand
      */
     void MoveCaretHorz(int DX, bool isSelection);
+    void MoveCaretVert(int DY, bool isSelection);
     void MoveCaretAndSelection(const BufferCoord& ptBefore, const BufferCoord& ptAfter,
                                bool isSelection);
     void MoveCaretToLineStart(bool isSelection);

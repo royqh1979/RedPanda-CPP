@@ -113,7 +113,7 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
     mBlockEnd = mBlockBegin;
     mOptions = eoAutoIndent | eoDragDropEditing | eoEnhanceEndKey |
             eoShowScrollHint | eoSmartTabs | eoTabsToSpaces |
-            eoSmartTabDelete| eoGroupUndo;
+            eoSmartTabDelete| eoGroupUndo | eoKeepCaretX;
     qDebug()<<"init SynEdit: 9";
 
     mScrollTimer = new QTimer(this);
@@ -199,6 +199,7 @@ void SynEdit::setCaretXY(const BufferCoord &value)
 
 void SynEdit::setCaretXYEx(bool CallEnsureCursorPos, BufferCoord value)
 {
+    qDebug()<<"new Value"<<value.Line<<value.Char;
     bool vTriggerPaint=true; //how to test it?
 
     if (vTriggerPaint)
@@ -229,6 +230,7 @@ void SynEdit::setCaretXYEx(bool CallEnsureCursorPos, BufferCoord value)
         if (mCaretX != value.Char) {
             mCaretX = value.Char;
             mStatusChanges.setFlag(SynStatusChange::scCaretX);
+            invalidateLine(mCaretY);
         }
         if (mCaretY != value.Line) {
             int oldCaretY = mCaretY;
@@ -238,8 +240,6 @@ void SynEdit::setCaretXYEx(bool CallEnsureCursorPos, BufferCoord value)
                 invalidateLine(oldCaretY);
             }
             mStatusChanges.setFlag(SynStatusChange::scCaretY);
-        } else {
-            invalidateLine(mCaretY);
         }
         // Call UpdateLastCaretX before DecPaintLock because the event handler it
         // calls could raise an exception, and we don't want fLastCaretX to be
@@ -1691,6 +1691,40 @@ void SynEdit::MoveCaretHorz(int DX, bool isSelection)
     MoveCaretAndSelection(mBlockBegin, ptDst, isSelection);
 }
 
+void SynEdit::MoveCaretVert(int DY, bool isSelection)
+{
+    DisplayCoord ptO = displayXY();
+    DisplayCoord ptDst = ptO;
+
+    ptDst.Row+=DY;
+    if (DY >= 0) {
+        if (rowToLine(ptDst.Row) > mLines->count())
+            ptDst.Row = std::max(1, displayLineCount());
+    } else {
+        if (ptDst.Row < 1)
+            ptDst.Row = 1;
+    }
+
+    if (ptO.Row != ptDst.Row) {
+        if (mOptions.testFlag(eoKeepCaretX))
+            ptDst.Column = mLastCaretX;
+    }
+    BufferCoord vDstLineChar = displayToBufferPos(ptDst);
+    int SaveLastCaretX = mLastCaretX;
+    bool NewStepAside = mMBCSStepAside;
+
+    // set caret and block begin / end
+    incPaintLock();
+    MoveCaretAndSelection(mBlockBegin, vDstLineChar, isSelection);
+    decPaintLock();
+
+    // Set fMBCSStepAside and restore fLastCaretX after moving caret, since
+    // UpdateLastCaretX, called by SetCaretXYEx, changes them. This is the one
+    // case where we don't want that.
+    mMBCSStepAside = NewStepAside;
+    mLastCaretX = SaveLastCaretX;
+}
+
 void SynEdit::MoveCaretAndSelection(const BufferCoord &ptBefore, const BufferCoord &ptAfter, bool isSelection)
 {
     if (mOptions.testFlag(SynEditorOption::eoGroupUndo) && mUndoList->CanUndo())
@@ -1789,6 +1823,7 @@ void SynEdit::onCommandProcessed(SynEditorCommand Command, QChar AChar, void *pD
 void SynEdit::ExecuteCommand(SynEditorCommand Command, QChar AChar, void *pData)
 {
     switch(Command) {
+    //horizontal caret movement or selection
     case SynEditorCommand::ecLeft:
     case SynEditorCommand::ecSelLeft:
         MoveCaretHorz(-1, Command == SynEditorCommand::ecSelLeft);
@@ -1812,6 +1847,51 @@ void SynEdit::ExecuteCommand(SynEditorCommand Command, QChar AChar, void *pData)
     case SynEditorCommand::ecLineEnd:
     case SynEditorCommand::ecSelLineEnd:
         MoveCaretToLineEnd(Command == SynEditorCommand::ecSelLineEnd);
+        break;
+    // vertical caret movement or selection
+    case SynEditorCommand::ecUp:
+    case SynEditorCommand::ecSelUp:
+        MoveCaretVert(-1, Command == SynEditorCommand::ecSelUp);
+        break;
+    case SynEditorCommand::ecDown:
+    case SynEditorCommand::ecSelDown:
+        MoveCaretVert(1, Command == SynEditorCommand::ecSelDown);
+        break;
+    case SynEditorCommand::ecPageUp:
+    case SynEditorCommand::ecSelPageUp:
+    case SynEditorCommand::ecPageDown:
+    case SynEditorCommand::ecSelPageDown:
+    {
+        int counter = mLinesInWindow;
+        if (mOptions.testFlag(eoHalfPageScroll))
+            counter /= 2;
+        if (mOptions.testFlag(eoScrollByOneLess)) {
+            counter -=1;
+        }
+        if (counter<0)
+            break;
+        if (Command == SynEditorCommand::ecPageUp || Command == SynEditorCommand::ecSelPageUp) {
+            counter = -counter;
+        }
+        MoveCaretVert(counter, Command == SynEditorCommand::ecSelPageUp || Command == SynEditorCommand::ecSelPageDown);
+        break;
+    }
+    case SynEditorCommand::ecPageTop:
+    case SynEditorCommand::ecSelPageTop:
+        MoveCaretVert(mTopLine-mCaretY, Command == SynEditorCommand::ecSelPageTop);
+        break;
+    case SynEditorCommand::ecPageBottom:
+    case SynEditorCommand::ecSelPageBottom:
+        MoveCaretVert(mTopLine+mLinesInWindow-1-mCaretY, Command == SynEditorCommand::ecSelPageBottom);
+        break;
+    case SynEditorCommand::ecEditorTop:
+    case SynEditorCommand::ecSelEditorTop:
+        MoveCaretVert(1-mCaretY, Command == SynEditorCommand::ecSelEditorTop);
+        break;
+    case SynEditorCommand::ecEditorBottom:
+    case SynEditorCommand::ecSelEditorBottom:
+        if (!mLines->empty())
+            MoveCaretVert(mLines->count()-mCaretY, Command == SynEditorCommand::ecSelEditorBottom);
         break;
     }
 
@@ -1891,51 +1971,6 @@ void SynEdit::ExecuteCommand(SynEditorCommand Command, QChar AChar, void *pData)
 //    IncPaintLock;
 //    try
 //      case Command of
-//        // vertical caret movement or selection
-//        ecUp, ecSelUp: begin
-//            MoveCaretVert(-1, Command = ecSelUp);
-//            Update;
-//          end;
-//        ecDown, ecSelDown: begin
-//            MoveCaretVert(1, Command = ecSelDown);
-//            Update;
-//          end;
-//        ecPageUp, ecSelPageUp, ecPageDown, ecSelPageDown: begin
-//            counter := fLinesInWindow shr Ord(eoHalfPageScroll in fOptions);
-//            if eoScrollByOneLess in fOptions then
-//              Dec(counter);
-//            if (Command in [ecPageUp, ecSelPageUp]) then
-//              counter := -counter;
-//            TopLine := TopLine + counter;
-//            MoveCaretVert(counter, Command in [ecSelPageUp, ecSelPageDown]);
-//            Update;
-//          end;
-//        ecPageTop, ecSelPageTop: begin
-//            CaretNew := DisplayToBufferPos(
-//              DisplayCoord(DisplayX, TopLine));
-//            MoveCaretAndSelection(CaretXY, CaretNew, Command = ecSelPageTop);
-//            Update;
-//          end;
-//        ecPageBottom, ecSelPageBottom: begin
-//            CaretNew := DisplayToBufferPos(
-//              DisplayCoord(DisplayX, TopLine + LinesInWindow - 1));
-//            MoveCaretAndSelection(CaretXY, CaretNew, Command = ecSelPageBottom);
-//            Update;
-//          end;
-//        ecEditorTop, ecSelEditorTop: begin
-//            CaretNew.Char := 1;
-//            CaretNew.Line := 1;
-//            MoveCaretAndSelection(CaretXY, CaretNew, Command = ecSelEditorTop);
-//            Update;
-//          end;
-//        ecEditorBottom, ecSelEditorBottom: begin
-//            CaretNew.Char := 1;
-//            CaretNew.Line := Lines.Count;
-//            if (CaretNew.Line > 0) then
-//              CaretNew.Char := Length(Lines[CaretNew.Line - 1]) + 1;
-//            MoveCaretAndSelection(CaretXY, CaretNew, Command = ecSelEditorBottom);
-//            Update;
-//          end;
 //        // goto special line / column position
 //        ecGotoXY, ecSelGotoXY:
 //          if Assigned(Data) then begin
@@ -2813,6 +2848,7 @@ void SynEdit::paintEvent(QPaintEvent *event)
     if (rcCaret == rcClip) {
         // only update caret
         // calculate the needed invalid area for caret
+        //qDebug()<<"update caret"<<rcCaret;
         painter.drawImage(rcCaret,*mContentImage,rcCaret);
     } else {
         QRect rcDraw;
