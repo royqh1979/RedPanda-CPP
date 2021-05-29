@@ -3,6 +3,7 @@
 #include <QPainter>
 #include <QTextStream>
 #include <algorithm>
+#include <QDebug>
 
 int MinMax(int x, int mi, int ma)
 {
@@ -539,4 +540,54 @@ SynFontStyles getFontStyles(const QFont &font)
     styles.setFlag(SynFontStyle::fsItalic, font.italic());
     styles.setFlag(SynFontStyle::fsUnderline, font.underline());
     styles.setFlag(SynFontStyle::fsStrikeOut, font.strikeOut());
+}
+
+bool isWordChar(const QChar& ch) {
+    return (ch == '_') || ch.isLetterOrNumber();
+}
+
+int StrScanForWordChar(const QString &s, int startPos)
+{
+    for (int i=startPos-1;i<s.length();i++) {
+        if (isWordChar(s[i])) {
+            return i+1;
+        }
+    }
+    return 0;
+}
+
+int StrScanForNonWordChar(const QString &s, int startPos)
+{
+    for (int i=startPos-1;i<s.length();i++) {
+        if (!isWordChar(s[i])) {
+            return i+1;
+        }
+    }
+    return 0;
+}
+
+int StrRScanForWordChar(const QString &s, int startPos)
+{
+    int i = startPos-1;
+    if (i>s.length())
+        return 0;
+    while (i>=0) {
+        if (isWordChar(s[i]))
+            return i+1;
+        i--;
+    }
+    return 0;
+}
+
+int StrRScanForNonWordChar(const QString &s, int startPos)
+{
+    int i = startPos-1;
+    if (i>s.length())
+        return 0;
+    while (i>=0) {
+        if (!isWordChar(s[i]))
+            return i+1;
+        i--;
+    }
+    return 0;
 }

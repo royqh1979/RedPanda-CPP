@@ -89,4 +89,32 @@ void SynDrawGradient(QPaintDevice* ACanvas, const QColor& AStartColor, const QCo
 
 SynFontStyles getFontStyles(const QFont& font);
 
+/**
+ * Find the first occurency of word char in s, starting from startPos
+ * Note: the index of first char in s in 1
+ * @return index of the char founded , 0 if not found
+ */
+int StrScanForWordChar(const QString& s, int startPos);
+
+/**
+ * Find the first occurency of non word char in s, starting from startPos
+ * Note: the index of first char in s in 1
+ * @return index of the char founded , 0 if not found
+ */
+int StrScanForNonWordChar(const QString& s, int startPos);
+
+/**
+ * Find the first occurency of word char in s right to left, starting from startPos
+ * Note: the index of first char in s in 1
+ * @return index of the char founded , 0 if not found
+ */
+int StrRScanForWordChar(const QString& s, int startPos);
+
+/**
+ * Find the first occurency of non word char in s  right to left, starting from startPos
+ * Note: the index of first char in s in 1
+ * @return index of the char founded , 0 if not found
+ */
+int StrRScanForNonWordChar(const QString& s, int startPos);
+
 #endif // MISCPROCS_H

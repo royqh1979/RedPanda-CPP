@@ -90,6 +90,18 @@ int SynEditStringList::lengthOfLongestLine()
         return 0;
 }
 
+QString SynEditStringList::lineBreak()
+{
+    switch(mFileEndingType) {
+    case FileEndingType::Linux:
+        return "\n";
+    case FileEndingType::Windows:
+        return "\r\n";
+    case FileEndingType::Mac:
+        return "\r";
+    }
+}
+
 SynRangeState SynEditStringList::ranges(int Index)
 {
     if (Index>=0 && Index < mList.size()) {
@@ -340,14 +352,7 @@ QString SynEditStringList::GetTextStr()
     QString Result;
     for (PSynEditStringRec& line:mList) {
         Result.append(line->fString);
-        switch(mFileEndingType) {
-        case FileEndingType::Linux:
-            Result.append('\n');
-        case FileEndingType::Windows:
-            Result.append("\r\n");
-        case FileEndingType::Mac:
-            Result.append("\r");
-        }
+        Result.append(lineBreak());
     }
     return Result;
 }
@@ -489,14 +494,14 @@ void SynEditStringList::LoadFromFile(QFile &file, const QByteArray& encoding, QB
                 allAscii = isTextAllAscii(line);
             }
             if (allAscii) {
-                addItem(removeLineEnds(QString::fromLatin1(line)));
+                addItem(TrimRight(QString::fromLatin1(line)));
             } else {
                 QString newLine = codec->toUnicode(line.constData(),line.length(),&state);
                 if (state.invalidChars>0) {
                     needReread = true;
                     break;
                 }
-                addItem(removeLineEnds(newLine));
+                addItem(TrimRight(newLine));
             }
             if (file.atEnd()){
                 break;
@@ -528,7 +533,7 @@ void SynEditStringList::LoadFromFile(QFile &file, const QByteArray& encoding, QB
     QString line;
     clear();
     while (textStream.readLineInto(&line)) {
-        addItem(removeLineEnds(line));
+        addItem(TrimRight(line));
     }
 }
 

@@ -364,7 +364,7 @@ void inflateRect(QRect &rect, int dx, int dy)
     rect.setBottom(rect.bottom()+dy);
 }
 
-QString removeLineEnds(const QString &s)
+QString TrimRight(const QString &s)
 {
     if (s.isEmpty())
         return s;

@@ -56,6 +56,7 @@ public:
     int braceLevels(int Index);
     int lineColumns(int Index);
     int lengthOfLongestLine();
+    QString lineBreak();
     SynRangeState ranges(int Index);
     void setRange(int Index, SynRangeState ARange);
     void setParenthesisLevel(int Index, int level);

@@ -91,7 +91,8 @@ enum SynEditorOption {
   eoTabIndent = 0x02000000, //When active <Tab> and <Shift><Tab> act as block indent, unindent when text is selected
   eoTabsToSpaces = 0x04000000, //Converts a tab character to a specified number of space characters
   eoShowRainbowColor = 0x08000000,
-  eoTrimTrailingSpaces = 0x10000000 //Spaces at the end of lines will be trimmed and not saved
+  eoTrimTrailingSpaces = 0x10000000, //Spaces at the end of lines will be trimmed and not saved
+  eoSelectWordByDblClick = 0x20000000
 };
 
 Q_DECLARE_FLAGS(SynEditorOptions, SynEditorOption)
@@ -172,7 +173,9 @@ public:
     QPoint RowColumnToPixels(const DisplayCoord& coord);
     DisplayCoord bufferToDisplayPos(const BufferCoord& p);
     BufferCoord displayToBufferPos(const DisplayCoord& p);
+    int leftSpaces(const QString& line);
     int charToColumn(int aLine, int aChar);
+    int columnToChar(int aLine, int aColumn);
     int stringColumns(const QString& line, int colsBefore);
     int getLineIndent(const QString& line);
     int rowToLine(int aRow);
@@ -197,6 +200,20 @@ public:
     void showCaret();
     void hideCaret();
     bool IsPointInSelection(const BufferCoord& Value);
+    BufferCoord NextWordPos();
+    BufferCoord NextWordPosEx(const BufferCoord& XY);
+    BufferCoord WordStart();
+    BufferCoord WordStartEx(const BufferCoord& XY);
+    BufferCoord WordEnd();
+    BufferCoord WordEndEx(const BufferCoord& XY);
+    BufferCoord PrevWordPos();
+    BufferCoord PrevWordPosEx(const BufferCoord& XY);
+    void SetSelWord();
+    void SetWordBlock(BufferCoord Value);
+
+//Commands
+    void SelectAll();
+    void DeleteLastChar();
 
 // setter && getters
     int topLine() const;
@@ -245,6 +262,10 @@ public:
 
     SynSelectionMode selectionMode() const;
     void setSelectionMode(SynSelectionMode value);
+
+    QString selText();
+
+    QString lineBreak();
 
 signals:
     void Changed();
@@ -306,6 +327,8 @@ private:
     void scrollWindow(int dx,int dy);
     void setInternalDisplayXY(const DisplayCoord& aPos);
     void internalSetCaretXY(const BufferCoord& Value);
+    void internalSetCaretX(int Value);
+    void internalSetCaretY(int Value);
     void setStatusChanged(SynStatusChanges changes);
     void doOnStatusChange(SynStatusChanges changes);
     void insertBlock(const BufferCoord& BB, const BufferCoord& BE, const QString& ChangeStr,
@@ -352,6 +375,14 @@ private:
                                bool isSelection);
     void MoveCaretToLineStart(bool isSelection);
     void MoveCaretToLineEnd(bool isSelection);
+    void SetSelectedTextEmpty();
+    void SetSelTextPrimitive(const QString& aValue);
+    void SetSelTextPrimitiveEx(SynSelectionMode PasteMode,
+                               const QString& Value, bool AddToUndoList);
+    void DoLinesDeleted(int FirstLine, int Count);
+    void ProperSetLine(int ALine, const QString& ALineText);
+    void DeleteSelection(const BufferCoord& BB, const BufferCoord& BE);
+    void InsertText(const QString& Value, SynSelectionMode PasteMode);
 
 private slots:
     void bookMarkOptionsChanged();
@@ -415,8 +446,7 @@ private:
     PSynEditUndoList mUndoList;
     PSynEditUndoList mRedoList;
     SynEditMarkList  mBookMarks;
-    int mMouseDownX;
-    int mMouseDownY;
+    QPoint mMouseDownPos;
     SynBookMarkOpt mBookMarkOpt;
     bool mHideSelection;
     int mMouseWheelAccumulator;
@@ -476,9 +506,6 @@ private:
     int m_blinkTimerId;
     int m_blinkStatus;
 
-
-
-
 friend class SynEditTextPainter;
 
 // QWidget interface
@@ -491,6 +518,9 @@ void focusInEvent(QFocusEvent *event) override;
 void focusOutEvent(QFocusEvent *event) override;
 void keyPressEvent(QKeyEvent *event) override;
 void mousePressEvent(QMouseEvent *event) override;
+void mouseReleaseEvent(QMouseEvent *event) override;
+void mouseMoveEvent(QMouseEvent *event) override;
+void mouseDoubleClickEvent(QMouseEvent *event) override;
 };
 
 #endif // SYNEDIT_H

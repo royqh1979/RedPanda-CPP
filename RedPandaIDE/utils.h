@@ -75,27 +75,21 @@ QString getCompiledExecutableName(const QString filename);
 void splitStringArguments(const QString& arguments, QStringList& argumentList);
 bool programHasConsole(const QString& filename);
 QString toLocalPath(const QString& filename);
-
 using LineProcessFunc =  std::function<void(const QString&)>;
 
 QStringList ReadStreamToLines(QTextStream* stream);
-
 void ReadStreamToLines(QTextStream* stream, LineProcessFunc lineFunc);
 
-
 QStringList TextToLines(const QString& text);
-
 void TextToLines(const QString& text, LineProcessFunc lineFunc);
 
 QStringList ReadFileToLines(const QString& fileName, QTextCodec* codec);
-
 void ReadFileToLines(const QString& fileName, QTextCodec* codec, LineProcessFunc lineFunc);
 
 void decodeKey(int combinedKey, int& key, Qt::KeyboardModifiers& modifiers);
-
 void inflateRect(QRect& rect, int delta);
 void inflateRect(QRect& rect, int dx, int dy);
-QString removeLineEnds(const QString& s);
+QString TrimRight(const QString& s);
 
 template <class F>
 class final_action
