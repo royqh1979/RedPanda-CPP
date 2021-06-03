@@ -90,6 +90,7 @@ void decodeKey(int combinedKey, int& key, Qt::KeyboardModifiers& modifiers);
 void inflateRect(QRect& rect, int delta);
 void inflateRect(QRect& rect, int dx, int dy);
 QString TrimRight(const QString& s);
+bool StringIsBlank(const QString& s);
 
 template <class F>
 class final_action

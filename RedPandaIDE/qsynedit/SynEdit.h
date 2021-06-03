@@ -85,8 +85,8 @@ enum SynEditorOption {
   eoScrollPastEol = 0x00080000, //Allows the cursor to go past the last character into the white space at the end of a line
   eoShowScrollHint = 0x00100000, //Shows a hint of the visible line numbers when scrolling vertically
   eoShowSpecialChars = 0x00200000, //Shows the special Characters
-  eoSmartTabDelete = 0x00400000, //similar to Smart Tabs, but when you delete characters
-  eoSmartTabs = 0x00800000, //When tabbing, the cursor will go to the next non-white space character of the previous line
+//  eoSmartTabDelete = 0x00400000, //similar to Smart Tabs, but when you delete characters
+//  eoSmartTabs = 0x00800000, //When tabbing, the cursor will go to the next non-white space character of the previous line
   eoSpecialLineDefaultFg = 0x01000000, //disables the foreground text color override when using the OnSpecialLineColor event
   eoTabIndent = 0x02000000, //When active <Tab> and <Shift><Tab> act as block indent, unindent when text is selected
   eoTabsToSpaces = 0x04000000, //Converts a tab character to a specified number of space characters
@@ -159,12 +159,6 @@ public:
     int caretX();
     int caretY();
 
-    void setCaretX(int value);
-    void setCaretY(int value);
-    void setCaretXY(const BufferCoord& value);
-    void setCaretXYEx(bool CallEnsureCursorPos, BufferCoord value);
-    void setCaretXYCentered(bool ForceToMiddle, const BufferCoord& value);
-
     void invalidateGutter();
     void invalidateGutterLine(int aLine);
     void invalidateGutterLines(int FirstLine, int LastLine);
@@ -174,7 +168,9 @@ public:
     DisplayCoord bufferToDisplayPos(const BufferCoord& p);
     BufferCoord displayToBufferPos(const DisplayCoord& p);
     int leftSpaces(const QString& line);
+    QString GetLeftSpacing(int charCount,bool wantTabs);
     int charToColumn(int aLine, int aChar);
+    int charToColumn(const QString& s, int aChar);
     int columnToChar(int aLine, int aColumn);
     int stringColumns(const QString& line, int colsBefore);
     int getLineIndent(const QString& line);
@@ -191,14 +187,9 @@ public:
     void lockPainter();
     void unlockPainter();
     bool selAvail();
-    void setCaretAndSelection(const BufferCoord& ptCaret,
-                              const BufferCoord& ptBefore,
-                              const BufferCoord& ptAfter);
-    void clearUndo();
+
     int charColumns(QChar ch);
     double dpiFactor();
-    void showCaret();
-    void hideCaret();
     bool IsPointInSelection(const BufferCoord& Value);
     BufferCoord NextWordPos();
     BufferCoord NextWordPosEx(const BufferCoord& XY);
@@ -208,12 +199,27 @@ public:
     BufferCoord WordEndEx(const BufferCoord& XY);
     BufferCoord PrevWordPos();
     BufferCoord PrevWordPosEx(const BufferCoord& XY);
-    void SetSelWord();
-    void SetWordBlock(BufferCoord Value);
+    void CommandProcessor(SynEditorCommand Command, QChar AChar = QChar(), void * pData = nullptr);
+    //Caret
+    void showCaret();
+    void hideCaret();
+    void setCaretX(int value);
+    void setCaretY(int value);
+    void setCaretXY(const BufferCoord& value);
+    void setCaretXYEx(bool CallEnsureCursorPos, BufferCoord value);
+    void setCaretXYCentered(bool ForceToMiddle, const BufferCoord& value);
 
-//Commands
+    bool GetHighlighterAttriAtRowCol(const BufferCoord& XY, QString& Token,
+      PSynHighlighterAttribute& Attri);
+    bool GetHighlighterAttriAtRowCol(const BufferCoord& XY, QString& Token,
+      bool& tokenFinished, SynHighlighterTokenType& TokenType,
+      PSynHighlighterAttribute& Attri);
+    bool GetHighlighterAttriAtRowColEx(const BufferCoord& XY, QString& Token,
+      SynHighlighterTokenType& TokenType, SynTokenKind &TokenKind, int &Start,
+      PSynHighlighterAttribute& Attri);
+    //Commands
     void SelectAll();
-    void DeleteLastChar();
+
 
 // setter && getters
     int topLine() const;
@@ -225,10 +231,7 @@ public:
     void setLeftChar(int Value);
 
     BufferCoord blockBegin() const;
-    void setBlockBegin(BufferCoord value);
-
     BufferCoord blockEnd() const;
-    void setBlockEnd(BufferCoord Value);
 
     SynSelectionMode activeSelectionMode() const;
     void setActiveSelectionMode(const SynSelectionMode &Value);
@@ -309,7 +312,6 @@ private:
     void clearAreaList(SynEditingAreaList areaList);
     void computeCaret(int X, int Y);
     void computeScroll(int X, int Y);
-    void doBlockIndent();
 
     void incPaintLock();
     void decPaintLock();
@@ -350,8 +352,6 @@ private:
     int lineHasChar(int Line, int startChar, QChar character, const QString& highlighterAttrName);
     void findSubFoldRange(PSynEditFoldRanges TopFoldRanges,int FoldIndex,PSynEditFoldRanges& parentFoldRanges, PSynEditFoldRange Parent);
     PSynEditFoldRange collapsedFoldStartAtLine(int Line);
-    void setSelTextPrimitiveEx(SynSelectionMode PasteMode,
-                               const QString& Value, bool AddToUndoList);
     void doOnPaintTransientEx(SynTransientType TransientType, bool Lock);
     void initializeCaret();
     PSynEditFoldRange foldStartAtLine(int Line);
@@ -363,7 +363,6 @@ private:
     void paintCaret(QPainter& painter, const QRect rcClip);
     int textOffset();
     SynEditorCommand TranslateKeyCode(int key, Qt::KeyboardModifiers modifiers);
-    void CommandProcessor(SynEditorCommand Command, QChar AChar, void * pData);
     /**
      * Move the caret to right DX columns
      * @param DX
@@ -379,10 +378,50 @@ private:
     void SetSelTextPrimitive(const QString& aValue);
     void SetSelTextPrimitiveEx(SynSelectionMode PasteMode,
                                const QString& Value, bool AddToUndoList);
+    void setSelText(const QString& Value);
     void DoLinesDeleted(int FirstLine, int Count);
+    void DoLinesInserted(int FirstLine, int Count);
     void ProperSetLine(int ALine, const QString& ALineText);
     void DeleteSelection(const BufferCoord& BB, const BufferCoord& BE);
-    void InsertText(const QString& Value, SynSelectionMode PasteMode);
+    void InsertText(const QString& Value, SynSelectionMode PasteMode,bool AddToUndoList);
+    int InsertTextByNormalMode(const QString& Value);
+    int InsertTextByColumnMode(const QString& Value,bool AddToUndoList);
+    int InsertTextByLineMode(const QString& Value);
+    void DeleteFromTo(const BufferCoord& start, const BufferCoord& end);
+    void SetSelWord();
+    void SetWordBlock(BufferCoord Value);
+    void setCaretAndSelection(const BufferCoord& ptCaret,
+                              const BufferCoord& ptBefore,
+                              const BufferCoord& ptAfter);
+
+    void clearUndo();
+    BufferCoord GetPreviousLeftBracket(int x,int y);
+
+    //Commands
+    void DeleteLastChar();
+    void DeleteCurrentChar();
+    void DeleteWord();
+    void DeleteToEOL();
+    void DeleteLastWord();
+    void DeleteFromBOL();
+    void DeleteLine();
+    void DuplicateLine();
+    void MoveSelUp();
+    void MoveSelDown();
+    void ClearAll();
+    void InsertLine(bool moveCaret);
+    void DoTabKey();
+    void DoShiftTabKey();
+    void doBlockIndent();
+    void doBlockUnindent();
+    void DoAddChar(QChar AChar);
+
+    bool CanDoBlockIndent();
+
+private:
+    void setBlockBegin(BufferCoord value);
+    void setBlockEnd(BufferCoord Value);
+    void setSelLength(int Value);
 
 private slots:
     void bookMarkOptionsChanged();

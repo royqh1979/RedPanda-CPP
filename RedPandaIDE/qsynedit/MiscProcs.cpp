@@ -591,3 +591,27 @@ int StrRScanForNonWordChar(const QString &s, int startPos)
     }
     return 0;
 }
+
+int CountLines(const QString &Line, int start)
+{
+    int Result = 0;
+    int i=start;
+    while (i<Line.length()) {
+        if (Line[i]=='\r')
+            i++;
+        if (Line[i]=='\n')
+            i++;
+        Result ++ ;
+        i = GetEOL(Line,i);
+    }
+    return Result;
+}
+
+void ensureNotAfter(BufferCoord &cord1, BufferCoord &cord2)
+{
+    if((cord1.Line > cord2.Line) || (
+                cord1.Line == cord2.Line &&
+                cord1.Char > cord2.Char)) {
+        std::swap(cord1,cord2);
+    }
+}

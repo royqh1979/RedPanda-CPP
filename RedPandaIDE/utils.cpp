@@ -378,3 +378,12 @@ QString TrimRight(const QString &s)
         return QString();
     }
 }
+
+bool StringIsBlank(const QString &s)
+{
+    for (QChar ch:s) {
+        if (ch != ' ' && ch != '\t')
+            return false;
+    }
+    return true;
+}

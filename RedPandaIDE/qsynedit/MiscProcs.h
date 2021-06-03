@@ -61,6 +61,7 @@ int StrScanForCharInSet(const QString& Line, int Start, const QSet<QChar>&  ACha
 int StrRScanForCharInSet(const QString& Line, int Start, const QSet<QChar>&  AChars);
 
 int GetEOL(const QString& Line, int start);
+int CountLines(const QString& Line, int start);
 
 // Remove all '/' characters from string by changing them into '\.'.
 // Change all '\' characters into '\\' to allow for unique decoding.
@@ -116,5 +117,7 @@ int StrRScanForWordChar(const QString& s, int startPos);
  * @return index of the char founded , 0 if not found
  */
 int StrRScanForNonWordChar(const QString& s, int startPos);
+
+void ensureNotAfter(BufferCoord& cord1, BufferCoord& cord2);
 
 #endif // MISCPROCS_H
