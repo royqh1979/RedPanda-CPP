@@ -234,7 +234,7 @@ void MainWindow::on_actionSelectAll_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor != NULL ) {
-        editor->CommandProcessor()
+        editor->CommandProcessor(SynEditorCommand::ecSelectAll);
     }
 }
 

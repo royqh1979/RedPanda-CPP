@@ -448,7 +448,7 @@ private:
     BufferCoord mBlockBegin;
     BufferCoord mBlockEnd;
     int mCaretX;
-    int mLastCaretX;
+    int mLastCaretColumn;
     int mCaretY;
     int mCharsInWindow;
     int mCharWidth;

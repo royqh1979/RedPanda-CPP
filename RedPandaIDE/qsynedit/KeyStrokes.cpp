@@ -204,7 +204,7 @@ void SynEditKeyStrokes::resetDefaults()
     add(SynEditorCommand::ecSelLineEnd, Qt::Key_End, Qt::ShiftModifier);
     add(SynEditorCommand::ecEditorBottom, Qt::Key_End, Qt::ControlModifier);
     add(SynEditorCommand::ecSelEditorBottom, Qt::Key_End, Qt::ShiftModifier|Qt::ControlModifier);
-    add(SynEditorCommand::ecToggleMode, Qt::Key_Insert, Qt::ShiftModifier);
+    add(SynEditorCommand::ecToggleMode, Qt::Key_Insert, Qt::NoModifier);
     add(SynEditorCommand::ecCopy, Qt::Key_Insert, Qt::ControlModifier);
     add(SynEditorCommand::ecCut, Qt::Key_Delete, Qt::ShiftModifier);
     add(SynEditorCommand::ecPaste, Qt::Key_Insert, Qt::ShiftModifier);

@@ -85,6 +85,7 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
     mOverwriteCaret = SynEditCaretType::ctBlock;
     mSelectionMode = SynSelectionMode::smNormal;
     mActiveSelectionMode = SynSelectionMode::smNormal;
+    mReadOnly = false;
     qDebug()<<"init SynEdit: 7";
 
     //stop qt to auto fill background
@@ -108,7 +109,7 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
     mLeftChar = 1;
     mTopLine = 1;
     mCaretX = 1;
-    mLastCaretX = 1;
+    mLastCaretColumn = 1;
     mCaretY = 1;
     mBlockBegin.Char = 1;
     mBlockBegin.Line = 1;
@@ -486,7 +487,7 @@ BufferCoord SynEdit::displayToBufferPos(const DisplayCoord &p)
     BufferCoord Result{p.Column,p.Row};
     // Account for code folding
     if (mUseCodeFolding)
-        Result.Line = foldRowToLine(p.Column);
+        Result.Line = foldRowToLine(p.Row);
     // Account for tabs
     if (Result.Line <= mLines->count() ) {
         Result.Char = columnToChar(Result.Line,p.Column);
@@ -782,7 +783,6 @@ void SynEdit::clearUndo()
 BufferCoord SynEdit::GetPreviousLeftBracket(int x, int y)
 {
     QChar Test;
-    int NumBrackets;
     QString vDummy;
     PSynHighlighterAttribute attr;
     BufferCoord p;
@@ -796,48 +796,46 @@ BufferCoord SynEdit::GetPreviousLeftBracket(int x, int y)
     if (PosY<1 )
         return Result;
     QString Line = mLines->getString(PosY - 1);
-if (PosX > Length(Line)) or (PosX<1) then
-  PosX := Length(Line);
-numBrackets := 1;
-while True do begin
-  if Length(Line)=0 then begin;
-    dec(PosY);
-    if PosY<1 then
-      Exit;
-    Line := Lines[PosY - 1];
-    PosX := Length(Line);
-    continue;
-  end;
-  Test := Line[PosX];
-  p.Char := PosX;
-  p.Line := PosY;
-  if Test in ['{','}'] then begin
-    if GetHighlighterAttriAtRowCol(p, vDummy, attr) then
-      isCommentOrStringOrChar :=
-         (attr = Highlighter.StringAttribute) or (attr = Highlighter.CommentAttribute) or (attr.Name
-                  =
-                  'Character')
-    else
-      isCommentOrStringOrChar := false;
-    if (Test = '{') and (not isCommentOrStringOrChar) then
-      dec(NumBrackets)
-    else if (Test = '}') and (not isCommentOrStringOrChar) then
-      inc(NumBrackets);
-    if NumBrackets = 0 then begin
-      // matching bracket found, set caret and bail out
-      Result := p;
-      exit;
-    end;
-  end;
-  dec(PosX);
-  if PosX<1 then begin
-    dec(PosY);
-    if PosY<1 then
-      Exit;
-    Line := Lines[PosY - 1];
-    PosX := Length(Line);
-  end;
-end;
+    if ((PosX > Line.length()) || (PosX<1))
+        PosX = Line.length();
+    int numBrackets = 1;
+    while (true) {
+        if (Line.isEmpty()){
+            PosY--;
+            if (PosY<1)
+                return Result;
+            Line = mLines->getString(PosY - 1);
+            PosX = Line.length();
+            continue;
+        }
+        Test = Line[PosX-1];
+        p.Char = PosX;
+        p.Line = PosY;
+        if (Test=='{' || Test == '}') {
+            if (GetHighlighterAttriAtRowCol(p, vDummy, attr)) {
+                isCommentOrStringOrChar =
+                        (attr == mHighlighter->stringAttribute()) ||
+                        (attr == mHighlighter->commentAttribute()) ||
+                        (attr->name() == SYNS_AttrCharacter);
+            } else
+                isCommentOrStringOrChar = false;
+            if ((Test == '{') && (! isCommentOrStringOrChar))
+                numBrackets--;
+            else if ((Test == '}') && (!isCommentOrStringOrChar))
+                numBrackets++;
+            if (numBrackets == 0) {
+                return p;
+            }
+        }
+        PosX--;
+        if (PosX<1) {
+            PosY--;
+            if (PosY<1)
+                return Result;
+            Line = mLines->getString(PosY - 1);
+            PosX = Line.length();
+        }
+    }
 }
 
 int SynEdit::charColumns(QChar ch)
@@ -1081,7 +1079,7 @@ void SynEdit::DeleteLastChar()
     //TabBuffer := Lines.ExpandedStrings[CaretY - 1];
     int Len = Temp.length();
     BufferCoord Caret = caretXY();
-    int vTabTrim = 0;
+//    int vTabTrim = 0;
     QString helper = "";
     if (mCaretX > Len + 1) {
 //        if (mOptions.setFlag(eoSmartTabDelete)) {
@@ -1443,8 +1441,9 @@ void SynEdit::InsertLine(bool moveCaret)
                 Temp2.remove(0, mCaretX - 1);
                 ProperSetLine(mCaretY-1,Temp);
                 QString Temp4=GetLeftSpacing(SpaceCount1, true);
-                if (mOptions.testFlag(eoAddIndent) && GetHighlighterAttriAtRowCol(BufferCoord{Temp3.length(), mCaretY},
-                        Temp3, &Attr)) { // only add indent to source files
+                if (mOptions.testFlag(eoAddIndent) &&
+                        GetHighlighterAttriAtRowCol(BufferCoord{Temp3.length(), mCaretY},
+                        Temp3, Attr)) { // only add indent to source files
                     if (Attr != mHighlighter->commentAttribute()) { // and outside of comments
                         if ((!Temp.isEmpty() && Temp[Temp.length()-1] ==':')
                               || (
@@ -1555,8 +1554,6 @@ void SynEdit::DoTabKey()
         return;
     }
     int i = 0;
-    int iLine = 0;
-    int MinLen = 0;
     {
         mUndoList->BeginBlock();
         auto action = finally([this]{
@@ -1600,8 +1597,8 @@ void SynEdit::DoTabKey()
 void SynEdit::DoShiftTabKey()
 {
     // Provide Visual Studio like block indenting
-    if (mOptions.testFlag(eoTabIndent) && CanBlockUnindent()) {
-      doBlockUnIndent();
+    if (mOptions.testFlag(eoTabIndent) && CanDoBlockIndent()) {
+      doBlockUnindent();
       return;
     }
 
@@ -1745,8 +1742,7 @@ void SynEdit::doBlockIndent()
     BufferCoord  OrgCaretPos;
     BufferCoord  BB, BE;
     QString StrToInsert;
-    int Run;
-    int e,x,i,InsertStrLen;
+    int e,x,i;
     QString Spaces;
     SynSelectionMode OrgSelectionMode;
     BufferCoord InsertionPos;
@@ -1990,7 +1986,7 @@ void SynEdit::doOnPaintTransient(SynTransientType TransientType)
 void SynEdit::updateLastCaretX()
 {
     mMBCSStepAside = false;
-    mLastCaretX = displayX();
+    mLastCaretColumn = displayX();
 }
 
 void SynEdit::ensureCursorPosVisible()
@@ -2921,10 +2917,10 @@ void SynEdit::MoveCaretVert(int DY, bool isSelection)
 
     if (ptO.Row != ptDst.Row) {
         if (mOptions.testFlag(eoKeepCaretX))
-            ptDst.Column = mLastCaretX;
+            ptDst.Column = mLastCaretColumn;
     }
     BufferCoord vDstLineChar = displayToBufferPos(ptDst);
-    int SaveLastCaretX = mLastCaretX;
+    int SaveLastCaretX = mLastCaretColumn;
     bool NewStepAside = mMBCSStepAside;
 
     // set caret and block begin / end
@@ -2936,7 +2932,7 @@ void SynEdit::MoveCaretVert(int DY, bool isSelection)
     // UpdateLastCaretX, called by SetCaretXYEx, changes them. This is the one
     // case where we don't want that.
     mMBCSStepAside = NewStepAside;
-    mLastCaretX = SaveLastCaretX;
+    mLastCaretColumn = SaveLastCaretX;
 }
 
 void SynEdit::MoveCaretAndSelection(const BufferCoord &ptBefore, const BufferCoord &ptAfter, bool isSelection)
@@ -3558,6 +3554,28 @@ void SynEdit::ExecuteCommand(SynEditorCommand Command, QChar AChar, void *pData)
     case SynEditorCommand::ecChar:
         DoAddChar(AChar);
         break;
+    case SynEditorCommand::ecInsertMode:
+        if (!mReadOnly)
+            mInserting = true;
+        break;
+    case SynEditorCommand::ecOverwriteMode:
+        if (!mReadOnly)
+            mInserting = false;
+        break;
+    case SynEditorCommand::ecToggleMode:
+        if (!mReadOnly) {
+            mInserting = !mInserting;
+            updateCaret();
+        }
+        break;
+        //            InsertMode := TRUE;
+        //          end;
+        //        ecOverwriteMode: begin
+        //            InsertMode := FALSE;
+        //          end;
+        //        ecToggleMode: begin
+        //            InsertMode := not InsertMode;
+        //          end;
     }
 
 //    procedure ForceCaretX(aCaretX: integer);
