@@ -114,7 +114,8 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
     mBlockBegin.Char = 1;
     mBlockBegin.Line = 1;
     mBlockEnd = mBlockBegin;
-    mOptions = eoAutoIndent | eoDragDropEditing | eoEnhanceEndKey |
+    mOptions = eoAutoIndent | eoAddIndent
+            | eoDragDropEditing | eoEnhanceEndKey |
             eoShowScrollHint | eoGroupUndo | eoKeepCaretX | eoSelectWordByDblClick;
     qDebug()<<"init SynEdit: 9";
 
@@ -502,8 +503,10 @@ int SynEdit::leftSpaces(const QString &line)
         for (QChar ch:line) {
             if (ch == '\t') {
                 result += mTabWidth - (result % mTabWidth);
-            } else {
+            } else if (ch == ' ') {
                 result ++;
+            } else {
+                break;
             }
         }
     }
@@ -513,9 +516,9 @@ int SynEdit::leftSpaces(const QString &line)
 QString SynEdit::GetLeftSpacing(int charCount, bool wantTabs)
 {
     if (wantTabs && !mOptions.testFlag(eoTabsToSpaces)) {
-        return QString('\t',charCount / mTabWidth) + QString(' ', charCount % mTabWidth);
+        return QString(charCount / mTabWidth,'\t') + QString(charCount % mTabWidth,' ');
     } else {
-        return QString(' ', charCount);
+        return QString(charCount,' ');
     }
 }
 
@@ -558,10 +561,7 @@ int SynEdit::columnToChar(int aLine, int aColumn)
                 break;
             }
         }
-        if (i<len)
-            return i+1;
-        else
-            return len;
+        return i+1;
     }
 }
 
@@ -1205,8 +1205,7 @@ void SynEdit::DeleteCurrentChar()
             } else {
                 // join line with the line after
                 if (mCaretY < mLines->count()) {
-                      helper = QString(' ', mCaretX - 1 - Len);
-                      ProperSetLine(mCaretY - 1, Temp + helper + mLines->getString(mCaretY));
+                      ProperSetLine(mCaretY - 1, Temp + mLines->getString(mCaretY));
                       Caret.Char = 1;
                       Caret.Line = mCaretY + 1;
                       helper = lineBreak();
@@ -1440,7 +1439,11 @@ void SynEdit::InsertLine(bool moveCaret)
                 SpaceCount1 = leftSpaces(Temp);
                 Temp2.remove(0, mCaretX - 1);
                 ProperSetLine(mCaretY-1,Temp);
-                QString Temp4=GetLeftSpacing(SpaceCount1, true);
+                QString Temp4;
+                if (mOptions.testFlag(eoAutoIndent)) {
+                    Temp4=GetLeftSpacing(SpaceCount1, true);
+                    Temp2=TrimLeft(Temp2);
+                }
                 if (mOptions.testFlag(eoAddIndent) &&
                         GetHighlighterAttriAtRowCol(BufferCoord{Temp3.length(), mCaretY},
                         Temp3, Attr)) { // only add indent to source files
@@ -1573,7 +1576,7 @@ void SynEdit::DoTabKey()
         if (mOptions.testFlag(eoTabsToSpaces)) {
             int cols = charToColumn(mCaretY,mCaretX);
             i = tabWidth() - (cols) % mTabWidth;
-            Spaces = QString(' ',i);
+            Spaces = QString(i,' ');
             NewCaretX = mCaretX + i;
         } else {
             Spaces = '\t';
@@ -2550,7 +2553,9 @@ QString SynEdit::substringByColumns(const QString &s, int startColumn, int &colL
     int oldColumns;
     while (columns < startColumn) {
         oldColumns = columns;
-        if (i < len && s[i] == '\t')
+        if (i>=len)
+            break;
+        if (s[i] == '\t')
             columns += mTabWidth - (columns % mTabWidth);
         else
             columns += charColumns(s[i]);
@@ -3204,7 +3209,7 @@ int SynEdit::InsertTextByNormalMode(const QString &Value)
         if (StringIsBlank(sLeftSide))
             sLeftSide = GetLeftSpacing(displayX() - 1, true);
         else
-            sLeftSide += QString(' ',  mCaretX - 1 - sLeftSide.length());
+            sLeftSide += QString(mCaretX - 1 - sLeftSide.length(),' ');
     }
     sRightSide = lineText().mid(mCaretX-1);
     if (mUndoing) {
@@ -3280,7 +3285,7 @@ int SynEdit::InsertTextByColumnMode(const QString &Value, bool AddToUndoList)
 //          Move(Start^, Str[1], P - Start);
             if (mCaretY > mLines->count()) {
                 Result++;
-                TempString = QString(' ', InsertPos - 1) + Str;
+                TempString = QString(InsertPos - 1,' ') + Str;
                 mLines->add("");
                 if (AddToUndoList) {
                     LineBreakPos.Line = mCaretY - 1;
@@ -3307,7 +3312,7 @@ int SynEdit::InsertTextByColumnMode(const QString &Value, bool AddToUndoList)
                     BufferCoord{mCaretX + (P - Start), mCaretY}, "", mActiveSelectionMode);
             }
         }
-        if (P<Value.length() && (Value[P]=='\r') || (Value[P]=='\n')) {
+        if (P<Value.length() && ((Value[P]=='\r') || (Value[P]=='\n'))) {
             P++;
             if (P<Value.length() && Value[P]=='\n')
                 P++;

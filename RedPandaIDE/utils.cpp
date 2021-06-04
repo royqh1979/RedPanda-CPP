@@ -369,7 +369,7 @@ QString TrimRight(const QString &s)
     if (s.isEmpty())
         return s;
     int i = s.length()-1;
-    while ((i>=0) && ((s[i] == '\r') || (s[i]=='\n')))  {
+    while ((i>=0) && ((s[i] == '\r') || (s[i]=='\n') || (s[i] == '\t') || (s[i]==' ')))  {
         i--;
     };
     if (i>=0) {
@@ -386,4 +386,19 @@ bool StringIsBlank(const QString &s)
             return false;
     }
     return true;
+}
+
+QString TrimLeft(const QString &s)
+{
+    if (s.isEmpty())
+        return s;
+    int i=0;
+    while ((i<s.length()) && ((s[i] == '\r') || (s[i]=='\n') || (s[i] == '\t') || (s[i]==' ')))  {
+        i++;
+    };
+    if (i<s.length()) {
+        return s.mid(i);
+    } else {
+        return QString();
+    }
 }
