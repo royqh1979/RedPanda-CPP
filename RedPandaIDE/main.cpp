@@ -81,6 +81,13 @@ int main(int argc, char *argv[])
 //    qDebug() << settings->compilerSets().defaultSet()->CCompiler();
 //    qDebug()<<settings->compilerSets().size();
 //    qDebug()<<settings->compilerSets().list().at(0)->binDirs();
+
+      // load theme
+//    QFile cssFile("dracula.css");
+//    if (cssFile.open(QFile::ReadOnly)) {
+//        QString qss = QLatin1String(cssFile.readAll());
+//        app.setStyleSheet(qss);
+//    }
     MainWindow mainWindow;
     pMainWindow = &mainWindow;
     mainWindow.show();

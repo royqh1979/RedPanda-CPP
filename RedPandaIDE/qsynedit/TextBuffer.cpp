@@ -400,7 +400,7 @@ int SynEditStringList::calculateLineColumns(int Index)
 
 void SynEditStringList::InsertLines(int Index, int NumLines)
 {
-    if (Index<0 || Index>=mList.count()) {
+    if (Index<0 || Index>mList.count()) {
         ListIndexOutOfBounds(Index);
     }
     if (NumLines<=0)
@@ -420,7 +420,7 @@ void SynEditStringList::InsertLines(int Index, int NumLines)
 
 void SynEditStringList::InsertStrings(int Index, const QStringList &NewStrings)
 {
-    if (Index<0 || Index>=mList.count()) {
+    if (Index<0 || Index>mList.count()) {
         ListIndexOutOfBounds(Index);
     }
     if (NewStrings.isEmpty())

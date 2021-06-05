@@ -23,6 +23,8 @@ using PIntArray = std::shared_ptr<IntArray>;
 int MinMax(int x, int mi, int ma);
 int MulDiv(int a, int b, int c);
 void SwapInt(int& l, int &r);
+BufferCoord MaxBufferCoord(const BufferCoord& P1, const BufferCoord& P2);
+BufferCoord MinBufferCoord(const BufferCoord& P1, const BufferCoord& P2);
 QPoint MaxPoint(const QPoint& P1, const QPoint& P2);
 QPoint MinPoint(const QPoint& P1, const QPoint& P2);
 

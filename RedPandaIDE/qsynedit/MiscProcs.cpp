@@ -615,3 +615,21 @@ void ensureNotAfter(BufferCoord &cord1, BufferCoord &cord2)
         std::swap(cord1,cord2);
     }
 }
+
+BufferCoord MinBufferCoord(const BufferCoord &P1, const BufferCoord &P2)
+{
+    if ( (P2.Line < P1.Line) || ( (P2.Line == P1.Line) && (P2.Char < P1.Char)) ) {
+      return P2;
+    } else {
+      return P1;
+    }
+}
+
+BufferCoord MaxBufferCoord(const BufferCoord &P1, const BufferCoord &P2)
+{
+    if ( (P2.Line > P1.Line) || ( (P2.Line == P1.Line) && (P2.Char > P1.Char)) ) {
+      return P2;
+    } else {
+      return P1;
+    }
+}

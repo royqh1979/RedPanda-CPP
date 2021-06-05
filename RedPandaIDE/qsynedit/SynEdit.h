@@ -415,6 +415,11 @@ private:
     void doBlockIndent();
     void doBlockUnindent();
     void DoAddChar(QChar AChar);
+    void cutToClipboard();
+    void copyToClipboard();
+    void DoCopyToClipboard(const QString& s);
+    void pasteFromClipboard();
+
 
     bool CanDoBlockIndent();
 
@@ -438,6 +443,11 @@ private slots:
     void sizeOrFontChanged(bool bFont);
     void doChange();
     void doScrolled(int value);
+    void doAddStr(const QString& s);
+    void doUndo();
+    void doUndoItem();
+    void doRedo();
+    void doRedoItem();
 
 private:
     std::shared_ptr<QImage> mContentImage;
@@ -560,6 +570,7 @@ void mousePressEvent(QMouseEvent *event) override;
 void mouseReleaseEvent(QMouseEvent *event) override;
 void mouseMoveEvent(QMouseEvent *event) override;
 void mouseDoubleClickEvent(QMouseEvent *event) override;
+void inputMethodEvent(QInputMethodEvent *event) override;
 };
 
 #endif // SYNEDIT_H

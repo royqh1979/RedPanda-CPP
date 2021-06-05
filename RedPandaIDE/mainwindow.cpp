@@ -210,7 +210,7 @@ void MainWindow::on_actionUndo_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor != NULL ) {
-        //editor->undo();
+        editor->CommandProcessor(SynEditorCommand::ecUndo);
     }
 }
 
@@ -218,7 +218,7 @@ void MainWindow::on_actionRedo_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor != NULL ) {
-        //editor->redo();
+        editor->CommandProcessor(SynEditorCommand::ecRedo);
     }
 }
 
@@ -226,7 +226,7 @@ void MainWindow::on_actionCut_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor != NULL ) {
-        //editor->cut();
+        editor->CommandProcessor(SynEditorCommand::ecCut);
     }
 }
 
@@ -242,7 +242,7 @@ void MainWindow::on_actionCopy_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor != NULL ) {
-        //editor->copy();
+        editor->CommandProcessor(SynEditorCommand::ecCopy);
     }
 }
 
@@ -250,7 +250,7 @@ void MainWindow::on_actionPaste_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor != NULL ) {
-        //editor->paste();
+        editor->CommandProcessor(SynEditorCommand::ecPaste);
     }
 }
 
@@ -258,7 +258,7 @@ void MainWindow::on_actionIndent_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor != NULL ) {
-        //editor->indent();
+        editor->CommandProcessor(SynEditorCommand::ecTab);
     }
 }
 
@@ -266,7 +266,7 @@ void MainWindow::on_actionUnIndent_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor != NULL ) {
-        //editor->unindent();
+        editor->CommandProcessor(SynEditorCommand::ecShiftTab);
     }
 }
 

@@ -10,8 +10,10 @@
 #include "highlighter/base.h"
 #include "Constants.h"
 #include "TextPainter.h"
+#include <QClipboard>
 #include <QDebug>
 #include <QGuiApplication>
+#include <QInputMethodEvent>
 #include <QPaintEvent>
 #include <QStyleHints>
 
@@ -115,7 +117,7 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
     mBlockBegin.Line = 1;
     mBlockEnd = mBlockBegin;
     mOptions = eoAutoIndent | eoAddIndent
-            | eoDragDropEditing | eoEnhanceEndKey |
+            | eoDragDropEditing | eoEnhanceEndKey | eoTabIndent |
             eoShowScrollHint | eoGroupUndo | eoKeepCaretX | eoSelectWordByDblClick;
     qDebug()<<"init SynEdit: 9";
 
@@ -142,6 +144,9 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
             this, &SynEdit::doScrolled);
     connect(verticalScrollBar(),&QScrollBar::valueChanged,
             this, &SynEdit::doScrolled);
+
+    //enable input method
+    setAttribute(Qt::WA_InputMethodEnabled);
 }
 
 int SynEdit::displayLineCount()
@@ -471,7 +476,8 @@ DisplayCoord SynEdit::bufferToDisplayPos(const BufferCoord &p)
 {
     DisplayCoord result {p.Char,p.Line};
     // Account for tabs and charColumns
-    result.Column = charToColumn(p.Line,p.Char);
+    if (p.Line-1 <mLines->count())
+        result.Column = charToColumn(p.Line,p.Char);
     // Account for code folding
     if (mUseCodeFolding)
         result.Row = foldLineToRow(result.Row);
@@ -1580,7 +1586,7 @@ void SynEdit::DoTabKey()
             NewCaretX = mCaretX + i;
         } else {
             Spaces = '\t';
-            NewCaretX += 1;
+            NewCaretX = mCaretX + 1;
         }
 
         SetSelTextPrimitive(Spaces);
@@ -1755,10 +1761,12 @@ void SynEdit::doBlockIndent()
     StrToInsert = nullptr;
 
     auto action = finally([&,this]{
+        if (BB.Char > 1)
+            BB.Char += Spaces.length();
         if (BE.Char > 1)
           BE.Char+=Spaces.length();
         setCaretAndSelection(OrgCaretPos,
-          {BB.Char + Spaces.length(), BB.Line}, BE);
+          BB, BE);
         setActiveSelectionMode(OrgSelectionMode);
     });
     // keep current selection detail
@@ -1770,7 +1778,7 @@ void SynEdit::doBlockIndent()
         BE = caretXY();
     }
     // build text to insert
-    if (BE.Char == 1) {
+    if (BE.Char == 1 && BE.Line != BB.Line) {
         e = BE.Line - 1;
         x = 1;
     } else {
@@ -1835,7 +1843,7 @@ void SynEdit::doBlockUnindent()
         e = BE.Line - 1;
     // build string to delete
     QString FullStrToDelete;
-    for (int i = BB.Line; i<= e - 1;i++) {
+    for (int i = BB.Line; i<= e;i++) {
         QString Line = mLines->getString(i - 1);
         FullStrToDelete += Line;
         if (i!=e-1)
@@ -1853,7 +1861,7 @@ void SynEdit::doBlockUnindent()
             charsToDelete = 1;
         if (i==BB.Line)
             FirstIndent = charsToDelete;
-        if (i==e-1)
+        if (i==e)
             LastIndent = charsToDelete;
         if (i==OrgCaretPos.Line)
             x = charsToDelete;
@@ -1881,8 +1889,6 @@ void SynEdit::DoAddChar(QChar AChar)
     if ((mInserting == false) && (!selAvail())) {
         setSelLength(1);
     }
-
-    BufferCoord orgCaret = caretXY();
 
     mUndoList->BeginBlock();
     if (mOptions.testFlag(eoAddIndent)) {
@@ -1924,6 +1930,97 @@ void SynEdit::DoAddChar(QChar AChar)
     mUndoList->EndBlock();
 
     //DoOnPaintTransient(ttAfter);
+}
+
+void SynEdit::cutToClipboard()
+{
+    if (mReadOnly || !selAvail())
+        return;
+    mUndoList->BeginBlock();
+    auto action = finally([this] {
+        mUndoList->EndBlock();
+    });
+    DoCopyToClipboard(selText());
+    setSelText("");
+}
+
+void SynEdit::copyToClipboard()
+{
+    if (!selAvail())
+        return;
+    bool ChangeTrim = (mActiveSelectionMode == SynSelectionMode::smColumn) &&
+            mOptions.testFlag(eoTrimTrailingSpaces);
+    QString sText;
+    {
+        auto action = finally([&,this] {
+            if (ChangeTrim)
+                mOptions.setFlag(eoTrimTrailingSpaces);
+        });
+        if (ChangeTrim)
+            mOptions.setFlag(eoTrimTrailingSpaces,false);
+        sText = selText();
+    }
+    DoCopyToClipboard(sText);
+}
+
+void SynEdit::DoCopyToClipboard(const QString &s)
+{
+    QClipboard* clipboard=QGuiApplication::clipboard();
+    clipboard->clear();
+    clipboard->setText(s);
+}
+
+void SynEdit::pasteFromClipboard()
+{
+    if (mReadOnly)
+        return;
+    QClipboard* clipboard = QGuiApplication::clipboard();
+    if (clipboard->text().isEmpty())
+        return;
+    doOnPaintTransient(SynTransientType::ttBefore);
+    mUndoList->BeginBlock();
+    bool AddPasteEndMarker = false;
+    auto action = finally([&,this] {
+        if (AddPasteEndMarker)
+          mUndoList->AddChange(
+                      SynChangeReason::crPasteEnd,
+                      blockBegin(),
+                      blockEnd(),
+                      "",
+                      SynSelectionMode::smNormal);
+        mUndoList->EndBlock();
+    });
+    if (!clipboard->text().isEmpty()) {
+        mUndoList->AddChange(
+                    SynChangeReason::crPasteBegin,
+                    blockBegin(),
+                    blockEnd(),
+                    "",
+                    SynSelectionMode::smNormal);
+        AddPasteEndMarker = true;
+        if (selAvail()) {
+            mUndoList->AddChange(
+                        SynChangeReason::crDelete,
+                        blockBegin(),
+                        blockEnd(),
+                        selText(),
+                        mActiveSelectionMode);
+        } else
+            setActiveSelectionMode(selectionMode());
+        BufferCoord vStartOfBlock = blockBegin();
+        BufferCoord vEndOfBlock = blockEnd();
+        mBlockBegin = vStartOfBlock;
+        mBlockEnd = vEndOfBlock;
+        SetSelTextPrimitive(clipboard->text());
+        if (mActiveSelectionMode != SynSelectionMode::smColumn) {
+            mUndoList->AddChange(
+                        SynChangeReason::crPaste,
+                        vStartOfBlock,
+                        blockEnd(),
+                        selText(),
+                        mActiveSelectionMode);
+        }
+    }
 }
 
 void SynEdit::incPaintLock()
@@ -2728,6 +2825,473 @@ void SynEdit::doScrolled(int)
     invalidate();
 }
 
+void SynEdit::doAddStr(const QString &s)
+{
+    if (!selAvail() && !mInserting) {
+        BufferCoord BB = caretXY();
+        BufferCoord BE = BB;
+        BE.Char = BB.Char + s.length();
+        setCaretAndSelection(caretXY(),BB,BE);
+    }
+    setSelText(s);
+}
+
+void SynEdit::doUndo()
+{
+    if (mReadOnly)
+        return;
+
+    //Remove Group Break;
+    if (mUndoList->LastChangeReason() ==  SynChangeReason::crGroupBreak) {
+        int OldBlockNumber = mRedoList->blockChangeNumber();
+        auto action = finally([&,this]{
+           mRedoList->setBlockChangeNumber(OldBlockNumber);
+        });
+        PSynEditUndoItem Item = mUndoList->PopItem();
+        mRedoList->setBlockChangeNumber(Item->changeNumber());
+        mRedoList->AddGroupBreak();
+    }
+
+    SynChangeReason  FLastChange = mUndoList->LastChangeReason();
+    bool FAutoComplete = (FLastChange == SynChangeReason::crAutoCompleteEnd);
+    bool FPasteAction = (FLastChange == SynChangeReason::crPasteEnd);
+    bool FSpecial1 = (FLastChange == SynChangeReason::crSpecial1End);
+    bool FSpecial2 = (FLastChange == SynChangeReason::crSpecial2End);
+    bool FKeepGoing;
+
+    PSynEditUndoItem Item = mUndoList->PeekItem();
+    if (Item) {
+        int OldChangeNumber = Item->changeNumber();
+        int SaveChangeNumber = mRedoList->blockChangeNumber();
+        mRedoList->setBlockChangeNumber(Item->changeNumber());
+
+        {
+            auto action = finally([&,this] {
+               mRedoList->setBlockChangeNumber(SaveChangeNumber);
+            });
+            do {
+                doUndoItem();
+                Item = mUndoList->PeekItem();
+                if (!Item)
+                    FKeepGoing = false;
+                else {
+                    if (FAutoComplete)
+                        FKeepGoing = (mUndoList->LastChangeReason() != SynChangeReason::crAutoCompleteBegin);
+                    else if (FPasteAction)
+                        FKeepGoing = (mUndoList->LastChangeReason() != SynChangeReason::crPasteBegin);
+                    else if (FSpecial1)
+                        FKeepGoing = (mUndoList->LastChangeReason() != SynChangeReason::crSpecial1Begin);
+                    else if (FSpecial2)
+                        FKeepGoing = (mUndoList->LastChangeReason() != SynChangeReason::crSpecial2Begin);
+                    else if (Item->changeNumber() == OldChangeNumber)
+                        FKeepGoing = true;
+                    else {
+                        FKeepGoing = (mOptions.testFlag(eoGroupUndo) &&
+                            (FLastChange == Item->changeReason()) &&
+                            ! (FLastChange == SynChangeReason::crIndent
+                               || FLastChange == SynChangeReason::crUnindent));
+                    }
+                    FLastChange = Item->changeReason();
+                }
+            } while (FKeepGoing);
+            //we need to eat the last command since it does nothing and also update modified status...
+            if ((FAutoComplete && (mUndoList->LastChangeReason() == SynChangeReason::crAutoCompleteBegin)) ||
+                    (FPasteAction && (mUndoList->LastChangeReason() == SynChangeReason::crPasteBegin)) ||
+                    (FSpecial1 && (mUndoList->LastChangeReason() == SynChangeReason::crSpecial1Begin)) ||
+                    (FSpecial2 && (mUndoList->LastChangeReason() == SynChangeReason::crSpecial2Begin))) {
+                doUndoItem();
+                updateModifiedStatus();
+            }
+        }
+    }
+}
+
+void SynEdit::doUndoItem()
+{
+    mUndoing = true;
+    bool ChangeScrollPastEol = ! mOptions.testFlag(eoScrollPastEol);
+
+    PSynEditUndoItem Item = mUndoList->PopItem();
+    if (Item) {
+        setActiveSelectionMode(Item->changeSelMode());
+        incPaintLock();
+        auto action = finally([&,this]{
+            mUndoing = false;
+            if (ChangeScrollPastEol)
+                mOptions.setFlag(eoScrollPastEol,false);
+            decPaintLock();
+        });
+        mOptions.setFlag(eoScrollPastEol);
+        switch(Item->changeReason()) {
+        case SynChangeReason::crCaret:
+            mRedoList->AddChange(
+                        Item->changeReason(),
+                        caretXY(),
+                        caretXY(), "",
+                        mActiveSelectionMode);
+            internalSetCaretXY(Item->changeStartPos());
+            break;
+        case SynChangeReason::crSelection:
+            mRedoList->AddChange(
+                        Item->changeReason(),
+                        blockBegin(),
+                        blockEnd(),
+                        "",
+                        mActiveSelectionMode);
+            setCaretAndSelection(caretXY(), Item->changeStartPos(), Item->changeEndPos());
+            break;
+        case SynChangeReason::crInsert:
+        case SynChangeReason::crPaste:
+        case SynChangeReason::crDragDropInsert: {
+            setCaretAndSelection(
+                        Item->changeStartPos(),
+                        Item->changeStartPos(),
+                        Item->changeEndPos());
+            QString TmpStr = selText();
+            SetSelTextPrimitiveEx(
+                        Item->changeSelMode(),
+                        Item->changeStr(),
+                        false);
+            mRedoList->AddChange(
+                        Item->changeReason(),
+                        Item->changeStartPos(),
+                        Item->changeEndPos(),
+                        TmpStr,
+                        Item->changeSelMode());
+            internalSetCaretXY(Item->changeStartPos());
+            break;
+        }
+        case SynChangeReason::crDeleteAfterCursor:
+        case SynChangeReason::crDelete:
+        case SynChangeReason::crSilentDelete:
+        case SynChangeReason::crSilentDeleteAfterCursor:
+        case SynChangeReason::crDeleteAll: {
+            // If there's no selection, we have to set
+            // the Caret's position manualy.
+            BufferCoord TmpPos;
+            if (Item->changeSelMode() == SynSelectionMode::smColumn) {
+                TmpPos = BufferCoord{
+                    std::min(Item->changeStartPos().Char, Item->changeEndPos().Char),
+                    std::min(Item->changeStartPos().Line, Item->changeEndPos().Line)};
+            } else {
+                TmpPos = BufferCoord{
+                        MinBufferCoord(
+                            Item->changeStartPos(),
+                            Item->changeEndPos())};
+            }
+            if ( (Item->changeReason() == SynChangeReason::crDeleteAfterCursor
+                  || Item->changeReason() == SynChangeReason::crSilentDeleteAfterCursor)
+                 && (TmpPos.Line > mLines->count())) {
+                internalSetCaretXY(BufferCoord{1, mLines->count()});
+                mLines->add("");
+            }
+            setCaretXY(TmpPos);
+            SetSelTextPrimitiveEx(
+                        Item->changeSelMode(),
+                        Item->changeStr(),
+                        false);
+            if ( (Item->changeReason() == SynChangeReason::crDeleteAfterCursor
+                  || Item->changeReason() == SynChangeReason::crSilentDeleteAfterCursor)) {
+                TmpPos = Item->changeStartPos();
+                internalSetCaretXY(TmpPos);
+            } else {
+                TmpPos = Item->changeEndPos();
+                setCaretAndSelection(TmpPos,
+                                     Item->changeStartPos(),
+                                     Item->changeEndPos());
+            }
+            mRedoList->AddChange(
+                        Item->changeReason(),
+                        Item->changeStartPos(),
+                        Item->changeEndPos(),
+                        "",
+                        Item->changeSelMode());
+            if (Item->changeReason() == SynChangeReason::crDeleteAll) {
+                internalSetCaretXY(BufferCoord{1, 1});
+                mBlockEnd = BufferCoord{1, 1};
+            }
+            ensureCursorPosVisible();
+            break;
+        }
+        case SynChangeReason::crLineBreak:
+            // If there's no selection, we have to set
+            // the Caret's position manualy.
+            internalSetCaretXY(Item->changeStartPos());
+            if (mCaretY > 0) {
+                QString TmpStr = mLines->getString(mCaretY - 1);
+                if ( (mCaretX > TmpStr.length() + 1) && (leftSpaces(Item->changeStr()) == 0))
+                    TmpStr = TmpStr + QString(mCaretX - 1 - TmpStr.length(), ' ');
+                ProperSetLine(mCaretY - 1, TmpStr + Item->changeStr());
+                mLines->deleteAt(mCaretY);
+                DoLinesDeleted(mCaretY, 1);
+            }
+            mRedoList->AddChange(
+                        Item->changeReason(),
+                        Item->changeStartPos(),
+                        Item->changeEndPos(),
+                        "",
+                        Item->changeSelMode());
+            break;
+        case SynChangeReason::crIndent:
+            // restore the selection
+            setCaretAndSelection(
+                        Item->changeEndPos(),
+                        Item->changeStartPos(),
+                        Item->changeEndPos());
+            mRedoList->AddChange(
+                        Item->changeReason(),
+                        Item->changeStartPos(),
+                        Item->changeEndPos(),
+                        Item->changeStr(),
+                        Item->changeSelMode());
+            break;
+        case SynChangeReason::crUnindent:
+            // reinsert the string
+            if (Item->changeSelMode()!= SynSelectionMode::smColumn)
+                insertBlock(BufferCoord{1, Item->changeStartPos().Line},
+                            BufferCoord{1, Item->changeEndPos().Line},
+                            Item->changeStr(),
+                            false);
+            else {
+                int BeginX = std::min(Item->changeStartPos().Char,
+                                      Item->changeEndPos().Char);
+                insertBlock(BufferCoord{BeginX, Item->changeStartPos().Line},
+                            BufferCoord{BeginX, Item->changeEndPos().Line},
+                            Item->changeStr(), false);
+            }
+            setCaretAndSelection(
+                        Item->changeStartPos(),
+                        Item->changeStartPos(),
+                        Item->changeEndPos());
+            mRedoList->AddChange(
+                        Item->changeReason(),
+                        Item->changeStartPos(),
+                        Item->changeEndPos(),
+                        Item->changeStr(),
+                        Item->changeSelMode());
+            break;
+        }
+    }
+}
+
+void SynEdit::doRedo()
+{
+    if (mReadOnly)
+        return;
+
+    SynChangeReason FLastChange = mRedoList->LastChangeReason();
+    bool FAutoComplete = (FLastChange == SynChangeReason::crAutoCompleteBegin);
+    bool FPasteAction = (FLastChange == SynChangeReason::crPasteBegin);
+    bool FSpecial1 = (FLastChange == SynChangeReason::crSpecial1Begin);
+    bool FSpecial2 = (FLastChange == SynChangeReason::crSpecial2Begin);
+
+    PSynEditUndoItem Item = mRedoList->PeekItem();
+    if (!Item)
+        return;
+    int OldChangeNumber = Item->changeNumber();
+    int SaveChangeNumber = mUndoList->blockChangeNumber();
+    mUndoList->setBlockChangeNumber(Item->changeNumber());
+    {
+        auto action = finally([&,this]{
+            mUndoList->setBlockChangeNumber(SaveChangeNumber);
+        });
+        bool FKeepGoing;
+        do {
+          doRedoItem();
+          Item = mRedoList->PeekItem();
+          if (!Item)
+              FKeepGoing = false;
+          else {
+            if (FAutoComplete)
+              FKeepGoing = (mRedoList->LastChangeReason() != SynChangeReason::crAutoCompleteEnd);
+            if (FPasteAction)
+              FKeepGoing = (mRedoList->LastChangeReason() != SynChangeReason::crPasteEnd);
+            if (FSpecial1)
+              FKeepGoing = (mRedoList->LastChangeReason() != SynChangeReason::crSpecial1End);
+            if (FSpecial2)
+              FKeepGoing = (mRedoList->LastChangeReason() != SynChangeReason::crSpecial2End);
+            else if (Item->changeNumber() == OldChangeNumber)
+                FKeepGoing = true;
+            else {
+                FKeepGoing = (mOptions.testFlag(eoGroupUndo) &&
+                (FLastChange == Item->changeReason()) &&
+                !(FLastChange == SynChangeReason::crIndent
+                        || FLastChange == SynChangeReason::crUnindent));
+            }
+            FLastChange = Item->changeReason();
+          }
+        } while (FKeepGoing);
+
+        //we need to eat the last command since it does nothing and also update modified status...
+        if ((FAutoComplete && (mRedoList->LastChangeReason() == SynChangeReason::crAutoCompleteEnd)) ||
+          (FPasteAction && (mRedoList->LastChangeReason() == SynChangeReason::crPasteEnd)) ||
+          (FSpecial1 && (mRedoList->LastChangeReason() == SynChangeReason::crSpecial1End)) ||
+          (FSpecial2 && (mRedoList->LastChangeReason() == SynChangeReason::crSpecial2End))) {
+            doRedoItem();
+            updateModifiedStatus();
+        }
+    }
+    //Remove Group Break
+    if (mRedoList->LastChangeReason() == SynChangeReason::crGroupBreak) {
+        int OldBlockNumber = mUndoList->blockChangeNumber();
+        Item = mRedoList->PopItem();
+        {
+            auto action2=finally([&,this]{
+                mUndoList->setBlockChangeNumber(OldBlockNumber);
+            });
+            mUndoList->setBlockChangeNumber(Item->changeNumber());
+            mUndoList->AddGroupBreak();
+        }
+        updateModifiedStatus();
+    }
+}
+
+void SynEdit::doRedoItem()
+{
+    bool ChangeScrollPastEol = ! mOptions.testFlag(eoScrollPastEol);
+    PSynEditUndoItem Item = mRedoList->PopItem();
+    if (Item) {
+        setActiveSelectionMode(Item->changeSelMode());
+        incPaintLock();
+        mOptions.setFlag(eoScrollPastEol);
+        mUndoList->setInsideRedo(true);
+        auto action = finally([&,this]{
+            mUndoList->setInsideRedo(false);
+            if (ChangeScrollPastEol)
+                mOptions.setFlag(eoScrollPastEol,false);
+            decPaintLock();
+        });
+        switch(Item->changeReason()) {
+        case SynChangeReason::crCaret:
+            mUndoList->AddChange(
+                        Item->changeReason(),
+                        caretXY(),
+                        caretXY(),
+                        "",
+                        mActiveSelectionMode);
+            internalSetCaretXY(Item->changeStartPos());
+            break;
+        case SynChangeReason::crSelection:
+            mUndoList->AddChange(
+                        Item->changeReason(),
+                        blockBegin(),
+                        blockEnd(),
+                        "",
+                        mActiveSelectionMode);
+            setCaretAndSelection(
+                        caretXY(),
+                        Item->changeStartPos(),
+                        Item->changeEndPos());
+            break;
+        case SynChangeReason::crInsert:
+        case SynChangeReason::crPaste:
+        case SynChangeReason::crDragDropInsert:
+            setCaretAndSelection(
+                        Item->changeStartPos(),
+                        Item->changeStartPos(),
+                        Item->changeStartPos());
+            SetSelTextPrimitiveEx(Item->changeSelMode(), Item->changeStr(), false);
+            internalSetCaretXY(Item->changeEndPos());
+            mUndoList->AddChange(Item->changeReason(),
+                                 Item->changeStartPos(),
+                                 Item->changeEndPos(),
+                                 selText(),
+                                 Item->changeSelMode());
+            if (Item->changeReason() == SynChangeReason::crDragDropInsert) {
+                setCaretAndSelection(Item->changeStartPos(),
+                                     Item->changeStartPos(),
+                                     Item->changeEndPos());
+            }
+            break;
+        case SynChangeReason::crDeleteAfterCursor:
+        case SynChangeReason::crSilentDeleteAfterCursor: {
+            setCaretAndSelection(Item->changeStartPos(), Item->changeStartPos(),
+                                 Item->changeEndPos());
+            QString TempString = selText();
+            SetSelTextPrimitiveEx(Item->changeSelMode(),
+                                  Item->changeStr(),false);
+            mUndoList->AddChange(Item->changeReason(), Item->changeStartPos(),
+                                 Item->changeEndPos(), TempString, Item->changeSelMode());
+            internalSetCaretXY(Item->changeEndPos());
+            break;
+        }
+        case SynChangeReason::crDelete:
+        case SynChangeReason::crSilentDelete: {
+            setCaretAndSelection(Item->changeStartPos(), Item->changeStartPos(),
+                                 Item->changeEndPos());
+            QString TempString = selText();
+            SetSelTextPrimitiveEx(Item->changeSelMode(), Item->changeStr(),false);
+            mUndoList->AddChange(Item->changeReason(), Item->changeStartPos(),
+                                 Item->changeEndPos(),TempString,
+                                 Item->changeSelMode());
+            internalSetCaretXY(Item->changeStartPos());
+            break;
+        };
+        case SynChangeReason::crLineBreak: {
+            BufferCoord CaretPt = Item->changeStartPos();
+            setCaretAndSelection(CaretPt, CaretPt, CaretPt);
+            CommandProcessor(SynEditorCommand::ecLineBreak);
+            break;
+        }
+        case SynChangeReason::crIndent:
+            setCaretAndSelection(
+                        Item->changeEndPos(),
+                        Item->changeStartPos(),
+                        Item->changeEndPos());
+            mUndoList->AddChange(Item->changeReason(), Item->changeStartPos(),
+                        Item->changeEndPos(), Item->changeStr(), Item->changeSelMode());
+            break;
+        case SynChangeReason::crUnindent: {
+            // Delete string
+            QString StrToDelete = Item->changeStr();
+            internalSetCaretY(Item->changeStartPos().Line);
+            int BeginX = 1;
+            if (Item->changeSelMode() == SynSelectionMode::smColumn)
+                BeginX = std::min(Item->changeStartPos().Char, Item->changeEndPos().Char);
+            int Run = 0;
+            int Len;
+            QString TempString;
+            do {
+                Run = GetEOL(StrToDelete,Run);
+                if (Run != 0) {
+                    Len = Run;
+                    if (Len > 0) {
+                        TempString = mLines->getString(mCaretY - 1);
+                        TempString.remove(BeginX-1,Len);
+                        mLines->putString(mCaretY-1,TempString);
+                    }
+                } else
+                    Len = 0;
+                if (StrToDelete[Run] == '\r') {
+                    Run++;
+                    if (StrToDelete[Run] == '\n')
+                      Run++;
+                    mCaretY++;
+                }
+            } while (Run<StrToDelete.length());
+            if (Item->changeSelMode() == SynSelectionMode::smColumn) {
+                setCaretAndSelection(Item->changeStartPos(), Item->changeStartPos(),
+                    Item->changeEndPos());
+            } else {
+                // restore selection
+                BufferCoord CaretPt;
+                if (mOptions.testFlag(eoTabsToSpaces))
+                    CaretPt.Char = Item->changeStartPos().Char - mTabWidth;
+                else
+                    CaretPt.Char = Item->changeStartPos().Char - 1;
+                CaretPt.Line = Item->changeStartPos().Line;
+                setCaretAndSelection(CaretPt, CaretPt,
+                    BufferCoord{Item->changeEndPos().Char - Len,
+                                Item->changeEndPos().Line});
+            }
+            mUndoList->AddChange(Item->changeReason(), Item->changeStartPos(),
+                                 Item->changeEndPos(), Item->changeStr(), Item->changeSelMode());
+            break;
+        }
+        }
+    }
+}
+
 SynSelectionMode SynEdit::selectionMode() const
 {
     return mSelectionMode;
@@ -3232,7 +3796,7 @@ int SynEdit::InsertTextByNormalMode(const QString &Value)
     while (P < Value.length()) {
         if (Value[P] == '\r')
             P++;
-        if (Value[P] == ' ')
+        if (Value[P] == '\n')
             P++;
         mCaretY++;
         mStatusChanges.setFlag(SynStatusChange::scCaretY);
@@ -3272,11 +3836,11 @@ int SynEdit::InsertTextByColumnMode(const QString &Value, bool AddToUndoList)
     int Start;
     int P;
     int Len;
-    int InsertPos;
+    int InsertCol;
     BufferCoord  LineBreakPos;
     int Result = 0;
     // Insert string at current position
-    InsertPos = charToColumn(mCaretY,mCaretX);
+    InsertCol = charToColumn(mCaretY,mCaretX);
     Start = 0;
     do {
         P = GetEOL(Value,Start);
@@ -3285,7 +3849,7 @@ int SynEdit::InsertTextByColumnMode(const QString &Value, bool AddToUndoList)
 //          Move(Start^, Str[1], P - Start);
             if (mCaretY > mLines->count()) {
                 Result++;
-                TempString = QString(InsertPos - 1,' ') + Str;
+                TempString = QString(InsertCol - 1,' ') + Str;
                 mLines->add("");
                 if (AddToUndoList) {
                     LineBreakPos.Line = mCaretY - 1;
@@ -3298,11 +3862,11 @@ int SynEdit::InsertTextByColumnMode(const QString &Value, bool AddToUndoList)
             } else {
                 TempString = mLines->getString(mCaretY - 1);
                 Len = stringColumns(TempString,0);
-                if (Len < InsertPos) {
-                    TempString = TempString + QChar(' ', InsertPos - Len - 1) + Str;
+                if (Len < InsertCol) {
+                    TempString = TempString + QChar(' ', InsertCol - Len - 1) + Str;
                 } else {
-                    int insertColumn = charToColumn(TempString,InsertPos);
-                    TempString.insert(insertColumn,Str);
+                    int insertPos = charToColumn(TempString,InsertCol);
+                    TempString.insert(insertPos-1,Str);
                 }
             }
             ProperSetLine(mCaretY - 1, TempString);
@@ -3399,12 +3963,12 @@ void SynEdit::onPaint(QPainter &)
 
 }
 
-void SynEdit::onProcessCommand(SynEditorCommand Command, QChar AChar, void *pData)
+void SynEdit::onProcessCommand(SynEditorCommand , QChar , void *)
 {
 
 }
 
-void SynEdit::onCommandProcessed(SynEditorCommand Command, QChar AChar, void *pData)
+void SynEdit::onCommandProcessed(SynEditorCommand , QChar , void *)
 {
 
 }
@@ -3573,14 +4137,30 @@ void SynEdit::ExecuteCommand(SynEditorCommand Command, QChar AChar, void *pData)
             updateCaret();
         }
         break;
-        //            InsertMode := TRUE;
-        //          end;
-        //        ecOverwriteMode: begin
-        //            InsertMode := FALSE;
-        //          end;
-        //        ecToggleMode: begin
-        //            InsertMode := not InsertMode;
-        //          end;
+    case SynEditorCommand::ecCut:
+        if (!mReadOnly && selAvail())
+            cutToClipboard();
+        break;
+    case SynEditorCommand::ecCopy:
+        if (!mReadOnly && selAvail())
+            copyToClipboard();
+        break;
+    case SynEditorCommand::ecPaste:
+        if (!mReadOnly)
+            pasteFromClipboard();
+        break;
+    case SynEditorCommand::ecImeStr:
+        if (!mReadOnly)
+            doAddStr(*((QString*)pData));
+        break;
+    case SynEditorCommand::ecUndo:
+        if (!mReadOnly)
+            doUndo();
+        break;
+    case SynEditorCommand::ecRedo:
+        if (!mReadOnly)
+            doRedo();
+        break;
     }
 
 //    procedure ForceCaretX(aCaretX: integer);
@@ -3726,14 +4306,7 @@ void SynEdit::ExecuteCommand(SynEditorCommand Command, QChar AChar, void *pData)
 //          ecToggleCaseBlock:
 //          if not ReadOnly then
 //            DoCaseChange(Command);
-//        ecUndo: begin
-//            if not ReadOnly then
-//              Undo;
-//          end;
-//        ecRedo: begin
-//            if not ReadOnly then
-//              Redo;
-//          end;
+
 //        ecGotoMarker0..ecGotoMarker9: begin
 //            if BookMarkOptions.EnableKeys then
 //              GotoBookMark(Command - ecGotoMarker0);
@@ -3754,17 +4327,7 @@ void SynEdit::ExecuteCommand(SynEditorCommand Command, QChar AChar, void *pData)
 //                SetBookMark(CX, Caret.Char, Caret.Line);
 //            end; // if BookMarkOptions.EnableKeys
 //          end;
-//        ecCut: begin
-//            if (not ReadOnly) and SelAvail then
-//              CutToClipboard;
-//          end;
-//        ecCopy: begin
-//            CopyToClipboard;
-//          end;
-//        ecPaste: begin
-//            if not ReadOnly then
-//              PasteFromClipboard;
-//          end;
+
 //        ecScrollUp, ecScrollDown: begin
 //            vCaretRow := DisplayY;
 //            if (vCaretRow < TopLine) or (vCaretRow >= TopLine + LinesInWindow) then
@@ -3799,15 +4362,6 @@ void SynEdit::ExecuteCommand(SynEditorCommand Command, QChar AChar, void *pData)
 //            //  InternalCaretX := LeftChar;
 //            Update;
 //          end;
-//        ecInsertMode: begin
-//            InsertMode := TRUE;
-//          end;
-//        ecOverwriteMode: begin
-//            InsertMode := FALSE;
-//          end;
-//        ecToggleMode: begin
-//            InsertMode := not InsertMode;
-//          end;
 //        ecBlockIndent:
 //          if not ReadOnly then
 //            DoBlockIndent;
@@ -3826,63 +4380,6 @@ void SynEdit::ExecuteCommand(SynEditorCommand Command, QChar AChar, void *pData)
 //          end;
 //  {$IFDEF SYN_MBCSSUPPORT}
 //        ecImeStr: begin;
-//          if not ReadOnly then begin
-//            SetString(s, PChar(Data), StrLen(Data));
-//            if SelAvail then begin
-//            {
-//              BeginUndoBlock;
-//              try
-//                fUndoList.AddChange(crDelete, fBlockBegin, fBlockEnd, selText,
-//                  smNormal);
-//                StartOfBlock := fBlockBegin;
-//                SetSelTextPrimitive(s);
-//                fUndoList.AddChange(crInsert, fBlockBegin, fBlockEnd, s,
-//                  smNormal);
-//              finally
-//                EndUndoBlock;
-//              end;
-//            }
-//              SetSelTextExternal(s);
-//              InvalidateGutterLines(-1, -1);
-//            end else begin
-//              Temp := LineText;
-//              Len := Length(Temp);
-//              if Len < (CaretX-1) then
-//                Temp := Temp + StringOfChar(#32, (CaretX-1) - Len);
-//              bChangeScroll := not (eoScrollPastEol in fOptions);
-//              try
-//                if bChangeScroll then
-//                  Include(fOptions, eoScrollPastEol);
-//                StartOfBlock := CaretXY;
-//                // Processing of case character covers on LeadByte.
-//                Len := Length(s);
-//                if not fInserting then begin
-//                  i := (CaretX + Len);
-//                  if (ByteType(Temp, i) = mbTrailByte) then begin
-//                    s := s + Temp[i - 1];
-//                    helper := Copy(Temp, CaretX, Len - 1);
-//                  end else
-//                    helper := Copy(Temp, CaretX, Len);
-//                  Delete(Temp, CaretX, Len);
-//                end;
-//                Insert(s, Temp, CaretX);
-//                InternalCaretX := (CaretX + Len);
-//                ProperSetLine(CaretY - 1, Temp);
-//                if fInserting then
-//                  helper := '';
-//                fUndoList.AddChange(crInsert, StartOfBlock, CaretXY, helper,
-//                  smNormal);
-//                if CaretX >= LeftChar + fCharsInWindow then
-//                  LeftChar := LeftChar + min(25, fCharsInWindow - 1);
-//              finally
-//                if bChangeScroll then
-//                  Exclude(fOptions, eoScrollPastEol);
-//              end;
-//            end;
-//          end;
-//            if assigned(fOnImeInput) then
-//              fOnImeInput(self,s);
-//          end;
 //  {$ENDIF}
 //      end;
 //    finally
@@ -4030,7 +4527,6 @@ void SynEdit::mousePressEvent(QMouseEvent *event)
 {
     bool bWasSel = false;
     bool bStartDrag = false;
-    bool mMouseMoved = false;
     BufferCoord TmpBegin = mBlockBegin;
     BufferCoord TmpEnd = mBlockEnd;
     Qt::MouseButton button = event->button();
@@ -4095,7 +4591,6 @@ void SynEdit::mousePressEvent(QMouseEvent *event)
 void SynEdit::mouseReleaseEvent(QMouseEvent *event)
 {
     QAbstractScrollArea::mouseReleaseEvent(event);
-    Qt::MouseButton button = event->button();
     int X=event->pos().x();
     int Y=event->pos().y();
 
@@ -4110,10 +4605,10 @@ void SynEdit::mouseReleaseEvent(QMouseEvent *event)
 
     if (mStateFlags.testFlag(SynStateFlag::sfWaitForDragging) &&
             !mStateFlags.testFlag(SynStateFlag::sfDblClicked)) {
-//        computeCaret(X, Y);
-//      if not (ssShift in Shift) then
-//        SetBlockBegin(CaretXY);
-//      SetBlockEnd(CaretXY);
+        computeCaret(X, Y);
+        if (! (event->modifiers() & Qt::ShiftModifier))
+            setBlockBegin(caretXY());
+        setBlockEnd(caretXY());
         mStateFlags.setFlag(SynStateFlag::sfWaitForDragging, false);
     }
     mStateFlags.setFlag(SynStateFlag::sfDblClicked,false);
@@ -4134,7 +4629,8 @@ void SynEdit::mouseMoveEvent(QMouseEvent *event)
             mStateFlags.setFlag(SynStateFlag::sfWaitForDragging);
             //BeginDrag(false);
         }
-    } else if ((buttons == Qt::LeftButton) && (X > mGutterWidth)) {
+//    } else if ((buttons == Qt::LeftButton) && (X > mGutterWidth)) {
+    } else if ((buttons == Qt::LeftButton)) {
       // should we begin scrolling?
       computeScroll(X, Y);
       DisplayCoord P = pixelsToNearestRowColumn(X, Y);
@@ -4157,6 +4653,17 @@ void SynEdit::mouseDoubleClickEvent(QMouseEvent *event)
           SetWordBlock(caretXY());
       mStateFlags.setFlag(SynStateFlag::sfDblClicked);
       //MouseCapture := FALSE;
+    }
+}
+
+void SynEdit::inputMethodEvent(QInputMethodEvent *event)
+{
+    QString s = event->commitString();
+    if (!s.isEmpty()) {
+        CommandProcessor(SynEditorCommand::ecImeStr,QChar(),&s);
+//        for (QChar ch:s) {
+//            CommandProcessor(SynEditorCommand::ecChar,ch);
+//        }
     }
 }
 
@@ -4578,9 +5085,9 @@ void SynEdit::scrollTimerHandler()
         });
         internalSetCaretXY(vCaret);
 
-          // if MouseCapture is True we're changing selection. otherwise we're dragging
-        if (mouseCapture())
-            setBlockEnd(caretXY());
+        // if MouseCapture is True we're changing selection. otherwise we're dragging
+//        if (mouseCapture())
+        setBlockEnd(caretXY());
     }
     computeScroll(iMousePos.x(), iMousePos.y());
 }
