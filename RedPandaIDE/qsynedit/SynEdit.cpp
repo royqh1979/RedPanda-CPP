@@ -3342,7 +3342,7 @@ QString SynEdit::selText()
                   int l = columnToChar(i,ColFrom);
                   int r = columnToChar(i,ColTo-1);
                   QString s = mLines->getString(i);
-                  result += s.mid(l-1,r-l+1);
+                  result += s.mid(l-1,r-l);
                   result+=lineBreak();
               }
               return result;
@@ -3701,7 +3701,7 @@ void SynEdit::DeleteSelection(const BufferCoord &BB, const BufferCoord &BE)
             int l = columnToChar(i,ColFrom);
             int r = columnToChar(i,ColTo-1);
             QString s = mLines->getString(i);
-            s.remove(l-1,r-l+1);
+            s.remove(l-1,r-l);
             ProperSetLine(i,s);
         }
         // Lines never get deleted completely, so keep caret at end.
