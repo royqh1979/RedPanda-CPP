@@ -144,7 +144,6 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
             this, &SynEdit::doScrolled);
     connect(verticalScrollBar(),&QScrollBar::valueChanged,
             this, &SynEdit::doScrolled);
-
     //enable input method
     setAttribute(Qt::WA_InputMethodEnabled);
 
@@ -2035,8 +2034,10 @@ void SynEdit::decPaintLock()
     Q_ASSERT(mPaintLock > 0);
     mPaintLock--;
     if (mPaintLock == 0 ) {
-        if (mStateFlags.testFlag(SynStateFlag::sfScrollbarChanged))
+        if (mStateFlags.testFlag(SynStateFlag::sfScrollbarChanged)) {
             updateScrollbars();
+            ensureCursorPosVisible();
+        }
         if (mStateFlags.testFlag(SynStateFlag::sfCaretChanged))
             updateCaret();
         if (mStatusChanges!=0)
@@ -2197,11 +2198,10 @@ void SynEdit::updateScrollbars()
                 setVerticalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOn);
             }
             if (mScrollBars == SynScrollStyle::ssBoth ||  mScrollBars == SynScrollStyle::ssHorizontal) {
-                nMaxScroll = std::max(mLines->lengthOfLongestLine(), 1);
                 if (mOptions.testFlag(eoScrollPastEol))
-                    nMaxScroll = mMaxScrollWidth;
+                    nMaxScroll = mLines->lengthOfLongestLine();
                 else
-                    nMaxScroll = std::max(mLines->lengthOfLongestLine(), 1);
+                    nMaxScroll = std::max(mLines->lengthOfLongestLine()-mCharsInWindow+1, 1);
                 if (nMaxScroll <= MAX_SCROLL) {
                     nMin = 1;
                     nMax = nMaxScroll;
@@ -2222,9 +2222,11 @@ void SynEdit::updateScrollbars()
                 setHorizontalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOn);
 
             if (mScrollBars == SynScrollStyle::ssBoth ||  mScrollBars == SynScrollStyle::ssVertical) {
-                nMaxScroll = displayLineCount();
                 if (mOptions.testFlag(eoScrollPastEof))
-                    nMaxScroll+=mLinesInWindow - 1;
+                    nMaxScroll = std::max(displayLineCount(),1);
+                else
+                    nMaxScroll = std::max(displayLineCount()-mLinesInWindow+1, 1);
+
                 if (nMaxScroll <= MAX_SCROLL) {
                     nMin = 1;
                     nMax = std::max(1, nMaxScroll);
@@ -4812,6 +4814,16 @@ void SynEdit::leaveEvent(QEvent *event)
     setCursor(Qt::ArrowCursor);
 }
 
+bool SynEdit::viewportEvent(QEvent * event)
+{
+    switch (event->type()) {
+        case QEvent::Resize:
+            sizeOrFontChanged(false);
+        break;
+    }
+    return QAbstractScrollArea::viewportEvent(event);
+}
+
 int SynEdit::maxScrollWidth() const
 {
     return mMaxScrollWidth;
@@ -4856,6 +4868,7 @@ void SynEdit::setGutterWidth(int Value)
     if (mGutterWidth != Value) {
         mGutterWidth = Value;
         sizeOrFontChanged(false);
+        invalidate();
     }
 }
 
@@ -5142,7 +5155,6 @@ void SynEdit::setLeftChar(int Value)
         horizontalScrollBar()->setValue(Value);
         setStatusChanged(SynStatusChange::scLeftChar);
     }
-
 }
 
 int SynEdit::linesInWindow() const
@@ -5163,7 +5175,6 @@ void SynEdit::setTopLine(int Value)
         Value = std::min(Value, displayLineCount() - mLinesInWindow + 1);
     Value = std::max(Value, 1);
     if (Value != mTopLine) {
-        //updateScrollbars();
         verticalScrollBar()->setValue(Value);
         setStatusChanged(SynStatusChange::scTopLine);
     }

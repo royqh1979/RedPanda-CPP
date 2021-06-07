@@ -165,7 +165,7 @@
          <property name="spacing">
           <number>7</number>
          </property>
-         <item row="0" column="2">
+         <item row="2" column="2">
           <spacer name="horizontalSpacer">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
@@ -178,34 +178,7 @@
            </property>
           </spacer>
          </item>
-         <item row="0" column="1">
-          <widget class="QComboBox" name="cbCaretForInsert"/>
-         </item>
-         <item row="0" column="0">
-          <widget class="QLabel" name="lbCaretForInsert">
-           <property name="text">
-            <string>Caret for inserting mode</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="0">
-          <widget class="QLabel" name="lbCaretForOverwrite">
-           <property name="text">
-            <string>Caret for overwriting mode</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="1">
-          <widget class="QComboBox" name="cbCaretForOverwrite"/>
-         </item>
-         <item row="2" column="0">
-          <widget class="QLabel" name="lbCaretColor">
-           <property name="text">
-            <string>Caret Color</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="1">
+         <item row="4" column="1">
           <widget class="ColorEdit" name="colorCaret">
            <property name="frameShape">
             <enum>QFrame::StyledPanel</enum>
@@ -215,10 +188,58 @@
            </property>
           </widget>
          </item>
+         <item row="0" column="0">
+          <widget class="QCheckBox" name="chkCaretPastEol">
+           <property name="text">
+            <string>Caret can be positioned past end of line</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QComboBox" name="cbCaretForOverwrite"/>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="lbCaretForInsert">
+           <property name="text">
+            <string>Caret for inserting mode</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QComboBox" name="cbCaretForInsert"/>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="lbCaretForOverwrite">
+           <property name="text">
+            <string>Caret for overwriting mode</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="0">
+          <widget class="QLabel" name="lbCaretColor">
+           <property name="text">
+            <string>Caret Color</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QCheckBox" name="chkCaretPastEof">
+           <property name="text">
+            <string>Caret can be positioned past end of file</string>
+           </property>
+          </widget>
+         </item>
         </layout>
        </widget>
       </item>
      </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBox">
+     <property name="title">
+      <string>Scroll</string>
+     </property>
     </widget>
    </item>
    <item>

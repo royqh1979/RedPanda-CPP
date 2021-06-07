@@ -602,6 +602,10 @@ void mouseMoveEvent(QMouseEvent *event) override;
 void mouseDoubleClickEvent(QMouseEvent *event) override;
 void inputMethodEvent(QInputMethodEvent *event) override;
 void leaveEvent(QEvent *event) override;
+
+// QAbstractScrollArea interface
+protected:
+bool viewportEvent(QEvent * event) override;
 };
 
 #endif // SYNEDIT_H

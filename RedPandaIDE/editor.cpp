@@ -46,7 +46,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
 {
     if (mFilename.isEmpty()) {
         newfileCount++;
-        mFilename = tr("untitled") + newfileCount;
+        mFilename = tr("untitled%1").arg(newfileCount);
     }
     QFileInfo fileInfo(mFilename);
     if (mParentPageControl!=NULL) {
@@ -258,7 +258,7 @@ void Editor::applySettings()
 {
     SynEditorOptions options = eoAltSetsColumnMode |
             eoDragDropEditing | eoDropFiles |  eoKeepCaretX | eoTabsToSpaces |
-            eoRightMouseMovesCursor | eoScrollByOneLess | eoTabIndent;
+            eoRightMouseMovesCursor | eoScrollByOneLess | eoTabIndent | eoHideShowScrollbars;
     options.setFlag(eoAddIndent,pSettings->editor().addIndent());
     options.setFlag(eoAutoIndent,pSettings->editor().autoIndent());
     options.setFlag(eoTabsToSpaces,pSettings->editor().tabToSpaces());
