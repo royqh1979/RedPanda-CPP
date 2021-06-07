@@ -98,6 +98,8 @@ public:
     void setFileEndingType(const FileEndingType &fileEndingType);
 
     bool empty();
+
+    void resetColumns();
 public slots:
     void invalidAllLineColumns();
 

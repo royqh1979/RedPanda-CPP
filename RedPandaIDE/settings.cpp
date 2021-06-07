@@ -20,23 +20,19 @@ Settings::Settings(const QString &filename):
     mEditor(this),
     mCompilerSets(this)
 {
-    // default values for editors
-    mEditor.setDefault(SETTING_EDITOR_DEFAULT_ENCODING, QTextCodec::codecForLocale()->name());
-    mEditor.setDefault(SETTING_EDITOR_AUTO_INDENT,true);
-
 }
 
-void Settings::setDefault(const QString&group,const QString &key, const QVariant &value) {
+void Settings::beginGroup(const QString &group)
+{
     mSettings.beginGroup(group);
-    auto act = finally([this] {
-        this->mSettings.endGroup();
-    });
-    if (!mSettings.contains(key)) {
-        mSettings.setValue(key,value);
-    }
 }
 
-void Settings::setValue(const QString& group, const QString &key, const QVariant &value) {
+void Settings::endGroup()
+{
+    mSettings.endGroup();
+}
+
+void Settings::saveValue(const QString& group, const QString &key, const QVariant &value) {
     mSettings.beginGroup(group);
     auto act = finally([this] {
         this->mSettings.endGroup();
@@ -44,22 +40,23 @@ void Settings::setValue(const QString& group, const QString &key, const QVariant
     mSettings.setValue(key,value);
 }
 
-void Settings::setValue(const QString &key, const QVariant &value)
+void Settings::saveValue(const QString &key, const QVariant &value)
 {
     mSettings.setValue(key,value);
 }
 
-QVariant Settings::value(const QString& group, const QString &key) {
+QVariant Settings::value(const QString &group, const QString &key, const QVariant &defaultValue)
+{
     mSettings.beginGroup(group);
     auto act = finally([this] {
         this->mSettings.endGroup();
     });
-    return mSettings.value(key);
+    return mSettings.value(key,defaultValue);
 }
 
-QVariant Settings::value(const QString &key)
+QVariant Settings::value(const QString &key, const QVariant &defaultValue)
 {
-    return mSettings.value(key);
+    return mSettings.value(key,defaultValue);
 }
 
 Settings::Dirs &Settings::dirs()
@@ -87,6 +84,16 @@ QString Settings::Dirs::app() const
     return QApplication::instance()->applicationDirPath();
 }
 
+void Settings::Dirs::doSave()
+{
+
+}
+
+void Settings::Dirs::doLoad()
+{
+
+}
+
 Settings::_Base::_Base(Settings *settings, const QString &groupName):
     mSettings(settings),
     mGroup(groupName)
@@ -94,19 +101,58 @@ Settings::_Base::_Base(Settings *settings, const QString &groupName):
 
 }
 
-void Settings::_Base::setDefault(const QString &key, const QVariant &value)
+void Settings::_Base::beginGroup()
 {
-    mSettings->setDefault(mGroup,key,value);
+    mSettings->beginGroup(mGroup);
 }
 
-void Settings::_Base::setValue(const QString &key, const QVariant &value)
+void Settings::_Base::endGroup()
 {
-    mSettings->setValue(mGroup,key,value);
+    mSettings->endGroup();
 }
 
-QVariant Settings::_Base::value(const QString &key)
+void Settings::_Base::saveValue(const QString &key, const QVariant &value)
 {
-    return mSettings->value(mGroup,key);
+    mSettings->saveValue(key,value);
+}
+
+QVariant Settings::_Base::value(const QString &key, const QVariant &defaultValue)
+{
+    return mSettings->value(key,defaultValue);
+}
+
+bool Settings::_Base::boolValue(const QString &key, bool defaultValue)
+{
+    return value(key,defaultValue).toBool();
+}
+
+int Settings::_Base::intValue(const QString &key, int defaultValue)
+{
+    return value(key,defaultValue).toInt();
+}
+
+QColor Settings::_Base::colorValue(const QString &key, const QColor& defaultValue)
+{
+    return value(key,defaultValue).value<QColor>();
+}
+
+QString Settings::_Base::stringValue(const QString &key, const QString& defaultValue)
+{
+    return value(key,defaultValue).toString();
+}
+
+void Settings::_Base::save()
+{
+    beginGroup();
+    doSave();
+    endGroup();
+}
+
+void Settings::_Base::load()
+{
+    beginGroup();
+    doLoad();
+    endGroup();
 }
 
 Settings::Editor::Editor(Settings *settings): _Base(settings, SETTING_EDITOR)
@@ -116,25 +162,171 @@ Settings::Editor::Editor(Settings *settings): _Base(settings, SETTING_EDITOR)
 
 QByteArray Settings::Editor::defaultEncoding()
 {
-    return value(SETTING_EDITOR_DEFAULT_ENCODING).toByteArray();
+    return mDefaultEncoding;
 }
 
-void Settings::Editor::setDefaultEncoding(const QByteArray &encoding)
+void Settings::Editor::setDefaultEncoding(const QByteArray &value)
 {
-    setValue(SETTING_EDITOR_DEFAULT_ENCODING,encoding);
+    mDefaultEncoding = value;
 }
 
 bool Settings::Editor::autoIndent()
 {
-    return value(SETTING_EDITOR_AUTO_INDENT).toBool();
+    return mAutoIndent;
 }
 
-void Settings::Editor::setAutoIndent(bool indent)
+void Settings::Editor::setAutoIndent(bool value)
 {
-    setValue(SETTING_EDITOR_AUTO_INDENT,indent);
+    mAutoIndent = value;
 }
 
+QColor Settings::Editor::caretColor() const
+{
+    return mCaretColor;
+}
 
+void Settings::Editor::setCaretColor(const QColor &caretColor)
+{
+    mCaretColor = caretColor;
+}
+
+bool Settings::Editor::Editor::keepCaretX() const
+{
+    return mKeepCaretX;
+}
+
+void Settings::Editor::Editor::setKeepCaretX(bool keepCaretX)
+{
+    mKeepCaretX = keepCaretX;
+}
+
+void Settings::Editor::doSave()
+{
+    saveValue("default_encoding",mDefaultEncoding);
+    // indents
+    saveValue("auto_indent", mAutoIndent);
+    saveValue("add_indent", mAddIndent);
+    saveValue("tab_to_spaces", mTabToSpaces);
+    saveValue("tab_width", mTabWidth);
+    saveValue("show_indent_lines", mShowIndentLines);
+    saveValue("indent_line_color",mIndentLineColor);
+    // caret
+    saveValue("enhance_home_key",mEnhanceHomeKey);
+    saveValue("enhance_end_key",mEnhanceEndKey);
+    saveValue("keep_caret_x",mKeepCaretX);
+    saveValue("caret_for_insert",static_cast<int>(mCaretForInsert));
+    saveValue("caret_for_overwrite",static_cast<int>(mCaretForOverwrite));
+    saveValue("caret_color",mCaretColor);
+}
+
+void Settings::Editor::doLoad()
+{
+    mDefaultEncoding = value("default_encoding", ENCODING_SYSTEM_DEFAULT).toByteArray();
+    // indents
+    mAutoIndent = boolValue("auto_indent", true);
+    mAddIndent = boolValue("add_indent", true);
+    mTabToSpaces = boolValue("tab_to_spaces",false);
+    mTabWidth = intValue("tab_width",4);
+    mShowIndentLines = boolValue("show_indent_lines",true);
+    mIndentLineColor = colorValue("indent_line_color",QColorConstants::Svg::silver);
+    // caret
+    mEnhanceHomeKey = boolValue("enhance_home_key", true);
+    mEnhanceEndKey = boolValue("enhance_end_key",true);
+    mKeepCaretX = boolValue("keep_caret_x",true);
+    mCaretForInsert = static_cast<SynEditCaretType>( intValue("caret_for_insert",static_cast<int>(SynEditCaretType::ctVerticalLine)));
+    mCaretForOverwrite = static_cast<SynEditCaretType>( intValue("caret_for_overwrite",static_cast<int>(SynEditCaretType::ctBlock)));
+    mCaretColor = colorValue("caret_color",QColorConstants::Svg::black);
+}
+
+SynEditCaretType Settings::Editor::caretForOverwrite() const
+{
+    return mCaretForOverwrite;
+}
+
+void Settings::Editor::setCaretForOverwrite(const SynEditCaretType &caretForOverwrite)
+{
+    mCaretForOverwrite = caretForOverwrite;
+}
+
+SynEditCaretType Settings::Editor::caretForInsert() const
+{
+    return mCaretForInsert;
+}
+
+void Settings::Editor::setCaretForInsert(const SynEditCaretType &caretForInsert)
+{
+    mCaretForInsert = caretForInsert;
+}
+
+bool Settings::Editor::enhanceEndKey() const
+{
+    return mEnhanceEndKey;
+}
+
+void Settings::Editor::setEnhanceEndKey(bool enhanceEndKey)
+{
+    mEnhanceEndKey = enhanceEndKey;
+}
+
+bool Settings::Editor::enhanceHomeKey() const
+{
+    return mEnhanceHomeKey;
+}
+
+void Settings::Editor::setEnhanceHomeKey(bool enhanceHomeKey)
+{
+    mEnhanceHomeKey = enhanceHomeKey;
+}
+
+QColor Settings::Editor::indentLineColor() const
+{
+    return mIndentLineColor;
+}
+
+void Settings::Editor::setIndentLineColor(const QColor &indentLineColor)
+{
+    mIndentLineColor = indentLineColor;
+}
+
+bool Settings::Editor::showIndentLines() const
+{
+    return mShowIndentLines;
+}
+
+void Settings::Editor::setShowIndentLines(bool showIndentLines)
+{
+    mShowIndentLines = showIndentLines;
+}
+
+int Settings::Editor::tabWidth() const
+{
+    return mTabWidth;
+}
+
+void Settings::Editor::setTabWidth(int tabWidth)
+{
+    mTabWidth = tabWidth;
+}
+
+bool Settings::Editor::tabToSpaces() const
+{
+    return mTabToSpaces;
+}
+
+void Settings::Editor::setTabToSpaces(bool tabToSpaces)
+{
+    mTabToSpaces = tabToSpaces;
+}
+
+bool Settings::Editor::addIndent() const
+{
+    return mAddIndent;
+}
+
+void Settings::Editor::setAddIndent(bool addIndent)
+{
+    mAddIndent = addIndent;
+}
 
 Settings::CompilerSet::CompilerSet(const QString& compilerFolder):
     mAutoAddCharsetParams(true)

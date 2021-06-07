@@ -367,6 +367,7 @@ void SynEditStringList::putString(int Index, const QString &s) {
         beginUpdate();
         mIndexOfLongestLine = -1;
         mList[Index]->fString = s;
+        mList[Index]->fColumns = -1;
         emit putted(Index,1);
         endUpdate();
     }
@@ -624,6 +625,16 @@ void SynEditStringList::setFileEndingType(const FileEndingType &fileEndingType)
 bool SynEditStringList::empty()
 {
     return count()==0;
+}
+
+void SynEditStringList::resetColumns()
+{
+    mIndexOfLongestLine = -1;
+    if (mList.count() > 0 ) {
+        for (int i=0;i<mList.size();i++) {
+            mList[i]->fColumns = -1;
+        }
+    }
 }
 
 void SynEditStringList::invalidAllLineColumns()

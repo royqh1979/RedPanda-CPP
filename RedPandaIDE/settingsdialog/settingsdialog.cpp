@@ -2,6 +2,7 @@
 #include "ui_settingsdialog.h"
 #include "settingswidget.h"
 #include "compilersetoptionwidget.h"
+#include "editorgeneralwidget.h"
 #include <QDebug>
 #include <QMessageBox>
 
@@ -19,8 +20,11 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
 
     pCompilerSetOptionWidget = new CompilerSetOptionWidget(tr("Compiler Set"),tr("Compiler"));
     pCompilerSetOptionWidget->init();
-
     addWidget(pCompilerSetOptionWidget);
+
+    pEditorGeneralWidget = new EditorGeneralWidget(tr("General"),tr("Editor"));
+    pEditorGeneralWidget->init();
+    addWidget(pEditorGeneralWidget);
 }
 
 SettingsDialog::~SettingsDialog()
@@ -60,6 +64,10 @@ void SettingsDialog::on_widgetsView_clicked(const QModelIndex &index)
     if (i>=0) {
         saveCurrentPageSettings(true);
         SettingsWidget* pWidget = mSettingWidgets[i];
+        if (ui->scrollArea->widget()!=nullptr) {
+            QWidget* w = ui->scrollArea->takeWidget();
+            w->setParent(nullptr);
+        }
         ui->scrollArea->setWidget(pWidget);
         ui->lblWidgetCaption->setText(QString("%1 > %2").arg(pWidget->group()).arg(pWidget->name()));
 

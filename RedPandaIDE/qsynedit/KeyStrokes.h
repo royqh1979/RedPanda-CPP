@@ -147,8 +147,6 @@ enum class SynEditorCommand {
     ecToggleComment   = 616,
     ecCommentInline   = 617,
 
-    ecAutoCompletion  = 650,
-
     ecUpperCase       = 620, // apply to the current or previous word
     ecLowerCase       = 621,
     ecToggleCase      = 622,
@@ -158,8 +156,13 @@ enum class SynEditorCommand {
     ecToggleCaseBlock = 627,
 
     ecString          = 630,  //Insert a whole string
+    ecZoomOut         = 631,  //Increase Font Size
+    ecZoomIn          = 632,  //Decrease Font Size
 
     ecUserFirst       = 1001, // Start of user-defined commands
+
+    ecAutoCompletion  = 650,
+
 
     //### Code Folding ###
     ecCollapse = ecUserFirst + 100,

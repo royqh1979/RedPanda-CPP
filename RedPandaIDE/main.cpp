@@ -75,6 +75,7 @@ int main(int argc, char *argv[])
 //    settings->compilerSets().findSets();
 //    settings->compilerSets().saveSets();
     settings->compilerSets().loadSets();
+    settings->editor().load();
 //    qDebug() << settings->compilerSets().defaultSet()->binDirs();
 //    settings->compilerSets().loadSets();
 //    qDebug() << settings->compilerSets().defaultSet()->defines();

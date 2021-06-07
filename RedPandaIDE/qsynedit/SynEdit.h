@@ -28,7 +28,7 @@ enum class SynScrollStyle {
 };
 
 enum class SynEditCaretType {
-    ctVerticalLine, ctHorizontalLine, ctHalfBlock, ctBlock
+    ctVerticalLine=0, ctHorizontalLine=1, ctHalfBlock=2, ctBlock=3
 };
 
 enum class SynStatusChange {
@@ -80,10 +80,10 @@ enum SynEditorOption {
   eoNoSelection = 0x00004000, //Disables selecting text
   eoRightMouseMovesCursor = 0x00008000, //When clicking with the right mouse for a popup menu, move the cursor to that location
   eoScrollByOneLess = 0x00010000, //Forces scrolling to be one less
-  eoScrollHintFollows = 0x00020000, //The scroll hint follows the mouse when scrolling vertically
+//  eoScrollHintFollows = 0x00020000, //The scroll hint follows the mouse when scrolling vertically
   eoScrollPastEof = 0x00040000, //Allows the cursor to go past the end of file marker
   eoScrollPastEol = 0x00080000, //Allows the cursor to go past the last character into the white space at the end of a line
-  eoShowScrollHint = 0x00100000, //Shows a hint of the visible line numbers when scrolling vertically
+//  eoShowScrollHint = 0x00100000, //Shows a hint of the visible line numbers when scrolling vertically
   eoShowSpecialChars = 0x00200000, //Shows the special Characters
 //  eoSmartTabDelete = 0x00400000, //similar to Smart Tabs, but when you delete characters
 //  eoSmartTabs = 0x00800000, //When tabbing, the cursor will go to the next non-white space character of the previous line
@@ -218,7 +218,16 @@ public:
       SynHighlighterTokenType& TokenType, SynTokenKind &TokenKind, int &Start,
       PSynHighlighterAttribute& Attri);
     //Commands
-    void SelectAll();
+    void cutToClipboard() { CommandProcessor(SynEditorCommand::ecCut);}
+    void copyToClipboard() { CommandProcessor(SynEditorCommand::ecCopy);}
+    void pasteFromClipboard() { CommandProcessor(SynEditorCommand::ecPaste);}
+    void undo()  { CommandProcessor(SynEditorCommand::ecUndo);}
+    void redo()  { CommandProcessor(SynEditorCommand::ecRedo);}
+    void zoomIn()  { CommandProcessor(SynEditorCommand::ecZoomIn);}
+    void zoomOut()  { CommandProcessor(SynEditorCommand::ecZoomOut);}
+    void selectAll() { { CommandProcessor(SynEditorCommand::ecSelectAll);}}
+    void tab() { { CommandProcessor(SynEditorCommand::ecTab);}}
+    void untab() { { CommandProcessor(SynEditorCommand::ecShiftTab);}}
 
 
 // setter && getters
@@ -269,6 +278,24 @@ public:
     QString selText();
 
     QString lineBreak();
+
+    SynEditorOptions getOptions() const;
+    void setOptions(const SynEditorOptions &Value);
+
+    int getTabWidth() const;
+    void setTabWidth(int tabWidth);
+
+    QColor getCaretColor() const;
+    void setCaretColor(const QColor &caretColor);
+
+    QColor getActiveLineColor() const;
+    void setActiveLineColor(const QColor &activeLineColor);
+
+    SynEditCaretType getOverwriteCaret() const;
+    void setOverwriteCaret(const SynEditCaretType &overwriteCaret);
+
+    SynEditCaretType getInsertCaret() const;
+    void setInsertCaret(const SynEditCaretType &insertCaret);
 
 signals:
     void Changed();
@@ -396,32 +423,38 @@ private:
 
     void clearUndo();
     BufferCoord GetPreviousLeftBracket(int x,int y);
+    bool CanDoBlockIndent();
 
     //Commands
-    void DeleteLastChar();
-    void DeleteCurrentChar();
-    void DeleteWord();
-    void DeleteToEOL();
-    void DeleteLastWord();
-    void DeleteFromBOL();
-    void DeleteLine();
-    void DuplicateLine();
-    void MoveSelUp();
-    void MoveSelDown();
-    void ClearAll();
-    void InsertLine(bool moveCaret);
-    void DoTabKey();
-    void DoShiftTabKey();
+    void doDeleteLastChar();
+    void doDeleteCurrentChar();
+    void doDeleteWord();
+    void doDeleteToEOL();
+    void doDeleteLastWord();
+    void doDeleteFromBOL();
+    void doDeleteLine();
+    void doDuplicateLine();
+    void doMoveSelUp();
+    void doMoveSelDown();
+    void clearAll();
+    void insertLine(bool moveCaret);
+    void doTabKey();
+    void doShiftTabKey();
     void doBlockIndent();
     void doBlockUnindent();
-    void DoAddChar(QChar AChar);
-    void cutToClipboard();
-    void copyToClipboard();
-    void DoCopyToClipboard(const QString& s);
-    void pasteFromClipboard();
-
-
-    bool CanDoBlockIndent();
+    void doAddChar(QChar AChar);
+    void doCutToClipboard();
+    void doCopyToClipboard();
+    void internalDoCopyToClipboard(const QString& s);
+    void doPasteFromClipboard();
+    void doAddStr(const QString& s);
+    void doUndo();
+    void doUndoItem();
+    void doRedo();
+    void doRedoItem();
+    void doZoomIn();
+    void doZoomOut();
+    void doSelectAll();
 
 private:
     void setBlockBegin(BufferCoord value);
@@ -443,11 +476,6 @@ private slots:
     void sizeOrFontChanged(bool bFont);
     void doChange();
     void doScrolled(int value);
-    void doAddStr(const QString& s);
-    void doUndo();
-    void doUndoItem();
-    void doRedo();
-    void doRedoItem();
 
 private:
     std::shared_ptr<QImage> mContentImage;
@@ -555,6 +583,8 @@ private:
     int m_blinkTimerId;
     int m_blinkStatus;
 
+    QCursor mDefaultCursor;
+
 friend class SynEditTextPainter;
 
 // QWidget interface
@@ -571,6 +601,7 @@ void mouseReleaseEvent(QMouseEvent *event) override;
 void mouseMoveEvent(QMouseEvent *event) override;
 void mouseDoubleClickEvent(QMouseEvent *event) override;
 void inputMethodEvent(QInputMethodEvent *event) override;
+void leaveEvent(QEvent *event) override;
 };
 
 #endif // SYNEDIT_H

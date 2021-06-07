@@ -32,10 +32,12 @@ SOURCES += \
     settingsdialog/compilersetdirectorieswidget.cpp \
     settingsdialog/compilersetoptionwidget.cpp \
     settings.cpp \
+    settingsdialog/editorgeneralwidget.cpp \
     settingsdialog/settingsdialog.cpp \
     settingsdialog/settingswidget.cpp \
     systemconsts.cpp \
     utils.cpp \
+    widgets/coloredit.cpp \
     widgets/issuestable.cpp
 
 HEADERS += \
@@ -62,17 +64,20 @@ HEADERS += \
     settingsdialog/compilersetdirectorieswidget.h \
     settingsdialog/compilersetoptionwidget.h \
     settings.h \
+    settingsdialog/editorgeneralwidget.h \
     settingsdialog/settingsdialog.h \
     settingsdialog/settingswidget.h \
     systemconsts.h \
     utils.h \
     common.h \
+    widgets/coloredit.h \
     widgets/issuestable.h
 
 FORMS += \
     mainwindow.ui \
     settingsdialog/compilersetdirectorieswidget.ui \
     settingsdialog/compilersetoptionwidget.ui \
+    settingsdialog/editorgeneralwidget.ui \
     settingsdialog/settingsdialog.ui
 
 TRANSLATIONS += \

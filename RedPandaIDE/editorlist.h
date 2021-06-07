@@ -38,6 +38,7 @@ public:
 
     void beginUpdate();
     void endUpdate();
+    void applySettings();
 
 private:
     QTabWidget* getNewEditorPageControl() const;

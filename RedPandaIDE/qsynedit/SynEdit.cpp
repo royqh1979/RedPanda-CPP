@@ -118,7 +118,7 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
     mBlockEnd = mBlockBegin;
     mOptions = eoAutoIndent | eoAddIndent
             | eoDragDropEditing | eoEnhanceEndKey | eoTabIndent |
-            eoShowScrollHint | eoGroupUndo | eoKeepCaretX | eoSelectWordByDblClick;
+             eoGroupUndo | eoKeepCaretX | eoSelectWordByDblClick;
     qDebug()<<"init SynEdit: 9";
 
     mScrollTimer = new QTimer(this);
@@ -147,6 +147,8 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
 
     //enable input method
     setAttribute(Qt::WA_InputMethodEnabled);
+
+    setMouseTracking(true);
 }
 
 int SynEdit::displayLineCount()
@@ -1053,7 +1055,7 @@ void SynEdit::SetWordBlock(BufferCoord Value)
         setCaretAndSelection(v_WordEnd, v_WordStart, v_WordEnd);
 }
 
-void SynEdit::SelectAll()
+void SynEdit::doSelectAll()
 {
     BufferCoord LastPt;
     LastPt.Char = 1;
@@ -1068,7 +1070,7 @@ void SynEdit::SelectAll()
     statusChanged(SynStatusChange::scSelection);
 }
 
-void SynEdit::DeleteLastChar()
+void SynEdit::doDeleteLastChar()
 {
     //  if not ReadOnly then begin
     doOnPaintTransientEx(SynTransientType::ttBefore, true);
@@ -1187,7 +1189,7 @@ void SynEdit::DeleteLastChar()
     }
 }
 
-void SynEdit::DeleteCurrentChar()
+void SynEdit::doDeleteCurrentChar()
 {
     QString helper;
     BufferCoord Caret;
@@ -1231,7 +1233,7 @@ void SynEdit::DeleteCurrentChar()
     }
 }
 
-void SynEdit::DeleteWord()
+void SynEdit::doDeleteWord()
 {
     if (mReadOnly)
         return;
@@ -1241,14 +1243,14 @@ void SynEdit::DeleteWord()
     DeleteFromTo(start,end);
 }
 
-void SynEdit::DeleteToEOL()
+void SynEdit::doDeleteToEOL()
 {
     if (mReadOnly)
         return;
     DeleteFromTo(caretXY(),BufferCoord{lineText().length()+1,mCaretY});
 }
 
-void SynEdit::DeleteLastWord()
+void SynEdit::doDeleteLastWord()
 {
     if (mReadOnly)
         return;
@@ -1257,14 +1259,14 @@ void SynEdit::DeleteLastWord()
     DeleteFromTo(start,end);
 }
 
-void SynEdit::DeleteFromBOL()
+void SynEdit::doDeleteFromBOL()
 {
     if (mReadOnly)
         return;
     DeleteFromTo(BufferCoord{1,mCaretY},caretXY());
 }
 
-void SynEdit::DeleteLine()
+void SynEdit::doDeleteLine()
 {
     if (!mReadOnly && (mLines->count() > 0)
             && ! ((mCaretY == mLines->count()) && (lineText().isEmpty()))) {
@@ -1292,7 +1294,7 @@ void SynEdit::DeleteLine()
     }
 }
 
-void SynEdit::DuplicateLine()
+void SynEdit::doDuplicateLine()
 {
     if (!mReadOnly && (mLines->count() > 0)) {
         doOnPaintTransient(SynTransientType::ttBefore);
@@ -1305,7 +1307,7 @@ void SynEdit::DuplicateLine()
     }
 }
 
-void SynEdit::MoveSelUp()
+void SynEdit::doMoveSelUp()
 {
     if (!mReadOnly && (mLines->count() > 0) && (blockBegin().Line > 1)) {
         doOnPaintTransient(SynTransientType::ttBefore);
@@ -1352,7 +1354,7 @@ void SynEdit::MoveSelUp()
     }
 }
 
-void SynEdit::MoveSelDown()
+void SynEdit::doMoveSelDown()
 {
     if (!mReadOnly && (mLines->count() > 0) && (blockEnd().Line < mLines->count())) {
         doOnPaintTransient(SynTransientType::ttBefore);
@@ -1400,7 +1402,7 @@ void SynEdit::MoveSelDown()
     }
 }
 
-void SynEdit::ClearAll()
+void SynEdit::clearAll()
 {
     mLines->clear();
     mMarkList.clear();
@@ -1409,7 +1411,7 @@ void SynEdit::ClearAll()
     setModified(false);
 }
 
-void SynEdit::InsertLine(bool moveCaret)
+void SynEdit::insertLine(bool moveCaret)
 {
     if (mReadOnly)
         return;
@@ -1555,7 +1557,7 @@ void SynEdit::InsertLine(bool moveCaret)
     updateLastCaretX();
 }
 
-void SynEdit::DoTabKey()
+void SynEdit::doTabKey()
 {
     // Provide Visual Studio like block indenting
     if (mOptions.testFlag(eoTabIndent) && CanDoBlockIndent()) {
@@ -1603,7 +1605,7 @@ void SynEdit::DoTabKey()
     ensureCursorPosVisible();
 }
 
-void SynEdit::DoShiftTabKey()
+void SynEdit::doShiftTabKey()
 {
     // Provide Visual Studio like block indenting
     if (mOptions.testFlag(eoTabIndent) && CanDoBlockIndent()) {
@@ -1879,7 +1881,7 @@ void SynEdit::doBlockUnindent()
     setCaretAndSelection(OrgCaretPos, BB, BE);
 }
 
-void SynEdit::DoAddChar(QChar AChar)
+void SynEdit::doAddChar(QChar AChar)
 {
     if (mReadOnly)
         return;
@@ -1932,7 +1934,7 @@ void SynEdit::DoAddChar(QChar AChar)
     //DoOnPaintTransient(ttAfter);
 }
 
-void SynEdit::cutToClipboard()
+void SynEdit::doCutToClipboard()
 {
     if (mReadOnly || !selAvail())
         return;
@@ -1940,11 +1942,11 @@ void SynEdit::cutToClipboard()
     auto action = finally([this] {
         mUndoList->EndBlock();
     });
-    DoCopyToClipboard(selText());
+    internalDoCopyToClipboard(selText());
     setSelText("");
 }
 
-void SynEdit::copyToClipboard()
+void SynEdit::doCopyToClipboard()
 {
     if (!selAvail())
         return;
@@ -1960,17 +1962,17 @@ void SynEdit::copyToClipboard()
             mOptions.setFlag(eoTrimTrailingSpaces,false);
         sText = selText();
     }
-    DoCopyToClipboard(sText);
+    internalDoCopyToClipboard(sText);
 }
 
-void SynEdit::DoCopyToClipboard(const QString &s)
+void SynEdit::internalDoCopyToClipboard(const QString &s)
 {
     QClipboard* clipboard=QGuiApplication::clipboard();
     clipboard->clear();
     clipboard->setText(s);
 }
 
-void SynEdit::pasteFromClipboard()
+void SynEdit::doPasteFromClipboard()
 {
     if (mReadOnly)
         return;
@@ -2744,7 +2746,7 @@ void SynEdit::paintCaret(QPainter &painter, const QRect rcClip)
     } else {
         ct =mOverwriteCaret;
     }
-    painter.setPen(QColorConstants::Svg::red);
+    painter.setPen(mCaretColor);
     switch(ct) {
     case SynEditCaretType::ctVerticalLine:
         painter.drawLine(rcClip.left()+1,rcClip.top(),rcClip.left()+1,rcClip.bottom());
@@ -2753,12 +2755,12 @@ void SynEdit::paintCaret(QPainter &painter, const QRect rcClip)
         painter.drawLine(rcClip.left(),rcClip.bottom()-1,rcClip.right(),rcClip.bottom()-1);
         break;
     case SynEditCaretType::ctBlock:
-        painter.fillRect(rcClip, QColorConstants::Svg::red);
+        painter.fillRect(rcClip, mCaretColor);
         break;
     case SynEditCaretType::ctHalfBlock:
         QRect rc=rcClip;
         rc.setTop(rcClip.top()+rcClip.height() / 2);
-        painter.fillRect(rcClip, QColorConstants::Svg::red);
+        painter.fillRect(rcClip, mCaretColor);
         break;
     }
 }
@@ -2823,6 +2825,103 @@ void SynEdit::doScrolled(int)
     mLeftChar = horizontalScrollBar()->value();
     mTopLine = verticalScrollBar()->value();
     invalidate();
+}
+
+SynEditCaretType SynEdit::getInsertCaret() const
+{
+    return mInsertCaret;
+}
+
+void SynEdit::setInsertCaret(const SynEditCaretType &insertCaret)
+{
+    mInsertCaret = insertCaret;
+}
+
+SynEditCaretType SynEdit::getOverwriteCaret() const
+{
+    return mOverwriteCaret;
+}
+
+void SynEdit::setOverwriteCaret(const SynEditCaretType &overwriteCaret)
+{
+    mOverwriteCaret = overwriteCaret;
+}
+
+QColor SynEdit::getActiveLineColor() const
+{
+    return mActiveLineColor;
+}
+
+void SynEdit::setActiveLineColor(const QColor &activeLineColor)
+{
+    if (mActiveLineColor!=activeLineColor) {
+        mActiveLineColor = activeLineColor;
+        invalidateLine(mCaretY);
+    }
+}
+
+QColor SynEdit::getCaretColor() const
+{
+    return mCaretColor;
+}
+
+void SynEdit::setCaretColor(const QColor &caretColor)
+{
+    mCaretColor = caretColor;
+}
+
+int SynEdit::getTabWidth() const
+{
+    return mTabWidth;
+}
+
+void SynEdit::setTabWidth(int tabWidth)
+{
+    if (tabWidth!=mTabWidth) {
+        mTabWidth = tabWidth;
+        mLines->resetColumns();
+        invalidate();
+    }
+}
+
+SynEditorOptions SynEdit::getOptions() const
+{
+    return mOptions;
+}
+
+void SynEdit::setOptions(const SynEditorOptions &Value)
+{
+    if (Value != mOptions) {
+        bool bSetDrag = mOptions.testFlag(eoDropFiles) != Value.testFlag(eoDropFiles);
+        if  (!mOptions.testFlag(eoScrollPastEol))
+            setLeftChar(mLeftChar);
+        if (!mOptions.testFlag(eoScrollPastEof))
+            setTopLine(mTopLine);
+
+        bool bUpdateAll = Value.testFlag(eoShowSpecialChars) != mOptions.testFlag(eoShowSpecialChars);
+        if (!bUpdateAll)
+            bUpdateAll = Value.testFlag(eoShowRainbowColor) != mOptions.testFlag(eoShowRainbowColor);
+        //bool bUpdateScroll = (Options * ScrollOptions)<>(Value * ScrollOptions);
+        bool bUpdateScroll = true;
+        mOptions = Value;
+
+        // constrain caret position to MaxScrollWidth if eoScrollPastEol is enabled
+        internalSetCaretXY(caretXY());
+        if (mOptions.testFlag(eoScrollPastEol)) {
+            BufferCoord vTempBlockBegin = blockBegin();
+            BufferCoord vTempBlockEnd = blockEnd();
+            setBlockBegin(vTempBlockBegin);
+            setBlockEnd(vTempBlockEnd);
+        }
+        updateScrollbars();
+      // (un)register HWND as drop target
+//      if bSetDrag and not (csDesigning in ComponentState) and HandleAllocated then
+//        DragAcceptFiles(Handle, (eoDropFiles in fOptions));
+        if (bUpdateAll)
+            invalidate();
+        if (bUpdateScroll)
+            updateScrollbars();
+    }
 }
 
 void SynEdit::doAddStr(const QString &s)
@@ -3290,6 +3389,26 @@ void SynEdit::doRedoItem()
         }
         }
     }
+}
+
+void SynEdit::doZoomIn()
+{
+    QFont newFont = font();
+    int size = newFont.pointSize();
+    size++;
+    newFont.setPointSize(size);
+    setFont(newFont);
+}
+
+void SynEdit::doZoomOut()
+{
+    QFont newFont = font();
+    int size = newFont.pointSize();
+    size--;
+    if (size<2)
+        size = 2;
+    newFont.setPointSize(size);
+    setFont(newFont);
 }
 
 SynSelectionMode SynEdit::selectionMode() const
@@ -4075,53 +4194,53 @@ void SynEdit::ExecuteCommand(SynEditorCommand Command, QChar AChar, void *pData)
         SetSelWord();
         break;
     case SynEditorCommand::ecSelectAll:
-        SelectAll();
+        doSelectAll();
         break;
     case SynEditorCommand::ecDeleteLastChar:
-        DeleteLastChar();
+        doDeleteLastChar();
         break;
     case SynEditorCommand::ecDeleteChar:
-        DeleteCurrentChar();
+        doDeleteCurrentChar();
         break;
     case SynEditorCommand::ecDeleteWord:
-        DeleteWord();
+        doDeleteWord();
         break;
     case SynEditorCommand::ecDeleteEOL:
-        DeleteToEOL();
+        doDeleteToEOL();
         break;
     case SynEditorCommand::ecDeleteLastWord:
-        DeleteLastWord();
+        doDeleteLastWord();
         break;
     case SynEditorCommand::ecDeleteBOL:
-        DeleteFromBOL();
+        doDeleteFromBOL();
         break;
     case SynEditorCommand::ecDeleteLine:
-        DeleteLine();
+        doDeleteLine();
         break;
     case SynEditorCommand::ecDuplicateLine:
-        DuplicateLine();
+        doDuplicateLine();
         break;
     case SynEditorCommand::ecMoveSelUp:
-        MoveSelUp();
+        doMoveSelUp();
         break;
     case SynEditorCommand::ecMoveSelDown:
-        MoveSelDown();
+        doMoveSelDown();
         break;
     case SynEditorCommand::ecClearAll:
-        ClearAll();
+        clearAll();
         break;
     case SynEditorCommand::ecInsertLine:
     case SynEditorCommand::ecLineBreak:
-        InsertLine(Command == SynEditorCommand::ecLineBreak);
+        insertLine(Command == SynEditorCommand::ecLineBreak);
         break;
     case SynEditorCommand::ecTab:
-        DoTabKey();
+        doTabKey();
         break;
     case SynEditorCommand::ecShiftTab:
-        DoShiftTabKey();
+        doShiftTabKey();
         break;
     case SynEditorCommand::ecChar:
-        DoAddChar(AChar);
+        doAddChar(AChar);
         break;
     case SynEditorCommand::ecInsertMode:
         if (!mReadOnly)
@@ -4139,17 +4258,18 @@ void SynEdit::ExecuteCommand(SynEditorCommand Command, QChar AChar, void *pData)
         break;
     case SynEditorCommand::ecCut:
         if (!mReadOnly && selAvail())
-            cutToClipboard();
+            doCutToClipboard();
         break;
     case SynEditorCommand::ecCopy:
         if (!mReadOnly && selAvail())
-            copyToClipboard();
+            doCopyToClipboard();
         break;
     case SynEditorCommand::ecPaste:
         if (!mReadOnly)
-            pasteFromClipboard();
+            doPasteFromClipboard();
         break;
     case SynEditorCommand::ecImeStr:
+    case SynEditorCommand::ecString:
         if (!mReadOnly)
             doAddStr(*((QString*)pData));
         break;
@@ -4160,6 +4280,12 @@ void SynEdit::ExecuteCommand(SynEditorCommand Command, QChar AChar, void *pData)
     case SynEditorCommand::ecRedo:
         if (!mReadOnly)
             doRedo();
+        break;
+    case SynEditorCommand::ecZoomIn:
+        doZoomIn();
+        break;
+    case SynEditorCommand::ecZoomOut:
+        doZoomOut();
         break;
     }
 
@@ -4488,9 +4614,16 @@ void SynEdit::timerEvent(QTimerEvent *event)
 bool SynEdit::event(QEvent *event)
 {
     switch(event->type()) {
-        case QEvent::FontChange:
+    case QEvent::FontChange:
         synFontChanged();
         break;
+    case QEvent::MouseMove: {
+        QPoint p = mapFromGlobal(cursor().pos());
+        if (p.y() >= clientHeight() || p.x()>= clientWidth()) {
+            setCursor(Qt::ArrowCursor);
+        }
+        break;
+    }
     }
     QAbstractScrollArea::event(event);
 }
@@ -4507,6 +4640,7 @@ void SynEdit::focusOutEvent(QFocusEvent *)
 
 void SynEdit::keyPressEvent(QKeyEvent *event)
 {
+    mMouseMoved = false;
     SynEditorCommand cmd=TranslateKeyCode(event->key(),event->modifiers());
     if (cmd!=SynEditorCommand::ecNone) {
         CommandProcessor(cmd,QChar(),nullptr);
@@ -4641,6 +4775,12 @@ void SynEdit::mouseMoveEvent(QMouseEvent *event)
           P.Row = displayY();
       internalSetCaretXY(displayToBufferPos(P));
       setBlockEnd(caretXY());
+    } else if (buttons == Qt::NoButton) {
+        if (X > mGutterWidth) {
+            setCursor(Qt::IBeamCursor);
+        } else {
+            setCursor(Qt::ArrowCursor);
+        }
     }
 }
 
@@ -4665,6 +4805,11 @@ void SynEdit::inputMethodEvent(QInputMethodEvent *event)
 //            CommandProcessor(SynEditorCommand::ecChar,ch);
 //        }
     }
+}
+
+void SynEdit::leaveEvent(QEvent *event)
+{
+    setCursor(Qt::ArrowCursor);
 }
 
 int SynEdit::maxScrollWidth() const

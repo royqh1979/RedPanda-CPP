@@ -24,6 +24,7 @@ public:
 
     void updateStatusBarForEncoding();
     void updateStatusBarForEditingInfo(int line,int col,int lines,int charCount);
+    void updateEditorSettings();
 
 protected:
     void openFiles(const QStringList& files);

@@ -10,23 +10,23 @@ HighlighterManager::HighlighterManager()
 
 }
 
-PSynHighlighter HighlighterManager::createHighlighter(const QString &filename)
+PSynHighlighter HighlighterManager::getHighlighter(const QString &filename)
 {
     if (filename.isEmpty() || filename.startsWith(QObject::tr("untitled"))) {
-        return createCppHighlighter();
+        return getCppHighlighter();
     } else {
         QFileInfo info(filename);
         QString suffix = info.suffix();
         if (suffix.isEmpty() || suffix == "c" || suffix == "cpp" || suffix == "cxx"
                 || suffix == "cc" || suffix == "h" || suffix == "hpp"
                 || suffix == "hxx" || suffix == "hh") {
-            return createCppHighlighter();
+            return getCppHighlighter();
         }
     }
     return PSynHighlighter();
 }
 
-PSynHighlighter HighlighterManager::createCppHighlighter()
+PSynHighlighter HighlighterManager::getCppHighlighter()
 {
     SynEditCppHighlighter* highlighter = new SynEditCppHighlighter();
     PSynHighlighter pHighlighter(highlighter);

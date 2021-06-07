@@ -104,6 +104,18 @@ void EditorList::endUpdate() {
     }
 }
 
+void EditorList::applySettings()
+{
+    for (int i=0;i<mLeftPageWidget->count();i++) {
+        Editor* e = static_cast<Editor*>(mLeftPageWidget->widget(i));
+        e->applySettings();
+    }
+    for (int i=0;i<mRightPageWidget->count();i++) {
+        Editor* e = static_cast<Editor*>(mRightPageWidget->widget(i));
+        e->applySettings();
+    }
+}
+
 bool EditorList::closeAll(bool force) {
     beginUpdate();
     auto end = finally([this] {

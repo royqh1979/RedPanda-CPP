@@ -6,6 +6,8 @@
 #include <QLineEdit>
 #include <QListView>
 #include <QPlainTextEdit>
+#include <QSpinBox>
+#include "../widgets/coloredit.h"
 
 SettingsWidget::SettingsWidget(const QString &name, const QString &group, QWidget *parent):
     QWidget(parent),
@@ -62,6 +64,12 @@ void SettingsWidget::connectInputs()
     }
     for (QPlainTextEdit* p:findChildren<QPlainTextEdit*>()) {
         connect(p, &QPlainTextEdit::textChanged, this, &SettingsWidget::setSettingsChanged);
+    }
+    for (QSpinBox* p:findChildren<QSpinBox*>()) {
+        connect(p, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsWidget::setSettingsChanged);
+    }
+    for (ColorEdit* p:findChildren<ColorEdit*>()) {
+        connect(p, &ColorEdit::colorChanged, this, &SettingsWidget::setSettingsChanged);
     }
     for (QComboBox* p: findChildren<QComboBox*>()) {
         connect(p, QOverload<int>::of(&QComboBox::currentIndexChanged) ,this, &SettingsWidget::setSettingsChanged);

@@ -63,6 +63,7 @@ public:
     QTabWidget* pageControl() noexcept;
 
     void updateCaption(const QString& newCaption=QString());
+    void applySettings();
 
 signals:
 

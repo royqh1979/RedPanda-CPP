@@ -7,8 +7,8 @@ class HighlighterManager
 public:
     HighlighterManager();
 
-    PSynHighlighter createHighlighter(const QString& filename);
-    PSynHighlighter createCppHighlighter();
+    PSynHighlighter getHighlighter(const QString& filename);
+    PSynHighlighter getCppHighlighter();
 };
 
 extern HighlighterManager highlighterManager;

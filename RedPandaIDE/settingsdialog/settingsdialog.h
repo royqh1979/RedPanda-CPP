@@ -11,6 +11,7 @@ class SettingsDialog;
 }
 
 class CompilerSetOptionWidget;
+class EditorGeneralWidget;
 class PCompilerSet;
 class SettingsWidget;
 class SettingsDialog : public QDialog
@@ -42,6 +43,7 @@ private:
     QStandardItemModel model;
 
     CompilerSetOptionWidget* pCompilerSetOptionWidget;
+    EditorGeneralWidget* pEditorGeneralWidget;
 };
 
 #endif // SETTINGSDIALOG_H

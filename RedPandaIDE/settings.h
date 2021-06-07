@@ -4,6 +4,8 @@
 #include <QSettings>
 #include <vector>
 #include <memory>
+#include <QColor>
+#include "qsynedit/SynEdit.h"
 
 /**
  * use the following command to get gcc's default bin/library folders:
@@ -46,9 +48,19 @@ private:
     class _Base {
     public:
         explicit _Base(Settings* settings, const QString& groupName);
-        void setDefault(const QString &key, const QVariant &value);
-        void setValue(const QString &key, const QVariant &value);
-        QVariant value(const QString &key);
+        void beginGroup();
+        void endGroup();
+        void saveValue(const QString &key, const QVariant &value);
+        QVariant value(const QString &key, const QVariant& defaultValue);
+        bool boolValue(const QString &key, bool defaultValue);
+        int intValue(const QString &key, int defaultValue);
+        QColor colorValue(const QString &key, const QColor& defaultValue);
+        QString stringValue(const QString &key, const QString& defaultValue);
+        void save();
+        void load();
+    protected:
+        virtual void doSave() = 0;
+        virtual void doLoad() = 0;
     protected:
         Settings* mSettings;
         QString mGroup;
@@ -59,15 +71,74 @@ public:
     public:
         explicit Dirs(Settings * settings);
         QString app() const;
+
+        // _Base interface
+    protected:
+        void doSave() override;
+        void doLoad() override;
     };
 
     class Editor: public _Base {
     public:
         explicit Editor(Settings * settings);
         QByteArray defaultEncoding();
-        void setDefaultEncoding(const QByteArray& encoding);
+        void setDefaultEncoding(const QByteArray& value);
         bool autoIndent();
-        void setAutoIndent(bool indent);
+        void setAutoIndent(bool value);
+        bool addIndent() const;
+        void setAddIndent(bool addIndent);
+
+        bool tabToSpaces() const;
+        void setTabToSpaces(bool tabToSpaces);
+
+        int tabWidth() const;
+        void setTabWidth(int tabWidth);
+
+        bool showIndentLines() const;
+        void setShowIndentLines(bool showIndentLines);
+
+        QColor indentLineColor() const;
+        void setIndentLineColor(const QColor &indentLineColor);
+
+        bool enhanceHomeKey() const;
+        void setEnhanceHomeKey(bool enhanceHomeKey);
+
+        bool enhanceEndKey() const;
+        void setEnhanceEndKey(bool enhanceEndKey);
+
+        SynEditCaretType caretForInsert() const;
+        void setCaretForInsert(const SynEditCaretType &caretForInsert);
+
+        SynEditCaretType caretForOverwrite() const;
+        void setCaretForOverwrite(const SynEditCaretType &caretForOverwrite);
+
+        QColor caretColor() const;
+        void setCaretColor(const QColor &caretColor);
+
+        bool keepCaretX() const;
+        void setKeepCaretX(bool keepCaretX);
+
+    private:
+        QByteArray mDefaultEncoding;
+        // indents
+        bool mAutoIndent;
+        bool mAddIndent;
+        bool mTabToSpaces;
+        int mTabWidth;
+        bool mShowIndentLines;
+        QColor mIndentLineColor;
+        // caret
+        bool mEnhanceHomeKey;
+        bool mEnhanceEndKey;
+        bool mKeepCaretX;
+        SynEditCaretType mCaretForInsert;
+        SynEditCaretType mCaretForOverwrite;
+        QColor mCaretColor;
+
+        // _Base interface
+    protected:
+        void doSave() override;
+        void doLoad() override;
     };
 
     class CompilerSet {
@@ -230,11 +301,12 @@ public:
 
     Settings& operator= (const Settings& settings) = delete;
     Settings& operator= (const Settings&& settings) = delete;
-    void setDefault(const QString& group, const QString &key, const QVariant &value);
-    void setValue(const QString& group, const QString &key, const QVariant &value);
-    void setValue(const QString &key, const QVariant &value);
-    QVariant value(const QString& group, const QString &key);
-    QVariant value(const QString &key);
+    void beginGroup(const QString& group);
+    void endGroup();
+    void saveValue(const QString& group, const QString &key, const QVariant &value);
+    void saveValue(const QString &key, const QVariant &value);
+    QVariant value(const QString& group, const QString &key, const QVariant& defaultValue);
+    QVariant value(const QString &key, const QVariant& defaultValue);
 
     Dirs& dirs();
     Editor& editor();

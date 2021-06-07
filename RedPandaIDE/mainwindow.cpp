@@ -72,6 +72,11 @@ void MainWindow::updateStatusBarForEditingInfo(int line,int col,int lines,int ch
     }
 }
 
+void MainWindow::updateEditorSettings()
+{
+    mEditorList->applySettings();
+}
+
 void MainWindow::openFiles(const QStringList &files)
 {
     mEditorList->beginUpdate();
@@ -105,7 +110,7 @@ void MainWindow::updateCompilerSet()
 {
     mCompilerSet->clear();
     int index=pSettings->compilerSets().defaultIndex();
-    for (int i=0;i<pSettings->compilerSets().list().size();i++) {
+    for (size_t i=0;i<pSettings->compilerSets().list().size();i++) {
         mCompilerSet->addItem(pSettings->compilerSets().list()[i]->name());
     }
     if (index < 0 || index>=mCompilerSet->count()) {
@@ -210,7 +215,7 @@ void MainWindow::on_actionUndo_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor != NULL ) {
-        editor->CommandProcessor(SynEditorCommand::ecUndo);
+        editor->undo();
     }
 }
 
@@ -218,7 +223,7 @@ void MainWindow::on_actionRedo_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor != NULL ) {
-        editor->CommandProcessor(SynEditorCommand::ecRedo);
+        editor->redo();
     }
 }
 
@@ -226,7 +231,7 @@ void MainWindow::on_actionCut_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor != NULL ) {
-        editor->CommandProcessor(SynEditorCommand::ecCut);
+        editor->cutToClipboard();
     }
 }
 
@@ -234,7 +239,7 @@ void MainWindow::on_actionSelectAll_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor != NULL ) {
-        editor->CommandProcessor(SynEditorCommand::ecSelectAll);
+        editor->selectAll();
     }
 }
 
@@ -242,7 +247,7 @@ void MainWindow::on_actionCopy_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor != NULL ) {
-        editor->CommandProcessor(SynEditorCommand::ecCopy);
+        editor->copyToClipboard();
     }
 }
 
@@ -250,7 +255,7 @@ void MainWindow::on_actionPaste_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor != NULL ) {
-        editor->CommandProcessor(SynEditorCommand::ecPaste);
+        editor->pasteFromClipboard();
     }
 }
 
@@ -258,7 +263,7 @@ void MainWindow::on_actionIndent_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor != NULL ) {
-        editor->CommandProcessor(SynEditorCommand::ecTab);
+        editor->tab();
     }
 }
 
@@ -266,7 +271,7 @@ void MainWindow::on_actionUnIndent_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor != NULL ) {
-        editor->CommandProcessor(SynEditorCommand::ecShiftTab);
+        editor->untab();
     }
 }
 

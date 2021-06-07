@@ -56,13 +56,13 @@ Editor::Editor(QWidget *parent, const QString& filename,
     PSynHighlighter highlighter;
     if (!isNew) {
         loadFile();
-        highlighter = highlighterManager.createHighlighter(mFilename);
+        highlighter = highlighterManager.getHighlighter(mFilename);
     } else {
         if (mEncodingOption == ENCODING_AUTO_DETECT)
             mFileEncoding = ENCODING_ASCII;
         else
             mFileEncoding = mEncodingOption;
-        highlighter=highlighterManager.createCppHighlighter();
+        highlighter=highlighterManager.getCppHighlighter();
     }
 
     if (highlighter) {
@@ -72,9 +72,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
         setUseCodeFolding(false);
     }
 
-    //SynEditCppHighlighter highlighter;
-
-
+    applySettings();
 }
 
 Editor::~Editor() {
@@ -229,15 +227,15 @@ void Editor::wheelEvent(QWheelEvent *event) {
         QFont oldFont = font();
         int size = oldFont.pointSize();
         if (event->angleDelta().y()>0) {
-            size = std::max(5,size-1);
-            oldFont.setPointSize(oldFont.pointSize());
-            this->setFont(oldFont);
-            //this->zoomIn();
+//            size = std::max(5,size-1);
+//            oldFont.setPointSize(oldFont.pointSize());
+//            this->setFont(oldFont);
+            this->zoomIn();
         } else {
-            size = std::min(size+1,50);
-            oldFont.setPointSize(oldFont.pointSize());
-            this->setFont(oldFont);
-            //this->zoomOut();
+//            size = std::min(size+1,50);
+//            oldFont.setPointSize(oldFont.pointSize());
+//            this->setFont(oldFont);
+            this->zoomOut();
         }
         onLinesChanged(0,0);
     }
@@ -249,12 +247,34 @@ void Editor::onModificationChanged(bool) {
 
 void Editor::onCursorPositionChanged(int line, int index) {
     pMainWindow->updateStatusBarForEditingInfo(line,index+1,lines()->count(),lines()->getTextLength());
-
 }
 
 void Editor::onLinesChanged(int startLine, int count) {
     qDebug()<<"Editor lines changed"<<lines()->count();
     qDebug()<<startLine<<count;
+}
+
+void Editor::applySettings()
+{
+    SynEditorOptions options = eoAltSetsColumnMode |
+            eoDragDropEditing | eoDropFiles |  eoKeepCaretX | eoTabsToSpaces |
+            eoRightMouseMovesCursor | eoScrollByOneLess | eoTabIndent;
+    options.setFlag(eoAddIndent,pSettings->editor().addIndent());
+    options.setFlag(eoAutoIndent,pSettings->editor().autoIndent());
+    options.setFlag(eoTabsToSpaces,pSettings->editor().tabToSpaces());
+
+    options.setFlag(eoKeepCaretX,pSettings->editor().keepCaretX());
+    options.setFlag(eoEnhanceHomeKey,pSettings->editor().enhanceHomeKey());
+    options.setFlag(eoEnhanceEndKey,pSettings->editor().enhanceEndKey());
+
+    setOptions(options);
+
+    setTabWidth(pSettings->editor().tabWidth());
+
+    setInsertCaret(pSettings->editor().caretForInsert());
+    setOverwriteCaret(pSettings->editor().caretForOverwrite());
+    setCaretColor(pSettings->editor().caretColor());
+    //todo: show indent line
 }
 
 void Editor::updateCaption(const QString& newCaption) {
