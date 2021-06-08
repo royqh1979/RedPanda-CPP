@@ -51,6 +51,12 @@ void EditorGeneralWidget::doLoad()
     setCaretTypeIndex(ui->cbCaretForInsert,pSettings->editor().caretForInsert());
     setCaretTypeIndex(ui->cbCaretForOverwrite,pSettings->editor().caretForOverwrite());
     ui->colorCaret->setColor(pSettings->editor().caretColor());
+    //scrolls;
+    ui->chkAutoHideScrollBars->setChecked(pSettings->editor().autoHideScrollbar());
+    ui->chkScrollPastEOF->setChecked(pSettings->editor().scrollPastEof());
+    ui->chkScrollPastEOL->setChecked(pSettings->editor().scrollPastEol());
+    ui->chkScrollHalfPage->setChecked(pSettings->editor().halfPageScroll());
+    ui->chkScrollByOneLess->setChecked(pSettings->editor().scrollByOneLess());
 }
 
 void EditorGeneralWidget::doSave()
@@ -69,6 +75,12 @@ void EditorGeneralWidget::doSave()
     pSettings->editor().setCaretForInsert(getCaretTypeIndex(ui->cbCaretForInsert));
     pSettings->editor().setCaretForOverwrite(getCaretTypeIndex(ui->cbCaretForOverwrite));
     pSettings->editor().setCaretColor(ui->colorCaret->color());
+    //scrolls;
+    pSettings->editor().setAutoHideScrollbar(ui->chkAutoHideScrollBars->isChecked());
+    pSettings->editor().setScrollPastEof(ui->chkScrollPastEOF->isChecked());
+    pSettings->editor().setScrollPastEol(ui->chkScrollPastEOL->isChecked());
+    pSettings->editor().setScrollByOneLess(ui->chkScrollByOneLess->isChecked());
+    pSettings->editor().setHalfPageScroll(ui->chkScrollHalfPage->isChecked());
 
     pSettings->editor().save();
     pMainWindow->updateEditorSettings();

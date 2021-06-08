@@ -3,6 +3,7 @@
 #include "settingswidget.h"
 #include "compilersetoptionwidget.h"
 #include "editorgeneralwidget.h"
+#include "editorfontwidget.h"
 #include <QDebug>
 #include <QMessageBox>
 
@@ -25,6 +26,10 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     pEditorGeneralWidget = new EditorGeneralWidget(tr("General"),tr("Editor"));
     pEditorGeneralWidget->init();
     addWidget(pEditorGeneralWidget);
+
+    pEditorFontWidget = new EditorFontWidget(tr("Font"),tr("Editor"));
+    pEditorFontWidget->init();
+    addWidget(pEditorFontWidget);
 }
 
 SettingsDialog::~SettingsDialog()

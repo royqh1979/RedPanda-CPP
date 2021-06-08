@@ -64,35 +64,35 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(SynStateFlags)
 
 enum SynEditorOption {
   eoAltSetsColumnMode = 0x00000001, //Holding down the Alt Key will put the selection mode into columnar format
-  eoAutoIndent = 0x00000002, //Will indent the caret on new lines with the same amount of leading white space as the preceding line
-  eoAddIndent = 0x00000004, //Will add one tab width of indent when typing { and :, and remove the same amount when typing }
-  //eoAutoSizeMaxScrollWidth = 0x00000008, //Automatically resizes the MaxScrollWidth property when inserting text
-  //eoDisableScrollArrows = 0x00000010 , //Disables the scroll bar arrow buttons when you can't scroll in that direction any more
-  eoDragDropEditing = 0x00000020, //Allows you to select a block of text and drag it within the document to another location
-  eoDropFiles = 0x00000040, //Allows the editor accept OLE file drops
-  eoEnhanceHomeKey = 0x00000080, //enhances home key positioning, similar to visual studio
-  eoEnhanceEndKey = 0x00000100, //enhances End key positioning, similar to JDeveloper
-  eoGroupUndo = 0x00000200, //When undoing/redoing actions, handle all continous changes of the same kind in one call instead undoing/redoing each command separately
-  eoHalfPageScroll = 0x00000400, //When scrolling with page-up and page-down commands, only scroll a half page at a time
-  eoHideShowScrollbars = 0x00000800, //if enabled, then the scrollbars will only show when necessary.  If you have ScrollPastEOL, then it the horizontal bar will always be there (it uses MaxLength instead)
-  eoKeepCaretX = 0x00001000 , //When moving through lines w/o Cursor Past EOL, keeps the X position of the cursor
-  eoNoCaret = 0x00002000, //Makes it so the caret is never visible
-  eoNoSelection = 0x00004000, //Disables selecting text
-  eoRightMouseMovesCursor = 0x00008000, //When clicking with the right mouse for a popup menu, move the cursor to that location
-  eoScrollByOneLess = 0x00010000, //Forces scrolling to be one less
-//  eoScrollHintFollows = 0x00020000, //The scroll hint follows the mouse when scrolling vertically
-  eoScrollPastEof = 0x00040000, //Allows the cursor to go past the end of file marker
-  eoScrollPastEol = 0x00080000, //Allows the cursor to go past the last character into the white space at the end of a line
-//  eoShowScrollHint = 0x00100000, //Shows a hint of the visible line numbers when scrolling vertically
-  eoShowSpecialChars = 0x00200000, //Shows the special Characters
-//  eoSmartTabDelete = 0x00400000, //similar to Smart Tabs, but when you delete characters
-//  eoSmartTabs = 0x00800000, //When tabbing, the cursor will go to the next non-white space character of the previous line
-  eoSpecialLineDefaultFg = 0x01000000, //disables the foreground text color override when using the OnSpecialLineColor event
-  eoTabIndent = 0x02000000, //When active <Tab> and <Shift><Tab> act as block indent, unindent when text is selected
-  eoTabsToSpaces = 0x04000000, //Converts a tab character to a specified number of space characters
-  eoShowRainbowColor = 0x08000000,
-  eoTrimTrailingSpaces = 0x10000000, //Spaces at the end of lines will be trimmed and not saved
-  eoSelectWordByDblClick = 0x20000000
+  eoAutoIndent =        0x00000002, //Will indent the caret on new lines with the same amount of leading white space as the preceding line
+  eoAddIndent =         0x00000004, //Will add one tab width of indent when typing { and :, and remove the same amount when typing }
+  eoDragDropEditing =   0x00000008, //Allows you to select a block of text and drag it within the document to another location
+  eoDropFiles =         0x00000010, //Allows the editor accept OLE file drops
+  eoEnhanceHomeKey =    0x00000020, //enhances home key positioning, similar to visual studio
+  eoEnhanceEndKey =     0x00000040, //enhances End key positioning, similar to JDeveloper
+  eoGroupUndo =         0x00000080, //When undoing/redoing actions, handle all continous changes of the same kind in one call instead undoing/redoing each command separately
+  eoHalfPageScroll =    0x00000100, //When scrolling with page-up and page-down commands, only scroll a half page at a time
+  eoHideShowScrollbars =0x00000200, //if enabled, then the scrollbars will only show when necessary.  If you have ScrollPastEOL, then it the horizontal bar will always be there (it uses MaxLength instead)
+  eoKeepCaretX =        0x00000400 , //When moving through lines w/o Cursor Past EOL, keeps the X position of the cursor
+  eoRightMouseMovesCursor= 0x00000800, //When clicking with the right mouse for a popup menu, move the cursor to that location
+  eoScrollByOneLess =   0x00001000, //Forces scrolling to be one less
+  eoScrollPastEof =     0x00002000, //Allows the cursor to go past the end of file marker
+  eoScrollPastEol =     0x00004000, //Allows the cursor to go past the last character into the white space at the end of a line
+  eoShowSpecialChars =  0x00008000, //Shows the special Characters
+  eoSpecialLineDefaultFg = 0x00010000, //disables the foreground text color override when using the OnSpecialLineColor event
+  eoTabIndent =         0x00020000, //When active <Tab> and <Shift><Tab> act as block indent, unindent when text is selected
+  eoTabsToSpaces =      0x00040000, //Converts a tab character to a specified number of space characters
+  eoShowRainbowColor =  0x00080000,
+  eoTrimTrailingSpaces =0x00100000, //Spaces at the end of lines will be trimmed and not saved
+  eoSelectWordByDblClick=0x00200000,
+  eoNoSelection =       0x00400000, //Disables selecting text
+    //eoAutoSizeMaxScrollWidth = 0x00000008, //Automatically resizes the MaxScrollWidth property when inserting text
+    //eoDisableScrollArrows = 0x00000010 , //Disables the scroll bar arrow buttons when you can't scroll in that direction any more
+    //  eoScrollHintFollows = 0x00020000, //The scroll hint follows the mouse when scrolling vertically
+    //  eoShowScrollHint = 0x00100000, //Shows a hint of the visible line numbers when scrolling vertically
+    //  eoSmartTabDelete = 0x00400000, //similar to Smart Tabs, but when you delete characters
+    //  eoSmartTabs = 0x00800000, //When tabbing, the cursor will go to the next non-white space character of the previous line
+    // eoNoCaret =           0x00000800, //Makes it so the caret is never visible
 };
 
 Q_DECLARE_FLAGS(SynEditorOptions, SynEditorOption)
@@ -146,38 +146,38 @@ public:
      * Returns how many rows are there in the editor
      * @return
      */
-    int displayLineCount();
+    int displayLineCount() const;
 
     /**
      * @brief displayX
      * @return
      */
-    DisplayCoord displayXY();
-    int displayX();
-    int displayY();
-    BufferCoord caretXY();
-    int caretX();
-    int caretY();
+    DisplayCoord displayXY() const;
+    int displayX() const;
+    int displayY() const;
+    BufferCoord caretXY() const;
+    int caretX() const;
+    int caretY() const;
 
     void invalidateGutter();
     void invalidateGutterLine(int aLine);
     void invalidateGutterLines(int FirstLine, int LastLine);
-    DisplayCoord pixelsToNearestRowColumn(int aX, int aY);
-    DisplayCoord pixelsToRowColumn(int aX, int aY);
-    QPoint RowColumnToPixels(const DisplayCoord& coord);
-    DisplayCoord bufferToDisplayPos(const BufferCoord& p);
-    BufferCoord displayToBufferPos(const DisplayCoord& p);
-    int leftSpaces(const QString& line);
-    QString GetLeftSpacing(int charCount,bool wantTabs);
-    int charToColumn(int aLine, int aChar);
-    int charToColumn(const QString& s, int aChar);
-    int columnToChar(int aLine, int aColumn);
-    int stringColumns(const QString& line, int colsBefore);
-    int getLineIndent(const QString& line);
-    int rowToLine(int aRow);
-    int lineToRow(int aLine);
-    int foldRowToLine(int Row);
-    int foldLineToRow(int Line);
+    DisplayCoord pixelsToNearestRowColumn(int aX, int aY) const;
+    DisplayCoord pixelsToRowColumn(int aX, int aY) const;
+    QPoint RowColumnToPixels(const DisplayCoord& coord) const;
+    DisplayCoord bufferToDisplayPos(const BufferCoord& p) const;
+    BufferCoord displayToBufferPos(const DisplayCoord& p) const;
+    int leftSpaces(const QString& line) const;
+    QString GetLeftSpacing(int charCount,bool wantTabs) const;
+    int charToColumn(int aLine, int aChar) const;
+    int charToColumn(const QString& s, int aChar) const;
+    int columnToChar(int aLine, int aColumn) const;
+    int stringColumns(const QString& line, int colsBefore) const;
+    int getLineIndent(const QString& line) const;
+    int rowToLine(int aRow) const;
+    int lineToRow(int aLine) const;
+    int foldRowToLine(int Row) const;
+    int foldLineToRow(int Line) const;
     void setDefaultKeystrokes();
     void invalidateLine(int Line);
     void invalidateLines(int FirstLine, int LastLine);
@@ -186,11 +186,11 @@ public:
     void invalidate();
     void lockPainter();
     void unlockPainter();
-    bool selAvail();
+    bool selAvail() const;
 
-    int charColumns(QChar ch);
-    double dpiFactor();
-    bool IsPointInSelection(const BufferCoord& Value);
+    int charColumns(QChar ch) const;
+    double dpiFactor() const;
+    bool IsPointInSelection(const BufferCoord& Value) const;
     BufferCoord NextWordPos();
     BufferCoord NextWordPosEx(const BufferCoord& XY);
     BufferCoord WordStart();
@@ -209,6 +209,9 @@ public:
     void setCaretXYEx(bool CallEnsureCursorPos, BufferCoord value);
     void setCaretXYCentered(bool ForceToMiddle, const BufferCoord& value);
 
+    int maxScrollWidth() const;
+    int maxScrollHeight() const;
+
     bool GetHighlighterAttriAtRowCol(const BufferCoord& XY, QString& Token,
       PSynHighlighterAttribute& Attri);
     bool GetHighlighterAttriAtRowCol(const BufferCoord& XY, QString& Token,
@@ -217,6 +220,7 @@ public:
     bool GetHighlighterAttriAtRowColEx(const BufferCoord& XY, QString& Token,
       SynHighlighterTokenType& TokenType, SynTokenKind &TokenKind, int &Start,
       PSynHighlighterAttribute& Attri);
+
     //Commands
     void cutToClipboard() { CommandProcessor(SynEditorCommand::ecCut);}
     void copyToClipboard() { CommandProcessor(SynEditorCommand::ecCopy);}
@@ -254,9 +258,6 @@ public:
 
     bool modified() const;
     void setModified(bool Value);
-
-    int maxScrollWidth() const;
-    void setMaxScrollWidth(int Value);
 
     int tabWidth() const;
 
@@ -388,7 +389,7 @@ private:
     PSynEditFoldRange checkFoldRange(SynEditFoldRanges* FoldRangeToCheck,int Line, bool WantCollapsed, bool AcceptFromLine, bool AcceptToLine);
     PSynEditFoldRange foldEndAtLine(int Line);
     void paintCaret(QPainter& painter, const QRect rcClip);
-    int textOffset();
+    int textOffset() const;
     SynEditorCommand TranslateKeyCode(int key, Qt::KeyboardModifiers modifiers);
     /**
      * Move the caret to right DX columns
@@ -505,7 +506,6 @@ private:
     PSynEditUndoList mOrigRedoList;
     int mLinesInWindow;
     int mLeftChar;
-    int mMaxScrollWidth;
     int mPaintLock; // lock counter for internal calculations
     bool mReadOnly;
     int mRightEdge;

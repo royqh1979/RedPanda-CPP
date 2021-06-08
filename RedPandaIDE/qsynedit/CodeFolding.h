@@ -48,7 +48,7 @@ private:
 public:
     PSynEditFoldRange range(int index);
     void clear();
-    int count();
+    int count() const;
     SynEditFoldRanges();
     PSynEditFoldRange addByParts(PSynEditFoldRange aParent, PSynEditFoldRanges aAllFold,
                                int aFromLine, PSynEditFoldRegion aFoldRegion, int aToLine);
@@ -56,7 +56,7 @@ public:
     void insert(int index, PSynEditFoldRange range);
     int remove(int index);
     void add(PSynEditFoldRange foldRange);
-    PSynEditFoldRange operator[](int index);
+    PSynEditFoldRange operator[](int index) const;
 };
 
 // A single fold

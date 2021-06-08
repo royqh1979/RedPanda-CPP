@@ -118,6 +118,21 @@ public:
         bool keepCaretX() const;
         void setKeepCaretX(bool keepCaretX);
 
+        bool autoHideScrollbar() const;
+        void setAutoHideScrollbar(bool autoHideScrollbar);
+
+        bool scrollPastEof() const;
+        void setScrollPastEof(bool scrollPastEof);
+
+        bool scrollPastEol() const;
+        void setScrollPastEol(bool scrollPastEol);
+
+        bool scrollByOneLess() const;
+        void setScrollByOneLess(bool scrollByOneLess);
+
+        bool halfPageScroll() const;
+        void setHalfPageScroll(bool halfPageScroll);
+
     private:
         QByteArray mDefaultEncoding;
         // indents
@@ -134,6 +149,12 @@ public:
         SynEditCaretType mCaretForInsert;
         SynEditCaretType mCaretForOverwrite;
         QColor mCaretColor;
+        //scroll
+        bool mAutoHideScrollbar;
+        bool mScrollPastEof;
+        bool mScrollPastEol;
+        bool mScrollByOneLess;
+        bool mHalfPageScroll;
 
         // _Base interface
     protected:

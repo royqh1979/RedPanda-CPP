@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>721</width>
-    <height>636</height>
+    <height>691</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -165,7 +165,24 @@
          <property name="spacing">
           <number>7</number>
          </property>
-         <item row="2" column="2">
+         <item row="1" column="0">
+          <widget class="QLabel" name="lbCaretForOverwrite">
+           <property name="text">
+            <string>Caret for overwriting mode</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QComboBox" name="cbCaretForInsert"/>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="lbCaretForInsert">
+           <property name="text">
+            <string>Caret for inserting mode</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="2">
           <spacer name="horizontalSpacer">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
@@ -178,7 +195,14 @@
            </property>
           </spacer>
          </item>
-         <item row="4" column="1">
+         <item row="2" column="0">
+          <widget class="QLabel" name="lbCaretColor">
+           <property name="text">
+            <string>Caret Color</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
           <widget class="ColorEdit" name="colorCaret">
            <property name="frameShape">
             <enum>QFrame::StyledPanel</enum>
@@ -188,46 +212,8 @@
            </property>
           </widget>
          </item>
-         <item row="0" column="0">
-          <widget class="QCheckBox" name="chkCaretPastEol">
-           <property name="text">
-            <string>Caret can be positioned past end of line</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="1">
+         <item row="1" column="1">
           <widget class="QComboBox" name="cbCaretForOverwrite"/>
-         </item>
-         <item row="2" column="0">
-          <widget class="QLabel" name="lbCaretForInsert">
-           <property name="text">
-            <string>Caret for inserting mode</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="1">
-          <widget class="QComboBox" name="cbCaretForInsert"/>
-         </item>
-         <item row="3" column="0">
-          <widget class="QLabel" name="lbCaretForOverwrite">
-           <property name="text">
-            <string>Caret for overwriting mode</string>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="0">
-          <widget class="QLabel" name="lbCaretColor">
-           <property name="text">
-            <string>Caret Color</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="0">
-          <widget class="QCheckBox" name="chkCaretPastEof">
-           <property name="text">
-            <string>Caret can be positioned past end of file</string>
-           </property>
-          </widget>
          </item>
         </layout>
        </widget>
@@ -240,6 +226,43 @@
      <property name="title">
       <string>Scroll</string>
      </property>
+     <layout class="QVBoxLayout" name="verticalLayout_4">
+      <item>
+       <widget class="QCheckBox" name="chkAutoHideScrollBars">
+        <property name="text">
+         <string>Auto hide scroll bars</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="chkScrollPastEOL">
+        <property name="text">
+         <string>Can scroll the last char to the left edge of the editor</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="chkScrollPastEOF">
+        <property name="text">
+         <string>Can scroll the last line to the top edge of the editor</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="chkScrollHalfPage">
+        <property name="text">
+         <string>Page Up/Down scrolls half a page</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="chkScrollByOneLess">
+        <property name="text">
+         <string>Forces page scroll to be one line less</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </widget>
    </item>
    <item>

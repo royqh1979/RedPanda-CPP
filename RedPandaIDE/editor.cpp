@@ -267,10 +267,14 @@ void Editor::applySettings()
     options.setFlag(eoEnhanceHomeKey,pSettings->editor().enhanceHomeKey());
     options.setFlag(eoEnhanceEndKey,pSettings->editor().enhanceEndKey());
 
+    options.setFlag(eoHideShowScrollbars,pSettings->editor().autoHideScrollbar());
+    options.setFlag(eoScrollPastEol,pSettings->editor().scrollPastEol());
+    options.setFlag(eoScrollPastEof,pSettings->editor().scrollPastEof());
+    options.setFlag(eoScrollByOneLess,pSettings->editor().scrollByOneLess());
+    options.setFlag(eoHalfPageScroll,pSettings->editor().halfPageScroll());
     setOptions(options);
 
     setTabWidth(pSettings->editor().tabWidth());
-
     setInsertCaret(pSettings->editor().caretForInsert());
     setOverwriteCaret(pSettings->editor().caretForOverwrite());
     setCaretColor(pSettings->editor().caretColor());

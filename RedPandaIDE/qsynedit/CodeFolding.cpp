@@ -75,7 +75,7 @@ void SynEditFoldRanges::clear()
     mRanges.clear();
 }
 
-int SynEditFoldRanges::count()
+int SynEditFoldRanges::count() const
 {
     return mRanges.size();
 }
@@ -114,7 +114,7 @@ void SynEditFoldRanges::add(PSynEditFoldRange foldRange)
     mRanges.push_back(foldRange);
 }
 
-PSynEditFoldRange SynEditFoldRanges::operator[](int index)
+PSynEditFoldRange SynEditFoldRanges::operator[](int index) const
 {
     return mRanges[index];
 }

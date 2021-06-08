@@ -12,6 +12,7 @@ class SettingsDialog;
 
 class CompilerSetOptionWidget;
 class EditorGeneralWidget;
+class EditorFontWidget;
 class PCompilerSet;
 class SettingsWidget;
 class SettingsDialog : public QDialog
@@ -44,6 +45,7 @@ private:
 
     CompilerSetOptionWidget* pCompilerSetOptionWidget;
     EditorGeneralWidget* pEditorGeneralWidget;
+    EditorFontWidget* pEditorFontWidget;
 };
 
 #endif // SETTINGSDIALOG_H

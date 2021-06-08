@@ -32,6 +32,7 @@ SOURCES += \
     settingsdialog/compilersetdirectorieswidget.cpp \
     settingsdialog/compilersetoptionwidget.cpp \
     settings.cpp \
+    settingsdialog/editorfontwidget.cpp \
     settingsdialog/editorgeneralwidget.cpp \
     settingsdialog/settingsdialog.cpp \
     settingsdialog/settingswidget.cpp \
@@ -64,6 +65,7 @@ HEADERS += \
     settingsdialog/compilersetdirectorieswidget.h \
     settingsdialog/compilersetoptionwidget.h \
     settings.h \
+    settingsdialog/editorfontwidget.h \
     settingsdialog/editorgeneralwidget.h \
     settingsdialog/settingsdialog.h \
     settingsdialog/settingswidget.h \
@@ -77,6 +79,7 @@ FORMS += \
     mainwindow.ui \
     settingsdialog/compilersetdirectorieswidget.ui \
     settingsdialog/compilersetoptionwidget.ui \
+    settingsdialog/editorfontwidget.ui \
     settingsdialog/editorgeneralwidget.ui \
     settingsdialog/settingsdialog.ui
 

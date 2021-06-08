@@ -75,7 +75,6 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
     this->setCursor(Qt::CursorShape::IBeamCursor);
     //TabStop := True;
     mInserting = true;
-    mMaxScrollWidth = 1024;
     mScrollBars = SynScrollStyle::ssBoth;
     mExtraLineSpacing = 0;
     qDebug()<<"init SynEdit: 6";
@@ -150,7 +149,7 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
     setMouseTracking(true);
 }
 
-int SynEdit::displayLineCount()
+int SynEdit::displayLineCount() const
 {
     if (mLines->empty()) {
         return 0;
@@ -158,22 +157,22 @@ int SynEdit::displayLineCount()
     return lineToRow(mLines->count());
 }
 
-DisplayCoord SynEdit::displayXY()
+DisplayCoord SynEdit::displayXY() const
 {
     return bufferToDisplayPos(caretXY());
 }
 
-int SynEdit::displayX()
+int SynEdit::displayX() const
 {
     return displayXY().Column;
 }
 
-int SynEdit::displayY()
+int SynEdit::displayY() const
 {
     return displayXY().Row;
 }
 
-BufferCoord SynEdit::caretXY()
+BufferCoord SynEdit::caretXY() const
 {
     BufferCoord result;
     result.Char = caretX();
@@ -181,12 +180,12 @@ BufferCoord SynEdit::caretXY()
     return result;
 }
 
-int SynEdit::caretX()
+int SynEdit::caretX() const
 {
     return mCaretX;
 }
 
-int SynEdit::caretY()
+int SynEdit::caretY() const
 {
     return mCaretY;
 }
@@ -213,7 +212,7 @@ void SynEdit::setCaretXYEx(bool CallEnsureCursorPos, BufferCoord value)
 
     if (vTriggerPaint)
         doOnPaintTransient(SynTransientType::ttBefore);
-    int nMaxX = mMaxScrollWidth + 1;
+    int nMaxX;
     if (value.Line > mLines->count())
         value.Line = mLines->count();
     if (value.Line < 1) {
@@ -223,13 +222,14 @@ void SynEdit::setCaretXYEx(bool CallEnsureCursorPos, BufferCoord value)
             nMaxX = 1;
         }
     } else {
-        if (!mOptions.testFlag(SynEditorOption::eoScrollPastEol))
-            nMaxX = mLines->getString(value.Line-1).length()+1;
+        nMaxX = mLines->getString(value.Line-1).length()+1;
     }
-    if ((value.Char > nMaxX) && (! (mOptions.testFlag(SynEditorOption::eoScrollPastEol)) ) )
-        value.Char = nMaxX;
-    if (value.Char < 1)
-        value.Char = 1;
+    value.Char = std::min(value.Char,nMaxX);
+    value.Char = std::max(value.Char,1);
+//    if ((value.Char > nMaxX) && (! (mOptions.testFlag(SynEditorOption::eoScrollPastEol)) ) )
+//        value.Char = nMaxX;
+//    if (value.Char < 1)
+//        value.Char = 1;
     if ((value.Char != mCaretX) || (value.Line != mCaretY)) {
         incPaintLock();
         auto action = finally([this]{
@@ -289,6 +289,14 @@ void SynEdit::setCaretXYCentered(bool ForceToMiddle, const BufferCoord &value)
     if (ForceToMiddle)
         ensureCursorPosVisibleEx(true); // but here after block has been set
 
+}
+
+int SynEdit::maxScrollWidth() const
+{
+    if (mOptions.testFlag(eoScrollPastEol))
+        return mLines->lengthOfLongestLine();
+    else
+        return std::max(mLines->lengthOfLongestLine()-mCharsInWindow+1, 1);
 }
 
 bool SynEdit::GetHighlighterAttriAtRowCol(const BufferCoord &XY, QString &Token, PSynHighlighterAttribute &Attri)
@@ -434,7 +442,7 @@ void SynEdit::invalidateGutterLines(int FirstLine, int LastLine)
  * @param aY
  * @return
  */
-DisplayCoord SynEdit::pixelsToNearestRowColumn(int aX, int aY)
+DisplayCoord SynEdit::pixelsToNearestRowColumn(int aX, int aY) const
 {
     // Result is in display coordinates
     float f;
@@ -451,7 +459,7 @@ DisplayCoord SynEdit::pixelsToNearestRowColumn(int aX, int aY)
     };
 }
 
-DisplayCoord SynEdit::pixelsToRowColumn(int aX, int aY)
+DisplayCoord SynEdit::pixelsToRowColumn(int aX, int aY) const
 {
     return {
         .Column = std::max(1, mLeftChar + ((aX - mGutterWidth - 2) / mCharWidth)),
@@ -459,7 +467,7 @@ DisplayCoord SynEdit::pixelsToRowColumn(int aX, int aY)
     };
 }
 
-QPoint SynEdit::RowColumnToPixels(const DisplayCoord &coord)
+QPoint SynEdit::RowColumnToPixels(const DisplayCoord &coord) const
 {
     QPoint result;
     result.setX((coord.Column - 1) * mCharWidth + textOffset());
@@ -473,7 +481,7 @@ QPoint SynEdit::RowColumnToPixels(const DisplayCoord &coord)
  * @param p
  * @return
  */
-DisplayCoord SynEdit::bufferToDisplayPos(const BufferCoord &p)
+DisplayCoord SynEdit::bufferToDisplayPos(const BufferCoord &p) const
 {
     DisplayCoord result {p.Char,p.Line};
     // Account for tabs and charColumns
@@ -490,7 +498,7 @@ DisplayCoord SynEdit::bufferToDisplayPos(const BufferCoord &p)
  * @param p
  * @return
  */
-BufferCoord SynEdit::displayToBufferPos(const DisplayCoord &p)
+BufferCoord SynEdit::displayToBufferPos(const DisplayCoord &p) const
 {
     BufferCoord Result{p.Column,p.Row};
     // Account for code folding
@@ -503,7 +511,7 @@ BufferCoord SynEdit::displayToBufferPos(const DisplayCoord &p)
     return Result;
 }
 
-int SynEdit::leftSpaces(const QString &line)
+int SynEdit::leftSpaces(const QString &line) const
 {
     int result = 0;
     if (mOptions.testFlag(eoAutoIndent)) {
@@ -520,7 +528,7 @@ int SynEdit::leftSpaces(const QString &line)
     return result;
 }
 
-QString SynEdit::GetLeftSpacing(int charCount, bool wantTabs)
+QString SynEdit::GetLeftSpacing(int charCount, bool wantTabs) const
 {
     if (wantTabs && !mOptions.testFlag(eoTabsToSpaces)) {
         return QString(charCount / mTabWidth,'\t') + QString(charCount % mTabWidth,' ');
@@ -529,7 +537,7 @@ QString SynEdit::GetLeftSpacing(int charCount, bool wantTabs)
     }
 }
 
-int SynEdit::charToColumn(int aLine, int aChar)
+int SynEdit::charToColumn(int aLine, int aChar) const
 {
     Q_ASSERT( (aLine <= mLines->count()) && (aLine >= 1));
     if (aLine <= mLines->count()) {
@@ -538,7 +546,7 @@ int SynEdit::charToColumn(int aLine, int aChar)
     }
 }
 
-int SynEdit::charToColumn(const QString &s, int aChar)
+int SynEdit::charToColumn(const QString &s, int aChar) const
 {
     int x = 0;
     int len = std::min(aChar-1,s.length());
@@ -551,7 +559,7 @@ int SynEdit::charToColumn(const QString &s, int aChar)
     return x+1;
 }
 
-int SynEdit::columnToChar(int aLine, int aColumn)
+int SynEdit::columnToChar(int aLine, int aColumn) const
 {
     Q_ASSERT( (aLine <= mLines->count()) && (aLine >= 1));
     if (aLine <= mLines->count()) {
@@ -572,7 +580,7 @@ int SynEdit::columnToChar(int aLine, int aColumn)
     }
 }
 
-int SynEdit::stringColumns(const QString &line, int colsBefore)
+int SynEdit::stringColumns(const QString &line, int colsBefore) const
 {
     int columns = colsBefore;
     int charCols;
@@ -588,7 +596,7 @@ int SynEdit::stringColumns(const QString &line, int colsBefore)
     return columns-colsBefore;
 }
 
-int SynEdit::getLineIndent(const QString &line)
+int SynEdit::getLineIndent(const QString &line) const
 {
     int indents = 0;
     for (QChar ch:line) {
@@ -606,7 +614,7 @@ int SynEdit::getLineIndent(const QString &line)
     return indents;
 }
 
-int SynEdit::rowToLine(int aRow)
+int SynEdit::rowToLine(int aRow) const
 {
     if (mUseCodeFolding)
         return foldRowToLine(aRow);
@@ -615,12 +623,12 @@ int SynEdit::rowToLine(int aRow)
     //return displayToBufferPos({1, aRow}).Line;
 }
 
-int SynEdit::lineToRow(int aLine)
+int SynEdit::lineToRow(int aLine) const
 {
     return bufferToDisplayPos({1, aLine}).Row;
 }
 
-int SynEdit::foldRowToLine(int Row)
+int SynEdit::foldRowToLine(int Row) const
 {
     int result = Row;
     for (int i=0;i<mAllFoldRanges.count();i++) {
@@ -632,7 +640,7 @@ int SynEdit::foldRowToLine(int Row)
     return result;
 }
 
-int SynEdit::foldLineToRow(int Line)
+int SynEdit::foldLineToRow(int Line) const
 {
     int result = Line;
     for (int i=mAllFoldRanges.count()-1;i>=0;i--) {
@@ -762,7 +770,7 @@ void SynEdit::unlockPainter()
     mPainterLock--;
 }
 
-bool SynEdit::selAvail()
+bool SynEdit::selAvail() const
 {
     return (mBlockBegin.Char != mBlockEnd.Char) ||
             ((mBlockBegin.Line != mBlockEnd.Line) && (mActiveSelectionMode != SynSelectionMode::smColumn));
@@ -845,7 +853,7 @@ BufferCoord SynEdit::GetPreviousLeftBracket(int x, int y)
     }
 }
 
-int SynEdit::charColumns(QChar ch)
+int SynEdit::charColumns(QChar ch) const
 {
     if (ch == ' ')
         return 1;
@@ -853,7 +861,7 @@ int SynEdit::charColumns(QChar ch)
     return std::ceil((int)(fontMetrics().horizontalAdvance(ch)) / (double)mCharWidth);
 }
 
-double SynEdit::dpiFactor()
+double SynEdit::dpiFactor() const
 {
     return fontMetrics().fontDpi() / 96.0;
 }
@@ -874,7 +882,7 @@ void SynEdit::hideCaret()
     }
 }
 
-bool SynEdit::IsPointInSelection(const BufferCoord &Value)
+bool SynEdit::IsPointInSelection(const BufferCoord &Value) const
 {
     BufferCoord ptBegin = blockBegin();
     BufferCoord ptEnd = blockEnd();
@@ -1037,11 +1045,12 @@ void SynEdit::SetSelWord()
 
 void SynEdit::SetWordBlock(BufferCoord Value)
 {
-    if (mOptions.testFlag(eoScrollPastEol))
-        Value.Char = MinMax(Value.Char, 1, mMaxScrollWidth + 1);
-    else
-        Value.Char = std::max(Value.Char, 1);
+//    if (mOptions.testFlag(eoScrollPastEol))
+//        Value.Char =
+//    else
+//        Value.Char = std::max(Value.Char, 1);
     Value.Line = MinMax(Value.Line, 1, mLines->count());
+    Value.Char = std::max(Value.Char, 1);
     QString TempString = mLines->getString(Value.Line - 1); //needed for CaretX = LineLength +1
     if (Value.Char > TempString.length()) {
         internalSetCaretXY(BufferCoord{TempString.length()+1, Value.Line});
@@ -2198,10 +2207,7 @@ void SynEdit::updateScrollbars()
                 setVerticalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOn);
             }
             if (mScrollBars == SynScrollStyle::ssBoth ||  mScrollBars == SynScrollStyle::ssHorizontal) {
-                if (mOptions.testFlag(eoScrollPastEol))
-                    nMaxScroll = mLines->lengthOfLongestLine();
-                else
-                    nMaxScroll = std::max(mLines->lengthOfLongestLine()-mCharsInWindow+1, 1);
+                nMaxScroll = maxScrollWidth();
                 if (nMaxScroll <= MAX_SCROLL) {
                     nMin = 1;
                     nMax = nMaxScroll;
@@ -2222,11 +2228,7 @@ void SynEdit::updateScrollbars()
                 setHorizontalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOn);
 
             if (mScrollBars == SynScrollStyle::ssBoth ||  mScrollBars == SynScrollStyle::ssVertical) {
-                if (mOptions.testFlag(eoScrollPastEof))
-                    nMaxScroll = std::max(displayLineCount(),1);
-                else
-                    nMaxScroll = std::max(displayLineCount()-mLinesInWindow+1, 1);
-
+                nMaxScroll = maxScrollHeight();
                 if (nMaxScroll <= MAX_SCROLL) {
                     nMin = 1;
                     nMax = std::max(1, nMaxScroll);
@@ -2767,7 +2769,7 @@ void SynEdit::paintCaret(QPainter &painter, const QRect rcClip)
     }
 }
 
-int SynEdit::textOffset()
+int SynEdit::textOffset() const
 {
     return mGutterWidth + 2 - (mLeftChar-1)*mCharWidth;
 }
@@ -2810,10 +2812,10 @@ void SynEdit::sizeOrFontChanged(bool bFont)
         } else
             updateScrollbars();
         mStateFlags.setFlag(SynStateFlag::sfScrollbarChanged,false);
-        if (!mOptions.testFlag(SynEditorOption::eoScrollPastEol))
-            setLeftChar(mLeftChar);
-        if (!mOptions.testFlag(SynEditorOption::eoScrollPastEof))
-            setTopLine(mTopLine);
+        //if (!mOptions.testFlag(SynEditorOption::eoScrollPastEol))
+        setLeftChar(mLeftChar);
+        //if (!mOptions.testFlag(SynEditorOption::eoScrollPastEof))
+        setTopLine(mTopLine);
     }
 }
 
@@ -2895,10 +2897,10 @@ void SynEdit::setOptions(const SynEditorOptions &Value)
 {
     if (Value != mOptions) {
         bool bSetDrag = mOptions.testFlag(eoDropFiles) != Value.testFlag(eoDropFiles);
-        if  (!mOptions.testFlag(eoScrollPastEol))
-            setLeftChar(mLeftChar);
-        if (!mOptions.testFlag(eoScrollPastEof))
-            setTopLine(mTopLine);
+        //if  (!mOptions.testFlag(eoScrollPastEol))
+        setLeftChar(mLeftChar);
+        //if (!mOptions.testFlag(eoScrollPastEof))
+        setTopLine(mTopLine);
 
         bool bUpdateAll = Value.testFlag(eoShowSpecialChars) != mOptions.testFlag(eoShowSpecialChars);
         if (!bUpdateAll)
@@ -3572,7 +3574,8 @@ void SynEdit::MoveCaretHorz(int DX, bool isSelection)
     QString s = lineText();
     int nLineLen = s.length();
     // only moving or selecting one char can change the line
-    bool bChangeY = !mOptions.testFlag(SynEditorOption::eoScrollPastEol);
+    //bool bChangeY = !mOptions.testFlag(SynEditorOption::eoScrollPastEol);
+    bool bChangeY=true;
     if (bChangeY && (DX == -1) && (ptO.Char == 1) && (ptO.Line > 1)) {
         // end of previous line
         ptDst.Line--;
@@ -4824,19 +4827,12 @@ bool SynEdit::viewportEvent(QEvent * event)
     return QAbstractScrollArea::viewportEvent(event);
 }
 
-int SynEdit::maxScrollWidth() const
+int SynEdit::maxScrollHeight() const
 {
-    return mMaxScrollWidth;
-}
-
-void SynEdit::setMaxScrollWidth(int Value)
-{
-    Value = MinMax(Value, 1, INT_MAX - 1);
-    if (mMaxScrollWidth != Value) {
-        mMaxScrollWidth = Value;
-        if (mOptions.testFlag(SynEditorOption::eoScrollPastEol))
-                updateScrollbars();
-    }
+    if (mOptions.testFlag(eoScrollPastEof))
+        return std::max(displayLineCount(),1);
+    else
+        return std::max(displayLineCount()-mLinesInWindow+1, 1);
 }
 
 bool SynEdit::modified() const
@@ -4903,8 +4899,8 @@ void SynEdit::linesChanged()
 
     if (mGutter.showLineNumbers() && (mGutter.autoSize()))
         mGutter.autoSizeDigitCount(mLines->count());
-    if (!mOptions.testFlag(SynEditorOption::eoScrollPastEof))
-        setTopLine(mTopLine);
+    //if (!mOptions.testFlag(SynEditorOption::eoScrollPastEof))
+    setTopLine(mTopLine);
 }
 
 void SynEdit::linesChanging()
@@ -5010,11 +5006,8 @@ void SynEdit::setBlockEnd(BufferCoord Value)
 {
     setActiveSelectionMode(mSelectionMode);
     if (!mOptions.testFlag(eoNoSelection)) {
-        if (mOptions.testFlag(eoScrollPastEol))
-            Value.Char = MinMax(Value.Char, 1, mMaxScrollWidth + 1);
-        else
-            Value.Char = std::max(Value.Char, 1);
         Value.Line = MinMax(Value.Line, 1, mLines->count());
+        Value.Char = MinMax(Value.Char, 1, mLines->lengthOfLongestLine()+1);
         if (mActiveSelectionMode == SynSelectionMode::smNormal) {
           if (Value.Line >= 1 && Value.Line <= mLines->count())
               Value.Char = std::min(Value.Char, mLines->getString(Value.Line - 1).length() + 1);
@@ -5102,10 +5095,7 @@ void SynEdit::setBlockBegin(BufferCoord value)
     int nInval1, nInval2;
     bool SelChanged;
     setActiveSelectionMode(mSelectionMode);
-    if (mOptions.testFlag(SynEditorOption::eoScrollPastEol))
-        value.Char = MinMax(value.Char, 1, mMaxScrollWidth + 1);
-    else
-        value.Char = std::max(value.Char, 1);
+    value.Char = MinMax(value.Char, 1, mLines->lengthOfLongestLine()+1);
     value.Line = MinMax(value.Line, 1, mLines->count());
     if (mActiveSelectionMode == SynSelectionMode::smNormal) {
         if (value.Line >= 1 && value.Line <= mLines->count())
@@ -5143,14 +5133,9 @@ int SynEdit::leftChar() const
 
 void SynEdit::setLeftChar(int Value)
 {
-    int MaxVal;
+    //int MaxVal;
     //QRect iTextArea;
-    MaxVal = mLines->lengthOfLongestLine();
-    if (mOptions.testFlag(SynEditorOption::eoScrollPastEol)) {
-        Value = std::min(Value,MaxVal);
-    } else {
-        Value = std::min(Value,MaxVal-mCharsInWindow+1);
-    }
+    Value = std::min(Value,maxScrollWidth());
     if (Value != mLeftChar) {
         horizontalScrollBar()->setValue(Value);
         setStatusChanged(SynStatusChange::scLeftChar);
@@ -5169,10 +5154,11 @@ int SynEdit::topLine() const
 
 void SynEdit::setTopLine(int Value)
 {
-    if (mOptions.testFlag(SynEditorOption::eoScrollPastEof))
-        Value = std::min(Value, displayLineCount());
-    else
-        Value = std::min(Value, displayLineCount() - mLinesInWindow + 1);
+    Value = std::min(Value,maxScrollHeight());
+//    if (mOptions.testFlag(SynEditorOption::eoScrollPastEof))
+//        Value = std::min(Value, displayLineCount());
+//    else
+//        Value = std::min(Value, displayLineCount() - mLinesInWindow + 1);
     Value = std::max(Value, 1);
     if (Value != mTopLine) {
         verticalScrollBar()->setValue(Value);

@@ -11,7 +11,6 @@ const char ValueToChar[28] = {'0', '1', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',
                               'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
                               's', 't', 'u', 'v', 'w', 'x', 'y', 'z'};
 
-
 Settings* pSettings;
 
 Settings::Settings(const QString &filename):
@@ -190,14 +189,64 @@ void Settings::Editor::setCaretColor(const QColor &caretColor)
     mCaretColor = caretColor;
 }
 
-bool Settings::Editor::Editor::keepCaretX() const
+bool Settings::Editor::keepCaretX() const
 {
     return mKeepCaretX;
 }
 
-void Settings::Editor::Editor::setKeepCaretX(bool keepCaretX)
+void Settings::Editor::setKeepCaretX(bool keepCaretX)
 {
     mKeepCaretX = keepCaretX;
+}
+
+bool Settings::Editor::halfPageScroll() const
+{
+    return mHalfPageScroll;
+}
+
+void Settings::Editor::setHalfPageScroll(bool halfPageScroll)
+{
+    mHalfPageScroll = halfPageScroll;
+}
+
+bool Settings::Editor::scrollByOneLess() const
+{
+    return mScrollByOneLess;
+}
+
+void Settings::Editor::setScrollByOneLess(bool scrollByOneLess)
+{
+    mScrollByOneLess = scrollByOneLess;
+}
+
+bool Settings::Editor::scrollPastEol() const
+{
+    return mScrollPastEol;
+}
+
+void Settings::Editor::setScrollPastEol(bool scrollPastEol)
+{
+    mScrollPastEol = scrollPastEol;
+}
+
+bool Settings::Editor::scrollPastEof() const
+{
+    return mScrollPastEof;
+}
+
+void Settings::Editor::setScrollPastEof(bool scrollPastEof)
+{
+    mScrollPastEof = scrollPastEof;
+}
+
+bool Settings::Editor::autoHideScrollbar() const
+{
+    return mAutoHideScrollbar;
+}
+
+void Settings::Editor::setAutoHideScrollbar(bool autoHideScrollbar)
+{
+    mAutoHideScrollbar = autoHideScrollbar;
 }
 
 void Settings::Editor::doSave()
@@ -217,6 +266,13 @@ void Settings::Editor::doSave()
     saveValue("caret_for_insert",static_cast<int>(mCaretForInsert));
     saveValue("caret_for_overwrite",static_cast<int>(mCaretForOverwrite));
     saveValue("caret_color",mCaretColor);
+
+    //scroll
+    saveValue("auto_hide_scroll_bar", mAutoHideScrollbar);
+    saveValue("scroll_past_eof", mScrollPastEof);
+    saveValue("scroll_past_eol", mScrollPastEol);
+    saveValue("scroll_by_one_less", mScrollByOneLess);
+    saveValue("half_page_scroll", mHalfPageScroll);
 }
 
 void Settings::Editor::doLoad()
@@ -236,6 +292,13 @@ void Settings::Editor::doLoad()
     mCaretForInsert = static_cast<SynEditCaretType>( intValue("caret_for_insert",static_cast<int>(SynEditCaretType::ctVerticalLine)));
     mCaretForOverwrite = static_cast<SynEditCaretType>( intValue("caret_for_overwrite",static_cast<int>(SynEditCaretType::ctBlock)));
     mCaretColor = colorValue("caret_color",QColorConstants::Svg::black);
+
+    //scroll
+    mAutoHideScrollbar = boolValue("auto_hide_scroll_bar", false);
+    mScrollPastEof = boolValue("scroll_past_eof", true);
+    mScrollPastEol = boolValue("scroll_past_eol", true);
+    mScrollByOneLess = boolValue("scroll_by_one_less", false);
+    mHalfPageScroll = boolValue("half_page_scroll",false);
 }
 
 SynEditCaretType Settings::Editor::caretForOverwrite() const
