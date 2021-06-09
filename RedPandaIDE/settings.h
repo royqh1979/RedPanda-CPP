@@ -133,8 +133,54 @@ public:
         bool halfPageScroll() const;
         void setHalfPageScroll(bool halfPageScroll);
 
+        QString fontName() const;
+        void setFontName(const QString &fontName);
+
+        int fontSize() const;
+        void setFontSize(int fontSize);
+
+        bool fontOnlyMonospaced() const;
+        void setFontOnlyMonospaced(bool fontOnlyMonospaced);
+
+        bool gutterVisible() const;
+        void setGutterVisible(bool gutterVisible);
+
+        bool gutterAutoSize() const;
+        void setGutterAutoSize(bool gutterAutoSize);
+
+        int gutterDigitsCount() const;
+        void setGutterDigitsCount(int gutterDigitsCount);
+
+        bool gutterShowLineNumbers() const;
+        void setGutterShowLineNumbers(bool gutterShowLineNumbers);
+
+        bool gutterAddLeadingZero() const;
+        void setGutterAddLeadingZero(bool gutterAddLeadingZero);
+
+        bool gutterLineNumbersStartZero() const;
+        void setGutterLineNumbersStartZero(bool gutterLineNumbersStartZero);
+
+        bool gutterUseCustomFont() const;
+        void setGutterUseCustomFont(bool gutterUseCustomFont);
+
+        QString gutterFontName() const;
+        void setGutterFontName(const QString &gutterFontName);
+
+        int gutterFontSize() const;
+        void setGutterFontSize(int gutterFontSize);
+
+        bool gutterFontOnlyMonospaced() const;
+        void setGutterFontOnlyMonospaced(bool gutterFontOnlyMonospaced);
+
+        int gutterLeftOffset() const;
+        void setGutterLeftOffset(int gutterLeftOffset);
+
+        int gutterRightOffset() const;
+        void setGutterRightOffset(int gutterRightOffset);
+
     private:
         QByteArray mDefaultEncoding;
+        //General
         // indents
         bool mAutoIndent;
         bool mAddIndent;
@@ -155,6 +201,26 @@ public:
         bool mScrollPastEol;
         bool mScrollByOneLess;
         bool mHalfPageScroll;
+
+        //Font
+        //font
+        QString mFontName;
+        int mFontSize;
+        bool mFontOnlyMonospaced;
+
+        //gutter
+        bool mGutterVisible;
+        bool mGutterAutoSize;
+        int mGutterLeftOffset;
+        int mGutterRightOffset;
+        int mGutterDigitsCount;
+        bool mGutterShowLineNumbers;
+        bool mGutterAddLeadingZero;
+        bool mGutterLineNumbersStartZero;
+        bool mGutterUseCustomFont;
+        QString mGutterFontName;
+        int mGutterFontSize;
+        bool mGutterFontOnlyMonospaced;
 
         // _Base interface
     protected:

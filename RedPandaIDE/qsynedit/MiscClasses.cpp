@@ -9,7 +9,6 @@ SynGutter::SynGutter(QObject *parent):
     mColor= QColorConstants::Svg::lightgray;
     mBorderColor = QColorConstants::Transparent;
     mTextColor = QColorConstants::Svg::black;
-    mWidth = 30;
     mShowLineNumbers = true;
     mDigitCount = 1;
     mLeadingZeros = false;
@@ -71,19 +70,6 @@ void SynGutter::setTextColor(const QColor &value)
     }
 }
 
-int SynGutter::width() const
-{
-    return mWidth;
-}
-
-void SynGutter::setWidth(int width)
-{
-    if (mWidth != width ) {
-        mWidth = width;
-        setChanged();
-    }
-}
-
 void SynGutter::autoSizeDigitCount(int linesCount)
 {
     if (mVisible && mAutoSize && mShowLineNumbers) {
@@ -111,7 +97,7 @@ int SynGutter::realGutterWidth(int charWidth)
     if (mShowLineNumbers) {
         return mLeftOffset + mRightOffset + mAutoSizeDigitCount * charWidth + 2;
     }
-    return mWidth;
+    return mLeftOffset + mRightOffset;
 }
 
 bool SynGutter::visible() const

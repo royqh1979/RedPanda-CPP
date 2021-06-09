@@ -69,9 +69,6 @@ public:
     bool visible() const;
     void setVisible(bool visible);
 
-    int width() const;
-    void setWidth(int width);
-
     void autoSizeDigitCount(int linesCount);
     QString formatLineNumber(int line);
     int realGutterWidth(int charWidth);
@@ -102,7 +99,6 @@ private:
     SynGutterBorderStyle mBorderStyle;
     bool mUseFontStyle;
     bool mVisible;
-    int mWidth;
     int mAutoSizeDigitCount;
 };
 

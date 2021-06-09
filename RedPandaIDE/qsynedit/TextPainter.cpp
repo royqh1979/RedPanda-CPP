@@ -308,7 +308,6 @@ void SynEditTextPainter::ComputeSelectionInfo()
             bAnySelection = (vEnd.Line >= vFirstLine) and (vStart.Line <= vLastLine);
             if (bAnySelection) {
                 // Transform the selection from text space into screen space
-                qDebug()<<"ComputeSelectionInfo";
                 vSelStart = edit->bufferToDisplayPos(vStart);
                 vSelEnd = edit->bufferToDisplayPos(vEnd);
                 // In the column selection mode sort the begin and end of the selection,

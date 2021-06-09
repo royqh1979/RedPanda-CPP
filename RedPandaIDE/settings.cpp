@@ -209,6 +209,156 @@ void Settings::Editor::setHalfPageScroll(bool halfPageScroll)
     mHalfPageScroll = halfPageScroll;
 }
 
+bool Settings::Editor::gutterFontOnlyMonospaced() const
+{
+    return mGutterFontOnlyMonospaced;
+}
+
+void Settings::Editor::setGutterFontOnlyMonospaced(bool gutterFontOnlyMonospaced)
+{
+    mGutterFontOnlyMonospaced = gutterFontOnlyMonospaced;
+}
+
+int Settings::Editor::gutterRightOffset() const
+{
+    return mGutterRightOffset;
+}
+
+void Settings::Editor::setGutterRightOffset(int gutterRightOffset)
+{
+    mGutterRightOffset = gutterRightOffset;
+}
+
+int Settings::Editor::gutterLeftOffset() const
+{
+    return mGutterLeftOffset;
+}
+
+void Settings::Editor::setGutterLeftOffset(int gutterLeftOffset)
+{
+    mGutterLeftOffset = gutterLeftOffset;
+}
+
+int Settings::Editor::gutterFontSize() const
+{
+    return mGutterFontSize;
+}
+
+void Settings::Editor::setGutterFontSize(int gutterFontSize)
+{
+    mGutterFontSize = gutterFontSize;
+}
+
+QString Settings::Editor::gutterFontName() const
+{
+    return mGutterFontName;
+}
+
+void Settings::Editor::setGutterFontName(const QString &gutterFontName)
+{
+    mGutterFontName = gutterFontName;
+}
+
+bool Settings::Editor::gutterUseCustomFont() const
+{
+    return mGutterUseCustomFont;
+}
+
+void Settings::Editor::setGutterUseCustomFont(bool gutterUseCustomFont)
+{
+    mGutterUseCustomFont = gutterUseCustomFont;
+}
+
+bool Settings::Editor::gutterLineNumbersStartZero() const
+{
+    return mGutterLineNumbersStartZero;
+}
+
+void Settings::Editor::setGutterLineNumbersStartZero(bool gutterLineNumbersStartZero)
+{
+    mGutterLineNumbersStartZero = gutterLineNumbersStartZero;
+}
+
+bool Settings::Editor::gutterAddLeadingZero() const
+{
+    return mGutterAddLeadingZero;
+}
+
+void Settings::Editor::setGutterAddLeadingZero(bool gutterAddLeadingZero)
+{
+    mGutterAddLeadingZero = gutterAddLeadingZero;
+}
+
+bool Settings::Editor::gutterShowLineNumbers() const
+{
+    return mGutterShowLineNumbers;
+}
+
+void Settings::Editor::setGutterShowLineNumbers(bool gutterShowLineNumbers)
+{
+    mGutterShowLineNumbers = gutterShowLineNumbers;
+}
+
+int Settings::Editor::gutterDigitsCount() const
+{
+    return mGutterDigitsCount;
+}
+
+void Settings::Editor::setGutterDigitsCount(int gutterDigitsCount)
+{
+    mGutterDigitsCount = gutterDigitsCount;
+}
+
+bool Settings::Editor::gutterAutoSize() const
+{
+    return mGutterAutoSize;
+}
+
+void Settings::Editor::setGutterAutoSize(bool gutterAutoSize)
+{
+    mGutterAutoSize = gutterAutoSize;
+}
+
+bool Settings::Editor::gutterVisible() const
+{
+    return mGutterVisible;
+}
+
+void Settings::Editor::setGutterVisible(bool gutterVisible)
+{
+    mGutterVisible = gutterVisible;
+}
+
+bool Settings::Editor::fontOnlyMonospaced() const
+{
+    return mFontOnlyMonospaced;
+}
+
+void Settings::Editor::setFontOnlyMonospaced(bool fontOnlyMonospaced)
+{
+    mFontOnlyMonospaced = fontOnlyMonospaced;
+}
+
+int Settings::Editor::fontSize() const
+{
+    return mFontSize;
+}
+
+void Settings::Editor::setFontSize(int fontSize)
+{
+    mFontSize = fontSize;
+}
+
+QString Settings::Editor::fontName() const
+{
+    return mFontName;
+}
+
+void Settings::Editor::setFontName(const QString &fontName)
+{
+    mFontName = fontName;
+}
+
 bool Settings::Editor::scrollByOneLess() const
 {
     return mScrollByOneLess;
@@ -273,6 +423,24 @@ void Settings::Editor::doSave()
     saveValue("scroll_past_eol", mScrollPastEol);
     saveValue("scroll_by_one_less", mScrollByOneLess);
     saveValue("half_page_scroll", mHalfPageScroll);
+
+    //Font
+    //font
+    saveValue("font_name",mFontName);
+    saveValue("font_size", mFontSize);
+    saveValue("font_only_monospaced",mFontOnlyMonospaced);
+
+    //gutter
+    saveValue("gutter_visible", mGutterVisible);
+    saveValue("gutter_auto_size", mGutterAutoSize);
+    saveValue("gutter_digits_count", mGutterDigitsCount);
+    saveValue("gutter_show_line_numbers",mGutterShowLineNumbers);
+    saveValue("gutter_add_leading_zero",mGutterAddLeadingZero);
+    saveValue("gutter_line_numbers_start_zero",mGutterLineNumbersStartZero);
+    saveValue("gutter_use_custom_font",mGutterUseCustomFont);
+    saveValue("gutter_font_name",mGutterFontName);
+    saveValue("gutter_font_size",mGutterFontSize);
+    saveValue("gutter_font_only_monospaced",mGutterFontOnlyMonospaced);
 }
 
 void Settings::Editor::doLoad()
@@ -299,6 +467,26 @@ void Settings::Editor::doLoad()
     mScrollPastEol = boolValue("scroll_past_eol", true);
     mScrollByOneLess = boolValue("scroll_by_one_less", false);
     mHalfPageScroll = boolValue("half_page_scroll",false);
+
+    //Font
+    //font
+    mFontName = stringValue("font_name","consolas");
+    mFontSize = intValue("font_size",QGuiApplication::font().pointSize());
+    mFontOnlyMonospaced = boolValue("font_only_monospaced",true);
+
+    //gutter
+    mGutterVisible = boolValue("gutter_visible",true);
+    mGutterAutoSize = boolValue("gutter_auto_size",true);
+    mGutterLeftOffset = intValue("gutter_left_offset",28);
+    mGutterRightOffset = intValue("gutter_right_offset",24);
+    mGutterDigitsCount = intValue("gutter_digits_count",1);
+    mGutterShowLineNumbers = boolValue("gutter_show_line_numbers",true);
+    mGutterAddLeadingZero = boolValue("gutter_add_leading_zero",true);
+    mGutterLineNumbersStartZero = boolValue("gutter_line_numbers_start_zero",false);
+    mGutterUseCustomFont = boolValue("gutter_use_custom_font",false);
+    mGutterFontName = stringValue("gutter_font_name","consolas");
+    mGutterFontSize = intValue("gutter_font_size",QGuiApplication::font().pointSize());
+    mGutterFontOnlyMonospaced = boolValue("gutter_font_only_monospaced",true);
 }
 
 SynEditCaretType Settings::Editor::caretForOverwrite() const

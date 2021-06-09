@@ -68,7 +68,7 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
 
     mGutter.setRightOffset(21);
     mGutter.connect(&mGutter, &SynGutter::changed, this, &SynEdit::gutterChanged);
-    mGutterWidth = mGutter.width();
+    mGutterWidth = mGutter.realGutterWidth(charWidth());
     //ControlStyle := ControlStyle + [csOpaque, csSetCaption, csNeedsBorderPaint];
     //Height := 150;
     //Width := 200;
@@ -207,7 +207,6 @@ void SynEdit::setCaretXY(const BufferCoord &value)
 
 void SynEdit::setCaretXYEx(bool CallEnsureCursorPos, BufferCoord value)
 {
-    qDebug()<<"new Value"<<value.Line<<value.Char;
     bool vTriggerPaint=true; //how to test it?
 
     if (vTriggerPaint)
@@ -787,6 +786,40 @@ void SynEdit::setCaretAndSelection(const BufferCoord &ptCaret, const BufferCoord
     internalSetCaretXY(ptCaret);
     setBlockBegin(ptBefore);
     setBlockEnd(ptAfter);
+}
+
+void SynEdit::processGutterClick(QMouseEvent *event)
+{
+    int X = event->pos().x();
+    int Y = event->pos().y();
+    DisplayCoord RowColumn = pixelsToRowColumn(X, Y);
+    int Line = rowToLine(RowColumn.Row);
+
+    // Check if we clicked on a folding thing
+    if (mUseCodeFolding) {
+        PSynEditFoldRange FoldRange = foldStartAtLine(Line);
+        if (FoldRange) {
+            // See if we actually clicked on the rectangle...
+            //rect.Left := Gutter.RealGutterWidth(CharWidth) - Gutter.RightOffset;
+            QRect rect;
+            rect.setLeft(mGutterWidth - mGutter.rightOffset());
+            rect.setRight(rect.left() + mGutter.rightOffset() - 4);
+            rect.setTop((RowColumn.Row - mTopLine) * mTextHeight);
+            rect.setBottom(rect.top() + mTextHeight);
+            if (rect.contains(QPoint(X, Y))) {
+                if (FoldRange->collapsed)
+                    uncollapse(FoldRange);
+                else
+                    collapse(FoldRange);
+                return;
+            }
+        }
+    }
+
+    // If not, check gutter marks
+    if (Line>=1 && Line <= mLines->count()) {
+        emit gutterClicked(event->button(),X,Y,Line);
+    }
 }
 
 void SynEdit::clearUndo()
@@ -2419,6 +2452,24 @@ void SynEdit::uncollapse(PSynEditFoldRange FoldRange)
     invalidateGutterLines(FoldRange->fromLine, INT_MAX);
 }
 
+void SynEdit::collapse(PSynEditFoldRange FoldRange)
+{
+    FoldRange->linesCollapsed = FoldRange->toLine - FoldRange->fromLine;
+    FoldRange->collapsed = true;
+
+    // Extract caret from fold
+    if ((mCaretY > FoldRange->fromLine) && (mCaretY <= FoldRange->toLine)) {
+          setCaretXY(BufferCoord{mLines->getString(FoldRange->fromLine - 1).length() + 1,
+                                 FoldRange->fromLine});
+    }
+
+    // Redraw the collapsed line
+    invalidateLines(FoldRange->fromLine, INT_MAX);
+
+    // Redraw fold mark
+    invalidateGutterLines(FoldRange->fromLine, INT_MAX);
+}
+
 void SynEdit::foldOnListInserted(int Line, int Count)
 {
     // Delete collapsed inside selection
@@ -2829,6 +2880,11 @@ void SynEdit::doScrolled(int)
     mLeftChar = horizontalScrollBar()->value();
     mTopLine = verticalScrollBar()->value();
     invalidate();
+}
+
+SynGutter& SynEdit::gutter()
+{
+    return mGutter;
 }
 
 SynEditCaretType SynEdit::getInsertCaret() const
@@ -4563,7 +4619,7 @@ void SynEdit::paintEvent(QPaintEvent *event)
         nL1 = MinMax(mTopLine + rcClip.top() / mTextHeight, mTopLine, displayLineCount());
         nL2 = MinMax(mTopLine + (rcClip.bottom() + mTextHeight - 1) / mTextHeight, 1, displayLineCount());
 
-        qDebug()<<"Paint:"<<nL1<<nL2<<nC1<<nC2;
+        //qDebug()<<"Paint:"<<nL1<<nL2<<nC1<<nC2;
 
         QPainter cachePainter(mContentImage.get());
         cachePainter.setFont(font());
@@ -4645,7 +4701,6 @@ void SynEdit::focusOutEvent(QFocusEvent *)
 
 void SynEdit::keyPressEvent(QKeyEvent *event)
 {
-    mMouseMoved = false;
     SynEditorCommand cmd=TranslateKeyCode(event->key(),event->modifiers());
     if (cmd!=SynEditorCommand::ecNone) {
         CommandProcessor(cmd,QChar(),nullptr);
@@ -4666,6 +4721,7 @@ void SynEdit::mousePressEvent(QMouseEvent *event)
 {
     bool bWasSel = false;
     bool bStartDrag = false;
+    mMouseMoved = false;
     BufferCoord TmpBegin = mBlockBegin;
     BufferCoord TmpEnd = mBlockEnd;
     Qt::MouseButton button = event->button();
@@ -4734,7 +4790,7 @@ void SynEdit::mouseReleaseEvent(QMouseEvent *event)
     int Y=event->pos().y();
 
     if (!mMouseMoved && (X < mGutterWidth + 2)) {
-        //doOnGutterClick(event);
+        processGutterClick(event);
     }
 
     mScrollTimer->stop();
@@ -4815,6 +4871,19 @@ void SynEdit::inputMethodEvent(QInputMethodEvent *event)
 void SynEdit::leaveEvent(QEvent *event)
 {
     setCursor(Qt::ArrowCursor);
+}
+
+void SynEdit::wheelEvent(QWheelEvent *event)
+{
+    if (event->angleDelta().y()>0) {
+        verticalScrollBar()->setValue(verticalScrollBar()->value()-1);
+        return;
+    } else {
+        verticalScrollBar()->setValue(verticalScrollBar()->value()+1);
+        event->accept();
+        return;
+    }
+    QAbstractScrollArea::wheelEvent(event);
 }
 
 bool SynEdit::viewportEvent(QEvent * event)

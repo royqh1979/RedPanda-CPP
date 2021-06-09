@@ -298,6 +298,8 @@ public:
     SynEditCaretType getInsertCaret() const;
     void setInsertCaret(const SynEditCaretType &insertCaret);
 
+    SynGutter& gutter();
+
 signals:
     void Changed();
 
@@ -312,7 +314,7 @@ signals:
     void ChainListPutted(int Index, int Count);
 
     void FilesDropped(int X,int Y, const QStringList& AFiles);
-    void GutterClicked(Qt::MouseButton button, int x, int y, int line, PSynEditMark mark);
+    void gutterClicked(Qt::MouseButton button, int x, int y, int line);
     void ImeInputed(const QString& s);
 
     void contextHelp(const QString& word);
@@ -371,6 +373,8 @@ private:
     int scanFrom(int Index);
     int scanRanges();
     void uncollapse(PSynEditFoldRange FoldRange);
+    void collapse(PSynEditFoldRange FoldRange);
+
     void foldOnListInserted(int Line, int Count);
     void foldOnListDeleted(int Line, int Count);
     void foldOnListCleared();
@@ -421,6 +425,8 @@ private:
     void setCaretAndSelection(const BufferCoord& ptCaret,
                               const BufferCoord& ptBefore,
                               const BufferCoord& ptAfter);
+
+    void processGutterClick(QMouseEvent* event);
 
     void clearUndo();
     BufferCoord GetPreviousLeftBracket(int x,int y);
@@ -602,6 +608,7 @@ void mouseMoveEvent(QMouseEvent *event) override;
 void mouseDoubleClickEvent(QMouseEvent *event) override;
 void inputMethodEvent(QInputMethodEvent *event) override;
 void leaveEvent(QEvent *event) override;
+void wheelEvent(QWheelEvent *event) override;
 
 // QAbstractScrollArea interface
 protected:

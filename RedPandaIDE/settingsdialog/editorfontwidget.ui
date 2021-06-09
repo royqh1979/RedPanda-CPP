@@ -143,15 +143,8 @@
        </widget>
       </item>
       <item>
-       <widget class="QCheckBox" name="chkAutoSizeGutter">
-        <property name="text">
-         <string>Auto size the gutter</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QWidget" name="widget_4" native="true">
-        <layout class="QHBoxLayout" name="horizontalLayout_5">
+       <widget class="QWidget" name="widget_8" native="true">
+        <layout class="QHBoxLayout" name="horizontalLayout_6">
          <property name="leftMargin">
           <number>0</number>
          </property>
@@ -165,16 +158,16 @@
           <number>0</number>
          </property>
          <item>
-          <widget class="QLabel" name="label_3">
+          <widget class="QLabel" name="label_6">
            <property name="text">
-            <string>base width</string>
+            <string>Left Offset</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QSpinBox" name="spinGutterBaseWidth">
+          <widget class="QSpinBox" name="spinGutterLeftOffset">
            <property name="minimum">
-            <number>1</number>
+            <number>0</number>
            </property>
            <property name="maximum">
             <number>999</number>
@@ -182,7 +175,24 @@
           </widget>
          </item>
          <item>
-          <spacer name="horizontalSpacer_5">
+          <widget class="QLabel" name="label_7">
+           <property name="text">
+            <string>Right Offset</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QSpinBox" name="spinGutterRightOffset">
+           <property name="minimum">
+            <number>0</number>
+           </property>
+           <property name="maximum">
+            <number>999</number>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_6">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
            </property>
@@ -218,6 +228,61 @@
            <property name="text">
             <string>Line numbers starts at zero</string>
            </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="chkAutoSizeGutter">
+           <property name="text">
+            <string>Auto calculate the digit count of line number</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QWidget" name="widget_4" native="true">
+           <layout class="QHBoxLayout" name="horizontalLayout_5">
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QLabel" name="label_3">
+              <property name="text">
+               <string>Digit count</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSpinBox" name="spinGutterDigitsCount">
+              <property name="minimum">
+               <number>1</number>
+              </property>
+              <property name="maximum">
+               <number>999</number>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_5">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
           </widget>
          </item>
         </layout>

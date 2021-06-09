@@ -231,14 +231,18 @@ void Editor::wheelEvent(QWheelEvent *event) {
 //            oldFont.setPointSize(oldFont.pointSize());
 //            this->setFont(oldFont);
             this->zoomIn();
+            event->accept();
+            return;
         } else {
 //            size = std::min(size+1,50);
 //            oldFont.setPointSize(oldFont.pointSize());
 //            this->setFont(oldFont);
             this->zoomOut();
+            event->accept();
+            return;
         }
-        onLinesChanged(0,0);
     }
+    SynEdit::wheelEvent(event);
 }
 
 void Editor::onModificationChanged(bool) {
@@ -259,6 +263,8 @@ void Editor::applySettings()
     SynEditorOptions options = eoAltSetsColumnMode |
             eoDragDropEditing | eoDropFiles |  eoKeepCaretX | eoTabsToSpaces |
             eoRightMouseMovesCursor | eoScrollByOneLess | eoTabIndent | eoHideShowScrollbars;
+
+    //options
     options.setFlag(eoAddIndent,pSettings->editor().addIndent());
     options.setFlag(eoAutoIndent,pSettings->editor().autoIndent());
     options.setFlag(eoTabsToSpaces,pSettings->editor().tabToSpaces());
@@ -278,7 +284,34 @@ void Editor::applySettings()
     setInsertCaret(pSettings->editor().caretForInsert());
     setOverwriteCaret(pSettings->editor().caretForOverwrite());
     setCaretColor(pSettings->editor().caretColor());
-    //todo: show indent line
+
+    QFont f=QFont(pSettings->editor().fontName(),pSettings->editor().fontSize());
+    f.setStyleStrategy(QFont::PreferAntialias);
+    setFont(f);
+
+    // Set gutter properties
+    gutter().setLeftOffset(pSettings->editor().gutterLeftOffset());
+    gutter().setRightOffset(pSettings->editor().gutterRightOffset());
+    gutter().setBorderStyle(SynGutterBorderStyle::None);
+    gutter().setUseFontStyle(pSettings->editor().gutterUseCustomFont());
+    if (pSettings->editor().gutterUseCustomFont()) {
+        f=QFont(pSettings->editor().gutterFontName(),pSettings->editor().gutterFontSize());
+    } else {
+        f=QFont(pSettings->editor().fontName(),pSettings->editor().fontSize());
+    }
+    f.setStyleStrategy(QFont::PreferAntialias);
+    gutter().setFont(f);
+    gutter().setDigitCount(pSettings->editor().gutterDigitsCount());
+    gutter().setVisible(pSettings->editor().gutterVisible());
+    gutter().setAutoSize(pSettings->editor().gutterAutoSize());
+    gutter().setShowLineNumbers(pSettings->editor().gutterShowLineNumbers());
+    gutter().setLeadingZeros(pSettings->editor().gutterAddLeadingZero());
+    if (pSettings->editor().gutterLineNumbersStartZero())
+        gutter().setLineNumberStart(0);
+    else
+        gutter().setLineNumberStart(1);
+    //font color
+
 }
 
 void Editor::updateCaption(const QString& newCaption) {
