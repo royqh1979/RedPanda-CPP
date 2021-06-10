@@ -143,7 +143,7 @@ void MainWindow::on_actionOpen_triggered()
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {
-    if (!mEditorList->closeAll(true)) {
+    if (!mEditorList->closeAll(false)) {
         event->ignore();
         return ;
     }

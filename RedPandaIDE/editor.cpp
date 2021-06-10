@@ -73,6 +73,8 @@ Editor::Editor(QWidget *parent, const QString& filename,
     }
 
     applySettings();
+
+    connect(this,&SynEdit::statusChanged,this,&Editor::onStatusChanged);
 }
 
 Editor::~Editor() {
@@ -256,6 +258,99 @@ void Editor::onCursorPositionChanged(int line, int index) {
 void Editor::onLinesChanged(int startLine, int count) {
     qDebug()<<"Editor lines changed"<<lines()->count();
     qDebug()<<startLine<<count;
+}
+
+void Editor::onStatusChanged(SynStatusChanges changes)
+{
+//    if (not (scOpenFile in Changes)) and  (fText.Lines.Count <> fLineCount)
+//      and (fText.Lines.Count <> 0) and ((fLineCount>0) or (fText.Lines.Count>1)) then begin
+//      if devCodeCompletion.Enabled
+//        and SameStr(mainForm.ClassBrowser.CurrentFile,FileName) // Don't reparse twice
+//        then begin
+//        Reparse;
+//      end;
+//      if fText.Focused and devEditor.AutoCheckSyntax and devEditor.CheckSyntaxWhenReturn
+//        and (fText.Highlighter = dmMain.Cpp) then begin
+//        mainForm.CheckSyntaxInBack(self);
+//      end;
+//    end;
+//    fLineCount := fText.Lines.Count;
+//    // scModified is only fired when the modified state changes
+    if (changes.testFlag(scModified)) {
+        updateCaption();
+    }
+
+//    if (fTabStopBegin >=0) and (fTabStopY=fText.CaretY) then begin
+//      if StartsStr(fLineBeforeTabStop,fText.LineText) and EndsStr(fLineAfterTabStop, fText.LineText) then
+//        fTabStopBegin := Length(fLineBeforeTabStop);
+//        if fLineAfterTabStop = '' then
+//          fTabStopEnd := Length(fText.LineText)+1
+//        else
+//          fTabStopEnd := Length(fText.LineText) - Length(fLineAfterTabStop);
+//        fXOffsetSince := fTabStopEnd - fText.CaretX;
+//        if (fText.CaretX < fTabStopBegin) or (fText.CaretX >  (fTabStopEnd+1)) then begin
+//          fTabStopBegin :=-1;
+//        end;
+//    end;
+
+    // scSelection includes anything caret related
+    if (changes.testFlag(SynStatusChange::scSelection)) {
+        //MainForm.SetStatusbarLineCol;
+
+
+//      // Update the function tip
+//      fFunctionTip.ForceHide := false;
+//      if Assigned(fFunctionTipTimer) then begin
+//        if fFunctionTip.Activated and FunctionTipAllowed then begin
+//          fFunctionTip.Parser := fParser;
+//          fFunctionTip.FileName := fFileName;
+//          fFunctionTip.Show;
+//        end else begin // Reset the timer
+//          fFunctionTipTimer.Enabled := false;
+//          fFunctionTipTimer.Enabled := true;
+//        end;
+    }
+
+//      // Remove error line colors
+//      if not fIgnoreCaretChange then begin
+//        if (fErrorLine <> -1) and not fText.SelAvail then begin
+//          fText.InvalidateLine(fErrorLine);
+//          fText.InvalidateGutterLine(fErrorLine);
+//          fErrorLine := -1;
+//        end;
+//      end else
+//        fIgnoreCaretChange := false;
+
+//      if fText.SelAvail then begin
+//        if fText.GetWordAtRowCol(fText.CaretXY) = fText.SelText then begin
+//          fSelChanged:=True;
+//          BeginUpdate;
+//          EndUpdate;
+//        end else if fSelChanged then begin
+//          fSelChanged:=False; //invalidate to unhighlight others
+//          BeginUpdate;
+//          EndUpdate;
+//        end;
+//      end else if fSelChanged then begin
+//        fSelChanged:=False; //invalidate to unhighlight others
+//        BeginUpdate;
+//        EndUpdate;
+//      end;
+//  end;
+
+//    if scInsertMode in Changes then begin
+//      with MainForm.Statusbar do begin
+//        // Set readonly / insert / overwrite
+//        if fText.ReadOnly then
+//          Panels[2].Text := Lang[ID_READONLY]
+//        else if fText.InsertMode then
+//          Panels[2].Text := Lang[ID_INSERT]
+//        else
+//          Panels[2].Text := Lang[ID_OVERWRITE];
+//      end;
+//    end;
+
+//    mainForm.CaretList.AddCaret(self,fText.CaretY,fText.CaretX);
 }
 
 void Editor::applySettings()

@@ -72,6 +72,7 @@ protected slots:
     void onModificationChanged(bool status) ;
     void onCursorPositionChanged(int line, int index) ;
     void onLinesChanged(int startLine, int count) ;
+    void onStatusChanged(SynStatusChanges changes);
 
 private:
     static int newfileCount;

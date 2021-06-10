@@ -26,6 +26,7 @@ SOURCES += \
     qsynedit/SynEdit.cpp \
     qsynedit/TextBuffer.cpp \
     qsynedit/TextPainter.cpp \
+    qsynedit/exporter/synexporter.cpp \
     qsynedit/highlighter/base.cpp \
     qsynedit/highlighter/composition.cpp \
     qsynedit/highlighter/cpp.cpp \
@@ -59,6 +60,7 @@ HEADERS += \
     qsynedit/TextBuffer.h \
     qsynedit/TextPainter.h \
     qsynedit/Types.h \
+    qsynedit/exporter/synexporter.h \
     qsynedit/highlighter/base.h \
     qsynedit/highlighter/composition.h \
     qsynedit/highlighter/cpp.h \

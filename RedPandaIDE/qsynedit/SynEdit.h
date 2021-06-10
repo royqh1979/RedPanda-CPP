@@ -31,7 +31,7 @@ enum class SynEditCaretType {
     ctVerticalLine=0, ctHorizontalLine=1, ctHalfBlock=2, ctBlock=3
 };
 
-enum class SynStatusChange {
+enum SynStatusChange {
     scNone = 0,
     scAll = 0x0001,
     scCaretX = 0x0002,

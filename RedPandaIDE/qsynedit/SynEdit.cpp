@@ -58,8 +58,8 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
 
     mCaretColor = QColorConstants::Red;
     mActiveLineColor = QColorConstants::Svg::lightblue;
-    mSelectedBackground = QColorConstants::Svg::lightgray;
-    mSelectedForeground = palette().color(QPalette::Text);
+    mSelectedBackground = palette().color(QPalette::Highlight);
+    mSelectedForeground = palette().color(QPalette::HighlightedText);
 
     mBookMarkOpt.connect(&mBookMarkOpt, &SynBookMarkOpt::changed, this, &SynEdit::bookMarkOptionsChanged);
     //  fRightEdge has to be set before FontChanged is called for the first time
