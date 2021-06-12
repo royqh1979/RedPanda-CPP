@@ -271,6 +271,7 @@ int SynEditStringList::getTextLength()
             Result += 1;
         }
     }
+    return Result;
 }
 
 void SynEditStringList::clear()
@@ -549,11 +550,15 @@ void SynEditStringList::SaveToFile(QFile &file, const QByteArray& encoding, QByt
     bool allAscii = true;
 
     QTextCodec* codec;
+    realEncoding = encoding;
     if (realEncoding == ENCODING_UTF8_BOM) {
-        codec = QTextCodec::codecForName(ENCODING_UTF8_BOM);
+        codec = QTextCodec::codecForName(ENCODING_UTF8);
+        file.putChar(0xEF);
+        file.putChar(0xBB);
+        file.putChar(0xBF);
     } else if (realEncoding == ENCODING_SYSTEM_DEFAULT) {
         codec = QTextCodec::codecForLocale();
-    } else if (realEncoding == ENCODING_ASCII) {
+    } else if (realEncoding == ENCODING_AUTO_DETECT) {
         codec = QTextCodec::codecForLocale();
     } else {
         codec = QTextCodec::codecForName(realEncoding);
@@ -567,23 +572,15 @@ void SynEditStringList::SaveToFile(QFile &file, const QByteArray& encoding, QByt
         } else {
             file.write(line->fString.toLatin1());
         }
-        switch (mFileEndingType) {
-        case FileEndingType::Windows:
-            file.write("\r\n");
-            break;
-        case FileEndingType::Linux:
-            file.write("\n");
-            break;
-        case FileEndingType::Mac:
-            file.write("\r");
-            break;
-        }
+        file.write(lineBreak().toLatin1());
     }
-    if (encoding == ENCODING_AUTO_DETECT && allAscii) {
-        realEncoding = ENCODING_ASCII;
+    if (encoding == ENCODING_AUTO_DETECT) {
+        if (allAscii)
+            realEncoding = ENCODING_ASCII;
+        else
+            realEncoding = codec->name();
     }
 }
-
 
 void SynEditStringList::PutTextStr(const QString &text)
 {

@@ -178,6 +178,36 @@ public:
         int gutterRightOffset() const;
         void setGutterRightOffset(int gutterRightOffset);
 
+        bool copySizeLimit() const;
+        void setCopySizeLimit(bool copyLimit);
+
+        int copyCharLimits() const;
+        void setCopyCharLimits(int copyCharLimits);
+
+        int copyLineLimits() const;
+        void setCopyLineLimits(int copyLineLimits);
+
+        bool copyRTFUseBackground() const;
+        void setCopyRTFUseBackground(bool copyRTFUseBackground);
+
+        bool copyRTFUseEditorColor() const;
+        void setCopyRTFUseEditorColor(bool copyRTFUseEditorColor);
+
+        QString copyRTFColorSchema() const;
+        void setCopyRTFColorSchema(const QString &copyRTFColorSchema);
+
+        bool copyHTMLUseBackground() const;
+        void setCopyHTMLUseBackground(bool copyHTMLUseBackground);
+
+        bool copyHTMLUseEditorColor() const;
+        void setCopyHTMLUseEditorColor(bool copyHTMLUseEditorColor);
+
+        QString copyHTMLColorSchema() const;
+        void setCopyHTMLColorSchema(const QString &copyHTMLColorSchema);
+
+        int copyWithFormatAs() const;
+        void setCopyWithFormatAs(int copyWithFormatAs);
+
     private:
         QByteArray mDefaultEncoding;
         //General
@@ -221,6 +251,18 @@ public:
         QString mGutterFontName;
         int mGutterFontSize;
         bool mGutterFontOnlyMonospaced;
+
+        //copy
+        bool mCopySizeLimit;
+        int mCopyCharLimits;
+        int mCopyLineLimits;
+        int mCopyWithFormatAs;
+        bool mCopyRTFUseBackground;
+        bool mCopyRTFUseEditorColor;
+        QString mCopyRTFColorSchema;
+        bool mCopyHTMLUseBackground;
+        bool mCopyHTMLUseEditorColor;
+        QString mCopyHTMLColorSchema;
 
         // _Base interface
     protected:
@@ -385,6 +427,7 @@ public:
     explicit Settings(const QString& filename);
     explicit Settings(Settings&& settings) = delete;
     explicit Settings(const Settings& settings) = delete;
+    ~Settings();
 
     Settings& operator= (const Settings& settings) = delete;
     Settings& operator= (const Settings&& settings) = delete;

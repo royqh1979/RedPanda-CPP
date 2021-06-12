@@ -21,6 +21,11 @@ Settings::Settings(const QString &filename):
 {
 }
 
+Settings::~Settings()
+{
+    mEditor.save();
+}
+
 void Settings::beginGroup(const QString &group)
 {
     mSettings.beginGroup(group);
@@ -227,6 +232,106 @@ int Settings::Editor::gutterRightOffset() const
 void Settings::Editor::setGutterRightOffset(int gutterRightOffset)
 {
     mGutterRightOffset = gutterRightOffset;
+}
+
+int Settings::Editor::copyWithFormatAs() const
+{
+    return mCopyWithFormatAs;
+}
+
+void Settings::Editor::setCopyWithFormatAs(int copyWithFormatAs)
+{
+    mCopyWithFormatAs = copyWithFormatAs;
+}
+
+QString Settings::Editor::copyHTMLColorSchema() const
+{
+    return mCopyHTMLColorSchema;
+}
+
+void Settings::Editor::setCopyHTMLColorSchema(const QString &copyHTMLColorSchema)
+{
+    mCopyHTMLColorSchema = copyHTMLColorSchema;
+}
+
+bool Settings::Editor::copyHTMLUseEditorColor() const
+{
+    return mCopyHTMLUseEditorColor;
+}
+
+void Settings::Editor::setCopyHTMLUseEditorColor(bool copyHTMLUseEditorColor)
+{
+    mCopyHTMLUseEditorColor = copyHTMLUseEditorColor;
+}
+
+bool Settings::Editor::copyHTMLUseBackground() const
+{
+    return mCopyHTMLUseBackground;
+}
+
+void Settings::Editor::setCopyHTMLUseBackground(bool copyHTMLUseBackground)
+{
+    mCopyHTMLUseBackground = copyHTMLUseBackground;
+}
+
+QString Settings::Editor::copyRTFColorSchema() const
+{
+    return mCopyRTFColorSchema;
+}
+
+void Settings::Editor::setCopyRTFColorSchema(const QString &copyRTFColorSchema)
+{
+    mCopyRTFColorSchema = copyRTFColorSchema;
+}
+
+bool Settings::Editor::copyRTFUseEditorColor() const
+{
+    return mCopyRTFUseEditorColor;
+}
+
+void Settings::Editor::setCopyRTFUseEditorColor(bool copyRTFUseEditorColor)
+{
+    mCopyRTFUseEditorColor = copyRTFUseEditorColor;
+}
+
+bool Settings::Editor::copyRTFUseBackground() const
+{
+    return mCopyRTFUseBackground;
+}
+
+void Settings::Editor::setCopyRTFUseBackground(bool copyRTFUseBackground)
+{
+    mCopyRTFUseBackground = copyRTFUseBackground;
+}
+
+int Settings::Editor::copyLineLimits() const
+{
+    return mCopyLineLimits;
+}
+
+void Settings::Editor::setCopyLineLimits(int copyLineLimits)
+{
+    mCopyLineLimits = copyLineLimits;
+}
+
+int Settings::Editor::copyCharLimits() const
+{
+    return mCopyCharLimits;
+}
+
+void Settings::Editor::setCopyCharLimits(int copyCharLimits)
+{
+    mCopyCharLimits = copyCharLimits;
+}
+
+bool Settings::Editor::copySizeLimit() const
+{
+    return mCopySizeLimit;
+}
+
+void Settings::Editor::setCopySizeLimit(bool copyLimit)
+{
+    mCopySizeLimit = copyLimit;
 }
 
 int Settings::Editor::gutterLeftOffset() const
@@ -441,6 +546,18 @@ void Settings::Editor::doSave()
     saveValue("gutter_font_name",mGutterFontName);
     saveValue("gutter_font_size",mGutterFontSize);
     saveValue("gutter_font_only_monospaced",mGutterFontOnlyMonospaced);
+
+    //copy
+    saveValue("copy_limit",mCopySizeLimit);
+    saveValue("copy_char_limits",mCopyCharLimits);
+    saveValue("copy_line_limits",mCopyLineLimits);
+    saveValue("copy_with_format_as",mCopyWithFormatAs);
+    saveValue("copy_rtf_use_background",mCopyRTFUseBackground);
+    saveValue("copy_rtf_use_editor_color_schema",mCopyRTFUseEditorColor);
+    saveValue("copy_rtf_color_schema",mCopyRTFColorSchema);
+    saveValue("copy_html_use_background",mCopyHTMLUseBackground);
+    saveValue("copy_html_use_editor_color_schema",mCopyHTMLUseEditorColor);
+    saveValue("copy_html_color_schema", mCopyHTMLColorSchema);
 }
 
 void Settings::Editor::doLoad()
@@ -487,6 +604,19 @@ void Settings::Editor::doLoad()
     mGutterFontName = stringValue("gutter_font_name","consolas");
     mGutterFontSize = intValue("gutter_font_size",QGuiApplication::font().pointSize());
     mGutterFontOnlyMonospaced = boolValue("gutter_font_only_monospaced",true);
+
+    //copy
+    mCopySizeLimit = boolValue("copy_limit",true);
+    mCopyCharLimits = intValue("copy_char_limits",100);
+    mCopyLineLimits = intValue("copy_line_limits",100000);
+    mCopyWithFormatAs = intValue("copy_with_format_as",0);
+    mCopyRTFUseBackground = boolValue("copy_rtf_use_background",false);
+    mCopyRTFUseEditorColor = boolValue("copy_rtf_use_editor_color_schema",true);
+    mCopyRTFColorSchema = stringValue("copy_rtf_color_schema","");
+    mCopyHTMLUseBackground = boolValue("copy_html_use_background",false);
+    mCopyHTMLUseEditorColor = boolValue("copy_html_use_editor_color_schema",true);
+    mCopyHTMLColorSchema = stringValue("copy_html_color_schema","");
+
 }
 
 SynEditCaretType Settings::Editor::caretForOverwrite() const

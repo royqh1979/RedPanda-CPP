@@ -56,6 +56,7 @@ public:
 
     void loadFile();
     void saveFile(const QString& filename);
+    void convertToEncoding(const QByteArray& encoding);
     bool save(bool force=false, bool reparse=true);
     bool saveAs();
     void activate();
@@ -64,14 +65,14 @@ public:
 
     void updateCaption(const QString& newCaption=QString());
     void applySettings();
-
+    void copyToClipboard() override;
+    void cutToClipboard() override;
+    void copyAsHTML();
 signals:
 
 
 protected slots:
     void onModificationChanged(bool status) ;
-    void onCursorPositionChanged(int line, int index) ;
-    void onLinesChanged(int startLine, int count) ;
     void onStatusChanged(SynStatusChanges changes);
 
 private:
@@ -86,6 +87,8 @@ private:
     // QWidget interface
 protected:
     void wheelEvent(QWheelEvent *event) override;
+    void focusInEvent(QFocusEvent *event);
+    void focusOutEvent(QFocusEvent *event);
 };
 
 #endif // EDITOR_H

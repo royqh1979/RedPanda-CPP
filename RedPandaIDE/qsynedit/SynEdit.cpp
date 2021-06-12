@@ -290,10 +290,34 @@ void SynEdit::setCaretXYCentered(bool ForceToMiddle, const BufferCoord &value)
 
 }
 
+void SynEdit::setInsertMode(bool value)
+{
+    if (mInserting != value) {
+        mInserting = value;
+        updateCaret();
+        statusChanged(scInsertMode);
+    }
+}
+
+bool SynEdit::insertMode() const
+{
+    return mInserting;
+}
+
+bool SynEdit::canUndo() const
+{
+    return !mReadOnly && mUndoList->CanUndo();
+}
+
+bool SynEdit::canRedo() const
+{
+    return !mReadOnly && mRedoList->CanUndo();
+}
+
 int SynEdit::maxScrollWidth() const
 {
     if (mOptions.testFlag(eoScrollPastEol))
-        return mLines->lengthOfLongestLine();
+        return std::max(mLines->lengthOfLongestLine(),1);
     else
         return std::max(mLines->lengthOfLongestLine()-mCharsInWindow+1, 1);
 }
@@ -1948,7 +1972,7 @@ void SynEdit::doAddChar(QChar AChar)
                     while (i<matchline.length() && (matchline[i]==' ' || matchline[i]=='\t')) {
                         i++;
                     }
-                    QString temp = matchline.mid(0,i-1) + line.mid(mCaretX-1);
+                    QString temp = matchline.mid(0,i) + line.mid(mCaretX-1);
                     mLines->putString(mCaretY-1,temp);
                     internalSetCaretXY(BufferCoord{i,mCaretY});
                     mUndoList->AddChange(
@@ -2293,6 +2317,7 @@ void SynEdit::updateCaret()
     DisplayCoord coord = displayXY();
     QPoint caretPos = RowColumnToPixels(coord);
     int caretWidth=mCharWidth;
+    qDebug()<<"caret"<<mCaretX<<mCaretY;
     if (mCaretY <= mLines->count() && mCaretX <= mLines->getString(mCaretY-1).length()) {
         caretWidth = charColumns(mLines->getString(mCaretY-1)[mCaretX-1])*mCharWidth;
     }
@@ -2882,12 +2907,25 @@ void SynEdit::doScrolled(int)
     invalidate();
 }
 
+bool SynEdit::readOnly() const
+{
+    return mReadOnly;
+}
+
+void SynEdit::setReadOnly(bool readOnly)
+{
+    if (mReadOnly != readOnly) {
+        mReadOnly = readOnly;
+        statusChanged(scReadOnly);
+    }
+}
+
 SynGutter& SynEdit::gutter()
 {
     return mGutter;
 }
 
-SynEditCaretType SynEdit::getInsertCaret() const
+SynEditCaretType SynEdit::insertCaret() const
 {
     return mInsertCaret;
 }
@@ -2897,7 +2935,7 @@ void SynEdit::setInsertCaret(const SynEditCaretType &insertCaret)
     mInsertCaret = insertCaret;
 }
 
-SynEditCaretType SynEdit::getOverwriteCaret() const
+SynEditCaretType SynEdit::overwriteCaret() const
 {
     return mOverwriteCaret;
 }
@@ -2907,7 +2945,7 @@ void SynEdit::setOverwriteCaret(const SynEditCaretType &overwriteCaret)
     mOverwriteCaret = overwriteCaret;
 }
 
-QColor SynEdit::getActiveLineColor() const
+QColor SynEdit::activeLineColor() const
 {
     return mActiveLineColor;
 }
@@ -2920,7 +2958,7 @@ void SynEdit::setActiveLineColor(const QColor &activeLineColor)
     }
 }
 
-QColor SynEdit::getCaretColor() const
+QColor SynEdit::caretColor() const
 {
     return mCaretColor;
 }
@@ -2930,7 +2968,7 @@ void SynEdit::setCaretColor(const QColor &caretColor)
     mCaretColor = caretColor;
 }
 
-int SynEdit::getTabWidth() const
+int SynEdit::tabWidth() const
 {
     return mTabWidth;
 }
@@ -3602,11 +3640,6 @@ void SynEdit::setHighlighter(const PSynHighlighter &highlighter)
 PSynEditStringList SynEdit::lines() const
 {
     return mLines;
-}
-
-int SynEdit::tabWidth() const
-{
-    return mTabWidth;
 }
 
 bool SynEdit::empty()
@@ -4305,16 +4338,15 @@ void SynEdit::ExecuteCommand(SynEditorCommand Command, QChar AChar, void *pData)
         break;
     case SynEditorCommand::ecInsertMode:
         if (!mReadOnly)
-            mInserting = true;
+            setInsertMode(true);
         break;
     case SynEditorCommand::ecOverwriteMode:
         if (!mReadOnly)
-            mInserting = false;
+            setInsertMode(false);
         break;
     case SynEditorCommand::ecToggleMode:
         if (!mReadOnly) {
-            mInserting = !mInserting;
-            updateCaret();
+            setInsertMode(!mInserting);
         }
         break;
     case SynEditorCommand::ecCut:
@@ -4963,7 +4995,10 @@ void SynEdit::linesChanged()
     vOldMode = mActiveSelectionMode;
     setBlockBegin(caretXY());
     mActiveSelectionMode = vOldMode;
-    invalidateRect(mInvalidateRect);
+    if (mInvalidateRect.width()==0)
+        invalidate();
+    else
+        invalidateRect(mInvalidateRect);
     mInvalidateRect = {0,0,0,0};
 
     if (mGutter.showLineNumbers() && (mGutter.autoSize()))

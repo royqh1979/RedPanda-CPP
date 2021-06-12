@@ -22,9 +22,11 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
-    void updateStatusBarForEncoding();
-    void updateStatusBarForEditingInfo(int line,int col,int lines,int charCount);
+    void updateForEncodingInfo();
+    void updateStatusbarForLineCol();
+    void updateForStatusbarModeInfo();
     void updateEditorSettings();
+    void updateEditorActions();
 
 protected:
     void openFiles(const QStringList& files);
@@ -73,6 +75,16 @@ private slots:
 
     void on_tableIssues_doubleClicked(const QModelIndex &index);
 
+    void on_actionEncode_in_ANSI_triggered();
+
+    void on_actionEncode_in_UTF_8_triggered();
+
+    void on_actionAuto_Detect_triggered();
+
+    void on_actionConvert_to_ANSI_triggered();
+
+    void on_actionConvert_to_UTF_8_triggered();
+
 public slots:
     void onCompileLog(const QString& msg);
     void onCompileIssue(PCompileIssue issue);
@@ -87,6 +99,9 @@ private:
     EditorList* mEditorList;
     QLabel* mFileInfoStatus;
     QLabel* mFileEncodingStatus;
+    QLabel* mFileModeStatus;
+    QMenu * mMenuEncoding;
+    QMenu * mMenuEncodingList;
     QComboBox* mCompilerSet;
     CompilerManager* mCompilerManager;
 

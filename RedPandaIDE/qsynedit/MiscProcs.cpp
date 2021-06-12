@@ -438,7 +438,7 @@ bool InternalEnumHighlighterAttris(PSynHighlighter Highlighter,
     } else if (Highlighter) {
         for (PSynHighlighterAttribute pAttr: Highlighter->attributes()){
             QString UniqueAttriName = Highlighter->getName()
-                    +  HighlighterList.indexOf(Highlighter) + '.'
+                    +  QString("%1").arg(HighlighterList.indexOf(Highlighter)) + '.'
                     + pAttr->name();
             Result = highlighterAttriProc(Highlighter, pAttr,
                                           UniqueAttriName, Params);

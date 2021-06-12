@@ -222,16 +222,16 @@ public:
       PSynHighlighterAttribute& Attri);
 
     //Commands
-    void cutToClipboard() { CommandProcessor(SynEditorCommand::ecCut);}
-    void copyToClipboard() { CommandProcessor(SynEditorCommand::ecCopy);}
-    void pasteFromClipboard() { CommandProcessor(SynEditorCommand::ecPaste);}
-    void undo()  { CommandProcessor(SynEditorCommand::ecUndo);}
-    void redo()  { CommandProcessor(SynEditorCommand::ecRedo);}
-    void zoomIn()  { CommandProcessor(SynEditorCommand::ecZoomIn);}
-    void zoomOut()  { CommandProcessor(SynEditorCommand::ecZoomOut);}
-    void selectAll() { { CommandProcessor(SynEditorCommand::ecSelectAll);}}
-    void tab() { { CommandProcessor(SynEditorCommand::ecTab);}}
-    void untab() { { CommandProcessor(SynEditorCommand::ecShiftTab);}}
+    virtual void cutToClipboard() { CommandProcessor(SynEditorCommand::ecCut);}
+    virtual void copyToClipboard() { CommandProcessor(SynEditorCommand::ecCopy);}
+    virtual void pasteFromClipboard() { CommandProcessor(SynEditorCommand::ecPaste);}
+    virtual void undo()  { CommandProcessor(SynEditorCommand::ecUndo);}
+    virtual void redo()  { CommandProcessor(SynEditorCommand::ecRedo);}
+    virtual void zoomIn()  { CommandProcessor(SynEditorCommand::ecZoomIn);}
+    virtual void zoomOut()  { CommandProcessor(SynEditorCommand::ecZoomOut);}
+    virtual void selectAll() { { CommandProcessor(SynEditorCommand::ecSelectAll);}}
+    virtual void tab() { { CommandProcessor(SynEditorCommand::ecTab);}}
+    virtual void untab() { { CommandProcessor(SynEditorCommand::ecShiftTab);}}
 
 
 // setter && getters
@@ -259,8 +259,6 @@ public:
     bool modified() const;
     void setModified(bool Value);
 
-    int tabWidth() const;
-
     PSynHighlighter highlighter() const;
     void setHighlighter(const PSynHighlighter &highlighter);
 
@@ -283,22 +281,31 @@ public:
     SynEditorOptions getOptions() const;
     void setOptions(const SynEditorOptions &Value);
 
-    int getTabWidth() const;
+    int tabWidth() const;
     void setTabWidth(int tabWidth);
 
-    QColor getCaretColor() const;
+    QColor caretColor() const;
     void setCaretColor(const QColor &caretColor);
 
-    QColor getActiveLineColor() const;
+    QColor activeLineColor() const;
     void setActiveLineColor(const QColor &activeLineColor);
 
-    SynEditCaretType getOverwriteCaret() const;
+    SynEditCaretType overwriteCaret() const;
     void setOverwriteCaret(const SynEditCaretType &overwriteCaret);
 
-    SynEditCaretType getInsertCaret() const;
+    SynEditCaretType insertCaret() const;
     void setInsertCaret(const SynEditCaretType &insertCaret);
 
     SynGutter& gutter();
+
+    bool readOnly() const;
+    void setReadOnly(bool readOnly);
+
+    void setInsertMode(bool value);
+    bool insertMode() const;
+
+    bool canUndo() const;
+    bool canRedo() const;
 
 signals:
     void Changed();

@@ -74,7 +74,7 @@ QString DecodeString(const QString& s);
 
 using  HighlighterAttriProc = std::function<bool(PSynHighlighter Highlighter,
     PSynHighlighterAttribute Attri, const QString& UniqueAttriName,
-    std::initializer_list<void *> Params)>;
+    QList<void *> Params)>;
 
 // Enums all child highlighters and their attributes of a TSynMultiSyn through a
 // callback function.

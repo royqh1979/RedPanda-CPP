@@ -12,8 +12,13 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QDebug>
+#include <QMimeData>
 #include "qsynedit/highlighter/cpp.h"
 #include "HighlighterManager.h"
+#include "qsynedit/exporter/synrtfexporter.h"
+#include "qsynedit/exporter/synhtmlexporter.h"
+#include <QGuiApplication>
+#include <QClipboard>
 
 
 using namespace std;
@@ -88,56 +93,23 @@ Editor::~Editor() {
 
 void Editor::loadFile() {
     QFile file(mFilename);
-//    if (!file.open(QFile::ReadOnly)) {
-//        QMessageBox::information(pMainWindow,
-//                                 tr("Error"),
-//                                 QString(tr("Can't Open File %1:%2")).arg(mFilename).arg(file.errorString()));
-//    }
     this->lines()->LoadFromFile(file,mEncodingOption,mFileEncoding);
     this->setModified(false);
     updateCaption();
-    pMainWindow->updateStatusBarForEncoding();
+    pMainWindow->updateForEncodingInfo();
 }
 
 void Editor::saveFile(const QString &filename) {
-//    if (mEncodingOption!=ENCODING_AUTO_DETECT && mEncodingOption!=mFileEncoding)  {
-//        mFileEncoding = mEncodingOption;
-//    }
-//    if (mEncodingOption == ENCODING_AUTO_DETECT && mFileEncoding == ENCODING_ASCII) {
-//        if (!isTextAllAscii(this->text())) {
-//            mFileEncoding = pSettings->editor().defaultEncoding();
-//        }
-//        pMainWindow->updateStatusBarForEncoding();
-//        //todo: update status bar, and set fileencoding using configurations
-//    }
     QFile file(filename);
     this->lines()->SaveToFile(file,mEncodingOption,mFileEncoding);
-    pMainWindow->updateStatusBarForEncoding();
-//    QByteArray ba;
-//    if (mFileEncoding == ENCODING_UTF8) {
-//        ba = this->text().toUtf8();
-//    } else if (mFileEncoding == ENCODING_UTF8_BOM) {
-//            ba.resize(3);
-//            ba[0]=0xEF;
-//            ba[1]=0xBB;
-//            ba[2]=0xBF;
-//            ba.append(this->text().toUtf8());
-//    } else if (mFileEncoding == ENCODING_ASCII) {
-//        ba = this->text().toLatin1();
-//    } else if (mFileEncoding == ENCODING_SYSTEM_DEFAULT) {
-//        ba = this->text().toLocal8Bit();
-//    } else {
-//        QTextCodec* codec = QTextCodec::codecForName(mFileEncoding);
-//        ba = codec->fromUnicode(this->text());
-//    }
-//    if (file.open(QFile::WriteOnly)) {
-//        if (file.write(ba)<0) {
-//            throw SaveException(QString(tr("Failed to Save file %1: %2")).arg(filename).arg(file.errorString()));
-//        }
-//        file.close();
-//    } else {
-//        throw SaveException(QString(tr("Failed to Open file %1: %2")).arg(filename).arg(file.errorString()));
-//    }
+    pMainWindow->updateForEncodingInfo();
+}
+
+void Editor::convertToEncoding(const QByteArray &encoding)
+{
+    mEncodingOption = encoding;
+    setModified(true);
+    save();
 }
 
 bool Editor::save(bool force, bool reparse) {
@@ -155,6 +127,8 @@ bool Editor::save(bool force, bool reparse) {
         try {
             saveFile(mFilename);
             setModified(false);
+            mIsNew = false;
+            this->updateCaption();
         }  catch (SaveException& exception) {
             QMessageBox::information(pMainWindow,tr("Fail"),
                                      exception.reason());
@@ -177,10 +151,11 @@ bool Editor::saveAs(){
         return false;
     }
     try {
-        saveFile(mFilename);
         mFilename = newName;
+        saveFile(mFilename);
         mIsNew = false;
         setModified(false);
+        this->updateCaption();
     }  catch (SaveException& exception) {
         QMessageBox::information(pMainWindow,tr("Fail"),
                                  exception.reason());
@@ -206,6 +181,10 @@ const QByteArray& Editor::encodingOption() const noexcept{
 }
 void Editor::setEncodingOption(const QByteArray& encoding) noexcept{
     mEncodingOption = encoding;
+    if (!this->isNew())
+        this->loadFile();
+    else
+        pMainWindow->updateForEncodingInfo();
 }
 const QByteArray& Editor::fileEncoding() const noexcept{
     return mFileEncoding;
@@ -226,20 +205,17 @@ QTabWidget* Editor::pageControl() noexcept{
 
 void Editor::wheelEvent(QWheelEvent *event) {
     if ( (event->modifiers() & Qt::ControlModifier)!=0) {
-        QFont oldFont = font();
-        int size = oldFont.pointSize();
+        int size = pSettings->editor().fontSize();
         if (event->angleDelta().y()>0) {
-//            size = std::max(5,size-1);
-//            oldFont.setPointSize(oldFont.pointSize());
-//            this->setFont(oldFont);
-            this->zoomIn();
+            size = std::min(99,size+1);
+            pSettings->editor().setFontSize(size);
+            pMainWindow->updateEditorSettings();
             event->accept();
             return;
         } else {
-//            size = std::min(size+1,50);
-//            oldFont.setPointSize(oldFont.pointSize());
-//            this->setFont(oldFont);
-            this->zoomOut();
+            size = std::max(2,size-1);
+            pSettings->editor().setFontSize(size);
+            pMainWindow->updateEditorSettings();
             event->accept();
             return;
         }
@@ -247,17 +223,94 @@ void Editor::wheelEvent(QWheelEvent *event) {
     SynEdit::wheelEvent(event);
 }
 
+void Editor::focusInEvent(QFocusEvent *event)
+{
+    SynEdit::focusInEvent(event);
+    pMainWindow->updateEditorActions();
+    pMainWindow->updateStatusbarForLineCol();
+    pMainWindow->updateForStatusbarModeInfo();
+}
+
+void Editor::focusOutEvent(QFocusEvent *event)
+{
+    SynEdit::focusOutEvent(event);
+    pMainWindow->updateEditorActions();
+    pMainWindow->updateStatusbarForLineCol();
+    pMainWindow->updateForStatusbarModeInfo();
+}
+
+void Editor::copyToClipboard()
+{
+    if (pSettings->editor().copySizeLimit()) {
+        if (lines()->count() > pSettings->editor().copyLineLimits()) {
+            QMessageBox::information(pMainWindow,tr("Fail"),
+                                     tr("The text to be copied exceeds count limit!"));
+            return;
+        }
+        if (lines()->getTextLength() > pSettings->editor().copyCharLimits() * 1000) {
+            QMessageBox::information(pMainWindow,tr("Fail"),
+                                     tr("The text to be copied exceeds character limit!"));
+            return;
+        }
+    }
+    switch(pSettings->editor().copyWithFormatAs()) {
+    case 1: //HTML
+        copyAsHTML();
+        break;;
+    default:
+        SynEdit::copyToClipboard();
+    }
+}
+
+void Editor::cutToClipboard()
+{
+    if (pSettings->editor().copySizeLimit()) {
+        if (lines()->count() > pSettings->editor().copyLineLimits()) {
+            QMessageBox::information(pMainWindow,tr("Fail"),
+                                     tr("The text to be cut exceeds count limit!"));
+            return;
+        }
+        if (lines()->getTextLength() > pSettings->editor().copyCharLimits() * 1000) {
+            QMessageBox::information(pMainWindow,tr("Fail"),
+                                     tr("The text to be cut exceeds character limit!"));
+            return;
+        }
+    }
+    SynEdit::cutToClipboard();
+}
+
+void Editor::copyAsHTML()
+{
+    if (!selAvail())
+        return;
+    SynHTMLExporter SynExporterHTML;
+
+    SynExporterHTML.setTitle(QFileInfo(mFilename).fileName());
+    SynExporterHTML.setExportAsText(false);
+    SynExporterHTML.setUseBackground(true);
+    SynExporterHTML.setFont(font());
+    SynExporterHTML.setHighlighter(highlighter());
+    SynExporterHTML.setCreateHTMLFragment(true);
+    //SynExporterRTF.OnFormatToken := ExporterFormatToken;
+
+
+    SynExporterHTML.ExportRange(lines(),blockBegin(),blockEnd());
+
+    //SynExporterHTML.CopyToClipboard();
+
+    QMimeData * mimeData = new QMimeData;
+
+    //sethtml will convert buffer to QString , which will cause encoding trouble
+    mimeData->setData(SynExporterHTML.clipboardFormat(),SynExporterHTML.buffer());
+    //mimeData->setHtml("<span><style> b {color:red;} </style><b>test</b></span>");
+    mimeData->setText(selText());
+
+    QGuiApplication::clipboard()->clear();
+    QGuiApplication::clipboard()->setMimeData(mimeData);
+}
+
 void Editor::onModificationChanged(bool) {
     updateCaption();
-}
-
-void Editor::onCursorPositionChanged(int line, int index) {
-    pMainWindow->updateStatusBarForEditingInfo(line,index+1,lines()->count(),lines()->getTextLength());
-}
-
-void Editor::onLinesChanged(int startLine, int count) {
-    qDebug()<<"Editor lines changed"<<lines()->count();
-    qDebug()<<startLine<<count;
 }
 
 void Editor::onStatusChanged(SynStatusChanges changes)
@@ -295,8 +348,7 @@ void Editor::onStatusChanged(SynStatusChanges changes)
 
     // scSelection includes anything caret related
     if (changes.testFlag(SynStatusChange::scSelection)) {
-        //MainForm.SetStatusbarLineCol;
-
+        pMainWindow->updateStatusbarForLineCol();
 
 //      // Update the function tip
 //      fFunctionTip.ForceHide := false;
@@ -338,17 +390,10 @@ void Editor::onStatusChanged(SynStatusChanges changes)
 //      end;
 //  end;
 
-//    if scInsertMode in Changes then begin
-//      with MainForm.Statusbar do begin
-//        // Set readonly / insert / overwrite
-//        if fText.ReadOnly then
-//          Panels[2].Text := Lang[ID_READONLY]
-//        else if fText.InsertMode then
-//          Panels[2].Text := Lang[ID_INSERT]
-//        else
-//          Panels[2].Text := Lang[ID_OVERWRITE];
-//      end;
-//    end;
+    if (changes.testFlag(scInsertMode) | changes.testFlag(scReadOnly))
+        pMainWindow->updateForStatusbarModeInfo();
+
+    pMainWindow->updateEditorActions();
 
 //    mainForm.CaretList.AddCaret(self,fText.CaretY,fText.CaretX);
 }

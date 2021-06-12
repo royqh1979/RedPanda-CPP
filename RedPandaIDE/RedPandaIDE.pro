@@ -2,7 +2,7 @@ QT       += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-CONFIG += c++14
+CONFIG += c++17
 
 # You can make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
@@ -27,12 +27,15 @@ SOURCES += \
     qsynedit/TextBuffer.cpp \
     qsynedit/TextPainter.cpp \
     qsynedit/exporter/synexporter.cpp \
+    qsynedit/exporter/synhtmlexporter.cpp \
+    qsynedit/exporter/synrtfexporter.cpp \
     qsynedit/highlighter/base.cpp \
     qsynedit/highlighter/composition.cpp \
     qsynedit/highlighter/cpp.cpp \
     settingsdialog/compilersetdirectorieswidget.cpp \
     settingsdialog/compilersetoptionwidget.cpp \
     settings.cpp \
+    settingsdialog/editorclipboardwidget.cpp \
     settingsdialog/editorfontwidget.cpp \
     settingsdialog/editorgeneralwidget.cpp \
     settingsdialog/settingsdialog.cpp \
@@ -61,12 +64,15 @@ HEADERS += \
     qsynedit/TextPainter.h \
     qsynedit/Types.h \
     qsynedit/exporter/synexporter.h \
+    qsynedit/exporter/synhtmlexporter.h \
+    qsynedit/exporter/synrtfexporter.h \
     qsynedit/highlighter/base.h \
     qsynedit/highlighter/composition.h \
     qsynedit/highlighter/cpp.h \
     settingsdialog/compilersetdirectorieswidget.h \
     settingsdialog/compilersetoptionwidget.h \
     settings.h \
+    settingsdialog/editorclipboardwidget.h \
     settingsdialog/editorfontwidget.h \
     settingsdialog/editorgeneralwidget.h \
     settingsdialog/settingsdialog.h \
@@ -81,6 +87,7 @@ FORMS += \
     mainwindow.ui \
     settingsdialog/compilersetdirectorieswidget.ui \
     settingsdialog/compilersetoptionwidget.ui \
+    settingsdialog/editorclipboardwidget.ui \
     settingsdialog/editorfontwidget.ui \
     settingsdialog/editorgeneralwidget.ui \
     settingsdialog/settingsdialog.ui

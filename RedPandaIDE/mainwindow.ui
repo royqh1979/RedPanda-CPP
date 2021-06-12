@@ -250,7 +250,7 @@
      <x>0</x>
      <y>0</y>
      <width>946</width>
-     <height>25</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -546,6 +546,9 @@
    </property>
   </action>
   <action name="actionFoldAll">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
    <property name="text">
     <string>Collapse All</string>
    </property>
@@ -553,6 +556,31 @@
   <action name="actionUnfoldAll">
    <property name="text">
     <string>Uncollapse All</string>
+   </property>
+  </action>
+  <action name="actionEncode_in_ANSI">
+   <property name="text">
+    <string>Encode in ANSI</string>
+   </property>
+  </action>
+  <action name="actionEncode_in_UTF_8">
+   <property name="text">
+    <string>Encode in UTF-8</string>
+   </property>
+  </action>
+  <action name="actionAuto_Detect">
+   <property name="text">
+    <string>Auto Detect</string>
+   </property>
+  </action>
+  <action name="actionConvert_to_ANSI">
+   <property name="text">
+    <string>Convert to ANSI</string>
+   </property>
+  </action>
+  <action name="actionConvert_to_UTF_8">
+   <property name="text">
+    <string>Convert to UTF-8</string>
    </property>
   </action>
  </widget>

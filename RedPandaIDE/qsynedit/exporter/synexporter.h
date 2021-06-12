@@ -6,10 +6,11 @@
 
 
 
-using FormatTokenHandler = std::function<void(int Line, int column, QString& token,
+using FormatTokenHandler = std::function<void(int Line, int column, const QString& token,
     PSynHighlighterAttribute attr)>;
 class SynExporter
 {
+
 public:
     explicit SynExporter();
 
@@ -27,7 +28,7 @@ public:
      * @brief Exports everything in the strings parameter to the output buffer.
      * @param ALines
      */
-    void ExportAll(const SynEditStringList& ALines);
+    void ExportAll(PSynEditStringList ALines);
 
     /**
      * @brief Exports the given range of the strings parameter to the output buffer.
@@ -35,8 +36,8 @@ public:
      * @param Start
      * @param Stop
      */
-    void ExportRange(const SynEditStringList& ALines,
-                     const BufferCoord& Start, const BufferCoord& Stop);
+    void ExportRange(PSynEditStringList ALines,
+                     BufferCoord Start, BufferCoord Stop);
     /**
      * @brief Saves the contents of the output buffer to a file.
      * @param AFileName
@@ -46,7 +47,7 @@ public:
      * @brief Saves the contents of the output buffer to a stream.
      * @param AStream
      */
-    void SaveToStream(const QIODevice& AStream);
+    void SaveToStream(QIODevice& AStream);
     bool exportAsText() const;
     void setExportAsText(bool Value);
 
@@ -80,6 +81,14 @@ public:
     QByteArray charset() const;
     void setCharset(const QByteArray &charset);
 
+    QString defaultFilter() const;
+    void setDefaultFilter(const QString &defaultFilter);
+
+    FormatTokenHandler onFormatToken() const;
+    void setOnFormatToken(const FormatTokenHandler &onFormatToken);
+
+    const QByteArray& buffer() const;
+
 protected:
     QByteArray mCharset;
     QColor mBackgroundColor;
@@ -96,6 +105,8 @@ protected:
     QString mTitle;
     bool mUseBackground;
     FileEndingType mFileEndingType;
+
+    QString lineBreak();
 
     /**
      * @brief Adds a string to the output buffer.
@@ -161,7 +172,7 @@ protected:
      * @brief Can be overridden in descendant classes to add the formatted text of
      *   the actual token text to the output buffer.
      */
-    virtual void FormatToken(QString& Token) ;
+    virtual void FormatToken(const QString& Token) ;
     /**
      * @brief Has to be overridden in descendant classes to add a newline in the output
      *   format to the output buffer.
@@ -203,7 +214,7 @@ protected:
      * @brief Returns a string that has all the invalid chars of the output format
      *   replaced with the entries in the replacement array.
      */
-    QString ReplaceReservedChars(QString &AToken);
+    QString ReplaceReservedChars(const QString &AToken);
     /**
      * @brief Sets the token attribute of the next token to determine the changes
      *   of colors and font styles so the properties of the next token can be
@@ -211,10 +222,13 @@ protected:
      * @param Attri
      */
     virtual void SetTokenAttribute(PSynHighlighterAttribute Attri);
+
+    QTextCodec *getCodec();
 private:
     QByteArray mBuffer;
     bool mFirstAttribute;
     FormatTokenHandler mOnFormatToken;
+
 };
 
 #endif // SYNEXPORTER_H
