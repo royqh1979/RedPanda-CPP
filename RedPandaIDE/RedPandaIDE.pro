@@ -10,6 +10,7 @@ CONFIG += c++17
 
 SOURCES += \
     HighlighterManager.cpp \
+    colorschema.cpp \
     compiler/compiler.cpp \
     compiler/compilermanager.cpp \
     compiler/executablerunner.cpp \
@@ -47,6 +48,7 @@ SOURCES += \
 
 HEADERS += \
     HighlighterManager.h \
+    colorschema.h \
     compiler/compiler.h \
     compiler/compilermanager.h \
     compiler/executablerunner.h \

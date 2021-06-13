@@ -59,23 +59,17 @@ int main(int argc, char *argv[])
     SystemConsts systemConsts;
     pSystemConsts = &systemConsts;
 
-//    Settings::CompilerSet testSet("e:/workspace/contributes/Dev-CPP/MinGW32_GCC92");
-//    qDebug() << testSet.binDirs();
-//    qDebug() << testSet.CIncludeDirs();
-//    qDebug() << testSet.CppIncludeDirs();
-//    qDebug() << testSet.LibDirs();
-
     pSettings = createAppSettings();
     if (pSettings == nullptr) {
         return -1;
     }
     auto settings = std::unique_ptr<Settings>(pSettings);
+    settings->compilerSets().loadSets();
+    settings->editor().load();
 
     //settings->compilerSets().addSets("e:/workspace/contributes/Dev-CPP/MinGW32_GCC92");
 //    settings->compilerSets().findSets();
 //    settings->compilerSets().saveSets();
-    settings->compilerSets().loadSets();
-    settings->editor().load();
 //    qDebug() << settings->compilerSets().defaultSet()->binDirs();
 //    settings->compilerSets().loadSets();
 //    qDebug() << settings->compilerSets().defaultSet()->defines();
