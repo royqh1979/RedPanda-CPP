@@ -37,6 +37,7 @@ SOURCES += \
     settingsdialog/compilersetoptionwidget.cpp \
     settings.cpp \
     settingsdialog/editorclipboardwidget.cpp \
+    settingsdialog/editorcolorschemewidget.cpp \
     settingsdialog/editorfontwidget.cpp \
     settingsdialog/editorgeneralwidget.cpp \
     settingsdialog/settingsdialog.cpp \
@@ -75,6 +76,7 @@ HEADERS += \
     settingsdialog/compilersetoptionwidget.h \
     settings.h \
     settingsdialog/editorclipboardwidget.h \
+    settingsdialog/editorcolorschemewidget.h \
     settingsdialog/editorfontwidget.h \
     settingsdialog/editorgeneralwidget.h \
     settingsdialog/settingsdialog.h \
@@ -90,6 +92,7 @@ FORMS += \
     settingsdialog/compilersetdirectorieswidget.ui \
     settingsdialog/compilersetoptionwidget.ui \
     settingsdialog/editorclipboardwidget.ui \
+    settingsdialog/editorcolorschemewidget.ui \
     settingsdialog/editorfontwidget.ui \
     settingsdialog/editorgeneralwidget.ui \
     settingsdialog/settingsdialog.ui
