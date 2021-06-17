@@ -78,6 +78,11 @@ Settings::CompilerSets &Settings::compilerSets()
     return mCompilerSets;
 }
 
+QString Settings::filename() const
+{
+    return mFilename;
+}
+
 Settings::Dirs::Dirs(Settings *settings):
     _Base(settings, SETTING_DIRS)
 {
@@ -86,6 +91,32 @@ Settings::Dirs::Dirs(Settings *settings):
 QString Settings::Dirs::app() const
 {
     return QApplication::instance()->applicationDirPath();
+}
+
+QString Settings::Dirs::data(Settings::Dirs::DataType dataType) const
+{
+    using DataType = Settings::Dirs::DataType;
+    QString dataDir = includeTrailingPathDelimiter(app())+"data";
+    switch (dataType) {
+    case DataType::None:
+        return dataDir;
+    case DataType::ColorSheme:
+        return includeTrailingPathDelimiter(dataDir)+"scheme";
+    }
+}
+
+QString Settings::Dirs::config(Settings::Dirs::DataType dataType) const
+{
+    using DataType = Settings::Dirs::DataType;
+    QFileInfo configFile(pSettings->filename());
+    QString configDir = configFile.path();
+    switch (dataType) {
+    case DataType::None:
+        return configDir;
+    case DataType::ColorSheme:
+        return includeTrailingPathDelimiter(configDir)+"scheme";
+    }
+
 }
 
 void Settings::Dirs::doSave()
@@ -1595,13 +1626,13 @@ void Settings::CompilerSets::saveDefaultIndex()
 void Settings::CompilerSets::deleteSet(int index)
 {
     // Erase all sections at and above from disk
-    for (int i=index;i<mList.size();i++) {
+    for (size_t i=index;i<mList.size();i++) {
         mSettings->mSettings.beginGroup(QString(SETTING_COMPILTER_SET).arg(i));
         mSettings->mSettings.remove("");
         mSettings->mSettings.endGroup();
     }
     mList.erase(std::begin(mList)+index);
-    for (int i=index;i<mList.size();i++) {
+    for (size_t i=index;i<mList.size();i++) {
         saveSet(i);
     }
     if (mDefaultIndex>=mList.size()) {

@@ -69,8 +69,14 @@ private:
 public:
     class Dirs: public _Base {
     public:
+        enum class DataType {
+            None,
+            ColorSheme
+        };
         explicit Dirs(Settings * settings);
         QString app() const;
+        QString data(DataType dataType = DataType::None) const;
+        QString config(DataType dataType = DataType::None) const;
 
         // _Base interface
     protected:
@@ -441,7 +447,10 @@ public:
     Dirs& dirs();
     Editor& editor();
     CompilerSets& compilerSets();
+    QString filename() const;
+
 private:
+    QString mFilename;
     QSettings mSettings;
     Dirs mDirs;
     Editor mEditor;

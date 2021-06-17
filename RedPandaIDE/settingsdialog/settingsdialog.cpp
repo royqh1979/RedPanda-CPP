@@ -5,6 +5,7 @@
 #include "editorgeneralwidget.h"
 #include "editorfontwidget.h"
 #include "editorclipboardwidget.h"
+#include "editorcolorschemewidget.h"
 #include <QDebug>
 #include <QMessageBox>
 
@@ -35,6 +36,10 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     pEditorClipboardWidget = new EditorClipboardWidget(tr("Copy & Export"),tr("Editor"));
     pEditorClipboardWidget->init();
     addWidget(pEditorClipboardWidget);
+
+    pEditorColorSchemeWidget = new EditorColorSchemeWidget(tr("Color"),tr("Editor"));
+    pEditorColorSchemeWidget->init();
+    addWidget(pEditorColorSchemeWidget);
 }
 
 SettingsDialog::~SettingsDialog()
