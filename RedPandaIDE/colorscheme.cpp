@@ -1,9 +1,12 @@
 #include "colorscheme.h"
+#include <QDir>
 #include <QFile>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include "utils.h"
+#include "settings.h"
+#include "qsynedit/Constants.h"
 
 ColorScheme::ColorScheme()
 {
@@ -51,8 +54,9 @@ void ColorScheme::write(QJsonObject &json)
     json["items"]=itemsList;
 }
 
-void ColorScheme::load(const QString &filename)
+PColorScheme ColorScheme::load(const QString &filename)
 {
+    PColorScheme scheme = std::make_shared<ColorScheme>();
     QFile file(filename);
     if (!file.open(QFile::ReadOnly)) {
         throw new FileError(QObject::tr("Can't open file '%1' for read").arg(file.fileName()));
@@ -68,7 +72,8 @@ void ColorScheme::load(const QString &filename)
         throw new FileError(QObject::tr("Can't parse json file '%1' is not a color schema config file!")
                             .arg(file.fileName()));
     }
-    read(doc.object());
+    scheme->read(doc.object());
+    return scheme;
 }
 
 void ColorScheme::save(const QString &filename)
@@ -94,14 +99,14 @@ void ColorScheme::setBundled(bool bundled)
     mBundled = bundled;
 }
 
-bool ColorScheme::modified() const
+bool ColorScheme::customed() const
 {
-    return mModified;
+    return mCustomed;
 }
 
-void ColorScheme::setModified(bool modified)
+void ColorScheme::setCustomed(bool customed)
 {
-    mModified = modified;
+    mCustomed = customed;
 }
 
 QString ColorScheme::preferThemeType() const
@@ -244,9 +249,46 @@ void ColorSchemeItem::write(QJsonObject &json)
     json["strikeout"] = mStrikeout;
 }
 
+ColorManager::ColorManager()
+{
+    mDefaultSchemeItemDefine = std::make_shared<ColorSchemeItemDefine>();
+    initItemDefines();
+}
+
 void ColorManager::init()
 {
     reload();
+}
+
+void ColorManager::reload()
+{
+    mSchemes.clear();
+    //bundled schemes ( the lowest priority)
+    loadSchemesInDir(pSettings->dirs().data(Settings::Dirs::DataType::ColorSheme),false);
+    //config schemes ( higher priority)
+    loadSchemesInDir(pSettings->dirs().config(Settings::Dirs::DataType::ColorSheme),false);
+    //customed schemes ( highest priority)
+    loadSchemesInDir(pSettings->dirs().config(Settings::Dirs::DataType::ColorSheme),true);
+}
+
+QStringList ColorManager::getSchemes(const QString &themeType)
+{
+    if (themeType.isEmpty()) {
+        return mSchemes.keys();
+    }
+    QStringList lst;
+    for (QString name:mSchemes.keys()) {
+        PColorScheme scheme = mSchemes[name];
+        if (scheme && scheme->preferThemeType() == themeType) {
+            lst.append(name);
+        }
+    }
+    return lst;
+}
+
+bool ColorManager::exists(const QString name)
+{
+    return mSchemes.contains(name);
 }
 
 PColorScheme ColorManager::copy(const QString &sourceName)
@@ -254,9 +296,97 @@ PColorScheme ColorManager::copy(const QString &sourceName)
     if (!mSchemes.contains(sourceName))
         return PColorScheme();
     PColorScheme sourceScheme = mSchemes[sourceName];
-    // todo:save source with the new name
+    QString newName = sourceName+" Copy";
+    if (mSchemes.contains(newName))
+        return PColorScheme();
+    // save source with the new name
+    QString newFilepath = generateFullPathname(newName,false,false);
+    sourceScheme->save(newFilepath);
     // then load it to the copied
+    PColorScheme newScheme = ColorScheme::load(newFilepath);
+    newScheme->setName(newName);
+    newScheme->setBundled(false);
+    newScheme->setCustomed(false);
+    mSchemes[newName]=newScheme;
+    return newScheme;
+}
 
+QString ColorManager::generateFilename(const QString &name, bool isCustomed)
+{
+    QString newName = name;
+    newName.replace(' ','_');
+    if (isCustomed)
+        newName += EXT_PREFIX_CUSTOM;
+    return newName += EXT_COLOR_SCHEME;
+}
+
+void ColorManager::loadSchemesInDir(const QString &dirName, bool isCustomed)
+{
+    QDir dir(dirName);
+    dir.setFilter(QDir::Files);
+    QFileInfoList  list = dir.entryInfoList();
+    QString suffix;
+    if (isCustomed) {
+        suffix = EXT_PREFIX_CUSTOM;
+        suffix = suffix + EXT_COLOR_SCHEME;
+    } else {
+        suffix = EXT_COLOR_SCHEME;
+    }
+    for (int i=0;i<list.size();i++) {
+        QFileInfo fileInfo = list[i];
+        if (fileInfo.fileName().toLower().endsWith(suffix)) {
+            PColorScheme scheme = ColorScheme::load(fileInfo.absoluteFilePath());
+            mSchemes[scheme->name()]=scheme;
+        }
+    }
+}
+
+void ColorManager::initItemDefines()
+{
+    //Highlighter colors
+    addDefine(SYNS_AttrAssembler,true,true,true);
+    addDefine(SYNS_AttrCharacter,true,true,true);
+    addDefine(SYNS_AttrComment,true,true,true);
+    addDefine(SYNS_AttrClass,true,true,true);
+    addDefine(SYNS_AttrFloat,true,true,true);
+    addDefine(SYNS_AttrFunction,true,true,true);
+    addDefine(SYNS_AttrGlobalVariable,true,true,true);
+    addDefine(SYNS_AttrHexadecimal,true,true,true);
+    addDefine(SYNS_AttrIdentifier,true,true,true);
+    addDefine(SYNS_AttrIllegalChar,true,true,true);
+    addDefine(SYNS_AttrLocalVariable,true,true,true);
+    addDefine(SYNS_AttrNumber,true,true,true);
+    addDefine(SYNS_AttrOctal,true,true,true);
+    addDefine(SYNS_AttrPreprocessor,true,true,true);
+    addDefine(SYNS_AttrReservedWord,true,true,true);
+    addDefine(SYNS_AttrSpace,true,true,true);
+    addDefine(SYNS_AttrString,true,true,true);
+    addDefine(SYNS_AttrStringEscapeSequences,true,true,true);
+    addDefine(SYNS_AttrSymbol,true,true,true);
+    addDefine(SYNS_AttrVariable,true,true,true);
+
+    //Gutter colors
+    addDefine(COLOR_SCHEME_GUTTER,true,true,true);
+    //Active Line
+    addDefine(COLOR_SCHEME_ACTIVE_LINE,false,true,false);
+    //Breakpoint Line
+    addDefine(COLOR_SCHEME_BREAKPOINT,true,true,false);
+    //Current Debug Line
+    addDefine(COLOR_SCHEME_ACTIVE_BREAKPOINT,true,true,false);
+    //Fold line
+    addDefine(COLOR_SCHEME_FOLD_LINE,true,false,false);
+    //Brace/Bracket/Parenthesis Level 1 2 3 4
+    addDefine(COLOR_SCHEME_BRACE_1,true,false,false);
+    addDefine(COLOR_SCHEME_BRACE_2,true,false,false);
+    addDefine(COLOR_SCHEME_BRACE_3,true,false,false);
+    addDefine(COLOR_SCHEME_BRACE_4,true,false,false);
+    addDefine(COLOR_SCHEME_SELECTION,true,true,false);
+    //Syntax Error
+    addDefine(COLOR_SCHEME_ERROR,true,false,false);
+    addDefine(COLOR_SCHEME_WARNING,true,false,false);
+
+
+#define COLOR_SCHEME_INDENT_GUIDE_LINE "indent guide line"
 }
 
 bool ColorManager::rename(const QString &oldName, const QString &newName)
@@ -303,19 +433,36 @@ void ColorManager::addDefine(const QString &name, bool hasForeground, bool hasBa
     define->setHasForeground(hasForeground);
     define->setHasBackground(hasBackground);
     define->setHasFontStyle(hasFontStyle);
-    mSchemeDefine[name]=define;
+    mSchemeItemDefine[name]=define;
 }
 
 bool ColorManager::removeDefine(const QString &name)
 {
-    return mSchemeDefine.remove(name)==1;
+    return mSchemeItemDefine.remove(name)==1;
 }
 
 PColorSchemeItemDefine ColorManager::getDefine(const QString &name)
 {
-    if (mSchemeDefine.contains(name))
-        return mSchemeDefine[name];
+    if (mSchemeItemDefine.contains(name))
+        return mSchemeItemDefine[name];
     return PColorSchemeItemDefine();
+}
+
+QString ColorManager::generateFullPathname(const QString &name, bool isBundled, bool isCustomed)
+{
+    QString filename = generateFilename(name,isCustomed);
+    if (isBundled) {
+        return includeTrailingPathDelimiter(pSettings->dirs().data(Settings::Dirs::DataType::ColorSheme))+filename;
+    } else {
+        return includeTrailingPathDelimiter(pSettings->dirs().config(Settings::Dirs::DataType::ColorSheme))+filename;
+    }
+}
+
+ColorSchemeItemDefine::ColorSchemeItemDefine()
+{
+    mHasBackground = true;
+    mHasForeground = true;
+    mHasFontStyle = true;
 }
 
 bool ColorSchemeItemDefine::hasBackground() const
@@ -338,12 +485,12 @@ void ColorSchemeItemDefine::setHasForeground(bool hasForeground)
     mHasForeground = hasForeground;
 }
 
-bool ColorSchemeItemDefine::getHasFontStyle() const
+bool ColorSchemeItemDefine::hasFontStyle() const
 {
-    return hasFontStyle;
+    return mHasFontStyle;
 }
 
 void ColorSchemeItemDefine::setHasFontStyle(bool value)
 {
-    hasFontStyle = value;
+    mHasFontStyle = value;
 }

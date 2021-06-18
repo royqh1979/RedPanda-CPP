@@ -4,6 +4,23 @@
 #include <QColor>
 #include <qsynedit/highlighter/base.h>
 
+#define EXT_COLOR_SCHEME ".scheme"
+#define EXT_PREFIX_CUSTOM ".custom"
+
+#define COLOR_SCHEME_BREAKPOINT "breakpoint"
+#define COLOR_SCHEME_ERROR  "error"
+#define COLOR_SCHEME_ACTIVE_BREAKPOINT  "active breakpoint"
+#define COLOR_SCHEME_GUTTER "gutter"
+#define COLOR_SCHEME_SELECTION "selected text"
+#define COLOR_SCHEME_FOLD_LINE "fold line"
+#define COLOR_SCHEME_ACTIVE_LINE "active line"
+#define COLOR_SCHEME_WARNING "warning"
+#define COLOR_SCHEME_INDENT_GUIDE_LINE "indent guide line"
+#define COLOR_SCHEME_BRACE_1 "brace/parenthesis/bracket level 1"
+#define COLOR_SCHEME_BRACE_2 "brace/parenthesis/bracket level 2"
+#define COLOR_SCHEME_BRACE_3 "brace/parenthesis/bracket level 3"
+#define COLOR_SCHEME_BRACE_4 "brace/parenthesis/bracket level 4"
+
 class ColorSchemeItem {
 
 public:
@@ -31,7 +48,6 @@ public:
     void read(const QJsonObject& json);
     void write(QJsonObject& json);
 
-
 private:
     QString mName;
     QColor mForeground;
@@ -51,6 +67,8 @@ class ColorScheme
 public:
     explicit ColorScheme();
 
+    static PColorScheme load(const QString& filename);
+
     QMap<QString,PColorSchemeItem> items();
     QString name() const;
     void setName(const QString &name);
@@ -58,14 +76,14 @@ public:
     void read(const QJsonObject& json);
     void write(QJsonObject& json);
 
-    void load(const QString& filename);
+    //void load();
     void save(const QString& filename);
 
     bool bundled() const;
     void setBundled(bool bundled);
 
-    bool modified() const;
-    void setModified(bool modified);
+    bool customed() const;
+    void setCustomed(bool customed);
 
     QString preferThemeType() const;
     void setPreferThemeType(const QString &preferThemeType);
@@ -74,37 +92,37 @@ private:
     QString mName;
     QString mPreferThemeType;
     bool mBundled;
-    bool mModified;
+    bool mCustomed;
 };
 
 class ColorSchemeItemDefine {
 public:
+    explicit ColorSchemeItemDefine();
     bool hasBackground() const;
     void setHasBackground(bool hasBackground);
 
     bool hasForeground() const;
     void setHasForeground(bool hasForeground);
 
-    bool getHasFontStyle() const;
+    bool hasFontStyle() const;
     void setHasFontStyle(bool value);
 
 private:
     bool mHasBackground;
     bool mHasForeground;
-    bool hasFontStyle;
+    bool mHasFontStyle;
 };
 
 using PColorSchemeItemDefine = std::shared_ptr<ColorSchemeItemDefine>;
 
 class ColorManager {
 public:
+    explicit ColorManager();
     void init();
     void reload();
-    QMap<QString,PColorScheme> getSchemesForTheme(QString themeName);
-    QMap<QString,PColorScheme> getSchemes();
+    QStringList getSchemes(const QString& themeType = QString());
 
     bool exists(const QString name);
-    PColorScheme create(const QString& name);
     PColorScheme copy(const QString& source);
     bool rename(const QString& oldName, const QString& newName);
     PColorScheme remove(const QString& name);
@@ -114,8 +132,14 @@ public:
     bool removeDefine(const QString &name);
     PColorSchemeItemDefine getDefine(const QString& name);
 private:
-    QMap<QString,PColorSchemeItemDefine> mSchemeDefine;
+    QString generateFullPathname(const QString& name, bool isBundled, bool isCustomed);
+    QString generateFilename(const QString& name, bool isCustomed);
+    void loadSchemesInDir(const QString& dirName, bool isCustomed);
+    void initItemDefines();
+private:
+    QMap<QString,PColorSchemeItemDefine> mSchemeItemDefine;
     QMap<QString,PColorScheme> mSchemes;
+    PColorSchemeItemDefine mDefaultSchemeItemDefine;
 };
 
 #endif // COLORSCHEME_H
