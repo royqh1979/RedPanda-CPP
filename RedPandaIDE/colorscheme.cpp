@@ -15,50 +15,32 @@ ColorScheme::ColorScheme()
 
 }
 
-QString ColorScheme::name() const
+PColorScheme ColorScheme::fromJson(const QJsonObject &json)
 {
-    return mName;
-}
-
-void ColorScheme::setName(const QString &name)
-{
-    mName = name;
-}
-
-void ColorScheme::read(const QJsonObject &json)
-{
-    if (json.contains("name") && json["name"].isString()) {
-        setName(json["name"].toString());
-    } else {
-        setName("");
-    }
-    mItems.clear();
-    if (json.contains("items") && json["items"].isObject()) {
-        QJsonObject itemsList = json["items"].toObject();
-        for (QString key:itemsList.keys()) {
-            PColorSchemeItem item = std::make_shared<ColorSchemeItem>(key);
-            item->read(itemsList[key].toObject());
+    PColorScheme scheme = std::make_shared<ColorScheme>();
+    scheme->mItems.clear();
+    for (QString key:json.keys()) {
+        if (json[key].isObject()) {
+            scheme->mItems[key]=ColorSchemeItem::fromJson(json[key].toObject());
         }
     }
+    return scheme;
 }
 
-void ColorScheme::write(QJsonObject &json)
+void ColorScheme::toJson(QJsonObject &json)
 {
-    json["name"] = mName;
-    QJsonObject itemsList;
-    for (PColorSchemeItem item:mItems) {
-        if (!item->name().isEmpty()) {
+    for (QString key:mItems.keys()) {
+        PColorSchemeItem item = mItems[key];
+        if (item) {
             QJsonObject itemObject;
-            item->write(itemObject);
-            itemsList[item->name()] = itemObject;
+            item->toJson(itemObject);
+            json[key] = itemObject;
         }
     }
-    json["items"]=itemsList;
 }
 
 PColorScheme ColorScheme::load(const QString &filename)
 {
-    PColorScheme scheme = std::make_shared<ColorScheme>();
     QFile file(filename);
     if (!file.open(QFile::ReadOnly)) {
         throw new FileError(QObject::tr("Can't open file '%1' for read").arg(file.fileName()));
@@ -74,8 +56,7 @@ PColorScheme ColorScheme::load(const QString &filename)
         throw new FileError(QObject::tr("Can't parse json file '%1' is not a color schema config file!")
                             .arg(file.fileName()));
     }
-    scheme->read(doc.object());
-    return scheme;
+    return ColorScheme::fromJson(doc.object());
 }
 
 void ColorScheme::save(const QString &filename)
@@ -85,7 +66,7 @@ void ColorScheme::save(const QString &filename)
         throw new FileError(QObject::tr("Can't open file '%1' for write").arg(file.fileName()));
     }
     QJsonObject json;
-    write(json);
+    toJson(json);
     QJsonDocument doc(json);
     QByteArray content = doc.toJson();
     file.write(content);
@@ -121,8 +102,7 @@ void ColorScheme::setPreferThemeType(const QString &preferThemeType)
     mPreferThemeType = preferThemeType;
 }
 
-ColorSchemeItem::ColorSchemeItem(const QString& name):
-    mName(name),
+ColorSchemeItem::ColorSchemeItem():
     mForeground(),
     mBackground(),
     mBold(false),
@@ -131,11 +111,6 @@ ColorSchemeItem::ColorSchemeItem(const QString& name):
     mStrikeout(false)
 {
 
-}
-
-QString ColorSchemeItem::name() const
-{
-    return mName;
 }
 
 QColor ColorSchemeItem::foreground() const
@@ -198,42 +173,43 @@ void ColorSchemeItem::setStrikeout(bool strikeout)
     mStrikeout = strikeout;
 }
 
-void ColorSchemeItem::read(const QJsonObject &json)
+PColorSchemeItem ColorSchemeItem::fromJson(const QJsonObject &json)
 {
+    PColorSchemeItem item = std::make_shared<ColorSchemeItem>();
     if (json.contains("foreground") && json["foreground"].isString()) {
-        setForeground(json["foreground"].toString());
+        item->setForeground(json["foreground"].toString());
     } else {
-        setForeground(QColor());
+        item->setForeground(QColor());
     }
     if (json.contains("background") && json["background"].isString()) {
-        setBackground(json["background"].toString());
+        item->setBackground(json["background"].toString());
     } else {
-        setBackground(QColor());
+        item->setBackground(QColor());
     }
     if (json.contains("bold") && json["bold"].isBool()) {
-        setBold(json["bold"].toBool());
+        item->setBold(json["bold"].toBool());
     } else {
-        setBold(false);
+        item->setBold(false);
     }
     if (json.contains("italic") && json["italic"].isBool()) {
-        setBold(json["italic"].toBool());
+        item->setBold(json["italic"].toBool());
     } else {
-        setItalic(false);
+        item->setItalic(false);
     }
     if (json.contains("underlined") && json["underlined"].isBool()) {
-        setBold(json["underlined"].toBool());
+        item->setBold(json["underlined"].toBool());
     } else {
-        setUnderlined(false);
+        item->setUnderlined(false);
     }
     if (json.contains("strikeout") && json["strikeout"].isBool()) {
-        setBold(json["strikeout"].toBool());
+        item->setBold(json["strikeout"].toBool());
     } else {
-        setUnderlined(false);
+        item->setUnderlined(false);
     }
-
+    return item;
 }
 
-void ColorSchemeItem::write(QJsonObject &json)
+void ColorSchemeItem::toJson(QJsonObject &json)
 {
     if (mForeground.isValid()) {
         json["foreground"] = mForeground.name();
@@ -307,7 +283,6 @@ PColorScheme ColorManager::copy(const QString &sourceName)
     sourceScheme->save(newFilepath);
     // then load it to the copied
     PColorScheme newScheme = ColorScheme::load(newFilepath);
-    newScheme->setName(newName);
     newScheme->setBundled(false);
     newScheme->setCustomed(false);
     mSchemes[newName]=newScheme;
@@ -337,9 +312,12 @@ void ColorManager::loadSchemesInDir(const QString &dirName, bool isCustomed)
     }
     for (int i=0;i<list.size();i++) {
         QFileInfo fileInfo = list[i];
-        if (fileInfo.fileName().toLower().endsWith(suffix)) {
+        QString name = fileInfo.fileName().toLower();
+        if (name.endsWith(suffix)) {
             PColorScheme scheme = ColorScheme::load(fileInfo.absoluteFilePath());
-            mSchemes[scheme->name()]=scheme;
+            name.remove(name.length()-suffix.length(),suffix.length());
+            name.replace('_',' ');
+            mSchemes[name]=scheme;
         }
     }
 }

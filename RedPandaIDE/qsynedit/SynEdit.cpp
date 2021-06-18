@@ -2317,7 +2317,7 @@ void SynEdit::updateCaret()
     DisplayCoord coord = displayXY();
     QPoint caretPos = RowColumnToPixels(coord);
     int caretWidth=mCharWidth;
-    qDebug()<<"caret"<<mCaretX<<mCaretY;
+    //qDebug()<<"caret"<<mCaretX<<mCaretY;
     if (mCaretY <= mLines->count() && mCaretX <= mLines->getString(mCaretY-1).length()) {
         caretWidth = charColumns(mLines->getString(mCaretY-1)[mCaretX-1])*mCharWidth;
     }

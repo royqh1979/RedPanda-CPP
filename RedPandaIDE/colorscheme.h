@@ -7,25 +7,27 @@
 #define EXT_COLOR_SCHEME ".scheme"
 #define EXT_PREFIX_CUSTOM ".custom"
 
-#define COLOR_SCHEME_BREAKPOINT "breakpoint"
-#define COLOR_SCHEME_ERROR  "error"
-#define COLOR_SCHEME_ACTIVE_BREAKPOINT  "active breakpoint"
-#define COLOR_SCHEME_GUTTER "gutter"
-#define COLOR_SCHEME_SELECTION "selected text"
-#define COLOR_SCHEME_FOLD_LINE "fold line"
-#define COLOR_SCHEME_ACTIVE_LINE "active line"
-#define COLOR_SCHEME_WARNING "warning"
-#define COLOR_SCHEME_INDENT_GUIDE_LINE "indent guide line"
+#define COLOR_SCHEME_BREAKPOINT "Breakpoint"
+#define COLOR_SCHEME_ERROR  "Error"
+#define COLOR_SCHEME_ACTIVE_BREAKPOINT  "Active Breakpoint"
+#define COLOR_SCHEME_GUTTER "Gutter"
+#define COLOR_SCHEME_SELECTION "Selected text"
+#define COLOR_SCHEME_FOLD_LINE "Fold Line"
+#define COLOR_SCHEME_ACTIVE_LINE "Active Line"
+#define COLOR_SCHEME_WARNING "Warning"
+#define COLOR_SCHEME_INDENT_GUIDE_LINE "Indent Guide Line"
 #define COLOR_SCHEME_BRACE_1 "brace/parenthesis/bracket level 1"
 #define COLOR_SCHEME_BRACE_2 "brace/parenthesis/bracket level 2"
 #define COLOR_SCHEME_BRACE_3 "brace/parenthesis/bracket level 3"
 #define COLOR_SCHEME_BRACE_4 "brace/parenthesis/bracket level 4"
 
+
+class ColorSchemeItem;
+using PColorSchemeItem = std::shared_ptr<ColorSchemeItem>;
 class ColorSchemeItem {
 
 public:
-    explicit ColorSchemeItem(const QString& name);
-    QString name() const;
+    explicit ColorSchemeItem();
 
     QColor foreground() const;
     void setForeground(const QColor &foreground);
@@ -45,11 +47,10 @@ public:
     bool strikeout() const;
     void setStrikeout(bool strikeout);
 
-    void read(const QJsonObject& json);
-    void write(QJsonObject& json);
+    static PColorSchemeItem fromJson(const QJsonObject& json);
+    void toJson(QJsonObject& json);
 
 private:
-    QString mName;
     QColor mForeground;
     QColor mBackground;
     bool mBold;
@@ -58,7 +59,6 @@ private:
     bool mStrikeout;
 };
 
-using PColorSchemeItem = std::shared_ptr<ColorSchemeItem>;
 
 class ColorScheme;
 using PColorScheme = std::shared_ptr<ColorScheme>;
@@ -70,11 +70,9 @@ public:
     static PColorScheme load(const QString& filename);
 
     QMap<QString,PColorSchemeItem> items();
-    QString name() const;
-    void setName(const QString &name);
 
-    void read(const QJsonObject& json);
-    void write(QJsonObject& json);
+    static PColorScheme fromJson(const QJsonObject& json);
+    void toJson(QJsonObject& json);
 
     //void load();
     void save(const QString& filename);
@@ -89,7 +87,6 @@ public:
     void setPreferThemeType(const QString &preferThemeType);
 private:
     QMap<QString,PColorSchemeItem> mItems;
-    QString mName;
     QString mPreferThemeType;
     bool mBundled;
     bool mCustomed;

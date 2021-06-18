@@ -1,0 +1,184 @@
+{
+    "Assembler" : {
+        "foreground" : "#FF00FF",
+        "bold" : false,
+        "italic" : false,
+        "underlined" : false,
+        "strikeout" : false
+    },
+    "Character" : {
+        "foreground" : "#D69D85",
+        "bold" : false,
+        "italic" : false,
+        "underlined" : false,
+        "strikeout" : false
+    },
+    "Class" : {
+        "foreground" : "#4EC9B0",
+        "bold" : false,
+        "italic" : false,
+        "underlined" : false,
+        "strikeout" : false
+    },
+    "Comment" : {
+        "foreground" : "#6A9955",
+        "bold" : false,
+        "italic" : false,
+        "underlined" : false,
+        "strikeout" : false
+    },
+    "Float" : {
+        "foreground" : "#B5CEA8",
+        "bold" : false,
+        "italic" : false,
+        "underlined" : false,
+        "strikeout" : false
+    },
+    "Function" : {
+        "foreground" : "#BFBFFF",
+        "bold" : false,
+        "italic" : false,
+        "underlined" : false,
+        "strikeout" : false
+    },
+    "Global variable" : {
+        "foreground" : "#BFBFFF",
+        "bold" : false,
+        "italic" : false,
+        "underlined" : false,
+        "strikeout" : false
+    },
+    "Hexadecimal" : {
+        "foreground" : "#B5CEA8",
+        "bold" : false,
+        "italic" : false,
+        "underlined" : false,
+        "strikeout" : false
+    },
+    "Identifier" : {
+        "foreground" : "#DCDCAA",
+        "bold" : false,
+        "italic" : false,
+        "underlined" : false,
+        "strikeout" : false
+    },
+    "Illegal Char" : {
+        "foreground" : "#FF3C3C",
+        "bold" : false,
+        "italic" : false,
+        "underlined" : false,
+        "strikeout" : false
+    },
+    "Local Variable" : {
+        "foreground" : "#9CDCFE",
+        "bold" : false,
+        "italic" : false,
+        "underlined" : false,
+        "strikeout" : false
+    },
+    "Number" : {
+        "foreground" : "#9CDCFE",
+        "bold" : false,
+        "italic" : false,
+        "underlined" : false,
+        "strikeout" : false
+    },
+    "Octal" : {
+        "foreground" : "#B5CEA8",
+        "bold" : false,
+        "italic" : false,
+        "underlined" : false,
+        "strikeout" : false
+    },
+    "Preprocessor" : {
+        "foreground" : "#C586C0",
+        "bold" : false,
+        "italic" : false,
+        "underlined" : false,
+        "strikeout" : false
+    },
+    "Reserved Word" : {
+        "foreground" : "#569CD6",
+        "bold" : false,
+        "italic" : false,
+        "underlined" : false,
+        "strikeout" : false
+    },
+    "Space" : {
+        "foreground" : "#505050",
+        "background" : "#1E1E1E",
+        "bold" : false,
+        "italic" : false,
+        "underlined" : false,
+        "strikeout" : false
+    },
+    "String" : {
+        "foreground" : "#D69D85",
+        "bold" : false,
+        "italic" : false,
+        "underlined" : false,
+        "strikeout" : false
+    },
+    "Symbol" : {
+        "foreground" : "#D4D4D4",
+        "bold" : false,
+        "italic" : false,
+        "underlined" : false,
+        "strikeout" : false
+    },
+    "Variable" : {
+        "foreground" : "#9CDCFE",
+        "bold" : false,
+        "italic" : false,
+        "underlined" : false,
+        "strikeout" : false
+    },
+    "Escape sequences" : {
+        "foreground" : "#B5CEA8",
+        "bold" : false,
+        "italic" : false,
+        "underlined" : false,
+        "strikeout" : false
+    },
+    "Selected text" : {
+        "foreground" : "#000000",
+        "background" : "#808080"
+    },
+    "Gutter" : {
+        "foreground" : "#858585",
+        "background" : "#1E1E1E"
+    },
+    "Breakpoint": {
+    },
+    "Error" : {
+        "foreground" : "#C0C0C0"
+    },
+    "Active Breakpoint" : {
+        "foreground" : "#FFFFCE",
+        "background" : "#00376F"
+    },
+    "Fold Line" : {
+        "foreground" : "#C0C0C0"
+    },
+    "Active Line" : {
+        "background" : "#323232"
+    },
+    "Warning" : {
+        "foreground" : "#FF8040"
+    },
+    "Indent Guide Line" : {
+        "foreground" : "#C0C0C0"
+    },
+    "brace/parenthesis/bracket level 1" : {
+        "foreground" : "#D4D4D4"
+    },
+    "brace/parenthesis/bracket level 2" : {
+        "foreground" : "#9CDCFE"
+    },
+    "brace/parenthesis/bracket level 3" : {
+        "foreground" : "#FF00FF"
+    },
+    "brace/parenthesis/bracket level 4" : {
+        "foreground" : "#C586C0"
+    }
+}

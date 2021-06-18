@@ -107,7 +107,7 @@ QString Settings::Dirs::data(Settings::Dirs::DataType dataType) const
     case DataType::None:
         return dataDir;
     case DataType::ColorSheme:
-        return includeTrailingPathDelimiter(dataDir)+"scheme";
+        return ":/colorschemes/colorschemes";
     }
 }
 
