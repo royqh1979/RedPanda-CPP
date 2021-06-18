@@ -8,6 +8,8 @@
 #include "settings.h"
 #include "qsynedit/Constants.h"
 
+
+ColorManager * pColorManager;
 ColorScheme::ColorScheme()
 {
 
@@ -253,6 +255,7 @@ ColorManager::ColorManager()
 {
     mDefaultSchemeItemDefine = std::make_shared<ColorSchemeItemDefine>();
     initItemDefines();
+    init();
 }
 
 void ColorManager::init()

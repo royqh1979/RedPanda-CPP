@@ -142,4 +142,6 @@ private:
     PColorSchemeItemDefine mDefaultSchemeItemDefine;
 };
 
+extern ColorManager * pColorManager;
+
 #endif // COLORSCHEME_H

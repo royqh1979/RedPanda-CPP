@@ -14,6 +14,7 @@
 
 #define SETTING_DIRS "Dirs"
 #define SETTING_EDITOR "Editor"
+#define SETTING_ENVIRONMENT "Environment"
 #define SETTING_COMPILTER_SETS "CompilerSets"
 #define SETTING_COMPILTER_SETS_DEFAULT_INDEX "defaultIndex"
 #define SETTING_COMPILTER_SETS_COUNT "count"
@@ -276,6 +277,30 @@ public:
         void doLoad() override;
     };
 
+    class Environment: public _Base {
+    public:
+        explicit Environment(Settings * settings);
+        QString theme() const;
+        void setTheme(const QString &theme);
+
+        QString interfaceFont() const;
+        void setInterfaceFont(const QString &interfaceFont);
+
+        int interfaceFontSize() const;
+        void setInterfaceFontSize(int interfaceFontSize);
+
+    private:
+
+        //Appearence
+        QString mTheme;
+        QString mInterfaceFont;
+        int mInterfaceFontSize;
+        // _Base interface
+    protected:
+        void doSave() override;
+        void doLoad() override;
+    };
+
     class CompilerSet {
     public:
         explicit CompilerSet(const QString& compilerFolder = QString());
@@ -447,6 +472,7 @@ public:
     Dirs& dirs();
     Editor& editor();
     CompilerSets& compilerSets();
+    Environment& environment();
     QString filename() const;
 
 private:
@@ -454,6 +480,7 @@ private:
     QSettings mSettings;
     Dirs mDirs;
     Editor mEditor;
+    Environment mEnvironment;
     CompilerSets mCompilerSets;
 };
 

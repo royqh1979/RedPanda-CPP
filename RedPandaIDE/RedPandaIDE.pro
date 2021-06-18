@@ -40,6 +40,7 @@ SOURCES += \
     settingsdialog/editorcolorschemewidget.cpp \
     settingsdialog/editorfontwidget.cpp \
     settingsdialog/editorgeneralwidget.cpp \
+    settingsdialog/environmentappearencewidget.cpp \
     settingsdialog/settingsdialog.cpp \
     settingsdialog/settingswidget.cpp \
     systemconsts.cpp \
@@ -79,6 +80,7 @@ HEADERS += \
     settingsdialog/editorcolorschemewidget.h \
     settingsdialog/editorfontwidget.h \
     settingsdialog/editorgeneralwidget.h \
+    settingsdialog/environmentappearencewidget.h \
     settingsdialog/settingsdialog.h \
     settingsdialog/settingswidget.h \
     systemconsts.h \
@@ -95,6 +97,7 @@ FORMS += \
     settingsdialog/editorcolorschemewidget.ui \
     settingsdialog/editorfontwidget.ui \
     settingsdialog/editorgeneralwidget.ui \
+    settingsdialog/environmentappearencewidget.ui \
     settingsdialog/settingsdialog.ui
 
 TRANSLATIONS += \
@@ -106,6 +109,9 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 RESOURCES += \
+    themes/dark/dark.qrc \
+    themes/light/light.qrc \
+    themes/dracula/dracula.qrc \
     icons.qrc
 
 #win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../../QScintilla/src/release/ -lqscintilla2_qt5d

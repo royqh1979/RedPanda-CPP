@@ -12,3 +12,13 @@ EditorColorSchemeWidget::~EditorColorSchemeWidget()
 {
     delete ui;
 }
+
+void EditorColorSchemeWidget::doLoad()
+{
+
+}
+
+void EditorColorSchemeWidget::doSave()
+{
+
+}

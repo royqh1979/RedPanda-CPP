@@ -6,8 +6,10 @@
 #include "editorfontwidget.h"
 #include "editorclipboardwidget.h"
 #include "editorcolorschemewidget.h"
+#include "environmentappearencewidget.h"
 #include <QDebug>
 #include <QMessageBox>
+#include <QModelIndex>
 
 SettingsDialog::SettingsDialog(QWidget *parent) :
     QDialog(parent),
@@ -20,6 +22,10 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     model.setHorizontalHeaderLabels(QStringList());
 
     ui->btnApply->setEnabled(false);
+
+    pEnvironmentAppearenceWidget = new EnvironmentAppearenceWidget(tr("Appearence"),tr("Environment"));
+    pEnvironmentAppearenceWidget->init();
+    addWidget(pEnvironmentAppearenceWidget);
 
     pCompilerSetOptionWidget = new CompilerSetOptionWidget(tr("Compiler Set"),tr("Compiler"));
     pCompilerSetOptionWidget->init();
@@ -40,6 +46,18 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     pEditorColorSchemeWidget = new EditorColorSchemeWidget(tr("Color"),tr("Editor"));
     pEditorColorSchemeWidget->init();
     addWidget(pEditorColorSchemeWidget);
+
+
+
+    ui->widgetsView->expandAll();
+    //select the first widget of the first group
+    auto groupIndex = ui->widgetsView->model()->index(0,0);
+    auto widgetIndex = ui->widgetsView->model()->index(0,0, groupIndex);
+    ui->widgetsView->selectionModel()->setCurrentIndex(
+                widgetIndex,
+                QItemSelectionModel::Select
+                );
+    on_widgetsView_clicked(widgetIndex);
 }
 
 SettingsDialog::~SettingsDialog()

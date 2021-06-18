@@ -10,6 +10,7 @@
 #include <QMessageBox>
 #include <QStringList>
 #include "common.h"
+#include "colorscheme.h"
 
 Settings* createAppSettings(const QString& filepath = QString()) {
     QString filename;
@@ -66,6 +67,11 @@ int main(int argc, char *argv[])
     auto settings = std::unique_ptr<Settings>(pSettings);
     settings->compilerSets().loadSets();
     settings->editor().load();
+    settings->environment().load();
+
+    pColorManager = new ColorManager();
+
+
 
     //settings->compilerSets().addSets("e:/workspace/contributes/Dev-CPP/MinGW32_GCC92");
 //    settings->compilerSets().findSets();

@@ -28,6 +28,8 @@ public:
     void updateEditorSettings();
     void updateEditorActions();
 
+    void applySettings();
+
 protected:
     void openFiles(const QStringList& files);
     void openFile(const QString& filename);

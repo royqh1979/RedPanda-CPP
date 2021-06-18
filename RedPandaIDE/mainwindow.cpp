@@ -71,6 +71,8 @@ MainWindow::MainWindow(QWidget *parent)
     ui->actionEncode_in_UTF_8->setCheckable(true);
 
     updateEditorActions();
+
+    applySettings();
 }
 
 MainWindow::~MainWindow()
@@ -152,6 +154,14 @@ void MainWindow::updateEditorActions()
         ui->actionUnfoldAll->setEnabled(e->lines()->count()>0);
     }
 
+}
+
+void MainWindow::applySettings()
+{
+    changeTheme(pSettings->environment().theme());
+    QFont font(pSettings->environment().interfaceFont(),
+               pSettings->environment().interfaceFontSize());
+    dynamic_cast<QApplication*>(QApplication::instance())->setFont(font);
 }
 
 void MainWindow::updateStatusbarForLineCol()

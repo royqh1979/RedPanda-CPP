@@ -16,6 +16,7 @@ class EditorFontWidget;
 class EditorClipboardWidget;
 class PCompilerSet;
 class EditorColorSchemeWidget;
+class EnvironmentAppearenceWidget;
 class SettingsWidget;
 class SettingsDialog : public QDialog
 {
@@ -50,6 +51,7 @@ private:
     EditorFontWidget* pEditorFontWidget;
     EditorClipboardWidget *pEditorClipboardWidget;
     EditorColorSchemeWidget *pEditorColorSchemeWidget;
+    EnvironmentAppearenceWidget* pEnvironmentAppearenceWidget;
 };
 
 #endif // SETTINGSDIALOG_H

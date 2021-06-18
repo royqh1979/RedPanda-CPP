@@ -13,6 +13,7 @@
 #include <QtGlobal>
 #include <QDebug>
 #include <windows.h>
+#include <QStyleFactory>
 
 const QByteArray GuessTextEncoding(const QByteArray& text){
     bool allAscii;
@@ -400,5 +401,26 @@ QString TrimLeft(const QString &s)
         return s.mid(i);
     } else {
         return QString();
+    }
+}
+
+void changeTheme(const QString &themeName)
+{
+    if (themeName.isEmpty() || themeName == "default") {
+        QApplication::setStyle("Fusion");
+        return ;
+    }
+    QStyleFactory styleFactory;
+    if (styleFactory.keys().contains(themeName)) {
+        QApplication::setStyle(themeName);
+    }
+    QFile f(QString(":/themes/%1/style.qss").arg(themeName));
+
+    if (!f.exists())   {
+        qDebug()<<"Unable to set stylesheet, file not found\n";
+    } else {
+        f.open(QFile::ReadOnly | QFile::Text);
+        QTextStream ts(&f);
+        dynamic_cast<QApplication*>(QApplication::instance())->setStyleSheet(ts.readAll());
     }
 }

@@ -17,6 +17,7 @@ Settings::Settings(const QString &filename):
     mSettings(filename,QSettings::IniFormat),
     mDirs(this),
     mEditor(this),
+    mEnvironment(this),
     mCompilerSets(this)
 {
 }
@@ -76,6 +77,11 @@ Settings::Editor &Settings::editor()
 Settings::CompilerSets &Settings::compilerSets()
 {
     return mCompilerSets;
+}
+
+Settings::Environment &Settings::environment()
+{
+    return mEnvironment;
 }
 
 QString Settings::filename() const
@@ -1800,4 +1806,55 @@ Settings::PCompilerSet Settings::CompilerSets::loadSet(int index)
 
     pSet->setDefines();
     return pSet;
+}
+
+Settings::Environment::Environment(Settings *settings):_Base(settings, SETTING_ENVIRONMENT)
+{
+
+}
+
+void Settings::Environment::doLoad()
+{
+    //Appearence
+    mTheme = stringValue("theme","default");
+    mInterfaceFont = stringValue("interface font","Segoe UI");
+    mInterfaceFontSize = intValue("interface font size",9);
+}
+
+int Settings::Environment::interfaceFontSize() const
+{
+    return mInterfaceFontSize;
+}
+
+void Settings::Environment::setInterfaceFontSize(int interfaceFontSize)
+{
+    mInterfaceFontSize = interfaceFontSize;
+}
+
+void Settings::Environment::doSave()
+{
+    //Appearence
+    saveValue("theme", mTheme);
+    saveValue("interface font", mInterfaceFont);
+    saveValue("interface font size", mInterfaceFontSize);
+}
+
+QString Settings::Environment::interfaceFont() const
+{
+    return mInterfaceFont;
+}
+
+void Settings::Environment::setInterfaceFont(const QString &interfaceFont)
+{
+    mInterfaceFont = interfaceFont;
+}
+
+QString Settings::Environment::theme() const
+{
+    return mTheme;
+}
+
+void Settings::Environment::setTheme(const QString &theme)
+{
+    mTheme = theme;
 }
