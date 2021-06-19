@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/colorschemes">
+        <file>colorschemes/vs_code.scheme</file>
+    </qresource>
+</RCC>

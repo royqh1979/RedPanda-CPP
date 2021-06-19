@@ -365,9 +365,6 @@ void ColorManager::initItemDefines()
     //Syntax Error
     addDefine(COLOR_SCHEME_ERROR,true,false,false);
     addDefine(COLOR_SCHEME_WARNING,true,false,false);
-
-
-#define COLOR_SCHEME_INDENT_GUIDE_LINE "indent guide line"
 }
 
 bool ColorManager::rename(const QString &oldName, const QString &newName)

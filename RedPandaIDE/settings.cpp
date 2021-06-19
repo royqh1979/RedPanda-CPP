@@ -109,6 +109,7 @@ QString Settings::Dirs::data(Settings::Dirs::DataType dataType) const
     case DataType::ColorSheme:
         return ":/colorschemes/colorschemes";
     }
+    return "";
 }
 
 QString Settings::Dirs::config(Settings::Dirs::DataType dataType) const
@@ -122,7 +123,7 @@ QString Settings::Dirs::config(Settings::Dirs::DataType dataType) const
     case DataType::ColorSheme:
         return includeTrailingPathDelimiter(configDir)+"scheme";
     }
-
+    return "";
 }
 
 void Settings::Dirs::doSave()
