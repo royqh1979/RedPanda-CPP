@@ -1,0 +1,195 @@
+{
+	"Assembler" : {
+		"foreground" : "#79ABFF",
+		"background" : "#1E1E1E",
+		"bold" : false,
+		"italic" : false,
+		"underlined" : false,
+		"strikeout" : false
+	},
+	"Character" : {
+		"foreground" : "#D25252",
+		"bold" : false,
+		"italic" : false,
+		"underlined" : false,
+		"strikeout" : false
+	},
+	"Class" : {
+		"foreground" : "#79ABFF",
+		"background" : "#1E1E1E",
+		"bold" : false,
+		"italic" : false,
+		"underlined" : false,
+		"strikeout" : false
+	},
+	"Comment" : {
+		"foreground" : "#C7DD0C",
+		"background" : "#1E1E1E",
+		"bold" : false,
+		"italic" : false,
+		"underlined" : false,
+		"strikeout" : false
+	},
+	"Escape sequences" : {
+		"foreground" : "#7FB347",
+		"bold" : false,
+		"italic" : false,
+		"underlined" : false,
+		"strikeout" : false
+	},
+	"Float" : {
+		"foreground" : "#7FB347",
+		"background" : "#1E1E1E",
+		"bold" : false,
+		"italic" : false,
+		"underlined" : false,
+		"strikeout" : false
+	},
+	"Function" : {
+		"foreground" : "#BED6FF",
+		"bold" : false,
+		"italic" : false,
+		"underlined" : false,
+		"strikeout" : false
+	},
+	"Global variable" : {
+		"foreground" : "#BED6FF",
+		"bold" : false,
+		"italic" : false,
+		"underlined" : false,
+		"strikeout" : false
+	},
+	"Hexadecimal" : {
+		"foreground" : "#7FB347",
+		"background" : "#1E1E1E",
+		"bold" : false,
+		"italic" : false,
+		"underlined" : false,
+		"strikeout" : false
+	},
+	"Identifier" : {
+		"foreground" : "#BED6FF",
+		"bold" : false,
+		"italic" : false,
+		"underlined" : false,
+		"strikeout" : false
+	},
+	"Illegal Char" : {
+		"foreground" : "#F44747",
+		"bold" : false,
+		"italic" : false,
+		"underlined" : false,
+		"strikeout" : false
+	},
+	"Local Variable" : {
+		"foreground" : "#BED6FF",
+		"bold" : false,
+		"italic" : false,
+		"underlined" : false,
+		"strikeout" : false
+	},
+	"Number" : {
+		"foreground" : "#7FB347",
+		"background" : "#1E1E1E",
+		"bold" : false,
+		"italic" : false,
+		"underlined" : false,
+		"strikeout" : false
+	},
+	"Octal" : {
+		"foreground" : "#7FB347",
+		"background" : "#1E1E1E",
+		"bold" : false,
+		"italic" : false,
+		"underlined" : false,
+		"strikeout" : false
+	},
+	"Preprocessor" : {
+		"foreground" : "#79ABFF",
+		"background" : "#1E1E1E",
+		"bold" : false,
+		"italic" : false,
+		"underlined" : false,
+		"strikeout" : false
+	},
+	"Reserved Word" : {
+		"foreground" : "#FFFFFF",
+		"background" : "#1E1E1E",
+		"bold" : false,
+		"italic" : false,
+		"underlined" : false,
+		"strikeout" : false
+	},
+	"Space" : {
+		"foreground" : "#505050",
+		"background" : "#1E1E1E",
+		"bold" : false,
+		"italic" : false,
+		"underlined" : false,
+		"strikeout" : false
+	},
+	"String" : {
+		"foreground" : "#FFC600",
+		"background" : "#1E1E1E",
+		"bold" : false,
+		"italic" : false,
+		"underlined" : false,
+		"strikeout" : false
+	},
+	"Symbol" : {
+		"foreground" : "#D9E577",
+		"background" : "#1E1E1E",
+		"bold" : false,
+		"italic" : false,
+		"underlined" : false,
+		"strikeout" : false
+	},
+	"Variable" : {
+		"foreground" : "#BED6FF",
+		"bold" : false,
+		"italic" : false,
+		"underlined" : false,
+		"strikeout" : false
+	},
+	"Selected text" : {
+		"foreground" : "#D0D0D0",
+		"background" : "#000000"
+	},
+	"Gutter" : {
+		"foreground" : "#D0D0D0",
+		"background" : "#323232"
+	},
+	"Breakpoint" : {
+		"foreground" : "#FFFFFF",
+		"background" : "#808000"
+	},
+	"Error" : {
+		"foreground" : "#FFFFFF",
+		"background" : "#FF2A55"
+	},
+	"Active Breakpoint" : {
+		"foreground" : "#FFFFFF",
+		"background" : "#33CCCC"
+	},
+	"Active Line" : {
+		"background" : "#323232"
+	},
+	"Warning" : {
+		"foreground" : "#FFAA00"
+	},
+	"Indent Guide Line" : {
+		"foreground" : "#C0C0C0"
+	},
+	"brace/parenthesis/bracket level 1" : {
+		"foreground" : "#FFFFFF"
+	},
+	"brace/parenthesis/bracket level 2" : {
+		"foreground" : "#D9E577"
+	},
+	"brace/parenthesis/bracket level 3" : {
+		"foreground" : "#FFC600"
+	},
+	"brace/parenthesis/bracket level 4" : {
+		"foreground" : "#BED6FF"
+	}
+}

@@ -104,10 +104,18 @@ public:
     bool hasFontStyle() const;
     void setHasFontStyle(bool value);
 
+    QString group() const;
+    void setGroup(const QString &group);
+
+    QString displayName() const;
+    void setDisplayName(const QString &displayName);
+
 private:
     bool mHasBackground;
     bool mHasForeground;
     bool mHasFontStyle;
+    QString mGroup;
+    QString mDisplayName;
 };
 
 using PColorSchemeItemDefine = std::shared_ptr<ColorSchemeItemDefine>;
@@ -118,14 +126,16 @@ public:
     void init();
     void reload();
     QStringList getSchemes(const QString& themeType = QString());
+    QStringList getDefines();
 
     bool exists(const QString name);
     PColorScheme copy(const QString& source);
     bool rename(const QString& oldName, const QString& newName);
     PColorScheme remove(const QString& name);
     PColorScheme get(const QString& name);
+    PColorSchemeItem getItem(const QString& schemeName, const QString& itemName);
     bool isValidName(const QString& name);
-    void addDefine(const QString& name, bool hasForeground, bool hasBackground, bool hasFontStyle);
+    void addDefine(const QString& name, const QString& displayName, const QString& group, bool hasForeground, bool hasBackground, bool hasFontStyle);
     bool removeDefine(const QString &name);
     PColorSchemeItemDefine getDefine(const QString& name);
 private:
@@ -134,7 +144,7 @@ private:
     void loadSchemesInDir(const QString& dirName, bool isCustomed);
     void initItemDefines();
 private:
-    QMap<QString,PColorSchemeItemDefine> mSchemeItemDefine;
+    QMap<QString,PColorSchemeItemDefine> mSchemeItemDefines;
     QMap<QString,PColorScheme> mSchemes;
     PColorSchemeItemDefine mDefaultSchemeItemDefine;
 };

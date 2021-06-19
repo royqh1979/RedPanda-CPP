@@ -63,30 +63,30 @@
     <message>
         <location filename="settingsdialog/compilersetdirectorieswidget.ui" line="14"/>
         <source>Form</source>
-        <translation type="unfinished"></translation>
+        <translation>表单</translation>
     </message>
     <message>
         <location filename="settingsdialog/compilersetdirectorieswidget.ui" line="29"/>
         <location filename="settingsdialog/compilersetdirectorieswidget.ui" line="32"/>
         <source>Add</source>
-        <translation type="unfinished"></translation>
+        <translation>添加</translation>
     </message>
     <message>
         <location filename="settingsdialog/compilersetdirectorieswidget.ui" line="47"/>
         <location filename="settingsdialog/compilersetdirectorieswidget.ui" line="50"/>
         <source>Delete</source>
-        <translation type="unfinished"></translation>
+        <translation>删除</translation>
     </message>
     <message>
         <location filename="settingsdialog/compilersetdirectorieswidget.ui" line="65"/>
         <location filename="settingsdialog/compilersetdirectorieswidget.ui" line="68"/>
         <source>Remove Invalid</source>
-        <translation type="unfinished"></translation>
+        <translation>删除非法文件夹</translation>
     </message>
     <message>
         <location filename="settingsdialog/compilersetdirectorieswidget.cpp" line="52"/>
         <source>Choose Folder</source>
-        <translation type="unfinished"></translation>
+        <translation>选择文件夹</translation>
     </message>
 </context>
 <context>
@@ -94,12 +94,12 @@
     <message>
         <location filename="settingsdialog/compilersetoptionwidget.ui" line="14"/>
         <source>Form</source>
-        <translation type="unfinished"></translation>
+        <translation>表单</translation>
     </message>
     <message>
         <location filename="settingsdialog/compilersetoptionwidget.ui" line="20"/>
         <source>Compiler set to config</source>
-        <translation type="unfinished"></translation>
+        <translation>编译器配置方案</translation>
     </message>
     <message>
         <location filename="settingsdialog/compilersetoptionwidget.ui" line="35"/>
@@ -114,52 +114,52 @@
         <location filename="settingsdialog/compilersetoptionwidget.ui" line="345"/>
         <location filename="settingsdialog/compilersetoptionwidget.ui" line="360"/>
         <source>...</source>
-        <translation type="unfinished"></translation>
+        <translation>...</translation>
     </message>
     <message>
         <location filename="settingsdialog/compilersetoptionwidget.ui" line="105"/>
         <source>General</source>
-        <translation type="unfinished">通用</translation>
+        <translation>基本选项</translation>
     </message>
     <message>
         <location filename="settingsdialog/compilersetoptionwidget.ui" line="111"/>
         <source>Add the following arguments when calling the compiler</source>
-        <translation type="unfinished"></translation>
+        <translation>编译时加入下列选项：</translation>
     </message>
     <message>
         <location filename="settingsdialog/compilersetoptionwidget.ui" line="121"/>
         <source>Add the following arguments when calling the linker</source>
-        <translation type="unfinished"></translation>
+        <translation>链接时加入下列选项</translation>
     </message>
     <message>
         <location filename="settingsdialog/compilersetoptionwidget.ui" line="131"/>
         <source>Add Charset arguments when calling the compiler</source>
-        <translation type="unfinished"></translation>
+        <translation>编译时自动加入字符编码选项</translation>
     </message>
     <message>
         <location filename="settingsdialog/compilersetoptionwidget.ui" line="139"/>
         <source>Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>编译/链接选项</translation>
     </message>
     <message>
         <location filename="settingsdialog/compilersetoptionwidget.ui" line="165"/>
         <source>Directories</source>
-        <translation type="unfinished"></translation>
+        <translation>文件夹</translation>
     </message>
     <message>
         <location filename="settingsdialog/compilersetoptionwidget.ui" line="194"/>
         <source>Programs</source>
-        <translation type="unfinished"></translation>
+        <translation>程序</translation>
     </message>
     <message>
         <location filename="settingsdialog/compilersetoptionwidget.ui" line="206"/>
         <source>TextLabel</source>
-        <translation type="unfinished">选项</translation>
+        <translation>选项</translation>
     </message>
     <message>
         <location filename="settingsdialog/compilersetoptionwidget.ui" line="222"/>
         <source>Resource Compiler（windres)</source>
-        <translation type="unfinished"></translation>
+        <translation>资源编辑器(winres)</translation>
     </message>
     <message>
         <location filename="settingsdialog/compilersetoptionwidget.ui" line="232"/>
@@ -370,48 +370,46 @@ Are you really want to continue?</source>
     <message>
         <location filename="settingsdialog/editorcolorschemewidget.ui" line="29"/>
         <source>Scheme</source>
-        <translation type="unfinished"></translation>
+        <translation>配色方案</translation>
     </message>
     <message>
         <location filename="settingsdialog/editorcolorschemewidget.ui" line="39"/>
         <source>...</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
-        <location filename="settingsdialog/editorcolorschemewidget.ui" line="111"/>
-        <location filename="settingsdialog/editorcolorschemewidget.ui" line="168"/>
         <source>TextLabel</source>
-        <translation type="unfinished">选项</translation>
+        <translation type="obsolete">选项</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/editorcolorschemewidget.ui" line="125"/>
+        <source>Foreground:</source>
+        <translation>前景色</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/editorcolorschemewidget.ui" line="168"/>
+        <source>Font Styles</source>
+        <translation>字体样式</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/editorcolorschemewidget.ui" line="174"/>
+        <source>Bold</source>
+        <translation>加粗</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/editorcolorschemewidget.ui" line="181"/>
+        <source>Italic</source>
+        <translation>斜体</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/editorcolorschemewidget.ui" line="188"/>
+        <source>Underlined</source>
+        <translation>下划线</translation>
     </message>
     <message>
         <location filename="settingsdialog/editorcolorschemewidget.ui" line="118"/>
-        <source>Foreground:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="settingsdialog/editorcolorschemewidget.ui" line="138"/>
-        <source>Font Styles</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="settingsdialog/editorcolorschemewidget.ui" line="144"/>
-        <source>Bold</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="settingsdialog/editorcolorschemewidget.ui" line="151"/>
-        <source>Italic</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="settingsdialog/editorcolorschemewidget.ui" line="158"/>
-        <source>Underlined</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="settingsdialog/editorcolorschemewidget.ui" line="175"/>
         <source>Background:</source>
-        <translation type="unfinished"></translation>
+        <translation>背景色</translation>
     </message>
 </context>
 <context>
@@ -419,7 +417,7 @@ Are you really want to continue?</source>
     <message>
         <location filename="settingsdialog/editorfontwidget.ui" line="14"/>
         <source>Form</source>
-        <translation type="unfinished"></translation>
+        <translation>表单</translation>
     </message>
     <message>
         <location filename="settingsdialog/editorfontwidget.ui" line="29"/>
@@ -902,7 +900,7 @@ Are you really want to continue?</source>
     <message>
         <location filename="editorlist.cpp" line="73"/>
         <source>Save changes to %1?</source>
-        <translation type="unfinished"></translation>
+        <translation>将修改保存到&quot;%1&quot;？</translation>
     </message>
     <message>
         <source>Save changes to %s?</source>
@@ -916,264 +914,469 @@ Are you really want to continue?</source>
     <message>
         <location filename="systemconsts.cpp" line="10"/>
         <source>C files</source>
-        <translation type="unfinished"></translation>
+        <translation>C语言文件</translation>
     </message>
     <message>
         <location filename="systemconsts.cpp" line="11"/>
         <source>C++ files</source>
-        <translation type="unfinished"></translation>
+        <translation>C++语言文件</translation>
     </message>
     <message>
         <location filename="systemconsts.cpp" line="12"/>
         <source>Header files</source>
-        <translation type="unfinished"></translation>
+        <translation>头文件</translation>
     </message>
     <message>
         <location filename="systemconsts.cpp" line="13"/>
         <source>Text files</source>
-        <translation type="unfinished"></translation>
+        <translation>文本文件</translation>
     </message>
     <message>
         <location filename="systemconsts.cpp" line="14"/>
         <source>All files</source>
-        <translation type="unfinished"></translation>
+        <translation>所有文件</translation>
     </message>
     <message>
+        <location filename="colorscheme.cpp" line="464"/>
         <location filename="main.cpp" line="33"/>
         <location filename="main.cpp" line="40"/>
         <source>Error</source>
-        <translation type="unfinished"></translation>
+        <translation>错误</translation>
     </message>
     <message>
         <location filename="main.cpp" line="34"/>
         <source>Can&apos;t create configuration folder %1</source>
-        <translation type="unfinished"></translation>
+        <translation>无法创建配置文件夹&quot;%1&quot;</translation>
     </message>
     <message>
         <location filename="main.cpp" line="41"/>
         <source>Can&apos;t write to configuration file %1</source>
-        <translation type="unfinished"></translation>
+        <translation>无法写入配置文件夹&quot;%1&quot;</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1307"/>
+        <location filename="settings.cpp" line="1308"/>
         <source>C options</source>
-        <translation type="unfinished"></translation>
+        <translation>C语言选项</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1313"/>
+        <location filename="settings.cpp" line="1314"/>
         <source>Code Generation</source>
-        <translation type="unfinished"></translation>
+        <translation>代码生成</translation>
     </message>
     <message>
         <location filename="settingsdialog/compilersetoptionwidget.cpp" line="19"/>
         <source>Binaries</source>
-        <translation type="unfinished"></translation>
+        <translation>二进制文件</translation>
     </message>
     <message>
         <location filename="settingsdialog/compilersetoptionwidget.cpp" line="21"/>
         <source>Libraries</source>
-        <translation type="unfinished"></translation>
+        <translation>库文件</translation>
     </message>
     <message>
         <location filename="settingsdialog/compilersetoptionwidget.cpp" line="23"/>
         <source>C Includes</source>
-        <translation type="unfinished"></translation>
+        <translation>C包含文件</translation>
     </message>
     <message>
         <location filename="settingsdialog/compilersetoptionwidget.cpp" line="25"/>
         <source>C++ Includes</source>
-        <translation type="unfinished"></translation>
+        <translation>C++包含文件</translation>
     </message>
     <message>
         <location filename="settingsdialog/compilersetoptionwidget.cpp" line="77"/>
         <source>No</source>
-        <translation type="unfinished"></translation>
+        <translation>否</translation>
     </message>
     <message>
         <location filename="settingsdialog/compilersetoptionwidget.cpp" line="78"/>
         <source>Yes</source>
-        <translation type="unfinished"></translation>
+        <translation>是</translation>
     </message>
     <message>
         <location filename="HighlighterManager.cpp" line="15"/>
         <source>untitled</source>
-        <translation type="unfinished">无标题</translation>
+        <translation>无标题</translation>
     </message>
     <message>
         <location filename="utils.cpp" line="324"/>
         <source>Index %1 out of range</source>
-        <translation type="unfinished"></translation>
+        <translation>下标&quot;%1&quot;越界</translation>
     </message>
     <message>
-        <location filename="colorscheme.cpp" line="64"/>
+        <location filename="colorscheme.cpp" line="46"/>
         <source>Can&apos;t open file &apos;%1&apos; for read</source>
-        <translation type="unfinished"></translation>
+        <translation>无法打开文件&quot;%1&quot;进行读取</translation>
     </message>
     <message>
-        <location filename="colorscheme.cpp" line="70"/>
+        <location filename="colorscheme.cpp" line="52"/>
         <source>Can&apos;t parse json file &apos;%1&apos; at offset %2! Error Code: %3</source>
-        <translation type="unfinished"></translation>
+        <translation>JSON文件&quot;%1&quot;在位置&quot;%2&quot;处无法解析</translation>
     </message>
     <message>
-        <location filename="colorscheme.cpp" line="74"/>
+        <location filename="colorscheme.cpp" line="56"/>
         <source>Can&apos;t parse json file &apos;%1&apos; is not a color schema config file!</source>
-        <translation type="unfinished"></translation>
+        <translation>&quot;%1&quot;不是一个合法的颜色配置文件，无法解析！</translation>
     </message>
     <message>
-        <location filename="colorscheme.cpp" line="85"/>
+        <location filename="colorscheme.cpp" line="66"/>
         <source>Can&apos;t open file &apos;%1&apos; for write</source>
-        <translation type="unfinished"></translation>
+        <translation>无法打开文件&quot;%1&quot;写入内容</translation>
+    </message>
+    <message>
+        <location filename="colorscheme.cpp" line="334"/>
+        <source>Assembler</source>
+        <translation>汇编</translation>
+    </message>
+    <message>
+        <location filename="colorscheme.cpp" line="335"/>
+        <location filename="colorscheme.cpp" line="339"/>
+        <location filename="colorscheme.cpp" line="343"/>
+        <location filename="colorscheme.cpp" line="347"/>
+        <location filename="colorscheme.cpp" line="351"/>
+        <location filename="colorscheme.cpp" line="355"/>
+        <location filename="colorscheme.cpp" line="359"/>
+        <location filename="colorscheme.cpp" line="363"/>
+        <location filename="colorscheme.cpp" line="367"/>
+        <location filename="colorscheme.cpp" line="371"/>
+        <location filename="colorscheme.cpp" line="375"/>
+        <location filename="colorscheme.cpp" line="379"/>
+        <location filename="colorscheme.cpp" line="383"/>
+        <location filename="colorscheme.cpp" line="387"/>
+        <location filename="colorscheme.cpp" line="391"/>
+        <location filename="colorscheme.cpp" line="395"/>
+        <location filename="colorscheme.cpp" line="399"/>
+        <location filename="colorscheme.cpp" line="403"/>
+        <location filename="colorscheme.cpp" line="407"/>
+        <location filename="colorscheme.cpp" line="411"/>
+        <location filename="colorscheme.cpp" line="417"/>
+        <location filename="colorscheme.cpp" line="421"/>
+        <location filename="colorscheme.cpp" line="425"/>
+        <location filename="colorscheme.cpp" line="429"/>
+        <source>Syntax</source>
+        <translation>语法</translation>
+    </message>
+    <message>
+        <location filename="colorscheme.cpp" line="338"/>
+        <source>Character</source>
+        <translation>字符</translation>
+    </message>
+    <message>
+        <location filename="colorscheme.cpp" line="342"/>
+        <source>Comment</source>
+        <translation>注释</translation>
+    </message>
+    <message>
+        <location filename="colorscheme.cpp" line="346"/>
+        <source>Class</source>
+        <translation>类</translation>
+    </message>
+    <message>
+        <location filename="colorscheme.cpp" line="350"/>
+        <source>Float</source>
+        <translation>浮点数</translation>
+    </message>
+    <message>
+        <location filename="colorscheme.cpp" line="354"/>
+        <source>Function</source>
+        <translation>函数</translation>
+    </message>
+    <message>
+        <location filename="colorscheme.cpp" line="358"/>
+        <source>Gloabal Variable</source>
+        <translation>全局变量</translation>
+    </message>
+    <message>
+        <location filename="colorscheme.cpp" line="362"/>
+        <source>Hexadecimal Integer</source>
+        <translation>十六进制数</translation>
+    </message>
+    <message>
+        <location filename="colorscheme.cpp" line="366"/>
+        <source>Identifier</source>
+        <translation>标识符</translation>
+    </message>
+    <message>
+        <location filename="colorscheme.cpp" line="370"/>
+        <source>Illegal Char</source>
+        <translation>非法字符</translation>
+    </message>
+    <message>
+        <location filename="colorscheme.cpp" line="374"/>
+        <source>Local Variable</source>
+        <translation>局部变量</translation>
+    </message>
+    <message>
+        <location filename="colorscheme.cpp" line="378"/>
+        <source>Integer</source>
+        <translation>整数</translation>
+    </message>
+    <message>
+        <location filename="colorscheme.cpp" line="382"/>
+        <source>Octal Integer</source>
+        <translation>八进制整数</translation>
+    </message>
+    <message>
+        <location filename="colorscheme.cpp" line="386"/>
+        <source>Preprocessor</source>
+        <translation>预处理指令</translation>
+    </message>
+    <message>
+        <location filename="colorscheme.cpp" line="390"/>
+        <source>Reserve Word</source>
+        <translation>保留字（关键字）</translation>
+    </message>
+    <message>
+        <location filename="colorscheme.cpp" line="394"/>
+        <source>Space</source>
+        <translation>空格字符</translation>
+    </message>
+    <message>
+        <location filename="colorscheme.cpp" line="398"/>
+        <source>String</source>
+        <translation>字符串</translation>
+    </message>
+    <message>
+        <location filename="colorscheme.cpp" line="402"/>
+        <source>Escape Sequences</source>
+        <translation>转义序列</translation>
+    </message>
+    <message>
+        <location filename="colorscheme.cpp" line="406"/>
+        <source>Symbol</source>
+        <translation>符号</translation>
+    </message>
+    <message>
+        <location filename="colorscheme.cpp" line="410"/>
+        <source>Variable</source>
+        <translation>变量</translation>
+    </message>
+    <message>
+        <location filename="colorscheme.cpp" line="416"/>
+        <source>Brace/Bracket/Parenthesis Level 1</source>
+        <translation>1级括号</translation>
+    </message>
+    <message>
+        <location filename="colorscheme.cpp" line="420"/>
+        <source>Brace/Bracket/Parenthesis Level 2</source>
+        <translation>2级括号</translation>
+    </message>
+    <message>
+        <location filename="colorscheme.cpp" line="424"/>
+        <source>Brace/Bracket/Parenthesis Level 3</source>
+        <translation>3级括号</translation>
+    </message>
+    <message>
+        <location filename="colorscheme.cpp" line="428"/>
+        <source>Brace/Bracket/Parenthesis Level 4</source>
+        <translation>4级括号</translation>
+    </message>
+    <message>
+        <location filename="colorscheme.cpp" line="434"/>
+        <source>Gutter</source>
+        <translation>装订线</translation>
+    </message>
+    <message>
+        <location filename="colorscheme.cpp" line="435"/>
+        <location filename="colorscheme.cpp" line="440"/>
+        <location filename="colorscheme.cpp" line="445"/>
+        <location filename="colorscheme.cpp" line="450"/>
+        <location filename="colorscheme.cpp" line="455"/>
+        <location filename="colorscheme.cpp" line="460"/>
+        <source>Editor</source>
+        <translation>编辑器</translation>
+    </message>
+    <message>
+        <location filename="colorscheme.cpp" line="439"/>
+        <source>Active Line</source>
+        <translation>当前行</translation>
+    </message>
+    <message>
+        <location filename="colorscheme.cpp" line="444"/>
+        <source>Breakpoint</source>
+        <translation>断点</translation>
+    </message>
+    <message>
+        <location filename="colorscheme.cpp" line="449"/>
+        <source>Active Breakpoint</source>
+        <translation>活动断点</translation>
+    </message>
+    <message>
+        <location filename="colorscheme.cpp" line="454"/>
+        <source>Folding Line</source>
+        <translation>代码折叠线</translation>
+    </message>
+    <message>
+        <location filename="colorscheme.cpp" line="459"/>
+        <source>Selection</source>
+        <translation>选中文字</translation>
+    </message>
+    <message>
+        <location filename="colorscheme.cpp" line="465"/>
+        <location filename="colorscheme.cpp" line="469"/>
+        <source>Syntax Check</source>
+        <translation>语法检查</translation>
+    </message>
+    <message>
+        <location filename="colorscheme.cpp" line="468"/>
+        <source>Warning</source>
+        <translation>警告</translation>
+    </message>
+    <message>
+        <location filename="colorscheme.cpp" line="549"/>
+        <source>default</source>
+        <translation>缺省</translation>
     </message>
     <message>
         <location filename="qsynedit/exporter/synexporter.cpp" line="177"/>
         <source>Untitled</source>
-        <translation type="unfinished"></translation>
+        <translation>无标题</translation>
     </message>
 </context>
 <context>
     <name>Settings::CompilerSet</name>
     <message>
-        <location filename="settings.cpp" line="1308"/>
-        <source>Support all ANSI standard C programs (-ansi)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <location filename="settings.cpp" line="1309"/>
-        <source>Do not recognize asm,inline or typeof as a keyword (-fno-asm)</source>
-        <translation type="unfinished"></translation>
+        <source>Support all ANSI standard C programs (-ansi)</source>
+        <translation>支持所有ANSI标准C程序(-ansi)</translation>
     </message>
     <message>
         <location filename="settings.cpp" line="1310"/>
-        <source>Imitate traditional C preprocessors (-traditional-cpp)</source>
-        <translation type="unfinished"></translation>
+        <source>Do not recognize asm,inline or typeof as a keyword (-fno-asm)</source>
+        <translation>不支持将asm、inline和typeof作为关键字(-fno-asm)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1342"/>
+        <location filename="settings.cpp" line="1311"/>
+        <source>Imitate traditional C preprocessors (-traditional-cpp)</source>
+        <translation>模仿传统C预处理器行为(-traditional-cpp)</translation>
+    </message>
+    <message>
+        <location filename="settings.cpp" line="1343"/>
         <source>Optimize for the following machine (-march)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1343"/>
+        <location filename="settings.cpp" line="1344"/>
         <source>Optimize less, while maintaining full compatibility (-tune)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1363"/>
+        <location filename="settings.cpp" line="1364"/>
         <source>Enable use of specific instructions (-mx)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1374"/>
+        <location filename="settings.cpp" line="1375"/>
         <source>Optimization level (-Ox)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1381"/>
+        <location filename="settings.cpp" line="1382"/>
         <source>Compile with the following pointer size (-mx)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1404"/>
+        <location filename="settings.cpp" line="1405"/>
         <source>Language standard (-std)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1405"/>
+        <location filename="settings.cpp" line="1406"/>
         <source>Generate debugging information (-g3)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1406"/>
+        <location filename="settings.cpp" line="1407"/>
         <source>Generate profiling info for analysis (-pg)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1409"/>
+        <location filename="settings.cpp" line="1410"/>
         <source>Warnings</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1410"/>
+        <location filename="settings.cpp" line="1411"/>
         <source>Inhibit all warning messages (-w)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1411"/>
+        <location filename="settings.cpp" line="1412"/>
         <source>Show most warnings (-Wall)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1412"/>
+        <location filename="settings.cpp" line="1413"/>
         <source>Show some more warnings (-Wextra)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1413"/>
+        <location filename="settings.cpp" line="1414"/>
         <source>Check ISO C/C++/C++0x conformance (-pedantic)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1414"/>
+        <location filename="settings.cpp" line="1415"/>
         <source>Only check the code for syntax errors (-fsyntax-only)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1415"/>
+        <location filename="settings.cpp" line="1416"/>
         <source>Make all warnings into errors (-Werror)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1416"/>
+        <location filename="settings.cpp" line="1417"/>
         <source>Abort compilation on first error (-Wfatal-errors)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1419"/>
+        <location filename="settings.cpp" line="1420"/>
         <source>Linker</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1420"/>
+        <location filename="settings.cpp" line="1421"/>
         <source>Link an Objective C program (-lobjc)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1421"/>
+        <location filename="settings.cpp" line="1422"/>
         <source>Do not use standard system libraries (-nostdlib)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1422"/>
+        <location filename="settings.cpp" line="1423"/>
         <source>Do not create a console window (-mwindows)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1423"/>
+        <location filename="settings.cpp" line="1424"/>
         <source>Strip executable (-s)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1424"/>
+        <location filename="settings.cpp" line="1425"/>
         <source>Link libraries statically (-static)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1427"/>
+        <location filename="settings.cpp" line="1428"/>
         <source>Output</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1428"/>
+        <location filename="settings.cpp" line="1429"/>
         <source>-fverbose-asm</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1429"/>
+        <location filename="settings.cpp" line="1430"/>
         <source>Use pipes instead of temporary files during compilation (-pipe)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1430"/>
+        <location filename="settings.cpp" line="1431"/>
         <source>Do not assemble, compile and generate the assemble code (-S)</source>
         <translation type="unfinished"></translation>
     </message>

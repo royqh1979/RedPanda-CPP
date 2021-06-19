@@ -17,6 +17,7 @@
 #include "HighlighterManager.h"
 #include "qsynedit/exporter/synrtfexporter.h"
 #include "qsynedit/exporter/synhtmlexporter.h"
+#include "qsynedit/Constants.h"
 #include <QGuiApplication>
 #include <QClipboard>
 
@@ -38,6 +39,11 @@ const char *SaveException::what() const noexcept {
 
 int Editor::newfileCount=0;
 
+Editor::Editor(QWidget *parent):
+    Editor(parent,QObject::tr("untitled"),ENCODING_SYSTEM_DEFAULT,false,true,nullptr)
+{
+}
+
 Editor::Editor(QWidget *parent, const QString& filename,
                   const QByteArray& encoding,
                   bool inProject, bool isNew,
@@ -54,7 +60,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
         mFilename = tr("untitled%1").arg(newfileCount);
     }
     QFileInfo fileInfo(mFilename);
-    if (mParentPageControl!=NULL) {
+    if (mParentPageControl!=nullptr) {
         mParentPageControl->addTab(this,QString());
         updateCaption();
     }
@@ -83,7 +89,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
 }
 
 Editor::~Editor() {
-    if (mParentPageControl!=NULL) {
+    if (mParentPageControl!=nullptr) {
         int index = mParentPageControl->indexOf(this);
         mParentPageControl->removeTab(index);
     }
@@ -172,8 +178,9 @@ bool Editor::saveAs(){
 
 void Editor::activate()
 {
-    this->mParentPageControl->setCurrentWidget(this);
-    this->setFocus();
+    if (mParentPageControl!=nullptr)
+        mParentPageControl->setCurrentWidget(this);
+    setFocus();
 }
 
 const QByteArray& Editor::encodingOption() const noexcept{
@@ -454,8 +461,55 @@ void Editor::applySettings()
 
 }
 
+void Editor::applyColorScheme(const QString& schemeName)
+{
+    if (highlighter()) {
+        if (highlighter()->getName() == SYN_HIGHLIGHTER_CPP) {
+            for (QString name: highlighter()->attributes().keys()) {
+                PColorSchemeItem item = pColorManager->getItem(schemeName,name);
+                if (item) {
+                    PSynHighlighterAttribute attr = highlighter()->attributes()[name];
+                    attr->setBackground(item->background());
+                    attr->setForeground(item->foreground());
+                    SynFontStyles styles = SynFontStyle::fsNone;
+                    if (item->bold()) {
+                        styles.setFlag(SynFontStyle::fsBold);
+                    }
+                    if (item->italic()) {
+                        styles.setFlag(SynFontStyle::fsItalic);
+                    }
+                    if (item->underlined()) {
+                        styles.setFlag(SynFontStyle::fsUnderline);
+                    }
+                    if (item->strikeout()) {
+                        styles.setFlag(SynFontStyle::fsStrikeOut);
+                    }
+                }
+            }
+        }
+    }
+    PColorSchemeItem item = pColorManager->getItem(schemeName,COLOR_SCHEME_ACTIVE_LINE);
+    if (item) {
+        setActiveLineColor(item->background());
+    }
+    item = pColorManager->getItem(schemeName,COLOR_SCHEME_GUTTER);
+    if (item) {
+        gutter().setTextColor(item->foreground());
+        gutter().setColor(item->background());
+    }
+    item = pColorManager->getItem(schemeName,COLOR_SCHEME_FOLD_LINE);
+    if (item) {
+        //todo
+    }
+    item = pColorManager->getItem(schemeName,COLOR_SCHEME_INDENT_GUIDE_LINE);
+    if (item) {
+        //todo
+    }
+    this->invalidate();
+}
+
 void Editor::updateCaption(const QString& newCaption) {
-    if (mParentPageControl==NULL) {
+    if (mParentPageControl==nullptr) {
         return;
     }
     int index = mParentPageControl->indexOf(this);

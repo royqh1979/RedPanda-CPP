@@ -164,4 +164,6 @@ extern const QChar SynSoftBreakGlyph;
 #define SYNS_ExporterFormatHTML "HTML"
 #define SYNS_ExporterFormatRTF "RTF"
 #define SYNS_ExporterFormatTeX "TeX"
+
+#define SYN_HIGHLIGHTER_CPP "SynCppHighlighter"
 #endif // CONSTANTS_H

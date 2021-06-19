@@ -1572,7 +1572,7 @@ SynHighlighterClass SynEditCppHighlighter::getClass() const
 
 QString SynEditCppHighlighter::getName() const
 {
-    return "SynCppHighlighter";
+    return SYN_HIGHLIGHTER_CPP;
 }
 
 QString SynEditCppHighlighter::languageName()

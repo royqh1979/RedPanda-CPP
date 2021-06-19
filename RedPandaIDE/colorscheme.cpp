@@ -59,6 +59,11 @@ PColorScheme ColorScheme::load(const QString &filename)
     return ColorScheme::fromJson(doc.object());
 }
 
+QMap<QString, PColorSchemeItem> ColorScheme::items()
+{
+    return mItems;
+}
+
 void ColorScheme::save(const QString &filename)
 {
     QFile file(filename);
@@ -265,6 +270,11 @@ QStringList ColorManager::getSchemes(const QString &themeType)
     return lst;
 }
 
+QStringList ColorManager::getDefines()
+{
+    return mSchemeItemDefines.keys();
+}
+
 bool ColorManager::exists(const QString name)
 {
     return mSchemes.contains(name);
@@ -312,8 +322,8 @@ void ColorManager::loadSchemesInDir(const QString &dirName, bool isCustomed)
     }
     for (int i=0;i<list.size();i++) {
         QFileInfo fileInfo = list[i];
-        QString name = fileInfo.fileName().toLower();
-        if (name.endsWith(suffix)) {
+        QString name = fileInfo.fileName();
+        if (name.toLower().endsWith(suffix)) {
             PColorScheme scheme = ColorScheme::load(fileInfo.absoluteFilePath());
             name.remove(name.length()-suffix.length(),suffix.length());
             name.replace('_',' ');
@@ -325,46 +335,144 @@ void ColorManager::loadSchemesInDir(const QString &dirName, bool isCustomed)
 void ColorManager::initItemDefines()
 {
     //Highlighter colors
-    addDefine(SYNS_AttrAssembler,true,true,true);
-    addDefine(SYNS_AttrCharacter,true,true,true);
-    addDefine(SYNS_AttrComment,true,true,true);
-    addDefine(SYNS_AttrClass,true,true,true);
-    addDefine(SYNS_AttrFloat,true,true,true);
-    addDefine(SYNS_AttrFunction,true,true,true);
-    addDefine(SYNS_AttrGlobalVariable,true,true,true);
-    addDefine(SYNS_AttrHexadecimal,true,true,true);
-    addDefine(SYNS_AttrIdentifier,true,true,true);
-    addDefine(SYNS_AttrIllegalChar,true,true,true);
-    addDefine(SYNS_AttrLocalVariable,true,true,true);
-    addDefine(SYNS_AttrNumber,true,true,true);
-    addDefine(SYNS_AttrOctal,true,true,true);
-    addDefine(SYNS_AttrPreprocessor,true,true,true);
-    addDefine(SYNS_AttrReservedWord,true,true,true);
-    addDefine(SYNS_AttrSpace,true,true,true);
-    addDefine(SYNS_AttrString,true,true,true);
-    addDefine(SYNS_AttrStringEscapeSequences,true,true,true);
-    addDefine(SYNS_AttrSymbol,true,true,true);
-    addDefine(SYNS_AttrVariable,true,true,true);
+    addDefine(SYNS_AttrAssembler,
+              QObject::tr("Assembler"),
+              QObject::tr("Syntax"),
+              true,true,true);
+    addDefine(SYNS_AttrCharacter,
+              QObject::tr("Character"),
+              QObject::tr("Syntax"),
+              true,true,true);
+    addDefine(SYNS_AttrComment,
+              QObject::tr("Comment"),
+              QObject::tr("Syntax"),
+              true,true,true);
+    addDefine(SYNS_AttrClass,
+              QObject::tr("Class"),
+              QObject::tr("Syntax"),
+              true,true,true);
+    addDefine(SYNS_AttrFloat,
+              QObject::tr("Float"),
+              QObject::tr("Syntax"),
+              true,true,true);
+    addDefine(SYNS_AttrFunction,
+              QObject::tr("Function"),
+              QObject::tr("Syntax"),
+              true,true,true);
+    addDefine(SYNS_AttrGlobalVariable,
+              QObject::tr("Gloabal Variable"),
+              QObject::tr("Syntax"),
+              true,true,true);
+    addDefine(SYNS_AttrHexadecimal,
+              QObject::tr("Hexadecimal Integer"),
+              QObject::tr("Syntax"),
+              true,true,true);
+    addDefine(SYNS_AttrIdentifier,
+              QObject::tr("Identifier"),
+              QObject::tr("Syntax"),
+              true,true,true);
+    addDefine(SYNS_AttrIllegalChar,
+              QObject::tr("Illegal Char"),
+              QObject::tr("Syntax"),
+              true,true,true);
+    addDefine(SYNS_AttrLocalVariable,
+              QObject::tr("Local Variable"),
+              QObject::tr("Syntax"),
+              true,true,true);
+    addDefine(SYNS_AttrNumber,
+              QObject::tr("Integer"),
+              QObject::tr("Syntax"),
+              true,true,true);
+    addDefine(SYNS_AttrOctal,
+              QObject::tr("Octal Integer"),
+              QObject::tr("Syntax"),
+              true,true,true);
+    addDefine(SYNS_AttrPreprocessor,
+              QObject::tr("Preprocessor"),
+              QObject::tr("Syntax"),
+              true,true,true);
+    addDefine(SYNS_AttrReservedWord,
+              QObject::tr("Reserve Word"),
+              QObject::tr("Syntax"),
+              true,true,true);
+    addDefine(SYNS_AttrSpace,
+              QObject::tr("Space"),
+              QObject::tr("Syntax"),
+              true,true,true);
+    addDefine(SYNS_AttrString,
+              QObject::tr("String"),
+              QObject::tr("Syntax"),
+              true,true,true);
+    addDefine(SYNS_AttrStringEscapeSequences,
+              QObject::tr("Escape Sequences"),
+              QObject::tr("Syntax"),
+              true,true,true);
+    addDefine(SYNS_AttrSymbol,
+              QObject::tr("Symbol"),
+              QObject::tr("Syntax"),
+              true,true,true);
+    addDefine(SYNS_AttrVariable,
+              QObject::tr("Variable"),
+              QObject::tr("Syntax"),
+              true,true,true);
+
+    //Brace/Bracket/Parenthesis Level 1 2 3 4
+    addDefine(COLOR_SCHEME_BRACE_1,
+              QObject::tr("Brace/Bracket/Parenthesis Level 1"),
+              QObject::tr("Syntax"),
+              true,false,false);
+    addDefine(COLOR_SCHEME_BRACE_2,
+              QObject::tr("Brace/Bracket/Parenthesis Level 2"),
+              QObject::tr("Syntax"),
+              true,false,false);
+    addDefine(COLOR_SCHEME_BRACE_3,
+              QObject::tr("Brace/Bracket/Parenthesis Level 3"),
+              QObject::tr("Syntax"),
+              true,false,false);
+    addDefine(COLOR_SCHEME_BRACE_4,
+              QObject::tr("Brace/Bracket/Parenthesis Level 4"),
+              QObject::tr("Syntax"),
+              true,false,false);
 
     //Gutter colors
-    addDefine(COLOR_SCHEME_GUTTER,true,true,true);
+    addDefine(COLOR_SCHEME_GUTTER,
+              QObject::tr("Gutter"),
+              QObject::tr("Editor"),
+              true,true,true);
     //Active Line
-    addDefine(COLOR_SCHEME_ACTIVE_LINE,false,true,false);
+    addDefine(COLOR_SCHEME_ACTIVE_LINE,
+              QObject::tr("Active Line"),
+              QObject::tr("Editor"),
+              false,true,false);
     //Breakpoint Line
-    addDefine(COLOR_SCHEME_BREAKPOINT,true,true,false);
+    addDefine(COLOR_SCHEME_BREAKPOINT,
+              QObject::tr("Breakpoint"),
+              QObject::tr("Editor"),
+              true,true,false);
     //Current Debug Line
-    addDefine(COLOR_SCHEME_ACTIVE_BREAKPOINT,true,true,false);
+    addDefine(COLOR_SCHEME_ACTIVE_BREAKPOINT,
+              QObject::tr("Active Breakpoint"),
+              QObject::tr("Editor"),
+              true,true,false);
     //Fold line
-    addDefine(COLOR_SCHEME_FOLD_LINE,true,false,false);
-    //Brace/Bracket/Parenthesis Level 1 2 3 4
-    addDefine(COLOR_SCHEME_BRACE_1,true,false,false);
-    addDefine(COLOR_SCHEME_BRACE_2,true,false,false);
-    addDefine(COLOR_SCHEME_BRACE_3,true,false,false);
-    addDefine(COLOR_SCHEME_BRACE_4,true,false,false);
-    addDefine(COLOR_SCHEME_SELECTION,true,true,false);
+    addDefine(COLOR_SCHEME_FOLD_LINE,
+              QObject::tr("Folding Line"),
+              QObject::tr("Editor"),
+              true,false,false);
+
+    addDefine(COLOR_SCHEME_SELECTION,
+              QObject::tr("Selection"),
+              QObject::tr("Editor"),
+              true,true,false);
     //Syntax Error
-    addDefine(COLOR_SCHEME_ERROR,true,false,false);
-    addDefine(COLOR_SCHEME_WARNING,true,false,false);
+    addDefine(COLOR_SCHEME_ERROR,
+              QObject::tr("Error"),
+              QObject::tr("Syntax Check"),
+              true,false,false);
+    addDefine(COLOR_SCHEME_WARNING,
+              QObject::tr("Warning"),
+              QObject::tr("Syntax Check"),
+              true,false,false);
 }
 
 bool ColorManager::rename(const QString &oldName, const QString &newName)
@@ -395,6 +503,16 @@ PColorScheme ColorManager::get(const QString &name)
     return PColorScheme();
 }
 
+PColorSchemeItem ColorManager::getItem(const QString &schemeName, const QString &itemName)
+{
+    PColorScheme scheme = get(schemeName);
+    if (!scheme)
+        return PColorSchemeItem();
+    if (!scheme->items().contains(itemName))
+        return PColorSchemeItem();
+    return scheme->items()[itemName];
+}
+
 bool ColorManager::isValidName(const QString &name)
 {
     for (QChar ch:name) {
@@ -405,24 +523,26 @@ bool ColorManager::isValidName(const QString &name)
     return true;
 }
 
-void ColorManager::addDefine(const QString &name, bool hasForeground, bool hasBackground, bool hasFontStyle)
+void ColorManager::addDefine(const QString &name, const QString &displayName, const QString &group, bool hasForeground, bool hasBackground, bool hasFontStyle)
 {
     PColorSchemeItemDefine define = std::make_shared<ColorSchemeItemDefine>();
+    define->setDisplayName(displayName);
+    define->setGroup(group);
     define->setHasForeground(hasForeground);
     define->setHasBackground(hasBackground);
     define->setHasFontStyle(hasFontStyle);
-    mSchemeItemDefine[name]=define;
+    mSchemeItemDefines[name]=define;
 }
 
 bool ColorManager::removeDefine(const QString &name)
 {
-    return mSchemeItemDefine.remove(name)==1;
+    return mSchemeItemDefines.remove(name)==1;
 }
 
 PColorSchemeItemDefine ColorManager::getDefine(const QString &name)
 {
-    if (mSchemeItemDefine.contains(name))
-        return mSchemeItemDefine[name];
+    if (mSchemeItemDefines.contains(name))
+        return mSchemeItemDefines[name];
     return PColorSchemeItemDefine();
 }
 
@@ -441,6 +561,7 @@ ColorSchemeItemDefine::ColorSchemeItemDefine()
     mHasBackground = true;
     mHasForeground = true;
     mHasFontStyle = true;
+    mGroup = QObject::tr("default");
 }
 
 bool ColorSchemeItemDefine::hasBackground() const
@@ -471,4 +592,24 @@ bool ColorSchemeItemDefine::hasFontStyle() const
 void ColorSchemeItemDefine::setHasFontStyle(bool value)
 {
     mHasFontStyle = value;
+}
+
+QString ColorSchemeItemDefine::group() const
+{
+    return mGroup;
+}
+
+void ColorSchemeItemDefine::setGroup(const QString &group)
+{
+    mGroup = group;
+}
+
+QString ColorSchemeItemDefine::displayName() const
+{
+    return mDisplayName;
+}
+
+void ColorSchemeItemDefine::setDisplayName(const QString &displayName)
+{
+    mDisplayName = displayName;
 }

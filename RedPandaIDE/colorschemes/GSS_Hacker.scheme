@@ -1,0 +1,202 @@
+{
+	"Assembler" : {
+		"foreground" : "#009CFF",
+		"background" : "#171717",
+		"bold" : false,
+		"italic" : false,
+		"underlined" : false,
+		"strikeout" : false
+	},
+	"Character" : {
+		"foreground" : "#C732FB",
+		"background" : "#171717",
+		"bold" : false,
+		"italic" : false,
+		"underlined" : false,
+		"strikeout" : false
+	},
+	"Class" : {
+		"foreground" : "#009CFF",
+		"background" : "#171717",
+		"bold" : false,
+		"italic" : false,
+		"underlined" : false,
+		"strikeout" : false
+	},
+	"Comment" : {
+		"foreground" : "#577A57",
+		"background" : "#171717",
+		"bold" : false,
+		"italic" : false,
+		"underlined" : false,
+		"strikeout" : false
+	},
+	"Escape sequences" : {
+		"foreground" : "#EEDEC9",
+		"bold" : false,
+		"italic" : false,
+		"underlined" : false,
+		"strikeout" : false
+	},
+	"Float" : {
+		"foreground" : "#EEDEC9",
+		"background" : "#171717",
+		"bold" : false,
+		"italic" : false,
+		"underlined" : false,
+		"strikeout" : false
+	},
+	"Function" : {
+		"foreground" : "#FFFFFF",
+		"background" : "#171717",
+		"bold" : false,
+		"italic" : false,
+		"underlined" : false,
+		"strikeout" : false
+	},
+	"Global variable" : {
+		"foreground" : "#FFFFFF",
+		"background" : "#171717",
+		"bold" : false,
+		"italic" : false,
+		"underlined" : false,
+		"strikeout" : false
+	},
+	"Hexadecimal" : {
+		"foreground" : "#EEDEC9",
+		"background" : "#171717",
+		"bold" : false,
+		"italic" : false,
+		"underlined" : false,
+		"strikeout" : false
+	},
+	"Identifier" : {
+		"foreground" : "#FFFFFF",
+		"background" : "#171717",
+		"bold" : false,
+		"italic" : false,
+		"underlined" : false,
+		"strikeout" : false
+	},
+	"Illegal Char" : {
+		"foreground" : "#F44747",
+		"background" : "#056109",
+		"bold" : false,
+		"italic" : false,
+		"underlined" : false,
+		"strikeout" : false
+	},
+	"Local Variable" : {
+		"foreground" : "#FFFFFF",
+		"background" : "#171717",
+		"bold" : false,
+		"italic" : false,
+		"underlined" : false,
+		"strikeout" : false
+	},
+	"Number" : {
+		"foreground" : "#EEDEC9",
+		"background" : "#171717",
+		"bold" : false,
+		"italic" : false,
+		"underlined" : false,
+		"strikeout" : false
+	},
+	"Octal" : {
+		"foreground" : "#EEDEC9",
+		"background" : "#171717",
+		"bold" : false,
+		"italic" : false,
+		"underlined" : false,
+		"strikeout" : false
+	},
+	"Preprocessor" : {
+		"foreground" : "#009CFF",
+		"background" : "#171717",
+		"bold" : false,
+		"italic" : false,
+		"underlined" : false,
+		"strikeout" : false
+	},
+	"Reserved Word" : {
+		"foreground" : "#AFFF80",
+		"background" : "#171717",
+		"bold" : false,
+		"italic" : false,
+		"underlined" : false,
+		"strikeout" : false
+	},
+	"Space" : {
+		"foreground" : "#505050",
+		"background" : "#171717",
+		"bold" : false,
+		"italic" : false,
+		"underlined" : false,
+		"strikeout" : false
+	},
+	"String" : {
+		"foreground" : "#1667CA",
+		"background" : "#171717",
+		"bold" : false,
+		"italic" : false,
+		"underlined" : false,
+		"strikeout" : false
+	},
+	"Symbol" : {
+		"foreground" : "#FFFFFF",
+		"background" : "#171717",
+		"bold" : false,
+		"italic" : false,
+		"underlined" : false,
+		"strikeout" : false
+	},
+	"Variable" : {
+		"foreground" : "#FFFFFF",
+		"background" : "#171717",
+		"bold" : false,
+		"italic" : false,
+		"underlined" : false,
+		"strikeout" : false
+	},
+	"Selected text" : {
+		"foreground" : "#FFFFFF",
+		"background" : "#4E5F1C"
+	},
+	"Gutter" : {
+		"foreground" : "#06ED02",
+		"background" : "#000000"
+	},
+	"Breakpoint" : {
+		"foreground" : "#000000",
+		"background" : "#41AD00"
+	},
+	"Error" : {
+		"foreground" : "#FFFFFF",
+		"background" : "#C22026"
+	},
+	"Active Breakpoint" : {
+		"foreground" : "#FFFFFF",
+		"background" : "#008E99"
+	},
+	"Active Line" : {
+		"background" : "#323232"
+	},
+	"Warning" : {
+		"foreground" : "#FFAA00"
+	},
+	"Indent Guide Line" : {
+		"foreground" : "#C0C0C0"
+	},
+	"brace/parenthesis/bracket level 1" : {
+		"foreground" : "#AFFF80"
+	},
+	"brace/parenthesis/bracket level 2" : {
+		"foreground" : "#FFFFFF"
+	},
+	"brace/parenthesis/bracket level 3" : {
+		"foreground" : "#1667CA"
+	},
+	"brace/parenthesis/bracket level 4" : {
+		"foreground" : "#FFFFFF"
+	}
+}

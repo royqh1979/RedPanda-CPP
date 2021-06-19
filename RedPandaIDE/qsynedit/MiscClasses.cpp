@@ -15,7 +15,7 @@ SynGutter::SynGutter(QObject *parent):
     mLeftOffset = 16;
     mRightOffset = 2;
     mVisible = true;
-    mUseFontStyle = false;
+    mUseFontStyle = true;
     mAutoSize = true;
     mAutoSizeDigitCount = mDigitCount;
     mBorderStyle = SynGutterBorderStyle::Middle;

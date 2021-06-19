@@ -1819,7 +1819,7 @@ void Settings::Environment::doLoad()
     //Appearence
     mTheme = stringValue("theme","default");
     mInterfaceFont = stringValue("interface font","Segoe UI");
-    mInterfaceFontSize = intValue("interface font size",9);
+    mInterfaceFontSize = intValue("interface font size",11);
 }
 
 int Settings::Environment::interfaceFontSize() const

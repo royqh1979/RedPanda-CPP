@@ -5,6 +5,7 @@
 #include <utils.h>
 #include <QTabWidget>
 #include "qsynedit/SynEdit.h"
+#include "colorscheme.h"
 
 class SaveException: public std::exception {
 
@@ -34,6 +35,8 @@ public:
         ErrorMarker,
         WarningMarker
     };
+
+    explicit Editor(QWidget *parent);
 
     explicit Editor(QWidget *parent, const QString& filename,
                     const QByteArray& encoding,
@@ -65,6 +68,7 @@ public:
 
     void updateCaption(const QString& newCaption=QString());
     void applySettings();
+    void applyColorScheme(const QString& schemeName);
     void copyToClipboard() override;
     void cutToClipboard() override;
     void copyAsHTML();
