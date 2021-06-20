@@ -9,6 +9,7 @@
 #include <QComboBox>
 #include <QFileDialog>
 #include <QLabel>
+#include <QTranslator>
 
 #include "settingsdialog/settingsdialog.h"
 #include "compiler/compilermanager.h"
@@ -161,7 +162,9 @@ void MainWindow::applySettings()
     changeTheme(pSettings->environment().theme());
     QFont font(pSettings->environment().interfaceFont(),
                pSettings->environment().interfaceFontSize());
-    dynamic_cast<QApplication*>(QApplication::instance())->setFont(font);
+    font.setStyleStrategy(QFont::PreferAntialias);
+    QApplication * app = dynamic_cast<QApplication*>(QApplication::instance());
+    app->setFont(font);
 }
 
 void MainWindow::updateStatusbarForLineCol()
@@ -243,9 +246,13 @@ void MainWindow::updateCompilerSet()
 
 void MainWindow::on_actionNew_triggered()
 {
-    Editor * editor=mEditorList->newEditor("",ENCODING_AUTO_DETECT,false,true);
-    editor->activate();
-    updateForEncodingInfo();
+    try {
+        Editor * editor=mEditorList->newEditor("",ENCODING_AUTO_DETECT,false,true);
+        editor->activate();
+        updateForEncodingInfo();
+    }  catch (FileError e) {
+        QMessageBox::information(this,tr("Error"),e.reason());
+    }
 }
 
 void MainWindow::on_EditorTabsLeft_tabCloseRequested(int index)
@@ -256,11 +263,15 @@ void MainWindow::on_EditorTabsLeft_tabCloseRequested(int index)
 
 void MainWindow::on_actionOpen_triggered()
 {
-    QString selectedFileFilter = pSystemConsts->defaultFileFilter();
-    QStringList files = QFileDialog::getOpenFileNames(pMainWindow,
-        tr("Open"), QString(), pSystemConsts->defaultFileFilters().join(";;"),
-        &selectedFileFilter);
-    openFiles(files);
+    try {
+        QString selectedFileFilter = pSystemConsts->defaultFileFilter();
+        QStringList files = QFileDialog::getOpenFileNames(pMainWindow,
+            tr("Open"), QString(), pSystemConsts->defaultFileFilters().join(";;"),
+            &selectedFileFilter);
+        openFiles(files);
+    }  catch (FileError e) {
+        QMessageBox::information(this,tr("Error"),e.reason());
+    }
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {
@@ -278,15 +289,23 @@ void MainWindow::on_actionSave_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor != NULL) {
-        editor->save();
-    }
+        try {
+            editor->save();
+        } catch(FileError e) {
+            QMessageBox::information(this,tr("Error"),e.reason());
+        }
+    }    
 }
 
 void MainWindow::on_actionSaveAs_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor != NULL) {
-        editor->saveAs();
+        try {
+            editor->saveAs();
+        } catch(FileError e) {
+            QMessageBox::information(this,tr("Error"),e.reason());
+        }
     }
 }
 
@@ -440,7 +459,11 @@ void MainWindow::on_actionEncode_in_ANSI_triggered()
     Editor * editor = mEditorList->getEditor();
     if (editor == nullptr)
         return;
-    editor->setEncodingOption(ENCODING_SYSTEM_DEFAULT);
+    try {
+        editor->setEncodingOption(ENCODING_SYSTEM_DEFAULT);
+    } catch(FileError e) {
+        QMessageBox::information(this,tr("Error"),e.reason());
+    }
 }
 
 void MainWindow::on_actionEncode_in_UTF_8_triggered()
@@ -448,7 +471,11 @@ void MainWindow::on_actionEncode_in_UTF_8_triggered()
     Editor * editor = mEditorList->getEditor();
     if (editor == nullptr)
         return;
-    editor->setEncodingOption(ENCODING_UTF8);
+    try {
+        editor->setEncodingOption(ENCODING_UTF8);
+    } catch(FileError e) {
+        QMessageBox::information(this,tr("Error"),e.reason());
+    }
 }
 
 void MainWindow::on_actionAuto_Detect_triggered()

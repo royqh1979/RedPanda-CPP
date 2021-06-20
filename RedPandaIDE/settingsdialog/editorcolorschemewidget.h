@@ -31,6 +31,7 @@ public slots:
 private:
     void addDefine(const QString& name, PColorSchemeItemDefine define);
     PColorSchemeItem getCurrentItem();
+    PColorScheme getCurrentScheme();
 
 private:
     Ui::EditorColorSchemeWidget *ui;

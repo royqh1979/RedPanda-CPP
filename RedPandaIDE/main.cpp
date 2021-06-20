@@ -52,48 +52,36 @@ int main(int argc, char *argv[])
     qRegisterMetaType<PCompileIssue>("PCompileIssue");
     qRegisterMetaType<PCompileIssue>("PCompileIssue&");
 
-//load translations
-    QTranslator trans;
-    trans.load(("RedPandaIDE_zh_CN"));
-    app.installTranslator(&trans);
+    try {
 
-    SystemConsts systemConsts;
-    pSystemConsts = &systemConsts;
+        SystemConsts systemConsts;
+        pSystemConsts = &systemConsts;
 
-    pSettings = createAppSettings();
-    if (pSettings == nullptr) {
-        return -1;
+        //load settings
+        pSettings = createAppSettings();
+        if (pSettings == nullptr) {
+            return -1;
+        }
+        auto settings = std::unique_ptr<Settings>(pSettings);
+        settings->compilerSets().loadSets();
+        settings->editor().load();
+        settings->environment().load();
+
+        pColorManager = new ColorManager();
+
+        //load translations
+        QTranslator trans;
+        trans.load("RedPandaIDE_"+pSettings->environment().language(),":/translations");
+        app.installTranslator(&trans);
+
+        MainWindow mainWindow;
+        pMainWindow = &mainWindow;
+        mainWindow.show();
+        int retCode = app.exec();
+        // save settings
+        // settings->compilerSets().saveSets();
+        return retCode;
+    }  catch (BaseError e) {
+        QMessageBox::information(nullptr,QApplication::tr("Error"),e.reason());
     }
-    auto settings = std::unique_ptr<Settings>(pSettings);
-    settings->compilerSets().loadSets();
-    settings->editor().load();
-    settings->environment().load();
-
-    pColorManager = new ColorManager();
-
-
-
-    //settings->compilerSets().addSets("e:/workspace/contributes/Dev-CPP/MinGW32_GCC92");
-//    settings->compilerSets().findSets();
-//    settings->compilerSets().saveSets();
-//    qDebug() << settings->compilerSets().defaultSet()->binDirs();
-//    settings->compilerSets().loadSets();
-//    qDebug() << settings->compilerSets().defaultSet()->defines();
-//    qDebug() << settings->compilerSets().defaultSet()->CCompiler();
-//    qDebug()<<settings->compilerSets().size();
-//    qDebug()<<settings->compilerSets().list().at(0)->binDirs();
-
-      // load theme
-//    QFile cssFile("dracula.css");
-//    if (cssFile.open(QFile::ReadOnly)) {
-//        QString qss = QLatin1String(cssFile.readAll());
-//        app.setStyleSheet(qss);
-//    }
-    MainWindow mainWindow;
-    pMainWindow = &mainWindow;
-    mainWindow.show();
-    int retCode = app.exec();
-    // save settings
-//    settings->compilerSets().saveSets();
-    return retCode;
 }

@@ -1819,7 +1819,8 @@ void Settings::Environment::doLoad()
     //Appearence
     mTheme = stringValue("theme","default");
     mInterfaceFont = stringValue("interface font","Segoe UI");
-    mInterfaceFontSize = intValue("interface font size",11);
+    mInterfaceFontSize = intValue("interface font size",10);
+    mLanguage = stringValue("language", QLocale::system().name());
 }
 
 int Settings::Environment::interfaceFontSize() const
@@ -1832,12 +1833,23 @@ void Settings::Environment::setInterfaceFontSize(int interfaceFontSize)
     mInterfaceFontSize = interfaceFontSize;
 }
 
+QString Settings::Environment::language() const
+{
+    return mLanguage;
+}
+
+void Settings::Environment::setLanguage(const QString &language)
+{
+    mLanguage = language;
+}
+
 void Settings::Environment::doSave()
 {
     //Appearence
     saveValue("theme", mTheme);
     saveValue("interface font", mInterfaceFont);
     saveValue("interface font size", mInterfaceFontSize);
+    saveValue("language", mLanguage);
 }
 
 QString Settings::Environment::interfaceFont() const

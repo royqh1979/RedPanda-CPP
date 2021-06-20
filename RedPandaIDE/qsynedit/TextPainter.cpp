@@ -846,8 +846,10 @@ void SynEditTextPainter::PaintLines()
                         break;
                     sToken = edit->mHighlighter->getToken();
                     // Maybe should also test whether GetTokenPos changed...
-                    if (sToken.isEmpty())
+                    if (sToken.isEmpty()) {
+                        qDebug()<<SynEdit::tr("The highlighter seems to be in an infinite loop");
                         throw BaseError(SynEdit::tr("The highlighter seems to be in an infinite loop"));
+                    }
                 }
                 nTokenColumnsBefore = edit->charToColumn(vLine,edit->mHighlighter->getTokenPos()+1)-1;
                 nTokenColumnLen = edit->stringColumns(sToken, nTokenColumnsBefore);

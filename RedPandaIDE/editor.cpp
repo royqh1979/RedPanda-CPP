@@ -188,8 +188,8 @@ const QByteArray& Editor::encodingOption() const noexcept{
 }
 void Editor::setEncodingOption(const QByteArray& encoding) noexcept{
     mEncodingOption = encoding;
-    if (!this->isNew())
-        this->loadFile();
+    if (!isNew())
+        loadFile();
     else
         pMainWindow->updateForEncodingInfo();
 }

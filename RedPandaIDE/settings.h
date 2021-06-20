@@ -289,12 +289,16 @@ public:
         int interfaceFontSize() const;
         void setInterfaceFontSize(int interfaceFontSize);
 
+        QString language() const;
+        void setLanguage(const QString &language);
+
     private:
 
         //Appearence
         QString mTheme;
         QString mInterfaceFont;
         int mInterfaceFontSize;
+        QString mLanguage;
         // _Base interface
     protected:
         void doSave() override;

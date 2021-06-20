@@ -456,8 +456,6 @@ void SynEditStringList::LoadFromFile(QFile &file, const QByteArray& encoding, QB
 {
     if (!file.open(QFile::ReadOnly))
         throw FileError(tr("Can't open file '%1' for read!").arg(file.fileName()));
-//    if (!file.canReadLine())
-//        throw FileError(tr("Can't read from file '%1'!").arg(file.fileName()));
     beginUpdate();
     auto action = finally([this]{
         endUpdate();

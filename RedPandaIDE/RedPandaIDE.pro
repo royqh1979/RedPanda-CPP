@@ -113,7 +113,8 @@ RESOURCES += \
     themes/dark/dark.qrc \
     themes/light/light.qrc \
     themes/dracula/dracula.qrc \
-    icons.qrc
+    icons.qrc \
+    translations.qrc
 
 #win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../../QScintilla/src/release/ -lqscintilla2_qt5d
 #else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../../QScintilla/src/debug/ -lqscintilla2_qt5d

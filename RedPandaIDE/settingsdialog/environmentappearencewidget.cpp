@@ -19,6 +19,8 @@ EnvironmentAppearenceWidget::EnvironmentAppearenceWidget(const QString& name, co
     for (QString name:factory.keys()) {
         ui->cbTheme->addItem(name);
     }
+    ui->cbLanguage->addItem("English","en");
+    ui->cbLanguage->addItem("简体中文","zh_CN");
 }
 
 EnvironmentAppearenceWidget::~EnvironmentAppearenceWidget()
@@ -31,6 +33,13 @@ void EnvironmentAppearenceWidget::doLoad()
     ui->cbTheme->setCurrentText(pSettings->environment().theme());
     ui->cbFont->setCurrentFont(QFont(pSettings->environment().interfaceFont()));
     ui->spinFontSize->setValue(pSettings->environment().interfaceFontSize());
+
+    for (int i=0;i<ui->cbLanguage->count();i++) {
+        if (ui->cbLanguage->itemData(i) == pSettings->environment().language()) {
+            ui->cbLanguage->setCurrentIndex(i);
+            break;
+        }
+    }
 }
 
 void EnvironmentAppearenceWidget::doSave()
@@ -38,6 +47,7 @@ void EnvironmentAppearenceWidget::doSave()
     pSettings->environment().setTheme(ui->cbTheme->currentText());
     pSettings->environment().setInterfaceFont(ui->cbFont->currentFont().family());
     pSettings->environment().setInterfaceFontSize(ui->spinFontSize->value());
+    pSettings->environment().setLanguage(ui->cbLanguage->currentData().toString());
 
     pSettings->environment().save();
     pMainWindow->applySettings();

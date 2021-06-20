@@ -43,18 +43,19 @@ PColorScheme ColorScheme::load(const QString &filename)
 {
     QFile file(filename);
     if (!file.open(QFile::ReadOnly)) {
-        throw new FileError(QObject::tr("Can't open file '%1' for read").arg(file.fileName()));
+        qDebug()<<QObject::tr("Can't open file '%1' for read").arg(file.fileName());
+        return PColorScheme();
     }
     QByteArray content = file.readAll();
     QJsonParseError error;
     QJsonDocument doc = QJsonDocument::fromJson(content,&error);
     if (error.error!=QJsonParseError::NoError) {
-        throw new FileError(QObject::tr("Can't parse json file '%1' at offset %2! Error Code: %3")
-                            .arg(file.fileName()).arg(error.offset).arg(error.error));
+        qDebug()<<QObject::tr("Can't parse json file '%1' at offset %2! Error Code: %3")
+                            .arg(file.fileName()).arg(error.offset).arg(error.error);
     }
     if (!doc.isObject()) {
-        throw new FileError(QObject::tr("Can't parse json file '%1' is not a color schema config file!")
-                            .arg(file.fileName()));
+        qDebug()<<QObject::tr("Can't parse json file '%1' is not a color schema config file!")
+                            .arg(file.fileName());
     }
     return ColorScheme::fromJson(doc.object());
 }

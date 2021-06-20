@@ -1011,7 +1011,7 @@ Are you really want to continue?</source>
     <message>
         <location filename="colorscheme.cpp" line="52"/>
         <source>Can&apos;t parse json file &apos;%1&apos; at offset %2! Error Code: %3</source>
-        <translation>JSON文件&quot;%1&quot;在位置&quot;%2&quot;处无法解析</translation>
+        <translation type="unfinished">JSON文件&quot;%1&quot;在位置&quot;%2&quot;处无法解析！错误码：%3</translation>
     </message>
     <message>
         <location filename="colorscheme.cpp" line="56"/>

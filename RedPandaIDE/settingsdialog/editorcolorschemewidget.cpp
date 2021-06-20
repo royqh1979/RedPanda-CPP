@@ -89,6 +89,11 @@ PColorSchemeItem EditorColorSchemeWidget::getCurrentItem()
     return pColorManager->getItem(ui->cbScheme->currentText(), name);
 }
 
+PColorScheme EditorColorSchemeWidget::getCurrentScheme()
+{
+    return pColorManager->get(ui->cbScheme->currentText());
+}
+
 EditorColorSchemeWidget::~EditorColorSchemeWidget()
 {
     delete ui;
@@ -164,6 +169,10 @@ void EditorColorSchemeWidget::onForegroundChanged()
     } else {
         item->setForeground(QColor());
     }
+    PColorScheme scheme = getCurrentScheme();
+    if (scheme) {
+        scheme->setCustomed(true);
+    }
 }
 
 void EditorColorSchemeWidget::onBackgroundChanged()
@@ -176,7 +185,10 @@ void EditorColorSchemeWidget::onBackgroundChanged()
     } else {
         item->setBackground(QColor());
     }
-
+    PColorScheme scheme = getCurrentScheme();
+    if (scheme) {
+        scheme->setCustomed(true);
+    }
 }
 
 void EditorColorSchemeWidget::onFontStyleChanged()
@@ -188,6 +200,10 @@ void EditorColorSchemeWidget::onFontStyleChanged()
     item->setItalic(ui->cbItalic->isChecked());
     item->setStrikeout(ui->cbStrikeout->isChecked());
     item->setUnderlined(ui->cbUnderlined->isChecked());
+    PColorScheme scheme = getCurrentScheme();
+    if (scheme) {
+        scheme->setCustomed(true);
+    }
 }
 
 void EditorColorSchemeWidget::doLoad()
