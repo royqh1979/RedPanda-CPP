@@ -129,7 +129,7 @@ public:
     QStringList getDefines();
 
     bool exists(const QString name);
-    PColorScheme copy(const QString& source);
+    QString copy(const QString& source);
     bool rename(const QString& oldName, const QString& newName);
     PColorScheme remove(const QString& name);
     PColorScheme get(const QString& name);

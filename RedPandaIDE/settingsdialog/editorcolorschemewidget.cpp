@@ -6,6 +6,7 @@
 
 #include <QAction>
 #include <QMessageBox>
+#include <QDebug>
 
 EditorColorSchemeWidget::EditorColorSchemeWidget(const QString& name, const QString& group, QWidget *parent) :
     SettingsWidget(name,group,parent),
@@ -292,14 +293,18 @@ void EditorColorSchemeWidget::doSave()
 
 void EditorColorSchemeWidget::on_actionCopy_Scheme_triggered()
 {
-
+    QString newName = pColorManager->copy(ui->cbScheme->currentText());
+    if (newName.isEmpty())
+        return;
+    ui->cbScheme->addItem(newName);
+    ui->cbScheme->setCurrentText(newName);
 }
 
 void EditorColorSchemeWidget::on_btnSchemeMenu_pressed()
 {
     QMenu menu;
 
-    PColorScheme scheme = pColorManager->get(ui->cbScheme->currentText());
+    PColorScheme scheme = getCurrentScheme();
     if (scheme) {
         if (scheme->customed()) {
             menu.addAction(ui->actionReset_Scheme);
@@ -316,7 +321,5 @@ void EditorColorSchemeWidget::on_btnSchemeMenu_pressed()
     QPoint p;
     p.setX(0);
     p.setY(ui->btnSchemeMenu->height()+2);
-    QAction* action = menu.exec(ui->btnSchemeMenu->mapToGlobal(p));
-    if (action)
-        action->trigger();
+    menu.exec(ui->btnSchemeMenu->mapToGlobal(p));
 }

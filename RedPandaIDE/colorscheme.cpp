@@ -283,14 +283,14 @@ bool ColorManager::exists(const QString name)
     return mSchemes.contains(name);
 }
 
-PColorScheme ColorManager::copy(const QString &sourceName)
+QString ColorManager::copy(const QString &sourceName)
 {
     if (!mSchemes.contains(sourceName))
-        return PColorScheme();
+        return QString();
     PColorScheme sourceScheme = mSchemes[sourceName];
     QString newName = sourceName+" Copy";
     if (mSchemes.contains(newName))
-        return PColorScheme();
+        return QString();
     // save source with the new name
     QString newFilepath = generateFullPathname(newName,false,false);
     sourceScheme->save(newFilepath);
@@ -299,7 +299,7 @@ PColorScheme ColorManager::copy(const QString &sourceName)
     newScheme->setBundled(false);
     newScheme->setCustomed(false);
     mSchemes[newName]=newScheme;
-    return newScheme;
+    return newName;
 }
 
 QString ColorManager::generateFilename(const QString &name, bool isCustomed)
