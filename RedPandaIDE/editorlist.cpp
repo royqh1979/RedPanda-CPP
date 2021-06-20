@@ -116,6 +116,18 @@ void EditorList::applySettings()
     }
 }
 
+void EditorList::applyColorSchemes(const QString& name)
+{
+    for (int i=0;i<mLeftPageWidget->count();i++) {
+        Editor* e = static_cast<Editor*>(mLeftPageWidget->widget(i));
+        e->applyColorScheme(name);
+    }
+    for (int i=0;i<mRightPageWidget->count();i++) {
+        Editor* e = static_cast<Editor*>(mRightPageWidget->widget(i));
+        e->applyColorScheme(name);
+    }
+}
+
 bool EditorList::closeAll(bool force) {
     beginUpdate();
     auto end = finally([this] {

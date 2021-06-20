@@ -138,10 +138,11 @@ public:
     void addDefine(const QString& name, const QString& displayName, const QString& group, bool hasForeground, bool hasBackground, bool hasFontStyle);
     bool removeDefine(const QString &name);
     PColorSchemeItemDefine getDefine(const QString& name);
+    bool saveScheme(const QString &name);
 private:
     QString generateFullPathname(const QString& name, bool isBundled, bool isCustomed);
     QString generateFilename(const QString& name, bool isCustomed);
-    void loadSchemesInDir(const QString& dirName, bool isCustomed);
+    void loadSchemesInDir(const QString& dirName, bool isBundled, bool isCustomed);
     void initItemDefines();
 private:
     QMap<QString,PColorSchemeItemDefine> mSchemeItemDefines;

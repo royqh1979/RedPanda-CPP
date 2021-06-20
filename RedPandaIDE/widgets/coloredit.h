@@ -23,6 +23,7 @@ public:
     void mouseReleaseEvent(QMouseEvent *event) override;
     void enterEvent(QEvent *event) override;
     void leaveEvent(QEvent *event) override;
+    QSize minimumSizeHint() const override;
 };
 
 #endif // COLOREDIT_H

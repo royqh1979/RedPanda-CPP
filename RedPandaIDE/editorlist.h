@@ -39,6 +39,7 @@ public:
     void beginUpdate();
     void endUpdate();
     void applySettings();
+    void applyColorSchemes(const QString& name);
 
 private:
     QTabWidget* getNewEditorPageControl() const;

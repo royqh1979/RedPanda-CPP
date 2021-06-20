@@ -54,7 +54,7 @@ PColorScheme ColorScheme::load(const QString &filename)
                             .arg(file.fileName()).arg(error.offset).arg(error.error);
     }
     if (!doc.isObject()) {
-        qDebug()<<QObject::tr("Can't parse json file '%1' is not a color schema config file!")
+        qDebug()<<QObject::tr("Can't parse json file '%1' is not a color scheme config file!")
                             .arg(file.fileName());
     }
     return ColorScheme::fromJson(doc.object());
@@ -68,8 +68,10 @@ QMap<QString, PColorSchemeItem> ColorScheme::items()
 void ColorScheme::save(const QString &filename)
 {
     QFile file(filename);
+    QFileInfo info(filename);
+    info.dir().mkpath(info.dir().absolutePath());
     if (!file.open(QFile::WriteOnly)) {
-        throw new FileError(QObject::tr("Can't open file '%1' for write").arg(file.fileName()));
+        throw FileError(QObject::tr("Can't open file '%1' for write").arg(file.fileName()));
     }
     QJsonObject json;
     toJson(json);
@@ -249,11 +251,11 @@ void ColorManager::reload()
 {
     mSchemes.clear();
     //bundled schemes ( the lowest priority)
-    loadSchemesInDir(pSettings->dirs().data(Settings::Dirs::DataType::ColorSheme),false);
+    loadSchemesInDir(pSettings->dirs().data(Settings::Dirs::DataType::ColorSheme),true,false);
     //config schemes ( higher priority)
-    loadSchemesInDir(pSettings->dirs().config(Settings::Dirs::DataType::ColorSheme),false);
+    loadSchemesInDir(pSettings->dirs().config(Settings::Dirs::DataType::ColorSheme),false,false);
     //customed schemes ( highest priority)
-    loadSchemesInDir(pSettings->dirs().config(Settings::Dirs::DataType::ColorSheme),true);
+    loadSchemesInDir(pSettings->dirs().config(Settings::Dirs::DataType::ColorSheme),false,true);
 }
 
 QStringList ColorManager::getSchemes(const QString &themeType)
@@ -309,15 +311,16 @@ QString ColorManager::generateFilename(const QString &name, bool isCustomed)
     return newName += EXT_COLOR_SCHEME;
 }
 
-void ColorManager::loadSchemesInDir(const QString &dirName, bool isCustomed)
+void ColorManager::loadSchemesInDir(const QString &dirName, bool isBundled, bool isCustomed)
 {
     QDir dir(dirName);
     dir.setFilter(QDir::Files);
     QFileInfoList  list = dir.entryInfoList();
     QString suffix;
+    QString customSuffix = EXT_PREFIX_CUSTOM;
+    customSuffix += EXT_COLOR_SCHEME;
     if (isCustomed) {
-        suffix = EXT_PREFIX_CUSTOM;
-        suffix = suffix + EXT_COLOR_SCHEME;
+        suffix = customSuffix;
     } else {
         suffix = EXT_COLOR_SCHEME;
     }
@@ -325,9 +328,25 @@ void ColorManager::loadSchemesInDir(const QString &dirName, bool isCustomed)
         QFileInfo fileInfo = list[i];
         QString name = fileInfo.fileName();
         if (name.toLower().endsWith(suffix)) {
+            if (!isCustomed && name.toLower().endsWith(customSuffix))
+                continue;
             PColorScheme scheme = ColorScheme::load(fileInfo.absoluteFilePath());
             name.remove(name.length()-suffix.length(),suffix.length());
             name.replace('_',' ');
+            if (!isCustomed) {
+                scheme->setBundled(isBundled);
+                scheme->setCustomed(false);
+            } else {
+                scheme->setBundled(false);
+                if (mSchemes.contains(name)) {
+                    PColorScheme oldScheme = mSchemes[name];
+                    if (oldScheme) {
+                        scheme->setBundled(oldScheme->bundled());
+                    }
+                    mSchemes.remove(name);
+                }
+                scheme->setCustomed(true);
+            }
             mSchemes[name]=scheme;
         }
     }
@@ -547,10 +566,19 @@ PColorSchemeItemDefine ColorManager::getDefine(const QString &name)
     return PColorSchemeItemDefine();
 }
 
+bool ColorManager::saveScheme(const QString &name)
+{
+    PColorScheme scheme = get(name);
+    if (!scheme)
+        return false;
+    QString newFilepath = generateFullPathname(name,scheme->bundled(),scheme->customed());
+    scheme->save(newFilepath);
+}
+
 QString ColorManager::generateFullPathname(const QString &name, bool isBundled, bool isCustomed)
 {
     QString filename = generateFilename(name,isCustomed);
-    if (isBundled) {
+    if (isBundled && !isCustomed) {
         return includeTrailingPathDelimiter(pSettings->dirs().data(Settings::Dirs::DataType::ColorSheme))+filename;
     } else {
         return includeTrailingPathDelimiter(pSettings->dirs().config(Settings::Dirs::DataType::ColorSheme))+filename;

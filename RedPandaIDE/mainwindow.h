@@ -27,6 +27,7 @@ public:
     void updateForStatusbarModeInfo();
     void updateEditorSettings();
     void updateEditorActions();
+    void updateEditorColorSchemes();
 
     void applySettings();
 

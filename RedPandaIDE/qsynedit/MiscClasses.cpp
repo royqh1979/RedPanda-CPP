@@ -287,7 +287,6 @@ QColor SynGutter::color() const
 void SynGutter::setColor(const QColor &value)
 {
     if (mColor!=value) {
-        qDebug()<<"mColor"<<value;
         mColor = value;
         setChanged();
     }

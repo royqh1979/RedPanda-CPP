@@ -4,6 +4,7 @@
 #include "settingswidget.h"
 #include "../colorscheme.h"
 
+#include <QMenu>
 #include <QStandardItemModel>
 
 namespace Ui {
@@ -27,21 +28,32 @@ public slots:
     void onForegroundChanged();
     void onBackgroundChanged();
     void onFontStyleChanged();
+    void changeSchemeComboFont();
 
 private:
     void addDefine(const QString& name, PColorSchemeItemDefine define);
     PColorSchemeItem getCurrentItem();
     PColorScheme getCurrentScheme();
+    void connectModificationSlots();
+    void disconnectModificationSlots();
+    void setCurrentSchemeModified();
 
 private:
     Ui::EditorColorSchemeWidget *ui;
     QStandardItemModel mDefinesModel;
+    QFont mDefaultSchemeComboFont;
+    QFont mModifiedSchemeComboFont;
+    QSet<QString> mModifiedSchemes;
+    QMenu mMenu;
 
     // SettingsWidget interface
 protected:
     void doLoad() override;
     void doSave() override;
 
+private slots:
+    void on_actionCopy_Scheme_triggered();
+    void on_btnSchemeMenu_pressed();
 };
 
 #endif // EDITORCOLORSCHEMEWIDGET_H

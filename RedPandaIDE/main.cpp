@@ -63,16 +63,17 @@ int main(int argc, char *argv[])
             return -1;
         }
         auto settings = std::unique_ptr<Settings>(pSettings);
+        settings->environment().load();
         settings->compilerSets().loadSets();
         settings->editor().load();
-        settings->environment().load();
 
-        pColorManager = new ColorManager();
-
-        //load translations
+        //Translation must be loaded after language setting is loaded
         QTranslator trans;
         trans.load("RedPandaIDE_"+pSettings->environment().language(),":/translations");
         app.installTranslator(&trans);
+
+        //Color scheme settings must be loaded after translation
+        pColorManager = new ColorManager();
 
         MainWindow mainWindow;
         pMainWindow = &mainWindow;

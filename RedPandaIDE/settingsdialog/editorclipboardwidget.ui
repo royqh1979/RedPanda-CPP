@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>429</height>
+    <height>470</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -150,7 +150,7 @@
       <item>
        <widget class="QCheckBox" name="chkCopyHTMLUseEditorColor">
         <property name="text">
-         <string>Use editor's color schema</string>
+         <string>Use editor's color scheme</string>
         </property>
        </widget>
       </item>
@@ -172,12 +172,12 @@
          <item>
           <widget class="QLabel" name="label_5">
            <property name="text">
-            <string>Color schema</string>
+            <string>Color scheme</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QComboBox" name="cbCopyHTMLColorSchema"/>
+          <widget class="QComboBox" name="cbHTMLColorScheme"/>
          </item>
          <item>
           <spacer name="horizontalSpacer_3">
@@ -217,7 +217,7 @@
       <item>
        <widget class="QCheckBox" name="chkCopyRTFUseEditorColor">
         <property name="text">
-         <string>Use editor's color schema</string>
+         <string>Use editor's color scheme</string>
         </property>
        </widget>
       </item>
@@ -239,12 +239,12 @@
          <item>
           <widget class="QLabel" name="label_4">
            <property name="text">
-            <string>Color schema</string>
+            <string>Color scheme</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QComboBox" name="cbCopyRTFColorSchema"/>
+          <widget class="QComboBox" name="cbRTFColorScheme"/>
          </item>
          <item>
           <spacer name="horizontalSpacer_2">

@@ -200,8 +200,8 @@ public:
         bool copyRTFUseEditorColor() const;
         void setCopyRTFUseEditorColor(bool copyRTFUseEditorColor);
 
-        QString copyRTFColorSchema() const;
-        void setCopyRTFColorSchema(const QString &copyRTFColorSchema);
+        QString copyRTFColorScheme() const;
+        void setCopyRTFColorScheme(const QString &copyRTFColorScheme);
 
         bool copyHTMLUseBackground() const;
         void setCopyHTMLUseBackground(bool copyHTMLUseBackground);
@@ -209,11 +209,14 @@ public:
         bool copyHTMLUseEditorColor() const;
         void setCopyHTMLUseEditorColor(bool copyHTMLUseEditorColor);
 
-        QString copyHTMLColorSchema() const;
-        void setCopyHTMLColorSchema(const QString &copyHTMLColorSchema);
+        QString copyHTMLColorScheme() const;
+        void setCopyHTMLColorScheme(const QString &copyHTMLColorScheme);
 
         int copyWithFormatAs() const;
         void setCopyWithFormatAs(int copyWithFormatAs);
+
+        QString colorScheme() const;
+        void setColorScheme(const QString &colorScheme);
 
     private:
         QByteArray mDefaultEncoding;
@@ -266,10 +269,13 @@ public:
         int mCopyWithFormatAs;
         bool mCopyRTFUseBackground;
         bool mCopyRTFUseEditorColor;
-        QString mCopyRTFColorSchema;
+        QString mCopyRTFColorScheme;
         bool mCopyHTMLUseBackground;
         bool mCopyHTMLUseEditorColor;
-        QString mCopyHTMLColorSchema;
+        QString mCopyHTMLColorScheme;
+
+        //Color
+        QString mColorScheme;
 
         // _Base interface
     protected:

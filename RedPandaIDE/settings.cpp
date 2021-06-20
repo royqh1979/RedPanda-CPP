@@ -14,6 +14,7 @@ const char ValueToChar[28] = {'0', '1', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',
 Settings* pSettings;
 
 Settings::Settings(const QString &filename):
+    mFilename(filename),
     mSettings(filename,QSettings::IniFormat),
     mDirs(this),
     mEditor(this),
@@ -282,14 +283,24 @@ void Settings::Editor::setCopyWithFormatAs(int copyWithFormatAs)
     mCopyWithFormatAs = copyWithFormatAs;
 }
 
-QString Settings::Editor::copyHTMLColorSchema() const
+QString Settings::Editor::colorScheme() const
 {
-    return mCopyHTMLColorSchema;
+    return mColorScheme;
 }
 
-void Settings::Editor::setCopyHTMLColorSchema(const QString &copyHTMLColorSchema)
+void Settings::Editor::setColorScheme(const QString &colorScheme)
 {
-    mCopyHTMLColorSchema = copyHTMLColorSchema;
+    mColorScheme = colorScheme;
+}
+
+QString Settings::Editor::copyHTMLColorScheme() const
+{
+    return mCopyHTMLColorScheme;
+}
+
+void Settings::Editor::setCopyHTMLColorScheme(const QString &copyHTMLColorScheme)
+{
+    mCopyHTMLColorScheme = copyHTMLColorScheme;
 }
 
 bool Settings::Editor::copyHTMLUseEditorColor() const
@@ -312,14 +323,14 @@ void Settings::Editor::setCopyHTMLUseBackground(bool copyHTMLUseBackground)
     mCopyHTMLUseBackground = copyHTMLUseBackground;
 }
 
-QString Settings::Editor::copyRTFColorSchema() const
+QString Settings::Editor::copyRTFColorScheme() const
 {
-    return mCopyRTFColorSchema;
+    return mCopyRTFColorScheme;
 }
 
-void Settings::Editor::setCopyRTFColorSchema(const QString &copyRTFColorSchema)
+void Settings::Editor::setCopyRTFColorScheme(const QString &copyRTFColorScheme)
 {
-    mCopyRTFColorSchema = copyRTFColorSchema;
+    mCopyRTFColorScheme = copyRTFColorScheme;
 }
 
 bool Settings::Editor::copyRTFUseEditorColor() const
@@ -591,11 +602,14 @@ void Settings::Editor::doSave()
     saveValue("copy_line_limits",mCopyLineLimits);
     saveValue("copy_with_format_as",mCopyWithFormatAs);
     saveValue("copy_rtf_use_background",mCopyRTFUseBackground);
-    saveValue("copy_rtf_use_editor_color_schema",mCopyRTFUseEditorColor);
-    saveValue("copy_rtf_color_schema",mCopyRTFColorSchema);
+    saveValue("copy_rtf_use_editor_color_scheme",mCopyRTFUseEditorColor);
+    saveValue("copy_rtf_color_scheme",mCopyRTFColorScheme);
     saveValue("copy_html_use_background",mCopyHTMLUseBackground);
-    saveValue("copy_html_use_editor_color_schema",mCopyHTMLUseEditorColor);
-    saveValue("copy_html_color_schema", mCopyHTMLColorSchema);
+    saveValue("copy_html_use_editor_color_scheme",mCopyHTMLUseEditorColor);
+    saveValue("copy_html_color_scheme", mCopyHTMLColorScheme);
+
+    //color scheme
+    saveValue("color_scheme", mColorScheme);
 }
 
 void Settings::Editor::doLoad()
@@ -649,12 +663,14 @@ void Settings::Editor::doLoad()
     mCopyLineLimits = intValue("copy_line_limits",100000);
     mCopyWithFormatAs = intValue("copy_with_format_as",0);
     mCopyRTFUseBackground = boolValue("copy_rtf_use_background",false);
-    mCopyRTFUseEditorColor = boolValue("copy_rtf_use_editor_color_schema",true);
-    mCopyRTFColorSchema = stringValue("copy_rtf_color_schema","");
+    mCopyRTFUseEditorColor = boolValue("copy_rtf_use_editor_color_scheme",true);
+    mCopyRTFColorScheme = stringValue("copy_rtf_color_scheme","");
     mCopyHTMLUseBackground = boolValue("copy_html_use_background",false);
-    mCopyHTMLUseEditorColor = boolValue("copy_html_use_editor_color_schema",true);
-    mCopyHTMLColorSchema = stringValue("copy_html_color_schema","");
+    mCopyHTMLUseEditorColor = boolValue("copy_html_use_editor_color_scheme",true);
+    mCopyHTMLColorScheme = stringValue("copy_html_color_scheme","");
 
+    //color
+    mColorScheme = stringValue("color_scheme", "VS Code");
 }
 
 SynEditCaretType Settings::Editor::caretForOverwrite() const

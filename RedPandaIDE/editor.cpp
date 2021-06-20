@@ -49,11 +49,11 @@ Editor::Editor(QWidget *parent, const QString& filename,
                   bool inProject, bool isNew,
                   QTabWidget* parentPageControl):
   SynEdit(parent),
-  mFilename(filename),
   mEncodingOption(encoding),
+  mFilename(filename),
+  mParentPageControl(parentPageControl),
   mInProject(inProject),
-  mIsNew(isNew),
-  mParentPageControl(parentPageControl)
+  mIsNew(isNew)
 {
     if (mFilename.isEmpty()) {
         newfileCount++;
@@ -84,6 +84,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
     }
 
     applySettings();
+    applyColorScheme(pSettings->editor().colorScheme());
 
     connect(this,&SynEdit::statusChanged,this,&Editor::onStatusChanged);
 }

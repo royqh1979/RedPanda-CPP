@@ -21,7 +21,7 @@ void EditorClipboardWidget::doLoad()
 {
     //pSettings->editor().load();
     //copy
-    QString mCopyHTMLColorSchema;
+    QString mCopyHTMLColorScheme;
 
     ui->grpCopySizeLimit->setChecked(pSettings->editor().copySizeLimit());
     ui->spinCopyCharLimits->setValue(pSettings->editor().copyCharLimits());
@@ -31,11 +31,11 @@ void EditorClipboardWidget::doLoad()
     ui->chkCopyRTFUseBackground->setChecked(pSettings->editor().copyRTFUseBackground());
     ui->chkCopyRTFUseEditorColor->setChecked(pSettings->editor().copyRTFUseEditorColor());
     //todo
-    //ui->cbCopyRTFColorSchema
+    //ui->cbCopyRTFColorScheme
     ui->chkCopyHTMLUseBackground->setChecked(pSettings->editor().copyHTMLUseBackground());
     ui->chkCopyHTMLUseEditorColor->setChecked(pSettings->editor().copyHTMLUseEditorColor());
     //todo
-    //ui->cbCopyHTMLColorSchema
+    //ui->cbCopyHTMLColorScheme
 
 }
 

@@ -46,7 +46,8 @@ SOURCES += \
     systemconsts.cpp \
     utils.cpp \
     widgets/coloredit.cpp \
-    widgets/issuestable.cpp
+    widgets/issuestable.cpp \
+    widgets/qpatchedcombobox.cpp
 
 HEADERS += \
     HighlighterManager.h \
@@ -87,7 +88,8 @@ HEADERS += \
     utils.h \
     common.h \
     widgets/coloredit.h \
-    widgets/issuestable.h
+    widgets/issuestable.h \
+    widgets/qpatchedcombobox.h
 
 FORMS += \
     mainwindow.ui \

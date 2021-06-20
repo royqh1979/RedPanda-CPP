@@ -157,6 +157,11 @@ void MainWindow::updateEditorActions()
 
 }
 
+void MainWindow::updateEditorColorSchemes()
+{
+    mEditorList->applyColorSchemes(pSettings->editor().colorScheme());
+}
+
 void MainWindow::applySettings()
 {
     changeTheme(pSettings->environment().theme());

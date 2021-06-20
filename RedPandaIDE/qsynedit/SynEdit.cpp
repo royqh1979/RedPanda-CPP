@@ -19,12 +19,10 @@
 
 SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
 {
-    qDebug()<<"init SynEdit:";
     mPaintLock = 0;
     mPainterLock = 0;
     mPainting = false;
     mLines = std::make_shared<SynEditStringList>(this);
-    qDebug()<<"init SynEdit: 1";
     mOrigLines = mLines;
     //fPlugins := TList.Create;
     mMouseMoved = false;
@@ -35,7 +33,6 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
     mLines->connect(mLines.get(), &SynEditStringList::deleted, this, &SynEdit::linesDeleted);
     mLines->connect(mLines.get(), &SynEditStringList::inserted, this, &SynEdit::linesInserted);
     mLines->connect(mLines.get(), &SynEditStringList::putted, this, &SynEdit::linesPutted);
-    qDebug()<<"init SynEdit: 2";
 
 #ifdef Q_OS_WIN
     mFontDummy = QFont("Consolas",12);
@@ -46,7 +43,6 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
 #endif
     mFontDummy.setStyleStrategy(QFont::PreferAntialias);
     setFont(mFontDummy);
-    qDebug()<<"init SynEdit:3";
 
     mUndoList = std::make_shared<SynEditUndoList>();
     mUndoList->connect(mUndoList.get(), &SynEditUndoList::addedUndo, this, &SynEdit::undoAdded);
@@ -54,7 +50,6 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
     mRedoList = std::make_shared<SynEditUndoList>();
     mRedoList->connect(mRedoList.get(), &SynEditUndoList::addedUndo, this, &SynEdit::redoAdded);
     mOrigRedoList = mRedoList;
-    qDebug()<<"init SynEdit: 4";
 
     mCaretColor = QColorConstants::Red;
     mActiveLineColor = QColorConstants::Svg::lightblue;
@@ -64,7 +59,6 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
     mBookMarkOpt.connect(&mBookMarkOpt, &SynBookMarkOpt::changed, this, &SynEdit::bookMarkOptionsChanged);
     //  fRightEdge has to be set before FontChanged is called for the first time
     mRightEdge = 80;
-    qDebug()<<"init SynEdit: 5";
 
     mGutter.setRightOffset(21);
     mGutter.connect(&mGutter, &SynGutter::changed, this, &SynEdit::gutterChanged);
@@ -77,7 +71,6 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
     mInserting = true;
     mScrollBars = SynScrollStyle::ssBoth;
     mExtraLineSpacing = 0;
-    qDebug()<<"init SynEdit: 6";
 
     this->setFrameShape(QFrame::Panel);
     this->setFrameShadow(QFrame::Sunken);
@@ -87,18 +80,14 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
     mSelectionMode = SynSelectionMode::smNormal;
     mActiveSelectionMode = SynSelectionMode::smNormal;
     mReadOnly = false;
-    qDebug()<<"init SynEdit: 7";
 
     //stop qt to auto fill background
     setAutoFillBackground(false);
     //fFocusList := TList.Create;
     //fKbdHandler := TSynEditKbdHandler.Create;
     //fMarkList.OnChange := MarkListChange;
-    qDebug()<<"init SynEdit: 7-1";
     setDefaultKeystrokes();
-    qDebug()<<"init SynEdit: 7-2";
     mRightEdgeColor = QColorConstants::Svg::silver;
-    qDebug()<<"init SynEdit: 8";
 
     /* IME input */
     mImeCount = 0;
@@ -118,7 +107,6 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
     mOptions = eoAutoIndent | eoAddIndent
             | eoDragDropEditing | eoEnhanceEndKey | eoTabIndent |
              eoGroupUndo | eoKeepCaretX | eoSelectWordByDblClick;
-    qDebug()<<"init SynEdit: 9";
 
     mScrollTimer = new QTimer(this);
     mScrollTimer->setInterval(100);
@@ -132,10 +120,8 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
     mUseCodeFolding = true;
     m_blinkTimerId = 0;
     m_blinkStatus = 0;
-    qDebug()<<"init SynEdit: 10";
 
     synFontChanged();
-    qDebug()<<"init SynEdit: done";
 
     showCaret();
 

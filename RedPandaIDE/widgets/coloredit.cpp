@@ -46,7 +46,7 @@ QSize ColorEdit::sizeHint() const
 {
     QRect rect = fontMetrics().boundingRect(mColor.name());
     return QSize{rect.width()+ 10,
-                rect.width()+ 6 };
+                rect.height()+ 6 };
 }
 
 void ColorEdit::paintEvent(QPaintEvent *event)
@@ -56,7 +56,6 @@ void ColorEdit::paintEvent(QPaintEvent *event)
     painter.fillRect(rect,mColor);
     painter.setPen(contrast());
     painter.drawText(rect,Qt::AlignCenter, mColor.name());
-    qDebug()<<rect<<mColor<<contrast();
 }
 
 void ColorEdit::mouseReleaseEvent(QMouseEvent *event)
@@ -75,4 +74,11 @@ void ColorEdit::enterEvent(QEvent *event)
 void ColorEdit::leaveEvent(QEvent *event)
 {
     setCursor(Qt::ArrowCursor);
+}
+
+QSize ColorEdit::minimumSizeHint() const
+{
+    QRect rect = fontMetrics().boundingRect(mColor.name());
+    return QSize{rect.width(),
+                rect.height()};
 }
