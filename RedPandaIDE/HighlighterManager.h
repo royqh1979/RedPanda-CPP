@@ -8,7 +8,9 @@ public:
     HighlighterManager();
 
     PSynHighlighter getHighlighter(const QString& filename);
+    PSynHighlighter copyHighlighter(PSynHighlighter highlighter);
     PSynHighlighter getCppHighlighter();
+    void applyColorScheme(PSynHighlighter highlighter, const QString& schemeName);
 };
 
 extern HighlighterManager highlighterManager;

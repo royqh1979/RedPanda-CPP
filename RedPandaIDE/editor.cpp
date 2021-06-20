@@ -127,7 +127,7 @@ bool Editor::save(bool force, bool reparse) {
     //is this file writable;
     if (!force && !info.isWritable()) {
         QMessageBox::information(pMainWindow,tr("Fail"),
-                                 QString(QObject::tr("File %s is not writable!")));
+                                 tr("File %1 is not writable!").arg(mFilename));
         return false;
     }
     if (this->modified()|| force) {
@@ -295,22 +295,22 @@ void Editor::copyAsHTML()
 
     SynExporterHTML.setTitle(QFileInfo(mFilename).fileName());
     SynExporterHTML.setExportAsText(false);
-    SynExporterHTML.setUseBackground(true);
+    SynExporterHTML.setUseBackground(pSettings->editor().copyHTMLUseBackground());
     SynExporterHTML.setFont(font());
-    SynExporterHTML.setHighlighter(highlighter());
+    PSynHighlighter hl = highlighter();
+    if (!pSettings->editor().copyHTMLUseEditorColor()) {
+        hl = highlighterManager.copyHighlighter(highlighter());
+        highlighterManager.applyColorScheme(hl,pSettings->editor().copyHTMLColorScheme());
+    }
+    SynExporterHTML.setHighlighter(hl);
     SynExporterHTML.setCreateHTMLFragment(true);
-    //SynExporterRTF.OnFormatToken := ExporterFormatToken;
-
 
     SynExporterHTML.ExportRange(lines(),blockBegin(),blockEnd());
-
-    //SynExporterHTML.CopyToClipboard();
 
     QMimeData * mimeData = new QMimeData;
 
     //sethtml will convert buffer to QString , which will cause encoding trouble
     mimeData->setData(SynExporterHTML.clipboardFormat(),SynExporterHTML.buffer());
-    //mimeData->setHtml("<span><style> b {color:red;} </style><b>test</b></span>");
     mimeData->setText(selText());
 
     QGuiApplication::clipboard()->clear();
@@ -464,31 +464,7 @@ void Editor::applySettings()
 
 void Editor::applyColorScheme(const QString& schemeName)
 {
-    if (highlighter()) {
-        if (highlighter()->getName() == SYN_HIGHLIGHTER_CPP) {
-            for (QString name: highlighter()->attributes().keys()) {
-                PColorSchemeItem item = pColorManager->getItem(schemeName,name);
-                if (item) {
-                    PSynHighlighterAttribute attr = highlighter()->attributes()[name];
-                    attr->setBackground(item->background());
-                    attr->setForeground(item->foreground());
-                    SynFontStyles styles = SynFontStyle::fsNone;
-                    if (item->bold()) {
-                        styles.setFlag(SynFontStyle::fsBold);
-                    }
-                    if (item->italic()) {
-                        styles.setFlag(SynFontStyle::fsItalic);
-                    }
-                    if (item->underlined()) {
-                        styles.setFlag(SynFontStyle::fsUnderline);
-                    }
-                    if (item->strikeout()) {
-                        styles.setFlag(SynFontStyle::fsStrikeOut);
-                    }
-                }
-            }
-        }
-    }
+    highlighterManager.applyColorScheme(highlighter(),schemeName);
     PColorSchemeItem item = pColorManager->getItem(schemeName,COLOR_SCHEME_ACTIVE_LINE);
     if (item) {
         setActiveLineColor(item->background());

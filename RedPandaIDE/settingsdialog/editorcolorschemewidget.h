@@ -54,6 +54,11 @@ protected:
 private slots:
     void on_actionCopy_Scheme_triggered();
     void on_btnSchemeMenu_pressed();
+    void on_actionImport_Scheme_triggered();
+    void on_actionRename_Scheme_triggered();
+    void on_actionReset_Scheme_triggered();
+    void on_actionExport_Scheme_triggered();
+    void on_actionDelete_Scheme_triggered();
 };
 
 #endif // EDITORCOLORSCHEMEWIDGET_H

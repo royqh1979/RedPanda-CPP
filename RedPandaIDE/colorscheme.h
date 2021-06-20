@@ -130,8 +130,10 @@ public:
 
     bool exists(const QString name);
     QString copy(const QString& source);
+    bool restoreToDefault(const QString& name);
+    bool remove(const QString& name);
     bool rename(const QString& oldName, const QString& newName);
-    PColorScheme remove(const QString& name);
+    bool add(const QString& name, PColorScheme scheme);
     PColorScheme get(const QString& name);
     PColorSchemeItem getItem(const QString& schemeName, const QString& itemName);
     bool isValidName(const QString& name);

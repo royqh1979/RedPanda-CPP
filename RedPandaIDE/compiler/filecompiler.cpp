@@ -59,11 +59,10 @@ bool FileCompiler::prepareForCompile()
         mCompiler = compilerSet()->cppCompiler();
         break;
     default:
-        error(tr("Can't the compiler for file %1").arg(mFileName));
+        error(tr("Can't find the compiler for file %1").arg(mFileName));
         return false;
     }
     mArguments += getLibraryArguments();
-
 
     log(tr("Processing %1 source file:").arg(strFileType));
     log("------------------");

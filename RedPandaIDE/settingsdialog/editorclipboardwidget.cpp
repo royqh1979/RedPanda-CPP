@@ -2,6 +2,7 @@
 #include "ui_editorclipboardwidget.h"
 #include "../settings.h"
 #include "../mainwindow.h"
+#include "../colorscheme.h"
 
 EditorClipboardWidget::EditorClipboardWidget(const QString& name, const QString& group, QWidget *parent) :
     SettingsWidget(name,group,parent),
@@ -10,11 +11,30 @@ EditorClipboardWidget::EditorClipboardWidget(const QString& name, const QString&
     ui->setupUi(this);
     ui->cbCopyWithFormatAs->addItem("None");
     ui->cbCopyWithFormatAs->addItem("HTML");
+
+    for (QString name: pColorManager->getSchemes()) {
+        ui->cbHTMLColorScheme->addItem(name);
+        ui->cbRTFColorScheme->addItem(name);
+    }
+    connect(ui->chkCopyRTFUseEditorColor,
+            &QCheckBox::stateChanged,
+            this,
+            &EditorClipboardWidget::onUseSchemeChanged);
+    connect(ui->chkCopyHTMLUseEditorColor,
+            &QCheckBox::stateChanged,
+            this,
+            &EditorClipboardWidget::onUseSchemeChanged);
 }
 
 EditorClipboardWidget::~EditorClipboardWidget()
 {
     delete ui;
+}
+
+void EditorClipboardWidget::onUseSchemeChanged()
+{
+    ui->cbRTFColorScheme->setEnabled(!ui->chkCopyRTFUseEditorColor->isChecked());
+    ui->cbHTMLColorScheme->setEnabled(!ui->chkCopyHTMLUseEditorColor->isChecked());
 }
 
 void EditorClipboardWidget::doLoad()
@@ -30,13 +50,11 @@ void EditorClipboardWidget::doLoad()
                                                                 pSettings->editor().copyWithFormatAs())) );
     ui->chkCopyRTFUseBackground->setChecked(pSettings->editor().copyRTFUseBackground());
     ui->chkCopyRTFUseEditorColor->setChecked(pSettings->editor().copyRTFUseEditorColor());
-    //todo
-    //ui->cbCopyRTFColorScheme
+    ui->cbRTFColorScheme->setCurrentText(pSettings->editor().colorScheme());
     ui->chkCopyHTMLUseBackground->setChecked(pSettings->editor().copyHTMLUseBackground());
     ui->chkCopyHTMLUseEditorColor->setChecked(pSettings->editor().copyHTMLUseEditorColor());
-    //todo
-    //ui->cbCopyHTMLColorScheme
-
+    ui->cbHTMLColorScheme->setCurrentText(pSettings->editor().colorScheme());
+    onUseSchemeChanged();
 }
 
 void EditorClipboardWidget::doSave()
@@ -49,10 +67,11 @@ void EditorClipboardWidget::doSave()
 
     pSettings->editor().setCopyRTFUseBackground(ui->chkCopyRTFUseBackground->isChecked());
     pSettings->editor().setCopyRTFUseEditorColor(ui->chkCopyRTFUseEditorColor->isChecked());
-    //todo
-    //ui->cbCopyRTFColorSchema
+    pSettings->editor().setCopyRTFColorScheme(ui->cbRTFColorScheme->currentText());
+
     pSettings->editor().setCopyHTMLUseBackground(ui->chkCopyHTMLUseBackground->isChecked());
     pSettings->editor().setCopyHTMLUseEditorColor(ui->chkCopyHTMLUseEditorColor->isChecked());
+    pSettings->editor().setCopyHTMLColorScheme(ui->cbHTMLColorScheme->currentText());
 
     pSettings->editor().save();
     pMainWindow->updateEditorSettings();

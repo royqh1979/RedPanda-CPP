@@ -3,6 +3,7 @@
 #include <QColorDialog>
 #include <QPainter>
 #include <QDebug>
+#include <QApplication>
 
 ColorEdit::ColorEdit(QWidget *parent):QFrame(parent)
 {
@@ -21,13 +22,18 @@ void ColorEdit::setColor(const QColor &value)
     if (mColor!=value) {
         mColor=value;
         emit colorChanged(value);
-        update();
+        resize(sizeHint());
+//        update();
     }
 }
 
 QColor ColorEdit::contrast()
 {
-    int crBg = mColor.rgb() & 0xFFFFFF;
+    int crBg;
+    if (!mColor.isValid())
+        crBg = palette().color(QPalette::Base).rgb() & 0xFFFFFF;
+    else
+        crBg = mColor.rgb() & 0xFFFFFF;
     int TOLERANCE = 30;
     int result;
 
@@ -44,18 +50,32 @@ QColor ColorEdit::contrast()
 
 QSize ColorEdit::sizeHint() const
 {
-    QRect rect = fontMetrics().boundingRect(mColor.name());
+    QRect rect;
+    if (mColor.isValid() )
+        rect = fontMetrics().boundingRect(mColor.name());
+    else
+        rect = fontMetrics().boundingRect(tr("NONE"));
     return QSize{rect.width()+ 10,
                 rect.height()+ 6 };
 }
 
-void ColorEdit::paintEvent(QPaintEvent *event)
+void ColorEdit::paintEvent(QPaintEvent *)
 {
     QPainter painter(this);
     QRect rect = QRect(lineWidth(),lineWidth(),width()-2*lineWidth(),height()-2*lineWidth());
-    painter.fillRect(rect,mColor);
-    painter.setPen(contrast());
-    painter.drawText(rect,Qt::AlignCenter, mColor.name());
+    if (mColor.isValid()) {
+        //painter.fillRect(rect,mColor);
+        painter.setPen(contrast());
+        painter.setBrush(mColor);
+        painter.drawRect(rect);
+        painter.drawText(rect,Qt::AlignCenter, mColor.name());
+    } else {
+        //painter.fillRect(rect,palette().color(QPalette::Base));
+        painter.setPen(contrast());
+        painter.setBrush(palette().color(QPalette::Base));
+        painter.drawRect(rect);
+        painter.drawText(rect,Qt::AlignCenter, tr("NONE"));
+    }
 }
 
 void ColorEdit::mouseReleaseEvent(QMouseEvent *event)
@@ -78,7 +98,5 @@ void ColorEdit::leaveEvent(QEvent *event)
 
 QSize ColorEdit::minimumSizeHint() const
 {
-    QRect rect = fontMetrics().boundingRect(mColor.name());
-    return QSize{rect.width(),
-                rect.height()};
+    return sizeHint();
 }

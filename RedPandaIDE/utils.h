@@ -94,7 +94,6 @@ QString TrimLeft(const QString& s);
 bool StringIsBlank(const QString& s);
 
 void changeTheme(const QString& themeName);
-
 template <class F>
 class final_action
 {

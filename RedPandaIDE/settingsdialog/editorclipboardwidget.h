@@ -16,6 +16,9 @@ public:
     explicit EditorClipboardWidget(const QString& name, const QString& group, QWidget *parent = nullptr);
     ~EditorClipboardWidget();
 
+public slots:
+    void onUseSchemeChanged();
+
 private:
     Ui::EditorClipboardWidget *ui;
 

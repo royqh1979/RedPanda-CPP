@@ -2,6 +2,8 @@
 #include <QFileInfo>
 #include <QObject>
 #include "qsynedit/highlighter/cpp.h"
+#include "qsynedit/Constants.h"
+#include "colorscheme.h"
 
 HighlighterManager highlighterManager;
 
@@ -24,6 +26,14 @@ PSynHighlighter HighlighterManager::getHighlighter(const QString &filename)
         }
     }
     return PSynHighlighter();
+}
+
+PSynHighlighter HighlighterManager::copyHighlighter(PSynHighlighter highlighter)
+{
+    if (!highlighter)
+        return PSynHighlighter();
+    if (highlighter->getName() == SYN_HIGHLIGHTER_CPP)
+        return getCppHighlighter();
 }
 
 PSynHighlighter HighlighterManager::getCppHighlighter()
@@ -52,4 +62,33 @@ PSynHighlighter HighlighterManager::getCppHighlighter()
     highlighter->symbolAttribute()->setForeground(0xc10000);
     highlighter->variableAttribute()->setForeground(0x400080);
     return pHighlighter;
+}
+
+void HighlighterManager::applyColorScheme(PSynHighlighter highlighter, const QString &schemeName)
+{
+    if (!highlighter)
+        return;
+    if (highlighter->getName() == SYN_HIGHLIGHTER_CPP) {
+        for (QString name: highlighter->attributes().keys()) {
+            PColorSchemeItem item = pColorManager->getItem(schemeName,name);
+            if (item) {
+                PSynHighlighterAttribute attr = highlighter->attributes()[name];
+                attr->setBackground(item->background());
+                attr->setForeground(item->foreground());
+                SynFontStyles styles = SynFontStyle::fsNone;
+                if (item->bold()) {
+                    styles.setFlag(SynFontStyle::fsBold);
+                }
+                if (item->italic()) {
+                    styles.setFlag(SynFontStyle::fsItalic);
+                }
+                if (item->underlined()) {
+                    styles.setFlag(SynFontStyle::fsUnderline);
+                }
+                if (item->strikeout()) {
+                    styles.setFlag(SynFontStyle::fsStrikeOut);
+                }
+            }
+        }
+    }
 }

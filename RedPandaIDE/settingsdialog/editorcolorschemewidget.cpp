@@ -7,6 +7,8 @@
 #include <QAction>
 #include <QMessageBox>
 #include <QDebug>
+#include <QInputDialog>
+#include <QFileDialog>
 
 EditorColorSchemeWidget::EditorColorSchemeWidget(const QString& name, const QString& group, QWidget *parent) :
     SettingsWidget(name,group,parent),
@@ -150,7 +152,7 @@ void EditorColorSchemeWidget::setCurrentSchemeModified()
     ui->cbScheme->setItemData(ui->cbScheme->currentIndex(),
                               mModifiedSchemeComboFont,Qt::FontRole);
     ui->cbScheme->setFont(mModifiedSchemeComboFont);
-    ui->cbScheme->view()->setFont(mDefaultSchemeComboFont);
+    //ui->cbScheme->view()->setFont(mDefaultSchemeComboFont);
     //we must reset the editor here, because this slot is processed after the onSettingChanged
     onSettingChanged();
 }
@@ -227,9 +229,11 @@ void EditorColorSchemeWidget::onForegroundChanged()
     PColorSchemeItem item = getCurrentItem();
     if (!item)
         return;
+    ui->colorForeground->setVisible(ui->cbForeground->isChecked());
     if (ui->cbForeground->isChecked()) {
         item->setForeground(ui->colorForeground->color());
     } else {
+        ui->colorForeground->setColor(QColor());
         item->setForeground(QColor());
     }
     setCurrentSchemeModified();
@@ -240,9 +244,11 @@ void EditorColorSchemeWidget::onBackgroundChanged()
     PColorSchemeItem item = getCurrentItem();
     if (!item)
         return;
+    ui->colorBackground->setVisible(ui->cbBackground->isChecked());
     if (ui->cbBackground->isChecked()) {
         item->setBackground(ui->colorBackground->color());
     } else {
+        ui->colorBackground->setColor(QColor());
         item->setBackground(QColor());
     }
     setCurrentSchemeModified();
@@ -269,7 +275,7 @@ void EditorColorSchemeWidget::changeSchemeComboFont()
     } else {
         ui->cbScheme->setFont(mDefaultSchemeComboFont);
     }
-    ui->cbScheme->view()->setFont(mDefaultSchemeComboFont);
+    //ui->cbScheme->view()->setFont(mDefaultSchemeComboFont);
 }
 
 void EditorColorSchemeWidget::doLoad()
@@ -313,7 +319,9 @@ void EditorColorSchemeWidget::on_btnSchemeMenu_pressed()
             menu.addAction(ui->actionRename_Scheme);
             menu.addAction(ui->actionDelete_Scheme);
         }
-        menu.addAction(ui->actionCopy_Scheme);
+        QString name = ui->cbScheme->currentText();
+        if (!pColorManager->exists(name+ " Copy"))
+            menu.addAction(ui->actionCopy_Scheme);
         menu.addAction(ui->actionExport_Scheme);
         menu.addSeparator();
     }
@@ -322,4 +330,112 @@ void EditorColorSchemeWidget::on_btnSchemeMenu_pressed()
     p.setX(0);
     p.setY(ui->btnSchemeMenu->height()+2);
     menu.exec(ui->btnSchemeMenu->mapToGlobal(p));
+}
+
+void EditorColorSchemeWidget::on_actionImport_Scheme_triggered()
+{
+    QString filename = QFileDialog::getOpenFileName(this,
+        tr("Open"), QString(), tr("Color Scheme Files (*.scheme)"));
+    if (filename.isEmpty())
+        return;
+    QFileInfo fileInfo(filename);
+    QString name = fileInfo.fileName();
+    QString suffix = EXT_COLOR_SCHEME;
+    if (!name.toLower().endsWith(suffix))
+        return;
+    name.remove(name.length()-suffix.length(),suffix.length());
+    name.replace('_',' ');
+    if (!pColorManager->isValidName(name)) {
+        QMessageBox::information(this,tr("Error"),tr("'%1' is not a valid name for color scheme file."));
+        return;
+    }
+    try {
+        PColorScheme scheme = ColorScheme::load(filename);
+        pColorManager->add(name, scheme);
+        ui->cbScheme->addItem(name);
+        ui->cbScheme->setCurrentText(name);
+    } catch (FileError e) {
+        QMessageBox::information(this,tr("Error"),e.reason());
+        return;
+    }
+}
+
+void EditorColorSchemeWidget::on_actionRename_Scheme_triggered()
+{
+    QString name = ui->cbScheme->currentText();
+    bool isOk;
+    QString newName = QInputDialog::getText(this,tr("New scheme name"),tr("New scheme name"),
+                                            QLineEdit::Normal,name,&isOk);
+    if (isOk) {
+        if (!pColorManager->isValidName(newName)) {
+            QMessageBox::information(this,tr("Error"),tr("'%1' is not a valid scheme name!").arg(newName));
+            return;
+        }
+        try {
+            pColorManager->rename(name,newName);
+            ui->cbScheme->setItemText(
+                        ui->cbScheme->currentIndex(),
+                        newName
+                        );
+            if (mModifiedSchemes.contains(name))
+                mModifiedSchemes.remove(name);
+            mModifiedSchemes.insert(newName);
+        } catch(FileError e) {
+            QMessageBox::information(this,tr("Error"),e.reason());
+        }
+    }
+}
+
+void EditorColorSchemeWidget::on_actionReset_Scheme_triggered()
+{
+    try {
+        if (pColorManager->restoreToDefault(ui->cbScheme->currentText())) {
+            ui->cbScheme->setItemData(
+                        ui->cbScheme->currentIndex(),
+                        QVariant(),
+                        Qt::FontRole);
+            ui->cbScheme->setFont(mDefaultSchemeComboFont);
+            //ui->cbScheme->view()->setFont(mDefaultSchemeComboFont);
+        }
+    } catch (FileError e) {
+        QMessageBox::information(this,tr("Error"),e.reason());
+    }
+
+}
+
+void EditorColorSchemeWidget::on_actionExport_Scheme_triggered()
+{
+    QString filename = QFileDialog::getSaveFileName(this,
+        tr("Save"), QString(), tr("Color Scheme Files (*.scheme)"));
+    if (filename.isEmpty())
+        return;
+    try {
+        PColorScheme scheme = getCurrentScheme();
+        scheme->save(filename);
+    } catch (FileError e) {
+        QMessageBox::information(this,tr("Error"),e.reason());
+        return;
+    }
+}
+
+void EditorColorSchemeWidget::on_actionDelete_Scheme_triggered()
+{
+
+    QString name = ui->cbScheme->currentText();
+    if (QMessageBox::information(this,tr("Confirm Delete Scheme"),
+                   tr("Scheme '%1' will be deleted!<br />Do you really want to continue?")
+                   .arg(name),
+                   QMessageBox::Yes, QMessageBox::No)!=QMessageBox::Yes)
+        return;
+    try {
+        if (pColorManager->remove(name)) {
+            if (mModifiedSchemes.contains(name))
+                mModifiedSchemes.remove(name);
+            ui->cbScheme->removeItem(ui->cbScheme->currentIndex());
+            if (name == pSettings->editor().colorScheme())
+                doSave();
+        }
+    }  catch (FileError e) {
+        QMessageBox::information(this,tr("Error"),e.reason());
+    }
 }

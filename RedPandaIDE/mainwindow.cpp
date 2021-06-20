@@ -170,6 +170,7 @@ void MainWindow::applySettings()
     font.setStyleStrategy(QFont::PreferAntialias);
     QApplication * app = dynamic_cast<QApplication*>(QApplication::instance());
     app->setFont(font);
+    this->setFont(font);
 }
 
 void MainWindow::updateStatusbarForLineCol()

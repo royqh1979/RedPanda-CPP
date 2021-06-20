@@ -302,6 +302,48 @@ QString ColorManager::copy(const QString &sourceName)
     return newName;
 }
 
+bool ColorManager::restoreToDefault(const QString &name)
+{
+    PColorScheme scheme = get(name);
+    if (!scheme)
+        return false;
+    if (!scheme->customed())
+        return false;
+    QString fullPath = generateFullPathname(name,scheme->bundled(),false);
+    PColorScheme oldScheme = ColorScheme::load(fullPath);
+    if (!oldScheme)
+        throw FileError(QObject::tr("Can't Find the color scheme file %1!").arg(fullPath));
+    fullPath = generateFullPathname(name,scheme->bundled(),true);
+    QFile file(fullPath);
+    if (file.exists() && !file.remove())
+        throw FileError(QObject::tr("Can't remove the color scheme file %1!").arg(fullPath));
+    oldScheme->setBundled(scheme->bundled());
+    oldScheme->setCustomed(false);
+    mSchemes[name]=oldScheme;
+    return true;
+}
+
+bool ColorManager::remove(const QString &name)
+{
+    PColorScheme scheme = get(name);
+    if (!scheme)
+        return false;
+    if (scheme->bundled())
+        return false;
+    if (scheme->customed()) {
+        QString fullPath = generateFullPathname(name,false,true);
+        QFile file(fullPath);
+        if (!file.remove())
+            throw FileError(QObject::tr("Can't remove the color scheme file %1!").arg(fullPath));
+    }
+    QString fullPath = generateFullPathname(name,false,false);
+    QFile file(fullPath);
+    if (!file.remove())
+        throw FileError(QObject::tr("Can't remove the color scheme file %1!").arg(fullPath));
+    mSchemes.remove(name);
+    return true;
+}
+
 QString ColorManager::generateFilename(const QString &name, bool isCustomed)
 {
     QString newName = name;
@@ -328,11 +370,13 @@ void ColorManager::loadSchemesInDir(const QString &dirName, bool isBundled, bool
         QFileInfo fileInfo = list[i];
         QString name = fileInfo.fileName();
         if (name.toLower().endsWith(suffix)) {
-            if (!isCustomed && name.toLower().endsWith(customSuffix))
-                continue;
-            PColorScheme scheme = ColorScheme::load(fileInfo.absoluteFilePath());
+//            if (!isCustomed && name.toLower().endsWith(customSuffix))
+//                continue;
             name.remove(name.length()-suffix.length(),suffix.length());
             name.replace('_',' ');
+            if (!isValidName(name))
+                continue;
+            PColorScheme scheme = ColorScheme::load(fileInfo.absoluteFilePath());
             if (!isCustomed) {
                 scheme->setBundled(isBundled);
                 scheme->setCustomed(false);
@@ -504,16 +548,33 @@ bool ColorManager::rename(const QString &oldName, const QString &newName)
     PColorScheme scheme = get(oldName);
     if (!scheme)
         return false;
+    if (scheme->bundled())
+        return false;
+    if (scheme->customed()) {
+        QString oldfullPath = generateFullPathname(oldName,false,true);
+        QString fullpath = generateFullPathname(newName,false,true);
+        QFile oldFile(oldfullPath);
+        if (oldFile.exists() && !oldFile.rename(fullpath))
+            throw FileError(QObject::tr("Rename file '%1' to '%2' failed!").arg(oldfullPath).arg(fullpath));
+    }
+    QString oldfullPath = generateFullPathname(oldName,false,false);
+    QString fullpath = generateFullPathname(newName,false,false);
+    QFile oldFile(oldfullPath);
+    if (oldFile.exists() && !oldFile.rename(fullpath))
+        throw FileError(QObject::tr("Rename file '%1' to '%2' failed!").arg(oldfullPath).arg(fullpath));
+    mSchemes.remove(oldName);
     mSchemes[newName] = scheme;
-
+    return true;
 }
 
-PColorScheme ColorManager::remove(const QString &name)
+bool ColorManager::add(const QString &name, PColorScheme scheme)
 {
-    PColorScheme scheme=get(name);
-    if (scheme)
-        mSchemes.remove(name);
-    return scheme;
+    if (mSchemes.contains(name))
+        throw FileError(QObject::tr("Scheme '%1' already exists!").arg(name));
+    scheme->setBundled(false);
+    scheme->setCustomed(false);
+    mSchemes[name] = scheme;
+    saveScheme(name);
 }
 
 PColorScheme ColorManager::get(const QString &name)
