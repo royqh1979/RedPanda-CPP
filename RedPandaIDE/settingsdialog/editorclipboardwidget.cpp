@@ -50,10 +50,10 @@ void EditorClipboardWidget::doLoad()
                                                                 pSettings->editor().copyWithFormatAs())) );
     ui->chkCopyRTFUseBackground->setChecked(pSettings->editor().copyRTFUseBackground());
     ui->chkCopyRTFUseEditorColor->setChecked(pSettings->editor().copyRTFUseEditorColor());
-    ui->cbRTFColorScheme->setCurrentText(pSettings->editor().colorScheme());
+    ui->cbRTFColorScheme->setCurrentText(pSettings->editor().copyRTFColorScheme());
     ui->chkCopyHTMLUseBackground->setChecked(pSettings->editor().copyHTMLUseBackground());
     ui->chkCopyHTMLUseEditorColor->setChecked(pSettings->editor().copyHTMLUseEditorColor());
-    ui->cbHTMLColorScheme->setCurrentText(pSettings->editor().colorScheme());
+    ui->cbHTMLColorScheme->setCurrentText(pSettings->editor().copyHTMLColorScheme());
     onUseSchemeChanged();
 }
 
