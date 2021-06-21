@@ -23,6 +23,7 @@ signals:
     void compileFinished();
     void compileOutput(const QString& msg);
     void compileIssue(PCompileIssue issue);
+    void compileErrorOccured(const QString& reason);
 public slots:
     void stopCompile();
 
@@ -58,7 +59,7 @@ protected:
 
 private:
     bool mStop;
-
 };
+
 
 #endif // COMPILER_H

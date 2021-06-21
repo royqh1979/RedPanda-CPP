@@ -1,6 +1,7 @@
 #include "filecompiler.h"
 #include "utils.h"
 #include "../mainwindow.h"
+#include "compilermanager.h"
 
 #include <QFile>
 #include <QFileInfo>
@@ -59,10 +60,13 @@ bool FileCompiler::prepareForCompile()
         mCompiler = compilerSet()->cppCompiler();
         break;
     default:
-        error(tr("Can't find the compiler for file %1").arg(mFileName));
-        return false;
+        throw CompileError(tr("Can't find the compiler for file %1").arg(mFileName));
     }
     mArguments += getLibraryArguments();
+
+    if (!QFile(mCompiler).exists()) {
+        throw CompileError(tr("The Compiler '%1' doesn't exists!").arg(mCompiler));
+    }
 
     log(tr("Processing %1 source file:").arg(strFileType));
     log("------------------");

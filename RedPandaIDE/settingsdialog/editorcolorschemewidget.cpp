@@ -293,7 +293,7 @@ void EditorColorSchemeWidget::doSave()
         pSettings->editor().save();
         pMainWindow->updateEditorColorSchemes();
     } catch (FileError e) {
-        QMessageBox::information(this,tr("Error"),e.reason());
+        QMessageBox::critical(this,tr("Error"),e.reason());
     }
 }
 
@@ -346,7 +346,7 @@ void EditorColorSchemeWidget::on_actionImport_Scheme_triggered()
     name.remove(name.length()-suffix.length(),suffix.length());
     name.replace('_',' ');
     if (!pColorManager->isValidName(name)) {
-        QMessageBox::information(this,tr("Error"),tr("'%1' is not a valid name for color scheme file."));
+        QMessageBox::critical(this,tr("Error"),tr("'%1' is not a valid name for color scheme file."));
         return;
     }
     try {
@@ -355,7 +355,7 @@ void EditorColorSchemeWidget::on_actionImport_Scheme_triggered()
         ui->cbScheme->addItem(name);
         ui->cbScheme->setCurrentText(name);
     } catch (FileError e) {
-        QMessageBox::information(this,tr("Error"),e.reason());
+        QMessageBox::critical(this,tr("Error"),e.reason());
         return;
     }
 }
@@ -368,7 +368,7 @@ void EditorColorSchemeWidget::on_actionRename_Scheme_triggered()
                                             QLineEdit::Normal,name,&isOk);
     if (isOk) {
         if (!pColorManager->isValidName(newName)) {
-            QMessageBox::information(this,tr("Error"),tr("'%1' is not a valid scheme name!").arg(newName));
+            QMessageBox::critical(this,tr("Error"),tr("'%1' is not a valid scheme name!").arg(newName));
             return;
         }
         try {
@@ -381,7 +381,7 @@ void EditorColorSchemeWidget::on_actionRename_Scheme_triggered()
                 mModifiedSchemes.remove(name);
             mModifiedSchemes.insert(newName);
         } catch(FileError e) {
-            QMessageBox::information(this,tr("Error"),e.reason());
+            QMessageBox::critical(this,tr("Error"),e.reason());
         }
     }
 }
@@ -398,7 +398,7 @@ void EditorColorSchemeWidget::on_actionReset_Scheme_triggered()
             //ui->cbScheme->view()->setFont(mDefaultSchemeComboFont);
         }
     } catch (FileError e) {
-        QMessageBox::information(this,tr("Error"),e.reason());
+        QMessageBox::critical(this,tr("Error"),e.reason());
     }
 
 }
@@ -413,7 +413,7 @@ void EditorColorSchemeWidget::on_actionExport_Scheme_triggered()
         PColorScheme scheme = getCurrentScheme();
         scheme->save(filename);
     } catch (FileError e) {
-        QMessageBox::information(this,tr("Error"),e.reason());
+        QMessageBox::critical(this,tr("Error"),e.reason());
         return;
     }
 }
@@ -422,7 +422,7 @@ void EditorColorSchemeWidget::on_actionDelete_Scheme_triggered()
 {
 
     QString name = ui->cbScheme->currentText();
-    if (QMessageBox::information(this,tr("Confirm Delete Scheme"),
+    if (QMessageBox::warning(this,tr("Confirm Delete Scheme"),
                    tr("Scheme '%1' will be deleted!<br />Do you really want to continue?")
                    .arg(name),
                    QMessageBox::Yes, QMessageBox::No)!=QMessageBox::Yes)
@@ -436,6 +436,6 @@ void EditorColorSchemeWidget::on_actionDelete_Scheme_triggered()
                 doSave();
         }
     }  catch (FileError e) {
-        QMessageBox::information(this,tr("Error"),e.reason());
+        QMessageBox::critical(this,tr("Error"),e.reason());
     }
 }

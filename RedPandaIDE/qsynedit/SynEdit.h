@@ -229,9 +229,10 @@ public:
     virtual void redo()  { CommandProcessor(SynEditorCommand::ecRedo);}
     virtual void zoomIn()  { CommandProcessor(SynEditorCommand::ecZoomIn);}
     virtual void zoomOut()  { CommandProcessor(SynEditorCommand::ecZoomOut);}
-    virtual void selectAll() { { CommandProcessor(SynEditorCommand::ecSelectAll);}}
-    virtual void tab() { { CommandProcessor(SynEditorCommand::ecTab);}}
-    virtual void untab() { { CommandProcessor(SynEditorCommand::ecShiftTab);}}
+    virtual void selectAll() {  CommandProcessor(SynEditorCommand::ecSelectAll);}
+    virtual void tab() { CommandProcessor(SynEditorCommand::ecTab);}
+    virtual void untab() { CommandProcessor(SynEditorCommand::ecShiftTab);}
+    virtual void toggleComment() { CommandProcessor(SynEditorCommand::ecToggleComment);}
 
 
 // setter && getters
@@ -469,6 +470,9 @@ private:
     void doZoomIn();
     void doZoomOut();
     void doSelectAll();
+    void doComment();
+    void doUncomment();
+    void doToggleComment();
 
 private:
     void setBlockBegin(BufferCoord value);

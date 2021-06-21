@@ -257,7 +257,7 @@ void MainWindow::on_actionNew_triggered()
         editor->activate();
         updateForEncodingInfo();
     }  catch (FileError e) {
-        QMessageBox::information(this,tr("Error"),e.reason());
+        QMessageBox::critical(this,tr("Error"),e.reason());
     }
 }
 
@@ -276,7 +276,7 @@ void MainWindow::on_actionOpen_triggered()
             &selectedFileFilter);
         openFiles(files);
     }  catch (FileError e) {
-        QMessageBox::information(this,tr("Error"),e.reason());
+        QMessageBox::critical(this,tr("Error"),e.reason());
     }
 }
 
@@ -298,7 +298,7 @@ void MainWindow::on_actionSave_triggered()
         try {
             editor->save();
         } catch(FileError e) {
-            QMessageBox::information(this,tr("Error"),e.reason());
+            QMessageBox::critical(this,tr("Error"),e.reason());
         }
     }    
 }
@@ -310,7 +310,7 @@ void MainWindow::on_actionSaveAs_triggered()
         try {
             editor->saveAs();
         } catch(FileError e) {
-            QMessageBox::information(this,tr("Error"),e.reason());
+            QMessageBox::critical(this,tr("Error"),e.reason());
         }
     }
 }
@@ -337,6 +337,11 @@ void MainWindow::onCompileLog(const QString &msg)
 void MainWindow::onCompileIssue(PCompileIssue issue)
 {
     ui->tableIssues->addIssue(issue);
+}
+
+void MainWindow::onCompileErrorOccured(const QString &reason)
+{
+    QMessageBox::critical(this,tr("Compile Failed"),reason);
 }
 
 void MainWindow::on_actionCompile_triggered()
@@ -425,7 +430,7 @@ void MainWindow::on_actionToggleComment_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor != NULL ) {
-        //editor->toggleComment();
+        editor->toggleComment();
     }
 }
 
@@ -468,7 +473,7 @@ void MainWindow::on_actionEncode_in_ANSI_triggered()
     try {
         editor->setEncodingOption(ENCODING_SYSTEM_DEFAULT);
     } catch(FileError e) {
-        QMessageBox::information(this,tr("Error"),e.reason());
+        QMessageBox::critical(this,tr("Error"),e.reason());
     }
 }
 
@@ -480,7 +485,7 @@ void MainWindow::on_actionEncode_in_UTF_8_triggered()
     try {
         editor->setEncodingOption(ENCODING_UTF8);
     } catch(FileError e) {
-        QMessageBox::information(this,tr("Error"),e.reason());
+        QMessageBox::critical(this,tr("Error"),e.reason());
     }
 }
 
@@ -497,7 +502,7 @@ void MainWindow::on_actionConvert_to_ANSI_triggered()
     Editor * editor = mEditorList->getEditor();
     if (editor == nullptr)
         return;
-    if (QMessageBox::information(this,tr("Confirm Convertion"),
+    if (QMessageBox::warning(this,tr("Confirm Convertion"),
                    tr("The editing file will be saved using %1 encoding. <br />This operation can't be reverted. <br />Are you sure to continue?")
                    .arg(QString(QTextCodec::codecForLocale()->name())),
                    QMessageBox::Yes, QMessageBox::No)!=QMessageBox::Yes)
@@ -511,7 +516,7 @@ void MainWindow::on_actionConvert_to_UTF_8_triggered()
     Editor * editor = mEditorList->getEditor();
     if (editor == nullptr)
         return;
-    if (QMessageBox::information(this,tr("Confirm Convertion"),
+    if (QMessageBox::warning(this,tr("Confirm Convertion"),
                    tr("The editing file will be saved using %1 encoding. <br />This operation can't be reverted. <br />Are you sure to continue?")
                    .arg(ENCODING_UTF8),
                    QMessageBox::Yes, QMessageBox::No)!=QMessageBox::Yes)

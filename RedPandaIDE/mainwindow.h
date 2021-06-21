@@ -91,6 +91,7 @@ private slots:
 public slots:
     void onCompileLog(const QString& msg);
     void onCompileIssue(PCompileIssue issue);
+    void onCompileErrorOccured(const QString& reason);
 
 private:
     void setupActions();

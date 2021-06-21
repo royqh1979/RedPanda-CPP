@@ -126,7 +126,7 @@ bool Editor::save(bool force, bool reparse) {
     QFileInfo info(mFilename);
     //is this file writable;
     if (!force && !info.isWritable()) {
-        QMessageBox::information(pMainWindow,tr("Fail"),
+        QMessageBox::critical(pMainWindow,tr("Error"),
                                  tr("File %1 is not writable!").arg(mFilename));
         return false;
     }
@@ -137,7 +137,7 @@ bool Editor::save(bool force, bool reparse) {
             mIsNew = false;
             this->updateCaption();
         }  catch (SaveException& exception) {
-            QMessageBox::information(pMainWindow,tr("Fail"),
+            QMessageBox::critical(pMainWindow,tr("Error"),
                                      exception.reason());
             return false;
         }
@@ -164,7 +164,7 @@ bool Editor::saveAs(){
         setModified(false);
         this->updateCaption();
     }  catch (SaveException& exception) {
-        QMessageBox::information(pMainWindow,tr("Fail"),
+        QMessageBox::critical(pMainWindow,tr("Error"),
                                  exception.reason());
         return false;
     }
@@ -251,12 +251,12 @@ void Editor::copyToClipboard()
 {
     if (pSettings->editor().copySizeLimit()) {
         if (lines()->count() > pSettings->editor().copyLineLimits()) {
-            QMessageBox::information(pMainWindow,tr("Fail"),
+            QMessageBox::critical(pMainWindow,tr("Error"),
                                      tr("The text to be copied exceeds count limit!"));
             return;
         }
         if (lines()->getTextLength() > pSettings->editor().copyCharLimits() * 1000) {
-            QMessageBox::information(pMainWindow,tr("Fail"),
+            QMessageBox::critical(pMainWindow,tr("Error"),
                                      tr("The text to be copied exceeds character limit!"));
             return;
         }
@@ -274,12 +274,12 @@ void Editor::cutToClipboard()
 {
     if (pSettings->editor().copySizeLimit()) {
         if (lines()->count() > pSettings->editor().copyLineLimits()) {
-            QMessageBox::information(pMainWindow,tr("Fail"),
+            QMessageBox::critical(pMainWindow,tr("Error"),
                                      tr("The text to be cut exceeds count limit!"));
             return;
         }
         if (lines()->getTextLength() > pSettings->editor().copyCharLimits() * 1000) {
-            QMessageBox::information(pMainWindow,tr("Fail"),
+            QMessageBox::critical(pMainWindow,tr("Error"),
                                      tr("The text to be cut exceeds character limit!"));
             return;
         }

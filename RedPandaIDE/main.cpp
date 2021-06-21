@@ -30,14 +30,14 @@ Settings* createAppSettings(const QString& filepath = QString()) {
     QDir dir(fileInfo.absoluteDir());
     if (!dir.exists()) {
         if (!dir.mkpath(dir.absolutePath())) {
-            QMessageBox::information(nullptr, QObject::tr("Error"),
+            QMessageBox::critical(nullptr, QObject::tr("Error"),
                 QString(QObject::tr("Can't create configuration folder %1")).arg(dir.absolutePath()));
             return nullptr;
         }
     }
 
     if (fileInfo.exists() && !fileInfo.isWritable()) {
-        QMessageBox::information(nullptr, QObject::tr("Error"),
+        QMessageBox::critical(nullptr, QObject::tr("Error"),
             QString(QObject::tr("Can't write to configuration file %1")).arg(filename));
 
         return nullptr;
@@ -83,6 +83,6 @@ int main(int argc, char *argv[])
         // settings->compilerSets().saveSets();
         return retCode;
     }  catch (BaseError e) {
-        QMessageBox::information(nullptr,QApplication::tr("Error"),e.reason());
+        QMessageBox::critical(nullptr,QApplication::tr("Error"),e.reason());
     }
 }

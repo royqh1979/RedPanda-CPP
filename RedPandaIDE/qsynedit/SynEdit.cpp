@@ -1121,6 +1121,149 @@ void SynEdit::doSelectAll()
     statusChanged(SynStatusChange::scSelection);
 }
 
+void SynEdit::doComment()
+{
+    BufferCoord origBlockBegin, origBlockEnd, origCaret;
+    int endLine;
+    if (mReadOnly)
+        return;
+    doOnPaintTransient(SynTransientType::ttBefore);
+    mUndoList->BeginBlock();
+    auto action = finally([this]{
+        mUndoList->EndBlock();
+    });
+    origBlockBegin = blockBegin();
+    origBlockEnd = blockEnd();
+    origCaret = caretXY();
+    // Ignore the last line the cursor is placed on
+    if (origBlockEnd.Char == 1)
+        endLine = std::max(origBlockBegin.Line - 1, origBlockEnd.Line - 2);
+    else
+        endLine = origBlockEnd.Line - 1;
+    for (int i = origBlockBegin.Line - 1; i<=endLine; i++) {
+        mLines->putString(i, "//" + mLines->getString(i));
+        mUndoList->AddChange(SynChangeReason::crInsert,
+              BufferCoord{1, i + 1},
+              BufferCoord{3, i + 1},
+              "", SynSelectionMode::smNormal);
+    }
+    // When grouping similar commands, process one comment action per undo/redo
+    mUndoList->AddChange(SynChangeReason::crNothing,
+                         BufferCoord{0, 0},
+                         BufferCoord{0, 0},
+                         "", SynSelectionMode::smNormal);
+    // Move begin of selection
+    if (origBlockBegin.Char > 1)
+        origBlockBegin.Char+=2;
+    // Move end of selection
+    if (origBlockEnd.Char > 1)
+        origBlockEnd.Char+=2;
+    // Move caret
+    if (origCaret.Char > 1)
+          origCaret.Char+=2;
+    setCaretAndSelection(origCaret, origBlockBegin, origBlockEnd);
+}
+
+void SynEdit::doUncomment()
+{
+    BufferCoord origBlockBegin, origBlockEnd, origCaret;
+    int endLine;
+    QString s;
+    if (mReadOnly)
+        return;
+    doOnPaintTransient(SynTransientType::ttBefore);
+    mUndoList->BeginBlock();
+    auto action = finally([this]{
+        mUndoList->EndBlock();
+    });
+    origBlockBegin = blockBegin();
+    origBlockEnd = blockEnd();
+    origCaret = caretXY();
+    // Ignore the last line the cursor is placed on
+    if (origBlockEnd.Char == 1)
+        endLine = std::max(origBlockBegin.Line - 1, origBlockEnd.Line - 2);
+    else
+        endLine = origBlockEnd.Line - 1;
+    for (int i = origBlockBegin.Line - 1; i<= endLine; i++) {
+        s = mLines->getString(i);
+        // Find // after blanks only
+        int j = 0;
+        while ((j+1 < s.length()) && (s[j] == '\n' || s[j] == '\t'))
+            j++;
+        if ((j + 1 < s.length()) && (s[j] == '/') && (s[j + 1] == '/')) {
+            s.remove(j,2);
+            mLines->putString(i,s);
+            mUndoList->AddChange(SynChangeReason::crDelete,
+                                 BufferCoord{j+1, i + 1},
+                                 BufferCoord{j + 3, i + 1},
+                                 "//", SynSelectionMode::smNormal);
+            // Move begin of selection
+            if ((i == origBlockBegin.Line - 1) && (origBlockBegin.Char > 1))
+                origBlockBegin.Char-=2;
+            // Move end of selection
+            if ((i == origBlockEnd.Line - 1) && (origBlockEnd.Char > 1))
+                origBlockEnd.Char-=2;
+            // Move caret
+            if ((i == origCaret.Line - 1) && (origCaret.Char > 1))
+                origCaret.Char-=2;
+        }
+    }
+    // When grouping similar commands, process one uncomment action per undo/redo
+    mUndoList->AddChange(SynChangeReason::crNothing,
+                         BufferCoord{0, 0},
+                         BufferCoord{0, 0},
+                         "", SynSelectionMode::smNormal);
+    setCaretAndSelection(origCaret,origBlockBegin,origBlockEnd);
+}
+
+void SynEdit::doToggleComment()
+{
+    BufferCoord origBlockBegin, origBlockEnd, origCaret;
+    int endLine;
+    QString s;
+    bool allCommented = true;
+    if (mReadOnly)
+        return;
+    doOnPaintTransient(SynTransientType::ttBefore);
+    mUndoList->BeginBlock();
+    auto action = finally([this]{
+        mUndoList->EndBlock();
+    });
+    origBlockBegin = blockBegin();
+    origBlockEnd = blockEnd();
+    origCaret = caretXY();
+    // Ignore the last line the cursor is placed on
+    if (origBlockEnd.Char == 1)
+        endLine = std::max(origBlockBegin.Line - 1, origBlockEnd.Line - 2);
+    else
+        endLine = origBlockEnd.Line - 1;
+    for (int i = origBlockBegin.Line - 1; i<= endLine; i++) {
+        s = mLines->getString(i);
+        // Find // after blanks only
+        int j = 0;
+        while ((j < s.length()) && (s[j] == '\n' || s[j] == '\t'))
+            j++;
+        if (j>= s.length())
+            continue;
+        if (s[j] != '/'){
+            allCommented = false;
+            break;
+        }
+        if (j+1>=s.length()) {
+            allCommented = false;
+            break;
+        }
+        if (s[j + 1] != '/') {
+            allCommented = false;
+            break;
+        }
+    }
+    if (allCommented)
+        doUncomment();
+    else
+        doComment();
+}
+
 void SynEdit::doDeleteLastChar()
 {
     //  if not ReadOnly then begin
@@ -2440,14 +2583,12 @@ int SynEdit::scanRanges()
         mHighlighter->resetState();
         for (int i =0;i<mLines->count();i++) {
             mHighlighter->setLine(mLines->getString(i), i);
-            qDebug()<<i<<mLines->getString(i);
             mHighlighter->nextToEol();
             mLines->setRange(i, mHighlighter->getRangeState());
             mLines->setParenthesisLevel(i, mHighlighter->getParenthesisLevel());
             mLines->setBracketLevel(i, mHighlighter->getBracketLevel());
             mLines->setBraceLevel(i, mHighlighter->getBraceLevel());
         }
-        qDebug()<<"finished.";
     }
 }
 
@@ -4366,6 +4507,15 @@ void SynEdit::ExecuteCommand(SynEditorCommand Command, QChar AChar, void *pData)
     case SynEditorCommand::ecZoomOut:
         doZoomOut();
         break;
+    case SynEditorCommand::ecComment:
+        doComment();
+        break;
+    case SynEditorCommand::ecUncomment:
+        doUncomment();
+        break;
+    case SynEditorCommand::ecToggleComment:
+        doToggleComment();
+        break;
     }
 
 //    procedure ForceCaretX(aCaretX: integer);
@@ -4427,31 +4577,6 @@ void SynEdit::ExecuteCommand(SynEditorCommand Command, QChar AChar, void *pData)
 //      case Command of
 
 
-//        ecComment:
-//          DoComment;
-//        ecUnComment:
-//          DoUncomment;
-//        ecToggleComment:
-//          if not ReadOnly then begin
-//            OrigBlockBegin := BlockBegin;
-//            OrigBlockEnd := BlockEnd;
-
-//            BeginIndex := OrigBlockBegin.Line - 1;
-//            // Ignore the last line the cursor is placed on
-//            if (OrigBlockEnd.Char = 1) and (OrigBlockBegin.Line < OrigBlockEnd.Line) then
-//              EndIndex := max(0, OrigBlockEnd.Line - 2)
-//            else
-//              EndIndex := OrigBlockEnd.Line - 1;
-
-//            // if everything is commented, then uncomment
-//            for I := BeginIndex to EndIndex do begin
-//              if Pos('//', TrimLeft(fLines[i])) <> 1 then begin // not fully commented
-//                DoComment; // comment everything
-//                Exit;
-//              end;
-//            end;
-//            DoUncomment;
-//          end;
 //        ecCommentInline: // toggle inline comment
 //          if not ReadOnly and SelAvail then begin
 //            Temp := SelText;

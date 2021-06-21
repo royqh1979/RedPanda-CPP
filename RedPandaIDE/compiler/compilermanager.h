@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QMutex>
+#include "../utils.h"
 
 class ExecutableRunner;
 class Compiler;
@@ -28,6 +29,11 @@ private:
     QMutex compileMutex;
     QMutex backgroundSyntaxChekMutex;
     QMutex runnerMutex;
+};
+
+class CompileError : public BaseError {
+public:
+    explicit CompileError(const QString& reason);
 };
 
 #endif // COMPILERMANAGER_H

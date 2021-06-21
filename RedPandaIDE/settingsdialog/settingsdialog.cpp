@@ -137,7 +137,7 @@ void SettingsDialog::saveCurrentPageSettings(bool confirm)
     if (!pWidget->isSettingsChanged())
         return;
     if (confirm) {
-        if (QMessageBox::information(this,tr("Save Changes"),
+        if (QMessageBox::warning(this,tr("Save Changes"),
                tr("There are changes in the settings, do you want to save them before swtich to other page?"),
                QMessageBox::Yes, QMessageBox::No)!=QMessageBox::Yes) {
             return;

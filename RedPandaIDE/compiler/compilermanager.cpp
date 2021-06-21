@@ -32,6 +32,7 @@ void CompilerManager::compile(const QString& filename, const QByteArray& encodin
     connect(mCompiler, &Compiler::compileFinished, this ,&CompilerManager::onCompileFinished);
     connect(mCompiler, &Compiler::compileOutput, pMainWindow, &MainWindow::onCompileLog);
     connect(mCompiler, &Compiler::compileIssue, pMainWindow, &MainWindow::onCompileIssue);
+    connect(mCompiler, &Compiler::compileErrorOccured, pMainWindow, &MainWindow::onCompileErrorOccured);
     mCompiler->start();
 }
 
@@ -69,5 +70,10 @@ void CompilerManager::onRunnerTerminated()
     QMutexLocker locker(&runnerMutex);
     qDebug() << "Runner Terminated";
     mRunner=nullptr;
+}
+
+CompileError::CompileError(const QString &reason):BaseError(reason)
+{
+
 }
 

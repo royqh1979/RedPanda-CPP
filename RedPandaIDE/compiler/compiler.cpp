@@ -1,5 +1,6 @@
 #include "compiler.h"
 #include "utils.h"
+#include "compilermanager.h"
 
 #include <QFileInfo>
 #include <QProcess>
@@ -19,24 +20,28 @@ Compiler::Compiler(bool silent,bool onlyCheckSyntax):
 void Compiler::run()
 {
     emit compileStarted();
-    if (prepareForCompile()){
-        mErrorCount = 0;
-        mWarningCount = 0;
-        QElapsedTimer timer;
-        timer.start();
-        runCommand(mCompiler, mArguments, QFileInfo(mCompiler).absolutePath());
+    try {
+        if (prepareForCompile()){
+            mErrorCount = 0;
+            mWarningCount = 0;
+            QElapsedTimer timer;
+            timer.start();
+            runCommand(mCompiler, mArguments, QFileInfo(mCompiler).absolutePath());
 
-        log("");
-        log(tr("Compile Result:"));
-        log("------------------");
-        log(tr("- Errors: %1").arg(mErrorCount));
-        log(tr("- Warnings: %1").arg(mWarningCount));
-        if (!mOutputFile.isEmpty()) {
-            log(tr("- Output Filename: %1").arg(mOutputFile));
-            QLocale locale = QLocale::system();
-            log(tr("- Output Size: %1").arg(locale.formattedDataSize(QFileInfo(mOutputFile).size())));
+            log("");
+            log(tr("Compile Result:"));
+            log("------------------");
+            log(tr("- Errors: %1").arg(mErrorCount));
+            log(tr("- Warnings: %1").arg(mWarningCount));
+            if (!mOutputFile.isEmpty()) {
+                log(tr("- Output Filename: %1").arg(mOutputFile));
+                QLocale locale = QLocale::system();
+                log(tr("- Output Size: %1").arg(locale.formattedDataSize(QFileInfo(mOutputFile).size())));
+            }
+            log(tr("- Compilation Time: %1 secs").arg(timer.elapsed() / 1000.0));
         }
-        log(tr("- Compilation Time: %1 secs").arg(timer.elapsed() / 1000.0));
+    } catch (CompileError e) {
+        emit compileErrorOccured(e.reason());
     }
     emit compileFinished();
 }
@@ -302,9 +307,15 @@ void Compiler::runCommand(const QString &cmd, const QString  &arguments, const Q
 {
     QProcess process;
     mStop = false;
+    bool errorOccurred = false;
     process.setProgram(cmd);
     process.setArguments(QProcess::splitCommand(arguments));
     process.setWorkingDirectory(workingDir);
+
+    process.connect(&process, &QProcess::errorOccurred,
+                    [&](){
+                        errorOccurred= true;
+                    });
 
     process.connect(&process, &QProcess::readyReadStandardError,[&process,this](){
         this->error(QString::fromLocal8Bit( process.readAllStandardError()));
@@ -322,9 +333,30 @@ void Compiler::runCommand(const QString &cmd, const QString  &arguments, const Q
         if (process.state()!=QProcess::Running) {
             break;
         }
-        if (mStop) {
+        if (mStop || errorOccurred) {
             process.kill();
             break;
+        }
+    }
+    if (errorOccurred) {
+        switch (process.error()) {
+        case QProcess::FailedToStart:
+            throw CompileError(tr("The compiler process failed to start."));
+            break;
+        case QProcess::Crashed:
+            throw CompileError(tr("The compiler process crashed after starting successfully."));
+            break;
+        case QProcess::Timedout:
+            throw CompileError(tr("The last waitFor...() function timed out."));
+            break;
+        case QProcess::WriteError:
+            throw CompileError(tr("An error occurred when attempting to write to the compiler process."));
+            break;
+        case QProcess::ReadError:
+            throw CompileError(tr("An error occurred when attempting to read from the compiler process."));
+            break;
+        default:
+            throw CompileError(tr("An unknown error occurred."));
         }
     }
 }
@@ -342,4 +374,3 @@ void Compiler::error(const QString &msg)
             processOutput(s);
     }
 }
-
