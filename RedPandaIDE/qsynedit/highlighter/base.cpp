@@ -98,7 +98,7 @@ bool SynHighlighter::isIdentChar(const QChar &ch) const
     if ((ch>='A') && (ch <= 'Z')) {
         return true;
     }
-
+    return false;
 }
 
 void SynHighlighter::addAttribute(PSynHighlighterAttribute attribute)
