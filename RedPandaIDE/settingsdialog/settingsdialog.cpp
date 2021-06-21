@@ -6,6 +6,7 @@
 #include "editorfontwidget.h"
 #include "editorclipboardwidget.h"
 #include "editorcolorschemewidget.h"
+#include "editorsymbolcompletionwidget.h"
 #include "environmentappearencewidget.h"
 #include <QDebug>
 #include <QMessageBox>
@@ -47,7 +48,9 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     pEditorColorSchemeWidget->init();
     addWidget(pEditorColorSchemeWidget);
 
-
+    pEditorSymbolCompletionWidget = new EditorSymbolCompletionWidget(tr("Symbol Completion"),tr("Editor"));
+    pEditorSymbolCompletionWidget->init();
+    addWidget(pEditorSymbolCompletionWidget);
 
     ui->widgetsView->expandAll();
     //select the first widget of the first group

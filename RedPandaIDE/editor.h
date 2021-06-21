@@ -80,6 +80,9 @@ protected slots:
     void onStatusChanged(SynStatusChanges changes);
 
 private:
+    bool handleSymbolCompletion(QChar ch);
+
+private:
     static int newfileCount;
     QByteArray mEncodingOption; // the encoding type set by the user
     QByteArray mFileEncoding; // the real encoding of the file (auto detected)
@@ -93,6 +96,7 @@ protected:
     void wheelEvent(QWheelEvent *event) override;
     void focusInEvent(QFocusEvent *event);
     void focusOutEvent(QFocusEvent *event);
+    void keyPressEvent(QKeyEvent *event);
 };
 
 #endif // EDITOR_H

@@ -293,6 +293,106 @@ void Settings::Editor::setColorScheme(const QString &colorScheme)
     mColorScheme = colorScheme;
 }
 
+bool Settings::Editor::removeMathcingSymbol() const
+{
+    return mRemoveMathcingSymbol;
+}
+
+void Settings::Editor::setRemoveMathcingSymbol(bool removeMathcingSymbol)
+{
+    mRemoveMathcingSymbol = removeMathcingSymbol;
+}
+
+bool Settings::Editor::overwriteSymbols() const
+{
+    return mOverwriteSymbols;
+}
+
+void Settings::Editor::setOverwriteSymbols(bool overwriteSymbols)
+{
+    mOverwriteSymbols = overwriteSymbols;
+}
+
+bool Settings::Editor::completeGlobalInclude() const
+{
+    return mCompleteGlobalInclude;
+}
+
+void Settings::Editor::setCompleteGlobalInclude(bool completeGlobalInclude)
+{
+    mCompleteGlobalInclude = completeGlobalInclude;
+}
+
+bool Settings::Editor::completeDoubleQuote() const
+{
+    return mCompleteDoubleQuote;
+}
+
+void Settings::Editor::setCompleteDoubleQuote(bool completeDoubleQuote)
+{
+    mCompleteDoubleQuote = completeDoubleQuote;
+}
+
+bool Settings::Editor::completeSingleQuote() const
+{
+    return mCompleteSingleQuote;
+}
+
+void Settings::Editor::setCompleteSingleQuote(bool completeSingleQuote)
+{
+    mCompleteSingleQuote = completeSingleQuote;
+}
+
+bool Settings::Editor::completeComment() const
+{
+    return mCompleteComment;
+}
+
+void Settings::Editor::setCompleteComment(bool completeComment)
+{
+    mCompleteComment = completeComment;
+}
+
+bool Settings::Editor::completeBrace() const
+{
+    return mCompleteBrace;
+}
+
+void Settings::Editor::setCompleteBrace(bool completeBrace)
+{
+    mCompleteBrace = completeBrace;
+}
+
+bool Settings::Editor::completeBracket() const
+{
+    return mCompleteBracket;
+}
+
+void Settings::Editor::setCompleteBracket(bool completeBracket)
+{
+    mCompleteBracket = completeBracket;
+}
+
+bool Settings::Editor::completeParenthese() const
+{
+    return mCompleteParenthese;
+}
+
+void Settings::Editor::setCompleteParenthese(bool completeParenthese)
+{
+    mCompleteParenthese = completeParenthese;
+}
+
+bool Settings::Editor::completeSymbols() const
+{
+    return mCompleteSymbols;
+}
+
+void Settings::Editor::setCompleteSymbols(bool completeSymbols)
+{
+    mCompleteSymbols = completeSymbols;
+}
+
 QString Settings::Editor::copyHTMLColorScheme() const
 {
     return mCopyHTMLColorScheme;
@@ -610,6 +710,18 @@ void Settings::Editor::doSave()
 
     //color scheme
     saveValue("color_scheme", mColorScheme);
+
+    //Symbol Completion
+    saveValue("complete_symbols", mCompleteSymbols);
+    saveValue("complete_parenthese", mCompleteParenthese);
+    saveValue("complete_bracket", mCompleteBracket);
+    saveValue("complete_brace", mCompleteBrace);
+    saveValue("complete_comment", mCompleteComment);
+    saveValue("complete_single_quote", mCompleteSingleQuote);
+    saveValue("complete_double_quote", mCompleteDoubleQuote);
+    saveValue("complete_global_include", mCompleteGlobalInclude);
+    saveValue("overwrite_symbols", mOverwriteSymbols);
+    saveValue("remove_matching_symbols",mRemoveMathcingSymbol);
 }
 
 void Settings::Editor::doLoad()
@@ -664,13 +776,25 @@ void Settings::Editor::doLoad()
     mCopyWithFormatAs = intValue("copy_with_format_as",0);
     mCopyRTFUseBackground = boolValue("copy_rtf_use_background",false);
     mCopyRTFUseEditorColor = boolValue("copy_rtf_use_editor_color_scheme",true);
-    mCopyRTFColorScheme = stringValue("copy_rtf_color_scheme","");
+    mCopyRTFColorScheme = stringValue("copy_rtf_color_scheme","Intellij Classic");
     mCopyHTMLUseBackground = boolValue("copy_html_use_background",false);
     mCopyHTMLUseEditorColor = boolValue("copy_html_use_editor_color_scheme",true);
-    mCopyHTMLColorScheme = stringValue("copy_html_color_scheme","");
+    mCopyHTMLColorScheme = stringValue("copy_html_color_scheme","Intellij Classic");
 
     //color
     mColorScheme = stringValue("color_scheme", "VS Code");
+
+    //Symbol Completion
+    mCompleteSymbols = boolValue("complete_symbols",true);
+    mCompleteParenthese = boolValue("complete_parenthese",true);
+    mCompleteBracket = boolValue("complete_bracket",true);
+    mCompleteBrace = boolValue("complete_brace",true);
+    mCompleteComment = boolValue("complete_comment",true);
+    mCompleteSingleQuote = boolValue("complete_single_quote",true);
+    mCompleteDoubleQuote = boolValue("complete_double_quote",true);
+    mCompleteGlobalInclude = boolValue("complete_global_include",true);
+    mOverwriteSymbols = boolValue("overwrite_symbols",true);
+    mRemoveMathcingSymbol = boolValue("remove_matching_symbols",true);
 }
 
 SynEditCaretType Settings::Editor::caretForOverwrite() const
@@ -1833,7 +1957,7 @@ Settings::Environment::Environment(Settings *settings):_Base(settings, SETTING_E
 void Settings::Environment::doLoad()
 {
     //Appearence
-    mTheme = stringValue("theme","default");
+    mTheme = stringValue("theme","dark");
     mInterfaceFont = stringValue("interface font","Segoe UI");
     mInterfaceFontSize = intValue("interface font size",10);
     mLanguage = stringValue("language", QLocale::system().name());

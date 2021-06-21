@@ -10,11 +10,12 @@ namespace Ui {
 class SettingsDialog;
 }
 
+class PCompilerSet;
 class CompilerSetOptionWidget;
 class EditorGeneralWidget;
 class EditorFontWidget;
 class EditorClipboardWidget;
-class PCompilerSet;
+class EditorSymbolCompletionWidget;
 class EditorColorSchemeWidget;
 class EnvironmentAppearenceWidget;
 class SettingsWidget;
@@ -52,6 +53,7 @@ private:
     EditorClipboardWidget *pEditorClipboardWidget;
     EditorColorSchemeWidget *pEditorColorSchemeWidget;
     EnvironmentAppearenceWidget* pEnvironmentAppearenceWidget;
+    EditorSymbolCompletionWidget* pEditorSymbolCompletionWidget;
 };
 
 #endif // SETTINGSDIALOG_H

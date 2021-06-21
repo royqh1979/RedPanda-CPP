@@ -247,6 +247,34 @@ void Editor::focusOutEvent(QFocusEvent *event)
     pMainWindow->updateForStatusbarModeInfo();
 }
 
+void Editor::keyPressEvent(QKeyEvent *event)
+{
+    bool handled = false;
+    QString t = event->text();
+    if (!t.isEmpty()) {
+        QChar ch = t;
+        switch (ch.unicode()) {
+        case '"':
+        case '\'':
+        case '(':
+        case ')':
+        case '{':
+        case '}':
+        case '[':
+        case ']':
+        case '<':
+        case '>':
+        case ';':
+            handled = handleSymbolCompletion(ch);
+        }
+    }
+    if (!handled) {
+        SynEdit::keyPressEvent(event);
+    } else {
+        event->accept();
+    }
+}
+
 void Editor::copyToClipboard()
 {
     if (pSettings->editor().copySizeLimit()) {
@@ -403,7 +431,12 @@ void Editor::onStatusChanged(SynStatusChanges changes)
 
     pMainWindow->updateEditorActions();
 
-//    mainForm.CaretList.AddCaret(self,fText.CaretY,fText.CaretX);
+    //    mainForm.CaretList.AddCaret(self,fText.CaretY,fText.CaretX);
+}
+
+bool Editor::handleSymbolCompletion(QChar ch)
+{
+
 }
 
 void Editor::applySettings()

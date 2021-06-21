@@ -218,6 +218,36 @@ public:
         QString colorScheme() const;
         void setColorScheme(const QString &colorScheme);
 
+        bool completeSymbols() const;
+        void setCompleteSymbols(bool completeSymbols);
+
+        bool completeParenthese() const;
+        void setCompleteParenthese(bool completeParenthese);
+
+        bool completeBracket() const;
+        void setCompleteBracket(bool completeBracket);
+
+        bool completeBrace() const;
+        void setCompleteBrace(bool completeBrace);
+
+        bool completeComment() const;
+        void setCompleteComment(bool completeComment);
+
+        bool completeSingleQuote() const;
+        void setCompleteSingleQuote(bool completeSingleQuote);
+
+        bool completeDoubleQuote() const;
+        void setCompleteDoubleQuote(bool completeDoubleQuote);
+
+        bool completeGlobalInclude() const;
+        void setCompleteGlobalInclude(bool completeGlobalInclude);
+
+        bool overwriteSymbols() const;
+        void setOverwriteSymbols(bool overwriteSymbols);
+
+        bool removeMathcingSymbol() const;
+        void setRemoveMathcingSymbol(bool removeMathcingSymbol);
+
     private:
         QByteArray mDefaultEncoding;
         //General
@@ -276,6 +306,18 @@ public:
 
         //Color
         QString mColorScheme;
+
+        //Symbol Completion
+        bool mCompleteSymbols;
+        bool mCompleteParenthese;
+        bool mCompleteBracket;
+        bool mCompleteBrace;
+        bool mCompleteComment;
+        bool mCompleteSingleQuote;
+        bool mCompleteDoubleQuote;
+        bool mCompleteGlobalInclude;
+        bool mOverwriteSymbols;
+        bool mRemoveMathcingSymbol;
 
         // _Base interface
     protected:
