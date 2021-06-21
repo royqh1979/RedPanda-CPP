@@ -379,7 +379,7 @@ private:
     QString expandAtWideGlyphs(const QString& S);
     void updateModifiedStatus();
     int scanFrom(int Index);
-    int scanRanges();
+    void scanRanges();
     void uncollapse(PSynEditFoldRange FoldRange);
     void collapse(PSynEditFoldRange FoldRange);
 

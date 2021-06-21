@@ -243,7 +243,7 @@ int SynEditStringList::add(const QString &s)
     return Result;
 }
 
-int SynEditStringList::addStrings(const QStringList &Strings)
+void SynEditStringList::addStrings(const QStringList &Strings)
 {
     if (Strings.count() > 0) {
         mIndexOfLongestLine = -1;
@@ -739,7 +739,7 @@ SynChangeReason SynEditUndoList::LastChangeReason()
     if (mItems.count() == 0)
         return SynChangeReason::crNothing;
     else
-        mItems.last()->changeReason();
+        return mItems.last()->changeReason();
 }
 
 void SynEditUndoList::Lock()

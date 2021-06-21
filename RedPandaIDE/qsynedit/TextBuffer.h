@@ -75,7 +75,7 @@ public:
     void endUpdate();
 
     int add(const QString& s);
-    int addStrings(const QStringList& Strings);
+    void addStrings(const QStringList& Strings);
 
     int getTextLength();
     void clear();

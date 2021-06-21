@@ -575,6 +575,7 @@ bool ColorManager::add(const QString &name, PColorScheme scheme)
     scheme->setCustomed(false);
     mSchemes[name] = scheme;
     saveScheme(name);
+    return true;
 }
 
 PColorScheme ColorManager::get(const QString &name)
@@ -634,6 +635,7 @@ bool ColorManager::saveScheme(const QString &name)
         return false;
     QString newFilepath = generateFullPathname(name,scheme->bundled(),scheme->customed());
     scheme->save(newFilepath);
+    return true;
 }
 
 QString ColorManager::generateFullPathname(const QString &name, bool isBundled, bool isCustomed)

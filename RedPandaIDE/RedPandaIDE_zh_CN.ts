@@ -1003,7 +1003,7 @@ Are you really want to continue?</source>
     <message>
         <location filename="mainwindow.cpp" line="274"/>
         <source>Open</source>
-        <translation>打开打开</translation>
+        <translation>打开</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="499"/>

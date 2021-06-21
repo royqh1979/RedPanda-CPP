@@ -252,7 +252,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
     bool handled = false;
     QString t = event->text();
     if (!t.isEmpty()) {
-        QChar ch = t;
+        QChar ch = t[0];
         switch (ch.unicode()) {
         case '"':
         case '\'':

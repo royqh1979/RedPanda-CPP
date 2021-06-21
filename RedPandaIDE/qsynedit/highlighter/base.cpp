@@ -89,13 +89,13 @@ bool SynHighlighter::isIdentChar(const QChar &ch) const
     if (ch == '_') {
         return true;
     }
-    if (ch>='0' && ch <= '9') {
+    if ((ch>='0') && (ch <= '9')) {
         return true;
     }
-    if (ch>='a' && ch <= 'z') {
+    if ((ch>='a') && (ch <= 'z')) {
         return true;
     }
-    if (ch>='A' && ch <= 'Z') {
+    if ((ch>='A') && (ch <= 'Z')) {
         return true;
     }
 

@@ -84,5 +84,6 @@ int main(int argc, char *argv[])
         return retCode;
     }  catch (BaseError e) {
         QMessageBox::critical(nullptr,QApplication::tr("Error"),e.reason());
+        return -1;
     }
 }

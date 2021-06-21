@@ -6,7 +6,7 @@ int SynEditFoldRegions::count()
     return fRegions.size();
 }
 
-int SynEditFoldRegions::add(bool addEnding, const QChar &openSymbol, const QChar &closeSymbol, const QString &highlight)
+PSynEditFoldRegion SynEditFoldRegions::add(bool addEnding, const QChar &openSymbol, const QChar &closeSymbol, const QString &highlight)
 {
     PSynEditFoldRegion region = std::make_shared<SynEditFoldRegion>();
     region->addEnding = addEnding;
@@ -14,6 +14,7 @@ int SynEditFoldRegions::add(bool addEnding, const QChar &openSymbol, const QChar
     region->closeSymbol = closeSymbol;
     region->highlight = highlight;
     fRegions.push_back(region);
+    return region;
 }
 
 PSynEditFoldRegion SynEditFoldRegions::get(int index)
@@ -104,7 +105,7 @@ void SynEditFoldRanges::insert(int index, PSynEditFoldRange range)
     mRanges.insert(index,range);
 }
 
-int SynEditFoldRanges::remove(int index)
+void SynEditFoldRanges::remove(int index)
 {
     mRanges.remove(index);
 }

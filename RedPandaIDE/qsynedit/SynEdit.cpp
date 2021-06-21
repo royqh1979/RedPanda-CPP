@@ -553,6 +553,7 @@ int SynEdit::charToColumn(int aLine, int aChar) const
         QString s = mLines->getString(aLine - 1);
         return charToColumn(s,aChar);
     }
+    return aChar;
 }
 
 int SynEdit::charToColumn(const QString &s, int aChar) const
@@ -587,6 +588,7 @@ int SynEdit::columnToChar(int aLine, int aColumn) const
         }
         return i+1;
     }
+    return aColumn;
 }
 
 int SynEdit::stringColumns(const QString &line, int colsBefore) const
@@ -2537,6 +2539,7 @@ QString SynEdit::expandAtWideGlyphs(const QString &S)
         j++;
     }
     Result.resize(j);
+    return Result;
 }
 
 void SynEdit::updateModifiedStatus()
@@ -2577,7 +2580,7 @@ int SynEdit::scanFrom(int Index)
     return Result;
 }
 
-int SynEdit::scanRanges()
+void SynEdit::scanRanges()
 {
     if (mHighlighter && !mLines->empty()) {
         mHighlighter->resetState();
@@ -4227,6 +4230,7 @@ int SynEdit::InsertTextByColumnMode(const QString &Value, bool AddToUndoList)
     } while (P<Value.length());
     mCaretX+=Str.length();
     mStatusChanges.setFlag(SynStatusChange::scCaretX);
+    return Result;
 }
 
 int SynEdit::InsertTextByLineMode(const QString &Value)
@@ -4258,6 +4262,7 @@ int SynEdit::InsertTextByLineMode(const QString &Value)
             P++;
         Start = P;
     } while (P<Value.length());
+    return Result;
 }
 
 void SynEdit::DeleteFromTo(const BufferCoord &start, const BufferCoord &end)
@@ -4829,7 +4834,7 @@ bool SynEdit::event(QEvent *event)
         break;
     }
     }
-    QAbstractScrollArea::event(event);
+    return QAbstractScrollArea::event(event);
 }
 
 void SynEdit::focusInEvent(QFocusEvent *)

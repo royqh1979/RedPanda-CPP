@@ -94,9 +94,9 @@ private:
     // QWidget interface
 protected:
     void wheelEvent(QWheelEvent *event) override;
-    void focusInEvent(QFocusEvent *event);
-    void focusOutEvent(QFocusEvent *event);
-    void keyPressEvent(QKeyEvent *event);
+    void focusInEvent(QFocusEvent *event) override;
+    void focusOutEvent(QFocusEvent *event) override;
+    void keyPressEvent(QKeyEvent *event) override;
 };
 
 #endif // EDITOR_H

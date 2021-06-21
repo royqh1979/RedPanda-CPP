@@ -13,7 +13,7 @@ private:
     std::vector<PSynEditFoldRegion> fRegions;
 public:
     int count();
-    int add(bool addEnding, const QChar& openSymbol, const QChar& closeSymbol, const QString& highlight);
+    PSynEditFoldRegion add(bool addEnding, const QChar& openSymbol, const QChar& closeSymbol, const QString& highlight);
     PSynEditFoldRegion get(int index);
 };
 typedef std::shared_ptr<SynEditFoldRegions> PSynFoldRegions;
@@ -54,7 +54,7 @@ public:
                                int aFromLine, PSynEditFoldRegion aFoldRegion, int aToLine);
 
     void insert(int index, PSynEditFoldRange range);
-    int remove(int index);
+    void remove(int index);
     void add(PSynEditFoldRange foldRange);
     PSynEditFoldRange operator[](int index) const;
 };
