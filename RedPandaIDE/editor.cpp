@@ -264,7 +264,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
         case ']':
         case '<':
         case '>':
-        case ';':
+        case '*':
             handled = handleSymbolCompletion(ch);
         }
     }
@@ -434,9 +434,192 @@ void Editor::onStatusChanged(SynStatusChanges changes)
     //    mainForm.CaretList.AddCaret(self,fText.CaretY,fText.CaretX);
 }
 
-bool Editor::handleSymbolCompletion(QChar ch)
+bool Editor::handleSymbolCompletion(QChar key)
 {
+    if (!pSettings->editor().completeSymbols() || selAvail())
+        return false;
 
+    //todo: better methods to detect current caret type
+    if (caretX() <= 1) {
+        if (caretY()>1) {
+            if (highlighter()->isLastLineCommentNotFinished(lines()->ranges(caretY() - 2).state))
+                return false;
+            if (highlighter()->isLastLineStringNotFinished(lines()->ranges(caretY() - 2).state)
+                    && (key!='\"') && (key!='\''))
+                return false;
+        }
+    } else {
+        BufferCoord  HighlightPos = BufferCoord{caretX()-1, caretY()};
+        // Check if that line is highlighted as  comment
+        PSynHighlighterAttribute Attr;
+        QString Token;
+        bool tokenFinished;
+        SynHighlighterTokenType tokenType;
+        if (GetHighlighterAttriAtRowCol(HighlightPos, Token, tokenFinished, tokenType,Attr)) {
+            if ((tokenType == SynHighlighterTokenType::Comment) && (!tokenFinished))
+                return false;
+            if ((tokenType == SynHighlighterTokenType::String) && (!tokenFinished)
+                    && (key!='\'') && (key!='\"') && (key!='(') && (key!=')'))
+                return false;
+            if (( key=='<' || key =='>') && (tokenType != SynHighlighterTokenType::PreprocessDirective))
+                return false;
+            if ((key == '\'') && (Attr->name() == "SYNS_AttrNumber"))
+                return false;
+        }
+    }
+
+    // Check if that line is highlighted as string or character or comment
+    //    if (Attr = fText.Highlighter.StringAttribute) or (Attr = fText.Highlighter.CommentAttribute) or SameStr(Attr.Name,
+    //      'Character') then
+    //      Exit;
+
+    QuoteStatus status;
+    switch(key.unicode()) {
+    case '(':
+        if (pSettings->editor().completeParenthese()) {
+            handleParentheseCompletion();
+            return true;
+        }
+        return false;
+    case ')':
+        if (pSettings->editor().completeParenthese() && pSettings->editor().overwriteSymbols()) {
+            handleParentheseSkip();
+            return true;
+        }
+        return false;
+    case '[':
+          if (pSettings->editor().completeBracket()) {
+              handleBracketCompletion();
+              return true;
+          }
+          return false;
+    case ']':
+          if (pSettings->editor().completeBracket() && pSettings->editor().overwriteSymbols()) {
+              HandleBracketSkip();
+              return true;
+          }
+          return false;
+    case '*':
+          status = getQuoteState();
+          if (pSettings->editor().completeComment() && (status == QuoteStatus::NotQuote)) {
+              handleMultilineCommentCompletion();
+              return true;
+          }
+          return false;
+    case '{':
+          if (pSettings->editor().completeBrace()) {
+              handleBraceCompletion();
+              return true;
+          }
+          return false;
+    case '}':
+        if (pSettings->editor().completeBrace() && pSettings->editor().overwriteSymbols()) {
+            handleBraceSkip();
+            return true;
+        }
+        return false;
+    case '\'':
+        if (pSettings->editor().completeSingleQuote()) {
+            handleSingleQuoteCompletion();
+            return true;
+        }
+        return false;
+    case '\"':
+        if (pSettings->editor().completeDoubleQuote()) {
+            handleDoubleQuoteCompletion();
+            return true;
+        }
+        return false;
+    case '<':
+        if (pSettings->editor().completeGlobalInclude()) { // #include <>
+            handleGlobalIncludeCompletion();
+            return true;
+        }
+        return false;
+    case '>':
+        if (pSettings->editor().completeGlobalInclude() && pSettings->editor().overwriteSymbols()) { // #include <>
+            handleGlobalIncludeSkip();
+            return true;
+        }
+        return false;
+    }
+    return false;
+}
+
+void Editor::handleParentheseCompletion()
+{
+    status := GetQuoteState;
+if (status in [RawString,NotQuote]) then begin
+  InsertString(')', false);
+end;
+if (status=NotQuote) and FunctionTipAllowed then
+        fFunctionTip.Activated := true;
+}
+
+Editor::QuoteStatus Editor::getQuoteStatus()
+{
+    QuoteStatus Result = QuoteStatus::NotQuote;
+    if ((caretY()>1) && highlighter()->isLastLineStringNotFinished(lines()->ranges(caretY() - 2).state))
+        Result = QuoteStatus::DoubleQuote;
+
+    QString Line = lines()->getString(caretY()-1);
+    int posX =fText.CaretX-1;
+if posX > Length(Line) then begin
+  posX := Length(Line);
+end;
+i:=1;
+while (i<=posX) do begin
+  if (Line[i] = 'R') and (Line[i+1] = '"') and (Result = NotQuote) then begin
+    Result := RawString;
+    inc(i); // skip R
+  end else if Line[i] = '(' then begin
+    Case Result of
+      RawString: Result:=RawStringNoEscape;
+      //RawStringNoEscape: do nothing
+    end
+  end else if Line[i] = ')' then begin
+    Case Result of
+      RawStringNoEscape: Result:=RawString;
+    end
+  end else if Line[i] = '"' then begin
+    Case Result of
+      NotQuote: Result := DoubleQuote;
+      SingleQuote: Result := SingleQuote;
+      SingleQuoteEscape: Result := SingleQuote;
+      DoubleQuote: Result := NotQuote;
+      DoubleQuoteEscape: Result := DoubleQuote;
+      RawString: Result:=NotQuote;
+      //RawStringNoEscape: do nothing
+    end
+  end else if Line[i] = '''' then
+    Case Result of
+      NotQuote: Result := SingleQuote;
+      SingleQuote: Result := NotQuote;
+      SingleQuoteEscape: Result := SingleQuote;
+      DoubleQuote: Result := DoubleQuote;
+      DoubleQuoteEscape: Result := DoubleQuote;
+    end
+  else if Line[i] = '\' then
+    Case Result of
+      NotQuote: Result := NotQuote;
+      SingleQuote: Result := SingleQuoteEscape;
+      SingleQuoteEscape: Result := SingleQuote;
+      DoubleQuote: Result := DoubleQuoteEscape;
+      DoubleQuoteEscape: Result := DoubleQuote;
+    end
+  else begin
+    Case Result of
+      NotQuote: Result := NotQuote;
+      SingleQuote: Result := SingleQuote;
+      SingleQuoteEscape: Result := SingleQuote;
+      DoubleQuote: Result := DoubleQuote;
+      DoubleQuoteEscape: Result := DoubleQuote;
+    end;
+  end;
+  inc(i);
+end;
+end;
+    return Result;
 }
 
 void Editor::applySettings()

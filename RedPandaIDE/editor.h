@@ -36,6 +36,16 @@ public:
         WarningMarker
     };
 
+    enum class QuoteStatus {
+        NotQuote,
+        SingleQuote,
+        SingleQuoteEscape,
+        DoubleQuote,
+        DoubleQuoteEscape,
+        RawString,
+        RawStringNoEscape
+    };
+
     explicit Editor(QWidget *parent);
 
     explicit Editor(QWidget *parent, const QString& filename,
@@ -80,7 +90,9 @@ protected slots:
     void onStatusChanged(SynStatusChanges changes);
 
 private:
-    bool handleSymbolCompletion(QChar ch);
+    bool handleSymbolCompletion(QChar key);
+    void handleParentheseCompletion();
+    QuoteStatus getQuoteStatus();
 
 private:
     static int newfileCount;
