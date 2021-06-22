@@ -1271,6 +1271,7 @@ void Settings::CompilerSet::setProperties(const QString &binDir)
     addExistingDirectory(mCppIncludeDirs, includeTrailingPathDelimiter(folder) + "include");
 
     // Find default directories
+    // C include dirs
     arguments.clear();
     arguments.append("-xc");
     arguments.append("-v");
@@ -1278,7 +1279,7 @@ void Settings::CompilerSet::setProperties(const QString &binDir)
     arguments.append(NULL_FILE);
     output = getCompilerOutput(binDir,GCC_PROGRAM,arguments);
 
-    // C include dirs
+
     delimPos1 = output.indexOf("#include <...> search starts here:");
     delimPos2 = output.indexOf("End of search list.");
     if (delimPos1 >0 && delimPos2>0 ) {
@@ -1291,35 +1292,9 @@ void Settings::CompilerSet::setProperties(const QString &binDir)
             }
         }
     }
-    // bin dirs
-    targetStr = QByteArray("COMPILER_PATH=");
-    delimPos1 = output.indexOf(targetStr);
-    if (delimPos1>=0) {
-        delimPos1+=targetStr.length();
-        delimPos2 = delimPos1;
-        while (delimPos2 < output.length() && output[delimPos2]!='\n')
-            delimPos2+=1;
-        QList<QByteArray> lines = output.mid(delimPos1,delimPos2-delimPos1).split(';');
-        for (QByteArray& line:lines) {
-            QByteArray trimmedLine = line.trimmed();
-            addExistingDirectory(mBinDirs,trimmedLine);
-        }
-    }
-    // lib dirs
-    targetStr = QByteArray("LIBRARY_PATH=");
-    delimPos1 = output.indexOf(targetStr);
-    if (delimPos1>=0) {
-        delimPos1+=targetStr.length();
-        delimPos2 = delimPos1;
-        while (delimPos2 < output.length() && output[delimPos2]!='\n')
-            delimPos2+=1;
-        QList<QByteArray> lines = output.mid(delimPos1,delimPos2-delimPos1).split(';');
-        for (QByteArray& line:lines) {
-            QByteArray trimmedLine = line.trimmed();
-            addExistingDirectory(mLibDirs,trimmedLine);
-        }
-    }
 
+    // Find default directories
+    // C++ include dirs
     arguments.clear();
     arguments.append("-xc++");
     arguments.append("-E");
@@ -1328,7 +1303,6 @@ void Settings::CompilerSet::setProperties(const QString &binDir)
     output = getCompilerOutput(binDir,GCC_PROGRAM,arguments);
     //gcc -xc++ -E -v NUL
 
-    // C include dirs
     delimPos1 = output.indexOf("#include <...> search starts here:");
     delimPos2 = output.indexOf("End of search list.");
     if (delimPos1 >0 && delimPos2>0 ) {
@@ -1342,6 +1316,41 @@ void Settings::CompilerSet::setProperties(const QString &binDir)
         }
     }
 
+    // Find default directories
+    arguments.clear();
+    arguments.append("-print-search-dirs");
+    arguments.append(NULL_FILE);
+    output = getCompilerOutput(binDir,GCC_PROGRAM,arguments);
+    // bin dirs
+    targetStr = QByteArray("programs: =");
+    delimPos1 = output.indexOf(targetStr);
+    if (delimPos1>=0) {
+        delimPos1+=targetStr.length();
+        delimPos2 = delimPos1;
+        while (delimPos2 < output.length() && output[delimPos2]!='\n')
+            delimPos2+=1;
+        QList<QByteArray> lines = output.mid(delimPos1,delimPos2-delimPos1).split(';');
+        for (QByteArray& line:lines) {
+            QByteArray trimmedLine = line.trimmed();
+            if (!trimmedLine.isEmpty())
+                addExistingDirectory(mBinDirs,trimmedLine);
+        }
+    }
+    // lib dirs
+    targetStr = QByteArray("libraries: =");
+    delimPos1 = output.indexOf(targetStr);
+    if (delimPos1>=0) {
+        delimPos1+=targetStr.length();
+        delimPos2 = delimPos1;
+        while (delimPos2 < output.length() && output[delimPos2]!='\n')
+            delimPos2+=1;
+        QList<QByteArray> lines = output.mid(delimPos1,delimPos2-delimPos1).split(';');
+        for (QByteArray& line:lines) {
+            QByteArray trimmedLine = line.trimmed();
+            if (!trimmedLine.isEmpty())
+                addExistingDirectory(mLibDirs,trimmedLine);
+        }
+    }
 }
 
 void Settings::CompilerSet::setDefines() {

@@ -234,6 +234,11 @@ public:
     virtual void untab() { CommandProcessor(SynEditorCommand::ecShiftTab);}
     virtual void toggleComment() { CommandProcessor(SynEditorCommand::ecToggleComment);}
 
+    virtual void beginUpdate();
+    virtual void endUpdate();
+    virtual BufferCoord getMatchingBracket();
+    virtual BufferCoord getMatchingBracketEx(BufferCoord APoint);
+
 
 // setter && getters
     int topLine() const;

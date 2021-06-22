@@ -273,7 +273,6 @@ void SynEdit::setCaretXYCentered(bool ForceToMiddle, const BufferCoord &value)
     mBlockEnd = mBlockBegin;
     if (ForceToMiddle)
         ensureCursorPosVisibleEx(true); // but here after block has been set
-
 }
 
 void SynEdit::setInsertMode(bool value)
@@ -393,6 +392,130 @@ bool SynEdit::GetHighlighterAttriAtRowColEx(const BufferCoord &XY, QString &Toke
     TokenKind = 0;
     TokenType = SynHighlighterTokenType::Default;
     return false;
+}
+
+void SynEdit::beginUpdate()
+{
+    incPaintLock();
+}
+
+void SynEdit::endUpdate()
+{
+    decPaintLock();
+}
+
+BufferCoord SynEdit::getMatchingBracket()
+{
+    return getMatchingBracketEx(caretXY());
+}
+
+BufferCoord SynEdit::getMatchingBracketEx(BufferCoord APoint)
+{
+    QChar Brackets[] = {'(', ')', '[', ']', '{', '}', '<', '>'};
+    QString Line;
+    int i, PosX, PosY, Len;
+    QChar Test, BracketInc, BracketDec;
+    int NumBrackets;
+    QString vDummy;
+    PSynHighlighterAttribute attr;
+    BufferCoord p;
+    bool isCommentOrStringOrChar;
+    int nBrackets = sizeof(Brackets) / sizeof(QChar);
+
+    if (mLines->count()<1)
+        return BufferCoord{0,0};
+    if (!mHighlighter)
+        return BufferCoord{0,0};
+    // get char at caret
+    PosX = std::max(APoint.Char,1);
+    PosY = std::max(APoint.Line,1);
+    Line = mLines->getString(APoint.Line - 1);
+    if (Line.length() >= PosX ) {
+        Test = Line[PosX-1];
+        // is it one of the recognized brackets?
+        for (i = 0; i<nBrackets; i++) {
+            if (Test == Brackets[i]) {
+                // this is the bracket, get the matching one and the direction
+                BracketInc = Brackets[i];
+                BracketDec = Brackets[i xor 1]; // 0 -> 1, 1 -> 0, ...
+                // search for the matching bracket (that is until NumBrackets = 0)
+                NumBrackets = 1;
+                if (i%2==1) {
+                    do {
+                        // search until start of line
+                        while (PosX > 1) {
+                            PosX--;
+                            Test = Line[PosX-1];
+                            p.Char = PosX;
+                            p.Line = PosY;
+                            if ((Test == BracketInc) || (Test == BracketDec)) {
+                                if (GetHighlighterAttriAtRowCol(p, vDummy, attr))
+                                    isCommentOrStringOrChar =
+                                        (attr == mHighlighter->stringAttribute()) ||
+                                            (attr == mHighlighter->commentAttribute()) ||
+                                            (attr->name() == SYNS_AttrCharacter);
+                                else
+                                    isCommentOrStringOrChar = false;
+                                if ((Test == BracketInc) && (!isCommentOrStringOrChar))
+                                    NumBrackets++;
+                                else if ((Test == BracketDec) && (!isCommentOrStringOrChar)) {
+                                    NumBrackets--;
+                                    if (NumBrackets == 0) {
+                                        // matching bracket found, set caret and bail out
+                                        return p;
+                                    }
+                                }
+                            }
+                        }
+                        // get previous line if possible
+                        if (PosY == 1)
+                            break;
+                        PosY--;
+                        Line = mLines->getString(PosY - 1);
+                        PosX = Line.length() + 1;
+                    } while (true);
+                } else {
+                    do {
+                        // search until end of line
+                        Len = Line.length();
+                        while (PosX < Len) {
+                            PosX++;
+                            Test = Line[PosX-1];
+                            p.Char = PosX;
+                            p.Line = PosY;
+                            if ((Test == BracketInc) || (Test == BracketDec)) {
+                                if (GetHighlighterAttriAtRowCol(p, vDummy, attr))
+                                    isCommentOrStringOrChar =
+                                        (attr == mHighlighter->stringAttribute()) ||
+                                            (attr == mHighlighter->commentAttribute()) ||
+                                            (attr->name() == SYNS_AttrCharacter);
+                                else
+                                    isCommentOrStringOrChar = false;
+                                if ((Test == BracketInc) && (!isCommentOrStringOrChar))
+                                    NumBrackets++;
+                                else if ((Test == BracketDec) && (!isCommentOrStringOrChar)) {
+                                    NumBrackets--;
+                                    if (NumBrackets == 0) {
+                                        // matching bracket found, set caret and bail out
+                                        return p;
+                                    }
+                                }
+                            }
+                        }
+                        // get next line if possible
+                        if (PosY == mLines->count())
+                            break;
+                        PosY++;
+                        Line = mLines->getString(PosY - 1);
+                        PosX = 0;
+                    } while (true);
+                }
+                // don't test the other brackets, we're done
+                break;
+            }
+        }
+    }
+    return BufferCoord{0,0};
 }
 
 void SynEdit::invalidateGutter()

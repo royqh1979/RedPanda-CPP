@@ -84,6 +84,40 @@ bool SynHighlighter::isSpaceChar(const QChar &ch)
     return ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n';
 }
 
+bool SynHighlighter::isWordBreakChar(const QChar &ch)
+{
+    switch (ch.unicode()) {
+    case '.':
+    case ',':
+    case ';':
+    case ':':
+    case '"':
+    case '\'':
+    case '!':
+    case '?':
+    case '[':
+    case ']':
+    case '(':
+    case ')':
+    case '{':
+    case '}':
+    case '<':
+    case '>':
+    case '^':
+    case '|':
+    case '&':
+    case '-':
+    case '=':
+    case '+':
+    case '*':
+    case '/':
+    case '\\':
+        return true;
+    default:
+        return false;
+    }
+}
+
 bool SynHighlighter::isIdentChar(const QChar &ch) const
 {
     if (ch == '_') {

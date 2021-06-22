@@ -90,8 +90,19 @@ protected slots:
     void onStatusChanged(SynStatusChanges changes);
 
 private:
+    QChar getCurrentChar();
     bool handleSymbolCompletion(QChar key);
-    void handleParentheseCompletion();
+    bool handleParentheseCompletion();
+    bool handleParentheseSkip();
+    bool handleBracketCompletion();
+    bool handleBracketSkip();
+    bool handleMultilineCommentCompletion();
+    bool handleBraceCompletion();
+    bool handleBraceSkip();
+    bool handleSingleQuoteCompletion();
+    bool handleDoubleQuoteCompletion();
+    bool handleGlobalIncludeCompletion();
+    bool handleGlobalIncludeSkip();
     QuoteStatus getQuoteStatus();
 
 private:

@@ -434,9 +434,19 @@ void Editor::onStatusChanged(SynStatusChanges changes)
     //    mainForm.CaretList.AddCaret(self,fText.CaretY,fText.CaretX);
 }
 
+QChar Editor::getCurrentChar()
+{
+    if (lineText().length()<caretX())
+        return QChar();
+    else
+        return lineText()[caretX()-1];
+}
+
 bool Editor::handleSymbolCompletion(QChar key)
 {
     if (!pSettings->editor().completeSymbols() || selAvail())
+        return false;
+    if (!insertMode())
         return false;
 
     //todo: better methods to detect current caret type
@@ -477,83 +487,265 @@ bool Editor::handleSymbolCompletion(QChar key)
     switch(key.unicode()) {
     case '(':
         if (pSettings->editor().completeParenthese()) {
-            handleParentheseCompletion();
-            return true;
+            return handleParentheseCompletion();
         }
         return false;
     case ')':
         if (pSettings->editor().completeParenthese() && pSettings->editor().overwriteSymbols()) {
-            handleParentheseSkip();
-            return true;
+            return handleParentheseSkip();
         }
         return false;
     case '[':
           if (pSettings->editor().completeBracket()) {
-              handleBracketCompletion();
-              return true;
+              return handleBracketCompletion();
           }
           return false;
     case ']':
           if (pSettings->editor().completeBracket() && pSettings->editor().overwriteSymbols()) {
-              HandleBracketSkip();
-              return true;
+              return handleBracketSkip();
           }
           return false;
     case '*':
-          status = getQuoteState();
+          status = getQuoteStatus();
           if (pSettings->editor().completeComment() && (status == QuoteStatus::NotQuote)) {
-              handleMultilineCommentCompletion();
-              return true;
+              return handleMultilineCommentCompletion();
           }
           return false;
     case '{':
           if (pSettings->editor().completeBrace()) {
-              handleBraceCompletion();
-              return true;
+              return handleBraceCompletion();
           }
           return false;
     case '}':
         if (pSettings->editor().completeBrace() && pSettings->editor().overwriteSymbols()) {
-            handleBraceSkip();
-            return true;
+            return handleBraceSkip();
         }
         return false;
     case '\'':
         if (pSettings->editor().completeSingleQuote()) {
-            handleSingleQuoteCompletion();
-            return true;
+            return handleSingleQuoteCompletion();
         }
         return false;
     case '\"':
         if (pSettings->editor().completeDoubleQuote()) {
-            handleDoubleQuoteCompletion();
-            return true;
+            return handleDoubleQuoteCompletion();
         }
         return false;
     case '<':
         if (pSettings->editor().completeGlobalInclude()) { // #include <>
-            handleGlobalIncludeCompletion();
-            return true;
+            return handleGlobalIncludeCompletion();
         }
         return false;
     case '>':
         if (pSettings->editor().completeGlobalInclude() && pSettings->editor().overwriteSymbols()) { // #include <>
-            handleGlobalIncludeSkip();
-            return true;
+            return handleGlobalIncludeSkip();
         }
         return false;
     }
     return false;
 }
 
-void Editor::handleParentheseCompletion()
+bool Editor::handleParentheseCompletion()
 {
-    status := GetQuoteState;
-if (status in [RawString,NotQuote]) then begin
-  InsertString(')', false);
-end;
-if (status=NotQuote) and FunctionTipAllowed then
-        fFunctionTip.Activated := true;
+    QuoteStatus status = getQuoteStatus();
+    if (status == QuoteStatus::RawString || status == QuoteStatus::NotQuote) {
+        beginUpdate();
+        CommandProcessor(SynEditorCommand::ecChar,'(');
+        BufferCoord oldCaret = caretXY();
+        CommandProcessor(SynEditorCommand::ecChar,')');
+        setCaretXY(oldCaret);
+        endUpdate();
+        return true;
+    }
+//    if (status == QuoteStatus::NotQuote) && FunctionTipAllowed then
+    //        fFunctionTip.Activated := true;
+    return false;
+}
+
+bool Editor::handleParentheseSkip()
+{
+      if (getCurrentChar() != ')')
+          return false;
+      QuoteStatus status = getQuoteStatus();
+      if (status == QuoteStatus::RawStringNoEscape) {
+          setCaretXY( BufferCoord{caretX() + 1, caretY()}); // skip over
+          return true;
+      }
+      if (status != QuoteStatus::NotQuote)
+          return false;
+      BufferCoord pos = getMatchingBracket();
+      if (pos.Line != 0) {
+          setCaretXY( BufferCoord{caretX() + 1, caretY()}); // skip over
+          return true;
+      }
+//      if FunctionTipAllowed then
+      //        fFunctionTip.Activated := false;
+      return false;
+}
+
+bool Editor::handleBracketCompletion()
+{
+//    QuoteStatus status = getQuoteStatus();
+//    if (status == QuoteStatus::RawString || status == QuoteStatus::NotQuote) {
+    beginUpdate();
+    CommandProcessor(SynEditorCommand::ecChar,'[');
+    BufferCoord oldCaret = caretXY();
+    CommandProcessor(SynEditorCommand::ecChar,']');
+    setCaretXY(oldCaret);
+    endUpdate();
+    return true;
+        //    }
+}
+
+bool Editor::handleBracketSkip()
+{
+    if (getCurrentChar() != ']')
+        return false;
+    BufferCoord pos = getMatchingBracket();
+    if (pos.Line != 0) {
+        setCaretXY( BufferCoord{caretX() + 1, caretY()}); // skip over
+        return true;
+    }
+    return false;
+}
+
+bool Editor::handleMultilineCommentCompletion()
+{
+    if (((caretX() > 1) && (caretX()-1 < lineText().length())) && (lineText()[caretX() - 1] == '/')) {
+        beginUpdate();
+        CommandProcessor(SynEditorCommand::ecChar,'*');
+        BufferCoord oldCaret = caretXY();
+        CommandProcessor(SynEditorCommand::ecChar,'*');
+        CommandProcessor(SynEditorCommand::ecChar,'/');
+        setCaretXY(oldCaret);
+        endUpdate();
+        return true;
+    }
+    return false;
+}
+
+bool Editor::handleBraceCompletion()
+{
+    QString s = lineText().trimmed();
+    int i= caretY()-2;
+    while ((s.isEmpty()) && (i>=0)) {
+        s=lines()->getString(i);
+        i--;
+    }
+    beginUpdate();
+    CommandProcessor(SynEditorCommand::ecChar,'{');
+    BufferCoord oldCaret = caretXY();
+    CommandProcessor(SynEditorCommand::ecChar,'}');
+    if (
+        ( (s.startsWith("struct")
+          || s.startsWith("class")
+          || s.startsWith("union")
+          || s.startsWith("typedef")
+          || s.startsWith("public")
+          || s.startsWith("private")
+          || s.startsWith("enum") )
+          && !s.contains(';')
+        ) || s.endsWith('=')) {
+        CommandProcessor(SynEditorCommand::ecChar,';');
+    }
+    setCaretXY(oldCaret);
+    endUpdate();
+    return true;
+}
+
+bool Editor::handleBraceSkip()
+{
+    if (getCurrentChar() != '}')
+        return false;
+    BufferCoord pos = getMatchingBracket();
+    if (pos.Line != 0) {
+        setCaretXY( BufferCoord{caretX() + 1, caretY()}); // skip over
+        return true;
+    }
+    return false;
+}
+
+bool Editor::handleSingleQuoteCompletion()
+{
+    QuoteStatus status = getQuoteStatus();
+    QChar ch = getCurrentChar();
+    if (ch == '\'') {
+        if (status == QuoteStatus::SingleQuote) {
+            setCaretXY( BufferCoord{caretX() + 1, caretY()}); // skip over
+            return true;
+        }
+    } else {
+        if (status == QuoteStatus::NotQuote) {
+            if (highlighter()->isWordBreakChar(ch) || highlighter()->isSpaceChar(ch)) {
+                // insert ''
+                beginUpdate();
+                CommandProcessor(SynEditorCommand::ecChar,'\'');
+                BufferCoord oldCaret = caretXY();
+                CommandProcessor(SynEditorCommand::ecChar,'\'');
+                setCaretXY(oldCaret);
+                endUpdate();
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool Editor::handleDoubleQuoteCompletion()
+{
+    QuoteStatus status = getQuoteStatus();
+    QChar ch = getCurrentChar();
+    if (ch == '"') {
+        if (status == QuoteStatus::DoubleQuote && status == QuoteStatus::RawString) {
+            setCaretXY( BufferCoord{caretX() + 1, caretY()}); // skip over
+            return true;
+        }
+    } else {
+        if (status == QuoteStatus::NotQuote) {
+            if (highlighter()->isWordBreakChar(ch) || highlighter()->isSpaceChar(ch)) {
+                // insert ""
+                beginUpdate();
+                CommandProcessor(SynEditorCommand::ecChar,'"');
+                BufferCoord oldCaret = caretXY();
+                CommandProcessor(SynEditorCommand::ecChar,'"');
+                setCaretXY(oldCaret);
+                endUpdate();
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool Editor::handleGlobalIncludeCompletion()
+{
+    if (!lineText().startsWith('#'))
+        return false;
+    QString s= lineText().mid(1).trimmed();
+    if (!s.startsWith("include"))  //it's not #include
+        return false;
+    beginUpdate();
+    CommandProcessor(SynEditorCommand::ecChar,'<');
+    BufferCoord oldCaret = caretXY();
+    CommandProcessor(SynEditorCommand::ecChar,'>');
+    setCaretXY(oldCaret);
+    endUpdate();
+    return true;
+}
+
+bool Editor::handleGlobalIncludeSkip()
+{
+    if (getCurrentChar()!='>')
+        return false;
+    QString s= lineText().mid(1).trimmed();
+    if (!s.startsWith("include"))  //it's not #include
+        return false;
+    BufferCoord pos = getMatchingBracket();
+    if (pos.Line != 0) {
+        setCaretXY( BufferCoord{caretX() + 1, caretY()}); // skip over
+        return true;
+    }
+    return false;
 }
 
 Editor::QuoteStatus Editor::getQuoteStatus()
@@ -563,62 +755,105 @@ Editor::QuoteStatus Editor::getQuoteStatus()
         Result = QuoteStatus::DoubleQuote;
 
     QString Line = lines()->getString(caretY()-1);
-    int posX =fText.CaretX-1;
-if posX > Length(Line) then begin
-  posX := Length(Line);
-end;
-i:=1;
-while (i<=posX) do begin
-  if (Line[i] = 'R') and (Line[i+1] = '"') and (Result = NotQuote) then begin
-    Result := RawString;
-    inc(i); // skip R
-  end else if Line[i] = '(' then begin
-    Case Result of
-      RawString: Result:=RawStringNoEscape;
-      //RawStringNoEscape: do nothing
-    end
-  end else if Line[i] = ')' then begin
-    Case Result of
-      RawStringNoEscape: Result:=RawString;
-    end
-  end else if Line[i] = '"' then begin
-    Case Result of
-      NotQuote: Result := DoubleQuote;
-      SingleQuote: Result := SingleQuote;
-      SingleQuoteEscape: Result := SingleQuote;
-      DoubleQuote: Result := NotQuote;
-      DoubleQuoteEscape: Result := DoubleQuote;
-      RawString: Result:=NotQuote;
-      //RawStringNoEscape: do nothing
-    end
-  end else if Line[i] = '''' then
-    Case Result of
-      NotQuote: Result := SingleQuote;
-      SingleQuote: Result := NotQuote;
-      SingleQuoteEscape: Result := SingleQuote;
-      DoubleQuote: Result := DoubleQuote;
-      DoubleQuoteEscape: Result := DoubleQuote;
-    end
-  else if Line[i] = '\' then
-    Case Result of
-      NotQuote: Result := NotQuote;
-      SingleQuote: Result := SingleQuoteEscape;
-      SingleQuoteEscape: Result := SingleQuote;
-      DoubleQuote: Result := DoubleQuoteEscape;
-      DoubleQuoteEscape: Result := DoubleQuote;
-    end
-  else begin
-    Case Result of
-      NotQuote: Result := NotQuote;
-      SingleQuote: Result := SingleQuote;
-      SingleQuoteEscape: Result := SingleQuote;
-      DoubleQuote: Result := DoubleQuote;
-      DoubleQuoteEscape: Result := DoubleQuote;
-    end;
-  end;
-  inc(i);
-end;
-end;
+    int posX = caretX()-1;
+    if (posX >= Line.length()) {
+        posX = Line.length()-1;
+    }
+    for (int i=0; i<=posX;i++) {
+        if (i+1<Line.length() && (Line[i] == 'R') && (Line[i+1] == '"') && (Result == QuoteStatus::NotQuote)) {
+            Result = QuoteStatus::RawString;
+            i++; // skip R
+        } else if (Line[i] == '(') {
+            switch(Result) {
+            case QuoteStatus::RawString:
+                Result=QuoteStatus::RawStringNoEscape;
+                break;
+            //case RawStringNoEscape: do nothing
+            }
+        } else if (Line[i] == ')') {
+            switch(Result) {
+            case QuoteStatus::RawStringNoEscape:
+                Result=QuoteStatus::RawString;
+                break;
+            }
+        } else if (Line[i] == '"') {
+            switch(Result) {
+            case QuoteStatus::NotQuote:
+                Result = QuoteStatus::DoubleQuote;
+                break;
+            case QuoteStatus::SingleQuote:
+                Result = QuoteStatus::SingleQuote;
+                break;
+            case QuoteStatus::SingleQuoteEscape:
+                Result = QuoteStatus::SingleQuote;
+                break;
+            case QuoteStatus::DoubleQuote:
+                Result = QuoteStatus::NotQuote;
+                break;
+            case QuoteStatus::DoubleQuoteEscape:
+                Result = QuoteStatus::DoubleQuote;
+                break;
+            case QuoteStatus::RawString:
+                Result=QuoteStatus::NotQuote;
+                break;
+            //RawStringNoEscape: do nothing
+            }
+        } else if (Line[i] == '\'') {
+            switch(Result) {
+            case QuoteStatus::NotQuote:
+                Result = QuoteStatus::SingleQuote;
+                break;
+            case QuoteStatus::SingleQuote:
+                Result = QuoteStatus::NotQuote;
+                break;
+            case QuoteStatus::SingleQuoteEscape:
+                Result = QuoteStatus::SingleQuote;
+                break;
+            case QuoteStatus::DoubleQuote:
+                Result = QuoteStatus::DoubleQuote;
+                break;
+            case QuoteStatus::DoubleQuoteEscape:
+                Result = QuoteStatus::DoubleQuote;
+                break;
+            }
+        } else if (Line[i] == '\\') {
+            switch(Result) {
+            case QuoteStatus::NotQuote:
+                Result = QuoteStatus::NotQuote;
+                break;
+            case QuoteStatus::SingleQuote:
+                Result = QuoteStatus::SingleQuoteEscape;
+                break;
+            case QuoteStatus::SingleQuoteEscape:
+                Result = QuoteStatus::SingleQuote;
+                break;
+            case QuoteStatus::DoubleQuote:
+                Result = QuoteStatus::DoubleQuoteEscape;
+                break;
+            case QuoteStatus::DoubleQuoteEscape:
+                Result = QuoteStatus::DoubleQuote;
+                break;
+            }
+        } else {
+            switch(Result) {
+            case QuoteStatus::NotQuote:
+                Result = QuoteStatus::NotQuote;
+                break;
+            case QuoteStatus::SingleQuote:
+                Result = QuoteStatus::SingleQuote;
+                break;
+            case QuoteStatus::SingleQuoteEscape:
+                Result = QuoteStatus::SingleQuote;
+                break;
+            case QuoteStatus::DoubleQuote:
+                Result = QuoteStatus::DoubleQuote;
+                break;
+            case QuoteStatus::DoubleQuoteEscape:
+                Result = QuoteStatus::DoubleQuote;
+                break;
+            }
+        }
+    }
     return Result;
 }
 

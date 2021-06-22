@@ -108,7 +108,8 @@ public:
     virtual QString languageName() = 0;
     virtual SynHighlighterLanguage language() = 0;
 
-    static bool isSpaceChar(const QChar& ch);
+    virtual bool isSpaceChar(const QChar& ch);
+    virtual bool isWordBreakChar(const QChar& ch);
     bool enabled() const;
     void setEnabled(bool value);
 
