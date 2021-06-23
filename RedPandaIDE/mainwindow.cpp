@@ -22,8 +22,10 @@
 MainWindow* pMainWindow;
 
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
-    , ui(new Ui::MainWindow)
+    : QMainWindow(parent),
+      ui(new Ui::MainWindow),
+      mMessageControlChanged(false),
+      mCheckSyntaxInBack(false)
 {
     ui->setupUi(this);
     // status bar
@@ -71,8 +73,9 @@ MainWindow::MainWindow(QWidget *parent)
     ui->actionEncode_in_ANSI->setCheckable(true);
     ui->actionEncode_in_UTF_8->setCheckable(true);
 
+    openCloseMessageSheet(false);
+    mPreviousHeight = 250;
     updateEditorActions();
-
     applySettings();
 }
 
@@ -249,6 +252,36 @@ void MainWindow::updateCompilerSet()
     mCompilerSet->setCurrentIndex(index);
 }
 
+void MainWindow::openCloseMessageSheet(bool open)
+{
+//    if Assigned(fReportToolWindow) then
+//      Exit;
+
+    // Switch between open and close
+    if (open) {
+        QList<int> sizes = ui->splitterMessages->sizes();
+        int tabHeight = ui->tabMessages->tabBar()->height();
+        ui->tabMessages->setMinimumHeight(tabHeight+5);
+        int totalSize = sizes[0] + sizes[1];
+        sizes[1] = mPreviousHeight;
+        sizes[0] = std::max(1,totalSize - sizes[1]);
+        ui->splitterMessages->setSizes(sizes);
+    } else {
+        QList<int> sizes = ui->splitterMessages->sizes();
+        mPreviousHeight = sizes[1];
+        int totalSize = sizes[0] + sizes[1];
+        int tabHeight = ui->tabMessages->tabBar()->height();
+        ui->tabMessages->setMinimumHeight(tabHeight);
+        sizes[1] = tabHeight;
+        sizes[0] = std::max(1,totalSize - sizes[1]);
+        ui->splitterMessages->setSizes(sizes);
+    }
+    QSplitterHandle* handle = ui->splitterMessages->handle(1);
+    handle->setEnabled(open);
+    int idxClose = ui->tabMessages->indexOf(ui->tabClose);
+    ui->tabMessages->setTabVisible(idxClose,open);
+}
+
 
 void MainWindow::on_actionNew_triggered()
 {
@@ -337,6 +370,104 @@ void MainWindow::onCompileLog(const QString &msg)
 void MainWindow::onCompileIssue(PCompileIssue issue)
 {
     ui->tableIssues->addIssue(issue);
+
+    // Update tab caption
+//    if CompilerOutput.Items.Count = 1 then
+//      CompSheet.Caption := Lang[ID_SHEET_COMP] + ' (' + IntToStr(CompilerOutput.Items.Count) + ')';
+
+    if (issue->type == CompileIssueType::Error || issue->type ==
+            CompileIssueType::Warning) {
+        Editor* e = mEditorList->getOpenedEditorByFilename(issue->filename);
+        if (e!=nullptr && (issue->line>0)) {
+            int line = issue->line;
+            if (line > e->lines()->count())
+                return;
+            int col = std::min(issue->column,e->lines()->getString(line-1).length()+1);
+            e->addSyntaxIssues(line,col,issue->type,issue->description);
+        }
+    }
+}
+
+void MainWindow::onCompileFinished()
+{
+    // Update tab caption
+    int i = ui->tabMessages->indexOf(ui->tabIssues);
+    if (i==-1)
+        return;
+    ui->tabMessages->setTabText(i, tr("Issues") +
+                                QString(" (%1)").arg(ui->tableIssues->model()->rowCount()));
+
+    // Close it if there's nothing to show
+    if (mCheckSyntaxInBack) {
+      // check syntax in back, don't change message panel
+    } else if (
+        (ui->tableIssues->count() == 0)
+//        and (ResourceOutput.Items.Count = 0)
+//        and devData.AutoCloseProgress
+               ) {
+        openCloseMessageSheet(false);
+        // Or open it if there is anything to show
+    } else {
+        if (ui->tableIssues->count() > 0) {
+            if (ui->tabMessages->currentIndex() != i) {
+                ui->tabMessages->setCurrentIndex(i);
+                mMessageControlChanged = false;
+            }
+//      end else if (ResourceOutput.Items.Count > 0) then begin
+//        if MessageControl.ActivePage <> ResSheet then begin
+//          MessageControl.ActivePage := ResSheet;
+//          fMessageControlChanged := False;
+//        end;
+//      end;
+            openCloseMessageSheet(true);
+        }
+    }
+
+    Editor * e = mEditorList->getEditor();
+    if (e!=nullptr) {
+        e->beginUpdate();
+        e->endUpdate();
+    }
+
+    // Jump to problem location, sorted by significance
+    if ((mCompilerManager->compileErrorCount() > 0) && (!mCheckSyntaxInBack)) {
+        // First try to find errors
+        for (int i=0;i<ui->tableIssues->count();i++) {
+            PCompileIssue issue = ui->tableIssues->issue(i);
+            if (issue->type == CompileIssueType::Error) {
+                ui->tableIssues->selectRow(i);
+                QModelIndex index =ui->tableIssues->model()->index(i,0);
+                ui->tableIssues->doubleClicked(index);
+            }
+        }
+
+        // Then try to find warnings
+        for (int i=0;i<ui->tableIssues->count();i++) {
+            PCompileIssue issue = ui->tableIssues->issue(i);
+            if (issue->type == CompileIssueType::Warning) {
+                ui->tableIssues->selectRow(i);
+                QModelIndex index =ui->tableIssues->model()->index(i,0);
+                ui->tableIssues->doubleClicked(index);
+            }
+        }
+        // Then try to find anything with a line number...
+//      for I := 0 to CompilerOutput.Items.Count - 1 do begin
+//        if not SameStr(CompilerOutput.Items[I].Caption, '') then begin
+//          CompilerOutput.Selected := CompilerOutput.Items[I];
+//          CompilerOutput.Selected.MakeVisible(False);
+//          CompilerOutputDblClick(CompilerOutput);
+//          Exit;
+//        end;
+//      end;
+
+      // Then try to find a resource error
+//      if ResourceOutput.Items.Count > 0 then begin
+//        ResourceOutput.Selected := ResourceOutput.Items[0];
+//        ResourceOutput.Selected.MakeVisible(False);
+//        CompilerOutputDblClick(ResourceOutput);
+//      end;
+    }
+    mCheckSyntaxInBack=false;
 }
 
 void MainWindow::onCompileErrorOccured(const QString &reason)
@@ -522,4 +653,15 @@ void MainWindow::on_actionConvert_to_UTF_8_triggered()
                    QMessageBox::Yes, QMessageBox::No)!=QMessageBox::Yes)
         return;
     editor->convertToEncoding(ENCODING_UTF8);
+}
+
+void MainWindow::on_tabMessages_tabBarClicked(int index)
+{
+    mMessageControlChanged = false;
+    int idxClose = ui->tabMessages->indexOf(ui->tabClose);
+    if (index == idxClose) {
+        openCloseMessageSheet(false);
+    } else {
+        openCloseMessageSheet(true);
+    }
 }

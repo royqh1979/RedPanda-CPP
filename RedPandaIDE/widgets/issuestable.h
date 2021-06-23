@@ -26,6 +26,7 @@ private:
 
     // QAbstractItemModel interface
 public:
+    int count();
     int rowCount(const QModelIndex &parent) const override;
     int columnCount(const QModelIndex &parent) const override;
     QVariant data(const QModelIndex &index, int role) const override;
@@ -51,6 +52,7 @@ public slots:
 
     PCompileIssue issue(const QModelIndex& index);
     PCompileIssue issue(const int row);
+    int count();
 
     void clearIssues();
 

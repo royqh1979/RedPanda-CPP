@@ -69,6 +69,11 @@ PCompileIssue IssuesModel::issue(int row)
     return mIssues[row];
 }
 
+int IssuesModel::count()
+{
+    return mIssues.size();
+}
+
 void IssuesTable::addIssue(PCompileIssue issue)
 {
     mModel->addIssue(issue);
@@ -82,6 +87,11 @@ PCompileIssue IssuesTable::issue(const QModelIndex &index)
 PCompileIssue IssuesTable::issue(const int row)
 {
     return mModel->issue(row);
+}
+
+int IssuesTable::count()
+{
+    return mModel->count();
 }
 
 void IssuesTable::clearIssues()

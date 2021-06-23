@@ -409,6 +409,115 @@ void Editor::copyAsHTML()
     QGuiApplication::clipboard()->setMimeData(mimeData);
 }
 
+void Editor::addSyntaxIssues(int line, int startChar, CompileIssueType errorType, const QString &hint)
+{
+    PSyntaxIssue pError;
+    BufferCoord p;
+    QString token;
+    SynHighlighterTokenType tokenType;
+    int tokenKind,start;
+    PSynHighlighterAttribute attr;
+    PSyntaxIssueList lst;
+    if ((line<1) || (line>lines()->count()))
+        return;
+    pError = std::make_shared<SyntaxIssue>();
+    p.Char = startChar;
+    p.Line = line;
+    if (startChar >= lines()->getString(line-1).length()) {
+        start = 1;
+        token = lines()->getString(line-1);
+    } else {
+        if (!GetHighlighterAttriAtRowColEx(p,token,tokenType,tokenKind,start,attr))
+            return;
+    }
+    pError->startChar = start;
+    pError->endChar = start + token.length();
+    pError->col = charToColumn(line,pError->startChar);
+    pError->endCol = charToColumn(line,pError->endChar);
+    pError->hint = hint;
+    pError->token = token;
+    pError->issueType = errorType;
+    if (mSyntaxIssues.contains(line)) {
+        lst = mSyntaxIssues[line];
+    } else {
+        lst = std::make_shared<SyntaxIssueList>();
+        mSyntaxIssues[line] = lst;
+    }
+    lst->append(pError);
+}
+
+void Editor::clearSyntaxIssues()
+{
+    mSyntaxIssues.clear();
+}
+
+void Editor::gotoNextSyntaxIssue()
+{
+    auto iter = mSyntaxIssues.find(caretY());
+    if (iter==mSyntaxIssues.end())
+        return;
+    iter++;
+    if (iter==mSyntaxIssues.end())
+        return;
+    BufferCoord p;
+    p.Char = (*iter)->at(0)->startChar;
+    p.Line = iter.key();
+    setCaretXY(p);
+}
+
+void Editor::gotoPrevSyntaxIssue()
+{
+    auto iter = mSyntaxIssues.find(caretY());
+    if (iter==mSyntaxIssues.end())
+        return;
+    if (iter==mSyntaxIssues.begin())
+        return;
+    iter--;
+    BufferCoord p;
+    p.Char = (*iter)->at(0)->startChar;
+    p.Line = iter.key();
+    setCaretXY(p);
+
+}
+
+bool Editor::hasNextSyntaxIssue() const
+{
+    auto iter = mSyntaxIssues.find(caretY());
+    if (iter==mSyntaxIssues.end())
+        return false;
+    iter++;
+    if (iter==mSyntaxIssues.end())
+        return false;
+    return true;
+}
+
+bool Editor::hasPrevSyntaxIssue() const
+{
+    auto iter = mSyntaxIssues.find(caretY());
+    if (iter==mSyntaxIssues.end())
+        return true;
+    if (iter==mSyntaxIssues.begin())
+        return true;
+    return false;
+}
+
+Editor::PSyntaxIssueList Editor::getErrorsAtLine(int line)
+{
+    if (mSyntaxIssues.contains(line))
+        return mSyntaxIssues[line];
+    return PSyntaxIssueList();
+}
+
+Editor::PSyntaxIssue Editor::getErrorAtPosition(const BufferCoord &pos)
+{
+    PSyntaxIssueList lst = getErrorsAtLine(pos.Line);
+    for (PSyntaxIssue issue: *lst) {
+        if (issue->startChar<=pos.Char && pos.Char<=issue->endChar)
+            return issue;
+    }
+    return PSyntaxIssue();
+}
+
 void Editor::onModificationChanged(bool) {
     updateCaption();
 }

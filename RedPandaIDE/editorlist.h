@@ -40,6 +40,7 @@ public:
     void endUpdate();
     void applySettings();
     void applyColorSchemes(const QString& name);
+    bool isFileOpened(const QString& name);
 
 private:
     QTabWidget* getNewEditorPageControl() const;

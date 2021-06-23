@@ -6,6 +6,7 @@
 #include <QTabWidget>
 #include "qsynedit/SynEdit.h"
 #include "colorscheme.h"
+#include "common.h"
 
 class SaveException: public std::exception {
 
@@ -46,6 +47,20 @@ public:
         RawStringNoEscape
     };
 
+    struct SyntaxIssue {
+        int col;
+        int endCol;
+        int startChar;
+        int endChar;
+        CompileIssueType issueType;
+        QString token;
+        QString hint;
+    };
+
+    using PSyntaxIssue = std::shared_ptr<SyntaxIssue>;
+    using SyntaxIssueList = QVector<PSyntaxIssue>;
+    using PSyntaxIssueList = std::shared_ptr<SyntaxIssueList>;
+
     explicit Editor(QWidget *parent);
 
     explicit Editor(QWidget *parent, const QString& filename,
@@ -82,6 +97,15 @@ public:
     void copyToClipboard() override;
     void cutToClipboard() override;
     void copyAsHTML();
+
+    void addSyntaxIssues(int line, int startChar, CompileIssueType errorType, const QString& hint);
+    void clearSyntaxIssues();
+    void gotoNextSyntaxIssue();
+    void gotoPrevSyntaxIssue();
+    bool hasPrevSyntaxIssue() const;
+    bool hasNextSyntaxIssue() const;
+    PSyntaxIssueList getErrorsAtLine(int line);
+    PSyntaxIssue getErrorAtPosition(const BufferCoord& pos);
 signals:
 
 
@@ -114,6 +138,7 @@ private:
     QTabWidget* mParentPageControl;
     bool mInProject;
     bool mIsNew;
+    QMap<int,PSyntaxIssueList> mSyntaxIssues;
 
     // QWidget interface
 protected:

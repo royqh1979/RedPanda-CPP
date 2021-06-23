@@ -88,15 +88,19 @@ private slots:
 
     void on_actionConvert_to_UTF_8_triggered();
 
+    void on_tabMessages_tabBarClicked(int index);
+
 public slots:
     void onCompileLog(const QString& msg);
     void onCompileIssue(PCompileIssue issue);
+    void onCompileFinished();
     void onCompileErrorOccured(const QString& reason);
 
 private:
     void setupActions();
 
     void updateCompilerSet();
+    void openCloseMessageSheet(bool open);
 
 private:
     Ui::MainWindow *ui;
@@ -108,6 +112,9 @@ private:
     QMenu * mMenuEncodingList;
     QComboBox* mCompilerSet;
     CompilerManager* mCompilerManager;
+    bool mMessageControlChanged;
+    bool mCheckSyntaxInBack;
+    int mPreviousHeight;
 
    // QWidget interface
 protected:

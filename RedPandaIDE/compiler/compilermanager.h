@@ -19,11 +19,17 @@ public:
     void compile(const QString& filename, const QByteArray& encoding, bool silent=false,bool onlyCheckSyntax=false);
     void run(const QString& filename, const QString& arguments, const QString& workDir);
     bool canCompile(const QString& filename);
+    int compileErrorCount() const;
+
+    int syntaxCheckErrorCount() const;
+
 private slots:
     void onCompileFinished();
     void onRunnerTerminated();
 private:
     Compiler* mCompiler;
+    int mCompileErrorCount;
+    int mSyntaxCheckErrorCount;
     Compiler* mBackgroundSyntaxChecker;
     ExecutableRunner* mRunner;
     QMutex compileMutex;

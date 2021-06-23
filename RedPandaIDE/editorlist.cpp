@@ -5,6 +5,7 @@
 #include <mainwindow.h>
 #include <iconv.h>
 #include <QDebug>
+#include <QFileInfo>
 
 EditorList::EditorList(QTabWidget* leftPageWidget,
       QTabWidget* rightPageWidget,
@@ -126,6 +127,23 @@ void EditorList::applyColorSchemes(const QString& name)
         Editor* e = static_cast<Editor*>(mRightPageWidget->widget(i));
         e->applyColorScheme(name);
     }
+}
+
+bool EditorList::isFileOpened(const QString &name)
+{
+    QFileInfo fileInfo(name);
+    QString filename = fileInfo.absoluteFilePath();
+    for (int i=0;i<mLeftPageWidget->count();i++) {
+        Editor* e = static_cast<Editor*>(mLeftPageWidget->widget(i));
+        if (e->filename().compare(filename)==0)
+            return true;
+    }
+    for (int i=0;i<mRightPageWidget->count();i++) {
+        Editor* e = static_cast<Editor*>(mRightPageWidget->widget(i));
+        if (e->filename().compare(filename)==0)
+            return true;
+    }
+    return false;
 }
 
 bool EditorList::closeAll(bool force) {
