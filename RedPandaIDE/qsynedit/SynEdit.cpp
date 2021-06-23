@@ -4059,8 +4059,8 @@ void SynEdit::SetSelTextPrimitiveEx(SynSelectionMode PasteMode, const QString &V
         mLines->endUpdate();
         decPaintLock();
     });
-    BufferCoord BB = mBlockBegin;
-    BufferCoord BE = mBlockEnd;
+    BufferCoord BB = blockBegin();
+    BufferCoord BE = blockEnd();
     if (selAvail()) {
         DeleteSelection(BB,BE);
         internalSetCaretXY(BB);

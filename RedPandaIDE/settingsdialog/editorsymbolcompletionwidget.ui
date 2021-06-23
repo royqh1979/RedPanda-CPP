@@ -118,13 +118,6 @@
            </property>
           </widget>
          </item>
-         <item>
-          <widget class="QCheckBox" name="chkRemoveMatchingSymbols">
-           <property name="text">
-            <string>Remove matching symbols when delete chars</string>
-           </property>
-          </widget>
-         </item>
         </layout>
        </widget>
       </item>
@@ -144,7 +137,7 @@
      </layout>
     </widget>
    </item>
-   <item row="1" column="0">
+   <item row="2" column="0">
     <spacer name="verticalSpacer">
      <property name="orientation">
       <enum>Qt::Vertical</enum>
@@ -156,6 +149,13 @@
       </size>
      </property>
     </spacer>
+   </item>
+   <item row="1" column="0">
+    <widget class="QCheckBox" name="chkRemoveSymbolPairs">
+     <property name="text">
+      <string>Remove symbol pairs when delete chars</string>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>

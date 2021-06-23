@@ -24,7 +24,7 @@ void EditorSymbolCompletionWidget::doLoad()
     ui->chkCompleteGlobalInclude->setChecked(pSettings->editor().completeGlobalInclude());
     ui->chkCompleteParenthesis->setChecked(pSettings->editor().completeParenthese());
     ui->chkCompleteSingleQuotation->setChecked(pSettings->editor().completeSingleQuote());
-    ui->chkRemoveMatchingSymbols->setChecked(pSettings->editor().removeMathcingSymbol());
+    ui->chkRemoveSymbolPairs->setChecked(pSettings->editor().removeSymbolPairs());
     ui->chkSkipMathingSymbols->setChecked(pSettings->editor().overwriteSymbols());
 }
 
@@ -38,7 +38,7 @@ void EditorSymbolCompletionWidget::doSave()
     pSettings->editor().setCompleteGlobalInclude(ui->chkCompleteGlobalInclude->isChecked());
     pSettings->editor().setCompleteParenthese(ui->chkCompleteParenthesis->isChecked());
     pSettings->editor().setCompleteSingleQuote(ui->chkCompleteSingleQuotation->isChecked());
-    pSettings->editor().setRemoveMathcingSymbol(ui->chkRemoveMatchingSymbols->isChecked());
+    pSettings->editor().setRemoveSymbolPairs(ui->chkRemoveSymbolPairs->isChecked());
     pSettings->editor().setOverwriteSymbols(ui->chkSkipMathingSymbols->isChecked());
 
     pSettings->editor().save();

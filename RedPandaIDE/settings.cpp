@@ -293,14 +293,14 @@ void Settings::Editor::setColorScheme(const QString &colorScheme)
     mColorScheme = colorScheme;
 }
 
-bool Settings::Editor::removeMathcingSymbol() const
+bool Settings::Editor::removeSymbolPairs() const
 {
-    return mRemoveMathcingSymbol;
+    return mRemoveSymbolPairs;
 }
 
-void Settings::Editor::setRemoveMathcingSymbol(bool removeMathcingSymbol)
+void Settings::Editor::setRemoveSymbolPairs(bool value)
 {
-    mRemoveMathcingSymbol = removeMathcingSymbol;
+    mRemoveSymbolPairs = value;
 }
 
 bool Settings::Editor::overwriteSymbols() const
@@ -721,7 +721,7 @@ void Settings::Editor::doSave()
     saveValue("complete_double_quote", mCompleteDoubleQuote);
     saveValue("complete_global_include", mCompleteGlobalInclude);
     saveValue("overwrite_symbols", mOverwriteSymbols);
-    saveValue("remove_matching_symbols",mRemoveMathcingSymbol);
+    saveValue("remove_symbol_pairs",mRemoveSymbolPairs);
 }
 
 void Settings::Editor::doLoad()
@@ -794,7 +794,7 @@ void Settings::Editor::doLoad()
     mCompleteDoubleQuote = boolValue("complete_double_quote",true);
     mCompleteGlobalInclude = boolValue("complete_global_include",true);
     mOverwriteSymbols = boolValue("overwrite_symbols",true);
-    mRemoveMathcingSymbol = boolValue("remove_matching_symbols",true);
+    mRemoveSymbolPairs = boolValue("remove_symbol_pairs",true);
 }
 
 SynEditCaretType Settings::Editor::caretForOverwrite() const

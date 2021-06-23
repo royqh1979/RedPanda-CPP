@@ -245,8 +245,8 @@ public:
         bool overwriteSymbols() const;
         void setOverwriteSymbols(bool overwriteSymbols);
 
-        bool removeMathcingSymbol() const;
-        void setRemoveMathcingSymbol(bool removeMathcingSymbol);
+        bool removeSymbolPairs() const;
+        void setRemoveSymbolPairs(bool value);
 
     private:
         QByteArray mDefaultEncoding;
@@ -317,7 +317,7 @@ public:
         bool mCompleteDoubleQuote;
         bool mCompleteGlobalInclude;
         bool mOverwriteSymbols;
-        bool mRemoveMathcingSymbol;
+        bool mRemoveSymbolPairs;
 
         // _Base interface
     protected:

@@ -211,6 +211,56 @@ QTabWidget* Editor::pageControl() noexcept{
     return mParentPageControl;
 }
 
+void Editor::undoSymbolCompletion(int pos)
+{
+    PSynHighlighterAttribute Attr;
+    QString Token;
+    bool tokenFinished;
+    SynHighlighterTokenType tokenType;
+
+    if (!highlighter())
+        return;
+    if (!pSettings->editor().removeSymbolPairs())
+        return;
+    if (!GetHighlighterAttriAtRowCol(caretXY(), Token, tokenFinished, tokenType, Attr))
+        return;
+    if ((tokenType == SynHighlighterTokenType::Comment) && (!tokenFinished))
+        return ;
+    //convert caret x to string index;
+    pos--;
+
+    if (pos<0 || pos+1>=lineText().length())
+        return;
+    QChar DeletedChar = lineText()[pos];
+    QChar NextChar = lineText()[pos+1];
+    if ((tokenType == SynHighlighterTokenType::Character) && (DeletedChar != '\''))
+        return;
+    if (tokenType == SynHighlighterTokenType::StringEscapeSequence)
+        return;
+    if (tokenType == SynHighlighterTokenType::String) {
+        if ((DeletedChar!='"') && (DeletedChar!='('))
+            return;
+        if ((DeletedChar=='"') && (Token!="\"\""))
+            return;
+        if ((DeletedChar=='(') && (!Token.startsWith("R\"")))
+            return;
+    }
+    if ((DeletedChar == '\'') && (tokenType == SynHighlighterTokenType::Number))
+        return;
+    if ((DeletedChar == '<') &&
+            ((tokenType != SynHighlighterTokenType::PreprocessDirective)
+             || !lineText().startsWith("#include")))
+        return;
+    if ( (pSettings->editor().completeBracket() && (DeletedChar == '[') && (NextChar == ']')) ||
+         (pSettings->editor().completeParenthese() && (DeletedChar == '(') && (NextChar == ')')) ||
+         (pSettings->editor().completeGlobalInclude() && (DeletedChar == '<') && (NextChar == '>')) ||
+         (pSettings->editor().completeBrace() && (DeletedChar == '{') && (NextChar == '}')) ||
+         (pSettings->editor().completeSingleQuote() && (DeletedChar == '\'') && (NextChar == '\'')) ||
+         (pSettings->editor().completeDoubleQuote() && (DeletedChar == '\"') && (NextChar == '\"'))) {
+         CommandProcessor(SynEditorCommand::ecDeleteChar);
+    }
+}
+
 void Editor::wheelEvent(QWheelEvent *event) {
     if ( (event->modifiers() & Qt::ControlModifier)!=0) {
         int size = pSettings->editor().fontSize();
@@ -250,23 +300,37 @@ void Editor::focusOutEvent(QFocusEvent *event)
 void Editor::keyPressEvent(QKeyEvent *event)
 {
     bool handled = false;
-    QString t = event->text();
-    if (!t.isEmpty()) {
-        QChar ch = t[0];
-        switch (ch.unicode()) {
-        case '"':
-        case '\'':
-        case '(':
-        case ')':
-        case '{':
-        case '}':
-        case '[':
-        case ']':
-        case '<':
-        case '>':
-        case '*':
-            handled = handleSymbolCompletion(ch);
+    switch (event->key()) {
+    case Qt::Key_Delete:
+        // remove completed character
+        //fLastIdCharPressed:=0;
+        undoSymbolCompletion(caretX());
+        break;;
+    case Qt::Key_Backspace:
+        // remove completed character
+        //fLastIdCharPressed:=0;
+        undoSymbolCompletion(caretX()-1);
+        break;;
+    default: {
+        QString t = event->text();
+        if (!t.isEmpty()) {
+            QChar ch = t[0];
+            switch (ch.unicode()) {
+            case '"':
+            case '\'':
+            case '(':
+            case ')':
+            case '{':
+            case '}':
+            case '[':
+            case ']':
+            case '<':
+            case '>':
+            case '*':
+                handled = handleSymbolCompletion(ch);
+            }
         }
+    }
     }
     if (!handled) {
         SynEdit::keyPressEvent(event);
@@ -676,7 +740,7 @@ bool Editor::handleSingleQuoteCompletion()
         }
     } else {
         if (status == QuoteStatus::NotQuote) {
-            if (highlighter()->isWordBreakChar(ch) || highlighter()->isSpaceChar(ch)) {
+            if (ch == 0 || highlighter()->isWordBreakChar(ch) || highlighter()->isSpaceChar(ch)) {
                 // insert ''
                 beginUpdate();
                 CommandProcessor(SynEditorCommand::ecChar,'\'');
@@ -696,13 +760,13 @@ bool Editor::handleDoubleQuoteCompletion()
     QuoteStatus status = getQuoteStatus();
     QChar ch = getCurrentChar();
     if (ch == '"') {
-        if (status == QuoteStatus::DoubleQuote && status == QuoteStatus::RawString) {
+        if (status == QuoteStatus::DoubleQuote || status == QuoteStatus::RawString) {
             setCaretXY( BufferCoord{caretX() + 1, caretY()}); // skip over
             return true;
         }
     } else {
         if (status == QuoteStatus::NotQuote) {
-            if (highlighter()->isWordBreakChar(ch) || highlighter()->isSpaceChar(ch)) {
+            if ((ch == 0) || highlighter()->isWordBreakChar(ch) || highlighter()->isSpaceChar(ch)) {
                 // insert ""
                 beginUpdate();
                 CommandProcessor(SynEditorCommand::ecChar,'"');
@@ -759,7 +823,7 @@ Editor::QuoteStatus Editor::getQuoteStatus()
     if (posX >= Line.length()) {
         posX = Line.length()-1;
     }
-    for (int i=0; i<=posX;i++) {
+    for (int i=0; i<posX;i++) {
         if (i+1<Line.length() && (Line[i] == 'R') && (Line[i+1] == '"') && (Result == QuoteStatus::NotQuote)) {
             Result = QuoteStatus::RawString;
             i++; // skip R

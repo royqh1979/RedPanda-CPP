@@ -103,6 +103,7 @@ private:
     bool handleDoubleQuoteCompletion();
     bool handleGlobalIncludeCompletion();
     bool handleGlobalIncludeSkip();
+    void undoSymbolCompletion(int pos);
     QuoteStatus getQuoteStatus();
 
 private:
