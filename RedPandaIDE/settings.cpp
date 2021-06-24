@@ -6,6 +6,7 @@
 #include <QDir>
 #include "systemconsts.h"
 #include <QDebug>
+#include <QMessageBox>
 
 const char ValueToChar[28] = {'0', '1', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',
                               'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
@@ -984,9 +985,123 @@ void Settings::CompilerSet::setOption(PCompilerOption &option, char valueChar)
     option->value = charToValue(valueChar);
 }
 
+static void checkDirs(const QStringList& dirlist, QString& gooddirs, QString& baddirs) {
+    gooddirs = "";
+    baddirs = "";
+
+    for (int i=0; i<dirlist.count();i++) {
+        QDir dir(dirlist[i]);
+        if (!dir.exists()) {
+            if (baddirs.isEmpty()) {
+                baddirs = dirlist[i];
+            } else {
+                baddirs += ";" + dirlist[i];
+            }
+        } else {
+            if (gooddirs.isEmpty()) {
+                gooddirs = dirlist[i];
+            } else {
+                gooddirs += ";" + dirlist[i];
+            }
+        }
+    }
+}
+
+
 bool Settings::CompilerSet::dirsValid(QString &msg)
 {
-    return true;
+    QString goodbin, badbin, goodlib, badlib, goodinc, badinc, goodinccpp, badinccpp;
+    msg = "";
+
+    if (mBinDirs.count()>0) {// we need some bin dir, so treat count=0 as an error too
+        checkDirs(mBinDirs,goodbin,badbin);
+        if (!badbin.isEmpty()) {
+            msg += QObject::tr("The following %1 directories don't exist:").arg(
+                        QObject::tr("binary")
+                        );
+            msg += "<br />";
+            msg += badbin.replace(';',"<br />");
+            msg += "<br />";
+            msg += "<br />";
+            return false;
+        }
+    } else {
+        msg += QObject::tr("No %1 directories have been specified.").arg(
+                    QObject::tr("binary")
+                    );
+        msg += "<br />";
+        msg += "<br />";
+        return false;
+    }
+    checkDirs(mCIncludeDirs,goodbin,badbin);
+    if (!badbin.isEmpty()) {
+        msg += QObject::tr("The following %1 directories don't exist:").arg(
+                    QObject::tr("C include")
+                    );
+        msg += "<br />";
+        msg += badbin.replace(';',"<br />");
+        msg += "<br />";
+        msg += "<br />";
+        return false;
+    }
+
+    checkDirs(mCppIncludeDirs,goodbin,badbin);
+    if (!badbin.isEmpty()) {
+        msg += QObject::tr("The following %1 directories don't exist:").arg(
+                    QObject::tr("C++ include")
+                    );
+        msg += "<br />";
+        msg += badbin.replace(';',"<br />");
+        msg += "<br />";
+        msg += "<br />";
+        return false;
+    }
+
+    checkDirs(mLibDirs,goodbin,badbin);
+    if (!badbin.isEmpty()) {
+        msg += QObject::tr("The following %1 directories don't exist:").arg(
+                    QObject::tr("C++ include")
+                    );
+        msg += "<br />";
+        msg += badbin.replace(';',"<br />");
+        msg += "<br />";
+        msg += "<br />";
+        return false;
+    }
+
+    if (!msg.isEmpty())
+        return false;
+    else
+        return true;
+}
+
+bool Settings::CompilerSet::validateExes(QString &msg)
+{
+    msg ="";
+    if (!QFile(mCCompiler).exists()) {
+        msg += QObject::tr("Cannot find the %1 \"%2\"")
+                .arg("C Compiler")
+                .arg(mCCompiler);
+    }
+    if (!QFile(mCppCompiler).exists()) {
+        msg += QObject::tr("Cannot find the %1 \"%2\"")
+                .arg("C++ Compiler")
+                .arg(mCppCompiler);
+    }
+    if (!QFile(mMake).exists()) {
+        msg += QObject::tr("Cannot find the %1 \"%2\"")
+                .arg("Maker")
+                .arg(mMake);
+    }
+    if (!QFile(mDebugger).exists()) {
+        msg += QObject::tr("Cannot find the %1 \"%2\"")
+                .arg("Maker")
+                .arg(mDebugger);
+    }
+    if (!msg.isEmpty())
+        return false;
+    else
+        return true;
 }
 
 const QString &Settings::CompilerSet::CCompiler() const
@@ -1766,8 +1881,30 @@ void Settings::CompilerSets::loadSets()
     PCompilerSet pCurrentSet = defaultSet();
     if (pCurrentSet) {
         QString msg;
-        if (!pCurrentSet->dirsValid(msg)) {
-
+        if (!pCurrentSet->dirsValid(msg) || !pCurrentSet->validateExes(msg)) {
+            if (QMessageBox::warning(nullptr,tr("Confirm"),
+                       QObject::tr("The following problems were found during validation of compiler set \"%1\":")
+                                     .arg(pCurrentSet->name())
+                                     +"<br /><br />"
+                                     +msg
+                                     +"Would you like Dev-C++ to remove them for you and add the default paths to the valid paths?<br /><br />Leaving those directories will lead to problems during compilation.<br /><br />Unless you know exactly what you're doing, it is recommended that you click Yes.",
+                                     QMessageBox::Yes | QMessageBox::No) == QMessageBox::Ok) {
+                clearSets();
+                findSets();
+                saveSets();
+                if ( mList.size() <= mDefaultIndex)
+                    mDefaultIndex =  mList.size()-1;
+            } else {
+                return;
+            }
+            pCurrentSet = defaultSet();
+            if (!pCurrentSet) {
+                return;
+            }
+            saveSet(mDefaultIndex);
+            if (pCurrentSet->binDirs().count()>0) {
+                pCurrentSet->setProperties(pCurrentSet->binDirs()[0]);
+            }
         }
     }
 }

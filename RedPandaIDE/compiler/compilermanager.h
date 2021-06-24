@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QMutex>
 #include "../utils.h"
+#include "../common.h"
 
 class ExecutableRunner;
 class Compiler;
@@ -26,6 +27,8 @@ public:
 private slots:
     void onCompileFinished();
     void onRunnerTerminated();
+    void onCompileIssue(PCompileIssue issue);
+
 private:
     Compiler* mCompiler;
     int mCompileErrorCount;

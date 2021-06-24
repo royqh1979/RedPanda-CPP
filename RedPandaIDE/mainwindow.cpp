@@ -25,6 +25,7 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
       ui(new Ui::MainWindow),
       mMessageControlChanged(false),
+      mTabMessagesTogglingState(false),
       mCheckSyntaxInBack(false)
 {
     ui->setupUi(this);
@@ -40,7 +41,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->statusbar->addWidget(mFileModeStatus);
     mEditorList = new EditorList(ui->EditorTabsLeft,
                                  ui->EditorTabsRight,
-                                 ui->EditorPanelSplitter,
+                                 ui->splitterEditorPanel,
                                  ui->EditorPanel);
     setupActions();
     ui->EditorTabsRight->setVisible(false);
@@ -73,10 +74,12 @@ MainWindow::MainWindow(QWidget *parent)
     ui->actionEncode_in_ANSI->setCheckable(true);
     ui->actionEncode_in_UTF_8->setCheckable(true);
 
-    openCloseMessageSheet(false);
-    mPreviousHeight = 250;
     updateEditorActions();
     applySettings();
+
+    openCloseMessageSheet(false);
+    mPreviousHeight = 250;
+
 }
 
 MainWindow::~MainWindow()
@@ -256,7 +259,12 @@ void MainWindow::openCloseMessageSheet(bool open)
 {
 //    if Assigned(fReportToolWindow) then
 //      Exit;
-
+    if (mTabMessagesTogglingState)
+        return;
+    mTabMessagesTogglingState = true;
+    auto action = finally([this]{
+        mTabMessagesTogglingState = false;
+    });
     // Switch between open and close
     if (open) {
         QList<int> sizes = ui->splitterMessages->sizes();
@@ -280,6 +288,7 @@ void MainWindow::openCloseMessageSheet(bool open)
     handle->setEnabled(open);
     int idxClose = ui->tabMessages->indexOf(ui->tabClose);
     ui->tabMessages->setTabVisible(idxClose,open);
+    mTabMessagesTogglingState = false;
 }
 
 
@@ -383,7 +392,9 @@ void MainWindow::onCompileIssue(PCompileIssue issue)
             if (line > e->lines()->count())
                 return;
             int col = std::min(issue->column,e->lines()->getString(line-1).length()+1);
-            e->addSyntaxIssues(line,col,issue->type,issue->description);
+            if (col < 1)
+                col = e->lines()->getString(line-1).length()+1;
+            e->addSyntaxIssues(line,col,issue->endColumn,issue->type,issue->description);
         }
     }
 }
@@ -592,8 +603,7 @@ void MainWindow::on_tableIssues_doubleClicked(const QModelIndex &index)
     if (editor == nullptr)
         return;
 
-    //editor->setCursorPosition(issue->line-1,issue->column-1);
-    editor->activate();
+    editor->setCaretPositionAndActivate(issue->line,issue->column);
 }
 
 void MainWindow::on_actionEncode_in_ANSI_triggered()
@@ -657,11 +667,23 @@ void MainWindow::on_actionConvert_to_UTF_8_triggered()
 
 void MainWindow::on_tabMessages_tabBarClicked(int index)
 {
-    mMessageControlChanged = false;
+    if (index == ui->tabMessages->currentIndex()) {
+        openCloseMessageSheet(!ui->splitterMessages->handle(1)->isEnabled());
+    }
+}
+
+void MainWindow::on_tabMessages_currentChanged(int index)
+{
+    mMessageControlChanged = true;
     int idxClose = ui->tabMessages->indexOf(ui->tabClose);
     if (index == idxClose) {
         openCloseMessageSheet(false);
     } else {
         openCloseMessageSheet(true);
     }
+}
+
+void MainWindow::on_tabMessages_tabBarDoubleClicked(int index)
+{
+
 }

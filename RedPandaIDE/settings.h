@@ -370,8 +370,10 @@ public:
         char getOptionValue(const QString& setting);
         void setOption(const QString& setting, char valueChar);
         void setOption(PCompilerOption& option, char valueChar);
+        void setProperties(const QString& binDir);
 
         bool dirsValid(QString& msg);
+        bool validateExes(QString& msg);
         //properties
         const QString& CCompiler() const;
         void setCCompiler(const QString& name);
@@ -427,7 +429,6 @@ public:
         int charToValue(char valueChar);
 
         // Initialization
-        void setProperties(const QString& binDir);
         void setExecutables();
         void setDirectories(const QString& folder);
         void setUserInput();

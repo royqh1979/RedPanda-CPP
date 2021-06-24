@@ -33,6 +33,7 @@ void CompilerManager::compile(const QString& filename, const QByteArray& encodin
     mCompileErrorCount = 0;
     mCompiler = new FileCompiler(filename,encoding,silent,onlyCheckSyntax);
     connect(mCompiler, &Compiler::compileFinished, this ,&CompilerManager::onCompileFinished);
+    connect(mCompiler, &Compiler::compileIssue, this, &CompilerManager::onCompileIssue);
     connect(mCompiler, &Compiler::compileFinished, pMainWindow, &MainWindow::onCompileFinished);
     connect(mCompiler, &Compiler::compileOutput, pMainWindow, &MainWindow::onCompileLog);
     connect(mCompiler, &Compiler::compileIssue, pMainWindow, &MainWindow::onCompileIssue);
@@ -64,8 +65,8 @@ bool CompilerManager::canCompile(const QString &filename)
 void CompilerManager::onCompileFinished()
 {
     QMutexLocker locker(&compileMutex);
-    mCompiler=nullptr;
     delete mCompiler;
+    mCompiler=nullptr;
 }
 
 void CompilerManager::onRunnerTerminated()
@@ -73,6 +74,11 @@ void CompilerManager::onRunnerTerminated()
     QMutexLocker locker(&runnerMutex);
     qDebug() << "Runner Terminated";
     mRunner=nullptr;
+}
+
+void CompilerManager::onCompileIssue(PCompileIssue)
+{
+    mCompileErrorCount ++;
 }
 
 int CompilerManager::syntaxCheckErrorCount() const

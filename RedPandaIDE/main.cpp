@@ -11,6 +11,7 @@
 #include <QStringList>
 #include "common.h"
 #include "colorscheme.h"
+#include "iconsmanager.h"
 
 Settings* createAppSettings(const QString& filepath = QString()) {
     QString filename;
@@ -74,6 +75,7 @@ int main(int argc, char *argv[])
 
         //Color scheme settings must be loaded after translation
         pColorManager = new ColorManager();
+        pIconsManager = new IconsManager();
 
         MainWindow mainWindow;
         pMainWindow = &mainWindow;

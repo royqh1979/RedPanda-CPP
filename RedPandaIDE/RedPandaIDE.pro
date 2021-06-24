@@ -17,6 +17,7 @@ SOURCES += \
     compiler/filecompiler.cpp \
     editor.cpp \
     editorlist.cpp \
+    iconsmanager.cpp \
     main.cpp \
     mainwindow.cpp \
     qsynedit/CodeFolding.cpp \
@@ -59,6 +60,7 @@ HEADERS += \
     compiler/filecompiler.h \
     editor.h \
     editorlist.h \
+    iconsmanager.h \
     mainwindow.h \
     qsynedit/CodeFolding.h \
     qsynedit/Constants.h \

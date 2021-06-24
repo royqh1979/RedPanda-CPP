@@ -450,5 +450,9 @@
         <file>images/newlook64/087-update.png</file>
         <file>images/newlook64/088-watch.png</file>
         <file>images/newlook64/089-watch-tm.png</file>
+        <file>images/editor/breakpoint.png</file>
+        <file>images/editor/currentline.png</file>
+        <file>images/editor/syntaxerror.png</file>
+        <file>images/editor/syntaxwarning.png</file>
     </qresource>
 </RCC>

@@ -101,7 +101,8 @@ int Compiler::getColunmnFromOutputLine(QString &line)
     }
     if (pos>=0) {
         result = line.mid(0,pos).toInt();
-        line.remove(0,pos+1);
+        if (result > 0)
+            line.remove(0,pos+1);
     }
     return result;
 }
@@ -141,6 +142,7 @@ void Compiler::processOutput(QString &line)
     PCompileIssue issue = std::make_shared<CompileIssue>();
     QString description;
     issue->type = CompileIssueType::Other;
+    issue->endColumn = -1;
     if (line.startsWith(inFilePrefix)) {
         line.remove(0,inFilePrefix.length());
         issue->filename = getFileNameFromOutputLine(line);
@@ -166,16 +168,54 @@ void Compiler::processOutput(QString &line)
     // Ignore code snippets that GCC produces
     // they always start with a space
     if (line.length()>0 && line[0] == ' ') {
+        if (!mLastIssue)
+            return;
+        QString s = line.trimmed();
+        if (s.startsWith('|') && s.indexOf('^')) {
+            int pos = 0;
+            while (pos < s.length()) {
+                if (s[pos]=='^')
+                    break;
+                pos++;
+            }
+            if (pos<s.length()) {
+                int i=pos+1;
+                while (i<s.length()) {
+                    if (s[i]!='~' && s[i]!='^')
+                        break;
+                    i++;
+                }
+                mLastIssue->endColumn = mLastIssue->column+i-pos;
+                emit compileIssue(mLastIssue);
+                mLastIssue.reset();
+            }
+        }
         return;
     }
+
+    if (mLastIssue) {
+        emit compileIssue(mLastIssue);
+        mLastIssue.reset();
+    }
+
     // assume regular main.cpp:line:col: message
     issue->filename = getFileNameFromOutputLine(line);
     issue->line = getLineNumberFromOutputLine(line);
-    if (issue->line > 0)
+    if (issue->line > 0) {
         issue->column = getColunmnFromOutputLine(line);
-    issue->type = getIssueTypeFromOutputLine(line);
+        if (issue->column>0)
+            issue->type = getIssueTypeFromOutputLine(line);
+        else
+            issue->type = CompileIssueType::Error; //linkage error
+    } else {
+        issue->column = -1;
+        issue->type = getIssueTypeFromOutputLine(line);
+    }
     issue->description = line.trimmed();
-    emit compileIssue(issue);
+    if (issue->line<=0) {
+        emit compileIssue(issue);
+    } else
+        mLastIssue = issue;
 }
 
 void Compiler::stopCompile()
@@ -316,7 +356,6 @@ void Compiler::runCommand(const QString &cmd, const QString  &arguments, const Q
                     [&](){
                         errorOccurred= true;
                     });
-
     process.connect(&process, &QProcess::readyReadStandardError,[&process,this](){
         this->error(QString::fromLocal8Bit( process.readAllStandardError()));
     });

@@ -15,6 +15,7 @@ struct CompileIssue {
     QString filename;
     int line;
     int column;
+    int endColumn;
     QString description;
     CompileIssueType type;
 };

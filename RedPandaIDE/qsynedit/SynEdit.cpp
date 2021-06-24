@@ -275,6 +275,22 @@ void SynEdit::setCaretXYCentered(bool ForceToMiddle, const BufferCoord &value)
         ensureCursorPosVisibleEx(true); // but here after block has been set
 }
 
+void SynEdit::uncollapseAroundLine(int line)
+{
+    while (true) { // Open up the closed folds around the focused line until we can see the line we're looking for
+      PSynEditFoldRange fold = foldHidesLine(line);
+      if (fold)
+          uncollapse(fold);
+      else
+          break;
+    }
+}
+
+PSynEditFoldRange SynEdit::foldHidesLine(int line)
+{
+    return foldAroundLineEx(line, true, false, true);
+}
+
 void SynEdit::setInsertMode(bool value)
 {
     if (mInserting != value) {
@@ -3158,6 +3174,11 @@ void SynEdit::doScrolled(int)
     mLeftChar = horizontalScrollBar()->value();
     mTopLine = verticalScrollBar()->value();
     invalidate();
+}
+
+int SynEdit::textHeight() const
+{
+    return mTextHeight;
 }
 
 bool SynEdit::readOnly() const

@@ -97,15 +97,17 @@ public:
     void copyToClipboard() override;
     void cutToClipboard() override;
     void copyAsHTML();
+    void setCaretPosition(int line,int col);
+    void setCaretPositionAndActivate(int line,int col);
 
-    void addSyntaxIssues(int line, int startChar, CompileIssueType errorType, const QString& hint);
+    void addSyntaxIssues(int line, int startChar, int endChar, CompileIssueType errorType, const QString& hint);
     void clearSyntaxIssues();
     void gotoNextSyntaxIssue();
     void gotoPrevSyntaxIssue();
     bool hasPrevSyntaxIssue() const;
     bool hasNextSyntaxIssue() const;
-    PSyntaxIssueList getErrorsAtLine(int line);
-    PSyntaxIssue getErrorAtPosition(const BufferCoord& pos);
+    PSyntaxIssueList getSyntaxIssuesAtLine(int line);
+    PSyntaxIssue getSyntaxIssueAtPosition(const BufferCoord& pos);
 signals:
 
 
@@ -139,6 +141,9 @@ private:
     bool mInProject;
     bool mIsNew;
     QMap<int,PSyntaxIssueList> mSyntaxIssues;
+    QColor mSyntaxErrorColor;
+    QColor mSyntaxWaringColor;
+    int mSyntaxErrorLine;
 
     // QWidget interface
 protected:
@@ -146,6 +151,11 @@ protected:
     void focusInEvent(QFocusEvent *event) override;
     void focusOutEvent(QFocusEvent *event) override;
     void keyPressEvent(QKeyEvent *event) override;
+
+    // SynEdit interface
+protected:
+    void onGutterPaint(QPainter &painter, int aLine, int X, int Y) override;
+    void onGetEditingAreas(int Line, SynEditingAreaList &areaList) override;
 };
 
 #endif // EDITOR_H

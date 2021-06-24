@@ -167,15 +167,17 @@ bool EditorList::closeAll(bool force) {
 
 Editor* EditorList::getOpenedEditorByFilename(const QString &filename)
 {
+    QFileInfo fileInfo(filename);
+    QString fullname = fileInfo.absoluteFilePath();
     for (int i=0;i<mLeftPageWidget->count();i++) {
         Editor* e = static_cast<Editor*>(mLeftPageWidget->widget(i));
-        if (e->filename() == filename) {
+        if (e->filename() == fullname) {
             return e;
         }
     }
     for (int i=0;i<mRightPageWidget->count();i++) {
         Editor* e = static_cast<Editor*>(mRightPageWidget->widget(i));
-        if (e->filename() == filename) {
+        if (e->filename() == fullname) {
             return e;
         }
     }
@@ -184,12 +186,16 @@ Editor* EditorList::getOpenedEditorByFilename(const QString &filename)
 
 Editor *EditorList::getEditorByFilename(const QString &filename)
 {
+    QFileInfo fileInfo(filename);
+    QString fullname = fileInfo.absoluteFilePath();
     //check if an editor is already openned
-    Editor* e=getOpenedEditorByFilename(filename);
+    Editor* e=getOpenedEditorByFilename(fullname);
     if (e!=nullptr)
         return e;
     //Todo: check if is in the project
 
     //Create a new editor
-    return newEditor(filename,ENCODING_AUTO_DETECT,false,false);
+    if (fileInfo.exists())
+        return newEditor(fullname,ENCODING_AUTO_DETECT,false,false);
+    return nullptr;
 }

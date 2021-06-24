@@ -56,6 +56,7 @@ protected:
     QString mOutputFile;
     int mErrorCount;
     int mWarningCount;
+    PCompileIssue mLastIssue;
 
 private:
     bool mStop;

@@ -90,6 +90,10 @@ private slots:
 
     void on_tabMessages_tabBarClicked(int index);
 
+    void on_tabMessages_currentChanged(int index);
+
+    void on_tabMessages_tabBarDoubleClicked(int index);
+
 public slots:
     void onCompileLog(const QString& msg);
     void onCompileIssue(PCompileIssue issue);
@@ -113,6 +117,7 @@ private:
     QComboBox* mCompilerSet;
     CompilerManager* mCompilerManager;
     bool mMessageControlChanged;
+    bool mTabMessagesTogglingState;
     bool mCheckSyntaxInBack;
     int mPreviousHeight;
 

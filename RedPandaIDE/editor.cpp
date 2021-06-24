@@ -20,6 +20,8 @@
 #include "qsynedit/Constants.h"
 #include <QGuiApplication>
 #include <QClipboard>
+#include <QPainter>
+#include "iconsmanager.h"
 
 
 using namespace std;
@@ -53,7 +55,9 @@ Editor::Editor(QWidget *parent, const QString& filename,
   mFilename(filename),
   mParentPageControl(parentPageControl),
   mInProject(inProject),
-  mIsNew(isNew)
+  mIsNew(isNew),
+  mSyntaxErrorColor(QColorConstants::Red),
+  mSyntaxWaringColor("orange")
 {
     if (mFilename.isEmpty()) {
         newfileCount++;
@@ -339,6 +343,92 @@ void Editor::keyPressEvent(QKeyEvent *event)
     }
 }
 
+void Editor::onGutterPaint(QPainter &painter, int aLine, int X, int Y)
+{
+    // Get point where to draw marks
+    //X := (fText.Gutter.RealGutterWidth(fText.CharWidth) - fText.Gutter.RightOffset) div 2 - 3;
+    X = 5;
+    Y += (this->textHeight() - 16) / 2;
+
+    PSyntaxIssueList lst = getSyntaxIssuesAtLine(aLine);
+    if (lst) {
+        bool hasError=false;
+        for (PSyntaxIssue issue : *lst) {
+            if (issue->issueType == CompileIssueType::Error) {
+                hasError = true;
+                break;;
+            }
+        }
+        if (hasError) {
+            painter.drawPixmap(X,Y,*(pIconsManager->syntaxError()));
+        } else {
+            painter.drawPixmap(X,Y,*(pIconsManager->syntaxWarning()));
+        }
+    }
+//   if fActiveLine = Line then begin // prefer active line over breakpoints
+//        dmMain.GutterImages.Draw(ACanvas, X, Y, 1);
+//        drawn:=True;
+//      end else if HasBreakpoint(Line) <> -1 then begin
+//        dmMain.GutterImages.Draw(ACanvas, X, Y, 0);
+//        drawn:=True;
+//      end else if fErrorLine = Line then begin
+//        dmMain.GutterImages.Draw(ACanvas, X, Y, 2);
+//        drawn:=True;
+//      end;
+//      idx := CBUtils.FastIndexOf(fErrorList, Line);
+//      if idx>=0 then begin
+//        isError := False;
+//        lst:=TList(fErrorList.Objects[idx]);
+//        for j:=0 to lst.Count-1 do begin
+//          if PSyntaxError(lst[j])^.errorType = setError then begin
+//            isError := True;
+//            break;
+//          end;
+//        end;
+//        if isError then
+//          dmMain.GutterImages.Draw(ACanvas, X, Y, 2)
+//        else if not drawn then
+//          dmMain.GutterImages.Draw(ACanvas, X, Y, 3);
+//      end;
+
+//      Inc(Y, fText.LineHeight);
+//    end;
+
+}
+
+void Editor::onGetEditingAreas(int Line, SynEditingAreaList &areaList)
+{
+    areaList.clear();
+//    if (fTabStopBegin >=0) and (fTabStopY=Line) then begin
+//      areaType:=eatEditing;
+//      System.new(p);
+//      spaceCount := fText.LeftSpacesEx(fLineBeforeTabStop,True);
+//      spaceBefore := Length(fLineBeforeTabStop) - Length(TrimLeft(fLineBeforeTabStop));
+//      p.beginX := fTabStopBegin + spaceCount - spaceBefore ;
+//      p.endX := fTabStopEnd + spaceCount - spaceBefore ;
+//      p.color := dmMain.Cpp.StringAttri.Foreground;
+//      areaList.Add(p);
+//      ColBorder := dmMain.Cpp.StringAttri.Foreground;
+//      Exit;
+//    end;
+//    StrToThemeColor(tc,devEditor.Syntax.Values[cWN]);
+    PSyntaxIssueList lst = getSyntaxIssuesAtLine(Line);
+    if (lst) {
+        for (PSyntaxIssue issue: *lst) {
+            PSynEditingArea p=std::make_shared<SynEditingArea>();
+            p->beginX = issue->col;
+            p->endX = issue->endCol;
+            if (issue->issueType == CompileIssueType::Error) {
+                p->color = mSyntaxErrorColor;
+            } else {
+                p->color = mSyntaxWaringColor;
+            }
+            p->type = SynEditingAreaType::eatWaveUnderLine;
+            areaList.append(p);
+        }
+    }
+}
+
 void Editor::copyToClipboard()
 {
     if (pSettings->editor().copySizeLimit()) {
@@ -409,7 +499,21 @@ void Editor::copyAsHTML()
     QGuiApplication::clipboard()->setMimeData(mimeData);
 }
 
-void Editor::addSyntaxIssues(int line, int startChar, CompileIssueType errorType, const QString &hint)
+void Editor::setCaretPosition(int line, int col)
+{
+    this->uncollapseAroundLine(line);
+    this->setCaretXYCentered(true,BufferCoord{col,line});
+}
+
+void Editor::setCaretPositionAndActivate(int line, int col)
+{
+    this->uncollapseAroundLine(line);
+    if (!this->hasFocus())
+        this->activate();
+    this->setCaretXYCentered(true,BufferCoord{col,line});
+}
+
+void Editor::addSyntaxIssues(int line, int startChar, int endChar, CompileIssueType errorType, const QString &hint)
 {
     PSyntaxIssue pError;
     BufferCoord p;
@@ -426,9 +530,12 @@ void Editor::addSyntaxIssues(int line, int startChar, CompileIssueType errorType
     if (startChar >= lines()->getString(line-1).length()) {
         start = 1;
         token = lines()->getString(line-1);
-    } else {
+    } else if (endChar < 1) {
         if (!GetHighlighterAttriAtRowColEx(p,token,tokenType,tokenKind,start,attr))
             return;
+    } else {
+        start = startChar;
+        token = lines()->getString(line-1).mid(start-1,endChar-startChar);
     }
     pError->startChar = start;
     pError->endChar = start + token.length();
@@ -501,16 +608,16 @@ bool Editor::hasPrevSyntaxIssue() const
     return false;
 }
 
-Editor::PSyntaxIssueList Editor::getErrorsAtLine(int line)
+Editor::PSyntaxIssueList Editor::getSyntaxIssuesAtLine(int line)
 {
     if (mSyntaxIssues.contains(line))
         return mSyntaxIssues[line];
     return PSyntaxIssueList();
 }
 
-Editor::PSyntaxIssue Editor::getErrorAtPosition(const BufferCoord &pos)
+Editor::PSyntaxIssue Editor::getSyntaxIssueAtPosition(const BufferCoord &pos)
 {
-    PSyntaxIssueList lst = getErrorsAtLine(pos.Line);
+    PSyntaxIssueList lst = getSyntaxIssuesAtLine(pos.Line);
     for (PSyntaxIssue issue: *lst) {
         if (issue->startChar<=pos.Char && pos.Char<=issue->endChar)
             return issue;

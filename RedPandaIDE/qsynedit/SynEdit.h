@@ -208,6 +208,8 @@ public:
     void setCaretXY(const BufferCoord& value);
     void setCaretXYEx(bool CallEnsureCursorPos, BufferCoord value);
     void setCaretXYCentered(bool ForceToMiddle, const BufferCoord& value);
+    void uncollapseAroundLine(int line);
+    PSynEditFoldRange foldHidesLine(int line);
 
     int maxScrollWidth() const;
     int maxScrollHeight() const;
@@ -312,6 +314,8 @@ public:
 
     bool canUndo() const;
     bool canRedo() const;
+
+    int textHeight() const;
 
 signals:
     void Changed();

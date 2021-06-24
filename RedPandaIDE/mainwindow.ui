@@ -37,6 +37,9 @@
       <property name="orientation">
        <enum>Qt::Vertical</enum>
       </property>
+      <property name="handleWidth">
+       <number>1</number>
+      </property>
       <property name="childrenCollapsible">
        <bool>false</bool>
       </property>
@@ -64,6 +67,9 @@
          <widget class="QSplitter" name="splitterInfos">
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="handleWidth">
+           <number>1</number>
           </property>
           <property name="childrenCollapsible">
            <bool>false</bool>
@@ -113,9 +119,12 @@
              <number>0</number>
             </property>
             <item>
-             <widget class="QSplitter" name="EditorPanelSplitter">
+             <widget class="QSplitter" name="splitterEditorPanel">
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="handleWidth">
+               <number>1</number>
               </property>
               <widget class="QTabWidget" name="EditorTabsLeft">
                <property name="currentIndex">
@@ -164,7 +173,7 @@
         <enum>QTabWidget::South</enum>
        </property>
        <property name="currentIndex">
-        <number>5</number>
+        <number>0</number>
        </property>
        <widget class="QWidget" name="tabIssues">
         <attribute name="icon">

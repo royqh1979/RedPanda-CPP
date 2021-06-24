@@ -421,7 +421,7 @@ void SynEditTextPainter::PaintEditAreas(const SynEditingAreaList &areaList)
             int lastX=rc.left();
             int lastY=rc.bottom()-offset;
             int t = rc.left();
-            while (t<=rc.right()) {
+            while (t<rc.right()) {
                 t+=3;
                 if (t>rc.right())
                     t = rc.right();

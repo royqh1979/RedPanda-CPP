@@ -219,6 +219,9 @@ void CompilerSetOptionWidget::on_btnFindCompilers_pressed()
     pSettings->compilerSets().clearSets();
     pSettings->compilerSets().findSets();
     doLoad();
+    if (pSettings->compilerSets().size()==0) {
+        QMessageBox::warning(this,tr("Failed"),tr("Can't find any compiler."));
+    }
 }
 
 void CompilerSetOptionWidget::on_btnAddBlankCompilerSet_pressed()
@@ -233,8 +236,14 @@ void CompilerSetOptionWidget::on_btnAddBlankCompilerSet_pressed()
 void CompilerSetOptionWidget::on_btnAddCompilerSetByFolder_pressed()
 {
     QString folder = QFileDialog::getExistingDirectory(this, tr("Compiler Set Folder"));
+    int oldSize = pSettings->compilerSets().size();
+
     pSettings->compilerSets().addSets(folder);
     doLoad();
+    int newSize = pSettings->compilerSets().size();
+    if (oldSize == newSize) {
+        QMessageBox::warning(this,tr("Failed"),tr("Can't find any compiler."));
+    }
 }
 
 void CompilerSetOptionWidget::on_btnRenameCompilerSet_pressed()
