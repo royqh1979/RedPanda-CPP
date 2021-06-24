@@ -1,58 +1,41 @@
-#include "filecompiler.h"
-#include "utils.h"
-#include "../mainwindow.h"
+#include "stdincompiler.h"
 #include "compilermanager.h"
-
 #include <QFile>
 #include <QFileInfo>
-#include <QMessageBox>
 
-
-FileCompiler::FileCompiler(const QString &filename, const QByteArray &encoding,bool silent,bool onlyCheckSyntax):
-    Compiler(filename, silent,onlyCheckSyntax),
-    mEncoding(encoding)
+StdinCompiler::StdinCompiler(const QString &filename, const QString& content, bool silent, bool onlyCheckSyntax):
+    Compiler(filename,silent,onlyCheckSyntax),
+    mContent(content)
 {
 
 }
 
-Settings::PCompilerSet FileCompiler::compilerSet()
+Settings::PCompilerSet StdinCompiler::compilerSet()
 {
     return pSettings->compilerSets().defaultSet();
 }
 
-bool FileCompiler::prepareForCompile()
+bool StdinCompiler::prepareForCompile()
 {
-    log(tr("Compiling single file..."));
+    log(tr("Checking file syntax..."));
     log("------------------");
     log(tr("- Filename: %1").arg(mFilename));
     log(tr("- Compiler Set Name: %1").arg(compilerSet()->name()));
     log("");
     FileType fileType = getFileType(mFilename);
-    mArguments= QString(" \"%1\"").arg(mFilename);
-    if (!mOnlyCheckSyntax) {
-        mOutputFile = getCompiledExecutableName(mFilename);
-        mArguments+=QString(" -o \"%1\"").arg(mOutputFile);
-
-        //remove the old file it exists
-        QFile outputFile(mOutputFile);
-        if (outputFile.exists()) {
-            if (!outputFile.remove()) {
-                error(tr("Can't delete the old executable file \"%1\".\n").arg(mOutputFile));
-                return false;
-            }
-        }
-    }
-
-    mArguments += getCharsetArgument(mEncoding);
+    if (fileType == FileType::Other)
+        fileType = FileType::CppSource;
     QString strFileType;
     switch(fileType) {
     case FileType::CSource:
+        mArguments += " -x c - ";
         mArguments += getCCompileArguments(mOnlyCheckSyntax);
         mArguments += getCIncludeArguments();
         strFileType = "C";
         mCompiler = compilerSet()->CCompiler();
         break;
     case FileType::CppSource:
+        mArguments += " -x c++ - ";
         mArguments += getCCompileArguments(mOnlyCheckSyntax);
         mArguments += getCIncludeArguments();
         strFileType = "C++";
@@ -74,7 +57,7 @@ bool FileCompiler::prepareForCompile()
     return true;
 }
 
-QString FileCompiler::pipedText()
+QString StdinCompiler::pipedText()
 {
-    return QString();
+    return mContent;
 }

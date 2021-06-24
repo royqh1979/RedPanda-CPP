@@ -18,6 +18,7 @@ public:
     bool backgroundSyntaxChecking();
 
     void compile(const QString& filename, const QByteArray& encoding, bool silent=false,bool onlyCheckSyntax=false);
+    void checkSyntax(const QString&filename, const QString& content);
     void run(const QString& filename, const QString& arguments, const QString& workDir);
     bool canCompile(const QString& filename);
     int compileErrorCount() const;
@@ -25,9 +26,11 @@ public:
     int syntaxCheckErrorCount() const;
 
 private slots:
-    void onCompileFinished();
     void onRunnerTerminated();
+    void onCompileFinished();
     void onCompileIssue(PCompileIssue issue);
+    void onSyntaxCheckFinished();
+    void onSyntaxCheckIssue(PCompileIssue issue);
 
 private:
     Compiler* mCompiler;

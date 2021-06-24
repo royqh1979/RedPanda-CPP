@@ -4,7 +4,6 @@
 #include <QMainWindow>
 #include "common.h"
 
-
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -13,6 +12,7 @@ class EditorList;
 class QLabel;
 class QComboBox;
 class CompilerManager;
+class Editor;
 
 class MainWindow : public QMainWindow
 {
@@ -28,6 +28,8 @@ public:
     void updateEditorSettings();
     void updateEditorActions();
     void updateEditorColorSchemes();
+    void updateCompilerSet();
+    void checkSyntaxInBack(Editor* e);
 
     void applySettings();
 
@@ -102,8 +104,6 @@ public slots:
 
 private:
     void setupActions();
-
-    void updateCompilerSet();
     void openCloseMessageSheet(bool open);
 
 private:

@@ -139,6 +139,7 @@ void CompilerSetOptionWidget::doSave()
         saveCurrentCompilerSet();
     }
     pSettings->compilerSets().saveSets();
+    pMainWindow->updateCompilerSet();
 }
 
 void CompilerSetOptionWidget::on_cbCompilerSet_currentIndexChanged(int index)
@@ -219,6 +220,7 @@ void CompilerSetOptionWidget::on_btnFindCompilers_pressed()
     pSettings->compilerSets().clearSets();
     pSettings->compilerSets().findSets();
     doLoad();
+    setSettingsChanged();
     if (pSettings->compilerSets().size()==0) {
         QMessageBox::warning(this,tr("Failed"),tr("Can't find any compiler."));
     }

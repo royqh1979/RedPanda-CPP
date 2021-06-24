@@ -1,5 +1,6 @@
 #include "compilermanager.h"
 #include "filecompiler.h"
+#include "stdincompiler.h"
 #include <QDebug>
 #include "../mainwindow.h"
 #include "executablerunner.h"
@@ -41,6 +42,23 @@ void CompilerManager::compile(const QString& filename, const QByteArray& encodin
     mCompiler->start();
 }
 
+void CompilerManager::checkSyntax(const QString &filename, const QString &content)
+{
+    QMutexLocker locker(&backgroundSyntaxChekMutex);
+    if (mBackgroundSyntaxChecker!=nullptr) {
+        return;
+    }
+    mSyntaxCheckErrorCount = 0;
+    mBackgroundSyntaxChecker = new StdinCompiler(filename,content,true,true);
+    connect(mBackgroundSyntaxChecker, &Compiler::compileFinished, this ,&CompilerManager::onSyntaxCheckFinished);
+    connect(mBackgroundSyntaxChecker, &Compiler::compileIssue, this, &CompilerManager::onSyntaxCheckIssue);
+    connect(mBackgroundSyntaxChecker, &Compiler::compileFinished, pMainWindow, &MainWindow::onCompileFinished);
+    connect(mBackgroundSyntaxChecker, &Compiler::compileOutput, pMainWindow, &MainWindow::onCompileLog);
+    connect(mBackgroundSyntaxChecker, &Compiler::compileIssue, pMainWindow, &MainWindow::onCompileIssue);
+    connect(mBackgroundSyntaxChecker, &Compiler::compileErrorOccured, pMainWindow, &MainWindow::onCompileErrorOccured);
+    mBackgroundSyntaxChecker->start();
+}
+
 void CompilerManager::run(const QString &filename, const QString &arguments, const QString &workDir)
 {
     QMutexLocker locker(&runnerMutex);
@@ -79,6 +97,18 @@ void CompilerManager::onRunnerTerminated()
 void CompilerManager::onCompileIssue(PCompileIssue)
 {
     mCompileErrorCount ++;
+}
+
+void CompilerManager::onSyntaxCheckFinished()
+{
+    QMutexLocker locker(&backgroundSyntaxChekMutex);
+    delete mBackgroundSyntaxChecker;
+    mBackgroundSyntaxChecker=nullptr;
+}
+
+void CompilerManager::onSyntaxCheckIssue(PCompileIssue)
+{
+    mSyntaxCheckErrorCount++;
 }
 
 int CompilerManager::syntaxCheckErrorCount() const

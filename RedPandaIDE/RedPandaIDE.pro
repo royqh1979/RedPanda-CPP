@@ -15,6 +15,7 @@ SOURCES += \
     compiler/compilermanager.cpp \
     compiler/executablerunner.cpp \
     compiler/filecompiler.cpp \
+    compiler/stdincompiler.cpp \
     editor.cpp \
     editorlist.cpp \
     iconsmanager.cpp \
@@ -58,6 +59,7 @@ HEADERS += \
     compiler/compilermanager.h \
     compiler/executablerunner.h \
     compiler/filecompiler.h \
+    compiler/stdincompiler.h \
     editor.h \
     editorlist.h \
     iconsmanager.h \

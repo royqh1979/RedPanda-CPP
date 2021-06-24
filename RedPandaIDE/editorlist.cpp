@@ -135,12 +135,12 @@ bool EditorList::isFileOpened(const QString &name)
     QString filename = fileInfo.absoluteFilePath();
     for (int i=0;i<mLeftPageWidget->count();i++) {
         Editor* e = static_cast<Editor*>(mLeftPageWidget->widget(i));
-        if (e->filename().compare(filename)==0)
+        if (e->filename().compare(filename)==0 || e->filename().compare(name)==0)
             return true;
     }
     for (int i=0;i<mRightPageWidget->count();i++) {
         Editor* e = static_cast<Editor*>(mRightPageWidget->widget(i));
-        if (e->filename().compare(filename)==0)
+        if (e->filename().compare(filename)==0 || e->filename().compare(name)==0)
             return true;
     }
     return false;
@@ -171,13 +171,13 @@ Editor* EditorList::getOpenedEditorByFilename(const QString &filename)
     QString fullname = fileInfo.absoluteFilePath();
     for (int i=0;i<mLeftPageWidget->count();i++) {
         Editor* e = static_cast<Editor*>(mLeftPageWidget->widget(i));
-        if (e->filename() == fullname) {
+        if (e->filename().compare(filename)==0 || e->filename().compare(fullname)==0) {
             return e;
         }
     }
     for (int i=0;i<mRightPageWidget->count();i++) {
         Editor* e = static_cast<Editor*>(mRightPageWidget->widget(i));
-        if (e->filename() == fullname) {
+        if (e->filename().compare(filename)==0 || e->filename().compare(fullname)==0) {
             return e;
         }
     }
@@ -186,15 +186,15 @@ Editor* EditorList::getOpenedEditorByFilename(const QString &filename)
 
 Editor *EditorList::getEditorByFilename(const QString &filename)
 {
-    QFileInfo fileInfo(filename);
-    QString fullname = fileInfo.absoluteFilePath();
     //check if an editor is already openned
-    Editor* e=getOpenedEditorByFilename(fullname);
+    Editor* e=getOpenedEditorByFilename(filename);
     if (e!=nullptr)
         return e;
     //Todo: check if is in the project
 
     //Create a new editor
+    QFileInfo fileInfo(filename);
+    QString fullname = fileInfo.absoluteFilePath();
     if (fileInfo.exists())
         return newEditor(fullname,ENCODING_AUTO_DETECT,false,false);
     return nullptr;

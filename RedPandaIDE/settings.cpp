@@ -1860,6 +1860,9 @@ void Settings::CompilerSets::saveSets()
     for (int i=0;i<mList.size();i++) {
         saveSet(i);
     }
+    if (mDefaultIndex>=mList.size()) {
+        mDefaultIndex = mList.size()-1;
+    }
     mSettings->mSettings.beginGroup(SETTING_COMPILTER_SETS);
     mSettings->mSettings.setValue(SETTING_COMPILTER_SETS_DEFAULT_INDEX,mDefaultIndex);
     mSettings->mSettings.setValue(SETTING_COMPILTER_SETS_COUNT,mList.size());
@@ -1888,8 +1891,7 @@ void Settings::CompilerSets::loadSets()
                                      +"<br /><br />"
                                      +msg
                                      +"Would you like Dev-C++ to remove them for you and add the default paths to the valid paths?<br /><br />Leaving those directories will lead to problems during compilation.<br /><br />Unless you know exactly what you're doing, it is recommended that you click Yes.",
-                                     QMessageBox::Yes | QMessageBox::No) == QMessageBox::Ok) {
-                clearSets();
+                                     QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
                 findSets();
                 saveSets();
                 if ( mList.size() <= mDefaultIndex)

@@ -16,7 +16,7 @@ public:
         Project,
         StdIn
     };
-    Compiler(bool silent,bool onlyCheckSyntax);
+    Compiler(const QString& filename, bool silent,bool onlyCheckSyntax);
 
 signals:
     void compileStarted();
@@ -38,6 +38,7 @@ protected:
 protected:
     virtual Settings::PCompilerSet compilerSet() = 0;
     virtual bool prepareForCompile() = 0;
+    virtual QString pipedText() = 0;
     virtual QString getCharsetArgument(const QByteArray& encoding);
     virtual QString getCCompileArguments(bool checkSyntax);
     virtual QString getCppCompileArguments(bool checkSyntax);
@@ -57,6 +58,7 @@ protected:
     int mErrorCount;
     int mWarningCount;
     PCompileIssue mLastIssue;
+    QString mFilename;
 
 private:
     bool mStop;

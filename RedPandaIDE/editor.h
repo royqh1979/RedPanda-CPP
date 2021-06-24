@@ -144,6 +144,7 @@ private:
     QColor mSyntaxErrorColor;
     QColor mSyntaxWaringColor;
     int mSyntaxErrorLine;
+    int mLineCount;
 
     // QWidget interface
 protected:

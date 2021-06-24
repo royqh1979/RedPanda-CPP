@@ -9,10 +9,13 @@
 #include <QDebug>
 #include <QTime>
 
-Compiler::Compiler(bool silent,bool onlyCheckSyntax):
+#define COMPILE_PROCESS_END "---//END//----"
+
+Compiler::Compiler(const QString &filename, bool silent, bool onlyCheckSyntax):
     QThread(),
     mSilent(silent),
-    mOnlyCheckSyntax(onlyCheckSyntax)
+    mOnlyCheckSyntax(onlyCheckSyntax),
+    mFilename(filename)
 {
 
 }
@@ -26,8 +29,7 @@ void Compiler::run()
             mWarningCount = 0;
             QElapsedTimer timer;
             timer.start();
-            runCommand(mCompiler, mArguments, QFileInfo(mCompiler).absolutePath());
-
+            runCommand(mCompiler, mArguments, QFileInfo(mCompiler).absolutePath(), pipedText());
             log("");
             log(tr("Compile Result:"));
             log("------------------");
@@ -62,9 +64,10 @@ QString Compiler::getFileNameFromOutputLine(QString &line) {
         temp = line.mid(0,pos);
         line.remove(0,pos+1);
         line=line.trimmed();
-//        if (temp.compare("<stdin>", Qt::CaseInsensitive)!=0 && !QFile(temp).exists()) {
-//            continue;
-//        }
+        if (temp.compare("<stdin>", Qt::CaseInsensitive)==0 ) {
+            temp = mFilename;
+            break;
+        }
 
         if (QFileInfo(temp).fileName() == QLatin1String("ld.exe")) { // skip ld.exe
             continue;
@@ -137,6 +140,13 @@ CompileIssueType Compiler::getIssueTypeFromOutputLine(QString &line)
 
 void Compiler::processOutput(QString &line)
 {
+    if (line == COMPILE_PROCESS_END) {
+        if (mLastIssue) {
+            emit compileIssue(mLastIssue);
+            mLastIssue.reset();
+        }
+        return;
+    }
     QString inFilePrefix = QString("In file included from ");
     QString fromPrefix = QString("from ");
     PCompileIssue issue = std::make_shared<CompileIssue>();
@@ -362,11 +372,14 @@ void Compiler::runCommand(const QString &cmd, const QString  &arguments, const Q
     process.connect(&process, &QProcess::readyReadStandardOutput,[&process,this](){
         this->log(QString::fromLocal8Bit( process.readAllStandardOutput()));
     });
+    process.connect(&process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),[&process,this](){
+        this->error(COMPILE_PROCESS_END);
+    });
     process.start();
-    if (!inputText.isEmpty())
-        process.write(inputText.toUtf8());
-    process.closeWriteChannel();
     process.waitForStarted(5000);
+    if (!inputText.isEmpty())
+        process.write(inputText.toLocal8Bit());
+    process.closeWriteChannel();
     while (true) {
         process.waitForFinished(1000);
         if (process.state()!=QProcess::Running) {
@@ -407,7 +420,8 @@ void Compiler::log(const QString &msg)
 
 void Compiler::error(const QString &msg)
 {
-    emit compileOutput(msg);
+    if (msg != COMPILE_PROCESS_END)
+        emit compileOutput(msg);
     for (QString& s:msg.split("\n")) {
         if (!s.isEmpty())
             processOutput(s);

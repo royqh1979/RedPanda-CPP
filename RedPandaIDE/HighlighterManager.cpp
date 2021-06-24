@@ -34,6 +34,8 @@ PSynHighlighter HighlighterManager::copyHighlighter(PSynHighlighter highlighter)
         return PSynHighlighter();
     if (highlighter->getName() == SYN_HIGHLIGHTER_CPP)
         return getCppHighlighter();
+    //todo
+    return PSynHighlighter();
 }
 
 PSynHighlighter HighlighterManager::getCppHighlighter()

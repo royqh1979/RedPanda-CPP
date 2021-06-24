@@ -4,6 +4,7 @@
 #include "editor.h"
 #include "systemconsts.h"
 #include "settings.h"
+#include "qsynedit/Constants.h"
 
 #include <QCloseEvent>
 #include <QComboBox>
@@ -47,6 +48,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->EditorTabsRight->setVisible(false);
 
     mCompilerSet = new QComboBox();
+    mCompilerSet->setMinimumWidth(200);
     ui->toolbarCompilerSet->addWidget(mCompilerSet);
     connect(mCompilerSet,QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &MainWindow::onCompilerSetChanged);
@@ -255,6 +257,45 @@ void MainWindow::updateCompilerSet()
     mCompilerSet->setCurrentIndex(index);
 }
 
+void MainWindow::checkSyntaxInBack(Editor *e)
+{
+    if (e==nullptr)
+        return;
+
+//    if not devEditor.AutoCheckSyntax then
+//      Exit;
+    //not c or cpp file
+    if (!e->highlighter() || e->highlighter()->getName()!=SYN_HIGHLIGHTER_CPP)
+        return;
+    if (mCompilerManager->backgroundSyntaxChecking())
+        return;
+    if (mCompilerManager->compiling())
+        return;
+//    if not Assigned(devCompilerSets.CompilationSet) then
+//      Exit;
+//    if fCompiler.Compiling then
+//      Exit;
+//    if fSyntaxChecker.Compiling then
+//      Exit;
+    if (mCheckSyntaxInBack)
+        return;
+
+    mCheckSyntaxInBack=true;
+    e->clearSyntaxIssues();
+    ui->tableIssues->clearIssues();
+    mCompilerManager->checkSyntax(e->filename(),e->lines()->text());
+//    if not PrepareForCompile(cttStdin,True) then begin
+//      fCheckSyntaxInBack:=False;
+//      Exit;
+//    end;
+//    if e.InProject then begin
+//      if not assigned(MainForm.fProject) then
+//        Exit;
+//      fSyntaxChecker.Project := MainForm.fProject;
+//    end;
+//    fSyntaxChecker.CheckSyntax(True);
+}
+
 void MainWindow::openCloseMessageSheet(bool open)
 {
 //    if Assigned(fReportToolWindow) then
@@ -436,8 +477,7 @@ void MainWindow::onCompileFinished()
 
     Editor * e = mEditorList->getEditor();
     if (e!=nullptr) {
-        e->beginUpdate();
-        e->endUpdate();
+        e->invalidate();
     }
 
     // Jump to problem location, sorted by significance
@@ -490,6 +530,7 @@ void MainWindow::on_actionCompile_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor != NULL ) {
+        editor->clearSyntaxIssues();
         ui->tableIssues->clearIssues();
         mCompilerManager->compile(editor->filename(),editor->fileEncoding());
     }

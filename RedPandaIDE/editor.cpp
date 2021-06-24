@@ -57,7 +57,8 @@ Editor::Editor(QWidget *parent, const QString& filename,
   mInProject(inProject),
   mIsNew(isNew),
   mSyntaxErrorColor(QColorConstants::Red),
-  mSyntaxWaringColor("orange")
+  mSyntaxWaringColor("orange"),
+  mLineCount(0)
 {
     if (mFilename.isEmpty()) {
         newfileCount++;
@@ -631,6 +632,11 @@ void Editor::onModificationChanged(bool) {
 
 void Editor::onStatusChanged(SynStatusChanges changes)
 {
+    if (!changes.testFlag(SynStatusChange::scOpenFile) && (lines()->count()!=mLineCount)
+            && (lines()->count()!=0) && ((mLineCount>0) || (lines()->count()>1))) {
+        pMainWindow->checkSyntaxInBack(this);
+    }
+    mLineCount = lines()->count();
 //    if (not (scOpenFile in Changes)) and  (fText.Lines.Count <> fLineCount)
 //      and (fText.Lines.Count <> 0) and ((fLineCount>0) or (fText.Lines.Count>1)) then begin
 //      if devCodeCompletion.Enabled

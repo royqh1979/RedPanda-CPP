@@ -540,6 +540,7 @@ SynFontStyles getFontStyles(const QFont &font)
     styles.setFlag(SynFontStyle::fsItalic, font.italic());
     styles.setFlag(SynFontStyle::fsUnderline, font.underline());
     styles.setFlag(SynFontStyle::fsStrikeOut, font.strikeOut());
+    return styles;
 }
 
 bool isWordChar(const QChar& ch) {

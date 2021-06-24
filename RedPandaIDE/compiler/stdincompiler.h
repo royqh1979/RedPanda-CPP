@@ -1,13 +1,14 @@
-#ifndef FILECOMPILER_H
-#define FILECOMPILER_H
+#ifndef STDINCOMPILER_H
+#define STDINCOMPILER_H
 
 #include "compiler.h"
 
-class FileCompiler : public Compiler
+class StdinCompiler : public Compiler
 {
     Q_OBJECT
+
 public:
-    FileCompiler(const QString& filename, const QByteArray& encoding,bool silent,bool onlyCheckSyntax);
+    explicit StdinCompiler(const QString& filename, const QString& content, bool silent,bool onlyCheckSyntax);
 
     // Compiler interface
 protected:
@@ -15,11 +16,11 @@ protected:
     bool prepareForCompile() override;
 
 private:
-    QByteArray mEncoding;
+    QString mContent;
 
     // Compiler interface
 protected:
     QString pipedText();
 };
 
-#endif // FILECOMPILER_H
+#endif // STDINCOMPILER_H
