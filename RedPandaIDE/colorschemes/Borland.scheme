@@ -160,6 +160,9 @@
 		"foreground" : "#000000",
 		"background" : "#00FFFF"
 	},
+	"Fold Line" : {
+		"foreground" : "#FFFF00"
+	},
 	"Active Line" : {
 		"background" : "#000050"
 	},

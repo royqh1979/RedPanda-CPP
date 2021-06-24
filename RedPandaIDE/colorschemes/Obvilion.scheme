@@ -171,6 +171,9 @@
 		"foreground" : "#FFFFFF",
 		"background" : "#33CCCC"
 	},
+	"Fold Line" : {
+		"foreground" : "#FF9900"
+	},
 	"Active Line" : {
 		"background" : "#323232"
 	},

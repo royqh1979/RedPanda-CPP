@@ -1213,11 +1213,11 @@ void Editor::applyColorScheme(const QString& schemeName)
     }
     item = pColorManager->getItem(schemeName,COLOR_SCHEME_FOLD_LINE);
     if (item) {
-        //todo
+        codeFolding().folderBarLinesColor = item->foreground();
     }
     item = pColorManager->getItem(schemeName,COLOR_SCHEME_INDENT_GUIDE_LINE);
     if (item) {
-        //todo
+        codeFolding().indentGuidesColor = item->foreground();
     }
     this->invalidate();
 }

@@ -3874,6 +3874,11 @@ void SynEdit::setUseCodeFolding(bool value)
     }
 }
 
+SynEditCodeFolding &SynEdit::codeFolding()
+{
+    return mCodeFolding;
+}
+
 QString SynEdit::lineText()
 {
     if (mCaretY >= 1 && mCaretY <= mLines->count())

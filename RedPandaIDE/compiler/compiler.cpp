@@ -213,10 +213,11 @@ void Compiler::processOutput(QString &line)
     issue->line = getLineNumberFromOutputLine(line);
     if (issue->line > 0) {
         issue->column = getColunmnFromOutputLine(line);
-        if (issue->column>0)
-            issue->type = getIssueTypeFromOutputLine(line);
-        else
+        issue->type = getIssueTypeFromOutputLine(line);
+        if (issue->column<=0 && issue->type == CompileIssueType::Other) {
             issue->type = CompileIssueType::Error; //linkage error
+            mErrorCount += 1;
+        }
     } else {
         issue->column = -1;
         issue->type = getIssueTypeFromOutputLine(line);
