@@ -173,7 +173,7 @@
         <enum>QTabWidget::South</enum>
        </property>
        <property name="currentIndex">
-        <number>0</number>
+        <number>1</number>
        </property>
        <widget class="QWidget" name="tabIssues">
         <attribute name="icon">
@@ -315,7 +315,7 @@
      <x>0</x>
      <y>0</y>
      <width>946</width>
-     <height>25</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -341,6 +341,10 @@
     </property>
     <addaction name="actionCompile"/>
     <addaction name="actionRun"/>
+    <addaction name="actionCompile_Run"/>
+    <addaction name="actionRebuild"/>
+    <addaction name="separator"/>
+    <addaction name="actionStop_Execution"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
     <property name="title">
@@ -406,6 +410,20 @@
    </attribute>
    <addaction name="actionCompile"/>
    <addaction name="actionRun"/>
+   <addaction name="actionCompile_Run"/>
+   <addaction name="actionRebuild"/>
+  </widget>
+  <widget class="QToolBar" name="toolBarDebug">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionStop_Execution"/>
   </widget>
   <action name="actionNew">
    <property name="icon">
@@ -646,6 +664,48 @@
   <action name="actionConvert_to_UTF_8">
    <property name="text">
     <string>Convert to UTF-8</string>
+   </property>
+  </action>
+  <action name="actionCompile_Run">
+   <property name="icon">
+    <iconset>
+     <normalon>:/icons/images/newlook24/017-comprun.png</normalon>
+    </iconset>
+   </property>
+   <property name="text">
+    <string>Compile &amp; Run</string>
+   </property>
+   <property name="toolTip">
+    <string>Compile &amp; Run</string>
+   </property>
+   <property name="shortcut">
+    <string>F11</string>
+   </property>
+  </action>
+  <action name="actionRebuild">
+   <property name="icon">
+    <iconset>
+     <normalon>:/icons/images/newlook24/061-rebuild.png</normalon>
+    </iconset>
+   </property>
+   <property name="text">
+    <string>Rebuild All</string>
+   </property>
+   <property name="toolTip">
+    <string>Rebuild All</string>
+   </property>
+   <property name="shortcut">
+    <string>F12</string>
+   </property>
+  </action>
+  <action name="actionStop_Execution">
+   <property name="icon">
+    <iconset>
+     <normalon>:/icons/images/newlook24/008-close.png</normalon>
+    </iconset>
+   </property>
+   <property name="text">
+    <string>Stop Execution</string>
    </property>
   </action>
  </widget>

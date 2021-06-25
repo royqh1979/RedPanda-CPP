@@ -16,10 +16,13 @@ public:
 
     bool compiling();
     bool backgroundSyntaxChecking();
+    bool running();
 
-    void compile(const QString& filename, const QByteArray& encoding, bool silent=false,bool onlyCheckSyntax=false);
+    void compile(const QString& filename, const QByteArray& encoding, bool rebuild, bool silent=false,bool onlyCheckSyntax=false);
     void checkSyntax(const QString&filename, const QString& content);
     void run(const QString& filename, const QString& arguments, const QString& workDir);
+    void stopRun();
+    void stopCompile();
     bool canCompile(const QString& filename);
     int compileErrorCount() const;
 
@@ -38,9 +41,9 @@ private:
     int mSyntaxCheckErrorCount;
     Compiler* mBackgroundSyntaxChecker;
     ExecutableRunner* mRunner;
-    QMutex compileMutex;
-    QMutex backgroundSyntaxChekMutex;
-    QMutex runnerMutex;
+    QMutex mCompileMutex;
+    QMutex mBackgroundSyntaxCheckMutex;
+    QMutex mRunnerMutex;
 };
 
 class CompileError : public BaseError {

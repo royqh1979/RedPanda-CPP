@@ -3,6 +3,7 @@
 #include <QProcess>
 #include <windows.h>
 #include <QDebug>
+#include "compilermanager.h"
 
 ExecutableRunner::ExecutableRunner(const QString &filename, const QString &arguments, const QString &workDir):
     QThread(),
@@ -24,6 +25,8 @@ void ExecutableRunner::run()
     emit started();
     QProcess process;
     mStop = false;
+    bool errorOccurred = false;
+
     process.setProgram(mFilename);
     process.setArguments(QProcess::splitCommand(mArguments));
     process.setWorkingDirectory(mWorkDir);
@@ -31,8 +34,12 @@ void ExecutableRunner::run()
         args->flags |= CREATE_NEW_CONSOLE;
         args->startupInfo -> dwFlags &= ~STARTF_USESTDHANDLES;
     });
-    qDebug() << mFilename;
-    qDebug() << QProcess::splitCommand(mArguments);
+    process.connect(&process, &QProcess::errorOccurred,
+                    [&](){
+                        errorOccurred= true;
+                    });
+//    qDebug() << mFilename;
+//    qDebug() << QProcess::splitCommand(mArguments);
     process.start();
     process.closeWriteChannel();
     process.waitForStarted(5000);
@@ -42,10 +49,33 @@ void ExecutableRunner::run()
             break;
         }
         if (mStop) {
-            process.kill();
+            process.terminate();
+            //break;
+        }
+        if (errorOccurred)
             break;
+    }
+    if (errorOccurred) {
+        switch (process.error()) {
+        case QProcess::FailedToStart:
+            emit runErrorOccurred(tr("The runner process failed to start."));
+            break;
+        case QProcess::Crashed:
+            if (!mStop)
+                emit runErrorOccurred(tr("The runner process crashed after starting successfully."));
+            break;
+        case QProcess::Timedout:
+            emit runErrorOccurred(tr("The last waitFor...() function timed out."));
+            break;
+        case QProcess::WriteError:
+            emit runErrorOccurred(tr("An error occurred when attempting to write to the runner process."));
+            break;
+        case QProcess::ReadError:
+            emit runErrorOccurred(tr("An error occurred when attempting to read from the runner process."));
+            break;
+        default:
+            emit runErrorOccurred(tr("An unknown error occurred."));
         }
     }
     emit terminated();
-    this->deleteLater();
 }

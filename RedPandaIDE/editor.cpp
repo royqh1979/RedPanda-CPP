@@ -109,12 +109,16 @@ void Editor::loadFile() {
     this->setModified(false);
     updateCaption();
     pMainWindow->updateForEncodingInfo();
+    if (pSettings->editor().syntaxCheck() && pSettings->editor().syntaxCheckWhenSave())
+        pMainWindow->checkSyntaxInBack(this);
 }
 
 void Editor::saveFile(const QString &filename) {
     QFile file(filename);
     this->lines()->SaveToFile(file,mEncodingOption,mFileEncoding);
     pMainWindow->updateForEncodingInfo();
+    if (pSettings->editor().syntaxCheck() && pSettings->editor().syntaxCheckWhenSave())
+        pMainWindow->checkSyntaxInBack(this);
 }
 
 void Editor::convertToEncoding(const QByteArray &encoding)
@@ -634,7 +638,8 @@ void Editor::onStatusChanged(SynStatusChanges changes)
 {
     if (!changes.testFlag(SynStatusChange::scOpenFile) && (lines()->count()!=mLineCount)
             && (lines()->count()!=0) && ((mLineCount>0) || (lines()->count()>1))) {
-        pMainWindow->checkSyntaxInBack(this);
+        if (pSettings->editor().syntaxCheck() && pSettings->editor().syntaxCheckWhenLineChanged())
+            pMainWindow->checkSyntaxInBack(this);
     }
     mLineCount = lines()->count();
 //    if (not (scOpenFile in Changes)) and  (fText.Lines.Count <> fLineCount)

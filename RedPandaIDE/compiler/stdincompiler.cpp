@@ -61,3 +61,8 @@ QString StdinCompiler::pipedText()
 {
     return mContent;
 }
+
+bool StdinCompiler::prepareForRebuild()
+{
+    return true;
+}

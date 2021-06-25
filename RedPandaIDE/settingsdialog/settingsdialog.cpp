@@ -6,6 +6,7 @@
 #include "editorfontwidget.h"
 #include "editorclipboardwidget.h"
 #include "editorcolorschemewidget.h"
+#include "editorsyntaxcheckwidget.h"
 #include "editorsymbolcompletionwidget.h"
 #include "environmentappearencewidget.h"
 #include <QDebug>
@@ -51,6 +52,11 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     pEditorSymbolCompletionWidget = new EditorSymbolCompletionWidget(tr("Symbol Completion"),tr("Editor"));
     pEditorSymbolCompletionWidget->init();
     addWidget(pEditorSymbolCompletionWidget);
+
+    pEditorSyntaxCheckWidget = new EditorSyntaxCheckWidget(tr("Auto Syntax Checking"),tr("Editor"));
+    pEditorSyntaxCheckWidget->init();
+    addWidget(pEditorSyntaxCheckWidget);
+
 
     ui->widgetsView->expandAll();
     //select the first widget of the first group

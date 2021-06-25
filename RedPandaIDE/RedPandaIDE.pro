@@ -43,6 +43,7 @@ SOURCES += \
     settingsdialog/editorfontwidget.cpp \
     settingsdialog/editorgeneralwidget.cpp \
     settingsdialog/editorsymbolcompletionwidget.cpp \
+    settingsdialog/editorsyntaxcheckwidget.cpp \
     settingsdialog/environmentappearencewidget.cpp \
     settingsdialog/settingsdialog.cpp \
     settingsdialog/settingswidget.cpp \
@@ -87,6 +88,7 @@ HEADERS += \
     settingsdialog/editorfontwidget.h \
     settingsdialog/editorgeneralwidget.h \
     settingsdialog/editorsymbolcompletionwidget.h \
+    settingsdialog/editorsyntaxcheckwidget.h \
     settingsdialog/environmentappearencewidget.h \
     settingsdialog/settingsdialog.h \
     settingsdialog/settingswidget.h \
@@ -106,6 +108,7 @@ FORMS += \
     settingsdialog/editorfontwidget.ui \
     settingsdialog/editorgeneralwidget.ui \
     settingsdialog/editorsymbolcompletionwidget.ui \
+    settingsdialog/editorsyntaxcheckwidget.ui \
     settingsdialog/environmentappearencewidget.ui \
     settingsdialog/settingsdialog.ui
 

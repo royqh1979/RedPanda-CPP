@@ -78,3 +78,15 @@ QString FileCompiler::pipedText()
 {
     return QString();
 }
+
+bool FileCompiler::prepareForRebuild()
+{
+    QString exeName = getCompiledExecutableName(mFilename);
+    QFile file(exeName);
+
+    if (!file.remove()) {
+        QFileInfo info(exeName);
+        throw CompileError(tr("Can't delete the old executable file \"%1\".\n").arg(info.absoluteFilePath()));
+    }
+    return true;
+}

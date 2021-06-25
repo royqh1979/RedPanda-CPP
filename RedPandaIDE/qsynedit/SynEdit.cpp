@@ -5024,7 +5024,6 @@ void SynEdit::mousePressEvent(QMouseEvent *event)
     Qt::MouseButton button = event->button();
     int X=event->pos().x();
     int Y=event->pos().y();
-    qDebug()<<"Mouse Pressed";
 
     QAbstractScrollArea::mousePressEvent(event);
 

@@ -14,6 +14,7 @@
 #include <QDebug>
 #include <windows.h>
 #include <QStyleFactory>
+#include <QDateTime>
 
 const QByteArray GuessTextEncoding(const QByteArray& text){
     bool allAscii;
@@ -423,4 +424,17 @@ void changeTheme(const QString &themeName)
         QTextStream ts(&f);
         dynamic_cast<QApplication*>(QApplication::instance())->setStyleSheet(ts.readAll());
     }
+}
+
+int compareFileModifiedTime(const QString &filename1, const QString &filename2)
+{
+    QFileInfo fileInfo1(filename1);
+    QFileInfo fileInfo2(filename2);
+    qint64 time1=fileInfo1.lastModified().toMSecsSinceEpoch();
+    qint64 time2=fileInfo2.lastModified().toMSecsSinceEpoch();
+    if (time1 > time2)
+        return 1;
+    if (time1 < time2)
+        return -1;
+    return 0;
 }

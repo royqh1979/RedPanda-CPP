@@ -82,6 +82,6 @@ void EditorGeneralWidget::doSave()
     pSettings->editor().setScrollByOneLess(ui->chkScrollByOneLess->isChecked());
     pSettings->editor().setHalfPageScroll(ui->chkScrollHalfPage->isChecked());
 
-    //pSettings->editor().save();
+    pSettings->editor().save();
     pMainWindow->updateEditorSettings();
 }

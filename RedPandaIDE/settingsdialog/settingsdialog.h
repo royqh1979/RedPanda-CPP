@@ -17,6 +17,7 @@ class EditorFontWidget;
 class EditorClipboardWidget;
 class EditorSymbolCompletionWidget;
 class EditorColorSchemeWidget;
+class EditorSyntaxCheckWidget;
 class EnvironmentAppearenceWidget;
 class SettingsWidget;
 class SettingsDialog : public QDialog
@@ -54,6 +55,7 @@ private:
     EditorColorSchemeWidget *pEditorColorSchemeWidget;
     EnvironmentAppearenceWidget* pEnvironmentAppearenceWidget;
     EditorSymbolCompletionWidget* pEditorSymbolCompletionWidget;
+    EditorSyntaxCheckWidget* pEditorSyntaxCheckWidget;
 };
 
 #endif // SETTINGSDIALOG_H

@@ -12,6 +12,7 @@ public:
 signals:
     void started();
     void terminated();
+    void runErrorOccurred(const QString& reason);
 
 public slots:
     void stop();

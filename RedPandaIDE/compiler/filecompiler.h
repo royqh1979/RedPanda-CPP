@@ -19,7 +19,11 @@ private:
 
     // Compiler interface
 protected:
-    QString pipedText();
+    QString pipedText() override;
+
+    // Compiler interface
+protected:
+    bool prepareForRebuild() override;
 };
 
 #endif // FILECOMPILER_H

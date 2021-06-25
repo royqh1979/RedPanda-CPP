@@ -10,6 +10,7 @@
 #include <QComboBox>
 #include <QFileDialog>
 #include <QLabel>
+#include <QMessageBox>
 #include <QTranslator>
 
 #include "settingsdialog/settingsdialog.h"
@@ -293,7 +294,96 @@ void MainWindow::checkSyntaxInBack(Editor *e)
 //        Exit;
 //      fSyntaxChecker.Project := MainForm.fProject;
 //    end;
-//    fSyntaxChecker.CheckSyntax(True);
+    //    fSyntaxChecker.CheckSyntax(True);
+}
+
+bool MainWindow::compile(bool rebuild)
+{
+    Editor * editor = mEditorList->getEditor();
+    if (editor != NULL ) {
+        editor->clearSyntaxIssues();
+        ui->tableIssues->clearIssues();
+        if (editor->modified()) {
+            if (!editor->save(false,false))
+                return false;
+        }
+        if (mCompileSuccessionTask) {
+            mCompileSuccessionTask->filename = getCompiledExecutableName(editor->filename());
+        }
+        mCompilerManager->compile(editor->filename(),editor->fileEncoding(),rebuild);
+        openCloseMessageSheet(true);
+        ui->tabMessages->setCurrentWidget(ui->tabCompilerOutput);
+        return true;
+    }
+    return false;
+}
+
+void MainWindow::runExecutable(const QString &exeName,const QString &filename)
+{
+    // Check if it exists
+    if (!QFile(exeName).exists()) {
+        if (ui->actionCompile_Run->isEnabled()) {
+            if (QMessageBox::warning(this,tr("Confirm"),
+                                     tr("Source file is not compiled.")
+                                     +"<br /><br />"+tr("Compile now?"),
+                    QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
+                ui->actionCompile_Run->trigger();
+                return;
+            }
+        } else {
+            QMessageBox::critical(this,"Error",
+                                  tr("Source file is not compiled."));
+            return;
+        }
+    } else {
+        if (!filename.isEmpty() && compareFileModifiedTime(filename,exeName)>=0) {
+            if (ui->actionCompile_Run->isEnabled()) {
+                if (QMessageBox::warning(this,tr("Confirm"),
+                                         tr("Source file is more recent than executable.")
+                                         +"<br /><br />"+tr("Recompile now?"),
+                        QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
+                    ui->actionCompile_Run->trigger();
+                    return;
+                }
+            }
+        }
+    }
+      // Pause programs if they contain a console
+//          if devData.ConsolePause and ProgramHasConsole(FileToRun) then begin
+//            if fUseRunParams then
+//              Parameters := '"' + FileToRun + '" ' + fRunParams
+//            else
+//              Parameters := '"' + FileToRun + '"';
+
+//            FileToRun := devDirs.Exec + 'ConsolePauser.exe';
+//          end else begin
+//            if fUseRunParams then
+//              Parameters := fRunParams
+//            else
+//              Parameters := '';
+//            FileToRun := FileToRun;
+//          end;
+
+//          if devData.MinOnRun then
+//            Application.Minimize;
+//          devExecutor.ExecuteAndWatch(FileToRun, Parameters, ExtractFilePath(fSourceFile),
+//            True, UseInputFile,InputFile, INFINITE, RunTerminate);
+//          MainForm.UpdateAppTitle;
+//        end;
+    mCompilerManager->run(exeName,"",QFileInfo(exeName).absolutePath());
+}
+
+void MainWindow::runExecutable()
+{
+    Editor * editor = mEditorList->getEditor();
+    if (editor != NULL ) {
+        if (editor->modified()) {
+            if (!editor->save(false,false))
+                return;
+        }
+        QString exeName= getCompiledExecutableName(editor->filename());
+        runExecutable(exeName,editor->filename());
+    }
 }
 
 void MainWindow::openCloseMessageSheet(bool open)
@@ -517,6 +607,13 @@ void MainWindow::onCompileFinished()
 //        ResourceOutput.Selected.MakeVisible(False);
 //        CompilerOutputDblClick(ResourceOutput);
 //      end;
+    } else {
+        if (mCompileSuccessionTask) {
+            switch (mCompileSuccessionTask->type) {
+            case MainWindow::CompileSuccessionTaskType::Run:
+                runExecutable(mCompileSuccessionTask->filename);
+            }
+        }
     }
     mCheckSyntaxInBack=false;
 }
@@ -526,23 +623,25 @@ void MainWindow::onCompileErrorOccured(const QString &reason)
     QMessageBox::critical(this,tr("Compile Failed"),reason);
 }
 
+void MainWindow::onRunErrorOccured(const QString &reason)
+{
+    QMessageBox::critical(this,tr("Run Failed"),reason);
+}
+
+void MainWindow::onRunFinished()
+{
+    qDebug()<<"run finished";
+}
+
 void MainWindow::on_actionCompile_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
-    if (editor != NULL ) {
-        editor->clearSyntaxIssues();
-        ui->tableIssues->clearIssues();
-        mCompilerManager->compile(editor->filename(),editor->fileEncoding());
-    }
+    mCompileSuccessionTask.reset();
+    compile();
 }
 
 void MainWindow::on_actionRun_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
-    if (editor != NULL ) {
-        QString exeName= getCompiledExecutableName(editor->filename());
-        mCompilerManager->run(exeName,"",QFileInfo(exeName).absolutePath());
-    }
+    runExecutable();
 }
 
 void MainWindow::on_actionUndo_triggered()
@@ -727,4 +826,22 @@ void MainWindow::on_tabMessages_currentChanged(int index)
 void MainWindow::on_tabMessages_tabBarDoubleClicked(int index)
 {
 
+}
+
+void MainWindow::on_actionCompile_Run_triggered()
+{
+    mCompileSuccessionTask = std::make_shared<CompileSuccessionTask>();
+    mCompileSuccessionTask->type = CompileSuccessionTaskType::Run;
+    compile();
+}
+
+void MainWindow::on_actionRebuild_triggered()
+{
+    mCompileSuccessionTask.reset();
+    compile(true);
+}
+
+void MainWindow::on_actionStop_Execution_triggered()
+{
+    mCompilerManager->stopRun();
 }

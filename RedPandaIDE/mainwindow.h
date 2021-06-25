@@ -18,6 +18,20 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
+    enum class CompileSuccessionTaskType {
+        None,
+        Run,
+        Debug,
+        Profile
+    };
+
+    struct CompileSuccessionTask {
+        CompileSuccessionTaskType type;
+        QString filename;
+    };
+
+    using PCompileSuccessionTask = std::shared_ptr<CompileSuccessionTask>;
+
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
@@ -30,6 +44,9 @@ public:
     void updateEditorColorSchemes();
     void updateCompilerSet();
     void checkSyntaxInBack(Editor* e);
+    bool compile(bool rebuild=false);
+    void runExecutable(const QString& exeName, const QString& filename=QString());
+    void runExecutable();
 
     void applySettings();
 
@@ -96,11 +113,19 @@ private slots:
 
     void on_tabMessages_tabBarDoubleClicked(int index);
 
+    void on_actionCompile_Run_triggered();
+
+    void on_actionRebuild_triggered();
+
+    void on_actionStop_Execution_triggered();
+
 public slots:
     void onCompileLog(const QString& msg);
     void onCompileIssue(PCompileIssue issue);
     void onCompileFinished();
     void onCompileErrorOccured(const QString& reason);
+    void onRunErrorOccured(const QString& reason);
+    void onRunFinished();
 
 private:
     void setupActions();
@@ -120,6 +145,7 @@ private:
     bool mTabMessagesTogglingState;
     bool mCheckSyntaxInBack;
     int mPreviousHeight;
+    PCompileSuccessionTask mCompileSuccessionTask;
 
    // QWidget interface
 protected:

@@ -304,6 +304,36 @@ void Settings::Editor::setRemoveSymbolPairs(bool value)
     mRemoveSymbolPairs = value;
 }
 
+bool Settings::Editor::syntaxCheckWhenLineChanged() const
+{
+    return mSyntaxCheckWhenLineChanged;
+}
+
+void Settings::Editor::setSyntaxCheckWhenLineChanged(bool syntaxCheckWhenLineChanged)
+{
+    mSyntaxCheckWhenLineChanged = syntaxCheckWhenLineChanged;
+}
+
+bool Settings::Editor::syntaxCheckWhenSave() const
+{
+    return mSyntaxCheckWhenSave;
+}
+
+void Settings::Editor::setSyntaxCheckWhenSave(bool syntaxCheckWhenSave)
+{
+    mSyntaxCheckWhenSave = syntaxCheckWhenSave;
+}
+
+bool Settings::Editor::syntaxCheck() const
+{
+    return mSyntaxCheck;
+}
+
+void Settings::Editor::setSyntaxCheck(bool syntaxCheck)
+{
+    mSyntaxCheck = syntaxCheck;
+}
+
 bool Settings::Editor::overwriteSymbols() const
 {
     return mOverwriteSymbols;
@@ -723,6 +753,11 @@ void Settings::Editor::doSave()
     saveValue("complete_global_include", mCompleteGlobalInclude);
     saveValue("overwrite_symbols", mOverwriteSymbols);
     saveValue("remove_symbol_pairs",mRemoveSymbolPairs);
+
+    //Auto Syntax Check
+    saveValue("check_syntax",mSyntaxCheck);
+    saveValue("check_syntax_when_save",mSyntaxCheckWhenSave);
+    saveValue("check_syntax_when_line_changed",mSyntaxCheckWhenLineChanged);
 }
 
 void Settings::Editor::doLoad()
@@ -796,6 +831,11 @@ void Settings::Editor::doLoad()
     mCompleteGlobalInclude = boolValue("complete_global_include",true);
     mOverwriteSymbols = boolValue("overwrite_symbols",true);
     mRemoveSymbolPairs = boolValue("remove_symbol_pairs",true);
+
+    //Auto Syntax Check
+    mSyntaxCheck = boolValue("check_syntax",true);
+    mSyntaxCheckWhenSave = boolValue("check_syntax_when_save",true);
+    mSyntaxCheckWhenLineChanged = boolValue("check_syntax_when_line_changed",true);
 }
 
 SynEditCaretType Settings::Editor::caretForOverwrite() const

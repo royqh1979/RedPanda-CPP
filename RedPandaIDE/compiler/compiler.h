@@ -18,6 +18,9 @@ public:
     };
     Compiler(const QString& filename, bool silent,bool onlyCheckSyntax);
 
+    bool isRebuild() const;
+    void setRebuild(bool isRebuild);
+
 signals:
     void compileStarted();
     void compileFinished();
@@ -39,6 +42,7 @@ protected:
     virtual Settings::PCompilerSet compilerSet() = 0;
     virtual bool prepareForCompile() = 0;
     virtual QString pipedText() = 0;
+    virtual bool prepareForRebuild() = 0;
     virtual QString getCharsetArgument(const QByteArray& encoding);
     virtual QString getCCompileArguments(bool checkSyntax);
     virtual QString getCppCompileArguments(bool checkSyntax);
@@ -59,6 +63,7 @@ protected:
     int mWarningCount;
     PCompileIssue mLastIssue;
     QString mFilename;
+    bool mRebuild;
 
 private:
     bool mStop;

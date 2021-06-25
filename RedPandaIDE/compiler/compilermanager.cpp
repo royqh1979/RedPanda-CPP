@@ -17,22 +17,31 @@ CompilerManager::CompilerManager(QObject *parent) : QObject(parent)
 
 bool CompilerManager::compiling()
 {
+    QMutexLocker locker(&mCompileMutex);
     return mCompiler!=nullptr;
 }
 
 bool CompilerManager::backgroundSyntaxChecking()
 {
+    QMutexLocker locker(&mBackgroundSyntaxCheckMutex);
     return mBackgroundSyntaxChecker!=nullptr;
 }
 
-void CompilerManager::compile(const QString& filename, const QByteArray& encoding, bool silent, bool onlyCheckSyntax)
+bool CompilerManager::running()
 {
-    QMutexLocker locker(&compileMutex);
+    QMutexLocker locker(&mRunnerMutex);
+    return mRunner!=nullptr;
+}
+
+void CompilerManager::compile(const QString& filename, const QByteArray& encoding, bool rebuild, bool silent, bool onlyCheckSyntax)
+{
+    QMutexLocker locker(&mCompileMutex);
     if (mCompiler!=nullptr) {
         return;
     }
     mCompileErrorCount = 0;
     mCompiler = new FileCompiler(filename,encoding,silent,onlyCheckSyntax);
+    mCompiler->setRebuild(rebuild);
     connect(mCompiler, &Compiler::compileFinished, this ,&CompilerManager::onCompileFinished);
     connect(mCompiler, &Compiler::compileIssue, this, &CompilerManager::onCompileIssue);
     connect(mCompiler, &Compiler::compileFinished, pMainWindow, &MainWindow::onCompileFinished);
@@ -44,7 +53,7 @@ void CompilerManager::compile(const QString& filename, const QByteArray& encodin
 
 void CompilerManager::checkSyntax(const QString &filename, const QString &content)
 {
-    QMutexLocker locker(&backgroundSyntaxChekMutex);
+    QMutexLocker locker(&mBackgroundSyntaxCheckMutex);
     if (mBackgroundSyntaxChecker!=nullptr) {
         return;
     }
@@ -61,7 +70,7 @@ void CompilerManager::checkSyntax(const QString &filename, const QString &conten
 
 void CompilerManager::run(const QString &filename, const QString &arguments, const QString &workDir)
 {
-    QMutexLocker locker(&runnerMutex);
+    QMutexLocker locker(&mRunnerMutex);
     if (mRunner!=nullptr) {
         return;
     }
@@ -72,7 +81,23 @@ void CompilerManager::run(const QString &filename, const QString &arguments, con
         mRunner = new ExecutableRunner(filename,arguments,workDir);
     }
     connect(mRunner, &ExecutableRunner::terminated, this ,&CompilerManager::onRunnerTerminated);
+    connect(mRunner, &ExecutableRunner::terminated, pMainWindow ,&MainWindow::onRunFinished);
+    connect(mRunner, &ExecutableRunner::runErrorOccurred, pMainWindow ,&MainWindow::onRunErrorOccured);
     mRunner->start();
+}
+
+void CompilerManager::stopRun()
+{
+    QMutexLocker locker(&mRunnerMutex);
+    if (mRunner!=nullptr)
+        mRunner->stop();
+}
+
+void CompilerManager::stopCompile()
+{
+    QMutexLocker locker(&mCompileMutex);
+    if (mCompiler!=nullptr)
+        mCompiler->stopCompile();
 }
 
 bool CompilerManager::canCompile(const QString &filename)
@@ -82,15 +107,15 @@ bool CompilerManager::canCompile(const QString &filename)
 
 void CompilerManager::onCompileFinished()
 {
-    QMutexLocker locker(&compileMutex);
+    QMutexLocker locker(&mCompileMutex);
     delete mCompiler;
     mCompiler=nullptr;
 }
 
 void CompilerManager::onRunnerTerminated()
 {
-    QMutexLocker locker(&runnerMutex);
-    qDebug() << "Runner Terminated";
+    QMutexLocker locker(&mRunnerMutex);
+    delete mRunner;
     mRunner=nullptr;
 }
 
@@ -101,7 +126,7 @@ void CompilerManager::onCompileIssue(PCompileIssue)
 
 void CompilerManager::onSyntaxCheckFinished()
 {
-    QMutexLocker locker(&backgroundSyntaxChekMutex);
+    QMutexLocker locker(&mBackgroundSyntaxCheckMutex);
     delete mBackgroundSyntaxChecker;
     mBackgroundSyntaxChecker=nullptr;
 }

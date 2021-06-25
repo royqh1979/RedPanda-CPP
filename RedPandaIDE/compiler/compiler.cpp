@@ -15,7 +15,8 @@ Compiler::Compiler(const QString &filename, bool silent, bool onlyCheckSyntax):
     QThread(),
     mSilent(silent),
     mOnlyCheckSyntax(onlyCheckSyntax),
-    mFilename(filename)
+    mFilename(filename),
+    mRebuild(false)
 {
 
 }
@@ -24,6 +25,9 @@ void Compiler::run()
 {
     emit compileStarted();
     try {
+        if (mRebuild && !prepareForRebuild()) {
+            throw CompileError(tr("Clean before rebuild failed."));
+        }
         if (prepareForCompile()){
             mErrorCount = 0;
             mWarningCount = 0;
@@ -386,10 +390,11 @@ void Compiler::runCommand(const QString &cmd, const QString  &arguments, const Q
         if (process.state()!=QProcess::Running) {
             break;
         }
-        if (mStop || errorOccurred) {
-            process.kill();
-            break;
+        if (mStop) {
+            process.terminate();
         }
+        if (errorOccurred)
+            break;
     }
     if (errorOccurred) {
         switch (process.error()) {
@@ -397,7 +402,8 @@ void Compiler::runCommand(const QString &cmd, const QString  &arguments, const Q
             throw CompileError(tr("The compiler process failed to start."));
             break;
         case QProcess::Crashed:
-            throw CompileError(tr("The compiler process crashed after starting successfully."));
+            if (!mStop)
+                throw CompileError(tr("The compiler process crashed after starting successfully."));
             break;
         case QProcess::Timedout:
             throw CompileError(tr("The last waitFor...() function timed out."));
@@ -412,6 +418,16 @@ void Compiler::runCommand(const QString &cmd, const QString  &arguments, const Q
             throw CompileError(tr("An unknown error occurred."));
         }
     }
+}
+
+bool Compiler::isRebuild() const
+{
+    return mRebuild;
+}
+
+void Compiler::setRebuild(bool isRebuild)
+{
+    mRebuild = isRebuild;
 }
 
 void Compiler::log(const QString &msg)

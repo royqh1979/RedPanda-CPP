@@ -248,6 +248,15 @@ public:
         bool removeSymbolPairs() const;
         void setRemoveSymbolPairs(bool value);
 
+        bool syntaxCheck() const;
+        void setSyntaxCheck(bool syntaxCheck);
+
+        bool syntaxCheckWhenSave() const;
+        void setSyntaxCheckWhenSave(bool syntaxCheckWhenSave);
+
+        bool syntaxCheckWhenLineChanged() const;
+        void setSyntaxCheckWhenLineChanged(bool syntaxCheckWhenLineChanged);
+
     private:
         QByteArray mDefaultEncoding;
         //General
@@ -318,6 +327,11 @@ public:
         bool mCompleteGlobalInclude;
         bool mOverwriteSymbols;
         bool mRemoveSymbolPairs;
+
+        //Auto Syntax Check
+        bool mSyntaxCheck;
+        bool mSyntaxCheckWhenSave;
+        bool mSyntaxCheckWhenLineChanged;
 
         // _Base interface
     protected:
