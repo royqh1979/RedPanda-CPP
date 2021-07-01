@@ -5,6 +5,7 @@
 #include "../mainwindow.h"
 #include "executablerunner.h"
 #include "utils.h"
+#include "../settings.h"
 
 CompilerManager::CompilerManager(QObject *parent) : QObject(parent)
 {
@@ -74,7 +75,7 @@ void CompilerManager::run(const QString &filename, const QString &arguments, con
     if (mRunner!=nullptr) {
         return;
     }
-    if (programHasConsole(filename)) {
+    if (pSettings->executor().pauseConsole() && programHasConsole(filename)) {
         QString newArguments = QString(" 0 \"%1\" %2").arg(toLocalPath(filename)).arg(arguments);
         mRunner = new ExecutableRunner(includeTrailingPathDelimiter(pSettings->dirs().app())+"ConsolePauser.exe",newArguments,workDir);
     } else {

@@ -45,11 +45,13 @@ SOURCES += \
     settingsdialog/editorsymbolcompletionwidget.cpp \
     settingsdialog/editorsyntaxcheckwidget.cpp \
     settingsdialog/environmentappearencewidget.cpp \
+    settingsdialog/executorgeneralwidget.cpp \
     settingsdialog/settingsdialog.cpp \
     settingsdialog/settingswidget.cpp \
     systemconsts.cpp \
     utils.cpp \
     widgets/coloredit.cpp \
+    widgets/consolewidget.cpp \
     widgets/issuestable.cpp \
     widgets/qpatchedcombobox.cpp
 
@@ -90,12 +92,14 @@ HEADERS += \
     settingsdialog/editorsymbolcompletionwidget.h \
     settingsdialog/editorsyntaxcheckwidget.h \
     settingsdialog/environmentappearencewidget.h \
+    settingsdialog/executorgeneralwidget.h \
     settingsdialog/settingsdialog.h \
     settingsdialog/settingswidget.h \
     systemconsts.h \
     utils.h \
     common.h \
     widgets/coloredit.h \
+    widgets/consolewidget.h \
     widgets/issuestable.h \
     widgets/qpatchedcombobox.h
 
@@ -110,6 +114,7 @@ FORMS += \
     settingsdialog/editorsymbolcompletionwidget.ui \
     settingsdialog/editorsyntaxcheckwidget.ui \
     settingsdialog/environmentappearencewidget.ui \
+    settingsdialog/executorgeneralwidget.ui \
     settingsdialog/settingsdialog.ui
 
 TRANSLATIONS += \

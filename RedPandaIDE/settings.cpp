@@ -20,7 +20,8 @@ Settings::Settings(const QString &filename):
     mDirs(this),
     mEditor(this),
     mEnvironment(this),
-    mCompilerSets(this)
+    mCompilerSets(this),
+    mExecutor(this)
 {
 }
 
@@ -2199,3 +2200,43 @@ void Settings::Environment::setTheme(const QString &theme)
 {
     mTheme = theme;
 }
+
+Settings::Executor::Executor(Settings *settings):_Base(settings, SETTING_EXECUTOR)
+{
+
+}
+
+bool Settings::Executor::minimizeOnRun() const
+{
+    return mMinimizeOnRun;
+}
+
+void Settings::Executor::setMinimizeOnRun(bool minimizeOnRun)
+{
+    mMinimizeOnRun = minimizeOnRun;
+}
+
+void Settings::Executor::doSave()
+{
+    //Appearence
+    saveValue("pause_console", mPauseConsole);
+    saveValue("minimize_on_run", mMinimizeOnRun);
+}
+
+bool Settings::Executor::pauseConsole() const
+{
+    return mPauseConsole;
+}
+
+void Settings::Executor::setPauseConsole(bool pauseConsole)
+{
+    mPauseConsole = pauseConsole;
+}
+
+void Settings::Executor::doLoad()
+{
+    //Appearence
+    mPauseConsole = boolValue("pause_console",true);
+    mMinimizeOnRun = boolValue("minimize_on_run",false);
+}
+

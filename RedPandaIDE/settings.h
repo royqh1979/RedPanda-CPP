@@ -15,6 +15,7 @@
 #define SETTING_DIRS "Dirs"
 #define SETTING_EDITOR "Editor"
 #define SETTING_ENVIRONMENT "Environment"
+#define SETTING_EXECUTOR "Executor"
 #define SETTING_COMPILTER_SETS "CompilerSets"
 #define SETTING_COMPILTER_SETS_DEFAULT_INDEX "defaultIndex"
 #define SETTING_COMPILTER_SETS_COUNT "count"
@@ -367,6 +368,27 @@ public:
         void doLoad() override;
     };
 
+    class Executor: public _Base {
+    public:
+        explicit Executor(Settings * settings);
+
+        bool pauseConsole() const;
+        void setPauseConsole(bool pauseConsole);
+
+        bool minimizeOnRun() const;
+        void setMinimizeOnRun(bool minimizeOnRun);
+
+    private:
+        // general
+        bool mPauseConsole;
+        bool mMinimizeOnRun;
+
+    protected:
+        void doSave() override;
+        void doLoad() override;
+    };
+
+
     class CompilerSet {
     public:
         explicit CompilerSet(const QString& compilerFolder = QString());
@@ -540,6 +562,7 @@ public:
     Editor& editor();
     CompilerSets& compilerSets();
     Environment& environment();
+    Executor& executor();
     QString filename() const;
 
 private:
@@ -549,6 +572,7 @@ private:
     Editor mEditor;
     Environment mEnvironment;
     CompilerSets mCompilerSets;
+    Executor mExecutor;
 };
 
 

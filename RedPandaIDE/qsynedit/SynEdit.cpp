@@ -5173,8 +5173,9 @@ void SynEdit::wheelEvent(QWheelEvent *event)
 {
     if (event->angleDelta().y()>0) {
         verticalScrollBar()->setValue(verticalScrollBar()->value()-1);
+        event->accept();
         return;
-    } else {
+    } else if (event->angleDelta().y()<0) {
         verticalScrollBar()->setValue(verticalScrollBar()->value()+1);
         event->accept();
         return;

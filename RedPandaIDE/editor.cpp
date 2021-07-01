@@ -279,7 +279,7 @@ void Editor::wheelEvent(QWheelEvent *event) {
             pMainWindow->updateEditorSettings();
             event->accept();
             return;
-        } else {
+        } else if  (event->angleDelta().y()<0) {
             size = std::max(2,size-1);
             pSettings->editor().setFontSize(size);
             pMainWindow->updateEditorSettings();

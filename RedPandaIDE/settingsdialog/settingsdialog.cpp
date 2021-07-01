@@ -9,6 +9,7 @@
 #include "editorsyntaxcheckwidget.h"
 #include "editorsymbolcompletionwidget.h"
 #include "environmentappearencewidget.h"
+#include "executorgeneralwidget.h"
 #include <QDebug>
 #include <QMessageBox>
 #include <QModelIndex>
@@ -57,6 +58,10 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     pEditorSyntaxCheckWidget->init();
     addWidget(pEditorSyntaxCheckWidget);
 
+
+    pExecutorGeneralWidget = new ExecutorGeneralWidget(tr("General"),tr("Program Runner"));
+    pExecutorGeneralWidget->init();
+    addWidget(pExecutorGeneralWidget);
 
     ui->widgetsView->expandAll();
     //select the first widget of the first group

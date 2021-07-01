@@ -122,14 +122,12 @@ void MainWindow::updateEditorActions()
         ui->actionEncode_in_UTF_8->setEnabled(false);
         ui->actionConvert_to_ANSI->setEnabled(false);
         ui->actionConvert_to_UTF_8->setEnabled(false);
-        ui->actionCompile->setEnabled(false);
         ui->actionCopy->setEnabled(false);
         ui->actionCut->setEnabled(false);
         ui->actionFoldAll->setEnabled(false);
         ui->actionIndent->setEnabled(false);
         ui->actionPaste->setEnabled(false);
         ui->actionRedo->setEnabled(false);
-        ui->actionRun->setEnabled(false);
         ui->actionSave->setEnabled(false);
         ui->actionSaveAs->setEnabled(false);
         ui->actionSaveAll->setEnabled(false);
@@ -138,15 +136,19 @@ void MainWindow::updateEditorActions()
         ui->actionUnIndent->setEnabled(false);
         ui->actionUndo->setEnabled(false);
         ui->actionUnfoldAll->setEnabled(false);
+
+        ui->actionCompile->setEnabled(false);
+        ui->actionCompile_Run->setEnabled(false);
+        ui->actionRun->setEnabled(false);
+        ui->actionRebuild->setEnabled(false);
+        ui->actionStop_Execution->setEnabled(false);
     } else {
         ui->actionAuto_Detect->setEnabled(true);
         ui->actionEncode_in_ANSI->setEnabled(true);
         ui->actionEncode_in_UTF_8->setEnabled(true);
         ui->actionConvert_to_ANSI->setEnabled(e->encodingOption()!=ENCODING_SYSTEM_DEFAULT && e->fileEncoding()!=ENCODING_SYSTEM_DEFAULT);
         ui->actionConvert_to_UTF_8->setEnabled(e->encodingOption()!=ENCODING_UTF8 && e->fileEncoding()!=ENCODING_UTF8);
-        //if (e->compilable())
-            ui->actionCompile->setEnabled(true);
-        ui->actionRun->setEnabled(true);
+
         ui->actionCopy->setEnabled(e->selAvail());
         ui->actionCut->setEnabled(e->selAvail());
         ui->actionFoldAll->setEnabled(e->lines()->count()>0);
@@ -162,8 +164,26 @@ void MainWindow::updateEditorActions()
         ui->actionToggleComment->setEnabled(!e->readOnly() && e->lines()->count()>0);
         ui->actionUnIndent->setEnabled(!e->readOnly() && e->lines()->count()>0);
         ui->actionUnfoldAll->setEnabled(e->lines()->count()>0);
+
+        updateCompileActions();
     }
 
+}
+
+void MainWindow::updateCompileActions()
+{
+    if (mCompilerManager->compiling()|| mCompilerManager->running()) {
+        ui->actionCompile->setEnabled(false);
+        ui->actionCompile_Run->setEnabled(false);
+        ui->actionRun->setEnabled(false);
+        ui->actionRebuild->setEnabled(false);
+    } else {
+        ui->actionCompile->setEnabled(true);
+        ui->actionCompile_Run->setEnabled(true);
+        ui->actionRun->setEnabled(true);
+        ui->actionRebuild->setEnabled(true);
+    }
+    ui->actionStop_Execution->setEnabled(mCompilerManager->running());
 }
 
 void MainWindow::updateEditorColorSchemes()
@@ -310,7 +330,8 @@ bool MainWindow::compile(bool rebuild)
         if (mCompileSuccessionTask) {
             mCompileSuccessionTask->filename = getCompiledExecutableName(editor->filename());
         }
-        mCompilerManager->compile(editor->filename(),editor->fileEncoding(),rebuild);
+        mCompilerManager->compile(editor->filename(),editor->fileEncoding(),rebuild);        
+        updateCompileActions();
         openCloseMessageSheet(true);
         ui->tabMessages->setCurrentWidget(ui->tabCompilerOutput);
         return true;
@@ -371,6 +392,10 @@ void MainWindow::runExecutable(const QString &exeName,const QString &filename)
 //          MainForm.UpdateAppTitle;
 //        end;
     mCompilerManager->run(exeName,"",QFileInfo(exeName).absolutePath());
+    updateCompileActions();
+    if (pSettings->executor().minimizeOnRun()) {
+        showMinimized();
+    }
 }
 
 void MainWindow::runExecutable()
@@ -616,6 +641,7 @@ void MainWindow::onCompileFinished()
         }
     }
     mCheckSyntaxInBack=false;
+    updateCompileActions();
 }
 
 void MainWindow::onCompileErrorOccured(const QString &reason)
@@ -630,7 +656,10 @@ void MainWindow::onRunErrorOccured(const QString &reason)
 
 void MainWindow::onRunFinished()
 {
-    qDebug()<<"run finished";
+    updateCompileActions();
+    if (pSettings->executor().minimizeOnRun()) {
+        showNormal();
+    }
 }
 
 void MainWindow::on_actionCompile_triggered()

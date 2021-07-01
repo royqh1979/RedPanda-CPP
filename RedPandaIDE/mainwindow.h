@@ -41,6 +41,7 @@ public:
     void updateForStatusbarModeInfo();
     void updateEditorSettings();
     void updateEditorActions();
+    void updateCompileActions();
     void updateEditorColorSchemes();
     void updateCompilerSet();
     void checkSyntaxInBack(Editor* e);
