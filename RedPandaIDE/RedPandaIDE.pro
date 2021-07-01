@@ -32,6 +32,7 @@ SOURCES += \
     qsynedit/exporter/synexporter.cpp \
     qsynedit/exporter/synhtmlexporter.cpp \
     qsynedit/exporter/synrtfexporter.cpp \
+    qsynedit/highlighter/asm.cpp \
     qsynedit/highlighter/base.cpp \
     qsynedit/highlighter/composition.cpp \
     qsynedit/highlighter/cpp.cpp \
@@ -53,6 +54,7 @@ SOURCES += \
     widgets/coloredit.cpp \
     widgets/consolewidget.cpp \
     widgets/issuestable.cpp \
+    widgets/qconsole.cpp \
     widgets/qpatchedcombobox.cpp
 
 HEADERS += \
@@ -79,6 +81,7 @@ HEADERS += \
     qsynedit/exporter/synexporter.h \
     qsynedit/exporter/synhtmlexporter.h \
     qsynedit/exporter/synrtfexporter.h \
+    qsynedit/highlighter/asm.h \
     qsynedit/highlighter/base.h \
     qsynedit/highlighter/composition.h \
     qsynedit/highlighter/cpp.h \
@@ -101,6 +104,7 @@ HEADERS += \
     widgets/coloredit.h \
     widgets/consolewidget.h \
     widgets/issuestable.h \
+    widgets/qconsole.h \
     widgets/qpatchedcombobox.h
 
 FORMS += \
