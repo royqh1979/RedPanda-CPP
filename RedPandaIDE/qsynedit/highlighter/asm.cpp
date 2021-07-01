@@ -1,4 +1,5 @@
 #include "asm.h"
+#include "../Constants.h"
 
 const QSet<QString> SynEditASMHighlighter::Keywords {
     "aaa","aad","aam","adc","add","and","arpl","bound","bsf","bsr","bswap","bt","btc","btr","bts",
@@ -36,5 +37,154 @@ const QSet<QString> SynEditASMHighlighter::Keywords {
 
 SynEditASMHighlighter::SynEditASMHighlighter()
 {
+    mCommentAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrComment);
+    mCommentAttribute->setStyles(SynFontStyle::fsItalic);
+    addAttribute(mCommentAttribute);
+    mIdentifierAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrIdentifier);
+    addAttribute(mIdentifierAttribute);
+    mKeywordAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrReservedWord);
+    mKeywordAttribute->setStyles(SynFontStyle::fsBold);
+    addAttribute(mKeywordAttribute);
+    mNumberAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrNumber);
+    addAttribute(mNumberAttribute);
+    mWhitespaceAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrSpace);
+    addAttribute(mWhitespaceAttribute);
+    mStringAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrString);
+    addAttribute(mStringAttribute);
+    mSymbolAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrSymbol);
+    addAttribute(mSymbolAttribute);
 
+
+}
+
+bool SynEditASMHighlighter::eol() const
+{
+    return mTokenID == TokenKind::Null;
+}
+
+QString SynEditASMHighlighter::languageName()
+{
+    return "asm";
+}
+
+SynHighlighterLanguage SynEditASMHighlighter::language()
+{
+    return SynHighlighterLanguage::Asssembly;
+}
+
+QString SynEditASMHighlighter::getToken() const
+{
+    return mLineString.mid(mTokenPos,mRun-mTokenPos);
+}
+
+PSynHighlighterAttribute SynEditASMHighlighter::getTokenAttribute() const
+{
+    switch(mTokenID) {
+    case TokenKind::Comment:
+        return mCommentAttribute;
+    case TokenKind::Identifier:
+        return mIdentifierAttribute;
+    case TokenKind::Key:
+        return mKeywordAttribute;
+    case TokenKind::Number:
+        return mNumberAttribute;
+    case TokenKind::Space:
+        return mWhitespaceAttribute;
+    case TokenKind::String:
+        return mStringAttribute;
+    case TokenKind::Symbol:
+        return mSymbolAttribute;
+    case TokenKind::Unknown:
+        return mIdentifierAttribute;
+    }
+    return PSynHighlighterAttribute();
+}
+
+SynTokenKind SynEditASMHighlighter::getTokenKind()
+{
+    return mTokenID;
+}
+
+SynHighlighterTokenType SynEditASMHighlighter::getTokenType()
+{
+    switch(mTokenID) {
+    case TokenKind::Comment:
+        return SynHighlighterTokenType::Comment;
+    case TokenKind::Identifier:
+        return SynHighlighterTokenType::Identifier;
+    case TokenKind::Key:
+        return SynHighlighterTokenType::Keyword;
+    case TokenKind::Number:
+        return SynHighlighterTokenType::Number;
+    case TokenKind::Space:
+        return SynHighlighterTokenType::Space;
+    case TokenKind::String:
+        return SynHighlighterTokenType::String;
+    case TokenKind::Symbol:
+        return SynHighlighterTokenType::Symbol;
+    case TokenKind::Unknown:
+        return SynHighlighterTokenType::Default;
+    }
+    return SynHighlighterTokenType::Default;
+}
+
+void SynEditASMHighlighter::next()
+{
+    mTokenPos = mRun;
+    switch(mLine[mRun].unicode()) {
+    case 0:
+        NullProc();
+        break;
+    case 10:
+        LFProc();
+        break;
+    case 13:
+        CRProc();
+        break;
+    case '\"':
+        StringProc();
+        break;
+    case '\'':
+        SingleQuoteStringProc();
+        break;
+    case '>':
+        GreaterProc();
+        break;
+    case '<':
+        LowerProc();
+        break;
+    case '/':
+        SlashProc();
+        break;
+    case '#':
+    case ';':
+        CommentProc();
+        break;
+    case '.':
+    case ':':
+    case '&':
+    case '{':
+    case '}':
+    case '=':
+    case '^':
+    case '-':
+    case '+':
+    case '(':
+    case ')':
+    case '*':
+        SymbolProc();
+        break;
+    default:
+        if (mLine[mRun]>='0' && mLine[mRun]<='9') {
+            NumberProc();
+        } else if ((mLine[mRun]>='A' && mLine[mRun]<='Z')
+                   || (mLine[mRun]>='a' && mLine[mRun]<='z')
+                   || (mLine[mRun]=='_')) {
+            IdentProc();
+        } else if (mLine[mRun]<=32) {
+            SpaceProc();
+        } else {
+            UnknownProc();
+        }
+    }
 }

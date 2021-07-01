@@ -29,7 +29,8 @@ enum class SynHighlighterClass {
 };
 
 enum class SynHighlighterLanguage {
-    Cpp
+    Asssembly,
+    Cpp,
 };
 
 class SynHighlighterAttribute {

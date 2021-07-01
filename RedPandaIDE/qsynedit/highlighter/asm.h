@@ -18,24 +18,35 @@ class SynEditASMHighlighter : public SynHighlighter
         Unknown
     };
 public:
-    SynEditASMHighlighter();
+    explicit SynEditASMHighlighter();
 
     static const QSet<QString> Keywords;
 private:
     QChar* mLine;
+    QString mLineString;
     int mLineNumber;
     int mRun;
     int mStringLen;
     QChar mToIdent;
     int mTokenPos;
     SynTokenKind mTokenID;
-    SynHighlighterAttribute mCommentAttri;
-    SynHighlighterAttribute mIdentifierAttri;
-    SynHighlighterAttribute mKeyAttri;
-    SynHighlighterAttribute mNumberAttri;
-    SynHighlighterAttribute mSpaceAttri;
-    SynHighlighterAttribute mStringAttri;
-    SynHighlighterAttribute mSymbolAttri;
+    PSynHighlighterAttribute mNumberAttribute;
+
+    // SynHighlighter interface
+public:
+    bool eol() const override;
+
+    // SynHighlighter interface
+public:
+    QString languageName() override;
+
+    // SynHighlighter interface
+public:
+    SynHighlighterLanguage language() override;
+
+    // SynHighlighter interface
+public:
+    QString getToken() const override;
 };
 
 #endif // SYNEDITASMHIGHLIGHTER_H
