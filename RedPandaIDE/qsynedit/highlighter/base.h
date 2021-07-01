@@ -26,6 +26,7 @@ enum class SynHighlighterTokenType {
 enum class SynHighlighterClass {
     Composition,
     CppHighlighter,
+    AsmHighlighter
 };
 
 enum class SynHighlighterLanguage {

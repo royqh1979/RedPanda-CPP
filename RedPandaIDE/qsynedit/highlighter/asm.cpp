@@ -35,26 +35,22 @@ const QSet<QString> SynEditASMHighlighter::Keywords {
     "wait","wbinvd","xadd","xchg","xlat","xlatb","xor"
 };
 
-SynEditASMHighlighter::SynEditASMHighlighter()
+
+
+void SynEditASMHighlighter::CommentProc()
 {
-    mCommentAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrComment);
-    mCommentAttribute->setStyles(SynFontStyle::fsItalic);
-    addAttribute(mCommentAttribute);
-    mIdentifierAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrIdentifier);
-    addAttribute(mIdentifierAttribute);
-    mKeywordAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrReservedWord);
-    mKeywordAttribute->setStyles(SynFontStyle::fsBold);
-    addAttribute(mKeywordAttribute);
-    mNumberAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrNumber);
-    addAttribute(mNumberAttribute);
-    mWhitespaceAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrSpace);
-    addAttribute(mWhitespaceAttribute);
-    mStringAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrString);
-    addAttribute(mStringAttribute);
-    mSymbolAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrSymbol);
-    addAttribute(mSymbolAttribute);
+    mTokenID = TokenKind::Comment;
+    do {
+        mRun++;
+    } while (! (mLine[mRun]==0 || mLine[mRun] == '\r' || mLine[mRun]=='\n'));
+}
 
-
+void SynEditASMHighlighter::CRProc()
+{
+    mTokenID = TokenKind::Space;
+    mRun++;
+    if (mLine[mRun] == 10)
+        mRun++;
 }
 
 bool SynEditASMHighlighter::eol() const
@@ -187,4 +183,23 @@ void SynEditASMHighlighter::next()
             UnknownProc();
         }
     }
+}
+
+void SynEditASMHighlighter::setLine(const QString &newLine, int lineNumber)
+{
+    mLineString = newLine;
+    mLine = mLineString.data();
+    mLineNumber = lineNumber;
+    mRun = 0;
+    next();
+}
+
+SynHighlighterClass SynEditASMHighlighter::getClass() const
+{
+    return SynHighlighterClass::CppHighlighter;
+}
+
+QString SynEditASMHighlighter::getName() const
+{
+    return SYN_HIGHLIGHTER_CPP;
 }
