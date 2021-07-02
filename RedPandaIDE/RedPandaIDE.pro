@@ -16,6 +16,7 @@ SOURCES += \
     compiler/executablerunner.cpp \
     compiler/filecompiler.cpp \
     compiler/stdincompiler.cpp \
+    cpudialog.cpp \
     editor.cpp \
     editorlist.cpp \
     iconsmanager.cpp \
@@ -65,6 +66,7 @@ HEADERS += \
     compiler/executablerunner.h \
     compiler/filecompiler.h \
     compiler/stdincompiler.h \
+    cpudialog.h \
     editor.h \
     editorlist.h \
     iconsmanager.h \
@@ -108,6 +110,7 @@ HEADERS += \
     widgets/qpatchedcombobox.h
 
 FORMS += \
+    cpudialog.ui \
     mainwindow.ui \
     settingsdialog/compilersetdirectorieswidget.ui \
     settingsdialog/compilersetoptionwidget.ui \
