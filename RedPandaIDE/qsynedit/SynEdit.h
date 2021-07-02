@@ -210,6 +210,7 @@ public:
     void setCaretXYCentered(bool ForceToMiddle, const BufferCoord& value);
     void uncollapseAroundLine(int line);
     PSynEditFoldRange foldHidesLine(int line);
+    void setSelText(const QString& Value);
 
     int maxScrollWidth() const;
     int maxScrollHeight() const;
@@ -429,7 +430,6 @@ private:
     void SetSelTextPrimitive(const QString& aValue);
     void SetSelTextPrimitiveEx(SynSelectionMode PasteMode,
                                const QString& Value, bool AddToUndoList);
-    void setSelText(const QString& Value);
     void DoLinesDeleted(int FirstLine, int Count);
     void DoLinesInserted(int FirstLine, int Count);
     void ProperSetLine(int ALine, const QString& ALineText);

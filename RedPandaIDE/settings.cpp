@@ -87,6 +87,11 @@ Settings::Environment &Settings::environment()
     return mEnvironment;
 }
 
+Settings::Executor &Settings::executor()
+{
+    return mExecutor;
+}
+
 QString Settings::filename() const
 {
     return mFilename;

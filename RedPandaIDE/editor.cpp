@@ -636,9 +636,12 @@ void Editor::onModificationChanged(bool) {
 
 void Editor::onStatusChanged(SynStatusChanges changes)
 {
-    if (!changes.testFlag(SynStatusChange::scOpenFile) && (lines()->count()!=mLineCount)
+    if (!changes.testFlag(SynStatusChange::scOpenFile)
+            && !changes.testFlag(SynStatusChange::scReadOnly)
+            && !changes.testFlag(SynStatusChange::scInsertMode)
+            && (lines()->count()!=mLineCount)
             && (lines()->count()!=0) && ((mLineCount>0) || (lines()->count()>1))) {
-        if (pSettings->editor().syntaxCheck() && pSettings->editor().syntaxCheckWhenLineChanged())
+        if (!readOnly() && pSettings->editor().syntaxCheck() && pSettings->editor().syntaxCheckWhenLineChanged())
             pMainWindow->checkSyntaxInBack(this);
     }
     mLineCount = lines()->count();

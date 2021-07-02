@@ -18,25 +18,8 @@ class SynEditASMHighlighter : public SynHighlighter
         Unknown
     };
 public:
-    explicit SynEditASMHighlighter()
-    {
-        mCommentAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrComment);
-        mCommentAttribute->setStyles(SynFontStyle::fsItalic);
-        addAttribute(mCommentAttribute);
-        mIdentifierAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrIdentifier);
-        addAttribute(mIdentifierAttribute);
-        mKeywordAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrReservedWord);
-        mKeywordAttribute->setStyles(SynFontStyle::fsBold);
-        addAttribute(mKeywordAttribute);
-        mNumberAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrNumber);
-        addAttribute(mNumberAttribute);
-        mWhitespaceAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrSpace);
-        addAttribute(mWhitespaceAttribute);
-        mStringAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrString);
-        addAttribute(mStringAttribute);
-        mSymbolAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrSymbol);
-        addAttribute(mSymbolAttribute);
-    }
+    explicit SynEditASMHighlighter();
+    PSynHighlighterAttribute numberAttribute();
 
     static const QSet<QString> Keywords;
 private:
@@ -53,6 +36,19 @@ private:
 private:
     void CommentProc();
     void CRProc();
+    void GreaterProc();
+    void IdentProc();
+    void LFProc();
+    void LowerProc();
+    void NullProc();
+    void NumberProc();
+    void SingleQuoteStringProc();
+    void SlashProc();
+    void SpaceProc();
+    void StringProc();
+    void SymbolProc();
+    void UnknownProc();
+
 
     // SynHighlighter interface
 public:
@@ -72,6 +68,15 @@ public:
 public:
     SynHighlighterClass getClass() const override;
     QString getName() const override;
+
+    // SynHighlighter interface
+public:
+    bool getTokenFinished() const override;
+    bool isLastLineCommentNotFinished(int state) const override;
+    bool isLastLineStringNotFinished(int state) const override;
+    SynRangeState getRangeState() const override;
+    void setState(SynRangeState rangeState, int braceLevel, int bracketLevel, int parenthesisLevel) override;
+    void resetState() override;
 };
 
 #endif // SYNEDITASMHIGHLIGHTER_H

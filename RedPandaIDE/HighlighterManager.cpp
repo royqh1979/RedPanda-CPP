@@ -2,6 +2,7 @@
 #include <QFileInfo>
 #include <QObject>
 #include "qsynedit/highlighter/cpp.h"
+#include "qsynedit/highlighter/asm.h"
 #include "qsynedit/Constants.h"
 #include "colorscheme.h"
 
@@ -57,7 +58,7 @@ PSynHighlighter HighlighterManager::getCppHighlighter()
     highlighter->numberAttribute()->setForeground(0x1750EB);
     highlighter->octAttribute()->setForeground(QColorConstants::Svg::purple);
     highlighter->direcAttribute()->setForeground(0x1f542e);
-    highlighter->keyAttribute()->setForeground(0x0033b3);
+    highlighter->keywordAttribute()->setForeground(0x0033b3);
     highlighter->whitespaceAttribute()->setForeground(QColorConstants::Svg::silver);
     highlighter->stringAttribute()->setForeground(0x007d17);
     highlighter->stringEscapeSequenceAttribute()->setForeground(QColorConstants::Svg::red);
@@ -66,11 +67,28 @@ PSynHighlighter HighlighterManager::getCppHighlighter()
     return pHighlighter;
 }
 
+PSynHighlighter HighlighterManager::getAsmHighlighter()
+{
+    SynEditASMHighlighter* highlighter = new SynEditASMHighlighter();
+    PSynHighlighter pHighlighter(highlighter);
+    highlighter->commentAttribute()->setForeground(0x8C8C8C);
+    highlighter->commentAttribute()->setStyles(SynFontStyle::fsItalic);
+    highlighter->identifierAttribute()->setForeground(0x080808);
+    highlighter->keywordAttribute()->setForeground(0x0033b3);
+    highlighter->numberAttribute()->setForeground(0x1750EB);
+    highlighter->whitespaceAttribute()->setForeground(QColorConstants::Svg::silver);
+    highlighter->stringAttribute()->setForeground(0x007d17);
+    highlighter->symbolAttribute()->setForeground(0xc10000);
+    return pHighlighter;
+}
+
 void HighlighterManager::applyColorScheme(PSynHighlighter highlighter, const QString &schemeName)
 {
     if (!highlighter)
         return;
-    if (highlighter->getName() == SYN_HIGHLIGHTER_CPP) {
+    if ( (highlighter->getName() == SYN_HIGHLIGHTER_CPP)
+         || (highlighter->getName() == SYN_HIGHLIGHTER_ASM)
+         ) {
         for (QString name: highlighter->attributes().keys()) {
             PColorSchemeItem item = pColorManager->getItem(schemeName,name);
             if (item) {

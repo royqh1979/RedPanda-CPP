@@ -40,6 +40,8 @@ void CompilerManager::compile(const QString& filename, const QByteArray& encodin
     if (mCompiler!=nullptr) {
         return;
     }
+    if (!pSettings->compilerSets().defaultSet())
+        return;
     mCompileErrorCount = 0;
     mCompiler = new FileCompiler(filename,encoding,silent,onlyCheckSyntax);
     mCompiler->setRebuild(rebuild);
@@ -58,6 +60,8 @@ void CompilerManager::checkSyntax(const QString &filename, const QString &conten
     if (mBackgroundSyntaxChecker!=nullptr) {
         return;
     }
+    if (!pSettings->compilerSets().defaultSet())
+        return;
     mSyntaxCheckErrorCount = 0;
     mBackgroundSyntaxChecker = new StdinCompiler(filename,content,true,true);
     connect(mBackgroundSyntaxChecker, &Compiler::compileFinished, this ,&CompilerManager::onSyntaxCheckFinished);

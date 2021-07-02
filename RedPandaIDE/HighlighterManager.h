@@ -10,6 +10,7 @@ public:
     PSynHighlighter getHighlighter(const QString& filename);
     PSynHighlighter copyHighlighter(PSynHighlighter highlighter);
     PSynHighlighter getCppHighlighter();
+    PSynHighlighter getAsmHighlighter();
     void applyColorScheme(PSynHighlighter highlighter, const QString& schemeName);
 };
 

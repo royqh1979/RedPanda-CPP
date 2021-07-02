@@ -56,8 +56,6 @@ public:
 
     PSynHighlighterAttribute invalidAttribute() const;
 
-    PSynHighlighterAttribute keyAttribute() const;
-
     PSynHighlighterAttribute numberAttribute() const;
 
     PSynHighlighterAttribute floatAttribute() const;
@@ -148,7 +146,6 @@ private:
     PSynHighlighterAttribute mAsmAttribute;
     PSynHighlighterAttribute mDirecAttribute;
     PSynHighlighterAttribute mInvalidAttribute;
-    PSynHighlighterAttribute mKeyAttribute;
     PSynHighlighterAttribute mNumberAttribute;
     PSynHighlighterAttribute mFloatAttribute;
     PSynHighlighterAttribute mHexAttribute;
