@@ -17,6 +17,7 @@ SOURCES += \
     compiler/filecompiler.cpp \
     compiler/stdincompiler.cpp \
     cpudialog.cpp \
+    debugger.cpp \
     editor.cpp \
     editorlist.cpp \
     iconsmanager.cpp \
@@ -67,6 +68,7 @@ HEADERS += \
     compiler/filecompiler.h \
     compiler/stdincompiler.h \
     cpudialog.h \
+    debugger.h \
     editor.h \
     editorlist.h \
     iconsmanager.h \
