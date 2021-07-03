@@ -108,12 +108,17 @@ public:
     bool hasNextSyntaxIssue() const;
     PSyntaxIssueList getSyntaxIssuesAtLine(int line);
     PSyntaxIssue getSyntaxIssueAtPosition(const BufferCoord& pos);
+    int gutterClickedLine() const;
+    void toggleBreakpoint(int line);
+    bool hasBreakpoint(int line);
+
 signals:
 
 
 protected slots:
     void onModificationChanged(bool status) ;
     void onStatusChanged(SynStatusChanges changes);
+    void onGutterClicked(Qt::MouseButton button, int x, int y, int line);
 
 private:
     QChar getCurrentChar();
@@ -145,6 +150,8 @@ private:
     QColor mSyntaxWaringColor;
     int mSyntaxErrorLine;
     int mLineCount;
+    int mGutterClickedLine;
+    QSet<int> mBreakpointLines;
 
     // QWidget interface
 protected:
@@ -157,6 +164,10 @@ protected:
 protected:
     void onGutterPaint(QPainter &painter, int aLine, int X, int Y) override;
     void onGetEditingAreas(int Line, SynEditingAreaList &areaList) override;
+
+    // SynEdit interface
+protected:
+    bool onGetSpecialLineColors(int Line, QColor &foreground, QColor &backgroundColor) override;
 };
 
 #endif // EDITOR_H

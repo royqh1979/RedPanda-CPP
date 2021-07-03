@@ -92,6 +92,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
     applyColorScheme(pSettings->editor().colorScheme());
 
     connect(this,&SynEdit::statusChanged,this,&Editor::onStatusChanged);
+    connect(this,&SynEdit::gutterClicked,this,&Editor::onGutterClicked);
 }
 
 Editor::~Editor() {
@@ -369,6 +370,11 @@ void Editor::onGutterPaint(QPainter &painter, int aLine, int X, int Y)
         } else {
             painter.drawPixmap(X,Y,*(pIconsManager->syntaxWarning()));
         }
+        return;
+    }
+
+    if (hasBreakpoint(aLine)) {
+        painter.drawPixmap(X,Y,*(pIconsManager->breakpoint()));
     }
 //   if fActiveLine = Line then begin // prefer active line over breakpoints
 //        dmMain.GutterImages.Draw(ACanvas, X, Y, 1);
@@ -432,6 +438,11 @@ void Editor::onGetEditingAreas(int Line, SynEditingAreaList &areaList)
             areaList.append(p);
         }
     }
+}
+
+bool Editor::onGetSpecialLineColors(int Line, QColor &foreground, QColor &backgroundColor)
+{
+
 }
 
 void Editor::copyToClipboard()
@@ -726,6 +737,14 @@ void Editor::onStatusChanged(SynStatusChanges changes)
     pMainWindow->updateEditorActions();
 
     //    mainForm.CaretList.AddCaret(self,fText.CaretY,fText.CaretX);
+}
+
+void Editor::onGutterClicked(Qt::MouseButton button, int x, int y, int line)
+{
+    if (button == Qt::LeftButton) {
+        toggleBreakpoint(line);
+    }
+    mGutterClickedLine = line;
 }
 
 QChar Editor::getCurrentChar()
@@ -1149,6 +1168,32 @@ Editor::QuoteStatus Editor::getQuoteStatus()
         }
     }
     return Result;
+}
+
+int Editor::gutterClickedLine() const
+{
+    return mGutterClickedLine;
+}
+
+void Editor::toggleBreakpoint(int line)
+{
+    if (hasBreakpoint(line)) {
+        mBreakpointLines.remove(line);
+        //todo
+       // MainForm.Debugger.RemoveBreakPoint(Line, self)
+    } else {
+        mBreakpointLines.insert(line);
+        //todo
+       // MainForm.Debugger.AddBreakPoint(Line, self);
+    }
+
+    invalidateGutterLine(line);
+    invalidateLine(line);
+}
+
+bool Editor::hasBreakpoint(int line)
+{
+    return mBreakpointLines.contains(line);
 }
 
 void Editor::applySettings()

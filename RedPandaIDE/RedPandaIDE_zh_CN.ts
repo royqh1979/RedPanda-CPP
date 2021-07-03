@@ -1351,7 +1351,7 @@ Are you really want to continue?</source>
     </message>
     <message>
         <location filename="colorscheme.cpp" line="523"/>
-        <source>Folding Line</source>
+        <source>Fold Line</source>
         <translation>代码折叠线</translation>
     </message>
     <message>

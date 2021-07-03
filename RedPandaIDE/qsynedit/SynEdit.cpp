@@ -132,7 +132,7 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
     //enable input method
     setAttribute(Qt::WA_InputMethodEnabled);
 
-    setMouseTracking(true);
+    //setMouseTracking(true);
 }
 
 int SynEdit::displayLineCount() const
@@ -5052,7 +5052,7 @@ void SynEdit::mousePressEvent(QMouseEvent *event)
         mBlockBegin = TmpBegin;
         mBlockEnd = TmpEnd;
 
-        //setMouseTracking(true);
+        setMouseTracking(true);
         //if mousedown occurred in selected block begin drag operation
         mStateFlags.setFlag(SynStateFlag::sfWaitForDragging,false);
         if (bWasSel && mOptions.testFlag(eoDragDropEditing) && (X >= mGutterWidth + 2)
@@ -5092,7 +5092,7 @@ void SynEdit::mouseReleaseEvent(QMouseEvent *event)
     mScrollTimer->stop();
 //    if ((button = ) and (Shift = [ssRight]) and Assigned(PopupMenu) then
 //      exit;
-    //setMouseTracking(false);
+    setMouseTracking(false);
 
     if (mStateFlags.testFlag(SynStateFlag::sfWaitForDragging) &&
             !mStateFlags.testFlag(SynStateFlag::sfDblClicked)) {

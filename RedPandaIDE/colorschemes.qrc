@@ -12,6 +12,5 @@
         <file>colorschemes/Twilight.scheme</file>
         <file>colorschemes/Visual_Studio.scheme</file>
         <file>colorschemes/VS_Code.scheme</file>
-        <file>colorschemes/vs_code1.scheme</file>
     </qresource>
 </RCC>

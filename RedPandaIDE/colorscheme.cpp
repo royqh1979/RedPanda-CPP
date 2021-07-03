@@ -520,7 +520,7 @@ void ColorManager::initItemDefines()
               true,true,false);
     //Fold line
     addDefine(COLOR_SCHEME_FOLD_LINE,
-              QObject::tr("Folding Line"),
+              QObject::tr("Fold Line"),
               QObject::tr("Editor"),
               true,false,false);
 
