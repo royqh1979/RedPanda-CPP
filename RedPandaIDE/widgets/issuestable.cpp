@@ -36,7 +36,7 @@ IssuesModel::IssuesModel(QObject *parent):
 
 void IssuesModel::addIssue(PCompileIssue issue)
 {
-    beginInsertColumns(QModelIndex(),mIssues.size(),mIssues.size());
+    beginInsertRows(QModelIndex(),mIssues.size(),mIssues.size());
     mIssues.push_back(issue);
     endInsertRows();
 }

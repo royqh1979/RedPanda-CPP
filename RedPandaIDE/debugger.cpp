@@ -1,4 +1,6 @@
 #include "debugger.h"
+#include "utils.h"
+#include "mainwindow.h"
 
 Debugger::Debugger(QObject *parent) : QObject(parent)
 {
@@ -42,7 +44,7 @@ AnnotationType DebugReader::getAnnotation(const QString &s)
       AnnotationType result = AnnotationType::TPostPrompt;
 
       int IndexBackup = mIndex;
-      QString t = GetNextFilledLine();
+      QString t = getNextFilledLine();
       int mIndex = IndexBackup;
 
       //hack to catch local
@@ -132,10 +134,471 @@ AnnotationType DebugReader::getAnnotation(const QString &s)
       return AnnotationType::TSignalString;
     } else if (s == "signal-string-end") {
       return AnnotationType::TSignalStringEnd;
-    } else if (mOutput[mIndex] == 0) {
+    } else if (mIndex >= mOutput.length()) {
       return AnnotationType::TEOF;
     } else {
       return AnnotationType::TUnknown;;
     }
 }
 
+AnnotationType DebugReader::getLastAnnotation(const QString &text, int curpos, int len)
+{
+    // Walk back until end of #26's
+    while ((curpos >= 0) && (text[curpos] != 26))
+        curpos--;
+
+    curpos++;
+
+    // Tiny rewrite of GetNextWord for special purposes
+    QString s = "";
+    while ((curpos < len) && (text[curpos]>32)) {
+        s = s + text[curpos];
+        curpos++;
+    }
+
+    return getAnnotation(s);
+}
+
+AnnotationType DebugReader::getNextAnnotation()
+{
+    // Skip until end of #26's, i.e. GDB formatted output
+    skipToAnnotation();
+
+    // Get part this line, after #26#26
+    return getAnnotation(getNextWord());
+}
+
+QString DebugReader::getNextFilledLine()
+{
+    // Walk up to an enter sequence
+    while (mIndex<mOutput.length() && mOutput[mIndex]!=13 && mOutput[mIndex]!=10 && mOutput[mIndex]!=0)
+        mIndex++;
+    // Skip enter sequences (CRLF, CR, LF, etc.)
+    while (mIndex<mOutput.length() && mOutput[mIndex]==13 && mOutput[mIndex]==10 && mOutput[mIndex]==0)
+        mIndex++;
+    // Return next line
+    return getRemainingLine();
+}
+
+QString DebugReader::getNextLine()
+{
+    // Walk up to an enter sequence
+    while (mIndex<mOutput.length() && mOutput[mIndex]!=13 && mOutput[mIndex]!=10 && mOutput[mIndex]!=0)
+        mIndex++;
+
+    // End of output. Exit
+    if (mIndex>=mOutput.length())
+        return "";
+    // Skip ONE enter sequence (CRLF, CR, LF, etc.)
+    if ((mOutput[mIndex] == 13) && (mOutput[mIndex] == 10)) // DOS
+        mIndex+=2;
+    else if (mOutput[mIndex] == 13)  // UNIX
+        mIndex++;
+    else if (mOutput[mIndex] == 10) // MAC
+        mIndex++;
+    // Return next line
+    return getRemainingLine();
+}
+
+QString DebugReader::getNextWord()
+{
+    QString Result;
+
+    // Called when at a space? Skip over
+    skipSpaces();
+
+    // Skip until a space
+    while (mIndex<mOutput.length() && mOutput[mIndex]>32) {
+        Result += mOutput[mIndex];
+        mIndex++;
+    }
+    return Result;
+}
+
+QString DebugReader::getRemainingLine()
+{
+    QString Result;
+
+    // Return part of line still ahead of us
+    while (mIndex<mOutput.length() && mOutput[mIndex]!=13 && mOutput[mIndex]!=10 && mOutput[mIndex]!=0) {
+        Result += mOutput[mIndex];
+        mIndex++;
+    }
+    return Result;
+}
+
+void DebugReader::handleDisassembly()
+{
+    if (mDisassembly.isEmpty())
+        return;
+
+    // Get info message
+    QString s = getNextLine();
+
+    // the full function name will be saved at index 0
+    mDisassembly.append(s.mid(36));
+
+    s = getNextLine();
+
+    // Add lines of disassembly
+    while (!s.isEmpty() && (s != "End of assembler dump")) {
+        mDisassembly.append(s);
+        s = getNextLine();
+    }
+
+    dodisassemblerready = true;
+}
+
+void DebugReader::handleDisplay()
+{
+    QString s = getNextLine(); // watch index
+
+    if (!findAnnotation(AnnotationType::TDisplayExpression))
+        return;
+    QString watchName = getNextLine(); // watch name
+
+    // Find parent we're talking about
+    auto result = mWatchVarList.find(watchName);
+    if (result != mWatchVarList.end()) {
+        PWatchVar watchVar = result.value();
+        // Advance up to the value
+        if (!findAnnotation(AnnotationType::TDisplayExpression))
+            return;;
+        // Refresh GDB index so we can undisplay this by index
+        watchVar->gdbIndex = s.toInt();
+        processWatchOutput(watchVar);
+    }
+}
+
+void DebugReader::handleError()
+{
+    QString s = getNextLine(); // error text
+    if (s.startsWith("Cannot find bounds of current function")) {
+      //We have exited
+      handleExit();
+    } else if (s.startsWith("No symbol \"")) {
+        int head = s.indexOf('\"');
+        int tail = s.lastIndexOf('\"');
+        QString watchName = s.mid(head+1, tail-head-1);
+
+        // Update current...
+        auto result = mWatchVarList.find(watchName);
+        if (result != mWatchVarList.end()) {
+            PWatchVar watchVar = result.value();
+            //todo: update watch value to invalid
+            invalidateWatchVar(watchVar);
+            watchVar->gdbIndex = -1;
+            dorescanwatches = true;
+        }
+    }
+}
+
+void DebugReader::handleExit()
+{
+    doprocessexited=true;
+}
+
+void DebugReader::handleFrames()
+{
+    QString s = getNextLine();
+
+    // Is this a backtrace dump?
+    if (s.startsWith("#")) {
+        // Find function name
+        if (!findAnnotation(AnnotationType::TFrameFunctionName))
+            return;
+
+        PTrace trace = std::make_shared<Trace>();
+        trace->funcname = getNextLine();
+
+        // Find argument list start
+        if (!findAnnotation(AnnotationType::TFrameArgs))
+            return;
+
+        // Arguments are either () or detailed list
+        s = getNextLine();
+
+        while (peekNextAnnotation() == AnnotationType::TArgBegin) {
+
+            // argument name
+            if (!findAnnotation(AnnotationType::TArgBegin))
+                return;
+
+            s = s + getNextLine();
+
+            // =
+            if (!findAnnotation(AnnotationType::TArgNameEnd))
+                return;
+            s = s + ' ' + getNextLine() + ' '; // should be =
+
+            // argument value
+            if (!findAnnotation(AnnotationType::TArgValue))
+                return;
+
+            s = s + getNextLine();
+
+            // argument end
+            if (!findAnnotation(AnnotationType::TArgEnd))
+                return;
+
+            s = s + getNextLine();
+        }
+
+        trace->funcname = trace->funcname + s.trimmed();
+
+        // source info
+        if (peekNextAnnotation() == AnnotationType::TFrameSourceBegin) {
+            // Find filename
+            if (!findAnnotation(AnnotationType::TFrameSourceFile))
+                return;
+            trace->filename = getNextLine();
+            // find line
+            if (!findAnnotation(AnnotationType::TFrameSourceLine))
+                return;
+            trace->line = getNextLine().trimmed().toInt();
+        } else {
+            trace->filename = "";
+            trace->line = 0;
+        }
+        mBacktraceModel.addTrace(trace);
+
+        // Skip over the remaining frame part...
+        if (!findAnnotation(AnnotationType::TFrameEnd))
+            return;
+
+        // Not another one coming? Done!
+        if (peekNextAnnotation() != AnnotationType::TFrameBegin) {
+            // End of stack trace dump!
+              dobacktraceready = true;
+        }
+    } else
+        doupdatecpuwindow = true;
+}
+
+void DebugReader::handleLocalOutput()
+{
+    // name(spaces)hexvalue(tab)decimalvalue
+    QString s = getNextFilledLine();
+
+    bool breakLine = false;
+    while (true) {
+        if (s.startsWith("\032\032")) {
+            s = TrimLeft(s);
+            if (s == "No locals.") {
+                return;
+            }
+            if (s == "No arguments.") {
+                return;
+            }
+            //todo: update local view
+//            if (breakLine and (MainForm.txtLocals.Lines.Count>0) then begin
+//          MainForm.txtLocals.Lines[MainForm.txtLocals.Lines.Count-1] := MainForm.txtLocals.Lines[MainForm.txtLocals.Lines.Count-1] + s;
+//        end else begin
+//          MainForm.txtLocals.Lines.Add(s);
+//        end;
+            breakLine=false;
+        } else {
+            breakLine = true;
+        }
+        s = getNextLine();
+        if (!breakLine && s.isEmpty())
+            break;
+    }
+}
+
+void DebugReader::handleLocals()
+{
+    //todo: clear local view
+    handleLocalOutput();
+}
+
+void DebugReader::handleParams(){
+    handleLocalOutput();
+}
+
+void DebugReader::handleRegisters()
+{
+    // name(spaces)hexvalue(tab)decimalvalue
+    QString s = getNextFilledLine();
+
+    while (true) {
+        PRegister reg = std::make_shared<Register>();
+        // Cut name from 1 to first space
+        int x = s.indexOf(' ');
+        reg->name = s.mid(0,x-1);
+        s.remove(0,x);
+        // Remove spaces
+        s = TrimLeft(s);
+
+        // Cut hex value from 1 to first tab
+        x = s.indexOf('\t');
+        if (x<0)
+            x = s.indexOf(' ');
+        reg->hexValue = s.mid(0,x - 1);
+        s.remove(0,x); // delete tab too
+        s = TrimLeft(s);
+
+        // Remaining part contains decimal value
+        reg->decValue = s;
+
+        mRegisters.append(reg);
+        s = getNextLine();
+        if (s.isEmpty())
+            break;
+    }
+
+    doregistersready := true;
+}
+
+
+
+int BreakpointModel::rowCount(const QModelIndex &) const
+{
+    return mList.size();
+}
+
+int BreakpointModel::columnCount(const QModelIndex &) const
+{
+    return 3;
+}
+
+QVariant BreakpointModel::data(const QModelIndex &index, int role) const
+{
+    if (!index.isValid())
+        return QVariant();
+    if (index.row()<0 || index.row() >= static_cast<int>(mList.size()))
+        return QVariant();
+    PBreakpoint breakpoint = mList[index.row()];
+    if (!breakpoint)
+        return QVariant();
+    switch (role) {
+    case Qt::DisplayRole:
+        switch (index.column()) {
+        case 0:
+            return breakpoint->filename;
+        case 1:
+            if (breakpoint->line>0)
+                return breakpoint->line;
+            else
+                return "";
+        case 2:
+            return breakpoint->condition;
+        default:
+            return QVariant();
+        }
+    default:
+        return QVariant();
+    }
+}
+
+QVariant BreakpointModel::headerData(int section, Qt::Orientation orientation, int role) const
+{
+    if (orientation == Qt::Horizontal && role ==  Qt::DisplayRole) {
+        switch(section) {
+        case 0:
+            return tr("Filename");
+        case 1:
+            return tr("Line");
+        case 2:
+            return tr("Condition");
+        }
+    }
+    return QVariant();
+}
+
+void BreakpointModel::addBreakpoint(PBreakpoint p)
+{
+    beginInsertRows(QModelIndex(),mList.size(),mList.size());
+    mList.push_back(p);
+    endInsertRows();
+}
+
+void BreakpointModel::clear()
+{
+    beginRemoveRows(QModelIndex(),0,mList.size()-1);
+    mList.clear();
+    endRemoveRows();
+}
+
+void BreakpointModel::removeBreakpoint(int row)
+{
+    beginRemoveRows(QModelIndex(),row,row);
+    mList.removeAt(row);
+    endRemoveRows();
+}
+
+
+int BacktraceModel::rowCount(const QModelIndex &) const
+{
+    return mList.size();
+}
+
+int BacktraceModel::columnCount(const QModelIndex &) const
+{
+    return 3;
+}
+
+QVariant BacktraceModel::data(const QModelIndex &index, int role) const
+{
+    if (!index.isValid())
+        return QVariant();
+    if (index.row()<0 || index.row() >= static_cast<int>(mList.size()))
+        return QVariant();
+    PTrace trace = mList[index.row()];
+    if (!trace)
+        return QVariant();
+    switch (role) {
+    case Qt::DisplayRole:
+        switch (index.column()) {
+        case 0:
+            return trace->funcname;
+        case 1:
+            return trace->filename;
+        case 2:
+            if (trace->line>0)
+                return trace->line;
+            else
+                return "";
+        default:
+            return QVariant();
+        }
+    default:
+        return QVariant();
+    }
+}
+
+QVariant BacktraceModel::headerData(int section, Qt::Orientation orientation, int role) const
+{
+    if (orientation == Qt::Horizontal && role ==  Qt::DisplayRole) {
+        switch(section) {
+        case 0:
+            return tr("Function");
+        case 1:
+            return tr("Filename");
+        case 2:
+            return tr("Line");
+        }
+    }
+    return QVariant();
+}
+
+void BacktraceModel::addTrace(PTrace p)
+{
+    beginInsertRows(QModelIndex(),mList.size(),mList.size());
+    mList.push_back(p);
+    endInsertRows();
+}
+
+void BacktraceModel::clear()
+{
+    beginRemoveRows(QModelIndex(),0,mList.size()-1);
+    mList.clear();
+    endRemoveRows();
+}
+
+void BacktraceModel::removeTrace(int row)
+{
+    beginRemoveRows(QModelIndex(),row,row);
+    mList.removeAt(row);
+    endRemoveRows();
+}
