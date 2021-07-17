@@ -148,6 +148,11 @@ private:
     void handleLocals();
     void handleParams();
     void handleRegisters();
+    void handleSignal();
+    void handleSource();
+    void handleValueHistoryValue();
+    AnnotationType peekNextAnnotation();
+    void processDebugOutput();
 private:
     QMutex mMutex;
     QQueue<PDebugCommand> mCmdQueue;

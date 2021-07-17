@@ -447,7 +447,144 @@ void DebugReader::handleRegisters()
             break;
     }
 
-    doregistersready := true;
+    doregistersready = true;
+}
+
+void DebugReader::handleSignal()
+{
+    mSignal = getNextFilledLine(); // Program received signal
+
+    if (!findAnnotation(AnnotationType::TSignalName))
+        return;
+
+    mSignal = mSignal + getNextFilledLine(); // signal code
+
+    if (!findAnnotation(AnnotationType::TSignalNameEnd))
+        return;
+
+    mSignal = mSignal + getNextFilledLine(); // comma
+
+    if (!findAnnotation(AnnotationType::TSignalString))
+        return;
+
+    mSignal = mSignal + getNextFilledLine(); // user friendly description
+
+    if (!findAnnotation(AnnotationType::TSignalStringEnd))
+        return;
+
+    mSignal = mSignal + getNextFilledLine(); // period
+
+    doreceivedsignal = true;
+}
+
+void DebugReader::handleSource()
+{
+    // source filename:line:offset:beg/middle/end:addr
+    QString s = TrimLeft(getRemainingLine());
+
+    // remove offset, beg/middle/end, address
+    for (int i=0;i<3;i++) {
+        int delimPos = s.lastIndexOf(':');
+        if (delimPos >= 0)
+            s.remove(delimPos,INT_MAX);
+        else
+            return; // Wrong format. Don't bother to continue
+    }
+
+    // get line
+    int delimPos = s.lastIndexOf(':');
+    if (delimPos >= 0) {
+        mBreakPointLine = s.mid(delimPos+1).toInt();
+        s.remove(delimPos, INT_MAX);
+    }
+
+    // get file
+    mBreakPointFile = s;
+
+    doupdateexecution = true;
+    doupdatecpuwindow = true;
+}
+
+void DebugReader::handleValueHistoryValue()
+{
+    mEvalValue = processEvalOutput();
+    doevalready = true;
+}
+
+AnnotationType DebugReader::peekNextAnnotation()
+{
+    int indexBackup = mIndex; // do NOT modifiy curpos
+    AnnotationType result = getNextAnnotation();
+    mIndex = indexBackup;
+    return result;
+}
+
+void DebugReader::processDebugOutput()
+{
+    // Only update once per update at most
+      //WatchView.Items.BeginUpdate;
+
+      if fInvalidateAllVars then begin
+        //invalidate all vars when there's first output
+        if Assigned(fOnInvalidateAllVars) then
+          fOnInvalidateAllVars;
+        fInvalidateAllVars := False;
+      end;
+
+      //try
+
+        dobacktraceready := false;
+        dodisassemblerready := false;
+        doregistersready := false;
+        dorescanwatches := false;
+        doevalready := false;
+        doprocessexited := false;
+        doupdateexecution := false;
+        doreceivedsignal := false;
+        doupdatecpuwindow := false;
+        doreceivedsfwarning := false;
+
+        // Global checks
+        if Pos('warning: Source file is more recent than executable.', fOutput) > 0 then
+          doreceivedsfwarning := true;
+
+        fIndex := 1;
+        repeat
+          NextAnnotation := GetNextAnnotation;
+          case NextAnnotation of
+            TValueHistoryValue:
+              HandleValueHistoryValue;
+            TSignal:
+              HandleSignal;
+            TExit:
+              HandleExit;
+            TFrameBegin:
+              HandleFrames;
+            TInfoAsm:
+              HandleDisassembly;
+            TInfoReg:
+              HandleRegisters;
+            TLocal:
+              HandleLocals;
+            TParam:
+              HandleParams;
+            TErrorBegin:
+              HandleError;
+            TDisplayBegin:
+              HandleDisplay;
+            TSource:
+              HandleSource
+                //else
+          //	break;
+          end;
+        until NextAnnotation = TEOF;
+
+        // Only update once per update at most
+      //finally
+        //WatchView.Items.EndUpdate;
+      //end;
+
+      Synchronize(SyncFinishedParsing);
 }
 
 
