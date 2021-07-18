@@ -522,69 +522,126 @@ AnnotationType DebugReader::peekNextAnnotation()
 void DebugReader::processDebugOutput()
 {
     // Only update once per update at most
-      //WatchView.Items.BeginUpdate;
+    //WatchView.Items.BeginUpdate;
 
-      if fInvalidateAllVars then begin
-        //invalidate all vars when there's first output
-        if Assigned(fOnInvalidateAllVars) then
-          fOnInvalidateAllVars;
-        fInvalidateAllVars := False;
-      end;
+    if (mInvalidateAllVars) {
+         //invalidate all vars when there's first output
+         invalidateAllVars();
+         mInvalidateAllVars = false;
+    }
 
-      //try
+    emit parseStarted();
 
-        dobacktraceready := false;
-        dodisassemblerready := false;
-        doregistersready := false;
-        dorescanwatches := false;
-        doevalready := false;
-        doprocessexited := false;
-        doupdateexecution := false;
-        doreceivedsignal := false;
-        doupdatecpuwindow := false;
-        doreceivedsfwarning := false;
+   //try
 
-        // Global checks
-        if Pos('warning: Source file is more recent than executable.', fOutput) > 0 then
-          doreceivedsfwarning := true;
+   dobacktraceready = false;
+   dodisassemblerready = false;
+   doregistersready = false;
+   dorescanwatches = false;
+   doevalready = false;
+   doprocessexited = false;
+   doupdateexecution = false;
+   doreceivedsignal = false;
+   doupdatecpuwindow = false;
+   doreceivedsfwarning = false;
 
-        fIndex := 1;
-        repeat
-          NextAnnotation := GetNextAnnotation;
-          case NextAnnotation of
-            TValueHistoryValue:
-              HandleValueHistoryValue;
-            TSignal:
-              HandleSignal;
-            TExit:
-              HandleExit;
-            TFrameBegin:
-              HandleFrames;
-            TInfoAsm:
-              HandleDisassembly;
-            TInfoReg:
-              HandleRegisters;
-            TLocal:
-              HandleLocals;
-            TParam:
-              HandleParams;
-            TErrorBegin:
-              HandleError;
-            TDisplayBegin:
-              HandleDisplay;
-            TSource:
-              HandleSource
-                //else
-          //	break;
-          end;
-        until NextAnnotation = TEOF;
+   // Global checks
+   if (mOutput.indexOf("warning: Source file is more recent than executable.") >= 0)
+       doreceivedsfwarning = true;
 
-        // Only update once per update at most
-      //finally
-        //WatchView.Items.EndUpdate;
-      //end;
+   mIndex = 0;
+   AnnotationType nextAnnotation;
+   do {
+       nextAnnotation = getNextAnnotation();
+       switch(nextAnnotation) {
+       case AnnotationType::TValueHistoryValue:
+           handleValueHistoryValue();
+           break;
+       case AnnotationType::TSignal:
+           handleSignal();
+           break;
+       case AnnotationType::TExit:
+           handleExit();
+           break;
+       case AnnotationType::TFrameBegin:
+           handleFrames();
+           break;
+       case AnnotationType::TInfoAsm:
+           handleDisassembly();
+           break;
+       case AnnotationType::TInfoReg:
+           handleRegisters();
+           break;
+       case AnnotationType::TLocal:
+           handleLocals();
+           break;
+       case AnnotationType::TParam:
+           handleParams();
+           break;
+       case AnnotationType::TErrorBegin:
+           handleError();
+           break;
+       case AnnotationType::TDisplayBegin:
+           handleDisplay();
+           break;
+       case AnnotationType::TSource:
+           handleSource();
+           break;
+       }
+   } while (nextAnnotation != AnnotationType::TEOF);
 
-      Synchronize(SyncFinishedParsing);
+     // Only update once per update at most
+   //finally
+     //WatchView.Items.EndUpdate;
+   //end;
+
+   emit parseFinished();
+}
+
+QString DebugReader::processEvalOutput()
+{
+    int indent = 0;
+
+    // First line gets special treatment
+    QString result = getNextLine();
+    if (result.startsWith('{'))
+        indent+=4;
+
+    // Collect all data, add formatting in between
+    AnnotationType nextAnnotation;
+    QString nextLine;
+    bool shouldExit = false;
+    do {
+        nextAnnotation = getNextAnnotation();
+        nextLine = getNextLine();
+        switch(nextAnnotation) {
+        // Change indent if { or } is found
+        case AnnotationType::TFieldBegin:
+            result += "\r\n" + QString(4,' ');
+            break;
+        case AnnotationType::TFieldValue:
+            if (nextLine.startsWith('{') && (peekNextAnnotation() !=
+                                             AnnotationType::TArrayBegin))
+                indent+=4;
+            break;
+        case AnnotationType::TFieldEnd:
+            if (nextLine.endsWith('}')) {
+                indent-=4;
+                result += "\r\n" + QString(4,' ');
+            }
+            break;
+        case AnnotationType::TEOF:
+        case AnnotationType::TValueHistoryEnd:
+        case AnnotationType::TDisplayEnd:
+            shouldExit = true;
+        }
+        result += nextLine;
+    } while (!shouldExit);
+}
+
+void DebugReader::processWatchOutput(PWatchVar WatchVar)
+{
+    //todo
 }
 
 

@@ -129,6 +129,10 @@ class DebugReader : public QObject
 public:
     explicit DebugReader(QObject *parent = nullptr);
 
+signals:
+    void parseStarted();
+    void invalidateAllVars();
+    void parseFinished();
 private:
     void clearCmdQueue();
     bool findAnnotation(AnnotationType annotation);
@@ -153,6 +157,8 @@ private:
     void handleValueHistoryValue();
     AnnotationType peekNextAnnotation();
     void processDebugOutput();
+    QString processEvalOutput();
+    void processWatchOutput(PWatchVar WatchVar);
 private:
     QMutex mMutex;
     QQueue<PDebugCommand> mCmdQueue;
