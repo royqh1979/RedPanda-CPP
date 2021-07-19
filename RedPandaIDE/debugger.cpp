@@ -12,13 +12,32 @@ DebugReader::DebugReader(QObject *parent) : QObject(parent)
 
 }
 
+void DebugReader::postCommand(const QString &Command, const QString &Params, bool UpdateWatch, bool ShowInConsole, DebugCommandSource Source)
+{
+    QMutexLocker locker(&mCmdQueueMutex);
+    if (mCmdQueue.isEmpty() && UpdateWatch) {
+        emit pauseWatchUpdate();
+        mUpdateCount++;
+    }
+    PDebugCommand pCmd = std::make_shared<DebugCommand>();
+    pCmd->command = Command;
+    pCmd->params = Params;
+    pCmd->updateWatch = UpdateWatch;
+    pCmd->showInConsole = ShowInConsole;
+    pCmd->source = Source;
+    mCmdQueue.enqueue(pCmd);
+    if (!mCmdRunning)
+        runNextCmd();
+}
+
 void DebugReader::clearCmdQueue()
 {
-    QMutexLocker locker(&mMutex);
+    QMutexLocker locker(&mCmdQueueMutex);
     mCmdQueue.clear();
-    while (mUpdateCount>0) {
-        //WatchView.Items.EndUpdate();
-        mUpdateCount--;
+
+    if (mUpdateCount>0) {
+        emit updateWatch();
+        mUpdateCount=0;
     }
 }
 
@@ -141,8 +160,9 @@ AnnotationType DebugReader::getAnnotation(const QString &s)
     }
 }
 
-AnnotationType DebugReader::getLastAnnotation(const QString &text, int curpos, int len)
+AnnotationType DebugReader::getLastAnnotation(const QByteArray &text)
 {
+    int curpos = text.length()-1;
     // Walk back until end of #26's
     while ((curpos >= 0) && (text[curpos] != 26))
         curpos--;
@@ -151,7 +171,7 @@ AnnotationType DebugReader::getLastAnnotation(const QString &text, int curpos, i
 
     // Tiny rewrite of GetNextWord for special purposes
     QString s = "";
-    while ((curpos < len) && (text[curpos]>32)) {
+    while ((curpos < text.length()) && (text[curpos]>32)) {
         s = s + text[curpos];
         curpos++;
     }
@@ -642,6 +662,127 @@ QString DebugReader::processEvalOutput()
 void DebugReader::processWatchOutput(PWatchVar WatchVar)
 {
     //todo
+}
+
+void DebugReader::runNextCmd()
+{
+    bool doUpdate=false;
+
+    auto action = finally([this,&doUpdate] {
+        if (doUpdate) {
+            emit updateWatch();
+        }
+    });
+    QMutexLocker locker(&mCmdQueueMutex);
+    if (mCmdQueue.isEmpty()) {
+        if ((mCurrentCmd) && (mCurrentCmd->updateWatch)) {
+            doUpdate=true;
+            if (mUpdateCount>0) {
+                mUpdateCount=0;
+            }
+        }
+        return;
+    }
+
+    if (mCurrentCmd) {
+        mCurrentCmd.reset();
+    }
+
+    PDebugCommand pCmd = mCmdQueue.dequeue();
+    mCmdRunning = true;
+    mCurrentCmd = pCmd;
+
+    QByteArray s;
+    s=pCmd->command.toLocal8Bit();
+    if (!pCmd->params.isEmpty()) {
+        s+=' '+pCmd->params.toLocal8Bit();
+    }
+    s+= "\n";
+    if (mProcess.write(s)<0) {
+        emit writeToDebugFailed();
+    }
+
+//  if devDebugger.ShowCommandLog or pCmd^.ShowInConsole then begin
+    if (true || pCmd->showInConsole) {
+        //update debug console
+        // if not devDebugger.ShowAnnotations then begin
+        if (true) {
+//            if MainForm.DebugOutput.Lines.Count>0 then begin
+//              MainForm.DebugOutput.Lines.Delete(MainForm.DebugOutput.Lines.Count-1);
+//            end;
+//            MainForm.DebugOutput.Lines.Add('(gdb)'+pCmd^.Cmd + ' ' + pCmd^.params);
+//            MainForm.DebugOutput.Lines.Add('');
+        } else {
+//            MainForm.DebugOutput.Lines.Add(pCmd^.Cmd + ' ' + pCmd^.params);
+//            MainForm.DebugOutput.Lines.Add('');
+        }
+    }
+}
+
+void DebugReader::skipSpaces()
+{
+    while (mIndex < mOutput.length() &&
+           (mOutput[mIndex]=='\t' || mOutput[mIndex]==' '))
+        mIndex++;
+}
+
+void DebugReader::skipToAnnotation()
+{
+    // Walk up to the next annotation
+    while (mIndex < mOutput.length() &&
+           (mOutput[mIndex]!=26))
+        mIndex++;
+    // Crawl through the remaining ->'s
+    while (mIndex < mOutput.length() &&
+           (mOutput[mIndex]==26))
+        mIndex++;
+}
+
+void DebugReader::run()
+{
+    mStop = false;
+    bool errorOccurred = false;
+    mProcess.setProgram(cmd);
+    mProcess.setArguments(QProcess::splitCommand(arguments));
+    mProcess.setWorkingDirectory(workingDir);
+
+    mProcess.connect(&mProcess, &QProcess::errorOccurred,
+                    [&](){
+                        errorOccurred= true;
+                    });
+//    mProcess.connect(&process, &QProcess::readyReadStandardError,[&process,this](){
+//        this->error(QString::fromLocal8Bit( process.readAllStandardError()));
+//    });
+//    mProcess.connect(&mProcess, &QProcess::readyReadStandardOutput,[&process,this](){
+//        this->log(QString::fromLocal8Bit( process.readAllStandardOutput()));
+//    });
+//    process.connect(&mProcess, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),[&process,this](){
+//        this->error(COMPILE_PROCESS_END);
+//    });
+    mProcess.start();
+    mProcess.waitForStarted(5000);
+    QByteArray buffer;
+    while (true) {
+        mProcess.waitForFinished(1000);
+        if (mProcess.state()!=QProcess::Running) {
+            break;
+        }
+        if (mStop) {
+            mProcess.terminate();
+        }
+        if (errorOccurred)
+            break;
+        buffer += mProcess.readAll();
+        if (getLastAnnotation(buffer) == AnnotationType::TPrompt) {
+            mOutput = buffer;
+            processDebugOutput();
+            mCmdRunning = false;
+            runNextCmd();
+        }
+    }
+    if (errorOccurred) {
+        emit processError(mProcess.error());
+    }
 }
 
 

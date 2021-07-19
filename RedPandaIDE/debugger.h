@@ -7,8 +7,10 @@
 #include <QMap>
 #include <QMutex>
 #include <QObject>
+#include <QProcess>
 #include <QQueue>
 #include <QQueue>
+#include <QThread>
 #include <memory>
 enum class DebugCommandSource {
     Console,
@@ -123,21 +125,26 @@ private:
     QString getBreakpointFile();
 };
 
-class DebugReader : public QObject
+class DebugReader : public QThread
 {
     Q_OBJECT
 public:
     explicit DebugReader(QObject *parent = nullptr);
-
+    void postCommand(const QString &Command, const QString &Params,
+                     bool UpdateWatch, bool ShowInConsole, DebugCommandSource  Source);
 signals:
     void parseStarted();
     void invalidateAllVars();
     void parseFinished();
+    void writeToDebugFailed();
+    void pauseWatchUpdate();
+    void updateWatch();
+    void processError(QProcess::ProcessError error);
 private:
     void clearCmdQueue();
     bool findAnnotation(AnnotationType annotation);
     AnnotationType getAnnotation(const QString& s);
-    AnnotationType getLastAnnotation(const QString& text,int curpos, int len);
+    AnnotationType getLastAnnotation(const QByteArray& text);
     AnnotationType getNextAnnotation();
     QString getNextFilledLine();
     QString getNextLine();
@@ -159,8 +166,11 @@ private:
     void processDebugOutput();
     QString processEvalOutput();
     void processWatchOutput(PWatchVar WatchVar);
+    void runNextCmd();
+    void skipSpaces();
+    void skipToAnnotation();
 private:
-    QMutex mMutex;
+    QMutex mCmdQueueMutex;
     QQueue<PDebugCommand> mCmdQueue;
     int mUpdateCount;
     bool mInvalidateAllVars;
@@ -171,6 +181,8 @@ private:
     QList<PRegister> mRegisters;
     QStringList mDisassembly;
     BacktraceModel mBacktraceModel;
+
+    QProcess mProcess;
 
     QMap<QString,PWatchVar> mWatchVarList; // contains all parents
     //fWatchView: TTreeView;
@@ -193,6 +205,12 @@ private:
     bool doupdateexecution;
     bool doreceivedsignal;
     bool doreceivedsfwarning;
+
+    bool mStop;
+
+    // QThread interface
+protected:
+    void run() override;
 };
 
 #endif // DEBUGGER_H
