@@ -874,3 +874,249 @@ void MainWindow::on_actionStop_Execution_triggered()
 {
     mCompilerManager->stopRun();
 }
+
+void MainWindow::on_actionDebug_triggered()
+{
+    if (mCompilerManager->compiling())
+        return;
+    switch(getCompileTarget()) {
+    case CompileTarget::Project:
+        break;
+//      cttProject: begin
+//          // Check if we enabled proper options
+//          DebugEnabled := fProject.GetCompilerOption('-g3') <> '0';
+//          StripEnabled := fProject.GetCompilerOption('-s') <> '0';
+
+//          // Ask the user if he wants to enable debugging...
+//          if (not DebugEnabled or StripEnabled) then begin
+//            if  (MessageDlg(Lang[ID_MSG_NODEBUGSYMBOLS], mtConfirmation, [mbYes,
+//              mbNo], 0) = mrYes) then begin
+
+//              // Enable debugging, disable stripping
+//              fProject.SetCompilerOption('-g3', '1');
+//              fProject.SetCompilerOption('-s', '0');
+
+//              fCompSuccessAction := csaDebug;
+//              actRebuildExecute(nil);
+//            end;
+//            Exit;
+//          end;
+
+//          // Did we compile?
+//          if not FileExists(fProject.Executable) then begin
+//            if MessageDlg(Lang[ID_ERR_PROJECTNOTCOMPILEDSUGGEST], mtConfirmation, [mbYes, mbNo], 0) = mrYes then begin
+//              fCompSuccessAction := csaDebug;
+//              actCompileExecute(nil);
+//            end;
+//            Exit;
+//          end;
+
+
+//          // Did we choose a host application for our DLL?
+//          if fProject.Options.typ = dptDyn then begin
+//            if fProject.Options.HostApplication = '' then begin
+//              MessageDlg(Lang[ID_ERR_HOSTMISSING], mtWarning, [mbOK], 0);
+//              exit;
+//            end else if not FileExists(fProject.Options.HostApplication) then begin
+//              MessageDlg(Lang[ID_ERR_HOSTNOTEXIST], mtWarning, [mbOK], 0);
+//              exit;
+//            end;
+//          end;
+
+//          // Reset UI, remove invalid breakpoints
+//          PrepareDebugger;
+
+//          filepath := fProject.Executable;
+
+//          fDebugger.Start;
+//          fDebugger.SendCommand('file', '"' + StringReplace(filepath, '\', '/', [rfReplaceAll]) + '"');
+
+//          if fProject.Options.typ = dptDyn then
+//            fDebugger.SendCommand('exec-file', '"' + StringReplace(fProject.Options.HostApplication, '\', '/',
+//              [rfReplaceAll])
+//              + '"');
+
+//          for i:=0 to fProject.Units.Count-1 do begin
+//            fDebugger.SendCommand('dir', '"'+StringReplace(
+//              ExtractFilePath(fProject.Units[i].FileName),'\', '/',[rfReplaceAll])
+//              + '"');
+//          end;
+//          for i:=0 to fProject.Options.Includes.Count-1 do begin
+//            fDebugger.SendCommand('dir', '"'+StringReplace(
+//              fProject.Options.Includes[i],'\', '/',[rfReplaceAll])
+//              + '"');
+//          end;
+//          for i:=0 to fProject.Options.Libs.Count-1 do begin
+//            fDebugger.SendCommand('dir', '"'+StringReplace(
+//              fProject.Options.Includes[i],'\', '/',[rfReplaceAll])
+//              + '"');
+//          end;
+
+//        end;
+    case CompileTarget::File:
+        // Check if we enabled proper options
+        Settings::PCompilerSet compilerSet = pSettings->compilerSets().defaultSet();
+        if (!compilerSet)
+            return;
+        bool debugEnabled = compilerSet->getOptionValue("-g3")!='0';
+        bool stripEnabled = compilerSet->getOptionValue("-s")!=0;
+        // Ask the user if he wants to enable debugging...
+        if (((!debugEnabled) || stripEnabled) &&
+                QMessageBox::information( (MessageDlg(Lang[ID_MSG_NODEBUGSYMBOLS], mtConfirmation, [mbYes,
+            mbNo], 0) = mrYes) then begin
+
+            // Enable debugging, disable stripping
+            with devCompilerSets.CompilationSet do begin
+              SetOption('-g3', '1');
+              SetOption('-s', '0');
+            end;
+
+            // Save changes to compiler set
+            devCompilerSets.SaveSet(devCompilerSets.CompilationSetIndex);
+
+            fCompSuccessAction := csaDebug;
+            actRebuildExecute(nil);
+            Exit;
+          end;
+
+          e := fEditorList.GetEditor;
+          if Assigned(e) then begin
+            // Did we save?
+            if e.Text.Modified then begin // if file is modified
+              if not e.Save(false,false) then // save it first
+                Exit;
+            end;
+
+            // Did we compile?
+            if not FileExists(ChangeFileExt(e.FileName, EXE_EXT)) then begin
+              if MessageDlg(Lang[ID_ERR_SRCNOTCOMPILEDSUGGEST], mtConfirmation, [mbYes, mbNo], 0) = mrYes then begin
+                fCompSuccessAction := csaDebug;
+                actCompileExecute(nil);
+              end;
+              Exit;
+            end else begin
+              if CompareFileModifyTime(e.FileName,ChangeFileExt(e.FileName, EXE_EXT))>=0 then
+                if MessageDlg(Lang[ID_MSG_SOURCEMORERECENT], mtConfirmation, [mbYes, mbNo], 0) = mrYes then begin
+                  fCompSuccessAction := csaDebug;
+                  MainForm.actCompileExecute(nil);
+                  Exit;
+                end;
+            end;
+
+            PrepareDebugger;
+
+            fDebugger.UseUTF8 := (e.FileEncoding in [etUTF8,etUTF8Bom]);
+
+            filepath := ChangeFileExt(e.FileName, EXE_EXT);
+
+            fDebugger.Start;
+            fDebugger.SendCommand('file', '"' + StringReplace(filepath, '\', '/', [rfReplaceAll]) + '"');
+          end;
+        end;
+      cttNone: Exit;
+    end;
+
+
+    // Add library folders
+    with devCompilerSets.CompilationSet do begin
+      for I := 0 to LibDir.Count - 1 do
+        fDebugger.SendCommand('dir', '"' + StringReplace(LibDir[i], '\', '/', [rfReplaceAll]) + '"');
+
+      // Add include folders
+      for I := 0 to CDir.Count - 1 do
+        fDebugger.SendCommand('dir', '"' + StringReplace(CDir[i], '\', '/', [rfReplaceAll]) + '"');
+
+      // Add more include folders, duplicates will be added/moved to front of list
+      for I := 0 to CppDir.Count - 1 do
+        fDebugger.SendCommand('dir', '"' + StringReplace(CppDir[i], '\', '/', [rfReplaceAll]) + '"');
+    end;
+
+    // Add breakpoints and watch vars
+    for i := 0 to fDebugger.WatchVarList.Count - 1 do
+      fDebugger.AddWatchVar(i);
+
+    for i := 0 to fDebugger.BreakPointList.Count - 1 do
+      fDebugger.AddBreakpoint(i);
+
+    // Run the debugger
+    fDebugger.SendCommand('set', 'width 0'); // don't wrap output, very annoying
+    fDebugger.SendCommand('set', 'new-console on');
+    fDebugger.SendCommand('set', 'confirm off');
+    fDebugger.SendCommand('cd', ExcludeTrailingPathDelimiter(ExtractFileDir(filepath))); // restore working directory
+    if not hasBreakPoint then begin
+      case GetCompileTarget of
+        cttNone:
+          Exit;
+        cttFile:
+        begin
+          params := '';
+          if fCompiler.UseRunParams then
+            params := params + ' ' + fCompiler.RunParams;
+          if fCompiler.UseInputFile then
+            params := params + ' < "' + fCompiler.InputFile + '"';
+          fDebugger.SendCommand('start', params);
+          UpdateDebugInfo;
+        end;
+        cttProject:  begin
+          params := '';
+          if fCompiler.UseRunParams then
+            params := params + ' ' + fProject.Options.CmdLineArgs;
+          if fCompiler.UseInputFile then
+            params := params + ' < "' + fCompiler.InputFile + '"';
+
+          fDebugger.SendCommand('start', params);
+          UpdateDebugInfo;
+        end;
+      end;
+    end else begin
+      case GetCompileTarget of
+        cttNone:
+          Exit;
+        cttFile: begin
+          params := '';
+          if fCompiler.UseRunParams then
+            params := params + ' ' + fCompiler.RunParams;
+          if fCompiler.UseInputFile then
+            params := params + ' < "' + fCompiler.InputFile + '"';
+          fDebugger.SendCommand('run', params);
+          UpdateDebugInfo;
+        end;
+        cttProject: begin
+          params := '';
+          if fCompiler.UseRunParams then
+            params := params + ' ' + fProject.Options.CmdLineArgs;
+          if fCompiler.UseInputFile then
+            params := params + ' < "' + fCompiler.InputFile + '"';
+
+          fDebugger.SendCommand('run', params);
+          UpdateDebugInfo;
+        end;
+      end;
+    end;
+
+}
+
+CompileTarget MainWindow::getCompileTarget()
+{
+    // Check if the current file belongs to a project
+    CompileTarget target = CompileTarget::None;
+    Editor* e = mEditorList->getEditor();
+    if (e!=nullptr) {
+        // Treat makefiles as InProject files too
+//        if ((mProject) and (e.InProject or (fProject.MakeFileName = e.FileName)) then begin
+//            Result := cttProject;
+//        end else begin
+//          Result := cttFile;
+//        end;
+        target = CompileTarget::File;
+    }
+//      // No editors have been opened. Check if a project is open
+//    end else if Assigned(fProject) then begin
+//      Result := cttProject;
+
+//      // No project, no editor...
+//    end else begin
+//      Result := cttNone;
+//    end;
+    return target;
+}

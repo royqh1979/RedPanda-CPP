@@ -614,6 +614,7 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
+   <addaction name="actionDebug"/>
    <addaction name="actionStop_Execution"/>
   </widget>
   <action name="actionNew">
@@ -899,6 +900,21 @@
     <string>Stop Execution</string>
    </property>
   </action>
+  <action name="actionDebug">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/images/newlook24/022-debug-new-tm.png</normaloff>:/icons/images/newlook24/022-debug-new-tm.png</iconset>
+   </property>
+   <property name="text">
+    <string>Debug</string>
+   </property>
+   <property name="toolTip">
+    <string>Debug</string>
+   </property>
+   <property name="shortcut">
+    <string>F5</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>
@@ -913,6 +929,8 @@
    <container>1</container>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="icons.qrc"/>
+ </resources>
  <connections/>
 </ui>

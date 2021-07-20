@@ -10,7 +10,6 @@ namespace Ui {
 class SettingsDialog;
 }
 
-class PCompilerSet;
 class CompilerSetOptionWidget;
 class EditorGeneralWidget;
 class EditorFontWidget;

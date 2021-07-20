@@ -8,6 +8,11 @@ QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
+
+enum class CompileTarget {
+    Invalid, None, File, Project, SyntaxCheck
+};
+
 class EditorList;
 class QLabel;
 class QComboBox;
@@ -119,6 +124,10 @@ private slots:
     void on_actionRebuild_triggered();
 
     void on_actionStop_Execution_triggered();
+
+    void on_actionDebug_triggered();
+
+    CompileTarget getCompileTarget();
 
 public slots:
     void onCompileLog(const QString& msg);
