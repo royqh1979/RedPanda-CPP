@@ -525,6 +525,7 @@ public:
         void loadSets();
         void saveDefaultIndex();
         void deleteSet(int index);
+        void saveSet(int index);
         //properties
         CompilerSetList& list();
         int size() const;
@@ -534,7 +535,7 @@ public:
     private:
         void savePath(const QString& name, const QString& path);
         void savePathList(const QString& name, const QStringList& pathList);
-        void saveSet(int index);
+
         QString loadPath(const QString& name);
         void loadPathList(const QString& name, QStringList& list);
         PCompilerSet loadSet(int index);

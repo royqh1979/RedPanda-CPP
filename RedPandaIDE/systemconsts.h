@@ -21,7 +21,7 @@
 #ifdef Q_OS_WIN
 #   define PATH_SENSITIVITY Qt::CaseInsensitive
 #   define NULL_FILE       "NUL"
-#   define EXECUTABE_EXT   ".exe"
+#   define EXECUTABE_EXT   "exe"
 #elif Q_OS_LINUX
 #   define PATH_SENSITIVITY Qt::CaseSensitive
 #   define NULL_FILE       "/dev/null"

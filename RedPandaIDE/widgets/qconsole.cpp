@@ -162,6 +162,17 @@ QString QConsole::getLastLine()
     return mContents.getLastLine();
 }
 
+void QConsole::clear()
+{
+    mContents.clear();
+    mCommand = "";
+    mCurrentEditableLine = "";
+    mTopRow = 1;
+    mSelectionBegin = {0,0};
+    mSelectionEnd = {0,0};
+    mCaretChar = 0;
+}
+
 void QConsole::recalcCharExtent() {
     mRowHeight = fontMetrics().lineSpacing();
     mColumnWidth = fontMetrics().horizontalAdvance("M");
@@ -1170,4 +1181,10 @@ void ConsoleLines::setMaxLines(int maxLines)
             mLines.pop_front();
         }
     }
+}
+
+void ConsoleLines::clear()
+{
+    mLines.clear();
+    mRows = 0;
 }

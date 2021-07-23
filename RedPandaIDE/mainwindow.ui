@@ -84,14 +84,30 @@
            <property name="tabPosition">
             <enum>QTabWidget::West</enum>
            </property>
-           <widget class="QWidget" name="tab_3">
+           <property name="currentIndex">
+            <number>3</number>
+           </property>
+           <property name="usesScrollButtons">
+            <bool>true</bool>
+           </property>
+           <widget class="QWidget" name="tabProject">
             <attribute name="title">
-             <string>Tab 1</string>
+             <string>Project</string>
             </attribute>
            </widget>
-           <widget class="QWidget" name="tab_4">
+           <widget class="QWidget" name="tabWatch">
             <attribute name="title">
-             <string>Tab 2</string>
+             <string>Watch</string>
+            </attribute>
+           </widget>
+           <widget class="QWidget" name="tabStructure">
+            <attribute name="title">
+             <string>Structure</string>
+            </attribute>
+           </widget>
+           <widget class="QWidget" name="tabFiles">
+            <attribute name="title">
+             <string>Files</string>
             </attribute>
            </widget>
           </widget>
@@ -393,7 +409,7 @@
                <number>2</number>
               </property>
               <item>
-               <widget class="QConsole" name="frame">
+               <widget class="QConsole" name="debugConsole">
                 <property name="frameShape">
                  <enum>QFrame::StyledPanel</enum>
                 </property>
@@ -506,7 +522,7 @@
      <x>0</x>
      <y>0</y>
      <width>946</width>
-     <height>26</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

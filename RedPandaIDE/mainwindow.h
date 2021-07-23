@@ -18,6 +18,7 @@ class QLabel;
 class QComboBox;
 class CompilerManager;
 class Editor;
+class Debugger;
 
 class MainWindow : public QMainWindow
 {
@@ -53,6 +54,7 @@ public:
     bool compile(bool rebuild=false);
     void runExecutable(const QString& exeName, const QString& filename=QString());
     void runExecutable();
+    void debug();
 
     void applySettings();
 
@@ -140,6 +142,7 @@ public slots:
 private:
     void setupActions();
     void openCloseMessageSheet(bool open);
+    void prepareDebugger();
 
 private:
     Ui::MainWindow *ui;
@@ -151,6 +154,8 @@ private:
     QMenu * mMenuEncodingList;
     QComboBox* mCompilerSet;
     CompilerManager* mCompilerManager;
+    Debugger* mDebugger;
+
     bool mMessageControlChanged;
     bool mTabMessagesTogglingState;
     bool mCheckSyntaxInBack;

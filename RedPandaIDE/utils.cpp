@@ -191,11 +191,9 @@ FileType getFileType(const QString &filename)
 }
 
 
-QString getCompiledExecutableName(const QString filename)
+QString getCompiledExecutableName(const QString& filename)
 {
-    QFileInfo info(filename);
-    QString baseName = includeTrailingPathDelimiter(info.absolutePath())+info.baseName();
-    return baseName + EXECUTABE_EXT;
+    return changeFileExt(filename,EXECUTABE_EXT);
 }
 
 void splitStringArguments(const QString &arguments, QStringList &argumentList)
@@ -441,4 +439,16 @@ int compareFileModifiedTime(const QString &filename1, const QString &filename2)
     if (time1 < time2)
         return -1;
     return 0;
+}
+
+QString changeFileExt(const QString& filename, const QString& ext)
+{
+    QFileInfo fileInfo(filename);
+    QString suffix = fileInfo.suffix();
+    QString name  = fileInfo.fileName();
+    if (suffix.isEmpty()) {
+        return filename+"."+ext;
+    } else {
+        return filename.mid(0,filename.length()-suffix.length()-1)+"."+ext;
+    }
 }

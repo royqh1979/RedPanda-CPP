@@ -65,6 +65,7 @@ public:
     bool layouting() const;
     int maxLines() const;
     void setMaxLines(int maxLines);
+    void clear();
 
     int getMaxLines() const;
 public slots:
@@ -112,6 +113,7 @@ public:
     void removeLastLine();
     void changeLastLine(const QString& line);
     QString getLastLine();
+    void clear();
 
 signals:
     void commandInput(const QString& command);
