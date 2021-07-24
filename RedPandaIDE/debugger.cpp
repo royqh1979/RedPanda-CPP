@@ -1,10 +1,81 @@
 #include "debugger.h"
 #include "utils.h"
 #include "mainwindow.h"
+#include "editor.h"
 
 Debugger::Debugger(QObject *parent) : QObject(parent)
 {
+    mBreakpointModel=new BreakpointModel(this);
+    mBacktraceModel=new BacktraceModel(this);
+}
 
+void Debugger::sendCommand(const QString &command, const QString &params, bool updateWatch, bool showInConsole, DebugCommandSource source)
+{
+    if (mExecuting && mReader) {
+        mReader->postCommand(command,params,updateWatch,showInConsole,source);
+    }
+}
+
+void Debugger::addBreakpoint(int line, const Editor* editor)
+{
+    addBreakpoint(line,editor->filename());
+}
+
+void Debugger::addBreakpoint(int line, const QString &filename)
+{
+    PBreakpoint bp=std::make_shared<Breakpoint>();
+    bp->line = line;
+    bp->filename = filename;
+    bp->condition = "";
+    mBreakpointModel->addBreakpoint(bp);
+}
+
+void Debugger::deleteBreakpoints(const QString &filename)
+{
+    for (int i=mBreakpointModel->breakpoints().size()-1;i>=0;i--) {
+        PBreakpoint bp = mBreakpointModel->breakpoints()[i];
+        if (bp->filename == filename) {
+            mBreakpointModel->removeBreakpoint(i);
+        }
+    }
+}
+
+void Debugger::deleteBreakpoints(const Editor *editor)
+{
+    deleteBreakpoints(editor->filename());
+}
+
+void Debugger::removeBreakpoint(int line, const Editor *editor)
+{
+    removeBreakpoint(line,editor->filename());
+}
+
+void Debugger::removeBreakpoint(int line, const QString &filename)
+{
+    for (int i=mBreakpointModel->breakpoints().size()-1;i>=0;i--) {
+        PBreakpoint bp = mBreakpointModel->breakpoints()[i];
+        if (bp->filename == filename && bp->line == line) {
+            removeBreakpoint(i);
+        }
+    }
+}
+
+void Debugger::removeBreakpoint(int index)
+{
+    sendClearBreakpointCommand(index);
+    mBreakpointModel->removeBreakpoint(index);
+}
+
+void Debugger::setBreakPointCondition(int index, const QString &condition)
+{
+    PBreakpoint breakpoint=mBreakpointModel->setBreakPointCondition(index,condition);
+    if (condition.isEmpty()) {
+        sendCommand("cond",
+                    QString("%1").arg(breakpoint->line));
+    } else {
+        sendCommand("cond",
+                    QString("%1 %2").arg(breakpoint->line).arg(condition));
+    }
 }
 
 bool Debugger::useUTF8() const
@@ -22,7 +93,41 @@ const BacktraceModel* Debugger::getBacktraceModel() const
     return mBacktraceModel;
 }
 
-DebugReader::DebugReader(QObject *parent) : QObject(parent)
+const BreakpointModel *Debugger::getBreakpointModel() const
+{
+    return mBreakpointModel;
+}
+
+void Debugger::sendBreakpointCommand(int index)
+{
+    // break "filename":linenum
+    PBreakpoint breakpoint = mBreakpointModel->breakpoints()[index];
+    QString condition;
+    if (!breakpoint->condition.isEmpty()) {
+        condition = " if " + breakpoint->condition;
+    }
+    QString filename = breakpoint->filename;
+    filename.replace('\\','/');
+    sendCommand("break",
+                QString("\"%1\":%2").arg(filename)
+                .arg(breakpoint->line)+condition);
+}
+
+void Debugger::sendClearBreakpointCommand(int index)
+{
+    // Debugger already running? Remove it from GDB
+    if (mExecuting) {
+        //clear "filename":linenum
+        PBreakpoint breakpoint = mBreakpointModel->breakpoints()[index];
+        QString filename = breakpoint->filename;
+        filename.replace('\\','/');
+        sendCommand("clear",
+                    QString("\"%1\":%2").arg(filename)
+                    .arg(breakpoint->line));
+    }
+}
+
+DebugReader::DebugReader(QObject *parent) : QThread(parent)
 {
 
 }
@@ -802,6 +907,11 @@ void DebugReader::run()
 
 
 
+BreakpointModel::BreakpointModel(QObject *parent):QAbstractTableModel(parent)
+{
+
+}
+
 int BreakpointModel::rowCount(const QModelIndex &) const
 {
     return mList.size();
@@ -877,6 +987,25 @@ void BreakpointModel::removeBreakpoint(int row)
     endRemoveRows();
 }
 
+PBreakpoint BreakpointModel::setBreakPointCondition(int index, const QString &condition)
+{
+    beginResetModel();
+    PBreakpoint breakpoint = mList[index];
+    breakpoint->condition = condition;
+    endResetModel();
+    return breakpoint;
+}
+
+const QList<PBreakpoint> &BreakpointModel::breakpoints() const
+{
+    return mList;
+}
+
+
+BacktraceModel::BacktraceModel(QObject *parent):QAbstractTableModel(parent)
+{
+
+}
 
 int BacktraceModel::rowCount(const QModelIndex &) const
 {
@@ -951,4 +1080,9 @@ void BacktraceModel::removeTrace(int row)
     beginRemoveRows(QModelIndex(),row,row);
     mList.removeAt(row);
     endRemoveRows();
+}
+
+const QList<PTrace> &BacktraceModel::backtraces() const
+{
+    return mList;
 }

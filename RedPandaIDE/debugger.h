@@ -55,10 +55,9 @@ struct WatchVar {
 
 using PWatchVar = std::shared_ptr<WatchVar>;
 
-class Editor;
 struct Breakpoint {
     int line;
-    Editor * editor;
+    QString filename;
     QString condition;
 };
 
@@ -81,15 +80,19 @@ struct Register {
 using PRegister = std::shared_ptr<Register>;
 
 class BreakpointModel: public QAbstractTableModel {
+    Q_OBJECT
     // QAbstractItemModel interface
 public:
+    explicit BreakpointModel(QObject *parent = nullptr);
     int rowCount(const QModelIndex &parent) const override;
     int columnCount(const QModelIndex &parent) const override;
     QVariant data(const QModelIndex &index, int role) const override;
     QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
     void addBreakpoint(PBreakpoint p);
     void clear();
-    void removeBreakpoint(int row);
+    void removeBreakpoint(int index);
+    PBreakpoint setBreakPointCondition(int index, const QString& condition);
+    const QList<PBreakpoint>& breakpoints() const;
 private:
     QList<PBreakpoint> mList;
 };
@@ -97,44 +100,69 @@ private:
 class BacktraceModel : public QAbstractTableModel {
     // QAbstractItemModel interface
 public:
+    explicit BacktraceModel(QObject *parent = nullptr);
     int rowCount(const QModelIndex &parent) const override;
     int columnCount(const QModelIndex &parent) const override;
     QVariant data(const QModelIndex &index, int role) const override;
     QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
     void addTrace(PTrace p);
     void clear();
-    void removeTrace(int row);
+    void removeTrace(int index);
+    const QList<PTrace>& backtraces() const;
 private:
     QList<PTrace> mList;
 };
 
 
 class DebugReader;
+class Editor;
+
+using PDebugReader = std::shared_ptr<DebugReader>;
 
 class Debugger : public QObject
 {
     Q_OBJECT
 public:
     explicit Debugger(QObject *parent = nullptr);
-    void addBreakpoint(int line);
-    void sendBreakpointToDebugger(int index);
+    // Play/pause
+    void start();
+    void stop();
+    void sendCommand(const QString& command, const QString& params,
+                     bool updateWatch = true,
+                     bool showInConsole = false,
+                     DebugCommandSource source = DebugCommandSource::Other);
+
+    void addBreakpoint(int line, const Editor* editor);
+    void addBreakpoint(int line, const QString& filename);
+    void deleteBreakpoints(const QString& filename);
+    void deleteBreakpoints(const Editor* editor);
+    void removeBreakpoint(int line, const Editor* editor);
+    void removeBreakpoint(int line, const QString& filename);
+    void removeBreakpoint(int index);
+    void setBreakPointCondition(int index, const QString& condition);
 
     bool useUTF8() const;
     void setUseUTF8(bool useUTF8);
 
-    const BacktraceModel* getBacktraceModel() const;
+    const BacktraceModel *getBacktraceModel() const;
+    const BreakpointModel* getBreakpointModel() const;
 
 
 signals:
+
+private:
+    void sendBreakpointCommand(int index);
+    void sendClearBreakpointCommand(int index);
+
 private:
     bool mExecuting;
     bool mCommandChanged;
-    QList<PBreakpoint> mBreakpointList;
+    BreakpointModel* mBreakpointModel;
     bool mUseUTF8;
-    QString getBreakpointFile();
-    BacktraceModel mBacktraceModel;
+    BacktraceModel* mBacktraceModel;
+    PDebugReader mReader;
 
-    friend class DebugReader;
+    friend class DebugReader;    
 };
 
 class DebugReader : public QThread
