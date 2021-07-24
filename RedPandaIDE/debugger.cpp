@@ -2,11 +2,59 @@
 #include "utils.h"
 #include "mainwindow.h"
 #include "editor.h"
+#include "settings.h"
+
+#include <QFile>
+#include <QFileInfo>
+#include <QMessageBox>
 
 Debugger::Debugger(QObject *parent) : QObject(parent)
 {
     mBreakpointModel=new BreakpointModel(this);
     mBacktraceModel=new BacktraceModel(this);
+}
+
+void Debugger::start()
+{
+    mExecuting = true;
+
+    Settings::PCompilerSet compilerSet = pSettings->compilerSets().defaultSet();
+    if (!compilerSet) {
+        QMessageBox::critical(pMainWindow,
+                              tr("No compiler set"),
+                              tr("No compiler set is configured.")+tr("Can't start debugging."));
+        return;
+    }
+    QString debuggerPath = compilerSet->debugger();
+    QFile debuggerProgram(debuggerPath);
+    if (!debuggerProgram.exists()) {
+        QMessageBox::critical(pMainWindow,
+                              tr("Debugger not exists"),
+                              tr("Can''t find debugger in : \"%1\"").arg(debuggerPath));
+        return;
+    }
+    mReader = std::make_shared<DebugReader>();
+    mReader->setDebuggerPath(debuggerPath);
+    mReader->start();
+
+
+//fProcessID := pi.hProcess;
+
+//// Create a thread that will read GDB output.
+//Reader := TDebugReader.Create(true);
+//Reader.PipeRead := fOutputRead;
+//Reader.PipeWrite := fInputWrite;
+//Reader.FreeOnTerminate := true;
+//Reader.BreakpointList := BreakPointList;
+//Reader.WatchVarList := WatchVarList;
+//Reader.WatchView := WatchView;
+//Reader.UseUTF8 := UseUTF8;
+//Reader.Resume;
+//Reader.OnInvalidateAllVars := OnInvalidateAllVars;
+
+//MainForm.UpdateAppTitle;
+
+//Application.HintHidePause := 5000;
 }
 
 void Debugger::sendCommand(const QString &command, const QString &params, bool updateWatch, bool showInConsole, DebugCommandSource source)
@@ -88,12 +136,12 @@ void Debugger::setUseUTF8(bool useUTF8)
     mUseUTF8 = useUTF8;
 }
 
-const BacktraceModel* Debugger::getBacktraceModel() const
+BacktraceModel* Debugger::backtraceModel()
 {
     return mBacktraceModel;
 }
 
-const BreakpointModel *Debugger::getBreakpointModel() const
+BreakpointModel *Debugger::breakpointModel()
 {
     return mBreakpointModel;
 }
@@ -127,9 +175,9 @@ void Debugger::sendClearBreakpointCommand(int index)
     }
 }
 
-DebugReader::DebugReader(QObject *parent) : QThread(parent)
+DebugReader::DebugReader(Debugger* debugger, QObject *parent) : QThread(parent)
 {
-
+    mDebugger = debugger;
 }
 
 void DebugReader::postCommand(const QString &Command, const QString &Params, bool UpdateWatch, bool ShowInConsole, DebugCommandSource Source)
@@ -180,27 +228,26 @@ AnnotationType DebugReader::getAnnotation(const QString &s)
     } else if (s == "prompt") {
         return AnnotationType::TPrompt;
     } else if (s == "post-prompt") {
-      AnnotationType result = AnnotationType::TPostPrompt;
+        AnnotationType result = AnnotationType::TPostPrompt;
 
-      int IndexBackup = mIndex;
-      QString t = getNextFilledLine();
-      int mIndex = IndexBackup;
-
-      //hack to catch local
-      if ((mCurrentCmd) && (mCurrentCmd->command == "info locals")) {
-          result = AnnotationType::TLocal;
-      } else if ((mCurrentCmd) && (mCurrentCmd->command == "info args")) {
-          //hack to catch params
-          result = AnnotationType::TParam;
-      } else if (t.startsWith("rax ") || t.startsWith("eax ")) {
-          // Hack fix to catch register dump
-          result = AnnotationType::TInfoReg;
-      } else {
-          // Another hack to catch assembler
-          if (t.startsWith("Dump of assembler code for function "))
-          result = AnnotationType::TInfoAsm;
-      }
-      return result;
+        int IndexBackup = mIndex;
+        QString t = getNextFilledLine();
+        mIndex = IndexBackup;
+        //hack to catch local
+        if ((mCurrentCmd) && (mCurrentCmd->command == "info locals")) {
+            result = AnnotationType::TLocal;
+        } else if ((mCurrentCmd) && (mCurrentCmd->command == "info args")) {
+            //hack to catch params
+            result = AnnotationType::TParam;
+        } else if (t.startsWith("rax ") || t.startsWith("eax ")) {
+            // Hack fix to catch register dump
+            result = AnnotationType::TInfoReg;
+        } else {
+            // Another hack to catch assembler
+            if (t.startsWith("Dump of assembler code for function "))
+            result = AnnotationType::TInfoAsm;
+        }
+        return result;
     } else if (s == "error-begin") {
         return AnnotationType::TErrorBegin;
     } else if (s == "error-end") {
@@ -500,7 +547,7 @@ void DebugReader::handleFrames()
             trace->filename = "";
             trace->line = 0;
         }
-        mBacktraceModel.addTrace(trace);
+        mDebugger->backtraceModel()->addTrace(trace);
 
         // Skip over the remaining frame part...
         if (!findAnnotation(AnnotationType::TFrameEnd))
@@ -858,10 +905,29 @@ void DebugReader::skipToAnnotation()
         mIndex++;
 }
 
+QString DebugReader::debuggerPath() const
+{
+    return mDebuggerPath;
+}
+
+void DebugReader::setDebuggerPath(const QString &debuggerPath)
+{
+    mDebuggerPath = debuggerPath;
+}
+
+void DebugReader::stopDebug()
+{
+    mStop = true;
+}
+
 void DebugReader::run()
 {
     mStop = false;
     bool errorOccurred = false;
+    QString cmd = mDebuggerPath;
+    QString arguments = "--annotate=2 --silent";
+    QString workingDir = QFileInfo(mDebuggerPath).path();
+
     mProcess.setProgram(cmd);
     mProcess.setArguments(QProcess::splitCommand(arguments));
     mProcess.setWorkingDirectory(workingDir);
@@ -883,7 +949,7 @@ void DebugReader::run()
     mProcess.waitForStarted(5000);
     QByteArray buffer;
     while (true) {
-        mProcess.waitForFinished(1000);
+        mProcess.waitForFinished(100);
         if (mProcess.state()!=QProcess::Running) {
             break;
         }

@@ -144,9 +144,8 @@ public:
     bool useUTF8() const;
     void setUseUTF8(bool useUTF8);
 
-    const BacktraceModel *getBacktraceModel() const;
-    const BreakpointModel* getBreakpointModel() const;
-
+    BacktraceModel* backtraceModel();
+    BreakpointModel* breakpointModel();
 
 signals:
 
@@ -161,17 +160,19 @@ private:
     bool mUseUTF8;
     BacktraceModel* mBacktraceModel;
     PDebugReader mReader;
-
-    friend class DebugReader;    
 };
 
 class DebugReader : public QThread
 {
     Q_OBJECT
 public:
-    explicit DebugReader(QObject *parent = nullptr);
+    explicit DebugReader(Debugger* debugger, QObject *parent = nullptr);
     void postCommand(const QString &Command, const QString &Params,
                      bool UpdateWatch, bool ShowInConsole, DebugCommandSource  Source);
+    QString debuggerPath() const;
+    void setDebuggerPath(const QString &debuggerPath);
+    void stopDebug();
+
 signals:
     void parseStarted();
     void invalidateAllVars();
@@ -210,6 +211,8 @@ private:
     void skipSpaces();
     void skipToAnnotation();
 private:
+    Debugger* mDebugger;
+    QString mDebuggerPath;
     QMutex mCmdQueueMutex;
     QQueue<PDebugCommand> mCmdQueue;
     int mUpdateCount;

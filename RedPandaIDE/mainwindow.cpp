@@ -59,6 +59,9 @@ MainWindow::MainWindow(QWidget *parent)
     mCompilerManager = new CompilerManager(this);
     mDebugger = new Debugger(this);
 
+    ui->tblBreakpoints->setModel(mDebugger->breakpointModel());
+    ui->tblStackTrace->setModel(mDebugger->backtraceModel());
+
     ui->actionIndent->setShortcut(Qt::Key_Tab);
     ui->actionUnIndent->setShortcut(Qt::Key_Tab | Qt::ShiftModifier);
 
