@@ -55,9 +55,10 @@ struct WatchVar {
 
 using PWatchVar = std::shared_ptr<WatchVar>;
 
+class Editor;
 struct Breakpoint {
     int line;
-    QString filename;
+    Editor * editor;
     QString condition;
 };
 
@@ -115,6 +116,14 @@ class Debugger : public QObject
     Q_OBJECT
 public:
     explicit Debugger(QObject *parent = nullptr);
+    void addBreakpoint(int line);
+    void sendBreakpointToDebugger(int index);
+
+    bool useUTF8() const;
+    void setUseUTF8(bool useUTF8);
+
+    const BacktraceModel* getBacktraceModel() const;
+
 
 signals:
 private:
@@ -123,6 +132,9 @@ private:
     QList<PBreakpoint> mBreakpointList;
     bool mUseUTF8;
     QString getBreakpointFile();
+    BacktraceModel mBacktraceModel;
+
+    friend class DebugReader;
 };
 
 class DebugReader : public QThread
@@ -180,7 +192,7 @@ private:
     PDebugCommand mCurrentCmd;
     QList<PRegister> mRegisters;
     QStringList mDisassembly;
-    BacktraceModel mBacktraceModel;
+
 
     QProcess mProcess;
 

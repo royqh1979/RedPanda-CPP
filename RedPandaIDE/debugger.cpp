@@ -7,6 +7,21 @@ Debugger::Debugger(QObject *parent) : QObject(parent)
 
 }
 
+bool Debugger::useUTF8() const
+{
+    return mUseUTF8;
+}
+
+void Debugger::setUseUTF8(bool useUTF8)
+{
+    mUseUTF8 = useUTF8;
+}
+
+const BacktraceModel* Debugger::getBacktraceModel() const
+{
+    return mBacktraceModel;
+}
+
 DebugReader::DebugReader(QObject *parent) : QObject(parent)
 {
 
