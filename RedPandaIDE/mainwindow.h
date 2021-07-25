@@ -130,6 +130,7 @@ private slots:
     void on_actionDebug_triggered();
 
     CompileTarget getCompileTarget();
+    bool debugInferiorhasBreakpoint();
 
 public slots:
     void onCompileLog(const QString& msg);

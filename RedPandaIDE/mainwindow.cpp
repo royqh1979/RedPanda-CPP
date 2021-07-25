@@ -425,6 +425,8 @@ void MainWindow::debug()
         return;
     bool debugEnabled;
     bool stripEnabled;
+    QString filePath;
+    QFileInfo debugFile;
     switch(getCompileTarget()) {
     case CompileTarget::Project:
         break;
@@ -534,8 +536,9 @@ void MainWindow::debug()
 
 
             // Did we compiled?
-            QFile exeFile(getCompiledExecutableName(e->filename()));
-            if (!exeFile.exists()) {
+            filePath = getCompiledExecutableName(e->filename());
+            debugFile.setFile(filePath);
+            if (!debugFile.exists()) {
                 if (QMessageBox::question(this,tr("Compile"),
                                           tr("Source file is not compiled.")+"<BR /><BR />" + tr("Compile now?"),
                                           QMessageBox::Yes|QMessageBox::No,
@@ -546,7 +549,7 @@ void MainWindow::debug()
                     return;
                 }
             } else {
-                if (compareFileModifiedTime(e->filename(),exeFile.fileName())>=0) {
+                if (compareFileModifiedTime(e->filename(),filePath)>=0) {
                     if (QMessageBox::question(this,tr("Compile"),
                                               tr("Source file is more recent than executable.")+"<BR /><BR />" + tr("Recompile?"),
                                               QMessageBox::Yes|QMessageBox::No,
@@ -562,10 +565,9 @@ void MainWindow::debug()
 
             prepareDebugger();
 
-            mDebugger->UseUTF8 = (e->fileEncoding() == ENCODING_UTF8 || e->fileEncoding() == ENCODING_UTF8_BOM);
-
+            mDebugger->setUseUTF8(e->fileEncoding() == ENCODING_UTF8 || e->fileEncoding() == ENCODING_UTF8_BOM);
             mDebugger->start();
-            mDebugger->sendCommand("file", QString("\"%1\"").arg(exeFile.fileName().replace('\\','/')));
+            mDebugger->sendCommand("file", QString("\"%1\"").arg(debugFile.filePath().replace('\\','/')));
         }
         break;
     }
@@ -576,79 +578,76 @@ void MainWindow::debug()
         mDebugger->sendCommand("dir",
                                QString("\"%1\"").arg(dir.replace('\\','/')));
     }
-
-      // Add include folders
-      for I := 0 to CDir.Count - 1 do
-        fDebugger.SendCommand('dir', '"' + StringReplace(CDir[i], '\', '/', [rfReplaceAll]) + '"');
-
-      // Add more include folders, duplicates will be added/moved to front of list
-      for I := 0 to CppDir.Count - 1 do
-        fDebugger.SendCommand('dir', '"' + StringReplace(CppDir[i], '\', '/', [rfReplaceAll]) + '"');
-    end;
+    // Add include folders
+    for (QString dir:compilerSet->CIncludeDirs()) {
+        mDebugger->sendCommand("dir",
+                               QString("\"%1\"").arg(dir.replace('\\','/')));
+    }
+    for (QString dir:compilerSet->CppIncludeDirs()) {
+        mDebugger->sendCommand("dir",
+                               QString("\"%1\"").arg(dir.replace('\\','/')));
+    }
 
     // Add breakpoints and watch vars
     for i := 0 to fDebugger.WatchVarList.Count - 1 do
       fDebugger.AddWatchVar(i);
 
+    mDebugger->sendAllBreakpointsToDebugger();
     for i := 0 to fDebugger.BreakPointList.Count - 1 do
       fDebugger.AddBreakpoint(i);
 
     // Run the debugger
-    fDebugger.SendCommand('set', 'width 0'); // don't wrap output, very annoying
-    fDebugger.SendCommand('set', 'new-console on');
-    fDebugger.SendCommand('set', 'confirm off');
-    fDebugger.SendCommand('cd', ExcludeTrailingPathDelimiter(ExtractFileDir(filepath))); // restore working directory
-    if not hasBreakPoint then begin
-      case GetCompileTarget of
-        cttNone:
-          Exit;
-        cttFile:
-        begin
-          params := '';
-          if fCompiler.UseRunParams then
-            params := params + ' ' + fCompiler.RunParams;
-          if fCompiler.UseInputFile then
-            params := params + ' < "' + fCompiler.InputFile + '"';
-          fDebugger.SendCommand('start', params);
-          UpdateDebugInfo;
-        end;
-        cttProject:  begin
-          params := '';
-          if fCompiler.UseRunParams then
-            params := params + ' ' + fProject.Options.CmdLineArgs;
-          if fCompiler.UseInputFile then
-            params := params + ' < "' + fCompiler.InputFile + '"';
+    mDebugger->sendCommand("set", "width 0"); // don't wrap output, very annoying
+    mDebugger->sendCommand("set", "new-console on");
+    mDebugger->sendCommand("set", "confirm off");
+    mDebugger->sendCommand("cd", excludeTrailingPathDelimiter(debugFile.path())); // restore working directory
+    if (!debugInferiorhasBreakpoint()) {
+        QString params;
+        switch(getCompileTarget()) {
+        case CompileTarget::None:
+            return;
+        case CompileTarget::File:
+//            if (mCompiler->useRunParams) {
 
-          fDebugger.SendCommand('start', params);
-          UpdateDebugInfo;
-        end;
-      end;
-    end else begin
-      case GetCompileTarget of
-        cttNone:
-          Exit;
-        cttFile: begin
-          params := '';
-          if fCompiler.UseRunParams then
-            params := params + ' ' + fCompiler.RunParams;
-          if fCompiler.UseInputFile then
-            params := params + ' < "' + fCompiler.InputFile + '"';
-          fDebugger.SendCommand('run', params);
-          UpdateDebugInfo;
-        end;
-        cttProject: begin
-          params := '';
-          if fCompiler.UseRunParams then
-            params := params + ' ' + fProject.Options.CmdLineArgs;
-          if fCompiler.UseInputFile then
-            params := params + ' < "' + fCompiler.InputFile + '"';
+//            }
+            mDebugger->sendCommand("start",params);
+            updateDebugInfo();
+            break;
+        case CompileTarget::Project:
+//params := '';
+//if fCompiler.UseRunParams then
+//  params := params + ' ' + fProject.Options.CmdLineArgs;
+//if fCompiler.UseInputFile then
+//  params := params + ' < "' + fCompiler.InputFile + '"';
 
-          fDebugger.SendCommand('run', params);
-          UpdateDebugInfo;
-        end;
-      end;
-    end;
+//fDebugger.SendCommand('start', params);
+//UpdateDebugInfo;
+            break;
+        }
+    } else {
+        QString params;
+        switch(getCompileTarget()) {
+        case CompileTarget::None:
+            return;
+        case CompileTarget::File:
+//            if (mCompiler->useRunParams) {
 
+//            }
+            mDebugger->sendCommand("run",params);
+            updateDebugInfo();
+            break;
+        case CompileTarget::Project:
+//params := '';
+//if fCompiler.UseRunParams then
+//  params := params + ' ' + fProject.Options.CmdLineArgs;
+//if fCompiler.UseInputFile then
+//  params := params + ' < "' + fCompiler.InputFile + '"';
+
+//fDebugger.SendCommand('run', params);
+//UpdateDebugInfo;
+            break;
+        }
+    }
 }
 
 void MainWindow::openCloseMessageSheet(bool open)
@@ -1169,4 +1168,26 @@ CompileTarget MainWindow::getCompileTarget()
 //      Result := cttNone;
 //    end;
     return target;
+}
+
+bool MainWindow::debugInferiorhasBreakpoint()
+{
+    Editor * e = mEditorList->getEditor();
+    if (e==nullptr)
+        return false;
+    if (!e->inProject()) {
+        for (PBreakpoint breakpoint:mDebugger->breakpointModel()->breakpoints()) {
+            if (e->filename() == breakpoint->filename) {
+                return true;
+            }
+        }
+    } else {
+        for (PBreakpoint breakpoint:mDebugger->breakpointModel()->breakpoints()) {
+            Editor* e1 = mEditorList->getOpenedEditorByFilename(breakpoint->filename);
+            if (e1->inProject()) {
+                return true;
+            }
+        }
+    }
+    return false;
 }

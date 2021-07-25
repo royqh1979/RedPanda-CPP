@@ -54,7 +54,53 @@ void Debugger::start()
 
 //MainForm.UpdateAppTitle;
 
-//Application.HintHidePause := 5000;
+    //Application.HintHidePause := 5000;
+}
+
+void Debugger::stop()
+{
+    if (mExecuting) {
+        mExecuting = false;
+        if WatchVarList.Count = 0 then // nothing worth showing, restore view
+          MainForm.LeftPageControl.ActivePageIndex := LeftPageIndexBackup;
+
+        // Close CPU window
+        if Assigned(CPUForm) then
+          CPUForm.Close;
+
+        // stop gdb
+        TerminateProcess(fProcessID, 0);
+
+        Reader.Terminate;
+        Reader := nil;
+
+        // Free resources
+        CloseHandle(fProcessID);
+        CloseHandle(fOutputRead);
+        CloseHandle(fInputWrite);
+
+        MainForm.RemoveActiveBreakpoints;
+
+        MainForm.UpdateAppTitle;
+
+        MainForm.OnBacktraceReady;
+
+        Application.HintHidePause := 2500;
+
+        WatchView.Items.BeginUpdate;
+        try
+          //Clear all watch values
+          for I := 0 to WatchVarList.Count - 1 do begin
+            WatchVar := PWatchVar(WatchVarList.Items[I]);
+            WatchVar^.Node.Text := WatchVar^.Name + ' = '+Lang[ID_MSG_EXECUTE_TO_EVALUATE];
+
+            // Delete now invalid children
+            WatchVar^.Node.DeleteChildren;
+          end;
+        finally
+        WatchView.Items.EndUpdate;
+        end;
+    }
 }
 
 void Debugger::sendCommand(const QString &command, const QString &params, bool updateWatch, bool showInConsole, DebugCommandSource source)
@@ -76,6 +122,9 @@ void Debugger::addBreakpoint(int line, const QString &filename)
     bp->filename = filename;
     bp->condition = "";
     mBreakpointModel->addBreakpoint(bp);
+    if (mExecuting) {
+        sendBreakpointCommand(bp);
+    }
 }
 
 void Debugger::deleteBreakpoints(const QString &filename)
@@ -126,6 +175,13 @@ void Debugger::setBreakPointCondition(int index, const QString &condition)
     }
 }
 
+void Debugger::sendAllBreakpointsToDebugger()
+{
+    for (PBreakpoint breakpoint:mBreakpointModel->breakpoints()) {
+        sendBreakpointCommand(breakpoint);
+    }
+}
+
 bool Debugger::useUTF8() const
 {
     return mUseUTF8;
@@ -148,30 +204,40 @@ BreakpointModel *Debugger::breakpointModel()
 
 void Debugger::sendBreakpointCommand(int index)
 {
-    // break "filename":linenum
-    PBreakpoint breakpoint = mBreakpointModel->breakpoints()[index];
-    QString condition;
-    if (!breakpoint->condition.isEmpty()) {
-        condition = " if " + breakpoint->condition;
+    sendBreakpointCommand(mBreakpointModel->breakpoints()[index]);
+}
+
+void Debugger::sendBreakpointCommand(PBreakpoint breakpoint)
+{
+    if (breakpoint && mExecuting) {
+        // break "filename":linenum
+        QString condition;
+        if (!breakpoint->condition.isEmpty()) {
+            condition = " if " + breakpoint->condition;
+        }
+        QString filename = breakpoint->filename;
+        filename.replace('\\','/');
+        sendCommand("break",
+                    QString("\"%1\":%2").arg(filename)
+                    .arg(breakpoint->line)+condition);
     }
-    QString filename = breakpoint->filename;
-    filename.replace('\\','/');
-    sendCommand("break",
-                QString("\"%1\":%2").arg(filename)
-                .arg(breakpoint->line)+condition);
 }
 
 void Debugger::sendClearBreakpointCommand(int index)
 {
+    sendClearBreakpointCommand(mBreakpointModel->breakpoints()[breakpoint]);
+}
+
+void Debugger::sendClearBreakpointCommand(PBreakpoint breakpoint)
+{
     // Debugger already running? Remove it from GDB
-    if (mExecuting) {
+    if (breakpoint && mExecuting) {
         //clear "filename":linenum
-        PBreakpoint breakpoint = mBreakpointModel->breakpoints()[index];
         QString filename = breakpoint->filename;
         filename.replace('\\','/');
         sendCommand("clear",
-                    QString("\"%1\":%2").arg(filename)
-                    .arg(breakpoint->line));
+                QString("\"%1\":%2").arg(filename)
+                .arg(breakpoint->line));
     }
 }
 

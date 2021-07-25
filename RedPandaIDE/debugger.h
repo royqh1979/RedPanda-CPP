@@ -140,6 +140,7 @@ public:
     void removeBreakpoint(int line, const QString& filename);
     void removeBreakpoint(int index);
     void setBreakPointCondition(int index, const QString& condition);
+    void sendAllBreakpointsToDebugger();
 
     bool useUTF8() const;
     void setUseUTF8(bool useUTF8);
@@ -151,7 +152,9 @@ signals:
 
 private:
     void sendBreakpointCommand(int index);
+    void sendBreakpointCommand(PBreakpoint breakpoint);
     void sendClearBreakpointCommand(int index);
+    void sendClearBreakpointCommand(PBreakpoint breakpoint);
 
 private:
     bool mExecuting;
