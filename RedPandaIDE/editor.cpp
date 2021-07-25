@@ -57,8 +57,9 @@ Editor::Editor(QWidget *parent, const QString& filename,
   mInProject(inProject),
   mIsNew(isNew),
   mSyntaxErrorColor(QColorConstants::Red),
-  mSyntaxWaringColor("orange"),
-  mLineCount(0)
+  mSyntaxWarningColor("orange"),
+  mLineCount(0),
+  mActiveBreakpointLine(-1)
 {
     if (mFilename.isEmpty()) {
         newfileCount++;
@@ -373,7 +374,9 @@ void Editor::onGutterPaint(QPainter &painter, int aLine, int X, int Y)
         return;
     }
 
-    if (hasBreakpoint(aLine)) {
+    if (mActiveBreakpointLine == aLine) {
+        painter.drawPixmap(X,Y,*(pIconsManager->activeBreakpoint()));
+    } else if (hasBreakpoint(aLine)) {
         painter.drawPixmap(X,Y,*(pIconsManager->breakpoint()));
     }
 //   if fActiveLine = Line then begin // prefer active line over breakpoints
@@ -432,7 +435,7 @@ void Editor::onGetEditingAreas(int Line, SynEditingAreaList &areaList)
             if (issue->issueType == CompileIssueType::Error) {
                 p->color = mSyntaxErrorColor;
             } else {
-                p->color = mSyntaxWaringColor;
+                p->color = mSyntaxWarningColor;
             }
             p->type = SynEditingAreaType::eatWaveUnderLine;
             areaList.append(p);
@@ -442,7 +445,20 @@ void Editor::onGetEditingAreas(int Line, SynEditingAreaList &areaList)
 
 bool Editor::onGetSpecialLineColors(int Line, QColor &foreground, QColor &backgroundColor)
 {
-
+    if (Line == mActiveBreakpointLine) {
+        foreground = mActiveBreakpointForegroundColor;
+        backgroundColor = mActiveBreakpointBackgroundColor;
+    } else if (hasBreakpoint(Line)) {
+        foreground = mBreakpointForegroundColor;
+        backgroundColor = mBreakpointBackgroundColor;
+    }
+//    end else if Line = fErrorLine then begin
+//      StrToThemeColor(tc,  devEditor.Syntax.Values[cErr]);
+//      BG := tc.Background;
+//      FG := tc.Foreground;
+//      if (BG <> clNone) or (FG<>clNone) then
+//        Special := TRUE;
+//    end;
 }
 
 void Editor::copyToClipboard()
@@ -1196,6 +1212,16 @@ bool Editor::hasBreakpoint(int line)
     return mBreakpointLines.contains(line);
 }
 
+void Editor::removeBreakpointFocus()
+{
+    if (mActiveBreakpointLine!=-1) {
+        int oldLine = mActiveBreakpointLine;
+        mActiveBreakpointLine = -1;
+        invalidateGutterLine(oldLine);
+        invalidateLine(oldLine);
+    }
+}
+
 void Editor::applySettings()
 {
     SynEditorOptions options = eoAltSetsColumnMode |
@@ -1271,6 +1297,24 @@ void Editor::applyColorScheme(const QString& schemeName)
     item = pColorManager->getItem(schemeName,COLOR_SCHEME_INDENT_GUIDE_LINE);
     if (item) {
         codeFolding().indentGuidesColor = item->foreground();
+    }
+    item = pColorManager->getItem(schemeName,COLOR_SCHEME_ERROR);
+    if (item) {
+        this->mSyntaxErrorColor = item->foreground();
+    }
+    item = pColorManager->getItem(schemeName,COLOR_SCHEME_WARNING);
+    if (item) {
+        this->mSyntaxWarningColor = item->foreground();
+    }
+    item = pColorManager->getItem(schemeName,COLOR_SCHEME_ACTIVE_BREAKPOINT);
+    if (item) {
+        this->mActiveBreakpointForegroundColor = item->foreground();
+        this->mActiveBreakpointBackgroundColor = item->background();
+    }
+    item = pColorManager->getItem(schemeName,COLOR_SCHEME_BREAKPOINT);
+    if (item) {
+        this->mBreakpointForegroundColor = item->foreground();
+        this->mBreakpointBackgroundColor = item->foreground();
     }
     this->invalidate();
 }

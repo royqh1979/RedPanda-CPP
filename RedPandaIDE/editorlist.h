@@ -41,6 +41,9 @@ public:
     void applySettings();
     void applyColorSchemes(const QString& name);
     bool isFileOpened(const QString& name);
+    int pageCount();
+
+    Editor* operator[](int index);
 
 private:
     QTabWidget* getNewEditorPageControl() const;

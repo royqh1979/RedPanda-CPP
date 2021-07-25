@@ -207,6 +207,60 @@ void MainWindow::applySettings()
     this->setFont(font);
 }
 
+void MainWindow::removeActiveBreakpoints()
+{
+    for (int i=0;i<mEditorList->pageCount();i++) {
+        Editor* e= (*mEditorList)[i];
+        e->removeBreakpointFocus();
+    }
+}
+
+void MainWindow::updateAppTitle()
+{
+appName := Lang[ID_DEVCPP];
+e := fEditorList.GetEditor;
+if Assigned(e) and not e.InProject then begin
+  if e.Text.Modified then
+    str := e.FileName + ' [*]'
+  else
+    str := e.FileName;
+  if fDebugger.Executing then begin
+    Caption := Format('%s - [Debugging] - %s %s', [str, appName, DEVCPP_VERSION]);
+    Application.Title := Format('%s - [Debugging] - %s', [ExtractFileName(e.FileName), appName]);
+  end else if devExecutor.Running then begin
+    Caption := Format('%s - [Executing] - %s %s', [str, appName, DEVCPP_VERSION]);
+    Application.Title := Format('%s - [Executing] - %s', [ExtractFileName(e.FileName), appName]);
+  end else if fCompiler.Compiling then begin
+    Caption := Format('%s - [Compiling] - %s %s', [str, appName, DEVCPP_VERSION]);
+    Application.Title := Format('%s - [Compiling] - %s', [ExtractFileName(e.FileName), appName]);
+  end else begin
+    Caption := Format('%s - %s %s', [str, appName, DEVCPP_VERSION]);
+    Application.Title := Format('%s - %s', [ExtractFileName(e.FileName), appName]);
+  end;
+end else if Assigned(fProject) then begin
+  if fDebugger.Executing then begin
+    Caption := Format('%s - [%s] - [Debugging] - %s %s',
+      [fProject.Name, ExtractFilename(fProject.Filename), appName, DEVCPP_VERSION]);
+    Application.Title := Format('%s - [Debugging] - %s', [fProject.Name, appName]);
+  end else if devExecutor.Running then begin
+    Caption := Format('%s - [%s] - [Executing] - %s %s',
+      [fProject.Name, ExtractFilename(fProject.Filename), appName, DEVCPP_VERSION]);
+    Application.Title := Format('%s - [Executing] - %s', [fProject.Name, appName]);
+  end else if fCompiler.Compiling then begin
+    Caption := Format('%s - [%s] - [Compiling] - %s %s',
+      [fProject.Name, ExtractFilename(fProject.Filename), appName, DEVCPP_VERSION]);
+    Application.Title := Format('%s - [Compiling] - %s', [fProject.Name, appName]);
+  end else begin
+    Caption := Format('%s - [%s] - %s %s',
+      [fProject.Name, ExtractFilename(fProject.Filename), appName, DEVCPP_VERSION]);
+    Application.Title := Format('%s - %s', [fProject.Name, appName]);
+  end;
+end else begin
+  Caption := Format('%s %s', [appName, DEVCPP_VERSION]);
+  Application.Title := Format('%s', [DEVCPP]);
+end;
+}
+
 void MainWindow::updateStatusbarForLineCol()
 {
     Editor* e = mEditorList->getEditor();

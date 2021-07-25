@@ -58,6 +58,9 @@ public:
 
     void applySettings();
 
+    void removeActiveBreakpoints();
+    void updateAppTitle();
+
 protected:
     void openFiles(const QStringList& files);
     void openFile(const QString& filename);

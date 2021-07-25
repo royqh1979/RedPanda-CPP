@@ -33,8 +33,9 @@ void Debugger::start()
                               tr("Can''t find debugger in : \"%1\"").arg(debuggerPath));
         return;
     }
-    mReader = std::make_shared<DebugReader>();
+    mReader = new DebugReader(this);
     mReader->setDebuggerPath(debuggerPath);
+    connect(mReader, &QThread::finished,this,&Debugger::stop);
     mReader->start();
 
 
@@ -52,7 +53,7 @@ void Debugger::start()
 //Reader.Resume;
 //Reader.OnInvalidateAllVars := OnInvalidateAllVars;
 
-//MainForm.UpdateAppTitle;
+    pMainWindow->updateAppTitle();
 
     //Application.HintHidePause := 5000;
 }
@@ -61,27 +62,22 @@ void Debugger::stop()
 {
     if (mExecuting) {
         mExecuting = false;
-        if WatchVarList.Count = 0 then // nothing worth showing, restore view
-          MainForm.LeftPageControl.ActivePageIndex := LeftPageIndexBackup;
 
-        // Close CPU window
-        if Assigned(CPUForm) then
-          CPUForm.Close;
+        //stop debugger
+        mReader->stopDebug();
+        mReader->deleteLater();
+        mReader=nullptr;
+//        if WatchVarList.Count = 0 then // nothing worth showing, restore view
+//          MainForm.LeftPageControl.ActivePageIndex := LeftPageIndexBackup;
 
-        // stop gdb
-        TerminateProcess(fProcessID, 0);
-
-        Reader.Terminate;
-        Reader := nil;
+//        // Close CPU window
+//        if Assigned(CPUForm) then
+//          CPUForm.Close;
 
         // Free resources
-        CloseHandle(fProcessID);
-        CloseHandle(fOutputRead);
-        CloseHandle(fInputWrite);
+        pMainWindow->removeActiveBreakpoints();
 
-        MainForm.RemoveActiveBreakpoints;
-
-        MainForm.UpdateAppTitle;
+        pMainWindow->updateAppTitle();
 
         MainForm.OnBacktraceReady;
 

@@ -18,14 +18,14 @@ public:
 
     PIcon breakpoint() const;
 
-    PIcon currentLine() const;
+    PIcon activeBreakpoint() const;
 
 signals:
 private:
     PIcon mSyntaxError;
     PIcon mSyntaxWarning;
     PIcon mBreakpoint;
-    PIcon mCurrentLine;
+    PIcon mActiveBreakpoint;
 };
 
 extern IconsManager* pIconsManager;

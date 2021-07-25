@@ -111,6 +111,7 @@ public:
     int gutterClickedLine() const;
     void toggleBreakpoint(int line);
     bool hasBreakpoint(int line);
+    void removeBreakpointFocus();
 
 signals:
 
@@ -147,11 +148,16 @@ private:
     bool mIsNew;
     QMap<int,PSyntaxIssueList> mSyntaxIssues;
     QColor mSyntaxErrorColor;
-    QColor mSyntaxWaringColor;
+    QColor mSyntaxWarningColor;
+    QColor mActiveBreakpointForegroundColor;
+    QColor mActiveBreakpointBackgroundColor;
+    QColor mBreakpointForegroundColor;
+    QColor mBreakpointBackgroundColor;
     int mSyntaxErrorLine;
     int mLineCount;
     int mGutterClickedLine;
     QSet<int> mBreakpointLines;
+    int mActiveBreakpointLine;
 
     // QWidget interface
 protected:

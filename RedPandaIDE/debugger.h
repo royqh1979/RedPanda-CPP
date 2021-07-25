@@ -126,7 +126,6 @@ public:
     explicit Debugger(QObject *parent = nullptr);
     // Play/pause
     void start();
-    void stop();
     void sendCommand(const QString& command, const QString& params,
                      bool updateWatch = true,
                      bool showInConsole = false,
@@ -147,7 +146,8 @@ public:
 
     BacktraceModel* backtraceModel();
     BreakpointModel* breakpointModel();
-
+public slots:
+    void stop();
 signals:
 
 private:
@@ -162,7 +162,7 @@ private:
     BreakpointModel* mBreakpointModel;
     bool mUseUTF8;
     BacktraceModel* mBacktraceModel;
-    PDebugReader mReader;
+    DebugReader* mReader;
 };
 
 class DebugReader : public QThread

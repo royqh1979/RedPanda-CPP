@@ -146,6 +146,23 @@ bool EditorList::isFileOpened(const QString &name)
     return false;
 }
 
+int EditorList::pageCount()
+{
+    return mLeftPageWidget->count()+mRightPageWidget->count();
+}
+
+Editor *EditorList::operator[](int index)
+{
+    if (index>=0 && index<mLeftPageWidget->count()) {
+        return static_cast<Editor*>(mLeftPageWidget->widget(index));
+    }
+    index -= mLeftPageWidget->count();
+    if (index>=0 && index<mRightPageWidget->count()) {
+        return static_cast<Editor*>(mRightPageWidget->widget(index));
+    }
+    return nullptr;
+}
+
 bool EditorList::closeAll(bool force) {
     beginUpdate();
     auto end = finally([this] {
