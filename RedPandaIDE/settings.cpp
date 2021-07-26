@@ -21,7 +21,8 @@ Settings::Settings(const QString &filename):
     mEditor(this),
     mEnvironment(this),
     mCompilerSets(this),
-    mExecutor(this)
+    mExecutor(this),
+    mDebugger(this)
 {
 }
 
@@ -97,7 +98,7 @@ QString Settings::filename() const
     return mFilename;
 }
 
-Debugger Settings::debugger() const
+Settings::Debugger& Settings::debugger()
 {
     return mDebugger;
 }

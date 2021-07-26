@@ -112,6 +112,7 @@ public:
     void toggleBreakpoint(int line);
     bool hasBreakpoint(int line);
     void removeBreakpointFocus();
+    void setActiveBreakpointFocus(int Line, bool setFocus=true);
 
 signals:
 

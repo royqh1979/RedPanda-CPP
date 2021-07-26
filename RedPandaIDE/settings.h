@@ -584,9 +584,9 @@ public:
     CompilerSets& compilerSets();
     Environment& environment();
     Executor& executor();
+    Debugger& debugger();
     QString filename() const;
 
-    Debugger& debugger() const;
 
 private:
     QString mFilename;

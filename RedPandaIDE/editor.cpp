@@ -1222,6 +1222,25 @@ void Editor::removeBreakpointFocus()
     }
 }
 
+void Editor::setActiveBreakpointFocus(int Line, bool setFocus)
+{
+    if (Line != mActiveBreakpointLine) {
+        removeBreakpointFocus();
+
+        // Put the caret at the active breakpoint
+        mActiveBreakpointLine = Line;
+
+        if (setFocus)
+            setCaretPositionAndActivate(Line,1);
+        else
+            setCaretPosition(Line,1);
+
+        // Invalidate new active line
+        invalidateGutterLine(Line);
+        invalidateLine(Line);
+    }
+}
+
 void Editor::applySettings()
 {
     SynEditorOptions options = eoAltSetsColumnMode |

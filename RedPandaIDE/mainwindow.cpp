@@ -219,6 +219,22 @@ void MainWindow::removeActiveBreakpoints()
     }
 }
 
+void MainWindow::setActiveBreakpoint(QString FileName, int Line, bool setFocus)
+{
+    removeActiveBreakpoints();
+
+
+    // Then active the current line in the current file
+    FileName.replace('/',QDir::separator());
+    Editor *e = mEditorList->getEditorByFilename(FileName);
+    if (e!=nullptr) {
+        e->setActiveBreakpointFocus(Line,setFocus);
+    }
+    if (setFocus) {
+        this->activateWindow();
+    }
+}
+
 void MainWindow::updateAppTitle()
 {
     QString appName("Red Panda Dev-C++");
@@ -665,12 +681,10 @@ void MainWindow::debug()
     }
 
     // Add breakpoints and watch vars
-    for i := 0 to fDebugger.WatchVarList.Count - 1 do
-      fDebugger.AddWatchVar(i);
-
+//    for i := 0 to fDebugger.WatchVarList.Count - 1 do
+//      fDebugger.AddWatchVar(i);
+    mDebugger->sendAllWatchvarsToDebugger();
     mDebugger->sendAllBreakpointsToDebugger();
-    for i := 0 to fDebugger.BreakPointList.Count - 1 do
-      fDebugger.AddBreakpoint(i);
 
     // Run the debugger
     mDebugger->sendCommand("set", "width 0"); // don't wrap output, very annoying
@@ -687,7 +701,7 @@ void MainWindow::debug()
 
 //            }
             mDebugger->sendCommand("start",params);
-            updateDebugInfo();
+            mDebugger->updateDebugInfo();
             break;
         case CompileTarget::Project:
 //params := '';
@@ -710,7 +724,7 @@ void MainWindow::debug()
 
 //            }
             mDebugger->sendCommand("run",params);
-            updateDebugInfo();
+            mDebugger->updateDebugInfo();
             break;
         case CompileTarget::Project:
 //params := '';
@@ -771,7 +785,7 @@ void MainWindow::prepareDebugger()
     ui->txtEvalOutput->clear();
 
     // Restore when no watch vars are shown
-    mDebugger->leftPageIndexBackup = ui->tabInfos->currentIndex();
+    mDebugger->setLeftPageIndexBackup(ui->tabInfos->currentIndex());
 
     // Focus on the debugging buttons
     ui->tabInfos->setCurrentWidget(ui->tabWatch);
@@ -781,10 +795,10 @@ void MainWindow::prepareDebugger()
 
 
     // Reset watch vars
-    mDebugger->deleteWatchVars(false);
+//    mDebugger->deleteWatchVars(false);
 }
 
-CPUDialog *MainWindow::CPUDialog() const
+CPUDialog *MainWindow::cpuDialog() const
 {
     return mCPUDialog;
 }

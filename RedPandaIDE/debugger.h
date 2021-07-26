@@ -131,6 +131,7 @@ public:
                      bool showInConsole = false,
                      DebugCommandSource source = DebugCommandSource::Other);
 
+    //breakpoints
     void addBreakpoint(int line, const Editor* editor);
     void addBreakpoint(int line, const QString& filename);
     void deleteBreakpoints(const QString& filename);
@@ -140,6 +141,21 @@ public:
     void removeBreakpoint(int index);
     void setBreakPointCondition(int index, const QString& condition);
     void sendAllBreakpointsToDebugger();
+    //watch vars
+    void addWatchVar(int i);
+    void removeWatchVar(int i);
+    void addWatchVar(const QString& namein);
+//    void removeWatchVar(nodein: TTreeNode); overload;
+    void renameWatchVar(const QString& oldname, const QString& newname);
+
+    void refreshWatchVars();
+    void deleteWatchVars(bool deleteparent);
+    void invalidateAllVars();
+    void sendAllWatchvarsToDebugger();
+    void invalidateWatchVar(PWatchVar var);
+
+
+    void updateDebugInfo();
 
     bool useUTF8() const;
     void setUseUTF8(bool useUTF8);
@@ -147,6 +163,9 @@ public:
     BacktraceModel* backtraceModel();
     BreakpointModel* breakpointModel();
     bool executing() const;
+
+    int leftPageIndexBackup() const;
+    void setLeftPageIndexBackup(int leftPageIndexBackup);
 
 public slots:
     void stop();
@@ -167,6 +186,7 @@ private:
     bool mUseUTF8;
     BacktraceModel* mBacktraceModel;
     DebugReader* mReader;
+    int mLeftPageIndexBackup;
 };
 
 class DebugReader : public QThread

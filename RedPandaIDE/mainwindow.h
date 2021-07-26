@@ -60,10 +60,11 @@ public:
     void applySettings();
 
     void removeActiveBreakpoints();
+    void setActiveBreakpoint(QString FileName, int Line, bool setFocus=true);
     void updateAppTitle();
     void addDebugOutput(const QString& text);
 
-    CPUDialog *CPUDialog() const;
+    CPUDialog *cpuDialog() const;
 
 protected:
     void openFiles(const QStringList& files);

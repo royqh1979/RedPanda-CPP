@@ -181,6 +181,58 @@ void Debugger::sendAllBreakpointsToDebugger()
     }
 }
 
+void Debugger::addWatchVar(int i)
+{
+    //todo
+}
+
+void Debugger::removeWatchVar(int i)
+{
+    //todo
+}
+
+void Debugger::addWatchVar(const QString &namein)
+{
+    //todo
+}
+
+void Debugger::renameWatchVar(const QString &oldname, const QString &newname)
+{
+    //todo
+}
+
+void Debugger::refreshWatchVars()
+{
+    //todo
+}
+
+void Debugger::deleteWatchVars(bool deleteparent)
+{
+    //todo
+}
+
+void Debugger::invalidateAllVars()
+{
+    //todo
+}
+
+void Debugger::sendAllWatchvarsToDebugger()
+{
+    //todo
+}
+
+void Debugger::invalidateWatchVar(PWatchVar var)
+{
+    //toto
+}
+
+void Debugger::updateDebugInfo()
+{
+    sendCommand("backtrace", "");
+    sendCommand("info locals", "");
+    sendCommand("info args", "");
+}
+
 bool Debugger::useUTF8() const
 {
     return mUseUTF8;
@@ -302,7 +354,7 @@ void Debugger::syncFinishedParsing()
     }
 
     // Some part of the CPU form has been updated
-    if (pMainWindow->CPUDialog()->isVisible() && !mReader->doreceivedsignal) {
+    if (pMainWindow->cpuDialog()->isVisible() && !mReader->doreceivedsignal) {
 //        if (mReader->doregistersready)
 //            CPUForm.OnRegistersReady;
 
@@ -315,7 +367,7 @@ void Debugger::syncFinishedParsing()
 
 
     if (mReader->doupdateexecution) {
-        if (mReader->mCurrentCmd && mReader->mCurrentCmd == DebugCommandSource::Console) {
+        if (mReader->mCurrentCmd && mReader->mCurrentCmd->source == DebugCommandSource::Console) {
             pMainWindow->setActiveBreakpoint(mReader->mBreakPointFile, mReader->mBreakPointLine,false);
         } else {
             pMainWindow->setActiveBreakpoint(mReader->mBreakPointFile, mReader->mBreakPointLine);
@@ -356,10 +408,20 @@ void Debugger::syncFinishedParsing()
 
 
     // CPU form updates itself when spawned, don't update twice!
-    if ((mReader->doupdatecpuwindow && !spawnedcpuform) && (pMainWindow->CPUDialog()->isVisible())) {
+    if ((mReader->doupdatecpuwindow && !spawnedcpuform) && (pMainWindow->cpuDialog()->isVisible())) {
             sendCommand("disas", "");
             sendCommand("info registers", "");
     }
+}
+
+int Debugger::leftPageIndexBackup() const
+{
+    return mLeftPageIndexBackup;
+}
+
+void Debugger::setLeftPageIndexBackup(int leftPageIndexBackup)
+{
+    mLeftPageIndexBackup = leftPageIndexBackup;
 }
 
 bool Debugger::executing() const
@@ -665,7 +727,7 @@ void DebugReader::handleError()
         if (result != mWatchVarList.end()) {
             PWatchVar watchVar = result.value();
             //todo: update watch value to invalid
-            invalidateWatchVar(watchVar);
+            mDebugger->invalidateWatchVar(watchVar);
             watchVar->gdbIndex = -1;
             dorescanwatches = true;
         }
@@ -1111,6 +1173,7 @@ void DebugReader::stopDebug()
 {
     mStop = true;
 }
+
 
 void DebugReader::run()
 {
