@@ -18,8 +18,6 @@ Debugger::Debugger(QObject *parent) : QObject(parent)
 
 void Debugger::start()
 {
-    mExecuting = true;
-
     Settings::PCompilerSet compilerSet = pSettings->compilerSets().defaultSet();
     if (!compilerSet) {
         QMessageBox::critical(pMainWindow,
@@ -27,6 +25,7 @@ void Debugger::start()
                               tr("No compiler set is configured.")+tr("Can't start debugging."));
         return;
     }
+    mExecuting = true;
     QString debuggerPath = compilerSet->debugger();
     QFile debuggerProgram(debuggerPath);
     if (!debuggerProgram.exists()) {

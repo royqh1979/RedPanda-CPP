@@ -247,23 +247,23 @@ void MainWindow::updateAppTitle()
         else
           str = e->filename();
         if (mDebugger->executing()) {
-            setWindowTitle(QString("%s - [%s] - %s %s").arg(str).arg(appName)
+            setWindowTitle(QString("%1 - [%2] - %3 %4").arg(str).arg(appName)
                                  .arg(tr("Debugging")).arg(DEVCPP_VERSION));
-            app->setApplicationName(QString("%s - [%s] - %s").arg(str).arg(appName)
+            app->setApplicationName(QString("%1 - [%2] - %3").arg(str).arg(appName)
                                     .arg(tr("Debugging")));
         } else if (mCompilerManager->running()) {
-            setWindowTitle(QString("%s - [%s] - %s %s").arg(str).arg(appName)
+            setWindowTitle(QString("%1 - [%2] - %3 %4").arg(str).arg(appName)
                                  .arg(tr("Running")).arg(DEVCPP_VERSION));
-            app->setApplicationName(QString("%s - [%s] - %s").arg(str).arg(appName)
+            app->setApplicationName(QString("%1 - [%2] - %3").arg(str).arg(appName)
                                     .arg(tr("Running")));
         } else if (mCompilerManager->compiling()) {
-            setWindowTitle(QString("%s - [%s] - %s %s").arg(str).arg(appName)
+            setWindowTitle(QString("%1 - [%2] - %3 %4").arg(str).arg(appName)
                                  .arg(tr("Compiling")).arg(DEVCPP_VERSION));
-            app->setApplicationName(QString("%s - [%s] - %s").arg(str).arg(appName)
+            app->setApplicationName(QString("%1 - [%2] - %3").arg(str).arg(appName)
                                     .arg(tr("Compiling")));
         } else {
-            this->setWindowTitle(QString("%s - %s %s").arg(str).arg(appName).arg(DEVCPP_VERSION));
-            app->setApplicationName(QString("%s - %s").arg(str).arg(appName));
+            this->setWindowTitle(QString("%1 - %2 %3").arg(str).arg(appName).arg(DEVCPP_VERSION));
+            app->setApplicationName(QString("%1 - %2").arg(str).arg(appName));
         }
     }
 // else if Assigned(fProject) then begin
@@ -427,10 +427,11 @@ bool MainWindow::compile(bool rebuild)
         if (mCompileSuccessionTask) {
             mCompileSuccessionTask->filename = getCompiledExecutableName(editor->filename());
         }
-        mCompilerManager->compile(editor->filename(),editor->fileEncoding(),rebuild);        
         updateCompileActions();
         openCloseMessageSheet(true);
         ui->tabMessages->setCurrentWidget(ui->tabCompilerOutput);
+        updateAppTitle();
+        mCompilerManager->compile(editor->filename(),editor->fileEncoding(),rebuild);
         return true;
     }
     return false;
@@ -441,7 +442,7 @@ void MainWindow::runExecutable(const QString &exeName,const QString &filename)
     // Check if it exists
     if (!QFile(exeName).exists()) {
         if (ui->actionCompile_Run->isEnabled()) {
-            if (QMessageBox::warning(this,tr("Confirm"),
+            if (QMessageBox::question(this,tr("Confirm"),
                                      tr("Source file is not compiled.")
                                      +"<br /><br />"+tr("Compile now?"),
                     QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
@@ -482,17 +483,12 @@ void MainWindow::runExecutable(const QString &exeName,const QString &filename)
 //            FileToRun := FileToRun;
 //          end;
 
-//          if devData.MinOnRun then
-//            Application.Minimize;
-//          devExecutor.ExecuteAndWatch(FileToRun, Parameters, ExtractFilePath(fSourceFile),
-//            True, UseInputFile,InputFile, INFINITE, RunTerminate);
-//          MainForm.UpdateAppTitle;
-//        end;
-    mCompilerManager->run(exeName,"",QFileInfo(exeName).absolutePath());
     updateCompileActions();
     if (pSettings->executor().minimizeOnRun()) {
         showMinimized();
     }
+    updateAppTitle();
+    mCompilerManager->run(exeName,"",QFileInfo(exeName).absolutePath());
 }
 
 void MainWindow::runExecutable()
@@ -513,8 +509,12 @@ void MainWindow::debug()
     if (mCompilerManager->compiling())
         return;
     Settings::PCompilerSet compilerSet = pSettings->compilerSets().defaultSet();
-    if (!compilerSet)
+    if (!compilerSet) {
+        QMessageBox::critical(pMainWindow,
+                              tr("No compiler set"),
+                              tr("No compiler set is configured.")+"<BR/>"+tr("Can't start debugging."));
         return;
+    }
     bool debugEnabled;
     bool stripEnabled;
     QString filePath;
@@ -1003,6 +1003,7 @@ void MainWindow::onCompileFinished()
     }
     mCheckSyntaxInBack=false;
     updateCompileActions();
+    updateAppTitle();
 }
 
 void MainWindow::onCompileErrorOccured(const QString &reason)
@@ -1021,6 +1022,7 @@ void MainWindow::onRunFinished()
     if (pSettings->executor().minimizeOnRun()) {
         showNormal();
     }
+    updateAppTitle();
 }
 
 void MainWindow::on_actionCompile_triggered()

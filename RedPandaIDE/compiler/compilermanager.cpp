@@ -6,6 +6,7 @@
 #include "executablerunner.h"
 #include "utils.h"
 #include "../settings.h"
+#include <QMessageBox>
 
 CompilerManager::CompilerManager(QObject *parent) : QObject(parent)
 {
@@ -36,41 +37,54 @@ bool CompilerManager::running()
 
 void CompilerManager::compile(const QString& filename, const QByteArray& encoding, bool rebuild, bool silent, bool onlyCheckSyntax)
 {
-    QMutexLocker locker(&mCompileMutex);
-    if (mCompiler!=nullptr) {
+    if (!pSettings->compilerSets().defaultSet()) {
+        QMessageBox::critical(pMainWindow,
+                              tr("No compiler set"),
+                              tr("No compiler set is configured.")+tr("Can't start debugging."));
         return;
     }
-    if (!pSettings->compilerSets().defaultSet())
-        return;
-    mCompileErrorCount = 0;
-    mCompiler = new FileCompiler(filename,encoding,silent,onlyCheckSyntax);
-    mCompiler->setRebuild(rebuild);
-    connect(mCompiler, &Compiler::compileFinished, this ,&CompilerManager::onCompileFinished);
-    connect(mCompiler, &Compiler::compileIssue, this, &CompilerManager::onCompileIssue);
-    connect(mCompiler, &Compiler::compileFinished, pMainWindow, &MainWindow::onCompileFinished);
-    connect(mCompiler, &Compiler::compileOutput, pMainWindow, &MainWindow::onCompileLog);
-    connect(mCompiler, &Compiler::compileIssue, pMainWindow, &MainWindow::onCompileIssue);
-    connect(mCompiler, &Compiler::compileErrorOccured, pMainWindow, &MainWindow::onCompileErrorOccured);
-    mCompiler->start();
+    {
+        QMutexLocker locker(&mCompileMutex);
+        if (mCompiler!=nullptr) {
+            return;
+        }
+        mCompileErrorCount = 0;
+        mCompiler = new FileCompiler(filename,encoding,silent,onlyCheckSyntax);
+        mCompiler->setRebuild(rebuild);
+        connect(mCompiler, &Compiler::compileFinished, this ,&CompilerManager::onCompileFinished);
+        connect(mCompiler, &Compiler::compileIssue, this, &CompilerManager::onCompileIssue);
+        connect(mCompiler, &Compiler::compileFinished, pMainWindow, &MainWindow::onCompileFinished);
+        connect(mCompiler, &Compiler::compileOutput, pMainWindow, &MainWindow::onCompileLog);
+        connect(mCompiler, &Compiler::compileIssue, pMainWindow, &MainWindow::onCompileIssue);
+        connect(mCompiler, &Compiler::compileErrorOccured, pMainWindow, &MainWindow::onCompileErrorOccured);
+        mCompiler->start();
+    }
 }
 
 void CompilerManager::checkSyntax(const QString &filename, const QString &content)
 {
-    QMutexLocker locker(&mBackgroundSyntaxCheckMutex);
-    if (mBackgroundSyntaxChecker!=nullptr) {
+    if (!pSettings->compilerSets().defaultSet()) {
+        QMessageBox::critical(pMainWindow,
+                              tr("No compiler set"),
+                              tr("No compiler set is configured.")+tr("Can't start debugging."));
         return;
     }
-    if (!pSettings->compilerSets().defaultSet())
-        return;
-    mSyntaxCheckErrorCount = 0;
-    mBackgroundSyntaxChecker = new StdinCompiler(filename,content,true,true);
-    connect(mBackgroundSyntaxChecker, &Compiler::compileFinished, this ,&CompilerManager::onSyntaxCheckFinished);
-    connect(mBackgroundSyntaxChecker, &Compiler::compileIssue, this, &CompilerManager::onSyntaxCheckIssue);
-    connect(mBackgroundSyntaxChecker, &Compiler::compileFinished, pMainWindow, &MainWindow::onCompileFinished);
-    connect(mBackgroundSyntaxChecker, &Compiler::compileOutput, pMainWindow, &MainWindow::onCompileLog);
-    connect(mBackgroundSyntaxChecker, &Compiler::compileIssue, pMainWindow, &MainWindow::onCompileIssue);
-    connect(mBackgroundSyntaxChecker, &Compiler::compileErrorOccured, pMainWindow, &MainWindow::onCompileErrorOccured);
-    mBackgroundSyntaxChecker->start();
+    {
+        QMutexLocker locker(&mBackgroundSyntaxCheckMutex);
+        if (mBackgroundSyntaxChecker!=nullptr) {
+            return;
+        }
+
+        mSyntaxCheckErrorCount = 0;
+        mBackgroundSyntaxChecker = new StdinCompiler(filename,content,true,true);
+        connect(mBackgroundSyntaxChecker, &Compiler::compileFinished, this ,&CompilerManager::onSyntaxCheckFinished);
+        connect(mBackgroundSyntaxChecker, &Compiler::compileIssue, this, &CompilerManager::onSyntaxCheckIssue);
+        connect(mBackgroundSyntaxChecker, &Compiler::compileFinished, pMainWindow, &MainWindow::onCompileFinished);
+        connect(mBackgroundSyntaxChecker, &Compiler::compileOutput, pMainWindow, &MainWindow::onCompileLog);
+        connect(mBackgroundSyntaxChecker, &Compiler::compileIssue, pMainWindow, &MainWindow::onCompileIssue);
+        connect(mBackgroundSyntaxChecker, &Compiler::compileErrorOccured, pMainWindow, &MainWindow::onCompileErrorOccured);
+        mBackgroundSyntaxChecker->start();
+    }
 }
 
 void CompilerManager::run(const QString &filename, const QString &arguments, const QString &workDir)
