@@ -10,6 +10,7 @@
 #include <QProcess>
 #include <QQueue>
 #include <QQueue>
+#include <QSemaphore>
 #include <QThread>
 #include <memory>
 enum class DebugCommandSource {
@@ -240,7 +241,8 @@ private:
 private:
     Debugger* mDebugger;
     QString mDebuggerPath;
-    QMutex mCmdQueueMutex;
+    QRecursiveMutex mCmdQueueMutex;
+    QSemaphore mStartSemaphore;
     QQueue<PDebugCommand> mCmdQueue;
     int mUpdateCount;
     bool mInvalidateAllVars;
@@ -251,8 +253,7 @@ private:
     QList<PRegister> mRegisters;
     QStringList mDisassembly;
 
-
-    QProcess mProcess;
+    QProcess* mProcess;
 
     QMap<QString,PWatchVar> mWatchVarList; // contains all parents
     //fWatchView: TTreeView;

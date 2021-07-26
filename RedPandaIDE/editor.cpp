@@ -445,12 +445,18 @@ void Editor::onGetEditingAreas(int Line, SynEditingAreaList &areaList)
 
 bool Editor::onGetSpecialLineColors(int Line, QColor &foreground, QColor &backgroundColor)
 {
-    if (Line == mActiveBreakpointLine) {
+    if (Line == mActiveBreakpointLine &&
+            mActiveBreakpointForegroundColor.isValid()
+            && mActiveBreakpointBackgroundColor.isValid()) {
         foreground = mActiveBreakpointForegroundColor;
         backgroundColor = mActiveBreakpointBackgroundColor;
-    } else if (hasBreakpoint(Line)) {
+        return true;
+    } else if (hasBreakpoint(Line)  &&
+               mBreakpointForegroundColor.isValid()
+               && mBreakpointBackgroundColor.isValid()) {
         foreground = mBreakpointForegroundColor;
         backgroundColor = mBreakpointBackgroundColor;
+        return true;
     }
 //    end else if Line = fErrorLine then begin
 //      StrToThemeColor(tc,  devEditor.Syntax.Values[cErr]);
@@ -459,6 +465,7 @@ bool Editor::onGetSpecialLineColors(int Line, QColor &foreground, QColor &backgr
 //      if (BG <> clNone) or (FG<>clNone) then
 //        Special := TRUE;
 //    end;
+    return false;
 }
 
 void Editor::copyToClipboard()
@@ -1333,7 +1340,7 @@ void Editor::applyColorScheme(const QString& schemeName)
     item = pColorManager->getItem(schemeName,COLOR_SCHEME_BREAKPOINT);
     if (item) {
         this->mBreakpointForegroundColor = item->foreground();
-        this->mBreakpointBackgroundColor = item->foreground();
+        this->mBreakpointBackgroundColor = item->background();
     }
     this->invalidate();
 }

@@ -14,6 +14,11 @@ Debugger::Debugger(QObject *parent) : QObject(parent)
 {
     mBreakpointModel=new BreakpointModel(this);
     mBacktraceModel=new BacktraceModel(this);
+    mExecuting = false;
+    mUseUTF8 = false;
+    mReader = nullptr;
+    mCommandChanged = false;
+    mLeftPageIndexBackup = -1;
 }
 
 void Debugger::start()
@@ -39,7 +44,7 @@ void Debugger::start()
     connect(mReader, &QThread::finished,this,&Debugger::stop);
     connect(mReader, &DebugReader::parseFinished,this,&Debugger::syncFinishedParsing,Qt::BlockingQueuedConnection);
     mReader->start();
-
+    mReader->mStartSemaphore.acquire(1);
 
 //fProcessID := pi.hProcess;
 
@@ -428,9 +433,12 @@ bool Debugger::executing() const
     return mExecuting;
 }
 
-DebugReader::DebugReader(Debugger* debugger, QObject *parent) : QThread(parent)
+DebugReader::DebugReader(Debugger* debugger, QObject *parent) : QThread(parent),
+    mStartSemaphore(0)
 {
     mDebugger = debugger;
+    mProcess = nullptr;
+    mUseUTF8 = false;
 }
 
 void DebugReader::postCommand(const QString &Command, const QString &Params, bool UpdateWatch, bool ShowInConsole, DebugCommandSource Source)
@@ -1118,7 +1126,7 @@ void DebugReader::runNextCmd()
         s+=' '+pCmd->params.toLocal8Bit();
     }
     s+= "\n";
-    if (mProcess.write(s)<0) {
+    if (mProcess->write(s)<0) {
         emit writeToDebugFailed();
     }
 
@@ -1182,11 +1190,12 @@ void DebugReader::run()
     QString arguments = "--annotate=2 --silent";
     QString workingDir = QFileInfo(mDebuggerPath).path();
 
-    mProcess.setProgram(cmd);
-    mProcess.setArguments(QProcess::splitCommand(arguments));
-    mProcess.setWorkingDirectory(workingDir);
+    mProcess = new QProcess();
+    mProcess->setProgram(cmd);
+    mProcess->setArguments(QProcess::splitCommand(arguments));
+    mProcess->setWorkingDirectory(workingDir);
 
-    mProcess.connect(&mProcess, &QProcess::errorOccurred,
+    connect(mProcess, &QProcess::errorOccurred,
                     [&](){
                         errorOccurred= true;
                     });
@@ -1199,20 +1208,21 @@ void DebugReader::run()
 //    process.connect(&mProcess, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),[&process,this](){
 //        this->error(COMPILE_PROCESS_END);
 //    });
-    mProcess.start();
-    mProcess.waitForStarted(5000);
+    mProcess->start();
+    mProcess->waitForStarted(5000);
+    mStartSemaphore.release(1);
     QByteArray buffer;
     while (true) {
-        mProcess.waitForFinished(100);
-        if (mProcess.state()!=QProcess::Running) {
+        mProcess->waitForFinished(100);
+        if (mProcess->state()!=QProcess::Running) {
             break;
         }
         if (mStop) {
-            mProcess.terminate();
+            mProcess->terminate();
         }
         if (errorOccurred)
             break;
-        buffer += mProcess.readAll();
+        buffer += mProcess->readAll();
         if (getLastAnnotation(buffer) == AnnotationType::TPrompt) {
             mOutput = buffer;
             processDebugOutput();
@@ -1221,7 +1231,7 @@ void DebugReader::run()
         }
     }
     if (errorOccurred) {
-        emit processError(mProcess.error());
+        emit processError(mProcess->error());
     }
 }
 

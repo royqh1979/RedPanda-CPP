@@ -596,12 +596,12 @@ void MainWindow::debug()
     case CompileTarget::File:
         // Check if we enabled proper options
         debugEnabled = compilerSet->getOptionValue("-g3")!='0';
-        stripEnabled = compilerSet->getOptionValue("-s")!=0;
+        stripEnabled = compilerSet->getOptionValue("-s")!='0';
         // Ask the user if he wants to enable debugging...
         if (((!debugEnabled) || stripEnabled) &&
                 (QMessageBox::question(this,
                                       tr("Enable debugging"),
-                                      tr("You have not enabled debugging info (-g) and/or stripped it from the executable (-s) in Compiler Options.<BR /><BR />Do you want to correct this now?")
+                                      tr("You have not enabled debugging info (-g3) and/or stripped it from the executable (-s) in Compiler Options.<BR /><BR />Do you want to correct this now?")
                                       ) == QMessageBox::Yes)) {
             // Enable debugging, disable stripping
             compilerSet->setOption("-g3",'1');
