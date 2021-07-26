@@ -11,6 +11,7 @@
 #include <QDebug>
 #include <QTimer>
 #include <QApplication>
+#include "../utils.h"
 
 QConsole::QConsole(QWidget *parent):
     QAbstractScrollArea(parent),
@@ -141,6 +142,14 @@ void QConsole::addLine(const QString &line)
     mSelectionBegin = caretPos();
     mSelectionEnd = caretPos();
     mContents.addLine(line);
+}
+
+void QConsole::addText(const QString &text)
+{
+    QStringList lst = TextToLines(text);
+    for (const QString& line:lst) {
+        addLine(line);
+    }
 }
 
 void QConsole::removeLastLine()

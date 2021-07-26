@@ -110,6 +110,7 @@ public:
     void invalidateRect(const QRect& rect);
 
     void addLine(const QString& line);
+    void addText(const QString& text);
     void removeLastLine();
     void changeLastLine(const QString& line);
     QString getLastLine();

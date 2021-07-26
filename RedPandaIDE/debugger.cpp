@@ -3,9 +3,11 @@
 #include "mainwindow.h"
 #include "editor.h"
 #include "settings.h"
+#include "cpudialog.h"
 
 #include <QFile>
 #include <QFileInfo>
+#include <QMessageBox>
 #include <QMessageBox>
 
 Debugger::Debugger(QObject *parent) : QObject(parent)
@@ -36,6 +38,7 @@ void Debugger::start()
     mReader = new DebugReader(this);
     mReader->setDebuggerPath(debuggerPath);
     connect(mReader, &QThread::finished,this,&Debugger::stop);
+    connect(mReader, &DebugReader::parseFinished,this,&Debugger::syncFinishedParsing,Qt::BlockingQueuedConnection);
     mReader->start();
 
 
@@ -79,23 +82,23 @@ void Debugger::stop()
 
         pMainWindow->updateAppTitle();
 
-        MainForm.OnBacktraceReady;
+        mBacktraceModel->clear();
 
-        Application.HintHidePause := 2500;
+//        Application.HintHidePause := 2500;
 
-        WatchView.Items.BeginUpdate;
-        try
-          //Clear all watch values
-          for I := 0 to WatchVarList.Count - 1 do begin
-            WatchVar := PWatchVar(WatchVarList.Items[I]);
-            WatchVar^.Node.Text := WatchVar^.Name + ' = '+Lang[ID_MSG_EXECUTE_TO_EVALUATE];
+//        WatchView.Items.BeginUpdate;
+//        try
+//          //Clear all watch values
+//          for I := 0 to WatchVarList.Count - 1 do begin
+//            WatchVar := PWatchVar(WatchVarList.Items[I]);
+//            WatchVar^.Node.Text := WatchVar^.Name + ' = '+Lang[ID_MSG_EXECUTE_TO_EVALUATE];
 
-            // Delete now invalid children
-            WatchVar^.Node.DeleteChildren;
-          end;
-        finally
-        WatchView.Items.EndUpdate;
-        end;
+//            // Delete now invalid children
+//            WatchVar^.Node.DeleteChildren;
+//          end;
+//        finally
+//        WatchView.Items.EndUpdate;
+//        end;
     }
 }
 
@@ -221,7 +224,7 @@ void Debugger::sendBreakpointCommand(PBreakpoint breakpoint)
 
 void Debugger::sendClearBreakpointCommand(int index)
 {
-    sendClearBreakpointCommand(mBreakpointModel->breakpoints()[breakpoint]);
+    sendClearBreakpointCommand(mBreakpointModel->breakpoints()[index]);
 }
 
 void Debugger::sendClearBreakpointCommand(PBreakpoint breakpoint)
@@ -235,6 +238,133 @@ void Debugger::sendClearBreakpointCommand(PBreakpoint breakpoint)
                 QString("\"%1\":%2").arg(filename)
                 .arg(breakpoint->line));
     }
+}
+
+void Debugger::syncFinishedParsing()
+{
+    bool spawnedcpuform = false;
+
+    // GDB determined that the source code is more recent than the executable. Ask the user if he wants to rebuild.
+    if (mReader->doreceivedsfwarning) {
+        if (QMessageBox::question(pMainWindow,
+                                  tr("Compile"),
+                                  tr("Source file is more recent than executable.")+"<BR /><BR />" + tr("Recompile?"),
+                                  QMessageBox::Yes | QMessageBox::No,
+                                  QMessageBox::Yes
+                                  ) == QMessageBox::Yes) {
+            stop();
+            pMainWindow->compile();
+            return;
+        }
+    }
+
+    // The program to debug has stopped. Stop the debugger
+    if (mReader->doprocessexited) {
+        stop();
+        return;
+    }
+
+    // An evaluation variable has been processed. Forward the results
+    if (mReader->doevalready) {
+        emit evalReady(mReader->mEvalValue);
+    }
+
+    // show command output
+    if (pSettings->debugger().showCommandLog() ||
+            (mReader->mCurrentCmd && mReader->mCurrentCmd->showInConsole)) {
+        if (pSettings->debugger().showAnnotations()) {
+            QString strOutput = mReader->mOutput;
+            strOutput.replace(QChar(26),'>');
+            pMainWindow->addDebugOutput(strOutput);
+            pMainWindow->addDebugOutput("");
+            pMainWindow->addDebugOutput("");
+        } else {
+            QStringList strList = TextToLines(mReader->mOutput);
+            QStringList outStrList;
+            bool addToLastLine=false;
+            for (int i=0;i<strList.size();i++) {
+                QString strOutput=strList[i];
+                if (strOutput.startsWith("\032\032")) {
+                    addToLastLine = true;
+                } else {
+                    if (addToLastLine && outStrList.size()>0) {
+                        outStrList[outStrList.size()-1]+=strOutput;
+                    } else {
+                        outStrList.append(strOutput);
+                    }
+                    addToLastLine = false;
+                }
+            }
+            for (const QString& line:outStrList) {
+                pMainWindow->addDebugOutput(line);
+            }
+        }
+    }
+
+    // Some part of the CPU form has been updated
+    if (pMainWindow->CPUDialog()->isVisible() && !mReader->doreceivedsignal) {
+//        if (mReader->doregistersready)
+//            CPUForm.OnRegistersReady;
+
+//        if (mReader->dodisassemblerready)
+//            CPUForm.OnAssemblerReady;
+    }
+
+//if dobacktraceready then
+//  MainForm.OnBacktraceReady;
+
+
+    if (mReader->doupdateexecution) {
+        if (mReader->mCurrentCmd && mReader->mCurrentCmd == DebugCommandSource::Console) {
+            pMainWindow->setActiveBreakpoint(mReader->mBreakPointFile, mReader->mBreakPointLine,false);
+        } else {
+            pMainWindow->setActiveBreakpoint(mReader->mBreakPointFile, mReader->mBreakPointLine);
+        }
+        refreshWatchVars(); // update variable information
+    }
+
+    if (mReader->doreceivedsignal) {
+//SignalDialog := CreateMessageDialog(fSignal, mtError, [mbOk]);
+//SignalCheck := TCheckBox.Create(SignalDialog);
+
+//// Display it on top of everything
+//SignalDialog.FormStyle := fsStayOnTop;
+
+//SignalDialog.Height := 150;
+
+//with SignalCheck do begin
+//  Parent := SignalDialog;
+//  Caption := 'Show CPU window';
+//  Top := Parent.ClientHeight - 22;
+//  Left := 8;
+//  Width := Parent.ClientWidth - 16;
+//  Checked := devData.ShowCPUSignal;
+//end;
+
+//MessageBeep(MB_ICONERROR);
+//if SignalDialog.ShowModal = ID_OK then begin
+//  devData.ShowCPUSignal := SignalCheck.Checked;
+//  if SignalCheck.Checked and not Assigned(CPUForm) then begin
+//    MainForm.ViewCPUItemClick(nil);
+//    spawnedcpuform := true;
+//  end;
+//end;
+
+//SignalDialog.Free;
+
+    }
+
+
+    // CPU form updates itself when spawned, don't update twice!
+    if ((mReader->doupdatecpuwindow && !spawnedcpuform) && (pMainWindow->CPUDialog()->isVisible())) {
+            sendCommand("disas", "");
+            sendCommand("info registers", "");
+    }
+}
+
+bool Debugger::executing() const
+{
+    return mExecuting;
 }
 
 DebugReader::DebugReader(Debugger* debugger, QObject *parent) : QThread(parent)

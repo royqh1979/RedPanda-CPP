@@ -30,6 +30,8 @@
 #error "Only support windows and linux now!"
 #endif
 
+#define DEVCPP_VERSION "0.01"
+
 class SystemConsts
 {
 public:

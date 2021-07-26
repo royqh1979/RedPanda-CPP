@@ -16,6 +16,7 @@
 #define SETTING_EDITOR "Editor"
 #define SETTING_ENVIRONMENT "Environment"
 #define SETTING_EXECUTOR "Executor"
+#define SETTING_DEBUGGER "Debugger"
 #define SETTING_COMPILTER_SETS "CompilerSets"
 #define SETTING_COMPILTER_SETS_DEFAULT_INDEX "defaultIndex"
 #define SETTING_COMPILTER_SETS_COUNT "count"
@@ -388,6 +389,25 @@ public:
         void doLoad() override;
     };
 
+    class Debugger: public _Base {
+    public:
+        explicit Debugger(Settings* settings);
+        bool showCommandLog() const;
+        void setShowCommandLog(bool showCommandLog);
+
+        bool showAnnotations() const;
+        void setShowAnnotations(bool showAnnotations);
+
+    private:
+        bool mShowCommandLog;
+        bool mShowAnnotations;
+
+        // _Base interface
+    protected:
+        void doSave() override;
+        void doLoad() override;
+    };
+
 
     class CompilerSet {
     public:
@@ -566,6 +586,8 @@ public:
     Executor& executor();
     QString filename() const;
 
+    Debugger& debugger() const;
+
 private:
     QString mFilename;
     QSettings mSettings;
@@ -574,6 +596,7 @@ private:
     Environment mEnvironment;
     CompilerSets mCompilerSets;
     Executor mExecutor;
+    Debugger mDebugger;
 };
 
 

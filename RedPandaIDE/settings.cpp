@@ -97,6 +97,11 @@ QString Settings::filename() const
     return mFilename;
 }
 
+Debugger Settings::debugger() const
+{
+    return mDebugger;
+}
+
 Settings::Dirs::Dirs(Settings *settings):
     _Base(settings, SETTING_DIRS)
 {
@@ -2223,7 +2228,6 @@ void Settings::Executor::setMinimizeOnRun(bool minimizeOnRun)
 
 void Settings::Executor::doSave()
 {
-    //Appearence
     saveValue("pause_console", mPauseConsole);
     saveValue("minimize_on_run", mMinimizeOnRun);
 }
@@ -2240,8 +2244,44 @@ void Settings::Executor::setPauseConsole(bool pauseConsole)
 
 void Settings::Executor::doLoad()
 {
-    //Appearence
     mPauseConsole = boolValue("pause_console",true);
     mMinimizeOnRun = boolValue("minimize_on_run",false);
 }
 
+
+Settings::Debugger::Debugger(Settings *settings):_Base(settings, SETTING_DEBUGGER)
+{
+
+}
+
+bool Settings::Debugger::showCommandLog() const
+{
+    return mShowCommandLog;
+}
+
+void Settings::Debugger::setShowCommandLog(bool showCommandLog)
+{
+    mShowCommandLog = showCommandLog;
+}
+
+bool Settings::Debugger::showAnnotations() const
+{
+    return mShowAnnotations;
+}
+
+void Settings::Debugger::setShowAnnotations(bool showAnnotations)
+{
+    mShowAnnotations = showAnnotations;
+}
+
+void Settings::Debugger::doSave()
+{
+    saveValue("show_command_log", mShowCommandLog);
+    saveValue("show_annotations", mShowAnnotations);
+}
+
+void Settings::Debugger::doLoad()
+{
+    mShowCommandLog = boolValue("show_command_log",true);
+    mShowAnnotations = boolValue("show_annotations",false);
+}

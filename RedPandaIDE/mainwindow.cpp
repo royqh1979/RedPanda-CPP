@@ -6,6 +6,8 @@
 #include "settings.h"
 #include "qsynedit/Constants.h"
 #include "debugger.h"
+#include "cpudialog.h"
+
 
 #include <QCloseEvent>
 #include <QComboBox>
@@ -81,6 +83,8 @@ MainWindow::MainWindow(QWidget *parent)
     ui->actionAuto_Detect->setCheckable(true);
     ui->actionEncode_in_ANSI->setCheckable(true);
     ui->actionEncode_in_UTF_8->setCheckable(true);
+
+    mCPUDialog = new CPUDialog(this);
 
     updateEditorActions();
     applySettings();
@@ -217,48 +221,66 @@ void MainWindow::removeActiveBreakpoints()
 
 void MainWindow::updateAppTitle()
 {
-appName := Lang[ID_DEVCPP];
-e := fEditorList.GetEditor;
-if Assigned(e) and not e.InProject then begin
-  if e.Text.Modified then
-    str := e.FileName + ' [*]'
-  else
-    str := e.FileName;
-  if fDebugger.Executing then begin
-    Caption := Format('%s - [Debugging] - %s %s', [str, appName, DEVCPP_VERSION]);
-    Application.Title := Format('%s - [Debugging] - %s', [ExtractFileName(e.FileName), appName]);
-  end else if devExecutor.Running then begin
-    Caption := Format('%s - [Executing] - %s %s', [str, appName, DEVCPP_VERSION]);
-    Application.Title := Format('%s - [Executing] - %s', [ExtractFileName(e.FileName), appName]);
-  end else if fCompiler.Compiling then begin
-    Caption := Format('%s - [Compiling] - %s %s', [str, appName, DEVCPP_VERSION]);
-    Application.Title := Format('%s - [Compiling] - %s', [ExtractFileName(e.FileName), appName]);
-  end else begin
-    Caption := Format('%s - %s %s', [str, appName, DEVCPP_VERSION]);
-    Application.Title := Format('%s - %s', [ExtractFileName(e.FileName), appName]);
-  end;
-end else if Assigned(fProject) then begin
-  if fDebugger.Executing then begin
-    Caption := Format('%s - [%s] - [Debugging] - %s %s',
-      [fProject.Name, ExtractFilename(fProject.Filename), appName, DEVCPP_VERSION]);
-    Application.Title := Format('%s - [Debugging] - %s', [fProject.Name, appName]);
-  end else if devExecutor.Running then begin
-    Caption := Format('%s - [%s] - [Executing] - %s %s',
-      [fProject.Name, ExtractFilename(fProject.Filename), appName, DEVCPP_VERSION]);
-    Application.Title := Format('%s - [Executing] - %s', [fProject.Name, appName]);
-  end else if fCompiler.Compiling then begin
-    Caption := Format('%s - [%s] - [Compiling] - %s %s',
-      [fProject.Name, ExtractFilename(fProject.Filename), appName, DEVCPP_VERSION]);
-    Application.Title := Format('%s - [Compiling] - %s', [fProject.Name, appName]);
-  end else begin
-    Caption := Format('%s - [%s] - %s %s',
-      [fProject.Name, ExtractFilename(fProject.Filename), appName, DEVCPP_VERSION]);
-    Application.Title := Format('%s - %s', [fProject.Name, appName]);
-  end;
-end else begin
-  Caption := Format('%s %s', [appName, DEVCPP_VERSION]);
-  Application.Title := Format('%s', [DEVCPP]);
-end;
+    QString appName("Red Panda Dev-C++");
+    Editor *e = mEditorList->getEditor();
+    QString str;
+    QCoreApplication *app = QApplication::instance();
+    if (e && !e->inProject()) {
+        if (e->modified())
+          str = e->filename() + " [*]";
+        else
+          str = e->filename();
+        if (mDebugger->executing()) {
+            setWindowTitle(QString("%s - [%s] - %s %s").arg(str).arg(appName)
+                                 .arg(tr("Debugging")).arg(DEVCPP_VERSION));
+            app->setApplicationName(QString("%s - [%s] - %s").arg(str).arg(appName)
+                                    .arg(tr("Debugging")));
+        } else if (mCompilerManager->running()) {
+            setWindowTitle(QString("%s - [%s] - %s %s").arg(str).arg(appName)
+                                 .arg(tr("Running")).arg(DEVCPP_VERSION));
+            app->setApplicationName(QString("%s - [%s] - %s").arg(str).arg(appName)
+                                    .arg(tr("Running")));
+        } else if (mCompilerManager->compiling()) {
+            setWindowTitle(QString("%s - [%s] - %s %s").arg(str).arg(appName)
+                                 .arg(tr("Compiling")).arg(DEVCPP_VERSION));
+            app->setApplicationName(QString("%s - [%s] - %s").arg(str).arg(appName)
+                                    .arg(tr("Compiling")));
+        } else {
+            this->setWindowTitle(QString("%s - %s %s").arg(str).arg(appName).arg(DEVCPP_VERSION));
+            app->setApplicationName(QString("%s - %s").arg(str).arg(appName));
+        }
+    }
+// else if Assigned(fProject) then begin
+//  if fDebugger.Executing then begin
+//    Caption := Format('%s - [%s] - [Debugging] - %s %s',
+//      [fProject.Name, ExtractFilename(fProject.Filename), appName, DEVCPP_VERSION]);
+//    Application.Title := Format('%s - [Debugging] - %s', [fProject.Name, appName]);
+//  end else if devExecutor.Running then begin
+//    Caption := Format('%s - [%s] - [Executing] - %s %s',
+//      [fProject.Name, ExtractFilename(fProject.Filename), appName, DEVCPP_VERSION]);
+//    Application.Title := Format('%s - [Executing] - %s', [fProject.Name, appName]);
+//  end else if fCompiler.Compiling then begin
+//    Caption := Format('%s - [%s] - [Compiling] - %s %s',
+//      [fProject.Name, ExtractFilename(fProject.Filename), appName, DEVCPP_VERSION]);
+//    Application.Title := Format('%s - [Compiling] - %s', [fProject.Name, appName]);
+//  end else begin
+//    Caption := Format('%s - [%s] - %s %s',
+//      [fProject.Name, ExtractFilename(fProject.Filename), appName, DEVCPP_VERSION]);
+//    Application.Title := Format('%s - %s', [fProject.Name, appName]);
+//  end;
+    else {
+        setWindowTitle(QString("%s %s").arg(appName).arg(DEVCPP_VERSION));
+        app->setApplicationName(QString("%s").arg(appName));
+    }
+}
+
+void MainWindow::addDebugOutput(const QString &text)
+{
+    if (text.isEmpty()) {
+        ui->debugConsole->addLine("");
+    } else {
+        ui->debugConsole->addText(text);
+    }
 }
 
 void MainWindow::updateStatusbarForLineCol()
@@ -760,6 +782,11 @@ void MainWindow::prepareDebugger()
 
     // Reset watch vars
     mDebugger->deleteWatchVars(false);
+}
+
+CPUDialog *MainWindow::CPUDialog() const
+{
+    return mCPUDialog;
 }
 
 

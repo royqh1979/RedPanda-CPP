@@ -146,16 +146,20 @@ public:
 
     BacktraceModel* backtraceModel();
     BreakpointModel* breakpointModel();
+    bool executing() const;
+
 public slots:
     void stop();
 signals:
+    void evalReady(QString value);
 
 private:
     void sendBreakpointCommand(int index);
     void sendBreakpointCommand(PBreakpoint breakpoint);
     void sendClearBreakpointCommand(int index);
     void sendClearBreakpointCommand(PBreakpoint breakpoint);
-
+private slots:
+    void syncFinishedParsing();
 private:
     bool mExecuting;
     bool mCommandChanged;
@@ -253,7 +257,7 @@ private:
     bool doreceivedsfwarning;
 
     bool mStop;
-
+    friend class Debugger;
     // QThread interface
 protected:
     void run() override;

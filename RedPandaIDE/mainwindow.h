@@ -19,6 +19,7 @@ class QComboBox;
 class CompilerManager;
 class Editor;
 class Debugger;
+class CPUDialog;
 
 class MainWindow : public QMainWindow
 {
@@ -60,6 +61,9 @@ public:
 
     void removeActiveBreakpoints();
     void updateAppTitle();
+    void addDebugOutput(const QString& text);
+
+    CPUDialog *CPUDialog() const;
 
 protected:
     void openFiles(const QStringList& files);
@@ -159,6 +163,7 @@ private:
     QComboBox* mCompilerSet;
     CompilerManager* mCompilerManager;
     Debugger* mDebugger;
+    CPUDialog* mCPUDialog;
 
     bool mMessageControlChanged;
     bool mTabMessagesTogglingState;
