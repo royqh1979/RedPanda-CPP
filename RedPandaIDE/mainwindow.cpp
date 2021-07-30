@@ -296,7 +296,13 @@ void MainWindow::addDebugOutput(const QString &text)
         ui->debugConsole->addLine("");
     } else {
         ui->debugConsole->addText(text);
+        qDebug()<<"add text"<<text;
     }
+}
+
+void MainWindow::changeDebugOutputLastline(const QString &test)
+{
+    ui->debugConsole->changeLastLine(test);
 }
 
 void MainWindow::updateStatusbarForLineCol()

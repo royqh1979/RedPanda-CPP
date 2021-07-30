@@ -43,6 +43,7 @@ void Debugger::start()
     mReader->setDebuggerPath(debuggerPath);
     connect(mReader, &QThread::finished,this,&Debugger::stop);
     connect(mReader, &DebugReader::parseFinished,this,&Debugger::syncFinishedParsing,Qt::BlockingQueuedConnection);
+    connect(mReader, &DebugReader::changeDebugConsoleLastLine,this,&Debugger::onChangeDebugConsoleLastline,Qt::BlockingQueuedConnection);
     mReader->start();
     mReader->mStartSemaphore.acquire(1);
 
@@ -418,6 +419,12 @@ void Debugger::syncFinishedParsing()
     }
 }
 
+void Debugger::onChangeDebugConsoleLastline(const QString &text)
+{
+    //pMainWindow->changeDebugOutputLastline(text);
+    pMainWindow->addDebugOutput(text);
+}
+
 int Debugger::leftPageIndexBackup() const
 {
     return mLeftPageIndexBackup;
@@ -455,8 +462,8 @@ void DebugReader::postCommand(const QString &Command, const QString &Params, boo
     pCmd->showInConsole = ShowInConsole;
     pCmd->source = Source;
     mCmdQueue.enqueue(pCmd);
-    if (!mCmdRunning)
-        runNextCmd();
+//    if (!mCmdRunning)
+//        runNextCmd();
 }
 
 void DebugReader::clearCmdQueue()
@@ -1131,16 +1138,18 @@ void DebugReader::runNextCmd()
     }
 
 //  if devDebugger.ShowCommandLog or pCmd^.ShowInConsole then begin
-    if (true || pCmd->showInConsole) {
+    if (pSettings->debugger().showCommandLog() || pCmd->showInConsole) {
         //update debug console
         // if not devDebugger.ShowAnnotations then begin
-        if (true) {
+        if (!pSettings->debugger().showAnnotations()) {
 //            if MainForm.DebugOutput.Lines.Count>0 then begin
 //              MainForm.DebugOutput.Lines.Delete(MainForm.DebugOutput.Lines.Count-1);
 //            end;
+            emit changeDebugConsoleLastLine("(gdb)"+pCmd->command + ' ' + pCmd->params);
 //            MainForm.DebugOutput.Lines.Add('(gdb)'+pCmd^.Cmd + ' ' + pCmd^.params);
 //            MainForm.DebugOutput.Lines.Add('');
         } else {
+            emit changeDebugConsoleLastLine("(gdb)"+pCmd->command + ' ' + pCmd->params);
 //            MainForm.DebugOutput.Lines.Add(pCmd^.Cmd + ' ' + pCmd^.params);
 //            MainForm.DebugOutput.Lines.Add('');
         }
@@ -1212,6 +1221,7 @@ void DebugReader::run()
     mProcess->waitForStarted(5000);
     mStartSemaphore.release(1);
     QByteArray buffer;
+    QByteArray readed;
     while (true) {
         mProcess->waitForFinished(100);
         if (mProcess->state()!=QProcess::Running) {
@@ -1222,11 +1232,15 @@ void DebugReader::run()
         }
         if (errorOccurred)
             break;
-        buffer += mProcess->readAll();
+        readed = mProcess->readAll();
+        buffer += readed;
         if (getLastAnnotation(buffer) == AnnotationType::TPrompt) {
             mOutput = buffer;
             processDebugOutput();
+            buffer.clear();
             mCmdRunning = false;
+            runNextCmd();
+        } else if (!mCmdRunning && readed.isEmpty()){
             runNextCmd();
         }
     }

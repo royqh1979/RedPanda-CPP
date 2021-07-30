@@ -180,6 +180,7 @@ private:
     void sendClearBreakpointCommand(PBreakpoint breakpoint);
 private slots:
     void syncFinishedParsing();
+    void onChangeDebugConsoleLastline(const QString& text);
 private:
     bool mExecuting;
     bool mCommandChanged;
@@ -209,6 +210,7 @@ signals:
     void pauseWatchUpdate();
     void updateWatch();
     void processError(QProcess::ProcessError error);
+    void changeDebugConsoleLastLine(const QString& test);
 private:
     void clearCmdQueue();
     bool findAnnotation(AnnotationType annotation);

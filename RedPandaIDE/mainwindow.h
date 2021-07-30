@@ -63,6 +63,7 @@ public:
     void setActiveBreakpoint(QString FileName, int Line, bool setFocus=true);
     void updateAppTitle();
     void addDebugOutput(const QString& text);
+    void changeDebugOutputLastline(const QString& text);
 
     CPUDialog *cpuDialog() const;
 
