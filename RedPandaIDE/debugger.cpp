@@ -190,44 +190,78 @@ void Debugger::sendAllBreakpointsToDebugger()
     }
 }
 
-void Debugger::addWatchVar(int i)
-{
-    //todo
-}
-
-void Debugger::removeWatchVar(int i)
-{
-    //todo
-}
-
 void Debugger::addWatchVar(const QString &namein)
 {
-    //todo
+    // Don't allow duplicates...
+    PWatchVar oldVar = mWatchModel->findWatchVar(namein);
+    if (oldVar)
+        return;
+
+    PWatchVar var = std::make_shared<WatchVar>();
+    var->parent= nullptr;
+    var->name = namein;
+    var->value = tr("Execute to evaluate");
+    var->text = QString("%1 = %2").arg(var->name).arg(var->value);
+    var->gdbIndex = -1;
+
+    mWatchModel->addWatchVar(var);
+    sendWatchCommand(var);
 }
 
 void Debugger::renameWatchVar(const QString &oldname, const QString &newname)
 {
-    //todo
+    // check if name already exists;
+    PWatchVar var = mWatchModel->findWatchVar(newname);
+    if (var)
+        return;
+
+    var = mWatchModel->findWatchVar(oldname);
+    if (var) {
+        var->name = newname;
+        var->value = tr("Execute to evaluate");
+        var->text = QString("%1 = %1").arg(var->name).arg(var->value);
+
+        if (mExecuting) {
+            if (var->gdbIndex!=-1)
+                sendRemoveWatchCommand(var);
+            sendWatchCommand(var);
+        }
+        mWatchModel->notifyUpdated(var);
+    }
 }
 
 void Debugger::refreshWatchVars()
 {
-    //todo
+    for (PWatchVar var:mWatchModel->watchVars()) {
+        if (var->gdbIndex == -1)
+            sendWatchCommand(var);
+    }
 }
 
 void Debugger::deleteWatchVars(bool deleteparent)
 {
-    //todo
+    if (deleteparent) {
+        mWatchModel->clear();
+    } else {
+        for(PWatchVar var:mWatchModel->watchVars()) {
+            sendRemoveWatchCommand(var);
+            var->gdbIndex = -1;
+            var->value = tr("Execute to evaluate");
+            var->text = QString("%1 = %1").arg(var->name).arg(var->value);
+        }
+    }
 }
 
 void Debugger::invalidateAllVars()
 {
-    //todo
+    mReader->setInvalidateAllVars(true);
 }
 
 void Debugger::sendAllWatchvarsToDebugger()
 {
-    //todo
+    for (PWatchVar var:mWatchModel->watchVars()) {
+        sendWatchCommand(var);
+    }
 }
 
 void Debugger::invalidateWatchVar(PWatchVar var)
@@ -262,9 +296,14 @@ BreakpointModel *Debugger::breakpointModel()
     return mBreakpointModel;
 }
 
-void Debugger::sendBreakpointCommand(int index)
+void Debugger::sendWatchCommand(PWatchVar var)
 {
-    sendBreakpointCommand(mBreakpointModel->breakpoints()[index]);
+    sendCommand("display", var->name);
+}
+
+void Debugger::sendRemoveWatchCommand(PWatchVar var)
+{
+    sendCommand("undisplay",QString("%1").arg(var->gdbIndex));
 }
 
 void Debugger::sendBreakpointCommand(PBreakpoint breakpoint)
@@ -450,6 +489,8 @@ DebugReader::DebugReader(Debugger* debugger, QObject *parent) : QThread(parent),
     mDebugger = debugger;
     mProcess = nullptr;
     mUseUTF8 = false;
+    mCmdRunning = false;
+    mInvalidateAllVars = false;
 }
 
 void DebugReader::postCommand(const QString &Command, const QString &Params, bool UpdateWatch, bool ShowInConsole, DebugCommandSource Source)
@@ -985,7 +1026,7 @@ void DebugReader::processDebugOutput()
 
     if (mInvalidateAllVars) {
          //invalidate all vars when there's first output
-         invalidateAllVars();
+         mDebugger->deleteWatchVars(false);
          mInvalidateAllVars = false;
     }
 
@@ -1179,6 +1220,16 @@ void DebugReader::skipToAnnotation()
         mIndex++;
 }
 
+bool DebugReader::invalidateAllVars() const
+{
+    return mInvalidateAllVars;
+}
+
+void DebugReader::setInvalidateAllVars(bool invalidateAllVars)
+{
+    mInvalidateAllVars = invalidateAllVars;
+}
+
 QString DebugReader::debuggerPath() const
 {
     return mDebuggerPath;
@@ -1338,10 +1389,9 @@ void BreakpointModel::removeBreakpoint(int row)
 
 PBreakpoint BreakpointModel::setBreakPointCondition(int index, const QString &condition)
 {
-    beginResetModel();
     PBreakpoint breakpoint = mList[index];
     breakpoint->condition = condition;
-    endResetModel();
+    emit dataChanged(createIndex(index,0),createIndex(index,2));
     return breakpoint;
 }
 
@@ -1436,6 +1486,24 @@ const QList<PTrace> &BacktraceModel::backtraces() const
     return mList;
 }
 
+WatchModel::WatchModel(QObject *parent):QAbstractItemModel(parent)
+{
+
+}
+
+QVariant WatchModel::data(const QModelIndex &index, int role) const
+{
+    if (!index.isValid()) {
+        return QVariant();
+    }
+    WatchVar* item = static_cast<WatchVar*>(index.internalPointer());
+    switch (role) {
+    case Qt::DisplayRole:
+        return item->text;
+    }
+    return QVariant();
+}
+
 QModelIndex WatchModel::index(int row, int column, const QModelIndex &parent) const
 {
     if (!hasIndex(row,column,parent))
@@ -1496,7 +1564,7 @@ int WatchModel::rowCount(const QModelIndex &parent) const
     }
 }
 
-int WatchModel::columnCount(const QModelIndex &parent) const
+int WatchModel::columnCount(const QModelIndex&) const
 {
     return 1;
 }
@@ -1508,33 +1576,43 @@ void WatchModel::addWatchVar(PWatchVar watchVar)
             return;
         }
     }
+    this->beginInsertRows(QModelIndex(),mWatchVars.size(),mWatchVars.size());
     mWatchVars.append(watchVar);
+    this->endInsertRows();
 }
 
 void WatchModel::removeWatchVar(const QString &name)
 {
-    for (PWatchVar var:mWatchVars) {
+    for (int i=0;i<mWatchVars.size();i++) {
+        PWatchVar var = mWatchVars[i];
         if (name == var->name) {
+            this->beginRemoveRows(QModelIndex(),i,i);
             mWatchVars.removeOne(var);
+            this->endRemoveRows();
         }
     }
 }
 
 void WatchModel::removeWatchVar(int gdbIndex)
 {
-    for (PWatchVar var:mWatchVars) {
+    for (int i=0;i<mWatchVars.size();i++) {
+        PWatchVar var = mWatchVars[i];
         if (gdbIndex == var->gdbIndex) {
+            this->beginRemoveRows(QModelIndex(),i,i);
             mWatchVars.removeOne(var);
+            this->endRemoveRows();
         }
     }
 }
 
 void WatchModel::clear()
 {
+    this->beginResetModel();
     mWatchVars.clear();
+    this->endResetModel();
 }
 
-QList<PWatchVar> &WatchModel::watchVars()
+const QList<PWatchVar> &WatchModel::watchVars()
 {
     return mWatchVars;
 }
@@ -1546,6 +1624,7 @@ PWatchVar WatchModel::findWatchVar(const QString &name)
             return var;
         }
     }
+    return PWatchVar();
 }
 
 PWatchVar WatchModel::findWatchVar(int gdbIndex)
@@ -1555,4 +1634,20 @@ PWatchVar WatchModel::findWatchVar(int gdbIndex)
             return var;
         }
     }
+    return PWatchVar();
+}
+
+void WatchModel::notifyUpdated(PWatchVar var)
+{
+    if (!var)
+        return;
+    int row;
+    if (var->parent==nullptr) {
+        row = mWatchVars.indexOf(var);
+    } else {
+        row = var->parent->children.indexOf(var);
+    }
+    if (row<0)
+        return;
+    emit dataChanged(createIndex(row,0,var.get()),createIndex(row,0,var.get()));
 }

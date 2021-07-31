@@ -122,6 +122,7 @@ private:
 class WatchModel: public QAbstractItemModel {
     Q_OBJECT
 public:
+    explicit WatchModel(QObject *parent = nullptr);
     QVariant data(const QModelIndex &index, int role) const override;
     Qt::ItemFlags flags(const QModelIndex &index) const override;
     QVariant headerData(int section, Qt::Orientation orientation,
@@ -140,6 +141,7 @@ public:
     const QList<PWatchVar>& watchVars();
     PWatchVar findWatchVar(const QString& name);
     PWatchVar findWatchVar(int gdbIndex);
+    void notifyUpdated(PWatchVar var);
 private:
     QList<PWatchVar> mWatchVars;
 };
@@ -172,9 +174,8 @@ public:
     void removeBreakpoint(int index);
     void setBreakPointCondition(int index, const QString& condition);
     void sendAllBreakpointsToDebugger();
+
     //watch vars
-    void addWatchVar(int i);
-    void removeWatchVar(int i);
     void addWatchVar(const QString& namein);
 //    void removeWatchVar(nodein: TTreeNode); overload;
     void renameWatchVar(const QString& oldname, const QString& newname);
@@ -204,7 +205,8 @@ signals:
     void evalReady(QString value);
 
 private:
-    void sendBreakpointCommand(int index);
+    void sendWatchCommand(PWatchVar var);
+    void sendRemoveWatchCommand(PWatchVar var);
     void sendBreakpointCommand(PBreakpoint breakpoint);
     void sendClearBreakpointCommand(int index);
     void sendClearBreakpointCommand(PBreakpoint breakpoint);
@@ -218,6 +220,7 @@ private:
     BreakpointModel* mBreakpointModel;
     bool mUseUTF8;
     BacktraceModel* mBacktraceModel;
+    WatchModel* mWatchModel;
     DebugReader* mReader;
     int mLeftPageIndexBackup;
 };
