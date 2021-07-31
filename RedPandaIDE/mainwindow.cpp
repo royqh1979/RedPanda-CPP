@@ -1294,3 +1294,80 @@ bool MainWindow::debugInferiorhasBreakpoint()
     }
     return false;
 }
+
+void MainWindow::on_actionStep_Over_triggered()
+{
+    if (mDebugger->executing()) {
+        //WatchView.Items.BeginUpdate();
+        mDebugger->invalidateAllVars();
+        mDebugger->sendCommand("next", "");
+        mDebugger->updateDebugInfo();
+//        if (CPUForm) then
+//        CPUForm.UpdateInfo;
+      //WatchView.Items.EndUpdate();
+      //fDebugger.RefreshWatchVars;
+    }
+}
+
+void MainWindow::on_actionStep_Into_triggered()
+{
+    if (mDebugger->executing()) {
+        //WatchView.Items.BeginUpdate();
+        mDebugger->invalidateAllVars();
+        mDebugger->sendCommand("step", "");
+        mDebugger->updateDebugInfo();
+//        if (CPUForm) then
+//        CPUForm.UpdateInfo;
+      //WatchView.Items.EndUpdate();
+      //fDebugger.RefreshWatchVars;
+    }
+
+}
+
+void MainWindow::on_actionStep_Out_triggered()
+{
+    if (mDebugger->executing()) {
+        //WatchView.Items.BeginUpdate();
+        mDebugger->invalidateAllVars();
+        mDebugger->sendCommand("finish", "");
+        mDebugger->updateDebugInfo();
+//        if (CPUForm) then
+//        CPUForm.UpdateInfo;
+      //WatchView.Items.EndUpdate();
+      //fDebugger.RefreshWatchVars;
+    }
+
+}
+
+void MainWindow::on_actionRun_To_Cursor_triggered()
+{
+    if (mDebugger->executing()) {
+        Editor *e=mEditorList->getEditor();
+        if (e!=nullptr) {
+            //WatchView.Items.BeginUpdate();
+            mDebugger->invalidateAllVars();
+            mDebugger->sendCommand("tbreak", QString(" %1").arg(e->caretY()));
+            mDebugger->sendCommand("continue", "");
+            mDebugger->updateDebugInfo();
+    //        if (CPUForm) then
+    //        CPUForm.UpdateInfo;
+          //WatchView.Items.EndUpdate();
+          //fDebugger.RefreshWatchVars;
+        }
+    }
+
+}
+
+void MainWindow::on_actionContinue_triggered()
+{
+    if (mDebugger->executing()) {
+        //WatchView.Items.BeginUpdate();
+        mDebugger->invalidateAllVars();
+        mDebugger->sendCommand("continue", "");
+        mDebugger->updateDebugInfo();
+//        if (CPUForm) then
+//        CPUForm.UpdateInfo;
+      //WatchView.Items.EndUpdate();
+      //fDebugger.RefreshWatchVars;
+    }
+}

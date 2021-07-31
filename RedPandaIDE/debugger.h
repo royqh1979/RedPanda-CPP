@@ -48,13 +48,17 @@ struct DebugCommand{
 };
 
 using PDebugCommand = std::shared_ptr<DebugCommand>;
-
+struct WatchVar;
+using  PWatchVar = std::shared_ptr<WatchVar>;
 struct WatchVar {
     QString name;
+    QString text;
+    QString value;
     int gdbIndex;
+    QList<PWatchVar> children;
+    WatchVar * parent; //use raw point to prevent circular-reference
 };
 
-using PWatchVar = std::shared_ptr<WatchVar>;
 
 struct Breakpoint {
     int line;
@@ -99,6 +103,7 @@ private:
 };
 
 class BacktraceModel : public QAbstractTableModel {
+    Q_OBJECT
     // QAbstractItemModel interface
 public:
     explicit BacktraceModel(QObject *parent = nullptr);
@@ -112,6 +117,31 @@ public:
     const QList<PTrace>& backtraces() const;
 private:
     QList<PTrace> mList;
+};
+
+class WatchModel: public QAbstractItemModel {
+    Q_OBJECT
+public:
+    QVariant data(const QModelIndex &index, int role) const override;
+    Qt::ItemFlags flags(const QModelIndex &index) const override;
+    QVariant headerData(int section, Qt::Orientation orientation,
+                        int role = Qt::DisplayRole) const override;
+
+    QModelIndex index(int row, int column,
+                      const QModelIndex &parent = QModelIndex()) const override;
+    QModelIndex parent(const QModelIndex &index) const override;
+
+    int rowCount(const QModelIndex &parent = QModelIndex()) const override;
+    int columnCount(const QModelIndex &parent = QModelIndex()) const override;
+    void addWatchVar(PWatchVar watchVar);
+    void removeWatchVar(const QString& name);
+    void removeWatchVar(int gdbIndex);
+    void clear();
+    const QList<PWatchVar>& watchVars();
+    PWatchVar findWatchVar(const QString& name);
+    PWatchVar findWatchVar(int gdbIndex);
+private:
+    QList<PWatchVar> mWatchVars;
 };
 
 
@@ -181,6 +211,7 @@ private:
 private slots:
     void syncFinishedParsing();
     void onChangeDebugConsoleLastline(const QString& text);
+    void clearUpReader();
 private:
     bool mExecuting;
     bool mCommandChanged;

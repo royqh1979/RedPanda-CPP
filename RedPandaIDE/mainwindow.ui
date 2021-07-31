@@ -551,6 +551,11 @@
     <addaction name="actionCompile_Run"/>
     <addaction name="actionRebuild"/>
     <addaction name="separator"/>
+    <addaction name="actionDebug"/>
+    <addaction name="actionStep_Over"/>
+    <addaction name="actionStep_Into"/>
+    <addaction name="actionRun_To_Cursor"/>
+    <addaction name="actionContinue"/>
     <addaction name="actionStop_Execution"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
@@ -631,6 +636,10 @@
     <bool>false</bool>
    </attribute>
    <addaction name="actionDebug"/>
+   <addaction name="actionStep_Over"/>
+   <addaction name="actionStep_Into"/>
+   <addaction name="actionStep_Out"/>
+   <addaction name="actionContinue"/>
    <addaction name="actionStop_Execution"/>
   </widget>
   <action name="actionNew">
@@ -915,6 +924,9 @@
    <property name="text">
     <string>Stop Execution</string>
    </property>
+   <property name="shortcut">
+    <string>F6</string>
+   </property>
   </action>
   <action name="actionDebug">
    <property name="icon">
@@ -929,6 +941,66 @@
    </property>
    <property name="shortcut">
     <string>F5</string>
+   </property>
+  </action>
+  <action name="actionStep_Over">
+   <property name="icon">
+    <iconset>
+     <normalon>:/icons/images/newlook24/028-Debug-StepOver.png</normalon>
+    </iconset>
+   </property>
+   <property name="text">
+    <string>Step Over</string>
+   </property>
+   <property name="shortcut">
+    <string>F7</string>
+   </property>
+  </action>
+  <action name="actionStep_Into">
+   <property name="icon">
+    <iconset>
+     <normalon>:/icons/images/newlook24/024-Debug-StepInto.png</normalon>
+    </iconset>
+   </property>
+   <property name="text">
+    <string>Step Into</string>
+   </property>
+   <property name="shortcut">
+    <string>F8</string>
+   </property>
+  </action>
+  <action name="actionStep_Out">
+   <property name="icon">
+    <iconset>
+     <normalon>:/icons/images/newlook24/026-Debug-StepOut.png</normalon>
+    </iconset>
+   </property>
+   <property name="text">
+    <string>Step Out</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+F8</string>
+   </property>
+  </action>
+  <action name="actionRun_To_Cursor">
+   <property name="text">
+    <string>Run To Cursor</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+F5</string>
+   </property>
+  </action>
+  <action name="actionContinue">
+   <property name="icon">
+    <iconset>
+     <normalon>:/icons/images/newlook24/021-Debug-Continue.png</normalon>
+    </iconset>
+   </property>
+   <property name="text">
+    <string>Continue</string>
+   </property>
+   <property name="shortcut">
+    <string>F4</string>
    </property>
   </action>
  </widget>

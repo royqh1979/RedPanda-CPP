@@ -41,7 +41,7 @@ void Debugger::start()
     }
     mReader = new DebugReader(this);
     mReader->setDebuggerPath(debuggerPath);
-    connect(mReader, &QThread::finished,this,&Debugger::stop);
+    connect(mReader, &QThread::finished,this,&Debugger::clearUpReader);
     connect(mReader, &DebugReader::parseFinished,this,&Debugger::syncFinishedParsing,Qt::BlockingQueuedConnection);
     connect(mReader, &DebugReader::changeDebugConsoleLastLine,this,&Debugger::onChangeDebugConsoleLastline,Qt::BlockingQueuedConnection);
     mReader->start();
@@ -65,16 +65,20 @@ void Debugger::start()
 
     //Application.HintHidePause := 5000;
 }
-
-void Debugger::stop()
+void Debugger::stop() {
+    if (mExecuting) {
+        mReader->stopDebug();
+    }
+}
+void Debugger::clearUpReader()
 {
     if (mExecuting) {
         mExecuting = false;
 
         //stop debugger
-        mReader->stopDebug();
         mReader->deleteLater();
         mReader=nullptr;
+
 //        if WatchVarList.Count = 0 then // nothing worth showing, restore view
 //          MainForm.LeftPageControl.ActivePageIndex := LeftPageIndexBackup;
 
@@ -1229,6 +1233,7 @@ void DebugReader::run()
         }
         if (mStop) {
             mProcess->terminate();
+            break;
         }
         if (errorOccurred)
             break;
@@ -1429,4 +1434,125 @@ void BacktraceModel::removeTrace(int row)
 const QList<PTrace> &BacktraceModel::backtraces() const
 {
     return mList;
+}
+
+QModelIndex WatchModel::index(int row, int column, const QModelIndex &parent) const
+{
+    if (!hasIndex(row,column,parent))
+        return QModelIndex();
+
+    WatchVar* parentItem;
+    PWatchVar pChild;
+    if (!parent.isValid()) {
+        parentItem = nullptr;
+        pChild = mWatchVars[row];
+    } else {
+        parentItem = static_cast<WatchVar*>(parent.internalPointer());
+        pChild = parentItem->children[row];
+    }
+    if (pChild)
+        return createIndex(row,column,pChild.get());
+    return QModelIndex();
+}
+
+static int getWatchIndex(WatchVar* var, const QList<PWatchVar> list) {
+    for (int i=0;i<list.size();i++) {
+        PWatchVar v = list[i];
+        if (v.get() == var) {
+            return i;
+        }
+    }
+}
+
+QModelIndex WatchModel::parent(const QModelIndex &index) const
+{
+    if (!index.isValid()) {
+        return QModelIndex();
+    }
+    WatchVar* childItem = static_cast<WatchVar*>(index.internalPointer());
+    WatchVar* parentItem =childItem->parent;
+
+    //parent is root
+    if (parentItem == nullptr) {
+        return QModelIndex();
+    }
+    int row;
+    WatchVar* grandItem = parentItem->parent;
+    if (grandItem == nullptr) {
+        row = getWatchIndex(parentItem,mWatchVars);
+    } else {
+        row = getWatchIndex(parentItem,grandItem->children);
+    }
+    return createIndex(row,0,parentItem);
+}
+
+int WatchModel::rowCount(const QModelIndex &parent) const
+{
+    if (!parent.isValid()) {
+        return mWatchVars.count();
+    } else {
+        WatchVar* parentItem = static_cast<WatchVar*>(parent.internalPointer());
+        return parentItem->children.count();
+    }
+}
+
+int WatchModel::columnCount(const QModelIndex &parent) const
+{
+    return 1;
+}
+
+void WatchModel::addWatchVar(PWatchVar watchVar)
+{
+    for (PWatchVar var:mWatchVars) {
+        if (watchVar->name == var->name) {
+            return;
+        }
+    }
+    mWatchVars.append(watchVar);
+}
+
+void WatchModel::removeWatchVar(const QString &name)
+{
+    for (PWatchVar var:mWatchVars) {
+        if (name == var->name) {
+            mWatchVars.removeOne(var);
+        }
+    }
+}
+
+void WatchModel::removeWatchVar(int gdbIndex)
+{
+    for (PWatchVar var:mWatchVars) {
+        if (gdbIndex == var->gdbIndex) {
+            mWatchVars.removeOne(var);
+        }
+    }
+}
+
+void WatchModel::clear()
+{
+    mWatchVars.clear();
+}
+
+QList<PWatchVar> &WatchModel::watchVars()
+{
+    return mWatchVars;
+}
+
+PWatchVar WatchModel::findWatchVar(const QString &name)
+{
+    for (PWatchVar var:mWatchVars) {
+        if (name == var->name) {
+            return var;
+        }
+    }
+}
+
+PWatchVar WatchModel::findWatchVar(int gdbIndex)
+{
+    for (PWatchVar var:mWatchVars) {
+        if (gdbIndex == var->gdbIndex) {
+            return var;
+        }
+    }
 }

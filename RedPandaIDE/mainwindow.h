@@ -141,6 +141,16 @@ private slots:
     CompileTarget getCompileTarget();
     bool debugInferiorhasBreakpoint();
 
+    void on_actionStep_Over_triggered();
+
+    void on_actionStep_Into_triggered();
+
+    void on_actionStep_Out_triggered();
+
+    void on_actionRun_To_Cursor_triggered();
+
+    void on_actionContinue_triggered();
+
 public slots:
     void onCompileLog(const QString& msg);
     void onCompileIssue(PCompileIssue issue);
