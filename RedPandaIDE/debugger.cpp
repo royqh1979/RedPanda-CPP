@@ -9,11 +9,13 @@
 #include <QFileInfo>
 #include <QMessageBox>
 #include <QMessageBox>
+#include <QDebug>
 
 Debugger::Debugger(QObject *parent) : QObject(parent)
 {
     mBreakpointModel=new BreakpointModel(this);
     mBacktraceModel=new BacktraceModel(this);
+    mWatchModel = new WatchModel(this);
     mExecuting = false;
     mUseUTF8 = false;
     mReader = nullptr;
@@ -93,22 +95,15 @@ void Debugger::clearUpReader()
 
         mBacktraceModel->clear();
 
-//        Application.HintHidePause := 2500;
-
-//        WatchView.Items.BeginUpdate;
-//        try
-//          //Clear all watch values
-//          for I := 0 to WatchVarList.Count - 1 do begin
-//            WatchVar := PWatchVar(WatchVarList.Items[I]);
-//            WatchVar^.Node.Text := WatchVar^.Name + ' = '+Lang[ID_MSG_EXECUTE_TO_EVALUATE];
-
-//            // Delete now invalid children
-//            WatchVar^.Node.DeleteChildren;
-//          end;
-//        finally
-//        WatchView.Items.EndUpdate;
-//        end;
+        for(PWatchVar var:mWatchModel->watchVars()) {
+            invalidateWatchVar(var);
+        }
     }
+}
+
+WatchModel *Debugger::watchModel() const
+{
+    return mWatchModel;
 }
 
 void Debugger::sendCommand(const QString &command, const QString &params, bool updateWatch, bool showInConsole, DebugCommandSource source)
@@ -200,8 +195,7 @@ void Debugger::addWatchVar(const QString &namein)
     PWatchVar var = std::make_shared<WatchVar>();
     var->parent= nullptr;
     var->name = namein;
-    var->value = tr("Execute to evaluate");
-    var->text = QString("%1 = %2").arg(var->name).arg(var->value);
+    var->text = QString("%1 = %2").arg(var->name).arg(tr("Execute to evaluate"));
     var->gdbIndex = -1;
 
     mWatchModel->addWatchVar(var);
@@ -218,15 +212,13 @@ void Debugger::renameWatchVar(const QString &oldname, const QString &newname)
     var = mWatchModel->findWatchVar(oldname);
     if (var) {
         var->name = newname;
-        var->value = tr("Execute to evaluate");
-        var->text = QString("%1 = %1").arg(var->name).arg(var->value);
+        if (mExecuting && var->gdbIndex!=-1)
+            sendRemoveWatchCommand(var);
+        invalidateWatchVar(var);
 
         if (mExecuting) {
-            if (var->gdbIndex!=-1)
-                sendRemoveWatchCommand(var);
             sendWatchCommand(var);
         }
-        mWatchModel->notifyUpdated(var);
     }
 }
 
@@ -245,9 +237,7 @@ void Debugger::deleteWatchVars(bool deleteparent)
     } else {
         for(PWatchVar var:mWatchModel->watchVars()) {
             sendRemoveWatchCommand(var);
-            var->gdbIndex = -1;
-            var->value = tr("Execute to evaluate");
-            var->text = QString("%1 = %1").arg(var->name).arg(var->value);
+            invalidateWatchVar(var);
         }
     }
 }
@@ -264,9 +254,36 @@ void Debugger::sendAllWatchvarsToDebugger()
     }
 }
 
+void Debugger::invalidateWatchVar(const QString &name)
+{
+    PWatchVar var = mWatchModel->findWatchVar(name);
+    if (var) {
+        invalidateWatchVar(var);
+    }
+}
+
 void Debugger::invalidateWatchVar(PWatchVar var)
 {
-    //toto
+    var->gdbIndex = -1;
+    QString value;
+    if (mExecuting) {
+        value = tr("Not found in current context");
+    } else {
+        value = tr("Execute to evaluate");
+    }
+    var->text = QString("%1 = %2").arg(var->name).arg(value);
+    var->children.clear();
+    mWatchModel->notifyUpdated(var);
+}
+
+PWatchVar Debugger::findWatchVar(const QString &name)
+{
+    return mWatchModel->findWatchVar(name);
+}
+
+void Debugger::notifyWatchVarUpdated(PWatchVar var)
+{
+    mWatchModel->notifyUpdated(var);
 }
 
 void Debugger::updateDebugInfo()
@@ -409,10 +426,6 @@ void Debugger::syncFinishedParsing()
 //        if (mReader->dodisassemblerready)
 //            CPUForm.OnAssemblerReady;
     }
-
-//if dobacktraceready then
-//  MainForm.OnBacktraceReady;
-
 
     if (mReader->doupdateexecution) {
         if (mReader->mCurrentCmd && mReader->mCurrentCmd->source == DebugCommandSource::Console) {
@@ -756,17 +769,16 @@ void DebugReader::handleDisplay()
     if (!findAnnotation(AnnotationType::TDisplayExpression))
         return;
     QString watchName = getNextLine(); // watch name
-
-    // Find parent we're talking about
-    auto result = mWatchVarList.find(watchName);
-    if (result != mWatchVarList.end()) {
-        PWatchVar watchVar = result.value();
+    // Find watchVar we're talking about
+    PWatchVar watchVar = mDebugger->findWatchVar(watchName);
+    if (watchVar) {
         // Advance up to the value
         if (!findAnnotation(AnnotationType::TDisplayExpression))
             return;;
         // Refresh GDB index so we can undisplay this by index
         watchVar->gdbIndex = s.toInt();
         processWatchOutput(watchVar);
+        mDebugger->notifyWatchVarUpdated(watchVar);
     }
 }
 
@@ -781,15 +793,8 @@ void DebugReader::handleError()
         int tail = s.lastIndexOf('\"');
         QString watchName = s.mid(head+1, tail-head-1);
 
-        // Update current...
-        auto result = mWatchVarList.find(watchName);
-        if (result != mWatchVarList.end()) {
-            PWatchVar watchVar = result.value();
-            //todo: update watch value to invalid
-            mDebugger->invalidateWatchVar(watchVar);
-            watchVar->gdbIndex = -1;
-            dorescanwatches = true;
-        }
+        // Update current..
+        mDebugger->invalidateWatchVar(watchName);
     }
 }
 
@@ -804,6 +809,9 @@ void DebugReader::handleFrames()
 
     // Is this a backtrace dump?
     if (s.startsWith("#")) {
+        if (s.startsWith("#0")) {
+            mDebugger->backtraceModel()->clear();
+        }
         // Find function name
         if (!findAnnotation(AnnotationType::TFrameFunctionName))
             return;
@@ -1037,7 +1045,6 @@ void DebugReader::processDebugOutput()
    dobacktraceready = false;
    dodisassemblerready = false;
    doregistersready = false;
-   dorescanwatches = false;
    doevalready = false;
    doprocessexited = false;
    doupdateexecution = false;
@@ -1137,11 +1144,63 @@ QString DebugReader::processEvalOutput()
         }
         result += nextLine;
     } while (!shouldExit);
+    return result;
 }
 
-void DebugReader::processWatchOutput(PWatchVar WatchVar)
+void DebugReader::processWatchOutput(PWatchVar watchVar)
 {
-    //todo
+//    // Expand if it was expanded or if it didn't have any children
+//    bool ParentWasExpanded = false;
+
+    // Do not remove root node of watch variable
+
+    watchVar->children.clear();
+    watchVar->text = "";
+    // Process output parsed by ProcessEvalStruct
+    QString s = watchVar->name + " = " + processEvalOutput();
+    // add placeholder name for variable name so we can format structs using one rule
+
+    // Add children based on indent
+    QStringList lines = TextToLines(s);
+    PWatchVar parentVar=watchVar;
+
+    for (const QString& line:lines) {
+        // Format node text. Remove trailing comma
+        QString nodeText = line.trimmed();
+        if (nodeText.endsWith(',')) {
+            nodeText.remove(nodeText.length()-1);
+        }
+
+        if (nodeText.endsWith('{')) { // new member struct
+            if (parentVar->text.isEmpty()) { // root node, replace text only
+                parentVar->text = nodeText;
+            } else {
+                PWatchVar newVar = std::shared_ptr<WatchVar>();
+                newVar->parent = parentVar.get();
+                newVar->name = "";
+                newVar->text = nodeText;
+                newVar->gdbIndex = -1;
+                parentVar->children.append(newVar);
+                parentVar = newVar;
+            }
+        } else if (nodeText.startsWith('}')) { // end of struct, change parent
+            if (parentVar->parent!=nullptr) {
+                parentVar = std::shared_ptr<WatchVar>(parentVar->parent);
+            }
+        } else { // next parent member/child
+            if (parentVar->text.isEmpty()) { // root node, replace text only
+                parentVar->text = nodeText;
+            } else {
+                PWatchVar newVar = std::shared_ptr<WatchVar>();
+                newVar->parent = parentVar.get();
+                newVar->name = "";
+                newVar->text = nodeText;
+                newVar->gdbIndex = -1;
+                parentVar->children.append(newVar);
+            }
+        }
+    }
+        // TODO: remember expansion state
 }
 
 void DebugReader::runNextCmd()
@@ -1278,7 +1337,7 @@ void DebugReader::run()
     QByteArray buffer;
     QByteArray readed;
     while (true) {
-        mProcess->waitForFinished(100);
+        mProcess->waitForFinished(1);
         if (mProcess->state()!=QProcess::Running) {
             break;
         }
@@ -1298,6 +1357,8 @@ void DebugReader::run()
             runNextCmd();
         } else if (!mCmdRunning && readed.isEmpty()){
             runNextCmd();
+        } else if (readed.isEmpty()){
+            msleep(100);
         }
     }
     if (errorOccurred) {
@@ -1499,6 +1560,7 @@ QVariant WatchModel::data(const QModelIndex &index, int role) const
     WatchVar* item = static_cast<WatchVar*>(index.internalPointer());
     switch (role) {
     case Qt::DisplayRole:
+        qDebug()<<"item->text:"<<item->text;
         return item->text;
     }
     return QVariant();
@@ -1538,7 +1600,7 @@ QModelIndex WatchModel::parent(const QModelIndex &index) const
         return QModelIndex();
     }
     WatchVar* childItem = static_cast<WatchVar*>(index.internalPointer());
-    WatchVar* parentItem =childItem->parent;
+    WatchVar* parentItem = childItem->parent;
 
     //parent is root
     if (parentItem == nullptr) {
@@ -1649,5 +1711,6 @@ void WatchModel::notifyUpdated(PWatchVar var)
     }
     if (row<0)
         return;
+    qDebug()<<"dataChanged"<<row<<":"<<var->text;
     emit dataChanged(createIndex(row,0,var.get()),createIndex(row,0,var.get()));
 }

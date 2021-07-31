@@ -12,6 +12,7 @@
 #include <QCloseEvent>
 #include <QComboBox>
 #include <QFileDialog>
+#include <QInputDialog>
 #include <QLabel>
 #include <QMessageBox>
 #include <QTranslator>
@@ -63,12 +64,14 @@ MainWindow::MainWindow(QWidget *parent)
 
     ui->tblBreakpoints->setModel(mDebugger->breakpointModel());
     ui->tblStackTrace->setModel(mDebugger->backtraceModel());
+    ui->watchView->setModel(mDebugger->watchModel());
 
     ui->actionIndent->setShortcut(Qt::Key_Tab);
     ui->actionUnIndent->setShortcut(Qt::Key_Tab | Qt::ShiftModifier);
 
     ui->tableIssues->setErrorColor(QColor("Red"));
     ui->tableIssues->setWarningColor(QColor("Orange"));
+
 
     mMenuEncoding = new QMenu();
     mMenuEncoding->setTitle(tr("File Encoding"));
@@ -296,7 +299,6 @@ void MainWindow::addDebugOutput(const QString &text)
         ui->debugConsole->addLine("");
     } else {
         ui->debugConsole->addText(text);
-        qDebug()<<"add text"<<text;
     }
 }
 
@@ -1369,5 +1371,30 @@ void MainWindow::on_actionContinue_triggered()
 //        CPUForm.UpdateInfo;
       //WatchView.Items.EndUpdate();
       //fDebugger.RefreshWatchVars;
+    }
+}
+
+void MainWindow::on_actionAdd_Watch_triggered()
+{
+    QString s = "";
+    Editor *e = mEditorList->getEditor();
+    if (e==nullptr)
+        return;
+    if (e->selAvail()) {
+        s = e->selText();
+    } else {
+        s = e->WordAtCursor();
+    }
+    bool isOk;
+    s=QInputDialog::getText(this,
+                              tr("New Watch Expression"),
+                              tr("Enter Watch Expression (it is recommended to use 'this->' for class members):"),
+                            QLineEdit::Normal,
+                            s,&isOk);
+    if (!isOk)
+        return;
+    s = s.trimmed();
+    if (!s.isEmpty()) {
+        mDebugger->addWatchVar(s);
     }
 }

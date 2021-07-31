@@ -53,12 +53,10 @@ using  PWatchVar = std::shared_ptr<WatchVar>;
 struct WatchVar {
     QString name;
     QString text;
-    QString value;
     int gdbIndex;
     QList<PWatchVar> children;
     WatchVar * parent; //use raw point to prevent circular-reference
 };
-
 
 struct Breakpoint {
     int line;
@@ -124,9 +122,6 @@ class WatchModel: public QAbstractItemModel {
 public:
     explicit WatchModel(QObject *parent = nullptr);
     QVariant data(const QModelIndex &index, int role) const override;
-    Qt::ItemFlags flags(const QModelIndex &index) const override;
-    QVariant headerData(int section, Qt::Orientation orientation,
-                        int role = Qt::DisplayRole) const override;
 
     QModelIndex index(int row, int column,
                       const QModelIndex &parent = QModelIndex()) const override;
@@ -184,7 +179,10 @@ public:
     void deleteWatchVars(bool deleteparent);
     void invalidateAllVars();
     void sendAllWatchvarsToDebugger();
+    void invalidateWatchVar(const QString& name);
     void invalidateWatchVar(PWatchVar var);
+    PWatchVar findWatchVar(const QString& name);
+    void notifyWatchVarUpdated(PWatchVar var);
 
 
     void updateDebugInfo();
@@ -199,6 +197,8 @@ public:
     int leftPageIndexBackup() const;
     void setLeftPageIndexBackup(int leftPageIndexBackup);
 
+    WatchModel *watchModel() const;
+
 public slots:
     void stop();
 signals:
@@ -210,6 +210,7 @@ private:
     void sendBreakpointCommand(PBreakpoint breakpoint);
     void sendClearBreakpointCommand(int index);
     void sendClearBreakpointCommand(PBreakpoint breakpoint);
+
 private slots:
     void syncFinishedParsing();
     void onChangeDebugConsoleLastline(const QString& text);
@@ -235,6 +236,9 @@ public:
     QString debuggerPath() const;
     void setDebuggerPath(const QString &debuggerPath);
     void stopDebug();
+
+    bool invalidateAllVars() const;
+    void setInvalidateAllVars(bool invalidateAllVars);
 
 signals:
     void parseStarted();
@@ -291,7 +295,6 @@ private:
 
     QProcess* mProcess;
 
-    QMap<QString,PWatchVar> mWatchVarList; // contains all parents
     //fWatchView: TTreeView;
     int mIndex;
     int mBreakPointLine;
@@ -305,7 +308,6 @@ private:
     bool dobacktraceready;
     bool dodisassemblerready;
     bool doregistersready;
-    bool dorescanwatches;
     bool doevalready;
     bool doprocessexited;
     bool doupdatecpuwindow;

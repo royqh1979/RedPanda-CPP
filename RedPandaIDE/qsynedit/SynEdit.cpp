@@ -926,6 +926,38 @@ bool SynEdit::selAvail() const
             ((mBlockBegin.Line != mBlockEnd.Line) && (mActiveSelectionMode != SynSelectionMode::smColumn));
 }
 
+QString SynEdit::WordAtCursor()
+{
+    return WordAtRowCol(caretXY());
+}
+
+QString SynEdit::WordAtRowCol(const BufferCoord &XY)
+{
+    if ((XY.Line >= 1) && (XY.Line <= mLines->count())) {
+        QString line = mLines->getString(XY.Line - 1);
+        int Len = line.length();
+        if (Len == 0)
+            return "";
+        if (XY.Char<1 || XY.Char>Len)
+            return "";
+
+        int start = XY.Char - 1;
+        if  ((start> 0) && !isIdentChar(line[start]))
+             start--;
+
+        if (isIdentChar(line[start])) {
+            int stop = start;
+            while ((stop < Len) && isIdentChar(line[stop]))
+                stop++;
+            while ((start-1 >=0) && isIdentChar(line[start - 1]))
+                start--;
+            if (stop > start)
+                return line.mid(start,stop-start);
+        }
+    }
+    return "";
+}
+
 void SynEdit::setCaretAndSelection(const BufferCoord &ptCaret, const BufferCoord &ptBefore, const BufferCoord &ptAfter)
 {
     SynSelectionMode vOldMode = mActiveSelectionMode;
@@ -4871,6 +4903,27 @@ void SynEdit::ExecuteCommand(SynEditorCommand Command, QChar AChar, void *pData)
 //    end;
 //  end;
 
+}
+
+bool SynEdit::isIdentChar(const QChar &ch)
+{
+    if (mHighlighter) {
+        return mHighlighter->isIdentChar(ch);
+    } else {
+        if (ch == '_') {
+            return true;
+        }
+        if ((ch>='0') && (ch <= '9')) {
+            return true;
+        }
+        if ((ch>='a') && (ch <= 'z')) {
+            return true;
+        }
+        if ((ch>='A') && (ch <= 'Z')) {
+            return true;
+        }
+        return false;
+    }
 }
 
 void SynEdit::paintEvent(QPaintEvent *event)

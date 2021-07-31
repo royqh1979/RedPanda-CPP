@@ -52,6 +52,7 @@ int main(int argc, char *argv[])
 
     qRegisterMetaType<PCompileIssue>("PCompileIssue");
     qRegisterMetaType<PCompileIssue>("PCompileIssue&");
+    qRegisterMetaType<QVector<int>>("QVector<int>");
 
     try {
 
@@ -67,6 +68,8 @@ int main(int argc, char *argv[])
         settings->environment().load();
         settings->compilerSets().loadSets();
         settings->editor().load();
+        settings->executor().load();
+        settings->debugger().load();
 
         //Translation must be loaded after language setting is loaded
         QTranslator trans;

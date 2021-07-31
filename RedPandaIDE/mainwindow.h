@@ -151,6 +151,8 @@ private slots:
 
     void on_actionContinue_triggered();
 
+    void on_actionAdd_Watch_triggered();
+
 public slots:
     void onCompileLog(const QString& msg);
     void onCompileIssue(PCompileIssue issue);

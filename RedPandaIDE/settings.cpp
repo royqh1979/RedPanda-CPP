@@ -2284,5 +2284,5 @@ void Settings::Debugger::doSave()
 void Settings::Debugger::doLoad()
 {
     mShowCommandLog = boolValue("show_command_log",true);
-    mShowAnnotations = boolValue("show_annotations",false);
+    mShowAnnotations = boolValue("show_annotations",true);
 }

@@ -187,6 +187,8 @@ public:
     void lockPainter();
     void unlockPainter();
     bool selAvail() const;
+    QString WordAtCursor();
+    QString WordAtRowCol(const BufferCoord& XY);
 
     int charColumns(QChar ch) const;
     double dpiFactor() const;
@@ -359,6 +361,7 @@ protected:
     virtual void ExecuteCommand(SynEditorCommand Command, QChar AChar, void * pData);
 
 private:
+    bool isIdentChar(const QChar& ch);
     void clearAreaList(SynEditingAreaList areaList);
     void computeCaret(int X, int Y);
     void computeScroll(int X, int Y);

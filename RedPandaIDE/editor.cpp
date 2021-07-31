@@ -357,57 +357,28 @@ void Editor::onGutterPaint(QPainter &painter, int aLine, int X, int Y)
     X = 5;
     Y += (this->textHeight() - 16) / 2;
 
-    PSyntaxIssueList lst = getSyntaxIssuesAtLine(aLine);
-    if (lst) {
-        bool hasError=false;
-        for (PSyntaxIssue issue : *lst) {
-            if (issue->issueType == CompileIssueType::Error) {
-                hasError = true;
-                break;;
-            }
-        }
-        if (hasError) {
-            painter.drawPixmap(X,Y,*(pIconsManager->syntaxError()));
-        } else {
-            painter.drawPixmap(X,Y,*(pIconsManager->syntaxWarning()));
-        }
-        return;
-    }
-
     if (mActiveBreakpointLine == aLine) {
         painter.drawPixmap(X,Y,*(pIconsManager->activeBreakpoint()));
     } else if (hasBreakpoint(aLine)) {
         painter.drawPixmap(X,Y,*(pIconsManager->breakpoint()));
+    } else {
+        PSyntaxIssueList lst = getSyntaxIssuesAtLine(aLine);
+        if (lst) {
+            bool hasError=false;
+            for (PSyntaxIssue issue : *lst) {
+                if (issue->issueType == CompileIssueType::Error) {
+                    hasError = true;
+                    break;;
+                }
+            }
+            if (hasError) {
+                painter.drawPixmap(X,Y,*(pIconsManager->syntaxError()));
+            } else {
+                painter.drawPixmap(X,Y,*(pIconsManager->syntaxWarning()));
+            }
+            return;
+        }
     }
-//   if fActiveLine = Line then begin // prefer active line over breakpoints
-//        dmMain.GutterImages.Draw(ACanvas, X, Y, 1);
-//        drawn:=True;
-//      end else if HasBreakpoint(Line) <> -1 then begin
-//        dmMain.GutterImages.Draw(ACanvas, X, Y, 0);
-//        drawn:=True;
-//      end else if fErrorLine = Line then begin
-//        dmMain.GutterImages.Draw(ACanvas, X, Y, 2);
-//        drawn:=True;
-//      end;
-//      idx := CBUtils.FastIndexOf(fErrorList, Line);
-//      if idx>=0 then begin
-//        isError := False;
-//        lst:=TList(fErrorList.Objects[idx]);
-//        for j:=0 to lst.Count-1 do begin
-//          if PSyntaxError(lst[j])^.errorType = setError then begin
-//            isError := True;
-//            break;
-//          end;
-//        end;
-//        if isError then
-//          dmMain.GutterImages.Draw(ACanvas, X, Y, 2)
-//        else if not drawn then
-//          dmMain.GutterImages.Draw(ACanvas, X, Y, 3);
-//      end;
-
-//      Inc(Y, fText.LineHeight);
-//    end;
-
 }
 
 void Editor::onGetEditingAreas(int Line, SynEditingAreaList &areaList)
@@ -1206,6 +1177,7 @@ void Editor::toggleBreakpoint(int line)
        // MainForm.Debugger.RemoveBreakPoint(Line, self)
     } else {
         mBreakpointLines.insert(line);
+
         //todo
        // MainForm.Debugger.AddBreakPoint(Line, self);
     }
