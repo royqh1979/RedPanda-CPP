@@ -82,6 +82,20 @@ struct Register {
 
 using PRegister = std::shared_ptr<Register>;
 
+class RegisterModel: public QAbstractTableModel {
+    Q_OBJECT
+public:
+    explicit RegisterModel(QObject* parent = nullptr);
+    int rowCount(const QModelIndex &parent) const override;
+    int columnCount(const QModelIndex &parent) const override;
+    QVariant data(const QModelIndex &index, int role) const override;
+    QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
+    void update(const QList<PRegister>& regs);
+    void clear();
+private:
+    QList<PRegister> mRegisters;
+};
+
 class BreakpointModel: public QAbstractTableModel {
     Q_OBJECT
     // QAbstractItemModel interface
@@ -199,10 +213,10 @@ public:
 
     WatchModel *watchModel() const;
 
+    RegisterModel *registerModel() const;
+
 public slots:
     void stop();
-signals:
-    void evalReady(QString value);
 
 private:
     void sendWatchCommand(PWatchVar var);
@@ -221,11 +235,12 @@ private slots:
 private:
     bool mExecuting;
     bool mCommandChanged;
-    BreakpointModel* mBreakpointModel;
+    BreakpointModel *mBreakpointModel;
     bool mUseUTF8;
-    BacktraceModel* mBacktraceModel;
-    WatchModel* mWatchModel;
-    DebugReader* mReader;
+    BacktraceModel *mBacktraceModel;
+    WatchModel *mWatchModel;
+    RegisterModel *mRegisterModel;
+    DebugReader *mReader;
     int mLeftPageIndexBackup;
 };
 
@@ -285,7 +300,7 @@ private:
     void skipSpaces();
     void skipToAnnotation();
 private:
-    Debugger* mDebugger;
+    Debugger *mDebugger;
     QString mDebuggerPath;
     QRecursiveMutex mCmdQueueMutex;
     QSemaphore mStartSemaphore;

@@ -17,6 +17,7 @@
 #define SETTING_ENVIRONMENT "Environment"
 #define SETTING_EXECUTOR "Executor"
 #define SETTING_DEBUGGER "Debugger"
+#define SETTING_HISTORY "HISTORY"
 #define SETTING_COMPILTER_SETS "CompilerSets"
 #define SETTING_COMPILTER_SETS_DEFAULT_INDEX "defaultIndex"
 #define SETTING_COMPILTER_SETS_COUNT "count"
@@ -57,6 +58,7 @@ private:
         QVariant value(const QString &key, const QVariant& defaultValue);
         bool boolValue(const QString &key, bool defaultValue);
         int intValue(const QString &key, int defaultValue);
+        QStringList stringListValue(const QString &key, const QStringList& defaultValue=QStringList());
         QColor colorValue(const QString &key, const QColor& defaultValue);
         QString stringValue(const QString &key, const QString& defaultValue);
         void save();
@@ -369,6 +371,23 @@ public:
         void doLoad() override;
     };
 
+    class History: public _Base {
+    public:
+        explicit History(Settings *settings);
+
+        QStringList& openedFiles();
+        QStringList& openedProjects();
+        bool addToOpenedFiles(const QString& filename);
+    private:
+        QStringList mOpenedFiles;
+        QStringList mOpenedProjects;
+
+        // _Base interface
+    protected:
+        void doSave() override;
+        void doLoad() override;
+    };
+
     class Executor: public _Base {
     public:
         explicit Executor(Settings * settings);
@@ -398,9 +417,25 @@ public:
         bool showAnnotations() const;
         void setShowAnnotations(bool showAnnotations);
 
+        bool onlyShowMono() const;
+        void setOnlyShowMono(bool onlyShowMono);
+
+        int fontSize() const;
+        void setFontSize(int fontSize);
+
+        bool useIntelStyle() const;
+        void setUseIntelStyle(bool useIntelStyle);
+
+        QString fontName() const;
+        void setFontName(const QString &fontName);
+
     private:
         bool mShowCommandLog;
         bool mShowAnnotations;
+        QString mFontName;
+        bool mOnlyShowMono;
+        int mFontSize;
+        bool mUseIntelStyle;
 
         // _Base interface
     protected:
@@ -585,8 +620,8 @@ public:
     Environment& environment();
     Executor& executor();
     Debugger& debugger();
+    History& history();
     QString filename() const;
-
 
 private:
     QString mFilename;
@@ -597,6 +632,7 @@ private:
     CompilerSets mCompilerSets;
     Executor mExecutor;
     Debugger mDebugger;
+    History mHistory;
 };
 
 

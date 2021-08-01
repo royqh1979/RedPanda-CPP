@@ -3,7 +3,7 @@
 #include "mainwindow.h"
 #include "editor.h"
 #include "settings.h"
-#include "cpudialog.h"
+#include "widgets/cpudialog.h"
 
 #include <QFile>
 #include <QFileInfo>
@@ -16,6 +16,7 @@ Debugger::Debugger(QObject *parent) : QObject(parent)
     mBreakpointModel=new BreakpointModel(this);
     mBacktraceModel=new BacktraceModel(this);
     mWatchModel = new WatchModel(this);
+    mRegisterModel = new RegisterModel(this);
     mExecuting = false;
     mUseUTF8 = false;
     mReader = nullptr;
@@ -74,8 +75,9 @@ void Debugger::clearUpReader()
 //          MainForm.LeftPageControl.ActivePageIndex := LeftPageIndexBackup;
 
 //        // Close CPU window
-//        if Assigned(CPUForm) then
-//          CPUForm.Close;
+        if (pMainWindow->cpuDialog()!=nullptr) {
+            pMainWindow->cpuDialog()->close();
+        }
 
         // Free resources
         pMainWindow->removeActiveBreakpoints();
@@ -83,6 +85,8 @@ void Debugger::clearUpReader()
         pMainWindow->txtLocals()->clear();
 
         pMainWindow->updateAppTitle();
+
+        pMainWindow->updateDebugEval("");
 
         mBacktraceModel->clear();
 
@@ -107,6 +111,11 @@ void Debugger::onAddLocalWithLinebreak(const QString &text)
 void Debugger::onClearLocals()
 {
     pMainWindow->txtLocals()->clear();
+}
+
+RegisterModel *Debugger::registerModel() const
+{
+    return mRegisterModel;
 }
 
 WatchModel *Debugger::watchModel() const
@@ -391,7 +400,9 @@ void Debugger::syncFinishedParsing()
 
     // An evaluation variable has been processed. Forward the results
     if (mReader->doevalready) {
-        emit evalReady(mReader->mEvalValue);
+        pMainWindow->updateDebugEval(mReader->mEvalValue);
+        mReader->mEvalValue="";
+        mReader->doevalready = false;
     }
 
     // show command output
@@ -427,12 +438,18 @@ void Debugger::syncFinishedParsing()
     }
 
     // Some part of the CPU form has been updated
-    if (pMainWindow->cpuDialog()->isVisible() && !mReader->doreceivedsignal) {
-//        if (mReader->doregistersready)
-//            CPUForm.OnRegistersReady;
+    if (pMainWindow->cpuDialog()!=nullptr && !mReader->doreceivedsignal) {
+        if (mReader->doregistersready) {
+            mRegisterModel->update(mReader->mRegisters);
+            mReader->mRegisters.clear();
+            mReader->doregistersready = false;
+        }
 
-//        if (mReader->dodisassemblerready)
-//            CPUForm.OnAssemblerReady;
+        if (mReader->dodisassemblerready) {
+            pMainWindow->cpuDialog()->setDisassembly(mReader->mDisassembly);
+            mReader->mDisassembly.clear();
+            mReader->dodisassemblerready = false;
+        }
     }
 
     if (mReader->doupdateexecution) {
@@ -477,9 +494,8 @@ void Debugger::syncFinishedParsing()
 
 
     // CPU form updates itself when spawned, don't update twice!
-    if ((mReader->doupdatecpuwindow && !spawnedcpuform) && (pMainWindow->cpuDialog()->isVisible())) {
-            sendCommand("disas", "");
-            sendCommand("info registers", "");
+    if ((mReader->doupdatecpuwindow && !spawnedcpuform) && (pMainWindow->cpuDialog()!=nullptr)) {
+        pMainWindow->cpuDialog()->updateInfo();
     }
 }
 
@@ -573,12 +589,11 @@ AnnotationType DebugReader::getAnnotation(const QString &s)
         } else if ((mCurrentCmd) && (mCurrentCmd->command == "info args")) {
             //hack to catch params
             result = AnnotationType::TParam;
-        } else if (t.startsWith("rax ") || t.startsWith("eax ")) {
+        } else if ((mCurrentCmd) && (mCurrentCmd->command == "info") && (mCurrentCmd->params=="registers")) {
             // Hack fix to catch register dump
             result = AnnotationType::TInfoReg;
-        } else {
-            // Another hack to catch assembler
-            if (t.startsWith("Dump of assembler code for function "))
+        } else if ((mCurrentCmd) && (mCurrentCmd->command == "disas")) {
+            // Another hack to catch assembler            
             result = AnnotationType::TInfoAsm;
         }
         return result;
@@ -750,9 +765,6 @@ QString DebugReader::getRemainingLine()
 
 void DebugReader::handleDisassembly()
 {
-    if (mDisassembly.isEmpty())
-        return;
-
     // Get info message
     QString s = getNextLine();
 
@@ -762,7 +774,7 @@ void DebugReader::handleDisassembly()
     s = getNextLine();
 
     // Add lines of disassembly
-    while (!s.isEmpty() && (s != "End of assembler dump")) {
+    while (!s.isEmpty() && (s != "End of assembler dump.")) {
         mDisassembly.append(s);
         s = getNextLine();
     }
@@ -941,7 +953,7 @@ void DebugReader::handleRegisters()
         PRegister reg = std::make_shared<Register>();
         // Cut name from 1 to first space
         int x = s.indexOf(' ');
-        reg->name = s.mid(0,x-1);
+        reg->name = s.mid(0,x);
         s.remove(0,x);
         // Remove spaces
         s = TrimLeft(s);
@@ -950,14 +962,15 @@ void DebugReader::handleRegisters()
         x = s.indexOf('\t');
         if (x<0)
             x = s.indexOf(' ');
-        reg->hexValue = s.mid(0,x - 1);
+        reg->hexValue = s.mid(0,x);
         s.remove(0,x); // delete tab too
         s = TrimLeft(s);
 
         // Remaining part contains decimal value
         reg->decValue = s;
 
-        mRegisters.append(reg);
+        if (!reg->name.trimmed().isEmpty())
+            mRegisters.append(reg);
         s = getNextLine();
         if (s.isEmpty())
             break;
@@ -1350,7 +1363,11 @@ void DebugReader::run()
             break;
         }
         if (mStop) {
+            mProcess->closeReadChannel(QProcess::StandardOutput);
+            mProcess->closeReadChannel(QProcess::StandardError);
+            mProcess->closeWriteChannel();
             mProcess->terminate();
+            mProcess->kill();
             break;
         }
         if (errorOccurred)
@@ -1721,4 +1738,76 @@ void WatchModel::notifyUpdated(PWatchVar var)
         return;
     qDebug()<<"dataChanged"<<row<<":"<<var->text;
     emit dataChanged(createIndex(row,0,var.get()),createIndex(row,0,var.get()));
+}
+
+RegisterModel::RegisterModel(QObject *parent):QAbstractTableModel(parent)
+{
+
+}
+
+int RegisterModel::rowCount(const QModelIndex &parent) const
+{
+    return mRegisters.count();
+}
+
+int RegisterModel::columnCount(const QModelIndex &parent) const
+{
+    return 3;
+}
+
+QVariant RegisterModel::data(const QModelIndex &index, int role) const
+{
+    if (!index.isValid())
+        return QVariant();
+    if (index.row()<0 || index.row() >= static_cast<int>(mRegisters.size()))
+        return QVariant();
+    PRegister reg = mRegisters[index.row()];
+    if (!reg)
+        return QVariant();
+    switch (role) {
+    case Qt::DisplayRole:
+        switch (index.column()) {
+        case 0:
+            return reg->name;
+        case 1:
+            return reg->hexValue;
+        case 2:
+            return reg->decValue;
+        default:
+            return QVariant();
+        }
+    default:
+        return QVariant();
+    }
+}
+
+QVariant RegisterModel::headerData(int section, Qt::Orientation orientation, int role) const
+{
+    if (orientation == Qt::Horizontal && role ==  Qt::DisplayRole) {
+        switch(section) {
+        case 0:
+            return tr("Register");
+        case 1:
+            return tr("Value(Hex)");
+        case 2:
+            return tr("Value(Dec)");
+        }
+    }
+    return QVariant();
+}
+
+void RegisterModel::update(const QList<PRegister> &regs)
+{
+    beginResetModel();
+    mRegisters.clear();
+    mRegisters.append(regs);
+    endResetModel();
+}
+
+
+void RegisterModel::clear()
+{
+    beginResetModel();
+    mRegisters.clear();
+    endResetModel();
 }

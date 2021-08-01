@@ -6,6 +6,7 @@
 #include <iconv.h>
 #include <QDebug>
 #include <QFileInfo>
+#include "settings.h"
 
 EditorList::EditorList(QTabWidget* leftPageWidget,
       QTabWidget* rightPageWidget,
@@ -86,7 +87,11 @@ bool EditorList::closeEditor(Editor* editor, bool transferFocus, bool force) {
         //todo: activate & focus the previous editor
     }
 
-    delete editor;
+    if (pSettings->history().addToOpenedFiles(editor->filename())) {
+        pMainWindow->rebuildOpenedFileHisotryMenu();
+    }
+
+    editor->deleteLater();
     return true;
 }
 

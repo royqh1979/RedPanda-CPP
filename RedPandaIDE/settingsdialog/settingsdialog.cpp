@@ -10,6 +10,7 @@
 #include "editorsymbolcompletionwidget.h"
 #include "environmentappearencewidget.h"
 #include "executorgeneralwidget.h"
+#include "debuggeneralwidget.h"
 #include <QDebug>
 #include <QMessageBox>
 #include <QModelIndex>
@@ -62,6 +63,10 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     pExecutorGeneralWidget = new ExecutorGeneralWidget(tr("General"),tr("Program Runner"));
     pExecutorGeneralWidget->init();
     addWidget(pExecutorGeneralWidget);
+
+    pDebugGeneralWidget = new DebugGeneralWidget(tr("General"),tr("Debugger"));
+    pDebugGeneralWidget->init();
+    addWidget(pDebugGeneralWidget);
 
     ui->widgetsView->expandAll();
     //select the first widget of the first group

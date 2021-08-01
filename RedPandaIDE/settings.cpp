@@ -98,6 +98,11 @@ QString Settings::filename() const
     return mFilename;
 }
 
+Settings::History& Settings::history()
+{
+    return mHistory;
+}
+
 Settings::Debugger& Settings::debugger()
 {
     return mDebugger;
@@ -185,6 +190,11 @@ bool Settings::_Base::boolValue(const QString &key, bool defaultValue)
 int Settings::_Base::intValue(const QString &key, int defaultValue)
 {
     return value(key,defaultValue).toInt();
+}
+
+QStringList Settings::_Base::stringListValue(const QString &key, const QStringList &defaultValue)
+{
+    return value(key,defaultValue).toStringList();
 }
 
 QColor Settings::_Base::colorValue(const QString &key, const QColor& defaultValue)
@@ -2275,14 +2285,93 @@ void Settings::Debugger::setShowAnnotations(bool showAnnotations)
     mShowAnnotations = showAnnotations;
 }
 
+QString Settings::Debugger::fontName() const
+{
+    return mFontName;
+}
+
+void Settings::Debugger::setFontName(const QString &fontName)
+{
+    mFontName = fontName;
+}
+
+bool Settings::Debugger::useIntelStyle() const
+{
+    return mUseIntelStyle;
+}
+
+void Settings::Debugger::setUseIntelStyle(bool useIntelStyle)
+{
+    mUseIntelStyle = useIntelStyle;
+}
+
+int Settings::Debugger::fontSize() const
+{
+    return mFontSize;
+}
+
+void Settings::Debugger::setFontSize(int fontSize)
+{
+    mFontSize = fontSize;
+}
+
+bool Settings::Debugger::onlyShowMono() const
+{
+    return mOnlyShowMono;
+}
+
+void Settings::Debugger::setOnlyShowMono(bool onlyShowMono)
+{
+    mOnlyShowMono = onlyShowMono;
+}
+
 void Settings::Debugger::doSave()
 {
     saveValue("show_command_log", mShowCommandLog);
     saveValue("show_annotations", mShowAnnotations);
+    saveValue("font_name",mFontName);
+    saveValue("only_show_mono",mOnlyShowMono);
+    saveValue("font_size",mFontSize);
+    boolValue("use_intel_style",mUseIntelStyle);
 }
 
 void Settings::Debugger::doLoad()
 {
     mShowCommandLog = boolValue("show_command_log",true);
-    mShowAnnotations = boolValue("show_annotations",true);
+    mShowAnnotations = boolValue("show_annotations",false);
+    mFontName = stringValue("font_name","Consolas");
+    mOnlyShowMono = boolValue("only_show_mono",true);
+    mFontSize = intValue("font_size",10);
+    mUseIntelStyle = boolValue("use_intel_style",true);
+}
+
+Settings::History::History(Settings *settings):_Base(settings, SETTING_HISTORY)
+{
+
+}
+
+bool Settings::History::addToOpenedFiles(const QString &filename)
+{
+    if (!QFile(filename).exists())
+        return false;
+    if (openedFiles().indexOf(filename)>=0)
+        return false;
+    if (openedFiles().size()>=15) {
+        openedFiles().pop_front();
+    }
+    openedFiles().append(filename);
+    return true;
+
+}
+
+void Settings::History::doSave()
+{
+    saveValue("opened_files", mOpenedFiles);
+    saveValue("opened_projects", mOpenedProjects);
+}
+
+void Settings::History::doLoad()
+{
+    mOpenedFiles = stringListValue("opened_files");
+    mOpenedProjects =stringListValue("opened_projects");
 }

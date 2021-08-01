@@ -70,6 +70,7 @@ int main(int argc, char *argv[])
         settings->editor().load();
         settings->executor().load();
         settings->debugger().load();
+        settings->history().load();
 
         //Translation must be loaded after language setting is loaded
         QTranslator trans;

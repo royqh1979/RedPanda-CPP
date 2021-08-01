@@ -99,8 +99,8 @@ void CompilerManager::run(const QString &filename, const QString &arguments, con
     } else {
         mRunner = new ExecutableRunner(filename,arguments,workDir);
     }
-    connect(mRunner, &ExecutableRunner::terminated, this ,&CompilerManager::onRunnerTerminated);
-    connect(mRunner, &ExecutableRunner::terminated, pMainWindow ,&MainWindow::onRunFinished);
+    connect(mRunner, &ExecutableRunner::finished, this ,&CompilerManager::onRunnerTerminated);
+    connect(mRunner, &ExecutableRunner::finished, pMainWindow ,&MainWindow::onRunFinished);
     connect(mRunner, &ExecutableRunner::runErrorOccurred, pMainWindow ,&MainWindow::onRunErrorOccured);
     mRunner->start();
 }
@@ -134,8 +134,9 @@ void CompilerManager::onCompileFinished()
 void CompilerManager::onRunnerTerminated()
 {
     QMutexLocker locker(&mRunnerMutex);
-    delete mRunner;
+    ExecutableRunner* p=mRunner;
     mRunner=nullptr;
+    p->deleteLater();
 }
 
 void CompilerManager::onCompileIssue(PCompileIssue)

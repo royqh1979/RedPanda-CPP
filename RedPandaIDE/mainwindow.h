@@ -52,6 +52,7 @@ public:
     void updateCompileActions();
     void updateEditorColorSchemes();
     void updateCompilerSet();
+    void updateDebuggerSettings();
     void checkSyntaxInBack(Editor* e);
     bool compile(bool rebuild=false);
     void runExecutable(const QString& exeName, const QString& filename=QString());
@@ -65,6 +66,7 @@ public:
     void updateAppTitle();
     void addDebugOutput(const QString& text);
     void changeDebugOutputLastline(const QString& text);
+    void updateDebugEval(const QString& value);
 
     QPlainTextEdit* txtLocals();
 
@@ -159,6 +161,10 @@ private slots:
 
     void on_actionAdd_Watch_triggered();
 
+    void on_actionView_CPU_Window_triggered();
+
+    void on_txtEvaludate_returnPressed();
+
 public slots:
     void onCompileLog(const QString& msg);
     void onCompileIssue(PCompileIssue issue);
@@ -166,6 +172,8 @@ public slots:
     void onCompileErrorOccured(const QString& reason);
     void onRunErrorOccured(const QString& reason);
     void onRunFinished();
+    void cleanUpCPUDialog();
+    void onDebugCommandInput(const QString& command);
 
 private:
     void setupActions();

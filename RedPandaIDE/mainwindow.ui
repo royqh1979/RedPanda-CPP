@@ -393,14 +393,7 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="QComboBox" name="cbEvaluate">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                 </widget>
+                 <widget class="QLineEdit" name="txtEvaludate"/>
                 </item>
                </layout>
               </widget>
@@ -415,8 +408,11 @@
             </layout>
            </widget>
            <widget class="QTabWidget" name="debugViews">
+            <property name="tabPosition">
+             <enum>QTabWidget::North</enum>
+            </property>
             <property name="currentIndex">
-             <number>3</number>
+             <number>2</number>
             </property>
             <widget class="QWidget" name="tabDebugConsole">
              <attribute name="title">
@@ -465,7 +461,11 @@
                <number>0</number>
               </property>
               <item>
-               <widget class="QTableView" name="tblStackTrace"/>
+               <widget class="QTableView" name="tblStackTrace">
+                <property name="textElideMode">
+                 <enum>Qt::ElideNone</enum>
+                </property>
+               </widget>
               </item>
              </layout>
             </widget>
@@ -487,7 +487,11 @@
                <number>0</number>
               </property>
               <item>
-               <widget class="QTableView" name="tblBreakpoints"/>
+               <widget class="QTableView" name="tblBreakpoints">
+                <property name="textElideMode">
+                 <enum>Qt::ElideNone</enum>
+                </property>
+               </widget>
               </item>
              </layout>
             </widget>
@@ -584,7 +588,9 @@
     <addaction name="actionRun_To_Cursor"/>
     <addaction name="actionContinue"/>
     <addaction name="actionStop_Execution"/>
+    <addaction name="separator"/>
     <addaction name="actionAdd_Watch"/>
+    <addaction name="actionView_CPU_Window"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
     <property name="title">
@@ -1065,6 +1071,11 @@
    </property>
    <property name="text">
     <string>Add Watch...</string>
+   </property>
+  </action>
+  <action name="actionView_CPU_Window">
+   <property name="text">
+    <string>View CPU Window...</string>
    </property>
   </action>
  </widget>

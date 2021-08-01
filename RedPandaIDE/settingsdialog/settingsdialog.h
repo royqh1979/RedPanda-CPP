@@ -19,6 +19,7 @@ class EditorColorSchemeWidget;
 class EditorSyntaxCheckWidget;
 class EnvironmentAppearenceWidget;
 class ExecutorGeneralWidget;
+class DebugGeneralWidget;
 class SettingsWidget;
 class SettingsDialog : public QDialog
 {
@@ -48,15 +49,16 @@ private:
     QList<SettingsWidget*> mSettingWidgets;
     QStandardItemModel model;
 
-    CompilerSetOptionWidget* pCompilerSetOptionWidget;
-    EditorGeneralWidget* pEditorGeneralWidget;
-    EditorFontWidget* pEditorFontWidget;
+    CompilerSetOptionWidget *pCompilerSetOptionWidget;
+    EditorGeneralWidget *pEditorGeneralWidget;
+    EditorFontWidget *pEditorFontWidget;
     EditorClipboardWidget *pEditorClipboardWidget;
     EditorColorSchemeWidget *pEditorColorSchemeWidget;
-    EnvironmentAppearenceWidget* pEnvironmentAppearenceWidget;
-    EditorSymbolCompletionWidget* pEditorSymbolCompletionWidget;
-    EditorSyntaxCheckWidget* pEditorSyntaxCheckWidget;
-    ExecutorGeneralWidget  * pExecutorGeneralWidget;
+    EnvironmentAppearenceWidget *pEnvironmentAppearenceWidget;
+    EditorSymbolCompletionWidget *pEditorSymbolCompletionWidget;
+    EditorSyntaxCheckWidget *pEditorSyntaxCheckWidget;
+    ExecutorGeneralWidget  *pExecutorGeneralWidget;
+    DebugGeneralWidget *pDebugGeneralWidget;
 };
 
 #endif // SETTINGSDIALOG_H

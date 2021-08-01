@@ -6,7 +6,7 @@
 #include "settings.h"
 #include "qsynedit/Constants.h"
 #include "debugger.h"
-#include "cpudialog.h"
+#include "widgets/cpudialog.h"
 
 
 #include <QCloseEvent>
@@ -87,7 +87,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->actionEncode_in_ANSI->setCheckable(true);
     ui->actionEncode_in_UTF_8->setCheckable(true);
 
-    mCPUDialog = new CPUDialog(this);
+    mCPUDialog = nullptr;
 
     updateEditorActions();
     applySettings();
@@ -95,6 +95,7 @@ MainWindow::MainWindow(QWidget *parent)
     openCloseMessageSheet(false);
     mPreviousHeight = 250;
 
+    connect(ui->debugConsole,&QConsole::commandInput,this,&MainWindow::onDebugCommandInput);
 }
 
 MainWindow::~MainWindow()
@@ -227,6 +228,7 @@ void MainWindow::applySettings()
     QApplication * app = dynamic_cast<QApplication*>(QApplication::instance());
     app->setFont(font);
     this->setFont(font);
+    updateDebuggerSettings();
 }
 
 void MainWindow::removeActiveBreakpoints()
@@ -322,6 +324,12 @@ void MainWindow::changeDebugOutputLastline(const QString &test)
     ui->debugConsole->changeLastLine(test);
 }
 
+void MainWindow::updateDebugEval(const QString &value)
+{
+    ui->txtEvalOutput->clear();
+    ui->txtEvalOutput->appendPlainText(value);
+}
+
 QPlainTextEdit *MainWindow::txtLocals()
 {
     return ui->txtLocals;
@@ -401,6 +409,13 @@ void MainWindow::updateCompilerSet()
         index = 0;
     }
     mCompilerSet->setCurrentIndex(index);
+}
+
+void MainWindow::updateDebuggerSettings()
+{
+    ui->debugConsole->setFont(QFont(
+                                  pSettings->debugger().fontName(),
+                                  pSettings->debugger().fontSize()));
 }
 
 void MainWindow::checkSyntaxInBack(Editor *e)
@@ -1059,6 +1074,20 @@ void MainWindow::onRunFinished()
     updateAppTitle();
 }
 
+void MainWindow::cleanUpCPUDialog()
+{
+    CPUDialog* ptr=mCPUDialog;
+    mCPUDialog=nullptr;
+    ptr->deleteLater();
+}
+
+void MainWindow::onDebugCommandInput(const QString &command)
+{
+    if (mDebugger->executing()) {
+        mDebugger->sendCommand(command,"");
+    }
+}
+
 void MainWindow::on_actionCompile_triggered()
 {
     mCompileSuccessionTask.reset();
@@ -1331,8 +1360,6 @@ void MainWindow::on_actionStep_Over_triggered()
         mDebugger->invalidateAllVars();
         mDebugger->sendCommand("next", "");
         mDebugger->updateDebugInfo();
-//        if (CPUForm) then
-//        CPUForm.UpdateInfo;
         mDebugger->refreshWatchVars();
     }
 }
@@ -1344,8 +1371,6 @@ void MainWindow::on_actionStep_Into_triggered()
         mDebugger->invalidateAllVars();
         mDebugger->sendCommand("step", "");
         mDebugger->updateDebugInfo();
-//        if (CPUForm) then
-//        CPUForm.UpdateInfo;
         mDebugger->refreshWatchVars();
     }
 
@@ -1358,8 +1383,6 @@ void MainWindow::on_actionStep_Out_triggered()
         mDebugger->invalidateAllVars();
         mDebugger->sendCommand("finish", "");
         mDebugger->updateDebugInfo();
-//        if (CPUForm) then
-//        CPUForm.UpdateInfo;
         mDebugger->refreshWatchVars();
     }
 
@@ -1375,8 +1398,6 @@ void MainWindow::on_actionRun_To_Cursor_triggered()
             mDebugger->sendCommand("tbreak", QString(" %1").arg(e->caretY()));
             mDebugger->sendCommand("continue", "");
             mDebugger->updateDebugInfo();
-    //        if (CPUForm) then
-    //        CPUForm.UpdateInfo;
             mDebugger->refreshWatchVars();
         }
     }
@@ -1390,8 +1411,6 @@ void MainWindow::on_actionContinue_triggered()
         mDebugger->invalidateAllVars();
         mDebugger->sendCommand("continue", "");
         mDebugger->updateDebugInfo();
-//        if (CPUForm) then
-//        CPUForm.UpdateInfo;
         mDebugger->refreshWatchVars();
     }
 }
@@ -1418,5 +1437,22 @@ void MainWindow::on_actionAdd_Watch_triggered()
     s = s.trimmed();
     if (!s.isEmpty()) {
         mDebugger->addWatchVar(s);
+    }
+}
+
+void MainWindow::on_actionView_CPU_Window_triggered()
+{
+    if (mCPUDialog==nullptr) {
+        mCPUDialog = new CPUDialog(this);
+        connect(mCPUDialog, &CPUDialog::closed, this, &MainWindow::cleanUpCPUDialog);
+    }
+    mCPUDialog->show();
+}
+
+void MainWindow::on_txtEvaludate_returnPressed()
+{
+    QString s=ui->txtEvaludate->text().trimmed();
+    if (!s.isEmpty()) {
+        mDebugger->sendCommand("print",s,false);
     }
 }

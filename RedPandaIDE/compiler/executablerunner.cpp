@@ -49,8 +49,12 @@ void ExecutableRunner::run()
             break;
         }
         if (mStop) {
+            process.closeReadChannel(QProcess::StandardOutput);
+            process.closeReadChannel(QProcess::StandardError);
+            process.closeWriteChannel();
             process.terminate();
-            //break;
+            process.kill();
+            break;
         }
         if (errorOccurred)
             break;
