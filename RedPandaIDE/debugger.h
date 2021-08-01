@@ -215,6 +215,9 @@ private slots:
     void syncFinishedParsing();
     void onChangeDebugConsoleLastline(const QString& text);
     void clearUpReader();
+    void onAddLocalWithoutLinebreak(const QString& text);
+    void onAddLocalWithLinebreak(const QString& text);
+    void onClearLocals();
 private:
     bool mExecuting;
     bool mCommandChanged;
@@ -248,7 +251,10 @@ signals:
     void pauseWatchUpdate();
     void updateWatch();
     void processError(QProcess::ProcessError error);
-    void changeDebugConsoleLastLine(const QString& test);
+    void changeDebugConsoleLastLine(const QString& text);
+    void addLocalWithoutLinebreak(const QString& text);
+    void addLocalWithLinebreak(const QString& text);
+    void clearLocals();
 private:
     void clearCmdQueue();
     bool findAnnotation(AnnotationType annotation);

@@ -8,7 +8,7 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QMessageBox>
-#include <QMessageBox>
+#include <QPlainTextEdit>
 #include <QDebug>
 
 Debugger::Debugger(QObject *parent) : QObject(parent)
@@ -46,22 +46,11 @@ void Debugger::start()
     connect(mReader, &QThread::finished,this,&Debugger::clearUpReader);
     connect(mReader, &DebugReader::parseFinished,this,&Debugger::syncFinishedParsing,Qt::BlockingQueuedConnection);
     connect(mReader, &DebugReader::changeDebugConsoleLastLine,this,&Debugger::onChangeDebugConsoleLastline,Qt::BlockingQueuedConnection);
+    connect(mReader, &DebugReader::addLocalWithLinebreak,this,&Debugger::onAddLocalWithLinebreak);
+    connect(mReader, &DebugReader::addLocalWithoutLinebreak,this,&Debugger::onAddLocalWithoutLinebreak);
+    connect(mReader, &DebugReader::clearLocals,this,&Debugger::onClearLocals);
     mReader->start();
     mReader->mStartSemaphore.acquire(1);
-
-//fProcessID := pi.hProcess;
-
-//// Create a thread that will read GDB output.
-//Reader := TDebugReader.Create(true);
-//Reader.PipeRead := fOutputRead;
-//Reader.PipeWrite := fInputWrite;
-//Reader.FreeOnTerminate := true;
-//Reader.BreakpointList := BreakPointList;
-//Reader.WatchVarList := WatchVarList;
-//Reader.WatchView := WatchView;
-//Reader.UseUTF8 := UseUTF8;
-//Reader.Resume;
-//Reader.OnInvalidateAllVars := OnInvalidateAllVars;
 
     pMainWindow->updateAppTitle();
 
@@ -91,6 +80,8 @@ void Debugger::clearUpReader()
         // Free resources
         pMainWindow->removeActiveBreakpoints();
 
+        pMainWindow->txtLocals()->clear();
+
         pMainWindow->updateAppTitle();
 
         mBacktraceModel->clear();
@@ -99,6 +90,21 @@ void Debugger::clearUpReader()
             invalidateWatchVar(var);
         }
     }
+}
+
+void Debugger::onAddLocalWithoutLinebreak(const QString &text)
+{
+    pMainWindow->txtLocals()->insertPlainText(text);
+}
+
+void Debugger::onAddLocalWithLinebreak(const QString &text)
+{
+    pMainWindow->txtLocals()->appendPlainText(text);
+}
+
+void Debugger::onClearLocals()
+{
+    pMainWindow->txtLocals()->clear();
 }
 
 WatchModel *Debugger::watchModel() const
@@ -888,9 +894,9 @@ void DebugReader::handleLocalOutput()
     // name(spaces)hexvalue(tab)decimalvalue
     QString s = getNextFilledLine();
 
-    bool breakLine = false;
+    bool nobreakLine = false;
     while (true) {
-        if (s.startsWith("\032\032")) {
+        if (!s.startsWith("\032\032")) {
             s = TrimLeft(s);
             if (s == "No locals.") {
                 return;
@@ -899,24 +905,24 @@ void DebugReader::handleLocalOutput()
                 return;
             }
             //todo: update local view
-//            if (breakLine and (MainForm.txtLocals.Lines.Count>0) then begin
-//          MainForm.txtLocals.Lines[MainForm.txtLocals.Lines.Count-1] := MainForm.txtLocals.Lines[MainForm.txtLocals.Lines.Count-1] + s;
-//        end else begin
-//          MainForm.txtLocals.Lines.Add(s);
-//        end;
-            breakLine=false;
+            if (nobreakLine and pMainWindow->txtLocals()->document()->lineCount()>0) {
+                emit addLocalWithoutLinebreak(s);
+            } else {
+                emit addLocalWithLinebreak(s);
+            }
+            nobreakLine=false;
         } else {
-            breakLine = true;
+            nobreakLine = true;
         }
         s = getNextLine();
-        if (!breakLine && s.isEmpty())
+        if (!nobreakLine && s.isEmpty())
             break;
     }
 }
 
 void DebugReader::handleLocals()
 {
-    //todo: clear local view
+    emit clearLocals();
     handleLocalOutput();
 }
 

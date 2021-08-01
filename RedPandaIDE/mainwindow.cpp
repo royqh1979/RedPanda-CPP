@@ -307,6 +307,11 @@ void MainWindow::changeDebugOutputLastline(const QString &test)
     ui->debugConsole->changeLastLine(test);
 }
 
+QPlainTextEdit *MainWindow::txtLocals()
+{
+    return ui->txtLocals;
+}
+
 void MainWindow::updateStatusbarForLineCol()
 {
     Editor* e = mEditorList->getEditor();

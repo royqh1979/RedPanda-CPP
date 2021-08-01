@@ -20,6 +20,7 @@ class CompilerManager;
 class Editor;
 class Debugger;
 class CPUDialog;
+class QPlainTextEdit;
 
 class MainWindow : public QMainWindow
 {
@@ -65,9 +66,12 @@ public:
     void addDebugOutput(const QString& text);
     void changeDebugOutputLastline(const QString& text);
 
+    QPlainTextEdit* txtLocals();
+
     CPUDialog *cpuDialog() const;
 
     Debugger *debugger() const;
+
 
 protected:
     void openFiles(const QStringList& files);

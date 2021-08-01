@@ -416,7 +416,7 @@
            </widget>
            <widget class="QTabWidget" name="debugViews">
             <property name="currentIndex">
-             <number>1</number>
+             <number>3</number>
             </property>
             <widget class="QWidget" name="tabDebugConsole">
              <attribute name="title">
