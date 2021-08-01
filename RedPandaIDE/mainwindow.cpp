@@ -806,6 +806,11 @@ void MainWindow::prepareDebugger()
 //    mDebugger->deleteWatchVars(false);
 }
 
+Debugger *MainWindow::debugger() const
+{
+    return mDebugger;
+}
+
 CPUDialog *MainWindow::cpuDialog() const
 {
     return mCPUDialog;

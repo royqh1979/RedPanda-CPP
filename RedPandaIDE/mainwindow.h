@@ -67,6 +67,8 @@ public:
 
     CPUDialog *cpuDialog() const;
 
+    Debugger *debugger() const;
+
 protected:
     void openFiles(const QStringList& files);
     void openFile(const QString& filename);
@@ -168,16 +170,16 @@ private:
 
 private:
     Ui::MainWindow *ui;
-    EditorList* mEditorList;
-    QLabel* mFileInfoStatus;
-    QLabel* mFileEncodingStatus;
-    QLabel* mFileModeStatus;
-    QMenu * mMenuEncoding;
-    QMenu * mMenuEncodingList;
-    QComboBox* mCompilerSet;
-    CompilerManager* mCompilerManager;
-    Debugger* mDebugger;
-    CPUDialog* mCPUDialog;
+    EditorList *mEditorList;
+    QLabel *mFileInfoStatus;
+    QLabel *mFileEncodingStatus;
+    QLabel *mFileModeStatus;
+    QMenu *mMenuEncoding;
+    QMenu *mMenuEncodingList;
+    QComboBox *mCompilerSet;
+    CompilerManager *mCompilerManager;
+    Debugger *mDebugger;
+    CPUDialog *mCPUDialog;
 
     bool mMessageControlChanged;
     bool mTabMessagesTogglingState;

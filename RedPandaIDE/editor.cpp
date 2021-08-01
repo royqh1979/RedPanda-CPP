@@ -22,6 +22,7 @@
 #include <QClipboard>
 #include <QPainter>
 #include "iconsmanager.h"
+#include "debugger.h"
 
 
 using namespace std;
@@ -1173,13 +1174,10 @@ void Editor::toggleBreakpoint(int line)
 {
     if (hasBreakpoint(line)) {
         mBreakpointLines.remove(line);
-        //todo
-       // MainForm.Debugger.RemoveBreakPoint(Line, self)
+        pMainWindow->debugger()->removeBreakpoint(line,this);
     } else {
         mBreakpointLines.insert(line);
-
-        //todo
-       // MainForm.Debugger.AddBreakPoint(Line, self);
+        pMainWindow->debugger()->addBreakpoint(line,this);
     }
 
     invalidateGutterLine(line);
