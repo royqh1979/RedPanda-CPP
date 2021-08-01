@@ -154,6 +154,13 @@ void MainWindow::updateEditorActions()
         ui->actionRun->setEnabled(false);
         ui->actionRebuild->setEnabled(false);
         ui->actionStop_Execution->setEnabled(false);
+
+        ui->actionDebug->setEnabled(false);
+        ui->actionStep_Over->setEnabled(false);
+        ui->actionStep_Into->setEnabled(false);
+        ui->actionStep_Out->setEnabled(false);
+        ui->actionContinue->setEnabled(false);
+        ui->actionRun_To_Cursor->setEnabled(false);
     } else {
         ui->actionAuto_Detect->setEnabled(true);
         ui->actionEncode_in_ANSI->setEnabled(true);
@@ -184,18 +191,26 @@ void MainWindow::updateEditorActions()
 
 void MainWindow::updateCompileActions()
 {
-    if (mCompilerManager->compiling()|| mCompilerManager->running()) {
+    if (mCompilerManager->compiling() || mCompilerManager->running() || mDebugger->executing()) {
         ui->actionCompile->setEnabled(false);
         ui->actionCompile_Run->setEnabled(false);
         ui->actionRun->setEnabled(false);
         ui->actionRebuild->setEnabled(false);
+        ui->actionDebug->setEnabled(false);
     } else {
         ui->actionCompile->setEnabled(true);
         ui->actionCompile_Run->setEnabled(true);
         ui->actionRun->setEnabled(true);
         ui->actionRebuild->setEnabled(true);
+
+        ui->actionDebug->setEnabled(true);
     }
-    ui->actionStop_Execution->setEnabled(mCompilerManager->running());
+    ui->actionStep_Into->setEnabled(mDebugger->executing());
+    ui->actionStep_Out->setEnabled(mDebugger->executing());
+    ui->actionStep_Over->setEnabled(mDebugger->executing());
+    ui->actionContinue->setEnabled(mDebugger->executing());
+    ui->actionRun_To_Cursor->setEnabled(mDebugger->executing());
+    ui->actionStop_Execution->setEnabled(mCompilerManager->running() || mDebugger->executing());
 }
 
 void MainWindow::updateEditorColorSchemes()
@@ -677,6 +692,7 @@ void MainWindow::debug()
         break;
     }
 
+    updateEditorActions();
 
     // Add library folders
     for (QString dir:compilerSet->libDirs()) {
@@ -1253,6 +1269,7 @@ void MainWindow::on_actionRebuild_triggered()
 void MainWindow::on_actionStop_Execution_triggered()
 {
     mCompilerManager->stopRun();
+    mDebugger->stop();
 }
 
 void MainWindow::on_actionDebug_triggered()
@@ -1316,8 +1333,7 @@ void MainWindow::on_actionStep_Over_triggered()
         mDebugger->updateDebugInfo();
 //        if (CPUForm) then
 //        CPUForm.UpdateInfo;
-      //WatchView.Items.EndUpdate();
-      //fDebugger.RefreshWatchVars;
+        mDebugger->refreshWatchVars();
     }
 }
 
@@ -1330,8 +1346,7 @@ void MainWindow::on_actionStep_Into_triggered()
         mDebugger->updateDebugInfo();
 //        if (CPUForm) then
 //        CPUForm.UpdateInfo;
-      //WatchView.Items.EndUpdate();
-      //fDebugger.RefreshWatchVars;
+        mDebugger->refreshWatchVars();
     }
 
 }
@@ -1345,8 +1360,7 @@ void MainWindow::on_actionStep_Out_triggered()
         mDebugger->updateDebugInfo();
 //        if (CPUForm) then
 //        CPUForm.UpdateInfo;
-      //WatchView.Items.EndUpdate();
-      //fDebugger.RefreshWatchVars;
+        mDebugger->refreshWatchVars();
     }
 
 }
@@ -1363,8 +1377,7 @@ void MainWindow::on_actionRun_To_Cursor_triggered()
             mDebugger->updateDebugInfo();
     //        if (CPUForm) then
     //        CPUForm.UpdateInfo;
-          //WatchView.Items.EndUpdate();
-          //fDebugger.RefreshWatchVars;
+            mDebugger->refreshWatchVars();
         }
     }
 
@@ -1379,8 +1392,7 @@ void MainWindow::on_actionContinue_triggered()
         mDebugger->updateDebugInfo();
 //        if (CPUForm) then
 //        CPUForm.UpdateInfo;
-      //WatchView.Items.EndUpdate();
-      //fDebugger.RefreshWatchVars;
+        mDebugger->refreshWatchVars();
     }
 }
 

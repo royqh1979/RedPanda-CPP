@@ -45,7 +45,7 @@ void Debugger::start()
     mReader->setDebuggerPath(debuggerPath);
     connect(mReader, &QThread::finished,this,&Debugger::clearUpReader);
     connect(mReader, &DebugReader::parseFinished,this,&Debugger::syncFinishedParsing,Qt::BlockingQueuedConnection);
-    connect(mReader, &DebugReader::changeDebugConsoleLastLine,this,&Debugger::onChangeDebugConsoleLastline,Qt::BlockingQueuedConnection);
+    connect(mReader, &DebugReader::changeDebugConsoleLastLine,this,&Debugger::onChangeDebugConsoleLastline);
     connect(mReader, &DebugReader::addLocalWithLinebreak,this,&Debugger::onAddLocalWithLinebreak);
     connect(mReader, &DebugReader::addLocalWithoutLinebreak,this,&Debugger::onAddLocalWithoutLinebreak);
     connect(mReader, &DebugReader::clearLocals,this,&Debugger::onClearLocals);
@@ -89,6 +89,8 @@ void Debugger::clearUpReader()
         for(PWatchVar var:mWatchModel->watchVars()) {
             invalidateWatchVar(var);
         }
+
+        pMainWindow->updateEditorActions();
     }
 }
 

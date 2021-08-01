@@ -140,7 +140,7 @@
           </widget>
           <widget class="QWidget" name="EditorPanel" native="true">
            <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+            <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
              <horstretch>2</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
