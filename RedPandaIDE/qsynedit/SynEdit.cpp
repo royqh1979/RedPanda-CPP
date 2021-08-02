@@ -4174,7 +4174,7 @@ int SynEdit::searchReplace(const QString &ASearch, const QString &AReplace, SynS
     if (ASearch.isEmpty()) {
         return 0;
     }
-    int Result = 0;
+    int result = 0;
     // get the text range to search in, ignore the "Search in selection only"
     // option if nothing is selected
     bool bBackward = AOptions.testFlag(ssoBackwards);
@@ -4241,90 +4241,105 @@ int SynEdit::searchReplace(const QString &ASearch, const QString &AReplace, SynS
                 mUndoList->EndBlock();
             doOnPaintTransient(SynTransientType::ttAfter);
         });
+        int n;
         while ((ptCurrent.Line >= ptStart.Line) && (ptCurrent.Line <= ptEnd.Line)) {
-        nInLine := fSearchEngine.FindAll(Lines[ptCurrent.Line - 1]);
-        iResultOffset := 0;
-        if bBackward then
-          n := Pred(fSearchEngine.ResultCount)
-        else
-          n := 0;
-        // Operate on all results in this line.
-        while nInLine > 0 do begin
-          // An occurrence may have been replaced with a text of different length
-          nFound := fSearchEngine.Results[n] + iResultOffset;
-          nSearchLen := fSearchEngine.Lengths[n];
-          if bBackward then
-            Dec(n)
-          else
-            Inc(n);
-          Dec(nInLine);
-          // Is the search result entirely in the search range?
-          if not InValidSearchRange(nFound, nFound + nSearchLen) then
-            continue;
-          Inc(Result);
-          // Select the text, so the user can see it in the OnReplaceText event
-          // handler or as the search result.
+            int nInLine = mSearchEngine->findAll(mLines->getString(ptCurrent.Line - 1));
+            int iResultOffset = 0;
+            if (bBackward)
+                n = mSearchEngine->resultCount()-1;
+            else
+                n = 0;
+            // Operate on all results in this line.
+            while (nInLine > 0) {
+                // An occurrence may have been replaced with a text of different length
+                int nFound = mSearchEngine->result(n) + 1 + iResultOffset;
+                int nSearchLen = mSearchEngine->length(n);
+                int nReplaceLen = 0;
+                if (bBackward)
+                    n--;
+                else
+                    n++;
+                nInLine--;
+                // Is the search result entirely in the search range?
+                bool isInValidSearchRange = true;
+                int first = nFound;
+                int last = nFound + nSearchLen;
+                if ((mActiveSelectionMode == SynSelectionMode::smNormal)
+                        || !AOptions.testFlag(ssoSelectedOnly)) {
+                    if (((ptCurrent.Line == ptStart.Line) && (first < ptStart.Char)) ||
+                            ((ptCurrent.Line == ptEnd.Line) && (last > ptEnd.Char)))
+                        isInValidSearchRange = false;
+                } else if (mActiveSelectionMode == SynSelectionMode::smColumn) {
+                    // solves bug in search/replace when smColumn mode active and no selection
+                    isInValidSearchRange = (first >= ptStart.Char) && (last <= ptEnd.Char)
+                            || (ptEnd.Char - ptStart.Char < 1);
+                }
+                if (!isInValidSearchRange)
+                    continue;
+                result++;
+                // Select the text, so the user can see it in the OnReplaceText event
+                // handler or as the search result.
+                ptCurrent.Char = nFound;
+                setBlockBegin(ptCurrent);
 
-          ptCurrent.Char := nFound;
-          BlockBegin := ptCurrent;
-          //Be sure to use the Ex version of CursorPos so that it appears in the middle if necessary
-          SetCaretXYEx(False, BufferCoord(1, ptCurrent.Line));
-          EnsureCursorPosVisibleEx(True);
-          Inc(ptCurrent.Char, nSearchLen);
-          BlockEnd := ptCurrent;
-          InternalCaretXY := ptCurrent;
-          if bBackward then
-            InternalCaretXY := BlockBegin
-          else
-            InternalCaretXY := ptCurrent;
-          // If it's a search only we can leave the procedure now.
-          if not (bReplace or bReplaceAll) then
-            exit;
-          // Prompt and replace or replace all.  If user chooses to replace
-          // all after prompting, turn off prompting.
-          if bPrompt and Assigned(fOnReplaceText) then begin
-            nAction := DoOnReplaceText(ASearch, AReplace, ptCurrent.Line, nFound, nSearchLen);
-            if nAction = raCancel then
-              exit;
-          end else
-            nAction := raReplace;
-          if nAction <> raSkip then begin
-            // user has been prompted and has requested to silently replace all
-            // so turn off prompting
-            if nAction = raReplaceAll then begin
-              if (not bReplaceAll) or bPrompt then begin
-                bReplaceAll := TRUE;
-                IncPaintLock;
-              end;
-              bPrompt := False;
-              if bEndUndoBlock = false then
-                BeginUndoBlock;
-              bEndUndoBlock := true;
-            end;
-            //Allow advanced substition in the search engine
-            SelText := fSearchEngine.Replace(SelText, AReplace);
-            nReplaceLen := CaretX - nFound;
-          end;
-          // fix the caret position and the remaining results
-          if not bBackward then begin
-            InternalCaretX := nFound + nReplaceLen;
-            if (nSearchLen <> nReplaceLen) and (nAction <> raSkip) then begin
-              Inc(iResultOffset, nReplaceLen - nSearchLen);
-              if (fActiveSelectionMode <> smColumn) and (CaretY = ptEnd.Line) then begin
-                Inc(ptEnd.Char, nReplaceLen - nSearchLen);
-                BlockEnd := ptEnd;
-              end;
-            end;
-          end;
-          if not bReplaceAll then
-            exit;
-        end;
-        // search next / previous line
-        if bBackward then
-          Dec(ptCurrent.Line)
-        else
-          Inc(ptCurrent.Line);
-      end;
+                //Be sure to use the Ex version of CursorPos so that it appears in the middle if necessary
+                setCaretXYEx(false, BufferCoord{1, ptCurrent.Line});
+                ensureCursorPosVisibleEx(true);
+                ptCurrent.Char += nSearchLen;
+                setBlockEnd(ptCurrent);
+                //internalSetCaretXY(ptCurrent);
+                if (bBackward)
+                    internalSetCaretXY(blockBegin());
+                else
+                    internalSetCaretXY(ptCurrent);
+                // If it's a search only we can leave the procedure now.
+                if (! (bReplace || bReplaceAll))
+                    return result;
+                // Prompt and replace or replace all.  If user chooses to replace
+                // all after prompting, turn off prompting.
+                SynReplaceAction nAction;
+                if (bPrompt && this->mOnReplaceText) {
+                    nAction = mOnReplaceText(ASearch, AReplace, ptCurrent.Line, nFound, nSearchLen);
+                    if (nAction == SynReplaceAction::raCancel)
+                        return result;
+                } else
+                    nAction = SynReplaceAction::raReplace;
+                if (nAction != SynReplaceAction::raSkip) {
+                    // user has been prompted and has requested to silently replace all
+                    // so turn off prompting
+                    if (nAction == SynReplaceAction::raReplaceAll) {
+                        if ((not bReplaceAll) || bPrompt) {
+                            bReplaceAll = true;
+                            incPaintLock();
+                        }
+                        bPrompt = false;
+                        if (bEndUndoBlock == false)
+                            mUndoList->BeginBlock();
+                        bEndUndoBlock = true;
+                    }
+                    setSelText(mSearchEngine->replace(selText(), AReplace));
+                    nReplaceLen = caretX() - nFound;
+                }
+                // fix the caret position and the remaining results
+                if (!bBackward) {
+                    internalSetCaretX(nFound + nReplaceLen);
+                    if ((nSearchLen != nReplaceLen) && (nAction != SynReplaceAction::raSkip)) {
+                        iResultOffset += nReplaceLen - nSearchLen;
+                        if ((mActiveSelectionMode != SynSelectionMode::smColumn) && (caretY() == ptEnd.Line)) {
+                            ptEnd.Char+=nReplaceLen - nSearchLen;
+                            setBlockEnd(ptEnd);
+                        }
+                    }
+                }
+                if (!bReplaceAll)
+                    return result;
+            }
+            // search next / previous line
+            if (bBackward)
+                ptCurrent.Line--;
+            else
+                ptCurrent.Line++;
+        }
     }
 }
 

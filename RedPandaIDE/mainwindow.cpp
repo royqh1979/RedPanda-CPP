@@ -1479,15 +1479,15 @@ void MainWindow::on_actionView_CPU_Window_triggered()
     mCPUDialog->show();
 }
 
-void MainWindow::on_txtEvaludate_returnPressed()
-{
-    QString s=ui->txtEvaludate->text().trimmed();
-    if (!s.isEmpty()) {
-        mDebugger->sendCommand("print",s,false);
-    }
-}
-
 void MainWindow::on_actionExit_triggered()
 {
     close();
+}
+
+void MainWindow::on_cbEvaluate_textActivated(const QString &arg1)
+{
+    QString s=arg1.trimmed();
+    if (!s.isEmpty()) {
+        mDebugger->sendCommand("print",s,false);
+    }
 }

@@ -32,7 +32,7 @@ int SynSearch::findAll(const QString &newText)
     int start=0;
     int next=-1;
     while (true) {
-        if (options.testFlag(ssoMatchCase)) {
+        if (options().testFlag(ssoMatchCase)) {
             next = newText.indexOf(pattern(),start,Qt::CaseSensitive);
         } else {
             next = newText.indexOf(pattern(),start,Qt::CaseInsensitive);

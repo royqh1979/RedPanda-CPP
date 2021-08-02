@@ -393,7 +393,20 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="QLineEdit" name="txtEvaludate"/>
+                 <widget class="QComboBox" name="cbEvaluate">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="editable">
+                   <bool>true</bool>
+                  </property>
+                  <property name="insertPolicy">
+                   <enum>QComboBox::InsertAtTop</enum>
+                  </property>
+                 </widget>
                 </item>
                </layout>
               </widget>
@@ -553,7 +566,7 @@
      <x>0</x>
      <y>0</y>
      <width>946</width>
-     <height>25</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

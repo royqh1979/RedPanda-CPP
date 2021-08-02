@@ -61,7 +61,8 @@ SOURCES += \
     widgets/consolewidget.cpp \
     widgets/issuestable.cpp \
     widgets/qconsole.cpp \
-    widgets/qpatchedcombobox.cpp
+    widgets/qpatchedcombobox.cpp \
+    widgets/searchdialog.cpp
 
 HEADERS += \
     HighlighterManager.h \
@@ -117,7 +118,8 @@ HEADERS += \
     widgets/consolewidget.h \
     widgets/issuestable.h \
     widgets/qconsole.h \
-    widgets/qpatchedcombobox.h
+    widgets/qpatchedcombobox.h \
+    widgets/searchdialog.h
 
 FORMS += \
     settingsdialog/debuggeneralwidget.ui \
@@ -133,7 +135,8 @@ FORMS += \
     settingsdialog/editorsyntaxcheckwidget.ui \
     settingsdialog/environmentappearencewidget.ui \
     settingsdialog/executorgeneralwidget.ui \
-    settingsdialog/settingsdialog.ui
+    settingsdialog/settingsdialog.ui \
+    widgets/searchdialog.ui
 
 TRANSLATIONS += \
     RedPandaIDE_zh_CN.ts

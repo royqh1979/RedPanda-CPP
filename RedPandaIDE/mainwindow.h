@@ -164,9 +164,9 @@ private slots:
 
     void on_actionView_CPU_Window_triggered();
 
-    void on_txtEvaludate_returnPressed();
-
     void on_actionExit_triggered();
+
+    void on_cbEvaluate_textActivated(const QString &arg1);
 
 public slots:
     void onCompileLog(const QString& msg);

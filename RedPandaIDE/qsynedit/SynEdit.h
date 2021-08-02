@@ -125,8 +125,8 @@ using SynPaintProc = std::function<void(const QPaintDevice& paintDevice )>;
 using SynPreparePaintHighlightTokenProc = std::function<void(int row,
         int column, const QString& token, PSynHighlighterAttribute attr,
         SynFontStyles& style, QColor& foreground, QColor& background)>;
-using SynReplaceTextProc = std::function<void(const QString& ASearch, const QString& AReplace,
-    int Line, int Column, int wordLen, SynReplaceAction& action)>;
+using SynReplaceTextProc = std::function<SynReplaceAction(const QString& ASearch, const QString& AReplace,
+    int Line, int ch, int wordLen)>;
 //using SynSpecialLineColorsProc = std::function<void(int Line,
 //    bool& Special, QColor& foreground, QColor& backgroundColor)>;
 //using SynEditingAreasProc = std::function<void(int Line, SynEditingAreaList& areaList,
