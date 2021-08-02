@@ -16,6 +16,9 @@ SOURCES += \
     compiler/executablerunner.cpp \
     compiler/filecompiler.cpp \
     compiler/stdincompiler.cpp \
+    qsynedit/Search.cpp \
+    qsynedit/SearchBase.cpp \
+    qsynedit/SearchRegex.cpp \
     settingsdialog/debuggeneralwidget.cpp \
     widgets/cpudialog.cpp \
     debugger.cpp \
@@ -68,6 +71,9 @@ HEADERS += \
     compiler/executablerunner.h \
     compiler/filecompiler.h \
     compiler/stdincompiler.h \
+    qsynedit/Search.h \
+    qsynedit/SearchBase.h \
+    qsynedit/SearchRegex.h \
     settingsdialog/debuggeneralwidget.h \
     widgets/cpudialog.h \
     debugger.h \

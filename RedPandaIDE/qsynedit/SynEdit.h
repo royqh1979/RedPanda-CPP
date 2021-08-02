@@ -13,6 +13,7 @@
 #include "Types.h"
 #include "TextBuffer.h"
 #include "KeyStrokes.h"
+#include "SearchBase.h"
 
 enum class SynFontSmoothMethod {
     None, AntiAlias, ClearType
@@ -214,6 +215,8 @@ public:
     PSynEditFoldRange foldHidesLine(int line);
     void setSelText(const QString& Value);
 
+    int searchReplace(const QString& ASearch, const QString& AReplace, SynSearchOptions AOptions);
+
     int maxScrollWidth() const;
     int maxScrollHeight() const;
 
@@ -321,6 +324,9 @@ public:
     bool canRedo() const;
 
     int textHeight() const;
+
+    PSynSearchBase searchEngine() const;
+    void setSearchEngine(const PSynSearchBase &searchEngine);
 
 signals:
     void Changed();
@@ -586,6 +592,8 @@ private:
     QTimer*  mScrollTimer;
     int mScrollDeltaX;
     int mScrollDeltaY;
+
+    PSynSearchBase mSearchEngine;
 
     PSynEdit  fChainedEditor;
 
