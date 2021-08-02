@@ -166,8 +166,6 @@ private slots:
 
     void on_actionExit_triggered();
 
-    void on_cbEvaluate_textActivated(const QString &arg1);
-
 public slots:
     void onCompileLog(const QString& msg);
     void onCompileIssue(PCompileIssue issue);
@@ -177,6 +175,7 @@ public slots:
     void onRunFinished();
     void cleanUpCPUDialog();
     void onDebugCommandInput(const QString& command);
+    void onDebugEvaluateInput();
 
 private:
     void setupActions();

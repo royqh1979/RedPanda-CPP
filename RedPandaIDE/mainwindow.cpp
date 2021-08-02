@@ -102,6 +102,8 @@ MainWindow::MainWindow(QWidget *parent)
     mPreviousHeight = 250;
 
     connect(ui->debugConsole,&QConsole::commandInput,this,&MainWindow::onDebugCommandInput);
+    connect(ui->cbEvaluate->lineEdit(), &QLineEdit::returnPressed,
+            this, &MainWindow::onDebugEvaluateInput);
 }
 
 MainWindow::~MainWindow()
@@ -1484,9 +1486,9 @@ void MainWindow::on_actionExit_triggered()
     close();
 }
 
-void MainWindow::on_cbEvaluate_textActivated(const QString &arg1)
+void MainWindow::onDebugEvaluateInput()
 {
-    QString s=arg1.trimmed();
+    QString s=ui->cbEvaluate->currentText().trimmed();
     if (!s.isEmpty()) {
         mDebugger->sendCommand("print",s,false);
     }
