@@ -22,7 +22,8 @@ Settings::Settings(const QString &filename):
     mEnvironment(this),
     mCompilerSets(this),
     mExecutor(this),
-    mDebugger(this)
+    mDebugger(this),
+    mHistory(this)
 {
 }
 
@@ -2350,16 +2351,29 @@ Settings::History::History(Settings *settings):_Base(settings, SETTING_HISTORY)
 
 }
 
+QStringList &Settings::History::openedFiles()
+{
+    return mOpenedFiles;
+}
+
+QStringList &Settings::History::openedProjects()
+{
+    return mOpenedProjects;
+}
+
 bool Settings::History::addToOpenedFiles(const QString &filename)
 {
     if (!QFile(filename).exists())
         return false;
-    if (openedFiles().indexOf(filename)>=0)
-        return false;
-    if (openedFiles().size()>=15) {
-        openedFiles().pop_front();
+    int index = mOpenedFiles.indexOf(filename);
+    if (index>=0) {
+        mOpenedFiles.removeAt(index);
     }
-    openedFiles().append(filename);
+    if (mOpenedFiles.size()>=15) {
+        mOpenedFiles.pop_back();
+    }
+    mOpenedFiles.push_front(filename);
+    save();
     return true;
 
 }

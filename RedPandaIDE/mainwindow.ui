@@ -566,6 +566,8 @@
     <addaction name="actionSave"/>
     <addaction name="actionSaveAs"/>
     <addaction name="actionSaveAll"/>
+    <addaction name="separator"/>
+    <addaction name="actionExit"/>
    </widget>
    <widget class="QMenu" name="menuTools">
     <property name="title">
@@ -573,9 +575,9 @@
     </property>
     <addaction name="actionOptions"/>
    </widget>
-   <widget class="QMenu" name="menuRun">
+   <widget class="QMenu" name="menuExecute">
     <property name="title">
-     <string>Run</string>
+     <string>Execute</string>
     </property>
     <addaction name="actionCompile"/>
     <addaction name="actionRun"/>
@@ -614,7 +616,7 @@
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
-   <addaction name="menuRun"/>
+   <addaction name="menuExecute"/>
    <addaction name="menuTools"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
@@ -1076,6 +1078,11 @@
   <action name="actionView_CPU_Window">
    <property name="text">
     <string>View CPU Window...</string>
+   </property>
+  </action>
+  <action name="actionExit">
+   <property name="text">
+    <string>Exit</string>
    </property>
   </action>
  </widget>

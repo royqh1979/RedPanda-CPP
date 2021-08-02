@@ -68,12 +68,13 @@ public:
     void changeDebugOutputLastline(const QString& text);
     void updateDebugEval(const QString& value);
 
+    void rebuildOpenedFileHisotryMenu();
+
     QPlainTextEdit* txtLocals();
 
     CPUDialog *cpuDialog() const;
 
     Debugger *debugger() const;
-
 
 protected:
     void openFiles(const QStringList& files);
@@ -165,6 +166,8 @@ private slots:
 
     void on_txtEvaludate_returnPressed();
 
+    void on_actionExit_triggered();
+
 public slots:
     void onCompileLog(const QString& msg);
     void onCompileIssue(PCompileIssue issue);
@@ -188,10 +191,12 @@ private:
     QLabel *mFileModeStatus;
     QMenu *mMenuEncoding;
     QMenu *mMenuEncodingList;
+    QMenu *mMenuRecentFiles;
     QComboBox *mCompilerSet;
     CompilerManager *mCompilerManager;
     Debugger *mDebugger;
     CPUDialog *mCPUDialog;
+    QList<QAction *> mRecentFileActions;
 
     bool mMessageControlChanged;
     bool mTabMessagesTogglingState;

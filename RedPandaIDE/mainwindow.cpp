@@ -87,6 +87,12 @@ MainWindow::MainWindow(QWidget *parent)
     ui->actionEncode_in_ANSI->setCheckable(true);
     ui->actionEncode_in_UTF_8->setCheckable(true);
 
+    mMenuRecentFiles = new QMenu();
+    mMenuRecentFiles->setTitle(tr("Recent Files"));
+    ui->menuFile->insertMenu(ui->actionExit, mMenuRecentFiles);
+    ui->menuFile->insertSeparator(ui->actionExit);
+    rebuildOpenedFileHisotryMenu();
+
     mCPUDialog = nullptr;
 
     updateEditorActions();
@@ -328,6 +334,30 @@ void MainWindow::updateDebugEval(const QString &value)
 {
     ui->txtEvalOutput->clear();
     ui->txtEvalOutput->appendPlainText(value);
+}
+
+void MainWindow::rebuildOpenedFileHisotryMenu()
+{
+    mMenuRecentFiles->clear();
+    for (QAction* action:mRecentFileActions) {
+        action->setParent(nullptr);
+        action->deleteLater();
+    }
+    mRecentFileActions.clear();
+    if (pSettings->history().openedFiles().size()==0) {
+        mMenuRecentFiles->setEnabled(false);
+    } else {
+        mMenuRecentFiles->setEnabled(true);
+        for (QString filename: pSettings->history().openedFiles()) {
+            QAction* action = new QAction();
+            action->setText(filename);
+            connect(action, &QAction::triggered, [=,this](bool checked = false){
+                this->openFile(filename);
+            });
+            mRecentFileActions.append(action);
+        }
+        mMenuRecentFiles->addActions(mRecentFileActions);
+    }
 }
 
 QPlainTextEdit *MainWindow::txtLocals()
@@ -1455,4 +1485,9 @@ void MainWindow::on_txtEvaludate_returnPressed()
     if (!s.isEmpty()) {
         mDebugger->sendCommand("print",s,false);
     }
+}
+
+void MainWindow::on_actionExit_triggered()
+{
+    close();
 }
