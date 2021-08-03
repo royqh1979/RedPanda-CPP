@@ -91,7 +91,8 @@ bool EditorList::closeEditor(Editor* editor, bool transferFocus, bool force) {
         pMainWindow->rebuildOpenedFileHisotryMenu();
     }
 
-    editor->deleteLater();
+    //editor->deleteLater();
+    delete editor;
     return true;
 }
 

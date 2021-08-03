@@ -25,6 +25,8 @@
 #include <QTextCodec>
 #include <QDebug>
 
+#include <widgets/searchdialog.h>
+
 MainWindow* pMainWindow;
 
 MainWindow::MainWindow(QWidget *parent)
@@ -32,7 +34,8 @@ MainWindow::MainWindow(QWidget *parent)
       ui(new Ui::MainWindow),
       mMessageControlChanged(false),
       mTabMessagesTogglingState(false),
-      mCheckSyntaxInBack(false)
+      mCheckSyntaxInBack(false),
+      mSearchDialog(nullptr)
 {
     ui->setupUi(this);
     // status bar
@@ -874,6 +877,16 @@ void MainWindow::prepareDebugger()
 //    mDebugger->deleteWatchVars(false);
 }
 
+SearchDialog *MainWindow::searchDialog() const
+{
+    return mSearchDialog;
+}
+
+EditorList *MainWindow::editorList() const
+{
+    return mEditorList;
+}
+
 Debugger *MainWindow::debugger() const
 {
     return mDebugger;
@@ -1492,4 +1505,36 @@ void MainWindow::onDebugEvaluateInput()
     if (!s.isEmpty()) {
         mDebugger->sendCommand("print",s,false);
     }
+}
+
+void MainWindow::on_actionFind_triggered()
+{
+    Editor *e = mEditorList->getEditor();
+    if (!e)
+        return;
+    if (mSearchDialog==nullptr) {
+        mSearchDialog = new SearchDialog(this);
+    }
+    QString s = e->WordAtCursor();
+    mSearchDialog->find(s);
+}
+
+void MainWindow::on_actionFind_in_files_triggered()
+{
+
+}
+
+void MainWindow::on_actionReplace_triggered()
+{
+
+}
+
+void MainWindow::on_actionFind_Next_triggered()
+{
+
+}
+
+void MainWindow::on_actionFind_Previous_triggered()
+{
+
 }

@@ -125,7 +125,7 @@ using SynPaintProc = std::function<void(const QPaintDevice& paintDevice )>;
 using SynPreparePaintHighlightTokenProc = std::function<void(int row,
         int column, const QString& token, PSynHighlighterAttribute attr,
         SynFontStyles& style, QColor& foreground, QColor& background)>;
-using SynReplaceTextProc = std::function<SynReplaceAction(const QString& ASearch, const QString& AReplace,
+using SynSearchMathedProc = std::function<void(const QString& ASearch,
     int Line, int ch, int wordLen)>;
 //using SynSpecialLineColorsProc = std::function<void(int Line,
 //    bool& Special, QColor& foreground, QColor& backgroundColor)>;
@@ -215,7 +215,8 @@ public:
     PSynEditFoldRange foldHidesLine(int line);
     void setSelText(const QString& Value);
 
-    int searchReplace(const QString& ASearch, const QString& AReplace, SynSearchOptions AOptions);
+    int search(const QString& ASearch,SynSearchOptions AOptions,
+               PSynSearchBase searchEngine,  SynSearchMathedProc matchedCallback = nullptr);
 
     int maxScrollWidth() const;
     int maxScrollHeight() const;
@@ -324,9 +325,6 @@ public:
     bool canRedo() const;
 
     int textHeight() const;
-
-    PSynSearchBase searchEngine() const;
-    void setSearchEngine(const PSynSearchBase &searchEngine);
 
 signals:
     void Changed();
@@ -593,8 +591,6 @@ private:
     int mScrollDeltaX;
     int mScrollDeltaY;
 
-    PSynSearchBase mSearchEngine;
-
     PSynEdit  fChainedEditor;
 
     int mPaintTransientLock;
@@ -611,7 +607,6 @@ private:
     SynProcessCommandProc mOnProcessingCommand;
     SynProcessCommandProc mOnProcessingUserCommand;
 
-    SynReplaceTextProc mOnReplaceText;
 //    SynSpecialLineColorsProc mOnSpecialLineColors;
 //    SynEditingAreasProc mOnEditingAreas;
 //    SynGutterGetTextProc  mOnGutterGetText;

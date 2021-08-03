@@ -1,10 +1,18 @@
 #include "searchdialog.h"
 #include "ui_searchdialog.h"
 #include <QTabBar>
+#include "../editor.h"
+#include "../mainwindow.h"
+#include "../editorlist.h"
+#include "../qsynedit/Search.h"
+#include "../qsynedit/SearchRegex.h"
+#include <QMessageBox>
+
 
 SearchDialog::SearchDialog(QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::SearchDialog)
+    ui(new Ui::SearchDialog),
+    mSearchEngine()
 {
     ui->setupUi(this);
     mTabBar = new QTabBar();
@@ -12,8 +20,12 @@ SearchDialog::SearchDialog(QWidget *parent) :
     mTabBar->addTab(tr("Find in files"));
     mTabBar->addTab(tr("Replace"));
     mTabBar->addTab(tr("Replace in files"));
+    mTabBar->setExpanding(false);
     ui->dialogLayout->insertWidget(0,mTabBar);
     connect(mTabBar,&QTabBar::currentChanged,this, &SearchDialog::onTabChanged);
+    mSearchOptions&=0;
+    mBasicSearchEngine= PSynSearchBase(new SynSearch());
+    mRegexSearchEngine= PSynSearchBase(new SynSearchRegex());
 }
 
 SearchDialog::~SearchDialog()
@@ -94,12 +106,290 @@ void SearchDialog::on_btnCancel_clicked()
     this->close();
 }
 
-void SearchDialog::closeEvent(QCloseEvent *event)
-{
-    this->deleteLater();
-}
-
 void SearchDialog::on_btnExecute_clicked()
 {
+    int findcount = 0;
 
+    SearchAction actionType;
+    switch (mTabBar->currentIndex()) {
+    case 0:
+        actionType = SearchAction::Find;
+        break;
+    case 1:
+        actionType = SearchAction::FindFiles;
+        break;
+    case 2:
+        actionType = SearchAction::Replace;
+        break;
+    case 3:
+        actionType = SearchAction::ReplaceFiles;
+        break;
+    default:
+        return;
+    }
+
+    mSearchOptions&=0;
+
+    // Apply options
+    if (ui->chkRegExp->isChecked()) {
+        mSearchOptions.setFlag(ssoRegExp);
+    }
+    if (ui->chkCaseSensetive->isChecked()) {
+        mSearchOptions.setFlag(ssoMatchCase);
+    }
+    if (ui->chkWholeWord->isChecked()) {
+        mSearchOptions.setFlag(ssoWholeWord);
+    }
+    if (ui->chkPrompt->isChecked()) {
+        mSearchOptions.setFlag(ssoPrompt);
+    }
+
+    // Apply scope, when visible
+    if (ui->grpScope->isVisible()) {
+        if (ui->rbSelection->isChecked()) {
+            mSearchOptions.setFlag(ssoSelectedOnly);
+        }
+    }
+
+    // Apply direction, when visible
+    if (ui->grpDirection->isVisible()) {
+        if (ui->rbBackward->isChecked()) {
+            mSearchOptions.setFlag(ssoBackwards);
+        }
+    }
+
+    // Apply origin, when visible
+    if (ui->grpOrigin->isVisible()) {
+        if (ui->rbEntireScope->isChecked()) {
+            mSearchOptions.setFlag(ssoEntireScope);
+        }
+    }
+
+    // Use entire scope for file finding/replacing
+    if (actionType == SearchAction::FindFiles || actionType == SearchAction::ReplaceFiles) {
+        mSearchOptions.setFlag(ssoEntireScope);
+    }
+
+    this->close();
+
+    // Find the first one, then quit
+    if (actionType == SearchAction::Find) {
+        Editor *e = pMainWindow->editorList()->getEditor();
+        if (e!=nullptr) {
+            findcount+=execute(e,SearchAction::Find);
+        }
+    }
+
+//    // Replace first, find to next
+//end else if actiontype = faReplace then begin
+//  e := MainForm.EditorList.GetEditor;
+
+//  if Assigned(e) then begin
+//    Inc(findcount, Execute(e.Text, faReplace));
+//    if findcount > 0 then begin
+//      Exclude(fSearchOptions, ssoReplace);
+//      Inc(findcount, Execute(e.Text, faFind));
+//    end;
+//  end;
+//  // Or find everything
+//end else if actiontype = faFindFiles then begin
+//  fileSearched:=0;
+//  fileHitted:=0;
+//  MainForm.FindOutput.BeginFind(cboFindText.Text);
+//  try
+
+//    // loop through pagecontrol
+//    if rbOpenFiles.Checked then begin
+
+//      // loop through editors, add results to message control
+//      for I := 0 to MainForm.EditorList.PageCount - 1 do begin
+//        e := MainForm.EditorList[i];
+//        if Assigned(e) then begin
+//          inc(fileSearched);
+//          fCurFile := e.FileName;
+//          t:=Execute(e.Text, actiontype);
+//          Inc(findcount, t);
+//          if t>0 then
+//            inc(filehitted);
+//        end;
+//      end;
+
+//      // loop through project
+//    end else if rbProjectFiles.Checked then begin
+//      for I := 0 to MainForm.Project.Units.Count - 1 do begin
+//        e := MainForm.Project.Units[i].Editor;
+//        fCurFile := MainForm.Project.Units[i].FileName;
+
+//        // file is already open, use memory
+//        if Assigned(e) then begin begin
+//          inc(fileSearched);
+//          t:=Execute(e.Text, actiontype);
+//          Inc(findcount, t);
+//          if t>0 then
+//            inc(filehitted);
+//        end;
+
+//          // not open? load from disk
+//        end else if FileExists(fCurFile) then begin
+//            // Only finding...
+//          fTempSynEdit.Lines.LoadFromFile(fCurFile);
+//          inc(fileSearched);
+//          t:=Execute(fTempSynEdit, actiontype);
+//          Inc(findcount, t);
+//          if t>0 then
+//            inc(filehitted);
+//        end;
+//      end;
+
+//      // Don't loop, only pass single file
+//    end else if rbCurFile.Checked then begin
+//      e := MainForm.EditorList.GetEditor;
+
+//      if Assigned(e) then begin
+
+//        fCurFile := e.FileName;
+
+//        inc(fileSearched);
+//        t:=Execute(e.Text, actiontype);
+//        Inc(findcount, t);
+//        if t>0 then
+//          inc(filehitted);
+//      end;
+//    end;
+//  finally
+//    MainForm.FindOutput.EndFind(cboFindText.Text,findCount,
+//      filehitted,filesearched);
+//  end;
+//end else if actiontype = faReplaceFiles then begin
+//  // loop through pagecontrol
+//  if rbOpenFiles.Checked then begin
+
+//    // loop through editors, add results to message control
+//    for I := 0 to MainForm.EditorList.PageCount - 1 do begin
+//      e := MainForm.EditorList[i];
+//      if Assigned(e) then begin
+//        fCurFile := e.FileName;
+//        if (ssoPrompt in fSearchOptions) then
+//            e.Activate;
+//        Inc(findcount, Execute(e.Text, actiontype));
+//      end;
+//    end;
+
+//      // loop through project
+//  end else if rbProjectFiles.Checked then begin
+//    for I := 0 to MainForm.Project.Units.Count - 1 do begin
+//      e := MainForm.Project.Units[i].Editor;
+//      fCurFile := MainForm.Project.Units[i].FileName;
+
+//      // file is already open, use memory
+//      if Assigned(e) then begin
+//        if (ssoPrompt in fSearchOptions) then
+//            e.Activate;
+//        Inc(findcount, Execute(e.Text, actiontype));
+
+//          // not open? load from disk
+//      end else if FileExists(fCurFile) then begin
+//        // we have to open an editor...
+//        if ssoPrompt in fSearchOptions then begin
+//          e := MainForm.EditorList.GetEditorFromFileName(fCurFile);
+//          if Assigned(e) then begin
+//            e.Activate;
+
+//            Inc(findcount, Execute(e.Text, actiontype));
+
+//            // Save and close
+//            e.Save;
+//            MainForm.Project.CloseUnit(MainForm.Project.Units.Indexof(e));
+//          end;
+//        end else begin
+//          // Stealth replace
+//          fTempSynEdit.Lines.LoadFromFile(fCurFile);
+//          Inc(findcount, Execute(fTempSynEdit, actiontype));
+//          fTempSynEdit.Lines.SaveToFile(fCurFile);
+//        end;
+//      end;
+//    end;
+//      // Don't loop, only pass single file
+//  end else if rbCurFile.Checked then begin
+//    e := MainForm.EditorList.GetEditor;
+
+//    if Assigned(e) then begin
+//      fCurFile := e.FileName;
+//      Inc(findcount, Execute(e.Text, actiontype));
+//    end;
+//  end;
+//end;
+
+//if actiontype = faFindFiles then begin
+//  MainForm.MessageControl.ActivePageIndex := 4; // Find Tab
+//  if findcount > 0 then
+//    MainForm.FindSheet.Caption := Lang[ID_SHEET_FIND];
+//  MainForm.OpenCloseMessageSheet(TRUE);
+//  self.Close;
+//end else if findcount = 0 then begin
+//  MessageBox(
+//    Self.Handle,
+//    PAnsiChar(Format(Lang[ID_MSG_TEXTNOTFOUND], [cboFindText.Text])),
+//    PAnsiChar(Lang[ID_INFO]),
+//    MB_ICONINFORMATION or MB_TOPMOST);
+//  cboFindText.SetFocus;
+//end;
+//if actiontype = faFind then begin
+//  self.Close;
+    //end;
+}
+
+int SearchDialog::execute(Editor *editor, SearchDialog::SearchAction actionType)
+{
+    if (editor==nullptr)
+        return 0;
+    // Modify the caret when using 'from cursor' and when the selection is ignored
+    if (!mSearchOptions.testFlag(ssoEntireScope) && !mSearchOptions.testFlag(ssoSelectedOnly)
+            && editor->selAvail()) {
+        // start at end of selection
+        if (mSearchOptions.testFlag(ssoBackwards)) {
+            editor->setCaretXY(editor->blockBegin());
+        } else {
+            editor->setCaretXY(editor->blockEnd());
+        }
+    }
+
+    if (mSearchOptions.testFlag(ssoRegExp)) {
+        mSearchEngine = mRegexSearchEngine;
+    } else {
+        mSearchEngine = mBasicSearchEngine;
+    }
+
+    return editor->search(ui->cbFind->currentText(),
+                          mSearchOptions,
+                          mSearchEngine);
+
+
+//    // When using find in files, report each find using OnReplaceText
+//    if action = faFindFiles then
+//      editor.OnReplaceText := FindAllAction;
+
+//    // Swap search engire for ours
+//    if (ssoRegExp in fSearchOptions) then
+//      editor.SearchEngine := fRegExpSearchEngine
+//    else
+//      editor.SearchEngine := fSearchEngine;
+//    result := editor.SearchReplace(cboFindText.Text, cboReplaceText.Text, fSearchOptions);
+
+//    // Don't touch editors which we are only scanning
+//    if action in [faFindFiles] then begin
+//      // Put backup back into place
+//      editor.CaretXY := caretbackup;
+//      editor.BlockBegin := blockbeginbackup;
+//      editor.BlockEnd := blockendbackup;
+//      editor.TopLine := toplinebackup;
+//    end;
+
+//    editor.OnReplaceText := onreplacebackup;
+//    editor.SearchEngine := enginebackup;
+}
+
+PSynSearchBase SearchDialog::searchEngine() const
+{
+    return mSearchEngine;
 }

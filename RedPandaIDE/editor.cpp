@@ -103,7 +103,6 @@ Editor::~Editor() {
         mParentPageControl->removeTab(index);
     }
     this->setParent(0);
-
 }
 
 void Editor::loadFile() {

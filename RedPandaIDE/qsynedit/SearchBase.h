@@ -5,9 +5,15 @@
 #include <memory>
 
 enum SynSearchOption {
-    ssoMatchCase, ssoWholeWord, ssoBackwards,
-    ssoEntireScope, ssoSelectedOnly, ssoReplace, ssoReplaceAll, ssoPrompt,
-    ssoRegExp};
+    ssoMatchCase    = 0x0001,
+    ssoWholeWord    = 0x0002,
+    ssoBackwards    = 0x0004,
+    ssoEntireScope  = 0x0008,
+    ssoSelectedOnly = 0x0010,
+    ssoFindAll      = 0x0020,
+    ssoPrompt       = 0x0040,
+    ssoRegExp       = 0x0080
+};
 
 Q_DECLARE_FLAGS(SynSearchOptions, SynSearchOption)
 Q_DECLARE_OPERATORS_FOR_FLAGS(SynSearchOptions)

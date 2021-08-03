@@ -21,6 +21,7 @@ class Editor;
 class Debugger;
 class CPUDialog;
 class QPlainTextEdit;
+class SearchDialog;
 
 class MainWindow : public QMainWindow
 {
@@ -75,6 +76,10 @@ public:
     CPUDialog *cpuDialog() const;
 
     Debugger *debugger() const;
+
+    EditorList *editorList() const;
+
+    SearchDialog *searchDialog() const;
 
 protected:
     void openFiles(const QStringList& files);
@@ -166,6 +171,16 @@ private slots:
 
     void on_actionExit_triggered();
 
+    void on_actionFind_triggered();
+
+    void on_actionFind_in_files_triggered();
+
+    void on_actionReplace_triggered();
+
+    void on_actionFind_Next_triggered();
+
+    void on_actionFind_Previous_triggered();
+
 public slots:
     void onCompileLog(const QString& msg);
     void onCompileIssue(PCompileIssue issue);
@@ -195,6 +210,7 @@ private:
     CompilerManager *mCompilerManager;
     Debugger *mDebugger;
     CPUDialog *mCPUDialog;
+    SearchDialog *mSearchDialog;
     QList<QAction *> mRecentFileActions;
 
     bool mMessageControlChanged;

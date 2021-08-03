@@ -41,7 +41,7 @@ int SynSearch::findAll(const QString &newText)
             break;
         }
         mResults.append(next);
-        start = next;
+        start = next + newText.length();
     }
     return mResults.size();
 }

@@ -3208,16 +3208,6 @@ void SynEdit::doScrolled(int)
     invalidate();
 }
 
-PSynSearchBase SynEdit::searchEngine() const
-{
-    return mSearchEngine;
-}
-
-void SynEdit::setSearchEngine(const PSynSearchBase &searchEngine)
-{
-    mSearchEngine = searchEngine;
-}
-
 int SynEdit::textHeight() const
 {
     return mTextHeight;
@@ -4165,9 +4155,10 @@ void SynEdit::setSelText(const QString &Value)
                     mActiveSelectionMode);
 }
 
-int SynEdit::searchReplace(const QString &ASearch, const QString &AReplace, SynSearchOptions AOptions)
+int SynEdit::search(const QString &ASearch, SynSearchOptions AOptions, PSynSearchBase searchEngine,
+                    SynSearchMathedProc matchedCallback)
 {
-    if (!mSearchEngine)
+    if (!searchEngine)
         return 0;
 
     // can't search for or replace an empty string
@@ -4179,8 +4170,7 @@ int SynEdit::searchReplace(const QString &ASearch, const QString &AReplace, SynS
     // option if nothing is selected
     bool bBackward = AOptions.testFlag(ssoBackwards);
     bool bPrompt = AOptions.testFlag(ssoPrompt);
-    bool bReplace = AOptions.testFlag(ssoReplace);
-    bool bReplaceAll = AOptions.testFlag(ssoReplaceAll);
+    bool bFindAll = AOptions.testFlag(ssoFindAll);
     bool bFromCursor = !AOptions.testFlag(ssoEntireScope);
     BufferCoord ptCurrent;
     BufferCoord ptStart;
@@ -4222,43 +4212,33 @@ int SynEdit::searchReplace(const QString &ASearch, const QString &AReplace, SynS
             ptCurrent = ptStart;
     }
     // initialize the search engine
-    mSearchEngine->setOptions(AOptions);
-    mSearchEngine->setPattern(ASearch);
+    searchEngine->setOptions(AOptions);
+    searchEngine->setPattern(ASearch);
     // search while the current search position is inside of the search range
     int nReplaceLen = 0;
     bool bEndUndoBlock =false;
     doOnPaintTransient(SynTransientType::ttBefore);
-    if (bReplaceAll && !bPrompt) {
-        incPaintLock();
-        mUndoList->BeginBlock();
-        bEndUndoBlock = true;
-    }
     {
         auto action = finally([&,this]{
-            if (bReplaceAll && !bPrompt)
-                decPaintLock();
-            if (bEndUndoBlock)
-                mUndoList->EndBlock();
             doOnPaintTransient(SynTransientType::ttAfter);
         });
-        int n;
+        int i;
         while ((ptCurrent.Line >= ptStart.Line) && (ptCurrent.Line <= ptEnd.Line)) {
-            int nInLine = mSearchEngine->findAll(mLines->getString(ptCurrent.Line - 1));
+            int nInLine = searchEngine->findAll(mLines->getString(ptCurrent.Line - 1));
             int iResultOffset = 0;
             if (bBackward)
-                n = mSearchEngine->resultCount()-1;
+                i = searchEngine->resultCount()-1;
             else
-                n = 0;
+                i = 0;
             // Operate on all results in this line.
             while (nInLine > 0) {
                 // An occurrence may have been replaced with a text of different length
-                int nFound = mSearchEngine->result(n) + 1 + iResultOffset;
-                int nSearchLen = mSearchEngine->length(n);
-                int nReplaceLen = 0;
+                int nFound = searchEngine->result(i) + 1 + iResultOffset;
+                int nSearchLen = searchEngine->length(i);
                 if (bBackward)
-                    n--;
+                    i--;
                 else
-                    n++;
+                    i++;
                 nInLine--;
                 // Is the search result entirely in the search range?
                 bool isInValidSearchRange = true;
@@ -4271,7 +4251,7 @@ int SynEdit::searchReplace(const QString &ASearch, const QString &AReplace, SynS
                         isInValidSearchRange = false;
                 } else if (mActiveSelectionMode == SynSelectionMode::smColumn) {
                     // solves bug in search/replace when smColumn mode active and no selection
-                    isInValidSearchRange = (first >= ptStart.Char) && (last <= ptEnd.Char)
+                    isInValidSearchRange = ((first >= ptStart.Char) && (last <= ptEnd.Char))
                             || (ptEnd.Char - ptStart.Char < 1);
                 }
                 if (!isInValidSearchRange)
@@ -4293,46 +4273,23 @@ int SynEdit::searchReplace(const QString &ASearch, const QString &AReplace, SynS
                 else
                     internalSetCaretXY(ptCurrent);
                 // If it's a search only we can leave the procedure now.
-                if (! (bReplace || bReplaceAll))
-                    return result;
-                // Prompt and replace or replace all.  If user chooses to replace
-                // all after prompting, turn off prompting.
-                SynReplaceAction nAction;
-                if (bPrompt && this->mOnReplaceText) {
-                    nAction = mOnReplaceText(ASearch, AReplace, ptCurrent.Line, nFound, nSearchLen);
-                    if (nAction == SynReplaceAction::raCancel)
-                        return result;
-                } else
-                    nAction = SynReplaceAction::raReplace;
-                if (nAction != SynReplaceAction::raSkip) {
-                    // user has been prompted and has requested to silently replace all
-                    // so turn off prompting
-                    if (nAction == SynReplaceAction::raReplaceAll) {
-                        if ((not bReplaceAll) || bPrompt) {
-                            bReplaceAll = true;
-                            incPaintLock();
-                        }
-                        bPrompt = false;
-                        if (bEndUndoBlock == false)
-                            mUndoList->BeginBlock();
-                        bEndUndoBlock = true;
-                    }
-                    setSelText(mSearchEngine->replace(selText(), AReplace));
-                    nReplaceLen = caretX() - nFound;
+                if (matchedCallback) {
+                    matchedCallback(ASearch,ptCurrent.Line,
+                                    nFound,nSearchLen);
                 }
+                if (!bFindAll)
+                    return result;
                 // fix the caret position and the remaining results
-                if (!bBackward) {
-                    internalSetCaretX(nFound + nReplaceLen);
-                    if ((nSearchLen != nReplaceLen) && (nAction != SynReplaceAction::raSkip)) {
-                        iResultOffset += nReplaceLen - nSearchLen;
-                        if ((mActiveSelectionMode != SynSelectionMode::smColumn) && (caretY() == ptEnd.Line)) {
-                            ptEnd.Char+=nReplaceLen - nSearchLen;
-                            setBlockEnd(ptEnd);
-                        }
-                    }
-                }
-                if (!bReplaceAll)
-                    return result;
+//                if (!bBackward) {
+//                    internalSetCaretX(nFound + nReplaceLen);
+//                    if ((nSearchLen != nReplaceLen) && (nAction != SynReplaceAction::raSkip)) {
+//                        iResultOffset += nReplaceLen - nSearchLen;
+//                        if ((mActiveSelectionMode != SynSelectionMode::smColumn) && (caretY() == ptEnd.Line)) {
+//                            ptEnd.Char+=nReplaceLen - nSearchLen;
+//                            setBlockEnd(ptEnd);
+//                        }
+//                    }
+//                }
             }
             // search next / previous line
             if (bBackward)
@@ -4341,6 +4298,7 @@ int SynEdit::searchReplace(const QString &ASearch, const QString &AReplace, SynS
                 ptCurrent.Line++;
         }
     }
+    return result;
 }
 
 void SynEdit::DoLinesDeleted(int FirstLine, int Count)
