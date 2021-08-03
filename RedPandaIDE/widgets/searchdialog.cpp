@@ -40,6 +40,20 @@ void SearchDialog::find(const QString &text)
     show();
 }
 
+void SearchDialog::findNext()
+{
+    if (mTabBar->currentIndex()==0) { // it's a find action
+
+        // Disable entire scope searching
+        ui->rbEntireScope->setChecked(false);
+
+        // Always search forwards
+        ui->rbForward->setChecked(true);
+
+        ui->btnExecute->click();
+    }
+}
+
 void SearchDialog::findInFiles(const QString &text)
 {
     mTabBar->setCurrentIndex(1);
@@ -74,9 +88,15 @@ void SearchDialog::onTabChanged()
     ui->cbReplace->setVisible(isreplace || isreplacefiles);
 
     ui->grpOrigin->setVisible(isfind || isreplace);
+    ui->grpOrigin->setEnabled(isfind || isreplace);
+
     ui->grpScope->setVisible(isfind || isreplace);
+    ui->grpScope->setEnabled(isreplace);
     ui->grpWhere->setVisible(isfindfiles || isreplacefiles);
+    ui->grpWhere->setEnabled(isfindfiles || isreplacefiles);
     ui->grpDirection->setVisible(isfind || isreplace);
+    ui->grpDirection->setEnabled(isfind || isreplace);
+
     // grpOption is always visible
 
     // Disable project search option when none is open
@@ -144,22 +164,22 @@ void SearchDialog::on_btnExecute_clicked()
         mSearchOptions.setFlag(ssoPrompt);
     }
 
-    // Apply scope, when visible
-    if (ui->grpScope->isVisible()) {
+    // Apply scope, when enabled
+    if (ui->grpScope->isEnabled()) {
         if (ui->rbSelection->isChecked()) {
             mSearchOptions.setFlag(ssoSelectedOnly);
         }
     }
 
-    // Apply direction, when visible
-    if (ui->grpDirection->isVisible()) {
+    // Apply direction, when enabled
+    if (ui->grpDirection->isEnabled()) {
         if (ui->rbBackward->isChecked()) {
             mSearchOptions.setFlag(ssoBackwards);
         }
     }
 
-    // Apply origin, when visible
-    if (ui->grpOrigin->isVisible()) {
+    // Apply origin, when enabled
+    if (ui->grpOrigin->isEnabled()) {
         if (ui->rbEntireScope->isChecked()) {
             mSearchOptions.setFlag(ssoEntireScope);
         }
@@ -389,7 +409,26 @@ int SearchDialog::execute(Editor *editor, SearchDialog::SearchAction actionType)
 //    editor.SearchEngine := enginebackup;
 }
 
+QTabBar *SearchDialog::tabBar() const
+{
+    return mTabBar;
+}
+
 PSynSearchBase SearchDialog::searchEngine() const
 {
     return mSearchEngine;
+}
+
+void SearchDialog::findPrevious()
+{
+    if (mTabBar->currentIndex()==0) { // it's a find action
+
+        // Disable entire scope searching
+        ui->rbEntireScope->setChecked(false);
+
+        // Always search backward
+        ui->rbBackward->setChecked(true);
+
+        ui->btnExecute->click();
+    }
 }

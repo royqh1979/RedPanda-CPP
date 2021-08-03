@@ -25,10 +25,14 @@ public:
     explicit SearchDialog(QWidget *parent = nullptr);
     ~SearchDialog();
     void find(const QString& text);
+    void findNext();
+    void findPrevious();
     void findInFiles(const QString& text);
     void replace(const QString& sFind, const QString& sReplace);
     void replaceInFiles(const QString& sFind, const QString& sReplace);
     PSynSearchBase searchEngine() const;
+
+    QTabBar *tabBar() const;
 
 private slots:
     void onTabChanged();

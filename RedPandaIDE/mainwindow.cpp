@@ -1531,10 +1531,24 @@ void MainWindow::on_actionReplace_triggered()
 
 void MainWindow::on_actionFind_Next_triggered()
 {
+    Editor *e = mEditorList->getEditor();
+    if (e==nullptr)
+        return;
 
+    if (mSearchDialog==nullptr)
+        return;
+
+    mSearchDialog->findNext();
 }
 
 void MainWindow::on_actionFind_Previous_triggered()
 {
+    Editor *e = mEditorList->getEditor();
+    if (e==nullptr)
+        return;
 
+    if (mSearchDialog==nullptr)
+        return;
+
+    mSearchDialog->findPrevious();
 }
