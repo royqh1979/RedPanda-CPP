@@ -10,8 +10,6 @@ enum SynSearchOption {
     ssoBackwards    = 0x0004,
     ssoEntireScope  = 0x0008,
     ssoSelectedOnly = 0x0010,
-    ssoFindAll      = 0x0020,
-    ssoPrompt       = 0x0040,
     ssoRegExp       = 0x0080
 };
 

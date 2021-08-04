@@ -17,6 +17,8 @@ public:
     int findAll(const QString &newText) override;
     QString replace(const QString &aOccurrence, const QString &aReplacement) override;
 private:
+    bool isDelimitChar(QChar ch);
+private:
     QList<int> mResults;
 };
 

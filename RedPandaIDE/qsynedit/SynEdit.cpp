@@ -4155,29 +4155,27 @@ void SynEdit::setSelText(const QString &Value)
                     mActiveSelectionMode);
 }
 
-int SynEdit::search(const QString &ASearch, SynSearchOptions AOptions, PSynSearchBase searchEngine,
+int SynEdit::searchReplace(const QString &sSearch, const QString &sReplace, SynSearchOptions sOptions, PSynSearchBase searchEngine,
                     SynSearchMathedProc matchedCallback)
 {
     if (!searchEngine)
         return 0;
 
     // can't search for or replace an empty string
-    if (ASearch.isEmpty()) {
+    if (sSearch.isEmpty()) {
         return 0;
     }
     int result = 0;
     // get the text range to search in, ignore the "Search in selection only"
     // option if nothing is selected
-    bool bBackward = AOptions.testFlag(ssoBackwards);
-    bool bPrompt = AOptions.testFlag(ssoPrompt);
-    bool bFindAll = AOptions.testFlag(ssoFindAll);
-    bool bFromCursor = !AOptions.testFlag(ssoEntireScope);
+    bool bBackward = sOptions.testFlag(ssoBackwards);
+    bool bFromCursor = !sOptions.testFlag(ssoEntireScope);
     BufferCoord ptCurrent;
     BufferCoord ptStart;
     BufferCoord ptEnd;
     if (!selAvail())
-        AOptions.setFlag(ssoSelectedOnly,false);
-    if (AOptions.testFlag(ssoSelectedOnly)) {
+        sOptions.setFlag(ssoSelectedOnly,false);
+    if (sOptions.testFlag(ssoSelectedOnly)) {
         ptStart = blockBegin();
         ptEnd = blockEnd();
         // search the whole line in the line selection mode
@@ -4212,14 +4210,18 @@ int SynEdit::search(const QString &ASearch, SynSearchOptions AOptions, PSynSearc
             ptCurrent = ptStart;
     }
     // initialize the search engine
-    searchEngine->setOptions(AOptions);
-    searchEngine->setPattern(ASearch);
+    searchEngine->setOptions(sOptions);
+    searchEngine->setPattern(sSearch);
     // search while the current search position is inside of the search range
     int nReplaceLen = 0;
-    bool bEndUndoBlock =false;
+    bool dobatchReplace = false;
     doOnPaintTransient(SynTransientType::ttBefore);
     {
         auto action = finally([&,this]{
+            if (dobatchReplace) {
+                decPaintLock();
+                mUndoList->EndBlock();
+            }
             doOnPaintTransient(SynTransientType::ttAfter);
         });
         int i;
@@ -4235,6 +4237,7 @@ int SynEdit::search(const QString &ASearch, SynSearchOptions AOptions, PSynSearc
                 // An occurrence may have been replaced with a text of different length
                 int nFound = searchEngine->result(i) + 1 + iResultOffset;
                 int nSearchLen = searchEngine->length(i);
+                int nReplaceLen = 0;
                 if (bBackward)
                     i--;
                 else
@@ -4245,7 +4248,7 @@ int SynEdit::search(const QString &ASearch, SynSearchOptions AOptions, PSynSearc
                 int first = nFound;
                 int last = nFound + nSearchLen;
                 if ((mActiveSelectionMode == SynSelectionMode::smNormal)
-                        || !AOptions.testFlag(ssoSelectedOnly)) {
+                        || !sOptions.testFlag(ssoSelectedOnly)) {
                     if (((ptCurrent.Line == ptStart.Line) && (first < ptStart.Char)) ||
                             ((ptCurrent.Line == ptEnd.Line) && (last > ptEnd.Char)))
                         isInValidSearchRange = false;
@@ -4273,23 +4276,38 @@ int SynEdit::search(const QString &ASearch, SynSearchOptions AOptions, PSynSearc
                 else
                     internalSetCaretXY(ptCurrent);
                 // If it's a search only we can leave the procedure now.
-                if (matchedCallback) {
-                    matchedCallback(ASearch,ptCurrent.Line,
+                SynSearchAction searchAction = SynSearchAction::Exit;
+                QString replaceText = searchEngine->replace(selText(), sReplace);
+                if (matchedCallback && !dobatchReplace) {
+                    searchAction = matchedCallback(sSearch,replaceText,ptCurrent.Line,
                                     nFound,nSearchLen);
                 }
-                if (!bFindAll)
+                if (searchAction==SynSearchAction::Exit) {
                     return result;
-                // fix the caret position and the remaining results
-//                if (!bBackward) {
-//                    internalSetCaretX(nFound + nReplaceLen);
-//                    if ((nSearchLen != nReplaceLen) && (nAction != SynReplaceAction::raSkip)) {
-//                        iResultOffset += nReplaceLen - nSearchLen;
-//                        if ((mActiveSelectionMode != SynSelectionMode::smColumn) && (caretY() == ptEnd.Line)) {
-//                            ptEnd.Char+=nReplaceLen - nSearchLen;
-//                            setBlockEnd(ptEnd);
-//                        }
-//                    }
-//                }
+                } else if (searchAction == SynSearchAction::Skip) {
+                    continue;
+                } else if (searchAction == SynSearchAction::Replace
+                           || searchAction == SynSearchAction::ReplaceAll) {
+                    if (!dobatchReplace &&
+                            (searchAction == SynSearchAction::ReplaceAll) ){
+                        incPaintLock();
+                        mUndoList->BeginBlock();
+                        dobatchReplace = true;
+                    }
+                    setSelText(replaceText);
+                    nReplaceLen = caretX() - nFound;
+                    // fix the caret position and the remaining results
+                    if (!bBackward) {
+                        internalSetCaretX(nFound + nReplaceLen);
+                        if ((nSearchLen != nReplaceLen)) {
+                            iResultOffset += nReplaceLen - nSearchLen;
+                            if ((mActiveSelectionMode != SynSelectionMode::smColumn) && (caretY() == ptEnd.Line)) {
+                                ptEnd.Char+=nReplaceLen - nSearchLen;
+                                setBlockEnd(ptEnd);
+                            }
+                        }
+                    }
+                }
             }
             // search next / previous line
             if (bBackward)

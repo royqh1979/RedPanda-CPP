@@ -1296,7 +1296,7 @@
     <string>Find Previous</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+F3</string>
+    <string>Shift+F3</string>
    </property>
   </action>
  </widget>

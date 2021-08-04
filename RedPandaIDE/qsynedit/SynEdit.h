@@ -100,8 +100,11 @@ Q_DECLARE_FLAGS(SynEditorOptions, SynEditorOption)
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(SynEditorOptions)
 
-enum class SynReplaceAction {
-    raCancel, raSkip, raReplace, raReplaceAll
+enum class SynSearchAction {
+    Replace,
+    ReplaceAll,
+    Skip,
+    Exit
 };
 
 
@@ -125,8 +128,8 @@ using SynPaintProc = std::function<void(const QPaintDevice& paintDevice )>;
 using SynPreparePaintHighlightTokenProc = std::function<void(int row,
         int column, const QString& token, PSynHighlighterAttribute attr,
         SynFontStyles& style, QColor& foreground, QColor& background)>;
-using SynSearchMathedProc = std::function<void(const QString& ASearch,
-    int Line, int ch, int wordLen)>;
+using SynSearchMathedProc = std::function<SynSearchAction(const QString& sSearch,
+    const QString& sReplace, int Line, int ch, int wordLen)>;
 //using SynSpecialLineColorsProc = std::function<void(int Line,
 //    bool& Special, QColor& foreground, QColor& backgroundColor)>;
 //using SynEditingAreasProc = std::function<void(int Line, SynEditingAreaList& areaList,
@@ -215,7 +218,7 @@ public:
     PSynEditFoldRange foldHidesLine(int line);
     void setSelText(const QString& Value);
 
-    int search(const QString& ASearch,SynSearchOptions AOptions,
+    int searchReplace(const QString& sSearch, const QString& sReplace, SynSearchOptions options,
                PSynSearchBase searchEngine,  SynSearchMathedProc matchedCallback = nullptr);
 
     int maxScrollWidth() const;

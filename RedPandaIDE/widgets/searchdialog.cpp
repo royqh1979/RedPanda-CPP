@@ -19,7 +19,6 @@ SearchDialog::SearchDialog(QWidget *parent) :
     mTabBar->addTab(tr("Find"));
     mTabBar->addTab(tr("Find in files"));
     mTabBar->addTab(tr("Replace"));
-    mTabBar->addTab(tr("Replace in files"));
     mTabBar->setExpanding(false);
     ui->dialogLayout->insertWidget(0,mTabBar);
     connect(mTabBar,&QTabBar::currentChanged,this, &SearchDialog::onTabChanged);
@@ -35,7 +34,11 @@ SearchDialog::~SearchDialog()
 
 void SearchDialog::find(const QString &text)
 {
-    mTabBar->setCurrentIndex(0);
+    if (mTabBar->currentIndex()==0) {
+        this->onTabChanged();
+    } else {
+        mTabBar->setCurrentIndex(0);
+    }
     ui->cbFind->setCurrentText(text);
     show();
 }
@@ -69,31 +72,22 @@ void SearchDialog::replace(const QString &sFind, const QString &sReplace)
     show();
 }
 
-void SearchDialog::replaceInFiles(const QString &sFind, const QString &sReplace)
-{
-    mTabBar->setCurrentIndex(3);
-    ui->cbFind->setCurrentText(sFind);
-    ui->cbReplace->setCurrentText(sReplace);
-    show();
-}
-
 void SearchDialog::onTabChanged()
 {
     bool isfind = (mTabBar->currentIndex() == 0);
     bool isfindfiles = (mTabBar->currentIndex() == 1);
     bool isreplace = (mTabBar->currentIndex() == 2);
-    bool isreplacefiles = (mTabBar->currentIndex() == 3);
 
-    ui->lblReplace->setVisible(isreplace || isreplacefiles);
-    ui->cbReplace->setVisible(isreplace || isreplacefiles);
+    ui->lblReplace->setVisible(isreplace);
+    ui->cbReplace->setVisible(isreplace);
 
     ui->grpOrigin->setVisible(isfind || isreplace);
     ui->grpOrigin->setEnabled(isfind || isreplace);
 
     ui->grpScope->setVisible(isfind || isreplace);
     ui->grpScope->setEnabled(isreplace);
-    ui->grpWhere->setVisible(isfindfiles || isreplacefiles);
-    ui->grpWhere->setEnabled(isfindfiles || isreplacefiles);
+    ui->grpWhere->setVisible(isfindfiles);
+    ui->grpWhere->setEnabled(isfindfiles);
     ui->grpDirection->setVisible(isfind || isreplace);
     ui->grpDirection->setEnabled(isfind || isreplace);
 
@@ -106,9 +100,9 @@ void SearchDialog::onTabChanged()
 //      rbOpenFiles.Checked := true;
 
     // Disable prompt when doing finds
-    ui->chkPrompt->setEnabled(isreplace or isreplacefiles);
+    ui->chkPrompt->setEnabled(isreplace);
 
-    if (isfind || not isfindfiles) {
+    if (isfind || isfindfiles) {
         ui->btnExecute->setText(tr("Find"));
     } else {
         ui->btnExecute->setText(tr("Replace"));
@@ -160,9 +154,6 @@ void SearchDialog::on_btnExecute_clicked()
     if (ui->chkWholeWord->isChecked()) {
         mSearchOptions.setFlag(ssoWholeWord);
     }
-    if (ui->chkPrompt->isChecked()) {
-        mSearchOptions.setFlag(ssoPrompt);
-    }
 
     // Apply scope, when enabled
     if (ui->grpScope->isEnabled()) {
@@ -196,8 +187,38 @@ void SearchDialog::on_btnExecute_clicked()
     if (actionType == SearchAction::Find) {
         Editor *e = pMainWindow->editorList()->getEditor();
         if (e!=nullptr) {
-            findcount+=execute(e,SearchAction::Find);
+            findcount+=execute(e,ui->cbFind->currentText(),"");
         }
+    } else {
+        Editor *e = pMainWindow->editorList()->getEditor();
+        if (e!=nullptr) {
+            bool doPrompt = ui->chkPrompt->isChecked();
+            findcount+=execute(e,ui->cbFind->currentText(),ui->cbReplace->currentText(),
+                               [&doPrompt](const QString& sSearch,
+                               const QString& sReplace, int Line, int ch, int wordLen){
+                if (doPrompt) {
+                    switch(QMessageBox::question(pMainWindow,
+                                          tr("Replace"),
+                                          tr("Replace this occurrence of ''%1''?").arg(sSearch),
+                                          QMessageBox::Yes|QMessageBox::YesAll|QMessageBox::No|QMessageBox::Cancel,
+                                          QMessageBox::Yes)) {
+                    case QMessageBox::Yes:
+                        return SynSearchAction::Replace;
+                    case QMessageBox::YesAll:
+                        return SynSearchAction::ReplaceAll;
+                    case QMessageBox::No:
+                        return SynSearchAction::Skip;
+                    case QMessageBox::Cancel:
+                        return SynSearchAction::Exit;
+                    default:
+                        return SynSearchAction::Exit;
+                    }
+                } else {
+                    return SynSearchAction::ReplaceAll;
+                }
+            });
+        }
+
     }
 
 //    // Replace first, find to next
@@ -359,7 +380,7 @@ void SearchDialog::on_btnExecute_clicked()
     //end;
 }
 
-int SearchDialog::execute(Editor *editor, SearchDialog::SearchAction actionType)
+int SearchDialog::execute(Editor *editor, const QString &sSearch, const QString &sReplace, SynSearchMathedProc matchCallback)
 {
     if (editor==nullptr)
         return 0;
@@ -380,9 +401,8 @@ int SearchDialog::execute(Editor *editor, SearchDialog::SearchAction actionType)
         mSearchEngine = mBasicSearchEngine;
     }
 
-    return editor->search(ui->cbFind->currentText(),
-                          mSearchOptions,
-                          mSearchEngine);
+    return editor->searchReplace(sSearch, sReplace, mSearchOptions,
+                          mSearchEngine, matchCallback);
 
 
 //    // When using find in files, report each find using OnReplaceText

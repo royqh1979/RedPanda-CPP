@@ -40,8 +40,18 @@ int SynSearch::findAll(const QString &newText)
         if (next<0) {
             break;
         }
-        mResults.append(next);
         start = next + newText.length();
+        if (options().testFlag(ssoWholeWord)) {
+            if (((next<=0) || isDelimitChar(newText[next-1]))
+                    &&
+                    ( (start>=newText.length()) || isDelimitChar(newText[start]) )
+                 ) {
+                mResults.append(next);
+            }
+        } else {
+            mResults.append(next);
+        }
+
     }
     return mResults.size();
 }
@@ -49,4 +59,9 @@ int SynSearch::findAll(const QString &newText)
 QString SynSearch::replace(const QString &aOccurrence, const QString &aReplacement)
 {
     return aReplacement;
+}
+
+bool SynSearch::isDelimitChar(QChar ch)
+{
+    return !(ch == '_' || ch.isLetterOrNumber());
 }

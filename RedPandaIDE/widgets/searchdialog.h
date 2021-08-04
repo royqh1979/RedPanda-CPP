@@ -2,7 +2,7 @@
 #define SEARCHDIALOG_H
 
 #include <QDialog>
-#include "../qsynedit/SearchBase.h"
+#include "../qsynedit/SynEdit.h"
 
 namespace Ui {
 class SearchDialog;
@@ -29,7 +29,6 @@ public:
     void findPrevious();
     void findInFiles(const QString& text);
     void replace(const QString& sFind, const QString& sReplace);
-    void replaceInFiles(const QString& sFind, const QString& sReplace);
     PSynSearchBase searchEngine() const;
 
     QTabBar *tabBar() const;
@@ -42,7 +41,8 @@ private slots:
 
    void on_btnExecute_clicked();
 private:
-   int execute(Editor* editor, SearchAction actionType);
+   int execute(Editor* editor, const QString& sSearch,
+               const QString& sReplace, SynSearchMathedProc matchCallback = nullptr);
 private:
     Ui::SearchDialog *ui;
     QTabBar *mTabBar;
