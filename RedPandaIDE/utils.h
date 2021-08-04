@@ -34,6 +34,12 @@ enum class FileEndingType {
     Mac
 };// Windows: CRLF, UNIX: LF, Mac: CR
 
+enum class SearchFileScope {
+    currentFile,
+    wholeProject,
+    openedFiles
+};
+
 class BaseError{
 public:
     explicit BaseError(const QString& reason);

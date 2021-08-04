@@ -26,7 +26,7 @@ public:
     virtual int length(int aIndex) = 0;
     virtual int result(int aIndex) = 0;
     virtual int resultCount() = 0;
-    virtual int findAll(const QString& newText) = 0;
+    virtual int findAll(const QString& keyword) = 0;
     virtual QString replace(const QString& aOccurrence, const QString& aReplacement) = 0;
     SynSearchOptions options() const;
     virtual void setOptions(const SynSearchOptions &options);

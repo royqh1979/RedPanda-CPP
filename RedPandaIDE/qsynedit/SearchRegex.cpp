@@ -26,13 +26,13 @@ int SynSearchRegex::resultCount()
     return mResults.size();
 }
 
-int SynSearchRegex::findAll(const QString &newText)
+int SynSearchRegex::findAll(const QString &keyword)
 {
     if (pattern().isEmpty())
         return 0;
     mResults.clear();
     mLengths.clear();
-    QRegularExpressionMatchIterator it = mRegex.globalMatch(newText);
+    QRegularExpressionMatchIterator it = mRegex.globalMatch(keyword);
     while (it.hasNext()) {
         QRegularExpressionMatch match = it.next();
         mLengths.append(match.capturedLength());

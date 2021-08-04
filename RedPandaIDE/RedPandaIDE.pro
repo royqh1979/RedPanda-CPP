@@ -62,7 +62,8 @@ SOURCES += \
     widgets/issuestable.cpp \
     widgets/qconsole.cpp \
     widgets/qpatchedcombobox.cpp \
-    widgets/searchdialog.cpp
+    widgets/searchdialog.cpp \
+    widgets/searchresultview.cpp
 
 HEADERS += \
     HighlighterManager.h \
@@ -119,7 +120,8 @@ HEADERS += \
     widgets/issuestable.h \
     widgets/qconsole.h \
     widgets/qpatchedcombobox.h \
-    widgets/searchdialog.h
+    widgets/searchdialog.h \
+    widgets/searchresultview.h
 
 FORMS += \
     settingsdialog/debuggeneralwidget.ui \

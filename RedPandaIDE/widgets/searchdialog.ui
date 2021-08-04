@@ -260,7 +260,7 @@
                <item>
                 <widget class="QRadioButton" name="rbCurrentFile">
                  <property name="text">
-                  <string>current file</string>
+                  <string>Current File</string>
                  </property>
                  <property name="checked">
                   <bool>true</bool>
@@ -270,14 +270,14 @@
                <item>
                 <widget class="QRadioButton" name="rbProject">
                  <property name="text">
-                  <string>Files In project</string>
+                  <string>Files In Project</string>
                  </property>
                 </widget>
                </item>
                <item>
                 <widget class="QRadioButton" name="rbOpenFiles">
                  <property name="text">
-                  <string>Open files</string>
+                  <string>Open Files</string>
                  </property>
                 </widget>
                </item>
