@@ -574,7 +574,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QComboBox" name="comboBox">
+             <widget class="QComboBox" name="cbSearchHistory">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                 <horstretch>0</horstretch>
@@ -641,7 +641,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QComboBox" name="comboBox_2">
+             <widget class="QComboBox" name="cbReplaceInHistory">
               <property name="minimumSize">
                <size>
                 <width>150</width>
@@ -680,7 +680,11 @@
           </widget>
          </item>
          <item>
-          <widget class="QTreeView" name="searchView"/>
+          <widget class="QTreeView" name="searchView">
+           <attribute name="headerVisible">
+            <bool>false</bool>
+           </attribute>
+          </widget>
          </item>
         </layout>
        </widget>
@@ -1304,7 +1308,7 @@
   <customwidget>
    <class>IssuesTable</class>
    <extends>QTableView</extends>
-   <header>widgets/issuestable.h</header>
+   <header location="global">widgets/issuestable.h</header>
   </customwidget>
   <customwidget>
    <class>QConsole</class>

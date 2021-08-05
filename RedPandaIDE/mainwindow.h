@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include "common.h"
+#include "widgets/searchresultview.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -80,6 +81,8 @@ public:
     EditorList *editorList() const;
 
     SearchDialog *searchDialog() const;
+
+    SearchResultModel* searchResultModel();
 
 protected:
     void openFiles(const QStringList& files);
@@ -212,6 +215,11 @@ private:
     CPUDialog *mCPUDialog;
     SearchDialog *mSearchDialog;
     QList<QAction *> mRecentFileActions;
+
+    SearchResultModel mSearchResultModel;
+    PSearchResultListModel mSearchResultListModel;
+    PSearchResultTreeModel mSearchResultTreeModel;
+    PSearchResultTreeViewDelegate mSearchViewDelegate;
 
     bool mMessageControlChanged;
     bool mTabMessagesTogglingState;

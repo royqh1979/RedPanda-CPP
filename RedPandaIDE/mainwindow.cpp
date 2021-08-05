@@ -107,6 +107,13 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->debugConsole,&QConsole::commandInput,this,&MainWindow::onDebugCommandInput);
     connect(ui->cbEvaluate->lineEdit(), &QLineEdit::returnPressed,
             this, &MainWindow::onDebugEvaluateInput);
+
+    mSearchResultTreeModel = std::make_shared<SearchResultTreeModel>(&mSearchResultModel);
+    mSearchResultListModel = std::make_shared<SearchResultListModel>(&mSearchResultModel);
+    mSearchViewDelegate = std::make_shared<SearchResultTreeViewDelegate>(mSearchResultTreeModel);
+    ui->cbSearchHistory->view()->setModel(mSearchResultListModel.get());
+    ui->searchView->setModel(mSearchResultTreeModel.get());
+    ui->searchView->setItemDelegate(mSearchViewDelegate.get());
 }
 
 MainWindow::~MainWindow()
@@ -880,6 +887,11 @@ void MainWindow::prepareDebugger()
 SearchDialog *MainWindow::searchDialog() const
 {
     return mSearchDialog;
+}
+
+SearchResultModel *MainWindow::searchResultModel()
+{
+    return &mSearchResultModel;
 }
 
 EditorList *MainWindow::editorList() const

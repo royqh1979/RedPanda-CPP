@@ -3,38 +3,45 @@
 
 #include <QTreeView>
 #include <QMap>
+#include <QStyledItemDelegate>
 #include "../qsynedit/SearchBase.h"
 #include "utils.h"
 
 #define MAX_SEARCH_RESULTS 20
+struct SearchResultTreeItem;
+using PSearchResultTreeItem = std::shared_ptr<SearchResultTreeItem>;
+using SearchResultTreeItemList = QList<PSearchResultTreeItem>;
+using PSearchResultTreeItemList = std::shared_ptr<SearchResultTreeItemList>;
 
-struct SearchResult {
+struct SearchResultTreeItem {
     QString filename;
     int line;
     int start;
     int len;
+    QString text;
+    SearchResultTreeItem* parent;
+    SearchResultTreeItemList results;
 };
 
-using PSearchResult = std::shared_ptr<SearchResult>;
-using SearchResultList = QList<PSearchResult>;
-using PSearchResultList = std::shared_ptr<SearchResultList>;
+
 
 struct SearchResults{
     SynSearchOptions options;
     QString keyword;
     SearchFileScope scope;
-    QMap<QString, PSearchResultList> results;
+    QList<PSearchResultTreeItem> results;
 };
 
 using PSearchResults = std::shared_ptr<SearchResults>;
 
-class SearchResultModel : QObject {
+class SearchResultModel : public QObject {
     Q_OBJECT
 public:
     explicit SearchResultModel(QObject* parent=nullptr);
     PSearchResults addSearchResults(const QString& keyword,SynSearchOptions options,
                                     SearchFileScope scope);
     PSearchResults results(int index);
+    void notifySearchResultsUpdated();
     int currentIndex() const;
     int resultsCount() const;
     PSearchResults currentResults();
@@ -62,6 +69,8 @@ private:
     SearchResultModel *mSearchResultModel;
 };
 
+using PSearchResultListModel = std::shared_ptr<SearchResultListModel>;
+
 class SearchResultTreeModel : public QAbstractItemModel {
 Q_OBJECT
     // QAbstractItemModel interface
@@ -72,15 +81,26 @@ public:
     int rowCount(const QModelIndex &parent) const override;
     int columnCount(const QModelIndex &parent) const override;
     QVariant data(const QModelIndex &index, int role) const override;
+    SearchResultModel *searchResultModel() const;
+public slots:
+    void onResultModelChanged();
 private:
     SearchResultModel *mSearchResultModel;
 };
 
-class SearchResultView : public QTreeView
-{
-    Q_OBJECT
+using PSearchResultTreeModel = std::shared_ptr<SearchResultTreeModel>;
+
+class SearchResultTreeViewDelegate: public QStyledItemDelegate{
+Q_OBJECT
+    // QAbstractItemDelegate interface
 public:
-    explicit SearchResultView(QWidget* parent=nullptr);
+    explicit SearchResultTreeViewDelegate(PSearchResultTreeModel model,
+                                          QObject* parent=nullptr);
+    void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const override;
+private:
+    PSearchResultTreeModel mModel;
 };
+
+using PSearchResultTreeViewDelegate = std::shared_ptr<SearchResultTreeViewDelegate>;
 
 #endif // SEARCHRESULTVIEW_H

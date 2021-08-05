@@ -8,6 +8,7 @@ namespace Ui {
 class SearchDialog;
 }
 
+struct SearchResultTreeItem;
 class QTabBar;
 class Editor;
 class SearchDialog : public QDialog
@@ -43,6 +44,7 @@ private slots:
 private:
    int execute(Editor* editor, const QString& sSearch,
                const QString& sReplace, SynSearchMathedProc matchCallback = nullptr);
+   std::shared_ptr<SearchResultTreeItem> batchFindInEditor(Editor* editor,const QString& keyword);
 private:
     Ui::SearchDialog *ui;
     QTabBar *mTabBar;

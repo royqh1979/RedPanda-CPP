@@ -214,6 +214,10 @@ public:
     void setCaretXY(const BufferCoord& value);
     void setCaretXYEx(bool CallEnsureCursorPos, BufferCoord value);
     void setCaretXYCentered(bool ForceToMiddle, const BufferCoord& value);
+    void setCaretAndSelection(const BufferCoord& ptCaret,
+                              const BufferCoord& ptBefore,
+                              const BufferCoord& ptAfter);
+
     void uncollapseAroundLine(int line);
     PSynEditFoldRange foldHidesLine(int line);
     void setSelText(const QString& Value);
@@ -451,9 +455,7 @@ private:
     void DeleteFromTo(const BufferCoord& start, const BufferCoord& end);
     void SetSelWord();
     void SetWordBlock(BufferCoord Value);
-    void setCaretAndSelection(const BufferCoord& ptCaret,
-                              const BufferCoord& ptBefore,
-                              const BufferCoord& ptAfter);
+
 
     void processGutterClick(QMouseEvent* event);
 
