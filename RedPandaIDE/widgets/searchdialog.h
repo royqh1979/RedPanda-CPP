@@ -3,6 +3,7 @@
 
 #include <QDialog>
 #include "../qsynedit/SynEdit.h"
+#include "../utils.h"
 
 namespace Ui {
 class SearchDialog;
@@ -29,6 +30,7 @@ public:
     void findNext();
     void findPrevious();
     void findInFiles(const QString& text);
+    void findInFiles(const QString& keyword, SearchFileScope scope, SynSearchOptions options);
     void replace(const QString& sFind, const QString& sReplace);
     PSynSearchBase searchEngine() const;
 

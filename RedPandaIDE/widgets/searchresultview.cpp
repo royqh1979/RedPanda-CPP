@@ -195,8 +195,6 @@ SearchResultListModel::SearchResultListModel(SearchResultModel *model, QObject *
     QAbstractListModel(parent),
     mSearchResultModel(model)
 {
-    connect(mSearchResultModel, &SearchResultModel::currentChanged,
-            this, &SearchResultListModel::onResultModelChanged);
     connect(mSearchResultModel, &SearchResultModel::modelChanged,
             this, &SearchResultListModel::onResultModelChanged);
 }
@@ -216,11 +214,11 @@ QVariant SearchResultListModel::data(const QModelIndex &index, int role) const
             return QVariant();
         switch (results->scope) {
         case SearchFileScope::currentFile:
-            return tr("Current File") + QString(" \"%1\"").arg(results->keyword);
+            return tr("Current File:") + QString(" \"%1\"").arg(results->keyword);
         case SearchFileScope::wholeProject:
-            return tr("Files In Project") + QString(" \"%1\"").arg(results->keyword);
+            return tr("Files In Project:") + QString(" \"%1\"").arg(results->keyword);
         case SearchFileScope::openedFiles:
-            return tr("Open Files") + QString(" \"%1\"").arg(results->keyword);
+            return tr("Open Files:") + QString(" \"%1\"").arg(results->keyword);
         }
     }
     return QVariant();
@@ -266,10 +264,9 @@ void SearchResultTreeViewDelegate::paint(QPainter *painter, const QStyleOptionVi
      if (item->parent==nullptr) { //is filename
          fullText = item->filename;
      } else {
-        fullText = QString("%1 %2: %3").arg(tr("Line")).arg(item->line)
+         fullText = QString("%1 %2: %3").arg(tr("Line")).arg(item->line)
              .arg(item->text);
      }
-
      // Figure out where to render the text in order to follow the requested alignment
      option.text = fullText;
      QRect textRect = style->subElementRect(QStyle::SE_ItemViewItemText, &option);
@@ -277,7 +274,27 @@ void SearchResultTreeViewDelegate::paint(QPainter *painter, const QStyleOptionVi
      QFontMetrics metrics = option.fontMetrics;
      int x=textRect.left();
      int y=textRect.top() + metrics.ascent();
-     //painter->setClipRect(textRect);
-     painter->drawText(x,y,fullText);
+     if (item->parent==nullptr) { //is filename
+        painter->drawText(x,y,fullText);
+     } else {
+         QString s = item->text.mid(0,item->start-1);
+         QString text = QString("%1 %2: %3").arg(tr("Line")).arg(item->line)
+                 .arg(s);
+         painter->drawText(x,y,text);
+         x+=metrics.horizontalAdvance(text);
+         QFont font = option.font;
+         font.setBold(true);
+         font.setItalic(true);
+         QFont oldFont = painter->font();
+         painter->setFont(font);
+         text=item->text.mid(item->start-1,item->len);
+         painter->drawText(x,y,text);
+         metrics = QFontMetrics(font);
+         x+=metrics.horizontalAdvance(text);
+         painter->setFont(oldFont);
+         text = item->text.mid(item->start-1+item->len);
+         painter->drawText(x,y,text);
+     }
+
 
 }

@@ -111,9 +111,12 @@ MainWindow::MainWindow(QWidget *parent)
     mSearchResultTreeModel = std::make_shared<SearchResultTreeModel>(&mSearchResultModel);
     mSearchResultListModel = std::make_shared<SearchResultListModel>(&mSearchResultModel);
     mSearchViewDelegate = std::make_shared<SearchResultTreeViewDelegate>(mSearchResultTreeModel);
-    ui->cbSearchHistory->view()->setModel(mSearchResultListModel.get());
+    ui->cbSearchHistory->setModel(mSearchResultListModel.get());
     ui->searchView->setModel(mSearchResultTreeModel.get());
     ui->searchView->setItemDelegate(mSearchViewDelegate.get());
+    connect(mSearchResultTreeModel.get() , &QAbstractItemModel::modelReset,
+            ui->searchView,&QTreeView::expandAll);
+    ui->replacePanel->setVisible(false);
 }
 
 MainWindow::~MainWindow()
@@ -180,6 +183,11 @@ void MainWindow::updateEditorActions()
         ui->actionStep_Out->setEnabled(false);
         ui->actionContinue->setEnabled(false);
         ui->actionRun_To_Cursor->setEnabled(false);
+
+        ui->actionFind->setEnabled(false);
+        ui->actionReplace->setEnabled(false);
+        ui->actionFind_Next->setEnabled(false);
+        ui->actionFind_Previous->setEnabled(false);
     } else {
         ui->actionAuto_Detect->setEnabled(true);
         ui->actionEncode_in_ANSI->setEnabled(true);
@@ -202,6 +210,11 @@ void MainWindow::updateEditorActions()
         ui->actionToggleComment->setEnabled(!e->readOnly() && e->lines()->count()>0);
         ui->actionUnIndent->setEnabled(!e->readOnly() && e->lines()->count()>0);
         ui->actionUnfoldAll->setEnabled(e->lines()->count()>0);
+
+        ui->actionFind->setEnabled(true);
+        ui->actionReplace->setEnabled(true);
+        ui->actionFind_Next->setEnabled(true);
+        ui->actionFind_Previous->setEnabled(true);
 
         updateCompileActions();
     }
@@ -824,6 +837,12 @@ void MainWindow::debug()
             break;
         }
     }
+}
+
+void MainWindow::showSearchPanel()
+{
+    openCloseMessageSheet(true);
+    ui->tabMessages->setCurrentWidget(ui->tabSearch);
 }
 
 void MainWindow::openCloseMessageSheet(bool open)
@@ -1533,12 +1552,28 @@ void MainWindow::on_actionFind_triggered()
 
 void MainWindow::on_actionFind_in_files_triggered()
 {
-
+    if (mSearchDialog==nullptr) {
+        mSearchDialog = new SearchDialog(this);
+    }
+    Editor *e = mEditorList->getEditor();
+    if (e) {
+        QString s = e->WordAtCursor();
+        mSearchDialog->findInFiles(s);
+    } else {
+        mSearchDialog->findInFiles("");
+    }
 }
 
 void MainWindow::on_actionReplace_triggered()
 {
-
+    Editor *e = mEditorList->getEditor();
+    if (!e)
+        return;
+    if (mSearchDialog==nullptr) {
+        mSearchDialog = new SearchDialog(this);
+    }
+    QString s = e->WordAtCursor();
+    mSearchDialog->replace(s,s);
 }
 
 void MainWindow::on_actionFind_Next_triggered()
@@ -1563,4 +1598,23 @@ void MainWindow::on_actionFind_Previous_triggered()
         return;
 
     mSearchDialog->findPrevious();
+}
+
+void MainWindow::on_cbSearchHistory_currentIndexChanged(int index)
+{
+    ui->btnSearchAgin->setEnabled(!ui->cbSearchHistory->currentText().isEmpty());
+    mSearchResultModel.setCurrentIndex(index);
+}
+
+void MainWindow::on_btnSearchAgin_clicked()
+{
+    if (mSearchDialog==nullptr) {
+        mSearchDialog = new SearchDialog(this);
+    }
+    PSearchResults results=mSearchResultModel.currentResults();
+    if (results){
+        mSearchDialog->findInFiles(results->keyword,
+                                   results->scope,
+                                   results->options);
+    }
 }

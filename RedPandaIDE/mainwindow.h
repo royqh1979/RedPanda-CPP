@@ -60,6 +60,7 @@ public:
     void runExecutable(const QString& exeName, const QString& filename=QString());
     void runExecutable();
     void debug();
+    void showSearchPanel();
 
     void applySettings();
 
@@ -183,6 +184,10 @@ private slots:
     void on_actionFind_Next_triggered();
 
     void on_actionFind_Previous_triggered();
+
+    void on_cbSearchHistory_currentIndexChanged(int index);
+
+    void on_btnSearchAgin_clicked();
 
 public slots:
     void onCompileLog(const QString& msg);

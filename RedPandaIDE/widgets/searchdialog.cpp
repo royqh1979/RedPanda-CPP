@@ -65,6 +65,29 @@ void SearchDialog::findInFiles(const QString &text)
     show();
 }
 
+void SearchDialog::findInFiles(const QString &keyword, SearchFileScope scope, SynSearchOptions options)
+{
+    mTabBar->setCurrentIndex(1);
+    ui->cbFind->setCurrentText(keyword);
+    switch(scope) {
+    case SearchFileScope::currentFile:
+        ui->rbCurrentFile->setChecked(true);
+        break;
+    case SearchFileScope::openedFiles:
+        ui->rbOpenFiles->setChecked(true);
+        break;
+    case SearchFileScope::wholeProject:
+        ui->rbProject->setChecked(true);
+        break;
+    }
+    // Apply options
+    ui->chkRegExp->setChecked(mSearchOptions.testFlag(ssoRegExp));
+    ui->chkCaseSensetive->setChecked(mSearchOptions.testFlag(ssoMatchCase));
+    ui->chkWholeWord->setChecked(mSearchOptions.testFlag(ssoWholeWord));
+
+    show();
+}
+
 void SearchDialog::replace(const QString &sFind, const QString &sReplace)
 {
     mTabBar->setCurrentIndex(2);
@@ -280,6 +303,8 @@ void SearchDialog::on_btnExecute_clicked()
             //            inc(filehitted);
             //        end;
         }
+        if (findCount>0)
+            pMainWindow->showSearchPanel();
     }
 }
 
@@ -330,6 +355,7 @@ std::shared_ptr<SearchResultTreeItem> SearchDialog::batchFindInEditor(Editor *e,
         item->len = wordLen;
         item->parent = parentItem.get();
         item->text = e->lines()->getString(Line-1);
+        item->text.replace('\t',' ');
         parentItem->results.append(item);
         return SynSearchAction::Skip;
     });
