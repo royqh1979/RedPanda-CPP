@@ -16,6 +16,8 @@ SOURCES += \
     compiler/executablerunner.cpp \
     compiler/filecompiler.cpp \
     compiler/stdincompiler.cpp \
+    parser/cpppreprocessor.cpp \
+    parser/statementmodel.cpp \
     qsynedit/Search.cpp \
     qsynedit/SearchBase.cpp \
     qsynedit/SearchRegex.cpp \
@@ -73,6 +75,9 @@ HEADERS += \
     compiler/executablerunner.h \
     compiler/filecompiler.h \
     compiler/stdincompiler.h \
+    parser/cpppreprocessor.h \
+    parser/statementmodel.h \
+    parser/utils.h \
     qsynedit/Search.h \
     qsynedit/SearchBase.h \
     qsynedit/SearchRegex.h \
