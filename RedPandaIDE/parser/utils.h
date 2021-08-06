@@ -1,5 +1,6 @@
 #ifndef PARSER_UTILS_H
 #define PARSER_UTILS_H
+#include <QMap>
 #include <QObject>
 #include <QSet>
 #include <memory>
@@ -100,18 +101,18 @@ struct Statement {
     int line; // declaration
     int definitionLine; // definition
     QString fileName; // declaration
-    QString definitionFileName: AnsiString; // definition
-    _InProject: boolean; // statement in project
-    _InSystemHeader: boolean; // statement in system header (#include <>)
-    _Children: TList; // Children Statement to speedup search
-    _ChildrenIndex: TDevStringHash; // children statements index to speedup search
-    _Friends: TStringHash; // friend class / functions
-    _Static: boolean; // static function / variable
-    _Inherited: boolean; // inherted member;
-    _FullName: AnsiString; // fullname(including class and namespace)
-    _Usings: TStringList;
-    _Node: Pointer;    // the Node TStatementList used to save this statement
-    _UsageCount : integer; //Usage Count, used by TCodeCompletion
-    _FreqTop: integer; // Usage Count Rank, used by TCodeCompletion
-    _NoNameArgs: AnsiString; // Args without name
+    QString definitionFileName; // definition
+    bool inProject; // statement in project
+    bool inSystemHeader; // statement in system header (#include <>)
+    QList<std::weak_ptr<Statement>> children; // Children Statements
+    QHash<QString,std::weak_ptr<Statement>> childrenMap; //children map index to speedup search
+    QSet<QString> friends; // friend class / functions
+    bool isStatic; // static function / variable
+    bool isInherited; // inherted member;
+    QString fullName; // fullname(including class and namespace)
+    QStringList usingList; // using namespaces
+    int usageCount; //Usage Count, used by TCodeCompletion
+    int freqTop; // Usage Count Rank, used by TCodeCompletion
+    QString noNameArgs;// Args without name
+};
 #endif // PARSER_UTILS_H
