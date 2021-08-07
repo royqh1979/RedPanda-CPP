@@ -35,13 +35,14 @@ private:
     void handleBranch(const QString& line);
     void handleInclude(const QString& line);
     QString expandMacros(const QString& line, int depth);
+    void expandMacro(const QString& line, QString& newLine, QString& word, int& i, int depth);
     QString removeGCCAttributes(const QString& line);
     QString removeSuffixes(const QString& input);
     // current file stuff
     PParsedFile getInclude(int index);
     void openInclude(const QString& fileName, QTextStream stream = QTextStream());
-
     void closeInclude();
+
     // branch stuff
     bool getCurrentBranch();
     void setCurrentBranch(bool value);
@@ -50,6 +51,8 @@ private:
     // include stuff
     PFileIncludes getFileIncludesEntry(const QString& FileName);
     void addDefinesInFile(const QString& fileName);
+
+    bool isIdentChar(const QChar& ch);
 private:
     int mIndex; // points to current file buffer. do not free
     QString mFileName; // idem
@@ -62,7 +65,7 @@ private:
     DefineMap mDefines; // working set, editable
     QHash<QString, PDefineMap> mFileDefines; //dictionary to save defines for each headerfile;
     QList<PParsedFile> mIncludes; // stack of files we've stepped into. last one is current file, first one is source file
-    QList<bool> fBranchResults;// stack of branch results (boolean). last one is current branch, first one is outermost branch
+    QList<bool> mBranchResults;// stack of branch results (boolean). last one is current branch, first one is outermost branch
     QStringList mIncludePaths; // path to include folders
     QStringList mProjectIncludePaths;
     bool mParseSystem;
