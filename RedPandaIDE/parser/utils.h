@@ -6,7 +6,7 @@
 #include <memory>
 // preprocess/ macro define
 struct Define {
-    QString Name;
+    QString name;
     QString args;
     QString value;
     QString filename;
@@ -17,6 +17,9 @@ struct Define {
 };
 
 using PDefine = std::shared_ptr<Define>;
+
+using DefineMap = QHash<QString,PDefine>;
+using PDefineMap = std::shared_ptr<DefineMap>;
 
 enum class SkipType {
     skItself,  // skip itself
@@ -88,7 +91,7 @@ struct Statement;
 using PStatement = std::shared_ptr<Statement>;
 using StatementList = QVector<PStatement>;
 using PStatementList = std::shared_ptr<StatementList>;
-using StatementMap = QMap<QString, PStatementList>;
+using StatementMap = QHash<QString, PStatementList>;
 struct Statement {
     std::weak_ptr<Statement> parentScope; // parent class/struct/namespace scope, don't use auto pointer to prevent circular reference
     QString hintText; // text to force display when using PrettyPrintStatement

@@ -613,6 +613,7 @@ public:
     void saveValue(const QString &key, const QVariant &value);
     QVariant value(const QString& group, const QString &key, const QVariant& defaultValue);
     QVariant value(const QString &key, const QVariant& defaultValue);
+    void load();
 
     Dirs& dirs();
     Editor& editor();

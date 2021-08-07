@@ -13,8 +13,6 @@ public:
     void add(PStatement statement);
 //    function DeleteFirst: Integer;
 //    function DeleteLast: Integer;
-    void BeginBatchDelete();
-    void endBatchDelete();
     void deleteStatement(PStatement statement);
     const StatementMap& childrenStatements(PStatement statement = PStatement());
     const StatementMap& childrenStatements(std::weak_ptr<Statement> statement);
@@ -23,11 +21,13 @@ public:
     void dumpWithScope(const QString& logFile);
 
 signals:
+
+private:
+    void addMember(StatementMap& map, PStatement statement);
+    int deleteMember(StatementMap& map, PStatement statement);
 private:
     int mCount;
-    bool mClearing;
     StatementMap mGlobalStatements;  //may have overloaded functions, so use PStatementList to store
-    int mBatchDeleteCount;
 };
 
 #endif // STATEMENTMODEL_H
