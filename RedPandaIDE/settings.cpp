@@ -25,6 +25,7 @@ Settings::Settings(const QString &filename):
     mDebugger(this),
     mHistory(this)
 {
+    load();
 }
 
 Settings::~Settings()
@@ -67,6 +68,17 @@ QVariant Settings::value(const QString &group, const QString &key, const QVarian
 QVariant Settings::value(const QString &key, const QVariant &defaultValue)
 {
     return mSettings.value(key,defaultValue);
+}
+
+void Settings::load()
+{
+
+    mCompilerSets.loadSets();
+    mEnvironment.load();
+    mEditor.load();
+    mExecutor.load();
+    mDebugger.load();
+    mHistory.load();
 }
 
 Settings::Dirs &Settings::dirs()

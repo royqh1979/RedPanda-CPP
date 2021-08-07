@@ -36,6 +36,7 @@ enum class StatementKind  {
   skTypedef,
   skClass,
   skFunction,
+  skOperator,
   skConstructor,
   skDestructor,
   skVariable,
@@ -85,6 +86,9 @@ using PRemovedStatement = std::shared_ptr<RemovedStatement>;
 
 struct Statement;
 using PStatement = std::shared_ptr<Statement>;
+using StatementList = QVector<PStatement>;
+using PStatementList = std::shared_ptr<StatementList>;
+using StatementMap = QMap<QString, PStatementList>;
 struct Statement {
     std::weak_ptr<Statement> parentScope; // parent class/struct/namespace scope, don't use auto pointer to prevent circular reference
     QString hintText; // text to force display when using PrettyPrintStatement
@@ -99,20 +103,60 @@ struct Statement {
     StatementClassScope classScope; // protected/private/public
     bool hasDefinition; // definiton line/filename is valid
     int line; // declaration
+    int endLine;
     int definitionLine; // definition
+    int definitionEndLine;
     QString fileName; // declaration
     QString definitionFileName; // definition
     bool inProject; // statement in project
     bool inSystemHeader; // statement in system header (#include <>)
-    QList<std::weak_ptr<Statement>> children; // Children Statements
-    QHash<QString,std::weak_ptr<Statement>> childrenMap; //children map index to speedup search
+    StatementMap children; // functions can be overloaded,so we use list to save children with the same name
     QSet<QString> friends; // friend class / functions
     bool isStatic; // static function / variable
     bool isInherited; // inherted member;
-    QString fullName; // fullname(including class and namespace)
+    QString fullName; // fullname(including class and namespace), ClassA::foo
     QStringList usingList; // using namespaces
     int usageCount; //Usage Count, used by TCodeCompletion
     int freqTop; // Usage Count Rank, used by TCodeCompletion
     QString noNameArgs;// Args without name
 };
+
+struct UsingNamespace {
+    QStringList namespaces; // List['std','foo'] for using namespace std::foo;
+    QString filename;
+    int line;
+    int endLine;
+    bool fromHeader;
+};
+using PUsingNamespace = std::shared_ptr<UsingNamespace>;
+
+struct IncompleteClass {
+    std::weak_ptr<Statement> statement;
+    int count;
+};
+using PIncompleteClass = std::shared_ptr<IncompleteClass>;
+
+struct FileIncludes {
+    QString baseFile;
+    QMap<QString,bool> includeFiles; // true means the file is directly included, false means included indirectly
+    QSet<QString> usings; // namespaces it usings
+    QVector<std::weak_ptr<Statement>> statements; // but we don't save temporary statements
+    //StatementsIndex: TDevStringHash;
+    QVector<std::weak_ptr<Statement>> declaredStatements; // statements declared in this file
+    QMap<int, std::weak_ptr<Statement>> scopes; // int is start line of the statement scope
+    QSet<QString> dependingFiles; // The files I depeneds on
+    QSet<QString> dependedFiles; // the files depends on me
+};
+using PFileIncludes = std::shared_ptr<FileIncludes>;
+
+
+extern QStringList CppDirectives;
+extern QStringList JavadocTags;
+extern QMap<QString,SkipType> CppKeywords;
+extern QSet<QString> CppTypeKeywords;
+extern QSet<QString> STLPointers;
+extern QSet<QString> STLContainers;
+extern QSet<QString> STLElementMethods;
+
+void initParser();
 #endif // PARSER_UTILS_H

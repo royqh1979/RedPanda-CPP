@@ -18,6 +18,7 @@ SOURCES += \
     compiler/stdincompiler.cpp \
     parser/cpppreprocessor.cpp \
     parser/statementmodel.cpp \
+    parser/utils.cpp \
     qsynedit/Search.cpp \
     qsynedit/SearchBase.cpp \
     qsynedit/SearchRegex.cpp \

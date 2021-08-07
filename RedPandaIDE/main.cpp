@@ -12,6 +12,7 @@
 #include "common.h"
 #include "colorscheme.h"
 #include "iconsmanager.h"
+#include "parser/utils.h"
 
 Settings* createAppSettings(const QString& filepath = QString()) {
     QString filename;
@@ -43,7 +44,7 @@ Settings* createAppSettings(const QString& filepath = QString()) {
 
         return nullptr;
     }
-    return new Settings(filename);
+     new Settings(filename);
 }
 
 int main(int argc, char *argv[])
@@ -53,6 +54,8 @@ int main(int argc, char *argv[])
     qRegisterMetaType<PCompileIssue>("PCompileIssue");
     qRegisterMetaType<PCompileIssue>("PCompileIssue&");
     qRegisterMetaType<QVector<int>>("QVector<int>");
+
+    initParser();
 
     try {
 
@@ -65,12 +68,7 @@ int main(int argc, char *argv[])
             return -1;
         }
         auto settings = std::unique_ptr<Settings>(pSettings);
-        settings->environment().load();
-        settings->compilerSets().loadSets();
-        settings->editor().load();
-        settings->executor().load();
-        settings->debugger().load();
-        settings->history().load();
+
 
         //Translation must be loaded after language setting is loaded
         QTranslator trans;
