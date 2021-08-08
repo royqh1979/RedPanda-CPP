@@ -208,7 +208,7 @@ void *SynEditStringList::getObject(int Index)
 
 QString SynEditStringList::text()
 {
-    return GetTextStr();
+    return getTextStr();
 }
 
 void SynEditStringList::setText(const QString &text)
@@ -348,7 +348,7 @@ void SynEditStringList::deleteAt(int Index)
     endUpdate();
 }
 
-QString SynEditStringList::GetTextStr()
+QString SynEditStringList::getTextStr()
 {
     QString Result;
     for (PSynEditStringRec& line:mList) {

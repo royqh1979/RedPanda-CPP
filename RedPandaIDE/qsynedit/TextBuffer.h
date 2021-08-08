@@ -111,7 +111,7 @@ signals:
     void inserted(int index, int count);
     void putted(int index, int count);
 protected:
-    QString GetTextStr();
+    QString getTextStr();
     void SetUpdateState(bool Updating);
     void InsertItem(int Index, const QString& s);
     void addItem(const QString& s);

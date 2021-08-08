@@ -2,6 +2,7 @@
 #define STATEMENTMODEL_H
 
 #include <QObject>
+#include <QTextStream>
 #include "utils.h"
 
 class StatementModel : public QObject
@@ -17,14 +18,14 @@ public:
     const StatementMap& childrenStatements(PStatement statement = PStatement());
     const StatementMap& childrenStatements(std::weak_ptr<Statement> statement);
     void clear();
-    void dumpTo(const QString& logFile);
-    void dumpWithScope(const QString& logFile);
+    void dump(const QString& logFile);
 
 signals:
 
 private:
     void addMember(StatementMap& map, PStatement statement);
     int deleteMember(StatementMap& map, PStatement statement);
+    void dumpStatementMap(StatementMap& map, QTextStream& out, int level);
 private:
     int mCount;
     StatementMap mGlobalStatements;  //may have overloaded functions, so use PStatementList to store
