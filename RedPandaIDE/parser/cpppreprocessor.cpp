@@ -33,85 +33,73 @@ QString CppPreprocessor::getNextPreprocessor()
 void CppPreprocessor::handleBranch(const QString &line)
 {
     if (line.startsWith("ifdef")) {
-        // if a branch that is not at our level is false, current branch is false too;
-        for (int i=0;i<=mBranchResults.count()-2;i++) {
-            if (!mBranchResults[i]) {
-                setCurrentBranch(false);
-                return;
-            }
-        }
+//        // if a branch that is not at our level is false, current branch is false too;
+//        for (int i=0;i<=mBranchResults.count()-2;i++) {
+//            if (!mBranchResults[i]) {
+//                setCurrentBranch(false);
+//                return;
+//            }
+//        }
         if (!getCurrentBranch()) {
             setCurrentBranch(false);
         } else {
             constexpr int IFDEF_LEN = 5; //length of ifdef;
-            QString name = line.mid(IFDEF_LEN+1);
+            QString name = line.mid(IFDEF_LEN).trimmed();
             int dummy;
             setCurrentBranch( getDefine(name,dummy)!=nullptr );
 
         }
+    } else if (line.startsWith("ifndef")) {
+//        // if a branch that is not at our level is false, current branch is false too;
+//        for (int i=0;i<=mBranchResults.count()-2;i++) {
+//            if (!mBranchResults[i]) {
+//                setCurrentBranch(false);
+//                return;
+//            }
+//        }
+        if (!getCurrentBranch()) {
+            setCurrentBranch(false);
+        } else {
+            constexpr int IFNDEF_LEN = 6; //length of ifndef;
+            QString name = line.mid(IFNDEF_LEN).trimmed();
+            int dummy;
+            setCurrentBranch( getDefine(name,dummy)==nullptr );
+        }
+    } else if (line.startsWith("if")) {
+        //        // if a branch that is not at our level is false, current branch is false too;
+        //        for (int i=0;i<=mBranchResults.count()-2;i++) {
+        //            if (!mBranchResults[i]) {
+        //                setCurrentBranch(false);
+        //                return;
+        //            }
+        //        }
+        if (!getCurrentBranch()) {// we are already inside an if that is NOT being taken
+            setCurrentBranch(false);// so don't take this one either
+        } else {
+            constexpr int IF_LEN = 2; //length of if;
+            QString ifLine = line.mid(IF_LEN).trimmed();
+
+            bool testResult = evaludateIf(ifLine);
+            setCurrentBranch(testResult);
+        }
+    } else if (line.startsWith("else")) {
+        bool oldResult = getCurrentBranch(); // take either if or else
+        removeCurrentBranch();
+        setCurrentBranch(!oldResult);
+    } else if (line.startsWith("elif")) {
+        bool oldResult = getCurrentBranch(); // take either if or else
+        removeCurrentBranch();
+        if (oldResult) { // don't take this one, if  previous has been taken
+            setCurrentBranch(false);
+        } else {
+            constexpr int ELIF_LEN = 4; //length of if;
+            QString ifLine = line.mid(ELIF_LEN).trimmed();
+            bool testResult = evaludateIf(ifLine);
+            setCurrentBranch(testResult);
+        }
+    } else if (line.startsWith("endif")) {
+        removeCurrentBranch();
     }
-//      if not GetCurrentBranch then // we are already inside an if that is NOT being taken
-//        SetCurrentBranch(false) // so don't take this one either
-//      else begin
-//        Name := TrimLeft(Copy(Line, Length('ifdef') + 1, MaxInt));
-//        SetCurrentBranch(Assigned(GetDefine(Name,Dummy)));
-//      end;
-//    end else if StartsStr('ifndef', Line) then begin
-//      // if a branch that is not at our level is false, current branch is false too;
-//      for I := 0 to fBranchResults.Count - 2 do
-//        if integer(fBranchResults[i]) = 0 then begin
-//          SetCurrentBranch(false);
-//          Exit;
-//        end;
-//      if not GetCurrentBranch then // we are already inside an if that is NOT being taken
-//        SetCurrentBranch(false) // so don't take this one either
-//      else begin
-//        Name := TrimLeft(Copy(Line, Length('ifndef') + 1, MaxInt));
-//        SetCurrentBranch(not Assigned(GetDefine(Name,Dummy)));
-//      end;
-//    end else if StartsStr('if', Line) then begin
-//      // if a branch that is not at our level is false, current branch is false too;
-//      for I := 0 to fBranchResults.Count - 2 do
-//        if integer(fBranchResults[i]) = 0 then begin
-//          SetCurrentBranch(false);
-//          Exit;
-//        end;
-//      if not GetCurrentBranch then // we are already inside an if that is NOT being taken
-//        SetCurrentBranch(false) // so don't take this one either
-//      else begin
-//        IfLine := TrimLeft(Copy(Line, Length('if') + 1, MaxInt)); // remove if
-//        testResult := EvaluateIf(IfLine);
-//        SetCurrentBranch(testResult);
-//      end;
-//    end else if StartsStr('else', Line) then begin
-//      // if a branch that is not at our level is false, current branch is false too;
-//      for I := 0 to fBranchResults.Count - 2 do
-//        if integer(fBranchResults[i]) = 0 then begin
-//          RemoveCurrentBranch;
-//          SetCurrentBranch(false);
-//          Exit;
-//        end;
-//      OldResult := GetCurrentBranch; // take either if or else
-//      RemoveCurrentBranch;
-//      SetCurrentBranch(not OldResult);
-//    end else if StartsStr('elif', Line) then begin
-//      // if a branch that is not at our level is false, current branch is false too;
-//      for I := 0 to fBranchResults.Count - 2 do
-//        if integer(fBranchResults[i]) = 0 then begin
-//          RemoveCurrentBranch;
-//          SetCurrentBranch(false);
-//          Exit;
-//        end;
-//      OldResult := GetCurrentBranch; // take either if or else
-//      RemoveCurrentBranch;
-//      if OldResult then begin // don't take this one, previous if has been taken
-//        SetCurrentBranch(false);
-//      end else begin // previous ifs failed. try this one
-//        IfLine := TrimLeft(Copy(Line, Length('elif') + 1, MaxInt)); // remove elif
-//        SetCurrentBranch(EvaluateIf(IfLine));
-//      end;
-//    end else if StartsStr('endif', Line) then
-//      RemoveCurrentBranch;
 }
 
 QString CppPreprocessor::expandMacros(const QString &line, int depth)
