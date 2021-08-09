@@ -76,6 +76,23 @@ private:
      * 'A'..'Z', '0'..'9', 'a'..'z', '_', '*', '&', '~'
      */
     bool isIdentChar(const QChar& ch);
+    /*
+     * '\r','\n'
+     */
+    bool isLineChar(const QChar& ch);
+    /*
+     *  '\t' ' '
+     */
+    bool isSpaceChar(const QChar& ch);
+    /*
+     * '+', '-', '*', '/', '!', '=', '<', '>', '&', '|', '^'
+     */
+    bool isOperatorChar(const QChar& ch);
+
+    /*
+     * 'A'..'Z', 'a'..'z', '_'
+     */
+    bool isMacroIdentChar(const QChar& ch);
 
     QString lineBreak();
 
@@ -100,6 +117,8 @@ private:
     bool mParseLocal;
     QSet<QString> mScannedFiles;
     QSet<QString> mProcessed; // dictionary to save filename already processed
+
+    QStringList mOperators;
 };
 
 #endif // CPPPREPROCESSOR_H

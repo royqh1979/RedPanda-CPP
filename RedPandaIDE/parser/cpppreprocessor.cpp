@@ -3,7 +3,23 @@
 
 CppPreprocessor::CppPreprocessor(QObject *parent) : QObject(parent)
 {
-
+    mOperators.append("*");
+    mOperators.append("/");
+    mOperators.append("+");
+    mOperators.append("-");
+    mOperators.append("<");
+    mOperators.append("<=");
+    mOperators.append(">");
+    mOperators.append(">=");
+    mOperators.append("==");
+    mOperators.append("!=");
+    mOperators.append("&");
+    mOperators.append("^");
+    mOperators.append("|");
+    mOperators.append("&&");
+    mOperators.append("||");
+    mOperators.append("and");
+    mOperators.append("or");
 }
 
 QString CppPreprocessor::getNextPreprocessor()
@@ -300,6 +316,42 @@ bool CppPreprocessor::isIdentChar(const QChar &ch)
         return true;
     }
     return false;
+}
+
+bool CppPreprocessor::isLineChar(const QChar &ch)
+{
+    return ch=='\r' || ch == '\n';
+}
+
+bool CppPreprocessor::isSpaceChar(const QChar &ch)
+{
+    return ch == ' ' || ch == '\t';
+}
+
+bool CppPreprocessor::isOperatorChar(const QChar &ch)
+{
+
+    switch(ch.unicode()) {
+    case '+':
+    case '-':
+    case '*':
+    case '/':
+    case '!':
+    case '=':
+    case '<':
+    case '>':
+    case '&':
+    case '|':
+    case '^':
+        return true;
+    default:
+        return false;
+    }
+}
+
+bool CppPreprocessor::isMacroIdentChar(const QChar &ch)
+{
+    return (ch>='A' && ch<='Z') || (ch>='a' && ch<='z') || ch == '_';
 }
 
 QString CppPreprocessor::lineBreak()
