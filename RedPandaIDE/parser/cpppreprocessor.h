@@ -68,9 +68,19 @@ private:
     PFileIncludes getFileIncludesEntry(const QString& FileName);
     void addDefinesInFile(const QString& fileName);
 
+    /*
+     * '_','a'..'z','A'..'Z','0'..'9'
+     */
+    bool isWordChar(const QChar& ch);
+    /*
+     * 'A'..'Z', '0'..'9', 'a'..'z', '_', '*', '&', '~'
+     */
     bool isIdentChar(const QChar& ch);
 
     QString lineBreak();
+
+    bool evaluateIf(const QString& line);
+    QString expandDefines(const QString& line);
 private:
     int mIndex; // points to current file buffer. do not free
     QString mFileName; // idem

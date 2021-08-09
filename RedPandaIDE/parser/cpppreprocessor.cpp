@@ -113,7 +113,7 @@ QString CppPreprocessor::expandMacros(const QString &line, int depth)
     int i=0;
     while (i< lenLine) {
         QChar ch=line[i];
-        if (isIdentChar(ch)) {
+        if (isWordChar(ch)) {
             word += ch;
         } else {
             if (!word.isEmpty()) {
@@ -285,9 +285,18 @@ void CppPreprocessor::addDefinesInFile(const QString &fileName)
     }
 }
 
-bool CppPreprocessor::isIdentChar(const QChar &ch)
+bool CppPreprocessor::isWordChar(const QChar &ch)
 {
     if (ch=='_' || (ch>='a' && ch<='z') || (ch>='A' && ch<='Z') || (ch>='0' && ch<='9')) {
+        return true;
+    }
+    return false;
+}
+
+bool CppPreprocessor::isIdentChar(const QChar &ch)
+{
+    if (ch=='_' || ch == '*' || ch == '&' || ch == '~' ||
+            (ch>='a' && ch<='z') || (ch>='A' && ch<='Z') || (ch>='0' && ch<='9')) {
         return true;
     }
     return false;
@@ -296,4 +305,97 @@ bool CppPreprocessor::isIdentChar(const QChar &ch)
 QString CppPreprocessor::lineBreak()
 {
     return "\n";
+}
+
+bool CppPreprocessor::evaluateIf(const QString &line)
+{
+    QString newLine = expandDefines(line); // replace FOO by numerical value of FOO
+    newLine = evaluateDefines(newLine); // replace all defined() by 1 or 0
+    retrun  StrToIntDef(removeSuffixes(evaluateExpression(newLine)), -1) > 0;
+}
+
+QString CppPreprocessor::expandDefines(const QString &line)
+{
+    int searchPos = 0;
+    while (searchPos < line.length()) {
+        // We have found an identifier. It is not a number suffix. Try to expand it
+        if (Line[SearchPos] in MacroIdentChars) and ((SearchPos = 1) or not (Line[SearchPos - 1] in ['0'..'9'])) then begin
+        Tail := SearchPos;
+        Head := SearchPos;
+
+        // Get identifier name (numbers are allowed, but not at the start
+        while (Head <= Length(Line)) and ((Line[Head] in MacroIdentChars) or (Line[Head] in ['0'..'9'])) do
+          Inc(Head);
+        Name := Copy(Line, Tail, Head - Tail);
+        NameStart := Tail;
+        NameEnd := Head;
+
+        // Skip over contents of these built-in functions
+        if Name = 'defined' then begin
+          Head := SearchPos + Length(Name);
+          while (Head <= Length(Line)) and (Line[Head] in SpaceChars) do
+            Inc(Head); // skip spaces
+
+          Head1:=Head;
+          // Skip over its arguments
+          if SkipBraces(Line, Head) then begin
+            SearchPos := Head;
+          end else begin
+            //Skip none braced argument (next word)
+            {
+            Line := ''; // broken line
+            break;
+            }
+            Head:=Head1;
+            if (Head>Length(Line)) or not (Line[SearchPos] in MacroIdentChars) then begin
+              Line := ''; // broken line
+              break;
+            end;
+            while (Head <= Length(Line)) and ((Line[Head] in MacroIdentChars) or (Line[Head] in ['0'..'9'])) do
+              Inc(Head);
+            end;
+            SearchPos := Head;
+        end else if (Name = 'and') or (Name = 'or') then begin
+          SearchPos := Head; // Skip logical operators
+
+          // We have found a regular define. Replace it by its value
+        end else begin
+
+          // Does it exist in the database?
+          Define := GetDefine(Name,Dummy);
+          if not Assigned(Define) then begin
+            InsertValue := '0';
+          end else begin
+            while (Head <= Length(Line)) and (Line[Head] in SpaceChars) do
+              Inc(Head); // skip spaces
+
+            // It is a function. Expand arguments
+            if (Head <= Length(Line)) and (Line[Head] = '(') then begin
+              Tail := Head;
+              if SkipBraces(Line, Head) then begin
+                Args := Copy(Line, Tail, Head - Tail + 1);
+                InsertValue := ExpandFunction(Define, Args);
+                NameEnd := Head + 1;
+              end else begin
+                Line := ''; // broken line
+                break;
+              end;
+
+              // Replace regular define
+            end else begin
+              if Define^.Value <> '' then
+                InsertValue := Define^.Value
+              else
+                InsertValue := '0';
+            end;
+          end;
+
+          // Insert found value at place
+          Delete(Line, NameStart, NameEnd - NameStart);
+          Insert(InsertValue, Line, SearchPos);
+        end;
+      end else
+        Inc(SearchPos);
+    end;
+    Result := Line;
 }
