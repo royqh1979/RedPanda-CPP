@@ -3,23 +3,6 @@
 
 CppPreprocessor::CppPreprocessor(QObject *parent) : QObject(parent)
 {
-    mOperators.append("*");
-    mOperators.append("/");
-    mOperators.append("+");
-    mOperators.append("-");
-    mOperators.append("<");
-    mOperators.append("<=");
-    mOperators.append(">");
-    mOperators.append(">=");
-    mOperators.append("==");
-    mOperators.append("!=");
-    mOperators.append("&");
-    mOperators.append("^");
-    mOperators.append("|");
-    mOperators.append("&&");
-    mOperators.append("||");
-    mOperators.append("and");
-    mOperators.append("or");
 }
 
 QString CppPreprocessor::getNextPreprocessor()
@@ -95,7 +78,7 @@ void CppPreprocessor::handleBranch(const QString &line)
             constexpr int IF_LEN = 2; //length of if;
             QString ifLine = line.mid(IF_LEN).trimmed();
 
-            bool testResult = evaludateIf(ifLine);
+            bool testResult = evaluateIf(ifLine);
             setCurrentBranch(testResult);
         }
     } else if (line.startsWith("else")) {
@@ -110,7 +93,7 @@ void CppPreprocessor::handleBranch(const QString &line)
         } else {
             constexpr int ELIF_LEN = 4; //length of if;
             QString ifLine = line.mid(ELIF_LEN).trimmed();
-            bool testResult = evaludateIf(ifLine);
+            bool testResult = evaluateIf(ifLine);
             setCurrentBranch(testResult);
         }
     } else if (line.startsWith("endif")) {
@@ -353,7 +336,28 @@ bool CppPreprocessor::isMacroIdentChar(const QChar &ch)
 
 bool CppPreprocessor::isDigit(const QChar &ch)
 {
-    return (ch>='0' || ch<='9');
+    return (ch>='0' && ch<='9');
+}
+
+bool CppPreprocessor::isNumberChar(const QChar &ch)
+{
+    if (ch>='0' && ch<='9')
+        return true;
+    if (ch>='a' && ch<='f')
+        return true;
+    if (ch>='A' && ch<='F')
+        return true;
+    switch(ch.unicode()) {
+    case 'x':
+    case 'X':
+    case 'u':
+    case 'U':
+    case 'l':
+    case 'L':
+        return true;
+    default:
+        return false;
+    }
 }
 
 QString CppPreprocessor::lineBreak()
@@ -364,7 +368,7 @@ QString CppPreprocessor::lineBreak()
 bool CppPreprocessor::evaluateIf(const QString &line)
 {
     QString newLine = expandDefines(line); // replace FOO by numerical value of FOO
-    return  removeSuffixes(evaluateExpression(newLine)), -1) > 0;
+    return  evaluateExpression(newLine);
 }
 
 QString CppPreprocessor::expandDefines(QString line)
@@ -506,6 +510,270 @@ bool CppPreprocessor::skipSpaces(const QString &expr, int &pos)
     return pos<expr.length();
 }
 
+bool CppPreprocessor::evalNumber(const QString &expr, int &result, int &pos)
+{
+    if (!skipSpaces(expr,pos))
+        return false;
+    QString s;
+    while (pos<expr.length() && isNumberChar(expr[pos])) {
+        s+=expr[pos];
+        pos++;
+    }
+    bool ok;
+    result = s.toInt(&ok,0);
+    return ok;
+}
+
+bool CppPreprocessor::evalTerm(const QString &expr, int &result, int &pos)
+{
+    if (!skipSpaces(expr,pos))
+        return false;
+    if (expr[pos]=='(') {
+        pos++;
+        if (!evalExpr(expr,result,pos))
+            return false;
+        if (!skipSpaces(expr,pos))
+            return false;
+        if (expr[pos]!=')')
+            return false;
+        pos++;
+    } else {
+        return evalNumber(expr,result,pos);
+    }
+}
+
+/*
+ * unary_expr = term
+     | '+' term
+     | '-' term
+     | '!' term
+     | '~' term
+ */
+bool CppPreprocessor::evalUnaryExpr(const QString &expr, int &result, int &pos)
+{
+    if (!skipSpaces(expr,pos))
+        return false;
+    if (expr[pos]=='+') {
+        pos++;
+        if (!evalTerm(expr,result,pos))
+            return false;
+    } else if (expr[pos]=='-') {
+        pos++;
+        if (!evalTerm(expr,result,pos))
+            return false;
+        result = -result;
+    } else if (expr[pos]=='~') {
+        pos++;
+        if (!evalTerm(expr,result,pos))
+            return false;
+        result = ~result;
+    } else if (expr[pos]=='!') {
+        pos++;
+        if (!evalTerm(expr,result,pos))
+            return false;
+        result = !result;
+    } else {
+        return evalTerm(expr,result,pos);
+    }
+}
+
+/*
+ * mul_expr = unary_expr
+     | mul_expr '*' unary_expr
+     | mul_expr '/' unary_expr
+     | mul_expr '%' unary_expr
+ */
+bool CppPreprocessor::evalMulExpr(const QString &expr, int &result, int &pos)
+{
+    if (!evalUnaryExpr(expr,result,pos))
+        return false;
+    while (true) {
+        if (!skipSpaces(expr,pos))
+            break;
+        int rightResult;
+        if (expr[pos]=='*') {
+            pos++;
+            if (!evalUnaryExpr(expr,rightResult,pos))
+                return false;
+            result *= rightResult;
+        } else if (expr[pos]=='/') {
+            pos++;
+            if (!evalUnaryExpr(expr,rightResult,pos))
+                return false;
+            result /= rightResult;
+        } else if (expr[pos]=='%') {
+            pos++;
+            if (!evalUnaryExpr(expr,rightResult,pos))
+                return false;
+            result %= rightResult;
+        } else {
+            break;
+        }
+    }
+    return true;
+}
+
+/*
+ * add_expr = mul_expr
+     | add_expr '+' mul_expr
+     | add_expr '-' mul_expr
+ */
+bool CppPreprocessor::evalAddExpr(const QString &expr, int &result, int &pos)
+{
+    if (!evalAddExpr(expr,result,pos))
+        return false;
+    while (true) {
+        if (!skipSpaces(expr,pos))
+            break;
+        int rightResult;
+        if (expr[pos]=='+') {
+            pos++;
+            if (!evalMulExpr(expr,rightResult,pos))
+                return false;
+            result += rightResult;
+        } else if (expr[pos]=='-') {
+            pos++;
+            if (!evalMulExpr(expr,rightResult,pos))
+                return false;
+            result -= rightResult;
+        } else {
+            break;
+        }
+    }
+    return true;
+}
+
+/*
+ * shift_expr = add_expr
+     | shift_expr "<<" add_expr
+     | shift_expr ">>" add_expr
+ */
+bool CppPreprocessor::evalShiftExpr(const QString &expr, int &result, int &pos)
+{
+    if (!evalAddExpr(expr,result,pos))
+        return false;
+    while (true) {
+        if (!skipSpaces(expr,pos))
+            break;
+        int rightResult;
+        if (pos+1<expr.length() && expr[pos] == '<' && expr[pos+1]=='<') {
+            pos += 2;
+            if (!evalAddExpr(expr,rightResult,pos))
+                return false;
+            result = (result << rightResult);
+        } else if (pos+1<expr.length() && expr[pos] == '>' && expr[pos+1]=='>') {
+            pos += 2;
+            if (!evalAddExpr(expr,rightResult,pos))
+                return false;
+            result = (result >> rightResult);
+        } else {
+            break;
+        }
+    }
+    return true;
+}
+
+/*
+ * relation_expr = shift_expr
+     | relation_expr ">=" shift_expr
+     | relation_expr ">" shift_expr
+     | relation_expr "<=" shift_expr
+     | relation_expr "<" shift_expr
+ */
+bool CppPreprocessor::evalRelationExpr(const QString &expr, int &result, int &pos)
+{
+    if (!evalShiftExpr(expr,result,pos))
+        return false;
+    while (true) {
+        if (!skipSpaces(expr,pos))
+            break;
+        int rightResult;
+        if (expr[pos]=='<') {
+            if (pos+1<expr.length() && expr[pos+1]=='=') {
+                pos+=2;
+                if (!evalShiftExpr(expr,rightResult,pos))
+                    return false;
+                result = (result <= rightResult);
+            } else {
+                pos++;
+                if (!evalShiftExpr(expr,rightResult,pos))
+                    return false;
+                result = (result < rightResult);
+            }
+        } else if (expr[pos]=='>') {
+            if (pos+1<expr.length() && expr[pos+1]=='=') {
+                pos+=2;
+                if (!evalShiftExpr(expr,rightResult,pos))
+                    return false;
+                result = (result >= rightResult);
+            } else {
+                pos++;
+                if (!evalShiftExpr(expr,rightResult,pos))
+                    return false;
+                result = (result > rightResult);
+            }
+        } else {
+            break;
+        }
+    }
+    return true;
+}
+
+/*
+ * equal_expr = relation_expr
+     | equal_expr "==" relation_expr
+     | equal_expr "!=" relation_expr
+ */
+bool CppPreprocessor::evalEqualExpr(const QString &expr, int &result, int &pos)
+{
+    if (!evalRelationExpr(expr,result,pos))
+        return false;
+    while (true) {
+        if (!skipSpaces(expr,pos))
+            break;
+        if (pos+1<expr.length() && expr[pos]=='!' && expr[pos+1]=='=') {
+            pos+=2;
+            int rightResult;
+            if (!evalRelationExpr(expr,rightResult,pos))
+                return false;
+            result = (result != rightResult);
+        } else if (pos+1<expr.length() && expr[pos]=='=' && expr[pos+1]=='=') {
+            pos+=2;
+            int rightResult;
+            if (!evalRelationExpr(expr,rightResult,pos))
+                return false;
+            result = (result == rightResult);
+        } else {
+            break;
+        }
+    }
+    return true;
+}
+
+/*
+ * bit_and_expr = equal_expr
+     | bit_and_expr "&" equal_expr
+ */
+bool CppPreprocessor::evalBitAndExpr(const QString &expr, int &result, int &pos)
+{
+    if (!evalEqualExpr(expr,result,pos))
+        return false;
+    while (true) {
+        if (!skipSpaces(expr,pos))
+            break;
+        if (expr[pos]=='&') {
+            pos++;
+            int rightResult;
+            if (!evalEqualExpr(expr,rightResult,pos))
+                return false;
+            result = result & rightResult;
+        } else {
+            break;
+        }
+    }
+    return true;
+}
+
 /*
  * bit_xor_expr = bit_and_expr
      | bit_xor_expr "^" bit_and_expr
@@ -515,12 +783,12 @@ bool CppPreprocessor::evalBitXorExpr(const QString &expr, int &result, int &pos)
     if (!evalBitAndExpr(expr,result,pos))
         return false;
     while (true) {
-        if (!skipBraces(expr,result,pos))
+        if (!skipSpaces(expr,pos))
             break;
         if (expr[pos]=='^') {
             pos++;
             int rightResult;
-            if (!evalBitAndExpr(expr,result,pos))
+            if (!evalBitAndExpr(expr,rightResult,pos))
                 return false;
             result = result ^ rightResult;
         } else {
@@ -539,12 +807,12 @@ bool CppPreprocessor::evalBitOrExpr(const QString &expr, int &result, int &pos)
     if (!evalBitXorExpr(expr,result,pos))
         return false;
     while (true) {
-        if (!skipBraces(expr,result,pos))
+        if (!skipSpaces(expr,pos))
             break;
         if (expr[pos] == '|') {
             pos++;
             int rightResult;
-            if (!evalBitXorExpr(expr,result,pos))
+            if (!evalBitXorExpr(expr,rightResult,pos))
                 return false;
             result = result | rightResult;
         } else {
@@ -563,7 +831,7 @@ bool CppPreprocessor::evalLogicAndExpr(const QString &expr, int &result, int &po
     if (!evalBitOrExpr(expr,result,pos))
         return false;
     while (true) {
-        if (!skipBraces(expr,result,pos))
+        if (!skipSpaces(expr,pos))
             break;
         if (pos+1<expr.length() && expr[pos]=='&' && expr[pos+1] =='&') {
             pos+=2;
@@ -587,7 +855,7 @@ bool CppPreprocessor::evalLogicOrExpr(const QString &expr, int &result, int &pos
     if (!evalLogicAndExpr(expr,result,pos))
         return false;
     while (true) {
-        if (!skipBraces(expr,result,pos))
+        if (!skipSpaces(expr,pos))
             break;
         if (pos+1<expr.length() && expr[pos]=='|' && expr[pos+1] =='|') {
             pos+=2;
@@ -645,96 +913,16 @@ logic_or_expr = logic_and_expr
     | logic_or_expr "||" logic_and_expr
     */
 
-QString CppPreprocessor::evaluateExpression(QString line)
+int CppPreprocessor::evaluateExpression(QString line)
 {
-    //todo: improve this
-    // Find the first closing brace (this should leave us at the innermost brace pair)
-    while (true) {
-        int head = line.indexOf(')');
-        if (head<0)
-            break;
-        int tail = head;
-        if (skipBraces(line, tail, -1)) { // find the corresponding opening brace
-            QString resultLine = evaluateExpression(line.mid(tail + 1, head - tail - 1)); // evaluate this (without braces)
-            line.remove(tail, head - tail + 1); // Remove the old part AND braces
-            line.insert(tail,resultLine); // and replace by result
-        } else {
-            return "";
-        }
-    }
-
-    // Then evaluate braceless part
-    while (true) {
-        int operatorPos;
-        QString operatorToken = getNextOperator(operatorPos);
-        if (operatorPos < 0)
-            break;
-
-        // Get left operand
-        int tail = operatorPos - 1;
-        while ((tail >= 0) && isSpaceChar(line[tail]))
-            tail--; // skip spaces
-        Head := Tail;
-        while (Head >= 0) and (Line[Head] in IdentChars) do
-          Dec(Head); // step over identifier
-        LeftOp := Copy(Line, Head + 1, Tail - Head);
-        EquatStart := Head + 1; // marks begin of equation
-
-        // Get right operand
-        Tail := OperatorPos + Length(OperatorToken) + 1;
-        while (Tail <= Length(Line)) and (Line[Tail] in SpaceChars) do
-          Inc(Tail); // skip spaces
-        Head := Tail;
-        while (Head <= Length(Line)) and (Line[Head] in IdentChars) do
-          Inc(Head); // step over identifier
-        RightOp := Copy(Line, Tail, Head - Tail);
-        EquatEnd := Head; // marks begin of equation
-
-        // Evaluate after removing length suffixes...
-        LeftOpValue := StrToIntDef(RemoveSuffixes(LeftOp), 0);
-        RightOpValue := StrToIntDef(RemoveSuffixes(RightOp), 0);
-        if OperatorToken = '*' then
-          ResultValue := LeftOpValue * RightOpValue
-        else if OperatorToken = '/' then begin
-          if RightOpValue = 0 then
-            ResultValue := LeftOpValue
-          else
-            ResultValue := LeftOpValue div RightOpValue; // int division
-        end else if OperatorToken = '+' then
-          ResultValue := LeftOpValue + RightOpValue
-        else if OperatorToken = '-' then
-          ResultValue := LeftOpValue - RightOpValue
-        else if OperatorToken = '<' then
-          ResultValue := integer(LeftOpValue < RightOpValue)
-        else if OperatorToken = '<=' then
-          ResultValue := integer(LeftOpValue <= RightOpValue)
-        else if OperatorToken = '>' then
-          ResultValue := integer(LeftOpValue > RightOpValue)
-        else if OperatorToken = '>=' then
-          ResultValue := integer(LeftOpValue >= RightOpValue)
-        else if OperatorToken = '==' then
-          ResultValue := integer(LeftOpValue = RightOpValue)
-        else if OperatorToken = '!=' then
-          ResultValue := integer(LeftOpValue <> RightOpValue)
-        else if OperatorToken = '&' then // bitwise and
-          ResultValue := integer(LeftOpValue and RightOpValue)
-        else if OperatorToken = '|' then // bitwise or
-          ResultValue := integer(LeftOpValue or RightOpValue)
-        else if OperatorToken = '^' then // bitwise xor
-          ResultValue := integer(LeftOpValue xor RightOpValue)
-        else if (OperatorToken = '&&') or (OperatorToken = 'and') then
-          ResultValue := integer(LeftOpValue and RightOpValue)
-        else if (OperatorToken = '||') or (OperatorToken = 'or') then
-          ResultValue := integer(LeftOpValue or RightOpValue)
-        else
-          ResultValue := 0;
-
-        // And replace by result in string form
-        Delete(Line, EquatStart, EquatEnd - EquatStart);
-        Insert(IntToStr(ResultValue), Line, EquatStart);
-      end else
-        break;
-    end;
-    Result := Line;
+    int pos = 0;
+    int result;
+    bool ok = evalExpr(line,result,pos);
+    if (!ok)
+        return -1;
+    //expr not finished
+    if (skipSpaces(line,pos))
+        return -1;
+    return result;
 }
 
