@@ -94,10 +94,33 @@ private:
      */
     bool isMacroIdentChar(const QChar& ch);
 
+    /*
+     * '0'..'9'
+     */
+    bool isDigit(const QChar& ch);
+
     QString lineBreak();
 
     bool evaluateIf(const QString& line);
-    QString expandDefines(const QString& line);
+    QString expandDefines(QString line);
+    bool skipBraces(const QString&line, int& index, int step = 1);
+    QString expandFunction(PDefine define,QString args);
+    bool skipSpaces(const QString &expr, int& pos);
+    bool evalTerm(const QString &expr, int& result, int& pos);
+    bool evalUnaryExpr(const QString &expr, int& result, int& pos);
+    bool evalMulExpr(const QString &expr, int& result, int& pos);
+    bool evalAddExpr(const QString &expr, int& result, int& pos);
+    bool evalShiftExpr(const QString &expr, int& result, int& pos);
+    bool evalRelationExpr(const QString &expr, int& result, int& pos);
+    bool evalEqualExpr(const QString &expr, int& result, int& pos);
+    bool evalBitAndExpr(const QString &expr, int& result, int& pos);
+    bool evalBitXorExpr(const QString &expr, int& result, int& pos);
+    bool evalBitOrExpr(const QString &expr, int& result, int& pos);
+    bool evalLogicAndExpr(const QString &expr, int& result, int& pos);
+    bool evalLogicOrExpr(const QString &expr, int& result, int& pos);
+    bool evalExpr(const QString &expr, int& result, int& pos);
+
+    QString evaluateExpression(QString line);
 private:
     int mIndex; // points to current file buffer. do not free
     QString mFileName; // idem

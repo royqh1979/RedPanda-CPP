@@ -204,11 +204,8 @@ void CppPreprocessor::expandMacro(const QString &line, QString &newLine, QString
                 }
                 if (level==0) {
                     argEnd = i-2;
-                    QString arg = line.mid(argStart,argEnd-argStart+1).trimmed();
-                    QString formattedValue = define->formatValue;
-                    for (int i=0;i<define->argList.count();i++) {
-                        formattedValue = formattedValue.arg(arg);
-                    }
+                    QString args = line.mid(argStart,argEnd-argStart+1).trimmed();
+                    QString formattedValue = expandFunction(define,args);
                     newLine += expandMacros(formattedValue,depth+1);
                 }
             }
@@ -354,6 +351,11 @@ bool CppPreprocessor::isMacroIdentChar(const QChar &ch)
     return (ch>='A' && ch<='Z') || (ch>='a' && ch<='z') || ch == '_';
 }
 
+bool CppPreprocessor::isDigit(const QChar &ch)
+{
+    return (ch>='0' || ch<='9');
+}
+
 QString CppPreprocessor::lineBreak()
 {
     return "\n";
@@ -362,92 +364,377 @@ QString CppPreprocessor::lineBreak()
 bool CppPreprocessor::evaluateIf(const QString &line)
 {
     QString newLine = expandDefines(line); // replace FOO by numerical value of FOO
-    newLine = evaluateDefines(newLine); // replace all defined() by 1 or 0
-    retrun  StrToIntDef(removeSuffixes(evaluateExpression(newLine)), -1) > 0;
+    return  removeSuffixes(evaluateExpression(newLine)), -1) > 0;
 }
 
-QString CppPreprocessor::expandDefines(const QString &line)
+QString CppPreprocessor::expandDefines(QString line)
 {
     int searchPos = 0;
     while (searchPos < line.length()) {
         // We have found an identifier. It is not a number suffix. Try to expand it
-        if (Line[SearchPos] in MacroIdentChars) and ((SearchPos = 1) or not (Line[SearchPos - 1] in ['0'..'9'])) then begin
-        Tail := SearchPos;
-        Head := SearchPos;
+        if (isMacroIdentChar(line[searchPos]) && (
+                    (searchPos == 1) || !isDigit(line[searchPos - 1]))) {
+            int head = searchPos;
+            int tail = searchPos;
 
-        // Get identifier name (numbers are allowed, but not at the start
-        while (Head <= Length(Line)) and ((Line[Head] in MacroIdentChars) or (Line[Head] in ['0'..'9'])) do
-          Inc(Head);
-        Name := Copy(Line, Tail, Head - Tail);
-        NameStart := Tail;
-        NameEnd := Head;
+            // Get identifier name (numbers are allowed, but not at the start
+            while ((tail < line.length()) && (isMacroIdentChar(line[tail]) || isDigit(line[head])))
+                tail++;
+            QString name = line.mid(head,tail-head);
+            int nameStart = head;
+            int nameEnd = tail;
 
-        // Skip over contents of these built-in functions
-        if Name = 'defined' then begin
-          Head := SearchPos + Length(Name);
-          while (Head <= Length(Line)) and (Line[Head] in SpaceChars) do
-            Inc(Head); // skip spaces
+            if (name == "defined") {
+                //expand define
+                //tail = searchPos + name.length();
+                while ((tail < line.length()) && isSpaceChar(line[tail]))
+                    tail++; // skip spaces
+                int defineStart;
+                int defineEnd;
 
-          Head1:=Head;
-          // Skip over its arguments
-          if SkipBraces(Line, Head) then begin
-            SearchPos := Head;
-          end else begin
-            //Skip none braced argument (next word)
-            {
-            Line := ''; // broken line
-            break;
+                // Skip over its arguments
+                if ((tail < line.length()) && (line[tail]=='(')) {
+                    //braced argument (next word)
+                    defineStart = tail+1;
+                    if (!skipBraces(line, tail)) {
+                        line = ""; // broken line
+                        break;
+                    }
+                } else {
+                    //none braced argument (next word)
+                    defineStart = tail;
+                    if ((tail>=line.length()) || !isMacroIdentChar(line[searchPos])) {
+                        line = ""; // broken line
+                        break;
+                    }
+                    while ((tail < line.length()) && (isMacroIdentChar(line[tail]) || isDigit(line[tail])))
+                        tail++;
+                }
+                name = line.mid(defineStart, defineEnd - defineStart);
+                int dummy;
+                PDefine define = getDefine(name,dummy);
+                QString insertValue;
+                if (!define) {
+                    insertValue = "0";
+                } else {
+                    insertValue = "1";
+                }
+                // Insert found value at place
+                line.remove(searchPos, tail-searchPos+1);
+                line.insert(searchPos,insertValue);
+            } else if ((name == "and") || (name == "or")) {
+                searchPos = tail; // Skip logical operators
+            }  else {
+                 // We have found a regular define. Replace it by its value
+                // Does it exist in the database?
+                int dummy;
+                PDefine define = getDefine(name,dummy);
+                QString insertValue;
+                if (!define) {
+                    insertValue = "0";
+                } else {
+                    while ((tail < line.length()) && isSpaceChar(line[tail]))
+                        tail++;// skip spaces
+                    // It is a function. Expand arguments
+                    if ((tail < line.length()) && (line[tail] == '(')) {
+                        head=tail;
+                        if (skipBraces(line, tail)) {
+                            QString args = line.mid(head,tail-head+1);
+                            insertValue = expandFunction(define,args);
+                            nameEnd = tail+1;
+                        } else {
+                            line = "";// broken line
+                            break;
+                        }
+                        // Replace regular define
+                    } else {
+                        if (!define->value.isEmpty())
+                            insertValue = define->value;
+                        else
+                            insertValue = "0";
+                    }
+                }
+                // Insert found value at place
+                line.remove(nameStart, nameEnd - nameStart);
+                line.insert(searchPos,insertValue);
             }
-            Head:=Head1;
-            if (Head>Length(Line)) or not (Line[SearchPos] in MacroIdentChars) then begin
-              Line := ''; // broken line
-              break;
-            end;
-            while (Head <= Length(Line)) and ((Line[Head] in MacroIdentChars) or (Line[Head] in ['0'..'9'])) do
-              Inc(Head);
-            end;
-            SearchPos := Head;
-        end else if (Name = 'and') or (Name = 'or') then begin
-          SearchPos := Head; // Skip logical operators
+        } else {
+            searchPos ++ ;
+        }
+    }
+    return line;
+}
 
-          // We have found a regular define. Replace it by its value
-        end else begin
+bool CppPreprocessor::skipBraces(const QString &line, int &index, int step)
+{
+    int level = 0;
+    while ((index >= 0) && (index < line.length())) { // Find the corresponding opening brace
+        if (line[index] == '(') {
+            level++;
+        } else if (line[index] == ')') {
+            level--;
+        }
+        if (level == 0)
+            return true;
+        index+=step;
+    }
+    return false;
+}
 
-          // Does it exist in the database?
-          Define := GetDefine(Name,Dummy);
-          if not Assigned(Define) then begin
-            InsertValue := '0';
-          end else begin
-            while (Head <= Length(Line)) and (Line[Head] in SpaceChars) do
-              Inc(Head); // skip spaces
+QString CppPreprocessor::expandFunction(PDefine define, QString args)
+{
+    // Replace function by this string
+    QString result = define->formatValue;
+    if (args.startsWith('(')) {
+        args.remove(0,1);
+    }
+    if (args.endsWith(')')) {
+        args.remove(args.length()-1,1);
+    }
 
-            // It is a function. Expand arguments
-            if (Head <= Length(Line)) and (Line[Head] = '(') then begin
-              Tail := Head;
-              if SkipBraces(Line, Head) then begin
-                Args := Copy(Line, Tail, Head - Tail + 1);
-                InsertValue := ExpandFunction(Define, Args);
-                NameEnd := Head + 1;
-              end else begin
-                Line := ''; // broken line
-                break;
-              end;
+    QStringList argValues = args.split(",");
+    for (QString argValue:argValues) {
+        result=result.arg(argValue);
+    }
+    return result;
+}
 
-              // Replace regular define
-            end else begin
-              if Define^.Value <> '' then
-                InsertValue := Define^.Value
-              else
-                InsertValue := '0';
-            end;
-          end;
+bool CppPreprocessor::skipSpaces(const QString &expr, int &pos)
+{
+    while (pos<expr.length() && isSpaceChar(expr[pos]))
+        pos++;
+    return pos<expr.length();
+}
 
-          // Insert found value at place
-          Delete(Line, NameStart, NameEnd - NameStart);
-          Insert(InsertValue, Line, SearchPos);
-        end;
+/*
+ * bit_xor_expr = bit_and_expr
+     | bit_xor_expr "^" bit_and_expr
+ */
+bool CppPreprocessor::evalBitXorExpr(const QString &expr, int &result, int &pos)
+{
+    if (!evalBitAndExpr(expr,result,pos))
+        return false;
+    while (true) {
+        if (!skipBraces(expr,result,pos))
+            break;
+        if (expr[pos]=='^') {
+            pos++;
+            int rightResult;
+            if (!evalBitAndExpr(expr,result,pos))
+                return false;
+            result = result ^ rightResult;
+        } else {
+            break;
+        }
+    }
+    return true;
+}
+
+/*
+ * bit_or_expr = bit_xor_expr
+     | bit_or_expr "|" bit_xor_expr
+ */
+bool CppPreprocessor::evalBitOrExpr(const QString &expr, int &result, int &pos)
+{
+    if (!evalBitXorExpr(expr,result,pos))
+        return false;
+    while (true) {
+        if (!skipBraces(expr,result,pos))
+            break;
+        if (expr[pos] == '|') {
+            pos++;
+            int rightResult;
+            if (!evalBitXorExpr(expr,result,pos))
+                return false;
+            result = result | rightResult;
+        } else {
+            break;
+        }
+    }
+    return true;
+}
+
+/*
+ * logic_and_expr = bit_or_expr
+    | logic_and_expr "&&" bit_or_expr
+ */
+bool CppPreprocessor::evalLogicAndExpr(const QString &expr, int &result, int &pos)
+{
+    if (!evalBitOrExpr(expr,result,pos))
+        return false;
+    while (true) {
+        if (!skipBraces(expr,result,pos))
+            break;
+        if (pos+1<expr.length() && expr[pos]=='&' && expr[pos+1] =='&') {
+            pos+=2;
+            int rightResult;
+            if (!evalBitOrExpr(expr,rightResult,pos))
+                return false;
+            result = result && rightResult;
+        } else {
+            break;
+        }
+    }
+    return true;
+}
+
+/*
+ * logic_or_expr = logic_and_expr
+    | logic_or_expr "||" logic_and_expr
+ */
+bool CppPreprocessor::evalLogicOrExpr(const QString &expr, int &result, int &pos)
+{
+    if (!evalLogicAndExpr(expr,result,pos))
+        return false;
+    while (true) {
+        if (!skipBraces(expr,result,pos))
+            break;
+        if (pos+1<expr.length() && expr[pos]=='|' && expr[pos+1] =='|') {
+            pos+=2;
+            int rightResult;
+            if (!evalLogicAndExpr(expr,rightResult,pos))
+                return false;
+            result = result || rightResult;
+        } else {
+            break;
+        }
+    }
+    return true;
+}
+
+bool CppPreprocessor::evalExpr(const QString &expr, int &result, int &pos)
+{
+    return evalLogicOrExpr(expr,result,pos);
+}
+
+/* BNF for C constant expression evaluation
+ * term = number
+     | '(' expression ')'
+unary_expr = term
+     | '+' term
+     | '-' term
+     | '!' term
+     | '~' term
+mul_expr = term
+     | mul_expr '*' term
+     | mul_expr '/' term
+     | mul_expr '%' term
+add_expr = mul_expr
+     | add_expr '+' mul_expr
+     | add_expr '-' mul_expr
+shift_expr = add_expr
+     | shift_expr "<<" add_expr
+     | shift_expr ">>" add_expr
+relation_expr = shift_expr
+     | relation_expr ">=" shift_expr
+     | relation_expr ">" shift_expr
+     | relation_expr "<=" shift_expr
+     | relation_expr "<" shift_expr
+equal_expr = relation_expr
+     | equal_expr "==" relation_expr
+     | equal_expr "!=" relation_expr
+bit_and_expr = equal_expr
+     | bit_and_expr "&" equal_expr
+bit_xor_expr = bit_and_expr
+     | bit_xor_expr "^" bit_and_expr
+bit_or_expr = bit_xor_expr
+     | bit_or_expr "|" bit_xor_expr
+logic_and_expr = bit_or_expr
+    | logic_and_expr "&&" bit_or_expr
+logic_or_expr = logic_and_expr
+    | logic_or_expr "||" logic_and_expr
+    */
+
+QString CppPreprocessor::evaluateExpression(QString line)
+{
+    //todo: improve this
+    // Find the first closing brace (this should leave us at the innermost brace pair)
+    while (true) {
+        int head = line.indexOf(')');
+        if (head<0)
+            break;
+        int tail = head;
+        if (skipBraces(line, tail, -1)) { // find the corresponding opening brace
+            QString resultLine = evaluateExpression(line.mid(tail + 1, head - tail - 1)); // evaluate this (without braces)
+            line.remove(tail, head - tail + 1); // Remove the old part AND braces
+            line.insert(tail,resultLine); // and replace by result
+        } else {
+            return "";
+        }
+    }
+
+    // Then evaluate braceless part
+    while (true) {
+        int operatorPos;
+        QString operatorToken = getNextOperator(operatorPos);
+        if (operatorPos < 0)
+            break;
+
+        // Get left operand
+        int tail = operatorPos - 1;
+        while ((tail >= 0) && isSpaceChar(line[tail]))
+            tail--; // skip spaces
+        Head := Tail;
+        while (Head >= 0) and (Line[Head] in IdentChars) do
+          Dec(Head); // step over identifier
+        LeftOp := Copy(Line, Head + 1, Tail - Head);
+        EquatStart := Head + 1; // marks begin of equation
+
+        // Get right operand
+        Tail := OperatorPos + Length(OperatorToken) + 1;
+        while (Tail <= Length(Line)) and (Line[Tail] in SpaceChars) do
+          Inc(Tail); // skip spaces
+        Head := Tail;
+        while (Head <= Length(Line)) and (Line[Head] in IdentChars) do
+          Inc(Head); // step over identifier
+        RightOp := Copy(Line, Tail, Head - Tail);
+        EquatEnd := Head; // marks begin of equation
+
+        // Evaluate after removing length suffixes...
+        LeftOpValue := StrToIntDef(RemoveSuffixes(LeftOp), 0);
+        RightOpValue := StrToIntDef(RemoveSuffixes(RightOp), 0);
+        if OperatorToken = '*' then
+          ResultValue := LeftOpValue * RightOpValue
+        else if OperatorToken = '/' then begin
+          if RightOpValue = 0 then
+            ResultValue := LeftOpValue
+          else
+            ResultValue := LeftOpValue div RightOpValue; // int division
+        end else if OperatorToken = '+' then
+          ResultValue := LeftOpValue + RightOpValue
+        else if OperatorToken = '-' then
+          ResultValue := LeftOpValue - RightOpValue
+        else if OperatorToken = '<' then
+          ResultValue := integer(LeftOpValue < RightOpValue)
+        else if OperatorToken = '<=' then
+          ResultValue := integer(LeftOpValue <= RightOpValue)
+        else if OperatorToken = '>' then
+          ResultValue := integer(LeftOpValue > RightOpValue)
+        else if OperatorToken = '>=' then
+          ResultValue := integer(LeftOpValue >= RightOpValue)
+        else if OperatorToken = '==' then
+          ResultValue := integer(LeftOpValue = RightOpValue)
+        else if OperatorToken = '!=' then
+          ResultValue := integer(LeftOpValue <> RightOpValue)
+        else if OperatorToken = '&' then // bitwise and
+          ResultValue := integer(LeftOpValue and RightOpValue)
+        else if OperatorToken = '|' then // bitwise or
+          ResultValue := integer(LeftOpValue or RightOpValue)
+        else if OperatorToken = '^' then // bitwise xor
+          ResultValue := integer(LeftOpValue xor RightOpValue)
+        else if (OperatorToken = '&&') or (OperatorToken = 'and') then
+          ResultValue := integer(LeftOpValue and RightOpValue)
+        else if (OperatorToken = '||') or (OperatorToken = 'or') then
+          ResultValue := integer(LeftOpValue or RightOpValue)
+        else
+          ResultValue := 0;
+
+        // And replace by result in string form
+        Delete(Line, EquatStart, EquatEnd - EquatStart);
+        Insert(IntToStr(ResultValue), Line, EquatStart);
       end else
-        Inc(SearchPos);
+        break;
     end;
     Result := Line;
 }
+
