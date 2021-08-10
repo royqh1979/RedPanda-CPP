@@ -101,10 +101,84 @@ void CppPreprocessor::handleBranch(const QString &line)
     }
 }
 
+void CppPreprocessor::handleDefine(const QString &line)
+{
+    if (getCurrentBranch()) {
+        addDefineByLine(line, false);
+        mResult[mPreProcIndex] = '#' + line; // add define to result file so the parser can handle it
+    }
+}
+
+void CppPreprocessor::handleInclude(const QString &line)
+{
+    if (!getCurrentBranch()) // we're skipping due to a branch failure
+        return;
+
+    PParsedFile file = mIncludes.back();
+    // Get full header file name
+    QString fileName = getHeaderFileName(file->fileName, line,mIncludePaths,
+        mProjectIncludePaths);
+
+    if (fileName.isEmpty())
+        return;
+
+    mCurrentIncludes->includeFiles.insert(fileName,true);
+    // And open a new entry
+    openInclude(fileName);
+}
+
+void CppPreprocessor::handlePreprocessor(const QString &value)
+{
+    if (value.startsWith("define"))
+        handleDefine(value);
+    else if (value.startsWith("undef"))
+        handleUndefine(value);
+    else if (value.startsWith("if")
+             || value.startsWith("else") || value.startsWith("elif")
+             || value.startsWith("endif"))
+        handleBranch(value);
+    else if (value.startsWith("include"))
+        handleInclude(value);
+}
+
+void CppPreprocessor::handleUndefine(const QString &line)
+{
+    // Remove undef
+    Name := TrimLeft(Copy(Line, Length('undef') + 1, MaxInt));
+
+    files:=TStringList.Create;
+    files.Sorted:=True;
+    files.Duplicates:=dupIgnore;
+    try
+      // may be defined many times
+      while True do begin
+        Define := GetDefine(Name, Index);
+        if Assigned(Define) then begin
+          fDefineIndex.Remove(Name);
+          fDefines.objects[index]:=nil;
+          files.AddObject(Define^.FileName,Pointer(Define));
+        end else
+          break;
+      end;
+      for i:=0 to files.Count-1 do begin
+        Define:= PDefine(files.objects[i]);
+        idx:=FastIndexOf(fFileDefines,files[i]);
+        if idx>0 then begin
+          DefineList:=TList(fFileDefines.Objects[idx]);
+          DefineList.Remove(Pointer(Define));
+          define^.ArgList.Free;
+          Dispose(PDefine(Define));
+        end;
+      end;
+    finally
+      files.Free;
+    end;
+}
+
 QString CppPreprocessor::expandMacros(const QString &line, int depth)
 {
     //prevent infinit recursion
-    if (depth > 20)
+    if (depth > MAX_DEFINE_EXPAND_DEPTH)
         return line;
     QString word;
     QString newLine;

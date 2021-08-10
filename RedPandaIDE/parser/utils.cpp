@@ -1,5 +1,9 @@
 #include "utils.h"
 
+#include <QDir>
+#include <QFile>
+#include <QFileInfo>
+
 QStringList CppDirectives;
 QStringList JavadocTags;
 QMap<QString,SkipType> CppKeywords;
@@ -232,4 +236,65 @@ void initParser()
     JavadocTags.append("@throws");
     JavadocTags.append("@value");
     JavadocTags.append("@version");
+}
+
+QString getHeaderFileName(const QString &relativeTo, const QString &line, const QStringList &includePaths, const QStringList &projectIncludePaths) {
+    QString result = "";
+
+    // Handle <>
+    int openTokenPos = line.indexOf('<');
+    if (openTokenPos >= 0) {
+        int closeTokenPos = line.indexOf('>',openTokenPos+1);
+        if (closeTokenPos >=0) {
+            QString fileName = line.mid(openTokenPos + 1, closeTokenPos - openTokenPos - 1);
+            //project settings is preferred
+            result = getSystemHeaderFileName(fileName, projectIncludePaths);
+            if (result.isEmpty()) {
+                result = getSystemHeaderFileName(fileName, includePaths);
+            }
+        }
+    } else {
+        // Try ""
+        openTokenPos = line.indexOf('"');
+        if (openTokenPos >= 0) {
+            int closeTokenPos = line.indexOf('"', openTokenPos+1);
+            if (closeTokenPos >= 0) {
+                QString fileName = line.mid(openTokenPos + 1, closeTokenPos - openTokenPos - 1);
+                result = getLocalHeaderFileName(relativeTo, fileName);
+                //project settings is preferred
+                if (result.isEmpty()) {
+                    result = getSystemHeaderFileName(fileName, projectIncludePaths);
+                }
+                if (result.isEmpty()) {
+                    result = getSystemHeaderFileName(fileName, includePaths);
+                }
+            }
+        }
+    }
+}
+
+QString getLocalHeaderFileName(const QString &relativeTo, const QString &fileName)
+{
+    QFileInfo relativeFile(relativeTo);
+    QDir dir = relativeFile.dir();
+    // Search local directory
+    if (dir.exists(fileName)) {
+        return dir.absoluteFilePath(fileName);
+    }
+    return "";
+}
+
+QString getSystemHeaderFileName(const QString &fileName, const QStringList &includePaths)
+{
+    if (includePaths.isEmpty())
+        return "";
+
+    // Search compiler include directories
+    for (QString path:includePaths) {
+        QDir dir(path);
+        if (dir.exists(fileName))
+            return dir.absoluteFilePath(fileName);
+    }
+    //not found
+    return "";
 }

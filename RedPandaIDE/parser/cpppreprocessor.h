@@ -5,6 +5,8 @@
 #include <QTextStream>
 #include "utils.h"
 
+#define MAX_DEFINE_EXPAND_DEPTH 20
+
 struct ParsedFile {
     int index; // 0-based for programming convenience
     QString fileName; // Record filename, but not used now

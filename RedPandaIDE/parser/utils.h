@@ -162,4 +162,11 @@ extern QSet<QString> STLContainers;
 extern QSet<QString> STLElementMethods;
 
 void initParser();
+
+QString getHeaderFileName(const QString& relativeTo, const QString& line,
+                       const QStringList& includePaths, const QStringList &projectIncludePaths);
+
+QString getLocalHeaderFileName(const QString& relativeTo, const QString& fileName);
+
+QString getSystemHeaderFileName(const QString& fileName, const QStringList& includePaths);
 #endif // PARSER_UTILS_H
