@@ -89,9 +89,9 @@ using PRemovedStatement = std::shared_ptr<RemovedStatement>;
 
 struct Statement;
 using PStatement = std::shared_ptr<Statement>;
-using StatementList = QVector<PStatement>;
+using StatementList = QList<PStatement>;
 using PStatementList = std::shared_ptr<StatementList>;
-using StatementMap = QHash<QString, PStatementList>;
+using StatementMap = QMultiHash<QString, PStatement>;
 struct Statement {
     std::weak_ptr<Statement> parentScope; // parent class/struct/namespace scope, don't use auto pointer to prevent circular reference
     QString hintText; // text to force display when using PrettyPrintStatement
@@ -164,9 +164,9 @@ extern QSet<QString> STLElementMethods;
 void initParser();
 
 QString getHeaderFileName(const QString& relativeTo, const QString& line,
-                       const QStringList& includePaths, const QStringList &projectIncludePaths);
+                       std::shared_ptr<QStringList> includePaths, std::shared_ptr<QStringList> projectIncludePaths);
 
 QString getLocalHeaderFileName(const QString& relativeTo, const QString& fileName);
 
-QString getSystemHeaderFileName(const QString& fileName, const QStringList& includePaths);
+QString getSystemHeaderFileName(const QString& fileName, std::shared_ptr<QStringList> includePaths);
 #endif // PARSER_UTILS_H

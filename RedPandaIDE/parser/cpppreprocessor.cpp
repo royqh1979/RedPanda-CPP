@@ -144,35 +144,24 @@ void CppPreprocessor::handlePreprocessor(const QString &value)
 void CppPreprocessor::handleUndefine(const QString &line)
 {
     // Remove undef
-    Name := TrimLeft(Copy(Line, Length('undef') + 1, MaxInt));
+    constexpr int UNDEF_LEN = 5;
+    QString name = line.mid(UNDEF_LEN).trimmed();
 
-    files:=TStringList.Create;
-    files.Sorted:=True;
-    files.Duplicates:=dupIgnore;
-    try
-      // may be defined many times
-      while True do begin
-        Define := GetDefine(Name, Index);
-        if Assigned(Define) then begin
-          fDefineIndex.Remove(Name);
-          fDefines.objects[index]:=nil;
-          files.AddObject(Define^.FileName,Pointer(Define));
-        end else
-          break;
-      end;
-      for i:=0 to files.Count-1 do begin
-        Define:= PDefine(files.objects[i]);
-        idx:=FastIndexOf(fFileDefines,files[i]);
-        if idx>0 then begin
-          DefineList:=TList(fFileDefines.Objects[idx]);
-          DefineList.Remove(Pointer(Define));
-          define^.ArgList.Free;
-          Dispose(PDefine(Define));
-        end;
-      end;
-    finally
-      files.Free;
-    end;
+    int index;
+//    //may be defined many times
+//    while (true) {
+    PDefine define = getDefine(name, index);
+    if (define) {
+        //remove the define from defines set
+        mDefines.remove(name);
+        //remove the define form the file where it defines
+        if (define->filename == mFileName) {
+            PDefineMap defineMap = mFileDefines.value(mFileName);
+            if (defineMap) {
+                defineMap->remove(name);
+            }
+        }
+    }
 }
 
 QString CppPreprocessor::expandMacros(const QString &line, int depth)
@@ -277,6 +266,7 @@ PParsedFile CppPreprocessor::getInclude(int index)
     return mIncludes[index];
 }
 
+
 void CppPreprocessor::closeInclude()
 {
     if (mIncludes.isEmpty())
@@ -340,17 +330,20 @@ void CppPreprocessor::addDefinesInFile(const QString &fileName)
     if (!mScannedFiles.contains(fileName))
         return;
 
-    PDefineMap defineList = mFileDefines.value(fileName, PDefineMap());
-
-    if (defineList) {
-        for (PDefine define: defineList->values()) {
-            mDefines.insert(define->name,define);
-        }
-    }
+    //May be redefined, so order is important
+    //first add the defines in the files it included
     PFileIncludes fileIncludes = getFileIncludesEntry(fileName);
     if (fileIncludes) {
         for (QString s:fileIncludes->includeFiles.keys()) {
             addDefinesInFile(s);
+        }
+    }
+
+    // then add the defines defined in it
+    PDefineMap defineList = mFileDefines.value(fileName, PDefineMap());
+    if (defineList) {
+        for (PDefine define: defineList->values()) {
+            mDefines.insert(define->name,define);
         }
     }
 }

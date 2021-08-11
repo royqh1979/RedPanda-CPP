@@ -142,8 +142,8 @@ private:
     QHash<QString, PDefineMap> mFileDefines; //dictionary to save defines for each headerfile;
     QList<PParsedFile> mIncludes; // stack of files we've stepped into. last one is current file, first one is source file
     QList<bool> mBranchResults;// stack of branch results (boolean). last one is current branch, first one is outermost branch
-    QStringList mIncludePaths; // path to include folders
-    QStringList mProjectIncludePaths;
+    std::shared_ptr<QStringList> mIncludePaths; // path to include folders
+    std::shared_ptr<QStringList> mProjectIncludePaths;
     bool mParseSystem;
     bool mParseLocal;
     QSet<QString> mScannedFiles;
