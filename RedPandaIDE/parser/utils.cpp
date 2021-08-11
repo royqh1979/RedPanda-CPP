@@ -239,7 +239,7 @@ void initParser()
 }
 
 QString getHeaderFileName(const QString &relativeTo, const QString &line,
-                          std::shared_ptr<QStringList>includePaths, std::shared_ptr<QStringList> projectIncludePaths) {
+                          const QStringList& includePaths, const QStringList& projectIncludePaths) {
     QString result = "";
 
     // Handle <>
@@ -285,13 +285,11 @@ QString getLocalHeaderFileName(const QString &relativeTo, const QString &fileNam
     return "";
 }
 
-QString getSystemHeaderFileName(const QString &fileName, std::shared_ptr<QStringList> includePaths)
+QString getSystemHeaderFileName(const QString &fileName, const QStringList& includePaths)
 {
-    if (!includePaths)
-        return "";
 
     // Search compiler include directories
-    for (QString path:*includePaths) {
+    for (QString path:includePaths) {
         QDir dir(path);
         if (dir.exists(fileName))
             return dir.absoluteFilePath(fileName);

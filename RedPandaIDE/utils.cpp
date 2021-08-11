@@ -452,3 +452,40 @@ QString changeFileExt(const QString& filename, const QString& ext)
         return filename.mid(0,filename.length()-suffix.length()-1)+"."+ext;
     }
 }
+
+QStringList ReadFileToLines(const QString &fileName)
+{
+    QFile file(fileName);
+    if (file.size()<=0)
+        return QStringList();
+    QTextCodec* codec = QTextCodec::codecForLocale();
+    QStringList result;
+    QTextCodec::ConverterState state;
+    bool ok = true;
+    if (file.open(QFile::ReadOnly)) {
+        while (!file.atEnd()) {
+            QByteArray array = file.readLine();
+            QString s = codec->toUnicode(array,array.length(),&state);
+            if (state.invalidChars>0) {
+                ok=false;
+                break;
+            }
+            result.append(s);
+        }
+        if (!ok) {
+            file.seek(0);
+            result.clear();
+            codec = QTextCodec::codecForName("UTF-8");
+            while (!file.atEnd()) {
+                QByteArray array = file.readLine();
+                QString s = codec->toUnicode(array,array.length(),&state);
+                if (state.invalidChars>0) {
+                    result.clear();
+                    break;
+                }
+                result.append(s);
+            }
+        }
+    }
+    return result;
+}

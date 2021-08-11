@@ -91,6 +91,7 @@ QStringList TextToLines(const QString& text);
 void TextToLines(const QString& text, LineProcessFunc lineFunc);
 
 QStringList ReadFileToLines(const QString& fileName, QTextCodec* codec);
+QStringList ReadFileToLines(const QString& fileName);
 void ReadFileToLines(const QString& fileName, QTextCodec* codec, LineProcessFunc lineFunc);
 
 void decodeKey(int combinedKey, int& key, Qt::KeyboardModifiers& modifiers);

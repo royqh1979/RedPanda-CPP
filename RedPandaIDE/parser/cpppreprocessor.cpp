@@ -1,6 +1,8 @@
 #include "cpppreprocessor.h"
 #include "../utils.h"
 
+#include <QTextCodec>
+
 CppPreprocessor::CppPreprocessor(QObject *parent) : QObject(parent)
 {
 }
@@ -266,6 +268,110 @@ PParsedFile CppPreprocessor::getInclude(int index)
     return mIncludes[index];
 }
 
+void CppPreprocessor::openInclude(const QString &fileName, QTextStream stream)
+{
+    if (mIncludes.size()>0) {
+        PParsedFile topFile = mIncludes.front();
+        if (topFile->fileIncludes->includeFiles.contains(fileName)) {
+            return; //already included
+        }
+        for (PParsedFile parsedFile:mIncludes) {
+            parsedFile->fileIncludes->includeFiles.insert(fileName,false);
+        }
+    }
+    if (mIncludes.size()>0) {
+        // Backup old position if we're entering a new file
+        PParsedFile innerMostFile = mIncludes.back();
+        innerMostFile->index = mIndex;
+        innerMostFile->branches = mBranchResults.count();
+
+        innerMostFile->fileIncludes->includeFiles.insert(fileName,true);
+    }
+
+//    // Add the new file to the includes of the current file
+//    // Only add items to the include list of the given file if the file hasn't been scanned yet
+//    // The above is fixed by checking for duplicates.
+//    // The proper way would be to do backtracking of files we have FINISHED scanned.
+//    // These are not the same files as the ones in fScannedFiles. We have STARTED scanning these.
+//    {
+//    if Assigned(fCurrentIncludes) then
+//      with fCurrentIncludes^ do
+//        if not ContainsText(IncludeFiles, FileName) then
+//          IncludeFiles := IncludeFiles + AnsiQuotedStr(FileName, '"') + ',';
+//    }
+
+    // Create and add new buffer/position
+    PParsedFile parsedFile = std::make_shared<ParsedFile>();
+    parsedFile->index = 0;
+    parsedFile->fileName = fileName;
+    parsedFile->branches = 0;
+    // parsedFile->buffer; it's auto initialized
+
+
+    // Keep track of files we include here
+    // Only create new items for files we have NOT scanned yet
+    mCurrentIncludes = getFileIncludesEntry(fileName);
+    if (!mCurrentIncludes) {
+        // do NOT create a new item for a file that's already in the list
+        mCurrentIncludes = std::make_shared<FileIncludes>();
+        mCurrentIncludes->baseFile = fileName;
+        //mCurrentIncludes->includeFiles;
+        //mCurrentIncludes->usings;
+        //mCurrentIncludes->statements;
+        //mCurrentIncludes->declaredStatements;
+        //mCurrentIncludes->scopes;
+        //mCurrentIncludes->dependedFiles;
+        //mCurrentIncludes->dependingFiles;
+        mIncludesList.insert(fileName,mCurrentIncludes);
+    }
+
+    parsedFile->fileIncludes = mCurrentIncludes;
+
+    // Don't parse stuff we have already parsed
+    if ((stream.device()!=nullptr) || !mScannedFiles.contains(fileName)) {
+        // Parse ONCE
+        //if not Assigned(Stream) then
+        mScannedFiles.insert(fileName);
+
+        // Only load up the file if we are allowed to parse it
+        bool isSystemFile = isSystemHeaderFile(fileName, mIncludePaths);
+        if ((mParseSystem && isSystemFile) || (mParseLocal && !isSystemFile)) {
+            if (stream.device()!=nullptr) {
+                stream.seek(0);            // start scanning from here
+                parsedFile->buffer  = ReadStreamToLines(&stream);
+            } else {
+                parsedFile->buffer = ReadFileToLines(fileName);
+            }
+        }
+    } else {
+        //add defines of already parsed including headers;
+        addDefinesInFile(fileName);
+        PFileIncludes fileIncludes = getFileIncludesEntry(fileName);
+        for (PParsedFile file:mIncludes) {
+            file->fileIncludes->includeFiles.insert(fileIncludes->includeFiles);
+        }
+    }
+    mIncludes.append(parsedFile);
+
+    // Process it
+    mIndex = parsedFile->index;
+    mFileName = parsedFile->fileName;
+    mBuffer = parsedFile->buffer;
+
+    // Trim all lines
+    for (int i=0;i<mBuffer.count();i++) {
+        mBuffer[i] = mBuffer[i].trimmed();
+    }
+
+    // Update result file
+    QString includeLine = "#include " + fileName + ":1";
+    if (mIncludes.count()>1) { // include from within a file
+      mResult[mPreProcIndex] = includeLine;
+    } else {
+      mResult.append(includeLine);
+    }
+}
+
 
 void CppPreprocessor::closeInclude()
 {
@@ -303,6 +409,12 @@ bool CppPreprocessor::getCurrentBranch()
         return mBranchResults.last();
     else
         return true;
+}
+
+void CppPreprocessor::removeCurrentBranch()
+{
+    if (mBranchResults.size()>0)
+        mBranchResults.pop_back();
 }
 
 QString CppPreprocessor::getResult()
@@ -345,6 +457,23 @@ void CppPreprocessor::addDefinesInFile(const QString &fileName)
         for (PDefine define: defineList->values()) {
             mDefines.insert(define->name,define);
         }
+    }
+}
+
+void CppPreprocessor::preprocessBuffer()
+{
+    while (mIncludes.count() > 0) {
+        QString s;
+        do {
+            s = getNextPreprocessor();
+            if (s.startsWith('#')) {
+                simplify(s);
+                if (!s.isEmpty()) {
+                    handlePreprocessor(s);
+                }
+            }
+        } while (!s.isEmpty());
+        closeInclude();
     }
 }
 
