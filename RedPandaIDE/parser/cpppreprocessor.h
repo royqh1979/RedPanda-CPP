@@ -70,7 +70,7 @@ private:
     QString removeSuffixes(const QString& input);
     // current file stuff
     PParsedFile getInclude(int index);
-    void openInclude(const QString& fileName, QTextStream stream = QTextStream());
+    void openInclude(const QString& fileName, QStringList bufferedText=QStringList());
     void closeInclude();
 
     // branch stuff

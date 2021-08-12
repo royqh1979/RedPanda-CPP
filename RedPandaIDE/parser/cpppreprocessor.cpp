@@ -268,7 +268,7 @@ PParsedFile CppPreprocessor::getInclude(int index)
     return mIncludes[index];
 }
 
-void CppPreprocessor::openInclude(const QString &fileName, QTextStream stream)
+void CppPreprocessor::openInclude(const QString &fileName, QStringList bufferedText)
 {
     if (mIncludes.size()>0) {
         PParsedFile topFile = mIncludes.front();
@@ -328,7 +328,7 @@ void CppPreprocessor::openInclude(const QString &fileName, QTextStream stream)
     parsedFile->fileIncludes = mCurrentIncludes;
 
     // Don't parse stuff we have already parsed
-    if ((stream.device()!=nullptr) || !mScannedFiles.contains(fileName)) {
+    if ((!bufferedText.isEmpty()) || !mScannedFiles.contains(fileName)) {
         // Parse ONCE
         //if not Assigned(Stream) then
         mScannedFiles.insert(fileName);
@@ -336,9 +336,8 @@ void CppPreprocessor::openInclude(const QString &fileName, QTextStream stream)
         // Only load up the file if we are allowed to parse it
         bool isSystemFile = isSystemHeaderFile(fileName, mIncludePaths);
         if ((mParseSystem && isSystemFile) || (mParseLocal && !isSystemFile)) {
-            if (stream.device()!=nullptr) {
-                stream.seek(0);            // start scanning from here
-                parsedFile->buffer  = ReadStreamToLines(&stream);
+            if (!bufferedText.isEmpty()) {
+                parsedFile->buffer  = bufferedText;
             } else {
                 parsedFile->buffer = ReadFileToLines(fileName);
             }
@@ -417,14 +416,9 @@ void CppPreprocessor::removeCurrentBranch()
         mBranchResults.pop_back();
 }
 
-QString CppPreprocessor::getResult()
+QStringList CppPreprocessor::getResult()
 {
-    QString s;
-    for (QString line:mResult) {
-        s.append(line);
-        s.append(lineBreak());
-    }
-    return s;
+    return mResult;
 }
 
 PFileIncludes CppPreprocessor::getFileIncludesEntry(const QString &fileName)
