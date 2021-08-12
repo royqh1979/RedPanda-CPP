@@ -19,6 +19,18 @@ using PParsedFile = std::shared_ptr<ParsedFile>;
 class CppPreprocessor : public QObject
 {
     Q_OBJECT
+
+    enum class ContentType {
+        AnsiCComment,
+        CppComment,
+        String,
+        Character,
+        EscapeSequence,
+        RawStringPrefix,
+        RawString,
+        Other
+    };
+
 public:
 
     explicit CppPreprocessor(QObject *parent = nullptr);
@@ -70,7 +82,7 @@ private:
     PFileIncludes getFileIncludesEntry(const QString& FileName);
     void addDefinesInFile(const QString& fileName);
 
-    void preprocessBuffer();
+    QStringList removeComments(const QStringList& text);
     /*
      * '_','a'..'z','A'..'Z','0'..'9'
      */

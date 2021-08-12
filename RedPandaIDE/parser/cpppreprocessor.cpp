@@ -356,12 +356,12 @@ void CppPreprocessor::openInclude(const QString &fileName, QTextStream stream)
     // Process it
     mIndex = parsedFile->index;
     mFileName = parsedFile->fileName;
+    parsedFile->buffer = removeComments(parsedFile->buffer);
     mBuffer = parsedFile->buffer;
 
-    // Trim all lines
-    for (int i=0;i<mBuffer.count();i++) {
-        mBuffer[i] = mBuffer[i].trimmed();
-    }
+//    for (int i=0;i<mBuffer.count();i++) {
+//        mBuffer[i] = mBuffer[i].trimmed();
+//    }
 
     // Update result file
     QString includeLine = "#include " + fileName + ":1";
@@ -458,6 +458,113 @@ void CppPreprocessor::addDefinesInFile(const QString &fileName)
             mDefines.insert(define->name,define);
         }
     }
+}
+
+QStringList CppPreprocessor::removeComments(const QStringList &text)
+{
+    QStringList result;
+    ContentType currentType = ContentType::Other;
+    QString delimiter;
+
+    for (QString line:text) {
+        QChar lastCh;
+        QString s;
+        int pos = 0;
+        bool stopProcess=false;
+        while (pos<line.length()) {
+            QChar ch =line[pos];
+            if (currentType == ContentType::AnsiCComment) {
+                if (ch=='*' && (pos+1<line.length()) && line[pos+1]=='/') {
+                    pos+=2;
+                    currentType = ContentType::Other;
+                } else {
+                    pos+=1;
+                }
+                continue;
+            }
+            switch (ch.unicode()) {
+            case '"':
+                switch (currentType) {
+                case ContentType::String:
+                    currentType=ContentType::Other;
+                    break;
+                case ContentType::RawString:
+                    if (line.mid(0,pos).endsWith(')'+delimiter))
+                        currentType = ContentType::Other;
+                case ContentType::Other:
+                    currentType=ContentType::String;
+                    break;
+                case ContentType::RawStringPrefix:
+                    delimiter+=ch;
+                    break;
+                }
+                s+=ch;
+                break;
+            case '\'':
+                switch (currentType) {
+                case ContentType::Character:
+                    currentType=ContentType::Other;
+                case ContentType::Other:
+                    currentType=ContentType::Character;
+                case ContentType::RawStringPrefix:
+                    delimiter+=ch;
+                    break;
+                }
+                s+=ch;
+                break;
+            case 'R':
+                if (currentType == ContentType::Other && pos+1<line.length() && line[pos+1]=='"') {
+                    s+=ch;
+                    pos++;
+                    ch = line[pos];
+                    currentType=ContentType::RawStringPrefix;
+                    delimiter = "";
+                }
+                if (currentType == ContentType::RawStringPrefix ) {
+                    delimiter += ch;
+                }
+                s+=ch;
+                break;
+            case '(':
+                switch(currentType) {
+                case ContentType::RawStringPrefix:
+                    currentType = ContentType::RawString;
+                    break;
+                }
+                s+=ch;
+                break;
+            case '/':
+                switch(currentType) {
+                case ContentType::Other:
+                    if (pos+1<line.length() && line[pos+1]=='/') {
+                        // line comment , skip all remainings of the current line
+                        stopProcess = true;
+                    } else if (pos+1<line.length() && line[pos+1]=='*') {
+                        /* ansi c comment */
+                        pos++;
+                        currentType = ContentType::AnsiCComment;
+                    }
+                    break;
+                }
+            case '\\':
+                switch (currentType) {
+                case ContentType::String:
+                case ContentType::Character:
+                    pos++;
+                    s+=ch;
+                    if (pos<line.length()) {
+                        ch = line[pos];
+                        s+=ch;
+                    }
+                }
+            }
+            if (stopProcess)
+                break;
+            pos++;
+        }
+        result.append(s.trimmed());
+    }
+    return result;
 }
 
 void CppPreprocessor::preprocessBuffer()
