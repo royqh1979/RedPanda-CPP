@@ -10,7 +10,6 @@ struct Define {
     QString args;
     QString value;
     QString filename;
-    bool isMultiLine; // if true the expanded macro will span multiline
     bool hardCoded;// if true, don't free memory (points to hard defines)
     QStringList argList; // args list to format values
     QString formatValue; // format template to format values

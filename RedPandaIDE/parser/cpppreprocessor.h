@@ -67,7 +67,8 @@ private:
     QString expandMacros(const QString& line, int depth);
     void expandMacro(const QString& line, QString& newLine, QString& word, int& i, int depth);
     QString removeGCCAttributes(const QString& line);
-    QString removeSuffixes(const QString& input);
+    void removeGCCAttribute(const QString&line, QString& newLine, int &i, const QString& word);
+
     // current file stuff
     PParsedFile getInclude(int index);
     void openInclude(const QString& fileName, QStringList bufferedText=QStringList());
@@ -77,10 +78,13 @@ private:
     bool getCurrentBranch();
     void setCurrentBranch(bool value);
     void removeCurrentBranch();
-    QString getResult();
+    QStringList getResult();
     // include stuff
     PFileIncludes getFileIncludesEntry(const QString& FileName);
     void addDefinesInFile(const QString& fileName);
+
+    void parseArgs(PDefine define);
+    QStringList tokenizeValue(const QString& value);
 
     QStringList removeComments(const QStringList& text);
     /*
@@ -159,7 +163,7 @@ private:
     QStringList mProjectIncludePaths;
     bool mParseSystem;
     bool mParseLocal;
-    QSet<QString> mScannedFiles;
+    std::shared_ptr<QSet<QString>> mScannedFiles;
     QSet<QString> mProcessed; // dictionary to save filename already processed
 };
 

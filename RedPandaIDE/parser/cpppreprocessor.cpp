@@ -7,6 +7,64 @@ CppPreprocessor::CppPreprocessor(QObject *parent) : QObject(parent)
 {
 }
 
+void CppPreprocessor::clear()
+{
+    mIncludes.clear();
+    mDefines.clear();
+    mHardDefines.clear();
+    mProcessed.clear();
+    mFileDefines.clear();
+    mBranchResults.clear();
+    mResult.clear();
+    mCurrentIncludes.reset();
+    mScannedFiles.reset();
+}
+
+void CppPreprocessor::addDefineByParts(const QString &name, const QString &args, const QString &value, bool hardCoded)
+{
+    // Check for duplicates
+    PDefine define = std::make_shared<Define>();
+    define->name = name;
+    define->args = args;
+    define->value = value;
+    define->filename = mFileName;
+    //define->argList;
+    define->formatValue = value;
+    define->hardCoded = hardCoded;
+    if (!args.isEmpty())
+        parseArgs(define);
+    if (hardCoded)
+        mHardDefines.insert(name,define);
+    else {
+        PDefineMap defineMap = mFileDefines.value(mFileName,PDefineMap());
+        if (!defineMap) {
+            defineMap = std::make_shared<DefineMap>();
+            mFileDefines.insert(mFileName,defineMap);
+        }
+        defineMap->insert(define->name,define);
+        mDefines.insert(name,define);
+    }
+}
+
+void CppPreprocessor::getDefineParts(const QString &Input, QString &name, QString &args, QString &value)
+{
+
+}
+
+void CppPreprocessor::addDefineByLine(const QString &line, bool hardCoded)
+{
+    // Remove define
+    constexpr int DEFINE_LEN=6;
+    QString s = line.mid(DEFINE_LEN,0).trimmed();
+
+    QString name, args, value;
+    // Get parts from generalized function
+    getDefineParts(s, name, args, value);
+
+    // Add to the list
+    addDefineByParts(name, args, value, hardCoded);
+}
+
 QString CppPreprocessor::getNextPreprocessor()
 {
 
@@ -20,15 +78,25 @@ QString CppPreprocessor::getNextPreprocessor()
     // Calculate index to insert defines in in result file
     mPreProcIndex = (mResult.count() - 1) + 1; // offset by one for #include rootfile
 
-    // Assemble whole line, including newlines
+    // Assemble whole line, convert newlines to space
     QString result;
     for (int i=preProcFrom;i<=preProcTo;i++) {
-        result+=mBuffer[i]+'\n';
+        if (mBuffer[i].endsWith('/')) {
+            result+=mBuffer[i].mid(0,mBuffer[i].size()-1)+' ';
+        } else {
+            result+=mBuffer[i]+' ';
+        }
         mResult.append("");// defines resolve into empty files, except #define and #include
     }
     // Step over
     mIndex++;
     return result;
+}
+
+void CppPreprocessor::simplify(QString &output)
+{
+    // Remove #
+    output = output.mid(1).trimmed();
 }
 
 void CppPreprocessor::handleBranch(const QString &line)
@@ -222,14 +290,14 @@ void CppPreprocessor::expandMacro(const QString &line, QString &newLine, QString
     } else {
         int index;
         PDefine define = getDefine(word,index);
-        if (define && define->args=="" && (!define->isMultiLine)) {
+        if (define && define->args=="" ) {
             //newLine:=newLine+RemoveGCCAttributes(define^.Value);
             if (define->value != word )
               newLine += expandMacros(define->value,depth+1);
             else
               newLine += word;
 
-        } else if (define && (!define->isMultiLine) && (define->args!="")) {
+        } else if (define && (define->args!="")) {
             while ((i<lenLine) && (line[i] == ' ' || line[i]=='\t'))
                 i++;
             int argStart=-1;
@@ -260,6 +328,57 @@ void CppPreprocessor::expandMacro(const QString &line, QString &newLine, QString
         } else {
             newLine += word;
         }
+    }
+}
+
+QString CppPreprocessor::removeGCCAttributes(const QString &line)
+{
+    QString newLine = "";
+    QString word = "";
+    int lenLine = line.length();
+    int i=1;
+    while(i< lenLine) {
+        if (isWordChar(line[i])) {
+            word += line[i];
+        } else {
+            if (!word.isEmpty()) {
+                removeGCCAttribute(line,newLine,i,word);
+            }
+            word = "";
+            if (i<=lenLine) {
+                newLine = newLine+line[i];
+            }
+        }
+        i++;
+    }
+    if (!word.isEmpty())
+        removeGCCAttribute(line,newLine,i,word);
+    return newLine;
+}
+
+void CppPreprocessor::removeGCCAttribute(const QString &line, QString &newLine, int &i, const QString &word)
+{
+    int lenLine = line.length();
+    int level = 0;
+    if (word=="__attribute__") {
+        while ( (i<lenLine) && isSpaceChar(line[i]))
+            i++;
+        if ((i<lenLine) && (line[i]=='(')) {
+            level=0;
+            while (i<lenLine) {
+                switch(line[i].unicode()) {
+                case '(': level++;
+                    break;
+                case ')': level--;
+                    break;
+                }
+                i++;
+                if (level==0)
+                    break;
+            }
+        }
+    } else {
+        newLine += word;
     }
 }
 
@@ -328,10 +447,10 @@ void CppPreprocessor::openInclude(const QString &fileName, QStringList bufferedT
     parsedFile->fileIncludes = mCurrentIncludes;
 
     // Don't parse stuff we have already parsed
-    if ((!bufferedText.isEmpty()) || !mScannedFiles.contains(fileName)) {
+    if ((!bufferedText.isEmpty()) || !mScannedFiles->contains(fileName)) {
         // Parse ONCE
         //if not Assigned(Stream) then
-        mScannedFiles.insert(fileName);
+        mScannedFiles->insert(fileName);
 
         // Only load up the file if we are allowed to parse it
         bool isSystemFile = isSystemHeaderFile(fileName, mIncludePaths);
@@ -433,7 +552,7 @@ void CppPreprocessor::addDefinesInFile(const QString &fileName)
     mProcessed.insert(fileName);
 
     //todo: why test this?
-    if (!mScannedFiles.contains(fileName))
+    if (!mScannedFiles->contains(fileName))
         return;
 
     //May be redefined, so order is important
@@ -454,6 +573,78 @@ void CppPreprocessor::addDefinesInFile(const QString &fileName)
     }
 }
 
+void CppPreprocessor::parseArgs(PDefine define)
+{
+    QString args=define->args.mid(1,define->args.length()-2).trimmed(); // remove '(' ')'
+
+    if(args=="")
+        return ;
+    define->argList = args.split(',');
+    for (int i;i<define->argList.size();i++) {
+        define->argList[i]=define->argList[i].trimmed();
+    }
+    QStringList tokens = tokenizeValue(define->value);
+
+    QString formatStr = "";
+    QString lastToken = "##";
+    for (QString token: tokens) {
+        if (lastToken != "##" && token!="##") {
+            formatStr += ' ';
+        }
+        int index = define->argList.indexOf(token);
+        if (index>=0) {
+            if (lastToken == "#") {
+                formatStr+= "\"%"+QString("%1").arg(index+1)+"\"";
+            } else {
+                formatStr+= "%"+QString("%1").arg(index+1);
+            }
+        } else if (token == "%"){
+            formatStr+="%%";
+        }
+        lastToken = token;
+    }
+    define->formatValue = formatStr;
+}
+
+QStringList CppPreprocessor::tokenizeValue(const QString &value)
+{
+    int i=0;
+    QString  token;
+    QStringList tokens;
+    while (i<value.length()) {
+        QChar ch = value[i];
+        if (isSpaceChar(ch)) {
+            if(!token.isEmpty())
+                tokens.append(token);
+            token = "";
+            i++;
+        } else if (ch=='#') {
+            if(!token.isEmpty())
+                tokens.append(token);
+            token = "";
+            if ((i+1<value.length()) && (value[i+1]=='#')) {
+                i+=2;
+                tokens.append("##");
+            } else {
+                i++;
+                tokens.append("#");
+            }
+        } else if (isWordChar(ch)) {
+            token+=ch;
+            i++;
+        } else {
+            if(!token.isEmpty())
+                tokens.append(token);
+            token = "";
+            tokens.append(ch);
+            i++;
+        }
+    }
+    if(!token.isEmpty())
+        tokens.append(token);
+    return tokens;
+}
+
 QStringList CppPreprocessor::removeComments(const QStringList &text)
 {
     QStringList result;
@@ -461,7 +652,6 @@ QStringList CppPreprocessor::removeComments(const QStringList &text)
     QString delimiter;
 
     for (QString line:text) {
-        QChar lastCh;
         QString s;
         int pos = 0;
         bool stopProcess=false;
@@ -575,6 +765,25 @@ void CppPreprocessor::preprocessBuffer()
             }
         } while (!s.isEmpty());
         closeInclude();
+    }
+}
+
+void CppPreprocessor::skipToEndOfPreprocessor()
+{
+    // Skip until last char of line is NOT \ anymore
+    while ((mIndex < mBuffer.count()) && mBuffer[mIndex].endsWith('\\'))
+        mIndex++;
+}
+
+void CppPreprocessor::skipToPreprocessor()
+{
+// Increment until a line begins with a #
+    while ((mIndex < mBuffer.count()) && !mBuffer[mIndex].startsWith('#')) {
+        if (getCurrentBranch()) // if not skipping, expand current macros
+            mResult.append(expandMacros(mBuffer[mIndex],1));
+        else // If skipping due to a failed branch, clear line
+            mResult.append("");
+        mIndex++;
     }
 }
 
@@ -795,8 +1004,10 @@ QString CppPreprocessor::expandFunction(PDefine define, QString args)
 
     QStringList argValues = args.split(",");
     for (QString argValue:argValues) {
-        result=result.arg(argValue);
+        result=result.arg(argValue.trimmed());
     }
+    result.replace("%%","%");
+
     return result;
 }
 
