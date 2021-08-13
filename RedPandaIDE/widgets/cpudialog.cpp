@@ -4,24 +4,31 @@
 #include "../mainwindow.h"
 #include "../debugger.h"
 #include "../settings.h"
+#include "../colorscheme.h"
 
 CPUDialog::CPUDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::CPUDialog)
 {
+    setWindowFlags(windowFlags() | Qt::WindowMinimizeButtonHint | Qt::WindowMaximizeButtonHint);
     ui->setupUi(this);
-    ui->txtCode->setHighlighter(highlighterManager.getAsmHighlighter());
+    ui->txtCode->setHighlighter(highlighterManager.getCppHighlighter());
     highlighterManager.applyColorScheme(ui->txtCode->highlighter(),
                                         pSettings->editor().colorScheme());
+    PColorSchemeItem item = pColorManager->getItem(pSettings->editor().colorScheme(),COLOR_SCHEME_ACTIVE_LINE);
+    if (item) {
+        ui->txtCode->setActiveLineColor(item->background());
+    }
     ui->lstRegister->setModel(pMainWindow->debugger()->registerModel());
 
-    ui->rdIntel->setChecked(true);
+    ui->rdIntel->setChecked(pSettings->debugger().useIntelStyle());
+    ui->chkBlendMode->setChecked(pSettings->debugger().blendMode());
 //    RadioATT.Checked := devData.UseATTSyntax;
 //    RadioIntel.Checked := not devData.UseATTSyntax;
 
 //    fRegisters := TList.Create;
 //    fAssembler := TStringList.Create;
-    updateInfo();
+    //updateInfo();
 }
 
 CPUDialog::~CPUDialog()
@@ -35,7 +42,10 @@ void CPUDialog::updateInfo()
         // Load the registers..
         sendSyntaxCommand();
         pMainWindow->debugger()->sendCommand("info", "registers");
-        pMainWindow->debugger()->sendCommand("disas", "");
+        if (ui->chkBlendMode->isChecked())
+            pMainWindow->debugger()->sendCommand("disas", "/s");
+        else
+            pMainWindow->debugger()->sendCommand("disas", "");
     }
 }
 
@@ -45,6 +55,7 @@ void CPUDialog::setDisassembly(const QStringList &lines)
         ui->txtFunctionName->setText(lines[0]);
     }
     int activeLine = -1;
+    ui->txtCode->lines()->clear();
     for (int i=1;i<lines.size();i++) {
         QString line = lines[i];
         if (line.startsWith("=>")) {
@@ -83,5 +94,12 @@ void CPUDialog::on_rdATT_toggled(bool)
 {
     sendSyntaxCommand();
     pSettings->debugger().setUseIntelStyle(ui->rdIntel->isChecked());
+    pSettings->debugger().save();
+}
+
+void CPUDialog::on_chkBlendMode_stateChanged(int arg1)
+{
+    updateInfo();
+    pSettings->debugger().setBlendMode(ui->chkBlendMode->isCheckable());
     pSettings->debugger().save();
 }

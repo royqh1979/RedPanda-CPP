@@ -12,7 +12,7 @@
 #include "common.h"
 #include "colorscheme.h"
 #include "iconsmanager.h"
-#include "parser/utils.h"
+#include "parser/parserutils.h"
 
 Settings* createAppSettings(const QString& filepath = QString()) {
     QString filename;
@@ -44,7 +44,7 @@ Settings* createAppSettings(const QString& filepath = QString()) {
 
         return nullptr;
     }
-     new Settings(filename);
+    return new Settings(filename);
 }
 
 int main(int argc, char *argv[])

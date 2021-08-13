@@ -3,7 +3,7 @@
 
 #include <QObject>
 #include <QTextStream>
-#include "utils.h"
+#include "parserutils.h"
 
 #define MAX_DEFINE_EXPAND_DEPTH 20
 
@@ -37,20 +37,22 @@ public:
     void clear();
     void addDefineByParts(const QString& name, const QString& args,
                           const QString& value, bool hardCoded);
-    void getDefineParts(const QString& Input, QString &name, QString &args, QString &value);
+    void getDefineParts(const QString& input, QString &name, QString &args, QString &value);
     void addDefineByLine(const QString& line, bool hardCoded);
-    PDefine getDefine(const QString& name, int &index);
-    PDefine getHardDefine(const QString& name, int &index);
+    PDefine getDefine(const QString& name);
+    PDefine getHardDefine(const QString& name);
     void reset(); //reset but don't clear generated defines
     void resetDefines();
     void setScanOptions(bool parseSystem, bool parseLocal);
-    void setIncludePaths(QStringList &list);
-    void setProjectIncludePaths(QStringList& list);
-    void setScannedFileList(QStringList &list);
-    void setIncludesList(QString& list);
-    void preprocessStream(const QString& fileName, QTextStream stream = QTextStream());
-    void preprocessFile(const QString& fileName);
+    void setIncludePaths(QStringList list);
+    void setProjectIncludePaths(QStringList list);
+    void setScannedFileList(std::shared_ptr<QSet<QString>> list);
+    void setIncludesList(std::shared_ptr<QHash<QString,PFileIncludes>> list);
+    void preprocess(const QString& fileName, QStringList buffer = QStringList());
     void invalidDefinesInFile(const QString& fileName);
+
+    void dumpDefinesTo(const QString& fileName);
+    void dumpIncludesListTo(const QString& fileName);
 signals:
 
 private:
@@ -153,7 +155,7 @@ private:
     QStringList mResult;
     PFileIncludes mCurrentIncludes;
     int mPreProcIndex;
-    QHash<QString,PFileIncludes> mIncludesList;
+    std::shared_ptr<QHash<QString,PFileIncludes>> mIncludesList;
     DefineMap mHardDefines; // set by "cpp -dM -E -xc NUL"
     DefineMap mDefines; // working set, editable
     QHash<QString, PDefineMap> mFileDefines; //dictionary to save defines for each headerfile;

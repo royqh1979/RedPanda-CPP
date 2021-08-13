@@ -1,4 +1,4 @@
-#include "utils.h"
+#include "parserutils.h"
 
 #include <QDir>
 #include <QFile>
@@ -296,4 +296,34 @@ QString getSystemHeaderFileName(const QString &fileName, const QStringList& incl
     }
     //not found
     return "";
+}
+
+bool isSystemHeaderFile(const QString &fileName, const QStringList &includePaths)
+{
+    if (includePaths.isEmpty())
+        return false;
+    bool isFullName = false;
+#ifdef Q_OS_WIN
+    isFullName = fileName.length()>2 && fileName[1]==':';
+#else
+    isFullName = fileName.startsWith("\"");
+#endif
+    if (isFullName) {
+        // If it's a full file name, check if its directory is an include path
+        QFileInfo info(fileName);
+        if (info.exists()) { // full file name
+            QDir dir = info.dir();
+            QString absPath = dir.absolutePath();
+            if (includePaths.indexOf(absPath)>=0)
+                return true;
+        }
+    } else {
+        //check if it's in the include dir
+        for (QString includePath: includePaths) {
+            QDir dir(includePath);
+            if (dir.exists(fileName))
+                return true;
+        }
+    }
+    return false;
 }

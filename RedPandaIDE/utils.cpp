@@ -489,3 +489,14 @@ QStringList ReadFileToLines(const QString &fileName)
     }
     return result;
 }
+
+void StringsToFile(const QStringList &list, const QString &fileName)
+{
+    QFile file(fileName);
+    if (file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        QTextStream stream(&file);
+        for (QString s:list) {
+            stream<<s<<Qt::endl;
+        }
+    }
+}

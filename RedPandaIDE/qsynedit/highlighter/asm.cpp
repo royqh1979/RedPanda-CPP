@@ -125,7 +125,7 @@ void SynEditASMHighlighter::NumberProc()
     mTokenID = TokenKind::Number;
     while (true) {
         QChar ch = mLine[mRun];
-        if (!((ch>=0 && ch<=9) || (ch=='.') || (ch >= 'a' && ch<='f')
+        if (!((ch>='0' && ch<='9') || (ch=='.') || (ch >= 'a' && ch<='f')
               || (ch=='h') || (ch >= 'A' && ch<='F') || (ch == 'H')))
             break;
         mRun++;

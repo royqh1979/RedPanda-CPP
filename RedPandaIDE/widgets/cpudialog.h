@@ -28,6 +28,7 @@ protected:
 private slots:
     void on_rdIntel_toggled(bool checked);
     void on_rdATT_toggled(bool checked);
+    void on_chkBlendMode_stateChanged(int arg1);
 };
 
 #endif // CPUDIALOG_H

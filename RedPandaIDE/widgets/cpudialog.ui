@@ -143,6 +143,13 @@
             </property>
            </spacer>
           </item>
+          <item>
+           <widget class="QCheckBox" name="chkBlendMode">
+            <property name="text">
+             <string>Blend Mode</string>
+            </property>
+           </widget>
+          </item>
          </layout>
         </widget>
        </item>

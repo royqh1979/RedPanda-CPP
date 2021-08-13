@@ -429,6 +429,9 @@ public:
         QString fontName() const;
         void setFontName(const QString &fontName);
 
+        bool blendMode() const;
+        void setBlendMode(bool blendMode);
+
     private:
         bool mShowCommandLog;
         bool mShowAnnotations;
@@ -436,6 +439,7 @@ public:
         bool mOnlyShowMono;
         int mFontSize;
         bool mUseIntelStyle;
+        bool mBlendMode;
 
         // _Base interface
     protected:

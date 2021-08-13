@@ -3,7 +3,7 @@
 
 #include <QObject>
 #include <QTextStream>
-#include "utils.h"
+#include "parserutils.h"
 
 class StatementModel : public QObject
 {

@@ -774,8 +774,9 @@ void DebugReader::handleDisassembly()
     s = getNextLine();
 
     // Add lines of disassembly
-    while (!s.isEmpty() && (s != "End of assembler dump.")) {
-        mDisassembly.append(s);
+    while (s != "End of assembler dump.") {
+        if(!s.isEmpty())
+            mDisassembly.append(s);
         s = getNextLine();
     }
 

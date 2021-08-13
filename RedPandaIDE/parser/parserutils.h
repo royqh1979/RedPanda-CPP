@@ -168,4 +168,5 @@ QString getHeaderFileName(const QString& relativeTo, const QString& line,
 QString getLocalHeaderFileName(const QString& relativeTo, const QString& fileName);
 
 QString getSystemHeaderFileName(const QString& fileName, const QStringList& includePaths);
+bool isSystemHeaderFile(const QString& fileName, const QStringList& includePaths);
 #endif // PARSER_UTILS_H

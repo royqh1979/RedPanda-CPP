@@ -27,6 +27,7 @@ void DebugGeneralWidget::doLoad()
     } else {
         ui->rbATT->setChecked(true);
     }
+    ui->chkBlendMode->setChecked(pSettings->debugger().blendMode());
 }
 
 void DebugGeneralWidget::doSave()
@@ -37,6 +38,7 @@ void DebugGeneralWidget::doSave()
     pSettings->debugger().setShowCommandLog(ui->chkShowLog->isChecked());
     pSettings->debugger().setShowAnnotations(ui->chkShowFullAnnotation->isChecked());
     pSettings->debugger().setUseIntelStyle(ui->rbIntel->isChecked());
+    pSettings->debugger().setBlendMode(ui->chkBlendMode->isChecked());
 
     pSettings->debugger().save();
     pMainWindow->updateDebuggerSettings();

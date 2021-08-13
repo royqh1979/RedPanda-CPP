@@ -156,24 +156,92 @@
       <property name="bottomMargin">
        <number>11</number>
       </property>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBox_3">
+     <property name="title">
+      <string>CPU Window</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_4">
       <item>
-       <widget class="QRadioButton" name="rbIntel">
-        <property name="text">
-         <string>Intel</string>
-        </property>
-        <attribute name="buttonGroup">
-         <string notr="true">grpCPUDisassembly</string>
-        </attribute>
+       <widget class="QWidget" name="widget_3" native="true">
+        <layout class="QHBoxLayout" name="horizontalLayout_3">
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="QLabel" name="label_3">
+           <property name="text">
+            <string>Disassembly Coding Style:</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QWidget" name="widget_4" native="true">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_5">
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QRadioButton" name="rbIntel">
+              <property name="text">
+               <string>Intel</string>
+              </property>
+              <attribute name="buttonGroup">
+               <string notr="true">grpCPUDisassembly</string>
+              </attribute>
+             </widget>
+            </item>
+            <item>
+             <widget class="QRadioButton" name="rbATT">
+              <property name="text">
+               <string>AT&amp;&amp;T</string>
+              </property>
+              <attribute name="buttonGroup">
+               <string notr="true">grpCPUDisassembly</string>
+              </attribute>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+        </layout>
        </widget>
       </item>
       <item>
-       <widget class="QRadioButton" name="rbATT">
+       <widget class="QCheckBox" name="chkBlendMode">
         <property name="text">
-         <string>AT&amp;&amp;T</string>
+         <string>Show disassembly code in blend mode</string>
         </property>
-        <attribute name="buttonGroup">
-         <string notr="true">grpCPUDisassembly</string>
-        </attribute>
        </widget>
       </item>
      </layout>

@@ -2308,6 +2308,16 @@ void Settings::Debugger::setFontName(const QString &fontName)
     mFontName = fontName;
 }
 
+bool Settings::Debugger::blendMode() const
+{
+    return mBlendMode;
+}
+
+void Settings::Debugger::setBlendMode(bool blendMode)
+{
+    mBlendMode = blendMode;
+}
+
 bool Settings::Debugger::useIntelStyle() const
 {
     return mUseIntelStyle;
@@ -2345,7 +2355,8 @@ void Settings::Debugger::doSave()
     saveValue("font_name",mFontName);
     saveValue("only_show_mono",mOnlyShowMono);
     saveValue("font_size",mFontSize);
-    boolValue("use_intel_style",mUseIntelStyle);
+    saveValue("use_intel_style",mUseIntelStyle);
+    saveValue("blend_mode",mBlendMode);
 }
 
 void Settings::Debugger::doLoad()
@@ -2356,6 +2367,7 @@ void Settings::Debugger::doLoad()
     mOnlyShowMono = boolValue("only_show_mono",true);
     mFontSize = intValue("font_size",10);
     mUseIntelStyle = boolValue("use_intel_style",true);
+    mBlendMode = boolValue("blend_mode",true);
 }
 
 Settings::History::History(Settings *settings):_Base(settings, SETTING_HISTORY)
