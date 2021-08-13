@@ -17,6 +17,7 @@ SOURCES += \
     compiler/filecompiler.cpp \
     compiler/stdincompiler.cpp \
     parser/cpppreprocessor.cpp \
+    parser/cpptokenizer.cpp \
     parser/parserutils.cpp \
     parser/statementmodel.cpp \
     qsynedit/Search.cpp \
@@ -77,6 +78,7 @@ HEADERS += \
     compiler/filecompiler.h \
     compiler/stdincompiler.h \
     parser/cpppreprocessor.h \
+    parser/cpptokenizer.h \
     parser/parserutils.h \
     parser/statementmodel.h \
     qsynedit/Search.h \

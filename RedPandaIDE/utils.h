@@ -6,6 +6,7 @@
 #include <functional>
 #include <QString>
 #include <QRect>
+#include <QStringList>
 
 class QByteArray;
 class QString;
@@ -138,5 +139,4 @@ finally(F&& f) noexcept
     return final_action<typename std::remove_cv<typename std::remove_reference<F>::type>::type>(
         std::forward<F>(f));
 }
-
 #endif // UTILS_H
