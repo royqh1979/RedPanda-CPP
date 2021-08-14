@@ -16,6 +16,9 @@ public:
     using TokenList = QVector<PToken>;
     explicit cpptokenizer(QObject *parent = nullptr);
 
+    void reset();
+    void tokenize(const QStringList& buffer);
+    void dumpTokens(const QString& fileName);
 signals:
 private:
     void addToken(const QString& sText, int iLine);
@@ -70,9 +73,7 @@ private:
     QChar* mLineCount;
     int mCurrentLine;
     QString mLastToken;
-    int mEnd;
     TokenList mTokenList;
-    QString mFilename;
 };
 
 #endif // CPPTOKENIZER_H

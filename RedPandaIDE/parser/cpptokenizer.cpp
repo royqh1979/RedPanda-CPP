@@ -5,6 +5,36 @@ cpptokenizer::cpptokenizer(QObject *parent) : QObject(parent)
 
 }
 
+void cpptokenizer::tokenize(const QStringList &buffer)
+{
+    reset();
+    mBuffer = buffer;
+    mBufferStr.clear();
+    if (mBuffer.isEmpty())
+        return;
+    mBufferStr = mBuffer[0];
+    int i=1;
+    for (int i=1;i<mBuffer.size();i++) {
+        mBufferStr+='\n';
+        mBufferStr+=mBuffer[i];
+    }
+    mStart = mBufferStr.data();
+    mCurrent = mStart;
+    mLineCount = mStart;
+    QString s = "";
+    bool bSkipBlocks = false;
+    mCurrentLine = 1;
+    while (true) {
+        mLastToken = s;
+        s = getNextToken(true, true, bSkipBlocks);
+        simplify(s);
+        if (s.isEmpty())
+            break;
+        else
+            addToken(s,mCurrentLine);
+    }
+}
+
 void cpptokenizer::addToken(const QString &sText, int iLine)
 {
     PToken token = std::make_shared<Token>();
@@ -377,7 +407,7 @@ void cpptokenizer::skipDoubleQuotes()
 void cpptokenizer::skipPair(const QChar &cStart, const QChar cEnd, const QSet<QChar>& failChars)
 {
     mCurrent++;
-    while (*mCurrent != '\0') do {
+    while (*mCurrent != '\0') {
         if ((*mCurrent == '(') && !failChars.contains('(')) {
             skipPair('(', ')', failChars);
         } else if ((*mCurrent == '[') && !failChars.contains('[')) {
@@ -410,6 +440,92 @@ void cpptokenizer::skipPair(const QChar &cStart, const QChar cEnd, const QSet<QC
             mCurrent++;
         }
     }
+}
+
+void cpptokenizer::skipRawString()
+{
+    mCurrent++; //skip R
+    bool noEscape = false;
+    while(true) {
+        mCurrent++;
+        switch(mCurrent->unicode()) {
+        case '(':
+            noEscape = true;
+            break;
+        case ')':
+            noEscape = false;
+            break;
+        }
+        if (*mCurrent == '\0')
+            break;
+        if ((*mCurrent == '"') && !noEscape)
+            break;
+    }
+    if (*mCurrent!='\0')
+        mCurrent++;
+}
+
+void cpptokenizer::skipSingleQuote()
+{
+    mCurrent++;
+    while (!(*mCurrent=='\'' || *mCurrent == '\0')) {
+        if (*mCurrent == '\\')
+            mCurrent+=2; // skip escaped char
+        else
+            mCurrent++;
+    }
+    if (*mCurrent!='\0') {
+        mCurrent++;
+    }
+}
+
+void cpptokenizer::skipSplitLine()
+{
+    mCurrent++; // skip '\'
+    while ( isLineChar(*mCurrent)) // skip newline
+        mCurrent++;
+}
+
+void cpptokenizer::skipTemplateArgs()
+{
+    if (*mCurrent != '<')
+        return;
+    QChar* start = mCurrent;
+
+    QSet<QChar> failSet;
+    failSet.insert('{');
+    failSet.insert('}');
+    failSet.insert(';');
+    skipPair('<', '>', failSet);
+
+    // if we failed, return to where we came from
+    if (start!=mCurrent && *(mCurrent - 1) != '>')
+        mCurrent = start;
+}
+
+void cpptokenizer::skipToEOL()
+{
+    while (true) {
+        while (!isLineChar(*mCurrent) && (*mCurrent!='\0')) {
+            mCurrent++;
+        }
+        if (*mCurrent=='\0')
+            return;
+
+        bool splitLine = (*(mCurrent - 1) == '\\');
+
+        while (isLineChar(*mCurrent))
+            mCurrent++;
+
+        if (!splitLine || *mCurrent=='\0')
+            break;
+    }
+}
+
+void cpptokenizer::skipToNextToken()
+{
+    while (isSpaceChar(*mCurrent) || isLineChar(*mCurrent))
+        advance();
 }
 
 void cpptokenizer::advance()
