@@ -378,41 +378,38 @@ void cpptokenizer::skipPair(const QChar &cStart, const QChar cEnd, const QSet<QC
 {
     mCurrent++;
     while (*mCurrent != '\0') do {
-      if (pCurrent^ = '(') and not ('(' in FailChars) then begin
-        SkipPair('(', ')', FailChars);
-      end else if (pCurrent^ = '[') and not ('[' in FailChars) then begin
-        SkipPair('[', ']', FailChars);
-      end else if (pCurrent^ = '{') and not ('}' in FailChars) then begin
-        SkipPair('{', '}', FailChars);
-      end else if (pCurrent^ = cStart) then begin
-        SkipPair(cStart, cEnd, FailChars);
-      end else if pCurrent^ = cEnd then begin
-        Inc(pCurrent); // skip over end
-        break;
-      end else if (pCurrent^ = 'R') and ((pCurrent+1)^ = '"') then begin
-        if cStart <> '''' then
-          SkipRawString // don't do it inside AnsiString!
-        else
-          Inc(pCurrent);
-      end else if pCurrent^ = '"' then begin
-        if cStart <> '''' then
-          SkipDoubleQuotes // don't do it inside AnsiString!
-        else
-          Inc(pCurrent);
-      end else if pCurrent^ = '''' then begin
-        SkipSingleQuote;
-      end else if pCurrent^ = '/' then begin
-        if (pCurrent + 1)^ = '/' then
-          SkipToEOL
-        else if (pCurrent + 1)^ = '*' then
-          SkipCStyleComment // skips over */
-        else
-          Inc(pCurrent);
-      end else if pCurrent^ in FailChars then begin
-        Exit;
-      end else
-        Inc(pCurrent);
-    end;
+        if ((*mCurrent == '(') && !failChars.contains('(')) {
+            skipPair('(', ')', failChars);
+        } else if ((*mCurrent == '[') && !failChars.contains('[')) {
+            skipPair('[', ']', failChars);
+        } else if ((*mCurrent == '{') && !failChars.contains('{')) {
+            skipPair('{', '}', failChars);
+        } else if (*mCurrent ==  cStart) {
+            skipPair(cStart, cEnd, failChars);
+        } else if (*mCurrent == cEnd) {
+            mCurrent++; // skip over end
+            break;
+        } else if ((*mCurrent == 'R') && (*(mCurrent+1) == '"')) {
+            if (cStart != '\'' && cStart!='\"')
+                skipRawString(); // don't do it inside AnsiString!
+            else
+                mCurrent++;
+        } else if (*mCurrent == '"') {
+            if (cStart != '\'' && cStart!='\"')
+                skipDoubleQuotes(); // don't do it inside AnsiString!
+            else
+                mCurrent++;
+        } else if (*mCurrent == '\'') {
+            if (cStart != '\'' && cStart!='\"')
+                skipSingleQuote(); // don't do it inside AnsiString!
+            else
+                mCurrent++;
+        } else if (failChars.contains(*mCurrent)) {
+            break;
+        } else {
+            mCurrent++;
+        }
+    }
 }
 
 void cpptokenizer::advance()
