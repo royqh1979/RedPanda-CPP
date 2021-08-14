@@ -4,7 +4,7 @@
 #include <QFile>
 #include <QTextCodec>
 
-CppPreprocessor::CppPreprocessor(QObject *parent) : QObject(parent)
+CppPreprocessor::CppPreprocessor()
 {
 }
 

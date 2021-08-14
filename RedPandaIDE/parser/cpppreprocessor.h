@@ -16,10 +16,8 @@ struct ParsedFile {
 };
 using PParsedFile = std::shared_ptr<ParsedFile>;
 
-class CppPreprocessor : public QObject
+class CppPreprocessor
 {
-    Q_OBJECT
-
     enum class ContentType {
         AnsiCComment,
         CppComment,
@@ -33,7 +31,7 @@ class CppPreprocessor : public QObject
 
 public:
 
-    explicit CppPreprocessor(QObject *parent = nullptr);
+    explicit CppPreprocessor();
     void clear();
     void addDefineByParts(const QString& name, const QString& args,
                           const QString& value, bool hardCoded);

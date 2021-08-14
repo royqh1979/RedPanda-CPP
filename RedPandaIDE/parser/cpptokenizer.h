@@ -4,9 +4,8 @@
 #include <QObject>
 #include "parserutils.h"
 
-class cpptokenizer : public QObject
+class CppTokenizer
 {
-    Q_OBJECT
 public:
     struct Token {
       QString text;
@@ -14,7 +13,7 @@ public:
     };
     using PToken = std::shared_ptr<Token>;
     using TokenList = QVector<PToken>;
-    explicit cpptokenizer(QObject *parent = nullptr);
+    explicit CppTokenizer();
 
     void reset();
     void tokenize(const QStringList& buffer);

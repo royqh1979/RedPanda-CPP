@@ -1,15 +1,25 @@
 #include "cpptokenizer.h"
 
-cpptokenizer::cpptokenizer(QObject *parent) : QObject(parent)
+#include <QFile>
+#include <QTextStream>
+
+CppTokenizer::CppTokenizer()
 {
 
 }
 
-void cpptokenizer::tokenize(const QStringList &buffer)
+void CppTokenizer::reset()
+{
+    mTokenList.clear();
+    mBuffer.clear();
+    mBufferStr.clear();
+}
+
+void CppTokenizer::tokenize(const QStringList &buffer)
 {
     reset();
+
     mBuffer = buffer;
-    mBufferStr.clear();
     if (mBuffer.isEmpty())
         return;
     mBufferStr = mBuffer[0];
@@ -35,7 +45,19 @@ void cpptokenizer::tokenize(const QStringList &buffer)
     }
 }
 
-void cpptokenizer::addToken(const QString &sText, int iLine)
+void CppTokenizer::dumpTokens(const QString &fileName)
+{
+    QFile file(fileName);
+
+    if (file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        QTextStream stream(&file);
+        for (PToken token:mTokenList) {
+            stream<<QString("%1,%2").arg(token->line).arg(token->text)<<Qt::endl;
+        }
+    }
+}
+
+void CppTokenizer::addToken(const QString &sText, int iLine)
 {
     PToken token = std::make_shared<Token>();
     token->text = sText;
@@ -43,7 +65,7 @@ void cpptokenizer::addToken(const QString &sText, int iLine)
     mTokenList.append(token);
 }
 
-void cpptokenizer::countLines()
+void CppTokenizer::countLines()
 {
     while ((*mLineCount != '\0') && (mLineCount < mCurrent)) {
         if (*mLineCount == '\n')
@@ -52,7 +74,7 @@ void cpptokenizer::countLines()
     }
 }
 
-QString cpptokenizer::getArguments()
+QString CppTokenizer::getArguments()
 {
     QChar* offset = mCurrent;
     skipPair('(', ')');
@@ -74,7 +96,7 @@ QString cpptokenizer::getArguments()
     return result;
 }
 
-QString cpptokenizer::getForInit()
+QString CppTokenizer::getForInit()
 {
     QChar* startOffset = mCurrent;
 
@@ -98,7 +120,7 @@ QString cpptokenizer::getForInit()
     return "";
 }
 
-QString cpptokenizer::getNextToken(bool bSkipParenthesis, bool bSkipArray, bool bSkipBlock)
+QString CppTokenizer::getNextToken(bool bSkipParenthesis, bool bSkipArray, bool bSkipBlock)
 {
     QString result;
     bool done = false;
@@ -179,7 +201,7 @@ QString cpptokenizer::getNextToken(bool bSkipParenthesis, bool bSkipArray, bool 
     return result;
 }
 
-QString cpptokenizer::getNumber()
+QString CppTokenizer::getNumber()
 {
     QChar* offset = mCurrent;
 
@@ -190,7 +212,7 @@ QString cpptokenizer::getNumber()
     }
 
     QString result;
-    if (offset != mpCurrent) {
+    if (offset != mCurrent) {
         result = QString(offset,mCurrent-offset);
         if (*mCurrent=='.') // keep '.' for decimal
             result += *mCurrent;
@@ -198,14 +220,14 @@ QString cpptokenizer::getNumber()
     return result;
 }
 
-QString cpptokenizer::getPreprocessor()
+QString CppTokenizer::getPreprocessor()
 {
     QChar *offset = mCurrent;
     skipToEOL();
     return QString(offset, mCurrent-offset);
 }
 
-QString cpptokenizer::getWord(bool bSkipParenthesis, bool bSkipArray, bool bSkipBlock)
+QString CppTokenizer::getWord(bool bSkipParenthesis, bool bSkipArray, bool bSkipBlock)
 {
     bool bFoundTemplate = false;
     //  bIsSmartPointer:=False;
@@ -288,27 +310,27 @@ QString cpptokenizer::getWord(bool bSkipParenthesis, bool bSkipArray, bool bSkip
     return result;
 }
 
-bool cpptokenizer::isArguments()
+bool CppTokenizer::isArguments()
 {
     return *mCurrent == '(';
 }
 
-bool cpptokenizer::isForInit()
+bool CppTokenizer::isForInit()
 {
     return (*mCurrent == '(') && (mLastToken == "for");
 }
 
-bool cpptokenizer::isNumber()
+bool CppTokenizer::isNumber()
 {
     return isDigitChar(*mCurrent);
 }
 
-bool cpptokenizer::isPreprocessor()
+bool CppTokenizer::isPreprocessor()
 {
     return *mCurrent=='#';
 }
 
-bool cpptokenizer::isWord()
+bool CppTokenizer::isWord()
 {
     bool result = isLetterChar(*mCurrent);
     if (result && (*(mCurrent+1) == '"'))
@@ -316,7 +338,7 @@ bool cpptokenizer::isWord()
     return result;
 }
 
-void cpptokenizer::simplify(QString &output)
+void CppTokenizer::simplify(QString &output)
 {
     //remove \n \r;
     QString temp;
@@ -327,7 +349,7 @@ void cpptokenizer::simplify(QString &output)
     output = temp.trimmed();
 }
 
-void cpptokenizer::simplifyArgs(QString &output)
+void CppTokenizer::simplifyArgs(QString &output)
 {
     QString temp;
     QString lastSpace = "";
@@ -360,7 +382,7 @@ void cpptokenizer::simplifyArgs(QString &output)
     output = temp;
 }
 
-void cpptokenizer::skipAssignment()
+void CppTokenizer::skipAssignment()
 {
     while (true) {
         switch ((*mCurrent).unicode()) {
@@ -390,7 +412,7 @@ void cpptokenizer::skipAssignment()
     }
 }
 
-void cpptokenizer::skipDoubleQuotes()
+void CppTokenizer::skipDoubleQuotes()
 {
     mCurrent++;
     while (!(*mCurrent=='"' || *mCurrent == '\0')) {
@@ -404,7 +426,7 @@ void cpptokenizer::skipDoubleQuotes()
     }
 }
 
-void cpptokenizer::skipPair(const QChar &cStart, const QChar cEnd, const QSet<QChar>& failChars)
+void CppTokenizer::skipPair(const QChar &cStart, const QChar cEnd, const QSet<QChar>& failChars)
 {
     mCurrent++;
     while (*mCurrent != '\0') {
@@ -442,7 +464,7 @@ void cpptokenizer::skipPair(const QChar &cStart, const QChar cEnd, const QSet<QC
     }
 }
 
-void cpptokenizer::skipRawString()
+void CppTokenizer::skipRawString()
 {
     mCurrent++; //skip R
     bool noEscape = false;
@@ -465,7 +487,7 @@ void cpptokenizer::skipRawString()
         mCurrent++;
 }
 
-void cpptokenizer::skipSingleQuote()
+void CppTokenizer::skipSingleQuote()
 {
     mCurrent++;
     while (!(*mCurrent=='\'' || *mCurrent == '\0')) {
@@ -479,14 +501,14 @@ void cpptokenizer::skipSingleQuote()
     }
 }
 
-void cpptokenizer::skipSplitLine()
+void CppTokenizer::skipSplitLine()
 {
     mCurrent++; // skip '\'
     while ( isLineChar(*mCurrent)) // skip newline
         mCurrent++;
 }
 
-void cpptokenizer::skipTemplateArgs()
+void CppTokenizer::skipTemplateArgs()
 {
     if (*mCurrent != '<')
         return;
@@ -503,7 +525,7 @@ void cpptokenizer::skipTemplateArgs()
         mCurrent = start;
 }
 
-void cpptokenizer::skipToEOL()
+void CppTokenizer::skipToEOL()
 {
     while (true) {
         while (!isLineChar(*mCurrent) && (*mCurrent!='\0')) {
@@ -522,13 +544,13 @@ void cpptokenizer::skipToEOL()
     }
 }
 
-void cpptokenizer::skipToNextToken()
+void CppTokenizer::skipToNextToken()
 {
     while (isSpaceChar(*mCurrent) || isLineChar(*mCurrent))
         advance();
 }
 
-void cpptokenizer::advance()
+void CppTokenizer::advance()
 {
     switch(mCurrent->unicode()) {
     case '\"': skipDoubleQuotes();
@@ -571,7 +593,7 @@ void cpptokenizer::advance()
     }
 }
 
-bool cpptokenizer::isLetterChar(const QChar &ch)
+bool CppTokenizer::isLetterChar(const QChar &ch)
 {
     return (ch>= 'A' && ch<='Z')
             || (ch>='a' && ch<='z')
@@ -581,7 +603,7 @@ bool cpptokenizer::isLetterChar(const QChar &ch)
             || ch == '~';
 }
 
-bool cpptokenizer::isHexChar(const QChar &ch)
+bool CppTokenizer::isHexChar(const QChar &ch)
 {
     return (ch >= 'A' && ch<='F')
             || (ch>='a' && ch<='f')
@@ -589,27 +611,27 @@ bool cpptokenizer::isHexChar(const QChar &ch)
             || ch == 'L';
 }
 
-bool cpptokenizer::isDigitChar(const QChar &ch)
+bool CppTokenizer::isDigitChar(const QChar &ch)
 {
     return (ch>='0' && ch<='9');
 }
 
-bool cpptokenizer::isSpaceChar(const QChar &ch)
+bool CppTokenizer::isSpaceChar(const QChar &ch)
 {
     return (ch == ' ' || ch == '\t');
 }
 
-bool cpptokenizer::isLineChar(const QChar &ch)
+bool CppTokenizer::isLineChar(const QChar &ch)
 {
     return (ch=='\n' || ch=='\r');
 }
 
-bool cpptokenizer::isBlankChar(const QChar &ch)
+bool CppTokenizer::isBlankChar(const QChar &ch)
 {
     return (ch<=32);
 }
 
-bool cpptokenizer::isOperatorChar(const QChar &ch)
+bool CppTokenizer::isOperatorChar(const QChar &ch)
 {
     switch (ch.unicode()) {
     case '+':
@@ -632,7 +654,7 @@ bool cpptokenizer::isOperatorChar(const QChar &ch)
     }
 }
 
-bool cpptokenizer::currentWordEquals(QChar *wordStart, QChar *wordEnd, const QString& text)
+bool CppTokenizer::currentWordEquals(QChar *wordStart, QChar *wordEnd, const QString& text)
 {
     QString currentWord(wordStart, wordEnd-wordStart);
     return currentWord == text;

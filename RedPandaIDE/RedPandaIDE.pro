@@ -16,6 +16,7 @@ SOURCES += \
     compiler/executablerunner.cpp \
     compiler/filecompiler.cpp \
     compiler/stdincompiler.cpp \
+    parser/cppparser.cpp \
     parser/cpppreprocessor.cpp \
     parser/cpptokenizer.cpp \
     parser/parserutils.cpp \
@@ -77,6 +78,7 @@ HEADERS += \
     compiler/executablerunner.h \
     compiler/filecompiler.h \
     compiler/stdincompiler.h \
+    parser/cppparser.h \
     parser/cpppreprocessor.h \
     parser/cpptokenizer.h \
     parser/parserutils.h \
