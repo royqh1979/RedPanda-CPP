@@ -138,7 +138,6 @@ private:
     bool isInCurrentScopeLevel(const QString& command);
     void addSoloScopeLevel(PStatement statement, int line); // adds new solo level
     void removeScopeLevel(int line); // removes level
-    void checkForSkipStatement();
     int skipBraces(int startAt);
     int skipBracket(int startAt);
     bool checkForCatchBlock();
@@ -150,6 +149,7 @@ private:
     bool checkForNamespace();
     bool checkForPreprocessor();
     bool checkForScope();
+    void checkForSkipStatement();
     bool CheckForStructs();
     bool checkForTypedef();
     bool checkForTypedefEnum();
@@ -230,12 +230,18 @@ private:
 
     bool isSpaceChar(const QChar& ch);
 
+    bool isWordChar(const QChar& ch);
+
     bool isLetterChar(const QChar& ch);
 
     bool isDigitChar(const QChar& ch);
 
     /*'(', ';', ':', '{', '}', '#' */
     bool isSeperator(const QChar& ch);
+
+    bool isLineChar(const QChar& ch);
+
+    bool isNotFuncArgs(const QString& args);
 
     void onProgress(const QString& fileName, int total, int current);
     void onBusy();

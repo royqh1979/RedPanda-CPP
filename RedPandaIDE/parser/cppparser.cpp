@@ -328,6 +328,73 @@ bool CppParser::checkForScope()
                 );
 }
 
+void CppParser::checkForSkipStatement()
+{
+    if ((mSkipList.count()>0) && (mIndex == mSkipList.back())) { // skip to next ';'
+        do {
+            mIndex++;
+        } while ((mIndex < mTokenizer.tokenCount()) && (mTokenizer[mIndex]->text[0] != ';'));
+        mIndex++; //skip ';'
+        mSkipList.pop_back();
+    }
+}
+
+bool CppParser::CheckForStructs()
+{
+    int dis = 0;
+    if ((mTokenizer[mIndex]->text == "friend")
+            || (mTokenizer[mIndex]->text == "public")
+            || (mTokenizer[mIndex]->text == "private"))
+        dis = 1;
+    if (mIndex >= mTokenizer.tokenCount() - 2 - dis)
+        return false;
+    int keyLen = -1;
+    QString word = mTokenizer[mIndex+dis]->text;
+    if (word.startsWith("struct"))
+        keyLen = 6;
+    else if (word.startsWith("class")
+             || word.startsWith("union"))
+        keyLen = 5;
+    if (keyLen<0)
+        return false;
+    bool result = (word.length() == keyLen) || isSpaceChar(word[keyLen] == ' ')
+            || (word[keyLen] == '[');
+
+    if (result) {
+        if (mTokenizer[mIndex + 2+dis]->text[0] != ';') { // not: class something;
+            int i = mIndex+dis +1;
+            // the check for ']' was added because of this example:
+            // struct option long_options[] = {
+            //		{"debug", 1, 0, 'D'},
+            //		{"info", 0, 0, 'i'},
+            //    ...
+            // };
+            while (i < mTokenizer.tokenCount()) {
+                QChar ch = mTokenizer[i]->text.back();
+                if (ch=='{' || ch == ':')
+                    break;
+                switch(ch.unicode()) {
+                case ';':
+                case '}':
+                case ',':
+                case ')':
+                case ']':
+                case '=':
+                case '*':
+                case '&':
+                case '%':
+                case '+':
+                case '-':
+                case '~':
+                    return false;
+                }
+                i++;
+            }
+        }
+    }
+    return result;
+}
+
 void CppParser::calculateFilesToBeReparsed(const QString &fileName, QStringList &files)
 {
     if (fileName.isEmpty())
@@ -410,7 +477,7 @@ QString CppParser::removeArgNames(const QString &args)
             }
             break;
         default:
-            if (isLetterChar(args[i]) || isDigitChar(args[i]))
+            if (isWordChar(args[i]) || isDigitChar(args[i]))
                 word+=args[i];
         }
         i++;
@@ -431,7 +498,7 @@ bool CppParser::isSpaceChar(const QChar &ch)
     return ch==' ' || ch =='\t';
 }
 
-bool CppParser::isLetterChar(const QChar &ch)
+bool CppParser::isWordChar(const QChar &ch)
 {
     return (ch>= 'A' && ch<='Z')
             || (ch>='a' && ch<='z')
@@ -440,13 +507,20 @@ bool CppParser::isLetterChar(const QChar &ch)
             || ch == '&';
 }
 
+bool CppParser::isLetterChar(const QChar &ch)
+{
+    return (ch>= 'A' && ch<='Z')
+            || (ch>='a' && ch<='z')
+            || ch == '_';
+}
+
 bool CppParser::isDigitChar(const QChar &ch)
 {
     return (ch>='0' && ch<='9');
 }
 
 bool CppParser::isSeperator(const QChar &ch)  {
-    switch(ch){
+    switch(ch.unicode()){
     case '(':
     case ';':
     case ':':
@@ -457,4 +531,60 @@ bool CppParser::isSeperator(const QChar &ch)  {
     default:
         return false;
     }
+}
+
+bool CppParser::isLineChar(const QChar &ch)
+{
+    return ch=='\n' || ch=='\r';
+}
+
+bool CppParser::isNotFuncArgs(const QString &args)
+{
+    bool result = true;
+    int i=1; //skip '('
+    int endPos = args.length()-1;//skip ')'
+    bool lastCharIsId=false;
+    QString word = "";
+    while (i<endPos) {
+        if (args[i] == '"' || args[i]=='\'') {
+            // args contains a string/char, can't be a func define
+            return true;
+        } else if ( isLetterChar(args[i])) {
+            word += args[i];
+            lastCharIsId = true;
+            i++;
+        } else if ((args[i] == ':') && (args[i+1] == ':')) {
+            lastCharIsId = false;
+            word += "::";
+            i+=2;
+        } else if (isDigitChar(args[i])) {
+            if (!lastCharIsId)
+                return true;
+            word+=args[i];
+            i++;
+        } else if (isSpaceChar(args[i]) || isLineChar(args[i])) {
+            if (!word.isEmpty())
+                break;
+            i++;
+        } else if (word.isEmpty()) {
+            return true;
+        } else
+            break;
+    }
+    //function with no args
+    if (i>endPos && word.isEmpty()) {
+        return false;
+    }
+
+    if (isKeyword(word)) {
+        return word == "true" || word == "false" || word == "nullptr";
+    }
+    PStatement statement =findStatementOf(mCurrentFile,word,getCurrentScope(),true);
+    if (statement &&
+            !(statement->kind == StatementKind::skClass
+              || statement->kind == StatementKind::skTypedef
+              || statement->kind == StatementKind::skEnum
+              || statement->kind == StatementKind::skEnumType))
+        return true;
+    return false;
 }
