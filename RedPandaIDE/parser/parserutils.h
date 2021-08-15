@@ -168,4 +168,6 @@ QString getLocalHeaderFileName(const QString& relativeTo, const QString& fileNam
 
 QString getSystemHeaderFileName(const QString& fileName, const QStringList& includePaths);
 bool isSystemHeaderFile(const QString& fileName, const QStringList& includePaths);
+
+bool isKeyword(const QString& word);
 #endif // PARSER_UTILS_H

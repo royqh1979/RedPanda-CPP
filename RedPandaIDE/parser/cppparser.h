@@ -135,7 +135,7 @@ private:
             bool isStatic);
     void setInheritance(int index, PStatement classStatement, bool isStruct);
     PStatement getCurrentScope(); // gets last item from last level
-    PStatement isInCurrentScopeLevel(const QString& command);
+    bool isInCurrentScopeLevel(const QString& command);
     void addSoloScopeLevel(PStatement statement, int line); // adds new solo level
     void removeScopeLevel(int line); // removes level
     void checkForSkipStatement();
@@ -149,12 +149,12 @@ private:
                         bool &isStatic, bool &isFriend); // caching of results
     bool checkForNamespace();
     bool checkForPreprocessor();
-    bool checkForUsing();
     bool checkForScope();
     bool CheckForStructs();
     bool checkForTypedef();
     bool checkForTypedefEnum();
     bool checkForTypedefStruct();
+    bool checkForUsing();
     bool checkForVar();
     StatementScope  getScope();
     int getCurrentBlockEndSkip();
@@ -227,6 +227,16 @@ private:
                             const QString& sNoNameArgs);
 
     QString removeArgNames(const QString& args);
+
+    bool isSpaceChar(const QChar& ch);
+
+    bool isLetterChar(const QChar& ch);
+
+    bool isDigitChar(const QChar& ch);
+
+    /*'(', ';', ':', '{', '}', '#' */
+    bool isSeperator(const QChar& ch);
+
     void onProgress(const QString& fileName, int total, int current);
     void onBusy();
     void onStartParsing();

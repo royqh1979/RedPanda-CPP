@@ -327,3 +327,8 @@ bool isSystemHeaderFile(const QString &fileName, const QStringList &includePaths
     }
     return false;
 }
+
+bool isKeyword(const QString &word)
+{
+    return CppKeywords.contains(word);
+}

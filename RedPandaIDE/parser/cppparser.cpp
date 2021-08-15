@@ -175,20 +175,23 @@ void CppParser::addSoloScopeLevel(PStatement statement, int line)
 
 bool CppParser::checkForCatchBlock()
 {
-    return  mIndex < mTokenizer.tokenCount() &&
-            mTokenizer[mIndex]->text == "catch";
+//    return  mIndex < mTokenizer.tokenCount() &&
+//            mTokenizer[mIndex]->text == "catch";
+    return  mTokenizer[mIndex]->text == "catch";
 }
 
 bool CppParser::checkForEnum()
 {
-    return  mIndex < mTokenizer.tokenCount() &&
-            mTokenizer[mIndex]->text == "enum";
+//    return  mIndex < mTokenizer.tokenCount() &&
+//            mTokenizer[mIndex]->text == "enum";
+    return  mTokenizer[mIndex]->text == "enum";
 }
 
 bool CppParser::checkForForBlock()
 {
-    return  mIndex < mTokenizer.tokenCount() &&
-            mTokenizer[mIndex]->text == "for";
+//    return  mIndex < mTokenizer.tokenCount() &&
+//            mTokenizer[mIndex]->text == "for";
+    return  mTokenizer[mIndex]->text == "for";
 }
 
 bool CppParser::checkForKeyword()
@@ -199,7 +202,130 @@ bool CppParser::checkForKeyword()
 
 bool CppParser::checkForMethod(QString &sType, QString &sName, QString &sArgs, bool &isStatic, bool &isFriend)
 {
+    PStatement scope = getCurrentScope();
 
+    if (scope && !(scope->kind == StatementKind::skNamespace
+                   || scope->kind == StatementKind::skClass)) { //don't care function declaration in the function's
+        return false;
+    }
+
+    // Function template:
+    // compiler directives (>= 0 words), added to type
+    // type (>= 1 words)
+    // name (1 word)
+    // (argument list)
+    // ; or {
+
+    isStatic = false;
+    isFriend = false;
+
+    sType = ""; // should contain type "int"
+    sName = ""; // should contain function name "foo::function"
+    sArgs = ""; // should contain argument list "(int a)"
+
+    bool bTypeOK = false;
+    bool bNameOK = false;
+    bool bArgsOK = false;
+
+    // Don't modify index
+    int indexBackup = mIndex;
+
+    // Gather data for the string parts
+    while ((mIndex < mTokenizer.tokenCount()) && !isSeperator(mTokenizer[mIndex]->text[0])) {
+        if ((mIndex + 1 < mTokenizer.tokenCount())
+                && (mTokenizer[mIndex + 1]->text[0] == '(')) { // and start of a function
+            //it's not a function define
+            if ((mIndex+2 < mTokenizer.tokenCount()) && (mTokenizer[mIndex + 2]->text[0] == ','))
+                break;
+
+            if ((mIndex+2 < mTokenizer.tokenCount()) && (mTokenizer[mIndex + 2]->text[0] == ';')) {
+                if (isNotFuncArgs(mTokenizer[mIndex + 1]->text))
+                    break;
+            }
+            sName = mTokenizer[mIndex]->text;
+            sArgs = mTokenizer[mIndex + 1]->text;
+            bTypeOK = !sType.isEmpty();
+            bNameOK = !sName.isEmpty();
+            bArgsOK = !sArgs.isEmpty();
+
+            // Allow constructor/destructor too
+            if (!bTypeOK) {
+                // Check for constructor/destructor outside class body
+                int delimPos = sName.indexOf("::");
+                if (delimPos >= 0) {
+                    bTypeOK = true;
+                    sType = sName.mid(0, delimPos);
+
+                    // remove template staff
+                    int pos1 = sType.indexOf('<');
+                    if (pos1>=0) {
+                        sType.truncate(pos1);
+                        sName = sType+sName.mid(delimPos);
+                    }
+                }
+            }
+
+            // Are we inside a class body?
+            if (!bTypeOK) {
+                sType = mTokenizer[mIndex]->text;
+                if (sType[0] == '~')
+                    sType.remove(0,1);
+                bTypeOK = isInCurrentScopeLevel(sType); // constructor/destructor
+            }
+            break;
+        } else {
+            //if IsValidIdentifier(fTokenizer[fIndex]^.Text) then
+            // Still walking through type
+            QString s = expandMacroType(mTokenizer[mIndex]->text); //todo: do we really need expand macro? it should be done in preprocessor
+            if (s == "static")
+                isStatic = true;
+            if (s == "friend")
+                isFriend = true;
+            if (!s.isEmpty() && !(s=="extern"))
+                sType = sType + ' '+ s;
+            bTypeOK = !sType.isEmpty();
+        }
+        mIndex++;
+    }
+
+    mIndex = indexBackup;
+
+    // Correct function, don't jump over
+    if (bTypeOK && bNameOK && bArgsOK) {
+        sType = sType.trimmed(); // should contain type "int"
+        sName = sName.trimmed(); // should contain function name "foo::function"
+        sArgs = sArgs.trimmed(); // should contain argument list "(int a)"
+        return true;
+    } else
+        return false;
+}
+
+bool CppParser::checkForNamespace()
+{
+    return ((mIndex < mTokenizer.tokenCount()-1)
+            && (mTokenizer[mIndex]->text == "namespace"))
+        || (
+            (mIndex+1 < mTokenizer.tokenCount()-1)
+                && (mTokenizer[mIndex]->text == "inline")
+                && (mTokenizer[mIndex+1]->text == "namespace"));
+}
+
+bool CppParser::checkForPreprocessor()
+{
+//    return (mIndex < mTokenizer.tokenCount())
+//            && ( "#" == mTokenizer[mIndex]->text);
+    return ("#" == mTokenizer[mIndex]->text);
+}
+
+bool CppParser::checkForScope()
+{
+    return (mIndex < mTokenizer.tokenCount() - 1)
+            && (mTokenizer[mIndex + 1]->text == ':')
+            && (
+                (mTokenizer[mIndex]->text == "public")
+                || (mTokenizer[mIndex]->text == "protected")
+                || (mTokenizer[mIndex]->text == "private")
+                );
 }
 
 void CppParser::calculateFilesToBeReparsed(const QString &fileName, QStringList &files)
@@ -284,7 +410,7 @@ QString CppParser::removeArgNames(const QString &args)
             }
             break;
         default:
-            if (isLetterChar(args[i]))
+            if (isLetterChar(args[i]) || isDigitChar(args[i]))
                 word+=args[i];
         }
         i++;
@@ -298,4 +424,37 @@ QString CppParser::removeArgNames(const QString &args)
     }
     result += currentArg.trimmed();
     return result;
+}
+
+bool CppParser::isSpaceChar(const QChar &ch)
+{
+    return ch==' ' || ch =='\t';
+}
+
+bool CppParser::isLetterChar(const QChar &ch)
+{
+    return (ch>= 'A' && ch<='Z')
+            || (ch>='a' && ch<='z')
+            || ch == '_'
+            || ch == '*'
+            || ch == '&';
+}
+
+bool CppParser::isDigitChar(const QChar &ch)
+{
+    return (ch>='0' && ch<='9');
+}
+
+bool CppParser::isSeperator(const QChar &ch)  {
+    switch(ch){
+    case '(':
+    case ';':
+    case ':':
+    case '{':
+    case '}':
+    case '#':
+        return true;
+    default:
+        return false;
+    }
 }
