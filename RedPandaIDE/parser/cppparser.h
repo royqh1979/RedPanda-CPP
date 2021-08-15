@@ -86,7 +86,7 @@ public:
                                      const QString& phrase,
                                      PStatement currentClass);
     int findLastOperator(const QString& phrase) const;
-    QList<PStatement> findNamespace(const QString& name); // return a list of PSTATEMENTS (of the namespace)
+    PStatementList findNamespace(const QString& name); // return a list of PSTATEMENTS (of the namespace)
     bool freeze();  // Freeze/Lock (stop reparse while searching)
     bool freeze(const QString& serialId);  // Freeze/Lock (stop reparse while searching)
     void unFreeze(); // UnFree/UnLock (reparse while searching)
@@ -134,7 +134,6 @@ private:
             const QList<std::weak_ptr<Statement>>& inheritanceList,
             bool isStatic);
     void setInheritance(int index, PStatement classStatement, bool isStruct);
-    PStatement getCurrentScope(); // gets last item from last level
     bool isInCurrentScopeLevel(const QString& command);
     void addSoloScopeLevel(PStatement statement, int line); // adds new solo level
     void removeScopeLevel(int line); // removes level
@@ -156,10 +155,31 @@ private:
     bool checkForTypedefStruct();
     bool checkForUsing();
     bool checkForVar();
-    StatementScope  getScope();
-    int getCurrentBlockEndSkip();
+    QString expandMacroType(const QString& name);
+    //{procedure ResetDefines;}
+    PStatement findMemberOfStatement(
+            const QString& phrase,
+            PStatement scopeStatement);
+    PStatement findStatementInScope(
+            const QString& name,
+            const QString& noNameArgs,
+            StatementKind kind,
+            PStatement scope);
     int getCurrentBlockBeginSkip();
+    int getCurrentBlockEndSkip();
     int getCurrentInlineNamespaceEndSkip();
+    PStatement getCurrentScope(); // gets last item from last level
+    QString getFullStatementName(
+            const QString& command,
+            PStatement parent);
+    void getFullNameSpace(
+            const QString& phrase,
+            QString& sNamespace,
+            QString& member);
+    PStatement getIncompleteClass(
+            const QString& command,
+            PStatement parentScope);
+    StatementScope  getScope();
     void handlePreprocessor();
     void handleOtherTypedefs();
     void handleStructs(bool isTypedef = false);
@@ -185,35 +205,20 @@ private:
             const QString& fileName,
             bool manualUpdate = false);
 //    function FindMacroDefine(const Command: AnsiString): PStatement;
-    QString expandMacroType(const QString& name);
     void inheritClassStatement(
             PStatement derived,
             bool isStruct,
             PStatement base,
             StatementClassScope access);
-    PStatement getIncompleteClass(
-            const QString& command,
-            PStatement parentScope);
-    QString getFullStatementName(
-            const QString& command,
-            PStatement parent);
-    //{procedure ResetDefines;}
-    PStatement findMemberOfStatement(
-            const QString& phrase,
-            PStatement scopeStatement);
-    void getFullNameSpace(
-            const QString& phrase,
-            QString& sNamespace,
-            QString& member);
-    PStatement findStatementInScope(
-            const QString& name,
-            const QString& noNameArgs,
-            StatementKind kind,
-            PStatement scope);
+    PStatement doFindStatementInScope(const QString& name,
+                                      const QString& noNameArgs,
+                                      StatementKind kind,
+                                      PStatement scope);
     void internalInvalidateFile(const QString& fileName);
     void internalInvalidateFiles(const QStringList& files);
     void calculateFilesToBeReparsed(const QString& fileName,
                                     QStringList& files);
+    int calcKeyLenForStruct(const QString& word);
 //    {
 //    function GetClass(const Phrase: AnsiString): AnsiString;
 //    function GetMember(const Phrase: AnsiString): AnsiString;
@@ -238,6 +243,9 @@ private:
 
     /*'(', ';', ':', '{', '}', '#' */
     bool isSeperator(const QChar& ch);
+
+    /* '#', ',', ';', ':', '{', '}', '!', '/', '+', '-', '<', '>' */
+    bool isInvalidVarPrefixChar(const QChar& ch);
 
     bool isLineChar(const QChar& ch);
 

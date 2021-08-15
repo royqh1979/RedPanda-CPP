@@ -348,13 +348,8 @@ bool CppParser::CheckForStructs()
         dis = 1;
     if (mIndex >= mTokenizer.tokenCount() - 2 - dis)
         return false;
-    int keyLen = -1;
     QString word = mTokenizer[mIndex+dis]->text;
-    if (word.startsWith("struct"))
-        keyLen = 6;
-    else if (word.startsWith("class")
-             || word.startsWith("union"))
-        keyLen = 5;
+    int keyLen = calcKeyLenForStruct(word);
     if (keyLen<0)
         return false;
     bool result = (word.length() == keyLen) || isSpaceChar(word[keyLen] == ' ')
@@ -395,6 +390,193 @@ bool CppParser::CheckForStructs()
     return result;
 }
 
+bool CppParser::checkForTypedef()
+{
+    return mTokenizer[mIndex]->text == "typedef";
+}
+
+bool CppParser::checkForTypedefEnum()
+{
+    //we assume that typedef is the current index, so we check the next
+    //should call CheckForTypedef first!!!
+    return (mIndex < mTokenizer.tokenCount() - 1) &&
+            (mTokenizer[mIndex + 1]->text == "enum");
+}
+
+bool CppParser::checkForTypedefStruct()
+{
+    //we assume that typedef is the current index, so we check the next
+    //should call CheckForTypedef first!!!
+    if (mIndex+1 >= mTokenizer.tokenCount())
+        return false;
+    QString word = mTokenizer[mIndex + 1]->text;
+    int keyLen = calcKeyLenForStruct(word);
+    if (keyLen<0)
+        return false;
+    return (word.length() == keyLen) || isSpaceChar(word[keyLen]) || word[keyLen]=='[';
+}
+
+bool CppParser::checkForUsing()
+{
+    return (mIndex < mTokenizer.tokenCount()-1) && mTokenizer[mIndex]->text == "using";
+
+}
+
+bool CppParser::checkForVar()
+{
+    // Be pessimistic
+    bool result = false;
+
+    // Store old index
+    int indexBackup = mIndex;
+
+    // Use mIndex so we can reuse checking functions
+    if (mIndex + 1 < mTokenizer.tokenCount()) {
+        // Check the current and the next token
+        for (int i = 0; i<=1; i++) {
+            if (checkForKeyword()
+                    || isInvalidVarPrefixChar(mTokenizer[mIndex]->text.front())
+                    || (mTokenizer[mIndex]->text.back() == '.')
+                    || (
+                        (mTokenizer[mIndex]->text.length() > 1) &&
+                        (mTokenizer[mIndex]->text[mTokenizer[mIndex]->text.length() - 2] == '-') &&
+                        (mTokenizer[mIndex]->text[mTokenizer[mIndex]->text.length() - 1] == '>'))
+                    ) {
+                    // Reset index and fail
+                    mIndex = indexBackup;
+                    return false;
+            } // Could be a function pointer?
+            else if (mTokenizer[mIndex]->text.front() == '(') {
+                // Quick fix: there must be a pointer operator in the first tiken
+                if ( (mIndex + 1 >= mTokenizer.tokenCount())
+                     || (mTokenizer[mIndex + 1]->text.front() != '(')
+                     || mTokenizer[mIndex]->text.indexOf('*')<0) {
+                    // Reset index and fail
+                    mIndex = indexBackup;
+                    return false;
+                }
+            }
+            mIndex++;
+        }
+    }
+
+    // Revert to the point we started at
+    mIndex = indexBackup;
+
+    // Fail if we do not find a comma or a semicolon or a ( (inline constructor)
+    while (mIndex < mTokenizer.tokenCount()) {
+        if (mTokenizer[mIndex]->text.front() == '#'
+                || mTokenizer[mIndex]->text.front() == '}'
+                || checkForKeyword()) {
+            break; // fail
+//        } else if ((mTokenizer[mIndex]->text.length()>1) && (mTokenizer[mIndex]->text[0] == '(')
+//                   && (mTokenizer[mIndex]->text[1] == '(')) { // TODO: is this used to remove __attribute stuff?
+//            break;
+        } else if (mTokenizer[mIndex]->text.front() == ','
+                   || mTokenizer[mIndex]->text.front() == ';'
+                   || mTokenizer[mIndex]->text.front() == '{') {
+            result = true;
+            break;
+        }
+        mIndex++;
+    }
+
+    // Revert to the point we started at
+    mIndex = indexBackup;
+    return result;
+}
+
+int CppParser::getCurrentBlockEndSkip()
+{
+    if (mBlockEndSkips.isEmpty())
+        return mTokenizer.tokenCount()+1;
+    return mBlockEndSkips.back();
+}
+
+int CppParser::getCurrentBlockBeginSkip()
+{
+    if (mBlockBeginSkips.isEmpty())
+        return mTokenizer.tokenCount()+1;
+    return mBlockBeginSkips.back();
+}
+
+int CppParser::getCurrentInlineNamespaceEndSkip()
+{
+    if (mInlineNamespaceEndSkips.isEmpty())
+        return mTokenizer.tokenCount()+1;
+    return mInlineNamespaceEndSkips.back();
+}
+
+PStatement CppParser::getCurrentScope()
+{
+    if (mCurrentScope.isEmpty()) {
+        return PStatement();
+    }
+    return mCurrentScope.back();
+}
+
+QString CppParser::expandMacroType(const QString &name)
+{
+    //its done in the preprocessor
+    return name;
+}
+
+PStatement CppParser::findMemberOfStatement(const QString &phrase, PStatement scopeStatement)
+{
+    const StatementMap& statementMap =mStatementList.childrenStatements(scopeStatement);
+    if (statementMap.isEmpty())
+        return PStatement();
+
+    QString s = phrase;
+    //remove []
+    int p = phrase.indexOf('[');
+    if (p>=0)
+        s.truncate(p);
+
+    //remove <>
+    p =s.indexOf('<');
+    if (p>=0)
+        s.truncate(p);
+
+    return statementMap.value(s,PStatement());
+}
+
+PStatement CppParser::findStatementInScope(const QString &name, const QString &noNameArgs, StatementKind kind, PStatement scope)
+{
+    if (scope && scope->kind == StatementKind::skNamespace) {
+        PStatementList namespaceStatementsList = findNamespace(scope->command);
+        if (!namespaceStatementsList)
+            return PStatement();
+        for (PStatement namespaceStatement: *namespaceStatementsList) {
+            PStatement result=doFindStatementInScope(name,noNameArgs,kind,namespaceStatement);
+            if (result)
+                return result;
+        }
+    } else {
+        return doFindStatementInScope(name,noNameArgs,kind,scope);
+    }
+    return PStatement();
+}
+
+PStatement CppParser::doFindStatementInScope(const QString &name, const QString &noNameArgs, StatementKind kind, PStatement scope)
+{
+    const StatementMap& statementMap =mStatementList.childrenStatements(scope);
+    if (statementMap.isEmpty())
+        return PStatement();
+
+    PStatementList statementList = statementMap.values(name,PStatementList());
+
+    if (!statementList)
+        return PStatement();
+
+    for (PStatement statement: *statementList) {
+        if (statement->kind == kind && statement->noNameArgs == noNameArgs) {
+            return statement;
+        }
+    }
+    return PStatement();
+}
+
 void CppParser::calculateFilesToBeReparsed(const QString &fileName, QStringList &files)
 {
     if (fileName.isEmpty())
@@ -416,6 +598,16 @@ void CppParser::calculateFilesToBeReparsed(const QString &fileName, QStringList 
             }
         }
     }
+}
+
+int CppParser::calcKeyLenForStruct(const QString &word)
+{
+    if (word.startsWith("struct"))
+        return 6;
+    else if (word.startsWith("class")
+             || word.startsWith("union"))
+        return 5;
+    return -1;
 }
 
 QString CppParser::removeArgNames(const QString &args)
@@ -527,6 +719,27 @@ bool CppParser::isSeperator(const QChar &ch)  {
     case '{':
     case '}':
     case '#':
+        return true;
+    default:
+        return false;
+    }
+}
+
+bool CppParser::isInvalidVarPrefixChar(const QChar &ch)
+{
+    switch (ch.unicode()) {
+    case '#':
+    case ',':
+    case ';':
+    case ':':
+    case '{':
+    case '}':
+    case '!':
+    case '/':
+    case '+':
+    case '-':
+    case '<':
+    case '>':
         return true;
     default:
         return false;
