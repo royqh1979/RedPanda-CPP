@@ -16,64 +16,86 @@ public:
     explicit CppParser(QObject *parent = nullptr);
 
     void parseHardDefines();
-    function FindFileIncludes(const Filename: AnsiString; DeleteIt: boolean = False): PFileIncludes;
-    procedure AddHardDefineByLine(const Line: AnsiString);
-    procedure InvalidateFile(const FileName: AnsiString);
-    procedure GetFileDirectIncludes(const Filename: AnsiString; var List: TStringList);
-    procedure GetFileIncludes(const Filename: AnsiString; var List: TStringList);
-    procedure GetFileUsings(const Filename: AnsiString; var List: TDevStringList);
+    PFileIncludes findFileIncludes(const QString &filename, bool deleteIt = false);
+    void addHardDefineByLine(const QString& line);
+    void invalidateFile(const QString& fileName);
+    QStringList getFileDirectIncludes(const QString& filename) const;
+    const QList<QString>& getFileIncludes(const QString& filename) const;
+    const QSet<QString>& getFileUsings(const QString& filename) &;
 
-    function IsSystemHeaderFile(const FileName: AnsiString): boolean;
-    function IsProjectHeaderFile(const FileName: AnsiString): boolean;
-    procedure GetSourcePair(const FName: AnsiString; var CFile, HFile: AnsiString);
-    procedure GetClassesList(var List: TStringList);
-    function SuggestMemberInsertionLine(ParentStatement: PStatement; Scope: TStatementClassScope; var AddScopeStr:
-      boolean):
-      integer;
-      {
-    function GetSystemHeaderFileName(const FileName: AnsiString): AnsiString; // <file.h>
-    function GetProjectHeaderFileName(const FileName: AnsiString): AnsiString; // <file.h>
-    function GetLocalHeaderFileName(const RelativeTo, FileName: AnsiString): AnsiString; // "file.h"
-    }
-    function GetHeaderFileName(const RelativeTo, Line: AnsiString): AnsiString; // both
-    function IsIncludeLine(const Line: AnsiString): boolean;
-    constructor Create(wnd:HWND);
-    destructor Destroy; override;
-    procedure ParseFileList(UpdateView:boolean = True);
-    procedure ParseFile(const FileName: AnsiString; InProject: boolean; OnlyIfNotParsed: boolean = False; UpdateView:
-      boolean = True);
-    function StatementKindStr(Value: TStatementKind): AnsiString;
-    function StatementClassScopeStr(Value: TStatementClassScope): AnsiString;
-    procedure Reset;
-    procedure ClearIncludePaths;
-    procedure ClearProjectIncludePaths;
-    procedure ClearProjectFiles;
-    procedure AddIncludePath(const Value: AnsiString);
-    procedure AddProjectIncludePath(const Value: AnsiString);
-    procedure AddFileToScan(Value: AnsiString; InProject: boolean = False);
-    function PrettyPrintStatement(Statement: PStatement; line:integer = -1): AnsiString;
-    procedure FillListOfFunctions(const FileName, Phrase: AnsiString; const Line: integer;  List: TStringList);
-    function FindAndScanBlockAt(const Filename: AnsiString; Line: integer): PStatement;
-    function FindStatementOf(FileName, Phrase: AnsiString; Line: integer): PStatement; overload;
-    function FindStatementOf(FileName, Phrase: AnsiString; CurrentClass: PStatement;
-      var CurrentClassType: PStatement ; force:boolean = False): PStatement; overload;
-    function FindStatementOf(FileName, Phrase: AnsiString; CurrentClass: PStatement; force:boolean = False): PStatement; overload;
+    bool isSystemHeaderFile(const QString& fileName);
+    bool isProjectHeaderFile(const QString& fileName);
+    void getSourcePair(const QString& fName, QString& CFile, QString& HFile);
+    void getClassesList(QStringList& list);
+    int suggestMemberInsertionLine(PStatement parentStatement,
+                                   StatementClassScope Scope,
+                                   bool addScopeStr);
+//      {
+//    function GetSystemHeaderFileName(const FileName: AnsiString): AnsiString; // <file.h>
+//    function GetProjectHeaderFileName(const FileName: AnsiString): AnsiString; // <file.h>
+//    function GetLocalHeaderFileName(const RelativeTo, FileName: AnsiString): AnsiString; // "file.h"
+//    }
+    QString getHeaderFileName(const QString& relativeTo, const QString& line) const;// both
+    bool isIncludeLine(const QString &line);
+    void parseFileList(bool updateView = true);
+    void parseFile(const QString& fileName, bool inProject,
+                   bool onlyIfNotParsed = false, bool updateView = true);
+    QString statementKindStr(StatementKind value);
+    QString statementClassScopeStr(StatementClassScope value);
+    void reset();
+    void clearIncludePaths();
+    void clearProjectIncludePaths();
+    void clearProjectFiles();
+    void addIncludePath(const QString& value);
+    void addProjectIncludePath(const QString& value);
+    void addFileToScan(const QString& value, bool inProject = false);
+    QString prettyPrintStatement(PStatement statement, int line = -1);
+    void fillListOfFunctions(const QString& fileName,
+                             const QString& phrase,
+                             int line,
+                             QStringList& list);
+    PStatement findAndScanBlockAt(const QString& filename, int line);
+    PStatement findStatementOf(const QString& fileName,
+                               const QString& phrase,
+                               int line);
+    PStatement findStatementOf(const QString& fileName,
+                               const QString& phrase,
+                               PStatement currentClass,
+                               PStatement& currentClassType,
+                               bool force = false);
+    PStatement findStatementOf(const QString& fileName,
+                               const QString& phrase,
+                               PStatement currentClass,
+                               bool force = false);
 
-    function FindKindOfStatementOf(FileName, Phrase: AnsiString; Line: integer): TStatementKind;
-    function GetHintFromStatement(FileName, Phrase: AnsiString; Line: integer):AnsiString;
-    {Find statement starting from startScope}
-    function FindStatementStartingFrom(const FileName, Phrase: AnsiString; startScope: PStatement; force:boolean = False): PStatement;
-    function FindTypeDefinitionOf(const FileName: AnsiString;const aType: AnsiString; CurrentClass: PStatement): PStatement;
-    function FindFirstTemplateParamOf(const FileName: AnsiString;const aPhrase: AnsiString; currentClass: PStatement): String;
-    function FindLastOperator(const Phrase: AnsiString): integer;
-    function FindNamespace(const name:AnsiString):TList; // return a list of PSTATEMENTS (of the namespace)
-    function Freeze:boolean; overload;  // Freeze/Lock (stop reparse while searching)
-    function Freeze(serialId:String):boolean; overload;  // Freeze/Lock (stop reparse while searching)
-    procedure UnFreeze; // UnFree/UnLock (reparse while searching)
-    function GetParsing: boolean;
+    StatementKind findKindOfStatementOf(const QString& fileName,
+                                     const QString& phrase,
+                                     int line);
+    QString getHintFromStatement(const QString& fileName,
+                                 const QString& phrase,
+                                 int line);
+    //{Find statement starting from startScope}
+    PStatement findStatementStartingFrom(const QString& fileName,
+                                         const QString& phrase,
+                                         PStatement startScope,
+                                         bool force = false);
+    PStatement findTypeDefinitionOf(const QString& fileName,
+                                    const QString& phrase,
+                                    PStatement currentClass);
+    QString FindFirstTemplateParamOf(const QString& fileName,
+                                     const QString& phrase,
+                                     PStatement currentClass);
+    int findLastOperator(const QString& phrase) const;
+    QList<PStatement> findNamespace(const QString& name); // return a list of PSTATEMENTS (of the namespace)
+    bool freeze();  // Freeze/Lock (stop reparse while searching)
+    bool freeze(const QString& serialId);  // Freeze/Lock (stop reparse while searching)
+    void unFreeze(); // UnFree/UnLock (reparse while searching)
+    bool getParsing();
 
-    function FindFunctionDoc(const FileName:AnsiString; const Line: integer;
-      params:TStringList; var isVoid:boolean): AnsiString;
+    QString findFunctionDoc(const QString& fileName,
+                            int line,
+                            QStringList& params,
+                            bool &isVoid);
 signals:
 private:
     PStatement addInheritedStatement(
@@ -83,7 +105,7 @@ private:
 
     PStatement addChildStatement(
             // support for multiple parents (only typedef struct/union use multiple parents)
-            PStatement Parent,
+            PStatement parent,
             const QString& fileName,
             const QString& hintText,
             const QString& aType, // "Type" is already in use
@@ -109,7 +131,7 @@ private:
             StatementScope scope,
             StatementClassScope classScope,
             bool isDefinition,
-            const QStringList& InheritanceList,
+            const QList<std::weak_ptr<Statement>>& inheritanceList,
             bool isStatic);
     void setInheritance(int index, PStatement classStatement, bool isStruct);
     PStatement getCurrentScope(); // gets last item from last level
@@ -119,22 +141,21 @@ private:
     void checkForSkipStatement();
     int skipBraces(int startAt);
     int skipBracket(int startAt);
-    bool checkForPreprocessor();
+    bool checkForCatchBlock();
+    bool checkForEnum();
+    bool checkForForBlock();
     bool checkForKeyword();
+    bool checkForMethod(QString &sType, QString &sName, QString &sArgs,
+                        bool &isStatic, bool &isFriend); // caching of results
     bool checkForNamespace();
+    bool checkForPreprocessor();
     bool checkForUsing();
-
+    bool checkForScope();
+    bool CheckForStructs();
     bool checkForTypedef();
     bool checkForTypedefEnum();
     bool checkForTypedefStruct();
-    bool CheckForStructs();
-    bool checkForMethod(QString &sType, QString &sName, QString &sArgs,
-                        bool &isStatic, bool &isFriend); // caching of results
-    bool checkForScope();
     bool checkForVar();
-    bool checkForEnum();
-    bool checkForForBlock();
-    bool checkForCatchBlock();
     StatementScope  getScope();
     int getCurrentBlockEndSkip();
     int getCurrentBlockBeginSkip();
@@ -204,6 +225,8 @@ private:
     QString getStatementKey(const QString& sName,
                             const QString& sType,
                             const QString& sNoNameArgs);
+
+    QString removeArgNames(const QString& args);
     void onProgress(const QString& fileName, int total, int current);
     void onBusy();
     void onStartParsing();

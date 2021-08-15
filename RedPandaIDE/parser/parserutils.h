@@ -90,7 +90,7 @@ struct Statement;
 using PStatement = std::shared_ptr<Statement>;
 using StatementList = QList<PStatement>;
 using PStatementList = std::shared_ptr<StatementList>;
-using StatementMap = QMultiHash<QString, PStatement>;
+using StatementMap = QMultiMap<QString, PStatement>;
 struct Statement {
     std::weak_ptr<Statement> parentScope; // parent class/struct/namespace scope, don't use auto pointer to prevent circular reference
     QString hintText; // text to force display when using PrettyPrintStatement
@@ -133,7 +133,7 @@ struct UsingNamespace {
 using PUsingNamespace = std::shared_ptr<UsingNamespace>;
 
 struct IncompleteClass {
-    std::weak_ptr<Statement> statement;
+    PStatement statement;
     int count;
 };
 using PIncompleteClass = std::shared_ptr<IncompleteClass>;
@@ -142,10 +142,9 @@ struct FileIncludes {
     QString baseFile;
     QMap<QString,bool> includeFiles; // true means the file is directly included, false means included indirectly
     QSet<QString> usings; // namespaces it usings
-    QVector<std::weak_ptr<Statement>> statements; // but we don't save temporary statements
-    //StatementsIndex: TDevStringHash;
-    QVector<std::weak_ptr<Statement>> declaredStatements; // statements declared in this file
-    QMap<int, std::weak_ptr<Statement>> scopes; // int is start line of the statement scope
+    StatementMap statements; // but we don't save temporary statements
+    StatementMap declaredStatements; // statements declared in this file
+    QMap<int, PStatement> scopes; // int is start line of the statement scope
     QSet<QString> dependingFiles; // The files I depeneds on
     QSet<QString> dependedFiles; // the files depends on me
 };

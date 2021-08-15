@@ -57,6 +57,21 @@ void CppTokenizer::dumpTokens(const QString &fileName)
     }
 }
 
+const CppTokenizer::TokenList &CppTokenizer::tokens()
+{
+    return mTokenList;
+}
+
+CppTokenizer::PToken CppTokenizer::operator[](int i)
+{
+    return mTokenList[i];
+}
+
+int CppTokenizer::tokenCount()
+{
+    return mTokenList.count();
+}
+
 void CppTokenizer::addToken(const QString &sText, int iLine)
 {
     PToken token = std::make_shared<Token>();

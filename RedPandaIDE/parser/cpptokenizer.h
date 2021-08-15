@@ -18,6 +18,9 @@ public:
     void reset();
     void tokenize(const QStringList& buffer);
     void dumpTokens(const QString& fileName);
+    const TokenList& tokens();
+    PToken operator[](int i);
+    int tokenCount();
 signals:
 private:
     void addToken(const QString& sText, int iLine);
