@@ -707,10 +707,10 @@ AnnotationType DebugReader::getNextAnnotation()
 QString DebugReader::getNextFilledLine()
 {
     // Walk up to an enter sequence
-    while (mIndex<mOutput.length() && mOutput[mIndex]!=13 && mOutput[mIndex]!=10 && mOutput[mIndex]!=0)
+    while (mIndex<mOutput.length() && mOutput[mIndex]!='\r' && mOutput[mIndex]!='\n' && mOutput[mIndex]!=0)
         mIndex++;
     // Skip enter sequences (CRLF, CR, LF, etc.)
-    while (mIndex<mOutput.length() && mOutput[mIndex]==13 && mOutput[mIndex]==10 && mOutput[mIndex]==0)
+    while (mIndex<mOutput.length() && mOutput[mIndex]=='\r' && mOutput[mIndex]=='\n' && mOutput[mIndex]==0)
         mIndex++;
     // Return next line
     return getRemainingLine();
@@ -719,18 +719,18 @@ QString DebugReader::getNextFilledLine()
 QString DebugReader::getNextLine()
 {
     // Walk up to an enter sequence
-    while (mIndex<mOutput.length() && mOutput[mIndex]!=13 && mOutput[mIndex]!=10 && mOutput[mIndex]!=0)
+    while (mIndex<mOutput.length() && mOutput[mIndex]!='\r' && mOutput[mIndex]!='\n' && mOutput[mIndex]!=0)
         mIndex++;
 
     // End of output. Exit
     if (mIndex>=mOutput.length())
         return "";
     // Skip ONE enter sequence (CRLF, CR, LF, etc.)
-    if ((mOutput[mIndex] == 13) && (mOutput[mIndex] == 10)) // DOS
+    if ((mOutput[mIndex] == '\r') && (mOutput[mIndex] == '\n')) // DOS
         mIndex+=2;
-    else if (mOutput[mIndex] == 13)  // UNIX
+    else if (mOutput[mIndex] == '\r')  // UNIX
         mIndex++;
-    else if (mOutput[mIndex] == 10) // MAC
+    else if (mOutput[mIndex] == '\n') // MAC
         mIndex++;
     // Return next line
     return getRemainingLine();
@@ -756,7 +756,7 @@ QString DebugReader::getRemainingLine()
     QString Result;
 
     // Return part of line still ahead of us
-    while (mIndex<mOutput.length() && mOutput[mIndex]!=13 && mOutput[mIndex]!=10 && mOutput[mIndex]!=0) {
+    while (mIndex<mOutput.length() && mOutput[mIndex]!='\r' && mOutput[mIndex]!='\n' && mOutput[mIndex]!=0) {
         Result += mOutput[mIndex];
         mIndex++;
     }
@@ -920,7 +920,7 @@ void DebugReader::handleLocalOutput()
                 return;
             }
             //todo: update local view
-            if (nobreakLine and pMainWindow->txtLocals()->document()->lineCount()>0) {
+            if (nobreakLine && pMainWindow->txtLocals()->document()->lineCount()>0) {
                 emit addLocalWithoutLinebreak(s);
             } else {
                 emit addLocalWithLinebreak(s);

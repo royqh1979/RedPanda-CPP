@@ -272,6 +272,7 @@ QString getHeaderFileName(const QString &relativeTo, const QString &line,
             }
         }
     }
+    return result;
 }
 
 QString getLocalHeaderFileName(const QString &relativeTo, const QString &fileName)

@@ -307,7 +307,7 @@ void SynEditCppHighlighter::ansiCProc()
                 } else if (mRange.state == RangeState::rsAnsiCAsmBlock){
                     mRange.state = RangeState::rsAsmBlock;
                 } else if (mRange.state == RangeState::rsDirectiveComment &&
-                           mLine[mRun] != 0 && mLine[mRun]!=13 && mLine[mRun]!=10) {
+                           mLine[mRun] != 0 && mLine[mRun]!='\r' && mLine[mRun]!='\n') {
                     mRange.state = RangeState::rsMultiLineDirective;
                 } else {
                     mRange.state = RangeState::rsUnknown;
@@ -680,7 +680,7 @@ void SynEditCppHighlighter::numberProc()
         case 'e':
         case 'E':
             if (mTokenId!=TokenKind::Hex) {
-                if (mLine[mRun-1]>='0' || mLine[mRun-1]<=9 ) {//exponent
+                if (mLine[mRun-1]>='0' || mLine[mRun-1]<='9' ) {//exponent
                     for (int i=idx1;i<mRun;i++) {
                         if (mLine[i] == 'e' || mLine[i]=='E') { // too many exponents
                             mRun+=1;
@@ -820,7 +820,7 @@ void SynEditCppHighlighter::pointProc()
     if (mLine[mRun+1] == '.' && mLine[mRun+2] == '.') {
         mRun+=3;
         mExtTokenId = ExtTokenKind::Ellipse;
-    } else if (mLine[mRun+1]>=0 && mLine[mRun+1]<=9) {
+    } else if (mLine[mRun+1]>=0 && mLine[mRun+1]<='9') {
         numberProc();
     } else {
         mRun+=1;

@@ -598,8 +598,8 @@ PColorSchemeItem ColorManager::getItem(const QString &schemeName, const QString 
 bool ColorManager::isValidName(const QString &name)
 {
     for (QChar ch:name) {
-        if (!((ch == ' ') or  (ch>='a' && ch<='z') or (ch>='A' && ch <= 'Z')
-            or (ch>='0' && ch<='9') or (ch == '-') ))
+        if (!((ch == ' ') ||  (ch>='a' && ch<='z') || (ch>='A' && ch <= 'Z')
+            || (ch>='0' && ch<='9') || (ch == '-') ))
             return false;
     }
     return true;

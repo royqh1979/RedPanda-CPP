@@ -100,6 +100,7 @@ QString SynEditStringList::lineBreak()
     case FileEndingType::Mac:
         return "\r";
     }
+    return "\n";
 }
 
 SynRangeState SynEditStringList::ranges(int Index)

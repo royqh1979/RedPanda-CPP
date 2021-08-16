@@ -564,12 +564,9 @@ PStatement CppParser::doFindStatementInScope(const QString &name, const QString 
     if (statementMap.isEmpty())
         return PStatement();
 
-    PStatementList statementList = statementMap.values(name,PStatementList());
+    QList<PStatement> statementList = statementMap.values(name);
 
-    if (!statementList)
-        return PStatement();
-
-    for (PStatement statement: *statementList) {
+    for (PStatement statement: statementList) {
         if (statement->kind == kind && statement->noNameArgs == noNameArgs) {
             return statement;
         }

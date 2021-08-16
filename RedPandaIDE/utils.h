@@ -9,8 +9,6 @@
 #include <QStringList>
 
 class QByteArray;
-class QString;
-class QStringList;
 class QTextStream;
 class QTextCodec;
 

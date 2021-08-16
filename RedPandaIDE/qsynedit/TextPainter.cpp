@@ -307,7 +307,7 @@ void SynEditTextPainter::ComputeSelectionInfo()
         // intersection with the area to be painted.
         if (bAnySelection) {
             // Don't care if the selection is not visible.
-            bAnySelection = (vEnd.Line >= vFirstLine) and (vStart.Line <= vLastLine);
+            bAnySelection = (vEnd.Line >= vFirstLine) && (vStart.Line <= vLastLine);
             if (bAnySelection) {
                 // Transform the selection from text space into screen space
                 vSelStart = edit->bufferToDisplayPos(vStart);
@@ -448,7 +448,7 @@ void SynEditTextPainter::PaintHighlightToken(bool bFillToEOL)
       bU1 = (nC1 < nLineSelStart);
       bSel = (nC1 < nLineSelEnd) && (nC2 >= nLineSelStart);
       bU2 = (nC2 >= nLineSelEnd);
-      bComplexToken = bSel && (bU1 or bU2);
+      bComplexToken = bSel && (bU1 || bU2);
     } else {
       bSel = bLineSelected;
       bComplexToken = false;

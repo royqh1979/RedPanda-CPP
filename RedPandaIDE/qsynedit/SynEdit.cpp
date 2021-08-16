@@ -453,7 +453,7 @@ BufferCoord SynEdit::getMatchingBracketEx(BufferCoord APoint)
             if (Test == Brackets[i]) {
                 // this is the bracket, get the matching one and the direction
                 BracketInc = Brackets[i];
-                BracketDec = Brackets[i xor 1]; // 0 -> 1, 1 -> 0, ...
+                BracketDec = Brackets[i ^ 1]; // 0 -> 1, 1 -> 0, ...
                 // search for the matching bracket (that is until NumBrackets = 0)
                 NumBrackets = 1;
                 if (i%2==1) {
@@ -602,16 +602,16 @@ DisplayCoord SynEdit::pixelsToNearestRowColumn(int aX, int aY) const
             aY = 0;
     }
     return {
-      .Column = std::max(1, (int)(leftChar() + round(f))),
-      .Row = std::max(1, mTopLine + (aY / mTextHeight))
+      std::max(1, (int)(leftChar() + round(f))),
+      std::max(1, mTopLine + (aY / mTextHeight))
     };
 }
 
 DisplayCoord SynEdit::pixelsToRowColumn(int aX, int aY) const
 {
     return {
-        .Column = std::max(1, mLeftChar + ((aX - mGutterWidth - 2) / mCharWidth)),
-        .Row = std::max(1, mTopLine + (aY / mTextHeight))
+        std::max(1, mLeftChar + ((aX - mGutterWidth - 2) / mCharWidth)),
+        std::max(1, mTopLine + (aY / mTextHeight))
     };
 }
 
@@ -1223,7 +1223,7 @@ BufferCoord SynEdit::PrevWordPosEx(const BufferCoord &XY)
     int CX = XY.Char;
     int CY = XY.Line;
     // valid line?
-    if ((CY >= 1) and (CY <= mLines->count())) {
+    if ((CY >= 1) && (CY <= mLines->count())) {
         QString Line = mLines->getString(CY - 1);
         CX = std::min(CX, Line.length());
         if (CX <= 1) {

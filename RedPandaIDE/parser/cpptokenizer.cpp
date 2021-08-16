@@ -23,7 +23,6 @@ void CppTokenizer::tokenize(const QStringList &buffer)
     if (mBuffer.isEmpty())
         return;
     mBufferStr = mBuffer[0];
-    int i=1;
     for (int i=1;i<mBuffer.size();i++) {
         mBufferStr+='\n';
         mBufferStr+=mBuffer[i];
@@ -82,7 +81,7 @@ void CppTokenizer::addToken(const QString &sText, int iLine)
 
 void CppTokenizer::countLines()
 {
-    while ((*mLineCount != '\0') && (mLineCount < mCurrent)) {
+    while ((*mLineCount != 0) && (mLineCount < mCurrent)) {
         if (*mLineCount == '\n')
             mCurrentLine ++;
         mLineCount++;
@@ -97,7 +96,7 @@ QString CppTokenizer::getArguments()
     simplifyArgs(result);
     if ((*mCurrent == '.') || ((*mCurrent == '-') && (*(mCurrent + 1) == '>'))) {
         // skip '.' and '->'
-        while ( !( *mCurrent == '\0'
+        while ( !( *mCurrent == 0
                    || *mCurrent == '('
                    || *mCurrent == ';'
                    || *mCurrent == '{'
@@ -141,7 +140,7 @@ QString CppTokenizer::getNextToken(bool bSkipParenthesis, bool bSkipArray, bool 
     bool done = false;
     while (true) {
         skipToNextToken();
-        if (*mCurrent == '\0')
+        if (*mCurrent == 0)
             break;
         if (isPreprocessor()) {
             countLines();
@@ -172,7 +171,7 @@ QString CppTokenizer::getNextToken(bool bSkipParenthesis, bool bSkipArray, bool 
             done = (result != "");
         } else {
             switch((*mCurrent).unicode()) {
-            case '\0':
+            case 0:
                 done = true;
                 break;
             case '/':
@@ -422,7 +421,7 @@ void CppTokenizer::skipAssignment()
                 || *mCurrent ==';'
                 || *mCurrent ==')'
                 || *mCurrent =='}'
-                || *mCurrent =='\0')
+                || *mCurrent ==0)
             break;
     }
 }
@@ -430,13 +429,13 @@ void CppTokenizer::skipAssignment()
 void CppTokenizer::skipDoubleQuotes()
 {
     mCurrent++;
-    while (!(*mCurrent=='"' || *mCurrent == '\0')) {
+    while (!(*mCurrent=='"' || *mCurrent == 0)) {
         if (*mCurrent == '\\')
             mCurrent+=2; // skip escaped char
         else
             mCurrent++;
     }
-    if (*mCurrent!='\0') {
+    if (*mCurrent!=0) {
         mCurrent++;
     }
 }
@@ -444,7 +443,7 @@ void CppTokenizer::skipDoubleQuotes()
 void CppTokenizer::skipPair(const QChar &cStart, const QChar cEnd, const QSet<QChar>& failChars)
 {
     mCurrent++;
-    while (*mCurrent != '\0') {
+    while (*mCurrent != 0) {
         if ((*mCurrent == '(') && !failChars.contains('(')) {
             skipPair('(', ')', failChars);
         } else if ((*mCurrent == '[') && !failChars.contains('[')) {
@@ -493,25 +492,25 @@ void CppTokenizer::skipRawString()
             noEscape = false;
             break;
         }
-        if (*mCurrent == '\0')
+        if (*mCurrent == 0)
             break;
         if ((*mCurrent == '"') && !noEscape)
             break;
     }
-    if (*mCurrent!='\0')
+    if (*mCurrent!=0)
         mCurrent++;
 }
 
 void CppTokenizer::skipSingleQuote()
 {
     mCurrent++;
-    while (!(*mCurrent=='\'' || *mCurrent == '\0')) {
+    while (!(*mCurrent=='\'' || *mCurrent == 0)) {
         if (*mCurrent == '\\')
             mCurrent+=2; // skip escaped char
         else
             mCurrent++;
     }
-    if (*mCurrent!='\0') {
+    if (*mCurrent!=0) {
         mCurrent++;
     }
 }
@@ -543,10 +542,10 @@ void CppTokenizer::skipTemplateArgs()
 void CppTokenizer::skipToEOL()
 {
     while (true) {
-        while (!isLineChar(*mCurrent) && (*mCurrent!='\0')) {
+        while (!isLineChar(*mCurrent) && (*mCurrent!=0)) {
             mCurrent++;
         }
-        if (*mCurrent=='\0')
+        if (*mCurrent==0)
             return;
 
         bool splitLine = (*(mCurrent - 1) == '\\');
@@ -554,7 +553,7 @@ void CppTokenizer::skipToEOL()
         while (isLineChar(*mCurrent))
             mCurrent++;
 
-        if (!splitLine || *mCurrent=='\0')
+        if (!splitLine || *mCurrent==0)
             break;
     }
 }

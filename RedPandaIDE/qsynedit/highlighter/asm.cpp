@@ -74,7 +74,7 @@ void SynEditASMHighlighter::CRProc()
 {
     mTokenID = TokenKind::Space;
     mRun++;
-    if (mLine[mRun] == 10)
+    if (mLine[mRun] == '\n')
         mRun++;
 }
 
@@ -283,10 +283,10 @@ void SynEditASMHighlighter::next()
     case 0:
         NullProc();
         break;
-    case 10:
+    case '\n':
         LFProc();
         break;
-    case 13:
+    case '\r':
         CRProc();
         break;
     case '\"':

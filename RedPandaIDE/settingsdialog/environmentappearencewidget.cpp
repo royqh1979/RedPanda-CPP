@@ -20,7 +20,7 @@ EnvironmentAppearenceWidget::EnvironmentAppearenceWidget(const QString& name, co
         ui->cbTheme->addItem(name);
     }
     ui->cbLanguage->addItem("English","en");
-    ui->cbLanguage->addItem("简体中文","zh_CN");
+    ui->cbLanguage->addItem(tr("Simplified Chinese"),"zh_CN");
 }
 
 EnvironmentAppearenceWidget::~EnvironmentAppearenceWidget()

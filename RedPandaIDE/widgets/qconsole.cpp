@@ -252,8 +252,8 @@ void QConsole::paintRows(QPainter &painter, int row1, int row2)
     RowColumn selBeginRC = mContents.lineCharToRowColumn(selectionBegin());
     RowColumn selEndRC = mContents.lineCharToRowColumn(selectionEnd());
     LineChar editBegin = {
-        .ch = mContents.getLastLine().length() - mCurrentEditableLine.length(),
-        .line = mContents.lines()-1
+        mContents.getLastLine().length() - mCurrentEditableLine.length(),
+        mContents.lines()-1
     };
     RowColumn editBeginRC = mContents.lineCharToRowColumn(editBegin);
     bool isSelection = false;
@@ -836,8 +836,8 @@ RowColumn QConsole::pixelsToNearestRowColumn(int x, int y)
             y = 0;
     }
     return {
-      .column = std::max(0, (x - 2) / mColumnWidth),
-      .row = mTopRow + (y / mRowHeight)-1
+      std::max(0, (x - 2) / mColumnWidth),
+      mTopRow + (y / mRowHeight)-1
     };
 }
 

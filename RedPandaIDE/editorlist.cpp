@@ -3,7 +3,6 @@
 #include <QMessageBox>
 #include <QVariant>
 #include <mainwindow.h>
-#include <iconv.h>
 #include <QDebug>
 #include <QFileInfo>
 #include "settings.h"

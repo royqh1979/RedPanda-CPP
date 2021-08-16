@@ -376,7 +376,7 @@ void MainWindow::rebuildOpenedFileHisotryMenu()
         for (QString filename: pSettings->history().openedFiles()) {
             QAction* action = new QAction();
             action->setText(filename);
-            connect(action, &QAction::triggered, [=,this](bool checked = false){
+            connect(action, &QAction::triggered, [filename,this](bool checked = false){
                 this->openFile(filename);
             });
             mRecentFileActions.append(action);
