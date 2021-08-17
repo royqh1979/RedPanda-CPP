@@ -169,38 +169,38 @@ private:
     int getCurrentBlockEndSkip();
     int getCurrentInlineNamespaceEndSkip();
     PStatement getCurrentScope(); // gets last item from last level
-    QString getFullStatementName(
-            const QString& command,
-            PStatement parent);
     void getFullNameSpace(
             const QString& phrase,
             QString& sNamespace,
             QString& member);
+    QString getFullStatementName(
+            const QString& command,
+            PStatement parent);
     PStatement getIncompleteClass(
             const QString& command,
             PStatement parentScope);
     StatementScope  getScope();
-    void handlePreprocessor();
-    void handleOtherTypedefs();
-    void handleStructs(bool isTypedef = false);
+    QString getStatementKey(const QString& sName,
+                            const QString& sType,
+                            const QString& sNoNameArgs);
+    void handleCatchBlock();
+    void handleEnum();
+    void handleKeyword();
+    void handleForBlock();
     void HandleMethod(
             const QString& sType,
             const QString& sName,
             const QString& sArgs,
             bool isStatic,
             bool isFriend);
-    void scanMethodArgs(
-            PStatement functionStatement,
-            const QString& argStr);
-    void handleScope();
-    void handleKeyword();
-    void handleVar();
-    void handleEnum();
     void handleNamespace();
-    void handleUsing();
-    void handleForBlock();
-    void handleCatchBlock();
+    void handleOtherTypedefs();
+    void handlePreprocessor();
+    void handleScope();
     bool handleStatement();
+    void handleStructs(bool isTypedef = false);
+    void handleUsing();
+    void handleVar();
     void internalParse(
             const QString& fileName,
             bool manualUpdate = false);
@@ -225,11 +225,11 @@ private:
 //    function GetOperator(const Phrase: AnsiString): AnsiString;
 //    function GetRemainder(const Phrase: AnsiString): AnsiString;
 //    }
+    void scanMethodArgs(
+            PStatement functionStatement,
+            const QString& argStr);
     QString splitPhrase(const QString& phrase, QString& sClazz, QString &sMember,
                 QString& sOperator);
-    QString getStatementKey(const QString& sName,
-                            const QString& sType,
-                            const QString& sNoNameArgs);
 
     QString removeArgNames(const QString& args);
 
@@ -251,11 +251,27 @@ private:
 
     bool isNotFuncArgs(const QString& args);
 
+    /**
+     * @brief Test if a statement is a class/struct/union/namespace/function
+     * @param kind
+     * @return
+     */
+    bool isNamedScope(StatementKind kind);
+
+    /**
+     * @brief Test if a statement is a class/struct/union/enum/enum class/typedef
+     * @param kind
+     * @return
+     */
+    bool isTypeStatement(StatementKind kind);
+
     void onProgress(const QString& fileName, int total, int current);
     void onBusy();
     void onStartParsing();
     void onEndParsing(int total, int updateView);
     void updateSerialId();
+
+
 private:
     int mParserId;
     int mSerialCount;

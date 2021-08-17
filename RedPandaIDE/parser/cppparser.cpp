@@ -515,6 +515,130 @@ PStatement CppParser::getCurrentScope()
     return mCurrentScope.back();
 }
 
+void CppParser::getFullNameSpace(const QString &phrase, QString &sNamespace, QString &member)
+{
+    sNamespace = "";
+    member = phrase;
+    int strLen = phrase.length();
+    if (strLen==0)
+        return;
+    int lastI =-1;
+    int i=0;
+    while (i<strLen) {
+        if ((i+1<strLen) && (phrase[i]==':') && (phrase[i+1]==':') ) {
+            if (!mNamespaces.contains(sNamespace)) {
+                break;
+            } else {
+                lastI = i;
+            }
+        }
+        sNamespace += phrase[i];
+        i++;
+    }
+    if (i>=strLen) {
+        if (mNamespaces.contains(sNamespace)) {
+            sNamespace = phrase;
+            member = "";
+            return;
+        }
+    }
+    if (lastI >= 0) {
+        sNamespace = phrase.mid(0,lastI);
+        member = phrase.mid(lastI+2);
+    } else {
+        sNamespace = "";
+        member = phrase;
+    }
+}
+
+QString CppParser::getFullStatementName(const QString &command, PStatement parent)
+{
+    PStatement scopeStatement=parent;
+    while (scopeStatement && !isNamedScope(scopeStatement->kind))
+        scopeStatement = scopeStatement->parentScope.lock();
+    if (scopeStatement)
+        return scopeStatement->fullName + "::" + command;
+    else
+        return command;
+}
+
+PStatement CppParser::getIncompleteClass(const QString &command, PStatement parentScope)
+{
+    QString s=command;
+    //remove template parameter
+    int p = s.indexOf('<');
+    if (p>=0) {
+        s.truncate(p);
+    }
+    PStatement result = findStatementOf(mCurrentFile,s,parentScope,true);
+    if (result && result->kind!=StatementKind::skClass)
+        return PStatement();
+    return result;
+}
+
+StatementScope CppParser::getScope()
+{
+    // Don't blindly trust levels. Namespaces and externs can have levels too
+    PStatement currentScope = getCurrentScope();
+
+    // Invalid class or namespace/extern
+    if (!currentScope || (currentScope->kind == StatementKind::skNamespace))
+        return StatementScope::ssGlobal;
+    else if (currentScope->kind == StatementKind::skClass)
+        return StatementScope::ssClassLocal;
+    else
+        return StatementScope::ssLocal;
+}
+
+QString CppParser::getStatementKey(const QString &sName, const QString &sType, const QString &sNoNameArgs)
+{
+    return sName + "--" + sType + "--" + sNoNameArgs;
+}
+
+void CppParser::handleCatchBlock()
+{
+    int startLine= mTokenizer[mIndex]->line;
+    mIndex++; // skip for/catch;
+if not ((fIndex < fTokenizer.Tokens.Count) and (fTokenizer[fIndex]^.Text[1] = '(')) then
+  Exit;
+//skip params
+i2:=fIndex+1;
+if i2>=fTokenizer.Tokens.Count then
+  Exit;
+if fTokenizer[i2].Text[1] = '{' then begin
+  fBlockBeginSkips.Add(i2);
+  i:=SkipBraces(i2);
+  if i=i2 then
+    fBlockEndSkips.Add(fTokenizer.Tokens.Count)
+  else
+    fBlockEndSkips.Add(i);
+end else begin
+  i:=i2;
+  while (i<fTokenizer.Tokens.Count) and (fTokenizer[i].Text[1]<>';') do
+    inc(i);
+  fBlockEndSkips.Add(i);
+end;
+// add a block
+block := AddStatement(
+      GetCurrentScope,
+      fCurrentFile,
+      '', // override hint
+      '',
+      '',
+      '',
+      '',
+      startLine,
+      skBlock,
+      GetScope,
+      fClassScope,
+      True,
+      nil,
+      False);
+AddSoloScopeLevel(block,startLine);
+if not containsStr('...',fTokenizer[fIndex]^.Text) then
+  scanMethodArgs(block,fTokenizer[fIndex]^.Text);
+}
+
 QString CppParser::expandMacroType(const QString &name)
 {
     //its done in the preprocessor
@@ -750,7 +874,6 @@ bool CppParser::isLineChar(const QChar &ch)
 
 bool CppParser::isNotFuncArgs(const QString &args)
 {
-    bool result = true;
     int i=1; //skip '('
     int endPos = args.length()-1;//skip ')'
     bool lastCharIsId=false;
@@ -791,10 +914,32 @@ bool CppParser::isNotFuncArgs(const QString &args)
     }
     PStatement statement =findStatementOf(mCurrentFile,word,getCurrentScope(),true);
     if (statement &&
-            !(statement->kind == StatementKind::skClass
-              || statement->kind == StatementKind::skTypedef
-              || statement->kind == StatementKind::skEnum
-              || statement->kind == StatementKind::skEnumType))
+            !isTypeStatement(statement->kind))
         return true;
     return false;
+}
+
+bool CppParser::isNamedScope(StatementKind kind)
+{
+    switch(kind) {
+    case StatementKind::skClass:
+    case StatementKind::skNamespace:
+    case StatementKind::skFunction:
+        return true;
+    default:
+        return false;
+    }
+}
+
+bool CppParser::isTypeStatement(StatementKind kind)
+{
+    switch(kind) {
+    case StatementKind::skClass:
+    case StatementKind::skTypedef:
+    case StatementKind::skEnum:
+    case StatementKind::skEnumType:
+        return true;
+    default:
+        return false;
+    }
 }
