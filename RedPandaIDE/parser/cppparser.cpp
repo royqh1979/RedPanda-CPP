@@ -25,8 +25,8 @@ PStatement CppParser::addInheritedStatement(PStatement derived, PStatement inher
       inherit->scope,
       access,
       true,
-      inherit->inheritanceList,
       inherit->isStatic);
+    statement->inheritanceList.append(inherit->inheritanceList),
     statement->isInherited = true;
     return statement;
 }
@@ -34,23 +34,22 @@ PStatement CppParser::addInheritedStatement(PStatement derived, PStatement inher
 PStatement CppParser::addChildStatement(PStatement parent, const QString &fileName, const QString &hintText, const QString &aType, const QString &command, const QString &args, const QString &value, int line, StatementKind kind, StatementScope scope, StatementClassScope classScope, bool isDefinition, bool isStatic)
 {
     return addStatement(
-                    parent,
-                    fileName,
-                    hintText,
-                    aType,
-                    command,
-                    args,
-                    value,
-                    line,
-                    kind,
-                    scope,
-                    classScope,
-                    isDefinition,
-                    QList<std::weak_ptr<Statement>>(),
+                parent,
+                fileName,
+                hintText,
+                aType,
+                command,
+                args,
+                value,
+                line,
+                kind,
+                scope,
+                classScope,
+                isDefinition,
                 isStatic);
 }
 
-PStatement CppParser::addStatement(PStatement parent, const QString &fileName, const QString &hintText, const QString &aType, const QString &command, const QString &args, const QString &value, int line, StatementKind kind, StatementScope scope, StatementClassScope classScope, bool isDefinition, const QList<std::weak_ptr<Statement> > &inheritanceList, bool isStatic)
+PStatement CppParser::addStatement(PStatement parent, const QString &fileName, const QString &hintText, const QString &aType, const QString &command, const QString &args, const QString &value, int line, StatementKind kind, StatementScope scope, StatementClassScope classScope, bool isDefinition, bool isStatic)
 {
     // Move '*', '&' to type rather than cmd (it's in the way for code-completion)
     QString newType = aType;
@@ -101,7 +100,7 @@ PStatement CppParser::addStatement(PStatement parent, const QString &fileName, c
     result->noNameArgs = noNameArgs;
     result->value = value;
     result->kind = kind;
-    result->inheritanceList = inheritanceList;
+    //result->inheritanceList;
     result->scope = scope;
     result->classScope = classScope;
     result->hasDefinition = isDefinition;
@@ -599,44 +598,182 @@ void CppParser::handleCatchBlock()
 {
     int startLine= mTokenizer[mIndex]->line;
     mIndex++; // skip for/catch;
-if not ((fIndex < fTokenizer.Tokens.Count) and (fTokenizer[fIndex]^.Text[1] = '(')) then
-  Exit;
-//skip params
-i2:=fIndex+1;
-if i2>=fTokenizer.Tokens.Count then
-  Exit;
-if fTokenizer[i2].Text[1] = '{' then begin
-  fBlockBeginSkips.Add(i2);
-  i:=SkipBraces(i2);
-  if i=i2 then
-    fBlockEndSkips.Add(fTokenizer.Tokens.Count)
-  else
-    fBlockEndSkips.Add(i);
-end else begin
-  i:=i2;
-  while (i<fTokenizer.Tokens.Count) and (fTokenizer[i].Text[1]<>';') do
-    inc(i);
-  fBlockEndSkips.Add(i);
-end;
-// add a block
-block := AddStatement(
-      GetCurrentScope,
-      fCurrentFile,
-      '', // override hint
-      '',
-      '',
-      '',
-      '',
+    if (!((mIndex < mTokenizer.tokenCount()) && (mTokenizer[mIndex]->text.startsWith('('))))
+        return;
+    //skip params
+    int i2=mIndex+1;
+    if (i2>=mTokenizer.tokenCount())
+        return;
+    if (mTokenizer[i2]->text.startsWith('{')) {
+        mBlockBeginSkips.append(i2);
+        int i = skipBraces(i2);
+        if (i==i2) {
+            mBlockEndSkips.append(mTokenizer.tokenCount());
+        } else {
+            mBlockEndSkips.append(i);
+        }
+    } else {
+        int i=i2;
+        while ((i<mTokenizer.tokenCount()) && !mTokenizer[i]->text.startsWith(';'))
+            i++;
+        mBlockEndSkips.append(i);
+    }
+    // add a block
+    PStatement block = addStatement(
+      getCurrentScope(),
+      mCurrentFile,
+      "", // override hint
+      "",
+      "",
+      "",
+      "",
       startLine,
-      skBlock,
-      GetScope,
-      fClassScope,
-      True,
-      nil,
-      False);
-AddSoloScopeLevel(block,startLine);
-if not containsStr('...',fTokenizer[fIndex]^.Text) then
-  scanMethodArgs(block,fTokenizer[fIndex]^.Text);
+      StatementKind::skBlock,
+      getScope(),
+      mClassScope,
+      true,
+      false);
+    addSoloScopeLevel(block,startLine);
+    if (!mTokenizer[mIndex]->text.contains("..."))
+        scanMethodArgs(block,mTokenizer[mIndex]->text);
+}
+
+void CppParser::handleEnum()
+{
+    //todo : handle enum class
+    QString enumName = "";
+    bool isEnumClass = false;
+    int startLine = mTokenizer[mIndex]->line;
+    mIndex++; //skip 'enum'
+    if (mTokenizer[mIndex]->text.startsWith('{')) { // enum {...} NAME
+        // Skip to the closing brace
+        int i = skipBraces(mIndex);
+        if ((i + 1 < mTokenizer.tokenCount()) && mTokenizer[i]->text == "class") {
+            //enum class {...} NAME
+            isEnumClass = true;
+            i++;
+        }
+        // Have we found the name?
+        if ((i + 1 < mTokenizer.tokenCount()) && !mTokenizer[i]->text.startsWith('}')
+            && !mTokenizer[i + 1]->text.startsWith(';'))
+            enumName = mTokenizer[i + 1]->text.trimmed();
+    } else { // enum NAME {...};
+        if ( (mIndex< mTokenizer.tokenCount()) && mTokenizer[mIndex]->text == "class") {
+            //enum class {...} NAME
+            isEnumClass = true;
+            mIndex++;
+        }
+        while ((mIndex < mTokenizer.tokenCount()) &&
+               !(mTokenizer[mIndex]->text.startsWith('{')
+                  || mTokenizer[mIndex]->text.startsWith(';'))) {
+            enumName += mTokenizer[mIndex]->text + ' ';
+            mIndex++;
+        }
+        enumName = enumName.trimmed();
+        // An opening brace must be present after NAME
+        if ((mIndex >= mTokenizer.tokenCount()) || !mTokenizer[mIndex]->text.startsWith('{'))
+            return;
+    }
+
+    // Add statement for enum name too
+    PStatement enumStatement;
+    if (!enumName.isEmpty()) {
+        if (isEnumClass) {
+            enumStatement=addStatement(
+                        getCurrentScope(),
+                        mCurrentFile,
+                        "enum class "+enumName,
+                        "enum class",
+                        enumName,
+                        "",
+                        "",
+                        startLine,
+                        StatementKind::skEnumClassType,
+                        getScope(),
+                        mClassScope,
+                        true,
+                        false);
+        } else {
+            enumStatement=addStatement(
+                        getCurrentScope(),
+                        mCurrentFile,
+                        "enum "+enumName,
+                        "enum",
+                        enumName,
+                        "",
+                        "",
+                        startLine,
+                        StatementKind::skEnumType,
+                        getScope(),
+                        mClassScope,
+                        true,
+                        false);
+        }
+    }
+
+    // Skip opening brace
+    mIndex++;
+
+    // Call every member "enum NAME ITEMNAME"
+    QString lastType("enum");
+    if (!enumName.isEmpty())
+        lastType += ' ' + enumName;
+    QString cmd;
+    QString args;
+    if (!mTokenizer[mIndex]->text.startsWith('}')) {
+        while ((mIndex < mTokenizer.tokenCount()) &&
+                         !isblockChar(mTokenizer[mIndex]->text[0])) {
+            if (!mTokenizer[mIndex]->text.startsWith(',')) {
+                if (mTokenizer[mIndex]->text.endsWith(']')) { //array; break args
+                    int p = mTokenizer[mIndex]->text.indexOf('[');
+                    cmd = mTokenizer[mIndex]->text.mid(0,p);
+                    args = mTokenizer[mIndex]->text.mid(p);
+                } else {
+                    cmd = mTokenizer[mIndex]->text;
+                    args = "";
+                }
+                if (!isEnumClass) {
+                    if (enumStatement) {
+                        addStatement(
+                          enumStatement,
+                          mCurrentFile,
+                          lastType + "::" + mTokenizer[mIndex]->text, // override hint
+                          lastType,
+                          cmd,
+                          args,
+                          "",
+                          //fTokenizer[fIndex]^.Line,
+                          startLine,
+                          StatementKind::skEnum,
+                          getScope(),
+                          mClassScope,
+                          true,
+                          false);
+                    }
+                } else {
+                    addStatement(
+                      getCurrentScope(),
+                      mCurrentFile,
+                      lastType + "::" + mTokenizer[mIndex]->text, // override hint
+                      lastType,
+                      cmd,
+                      args,
+                      "",
+                      //fTokenizer[fIndex]^.Line,
+                      startLine,
+                      StatementKind::skEnum,
+                      getScope(),
+                      mClassScope,
+                      true,
+                      false);
+                }
+            }
+            mIndex ++ ;
+        }
+    }
+    // Step over closing brace
+    if ((mIndex < mTokenizer.tokenCount()) && mTokenizer[mIndex]->text.startsWith('}'))
+        mIndex++;
 }
 
 QString CppParser::expandMacroType(const QString &name)
@@ -846,6 +983,18 @@ bool CppParser::isSeperator(const QChar &ch)  {
     }
 }
 
+bool CppParser::isblockChar(const QChar &ch)
+{
+    switch(ch.unicode()){
+    case ';':
+    case '{':
+    case '}':
+        return true;
+    default:
+        return false;
+    }
+}
+
 bool CppParser::isInvalidVarPrefixChar(const QChar &ch)
 {
     switch (ch.unicode()) {
@@ -936,7 +1085,7 @@ bool CppParser::isTypeStatement(StatementKind kind)
     switch(kind) {
     case StatementKind::skClass:
     case StatementKind::skTypedef:
-    case StatementKind::skEnum:
+    case StatementKind::skEnumClassType:
     case StatementKind::skEnumType:
         return true;
     default:

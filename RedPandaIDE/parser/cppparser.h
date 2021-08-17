@@ -131,7 +131,6 @@ private:
             StatementScope scope,
             StatementClassScope classScope,
             bool isDefinition,
-            const QList<std::weak_ptr<Statement>>& inheritanceList,
             bool isStatic);
     void setInheritance(int index, PStatement classStatement, bool isStruct);
     bool isInCurrentScopeLevel(const QString& command);
@@ -243,6 +242,9 @@ private:
 
     /*'(', ';', ':', '{', '}', '#' */
     bool isSeperator(const QChar& ch);
+
+    /*';', '{', '}'*/
+    bool isblockChar(const QChar& ch);
 
     /* '#', ',', ';', ':', '{', '}', '!', '/', '+', '-', '<', '>' */
     bool isInvalidVarPrefixChar(const QChar& ch);

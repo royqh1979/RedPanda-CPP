@@ -34,6 +34,7 @@ enum class StatementKind  {
   skUnknown,
   skPreprocessor,
   skEnumType,
+  skEnumClassType,
   skEnum,
   skTypedef,
   skClass,
