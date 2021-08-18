@@ -273,7 +273,7 @@ bool CppParser::checkForMethod(QString &sType, QString &sName, QString &sArgs, b
             }
             break;
         } else {
-            //if IsValidIdentifier(fTokenizer[fIndex]^.Text) then
+            //if IsValidIdentifier(mTokenizer[mIndex]->text) then
             // Still walking through type
             QString s = expandMacroType(mTokenizer[mIndex]->text); //todo: do we really need expand macro? it should be done in preprocessor
             if (s == "static")
@@ -742,7 +742,7 @@ void CppParser::handleEnum()
                           cmd,
                           args,
                           "",
-                          //fTokenizer[fIndex]^.Line,
+                          //mTokenizer[mIndex]^.Line,
                           startLine,
                           StatementKind::skEnum,
                           getScope(),
@@ -759,7 +759,7 @@ void CppParser::handleEnum()
                       cmd,
                       args,
                       "",
-                      //fTokenizer[fIndex]^.Line,
+                      //mTokenizer[mIndex]^.Line,
                       startLine,
                       StatementKind::skEnum,
                       getScope(),
@@ -859,7 +859,345 @@ void CppParser::handleKeyword()
             mIndex++;
         mIndex++; // step over
         break;
+    default:
+        break;
     }
+}
+
+void CppParser::HandleMethod(const QString &sType, const QString &sName, const QString &sArgs, bool isStatic, bool isFriend)
+{
+    bool isValid = true;
+    bool isDeclaration = false; // assume it's not a prototype
+    int i = mIndex;
+    int startLine = mTokenizer[mIndex]->line;
+
+    // Skip over argument list
+    while ((mIndex < mTokenizer.tokenCount()) and ! (
+               isblockChar(mTokenizer[mIndex]->text.front())
+                           || mTokenizer[mIndex]->text.startsWith(':')))
+        mIndex++;
+
+    if (mIndex >= mTokenizer.tokenCount()) // not finished define, just skip it;
+        return;
+
+    PStatement functionClass = getCurrentScope();
+    // Check if this is a prototype
+    if (mTokenizer[mIndex]->text.startsWith(';')
+            || mTokenizer[mIndex]->text.startsWith('}')) {// prototype
+        isDeclaration = true;
+    } else {
+        // Find the function body start after the inherited constructor
+        if ((mIndex < mTokenizer.tokenCount()) && mTokenizer[mIndex]->text.startsWith(':')) {
+            while ((mIndex < mTokenizer.tokenCount()) && !isblockChar(mTokenizer[mIndex]->text.front()))
+                mIndex++;
+        }
+
+        // Still a prototype
+        if ((mIndex < mTokenizer.tokenCount()) && (mTokenizer[mIndex]->text.startsWith(';')
+                || mTokenizer[mIndex]->text.startsWith('}'))) {// prototype
+              isDeclaration = true;
+        }
+    }
+
+    QString scopelessName;
+    PStatement functionStatement;
+    if (isFriend && isDeclaration && functionClass) {
+        int delimPos = sName.indexOf("::");
+        if (delimPos >= 0) {
+            scopelessName = sName.mid(delimPos+2);
+        } else
+            scopelessName = sName;
+        //TODO : we should check namespace
+        functionClass->friends.insert(scopelessName);
+    } else if (isValid) {
+        // Use the class the function belongs to as the parent ID if the function is declared outside of the class body
+        int delimPos = sName.indexOf("::");
+        QString scopelessName;
+        QString parentClassName;
+        PStatement functionClass;
+        if (delimPos >= 0) {
+            // Provide Bar instead of Foo::Bar
+            scopelessName = sName.mid(delimPos);
+
+            // Check what class this function belongs to
+            parentClassName = sName.mid(0, delimPos);
+            functionClass = getIncompleteClass(parentClassName,getCurrentScope());
+        } else
+            scopelessName = sName;
+
+        StatementKind functionKind;
+        // Determine function type
+        if (scopelessName == sType) {
+            functionKind = StatementKind::skConstructor;
+        } else if (scopelessName == '~' + sType) {
+            functionKind = StatementKind::skDestructor;
+        } else {
+            functionKind = StatementKind::skFunction;
+        }
+
+        // For function definitions, the parent class is given. Only use that as a parent
+        if (!isDeclaration) {
+            functionStatement=addStatement(
+                        functionClass,
+                        mCurrentFile,
+                        "", // do not override hint
+                        sType,
+                        scopelessName,
+                        sArgs,
+                        "",
+                        //mTokenizer[mIndex - 1]^.Line,
+                        startLine,
+                        functionKind,
+                        getScope(),
+                        mClassScope,
+                        true,
+                        isStatic);
+            scanMethodArgs(functionStatement, functionStatement->args);
+            // add variable this to the class function
+            if (functionClass && functionClass->kind == StatementKind::skClass &&
+                    !isStatic) {
+                //add this to non-static class member function
+                addStatement(
+                            functionStatement,
+                            mCurrentFile,
+                            "", // do not override hint
+                            functionClass->command,
+                            "this",
+                            "",
+                            "",
+                            startLine,
+                            StatementKind::skVariable,
+                            StatementScope::ssLocal,
+                            StatementClassScope::scsNone,
+                            true,
+                            false);
+            }
+        } else {
+            functionStatement = addStatement(
+                        getCurrentScope(),
+                        mCurrentFile,
+                        "", // do not override hint
+                        sType,
+                        scopelessName,
+                        sArgs,
+                        "",
+                        //mTokenizer[mIndex - 1]^.Line,
+                        startLine,
+                        functionKind,
+                        getScope(),
+                        mClassScope,
+                        false,
+                        isStatic);
+        }
+
+    }
+
+
+    if ((mIndex < mTokenizer.tokenCount()) && mTokenizer[mIndex]->text.startsWith('{')) {
+        addSoloScopeLevel(functionStatement,startLine);
+        mIndex++; //skip '{'
+    } else if ((mIndex < mTokenizer.tokenCount()) && mTokenizer[mIndex]->text.startsWith(';')) {
+        addSoloScopeLevel(functionStatement,startLine);
+        if (mTokenizer[mIndex]->line != startLine)
+            removeScopeLevel(mTokenizer[mIndex]->line+1);
+        else
+            removeScopeLevel(startLine+1);
+        mIndex++;
+    }
+
+    if (i == mIndex) { // if not moved ahead, something is wrong but don't get stuck ;)
+        if ( (mIndex < mTokenizer.tokenCount()) &&
+             ! isBraceChar(mTokenizer[mIndex]->text.front())) {
+            mIndex++;
+        }
+    }
+}
+
+void CppParser::handleNamespace()
+{
+    bool isInline=false;
+    if (mTokenizer[mIndex]->text == "inline") {
+        isInline = true;
+        mIndex++; //skip 'inline'
+    }
+
+    int startLine = mTokenizer[mIndex]->line;
+    mIndex++; //skip 'namespace'
+
+    if (!isLetterChar(mTokenizer[mIndex]->text.front()))
+        //wrong namespace define, stop handling
+        return;
+    QString command = mTokenizer[mIndex]->text;
+    mIndex++;
+    if (mIndex>=mTokenizer.tokenCount())
+        return;
+    QString aliasName;
+    if ((mIndex+2<mTokenizer.tokenCount()) && (mTokenizer[mIndex]->text.front() == '=')) {
+        aliasName=mTokenizer[mIndex+1]->text;
+        //namespace alias
+        addStatement(
+            getCurrentScope(),
+            mCurrentFile,
+            "", // do not override hint
+            aliasName, // name of the alias namespace
+            command, // command
+            "", // args
+            "", // values
+            //mTokenizer[mIndex]^.Line,
+            startLine,
+            StatementKind::skNamespaceAlias,
+            getScope(),
+            mClassScope,
+            true,
+            false);
+        mIndex+=2; //skip ;
+        return;
+    } else if (isInline) {
+        //inline namespace , just skip it
+        // Skip to '{'
+        while ((mIndex<mTokenizer.tokenCount()) && (mTokenizer[mIndex]->text.front() != '{'))
+            mIndex++;
+        int i =skipBraces(mIndex); //skip '}'
+        if (i==mIndex)
+            mInlineNamespaceEndSkips.append(mTokenizer.tokenCount());
+        else
+            mInlineNamespaceEndSkips.append(i);
+        if (mIndex<mTokenizer.tokenCount())
+            mIndex++; //skip '{'
+    } else {
+        PStatement namespaceStatement = addStatement(
+            getCurrentScope(),
+            mCurrentFile,
+            "", // do not override hint
+            "", // type
+            command, // command
+            "", // args
+            "", // values
+            startLine,
+            StatementKind::skNamespace,
+            getScope(),
+            mClassScope,
+            true,
+            false);
+        addSoloScopeLevel(namespaceStatement,startLine);
+
+        // Skip to '{'
+        while ((mIndex<mTokenizer.tokenCount()) && !mTokenizer[mIndex]->text.startsWith('{'))
+            mIndex++;
+        if (mIndex<mTokenizer.tokenCount())
+            mIndex++; //skip '{'
+    }
+}
+
+void CppParser::handleOtherTypedefs()
+{
+    int startLine = mTokenizer[mIndex]->line;
+    // Skip typedef word
+    mIndex++;
+
+    if (mIndex>=mTokenizer.tokenCount())
+        return;
+
+    if (mTokenizer[mIndex]->text.front() == '('
+            || mTokenizer[mIndex]->text.front() == ','
+            || mTokenizer[mIndex]->text.front() == ';') { // error typedef
+        //skip to ;
+        while ((mIndex< mTokenizer.tokenCount()) && !mTokenizer[mIndex]->text.startsWith(';'))
+            mIndex++;
+        //skip ;
+        if ((mIndex< mTokenizer.tokenCount()) && !mTokenizer[mIndex]->text.startsWith(';'))
+            mIndex++;
+        return;
+    }
+    QString oldType;
+    // Walk up to first new word (before first comma or ;)
+    while(true) {
+        oldType += mTokenizer[mIndex]->text + ' ';
+        mIndex++;
+        if ((mIndex + 1 < mTokenizer.tokenCount())
+              && (mTokenizer[mIndex + 1]->text.front() == ','
+                  || mTokenizer[mIndex + 1]->text.front() == ';'))
+            break;
+        if  ((mIndex + 2 < mTokenizer.tokenCount())
+                            && (mTokenizer[mIndex + 2]->text.front() == ','
+                                || mTokenizer[mIndex + 2]->text.front() == ';'))
+            break;
+    }
+    oldType = oldType.trimmed();
+
+
+    // Add synonyms for old
+    if ((mIndex+1 < mTokenizer.tokenCount()) && !oldType.isEmpty()) {
+        while(true) {
+            // Support multiword typedefs
+            if (mIndex+2 < mTokenizer.tokenCount()) and (mTokenizer[mIndex + 2]->text[1] in [',', ';']) then begin // function define
+              if (mIndex + 2 < mTokenizer.tokenCount()) and (mIndex + 1 < mTokenizer.tokenCount()) and (mTokenizer[mIndex + 1]->text[1] = '(') then begin
+                //valid function define
+                NewType:=TrimRight(mTokenizer[mIndex]->text);
+                NewType:=Copy(NewType,2,Length(NewType)-2); //remove '(' and ')';
+                NewType:=TrimRight(NewType);
+                p:=LastDelimiter(' ',NewType);
+                if p <> 0 then
+                  NewType := Copy(NewType,p+1,Length(NewType)-p);
+                AddStatement(
+                  GetCurrentScope,
+                  fCurrentFile,
+                  'typedef ' + OldType + ' ' + mTokenizer[mIndex]->text + ' ' + mTokenizer[mIndex + 1]->text, // do not override hint
+                  OldType,
+                  NewType,
+                  mTokenizer[mIndex + 1]->text,
+                  '',
+                  startLine,
+                  skTypedef,
+                  GetScope,
+                  fClassScope,
+                  True,
+                  nil,
+                  False);
+               end;
+               NewType:='';
+               //skip to ',' or ';'
+               Inc(mIndex,2);
+               {
+               while (mIndex< mTokenizer.tokenCount()) and not (mTokenizer[mIndex]->text[1] in [',', ';']) do
+                  Inc(mIndex);
+               }
+            end else if not (mTokenizer[mIndex+1]->text[1] in [',', ';', '(']) then begin
+              NewType := NewType + mTokenizer[mIndex]->text + ' ';
+              Inc(mIndex);
+            end else begin
+              NewType := NewType + mTokenizer[mIndex]->text + ' ';
+              NewType := TrimRight(NewType);
+              AddStatement(
+                GetCurrentScope,
+                fCurrentFile,
+                'typedef ' + OldType + ' ' + NewType, // override hint
+                OldType,
+                NewType,
+                '',
+                '',
+                //mTokenizer[mIndex]^.Line,
+                startLine,
+                skTypedef,
+                GetScope,
+                fClassScope,
+                True,
+                nil,
+                False);
+              NewType := '';
+              Inc(mIndex);
+            end;
+            if (mIndex>= mTokenizer.tokenCount()) or (mTokenizer[mIndex]->text[1] = ';') then
+              break
+            else if mTokenizer[mIndex]->text[1] = ',' then
+              Inc(mIndex);
+            if (mIndex+1 >= mTokenizer.tokenCount())
+                break;
+        }
+    }
+
+// Step over semicolon (saves one HandleStatement loop)
+Inc(mIndex);
 }
 
 QString CppParser::expandMacroType(const QString &name)
@@ -1100,6 +1438,11 @@ bool CppParser::isInvalidVarPrefixChar(const QChar &ch)
     default:
         return false;
     }
+}
+
+bool CppParser::isBraceChar(const QChar &ch)
+{
+    return ch == '{' || ch =='}';
 }
 
 bool CppParser::isLineChar(const QChar &ch)

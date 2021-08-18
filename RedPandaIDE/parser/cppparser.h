@@ -184,8 +184,8 @@ private:
                             const QString& sNoNameArgs);
     void handleCatchBlock();
     void handleEnum();
-    void handleKeyword();
     void handleForBlock();
+    void handleKeyword();
     void HandleMethod(
             const QString& sType,
             const QString& sName,
@@ -248,6 +248,9 @@ private:
 
     /* '#', ',', ';', ':', '{', '}', '!', '/', '+', '-', '<', '>' */
     bool isInvalidVarPrefixChar(const QChar& ch);
+
+    /*'{', '}' */
+    bool isBraceChar(const QChar& ch);
 
     bool isLineChar(const QChar& ch);
 
