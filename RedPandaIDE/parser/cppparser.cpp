@@ -776,6 +776,92 @@ void CppParser::handleEnum()
         mIndex++;
 }
 
+void CppParser::handleForBlock()
+{
+    int startLine = mTokenizer[mIndex]->line;
+    mIndex++; // skip for/catch;
+    if (!(mIndex < mTokenizer.tokenCount()))
+        return;
+    int i=mIndex;
+    while ((i<mTokenizer.tokenCount()) && !mTokenizer[i]->text.startsWith(';'))
+        i++;
+    if (i>=mTokenizer.tokenCount())
+        return;
+    int i2 = i+1; //skip over ';' (tokenizer have change for(;;) to for(;)
+    if (i2>=mTokenizer.tokenCount())
+        return;
+    if (mTokenizer[i2]->text.startsWith('{')) {
+        mBlockBeginSkips.append(i2);
+        i=skipBraces(i2);
+        if (i==i2)
+            mBlockEndSkips.append(mTokenizer.tokenCount());
+        else
+            mBlockEndSkips.append(i);
+    } else {
+        i=i2;
+        while ((i<mTokenizer.tokenCount()) && !mTokenizer[i]->text.startsWith(';'))
+            i++;
+        mBlockEndSkips.append(i);
+    }
+    // add a block
+    PStatement block = addStatement(
+                getCurrentScope(),
+                mCurrentFile,
+                "", // override hint
+                "",
+                "",
+                "",
+                "",
+                startLine,
+                StatementKind::skBlock,
+                getScope(),
+                mClassScope,
+                true,
+                false);
+
+    addSoloScopeLevel(block,startLine);
+}
+
+void CppParser::handleKeyword()
+{
+    // Skip
+    SkipType skipType = CppKeywords.value(mTokenizer[mIndex]->text,SkipType::skNone);
+    switch (skipType) {
+    case SkipType::skItself:
+        // skip it;
+        mIndex++;
+        break;
+    case SkipType::skToSemicolon:
+        // Skip to ;
+        while (mIndex < mTokenizer.tokenCount() && !mTokenizer[mIndex]->text.startsWith(';'))
+            mIndex++;
+        mIndex++;// step over
+        break;
+    case SkipType::skToColon:
+        // Skip to :
+        while (mIndex < mTokenizer.tokenCount() && !mTokenizer[mIndex]->text.startsWith(':'))
+            mIndex++;
+        break;
+    case SkipType::skToRightParenthesis:
+        // skip to )
+        while (mIndex < mTokenizer.tokenCount() && !mTokenizer[mIndex]->text.startsWith(')'))
+            mIndex++;
+        mIndex++; // step over
+        break;
+    case SkipType::skToLeftBrace:
+        // Skip to {
+        while (mIndex < mTokenizer.tokenCount() && !mTokenizer[mIndex]->text.startsWith('{'))
+            mIndex++;
+        break;
+    case SkipType::skToRightBrace:
+        // Skip to }
+        while (mIndex < mTokenizer.tokenCount() && !mTokenizer[mIndex]->text.startsWith('}'))
+            mIndex++;
+        mIndex++; // step over
+        break;
+    }
+}
+
 QString CppParser::expandMacroType(const QString &name)
 {
     //its done in the preprocessor

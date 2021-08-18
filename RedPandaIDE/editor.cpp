@@ -311,37 +311,39 @@ void Editor::focusOutEvent(QFocusEvent *event)
 void Editor::keyPressEvent(QKeyEvent *event)
 {
     bool handled = false;
-    switch (event->key()) {
-    case Qt::Key_Delete:
-        // remove completed character
-        //fLastIdCharPressed:=0;
-        undoSymbolCompletion(caretX());
-        break;;
-    case Qt::Key_Backspace:
-        // remove completed character
-        //fLastIdCharPressed:=0;
-        undoSymbolCompletion(caretX()-1);
-        break;;
-    default: {
-        QString t = event->text();
-        if (!t.isEmpty()) {
-            QChar ch = t[0];
-            switch (ch.unicode()) {
-            case '"':
-            case '\'':
-            case '(':
-            case ')':
-            case '{':
-            case '}':
-            case '[':
-            case ']':
-            case '<':
-            case '>':
-            case '*':
-                handled = handleSymbolCompletion(ch);
+    if (!readOnly()) {
+        switch (event->key()) {
+        case Qt::Key_Delete:
+            // remove completed character
+            //fLastIdCharPressed:=0;
+            undoSymbolCompletion(caretX());
+            break;;
+        case Qt::Key_Backspace:
+            // remove completed character
+            //fLastIdCharPressed:=0;
+            undoSymbolCompletion(caretX()-1);
+            break;;
+        default: {
+            QString t = event->text();
+            if (!t.isEmpty()) {
+                QChar ch = t[0];
+                switch (ch.unicode()) {
+                case '"':
+                case '\'':
+                case '(':
+                case ')':
+                case '{':
+                case '}':
+                case '[':
+                case ']':
+                case '<':
+                case '>':
+                case '*':
+                    handled = handleSymbolCompletion(ch);
+                }
             }
         }
-    }
+        }
     }
     if (!handled) {
         SynEdit::keyPressEvent(event);
