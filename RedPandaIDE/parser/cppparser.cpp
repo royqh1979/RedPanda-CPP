@@ -1114,13 +1114,15 @@ void CppParser::handleOtherTypedefs()
     while(true) {
         oldType += mTokenizer[mIndex]->text + ' ';
         mIndex++;
-        if ((mIndex + 1 < mTokenizer.tokenCount())
-              && (mTokenizer[mIndex + 1]->text.front() == ','
-                  || mTokenizer[mIndex + 1]->text.front() == ';'))
+        if (mIndex+1>=mTokenizer.tokenCount())
+            break;
+        if (mTokenizer[mIndex + 1]->text.front() == ','
+                  || mTokenizer[mIndex + 1]->text.front() == ';')
             break;
         if  ((mIndex + 2 < mTokenizer.tokenCount())
-                            && (mTokenizer[mIndex + 2]->text.front() == ','
-                                || mTokenizer[mIndex + 2]->text.front() == ';'))
+             && (mTokenizer[mIndex + 2]->text.front() == ','
+                 || mTokenizer[mIndex + 2]->text.front() == ';')
+             && (mTokenizer[mIndex + 1]->text.front() == '('))
             break;
     }
     oldType = oldType.trimmed();
@@ -1128,76 +1130,134 @@ void CppParser::handleOtherTypedefs()
 
     // Add synonyms for old
     if ((mIndex+1 < mTokenizer.tokenCount()) && !oldType.isEmpty()) {
+        QString newType;
         while(true) {
             // Support multiword typedefs
-            if (mIndex+2 < mTokenizer.tokenCount()) and (mTokenizer[mIndex + 2]->text[1] in [',', ';']) then begin // function define
-              if (mIndex + 2 < mTokenizer.tokenCount()) and (mIndex + 1 < mTokenizer.tokenCount()) and (mTokenizer[mIndex + 1]->text[1] = '(') then begin
+            if ((mIndex + 2 < mTokenizer.tokenCount())
+                    && (mTokenizer[mIndex + 2]->text.front() == ','
+                        || mTokenizer[mIndex + 2]->text.front() == ';')
+                    && (mTokenizer[mIndex + 1]->text.front() == '(')) {
                 //valid function define
-                NewType:=TrimRight(mTokenizer[mIndex]->text);
-                NewType:=Copy(NewType,2,Length(NewType)-2); //remove '(' and ')';
-                NewType:=TrimRight(NewType);
-                p:=LastDelimiter(' ',NewType);
-                if p <> 0 then
-                  NewType := Copy(NewType,p+1,Length(NewType)-p);
-                AddStatement(
-                  GetCurrentScope,
-                  fCurrentFile,
-                  'typedef ' + OldType + ' ' + mTokenizer[mIndex]->text + ' ' + mTokenizer[mIndex + 1]->text, // do not override hint
-                  OldType,
-                  NewType,
-                  mTokenizer[mIndex + 1]->text,
-                  '',
-                  startLine,
-                  skTypedef,
-                  GetScope,
-                  fClassScope,
-                  True,
-                  nil,
-                  False);
-               end;
-               NewType:='';
-               //skip to ',' or ';'
-               Inc(mIndex,2);
-               {
-               while (mIndex< mTokenizer.tokenCount()) and not (mTokenizer[mIndex]->text[1] in [',', ';']) do
-                  Inc(mIndex);
-               }
-            end else if not (mTokenizer[mIndex+1]->text[1] in [',', ';', '(']) then begin
-              NewType := NewType + mTokenizer[mIndex]->text + ' ';
-              Inc(mIndex);
-            end else begin
-              NewType := NewType + mTokenizer[mIndex]->text + ' ';
-              NewType := TrimRight(NewType);
-              AddStatement(
-                GetCurrentScope,
-                fCurrentFile,
-                'typedef ' + OldType + ' ' + NewType, // override hint
-                OldType,
-                NewType,
-                '',
-                '',
-                //mTokenizer[mIndex]^.Line,
-                startLine,
-                skTypedef,
-                GetScope,
-                fClassScope,
-                True,
-                nil,
-                False);
-              NewType := '';
-              Inc(mIndex);
-            end;
-            if (mIndex>= mTokenizer.tokenCount()) or (mTokenizer[mIndex]->text[1] = ';') then
-              break
-            else if mTokenizer[mIndex]->text[1] = ',' then
-              Inc(mIndex);
+                newType = mTokenizer[mIndex]->text.trimmed();
+                newType = newType.mid(1,newType.length()-2); //remove '(' and ')';
+                newType = newType.trimmed();
+                int p = newType.lastIndexOf(' ');
+                if (p>=0)
+                    newType.truncate(p+1);
+                addStatement(
+                        getCurrentScope(),
+                        mCurrentFile,
+                        "typedef " + oldType + " " + mTokenizer[mIndex]->text + " " +
+                                mTokenizer[mIndex + 1]->text, // do not override hint
+                        oldType,
+                        newType,
+                        mTokenizer[mIndex + 1]->text,
+                        "",
+                        startLine,
+                        StatementKind::skTypedef,
+                        getScope(),
+                        mClassScope,
+                        true,
+                        false);
+                newType = "";
+                //skip to ',' or ';'
+                mIndex+=2;
+            } else if (mTokenizer[mIndex+1]->text.front() ==','
+                       || mTokenizer[mIndex+1]->text.front() ==';'
+                       || mTokenizer[mIndex+1]->text.front() =='(') {
+                newType += mTokenizer[mIndex]->text;
+                newType = newType.trimmed();
+                addStatement(
+                            getCurrentScope(),
+                            mCurrentFile,
+                            "typedef " + oldType + " " + newType, // override hint
+                            oldType,
+                            newType,
+                            "",
+                            "",
+                            startLine,
+                            StatementKind::skTypedef,
+                            getScope(),
+                            mClassScope,
+                            true,
+                            false);
+                newType = "";
+                mIndex++;
+            } else {
+                newType += mTokenizer[mIndex]->text + ' ';
+                mIndex++;
+            }
+            if ((mIndex>= mTokenizer.tokenCount()) || (mTokenizer[mIndex]->text[1] == ';'))
+                break;
+            else if (mTokenizer[mIndex]->text.front() == ',')
+                mIndex++;
             if (mIndex+1 >= mTokenizer.tokenCount())
                 break;
         }
     }
 
-// Step over semicolon (saves one HandleStatement loop)
-Inc(mIndex);
+    // Step over semicolon (saves one HandleStatement loop)
+    mIndex++;
+}
+
+void
+
+void CppParser::handlePreprocessor()
+{
+    if (mTokenizer[mIndex]->text.startsWith("#include ")) { // start of new file
+        // format: #include fullfilename:line
+        // Strip keyword
+        QString s = mTokenizer[mIndex]->text.mid(QString("#include ").length());
+        int delimPos = s.lastIndexOf(':');
+        if (delimPos>=0) {
+            mCurrentFile = s.mid(0,delimPos);
+            mIsSystemHeader = isSystemHeaderFile(mCurrentFile) || isProjectHeaderFile(mCurrentFile);
+            mIsProjectFile = mProjectFiles.contains(mCurrentFile); FastIndexOf(fProjectFiles,fCurrentFile) <> -1;
+            mIsHeader = isHfile(mCurrentFile);
+
+            // Mention progress to user if we enter a NEW file
+            bool ok;
+            int line = s.mid(delimPos+1).toInt(&ok);
+            if (line == 1) {
+                mFilesScannedCount++;
+                mFilesToScanCount++;
+                onProgress(mCurrentFile,mFilesToScanCount,mFilesScannedCount);
+            }
+        }
+    } else if (mTokenizer[mIndex]->text.startsWith("#define ")) {
+
+      // format: #define A B, remove define keyword
+      QString s = mTokenizer[mIndex]->text.mid(QString("#define ").length());
+
+      // Ask the preprocessor to cut parts up
+      QString name,args,value;
+      mPreprocessor.getDefineParts(s,name,args,value);
+
+      // Generate custom hint
+      QString hintText = "#define";
+      if (!name.isEmpty())
+          hintText += ' ' + name;
+      if (!args.isEmpty())
+          hintText += ' ' + args;
+      if (!value.isEmpty())
+          hintText += ' ' + value;
+
+      addStatement(
+        nullptr, // defines don't belong to any scope
+        mCurrentFile,
+        hintText, // override hint
+        "", // define has no type
+        name,
+        args,
+        value,
+        mTokenizer[mIndex]->line,
+        StatementKind::skPreprocessor,
+        StatementScope::ssGlobal,
+        StatementClassScope::scsNone,
+        true,
+        false);
+    } // TODO: undef ( define has limited scope)
+    mIndex++;
 }
 
 QString CppParser::expandMacroType(const QString &name)
@@ -1365,6 +1425,11 @@ QString CppParser::removeArgNames(const QString &args)
     }
     result += currentArg.trimmed();
     return result;
+}
+
+void CppParser::removeDefine(const QString &name)
+{
+
 }
 
 bool CppParser::isSpaceChar(const QChar &ch)

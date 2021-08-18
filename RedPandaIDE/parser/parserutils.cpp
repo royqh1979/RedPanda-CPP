@@ -12,8 +12,25 @@ QSet<QString> STLPointers;
 QSet<QString> STLContainers;
 QSet<QString> STLElementMethods;
 
+static QSet<QString> CppHeaderExts;
+static QSet<QString> CppSourceExts;
+
 void initParser()
 {
+    CppHeaderExts.insert("h");
+    CppHeaderExts.insert("hpp");
+    CppHeaderExts.insert("rh");
+    CppHeaderExts.insert("hh");
+    CppHeaderExts.insert("hxx");
+    CppHeaderExts.insert("inl");
+    CppHeaderExts.insert("");
+
+    CppSourceExts.insert("c");
+    CppSourceExts.insert("cpp");
+    CppSourceExts.insert("cc");
+    CppSourceExts.insert("cxx");
+    CppSourceExts.insert("c++");
+    CppSourceExts.insert("cp");
     // skip itself
     CppKeywords.insert("and",SkipType::skItself);
     CppKeywords.insert("and_eq",SkipType::skItself);
@@ -332,4 +349,14 @@ bool isSystemHeaderFile(const QString &fileName, const QStringList &includePaths
 bool isKeyword(const QString &word)
 {
     return CppKeywords.contains(word);
+}
+
+bool isHfile(const QString filename)
+{
+    if (filename.isEmpty())
+        return false;
+
+    QFileInfo fileInfo(filename);
+    return CppHeaderExts.contains(fileInfo.suffix().toLower());
+
 }
