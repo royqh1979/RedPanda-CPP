@@ -118,7 +118,7 @@ struct Statement {
     bool isStatic; // static function / variable
     bool isInherited; // inherted member;
     QString fullName; // fullname(including class and namespace), ClassA::foo
-    QStringList usingList; // using namespaces
+    QSet<QString> usingList; // using namespaces
     int usageCount; //Usage Count, used by TCodeCompletion
     int freqTop; // Usage Count Rank, used by TCodeCompletion
     QString noNameArgs;// Args without name
@@ -170,5 +170,6 @@ QString getLocalHeaderFileName(const QString& relativeTo, const QString& fileNam
 QString getSystemHeaderFileName(const QString& fileName, const QStringList& includePaths);
 bool isSystemHeaderFile(const QString& fileName, const QStringList& includePaths);
 bool isHfile(const QString filename);
+bool isCfile(const QString filename);
 bool isKeyword(const QString& word);
 #endif // PARSER_UTILS_H

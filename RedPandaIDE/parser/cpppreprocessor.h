@@ -51,6 +51,7 @@ public:
 
     void dumpDefinesTo(const QString& fileName);
     void dumpIncludesListTo(const QString& fileName);
+    QStringList result();
 signals:
 
 private:
@@ -78,7 +79,6 @@ private:
     bool getCurrentBranch();
     void setCurrentBranch(bool value);
     void removeCurrentBranch();
-    QStringList getResult();
     // include stuff
     PFileIncludes getFileIncludesEntry(const QString& FileName);
     void addDefinesInFile(const QString& fileName);

@@ -360,3 +360,12 @@ bool isHfile(const QString filename)
     return CppHeaderExts.contains(fileInfo.suffix().toLower());
 
 }
+
+bool isCfile(const QString filename)
+{
+    if (filename.isEmpty())
+        return false;
+
+    QFileInfo fileInfo(filename);
+    return CppSourceExts.contains(fileInfo.suffix().toLower());
+}

@@ -1,5 +1,6 @@
 #include "cppparser.h"
 #include "parserutils.h"
+#include "../utils.h"
 
 #include <QHash>
 #include <QQueue>
@@ -1200,8 +1201,6 @@ void CppParser::handleOtherTypedefs()
     mIndex++;
 }
 
-void
-
 void CppParser::handlePreprocessor()
 {
     if (mTokenizer[mIndex]->text.startsWith("#include ")) { // start of new file
@@ -1212,8 +1211,7 @@ void CppParser::handlePreprocessor()
         if (delimPos>=0) {
             mCurrentFile = s.mid(0,delimPos);
             mIsSystemHeader = isSystemHeaderFile(mCurrentFile) || isProjectHeaderFile(mCurrentFile);
-            mIsProjectFile = mProjectFiles.contains(mCurrentFile); FastIndexOf(fProjectFiles,fCurrentFile) <> -1;
-            mIsHeader = isHfile(mCurrentFile);
+            mIsProjectFile = mProjectFiles.contains(mCurrentFile);             mIsHeader = isHfile(mCurrentFile);
 
             // Mention progress to user if we enter a NEW file
             bool ok;
@@ -1587,7 +1585,7 @@ void CppParser::handleStructs(bool isTypedef)
                                   false); // typedef
                             } else {
                                 //variable define
-                                AddStatement(
+                                addStatement(
                                   getCurrentScope(),
                                   mCurrentFile,
                                   "", // do not override hint
@@ -1621,6 +1619,334 @@ void CppParser::handleStructs(bool isTypedef)
         // Step over {
         if ((mIndex < mTokenizer.tokenCount()) && (mTokenizer[mIndex]->text.front() == '{'))
             mIndex++;
+    }
+}
+
+void CppParser::handleUsing()
+{
+    int startLine = mTokenizer[mIndex]->line;
+    if (mCurrentFile.isEmpty()) {
+        //skip to ;
+        while ((mIndex < mTokenizer.tokenCount()) && (mTokenizer[mIndex]->text!=';'))
+            mIndex++;
+        mIndex++; //skip ;
+        return;
+    }
+
+    mIndex++; //skip 'using'
+
+    //handle things like 'using std::vector;'
+    if ((mIndex+2>=mTokenizer.tokenCount())
+            || (mTokenizer[mIndex]->text != "namespace")) {
+        int i= mTokenizer[mIndex]->text.lastIndexOf("::");
+        if (i>=0) {
+            QString fullName = mTokenizer[mIndex]->text;
+            QString usingName = fullName.mid(i+2);
+            addStatement(
+                        getCurrentScope(),
+                        mCurrentFile,
+                        "using "+fullName, //hint text
+                        fullName, // name of the alias (type)
+                        usingName, // command
+                        "", // args
+                        "", // values
+                        startLine,
+                        StatementKind::skAlias,
+                        getScope(),
+                        mClassScope,
+                        true,
+                        false);
+        }
+        //skip to ;
+        while ((mIndex<mTokenizer.tokenCount()) &&
+                (mTokenizer[mIndex]->text!=";"))
+            mIndex++;
+        mIndex++; //and skip it
+        return;
+    }
+    mIndex++;  // skip 'namespace'
+    PStatement scopeStatement = getCurrentScope();
+
+    QString usingName = mTokenizer[mIndex]->text;
+    mIndex++;
+
+    if (scopeStatement) {
+        QString fullName = scopeStatement->fullName + "::" + usingName;
+        if (!mNamespaces.contains(fullName)) {
+            fullName = usingName;
+        }
+        if (mNamespaces.contains(fullName)) {
+            scopeStatement->usingList.insert(fullName);
+        }
+    } else {
+        PFileIncludes fileInfo = findFileIncludes(mCurrentFile);
+        if (!fileInfo)
+            return;
+        if (mNamespaces.contains(usingName)) {
+            fileInfo->usings.insert(usingName);
+        }
+    }
+}
+
+void CppParser::handleVar()
+{
+    // Keep going and stop on top of the variable name
+    QString lastType = "";
+    bool isFunctionPointer = false;
+    bool isExtern = false;
+    bool isStatic = false;
+    bool varAdded = false;
+    while (true) {
+        if ((mIndex + 2 < mTokenizer.tokenCount())
+                && (mTokenizer[mIndex + 1]->text.front() == '(')
+                && (mTokenizer[mIndex + 2]->text.front() == '(')) {
+            isFunctionPointer = mTokenizer[mIndex + 1]->text.indexOf('*') >= 0;
+            if (!isFunctionPointer)
+                break; // inline constructor
+        } else if ((mIndex + 1 < mTokenizer.tokenCount())
+                   && (mTokenizer[mIndex + 1]->text.front()=='('
+                       || mTokenizer[mIndex + 1]->text.front()==','
+                       || mTokenizer[mIndex + 1]->text.front()==';'
+                       || mTokenizer[mIndex + 1]->text.front()==':'
+                       || mTokenizer[mIndex + 1]->text.front()=='}'
+                       || mTokenizer[mIndex + 1]->text.front()=='#'
+                       || mTokenizer[mIndex + 1]->text.front()=='{')) {
+            break;
+        }
+
+
+        // we've made a mistake, this is a typedef , not a variable definition.
+        if (mTokenizer[mIndex]->text == "typedef")
+            return;
+
+        // struct/class/union is part of the type signature
+        // but we dont store it in the type cache, so must trim it to find the type info
+        if (mTokenizer[mIndex]->text!="struct"
+                && mTokenizer[mIndex]->text!="class"
+                && mTokenizer[mIndex]->text!="union") {
+            if (mTokenizer[mIndex]->text == ':') {
+                lastType += ':';
+            } else {
+                QString s=expandMacroType(mTokenizer[mIndex]->text);
+                if (s == "extern") {
+                    isExtern = true;
+                } else {
+                    if (!s.isEmpty())
+                        lastType += ' '+s;
+                    if (s == "static")
+                        isStatic = true;
+                }
+            }
+        }
+        mIndex++;
+        if(mIndex >= mTokenizer.tokenCount())
+            break;
+        if (isFunctionPointer)
+            break;
+    }
+    lastType = lastType.trimmed();
+
+    // Don't bother entering the scanning loop when we have failed
+    if (mIndex >= mTokenizer.tokenCount())
+        return;
+
+    // Find the variable name
+    while (true) {
+
+        // Skip bit identifiers,
+        // e.g.:
+        // handle
+        // unsigned short bAppReturnCode:8,reserved:6,fBusy:1,fAck:1
+        // as
+        // unsigned short bAppReturnCode,reserved,fBusy,fAck
+        if ( (mIndex < mTokenizer.tokenCount()) && (mTokenizer[mIndex]->text.front() == ':')) {
+            while ( (mIndex < mTokenizer.tokenCount())
+                    && !(
+                        mTokenizer[mIndex]->text.front() == ','
+                        || isblockChar(';')
+                        ))
+                mIndex++;
+        }
+
+        // Skip inline constructors,
+        // e.g.:
+        // handle
+        // int a(3)
+        // as
+        // int a
+        if (!isFunctionPointer &&
+                mIndex < mTokenizer.tokenCount() &&
+                mTokenizer[mIndex]->text.front() == '(') {
+            while ((mIndex < mTokenizer.tokenCount())
+                    && !(
+                        mTokenizer[mIndex]->text.front() == ','
+                        || isblockChar(';')
+                        ))
+                mIndex++;
+        }
+
+        // Did we stop on top of the variable name?
+        if (mIndex < mTokenizer.tokenCount()) {
+            if (mTokenizer[mIndex]->text.front()!=','
+                    && mTokenizer[mIndex]->text.front()!=';') {
+                QString cmd;
+                QString args;
+                if (isFunctionPointer && (mIndex + 1 < mTokenizer.tokenCount())) {
+                        QString s = mTokenizer[mIndex]->text;
+                        cmd = s.mid(2,s.length()-3).trimmed(); // (*foo) -> foo
+                        args = mTokenizer[mIndex + 1]->text; // (int a,int b)
+                        lastType += "(*)" + args; // void(int a,int b)
+                        mIndex++;
+                } else if (mTokenizer[mIndex]->text.back() == ']') { //array; break args
+                    int pos = mTokenizer[mIndex]->text.indexOf('[');
+                    cmd = mTokenizer[mIndex]->text.mid(0,pos);
+                    args = mTokenizer[mIndex]->text.mid(pos);
+                } else {
+                    cmd = mTokenizer[mIndex]->text;
+                    args = "";
+                }
+
+                // Add a statement for every struct we are in
+                addChildStatement(
+                  getCurrentScope(),
+                  mCurrentFile,
+                  "", // do not override hint
+                  lastType,
+                  cmd,
+                  args,
+                  "",
+                  mTokenizer[mIndex]->line,
+                  StatementKind::skVariable,
+                  getScope(),
+                  mClassScope,
+                  //True,
+                  not isExtern,
+                  isStatic); // TODO: not supported to pass list
+                varAdded = true;
+            }
+
+            // Step over the variable name
+            if (isblockChar(mTokenizer[mIndex]->text.front())) {
+                break;
+            }
+            mIndex++;
+        }
+        if (mIndex >= mTokenizer.tokenCount())
+            break;
+        if (isblockChar(mTokenizer[mIndex]->text.front()))
+            break;
+    }
+    if (varAdded && (mIndex < mTokenizer.tokenCount())
+            && (mTokenizer[mIndex]->text == '{')) {
+        // skip { } like A x {new A};
+        int i=skipBraces(mIndex);
+        if (i!=mIndex)
+            mIndex = i+1;
+    }
+    // Skip ; and ,
+    if ( (mIndex < mTokenizer.tokenCount()) &&
+         (mTokenizer[mIndex]->text.front() == ';'
+          || mTokenizer[mIndex]->text.front() == ','))
+        mIndex++;
+}
+
+void CppParser::internalParse(const QString &fileName, bool manualUpdate)
+{
+    // Perform some validation before we start
+    if (!mEnabled)
+        return;
+    if (!isCfile(fileName) && !isHfile(fileName))  // support only known C/C++ files
+        return;
+
+    QStringList tempStream;
+    if (mOnGetFileStream) {
+        mOnGetFileStream(fileName,tempStream);
+    }
+
+    // Preprocess the file...
+    {
+        auto action = finally([this]{
+            mPreprocessor.reset();
+            mTokenizer.reset();
+        });
+        // Let the preprocessor augment the include records
+        mPreprocessor.setIncludesList(mIncludesList);
+        mPreprocessor.setIncludePaths(mIncludePaths);
+        mPreprocessor.setProjectIncludePaths(mProjectIncludePaths);
+        mPreprocessor.setScannedFileList(mScannedFiles);
+        mPreprocessor.setScanOptions(mParseGlobalHeaders, mParseLocalHeaders);
+        mPreprocessor.preprocess(fileName, tempStream);
+
+//    with TStringList.Create do try
+//      Text:=fPreprocessor.Result;
+//      SaveToFile('f:\\Preprocess.txt');
+//    finally
+//      Free;
+//    end;
+        //fPreprocessor.DumpIncludesListTo('f:\\includes.txt');
+        // Tokenize the preprocessed buffer file
+        mTokenizer.tokenize(mPreprocessor.result());
+        if (mTokenizer.tokenCount() == 0)
+            return;
+
+        // Process the token list
+        mCurrentScope.clear();
+        mCurrentClassScope.clear();
+        mIndex = 0;
+        mClassScope = StatementClassScope::scsNone;
+        mSkipList.clear();
+        mBlockBeginSkips.clear();
+        mBlockEndSkips.clear();
+        mInlineNamespaceEndSkips.clear();
+        while(true) {
+            if (!handleStatement())
+                break;
+        }
+        //mTokenizer.DumpTokens('f:\tokens.txt');
+        //Statements.DumpTo('f:\stats.txt');
+        //Statements.DumpWithScope('f:\\statements.txt');
+        //fPreprocessor.DumpDefinesTo('f:\defines.txt');
+        //fPreprocessor.DumpIncludesListTo('f:\\includes.txt');
+    }
+}
+
+void CppParser::inheritClassStatement(PStatement derived, bool isStruct, PStatement base, StatementClassScope access)
+{
+    PFileIncludes fileIncludes1=findFileIncludes(derived->fileName);
+    PFileIncludes fileIncludes2=findFileIncludes(base->fileName);
+    if (fileIncludes1 && fileIncludes2) {
+        //derived class depeneds on base class
+        fileIncludes1->dependingFiles.insert(base->fileName);
+        fileIncludes2->dependedFiles.insert(derived->fileName);
+    }
+    //differentiate class and struct
+    if (access == StatementClassScope::scsNone) {
+        if (isStruct)
+            access = StatementClassScope::scsPublic;
+        else
+            access = StatementClassScope::scsPrivate;
+    }
+    for (PStatement statement : base->children) {
+        if (statement->classScope == StatementClassScope::scsPrivate
+                || statement->kind == StatementKind::skConstructor
+                || statement->kind == StatementKind::skDestructor)
+            continue;
+        StatementClassScope m_acc;
+        switch(access) {
+        case StatementClassScope::scsPublic:
+            m_acc = statement->classScope;
+            break;
+        case StatementClassScope::scsProtected:
+            m_acc = StatementClassScope::scsProtected;
+            break;
+        case StatementClassScope::scsPrivate:
+            m_acc = StatementClassScope::scsPrivate;
+            break;
+        default:
+            m_acc = StatementClassScope::scsPrivate;
+        }
+        //inherit
+        addInheritedStatement(derived,statement,m_acc);
     }
 }
 
@@ -1681,6 +2007,63 @@ PStatement CppParser::doFindStatementInScope(const QString &name, const QString 
         }
     }
     return PStatement();
+}
+
+void CppParser::internalInvalidateFile(const QString &fileName)
+{
+    if (fileName.isEmpty())
+        return;
+
+    //remove all statements in the file
+    QList<QString> keys=mNamespaces.keys();
+    for (QString key:keys) {
+        PStatementList statements = mNamespaces.value(key);
+        for (int i=statements->size()-1;i>=0;i--) {
+            PStatement statement = statements->at(i);
+            if (statement->fileName == fileName
+                    || statement->definitionFileName == fileName) {
+                statements->removeAt(i);
+            }
+        }
+        if (statements->isEmpty()) {
+            mNamespaces.remove(key);
+        }
+    }
+    // delete it from scannedfiles
+    mScannedFiles->remove(fileName);
+
+    // remove its include files list
+    PFileIncludes p = findFileIncludes(fileName, true);
+    if (p) {
+        //fPreprocessor.InvalidDefinesInFile(FileName); //we don't need this, since we reset defines after each parse
+        //p->includeFiles.clear();
+        //p->usings.clear();
+        for (PStatement statement:p->statements) {
+            if ((statement->kind == StatementKind::skFunction
+                 || statement->kind == StatementKind::skConstructor
+                 || statement->kind == StatementKind::skDestructor
+                 || statement->kind == StatementKind::skVariable)
+                    && (fileName != statement->fileName)) {
+                statement->hasDefinition = false;
+            }
+        }
+
+        for (PStatement statement:p->declaredStatements) {
+            mStatementList.deleteStatement(statement);
+        }
+
+        //p->declaredStatements.clear();
+        //p->statements.clear();
+        //p->scopes.clear();
+        //p->dependedFiles.clear();
+        //p->dependingFiles.clear();
+    }
+}
+
+void CppParser::internalInvalidateFiles(const QStringList &files)
+{
+    for (QString file:files)
+        internalInvalidateFile(file);
 }
 
 void CppParser::calculateFilesToBeReparsed(const QString &fileName, QStringList &files)
@@ -1789,11 +2172,6 @@ QString CppParser::removeArgNames(const QString &args)
     }
     result += currentArg.trimmed();
     return result;
-}
-
-void CppParser::removeDefine(const QString &name)
-{
-
 }
 
 bool CppParser::isSpaceChar(const QChar &ch)

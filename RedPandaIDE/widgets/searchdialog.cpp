@@ -297,7 +297,7 @@ void SearchDialog::on_btnExecute_clicked()
             //        // file is already open, use memory
             //        if Assigned(e) then begin begin
             //          inc(fileSearched);
-            //          t:=Execute(e.Text, actiontype);
+            //          t:=Execute(e->text, actiontype);
             //          Inc(findcount, t);
             //          if t>0 then
             //            inc(filehitted);

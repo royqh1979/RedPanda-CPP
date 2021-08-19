@@ -703,7 +703,7 @@ void CppPreprocessor::removeCurrentBranch()
         mBranchResults.pop_back();
 }
 
-QStringList CppPreprocessor::getResult()
+QStringList CppPreprocessor::result()
 {
     return mResult;
 }
