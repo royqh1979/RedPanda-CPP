@@ -48,7 +48,7 @@ public:
     void clearProjectFiles();
     void addIncludePath(const QString& value);
     void addProjectIncludePath(const QString& value);
-    void addFileToScan(const QString& value, bool inProject = false);
+    void addFileToScan(QString value, bool inProject = false);
     QString prettyPrintStatement(PStatement statement, int line = -1);
     void fillListOfFunctions(const QString& fileName,
                              const QString& phrase,
@@ -97,6 +97,10 @@ public:
                             QStringList& params,
                             bool &isVoid);
 signals:
+    void onProgress(const QString& fileName, int total, int current);
+    void onBusy();
+    void onStartParsing();
+    void onEndParsing(int total, int updateView);
 private:
     PStatement addInheritedStatement(
             PStatement derived,
@@ -133,7 +137,7 @@ private:
             bool isDefinition,
             bool isStatic);
     void setInheritance(int index, PStatement classStatement, bool isStruct);
-    bool isInCurrentScopeLevel(const QString& command);
+    bool isCurrentScope(const QString& command);
     void addSoloScopeLevel(PStatement statement, int line); // adds new solo level
     void removeScopeLevel(int line); // removes level
     int skipBraces(int startAt);
@@ -164,6 +168,7 @@ private:
             const QString& noNameArgs,
             StatementKind kind,
             PStatement scope);
+    StatementClassScope getClassScope(int index);
     int getCurrentBlockBeginSkip();
     int getCurrentBlockEndSkip();
     int getCurrentInlineNamespaceEndSkip();
@@ -200,9 +205,7 @@ private:
     void handleStructs(bool isTypedef = false);
     void handleUsing();
     void handleVar();
-    void internalParse(
-            const QString& fileName,
-            bool manualUpdate = false);
+    void internalParse(const QString& fileName);
 //    function FindMacroDefine(const Command: AnsiString): PStatement;
     void inheritClassStatement(
             PStatement derived,
@@ -270,17 +273,13 @@ private:
      */
     bool isTypeStatement(StatementKind kind);
 
-    void onProgress(const QString& fileName, int total, int current);
-    void onBusy();
-    void onStartParsing();
-    void onEndParsing(int total, int updateView);
     void updateSerialId();
 
 
 private:
     int mParserId;
     int mSerialCount;
-    int mSerialId;
+    QString mSerialId;
     int mUniqId;
     bool mEnabled;
     int mIndex;
@@ -303,15 +302,15 @@ private:
     CppTokenizer mTokenizer;
     CppPreprocessor mPreprocessor;
     //{ List of current compiler set's include path}
-    QStringList mIncludePaths;
+    QSet<QString> mIncludePaths;
     //{ List of current project's include path }
-    QStringList mProjectIncludePaths;
+    QSet<QString> mProjectIncludePaths;
     //{ List of current project's include path }
     QSet<QString> mProjectFiles;
     QVector<int> mBlockBeginSkips; //list of for/catch block begin token index;
     QVector<int> mBlockEndSkips; //list of for/catch block end token index;
     QVector<int> mInlineNamespaceEndSkips; // list for inline namespace end token index;
-    QStringList mFilesToScan; // list of base files to scan
+    QSet<QString> mFilesToScan; // list of base files to scan
     int mFilesScannedCount; // count of files that have been scanned
     int mFilesToScanCount; // count of files and files included in files that have to be scanned
     bool mParseLocalHeaders;
@@ -323,7 +322,7 @@ private:
     QHash<QString,PStatementList> mNamespaces;  //TStringList<String,List<Statement>> namespace and the statements in its scope
     //fRemovedStatements: THashedStringList; //THashedStringList<String,PRemovedStatements>
 
-    QMutex mMutex;
+    QRecursiveMutex mMutex;
     GetFileStreamCallBack mOnGetFileStream;
 };
 

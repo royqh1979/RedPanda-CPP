@@ -256,7 +256,7 @@ void initParser()
 }
 
 QString getHeaderFileName(const QString &relativeTo, const QString &line,
-                          const QStringList& includePaths, const QStringList& projectIncludePaths) {
+                          const QSet<QString>& includePaths, const QSet<QString>& projectIncludePaths) {
     QString result = "";
 
     // Handle <>
@@ -303,7 +303,7 @@ QString getLocalHeaderFileName(const QString &relativeTo, const QString &fileNam
     return "";
 }
 
-QString getSystemHeaderFileName(const QString &fileName, const QStringList& includePaths)
+QString getSystemHeaderFileName(const QString &fileName, const QSet<QString>& includePaths)
 {
 
     // Search compiler include directories
@@ -316,7 +316,7 @@ QString getSystemHeaderFileName(const QString &fileName, const QStringList& incl
     return "";
 }
 
-bool isSystemHeaderFile(const QString &fileName, const QStringList &includePaths)
+bool isSystemHeaderFile(const QString &fileName, const QSet<QString> &includePaths)
 {
     if (includePaths.isEmpty())
         return false;
@@ -332,7 +332,7 @@ bool isSystemHeaderFile(const QString &fileName, const QStringList &includePaths
         if (info.exists()) { // full file name
             QDir dir = info.dir();
             QString absPath = dir.absolutePath();
-            if (includePaths.indexOf(absPath)>=0)
+            if (includePaths.contains(absPath))
                 return true;
         }
     } else {

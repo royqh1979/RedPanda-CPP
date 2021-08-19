@@ -139,12 +139,12 @@ void CppPreprocessor::setScanOptions(bool parseSystem, bool parseLocal)
     mParseLocal=parseLocal;
 }
 
-void CppPreprocessor::setIncludePaths(QStringList list)
+void CppPreprocessor::setIncludePaths(QSet<QString> list)
 {
     mIncludePaths = list;
 }
 
-void CppPreprocessor::setProjectIncludePaths(QStringList list)
+void CppPreprocessor::setProjectIncludePaths(QSet<QString> list)
 {
     mProjectIncludePaths = list;
 }
@@ -748,7 +748,7 @@ void CppPreprocessor::parseArgs(PDefine define)
     if(args=="")
         return ;
     define->argList = args.split(',');
-    for (int i;i<define->argList.size();i++) {
+    for (int i=0;i<define->argList.size();i++) {
         define->argList[i]=define->argList[i].trimmed();
     }
     QStringList tokens = tokenizeValue(define->value);
@@ -1068,7 +1068,6 @@ QString CppPreprocessor::expandDefines(QString line)
                 while ((tail < line.length()) && isSpaceChar(line[tail]))
                     tail++; // skip spaces
                 int defineStart;
-                int defineEnd;
 
                 // Skip over its arguments
                 if ((tail < line.length()) && (line[tail]=='(')) {
@@ -1088,7 +1087,7 @@ QString CppPreprocessor::expandDefines(QString line)
                     while ((tail < line.length()) && (isMacroIdentChar(line[tail]) || isDigit(line[tail])))
                         tail++;
                 }
-                name = line.mid(defineStart, defineEnd - defineStart);
+                name = line.mid(defineStart, tail - defineStart);
                 PDefine define = getDefine(name);
                 QString insertValue;
                 if (!define) {
@@ -1211,6 +1210,7 @@ bool CppPreprocessor::evalTerm(const QString &expr, int &result, int &pos)
         if (expr[pos]!=')')
             return false;
         pos++;
+        return true;
     } else {
         return evalNumber(expr,result,pos);
     }
@@ -1249,6 +1249,7 @@ bool CppPreprocessor::evalUnaryExpr(const QString &expr, int &result, int &pos)
     } else {
         return evalTerm(expr,result,pos);
     }
+    return true;
 }
 
 /*
@@ -1294,7 +1295,7 @@ bool CppPreprocessor::evalMulExpr(const QString &expr, int &result, int &pos)
  */
 bool CppPreprocessor::evalAddExpr(const QString &expr, int &result, int &pos)
 {
-    if (!evalAddExpr(expr,result,pos))
+    if (!evalMulExpr(expr,result,pos))
         return false;
     while (true) {
         if (!skipSpaces(expr,pos))

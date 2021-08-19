@@ -143,8 +143,8 @@ struct FileIncludes {
     QString baseFile;
     QMap<QString,bool> includeFiles; // true means the file is directly included, false means included indirectly
     QSet<QString> usings; // namespaces it usings
-    StatementMap statements; // but we don't save temporary statements
-    StatementMap declaredStatements; // statements declared in this file
+    StatementMap statements; // but we don't save temporary statements (full name as key)
+    StatementMap declaredStatements; // statements declared in this file (full name as key)
     QMap<int, PStatement> scopes; // int is start line of the statement scope
     QSet<QString> dependingFiles; // The files I depeneds on
     QSet<QString> dependedFiles; // the files depends on me
@@ -163,12 +163,12 @@ extern QSet<QString> STLElementMethods;
 void initParser();
 
 QString getHeaderFileName(const QString& relativeTo, const QString& line,
-                       const QStringList& includePaths, const QStringList& projectIncludePaths);
+                       const QSet<QString>& includePaths, const QSet<QString>& projectIncludePaths);
 
 QString getLocalHeaderFileName(const QString& relativeTo, const QString& fileName);
 
-QString getSystemHeaderFileName(const QString& fileName, const QStringList& includePaths);
-bool isSystemHeaderFile(const QString& fileName, const QStringList& includePaths);
+QString getSystemHeaderFileName(const QString& fileName, const QSet<QString>& includePaths);
+bool isSystemHeaderFile(const QString& fileName, const QSet<QString>& includePaths);
 bool isHfile(const QString filename);
 bool isCfile(const QString filename);
 bool isKeyword(const QString& word);

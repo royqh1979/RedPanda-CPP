@@ -42,8 +42,8 @@ public:
     void reset(); //reset but don't clear generated defines
     void resetDefines();
     void setScanOptions(bool parseSystem, bool parseLocal);
-    void setIncludePaths(QStringList list);
-    void setProjectIncludePaths(QStringList list);
+    void setIncludePaths(QSet<QString> list);
+    void setProjectIncludePaths(QSet<QString> list);
     void setScannedFileList(std::shared_ptr<QSet<QString>> list);
     void setIncludesList(std::shared_ptr<QHash<QString,PFileIncludes>> list);
     void preprocess(const QString& fileName, QStringList buffer = QStringList());
@@ -159,8 +159,8 @@ private:
     QHash<QString, PDefineMap> mFileDefines; //dictionary to save defines for each headerfile;
     QList<PParsedFile> mIncludes; // stack of files we've stepped into. last one is current file, first one is source file
     QList<bool> mBranchResults;// stack of branch results (boolean). last one is current branch, first one is outermost branch
-    QStringList mIncludePaths; // path to include folders
-    QStringList mProjectIncludePaths;
+    QSet<QString> mIncludePaths; // path to include folders
+    QSet<QString> mProjectIncludePaths;
     bool mParseSystem;
     bool mParseLocal;
     std::shared_ptr<QSet<QString>> mScannedFiles;

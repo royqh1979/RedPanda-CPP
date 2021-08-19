@@ -10,6 +10,42 @@ CppParser::CppParser(QObject *parent) : QObject(parent)
 
 }
 
+void CppParser::addHardDefineByLine(const QString &line)
+{
+    QMutexLocker  locker(&mMutex);
+    if (line.startsWith('#')) {
+        mPreprocessor.addDefineByLine(line.mid(1).trimmed(), true);
+    } else {
+        mPreprocessor.addDefineByLine(line, true);
+    }
+}
+
+void CppParser::addIncludePath(const QString &value)
+{
+    mIncludePaths.insert(value);
+}
+
+void CppParser::addProjectIncludePath(const QString &value)
+{
+    mProjectIncludePaths.insert(value);
+}
+
+void CppParser::addFileToScan(QString value, bool inProject)
+{
+    QMutexLocker locker(&mMutex);
+    //value.replace('/','\\'); // only accept full file names
+
+    // Update project listing
+    if (inProject)
+        mProjectFiles.insert(value);
+
+    // Only parse given file
+    if (!mScannedFiles->contains(value)) {
+        mFilesToScan.insert(value);
+    }
+
+}
+
 PStatement CppParser::addInheritedStatement(PStatement derived, PStatement inherit, StatementClassScope access)
 {
 
@@ -73,7 +109,7 @@ PStatement CppParser::addStatement(PStatement parent, const QString &fileName, c
             if (oldStatement->fileName!=fileName) {
                 PFileIncludes fileIncludes1=findFileIncludes(fileName);
                 if (fileIncludes1) {
-                    fileIncludes1->statements.insert(oldStatement->command,
+                    fileIncludes1->statements.insert(oldStatement->fullName,
                                                      oldStatement);
                     fileIncludes1->dependingFiles.insert(oldStatement->fileName);
                     PFileIncludes fileIncludes2=findFileIncludes(oldStatement->fileName);
@@ -132,7 +168,67 @@ PStatement CppParser::addStatement(PStatement parent, const QString &fileName, c
         }
         namespaceList->append(result);
     }
+
+    if (result->kind!= StatementKind::skBlock) {
+        PFileIncludes fileIncludes = findFileIncludes(fileName);
+        if (fileIncludes) {
+            fileIncludes->statements.insert(result->fullName,result);
+            fileIncludes->declaredStatements.insert(result->fullName,result);
+        }
+    }
     return result;
+}
+
+void CppParser::setInheritance(int index, PStatement classStatement, bool isStruct)
+{
+    // Clear it. Assume it is assigned
+    classStatement->inheritanceList.clear();
+    StatementClassScope lastInheritScopeType = StatementClassScope::scsNone;
+    // Assemble a list of statements in text form we inherit from
+    while (true) {
+        StatementClassScope inheritScopeType = getClassScope(index);
+        if (inheritScopeType == StatementClassScope::scsNone) {
+            if (mTokenizer[index]->text.front()!=','
+                    && mTokenizer[index]->text.front()!=':'
+                    && mTokenizer[index]->text.front()!='(') {
+                QString basename = mTokenizer[index]->text;
+                //remove template staff
+                if (basename.endsWith('>')) {
+                    int pBegin = basename.indexOf('<');
+                    if (pBegin>=0)
+                        basename.truncate(pBegin);
+                }
+                // Find the corresponding PStatement
+                PStatement statement = findStatementOf(mCurrentFile,basename,
+                                                       classStatement->parentScope.lock(),true);
+                if (statement && statement->kind == StatementKind::skClass) {
+                    classStatement->inheritanceList.append(statement);
+                    inheritClassStatement(classStatement,isStruct,statement,lastInheritScopeType);
+                }
+            }
+        }
+        index++;
+        lastInheritScopeType = inheritScopeType;
+        if (index >= mTokenizer.tokenCount())
+            break;
+        if (mTokenizer[index]->text.front() == '{'
+                || mTokenizer[index]->text.front() == ';')
+            break;
+    }
+}
+
+bool CppParser::isCurrentScope(const QString &command)
+{
+    PStatement statement = getCurrentScope();
+    if (!statement)
+        return false;
+    QString s = command;
+    // remove template staff
+    int i= command.indexOf('<');
+    if (i>=0) {
+        s.truncate(i);
+    }
+    return (statement->command == s);
 }
 
 void CppParser::addSoloScopeLevel(PStatement statement, int line)
@@ -171,6 +267,79 @@ void CppParser::addSoloScopeLevel(PStatement statement, int line)
     else
         mClassScope = StatementClassScope::scsPublic; // structs are public by default
     mCurrentClassScope.append(mClassScope);
+}
+
+void CppParser::removeScopeLevel(int line)
+{
+    // Remove class list
+    if (mCurrentScope.isEmpty())
+        return; // TODO: should be an exception
+    PStatement currentScope = mCurrentScope.back();;
+    PFileIncludes fileIncludes = findFileIncludes(mCurrentFile);
+    if (currentScope && (currentScope->kind == StatementKind::skBlock)) {
+        if (currentScope->children.isEmpty()) {
+            // remove no children block
+            if (fileIncludes && !fileIncludes->scopes.isEmpty()) {
+                fileIncludes->scopes.remove(currentScope->line);
+            }
+            mStatementList.deleteStatement(currentScope);
+        } else {
+            fileIncludes->statements.insert(currentScope->fullName,currentScope);
+            fileIncludes->declaredStatements.insert(currentScope->fullName,currentScope);
+        }
+    }
+    mCurrentScope.pop_back();
+    mCurrentClassScope.pop_back();
+
+    // Set new scope
+    currentScope = getCurrentScope();
+  //  fileIncludes:=FindFileIncludes(fCurrentFile);
+    if (fileIncludes && !fileIncludes->scopes.isEmpty()
+            && fileIncludes->scopes.value(fileIncludes->scopes.keys().back())!=currentScope) {
+        fileIncludes->scopes.insert(line,currentScope);
+    }
+
+    if (!currentScope) {
+        mClassScope = StatementClassScope::scsNone;
+    } else {
+        mClassScope = mCurrentClassScope.back();
+    }
+}
+
+int CppParser::skipBraces(int startAt)
+{
+    int i = startAt;
+    int level = 0; // assume we start on top of {
+    while (i < mTokenizer.tokenCount()) {
+        switch(mTokenizer[i]->text.front().unicode()) {
+        case '{': level++;
+            break;
+        case '}':
+            level--;
+            if (level==0)
+                return i;
+        }
+        i++;
+    }
+    return startAt;
+}
+
+int CppParser::skipBracket(int startAt)
+{
+    int i = startAt;
+    int level = 0; // assume we start on top of {
+    while (i < mTokenizer.tokenCount()) {
+        switch(mTokenizer[i]->text.front().unicode()) {
+        case '[': level++;
+            break;
+        case ']':
+            level--;
+            if (level==0)
+                return i;
+        }
+        i++;
+    }
+    return startAt;
 }
 
 bool CppParser::checkForCatchBlock()
@@ -270,7 +439,7 @@ bool CppParser::checkForMethod(QString &sType, QString &sName, QString &sArgs, b
                 sType = mTokenizer[mIndex]->text;
                 if (sType[0] == '~')
                     sType.remove(0,1);
-                bTypeOK = isInCurrentScopeLevel(sType); // constructor/destructor
+                bTypeOK = isCurrentScope(sType); // constructor/destructor
             }
             break;
         } else {
@@ -1258,16 +1427,20 @@ void CppParser::handlePreprocessor()
     mIndex++;
 }
 
+StatementClassScope CppParser::getClassScope(int index) {
+    if (mTokenizer[index]->text=="public")
+        return StatementClassScope::scsPublic;
+    else if (mTokenizer[index]->text=="private")
+        return StatementClassScope::scsPrivate;
+    else if (mTokenizer[index]->text=="protected")
+        return StatementClassScope::scsProtected;
+    else
+        return StatementClassScope::scsNone;
+}
+
 void CppParser::handleScope()
 {
-    if (mTokenizer[mIndex]->text=="public")
-        mClassScope = StatementClassScope::scsPublic;
-    else if (mTokenizer[mIndex]->text=="private")
-        mClassScope = StatementClassScope::scsPrivate;
-    else if (mTokenizer[mIndex]->text=="protected")
-        mClassScope = StatementClassScope::scsProtected;
-    else
-        mClassScope = StatementClassScope::scsNone;
+    mClassScope = getClassScope(mIndex);
     mIndex+=2; // the scope is followed by a ':'
 }
 
@@ -1850,7 +2023,7 @@ void CppParser::handleVar()
         mIndex++;
 }
 
-void CppParser::internalParse(const QString &fileName, bool manualUpdate)
+void CppParser::internalParse(const QString &fileName)
 {
     // Perform some validation before we start
     if (!mEnabled)
@@ -2099,6 +2272,129 @@ int CppParser::calcKeyLenForStruct(const QString &word)
     return -1;
 }
 
+void CppParser::scanMethodArgs(PStatement functionStatement, const QString &argStr)
+{
+    // Split up argument string by ,
+    int i = 1; // assume it starts with ( and ends with )
+    int paramStart = i;
+
+    QString args;
+    while (i < argStr.length()) {
+        if ((argStr[i] == ',') ||
+                ((i == argStr.length()-1) && (argStr[i] == ')'))) {
+            // We've found "int* a" for example
+            QString s = argStr.mid(paramStart,i-paramStart);
+
+            //remove default value
+            int assignPos = s.indexOf('=');
+            if (assignPos >= 0) {
+                s.truncate(assignPos);
+                s = s.trimmed();
+            }
+            // we don't support function pointer parameters now, till we can tokenize function parameters
+//        {
+//        // Can be a function pointer. If so, scan after last )
+//        BracePos := LastPos(')', S);
+//        if (BracePos > 0) then // it's a function pointer... begin
+//          SpacePos := LastPos(' ', Copy(S, BracePos, MaxInt)) // start search at brace
+//        end else begin
+//        }
+            int spacePos = s.lastIndexOf(' '); // Cut up at last space
+            if (spacePos >= 0) {
+                args = "";
+                int bracketPos = s.indexOf('[');
+                if (bracketPos >= 0) {
+                    args = s.mid(bracketPos);
+                    s.truncate(bracketPos);
+                }
+                addStatement(
+                            functionStatement,
+                            mCurrentFile,
+                            "", // do not override hint
+                            s.mid(0,spacePos), // 'int*'
+                            s.mid(spacePos+1), // a
+                            args,
+                            "",
+                            functionStatement->definitionLine,
+                            StatementKind::skParameter,
+                            StatementScope::ssLocal,
+                            StatementClassScope::scsNone,
+                            true,
+                            false);
+            }
+            paramStart = i + 1; // step over ,
+        }
+        i++;
+    }
+}
+
+QString CppParser::splitPhrase(const QString &phrase, QString &sClazz, QString &sMember, QString &sOperator)
+{
+    sClazz="";
+    sMember="";
+    sOperator="";
+    QString result="";
+    int bracketLevel = 0;
+    // Obtain stuff before first operator
+    int firstOpStart = phrase.length() + 1;
+    int firstOpEnd = phrase.length() + 1;
+    for (int i = 0; i<phrase.length();i++) {
+        if ((i+1<phrase.length()) && (phrase[i] == '-') && (phrase[i + 1] == '>') && (bracketLevel=0)) {
+            firstOpStart = i;
+            firstOpEnd = i+2;
+            sOperator = "->";
+            break;
+        } else if ((i+1<phrase.length()) && (phrase[i] == ':') && (phrase[i + 1] == ':') && (bracketLevel=0)) {
+            firstOpStart = i;
+            firstOpEnd = i+2;
+            sOperator = "::";
+            break;
+        } else if ((phrase[i] == '.') && (bracketLevel=0)) {
+            firstOpStart = i;
+            firstOpEnd = i+1;
+            sOperator = ".";
+            break;
+        } else if (phrase[i] == '[') {
+            bracketLevel++;
+        } else if (phrase[i] == ']') {
+            bracketLevel--;
+        }
+    }
+    sClazz = phrase.mid(0, firstOpStart);
+    if (firstOpStart == 0) {
+        sMember = "";
+        return "";
+    }
+
+    result = phrase.mid(firstOpEnd);
+
+    // ... and before second op, if there is one
+    int secondOp = 0;
+    bracketLevel = 0;
+    for (int i = firstOpEnd; i<phrase.length();i++) {
+        if ((i+1<phrase.length()) && (phrase[i] == '-') && (phrase[i + 1] == '>') && (bracketLevel=0)) {
+            secondOp = i;
+            break;
+        } else if ((i+1<phrase.length()) && (phrase[i] == ':') && (phrase[i + 1] == ':') && (bracketLevel=0)) {
+            secondOp = i;
+            break;
+        } else if ((phrase[i] == '.') && (bracketLevel=0)) {
+            secondOp = i;
+            break;
+        } else if (phrase[i] == '[') {
+            bracketLevel++;
+        } else if (phrase[i] == ']') {
+            bracketLevel--;
+        }
+    }
+    if (secondOp == 0) {
+        sMember = phrase.mid(firstOpEnd);
+    } else {
+        sMember = phrase.mid(firstOpEnd,secondOp-firstOpEnd);
+    }
+    return result;
+}
+
 QString CppParser::removeArgNames(const QString &args)
 {
     QString result = "";
@@ -2327,4 +2623,9 @@ bool CppParser::isTypeStatement(StatementKind kind)
     default:
         return false;
     }
+}
+
+void CppParser::updateSerialId()
+{
+    mSerialId = QString("%1 %2").arg(mParserId).arg(mSerialCount);
 }
