@@ -2,12 +2,53 @@
 #include "parserutils.h"
 #include "../utils.h"
 
+#include <QApplication>
 #include <QHash>
 #include <QQueue>
+#include <QThread>
 
+static QAtomicInt cppParserCount(0);
 CppParser::CppParser(QObject *parent) : QObject(parent)
 {
+    mParserId = cppParserCount.fetchAndAddRelaxed(1);
+    mSerialCount = 0;
+    updateSerialId();
+    mUniqId = 0;
+    mParsing = false;
+    //mStatementList ; // owns the objects
+    mIncludesList = std::make_shared<QHash<QString,PFileIncludes>>();
+    //mFilesToScan;
+    mScannedFiles = std::make_shared<QSet<QString>>();
+    //mIncludePaths;
+    //mProjectIncludePaths;
+    //mProjectFiles;
+    // mCurrentScope;
+    //mCurrentClassScope;
+    //mSkipList;
+    mParseLocalHeaders = true;
+    mParseGlobalHeaders = true;
+    mLockCount = 0;
+    //mNamespaces;
+    //mBlockBeginSkips;
+    //mBlockEndSkips;
+    //mInlineNamespaceEndSkips;
+}
 
+CppParser::~CppParser()
+{
+    while (true) {
+        //wait for all methods finishes running
+        {
+            QMutexLocker locker(&mMutex);
+            if (!mParsing && (mLockCount == 0)) {
+              mParsing = true;
+              break;
+            }
+        }
+        QThread::msleep(50);
+        QCoreApplication* app = QApplication::instance();
+        app->processEvents();
+    }
 }
 
 void CppParser::addHardDefineByLine(const QString &line)
@@ -22,12 +63,32 @@ void CppParser::addHardDefineByLine(const QString &line)
 
 void CppParser::addIncludePath(const QString &value)
 {
+    QMutexLocker  locker(&mMutex);
     mIncludePaths.insert(value);
 }
 
 void CppParser::addProjectIncludePath(const QString &value)
 {
+    QMutexLocker  locker(&mMutex);
     mProjectIncludePaths.insert(value);
+}
+
+void CppParser::clearIncludePaths()
+{
+    QMutexLocker  locker(&mMutex);
+    mIncludePaths.clear();
+}
+
+void CppParser::clearProjectIncludePaths()
+{
+    QMutexLocker  locker(&mMutex);
+    mProjectIncludePaths.clear();
+}
+
+void CppParser::clearProjectFiles()
+{
+    QMutexLocker  locker(&mMutex);
+    mProjectFiles.clear();
 }
 
 void CppParser::addFileToScan(QString value, bool inProject)

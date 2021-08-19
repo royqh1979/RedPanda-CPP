@@ -14,10 +14,17 @@ class CppParser : public QObject
     using GetFileStreamCallBack = std::function<bool (const QString&, QStringList&)>;
 public:
     explicit CppParser(QObject *parent = nullptr);
+    ~CppParser();
 
+    void addHardDefineByLine(const QString& line);
+    void addFileToScan(QString value, bool inProject = false);
+    void addIncludePath(const QString& value);
+    void addProjectIncludePath(const QString& value);
+    void clearIncludePaths();
+    void clearProjectIncludePaths();
+    void clearProjectFiles();
     void parseHardDefines();
     PFileIncludes findFileIncludes(const QString &filename, bool deleteIt = false);
-    void addHardDefineByLine(const QString& line);
     void invalidateFile(const QString& fileName);
     QStringList getFileDirectIncludes(const QString& filename) const;
     const QList<QString>& getFileIncludes(const QString& filename) const;
@@ -43,12 +50,7 @@ public:
     QString statementKindStr(StatementKind value);
     QString statementClassScopeStr(StatementClassScope value);
     void reset();
-    void clearIncludePaths();
-    void clearProjectIncludePaths();
-    void clearProjectFiles();
-    void addIncludePath(const QString& value);
-    void addProjectIncludePath(const QString& value);
-    void addFileToScan(QString value, bool inProject = false);
+
     QString prettyPrintStatement(PStatement statement, int line = -1);
     void fillListOfFunctions(const QString& fileName,
                              const QString& phrase,
