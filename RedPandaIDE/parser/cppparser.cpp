@@ -338,7 +338,7 @@ void CppParser::checkForSkipStatement()
     }
 }
 
-bool CppParser::CheckForStructs()
+bool CppParser::checkForStructs()
 {
     int dis = 0;
     if ((mTokenizer[mIndex]->text == "friend")
@@ -864,7 +864,7 @@ void CppParser::handleKeyword()
     }
 }
 
-void CppParser::HandleMethod(const QString &sType, const QString &sName, const QString &sArgs, bool isStatic, bool isFriend)
+void CppParser::handleMethod(const QString &sType, const QString &sName, const QString &sArgs, bool isStatic, bool isFriend)
 {
     bool isValid = true;
     bool isDeclaration = false; // assume it's not a prototype
@@ -1258,6 +1258,370 @@ void CppParser::handlePreprocessor()
         false);
     } // TODO: undef ( define has limited scope)
     mIndex++;
+}
+
+void CppParser::handleScope()
+{
+    if (mTokenizer[mIndex]->text=="public")
+        mClassScope = StatementClassScope::scsPublic;
+    else if (mTokenizer[mIndex]->text=="private")
+        mClassScope = StatementClassScope::scsPrivate;
+    else if (mTokenizer[mIndex]->text=="protected")
+        mClassScope = StatementClassScope::scsProtected;
+    else
+        mClassScope = StatementClassScope::scsNone;
+    mIndex+=2; // the scope is followed by a ':'
+}
+
+bool CppParser::handleStatement()
+{
+    QString S1,S2,S3;
+    bool isStatic, isFriend;
+    int idx=getCurrentBlockEndSkip();
+    int idx2=getCurrentBlockBeginSkip();
+    int idx3=getCurrentInlineNamespaceEndSkip();
+    if (mIndex >= idx2) {
+        //skip (previous handled) block begin
+        mBlockBeginSkips.pop_back();
+        if (mIndex == idx2)
+            mIndex++;
+        else if (mIndex<mTokenizer.tokenCount())  //error happens, but we must remove an (error) added scope
+            removeScopeLevel(mTokenizer[mIndex]->line);
+    } else if (mIndex >= idx) {
+        //skip (previous handled) block end
+        mBlockEndSkips.pop_back();
+        if (idx+1 < mTokenizer.tokenCount())
+            removeScopeLevel(mTokenizer[idx+1]->line);
+        if (mIndex == idx)
+            mIndex++;
+    } else if (mIndex >= idx3) {
+        //skip (previous handled) inline name space end
+        mInlineNamespaceEndSkips.pop_back();
+        if (mIndex == idx3)
+            mIndex++;
+    } else if (mTokenizer[mIndex]->text.startsWith('{')) {
+        PStatement block = addStatement(
+            getCurrentScope(),
+            mCurrentFile,
+            "", // override hint
+            "",
+            "",
+            "",
+            "",
+            //mTokenizer[mIndex]^.Line,
+            mTokenizer[mIndex]->line,
+            StatementKind::skBlock,
+            getScope(),
+            mClassScope,
+            true,
+            false);
+        addSoloScopeLevel(block,mTokenizer[mIndex]->line);
+        mIndex++;
+    } else if (mTokenizer[mIndex]->text[1] == '}') {
+        removeScopeLevel(mTokenizer[mIndex]->line);
+        mIndex++;
+    } else if (checkForPreprocessor()) {
+        handlePreprocessor();
+    } else if (checkForKeyword()) { // includes template now
+        handleKeyword();
+    } else if (checkForForBlock()) { // (for/catch)
+        handleForBlock();
+    } else if (checkForCatchBlock()) { // (for/catch)
+        handleCatchBlock();
+    } else if (checkForScope()) { // public /private/proteced
+        handleScope();
+    } else if (checkForEnum()) {
+        handleEnum();
+    } else if (checkForTypedef()) {
+        if (mIndex+1 < mTokenizer.tokenCount()) {
+            if (checkForTypedefStruct()) { // typedef struct something
+                mIndex++; // skip 'typedef'
+                handleStructs(true);
+            } else if (checkForTypedefEnum()) { // typedef enum something
+                mIndex++; // skip 'typedef'
+                handleEnum();
+            } else
+                handleOtherTypedefs(); // typedef Foo Bar
+        } else
+            mIndex++;
+    } else if (checkForNamespace()) {
+        handleNamespace();
+    } else if (checkForUsing()) {
+        handleUsing();
+    } else if (checkForStructs()) {
+        handleStructs(false);
+    } else if (checkForMethod(S1, S2, S3, isStatic, isFriend)) {
+        handleMethod(S1, S2, S3, isStatic, isFriend); // don't recalculate parts
+    } else if (checkForVar()) {
+        handleVar();
+    } else
+        mIndex++;
+
+    checkForSkipStatement();
+
+    return mIndex < mTokenizer.tokenCount();
+
+}
+
+void CppParser::handleStructs(bool isTypedef)
+{
+    bool isFriend = false;
+    QString prefix = mTokenizer[mIndex]->text;
+    if (prefix == "friend") {
+        isFriend = true;
+        mIndex++;
+    }
+    // Check if were dealing with a struct or union
+    prefix = mTokenizer[mIndex]->text;
+    bool isStruct = ("struct" == prefix) || ("union"==prefix);
+    int startLine = mTokenizer[mIndex]->line;
+
+    mIndex++; //skip struct/class/union
+
+    if (mIndex>=mTokenizer.tokenCount())
+        return;
+
+    // Do not modifiy index initially
+    int i = mIndex;
+
+    // Skip until the struct body starts
+    while ((i < mTokenizer.tokenCount()) && ! (
+               mTokenizer[i]->text.front() ==';'
+               || mTokenizer[i]->text.front() =='{'))
+        i++;
+
+    // Forward class/struct decl *or* typedef, e.g. typedef struct some_struct synonym1, synonym2;
+    if ((i < mTokenizer.tokenCount()) && (mTokenizer[i]->text.front() == ';')) {
+        // typdef struct Foo Bar
+        if (isTypedef) {
+            QString oldType = mTokenizer[mIndex]->text;
+            while(true) {
+                // Add definition statement for the synonym
+                if ((mIndex + 1 < mTokenizer.tokenCount())
+                        && (mTokenizer[mIndex + 1]->text.front()==','
+                            || mTokenizer[mIndex + 1]->text.front()==';')) {
+                    QString newType = mTokenizer[mIndex]->text;
+                    addStatement(
+                                getCurrentScope(),
+                                mCurrentFile,
+                                "typedef " + prefix + " " + oldType + ' ' + newType, // override hint
+                                oldType,
+                                newType,
+                                "",
+                                "",
+                                startLine,
+                                StatementKind::skTypedef,
+                                getScope(),
+                                mClassScope,
+                                true,
+                                false);
+                }
+                mIndex++;
+                if (mIndex >= mTokenizer.tokenCount())
+                    break;
+                if (mTokenizer[mIndex]->text.front() == ';')
+                    break;
+            }
+        } else {
+            if (isFriend) { // friend class
+                PStatement parentStatement = getCurrentScope();
+                if (parentStatement) {
+                    parentStatement->friends.insert(mTokenizer[mIndex]->text);
+                }
+            } else {
+            // todo: Forward declaration, struct Foo. Don't mention in class browser
+            }
+            i++; // step over ;
+            mIndex = i;
+        }
+
+        // normal class/struct decl
+    } else {
+        PStatement firstSynonym;
+        // Add class/struct name BEFORE opening brace
+        if (mTokenizer[mIndex]->text.front() != '{') {
+            while(true) {
+                if ((mIndex + 1 < mTokenizer.tokenCount())
+                  && (mTokenizer[mIndex + 1]->text.front() == ','
+                      || mTokenizer[mIndex + 1]->text.front() == ';'
+                      || mTokenizer[mIndex + 1]->text.front() == '{'
+                      || mTokenizer[mIndex + 1]->text.front() == ':')) {
+                    QString command = mTokenizer[mIndex]->text;
+                    if (!command.isEmpty()) {
+                        firstSynonym = addStatement(
+                                    getCurrentScope(),
+                                    mCurrentFile,
+                                    "", // do not override hint
+                                    prefix, // type
+                                    command, // command
+                                    "", // args
+                                    "", // values
+                                    startLine,
+                                    StatementKind::skClass,
+                                    getScope(),
+                                    mClassScope,
+                                    true,
+                                    false);
+                        command = "";
+                    }
+                    mIndex++;
+                } else if ((mIndex + 2 < mTokenizer.tokenCount())
+                           && (mTokenizer[mIndex + 1]->text == "final")
+                           && (mTokenizer[mIndex + 2]->text.front()==','
+                               || isblockChar(mTokenizer[mIndex + 2]->text.front()))) {
+                    QString command = mTokenizer[mIndex]->text;
+                    if (!command.isEmpty()) {
+                        firstSynonym = addStatement(
+                                    getCurrentScope(),
+                                    mCurrentFile,
+                                    "", // do not override hint
+                                    prefix, // type
+                                    command, // command
+                                    "", // args
+                                    "", // values
+                                    startLine,
+                                    StatementKind::skClass,
+                                    getScope(),
+                                    mClassScope,
+                                    true,
+                                    false);
+                        command="";
+                    }
+                    mIndex+=2;
+                } else
+                    mIndex++;
+                if (mIndex >= mTokenizer.tokenCount())
+                    break;
+                if (mTokenizer[mIndex]->text.front() == ':'
+                        || mTokenizer[mIndex]->text.front() == '{'
+                        || mTokenizer[mIndex]->text.front() == ';')
+                    break;
+            }
+        }
+
+        // Walk to opening brace if we encountered inheritance statements
+        if ((mIndex < mTokenizer.tokenCount()) && (mTokenizer[mIndex]->text.front() == ':')) {
+            if (firstSynonym)
+                setInheritance(mIndex, firstSynonym, isStruct); // set the _InheritanceList value
+            while ((mIndex < mTokenizer.tokenCount()) && (mTokenizer[mIndex]->text.front() != '{'))
+                mIndex++; // skip decl after ':'
+        }
+
+        // Check for struct synonyms after close brace
+        if (isStruct) {
+
+            // Walk to closing brace
+            i = skipBraces(mIndex); // step onto closing brace
+
+            if ((i + 1 < mTokenizer.tokenCount()) && !(
+                        mTokenizer[i + 1]->text.front() == ';'
+                        || mTokenizer[i + 1]->text.front() ==  '}')) {
+                // When encountering names again after struct body scanning, skip it
+                mSkipList.append(i+1); // add first name to skip statement so that we can skip it until the next ;
+                QString command = "";
+                QString args = "";
+
+                // Add synonym before opening brace
+                while(true) {
+                    i++;
+
+                    if (!(mTokenizer[i]->text.front() == '{'
+                          || mTokenizer[i]->text.front() == ','
+                          || mTokenizer[i]->text.front() == ';')) {
+                        if ((mTokenizer[i]->text.front() == '_')
+                            && (mTokenizer[i]->text.back() == '_')) {
+                            // skip possible gcc attributes
+                            // start and end with 2 underscores (i.e. __attribute__)
+                            // so, to avoid slow checks of strings, we just check the first and last letter of the token
+                            // if both are underscores, we split
+                            break;
+                        } else {
+                            if (mTokenizer[i]->text.endsWith(']')) { // cut-off array brackets
+                                int pos = mTokenizer[i]->text.indexOf('[');
+                                command += mTokenizer[i]->text.mid(0,pos) + ' ';
+                                args =  mTokenizer[i]->text.mid(pos);
+                            } else if (mTokenizer[i]->text.front() == '*'
+                                       || mTokenizer[i]->text.front() == '&') { // do not add spaces after pointer operator
+                                command += mTokenizer[i]->text;
+                            } else {
+                                command += mTokenizer[i]->text + ' ';
+                            }
+                        }
+                    } else {
+                        command = command.trimmed();
+                        if (!command.isEmpty() &&
+                                ( !firstSynonym
+                                  || command!=firstSynonym->command )) {
+                            //not define the struct yet, we define a unamed struct
+                            if (!firstSynonym) {
+                                firstSynonym = addStatement(
+                                            getCurrentScope(),
+                                            mCurrentFile,
+                                            "", // do not override hint
+                                            prefix,
+                                            "__"+command,
+                                            "",
+                                            "",
+                                            startLine,
+                                            StatementKind::skClass,
+                                            getScope(),
+                                            mClassScope,
+                                            true,
+                                            false);
+                            }
+                            if (isTypedef) {
+                                //typedef
+                                addStatement(
+                                  getCurrentScope(),
+                                  mCurrentFile,
+                                  "typedef " + firstSynonym->command + ' ' + command, // override hint
+                                  firstSynonym->command,
+                                  command,
+                                  "",
+                                  "",
+                                  mTokenizer[mIndex]->line,
+                                  StatementKind::skTypedef,
+                                  getScope(),
+                                  mClassScope,
+                                  true,
+                                  false); // typedef
+                            } else {
+                                //variable define
+                                AddStatement(
+                                  getCurrentScope(),
+                                  mCurrentFile,
+                                  "", // do not override hint
+                                  firstSynonym->command,
+                                  command,
+                                  args,
+                                  "",
+                                  mTokenizer[i]->line,
+                                  StatementKind::skVariable,
+                                  getScope(),
+                                  mClassScope,
+                                  true,
+                                  false); // TODO: not supported to pass list
+                            }
+                        }
+                        command = "";
+                    }
+                    if (i >= mTokenizer.tokenCount() - 1)
+                        break;
+                    if (mTokenizer[i]->text.front()=='{'
+                          || mTokenizer[i]->text.front()== ';')
+                        break;
+                }
+
+              // Nothing worth mentioning after closing brace
+              // Proceed to set first synonym as current class
+            }
+        }
+        addSoloScopeLevel(firstSynonym,startLine);
+
+        // Step over {
+        if ((mIndex < mTokenizer.tokenCount()) && (mTokenizer[mIndex]->text.front() == '{'))
+            mIndex++;
+    }
 }
 
 QString CppParser::expandMacroType(const QString &name)

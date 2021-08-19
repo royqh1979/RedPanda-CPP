@@ -148,7 +148,7 @@ private:
     bool checkForPreprocessor();
     bool checkForScope();
     void checkForSkipStatement();
-    bool CheckForStructs();
+    bool checkForStructs();
     bool checkForTypedef();
     bool checkForTypedefEnum();
     bool checkForTypedefStruct();
@@ -186,7 +186,7 @@ private:
     void handleEnum();
     void handleForBlock();
     void handleKeyword();
-    void HandleMethod(
+    void handleMethod(
             const QString& sType,
             const QString& sName,
             const QString& sArgs,
