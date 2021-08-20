@@ -167,7 +167,7 @@ class Debugger : public QObject
 public:
     explicit Debugger(QObject *parent = nullptr);
     // Play/pause
-    void start();
+    bool start();
     void sendCommand(const QString& command, const QString& params,
                      bool updateWatch = true,
                      bool showInConsole = false,

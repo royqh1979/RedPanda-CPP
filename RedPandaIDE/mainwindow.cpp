@@ -666,7 +666,8 @@ void MainWindow::debug()
 
 //          filepath := fProject.Executable;
 
-//          fDebugger.Start;
+//        if (!mDebugger->start())
+//            return;
 //          fDebugger.SendCommand('file', '"' + StringReplace(filepath, '\', '/', [rfReplaceAll]) + '"');
 
 //          if fProject.Options.typ = dptDyn then
@@ -756,7 +757,8 @@ void MainWindow::debug()
             prepareDebugger();
 
             mDebugger->setUseUTF8(e->fileEncoding() == ENCODING_UTF8 || e->fileEncoding() == ENCODING_UTF8_BOM);
-            mDebugger->start();
+            if (!mDebugger->start())
+                return;
             mDebugger->sendCommand("file", QString("\"%1\"").arg(debugFile.filePath().replace('\\','/')));
         }
         break;

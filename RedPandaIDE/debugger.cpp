@@ -24,23 +24,24 @@ Debugger::Debugger(QObject *parent) : QObject(parent)
     mLeftPageIndexBackup = -1;
 }
 
-void Debugger::start()
+bool Debugger::start()
 {
     Settings::PCompilerSet compilerSet = pSettings->compilerSets().defaultSet();
     if (!compilerSet) {
         QMessageBox::critical(pMainWindow,
                               tr("No compiler set"),
                               tr("No compiler set is configured.")+tr("Can't start debugging."));
-        return;
+        return false;
     }
     mExecuting = true;
     QString debuggerPath = compilerSet->debugger();
     QFile debuggerProgram(debuggerPath);
     if (!debuggerProgram.exists()) {
+        mExecuting = false;
         QMessageBox::critical(pMainWindow,
                               tr("Debugger not exists"),
                               tr("Can''t find debugger in : \"%1\"").arg(debuggerPath));
-        return;
+        return false;
     }
     mReader = new DebugReader(this);
     mReader->setDebuggerPath(debuggerPath);
@@ -56,6 +57,7 @@ void Debugger::start()
     pMainWindow->updateAppTitle();
 
     //Application.HintHidePause := 5000;
+    return true;
 }
 void Debugger::stop() {
     if (mExecuting) {
