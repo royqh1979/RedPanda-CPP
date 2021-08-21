@@ -42,16 +42,21 @@ public:
     void reset(); //reset but don't clear generated defines
     void resetDefines();
     void setScanOptions(bool parseSystem, bool parseLocal);
-    void setIncludePaths(QSet<QString> list);
-    void setProjectIncludePaths(QSet<QString> list);
-    void setScannedFileList(std::shared_ptr<QSet<QString>> list);
-    void setIncludesList(std::shared_ptr<QHash<QString,PFileIncludes>> list);
     void preprocess(const QString& fileName, QStringList buffer = QStringList());
     void invalidDefinesInFile(const QString& fileName);
 
-    void dumpDefinesTo(const QString& fileName);
-    void dumpIncludesListTo(const QString& fileName);
-    QStringList result();
+    void dumpDefinesTo(const QString& fileName) const;
+    void dumpIncludesListTo(const QString& fileName) const;
+    QStringList result() const;
+
+    QHash<QString, PFileIncludes> &includesList();
+
+    QSet<QString> &scannedFiles();
+
+    QSet<QString> &includePaths();
+
+    QSet<QString> &projectIncludePaths();
+
 signals:
 
 private:
@@ -153,17 +158,20 @@ private:
     QStringList mResult;
     PFileIncludes mCurrentIncludes;
     int mPreProcIndex;
-    std::shared_ptr<QHash<QString,PFileIncludes>> mIncludesList;
+    QHash<QString,PFileIncludes> mIncludesList;
     DefineMap mHardDefines; // set by "cpp -dM -E -xc NUL"
     DefineMap mDefines; // working set, editable
     QHash<QString, PDefineMap> mFileDefines; //dictionary to save defines for each headerfile;
     QList<PParsedFile> mIncludes; // stack of files we've stepped into. last one is current file, first one is source file
     QList<bool> mBranchResults;// stack of branch results (boolean). last one is current branch, first one is outermost branch
-    QSet<QString> mIncludePaths; // path to include folders
+    //{ List of current compiler set's include path}
+    QSet<QString> mIncludePaths;
+    //{ List of current project's include path }
     QSet<QString> mProjectIncludePaths;
+
     bool mParseSystem;
     bool mParseLocal;
-    std::shared_ptr<QSet<QString>> mScannedFiles;
+    QSet<QString> mScannedFiles;
     QSet<QString> mProcessed; // dictionary to save filename already processed
 };
 

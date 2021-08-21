@@ -98,6 +98,12 @@ public:
                             int line,
                             QStringList& params,
                             bool &isVoid);
+    bool enabled() const;
+    void setEnabled(bool newEnabled);
+
+    const QSet<QString> &filesToScan() const;
+    void setFilesToScan(const QSet<QString> &newFilesToScan);
+
 signals:
     void onProgress(const QString& fileName, int total, int current);
     void onBusy();
@@ -162,6 +168,7 @@ private:
     bool checkForVar();
     QString expandMacroType(const QString& name);
     //{procedure ResetDefines;}
+    void fillListOfFunctions(const QString& fileName, int line,PStatement statement, PStatement scopeStatement, QStringList& list);
     PStatement findMemberOfStatement(
             const QString& phrase,
             PStatement scopeStatement);
@@ -303,11 +310,7 @@ private:
     std::shared_ptr<QSet<QString>> mScannedFiles; // List of scaned file names
     CppTokenizer mTokenizer;
     CppPreprocessor mPreprocessor;
-    //{ List of current compiler set's include path}
-    QSet<QString> mIncludePaths;
-    //{ List of current project's include path }
-    QSet<QString> mProjectIncludePaths;
-    //{ List of current project's include path }
+    //{ List of current project's file }
     QSet<QString> mProjectFiles;
     QVector<int> mBlockBeginSkips; //list of for/catch block begin token index;
     QVector<int> mBlockEndSkips; //list of for/catch block end token index;

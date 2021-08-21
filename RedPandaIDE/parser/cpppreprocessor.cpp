@@ -18,7 +18,6 @@ void CppPreprocessor::clear()
     mBranchResults.clear();
     mResult.clear();
     mCurrentIncludes.reset();
-    mScannedFiles.reset();
 }
 
 void CppPreprocessor::addDefineByParts(const QString &name, const QString &args, const QString &value, bool hardCoded)
@@ -139,26 +138,6 @@ void CppPreprocessor::setScanOptions(bool parseSystem, bool parseLocal)
     mParseLocal=parseLocal;
 }
 
-void CppPreprocessor::setIncludePaths(QSet<QString> list)
-{
-    mIncludePaths = list;
-}
-
-void CppPreprocessor::setProjectIncludePaths(QSet<QString> list)
-{
-    mProjectIncludePaths = list;
-}
-
-void CppPreprocessor::setScannedFileList(std::shared_ptr<QSet<QString> > list)
-{
-    mScannedFiles = list;
-}
-
-void CppPreprocessor::setIncludesList(std::shared_ptr<QHash<QString, PFileIncludes> > list)
-{
-    mIncludesList = list;
-}
-
 void CppPreprocessor::preprocess(const QString &fileName, QStringList buffer)
 {
     mFileName = fileName;
@@ -184,7 +163,7 @@ void CppPreprocessor::invalidDefinesInFile(const QString &fileName)
     }
 }
 
-void CppPreprocessor::dumpDefinesTo(const QString &fileName)
+void CppPreprocessor::dumpDefinesTo(const QString &fileName) const
 {
     QFile file(fileName);
     if (file.open(QIODevice::WriteOnly|QIODevice::Truncate)) {
@@ -197,12 +176,12 @@ void CppPreprocessor::dumpDefinesTo(const QString &fileName)
     }
 }
 
-void CppPreprocessor::dumpIncludesListTo(const QString &fileName)
+void CppPreprocessor::dumpIncludesListTo(const QString &fileName) const
 {
     QFile file(fileName);
     if (file.open(QIODevice::WriteOnly|QIODevice::Truncate)) {
         QTextStream stream(&file);
-        for (PFileIncludes fileIncludes:*mIncludesList) {
+        for (PFileIncludes fileIncludes:mIncludesList) {
             stream<<fileIncludes->baseFile<<" : "<<Qt::endl;
             stream<<"\t**includes:**"<<Qt::endl;
             for (QString s:fileIncludes->includeFiles.keys()) {
@@ -604,16 +583,16 @@ void CppPreprocessor::openInclude(const QString &fileName, QStringList bufferedT
         //mCurrentIncludes->scopes;
         //mCurrentIncludes->dependedFiles;
         //mCurrentIncludes->dependingFiles;
-        mIncludesList->insert(fileName,mCurrentIncludes);
+        mIncludesList.insert(fileName,mCurrentIncludes);
     }
 
     parsedFile->fileIncludes = mCurrentIncludes;
 
     // Don't parse stuff we have already parsed
-    if ((!bufferedText.isEmpty()) || !mScannedFiles->contains(fileName)) {
+    if ((!bufferedText.isEmpty()) || !mScannedFiles.contains(fileName)) {
         // Parse ONCE
         //if not Assigned(Stream) then
-        mScannedFiles->insert(fileName);
+        mScannedFiles.insert(fileName);
 
         // Only load up the file if we are allowed to parse it
         bool isSystemFile = isSystemHeaderFile(fileName, mIncludePaths);
@@ -703,14 +682,14 @@ void CppPreprocessor::removeCurrentBranch()
         mBranchResults.pop_back();
 }
 
-QStringList CppPreprocessor::result()
+QStringList CppPreprocessor::result() const
 {
     return mResult;
 }
 
 PFileIncludes CppPreprocessor::getFileIncludesEntry(const QString &fileName)
 {
-    return mIncludesList->value(fileName,PFileIncludes());
+    return mIncludesList.value(fileName,PFileIncludes());
 }
 
 void CppPreprocessor::addDefinesInFile(const QString &fileName)
@@ -720,7 +699,7 @@ void CppPreprocessor::addDefinesInFile(const QString &fileName)
     mProcessed.insert(fileName);
 
     //todo: why test this?
-    if (!mScannedFiles->contains(fileName))
+    if (!mScannedFiles.contains(fileName))
         return;
 
     //May be redefined, so order is important
@@ -1599,5 +1578,25 @@ int CppPreprocessor::evaluateExpression(QString line)
     if (skipSpaces(line,pos))
         return -1;
     return result;
+}
+
+QSet<QString> &CppPreprocessor::projectIncludePaths()
+{
+    return mProjectIncludePaths;
+}
+
+QSet<QString> &CppPreprocessor::includePaths()
+{
+    return mIncludePaths;
+}
+
+QSet<QString> &CppPreprocessor::scannedFiles()
+{
+    return mScannedFiles;
+}
+
+QHash<QString, PFileIncludes> &CppPreprocessor::includesList()
+{
+    return mIncludesList;
 }
 

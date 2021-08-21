@@ -64,31 +64,50 @@ void CppParser::addHardDefineByLine(const QString &line)
 void CppParser::addIncludePath(const QString &value)
 {
     QMutexLocker  locker(&mMutex);
-    mIncludePaths.insert(value);
+    mPreprocessor.includePaths().insert(value);
 }
 
 void CppParser::addProjectIncludePath(const QString &value)
 {
     QMutexLocker  locker(&mMutex);
-    mProjectIncludePaths.insert(value);
+    mPreprocessor.projectIncludePaths().insert(value);
 }
 
 void CppParser::clearIncludePaths()
 {
     QMutexLocker  locker(&mMutex);
-    mIncludePaths.clear();
+    mPreprocessor.includePaths().clear();
 }
 
 void CppParser::clearProjectIncludePaths()
 {
     QMutexLocker  locker(&mMutex);
-    mProjectIncludePaths.clear();
+    mPreprocessor.projectIncludePaths().clear();
 }
 
 void CppParser::clearProjectFiles()
 {
     QMutexLocker  locker(&mMutex);
     mProjectFiles.clear();
+}
+
+void CppParser::fillListOfFunctions(const QString &fileName, const QString &phrase, int line, QStringList &list)
+{
+    QMutexLocker locker(&mMutex);
+    list.clear();
+    PStatement statement = findStatementOf(fileName,phrase, line);
+    if (!statement)
+        return;
+    PStatement parentScope = statement->parentScope.lock();
+    if (parentScope && parentScope->kind == StatementKind::skNamespace) {
+        PStatementList namespaceStatementsList = findNamespace(parentScope->command);
+        if (namespaceStatementsList) {
+            for (PStatement namespaceStatement  : *namespaceStatementsList) {
+                fillListOfFunctions(fileName,line,statement,namespaceStatement,list);
+            }
+        }
+    } else
+        fillListOfFunctions(fileName,line,statement,parentScope,list);
 }
 
 void CppParser::addFileToScan(QString value, bool inProject)
@@ -2104,10 +2123,10 @@ void CppParser::internalParse(const QString &fileName)
             mTokenizer.reset();
         });
         // Let the preprocessor augment the include records
-        mPreprocessor.setIncludesList(mIncludesList);
-        mPreprocessor.setIncludePaths(mIncludePaths);
-        mPreprocessor.setProjectIncludePaths(mProjectIncludePaths);
-        mPreprocessor.setScannedFileList(mScannedFiles);
+//        mPreprocessor.setIncludesList(mIncludesList);
+//        mPreprocessor.setIncludePaths(mIncludePaths);
+//        mPreprocessor.setProjectIncludePaths(mProjectIncludePaths);
+//        mPreprocessor.setScannedFileList(mScannedFiles);
         mPreprocessor.setScanOptions(mParseGlobalHeaders, mParseLocalHeaders);
         mPreprocessor.preprocess(fileName, tempStream);
 
@@ -2188,6 +2207,23 @@ QString CppParser::expandMacroType(const QString &name)
 {
     //its done in the preprocessor
     return name;
+}
+
+void CppParser::fillListOfFunctions(const QString& fileName, int line,PStatement statement, PStatement scopeStatement, QStringList &list)
+{
+    StatementMap children = mStatementList.childrenStatements(scopeStatement);
+    for (PStatement child:children) {
+        if ((statement->command == child->command)
+#ifdef Q_OS_WIN
+                || (statement->command +'A' == child->command)
+                || (statement->command +'W' == child->command)
+#endif
+                ) {
+            if (line < child->line && (child->fileName == fileName))
+                continue;
+            list.append(prettyPrintStatement(child));
+        }
+    }
 }
 
 PStatement CppParser::findMemberOfStatement(const QString &phrase, PStatement scopeStatement)
@@ -2689,4 +2725,24 @@ bool CppParser::isTypeStatement(StatementKind kind)
 void CppParser::updateSerialId()
 {
     mSerialId = QString("%1 %2").arg(mParserId).arg(mSerialCount);
+}
+
+const QSet<QString> &CppParser::filesToScan() const
+{
+    return mFilesToScan;
+}
+
+void CppParser::setFilesToScan(const QSet<QString> &newFilesToScan)
+{
+    mFilesToScan = newFilesToScan;
+}
+
+bool CppParser::enabled() const
+{
+    return mEnabled;
+}
+
+void CppParser::setEnabled(bool newEnabled)
+{
+    mEnabled = newEnabled;
 }
