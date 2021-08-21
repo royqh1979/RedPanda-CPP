@@ -110,6 +110,89 @@ void CppParser::fillListOfFunctions(const QString &fileName, const QString &phra
         fillListOfFunctions(fileName,line,statement,parentScope,list);
 }
 
+PStatement CppParser::findAndScanBlockAt(const QString &filename, int line)
+{
+    QMutexLocker locker(&mMutex);
+    if (mParsing)
+        return PStatement();
+    PFileIncludes fileIncludes = findFileIncludes(filename);
+    if (!fileIncludes)
+        return PStatement();
+
+
+    PStatement statement = fileIncludes->scopes.findScopeAtLine(line);
+    return statement;
+}
+
+PFileIncludes CppParser::findFileIncludes(const QString &filename, bool deleteIt)
+{
+    QMutexLocker locker(&mMutex);
+    PFileIncludes fileIncludes = mIncludesList->value(filename,PFileIncludes());
+    if (deleteIt && fileIncludes)
+        mIncludesList->remove(filename);
+    return fileIncludes;
+}
+
+QString CppParser::findFirstTemplateParamOf(const QString &fileName, const QString &phrase, PStatement currentScope)
+{
+    QMutexLocker locker(&mMutex);
+    QString result = "";
+    if (mParsing)
+        return "";
+    // Remove pointer stuff from type
+    QString s = phrase; // 'Type' is a keyword
+    int i = s.indexOf('<');
+    if (i>=0) {
+        int t=getFirstTemplateParamEnd(s,i);
+        return s.mid(i+1,t-i-1);
+    }
+    int position = s.length()-1;
+    while ((position >= 0) && (s[position] == '*'
+                               || s[position] == ' '
+                               || s[position] == '&'))
+        position--;
+    if (position != s.length()-1)
+        s.truncate(position+1);
+
+    PStatement scopeStatement = currentScope;
+
+    PStatement statement = findStatementOf(fileName,s,currentScope);
+    return getFirstTemplateParam(statement,fileName, phrase, currentScope);
+}
+
+QString CppParser::getFirstTemplateParam(PStatement statement, const QString& filename, const QString& phrase, PStatement currentScope)
+{
+    if (!statement)
+        return "";
+    if (statement->kind != StatementKind::skTypedef)
+        return "";
+    if (statement->type == phrase) // prevent infinite loop
+        return "";
+    return findFirstTemplateParamOf(filename,statement->type, currentScope);
+}
+
+int CppParser::getFirstTemplateParamEnd(const QString &s, int startAt)
+{
+    int i = startAt;
+    int level = 0; // assume we start on top of '<'
+    while (i < s.length()) {
+        switch (s[i].unicode()) {
+        case '<':
+            level++;
+            break;
+        case ',':
+            if (level == 1)
+                return i;
+        case '>':
+            level--;
+            if (level==0)
+                return i;
+        }
+        i++;
+    }
+    return startAt;
+}
+
 void CppParser::addFileToScan(QString value, bool inProject)
 {
     QMutexLocker locker(&mMutex);
@@ -334,7 +417,7 @@ void CppParser::addSoloScopeLevel(PStatement statement, int line)
     PFileIncludes fileIncludes = findFileIncludes(mCurrentFile);
 
     if (fileIncludes) {
-        fileIncludes->scopes.insert(line,statement);
+        fileIncludes->scopes.addScope(line,statement);
     }
 
     // Set new scope
@@ -359,8 +442,8 @@ void CppParser::removeScopeLevel(int line)
     if (currentScope && (currentScope->kind == StatementKind::skBlock)) {
         if (currentScope->children.isEmpty()) {
             // remove no children block
-            if (fileIncludes && !fileIncludes->scopes.isEmpty()) {
-                fileIncludes->scopes.remove(currentScope->line);
+            if (fileIncludes) {
+                fileIncludes->scopes.removeLastScope();
             }
             mStatementList.deleteStatement(currentScope);
         } else {
@@ -374,9 +457,8 @@ void CppParser::removeScopeLevel(int line)
     // Set new scope
     currentScope = getCurrentScope();
   //  fileIncludes:=FindFileIncludes(fCurrentFile);
-    if (fileIncludes && !fileIncludes->scopes.isEmpty()
-            && fileIncludes->scopes.value(fileIncludes->scopes.keys().back())!=currentScope) {
-        fileIncludes->scopes.insert(line,currentScope);
+    if (fileIncludes && fileIncludes->scopes.lastScope()!=currentScope) {
+        fileIncludes->scopes.addScope(line,currentScope);
     }
 
     if (!currentScope) {

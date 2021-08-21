@@ -139,13 +139,31 @@ struct IncompleteClass {
 };
 using PIncompleteClass = std::shared_ptr<IncompleteClass>;
 
+struct CppScope {
+    int startLine;
+    PStatement statement;
+};
+
+using PCppScope = std::shared_ptr<CppScope>;
+class CppScopes {
+
+public:
+    PStatement findScopeAtLine(int line);
+    void addScope(int line, PStatement scopeStatement);
+    PStatement lastScope();
+    void removeLastScope();
+    void clear();
+private:
+    QVector<PCppScope> mScopes;
+};
+
 struct FileIncludes {
     QString baseFile;
     QMap<QString,bool> includeFiles; // true means the file is directly included, false means included indirectly
     QSet<QString> usings; // namespaces it usings
     StatementMap statements; // but we don't save temporary statements (full name as key)
     StatementMap declaredStatements; // statements declared in this file (full name as key)
-    QMap<int, PStatement> scopes; // int is start line of the statement scope
+    CppScopes scopes; // int is start line of the statement scope
     QSet<QString> dependingFiles; // The files I depeneds on
     QSet<QString> dependedFiles; // the files depends on me
 };

@@ -24,7 +24,6 @@ public:
     void clearProjectIncludePaths();
     void clearProjectFiles();
     void parseHardDefines();
-    PFileIncludes findFileIncludes(const QString &filename, bool deleteIt = false);
     void invalidateFile(const QString& fileName);
     QStringList getFileDirectIncludes(const QString& filename) const;
     const QList<QString>& getFileIncludes(const QString& filename) const;
@@ -57,6 +56,11 @@ public:
                              int line,
                              QStringList& list);
     PStatement findAndScanBlockAt(const QString& filename, int line);
+    PFileIncludes findFileIncludes(const QString &filename, bool deleteIt = false);
+    QString findFirstTemplateParamOf(const QString& fileName,
+                                     const QString& phrase,
+                                     PStatement currentScope);
+
     PStatement findStatementOf(const QString& fileName,
                                const QString& phrase,
                                int line);
@@ -84,9 +88,6 @@ public:
     PStatement findTypeDefinitionOf(const QString& fileName,
                                     const QString& phrase,
                                     PStatement currentClass);
-    QString FindFirstTemplateParamOf(const QString& fileName,
-                                     const QString& phrase,
-                                     PStatement currentClass);
     int findLastOperator(const QString& phrase) const;
     PStatementList findNamespace(const QString& name); // return a list of PSTATEMENTS (of the namespace)
     bool freeze();  // Freeze/Lock (stop reparse while searching)
@@ -182,6 +183,9 @@ private:
     int getCurrentBlockEndSkip();
     int getCurrentInlineNamespaceEndSkip();
     PStatement getCurrentScope(); // gets last item from last level
+    QString getFirstTemplateParam(PStatement statement, const QString& filename,
+                                  const QString& phrase, PStatement currentScope);
+    int getFirstTemplateParamEnd(const QString& s, int startAt);
     void getFullNameSpace(
             const QString& phrase,
             QString& sNamespace,

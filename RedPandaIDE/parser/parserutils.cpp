@@ -3,6 +3,7 @@
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
+#include <QDebug>
 
 QStringList CppDirectives;
 QStringList JavadocTags;
@@ -368,4 +369,60 @@ bool isCfile(const QString filename)
 
     QFileInfo fileInfo(filename);
     return CppSourceExts.contains(fileInfo.suffix().toLower());
+}
+
+PStatement CppScopes::findScopeAtLine(int line)
+{
+    if (mScopes.isEmpty())
+        return PStatement();
+    int start = 0;
+    int end = mScopes.size()-1;
+    while (start<=end) {
+        int mid = (start+end)/2;
+        PCppScope midScope = mScopes[mid];
+        if (midScope->startLine == line) {
+            while (mid-1>=0 && (mScopes[mid-1]->startLine == line)) {
+                mid--;
+            }
+            return mScopes[mid]->statement;
+        } else if (midScope->startLine > line) {
+            end = mid-1;
+        } else {
+            start = mid+1;
+        }
+    }
+    if (start<mScopes.size())
+        return mScopes[start]->statement;
+    else
+        return mScopes.back()->statement;
+}
+
+void CppScopes::addScope(int line, PStatement scopeStatement)
+{
+    PCppScope scope = std::make_shared<CppScope>();
+    scope->startLine = line;
+    scope->statement = scopeStatement;
+    mScopes.append(scope);
+    if (!mScopes.isEmpty() && mScopes.back()->startLine>line) {
+        qDebug()<<QString("Error: new scope %1 at %2 which is less that last scope %3")
+                  .arg(scopeStatement->fullName, line,mScopes.back()->startLine>line);
+    }
+}
+
+PStatement CppScopes::lastScope()
+{
+    if (mScopes.isEmpty())
+        return PStatement();
+    return mScopes.back()->statement;
+}
+
+void CppScopes::removeLastScope()
+{
+    if (!mScopes.isEmpty())
+        mScopes.pop_back();
+}
+
+void CppScopes::clear()
+{
+    mScopes.clear();
 }
