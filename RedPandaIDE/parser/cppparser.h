@@ -110,6 +110,8 @@ public:
 
     int parserId() const;
 
+    const QString &serialId() const;
+
 signals:
     void onProgress(const QString& fileName, int total, int current);
     void onBusy();
@@ -346,5 +348,5 @@ private:
     QRecursiveMutex mMutex;
     GetFileStreamCallBack mOnGetFileStream;
 };
-
+using PCppParser = std::shared_ptr<CppParser>;
 #endif // CPPPARSER_H

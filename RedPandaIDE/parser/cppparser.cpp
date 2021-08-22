@@ -3517,6 +3517,11 @@ void CppParser::updateSerialId()
     mSerialId = QString("%1 %2").arg(mParserId).arg(mSerialCount);
 }
 
+const QString &CppParser::serialId() const
+{
+    return mSerialId;
+}
+
 int CppParser::parserId() const
 {
     return mParserId;

@@ -25,6 +25,7 @@ SOURCES += \
     qsynedit/SearchBase.cpp \
     qsynedit/SearchRegex.cpp \
     settingsdialog/debuggeneralwidget.cpp \
+    widgets/classbrowser.cpp \
     widgets/cpudialog.cpp \
     debugger.cpp \
     editor.cpp \
@@ -87,6 +88,7 @@ HEADERS += \
     qsynedit/SearchBase.h \
     qsynedit/SearchRegex.h \
     settingsdialog/debuggeneralwidget.h \
+    widgets/classbrowser.h \
     widgets/cpudialog.h \
     debugger.h \
     editor.h \
