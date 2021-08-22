@@ -180,12 +180,12 @@ extern QSet<QString> STLElementMethods;
 
 void initParser();
 
-QString getHeaderFileName(const QString& relativeTo, const QString& line,
+QString getHeaderFilename(const QString& relativeTo, const QString& line,
                        const QSet<QString>& includePaths, const QSet<QString>& projectIncludePaths);
 
-QString getLocalHeaderFileName(const QString& relativeTo, const QString& fileName);
+QString getLocalHeaderFilename(const QString& relativeTo, const QString& fileName);
 
-QString getSystemHeaderFileName(const QString& fileName, const QSet<QString>& includePaths);
+QString getSystemHeaderFilename(const QString& fileName, const QSet<QString>& includePaths);
 bool isSystemHeaderFile(const QString& fileName, const QSet<QString>& includePaths);
 bool isHfile(const QString filename);
 bool isCfile(const QString filename);

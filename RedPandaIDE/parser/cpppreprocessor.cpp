@@ -330,7 +330,7 @@ void CppPreprocessor::handleInclude(const QString &line)
 
     PParsedFile file = mIncludes.back();
     // Get full header file name
-    QString fileName = getHeaderFileName(file->fileName, line,mIncludePaths,
+    QString fileName = getHeaderFilename(file->fileName, line,mIncludePaths,
         mProjectIncludePaths);
 
     if (fileName.isEmpty())

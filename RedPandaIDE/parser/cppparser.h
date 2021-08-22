@@ -48,20 +48,34 @@ public:
                                const QString& phrase,
                                PStatement currentClass,
                                bool force = false);
+    //{Find statement starting from startScope}
+    PStatement findStatementStartingFrom(const QString& fileName,
+                                         const QString& phrase,
+                                         PStatement startScope,
+                                         bool force = false);
+    PStatement findTypeDefinitionOf(const QString& fileName,
+                                    const QString& aType,
+                                    PStatement currentClass);
+    bool freeze();  // Freeze/Lock (stop reparse while searching)
+    bool freeze(const QString& serialId);  // Freeze/Lock (stop reparse while searching)
+    QStringList getClassesList();
+    QSet<QString> getFileDirectIncludes(const QString& filename);
+    QSet<QString> getFileIncludes(const QString& filename);
+    QSet<QString> getFileUsings(const QString& filename);
 
+    QString getHeaderFileName(const QString& relativeTo, const QString& line);// both
     StatementKind getKindOfStatement(PStatement statement);
-
+    void invalidateFile(const QString& fileName);
+    bool isProjectHeaderFile(const QString& fileName);
+    bool isSystemHeaderFile(const QString& fileName);
+    void parseFile(const QString& fileName, bool inProject,
+                   bool onlyIfNotParsed = false, bool updateView = true);
+    void parseFileList(bool updateView = true);
+    bool parsing();
 
     void parseHardDefines();
-    void invalidateFile(const QString& fileName);
-    QStringList getFileDirectIncludes(const QString& filename) const;
-    const QList<QString>& getFileIncludes(const QString& filename) const;
-    const QSet<QString>& getFileUsings(const QString& filename) &;
-
-    bool isSystemHeaderFile(const QString& fileName);
-    bool isProjectHeaderFile(const QString& fileName);
     void getSourcePair(const QString& fName, QString& CFile, QString& HFile);
-    void getClassesList(QStringList& list);
+
     int suggestMemberInsertionLine(PStatement parentStatement,
                                    StatementClassScope Scope,
                                    bool addScopeStr);
@@ -70,11 +84,8 @@ public:
 //    function GetProjectHeaderFileName(const FileName: AnsiString): AnsiString; // <file.h>
 //    function GetLocalHeaderFileName(const RelativeTo, FileName: AnsiString): AnsiString; // "file.h"
 //    }
-    QString getHeaderFileName(const QString& relativeTo, const QString& line) const;// both
     bool isIncludeLine(const QString &line);
     void parseFileList(bool updateView = true);
-    void parseFile(const QString& fileName, bool inProject,
-                   bool onlyIfNotParsed = false, bool updateView = true);
     QString statementKindStr(StatementKind value);
     QString statementClassScopeStr(StatementClassScope value);
     void reset();
@@ -83,22 +94,14 @@ public:
 
 
 
-    StatementKind findKindOfStatementOf(const QString& fileName,
-                                     const QString& phrase,
-                                     int line);
+//    StatementKind findKindOfStatementOf(const QString& fileName,
+//                                     const QString& phrase,
+//                                     int line);
     QString getHintFromStatement(const QString& fileName,
                                  const QString& phrase,
                                  int line);
-    //{Find statement starting from startScope}
-    PStatement findStatementStartingFrom(const QString& fileName,
-                                         const QString& phrase,
-                                         PStatement startScope,
-                                         bool force = false);
-    PStatement findTypeDefinitionOf(const QString& fileName,
-                                    const QString& phrase,
-                                    PStatement currentClass);
-    bool freeze();  // Freeze/Lock (stop reparse while searching)
-    bool freeze(const QString& serialId);  // Freeze/Lock (stop reparse while searching)
+
+
     void unFreeze(); // UnFree/UnLock (reparse while searching)
     bool getParsing();
 
@@ -108,6 +111,8 @@ public:
 
     const QSet<QString> &filesToScan() const;
     void setFilesToScan(const QSet<QString> &newFilesToScan);
+
+    void setOnGetFileStream(const GetFileStreamCallBack &newOnGetFileStream);
 
 signals:
     void onProgress(const QString& fileName, int total, int current);
@@ -182,6 +187,13 @@ private:
             const QString& noNameArgs,
             StatementKind kind,
             PStatement scope);
+    PStatement findStatementInScope(
+            const QString& name,
+            PStatement scope);
+    PStatement findStatementInNamespace(
+            const QString& name,
+            const QString& namespaceName);
+    int getBracketEnd(const QString& s, int startAt);
     StatementClassScope getClassScope(int index);
     int getCurrentBlockBeginSkip();
     int getCurrentBlockEndSkip();
@@ -190,6 +202,7 @@ private:
     QString getFirstTemplateParam(PStatement statement, const QString& filename,
                                   const QString& phrase, PStatement currentScope);
     int getFirstTemplateParamEnd(const QString& s, int startAt);
+
     void getFullNamespace(
             const QString& phrase,
             QString& sNamespace,
@@ -204,6 +217,7 @@ private:
     QString getStatementKey(const QString& sName,
                             const QString& sType,
                             const QString& sNoNameArgs);
+    PStatement getTypeDef(PStatement statement, const QString& fileName, const QString& aType);
     void handleCatchBlock();
     void handleEnum();
     void handleForBlock();
@@ -234,9 +248,8 @@ private:
                                       StatementKind kind,
                                       PStatement scope);
     void internalInvalidateFile(const QString& fileName);
-    void internalInvalidateFiles(const QStringList& files);
-    void calculateFilesToBeReparsed(const QString& fileName,
-                                    QStringList& files);
+    void internalInvalidateFiles(const QSet<QString>& files);
+    QSet<QString> calculateFilesToBeReparsed(const QString& fileName);
     int calcKeyLenForStruct(const QString& word);
 //    {
 //    function GetClass(const Phrase: AnsiString): AnsiString;
@@ -315,7 +328,7 @@ private:
     StatementModel mStatementList;
     std::shared_ptr<QHash<QString,PFileIncludes>> mIncludesList; //List of scaned files and it's infos
     //It's used in preprocessor, so we can't use fIncludeList instead
-    std::shared_ptr<QSet<QString>> mScannedFiles; // List of scaned file names
+
     CppTokenizer mTokenizer;
     CppPreprocessor mPreprocessor;
     //{ List of current project's file }

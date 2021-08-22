@@ -256,7 +256,7 @@ void initParser()
     JavadocTags.append("@version");
 }
 
-QString getHeaderFileName(const QString &relativeTo, const QString &line,
+QString getHeaderFilename(const QString &relativeTo, const QString &line,
                           const QSet<QString>& includePaths, const QSet<QString>& projectIncludePaths) {
     QString result = "";
 
@@ -267,9 +267,9 @@ QString getHeaderFileName(const QString &relativeTo, const QString &line,
         if (closeTokenPos >=0) {
             QString fileName = line.mid(openTokenPos + 1, closeTokenPos - openTokenPos - 1);
             //project settings is preferred
-            result = getSystemHeaderFileName(fileName, projectIncludePaths);
+            result = getSystemHeaderFilename(fileName, projectIncludePaths);
             if (result.isEmpty()) {
-                result = getSystemHeaderFileName(fileName, includePaths);
+                result = getSystemHeaderFilename(fileName, includePaths);
             }
         }
     } else {
@@ -279,13 +279,13 @@ QString getHeaderFileName(const QString &relativeTo, const QString &line,
             int closeTokenPos = line.indexOf('"', openTokenPos+1);
             if (closeTokenPos >= 0) {
                 QString fileName = line.mid(openTokenPos + 1, closeTokenPos - openTokenPos - 1);
-                result = getLocalHeaderFileName(relativeTo, fileName);
+                result = getLocalHeaderFilename(relativeTo, fileName);
                 //project settings is preferred
                 if (result.isEmpty()) {
-                    result = getSystemHeaderFileName(fileName, projectIncludePaths);
+                    result = getSystemHeaderFilename(fileName, projectIncludePaths);
                 }
                 if (result.isEmpty()) {
-                    result = getSystemHeaderFileName(fileName, includePaths);
+                    result = getSystemHeaderFilename(fileName, includePaths);
                 }
             }
         }
@@ -293,7 +293,7 @@ QString getHeaderFileName(const QString &relativeTo, const QString &line,
     return result;
 }
 
-QString getLocalHeaderFileName(const QString &relativeTo, const QString &fileName)
+QString getLocalHeaderFilename(const QString &relativeTo, const QString &fileName)
 {
     QFileInfo relativeFile(relativeTo);
     QDir dir = relativeFile.dir();
@@ -304,7 +304,7 @@ QString getLocalHeaderFileName(const QString &relativeTo, const QString &fileNam
     return "";
 }
 
-QString getSystemHeaderFileName(const QString &fileName, const QSet<QString>& includePaths)
+QString getSystemHeaderFilename(const QString &fileName, const QSet<QString>& includePaths)
 {
 
     // Search compiler include directories
