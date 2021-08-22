@@ -1580,6 +1580,11 @@ int CppPreprocessor::evaluateExpression(QString line)
     return result;
 }
 
+const DefineMap &CppPreprocessor::hardDefines() const
+{
+    return mHardDefines;
+}
+
 QSet<QString> &CppPreprocessor::projectIncludePaths()
 {
     return mProjectIncludePaths;

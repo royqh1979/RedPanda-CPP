@@ -256,7 +256,7 @@ void SearchResultTreeViewDelegate::paint(QPainter *painter, const QStyleOptionVi
 
      // Painting item without text (this takes care of painting e.g. the highlighted for selected
      // or hovered over items in an ItemView)
-     option->text = QString();
+     option.text = QString();
      style->drawControl(QStyle::CE_ItemViewItem, &option, painter, option.widget);
      SearchResultTreeItem* item = static_cast<SearchResultTreeItem *>(index.internalPointer());
 
@@ -268,7 +268,7 @@ void SearchResultTreeViewDelegate::paint(QPainter *painter, const QStyleOptionVi
              .arg(item->text);
      }
      // Figure out where to render the text in order to follow the requested alignment
-     option->text = fullText;
+     option.text = fullText;
      QRect textRect = style->subElementRect(QStyle::SE_ItemViewItemText, &option);
 
      QFontMetrics metrics = option.fontMetrics;

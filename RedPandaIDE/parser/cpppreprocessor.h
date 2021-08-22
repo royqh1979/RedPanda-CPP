@@ -57,6 +57,8 @@ public:
 
     QSet<QString> &projectIncludePaths();
 
+    const DefineMap &hardDefines() const;
+
 signals:
 
 private:
