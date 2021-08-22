@@ -23,6 +23,35 @@ public:
     void clearIncludePaths();
     void clearProjectIncludePaths();
     void clearProjectFiles();
+    void fillListOfFunctions(const QString& fileName,
+                             const QString& phrase,
+                             int line,
+                             QStringList& list);
+    PStatement findAndScanBlockAt(const QString& filename, int line);
+    PFileIncludes findFileIncludes(const QString &filename, bool deleteIt = false);
+    QString findFirstTemplateParamOf(const QString& fileName,
+                                     const QString& phrase,
+                                     PStatement currentScope);
+    PStatement findFunctionAt(const QString& fileName,
+                            int line);
+    int findLastOperator(const QString& phrase) const;
+    PStatementList findNamespace(const QString& name); // return a list of PSTATEMENTS (of the namespace)
+    PStatement findStatementOf(const QString& fileName,
+                               const QString& phrase,
+                               int line);
+    PStatement findStatementOf(const QString& fileName,
+                               const QString& phrase,
+                               PStatement currentClass,
+                               PStatement& currentClassType,
+                               bool force = false);
+    PStatement findStatementOf(const QString& fileName,
+                               const QString& phrase,
+                               PStatement currentClass,
+                               bool force = false);
+
+    StatementKind getKindOfStatement(PStatement statement);
+
+
     void parseHardDefines();
     void invalidateFile(const QString& fileName);
     QStringList getFileDirectIncludes(const QString& filename) const;
@@ -51,28 +80,8 @@ public:
     void reset();
 
     QString prettyPrintStatement(PStatement statement, int line = -1);
-    void fillListOfFunctions(const QString& fileName,
-                             const QString& phrase,
-                             int line,
-                             QStringList& list);
-    PStatement findAndScanBlockAt(const QString& filename, int line);
-    PFileIncludes findFileIncludes(const QString &filename, bool deleteIt = false);
-    QString findFirstTemplateParamOf(const QString& fileName,
-                                     const QString& phrase,
-                                     PStatement currentScope);
 
-    PStatement findStatementOf(const QString& fileName,
-                               const QString& phrase,
-                               int line);
-    PStatement findStatementOf(const QString& fileName,
-                               const QString& phrase,
-                               PStatement currentClass,
-                               PStatement& currentClassType,
-                               bool force = false);
-    PStatement findStatementOf(const QString& fileName,
-                               const QString& phrase,
-                               PStatement currentClass,
-                               bool force = false);
+
 
     StatementKind findKindOfStatementOf(const QString& fileName,
                                      const QString& phrase,
@@ -88,17 +97,12 @@ public:
     PStatement findTypeDefinitionOf(const QString& fileName,
                                     const QString& phrase,
                                     PStatement currentClass);
-    int findLastOperator(const QString& phrase) const;
-    PStatementList findNamespace(const QString& name); // return a list of PSTATEMENTS (of the namespace)
     bool freeze();  // Freeze/Lock (stop reparse while searching)
     bool freeze(const QString& serialId);  // Freeze/Lock (stop reparse while searching)
     void unFreeze(); // UnFree/UnLock (reparse while searching)
     bool getParsing();
 
-    QString findFunctionDoc(const QString& fileName,
-                            int line,
-                            QStringList& params,
-                            bool &isVoid);
+
     bool enabled() const;
     void setEnabled(bool newEnabled);
 
@@ -186,7 +190,7 @@ private:
     QString getFirstTemplateParam(PStatement statement, const QString& filename,
                                   const QString& phrase, PStatement currentScope);
     int getFirstTemplateParamEnd(const QString& s, int startAt);
-    void getFullNameSpace(
+    void getFullNamespace(
             const QString& phrase,
             QString& sNamespace,
             QString& member);

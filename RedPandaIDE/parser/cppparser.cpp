@@ -160,6 +160,203 @@ QString CppParser::findFirstTemplateParamOf(const QString &fileName, const QStri
     return getFirstTemplateParam(statement,fileName, phrase, currentScope);
 }
 
+PStatement CppParser::findFunctionAt(const QString &fileName, int line)
+{
+    QMutexLocker locker(&mMutex);
+    PFileIncludes fileIncludes = findFileIncludes(fileName);
+    if (!fileIncludes)
+        return PStatement();
+    for (PStatement statement : fileIncludes->statements) {
+        if (statement->kind != StatementKind::skFunction
+                && statement->kind != StatementKind::skConstructor
+                && statement->kind != StatementKind::skDestructor)
+            continue;
+        if (statement->line == line || statement->definitionLine == line)
+            return statement;
+    }
+    return PStatement();
+}
+
+int CppParser::findLastOperator(const QString &phrase) const
+{
+    int i = phrase.length()-1;
+
+    // Obtain stuff after first operator
+    while (i>=0) {
+        if ((i+1<phrase.length()) &&
+                (phrase[i + 1] == '>') && (phrase[i] == '-'))
+            return i;
+        else if ((i+1<phrase.length()) &&
+                 (phrase[i + 1] == ':') && (phrase[i] == ':'))
+            return i;
+        else if (phrase[i] == '.')
+            return i;
+        i--;
+    }
+    return -1;
+}
+
+PStatementList CppParser::findNamespace(const QString &name)
+{
+    return mNamespaces.value(name,PStatementList());
+}
+
+PStatement CppParser::findStatementOf(const QString &fileName, const QString &phrase, int line)
+{
+    return findStatementOf(fileName,phrase,findAndScanBlockAt(fileName,line));
+}
+
+PStatement CppParser::findStatementOf(const QString &fileName, const QString &phrase, PStatement currentClass, PStatement &currentClassType, bool force)
+{
+    QMutexLocker locker(&mMutex);
+    PStatement result;
+    currentClassType = currentClass;
+    if (mParsing && !force)
+        return PStatement();
+
+    QString namespaceName, remainder;
+    QString nextScopeWord,operatorToken,memberName;
+    PStatement statement;
+    getFullNamespace(phrase, namespaceName, remainder);
+    if (!namespaceName.isEmpty()) {  // (namespace )qualified Name
+        PStatementList namespaceList = mNamespaces.value(namespaceName);
+
+        if (!namespaceList || namespaceList->isEmpty())
+            return PStatement();
+
+        if (remainder.isEmpty())
+            return namespaceList->front();
+
+        remainder = splitPhrase(remainder,nextScopeWord,operatorToken,memberName);
+
+        for (PStatement currentNamespace: *namespaceList) {
+            statement = findMemberOfStatement(nextScopeWord,currentNamespace);
+            if (statement)
+                break;
+        }
+
+        //not found in namespaces;
+        if (!statement)
+            return PStatement();
+        // found in namespace
+    } else if ((phrase.length()>2) &&
+               (phrase[0]==':') && (phrase[1]==':')) {
+        //global
+        remainder= phrase.mid(2);
+        remainder= splitPhrase(remainder,nextScopeWord,operatorToken,memberName);
+        statement= findMemberOfStatement(nextScopeWord,PStatement());
+        if (!statement)
+            return PStatement();
+    } else {
+        //unqualified name
+        currentClassType = currentClass;
+        remainder = splitPhrase(remainder,nextScopeWord,operatorToken,memberName);
+        if (currentClass && (currentClass->kind == StatementKind::skNamespace)) {
+            PStatementList namespaceList = mNamespaces.value(currentClass->command);
+            if (!namespaceList || namespaceList->isEmpty())
+                return PStatement();
+            for (PStatement currentNamespace:*namespaceList){
+                statement = findMemberOfStatement(nextScopeWord,currentNamespace);
+                if (statement)
+                    break;
+            }
+        } else {
+            statement = findStatementStartingFrom(fileName,nextScopeWord,currentClassType,force);
+        }
+        if (!statement)
+            return PStatement();
+    }
+    currentClassType = currentClass;
+
+    if (MemberName <> '') and (statement._Kind in [skTypedef]) then begin
+      TypeStatement := FindTypeDefinitionOf(FileName,statement^._Type, CurrentClassType);
+      if Assigned(TypeStatement) then
+        Statement := TypeStatement;
+    end;
+
+    if (statement._Kind in [skAlias]) and not SameStr(Phrase,statement^._Type)  then begin
+      Statement := FindStatementOf(FileName, statement^._Type,CurrentClass, CurrentClassType, force);
+      if not assigned(statement) then
+        Exit;
+    end;
+
+    if (statement._Kind = skConstructor) then begin // we need the class, not the construtor
+      statement:=statement^._ParentScope;
+      if not assigned(statement) then
+        Exit;
+    end;
+
+    LastScopeStatement:=nil;
+    while MemberName <> '' do begin
+      if statement._Kind in [skVariable,skParameter,skFunction] then begin
+        if (statement^._Kind = skFunction)
+            and assigned(statement^._ParentScope)
+            and  (STLContainers.ValueOf(statement^._ParentScope^._FullName)>0)
+            and (STLElementMethods.ValueOf(statement^._Command)>0)
+            and assigned(LastScopeStatement) then begin
+          typeName:=self.FindFirstTemplateParamOf(FileName,LastScopeStatement^._Type,LastScopeStatement^._ParentScope);
+          TypeStatement:=FindTypeDefinitionOf(FileName, typeName,LastScopeStatement^._ParentScope);
+        end else
+          TypeStatement := FindTypeDefinitionOf(FileName,statement^._Type, CurrentClassType);
+
+        if assigned(TypeStatement) and (
+          STLPointers.Valueof(TypeStatement^._FullName)>=0)
+           and SameStr(OperatorToken,'->') then begin
+          typeName:=self.FindFirstTemplateParamOf(FileName,Statement^._Type,statement^._ParentScope);
+          TypeStatement:=FindTypeDefinitionOf(FileName, typeName,statement^._ParentScope);
+        end else if assigned(TypeStatement) and (STLContainers.ValueOf(TypeStatement^._FullName)>0)
+            and EndsStr(']',NextScopeWord) then begin
+          typeName:=self.FindFirstTemplateParamOf(FileName,Statement^._Type,statement^._ParentScope);
+          TypeStatement:=FindTypeDefinitionOf(FileName, typeName,statement^._ParentScope);
+        end;
+        lastScopeStatement:= statement;
+        if Assigned(TypeStatement) then
+          Statement := TypeStatement;
+      end else
+        lastScopeStatement:= statement;
+      remainder := SplitPhrase(remainder,NextScopeWord,OperatorToken,MemberName);
+      MemberStatement := FindMemberOfStatement(NextScopeWord,statement);
+      if not Assigned(MemberStatement) then begin;
+        Exit;
+      end;
+
+      CurrentClassType:=statement;
+      Statement:=MemberStatement;
+      if (MemberName <> '') and (statement._Kind in [skTypedef]) then begin
+        TypeStatement := FindTypeDefinitionOf(FileName,statement^._Type, CurrentClassType);
+        if Assigned(TypeStatement) then
+          Statement := TypeStatement;
+      end;
+    end;
+    Result := Statement;
+
+    finally
+      fCriticalSection.Release;
+    end;
+}
+
+PStatement CppParser::findStatementOf(const QString &fileName, const QString &phrase, PStatement currentClass, bool force)
+{
+    PStatement statementParentType;
+    return findStatementOf(fileName,phrase,currentClass,statementParentType,force);
+}
+
+StatementKind CppParser::getKindOfStatement(PStatement statement)
+{
+    if (!statement)
+        return StatementKind::skUnknown;
+    if (statement->kind == StatementKind::skVariable) {
+        if (!statement->parentScope.lock()) {
+            return StatementKind::skGlobalVariable;
+        }  else if (statement->scope == StatementScope::ssLocal) {
+            return StatementKind::skLocalVariable;
+        } else {
+            return StatementKind::skVariable;
+        }
+    }
+    return statement->kind;
+}
+
 QString CppParser::getFirstTemplateParam(PStatement statement, const QString& filename, const QString& phrase, PStatement currentScope)
 {
     if (!statement)
@@ -846,7 +1043,7 @@ PStatement CppParser::getCurrentScope()
     return mCurrentScope.back();
 }
 
-void CppParser::getFullNameSpace(const QString &phrase, QString &sNamespace, QString &member)
+void CppParser::getFullNamespace(const QString &phrase, QString &sNamespace, QString &member)
 {
     sNamespace = "";
     member = phrase;
