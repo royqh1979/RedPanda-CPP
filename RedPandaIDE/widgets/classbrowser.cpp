@@ -1,5 +1,6 @@
 #include "classbrowser.h"
 #include "../utils.h"
+#include <QDebug>
 
 ClassBrowserModel::ClassBrowserModel(QObject *parent):QAbstractItemModel(parent)
 {
@@ -33,7 +34,7 @@ QModelIndex ClassBrowserModel::index(int row, int column, const QModelIndex &par
 
 QModelIndex ClassBrowserModel::parent(const QModelIndex &child) const
 {
-    if (child.isValid()) {
+    if (!child.isValid()) {
         return QModelIndex();
     }
     ClassBrowserNode *childNode = static_cast<ClassBrowserNode *>(child.internalPointer());
@@ -44,6 +45,21 @@ QModelIndex ClassBrowserModel::parent(const QModelIndex &child) const
     ClassBrowserNode *grandNode = parentNode->parent;
     int row = grandNode->children.indexOf(parentNode);
     return createIndex(row,0,parentNode);
+}
+
+bool ClassBrowserModel::hasChildren(const QModelIndex &parent) const
+{
+    ClassBrowserNode *parentNode;
+    if (!parent.isValid()) { // top level
+        return mRoot->children.count();
+    } else {
+        parentNode = static_cast<ClassBrowserNode *>(parent.internalPointer());
+        if (parentNode->childrenFetched)
+            return parentNode->children.count();
+        if (parentNode->statement)
+            return !parentNode->statement->children.isEmpty();
+        return false;
+    }
 }
 
 int ClassBrowserModel::rowCount(const QModelIndex &parent) const
@@ -71,8 +87,11 @@ void ClassBrowserModel::fetchMore(const QModelIndex &parent)
     ClassBrowserNode *parentNode = static_cast<ClassBrowserNode *>(parent.internalPointer());
     if (!parentNode->childrenFetched) {
         parentNode->childrenFetched = true;
-        if (parentNode->statement && !parentNode->statement->children.isEmpty())
+        if (parentNode->statement && !parentNode->statement->children.isEmpty()) {
             filterChildren(parentNode, parentNode->statement->children);
+            beginInsertRows(parent,0,parentNode->children.count());
+            endInsertRows();
+        }
     }
 }
 
@@ -109,12 +128,12 @@ QVariant ClassBrowserModel::data(const QModelIndex &index, int role) const
     return QVariant();
 }
 
-const PCppParser &ClassBrowserModel::cppParser() const
+const PCppParser &ClassBrowserModel::parser() const
 {
     return mParser;
 }
 
-void ClassBrowserModel::setCppParser(const PCppParser &newCppParser)
+void ClassBrowserModel::setParser(const PCppParser &newCppParser)
 {
     if (mParser) {
         disconnect(mParser.get(),
@@ -128,8 +147,6 @@ void ClassBrowserModel::setCppParser(const PCppParser &newCppParser)
                    &CppParser::onEndParsing,
                    this,
                    &ClassBrowserModel::fillStatements);
-        if (!mParser->parsing())
-            fillStatements();
     }
 }
 
@@ -144,10 +161,12 @@ void ClassBrowserModel::clear()
 
 void ClassBrowserModel::fillStatements()
 {
-    QMutexLocker locker(&mMutex);
-    if (mUpdateCount!=0)
-        return;
-    mUpdating = true;
+    {
+        QMutexLocker locker(&mMutex);
+        if (mUpdateCount!=0 || mUpdating)
+            return;
+        mUpdating = true;
+    }
     beginResetModel();
     clear();
     {
@@ -303,6 +322,31 @@ PStatement ClassBrowserModel::createDummy(PStatement statement)
     result->definitionLine = 0;
     mDummyStatements.insert(result->fullName,result);
     return result;
+}
+
+const QString &ClassBrowserModel::currentFile() const
+{
+    return mCurrentFile;
+}
+
+void ClassBrowserModel::setCurrentFile(const QString &newCurrentFile)
+{
+    mCurrentFile = newCurrentFile;
+}
+
+void ClassBrowserModel::beginUpdate()
+{
+    mUpdateCount++;
+}
+
+void ClassBrowserModel::endUpdate()
+{
+    mUpdateCount--;
+    if (mUpdateCount == 0) {
+        if (!mParser->parsing()) {
+            this->fillStatements();
+        }
+    }
 }
 
 

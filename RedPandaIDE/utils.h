@@ -7,6 +7,7 @@
 #include <QString>
 #include <QRect>
 #include <QStringList>
+#include <memory>
 
 class QByteArray;
 class QTextStream;

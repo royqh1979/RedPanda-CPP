@@ -279,6 +279,7 @@ QString CppTokenizer::getWord(bool bSkipParenthesis, bool bSkipArray, bool bSkip
     QString result;
     // We found a word...
     if (!currentWord.isEmpty()) {
+        result = currentWord;
         // Skip whitespace
         skipToNextToken();
 

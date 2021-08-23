@@ -971,6 +971,7 @@ PStatement CppParser::addStatement(PStatement parent, const QString &fileName, c
         result->fullName =  getFullStatementName(newCommand, parent);
     result->usageCount = 0;
     result->freqTop = 0;
+    mStatementList.add(result);
     if (result->kind == StatementKind::skNamespace) {
         PStatementList namespaceList = mNamespaces.value(result->fullName,PStatementList());
         if (!namespaceList) {
@@ -1293,7 +1294,7 @@ bool CppParser::checkForPreprocessor()
 {
 //    return (mIndex < mTokenizer.tokenCount())
 //            && ( "#" == mTokenizer[mIndex]->text);
-    return ("#" == mTokenizer[mIndex]->text);
+    return (mTokenizer[mIndex]->text.startsWith('#'));
 }
 
 bool CppParser::checkForScope()
@@ -2316,7 +2317,7 @@ bool CppParser::handleStatement()
             false);
         addSoloScopeLevel(block,mTokenizer[mIndex]->line);
         mIndex++;
-    } else if (mTokenizer[mIndex]->text[1] == '}') {
+    } else if (mTokenizer[mIndex]->text[0] == '}') {
         removeScopeLevel(mTokenizer[mIndex]->line);
         mIndex++;
     } else if (checkForPreprocessor()) {
@@ -2859,9 +2860,9 @@ void CppParser::internalParse(const QString &fileName)
     if (!isCfile(fileName) && !isHfile(fileName))  // support only known C/C++ files
         return;
 
-    QStringList tempStream;
+    QStringList buffer;
     if (mOnGetFileStream) {
-        mOnGetFileStream(fileName,tempStream);
+        mOnGetFileStream(fileName,buffer);
     }
 
     // Preprocess the file...
@@ -2876,8 +2877,10 @@ void CppParser::internalParse(const QString &fileName)
 //        mPreprocessor.setProjectIncludePaths(mProjectIncludePaths);
 //        mPreprocessor.setScannedFileList(mScannedFiles);
         mPreprocessor.setScanOptions(mParseGlobalHeaders, mParseLocalHeaders);
-        mPreprocessor.preprocess(fileName, tempStream);
-
+        mPreprocessor.preprocess(fileName, buffer);
+#ifdef QT_DEBUG
+        StringsToFile(mPreprocessor.result(),"f:\\preprocess.txt");
+#endif
 //    with TStringList.Create do try
 //      Text:=fPreprocessor.Result;
 //      SaveToFile('f:\\Preprocess.txt');
@@ -2903,11 +2906,16 @@ void CppParser::internalParse(const QString &fileName)
             if (!handleStatement())
                 break;
         }
-        //mTokenizer.DumpTokens('f:\tokens.txt');
+#ifdef QT_DEBUG
+        mTokenizer.dumpTokens("f:\\tokens.txt");
+        mPreprocessor.dumpDefinesTo("f:\\defines.txt");
+        mPreprocessor.dumpIncludesListTo("f:\\includes.txt");
+        mStatementList.dump("f:\\stats.txt");
         //Statements.DumpTo('f:\stats.txt');
         //Statements.DumpWithScope('f:\\statements.txt');
         //fPreprocessor.DumpDefinesTo('f:\defines.txt');
         //fPreprocessor.DumpIncludesListTo('f:\\includes.txt');
+#endif
     }
 }
 

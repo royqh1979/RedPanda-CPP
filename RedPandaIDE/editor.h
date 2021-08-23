@@ -115,6 +115,8 @@ public:
     void removeBreakpointFocus();
     void setActiveBreakpointFocus(int Line, bool setFocus=true);
 
+    const PCppParser &parser() const;
+
 signals:
 
 

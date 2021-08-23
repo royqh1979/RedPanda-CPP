@@ -23,14 +23,20 @@ public:
 
     QModelIndex index(int row, int column, const QModelIndex &parent) const override;
     QModelIndex parent(const QModelIndex &child) const override;
+    bool hasChildren(const QModelIndex &parent) const override;
     int rowCount(const QModelIndex &parent) const override;
     int columnCount(const QModelIndex &parent) const override;
     void fetchMore(const QModelIndex &parent) override;
     bool canFetchMore(const QModelIndex &parent) const override;
     QVariant data(const QModelIndex &index, int role) const override;
-    const PCppParser &cppParser() const;
-    void setCppParser(const PCppParser &newCppParser);
+    const PCppParser &parser() const;
+    void setParser(const PCppParser &newCppParser);
     void clear();
+    const QString &currentFile() const;
+    void setCurrentFile(const QString &newCurrentFile);
+    void beginUpdate();
+    void endUpdate();
+
 public slots:
     void fillStatements();
 private:
@@ -49,6 +55,9 @@ private:
     QString mCurrentFile;
     bool mShowInheritedMembers;
 
+
+    // QAbstractItemModel interface
+public:
 };
 
 #endif // CLASSBROWSER_H

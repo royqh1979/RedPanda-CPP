@@ -90,11 +90,19 @@ Editor::Editor(QWidget *parent, const QString& filename,
         setUseCodeFolding(false);
     }
 
+    if (inProject) {
+        //todo:
+    } else {
+        initParser();
+    }
+
     applySettings();
     applyColorScheme(pSettings->editor().colorScheme());
 
     connect(this,&SynEdit::statusChanged,this,&Editor::onStatusChanged);
     connect(this,&SynEdit::gutterClicked,this,&Editor::onGutterClicked);
+
+    onStatusChanged(SynStatusChange::scOpenFile);
 }
 
 Editor::~Editor() {
@@ -300,6 +308,7 @@ void Editor::focusInEvent(QFocusEvent *event)
     pMainWindow->updateEditorActions();
     pMainWindow->updateStatusbarForLineCol();
     pMainWindow->updateForStatusbarModeInfo();
+    pMainWindow->updateClassBrowserForEditor(this);
 }
 
 void Editor::focusOutEvent(QFocusEvent *event)
@@ -645,8 +654,7 @@ void Editor::onModificationChanged(bool) {
 
 void Editor::onStatusChanged(SynStatusChanges changes)
 {
-    if (!changes.testFlag(SynStatusChange::scOpenFile)
-            && !changes.testFlag(SynStatusChange::scReadOnly)
+    if (!changes.testFlag(SynStatusChange::scReadOnly)
             && !changes.testFlag(SynStatusChange::scInsertMode)
             && (lines()->count()!=mLineCount)
             && (lines()->count()!=0) && ((mLineCount>0) || (lines()->count()>1))) {
@@ -1183,6 +1191,11 @@ Editor::QuoteStatus Editor::getQuoteStatus()
 void Editor::reparse()
 {
     parseFile(mParser,mFilename,mInProject);
+}
+
+const PCppParser &Editor::parser() const
+{
+    return mParser;
 }
 
 int Editor::gutterClickedLine() const

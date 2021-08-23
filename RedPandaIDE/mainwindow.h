@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include "common.h"
 #include "widgets/searchresultview.h"
+#include "widgets/classbrowser.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -73,6 +74,8 @@ public:
 
     void rebuildOpenedFileHisotryMenu();
 
+    void updateClassBrowserForEditor(Editor* editor);
+
     QPlainTextEdit* txtLocals();
 
     CPUDialog *cpuDialog() const;
@@ -84,6 +87,8 @@ public:
     SearchDialog *searchDialog() const;
 
     SearchResultModel* searchResultModel();
+
+
 
 protected:
     void openFiles(const QStringList& files);
@@ -220,11 +225,13 @@ private:
     CPUDialog *mCPUDialog;
     SearchDialog *mSearchDialog;
     QList<QAction *> mRecentFileActions;
+    bool mQuitting;
 
     SearchResultModel mSearchResultModel;
     PSearchResultListModel mSearchResultListModel;
     PSearchResultTreeModel mSearchResultTreeModel;
     PSearchResultTreeViewDelegate mSearchViewDelegate;
+    ClassBrowserModel mClassBrowserModel;
 
     bool mMessageControlChanged;
     bool mTabMessagesTogglingState;

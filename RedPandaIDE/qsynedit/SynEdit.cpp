@@ -4551,7 +4551,7 @@ int SynEdit::InsertTextByColumnMode(const QString &Value, bool AddToUndoList)
                 TempString = mLines->getString(mCaretY - 1);
                 Len = stringColumns(TempString,0);
                 if (Len < InsertCol) {
-                    TempString = TempString + QChar(' ', InsertCol - Len - 1) + Str;
+                    TempString = TempString + QString(InsertCol - Len - 1,' ') + Str;
                 } else {
                     int insertPos = charToColumn(TempString,InsertCol);
                     TempString.insert(insertPos-1,Str);

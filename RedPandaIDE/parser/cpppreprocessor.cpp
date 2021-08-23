@@ -888,6 +888,8 @@ QStringList CppPreprocessor::removeComments(const QStringList &text)
                         s+=ch;
                     }
                 }
+            default:
+                s+=ch;
             }
             if (stopProcess)
                 break;

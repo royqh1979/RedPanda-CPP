@@ -35,7 +35,8 @@ MainWindow::MainWindow(QWidget *parent)
       mMessageControlChanged(false),
       mTabMessagesTogglingState(false),
       mCheckSyntaxInBack(false),
-      mSearchDialog(nullptr)
+      mSearchDialog(nullptr),
+      mQuitting(false)
 {
     ui->setupUi(this);
     // status bar
@@ -117,6 +118,9 @@ MainWindow::MainWindow(QWidget *parent)
     connect(mSearchResultTreeModel.get() , &QAbstractItemModel::modelReset,
             ui->searchView,&QTreeView::expandAll);
     ui->replacePanel->setVisible(false);
+
+    //class browser
+    ui->classBrowser->setModel(&mClassBrowserModel);
 }
 
 MainWindow::~MainWindow()
@@ -382,6 +386,35 @@ void MainWindow::rebuildOpenedFileHisotryMenu()
             mRecentFileActions.append(action);
         }
         mMenuRecentFiles->addActions(mRecentFileActions);
+    }
+}
+
+void MainWindow::updateClassBrowserForEditor(Editor *editor)
+{
+    if (!editor) {
+        mClassBrowserModel.setParser(nullptr);
+        mClassBrowserModel.setCurrentFile("");
+        return;
+    }
+    if (mQuitting)
+        return;
+//    if not devCodeCompletion.Enabled then
+//      Exit;
+    if ((mClassBrowserModel.currentFile() == editor->filename())
+         && (mClassBrowserModel.parser() == editor->parser()))
+            return;
+
+    mClassBrowserModel.beginUpdate();
+    {
+        auto action = finally([this] {
+            mClassBrowserModel.endUpdate();
+        });
+        mClassBrowserModel.setParser(editor->parser());
+//              if e.InProject then begin
+//                ClassBrowser.StatementsType := devClassBrowsing.StatementsType;
+//              end else
+//                ClassBrowser.StatementsType := cbstFile;
+        mClassBrowserModel.setCurrentFile(editor->filename());
     }
 }
 
