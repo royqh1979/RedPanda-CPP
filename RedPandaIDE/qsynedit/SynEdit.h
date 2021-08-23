@@ -130,12 +130,6 @@ using SynPreparePaintHighlightTokenProc = std::function<void(int row,
         SynFontStyles& style, QColor& foreground, QColor& background)>;
 using SynSearchMathedProc = std::function<SynSearchAction(const QString& sSearch,
     const QString& sReplace, int Line, int ch, int wordLen)>;
-//using SynSpecialLineColorsProc = std::function<void(int Line,
-//    bool& Special, QColor& foreground, QColor& backgroundColor)>;
-//using SynEditingAreasProc = std::function<void(int Line, SynEditingAreaList& areaList,
-//            QColor& borderColor,SynEditingAreaType& areaType)>;
-//using SynGutterGetTextProc = std::function<void(int aLine, QString& aText)>;
-//using SynTGutterPaintProc = std::function<void(int aLine, int X, int Y)>;
 
 class SynEdit;
 using PSynEdit = std::shared_ptr<SynEdit>;

@@ -179,26 +179,12 @@ void ClassBrowserModel::fillStatements()
     }
 }
 
-void ClassBrowserModel::calculateChildrenCounts(const QModelIndex &index)
-{
-    ClassBrowserNode *parentNode;
-    if (!index.isValid()) { // top level
-        parentNode = mRoot;
-    } else {
-        parentNode = static_cast<ClassBrowserNode *>(index.internalPointer());
-    }
-    if (!parentNode->childrenFetched && parentNode->statement) {
-        parentNode->childrenFetched = true;
-        filterChildren(parentNode, parentNode->statement->children);
-    }
-}
-
 void ClassBrowserModel::addChild(ClassBrowserNode *node, PStatement statement)
 {
     PClassBrowserNode newNode = std::make_shared<ClassBrowserNode>();
     newNode->parent = node;
     newNode->statement = statement;
-    newNode->childrenInited = false;
+    newNode->childrenFetched = false;
     node->children.append(newNode.get());
     mNodes.append(newNode);
 }

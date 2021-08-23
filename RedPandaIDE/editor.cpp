@@ -23,7 +23,7 @@
 #include <QPainter>
 #include "iconsmanager.h"
 #include "debugger.h"
-
+#include "editorlist.h"
 
 using namespace std;
 
@@ -130,7 +130,7 @@ void Editor::convertToEncoding(const QByteArray &encoding)
     save();
 }
 
-bool Editor::save(bool force, bool reparse) {
+bool Editor::save(bool force, bool doReparse) {
     if (this->mIsNew) {
         return saveAs();
     }
@@ -148,14 +148,16 @@ bool Editor::save(bool force, bool reparse) {
             mIsNew = false;
             this->updateCaption();
         }  catch (SaveException& exception) {
-            QMessageBox::critical(pMainWindow,tr("Error"),
+            if (!force) {
+                QMessageBox::critical(pMainWindow,tr("Error"),
                                      exception.reason());
+            }
             return false;
         }
     }
 
-    if (reparse) {
-        //todo: reparse the file
+    if (doReparse && mParser) {
+        reparse();
     }
     return true;
 }
@@ -648,6 +650,7 @@ void Editor::onStatusChanged(SynStatusChanges changes)
             && !changes.testFlag(SynStatusChange::scInsertMode)
             && (lines()->count()!=mLineCount)
             && (lines()->count()!=0) && ((mLineCount>0) || (lines()->count()>1))) {
+        reparse();
         if (!readOnly() && pSettings->editor().syntaxCheck() && pSettings->editor().syntaxCheckWhenLineChanged())
             pMainWindow->checkSyntaxInBack(this);
     }
@@ -1057,6 +1060,17 @@ bool Editor::handleGlobalIncludeSkip()
     return false;
 }
 
+void Editor::initParser()
+{
+    mParser = std::make_shared<CppParser>();
+    mParser->setOnGetFileStream(
+                std::bind(
+                    &EditorList::getContentFromOpenedEditor,pMainWindow->editorList(),
+                    std::placeholders::_1, std::placeholders::_2));
+    resetCppParser(mParser);
+    mParser->setEnabled((highlighter() && highlighter()->getClass() == SynHighlighterClass::CppHighlighter));
+}
+
 Editor::QuoteStatus Editor::getQuoteStatus()
 {
     QuoteStatus Result = QuoteStatus::NotQuote;
@@ -1164,6 +1178,11 @@ Editor::QuoteStatus Editor::getQuoteStatus()
         }
     }
     return Result;
+}
+
+void Editor::reparse()
+{
+    parseFile(mParser,mFilename,mInProject);
 }
 
 int Editor::gutterClickedLine() const

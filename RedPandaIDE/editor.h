@@ -7,6 +7,7 @@
 #include "qsynedit/SynEdit.h"
 #include "colorscheme.h"
 #include "common.h"
+#include "parser/cppparser.h"
 
 class SaveException: public std::exception {
 
@@ -136,8 +137,10 @@ private:
     bool handleDoubleQuoteCompletion();
     bool handleGlobalIncludeCompletion();
     bool handleGlobalIncludeSkip();
+    void initParser();
     void undoSymbolCompletion(int pos);
     QuoteStatus getQuoteStatus();
+    void reparse();
 
 private:
     static int newfileCount;
@@ -159,6 +162,7 @@ private:
     int mGutterClickedLine;
     QSet<int> mBreakpointLines;
     int mActiveBreakpointLine;
+    PCppParser mParser;
 
     // QWidget interface
 protected:

@@ -3,6 +3,7 @@
 
 #include <QMutex>
 #include <QObject>
+#include <QThread>
 #include "statementmodel.h"
 #include "cpptokenizer.h"
 #include "cpppreprocessor.h"
@@ -111,6 +112,12 @@ public:
     int parserId() const;
 
     const QString &serialId() const;
+
+    bool parseLocalHeaders() const;
+    void setParseLocalHeaders(bool newParseLocalHeaders);
+
+    bool parseGlobalHeaders() const;
+    void setParseGlobalHeaders(bool newParseGlobalHeaders);
 
 signals:
     void onProgress(const QString& fileName, int total, int current);
@@ -349,4 +356,56 @@ private:
     GetFileStreamCallBack mOnGetFileStream;
 };
 using PCppParser = std::shared_ptr<CppParser>;
+
+class CppFileParserThread : public QThread {
+    Q_OBJECT
+public:
+    explicit CppFileParserThread(
+            PCppParser parser,
+            QString fileName,
+            bool inProject,
+            bool onlyIfNotParsed = false,
+            bool updateView = true,
+            QObject *parent = nullptr);
+
+private:
+    PCppParser mParser;
+    QString mFileName;
+    bool mInProject;
+    bool mOnlyIfNotParsed;
+    bool mUpdateView;
+
+    // QThread interface
+protected:
+    void run() override;
+};
+using PCppParserThread = std::shared_ptr<CppFileParserThread>;
+
+class CppFileListParserThread: public QThread {
+    Q_OBJECT
+public:
+    explicit CppFileListParserThread(
+            PCppParser parser,
+            bool updateView = true,
+            QObject *parent = nullptr);
+private:
+    PCppParser mParser;
+    bool mUpdateView;
+    // QThread interface
+protected:
+    void run() override;
+};
+
+void parseFile(
+    PCppParser parser,
+    QString fileName,
+    bool inProject,
+    bool onlyIfNotParsed = false,
+    bool updateView = true);
+
+void parseFileList(
+        PCppParser parser,
+        bool updateView = true);
+
+
 #endif // CPPPARSER_H

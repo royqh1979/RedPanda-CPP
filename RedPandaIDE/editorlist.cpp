@@ -221,3 +221,12 @@ Editor *EditorList::getEditorByFilename(const QString &filename)
         return newEditor(fullname,ENCODING_AUTO_DETECT,false,false);
     return nullptr;
 }
+
+bool EditorList::getContentFromOpenedEditor(const QString &filename, QStringList &buffer)
+{
+    Editor * e= getOpenedEditorByFilename(filename);
+    if (!e)
+        return false;
+    buffer = e->lines()->contents();
+    return true;
+}

@@ -217,6 +217,15 @@ void SynEditStringList::setText(const QString &text)
     PutTextStr(text);
 }
 
+QStringList SynEditStringList::contents()
+{
+    QStringList Result;
+    for (PSynEditStringRec& line:mList) {
+        Result.append(line->fString);
+    }
+    return Result;
+}
+
 void SynEditStringList::beginUpdate()
 {
     if (mUpdateCount == 0) {

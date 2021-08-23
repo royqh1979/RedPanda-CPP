@@ -103,6 +103,10 @@ bool StringIsBlank(const QString& s);
 int compareFileModifiedTime(const QString& filename1, const QString& filename2);
 
 void changeTheme(const QString& themeName);
+
+class CppParser;
+void resetCppParser(std::shared_ptr<CppParser> parser);
+
 template <class F>
 class final_action
 {

@@ -36,6 +36,8 @@ public:
 
     Editor* getEditorByFilename(const QString& filename);
 
+    bool getContentFromOpenedEditor(const QString& filename, QStringList& buffer);
+
     void beginUpdate();
     void endUpdate();
     void applySettings();

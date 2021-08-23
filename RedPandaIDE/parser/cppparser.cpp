@@ -3517,6 +3517,26 @@ void CppParser::updateSerialId()
     mSerialId = QString("%1 %2").arg(mParserId).arg(mSerialCount);
 }
 
+bool CppParser::parseGlobalHeaders() const
+{
+    return mParseGlobalHeaders;
+}
+
+void CppParser::setParseGlobalHeaders(bool newParseGlobalHeaders)
+{
+    mParseGlobalHeaders = newParseGlobalHeaders;
+}
+
+bool CppParser::parseLocalHeaders() const
+{
+    return mParseLocalHeaders;
+}
+
+void CppParser::setParseLocalHeaders(bool newParseLocalHeaders)
+{
+    mParseLocalHeaders = newParseLocalHeaders;
+}
+
 const QString &CppParser::serialId() const
 {
     return mSerialId;
@@ -3550,4 +3570,63 @@ bool CppParser::enabled() const
 void CppParser::setEnabled(bool newEnabled)
 {
     mEnabled = newEnabled;
+}
+
+CppFileParserThread::CppFileParserThread(
+        PCppParser parser,
+        QString fileName,
+        bool inProject,
+        bool onlyIfNotParsed,
+        bool updateView,
+        QObject *parent):QThread(parent),
+    mParser(parser),
+    mFileName(fileName),
+    mInProject(inProject),
+    mOnlyIfNotParsed(onlyIfNotParsed),
+    mUpdateView(updateView)
+{
+
+}
+
+void CppFileParserThread::run()
+{
+    if (mParser && !mParser->parsing()) {
+        mParser->parseFile(mFileName,mInProject,mOnlyIfNotParsed,mUpdateView);
+    }
+}
+
+CppFileListParserThread::CppFileListParserThread(PCppParser parser,
+                                                 bool updateView, QObject *parent):
+    QThread(parent),
+    mParser(parser),
+    mUpdateView(updateView)
+{
+
+}
+
+void CppFileListParserThread::run()
+{
+    if (mParser && !mParser->parsing()) {
+        mParser->parseFileList(mUpdateView);
+    }
+}
+
+void parseFile(PCppParser parser, QString fileName, bool inProject, bool onlyIfNotParsed, bool updateView)
+{
+    CppFileParserThread* thread = new CppFileParserThread(parser,fileName,inProject,onlyIfNotParsed,updateView);
+    thread->connect(thread,
+                    &QThread::finished,
+                    thread,
+                    &QThread::deleteLater);
+    thread->start();
+}
+
+void parseFileList(PCppParser parser, bool updateView)
+{
+    CppFileListParserThread *thread = new CppFileListParserThread(parser,updateView);
+    thread->connect(thread,
+                    &QThread::finished,
+                    thread,
+                    &QThread::deleteLater);
+    thread->start();
 }

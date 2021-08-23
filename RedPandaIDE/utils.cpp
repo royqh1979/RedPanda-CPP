@@ -15,6 +15,8 @@
 #include <windows.h>
 #include <QStyleFactory>
 #include <QDateTime>
+#include "parser/cppparser.h"
+#include "settings.h"
 
 const QByteArray GuessTextEncoding(const QByteArray& text){
     bool allAscii;
@@ -499,4 +501,43 @@ void StringsToFile(const QStringList &list, const QString &fileName)
             stream<<s<<Qt::endl;
         }
     }
+}
+
+void resetCppParser(std::shared_ptr<CppParser> parser)
+{
+    if (!parser)
+        return;
+    // Configure parser
+    parser->reset();
+    //paser->enabled = pSettings-> devCodeCompletion.Enabled;
+//    CppParser.ParseLocalHeaders := devCodeCompletion.ParseLocalHeaders;
+//    CppParser.ParseGlobalHeaders := devCodeCompletion.ParseGlobalHeaders;
+    parser->setEnabled(true);
+    parser->setParseGlobalHeaders(true);
+    parser->setParseLocalHeaders(true);
+    // Set options depending on the current compiler set
+    // TODO: do this every time OnCompilerSetChanged
+    Settings::PCompilerSet compilerSet = pSettings->compilerSets().defaultSet();
+    parser->clearIncludePaths();
+    if (compilerSet) {
+        for (QString file:compilerSet->CIncludeDirs()) {
+            parser->addIncludePath(file);
+        }
+        for (QString file:compilerSet->CppIncludeDirs()) {
+            parser->addIncludePath(file);
+        }
+        //TODO: Add default include dirs last, just like gcc does
+        // Set defines
+        for (QString define:compilerSet->defines()) {
+            parser->addHardDefineByLine(define); // predefined constants from -dM -E
+        }
+        // add a dev-cpp's own macro
+        parser->addHardDefineByLine("#define EGE_FOR_AUTO_CODE_COMPLETETION_ONLY");
+        // add C/C++ default macro
+        parser->addHardDefineByLine("#define __FILE__  1");
+        parser->addHardDefineByLine("#define __LINE__  1");
+        parser->addHardDefineByLine("#define __DATE__  1");
+        parser->addHardDefineByLine("#define __TIME__  1");
+    }
+    parser->parseHardDefines();
 }
