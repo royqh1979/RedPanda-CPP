@@ -150,7 +150,7 @@
              <item>
               <widget class="QTreeView" name="classBrowser">
                <property name="rootIsDecorated">
-                <bool>true</bool>
+                <bool>false</bool>
                </property>
                <attribute name="headerVisible">
                 <bool>false</bool>

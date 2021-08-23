@@ -92,6 +92,10 @@ bool EditorList::closeEditor(Editor* editor, bool transferFocus, bool force) {
 
     //editor->deleteLater();
     delete editor;
+
+    editor = getEditor();
+    if (!force)
+        pMainWindow->updateClassBrowserForEditor(editor);
     return true;
 }
 

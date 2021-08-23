@@ -394,6 +394,7 @@ void MainWindow::updateClassBrowserForEditor(Editor *editor)
     if (!editor) {
         mClassBrowserModel.setParser(nullptr);
         mClassBrowserModel.setCurrentFile("");
+        mClassBrowserModel.clear();
         return;
     }
     if (mQuitting)
@@ -520,12 +521,8 @@ void MainWindow::checkSyntaxInBack(Editor *e)
         return;
     if (mCompilerManager->compiling())
         return;
-//    if not Assigned(devCompilerSets.CompilationSet) then
-//      Exit;
-//    if fCompiler.Compiling then
-//      Exit;
-//    if fSyntaxChecker.Compiling then
-//      Exit;
+    if (!pSettings->compilerSets().defaultSet())
+        return;
     if (mCheckSyntaxInBack)
         return;
 

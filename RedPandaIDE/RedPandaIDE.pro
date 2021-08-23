@@ -26,6 +26,7 @@ SOURCES += \
     qsynedit/SearchRegex.cpp \
     settingsdialog/debuggeneralwidget.cpp \
     widgets/classbrowser.cpp \
+    widgets/codecompletionview.cpp \
     widgets/cpudialog.cpp \
     debugger.cpp \
     editor.cpp \
@@ -89,6 +90,7 @@ HEADERS += \
     qsynedit/SearchRegex.h \
     settingsdialog/debuggeneralwidget.h \
     widgets/classbrowser.h \
+    widgets/codecompletionview.h \
     widgets/cpudialog.h \
     debugger.h \
     editor.h \
@@ -137,6 +139,7 @@ HEADERS += \
 
 FORMS += \
     settingsdialog/debuggeneralwidget.ui \
+    widgets/codecompletionview.ui \
     widgets/cpudialog.ui \
     mainwindow.ui \
     settingsdialog/compilersetdirectorieswidget.ui \
