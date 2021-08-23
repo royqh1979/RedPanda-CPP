@@ -277,7 +277,32 @@ void ClassBrowserModel::filterChildren(ClassBrowserNode *node, const StatementMa
 //      filtered.Sort(@CompareByAlpha);
 //    end else if sortByType then begin
 //      filtered.Sort(@CompareByType);
-//    end;
+    //    end;
+}
+
+PStatement ClassBrowserModel::createDummy(PStatement statement)
+{
+    PStatement result = std::make_shared<Statement>();
+    result->parentScope = statement->parentScope;
+    result->command = statement->command;
+    result->args = statement->args;
+    result->noNameArgs = statement->noNameArgs;
+    result->fullName = statement->fullName;
+    result->kind = statement->kind;
+    result->type = statement->type;
+    result->value = statement->value;
+    result->scope = statement->scope;
+    result->classScope = statement->classScope;
+    result->inProject = statement->inProject;
+    result->inSystemHeader = statement->inSystemHeader;
+    result->isStatic = statement->isStatic;
+    result->isInherited = statement->isInherited;
+    result->fileName = mCurrentFile;
+    result->definitionFileName = mCurrentFile;
+    result->line = 0;
+    result->definitionLine = 0;
+    mDummyStatements.insert(result->fullName,result);
+    return result;
 }
 
 

@@ -37,6 +37,7 @@ private:
     void addChild(ClassBrowserNode* node, PStatement statement);
     void addMembers(const QSet<QString>& includedFiles);
     void filterChildren(ClassBrowserNode * node, const StatementMap& statements);
+    PStatement createDummy(PStatement statement);
 private:
     ClassBrowserNode * mRoot;
     QHash<QString,PStatement> mDummyStatements;
