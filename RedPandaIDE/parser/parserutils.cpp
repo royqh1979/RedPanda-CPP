@@ -391,10 +391,10 @@ PStatement CppScopes::findScopeAtLine(int line)
             start = mid+1;
         }
     }
-    if (start<mScopes.size())
-        return mScopes[start]->statement;
+    if (end>=0)
+        return mScopes[end]->statement;
     else
-        return mScopes.back()->statement;
+        return PStatement();
 }
 
 void CppScopes::addScope(int line, PStatement scopeStatement)
