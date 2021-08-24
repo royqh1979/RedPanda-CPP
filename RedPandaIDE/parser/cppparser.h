@@ -42,8 +42,8 @@ public:
                                int line);
     PStatement findStatementOf(const QString& fileName,
                                const QString& phrase,
-                               PStatement currentClass,
-                               PStatement& currentClassType,
+                               PStatement currentScope,
+                               PStatement& parentScopeType,
                                bool force = false);
     PStatement findStatementOf(const QString& fileName,
                                const QString& phrase,

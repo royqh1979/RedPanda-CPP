@@ -9,6 +9,7 @@ QStringList CppDirectives;
 QStringList JavadocTags;
 QMap<QString,SkipType> CppKeywords;
 QSet<QString> CppTypeKeywords;
+QSet<QString> CKeywords;
 QSet<QString> STLPointers;
 QSet<QString> STLContainers;
 QSet<QString> STLElementMethods;
@@ -181,7 +182,41 @@ void initParser()
     // nullptr is value
     CppKeywords.insert("nullptr",SkipType::skNone);
 
-
+    //C Keywords
+    CKeywords.insert("auto");
+    CKeywords.insert("break");
+    CKeywords.insert("case");
+    CKeywords.insert("char");
+    CKeywords.insert("const");
+    CKeywords.insert("continue");
+    CKeywords.insert("default");
+    CKeywords.insert("do");
+    CKeywords.insert("double");
+    CKeywords.insert("else");
+    CKeywords.insert("enum");
+    CKeywords.insert("extern");
+    CKeywords.insert("float");
+    CKeywords.insert("for");
+    CKeywords.insert("goto");
+    CKeywords.insert("if");
+    CKeywords.insert("inline");
+    CKeywords.insert("int");
+    CKeywords.insert("long");
+    CKeywords.insert("register");
+    CKeywords.insert("restrict");
+    CKeywords.insert("return");
+    CKeywords.insert("short");
+    CKeywords.insert("signed");
+    CKeywords.insert("sizeof");
+    CKeywords.insert("static");
+    CKeywords.insert("struct");
+    CKeywords.insert("switch");
+    CKeywords.insert("typedef");
+    CKeywords.insert("union");
+    CKeywords.insert("unsigned");
+    CKeywords.insert("void");
+    CKeywords.insert("volatile");
+    CKeywords.insert("while");
 
     //STL Containers
     STLContainers.insert("std::array");
@@ -425,4 +460,34 @@ void CppScopes::removeLastScope()
 void CppScopes::clear()
 {
     mScopes.clear();
+}
+
+MemberOperatorType getOperatorType(const QString &phrase, int index)
+{
+    MemberOperatorType result=MemberOperatorType::otOther;
+    if (index>=phrase.length())
+        return MemberOperatorType::otOther;
+    if (phrase[index] == '.')
+        return MemberOperatorType::otDot;
+    if (index+1>=phrase.length())
+        return MemberOperatorType::otOther;
+    if ((phrase[index] == '-') && (phrase[index+1] == '>'))
+        return MemberOperatorType::otArrow;
+    if ((phrase[index] == ':') && (phrase[index+1] == ':'))
+        return MemberOperatorType::otDColon;
+    return MemberOperatorType::otOther;
+}
+
+bool isScopeTypeKind(StatementKind kind)
+{
+    switch(kind) {
+    case StatementKind::skClass:
+    case StatementKind::skNamespace:
+    case StatementKind::skFunction:
+    case StatementKind::skConstructor:
+    case StatementKind::skDestructor:
+        return true;
+    default:
+        return false;
+    }
 }

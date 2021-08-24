@@ -31,6 +31,10 @@ public:
     ~CodeCompletionView();
 
     void setKeypressedCallback(const KeyPressedCallback &newKeypressedCallback);
+    void prepareSearch(const QString& phrase, const QString& filename, int line);
+    bool search(const QString& phrase, const QString& filename,
+                bool autoHideOnSingleResult);
+
 
 private:
     void addChildren(PStatement scopeStatement, const QString& fileName,
@@ -52,10 +56,7 @@ private:
     PStatement mCurrentStatement;
     QSet<QString> mIncludedFiles;
     QSet<QString> mUsings;
-    QString mIsIncludedCacheFileName;
-    bool mIsIncludedCacheResult;
     QSet<QString> mAddedStatements;
-    bool mPreparing;
     QString mPhrase;
     QHash<QString,int> mSymbolUsage;
     bool mRecordUsage;
@@ -63,9 +64,13 @@ private:
     bool mShowCodeIns;
     bool mIgnoreCase;
     QRecursiveMutex mMutex;
-    QString mParserSerialId;
     bool mSortByScope;
     bool mUseCppKeyword;
+
+
+    // QWidget interface
+protected:
+    void hideEvent(QHideEvent *event) override;
 };
 
 #endif // CODECOMPLETIONVIEW_H

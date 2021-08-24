@@ -184,6 +184,7 @@ using PFileIncludes = std::shared_ptr<FileIncludes>;
 extern QStringList CppDirectives;
 extern QStringList JavadocTags;
 extern QMap<QString,SkipType> CppKeywords;
+extern QSet<QString> CKeywords;
 extern QSet<QString> CppTypeKeywords;
 extern QSet<QString> STLPointers;
 extern QSet<QString> STLContainers;
@@ -201,5 +202,7 @@ bool isSystemHeaderFile(const QString& fileName, const QSet<QString>& includePat
 bool isHfile(const QString filename);
 bool isCfile(const QString filename);
 bool isKeyword(const QString& word);
+bool isScopeTypeKind(StatementKind kind);
+MemberOperatorType getOperatorType(const QString& phrase, int index);
 
 #endif // PARSER_UTILS_H

@@ -205,11 +205,11 @@ PStatement CppParser::findStatementOf(const QString &fileName, const QString &ph
     return findStatementOf(fileName,phrase,findAndScanBlockAt(fileName,line));
 }
 
-PStatement CppParser::findStatementOf(const QString &fileName, const QString &phrase, PStatement currentClass, PStatement &currentClassType, bool force)
+PStatement CppParser::findStatementOf(const QString &fileName, const QString &phrase, PStatement currentScope, PStatement &parentScopeType, bool force)
 {
     QMutexLocker locker(&mMutex);
     PStatement result;
-    currentClassType = currentClass;
+    parentScopeType = currentScope;
     if (mParsing && !force)
         return PStatement();
 
@@ -249,10 +249,10 @@ PStatement CppParser::findStatementOf(const QString &fileName, const QString &ph
             return PStatement();
     } else {
         //unqualified name
-        currentClassType = currentClass;
+        parentScopeType = currentScope;
         remainder = splitPhrase(remainder,nextScopeWord,operatorToken,memberName);
-        if (currentClass && (currentClass->kind == StatementKind::skNamespace)) {
-            PStatementList namespaceList = mNamespaces.value(currentClass->fullName);
+        if (currentScope && (currentScope->kind == StatementKind::skNamespace)) {
+            PStatementList namespaceList = mNamespaces.value(currentScope->fullName);
             if (!namespaceList || namespaceList->isEmpty())
                 return PStatement();
             for (PStatement currentNamespace:*namespaceList){
@@ -261,15 +261,15 @@ PStatement CppParser::findStatementOf(const QString &fileName, const QString &ph
                     break;
             }
         } else {
-            statement = findStatementStartingFrom(fileName,nextScopeWord,currentClassType,force);
+            statement = findStatementStartingFrom(fileName,nextScopeWord,parentScopeType,force);
         }
         if (!statement)
             return PStatement();
     }
-    currentClassType = currentClass;
+    parentScopeType = currentScope;
 
     if (!memberName.isEmpty() && (statement->kind == StatementKind::skTypedef)) {
-        PStatement typeStatement = findTypeDefinitionOf(fileName,statement->type, currentClassType);
+        PStatement typeStatement = findTypeDefinitionOf(fileName,statement->type, parentScopeType);
         if (typeStatement)
             statement = typeStatement;
     }
@@ -278,7 +278,7 @@ PStatement CppParser::findStatementOf(const QString &fileName, const QString &ph
     if ((statement->kind ==  StatementKind::skAlias) &&
             (phrase!=statement->type)) {
         statement = findStatementOf(fileName, statement->type,
-                                    currentClass, currentClassType, force);
+                                    currentScope, parentScopeType, force);
         if (!statement)
             return PStatement();
     }
@@ -315,7 +315,7 @@ PStatement CppParser::findStatementOf(const QString &fileName, const QString &ph
                 }
             }
             if (!isSTLContainerFunctions)
-                typeStatement = findTypeDefinitionOf(fileName,statement->type, currentClassType);
+                typeStatement = findTypeDefinitionOf(fileName,statement->type, parentScopeType);
 
             //it's stl smart pointer
             if ((typeStatement)
@@ -344,10 +344,10 @@ PStatement CppParser::findStatementOf(const QString &fileName, const QString &ph
         if (!memberStatement)
             return PStatement();
 
-        currentClassType=statement;
+        parentScopeType=statement;
         statement = memberStatement;
         if (!memberName.isEmpty() && (statement->kind == StatementKind::skTypedef)) {
-            PStatement typeStatement = findTypeDefinitionOf(fileName,statement->type, currentClassType);
+            PStatement typeStatement = findTypeDefinitionOf(fileName,statement->type, parentScopeType);
             if (typeStatement)
                 statement = typeStatement;
         }
