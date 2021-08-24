@@ -37,7 +37,7 @@ void StatementModel::deleteStatement(PStatement statement)
     mCount -= count;
 }
 
-const StatementMap &StatementModel::childrenStatements(PStatement statement)
+const StatementMap &StatementModel::childrenStatements(PStatement statement) const
 {
     if (!statement) {
         return mGlobalStatements;
@@ -46,7 +46,7 @@ const StatementMap &StatementModel::childrenStatements(PStatement statement)
     }
 }
 
-const StatementMap &StatementModel::childrenStatements(std::weak_ptr<Statement> statement)
+const StatementMap &StatementModel::childrenStatements(std::weak_ptr<Statement> statement) const
 {
     PStatement s = statement.lock();
     return childrenStatements(s);

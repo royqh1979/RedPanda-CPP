@@ -119,6 +119,8 @@ public:
     bool parseGlobalHeaders() const;
     void setParseGlobalHeaders(bool newParseGlobalHeaders);
 
+    const StatementModel &statementList() const;
+
 signals:
     void onProgress(const QString& fileName, int total, int current);
     void onBusy();

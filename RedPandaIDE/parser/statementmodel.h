@@ -15,8 +15,8 @@ public:
 //    function DeleteFirst: Integer;
 //    function DeleteLast: Integer;
     void deleteStatement(PStatement statement);
-    const StatementMap& childrenStatements(PStatement statement = PStatement());
-    const StatementMap& childrenStatements(std::weak_ptr<Statement> statement);
+    const StatementMap& childrenStatements(PStatement statement = PStatement()) const;
+    const StatementMap& childrenStatements(std::weak_ptr<Statement> statement) const;
     void clear();
     void dump(const QString& logFile);
 

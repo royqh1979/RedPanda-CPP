@@ -4,6 +4,17 @@
 #include <QObject>
 #include <QSet>
 #include <memory>
+
+struct CodeIns {
+    QString caption; //Name
+    QString prefix; //Prefix used in code suggestion
+    QString code;  //Code body
+    QString desc;  //Description
+    int section;  //Section in the menu
+};
+
+using PCodeIns = std::shared_ptr<CodeIns>;
+
 // preprocess/ macro define
 struct Define {
     QString name;
@@ -190,4 +201,5 @@ bool isSystemHeaderFile(const QString& fileName, const QSet<QString>& includePat
 bool isHfile(const QString filename);
 bool isCfile(const QString filename);
 bool isKeyword(const QString& word);
+
 #endif // PARSER_UTILS_H

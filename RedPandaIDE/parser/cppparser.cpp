@@ -3525,6 +3525,11 @@ void CppParser::updateSerialId()
     mSerialId = QString("%1 %2").arg(mParserId).arg(mSerialCount);
 }
 
+const StatementModel &CppParser::statementList() const
+{
+    return mStatementList;
+}
+
 bool CppParser::parseGlobalHeaders() const
 {
     return mParseGlobalHeaders;

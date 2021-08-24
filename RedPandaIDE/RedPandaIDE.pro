@@ -139,7 +139,6 @@ HEADERS += \
 
 FORMS += \
     settingsdialog/debuggeneralwidget.ui \
-    widgets/codecompletionview.ui \
     widgets/cpudialog.ui \
     mainwindow.ui \
     settingsdialog/compilersetdirectorieswidget.ui \
