@@ -47,6 +47,36 @@ public:
     bool search(const QString& phrase, bool autoHideOnSingleResult);
 
 
+    const PCppParser &parser() const;
+    void setParser(const PCppParser &newParser);
+
+    int showCount() const;
+    void setShowCount(int newShowCount);
+
+    bool onlyGlobals() const;
+    void setOnlyGlobals(bool newOnlyGlobals);
+
+    bool recordUsage() const;
+    void setRecordUsage(bool newRecordUsage);
+
+    bool showKeywords() const;
+    void setShowKeywords(bool newShowKeywords);
+
+    bool showCodeIns() const;
+    void setShowCodeIns(bool newShowCodeIns);
+
+    bool ignoreCase() const;
+    void setIgnoreCase(bool newIgnoreCase);
+
+    bool sortByScope() const;
+    void setSortByScope(bool newSortByScope);
+
+    bool useCppKeyword() const;
+    void setUseCppKeyword(bool newUseCppKeyword);
+
+    const PStatement &currentStatement() const;
+    void setCurrentStatement(const PStatement &newCurrentStatement);
+
 private:
     void addChildren(PStatement scopeStatement, const QString& fileName,
                      int line);
@@ -59,25 +89,25 @@ private:
     CodeCompletionListModel* mModel;
     QList<PCodeIns> mCodeInsList; //(Code template list)
     //QList<PStatement> mCodeInsStatements; //temporary (user code template) statements created when show code suggestion
-    PCppParser mParser;
     StatementList mFullCompletionStatementList;
     StatementList mCompletionStatementList;
-    int mShowCount;
-    bool mOnlyGlobals;
-    PStatement mCurrentStatement;
     QSet<QString> mIncludedFiles;
     QSet<QString> mUsings;
     QSet<QString> mAddedStatements;
     QString mPhrase;
     QHash<QString,int> mSymbolUsage;
+    QRecursiveMutex mMutex;
+
+    PCppParser mParser;
+    PStatement mCurrentStatement;
+    int mShowCount;
+    bool mOnlyGlobals;
     bool mRecordUsage;
     bool mShowKeywords;
     bool mShowCodeIns;
     bool mIgnoreCase;
-    QRecursiveMutex mMutex;
     bool mSortByScope;
     bool mUseCppKeyword;
-
 
     // QWidget interface
 protected:

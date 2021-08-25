@@ -125,6 +125,10 @@ public:
     bool hasBreakpoint(int line);
     void removeBreakpointFocus();
     void setActiveBreakpointFocus(int Line, bool setFocus=true);
+    QString getWordAtPosition(const BufferCoord& p,
+                              BufferCoord& pWordBegin,
+                              BufferCoord& pWordEnd,
+                              WordPurpose purpose);
 
     const PCppParser &parser() const;
 
@@ -158,6 +162,7 @@ private:
     void reparse();
 
     void showCompletion(bool autoComplete);
+    void showHeaderCompletion(bool autoComplete);
 
 private:
     static int newfileCount;
@@ -182,6 +187,7 @@ private:
     PCppParser mParser;
     std::shared_ptr<CodeCompletionView> mCompletionPopup;
     int mLastIdCharPressed;
+    bool mUseCppSyntax;
 
     // QWidget interface
 protected:

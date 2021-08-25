@@ -1315,57 +1315,264 @@ void Editor::showCompletion(bool autoComplete)
                 BufferCoord{caretX() - 1,
                 caretY()}, s, tokenFinished,tokenType, attr)) {
         if (tokenType == SynHighlighterTokenType::PreprocessDirective) {//Preprocessor
-            word = getWordAtPosition(this, caretXY(),pBeginPos,pEndPos, wpDirective);
-if not StartsStr('#',word) then begin
-  ShowTabnineCompletion;
-  Exit;
-end;
-      end else if attr = dmMain.Cpp.CommentAttri then begin //Comment, javadoc tag
-        word:=GetWordAtPosition(fText, fText.CaretXY,pBeginPos,pEndPos, wpJavadoc);
-        if not StartsStr('@',word) then begin
-          Exit;
-        end;
-      end else if (attr <> fText.Highlighter.SymbolAttribute) and
-        (attr <> fText.Highlighter.WhitespaceAttribute) and
-        (attr <> fText.Highlighter.IdentifierAttribute) then begin
-        Exit;
-      end;
+            word = getWordAtPosition(caretXY(),pBeginPos,pEndPos, WordPurpose::wpDirective);
+            if (!word.startsWith('#')) {
+                //showTabnineCompletion();
+                return;
+            }
+        } else if (tokenType == SynHighlighterTokenType::Comment) { //Comment, javadoc tag
+            word = getWordAtPosition(caretXY(),pBeginPos,pEndPos, WordPurpose::wpJavadoc);
+            if (!word.startsWith('@')) {
+                    return;
+            }
+        } else if (
+                   (tokenType != SynHighlighterTokenType::Symbol) &&
+                   (tokenType != SynHighlighterTokenType::Space) &&
+                   (tokenType != SynHighlighterTokenType::Identifier)
+                   ) {
+            return;
+        }
     }
 
     // Position it at the top of the next line
-    P := fText.RowColumnToPixels(fText.DisplayXY);
-    Inc(P.Y, fText.LineHeight + 2);
-    fCompletionBox.Position := fText.ClientToScreen(P);
+    QPoint p = RowColumnToPixels(displayXY());
+    p+=QPoint(0,textHeight()+2);
+    mCompletionPopup->move(mapToGlobal(p));
 
-    fCompletionBox.RecordUsage := devCodeCompletion.RecordUsage;
-    fCompletionBox.SortByScope := devCodeCompletion.SortByScope;
-    fCompletionBox.ShowKeywords := devCodeCompletion.ShowKeywords;
-    fCompletionBox.ShowCodeIns := devCodeCompletion.ShowCodeIns;
-    fCompletionBox.IgnoreCase := devCodeCompletion.IgnoreCase;
-    fCompletionBox.CodeInsList := dmMain.CodeInserts.ItemList;
-    fCompletionBox.SymbolUsage := dmMain.SymbolUsage;
-    fCompletionBox.ShowCount := devCodeCompletion.MaxCount;
+//    fCompletionBox.RecordUsage := devCodeCompletion.RecordUsage;
+//    fCompletionBox.SortByScope := devCodeCompletion.SortByScope;
+//    fCompletionBox.ShowKeywords := devCodeCompletion.ShowKeywords;
+//    fCompletionBox.ShowCodeIns := devCodeCompletion.ShowCodeIns;
+//    fCompletionBox.IgnoreCase := devCodeCompletion.IgnoreCase;
+//    fCompletionBox.CodeInsList := dmMain.CodeInserts.ItemList;
+//    fCompletionBox.SymbolUsage := dmMain.SymbolUsage;
+//    fCompletionBox.ShowCount := devCodeCompletion.MaxCount;
     //Set Font size;
-    fCompletionBox.FontSize := fText.Font.Size;
+    mCompletionPopup->setFont(font());
 
     // Redirect key presses to completion box if applicable
-    fCompletionBox.OnKeyPress := CompletionKeyPress;
-    fCompletionBox.OnKeyDown := CompletionKeyDown;
-    fCompletionBox.Parser := fParser;
-    fCompletionBox.useCppKeyword := fUseCppSyntax;
-    fCompletionBox.Show;
+    //todo:
+    mCompletionPopup->setKeypressedCallback([this](QKeyEvent *event)->bool{
+        return onCompletionKeyPressed(event);
+    });
+    mCompletionPopup->setParser(mParser);
+    //todo:
+    //mCompletionPopup->setUseCppKeyword(mUseCppSyntax);
+    mCompletionPopup->show();
 
     // Scan the current function body
-    fCompletionBox.CurrentStatement := fParser.FindAndScanBlockAt(fFileName, fText.CaretY);
+    mCompletionPopup->setCurrentStatement(
+                mParser->findAndScanBlockAt(mFilename, caretY())
+                );
 
-    if word='' then
-      word:=GetWordAtPosition(fText, fText.CaretXY,pBeginPos,pEndPos, wpCompletion);
+    if (word.isEmpty())
+        word=getWordAtPosition(caretXY(),pBeginPos,pEndPos, WordPurpose::wpCompletion);
     //if not fCompletionBox.Visible then
-    fCompletionBox.PrepareSearch(word, fFileName,pBeginPos.Line);
+    mCompletionPopup->prepareSearch(word, mFilename, pBeginPos.Line);
 
     // Filter the whole statement list
-    if fCompletionBox.Search(word, fFileName, autoComplete) then //only one suggestion and it's not input while typing
-      CompletionInsert(); // if only have one suggestion, just use it
+    if (mCompletionPopup->search(word, autoComplete)) { //only one suggestion and it's not input while typing
+        completionInsert(); // if only have one suggestion, just use it
+    }
+}
+
+void Editor::showHeaderCompletion(bool autoComplete)
+{
+    //todo:
+}
+
+QString Editor::getWordAtPosition(const BufferCoord &p, BufferCoord &pWordBegin, BufferCoord &pWordEnd, WordPurpose purpose)
+{
+    QString result = "";
+    QString s;
+    if ((p.Line >= 1) && (p.Line <= lines()->count())) {
+        s = lines()->getString(p.Line - 1);
+        int len = s.length();
+
+        int wordBegin = p.Char - 1 - 1; //BufferCoord::Char starts with 1
+        int wordEnd = p.Char - 1 - 1;
+
+        // Copy forward until end of word
+        if (purpose == WordPurpose::wpEvaluation
+                || purpose == WordPurpose::wpInformation) {
+            while (wordEnd + 1 < len) do {
+                if ((purpose == WordPurpose::wpEvaluation)
+                        && (s[wordEnd + 1] == '[')) {
+                    if (!findComplement(s, '[', ']', wordEnd, 1))
+                        break;
+                } else if (isIdentChar(s[wordEnd + 1])) {
+                    wordEnd++;
+                } else
+                    break;
+            }
+        }
+
+        // Copy backward until #
+        if (purpose == WordPurpose::wpDirective) {
+            while ((wordBegin >= 0) && (wordBegin < len)) {
+               if (isIdentChar(s[wordBegin]))
+                   wordBegin--;
+               else if (s[wordBegin] == '#') {
+                   wordBegin--;
+                   break;
+               } else
+                   break;
+            }
+        }
+
+        // Copy backward until @
+        if (purpose == WordPurpose::wpJavadoc) {
+            while ((wordBegin >= 0) && (wordBegin < len)) {
+               if (isIdentChar(s[wordBegin]))
+                   wordBegin--;
+               else if (s[wordBegin] == '@') {
+                   wordBegin--;
+                   break;
+               } else
+                   break;
+            }
+        }
+
+        // Copy backward until begin of path
+        if (purpose == wpHeaderCompletion) {
+            while ((wordBegin >= 0) && (wordBegin < len)) {
+                if (isIdentChar(s[wordBegin]))
+                    wordBegin--;
+                else if (s[wordBegin] == '/'
+                         || s[wordBegin] == '\\'
+                         || s[wordBegin] == '.') {
+                    wordBegin--;
+                    break;
+                } else
+                    break;
+            }
+        }
+
+        if (purpose == WordPurpose::wpHeaderCompletionStart) {
+            while ((wordBegin >= 0) && (wordBegin < len)) {
+                if (s[wordBegin] == '"'
+                        || s[wordBegin] == '<']) {
+                    wordBegin--;
+                    break;
+                } else if (s[wordBegin] == '/'
+                             || s[wordBegin] == '\\'
+                             || s[wordBegin] == '.') {
+                        wordBegin--;
+                } else  if (isIdentChar(s[wordBegin]))
+                    wordBegin--;
+                else
+                    break;
+            }
+        }
+
+        // Copy backward until begin of word
+        if (purpose == WordPurpose::wpCompletion
+                || purpose == WordPurpose::wpEvaluation
+                || purpose == WordPurpose::wpInformation) {
+            while ((wordBegin >= 0) && (wordBegin < len)) {
+                if (s[wordBegin] == ']') then {
+                    if (!findComplement(s, ']', '[', wordBegin, -1))
+                        break
+                    else
+                        wordBegin++; // step over [
+                } else if (isIdentChar(s[wordBegin])) {
+                    wordBegin--;
+                } else if (s[wordBegin] == '.'
+                           || s[wordBegin] == ':'
+                           || s[wordBegin] == '~') { // allow destructor signs
+                    wordBegin--;
+                } else if (
+                           (s[wordBegin] == '>')
+                           && (wordBegin+2<len)
+                           && (s[WordBegin+1]==':')
+                           && (s[WordBegin+2]==':')
+                           ) { // allow template
+                    if (!findComplement(s, '>', '<', wordBegin, -1))
+                        break;
+                    else
+                        wordBegin--; // step over >
+                } else if ((wordBegin-1 >= 0)
+                           && (s[wordBegin - 1] == '-')
+                           && (s[wordBegin] == '>')) {
+                    wordBegin-=2;
+                } else if ((wordBegin-1 >= 0)
+                       && (s[wordBegin - 1] == ':')
+                       && (s[wordBegin] == ':')) {
+                    wordBegin-=2;
+                } else if ((wordBegin > 0)
+                           && (s[wordBegin] == ')')) {
+                    if (!findComplement(s, ')', '(', WordBegin, -1))
+                        break;
+                    else
+                        wordBegin--; // step over (
+                } else
+                    break;
+            }
+        }
+    }
+
+    // Get end result
+    result = s.mid(wordBegin + 1, wordEnd - wordBegin);
+    pWordBegin.Line = p.Line;
+    pWordBegin.Char = wordBegin+1;
+    pWordEnd.Line = p.Line;
+    pWordEnd.Char = wordEnd;
+    if (!result.isEmpty() && (
+                result[0] in ['.','-'])
+      and (Purpose in [wpCompletion, wpEvaluation, wpInformation]) then begin
+      i:=WordBegin;
+      line:=p.Line;
+      while line>=1 do begin
+        while i>=1 do begin
+          if S[i] in [' ',#9] then
+            dec(i)
+          else
+            break;
+        end;
+        if i<1 then begin
+          dec(line);
+          if (line>=1) then begin
+            S:=editor.Lines[line-1];
+            i:=Length(s);
+            continue;
+          end else
+            break;
+        end else begin
+          HighlightPos.Line := line;
+          HighlightPos.Char := i+1;
+          Result := GetWordAtPosition(editor,highlightPos,pWordBegin,pDummy,Purpose)+Result;
+          break;
+        end;
+      end;
+    end;
+
+    // Strip function parameters
+    while true do begin
+      ParamBegin := Pos('(', Result);
+      if ParamBegin > 0 then begin
+        ParamEnd := ParamBegin;
+        if (ParamBegin=1) and FindComplement(Result, '(', ')', ParamEnd, 1)
+          and (ParamEnd = Length(Result)) then begin
+          Delete(Result,ParamEnd,1);
+          Delete(Result,ParamBegin,1);
+          continue;
+        end else begin
+          ParamEnd := ParamBegin;
+          if FindComplement(Result, '(', ')', ParamEnd, 1) then begin
+            Delete(Result, ParamBegin, ParamEnd - ParamBegin + 1);
+          end else
+            break;
+        end;
+      end else
+        break;
+    end;
+
+    ParamBegin := 1;
+    while (ParamBegin <= Length(Result)) and (Result[ParamBegin] = '*') do begin
+      inc(ParamBegin);
+    end;
+    Delete(Result,1,ParamBegin-1);
+
 }
 
 const PCppParser &Editor::parser() const

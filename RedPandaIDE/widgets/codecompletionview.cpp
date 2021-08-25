@@ -669,6 +669,106 @@ bool CodeCompletionView::isIncluded(const QString &fileName)
     return mIncludedFiles.contains(fileName);
 }
 
+const PStatement &CodeCompletionView::currentStatement() const
+{
+    return mCurrentStatement;
+}
+
+void CodeCompletionView::setCurrentStatement(const PStatement &newCurrentStatement)
+{
+    mCurrentStatement = newCurrentStatement;
+}
+
+bool CodeCompletionView::useCppKeyword() const
+{
+    return mUseCppKeyword;
+}
+
+void CodeCompletionView::setUseCppKeyword(bool newUseCppKeyword)
+{
+    mUseCppKeyword = newUseCppKeyword;
+}
+
+bool CodeCompletionView::sortByScope() const
+{
+    return mSortByScope;
+}
+
+void CodeCompletionView::setSortByScope(bool newSortByScope)
+{
+    mSortByScope = newSortByScope;
+}
+
+bool CodeCompletionView::ignoreCase() const
+{
+    return mIgnoreCase;
+}
+
+void CodeCompletionView::setIgnoreCase(bool newIgnoreCase)
+{
+    mIgnoreCase = newIgnoreCase;
+}
+
+bool CodeCompletionView::showCodeIns() const
+{
+    return mShowCodeIns;
+}
+
+void CodeCompletionView::setShowCodeIns(bool newShowCodeIns)
+{
+    mShowCodeIns = newShowCodeIns;
+}
+
+bool CodeCompletionView::showKeywords() const
+{
+    return mShowKeywords;
+}
+
+void CodeCompletionView::setShowKeywords(bool newShowKeywords)
+{
+    mShowKeywords = newShowKeywords;
+}
+
+bool CodeCompletionView::recordUsage() const
+{
+    return mRecordUsage;
+}
+
+void CodeCompletionView::setRecordUsage(bool newRecordUsage)
+{
+    mRecordUsage = newRecordUsage;
+}
+
+bool CodeCompletionView::onlyGlobals() const
+{
+    return mOnlyGlobals;
+}
+
+void CodeCompletionView::setOnlyGlobals(bool newOnlyGlobals)
+{
+    mOnlyGlobals = newOnlyGlobals;
+}
+
+int CodeCompletionView::showCount() const
+{
+    return mShowCount;
+}
+
+void CodeCompletionView::setShowCount(int newShowCount)
+{
+    mShowCount = newShowCount;
+}
+
+const PCppParser &CodeCompletionView::parser() const
+{
+    return mParser;
+}
+
+void CodeCompletionView::setParser(const PCppParser &newParser)
+{
+    mParser = newParser;
+}
+
 void CodeCompletionView::hideEvent(QHideEvent *event)
 {
     QMutexLocker locker(&mMutex);
@@ -710,7 +810,7 @@ CodeCompletionListModel::CodeCompletionListModel(StatementList *statements, QObj
 
 }
 
-int CodeCompletionListModel::rowCount(const QModelIndex &parent) const
+int CodeCompletionListModel::rowCount(const QModelIndex &) const
 {
     return mStatements->count();
 }
