@@ -9,6 +9,8 @@ CodeCompletionView::CodeCompletionView(QWidget *parent) :
 {
     setWindowFlags(Qt::Popup);
     mListView = new CodeCompletionListView(this);
+    mModel=new CodeCompletionListModel(&mCompletionStatementList);
+    mListView->setModel(mModel);
     setLayout(new QVBoxLayout());
     layout()->addWidget(mListView);
     layout()->setMargin(0);
@@ -16,17 +18,18 @@ CodeCompletionView::CodeCompletionView(QWidget *parent) :
     mShowKeywords=true;
     mUseCppKeyword=true;
 
-    mEnabled = true;
     mOnlyGlobals = false;
     mShowCount = 1000;
     mShowCodeIns = true;
 
     mIgnoreCase = false;
+
 }
 
 CodeCompletionView::~CodeCompletionView()
 {
-
+    delete mListView;
+    delete mModel;
 }
 
 void CodeCompletionView::setKeypressedCallback(const KeyPressedCallback &newKeypressedCallback)
@@ -37,7 +40,7 @@ void CodeCompletionView::setKeypressedCallback(const KeyPressedCallback &newKeyp
 void CodeCompletionView::prepareSearch(const QString &phrase, const QString &filename, int line)
 {
     QMutexLocker locker(&mMutex);
-    if (!mEnabled)
+    if (!isEnabled())
         return;
     mPhrase = phrase;
     //Screen.Cursor := crHourglass;
@@ -55,10 +58,9 @@ void CodeCompletionView::prepareSearch(const QString &phrase, const QString &fil
     setCursor(oldCursor);
 }
 
-bool CodeCompletionView::search(const QString &phrase, const QString &filename, bool autoHideOnSingleResult)
+bool CodeCompletionView::search(const QString &phrase, bool autoHideOnSingleResult)
 {
     QMutexLocker locker(&mMutex);
-    bool result = false;
 
     mPhrase = phrase;
 
@@ -66,7 +68,7 @@ bool CodeCompletionView::search(const QString &phrase, const QString &filename, 
         hide();
         return false;
     }
-    if (!mEnabled) {
+    if (!isEnabled()) {
         hide();
         return false;
     }
@@ -86,12 +88,10 @@ bool CodeCompletionView::search(const QString &phrase, const QString &filename, 
     QString symbol = phrase.mid(i);
     // filter fFullCompletionStatementList to fCompletionStatementList
     filterList(symbol);
-
+    mModel->notifyUpdated();
+    setCursor(oldCursor);
 
     if (!mCompletionStatementList.isEmpty()) {
-        //todo:update model
-
-        setCursor(oldCursor);
         // if only one suggestion, and is exactly the symbol to search, hide the frame (the search is over)
         // if only one suggestion and auto hide , don't show the frame
         if(mCompletionStatementList.count() == 1)
@@ -100,10 +100,9 @@ bool CodeCompletionView::search(const QString &phrase, const QString &filename, 
             return true;
         }
     } else {
-        //todo:update(clear) the model
-        setCursor(oldCursor);
         hide();
     }
+    return false;
 }
 
 void CodeCompletionView::addChildren(PStatement scopeStatement, const QString &fileName, int line)
@@ -673,6 +672,7 @@ bool CodeCompletionView::isIncluded(const QString &fileName)
 void CodeCompletionView::hideEvent(QHideEvent *event)
 {
     QMutexLocker locker(&mMutex);
+    mListView->setKeypressedCallback(nullptr);
     mCompletionStatementList.clear();
     mFullCompletionStatementList.clear();
     mIncludedFiles.clear();
@@ -688,7 +688,7 @@ CodeCompletionListView::CodeCompletionListView(QWidget *parent) : QListView(pare
 
 void CodeCompletionListView::keyPressEvent(QKeyEvent *event)
 {
-    if (!mKeypressedCallback(event)) {
+    if (!mKeypressedCallback || !mKeypressedCallback(event)) {
         QListView::keyPressEvent(event);
     }
 }
@@ -701,4 +701,33 @@ const KeyPressedCallback &CodeCompletionListView::keypressedCallback() const
 void CodeCompletionListView::setKeypressedCallback(const KeyPressedCallback &newKeypressedCallback)
 {
     mKeypressedCallback = newKeypressedCallback;
+}
+
+CodeCompletionListModel::CodeCompletionListModel(StatementList *statements, QObject *parent):
+    QAbstractListModel(parent),
+    mStatements(statements)
+{
+
+}
+
+int CodeCompletionListModel::rowCount(const QModelIndex &parent) const
+{
+    return mStatements->count();
+}
+
+QVariant CodeCompletionListModel::data(const QModelIndex &index, int role) const
+{
+    if (!index.isValid())
+        return QVariant();
+    if (role == Qt::DisplayRole) {
+        PStatement statement = mStatements->at(index.row());
+        return statement->command;
+    }
+    return QVariant();
+}
+
+void CodeCompletionListModel::notifyUpdated()
+{
+    beginResetModel();
+    endResetModel();
 }

@@ -353,6 +353,7 @@ signals:
     void tabSizeChanged();
 
 protected:
+    bool isIdentChar(const QChar& ch);
 
 protected:
     virtual bool onGetSpecialLineColors(int Line,
@@ -366,7 +367,6 @@ protected:
     virtual void ExecuteCommand(SynEditorCommand Command, QChar AChar, void * pData);
 
 private:
-    bool isIdentChar(const QChar& ch);
     void clearAreaList(SynEditingAreaList areaList);
     void computeCaret(int X, int Y);
     void computeScroll(int X, int Y);

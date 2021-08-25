@@ -60,7 +60,8 @@ Editor::Editor(QWidget *parent, const QString& filename,
   mSyntaxErrorColor(QColorConstants::Red),
   mSyntaxWarningColor("orange"),
   mLineCount(0),
-  mActiveBreakpointLine(-1)
+  mActiveBreakpointLine(-1),
+  mLastIdCharPressed(0)
 {
     if (mFilename.isEmpty()) {
         newfileCount++;
@@ -95,6 +96,8 @@ Editor::Editor(QWidget *parent, const QString& filename,
     } else {
         initParser();
     }
+
+    mCompletionPopup = std::make_shared<CodeCompletionView>();
 
     applySettings();
     applyColorScheme(pSettings->editor().colorScheme());
@@ -322,45 +325,117 @@ void Editor::focusOutEvent(QFocusEvent *event)
 void Editor::keyPressEvent(QKeyEvent *event)
 {
     bool handled = false;
-    if (!readOnly()) {
-        switch (event->key()) {
-        case Qt::Key_Delete:
-            // remove completed character
-            //fLastIdCharPressed:=0;
-            undoSymbolCompletion(caretX());
-            break;;
-        case Qt::Key_Backspace:
-            // remove completed character
-            //fLastIdCharPressed:=0;
-            undoSymbolCompletion(caretX()-1);
-            break;;
-        default: {
-            QString t = event->text();
-            if (!t.isEmpty()) {
-                QChar ch = t[0];
-                switch (ch.unicode()) {
-                case '"':
-                case '\'':
-                case '(':
-                case ')':
-                case '{':
-                case '}':
-                case '[':
-                case ']':
-                case '<':
-                case '>':
-                case '*':
-                    handled = handleSymbolCompletion(ch);
+    auto action = finally([&,this]{
+        if (!handled) {
+            SynEdit::keyPressEvent(event);
+        } else {
+            event->accept();
+        }
+    });
+    if (readOnly())
+        return;
+
+    switch (event->key()) {
+    case Qt::Key_Delete:
+        // remove completed character
+        mLastIdCharPressed = 0;
+        undoSymbolCompletion(caretX());
+        return;
+    case Qt::Key_Backspace:
+        // remove completed character
+        mLastIdCharPressed = 0;
+        undoSymbolCompletion(caretX()-1);
+        return;
+    }
+
+    QString t = event->text();
+    if (t.isEmpty())
+        return;
+
+    QChar ch = t[0];
+    if (isIdentChar(ch)) {
+        mLastIdCharPressed++;
+//        if devCodeCompletion.Enabled and devCodeCompletion.ShowCompletionWhileInput then begin
+        if (mLastIdCharPressed==1) {
+            if (mParser->isIncludeLine(lineText())) {
+                // is a #include line
+                setSelText(ch);
+                showHeaderCompletion(false);
+                handled=true;
+                return;
+            } else {
+                QString lastWord = getPreviousWordAtPositionForSuggestion(caretXY());
+                if (!lastWord.isEmpty()) {
+                    if (CppTypeKeywords.contains(lastWord)) {
+                        //last word is a type keyword, this is a var or param define, and dont show suggestion
+  //                  if devEditor.UseTabnine then
+  //                    ShowTabnineCompletion;
+                        return;
+                    }
+                    PStatement statement = mParser->findStatementOf(
+                                mFilename,
+                                lastWord,
+                                caretY());
+                    StatementKind kind = mParser->getKindOfStatement(statement);
+                    if (kind == StatementKind::skClass
+                            || kind == StatementKind::skEnumClassType
+                            || kind == StatementKind::skEnumType
+                            || kind == StatementKind::skTypedef) {
+                        //last word is a typedef/class/struct, this is a var or param define, and dont show suggestion
+  //                      if devEditor.UseTabnine then
+  //                        ShowTabnineCompletion;
+                        return;
+                    }
                 }
+                setSelText(ch);
+                showCompletion(false);
+                handled=true;
             }
         }
+
+//        }
+    } else {
+        //preprocessor ?
+        if ((mLastIdCharPressed=0) && (ch=='#') && lineText().isEmpty()) {
+          // and devCodeCompletion.Enabled and devCodeCompletion.ShowCompletionWhileInput
+            mLastIdCharPressed++;
+            setSelText(ch);
+            showCompletion(false);
+            handled=true;
+            return;
+        }
+        //javadoc directive?
+        if  ((mLastIdCharPressed=0) && (ch=='#') &&
+              lineText().trimmed().startsWith('*')) {
+//          and devCodeCompletion.Enabled and devCodeCompletion.ShowCompletionWhileInput
+            mLastIdCharPressed++;
+            setSelText(ch);
+            showCompletion(false);
+            handled=true;
+            return;
+        }
+        mLastIdCharPressed = 0;
+        switch (ch.unicode()) {
+        case '"':
+        case '\'':
+        case '(':
+        case ')':
+        case '{':
+        case '}':
+        case '[':
+        case ']':
+        case '<':
+        case '>':
+        case '*':
+            handled = handleSymbolCompletion(ch);
+            return;
         }
     }
-    if (!handled) {
-        SynEdit::keyPressEvent(event);
-    } else {
-        event->accept();
-    }
+
+    // Spawn code completion window if we are allowed to
+//    if devCodeCompletion.Enabled then begin
+    handleCodeCompletion(ch);
+//    end;
 }
 
 void Editor::onGutterPaint(QPainter &painter, int aLine, int X, int Y)
@@ -1068,6 +1143,32 @@ bool Editor::handleGlobalIncludeSkip()
     return false;
 }
 
+void Editor::handleCodeCompletion(QChar key)
+{
+    if (!mCompletionPopup->isEnabled())
+        return;
+    switch(key.unicode()) {
+    case '.':
+        showCompletion(false);
+        break;
+    case '>':
+        if ((caretX() > 1) && (lineText().length() >= 1) &&
+                (lineText()[caretX() - 2] == '-'))
+            showCompletion(false);
+        break;
+    case ':':
+        if ((caretX() > 1) && (lineText().length() >= 1) &&
+                (lineText()[caretX() - 2] == ':'))
+            showCompletion(false);
+        break;
+    case '/':
+    case '\\':
+        if (mParser->isIncludeLine(lineText())) {
+            showHeaderCompletion(false);
+        }
+    }
+}
+
 void Editor::initParser()
 {
     mParser = std::make_shared<CppParser>();
@@ -1191,6 +1292,80 @@ Editor::QuoteStatus Editor::getQuoteStatus()
 void Editor::reparse()
 {
     parseFile(mParser,mFilename,mInProject);
+}
+
+void Editor::showCompletion(bool autoComplete)
+{
+//    if not devCodeCompletion.Enabled then
+//      Exit;
+    if (!mParser->enabled())
+        return;
+
+    if (mCompletionPopup->isVisible()) // already in search, don't do it again
+        return;
+
+    QString word="";
+
+    QString s;
+    PSynHighlighterAttribute attr;
+    bool tokenFinished;
+    SynHighlighterTokenType tokenType;
+    BufferCoord pBeginPos, pEndPos;
+    if (GetHighlighterAttriAtRowCol(
+                BufferCoord{caretX() - 1,
+                caretY()}, s, tokenFinished,tokenType, attr)) {
+        if (tokenType == SynHighlighterTokenType::PreprocessDirective) {//Preprocessor
+            word = getWordAtPosition(this, caretXY(),pBeginPos,pEndPos, wpDirective);
+if not StartsStr('#',word) then begin
+  ShowTabnineCompletion;
+  Exit;
+end;
+      end else if attr = dmMain.Cpp.CommentAttri then begin //Comment, javadoc tag
+        word:=GetWordAtPosition(fText, fText.CaretXY,pBeginPos,pEndPos, wpJavadoc);
+        if not StartsStr('@',word) then begin
+          Exit;
+        end;
+      end else if (attr <> fText.Highlighter.SymbolAttribute) and
+        (attr <> fText.Highlighter.WhitespaceAttribute) and
+        (attr <> fText.Highlighter.IdentifierAttribute) then begin
+        Exit;
+      end;
+    }
+
+    // Position it at the top of the next line
+    P := fText.RowColumnToPixels(fText.DisplayXY);
+    Inc(P.Y, fText.LineHeight + 2);
+    fCompletionBox.Position := fText.ClientToScreen(P);
+
+    fCompletionBox.RecordUsage := devCodeCompletion.RecordUsage;
+    fCompletionBox.SortByScope := devCodeCompletion.SortByScope;
+    fCompletionBox.ShowKeywords := devCodeCompletion.ShowKeywords;
+    fCompletionBox.ShowCodeIns := devCodeCompletion.ShowCodeIns;
+    fCompletionBox.IgnoreCase := devCodeCompletion.IgnoreCase;
+    fCompletionBox.CodeInsList := dmMain.CodeInserts.ItemList;
+    fCompletionBox.SymbolUsage := dmMain.SymbolUsage;
+    fCompletionBox.ShowCount := devCodeCompletion.MaxCount;
+    //Set Font size;
+    fCompletionBox.FontSize := fText.Font.Size;
+
+    // Redirect key presses to completion box if applicable
+    fCompletionBox.OnKeyPress := CompletionKeyPress;
+    fCompletionBox.OnKeyDown := CompletionKeyDown;
+    fCompletionBox.Parser := fParser;
+    fCompletionBox.useCppKeyword := fUseCppSyntax;
+    fCompletionBox.Show;
+
+    // Scan the current function body
+    fCompletionBox.CurrentStatement := fParser.FindAndScanBlockAt(fFileName, fText.CaretY);
+
+    if word='' then
+      word:=GetWordAtPosition(fText, fText.CaretXY,pBeginPos,pEndPos, wpCompletion);
+    //if not fCompletionBox.Visible then
+    fCompletionBox.PrepareSearch(word, fFileName,pBeginPos.Line);
+
+    // Filter the whole statement list
+    if fCompletionBox.Search(word, fFileName, autoComplete) then //only one suggestion and it's not input while typing
+      CompletionInsert(); // if only have one suggestion, just use it
 }
 
 const PCppParser &Editor::parser() const

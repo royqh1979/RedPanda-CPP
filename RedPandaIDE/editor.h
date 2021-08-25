@@ -8,6 +8,7 @@
 #include "colorscheme.h"
 #include "common.h"
 #include "parser/cppparser.h"
+#include "widgets/codecompletionview.h"
 
 class SaveException: public std::exception {
 
@@ -46,6 +47,16 @@ public:
         DoubleQuoteEscape,
         RawString,
         RawStringNoEscape
+    };
+
+    enum class WordPurpose {
+        wpCompletion, // walk backwards over words, array, functions, parents, no forward movement
+        wpEvaluation, // walk backwards over words, array, functions, parents, forwards over words, array
+        wpHeaderCompletion, // walk backwards over path
+        wpHeaderCompletionStart, // walk backwards over path, including start '<' or '"'
+        wpDirective, // preprocessor
+        wpJavadoc, //javadoc
+        wpInformation // walk backwards over words, array, functions, parents, forwards over words
     };
 
     struct SyntaxIssue {
@@ -139,10 +150,14 @@ private:
     bool handleDoubleQuoteCompletion();
     bool handleGlobalIncludeCompletion();
     bool handleGlobalIncludeSkip();
+
+    void handleCodeCompletion(QChar key);
     void initParser();
     void undoSymbolCompletion(int pos);
     QuoteStatus getQuoteStatus();
     void reparse();
+
+    void showCompletion(bool autoComplete);
 
 private:
     static int newfileCount;
@@ -165,6 +180,8 @@ private:
     QSet<int> mBreakpointLines;
     int mActiveBreakpointLine;
     PCppParser mParser;
+    std::shared_ptr<CodeCompletionView> mCompletionPopup;
+    int mLastIdCharPressed;
 
     // QWidget interface
 protected:

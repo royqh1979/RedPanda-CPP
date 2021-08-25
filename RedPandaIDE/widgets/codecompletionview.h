@@ -22,6 +22,18 @@ private:
     KeyPressedCallback mKeypressedCallback;
 };
 
+class CodeCompletionListModel : public QAbstractListModel {
+    Q_OBJECT
+public:
+    explicit CodeCompletionListModel(StatementList* statements,QObject *parent = nullptr);
+    int rowCount(const QModelIndex &parent) const override;
+    QVariant data(const QModelIndex &index, int role) const override;
+    void notifyUpdated();
+private:
+    const StatementList* mStatements;
+
+};
+
 class CodeCompletionView : public QWidget
 {
     Q_OBJECT
@@ -32,8 +44,7 @@ public:
 
     void setKeypressedCallback(const KeyPressedCallback &newKeypressedCallback);
     void prepareSearch(const QString& phrase, const QString& filename, int line);
-    bool search(const QString& phrase, const QString& filename,
-                bool autoHideOnSingleResult);
+    bool search(const QString& phrase, bool autoHideOnSingleResult);
 
 
 private:
@@ -45,12 +56,12 @@ private:
     bool isIncluded(const QString& fileName);
 private:
     CodeCompletionListView * mListView;
+    CodeCompletionListModel* mModel;
     QList<PCodeIns> mCodeInsList; //(Code template list)
     //QList<PStatement> mCodeInsStatements; //temporary (user code template) statements created when show code suggestion
     PCppParser mParser;
-    QList<PStatement> mFullCompletionStatementList;
-    QList<PStatement> mCompletionStatementList;
-    bool mEnabled;
+    StatementList mFullCompletionStatementList;
+    StatementList mCompletionStatementList;
     int mShowCount;
     bool mOnlyGlobals;
     PStatement mCurrentStatement;
