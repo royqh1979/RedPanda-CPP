@@ -1644,18 +1644,21 @@ void CppParser::handleEnum()
     bool isEnumClass = false;
     int startLine = mTokenizer[mIndex]->line;
     mIndex++; //skip 'enum'
-    if (mTokenizer[mIndex]->text.startsWith('{')) { // enum {...} NAME
+
+    if (mIndex < mTokenizer.tokenCount() && mTokenizer[mIndex]->text == "class") {
+        //enum class
+        isEnumClass = true;
+        mIndex++; //skip class
+
+    }
+    if ((mIndex< mTokenizer.tokenCount()) && mTokenizer[mIndex]->text.startsWith('{')) { // enum {...} NAME
         // Skip to the closing brace
         int i = skipBraces(mIndex);
-        if ((i + 1 < mTokenizer.tokenCount()) && mTokenizer[i]->text == "class") {
-            //enum class {...} NAME
-            isEnumClass = true;
-            i++;
-        }
         // Have we found the name?
-        if ((i + 1 < mTokenizer.tokenCount()) && !mTokenizer[i]->text.startsWith('}')
-            && !mTokenizer[i + 1]->text.startsWith(';'))
-            enumName = mTokenizer[i + 1]->text.trimmed();
+        if ((i + 1 < mTokenizer.tokenCount()) && mTokenizer[i]->text.startsWith('}')) {
+            if (!mTokenizer[i + 1]->text.startsWith(';'))
+                enumName = mTokenizer[i + 1]->text.trimmed();
+        }
     } else { // enum NAME {...};
         if ( (mIndex< mTokenizer.tokenCount()) && mTokenizer[mIndex]->text == "class") {
             //enum class {...} NAME
@@ -1708,6 +1711,8 @@ void CppParser::handleEnum()
                         true,
                         false);
         }
+    } else {
+        enumStatement = getCurrentScope();
     }
 
     // Skip opening brace
@@ -1913,7 +1918,6 @@ void CppParser::handleMethod(const QString &sType, const QString &sName, const Q
         int delimPos = sName.indexOf("::");
         QString scopelessName;
         QString parentClassName;
-        PStatement functionClass;
         if (delimPos >= 0) {
             // Provide Bar instead of Foo::Bar
             scopelessName = sName.mid(delimPos);
@@ -1973,7 +1977,7 @@ void CppParser::handleMethod(const QString &sType, const QString &sName, const Q
             }
         } else {
             functionStatement = addStatement(
-                        getCurrentScope(),
+                        functionClass,
                         mCurrentFile,
                         "", // do not override hint
                         sType,

@@ -531,12 +531,14 @@ bool Editor::onGetSpecialLineColors(int Line, QColor &foreground, QColor &backgr
 void Editor::copyToClipboard()
 {
     if (pSettings->editor().copySizeLimit()) {
-        if (lines()->count() > pSettings->editor().copyLineLimits()) {
+        int startLine = blockBegin().Line;
+        int endLine = blockEnd().Line;
+        if ((endLine-startLine+1) > pSettings->editor().copyLineLimits()) {
             QMessageBox::critical(pMainWindow,tr("Error"),
                                      tr("The text to be copied exceeds count limit!"));
             return;
         }
-        if (lines()->getTextLength() > pSettings->editor().copyCharLimits() * 1000) {
+        if ((selText().length()) > pSettings->editor().copyCharLimits() * 1000) {
             QMessageBox::critical(pMainWindow,tr("Error"),
                                      tr("The text to be copied exceeds character limit!"));
             return;
