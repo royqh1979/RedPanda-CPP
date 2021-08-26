@@ -1381,133 +1381,179 @@ void Editor::showHeaderCompletion(bool autoComplete)
     //todo:
 }
 
+bool Editor::testInFunc(int x, int y)
+{
+    bool result = false;
+    QString s = lines()->getString(y);
+    int posY = y;
+    int posX = std::min(x,s.length()-1); // x is started from 1
+    int bracketLevel=0;
+    while (true) {
+        while (posX < 0) {
+            posY--;
+            if (posY < 0)
+                return false;
+            s = lines()->getString(posY);
+            posX = s.length()-1;
+        }
+        if (s[posX] == '>'
+                || s[posX] == ']') {
+            bracketLevel++;
+        } else if (s[posX] == '<'
+                   || s[posX] == '[') {
+            bracketLevel--;
+        } else if (bracketLevel==0) {
+            switch (s[posX].unicode()) {
+            case '(':
+                return true;
+            case ';':
+            case '{':
+                return false;
+            }
+            if (!(isIdentChar(s[posX])
+                  || s[posX] == ' '
+                  || s[posX] == '\t'
+                  || s[posX] == '*'
+                  || s[posX] == '&'))
+                break;;
+        }
+        posX--;
+    }
+    return result;
+}
+
 QString Editor::getWordAtPosition(const BufferCoord &p, BufferCoord &pWordBegin, BufferCoord &pWordEnd, WordPurpose purpose)
 {
     QString result = "";
     QString s;
-    if ((p.Line >= 1) && (p.Line <= lines()->count())) {
-        s = lines()->getString(p.Line - 1);
-        int len = s.length();
+    if ((p.Line<1) || (p.Line>lines()->count())) {
+        pWordBegin = p;
+        pWordEnd = p;
+        return "";
+    }
 
-        int wordBegin = p.Char - 1 - 1; //BufferCoord::Char starts with 1
-        int wordEnd = p.Char - 1 - 1;
+    s = lines()->getString(p.Line - 1);
+    int len = s.length();
 
-        // Copy forward until end of word
-        if (purpose == WordPurpose::wpEvaluation
-                || purpose == WordPurpose::wpInformation) {
-            while (wordEnd + 1 < len) do {
-                if ((purpose == WordPurpose::wpEvaluation)
-                        && (s[wordEnd + 1] == '[')) {
-                    if (!findComplement(s, '[', ']', wordEnd, 1))
-                        break;
-                } else if (isIdentChar(s[wordEnd + 1])) {
-                    wordEnd++;
-                } else
+    int wordBegin = p.Char - 1 - 1; //BufferCoord::Char starts with 1
+    int wordEnd = p.Char - 1 - 1;
+
+    // Copy forward until end of word
+    if (purpose == WordPurpose::wpEvaluation
+            || purpose == WordPurpose::wpInformation) {
+        while (wordEnd + 1 < len) {
+            if ((purpose == WordPurpose::wpEvaluation)
+                    && (s[wordEnd + 1] == '[')) {
+                if (!findComplement(s, '[', ']', wordEnd, 1))
                     break;
-            }
+            } else if (isIdentChar(s[wordEnd + 1])) {
+                wordEnd++;
+            } else
+                break;
         }
+    }
 
-        // Copy backward until #
-        if (purpose == WordPurpose::wpDirective) {
-            while ((wordBegin >= 0) && (wordBegin < len)) {
-               if (isIdentChar(s[wordBegin]))
-                   wordBegin--;
-               else if (s[wordBegin] == '#') {
-                   wordBegin--;
-                   break;
-               } else
-                   break;
-            }
+    // Copy backward until #
+    if (purpose == WordPurpose::wpDirective) {
+        while ((wordBegin >= 0) && (wordBegin < len)) {
+           if (isIdentChar(s[wordBegin]))
+               wordBegin--;
+           else if (s[wordBegin] == '#') {
+               wordBegin--;
+               break;
+           } else
+               break;
         }
+    }
 
-        // Copy backward until @
-        if (purpose == WordPurpose::wpJavadoc) {
-            while ((wordBegin >= 0) && (wordBegin < len)) {
-               if (isIdentChar(s[wordBegin]))
-                   wordBegin--;
-               else if (s[wordBegin] == '@') {
-                   wordBegin--;
-                   break;
-               } else
-                   break;
-            }
+    // Copy backward until @
+    if (purpose == WordPurpose::wpJavadoc) {
+        while ((wordBegin >= 0) && (wordBegin < len)) {
+           if (isIdentChar(s[wordBegin]))
+               wordBegin--;
+           else if (s[wordBegin] == '@') {
+               wordBegin--;
+               break;
+           } else
+               break;
         }
+    }
 
-        // Copy backward until begin of path
-        if (purpose == wpHeaderCompletion) {
-            while ((wordBegin >= 0) && (wordBegin < len)) {
-                if (isIdentChar(s[wordBegin]))
-                    wordBegin--;
-                else if (s[wordBegin] == '/'
+    // Copy backward until begin of path
+    if (purpose == WordPurpose::wpHeaderCompletion) {
+        while ((wordBegin >= 0) && (wordBegin < len)) {
+            if (isIdentChar(s[wordBegin]))
+                wordBegin--;
+            else if (s[wordBegin] == '/'
+                     || s[wordBegin] == '\\'
+                     || s[wordBegin] == '.') {
+                wordBegin--;
+                break;
+            } else
+                break;
+        }
+    }
+
+    if (purpose == WordPurpose::wpHeaderCompletionStart) {
+        while ((wordBegin >= 0) && (wordBegin < len)) {
+            if (s[wordBegin] == '"'
+                    || s[wordBegin] == '<') {
+                wordBegin--;
+                break;
+            } else if (s[wordBegin] == '/'
                          || s[wordBegin] == '\\'
                          || s[wordBegin] == '.') {
                     wordBegin--;
-                    break;
-                } else
-                    break;
-            }
+            } else  if (isIdentChar(s[wordBegin]))
+                wordBegin--;
+            else
+                break;
         }
+    }
 
-        if (purpose == WordPurpose::wpHeaderCompletionStart) {
-            while ((wordBegin >= 0) && (wordBegin < len)) {
-                if (s[wordBegin] == '"'
-                        || s[wordBegin] == '<']) {
-                    wordBegin--;
+//        && ( wordBegin < len)
+    // Copy backward until begin of word
+    if (purpose == WordPurpose::wpCompletion
+            || purpose == WordPurpose::wpEvaluation
+            || purpose == WordPurpose::wpInformation) {
+        while ((wordBegin >= 0) && (wordBegin<len)) {
+            if (s[wordBegin] == ']') {
+                if (!findComplement(s, ']', '[', wordBegin, -1))
                     break;
-                } else if (s[wordBegin] == '/'
-                             || s[wordBegin] == '\\'
-                             || s[wordBegin] == '.') {
-                        wordBegin--;
-                } else  if (isIdentChar(s[wordBegin]))
-                    wordBegin--;
                 else
+                    wordBegin++; // step over mathing [
+            } else if (isIdentChar(s[wordBegin])) {
+                wordBegin--;
+            } else if (s[wordBegin] == '.'
+                       || s[wordBegin] == ':'
+                       || s[wordBegin] == '~') { // allow destructor signs
+                wordBegin--;
+            } else if (
+                       (s[wordBegin] == '>')
+                       && (wordBegin+2<len)
+                       && (s[wordBegin+1]==':')
+                       && (s[wordBegin+2]==':')
+                       ) { // allow template
+                if (!findComplement(s, '>', '<', wordBegin, -1))
                     break;
-            }
-        }
-
-        // Copy backward until begin of word
-        if (purpose == WordPurpose::wpCompletion
-                || purpose == WordPurpose::wpEvaluation
-                || purpose == WordPurpose::wpInformation) {
-            while ((wordBegin >= 0) && (wordBegin < len)) {
-                if (s[wordBegin] == ']') then {
-                    if (!findComplement(s, ']', '[', wordBegin, -1))
-                        break
-                    else
-                        wordBegin++; // step over [
-                } else if (isIdentChar(s[wordBegin])) {
-                    wordBegin--;
-                } else if (s[wordBegin] == '.'
-                           || s[wordBegin] == ':'
-                           || s[wordBegin] == '~') { // allow destructor signs
-                    wordBegin--;
-                } else if (
-                           (s[wordBegin] == '>')
-                           && (wordBegin+2<len)
-                           && (s[WordBegin+1]==':')
-                           && (s[WordBegin+2]==':')
-                           ) { // allow template
-                    if (!findComplement(s, '>', '<', wordBegin, -1))
-                        break;
-                    else
-                        wordBegin--; // step over >
-                } else if ((wordBegin-1 >= 0)
-                           && (s[wordBegin - 1] == '-')
-                           && (s[wordBegin] == '>')) {
-                    wordBegin-=2;
-                } else if ((wordBegin-1 >= 0)
-                       && (s[wordBegin - 1] == ':')
-                       && (s[wordBegin] == ':')) {
-                    wordBegin-=2;
-                } else if ((wordBegin > 0)
-                           && (s[wordBegin] == ')')) {
-                    if (!findComplement(s, ')', '(', WordBegin, -1))
-                        break;
-                    else
-                        wordBegin--; // step over (
-                } else
+                else
+                    wordBegin--; // step over >
+            } else if ((wordBegin-1 >= 0)
+                       && (s[wordBegin - 1] == '-')
+                       && (s[wordBegin] == '>')) {
+                wordBegin-=2;
+            } else if ((wordBegin-1 >= 0)
+                   && (s[wordBegin - 1] == ':')
+                   && (s[wordBegin] == ':')) {
+                wordBegin-=2;
+            } else if ((wordBegin > 0)
+                       && (s[wordBegin] == ')')) {
+                if (!findComplement(s, ')', '(', wordBegin, -1))
                     break;
-            }
+                else
+                    wordBegin--; // step over mathing (
+            } else
+                break;
         }
     }
 
@@ -1517,62 +1563,134 @@ QString Editor::getWordAtPosition(const BufferCoord &p, BufferCoord &pWordBegin,
     pWordBegin.Char = wordBegin+1;
     pWordEnd.Line = p.Line;
     pWordEnd.Char = wordEnd;
-    if (!result.isEmpty() && (
-                result[0] in ['.','-'])
-      and (Purpose in [wpCompletion, wpEvaluation, wpInformation]) then begin
-      i:=WordBegin;
-      line:=p.Line;
-      while line>=1 do begin
-        while i>=1 do begin
-          if S[i] in [' ',#9] then
-            dec(i)
-          else
-            break;
-        end;
-        if i<1 then begin
-          dec(line);
-          if (line>=1) then begin
-            S:=editor.Lines[line-1];
-            i:=Length(s);
-            continue;
-          end else
-            break;
-        end else begin
-          HighlightPos.Line := line;
-          HighlightPos.Char := i+1;
-          Result := GetWordAtPosition(editor,highlightPos,pWordBegin,pDummy,Purpose)+Result;
-          break;
-        end;
-      end;
-    end;
+
+    // last line still have part of word
+    if (!result.isEmpty()
+            && (
+                result[0] == '.'
+                || result[0] == '-')
+            && (purpose == WordPurpose::wpCompletion
+                || purpose == WordPurpose::wpEvaluation
+                || purpose == WordPurpose::wpInformation)) {
+        int i = wordBegin;
+        int line=p.Line;
+        while (line>=1) {
+            while (i>=0) {
+                if (s[i] == ' '
+                        || s[i] == '\t')
+                    i--;
+                else
+                    break;
+            }
+            if (i<0) {
+                line--;
+                if (line>=1) {
+                    s=lines()->getString(line-1);
+                    i=s.length();
+                    continue;
+                } else
+                    break;
+            } else {
+                BufferCoord highlightPos;
+                BufferCoord pDummy;
+                highlightPos.Line = line;
+                highlightPos.Char = i+1;
+                result = getWordAtPosition(highlightPos,pWordBegin,pDummy,purpose)+result;
+                break;
+            }
+        }
+    }
 
     // Strip function parameters
-    while true do begin
-      ParamBegin := Pos('(', Result);
-      if ParamBegin > 0 then begin
-        ParamEnd := ParamBegin;
-        if (ParamBegin=1) and FindComplement(Result, '(', ')', ParamEnd, 1)
-          and (ParamEnd = Length(Result)) then begin
-          Delete(Result,ParamEnd,1);
-          Delete(Result,ParamBegin,1);
-          continue;
-        end else begin
-          ParamEnd := ParamBegin;
-          if FindComplement(Result, '(', ')', ParamEnd, 1) then begin
-            Delete(Result, ParamBegin, ParamEnd - ParamBegin + 1);
-          end else
+    int paramBegin,paramEnd;
+    while (true) {
+        paramBegin = result.indexOf('(');
+        if (paramBegin > 0) {
+            paramEnd = paramBegin;
+            if ((paramBegin==0)
+                    && findComplement(result, '(', ')', paramEnd, 1)
+                    && (paramEnd = result.length()-1) ) {
+                //remove the enclosing parenthese pair
+                result = result.mid(1,result.length()-2);
+                continue;
+            } else {
+                paramEnd = paramBegin;
+              if (findComplement(result, '(', ')', paramEnd, 1)) {
+                  result.remove(paramBegin, paramEnd - paramBegin + 1);
+              } else
+                  break;
+            }
+        } else
             break;
-        end;
-      end else
-        break;
-    end;
+    }
 
-    ParamBegin := 1;
-    while (ParamBegin <= Length(Result)) and (Result[ParamBegin] = '*') do begin
-      inc(ParamBegin);
-    end;
-    Delete(Result,1,ParamBegin-1);
+    paramBegin = 0;
+    while ((paramBegin < result.length()) && (result[paramBegin] == '*')) {
+        paramBegin++;
+    }
+    result.remove(0,paramBegin);
+    return result;
+}
 
+QString Editor::getPreviousWordAtPositionForSuggestion(const BufferCoord &p)
+{
+    QString result;
+    if ((p.Line<1) || (p.Line>lines()->count())) {
+        return "";
+    }
+    bool inFunc = testInFunc(p.Char-1,p.Line-1);
+
+    QString s = lines()->getString(p.Line - 1);
+    int wordBegin;
+    int wordEnd = p.Char-1;
+    if (wordEnd >= s.length())
+        wordEnd = s.length()-1;
+    while (true) {
+        int bracketLevel=0;
+        bool skipNextWord=false;
+        while (wordEnd > 0) {
+          if (s[wordEnd] == '>'
+                 || s[wordEnd] == ']') {
+              bracketLevel++;
+          } else if (s[wordEnd] == '<'
+                     || s[wordEnd] == '[') {
+              bracketLevel--;
+          } else if (bracketLevel==0) {
+              //we can't differentiate multiple definition and function parameter define here , so we don't handle ','
+              if (s[wordEnd] == ',') {
+                  if (inFunc) // in func, dont skip ','
+                      break;
+                  else
+                      skipNextWord=true;
+              } else if (s[wordEnd] != ' '
+                         && s[wordEnd] != '\t') {
+                  break;
+              }
+          }
+          wordEnd--;
+        }
+        if (wordEnd<0)
+            return "";
+        if (bracketLevel > 0)
+            return "";
+        if (!isIdentChar(s[wordEnd]))
+            return "";
+
+        wordBegin = wordEnd;
+        while ((wordBegin >= 0) && isIdentChar(s[wordBegin])) {
+            wordBegin--;
+        }
+        wordBegin++;
+
+        if (s[wordBegin]>='0' && s[wordBegin]<='9') // not valid word
+            return "";
+
+        result = s.mid(wordBegin, wordEnd - wordBegin+1);
+        if ((result != "const") && !skipNextWord)
+            break;
+        wordEnd = wordBegin-1;
+    }
+    return result;
 }
 
 const PCppParser &Editor::parser() const

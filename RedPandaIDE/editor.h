@@ -129,6 +129,7 @@ public:
                               BufferCoord& pWordBegin,
                               BufferCoord& pWordEnd,
                               WordPurpose purpose);
+    QString getPreviousWordAtPositionForSuggestion(const BufferCoord& p);
 
     const PCppParser &parser() const;
 
@@ -163,6 +164,8 @@ private:
 
     void showCompletion(bool autoComplete);
     void showHeaderCompletion(bool autoComplete);
+
+    bool testInFunc(int x,int y);
 
 private:
     static int newfileCount;

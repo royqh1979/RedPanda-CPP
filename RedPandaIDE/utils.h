@@ -105,6 +105,12 @@ int compareFileModifiedTime(const QString& filename1, const QString& filename2);
 
 void changeTheme(const QString& themeName);
 
+bool findComplement(const QString& s,
+                       const QChar& fromToken,
+                       const QChar& toToken,
+                       int& curPos,
+                       int increment);
+
 class CppParser;
 void resetCppParser(std::shared_ptr<CppParser> parser);
 

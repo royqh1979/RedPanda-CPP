@@ -541,3 +541,22 @@ void resetCppParser(std::shared_ptr<CppParser> parser)
     }
     parser->parseHardDefines();
 }
+
+bool findComplement(const QString &s, const QChar &fromToken, const QChar &toToken, int &curPos, int increment)
+{
+    int curPosBackup = curPos;
+    int level = 0;
+    //todo: skip comment, char and strings
+    while ((curPos < s.length()) && (curPos >= 0)) {
+        if (s[curPos] == fromToken) {
+            level++;
+        } else if (s[curPos] == toToken) {
+            level--;
+            if (level == 0)
+                return true;
+        }
+        curPos += increment;
+    }
+    curPos = curPosBackup;
+    return false;
+}
