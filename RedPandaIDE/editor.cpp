@@ -390,6 +390,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
                 setSelText(ch);
                 showCompletion(false);
                 handled=true;
+                return;
             }
         }
 
@@ -434,7 +435,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
 
     // Spawn code completion window if we are allowed to
 //    if devCodeCompletion.Enabled then begin
-    handleCodeCompletion(ch);
+    handled = handleCodeCompletion(ch);
 //    end;
 }
 
@@ -1143,29 +1144,36 @@ bool Editor::handleGlobalIncludeSkip()
     return false;
 }
 
-void Editor::handleCodeCompletion(QChar key)
+bool Editor::handleCodeCompletion(QChar key)
 {
     if (!mCompletionPopup->isEnabled())
-        return;
+        return false;
     switch(key.unicode()) {
     case '.':
+        setSelText(key);
         showCompletion(false);
-        break;
+        return true;
     case '>':
+        setSelText(key);
         if ((caretX() > 1) && (lineText().length() >= 1) &&
                 (lineText()[caretX() - 2] == '-'))
             showCompletion(false);
-        break;
+        return true;
     case ':':
+        setSelText(key);
         if ((caretX() > 1) && (lineText().length() >= 1) &&
                 (lineText()[caretX() - 2] == ':'))
             showCompletion(false);
-        break;
+        return true;
     case '/':
     case '\\':
+        setSelText(key);
         if (mParser->isIncludeLine(lineText())) {
             showHeaderCompletion(false);
         }
+        return true;
+    default:
+        return false;
     }
 }
 
@@ -1683,7 +1691,7 @@ QString Editor::getWordAtPosition(const BufferCoord &p, BufferCoord &pWordBegin,
     }
 
     // Get end result
-    result = s.mid(wordBegin + 1, wordEnd - wordBegin);
+    result = s.mid(wordBegin+1, wordEnd - wordBegin);
     pWordBegin.Line = p.Line;
     pWordBegin.Char = wordBegin+1;
     pWordEnd.Line = p.Line;

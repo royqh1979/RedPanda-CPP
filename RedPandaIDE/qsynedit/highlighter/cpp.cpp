@@ -820,7 +820,7 @@ void SynEditCppHighlighter::pointProc()
     if (mLine[mRun+1] == '.' && mLine[mRun+2] == '.') {
         mRun+=3;
         mExtTokenId = ExtTokenKind::Ellipse;
-    } else if (mLine[mRun+1]>=0 && mLine[mRun+1]<='9') {
+    } else if (mLine[mRun+1]>='0' && mLine[mRun+1]<='9') {
         numberProc();
     } else {
         mRun+=1;
@@ -1538,6 +1538,8 @@ SynHighlighterTokenType SynEditCppHighlighter::getTokenType()
         return SynHighlighterTokenType::Character;
     case TokenKind::Symbol:
         return SynHighlighterTokenType::Symbol;
+    case TokenKind::Number:
+        return SynHighlighterTokenType::Number;
     default:
         return SynHighlighterTokenType::Default;
     }

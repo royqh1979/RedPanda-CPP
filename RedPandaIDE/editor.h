@@ -156,7 +156,7 @@ private:
     bool handleGlobalIncludeCompletion();
     bool handleGlobalIncludeSkip();
 
-    void handleCodeCompletion(QChar key);
+    bool handleCodeCompletion(QChar key);
     void initParser();
     void undoSymbolCompletion(int pos);
     QuoteStatus getQuoteStatus();
