@@ -5667,6 +5667,56 @@ void SynEdit::setSelLength(int Value)
     }
 }
 
+BufferCoord SynEdit::wordStart()
+{
+    return wordStart(caretXY());
+}
+
+BufferCoord SynEdit::wordStart(const BufferCoord &value)
+{
+    int cx = value.Char-1;
+    int cy = value.Line;
+    // valid line?
+    if ((cy <1) || (cy > lines()->count()))
+        return value;
+    QString line = lines()->getString(cy - 1);
+    if (cx>=line.length()) {
+        cx=line.length()-1;
+    }
+
+    while (cx>=0 && cx<line.length()) {
+        if (line[cx]==' ' || line[cx]=='\t')
+            break;
+        cx--;
+    }
+    if (cx != value.Char-1) {
+        cx++;
+    }
+    return BufferCoord{cx+1,cy};
+}
+
+BufferCoord SynEdit::wordEnd()
+{
+    return wordEnd(caretXY());
+}
+
+BufferCoord SynEdit::wordEnd(const BufferCoord &value)
+{
+    int cx = value.Char-1;
+    int cy = value.Line;
+    // valid line?
+    if ((cy <1) || (cy > lines()->count()))
+        return value;
+    QString line = lines()->getString(cy - 1);
+
+    while (cx>=0 && cx<line.length()) {
+        if (line[cx]==' ' || line[cx]=='\t')
+            break;
+        cx++;
+    }
+    return BufferCoord{cx+1,cy};
+}
+
 BufferCoord SynEdit::blockBegin() const
 {
     if ((mBlockEnd.Line < mBlockBegin.Line)

@@ -167,6 +167,10 @@ private:
 
     bool testInFunc(int x,int y);
 
+    void completionInsert(bool appendFunc=false);
+
+    bool onCompletionKeyPressed(QKeyEvent* event);
+
 private:
     static int newfileCount;
     QByteArray mEncodingOption; // the encoding type set by the user

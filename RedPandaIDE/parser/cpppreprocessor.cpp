@@ -336,9 +336,10 @@ void CppPreprocessor::handleInclude(const QString &line)
     if (fileName.isEmpty())
         return;
 
-    mCurrentIncludes->includeFiles.insert(fileName,true);
+    //mCurrentIncludes->includeFiles.insert(fileName,true);
     // And open a new entry
     openInclude(fileName);
+    mCurrentIncludes->includeFiles.insert(fileName,true);
 }
 
 void CppPreprocessor::handlePreprocessor(const QString &value)
@@ -396,7 +397,7 @@ QString CppPreprocessor::expandMacros(const QString &line, int depth)
             }
             word = "";
             if (i< lenLine) {
-                newLine += ch;
+                newLine += line[i];
             }
         }
         i++;
@@ -410,7 +411,9 @@ QString CppPreprocessor::expandMacros(const QString &line, int depth)
 void CppPreprocessor::expandMacro(const QString &line, QString &newLine, QString &word, int &i, int depth)
 {
     int lenLine = line.length();
-    if (word == "__attribute__") {
+    if (word.startsWith("__")
+            && word.endsWith("__")) {
+//    if (word == "__attribute__") {
         //skip gcc __attribute__
         while ((i<lenLine) && (line[i] == ' ' || line[i]=='\t'))
             i++;
@@ -487,7 +490,7 @@ QString CppPreprocessor::removeGCCAttributes(const QString &line)
                 removeGCCAttribute(line,newLine,i,word);
             }
             word = "";
-            if (i<=lenLine) {
+            if (i<lenLine) {
                 newLine = newLine+line[i];
             }
         }
@@ -500,28 +503,29 @@ QString CppPreprocessor::removeGCCAttributes(const QString &line)
 
 void CppPreprocessor::removeGCCAttribute(const QString &line, QString &newLine, int &i, const QString &word)
 {
-    int lenLine = line.length();
-    int level = 0;
-    if (word=="__attribute__") {
-        while ( (i<lenLine) && isSpaceChar(line[i]))
-            i++;
-        if ((i<lenLine) && (line[i]=='(')) {
-            level=0;
-            while (i<lenLine) {
-                switch(line[i].unicode()) {
-                case '(': level++;
-                    break;
-                case ')': level--;
-                    break;
-                }
-                i++;
-                if (level==0)
-                    break;
-            }
-        }
-    } else {
-        newLine += word;
-    }
+    //no need it now
+//    int lenLine = line.length();
+//    int level = 0;
+//    if (word=="__attribute__") {
+//        while ( (i<lenLine) && isSpaceChar(line[i]))
+//            i++;
+//        if ((i<lenLine) && (line[i]=='(')) {
+//            level=0;
+//            while (i<lenLine) {
+//                switch(line[i].unicode()) {
+//                case '(': level++;
+//                    break;
+//                case ')': level--;
+//                    break;
+//                }
+//                i++;
+//                if (level==0)
+//                    break;
+//            }
+//        }
+//    } else {
+//        newLine += word;
+//    }
 }
 
 PParsedFile CppPreprocessor::getInclude(int index)
@@ -865,18 +869,20 @@ QStringList CppPreprocessor::removeComments(const QStringList &text)
                 s+=ch;
                 break;
             case '/':
-                switch(currentType) {
-                case ContentType::Other:
+                if (currentType == ContentType::Other) {
                     if (pos+1<line.length() && line[pos+1]=='/') {
                         // line comment , skip all remainings of the current line
                         stopProcess = true;
+                        break;
                     } else if (pos+1<line.length() && line[pos+1]=='*') {
                         /* ansi c comment */
                         pos++;
                         currentType = ContentType::AnsiCComment;
+                        break;
                     }
-                    break;
                 }
+                s+=ch;
+                break;
             case '\\':
                 switch (currentType) {
                 case ContentType::String:
@@ -1032,7 +1038,7 @@ QString CppPreprocessor::expandDefines(QString line)
     while (searchPos < line.length()) {
         // We have found an identifier. It is not a number suffix. Try to expand it
         if (isMacroIdentChar(line[searchPos]) && (
-                    (searchPos == 1) || !isDigit(line[searchPos - 1]))) {
+                    (searchPos == 0) || !isDigit(line[searchPos - 1]))) {
             int head = searchPos;
             int tail = searchPos;
 

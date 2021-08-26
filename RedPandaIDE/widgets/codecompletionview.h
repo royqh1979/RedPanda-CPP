@@ -46,6 +46,7 @@ public:
     void prepareSearch(const QString& phrase, const QString& filename, int line);
     bool search(const QString& phrase, bool autoHideOnSingleResult);
 
+    PStatement selectedStatement();
 
     const PCppParser &parser() const;
     void setParser(const PCppParser &newParser);
@@ -111,6 +112,7 @@ private:
 
     // QWidget interface
 protected:
+    void showEvent(QShowEvent *event) override;
     void hideEvent(QHideEvent *event) override;
 };
 

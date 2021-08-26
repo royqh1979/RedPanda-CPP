@@ -215,6 +215,12 @@ public:
     void uncollapseAroundLine(int line);
     PSynEditFoldRange foldHidesLine(int line);
     void setSelText(const QString& Value);
+    void setSelLength(int Value);
+
+    BufferCoord wordStart();
+    BufferCoord wordStart(const BufferCoord& value);
+    BufferCoord wordEnd();
+    BufferCoord wordEnd(const BufferCoord& value);
 
     int searchReplace(const QString& sSearch, const QString& sReplace, SynSearchOptions options,
                PSynSearchBase searchEngine,  SynSearchMathedProc matchedCallback = nullptr);
@@ -261,6 +267,8 @@ public:
 
     BufferCoord blockBegin() const;
     BufferCoord blockEnd() const;
+    void setBlockBegin(BufferCoord value);
+    void setBlockEnd(BufferCoord Value);
 
     SynSelectionMode activeSelectionMode() const;
     void setActiveSelectionMode(const SynSelectionMode &Value);
@@ -491,10 +499,6 @@ private:
     void doUncomment();
     void doToggleComment();
 
-private:
-    void setBlockBegin(BufferCoord value);
-    void setBlockEnd(BufferCoord Value);
-    void setSelLength(int Value);
 
 private slots:
     void bookMarkOptionsChanged();

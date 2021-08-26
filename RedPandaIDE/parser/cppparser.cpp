@@ -2104,7 +2104,7 @@ void CppParser::handleOtherTypedefs()
         while ((mIndex< mTokenizer.tokenCount()) && !mTokenizer[mIndex]->text.startsWith(';'))
             mIndex++;
         //skip ;
-        if ((mIndex< mTokenizer.tokenCount()) && !mTokenizer[mIndex]->text.startsWith(';'))
+        if ((mIndex< mTokenizer.tokenCount()) && mTokenizer[mIndex]->text.startsWith(';'))
             mIndex++;
         return;
     }
@@ -2186,7 +2186,7 @@ void CppParser::handleOtherTypedefs()
                 newType += mTokenizer[mIndex]->text + ' ';
                 mIndex++;
             }
-            if ((mIndex>= mTokenizer.tokenCount()) || (mTokenizer[mIndex]->text[1] == ';'))
+            if ((mIndex>= mTokenizer.tokenCount()) || (mTokenizer[mIndex]->text[0] == ';'))
                 break;
             else if (mTokenizer[mIndex]->text.front() == ',')
                 mIndex++;
@@ -2528,14 +2528,14 @@ void CppParser::handleStructs(bool isTypedef)
                     if (!(mTokenizer[i]->text.front() == '{'
                           || mTokenizer[i]->text.front() == ','
                           || mTokenizer[i]->text.front() == ';')) {
-                        if ((mTokenizer[i]->text.front() == '_')
-                            && (mTokenizer[i]->text.back() == '_')) {
-                            // skip possible gcc attributes
-                            // start and end with 2 underscores (i.e. __attribute__)
-                            // so, to avoid slow checks of strings, we just check the first and last letter of the token
-                            // if both are underscores, we split
-                            break;
-                        } else {
+//                        if ((mTokenizer[i]->text.front() == '_')
+//                            && (mTokenizer[i]->text.back() == '_')) {
+//                            // skip possible gcc attributes
+//                            // start and end with 2 underscores (i.e. __attribute__)
+//                            // so, to avoid slow checks of strings, we just check the first and last letter of the token
+//                            // if both are underscores, we split
+//                            break;
+//                        } else {
                             if (mTokenizer[i]->text.endsWith(']')) { // cut-off array brackets
                                 int pos = mTokenizer[i]->text.indexOf('[');
                                 command += mTokenizer[i]->text.mid(0,pos) + ' ';
@@ -2546,7 +2546,7 @@ void CppParser::handleStructs(bool isTypedef)
                             } else {
                                 command += mTokenizer[i]->text + ' ';
                             }
-                        }
+//                        }
                     } else {
                         command = command.trimmed();
                         if (!command.isEmpty() &&
@@ -2873,9 +2873,9 @@ void CppParser::internalParse(const QString &fileName)
         });
         // Let the preprocessor augment the include records
 //        mPreprocessor.setIncludesList(mIncludesList);
+//        mPreprocessor.setScannedFileList(mScannedFiles);
 //        mPreprocessor.setIncludePaths(mIncludePaths);
 //        mPreprocessor.setProjectIncludePaths(mProjectIncludePaths);
-//        mPreprocessor.setScannedFileList(mScannedFiles);
         mPreprocessor.setScanOptions(mParseGlobalHeaders, mParseLocalHeaders);
         mPreprocessor.preprocess(fileName, buffer);
 #ifdef QT_DEBUG

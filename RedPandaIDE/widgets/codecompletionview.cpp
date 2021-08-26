@@ -105,6 +105,23 @@ bool CodeCompletionView::search(const QString &phrase, bool autoHideOnSingleResu
     return false;
 }
 
+PStatement CodeCompletionView::selectedStatement()
+{
+    if (isEnabled()) {
+        int index = mListView->currentIndex().row();
+        if (mListView->currentIndex().isValid()
+                && (index<mCompletionStatementList.count()) ) {
+            return mCompletionStatementList[index];
+        } else {
+            if (!mCompletionStatementList.isEmpty())
+                return mCompletionStatementList.front();
+            else
+                return PStatement();
+        }
+    } else
+        return PStatement();
+}
+
 void CodeCompletionView::addChildren(PStatement scopeStatement, const QString &fileName, int line)
 {
     if (scopeStatement && !isIncluded(scopeStatement->fileName)
@@ -669,6 +686,11 @@ bool CodeCompletionView::isIncluded(const QString &fileName)
     return mIncludedFiles.contains(fileName);
 }
 
+void CodeCompletionView::showEvent(QShowEvent *)
+{
+    mListView->setFocus();
+}
+
 const PStatement &CodeCompletionView::currentStatement() const
 {
     return mCurrentStatement;
@@ -819,6 +841,9 @@ QVariant CodeCompletionListModel::data(const QModelIndex &index, int role) const
 {
     if (!index.isValid())
         return QVariant();
+    if (index.row()>=mStatements->count())
+        return QVariant();
+
     if (role == Qt::DisplayRole) {
         PStatement statement = mStatements->at(index.row());
         return statement->command;

@@ -1422,6 +1422,131 @@ bool Editor::testInFunc(int x, int y)
     return result;
 }
 
+void Editor::completionInsert(bool appendFunc)
+{
+    PStatement statement = mCompletionPopup->selectedStatement();
+    if (!statement)
+        return;
+//    if devCodeCompletion.RecordUsage and (Statement^._Kind <> skUserCodeIn) then begin
+//        idx:=Utils.FastIndexOf(dmMain.SymbolUsage,Statement^._FullName);
+//        if idx = -1 then begin
+//            usageCount:=1;
+//            dmMain.SymbolUsage.AddObject(Statement^._FullName, pointer(1))
+//        end else begin
+//            usageCount := 1 + integer(dmMain.SymbolUsage.Objects[idx]);
+//            dmMain.SymbolUsage.Objects[idx] := pointer( usageCount );
+//        end;
+//        Statement^._UsageCount := usageCount;
+//    end;
+
+    QString funcAddOn = "";
+
+// delete the part of the word that's already been typed ...
+    BufferCoord p = wordEnd();
+    setBlockBegin(wordStart());
+    setBlockEnd(p);
+
+    // if we are inserting a function,
+    if (appendFunc) {
+        if (statement->kind == StatementKind::skFunction
+                || statement->kind == StatementKind::skConstructor
+                || statement->kind == StatementKind::skDestructor) {
+            if ((p.Char >= lineText().length()) // it's the last char on line
+                    || (lineText()[p.Char] != '(')) {  // it don't have '(' after it
+                if (statement->fullName!="std::endl")
+                    funcAddOn = "()";
+            }
+        }
+    }
+
+    // ... by replacing the selection
+    if (statement->kind == StatementKind::skUserCodeIn) { // it's a user code template
+        //insertUserCodeIn(Statement->value);
+    } else {
+        if (
+                (statement->kind == StatementKind::skKeyword
+                 || statement->kind == StatementKind::skPreprocessor)
+                && (statement->command.startsWith('#')
+                    || statement->command.startsWith('@'))
+                ) {
+            setSelText(statement->command.mid(1));
+        } else
+            setSelText(statement->command + funcAddOn);
+
+        if (!funcAddOn.isEmpty())
+            mLastIdCharPressed = 0;
+
+        // Move caret inside the ()'s, only when the user has something to do there...
+        if (!funcAddOn.isEmpty()
+                && (statement->args != "()")
+                && (statement->args != "(void)")) {
+            setCaretX(caretX() - funcAddOn.length()+1);
+
+            //todo: function hint
+            // immediately activate function hint
+//            if devEditor.ShowFunctionTip and Assigned(fText.Highlighter) then begin
+//            fText.SetFocus;
+//            fFunctionTip.Parser := fParser;
+//            fFunctionTip.FileName := fFileName;
+//            fFunctionTip.Show;
+//              end;
+        }
+    }
+    mCompletionPopup->hide();
+}
+
+bool Editor::onCompletionKeyPressed(QKeyEvent *event)
+{
+    bool processed = false;
+    if (!mCompletionPopup->isEnabled())
+        return false;
+    QString phrase;
+    BufferCoord pBeginPos,pEndPos;
+    switch (event->key()) {
+    case Qt::Key_Backspace:
+        ExecuteCommand(
+                    SynEditorCommand::ecDeleteLastChar,
+                    QChar(), nullptr); // Simulate backspace in editor
+        phrase = getWordAtPosition(caretXY(),
+                                   pBeginPos,pEndPos,
+                                   WordPurpose::wpCompletion);
+        mLastIdCharPressed = phrase.length();
+        mCompletionPopup->search(phrase, false);
+        return true;
+    case Qt::Key_Escape:
+        mCompletionPopup->hide();
+        return true;
+    case Qt::Key_Return:
+    case Qt::Key_Tab:
+        //CompletionInsert(devCodeCompletion.AppendFunc);
+        completionInsert(false);
+        return true;
+    default:
+        if (event->text().isEmpty()) {
+            //stop completion
+            mCompletionPopup->hide();
+            keyPressEvent(event);
+            return true;
+        }
+    }
+    QChar ch = event->text().front();
+    if (isIdentChar(ch)) {
+        setSelText(ch);
+        phrase = phrase = getWordAtPosition(caretXY(),
+                                            pBeginPos,pEndPos,
+                                            WordPurpose::wpCompletion);
+        mLastIdCharPressed = phrase.length();
+        mCompletionPopup->search(phrase, false);
+        return true;
+    } else {
+        //stop completion
+        mCompletionPopup->hide();
+        keyPressEvent(event);
+        return true;
+    }
+    return processed;
+}
+
 QString Editor::getWordAtPosition(const BufferCoord &p, BufferCoord &pWordBegin, BufferCoord &pWordEnd, WordPurpose purpose)
 {
     QString result = "";
