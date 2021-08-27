@@ -19,7 +19,9 @@ public:
     const StatementMap& childrenStatements(std::weak_ptr<Statement> statement) const;
     void clear();
     void dump(const QString& logFile);
-
+#ifdef QT_DEBUG
+    void dumpAll(const QString& logFile);
+#endif
 signals:
 
 private:
@@ -29,6 +31,9 @@ private:
 private:
     int mCount;
     StatementMap mGlobalStatements;  //may have overloaded functions, so use PStatementList to store
+#ifdef QT_DEBUG
+    StatementList mAllStatements;
+#endif
 };
 
 #endif // STATEMENTMODEL_H

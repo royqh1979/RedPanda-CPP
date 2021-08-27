@@ -20,6 +20,10 @@ void StatementModel::add(PStatement statement)
         addMember(mGlobalStatements,statement);
     }
     mCount++;
+#ifdef QT_DEBUG
+    mAllStatements.append(statement);
+#endif
+
 }
 
 void StatementModel::deleteStatement(PStatement statement)
@@ -35,6 +39,10 @@ void StatementModel::deleteStatement(PStatement statement)
         count = deleteMember(mGlobalStatements,statement);
     }
     mCount -= count;
+#ifdef QT_DEBUG
+    mAllStatements.removeOne(statement);
+#endif
+
 }
 
 const StatementMap &StatementModel::childrenStatements(PStatement statement) const
@@ -66,6 +74,29 @@ void StatementModel::dump(const QString &logFile)
     }
 }
 
+#ifdef QT_DEBUG
+void StatementModel::dumpAll(const QString &logFile)
+{
+    QFile file(logFile);
+    if (file.open(QFile::WriteOnly | QFile::Truncate)) {
+        QTextStream out(&file);
+        for (PStatement statement:mAllStatements) {
+            out<<QString("%1, %2, %3, %4, %5, %6, %7, %8, %9, %10, %11, %12")
+             .arg(statement->command).arg(int(statement->kind))
+             .arg(statement->type).arg(statement->fullName)
+             .arg((size_t)(statement->parentScope.lock().get()))
+             .arg((int)statement->classScope)
+             .arg(statement->fileName)
+             .arg(statement->line)
+             .arg(statement->endLine)
+             .arg(statement->definitionFileName)
+             .arg(statement->definitionLine)
+             .arg(statement->definitionEndLine)<<Qt::endl;
+        }
+    }
+}
+#endif
+
 void StatementModel::addMember(StatementMap &map, PStatement statement)
 {
     if (!statement)
@@ -88,7 +119,7 @@ int StatementModel::deleteMember(StatementMap &map, PStatement statement)
 
 void StatementModel::dumpStatementMap(StatementMap &map, QTextStream &out, int level)
 {
-    QString indent(level,' ');
+    QString indent(level,'\t');
     for (PStatement statement:map.values()) {
         out<<indent<<QString("%1, %2, %3, %4, %5, %6, %7, %8, %9, %10, %11, %12")
          .arg(statement->command).arg(int(statement->kind))

@@ -93,7 +93,7 @@ void CppPreprocessor::addDefineByLine(const QString &line, bool hardCoded)
 {
     // Remove define
     constexpr int DEFINE_LEN=6;
-    QString s = line.mid(DEFINE_LEN,0).trimmed();
+    QString s = line.mid(DEFINE_LEN).trimmed();
 
     QString name, args, value;
     // Get parts from generalized function
@@ -826,6 +826,7 @@ QStringList CppPreprocessor::removeComments(const QStringList &text)
                 case ContentType::RawString:
                     if (line.mid(0,pos).endsWith(')'+delimiter))
                         currentType = ContentType::Other;
+                    break;
                 case ContentType::Other:
                     currentType=ContentType::String;
                     break;
@@ -839,8 +840,10 @@ QStringList CppPreprocessor::removeComments(const QStringList &text)
                 switch (currentType) {
                 case ContentType::Character:
                     currentType=ContentType::Other;
+                    break;
                 case ContentType::Other:
                     currentType=ContentType::Character;
+                    break;
                 case ContentType::RawStringPrefix:
                     delimiter+=ch;
                     break;

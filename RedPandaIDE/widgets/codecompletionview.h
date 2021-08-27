@@ -114,6 +114,10 @@ private:
 protected:
     void showEvent(QShowEvent *event) override;
     void hideEvent(QHideEvent *event) override;
+
+    // QObject interface
+public:
+    bool event(QEvent *event) override;
 };
 
 #endif // CODECOMPLETIONVIEW_H

@@ -1848,7 +1848,7 @@ void CppParser::handleKeyword()
         break;
     case SkipType::skToRightParenthesis:
         // skip to )
-        while (mIndex < mTokenizer.tokenCount() && !mTokenizer[mIndex]->text.startsWith(')'))
+        while (mIndex < mTokenizer.tokenCount() && !mTokenizer[mIndex]->text.endsWith(')'))
             mIndex++;
         mIndex++; // step over
         break;
@@ -2112,7 +2112,29 @@ void CppParser::handleOtherTypedefs()
             mIndex++;
         return;
     }
+    if ((mIndex+1<mTokenizer.tokenCount())
+            && (mTokenizer[mIndex+1]->text == ';')) {
+        //no old type
+        QString newType = mTokenizer[mIndex]->text.trimmed();
+        addStatement(
+                    getCurrentScope(),
+                    mCurrentFile,
+                    "typedef " + newType, // override hint
+                    "",
+                    newType,
+                    "",
+                    "",
+                    startLine,
+                    StatementKind::skTypedef,
+                    getScope(),
+                    mClassScope,
+                    true,
+                    false);
+        mIndex+=2; //skip ;
+        return;
+    }
     QString oldType;
+
     // Walk up to first new word (before first comma or ;)
     while(true) {
         oldType += mTokenizer[mIndex]->text + ' ';
@@ -2129,7 +2151,6 @@ void CppParser::handleOtherTypedefs()
             break;
     }
     oldType = oldType.trimmed();
-
 
     // Add synonyms for old
     if ((mIndex+1 < mTokenizer.tokenCount()) && !oldType.isEmpty()) {
@@ -2620,6 +2641,23 @@ void CppParser::handleStructs(bool isTypedef)
               // Proceed to set first synonym as current class
             }
         }
+        if (!firstSynonym) {
+            //anonymous union/struct/class, add ast a block
+            firstSynonym=addStatement(
+                      getCurrentScope(),
+                      mCurrentFile,
+                      "", // override hint
+                      "",
+                      "",
+                      "",
+                      "",
+                      startLine,
+                      StatementKind::skBlock,
+                      getScope(),
+                      mClassScope,
+                      true,
+                      false);
+        }
         addSoloScopeLevel(firstSynonym,startLine);
 
         // Step over {
@@ -2882,9 +2920,7 @@ void CppParser::internalParse(const QString &fileName)
 //        mPreprocessor.setProjectIncludePaths(mProjectIncludePaths);
         mPreprocessor.setScanOptions(mParseGlobalHeaders, mParseLocalHeaders);
         mPreprocessor.preprocess(fileName, buffer);
-#ifdef QT_DEBUG
-        StringsToFile(mPreprocessor.result(),"f:\\preprocess.txt");
-#endif
+
 //    with TStringList.Create do try
 //      Text:=fPreprocessor.Result;
 //      SaveToFile('f:\\Preprocess.txt');
@@ -2911,14 +2947,12 @@ void CppParser::internalParse(const QString &fileName)
                 break;
         }
 #ifdef QT_DEBUG
-        mTokenizer.dumpTokens("f:\\tokens.txt");
-        mPreprocessor.dumpDefinesTo("f:\\defines.txt");
-        mPreprocessor.dumpIncludesListTo("f:\\includes.txt");
-        mStatementList.dump("f:\\stats.txt");
-        //Statements.DumpTo('f:\stats.txt');
-        //Statements.DumpWithScope('f:\\statements.txt');
-        //fPreprocessor.DumpDefinesTo('f:\defines.txt');
-        //fPreprocessor.DumpIncludesListTo('f:\\includes.txt');
+//        StringsToFile(mPreprocessor.result(),"f:\\preprocess.txt");
+//        mTokenizer.dumpTokens("f:\\tokens.txt");
+//        mPreprocessor.dumpDefinesTo("f:\\defines.txt");
+//        mPreprocessor.dumpIncludesListTo("f:\\includes.txt");
+//        mStatementList.dump("f:\\stats.txt");
+//        mStatementList.dumpAll("f:\\all-stats.txt");
 #endif
     }
 }

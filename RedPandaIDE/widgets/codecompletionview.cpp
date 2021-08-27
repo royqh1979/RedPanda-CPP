@@ -803,6 +803,14 @@ void CodeCompletionView::hideEvent(QHideEvent *event)
     QWidget::hideEvent(event);
 }
 
+bool CodeCompletionView::event(QEvent *event)
+{
+    QWidget::event(event);
+    if (event->type() == QEvent::FontChange) {
+        mListView->setFont(font());
+    }
+}
+
 CodeCompletionListView::CodeCompletionListView(QWidget *parent) : QListView(parent)
 {
 
@@ -810,6 +818,11 @@ CodeCompletionListView::CodeCompletionListView(QWidget *parent) : QListView(pare
 
 void CodeCompletionListView::keyPressEvent(QKeyEvent *event)
 {
+    if (event->key() == Qt::Key_Up
+            || event->key() == Qt::Key_Down) {
+        QListView::keyPressEvent(event);
+        return;
+    }
     if (!mKeypressedCallback || !mKeypressedCallback(event)) {
         QListView::keyPressEvent(event);
     }
