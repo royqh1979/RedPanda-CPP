@@ -5,6 +5,7 @@
 #include "common.h"
 #include "widgets/searchresultview.h"
 #include "widgets/classbrowser.h"
+#include "widgets/elidedlabel.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -220,7 +221,6 @@ private:
     QLabel *mFileInfoStatus;
     QLabel *mFileEncodingStatus;
     QLabel *mFileModeStatus;
-    QLabel *mParsingInfoStatus;
     QMenu *mMenuEncoding;
     QMenu *mMenuEncodingList;
     QMenu *mMenuRecentFiles;

@@ -741,7 +741,7 @@ void Editor::onStatusChanged(SynStatusChanges changes)
             pMainWindow->checkSyntaxInBack(this);
     }
     mLineCount = lines()->count();
-//    if (not (scOpenFile in Changes)) and  (fText.Lines.Count <> fLineCount)
+    //    if (not (scOpenFile in Changes)) and  (fText.Lines.Count <> fLineCount)
 //      and (fText.Lines.Count <> 0) and ((fLineCount>0) or (fText.Lines.Count>1)) then begin
 //      if devCodeCompletion.Enabled
 //        and SameStr(mainForm.ClassBrowser.CurrentFile,FileName) // Don't reparse twice

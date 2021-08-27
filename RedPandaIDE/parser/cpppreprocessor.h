@@ -6,6 +6,19 @@
 #include "parserutils.h"
 
 #define MAX_DEFINE_EXPAND_DEPTH 20
+enum class DefineArgTokenType{
+    Symbol,
+    Identifier,
+    Space,
+    Sharp,
+    DSharp,
+    Other
+};
+struct DefineArgToken {
+    QString value;
+    DefineArgTokenType type;
+};
+using PDefineArgToken = std::shared_ptr<DefineArgToken>;
 
 struct ParsedFile {
     int index; // 0-based for programming convenience
@@ -91,7 +104,7 @@ private:
     void addDefinesInFile(const QString& fileName);
 
     void parseArgs(PDefine define);
-    QStringList tokenizeValue(const QString& value);
+    QList<PDefineArgToken> tokenizeValue(const QString& value);
 
     QStringList removeComments(const QStringList& text);
     /*

@@ -1620,6 +1620,7 @@ static int getWatchIndex(WatchVar* var, const QList<PWatchVar> list) {
             return i;
         }
     }
+    return -1;
 }
 
 QModelIndex WatchModel::parent(const QModelIndex &index) const

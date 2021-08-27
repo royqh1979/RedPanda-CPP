@@ -43,15 +43,12 @@ MainWindow::MainWindow(QWidget *parent)
     mFileInfoStatus=new QLabel();
     mFileEncodingStatus = new QLabel();
     mFileModeStatus = new QLabel();
-    mParsingInfoStatus = new QLabel();
     mFileInfoStatus->setStyleSheet("margin-left:10px; margin-right:10px");
     mFileEncodingStatus->setStyleSheet("margin-left:10px; margin-right:10px");
     mFileModeStatus->setStyleSheet("margin-left:10px; margin-right:10px");
-    mParsingInfoStatus->setStyleSheet("margin-left:10px; margin-right:10px");
-    ui->statusbar->addWidget(mFileInfoStatus);
-    ui->statusbar->addWidget(mFileEncodingStatus);
-    ui->statusbar->addWidget(mFileModeStatus);
-    ui->statusbar->addWidget(mParsingInfoStatus);
+    ui->statusbar->insertPermanentWidget(0,mFileModeStatus);
+    ui->statusbar->insertPermanentWidget(0,mFileEncodingStatus);
+    ui->statusbar->insertPermanentWidget(0,mFileInfoStatus);
     mEditorList = new EditorList(ui->EditorTabsLeft,
                                  ui->EditorTabsRight,
                                  ui->splitterEditorPanel,
@@ -463,7 +460,7 @@ void MainWindow::updateForStatusbarModeInfo()
 
 void MainWindow::updateStatusBarForParsing(const QString &s)
 {
-    mParsingInfoStatus->setText(s);
+    ui->statusbar->showMessage(s);
 }
 
 void MainWindow::openFiles(const QStringList &files)

@@ -114,7 +114,6 @@ int StatementModel::deleteMember(StatementMap &map, PStatement statement)
 {
     if (!statement)
         return 0;
-    //return map.remove(statement->command,statement);
     return map.remove(statement->command,statement);
 }
 

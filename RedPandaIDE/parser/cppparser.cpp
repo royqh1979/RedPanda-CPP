@@ -2929,15 +2929,13 @@ void CppParser::internalParse(const QString &fileName)
 //        mPreprocessor.setIncludePaths(mIncludePaths);
 //        mPreprocessor.setProjectIncludePaths(mProjectIncludePaths);
         mPreprocessor.setScanOptions(mParseGlobalHeaders, mParseLocalHeaders);
-        logToFile("preprocess + 1:","f:\\log.txt");
         mPreprocessor.preprocess(fileName, buffer);
-        StringsToFile(mPreprocessor.result(),"f:\\preprocess.txt");
+
 
         // Tokenize the preprocessed buffer file
         mTokenizer.tokenize(mPreprocessor.result());
         if (mTokenizer.tokenCount() == 0)
             return;
-        mTokenizer.dumpTokens("f:\\tokens.txt");
 
         // Process the token list
         mCurrentScope.clear();
@@ -2952,10 +2950,16 @@ void CppParser::internalParse(const QString &fileName)
             if (!handleStatement())
                 break;
         }
-//        mPreprocessor.dumpDefinesTo("f:\\defines.txt");
-//        mPreprocessor.dumpIncludesListTo("f:\\includes.txt");
+//#ifdef QT_DEBUG
+        StringsToFile(mPreprocessor.result(),"f:\\preprocess.txt");
+        mPreprocessor.dumpDefinesTo("f:\\defines.txt");
+        mPreprocessor.dumpIncludesListTo("f:\\includes.txt");
         mStatementList.dump("f:\\stats.txt");
-//        mStatementList.dumpAll("f:\\all-stats.txt");
+        mTokenizer.dumpTokens("f:\\tokens.txt");
+//#endif
+#ifdef QT_DEBUG
+        mStatementList.dumpAll("f:\\all-stats.txt");
+#endif
     }
 }
 
@@ -3120,8 +3124,6 @@ PStatement CppParser::doFindStatementInScope(const QString &name, const QString 
 
 void CppParser::internalInvalidateFile(const QString &fileName)
 {
-    logToFile(QString("invalidate %1 start:").arg(fileName),"f:\\log.txt");
-
     if (fileName.isEmpty())
         return;
 
@@ -3140,10 +3142,8 @@ void CppParser::internalInvalidateFile(const QString &fileName)
             mNamespaces.remove(key);
         }
     }
-    logToFile(QString("invalidate %1 1:").arg(fileName),"f:\\log.txt");
     // delete it from scannedfiles
     mPreprocessor.scannedFiles().remove(fileName);
-    logToFile(QString("invalidate %1 2:").arg(fileName),"f:\\log.txt");
 
     // remove its include files list
     PFileIncludes p = findFileIncludes(fileName, true);
@@ -3160,12 +3160,10 @@ void CppParser::internalInvalidateFile(const QString &fileName)
                 statement->hasDefinition = false;
             }
         }
-        logToFile(QString("invalidate %1 3:").arg(fileName),"f:\\log.txt");
 
         for (PStatement statement:p->declaredStatements) {
             mStatementList.deleteStatement(statement);
         }
-        logToFile(QString("invalidate %1 4:").arg(fileName),"f:\\log.txt");
 
         //p->declaredStatements.clear();
         //p->statements.clear();
@@ -3173,15 +3171,11 @@ void CppParser::internalInvalidateFile(const QString &fileName)
         //p->dependedFiles.clear();
         //p->dependingFiles.clear();
     }
-    logToFile(QString("invalidate %1 10:").arg(fileName),"f:\\log.txt");
-
-    logToFile(QString("invalidate %1 end:").arg(fileName),"f:\\log.txt");
-
 }
 
 void CppParser::internalInvalidateFiles(const QSet<QString> &files)
 {
-    for (QString file:files)
+    for (const QString& file:files)
         internalInvalidateFile(file);
 }
 

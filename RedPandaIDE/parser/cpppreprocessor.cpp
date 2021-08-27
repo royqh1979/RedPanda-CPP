@@ -215,7 +215,6 @@ void CppPreprocessor::dumpIncludesListTo(const QString &fileName) const
 
 QString CppPreprocessor::getNextPreprocessor()
 {
-    logToFile("next preprocessor:","f:\\log.txt");
     skipToPreprocessor(); // skip until # at start of line
     int preProcFrom = mIndex;
     if (preProcFrom >= mBuffer.count())
@@ -229,7 +228,7 @@ QString CppPreprocessor::getNextPreprocessor()
     // Assemble whole line, convert newlines to space
     QString result;
     for (int i=preProcFrom;i<=preProcTo;i++) {
-        if (mBuffer[i].endsWith('/')) {
+        if (mBuffer[i].endsWith('\\')) {
             result+=mBuffer[i].mid(0,mBuffer[i].size()-1)+' ';
         } else {
             result+=mBuffer[i]+' ';
@@ -736,67 +735,112 @@ void CppPreprocessor::parseArgs(PDefine define)
         define->argList[i]=define->argList[i].trimmed();
         define->argUsed.append(false);
     }
-    QStringList tokens = tokenizeValue(define->value);
+    QList<PDefineArgToken> tokens = tokenizeValue(define->value);
 
     QString formatStr = "";
-    QString lastToken = "##";
-    for (QString token: tokens) {
-        if (lastToken != "##" && token!="##") {
-            formatStr += ' ';
-        }
-        int index = define->argList.indexOf(token);
-        if (index>=0) {
-            define->argUsed[index] = true;
-            if (lastToken == "#") {
-                formatStr+= "\"%"+QString("%1").arg(index+1)+"\"";
-            } else {
-                formatStr+= "%"+QString("%1").arg(index+1);
+    DefineArgTokenType lastTokenType=DefineArgTokenType::Other;
+    int index;
+    for (PDefineArgToken token: tokens) {
+        switch(token->type) {
+        case DefineArgTokenType::Identifier:
+            index = define->argList.indexOf(token->value);
+            if (index>=0) {
+                define->argUsed[index] = true;
+                if (lastTokenType == DefineArgTokenType::Sharp) {
+                    formatStr+= "\"%"+QString("%1").arg(index+1)+"\"";
+                    break;
+                } else {
+                    formatStr+= "%"+QString("%1").arg(index+1);
+                    break;
+                }
             }
-        } else if (token == "%"){
-            formatStr+="%%";
-        } else if (token!="##" && token!="#"){
-            formatStr+=token;
+            formatStr += token->value;
+            break;
+        case DefineArgTokenType::DSharp:
+        case DefineArgTokenType::Sharp:
+            break;
+        case DefineArgTokenType::Space:
+        case DefineArgTokenType::Symbol:
+            formatStr+=token->value;
+            break;
         }
-        lastToken = token;
+        lastTokenType = token->type;
     }
     define->formatValue = formatStr;
 }
 
-QStringList CppPreprocessor::tokenizeValue(const QString &value)
+QList<PDefineArgToken> CppPreprocessor::tokenizeValue(const QString &value)
 {
     int i=0;
-    QString  token;
-    QStringList tokens;
+    PDefineArgToken  token = std::make_shared<DefineArgToken>();
+    token->type = DefineArgTokenType::Other;
+    QList<PDefineArgToken> tokens;
+    bool skipSpaces=false;
     while (i<value.length()) {
         QChar ch = value[i];
         if (isSpaceChar(ch)) {
-            if(!token.isEmpty())
+            if (token->type==DefineArgTokenType::Other) {
+                token->value = " ";
+                token->type = DefineArgTokenType::Space;
+            } else if (token->type!=DefineArgTokenType::Space) {
                 tokens.append(token);
-            token = "";
+                token = std::make_shared<DefineArgToken>();
+                token->value = " ";
+                token->type = DefineArgTokenType::Space;
+            }
             i++;
         } else if (ch=='#') {
-            if(!token.isEmpty())
+            if (token->type!=DefineArgTokenType::Other
+                    && token->type!=DefineArgTokenType::Space) {
                 tokens.append(token);
-            token = "";
+                token = std::make_shared<DefineArgToken>();
+            }
             if ((i+1<value.length()) && (value[i+1]=='#')) {
                 i+=2;
-                tokens.append("##");
+                token->value = "##";
+                token->type = DefineArgTokenType::DSharp;
             } else {
                 i++;
-                tokens.append("#");
+                token->value = "#";
+                token->type = DefineArgTokenType::Sharp;
             }
+            skipSpaces=true;
+            tokens.append(token);
+            token = std::make_shared<DefineArgToken>();
+            token->value = "";
+            token->type = DefineArgTokenType::Other;
         } else if (isWordChar(ch)) {
-            token+=ch;
+            if (token->type==DefineArgTokenType::Other) {
+                token->value = ch ;
+                token->type = DefineArgTokenType::Identifier;
+            } else if (token->type==DefineArgTokenType::Identifier) {
+                token->value+=ch;
+            } else if (skipSpaces && token->type==DefineArgTokenType::Space) {
+                //dont use space;
+                token->value = ch ;
+                token->type = DefineArgTokenType::Identifier;
+            } else {
+                tokens.append(token);
+                token = std::make_shared<DefineArgToken>();
+                token->value = ch ;
+                token->type = DefineArgTokenType::Identifier;
+            }
+            skipSpaces=false;
             i++;
         } else {
-            if(!token.isEmpty())
+            if (skipSpaces && token->type==DefineArgTokenType::Space) {
+                //dont use space;
+            } else if (token->type!=DefineArgTokenType::Other) {
                 tokens.append(token);
-            token = "";
-            tokens.append(ch);
+                token = std::make_shared<DefineArgToken>();
+            }
+            skipSpaces=false;
+            token->value = ch ;
+            token->type = DefineArgTokenType::Symbol;
             i++;
         }
     }
-    if(!token.isEmpty())
+    if(token->type!=DefineArgTokenType::Other)
         tokens.append(token);
     return tokens;
 }
@@ -901,7 +945,11 @@ QStringList CppPreprocessor::removeComments(const QStringList &text)
                         ch = line[pos];
                         s+=ch;
                     }
+                    break;
+                default:
+                    s+=ch;
                 }
+                break;
             default:
                 s+=ch;
             }
@@ -940,17 +988,13 @@ void CppPreprocessor::skipToEndOfPreprocessor()
 
 void CppPreprocessor::skipToPreprocessor()
 {
-    logToFile("skip:","f:\\log.txt");
 
 // Increment until a line begins with a #
     while ((mIndex < mBuffer.count()) && !mBuffer[mIndex].startsWith('#')) {
-        logToFile(QString("tt %1 tt").arg(mIndex),"f:\\log.txt");
-        logToFile(QString("tt %1 tt").arg(mBuffer[mIndex]),"f:\\log.txt");
-//        if (getCurrentBranch()) // if not skipping, expand current macros
-//            mResult.append(expandMacros(mBuffer[mIndex],1));
-//        else // If skipping due to a failed branch, clear line
-//            mResult.append("");
-        mResult.append(mBuffer[mIndex]);
+        if (getCurrentBranch()) // if not skipping, expand current macros
+            mResult.append(expandMacros(mBuffer[mIndex],1));
+        else // If skipping due to a failed branch, clear line
+            mResult.append("");
         mIndex++;
     }
 }
@@ -1163,11 +1207,8 @@ QString CppPreprocessor::expandFunction(PDefine define, QString args)
 {
     // Replace function by this string
     QString result = define->formatValue;
-    if (args.startsWith('(')) {
-        args.remove(0,1);
-    }
-    if (args.endsWith(')')) {
-        args.remove(args.length()-1,1);
+    if (args.startsWith('(') && args.endsWith(')')) {
+        args = args.mid(1,args.length()-2);
     }
 
     QStringList argValues = args.split(",");

@@ -77,7 +77,7 @@
           <widget class="QTabWidget" name="tabInfos">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
-             <horstretch>1</horstretch>
+             <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
@@ -85,7 +85,7 @@
             <enum>QTabWidget::West</enum>
            </property>
            <property name="currentIndex">
-            <number>2</number>
+            <number>1</number>
            </property>
            <property name="usesScrollButtons">
             <bool>true</bool>
@@ -168,7 +168,7 @@
           <widget class="QWidget" name="EditorPanel" native="true">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-             <horstretch>2</horstretch>
+             <horstretch>1</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
@@ -190,6 +190,12 @@
             </property>
             <item>
              <widget class="QSplitter" name="splitterEditorPanel">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
               </property>
@@ -197,6 +203,12 @@
                <number>1</number>
               </property>
               <widget class="QTabWidget" name="EditorTabsLeft">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Ignored" vsizetype="Expanding">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
                <property name="currentIndex">
                 <number>-1</number>
                </property>

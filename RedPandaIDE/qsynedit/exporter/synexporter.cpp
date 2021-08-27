@@ -378,4 +378,5 @@ QString SynExporter::lineBreak()
     case FileEndingType::Mac:
         return "\r";
     }
+    return "\n";
 }

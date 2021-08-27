@@ -69,6 +69,7 @@ SOURCES += \
     utils.cpp \
     widgets/coloredit.cpp \
     widgets/consolewidget.cpp \
+    widgets/elidedlabel.cpp \
     widgets/issuestable.cpp \
     widgets/qconsole.cpp \
     widgets/qpatchedcombobox.cpp \
@@ -134,6 +135,7 @@ HEADERS += \
     common.h \
     widgets/coloredit.h \
     widgets/consolewidget.h \
+    widgets/elidedlabel.h \
     widgets/issuestable.h \
     widgets/qconsole.h \
     widgets/qpatchedcombobox.h \

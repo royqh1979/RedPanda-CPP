@@ -15,6 +15,7 @@
 #include <QGuiApplication>
 #include <QInputMethodEvent>
 #include <QPaintEvent>
+#include <QResizeEvent>
 #include <QStyleHints>
 
 SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
@@ -1291,7 +1292,7 @@ void SynEdit::doSelectAll()
     }
     setCaretAndSelection(caretXY(), BufferCoord{1, 1}, LastPt);
     // Selection should have changed...
-    statusChanged(SynStatusChange::scSelection);
+    emit statusChanged(SynStatusChange::scSelection);
 }
 
 void SynEdit::doComment()
@@ -2494,7 +2495,7 @@ void SynEdit::ensureCursorPosVisibleEx(bool ForceToMiddle)
     }
 }
 
-void SynEdit::scrollWindow(int dx, int dy)
+void SynEdit::scrollWindow(int , int )
 {
 //    int nx = horizontalScrollBar()->value()+dx;
 //    int ny = verticalScrollBar()->value()+dy;
@@ -3886,6 +3887,7 @@ QString SynEdit::selText()
         }
         }
     }
+    return "";
 }
 
 QString SynEdit::lineBreak()
@@ -4213,7 +4215,6 @@ int SynEdit::searchReplace(const QString &sSearch, const QString &sReplace, SynS
     searchEngine->setOptions(sOptions);
     searchEngine->setPattern(sSearch);
     // search while the current search position is inside of the search range
-    int nReplaceLen = 0;
     bool dobatchReplace = false;
     doOnPaintTransient(SynTransientType::ttBefore);
     {
@@ -5162,7 +5163,7 @@ void SynEdit::paintEvent(QPaintEvent *event)
     paintCaret(painter, rcCaret);
 }
 
-void SynEdit::resizeEvent(QResizeEvent *)
+void SynEdit::resizeEvent(QResizeEvent *e)
 {
     //resize the cache image
     std::shared_ptr<QImage> image = std::make_shared<QImage>(clientWidth(),clientHeight(),
@@ -5402,11 +5403,11 @@ void SynEdit::wheelEvent(QWheelEvent *event)
 
 bool SynEdit::viewportEvent(QEvent * event)
 {
-    switch (event->type()) {
-        case QEvent::Resize:
-            sizeOrFontChanged(false);
-        break;
-    }
+//    switch (event->type()) {
+//        case QEvent::Resize:
+//            sizeOrFontChanged(false);
+//        break;
+//    }
     return QAbstractScrollArea::viewportEvent(event);
 }
 
