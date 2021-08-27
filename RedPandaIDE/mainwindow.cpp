@@ -43,12 +43,15 @@ MainWindow::MainWindow(QWidget *parent)
     mFileInfoStatus=new QLabel();
     mFileEncodingStatus = new QLabel();
     mFileModeStatus = new QLabel();
+    mParsingInfoStatus = new QLabel();
     mFileInfoStatus->setStyleSheet("margin-left:10px; margin-right:10px");
     mFileEncodingStatus->setStyleSheet("margin-left:10px; margin-right:10px");
     mFileModeStatus->setStyleSheet("margin-left:10px; margin-right:10px");
+    mParsingInfoStatus->setStyleSheet("margin-left:10px; margin-right:10px");
     ui->statusbar->addWidget(mFileInfoStatus);
     ui->statusbar->addWidget(mFileEncodingStatus);
     ui->statusbar->addWidget(mFileModeStatus);
+    ui->statusbar->addWidget(mParsingInfoStatus);
     mEditorList = new EditorList(ui->EditorTabsLeft,
                                  ui->EditorTabsRight,
                                  ui->splitterEditorPanel,
@@ -456,6 +459,11 @@ void MainWindow::updateForStatusbarModeInfo()
     } else {
         mFileModeStatus->setText("");
     }
+}
+
+void MainWindow::updateStatusBarForParsing(const QString &s)
+{
+    mParsingInfoStatus->setText(s);
 }
 
 void MainWindow::openFiles(const QStringList &files)
@@ -1567,6 +1575,50 @@ void MainWindow::onDebugEvaluateInput()
     QString s=ui->cbEvaluate->currentText().trimmed();
     if (!s.isEmpty()) {
         mDebugger->sendCommand("print",s,false);
+    }
+}
+
+void MainWindow::onParserProgress(const QString &fileName, int total, int current)
+{
+    // Mention every 5% progress
+    int showStep = total / 20;
+
+    // For Total = 1, avoid division by zero
+    if (showStep == 0)
+        showStep = 1;
+
+    // Only show if needed (it's a very slow operation)
+    if (current ==1 || current % showStep==0) {
+        updateStatusBarForParsing(tr("Parsing file %1 of %2: \"%3\"")
+                                  .arg(current).arg(total).arg(fileName));
+    }
+}
+
+void MainWindow::onStartParsing()
+{
+    mParserTimer.restart();
+}
+
+void MainWindow::onEndParsing(int total, int)
+{
+    double parseTime = mParserTimer.elapsed() / 1000;
+    double parsingFrequency;
+
+
+    if (total > 1) {
+        if (parseTime>0) {
+            parsingFrequency = total / parseTime;
+        } else {
+            parsingFrequency = 999;
+        }
+        updateStatusBarForParsing(tr("Done parsing %1 files in %2 seconds")
+                                  .arg(total).arg(parseTime)
+                                  + " "
+                                  + tr("(%1 files per second)")
+                                  .arg(parsingFrequency));
+    } else {
+        updateStatusBarForParsing(tr("Done parsing %1 files in %2 seconds")
+                                  .arg(total).arg(parseTime));
     }
 }
 

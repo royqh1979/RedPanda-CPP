@@ -3,6 +3,7 @@
 
 #include <QKeyEvent>
 #include <QVBoxLayout>
+#include <QDebug>
 
 CodeCompletionView::CodeCompletionView(QWidget *parent) :
     QWidget(parent)
@@ -17,6 +18,8 @@ CodeCompletionView::CodeCompletionView(QWidget *parent) :
 
     mShowKeywords=true;
     mUseCppKeyword=true;
+    mRecordUsage = false;
+    mSortByScope = true;
 
     mOnlyGlobals = false;
     mShowCount = 1000;
@@ -210,16 +213,16 @@ static bool sortByScopeComparator(PStatement statement1,PStatement statement2){
     } else if (statement2->kind == StatementKind::skKeyword) {
         return false;
         // Show stuff from local headers first
-    } else if (statement1->inSystemHeader && ! statement2->inSystemHeader) {
+    } else if (statement1->inSystemHeader && (!statement2->inSystemHeader)) {
         return true;
-    } else if (!statement1->inSystemHeader && statement2->inSystemHeader) {
+    } else if ((!statement1->inSystemHeader) && statement2->inSystemHeader) {
         return false;
         // Show local statements first
     } else if (statement1->scope != StatementScope::ssGlobal
-               && statement1->scope == StatementScope::ssGlobal ) {
+               && statement2->scope == StatementScope::ssGlobal ) {
         return true;
     } else if (statement1->scope == StatementScope::ssGlobal
-               && statement1->scope != StatementScope::ssGlobal ) {
+               && statement2->scope != StatementScope::ssGlobal ) {
         return false;
         // otherwise, sort by name
     } else
@@ -280,16 +283,15 @@ static bool sortByScopeWithUsageComparator(PStatement statement1,PStatement stat
         return false;
         // Show local statements first
     } else if (statement1->scope != StatementScope::ssGlobal
-               && statement1->scope == StatementScope::ssGlobal ) {
+               && statement2->scope == StatementScope::ssGlobal ) {
         return true;
     } else if (statement1->scope == StatementScope::ssGlobal
-               && statement1->scope != StatementScope::ssGlobal ) {
+               && statement2->scope != StatementScope::ssGlobal ) {
         return false;
         // otherwise, sort by name
     } else
         return statement1->command < statement2->command;
 }
-
 
 void CodeCompletionView::filterList(const QString &member)
 {
@@ -403,8 +405,10 @@ void CodeCompletionView::getCompletionFor(const QString &fileName, const QString
                 for (QString keyword:CppDirectives) {
                     PStatement statement = std::make_shared<Statement>();
                     statement->command = keyword;
-                    statement->kind = StatementKind::skPreprocessor;
+                    statement->kind = StatementKind::skKeyword;
                     statement->fullName = keyword;
+                    statement->usageCount = 0;
+                    statement->freqTop = 0;
                     mFullCompletionStatementList.append(statement);
                 }
             }
@@ -419,6 +423,8 @@ void CodeCompletionView::getCompletionFor(const QString &fileName, const QString
                     statement->command = keyword;
                     statement->kind = StatementKind::skKeyword;
                     statement->fullName = keyword;
+                    statement->usageCount = 0;
+                    statement->freqTop = 0;
                     mFullCompletionStatementList.append(statement);
                 }
             }
@@ -437,6 +443,8 @@ void CodeCompletionView::getCompletionFor(const QString &fileName, const QString
                     statement->command = codeIn->prefix;
                     statement->kind = StatementKind::skUserCodeIn;
                     statement->fullName = codeIn->prefix;
+                    statement->usageCount = 0;
+                    statement->freqTop = 0;
                     mFullCompletionStatementList.append(statement);
                 }
             }
@@ -449,6 +457,8 @@ void CodeCompletionView::getCompletionFor(const QString &fileName, const QString
                         statement->command = keyword;
                         statement->kind = StatementKind::skKeyword;
                         statement->fullName = keyword;
+                        statement->usageCount = 0;
+                        statement->freqTop = 0;
                         mFullCompletionStatementList.append(statement);
                     }
                 } else {
@@ -457,6 +467,8 @@ void CodeCompletionView::getCompletionFor(const QString &fileName, const QString
                         statement->command = keyword;
                         statement->kind = StatementKind::skKeyword;
                         statement->fullName = keyword;
+                        statement->usageCount = 0;
+                        statement->freqTop = 0;
                         mFullCompletionStatementList.append(statement);
                     }
                 }
@@ -805,10 +817,11 @@ void CodeCompletionView::hideEvent(QHideEvent *event)
 
 bool CodeCompletionView::event(QEvent *event)
 {
-    QWidget::event(event);
+    bool result = QWidget::event(event);
     if (event->type() == QEvent::FontChange) {
-        mListView->setFont(font());
+          mListView->setFont(font());
     }
+    return result;
 }
 
 CodeCompletionListView::CodeCompletionListView(QWidget *parent) : QListView(parent)

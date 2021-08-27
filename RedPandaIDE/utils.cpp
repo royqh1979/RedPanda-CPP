@@ -17,6 +17,7 @@
 #include <QDateTime>
 #include "parser/cppparser.h"
 #include "settings.h"
+#include "mainwindow.h"
 
 const QByteArray GuessTextEncoding(const QByteArray& text){
     bool allAscii;
@@ -540,6 +541,30 @@ void resetCppParser(std::shared_ptr<CppParser> parser)
         parser->addHardDefineByLine("#define __TIME__  1");
     }
     parser->parseHardDefines();
+    pMainWindow->disconnect(parser.get(),
+                            &CppParser::onStartParsing,
+                            pMainWindow,
+                            &MainWindow::onStartParsing);
+    pMainWindow->disconnect(parser.get(),
+                            &CppParser::onProgress,
+                            pMainWindow,
+                            &MainWindow::onParserProgress);
+    pMainWindow->disconnect(parser.get(),
+                            &CppParser::onEndParsing,
+                            pMainWindow,
+                            &MainWindow::onEndParsing);
+    pMainWindow->connect(parser.get(),
+                            &CppParser::onStartParsing,
+                            pMainWindow,
+                            &MainWindow::onStartParsing);
+    pMainWindow->connect(parser.get(),
+                            &CppParser::onProgress,
+                            pMainWindow,
+                            &MainWindow::onParserProgress);
+    pMainWindow->connect(parser.get(),
+                            &CppParser::onEndParsing,
+                            pMainWindow,
+                            &MainWindow::onEndParsing);
 }
 
 bool findComplement(const QString &s, const QChar &fromToken, const QChar &toToken, int &curPos, int increment)
@@ -559,4 +584,19 @@ bool findComplement(const QString &s, const QChar &fromToken, const QChar &toTok
     }
     curPos = curPosBackup;
     return false;
+}
+
+void logToFile(const QString &s, const QString &filename, bool append)
+{
+    QFile file(filename);
+    QFile::OpenMode mode = QFile::WriteOnly;
+    if (append) {
+        mode |= QFile::Append;
+    } else {
+        mode |= QFile::Truncate;
+    }
+    if (file.open(mode)) {
+        QTextStream ts(&file);
+        ts<<s<<Qt::endl;
+    }
 }

@@ -72,6 +72,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
         mParentPageControl->addTab(this,QString());
         updateCaption();
     }
+
     PSynHighlighter highlighter;
     if (!isNew) {
         loadFile();
@@ -96,7 +97,6 @@ Editor::Editor(QWidget *parent, const QString& filename,
     } else {
         initParser();
     }
-
     mCompletionPopup = std::make_shared<CodeCompletionView>();
 
     applySettings();

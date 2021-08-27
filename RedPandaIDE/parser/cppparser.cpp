@@ -26,6 +26,10 @@ CppParser::CppParser(QObject *parent) : QObject(parent)
     mParseLocalHeaders = true;
     mParseGlobalHeaders = true;
     mLockCount = 0;
+    mIsSystemHeader = false;
+    mIsHeader = false;
+    mIsProjectFile = false;
+
     //mNamespaces;
     //mBlockBeginSkips;
     //mBlockEndSkips;
@@ -637,7 +641,7 @@ void CppParser::parseFile(const QString &fileName, bool inProject, bool onlyIfNo
         for (QString file:files) {
             if (isHfile(file)) {
                 mFilesScannedCount++;
-                emit onProgress(mCurrentFile,mFilesToScanCount,mFilesScannedCount);
+                emit onProgress(file,mFilesToScanCount,mFilesScannedCount);
                 if (!mPreprocessor.scannedFiles().contains(file)) {
                     internalParse(file);
                 }
@@ -647,7 +651,7 @@ void CppParser::parseFile(const QString &fileName, bool inProject, bool onlyIfNo
         for (QString file:files) {
             if (isCfile(file)) {
                 mFilesScannedCount++;
-                emit onProgress(mCurrentFile,mFilesToScanCount,mFilesScannedCount);
+                emit onProgress(file,mFilesToScanCount,mFilesScannedCount);
                 if (!mPreprocessor.scannedFiles().contains(file)) {
                     internalParse(file);
                 }
@@ -710,10 +714,13 @@ void CppParser::parseHardDefines()
     QMutexLocker locker(&mMutex);
     if (mParsing)
         return;
+    int oldIsSystemHeader = mIsSystemHeader;
+    mIsSystemHeader = true;
     mParsing=true;
     {
-        auto action = finally([this]{
+        auto action = finally([&,this]{
             mParsing = false;
+            mIsSystemHeader=oldIsSystemHeader;
         });
         for (PDefine define:mPreprocessor.hardDefines()) {
             QString hintText = "#define";
@@ -773,6 +780,9 @@ void CppParser::reset()
         mInlineNamespaceEndSkips.clear();
         mParseLocalHeaders = true;
         mParseGlobalHeaders = true;
+        mIsSystemHeader = false;
+        mIsHeader = false;
+        mIsProjectFile = false;
 
         mCurrentScope.clear();
         mCurrentClassScope.clear();
@@ -2242,7 +2252,7 @@ void CppParser::handlePreprocessor()
             if (line == 1) {
                 mFilesScannedCount++;
                 mFilesToScanCount++;
-                onProgress(mCurrentFile,mFilesToScanCount,mFilesScannedCount);
+                emit onProgress(mCurrentFile,mFilesToScanCount,mFilesScannedCount);
             }
         }
     } else if (mTokenizer[mIndex]->text.startsWith("#define ")) {
@@ -2919,19 +2929,15 @@ void CppParser::internalParse(const QString &fileName)
 //        mPreprocessor.setIncludePaths(mIncludePaths);
 //        mPreprocessor.setProjectIncludePaths(mProjectIncludePaths);
         mPreprocessor.setScanOptions(mParseGlobalHeaders, mParseLocalHeaders);
+        logToFile("preprocess + 1:","f:\\log.txt");
         mPreprocessor.preprocess(fileName, buffer);
+        StringsToFile(mPreprocessor.result(),"f:\\preprocess.txt");
 
-//    with TStringList.Create do try
-//      Text:=fPreprocessor.Result;
-//      SaveToFile('f:\\Preprocess.txt');
-//    finally
-//      Free;
-//    end;
-        //fPreprocessor.DumpIncludesListTo('f:\\includes.txt');
         // Tokenize the preprocessed buffer file
         mTokenizer.tokenize(mPreprocessor.result());
         if (mTokenizer.tokenCount() == 0)
             return;
+        mTokenizer.dumpTokens("f:\\tokens.txt");
 
         // Process the token list
         mCurrentScope.clear();
@@ -2946,14 +2952,10 @@ void CppParser::internalParse(const QString &fileName)
             if (!handleStatement())
                 break;
         }
-#ifdef QT_DEBUG
-//        StringsToFile(mPreprocessor.result(),"f:\\preprocess.txt");
-//        mTokenizer.dumpTokens("f:\\tokens.txt");
 //        mPreprocessor.dumpDefinesTo("f:\\defines.txt");
 //        mPreprocessor.dumpIncludesListTo("f:\\includes.txt");
-//        mStatementList.dump("f:\\stats.txt");
+        mStatementList.dump("f:\\stats.txt");
 //        mStatementList.dumpAll("f:\\all-stats.txt");
-#endif
     }
 }
 
@@ -3118,6 +3120,8 @@ PStatement CppParser::doFindStatementInScope(const QString &name, const QString 
 
 void CppParser::internalInvalidateFile(const QString &fileName)
 {
+    logToFile(QString("invalidate %1 start:").arg(fileName),"f:\\log.txt");
+
     if (fileName.isEmpty())
         return;
 
@@ -3136,8 +3140,10 @@ void CppParser::internalInvalidateFile(const QString &fileName)
             mNamespaces.remove(key);
         }
     }
+    logToFile(QString("invalidate %1 1:").arg(fileName),"f:\\log.txt");
     // delete it from scannedfiles
     mPreprocessor.scannedFiles().remove(fileName);
+    logToFile(QString("invalidate %1 2:").arg(fileName),"f:\\log.txt");
 
     // remove its include files list
     PFileIncludes p = findFileIncludes(fileName, true);
@@ -3154,10 +3160,12 @@ void CppParser::internalInvalidateFile(const QString &fileName)
                 statement->hasDefinition = false;
             }
         }
+        logToFile(QString("invalidate %1 3:").arg(fileName),"f:\\log.txt");
 
         for (PStatement statement:p->declaredStatements) {
             mStatementList.deleteStatement(statement);
         }
+        logToFile(QString("invalidate %1 4:").arg(fileName),"f:\\log.txt");
 
         //p->declaredStatements.clear();
         //p->statements.clear();
@@ -3165,6 +3173,10 @@ void CppParser::internalInvalidateFile(const QString &fileName)
         //p->dependedFiles.clear();
         //p->dependingFiles.clear();
     }
+    logToFile(QString("invalidate %1 10:").arg(fileName),"f:\\log.txt");
+
+    logToFile(QString("invalidate %1 end:").arg(fileName),"f:\\log.txt");
+
 }
 
 void CppParser::internalInvalidateFiles(const QSet<QString> &files)

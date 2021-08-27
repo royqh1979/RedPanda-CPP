@@ -110,6 +110,7 @@ bool findComplement(const QString& s,
                        const QChar& toToken,
                        int& curPos,
                        int increment);
+void logToFile(const QString& s, const QString& filename, bool append=true);
 
 class CppParser;
 void resetCppParser(std::shared_ptr<CppParser> parser);

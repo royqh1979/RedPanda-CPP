@@ -50,6 +50,7 @@ public:
     void updateForEncodingInfo();
     void updateStatusbarForLineCol();
     void updateForStatusbarModeInfo();
+    void updateStatusBarForParsing(const QString& s);
     void updateEditorSettings();
     void updateEditorActions();
     void updateCompileActions();
@@ -204,6 +205,9 @@ public slots:
     void cleanUpCPUDialog();
     void onDebugCommandInput(const QString& command);
     void onDebugEvaluateInput();
+    void onParserProgress(const QString& fileName, int total, int current);
+    void onStartParsing();
+    void onEndParsing(int total, int updateView);
 
 private:
     void setupActions();
@@ -216,6 +220,7 @@ private:
     QLabel *mFileInfoStatus;
     QLabel *mFileEncodingStatus;
     QLabel *mFileModeStatus;
+    QLabel *mParsingInfoStatus;
     QMenu *mMenuEncoding;
     QMenu *mMenuEncodingList;
     QMenu *mMenuRecentFiles;
@@ -226,6 +231,7 @@ private:
     SearchDialog *mSearchDialog;
     QList<QAction *> mRecentFileActions;
     bool mQuitting;
+    QElapsedTimer mParserTimer;
 
     SearchResultModel mSearchResultModel;
     PSearchResultListModel mSearchResultListModel;

@@ -811,7 +811,7 @@ void Settings::Editor::doLoad()
     mKeepCaretX = boolValue("keep_caret_x",true);
     mCaretForInsert = static_cast<SynEditCaretType>( intValue("caret_for_insert",static_cast<int>(SynEditCaretType::ctVerticalLine)));
     mCaretForOverwrite = static_cast<SynEditCaretType>( intValue("caret_for_overwrite",static_cast<int>(SynEditCaretType::ctBlock)));
-    mCaretColor = colorValue("caret_color",QColorConstants::Svg::black);
+    mCaretColor = colorValue("caret_color",QColorConstants::Svg::yellow);
 
     //scroll
     mAutoHideScrollbar = boolValue("auto_hide_scroll_bar", false);

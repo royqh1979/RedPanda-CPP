@@ -3,6 +3,7 @@
 
 #include <QFile>
 #include <QTextCodec>
+#include <QDebug>
 
 CppPreprocessor::CppPreprocessor()
 {
@@ -169,9 +170,10 @@ void CppPreprocessor::dumpDefinesTo(const QString &fileName) const
     if (file.open(QIODevice::WriteOnly|QIODevice::Truncate)) {
         QTextStream stream(&file);
         for (PDefine define:mDefines) {
-            stream<<QString("%1 %2 %3 %4\n").arg(define->name)
+            stream<<QString("%1 %2 %3 %4 %5\n").arg(define->name)
                        .arg(define->args).arg(define->value)
-                       .arg(define->hardCoded)<<Qt::endl;
+                       .arg(define->hardCoded).arg(define->formatValue)
+                 <<Qt::endl;
         }
     }
 }
@@ -213,7 +215,7 @@ void CppPreprocessor::dumpIncludesListTo(const QString &fileName) const
 
 QString CppPreprocessor::getNextPreprocessor()
 {
-
+    logToFile("next preprocessor:","f:\\log.txt");
     skipToPreprocessor(); // skip until # at start of line
     int preProcFrom = mIndex;
     if (preProcFrom >= mBuffer.count())
@@ -481,7 +483,7 @@ QString CppPreprocessor::removeGCCAttributes(const QString &line)
     QString newLine = "";
     QString word = "";
     int lenLine = line.length();
-    int i=1;
+    int i=0;
     while(i< lenLine) {
         if (isWordChar(line[i])) {
             word += line[i];
@@ -503,29 +505,28 @@ QString CppPreprocessor::removeGCCAttributes(const QString &line)
 
 void CppPreprocessor::removeGCCAttribute(const QString &line, QString &newLine, int &i, const QString &word)
 {
-    //no need it now
-//    int lenLine = line.length();
-//    int level = 0;
-//    if (word=="__attribute__") {
-//        while ( (i<lenLine) && isSpaceChar(line[i]))
-//            i++;
-//        if ((i<lenLine) && (line[i]=='(')) {
-//            level=0;
-//            while (i<lenLine) {
-//                switch(line[i].unicode()) {
-//                case '(': level++;
-//                    break;
-//                case ')': level--;
-//                    break;
-//                }
-//                i++;
-//                if (level==0)
-//                    break;
-//            }
-//        }
-//    } else {
-//        newLine += word;
-//    }
+    int lenLine = line.length();
+    int level = 0;
+    if (word=="__attribute__") {
+        while ( (i<lenLine) && isSpaceChar(line[i]))
+            i++;
+        if ((i<lenLine) && (line[i]=='(')) {
+            level=0;
+            while (i<lenLine) {
+                switch(line[i].unicode()) {
+                case '(': level++;
+                    break;
+                case ')': level--;
+                    break;
+                }
+                i++;
+                if (level==0)
+                    break;
+            }
+        }
+    } else {
+        newLine += word;
+    }
 }
 
 PParsedFile CppPreprocessor::getInclude(int index)
@@ -733,6 +734,7 @@ void CppPreprocessor::parseArgs(PDefine define)
     define->argList = args.split(',');
     for (int i=0;i<define->argList.size();i++) {
         define->argList[i]=define->argList[i].trimmed();
+        define->argUsed.append(false);
     }
     QStringList tokens = tokenizeValue(define->value);
 
@@ -744,6 +746,7 @@ void CppPreprocessor::parseArgs(PDefine define)
         }
         int index = define->argList.indexOf(token);
         if (index>=0) {
+            define->argUsed[index] = true;
             if (lastToken == "#") {
                 formatStr+= "\"%"+QString("%1").arg(index+1)+"\"";
             } else {
@@ -751,6 +754,8 @@ void CppPreprocessor::parseArgs(PDefine define)
             }
         } else if (token == "%"){
             formatStr+="%%";
+        } else if (token!="##" && token!="#"){
+            formatStr+=token;
         }
         lastToken = token;
     }
@@ -935,12 +940,17 @@ void CppPreprocessor::skipToEndOfPreprocessor()
 
 void CppPreprocessor::skipToPreprocessor()
 {
+    logToFile("skip:","f:\\log.txt");
+
 // Increment until a line begins with a #
     while ((mIndex < mBuffer.count()) && !mBuffer[mIndex].startsWith('#')) {
-        if (getCurrentBranch()) // if not skipping, expand current macros
-            mResult.append(expandMacros(mBuffer[mIndex],1));
-        else // If skipping due to a failed branch, clear line
-            mResult.append("");
+        logToFile(QString("tt %1 tt").arg(mIndex),"f:\\log.txt");
+        logToFile(QString("tt %1 tt").arg(mBuffer[mIndex]),"f:\\log.txt");
+//        if (getCurrentBranch()) // if not skipping, expand current macros
+//            mResult.append(expandMacros(mBuffer[mIndex],1));
+//        else // If skipping due to a failed branch, clear line
+//            mResult.append("");
+        mResult.append(mBuffer[mIndex]);
         mIndex++;
     }
 }
@@ -1048,6 +1058,7 @@ QString CppPreprocessor::expandDefines(QString line)
             // Get identifier name (numbers are allowed, but not at the start
             while ((tail < line.length()) && (isMacroIdentChar(line[tail]) || isDigit(line[head])))
                 tail++;
+//            qDebug()<<"1 "<<head<<tail<<line;
             QString name = line.mid(head,tail-head);
             int nameStart = head;
             int nameEnd = tail;
@@ -1077,6 +1088,7 @@ QString CppPreprocessor::expandDefines(QString line)
                     while ((tail < line.length()) && (isMacroIdentChar(line[tail]) || isDigit(line[tail])))
                         tail++;
                 }
+//                qDebug()<<"2 "<<defineStart<<tail<<line;
                 name = line.mid(defineStart, tail - defineStart);
                 PDefine define = getDefine(name);
                 QString insertValue;
@@ -1104,6 +1116,7 @@ QString CppPreprocessor::expandDefines(QString line)
                     if ((tail < line.length()) && (line[tail] == '(')) {
                         head=tail;
                         if (skipBraces(line, tail)) {
+//                            qDebug()<<"3 "<<line<<head<<tail;
                             QString args = line.mid(head,tail-head+1);
                             insertValue = expandFunction(define,args);
                             nameEnd = tail+1;
@@ -1158,8 +1171,14 @@ QString CppPreprocessor::expandFunction(PDefine define, QString args)
     }
 
     QStringList argValues = args.split(",");
-    for (QString argValue:argValues) {
-        result=result.arg(argValue.trimmed());
+    if (argValues.length() == define->argList.length()
+            && argValues.length()>0) {
+        for (int i=0;i<argValues.length();i++) {
+            if (define->argUsed[i]) {
+                QString argValue = argValues[i];
+                result=result.arg(argValue.trimmed());
+            }
+        }
     }
     result.replace("%%","%");
 

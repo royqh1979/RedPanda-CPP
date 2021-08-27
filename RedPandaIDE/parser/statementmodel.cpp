@@ -114,7 +114,8 @@ int StatementModel::deleteMember(StatementMap &map, PStatement statement)
 {
     if (!statement)
         return 0;
-    map.remove(statement->command,statement);
+    //return map.remove(statement->command,statement);
+    return map.remove(statement->command,statement);
 }
 
 void StatementModel::dumpStatementMap(StatementMap &map, QTextStream &out, int level)
