@@ -2041,6 +2041,8 @@ void CppParser::handleNamespace()
         //wrong namespace define, stop handling
         return;
     QString command = mTokenizer[mIndex]->text;
+    if (command.startsWith("__")) // hack for inline namespaces
+      isInline = true;
     mIndex++;
     if (mIndex>=mTokenizer.tokenCount())
         return;
@@ -2834,7 +2836,7 @@ void CppParser::handleVar()
             while ((mIndex < mTokenizer.tokenCount())
                     && !(
                         mTokenizer[mIndex]->text.front() == ','
-                        || isblockChar(';')
+                        || isblockChar(mTokenizer[mIndex]->text.front())
                         ))
                 mIndex++;
         }
@@ -2861,22 +2863,24 @@ void CppParser::handleVar()
                 }
 
                 // Add a statement for every struct we are in
-                addChildStatement(
-                  getCurrentScope(),
-                  mCurrentFile,
-                  "", // do not override hint
-                  lastType,
-                  cmd,
-                  args,
-                  "",
-                  mTokenizer[mIndex]->line,
-                  StatementKind::skVariable,
-                  getScope(),
-                  mClassScope,
-                  //True,
-                  !isExtern,
-                  isStatic); // TODO: not supported to pass list
-                varAdded = true;
+                if (!lastType.isEmpty()) {
+                    addChildStatement(
+                      getCurrentScope(),
+                      mCurrentFile,
+                      "", // do not override hint
+                      lastType,
+                      cmd,
+                      args,
+                      "",
+                      mTokenizer[mIndex]->line,
+                      StatementKind::skVariable,
+                      getScope(),
+                      mClassScope,
+                      //True,
+                      !isExtern,
+                      isStatic); // TODO: not supported to pass list
+                    varAdded = true;
+                }
             }
 
             // Step over the variable name
