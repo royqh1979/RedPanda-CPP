@@ -22,6 +22,8 @@ private:
     KeyPressedCallback mKeypressedCallback;
 };
 
+using ColorCallback = std::function<QColor (PStatement)>;
+
 class CodeCompletionListModel : public QAbstractListModel {
     Q_OBJECT
 public:
@@ -29,9 +31,12 @@ public:
     int rowCount(const QModelIndex &parent) const override;
     QVariant data(const QModelIndex &index, int role) const override;
     void notifyUpdated();
+    const ColorCallback &colorCallback() const;
+    void setColorCallback(const ColorCallback &newColorCallback);
+
 private:
     const StatementList* mStatements;
-
+    ColorCallback mColorCallback;
 };
 
 class CodeCompletionView : public QWidget
@@ -77,6 +82,7 @@ public:
 
     const PStatement &currentStatement() const;
     void setCurrentStatement(const PStatement &newCurrentStatement);
+    QHash<StatementKind, QColor>& colors();
 
 private:
     void addChildren(PStatement scopeStatement, const QString& fileName,
@@ -98,6 +104,7 @@ private:
     QString mPhrase;
     QHash<QString,int> mSymbolUsage;
     QRecursiveMutex mMutex;
+    QHash<StatementKind, QColor> mColors;
 
     PCppParser mParser;
     PStatement mCurrentStatement;

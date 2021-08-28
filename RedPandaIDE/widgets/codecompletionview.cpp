@@ -4,6 +4,7 @@
 #include <QKeyEvent>
 #include <QVBoxLayout>
 #include <QDebug>
+#include <QApplication>
 
 CodeCompletionView::CodeCompletionView(QWidget *parent) :
     QWidget(parent)
@@ -11,6 +12,15 @@ CodeCompletionView::CodeCompletionView(QWidget *parent) :
     setWindowFlags(Qt::Popup);
     mListView = new CodeCompletionListView(this);
     mModel=new CodeCompletionListModel(&mCompletionStatementList);
+    mModel->setColorCallback([this](PStatement statement)->QColor{
+        StatementKind kind;
+        if (mParser) {
+            kind = mParser->getKindOfStatement(statement);
+        } else {
+            kind = statement->kind;
+        }
+        return mColors.value(kind,palette().color(QPalette::Text));
+    });
     mListView->setModel(mModel);
     setLayout(new QVBoxLayout());
     layout()->addWidget(mListView);
@@ -213,9 +223,9 @@ static bool sortByScopeComparator(PStatement statement1,PStatement statement2){
     } else if (statement2->kind == StatementKind::skKeyword) {
         return false;
         // Show stuff from local headers first
-    } else if (statement1->inSystemHeader && (!statement2->inSystemHeader)) {
+    } else if (statement1->inSystemHeader && !(statement2->inSystemHeader)) {
         return true;
-    } else if ((!statement1->inSystemHeader) && statement2->inSystemHeader) {
+    } else if (!(statement1->inSystemHeader) && statement2->inSystemHeader) {
         return false;
         // Show local statements first
     } else if (statement1->scope != StatementScope::ssGlobal
@@ -277,9 +287,9 @@ static bool sortByScopeWithUsageComparator(PStatement statement1,PStatement stat
     } else if (statement2->kind == StatementKind::skKeyword) {
         return false;
         // Show stuff from local headers first
-    } else if (statement1->inSystemHeader && ! statement2->inSystemHeader) {
+    } else if (statement1->inSystemHeader && ! (statement2->inSystemHeader)) {
         return true;
-    } else if (!statement1->inSystemHeader && statement2->inSystemHeader) {
+    } else if (!(statement1->inSystemHeader) && statement2->inSystemHeader) {
         return false;
         // Show local statements first
     } else if (statement1->scope != StatementScope::ssGlobal
@@ -713,6 +723,11 @@ void CodeCompletionView::setCurrentStatement(const PStatement &newCurrentStateme
     mCurrentStatement = newCurrentStatement;
 }
 
+QHash<StatementKind, QColor> &CodeCompletionView::colors()
+{
+    return mColors;
+}
+
 bool CodeCompletionView::useCppKeyword() const
 {
     return mUseCppKeyword;
@@ -870,9 +885,18 @@ QVariant CodeCompletionListModel::data(const QModelIndex &index, int role) const
     if (index.row()>=mStatements->count())
         return QVariant();
 
-    if (role == Qt::DisplayRole) {
+    switch(role) {
+    case Qt::DisplayRole: {
         PStatement statement = mStatements->at(index.row());
         return statement->command;
+        }
+    case Qt::ForegroundRole: {
+        PStatement statement = mStatements->at(index.row());
+        if (mColorCallback)
+            return mColorCallback(statement);
+        QApplication *app = dynamic_cast<QApplication *>(QApplication::instance());
+        return app->palette().color(QPalette::Text);
+    }
     }
     return QVariant();
 }
@@ -881,4 +905,14 @@ void CodeCompletionListModel::notifyUpdated()
 {
     beginResetModel();
     endResetModel();
+}
+
+const ColorCallback &CodeCompletionListModel::colorCallback() const
+{
+    return mColorCallback;
+}
+
+void CodeCompletionListModel::setColorCallback(const ColorCallback &newColorCallback)
+{
+    mColorCallback = newColorCallback;
 }

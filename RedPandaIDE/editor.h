@@ -211,6 +211,10 @@ protected:
     // SynEdit interface
 protected:
     bool onGetSpecialLineColors(int Line, QColor &foreground, QColor &backgroundColor) override;
+
+    // SynEdit interface
+protected:
+    void onPreparePaintHighlightToken(int row, int column, const QString &token, PSynHighlighterAttribute attr, SynFontStyles &style, QColor &foreground, QColor &background) override;
 };
 
 #endif // EDITOR_H

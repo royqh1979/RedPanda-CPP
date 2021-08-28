@@ -799,6 +799,7 @@ void CppParser::reset()
         mPreprocessor.includesList().clear();
 
         mNamespaces.clear();
+        mInlineNamespaces.clear();
 
         mPreprocessor.projectIncludePaths().clear();
         mPreprocessor.includePaths().clear();
@@ -2041,8 +2042,15 @@ void CppParser::handleNamespace()
         //wrong namespace define, stop handling
         return;
     QString command = mTokenizer[mIndex]->text;
-    if (command.startsWith("__")) // hack for inline namespaces
-      isInline = true;
+
+    QString fullName = getFullStatementName(command,getCurrentScope());
+    if (isInline) {
+        mInlineNamespaces.insert(fullName);
+    } else if (mInlineNamespaces.contains(fullName)) {
+        isInline = true;
+    }
+//    if (command.startsWith("__")) // hack for inline namespaces
+//      isInline = true;
     mIndex++;
     if (mIndex>=mTokenizer.tokenCount())
         return;
@@ -2954,15 +2962,15 @@ void CppParser::internalParse(const QString &fileName)
             if (!handleStatement())
                 break;
         }
-//#ifdef QT_DEBUG
-        StringsToFile(mPreprocessor.result(),"f:\\preprocess.txt");
-        mPreprocessor.dumpDefinesTo("f:\\defines.txt");
-        mPreprocessor.dumpIncludesListTo("f:\\includes.txt");
-        mStatementList.dump("f:\\stats.txt");
-        mTokenizer.dumpTokens("f:\\tokens.txt");
-//#endif
 #ifdef QT_DEBUG
-        mStatementList.dumpAll("f:\\all-stats.txt");
+//        StringsToFile(mPreprocessor.result(),"f:\\preprocess.txt");
+//        mPreprocessor.dumpDefinesTo("f:\\defines.txt");
+//        mPreprocessor.dumpIncludesListTo("f:\\includes.txt");
+//        mStatementList.dump("f:\\stats.txt");
+//        mTokenizer.dumpTokens("f:\\tokens.txt");
+#endif
+#ifdef QT_DEBUG
+//        mStatementList.dumpAll("f:\\all-stats.txt");
 #endif
     }
 }

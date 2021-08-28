@@ -352,6 +352,7 @@ private:
     int mLockCount; // lock(don't reparse) when we need to find statements in a batch
     bool mParsing;
     QHash<QString,PStatementList> mNamespaces;  //TStringList<String,List<Statement>> namespace and the statements in its scope
+    QSet<QString> mInlineNamespaces;
     //fRemovedStatements: THashedStringList; //THashedStringList<String,PRemovedStatements>
 
     QRecursiveMutex mMutex;

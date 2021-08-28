@@ -42,7 +42,7 @@ enum class SkipType {
     skNone // It's a keyword but don't process here
 };
 
-enum class StatementKind  {
+enum StatementKind  {
   skUnknown,
   skPreprocessor,
   skEnumType,

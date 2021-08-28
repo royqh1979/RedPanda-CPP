@@ -528,6 +528,47 @@ bool Editor::onGetSpecialLineColors(int Line, QColor &foreground, QColor &backgr
     return false;
 }
 
+void Editor::onPreparePaintHighlightToken(int row, int column, const QString &token, PSynHighlighterAttribute attr, SynFontStyles &style, QColor &foreground, QColor &background)
+{
+    if (token.isEmpty())
+        return;
+    //selection
+    if (selAvail() && highlighter()) {
+        if ((
+          (attr->name() == SYNS_AttrIdentifier)
+          || (attr->name() == SYNS_AttrReservedWord)
+          || (attr->name() == SYNS_AttrPreprocessor)
+          )
+          && (token == selText())) {
+            foreground = selectedForeground();
+            background = selectedBackground();
+            return;
+        }
+    }
+
+
+    if (mParser && mCompletionPopup && (attr->name() == SYNS_AttrIdentifier)) {
+        BufferCoord p=displayToBufferPos(DisplayCoord{column+1,row});
+        BufferCoord pBeginPos,pEndPos;
+        QString s= getWordAtPosition(p, pBeginPos,pEndPos, WordPurpose::wpInformation);
+        PStatement statement = mParser->findStatementOf(mFilename,
+          s , p.Line);
+        StatementKind kind = mParser->getKindOfStatement(statement);
+        if (kind == StatementKind::skUnknown) {
+            if ((pEndPos.Line>=1)
+              && (pEndPos.Char < lines()->getString(pEndPos.Line-1).length())
+              && (lines()->getString(pEndPos.Line-1)[pEndPos.Char] == '(')) {
+                kind = StatementKind::skFunction;
+            } else {
+                kind = StatementKind::skVariable;
+            }
+        }
+        foreground = mCompletionPopup->colors().value(kind,
+                                                      highlighter()->identifierAttribute()->foreground());
+        return;
+    }
+}
+
 void Editor::copyToClipboard()
 {
     if (pSettings->editor().copySizeLimit()) {
@@ -1452,8 +1493,8 @@ void Editor::completionInsert(bool appendFunc)
     QString funcAddOn = "";
 
 // delete the part of the word that's already been typed ...
-    BufferCoord p = wordEnd();
-    setBlockBegin(wordStart());
+    BufferCoord p = WordEnd();
+    setBlockBegin(WordStart());
     setBlockEnd(p);
 
     // if we are inserting a function,
@@ -1970,6 +2011,11 @@ void Editor::applyColorScheme(const QString& schemeName)
     if (item) {
         this->mSyntaxWarningColor = item->foreground();
     }
+    item = pColorManager->getItem(schemeName,COLOR_SCHEME_SELECTION);
+    if (item) {
+        setSelectedForeground(item->foreground());
+        setSelectedBackground(item->background());
+    }
     item = pColorManager->getItem(schemeName,COLOR_SCHEME_ACTIVE_BREAKPOINT);
     if (item) {
         this->mActiveBreakpointForegroundColor = item->foreground();
@@ -1979,6 +2025,58 @@ void Editor::applyColorScheme(const QString& schemeName)
     if (item) {
         this->mBreakpointForegroundColor = item->foreground();
         this->mBreakpointBackgroundColor = item->background();
+    }
+    //color for code completion popup
+    if (mCompletionPopup) {
+        item = pColorManager->getItem(schemeName, SYNS_AttrFunction);
+        if (item) {
+            mCompletionPopup->colors().insert(StatementKind::skFunction,item->foreground());
+            mCompletionPopup->colors().insert(StatementKind::skConstructor,item->foreground());
+            mCompletionPopup->colors().insert(StatementKind::skDestructor,item->foreground());
+        }
+        item = pColorManager->getItem(schemeName, SYNS_AttrClass);
+        if (item) {
+            mCompletionPopup->colors().insert(StatementKind::skClass,item->foreground());
+            mCompletionPopup->colors().insert(StatementKind::skTypedef,item->foreground());
+            mCompletionPopup->colors().insert(StatementKind::skAlias,item->foreground());
+        }
+        item = pColorManager->getItem(schemeName, SYNS_AttrIdentifier);
+        if (item) {
+            mCompletionPopup->colors().insert(StatementKind::skEnumType,item->foreground());
+            mCompletionPopup->colors().insert(StatementKind::skEnumClassType,item->foreground());
+        }
+        item = pColorManager->getItem(schemeName, SYNS_AttrVariable);
+        if (item) {
+            mCompletionPopup->colors().insert(StatementKind::skVariable,item->foreground());
+        }
+        item = pColorManager->getItem(schemeName, SYNS_AttrLocalVariable);
+        if (item) {
+            mCompletionPopup->colors().insert(StatementKind::skLocalVariable,item->foreground());
+            mCompletionPopup->colors().insert(StatementKind::skParameter,item->foreground());
+        }
+        item = pColorManager->getItem(schemeName, SYNS_AttrGlobalVariable);
+        if (item) {
+            mCompletionPopup->colors().insert(StatementKind::skGlobalVariable,item->foreground());
+        }
+        item = pColorManager->getItem(schemeName, SYNS_AttrGlobalVariable);
+        if (item) {
+            mCompletionPopup->colors().insert(StatementKind::skGlobalVariable,item->foreground());
+        }
+        item = pColorManager->getItem(schemeName, SYNS_AttrPreprocessor);
+        if (item) {
+            mCompletionPopup->colors().insert(StatementKind::skPreprocessor,item->foreground());
+            mCompletionPopup->colors().insert(StatementKind::skEnum,item->foreground());
+        }
+        item = pColorManager->getItem(schemeName, SYNS_AttrReservedWord);
+        if (item) {
+            mCompletionPopup->colors().insert(StatementKind::skKeyword,item->foreground());
+            mCompletionPopup->colors().insert(StatementKind::skUserCodeIn,item->foreground());
+        }
+        item = pColorManager->getItem(schemeName, SYNS_AttrString);
+        if (item) {
+            mCompletionPopup->colors().insert(StatementKind::skNamespace,item->foreground());
+            mCompletionPopup->colors().insert(StatementKind::skNamespaceAlias,item->foreground());
+        }
     }
     this->invalidate();
 }

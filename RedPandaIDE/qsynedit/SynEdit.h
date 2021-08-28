@@ -125,9 +125,9 @@ using SynPlaceMarkProc = std::function<void(PSynEditMark& Mark)>;
 using SynProcessCommandProc = std::function<void(SynEditorCommand& command, QChar& AChar, void* data)>;
 using SynMouseCursorProc = std::function<void(const BufferCoord& aLineCharPos, QCursor &  aCursor)>;
 using SynPaintProc = std::function<void(const QPaintDevice& paintDevice )>;
-using SynPreparePaintHighlightTokenProc = std::function<void(int row,
-        int column, const QString& token, PSynHighlighterAttribute attr,
-        SynFontStyles& style, QColor& foreground, QColor& background)>;
+//using SynPreparePaintHighlightTokenProc = std::function<void(int row,
+//        int column, const QString& token, PSynHighlighterAttribute attr,
+//        SynFontStyles& style, QColor& foreground, QColor& background)>;
 using SynSearchMathedProc = std::function<SynSearchAction(const QString& sSearch,
     const QString& sReplace, int Line, int ch, int wordLen)>;
 
@@ -216,11 +216,6 @@ public:
     PSynEditFoldRange foldHidesLine(int line);
     void setSelText(const QString& Value);
     void setSelLength(int Value);
-
-    BufferCoord wordStart();
-    BufferCoord wordStart(const BufferCoord& value);
-    BufferCoord wordEnd();
-    BufferCoord wordEnd(const BufferCoord& value);
 
     int searchReplace(const QString& sSearch, const QString& sReplace, SynSearchOptions options,
                PSynSearchBase searchEngine,  SynSearchMathedProc matchedCallback = nullptr);
@@ -335,6 +330,12 @@ public:
 
     int textHeight() const;
 
+    const QColor &selectedForeground() const;
+    void setSelectedForeground(const QColor &newSelectedForeground);
+
+    const QColor &selectedBackground() const;
+    void setSelectedBackground(const QColor &newSelectedBackground);
+
 signals:
     void Changed();
 
@@ -370,6 +371,9 @@ protected:
     virtual void onGutterGetText(int aLine, QString& aText);
     virtual void onGutterPaint(QPainter& painter, int aLine, int X, int Y);
     virtual void onPaint(QPainter& painter);
+    virtual void onPreparePaintHighlightToken(int row,
+            int column, const QString& token, PSynHighlighterAttribute attr,
+            SynFontStyles& style, QColor& foreground, QColor& background);
     virtual void onProcessCommand(SynEditorCommand Command, QChar AChar, void * pData);
     virtual void onCommandProcessed(SynEditorCommand Command, QChar AChar, void * pData);
     virtual void ExecuteCommand(SynEditorCommand Command, QChar AChar, void * pData);
@@ -605,7 +609,7 @@ private:
     SynProcessCommandProc mOnCommandProcessed;
     SynMouseCursorProc mOnMouseCursor;
     SynPaintProc mOnPaint;
-    SynPreparePaintHighlightTokenProc mOnPaintHighlightToken;
+//    SynPreparePaintHighlightTokenProc mOnPaintHighlightToken;
     SynPlaceMarkProc mOnPlaceMark;
     SynProcessCommandProc mOnProcessingCommand;
     SynProcessCommandProc mOnProcessingUserCommand;

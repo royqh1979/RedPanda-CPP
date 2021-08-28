@@ -582,8 +582,7 @@ void SynEditTextPainter::AddHighlightToken(const QString &Token, int ColumnsBefo
     }
 
     //todo : change char(getTokenPos) to column?
-    if (edit->mOnPaintHighlightToken)
-        edit->mOnPaintHighlightToken(cLine,edit->mHighlighter->getTokenPos(),
+    edit->onPreparePaintHighlightToken(cLine,edit->mHighlighter->getTokenPos(),
         Token,p_Attri,Style,Foreground,Background);
 
     // Do we have to paint the old chars first, or can we just append?

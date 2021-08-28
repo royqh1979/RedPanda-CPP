@@ -1179,8 +1179,8 @@ BufferCoord SynEdit::WordStartEx(const BufferCoord &XY)
     // valid line?
     if ((CY >= 1) && (CY <= mLines->count())) {
         QString Line = mLines->getString(CY - 1);
-        CX = std::min(CX, Line.length());
-        if (CX > 1) {
+        CX = std::min(CX, Line.length()+1);
+        if (CX-1 >= 0) {
             if (!(Line[CX - 1].isSpace()))
                 CX = StrRScanForNonWordChar(Line, CX - 1) + 1;
             else
@@ -3209,6 +3209,26 @@ void SynEdit::doScrolled(int)
     invalidate();
 }
 
+const QColor &SynEdit::selectedBackground() const
+{
+    return mSelectedBackground;
+}
+
+void SynEdit::setSelectedBackground(const QColor &newSelectedBackground)
+{
+    mSelectedBackground = newSelectedBackground;
+}
+
+const QColor &SynEdit::selectedForeground() const
+{
+    return mSelectedForeground;
+}
+
+void SynEdit::setSelectedForeground(const QColor &newSelectedForeground)
+{
+    mSelectedForeground = newSelectedForeground;
+}
+
 int SynEdit::textHeight() const
 {
     return mTextHeight;
@@ -4654,6 +4674,11 @@ void SynEdit::onPaint(QPainter &)
 
 }
 
+void SynEdit::onPreparePaintHighlightToken(int row, int column, const QString &token, PSynHighlighterAttribute attr, SynFontStyles &style, QColor &foreground, QColor &background)
+{
+
+}
+
 void SynEdit::onProcessCommand(SynEditorCommand , QChar , void *)
 {
 
@@ -5666,56 +5691,6 @@ void SynEdit::setSelLength(int Value)
         BufferCoord iNewStart{x,y};
         setCaretAndSelection(iNewStart, iNewStart, mBlockBegin);
     }
-}
-
-BufferCoord SynEdit::wordStart()
-{
-    return wordStart(caretXY());
-}
-
-BufferCoord SynEdit::wordStart(const BufferCoord &value)
-{
-    int cx = value.Char-1;
-    int cy = value.Line;
-    // valid line?
-    if ((cy <1) || (cy > lines()->count()))
-        return value;
-    QString line = lines()->getString(cy - 1);
-    if (cx>=line.length()) {
-        cx=line.length()-1;
-    }
-
-    while (cx>=0 && cx<line.length()) {
-        if (line[cx]==' ' || line[cx]=='\t')
-            break;
-        cx--;
-    }
-    if (cx != value.Char-1) {
-        cx++;
-    }
-    return BufferCoord{cx+1,cy};
-}
-
-BufferCoord SynEdit::wordEnd()
-{
-    return wordEnd(caretXY());
-}
-
-BufferCoord SynEdit::wordEnd(const BufferCoord &value)
-{
-    int cx = value.Char-1;
-    int cy = value.Line;
-    // valid line?
-    if ((cy <1) || (cy > lines()->count()))
-        return value;
-    QString line = lines()->getString(cy - 1);
-
-    while (cx>=0 && cx<line.length()) {
-        if (line[cx]==' ' || line[cx]=='\t')
-            break;
-        cx++;
-    }
-    return BufferCoord{cx+1,cy};
 }
 
 BufferCoord SynEdit::blockBegin() const
