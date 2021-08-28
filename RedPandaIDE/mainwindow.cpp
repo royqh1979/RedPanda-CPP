@@ -121,6 +121,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     //class browser
     ui->classBrowser->setModel(&mClassBrowserModel);
+
+    updateAppTitle();
 }
 
 MainWindow::~MainWindow()
@@ -340,8 +342,8 @@ void MainWindow::updateAppTitle()
 //    Application.Title := Format('%s - %s', [fProject.Name, appName]);
 //  end;
     else {
-        setWindowTitle(QString("%s %s").arg(appName).arg(DEVCPP_VERSION));
-        app->setApplicationName(QString("%s").arg(appName));
+        setWindowTitle(QString("%1 %2").arg(appName).arg(DEVCPP_VERSION));
+        app->setApplicationName(QString("%1").arg(appName));
     }
 }
 
@@ -1598,7 +1600,7 @@ void MainWindow::onStartParsing()
 
 void MainWindow::onEndParsing(int total, int)
 {
-    double parseTime = mParserTimer.elapsed() / 1000;
+    double parseTime = mParserTimer.elapsed() / 1000.0;
     double parsingFrequency;
 
 

@@ -18,7 +18,7 @@ public:
     ~CppParser();
 
     void addHardDefineByLine(const QString& line);
-    void addFileToScan(QString value, bool inProject = false);
+    void addFileToScan(const QString& value, bool inProject = false);
     void addIncludePath(const QString& value);
     void addProjectIncludePath(const QString& value);
     void clearIncludePaths();
@@ -32,7 +32,7 @@ public:
     PFileIncludes findFileIncludes(const QString &filename, bool deleteIt = false);
     QString findFirstTemplateParamOf(const QString& fileName,
                                      const QString& phrase,
-                                     PStatement currentScope);
+                                     const PStatement& currentScope);
     PStatement findFunctionAt(const QString& fileName,
                             int line);
     int findLastOperator(const QString& phrase) const;
@@ -42,21 +42,21 @@ public:
                                int line);
     PStatement findStatementOf(const QString& fileName,
                                const QString& phrase,
-                               PStatement currentScope,
+                               const PStatement& currentScope,
                                PStatement& parentScopeType,
                                bool force = false);
     PStatement findStatementOf(const QString& fileName,
                                const QString& phrase,
-                               PStatement currentClass,
+                               const PStatement& currentClass,
                                bool force = false);
     //{Find statement starting from startScope}
     PStatement findStatementStartingFrom(const QString& fileName,
                                          const QString& phrase,
-                                         PStatement startScope,
+                                         const PStatement& startScope,
                                          bool force = false);
     PStatement findTypeDefinitionOf(const QString& fileName,
                                     const QString& aType,
-                                    PStatement currentClass);
+                                    const PStatement& currentClass);
     bool freeze();  // Freeze/Lock (stop reparse while searching)
     bool freeze(const QString& serialId);  // Freeze/Lock (stop reparse while searching)
     QStringList getClassesList();
@@ -65,7 +65,7 @@ public:
     QSet<QString> getFileUsings(const QString& filename);
 
     QString getHeaderFileName(const QString& relativeTo, const QString& line);// both
-    StatementKind getKindOfStatement(PStatement statement);
+    StatementKind getKindOfStatement(const PStatement& statement);
     void invalidateFile(const QString& fileName);
     bool isIncludeLine(const QString &line);
     bool isProjectHeaderFile(const QString& fileName);
@@ -77,6 +77,8 @@ public:
     bool parsing() const;
     void reset();
     void unFreeze(); // UnFree/UnLock (reparse while searching)
+
+
 
     //void getSourcePair(const QString& fName, QString& CFile, QString& HFile);
 
@@ -91,7 +93,7 @@ public:
     //QString statementKindStr(StatementKind value);
     //QString statementClassScopeStr(StatementClassScope value);
 
-    QString prettyPrintStatement(PStatement statement, int line = -1);
+    QString prettyPrintStatement(const PStatement& statement, int line = -1);
 
 
 
@@ -119,6 +121,9 @@ public:
     bool parseGlobalHeaders() const;
     void setParseGlobalHeaders(bool newParseGlobalHeaders);
 
+    const QSet<QString>& includePaths();
+    const QSet<QString>& projectIncludePaths();
+
     const StatementModel &statementList() const;
 
 signals:
@@ -128,13 +133,13 @@ signals:
     void onEndParsing(int total, int updateView);
 private:
     PStatement addInheritedStatement(
-            PStatement derived,
-            PStatement inherit,
+            const PStatement& derived,
+            const PStatement& inherit,
             StatementClassScope access);
 
     PStatement addChildStatement(
             // support for multiple parents (only typedef struct/union use multiple parents)
-            PStatement parent,
+            const PStatement& parent,
             const QString& fileName,
             const QString& hintText,
             const QString& aType, // "Type" is already in use
@@ -143,12 +148,12 @@ private:
             const QString& value,
             int line,
             StatementKind kind,
-            StatementScope scope,
-            StatementClassScope classScope,
+            const StatementScope& scope,
+            const StatementClassScope& classScope,
             bool isDefinition,
             bool isStatic); // TODO: InheritanceList not supported
     PStatement addStatement(
-            PStatement parent,
+            const PStatement& parent,
             const QString &fileName,
             const QString &hintText,
             const QString &aType, // "Type" is already in use
@@ -157,13 +162,13 @@ private:
             const QString& value,
             int line,
             StatementKind kind,
-            StatementScope scope,
-            StatementClassScope classScope,
+            const StatementScope& scope,
+            const StatementClassScope& classScope,
             bool isDefinition,
             bool isStatic);
-    void setInheritance(int index, PStatement classStatement, bool isStruct);
+    void setInheritance(int index, const PStatement& classStatement, bool isStruct);
     bool isCurrentScope(const QString& command);
-    void addSoloScopeLevel(PStatement statement, int line); // adds new solo level
+    void addSoloScopeLevel(PStatement& statement, int line); // adds new solo level
     void removeScopeLevel(int line); // removes level
     int skipBraces(int startAt);
     int skipBracket(int startAt);
@@ -185,18 +190,20 @@ private:
     bool checkForVar();
     QString expandMacroType(const QString& name);
     //{procedure ResetDefines;}
-    void fillListOfFunctions(const QString& fileName, int line,PStatement statement, PStatement scopeStatement, QStringList& list);
+    void fillListOfFunctions(const QString& fileName, int line,
+                             const PStatement& statement,
+                             const PStatement& scopeStatement, QStringList& list);
     PStatement findMemberOfStatement(
             const QString& phrase,
-            PStatement scopeStatement);
+            const PStatement& scopeStatement);
     PStatement findStatementInScope(
             const QString& name,
             const QString& noNameArgs,
             StatementKind kind,
-            PStatement scope);
+            const PStatement& scope);
     PStatement findStatementInScope(
             const QString& name,
-            PStatement scope);
+            const PStatement& scope);
     PStatement findStatementInNamespace(
             const QString& name,
             const QString& namespaceName);
@@ -206,8 +213,8 @@ private:
     int getCurrentBlockEndSkip();
     int getCurrentInlineNamespaceEndSkip();
     PStatement getCurrentScope(); // gets last item from last level
-    QString getFirstTemplateParam(PStatement statement, const QString& filename,
-                                  const QString& phrase, PStatement currentScope);
+    QString getFirstTemplateParam(const PStatement& statement, const QString& filename,
+                                  const QString& phrase, const PStatement& currentScope);
     int getFirstTemplateParamEnd(const QString& s, int startAt);
 
     void getFullNamespace(
@@ -216,15 +223,16 @@ private:
             QString& member);
     QString getFullStatementName(
             const QString& command,
-            PStatement parent);
+            const PStatement& parent);
     PStatement getIncompleteClass(
             const QString& command,
-            PStatement parentScope);
+            const PStatement& parentScope);
     StatementScope  getScope();
     QString getStatementKey(const QString& sName,
                             const QString& sType,
                             const QString& sNoNameArgs);
-    PStatement getTypeDef(PStatement statement, const QString& fileName, const QString& aType);
+    PStatement getTypeDef(const PStatement& statement,
+                          const QString& fileName, const QString& aType);
     void handleCatchBlock();
     void handleEnum();
     void handleForBlock();
@@ -246,14 +254,14 @@ private:
     void internalParse(const QString& fileName);
 //    function FindMacroDefine(const Command: AnsiString): PStatement;
     void inheritClassStatement(
-            PStatement derived,
+            const PStatement& derived,
             bool isStruct,
-            PStatement base,
+            const PStatement& base,
             StatementClassScope access);
     PStatement doFindStatementInScope(const QString& name,
                                       const QString& noNameArgs,
                                       StatementKind kind,
-                                      PStatement scope);
+                                      const PStatement& scope);
     void internalInvalidateFile(const QString& fileName);
     void internalInvalidateFiles(const QSet<QString>& files);
     QSet<QString> calculateFilesToBeReparsed(const QString& fileName);
@@ -265,7 +273,7 @@ private:
 //    function GetRemainder(const Phrase: AnsiString): AnsiString;
 //    }
     void scanMethodArgs(
-            PStatement functionStatement,
+            const PStatement& functionStatement,
             const QString& argStr);
     QString splitPhrase(const QString& phrase, QString& sClazz, QString &sMember,
                 QString& sOperator);
@@ -401,7 +409,7 @@ protected:
 
 void parseFile(
     PCppParser parser,
-    QString fileName,
+    const QString& fileName,
     bool inProject,
     bool onlyIfNotParsed = false,
     bool updateView = true);

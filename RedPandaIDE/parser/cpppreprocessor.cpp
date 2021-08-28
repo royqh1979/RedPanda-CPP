@@ -154,8 +154,8 @@ void CppPreprocessor::invalidDefinesInFile(const QString &fileName)
 {
     PDefineMap defineMap = mFileDefines.value(fileName,PDefineMap());
     if (defineMap) {
-        for (PDefine define:*defineMap) {
-            PDefine p = mDefines.value(define->name);
+        for (const PDefine& define:*defineMap) {
+            const PDefine& p = mDefines.value(define->name);
             if (p == define) {
                 mDefines.remove(define->name);
             }
@@ -169,10 +169,10 @@ void CppPreprocessor::dumpDefinesTo(const QString &fileName) const
     QFile file(fileName);
     if (file.open(QIODevice::WriteOnly|QIODevice::Truncate)) {
         QTextStream stream(&file);
-        for (PDefine define:mDefines) {
-            stream<<QString("%1 %2 %3 %4 %5\n").arg(define->name)
-                       .arg(define->args).arg(define->value)
-                       .arg(define->hardCoded).arg(define->formatValue)
+        for (const PDefine& define:mDefines) {
+            stream<<QString("%1 %2 %3 %4 %5\n")
+                    .arg(define->name,define->args,define->value)
+                    .arg(define->hardCoded).arg(define->formatValue)
                  <<Qt::endl;
         }
     }
@@ -183,27 +183,26 @@ void CppPreprocessor::dumpIncludesListTo(const QString &fileName) const
     QFile file(fileName);
     if (file.open(QIODevice::WriteOnly|QIODevice::Truncate)) {
         QTextStream stream(&file);
-        for (PFileIncludes fileIncludes:mIncludesList) {
+        for (const PFileIncludes& fileIncludes:mIncludesList) {
             stream<<fileIncludes->baseFile<<" : "<<Qt::endl;
             stream<<"\t**includes:**"<<Qt::endl;
-            for (QString s:fileIncludes->includeFiles.keys()) {
+            for (const QString& s:fileIncludes->includeFiles.keys()) {
                 stream<<"\t--"+s<<Qt::endl;
             }
             stream<<"\t**depends on:**"<<Qt::endl;
-            for (QString s:fileIncludes->dependingFiles) {
+            for (const QString& s:fileIncludes->dependingFiles) {
                 stream<<"\t^^"+s<<Qt::endl;
             }
             stream<<"\t**depended by:**"<<Qt::endl;
-            for (QString s:fileIncludes->dependedFiles) {
+            for (const QString& s:fileIncludes->dependedFiles) {
                 stream<<"\t&&"+s<<Qt::endl;
             }
             stream<<"\t**using:**"<<Qt::endl;
-            for (QString s:fileIncludes->usings) {
+            for (const QString& s:fileIncludes->usings) {
                 stream<<"\t++"+s<<Qt::endl;
             }
             stream<<"\t**statements:**"<<Qt::endl;
-            for (std::weak_ptr<Statement> p:fileIncludes->statements) {
-                PStatement statement = p.lock();
+            for (PStatement& statement:fileIncludes->statements) {
                 if (statement) {
                     stream<<QString("\t**%1 , %2").arg(statement->command)
                             .arg(statement->fullName)<<Qt::endl;
@@ -540,7 +539,7 @@ void CppPreprocessor::openInclude(const QString &fileName, QStringList bufferedT
         if (topFile->fileIncludes->includeFiles.contains(fileName)) {
             return; //already included
         }
-        for (PParsedFile parsedFile:mIncludes) {
+        for (PParsedFile& parsedFile:mIncludes) {
             parsedFile->fileIncludes->includeFiles.insert(fileName,false);
         }
     }
@@ -611,7 +610,7 @@ void CppPreprocessor::openInclude(const QString &fileName, QStringList bufferedT
         //add defines of already parsed including headers;
         addDefinesInFile(fileName);
         PFileIncludes fileIncludes = getFileIncludesEntry(fileName);
-        for (PParsedFile file:mIncludes) {
+        for (PParsedFile& file:mIncludes) {
             file->fileIncludes->includeFiles.insert(fileIncludes->includeFiles);
         }
     }
@@ -710,7 +709,7 @@ void CppPreprocessor::addDefinesInFile(const QString &fileName)
     //first add the defines in the files it included
     PFileIncludes fileIncludes = getFileIncludesEntry(fileName);
     if (fileIncludes) {
-        for (QString s:fileIncludes->includeFiles.keys()) {
+        for (const QString& s:fileIncludes->includeFiles.keys()) {
             addDefinesInFile(s);
         }
     }
@@ -718,7 +717,7 @@ void CppPreprocessor::addDefinesInFile(const QString &fileName)
     // then add the defines defined in it
     PDefineMap defineList = mFileDefines.value(fileName, PDefineMap());
     if (defineList) {
-        for (PDefine define: defineList->values()) {
+        for (const PDefine& define: defineList->values()) {
             mDefines.insert(define->name,define);
         }
     }
@@ -740,7 +739,7 @@ void CppPreprocessor::parseArgs(PDefine define)
     QString formatStr = "";
     DefineArgTokenType lastTokenType=DefineArgTokenType::Other;
     int index;
-    for (PDefineArgToken token: tokens) {
+    for (const PDefineArgToken& token: tokens) {
         switch(token->type) {
         case DefineArgTokenType::Identifier:
             index = define->argList.indexOf(token->value);
@@ -851,7 +850,7 @@ QStringList CppPreprocessor::removeComments(const QStringList &text)
     ContentType currentType = ContentType::Other;
     QString delimiter;
 
-    for (QString line:text) {
+    for (const QString& line:text) {
         QString s;
         int pos = 0;
         bool stopProcess=false;

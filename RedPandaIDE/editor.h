@@ -8,7 +8,7 @@
 #include "colorscheme.h"
 #include "common.h"
 #include "parser/cppparser.h"
-#include "widgets/codecompletionview.h"
+#include "widgets/codecompletionpopup.h"
 
 class SaveException: public std::exception {
 
@@ -192,7 +192,7 @@ private:
     QSet<int> mBreakpointLines;
     int mActiveBreakpointLine;
     PCppParser mParser;
-    std::shared_ptr<CodeCompletionView> mCompletionPopup;
+    std::shared_ptr<CodeCompletionPopup> mCompletionPopup;
     int mLastIdCharPressed;
     bool mUseCppSyntax;
 

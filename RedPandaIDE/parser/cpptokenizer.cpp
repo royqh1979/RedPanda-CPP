@@ -50,7 +50,7 @@ void CppTokenizer::dumpTokens(const QString &fileName)
 
     if (file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
         QTextStream stream(&file);
-        for (PToken token:mTokenList) {
+        for (const PToken& token:mTokenList) {
             stream<<QString("%1,%2").arg(token->line).arg(token->text)<<Qt::endl;
         }
     }
@@ -357,7 +357,7 @@ void CppTokenizer::simplify(QString &output)
 {
     //remove \n \r;
     QString temp;
-    for (QChar ch:output) {
+    for (const QChar& ch:output) {
         if (!isLineChar(ch))
             temp+=ch;
     }
@@ -369,7 +369,7 @@ void CppTokenizer::simplifyArgs(QString &output)
     QString temp;
     QString lastSpace = "";
     bool parentheseStart = true;
-    for (QChar ch:output.trimmed()) {
+    for (const QChar& ch:output.trimmed()) {
         if (isSpaceChar(ch)) {
             if (!parentheseStart)
                 lastSpace+=ch;

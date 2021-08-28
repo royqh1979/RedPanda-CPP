@@ -1,4 +1,4 @@
-#include "codecompletionview.h"
+#include "codecompletionpopup.h"
 #include "../utils.h"
 
 #include <QKeyEvent>
@@ -6,7 +6,7 @@
 #include <QDebug>
 #include <QApplication>
 
-CodeCompletionView::CodeCompletionView(QWidget *parent) :
+CodeCompletionPopup::CodeCompletionPopup(QWidget *parent) :
     QWidget(parent)
 {
     setWindowFlags(Qt::Popup);
@@ -39,18 +39,18 @@ CodeCompletionView::CodeCompletionView(QWidget *parent) :
 
 }
 
-CodeCompletionView::~CodeCompletionView()
+CodeCompletionPopup::~CodeCompletionPopup()
 {
     delete mListView;
     delete mModel;
 }
 
-void CodeCompletionView::setKeypressedCallback(const KeyPressedCallback &newKeypressedCallback)
+void CodeCompletionPopup::setKeypressedCallback(const KeyPressedCallback &newKeypressedCallback)
 {
     mListView->setKeypressedCallback(newKeypressedCallback);
 }
 
-void CodeCompletionView::prepareSearch(const QString &phrase, const QString &filename, int line)
+void CodeCompletionPopup::prepareSearch(const QString &phrase, const QString &filename, int line)
 {
     QMutexLocker locker(&mMutex);
     if (!isEnabled())
@@ -71,7 +71,7 @@ void CodeCompletionView::prepareSearch(const QString &phrase, const QString &fil
     setCursor(oldCursor);
 }
 
-bool CodeCompletionView::search(const QString &phrase, bool autoHideOnSingleResult)
+bool CodeCompletionPopup::search(const QString &phrase, bool autoHideOnSingleResult)
 {
     QMutexLocker locker(&mMutex);
 
@@ -118,7 +118,7 @@ bool CodeCompletionView::search(const QString &phrase, bool autoHideOnSingleResu
     return false;
 }
 
-PStatement CodeCompletionView::selectedStatement()
+PStatement CodeCompletionPopup::selectedStatement()
 {
     if (isEnabled()) {
         int index = mListView->currentIndex().row();
@@ -135,7 +135,7 @@ PStatement CodeCompletionView::selectedStatement()
         return PStatement();
 }
 
-void CodeCompletionView::addChildren(PStatement scopeStatement, const QString &fileName, int line)
+void CodeCompletionPopup::addChildren(PStatement scopeStatement, const QString &fileName, int line)
 {
     if (scopeStatement && !isIncluded(scopeStatement->fileName)
       && !isIncluded(scopeStatement->definitionFileName))
@@ -145,7 +145,7 @@ void CodeCompletionView::addChildren(PStatement scopeStatement, const QString &f
         return;
 
     if (!scopeStatement) { //Global scope
-        for (PStatement childStatement: children) {
+        for (const PStatement& childStatement: children) {
             if (childStatement->fileName.isEmpty()) {
                 // hard defines
                 addStatement(childStatement,fileName,-1);
@@ -163,7 +163,7 @@ void CodeCompletionView::addChildren(PStatement scopeStatement, const QString &f
             }
         }
     } else {
-        for (PStatement childStatement: children) {
+        for (const PStatement& childStatement: children) {
             if (!( childStatement->kind == StatementKind::skConstructor
                                       || childStatement->kind == StatementKind::skDestructor
                                       || childStatement->kind == StatementKind::skBlock)
@@ -173,7 +173,7 @@ void CodeCompletionView::addChildren(PStatement scopeStatement, const QString &f
     }
 }
 
-void CodeCompletionView::addStatement(PStatement statement, const QString &fileName, int line)
+void CodeCompletionPopup::addStatement(PStatement statement, const QString &fileName, int line)
 {
     if (mAddedStatements.contains(statement->command))
         return;
@@ -303,7 +303,7 @@ static bool sortByScopeWithUsageComparator(PStatement statement1,PStatement stat
         return statement1->command < statement2->command;
 }
 
-void CodeCompletionView::filterList(const QString &member)
+void CodeCompletionPopup::filterList(const QString &member)
 {
     QMutexLocker locker(&mMutex);
     mCompletionStatementList.clear();
@@ -326,7 +326,7 @@ void CodeCompletionView::filterList(const QString &member)
     mCompletionStatementList.clear();
     if (!member.isEmpty()) { // filter
         mCompletionStatementList.reserve(mFullCompletionStatementList.size());
-        for (PStatement statement:mFullCompletionStatementList) {
+        foreach (const PStatement& statement, mFullCompletionStatementList) {
             Qt::CaseSensitivity cs = (mIgnoreCase?
                                           Qt::CaseInsensitive:
                                           Qt::CaseSensitive);
@@ -340,7 +340,7 @@ void CodeCompletionView::filterList(const QString &member)
         int secondCount = 0;
         int thirdCount = 0;
         int usageCount;
-        for (PStatement statement:mCompletionStatementList) {
+        foreach (const PStatement& statement,mCompletionStatementList) {
             if (statement->usageCount == 0) {
                 usageCount = mSymbolUsage.value(statement->fullName,0);
                 if (usageCount == 0)
@@ -363,7 +363,7 @@ void CodeCompletionView::filterList(const QString &member)
                 thirdCount = usageCount;
             }
         }
-        for (PStatement statement:mCompletionStatementList) {
+        foreach (const PStatement& statement, mCompletionStatementList) {
             if (statement->usageCount == 0) {
                 statement->freqTop = 0;
             } else if  (statement->usageCount == topCount) {
@@ -395,7 +395,7 @@ void CodeCompletionView::filterList(const QString &member)
     //    }
 }
 
-void CodeCompletionView::getCompletionFor(const QString &fileName, const QString &phrase, int line)
+void CodeCompletionPopup::getCompletionFor(const QString &fileName, const QString &phrase, int line)
 {
     if(!mParser)
         return;
@@ -412,7 +412,7 @@ void CodeCompletionView::getCompletionFor(const QString &fileName, const QString
         //C++ preprocessor directives
         if (phrase.startsWith('#')) {
             if (mShowKeywords) {
-                for (QString keyword:CppDirectives) {
+                foreach (const QString& keyword, CppDirectives) {
                     PStatement statement = std::make_shared<Statement>();
                     statement->command = keyword;
                     statement->kind = StatementKind::skKeyword;
@@ -428,7 +428,7 @@ void CodeCompletionView::getCompletionFor(const QString &fileName, const QString
         //docstring tags (javadoc style)
         if (phrase.startsWith('@')) {
             if (mShowKeywords) {
-                for (QString keyword:JavadocTags) {
+                foreach (const QString& keyword,JavadocTags) {
                     PStatement statement = std::make_shared<Statement>();
                     statement->command = keyword;
                     statement->kind = StatementKind::skKeyword;
@@ -448,7 +448,7 @@ void CodeCompletionView::getCompletionFor(const QString &fileName, const QString
 
             if (mShowCodeIns) {
                 //add custom code templates
-                for (PCodeIns codeIn:mCodeInsList) {
+                foreach (const PCodeIns& codeIn,mCodeInsList) {
                     PStatement statement = std::make_shared<Statement>();
                     statement->command = codeIn->prefix;
                     statement->kind = StatementKind::skUserCodeIn;
@@ -462,7 +462,7 @@ void CodeCompletionView::getCompletionFor(const QString &fileName, const QString
             if (mShowKeywords) {
                 //add keywords
                 if (mUseCppKeyword) {
-                    for (QString keyword:CppKeywords.keys()) {
+                    foreach (const QString& keyword,CppKeywords.keys()) {
                         PStatement statement = std::make_shared<Statement>();
                         statement->command = keyword;
                         statement->kind = StatementKind::skKeyword;
@@ -472,7 +472,7 @@ void CodeCompletionView::getCompletionFor(const QString &fileName, const QString
                         mFullCompletionStatementList.append(statement);
                     }
                 } else {
-                    for (QString keyword:CKeywords) {
+                    foreach (const QString& keyword,CKeywords) {
                         PStatement statement = std::make_shared<Statement>();
                         statement->command = keyword;
                         statement->kind = StatementKind::skKeyword;
@@ -495,12 +495,12 @@ void CodeCompletionView::getCompletionFor(const QString &fileName, const QString
                 }
 
                 // add members of all usings (in current scope ) and not added before
-                for (QString namespaceName:scopeStatement->usingList) {
+                foreach (const QString& namespaceName,scopeStatement->usingList) {
                     PStatementList namespaceStatementsList =
                             mParser->findNamespace(namespaceName);
                     if (!namespaceStatementsList)
                         continue;
-                    for (PStatement namespaceStatement:*namespaceStatementsList) {
+                    foreach (const PStatement& namespaceStatement,*namespaceStatementsList) {
                         addChildren(namespaceStatement, fileName, line);
                     }
                 }
@@ -512,12 +512,12 @@ void CodeCompletionView::getCompletionFor(const QString &fileName, const QString
 
             // add members of all fusings
             mUsings = mParser->getFileUsings(fileName);
-            for (QString namespaceName:mUsings) {
+            foreach (const QString& namespaceName, mUsings) {
                 PStatementList namespaceStatementsList =
                         mParser->findNamespace(namespaceName);
                 if (!namespaceStatementsList)
                     continue;
-                for (PStatement namespaceStatement:*namespaceStatementsList) {
+                foreach (const PStatement& namespaceStatement, *namespaceStatementsList) {
                     addChildren(namespaceStatement, fileName, line);
                 }
             }
@@ -535,7 +535,7 @@ void CodeCompletionView::getCompletionFor(const QString &fileName, const QString
                     PStatementList namespaceStatementsList =
                             mParser->findNamespace(scopeName);
                     if (namespaceStatementsList) {
-                        for (PStatement namespaceStatement:*namespaceStatementsList) {
+                        foreach (const PStatement& namespaceStatement, *namespaceStatementsList) {
                             addChildren(namespaceStatement, fileName, line);
                         }
                         return;
@@ -633,7 +633,7 @@ void CodeCompletionView::getCompletionFor(const QString &fileName, const QString
                     const StatementMap& children = mParser->statementList().childrenStatements(classTypeStatement);
                     if (children.isEmpty())
                         return;
-                    for (PStatement childStatement:children) {
+                    foreach (const PStatement& childStatement, children) {
                         if ((childStatement->classScope==StatementClassScope::scsPublic)
                                 && !(
                                     childStatement->kind == StatementKind::skConstructor
@@ -654,7 +654,7 @@ void CodeCompletionView::getCompletionFor(const QString &fileName, const QString
                     return;
                 const StatementMap& children =
                         mParser->statementList().childrenStatements(classTypeStatement);
-                for (PStatement child:children) {
+                foreach (const PStatement& child,children) {
                     addStatement(child,fileName,line);
                 }
             } else if ((opType == MemberOperatorType::otDColon)
@@ -667,7 +667,7 @@ void CodeCompletionView::getCompletionFor(const QString &fileName, const QString
                     //we can use all static members
                     const StatementMap& children =
                             mParser->statementList().childrenStatements(classTypeStatement);
-                    for (PStatement childStatement: children) {
+                    foreach (const PStatement& childStatement, children) {
                         if (
                           (childStatement->isStatic)
                            || (childStatement->kind == StatementKind::skTypedef
@@ -683,7 +683,7 @@ void CodeCompletionView::getCompletionFor(const QString &fileName, const QString
                     // we can only use public static members
                     const StatementMap& children =
                             mParser->statementList().childrenStatements(classTypeStatement);
-                    for (PStatement childStatement: children) {
+                    foreach (const PStatement& childStatement,children) {
                         if (
                           (childStatement->isStatic)
                            || (childStatement->kind == StatementKind::skTypedef
@@ -703,122 +703,122 @@ void CodeCompletionView::getCompletionFor(const QString &fileName, const QString
     }
 }
 
-bool CodeCompletionView::isIncluded(const QString &fileName)
+bool CodeCompletionPopup::isIncluded(const QString &fileName)
 {
     return mIncludedFiles.contains(fileName);
 }
 
-void CodeCompletionView::showEvent(QShowEvent *)
+void CodeCompletionPopup::showEvent(QShowEvent *)
 {
     mListView->setFocus();
 }
 
-const PStatement &CodeCompletionView::currentStatement() const
+const PStatement &CodeCompletionPopup::currentStatement() const
 {
     return mCurrentStatement;
 }
 
-void CodeCompletionView::setCurrentStatement(const PStatement &newCurrentStatement)
+void CodeCompletionPopup::setCurrentStatement(const PStatement &newCurrentStatement)
 {
     mCurrentStatement = newCurrentStatement;
 }
 
-QHash<StatementKind, QColor> &CodeCompletionView::colors()
+QHash<StatementKind, QColor> &CodeCompletionPopup::colors()
 {
     return mColors;
 }
 
-bool CodeCompletionView::useCppKeyword() const
+bool CodeCompletionPopup::useCppKeyword() const
 {
     return mUseCppKeyword;
 }
 
-void CodeCompletionView::setUseCppKeyword(bool newUseCppKeyword)
+void CodeCompletionPopup::setUseCppKeyword(bool newUseCppKeyword)
 {
     mUseCppKeyword = newUseCppKeyword;
 }
 
-bool CodeCompletionView::sortByScope() const
+bool CodeCompletionPopup::sortByScope() const
 {
     return mSortByScope;
 }
 
-void CodeCompletionView::setSortByScope(bool newSortByScope)
+void CodeCompletionPopup::setSortByScope(bool newSortByScope)
 {
     mSortByScope = newSortByScope;
 }
 
-bool CodeCompletionView::ignoreCase() const
+bool CodeCompletionPopup::ignoreCase() const
 {
     return mIgnoreCase;
 }
 
-void CodeCompletionView::setIgnoreCase(bool newIgnoreCase)
+void CodeCompletionPopup::setIgnoreCase(bool newIgnoreCase)
 {
     mIgnoreCase = newIgnoreCase;
 }
 
-bool CodeCompletionView::showCodeIns() const
+bool CodeCompletionPopup::showCodeIns() const
 {
     return mShowCodeIns;
 }
 
-void CodeCompletionView::setShowCodeIns(bool newShowCodeIns)
+void CodeCompletionPopup::setShowCodeIns(bool newShowCodeIns)
 {
     mShowCodeIns = newShowCodeIns;
 }
 
-bool CodeCompletionView::showKeywords() const
+bool CodeCompletionPopup::showKeywords() const
 {
     return mShowKeywords;
 }
 
-void CodeCompletionView::setShowKeywords(bool newShowKeywords)
+void CodeCompletionPopup::setShowKeywords(bool newShowKeywords)
 {
     mShowKeywords = newShowKeywords;
 }
 
-bool CodeCompletionView::recordUsage() const
+bool CodeCompletionPopup::recordUsage() const
 {
     return mRecordUsage;
 }
 
-void CodeCompletionView::setRecordUsage(bool newRecordUsage)
+void CodeCompletionPopup::setRecordUsage(bool newRecordUsage)
 {
     mRecordUsage = newRecordUsage;
 }
 
-bool CodeCompletionView::onlyGlobals() const
+bool CodeCompletionPopup::onlyGlobals() const
 {
     return mOnlyGlobals;
 }
 
-void CodeCompletionView::setOnlyGlobals(bool newOnlyGlobals)
+void CodeCompletionPopup::setOnlyGlobals(bool newOnlyGlobals)
 {
     mOnlyGlobals = newOnlyGlobals;
 }
 
-int CodeCompletionView::showCount() const
+int CodeCompletionPopup::showCount() const
 {
     return mShowCount;
 }
 
-void CodeCompletionView::setShowCount(int newShowCount)
+void CodeCompletionPopup::setShowCount(int newShowCount)
 {
     mShowCount = newShowCount;
 }
 
-const PCppParser &CodeCompletionView::parser() const
+const PCppParser &CodeCompletionPopup::parser() const
 {
     return mParser;
 }
 
-void CodeCompletionView::setParser(const PCppParser &newParser)
+void CodeCompletionPopup::setParser(const PCppParser &newParser)
 {
     mParser = newParser;
 }
 
-void CodeCompletionView::hideEvent(QHideEvent *event)
+void CodeCompletionPopup::hideEvent(QHideEvent *event)
 {
     QMutexLocker locker(&mMutex);
     mListView->setKeypressedCallback(nullptr);
@@ -830,7 +830,7 @@ void CodeCompletionView::hideEvent(QHideEvent *event)
     QWidget::hideEvent(event);
 }
 
-bool CodeCompletionView::event(QEvent *event)
+bool CodeCompletionPopup::event(QEvent *event)
 {
     bool result = QWidget::event(event);
     if (event->type() == QEvent::FontChange) {
@@ -839,34 +839,7 @@ bool CodeCompletionView::event(QEvent *event)
     return result;
 }
 
-CodeCompletionListView::CodeCompletionListView(QWidget *parent) : QListView(parent)
-{
-
-}
-
-void CodeCompletionListView::keyPressEvent(QKeyEvent *event)
-{
-    if (event->key() == Qt::Key_Up
-            || event->key() == Qt::Key_Down) {
-        QListView::keyPressEvent(event);
-        return;
-    }
-    if (!mKeypressedCallback || !mKeypressedCallback(event)) {
-        QListView::keyPressEvent(event);
-    }
-}
-
-const KeyPressedCallback &CodeCompletionListView::keypressedCallback() const
-{
-    return mKeypressedCallback;
-}
-
-void CodeCompletionListView::setKeypressedCallback(const KeyPressedCallback &newKeypressedCallback)
-{
-    mKeypressedCallback = newKeypressedCallback;
-}
-
-CodeCompletionListModel::CodeCompletionListModel(StatementList *statements, QObject *parent):
+CodeCompletionListModel::CodeCompletionListModel(const StatementList *statements, QObject *parent):
     QAbstractListModel(parent),
     mStatements(statements)
 {

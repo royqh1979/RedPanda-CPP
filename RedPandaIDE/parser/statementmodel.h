@@ -11,11 +11,11 @@ class StatementModel : public QObject
 public:
     explicit StatementModel(QObject *parent = nullptr);
 
-    void add(PStatement statement);
+    void add(const PStatement& statement);
 //    function DeleteFirst: Integer;
 //    function DeleteLast: Integer;
-    void deleteStatement(PStatement statement);
-    const StatementMap& childrenStatements(PStatement statement = PStatement()) const;
+    void deleteStatement(const PStatement& statement);
+    const StatementMap& childrenStatements(const PStatement& statement = PStatement()) const;
     const StatementMap& childrenStatements(std::weak_ptr<Statement> statement) const;
     void clear();
     void dump(const QString& logFile);
@@ -25,8 +25,8 @@ public:
 signals:
 
 private:
-    void addMember(StatementMap& map, PStatement statement);
-    int deleteMember(StatementMap& map, PStatement statement);
+    void addMember(StatementMap& map, const PStatement& statement);
+    int deleteMember(StatementMap& map, const PStatement& statement);
     void dumpStatementMap(StatementMap& map, QTextStream& out, int level);
 private:
     int mCount;

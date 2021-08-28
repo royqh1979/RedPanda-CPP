@@ -343,7 +343,7 @@ QString getSystemHeaderFilename(const QString &fileName, const QSet<QString>& in
 {
 
     // Search compiler include directories
-    for (QString path:includePaths) {
+    for (const QString& path:includePaths) {
         QDir dir(path);
         if (dir.exists(fileName))
             return dir.absoluteFilePath(fileName);
@@ -373,7 +373,7 @@ bool isSystemHeaderFile(const QString &fileName, const QSet<QString> &includePat
         }
     } else {
         //check if it's in the include dir
-        for (QString includePath: includePaths) {
+        for (const QString& includePath: includePaths) {
             QDir dir(includePath);
             if (dir.exists(fileName))
                 return true;
@@ -387,7 +387,7 @@ bool isKeyword(const QString &word)
     return CppKeywords.contains(word);
 }
 
-bool isHfile(const QString filename)
+bool isHfile(const QString& filename)
 {
     if (filename.isEmpty())
         return false;
@@ -397,7 +397,7 @@ bool isHfile(const QString filename)
 
 }
 
-bool isCfile(const QString filename)
+bool isCfile(const QString& filename)
 {
     if (filename.isEmpty())
         return false;
@@ -464,7 +464,6 @@ void CppScopes::clear()
 
 MemberOperatorType getOperatorType(const QString &phrase, int index)
 {
-    MemberOperatorType result=MemberOperatorType::otOther;
     if (index>=phrase.length())
         return MemberOperatorType::otOther;
     if (phrase[index] == '.')

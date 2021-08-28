@@ -1,33 +1,15 @@
-#ifndef CODECOMPLETIONVIEW_H
-#define CODECOMPLETIONVIEW_H
+#ifndef CODECOMPLETIONPOPUP_H
+#define CODECOMPLETIONPOPUP_H
 
 #include <QListView>
 #include <QWidget>
 #include "parser/cppparser.h"
-
-using KeyPressedCallback = std::function<bool (QKeyEvent *)>;
-
-class CodeCompletionListView: public QListView {
-    Q_OBJECT
-public:
-    explicit CodeCompletionListView(QWidget *parent = nullptr);
-
-    // QWidget interface
-    const KeyPressedCallback &keypressedCallback() const;
-    void setKeypressedCallback(const KeyPressedCallback &newKeypressedCallback);
-
-protected:
-    void keyPressEvent(QKeyEvent *event) override;
-private:
-    KeyPressedCallback mKeypressedCallback;
-};
-
-using ColorCallback = std::function<QColor (PStatement)>;
+#include "codecompletionlistview.h"
 
 class CodeCompletionListModel : public QAbstractListModel {
     Q_OBJECT
 public:
-    explicit CodeCompletionListModel(StatementList* statements,QObject *parent = nullptr);
+    explicit CodeCompletionListModel(const StatementList* statements,QObject *parent = nullptr);
     int rowCount(const QModelIndex &parent) const override;
     QVariant data(const QModelIndex &index, int role) const override;
     void notifyUpdated();
@@ -39,13 +21,13 @@ private:
     ColorCallback mColorCallback;
 };
 
-class CodeCompletionView : public QWidget
+class CodeCompletionPopup : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit CodeCompletionView(QWidget *parent = nullptr);
-    ~CodeCompletionView();
+    explicit CodeCompletionPopup(QWidget *parent = nullptr);
+    ~CodeCompletionPopup();
 
     void setKeypressedCallback(const KeyPressedCallback &newKeypressedCallback);
     void prepareSearch(const QString& phrase, const QString& filename, int line);
@@ -127,4 +109,4 @@ public:
     bool event(QEvent *event) override;
 };
 
-#endif // CODECOMPLETIONVIEW_H
+#endif // CODECOMPLETIONPOPUP_H

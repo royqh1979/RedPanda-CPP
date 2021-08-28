@@ -29,7 +29,8 @@ SOURCES += \
     qsynedit/SearchRegex.cpp \
     settingsdialog/debuggeneralwidget.cpp \
     widgets/classbrowser.cpp \
-    widgets/codecompletionview.cpp \
+    widgets/codecompletionlistview.cpp \
+    widgets/codecompletionpopup.cpp \
     widgets/cpudialog.cpp \
     debugger.cpp \
     editor.cpp \
@@ -69,7 +70,7 @@ SOURCES += \
     utils.cpp \
     widgets/coloredit.cpp \
     widgets/consolewidget.cpp \
-    widgets/elidedlabel.cpp \
+    widgets/headercompletionpopup.cpp \
     widgets/issuestable.cpp \
     widgets/qconsole.cpp \
     widgets/qpatchedcombobox.cpp \
@@ -94,7 +95,8 @@ HEADERS += \
     qsynedit/SearchRegex.h \
     settingsdialog/debuggeneralwidget.h \
     widgets/classbrowser.h \
-    widgets/codecompletionview.h \
+    widgets/codecompletionlistview.h \
+    widgets/codecompletionpopup.h \
     widgets/cpudialog.h \
     debugger.h \
     editor.h \
@@ -135,7 +137,7 @@ HEADERS += \
     common.h \
     widgets/coloredit.h \
     widgets/consolewidget.h \
-    widgets/elidedlabel.h \
+    widgets/headercompletionpopup.h \
     widgets/issuestable.h \
     widgets/qconsole.h \
     widgets/qpatchedcombobox.h \

@@ -8,7 +8,7 @@ StatementModel::StatementModel(QObject *parent) : QObject(parent)
     mCount = 0;
 }
 
-void StatementModel::add(PStatement statement)
+void StatementModel::add(const PStatement& statement)
 {
     if (!statement) {
         return ;
@@ -26,7 +26,7 @@ void StatementModel::add(PStatement statement)
 
 }
 
-void StatementModel::deleteStatement(PStatement statement)
+void StatementModel::deleteStatement(const PStatement& statement)
 {
     if (!statement) {
         return ;
@@ -45,7 +45,7 @@ void StatementModel::deleteStatement(PStatement statement)
 
 }
 
-const StatementMap &StatementModel::childrenStatements(PStatement statement) const
+const StatementMap &StatementModel::childrenStatements(const PStatement& statement) const
 {
     if (!statement) {
         return mGlobalStatements;
@@ -97,7 +97,7 @@ void StatementModel::dumpAll(const QString &logFile)
 }
 #endif
 
-void StatementModel::addMember(StatementMap &map, PStatement statement)
+void StatementModel::addMember(StatementMap &map, const PStatement& statement)
 {
     if (!statement)
         return ;
@@ -110,7 +110,7 @@ void StatementModel::addMember(StatementMap &map, PStatement statement)
 //    lst->append(statement);
 }
 
-int StatementModel::deleteMember(StatementMap &map, PStatement statement)
+int StatementModel::deleteMember(StatementMap &map, const PStatement& statement)
 {
     if (!statement)
         return 0;

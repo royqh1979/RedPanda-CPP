@@ -200,8 +200,8 @@ QString getLocalHeaderFilename(const QString& relativeTo, const QString& fileNam
 
 QString getSystemHeaderFilename(const QString& fileName, const QSet<QString>& includePaths);
 bool isSystemHeaderFile(const QString& fileName, const QSet<QString>& includePaths);
-bool isHfile(const QString filename);
-bool isCfile(const QString filename);
+bool isHfile(const QString& filename);
+bool isCfile(const QString& filename);
 bool isKeyword(const QString& word);
 bool isScopeTypeKind(StatementKind kind);
 MemberOperatorType getOperatorType(const QString& phrase, int index);

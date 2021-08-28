@@ -1965,15 +1965,14 @@ void Settings::CompilerSets::loadSets()
                                      .arg(pCurrentSet->name())
                                      +"<br /><br />"
                                      +msg
-                                     +"Would you like Dev-C++ to remove them for you and add the default paths to the valid paths?<br /><br />Leaving those directories will lead to problems during compilation.<br /><br />Unless you know exactly what you're doing, it is recommended that you click Yes.",
-                                     QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
-                findSets();
-                saveSets();
-                if ( mList.size() <= mDefaultIndex)
-                    mDefaultIndex =  mList.size()-1;
-            } else {
+                                     +"Would you like Red Panda C++ to remove them for you and add the default paths to the valid paths?<br /><br />Leaving those directories will lead to problems during compilation.<br /><br />Unless you know exactly what you're doing, it is recommended that you click Yes.",
+                                     QMessageBox::Yes | QMessageBox::No) != QMessageBox::Yes) {
                 return;
             }
+            findSets();
+            saveSets();
+            if ( mList.size() <= mDefaultIndex)
+                mDefaultIndex =  mList.size()-1;
             pCurrentSet = defaultSet();
             if (!pCurrentSet) {
                 return;
@@ -1982,8 +1981,29 @@ void Settings::CompilerSets::loadSets()
             if (pCurrentSet->binDirs().count()>0) {
                 pCurrentSet->setProperties(pCurrentSet->binDirs()[0]);
             }
+        } else {
+            return;
         }
+    } else {
+        if (QMessageBox::warning(nullptr,tr("Confirm"),
+                   QObject::tr("Compiler set not configuared.")
+                                 +"<br /><br />"
+                                 +QObject::tr("Would you like Red Panda C++ to search for compilers in the following locations: <BR />'%1'<BR />'%2'? ")
+                                 .arg(includeTrailingPathDelimiter(pSettings->dirs().app()) + "MinGW32")
+                                 .arg(includeTrailingPathDelimiter(pSettings->dirs().app()) + "MinGW64"),
+                                 QMessageBox::Yes | QMessageBox::No) != QMessageBox::Yes) {
+            return;
+        }
+        clearSets();
+        findSets();
+        mDefaultIndex =  mList.size()-1;
+        pCurrentSet = defaultSet();
+        if (!pCurrentSet) {
+            return;
+        }
+        saveSets();
     }
+
 }
 
 void Settings::CompilerSets::saveDefaultIndex()
