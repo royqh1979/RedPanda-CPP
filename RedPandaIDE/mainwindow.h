@@ -5,6 +5,8 @@
 #include "common.h"
 #include "widgets/searchresultview.h"
 #include "widgets/classbrowser.h"
+#include "widgets/codecompletionpopup.h"
+#include "widgets/headercompletionpopup.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -90,6 +92,10 @@ public:
     SearchResultModel* searchResultModel();
 
 
+
+    const std::shared_ptr<CodeCompletionPopup> &completionPopup() const;
+
+    const std::shared_ptr<HeaderCompletionPopup> &headerCompletionPopup() const;
 
 protected:
     void openFiles(const QStringList& files);
@@ -232,6 +238,9 @@ private:
     bool mQuitting;
     QElapsedTimer mParserTimer;
 
+    std::shared_ptr<CodeCompletionPopup> mCompletionPopup;
+    std::shared_ptr<HeaderCompletionPopup> mHeaderCompletionPopup;
+
     SearchResultModel mSearchResultModel;
     PSearchResultListModel mSearchResultListModel;
     PSearchResultTreeModel mSearchResultTreeModel;
@@ -243,6 +252,7 @@ private:
     bool mCheckSyntaxInBack;
     int mPreviousHeight;
     PCompileSuccessionTask mCompileSuccessionTask;
+
 
    // QWidget interface
 protected:

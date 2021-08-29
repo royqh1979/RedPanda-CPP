@@ -99,8 +99,10 @@ Editor::Editor(QWidget *parent, const QString& filename,
     } else {
         initParser();
     }
-    mCompletionPopup = std::make_shared<CodeCompletionPopup>();
-    mHeaderCompletionPopup = std::make_shared<HeaderCompletionPopup>();
+//    mCompletionPopup = std::make_shared<CodeCompletionPopup>();
+//    mHeaderCompletionPopup = std::make_shared<HeaderCompletionPopup>();
+    mCompletionPopup = pMainWindow->completionPopup();
+    mHeaderCompletionPopup = pMainWindow->headerCompletionPopup();
 
     applySettings();
     applyColorScheme(pSettings->editor().colorScheme());

@@ -64,6 +64,7 @@ bool HeaderCompletionPopup::search(const QString &phrase, bool autoHideOnSingleR
     setCursor(oldCursor);
 
     if (!mCompletionList.isEmpty()) {
+        mListView->setCurrentIndex(mModel->index(0,0));
         if (mCompletionList.count() == 1) {
             // if only one suggestion and auto hide , don't show the frame
             if (autoHideOnSingleResult)
@@ -95,7 +96,9 @@ QString HeaderCompletionPopup::selectedFilename()
     int index = mListView->currentIndex().row();
     if (index>=0 && index<mCompletionList.count())
         return mCompletionList[index];
-    else
+    else if (mCompletionList.count()>0) {
+        return mCompletionList.front();
+    }
         return "";
 }
 

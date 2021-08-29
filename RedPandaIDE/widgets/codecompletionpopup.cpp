@@ -105,6 +105,7 @@ bool CodeCompletionPopup::search(const QString &phrase, bool autoHideOnSingleRes
     setCursor(oldCursor);
 
     if (!mCompletionStatementList.isEmpty()) {
+        mListView->setCurrentIndex(mModel->index(0,0));
         // if only one suggestion, and is exactly the symbol to search, hide the frame (the search is over)
         // if only one suggestion and auto hide , don't show the frame
         if(mCompletionStatementList.count() == 1)
@@ -223,9 +224,9 @@ static bool sortByScopeComparator(PStatement statement1,PStatement statement2){
     } else if (statement2->kind == StatementKind::skKeyword) {
         return false;
         // Show stuff from local headers first
-    } else if (statement1->inSystemHeader && !(statement2->inSystemHeader)) {
-        return true;
     } else if (!(statement1->inSystemHeader) && statement2->inSystemHeader) {
+        return true;
+    } else if (statement1->inSystemHeader && !(statement2->inSystemHeader)) {
         return false;
         // Show local statements first
     } else if (statement1->scope != StatementScope::ssGlobal
@@ -254,11 +255,11 @@ static bool sortWithUsageComparator(PStatement statement1,PStatement statement2)
     } else if (statement1->freqTop < statement2->freqTop) {
         return false;
         // show keywords first
-    } else if ((statement1->kind == StatementKind::skKeyword)
-               && (statement2->kind != StatementKind::skKeyword)) {
-        return true;
     } else if ((statement1->kind != StatementKind::skKeyword)
                && (statement2->kind == StatementKind::skKeyword)) {
+        return true;
+    } else if ((statement1->kind == StatementKind::skKeyword)
+               && (statement2->kind != StatementKind::skKeyword)) {
         return false;
     } else
         return statement1->command < statement2->command;

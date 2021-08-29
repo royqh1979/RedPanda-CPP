@@ -122,6 +122,9 @@ MainWindow::MainWindow(QWidget *parent)
     //class browser
     ui->classBrowser->setModel(&mClassBrowserModel);
 
+    mCompletionPopup = std::make_shared<CodeCompletionPopup>();
+    mHeaderCompletionPopup = std::make_shared<HeaderCompletionPopup>();
+
     updateAppTitle();
 }
 
@@ -941,7 +944,17 @@ void MainWindow::prepareDebugger()
 
 
     // Reset watch vars
-//    mDebugger->deleteWatchVars(false);
+    //    mDebugger->deleteWatchVars(false);
+}
+
+const std::shared_ptr<HeaderCompletionPopup> &MainWindow::headerCompletionPopup() const
+{
+    return mHeaderCompletionPopup;
+}
+
+const std::shared_ptr<CodeCompletionPopup> &MainWindow::completionPopup() const
+{
+    return mCompletionPopup;
 }
 
 SearchDialog *MainWindow::searchDialog() const
