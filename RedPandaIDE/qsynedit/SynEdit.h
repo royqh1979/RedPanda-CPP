@@ -250,6 +250,11 @@ public:
     virtual BufferCoord getMatchingBracket();
     virtual BufferCoord getMatchingBracketEx(BufferCoord APoint);
 
+    bool GetPositionOfMouse(BufferCoord& aPos);
+    bool GetLineOfMouse(int& line);
+    bool PointToCharLine(const QPoint& point, BufferCoord& coord);
+    bool PointToLine(const QPoint& point, int& line);
+
 
 // setter && getters
     int topLine() const;

@@ -61,6 +61,14 @@ public:
         wpInformation // walk backwards over words, array, functions, parents, forwards over words
     };
 
+    enum class TipType {
+      Preprocessor, // cursor hovers above preprocessor line
+      Identifier, // cursor hovers above identifier
+      Selection, // cursor hovers above selection
+      None, // mouseover not allowed
+      Error //Cursor hovers above error line/item;
+    };
+
     struct SyntaxIssue {
         int col;
         int endCol;
@@ -176,6 +184,15 @@ private:
     bool onCompletionKeyPressed(QKeyEvent* event);
     bool onHeaderCompletionKeyPressed(QKeyEvent* event);
 
+    TipType getTipType(QPoint point, BufferCoord& pos);
+    void cancelHint();
+    QString getFileHint(const QString& s);
+    QString getParserHint(const QString& s, int line);
+    QString getDebugHint(const QString& s);
+    QString getErrorHint(const QString& s);
+    QString getHintForFunction(const PStatement& statement, const PStatement& scope,
+                               const QString& filename, int line);
+
 private:
     static int newfileCount;
     QByteArray mEncodingOption; // the encoding type set by the user
@@ -201,6 +218,8 @@ private:
     std::shared_ptr<HeaderCompletionPopup> mHeaderCompletionPopup;
     int mLastIdCharPressed;
     bool mUseCppSyntax;
+    QString mCurrentWord;
+    TipType mCurrentTipType;
 
     // QWidget interface
 protected:
@@ -221,6 +240,10 @@ protected:
     // SynEdit interface
 protected:
     void onPreparePaintHighlightToken(int row, int column, const QString &token, PSynHighlighterAttribute attr, SynFontStyles &style, QColor &foreground, QColor &background) override;
+
+    // QObject interface
+public:
+    bool event(QEvent *event) override;
 };
 
 #endif // EDITOR_H

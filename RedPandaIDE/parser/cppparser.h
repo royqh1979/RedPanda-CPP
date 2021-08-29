@@ -93,7 +93,7 @@ public:
     //QString statementKindStr(StatementKind value);
     //QString statementClassScopeStr(StatementClassScope value);
 
-    QString prettyPrintStatement(const PStatement& statement, int line = -1);
+    QString prettyPrintStatement(const PStatement& statement, const QString& filename, int line = -1);
 
 
 

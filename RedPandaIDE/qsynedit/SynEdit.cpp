@@ -535,6 +535,49 @@ BufferCoord SynEdit::getMatchingBracketEx(BufferCoord APoint)
     return BufferCoord{0,0};
 }
 
+bool SynEdit::GetPositionOfMouse(BufferCoord &aPos)
+{
+    QPoint point = QCursor::pos();
+    point = mapFromGlobal(point);
+    return PointToCharLine(point,aPos);
+}
+
+bool SynEdit::GetLineOfMouse(int &line)
+{
+    QPoint point = QCursor::pos();
+    point = mapFromGlobal(point);
+    return PointToLine(point,line);
+}
+
+bool SynEdit::PointToCharLine(const QPoint &point, BufferCoord &coord)
+{
+    // Make sure it fits within the SynEdit bounds (and on the gutter)
+    if ((point.x() < gutterWidth() + clientLeft())
+            || (point.x()>clientWidth()+clientLeft())
+            || (point.y() < clientTop())
+            || (point.y() > clientTop()+clientHeight())) {
+        return false;
+    }
+
+    coord = displayToBufferPos(pixelsToRowColumn(point.x(),point.y()));
+    return true;
+}
+
+bool SynEdit::PointToLine(const QPoint &point, int &line)
+{
+    // Make sure it fits within the SynEdit bounds
+    if ((point.x() < clientLeft())
+            || (point.x()>clientWidth()+clientLeft())
+            || (point.y() < clientTop())
+            || (point.y() > clientTop()+clientHeight())) {
+        return false;
+    }
+
+    BufferCoord coord = displayToBufferPos(pixelsToRowColumn(point.x(),point.y()));
+    line = coord.Line;
+    return true;
+}
+
 void SynEdit::invalidateGutter()
 {
     invalidateGutterLines(-1, -1);

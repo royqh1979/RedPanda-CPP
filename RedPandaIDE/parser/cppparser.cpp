@@ -3,9 +3,11 @@
 #include "../utils.h"
 
 #include <QApplication>
+#include <QDate>
 #include <QHash>
 #include <QQueue>
 #include <QThread>
+#include <QTime>
 
 static QAtomicInt cppParserCount(0);
 CppParser::CppParser(QObject *parent) : QObject(parent)
@@ -811,10 +813,53 @@ void CppParser::unFreeze()
     mLockCount--;
 }
 
-QString CppParser::prettyPrintStatement(const PStatement& statement, int line)
+QString CppParser::prettyPrintStatement(const PStatement& statement, const QString& filename, int line)
 {
-    //TODO: implement it
-    return "not implemented yet";
+    QString result;
+    if (!statement->hintText.isEmpty()) {
+      if (statement->kind != StatementKind::skPreprocessor)
+          result = statement->hintText;
+      else if (statement->command == "__FILE__")
+          result = '"'+filename+'"';
+      else if (statement->command == "__LINE__")
+          result = QString("\"%1\"").arg(line);
+      else if (statement->command == "__DATE__")
+          result = QString("\"%1\"").arg(QDate::currentDate().toString(Qt::ISODate));
+      else if (statement->command == "__TIME__")
+          result = QString("\"%1\"").arg(QTime::currentTime().toString(Qt::ISODate));
+      else
+          result = statement->hintText;
+    } else {
+        switch(statement->kind) {
+        case StatementKind::skFunction:
+        case StatementKind::skVariable:
+        case StatementKind::skParameter:
+        case StatementKind::skClass:
+            if (statement->scope!= StatementScope::ssLocal)
+                result = getScopePrefix(statement); // public
+            result += statement->type + ' '; // void
+            result += statement->fullName; // A::B::C::Bar
+            result += getArgsSuffix(statement); // (int a)
+            break;
+        case StatementKind::skNamespace:
+            result = statement->fullName; // Bar
+            break;
+        case StatementKind::skConstructor:
+            result = getScopePrefix(statement); // public
+            result += QObject::tr("constructor") + ' '; // constructor
+            result += statement->type + ' '; // void
+            result += statement->fullName; // A::B::C::Bar
+            result += getArgsSuffix(statement); // (int a)
+            break;
+        case StatementKind::skDestructor:
+            result = getScopePrefix(statement); // public
+            result += QObject::tr("destructor") + ' '; // constructor
+            result += statement->type + ' '; // void
+            result += statement->fullName; // A::B::C::Bar
+            result += getArgsSuffix(statement); // (int a)
+            break;
+        }
+    }
 }
 
 QString CppParser::getFirstTemplateParam(const PStatement& statement,

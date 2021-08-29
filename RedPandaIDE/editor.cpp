@@ -21,9 +21,11 @@
 #include <QGuiApplication>
 #include <QClipboard>
 #include <QPainter>
+#include <QToolTip>
 #include "iconsmanager.h"
 #include "debugger.h"
 #include "editorlist.h"
+#include <QDebug>
 
 using namespace std;
 
@@ -63,7 +65,9 @@ Editor::Editor(QWidget *parent, const QString& filename,
   mSyntaxWarningColor("orange"),
   mLineCount(0),
   mActiveBreakpointLine(-1),
-  mLastIdCharPressed(0)
+  mLastIdCharPressed(0),
+  mCurrentWord(),
+  mCurrentTipType(TipType::None)
 {
     if (mFilename.isEmpty()) {
         newfileCount++;
@@ -575,6 +579,115 @@ void Editor::onPreparePaintHighlightToken(int row, int column, const QString &to
     }
 }
 
+bool Editor::event(QEvent *event)
+{
+    if (event->type() == QEvent::ToolTip) {
+        QHelpEvent *helpEvent = static_cast<QHelpEvent *>(event);
+        BufferCoord p;
+        TipType reason = getTipType(helpEvent->pos(),p);
+        qDebug()<<(int)reason;
+        PSyntaxIssue pError;
+        int line ;
+        if (reason == TipType::Error) {
+            pError = getSyntaxIssueAtPosition(p);
+        } else if ((reason == TipType::None) && GetLineOfMouse(line)) {
+            //it's on gutter
+            //see if its error;
+            PSyntaxIssueList issues = getSyntaxIssuesAtLine(line);
+            if (issues && !issues->isEmpty()) {
+                reason = TipType::Error;
+                pError = issues->front();
+            }
+        }
+
+        // Get subject
+        bool isIncludeLine = false;
+        BufferCoord pBeginPos,pEndPos;
+        QString s;
+        switch (reason) {
+        case TipType::Preprocessor:
+            // When hovering above a preprocessor line, determine if we want to show an include or a identifier hint
+            s = lines()->getString(p.Line - 1);
+            isIncludeLine = mParser->isIncludeLine(s);
+            if (!isIncludeLine)
+                s = WordAtRowCol(p);
+            break;
+        case TipType::Identifier:
+            if (pMainWindow->debugger()->executing())
+                s = getWordAtPosition(p, pBeginPos,pEndPos, WordPurpose::wpEvaluation); // debugging
+            else if (//devEditor.ParserHints and
+                     !mCompletionPopup->isVisible()
+                     && !mHeaderCompletionPopup->isVisible())
+                s = getWordAtPosition(p, pBeginPos,pEndPos, WordPurpose::wpInformation); // information during coding
+            break;
+        case TipType::Selection:
+            s = selText(); // when a selection is available, always only use that
+            break;
+        case TipType::Error:
+            s = pError->token;
+            break;
+        case TipType::None:
+            //fText.Cursor := crIBeam; // nope
+            cancelHint();
+            event->ignore();
+            return true;
+        }
+
+
+        qDebug()<<s<<" - "<<(int)reason;
+        // Don't rescan the same stuff over and over again (that's slow)
+        //  if (s = fCurrentWord) and (fText.Hint<>'') then
+        s = s.trimmed();
+        if ((s == mCurrentWord) && (mCurrentTipType == reason)) {
+            event->ignore();
+            return true; // do NOT remove hint when subject stays the same
+        }
+
+        // Remove hint
+        cancelHint();
+        mCurrentWord = s;
+        mCurrentTipType = reason;
+
+        // We are allowed to change the cursor
+//        if (ssCtrl in Shift) then
+//          fText.Cursor := crHandPoint
+//        else
+//          fText.Cursor := crIBeam;
+
+        // Determine what to do with subject
+        QString hint = "";
+        switch (reason) {
+        case TipType::Preprocessor:
+            if (isIncludeLine) {
+                hint = getFileHint(s);
+            } else if (//devEditor.ParserHints and
+                     !mCompletionPopup->isVisible()
+                     && !mHeaderCompletionPopup->isVisible()) {
+                hint = getParserHint(s,p.Line);
+            }
+            break;
+        case TipType::Identifier:
+        case TipType::Selection:
+            if (!mCompletionPopup->isVisible()
+                    && !mHeaderCompletionPopup->isVisible()) {
+                if (pMainWindow->debugger()->executing()) {
+                    hint = getDebugHint(s);
+                } else { //if devEditor.ParserHints {
+                    hint = getParserHint(s, p.Line);
+                }
+            }
+            break;
+        case TipType::Error:
+            hint = getErrorHint(s);
+        }
+        if (!hint.isEmpty()) {
+            QToolTip::showText(helpEvent->globalPos(),hint);
+        } else
+            event->ignore();
+    }
+    return SynEdit::event(event);
+}
+
 void Editor::copyToClipboard()
 {
     if (pSettings->editor().copySizeLimit()) {
@@ -766,6 +879,8 @@ Editor::PSyntaxIssueList Editor::getSyntaxIssuesAtLine(int line)
 Editor::PSyntaxIssue Editor::getSyntaxIssueAtPosition(const BufferCoord &pos)
 {
     PSyntaxIssueList lst = getSyntaxIssuesAtLine(pos.Line);
+    if (!lst)
+        return PSyntaxIssue();
     foreach (const PSyntaxIssue& issue, *lst) {
         if (issue->startChar<=pos.Char && pos.Char<=issue->endChar)
             return issue;
@@ -1733,6 +1848,119 @@ bool Editor::onHeaderCompletionKeyPressed(QKeyEvent *event)
         return true;
     }
     return processed;
+}
+
+Editor::TipType Editor::getTipType(QPoint point, BufferCoord& pos)
+{
+    // Only allow in the text area...
+    if (PointToCharLine(point, pos)) {
+        if (!pMainWindow->debugger()->executing()
+                && getSyntaxIssueAtPosition(pos)) {
+            return TipType::Error;
+        }
+
+        PSynHighlighterAttribute attr;
+        QString s;
+
+        // Only allow hand tips in highlighted areas
+        if (GetHighlighterAttriAtRowCol(pos,s,attr)) {
+            // Only allow Identifiers, Preprocessor directives, and selection
+            if (attr) {
+                if (selAvail()) {
+                    // do not allow when dragging selection
+                    if (IsPointInSelection(pos))
+                        return TipType::Selection;
+                } else if (attr->name() == SYNS_AttrAreaAIdentifier)
+                    return TipType::Identifier;
+                else if (attr->name() == SYNS_AttrPreprocessor)
+                    return TipType::Preprocessor;
+            }
+        }
+    }
+    return TipType::None;
+}
+
+void Editor::cancelHint()
+{
+    //MainForm.Debugger.OnEvalReady := nil;
+
+    // disable editor hint
+    QToolTip::hideText();
+    mCurrentWord = "";
+    mCurrentTipType = TipType::None;
+}
+
+QString Editor::getFileHint(const QString &s)
+{
+    QString fileName = mParser->getHeaderFileName(mFilename, s);
+    if (QFileInfo(fileName).exists()) {
+        return fileName + " - " + tr("Ctrl+click for more info");
+    }
+    return "";
+}
+
+QString Editor::getParserHint(const QString &s, int line)
+{
+    // This piece of code changes the parser database, possibly making hints and code completion invalid...
+    QString result;
+    PStatement statement = mParser->findStatementOf(mFilename, s, line);
+    if (!statement)
+        return result;
+    if (statement->kind == StatementKind::skFunction
+            || statement->kind == StatementKind::skConstructor
+            || statement->kind == StatementKind::skDestructor) {
+        PStatement parentScope = statement->parentScope.lock();
+        if (parentScope && parentScope->kind == StatementKind::skNamespace) {
+            PStatementList namespaceStatementsList =
+                    mParser->findNamespace(parentScope->command);
+            if (namespaceStatementsList) {
+                foreach (const PStatement& namespaceStatement, *namespaceStatementsList) {
+                    QString hint = getHintForFunction(statement,namespaceStatement,
+                                                      mFilename,line);
+                    if (!hint.isEmpty()) {
+                        if (!result.isEmpty())
+                            result += "<BR />";
+                        result += hint;
+                    }
+                }
+            }
+        } else
+          result = getHintForFunction(statement, parentScope,
+                                      mFilename,line);
+    } else if (statement->line>0) {
+        QFileInfo fileInfo(statement->fileName);
+        result = mParser->prettyPrintStatement(statement) + " - " +
+                QString(" %1 (%2) ")
+                .arg(fileInfo.fileName())
+                .arg(statement->line)
+                + tr("Ctrl+click for more info");
+    } else {  // hard defines
+        result = mParser->prettyPrintStatement(statement);
+    }
+//    Result := StringReplace(Result, '|', #5, [rfReplaceAll]);
+    return result;
+}
+
+QString Editor::getHintForFunction(const PStatement &statement, const PStatement &scopeStatement, const QString& filename, int line)
+{
+    QString result;
+    const StatementMap& children = mParser->statementList().childrenStatements(scopeStatement);
+    foreach (const PStatement& childStatement, children){
+        if (statement->command == childStatement->command
+                && statement->kind == childStatement->kind) {
+            if ((line < childStatement->line) &&
+                    childStatement->fileName == filename)
+                continue;
+            if (!result.isEmpty())
+                result += "<BR />";
+            result = mParser->prettyPrintStatement(childStatement) + " - " +
+                    QString(" %1 (%2) ")
+                    .arg(filename)
+                    .arg(childStatement->line)
+                    + tr("Ctrl+click for more info");
+        }
+    }
+    return result;
 }
 
 QString Editor::getWordAtPosition(const BufferCoord &p, BufferCoord &pWordBegin, BufferCoord &pWordEnd, WordPurpose purpose)
