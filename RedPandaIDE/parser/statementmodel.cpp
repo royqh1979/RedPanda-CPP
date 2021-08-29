@@ -120,10 +120,10 @@ int StatementModel::deleteMember(StatementMap &map, const PStatement& statement)
 void StatementModel::dumpStatementMap(StatementMap &map, QTextStream &out, int level)
 {
     QString indent(level,'\t');
-    for (PStatement statement:map.values()) {
+    foreach (const PStatement& statement,map) {
         out<<indent<<QString("%1, %2, %3, %4, %5, %6, %7, %8, %9, %10, %11, %12")
          .arg(statement->command).arg(int(statement->kind))
-         .arg(statement->type).arg(statement->fullName)
+         .arg(statement->type,statement->fullName)
          .arg((size_t)(statement->parentScope.lock().get()))
          .arg((int)statement->classScope)
          .arg(statement->fileName)

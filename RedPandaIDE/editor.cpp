@@ -29,15 +29,17 @@ using namespace std;
 
 SaveException::SaveException(const QString& reason) {
     mReason = reason;
+    mReasonBuffer = mReason.toLocal8Bit();
 }
 SaveException::SaveException(const QString&& reason) {
     mReason = reason;
+    mReasonBuffer = mReason.toLocal8Bit();
 }
 const QString& SaveException::reason() const  noexcept{
     return mReason;
 }
-const char *SaveException::what() const noexcept {
-    return mReason.toLocal8Bit();
+const char* SaveException::what() const noexcept {
+    return mReasonBuffer;
 }
 
 int Editor::newfileCount=0;
@@ -98,6 +100,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
         initParser();
     }
     mCompletionPopup = std::make_shared<CodeCompletionPopup>();
+    mHeaderCompletionPopup = std::make_shared<HeaderCompletionPopup>();
 
     applySettings();
     applyColorScheme(pSettings->editor().colorScheme());
@@ -255,8 +258,8 @@ void Editor::undoSymbolCompletion(int pos)
 
     if (pos<0 || pos+1>=lineText().length())
         return;
-    QChar DeletedChar = lineText()[pos];
-    QChar NextChar = lineText()[pos+1];
+    QChar DeletedChar = lineText().at(pos);
+    QChar NextChar = lineText().at(pos+1);
     if ((tokenType == SynHighlighterTokenType::Character) && (DeletedChar != '\''))
         return;
     if (tokenType == SynHighlighterTokenType::StringEscapeSequence)
@@ -454,7 +457,7 @@ void Editor::onGutterPaint(QPainter &painter, int aLine, int X, int Y)
         PSyntaxIssueList lst = getSyntaxIssuesAtLine(aLine);
         if (lst) {
             bool hasError=false;
-            for (PSyntaxIssue issue : *lst) {
+            for (const PSyntaxIssue& issue : *lst) {
                 if (issue->issueType == CompileIssueType::Error) {
                     hasError = true;
                     break;;
@@ -488,7 +491,7 @@ void Editor::onGetEditingAreas(int Line, SynEditingAreaList &areaList)
 //    StrToThemeColor(tc,devEditor.Syntax.Values[cWN]);
     PSyntaxIssueList lst = getSyntaxIssuesAtLine(Line);
     if (lst) {
-        for (PSyntaxIssue issue: *lst) {
+        for (const PSyntaxIssue& issue: *lst) {
             PSynEditingArea p=std::make_shared<SynEditingArea>();
             p->beginX = issue->col;
             p->endX = issue->endCol;
@@ -556,6 +559,7 @@ void Editor::onPreparePaintHighlightToken(int row, int column, const QString &to
         StatementKind kind = mParser->getKindOfStatement(statement);
         if (kind == StatementKind::skUnknown) {
             if ((pEndPos.Line>=1)
+              && (pEndPos.Char>=0)
               && (pEndPos.Char < lines()->getString(pEndPos.Line-1).length())
               && (lines()->getString(pEndPos.Line-1)[pEndPos.Char] == '(')) {
                 kind = StatementKind::skFunction;
@@ -760,7 +764,7 @@ Editor::PSyntaxIssueList Editor::getSyntaxIssuesAtLine(int line)
 Editor::PSyntaxIssue Editor::getSyntaxIssueAtPosition(const BufferCoord &pos)
 {
     PSyntaxIssueList lst = getSyntaxIssuesAtLine(pos.Line);
-    for (PSyntaxIssue issue: *lst) {
+    foreach (const PSyntaxIssue& issue, *lst) {
         if (issue->startChar<=pos.Char && pos.Char<=issue->endChar)
             return issue;
     }
@@ -865,7 +869,7 @@ void Editor::onStatusChanged(SynStatusChanges changes)
     //    mainForm.CaretList.AddCaret(self,fText.CaretY,fText.CaretX);
 }
 
-void Editor::onGutterClicked(Qt::MouseButton button, int x, int y, int line)
+void Editor::onGutterClicked(Qt::MouseButton button, int , int , int line)
 {
     if (button == Qt::LeftButton) {
         toggleBreakpoint(line);
@@ -878,7 +882,7 @@ QChar Editor::getCurrentChar()
     if (lineText().length()<caretX())
         return QChar();
     else
-        return lineText()[caretX()-1];
+        return lineText().at(caretX()-1);
 }
 
 bool Editor::handleSymbolCompletion(QChar key)
@@ -1429,7 +1433,50 @@ void Editor::showCompletion(bool autoComplete)
 
 void Editor::showHeaderCompletion(bool autoComplete)
 {
-    //todo:
+//    if not devCodeCompletion.Enabled then
+//      Exit;
+
+    if (mHeaderCompletionPopup->isVisible()) // already in search, don't do it again
+        return;
+
+    // Position it at the top of the next line
+    QPoint p = RowColumnToPixels(displayXY());
+    p.setY(p.y() + textHeight() + 2);
+    mHeaderCompletionPopup->move(mapToGlobal(p));
+
+
+//    fHeaderCompletionBox.IgnoreCase := devCodeCompletion.IgnoreCase;
+//    fHeaderCompletionBox.ShowCount := devCodeCompletion.MaxCount;
+    //Set Font size;
+    mHeaderCompletionPopup->setFont(font());
+
+    // Redirect key presses to completion box if applicable
+    mHeaderCompletionPopup->setKeypressedCallback([this](QKeyEvent* event)->bool{
+        return onHeaderCompletionKeyPressed(event);
+    });
+    mHeaderCompletionPopup->setParser(mParser);
+
+    BufferCoord pBeginPos,pEndPos;
+    QString word = getWordAtPosition(caretXY(),pBeginPos,pEndPos,
+                                     WordPurpose::wpHeaderCompletionStart);
+    if (word.isEmpty())
+        return;
+
+    if (!word.startsWith('"') && !word.startsWith('<'))
+        return;
+
+    if (word.lastIndexOf('"')>0 || word.lastIndexOf('>')>0)
+        return;
+
+    mHeaderCompletionPopup->show();
+    mHeaderCompletionPopup->setSearchLocal(word.startsWith('"'));
+    word.remove(0,1);
+
+    mHeaderCompletionPopup->prepareSearch(word, mFilename);
+
+    // Filter the whole statement list
+    if (mHeaderCompletionPopup->search(word, autoComplete)) //only one suggestion and it's not input while typing
+        headerCompletionInsert(); // if only have one suggestion, just use it
 }
 
 bool Editor::testInFunc(int x, int y)
@@ -1503,7 +1550,7 @@ void Editor::completionInsert(bool appendFunc)
                 || statement->kind == StatementKind::skConstructor
                 || statement->kind == StatementKind::skDestructor) {
             if ((p.Char >= lineText().length()) // it's the last char on line
-                    || (lineText()[p.Char] != '(')) {  // it don't have '(' after it
+                    || (lineText().at(p.Char) != '(')) {  // it don't have '(' after it
                 if (statement->fullName!="std::endl")
                     funcAddOn = "()";
             }
@@ -1546,11 +1593,46 @@ void Editor::completionInsert(bool appendFunc)
     mCompletionPopup->hide();
 }
 
+void Editor::headerCompletionInsert()
+{
+    QString headerName = mHeaderCompletionPopup->selectedFilename();
+    if (headerName.isEmpty())
+        return;
+
+    // delete the part of the word that's already been typed ...
+    BufferCoord p = caretXY();
+    int posBegin = p.Char-1;
+    int posEnd = p.Char-1;
+    QString sLine = lineText();
+    while ((posBegin>0) &&
+           (isIdentChar(sLine[posBegin-1]) || (sLine[posBegin-1]=='.')))
+        posBegin--;
+
+    while ((posEnd < sLine.length())
+           && (isIdentChar(sLine[posEnd]) || (sLine[posEnd]=='.')))
+        posEnd++;
+    p.Char = posBegin+1;
+    setBlockBegin(p);
+    p.Char = posEnd+1;
+    setBlockEnd(p);
+
+    setSelText(headerName);
+
+    mCompletionPopup->hide();
+}
+
 bool Editor::onCompletionKeyPressed(QKeyEvent *event)
 {
     bool processed = false;
     if (!mCompletionPopup->isEnabled())
         return false;
+    QString oldPhrase = mCompletionPopup->phrase();
+    WordPurpose purpose = WordPurpose::wpCompletion;
+    if (oldPhrase.startsWith('#')) {
+        purpose = WordPurpose::wpDirective;
+    } else if (oldPhrase.startsWith('@')) {
+        purpose = WordPurpose::wpJavadoc;
+    }
     QString phrase;
     BufferCoord pBeginPos,pEndPos;
     switch (event->key()) {
@@ -1560,7 +1642,7 @@ bool Editor::onCompletionKeyPressed(QKeyEvent *event)
                     QChar(), nullptr); // Simulate backspace in editor
         phrase = getWordAtPosition(caretXY(),
                                    pBeginPos,pEndPos,
-                                   WordPurpose::wpCompletion);
+                                   purpose);
         mLastIdCharPressed = phrase.length();
         mCompletionPopup->search(phrase, false);
         return true;
@@ -1583,15 +1665,68 @@ bool Editor::onCompletionKeyPressed(QKeyEvent *event)
     QChar ch = event->text().front();
     if (isIdentChar(ch)) {
         setSelText(ch);
-        phrase = phrase = getWordAtPosition(caretXY(),
+        phrase = getWordAtPosition(caretXY(),
                                             pBeginPos,pEndPos,
-                                            WordPurpose::wpCompletion);
+                                            purpose);
         mLastIdCharPressed = phrase.length();
         mCompletionPopup->search(phrase, false);
         return true;
     } else {
         //stop completion
         mCompletionPopup->hide();
+        keyPressEvent(event);
+        return true;
+    }
+    return processed;
+}
+
+bool Editor::onHeaderCompletionKeyPressed(QKeyEvent *event)
+{
+    bool processed = false;
+    if (!mCompletionPopup->isEnabled())
+        return false;
+    QString phrase;
+    BufferCoord pBeginPos,pEndPos;
+    switch (event->key()) {
+    case Qt::Key_Backspace:
+        ExecuteCommand(
+                    SynEditorCommand::ecDeleteLastChar,
+                    QChar(), nullptr); // Simulate backspace in editor
+        phrase = getWordAtPosition(caretXY(),
+                                   pBeginPos,pEndPos,
+                                   WordPurpose::wpHeaderCompletion);
+        mLastIdCharPressed = phrase.length();
+        mHeaderCompletionPopup->search(phrase, false);
+        return true;
+    case Qt::Key_Escape:
+        mHeaderCompletionPopup->hide();
+        return true;
+    case Qt::Key_Return:
+    case Qt::Key_Tab:
+        //CompletionInsert(devCodeCompletion.AppendFunc);
+        headerCompletionInsert();
+        mHeaderCompletionPopup->hide();
+        return true;
+    default:
+        if (event->text().isEmpty()) {
+            //stop completion
+            mHeaderCompletionPopup->hide();
+            keyPressEvent(event);
+            return true;
+        }
+    }
+    QChar ch = event->text().front();
+    if (isIdentChar(ch)) {
+        setSelText(ch);
+        phrase = getWordAtPosition(caretXY(),
+                                            pBeginPos,pEndPos,
+                                            WordPurpose::wpHeaderCompletion);
+        mLastIdCharPressed = phrase.length();
+        mHeaderCompletionPopup->search(phrase, false);
+        return true;
+    } else {
+        //stop completion
+        mHeaderCompletionPopup->hide();
         keyPressEvent(event);
         return true;
     }
@@ -2066,6 +2201,7 @@ void Editor::applyColorScheme(const QString& schemeName)
         if (item) {
             mCompletionPopup->colors().insert(StatementKind::skPreprocessor,item->foreground());
             mCompletionPopup->colors().insert(StatementKind::skEnum,item->foreground());
+            mHeaderCompletionPopup->setSuggestionColor(item->foreground());
         }
         item = pColorManager->getItem(schemeName, SYNS_AttrReservedWord);
         if (item) {

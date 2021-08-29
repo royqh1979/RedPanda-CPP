@@ -297,7 +297,7 @@ void SynEdit::setInsertMode(bool value)
     if (mInserting != value) {
         mInserting = value;
         updateCaret();
-        statusChanged(scInsertMode);
+        emit statusChanged(scInsertMode);
     }
 }
 
@@ -1179,7 +1179,7 @@ BufferCoord SynEdit::WordStartEx(const BufferCoord &XY)
     // valid line?
     if ((CY >= 1) && (CY <= mLines->count())) {
         QString Line = mLines->getString(CY - 1);
-        CX = std::min(CX, Line.length()+1);
+        CX = std::min(CX, Line.length());
         if (CX-1 >= 0) {
             if (!(Line[CX - 1].isSpace()))
                 CX = StrRScanForNonWordChar(Line, CX - 1) + 1;
@@ -1539,7 +1539,7 @@ void SynEdit::doDeleteLastChar()
             setCaretX(newCaretX);
             updateLastCaretX();
             mStateFlags.setFlag(SynStateFlag::sfCaretChanged);
-            statusChanged(SynStatusChange::scCaretX);
+            emit statusChanged(SynStatusChange::scCaretX);
         } else {
             // delete char
             internalSetCaretX(mCaretX - 1);
@@ -2635,7 +2635,7 @@ void SynEdit::recalcCharExtent()
     bool hasStyles[] = {false,false,false,false};
     int size = 4;
     if (mHighlighter && mHighlighter->attributes().count()>0) {
-        for (PSynHighlighterAttribute attribute: mHighlighter->attributes().values()) {
+        for (const PSynHighlighterAttribute& attribute: mHighlighter->attributes()) {
             for (int i=0;i<size;i++) {
                 if (attribute->styles().testFlag(styles[i]))
                     hasStyles[i] = true;
@@ -3003,7 +3003,7 @@ PSynEditFoldRange SynEdit::collapsedFoldStartAtLine(int Line)
     return PSynEditFoldRange();
 }
 
-void SynEdit::doOnPaintTransientEx(SynTransientType TransientType, bool Lock)
+void SynEdit::doOnPaintTransientEx(SynTransientType , bool )
 {
     //todo: we can't draw to canvas outside paintEvent
 }
@@ -3243,7 +3243,7 @@ void SynEdit::setReadOnly(bool readOnly)
 {
     if (mReadOnly != readOnly) {
         mReadOnly = readOnly;
-        statusChanged(scReadOnly);
+        emit statusChanged(scReadOnly);
     }
 }
 
@@ -3870,7 +3870,7 @@ QString SynEdit::selText()
                     result += mLines->getString(i);
                     result+=lineBreak();
                 }
-                result += mLines->getString(Last).left(ColTo-1);
+                result += mLines->getString(Last).leftRef(ColTo-1);
                 return result;
             }
         case SynSelectionMode::smColumn:
@@ -4340,7 +4340,7 @@ int SynEdit::searchReplace(const QString &sSearch, const QString &sReplace, SynS
     return result;
 }
 
-void SynEdit::DoLinesDeleted(int FirstLine, int Count)
+void SynEdit::DoLinesDeleted(int , int )
 {
 //    // gutter marks
 //    for i := 0 to Marks.Count - 1 do begin
@@ -4356,7 +4356,7 @@ void SynEdit::DoLinesDeleted(int FirstLine, int Count)
     //    end;
 }
 
-void SynEdit::DoLinesInserted(int FirstLine, int Count)
+void SynEdit::DoLinesInserted(int , int )
 {
 //    // gutter marks
 //    for i := 0 to Marks.Count - 1 do begin
@@ -4606,7 +4606,7 @@ int SynEdit::InsertTextByLineMode(const QString &Value)
     QString Str;
     int Result = 0;
     mCaretX = 1;
-    statusChanged(SynStatusChange::scCaretX);
+    emit statusChanged(SynStatusChange::scCaretX);
     // Insert string before current line
     Start = 0;
     do {
@@ -4659,12 +4659,12 @@ void SynEdit::onGetEditingAreas(int, SynEditingAreaList &)
 
 }
 
-void SynEdit::onGutterGetText(int aLine, QString &aText)
+void SynEdit::onGutterGetText(int , QString &)
 {
 
 }
 
-void SynEdit::onGutterPaint(QPainter &painter, int aLine, int X, int Y)
+void SynEdit::onGutterPaint(QPainter &, int , int , int )
 {
 
 }
@@ -4674,7 +4674,8 @@ void SynEdit::onPaint(QPainter &)
 
 }
 
-void SynEdit::onPreparePaintHighlightToken(int row, int column, const QString &token, PSynHighlighterAttribute attr, SynFontStyles &style, QColor &foreground, QColor &background)
+void SynEdit::onPreparePaintHighlightToken(int , int , const QString &,
+                                           PSynHighlighterAttribute , SynFontStyles &, QColor &, QColor &)
 {
 
 }
@@ -5188,7 +5189,7 @@ void SynEdit::paintEvent(QPaintEvent *event)
     paintCaret(painter, rcCaret);
 }
 
-void SynEdit::resizeEvent(QResizeEvent *e)
+void SynEdit::resizeEvent(QResizeEvent *)
 {
     //resize the cache image
     std::shared_ptr<QImage> image = std::make_shared<QImage>(clientWidth(),clientHeight(),
@@ -5407,7 +5408,7 @@ void SynEdit::inputMethodEvent(QInputMethodEvent *event)
     }
 }
 
-void SynEdit::leaveEvent(QEvent *event)
+void SynEdit::leaveEvent(QEvent *)
 {
     setCursor(Qt::ArrowCursor);
 }
@@ -5458,7 +5459,7 @@ void SynEdit::setModified(bool Value)
         if (mOptions.testFlag(SynEditorOption::eoGroupUndo) && (!Value) && mUndoList->CanUndo())
             mUndoList->AddGroupBreak();
         mUndoList->setInitialState(!Value);
-        statusChanged(SynStatusChange::scModified);
+        emit statusChanged(SynStatusChange::scModified);
     }
 }
 

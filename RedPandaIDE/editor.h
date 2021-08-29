@@ -9,6 +9,7 @@
 #include "common.h"
 #include "parser/cppparser.h"
 #include "widgets/codecompletionpopup.h"
+#include "widgets/headercompletionpopup.h"
 
 class SaveException: public std::exception {
 
@@ -21,6 +22,7 @@ public:
     const char *what() const noexcept override;
 private:
     QString mReason;
+    QByteArray mReasonBuffer;
 };
 
 class Editor : public SynEdit
@@ -169,7 +171,10 @@ private:
 
     void completionInsert(bool appendFunc=false);
 
+    void headerCompletionInsert();
+
     bool onCompletionKeyPressed(QKeyEvent* event);
+    bool onHeaderCompletionKeyPressed(QKeyEvent* event);
 
 private:
     static int newfileCount;
@@ -193,6 +198,7 @@ private:
     int mActiveBreakpointLine;
     PCppParser mParser;
     std::shared_ptr<CodeCompletionPopup> mCompletionPopup;
+    std::shared_ptr<HeaderCompletionPopup> mHeaderCompletionPopup;
     int mLastIdCharPressed;
     bool mUseCppSyntax;
 

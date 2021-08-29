@@ -32,11 +32,11 @@ MainWindow* pMainWindow;
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
       ui(new Ui::MainWindow),
+      mSearchDialog(nullptr),
+      mQuitting(false),
       mMessageControlChanged(false),
       mTabMessagesTogglingState(false),
-      mCheckSyntaxInBack(false),
-      mSearchDialog(nullptr),
-      mQuitting(false)
+      mCheckSyntaxInBack(false)
 {
     ui->setupUi(this);
     // status bar
@@ -135,8 +135,8 @@ void MainWindow::updateForEncodingInfo() {
     if (editor!=NULL) {
         mFileEncodingStatus->setText(
                     QString("%1(%2)")
-                    .arg(QString(editor->encodingOption()))
-                    .arg(QString(editor->fileEncoding())));
+                    .arg(QString(editor->encodingOption())
+                         ,QString(editor->fileEncoding())));
         ui->actionAuto_Detect->setChecked(editor->encodingOption() == ENCODING_AUTO_DETECT);
         ui->actionEncode_in_ANSI->setChecked(editor->encodingOption() == ENCODING_SYSTEM_DEFAULT);
         ui->actionEncode_in_UTF_8->setChecked(editor->encodingOption() == ENCODING_UTF8);
@@ -304,23 +304,25 @@ void MainWindow::updateAppTitle()
         else
           str = e->filename();
         if (mDebugger->executing()) {
-            setWindowTitle(QString("%1 - [%2] - %3 %4").arg(str).arg(appName)
-                                 .arg(tr("Debugging")).arg(DEVCPP_VERSION));
-            app->setApplicationName(QString("%1 - [%2] - %3").arg(str).arg(appName)
-                                    .arg(tr("Debugging")));
+            setWindowTitle(QString("%1 - [%2] - %3 %4")
+                           .arg(str,appName,tr("Debugging"),DEVCPP_VERSION));
+            app->setApplicationName(QString("%1 - [%2] - %3")
+                                    .arg(str,appName,tr("Debugging")));
         } else if (mCompilerManager->running()) {
-            setWindowTitle(QString("%1 - [%2] - %3 %4").arg(str).arg(appName)
-                                 .arg(tr("Running")).arg(DEVCPP_VERSION));
-            app->setApplicationName(QString("%1 - [%2] - %3").arg(str).arg(appName)
-                                    .arg(tr("Running")));
+            setWindowTitle(QString("%1 - [%2] - %3 %4")
+                           .arg(str,appName,tr("Running"),DEVCPP_VERSION));
+            app->setApplicationName(QString("%1 - [%2] - %3")
+                                    .arg(str,appName,tr("Running")));
         } else if (mCompilerManager->compiling()) {
-            setWindowTitle(QString("%1 - [%2] - %3 %4").arg(str).arg(appName)
-                                 .arg(tr("Compiling")).arg(DEVCPP_VERSION));
-            app->setApplicationName(QString("%1 - [%2] - %3").arg(str).arg(appName)
-                                    .arg(tr("Compiling")));
+            setWindowTitle(QString("%1 - [%2] - %3 %4")
+                           .arg(str,appName,tr("Compiling"),DEVCPP_VERSION));
+            app->setApplicationName(QString("%1 - [%2] - %3")
+                                    .arg(str,appName,tr("Compiling")));
         } else {
-            this->setWindowTitle(QString("%1 - %2 %3").arg(str).arg(appName).arg(DEVCPP_VERSION));
-            app->setApplicationName(QString("%1 - %2").arg(str).arg(appName));
+            this->setWindowTitle(QString("%1 - %2 %3")
+                                 .arg(str,appName,DEVCPP_VERSION));
+            app->setApplicationName(QString("%1 - %2")
+                                    .arg(str,appName));
         }
     }
 // else if Assigned(fProject) then begin
@@ -342,7 +344,7 @@ void MainWindow::updateAppTitle()
 //    Application.Title := Format('%s - %s', [fProject.Name, appName]);
 //  end;
     else {
-        setWindowTitle(QString("%1 %2").arg(appName).arg(DEVCPP_VERSION));
+        setWindowTitle(QString("%1 %2").arg(appName,DEVCPP_VERSION));
         app->setApplicationName(QString("%1").arg(appName));
     }
 }
@@ -370,7 +372,7 @@ void MainWindow::updateDebugEval(const QString &value)
 void MainWindow::rebuildOpenedFileHisotryMenu()
 {
     mMenuRecentFiles->clear();
-    for (QAction* action:mRecentFileActions) {
+    foreach (QAction* action,mRecentFileActions) {
         action->setParent(nullptr);
         action->deleteLater();
     }
@@ -379,10 +381,10 @@ void MainWindow::rebuildOpenedFileHisotryMenu()
         mMenuRecentFiles->setEnabled(false);
     } else {
         mMenuRecentFiles->setEnabled(true);
-        for (QString filename: pSettings->history().openedFiles()) {
+        for (const QString& filename: pSettings->history().openedFiles()) {
             QAction* action = new QAction();
             action->setText(filename);
-            connect(action, &QAction::triggered, [filename,this](bool checked = false){
+            connect(action, &QAction::triggered, [&filename,this](bool){
                 this->openFile(filename);
             });
             mRecentFileActions.append(action);
@@ -471,7 +473,7 @@ void MainWindow::openFiles(const QStringList &files)
     auto end = finally([this] {
         this->mEditorList->endUpdate();
     });
-    for (QString file:files) {
+    for (const QString& file:files) {
         openFile(file);
     }
     mEditorList->endUpdate();
@@ -804,16 +806,16 @@ void MainWindow::debug()
     updateEditorActions();
 
     // Add library folders
-    for (QString dir:compilerSet->libDirs()) {
+    foreach (QString dir,compilerSet->libDirs()) {
         mDebugger->sendCommand("dir",
                                QString("\"%1\"").arg(dir.replace('\\','/')));
     }
     // Add include folders
-    for (QString dir:compilerSet->CIncludeDirs()) {
+    foreach (QString dir,compilerSet->CIncludeDirs()) {
         mDebugger->sendCommand("dir",
                                QString("\"%1\"").arg(dir.replace('\\','/')));
     }
-    for (QString dir:compilerSet->CppIncludeDirs()) {
+    foreach (QString dir,compilerSet->CppIncludeDirs()) {
         mDebugger->sendCommand("dir",
                                QString("\"%1\"").arg(dir.replace('\\','/')));
     }
@@ -1123,7 +1125,7 @@ void MainWindow::onCompileFinished()
             if (issue->type == CompileIssueType::Error) {
                 ui->tableIssues->selectRow(i);
                 QModelIndex index =ui->tableIssues->model()->index(i,0);
-                ui->tableIssues->doubleClicked(index);
+                emit ui->tableIssues->doubleClicked(index);
             }
         }
 
@@ -1133,7 +1135,7 @@ void MainWindow::onCompileFinished()
             if (issue->type == CompileIssueType::Warning) {
                 ui->tableIssues->selectRow(i);
                 QModelIndex index =ui->tableIssues->model()->index(i,0);
-                ui->tableIssues->doubleClicked(index);
+                emit ui->tableIssues->doubleClicked(index);
             }
         }
         // Then try to find anything with a line number...
@@ -1452,13 +1454,13 @@ bool MainWindow::debugInferiorhasBreakpoint()
     if (e==nullptr)
         return false;
     if (!e->inProject()) {
-        for (PBreakpoint breakpoint:mDebugger->breakpointModel()->breakpoints()) {
+        for (const PBreakpoint& breakpoint:mDebugger->breakpointModel()->breakpoints()) {
             if (e->filename() == breakpoint->filename) {
                 return true;
             }
         }
     } else {
-        for (PBreakpoint breakpoint:mDebugger->breakpointModel()->breakpoints()) {
+        for (const PBreakpoint& breakpoint:mDebugger->breakpointModel()->breakpoints()) {
             Editor* e1 = mEditorList->getOpenedEditorByFilename(breakpoint->filename);
             if (e1->inProject()) {
                 return true;

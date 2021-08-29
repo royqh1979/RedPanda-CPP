@@ -22,7 +22,6 @@ void SynEditTextPainter::paintTextLines(const QRect& clip)
     bCurrentLine = false;
     // If the right edge is visible and in the invalid area, prepare to paint it.
     // Do this first to realize the pen when getting the dc variable.
-    QString SynTabGlyphString = SynTabGlyph;
     bDoRightEdge = false;
     if (edit->mRightEdge > 0) { // column value
         nRightEdge = edit->textOffset()+ edit->mRightEdge * edit->mCharWidth; // pixel value
@@ -75,7 +74,6 @@ void SynEditTextPainter::paintGutter(const QRect& clip)
 {
     int cRow;
     QRect rcLine, rcFold;
-    QList<int> aGutterOffs;
     QString s;
     int vLine;
     int vLineTop;
@@ -392,7 +390,7 @@ void SynEditTextPainter::PaintEditAreas(const SynEditingAreaList &areaList)
     rc=rcLine;
     rc.setBottom(rc.bottom()-1);
     setDrawingColors(false);
-    for (PSynEditingArea p:areaList) {
+    for (const PSynEditingArea& p:areaList) {
         if (p->beginX > LastCol)
           continue;
         if (p->endX < FirstCol)
@@ -536,7 +534,6 @@ void SynEditTextPainter::PaintHighlightToken(bool bFillToEOL)
 
 bool SynEditTextPainter::TokenIsSpaces(bool &bSpacesTest, const QString& Token, bool& bIsSpaces)
 {
-    QString pTok;
     if (!bSpacesTest) {
         bSpacesTest = true;
         for (QChar ch:Token) {
@@ -622,7 +619,6 @@ void SynEditTextPainter::AddHighlightToken(const QString &Token, int ColumnsBefo
 void SynEditTextPainter::PaintFoldAttributes()
 {
     int TabSteps, LineIndent, LastNonBlank, X, Y, cRow, vLine;
-    QBrush DottedPenDesc;
     // Paint indent guides. Use folds to determine indent value of these
     // Use a separate loop so we can use a custom pen
     // Paint indent guides using custom pen
@@ -933,7 +929,7 @@ void SynEditTextPainter::PaintLines()
     }
 }
 
-void SynEditTextPainter::drawMark(PSynEditMark aMark, int &aGutterOff, int aMarkRow)
+void SynEditTextPainter::drawMark(PSynEditMark , int &, int )
 {
     //todo
 }

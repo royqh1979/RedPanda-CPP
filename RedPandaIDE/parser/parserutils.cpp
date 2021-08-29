@@ -4,6 +4,7 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QDebug>
+#include <QGlobalStatic>
 
 QStringList CppDirectives;
 QStringList JavadocTags;
@@ -14,25 +15,25 @@ QSet<QString> STLPointers;
 QSet<QString> STLContainers;
 QSet<QString> STLElementMethods;
 
-static QSet<QString> CppHeaderExts;
-static QSet<QString> CppSourceExts;
+Q_GLOBAL_STATIC(QSet<QString>,CppHeaderExts)
+Q_GLOBAL_STATIC(QSet<QString>,CppSourceExts)
 
 void initParser()
 {
-    CppHeaderExts.insert("h");
-    CppHeaderExts.insert("hpp");
-    CppHeaderExts.insert("rh");
-    CppHeaderExts.insert("hh");
-    CppHeaderExts.insert("hxx");
-    CppHeaderExts.insert("inl");
-    CppHeaderExts.insert("");
+    CppHeaderExts->insert("h");
+    CppHeaderExts->insert("hpp");
+    CppHeaderExts->insert("rh");
+    CppHeaderExts->insert("hh");
+    CppHeaderExts->insert("hxx");
+    CppHeaderExts->insert("inl");
+    CppHeaderExts->insert("");
 
-    CppSourceExts.insert("c");
-    CppSourceExts.insert("cpp");
-    CppSourceExts.insert("cc");
-    CppSourceExts.insert("cxx");
-    CppSourceExts.insert("c++");
-    CppSourceExts.insert("cp");
+    CppSourceExts->insert("c");
+    CppSourceExts->insert("cpp");
+    CppSourceExts->insert("cc");
+    CppSourceExts->insert("cxx");
+    CppSourceExts->insert("c++");
+    CppSourceExts->insert("cp");
     // skip itself
     CppKeywords.insert("and",SkipType::skItself);
     CppKeywords.insert("and_eq",SkipType::skItself);
@@ -393,7 +394,7 @@ bool isHfile(const QString& filename)
         return false;
 
     QFileInfo fileInfo(filename);
-    return CppHeaderExts.contains(fileInfo.suffix().toLower());
+    return CppHeaderExts->contains(fileInfo.suffix().toLower());
 
 }
 
@@ -403,7 +404,7 @@ bool isCfile(const QString& filename)
         return false;
 
     QFileInfo fileInfo(filename);
-    return CppSourceExts.contains(fileInfo.suffix().toLower());
+    return CppSourceExts->contains(fileInfo.suffix().toLower());
 }
 
 PStatement CppScopes::findScopeAtLine(int line)

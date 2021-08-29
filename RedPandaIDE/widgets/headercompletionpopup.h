@@ -29,6 +29,7 @@ public:
     bool search(const QString& phrase, bool autoHideOnSingleResult);
     void setKeypressedCallback(const KeyPressedCallback &newKeypressedCallback);
     void setSuggestionColor(const QColor& color);
+    QString selectedFilename();
 
 private:
     void filterList(const QString& member);
@@ -59,6 +60,12 @@ protected:
     // QObject interface
 public:
     bool event(QEvent *event) override;
+    void setParser(const PCppParser &newParser);
+    const QString &phrase() const;
+    bool ignoreCase() const;
+    void setIgnoreCase(bool newIgnoreCase);
+    bool searchLocal() const;
+    void setSearchLocal(bool newSearchLocal);
 };
 
 #endif // HEADERCOMPLETIONPOPUP_H

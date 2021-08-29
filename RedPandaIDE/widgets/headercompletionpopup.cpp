@@ -88,6 +88,17 @@ void HeaderCompletionPopup::setSuggestionColor(const QColor &color)
     mModel->setColor(color);
 }
 
+QString HeaderCompletionPopup::selectedFilename()
+{
+    if (!isEnabled())
+        return "";
+    int index = mListView->currentIndex().row();
+    if (index>=0 && index<mCompletionList.count())
+        return mCompletionList[index];
+    else
+        return "";
+}
+
 void HeaderCompletionPopup::filterList(const QString &member)
 {
     mCompletionList.clear();
@@ -149,8 +160,10 @@ void HeaderCompletionPopup::addFilesInPath(const QString &path)
     if (!dir.exists())
         return;
     foreach (const QFileInfo& fileInfo, dir.entryInfoList()) {
+        if (fileInfo.fileName().startsWith("."))
+            continue;
         QString suffix = fileInfo.suffix().toLower();
-        if (suffix == ".h" || suffix == ".hpp" || suffix == "") {
+        if (suffix == "h" || suffix == "hpp" || suffix == "") {
             addFile(fileInfo.fileName());
         }
     }
@@ -170,6 +183,36 @@ void HeaderCompletionPopup::addFilesInSubDir(const QString &baseDirPath, const Q
     QDir baseDir(baseDirPath);
     QString subDirPath = baseDir.filePath(subDirName);
     addFilesInPath(subDirPath);
+}
+
+bool HeaderCompletionPopup::searchLocal() const
+{
+    return mSearchLocal;
+}
+
+void HeaderCompletionPopup::setSearchLocal(bool newSearchLocal)
+{
+    mSearchLocal = newSearchLocal;
+}
+
+bool HeaderCompletionPopup::ignoreCase() const
+{
+    return mIgnoreCase;
+}
+
+void HeaderCompletionPopup::setIgnoreCase(bool newIgnoreCase)
+{
+    mIgnoreCase = newIgnoreCase;
+}
+
+const QString &HeaderCompletionPopup::phrase() const
+{
+    return mPhrase;
+}
+
+void HeaderCompletionPopup::setParser(const PCppParser &newParser)
+{
+    mParser = newParser;
 }
 
 void HeaderCompletionPopup::showEvent(QShowEvent *)

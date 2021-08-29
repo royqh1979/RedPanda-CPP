@@ -56,7 +56,7 @@ int SynSearch::findAll(const QString &keyword)
     return mResults.size();
 }
 
-QString SynSearch::replace(const QString &aOccurrence, const QString &aReplacement)
+QString SynSearch::replace(const QString &, const QString &aReplacement)
 {
     return aReplacement;
 }

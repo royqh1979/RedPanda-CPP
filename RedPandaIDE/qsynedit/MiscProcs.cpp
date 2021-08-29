@@ -570,8 +570,6 @@ int StrScanForNonWordChar(const QString &s, int startPos)
 int StrRScanForWordChar(const QString &s, int startPos)
 {
     int i = startPos-1;
-    if (i>s.length())
-        return 0;
     while (i>=0) {
         if (isWordChar(s[i]))
             return i+1;
@@ -583,8 +581,6 @@ int StrRScanForWordChar(const QString &s, int startPos)
 int StrRScanForNonWordChar(const QString &s, int startPos)
 {
     int i = startPos-1;
-    if (i>s.length())
-        return 0;
     while (i>=0) {
         if (!isWordChar(s[i]))
             return i+1;

@@ -1259,7 +1259,7 @@ QStringList &Settings::CompilerSet::libDirs()
     return mLibDirs;
 }
 
-const QString &Settings::CompilerSet::dumpMachine()
+const QString &Settings::CompilerSet::dumpMachine() const
 {
     return mDumpMachine;
 }
@@ -1269,7 +1269,7 @@ void Settings::CompilerSet::setDumpMachine(const QString &value)
     mDumpMachine = value;
 }
 
-const QString &Settings::CompilerSet::version()
+const QString &Settings::CompilerSet::version() const
 {
     return mVersion;
 }
@@ -1279,7 +1279,7 @@ void Settings::CompilerSet::setVersion(const QString &value)
     mVersion = value;
 }
 
-const QString &Settings::CompilerSet::type()
+const QString &Settings::CompilerSet::type() const
 {
     return mType;
 }
@@ -1289,7 +1289,7 @@ void Settings::CompilerSet::setType(const QString& value)
     mType = value;
 }
 
-const QString &Settings::CompilerSet::name()
+const QString &Settings::CompilerSet::name() const
 {
     return mName;
 }
@@ -1299,12 +1299,12 @@ void Settings::CompilerSet::setName(const QString &value)
     mName = value;
 }
 
-QStringList& Settings::CompilerSet::defines()
+const QStringList& Settings::CompilerSet::defines() const
 {
     return mDefines;
 }
 
-const QString &Settings::CompilerSet::target()
+const QString &Settings::CompilerSet::target() const
 {
     return mTarget;
 }
@@ -1319,7 +1319,7 @@ void Settings::CompilerSet::setUseCustomCompileParams(bool value)
     mUseCustomCompileParams = value;
 }
 
-bool Settings::CompilerSet::useCustomLinkParams()
+bool Settings::CompilerSet::useCustomLinkParams() const
 {
     return mUseCustomLinkParams;
 }
@@ -1329,7 +1329,7 @@ void Settings::CompilerSet::setUseCustomLinkParams(bool value)
     mUseCustomLinkParams = value;
 }
 
-const QString &Settings::CompilerSet::customCompileParams()
+const QString &Settings::CompilerSet::customCompileParams() const
 {
     return mCustomCompileParams;
 }
@@ -1339,7 +1339,7 @@ void Settings::CompilerSet::setCustomCompileParams(const QString &value)
     mCustomCompileParams = value;
 }
 
-const QString &Settings::CompilerSet::customLinkParams()
+const QString &Settings::CompilerSet::customLinkParams() const
 {
     return mCustomLinkParams;
 }
@@ -1349,7 +1349,7 @@ void Settings::CompilerSet::setCustomLinkParams(const QString &value)
     mCustomLinkParams = value;
 }
 
-bool Settings::CompilerSet::autoAddCharsetParams()
+bool Settings::CompilerSet::autoAddCharsetParams() const
 {
     return mAutoAddCharsetParams;
 }
@@ -1784,7 +1784,7 @@ QString Settings::CompilerSet::findProgramInBinDirs(const QString name)
 QByteArray Settings::CompilerSet::iniOptions() const
 {
     QByteArray result;
-    for (PCompilerOption p:mOptions) {
+    for (const PCompilerOption& p:mOptions) {
         result.append(ValueToChar[p->value]);
     }
     return result;
@@ -1808,14 +1808,14 @@ QByteArray Settings::CompilerSet::getCompilerOutput(const QString &binDir, const
     return result.trimmed();
 }
 
-bool Settings::CompilerSet::useCustomCompileParams()
+bool Settings::CompilerSet::useCustomCompileParams() const
 {
     return mUseCustomCompileParams;
 }
 
 Settings::CompilerSets::CompilerSets(Settings *settings):
-    mSettings(settings),
-    mDefaultIndex(-1)
+    mDefaultIndex(-1),
+    mSettings(settings)
 {
 
 }
@@ -1914,7 +1914,7 @@ void Settings::CompilerSets::addSets(const QString &folder)
 
 void Settings::CompilerSets::clearSets()
 {
-    for (int i=0;i<mList.size();i++) {
+    for (size_t i=0;i<mList.size();i++) {
         mSettings->mSettings.beginGroup(QString(SETTING_COMPILTER_SET).arg(i));
         mSettings->mSettings.remove("");
         mSettings->mSettings.endGroup();
@@ -1932,7 +1932,7 @@ void Settings::CompilerSets::findSets()
 
 void Settings::CompilerSets::saveSets()
 {
-    for (int i=0;i<mList.size();i++) {
+    for (size_t i=0;i<mList.size();i++) {
         saveSet(i);
     }
     if (mDefaultIndex>=mList.size()) {
@@ -2395,12 +2395,12 @@ Settings::History::History(Settings *settings):_Base(settings, SETTING_HISTORY)
 
 }
 
-QStringList &Settings::History::openedFiles()
+const QStringList &Settings::History::openedFiles() const
 {
     return mOpenedFiles;
 }
 
-QStringList &Settings::History::openedProjects()
+const QStringList &Settings::History::openedProjects() const
 {
     return mOpenedProjects;
 }

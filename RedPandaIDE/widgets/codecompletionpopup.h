@@ -107,6 +107,7 @@ protected:
     // QObject interface
 public:
     bool event(QEvent *event) override;
+    const QString &phrase() const;
 };
 
 #endif // CODECOMPLETIONPOPUP_H

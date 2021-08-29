@@ -273,7 +273,7 @@ void SynEditStringList::addStrings(const QStringList &Strings)
 int SynEditStringList::getTextLength()
 {
     int Result = 0;
-    for (const PSynEditStringRec& line: mList ) {
+    foreach (const PSynEditStringRec& line, mList ) {
         Result += line->fString.length();
         if (mFileEndingType == FileEndingType::Windows) {
             Result += 2;
@@ -783,7 +783,7 @@ void SynEditUndoList::PushItem(PSynEditUndoItem Item)
     mItems.append(Item);
     EnsureMaxEntries();
     if (Item->changeReason()!= SynChangeReason::crGroupBreak)
-        addedUndo();
+        emit addedUndo();
 }
 
 void SynEditUndoList::Unlock()

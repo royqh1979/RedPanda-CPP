@@ -708,6 +708,11 @@ bool CodeCompletionPopup::isIncluded(const QString &fileName)
     return mIncludedFiles.contains(fileName);
 }
 
+const QString &CodeCompletionPopup::phrase() const
+{
+    return mPhrase;
+}
+
 void CodeCompletionPopup::showEvent(QShowEvent *)
 {
     mListView->setFocus();

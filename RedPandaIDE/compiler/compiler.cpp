@@ -91,7 +91,7 @@ int Compiler::getLineNumberFromOutputLine(QString &line)
         pos = line.indexOf(',');
     }
     if (pos>=0) {
-        result = line.mid(0,pos).toInt();
+        result = line.midRef(0,pos).toInt();
         if (result > 0)
             line.remove(0,pos+1);
     }
@@ -107,7 +107,7 @@ int Compiler::getColunmnFromOutputLine(QString &line)
         pos = line.indexOf(',');
     }
     if (pos>=0) {
-        result = line.mid(0,pos).toInt();
+        result = line.midRef(0,pos).toInt();
         if (result > 0)
             line.remove(0,pos+1);
     }
@@ -154,7 +154,6 @@ void Compiler::processOutput(QString &line)
     QString inFilePrefix = QString("In file included from ");
     QString fromPrefix = QString("from ");
     PCompileIssue issue = std::make_shared<CompileIssue>();
-    QString description;
     issue->type = CompileIssueType::Other;
     issue->endColumn = -1;
     if (line.startsWith(inFilePrefix)) {
@@ -252,8 +251,7 @@ QString Compiler::getCharsetArgument(const QByteArray& encoding)
             encodingName = encoding;
         }
         result += QString(" -finput-charset=%1 -fexec-charset=%2")
-                .arg(encodingName)
-                .arg(systemEncodingName);
+                .arg(encodingName,systemEncodingName);
     }
     return result;
 }
@@ -265,7 +263,7 @@ QString Compiler::getCCompileArguments(bool checkSyntax)
         result += " -fsyntax-only";
     }
 
-    for (PCompilerOption pOption: compilerSet()->options()) {
+    foreach (const PCompilerOption& pOption, compilerSet()->options()) {
         if (pOption->value > 0 && pOption->isC) {
             if (pOption->choices.isEmpty()) {
                 result += " " + pOption->setting;
@@ -291,7 +289,7 @@ QString Compiler::getCppCompileArguments(bool checkSyntax)
         result += " -fsyntax-only";
     }
 
-    for (PCompilerOption pOption: compilerSet()->options()) {
+    foreach (const PCompilerOption& pOption, compilerSet()->options()) {
         if (pOption->value > 0 && pOption->isCpp) {
             if (pOption->choices.isEmpty()) {
                 result += " "+pOption->setting;
@@ -314,7 +312,7 @@ QString Compiler::getCppCompileArguments(bool checkSyntax)
 QString Compiler::getCIncludeArguments()
 {
     QString result;
-    for (const QString& folder:compilerSet()->CIncludeDirs()) {
+    foreach (const QString& folder,compilerSet()->CIncludeDirs()) {
         result += QString(" -I\"%1\"").arg(folder);
     }
     return result;
@@ -323,7 +321,7 @@ QString Compiler::getCIncludeArguments()
 QString Compiler::getCppIncludeArguments()
 {
     QString result;
-    for (const QString& folder:compilerSet()->CppIncludeDirs()) {
+    foreach (const QString& folder,compilerSet()->CppIncludeDirs()) {
         result += QString(" -I\"%1\"").arg(folder);
     }
     return result;
@@ -333,7 +331,7 @@ QString Compiler::getLibraryArguments()
 {
     QString result;
 
-    for (const QString& folder:compilerSet()->libDirs()) {
+    foreach (const QString& folder, compilerSet()->libDirs()) {
         result += QString(" -L\"%1\"").arg(folder);
     }
 
@@ -343,7 +341,7 @@ QString Compiler::getLibraryArguments()
     }
 
     //options like "-static" must be added after "-lxxx"
-    for (PCompilerOption pOption: compilerSet()->options()) {
+    foreach (const PCompilerOption& pOption, compilerSet()->options()) {
         if (pOption->value > 0 && pOption->isLinker) {
             if (pOption->choices.isEmpty()) {
                 result += " " + pOption->setting;
@@ -377,7 +375,7 @@ void Compiler::runCommand(const QString &cmd, const QString  &arguments, const Q
     process.connect(&process, &QProcess::readyReadStandardOutput,[&process,this](){
         this->log(QString::fromLocal8Bit( process.readAllStandardOutput()));
     });
-    process.connect(&process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),[&process,this](){
+    process.connect(&process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),[this](){
         this->error(COMPILE_PROCESS_END);
     });
     process.start();

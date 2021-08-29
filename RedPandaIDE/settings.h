@@ -375,8 +375,8 @@ public:
     public:
         explicit History(Settings *settings);
 
-        QStringList& openedFiles();
-        QStringList& openedProjects();
+        const QStringList& openedFiles() const;
+        const QStringList& openedProjects() const;
         bool addToOpenedFiles(const QString& filename);
     private:
         QStringList mOpenedFiles;
@@ -488,27 +488,27 @@ public:
         QStringList& CppIncludeDirs();
         QStringList& libDirs();
 
-        const QString& dumpMachine();
+        const QString& dumpMachine() const;
         void setDumpMachine(const QString& value);
-        const QString& version();
+        const QString& version() const;
         void setVersion(const QString& value);
-        const QString& type();
+        const QString& type() const;
         void setType(const QString& value);
-        const QString& name();
+        const QString& name() const;
         void setName(const QString& value);
-        QStringList& defines();
-        const QString& target();
+        const QStringList& defines() const;
+        const QString& target() const;
         void setTarget(const QString& value);
 
-        bool useCustomCompileParams();
+        bool useCustomCompileParams() const;
         void setUseCustomCompileParams(bool value);
-        bool useCustomLinkParams();
+        bool useCustomLinkParams() const;
         void setUseCustomLinkParams(bool value);
-        const QString& customCompileParams();
+        const QString& customCompileParams() const;
         void setCustomCompileParams(const QString& value);
-        const QString& customLinkParams();
+        const QString& customLinkParams() const;
         void setCustomLinkParams(const QString& value);
-        bool autoAddCharsetParams();
+        bool autoAddCharsetParams() const;
         void setAutoAddCharsetParams(bool value);
 
         CompilerOptionList& options();

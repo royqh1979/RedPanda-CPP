@@ -381,7 +381,7 @@ PStatement CppParser::findStatementStartingFrom(const QString &fileName, const Q
             return result;
         // not found
         // search members of all usings (in current scope )
-        for (const QString& namespaceName:scopeStatement->usingList) {
+        foreach (const QString& namespaceName, scopeStatement->usingList) {
             result = findStatementInNamespace(phrase,namespaceName);
             if (result)
                 return result;
@@ -514,7 +514,7 @@ QSet<QString> CppParser::getFileIncludes(const QString &filename)
     PFileIncludes fileIncludes = mPreprocessor.includesList().value(filename,PFileIncludes());
 
     if (fileIncludes) {
-        for (const QString& file: fileIncludes->includeFiles.keys()) {
+        foreach (const QString& file, fileIncludes->includeFiles.keys()) {
             list.insert(file);
         }
     }
@@ -636,7 +636,7 @@ void CppParser::parseFile(const QString &fileName, bool inProject, bool onlyIfNo
         mFilesScannedCount = 0;
 
         // parse header files in the first parse
-        for (const QString& file:files) {
+        foreach (const QString& file,files) {
             if (isHfile(file)) {
                 mFilesScannedCount++;
                 emit onProgress(file,mFilesToScanCount,mFilesScannedCount);
@@ -646,7 +646,7 @@ void CppParser::parseFile(const QString &fileName, bool inProject, bool onlyIfNo
             }
         }
         //we only parse CFile in the second parse
-        for (const QString& file:files) {
+        foreach (const QString& file,files) {
             if (isCfile(file)) {
                 mFilesScannedCount++;
                 emit onProgress(file,mFilesToScanCount,mFilesScannedCount);
@@ -684,7 +684,7 @@ void CppParser::parseFileList(bool updateView)
         mFilesScannedCount = 0;
         mFilesToScanCount = mFilesToScan.count();
         // parse header files in the first parse
-        for (const QString& file:mFilesToScan) {
+        foreach (const QString& file, mFilesToScan) {
             if (isHfile(file)) {
                 mFilesScannedCount++;
                 emit onProgress(mCurrentFile,mFilesToScanCount,mFilesScannedCount);
@@ -694,7 +694,7 @@ void CppParser::parseFileList(bool updateView)
             }
         }
         //we only parse CFile in the second parse
-        for (const QString& file:mFilesToScan) {
+        foreach (const QString& file,mFilesToScan) {
             if (isCfile(file)) {
                 mFilesScannedCount++;
                 emit onProgress(mCurrentFile,mFilesToScanCount,mFilesScannedCount);
@@ -2274,7 +2274,7 @@ void CppParser::handlePreprocessor()
 
             // Mention progress to user if we enter a NEW file
             bool ok;
-            int line = s.mid(delimPos+1).toInt(&ok);
+            int line = s.midRef(delimPos+1).toInt(&ok);
             if (line == 1) {
                 mFilesScannedCount++;
                 mFilesToScanCount++;
@@ -3008,7 +3008,7 @@ void CppParser::inheritClassStatement(const PStatement& derived, bool isStruct,
         else
             access = StatementClassScope::scsPrivate;
     }
-    for (const PStatement& statement : base->children) {
+    foreach (const PStatement& statement, base->children) {
         if (statement->classScope == StatementClassScope::scsPrivate
                 || statement->kind == StatementKind::skConstructor
                 || statement->kind == StatementKind::skDestructor)
@@ -3085,7 +3085,7 @@ PStatement CppParser::findStatementInScope(const QString &name, const QString &n
         PStatementList namespaceStatementsList = findNamespace(scope->command);
         if (!namespaceStatementsList)
             return PStatement();
-        for (const PStatement& namespaceStatement: *namespaceStatementsList) {
+        foreach (const PStatement& namespaceStatement, *namespaceStatementsList) {
             PStatement result=doFindStatementInScope(name,noNameArgs,kind,namespaceStatement);
             if (result)
                 return result;
@@ -3112,7 +3112,7 @@ PStatement CppParser::findStatementInNamespace(const QString &name, const QStrin
     PStatementList namespaceStatementsList=findNamespace(namespaceName);
     if (!namespaceStatementsList)
         return PStatement();
-    for (const PStatement& namespaceStatement:*namespaceStatementsList) {
+    foreach (const PStatement& namespaceStatement,*namespaceStatementsList) {
         PStatement result = findMemberOfStatement(name,namespaceStatement);
         if (result)
             return result;
@@ -3146,7 +3146,7 @@ PStatement CppParser::doFindStatementInScope(const QString &name,
 {
     const StatementMap& statementMap =mStatementList.childrenStatements(scope);
 
-    for (const PStatement& statement: statementMap.values(name)) {
+    foreach (const PStatement& statement, statementMap.values(name)) {
         if (statement->kind == kind && statement->noNameArgs == noNameArgs) {
             return statement;
         }
@@ -3224,7 +3224,7 @@ QSet<QString> CppParser::calculateFilesToBeReparsed(const QString &fileName)
         PFileIncludes p=mPreprocessor.includesList().value(name);
         if (!p)
           continue;
-        for (const QString& s:p->dependedFiles) {
+        foreach (const QString& s,p->dependedFiles) {
             if (!processed.contains(s)) {
                 queue.enqueue(s);
             }
