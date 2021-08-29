@@ -22,6 +22,7 @@
 #include <QClipboard>
 #include <QPainter>
 #include <QToolTip>
+#include <QApplication>
 #include "iconsmanager.h"
 #include "debugger.h"
 #include "editorlist.h"
@@ -585,12 +586,11 @@ bool Editor::event(QEvent *event)
         QHelpEvent *helpEvent = static_cast<QHelpEvent *>(event);
         BufferCoord p;
         TipType reason = getTipType(helpEvent->pos(),p);
-        qDebug()<<(int)reason;
         PSyntaxIssue pError;
         int line ;
         if (reason == TipType::Error) {
             pError = getSyntaxIssueAtPosition(p);
-        } else if ((reason == TipType::None) && GetLineOfMouse(line)) {
+        } else if ((reason == TipType::None) && PointToLine(helpEvent->pos(),line)) {
             //it's on gutter
             //see if its error;
             PSyntaxIssueList issues = getSyntaxIssuesAtLine(line);
@@ -627,7 +627,6 @@ bool Editor::event(QEvent *event)
             s = pError->token;
             break;
         case TipType::None:
-            //fText.Cursor := crIBeam; // nope
             cancelHint();
             event->ignore();
             return true;
@@ -639,6 +638,12 @@ bool Editor::event(QEvent *event)
         //  if (s = fCurrentWord) and (fText.Hint<>'') then
         s = s.trimmed();
         if ((s == mCurrentWord) && (mCurrentTipType == reason)) {
+            QApplication* app = dynamic_cast<QApplication *>(QApplication::instance());
+            if (app->keyboardModifiers().testFlag(Qt::ControlModifier)) {
+                setCursor(Qt::PointingHandCursor);
+            } else {
+                setCursor(Qt::ArrowCursor);
+            }
             event->ignore();
             return true; // do NOT remove hint when subject stays the same
         }
@@ -648,11 +653,6 @@ bool Editor::event(QEvent *event)
         mCurrentWord = s;
         mCurrentTipType = reason;
 
-        // We are allowed to change the cursor
-//        if (ssCtrl in Shift) then
-//          fText.Cursor := crHandPoint
-//        else
-//          fText.Cursor := crIBeam;
 
         // Determine what to do with subject
         QString hint = "";
@@ -671,19 +671,27 @@ bool Editor::event(QEvent *event)
             if (!mCompletionPopup->isVisible()
                     && !mHeaderCompletionPopup->isVisible()) {
                 if (pMainWindow->debugger()->executing()) {
-                    hint = getDebugHint(s);
+                    showDebugHint(s,line);
                 } else { //if devEditor.ParserHints {
                     hint = getParserHint(s, p.Line);
                 }
             }
             break;
         case TipType::Error:
-            hint = getErrorHint(s);
+            hint = getErrorHint(pError);
         }
         if (!hint.isEmpty()) {
+            QApplication* app = dynamic_cast<QApplication *>(QApplication::instance());
+            if (app->keyboardModifiers().testFlag(Qt::ControlModifier)) {
+                setCursor(Qt::PointingHandCursor);
+            } else {
+                setCursor(Qt::ArrowCursor);
+            }
             QToolTip::showText(helpEvent->globalPos(),hint);
-        } else
             event->ignore();
+        } else {
+            event->ignore();
+        }
     }
     return SynEdit::event(event);
 }
@@ -992,6 +1000,15 @@ void Editor::onGutterClicked(Qt::MouseButton button, int , int , int line)
         toggleBreakpoint(line);
     }
     mGutterClickedLine = line;
+}
+
+void Editor::onTipEvalValueReady(const QString &value)
+{
+    if (mCurrentWord == mCurrentDebugTipWord) {
+        QToolTip::showText(QCursor::pos(), mCurrentDebugTipWord + " = " + value );
+    }
+    disconnect(pMainWindow->debugger(), &Debugger::evalValueReady,
+               this, &Editor::onTipEvalValueReady);
 }
 
 QChar Editor::getCurrentChar()
@@ -1870,7 +1887,7 @@ Editor::TipType Editor::getTipType(QPoint point, BufferCoord& pos)
                     // do not allow when dragging selection
                     if (IsPointInSelection(pos))
                         return TipType::Selection;
-                } else if (attr->name() == SYNS_AttrAreaAIdentifier)
+                } else if (attr->name() == SYNS_AttrIdentifier)
                     return TipType::Identifier;
                 else if (attr->name() == SYNS_AttrPreprocessor)
                     return TipType::Preprocessor;
@@ -1888,6 +1905,7 @@ void Editor::cancelHint()
     QToolTip::hideText();
     mCurrentWord = "";
     mCurrentTipType = TipType::None;
+    setCursor(Qt::IBeamCursor);
 }
 
 QString Editor::getFileHint(const QString &s)
@@ -1929,16 +1947,44 @@ QString Editor::getParserHint(const QString &s, int line)
                                       mFilename,line);
     } else if (statement->line>0) {
         QFileInfo fileInfo(statement->fileName);
-        result = mParser->prettyPrintStatement(statement) + " - " +
+        result = mParser->prettyPrintStatement(statement,mFilename, line) + " - " +
                 QString(" %1 (%2) ")
                 .arg(fileInfo.fileName())
                 .arg(statement->line)
                 + tr("Ctrl+click for more info");
     } else {  // hard defines
-        result = mParser->prettyPrintStatement(statement);
+        result = mParser->prettyPrintStatement(statement, mFilename);
     }
 //    Result := StringReplace(Result, '|', #5, [rfReplaceAll]);
     return result;
+}
+
+void Editor::showDebugHint(const QString &s, int line)
+{
+    PStatement statement = mParser->findStatementOf(s,mFilename,line);
+    if (statement) {
+        if (statement->kind != StatementKind::skVariable
+                || statement->kind != StatementKind::skGlobalVariable
+                || statement->kind != StatementKind::skLocalVariable
+                || statement->kind != StatementKind::skParameter) {
+            return;
+        }
+    }
+    if (pMainWindow->debugger()->commandRunning())
+        return;
+    connect(pMainWindow->debugger(), &Debugger::evalValueReady,
+               this, &Editor::onTipEvalValueReady);
+    mCurrentDebugTipWord = s;
+    pMainWindow->debugger()->sendCommand("print",s,false);
+}
+
+QString Editor::getErrorHint(const PSyntaxIssue& issue)
+{
+    if (issue) {
+        return issue->hint;
+    } else {
+        return "";
+    }
 }
 
 QString Editor::getHintForFunction(const PStatement &statement, const PStatement &scopeStatement, const QString& filename, int line)
@@ -1953,7 +1999,7 @@ QString Editor::getHintForFunction(const PStatement &statement, const PStatement
                 continue;
             if (!result.isEmpty())
                 result += "<BR />";
-            result = mParser->prettyPrintStatement(childStatement) + " - " +
+            result = mParser->prettyPrintStatement(childStatement,filename,line) + " - " +
                     QString(" %1 (%2) ")
                     .arg(filename)
                     .arg(childStatement->line)

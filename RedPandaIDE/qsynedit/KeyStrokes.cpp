@@ -21,7 +21,7 @@ QKeySequence SynEditKeyStroke::keySequence() const
 
 void SynEditKeyStroke::setKeySequence(QKeySequence &keySequence)
 {
-    if (keySequence.isEmpty()<=0)
+    if (keySequence.isEmpty())
         return;
     decodeKey(keySequence[0],mKey,mKeyModifiers);
     if (keySequence.count()>1) {

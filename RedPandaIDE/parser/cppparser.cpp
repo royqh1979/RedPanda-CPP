@@ -813,6 +813,19 @@ void CppParser::unFreeze()
     mLockCount--;
 }
 
+QString CppParser::getScopePrefix(const PStatement& statement){
+    switch (statement->classScope) {
+    case StatementClassScope::scsPublic:
+        return "public";
+    case StatementClassScope::scsPrivate:
+        return "private";
+    case StatementClassScope::scsProtected:
+        return "protected";
+    default:
+        return "";
+    }
+}
+
 QString CppParser::prettyPrintStatement(const PStatement& statement, const QString& filename, int line)
 {
     QString result;
@@ -836,10 +849,10 @@ QString CppParser::prettyPrintStatement(const PStatement& statement, const QStri
         case StatementKind::skParameter:
         case StatementKind::skClass:
             if (statement->scope!= StatementScope::ssLocal)
-                result = getScopePrefix(statement); // public
+                result = getScopePrefix(statement)+ ' '; // public
             result += statement->type + ' '; // void
             result += statement->fullName; // A::B::C::Bar
-            result += getArgsSuffix(statement); // (int a)
+            result += statement->args; // (int a)
             break;
         case StatementKind::skNamespace:
             result = statement->fullName; // Bar
@@ -849,17 +862,18 @@ QString CppParser::prettyPrintStatement(const PStatement& statement, const QStri
             result += QObject::tr("constructor") + ' '; // constructor
             result += statement->type + ' '; // void
             result += statement->fullName; // A::B::C::Bar
-            result += getArgsSuffix(statement); // (int a)
+            result += statement->args; // (int a)
             break;
         case StatementKind::skDestructor:
             result = getScopePrefix(statement); // public
             result += QObject::tr("destructor") + ' '; // constructor
             result += statement->type + ' '; // void
             result += statement->fullName; // A::B::C::Bar
-            result += getArgsSuffix(statement); // (int a)
+            result += statement->args; // (int a)
             break;
         }
     }
+    return result;
 }
 
 QString CppParser::getFirstTemplateParam(const PStatement& statement,
@@ -3097,7 +3111,7 @@ void CppParser::fillListOfFunctions(const QString& fileName, int line,
                 ) {
             if (line < child->line && (child->fileName == fileName))
                 continue;
-            list.append(prettyPrintStatement(child));
+            list.append(prettyPrintStatement(child,child->fileName,child->line));
         }
     }
 }

@@ -214,6 +214,7 @@ public slots:
     void onParserProgress(const QString& fileName, int total, int current);
     void onStartParsing();
     void onEndParsing(int total, int updateView);
+    void onEvalValueReady(const QString& value);
 
 private:
     void setupActions();

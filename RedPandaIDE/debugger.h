@@ -172,6 +172,7 @@ public:
                      bool updateWatch = true,
                      bool showInConsole = false,
                      DebugCommandSource source = DebugCommandSource::Other);
+    bool commandRunning();
 
     //breakpoints
     void addBreakpoint(int line, const Editor* editor);
@@ -215,6 +216,8 @@ public:
 
     RegisterModel *registerModel() const;
 
+signals:
+    void evalValueReady(const QString& s);
 public slots:
     void stop();
 
@@ -254,6 +257,8 @@ public:
     QString debuggerPath() const;
     void setDebuggerPath(const QString &debuggerPath);
     void stopDebug();
+
+    bool commandRunning();
 
     bool invalidateAllVars() const;
     void setInvalidateAllVars(bool invalidateAllVars);

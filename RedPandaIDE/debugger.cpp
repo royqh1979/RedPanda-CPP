@@ -132,6 +132,14 @@ void Debugger::sendCommand(const QString &command, const QString &params, bool u
     }
 }
 
+bool Debugger::commandRunning()
+{
+    if (mExecuting && mReader) {
+        return mReader->commandRunning();
+    }
+    return false;
+}
+
 void Debugger::addBreakpoint(int line, const Editor* editor)
 {
     addBreakpoint(line,editor->filename());
@@ -402,7 +410,8 @@ void Debugger::syncFinishedParsing()
 
     // An evaluation variable has been processed. Forward the results
     if (mReader->doevalready) {
-        pMainWindow->updateDebugEval(mReader->mEvalValue);
+        //pMainWindow->updateDebugEval(mReader->mEvalValue);
+        emit evalValueReady(mReader->mEvalValue);
         mReader->mEvalValue="";
         mReader->doevalready = false;
     }
@@ -1326,6 +1335,11 @@ void DebugReader::setDebuggerPath(const QString &debuggerPath)
 void DebugReader::stopDebug()
 {
     mStop = true;
+}
+
+bool DebugReader::commandRunning()
+{
+    return !mCmdQueue.isEmpty();
 }
 
 

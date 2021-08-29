@@ -143,13 +143,11 @@ public:
 
     const PCppParser &parser() const;
 
-signals:
-
-
 protected slots:
     void onModificationChanged(bool status) ;
     void onStatusChanged(SynStatusChanges changes);
     void onGutterClicked(Qt::MouseButton button, int x, int y, int line);
+    void onTipEvalValueReady(const QString& value);
 
 private:
     QChar getCurrentChar();
@@ -188,8 +186,8 @@ private:
     void cancelHint();
     QString getFileHint(const QString& s);
     QString getParserHint(const QString& s, int line);
-    QString getDebugHint(const QString& s);
-    QString getErrorHint(const QString& s);
+    void showDebugHint(const QString& s,int line);
+    QString getErrorHint(const PSyntaxIssue& issue);
     QString getHintForFunction(const PStatement& statement, const PStatement& scope,
                                const QString& filename, int line);
 
@@ -219,6 +217,7 @@ private:
     int mLastIdCharPressed;
     bool mUseCppSyntax;
     QString mCurrentWord;
+    QString mCurrentDebugTipWord;
     TipType mCurrentTipType;
 
     // QWidget interface

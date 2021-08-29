@@ -227,6 +227,7 @@ private:
     PStatement getIncompleteClass(
             const QString& command,
             const PStatement& parentScope);
+    QString getScopePrefix(const PStatement& statement);
     StatementScope  getScope();
     QString getStatementKey(const QString& sName,
                             const QString& sType,

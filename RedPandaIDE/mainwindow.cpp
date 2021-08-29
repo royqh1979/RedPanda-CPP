@@ -1588,6 +1588,8 @@ void MainWindow::onDebugEvaluateInput()
 {
     QString s=ui->cbEvaluate->currentText().trimmed();
     if (!s.isEmpty()) {
+        connect(mDebugger, &Debugger::evalValueReady,
+                   this, &MainWindow::onEvalValueReady);
         mDebugger->sendCommand("print",s,false);
     }
 }
@@ -1634,6 +1636,13 @@ void MainWindow::onEndParsing(int total, int)
         updateStatusBarForParsing(tr("Done parsing %1 files in %2 seconds")
                                   .arg(total).arg(parseTime));
     }
+}
+
+void MainWindow::onEvalValueReady(const QString &value)
+{
+    updateDebugEval(value);
+    disconnect(mDebugger, &Debugger::evalValueReady,
+               this, &MainWindow::onEvalValueReady);
 }
 
 void MainWindow::on_actionFind_triggered()
