@@ -238,7 +238,7 @@ protected:
 
     // SynEdit interface
 protected:
-    void onPreparePaintHighlightToken(int row, int column, const QString &token, PSynHighlighterAttribute attr, SynFontStyles &style, QColor &foreground, QColor &background) override;
+    void onPreparePaintHighlightToken(int line, int aChar, const QString &token, PSynHighlighterAttribute attr, SynFontStyles &style, QColor &foreground, QColor &background) override;
 
     // QObject interface
 public:

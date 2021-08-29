@@ -435,11 +435,12 @@ void MainWindow::updateStatusbarForLineCol()
 {
     Editor* e = mEditorList->getEditor();
     if (e!=nullptr) {
-        QString msg = tr("Line:%1    Col:%2    Selected:%3    Lines:%4    Length:%5")
-                .arg(e->caretY(),6)
-                .arg(e->caretX(),6)
+        int col = e->charToColumn(e->caretY(),e->caretX());
+        QString msg = tr("Line:%1 Col:%2 Selected:%3 Lines:%4 Length:%5")
+                .arg(e->caretY(),4)
+                .arg(col,3)
                 .arg(e->selText().length(),6)
-                .arg(e->lines()->count(),6)
+                .arg(e->lines()->count(),4)
                 .arg(e->lines()->getTextLength(),6);
         mFileInfoStatus->setText(msg);
     } else {

@@ -538,7 +538,7 @@ bool Editor::onGetSpecialLineColors(int Line, QColor &foreground, QColor &backgr
     return false;
 }
 
-void Editor::onPreparePaintHighlightToken(int row, int column, const QString &token, PSynHighlighterAttribute attr, SynFontStyles &style, QColor &foreground, QColor &background)
+void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &token, PSynHighlighterAttribute attr, SynFontStyles &style, QColor &foreground, QColor &background)
 {
     if (token.isEmpty())
         return;
@@ -557,10 +557,12 @@ void Editor::onPreparePaintHighlightToken(int row, int column, const QString &to
     }
 
 
+    qDebug()<<token<<"-"<<attr->name()<<" - "<<line<<" : "<<aChar;
     if (mParser && mCompletionPopup && (attr->name() == SYNS_AttrIdentifier)) {
-        BufferCoord p=displayToBufferPos(DisplayCoord{column+1,row});
+        BufferCoord p{aChar,line};
         BufferCoord pBeginPos,pEndPos;
         QString s= getWordAtPosition(p, pBeginPos,pEndPos, WordPurpose::wpInformation);
+        qDebug()<<s;
         PStatement statement = mParser->findStatementOf(mFilename,
           s , p.Line);
         StatementKind kind = mParser->getKindOfStatement(statement);
@@ -632,8 +634,6 @@ bool Editor::event(QEvent *event)
             return true;
         }
 
-
-        qDebug()<<s<<" - "<<(int)reason;
         // Don't rescan the same stuff over and over again (that's slow)
         //  if (s = fCurrentWord) and (fText.Hint<>'') then
         s = s.trimmed();
@@ -671,7 +671,7 @@ bool Editor::event(QEvent *event)
             if (!mCompletionPopup->isVisible()
                     && !mHeaderCompletionPopup->isVisible()) {
                 if (pMainWindow->debugger()->executing()) {
-                    showDebugHint(s,line);
+                    showDebugHint(s,p.Line);
                 } else { //if devEditor.ParserHints {
                     hint = getParserHint(s, p.Line);
                 }
@@ -1961,12 +1961,12 @@ QString Editor::getParserHint(const QString &s, int line)
 
 void Editor::showDebugHint(const QString &s, int line)
 {
-    PStatement statement = mParser->findStatementOf(s,mFilename,line);
+    PStatement statement = mParser->findStatementOf(mFilename,s,line);
     if (statement) {
         if (statement->kind != StatementKind::skVariable
-                || statement->kind != StatementKind::skGlobalVariable
-                || statement->kind != StatementKind::skLocalVariable
-                || statement->kind != StatementKind::skParameter) {
+                && statement->kind != StatementKind::skGlobalVariable
+                && statement->kind != StatementKind::skLocalVariable
+                && statement->kind != StatementKind::skParameter) {
             return;
         }
     }

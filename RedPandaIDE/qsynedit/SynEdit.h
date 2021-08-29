@@ -376,8 +376,8 @@ protected:
     virtual void onGutterGetText(int aLine, QString& aText);
     virtual void onGutterPaint(QPainter& painter, int aLine, int X, int Y);
     virtual void onPaint(QPainter& painter);
-    virtual void onPreparePaintHighlightToken(int row,
-            int column, const QString& token, PSynHighlighterAttribute attr,
+    virtual void onPreparePaintHighlightToken(int line,
+            int aChar, const QString& token, PSynHighlighterAttribute attr,
             SynFontStyles& style, QColor& foreground, QColor& background);
     virtual void onProcessCommand(SynEditorCommand Command, QChar AChar, void * pData);
     virtual void onCommandProcessed(SynEditorCommand Command, QChar AChar, void * pData);
