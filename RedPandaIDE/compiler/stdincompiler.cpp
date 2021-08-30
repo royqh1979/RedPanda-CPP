@@ -28,6 +28,7 @@ bool StdinCompiler::prepareForCompile()
     QString strFileType;
     switch(fileType) {
     case FileType::CSource:
+    case FileType::CHeader:
         mArguments += " -x c - ";
         mArguments += getCCompileArguments(mOnlyCheckSyntax);
         mArguments += getCIncludeArguments();
@@ -35,6 +36,7 @@ bool StdinCompiler::prepareForCompile()
         mCompiler = compilerSet()->CCompiler();
         break;
     case FileType::CppSource:
+    case FileType::CppHeader:
         mArguments += " -x c++ - ";
         mArguments += getCCompileArguments(mOnlyCheckSyntax);
         mArguments += getCIncludeArguments();

@@ -349,6 +349,16 @@ void Settings::Editor::setSyntaxCheckWhenLineChanged(bool syntaxCheckWhenLineCha
     mSyntaxCheckWhenLineChanged = syntaxCheckWhenLineChanged;
 }
 
+bool Settings::Editor::readOnlySytemHeader() const
+{
+    return mReadOnlySytemHeader;
+}
+
+void Settings::Editor::setReadOnlySytemHeader(bool newReadOnlySytemHeader)
+{
+    mReadOnlySytemHeader = newReadOnlySytemHeader;
+}
+
 bool Settings::Editor::syntaxCheckWhenSave() const
 {
     return mSyntaxCheckWhenSave;
@@ -722,6 +732,7 @@ void Settings::Editor::setAutoHideScrollbar(bool autoHideScrollbar)
 void Settings::Editor::doSave()
 {
     saveValue("default_encoding",mDefaultEncoding);
+    saveValue("readonly_system_header",mReadOnlySytemHeader);
     // indents
     saveValue("auto_indent", mAutoIndent);
     saveValue("add_indent", mAddIndent);
@@ -798,6 +809,7 @@ void Settings::Editor::doSave()
 void Settings::Editor::doLoad()
 {
     mDefaultEncoding = value("default_encoding", ENCODING_SYSTEM_DEFAULT).toByteArray();
+    mReadOnlySytemHeader = boolValue("readonly_system_header",true);
     // indents
     mAutoIndent = boolValue("auto_indent", true);
     mAddIndent = boolValue("add_indent", true);
@@ -1996,7 +2008,6 @@ void Settings::CompilerSets::loadSets()
         }
         clearSets();
         findSets();
-        mDefaultIndex =  mList.size()-1;
         pCurrentSet = defaultSet();
         if (!pCurrentSet) {
             return;
@@ -2432,4 +2443,156 @@ void Settings::History::doLoad()
 {
     mOpenedFiles = stringListValue("opened_files");
     mOpenedProjects =stringListValue("opened_projects");
+}
+
+Settings::CodeCompletion::CodeCompletion(Settings *settings):_Base(settings, SETTING_CODE_COMPLETION)
+{
+
+}
+
+bool Settings::CodeCompletion::showCodeIns() const
+{
+    return mShowCodeIns;
+}
+
+void Settings::CodeCompletion::setShowCodeIns(bool newShowCodeIns)
+{
+    mShowCodeIns = newShowCodeIns;
+}
+
+bool Settings::CodeCompletion::appendFunc() const
+{
+    return mAppendFunc;
+}
+
+void Settings::CodeCompletion::setAppendFunc(bool newAppendFunc)
+{
+    mAppendFunc = newAppendFunc;
+}
+
+bool Settings::CodeCompletion::ignoreCase() const
+{
+    return mIgnoreCase;
+}
+
+void Settings::CodeCompletion::setIgnoreCase(bool newIgnoreCase)
+{
+    mIgnoreCase = newIgnoreCase;
+}
+
+bool Settings::CodeCompletion::showKeywords() const
+{
+    return mShowKeywords;
+}
+
+void Settings::CodeCompletion::setShowKeywords(bool newShowKeywords)
+{
+    mShowKeywords = newShowKeywords;
+}
+
+bool Settings::CodeCompletion::sortByScope() const
+{
+    return mSortByScope;
+}
+
+void Settings::CodeCompletion::setSortByScope(bool newSortByScope)
+{
+    mSortByScope = newSortByScope;
+}
+
+bool Settings::CodeCompletion::recordUsage() const
+{
+    return mRecordUsage;
+}
+
+void Settings::CodeCompletion::setRecordUsage(bool newRecordUsage)
+{
+    mRecordUsage = newRecordUsage;
+}
+
+bool Settings::CodeCompletion::showCompletionWhileInput() const
+{
+    return mShowCompletionWhileInput;
+}
+
+void Settings::CodeCompletion::setShowCompletionWhileInput(bool newShowCompletionWhileInput)
+{
+    mShowCompletionWhileInput = newShowCompletionWhileInput;
+}
+
+bool Settings::CodeCompletion::parseGlobalHeaders() const
+{
+    return mParseGlobalHeaders;
+}
+
+void Settings::CodeCompletion::setParseGlobalHeaders(bool newParseGlobalHeaders)
+{
+    mParseGlobalHeaders = newParseGlobalHeaders;
+}
+
+bool Settings::CodeCompletion::parseLocalHeaders() const
+{
+    return mParseLocalHeaders;
+}
+
+void Settings::CodeCompletion::setParseLocalHeaders(bool newParseLocalHeaders)
+{
+    mParseLocalHeaders = newParseLocalHeaders;
+}
+
+bool Settings::CodeCompletion::enabled() const
+{
+    return mEnabled;
+}
+
+void Settings::CodeCompletion::setEnabled(bool newEnabled)
+{
+    mEnabled = newEnabled;
+}
+
+int Settings::CodeCompletion::height() const
+{
+    return mHeight;
+}
+
+void Settings::CodeCompletion::setHeight(int newHeight)
+{
+    mHeight = newHeight;
+}
+
+int Settings::CodeCompletion::width() const
+{
+    return mWidth;
+}
+
+void Settings::CodeCompletion::setWidth(int newWidth)
+{
+    mWidth = newWidth;
+}
+
+void Settings::CodeCompletion::doSave()
+{
+    //Appearence
+    saveValue("width",mWidth);
+    saveValue("height",mHeight);
+    saveValue("enabled",mEnabled);
+    saveValue("parse_local_headers",mParseLocalHeaders);
+    saveValue("parse_global_headers",mParseGlobalHeaders);
+    saveValue("show_completion_while_input",mShowCompletionWhileInput);
+    saveValue("record_usage",mRecordUsage);
+    saveValue("sort_by_scope",mSortByScope);
+    saveValue("show_keywords",mShowKeywords);
+    saveValue("ignore_case",mIgnoreCase);
+    saveValue("append_func",mAppendFunc);
+    saveValue("show_code_ins",mShowCodeIns);
+}
+
+
+void Settings::CodeCompletion::doLoad()
+{
+    //Appearence
+    mTheme = stringValue("theme","dark");
+    mInterfaceFont = stringValue("interface font","Segoe UI");
+    mInterfaceFontSize = intValue("interface font size",10);
+    mLanguage = stringValue("language", QLocale::system().name());
 }

@@ -243,6 +243,10 @@ protected:
     // QObject interface
 public:
     bool event(QEvent *event) override;
+
+    // QWidget interface
+protected:
+    void mouseReleaseEvent(QMouseEvent *event) override;
 };
 
 #endif // EDITOR_H

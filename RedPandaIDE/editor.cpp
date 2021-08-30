@@ -104,6 +104,12 @@ Editor::Editor(QWidget *parent, const QString& filename,
     } else {
         initParser();
     }
+
+    if (mParser->isSystemHeaderFile(filename) || mParser->isProjectHeaderFile(filename)) {
+        this->setModified(false);
+        setReadOnly(true);
+        updateCaption();
+    }
 //    mCompletionPopup = std::make_shared<CodeCompletionPopup>();
 //    mHeaderCompletionPopup = std::make_shared<HeaderCompletionPopup>();
     mCompletionPopup = pMainWindow->completionPopup();
@@ -116,6 +122,8 @@ Editor::Editor(QWidget *parent, const QString& filename,
     connect(this,&SynEdit::gutterClicked,this,&Editor::onGutterClicked);
 
     onStatusChanged(SynStatusChange::scOpenFile);
+
+    setAttribute(Qt::WA_Hover,true);
 }
 
 Editor::~Editor() {
@@ -557,12 +565,12 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
     }
 
 
-    qDebug()<<token<<"-"<<attr->name()<<" - "<<line<<" : "<<aChar;
+//    qDebug()<<token<<"-"<<attr->name()<<" - "<<line<<" : "<<aChar;
     if (mParser && mCompletionPopup && (attr->name() == SYNS_AttrIdentifier)) {
         BufferCoord p{aChar,line};
         BufferCoord pBeginPos,pEndPos;
         QString s= getWordAtPosition(p, pBeginPos,pEndPos, WordPurpose::wpInformation);
-        qDebug()<<s;
+//        qDebug()<<s;
         PStatement statement = mParser->findStatementOf(mFilename,
           s , p.Line);
         StatementKind kind = mParser->getKindOfStatement(statement);
@@ -584,8 +592,8 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
 
 bool Editor::event(QEvent *event)
 {
-    if (event->type() == QEvent::ToolTip) {
-        QHelpEvent *helpEvent = static_cast<QHelpEvent *>(event);
+    if (event->type() == QEvent::HoverEnter || event->type() == QEvent::HoverMove) {
+        QHoverEvent *helpEvent = static_cast<QHoverEvent *>(event);
         BufferCoord p;
         TipType reason = getTipType(helpEvent->pos(),p);
         PSyntaxIssue pError;
@@ -634,12 +642,14 @@ bool Editor::event(QEvent *event)
             return true;
         }
 
+//        qDebug()<<s<<" -- "<<(int)reason;
         // Don't rescan the same stuff over and over again (that's slow)
         //  if (s = fCurrentWord) and (fText.Hint<>'') then
         s = s.trimmed();
         if ((s == mCurrentWord) && (mCurrentTipType == reason)) {
-            QApplication* app = dynamic_cast<QApplication *>(QApplication::instance());
-            if (app->keyboardModifiers().testFlag(Qt::ControlModifier)) {
+//            QApplication* app = dynamic_cast<QApplication *>(QApplication::instance());
+//            if (app->keyboardModifiers().testFlag(Qt::ControlModifier)) {
+            if (helpEvent->modifiers() == Qt::ControlModifier) {
                 setCursor(Qt::PointingHandCursor);
             } else {
                 setCursor(Qt::ArrowCursor);
@@ -680,20 +690,67 @@ bool Editor::event(QEvent *event)
         case TipType::Error:
             hint = getErrorHint(pError);
         }
+//        qDebug()<<"hint:"<<hint;
         if (!hint.isEmpty()) {
-            QApplication* app = dynamic_cast<QApplication *>(QApplication::instance());
-            if (app->keyboardModifiers().testFlag(Qt::ControlModifier)) {
+            //            QApplication* app = dynamic_cast<QApplication *>(QApplication::instance());
+            //            if (app->keyboardModifiers().testFlag(Qt::ControlModifier)) {
+            if (helpEvent->modifiers() == Qt::ControlModifier) {
                 setCursor(Qt::PointingHandCursor);
             } else {
                 setCursor(Qt::ArrowCursor);
             }
-            QToolTip::showText(helpEvent->globalPos(),hint);
+            QToolTip::showText(mapToGlobal(helpEvent->pos()),hint);
             event->ignore();
         } else {
             event->ignore();
         }
+        return true;
+    } else if (event->type() == QEvent::HoverLeave) {
+        cancelHint();
+        return true;
+    } else if (event->type() == QEvent::KeyPress || event->type() == QEvent::KeyRelease ) {
+        if (!mCurrentWord.isEmpty()) {
+            QKeyEvent* keyEvent = dynamic_cast<QKeyEvent*>(event);
+            if (keyEvent->key() == Qt::Key_Control) {
+                QApplication* app = dynamic_cast<QApplication *>(QApplication::instance());
+                QHoverEvent* hoverEvent=new QHoverEvent(QEvent::HoverMove,
+                                                        mapFromGlobal(QCursor::pos()),
+                                                        mapFromGlobal(QCursor::pos()),
+                                                        Qt::ControlModifier
+                                                        );
+                app->postEvent(this,hoverEvent);
+            }
+        }
     }
     return SynEdit::event(event);
+}
+
+void Editor::mouseReleaseEvent(QMouseEvent *event)
+{
+    if (event->button() | Qt::LeftButton) {
+        mLastIdCharPressed = 0;
+    }
+
+    // if ctrl+clicked
+    if ((event->modifiers() == Qt::ControlModifier)
+            && (event->button() == Qt::LeftButton)) {
+
+        BufferCoord p;
+        if (PointToCharLine(event->pos(),p)) {
+            QString s = lines()->getString(p.Line - 1);
+            if (mParser->isIncludeLine(s)) {
+                QString filename = mParser->getHeaderFileName(mFilename,s);
+                Editor * e = pMainWindow->editorList()->getEditorByFilename(filename);
+                if (e) {
+                    e->setCaretPositionAndActivate(1,1);
+                    return;
+                }
+            }
+//            else
+//                MainForm.actGotoImplDeclEditorExecute(self);
+        }
+    }
+    SynEdit::mouseReleaseEvent(event);
 }
 
 void Editor::copyToClipboard()
@@ -1947,10 +2004,8 @@ QString Editor::getParserHint(const QString &s, int line)
                                       mFilename,line);
     } else if (statement->line>0) {
         QFileInfo fileInfo(statement->fileName);
-        result = mParser->prettyPrintStatement(statement,mFilename, line) + " - " +
-                QString(" %1 (%2) ")
-                .arg(fileInfo.fileName())
-                .arg(statement->line)
+        result = mParser->prettyPrintStatement(statement,mFilename, line) + " - "
+                + QString("%1(%2)").arg(fileInfo.fileName()).arg(line)
                 + tr("Ctrl+click for more info");
     } else {  // hard defines
         result = mParser->prettyPrintStatement(statement, mFilename);
@@ -1999,10 +2054,9 @@ QString Editor::getHintForFunction(const PStatement &statement, const PStatement
                 continue;
             if (!result.isEmpty())
                 result += "<BR />";
-            result = mParser->prettyPrintStatement(childStatement,filename,line) + " - " +
-                    QString(" %1 (%2) ")
-                    .arg(filename)
-                    .arg(childStatement->line)
+            QFileInfo fileInfo(filename);
+            result = mParser->prettyPrintStatement(childStatement,filename,line) + " - "
+                    + QString("%1(%2)").arg(fileInfo.fileName()).arg(line)
                     + tr("Ctrl+click for more info");
         }
     }
@@ -2504,6 +2558,9 @@ void Editor::updateCaption(const QString& newCaption) {
         QString caption = QFileInfo(mFilename).fileName();
         if (this->modified()) {
             caption.append("[*]");
+        }
+        if (this->readOnly()) {
+            caption.append("["+tr("Readonly")+"]");
         }
         mParentPageControl->setTabText(index,caption);
     } else {
