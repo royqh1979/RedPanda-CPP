@@ -774,9 +774,10 @@ void Editor::mouseReleaseEvent(QMouseEvent *event)
                     e->setCaretPositionAndActivate(1,1);
                     return;
                 }
+            } else {
+                gotoDeclaration(p);
+                return;
             }
-//            else
-//                MainForm.actGotoImplDeclEditorExecute(self);
         }
     }
     SynEdit::mouseReleaseEvent(event);
@@ -2022,7 +2023,7 @@ QString Editor::getParserHint(const QString &s, int line)
     } else if (statement->line>0) {
         QFileInfo fileInfo(statement->fileName);
         result = mParser->prettyPrintStatement(statement,mFilename, line) + " - "
-                + QString("%1(%2)").arg(fileInfo.fileName()).arg(line)
+                + QString("%1(%2) ").arg(fileInfo.fileName()).arg(line)
                 + tr("Ctrl+click for more info");
     } else {  // hard defines
         result = mParser->prettyPrintStatement(statement, mFilename);
@@ -2071,13 +2072,68 @@ QString Editor::getHintForFunction(const PStatement &statement, const PStatement
                 continue;
             if (!result.isEmpty())
                 result += "<BR />";
-            QFileInfo fileInfo(filename);
+            QFileInfo fileInfo(childStatement->fileName);
             result = mParser->prettyPrintStatement(childStatement,filename,line) + " - "
-                    + QString("%1(%2)").arg(fileInfo.fileName()).arg(line)
+                    + QString("%1(%2) ").arg(fileInfo.fileName()).arg(line)
                     + tr("Ctrl+click for more info");
         }
     }
     return result;
+}
+
+void Editor::gotoDeclaration(const BufferCoord &pos)
+{
+    // Exit early, don't bother creating a stream (which is slow)
+    BufferCoord pBeginPos, pEndPos;
+    QString phrase = getWordAtPosition(pos,pBeginPos,pEndPos, WordPurpose::wpInformation);
+    if (phrase.isEmpty())
+        return;
+
+    PStatement statement = mParser->findStatementOf(
+                mFilename,phrase,pos.Line);
+
+    if (!statement) {
+        pMainWindow->updateStatusBarMessage(tr("Symbol '%1' not found!").arg(phrase));
+        return;
+    }
+    QString filename;
+    int line;
+    if (statement->fileName == mFilename && statement->line == pos.Line) {
+            filename = statement->definitionFileName;
+            line = statement->definitionLine;
+    } else {
+        filename = statement->fileName;
+        line = statement->line;
+    }
+    Editor* e = pMainWindow->editorList()->getEditorByFilename(filename);
+    if (e) {
+        e->setCaretPositionAndActivate(line,1);
+    }
+}
+
+void Editor::gotoDefinition(const BufferCoord &pos)
+{
+    // Exit early, don't bother creating a stream (which is slow)
+    BufferCoord pBeginPos, pEndPos;
+    QString phrase = getWordAtPosition(pos,pBeginPos,pEndPos, WordPurpose::wpInformation);
+    if (phrase.isEmpty())
+        return;
+
+    PStatement statement = mParser->findStatementOf(
+                mFilename,phrase,pos.Line);
+
+    if (!statement) {
+        pMainWindow->updateStatusBarMessage(tr("Symbol '%1' not found!").arg(phrase));
+        return;
+    }
+    QString filename;
+    int line;
+    filename = statement->definitionFileName;
+    line = statement->definitionLine;
+    Editor* e = pMainWindow->editorList()->getEditorByFilename(filename);
+    if (e) {
+        e->setCaretPositionAndActivate(line,1);
+    }
 }
 
 QString Editor::getWordAtPosition(const BufferCoord &p, BufferCoord &pWordBegin, BufferCoord &pWordEnd, WordPurpose purpose)

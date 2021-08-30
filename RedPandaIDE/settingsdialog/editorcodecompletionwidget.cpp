@@ -53,6 +53,6 @@ void EditorCodeCompletionWidget::doSave()
     pSettings->codeCompletion().setAppendFunc(ui->chkAppendFunc->isChecked());
     pSettings->codeCompletion().setShowCodeIns(ui->chkShowCodeIns->isChecked());
 
-    pSettings->editor().save();
+    pSettings->codeCompletion().save();
 }
 

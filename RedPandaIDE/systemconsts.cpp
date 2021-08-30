@@ -29,6 +29,11 @@ const QString &SystemConsts::defaultCPPFileFilter() const noexcept
     return mDefaultFileFilters[1];
 }
 
+const QString &SystemConsts::defaultAllFileFilter() const noexcept
+{
+    return mDefaultFileFilters.back();
+}
+
 void SystemConsts::addDefaultFileFilter(const QString &name, const QString &fileExtensions)
 {
     mDefaultFileFilters.append(name+ " (" + fileExtensions+")");

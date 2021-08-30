@@ -6,6 +6,7 @@
 #include <QLineEdit>
 #include <QListView>
 #include <QPlainTextEdit>
+#include <QRadioButton>
 #include <QSpinBox>
 #include "../widgets/coloredit.h"
 
@@ -60,7 +61,10 @@ void SettingsWidget::connectInputs()
         connect(p, &QLineEdit::textChanged, this, &SettingsWidget::setSettingsChanged);
     }
     for (QCheckBox* p:findChildren<QCheckBox*>()) {
-        connect(p, &QCheckBox::stateChanged, this, &SettingsWidget::setSettingsChanged);
+        connect(p, &QCheckBox::toggled, this, &SettingsWidget::setSettingsChanged);
+    }
+    for (QRadioButton* p:findChildren<QRadioButton*>()) {
+        connect(p, &QRadioButton::toggled, this, &SettingsWidget::setSettingsChanged);
     }
     for (QPlainTextEdit* p:findChildren<QPlainTextEdit*>()) {
         connect(p, &QPlainTextEdit::textChanged, this, &SettingsWidget::setSettingsChanged);

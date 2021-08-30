@@ -52,7 +52,7 @@ public:
     void updateForEncodingInfo();
     void updateStatusbarForLineCol();
     void updateForStatusbarModeInfo();
-    void updateStatusBarForParsing(const QString& s);
+    void updateStatusBarMessage(const QString& s);
     void updateEditorSettings();
     void updateEditorActions();
     void updateCompileActions();

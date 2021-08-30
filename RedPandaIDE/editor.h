@@ -191,6 +191,9 @@ private:
     QString getHintForFunction(const PStatement& statement, const PStatement& scope,
                                const QString& filename, int line);
 
+    void gotoDeclaration(const BufferCoord& pos);
+    void gotoDefinition(const BufferCoord& pos);
+
 private:
     static int newfileCount;
     QByteArray mEncodingOption; // the encoding type set by the user

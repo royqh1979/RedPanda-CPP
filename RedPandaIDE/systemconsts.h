@@ -30,7 +30,7 @@
 #error "Only support windows and linux now!"
 #endif
 
-#define DEVCPP_VERSION "0.05"
+#define DEVCPP_VERSION "0.0.5"
 
 class SystemConsts
 {
@@ -39,6 +39,7 @@ public:
     const QStringList& defaultFileFilters() const noexcept;
     const QString& defaultCFileFilter() const noexcept;
     const QString& defaultCPPFileFilter() const noexcept;
+    const QString& defaultAllFileFilter() const noexcept;
     void addDefaultFileFilter(const QString& name, const QString& fileExtensions);
 private:
     QStringList mDefaultFileFilters;

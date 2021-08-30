@@ -466,7 +466,7 @@ void MainWindow::updateForStatusbarModeInfo()
     }
 }
 
-void MainWindow::updateStatusBarForParsing(const QString &s)
+void MainWindow::updateStatusBarMessage(const QString &s)
 {
     ui->statusbar->showMessage(s);
 }
@@ -1005,10 +1005,11 @@ void MainWindow::on_actionOpen_triggered()
 {
     try {
         QString selectedFileFilter;
-        if (pSettings->editor().defaultFileCpp())
+        if (pSettings->editor().defaultFileCpp()){
             selectedFileFilter = pSystemConsts->defaultCPPFileFilter();
-        else
+        } else {
             selectedFileFilter = pSystemConsts->defaultCFileFilter();
+        }
         QStringList files = QFileDialog::getOpenFileNames(pMainWindow,
             tr("Open"), QString(), pSystemConsts->defaultFileFilters().join(";;"),
             &selectedFileFilter);
@@ -1610,7 +1611,7 @@ void MainWindow::onParserProgress(const QString &fileName, int total, int curren
 
     // Only show if needed (it's a very slow operation)
     if (current ==1 || current % showStep==0) {
-        updateStatusBarForParsing(tr("Parsing file %1 of %2: \"%3\"")
+        updateStatusBarMessage(tr("Parsing file %1 of %2: \"%3\"")
                                   .arg(current).arg(total).arg(fileName));
     }
 }
@@ -1632,13 +1633,13 @@ void MainWindow::onEndParsing(int total, int)
         } else {
             parsingFrequency = 999;
         }
-        updateStatusBarForParsing(tr("Done parsing %1 files in %2 seconds")
+        updateStatusBarMessage(tr("Done parsing %1 files in %2 seconds")
                                   .arg(total).arg(parseTime)
                                   + " "
                                   + tr("(%1 files per second)")
                                   .arg(parsingFrequency));
     } else {
-        updateStatusBarForParsing(tr("Done parsing %1 files in %2 seconds")
+        updateStatusBarMessage(tr("Done parsing %1 files in %2 seconds")
                                   .arg(total).arg(parseTime));
     }
 }
