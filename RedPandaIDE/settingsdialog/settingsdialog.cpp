@@ -134,6 +134,10 @@ void SettingsDialog::on_widgetsView_clicked(const QModelIndex &index)
         ui->lblWidgetCaption->setText(QString("%1 > %2").arg(pWidget->group()).arg(pWidget->name()));
 
         ui->btnApply->setEnabled(false);
+    } else if (model.hasChildren(index)) {
+        ui->widgetsView->expand(index);
+        QModelIndex childIndex = this->model.index(0,0,index);
+        emit ui->widgetsView->clicked(childIndex);
     }
 }
 
