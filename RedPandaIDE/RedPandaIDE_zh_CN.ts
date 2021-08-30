@@ -683,7 +683,7 @@ Are you really want to continue?</source>
     <message>
         <location filename="settingsdialog/editorcodecompletionwidget.ui" line="62"/>
         <source>Show keywords in suggestions</source>
-        <translation type="unfinished">提示C/C++关键字</translation>
+        <translation>提示C/C++关键字</translation>
     </message>
     <message>
         <location filename="settingsdialog/editorcodecompletionwidget.ui" line="69"/>
@@ -718,7 +718,7 @@ Are you really want to continue?</source>
     <message>
         <location filename="settingsdialog/editorcodecompletionwidget.ui" line="151"/>
         <source>Completion suggestion window width:</source>
-        <translation type="unfinished">补全提示窗口宽度：</translation>
+        <translation>补全提示窗口宽度：</translation>
     </message>
     <message>
         <location filename="settingsdialog/editorcodecompletionwidget.ui" line="181"/>
@@ -963,6 +963,39 @@ Are you really want to continue?</source>
         <location filename="settingsdialog/editorgeneralwidget.cpp" line="17"/>
         <source>Block</source>
         <translation>方块</translation>
+    </message>
+</context>
+<context>
+    <name>EditorMiscWidget</name>
+    <message>
+        <location filename="settingsdialog/editormiscwidget.ui" line="14"/>
+        <source>Form</source>
+        <translation>表单</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/editormiscwidget.ui" line="20"/>
+        <source>Open system header files in read only mode</source>
+        <translation>以只读方式打开系统头文件</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/editormiscwidget.ui" line="27"/>
+        <source>Auto load files being open when Red Panda C++ last exited.</source>
+        <translation>自动打开上次退出时打开的文件</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/editormiscwidget.ui" line="34"/>
+        <source>Default file type</source>
+        <translation>缺省文件类型</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/editormiscwidget.ui" line="40"/>
+        <source>C++ files</source>
+        <translation>C++语言文件</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/editormiscwidget.ui" line="47"/>
+        <source>C files</source>
+        <translation>C语言文件</translation>
     </message>
 </context>
 <context>
@@ -1877,7 +1910,7 @@ Are you really want to continue?</source>
 <context>
     <name>QApplication</name>
     <message>
-        <location filename="main.cpp" line="90"/>
+        <location filename="main.cpp" line="94"/>
         <source>Error</source>
         <translation>错误</translation>
     </message>
@@ -1979,27 +2012,178 @@ Are you really want to continue?</source>
         <translation>无法找到%1程序&quot;%2&quot;</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1666"/>
+        <location filename="settings.cpp" line="1662"/>
         <source>C options</source>
         <translation>C语言选项</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1672"/>
+        <location filename="settings.cpp" line="1663"/>
+        <source>Support all ANSI standard C programs (-ansi)</source>
+        <translation>支持所有ANSI标准C程序(-ansi)</translation>
+    </message>
+    <message>
+        <location filename="settings.cpp" line="1664"/>
+        <source>Do not recognize asm,inline or typeof as a keyword (-fno-asm)</source>
+        <translation>不支持将asm、inline和typeof作为关键字(-fno-asm)</translation>
+    </message>
+    <message>
+        <location filename="settings.cpp" line="1665"/>
+        <source>Imitate traditional C preprocessors (-traditional-cpp)</source>
+        <translation>模仿传统C预处理器行为(-traditional-cpp)</translation>
+    </message>
+    <message>
+        <location filename="settings.cpp" line="1668"/>
         <source>Code Generation</source>
         <translation>代码生成</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1983"/>
+        <location filename="settings.cpp" line="1697"/>
+        <source>Optimize for the following machine (-march)</source>
+        <translation>生成特定机器的专用指令(-march)</translation>
+    </message>
+    <message>
+        <location filename="settings.cpp" line="1698"/>
+        <source>Optimize less, while maintaining full compatibility (-tune)</source>
+        <translation>完整兼容特定机器，较少优化(-tune)</translation>
+    </message>
+    <message>
+        <location filename="settings.cpp" line="1718"/>
+        <source>Enable use of specific instructions (-mx)</source>
+        <translation>启用特定指令集(-mx)</translation>
+    </message>
+    <message>
+        <location filename="settings.cpp" line="1729"/>
+        <source>Optimization level (-Ox)</source>
+        <translation>优化级别(-Ox)</translation>
+    </message>
+    <message>
+        <location filename="settings.cpp" line="1736"/>
+        <source>Compile with the following pointer size (-mx)</source>
+        <translation>使用下列指针大小编译(-mx)</translation>
+    </message>
+    <message>
+        <location filename="settings.cpp" line="1759"/>
+        <source>Language standard (-std)</source>
+        <translation>语言标准(-std)</translation>
+    </message>
+    <message>
+        <location filename="settings.cpp" line="1760"/>
+        <source>Generate debugging information (-g3)</source>
+        <translation>生成调试信息(-g3)</translation>
+    </message>
+    <message>
+        <location filename="settings.cpp" line="1761"/>
+        <source>Generate profiling info for analysis (-pg)</source>
+        <translation>生成性能分析信息(-pg)</translation>
+    </message>
+    <message>
+        <location filename="settings.cpp" line="1764"/>
+        <source>Warnings</source>
+        <translation>代码警告</translation>
+    </message>
+    <message>
+        <location filename="settings.cpp" line="1765"/>
+        <source>Inhibit all warning messages (-w)</source>
+        <translation>忽略所有警告信息(-w)</translation>
+    </message>
+    <message>
+        <location filename="settings.cpp" line="1766"/>
+        <source>Show most warnings (-Wall)</source>
+        <translation>启用常见问题警告(-Wall)</translation>
+    </message>
+    <message>
+        <location filename="settings.cpp" line="1767"/>
+        <source>Show some more warnings (-Wextra)</source>
+        <translation>启用更多问题警告(-Wextra)</translation>
+    </message>
+    <message>
+        <location filename="settings.cpp" line="1768"/>
+        <source>Check ISO C/C++/C++0x conformance (-pedantic)</source>
+        <translation>检查ISO C/C++/C++0x语法一致性(-pedantic)</translation>
+    </message>
+    <message>
+        <location filename="settings.cpp" line="1769"/>
+        <source>Only check the code for syntax errors (-fsyntax-only)</source>
+        <translation>只进行语法检查（不编译）(-fsyntax-only)</translation>
+    </message>
+    <message>
+        <location filename="settings.cpp" line="1770"/>
+        <source>Make all warnings into errors (-Werror)</source>
+        <translation>将警告作为错误处理(-Werror)</translation>
+    </message>
+    <message>
+        <location filename="settings.cpp" line="1771"/>
+        <source>Abort compilation on first error (-Wfatal-errors)</source>
+        <translation>遇到第一个错误后立即中止编译(-Wfatal-errors)</translation>
+    </message>
+    <message>
+        <location filename="settings.cpp" line="1774"/>
+        <source>Linker</source>
+        <translation>链接器</translation>
+    </message>
+    <message>
+        <location filename="settings.cpp" line="1775"/>
+        <source>Link an Objective C program (-lobjc)</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="settings.cpp" line="1776"/>
+        <source>Do not use standard system libraries (-nostdlib)</source>
+        <translation>不使用标准库和系统启动文件(-nostdlib)</translation>
+    </message>
+    <message>
+        <location filename="settings.cpp" line="1777"/>
+        <source>Do not create a console window (-mwindows)</source>
+        <translation>不产生控制台窗口(-mwindows)</translation>
+    </message>
+    <message>
+        <location filename="settings.cpp" line="1778"/>
+        <source>Strip executable (-s)</source>
+        <translation>剥除附加信息(-s)</translation>
+    </message>
+    <message>
+        <location filename="settings.cpp" line="1779"/>
+        <source>Link libraries statically (-static)</source>
+        <translation>链接Ojbective C程序(-lobjc)</translation>
+    </message>
+    <message>
+        <location filename="settings.cpp" line="1782"/>
+        <source>Output</source>
+        <translation>输出</translation>
+    </message>
+    <message>
+        <location filename="settings.cpp" line="1783"/>
+        <source>Put comments in generated assembly code (-fverbose-asm)</source>
+        <translation>在生成的汇编代码中加入注释(-fverbose-asm)</translation>
+    </message>
+    <message>
+        <location filename="settings.cpp" line="1784"/>
+        <source>Use pipes instead of temporary files during compilation (-pipe)</source>
+        <translation>编译时使用管道而不是临时文件(-pipe)</translation>
+    </message>
+    <message>
+        <location filename="settings.cpp" line="1785"/>
+        <source>Do not assemble, compile and generate the assemble code (-S)</source>
+        <translation>只生成汇编代码(-S)</translation>
+    </message>
+    <message>
+        <location filename="settings.cpp" line="1978"/>
+        <location filename="settings.cpp" line="2003"/>
+        <source>Confirm</source>
+        <translation>确认</translation>
+    </message>
+    <message>
+        <location filename="settings.cpp" line="1979"/>
         <source>The following problems were found during validation of compiler set &quot;%1&quot;:</source>
         <translation>在验证编译器设置&quot;%1&quot;时遇到了下列问题：</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2008"/>
+        <location filename="settings.cpp" line="2004"/>
         <source>Compiler set not configuared.</source>
         <translation>未配置编译器设置。</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2010"/>
+        <location filename="settings.cpp" line="2006"/>
         <source>Would you like Red Panda C++ to search for compilers in the following locations: &lt;BR /&gt;&apos;%1&apos;&lt;BR /&gt;&apos;%2&apos;? </source>
         <translation>您需要小熊猫C++在下列位置搜索编译器吗：&lt;br /&gt;%1&lt;br /&gt;%2</translation>
     </message>
@@ -2504,158 +2688,124 @@ Are you really want to continue?</source>
 <context>
     <name>Settings::CompilerSet</name>
     <message>
-        <location filename="settings.cpp" line="1667"/>
         <source>Support all ANSI standard C programs (-ansi)</source>
-        <translation>支持所有ANSI标准C程序(-ansi)</translation>
+        <translation type="vanished">支持所有ANSI标准C程序(-ansi)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1668"/>
         <source>Do not recognize asm,inline or typeof as a keyword (-fno-asm)</source>
-        <translation>不支持将asm、inline和typeof作为关键字(-fno-asm)</translation>
+        <translation type="vanished">不支持将asm、inline和typeof作为关键字(-fno-asm)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1669"/>
         <source>Imitate traditional C preprocessors (-traditional-cpp)</source>
-        <translation>模仿传统C预处理器行为(-traditional-cpp)</translation>
+        <translation type="vanished">模仿传统C预处理器行为(-traditional-cpp)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1701"/>
         <source>Optimize for the following machine (-march)</source>
-        <translation>生成特定机器的专用指令(-march)</translation>
+        <translation type="vanished">生成特定机器的专用指令(-march)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1702"/>
         <source>Optimize less, while maintaining full compatibility (-tune)</source>
-        <translation>完整兼容特定机器，较少优化(-tune)</translation>
+        <translation type="vanished">完整兼容特定机器，较少优化(-tune)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1722"/>
         <source>Enable use of specific instructions (-mx)</source>
-        <translation>启用特定指令集(-mx)</translation>
+        <translation type="vanished">启用特定指令集(-mx)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1733"/>
         <source>Optimization level (-Ox)</source>
-        <translation>优化级别(-Ox)</translation>
+        <translation type="vanished">优化级别(-Ox)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1740"/>
         <source>Compile with the following pointer size (-mx)</source>
-        <translation>使用下列指针大小编译(-mx)</translation>
+        <translation type="vanished">使用下列指针大小编译(-mx)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1763"/>
         <source>Language standard (-std)</source>
-        <translation>语言标准(-std)</translation>
+        <translation type="vanished">语言标准(-std)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1764"/>
         <source>Generate debugging information (-g3)</source>
-        <translation>生成调试信息(-g3)</translation>
+        <translation type="vanished">生成调试信息(-g3)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1765"/>
         <source>Generate profiling info for analysis (-pg)</source>
-        <translation>生成性能分析信息(-pg)</translation>
+        <translation type="vanished">生成性能分析信息(-pg)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1768"/>
         <source>Warnings</source>
-        <translation>代码警告</translation>
+        <translation type="vanished">代码警告</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1769"/>
         <source>Inhibit all warning messages (-w)</source>
-        <translation>忽略所有警告信息(-w)</translation>
+        <translation type="vanished">忽略所有警告信息(-w)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1770"/>
         <source>Show most warnings (-Wall)</source>
-        <translation>启用常见问题警告(-Wall)</translation>
+        <translation type="vanished">启用常见问题警告(-Wall)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1771"/>
         <source>Show some more warnings (-Wextra)</source>
-        <translation>启用更多问题警告(-Wextra)</translation>
+        <translation type="vanished">启用更多问题警告(-Wextra)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1772"/>
         <source>Check ISO C/C++/C++0x conformance (-pedantic)</source>
-        <translation>检查ISO C/C++/C++0x语法一致性(-pedantic)</translation>
+        <translation type="vanished">检查ISO C/C++/C++0x语法一致性(-pedantic)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1773"/>
         <source>Only check the code for syntax errors (-fsyntax-only)</source>
-        <translation>只进行语法检查（不编译）(-fsyntax-only)</translation>
+        <translation type="vanished">只进行语法检查（不编译）(-fsyntax-only)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1774"/>
         <source>Make all warnings into errors (-Werror)</source>
-        <translation>将警告作为错误处理(-Werror)</translation>
+        <translation type="vanished">将警告作为错误处理(-Werror)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1775"/>
         <source>Abort compilation on first error (-Wfatal-errors)</source>
-        <translation>遇到第一个错误后立即中止编译(-Wfatal-errors)</translation>
+        <translation type="vanished">遇到第一个错误后立即中止编译(-Wfatal-errors)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1778"/>
         <source>Linker</source>
-        <translation>链接器</translation>
+        <translation type="vanished">链接器</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1779"/>
-        <source>Link an Objective C program (-lobjc)</source>
-        <translation>链接Ojbective C程序(-lobjc)</translation>
-    </message>
-    <message>
-        <location filename="settings.cpp" line="1780"/>
-        <source>Do not use standard system libraries (-nostdlib)</source>
-        <translation>不使用标准库和系统启动文件(-nostdlib)</translation>
-    </message>
-    <message>
-        <location filename="settings.cpp" line="1781"/>
-        <source>Do not create a console window (-mwindows)</source>
-        <translation>不产生控制台窗口(-mwindows)</translation>
-    </message>
-    <message>
-        <location filename="settings.cpp" line="1782"/>
-        <source>Strip executable (-s)</source>
-        <translation>剥除附加信息(-s)</translation>
-    </message>
-    <message>
-        <location filename="settings.cpp" line="1783"/>
         <source>Link libraries statically (-static)</source>
-        <translation>静态链接二进制库(-static)</translation>
+        <oldsource>Link an Objective C program (-lobjc)</oldsource>
+        <translation type="vanished">链接Ojbective C程序(-lobjc)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1786"/>
+        <source>Do not use standard system libraries (-nostdlib)</source>
+        <translation type="vanished">不使用标准库和系统启动文件(-nostdlib)</translation>
+    </message>
+    <message>
+        <source>Do not create a console window (-mwindows)</source>
+        <translation type="vanished">不产生控制台窗口(-mwindows)</translation>
+    </message>
+    <message>
+        <source>Strip executable (-s)</source>
+        <translation type="vanished">剥除附加信息(-s)</translation>
+    </message>
+    <message>
         <source>Output</source>
-        <translation>输出</translation>
+        <translation type="vanished">输出</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1787"/>
         <source>-fverbose-asm</source>
-        <translation></translation>
+        <translation type="obsolete">-fverbose-asm</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1788"/>
         <source>Use pipes instead of temporary files during compilation (-pipe)</source>
-        <translation>编译时使用管道而不是临时文件(-pipe)</translation>
+        <translation type="vanished">编译时使用管道而不是临时文件(-pipe)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1789"/>
         <source>Do not assemble, compile and generate the assemble code (-S)</source>
-        <translation>只生成汇编代码(-S)</translation>
+        <translation type="vanished">只生成汇编代码(-S)</translation>
     </message>
 </context>
 <context>
     <name>Settings::CompilerSets</name>
     <message>
-        <location filename="settings.cpp" line="1982"/>
-        <location filename="settings.cpp" line="2007"/>
         <source>Confirm</source>
-        <translation>确认</translation>
+        <translation type="vanished">确认</translation>
     </message>
 </context>
 <context>
@@ -2746,7 +2896,7 @@ Are you really want to continue?</source>
     <message>
         <location filename="settingsdialog/settingsdialog.cpp" line="59"/>
         <source>Symbol Completion</source>
-        <translation type="unfinished">符号补全</translation>
+        <translation>符号补全</translation>
     </message>
     <message>
         <location filename="settingsdialog/settingsdialog.cpp" line="63"/>

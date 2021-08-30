@@ -74,7 +74,7 @@ QVariant Settings::value(const QString &key, const QVariant &defaultValue)
 void Settings::load()
 {
 
-    //mCompilerSets.loadSets();
+    mCompilerSets.loadSets();
     mEnvironment.load();
     mEditor.load();
     mExecutor.load();
@@ -1656,17 +1656,13 @@ void Settings::CompilerSet::setUserInput()
     mAutoAddCharsetParams = true;
 }
 
-inline QString tr(const char* str) {
-    return QObject::tr(str);
-}
-
 void Settings::CompilerSet::setOptions()
 {
     // C options
     QString groupName = QObject::tr("C options");
-    addOption(tr("Support all ANSI standard C programs (-ansi)"), groupName, true, true, false, 0, "-ansi");
-    addOption(tr("Do not recognize asm,inline or typeof as a keyword (-fno-asm)"), groupName, true, true, false, 0, "-fno-asm");
-    addOption(tr("Imitate traditional C preprocessors (-traditional-cpp)"), groupName, true, true, false, 0, "-traditional-cpp");
+    addOption(QObject::tr("Support all ANSI standard C programs (-ansi)"), groupName, true, true, false, 0, "-ansi");
+    addOption(QObject::tr("Do not recognize asm,inline or typeof as a keyword (-fno-asm)"), groupName, true, true, false, 0, "-fno-asm");
+    addOption(QObject::tr("Imitate traditional C preprocessors (-traditional-cpp)"), groupName, true, true, false, 0, "-traditional-cpp");
 
     // Optimization for cpu type
     groupName = QObject::tr("Code Generation");
@@ -1698,8 +1694,8 @@ void Settings::CompilerSet::setOptions()
     sl.append("K8 Rev.E=k8-sse3");
     sl.append("K10=barcelona");
     sl.append("Bulldozer=bdver1");
-    addOption(tr("Optimize for the following machine (-march)"), groupName, true, true, false, 0, "-march=", sl);
-    addOption(tr("Optimize less, while maintaining full compatibility (-tune)"), groupName, true, true, false, 0, "-mtune=", sl);
+    addOption(QObject::tr("Optimize for the following machine (-march)"), groupName, true, true, false, 0, "-march=", sl);
+    addOption(QObject::tr("Optimize less, while maintaining full compatibility (-tune)"), groupName, true, true, false, 0, "-mtune=", sl);
 
     // Enable use of the specific instructions
     sl.clear();
@@ -1719,7 +1715,7 @@ void Settings::CompilerSet::setOptions()
     sl.append("FMA4=fma4");
     sl.append("XOP=xop");
     sl.append("AES=aes");
-    addOption(tr("Enable use of specific instructions (-mx)"), groupName, true, true, false, 0, "-m", sl);
+    addOption(QObject::tr("Enable use of specific instructions (-mx)"), groupName, true, true, false, 0, "-m", sl);
 
     // Optimization
     sl.clear();
@@ -1730,14 +1726,14 @@ void Settings::CompilerSet::setOptions()
     sl.append("Highest (fast)=fast");
     sl.append("Size (s)=s");
     sl.append("Debug (g)=g");
-    addOption(tr("Optimization level (-Ox)"), groupName, true, true, false, 0, "-O", sl);
+    addOption(QObject::tr("Optimization level (-Ox)"), groupName, true, true, false, 0, "-O", sl);
 
     // 32bit/64bit
     sl.clear();
     sl.append("");
     sl.append("32bit=m32");
     sl.append("64bit=m64");
-    addOption(tr("Compile with the following pointer size (-mx)"), groupName, true, true, true, 0, "-", sl);
+    addOption(QObject::tr("Compile with the following pointer size (-mx)"), groupName, true, true, true, 0, "-", sl);
 
     // Language Standards
     sl.clear();
@@ -1760,33 +1756,33 @@ void Settings::CompilerSet::setOptions()
     sl.append("GNU C++14=gnu++14");
     sl.append("GNU C++17=gnu++17");
     sl.append("GNU C++20=gnu++20");
-    addOption(tr("Language standard (-std)"), groupName, true, true, false, 0, "-std=", sl);
-    addOption(tr("Generate debugging information (-g3)"), groupName, true, true, false, 0, "-g3");
-    addOption(tr("Generate profiling info for analysis (-pg)"), groupName, true, true, true, 0, "-pg");
+    addOption(QObject::tr("Language standard (-std)"), groupName, true, true, false, 0, "-std=", sl);
+    addOption(QObject::tr("Generate debugging information (-g3)"), groupName, true, true, false, 0, "-g3");
+    addOption(QObject::tr("Generate profiling info for analysis (-pg)"), groupName, true, true, true, 0, "-pg");
 
     // Warnings
-    groupName = tr("Warnings");
-    addOption(tr("Inhibit all warning messages (-w)"), groupName, true, true, false, 0, "-w");
-    addOption(tr("Show most warnings (-Wall)"), groupName, true, true, false, 0, "-Wall");
-    addOption(tr("Show some more warnings (-Wextra)"), groupName, true, true, false, 0, "-Wextra");
-    addOption(tr("Check ISO C/C++/C++0x conformance (-pedantic)"), groupName, true, true, false, 0, "-pedantic");
-    addOption(tr("Only check the code for syntax errors (-fsyntax-only)"), groupName, true, true, false, 0, "-fsyntax-only");
-    addOption(tr("Make all warnings into errors (-Werror)"), groupName, true, true, false, 0, "-Werror");
-    addOption(tr("Abort compilation on first error (-Wfatal-errors)"), groupName, true, true, false, 0, "-Wfatal-errors");
+    groupName = QObject::tr("Warnings");
+    addOption(QObject::tr("Inhibit all warning messages (-w)"), groupName, true, true, false, 0, "-w");
+    addOption(QObject::tr("Show most warnings (-Wall)"), groupName, true, true, false, 0, "-Wall");
+    addOption(QObject::tr("Show some more warnings (-Wextra)"), groupName, true, true, false, 0, "-Wextra");
+    addOption(QObject::tr("Check ISO C/C++/C++0x conformance (-pedantic)"), groupName, true, true, false, 0, "-pedantic");
+    addOption(QObject::tr("Only check the code for syntax errors (-fsyntax-only)"), groupName, true, true, false, 0, "-fsyntax-only");
+    addOption(QObject::tr("Make all warnings into errors (-Werror)"), groupName, true, true, false, 0, "-Werror");
+    addOption(QObject::tr("Abort compilation on first error (-Wfatal-errors)"), groupName, true, true, false, 0, "-Wfatal-errors");
 
     // Linker
-    groupName = tr("Linker");
-    addOption(tr("Link an Objective C program (-lobjc)"), groupName, false, false, true, 0, "-lobjc");
-    addOption(tr("Do not use standard system libraries (-nostdlib)"), groupName, false, false, true, 0, "-nostdlib");
-    addOption(tr("Do not create a console window (-mwindows)"), groupName,false, false, true, 0, "-mwindows");
-    addOption(tr("Strip executable (-s)"), groupName, false, false, true, 0, "-s");
-    addOption(tr("Link libraries statically (-static)"), groupName, false, false, true, 0, "-static");
+    groupName = QObject::tr("Linker");
+    addOption(QObject::tr("Link an Objective C program (-lobjc)"), groupName, false, false, true, 0, "-lobjc");
+    addOption(QObject::tr("Do not use standard system libraries (-nostdlib)"), groupName, false, false, true, 0, "-nostdlib");
+    addOption(QObject::tr("Do not create a console window (-mwindows)"), groupName,false, false, true, 0, "-mwindows");
+    addOption(QObject::tr("Strip executable (-s)"), groupName, false, false, true, 0, "-s");
+    addOption(QObject::tr("Link libraries statically (-static)"), groupName, false, false, true, 0, "-static");
 
     // Output
-    groupName = tr("Output");
-    addOption(tr("-fverbose-asm"), groupName, true, true, false, 0, "-fverbose-asm");
-    addOption(tr("Use pipes instead of temporary files during compilation (-pipe)"), groupName, true, true, false, 0, "-pipe");
-    addOption(tr("Do not assemble, compile and generate the assemble code (-S)"), groupName, true, true, false, 0, "-S");
+    groupName = QObject::tr("Output");
+    addOption(QObject::tr("Put comments in generated assembly code (-fverbose-asm)"), groupName, true, true, false, 0, "-fverbose-asm");
+    addOption(QObject::tr("Use pipes instead of temporary files during compilation (-pipe)"), groupName, true, true, false, 0, "-pipe");
+    addOption(QObject::tr("Do not assemble, compile and generate the assemble code (-S)"), groupName, true, true, false, 0, "-S");
 }
 
 QString Settings::CompilerSet::findProgramInBinDirs(const QString name)
@@ -1979,7 +1975,7 @@ void Settings::CompilerSets::loadSets()
     if (pCurrentSet) {
         QString msg;
         if (!pCurrentSet->dirsValid(msg) || !pCurrentSet->validateExes(msg)) {
-            if (QMessageBox::warning(nullptr,tr("Confirm"),
+            if (QMessageBox::warning(nullptr,QObject::tr("Confirm"),
                        QObject::tr("The following problems were found during validation of compiler set \"%1\":")
                                      .arg(pCurrentSet->name())
                                      +"<br /><br />"
@@ -2004,7 +2000,7 @@ void Settings::CompilerSets::loadSets()
             return;
         }
     } else {
-        if (QMessageBox::warning(nullptr,tr("Confirm"),
+        if (QMessageBox::warning(nullptr,QObject::tr("Confirm"),
                    QObject::tr("Compiler set not configuared.")
                                  +"<br /><br />"
                                  +QObject::tr("Would you like Red Panda C++ to search for compilers in the following locations: <BR />'%1'<BR />'%2'? ")

@@ -14,7 +14,7 @@
 #include "iconsmanager.h"
 #include "parser/parserutils.h"
 
-Settings* createAppSettings(const QString& filepath = QString()) {
+QString getSettingFilename(const QString& filepath = QString()) {
     QString filename;
     if (filepath.isEmpty()) {
         if (isGreenEdition()) {
@@ -34,7 +34,7 @@ Settings* createAppSettings(const QString& filepath = QString()) {
         if (!dir.mkpath(dir.absolutePath())) {
             QMessageBox::critical(nullptr, QObject::tr("Error"),
                 QString(QObject::tr("Can't create configuration folder %1")).arg(dir.absolutePath()));
-            return nullptr;
+            return "";
         }
     }
 
@@ -42,14 +42,27 @@ Settings* createAppSettings(const QString& filepath = QString()) {
         QMessageBox::critical(nullptr, QObject::tr("Error"),
             QString(QObject::tr("Can't write to configuration file %1")).arg(filename));
 
-        return nullptr;
+        return "";
     }
-    return new Settings(filename);
+    return filename;
 }
 
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
+
+    //Translation must be loaded first
+    QTranslator trans;
+    QString settingFilename = getSettingFilename();
+    if (settingFilename.isEmpty())
+        return -1;
+    {
+//        QSettings languageSetting(settingFilename,QSettings::IniFormat);
+//        languageSetting.beginGroup(SETTING_ENVIRONMENT);
+//        QString language = languageSetting.value("language",QLocale::system().name()).toString();
+//        trans.load("RedPandaIDE_"+language,":/translations");
+//        app.installTranslator(&trans);
+    }
 
     qRegisterMetaType<PCompileIssue>("PCompileIssue");
     qRegisterMetaType<PCompileIssue>("PCompileIssue&");
@@ -63,20 +76,8 @@ int main(int argc, char *argv[])
         pSystemConsts = &systemConsts;
 
         //load settings
-        pSettings = createAppSettings();
-        if (pSettings == nullptr) {
-            return -1;
-        }
+        pSettings = new Settings(settingFilename);
         auto settings = std::unique_ptr<Settings>(pSettings);
-
-
-        //Translation must be loaded after language setting is loaded
-        QTranslator trans;
-        trans.load("RedPandaIDE_"+pSettings->environment().language(),":/translations");
-        app.installTranslator(&trans);
-
-        //must do it after translation is loaded
-        pSettings->compilerSets().loadSets();
 
         //Color scheme settings must be loaded after translation
         pColorManager = new ColorManager();
