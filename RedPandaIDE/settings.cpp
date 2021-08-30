@@ -366,6 +366,26 @@ void Settings::Editor::setReadOnlySytemHeader(bool newReadOnlySytemHeader)
     mReadOnlySytemHeader = newReadOnlySytemHeader;
 }
 
+bool Settings::Editor::defaultFileCpp() const
+{
+    return mDefaultFileCpp;
+}
+
+void Settings::Editor::setDefaultFileCpp(bool newDefaultFileCpp)
+{
+    mDefaultFileCpp = newDefaultFileCpp;
+}
+
+bool Settings::Editor::autoLoadLastFiles() const
+{
+    return mAutoLoadLastFiles;
+}
+
+void Settings::Editor::setAutoLoadLastFiles(bool newAutoLoadLastFiles)
+{
+    mAutoLoadLastFiles = newAutoLoadLastFiles;
+}
+
 bool Settings::Editor::syntaxCheckWhenSave() const
 {
     return mSyntaxCheckWhenSave;
@@ -738,8 +758,7 @@ void Settings::Editor::setAutoHideScrollbar(bool autoHideScrollbar)
 
 void Settings::Editor::doSave()
 {
-    saveValue("default_encoding",mDefaultEncoding);
-    saveValue("readonly_system_header",mReadOnlySytemHeader);
+
     // indents
     saveValue("auto_indent", mAutoIndent);
     saveValue("add_indent", mAddIndent);
@@ -811,12 +830,17 @@ void Settings::Editor::doSave()
     saveValue("check_syntax",mSyntaxCheck);
     saveValue("check_syntax_when_save",mSyntaxCheckWhenSave);
     saveValue("check_syntax_when_line_changed",mSyntaxCheckWhenLineChanged);
+
+    //misc
+    saveValue("default_encoding",mDefaultEncoding);
+    saveValue("readonly_system_header",mReadOnlySytemHeader);
+    saveValue("auto_load_last_files",mAutoLoadLastFiles);
+    saveValue("default_file_cpp",mDefaultFileCpp);
 }
 
 void Settings::Editor::doLoad()
 {
-    mDefaultEncoding = value("default_encoding", ENCODING_SYSTEM_DEFAULT).toByteArray();
-    mReadOnlySytemHeader = boolValue("readonly_system_header",true);
+
     // indents
     mAutoIndent = boolValue("auto_indent", true);
     mAddIndent = boolValue("add_indent", true);
@@ -890,6 +914,12 @@ void Settings::Editor::doLoad()
     mSyntaxCheck = boolValue("check_syntax",true);
     mSyntaxCheckWhenSave = boolValue("check_syntax_when_save",true);
     mSyntaxCheckWhenLineChanged = boolValue("check_syntax_when_line_changed",true);
+
+    //misc
+    mDefaultEncoding = value("default_encoding", ENCODING_SYSTEM_DEFAULT).toByteArray();
+    mReadOnlySytemHeader = boolValue("readonly_system_header",true);
+    mAutoLoadLastFiles = boolValue("auto_load_last_files",true);
+    mDefaultFileCpp = boolValue("default_file_cpp",true);
 }
 
 SynEditCaretType Settings::Editor::caretForOverwrite() const

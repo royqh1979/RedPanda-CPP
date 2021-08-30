@@ -70,7 +70,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
   mCurrentWord(),
   mCurrentTipType(TipType::None)
 {
-    mUseCppSyntax = true;
+    mUseCppSyntax = pSettings->editor().defaultFileCpp();
     if (mFilename.isEmpty()) {
         newfileCount++;
         mFilename = tr("untitled%1").arg(newfileCount);
@@ -106,13 +106,13 @@ Editor::Editor(QWidget *parent, const QString& filename,
         initParser();
     }
 
-    if (mParser->isSystemHeaderFile(filename) || mParser->isProjectHeaderFile(filename)) {
+    if (pSettings->editor().readOnlySytemHeader()
+            && (mParser->isSystemHeaderFile(filename) || mParser->isProjectHeaderFile(filename))) {
         this->setModified(false);
         setReadOnly(true);
         updateCaption();
     }
-//    mCompletionPopup = std::make_shared<CodeCompletionPopup>();
-//    mHeaderCompletionPopup = std::make_shared<HeaderCompletionPopup>();
+
     mCompletionPopup = pMainWindow->completionPopup();
     mHeaderCompletionPopup = pMainWindow->headerCompletionPopup();
 
@@ -143,6 +143,16 @@ void Editor::loadFile() {
     pMainWindow->updateForEncodingInfo();
     if (pSettings->editor().syntaxCheck() && pSettings->editor().syntaxCheckWhenSave())
         pMainWindow->checkSyntaxInBack(this);
+    switch(getFileType(mFilename)) {
+    case FileType::CppSource:
+        mUseCppSyntax = true;
+        break;
+    case FileType::CSource:
+        mUseCppSyntax = false;
+        break;
+    default:
+        mUseCppSyntax = pSettings->editor().defaultFileCpp();
+    }
 }
 
 void Editor::saveFile(const QString &filename) {
@@ -151,6 +161,16 @@ void Editor::saveFile(const QString &filename) {
     pMainWindow->updateForEncodingInfo();
     if (pSettings->editor().syntaxCheck() && pSettings->editor().syntaxCheckWhenSave())
         pMainWindow->checkSyntaxInBack(this);
+    switch(getFileType(mFilename)) {
+    case FileType::CppSource:
+        mUseCppSyntax = true;
+        break;
+    case FileType::CSource:
+        mUseCppSyntax = false;
+        break;
+    default:
+        mUseCppSyntax = pSettings->editor().defaultFileCpp();
+    }
 }
 
 void Editor::convertToEncoding(const QByteArray &encoding)
@@ -193,7 +213,11 @@ bool Editor::save(bool force, bool doReparse) {
 }
 
 bool Editor::saveAs(){
-    QString selectedFileFilter = pSystemConsts->defaultFileFilter();
+    QString selectedFileFilter;
+    if (pSettings->editor().defaultFileCpp())
+        selectedFileFilter = pSystemConsts->defaultCPPFileFilter();
+    else
+        selectedFileFilter = pSystemConsts->defaultCFileFilter();
     QString newName = QFileDialog::getSaveFileName(pMainWindow,
         tr("Save As"), QString(), pSystemConsts->defaultFileFilters().join(";;"),
         &selectedFileFilter);

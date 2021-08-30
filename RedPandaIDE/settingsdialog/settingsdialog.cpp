@@ -9,6 +9,7 @@
 #include "editorcodecompletionwidget.h"
 #include "editorsyntaxcheckwidget.h"
 #include "editorsymbolcompletionwidget.h"
+#include "editormiscwidget.h"
 #include "environmentappearencewidget.h"
 #include "executorgeneralwidget.h"
 #include "debuggeneralwidget.h"
@@ -63,6 +64,10 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     pEditorSyntaxCheckWidget = new EditorSyntaxCheckWidget(tr("Auto Syntax Checking"),tr("Editor"));
     pEditorSyntaxCheckWidget->init();
     addWidget(pEditorSyntaxCheckWidget);
+
+    pEditorMiscWidget = new EditorMiscWidget(tr("Misc"),tr("Editor"));
+    pEditorMiscWidget->init();
+    addWidget(pEditorMiscWidget);
 
 
     pExecutorGeneralWidget = new ExecutorGeneralWidget(tr("General"),tr("Program Runner"));

@@ -1004,7 +1004,11 @@ void MainWindow::on_EditorTabsLeft_tabCloseRequested(int index)
 void MainWindow::on_actionOpen_triggered()
 {
     try {
-        QString selectedFileFilter = pSystemConsts->defaultFileFilter();
+        QString selectedFileFilter;
+        if (pSettings->editor().defaultFileCpp())
+            selectedFileFilter = pSystemConsts->defaultCPPFileFilter();
+        else
+            selectedFileFilter = pSystemConsts->defaultCFileFilter();
         QStringList files = QFileDialog::getOpenFileNames(pMainWindow,
             tr("Open"), QString(), pSystemConsts->defaultFileFilters().join(";;"),
             &selectedFileFilter);

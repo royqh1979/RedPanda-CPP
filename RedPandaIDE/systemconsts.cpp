@@ -19,7 +19,12 @@ const QStringList &SystemConsts::defaultFileFilters() const noexcept
     return mDefaultFileFilters;
 }
 
-const QString &SystemConsts::defaultFileFilter() const noexcept
+const QString &SystemConsts::defaultCFileFilter() const noexcept
+{
+    return mDefaultFileFilters[0];
+}
+
+const QString &SystemConsts::defaultCPPFileFilter() const noexcept
 {
     return mDefaultFileFilters[1];
 }

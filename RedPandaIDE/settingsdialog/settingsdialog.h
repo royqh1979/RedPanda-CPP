@@ -18,6 +18,7 @@ class EditorSymbolCompletionWidget;
 class EditorColorSchemeWidget;
 class EditorSyntaxCheckWidget;
 class EditorCodeCompletionWidget;
+class EditorMiscWidget;
 class EnvironmentAppearenceWidget;
 class ExecutorGeneralWidget;
 class DebugGeneralWidget;
@@ -59,6 +60,7 @@ private:
     EditorSymbolCompletionWidget *pEditorSymbolCompletionWidget;
     EditorCodeCompletionWidget *pEditorCodeCompletionWidget;
     EditorSyntaxCheckWidget *pEditorSyntaxCheckWidget;
+    EditorMiscWidget *pEditorMiscWidget;
     ExecutorGeneralWidget  *pExecutorGeneralWidget;
     DebugGeneralWidget *pDebugGeneralWidget;
 };

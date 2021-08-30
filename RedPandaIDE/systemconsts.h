@@ -37,7 +37,8 @@ class SystemConsts
 public:
     SystemConsts();
     const QStringList& defaultFileFilters() const noexcept;
-    const QString& defaultFileFilter() const noexcept;
+    const QString& defaultCFileFilter() const noexcept;
+    const QString& defaultCPPFileFilter() const noexcept;
     void addDefaultFileFilter(const QString& name, const QString& fileExtensions);
 private:
     QStringList mDefaultFileFilters;

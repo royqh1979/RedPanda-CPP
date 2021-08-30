@@ -265,10 +265,14 @@ public:
         bool readOnlySytemHeader() const;
         void setReadOnlySytemHeader(bool newReadOnlySytemHeader);
 
+        bool autoLoadLastFiles() const;
+        void setAutoLoadLastFiles(bool newAutoLoadLastFiles);
+
+        bool defaultFileCpp() const;
+        void setDefaultFileCpp(bool newDefaultFileCpp);
+
     private:
-        QByteArray mDefaultEncoding;
         //General
-        bool mReadOnlySytemHeader;
         // indents
         bool mAutoIndent;
         bool mAddIndent;
@@ -341,6 +345,12 @@ public:
         bool mSyntaxCheck;
         bool mSyntaxCheckWhenSave;
         bool mSyntaxCheckWhenLineChanged;
+
+        //Misc
+        QByteArray mDefaultEncoding;
+        bool mReadOnlySytemHeader;
+        bool mAutoLoadLastFiles;
+        bool mDefaultFileCpp;
 
         // _Base interface
     protected:
