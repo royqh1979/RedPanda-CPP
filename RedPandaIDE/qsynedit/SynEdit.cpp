@@ -731,8 +731,7 @@ QString SynEdit::GetLeftSpacing(int charCount, bool wantTabs) const
 
 int SynEdit::charToColumn(int aLine, int aChar) const
 {
-    Q_ASSERT( (aLine <= mLines->count()) && (aLine >= 1));
-    if (aLine <= mLines->count()) {
+    if (aLine>=1 && aLine <= mLines->count()) {
         QString s = mLines->getString(aLine - 1);
         return charToColumn(s,aChar);
     }

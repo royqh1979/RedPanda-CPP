@@ -6,6 +6,7 @@
 #include "editorfontwidget.h"
 #include "editorclipboardwidget.h"
 #include "editorcolorschemewidget.h"
+#include "editorcodecompletionwidget.h"
 #include "editorsyntaxcheckwidget.h"
 #include "editorsymbolcompletionwidget.h"
 #include "environmentappearencewidget.h"
@@ -50,6 +51,10 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     pEditorColorSchemeWidget = new EditorColorSchemeWidget(tr("Color"),tr("Editor"));
     pEditorColorSchemeWidget->init();
     addWidget(pEditorColorSchemeWidget);
+
+    pEditorCodeCompletionWidget = new EditorCodeCompletionWidget(tr("Code Completion"),tr("Editor"));
+    pEditorCodeCompletionWidget->init();
+    addWidget(pEditorCodeCompletionWidget);
 
     pEditorSymbolCompletionWidget = new EditorSymbolCompletionWidget(tr("Symbol Completion"),tr("Editor"));
     pEditorSymbolCompletionWidget->init();

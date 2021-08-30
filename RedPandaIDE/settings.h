@@ -691,6 +691,7 @@ public:
     Executor& executor();
     Debugger& debugger();
     History& history();
+    CodeCompletion &codeCompletion();
     QString filename() const;
 
 private:
@@ -702,6 +703,7 @@ private:
     CompilerSets mCompilerSets;
     Executor mExecutor;
     Debugger mDebugger;
+    CodeCompletion mCodeCompletion;
     History mHistory;
 };
 

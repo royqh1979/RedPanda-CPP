@@ -75,6 +75,9 @@ int main(int argc, char *argv[])
         trans.load("RedPandaIDE_"+pSettings->environment().language(),":/translations");
         app.installTranslator(&trans);
 
+        //must do it after translation is loaded
+        pSettings->compilerSets().loadSets();
+
         //Color scheme settings must be loaded after translation
         pColorManager = new ColorManager();
         pIconsManager = new IconsManager();

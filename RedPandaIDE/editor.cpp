@@ -70,6 +70,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
   mCurrentWord(),
   mCurrentTipType(TipType::None)
 {
+    mUseCppSyntax = true;
     if (mFilename.isEmpty()) {
         newfileCount++;
         mFilename = tr("untitled%1").arg(newfileCount);
@@ -373,65 +374,70 @@ void Editor::keyPressEvent(QKeyEvent *event)
     QChar ch = t[0];
     if (isIdentChar(ch)) {
         mLastIdCharPressed++;
-//        if devCodeCompletion.Enabled and devCodeCompletion.ShowCompletionWhileInput then begin
-        if (mLastIdCharPressed==1) {
-            if (mParser->isIncludeLine(lineText())) {
-                // is a #include line
-                setSelText(ch);
-                showHeaderCompletion(false);
-                handled=true;
-                return;
-            } else {
-                QString lastWord = getPreviousWordAtPositionForSuggestion(caretXY());
-                if (!lastWord.isEmpty()) {
-                    if (CppTypeKeywords.contains(lastWord)) {
-                        //last word is a type keyword, this is a var or param define, and dont show suggestion
-  //                  if devEditor.UseTabnine then
-  //                    ShowTabnineCompletion;
-                        return;
+        if (pSettings->codeCompletion().enabled()
+                && pSettings->codeCompletion().showCompletionWhileInput() ) {
+            if (mLastIdCharPressed==1) {
+                if (mParser->isIncludeLine(lineText())) {
+                    // is a #include line
+                    setSelText(ch);
+                    showHeaderCompletion(false);
+                    handled=true;
+                    return;
+                } else {
+                    QString lastWord = getPreviousWordAtPositionForSuggestion(caretXY());
+                    if (!lastWord.isEmpty()) {
+                        if (CppTypeKeywords.contains(lastWord)) {
+                            //last word is a type keyword, this is a var or param define, and dont show suggestion
+      //                  if devEditor.UseTabnine then
+      //                    ShowTabnineCompletion;
+                            return;
+                        }
+                        PStatement statement = mParser->findStatementOf(
+                                    mFilename,
+                                    lastWord,
+                                    caretY());
+                        StatementKind kind = mParser->getKindOfStatement(statement);
+                        if (kind == StatementKind::skClass
+                                || kind == StatementKind::skEnumClassType
+                                || kind == StatementKind::skEnumType
+                                || kind == StatementKind::skTypedef) {
+                            //last word is a typedef/class/struct, this is a var or param define, and dont show suggestion
+      //                      if devEditor.UseTabnine then
+      //                        ShowTabnineCompletion;
+                            return;
+                        }
                     }
-                    PStatement statement = mParser->findStatementOf(
-                                mFilename,
-                                lastWord,
-                                caretY());
-                    StatementKind kind = mParser->getKindOfStatement(statement);
-                    if (kind == StatementKind::skClass
-                            || kind == StatementKind::skEnumClassType
-                            || kind == StatementKind::skEnumType
-                            || kind == StatementKind::skTypedef) {
-                        //last word is a typedef/class/struct, this is a var or param define, and dont show suggestion
-  //                      if devEditor.UseTabnine then
-  //                        ShowTabnineCompletion;
-                        return;
-                    }
+                    setSelText(ch);
+                    showCompletion(false);
+                    handled=true;
+                    return;
                 }
+            }
+
+        }
+    } else {
+        //preprocessor ?
+        if ((mLastIdCharPressed=0) && (ch=='#') && lineText().isEmpty()) {
+            if (pSettings->codeCompletion().enabled()
+                    && pSettings->codeCompletion().showCompletionWhileInput() ) {
+                mLastIdCharPressed++;
                 setSelText(ch);
                 showCompletion(false);
                 handled=true;
                 return;
             }
         }
-
-//        }
-    } else {
-        //preprocessor ?
-        if ((mLastIdCharPressed=0) && (ch=='#') && lineText().isEmpty()) {
-          // and devCodeCompletion.Enabled and devCodeCompletion.ShowCompletionWhileInput
-            mLastIdCharPressed++;
-            setSelText(ch);
-            showCompletion(false);
-            handled=true;
-            return;
-        }
         //javadoc directive?
         if  ((mLastIdCharPressed=0) && (ch=='#') &&
               lineText().trimmed().startsWith('*')) {
-//          and devCodeCompletion.Enabled and devCodeCompletion.ShowCompletionWhileInput
-            mLastIdCharPressed++;
-            setSelText(ch);
-            showCompletion(false);
-            handled=true;
-            return;
+            if (pSettings->codeCompletion().enabled()
+                    && pSettings->codeCompletion().showCompletionWhileInput() ) {
+                mLastIdCharPressed++;
+                setSelText(ch);
+                showCompletion(false);
+                handled=true;
+                return;
+            }
         }
         mLastIdCharPressed = 0;
         switch (ch.unicode()) {
@@ -452,9 +458,8 @@ void Editor::keyPressEvent(QKeyEvent *event)
     }
 
     // Spawn code completion window if we are allowed to
-//    if devCodeCompletion.Enabled then begin
-    handled = handleCodeCompletion(ch);
-//    end;
+    if (pSettings->codeCompletion().enabled())
+        handled = handleCodeCompletion(ch);
 }
 
 void Editor::onGutterPaint(QPainter &painter, int aLine, int X, int Y)
@@ -968,20 +973,6 @@ void Editor::onStatusChanged(SynStatusChanges changes)
             pMainWindow->checkSyntaxInBack(this);
     }
     mLineCount = lines()->count();
-    //    if (not (scOpenFile in Changes)) and  (fText.Lines.Count <> fLineCount)
-//      and (fText.Lines.Count <> 0) and ((fLineCount>0) or (fText.Lines.Count>1)) then begin
-//      if devCodeCompletion.Enabled
-//        and SameStr(mainForm.ClassBrowser.CurrentFile,FileName) // Don't reparse twice
-//        then begin
-//        Reparse;
-//      end;
-//      if fText.Focused and devEditor.AutoCheckSyntax and devEditor.CheckSyntaxWhenReturn
-//        and (fText.Highlighter = dmMain.Cpp) then begin
-//        mainForm.CheckSyntaxInBack(self);
-//      end;
-//    end;
-//    fLineCount := fText.Lines.Count;
-//    // scModified is only fired when the modified state changes
     if (changes.testFlag(scModified)) {
         updateCaption();
     }
@@ -1542,8 +1533,8 @@ void Editor::reparse()
 
 void Editor::showCompletion(bool autoComplete)
 {
-//    if not devCodeCompletion.Enabled then
-//      Exit;
+    if (!pSettings->codeCompletion().enabled())
+        return;
     if (!mParser->enabled())
         return;
 
@@ -1585,11 +1576,13 @@ void Editor::showCompletion(bool autoComplete)
     p+=QPoint(0,textHeight()+2);
     mCompletionPopup->move(mapToGlobal(p));
 
-//    fCompletionBox.RecordUsage := devCodeCompletion.RecordUsage;
-//    fCompletionBox.SortByScope := devCodeCompletion.SortByScope;
-//    fCompletionBox.ShowKeywords := devCodeCompletion.ShowKeywords;
-//    fCompletionBox.ShowCodeIns := devCodeCompletion.ShowCodeIns;
-//    fCompletionBox.IgnoreCase := devCodeCompletion.IgnoreCase;
+    mCompletionPopup->setRecordUsage(pSettings->codeCompletion().recordUsage());
+    mCompletionPopup->setSortByScope(pSettings->codeCompletion().sortByScope());
+    mCompletionPopup->setShowKeywords(pSettings->codeCompletion().showKeywords());
+    mCompletionPopup->setShowCodeIns(pSettings->codeCompletion().showCodeIns());
+    mCompletionPopup->setIgnoreCase(pSettings->codeCompletion().ignoreCase());
+    mCompletionPopup->resize(pSettings->codeCompletion().width(),
+                             pSettings->codeCompletion().height());
 //    fCompletionBox.CodeInsList := dmMain.CodeInserts.ItemList;
 //    fCompletionBox.SymbolUsage := dmMain.SymbolUsage;
 //    fCompletionBox.ShowCount := devCodeCompletion.MaxCount;
@@ -1602,8 +1595,7 @@ void Editor::showCompletion(bool autoComplete)
         return onCompletionKeyPressed(event);
     });
     mCompletionPopup->setParser(mParser);
-    //todo:
-    //mCompletionPopup->setUseCppKeyword(mUseCppSyntax);
+    mCompletionPopup->setUseCppKeyword(mUseCppSyntax);
     mCompletionPopup->show();
 
     // Scan the current function body
@@ -1618,12 +1610,14 @@ void Editor::showCompletion(bool autoComplete)
 
     // Filter the whole statement list
     if (mCompletionPopup->search(word, autoComplete)) { //only one suggestion and it's not input while typing
-        completionInsert(); // if only have one suggestion, just use it
+        completionInsert(pSettings->codeCompletion().appendFunc());
     }
 }
 
 void Editor::showHeaderCompletion(bool autoComplete)
 {
+    if (!pSettings->codeCompletion().enabled())
+        return;
 //    if not devCodeCompletion.Enabled then
 //      Exit;
 
@@ -1636,8 +1630,9 @@ void Editor::showHeaderCompletion(bool autoComplete)
     mHeaderCompletionPopup->move(mapToGlobal(p));
 
 
-//    fHeaderCompletionBox.IgnoreCase := devCodeCompletion.IgnoreCase;
-//    fHeaderCompletionBox.ShowCount := devCodeCompletion.MaxCount;
+    mHeaderCompletionPopup->setIgnoreCase(pSettings->codeCompletion().ignoreCase());
+    mHeaderCompletionPopup->resize(pSettings->codeCompletion().width(),
+                             pSettings->codeCompletion().height());
     //Set Font size;
     mHeaderCompletionPopup->setFont(font());
 
@@ -1842,8 +1837,7 @@ bool Editor::onCompletionKeyPressed(QKeyEvent *event)
         return true;
     case Qt::Key_Return:
     case Qt::Key_Tab:
-        //CompletionInsert(devCodeCompletion.AppendFunc);
-        completionInsert(false);
+        completionInsert(pSettings->codeCompletion().appendFunc());
         return true;
     default:
         if (event->text().isEmpty()) {
@@ -1894,7 +1888,6 @@ bool Editor::onHeaderCompletionKeyPressed(QKeyEvent *event)
         return true;
     case Qt::Key_Return:
     case Qt::Key_Tab:
-        //CompletionInsert(devCodeCompletion.AppendFunc);
         headerCompletionInsert();
         mHeaderCompletionPopup->hide();
         return true;

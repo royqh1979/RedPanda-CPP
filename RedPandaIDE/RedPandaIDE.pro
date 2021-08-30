@@ -29,6 +29,7 @@ SOURCES += \
     qsynedit/SearchBase.cpp \
     qsynedit/SearchRegex.cpp \
     settingsdialog/debuggeneralwidget.cpp \
+    settingsdialog/editorcodecompletionwidget.cpp \
     widgets/classbrowser.cpp \
     widgets/codecompletionlistview.cpp \
     widgets/codecompletionpopup.cpp \
@@ -95,6 +96,7 @@ HEADERS += \
     qsynedit/SearchBase.h \
     qsynedit/SearchRegex.h \
     settingsdialog/debuggeneralwidget.h \
+    settingsdialog/editorcodecompletionwidget.h \
     widgets/classbrowser.h \
     widgets/codecompletionlistview.h \
     widgets/codecompletionpopup.h \
@@ -147,6 +149,7 @@ HEADERS += \
 
 FORMS += \
     settingsdialog/debuggeneralwidget.ui \
+    settingsdialog/editorcodecompletionwidget.ui \
     widgets/cpudialog.ui \
     mainwindow.ui \
     settingsdialog/compilersetdirectorieswidget.ui \

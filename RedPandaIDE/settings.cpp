@@ -23,6 +23,7 @@ Settings::Settings(const QString &filename):
     mCompilerSets(this),
     mExecutor(this),
     mDebugger(this),
+    mCodeCompletion(this),
     mHistory(this)
 {
     load();
@@ -73,12 +74,13 @@ QVariant Settings::value(const QString &key, const QVariant &defaultValue)
 void Settings::load()
 {
 
-    mCompilerSets.loadSets();
+    //mCompilerSets.loadSets();
     mEnvironment.load();
     mEditor.load();
     mExecutor.load();
     mDebugger.load();
     mHistory.load();
+    mCodeCompletion.load();
 }
 
 Settings::Dirs &Settings::dirs()
@@ -109,6 +111,11 @@ Settings::Executor &Settings::executor()
 QString Settings::filename() const
 {
     return mFilename;
+}
+
+Settings::CodeCompletion& Settings::codeCompletion()
+{
+    return mCodeCompletion;
 }
 
 Settings::History& Settings::history()
@@ -2572,7 +2579,6 @@ void Settings::CodeCompletion::setWidth(int newWidth)
 
 void Settings::CodeCompletion::doSave()
 {
-    //Appearence
     saveValue("width",mWidth);
     saveValue("height",mHeight);
     saveValue("enabled",mEnabled);
@@ -2591,8 +2597,16 @@ void Settings::CodeCompletion::doSave()
 void Settings::CodeCompletion::doLoad()
 {
     //Appearence
-    mTheme = stringValue("theme","dark");
-    mInterfaceFont = stringValue("interface font","Segoe UI");
-    mInterfaceFontSize = intValue("interface font size",10);
-    mLanguage = stringValue("language", QLocale::system().name());
+    mWidth = intValue("width",700);
+    mHeight = intValue("height",400);
+    mEnabled = boolValue("enabled",true);
+    mParseLocalHeaders = boolValue("parse_local_headers",true);
+    mParseGlobalHeaders = boolValue("parse_global_headers",true);
+    mShowCompletionWhileInput = boolValue("show_completion_while_input",true);
+    mRecordUsage = boolValue("record_usage",true);
+    mSortByScope = boolValue("sort_by_scope",true);
+    mShowKeywords = boolValue("show_keywords",true);
+    mIgnoreCase = boolValue("ignore_case",true);
+    mAppendFunc = boolValue("append_func",true);
+    mShowCodeIns = boolValue("show_code_ins",true);
 }
