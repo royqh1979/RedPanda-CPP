@@ -40,6 +40,18 @@ enum class SearchFileScope {
     openedFiles
 };
 
+enum AutoSaveTarget {
+    astCurrentFile,
+    astAllOpennedFiles,
+    astAllProjectFiles
+};
+
+enum AutoSaveStrategy {
+    assOverwrite,
+    assAppendUnixTimestamp,
+    assAppendFormatedTimeStamp
+};
+
 class BaseError{
 public:
     explicit BaseError(const QString& reason);

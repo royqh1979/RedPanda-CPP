@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QTimer>
 #include "common.h"
 #include "widgets/searchresultview.h"
 #include "widgets/classbrowser.h"
@@ -52,7 +53,7 @@ public:
     void updateForEncodingInfo();
     void updateStatusbarForLineCol();
     void updateForStatusbarModeInfo();
-    void updateStatusBarMessage(const QString& s);
+    void updateStatusbarMessage(const QString& s);
     void updateEditorSettings();
     void updateEditorActions();
     void updateCompileActions();
@@ -79,6 +80,8 @@ public:
 
     void updateClassBrowserForEditor(Editor* editor);
 
+    void resetAutoSaveTimer();
+
     QPlainTextEdit* txtLocals();
 
     CPUDialog *cpuDialog() const;
@@ -91,16 +94,39 @@ public:
 
     SearchResultModel* searchResultModel();
 
-
-
     const std::shared_ptr<CodeCompletionPopup> &completionPopup() const;
 
     const std::shared_ptr<HeaderCompletionPopup> &headerCompletionPopup() const;
+public slots:
+    void onCompileLog(const QString& msg);
+    void onCompileIssue(PCompileIssue issue);
+    void onCompileFinished();
+    void onCompileErrorOccured(const QString& reason);
+    void onRunErrorOccured(const QString& reason);
+    void onRunFinished();
+    void cleanUpCPUDialog();
+    void onDebugCommandInput(const QString& command);
+    void onDebugEvaluateInput();
+    void onParserProgress(const QString& fileName, int total, int current);
+    void onStartParsing();
+    void onEndParsing(int total, int updateView);
+    void onEvalValueReady(const QString& value);
 
 protected:
     void openFiles(const QStringList& files);
     void openFile(const QString& filename);
+
+private:
+    CompileTarget getCompileTarget();
+    bool debugInferiorhasBreakpoint();
+    void setupActions();
+    void openCloseMessageSheet(bool open);
+    void prepareDebugger();
+    void doAutoSave(Editor *e);
+
 private slots:
+    void onAutoSaveTimeout();
+
     void on_actionNew_triggered();
 
     void on_EditorTabsLeft_tabCloseRequested(int index);
@@ -168,9 +194,6 @@ private slots:
 
     void on_actionDebug_triggered();
 
-    CompileTarget getCompileTarget();
-    bool debugInferiorhasBreakpoint();
-
     void on_actionStep_Over_triggered();
 
     void on_actionStep_Into_triggered();
@@ -200,27 +223,6 @@ private slots:
     void on_cbSearchHistory_currentIndexChanged(int index);
 
     void on_btnSearchAgin_clicked();
-
-public slots:
-    void onCompileLog(const QString& msg);
-    void onCompileIssue(PCompileIssue issue);
-    void onCompileFinished();
-    void onCompileErrorOccured(const QString& reason);
-    void onRunErrorOccured(const QString& reason);
-    void onRunFinished();
-    void cleanUpCPUDialog();
-    void onDebugCommandInput(const QString& command);
-    void onDebugEvaluateInput();
-    void onParserProgress(const QString& fileName, int total, int current);
-    void onStartParsing();
-    void onEndParsing(int total, int updateView);
-    void onEvalValueReady(const QString& value);
-
-private:
-    void setupActions();
-    void openCloseMessageSheet(bool open);
-    void prepareDebugger();
-
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;
@@ -253,6 +255,8 @@ private:
     bool mCheckSyntaxInBack;
     int mPreviousHeight;
     PCompileSuccessionTask mCompileSuccessionTask;
+
+    QTimer mAutoSaveTimer;
 
 
    // QWidget interface
