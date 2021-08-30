@@ -271,6 +271,18 @@ public:
         bool defaultFileCpp() const;
         void setDefaultFileCpp(bool newDefaultFileCpp);
 
+        bool enableAutoSave() const;
+        void setEnableAutoSave(bool newEnableAutoSave);
+
+        int autoSaveInterval() const;
+        void setAutoSaveInterval(int newInterval);
+
+        AutoSaveTarget autoSaveTarget() const;
+        void setAutoSaveTarget(AutoSaveTarget newAutoSaveTarget);
+
+        AutoSaveStrategy autoSaveStrategy() const;
+        void setAutoSaveStrategy(AutoSaveStrategy newAutoSaveStrategy);
+
     private:
         //General
         // indents
@@ -345,6 +357,12 @@ public:
         bool mSyntaxCheck;
         bool mSyntaxCheckWhenSave;
         bool mSyntaxCheckWhenLineChanged;
+
+        //auto save
+        bool mEnableAutoSave;
+        int mAutoSaveInterval;
+        enum AutoSaveTarget mAutoSaveTarget;
+        enum AutoSaveStrategy mAutoSaveStrategy;
 
         //Misc
         QByteArray mDefaultEncoding;

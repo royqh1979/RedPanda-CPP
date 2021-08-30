@@ -29,6 +29,7 @@ SOURCES += \
     qsynedit/SearchBase.cpp \
     qsynedit/SearchRegex.cpp \
     settingsdialog/debuggeneralwidget.cpp \
+    settingsdialog/editorautosavewidget.cpp \
     settingsdialog/editorcodecompletionwidget.cpp \
     settingsdialog/editormiscwidget.cpp \
     widgets/classbrowser.cpp \
@@ -97,6 +98,7 @@ HEADERS += \
     qsynedit/SearchBase.h \
     qsynedit/SearchRegex.h \
     settingsdialog/debuggeneralwidget.h \
+    settingsdialog/editorautosavewidget.h \
     settingsdialog/editorcodecompletionwidget.h \
     settingsdialog/editormiscwidget.h \
     widgets/classbrowser.h \
@@ -151,6 +153,7 @@ HEADERS += \
 
 FORMS += \
     settingsdialog/debuggeneralwidget.ui \
+    settingsdialog/editorautosavewidget.ui \
     settingsdialog/editorcodecompletionwidget.ui \
     settingsdialog/editormiscwidget.ui \
     widgets/cpudialog.ui \

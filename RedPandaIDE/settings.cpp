@@ -376,6 +376,46 @@ void Settings::Editor::setDefaultFileCpp(bool newDefaultFileCpp)
     mDefaultFileCpp = newDefaultFileCpp;
 }
 
+bool Settings::Editor::enableAutoSave() const
+{
+    return mEnableAutoSave;
+}
+
+void Settings::Editor::setEnableAutoSave(bool newEnableAutoSave)
+{
+    mEnableAutoSave = newEnableAutoSave;
+}
+
+int Settings::Editor::autoSaveInterval() const
+{
+    return mAutoSaveInterval;
+}
+
+void Settings::Editor::setAutoSaveInterval(int newInterval)
+{
+    mAutoSaveInterval = newInterval;
+}
+
+AutoSaveStrategy Settings::Editor::autoSaveStrategy() const
+{
+    return mAutoSaveStrategy;
+}
+
+void Settings::Editor::setAutoSaveStrategy(AutoSaveStrategy newAutoSaveStrategy)
+{
+    mAutoSaveStrategy = newAutoSaveStrategy;
+}
+
+AutoSaveTarget Settings::Editor::autoSaveTarget() const
+{
+    return mAutoSaveTarget;
+}
+
+void Settings::Editor::setAutoSaveTarget(AutoSaveTarget newAutoSaveTarget)
+{
+    mAutoSaveTarget = newAutoSaveTarget;
+}
+
 bool Settings::Editor::autoLoadLastFiles() const
 {
     return mAutoLoadLastFiles;
@@ -831,6 +871,12 @@ void Settings::Editor::doSave()
     saveValue("check_syntax_when_save",mSyntaxCheckWhenSave);
     saveValue("check_syntax_when_line_changed",mSyntaxCheckWhenLineChanged);
 
+    //auto save
+    saveValue("enable_auto_save",mEnableAutoSave);
+    saveValue("auto_save_interal",mAutoSaveInterval);
+    saveValue("auto_save_target",mAutoSaveTarget);
+    saveValue("auto_save_strategy",mAutoSaveStrategy);
+
     //misc
     saveValue("default_encoding",mDefaultEncoding);
     saveValue("readonly_system_header",mReadOnlySytemHeader);
@@ -914,6 +960,14 @@ void Settings::Editor::doLoad()
     mSyntaxCheck = boolValue("check_syntax",true);
     mSyntaxCheckWhenSave = boolValue("check_syntax_when_save",true);
     mSyntaxCheckWhenLineChanged = boolValue("check_syntax_when_line_changed",true);
+
+    //auto save
+    mEnableAutoSave = boolValue("enable_auto_save",false);
+    mAutoSaveInterval = intValue("auto_save_interal",10);
+    mAutoSaveTarget = static_cast<enum AutoSaveTarget>(
+                intValue("auto_save_target",AutoSaveTarget::astCurrentFile));
+    mAutoSaveStrategy = static_cast<enum AutoSaveStrategy>(
+                intValue("auto_save_strategy",AutoSaveStrategy::assOverwrite));
 
     //misc
     mDefaultEncoding = value("default_encoding", ENCODING_SYSTEM_DEFAULT).toByteArray();
@@ -1602,7 +1656,7 @@ void Settings::CompilerSet::setDefines() {
     arguments.append("-std=c++17");
     arguments.append(NULL_FILE);
     QFileInfo ccompiler(mCCompiler);
-    QByteArray output = getCompilerOutput(ccompiler.absolutePath(),ccompiler.baseName(),arguments);
+    QByteArray output = getCompilerOutput(ccompiler.absolutePath(),ccompiler.fileName(),arguments);
     // 'cpp.exe -dM -E -x c++ -std=c++17 NUL'
 
     mDefines.clear();

@@ -161,16 +161,6 @@ void Editor::saveFile(const QString &filename) {
     pMainWindow->updateForEncodingInfo();
     if (pSettings->editor().syntaxCheck() && pSettings->editor().syntaxCheckWhenSave())
         pMainWindow->checkSyntaxInBack(this);
-    switch(getFileType(mFilename)) {
-    case FileType::CppSource:
-        mUseCppSyntax = true;
-        break;
-    case FileType::CSource:
-        mUseCppSyntax = false;
-        break;
-    default:
-        mUseCppSyntax = pSettings->editor().defaultFileCpp();
-    }
 }
 
 void Editor::convertToEncoding(const QByteArray &encoding)
@@ -234,6 +224,16 @@ bool Editor::saveAs(){
         QMessageBox::critical(pMainWindow,tr("Error"),
                                  exception.reason());
         return false;
+    }
+    switch(getFileType(mFilename)) {
+    case FileType::CppSource:
+        mUseCppSyntax = true;
+        break;
+    case FileType::CSource:
+        mUseCppSyntax = false;
+        break;
+    default:
+        mUseCppSyntax = pSettings->editor().defaultFileCpp();
     }
 
     //todo: update (reassign highlighter)
@@ -2093,7 +2093,7 @@ void Editor::gotoDeclaration(const BufferCoord &pos)
                 mFilename,phrase,pos.Line);
 
     if (!statement) {
-        pMainWindow->updateStatusBarMessage(tr("Symbol '%1' not found!").arg(phrase));
+        pMainWindow->updateStatusbarMessage(tr("Symbol '%1' not found!").arg(phrase));
         return;
     }
     QString filename;
@@ -2123,7 +2123,7 @@ void Editor::gotoDefinition(const BufferCoord &pos)
                 mFilename,phrase,pos.Line);
 
     if (!statement) {
-        pMainWindow->updateStatusBarMessage(tr("Symbol '%1' not found!").arg(phrase));
+        pMainWindow->updateStatusbarMessage(tr("Symbol '%1' not found!").arg(phrase));
         return;
     }
     QString filename;

@@ -126,6 +126,10 @@ MainWindow::MainWindow(QWidget *parent)
     mHeaderCompletionPopup = std::make_shared<HeaderCompletionPopup>();
 
     updateAppTitle();
+
+    connect(&mAutoSaveTimer, &QTimer::timeout,
+            this, &MainWindow::onAutoSaveTimeout);
+    resetAutoSaveTimer();
 }
 
 MainWindow::~MainWindow()
@@ -426,6 +430,16 @@ void MainWindow::updateClassBrowserForEditor(Editor *editor)
     }
 }
 
+void MainWindow::resetAutoSaveTimer()
+{
+    if (pSettings->editor().enableAutoSave()) {
+        //minute to milliseconds
+        mAutoSaveTimer.start(pSettings->editor().autoSaveInterval()*60*1000);
+    } else {
+        mAutoSaveTimer.stop();
+    }
+}
+
 QPlainTextEdit *MainWindow::txtLocals()
 {
     return ui->txtLocals;
@@ -466,7 +480,7 @@ void MainWindow::updateForStatusbarModeInfo()
     }
 }
 
-void MainWindow::updateStatusBarMessage(const QString &s)
+void MainWindow::updateStatusbarMessage(const QString &s)
 {
     ui->statusbar->showMessage(s);
 }
@@ -946,6 +960,65 @@ void MainWindow::prepareDebugger()
 
     // Reset watch vars
     //    mDebugger->deleteWatchVars(false);
+}
+
+void MainWindow::doAutoSave(Editor *e)
+{
+    if (!e)
+        return;
+    if (!e->modified())
+        return;
+    QString filename = e->filename();
+    QFileInfo fileInfo(filename);
+    QDir parent = fileInfo.absoluteDir();
+    QString baseName = fileInfo.completeBaseName();
+    QString suffix = fileInfo.suffix();
+    switch(pSettings->editor().autoSaveStrategy()) {
+    case assOverwrite:
+        break;
+    case assAppendUnixTimestamp:
+        filename = parent.filePath(
+                    QString("%1.%2.%3")
+                    .arg(baseName)
+                    .arg(QDateTime::currentSecsSinceEpoch())
+                    .arg(suffix));
+        break;
+    case assAppendFormatedTimeStamp: {
+        QDateTime time = QDateTime::currentDateTime();
+        filename = parent.filePath(
+                    QString("%1.%2.%3")
+                    .arg(baseName)
+                    .arg(time.toString("yyyy.MM.dd.hh.mm.ss"))
+                    .arg(suffix));
+    }
+    }
+    e->saveFile(filename);
+}
+
+void MainWindow::onAutoSaveTimeout()
+{
+    if (!pSettings->editor().enableAutoSave())
+        return;
+    int updateCount = 0;
+    switch (pSettings->editor().autoSaveTarget()) {
+    case astCurrentFile: {
+        Editor *e = mEditorList->getEditor();
+        doAutoSave(e);
+        updateCount++;
+    }
+        break;
+    case astAllOpennedFiles:
+        for (int i=0;i<mEditorList->pageCount();i++) {
+            Editor *e = (*mEditorList)[i];
+            doAutoSave(e);
+            updateCount++;
+        }
+        break;
+    case astAllProjectFiles:
+        //todo: auto save project files
+        break;
+    }
+    updateStatusbarMessage(tr("%1 files autosaved").arg(updateCount));
 }
 
 const std::shared_ptr<HeaderCompletionPopup> &MainWindow::headerCompletionPopup() const
@@ -1611,7 +1684,7 @@ void MainWindow::onParserProgress(const QString &fileName, int total, int curren
 
     // Only show if needed (it's a very slow operation)
     if (current ==1 || current % showStep==0) {
-        updateStatusBarMessage(tr("Parsing file %1 of %2: \"%3\"")
+        updateStatusbarMessage(tr("Parsing file %1 of %2: \"%3\"")
                                   .arg(current).arg(total).arg(fileName));
     }
 }
@@ -1633,13 +1706,13 @@ void MainWindow::onEndParsing(int total, int)
         } else {
             parsingFrequency = 999;
         }
-        updateStatusBarMessage(tr("Done parsing %1 files in %2 seconds")
+        updateStatusbarMessage(tr("Done parsing %1 files in %2 seconds")
                                   .arg(total).arg(parseTime)
                                   + " "
                                   + tr("(%1 files per second)")
                                   .arg(parsingFrequency));
     } else {
-        updateStatusBarMessage(tr("Done parsing %1 files in %2 seconds")
+        updateStatusbarMessage(tr("Done parsing %1 files in %2 seconds")
                                   .arg(total).arg(parseTime));
     }
 }
