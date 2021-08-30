@@ -1217,9 +1217,9 @@ void DebugReader::processWatchOutput(PWatchVar watchVar)
                 parentVar = newVar;
             }
         } else if (nodeText.startsWith('}')) { // end of struct, change parent
-            if (parentVar->parent!=nullptr) {
-                parentVar = std::shared_ptr<WatchVar>(parentVar->parent);
-            }
+                if (parentVar->parent!=nullptr) {
+                    parentVar = std::shared_ptr<WatchVar>(parentVar->parent);
+                }
         } else { // next parent member/child
             if (parentVar->text.isEmpty()) { // root node, replace text only
                 parentVar->text = nodeText;

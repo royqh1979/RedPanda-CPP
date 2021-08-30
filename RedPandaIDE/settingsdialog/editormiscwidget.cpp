@@ -19,7 +19,11 @@ void EditorMiscWidget::doLoad()
 {
     ui->chkReadonlySystemHeaders->setChecked(pSettings->editor().readOnlySytemHeader());
     ui->chkLoadLastFiles->setChecked(pSettings->editor().autoLoadLastFiles());
-    ui->rbCppFile->setChecked(pSettings->editor().defaultFileCpp());
+    if (pSettings->editor().defaultFileCpp()) {
+        ui->rbCppFile->setChecked(true);
+    } else {
+        ui->rbCFile->setChecked(true);
+    }
 }
 
 void EditorMiscWidget::doSave()
