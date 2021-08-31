@@ -3379,7 +3379,7 @@ QString CppParser::splitPhrase(const QString &phrase, QString &sClazz, QString &
             firstOpEnd = i+2;
             sOperator = "::";
             break;
-        } else if ((phrase[i] == '.') && (bracketLevel=0)) {
+        } else if ((phrase[i] == '.') && (bracketLevel==0)) {
             firstOpStart = i;
             firstOpEnd = i+1;
             sOperator = ".";
@@ -3771,6 +3771,8 @@ void CppFileListParserThread::run()
 
 void parseFile(PCppParser parser, const QString& fileName, bool inProject, bool onlyIfNotParsed, bool updateView)
 {
+    if (!parser)
+        return;
     CppFileParserThread* thread = new CppFileParserThread(parser,fileName,inProject,onlyIfNotParsed,updateView);
     thread->connect(thread,
                     &QThread::finished,
@@ -3781,6 +3783,8 @@ void parseFile(PCppParser parser, const QString& fileName, bool inProject, bool 
 
 void parseFileList(PCppParser parser, bool updateView)
 {
+    if (!parser)
+        return;
     CppFileListParserThread *thread = new CppFileListParserThread(parser,updateView);
     thread->connect(thread,
                     &QThread::finished,

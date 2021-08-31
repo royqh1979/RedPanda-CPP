@@ -1,6 +1,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <QFileSystemWatcher>
 #include <QMainWindow>
 #include <QTimer>
 #include "common.h"
@@ -68,6 +69,7 @@ public:
     void showSearchPanel();
 
     void applySettings();
+    QFileSystemWatcher* fileSystemWatcher();
 
     void removeActiveBreakpoints();
     void setActiveBreakpoint(QString FileName, int Line, bool setFocus=true);
@@ -127,6 +129,7 @@ private:
 
 private slots:
     void onAutoSaveTimeout();
+    void onFileChanged(const QString& path);
 
     void on_actionNew_triggered();
 
@@ -247,6 +250,7 @@ private:
     QList<QAction *> mRecentFileActions;
     bool mQuitting;
     QElapsedTimer mParserTimer;
+    QFileSystemWatcher mFileSystemWatcher;
 
     std::shared_ptr<CodeCompletionPopup> mCompletionPopup;
     std::shared_ptr<HeaderCompletionPopup> mHeaderCompletionPopup;

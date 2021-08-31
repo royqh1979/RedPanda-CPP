@@ -28,6 +28,9 @@ Editor* EditorList::newEditor(const QString& filename, const QByteArray& encodin
         parentPageControl = getNewEditorPageControl();
     else
         parentPageControl = page;
+    if (!filename.isEmpty() && QFile(filename).exists()) {
+        pMainWindow->fileSystemWatcher()->addPath(filename);
+    }
     return new Editor(parentPageControl,filename,encoding,inProject,newFile,parentPageControl);
     //UpdateLayout;
 }
@@ -90,6 +93,7 @@ bool EditorList::closeEditor(Editor* editor, bool transferFocus, bool force) {
         pMainWindow->rebuildOpenedFileHisotryMenu();
     }
 
+    pMainWindow->fileSystemWatcher()->removePath(editor->filename());
     //editor->deleteLater();
     delete editor;
 

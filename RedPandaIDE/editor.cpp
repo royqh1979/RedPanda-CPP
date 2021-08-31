@@ -68,6 +68,8 @@ Editor::Editor(QWidget *parent, const QString& filename,
   mActiveBreakpointLine(-1),
   mLastIdCharPressed(0),
   mCurrentWord(),
+  mSelectionWord(),
+  mOldSelectionWord(),
   mCurrentTipType(TipType::None)
 {
     mUseCppSyntax = pSettings->editor().defaultFileCpp();
@@ -153,6 +155,12 @@ void Editor::loadFile() {
     default:
         mUseCppSyntax = pSettings->editor().defaultFileCpp();
     }
+    if (highlighter() && mParser) {
+        reparse();
+        if (pSettings->editor().syntaxCheck() && pSettings->editor().syntaxCheckWhenLineChanged()) {
+            pMainWindow->checkSyntaxInBack(this);
+        }
+    }
 }
 
 void Editor::saveFile(const QString &filename) {
@@ -182,8 +190,10 @@ bool Editor::save(bool force, bool doReparse) {
         return false;
     }
     if (this->modified()|| force) {
+        pMainWindow->fileSystemWatcher()->removePath(mFilename);
         try {
             saveFile(mFilename);
+            pMainWindow->fileSystemWatcher()->addPath(mFilename);
             setModified(false);
             mIsNew = false;
             this->updateCaption();
@@ -192,6 +202,7 @@ bool Editor::save(bool force, bool doReparse) {
                 QMessageBox::critical(pMainWindow,tr("Error"),
                                      exception.reason());
             }
+            pMainWindow->fileSystemWatcher()->addPath(mFilename);
             return false;
         }
     }
@@ -214,6 +225,9 @@ bool Editor::saveAs(){
     if (newName.isEmpty()) {
         return false;
     }
+    pMainWindow->fileSystemWatcher()->removePath(mFilename);
+    if (pSettings->codeCompletion().enabled() && mParser)
+        mParser->invalidateFile(mFilename);
     try {
         mFilename = newName;
         saveFile(mFilename);
@@ -225,6 +239,7 @@ bool Editor::saveAs(){
                                  exception.reason());
         return false;
     }
+    pMainWindow->fileSystemWatcher()->addPath(mFilename);
     switch(getFileType(mFilename)) {
     case FileType::CppSource:
         mUseCppSyntax = true;
@@ -236,11 +251,22 @@ bool Editor::saveAs(){
         mUseCppSyntax = pSettings->editor().defaultFileCpp();
     }
 
-    //todo: update (reassign highlighter)
-    //todo: remove old file from parser and reparse file
-    //todo: unmoniter/ monitor file
-    //todo: update windows caption
-    //todo: update class browser;
+
+    //update (reassign highlighter)
+    PSynHighlighter newHighlighter = HighlighterManager().getHighlighter(mFilename);
+    if (newHighlighter) {
+        setUseCodeFolding(true);
+    } else {
+        setUseCodeFolding(false);
+    }
+    setHighlighter(newHighlighter);
+    applyColorScheme(pSettings->editor().colorScheme());
+
+    reparse();
+
+    if (highlighter() && pSettings->editor().syntaxCheck() && pSettings->editor().syntaxCheckWhenLineChanged())
+        pMainWindow->checkSyntaxInBack(this);
+
     return true;
 }
 
@@ -586,7 +612,7 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
           || (attr->name() == SYNS_AttrReservedWord)
           || (attr->name() == SYNS_AttrPreprocessor)
           )
-          && (token == selText())) {
+          && (token == mSelectionWord)) {
             foreground = selectedForeground();
             background = selectedBackground();
             return;
@@ -629,7 +655,7 @@ bool Editor::event(QEvent *event)
         int line ;
         if (reason == TipType::Error) {
             pError = getSyntaxIssueAtPosition(p);
-        } else if ((reason == TipType::None) && PointToLine(helpEvent->pos(),line)) {
+        } else if (PointToLine(helpEvent->pos(),line)) {
             //it's on gutter
             //see if its error;
             PSyntaxIssueList issues = getSyntaxIssuesAtLine(line);
@@ -671,7 +697,7 @@ bool Editor::event(QEvent *event)
             return true;
         }
 
-//        qDebug()<<s<<" -- "<<(int)reason;
+        //qDebug()<<s<<" -- "<<(int)reason;
         // Don't rescan the same stuff over and over again (that's slow)
         //  if (s = fCurrentWord) and (fText.Hint<>'') then
         s = s.trimmed();
@@ -994,7 +1020,7 @@ void Editor::onStatusChanged(SynStatusChanges changes)
             && (lines()->count()!=mLineCount)
             && (lines()->count()!=0) && ((mLineCount>0) || (lines()->count()>1))) {
         reparse();
-        if (!readOnly() && pSettings->editor().syntaxCheck() && pSettings->editor().syntaxCheckWhenLineChanged())
+        if (!readOnly() && highlighter() && pSettings->editor().syntaxCheck() && pSettings->editor().syntaxCheckWhenLineChanged())
             pMainWindow->checkSyntaxInBack(this);
     }
     mLineCount = lines()->count();
@@ -1017,6 +1043,32 @@ void Editor::onStatusChanged(SynStatusChanges changes)
 
     // scSelection includes anything caret related
     if (changes.testFlag(SynStatusChange::scSelection)) {
+        mSelectionWord="";
+        if (selAvail()) {
+            BufferCoord wordBegin,wordEnd,bb,be;
+            bb = blockBegin();
+            be = blockEnd();
+            wordBegin = WordStartEx(bb);
+            wordEnd = WordEndEx(be);
+            if (wordBegin.Line == bb.Line
+                    && wordBegin.Char == bb.Char
+                    && wordEnd.Line == be.Line
+                    && wordEnd.Char == be.Char) {
+                if (wordBegin.Line>=1 && wordBegin.Line<=lines()->count()) {
+                    QString line = lines()->getString(wordBegin.Line-1);
+                    mSelectionWord = line.mid(wordBegin.Char-1,wordEnd.Char-wordBegin.Char);
+                }
+            }
+//            qDebug()<<QString("(%1,%2)").arg(bb.Line).arg(bb.Char)
+//                   <<" - "<<QString("(%1,%2)").arg(be.Line).arg(be.Char)
+//                  <<" - "<<QString("(%1,%2)").arg(wordBegin.Line).arg(wordBegin.Char)
+//                 <<" - "<<QString("(%1,%2)").arg(wordEnd.Line).arg(wordEnd.Char)
+//                <<" : "<<mSelectionWord;
+        }
+        if (mOldSelectionWord != mSelectionWord) {
+            invalidate();
+            mOldSelectionWord = mSelectionWord;
+        }
         pMainWindow->updateStatusbarForLineCol();
 
 //      // Update the function tip

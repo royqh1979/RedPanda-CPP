@@ -122,6 +122,9 @@ MainWindow::MainWindow(QWidget *parent)
     //class browser
     ui->classBrowser->setModel(&mClassBrowserModel);
 
+    connect(&mFileSystemWatcher,&QFileSystemWatcher::fileChanged,
+            this, &MainWindow::onFileChanged);
+
     mCompletionPopup = std::make_shared<CodeCompletionPopup>();
     mHeaderCompletionPopup = std::make_shared<HeaderCompletionPopup>();
 
@@ -275,6 +278,11 @@ void MainWindow::applySettings()
     app->setFont(font);
     this->setFont(font);
     updateDebuggerSettings();
+}
+
+QFileSystemWatcher *MainWindow::fileSystemWatcher()
+{
+    return &mFileSystemWatcher;
 }
 
 void MainWindow::removeActiveBreakpoints()
@@ -506,10 +514,14 @@ void MainWindow::openFile(const QString &filename)
         editor->activate();
         return;
     }
-    editor = mEditorList->newEditor(filename,ENCODING_AUTO_DETECT,
-                                    false,false);
-    editor->activate();
-    this->updateForEncodingInfo();
+    try {
+        editor = mEditorList->newEditor(filename,ENCODING_AUTO_DETECT,
+                                        false,false);
+        editor->activate();
+        this->updateForEncodingInfo();
+    } catch (FileError e) {
+        QMessageBox::critical(this,tr("Error"),e.reason());
+    }
 }
 
 void MainWindow::setupActions() {
@@ -1030,6 +1042,36 @@ void MainWindow::onAutoSaveTimeout()
         break;
     }
     updateStatusbarMessage(tr("%1 files autosaved").arg(updateCount));
+}
+
+void MainWindow::onFileChanged(const QString &path)
+{
+    Editor *e = mEditorList->getOpenedEditorByFilename(path);
+    if (e) {
+        if (QFile(path).exists()) {
+            e->activate();
+            if (QMessageBox::question(this,tr("Compile"),
+                                      tr("File '%1' was changed.").arg(path)+"<BR /><BR />" + tr("Reload its content from disk?"),
+                                      QMessageBox::Yes|QMessageBox::No,
+                                      QMessageBox::No) == QMessageBox::Yes) {
+                try {
+                    e->loadFile();
+                } catch(FileError e) {
+                    QMessageBox::critical(this,tr("Error"),e.reason());
+                }
+            }
+        } else {
+            if (QMessageBox::question(this,tr("Compile"),
+                                      tr("File '%1' was removed.").arg(path)+"<BR /><BR />" + tr("Keep it open?"),
+                                      QMessageBox::Yes|QMessageBox::No,
+                                      QMessageBox::Yes) == QMessageBox::No) {
+                mEditorList->closeEditor(e);
+            } else {
+                e->setModified(true);
+                e->updateCaption();
+            }
+        }
+    }
 }
 
 const std::shared_ptr<HeaderCompletionPopup> &MainWindow::headerCompletionPopup() const
