@@ -14,6 +14,7 @@ QMAKE_CXXFLAGS_DEBUG += -Werror=return-type
 
 SOURCES += \
     HighlighterManager.cpp \
+    codeformatter.cpp \
     colorscheme.cpp \
     compiler/compiler.cpp \
     compiler/compilermanager.cpp \
@@ -32,6 +33,8 @@ SOURCES += \
     settingsdialog/editorautosavewidget.cpp \
     settingsdialog/editorcodecompletionwidget.cpp \
     settingsdialog/editormiscwidget.cpp \
+    settingsdialog/formattergeneralwidget.cpp \
+    settingsdialog/formatteridentationwidget.cpp \
     widgets/classbrowser.cpp \
     widgets/codecompletionlistview.cpp \
     widgets/codecompletionpopup.cpp \
@@ -83,6 +86,7 @@ SOURCES += \
 
 HEADERS += \
     HighlighterManager.h \
+    codeformatter.h \
     colorscheme.h \
     compiler/compiler.h \
     compiler/compilermanager.h \
@@ -101,6 +105,8 @@ HEADERS += \
     settingsdialog/editorautosavewidget.h \
     settingsdialog/editorcodecompletionwidget.h \
     settingsdialog/editormiscwidget.h \
+    settingsdialog/formattergeneralwidget.h \
+    settingsdialog/formatteridentationwidget.h \
     widgets/classbrowser.h \
     widgets/codecompletionlistview.h \
     widgets/codecompletionpopup.h \
@@ -156,6 +162,8 @@ FORMS += \
     settingsdialog/editorautosavewidget.ui \
     settingsdialog/editorcodecompletionwidget.ui \
     settingsdialog/editormiscwidget.ui \
+    settingsdialog/formattergeneralwidget.ui \
+    settingsdialog/formatteridentationwidget.ui \
     widgets/cpudialog.ui \
     mainwindow.ui \
     settingsdialog/compilersetdirectorieswidget.ui \

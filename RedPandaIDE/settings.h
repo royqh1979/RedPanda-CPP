@@ -19,6 +19,7 @@
 #define SETTING_DEBUGGER "Debugger"
 #define SETTING_HISTORY "History"
 #define SETTING_CODE_COMPLETION "CodeCompletion"
+#define SETTING_CODE_FORMATTER "CodeFormatter"
 #define SETTING_COMPILTER_SETS "CompilerSets"
 #define SETTING_COMPILTER_SETS_DEFAULT_INDEX "defaultIndex"
 #define SETTING_COMPILTER_SETS_COUNT "count"
@@ -462,6 +463,94 @@ public:
         void doSave() override;
         void doLoad() override;
 
+    };
+
+    class CodeFormatter: public _Base {
+    public:
+        explicit CodeFormatter(Settings* settings);
+    private:
+        int mBraceStyle;
+        int mIndentStyle;
+        int mTabWidth;
+        bool mAttachNamespaces;
+        bool mAttachClasses;
+        bool mAttachInlines;
+        bool mAttachExternC;
+        bool mAttachClosingWhile;
+        bool mIndentClasses;
+        bool mIndentModifiers;
+        bool mIndentCases;
+        bool mIndentNamespaces;
+        bool mIndentContinuation;
+        bool mIndentLabels;
+        bool mIndentPreprocBlock;
+        bool mIndentPreprocCond;
+        bool mIndentPreprocDefine;
+        bool mIndentCollComments;
+        int mMinConditionalIndent;
+        int mMaxContinuationIndent;
+        bool mBreakBlocks;
+        bool mBreakBlocksAll;
+        bool mPadOper;
+        bool mPadComma;
+        bool mPadParen;
+        bool mPadParenOut;
+        bool mPadFirstParenOut;
+        bool mPadParenIn;
+        bool mPadHeader;
+        bool mUnpadParen;
+        bool mDeleteEmptyLines;
+        bool mDeleteMultipleEmptyLines;
+        bool mFillEmptyLines;
+        int mAlignPointerStyle;
+        int mAlignReferenceStyle;
+        bool mBreakClosingBraces;
+        bool mBreakElseIf;
+        bool mBreakOneLineHeaders;
+        bool mAddBraces;
+        bool mAddOneLineBraces;
+        bool mRemoveBraces;
+        bool mBreakRetureType;
+        bool mBreakReturnTypeDecl;
+        bool mAttachReturnType;
+        bool mAttachReturnTypeDecl;
+        bool mKeepOneLineBlocks;
+        bool mKeepOneLineStatements;
+        bool mConvertTabs;
+        bool mCloseTemplates;
+        bool mRemoveCommentPrefix;
+        int maxCodeLength;
+        bool mBreakAfterLogical;
+
+
+
+
+        int mBracketStyle;
+        int mIndentStyle;
+        int mTabWidth;
+        int mMaxLineLength;
+        bool mModifyMaxLineLength;
+        //Indentation options:
+        bool mIndentClasses;  // --indent-classes
+        bool mIndentSwitches; //-indent-switches
+        bool mIndentCases;  // --indent-cases
+        bool mIndentNamespaces; // --indent-namespaces
+        bool mIndentLabels; // --indent-labels
+        fIndentPreprocessor: Boolean; // --indent-preprocessor
+        //Padding options
+        fPadOper: boolean; // --pad-oper; add spaces around an operator
+        fPadHeader: boolean; // --pad-header; add spaces after 'if','for',etc.
+        fPointerAlign: integer; // --align-pointer=none/type/middle/name
+        fReferenceAlign: integer; // --align-reference=none/type/middle/name
+
+        fDeleteEmptyLines: boolean;
+        fDeleteMultipleEmptyLines: boolean;
+
+        fCustomCommand: AnsiString;
+
+        fFullCommand: AnsiString; // includes customizations
+        fAStyleDir: AnsiString;
+        fAStyleFile: AnsiString;
     };
 
     class History: public _Base {

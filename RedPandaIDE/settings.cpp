@@ -2690,3 +2690,9 @@ void Settings::CodeCompletion::doLoad()
     mAppendFunc = boolValue("append_func",true);
     mShowCodeIns = boolValue("show_code_ins",true);
 }
+
+Settings::CodeFormatter::CodeFormatter(Settings *settings):
+    _Base(settings,SETTING_CODE_FORMATTER)
+{
+
+}
