@@ -222,6 +222,8 @@ private:
     QString mCurrentWord;
     QString mCurrentDebugTipWord;
     TipType mCurrentTipType;
+    QString mOldSelectionWord;
+    QString mSelectionWord;
 
     // QWidget interface
 protected:

@@ -1221,9 +1221,9 @@ BufferCoord SynEdit::WordStartEx(const BufferCoord &XY)
     // valid line?
     if ((CY >= 1) && (CY <= mLines->count())) {
         QString Line = mLines->getString(CY - 1);
-        CX = std::min(CX, Line.length());
-        if (CX-1 >= 0) {
-            if (!(Line[CX - 1].isSpace()))
+        CX = std::min(CX, Line.length()+1);
+        if (CX > 1) {
+            if (isWordChar(Line[CX - 1]))
                 CX = StrRScanForNonWordChar(Line, CX - 1) + 1;
             else
                 CX = StrRScanForWordChar(Line, CX - 1) + 1;
@@ -1245,7 +1245,7 @@ BufferCoord SynEdit::WordEndEx(const BufferCoord &XY)
     if ((CY >= 1) && (CY <= mLines->count())) {
         QString Line = mLines->getString(CY - 1);
         if (CX <= Line.length()) {
-            if (!(Line[CX - 1].isSpace()))
+            if (isWordChar(Line[CX - 2]))
                 CX = StrScanForNonWordChar(Line, CX);
             else
                 CX = StrScanForWordChar(Line, CX);

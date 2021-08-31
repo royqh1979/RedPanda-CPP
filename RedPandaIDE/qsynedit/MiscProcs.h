@@ -122,4 +122,6 @@ int StrRScanForNonWordChar(const QString& s, int startPos);
 
 void ensureNotAfter(BufferCoord& cord1, BufferCoord& cord2);
 
+bool isWordChar(const QChar& ch);
+
 #endif // MISCPROCS_H
