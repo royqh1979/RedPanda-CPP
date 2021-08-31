@@ -14,6 +14,7 @@
 #include "environmentappearencewidget.h"
 #include "executorgeneralwidget.h"
 #include "debuggeneralwidget.h"
+#include "formattergeneralwidget.h"
 #include <QDebug>
 #include <QMessageBox>
 #include <QModelIndex>
@@ -82,6 +83,11 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     pDebugGeneralWidget = new DebugGeneralWidget(tr("General"),tr("Debugger"));
     pDebugGeneralWidget->init();
     addWidget(pDebugGeneralWidget);
+
+    pFormatterGeneralWidget = new FormatterGeneralWidget(tr("General"),tr("Code Formatter"));
+    pFormatterGeneralWidget->init();
+    addWidget(pFormatterGeneralWidget);
+
 
     ui->widgetsView->expandAll();
     //select the first widget of the first group

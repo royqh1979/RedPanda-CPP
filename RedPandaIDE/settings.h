@@ -468,6 +468,116 @@ public:
     class CodeFormatter: public _Base {
     public:
         explicit CodeFormatter(Settings* settings);
+        int braceStyle() const;
+        void setBraceStyle(int newBraceStyle);
+
+        int indentStyle() const;
+        void setIndentStyle(int newIndentStyle);
+        int tabWidth() const;
+        void setTabWidth(int newTabWidth);
+        bool attachNamespaces() const;
+        void setAttachNamespaces(bool newAttachNamespaces);
+        bool attachClasses() const;
+        void setAttachClasses(bool newAttachClasses);
+        bool attachInlines() const;
+        void setAttachInlines(bool newAttachInlines);
+        bool attachExternC() const;
+        void setAttachExternC(bool newAttachExternC);
+        bool attachClosingWhile() const;
+        void setAttachClosingWhile(bool newAttachClosingWhile);
+        bool indentClasses() const;
+        void setIndentClasses(bool newIndentClasses);
+        bool indentModifiers() const;
+        void setIndentModifiers(bool newIndentModifiers);
+        bool indentCases() const;
+        void setIndentCases(bool newIndentCases);
+        bool indentNamespaces() const;
+        void setIndentNamespaces(bool newIndentNamespaces);
+        bool indentContinuation() const;
+        void setIndentContinuation(bool newIndentContinuation);
+        bool indentLabels() const;
+        void setIndentLabels(bool newIndentLabels);
+        bool indentPreprocBlock() const;
+        void setIndentPreprocBlock(bool newIndentPreprocBlock);
+        bool indentPreprocCond() const;
+        void setIndentPreprocCond(bool newIndentPreprocCond);
+        bool indentPreprocDefine() const;
+        void setIndentPreprocDefine(bool newIndentPreprocDefine);
+        bool indentCol1Comments() const;
+        void setIndentCol1Comments(bool newIndentCol1Comments);
+        int minConditionalIndent() const;
+        void setMinConditionalIndent(int newMinConditionalIndent);
+        int maxContinuationIndent() const;
+        void setMaxContinuationIndent(int newMaxContinuationIndent);
+        bool breakBlocks() const;
+        void setBreakBlocks(bool newBreakBlocks);
+        bool breakBlocksAll() const;
+        void setBreakBlocksAll(bool newBreakBlocksAll);
+        bool padOper() const;
+        void setPadOper(bool newPadOper);
+        bool padComma() const;
+        void setPadComma(bool newPadComma);
+        bool padParen() const;
+        void setPadParen(bool newPadParen);
+        bool padParenOut() const;
+        void setPadParenOut(bool newPadParenOut);
+        bool padFirstParenOut() const;
+        void setPadFirstParenOut(bool newPadFirstParenOut);
+        bool padParenIn() const;
+        void setPadParenIn(bool newPadParenIn);
+        bool padHeader() const;
+        void setPadHeader(bool newPadHeader);
+        bool unpadParen() const;
+        void setUnpadParen(bool newUnpadParen);
+        bool deleteEmptyLines() const;
+        void setDeleteEmptyLines(bool newDeleteEmptyLines);
+        bool deleteMultipleEmptyLines() const;
+        void setDeleteMultipleEmptyLines(bool newDeleteMultipleEmptyLines);
+        bool fillEmptyLines() const;
+        void setFillEmptyLines(bool newFillEmptyLines);
+        int alignPointerStyle() const;
+        void setAlignPointerStyle(int newAlignPointerStyle);
+        int alignReferenceStyle() const;
+        void setAlignReferenceStyle(int newAlignReferenceStyle);
+        bool breakClosingBraces() const;
+        void setBreakClosingBraces(bool newBreakClosingBraces);
+        bool breakElseIf() const;
+        void setBreakElseIf(bool newBreakElseIf);
+        bool breakOneLineHeaders() const;
+        void setBreakOneLineHeaders(bool newBreakOneLineHeaders);
+        bool addBraces() const;
+        void setAddBraces(bool newAddBraces);
+        bool addOneLineBraces() const;
+        void setAddOneLineBraces(bool newAddOneLineBraces);
+        bool removeBraces() const;
+        void setRemoveBraces(bool newRemoveBraces);
+        bool breakReturnTypeDecl() const;
+        void setBreakReturnTypeDecl(bool newBreakReturnTypeDecl);
+        bool attachReturnType() const;
+        void setAttachReturnType(bool newAttachReturnType);
+        bool attachReturnTypeDecl() const;
+        void setAttachReturnTypeDecl(bool newAttachReturnTypeDecl);
+        bool keepOneLineBlocks() const;
+        void setKeepOneLineBlocks(bool newKeepOneLineBlocks);
+        bool keepOneLineStatements() const;
+        void setKeepOneLineStatements(bool newKeepOneLineStatements);
+        bool convertTabs() const;
+        void setConvertTabs(bool newConvertTabs);
+        bool closeTemplates() const;
+        void setCloseTemplates(bool newCloseTemplates);
+        bool removeCommentPrefix() const;
+        void setRemoveCommentPrefix(bool newRemoveCommentPrefix);
+        int getMaxCodeLength() const;
+        void setMaxCodeLength(int newMaxCodeLength);
+        bool breakAfterLogical() const;
+        void setBreakAfterLogical(bool newBreakAfterLogical);
+
+        bool breakReturnType() const;
+        void setBreakReturnType(bool newBreakReturnType);
+
+        bool breakMaxCodeLength() const;
+        void setBreakMaxCodeLength(bool newBreakMaxCodeLength);
+
     private:
         int mBraceStyle;
         int mIndentStyle;
@@ -486,7 +596,7 @@ public:
         bool mIndentPreprocBlock;
         bool mIndentPreprocCond;
         bool mIndentPreprocDefine;
-        bool mIndentCollComments;
+        bool mIndentCol1Comments;
         int mMinConditionalIndent;
         int mMaxContinuationIndent;
         bool mBreakBlocks;
@@ -510,7 +620,7 @@ public:
         bool mAddBraces;
         bool mAddOneLineBraces;
         bool mRemoveBraces;
-        bool mBreakRetureType;
+        bool mBreakReturnType;
         bool mBreakReturnTypeDecl;
         bool mAttachReturnType;
         bool mAttachReturnTypeDecl;
@@ -519,38 +629,13 @@ public:
         bool mConvertTabs;
         bool mCloseTemplates;
         bool mRemoveCommentPrefix;
+        bool mBreakMaxCodeLength;
         int maxCodeLength;
         bool mBreakAfterLogical;
-
-
-
-
-        int mBracketStyle;
-        int mIndentStyle;
-        int mTabWidth;
-        int mMaxLineLength;
-        bool mModifyMaxLineLength;
-        //Indentation options:
-        bool mIndentClasses;  // --indent-classes
-        bool mIndentSwitches; //-indent-switches
-        bool mIndentCases;  // --indent-cases
-        bool mIndentNamespaces; // --indent-namespaces
-        bool mIndentLabels; // --indent-labels
-        fIndentPreprocessor: Boolean; // --indent-preprocessor
-        //Padding options
-        fPadOper: boolean; // --pad-oper; add spaces around an operator
-        fPadHeader: boolean; // --pad-header; add spaces after 'if','for',etc.
-        fPointerAlign: integer; // --align-pointer=none/type/middle/name
-        fReferenceAlign: integer; // --align-reference=none/type/middle/name
-
-        fDeleteEmptyLines: boolean;
-        fDeleteMultipleEmptyLines: boolean;
-
-        fCustomCommand: AnsiString;
-
-        fFullCommand: AnsiString; // includes customizations
-        fAStyleDir: AnsiString;
-        fAStyleFile: AnsiString;
+        // _Base interface
+    protected:
+        void doSave() override;
+        void doLoad() override;
     };
 
     class History: public _Base {
@@ -809,6 +894,7 @@ public:
     Debugger& debugger();
     History& history();
     CodeCompletion &codeCompletion();
+    CodeFormatter &codeFormatter();
     QString filename() const;
 
 private:
@@ -821,6 +907,7 @@ private:
     Executor mExecutor;
     Debugger mDebugger;
     CodeCompletion mCodeCompletion;
+    CodeFormatter mCodeFormatter;
     History mHistory;
 };
 

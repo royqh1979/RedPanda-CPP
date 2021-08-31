@@ -24,6 +24,7 @@ Settings::Settings(const QString &filename):
     mExecutor(this),
     mDebugger(this),
     mCodeCompletion(this),
+    mCodeFormatter(this),
     mHistory(this)
 {
     load();
@@ -81,6 +82,7 @@ void Settings::load()
     mDebugger.load();
     mHistory.load();
     mCodeCompletion.load();
+    mCodeFormatter.load();
 }
 
 Settings::Dirs &Settings::dirs()
@@ -116,6 +118,11 @@ QString Settings::filename() const
 Settings::CodeCompletion& Settings::codeCompletion()
 {
     return mCodeCompletion;
+}
+
+Settings::CodeFormatter &Settings::codeFormatter()
+{
+    return mCodeFormatter;
 }
 
 Settings::History& Settings::history()
@@ -2695,4 +2702,648 @@ Settings::CodeFormatter::CodeFormatter(Settings *settings):
     _Base(settings,SETTING_CODE_FORMATTER)
 {
 
+}
+
+int Settings::CodeFormatter::indentStyle() const
+{
+    return mIndentStyle;
+}
+
+void Settings::CodeFormatter::setIndentStyle(int newIndentStyle)
+{
+    mIndentStyle = newIndentStyle;
+}
+
+int Settings::CodeFormatter::tabWidth() const
+{
+    return mTabWidth;
+}
+
+void Settings::CodeFormatter::setTabWidth(int newTabWidth)
+{
+    mTabWidth = newTabWidth;
+}
+
+bool Settings::CodeFormatter::attachNamespaces() const
+{
+    return mAttachNamespaces;
+}
+
+void Settings::CodeFormatter::setAttachNamespaces(bool newAttachNamespaces)
+{
+    mAttachNamespaces = newAttachNamespaces;
+}
+
+bool Settings::CodeFormatter::attachClasses() const
+{
+    return mAttachClasses;
+}
+
+void Settings::CodeFormatter::setAttachClasses(bool newAttachClasses)
+{
+    mAttachClasses = newAttachClasses;
+}
+
+bool Settings::CodeFormatter::attachInlines() const
+{
+    return mAttachInlines;
+}
+
+void Settings::CodeFormatter::setAttachInlines(bool newAttachInlines)
+{
+    mAttachInlines = newAttachInlines;
+}
+
+bool Settings::CodeFormatter::attachExternC() const
+{
+    return mAttachExternC;
+}
+
+void Settings::CodeFormatter::setAttachExternC(bool newAttachExternC)
+{
+    mAttachExternC = newAttachExternC;
+}
+
+bool Settings::CodeFormatter::attachClosingWhile() const
+{
+    return mAttachClosingWhile;
+}
+
+void Settings::CodeFormatter::setAttachClosingWhile(bool newAttachClosingWhile)
+{
+    mAttachClosingWhile = newAttachClosingWhile;
+}
+
+bool Settings::CodeFormatter::indentClasses() const
+{
+    return mIndentClasses;
+}
+
+void Settings::CodeFormatter::setIndentClasses(bool newIndentClasses)
+{
+    mIndentClasses = newIndentClasses;
+}
+
+bool Settings::CodeFormatter::indentModifiers() const
+{
+    return mIndentModifiers;
+}
+
+void Settings::CodeFormatter::setIndentModifiers(bool newIndentModifiers)
+{
+    mIndentModifiers = newIndentModifiers;
+}
+
+bool Settings::CodeFormatter::indentCases() const
+{
+    return mIndentCases;
+}
+
+void Settings::CodeFormatter::setIndentCases(bool newIndentCases)
+{
+    mIndentCases = newIndentCases;
+}
+
+bool Settings::CodeFormatter::indentNamespaces() const
+{
+    return mIndentNamespaces;
+}
+
+void Settings::CodeFormatter::setIndentNamespaces(bool newIndentNamespaces)
+{
+    mIndentNamespaces = newIndentNamespaces;
+}
+
+bool Settings::CodeFormatter::indentContinuation() const
+{
+    return mIndentContinuation;
+}
+
+void Settings::CodeFormatter::setIndentContinuation(bool newIndentContinuation)
+{
+    mIndentContinuation = newIndentContinuation;
+}
+
+bool Settings::CodeFormatter::indentLabels() const
+{
+    return mIndentLabels;
+}
+
+void Settings::CodeFormatter::setIndentLabels(bool newIndentLabels)
+{
+    mIndentLabels = newIndentLabels;
+}
+
+bool Settings::CodeFormatter::indentPreprocBlock() const
+{
+    return mIndentPreprocBlock;
+}
+
+void Settings::CodeFormatter::setIndentPreprocBlock(bool newIndentPreprocBlock)
+{
+    mIndentPreprocBlock = newIndentPreprocBlock;
+}
+
+bool Settings::CodeFormatter::indentPreprocCond() const
+{
+    return mIndentPreprocCond;
+}
+
+void Settings::CodeFormatter::setIndentPreprocCond(bool newIndentPreprocCond)
+{
+    mIndentPreprocCond = newIndentPreprocCond;
+}
+
+bool Settings::CodeFormatter::indentPreprocDefine() const
+{
+    return mIndentPreprocDefine;
+}
+
+void Settings::CodeFormatter::setIndentPreprocDefine(bool newIndentPreprocDefine)
+{
+    mIndentPreprocDefine = newIndentPreprocDefine;
+}
+
+bool Settings::CodeFormatter::indentCol1Comments() const
+{
+    return mIndentCol1Comments;
+}
+
+void Settings::CodeFormatter::setIndentCol1Comments(bool newIndentCol1Comments)
+{
+    mIndentCol1Comments = newIndentCol1Comments;
+}
+
+int Settings::CodeFormatter::minConditionalIndent() const
+{
+    return mMinConditionalIndent;
+}
+
+void Settings::CodeFormatter::setMinConditionalIndent(int newMinConditionalIndent)
+{
+    mMinConditionalIndent = newMinConditionalIndent;
+}
+
+int Settings::CodeFormatter::maxContinuationIndent() const
+{
+    return mMaxContinuationIndent;
+}
+
+void Settings::CodeFormatter::setMaxContinuationIndent(int newMaxContinuationIndent)
+{
+    mMaxContinuationIndent = newMaxContinuationIndent;
+}
+
+bool Settings::CodeFormatter::breakBlocks() const
+{
+    return mBreakBlocks;
+}
+
+void Settings::CodeFormatter::setBreakBlocks(bool newBreakBlocks)
+{
+    mBreakBlocks = newBreakBlocks;
+}
+
+bool Settings::CodeFormatter::breakBlocksAll() const
+{
+    return mBreakBlocksAll;
+}
+
+void Settings::CodeFormatter::setBreakBlocksAll(bool newBreakBlocksAll)
+{
+    mBreakBlocksAll = newBreakBlocksAll;
+}
+
+bool Settings::CodeFormatter::padOper() const
+{
+    return mPadOper;
+}
+
+void Settings::CodeFormatter::setPadOper(bool newPadOper)
+{
+    mPadOper = newPadOper;
+}
+
+bool Settings::CodeFormatter::padComma() const
+{
+    return mPadComma;
+}
+
+void Settings::CodeFormatter::setPadComma(bool newPadComma)
+{
+    mPadComma = newPadComma;
+}
+
+bool Settings::CodeFormatter::padParen() const
+{
+    return mPadParen;
+}
+
+void Settings::CodeFormatter::setPadParen(bool newPadParen)
+{
+    mPadParen = newPadParen;
+}
+
+bool Settings::CodeFormatter::padParenOut() const
+{
+    return mPadParenOut;
+}
+
+void Settings::CodeFormatter::setPadParenOut(bool newPadParenOut)
+{
+    mPadParenOut = newPadParenOut;
+}
+
+bool Settings::CodeFormatter::padFirstParenOut() const
+{
+    return mPadFirstParenOut;
+}
+
+void Settings::CodeFormatter::setPadFirstParenOut(bool newPadFirstParenOut)
+{
+    mPadFirstParenOut = newPadFirstParenOut;
+}
+
+bool Settings::CodeFormatter::padParenIn() const
+{
+    return mPadParenIn;
+}
+
+void Settings::CodeFormatter::setPadParenIn(bool newPadParenIn)
+{
+    mPadParenIn = newPadParenIn;
+}
+
+bool Settings::CodeFormatter::padHeader() const
+{
+    return mPadHeader;
+}
+
+void Settings::CodeFormatter::setPadHeader(bool newPadHeader)
+{
+    mPadHeader = newPadHeader;
+}
+
+bool Settings::CodeFormatter::unpadParen() const
+{
+    return mUnpadParen;
+}
+
+void Settings::CodeFormatter::setUnpadParen(bool newUnpadParen)
+{
+    mUnpadParen = newUnpadParen;
+}
+
+bool Settings::CodeFormatter::deleteEmptyLines() const
+{
+    return mDeleteEmptyLines;
+}
+
+void Settings::CodeFormatter::setDeleteEmptyLines(bool newDeleteEmptyLines)
+{
+    mDeleteEmptyLines = newDeleteEmptyLines;
+}
+
+bool Settings::CodeFormatter::deleteMultipleEmptyLines() const
+{
+    return mDeleteMultipleEmptyLines;
+}
+
+void Settings::CodeFormatter::setDeleteMultipleEmptyLines(bool newDeleteMultipleEmptyLines)
+{
+    mDeleteMultipleEmptyLines = newDeleteMultipleEmptyLines;
+}
+
+bool Settings::CodeFormatter::fillEmptyLines() const
+{
+    return mFillEmptyLines;
+}
+
+void Settings::CodeFormatter::setFillEmptyLines(bool newFillEmptyLines)
+{
+    mFillEmptyLines = newFillEmptyLines;
+}
+
+int Settings::CodeFormatter::alignPointerStyle() const
+{
+    return mAlignPointerStyle;
+}
+
+void Settings::CodeFormatter::setAlignPointerStyle(int newAlignPointerStyle)
+{
+    mAlignPointerStyle = newAlignPointerStyle;
+}
+
+int Settings::CodeFormatter::alignReferenceStyle() const
+{
+    return mAlignReferenceStyle;
+}
+
+void Settings::CodeFormatter::setAlignReferenceStyle(int newAlignReferenceStyle)
+{
+    mAlignReferenceStyle = newAlignReferenceStyle;
+}
+
+bool Settings::CodeFormatter::breakClosingBraces() const
+{
+    return mBreakClosingBraces;
+}
+
+void Settings::CodeFormatter::setBreakClosingBraces(bool newBreakClosingBraces)
+{
+    mBreakClosingBraces = newBreakClosingBraces;
+}
+
+bool Settings::CodeFormatter::breakElseIf() const
+{
+    return mBreakElseIf;
+}
+
+void Settings::CodeFormatter::setBreakElseIf(bool newBreakElseIf)
+{
+    mBreakElseIf = newBreakElseIf;
+}
+
+bool Settings::CodeFormatter::breakOneLineHeaders() const
+{
+    return mBreakOneLineHeaders;
+}
+
+void Settings::CodeFormatter::setBreakOneLineHeaders(bool newBreakOneLineHeaders)
+{
+    mBreakOneLineHeaders = newBreakOneLineHeaders;
+}
+
+bool Settings::CodeFormatter::addBraces() const
+{
+    return mAddBraces;
+}
+
+void Settings::CodeFormatter::setAddBraces(bool newAddBraces)
+{
+    mAddBraces = newAddBraces;
+}
+
+bool Settings::CodeFormatter::addOneLineBraces() const
+{
+    return mAddOneLineBraces;
+}
+
+void Settings::CodeFormatter::setAddOneLineBraces(bool newAddOneLineBraces)
+{
+    mAddOneLineBraces = newAddOneLineBraces;
+}
+
+bool Settings::CodeFormatter::removeBraces() const
+{
+    return mRemoveBraces;
+}
+
+void Settings::CodeFormatter::setRemoveBraces(bool newRemoveBraces)
+{
+    mRemoveBraces = newRemoveBraces;
+}
+
+bool Settings::CodeFormatter::breakReturnTypeDecl() const
+{
+    return mBreakReturnTypeDecl;
+}
+
+void Settings::CodeFormatter::setBreakReturnTypeDecl(bool newBreakReturnTypeDecl)
+{
+    mBreakReturnTypeDecl = newBreakReturnTypeDecl;
+}
+
+bool Settings::CodeFormatter::attachReturnType() const
+{
+    return mAttachReturnType;
+}
+
+void Settings::CodeFormatter::setAttachReturnType(bool newAttachReturnType)
+{
+    mAttachReturnType = newAttachReturnType;
+}
+
+bool Settings::CodeFormatter::attachReturnTypeDecl() const
+{
+    return mAttachReturnTypeDecl;
+}
+
+void Settings::CodeFormatter::setAttachReturnTypeDecl(bool newAttachReturnTypeDecl)
+{
+    mAttachReturnTypeDecl = newAttachReturnTypeDecl;
+}
+
+bool Settings::CodeFormatter::keepOneLineBlocks() const
+{
+    return mKeepOneLineBlocks;
+}
+
+void Settings::CodeFormatter::setKeepOneLineBlocks(bool newKeepOneLineBlocks)
+{
+    mKeepOneLineBlocks = newKeepOneLineBlocks;
+}
+
+bool Settings::CodeFormatter::keepOneLineStatements() const
+{
+    return mKeepOneLineStatements;
+}
+
+void Settings::CodeFormatter::setKeepOneLineStatements(bool newKeepOneLineStatements)
+{
+    mKeepOneLineStatements = newKeepOneLineStatements;
+}
+
+bool Settings::CodeFormatter::convertTabs() const
+{
+    return mConvertTabs;
+}
+
+void Settings::CodeFormatter::setConvertTabs(bool newConvertTabs)
+{
+    mConvertTabs = newConvertTabs;
+}
+
+bool Settings::CodeFormatter::closeTemplates() const
+{
+    return mCloseTemplates;
+}
+
+void Settings::CodeFormatter::setCloseTemplates(bool newCloseTemplates)
+{
+    mCloseTemplates = newCloseTemplates;
+}
+
+bool Settings::CodeFormatter::removeCommentPrefix() const
+{
+    return mRemoveCommentPrefix;
+}
+
+void Settings::CodeFormatter::setRemoveCommentPrefix(bool newRemoveCommentPrefix)
+{
+    mRemoveCommentPrefix = newRemoveCommentPrefix;
+}
+
+int Settings::CodeFormatter::getMaxCodeLength() const
+{
+    return maxCodeLength;
+}
+
+void Settings::CodeFormatter::setMaxCodeLength(int newMaxCodeLength)
+{
+    maxCodeLength = newMaxCodeLength;
+}
+
+bool Settings::CodeFormatter::breakAfterLogical() const
+{
+    return mBreakAfterLogical;
+}
+
+void Settings::CodeFormatter::setBreakAfterLogical(bool newBreakAfterLogical)
+{
+    mBreakAfterLogical = newBreakAfterLogical;
+}
+
+bool Settings::CodeFormatter::breakReturnType() const
+{
+    return mBreakReturnType;
+}
+
+void Settings::CodeFormatter::setBreakReturnType(bool newBreakReturnType)
+{
+    mBreakReturnType = newBreakReturnType;
+}
+
+bool Settings::CodeFormatter::breakMaxCodeLength() const
+{
+    return mBreakMaxCodeLength;
+}
+
+void Settings::CodeFormatter::setBreakMaxCodeLength(bool newBreakMaxCodeLength)
+{
+    mBreakMaxCodeLength = newBreakMaxCodeLength;
+}
+
+void Settings::CodeFormatter::doSave()
+{
+    saveValue("brace_style",mBraceStyle);
+    saveValue("indent_style",mIndentStyle);
+    saveValue("tab_width",mTabWidth);
+    saveValue("attach_namespaces",mAttachNamespaces);
+    saveValue("attach_classes",mAttachClasses);
+    saveValue("attach_inlines",mAttachInlines);
+    saveValue("attach_extern_c",mAttachExternC);
+    saveValue("attach_closing_while",mAttachClosingWhile);
+    saveValue("indent_classes",mIndentClasses);
+    saveValue("indent_modifiers",mIndentModifiers);
+    saveValue("indent_cases",mIndentCases);
+    saveValue("indent_namespaces",mIndentNamespaces);
+    saveValue("indent_continuation",mIndentContinuation);
+    saveValue("indent_labels",mIndentLabels);
+    saveValue("indent_preproc_block",mIndentPreprocBlock);
+    saveValue("indent_preproc_cond",mIndentPreprocCond);
+    saveValue("indent_preproc_define",mIndentPreprocDefine);
+    saveValue("indent_col1_comments",mIndentCol1Comments);
+    saveValue("min_conditional_indent",mMinConditionalIndent);
+    saveValue("max_continuation_indent",mMaxContinuationIndent);
+    saveValue("break_blocks",mBreakBlocks);
+    saveValue("break_blocks_all",mBreakBlocksAll);
+    saveValue("pad_oper",mPadOper);
+    saveValue("pad_comma",mPadComma);
+    saveValue("pad_paren",mPadParen);
+    saveValue("pad_paren_out",mPadParenOut);
+    saveValue("pad_first_paren_out",mPadFirstParenOut);
+    saveValue("pad_parent_in",mPadParenIn);
+    saveValue("pad_header",mPadHeader);
+    saveValue("unpad_paren",mUnpadParen);
+    saveValue("delete_empty_lines",mDeleteEmptyLines);
+    saveValue("delete_multiple_empty_lines",mDeleteMultipleEmptyLines);
+    saveValue("fill_empty_lines",mFillEmptyLines);
+    saveValue("align_pointer_style",mAlignPointerStyle);
+    saveValue("align_reference_style",mAlignReferenceStyle);
+    saveValue("break_closing_braces",mBreakClosingBraces);
+    saveValue("break_else_if",mBreakElseIf);
+    saveValue("break_one_line_headers",mBreakOneLineHeaders);
+    saveValue("add_braces",mAddBraces);
+    saveValue("add_one_line_braces",mAddOneLineBraces);
+    saveValue("remove_braces",mRemoveBraces);
+    saveValue("break_return_type",mBreakReturnType);
+    saveValue("break_return_type_decl",mBreakReturnTypeDecl);
+    saveValue("attach_return_type",mAttachReturnType);
+    saveValue("attach_return_type_decl",mAttachReturnTypeDecl);
+    saveValue("keep_one_line_blocks",mKeepOneLineBlocks);
+    saveValue("keep_one_line_statements",mKeepOneLineStatements);
+    saveValue("convert_tabs",mConvertTabs);
+    saveValue("close_templates",mCloseTemplates);
+    saveValue("remove_comment_prefix",mRemoveCommentPrefix);
+    saveValue("break_max_code_length",mBreakMaxCodeLength);
+    saveValue("max_code_length",maxCodeLength);
+    saveValue("break_after_logical",mBreakAfterLogical);
+}
+
+void Settings::CodeFormatter::doLoad()
+{
+    mBraceStyle = intValue("brace_style", FormatterBraceStyle::fbsDefault);
+    mIndentStyle = intValue("indent_style",FormatterIndentType::fitTab); // 0 isspaces, 1 is tab
+    mTabWidth = intValue("tab_width",4);
+    mAttachNamespaces = boolValue("attach_namespaces",false);
+    mAttachClasses = boolValue("attach_classes",false);
+    mAttachInlines = boolValue("attach_inlines",false);
+    mAttachExternC = boolValue("attach_extern_c",false);
+    mAttachClosingWhile = boolValue("attach_closing_while",false);
+    mIndentClasses = boolValue("indent_classes",false);
+    mIndentModifiers = boolValue("indent_modifiers",false);
+    mIndentCases = boolValue("indent_cases",false);
+    mIndentNamespaces = boolValue("indent_namespaces",false);
+    mIndentContinuation = boolValue("indent_continuation",false);
+    mIndentLabels = boolValue("indent_labels",false);
+    mIndentPreprocBlock = boolValue("indent_preproc_block",false);
+    mIndentPreprocCond = boolValue("indent_preproc_cond",false);
+    mIndentPreprocDefine = boolValue("indent_preproc_define",false);
+    mIndentCol1Comments = boolValue("indent_col1_comments",false);
+    mMinConditionalIndent = intValue("min_conditional_indent",1);
+    mMaxContinuationIndent = intValue("max_continuation_indent",40);
+    mBreakBlocks = boolValue("break_blocks",false);
+    mBreakBlocksAll = boolValue("break_blocks_all",false);
+    mPadOper = boolValue("pad_oper",false);
+    mPadComma = boolValue("pad_comma",false);
+    mPadParen = boolValue("pad_paren",false);
+    mPadParenOut = boolValue("pad_paren_out",false);
+    mPadFirstParenOut = boolValue("pad_first_paren_out",false);
+    mPadParenIn = boolValue("pad_parent_in",false);
+    mPadHeader = boolValue("pad_header",false);
+    mUnpadParen = boolValue("unpad_paren",false);
+    mDeleteEmptyLines = boolValue("delete_empty_lines",false);
+    mDeleteMultipleEmptyLines = boolValue("delete_multiple_empty_lines",false);
+    mFillEmptyLines = boolValue("fill_empty_lines",false);
+    mAlignPointerStyle = intValue("align_pointer_style", FormatterOperatorAlign::foaNone);
+    mAlignReferenceStyle = intValue("align_reference_style", FormatterOperatorAlign::foaNone);
+    mBreakClosingBraces = boolValue("break_closing_braces",false);
+    mBreakElseIf = boolValue("break_else_if",false);
+    mBreakOneLineHeaders = boolValue("break_one_line_headers",false);
+    mAddBraces = boolValue("add_braces",false);
+    mAddOneLineBraces = boolValue("add_one_line_braces",false);
+    mRemoveBraces = boolValue("remove_braces",false);
+    mBreakReturnType = boolValue("break_return_type",false);
+    mBreakReturnTypeDecl = boolValue("break_return_type_decl",false);
+    mAttachReturnType = boolValue("attach_return_type",false);
+    mAttachReturnTypeDecl = boolValue("attach_return_type_decl",false);
+    mKeepOneLineBlocks = boolValue("keep_one_line_blocks",false);
+    mKeepOneLineStatements = boolValue("keep_one_line_statements",false);
+    mConvertTabs = boolValue("convert_tabs",false);
+    mCloseTemplates = boolValue("close_templates",false);
+    mRemoveCommentPrefix = boolValue("remove_comment_prefix",false);
+    mBreakMaxCodeLength = boolValue("break_max_code_length",false);
+    maxCodeLength = intValue("max_code_length",200);
+    mBreakAfterLogical = boolValue("break_after_logical",false);
+}
+
+int Settings::CodeFormatter::braceStyle() const
+{
+    return mBraceStyle;
+}
+
+void Settings::CodeFormatter::setBraceStyle(int newBraceStyle)
+{
+    mBraceStyle = newBraceStyle;
 }

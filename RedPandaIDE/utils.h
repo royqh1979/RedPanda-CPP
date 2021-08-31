@@ -52,6 +52,38 @@ enum AutoSaveStrategy {
     assAppendFormatedTimeStamp
 };
 
+enum FormatterBraceStyle {
+    fbsDefault,
+    fbsAllman,
+    fbsJava,
+    fbsKR,
+    fbsStroustrup,
+    fbsWitesmith,
+    fbsVtk,
+    fbsRatliff,
+    fbsGNU,
+    fbsLinux,
+    fbsHorstman,
+    fbs1TBS,
+    fbsGoogle,
+    fbsMozilla,
+    fbsWebkit,
+    fbsPico,
+    fbsLisp
+};
+
+enum FormatterOperatorAlign {
+    foaNone,
+    foaType,
+    foaMiddle,
+    foaName
+};
+
+enum FormatterIndentType {
+    fitSpace,
+    fitTab
+};
+
 class BaseError{
 public:
     explicit BaseError(const QString& reason);

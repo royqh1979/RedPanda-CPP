@@ -523,7 +523,7 @@ Are you really want to continue?</source>
         <translation type="vanished">无标题</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="76"/>
+        <location filename="editor.cpp" line="78"/>
         <source>untitled%1</source>
         <translation>无标题%1</translation>
     </message>
@@ -532,61 +532,61 @@ Are you really want to continue?</source>
         <translation type="vanished">失败</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="180"/>
-        <location filename="editor.cpp" line="192"/>
-        <location filename="editor.cpp" line="227"/>
-        <location filename="editor.cpp" line="807"/>
-        <location filename="editor.cpp" line="812"/>
-        <location filename="editor.cpp" line="830"/>
-        <location filename="editor.cpp" line="835"/>
+        <location filename="editor.cpp" line="188"/>
+        <location filename="editor.cpp" line="202"/>
+        <location filename="editor.cpp" line="238"/>
+        <location filename="editor.cpp" line="818"/>
+        <location filename="editor.cpp" line="823"/>
+        <location filename="editor.cpp" line="841"/>
+        <location filename="editor.cpp" line="846"/>
         <source>Error</source>
         <translation>错误</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="181"/>
+        <location filename="editor.cpp" line="189"/>
         <source>File %1 is not writable!</source>
         <translation>无法写入文件&quot;%1&quot;</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="212"/>
+        <location filename="editor.cpp" line="223"/>
         <source>Save As</source>
         <translation>另存为</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="808"/>
+        <location filename="editor.cpp" line="819"/>
         <source>The text to be copied exceeds count limit!</source>
         <translation>要复制的内容超过了行数限制！</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="813"/>
+        <location filename="editor.cpp" line="824"/>
         <source>The text to be copied exceeds character limit!</source>
         <translation>要复制的内容超过了字符数限制！</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="831"/>
+        <location filename="editor.cpp" line="842"/>
         <source>The text to be cut exceeds count limit!</source>
         <translation>要剪切的内容超过了行数限制！</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="836"/>
+        <location filename="editor.cpp" line="847"/>
         <source>The text to be cut exceeds character limit!</source>
         <translation>要剪切的内容超过了字符数限制！</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="2005"/>
         <location filename="editor.cpp" line="2042"/>
-        <location filename="editor.cpp" line="2093"/>
+        <location filename="editor.cpp" line="2079"/>
+        <location filename="editor.cpp" line="2130"/>
         <source>Ctrl+click for more info</source>
         <translation>Ctrl+单击以获取更多信息</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="2111"/>
-        <location filename="editor.cpp" line="2141"/>
+        <location filename="editor.cpp" line="2148"/>
+        <location filename="editor.cpp" line="2178"/>
         <source>Symbol &apos;%1&apos; not found!</source>
         <translation>未找到符号&apos;%1&apos;!</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="2651"/>
+        <location filename="editor.cpp" line="2688"/>
         <source>Readonly</source>
         <translation>只读</translation>
     </message>
@@ -1306,6 +1306,388 @@ Are you really want to continue?</source>
     </message>
 </context>
 <context>
+    <name>FormatterGeneralWidget</name>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="14"/>
+        <source>Form</source>
+        <translation>表单</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="35"/>
+        <source>Predefined format style</source>
+        <oldsource>Default brace style</oldsource>
+        <translation>预定义排版方案</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="75"/>
+        <source>Basic</source>
+        <translation>基本</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="81"/>
+        <source>Brace modifications</source>
+        <translation>花括号修改</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="87"/>
+        <source>Attach braces to namespace statements</source>
+        <oldsource>Attach spaces to namespace statements</oldsource>
+        <translation>添加花括号到命名空间(namespace)定义</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="94"/>
+        <source>Attach braces to classes</source>
+        <oldsource>Attach spaces to classes</oldsource>
+        <translation>添加花括号到类(class)定义</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="101"/>
+        <source>Attach braces to class inline function definitions</source>
+        <oldsource>Attach spaces to class inline function definitions</oldsource>
+        <translation>添加花括号到类内联函数(inline function)定义</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="108"/>
+        <source>Attach braces to extern &quot;C&quot; statements</source>
+        <oldsource>Attach spaces to extern &quot;C&quot; statements</oldsource>
+        <translation>添加花括号到extern &quot;C&quot;语句</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="115"/>
+        <source>Attach the closing while of do-while to the close brace</source>
+        <translation>将do-while语句的while部分与结尾花括号合并</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="125"/>
+        <source>Convert tabs to the appropriate number of spaces</source>
+        <translation>将制表符(Tab)转换为相应数量的空格</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="133"/>
+        <source>Indentation 1</source>
+        <translation>缩进1</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="139"/>
+        <source>Indent with:</source>
+        <translation>使用什么符号缩进:</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="154"/>
+        <source>Indent using spaces</source>
+        <translation>使用空格缩进</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="157"/>
+        <source>Spaces</source>
+        <translation>空格</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="164"/>
+        <source>Indent using tabs</source>
+        <translation>使用制表符缩进</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="167"/>
+        <source>Tabs</source>
+        <translation>制表符</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="192"/>
+        <source>Tab Size:</source>
+        <translation>缩进宽度</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="243"/>
+        <source>Indent for continuation lines:</source>
+        <translation>连续行的缩进量：</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="291"/>
+        <source>Minimal indent for a continuous conditional beloning to a conditional header:</source>
+        <translation>属于同一个条件语句(&apos;if&apos;,&apos;while&apos;,...)的条件的最小缩进量</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="332"/>
+        <source>Maximal indent spaces for a continuation line</source>
+        <translation>连续行的最大缩进空格数：</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="359"/>
+        <source>Indentation 2</source>
+        <translation>缩进2</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="365"/>
+        <source>Indent labels</source>
+        <translation>缩进标签(label)</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="372"/>
+        <source>Indent class blocks</source>
+        <translation>缩进类定义(class)</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="379"/>
+        <source>Indent namespaces</source>
+        <translation>缩进命名空间定义(namespace)</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="386"/>
+        <source>Indent class access modifiers</source>
+        <translation>缩进类访问限制符(&apos;public&apos;,&apos;private&apos;...)</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="393"/>
+        <source>Indent after parenthesis &apos;(&apos; or assignment &apos;=&apos;</source>
+        <translation>在括号&apos;(&apos;或赋值号&apos;=&apos;后缩进</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="400"/>
+        <source>Indent preprocessor conditional statements</source>
+        <translation>缩进预处理条件指令(&apos;#if&apos;,&apos;#else&apos;,...)</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="407"/>
+        <source>Indent multi-line preprocessor #define statements</source>
+        <translation>缩进多行#define语句</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="414"/>
+        <source>Indent line comments that start in column one</source>
+        <translation>缩进在第一列开始的行注释</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="421"/>
+        <source>Indent preprocessor blocks</source>
+        <translation>缩进预处理代码段</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="428"/>
+        <source>Indent switch blocks</source>
+        <translation>缩进switch语句</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="435"/>
+        <source>Indent cases</source>
+        <translation>缩进case语句</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="443"/>
+        <source>Padding 1</source>
+        <translation>填充1</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="449"/>
+        <source>Insert spaces around operators</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="456"/>
+        <source>Insert spaces after commas</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="463"/>
+        <source>Insert spaces after parenthesis headers (&apos;if&apos;,&apos;for&apos;,...)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="470"/>
+        <source>Insert spaces around parenthesis on the outside only</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="477"/>
+        <source>Insert spaces around parenthesis on the inside only</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="484"/>
+        <source>Insert empty lines arround unrelated blocks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="491"/>
+        <source>Insert empy lines around all blocks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="498"/>
+        <source>Insert spaces around first parenthesis in a series on the out side  only</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="505"/>
+        <source>Insert spaces around parenthesis</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="513"/>
+        <source>Padding 2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="519"/>
+        <source>Remove all empty lines. It will NOT delete lines added by the padding options.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="526"/>
+        <source>Attach a pointer operator to its :</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="533"/>
+        <source>Remove all consecutive empty lines. It will NOT delete lines added by the padding options.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="540"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="547"/>
+        <source>type(left)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="574"/>
+        <source>Fill empty lines with the white space of the previous lines.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="567"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="588"/>
+        <source>middle</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="61"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Note for the predefined format style&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="581"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="595"/>
+        <source>name(right)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="602"/>
+        <source>Remove unnecessary space adding around parenthesis</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="609"/>
+        <source>Attach a reference operator to its :</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="616"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="623"/>
+        <source>none</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="631"/>
+        <source>Other 1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="637"/>
+        <source>Break one line headers (&apos;if&apos;,&apos;while&apos;,&apos;else&apos;...) from the statement on the same line</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="644"/>
+        <source>Add one line braces to unbraced one line conditional statements</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="651"/>
+        <source>Break braces before close headers (&apos;else&apos;,&apos;catch&quot;...)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="658"/>
+        <source>Remove braces from a braced one line conditional statements</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="665"/>
+        <source>Break &apos;else if&apos; statements into two lines</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="672"/>
+        <source>Add braces to unbraced one line conditional statements</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="680"/>
+        <source>Other 2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="686"/>
+        <source>Attach return type to the function name in its declaration</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="693"/>
+        <source>Break return type from the function name in its declaration</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="700"/>
+        <source>Break return type from the function name in its definition</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="707"/>
+        <source>Attach return type to the function name in its definition</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="714"/>
+        <source>Don&apos;t break blocks residing completely on one line</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="721"/>
+        <source>Don&apos;t break multimple statements residing on one line</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="729"/>
+        <source>Other 3</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="735"/>
+        <source>Place the logical conditional to the last on the previous line, when break lines</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="742"/>
+        <source>Close ending angle brackets on template definitions</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="749"/>
+        <source>Remove the leading &apos;*&apos; prefix on multi-line comments and indent the comment text one line indent.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="771"/>
+        <source>Break lines exceeds</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="778"/>
+        <source>characters</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>IssuesModel</name>
     <message>
         <location filename="widgets/issuestable.cpp" line="174"/>
@@ -1337,7 +1719,7 @@ Are you really want to continue?</source>
     </message>
     <message>
         <location filename="mainwindow.ui" line="267"/>
-        <location filename="mainwindow.cpp" line="1228"/>
+        <location filename="mainwindow.cpp" line="1231"/>
         <source>Issues</source>
         <translation>编译器</translation>
     </message>
@@ -1949,12 +2331,12 @@ Are you really want to continue?</source>
     <message>
         <location filename="mainwindow.cpp" line="523"/>
         <location filename="mainwindow.cpp" line="1060"/>
-        <location filename="mainwindow.cpp" line="1117"/>
-        <location filename="mainwindow.cpp" line="1141"/>
-        <location filename="mainwindow.cpp" line="1163"/>
-        <location filename="mainwindow.cpp" line="1175"/>
-        <location filename="mainwindow.cpp" line="1471"/>
-        <location filename="mainwindow.cpp" line="1483"/>
+        <location filename="mainwindow.cpp" line="1120"/>
+        <location filename="mainwindow.cpp" line="1144"/>
+        <location filename="mainwindow.cpp" line="1166"/>
+        <location filename="mainwindow.cpp" line="1178"/>
+        <location filename="mainwindow.cpp" line="1474"/>
+        <location filename="mainwindow.cpp" line="1486"/>
         <source>Error</source>
         <translation>错误</translation>
     </message>
@@ -1979,55 +2361,55 @@ Are you really want to continue?</source>
         <translation>是否保持它在小熊猫C++中打开的编辑窗口？</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1137"/>
+        <location filename="mainwindow.cpp" line="1140"/>
         <source>Open</source>
         <translation>打开</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1319"/>
+        <location filename="mainwindow.cpp" line="1322"/>
         <source>Compile Failed</source>
         <translation>编译失败</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1324"/>
+        <location filename="mainwindow.cpp" line="1327"/>
         <source>Run Failed</source>
         <translation>运行失败</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1500"/>
-        <location filename="mainwindow.cpp" line="1514"/>
+        <location filename="mainwindow.cpp" line="1503"/>
+        <location filename="mainwindow.cpp" line="1517"/>
         <source>Confirm Convertion</source>
         <translation>确认转换</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1501"/>
-        <location filename="mainwindow.cpp" line="1515"/>
+        <location filename="mainwindow.cpp" line="1504"/>
+        <location filename="mainwindow.cpp" line="1518"/>
         <source>The editing file will be saved using %1 encoding. &lt;br /&gt;This operation can&apos;t be reverted. &lt;br /&gt;Are you sure to continue?</source>
         <translation>当前编辑器中的文件将会使用%1编码保存。&lt;br /&gt;这项操作无法被撤回。&lt;br /&gt;你确定要继续吗？</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1690"/>
+        <location filename="mainwindow.cpp" line="1693"/>
         <source>New Watch Expression</source>
         <translation>新监视表达式</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1691"/>
+        <location filename="mainwindow.cpp" line="1694"/>
         <source>Enter Watch Expression (it is recommended to use &apos;this-&gt;&apos; for class members):</source>
         <translation>输入监视表达式</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1737"/>
+        <location filename="mainwindow.cpp" line="1740"/>
         <source>Parsing file %1 of %2: &quot;%3&quot;</source>
         <translation>（%1/%2）正在解析文件&quot;%3&quot;</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1759"/>
-        <location filename="mainwindow.cpp" line="1765"/>
+        <location filename="mainwindow.cpp" line="1762"/>
+        <location filename="mainwindow.cpp" line="1768"/>
         <source>Done parsing %1 files in %2 seconds</source>
         <translation>完成%1个文件的解析,用时%2秒</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1762"/>
+        <location filename="mainwindow.cpp" line="1765"/>
         <source>(%1 files per second)</source>
         <translation>(每秒%1个文件）</translation>
     </message>
@@ -2099,216 +2481,216 @@ Are you really want to continue?</source>
         <translation>无法写入配置文件夹&quot;%1&quot;</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1197"/>
-        <location filename="settings.cpp" line="1216"/>
-        <location filename="settings.cpp" line="1228"/>
-        <location filename="settings.cpp" line="1240"/>
+        <location filename="settings.cpp" line="1204"/>
+        <location filename="settings.cpp" line="1223"/>
+        <location filename="settings.cpp" line="1235"/>
+        <location filename="settings.cpp" line="1247"/>
         <source>The following %1 directories don&apos;t exist:</source>
         <translation>下列%1文件夹不存在：</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1198"/>
-        <location filename="settings.cpp" line="1208"/>
+        <location filename="settings.cpp" line="1205"/>
+        <location filename="settings.cpp" line="1215"/>
         <source>binary</source>
         <translation>二进制</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1207"/>
+        <location filename="settings.cpp" line="1214"/>
         <source>No %1 directories have been specified.</source>
         <translation>未指定%1文件夹</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1217"/>
+        <location filename="settings.cpp" line="1224"/>
         <source>C include</source>
         <translation>C包含</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1229"/>
-        <location filename="settings.cpp" line="1241"/>
+        <location filename="settings.cpp" line="1236"/>
+        <location filename="settings.cpp" line="1248"/>
         <source>C++ include</source>
         <translation>C++包含</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1260"/>
-        <location filename="settings.cpp" line="1265"/>
-        <location filename="settings.cpp" line="1270"/>
-        <location filename="settings.cpp" line="1275"/>
+        <location filename="settings.cpp" line="1267"/>
+        <location filename="settings.cpp" line="1272"/>
+        <location filename="settings.cpp" line="1277"/>
+        <location filename="settings.cpp" line="1282"/>
         <source>Cannot find the %1 &quot;%2&quot;</source>
         <translation>无法找到%1程序&quot;%2&quot;</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1746"/>
+        <location filename="settings.cpp" line="1753"/>
         <source>C options</source>
         <translation>C语言选项</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1747"/>
+        <location filename="settings.cpp" line="1754"/>
         <source>Support all ANSI standard C programs (-ansi)</source>
         <translation>支持所有ANSI标准C程序(-ansi)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1748"/>
+        <location filename="settings.cpp" line="1755"/>
         <source>Do not recognize asm,inline or typeof as a keyword (-fno-asm)</source>
         <translation>不支持将asm、inline和typeof作为关键字(-fno-asm)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1749"/>
+        <location filename="settings.cpp" line="1756"/>
         <source>Imitate traditional C preprocessors (-traditional-cpp)</source>
         <translation>模仿传统C预处理器行为(-traditional-cpp)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1752"/>
+        <location filename="settings.cpp" line="1759"/>
         <source>Code Generation</source>
         <translation>代码生成</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1781"/>
+        <location filename="settings.cpp" line="1788"/>
         <source>Optimize for the following machine (-march)</source>
         <translation>生成特定机器的专用指令(-march)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1782"/>
+        <location filename="settings.cpp" line="1789"/>
         <source>Optimize less, while maintaining full compatibility (-tune)</source>
         <translation>完整兼容特定机器，较少优化(-tune)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1802"/>
+        <location filename="settings.cpp" line="1809"/>
         <source>Enable use of specific instructions (-mx)</source>
         <translation>启用特定指令集(-mx)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1813"/>
+        <location filename="settings.cpp" line="1820"/>
         <source>Optimization level (-Ox)</source>
         <translation>优化级别(-Ox)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1820"/>
+        <location filename="settings.cpp" line="1827"/>
         <source>Compile with the following pointer size (-mx)</source>
         <translation>使用下列指针大小编译(-mx)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1843"/>
+        <location filename="settings.cpp" line="1850"/>
         <source>Language standard (-std)</source>
         <translation>语言标准(-std)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1844"/>
+        <location filename="settings.cpp" line="1851"/>
         <source>Generate debugging information (-g3)</source>
         <translation>生成调试信息(-g3)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1845"/>
+        <location filename="settings.cpp" line="1852"/>
         <source>Generate profiling info for analysis (-pg)</source>
         <translation>生成性能分析信息(-pg)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1848"/>
+        <location filename="settings.cpp" line="1855"/>
         <source>Warnings</source>
         <translation>代码警告</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1849"/>
+        <location filename="settings.cpp" line="1856"/>
         <source>Inhibit all warning messages (-w)</source>
         <translation>忽略所有警告信息(-w)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1850"/>
+        <location filename="settings.cpp" line="1857"/>
         <source>Show most warnings (-Wall)</source>
         <translation>启用常见问题警告(-Wall)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1851"/>
+        <location filename="settings.cpp" line="1858"/>
         <source>Show some more warnings (-Wextra)</source>
         <translation>启用更多问题警告(-Wextra)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1852"/>
+        <location filename="settings.cpp" line="1859"/>
         <source>Check ISO C/C++/C++0x conformance (-pedantic)</source>
         <translation>检查ISO C/C++/C++0x语法一致性(-pedantic)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1853"/>
+        <location filename="settings.cpp" line="1860"/>
         <source>Only check the code for syntax errors (-fsyntax-only)</source>
         <translation>只进行语法检查（不编译）(-fsyntax-only)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1854"/>
+        <location filename="settings.cpp" line="1861"/>
         <source>Make all warnings into errors (-Werror)</source>
         <translation>将警告作为错误处理(-Werror)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1855"/>
+        <location filename="settings.cpp" line="1862"/>
         <source>Abort compilation on first error (-Wfatal-errors)</source>
         <translation>遇到第一个错误后立即中止编译(-Wfatal-errors)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1858"/>
+        <location filename="settings.cpp" line="1865"/>
         <source>Linker</source>
         <translation>链接器</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1859"/>
+        <location filename="settings.cpp" line="1866"/>
         <source>Link an Objective C program (-lobjc)</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1860"/>
+        <location filename="settings.cpp" line="1867"/>
         <source>Do not use standard system libraries (-nostdlib)</source>
         <translation>不使用标准库和系统启动文件(-nostdlib)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1861"/>
+        <location filename="settings.cpp" line="1868"/>
         <source>Do not create a console window (-mwindows)</source>
         <translation>不产生控制台窗口(-mwindows)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1862"/>
+        <location filename="settings.cpp" line="1869"/>
         <source>Strip executable (-s)</source>
         <translation>剥除附加信息(-s)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1863"/>
+        <location filename="settings.cpp" line="1870"/>
         <source>Link libraries statically (-static)</source>
         <translation>链接Ojbective C程序(-lobjc)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1866"/>
+        <location filename="settings.cpp" line="1873"/>
         <source>Output</source>
         <translation>输出</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1867"/>
+        <location filename="settings.cpp" line="1874"/>
         <source>Put comments in generated assembly code (-fverbose-asm)</source>
         <translation>在生成的汇编代码中加入注释(-fverbose-asm)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1868"/>
+        <location filename="settings.cpp" line="1875"/>
         <source>Use pipes instead of temporary files during compilation (-pipe)</source>
         <translation>编译时使用管道而不是临时文件(-pipe)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1869"/>
+        <location filename="settings.cpp" line="1876"/>
         <source>Do not assemble, compile and generate the assemble code (-S)</source>
         <translation>只生成汇编代码(-S)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2062"/>
-        <location filename="settings.cpp" line="2087"/>
+        <location filename="settings.cpp" line="2069"/>
+        <location filename="settings.cpp" line="2094"/>
         <source>Confirm</source>
         <translation>确认</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2063"/>
+        <location filename="settings.cpp" line="2070"/>
         <source>The following problems were found during validation of compiler set &quot;%1&quot;:</source>
         <translation>在验证编译器设置&quot;%1&quot;时遇到了下列问题：</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2088"/>
+        <location filename="settings.cpp" line="2095"/>
         <source>Compiler set not configuared.</source>
         <translation>未配置编译器设置。</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2090"/>
+        <location filename="settings.cpp" line="2097"/>
         <source>Would you like Red Panda C++ to search for compilers in the following locations: &lt;BR /&gt;&apos;%1&apos;&lt;BR /&gt;&apos;%2&apos;? </source>
         <translation>您需要小熊猫C++在下列位置搜索编译器吗：&lt;br /&gt;%1&lt;br /&gt;%2</translation>
     </message>
@@ -2961,102 +3343,108 @@ Are you really want to continue?</source>
         <translation>取消</translation>
     </message>
     <message>
-        <location filename="settingsdialog/settingsdialog.cpp" line="33"/>
+        <location filename="settingsdialog/settingsdialog.cpp" line="34"/>
         <source>Appearence</source>
         <translation>外观</translation>
     </message>
     <message>
-        <location filename="settingsdialog/settingsdialog.cpp" line="33"/>
+        <location filename="settingsdialog/settingsdialog.cpp" line="34"/>
         <source>Environment</source>
         <translation>环境</translation>
     </message>
     <message>
-        <location filename="settingsdialog/settingsdialog.cpp" line="37"/>
+        <location filename="settingsdialog/settingsdialog.cpp" line="38"/>
         <source>Compiler Set</source>
         <translation>编译器配置集</translation>
     </message>
     <message>
-        <location filename="settingsdialog/settingsdialog.cpp" line="37"/>
+        <location filename="settingsdialog/settingsdialog.cpp" line="38"/>
         <source>Compiler</source>
         <translation>编译器</translation>
     </message>
     <message>
-        <location filename="settingsdialog/settingsdialog.cpp" line="41"/>
-        <location filename="settingsdialog/settingsdialog.cpp" line="78"/>
-        <location filename="settingsdialog/settingsdialog.cpp" line="82"/>
+        <location filename="settingsdialog/settingsdialog.cpp" line="42"/>
+        <location filename="settingsdialog/settingsdialog.cpp" line="79"/>
+        <location filename="settingsdialog/settingsdialog.cpp" line="83"/>
+        <location filename="settingsdialog/settingsdialog.cpp" line="87"/>
         <source>General</source>
         <translation>通用</translation>
     </message>
     <message>
-        <location filename="settingsdialog/settingsdialog.cpp" line="41"/>
-        <location filename="settingsdialog/settingsdialog.cpp" line="45"/>
-        <location filename="settingsdialog/settingsdialog.cpp" line="49"/>
-        <location filename="settingsdialog/settingsdialog.cpp" line="53"/>
-        <location filename="settingsdialog/settingsdialog.cpp" line="57"/>
-        <location filename="settingsdialog/settingsdialog.cpp" line="61"/>
-        <location filename="settingsdialog/settingsdialog.cpp" line="65"/>
-        <location filename="settingsdialog/settingsdialog.cpp" line="69"/>
-        <location filename="settingsdialog/settingsdialog.cpp" line="73"/>
+        <location filename="settingsdialog/settingsdialog.cpp" line="42"/>
+        <location filename="settingsdialog/settingsdialog.cpp" line="46"/>
+        <location filename="settingsdialog/settingsdialog.cpp" line="50"/>
+        <location filename="settingsdialog/settingsdialog.cpp" line="54"/>
+        <location filename="settingsdialog/settingsdialog.cpp" line="58"/>
+        <location filename="settingsdialog/settingsdialog.cpp" line="62"/>
+        <location filename="settingsdialog/settingsdialog.cpp" line="66"/>
+        <location filename="settingsdialog/settingsdialog.cpp" line="70"/>
+        <location filename="settingsdialog/settingsdialog.cpp" line="74"/>
         <source>Editor</source>
         <translation>编辑器</translation>
     </message>
     <message>
-        <location filename="settingsdialog/settingsdialog.cpp" line="45"/>
+        <location filename="settingsdialog/settingsdialog.cpp" line="46"/>
         <source>Font</source>
         <translation>字体</translation>
     </message>
     <message>
-        <location filename="settingsdialog/settingsdialog.cpp" line="49"/>
+        <location filename="settingsdialog/settingsdialog.cpp" line="50"/>
         <source>Copy &amp; Export</source>
         <translation>复制/导出</translation>
     </message>
     <message>
-        <location filename="settingsdialog/settingsdialog.cpp" line="53"/>
+        <location filename="settingsdialog/settingsdialog.cpp" line="54"/>
         <source>Color</source>
         <translation>配色</translation>
     </message>
     <message>
-        <location filename="settingsdialog/settingsdialog.cpp" line="57"/>
+        <location filename="settingsdialog/settingsdialog.cpp" line="58"/>
         <source>Code Completion</source>
         <translation>代码补全</translation>
     </message>
     <message>
-        <location filename="settingsdialog/settingsdialog.cpp" line="61"/>
+        <location filename="settingsdialog/settingsdialog.cpp" line="62"/>
         <source>Symbol Completion</source>
         <translation>符号补全</translation>
     </message>
     <message>
-        <location filename="settingsdialog/settingsdialog.cpp" line="65"/>
+        <location filename="settingsdialog/settingsdialog.cpp" line="66"/>
         <source>Auto Syntax Checking</source>
         <translation>自动语法检查</translation>
     </message>
     <message>
-        <location filename="settingsdialog/settingsdialog.cpp" line="69"/>
+        <location filename="settingsdialog/settingsdialog.cpp" line="70"/>
         <source>Auto save</source>
         <translation>自动保存</translation>
     </message>
     <message>
-        <location filename="settingsdialog/settingsdialog.cpp" line="73"/>
+        <location filename="settingsdialog/settingsdialog.cpp" line="74"/>
         <source>Misc</source>
         <translation>杂项</translation>
     </message>
     <message>
-        <location filename="settingsdialog/settingsdialog.cpp" line="78"/>
+        <location filename="settingsdialog/settingsdialog.cpp" line="79"/>
         <source>Program Runner</source>
         <translation>程序运行</translation>
     </message>
     <message>
-        <location filename="settingsdialog/settingsdialog.cpp" line="82"/>
+        <location filename="settingsdialog/settingsdialog.cpp" line="83"/>
         <source>Debugger</source>
         <translation>调试器</translation>
     </message>
     <message>
-        <location filename="settingsdialog/settingsdialog.cpp" line="178"/>
+        <location filename="settingsdialog/settingsdialog.cpp" line="87"/>
+        <source>Code Formatter</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/settingsdialog.cpp" line="184"/>
         <source>Save Changes</source>
         <translation>保存修改</translation>
     </message>
     <message>
-        <location filename="settingsdialog/settingsdialog.cpp" line="179"/>
+        <location filename="settingsdialog/settingsdialog.cpp" line="185"/>
         <source>There are changes in the settings, do you want to save them before swtich to other page?</source>
         <translation>本页中有尚未保存的设置修改，是否保存后再切换到其他页？</translation>
     </message>

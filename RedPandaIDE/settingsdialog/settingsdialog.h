@@ -23,6 +23,7 @@ class EditorMiscWidget;
 class EnvironmentAppearenceWidget;
 class ExecutorGeneralWidget;
 class DebugGeneralWidget;
+class FormatterGeneralWidget;
 class SettingsWidget;
 class SettingsDialog : public QDialog
 {
@@ -65,6 +66,7 @@ private:
     EditorMiscWidget *pEditorMiscWidget;
     ExecutorGeneralWidget  *pExecutorGeneralWidget;
     DebugGeneralWidget *pDebugGeneralWidget;
+    FormatterGeneralWidget  *pFormatterGeneralWidget;
 };
 
 #endif // SETTINGSDIALOG_H
