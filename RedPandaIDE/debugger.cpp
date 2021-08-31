@@ -257,16 +257,21 @@ void Debugger::refreshWatchVars()
     }
 }
 
-void Debugger::deleteWatchVars(bool deleteparent)
+void Debugger::removeWatchVars(bool deleteparent)
 {
     if (deleteparent) {
         mWatchModel->clear();
     } else {
-        for(PWatchVar var:mWatchModel->watchVars()) {
+        for(const PWatchVar& var:mWatchModel->watchVars()) {
             sendRemoveWatchCommand(var);
             invalidateWatchVar(var);
         }
     }
+}
+
+void Debugger::removeWatchVar(const QModelIndex &index)
+{
+    mWatchModel->removeWatchVar(index);
 }
 
 void Debugger::invalidateAllVars()
@@ -1067,7 +1072,7 @@ void DebugReader::processDebugOutput()
 
     if (mInvalidateAllVars) {
          //invalidate all vars when there's first output
-         mDebugger->deleteWatchVars(false);
+         mDebugger->removeWatchVars(false);
          mInvalidateAllVars = false;
     }
 
@@ -1708,6 +1713,14 @@ void WatchModel::removeWatchVar(int gdbIndex)
             this->endRemoveRows();
         }
     }
+}
+
+void WatchModel::removeWatchVar(const QModelIndex &index)
+{
+    int r=index.row();
+    this->beginRemoveRows(QModelIndex(),r,r);
+    mWatchVars.removeAt(r);
+    this->endRemoveRows();
 }
 
 void WatchModel::clear()

@@ -130,6 +130,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(&mAutoSaveTimer, &QTimer::timeout,
             this, &MainWindow::onAutoSaveTimeout);
     resetAutoSaveTimer();
+
+    buildContextMenus();
 }
 
 MainWindow::~MainWindow()
@@ -995,6 +997,15 @@ void MainWindow::doAutoSave(Editor *e)
     e->saveFile(filename);
 }
 
+void MainWindow::buildContextMenus()
+{
+    ui->watchView->setContextMenuPolicy(Qt::ActionsContextMenu);
+    ui->watchView->addAction(ui->actionAdd_Watch);
+    ui->watchView->addAction(ui->actionRemove_Watch);
+    ui->watchView->addAction(ui->actionRemove_All_Watches);
+    ui->watchView->addAction(ui->actionModify_Watch);
+}
+
 void MainWindow::onAutoSaveTimeout()
 {
     if (!pSettings->editor().enableAutoSave())
@@ -1804,3 +1815,31 @@ void MainWindow::on_btnSearchAgin_clicked()
                                    results->options);
     }
 }
+
+void MainWindow::on_actionRemove_Watch_triggered()
+{
+    QModelIndex index =ui->watchView->currentIndex();
+    QModelIndex parent;
+    while (true) {
+        parent = ui->watchView->model()->parent(index);
+        if (parent.isValid()) {
+            index=parent;
+        } else {
+            break;
+        }
+    }
+    mDebugger->removeWatchVar(index);
+}
+
+
+void MainWindow::on_actionRemove_All_Watches_triggered()
+{
+    mDebugger->removeWatchVars(true);
+}
+
+
+void MainWindow::on_actionModify_Watch_triggered()
+{
+
+}
+

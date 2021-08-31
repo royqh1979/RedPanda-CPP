@@ -85,7 +85,7 @@
             <enum>QTabWidget::West</enum>
            </property>
            <property name="currentIndex">
-            <number>1</number>
+            <number>2</number>
            </property>
            <property name="usesScrollButtons">
             <bool>true</bool>
@@ -1343,6 +1343,21 @@
    </property>
    <property name="shortcut">
     <string>Shift+F3</string>
+   </property>
+  </action>
+  <action name="actionRemove_Watch">
+   <property name="text">
+    <string>Remove Watch</string>
+   </property>
+  </action>
+  <action name="actionRemove_All_Watches">
+   <property name="text">
+    <string>Remove All</string>
+   </property>
+  </action>
+  <action name="actionModify_Watch">
+   <property name="text">
+    <string>Modify Watch...</string>
    </property>
   </action>
  </widget>

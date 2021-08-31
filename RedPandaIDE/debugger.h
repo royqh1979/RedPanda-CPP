@@ -146,6 +146,7 @@ public:
     void addWatchVar(PWatchVar watchVar);
     void removeWatchVar(const QString& name);
     void removeWatchVar(int gdbIndex);
+    void removeWatchVar(const QModelIndex& index);
     void clear();
     const QList<PWatchVar>& watchVars();
     PWatchVar findWatchVar(const QString& name);
@@ -191,7 +192,8 @@ public:
     void renameWatchVar(const QString& oldname, const QString& newname);
 
     void refreshWatchVars();
-    void deleteWatchVars(bool deleteparent);
+    void removeWatchVars(bool deleteparent);
+    void removeWatchVar(const QModelIndex& index);
     void invalidateAllVars();
     void sendAllWatchvarsToDebugger();
     void invalidateWatchVar(const QString& name);

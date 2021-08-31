@@ -123,6 +123,7 @@ private:
     void openCloseMessageSheet(bool open);
     void prepareDebugger();
     void doAutoSave(Editor *e);
+    void buildContextMenus();
 
 private slots:
     void onAutoSaveTimeout();
@@ -223,6 +224,12 @@ private slots:
     void on_cbSearchHistory_currentIndexChanged(int index);
 
     void on_btnSearchAgin_clicked();
+    void on_actionRemove_Watch_triggered();
+
+    void on_actionRemove_All_Watches_triggered();
+
+    void on_actionModify_Watch_triggered();
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;
