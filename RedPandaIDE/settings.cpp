@@ -2704,6 +2704,199 @@ Settings::CodeFormatter::CodeFormatter(Settings *settings):
 
 }
 
+QStringList Settings::CodeFormatter::getArguments()
+{
+    QStringList result;
+    switch(mBraceStyle) {
+    case FormatterBraceStyle::fbsDefault:
+        break;
+    case FormatterBraceStyle::fbsAllman:
+        result.append("--style=allman");
+        break;
+    case FormatterBraceStyle::fbsJava:
+        result.append("--style=java");
+        break;
+    case FormatterBraceStyle::fbsKR:
+        result.append("--style=kr");
+        break;
+    case FormatterBraceStyle::fbsStroustrup:
+        result.append("--style=stroustrup");
+        break;
+    case FormatterBraceStyle::fbsWitesmith:
+        result.append("--style=whitesmith");
+        break;
+    case FormatterBraceStyle::fbsVtk:
+        result.append("--style=vtk");
+        break;
+    case FormatterBraceStyle::fbsRatliff:
+        result.append("--style=ratliff");
+        break;
+    case FormatterBraceStyle::fbsGNU:
+        result.append("--style=gnu");
+        break;
+    case FormatterBraceStyle::fbsLinux:
+        result.append("--style=linux");
+        break;
+    case FormatterBraceStyle::fbsHorstmann:
+        result.append("--style=horstmann");
+        break;
+    case FormatterBraceStyle::fbs1TBS:
+        result.append("--style=1tbs");
+        break;
+    case FormatterBraceStyle::fbsGoogle:
+        result.append("--style=google");
+        break;
+    case FormatterBraceStyle::fbsMozilla:
+        result.append("--style=mozilla");
+        break;
+    case FormatterBraceStyle::fbsWebkit:
+        result.append("--style=webkit");
+        break;
+    case FormatterBraceStyle::fbsPico:
+        result.append("--style=pico");
+        break;
+    case FormatterBraceStyle::fbsLisp:
+        result.append("--style=lisp");
+        break;
+    };
+    switch(mIndentStyle) {
+    case FormatterIndentType::fitTab:
+        result.append(QString("--indent=tab=%1").arg(mTabWidth));
+        break;
+    case FormatterIndentType::fitSpace:
+        result.append(QString("--indent=spaces=%1").arg(mTabWidth));
+        break;
+    }
+    if (mAttachNamespaces)
+        result.append("--attach-namespaces");
+    if (mAttachClasses)
+        result.append("--attach-classes");
+    if (mAttachInlines)
+        result.append("--attach-inlines");
+    if (mAttachExternC)
+        result.append("--attach-extern-c");
+    if (mAttachClosingWhile)
+        result.append("--attach-closing-while");
+    if (mIndentClasses)
+        result.append("--indent-classes");
+    if (mIndentModifiers)
+        result.append("--indent-modifiers");
+    if (mIndentSwitches)
+        result.append("--indent-switches");
+    if (mIndentCases)
+        result.append("--indent-cases");
+    if (mIndentNamespaces)
+        result.append("--indent-namespaces");
+    if (mIndentAfterParens)
+        result.append("--indent-after-parens");
+    if (mIndentContinuation!=1)
+        result.append(QString("--indent-continuation=%1").arg(mIndentContinuation));
+    if (mIndentLabels)
+        result.append("--indent-labels");
+    if (mIndentPreprocBlock)
+        result.append("--indent-preproc-block");
+    if (mIndentPreprocCond)
+        result.append("--indent-preproc-cond");
+    if (mIndentPreprocDefine)
+        result.append("--indent-preproc-define");
+    if (mIndentCol1Comments)
+        result.append("--indent-col1-comments");
+    if (mMinConditionalIndent!=2)
+        result.append(QString("--min-conditional-indent=%1").arg(mMinConditionalIndent));
+    if (mMaxContinuationIndent!=40)
+        result.append(QString("--max-continuation-indent=%1").arg(mMaxContinuationIndent));
+    if (mBreakBlocks)
+        result.append("--break-blocks");
+    if (mBreakBlocksAll)
+        result.append("--break-blocks=all");
+    if (mPadOper)
+        result.append("--pad-oper");
+    if (mPadComma)
+        result.append("--pad-comma");
+    if (mPadParen)
+        result.append("--pad-paren");
+    if (mPadParenOut)
+        result.append("--pad-paren-out");
+    if (mPadFirstParenOut)
+        result.append("--pad-first-paren-out");
+    if (mPadParenIn)
+        result.append("--pad-paren-in");
+    if (mPadHeader)
+        result.append("--pad-header");
+    if (mUnpadParen)
+        result.append("--unpad-paren");
+    if (mDeleteEmptyLines)
+        result.append("--delete-empty-lines");
+    if (mDeleteMultipleEmptyLines)
+        result.append("--delete-multiple-empty-lines");
+    if (mFillEmptyLines)
+        result.append("--fill-empty-lines");
+    switch(mAlignPointerStyle) {
+    case FormatterOperatorAlign::foaNone:
+        break;
+    case FormatterOperatorAlign::foaType:
+        result.append("--align-pointer=type");
+        break;
+    case FormatterOperatorAlign::foaMiddle:
+        result.append("--align-pointer=middle");
+        break;
+    case FormatterOperatorAlign::foaName:
+        result.append("--align-pointer=name");
+        break;
+    }
+    switch(mAlignReferenceStyle) {
+    case FormatterOperatorAlign::foaNone:
+        break;
+    case FormatterOperatorAlign::foaType:
+        result.append("--align-reference=type");
+        break;
+    case FormatterOperatorAlign::foaMiddle:
+        result.append("--align-reference=middle");
+        break;
+    case FormatterOperatorAlign::foaName:
+        result.append("--align-reference=name");
+        break;
+    }
+
+    if (mBreakClosingBraces)
+        result.append("--break-closing-braces");
+    if (mBreakElseIf)
+        result.append("--break-elseifs");
+    if (mBreakOneLineHeaders)
+        result.append("--break-one-line-headers");
+    if (mAddBraces)
+        result.append("--add-braces");
+    if (mAddOneLineBraces)
+        result.append("--add-one-line-braces");
+    if (mRemoveBraces)
+        result.append("--remove-braces");
+    if (mBreakReturnType)
+        result.append("--break-return-type");
+    if (mBreakReturnTypeDecl)
+        result.append("--break-return-type-decl");
+    if (mAttachReturnType)
+        result.append("--attach-return-type");
+    if (mAttachReturnTypeDecl)
+        result.append("--attach-return-type-decl");
+    if (mKeepOneLineBlocks)
+        result.append("--keep-one-line-blocks");
+    if (mKeepOneLineStatements)
+        result.append("--keep-one-line-statements");
+    if (mConvertTabs)
+        result.append("--convert-tabs");
+    if (mCloseTemplates)
+        result.append("--close-templates");
+    if (mRemoveCommentPrefix)
+        result.append("--remove-comment-prefix");
+    if (mBreakMaxCodeLength) {
+        result.append(QString("--max-code-length=%1").arg(mMaxCodeLength));
+        if (mBreakAfterLogical)
+            result.append("--break-after-logical");
+    }
+
+    return result;
+}
+
 int Settings::CodeFormatter::indentStyle() const
 {
     return mIndentStyle;

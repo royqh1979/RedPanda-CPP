@@ -468,6 +468,7 @@ public:
     class CodeFormatter: public _Base {
     public:
         explicit CodeFormatter(Settings* settings);
+        QStringList getArguments();
         int braceStyle() const;
         void setBraceStyle(int newBraceStyle);
 

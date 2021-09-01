@@ -573,20 +573,20 @@ Are you really want to continue?</source>
         <translation>要剪切的内容超过了字符数限制！</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="2042"/>
-        <location filename="editor.cpp" line="2079"/>
-        <location filename="editor.cpp" line="2130"/>
+        <location filename="editor.cpp" line="2045"/>
+        <location filename="editor.cpp" line="2082"/>
+        <location filename="editor.cpp" line="2133"/>
         <source>Ctrl+click for more info</source>
         <translation>Ctrl+单击以获取更多信息</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="2148"/>
-        <location filename="editor.cpp" line="2178"/>
+        <location filename="editor.cpp" line="2151"/>
+        <location filename="editor.cpp" line="2181"/>
         <source>Symbol &apos;%1&apos; not found!</source>
         <translation>未找到符号&apos;%1&apos;!</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="2688"/>
+        <location filename="editor.cpp" line="2691"/>
         <source>Readonly</source>
         <translation>只读</translation>
     </message>
@@ -1319,371 +1319,371 @@ Are you really want to continue?</source>
         <translation>预定义排版方案</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="75"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="78"/>
         <source>Basic</source>
         <translation>基本</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="81"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="84"/>
         <source>Brace modifications</source>
         <translation>花括号修改</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="87"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="90"/>
         <source>Attach braces to namespace statements</source>
         <oldsource>Attach spaces to namespace statements</oldsource>
         <translation>添加花括号到命名空间(namespace)定义</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="94"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="97"/>
         <source>Attach braces to classes</source>
         <oldsource>Attach spaces to classes</oldsource>
         <translation>添加花括号到类(class)定义</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="101"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="104"/>
         <source>Attach braces to class inline function definitions</source>
         <oldsource>Attach spaces to class inline function definitions</oldsource>
         <translation>添加花括号到类内联函数(inline function)定义</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="108"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="111"/>
         <source>Attach braces to extern &quot;C&quot; statements</source>
         <oldsource>Attach spaces to extern &quot;C&quot; statements</oldsource>
         <translation>添加花括号到extern &quot;C&quot;语句</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="115"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="118"/>
         <source>Attach the closing while of do-while to the close brace</source>
         <translation>将do-while语句的while部分与结尾花括号合并</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="125"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="128"/>
         <source>Convert tabs to the appropriate number of spaces</source>
         <translation>将制表符(Tab)转换为相应数量的空格</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="133"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="136"/>
         <source>Indentation 1</source>
         <translation>缩进1</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="139"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="142"/>
         <source>Indent with:</source>
         <translation>使用什么符号缩进:</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="154"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="157"/>
         <source>Indent using spaces</source>
         <translation>使用空格缩进</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="157"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="160"/>
         <source>Spaces</source>
         <translation>空格</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="164"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="167"/>
         <source>Indent using tabs</source>
         <translation>使用制表符缩进</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="167"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="170"/>
         <source>Tabs</source>
         <translation>制表符</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="192"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="195"/>
         <source>Tab Size:</source>
         <translation>缩进宽度</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="243"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="246"/>
         <source>Indent for continuation lines:</source>
         <translation>连续行的缩进量：</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="291"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="294"/>
         <source>Minimal indent for a continuous conditional beloning to a conditional header:</source>
         <translation>属于同一个条件语句(&apos;if&apos;,&apos;while&apos;,...)的条件的最小缩进量</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="332"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="335"/>
         <source>Maximal indent spaces for a continuation line</source>
         <translation>连续行的最大缩进空格数：</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="359"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="362"/>
         <source>Indentation 2</source>
         <translation>缩进2</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="365"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="368"/>
         <source>Indent labels</source>
         <translation>缩进标签(label)</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="372"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="375"/>
         <source>Indent class blocks</source>
         <translation>缩进类定义(class)</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="379"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="382"/>
         <source>Indent namespaces</source>
         <translation>缩进命名空间定义(namespace)</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="386"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="389"/>
         <source>Indent class access modifiers</source>
         <translation>缩进类访问限制符(&apos;public&apos;,&apos;private&apos;...)</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="393"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="396"/>
         <source>Indent after parenthesis &apos;(&apos; or assignment &apos;=&apos;</source>
         <translation>在括号&apos;(&apos;或赋值号&apos;=&apos;后缩进</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="400"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="403"/>
         <source>Indent preprocessor conditional statements</source>
         <translation>缩进预处理条件指令(&apos;#if&apos;,&apos;#else&apos;,...)</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="407"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="410"/>
         <source>Indent multi-line preprocessor #define statements</source>
         <translation>缩进多行#define语句</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="414"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="417"/>
         <source>Indent line comments that start in column one</source>
         <translation>缩进在第一列开始的行注释</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="421"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="424"/>
         <source>Indent preprocessor blocks</source>
         <translation>缩进预处理代码段</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="428"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="431"/>
         <source>Indent switch blocks</source>
         <translation>缩进switch语句</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="435"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="438"/>
         <source>Indent cases</source>
         <translation>缩进case语句</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="443"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="446"/>
         <source>Padding 1</source>
         <translation>填充1</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="449"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="452"/>
         <source>Insert spaces around operators</source>
         <translation>在运算符周围插入空格</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="456"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="459"/>
         <source>Insert spaces after commas</source>
         <translation>在逗号后插入空格</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="463"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="466"/>
         <source>Insert spaces after parenthesis headers (&apos;if&apos;,&apos;for&apos;,...)</source>
         <translation>在语句和括号间插入空格(&apos;if&apos;,&apos;for&apos;...)</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="470"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="473"/>
         <source>Insert spaces around parenthesis on the outside only</source>
         <translation>在括号外侧加入空格</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="477"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="480"/>
         <source>Insert spaces around parenthesis on the inside only</source>
         <translation>在括号内侧加入空格</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="484"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="487"/>
         <source>Insert empty lines arround unrelated blocks</source>
         <translation>在代码段之间加入空行</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="491"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="494"/>
         <source>Insert empty lines around all blocks</source>
         <oldsource>Insert empy lines around all blocks</oldsource>
         <translation>在所有代码段之间加入空格</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="498"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="501"/>
         <source>Insert spaces around first parenthesis in a series on the out side  only</source>
         <translation>在多层嵌套括号的最外侧加入空格</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="505"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="508"/>
         <source>Insert spaces around parenthesis</source>
         <translation>在括号两侧加入空格</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="513"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="516"/>
         <source>Padding 2</source>
         <translation>填充2</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="519"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="522"/>
         <source>Remove all empty lines. It will NOT delete lines added by the padding options.</source>
         <translation>删除所有空行。不影响填充选项自动插入的空行。</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="526"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="529"/>
         <source>Attach a pointer operator to its :</source>
         <translation>将指针运算符(&apos;*&apos;)放在：</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="533"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="536"/>
         <source>Remove all consecutive empty lines. It will NOT delete lines added by the padding options.</source>
         <translation>将连续的多个空行合并成一个。不影响填充选项自动插入的空行。</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="540"/>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="550"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="543"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="553"/>
         <source>type(left)</source>
         <translation>类型侧（左侧）</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="583"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="586"/>
         <source>Fill empty lines with the white space of the previous lines.</source>
         <translation>使用前一行的缩进空格填充空行</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="573"/>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="600"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="576"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="603"/>
         <source>middle</source>
         <translation>中间</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="61"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="64"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Note for the predefined format style&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;预定义排版方案说明&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="590"/>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="610"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="593"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="613"/>
         <source>name(right)</source>
         <translation>名称侧（右侧）</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="620"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="623"/>
         <source>Remove unnecessary space adding around parenthesis</source>
         <translation>删除括号周围的多余空格</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="627"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="630"/>
         <source>Attach a reference operator to its :</source>
         <translation>将引用运算符(&apos;&amp;&apos;)放在：</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="634"/>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="644"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="637"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="647"/>
         <source>none</source>
         <translation>不变</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="655"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="658"/>
         <source>Other 1</source>
         <translation>其它1</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="661"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="664"/>
         <source>Break one line headers (&apos;if&apos;,&apos;while&apos;,&apos;else&apos;...) from the statement on the same line</source>
         <translation>对单行条件(&apos;if&apos;,&apos;while&apos;,&apos;else&apos;)语句分行</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="668"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="671"/>
         <source>Add one line braces to unbraced one line conditional statements</source>
         <translation>用花括号括起单行条件体</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="675"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="678"/>
         <source>Break braces before close headers (&apos;else&apos;,&apos;catch&quot;...)</source>
         <translation>对结束语句(&apos;else&apos;,&apos;catch&apos;)和它之前的花括号断行</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="682"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="685"/>
         <source>Remove braces from a braced one line conditional statements</source>
         <translation>删除括起单行条件体语句的花括号</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="689"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="692"/>
         <source>Break &apos;else if&apos; statements into two lines</source>
         <translation>将&apos;else if&apos;语句断成两行</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="696"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="699"/>
         <source>Add braces to unbraced one line conditional statements</source>
         <translation>对条件和条件体语句在同一行上的，删除括起条件体语句的花括号</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="704"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="707"/>
         <source>Other 2</source>
         <translation>其它2</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="745"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="748"/>
         <source>Attach return type to the function name in its declaration</source>
         <translation>将函数声明中的函数名和返回值类型放在同一行</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="738"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="741"/>
         <source>Break return type from the function name in its declaration</source>
         <translation>将函数声明中的函数名和返回值类型断成两行</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="710"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="713"/>
         <source>Break return type from the function name in its definition</source>
         <translation>将函数定义中的函数名和返回值类型断成两行</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="724"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="727"/>
         <source>Attach return type to the function name in its definition</source>
         <translation>将函数定义中的函数名和返回值类型放在同一行</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="717"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="720"/>
         <source>Don&apos;t break blocks residing completely on one line</source>
         <translation>不对同一行上的多个代码段断行</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="731"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="734"/>
         <source>Don&apos;t break multimple statements residing on one line</source>
         <translation>不对同一行上的多条语句断行</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="753"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="756"/>
         <source>Other 3</source>
         <translation>其它3</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="840"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="843"/>
         <source>Place the logical conditional to the last on the previous line, when break lines</source>
         <translation>在断行时，将逻辑条件放在前一行的末尾</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="833"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="836"/>
         <source>Close ending angle brackets on template definitions</source>
         <translation>关闭模板定义末尾的尖括号</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="826"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="829"/>
         <source>Remove the leading &apos;*&apos; prefix on multi-line comments and indent the comment text one line indent.</source>
         <translation>删除多行注释前的&apos;*&apos;并缩进注释内容</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="774"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="777"/>
         <source>Break lines exceeds</source>
         <translation>对超过指定长度的行断行</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.ui" line="781"/>
+        <location filename="settingsdialog/formattergeneralwidget.ui" line="784"/>
         <source>characters</source>
         <translation>字符</translation>
     </message>
@@ -1691,179 +1691,187 @@ Are you really want to continue?</source>
 <context>
     <name>FormatterStyleModel</name>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="204"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="133"/>
         <source>Default</source>
         <translation>缺省</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="205"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="134"/>
         <source>The opening braces will not be changed and closing braces will be broken from the preceding line.</source>
         <translation>左花括号不变，右花括号单独一行。</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="210"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="139"/>
         <source>Allman</source>
         <translation>Allman</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="211"/>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="217"/>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="223"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="140"/>
         <source>Broken braces.</source>
         <translation>花括号单独一行。</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="216"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="145"/>
         <source>Java</source>
         <translation>Java</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="222"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="146"/>
+        <source>Attached braces.</source>
+        <translation>花括号不断行。</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="151"/>
         <source>K&amp;R</source>
-        <translation>Kernighan &amp; Ritchie</translation>
+        <translation>K&amp;R</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="228"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="152"/>
+        <source>Linux braces.</source>
+        <translation type="unfinished">Linux风格花括号</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="157"/>
         <source>Stroustrup</source>
-        <translation>Kernighan &amp; Ritchie</translation>
+        <translation>Stroustrup</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="229"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="158"/>
         <source>Linux braces, with broken closing headers.</source>
         <translation>Linux风格花括号，对条件结束语句（如do-while的while）断行。</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="234"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="163"/>
         <source>Whitesmith</source>
         <translation>Whitesmith</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="235"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="164"/>
         <source>Broken, indented braces.</source>
         <translation>花括号独立成行，并且缩进。</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="237"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="166"/>
         <source>Indented class blocks and switch blocks.</source>
         <translation>类代码段和switch代码段缩进。</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="242"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="171"/>
         <source>VTK</source>
         <translation>VTK</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="243"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="172"/>
         <source>Broken, indented braces except for the opening braces.</source>
         <translation>除左花括号外，其他花括号独立断行且缩进。</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="248"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="177"/>
         <source>Ratliff</source>
         <translation>Ratliff</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="249"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="178"/>
         <source>Attached, indented braces.</source>
         <translation>花括号不断行，但是缩进</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="254"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="183"/>
         <source>GNU</source>
         <translation>GNU</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="255"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="184"/>
         <source>Broken braces, indented blocks.</source>
         <translation>花括号短号，代码段缩进</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="260"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="189"/>
         <source>Linux</source>
         <translation>Linux</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="261"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="190"/>
         <source>Linux braces, minimum conditional indent is one-half indent.</source>
         <translation>Linux风格花括号，最小条件缩进为1.5单位。</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="266"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="195"/>
         <source>Horstmann</source>
         <translation>Horstmann</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="267"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="196"/>
         <source>Run-in braces, indented switches.</source>
         <translation>Run-in花括号，switch语句缩进</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="272"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="201"/>
         <source>One True Brace</source>
         <translation>One True Brace</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="273"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="202"/>
         <source>Linux braces, add braces to all conditionals.</source>
         <translation>Linux封号花括号，所有条件语句条件花括号</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="278"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="207"/>
         <source>Google</source>
         <translation>Google</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="279"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="208"/>
         <source>Attached braces, indented class modifiers.</source>
         <translation>花括号不断行，类访问限定符缩进</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="284"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="213"/>
         <source>Mozilla</source>
         <translation>Mozilla</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="285"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="214"/>
         <source>Linux braces, with broken braces for structs and enums, and attached braces for namespaces.</source>
         <translation>Linux风格花括号， 结构和枚举的花括号断行， 命名空间的花括号不断行。</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="290"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="219"/>
         <source>Webkit</source>
         <translation>Webkit</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="291"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="220"/>
         <source>Linux braces, with attached closing headers.</source>
         <translation>Linux风格花括号， 条件结束语句（如do-while的while)不断行</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="296"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="225"/>
         <source>Pico</source>
         <translation>Pico</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="297"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="226"/>
         <source>Run-in opening braces and attached closing braces.</source>
         <translation>Run-in左花括号，右花括号不断行</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="299"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="228"/>
         <source>Uses keep one line blocks and keep one line statements.</source>
         <translation>启用保持单行代码段和保持多语句单行选项。</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="304"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="233"/>
         <source>Lisp</source>
         <translation>Lisp</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="305"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="234"/>
         <source>Attached opening braces and attached closing braces.</source>
         <translation>花括号不断行。</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="307"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="236"/>
         <source>Uses keep one line statements.</source>
         <translation>启用保持多语句单行选项。</translation>
     </message>
@@ -2912,7 +2920,7 @@ Are you really want to continue?</source>
         <translation>无标题</translation>
     </message>
     <message>
-        <location filename="utils.cpp" line="326"/>
+        <location filename="utils.cpp" line="329"/>
         <source>Index %1 out of range</source>
         <translation>下标&quot;%1&quot;越界</translation>
     </message>

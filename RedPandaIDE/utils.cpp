@@ -92,7 +92,7 @@ bool isGreenEdition()
     return gIsGreenEdition;
 }
 
-QByteArray runAndGetOutput(const QString &cmd, const QString& workingDir, const QStringList& arguments, bool inheritEnvironment)
+QByteArray runAndGetOutput(const QString &cmd, const QString& workingDir, const QStringList& arguments, const QByteArray &inputContent, bool inheritEnvironment)
 {
     QProcess process;
     QByteArray result;
@@ -111,6 +111,9 @@ QByteArray runAndGetOutput(const QString &cmd, const QString& workingDir, const 
         result.append(process.readAllStandardOutput());
     });
     process.start(cmd,arguments);
+    if (!inputContent.isEmpty()) {
+        process.write(inputContent);
+    }
     process.closeWriteChannel();
     process.waitForFinished();
     return result;

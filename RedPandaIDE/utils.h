@@ -63,7 +63,7 @@ enum FormatterBraceStyle {
     fbsRatliff,
     fbsGNU,
     fbsLinux,
-    fbsHorstman,
+    fbsHorstmann,
     fbs1TBS,
     fbsGoogle,
     fbsMozilla,
@@ -111,7 +111,9 @@ const QByteArray GuessTextEncoding(const QByteArray& text);
 
 bool isTextAllAscii(const QString& text);
 
-QByteArray runAndGetOutput(const QString& cmd, const QString& workingDir, const QStringList& arguments, bool inheritEnvironment = false);
+QByteArray runAndGetOutput(const QString& cmd, const QString& workingDir, const QStringList& arguments,
+                           const QByteArray& inputContent = QByteArray(),
+                           bool inheritEnvironment = false);
 
 bool isNonPrintableAsciiChar(char ch);
 

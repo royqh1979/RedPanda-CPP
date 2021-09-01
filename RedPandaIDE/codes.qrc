@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/codes">
+        <file alias="formatdemo.cpp">resources/formatdemo.cpp</file>
+    </qresource>
+</RCC>

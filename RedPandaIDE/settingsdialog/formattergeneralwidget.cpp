@@ -11,7 +11,8 @@ FormatterGeneralWidget::FormatterGeneralWidget(const QString& name, const QStrin
     connect(ui->cbBraceStyle, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &FormatterGeneralWidget::onBraceStyleChanged);
     ui->editDemo->setReadOnly(true);
-    ui->editDemo->lines()->setText("int test;");
+    connect(this, &SettingsWidget::settingsChanged,
+               this, &FormatterGeneralWidget::updateDemo);
 }
 
 FormatterGeneralWidget::~FormatterGeneralWidget()
@@ -30,7 +31,13 @@ void FormatterGeneralWidget::onBraceStyleChanged()
 void FormatterGeneralWidget::doLoad()
 {
     Settings::CodeFormatter& format = pSettings->codeFormatter();
-    ui->cbBraceStyle->setCurrentIndex(format.braceStyle());
+    for (int i=0;i<mStylesModel.rowCount(QModelIndex());i++) {
+        PFormatterStyleItem item = mStylesModel.getStyle(i);
+        if (item->style == format.braceStyle()) {
+            ui->cbBraceStyle->setCurrentIndex(i);
+            break;
+        }
+    }
     if (format.indentStyle() == FormatterIndentType::fitSpace) {
         ui->rbIndentSpaces->setChecked(true);
     } else {
@@ -115,87 +122,13 @@ void FormatterGeneralWidget::doLoad()
     ui->chkBreakMaxCodeLength->setChecked(format.breakMaxCodeLength());
     ui->spinMaxCodeLength->setValue(format.maxCodeLength());
     ui->chkBreakAfterLogical->setChecked(format.breakAfterLogical());
+    updateDemo();
 }
 
 void FormatterGeneralWidget::doSave()
 {
     Settings::CodeFormatter& format = pSettings->codeFormatter();
-    if (ui->cbBraceStyle->currentIndex()>0)
-        format.setBraceStyle(ui->cbBraceStyle->currentIndex());
-    if (ui->rbIndentSpaces) {
-        format.setIndentStyle(FormatterIndentType::fitSpace);
-    } else {
-        format.setIndentStyle(FormatterIndentType::fitTab);
-    }
-    format.setTabWidth(ui->spinTabSize->value());
-    format.setAttachNamespaces(ui->chkAttachNamespaces->isChecked());
-    format.setAttachClasses(ui->chkAttachClasses->isChecked());
-    format.setAttachInlines(ui->chkAttachInline->isChecked());
-    format.setAttachExternC(ui->chkAttachExternC->isChecked());
-    format.setAttachClosingWhile(ui->chkAttachClosingWhile->isChecked());
-    format.setIndentClasses(ui->chkIndentClasses->isChecked());
-    format.setIndentModifiers(ui->chkIndentModifiers->isChecked());
-    format.setIndentSwitches(ui->chkIndentSwiches->isChecked());
-    format.setIndentCases(ui->chkIndentCases->isChecked());
-    format.setIndentNamespaces(ui->chkIndentNamespaces->isChecked());
-    format.setIndentAfterParens(ui->chkIndentAfterParens->isChecked());
-    format.setIndentContinuation(ui->spinIndentContinuation->value());
-    format.setIndentLabels(ui->chkIndentLabels->isChecked());
-    format.setIndentPreprocBlock(ui->chkIndentPreprocBlock->isChecked());
-    format.setIndentPreprocCond(ui->chkIndentPreprocCond->isChecked());
-    format.setIndentPreprocDefine(ui->chkIndentPreprocDefine->isChecked());
-    format.setIndentCol1Comments(ui->chkIndentCol1Comments->isChecked());
-    format.setMinConditionalIndent(ui->spinMinConditionalIndent->value());
-    format.setMaxContinuationIndent(ui->spinMaxContinuationIndent->value());
-    format.setBreakBlocks(ui->chkBreakBlocks->isChecked());
-    format.setBreakBlocksAll(ui->chkBreakBlocksAll->isChecked());
-    format.setPadOper(ui->chkPadOper->isChecked());
-    format.setPadComma(ui->chkPadComma->isChecked());
-    format.setPadParen(ui->chkPadParen->isChecked());
-    format.setPadParenOut(ui->chkPadParenOut->isChecked());
-    format.setPadFirstParenOut(ui->chkPadFirstParenOut->isChecked());
-    format.setPadParenIn(ui->chkPadParenIn->isChecked());
-    format.setPadHeader(ui->chkPadHeader->isChecked());
-    format.setUnpadParen(ui->chkUnpadParen->isChecked());
-    format.setDeleteEmptyLines(ui->chkDeleteEmptyLines->isChecked());
-    format.setDeleteMultipleEmptyLines(ui->chkDeleteMultipleEmptyLines->isChecked());
-    format.setFillEmptyLines(ui->chkFillEmptyLines->isChecked());
-    if (ui->rbAlignPointNone->isChecked()) {
-        format.setAlignPointerStyle(FormatterOperatorAlign::foaNone);
-    } else if (ui->rbAlignPointType->isChecked()) {
-        format.setAlignPointerStyle(FormatterOperatorAlign::foaType);
-    } else if (ui->rbAlignPointerMiddle->isChecked()) {
-        format.setAlignPointerStyle(FormatterOperatorAlign::foaMiddle);
-    } else if (ui->rbAlignPointerName->isChecked()) {
-        format.setAlignPointerStyle(FormatterOperatorAlign::foaName);
-    }
-    if (ui->rbAlignReferenceNone->isChecked()) {
-        format.setAlignReferenceStyle(FormatterOperatorAlign::foaNone);
-    } else if (ui->rbAlignReferenceType->isChecked()) {
-        format.setAlignReferenceStyle(FormatterOperatorAlign::foaType);
-    } else if (ui->rbAlignReferenceMiddle->isChecked()) {
-        format.setAlignReferenceStyle(FormatterOperatorAlign::foaMiddle);
-    } else if (ui->rbAlignReferenceName->isChecked()) {
-        format.setAlignReferenceStyle(FormatterOperatorAlign::foaName);
-    }
-    format.setBreakClosingBraces(ui->chkBreakClosingBraces->isChecked());
-    format.setBreakElseIf(ui->chkBreakElseIf->isChecked());
-    format.setBreakOneLineHeaders(ui->chkBreakOneLineHeaders->isChecked());
-    format.setAddBraces(ui->chkAddBraces->isChecked());
-    format.setAddOneLineBraces(ui->chkAddOneLineBraces->isChecked());
-    format.setRemoveBraces(ui->chkRemoveBraces->isChecked());
-    format.setBreakReturnType(ui->chkBreakReturnType->isChecked());
-    format.setBreakReturnTypeDecl(ui->chkBreakReturnTypeDecl->isChecked());
-    format.setAttachReturnType(ui->chkAttachReturnType->isChecked());
-    format.setAttachReturnTypeDecl(ui->chkAttachReturnTypeDecl->isChecked());
-    format.setKeepOneLineBlocks(ui->chkKeepOneLineBlocks->isChecked());
-    format.setKeepOneLineStatements(ui->chkKeepOneLineStatements->isChecked());
-    format.setConvertTabs(ui->chkConvertTabs->isChecked());
-    format.setCloseTemplates(ui->chkCloseTemplates->isChecked());
-    format.setRemoveCommentPrefix(ui->chkRemoveCommentPrefix->isChecked());
-    format.setBreakMaxCodeLength(ui->chkBreakMaxCodeLength->isChecked());
-    format.setMaxCodeLength(ui->spinMaxCodeLength->value());
-    format.setBreakAfterLogical(ui->chkBreakAfterLogical->isChecked());
+    updateCodeFormatter(format);
     format.save();
 }
 
@@ -216,13 +149,13 @@ FormatterStyleModel::FormatterStyleModel(QObject *parent):QAbstractListModel(par
     mStyles.append(
                 std::make_shared<FormatterStyleItem>(
                     tr("Java"),
-                    tr("Broken braces."),
+                    tr("Attached braces."),
                     FormatterBraceStyle::fbsJava)
                 );
     mStyles.append(
                 std::make_shared<FormatterStyleItem>(
                     tr("K&R"),
-                    tr("Broken braces."),
+                    tr("Linux braces."),
                     FormatterBraceStyle::fbsKR)
                 );
     mStyles.append(
@@ -267,7 +200,7 @@ FormatterStyleModel::FormatterStyleModel(QObject *parent):QAbstractListModel(par
                 std::make_shared<FormatterStyleItem>(
                     tr("Horstmann"),
                     tr("Run-in braces, indented switches."),
-                    FormatterBraceStyle::fbsHorstman)
+                    FormatterBraceStyle::fbsHorstmann)
                 );
     mStyles.append(
                 std::make_shared<FormatterStyleItem>(
@@ -360,5 +293,103 @@ void FormatterGeneralWidget::on_chkBreakMaxCodeLength_stateChanged(int)
 {
     ui->spinMaxCodeLength->setEnabled(ui->chkBreakMaxCodeLength->isChecked());
     ui->chkBreakAfterLogical->setEnabled(ui->chkBreakMaxCodeLength->isChecked());
+}
+
+void FormatterGeneralWidget::updateDemo()
+{
+    QFile file(":/codes/formatdemo.cpp");
+    if (!file.open(QFile::ReadOnly))
+        return;
+    QByteArray content = file.readAll();
+
+    Settings::CodeFormatter formatter(nullptr);
+    updateCodeFormatter(formatter);
+
+    QByteArray newContent = runAndGetOutput("astyle.exe",
+                                            pSettings->dirs().app(),
+                                            formatter.getArguments(),
+                                            content);
+    ui->editDemo->lines()->setText(newContent);
+}
+
+void FormatterGeneralWidget::updateCodeFormatter(Settings::CodeFormatter &format)
+{
+    PFormatterStyleItem item = mStylesModel.getStyle(ui->cbBraceStyle->currentIndex());
+    if (item)
+        format.setBraceStyle(item->style);
+    if (ui->rbIndentSpaces) {
+        format.setIndentStyle(FormatterIndentType::fitSpace);
+    } else {
+        format.setIndentStyle(FormatterIndentType::fitTab);
+    }
+    format.setTabWidth(ui->spinTabSize->value());
+    format.setAttachNamespaces(ui->chkAttachNamespaces->isChecked());
+    format.setAttachClasses(ui->chkAttachClasses->isChecked());
+    format.setAttachInlines(ui->chkAttachInline->isChecked());
+    format.setAttachExternC(ui->chkAttachExternC->isChecked());
+    format.setAttachClosingWhile(ui->chkAttachClosingWhile->isChecked());
+    format.setIndentClasses(ui->chkIndentClasses->isChecked());
+    format.setIndentModifiers(ui->chkIndentModifiers->isChecked());
+    format.setIndentSwitches(ui->chkIndentSwiches->isChecked());
+    format.setIndentCases(ui->chkIndentCases->isChecked());
+    format.setIndentNamespaces(ui->chkIndentNamespaces->isChecked());
+    format.setIndentAfterParens(ui->chkIndentAfterParens->isChecked());
+    format.setIndentContinuation(ui->spinIndentContinuation->value());
+    format.setIndentLabels(ui->chkIndentLabels->isChecked());
+    format.setIndentPreprocBlock(ui->chkIndentPreprocBlock->isChecked());
+    format.setIndentPreprocCond(ui->chkIndentPreprocCond->isChecked());
+    format.setIndentPreprocDefine(ui->chkIndentPreprocDefine->isChecked());
+    format.setIndentCol1Comments(ui->chkIndentCol1Comments->isChecked());
+    format.setMinConditionalIndent(ui->spinMinConditionalIndent->value());
+    format.setMaxContinuationIndent(ui->spinMaxContinuationIndent->value());
+    format.setBreakBlocks(ui->chkBreakBlocks->isChecked());
+    format.setBreakBlocksAll(ui->chkBreakBlocksAll->isChecked());
+    format.setPadOper(ui->chkPadOper->isChecked());
+    format.setPadComma(ui->chkPadComma->isChecked());
+    format.setPadParen(ui->chkPadParen->isChecked());
+    format.setPadParenOut(ui->chkPadParenOut->isChecked());
+    format.setPadFirstParenOut(ui->chkPadFirstParenOut->isChecked());
+    format.setPadParenIn(ui->chkPadParenIn->isChecked());
+    format.setPadHeader(ui->chkPadHeader->isChecked());
+    format.setUnpadParen(ui->chkUnpadParen->isChecked());
+    format.setDeleteEmptyLines(ui->chkDeleteEmptyLines->isChecked());
+    format.setDeleteMultipleEmptyLines(ui->chkDeleteMultipleEmptyLines->isChecked());
+    format.setFillEmptyLines(ui->chkFillEmptyLines->isChecked());
+    if (ui->rbAlignPointNone->isChecked()) {
+        format.setAlignPointerStyle(FormatterOperatorAlign::foaNone);
+    } else if (ui->rbAlignPointType->isChecked()) {
+        format.setAlignPointerStyle(FormatterOperatorAlign::foaType);
+    } else if (ui->rbAlignPointerMiddle->isChecked()) {
+        format.setAlignPointerStyle(FormatterOperatorAlign::foaMiddle);
+    } else if (ui->rbAlignPointerName->isChecked()) {
+        format.setAlignPointerStyle(FormatterOperatorAlign::foaName);
+    }
+    if (ui->rbAlignReferenceNone->isChecked()) {
+        format.setAlignReferenceStyle(FormatterOperatorAlign::foaNone);
+    } else if (ui->rbAlignReferenceType->isChecked()) {
+        format.setAlignReferenceStyle(FormatterOperatorAlign::foaType);
+    } else if (ui->rbAlignReferenceMiddle->isChecked()) {
+        format.setAlignReferenceStyle(FormatterOperatorAlign::foaMiddle);
+    } else if (ui->rbAlignReferenceName->isChecked()) {
+        format.setAlignReferenceStyle(FormatterOperatorAlign::foaName);
+    }
+    format.setBreakClosingBraces(ui->chkBreakClosingBraces->isChecked());
+    format.setBreakElseIf(ui->chkBreakElseIf->isChecked());
+    format.setBreakOneLineHeaders(ui->chkBreakOneLineHeaders->isChecked());
+    format.setAddBraces(ui->chkAddBraces->isChecked());
+    format.setAddOneLineBraces(ui->chkAddOneLineBraces->isChecked());
+    format.setRemoveBraces(ui->chkRemoveBraces->isChecked());
+    format.setBreakReturnType(ui->chkBreakReturnType->isChecked());
+    format.setBreakReturnTypeDecl(ui->chkBreakReturnTypeDecl->isChecked());
+    format.setAttachReturnType(ui->chkAttachReturnType->isChecked());
+    format.setAttachReturnTypeDecl(ui->chkAttachReturnTypeDecl->isChecked());
+    format.setKeepOneLineBlocks(ui->chkKeepOneLineBlocks->isChecked());
+    format.setKeepOneLineStatements(ui->chkKeepOneLineStatements->isChecked());
+    format.setConvertTabs(ui->chkConvertTabs->isChecked());
+    format.setCloseTemplates(ui->chkCloseTemplates->isChecked());
+    format.setRemoveCommentPrefix(ui->chkRemoveCommentPrefix->isChecked());
+    format.setBreakMaxCodeLength(ui->chkBreakMaxCodeLength->isChecked());
+    format.setMaxCodeLength(ui->spinMaxCodeLength->value());
+    format.setBreakAfterLogical(ui->chkBreakAfterLogical->isChecked());
 }
 

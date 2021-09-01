@@ -5,6 +5,7 @@
 #include <QWidget>
 #include "settingswidget.h"
 #include "../utils.h"
+#include "../settings.h"
 
 namespace Ui {
 class FormatterGeneralWidget;
@@ -45,6 +46,10 @@ private slots:
     void onBraceStyleChanged();
 
     void on_chkBreakMaxCodeLength_stateChanged(int arg1);
+
+    void updateDemo();
+private:
+    void updateCodeFormatter(Settings::CodeFormatter& format);
 
 private:
     Ui::FormatterGeneralWidget *ui;
