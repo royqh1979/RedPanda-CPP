@@ -1361,9 +1361,10 @@ bool Editor::handleBraceSkip()
         return false;
     BufferCoord pos = getMatchingBracket();
     if (pos.Line != 0) {
-        setBlockBegin(caretXY());
-        setBlockEnd(BufferCoord{caretX() + 1, caretY()});
+        bool oldInsertMode = insertMode();
+        setInsertMode(false); //set mode to overwrite
         CommandProcessor(SynEditorCommand::ecChar,'}');
+        setInsertMode(oldInsertMode);
 //        setCaretXY( BufferCoord{caretX() + 1, caretY()}); // skip over
         return true;
     }
