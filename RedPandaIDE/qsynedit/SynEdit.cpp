@@ -1839,10 +1839,11 @@ void SynEdit::insertLine(bool moveCaret)
         mUndoList->AddChange(SynChangeReason::crDelete, iUndoBegin, iUndoEnd, helper,
                       mActiveSelectionMode);
     }
+
     QString Temp = lineText();
     QString Temp2 = Temp;
     QString Temp3;
-    int SpaceCount1,SpaceCount2;
+    int SpaceCount2;
     PSynHighlighterAttribute Attr;
 
     // This is sloppy, but the Right Thing would be to track the column of markers
@@ -1851,63 +1852,55 @@ void SynEdit::insertLine(bool moveCaret)
     int Len = Temp.length();
     if (Len > 0) {
         if (Len >= mCaretX) {
-            if (mCaretX > 1) {
-                Temp = lineText().mid(0, mCaretX - 1);
-                Temp3 = Temp;
-                SpaceCount1 = leftSpaces(Temp);
-                Temp2.remove(0, mCaretX - 1);
-                ProperSetLine(mCaretY-1,Temp);
-                QString Temp4;
-                if (mOptions.testFlag(eoAutoIndent)) {
-                    Temp4=GetLeftSpacing(SpaceCount1, true);
-                    Temp2=TrimLeft(Temp2);
-                }
-                if (mOptions.testFlag(eoAddIndent) &&
-                        GetHighlighterAttriAtRowCol(BufferCoord{Temp3.length(), mCaretY},
-                        Temp3, Attr)) { // only add indent to source files
-                    if (Attr != mHighlighter->commentAttribute()) { // and outside of comments
-                        if ((!Temp.isEmpty() && Temp[Temp.length()-1] ==':')
-                              || (
-                                (Temp[Temp.length()-1] =='{')
-                                && ((Temp2.isEmpty()) || (Temp2[0]!='}'))
-                              )) { // add more indent for these too
-                              if (!mOptions.testFlag(eoTabsToSpaces)) {
-                                  Temp4 = GetLeftSpacing(SpaceCount1+mTabWidth,true);
-                              }
-                        }
-                    }
-                }
-                mLines->Insert(mCaretY, Temp4+Temp2);
-                nLinesInserted++;
-
-                SpaceCount1 = mLines->getString(mCaretY).length(); //???
-                mUndoList->AddChange(SynChangeReason::crLineBreak, caretXY(), caretXY(), Temp2,
-                          SynSelectionMode::smNormal);
-
-                if ((Temp.length()>0) && (Temp[Temp.length()-1] == '{') &&
-                        (Temp2.length()>0) && (Temp2[0]=='}')) {
-                    if (mOptions.testFlag(eoAddIndent)) {
-                        Temp4 = GetLeftSpacing(leftSpaces(Temp)+mTabWidth,true)+Temp4;
-                    } else {
-                        Temp4=GetLeftSpacing(leftSpaces(Temp), true);
-                    }
-                    mLines->Insert(mCaretY, Temp4);
-                    nLinesInserted++;
-                    mUndoList->AddChange(SynChangeReason::crLineBreak, caretXY(), caretXY(), "",
-                            SynSelectionMode::smNormal);
-                    if (moveCaret)
-                        internalSetCaretXY(BufferCoord{Temp4.length()+1, mCaretY + 1});
-                } else {
-                    if (moveCaret)
-                        internalSetCaretXY(BufferCoord{SpaceCount1+1,mCaretY + 1});
-                }
-            } else {
+            if (mCaretX <= 1) {
                 mLines->Insert(mCaretY - 1, "");
                 nLinesInserted++;
                 mUndoList->AddChange(SynChangeReason::crLineBreak, caretXY(), caretXY(), Temp2,
                                      SynSelectionMode::smNormal);
                 if (moveCaret)
                     internalSetCaretY(mCaretY + 1);
+            } else {
+                QString leftLineText = lineText().mid(0, mCaretX - 1);
+                QString rightLineText = lineText().mid(mCaretX-1);
+                int indentSpacesOfLeftLineText = leftSpaces(leftLineText);
+                int indentSpaces = indentSpacesOfLeftLineText;
+                bool notInComment=true;
+                ProperSetLine(mCaretY-1,leftLineText);
+                if (mOptions.testFlag(eoAutoIndent)) {
+                    rightLineText=TrimLeft(rightLineText);
+                }
+                if (GetHighlighterAttriAtRowCol(BufferCoord{leftLineText.length(), mCaretY},
+                                                leftLineText, Attr)) {
+                    notInComment = (Attr != mHighlighter->commentAttribute());
+                }
+                leftLineText = leftLineText.trimmed();
+                if (mOptions.testFlag(eoAddIndent)) { // only add indent to source files
+                    if (notInComment) { // and outside of comments
+                        if (leftLineText.endsWith(':') || leftLineText.endsWith('{'))
+                            indentSpaces+=mTabWidth;
+                        if (rightLineText.startsWith('}'))
+                            indentSpaces-=mTabWidth;
+                    }
+                }
+                QString indentSpacesForRightLineText = GetLeftSpacing(indentSpaces,true);
+                mLines->Insert(mCaretY, indentSpacesForRightLineText+rightLineText);
+                nLinesInserted++;
+
+                //SpaceCount1 = mLines->getString(mCaretY).length(); //???
+                mUndoList->AddChange(SynChangeReason::crLineBreak, caretXY(), caretXY(), rightLineText,
+                          SynSelectionMode::smNormal);
+                //insert new line in middle of "{" and "}"
+                if (notInComment && leftLineText.endsWith('{') && rightLineText.startsWith('}')) {
+                    indentSpaces = indentSpacesOfLeftLineText;
+                    indentSpaces += mTabWidth;
+                    indentSpacesForRightLineText = GetLeftSpacing(indentSpaces,true);
+                    mLines->Insert(mCaretY, indentSpacesForRightLineText);
+                    nLinesInserted++;
+                    mUndoList->AddChange(SynChangeReason::crLineBreak, caretXY(), caretXY(), "",
+                            SynSelectionMode::smNormal);
+                }
+                if (moveCaret)
+                    internalSetCaretXY(BufferCoord{indentSpacesForRightLineText.length()+1,mCaretY + 1});
             }
         } else {
             SpaceCount2 = 0;
@@ -1929,7 +1922,8 @@ void SynEdit::insertLine(bool moveCaret)
                 if (mOptions.testFlag(eoAddIndent) && GetHighlighterAttriAtRowCol(BufferCoord{Temp.length(), mCaretY},
                           Temp, Attr)) { // only add indent to source files
                     if (Attr != mHighlighter->commentAttribute()) { // and outside of comments
-                        if (Temp.length() &&  (Temp[Temp.length()-1] == '{' || Temp[Temp.length()-1] == ':')) { // add more indent for these too
+                        Temp = Temp.trimmed();
+                        if (Temp.endsWith('{') || Temp.endsWith(':')) { // add more indent for these too
                             Temp4=GetLeftSpacing(mTabWidth,true)+Temp4;
                         }
                     }
@@ -4137,10 +4131,11 @@ void SynEdit::MoveCaretToLineEnd(bool isSelection)
     int vNewX;
     if (mOptions.testFlag(SynEditorOption::eoEnhanceEndKey)) {
         QString vText = lineText();
-        int vLastNonBlank = vText.length();
+        int vLastNonBlank = vText.length()-1;
         int vMinX = 0;
-        while ((vLastNonBlank > vMinX) && (vText[vLastNonBlank] == ' ' || vText[vLastNonBlank] =='\t'))
+        while ((vLastNonBlank >= vMinX) && (vText[vLastNonBlank] == ' ' || vText[vLastNonBlank] =='\t'))
             vLastNonBlank--;
+        vLastNonBlank++;
         vNewX = mCaretX;
         if (vNewX > vLastNonBlank)
             vNewX = vText.length() + 1;

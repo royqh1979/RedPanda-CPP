@@ -57,6 +57,9 @@
    </item>
    <item>
     <widget class="QLabel" name="lblBraceStyle">
+     <property name="frameShape">
+      <enum>QFrame::StyledPanel</enum>
+     </property>
      <property name="text">
       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Note for the predefined format style&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
@@ -846,7 +849,7 @@
     </widget>
    </item>
    <item>
-    <widget class="Editor" name="frame">
+    <widget class="Editor" name="editDemo">
      <property name="minimumSize">
       <size>
        <width>0</width>
