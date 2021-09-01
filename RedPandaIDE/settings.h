@@ -493,8 +493,8 @@ public:
         void setIndentCases(bool newIndentCases);
         bool indentNamespaces() const;
         void setIndentNamespaces(bool newIndentNamespaces);
-        bool indentContinuation() const;
-        void setIndentContinuation(bool newIndentContinuation);
+        int indentContinuation() const;
+        void setIndentContinuation(int newIndentContinuation);
         bool indentLabels() const;
         void setIndentLabels(bool newIndentLabels);
         bool indentPreprocBlock() const;
@@ -567,7 +567,7 @@ public:
         void setCloseTemplates(bool newCloseTemplates);
         bool removeCommentPrefix() const;
         void setRemoveCommentPrefix(bool newRemoveCommentPrefix);
-        int getMaxCodeLength() const;
+        int maxCodeLength() const;
         void setMaxCodeLength(int newMaxCodeLength);
         bool breakAfterLogical() const;
         void setBreakAfterLogical(bool newBreakAfterLogical);
@@ -577,6 +577,12 @@ public:
 
         bool breakMaxCodeLength() const;
         void setBreakMaxCodeLength(bool newBreakMaxCodeLength);
+
+        bool indentSwitches() const;
+        void setIndentSwitches(bool newIndentSwitches);
+
+        bool indentAfterParens() const;
+        void setIndentAfterParens(bool newIndentAfterParens);
 
     private:
         int mBraceStyle;
@@ -589,9 +595,11 @@ public:
         bool mAttachClosingWhile;
         bool mIndentClasses;
         bool mIndentModifiers;
+        bool mIndentSwitches;
         bool mIndentCases;
         bool mIndentNamespaces;
-        bool mIndentContinuation;
+        bool mIndentAfterParens;
+        int mIndentContinuation;
         bool mIndentLabels;
         bool mIndentPreprocBlock;
         bool mIndentPreprocCond;
@@ -630,7 +638,7 @@ public:
         bool mCloseTemplates;
         bool mRemoveCommentPrefix;
         bool mBreakMaxCodeLength;
-        int maxCodeLength;
+        int mMaxCodeLength;
         bool mBreakAfterLogical;
         // _Base interface
     protected:

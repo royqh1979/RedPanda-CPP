@@ -2814,12 +2814,12 @@ void Settings::CodeFormatter::setIndentNamespaces(bool newIndentNamespaces)
     mIndentNamespaces = newIndentNamespaces;
 }
 
-bool Settings::CodeFormatter::indentContinuation() const
+int Settings::CodeFormatter::indentContinuation() const
 {
     return mIndentContinuation;
 }
 
-void Settings::CodeFormatter::setIndentContinuation(bool newIndentContinuation)
+void Settings::CodeFormatter::setIndentContinuation(int newIndentContinuation)
 {
     mIndentContinuation = newIndentContinuation;
 }
@@ -3184,14 +3184,14 @@ void Settings::CodeFormatter::setRemoveCommentPrefix(bool newRemoveCommentPrefix
     mRemoveCommentPrefix = newRemoveCommentPrefix;
 }
 
-int Settings::CodeFormatter::getMaxCodeLength() const
+int Settings::CodeFormatter::maxCodeLength() const
 {
-    return maxCodeLength;
+    return mMaxCodeLength;
 }
 
 void Settings::CodeFormatter::setMaxCodeLength(int newMaxCodeLength)
 {
-    maxCodeLength = newMaxCodeLength;
+    mMaxCodeLength = newMaxCodeLength;
 }
 
 bool Settings::CodeFormatter::breakAfterLogical() const
@@ -3224,6 +3224,26 @@ void Settings::CodeFormatter::setBreakMaxCodeLength(bool newBreakMaxCodeLength)
     mBreakMaxCodeLength = newBreakMaxCodeLength;
 }
 
+bool Settings::CodeFormatter::indentAfterParens() const
+{
+    return mIndentAfterParens;
+}
+
+void Settings::CodeFormatter::setIndentAfterParens(bool newIndentAfterParens)
+{
+    mIndentAfterParens = newIndentAfterParens;
+}
+
+bool Settings::CodeFormatter::indentSwitches() const
+{
+    return mIndentSwitches;
+}
+
+void Settings::CodeFormatter::setIndentSwitches(bool newIndentSwitches)
+{
+    mIndentSwitches = newIndentSwitches;
+}
+
 void Settings::CodeFormatter::doSave()
 {
     saveValue("brace_style",mBraceStyle);
@@ -3236,8 +3256,10 @@ void Settings::CodeFormatter::doSave()
     saveValue("attach_closing_while",mAttachClosingWhile);
     saveValue("indent_classes",mIndentClasses);
     saveValue("indent_modifiers",mIndentModifiers);
+    saveValue("indent_switches",mIndentSwitches);
     saveValue("indent_cases",mIndentCases);
     saveValue("indent_namespaces",mIndentNamespaces);
+    saveValue("indent_after_parents",mIndentAfterParens);
     saveValue("indent_continuation",mIndentContinuation);
     saveValue("indent_labels",mIndentLabels);
     saveValue("indent_preproc_block",mIndentPreprocBlock);
@@ -3277,7 +3299,7 @@ void Settings::CodeFormatter::doSave()
     saveValue("close_templates",mCloseTemplates);
     saveValue("remove_comment_prefix",mRemoveCommentPrefix);
     saveValue("break_max_code_length",mBreakMaxCodeLength);
-    saveValue("max_code_length",maxCodeLength);
+    saveValue("max_code_length",mMaxCodeLength);
     saveValue("break_after_logical",mBreakAfterLogical);
 }
 
@@ -3293,8 +3315,10 @@ void Settings::CodeFormatter::doLoad()
     mAttachClosingWhile = boolValue("attach_closing_while",false);
     mIndentClasses = boolValue("indent_classes",false);
     mIndentModifiers = boolValue("indent_modifiers",false);
+    mIndentSwitches = boolValue("indent_switches",false);
     mIndentCases = boolValue("indent_cases",false);
     mIndentNamespaces = boolValue("indent_namespaces",false);
+    mIndentAfterParens = boolValue("indent_after_parents",false);
     mIndentContinuation = boolValue("indent_continuation",false);
     mIndentLabels = boolValue("indent_labels",false);
     mIndentPreprocBlock = boolValue("indent_preproc_block",false);
@@ -3334,7 +3358,7 @@ void Settings::CodeFormatter::doLoad()
     mCloseTemplates = boolValue("close_templates",false);
     mRemoveCommentPrefix = boolValue("remove_comment_prefix",false);
     mBreakMaxCodeLength = boolValue("break_max_code_length",false);
-    maxCodeLength = intValue("max_code_length",200);
+    mMaxCodeLength = intValue("max_code_length",200);
     mBreakAfterLogical = boolValue("break_after_logical",false);
 }
 

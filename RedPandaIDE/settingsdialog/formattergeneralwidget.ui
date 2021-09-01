@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>881</width>
-    <height>598</height>
+    <height>754</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -68,7 +68,7 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>7</number>
      </property>
      <widget class="QWidget" name="tab">
       <attribute name="title">
@@ -388,7 +388,7 @@
         </widget>
        </item>
        <item row="4" column="1">
-        <widget class="QCheckBox" name="chkIdentAfterParens">
+        <widget class="QCheckBox" name="chkIndentAfterParens">
          <property name="text">
           <string>Indent after parenthesis '(' or assignment '='</string>
          </property>
@@ -486,9 +486,9 @@
         </widget>
        </item>
        <item row="2" column="0">
-        <widget class="QCheckBox" name="chkBreadBlocksAll">
+        <widget class="QCheckBox" name="chkBreakBlocksAll">
          <property name="text">
-          <string>Insert empy lines around all blocks</string>
+          <string>Insert empty lines around all blocks</string>
          </property>
         </widget>
        </item>
@@ -539,6 +539,9 @@
          <property name="text">
           <string>type(left)</string>
          </property>
+         <attribute name="buttonGroup">
+          <string notr="true">referenceBtnGroup</string>
+         </attribute>
         </widget>
        </item>
        <item row="4" column="2">
@@ -546,6 +549,9 @@
          <property name="text">
           <string>type(left)</string>
          </property>
+         <attribute name="buttonGroup">
+          <string notr="true">pointerBtnGroup</string>
+         </attribute>
         </widget>
        </item>
        <item row="4" column="5">
@@ -566,10 +572,13 @@
          <property name="text">
           <string>middle</string>
          </property>
+         <attribute name="buttonGroup">
+          <string notr="true">referenceBtnGroup</string>
+         </attribute>
         </widget>
        </item>
        <item row="3" column="0" colspan="6">
-        <widget class="QCheckBox" name="chkFileEmptyLines">
+        <widget class="QCheckBox" name="chkFillEmptyLines">
          <property name="text">
           <string>Fill empty lines with the white space of the previous lines.</string>
          </property>
@@ -580,6 +589,9 @@
          <property name="text">
           <string>name(right)</string>
          </property>
+         <attribute name="buttonGroup">
+          <string notr="true">referenceBtnGroup</string>
+         </attribute>
         </widget>
        </item>
        <item row="4" column="3">
@@ -587,6 +599,9 @@
          <property name="text">
           <string>middle</string>
          </property>
+         <attribute name="buttonGroup">
+          <string notr="true">pointerBtnGroup</string>
+         </attribute>
         </widget>
        </item>
        <item row="4" column="4">
@@ -594,6 +609,9 @@
          <property name="text">
           <string>name(right)</string>
          </property>
+         <attribute name="buttonGroup">
+          <string notr="true">pointerBtnGroup</string>
+         </attribute>
         </widget>
        </item>
        <item row="0" column="0" colspan="6">
@@ -615,6 +633,9 @@
          <property name="text">
           <string>none</string>
          </property>
+         <attribute name="buttonGroup">
+          <string notr="true">pointerBtnGroup</string>
+         </attribute>
         </widget>
        </item>
        <item row="5" column="1">
@@ -622,6 +643,9 @@
          <property name="text">
           <string>none</string>
          </property>
+         <attribute name="buttonGroup">
+          <string notr="true">referenceBtnGroup</string>
+         </attribute>
         </widget>
        </item>
       </layout>
@@ -680,45 +704,45 @@
        <string>Other 2</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_6">
-       <item row="3" column="0">
-        <widget class="QCheckBox" name="chkAttachReturnTypeDecl">
-         <property name="text">
-          <string>Attach return type to the function name in its declaration</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QCheckBox" name="chkBreakReturnTypeDecl">
-         <property name="text">
-          <string>Break return type from the function name in its declaration</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="0">
+       <item row="2" column="0">
         <widget class="QCheckBox" name="chkBreakReturnType">
          <property name="text">
           <string>Break return type from the function name in its definition</string>
          </property>
         </widget>
        </item>
-       <item row="2" column="0">
-        <widget class="QCheckBox" name="chkAttachReturnType">
-         <property name="text">
-          <string>Attach return type to the function name in its definition</string>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="0">
+       <item row="6" column="0">
         <widget class="QCheckBox" name="chkKeepOneLineBlocks">
          <property name="text">
           <string>Don't break blocks residing completely on one line</string>
          </property>
         </widget>
        </item>
-       <item row="5" column="0">
+       <item row="4" column="0">
+        <widget class="QCheckBox" name="chkAttachReturnType">
+         <property name="text">
+          <string>Attach return type to the function name in its definition</string>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="0">
         <widget class="QCheckBox" name="chkKeepOneLineStatements">
          <property name="text">
           <string>Don't break multimple statements residing on one line</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QCheckBox" name="chkBreakReturnTypeDecl">
+         <property name="text">
+          <string>Break return type from the function name in its declaration</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QCheckBox" name="chkAttachReturnTypeDecl">
+         <property name="text">
+          <string>Attach return type to the function name in its declaration</string>
          </property>
         </widget>
        </item>
@@ -729,27 +753,6 @@
        <string>Other 3</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_7">
-       <item row="2" column="0">
-        <widget class="QCheckBox" name="chkBreakAfterLogical">
-         <property name="text">
-          <string>Place the logical conditional to the last on the previous line, when break lines</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="0">
-        <widget class="QCheckBox" name="chkCloseTemplates">
-         <property name="text">
-          <string>Close ending angle brackets on template definitions</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QCheckBox" name="chkRemoveCommentPrefix">
-         <property name="text">
-          <string>Remove the leading '*' prefix on multi-line comments and indent the comment text one line indent.</string>
-         </property>
-        </widget>
-       </item>
        <item row="3" column="0">
         <widget class="QWidget" name="widget_6" native="true">
          <layout class="QHBoxLayout" name="horizontalLayout_6">
@@ -804,7 +807,7 @@
          </layout>
         </widget>
        </item>
-       <item row="4" column="0">
+       <item row="5" column="0">
         <spacer name="verticalSpacer">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
@@ -817,8 +820,45 @@
          </property>
         </spacer>
        </item>
+       <item row="1" column="0">
+        <widget class="QCheckBox" name="chkRemoveCommentPrefix">
+         <property name="text">
+          <string>Remove the leading '*' prefix on multi-line comments and indent the comment text one line indent.</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QCheckBox" name="chkCloseTemplates">
+         <property name="text">
+          <string>Close ending angle brackets on template definitions</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="0">
+        <widget class="QCheckBox" name="chkBreakAfterLogical">
+         <property name="text">
+          <string>Place the logical conditional to the last on the previous line, when break lines</string>
+         </property>
+        </widget>
+       </item>
       </layout>
      </widget>
+    </widget>
+   </item>
+   <item>
+    <widget class="Editor" name="frame">
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>200</height>
+      </size>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::StyledPanel</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Raised</enum>
+     </property>
     </widget>
    </item>
    <item>
@@ -839,6 +879,18 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>Editor</class>
+   <extends>QFrame</extends>
+   <header location="global">editor.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
+ <buttongroups>
+  <buttongroup name="pointerBtnGroup"/>
+  <buttongroup name="referenceBtnGroup"/>
+ </buttongroups>
 </ui>
