@@ -2314,7 +2314,7 @@ void SynEdit::doAddChar(QChar AChar)
                     while (i<matchline.length() && (matchline[i]==' ' || matchline[i]=='\t')) {
                         i++;
                     }
-                    QString temp = matchline.mid(0,i) + line.mid(oldCaretX-1);
+                    QString temp = matchline.mid(0,i) + line.mid(mCaretX-1);
                     mLines->putString(oldCaretY-1,temp);
                     internalSetCaretXY(BufferCoord{i+1,oldCaretY});
                     mUndoList->AddChange(
@@ -2331,8 +2331,6 @@ void SynEdit::doAddChar(QChar AChar)
                                 "",
                                 SynSelectionMode::smNormal
                                 );
-                    mLines->getString(mCaretY-1);
-                    return;
                 }
             }
         }
