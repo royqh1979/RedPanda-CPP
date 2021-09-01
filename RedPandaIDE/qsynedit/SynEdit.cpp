@@ -1223,10 +1223,8 @@ BufferCoord SynEdit::WordStartEx(const BufferCoord &XY)
         QString Line = mLines->getString(CY - 1);
         CX = std::min(CX, Line.length()+1);
         if (CX > 1) {
-            if (isWordChar(Line[CX - 1]))
+            if (isWordChar(Line[CX - 2]))
                 CX = StrRScanForNonWordChar(Line, CX - 1) + 1;
-            else
-                CX = StrRScanForWordChar(Line, CX - 1) + 1;
         }
     }
     return BufferCoord{CX,CY};
@@ -1247,8 +1245,6 @@ BufferCoord SynEdit::WordEndEx(const BufferCoord &XY)
         if (CX <= Line.length()) {
             if (isWordChar(Line[CX - 2]))
                 CX = StrScanForNonWordChar(Line, CX);
-            else
-                CX = StrScanForWordChar(Line, CX);
             if (CX == 0)
                 CX = Line.length() + 1;
         }
