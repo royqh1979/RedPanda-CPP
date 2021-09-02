@@ -37,7 +37,8 @@ MainWindow::MainWindow(QWidget *parent)
       mOpenClosingBottomPanel(false),
       mOpenClosingLeftPanel(false),
       mCheckSyntaxInBack(false),
-      mClosing(false)
+      mClosing(false),
+      mSystemTurnedOff(false)
 {
     ui->setupUi(this);
     // status bar
@@ -210,6 +211,9 @@ void MainWindow::updateEditorActions()
 
         //code
         ui->actionReformat_Code->setEnabled(false);
+
+        ui->actionClose->setEnabled(false);
+        ui->actionClose_All->setEnabled(false);
     } else {
         ui->actionAuto_Detect->setEnabled(true);
         ui->actionEncode_in_ANSI->setEnabled(true);
@@ -240,6 +244,9 @@ void MainWindow::updateEditorActions()
 
         //code
         ui->actionReformat_Code->setEnabled(true);
+
+        ui->actionClose->setEnabled(true);
+        ui->actionClose_All->setEnabled(true);
 
         updateCompileActions();
     }
@@ -1080,6 +1087,17 @@ void MainWindow::buildContextMenus()
     ui->watchView->addAction(ui->actionRemove_Watch);
     ui->watchView->addAction(ui->actionRemove_All_Watches);
     ui->watchView->addAction(ui->actionModify_Watch);
+}
+
+void MainWindow::maximizeEditor()
+{
+    if (mLeftPanelOpenned || mBottomPanelOpenned) {
+        openCloseBottomPanel(false);
+        openCloseLeftPanel(false);
+    } else {
+        openCloseBottomPanel(true);
+        openCloseLeftPanel(true);
+    }
 }
 
 void MainWindow::onAutoSaveTimeout()
@@ -2050,13 +2068,7 @@ void MainWindow::on_splitterMessages_splitterMoved(int, int)
 
 void MainWindow::on_EditorTabsLeft_tabBarDoubleClicked(int index)
 {
-    if (mLeftPanelOpenned || mBottomPanelOpenned ) {
-        openCloseBottomPanel(false);
-        openCloseLeftPanel(false);
-    } else {
-        openCloseBottomPanel(true);
-        openCloseLeftPanel(true);
-    }
+    maximizeEditor();
 }
 
 
@@ -2067,5 +2079,20 @@ void MainWindow::on_actionClose_triggered()
     if (e) {
         mEditorList->closeEditor(e);
     }
+    mClosing = false;
+}
+
+
+void MainWindow::on_actionClose_All_triggered()
+{
+    mClosing = true;
+    mEditorList->closeAll(mSystemTurnedOff);
+    mClosing = false;
+}
+
+
+void MainWindow::on_actionMaximize_Editor_triggered()
+{
+    maximizeEditor();
 }
 

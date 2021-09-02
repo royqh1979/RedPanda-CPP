@@ -841,6 +841,8 @@
     <property name="title">
      <string>Window</string>
     </property>
+    <addaction name="actionClose_All"/>
+    <addaction name="actionMaximize_Editor"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -1459,6 +1461,19 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+Shift+W</string>
+   </property>
+  </action>
+  <action name="actionMaximize_Editor">
+   <property name="icon">
+    <iconset>
+     <normalon>:/icons/images/newlook24/030-dos.png</normalon>
+    </iconset>
+   </property>
+   <property name="text">
+    <string>Maximize Editor</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+F11</string>
    </property>
   </action>
  </widget>

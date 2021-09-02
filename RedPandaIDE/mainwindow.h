@@ -119,11 +119,9 @@ public slots:
     void onEndParsing(int total, int updateView);
     void onEvalValueReady(const QString& value);
 
-protected:
+private:
     void openFiles(const QStringList& files);
     void openFile(const QString& filename);
-
-private:
     CompileTarget getCompileTarget();
     bool debugInferiorhasBreakpoint();
     void setupActions();
@@ -132,6 +130,7 @@ private:
     void prepareDebugger();
     void doAutoSave(Editor *e);
     void buildContextMenus();
+    void maximizeEditor();
 
 private slots:
     void onAutoSaveTimeout();
@@ -255,6 +254,10 @@ private slots:
 
     void on_actionClose_triggered();
 
+    void on_actionClose_All_triggered();
+
+    void on_actionMaximize_Editor_triggered();
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;
@@ -296,7 +299,8 @@ private:
 
     CaretList mCaretList;
 
-    bool mClosing = false;
+    bool mClosing;
+    bool mSystemTurnedOff;
 
 
    // QWidget interface
