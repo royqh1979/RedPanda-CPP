@@ -695,9 +695,28 @@ public:
         const QByteArray &mainWindowGeometry() const;
         void setMainWindowGeometry(const QByteArray &newMainWindowGeometry);
 
+        bool bottomPanelOpenned() const;
+        void setBottomPanelOpenned(bool newBottomPanelOpenned);
+        int bottomPanelHeight() const;
+        void setBottomPanelHeight(int newBottomPanelHeight);
+        int bottomPanelIndex() const;
+        void setBottomPanelIndex(int newBottomPanelIndex);
+        bool leftPanelOpenned() const;
+        void setLeftPanelOpenned(bool newLeftPanelOpenned);
+        int leftPanelWidth() const;
+        void setLeftPanelWidth(int newLeftPanelWidth);
+        int leftPanelIndex() const;
+        void setLeftPanelIndex(int newLeftPanelIndex);
+
     private:
         QByteArray mMainWindowState;
         QByteArray mMainWindowGeometry;
+        bool mBottomPanelOpenned;
+        int mBottomPanelHeight;
+        int mBottomPanelIndex;
+        bool mLeftPanelOpenned;
+        int mLeftPanelWidth;
+        int mLeftPanelIndex;
 
     protected:
         void doSave() override;

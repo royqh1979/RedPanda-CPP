@@ -3587,6 +3587,66 @@ void Settings::UI::setMainWindowGeometry(const QByteArray &newMainWindowGeometry
     mMainWindowGeometry = newMainWindowGeometry;
 }
 
+bool Settings::UI::bottomPanelOpenned() const
+{
+    return mBottomPanelOpenned;
+}
+
+void Settings::UI::setBottomPanelOpenned(bool newBottomPanelOpenned)
+{
+    mBottomPanelOpenned = newBottomPanelOpenned;
+}
+
+int Settings::UI::bottomPanelHeight() const
+{
+    return mBottomPanelHeight;
+}
+
+void Settings::UI::setBottomPanelHeight(int newBottomPanelHeight)
+{
+    mBottomPanelHeight = newBottomPanelHeight;
+}
+
+int Settings::UI::bottomPanelIndex() const
+{
+    return mBottomPanelIndex;
+}
+
+void Settings::UI::setBottomPanelIndex(int newBottomPanelIndex)
+{
+    mBottomPanelIndex = newBottomPanelIndex;
+}
+
+bool Settings::UI::leftPanelOpenned() const
+{
+    return mLeftPanelOpenned;
+}
+
+void Settings::UI::setLeftPanelOpenned(bool newLeftPanelOpenned)
+{
+    mLeftPanelOpenned = newLeftPanelOpenned;
+}
+
+int Settings::UI::leftPanelWidth() const
+{
+    return mLeftPanelWidth;
+}
+
+void Settings::UI::setLeftPanelWidth(int newLeftPanelWidth)
+{
+    mLeftPanelWidth = newLeftPanelWidth;
+}
+
+int Settings::UI::leftPanelIndex() const
+{
+    return mLeftPanelIndex;
+}
+
+void Settings::UI::setLeftPanelIndex(int newLeftPanelIndex)
+{
+    mLeftPanelIndex = newLeftPanelIndex;
+}
+
 const QByteArray &Settings::UI::mainWindowState() const
 {
     return mMainWindowState;
@@ -3601,10 +3661,19 @@ void Settings::UI::doSave()
 {
     saveValue("main_window_state",mMainWindowState);
     saveValue("main_window_geometry",mMainWindowGeometry);
+    saveValue("bottom_panel_openned",mBottomPanelOpenned);
+    saveValue("bottom_panel_height",mBottomPanelHeight);
+    saveValue()
+    saveValue("left_panel_openned",mLeftPanelOpenned);
+    saveValue("left_panel_width",mLeftPanelWidth);
 }
 
 void Settings::UI::doLoad()
 {
     mMainWindowState = value("main_window_state",QByteArray()).toByteArray();
     mMainWindowGeometry = value("main_window_geometry",QByteArray()).toByteArray();
+    mBottomPanelOpenned = boolValue("bottom_panel_openned",false);
+    mBottomPanelHeight = intValue("bottom_panel_height",220);
+    mLeftPanelOpenned = boolValue("left_panel_openned",true);
+    mLeftPanelWidth = intValue("left_panel_width",250);
 }
