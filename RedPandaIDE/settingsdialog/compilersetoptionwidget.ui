@@ -106,6 +106,20 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
+        <widget class="QCheckBox" name="chkAutoAddCharset">
+         <property name="text">
+          <string>Add Charset arguments when calling the compiler</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="chkStaticLink">
+         <property name="text">
+          <string>Statically link libraries</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QCheckBox" name="chkUseCustomCompilerParams">
          <property name="text">
           <string>Add the following arguments when calling the compiler</string>
@@ -124,13 +138,6 @@
        </item>
        <item>
         <widget class="QPlainTextEdit" name="txtCustomLinkParams"/>
-       </item>
-       <item>
-        <widget class="QCheckBox" name="chkAutoAddCharset">
-         <property name="text">
-          <string>Add Charset arguments when calling the compiler</string>
-         </property>
-        </widget>
        </item>
       </layout>
      </widget>

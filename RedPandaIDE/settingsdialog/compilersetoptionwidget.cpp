@@ -97,7 +97,7 @@ static void loadCompilerSetSettings(Settings::PCompilerSet pSet, Ui::CompilerSet
     ui->txtCustomLinkParams->setPlainText(pSet->customLinkParams());
     ui->txtCustomLinkParams->setEnabled(pSet->useCustomLinkParams());
     ui->chkAutoAddCharset->setChecked(pSet->autoAddCharsetParams());
-
+    ui->chkStaticLink->setChecked(pSet->staticLink());
     //rest tabs in the options widget
     resetOptionTabs(pSet,ui->optionTabs);
 
@@ -174,6 +174,7 @@ void CompilerSetOptionWidget::saveCurrentCompilerSet()
     pSet->setUseCustomLinkParams(ui->chkUseCustomLinkParams->isChecked());
     pSet->setCustomLinkParams(ui->txtCustomLinkParams->toPlainText().trimmed());
     pSet->setAutoAddCharsetParams(ui->chkAutoAddCharset->isChecked());
+    pSet->setStaticLink(ui->chkStaticLink->isChecked());
 
     pSet->setCCompiler(ui->txtCCompiler->text().trimmed());
     pSet->setCppCompiler(ui->txtCppCompiler->text().trimmed());

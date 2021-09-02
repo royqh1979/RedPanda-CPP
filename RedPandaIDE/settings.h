@@ -835,6 +835,9 @@ public:
         //load hard defines
         void setDefines();
 
+        bool staticLink() const;
+        void setStaticLink(bool newStaticLink);
+
     private:
         int charToValue(char valueChar);
 
@@ -877,6 +880,7 @@ public:
         QString mCustomCompileParams;
         QString mCustomLinkParams;
         bool mAutoAddCharsetParams;
+        bool mStaticLink;
 
         // Options
         CompilerOptionList mOptions;

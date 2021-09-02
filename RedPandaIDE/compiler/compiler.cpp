@@ -353,6 +353,10 @@ QString Compiler::getLibraryArguments()
             }
         }
     }
+
+    if (compilerSet()->staticLink()) {
+        result += " -static";
+    }
     return result;
 }
 

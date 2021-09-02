@@ -1855,8 +1855,6 @@ void Settings::CompilerSet::setOptions()
     sl.append("GNU C++17=gnu++17");
     sl.append("GNU C++20=gnu++20");
     addOption(QObject::tr("Language standard (-std)"), groupName, true, true, false, 0, "-std=", sl);
-    addOption(QObject::tr("Generate debugging information (-g3)"), groupName, true, true, false, 0, "-g3");
-    addOption(QObject::tr("Generate profiling info for analysis (-pg)"), groupName, true, true, true, 0, "-pg");
 
     // Warnings
     groupName = QObject::tr("Warnings");
@@ -1868,19 +1866,23 @@ void Settings::CompilerSet::setOptions()
     addOption(QObject::tr("Make all warnings into errors (-Werror)"), groupName, true, true, false, 0, "-Werror");
     addOption(QObject::tr("Abort compilation on first error (-Wfatal-errors)"), groupName, true, true, false, 0, "-Wfatal-errors");
 
+    // Profile
+    groupName = QObject::tr("Profile");
+    addOption(QObject::tr("Generate profiling info for analysis (-pg)"), groupName, true, true, true, 0, "-pg");
+
     // Linker
     groupName = QObject::tr("Linker");
     addOption(QObject::tr("Link an Objective C program (-lobjc)"), groupName, false, false, true, 0, "-lobjc");
     addOption(QObject::tr("Do not use standard system libraries (-nostdlib)"), groupName, false, false, true, 0, "-nostdlib");
     addOption(QObject::tr("Do not create a console window (-mwindows)"), groupName,false, false, true, 0, "-mwindows");
     addOption(QObject::tr("Strip executable (-s)"), groupName, false, false, true, 0, "-s");
-    addOption(QObject::tr("Link libraries statically (-static)"), groupName, false, false, true, 0, "-static");
+    addOption(QObject::tr("Generate debugging information (-g3)"), groupName, true, true, false, 0, "-g3");
 
     // Output
     groupName = QObject::tr("Output");
     addOption(QObject::tr("Put comments in generated assembly code (-fverbose-asm)"), groupName, true, true, false, 0, "-fverbose-asm");
-    addOption(QObject::tr("Use pipes instead of temporary files during compilation (-pipe)"), groupName, true, true, false, 0, "-pipe");
     addOption(QObject::tr("Do not assemble, compile and generate the assemble code (-S)"), groupName, true, true, false, 0, "-S");
+    addOption(QObject::tr("Use pipes instead of temporary files during compilation (-pipe)"), groupName, true, true, false, 0, "-pipe");
 }
 
 QString Settings::CompilerSet::findProgramInBinDirs(const QString name)
@@ -1919,6 +1921,16 @@ QByteArray Settings::CompilerSet::getCompilerOutput(const QString &binDir, const
 {
     QByteArray result = runAndGetOutput(includeTrailingPathDelimiter(binDir)+binFile, binDir, arguments);
     return result.trimmed();
+}
+
+bool CompilerSet::staticLink() const
+{
+    return mStaticLink;
+}
+
+void CompilerSet::setStaticLink(bool newStaticLink)
+{
+    mStaticLink = newStaticLink;
 }
 
 bool Settings::CompilerSet::useCustomCompileParams() const
@@ -2223,6 +2235,7 @@ void Settings::CompilerSets::saveSet(int index)
     mSettings->mSettings.setValue("useCustomLinkParams", pSet->useCustomLinkParams());
     mSettings->mSettings.setValue("customLinkParams", pSet->customLinkParams());
     mSettings->mSettings.setValue("AddCharset", pSet->autoAddCharsetParams());
+    mSettings->mSettings.setValue("StaticLink", pSet->staticLink());
 
     // Misc. properties
     mSettings->mSettings.setValue("DumpMachine", pSet->dumpMachine());
@@ -2284,13 +2297,13 @@ Settings::PCompilerSet Settings::CompilerSets::loadSet(int index)
     pSet->setUseCustomLinkParams(mSettings->mSettings.value("useCustomLinkParams").toBool());
     pSet->setCustomLinkParams(mSettings->mSettings.value("customLinkParams").toString());
     pSet->setAutoAddCharsetParams(mSettings->mSettings.value("AddCharset").toBool());
+    pSet->setStaticLink(mSettings->mSettings.value("StaticLink").toBool());
 
     pSet->setDumpMachine(mSettings->mSettings.value("DumpMachine").toString());
     pSet->setVersion(mSettings->mSettings.value("Version").toString());
     pSet->setType(mSettings->mSettings.value("Type").toString());
     pSet->setName(mSettings->mSettings.value("Name").toString());
     pSet->setTarget(mSettings->mSettings.value("Target").toString());
-
 
     // Paths
     loadPathList("Bins",pSet->binDirs());
