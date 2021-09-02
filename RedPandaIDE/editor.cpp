@@ -382,6 +382,12 @@ void Editor::wheelEvent(QWheelEvent *event) {
 void Editor::focusInEvent(QFocusEvent *event)
 {
     SynEdit::focusInEvent(event);
+    if (mParser) {
+        connect(mParser.get(),
+                &CppParser::onEndParsing,
+                this,
+                &SynEdit::invalidate);
+    }
     pMainWindow->updateEditorActions();
     pMainWindow->updateStatusbarForLineCol();
     pMainWindow->updateForStatusbarModeInfo();
@@ -391,6 +397,13 @@ void Editor::focusInEvent(QFocusEvent *event)
 void Editor::focusOutEvent(QFocusEvent *event)
 {
     SynEdit::focusOutEvent(event);
+    if (mParser) {
+        disconnect(mParser.get(),
+                &CppParser::onEndParsing,
+                this,
+                &SynEdit::invalidate);
+    }
+    pMainWindow->updateClassBrowserForEditor(nullptr);
     pMainWindow->updateEditorActions();
     pMainWindow->updateStatusbarForLineCol();
     pMainWindow->updateForStatusbarModeInfo();

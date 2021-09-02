@@ -34,9 +34,10 @@ MainWindow::MainWindow(QWidget *parent)
       ui(new Ui::MainWindow),
       mSearchDialog(nullptr),
       mQuitting(false),
-      mMessageControlChanged(false),
-      mTabMessagesTogglingState(false),
-      mCheckSyntaxInBack(false)
+      mOpenClosingBottomPanel(false),
+      mOpenClosingLeftPanel(false),
+      mCheckSyntaxInBack(false),
+      mClosing(false)
 {
     ui->setupUi(this);
     // status bar
@@ -288,11 +289,26 @@ void MainWindow::applySettings()
 
 void MainWindow::applyUISettings()
 {
-    openCloseMessageSheet(false);
-    mPreviousHeight = 250;
     const Settings::UI& settings = pSettings->ui();
     restoreGeometry(settings.mainWindowGeometry());
     restoreState(settings.mainWindowState());
+    //we can show/hide left/bottom panels here, cause mainwindow layout is not calculated
+//    ui->tabMessages->setCurrentIndex(settings.bottomPanelIndex());
+//    if (settings.bottomPanelOpenned()) {
+//        mBottomPanelHeight = settings.bottomPanelHeight();
+//        openCloseBottomPanel(true);
+//    } else {
+//        openCloseBottomPanel(false);
+//        mBottomPanelHeight = settings.bottomPanelHeight();
+//    }
+//    ui->tabInfos->setCurrentIndex(settings.leftPanelIndex());
+//    if (settings.leftPanelOpenned()) {
+//        mLeftPanelWidth = settings.leftPanelWidth();
+//        openCloseLeftPanel(true);
+//    } else {
+//        openCloseLeftPanel(false);
+//        mLeftPanelWidth = settings.leftPanelWidth();
+//    }
 }
 
 QFileSystemWatcher *MainWindow::fileSystemWatcher()
@@ -612,7 +628,7 @@ bool MainWindow::compile(bool rebuild)
             mCompileSuccessionTask->filename = getCompiledExecutableName(editor->filename());
         }
         updateCompileActions();
-        openCloseMessageSheet(true);
+        openCloseBottomPanel(true);
         ui->tabMessages->setCurrentWidget(ui->tabCompilerOutput);
         updateAppTitle();
         mCompilerManager->compile(editor->filename(),editor->fileEncoding(),rebuild);
@@ -929,19 +945,19 @@ void MainWindow::debug()
 
 void MainWindow::showSearchPanel()
 {
-    openCloseMessageSheet(true);
+    openCloseBottomPanel(true);
     ui->tabMessages->setCurrentWidget(ui->tabSearch);
 }
 
-void MainWindow::openCloseMessageSheet(bool open)
+void MainWindow::openCloseBottomPanel(bool open)
 {
 //    if Assigned(fReportToolWindow) then
 //      Exit;
-    if (mTabMessagesTogglingState)
+    if (mOpenClosingBottomPanel)
         return;
-    mTabMessagesTogglingState = true;
+    mOpenClosingBottomPanel = true;
     auto action = finally([this]{
-        mTabMessagesTogglingState = false;
+        mOpenClosingBottomPanel = false;
     });
     // Switch between open and close
     if (open) {
@@ -949,12 +965,12 @@ void MainWindow::openCloseMessageSheet(bool open)
         int tabHeight = ui->tabMessages->tabBar()->height();
         ui->tabMessages->setMinimumHeight(tabHeight+5);
         int totalSize = sizes[0] + sizes[1];
-        sizes[1] = mPreviousHeight;
+        sizes[1] = mBottomPanelHeight;
         sizes[0] = std::max(1,totalSize - sizes[1]);
         ui->splitterMessages->setSizes(sizes);
     } else {
         QList<int> sizes = ui->splitterMessages->sizes();
-        mPreviousHeight = sizes[1];
+        mBottomPanelHeight = sizes[1];
         int totalSize = sizes[0] + sizes[1];
         int tabHeight = ui->tabMessages->tabBar()->height();
         ui->tabMessages->setMinimumHeight(tabHeight);
@@ -962,11 +978,43 @@ void MainWindow::openCloseMessageSheet(bool open)
         sizes[0] = std::max(1,totalSize - sizes[1]);
         ui->splitterMessages->setSizes(sizes);
     }
+    mBottomPanelOpenned = open;
     QSplitterHandle* handle = ui->splitterMessages->handle(1);
     handle->setEnabled(open);
     int idxClose = ui->tabMessages->indexOf(ui->tabClose);
     ui->tabMessages->setTabVisible(idxClose,open);
-    mTabMessagesTogglingState = false;
+}
+
+void MainWindow::openCloseLeftPanel(bool open)
+{
+    if (mOpenClosingLeftPanel)
+        return;
+    mOpenClosingLeftPanel = true;
+    auto action = finally([this]{
+        mOpenClosingLeftPanel = false;
+    });
+    // Switch between open and close
+    if (open) {
+        QList<int> sizes = ui->splitterInfos->sizes();
+        int tabWidth = ui->tabInfos->tabBar()->width();
+        ui->tabInfos->setMinimumWidth(tabWidth+5);
+        int totalSize = sizes[0] + sizes[1];
+        sizes[0] = mLeftPanelWidth;
+        sizes[1] = std::max(1,totalSize - sizes[0]);
+        ui->splitterInfos->setSizes(sizes);
+    } else {
+        QList<int> sizes = ui->splitterInfos->sizes();
+        mLeftPanelWidth = sizes[0];
+        int totalSize = sizes[0] + sizes[1];
+        int tabWidth = ui->tabInfos->tabBar()->width();
+        ui->tabInfos->setMinimumWidth(tabWidth);
+        sizes[0] = tabWidth;
+        sizes[1] = std::max(1,totalSize - sizes[0]);
+        ui->splitterInfos->setSizes(sizes);
+    }
+    mLeftPanelOpenned = open;
+    QSplitterHandle* handle = ui->splitterInfos->handle(1);
+    handle->setEnabled(open);
 }
 
 void MainWindow::prepareDebugger()
@@ -984,7 +1032,8 @@ void MainWindow::prepareDebugger()
     ui->tabInfos->setCurrentWidget(ui->tabWatch);
     ui->tabMessages->setCurrentWidget(ui->tabDebug);
     ui->debugViews->setCurrentWidget(ui->tabDebugConsole);
-    openCloseMessageSheet(true);
+    openCloseBottomPanel(true);
+    openCloseLeftPanel(true);
 
 
     // Reset watch vars
@@ -1138,7 +1187,7 @@ void MainWindow::on_actionNew_triggered()
 
 void MainWindow::on_EditorTabsLeft_tabCloseRequested(int index)
 {
-    Editor* editor = mEditorList->getEditor(index);
+    Editor* editor = mEditorList->getEditor(index,ui->EditorTabsLeft);
     mEditorList->closeEditor(editor);
 }
 
@@ -1164,7 +1213,14 @@ void MainWindow::closeEvent(QCloseEvent *event) {
     Settings::UI& settings = pSettings->ui();
     settings.setMainWindowState(saveState());
     settings.setMainWindowGeometry(saveGeometry());
-    pSettings->ui().save();
+    settings.setBottomPanelHeight(mBottomPanelHeight);
+    settings.setBottomPanelIndex(ui->tabMessages->currentIndex());
+    settings.setBottomPanelOpenned(mBottomPanelOpenned);
+    settings.setLeftPanelWidth(mLeftPanelWidth);
+    settings.setLeftPanelIndex(ui->tabInfos->currentIndex());
+    settings.setLeftPanelOpenned(mLeftPanelOpenned);
+    settings.save();
+
     if (!mEditorList->closeAll(false)) {
         event->ignore();
         return ;
@@ -1173,6 +1229,27 @@ void MainWindow::closeEvent(QCloseEvent *event) {
     delete mEditorList;
     event->accept();
     return;
+}
+
+void MainWindow::showEvent(QShowEvent *event)
+{
+    const Settings::UI& settings = pSettings->ui();
+    ui->tabMessages->setCurrentIndex(settings.bottomPanelIndex());
+    if (settings.bottomPanelOpenned()) {
+        mBottomPanelHeight = settings.bottomPanelHeight();
+        openCloseBottomPanel(true);
+    } else {
+        openCloseBottomPanel(false);
+        mBottomPanelHeight = settings.bottomPanelHeight();
+    }
+    ui->tabInfos->setCurrentIndex(settings.leftPanelIndex());
+    if (settings.leftPanelOpenned()) {
+        mLeftPanelWidth = settings.leftPanelWidth();
+        openCloseLeftPanel(true);
+    } else {
+        openCloseLeftPanel(false);
+        mLeftPanelWidth = settings.leftPanelWidth();
+    }
 }
 
 void MainWindow::on_actionSave_triggered()
@@ -1258,13 +1335,12 @@ void MainWindow::onCompileFinished()
 //        and (ResourceOutput.Items.Count = 0)
 //        and devData.AutoCloseProgress
                ) {
-        openCloseMessageSheet(false);
+        openCloseBottomPanel(false);
         // Or open it if there is anything to show
     } else {
         if (ui->tableIssues->count() > 0) {
             if (ui->tabMessages->currentIndex() != i) {
                 ui->tabMessages->setCurrentIndex(i);
-                mMessageControlChanged = false;
             }
 //      end else if (ResourceOutput.Items.Count > 0) then begin
 //        if MessageControl.ActivePage <> ResSheet then begin
@@ -1272,7 +1348,7 @@ void MainWindow::onCompileFinished()
 //          fMessageControlChanged := False;
 //        end;
 //      end;
-            openCloseMessageSheet(true);
+            openCloseBottomPanel(true);
         }
     }
 
@@ -1544,7 +1620,7 @@ void MainWindow::on_actionConvert_to_UTF_8_triggered()
 void MainWindow::on_tabMessages_tabBarClicked(int index)
 {
     if (index == ui->tabMessages->currentIndex()) {
-        openCloseMessageSheet(!ui->splitterMessages->handle(1)->isEnabled());
+        openCloseBottomPanel(!mBottomPanelOpenned);
     }
 }
 
@@ -1552,9 +1628,9 @@ void MainWindow::on_tabMessages_currentChanged(int index)
 {
     int idxClose = ui->tabMessages->indexOf(ui->tabClose);
     if (index == idxClose) {
-        openCloseMessageSheet(false);
+        openCloseBottomPanel(false);
     } else {
-        openCloseMessageSheet(true);
+        openCloseBottomPanel(true);
     }
 }
 
@@ -1947,5 +2023,49 @@ void MainWindow::on_actionForward_triggered()
     }
     mCaretList.unPause();
     updateCaretActions();
+}
+
+
+void MainWindow::on_tabInfos_tabBarClicked(int index)
+{
+    if (index == ui->tabInfos->currentIndex()) {
+        openCloseLeftPanel(!mLeftPanelOpenned);
+    }
+}
+
+
+void MainWindow::on_splitterInfos_splitterMoved(int, int)
+{
+    QList<int> sizes = ui->splitterMessages->sizes();
+    mLeftPanelWidth = sizes[0];
+}
+
+
+void MainWindow::on_splitterMessages_splitterMoved(int, int)
+{
+    QList<int> sizes = ui->splitterMessages->sizes();
+    mBottomPanelHeight = sizes[1];
+}
+
+
+void MainWindow::on_EditorTabsLeft_tabBarDoubleClicked(int index)
+{
+    if (mLeftPanelOpenned || mBottomPanelOpenned ) {
+        openCloseBottomPanel(false);
+        openCloseLeftPanel(false);
+    } else {
+        openCloseBottomPanel(true);
+        openCloseLeftPanel(true);
+    }
+}
+
+
+void MainWindow::on_actionClose_triggered()
+{
+    mClosing = true;
+    Editor* e = mEditorList->getEditor();
+    if (e) {
+        mEditorList->closeEditor(e);
+    }
 }
 

@@ -3663,9 +3663,10 @@ void Settings::UI::doSave()
     saveValue("main_window_geometry",mMainWindowGeometry);
     saveValue("bottom_panel_openned",mBottomPanelOpenned);
     saveValue("bottom_panel_height",mBottomPanelHeight);
-    saveValue()
+    saveValue("bottom_panel_index",mBottomPanelIndex);
     saveValue("left_panel_openned",mLeftPanelOpenned);
     saveValue("left_panel_width",mLeftPanelWidth);
+    saveValue("left_panel_index",mLeftPanelIndex);
 }
 
 void Settings::UI::doLoad()
@@ -3674,6 +3675,8 @@ void Settings::UI::doLoad()
     mMainWindowGeometry = value("main_window_geometry",QByteArray()).toByteArray();
     mBottomPanelOpenned = boolValue("bottom_panel_openned",false);
     mBottomPanelHeight = intValue("bottom_panel_height",220);
+    mBottomPanelIndex = intValue("bottom_panel_index",0);
     mLeftPanelOpenned = boolValue("left_panel_openned",true);
     mLeftPanelWidth = intValue("left_panel_width",250);
+    mLeftPanelIndex = intValue("left_panel_index",2);
 }

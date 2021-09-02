@@ -127,7 +127,8 @@ private:
     CompileTarget getCompileTarget();
     bool debugInferiorhasBreakpoint();
     void setupActions();
-    void openCloseMessageSheet(bool open);
+    void openCloseBottomPanel(bool open);
+    void openCloseLeftPanel(bool open);
     void prepareDebugger();
     void doAutoSave(Editor *e);
     void buildContextMenus();
@@ -244,6 +245,16 @@ private slots:
 
     void on_actionForward_triggered();
 
+    void on_tabInfos_tabBarClicked(int index);
+
+    void on_splitterInfos_splitterMoved(int pos, int index);
+
+    void on_splitterMessages_splitterMoved(int pos, int index);
+
+    void on_EditorTabsLeft_tabBarDoubleClicked(int index);
+
+    void on_actionClose_triggered();
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;
@@ -272,20 +283,26 @@ private:
     PSearchResultTreeViewDelegate mSearchViewDelegate;
     ClassBrowserModel mClassBrowserModel;
 
-    bool mMessageControlChanged;
-    bool mTabMessagesTogglingState;
     bool mCheckSyntaxInBack;
-    int mPreviousHeight;
+    bool mOpenClosingBottomPanel;
+    int mBottomPanelHeight;
+    bool mBottomPanelOpenned;
+    bool mOpenClosingLeftPanel;
+    int mLeftPanelWidth;
+    bool mLeftPanelOpenned;
     PCompileSuccessionTask mCompileSuccessionTask;
 
     QTimer mAutoSaveTimer;
 
     CaretList mCaretList;
 
+    bool mClosing = false;
+
 
    // QWidget interface
 protected:
     void closeEvent(QCloseEvent *event) override;
+    void showEvent(QShowEvent* event) override;
 };
 
 extern MainWindow* pMainWindow;
