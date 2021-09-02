@@ -360,12 +360,16 @@ void SynEditStringList::deleteAt(int Index)
 
 QString SynEditStringList::getTextStr()
 {
-    QString Result;
-    for (PSynEditStringRec& line:mList) {
-        Result.append(line->fString);
-        Result.append(lineBreak());
+    QString result;
+    for (int i=0;i<mList.count()-1;i++) {
+        const PSynEditStringRec& line = mList[i];
+        result.append(line->fString);
+        result.append(lineBreak());
     }
-    return Result;
+    if (mList.length()>0) {
+        result.append(mList.back()->fString);
+    }
+    return result;
 }
 
 void SynEditStringList::putString(int Index, const QString &s) {

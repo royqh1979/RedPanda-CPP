@@ -127,9 +127,16 @@ Editor::Editor(QWidget *parent, const QString& filename,
     onStatusChanged(SynStatusChange::scOpenFile);
 
     setAttribute(Qt::WA_Hover,true);
+
+    connect(this,&SynEdit::linesDeleted,
+            this, &Editor::onLinesDeleted);
+    connect(this,&SynEdit::linesInserted,
+            this, &Editor::onLinesInserted);
 }
 
 Editor::~Editor() {
+    pMainWindow->caretList().removeEditor(this);
+    pMainWindow->updateCaretActions();
     if (mParentPageControl!=nullptr) {
         int index = mParentPageControl->indexOf(this);
         mParentPageControl->removeTab(index);
@@ -143,8 +150,6 @@ void Editor::loadFile() {
     this->setModified(false);
     updateCaption();
     pMainWindow->updateForEncodingInfo();
-    if (pSettings->editor().syntaxCheck() && pSettings->editor().syntaxCheckWhenSave())
-        pMainWindow->checkSyntaxInBack(this);
     switch(getFileType(mFilename)) {
     case FileType::CppSource:
         mUseCppSyntax = true;
@@ -157,8 +162,8 @@ void Editor::loadFile() {
     }
     if (highlighter() && mParser) {
         reparse();
-        if (pSettings->editor().syntaxCheck() && pSettings->editor().syntaxCheckWhenLineChanged()) {
-            pMainWindow->checkSyntaxInBack(this);
+        if (pSettings->editor().syntaxCheckWhenLineChanged()) {
+            checkSyntaxInBack();
         }
     }
 }
@@ -167,8 +172,8 @@ void Editor::saveFile(const QString &filename) {
     QFile file(filename);
     this->lines()->SaveToFile(file,mEncodingOption,mFileEncoding);
     pMainWindow->updateForEncodingInfo();
-    if (pSettings->editor().syntaxCheck() && pSettings->editor().syntaxCheckWhenSave())
-        pMainWindow->checkSyntaxInBack(this);
+    if (pSettings->editor().syntaxCheckWhenSave())
+        checkSyntaxInBack();
 }
 
 void Editor::convertToEncoding(const QByteArray &encoding)
@@ -264,7 +269,7 @@ bool Editor::saveAs(){
 
     reparse();
 
-    if (highlighter() && pSettings->editor().syntaxCheck() && pSettings->editor().syntaxCheckWhenLineChanged())
+    if (pSettings->editor().syntaxCheckWhenSave())
         pMainWindow->checkSyntaxInBack(this);
 
     return true;
@@ -1020,8 +1025,8 @@ void Editor::onStatusChanged(SynStatusChanges changes)
             && (lines()->count()!=mLineCount)
             && (lines()->count()!=0) && ((mLineCount>0) || (lines()->count()>1))) {
         reparse();
-        if (!readOnly() && highlighter() && pSettings->editor().syntaxCheck() && pSettings->editor().syntaxCheckWhenLineChanged())
-            pMainWindow->checkSyntaxInBack(this);
+        if (pSettings->editor().syntaxCheckWhenLineChanged())
+            checkSyntaxInBack();
     }
     mLineCount = lines()->count();
     if (changes.testFlag(scModified)) {
@@ -1116,7 +1121,10 @@ void Editor::onStatusChanged(SynStatusChanges changes)
 
     pMainWindow->updateEditorActions();
 
-    //    mainForm.CaretList.AddCaret(self,fText.CaretY,fText.CaretX);
+    if (changes.testFlag(SynStatusChange::scCaretY)) {
+        pMainWindow->caretList().addCaret(this,caretY(),caretX());
+        pMainWindow->updateCaretActions();
+    }
 }
 
 void Editor::onGutterClicked(Qt::MouseButton button, int , int , int line)
@@ -1134,6 +1142,16 @@ void Editor::onTipEvalValueReady(const QString &value)
     }
     disconnect(pMainWindow->debugger(), &Debugger::evalValueReady,
                this, &Editor::onTipEvalValueReady);
+}
+
+void Editor::onLinesDeleted(int first, int count)
+{
+    pMainWindow->caretList().linesDeleted(this,first,count);
+}
+
+void Editor::onLinesInserted(int first, int count)
+{
+    pMainWindow->caretList().linesInserted(this,first,count);
 }
 
 QChar Editor::getCurrentChar()
@@ -2460,6 +2478,34 @@ QString Editor::getPreviousWordAtPositionForSuggestion(const BufferCoord &p)
         wordEnd = wordBegin-1;
     }
     return result;
+}
+
+void Editor::reformat()
+{
+    if (readOnly())
+        return;
+    QFile file(":/codes/formatdemo.cpp");
+    if (!file.open(QFile::ReadOnly))
+        return;
+    QByteArray content = lines()->text().toUtf8();
+    QStringList args = pSettings->codeFormatter().getArguments();
+    QByteArray newContent = runAndGetOutput("astyle.exe",
+                                            pSettings->dirs().app(),
+                                            args,
+                                            content);
+
+    selectAll();
+    setSelText(QString::fromUtf8(newContent));
+    reparse();
+
+}
+
+void Editor::checkSyntaxInBack()
+{
+    if (readOnly())
+        return;
+    if(pSettings->editor().syntaxCheck())
+        pMainWindow->checkSyntaxInBack(this);
 }
 
 const PCppParser &Editor::parser() const

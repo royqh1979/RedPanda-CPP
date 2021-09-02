@@ -14,6 +14,7 @@ QMAKE_CXXFLAGS_DEBUG += -Werror=return-type
 
 SOURCES += \
     HighlighterManager.cpp \
+    caretlist.cpp \
     codeformatter.cpp \
     colorscheme.cpp \
     compiler/compiler.cpp \
@@ -85,6 +86,7 @@ SOURCES += \
 
 HEADERS += \
     HighlighterManager.h \
+    caretlist.h \
     codeformatter.h \
     colorscheme.h \
     compiler/compiler.h \

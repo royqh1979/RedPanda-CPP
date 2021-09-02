@@ -28,12 +28,12 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
     //fPlugins := TList.Create;
     mMouseMoved = false;
     mUndoing = false;
-    mLines->connect(mLines.get(), &SynEditStringList::changed, this, &SynEdit::linesChanged);
-    mLines->connect(mLines.get(), &SynEditStringList::changing, this, &SynEdit::linesChanging);
-    mLines->connect(mLines.get(), &SynEditStringList::cleared, this, &SynEdit::linesCleared);
-    mLines->connect(mLines.get(), &SynEditStringList::deleted, this, &SynEdit::linesDeleted);
-    mLines->connect(mLines.get(), &SynEditStringList::inserted, this, &SynEdit::linesInserted);
-    mLines->connect(mLines.get(), &SynEditStringList::putted, this, &SynEdit::linesPutted);
+    mLines->connect(mLines.get(), &SynEditStringList::changed, this, &SynEdit::onLinesChanged);
+    mLines->connect(mLines.get(), &SynEditStringList::changing, this, &SynEdit::onLinesChanging);
+    mLines->connect(mLines.get(), &SynEditStringList::cleared, this, &SynEdit::onLinesCleared);
+    mLines->connect(mLines.get(), &SynEditStringList::deleted, this, &SynEdit::onLinesDeleted);
+    mLines->connect(mLines.get(), &SynEditStringList::inserted, this, &SynEdit::onLinesInserted);
+    mLines->connect(mLines.get(), &SynEditStringList::putted, this, &SynEdit::onLinesPutted);
 
 #ifdef Q_OS_WIN
     mFontDummy = QFont("Consolas",12);
@@ -46,10 +46,10 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
     setFont(mFontDummy);
 
     mUndoList = std::make_shared<SynEditUndoList>();
-    mUndoList->connect(mUndoList.get(), &SynEditUndoList::addedUndo, this, &SynEdit::undoAdded);
+    mUndoList->connect(mUndoList.get(), &SynEditUndoList::addedUndo, this, &SynEdit::onUndoAdded);
     mOrigUndoList = mUndoList;
     mRedoList = std::make_shared<SynEditUndoList>();
-    mRedoList->connect(mRedoList.get(), &SynEditUndoList::addedUndo, this, &SynEdit::redoAdded);
+    mRedoList->connect(mRedoList.get(), &SynEditUndoList::addedUndo, this, &SynEdit::onRedoAdded);
     mOrigRedoList = mRedoList;
 
     mCaretColor = QColorConstants::Red;
@@ -57,12 +57,12 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
     mSelectedBackground = palette().color(QPalette::Highlight);
     mSelectedForeground = palette().color(QPalette::HighlightedText);
 
-    mBookMarkOpt.connect(&mBookMarkOpt, &SynBookMarkOpt::changed, this, &SynEdit::bookMarkOptionsChanged);
+    mBookMarkOpt.connect(&mBookMarkOpt, &SynBookMarkOpt::changed, this, &SynEdit::onBookMarkOptionsChanged);
     //  fRightEdge has to be set before FontChanged is called for the first time
     mRightEdge = 80;
 
     mGutter.setRightOffset(21);
-    mGutter.connect(&mGutter, &SynGutter::changed, this, &SynEdit::gutterChanged);
+    mGutter.connect(&mGutter, &SynGutter::changed, this, &SynEdit::onGutterChanged);
     mGutterWidth = mGutter.realGutterWidth(charWidth());
     //ControlStyle := ControlStyle + [csOpaque, csSetCaption, csNeedsBorderPaint];
     //Height := 150;
@@ -111,7 +111,7 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
 
     mScrollTimer = new QTimer(this);
     mScrollTimer->setInterval(100);
-    connect(mScrollTimer, &QTimer::timeout,this, &SynEdit::scrollTimerHandler);
+    connect(mScrollTimer, &QTimer::timeout,this, &SynEdit::onScrollTimeout);
 
     mScrollHintColor = QColorConstants::Yellow;
     mScrollHintFormat = SynScrollHintFormat::shfTopLineOnly;
@@ -127,9 +127,9 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
     showCaret();
 
     connect(horizontalScrollBar(),&QScrollBar::valueChanged,
-            this, &SynEdit::doScrolled);
+            this, &SynEdit::onScrolled);
     connect(verticalScrollBar(),&QScrollBar::valueChanged,
-            this, &SynEdit::doScrolled);
+            this, &SynEdit::onScrolled);
     //enable input method
     setAttribute(Qt::WA_InputMethodEnabled);
 
@@ -1535,7 +1535,7 @@ void SynEdit::doDeleteLastChar()
             internalSetCaretY(mCaretY - 1);
             internalSetCaretX(mLines->getString(mCaretY - 1).length() + 1);
             mLines->deleteAt(mCaretY);
-            DoLinesDeleted(mCaretY+1, 1);
+            doLinesDeleted(mCaretY+1, 1);
             if (mOptions.testFlag(eoTrimTrailingSpaces))
                 Temp = TrimRight(Temp);
             setLineText(lineText() + Temp);
@@ -1629,9 +1629,9 @@ void SynEdit::doDeleteCurrentChar()
                       helper = lineBreak();
                       mLines->deleteAt(mCaretY);
                       if (mCaretX==1)
-                          DoLinesDeleted(mCaretY, 1);
+                          doLinesDeleted(mCaretY, 1);
                       else
-                          DoLinesDeleted(mCaretY + 1, 1);
+                          doLinesDeleted(mCaretY + 1, 1);
                 }
             }
             if ((Caret.Char != mCaretX) || (Caret.Line != mCaretY)) {
@@ -1697,7 +1697,7 @@ void SynEdit::doDeleteLine()
                                  BufferCoord{1, mCaretY},
                                  BufferCoord{helper.length() + 1, mCaretY},
                                  helper, SynSelectionMode::smNormal);
-            DoLinesDeleted(mCaretY, 1);
+            doLinesDeleted(mCaretY, 1);
         }
         internalSetCaretXY(BufferCoord{1, mCaretY}); // like seen in the Delphi editor
         doOnPaintTransient(SynTransientType::ttAfter);
@@ -1709,7 +1709,7 @@ void SynEdit::doDuplicateLine()
     if (!mReadOnly && (mLines->count() > 0)) {
         doOnPaintTransient(SynTransientType::ttBefore);
         mLines->Insert(mCaretY, lineText());
-        DoLinesInserted(mCaretY + 1, 1);
+        doLinesInserted(mCaretY + 1, 1);
         mUndoList->AddChange(SynChangeReason::crLineBreak,
                              caretXY(), caretXY(), "", SynSelectionMode::smNormal);
         internalSetCaretXY(BufferCoord{1, mCaretY}); // like seen in the Delphi editor
@@ -1729,11 +1729,11 @@ void SynEdit::doMoveSelUp()
         // Delete line above selection
         QString s = mLines->getString(OrigBlockBegin.Line - 2); // before start, 0 based
         mLines->deleteAt(OrigBlockBegin.Line - 2); // before start, 0 based
-        DoLinesDeleted(OrigBlockBegin.Line - 1, 1); // before start, 1 based
+        doLinesDeleted(OrigBlockBegin.Line - 1, 1); // before start, 1 based
 
         // Insert line below selection
         mLines->Insert(OrigBlockEnd.Line - 1, s);
-        DoLinesInserted(OrigBlockEnd.Line, 1);
+        doLinesInserted(OrigBlockEnd.Line, 1);
 
         // Restore caret and selection
         setCaretAndSelection(
@@ -1775,11 +1775,11 @@ void SynEdit::doMoveSelDown()
         // Delete line below selection
         QString s = mLines->getString(OrigBlockEnd.Line); // after end, 0 based
         mLines->deleteAt(OrigBlockEnd.Line); // after end, 0 based
-        DoLinesDeleted(OrigBlockEnd.Line, 1); // before start, 1 based
+        doLinesDeleted(OrigBlockEnd.Line, 1); // before start, 1 based
 
         // Insert line above selection
         mLines->Insert(OrigBlockBegin.Line - 1, s);
-        DoLinesInserted(OrigBlockBegin.Line, 1);
+        doLinesInserted(OrigBlockBegin.Line, 1);
 
         // Restore caret and selection
         setCaretAndSelection(
@@ -1954,7 +1954,7 @@ void SynEdit::insertLine(bool moveCaret)
             internalSetCaretXY(BufferCoord{1, mCaretY + 1});
         }
     }
-    DoLinesInserted(mCaretY - InsDelta, nLinesInserted);
+    doLinesInserted(mCaretY - InsDelta, nLinesInserted);
     setBlockBegin(caretXY());
     setBlockEnd(caretXY());
     ensureCursorPosVisible();
@@ -2483,7 +2483,7 @@ QRect SynEdit::clientRect()
 void SynEdit::synFontChanged()
 {
     recalcCharExtent();
-    sizeOrFontChanged(true);
+    onSizeOrFontChanged(true);
 }
 
 void SynEdit::doOnPaintTransient(SynTransientType TransientType)
@@ -3210,7 +3210,7 @@ SynEditorCommand SynEdit::TranslateKeyCode(int key, Qt::KeyboardModifiers modifi
     return cmd;
 }
 
-void SynEdit::sizeOrFontChanged(bool bFont)
+void SynEdit::onSizeOrFontChanged(bool bFont)
 {
 
     if (mCharWidth != 0) {
@@ -3218,7 +3218,7 @@ void SynEdit::sizeOrFontChanged(bool bFont)
         mLinesInWindow = clientHeight() / mTextHeight;
         if (bFont) {
             if (mGutter.showLineNumbers())
-                gutterChanged();
+                onGutterChanged();
             else
                 updateScrollbars();
             mStateFlags.setFlag(SynStateFlag::sfCaretChanged,false);
@@ -3233,12 +3233,12 @@ void SynEdit::sizeOrFontChanged(bool bFont)
     }
 }
 
-void SynEdit::doChange()
+void SynEdit::onChanged()
 {
     emit Changed();
 }
 
-void SynEdit::doScrolled(int)
+void SynEdit::onScrolled(int)
 {
     mLeftChar = horizontalScrollBar()->value();
     mTopLine = verticalScrollBar()->value();
@@ -3583,7 +3583,7 @@ void SynEdit::doUndoItem()
                     TmpStr = TmpStr + QString(mCaretX - 1 - TmpStr.length(), ' ');
                 ProperSetLine(mCaretY - 1, TmpStr + Item->changeStr());
                 mLines->deleteAt(mCaretY);
-                DoLinesDeleted(mCaretY, 1);
+                doLinesDeleted(mCaretY, 1);
             }
             mRedoList->AddChange(
                         Item->changeReason(),
@@ -4002,7 +4002,7 @@ void SynEdit::setHighlighter(const PSynHighlighter &highlighter)
         });
         scanRanges();
     }
-    sizeOrFontChanged(true);
+    onSizeOrFontChanged(true);
     invalidate();
 }
 
@@ -4377,8 +4377,9 @@ int SynEdit::searchReplace(const QString &sSearch, const QString &sReplace, SynS
     return result;
 }
 
-void SynEdit::DoLinesDeleted(int , int )
+void SynEdit::doLinesDeleted(int firstLine, int count)
 {
+    emit linesDeleted(firstLine, count);
 //    // gutter marks
 //    for i := 0 to Marks.Count - 1 do begin
 //      if Marks[i].Line >= FirstLine + Count then
@@ -4393,8 +4394,9 @@ void SynEdit::DoLinesDeleted(int , int )
     //    end;
 }
 
-void SynEdit::DoLinesInserted(int , int )
+void SynEdit::doLinesInserted(int firstLine, int count)
 {
+    emit linesInserted(firstLine, count);
 //    // gutter marks
 //    for i := 0 to Marks.Count - 1 do begin
 //      if Marks[i].Line >= FirstLine then
@@ -4471,7 +4473,7 @@ void SynEdit::DeleteSelection(const BufferCoord &BB, const BufferCoord &BE)
     }
     // Update marks
     if (UpdateMarks)
-        DoLinesDeleted(BB.Line, BE.Line - BB.Line + MarkOffset);
+        doLinesDeleted(BB.Line, BE.Line - BB.Line + MarkOffset);
 }
 
 void SynEdit::InsertText(const QString &Value, SynSelectionMode PasteMode,bool AddToUndoList)
@@ -4499,7 +4501,7 @@ void SynEdit::InsertText(const QString &Value, SynSelectionMode PasteMode,bool A
     if (InsertedLines > 0) {
         if ((PasteMode == SynSelectionMode::smNormal) && (StartCol > 1))
             StartLine++;
-        DoLinesInserted(StartLine, InsertedLines);
+        doLinesInserted(StartLine, InsertedLines);
     }
     ensureCursorPosVisible();
 }
@@ -5239,7 +5241,7 @@ void SynEdit::resizeEvent(QResizeEvent *)
 
     mContentImage = image;
 
-    sizeOrFontChanged(false);
+    onSizeOrFontChanged(false);
 }
 
 void SynEdit::timerEvent(QTimerEvent *event)
@@ -5510,7 +5512,7 @@ void SynEdit::setGutterWidth(int Value)
     Value = std::max(Value, 0);
     if (mGutterWidth != Value) {
         mGutterWidth = Value;
-        sizeOrFontChanged(false);
+        onSizeOrFontChanged(false);
         invalidate();
     }
 }
@@ -5525,12 +5527,12 @@ int SynEdit::charsInWindow() const
     return mCharsInWindow;
 }
 
-void SynEdit::bookMarkOptionsChanged()
+void SynEdit::onBookMarkOptionsChanged()
 {
     invalidateGutter();
 }
 
-void SynEdit::linesChanged()
+void SynEdit::onLinesChanged()
 {
     SynSelectionMode vOldMode;
     mStateFlags.setFlag(SynStateFlag::sfLinesChanging, false);
@@ -5553,12 +5555,12 @@ void SynEdit::linesChanged()
     setTopLine(mTopLine);
 }
 
-void SynEdit::linesChanging()
+void SynEdit::onLinesChanging()
 {
     mStateFlags.setFlag(SynStateFlag::sfLinesChanging);
 }
 
-void SynEdit::linesCleared()
+void SynEdit::onLinesCleared()
 {
     if (mUseCodeFolding)
         foldOnListCleared();
@@ -5574,7 +5576,7 @@ void SynEdit::linesCleared()
     mStatusChanges.setFlag(SynStatusChange::scAll);
 }
 
-void SynEdit::linesDeleted(int index, int count)
+void SynEdit::onLinesDeleted(int index, int count)
 {
     if (mUseCodeFolding)
         foldOnListDeleted(index + 1, count);
@@ -5584,7 +5586,7 @@ void SynEdit::linesDeleted(int index, int count)
     invalidateGutterLines(index + 1, INT_MAX);
 }
 
-void SynEdit::linesInserted(int index, int count)
+void SynEdit::onLinesInserted(int index, int count)
 {
     if (mUseCodeFolding)
         foldOnListInserted(index + 1, count);
@@ -5599,7 +5601,7 @@ void SynEdit::linesInserted(int index, int count)
     invalidateGutterLines(index + 1, INT_MAX);
 }
 
-void SynEdit::linesPutted(int index, int)
+void SynEdit::onLinesPutted(int index, int)
 {
     int vEndLine = index + 1;
     if (mHighlighter) {
@@ -5612,7 +5614,7 @@ void SynEdit::linesPutted(int index, int)
     invalidateLines(index + 1, vEndLine);
 }
 
-void SynEdit::undoAdded()
+void SynEdit::onUndoAdded()
 {
     updateModifiedStatus();
 
@@ -5622,7 +5624,7 @@ void SynEdit::undoAdded()
             mUndoList->PeekItem() && (mUndoList->PeekItem()->changeReason()!=SynChangeReason::crGroupBreak))
         mRedoList->Clear();
     if (mUndoList->blockCount() == 0 )
-        doChange();
+        onChanged();
 }
 
 SynSelectionMode SynEdit::activeSelectionMode() const
@@ -5816,15 +5818,15 @@ void SynEdit::setTopLine(int Value)
     }
 }
 
-void SynEdit::redoAdded()
+void SynEdit::onRedoAdded()
 {
     updateModifiedStatus();
 
     if (mRedoList->blockCount() == 0 )
-        doChange();
+        onChanged();
 }
 
-void SynEdit::gutterChanged()
+void SynEdit::onGutterChanged()
 {
     if (mGutter.showLineNumbers() && mGutter.autoSize())
         mGutter.autoSizeDigitCount(mLines->count());
@@ -5841,7 +5843,7 @@ void SynEdit::gutterChanged()
         setGutterWidth(nW);
 }
 
-void SynEdit::scrollTimerHandler()
+void SynEdit::onScrollTimeout()
 {
     QPoint iMousePos;
     DisplayCoord C;

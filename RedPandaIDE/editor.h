@@ -140,14 +140,18 @@ public:
                               BufferCoord& pWordEnd,
                               WordPurpose purpose);
     QString getPreviousWordAtPositionForSuggestion(const BufferCoord& p);
+    void reformat();
+    void checkSyntaxInBack();
 
     const PCppParser &parser() const;
 
-protected slots:
+private slots:
     void onModificationChanged(bool status) ;
     void onStatusChanged(SynStatusChanges changes);
     void onGutterClicked(Qt::MouseButton button, int x, int y, int line);
     void onTipEvalValueReady(const QString& value);
+    void onLinesDeleted(int first,int count);
+    void onLinesInserted(int first,int count);
 
 private:
     QChar getCurrentChar();

@@ -532,61 +532,61 @@ Are you really want to continue?</source>
         <translation type="vanished">失败</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="188"/>
-        <location filename="editor.cpp" line="202"/>
-        <location filename="editor.cpp" line="238"/>
-        <location filename="editor.cpp" line="818"/>
-        <location filename="editor.cpp" line="823"/>
-        <location filename="editor.cpp" line="841"/>
-        <location filename="editor.cpp" line="846"/>
+        <location filename="editor.cpp" line="186"/>
+        <location filename="editor.cpp" line="200"/>
+        <location filename="editor.cpp" line="236"/>
+        <location filename="editor.cpp" line="816"/>
+        <location filename="editor.cpp" line="821"/>
+        <location filename="editor.cpp" line="839"/>
+        <location filename="editor.cpp" line="844"/>
         <source>Error</source>
         <translation>错误</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="189"/>
+        <location filename="editor.cpp" line="187"/>
         <source>File %1 is not writable!</source>
         <translation>无法写入文件&quot;%1&quot;</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="223"/>
+        <location filename="editor.cpp" line="221"/>
         <source>Save As</source>
         <translation>另存为</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="819"/>
+        <location filename="editor.cpp" line="817"/>
         <source>The text to be copied exceeds count limit!</source>
         <translation>要复制的内容超过了行数限制！</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="824"/>
+        <location filename="editor.cpp" line="822"/>
         <source>The text to be copied exceeds character limit!</source>
         <translation>要复制的内容超过了字符数限制！</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="842"/>
+        <location filename="editor.cpp" line="840"/>
         <source>The text to be cut exceeds count limit!</source>
         <translation>要剪切的内容超过了行数限制！</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="847"/>
+        <location filename="editor.cpp" line="845"/>
         <source>The text to be cut exceeds character limit!</source>
         <translation>要剪切的内容超过了字符数限制！</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="2045"/>
-        <location filename="editor.cpp" line="2082"/>
-        <location filename="editor.cpp" line="2133"/>
+        <location filename="editor.cpp" line="2043"/>
+        <location filename="editor.cpp" line="2080"/>
+        <location filename="editor.cpp" line="2131"/>
         <source>Ctrl+click for more info</source>
         <translation>Ctrl+单击以获取更多信息</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="2151"/>
-        <location filename="editor.cpp" line="2181"/>
+        <location filename="editor.cpp" line="2149"/>
+        <location filename="editor.cpp" line="2179"/>
         <source>Symbol &apos;%1&apos; not found!</source>
         <translation>未找到符号&apos;%1&apos;!</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="2691"/>
+        <location filename="editor.cpp" line="2717"/>
         <source>Readonly</source>
         <translation>只读</translation>
     </message>
@@ -1691,187 +1691,187 @@ Are you really want to continue?</source>
 <context>
     <name>FormatterStyleModel</name>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="133"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="139"/>
         <source>Default</source>
         <translation>缺省</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="134"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="140"/>
         <source>The opening braces will not be changed and closing braces will be broken from the preceding line.</source>
         <translation>左花括号不变，右花括号单独一行。</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="139"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="145"/>
         <source>Allman</source>
         <translation>Allman</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="140"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="146"/>
         <source>Broken braces.</source>
         <translation>花括号单独一行。</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="145"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="151"/>
         <source>Java</source>
         <translation>Java</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="146"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="152"/>
         <source>Attached braces.</source>
         <translation>花括号不断行。</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="151"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="157"/>
         <source>K&amp;R</source>
         <translation>K&amp;R</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="152"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="158"/>
         <source>Linux braces.</source>
-        <translation type="unfinished">Linux风格花括号</translation>
+        <translation>Linux风格花括号</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="157"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="163"/>
         <source>Stroustrup</source>
         <translation>Stroustrup</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="158"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="164"/>
         <source>Linux braces, with broken closing headers.</source>
         <translation>Linux风格花括号，对条件结束语句（如do-while的while）断行。</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="163"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="169"/>
         <source>Whitesmith</source>
         <translation>Whitesmith</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="164"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="170"/>
         <source>Broken, indented braces.</source>
         <translation>花括号独立成行，并且缩进。</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="166"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="172"/>
         <source>Indented class blocks and switch blocks.</source>
         <translation>类代码段和switch代码段缩进。</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="171"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="177"/>
         <source>VTK</source>
         <translation>VTK</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="172"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="178"/>
         <source>Broken, indented braces except for the opening braces.</source>
         <translation>除左花括号外，其他花括号独立断行且缩进。</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="177"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="183"/>
         <source>Ratliff</source>
         <translation>Ratliff</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="178"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="184"/>
         <source>Attached, indented braces.</source>
         <translation>花括号不断行，但是缩进</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="183"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="189"/>
         <source>GNU</source>
         <translation>GNU</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="184"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="190"/>
         <source>Broken braces, indented blocks.</source>
         <translation>花括号短号，代码段缩进</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="189"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="195"/>
         <source>Linux</source>
         <translation>Linux</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="190"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="196"/>
         <source>Linux braces, minimum conditional indent is one-half indent.</source>
         <translation>Linux风格花括号，最小条件缩进为1.5单位。</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="195"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="201"/>
         <source>Horstmann</source>
         <translation>Horstmann</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="196"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="202"/>
         <source>Run-in braces, indented switches.</source>
         <translation>Run-in花括号，switch语句缩进</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="201"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="207"/>
         <source>One True Brace</source>
         <translation>One True Brace</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="202"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="208"/>
         <source>Linux braces, add braces to all conditionals.</source>
         <translation>Linux封号花括号，所有条件语句条件花括号</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="207"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="213"/>
         <source>Google</source>
         <translation>Google</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="208"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="214"/>
         <source>Attached braces, indented class modifiers.</source>
         <translation>花括号不断行，类访问限定符缩进</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="213"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="219"/>
         <source>Mozilla</source>
         <translation>Mozilla</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="214"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="220"/>
         <source>Linux braces, with broken braces for structs and enums, and attached braces for namespaces.</source>
         <translation>Linux风格花括号， 结构和枚举的花括号断行， 命名空间的花括号不断行。</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="219"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="225"/>
         <source>Webkit</source>
         <translation>Webkit</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="220"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="226"/>
         <source>Linux braces, with attached closing headers.</source>
         <translation>Linux风格花括号， 条件结束语句（如do-while的while)不断行</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="225"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="231"/>
         <source>Pico</source>
         <translation>Pico</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="226"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="232"/>
         <source>Run-in opening braces and attached closing braces.</source>
         <translation>Run-in左花括号，右花括号不断行</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="228"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="234"/>
         <source>Uses keep one line blocks and keep one line statements.</source>
         <translation>启用保持单行代码段和保持多语句单行选项。</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="233"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="239"/>
         <source>Lisp</source>
         <translation>Lisp</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="234"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="240"/>
         <source>Attached opening braces and attached closing braces.</source>
         <translation>花括号不断行。</translation>
     </message>
     <message>
-        <location filename="settingsdialog/formattergeneralwidget.cpp" line="236"/>
+        <location filename="settingsdialog/formattergeneralwidget.cpp" line="242"/>
         <source>Uses keep one line statements.</source>
         <translation>启用保持多语句单行选项。</translation>
     </message>
@@ -1928,8 +1928,8 @@ Are you really want to continue?</source>
         <translation>工具</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1010"/>
-        <location filename="mainwindow.ui" line="1013"/>
+        <location filename="mainwindow.ui" line="1017"/>
+        <location filename="mainwindow.ui" line="1020"/>
         <source>Run</source>
         <translation>运行</translation>
     </message>
@@ -1965,8 +1965,8 @@ Are you really want to continue?</source>
     </message>
     <message>
         <location filename="mainwindow.ui" line="366"/>
-        <location filename="mainwindow.ui" line="1209"/>
-        <location filename="mainwindow.ui" line="1212"/>
+        <location filename="mainwindow.ui" line="1216"/>
+        <location filename="mainwindow.ui" line="1219"/>
         <source>Debug</source>
         <translation>调试</translation>
     </message>
@@ -2032,75 +2032,80 @@ Are you really want to continue?</source>
         <translation>执行</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="835"/>
-        <location filename="mainwindow.ui" line="873"/>
-        <location filename="mainwindow.ui" line="894"/>
+        <location filename="mainwindow.ui" line="828"/>
+        <source>Code</source>
+        <translation>代码</translation>
+    </message>
+    <message>
+        <location filename="mainwindow.ui" line="842"/>
+        <location filename="mainwindow.ui" line="880"/>
+        <location filename="mainwindow.ui" line="901"/>
         <source>toolBar</source>
         <translation>工具栏</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="856"/>
+        <location filename="mainwindow.ui" line="863"/>
         <source>toolBar_2</source>
         <translation>工具栏2</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="924"/>
+        <location filename="mainwindow.ui" line="931"/>
         <source>New</source>
         <translation>新建</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="927"/>
+        <location filename="mainwindow.ui" line="934"/>
         <source>Ctrl+N</source>
         <translation>Ctrl+N</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="937"/>
+        <location filename="mainwindow.ui" line="944"/>
         <source>Open...</source>
         <translation>打开...</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="940"/>
+        <location filename="mainwindow.ui" line="947"/>
         <source>Ctrl+O</source>
         <translation>Ctrl+O</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="950"/>
+        <location filename="mainwindow.ui" line="957"/>
         <source>Save</source>
         <translation>保存</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="953"/>
+        <location filename="mainwindow.ui" line="960"/>
         <source>Ctrl+S</source>
         <translation>Ctrl+S</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="963"/>
+        <location filename="mainwindow.ui" line="970"/>
         <source>Save As...</source>
         <translation>另存为...</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="966"/>
+        <location filename="mainwindow.ui" line="973"/>
         <source>Save As</source>
         <translation>另存为</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="976"/>
+        <location filename="mainwindow.ui" line="983"/>
         <source>Save All</source>
         <translation>全部保存</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="979"/>
+        <location filename="mainwindow.ui" line="986"/>
         <source>Ctrl+Shift+S</source>
         <translation>Ctrl+Shift+S</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="984"/>
+        <location filename="mainwindow.ui" line="991"/>
         <source>Options</source>
         <translation>选项</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="994"/>
-        <location filename="mainwindow.ui" line="997"/>
+        <location filename="mainwindow.ui" line="1001"/>
+        <location filename="mainwindow.ui" line="1004"/>
         <location filename="mainwindow.cpp" line="804"/>
         <location filename="mainwindow.cpp" line="815"/>
         <location filename="mainwindow.cpp" line="1053"/>
@@ -2109,296 +2114,301 @@ Are you really want to continue?</source>
         <translation>编译</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1000"/>
+        <location filename="mainwindow.ui" line="1007"/>
         <source>F9</source>
         <translation>F9</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1016"/>
+        <location filename="mainwindow.ui" line="1023"/>
         <source>F10</source>
         <translation>F10</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1026"/>
+        <location filename="mainwindow.ui" line="1033"/>
         <source>Undo</source>
         <translation>恢复</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1029"/>
+        <location filename="mainwindow.ui" line="1036"/>
         <source>Ctrl+Z</source>
         <translation>Ctrl+Z</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1039"/>
+        <location filename="mainwindow.ui" line="1046"/>
         <source>Redo</source>
         <translation>重做</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1042"/>
+        <location filename="mainwindow.ui" line="1049"/>
         <source>Ctrl+Y</source>
         <translation>Ctrl+Y</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1052"/>
+        <location filename="mainwindow.ui" line="1059"/>
         <source>Cut</source>
         <translation>剪切</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1055"/>
+        <location filename="mainwindow.ui" line="1062"/>
         <source>Ctrl+X</source>
         <translation>Ctrl+X</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1065"/>
+        <location filename="mainwindow.ui" line="1072"/>
         <source>Copy</source>
         <translation>复制</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1068"/>
+        <location filename="mainwindow.ui" line="1075"/>
         <source>Ctrl+C</source>
         <translation>Ctrl+C</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1078"/>
+        <location filename="mainwindow.ui" line="1085"/>
         <source>Paste</source>
         <translation>粘贴</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1081"/>
+        <location filename="mainwindow.ui" line="1088"/>
         <source>Ctrl+V</source>
         <translation>Ctrl+V</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1086"/>
+        <location filename="mainwindow.ui" line="1093"/>
         <source>Select All</source>
         <translation>选择全部</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1089"/>
+        <location filename="mainwindow.ui" line="1096"/>
         <source>Ctrl+A</source>
         <translation>Ctrl+A</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1099"/>
+        <location filename="mainwindow.ui" line="1106"/>
         <source>Indent</source>
         <translation>缩进</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1109"/>
+        <location filename="mainwindow.ui" line="1116"/>
         <source>UnIndent</source>
         <translation>取消缩进</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1114"/>
+        <location filename="mainwindow.ui" line="1121"/>
         <source>Toggle Comment</source>
         <translation>切换注释</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1117"/>
+        <location filename="mainwindow.ui" line="1124"/>
         <source>Ctrl+/</source>
         <translation>Ctrl+/</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1125"/>
+        <location filename="mainwindow.ui" line="1132"/>
         <source>Collapse All</source>
         <translation>全部收起</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1130"/>
+        <location filename="mainwindow.ui" line="1137"/>
         <source>Uncollapse All</source>
         <translation>全部展开</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1135"/>
+        <location filename="mainwindow.ui" line="1142"/>
         <source>Encode in ANSI</source>
         <translation>使用ANSI编码</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1140"/>
+        <location filename="mainwindow.ui" line="1147"/>
         <source>Encode in UTF-8</source>
         <translation>使用UTF-8编码</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1145"/>
+        <location filename="mainwindow.ui" line="1152"/>
         <source>Auto Detect</source>
         <translation>自动检测</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1150"/>
+        <location filename="mainwindow.ui" line="1157"/>
         <source>Convert to ANSI</source>
         <translation>转换为ANSI编码</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1155"/>
+        <location filename="mainwindow.ui" line="1162"/>
         <source>Convert to UTF-8</source>
         <translation>转换为UTF-8编码</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1165"/>
-        <location filename="mainwindow.ui" line="1168"/>
+        <location filename="mainwindow.ui" line="1172"/>
+        <location filename="mainwindow.ui" line="1175"/>
         <source>Compile &amp; Run</source>
         <translation>编译运行</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1171"/>
+        <location filename="mainwindow.ui" line="1178"/>
         <source>F11</source>
         <translation>F11</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1181"/>
-        <location filename="mainwindow.ui" line="1184"/>
+        <location filename="mainwindow.ui" line="1188"/>
+        <location filename="mainwindow.ui" line="1191"/>
         <source>Rebuild All</source>
         <translation>全部重编译</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1187"/>
+        <location filename="mainwindow.ui" line="1194"/>
         <source>F12</source>
         <translation>F12</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1197"/>
+        <location filename="mainwindow.ui" line="1204"/>
         <source>Stop Execution</source>
         <translation>停止执行</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1200"/>
+        <location filename="mainwindow.ui" line="1207"/>
         <source>F6</source>
         <translation>F6</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1215"/>
+        <location filename="mainwindow.ui" line="1222"/>
         <source>F5</source>
         <translation>F5</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1225"/>
+        <location filename="mainwindow.ui" line="1232"/>
         <source>Step Over</source>
         <translation>单步跳过</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1228"/>
+        <location filename="mainwindow.ui" line="1235"/>
         <source>F7</source>
         <translation>F7</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1238"/>
+        <location filename="mainwindow.ui" line="1245"/>
         <source>Step Into</source>
         <translation>单步进入</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1241"/>
+        <location filename="mainwindow.ui" line="1248"/>
         <source>F8</source>
         <translation>F8</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1251"/>
+        <location filename="mainwindow.ui" line="1258"/>
         <source>Step Out</source>
         <translation>单步跳出</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1254"/>
+        <location filename="mainwindow.ui" line="1261"/>
         <source>Ctrl+F8</source>
         <translation>Ctrl+F8</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1259"/>
+        <location filename="mainwindow.ui" line="1266"/>
         <source>Run To Cursor</source>
         <translation>执行到光标处</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1262"/>
+        <location filename="mainwindow.ui" line="1269"/>
         <source>Ctrl+F5</source>
         <translation>Ctrl+F5</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1272"/>
+        <location filename="mainwindow.ui" line="1279"/>
         <source>Continue</source>
         <translation>继续执行</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1275"/>
+        <location filename="mainwindow.ui" line="1282"/>
         <source>F4</source>
         <translation>F4</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1285"/>
+        <location filename="mainwindow.ui" line="1292"/>
         <source>Add Watch...</source>
         <translation>添加监视</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1290"/>
+        <location filename="mainwindow.ui" line="1297"/>
         <source>View CPU Window...</source>
         <translation>打开CPU信息窗口...</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1295"/>
+        <location filename="mainwindow.ui" line="1302"/>
         <source>Exit</source>
         <translation>退出</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1305"/>
+        <location filename="mainwindow.ui" line="1312"/>
         <source>Find...</source>
         <translation>查找...</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1308"/>
+        <location filename="mainwindow.ui" line="1315"/>
         <source>Ctrl+F</source>
         <translation>Ctrl+F</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1313"/>
+        <location filename="mainwindow.ui" line="1320"/>
         <source>Find in Files...</source>
         <translation>在文件中查找...</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1316"/>
+        <location filename="mainwindow.ui" line="1323"/>
         <source>Ctrl+Shift+F</source>
         <translation>Ctrl+Shift+F</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1326"/>
+        <location filename="mainwindow.ui" line="1333"/>
         <source>Replace...</source>
         <translation>替换</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1329"/>
+        <location filename="mainwindow.ui" line="1336"/>
         <source>Ctrl+R</source>
         <translation>Ctrl+R</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1334"/>
+        <location filename="mainwindow.ui" line="1341"/>
         <source>Find Next</source>
         <translation>查找下一个</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1337"/>
+        <location filename="mainwindow.ui" line="1344"/>
         <source>F3</source>
         <translation>F3</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1342"/>
+        <location filename="mainwindow.ui" line="1349"/>
         <source>Find Previous</source>
         <translation>查找前一个</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1345"/>
+        <location filename="mainwindow.ui" line="1352"/>
         <source>Shift+F3</source>
         <translation>Shift+F3</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1350"/>
+        <location filename="mainwindow.ui" line="1357"/>
         <source>Remove Watch</source>
         <translation>删除监视</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1355"/>
+        <location filename="mainwindow.ui" line="1362"/>
         <source>Remove All</source>
         <translation>清除全部监视</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1360"/>
+        <location filename="mainwindow.ui" line="1367"/>
         <source>Modify Watch...</source>
         <translation>修改监视值</translation>
+    </message>
+    <message>
+        <location filename="mainwindow.ui" line="1377"/>
+        <source>Reformat Code</source>
+        <translation>对代码重新排版</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="81"/>
@@ -3693,12 +3703,12 @@ Are you really want to continue?</source>
 <context>
     <name>SynEditStringList</name>
     <message>
-        <location filename="qsynedit/TextBuffer.cpp" line="468"/>
+        <location filename="qsynedit/TextBuffer.cpp" line="472"/>
         <source>Can&apos;t open file &apos;%1&apos; for read!</source>
         <translation>无法读取文件&apos;%1&apos;!</translation>
     </message>
     <message>
-        <location filename="qsynedit/TextBuffer.cpp" line="555"/>
+        <location filename="qsynedit/TextBuffer.cpp" line="559"/>
         <source>Can&apos;t open file &apos;%1&apos; for save!</source>
         <translation>无法写入文件&apos;%2&apos;!</translation>
     </message>

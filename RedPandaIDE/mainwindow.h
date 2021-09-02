@@ -9,6 +9,7 @@
 #include "widgets/classbrowser.h"
 #include "widgets/codecompletionpopup.h"
 #include "widgets/headercompletionpopup.h"
+#include "caretlist.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -99,6 +100,9 @@ public:
     const std::shared_ptr<CodeCompletionPopup> &completionPopup() const;
 
     const std::shared_ptr<HeaderCompletionPopup> &headerCompletionPopup() const;
+    CaretList &caretList();
+    void updateCaretActions();
+
 public slots:
     void onCompileLog(const QString& msg);
     void onCompileIssue(PCompileIssue issue);
@@ -233,6 +237,12 @@ private slots:
 
     void on_actionModify_Watch_triggered();
 
+    void on_actionReformat_Code_triggered();
+
+    void on_actionBack_triggered();
+
+    void on_actionForward_triggered();
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;
@@ -268,6 +278,8 @@ private:
     PCompileSuccessionTask mCompileSuccessionTask;
 
     QTimer mAutoSaveTimer;
+
+    CaretList mCaretList;
 
 
    // QWidget interface

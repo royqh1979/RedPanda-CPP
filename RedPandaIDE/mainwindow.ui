@@ -823,9 +823,21 @@
     <addaction name="actionFind_Next"/>
     <addaction name="actionFind_Previous"/>
    </widget>
+   <widget class="QMenu" name="menuCode">
+    <property name="title">
+     <string>Code</string>
+    </property>
+    <addaction name="separator"/>
+    <addaction name="actionBack"/>
+    <addaction name="actionForward"/>
+    <addaction name="separator"/>
+    <addaction name="separator"/>
+    <addaction name="actionReformat_Code"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
    <addaction name="menuSearch"/>
+   <addaction name="menuCode"/>
    <addaction name="menuExecute"/>
    <addaction name="menuTools"/>
   </widget>
@@ -913,6 +925,21 @@
    <addaction name="actionStop_Execution"/>
    <addaction name="separator"/>
    <addaction name="actionAdd_Watch"/>
+  </widget>
+  <widget class="QToolBar" name="toolbarCode">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionBack"/>
+   <addaction name="actionForward"/>
+   <addaction name="separator"/>
+   <addaction name="actionReformat_Code"/>
   </widget>
   <action name="actionNew">
    <property name="icon">
@@ -1358,6 +1385,45 @@
   <action name="actionModify_Watch">
    <property name="text">
     <string>Modify Watch...</string>
+   </property>
+  </action>
+  <action name="actionReformat_Code">
+   <property name="icon">
+    <iconset>
+     <normalon>:/icons/images/newlook24/063-reformat.png</normalon>
+    </iconset>
+   </property>
+   <property name="text">
+    <string>Reformat Code</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+A</string>
+   </property>
+  </action>
+  <action name="actionBack">
+   <property name="icon">
+    <iconset>
+     <normalon>:/icons/images/newlook24/006-Back.png</normalon>
+    </iconset>
+   </property>
+   <property name="text">
+    <string>Go back</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Alt+Left</string>
+   </property>
+  </action>
+  <action name="actionForward">
+   <property name="icon">
+    <iconset>
+     <normalon>:/icons/images/newlook24/038-Forward.png</normalon>
+    </iconset>
+   </property>
+   <property name="text">
+    <string>Forward</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Alt+Right</string>
    </property>
   </action>
  </widget>

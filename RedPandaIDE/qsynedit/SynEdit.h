@@ -342,6 +342,9 @@ public:
     void setSelectedBackground(const QColor &newSelectedBackground);
 
 signals:
+    void linesDeleted(int FirstLine, int Count);
+    void linesInserted(int FirstLine, int Count);
+
     void Changed();
 
     void ChainUndoAdded();
@@ -455,8 +458,8 @@ private:
     void SetSelTextPrimitive(const QString& aValue);
     void SetSelTextPrimitiveEx(SynSelectionMode PasteMode,
                                const QString& Value, bool AddToUndoList);
-    void DoLinesDeleted(int FirstLine, int Count);
-    void DoLinesInserted(int FirstLine, int Count);
+    void doLinesDeleted(int FirstLine, int Count);
+    void doLinesInserted(int FirstLine, int Count);
     void ProperSetLine(int ALine, const QString& ALineText);
     void DeleteSelection(const BufferCoord& BB, const BufferCoord& BE);
     void InsertText(const QString& Value, SynSelectionMode PasteMode,bool AddToUndoList);
@@ -510,20 +513,20 @@ private:
 
 
 private slots:
-    void bookMarkOptionsChanged();
-    void gutterChanged();
-    void linesChanged();
-    void linesChanging();
-    void linesCleared();
-    void linesDeleted(int index, int count);
-    void linesInserted(int index, int count);
-    void linesPutted(int index, int count);
-    void redoAdded();
-    void scrollTimerHandler();
-    void undoAdded();
-    void sizeOrFontChanged(bool bFont);
-    void doChange();
-    void doScrolled(int value);
+    void onBookMarkOptionsChanged();
+    void onGutterChanged();
+    void onLinesChanged();
+    void onLinesChanging();
+    void onLinesCleared();
+    void onLinesDeleted(int index, int count);
+    void onLinesInserted(int index, int count);
+    void onLinesPutted(int index, int count);
+    void onRedoAdded();
+    void onScrollTimeout();
+    void onUndoAdded();
+    void onSizeOrFontChanged(bool bFont);
+    void onChanged();
+    void onScrolled(int value);
 
 private:
     std::shared_ptr<QImage> mContentImage;

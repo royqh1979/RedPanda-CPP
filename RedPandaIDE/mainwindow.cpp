@@ -100,6 +100,7 @@ MainWindow::MainWindow(QWidget *parent)
     mCPUDialog = nullptr;
 
     updateEditorActions();
+    updateCaretActions();
     applySettings();
 
     openCloseMessageSheet(false);
@@ -206,6 +207,9 @@ void MainWindow::updateEditorActions()
         ui->actionReplace->setEnabled(false);
         ui->actionFind_Next->setEnabled(false);
         ui->actionFind_Previous->setEnabled(false);
+
+        //code
+        ui->actionReformat_Code->setEnabled(false);
     } else {
         ui->actionAuto_Detect->setEnabled(true);
         ui->actionEncode_in_ANSI->setEnabled(true);
@@ -233,6 +237,9 @@ void MainWindow::updateEditorActions()
         ui->actionReplace->setEnabled(true);
         ui->actionFind_Next->setEnabled(true);
         ui->actionFind_Previous->setEnabled(true);
+
+        //code
+        ui->actionReformat_Code->setEnabled(true);
 
         updateCompileActions();
     }
@@ -1883,5 +1890,50 @@ void MainWindow::on_actionRemove_All_Watches_triggered()
 void MainWindow::on_actionModify_Watch_triggered()
 {
 
+}
+
+
+void MainWindow::on_actionReformat_Code_triggered()
+{
+    Editor* e = mEditorList->getEditor();
+    if (e) {
+        e->reformat();
+        e->activate();
+    }
+}
+
+CaretList &MainWindow::caretList()
+{
+    return mCaretList;
+}
+
+void MainWindow::updateCaretActions()
+{
+    ui->actionBack->setEnabled(mCaretList.hasPrevious());
+    ui->actionForward->setEnabled(mCaretList.hasNext());
+}
+
+
+void MainWindow::on_actionBack_triggered()
+{
+    PEditorCaret caret = mCaretList.gotoAndGetPrevious();
+    mCaretList.pause();
+    if (caret) {
+        caret->editor->setCaretPositionAndActivate(caret->line,caret->aChar);
+    }
+    mCaretList.unPause();
+    updateCaretActions();
+}
+
+
+void MainWindow::on_actionForward_triggered()
+{
+    PEditorCaret caret = mCaretList.gotoAndGetNext();
+    mCaretList.pause();
+    if (caret) {
+        caret->editor->setCaretPositionAndActivate(caret->line,caret->aChar);
+    }
+    mCaretList.unPause();
+    updateCaretActions();
 }
 
