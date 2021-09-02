@@ -25,7 +25,8 @@ Settings::Settings(const QString &filename):
     mDebugger(this),
     mCodeCompletion(this),
     mCodeFormatter(this),
-    mHistory(this)
+    mHistory(this),
+    mUI(this)
 {
     load();
 }
@@ -83,6 +84,7 @@ void Settings::load()
     mHistory.load();
     mCodeCompletion.load();
     mCodeFormatter.load();
+    mUI.load();
 }
 
 Settings::Dirs &Settings::dirs()
@@ -123,6 +125,11 @@ Settings::CodeCompletion& Settings::codeCompletion()
 Settings::CodeFormatter &Settings::codeFormatter()
 {
     return mCodeFormatter;
+}
+
+Settings::UI &Settings::ui()
+{
+    return mUI;
 }
 
 Settings::History& Settings::history()
@@ -3563,4 +3570,41 @@ int Settings::CodeFormatter::braceStyle() const
 void Settings::CodeFormatter::setBraceStyle(int newBraceStyle)
 {
     mBraceStyle = newBraceStyle;
+}
+
+Settings::UI::UI(Settings *settings):_Base(settings,SETTING_UI)
+{
+
+}
+
+const QByteArray &Settings::UI::mainWindowGeometry() const
+{
+    return mMainWindowGeometry;
+}
+
+void Settings::UI::setMainWindowGeometry(const QByteArray &newMainWindowGeometry)
+{
+    mMainWindowGeometry = newMainWindowGeometry;
+}
+
+const QByteArray &Settings::UI::mainWindowState() const
+{
+    return mMainWindowState;
+}
+
+void Settings::UI::setMainWindowState(const QByteArray &newMainWindowState)
+{
+    mMainWindowState = newMainWindowState;
+}
+
+void Settings::UI::doSave()
+{
+    saveValue("main_window_state",mMainWindowState);
+    saveValue("main_window_geometry",mMainWindowGeometry);
+}
+
+void Settings::UI::doLoad()
+{
+    mMainWindowState = value("main_window_state",QByteArray()).toByteArray();
+    mMainWindowGeometry = value("main_window_geometry",QByteArray()).toByteArray();
 }

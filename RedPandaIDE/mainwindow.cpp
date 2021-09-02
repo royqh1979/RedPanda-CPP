@@ -102,9 +102,8 @@ MainWindow::MainWindow(QWidget *parent)
     updateEditorActions();
     updateCaretActions();
     applySettings();
+    applyUISettings();
 
-    openCloseMessageSheet(false);
-    mPreviousHeight = 250;
 
     connect(ui->debugConsole,&QConsole::commandInput,this,&MainWindow::onDebugCommandInput);
     connect(ui->cbEvaluate->lineEdit(), &QLineEdit::returnPressed,
@@ -285,6 +284,15 @@ void MainWindow::applySettings()
     app->setFont(font);
     this->setFont(font);
     updateDebuggerSettings();
+}
+
+void MainWindow::applyUISettings()
+{
+    openCloseMessageSheet(false);
+    mPreviousHeight = 250;
+    const Settings::UI& settings = pSettings->ui();
+    restoreGeometry(settings.mainWindowGeometry());
+    restoreState(settings.mainWindowState());
 }
 
 QFileSystemWatcher *MainWindow::fileSystemWatcher()
@@ -1153,6 +1161,10 @@ void MainWindow::on_actionOpen_triggered()
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {
+    Settings::UI& settings = pSettings->ui();
+    settings.setMainWindowState(saveState());
+    settings.setMainWindowGeometry(saveGeometry());
+    pSettings->ui().save();
     if (!mEditorList->closeAll(false)) {
         event->ignore();
         return ;

@@ -18,6 +18,7 @@
 #define SETTING_EXECUTOR "Executor"
 #define SETTING_DEBUGGER "Debugger"
 #define SETTING_HISTORY "History"
+#define SETTING_UI "UI"
 #define SETTING_CODE_COMPLETION "CodeCompletion"
 #define SETTING_CODE_FORMATTER "CodeFormatter"
 #define SETTING_COMPILTER_SETS "CompilerSets"
@@ -684,6 +685,25 @@ public:
         void doLoad() override;
     };
 
+    class UI: public _Base {
+    public:
+        explicit UI(Settings *settings);
+
+        const QByteArray &mainWindowState() const;
+        void setMainWindowState(const QByteArray &newMainWindowState);
+
+        const QByteArray &mainWindowGeometry() const;
+        void setMainWindowGeometry(const QByteArray &newMainWindowGeometry);
+
+    private:
+        QByteArray mMainWindowState;
+        QByteArray mMainWindowGeometry;
+
+    protected:
+        void doSave() override;
+        void doLoad() override;
+    };
+
     class Debugger: public _Base {
     public:
         explicit Debugger(Settings* settings);
@@ -904,6 +924,7 @@ public:
     History& history();
     CodeCompletion &codeCompletion();
     CodeFormatter &codeFormatter();
+    UI &ui();
     QString filename() const;
 
 private:
@@ -918,6 +939,7 @@ private:
     CodeCompletion mCodeCompletion;
     CodeFormatter mCodeFormatter;
     History mHistory;
+    UI mUI;
 };
 
 

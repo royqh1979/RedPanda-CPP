@@ -880,7 +880,7 @@
     <bool>false</bool>
    </attribute>
   </widget>
-  <widget class="QToolBar" name="toolBarCompile">
+  <widget class="QToolBar" name="toolbarCompile">
    <property name="windowTitle">
     <string>toolBar</string>
    </property>
@@ -901,7 +901,7 @@
    <addaction name="actionCompile_Run"/>
    <addaction name="actionRebuild"/>
   </widget>
-  <widget class="QToolBar" name="toolBarDebug">
+  <widget class="QToolBar" name="toolbarDebug">
    <property name="windowTitle">
     <string>toolBar</string>
    </property>

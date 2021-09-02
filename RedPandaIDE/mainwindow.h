@@ -70,6 +70,7 @@ public:
     void showSearchPanel();
 
     void applySettings();
+    void applyUISettings();
     QFileSystemWatcher* fileSystemWatcher();
 
     void removeActiveBreakpoints();
