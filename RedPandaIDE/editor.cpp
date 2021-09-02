@@ -79,7 +79,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
     }
     QFileInfo fileInfo(mFilename);
     if (mParentPageControl!=nullptr) {
-        mParentPageControl->addTab(this,QString());
+        int index = mParentPageControl->addTab(this,QString());
         updateCaption();
     }
 
@@ -132,6 +132,10 @@ Editor::Editor(QWidget *parent, const QString& filename,
             this, &Editor::onLinesDeleted);
     connect(this,&SynEdit::linesInserted,
             this, &Editor::onLinesInserted);
+
+    setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(this, &QWidget::customContextMenuRequested,
+            pMainWindow, &MainWindow::onEditorContextMenu);
 }
 
 Editor::~Editor() {

@@ -118,6 +118,7 @@ public slots:
     void onStartParsing();
     void onEndParsing(int total, int updateView);
     void onEvalValueReady(const QString& value);
+    void onEditorContextMenu(const QPoint& pos);
 
 private:
     void openFiles(const QStringList& files);
@@ -134,6 +135,7 @@ private:
 
 private slots:
     void onAutoSaveTimeout();
+    void onWatchViewContextMenu(const QPoint& pos);
     void onFileChanged(const QString& path);
 
     void on_actionNew_triggered();
@@ -257,6 +259,10 @@ private slots:
     void on_actionClose_All_triggered();
 
     void on_actionMaximize_Editor_triggered();
+
+    void on_actionNext_Editor_triggered();
+
+    void on_actionPrevious_Editor_triggered();
 
 private:
     Ui::MainWindow *ui;

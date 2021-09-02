@@ -44,6 +44,8 @@ public:
     void applyColorSchemes(const QString& name);
     bool isFileOpened(const QString& name);
     int pageCount();
+    void selectNextPage();
+    void selectPreviousPage();
 
     Editor* operator[](int index);
 

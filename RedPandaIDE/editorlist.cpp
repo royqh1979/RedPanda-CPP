@@ -164,6 +164,26 @@ int EditorList::pageCount()
     return mLeftPageWidget->count()+mRightPageWidget->count();
 }
 
+void EditorList::selectNextPage()
+{
+    QTabWidget * pageControl = getFocusedPageControl();
+    if (pageControl && pageControl->count()>0) {
+        pageControl->setCurrentIndex(
+                    (pageControl->currentIndex()+1) % pageControl->count()
+                    );
+    }
+}
+
+void EditorList::selectPreviousPage()
+{
+    QTabWidget * pageControl = getFocusedPageControl();
+    if (pageControl && pageControl->count()>0) {
+        pageControl->setCurrentIndex(
+                    (pageControl->currentIndex()+pageControl->count()-1) % pageControl->count()
+                    );
+    }
+}
+
 Editor *EditorList::operator[](int index)
 {
     if (index>=0 && index<mLeftPageWidget->count()) {

@@ -751,7 +751,7 @@
      <x>0</x>
      <y>0</y>
      <width>946</width>
-     <height>22</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -843,6 +843,9 @@
     </property>
     <addaction name="actionClose_All"/>
     <addaction name="actionMaximize_Editor"/>
+    <addaction name="separator"/>
+    <addaction name="actionNext_Editor"/>
+    <addaction name="actionPrevious_Editor"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -1474,6 +1477,32 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+F11</string>
+   </property>
+  </action>
+  <action name="actionNext_Editor">
+   <property name="icon">
+    <iconset>
+     <normalon>:/icons/images/newlook24/038-Forward.png</normalon>
+    </iconset>
+   </property>
+   <property name="text">
+    <string>Next</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Tab</string>
+   </property>
+  </action>
+  <action name="actionPrevious_Editor">
+   <property name="icon">
+    <iconset>
+     <normalon>:/icons/images/newlook24/006-Back.png</normalon>
+    </iconset>
+   </property>
+   <property name="text">
+    <string>Previous</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+Tab</string>
    </property>
   </action>
  </widget>

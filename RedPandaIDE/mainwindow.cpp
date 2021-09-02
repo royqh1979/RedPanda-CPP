@@ -136,6 +136,9 @@ MainWindow::MainWindow(QWidget *parent)
             this, &MainWindow::onAutoSaveTimeout);
     resetAutoSaveTimer();
 
+    connect(ui->menuFile, &QMenu::aboutToShow,
+            this,&MainWindow::rebuildOpenedFileHisotryMenu);
+
     buildContextMenus();
 }
 
@@ -1082,11 +1085,10 @@ void MainWindow::doAutoSave(Editor *e)
 
 void MainWindow::buildContextMenus()
 {
-    ui->watchView->setContextMenuPolicy(Qt::ActionsContextMenu);
-    ui->watchView->addAction(ui->actionAdd_Watch);
-    ui->watchView->addAction(ui->actionRemove_Watch);
-    ui->watchView->addAction(ui->actionRemove_All_Watches);
-    ui->watchView->addAction(ui->actionModify_Watch);
+    ui->watchView->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui->watchView,&QWidget::customContextMenuRequested,
+            this, &MainWindow::onWatchViewContextMenu);
+
 }
 
 void MainWindow::maximizeEditor()
@@ -1124,6 +1126,34 @@ void MainWindow::onAutoSaveTimeout()
         break;
     }
     updateStatusbarMessage(tr("%1 files autosaved").arg(updateCount));
+}
+
+void MainWindow::onWatchViewContextMenu(const QPoint &pos)
+{
+    QMenu menu(this);
+    menu.addAction(ui->actionAdd_Watch);
+    menu.addAction(ui->actionRemove_Watch);
+    menu.addAction(ui->actionRemove_All_Watches);
+    menu.addAction(ui->actionModify_Watch);
+    menu.exec(ui->watchView->mapToGlobal(pos));
+}
+
+void MainWindow::onEditorContextMenu(const QPoint &pos)
+{
+    Editor * editor = mEditorList->getEditor();
+    if (!editor)
+        return;
+    QMenu menu(this);
+    menu.addAction(ui->actionCompile_Run);
+    menu.addAction(ui->actionDebug);
+    int line = editor->caretY();
+    if (editor->hasBreakpoint(line)) {
+        //todo: breakpoint property
+    }
+    //todo: goto declaretion
+    //todo: goto definition
+    menu.exec(editor->viewport()->mapToGlobal(pos));
+
 }
 
 void MainWindow::onFileChanged(const QString &path)
@@ -2094,5 +2124,17 @@ void MainWindow::on_actionClose_All_triggered()
 void MainWindow::on_actionMaximize_Editor_triggered()
 {
     maximizeEditor();
+}
+
+
+void MainWindow::on_actionNext_Editor_triggered()
+{
+    mEditorList->selectNextPage();
+}
+
+
+void MainWindow::on_actionPrevious_Editor_triggered()
+{
+    mEditorList->selectPreviousPage();
 }
 
