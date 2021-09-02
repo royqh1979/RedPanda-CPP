@@ -1223,10 +1223,8 @@ BufferCoord SynEdit::WordStartEx(const BufferCoord &XY)
         QString Line = mLines->getString(CY - 1);
         CX = std::min(CX, Line.length()+1);
         if (CX > 1) {
-            if (isWordChar(Line[CX - 1]))
+            if (isWordChar(Line[CX - 2]))
                 CX = StrRScanForNonWordChar(Line, CX - 1) + 1;
-            else
-                CX = StrRScanForWordChar(Line, CX - 1) + 1;
         }
     }
     return BufferCoord{CX,CY};
@@ -1247,8 +1245,6 @@ BufferCoord SynEdit::WordEndEx(const BufferCoord &XY)
         if (CX <= Line.length()) {
             if (isWordChar(Line[CX - 2]))
                 CX = StrScanForNonWordChar(Line, CX);
-            else
-                CX = StrScanForWordChar(Line, CX);
             if (CX == 0)
                 CX = Line.length() + 1;
         }
@@ -2292,6 +2288,9 @@ void SynEdit::doAddChar(QChar AChar)
     if (!AChar.isPrint())
         return;
     //DoOnPaintTransient(ttBefore);
+    //mCaretX will change after setSelLength;
+    int oldCaretX=mCaretX;
+    int oldCaretY=mCaretY;
     if ((mInserting == false) && (!selAvail())) {
         setSelLength(1);
     }
@@ -2299,32 +2298,32 @@ void SynEdit::doAddChar(QChar AChar)
     mUndoList->BeginBlock();
     if (mOptions.testFlag(eoAddIndent)) {
         // Remove TabWidth of indent of the current line when typing a }
-        if (AChar == '}' && (mCaretY<=mLines->count())) {
-            QString temp = mLines->getString(mCaretY-1).mid(0,mCaretX-1);
+        if (AChar == '}' && (oldCaretY<=mLines->count())) {
+            QString temp = mLines->getString(oldCaretY-1).mid(0,oldCaretX-1);
             // and the first nonblank char is this new }
             if (temp.trimmed().isEmpty()) {
-                BufferCoord MatchBracketPos = GetPreviousLeftBracket(mCaretX, mCaretY);
+                BufferCoord MatchBracketPos = GetPreviousLeftBracket(oldCaretX, oldCaretY);
                 if (MatchBracketPos.Line > 0) {
                     int i = 0;
                     QString matchline = mLines->getString(MatchBracketPos.Line-1);
-                    QString line = lineText();
+                    QString line = mLines->getString(oldCaretY-1);
                     while (i<matchline.length() && (matchline[i]==' ' || matchline[i]=='\t')) {
                         i++;
                     }
                     QString temp = matchline.mid(0,i) + line.mid(mCaretX-1);
-                    mLines->putString(mCaretY-1,temp);
-                    internalSetCaretXY(BufferCoord{i,mCaretY});
+                    mLines->putString(oldCaretY-1,temp);
+                    internalSetCaretXY(BufferCoord{i+1,oldCaretY});
                     mUndoList->AddChange(
                                 SynChangeReason::crDelete,
-                                BufferCoord{1, mCaretY},
-                                BufferCoord{line.length()+1, mCaretY},
+                                BufferCoord{1, oldCaretY},
+                                BufferCoord{line.length()+1, oldCaretY},
                                 line,
                                 SynSelectionMode::smNormal
                                 );
                     mUndoList->AddChange(
                                 SynChangeReason::crInsert,
-                                BufferCoord{1, mCaretY},
-                                BufferCoord{temp.length()+1, mCaretY},
+                                BufferCoord{1, oldCaretY},
+                                BufferCoord{temp.length()+1, oldCaretY},
                                 "",
                                 SynSelectionMode::smNormal
                                 );
