@@ -1923,12 +1923,12 @@ QByteArray Settings::CompilerSet::getCompilerOutput(const QString &binDir, const
     return result.trimmed();
 }
 
-bool CompilerSet::staticLink() const
+bool Settings::CompilerSet::staticLink() const
 {
     return mStaticLink;
 }
 
-void CompilerSet::setStaticLink(bool newStaticLink)
+void Settings::CompilerSet::setStaticLink(bool newStaticLink)
 {
     mStaticLink = newStaticLink;
 }
