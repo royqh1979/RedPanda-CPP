@@ -3244,6 +3244,31 @@ void SynEdit::onScrolled(int)
     invalidate();
 }
 
+const QColor &SynEdit::rightEdgeColor() const
+{
+    return mRightEdgeColor;
+}
+
+void SynEdit::setRightEdgeColor(const QColor &newRightEdgeColor)
+{
+    if (newRightEdgeColor!=mRightEdgeColor) {
+        mRightEdgeColor = newRightEdgeColor;
+    }
+}
+
+int SynEdit::rightEdge() const
+{
+    return mRightEdge;
+}
+
+void SynEdit::setRightEdge(int newRightEdge)
+{
+    if (mRightEdge != newRightEdge) {
+        mRightEdge = newRightEdge;
+        invalidate();
+    }
+}
+
 const QColor &SynEdit::selectedBackground() const
 {
     return mSelectedBackground;

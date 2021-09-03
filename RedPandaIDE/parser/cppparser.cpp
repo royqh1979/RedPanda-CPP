@@ -526,15 +526,26 @@ QSet<QString> CppParser::getFileIncludes(const QString &filename)
 QSet<QString> CppParser::getFileUsings(const QString &filename)
 {
     QMutexLocker locker(&mMutex);
+    QSet<QString> result;
     if (filename.isEmpty())
-        return QSet<QString>();
+        return result;
     if (mParsing)
-        return QSet<QString>();
+        return result;
     PFileIncludes fileIncludes= mPreprocessor.includesList().value(filename,PFileIncludes());
     if (fileIncludes) {
-        return fileIncludes->usings;
+        foreach (const QString& usingName, fileIncludes->usings) {
+            result.insert(usingName);
+        }
+        foreach (const QString& subFile,fileIncludes->includeFiles.keys()){
+            PFileIncludes subIncludes = mPreprocessor.includesList().value(subFile,PFileIncludes());
+            if (subIncludes) {
+                foreach (const QString& usingName, subIncludes->usings) {
+                    result.insert(usingName);
+                }
+            }
+        }
     }
-    return QSet<QString>();
+    return result;
 }
 
 QString CppParser::getHeaderFileName(const QString &relativeTo, const QString &line)

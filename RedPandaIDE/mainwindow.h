@@ -281,6 +281,8 @@ private slots:
 
     void on_actionOpen_Terminal_triggered();
 
+    void on_actionFile_Properties_triggered();
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;

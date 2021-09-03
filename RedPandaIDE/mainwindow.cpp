@@ -8,6 +8,7 @@
 #include "qsynedit/Constants.h"
 #include "debugger.h"
 #include "widgets/cpudialog.h"
+#include "widgets/filepropertiesdialog.h"
 
 
 #include <QCloseEvent>
@@ -1207,8 +1208,8 @@ void MainWindow::onEditorContextMenu(const QPoint &pos)
         menu.addAction(ui->actionAdd_Watch);
         menu.addAction(ui->actionToggle_Breakpoint);
         menu.addAction(ui->actionClear_all_breakpoints);
-
-
+        menu.addSeparator();
+        menu.addAction(ui->actionFile_Properties);
 
         //these actions needs parser
         ui->actionGoto_Declaration->setEnabled(!editor->parser()->parsing());
@@ -2307,5 +2308,13 @@ void MainWindow::on_actionOpen_Terminal_triggered()
         }
     }
 
+}
+
+
+void MainWindow::on_actionFile_Properties_triggered()
+{
+    FilePropertiesDialog dialog(this);
+    dialog.exec();
+    dialog.setParent(nullptr);
 }
 

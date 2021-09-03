@@ -1575,6 +1575,11 @@
     <string>Open a terminal here</string>
    </property>
   </action>
+  <action name="actionFile_Properties">
+   <property name="text">
+    <string>File Properties...</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>

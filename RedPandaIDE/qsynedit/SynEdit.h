@@ -342,6 +342,12 @@ public:
     const QColor &selectedBackground() const;
     void setSelectedBackground(const QColor &newSelectedBackground);
 
+    int rightEdge() const;
+    void setRightEdge(int newRightEdge);
+
+    const QColor &rightEdgeColor() const;
+    void setRightEdgeColor(const QColor &newRightEdgeColor);
+
 signals:
     void linesDeleted(int FirstLine, int Count);
     void linesInserted(int FirstLine, int Count);

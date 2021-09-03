@@ -2516,7 +2516,7 @@ void Editor::reformat()
     selectAll();
     setSelText(QString::fromUtf8(newContent));
     reparse();
-
+    pMainWindow->updateEditorActions();
 }
 
 void Editor::checkSyntaxInBack()
