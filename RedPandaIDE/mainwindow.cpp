@@ -1195,6 +1195,20 @@ void MainWindow::onEditorContextMenu(const QPoint &pos)
         menu.addAction(ui->actionOpen_Containing_Folder);
         menu.addAction(ui->actionOpen_Terminal);
 
+        menu.addSeparator();
+        menu.addAction(ui->actionReformat_Code);
+        menu.addSeparator();
+        menu.addAction(ui->actionCut);
+        menu.addAction(ui->actionCopy);
+        menu.addAction(ui->actionPaste);
+        menu.addAction(ui->actionSelectAll);
+        menu.addSeparator();
+        menu.addAction(ui->actionAdd_Watch);
+        menu.addAction(ui->actionToggle_Breakpoint);
+        menu.addAction(ui->actionClear_all_breakpoints);
+
+
+
         //these actions needs parser
         ui->actionGoto_Declaration->setEnabled(!editor->parser()->parsing());
         ui->actionGoto_Definition->setEnabled(!editor->parser()->parsing());

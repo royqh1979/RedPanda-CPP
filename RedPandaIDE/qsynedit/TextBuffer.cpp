@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include "SynEdit.h"
 #include "../utils.h"
+#include "../platform.h"
 
 SynEditStringList::SynEditStringList(SynEdit *pEdit, QObject *parent):
       QObject(parent),
@@ -553,7 +554,16 @@ void SynEditStringList::LoadFromFile(QFile &file, const QByteArray& encoding, QB
     }
 
     if (realEncoding == ENCODING_SYSTEM_DEFAULT) {
-        realEncoding = QTextCodec::codecForLocale()->name();
+        realEncoding = getDefaultSystemEncoding();
+        QFile file("f:\\test.txt");
+        if (file.open(QFile::WriteOnly|QFile::Truncate)) {
+            file.write("----test----\n");
+            for (QByteArray a:QTextCodec::codecForLocale()->aliases()) {
+                file.write(a);
+                file.write("\n");
+            }
+            file.close();
+        }
     }
     file.reset();
     QTextStream textStream(&file);

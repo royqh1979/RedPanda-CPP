@@ -1081,7 +1081,8 @@ void Settings::Editor::setAddIndent(bool addIndent)
 }
 
 Settings::CompilerSet::CompilerSet(const QString& compilerFolder):
-    mAutoAddCharsetParams(true)
+    mAutoAddCharsetParams(true),
+    mStaticLink(true)
 {
     if (!compilerFolder.isEmpty()) {
         setProperties(compilerFolder+"/bin");
@@ -1752,6 +1753,7 @@ void Settings::CompilerSet::setUserInput()
     mUseCustomCompileParams = false;
     mUseCustomLinkParams = false;
     mAutoAddCharsetParams = true;
+    mStaticLink = true;
 }
 
 void Settings::CompilerSet::setOptions()

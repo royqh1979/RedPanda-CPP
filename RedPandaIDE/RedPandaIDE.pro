@@ -21,6 +21,7 @@ SOURCES += \
     compiler/compilermanager.cpp \
     compiler/executablerunner.cpp \
     compiler/filecompiler.cpp \
+    compiler/platform.cpp \
     compiler/stdincompiler.cpp \
     cpprefacter.cpp \
     parser/cppparser.cpp \
@@ -101,6 +102,7 @@ HEADERS += \
     parser/cpptokenizer.h \
     parser/parserutils.h \
     parser/statementmodel.h \
+    platform.h \
     qsynedit/Search.h \
     qsynedit/SearchBase.h \
     qsynedit/SearchRegex.h \

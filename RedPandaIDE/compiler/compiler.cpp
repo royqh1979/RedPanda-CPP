@@ -8,6 +8,7 @@
 #include <QTextCodec>
 #include <QDebug>
 #include <QTime>
+#include "../platform.h"
 
 #define COMPILE_PROCESS_END "---//END//----"
 
@@ -242,7 +243,7 @@ QString Compiler::getCharsetArgument(const QByteArray& encoding)
     QString result;
     if (compilerSet()->autoAddCharsetParams() && encoding != ENCODING_ASCII) {
         QString encodingName;
-        QString systemEncodingName=QTextCodec::codecForLocale()->name();
+        QString systemEncodingName=getDefaultSystemEncoding();
         if (encoding == ENCODING_SYSTEM_DEFAULT) {
             encodingName = systemEncodingName;
         } else if (encoding == ENCODING_UTF8_BOM) {

@@ -5,6 +5,7 @@
 #include <QGuiApplication>
 #include <QMimeData>
 #include <QTextCodec>
+#include "../../platform.h"
 
 SynExporter::SynExporter()
 {
@@ -14,7 +15,7 @@ SynExporter::SynExporter()
     mForegroundColor = QGuiApplication::palette().color(QPalette::Text);
     mUseBackground = false;
     mExportAsText = false;
-    mCharset = QTextCodec::codecForLocale()->name();
+    mCharset = getDefaultSystemEncoding();
     mFileEndingType = FileEndingType::Windows;
     clear();
     setTitle("");
