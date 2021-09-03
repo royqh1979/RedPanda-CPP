@@ -1144,14 +1144,23 @@ void MainWindow::onEditorContextMenu(const QPoint &pos)
     if (!editor)
         return;
     QMenu menu(this);
-    menu.addAction(ui->actionCompile_Run);
-    menu.addAction(ui->actionDebug);
-    int line = editor->caretY();
-    if (editor->hasBreakpoint(line)) {
-        //todo: breakpoint property
+    BufferCoord p;
+    mContextMenuPos = pos;
+    if (editor->GetPositionOfMouse(p)) {
+        //mouse on editing area
+        menu.addAction(ui->actionCompile_Run);
+        menu.addAction(ui->actionDebug);
+        menu.addSeparator();
+    } else {
+        //mouse on gutter
+        int line;
+        if (!editor->GetLineOfMouse(line))
+            line=-1;
+        menu.addAction(ui->actionToggle_Breakpoint);
+        menu.addAction(ui->actionBreakpoint_property);
+        menu.addAction(ui->actionClear_all_breakpoints);
+        ui->actionBreakpoint_property->setEnabled(editor->hasBreakpoint(line));
     }
-    //todo: goto declaretion
-    //todo: goto definition
     menu.exec(editor->viewport()->mapToGlobal(pos));
 
 }
@@ -2136,5 +2145,41 @@ void MainWindow::on_actionNext_Editor_triggered()
 void MainWindow::on_actionPrevious_Editor_triggered()
 {
     mEditorList->selectPreviousPage();
+}
+
+
+void MainWindow::on_actionToggle_Breakpoint_triggered()
+{
+    Editor * editor = mEditorList->getEditor();
+    int line;
+    if (editor && editor->PointToLine(mContextMenuPos,line))
+        editor->toggleBreakpoint(line);
+}
+
+
+void MainWindow::on_actionClear_all_breakpoints_triggered()
+{
+    Editor *e=mEditorList->getEditor();
+    if (!e)
+        return;
+    if (QMessageBox::question(this,
+                              tr("Clear all breakpoints"),
+                              tr("Do you really want to clear all breakpoints in this file?"),
+                              QMessageBox::Yes | QMessageBox::No,
+                              QMessageBox::No) == QMessageBox::Yes) {
+        e->clearBreakpoints();
+    }
+}
+
+
+void MainWindow::on_actionBreakpoint_property_triggered()
+{
+    Editor * editor = mEditorList->getEditor();
+    int line;
+    if (editor && editor->PointToLine(mContextMenuPos,line)) {
+        if (editor->hasBreakpoint(line))
+            editor->modifyBreakpointProperty(line);
+    }
+
 }
 

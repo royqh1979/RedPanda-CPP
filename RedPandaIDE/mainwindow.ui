@@ -255,7 +255,7 @@
         <enum>QTabWidget::South</enum>
        </property>
        <property name="currentIndex">
-        <number>4</number>
+        <number>0</number>
        </property>
        <widget class="QWidget" name="tabIssues">
         <attribute name="icon">
@@ -302,6 +302,9 @@
            <property name="selectionBehavior">
             <enum>QAbstractItemView::SelectRows</enum>
            </property>
+           <attribute name="horizontalHeaderStretchLastSection">
+            <bool>true</bool>
+           </attribute>
           </widget>
          </item>
         </layout>
@@ -464,7 +467,7 @@
              <enum>QTabWidget::North</enum>
             </property>
             <property name="currentIndex">
-             <number>2</number>
+             <number>0</number>
             </property>
             <widget class="QWidget" name="tabDebugConsole">
              <attribute name="title">
@@ -517,6 +520,9 @@
                 <property name="textElideMode">
                  <enum>Qt::ElideNone</enum>
                 </property>
+                <attribute name="horizontalHeaderStretchLastSection">
+                 <bool>true</bool>
+                </attribute>
                </widget>
               </item>
              </layout>
@@ -543,6 +549,9 @@
                 <property name="textElideMode">
                  <enum>Qt::ElideNone</enum>
                 </property>
+                <attribute name="horizontalHeaderStretchLastSection">
+                 <bool>true</bool>
+                </attribute>
                </widget>
               </item>
              </layout>
@@ -1503,6 +1512,29 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+Shift+Tab</string>
+   </property>
+  </action>
+  <action name="actionToggle_Breakpoint">
+   <property name="icon">
+    <iconset>
+     <normalon>:/icons/images/editor/breakpoint.png</normalon>
+    </iconset>
+   </property>
+   <property name="text">
+    <string>Toggle breakpoint</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+F4</string>
+   </property>
+  </action>
+  <action name="actionClear_all_breakpoints">
+   <property name="text">
+    <string>Clear all breakpoints</string>
+   </property>
+  </action>
+  <action name="actionBreakpoint_property">
+   <property name="text">
+    <string>Breakpoint property...</string>
    </property>
   </action>
  </widget>

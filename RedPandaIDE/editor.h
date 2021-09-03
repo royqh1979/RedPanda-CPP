@@ -132,8 +132,10 @@ public:
     PSyntaxIssue getSyntaxIssueAtPosition(const BufferCoord& pos);
     int gutterClickedLine() const;
     void toggleBreakpoint(int line);
+    void clearBreakpoints();
     bool hasBreakpoint(int line);
     void removeBreakpointFocus();
+    void modifyBreakpointProperty(int line);
     void setActiveBreakpointFocus(int Line, bool setFocus=true);
     QString getWordAtPosition(const BufferCoord& p,
                               BufferCoord& pWordBegin,

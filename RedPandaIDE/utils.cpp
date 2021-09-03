@@ -603,3 +603,9 @@ void logToFile(const QString &s, const QString &filename, bool append)
         ts<<s<<Qt::endl;
     }
 }
+
+QString baseFileName(const QString &fileName)
+{
+    QFileInfo fileInfo(fileName);
+    return fileInfo.fileName();
+}

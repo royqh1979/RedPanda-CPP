@@ -193,6 +193,24 @@ void Debugger::removeBreakpoint(int index)
     mBreakpointModel->removeBreakpoint(index);
 }
 
+PBreakpoint Debugger::breakpointAt(int line, const QString& filename, int &index)
+{
+    const QList<PBreakpoint>& breakpoints=mBreakpointModel->breakpoints();
+    for (index=0;index<breakpoints.count();index++){
+        PBreakpoint breakpoint = breakpoints[index];
+        if (breakpoint->line == line
+                && breakpoint->filename == filename)
+            return breakpoint;
+    }
+    index=-1;
+    return PBreakpoint();
+}
+
+PBreakpoint Debugger::breakpointAt(int line, const Editor *editor, int &index)
+{
+    return breakpointAt(line,editor->filename(),index);
+}
+
 void Debugger::setBreakPointCondition(int index, const QString &condition)
 {
     PBreakpoint breakpoint=mBreakpointModel->setBreakPointCondition(index,condition);
@@ -1441,6 +1459,21 @@ QVariant BreakpointModel::data(const QModelIndex &index, int role) const
         return QVariant();
     switch (role) {
     case Qt::DisplayRole:
+        switch (index.column()) {
+        case 0: {
+            return baseFileName(breakpoint->filename);
+        }
+        case 1:
+            if (breakpoint->line>0)
+                return breakpoint->line;
+            else
+                return "";
+        case 2:
+            return breakpoint->condition;
+        default:
+            return QVariant();
+        }
+    case Qt::ToolTipRole:
         switch (index.column()) {
         case 0:
             return breakpoint->filename;

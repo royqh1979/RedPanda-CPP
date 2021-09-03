@@ -1,5 +1,7 @@
 #include "issuestable.h"
+#include "../utils.h"
 #include <QHeaderView>
+#include "../settings.h"
 
 
 IssuesTable::IssuesTable(QWidget *parent):
@@ -7,7 +9,6 @@ IssuesTable::IssuesTable(QWidget *parent):
 {
     mModel = new IssuesModel(this);
     this->setModel(mModel);
-    this->horizontalHeader()->setSectionResizeMode(3,QHeaderView::Stretch);
     this->setColumnWidth(0,200);
     this->setColumnWidth(1,45);
     this->setColumnWidth(2,45);
@@ -120,9 +121,14 @@ QVariant IssuesModel::data(const QModelIndex &index, int role) const
         return QVariant();
     switch (role) {
     case Qt::DisplayRole:
+    case Qt::ToolTipRole:
         switch (index.column()) {
-        case 0:
-            return issue->filename;
+        case 0: {
+            if (role == Qt::DisplayRole)
+                return baseFileName(issue->filename);
+            else
+                return issue->filename;
+        }
         case 1:
             if (issue->line>0)
                 return issue->line;
@@ -168,16 +174,20 @@ QVariant IssuesModel::data(const QModelIndex &index, int role) const
 
 QVariant IssuesModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
-    if (orientation == Qt::Horizontal && role ==  Qt::DisplayRole) {
-        switch(section) {
-        case 0:
-            return tr("Filename");
-        case 1:
-            return tr("Line");
-        case 2:
-            return tr("Col");
-        case 3:
-            return tr("Description");
+    if (orientation == Qt::Horizontal ) {
+        switch(role) {
+        case Qt::DisplayRole:
+            switch(section) {
+            case 0:
+                return tr("Filename");
+            case 1:
+                return tr("Line");
+            case 2:
+                return tr("Col");
+            case 3:
+                return tr("Description");
+            }
+            break;
         }
     }
     return QVariant();

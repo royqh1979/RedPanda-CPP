@@ -23,6 +23,7 @@
 #include <QPainter>
 #include <QToolTip>
 #include <QApplication>
+#include <QInputDialog>
 #include "iconsmanager.h"
 #include "debugger.h"
 #include "editorlist.h"
@@ -2550,6 +2551,13 @@ void Editor::toggleBreakpoint(int line)
     invalidateLine(line);
 }
 
+void Editor::clearBreakpoints()
+{
+    pMainWindow->debugger()->deleteBreakpoints(this);
+    mBreakpointLines.clear();
+    invalidate();
+}
+
 bool Editor::hasBreakpoint(int line)
 {
     return mBreakpointLines.contains(line);
@@ -2562,6 +2570,23 @@ void Editor::removeBreakpointFocus()
         mActiveBreakpointLine = -1;
         invalidateGutterLine(oldLine);
         invalidateLine(oldLine);
+    }
+}
+
+void Editor::modifyBreakpointProperty(int line)
+{
+    int index;
+    PBreakpoint breakpoint = pMainWindow->debugger()->breakpointAt(line,this,index);
+    if (!breakpoint)
+        return;
+    bool isOk;
+    QString s=QInputDialog::getText(this,
+                              tr("Break point condition"),
+                              tr("Enter the condition of the breakpoint:"),
+                            QLineEdit::Normal,
+                            breakpoint->condition,&isOk);
+    if (isOk) {
+        pMainWindow->debugger()->setBreakPointCondition(index,s);
     }
 }
 

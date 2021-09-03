@@ -401,7 +401,7 @@ QMenu::separator {
 
 QMenu::item {
   background-color: #37414F;
-  padding: 4px 24px 4px 28px;
+  padding: 4px 8px 4px 8px;
   /* Reserve space for selection border */
   border: 1px transparent #455364;
 }
@@ -1574,7 +1574,7 @@ QTabBar::tab:right:!selected, QDockWidget QTabBar::tab:right:!selected {
 QTabBar::tab:top, QDockWidget QTabBar::tab:top {
   background-color: #455364;
   margin-left: 2px;
-  padding: 0.1em 0.5em 0.1em 0.5em;
+  padding: 4px 10px 4px 10px;
   min-width: 5px;
   border-bottom: 3px solid #455364;
   border-top-left-radius: 4px;
@@ -1600,7 +1600,7 @@ QTabBar::tab:bottom, QDockWidget QTabBar::tab:bottom {
   border-top: 3px solid #455364;
   background-color: #455364;
   margin-left: 2px;
-  padding: 0.1em 0.5em 0.1em 0.5em;
+  padding: 4px 10px 4px 10px;
   border-bottom-left-radius: 4px;
   border-bottom-right-radius: 4px;
   min-width: 5px;
@@ -1624,7 +1624,7 @@ QTabBar::tab:bottom:!selected:hover, QDockWidget QTabBar::tab:bottom:!selected:h
 QTabBar::tab:left, QDockWidget QTabBar::tab:left {
   background-color: #455364;
   margin-top: 2px;
-  padding: 0.5em 0.1em 0.5em 0.1em;
+  padding: 10px 4px 10px 4px;
   border-top-left-radius: 4px;
   border-bottom-left-radius: 4px;
   min-height: 5px;
@@ -1646,7 +1646,7 @@ QTabBar::tab:left:!selected:hover, QDockWidget QTabBar::tab:left:!selected:hover
 QTabBar::tab:right, QDockWidget QTabBar::tab:right {
   background-color: #455364;
   margin-top: 2px;
-  padding: 0.5em 0.1em 0.5em 0.1em;
+  padding: 10px 4px 10px 4px;
   border-top-right-radius: 4px;
   border-bottom-right-radius: 4px;
   min-height: 5px;
@@ -1949,7 +1949,7 @@ QHeaderView::section {
   color: #E0E1E3;
   border-radius: 0;
   text-align: left;
-  font-size: 13px;
+/*  font-size: 13px; */
 }
 
 QHeaderView::section::horizontal {

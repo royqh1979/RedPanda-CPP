@@ -162,6 +162,9 @@
       <property name="textElideMode">
        <enum>Qt::ElideNone</enum>
       </property>
+      <attribute name="horizontalHeaderStretchLastSection">
+       <bool>true</bool>
+      </attribute>
      </widget>
     </widget>
    </item>

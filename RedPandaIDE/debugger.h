@@ -183,6 +183,8 @@ public:
     void removeBreakpoint(int line, const Editor* editor);
     void removeBreakpoint(int line, const QString& filename);
     void removeBreakpoint(int index);
+    PBreakpoint breakpointAt(int line, const QString& filename, int &index);
+    PBreakpoint breakpointAt(int line, const Editor* editor, int &index);
     void setBreakPointCondition(int index, const QString& condition);
     void sendAllBreakpointsToDebugger();
 

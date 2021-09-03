@@ -264,6 +264,12 @@ private slots:
 
     void on_actionPrevious_Editor_triggered();
 
+    void on_actionToggle_Breakpoint_triggered();
+
+    void on_actionClear_all_breakpoints_triggered();
+
+    void on_actionBreakpoint_property_triggered();
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;
@@ -307,6 +313,7 @@ private:
 
     bool mClosing;
     bool mSystemTurnedOff;
+    QPoint mContextMenuPos;
 
 
    // QWidget interface
