@@ -8,7 +8,7 @@ class StdinCompiler : public Compiler
     Q_OBJECT
 
 public:
-    explicit StdinCompiler(const QString& filename, const QString& content, bool silent,bool onlyCheckSyntax);
+    explicit StdinCompiler(const QString& filename, const QString& content, bool isAscii, bool silent,bool onlyCheckSyntax);
 
     // Compiler interface
 protected:
@@ -17,6 +17,7 @@ protected:
 
 private:
     QString mContent;
+    bool mIsAscii;
 
     // Compiler interface
 protected:

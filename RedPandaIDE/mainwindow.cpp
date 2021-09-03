@@ -614,7 +614,8 @@ void MainWindow::checkSyntaxInBack(Editor *e)
     mCheckSyntaxInBack=true;
     e->clearSyntaxIssues();
     ui->tableIssues->clearIssues();
-    mCompilerManager->checkSyntax(e->filename(),e->lines()->text());
+    mCompilerManager->checkSyntax(e->filename(),e->lines()->text(),
+                                  e->fileEncoding() == ENCODING_ASCII);
 //    if not PrepareForCompile(cttStdin,True) then begin
 //      fCheckSyntaxInBack:=False;
 //      Exit;

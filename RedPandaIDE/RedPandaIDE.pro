@@ -79,6 +79,7 @@ SOURCES += \
     utils.cpp \
     widgets/coloredit.cpp \
     widgets/consolewidget.cpp \
+    widgets/filepropertiesdialog.cpp \
     widgets/headercompletionpopup.cpp \
     widgets/issuestable.cpp \
     widgets/qconsole.cpp \
@@ -154,6 +155,7 @@ HEADERS += \
     common.h \
     widgets/coloredit.h \
     widgets/consolewidget.h \
+    widgets/filepropertiesdialog.h \
     widgets/headercompletionpopup.h \
     widgets/issuestable.h \
     widgets/qconsole.h \
@@ -180,6 +182,7 @@ FORMS += \
     settingsdialog/environmentappearencewidget.ui \
     settingsdialog/executorgeneralwidget.ui \
     settingsdialog/settingsdialog.ui \
+    widgets/filepropertiesdialog.ui \
     widgets/searchdialog.ui
 
 TRANSLATIONS += \

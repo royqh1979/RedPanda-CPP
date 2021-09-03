@@ -2,10 +2,12 @@
 #include "compilermanager.h"
 #include <QFile>
 #include <QFileInfo>
+#include "../platform.h"
 
-StdinCompiler::StdinCompiler(const QString &filename, const QString& content, bool silent, bool onlyCheckSyntax):
+StdinCompiler::StdinCompiler(const QString &filename, const QString& content,bool isAscii, bool silent, bool onlyCheckSyntax):
     Compiler(filename,silent,onlyCheckSyntax),
-    mContent(content)
+    mContent(content),
+    mIsAscii(isAscii)
 {
 
 }
@@ -26,6 +28,8 @@ bool StdinCompiler::prepareForCompile()
     if (fileType == FileType::Other)
         fileType = FileType::CppSource;
     QString strFileType;
+    if (!mIsAscii)
+        mArguments += getCharsetArgument(getDefaultSystemEncoding());
     switch(fileType) {
     case FileType::CSource:
     case FileType::CHeader:
