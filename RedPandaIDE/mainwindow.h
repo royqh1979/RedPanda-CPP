@@ -270,6 +270,10 @@ private slots:
 
     void on_actionBreakpoint_property_triggered();
 
+    void on_actionGoto_Declaration_triggered();
+
+    void on_actionGoto_Definition_triggered();
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;

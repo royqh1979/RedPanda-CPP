@@ -9,7 +9,8 @@ PSearchResults SearchResultModel::addSearchResults(const QString &keyword, SynSe
     int index=-1;
     for (int i=0;i<mSearchResults.size();i++) {
         PSearchResults results = mSearchResults[i];
-        if (results->keyword == keyword && results->scope == scope) {
+        if (results->keyword == keyword && results->scope == scope
+                && results->searchType == SearchType::Search) {
             index=i;
             break;
         }
@@ -24,6 +25,36 @@ PSearchResults SearchResultModel::addSearchResults(const QString &keyword, SynSe
     results->keyword = keyword;
     results->options = options;
     results->scope = scope;
+    results->searchType = SearchType::Search;
+    mSearchResults.push_front(results);
+    mCurrentIndex = 0;
+    return results;
+}
+
+PSearchResults SearchResultModel::addSearchResults(const QString &keyword, const QString &filename, int symbolLine)
+{
+    int index=-1;
+    for (int i=0;i<mSearchResults.size();i++) {
+        PSearchResults results = mSearchResults[i];
+        if (results->searchType == SearchType::FindOccurences
+                && results->keyword == keyword
+                && results->filename == filename
+                && results->symbolLine == symbolLine) {
+            index=i;
+            break;
+        }
+    }
+    if (index>=0) {
+        mSearchResults.removeAt(index);
+    }
+    if (mSearchResults.size()>=MAX_SEARCH_RESULTS) {
+        mSearchResults.pop_back();
+    }
+    PSearchResults results = std::make_shared<SearchResults>();
+    results->keyword = keyword;
+    results->filename = filename;
+    results->symbolLine = symbolLine;
+    results->searchType = SearchType::FindOccurences;
     mSearchResults.push_front(results);
     mCurrentIndex = 0;
     return results;
@@ -147,7 +178,7 @@ int SearchResultTreeModel::rowCount(const QModelIndex &parent) const
     return item->results.count();
 }
 
-int SearchResultTreeModel::columnCount(const QModelIndex &parent) const
+int SearchResultTreeModel::columnCount(const QModelIndex &) const
 {
     return 1;
 }
@@ -199,7 +230,7 @@ SearchResultListModel::SearchResultListModel(SearchResultModel *model, QObject *
             this, &SearchResultListModel::onResultModelChanged);
 }
 
-int SearchResultListModel::rowCount(const QModelIndex &parent) const
+int SearchResultListModel::rowCount(const QModelIndex &) const
 {
     return mSearchResultModel->resultsCount();
 }
@@ -212,13 +243,20 @@ QVariant SearchResultListModel::data(const QModelIndex &index, int role) const
         PSearchResults results = mSearchResultModel->results(index.row());
         if (!results)
             return QVariant();
-        switch (results->scope) {
-        case SearchFileScope::currentFile:
-            return tr("Current File:") + QString(" \"%1\"").arg(results->keyword);
-        case SearchFileScope::wholeProject:
-            return tr("Files In Project:") + QString(" \"%1\"").arg(results->keyword);
-        case SearchFileScope::openedFiles:
-            return tr("Open Files:") + QString(" \"%1\"").arg(results->keyword);
+        if (results->searchType == SearchType::Search) {
+            switch (results->scope) {
+            case SearchFileScope::currentFile:
+                return tr("Current File:") + QString(" \"%1\"").arg(results->keyword);
+            case SearchFileScope::wholeProject:
+                return tr("Files In Project:") + QString(" \"%1\"").arg(results->keyword);
+            case SearchFileScope::openedFiles:
+                return tr("Open Files:") + QString(" \"%1\"").arg(results->keyword);
+            }
+        } else if (results->searchType == SearchType::FindOccurences) {
+            return tr("References to symbol \'%1\' at '%2':%3")
+                    .arg(results->keyword)
+                    .arg(baseFileName(results->filename))
+                    .arg(results->symbolLine);
         }
     }
     return QVariant();

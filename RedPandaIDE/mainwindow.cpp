@@ -1151,6 +1151,9 @@ void MainWindow::onEditorContextMenu(const QPoint &pos)
         menu.addAction(ui->actionCompile_Run);
         menu.addAction(ui->actionDebug);
         menu.addSeparator();
+        menu.addAction(ui->actionGoto_Declaration);
+        menu.addAction(ui->actionGoto_Definition);
+        menu.addAction(ui->actionFind_references);
     } else {
         //mouse on gutter
         int line;
@@ -2181,5 +2184,25 @@ void MainWindow::on_actionBreakpoint_property_triggered()
             editor->modifyBreakpointProperty(line);
     }
 
+}
+
+
+void MainWindow::on_actionGoto_Declaration_triggered()
+{
+    Editor * editor = mEditorList->getEditor();
+    BufferCoord pos;
+    if (editor && editor->PointToCharLine(mContextMenuPos,pos)) {
+        editor->gotoDeclaration(pos);
+    }
+}
+
+
+void MainWindow::on_actionGoto_Definition_triggered()
+{
+    Editor * editor = mEditorList->getEditor();
+    BufferCoord pos;
+    if (editor && editor->PointToCharLine(mContextMenuPos,pos)) {
+        editor->gotoDefinition(pos);
+    }
 }
 

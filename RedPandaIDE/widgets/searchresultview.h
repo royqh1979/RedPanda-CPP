@@ -13,6 +13,11 @@ using PSearchResultTreeItem = std::shared_ptr<SearchResultTreeItem>;
 using SearchResultTreeItemList = QList<PSearchResultTreeItem>;
 using PSearchResultTreeItemList = std::shared_ptr<SearchResultTreeItemList>;
 
+enum class SearchType {
+    Search,
+    FindOccurences
+};
+
 struct SearchResultTreeItem {
     QString filename;
     int line;
@@ -23,12 +28,13 @@ struct SearchResultTreeItem {
     SearchResultTreeItemList results;
 };
 
-
-
 struct SearchResults{
     SynSearchOptions options;
     QString keyword;
     SearchFileScope scope;
+    SearchType searchType;
+    QString filename;
+    int symbolLine;
     QList<PSearchResultTreeItem> results;
 };
 
@@ -40,6 +46,10 @@ public:
     explicit SearchResultModel(QObject* parent=nullptr);
     PSearchResults addSearchResults(const QString& keyword,SynSearchOptions options,
                                     SearchFileScope scope);
+    PSearchResults addSearchResults(
+            const QString& keyword,
+            const QString& filename,
+            int symbolLine);
     PSearchResults results(int index);
     void notifySearchResultsUpdated();
     int currentIndex() const;

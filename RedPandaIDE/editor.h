@@ -144,6 +144,8 @@ public:
     QString getPreviousWordAtPositionForSuggestion(const BufferCoord& p);
     void reformat();
     void checkSyntaxInBack();
+    void gotoDeclaration(const BufferCoord& pos);
+    void gotoDefinition(const BufferCoord& pos);
 
     const PCppParser &parser() const;
 
@@ -197,8 +199,6 @@ private:
     QString getHintForFunction(const PStatement& statement, const PStatement& scope,
                                const QString& filename, int line);
 
-    void gotoDeclaration(const BufferCoord& pos);
-    void gotoDefinition(const BufferCoord& pos);
 
 private:
     static int newfileCount;

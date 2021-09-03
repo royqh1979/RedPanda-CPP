@@ -1537,6 +1537,21 @@
     <string>Breakpoint property...</string>
    </property>
   </action>
+  <action name="actionGoto_Declaration">
+   <property name="text">
+    <string>Goto Declaration</string>
+   </property>
+  </action>
+  <action name="actionGoto_Definition">
+   <property name="text">
+    <string>Goto Definition</string>
+   </property>
+  </action>
+  <action name="actionFind_references">
+   <property name="text">
+    <string>Find references</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>
