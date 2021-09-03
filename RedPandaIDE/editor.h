@@ -137,17 +137,13 @@ public:
     void removeBreakpointFocus();
     void modifyBreakpointProperty(int line);
     void setActiveBreakpointFocus(int Line, bool setFocus=true);
-    QString getWordAtPosition(const BufferCoord& p,
-                              BufferCoord& pWordBegin,
-                              BufferCoord& pWordEnd,
-                              WordPurpose purpose);
     QString getPreviousWordAtPositionForSuggestion(const BufferCoord& p);
     void reformat();
     void checkSyntaxInBack();
     void gotoDeclaration(const BufferCoord& pos);
     void gotoDefinition(const BufferCoord& pos);
 
-    const PCppParser &parser() const;
+    const PCppParser &parser();
 
 private slots:
     void onModificationChanged(bool status) ;
@@ -259,5 +255,12 @@ public:
 protected:
     void mouseReleaseEvent(QMouseEvent *event) override;
 };
+
+QString getWordAtPosition(SynEdit* editor,
+                          const BufferCoord& p,
+                          BufferCoord& pWordBegin,
+                          BufferCoord& pWordEnd,
+                          Editor::WordPurpose purpose);
+
 
 #endif // EDITOR_H

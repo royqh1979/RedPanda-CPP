@@ -132,6 +132,7 @@ private:
     void doAutoSave(Editor *e);
     void buildContextMenus();
     void maximizeEditor();
+    void openShell(const QString& folder, const QString& shellCommand);
 
 private slots:
     void onAutoSaveTimeout();
@@ -273,6 +274,12 @@ private slots:
     void on_actionGoto_Declaration_triggered();
 
     void on_actionGoto_Definition_triggered();
+
+    void on_actionFind_references_triggered();
+
+    void on_actionOpen_Containing_Folder_triggered();
+
+    void on_actionOpen_Terminal_triggered();
 
 private:
     Ui::MainWindow *ui;

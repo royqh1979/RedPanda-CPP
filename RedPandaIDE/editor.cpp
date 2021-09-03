@@ -647,7 +647,7 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
     if (mParser && mCompletionPopup && (attr->name() == SYNS_AttrIdentifier)) {
         BufferCoord p{aChar,line};
         BufferCoord pBeginPos,pEndPos;
-        QString s= getWordAtPosition(p, pBeginPos,pEndPos, WordPurpose::wpInformation);
+        QString s= getWordAtPosition(this,p, pBeginPos,pEndPos, WordPurpose::wpInformation);
 //        qDebug()<<s;
         PStatement statement = mParser->findStatementOf(mFilename,
           s , p.Line);
@@ -702,11 +702,11 @@ bool Editor::event(QEvent *event)
             break;
         case TipType::Identifier:
             if (pMainWindow->debugger()->executing())
-                s = getWordAtPosition(p, pBeginPos,pEndPos, WordPurpose::wpEvaluation); // debugging
+                s = getWordAtPosition(this,p, pBeginPos,pEndPos, WordPurpose::wpEvaluation); // debugging
             else if (//devEditor.ParserHints and
                      !mCompletionPopup->isVisible()
                      && !mHeaderCompletionPopup->isVisible())
-                s = getWordAtPosition(p, pBeginPos,pEndPos, WordPurpose::wpInformation); // information during coding
+                s = getWordAtPosition(this,p, pBeginPos,pEndPos, WordPurpose::wpInformation); // information during coding
             break;
         case TipType::Selection:
             s = selText(); // when a selection is available, always only use that
@@ -1669,13 +1669,13 @@ void Editor::showCompletion(bool autoComplete)
                 BufferCoord{caretX() - 1,
                 caretY()}, s, tokenFinished,tokenType, attr)) {
         if (tokenType == SynHighlighterTokenType::PreprocessDirective) {//Preprocessor
-            word = getWordAtPosition(caretXY(),pBeginPos,pEndPos, WordPurpose::wpDirective);
+            word = getWordAtPosition(this,caretXY(),pBeginPos,pEndPos, WordPurpose::wpDirective);
             if (!word.startsWith('#')) {
                 //showTabnineCompletion();
                 return;
             }
         } else if (tokenType == SynHighlighterTokenType::Comment) { //Comment, javadoc tag
-            word = getWordAtPosition(caretXY(),pBeginPos,pEndPos, WordPurpose::wpJavadoc);
+            word = getWordAtPosition(this,caretXY(),pBeginPos,pEndPos, WordPurpose::wpJavadoc);
             if (!word.startsWith('@')) {
                     return;
             }
@@ -1721,7 +1721,7 @@ void Editor::showCompletion(bool autoComplete)
                 );
 
     if (word.isEmpty())
-        word=getWordAtPosition(caretXY(),pBeginPos,pEndPos, WordPurpose::wpCompletion);
+        word=getWordAtPosition(this,caretXY(),pBeginPos,pEndPos, WordPurpose::wpCompletion);
     //if not fCompletionBox.Visible then
     mCompletionPopup->prepareSearch(word, mFilename, pBeginPos.Line);
 
@@ -1760,7 +1760,7 @@ void Editor::showHeaderCompletion(bool autoComplete)
     mHeaderCompletionPopup->setParser(mParser);
 
     BufferCoord pBeginPos,pEndPos;
-    QString word = getWordAtPosition(caretXY(),pBeginPos,pEndPos,
+    QString word = getWordAtPosition(this,caretXY(),pBeginPos,pEndPos,
                                      WordPurpose::wpHeaderCompletionStart);
     if (word.isEmpty())
         return;
@@ -1943,7 +1943,7 @@ bool Editor::onCompletionKeyPressed(QKeyEvent *event)
         ExecuteCommand(
                     SynEditorCommand::ecDeleteLastChar,
                     QChar(), nullptr); // Simulate backspace in editor
-        phrase = getWordAtPosition(caretXY(),
+        phrase = getWordAtPosition(this,caretXY(),
                                    pBeginPos,pEndPos,
                                    purpose);
         mLastIdCharPressed = phrase.length();
@@ -1967,7 +1967,7 @@ bool Editor::onCompletionKeyPressed(QKeyEvent *event)
     QChar ch = event->text().front();
     if (isIdentChar(ch)) {
         setSelText(ch);
-        phrase = getWordAtPosition(caretXY(),
+        phrase = getWordAtPosition(this,caretXY(),
                                             pBeginPos,pEndPos,
                                             purpose);
         mLastIdCharPressed = phrase.length();
@@ -1994,7 +1994,7 @@ bool Editor::onHeaderCompletionKeyPressed(QKeyEvent *event)
         ExecuteCommand(
                     SynEditorCommand::ecDeleteLastChar,
                     QChar(), nullptr); // Simulate backspace in editor
-        phrase = getWordAtPosition(caretXY(),
+        phrase = getWordAtPosition(this,caretXY(),
                                    pBeginPos,pEndPos,
                                    WordPurpose::wpHeaderCompletion);
         mLastIdCharPressed = phrase.length();
@@ -2019,7 +2019,7 @@ bool Editor::onHeaderCompletionKeyPressed(QKeyEvent *event)
     QChar ch = event->text().front();
     if (isIdentChar(ch)) {
         setSelText(ch);
-        phrase = getWordAtPosition(caretXY(),
+        phrase = getWordAtPosition(this,caretXY(),
                                             pBeginPos,pEndPos,
                                             WordPurpose::wpHeaderCompletion);
         mLastIdCharPressed = phrase.length();
@@ -2177,7 +2177,7 @@ void Editor::gotoDeclaration(const BufferCoord &pos)
 {
     // Exit early, don't bother creating a stream (which is slow)
     BufferCoord pBeginPos, pEndPos;
-    QString phrase = getWordAtPosition(pos,pBeginPos,pEndPos, WordPurpose::wpInformation);
+    QString phrase = getWordAtPosition(this,pos,pBeginPos,pEndPos, WordPurpose::wpInformation);
     if (phrase.isEmpty())
         return;
 
@@ -2207,7 +2207,7 @@ void Editor::gotoDefinition(const BufferCoord &pos)
 {
     // Exit early, don't bother creating a stream (which is slow)
     BufferCoord pBeginPos, pEndPos;
-    QString phrase = getWordAtPosition(pos,pBeginPos,pEndPos, WordPurpose::wpInformation);
+    QString phrase = getWordAtPosition(this,pos,pBeginPos,pEndPos, WordPurpose::wpInformation);
     if (phrase.isEmpty())
         return;
 
@@ -2228,31 +2228,31 @@ void Editor::gotoDefinition(const BufferCoord &pos)
     }
 }
 
-QString Editor::getWordAtPosition(const BufferCoord &p, BufferCoord &pWordBegin, BufferCoord &pWordEnd, WordPurpose purpose)
+QString getWordAtPosition(SynEdit *editor, const BufferCoord &p, BufferCoord &pWordBegin, BufferCoord &pWordEnd, Editor::WordPurpose purpose)
 {
     QString result = "";
     QString s;
-    if ((p.Line<1) || (p.Line>lines()->count())) {
+    if ((p.Line<1) || (p.Line>editor->lines()->count())) {
         pWordBegin = p;
         pWordEnd = p;
         return "";
     }
 
-    s = lines()->getString(p.Line - 1);
+    s = editor->lines()->getString(p.Line - 1);
     int len = s.length();
 
     int wordBegin = p.Char - 1 - 1; //BufferCoord::Char starts with 1
     int wordEnd = p.Char - 1 - 1;
 
     // Copy forward until end of word
-    if (purpose == WordPurpose::wpEvaluation
-            || purpose == WordPurpose::wpInformation) {
+    if (purpose == Editor::WordPurpose::wpEvaluation
+            || purpose == Editor::WordPurpose::wpInformation) {
         while (wordEnd + 1 < len) {
-            if ((purpose == WordPurpose::wpEvaluation)
+            if ((purpose == Editor::WordPurpose::wpEvaluation)
                     && (s[wordEnd + 1] == '[')) {
                 if (!findComplement(s, '[', ']', wordEnd, 1))
                     break;
-            } else if (isIdentChar(s[wordEnd + 1])) {
+            } else if (editor->isIdentChar(s[wordEnd + 1])) {
                 wordEnd++;
             } else
                 break;
@@ -2260,9 +2260,9 @@ QString Editor::getWordAtPosition(const BufferCoord &p, BufferCoord &pWordBegin,
     }
 
     // Copy backward until #
-    if (purpose == WordPurpose::wpDirective) {
+    if (purpose == Editor::WordPurpose::wpDirective) {
         while ((wordBegin >= 0) && (wordBegin < len)) {
-           if (isIdentChar(s[wordBegin]))
+           if (editor->isIdentChar(s[wordBegin]))
                wordBegin--;
            else if (s[wordBegin] == '#') {
                wordBegin--;
@@ -2273,9 +2273,9 @@ QString Editor::getWordAtPosition(const BufferCoord &p, BufferCoord &pWordBegin,
     }
 
     // Copy backward until @
-    if (purpose == WordPurpose::wpJavadoc) {
+    if (purpose == Editor::WordPurpose::wpJavadoc) {
         while ((wordBegin >= 0) && (wordBegin < len)) {
-           if (isIdentChar(s[wordBegin]))
+           if (editor->isIdentChar(s[wordBegin]))
                wordBegin--;
            else if (s[wordBegin] == '@') {
                wordBegin--;
@@ -2286,9 +2286,9 @@ QString Editor::getWordAtPosition(const BufferCoord &p, BufferCoord &pWordBegin,
     }
 
     // Copy backward until begin of path
-    if (purpose == WordPurpose::wpHeaderCompletion) {
+    if (purpose == Editor::WordPurpose::wpHeaderCompletion) {
         while ((wordBegin >= 0) && (wordBegin < len)) {
-            if (isIdentChar(s[wordBegin]))
+            if (editor->isIdentChar(s[wordBegin]))
                 wordBegin--;
             else if (s[wordBegin] == '/'
                      || s[wordBegin] == '\\'
@@ -2300,7 +2300,7 @@ QString Editor::getWordAtPosition(const BufferCoord &p, BufferCoord &pWordBegin,
         }
     }
 
-    if (purpose == WordPurpose::wpHeaderCompletionStart) {
+    if (purpose == Editor::WordPurpose::wpHeaderCompletionStart) {
         while ((wordBegin >= 0) && (wordBegin < len)) {
             if (s[wordBegin] == '"'
                     || s[wordBegin] == '<') {
@@ -2310,7 +2310,7 @@ QString Editor::getWordAtPosition(const BufferCoord &p, BufferCoord &pWordBegin,
                          || s[wordBegin] == '\\'
                          || s[wordBegin] == '.') {
                     wordBegin--;
-            } else  if (isIdentChar(s[wordBegin]))
+            } else  if (editor->isIdentChar(s[wordBegin]))
                 wordBegin--;
             else
                 break;
@@ -2319,16 +2319,16 @@ QString Editor::getWordAtPosition(const BufferCoord &p, BufferCoord &pWordBegin,
 
 //        && ( wordBegin < len)
     // Copy backward until begin of word
-    if (purpose == WordPurpose::wpCompletion
-            || purpose == WordPurpose::wpEvaluation
-            || purpose == WordPurpose::wpInformation) {
+    if (purpose == Editor::WordPurpose::wpCompletion
+            || purpose == Editor::WordPurpose::wpEvaluation
+            || purpose == Editor::WordPurpose::wpInformation) {
         while ((wordBegin >= 0) && (wordBegin<len)) {
             if (s[wordBegin] == ']') {
                 if (!findComplement(s, ']', '[', wordBegin, -1))
                     break;
                 else
                     wordBegin++; // step over mathing [
-            } else if (isIdentChar(s[wordBegin])) {
+            } else if (editor->isIdentChar(s[wordBegin])) {
                 wordBegin--;
             } else if (s[wordBegin] == '.'
                        || s[wordBegin] == ':'
@@ -2375,9 +2375,9 @@ QString Editor::getWordAtPosition(const BufferCoord &p, BufferCoord &pWordBegin,
             && (
                 result[0] == '.'
                 || result[0] == '-')
-            && (purpose == WordPurpose::wpCompletion
-                || purpose == WordPurpose::wpEvaluation
-                || purpose == WordPurpose::wpInformation)) {
+            && (purpose == Editor::WordPurpose::wpCompletion
+                || purpose == Editor::WordPurpose::wpEvaluation
+                || purpose == Editor::WordPurpose::wpInformation)) {
         int i = wordBegin;
         int line=p.Line;
         while (line>=1) {
@@ -2391,7 +2391,7 @@ QString Editor::getWordAtPosition(const BufferCoord &p, BufferCoord &pWordBegin,
             if (i<0) {
                 line--;
                 if (line>=1) {
-                    s=lines()->getString(line-1);
+                    s=editor->lines()->getString(line-1);
                     i=s.length();
                     continue;
                 } else
@@ -2401,7 +2401,7 @@ QString Editor::getWordAtPosition(const BufferCoord &p, BufferCoord &pWordBegin,
                 BufferCoord pDummy;
                 highlightPos.Line = line;
                 highlightPos.Char = i+1;
-                result = getWordAtPosition(highlightPos,pWordBegin,pDummy,purpose)+result;
+                result = getWordAtPosition(editor, highlightPos,pWordBegin,pDummy,purpose)+result;
                 break;
             }
         }
@@ -2527,7 +2527,7 @@ void Editor::checkSyntaxInBack()
         pMainWindow->checkSyntaxInBack(this);
 }
 
-const PCppParser &Editor::parser() const
+const PCppParser &Editor::parser()
 {
     return mParser;
 }

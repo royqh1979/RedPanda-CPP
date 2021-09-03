@@ -67,6 +67,7 @@ public:
     void* getObject(int Index);
     QString text();
     void setText(const QString& text);
+    void setContents(const QStringList& text);
     QStringList contents();
 
     void putString(int Index, const QString& s);

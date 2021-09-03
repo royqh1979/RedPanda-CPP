@@ -217,6 +217,24 @@ void SynEditStringList::setText(const QString &text)
     PutTextStr(text);
 }
 
+void SynEditStringList::setContents(const QStringList &text)
+{
+    beginUpdate();
+    auto action = finally([this]{
+        endUpdate();
+    });
+    clear();
+    if (text.count() > 0) {
+        mIndexOfLongestLine = -1;
+        int FirstAdded = mList.count();
+
+        foreach (const QString& s,text) {
+            addItem(s);
+        }
+        emit inserted(FirstAdded,text.count());
+    }
+}
+
 QStringList SynEditStringList::contents()
 {
     QStringList Result;
@@ -288,8 +306,10 @@ void SynEditStringList::clear()
 {
     if (!mList.isEmpty()) {
         beginUpdate();
+        int oldCount = mList.count();
         mIndexOfLongestLine = -1;
         mList.clear();
+        emit deleted(0,oldCount);
         endUpdate();
     }
 }

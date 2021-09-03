@@ -1,3 +1,4 @@
+#include <windows.h>
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "editorlist.h"
@@ -11,6 +12,7 @@
 
 #include <QCloseEvent>
 #include <QComboBox>
+#include <QDesktopServices>
 #include <QFileDialog>
 #include <QInputDialog>
 #include <QLabel>
@@ -24,6 +26,7 @@
 #include <QMessageBox>
 #include <QTextCodec>
 #include <QDebug>
+#include "cpprefacter.h"
 
 #include <widgets/searchdialog.h>
 
@@ -1102,6 +1105,39 @@ void MainWindow::maximizeEditor()
     }
 }
 
+void MainWindow::openShell(const QString &folder, const QString &shellCommand)
+{
+    QProcess process;
+    process.setWorkingDirectory(folder);
+    process.setProgram(shellCommand);
+    process.setCreateProcessArgumentsModifier([](QProcess::CreateProcessArguments * args){
+        args->flags |= CREATE_NEW_CONSOLE;
+        args->startupInfo->dwFlags &=  ~STARTF_USESTDHANDLES; //
+    });
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    QString path = env.value("PATH");
+
+    if (pSettings->compilerSets().defaultSet()) {
+        foreach(const QString& dir, pSettings->compilerSets().defaultSet()->binDirs()) {
+#ifdef Q_OS_WIN
+            path+=";";
+#else
+            path+=":";
+#endif
+            path+=dir;
+        }
+    }
+#ifdef Q_OS_WIN
+            path+=";";
+#else
+            path+=":";
+#endif
+    path+=pSettings->dirs().app();
+    env.insert("PATH",path);
+    process.setProcessEnvironment(env);
+    process.startDetached();
+}
+
 void MainWindow::onAutoSaveTimeout()
 {
     if (!pSettings->editor().enableAutoSave())
@@ -1154,6 +1190,15 @@ void MainWindow::onEditorContextMenu(const QPoint &pos)
         menu.addAction(ui->actionGoto_Declaration);
         menu.addAction(ui->actionGoto_Definition);
         menu.addAction(ui->actionFind_references);
+
+        menu.addSeparator();
+        menu.addAction(ui->actionOpen_Containing_Folder);
+        menu.addAction(ui->actionOpen_Terminal);
+
+        //these actions needs parser
+        ui->actionGoto_Declaration->setEnabled(!editor->parser()->parsing());
+        ui->actionGoto_Definition->setEnabled(!editor->parser()->parsing());
+        ui->actionFind_references->setEnabled(!editor->parser()->parsing());
     } else {
         //mouse on gutter
         int line;
@@ -1996,8 +2041,13 @@ void MainWindow::on_actionFind_Previous_triggered()
 
 void MainWindow::on_cbSearchHistory_currentIndexChanged(int index)
 {
-    ui->btnSearchAgin->setEnabled(!ui->cbSearchHistory->currentText().isEmpty());
     mSearchResultModel.setCurrentIndex(index);
+    PSearchResults results = mSearchResultModel.results(index);
+    if (results && results->searchType == SearchType::Search) {
+        ui->btnSearchAgin->setEnabled(true);
+    } else {
+        ui->btnSearchAgin->setEnabled(false);
+    }
 }
 
 void MainWindow::on_btnSearchAgin_clicked()
@@ -2204,5 +2254,43 @@ void MainWindow::on_actionGoto_Definition_triggered()
     if (editor && editor->PointToCharLine(mContextMenuPos,pos)) {
         editor->gotoDefinition(pos);
     }
+}
+
+
+void MainWindow::on_actionFind_references_triggered()
+{
+    Editor * editor = mEditorList->getEditor();
+    BufferCoord pos;
+    if (editor && editor->PointToCharLine(mContextMenuPos,pos)) {
+        CppRefacter refactor;
+        refactor.findOccurence(editor,pos);
+        ui->tabMessages->setCurrentWidget(ui->tabSearch);
+        openCloseBottomPanel(true);
+    }
+}
+
+
+void MainWindow::on_actionOpen_Containing_Folder_triggered()
+{
+    Editor* editor = mEditorList->getEditor();
+    if (editor) {
+        QFileInfo info(editor->filename());
+        if (!info.path().isEmpty()) {
+            QDesktopServices::openUrl(info.path());
+        }
+    }
+}
+
+
+void MainWindow::on_actionOpen_Terminal_triggered()
+{
+    Editor* editor = mEditorList->getEditor();
+    if (editor) {
+        QFileInfo info(editor->filename());
+        if (!info.path().isEmpty()) {
+            openShell(info.path(),"cmd.exe");
+        }
+    }
+
 }
 

@@ -22,6 +22,7 @@ SOURCES += \
     compiler/executablerunner.cpp \
     compiler/filecompiler.cpp \
     compiler/stdincompiler.cpp \
+    cpprefacter.cpp \
     parser/cppparser.cpp \
     parser/cpppreprocessor.cpp \
     parser/cpptokenizer.cpp \
@@ -94,6 +95,7 @@ HEADERS += \
     compiler/executablerunner.h \
     compiler/filecompiler.h \
     compiler/stdincompiler.h \
+    cpprefacter.h \
     parser/cppparser.h \
     parser/cpppreprocessor.h \
     parser/cpptokenizer.h \
@@ -194,6 +196,8 @@ RESOURCES += \
     themes/dracula/dracula.qrc \
     icons.qrc \
     translations.qrc
+
+RC_ICONS = images/devcpp.ico
 
 #win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../../QScintilla/src/release/ -lqscintilla2_qt5d
 #else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../../QScintilla/src/debug/ -lqscintilla2_qt5d

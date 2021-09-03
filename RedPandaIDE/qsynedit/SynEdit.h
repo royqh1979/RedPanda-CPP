@@ -254,6 +254,7 @@ public:
     bool GetLineOfMouse(int& line);
     bool PointToCharLine(const QPoint& point, BufferCoord& coord);
     bool PointToLine(const QPoint& point, int& line);
+    bool isIdentChar(const QChar& ch);
 
 
 // setter && getters
@@ -368,9 +369,6 @@ signals:
 
     void fontChanged();
     void tabSizeChanged();
-
-protected:
-    bool isIdentChar(const QChar& ch);
 
 protected:
     virtual bool onGetSpecialLineColors(int Line,
