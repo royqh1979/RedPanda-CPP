@@ -285,6 +285,9 @@ public:
         AutoSaveStrategy autoSaveStrategy() const;
         void setAutoSaveStrategy(AutoSaveStrategy newAutoSaveStrategy);
 
+        bool enableAutolink() const;
+        void setEnableAutolink(bool newEnableAutolink);
+
     private:
         //General
         // indents
@@ -365,6 +368,9 @@ public:
         int mAutoSaveInterval;
         enum AutoSaveTarget mAutoSaveTarget;
         enum AutoSaveStrategy mAutoSaveStrategy;
+
+        //auto link
+        bool mEnableAutolink;
 
         //Misc
         QByteArray mDefaultEncoding;

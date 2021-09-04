@@ -33,6 +33,7 @@ SOURCES += \
     qsynedit/Search.cpp \
     qsynedit/SearchBase.cpp \
     qsynedit/SearchRegex.cpp \
+    settingsdialog/compilerautolinkwidget.cpp \
     settingsdialog/debuggeneralwidget.cpp \
     settingsdialog/editorautosavewidget.cpp \
     settingsdialog/editorcodecompletionwidget.cpp \
@@ -109,6 +110,7 @@ HEADERS += \
     qsynedit/Search.h \
     qsynedit/SearchBase.h \
     qsynedit/SearchRegex.h \
+    settingsdialog/compilerautolinkwidget.h \
     settingsdialog/debuggeneralwidget.h \
     settingsdialog/editorautosavewidget.h \
     settingsdialog/editorcodecompletionwidget.h \
@@ -166,6 +168,7 @@ HEADERS += \
     widgets/searchresultview.h
 
 FORMS += \
+    settingsdialog/compilerautolinkwidget.ui \
     settingsdialog/debuggeneralwidget.ui \
     settingsdialog/editorautosavewidget.ui \
     settingsdialog/editorcodecompletionwidget.ui \

@@ -11,6 +11,7 @@ class SettingsDialog;
 }
 
 class CompilerSetOptionWidget;
+class CompilerAutolinkWidget;
 class EditorGeneralWidget;
 class EditorFontWidget;
 class EditorClipboardWidget;
@@ -54,6 +55,7 @@ private:
     QStandardItemModel model;
 
     CompilerSetOptionWidget *pCompilerSetOptionWidget;
+    CompilerAutolinkWidget *pCompilerAutolinkWidget;
     EditorGeneralWidget *pEditorGeneralWidget;
     EditorFontWidget *pEditorFontWidget;
     EditorClipboardWidget *pEditorClipboardWidget;

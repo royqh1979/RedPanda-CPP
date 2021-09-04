@@ -2,6 +2,7 @@
 #include "ui_settingsdialog.h"
 #include "settingswidget.h"
 #include "compilersetoptionwidget.h"
+#include "compilerautolinkwidget.h"
 #include "editorgeneralwidget.h"
 #include "editorfontwidget.h"
 #include "editorclipboardwidget.h"
@@ -38,6 +39,10 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     pCompilerSetOptionWidget = new CompilerSetOptionWidget(tr("Compiler Set"),tr("Compiler"));
     pCompilerSetOptionWidget->init();
     addWidget(pCompilerSetOptionWidget);
+
+    pCompilerAutolinkWidget = new CompilerAutolinkWidget(tr("Auto Link"),tr("Compiler"));
+    pCompilerAutolinkWidget->init();
+    addWidget(pCompilerAutolinkWidget);
 
     pEditorGeneralWidget = new EditorGeneralWidget(tr("General"),tr("Editor"));
     pEditorGeneralWidget->init();

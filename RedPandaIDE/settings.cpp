@@ -420,6 +420,16 @@ void Settings::Editor::setAutoSaveStrategy(AutoSaveStrategy newAutoSaveStrategy)
     mAutoSaveStrategy = newAutoSaveStrategy;
 }
 
+bool Settings::Editor::enableAutolink() const
+{
+    return mEnableAutolink;
+}
+
+void Settings::Editor::setEnableAutolink(bool newEnableAutolink)
+{
+    mEnableAutolink = newEnableAutolink;
+}
+
 AutoSaveTarget Settings::Editor::autoSaveTarget() const
 {
     return mAutoSaveTarget;
@@ -891,6 +901,9 @@ void Settings::Editor::doSave()
     saveValue("auto_save_target",mAutoSaveTarget);
     saveValue("auto_save_strategy",mAutoSaveStrategy);
 
+    //auto link
+    saveValue("enable_autolink",mEnableAutolink);
+
     //misc
     saveValue("default_encoding",mDefaultEncoding);
     saveValue("readonly_system_header",mReadOnlySytemHeader);
@@ -982,6 +995,9 @@ void Settings::Editor::doLoad()
                 intValue("auto_save_target",AutoSaveTarget::astCurrentFile));
     mAutoSaveStrategy = static_cast<enum AutoSaveStrategy>(
                 intValue("auto_save_strategy",AutoSaveStrategy::assOverwrite));
+
+    //auto link
+    mEnableAutolink = boolValue("enable_autolink",true);
 
     //misc
     mDefaultEncoding = value("default_encoding", ENCODING_SYSTEM_DEFAULT).toByteArray();
