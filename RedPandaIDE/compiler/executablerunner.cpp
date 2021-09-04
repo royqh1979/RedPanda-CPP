@@ -62,12 +62,12 @@ void ExecutableRunner::run()
     if (errorOccurred) {
         switch (process.error()) {
         case QProcess::FailedToStart:
-            emit runErrorOccurred(tr("The runner process failed to start."));
+            emit runErrorOccurred(tr("The runner process '%1' failed to start.").arg(mFilename));
             break;
-        case QProcess::Crashed:
-            if (!mStop)
-                emit runErrorOccurred(tr("The runner process crashed after starting successfully."));
-            break;
+//        case QProcess::Crashed:
+//            if (!mStop)
+//                emit runErrorOccurred(tr("The runner process crashed after starting successfully."));
+//            break;
         case QProcess::Timedout:
             emit runErrorOccurred(tr("The last waitFor...() function timed out."));
             break;

@@ -412,7 +412,7 @@
  &apos;%1&apos;
 &apos;%2&apos;
 Are you really want to continue?</source>
-        <translation>小熊猫C++ will将会清除现有的编译器配置列表，然后在下列文件夹中搜索编译器:
+        <translation>小熊猫C++ 将会清除现有的编译器配置列表，然后在下列文件夹中搜索编译器:
  &apos;%1&apos;
 &apos;%2&apos;
 你确定要继续吗？</translation>
@@ -1273,13 +1273,13 @@ Are you really want to continue?</source>
     <name>ExecutableRunner</name>
     <message>
         <location filename="compiler/executablerunner.cpp" line="65"/>
-        <source>The runner process failed to start.</source>
-        <translation>无法启动程序运行进程。</translation>
+        <source>The runner process &apos;%1&apos; failed to start.</source>
+        <oldsource>The runner process failed to start.</oldsource>
+        <translation type="unfinished">无法启动程序运行进程&apos;%1&apos;。</translation>
     </message>
     <message>
-        <location filename="compiler/executablerunner.cpp" line="69"/>
         <source>The runner process crashed after starting successfully.</source>
-        <translation>程序运行进程启动后崩溃。</translation>
+        <translation type="vanished">程序运行进程启动后崩溃。</translation>
     </message>
     <message>
         <location filename="compiler/executablerunner.cpp" line="72"/>
