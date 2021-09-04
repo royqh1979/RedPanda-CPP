@@ -262,7 +262,13 @@ void MainWindow::updateEditorActions()
 
 void MainWindow::updateCompileActions()
 {
-    if (mCompilerManager->compiling() || mCompilerManager->running() || mDebugger->executing()) {
+    Editor * e = mEditorList->getEditor();
+    if (!e)
+        return;
+    FileType fileType = getFileType(e->filename());
+    if (mCompilerManager->compiling() || mCompilerManager->running() || mDebugger->executing()
+         || (fileType!= FileType::CSource
+             && fileType != FileType::CppSource)   ) {
         ui->actionCompile->setEnabled(false);
         ui->actionCompile_Run->setEnabled(false);
         ui->actionRun->setEnabled(false);
