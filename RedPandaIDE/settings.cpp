@@ -430,6 +430,46 @@ void Settings::Editor::setEnableAutolink(bool newEnableAutolink)
     mEnableAutolink = newEnableAutolink;
 }
 
+const QColor &Settings::Editor::rightEdgeLineColor() const
+{
+    return mRightEdgeLineColor;
+}
+
+void Settings::Editor::setRightEdgeLineColor(const QColor &newRightMarginLineColor)
+{
+    mRightEdgeLineColor = newRightMarginLineColor;
+}
+
+bool Settings::Editor::caretUseTextColor() const
+{
+    return mCaretUseTextColor;
+}
+
+void Settings::Editor::setCaretUseTextColor(bool newUseIdentifierColor)
+{
+    mCaretUseTextColor = newUseIdentifierColor;
+}
+
+int Settings::Editor::rightEdgeWidth() const
+{
+    return mRightEdgeWidth;
+}
+
+void Settings::Editor::setRightEdgeWidth(int newRightMarginWidth)
+{
+    mRightEdgeWidth = newRightMarginWidth;
+}
+
+bool Settings::Editor::showRightEdgeLine() const
+{
+    return mShowRightEdgeLine;
+}
+
+void Settings::Editor::setShowRightEdgeLine(bool newShowRightMarginLine)
+{
+    mShowRightEdgeLine = newShowRightMarginLine;
+}
+
 AutoSaveTarget Settings::Editor::autoSaveTarget() const
 {
     return mAutoSaveTarget;
@@ -836,6 +876,7 @@ void Settings::Editor::doSave()
     saveValue("keep_caret_x",mKeepCaretX);
     saveValue("caret_for_insert",static_cast<int>(mCaretForInsert));
     saveValue("caret_for_overwrite",static_cast<int>(mCaretForOverwrite));
+    saveValue("caret_use_text_color",mCaretUseTextColor);
     saveValue("caret_color",mCaretColor);
 
     //scroll
@@ -844,6 +885,11 @@ void Settings::Editor::doSave()
     saveValue("scroll_past_eol", mScrollPastEol);
     saveValue("scroll_by_one_less", mScrollByOneLess);
     saveValue("half_page_scroll", mHalfPageScroll);
+
+    //right edge
+    saveValue("show_right_edge_line",mShowRightEdgeLine);
+    saveValue("right_edge_width",mRightEdgeWidth);
+    saveValue("right_edge_line_color",mRightEdgeLineColor);
 
     //Font
     //font
@@ -927,6 +973,7 @@ void Settings::Editor::doLoad()
     mKeepCaretX = boolValue("keep_caret_x",true);
     mCaretForInsert = static_cast<SynEditCaretType>( intValue("caret_for_insert",static_cast<int>(SynEditCaretType::ctVerticalLine)));
     mCaretForOverwrite = static_cast<SynEditCaretType>( intValue("caret_for_overwrite",static_cast<int>(SynEditCaretType::ctBlock)));
+    mCaretUseTextColor = boolValue("caret_use_text_color",true);
     mCaretColor = colorValue("caret_color",QColorConstants::Svg::yellow);
 
     //scroll
@@ -935,6 +982,11 @@ void Settings::Editor::doLoad()
     mScrollPastEol = boolValue("scroll_past_eol", true);
     mScrollByOneLess = boolValue("scroll_by_one_less", false);
     mHalfPageScroll = boolValue("half_page_scroll",false);
+
+    //right edge
+    mShowRightEdgeLine = boolValue("show_right_edge_line",false);
+    mRightEdgeWidth = intValue("right_edge_width",80);
+    mRightEdgeLineColor = colorValue("right_edge_line_color",QColorConstants::Svg::yellow);
 
     //Font
     //font

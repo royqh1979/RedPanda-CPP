@@ -43,7 +43,6 @@ void SettingsWidget::connectAbstractItemView(QAbstractItemView *pView)
     connect(pView->model(),&QAbstractItemModel::rowsRemoved,this,&SettingsWidget::setSettingsChanged);
     connect(pView->model(),&QAbstractItemModel::dataChanged,this,&SettingsWidget::setSettingsChanged);
     connect(pView->model(),&QAbstractItemModel::modelReset,this,&SettingsWidget::setSettingsChanged);
-    connect(pView->model(),&QAbstractItemModel::modelReset,this,&SettingsWidget::setSettingsChanged);
 }
 
 void SettingsWidget::disconnectAbstractItemView(QAbstractItemView *pView)

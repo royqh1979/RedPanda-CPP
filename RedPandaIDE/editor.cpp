@@ -2634,7 +2634,11 @@ void Editor::applySettings()
     setTabWidth(pSettings->editor().tabWidth());
     setInsertCaret(pSettings->editor().caretForInsert());
     setOverwriteCaret(pSettings->editor().caretForOverwrite());
-    setCaretColor(pSettings->editor().caretColor());
+    if (pSettings->editor().caretUseTextColor()) {
+        setCaretColor(palette().color(QPalette::Text));
+    } else {
+        setCaretColor(pSettings->editor().caretColor());
+    }
 
     QFont f=QFont(pSettings->editor().fontName(),pSettings->editor().fontSize());
     f.setStyleStrategy(QFont::PreferAntialias);
@@ -2663,6 +2667,12 @@ void Editor::applySettings()
         gutter().setLineNumberStart(1);
     //font color
 
+    if (pSettings->editor().showRightEdgeLine()) {
+        setRightEdge(pSettings->editor().rightEdgeWidth());
+        setRightEdgeColor(pSettings->editor().rightEdgeLineColor());
+    } else {
+        setRightEdge(0);
+    }
 }
 
 void Editor::applyColorScheme(const QString& schemeName)

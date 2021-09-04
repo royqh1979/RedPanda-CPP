@@ -84,7 +84,14 @@ int main(int argc, char *argv[])
         pColorManager = new ColorManager();
         pIconsManager = new IconsManager();
         pAutolinkManager = new AutolinkManager();
-        pAutolinkManager->load();
+        try {
+            pAutolinkManager->load();
+        } catch (FileError e) {
+            QMessageBox::critical(nullptr,
+                                  QObject::tr("Can't load autolink settings"),
+                                  e.reason(),
+                                  QMessageBox::Ok);
+        }
 
         MainWindow mainWindow;
         pMainWindow = &mainWindow;

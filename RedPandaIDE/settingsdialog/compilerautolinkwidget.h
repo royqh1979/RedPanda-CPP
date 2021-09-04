@@ -10,10 +10,11 @@ namespace Ui {
 class CompilerAutolinkWidget;
 }
 
+class CompilerAutolinkWidget;
 class AutolinkModel: public QAbstractTableModel {
     Q_OBJECT
 public:
-    explicit AutolinkModel(QObject* parent=nullptr);
+    explicit AutolinkModel(CompilerAutolinkWidget* widget,QObject* parent=nullptr);
 
     // QAbstractItemModel interface
 public:
@@ -23,11 +24,17 @@ public:
     QVariant data(const QModelIndex &index, int role) const override;
     bool setData(const QModelIndex &index, const QVariant &value, int role) override;
     Qt::ItemFlags flags(const QModelIndex &index) const override;
-    const QMap<QString, PAutolink> &links() const;
-    void setLinks(const QMap<QString, PAutolink> &newLinks);
+    bool insertRows(int row, int count, const QModelIndex &parent) override;
+    bool removeRows(int row, int count, const QModelIndex &parent) override;
 
+    const QList<PAutolink> &links() const;
+    void setLinks(const QMap<QString, PAutolink> &newLinks);
 private:
-    QMap<QString,PAutolink> mLinks;
+    int findLink(const QString& header);
+private:
+    QList<PAutolink> mLinks;
+    CompilerAutolinkWidget * mWidget;
+
 };
 
 class CompilerAutolinkWidget : public SettingsWidget
@@ -47,6 +54,9 @@ private:
 protected:
     void doLoad() override;
     void doSave() override;
+private slots:
+    void on_btnAdd_pressed();
+    void on_btnRemove_pressed();
 };
 
 #endif // COMPILERAUTOLINKWIDGET_H

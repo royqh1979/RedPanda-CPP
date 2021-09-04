@@ -3,6 +3,30 @@
     "links": "-lgraphics -luuid -lmsimg32 -lgdi32 -limm32 -lole32 -loleaut32 -lwinmm -lgdiplus"
 },
 {
+    "header": "GL/gl.h",
+    "links": "-lopengl32"
+},
+{
+    "header": "GL/glu.h",
+    "links": "-lglu32 -lopengl32"
+},
+{
+    "header": "GL/freeglut.h",
+    "links": "-lfreeglut -lwinmm"
+},
+{
+    "header": "GL/glut.h",
+    "links": "-lfreeglut -lwinmm"
+},
+{
+    "header": "GL/glew.h",
+    "links": "-lglew32 -lopengl32"
+},
+{
+    "header": "GLFW/glfw3.h",
+    "links": "-lglfw3 -lgdi32"
+},
+{
     "header": "turtle.h",
     "links": "-lturtle"
 }

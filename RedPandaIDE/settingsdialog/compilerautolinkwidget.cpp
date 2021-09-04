@@ -7,6 +7,7 @@
 
 CompilerAutolinkWidget::CompilerAutolinkWidget(const QString& name, const QString& group, QWidget* parent) :
     SettingsWidget(name,group,parent),
+    mModel(this),
     ui(new Ui::CompilerAutolinkWidget)
 {
     ui->setupUi(this);
@@ -29,19 +30,27 @@ void CompilerAutolinkWidget::doSave()
     pSettings->editor().setEnableAutolink(ui->grpAutolink->isChecked());
     pSettings->editor().save();
     pAutolinkManager->clear();
-    auto iter = mModel.links().cbegin();
-    while (iter!=mModel.links().cend()) {
-        PAutolink link = iter.value();
-        pAutolinkManager->setLink(
-                    link->header,
-                    link->linkOption
-                    );
-        iter++;
+    for (const PAutolink& link:mModel.links()) {
+        if (!link->header.isEmpty()) {
+            pAutolinkManager->setLink(
+                        link->header,
+                        link->linkOption
+                        );
+        }
     }
-    pAutolinkManager->save();
+    try{
+        pAutolinkManager->save();
+    } catch (FileError e) {
+        QMessageBox::critical(this,
+                              tr("Save failed."),
+                              e.reason(),
+                              QMessageBox::Ok);
+    }
 }
 
-AutolinkModel::AutolinkModel(QObject *parent):QAbstractTableModel(parent)
+AutolinkModel::AutolinkModel(CompilerAutolinkWidget* widget,QObject *parent):
+    QAbstractTableModel(parent),
+    mWidget(widget)
 {
 
 }
@@ -75,10 +84,9 @@ QVariant AutolinkModel::data(const QModelIndex &index, int role) const
         return QVariant();
     if (role == Qt::DisplayRole || role == Qt::EditRole) {
         int row = index.row();
-        QList<PAutolink> links = mLinks.values();
-        if (row<0 || row>=links.count())
+        if (row<0 || row>=mLinks.count())
             return QVariant();
-        PAutolink link = links[row];
+        PAutolink link = mLinks[row];
         switch(index.column()) {
         case 0:
             return link->header;
@@ -95,33 +103,34 @@ bool AutolinkModel::setData(const QModelIndex &index, const QVariant &value, int
         return false;
     if (role == Qt::EditRole) {
         int row = index.row();
-        QList<PAutolink> links = mLinks.values();
-        if (row<0 || row>=links.count())
+        if (row<0 || row>=mLinks.count())
             return false;
-        PAutolink link = links[row];
-        QString s=value.toString();
+        PAutolink link = mLinks[row];
+        QString s=value.toString().trimmed();
         if (index.column() == 0) {
             if (s.isEmpty())
                 return false;
-            PAutolink oldLink = mLinks.value(s,PAutolink());
-            if (oldLink) {
+            if (findLink(s)>=0) {
                 QMessageBox::warning(pMainWindow,
                                      tr("Header exists"),
                                      tr("Header already exists."),
-                                     QMessageBox::Yes);
+                                     QMessageBox::Ok);
                 return false;
             }
-            mLinks.remove(link->header);
+            //we must create a new link, becasue mList may share link pointer with the autolink manger
             PAutolink newLink = std::make_shared<Autolink>();
             newLink->header = s;
             newLink->linkOption = link->linkOption;
-            mLinks.insert(newLink->header,newLink);
+            mLinks[row]=newLink;
+            mWidget->setSettingsChanged();
             return true;
         } else if (index.column() == 1) {
+            //we must create a new link, becasue mList may share link pointer with the autolink manger
             PAutolink newLink = std::make_shared<Autolink>();
             newLink->header = link->header;
             newLink->linkOption = s;
-            mLinks.insert(newLink->header,newLink);
+            mLinks[row]=newLink;
+            mWidget->setSettingsChanged();
             return true;
         }
     }
@@ -137,12 +146,63 @@ Qt::ItemFlags AutolinkModel::flags(const QModelIndex &index) const
     return flags;
 }
 
-const QMap<QString, PAutolink> &AutolinkModel::links() const
+bool AutolinkModel::insertRows(int row, int count, const QModelIndex &parent)
+{
+    if (row<0 || row>mLinks.count())
+        return false;
+    beginInsertRows(parent,row,row+count-1);
+    for (int i=row;i<row+count;i++) {
+        PAutolink link = std::make_shared<Autolink>();
+        mLinks.insert(i,link);
+    }
+    endInsertRows();
+    return true;
+}
+
+bool AutolinkModel::removeRows(int row, int count, const QModelIndex &parent)
+{
+    if (row<0 || row>=mLinks.count())
+        return false;
+    beginRemoveRows(parent,row,row+count-1);
+    for (int i=row;i<row+count;i++) {
+        if (i>=mLinks.count())
+            break;
+        mLinks.removeAt(i);
+    }
+    endRemoveRows();
+    return true;
+
+}
+
+const QList<PAutolink> &AutolinkModel::links() const
 {
     return mLinks;
 }
 
 void AutolinkModel::setLinks(const QMap<QString, PAutolink> &newLinks)
 {
-    mLinks = newLinks;
+    mLinks = newLinks.values();
 }
+
+int AutolinkModel::findLink(const QString &header)
+{
+    for (int i=0;i<mLinks.count();i++) {
+        PAutolink link = mLinks[i];
+        if (link->header == header)
+            return i;
+    }
+    return -1;
+}
+
+void CompilerAutolinkWidget::on_btnAdd_pressed()
+{
+    mModel.insertRow(mModel.links().count());
+}
+
+
+void CompilerAutolinkWidget::on_btnRemove_pressed()
+{
+    QModelIndex index = ui->tblAutolinks->currentIndex();
+    mModel.removeRow(index.row(),index.parent());
+}
+

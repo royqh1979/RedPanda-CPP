@@ -50,6 +50,7 @@ void EditorGeneralWidget::doLoad()
     ui->chkKeepCaretX->setChecked(pSettings->editor().keepCaretX());
     setCaretTypeIndex(ui->cbCaretForInsert,pSettings->editor().caretForInsert());
     setCaretTypeIndex(ui->cbCaretForOverwrite,pSettings->editor().caretForOverwrite());
+    ui->chkCaretUseIdentifierColor->setChecked(pSettings->editor().caretUseTextColor());
     ui->colorCaret->setColor(pSettings->editor().caretColor());
     //scrolls;
     ui->chkAutoHideScrollBars->setChecked(pSettings->editor().autoHideScrollbar());
@@ -57,6 +58,10 @@ void EditorGeneralWidget::doLoad()
     ui->chkScrollPastEOL->setChecked(pSettings->editor().scrollPastEol());
     ui->chkScrollHalfPage->setChecked(pSettings->editor().halfPageScroll());
     ui->chkScrollByOneLess->setChecked(pSettings->editor().scrollByOneLess());
+    //right margin line;
+    ui->grpRightEdge->setChecked(pSettings->editor().showRightEdgeLine());
+    ui->spRightEdge->setValue(pSettings->editor().rightEdgeWidth());
+    ui->colorRightEdgeLine->setColor(pSettings->editor().rightEdgeLineColor());
 }
 
 void EditorGeneralWidget::doSave()
@@ -74,6 +79,7 @@ void EditorGeneralWidget::doSave()
     pSettings->editor().setKeepCaretX(ui->chkKeepCaretX->isChecked());
     pSettings->editor().setCaretForInsert(getCaretTypeIndex(ui->cbCaretForInsert));
     pSettings->editor().setCaretForOverwrite(getCaretTypeIndex(ui->cbCaretForOverwrite));
+    pSettings->editor().setCaretUseTextColor(ui->chkCaretUseTextColor->isChecked());
     pSettings->editor().setCaretColor(ui->colorCaret->color());
     //scrolls;
     pSettings->editor().setAutoHideScrollbar(ui->chkAutoHideScrollBars->isChecked());
@@ -82,6 +88,10 @@ void EditorGeneralWidget::doSave()
     pSettings->editor().setScrollByOneLess(ui->chkScrollByOneLess->isChecked());
     pSettings->editor().setHalfPageScroll(ui->chkScrollHalfPage->isChecked());
 
+    //right margin line;
+    pSettings->editor().setShowRightEdgeLine(ui->grpRightEdge->isChecked());
+    pSettings->editor().setRightEdgeWidth(ui->spRightEdge->value());
+    pSettings->editor().setRightEdgeLineColor(ui->colorRightEdgeLine->color());
     pSettings->editor().save();
     pMainWindow->updateEditorSettings();
 }

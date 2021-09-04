@@ -24,11 +24,19 @@ void AutolinkManager::load()
     QString filename=dir.filePath(AUTOLINK_CONFIG);
     QFile file(filename);
     if (!file.exists()) {
-        QFile::copy(":/config/autolink.json",filename);
-        if (!file.exists()) {
+        QFile preFile(":/config/autolink.json");
+        if (!preFile.open(QFile::ReadOnly)) {
+            throw FileError(QObject::tr("Can't open file '%1' for read.")
+                            .arg(":/config/autolink.json"));
+        }
+        QByteArray content=preFile.readAll();
+        if (!file.open(QFile::WriteOnly|QFile::Truncate)) {
             throw FileError(QObject::tr("Can't open file '%1' for write.")
                             .arg(filename));
         }
+        file.write(content);
+        file.close();
+        preFile.close();
     }
     if (file.open(QFile::ReadOnly)) {
         QByteArray content = file.readAll();

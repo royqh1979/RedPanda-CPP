@@ -288,6 +288,18 @@ public:
         bool enableAutolink() const;
         void setEnableAutolink(bool newEnableAutolink);
 
+        bool showRightEdgeLine() const;
+        void setShowRightEdgeLine(bool newShowRightMarginLine);
+
+        int rightEdgeWidth() const;
+        void setRightEdgeWidth(int newRightMarginWidth);
+
+        const QColor &rightEdgeLineColor() const;
+        void setRightEdgeLineColor(const QColor &newRightMarginLineColor);
+
+        bool caretUseTextColor() const;
+        void setCaretUseTextColor(bool newUseIdentifierColor);
+
     private:
         //General
         // indents
@@ -303,13 +315,20 @@ public:
         bool mKeepCaretX;
         SynEditCaretType mCaretForInsert;
         SynEditCaretType mCaretForOverwrite;
+        bool mCaretUseTextColor;
         QColor mCaretColor;
+
         //scroll
         bool mAutoHideScrollbar;
         bool mScrollPastEof;
         bool mScrollPastEol;
         bool mScrollByOneLess;
         bool mHalfPageScroll;
+
+        //right margin
+        bool mShowRightEdgeLine;
+        int mRightEdgeWidth;
+        QColor mRightEdgeLineColor;
 
         //Font
         //font

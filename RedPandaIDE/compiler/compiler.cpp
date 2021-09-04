@@ -344,8 +344,8 @@ QString Compiler::getLibraryArguments(FileType fileType)
 
     //Add auto links
     // is file and auto link enabled
-    if (fileType == FileType::CSource ||
-            fileType == FileType::CppSource){
+    if (pSettings->editor().enableAutolink() && (fileType == FileType::CSource ||
+            fileType == FileType::CppSource)){
         Editor* editor = pMainWindow->editorList()->getEditor();
         if (editor) {
             PCppParser parser = editor->parser();
