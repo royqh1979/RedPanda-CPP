@@ -1156,7 +1156,7 @@ Settings::CompilerSet::CompilerSet(const QString& compilerFolder):
         setProperties(compilerFolder+"/bin");
 
         //manually set the directories
-        setDirectories(compilerFolder);
+        setDirectories(compilerFolder+"/bin");
 
         setExecutables();
 
@@ -1657,22 +1657,67 @@ void Settings::CompilerSet::setProperties(const QString &binDir)
 
     // Add the default directories
     addExistingDirectory(mBinDirs, includeTrailingPathDelimiter(folder) +  "bin");
-    addExistingDirectory(mDefaultLibDirs, includeTrailingPathDelimiter(folder) + "lib");
-    addExistingDirectory(mDefaultCIncludeDirs, includeTrailingPathDelimiter(folder) + "include");
-    addExistingDirectory(mDefaultCppIncludeDirs, includeTrailingPathDelimiter(folder) + "include");
+//    addExistingDirectory(mDefaultLibDirs, includeTrailingPathDelimiter(folder) + "lib");
+//    addExistingDirectory(mDefaultCIncludeDirs, includeTrailingPathDelimiter(folder) + "include");
+//    addExistingDirectory(mDefaultCppIncludeDirs, includeTrailingPathDelimiter(folder) + "include");
 
+    if (!mDumpMachine.isEmpty()) {
+        //mingw-w64 bin folder
+        addExistingDirectory(mBinDirs,
+            includeTrailingPathDelimiter(folder) + "lib/"
+            "gcc/" + mDumpMachine
+            + "/" + mVersion);
+    }
+}
+
+void Settings::CompilerSet::setDefines() {
+    // get default defines
+    QStringList arguments;
+    arguments.append("-dM");
+    arguments.append("-E");
+    arguments.append("-x");
+    arguments.append("c++");
+    arguments.append("-std=c++17");
+    arguments.append(NULL_FILE);
+    QFileInfo ccompiler(mCCompiler);
+    QByteArray output = getCompilerOutput(ccompiler.absolutePath(),ccompiler.fileName(),arguments);
+    // 'cpp.exe -dM -E -x c++ -std=c++17 NUL'
+
+    mDefines.clear();
+    QList<QByteArray> lines = output.split('\n');
+    for (QByteArray& line:lines) {
+        QByteArray trimmedLine = line.trimmed();
+        if (!trimmedLine.isEmpty()) {
+            mDefines.append(trimmedLine);
+        }
+    }
+}
+
+void Settings::CompilerSet::setExecutables()
+{
+    mCCompiler = findProgramInBinDirs(GCC_PROGRAM);
+    mCppCompiler = findProgramInBinDirs(GPP_PROGRAM);
+    mDebugger = findProgramInBinDirs(GDB_PROGRAM);
+    mMake = findProgramInBinDirs(MAKE_PROGRAM);
+    mResourceCompiler = findProgramInBinDirs(WINDRES_PROGRAM);
+    mProfiler = findProgramInBinDirs(GPROF_PROGRAM);
+}
+
+void Settings::CompilerSet::setDirectories(const QString& binDir)
+{
+    QString folder = QFileInfo(binDir).absolutePath();
     // Find default directories
     // C include dirs
+    QStringList arguments;
     arguments.clear();
     arguments.append("-xc");
     arguments.append("-v");
     arguments.append("-E");
     arguments.append(NULL_FILE);
-    output = getCompilerOutput(binDir,GCC_PROGRAM,arguments);
+    QByteArray output = getCompilerOutput(binDir,GCC_PROGRAM,arguments);
 
-
-    delimPos1 = output.indexOf("#include <...> search starts here:");
-    delimPos2 = output.indexOf("End of search list.");
+    int delimPos1 = output.indexOf("#include <...> search starts here:");
+    int delimPos2 = output.indexOf("End of search list.");
     if (delimPos1 >0 && delimPos2>0 ) {
         delimPos1 += QByteArray("#include <...> search starts here:").length();
         QList<QByteArray> lines = output.mid(delimPos1, delimPos2-delimPos1).split('\n');
@@ -1713,7 +1758,7 @@ void Settings::CompilerSet::setProperties(const QString &binDir)
     arguments.append(NULL_FILE);
     output = getCompilerOutput(binDir,GCC_PROGRAM,arguments);
     // bin dirs
-    targetStr = QByteArray("programs: =");
+    QByteArray targetStr = QByteArray("programs: =");
     delimPos1 = output.indexOf(targetStr);
     if (delimPos1>=0) {
         delimPos1+=targetStr.length();
@@ -1742,43 +1787,7 @@ void Settings::CompilerSet::setProperties(const QString &binDir)
                 addExistingDirectory(mDefaultLibDirs,trimmedLine);
         }
     }
-}
 
-void Settings::CompilerSet::setDefines() {
-    // get default defines
-    QStringList arguments;
-    arguments.append("-dM");
-    arguments.append("-E");
-    arguments.append("-x");
-    arguments.append("c++");
-    arguments.append("-std=c++17");
-    arguments.append(NULL_FILE);
-    QFileInfo ccompiler(mCCompiler);
-    QByteArray output = getCompilerOutput(ccompiler.absolutePath(),ccompiler.fileName(),arguments);
-    // 'cpp.exe -dM -E -x c++ -std=c++17 NUL'
-
-    mDefines.clear();
-    QList<QByteArray> lines = output.split('\n');
-    for (QByteArray& line:lines) {
-        QByteArray trimmedLine = line.trimmed();
-        if (!trimmedLine.isEmpty()) {
-            mDefines.append(trimmedLine);
-        }
-    }
-}
-
-void Settings::CompilerSet::setExecutables()
-{
-    mCCompiler = findProgramInBinDirs(GCC_PROGRAM);
-    mCppCompiler = findProgramInBinDirs(GPP_PROGRAM);
-    mDebugger = findProgramInBinDirs(GDB_PROGRAM);
-    mMake = findProgramInBinDirs(MAKE_PROGRAM);
-    mResourceCompiler = findProgramInBinDirs(WINDRES_PROGRAM);
-    mProfiler = findProgramInBinDirs(GPROF_PROGRAM);
-}
-
-void Settings::CompilerSet::setDirectories(const QString& folder)
-{
     // Try to obtain our target/autoconf folder
     if (!mDumpMachine.isEmpty()) {
         //mingw-w64 bin folder
@@ -2398,6 +2407,7 @@ Settings::PCompilerSet Settings::CompilerSets::loadSet(int index)
 
     mSettings->mSettings.endGroup();
 
+    pSet->setDirectories(pSet->binDirs()[0]);
     pSet->setDefines();
     return pSet;
 }

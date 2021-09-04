@@ -806,6 +806,7 @@ public:
         void setOption(const QString& setting, char valueChar);
         void setOption(PCompilerOption& option, char valueChar);
         void setProperties(const QString& binDir);
+        void setDirectories(const QString& binDir);
 
         bool dirsValid(QString& msg);
         bool validateExes(QString& msg);
@@ -871,7 +872,6 @@ public:
 
         // Initialization
         void setExecutables();
-        void setDirectories(const QString& folder);
         void setUserInput();
         void setOptions();
 

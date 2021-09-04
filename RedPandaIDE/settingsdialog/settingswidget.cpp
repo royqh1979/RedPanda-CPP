@@ -3,6 +3,7 @@
 #include <QAbstractItemView>
 #include <QCheckBox>
 #include <QComboBox>
+#include <QGroupBox>
 #include <QLineEdit>
 #include <QListView>
 #include <QPlainTextEdit>
@@ -80,6 +81,9 @@ void SettingsWidget::connectInputs()
     }
     for (QAbstractItemView* p: findChildren<QAbstractItemView*>()) {
         connectAbstractItemView(p);
+    }
+    for (QGroupBox* p: findChildren<QGroupBox*>()) {
+        connect(p, &QGroupBox::toggled,this, &SettingsWidget::setSettingsChanged);
     }
 
 }
