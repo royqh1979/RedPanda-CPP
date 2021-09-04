@@ -536,6 +536,12 @@ void resetCppParser(std::shared_ptr<CppParser> parser)
         for (QString file:compilerSet->CppIncludeDirs()) {
             parser->addIncludePath(file);
         }
+        for (QString file:compilerSet->defaultCIncludeDirs()) {
+            parser->addIncludePath(file);
+        }
+        for (QString file:compilerSet->defaultCppIncludeDirs()) {
+            parser->addIncludePath(file);
+        }
         //TODO: Add default include dirs last, just like gcc does
         // Set defines
         for (QString define:compilerSet->defines()) {

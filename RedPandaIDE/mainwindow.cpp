@@ -888,6 +888,10 @@ void MainWindow::debug()
         mDebugger->sendCommand("dir",
                                QString("\"%1\"").arg(dir.replace('\\','/')));
     }
+    foreach (QString dir,compilerSet->defaultLibDirs()) {
+        mDebugger->sendCommand("dir",
+                               QString("\"%1\"").arg(dir.replace('\\','/')));
+    }
     // Add include folders
     foreach (QString dir,compilerSet->CIncludeDirs()) {
         mDebugger->sendCommand("dir",
@@ -897,6 +901,15 @@ void MainWindow::debug()
         mDebugger->sendCommand("dir",
                                QString("\"%1\"").arg(dir.replace('\\','/')));
     }
+    foreach (QString dir,compilerSet->defaultCIncludeDirs()) {
+        mDebugger->sendCommand("dir",
+                               QString("\"%1\"").arg(dir.replace('\\','/')));
+    }
+    foreach (QString dir,compilerSet->defaultCppIncludeDirs()) {
+        mDebugger->sendCommand("dir",
+                               QString("\"%1\"").arg(dir.replace('\\','/')));
+    }
+
 
     // Add breakpoints and watch vars
 //    for i := 0 to fDebugger.WatchVarList.Count - 1 do

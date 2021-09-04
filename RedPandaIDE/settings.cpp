@@ -1445,6 +1445,21 @@ QStringList &Settings::CompilerSet::libDirs()
     return mLibDirs;
 }
 
+QStringList &Settings::CompilerSet::defaultCIncludeDirs()
+{
+    return mDefaultCIncludeDirs;
+}
+
+QStringList &Settings::CompilerSet::defaultCppIncludeDirs()
+{
+    return mDefaultCppIncludeDirs;
+}
+
+QStringList &Settings::CompilerSet::defaultLibDirs()
+{
+    return mLibDirs;
+}
+
 const QString &Settings::CompilerSet::dumpMachine() const
 {
     return mDumpMachine;
@@ -1642,9 +1657,9 @@ void Settings::CompilerSet::setProperties(const QString &binDir)
 
     // Add the default directories
     addExistingDirectory(mBinDirs, includeTrailingPathDelimiter(folder) +  "bin");
-    addExistingDirectory(mLibDirs, includeTrailingPathDelimiter(folder) + "lib");
-    addExistingDirectory(mCIncludeDirs, includeTrailingPathDelimiter(folder) + "include");
-    addExistingDirectory(mCppIncludeDirs, includeTrailingPathDelimiter(folder) + "include");
+    addExistingDirectory(mDefaultLibDirs, includeTrailingPathDelimiter(folder) + "lib");
+    addExistingDirectory(mDefaultCIncludeDirs, includeTrailingPathDelimiter(folder) + "include");
+    addExistingDirectory(mDefaultCppIncludeDirs, includeTrailingPathDelimiter(folder) + "include");
 
     // Find default directories
     // C include dirs
@@ -1664,7 +1679,7 @@ void Settings::CompilerSet::setProperties(const QString &binDir)
         for (QByteArray& line:lines) {
             QByteArray trimmedLine = line.trimmed();
             if (!trimmedLine.isEmpty()) {
-                addExistingDirectory(mCIncludeDirs,trimmedLine);
+                addExistingDirectory(mDefaultCIncludeDirs,trimmedLine);
             }
         }
     }
@@ -1687,7 +1702,7 @@ void Settings::CompilerSet::setProperties(const QString &binDir)
         for (QByteArray& line:lines) {
             QByteArray trimmedLine = line.trimmed();
             if (!trimmedLine.isEmpty()) {
-                addExistingDirectory(mCppIncludeDirs,trimmedLine);
+                addExistingDirectory(mDefaultCppIncludeDirs,trimmedLine);
             }
         }
     }
@@ -1724,7 +1739,7 @@ void Settings::CompilerSet::setProperties(const QString &binDir)
         for (QByteArray& line:lines) {
             QByteArray trimmedLine = line.trimmed();
             if (!trimmedLine.isEmpty())
-                addExistingDirectory(mLibDirs,trimmedLine);
+                addExistingDirectory(mDefaultLibDirs,trimmedLine);
         }
     }
 }
@@ -1773,44 +1788,44 @@ void Settings::CompilerSet::setDirectories(const QString& folder)
             + "/" + mVersion);
 
         // Regular include folder
-        addExistingDirectory(mCIncludeDirs, includeTrailingPathDelimiter(folder) + mDumpMachine + "/include");
-        addExistingDirectory(mCppIncludeDirs, includeTrailingPathDelimiter(folder)+ mDumpMachine + "/include");
+        addExistingDirectory(mDefaultCIncludeDirs, includeTrailingPathDelimiter(folder) + mDumpMachine + "/include");
+        addExistingDirectory(mDefaultCppIncludeDirs, includeTrailingPathDelimiter(folder)+ mDumpMachine + "/include");
 
         // Other include folder?
-        addExistingDirectory(mCIncludeDirs,
+        addExistingDirectory(mDefaultCIncludeDirs,
             includeTrailingPathDelimiter(folder) + "lib/gcc/"
             + mDumpMachine + "/" + mVersion + "/include");
-        addExistingDirectory(mCppIncludeDirs,
+        addExistingDirectory(mDefaultCppIncludeDirs,
             includeTrailingPathDelimiter(folder) + "lib/gcc/"
             + mDumpMachine + "/" + mVersion + "/include");
 
-        addExistingDirectory(mCIncludeDirs,
+        addExistingDirectory(mDefaultCIncludeDirs,
             includeTrailingPathDelimiter(folder) + "lib/gcc/"
              + mDumpMachine + "/" + mVersion + "/include-fixed");
-        addExistingDirectory(mCppIncludeDirs,
+        addExistingDirectory(mDefaultCppIncludeDirs,
             includeTrailingPathDelimiter(folder) + "lib/gcc/"
                 + mDumpMachine + "/" + mVersion + "/include-fixed");
 
         // C++ only folder (mingw.org)
-        addExistingDirectory(mCppIncludeDirs,
+        addExistingDirectory(mDefaultCppIncludeDirs,
             includeTrailingPathDelimiter(folder)  + "lib/gcc/"
                 + mDumpMachine + "/" + mVersion + "/include/c++");
-        addExistingDirectory(mCppIncludeDirs,
+        addExistingDirectory(mDefaultCppIncludeDirs,
              includeTrailingPathDelimiter(folder)  + "lib/gcc/"
                  + mDumpMachine + "/" + mVersion + "/include/c++/"
                  + mDumpMachine);
-        addExistingDirectory(mCppIncludeDirs,
+        addExistingDirectory(mDefaultCppIncludeDirs,
              includeTrailingPathDelimiter(folder)  + "lib/gcc/"
                  + mDumpMachine + "/" + mVersion + "/include/c++/backward");
 
         // C++ only folder (Mingw-w64)
-        addExistingDirectory(mCppIncludeDirs,
+        addExistingDirectory(mDefaultCppIncludeDirs,
             includeTrailingPathDelimiter(folder)  + "include/c++/"
             + mVersion );
-        addExistingDirectory(mCppIncludeDirs,
+        addExistingDirectory(mDefaultCppIncludeDirs,
             includeTrailingPathDelimiter(folder)  + "include/c++/"
             + mVersion + "/backward");
-        addExistingDirectory(mCppIncludeDirs,
+        addExistingDirectory(mDefaultCppIncludeDirs,
             includeTrailingPathDelimiter(folder)  + "include/c++/"
             + mVersion + "/" + mDumpMachine);
     }

@@ -827,6 +827,9 @@ public:
         QStringList& CIncludeDirs();
         QStringList& CppIncludeDirs();
         QStringList& libDirs();
+        QStringList& defaultCIncludeDirs();
+        QStringList& defaultCppIncludeDirs();
+        QStringList& defaultLibDirs();
 
         const QString& dumpMachine() const;
         void setDumpMachine(const QString& value);
@@ -890,6 +893,9 @@ public:
         QStringList mCIncludeDirs;
         QStringList mCppIncludeDirs;
         QStringList mLibDirs;
+        QStringList mDefaultLibDirs;
+        QStringList mDefaultCIncludeDirs;
+        QStringList mDefaultCppIncludeDirs;
 
         // Misc. properties
         QString mDumpMachine; // "x86_64-w64-mingw32", "mingw32" etc
