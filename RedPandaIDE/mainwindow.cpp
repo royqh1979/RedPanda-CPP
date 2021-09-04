@@ -1112,11 +1112,11 @@ void MainWindow::buildContextMenus()
     ui->watchView->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->watchView,&QWidget::customContextMenuRequested,
             this, &MainWindow::onWatchViewContextMenu);
-    ui->EditorTabsLeft->setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(ui->EditorTabsLeft,&QWidget::customContextMenuRequested,
+    ui->EditorTabsLeft->tabBar()->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui->EditorTabsLeft->tabBar(),&QWidget::customContextMenuRequested,
             this, &MainWindow::onEditorTabContextMenu);
-    ui->EditorTabsRight->setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(ui->EditorTabsRight,&QWidget::customContextMenuRequested,
+    ui->EditorTabsRight->tabBar()->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui->EditorTabsRight->tabBar(),&QWidget::customContextMenuRequested,
             this, &MainWindow::onEditorTabContextMenu);
 
 }
@@ -1208,7 +1208,7 @@ void MainWindow::onEditorContextMenu(const QPoint &pos)
         return;
     QMenu menu(this);
     BufferCoord p;
-    mContextMenuPos = pos;
+    mEditorContextMenuPos = pos;
     if (editor->GetPositionOfMouse(p)) {
         //mouse on editing area
         menu.addAction(ui->actionCompile_Run);
@@ -1256,7 +1256,21 @@ void MainWindow::onEditorContextMenu(const QPoint &pos)
 
 void MainWindow::onEditorTabContextMenu(const QPoint &pos)
 {
+    int index = ui->EditorTabsLeft->tabBar()->tabAt(pos);
+    if (index<0)
+        return;
+    ui->EditorTabsLeft->setCurrentIndex(index);
+    QMenu menu(this);
+    QTabBar* tabBar = ui->EditorTabsLeft->tabBar();
+    menu.addAction(ui->actionClose);
+    menu.addAction(ui->actionClose_All);
+    menu.addSeparator();
+    menu.addAction(ui->actionOpen_Containing_Folder);
+    menu.addAction(ui->actionOpen_Terminal);
+    menu.addSeparator();
+    menu.addAction(ui->actionFile_Properties);
 
+    menu.exec(tabBar->mapToGlobal(pos));
 }
 
 void MainWindow::onFileChanged(const QString &path)
@@ -2256,7 +2270,7 @@ void MainWindow::on_actionToggle_Breakpoint_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     int line;
-    if (editor && editor->PointToLine(mContextMenuPos,line))
+    if (editor && editor->PointToLine(mEditorContextMenuPos,line))
         editor->toggleBreakpoint(line);
 }
 
@@ -2280,7 +2294,7 @@ void MainWindow::on_actionBreakpoint_property_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     int line;
-    if (editor && editor->PointToLine(mContextMenuPos,line)) {
+    if (editor && editor->PointToLine(mEditorContextMenuPos,line)) {
         if (editor->hasBreakpoint(line))
             editor->modifyBreakpointProperty(line);
     }
@@ -2292,7 +2306,7 @@ void MainWindow::on_actionGoto_Declaration_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     BufferCoord pos;
-    if (editor && editor->PointToCharLine(mContextMenuPos,pos)) {
+    if (editor && editor->PointToCharLine(mEditorContextMenuPos,pos)) {
         editor->gotoDeclaration(pos);
     }
 }
@@ -2302,7 +2316,7 @@ void MainWindow::on_actionGoto_Definition_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     BufferCoord pos;
-    if (editor && editor->PointToCharLine(mContextMenuPos,pos)) {
+    if (editor && editor->PointToCharLine(mEditorContextMenuPos,pos)) {
         editor->gotoDefinition(pos);
     }
 }
@@ -2312,7 +2326,7 @@ void MainWindow::on_actionFind_references_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     BufferCoord pos;
-    if (editor && editor->PointToCharLine(mContextMenuPos,pos)) {
+    if (editor && editor->PointToCharLine(mEditorContextMenuPos,pos)) {
         CppRefacter refactor;
         refactor.findOccurence(editor,pos);
         ui->tabMessages->setCurrentWidget(ui->tabSearch);
@@ -2348,8 +2362,11 @@ void MainWindow::on_actionOpen_Terminal_triggered()
 
 void MainWindow::on_actionFile_Properties_triggered()
 {
-    FilePropertiesDialog dialog(this);
-    dialog.exec();
-    dialog.setParent(nullptr);
+    Editor* editor = mEditorList->getEditor();
+    if (editor) {
+        FilePropertiesDialog dialog(editor,this);
+        dialog.exec();
+        dialog.setParent(nullptr);
+    }
 }
 

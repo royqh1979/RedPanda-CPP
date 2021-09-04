@@ -17,6 +17,7 @@ SOURCES += \
     autolinkmanager.cpp \
     caretlist.cpp \
     codeformatter.cpp \
+    codetemplate.cpp \
     colorscheme.cpp \
     compiler/compiler.cpp \
     compiler/compilermanager.cpp \
@@ -94,6 +95,7 @@ HEADERS += \
     autolinkmanager.h \
     caretlist.h \
     codeformatter.h \
+    codetemplate.h \
     colorscheme.h \
     compiler/compiler.h \
     compiler/compilermanager.h \

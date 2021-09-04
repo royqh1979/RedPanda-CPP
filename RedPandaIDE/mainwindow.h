@@ -327,8 +327,7 @@ private:
 
     bool mClosing;
     bool mSystemTurnedOff;
-    QPoint mContextMenuPos;
-
+    QPoint mEditorContextMenuPos;
 
    // QWidget interface
 protected:

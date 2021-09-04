@@ -7,8 +7,9 @@
 
 #include <QFileInfo>
 
-FilePropertiesDialog::FilePropertiesDialog(QWidget *parent) :
+FilePropertiesDialog::FilePropertiesDialog(Editor* activeEditor,QWidget *parent) :
     QDialog(parent),
+    mActiveEditor(activeEditor),
     ui(new Ui::FilePropertiesDialog)
 {
     ui->setupUi(this);
@@ -36,7 +37,7 @@ void FilePropertiesDialog::calcFile(Editor *editor,
     for (int i=0;i<editor->lines()->count();i++) {
         QString line = editor->lines()->getString(i);
         int j=0;
-        while (j<line.length() && (line[j]=='\t' || line[i]==' '))
+        while (j<line.length() && (line[j]=='\t' || line[j]==' '))
             j++;
         QString token;
         PSynHighlighterAttribute attr;
@@ -67,10 +68,9 @@ void FilePropertiesDialog::calcFile(Editor *editor,
 
 void FilePropertiesDialog::showEvent(QShowEvent *)
 {
-    Editor* activeEditor = pMainWindow->editorList()->getEditor();
     for (int i=0;i<pMainWindow->editorList()->pageCount();i++) {
         Editor * editor =  (*(pMainWindow->editorList()))[i];
-        if (editor == activeEditor) {
+        if (editor == mActiveEditor) {
             ui->cbFiles->setCurrentIndex(i);
             break;
         }
@@ -120,7 +120,7 @@ void FilePropertiesDialog::on_cbFiles_currentIndexChanged(int index)
         } else {
             ui->txtFileSize->setText(QString("%1 ").arg(fileSize / 1024.0 / 1024.0 / 1024.0)+tr("GB"));
         }
-        ui->txtFileDate->setText( info.lastModified().toString(Qt::DateFormat::LocaleDate));
+        ui->txtFileDate->setText( QLocale::system().toString(info.lastModified(), QLocale::LongFormat));
         ui->txtProject->setText("-");
         ui->txtPath->setText(editor->filename());
         ui->txtRelativeToProject->setText("_");

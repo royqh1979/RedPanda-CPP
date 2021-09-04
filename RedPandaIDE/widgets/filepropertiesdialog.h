@@ -24,8 +24,9 @@ class FilePropertiesDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit FilePropertiesDialog(QWidget *parent = nullptr);
+    explicit FilePropertiesDialog(Editor* activeEditor,QWidget *parent = nullptr);
     ~FilePropertiesDialog();
+
 private:
     void calcFile(Editor* editor,
                   int& totalLines,
@@ -35,6 +36,7 @@ private:
                   int &includeLines);
 private:
     FilePropertiesModel mModel;
+    Editor * mActiveEditor;
 private:
     Ui::FilePropertiesDialog *ui;
 
