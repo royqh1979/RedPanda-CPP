@@ -50,7 +50,7 @@ void EditorGeneralWidget::doLoad()
     ui->chkKeepCaretX->setChecked(pSettings->editor().keepCaretX());
     setCaretTypeIndex(ui->cbCaretForInsert,pSettings->editor().caretForInsert());
     setCaretTypeIndex(ui->cbCaretForOverwrite,pSettings->editor().caretForOverwrite());
-    ui->chkCaretUseIdentifierColor->setChecked(pSettings->editor().caretUseTextColor());
+    ui->chkCaretUseTextColor->setChecked(pSettings->editor().caretUseTextColor());
     ui->colorCaret->setColor(pSettings->editor().caretColor());
     //scrolls;
     ui->chkAutoHideScrollBars->setChecked(pSettings->editor().autoHideScrollbar());
