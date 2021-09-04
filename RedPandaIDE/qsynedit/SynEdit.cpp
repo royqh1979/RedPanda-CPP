@@ -1242,7 +1242,7 @@ BufferCoord SynEdit::WordEndEx(const BufferCoord &XY)
     // valid line?
     if ((CY >= 1) && (CY <= mLines->count())) {
         QString Line = mLines->getString(CY - 1);
-        if (CX <= Line.length()) {
+        if (CX <= Line.length() && CX-2>=0) {
             if (isWordChar(Line[CX - 2]))
                 CX = StrScanForNonWordChar(Line, CX);
             if (CX == 0)

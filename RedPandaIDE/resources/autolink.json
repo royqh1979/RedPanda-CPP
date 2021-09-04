@@ -1,9 +1,9 @@
 [{
     "header": "ege.h",
-    "links": ["-lgraphics -luuid -lmsimg32 -lgdi32 -limm32 -lole32 -loleaut32 -lwinmm -lgdiplus"]
+    "links": "-lgraphics -luuid -lmsimg32 -lgdi32 -limm32 -lole32 -loleaut32 -lwinmm -lgdiplus"
 },
 {
     "header": "turtle.h",
-    "links": ["-lturtle"]
+    "links": "-lturtle"
 }
 ]

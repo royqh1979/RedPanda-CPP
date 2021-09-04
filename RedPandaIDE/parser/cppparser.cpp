@@ -498,6 +498,7 @@ QSet<QString> CppParser::getFileDirectIncludes(const QString &filename)
         while (iter != fileIncludes->includeFiles.cend()) {
             if (iter.value())
                 list.insert(iter.key());
+            iter++;
         }
     }
     return list;

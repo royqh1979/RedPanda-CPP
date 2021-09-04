@@ -61,7 +61,7 @@ bool FileCompiler::prepareForCompile()
     default:
         throw CompileError(tr("Can't find the compiler for file %1").arg(mFilename));
     }
-    mArguments += getLibraryArguments();
+    mArguments += getLibraryArguments(fileType);
 
     if (!QFile(mCompiler).exists()) {
         throw CompileError(tr("The Compiler '%1' doesn't exists!").arg(mCompiler));

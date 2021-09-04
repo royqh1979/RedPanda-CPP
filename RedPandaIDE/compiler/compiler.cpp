@@ -334,7 +334,7 @@ QString Compiler::getCppIncludeArguments()
     return result;
 }
 
-QString Compiler::getLibraryArguments()
+QString Compiler::getLibraryArguments(FileType fileType)
 {
     QString result;
 
@@ -344,7 +344,8 @@ QString Compiler::getLibraryArguments()
 
     //Add auto links
     // is file and auto link enabled
-    {
+    if (fileType == FileType::CSource ||
+            fileType == FileType::CppSource){
         Editor* editor = pMainWindow->editorList()->getEditor();
         if (editor) {
             PCppParser parser = editor->parser();
@@ -359,12 +360,12 @@ QString Compiler::getLibraryArguments()
                     QApplication *app=dynamic_cast<QApplication*>(
                                 QApplication::instance());
                     app->processEvents();
-                    QSet<QString> parsedFiles;
-                    result += parseFileIncludesForAutolink(
-                                editor->filename(),
-                                parsedFiles,
-                                parser);
                 }
+                QSet<QString> parsedFiles;
+                result += parseFileIncludesForAutolink(
+                            editor->filename(),
+                            parsedFiles,
+                            parser);
             }
         }
 
@@ -461,7 +462,7 @@ void Compiler::runCommand(const QString &cmd, const QString  &arguments, const Q
     if (errorOccurred) {
         switch (process.error()) {
         case QProcess::FailedToStart:
-            throw CompileError(tr("The compiler process failed to start."));
+            throw CompileError(tr("The compiler process for '%1' failed to start.").arg(mFilename));
             break;
         case QProcess::Crashed:
             if (!mStop)

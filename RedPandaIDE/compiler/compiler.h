@@ -49,7 +49,7 @@ protected:
     virtual QString getCppCompileArguments(bool checkSyntax);
     virtual QString getCIncludeArguments();
     virtual QString getCppIncludeArguments();
-    virtual QString getLibraryArguments();
+    virtual QString getLibraryArguments(FileType fileType);
     virtual QString parseFileIncludesForAutolink(
             const QString& filename,
             QSet<QString> parsedFiles,
