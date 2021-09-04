@@ -8,6 +8,12 @@
 #include <QTextCodec>
 #include <QDebug>
 #include <QTime>
+#include <QApplication>
+#include "../editor.h"
+#include "../mainwindow.h"
+#include "../editorlist.h"
+#include "../parser/cppparser.h"
+#include "../autolinkmanager.h"
 #include "../platform.h"
 
 #define COMPILE_PROCESS_END "---//END//----"
@@ -336,6 +342,35 @@ QString Compiler::getLibraryArguments()
         result += QString(" -L\"%1\"").arg(folder);
     }
 
+    //Add auto links
+    // is file and auto link enabled
+    {
+        Editor* editor = pMainWindow->editorList()->getEditor();
+        if (editor) {
+            PCppParser parser = editor->parser();
+            if (parser) {
+                int waitCount = 0;
+                //wait parsing ends, at most 1 second
+                while(parser->parsing()) {
+                    if (waitCount>0)
+                        break;
+                    waitCount++;
+                    QThread::msleep(100);
+                    QApplication *app=dynamic_cast<QApplication*>(
+                                QApplication::instance());
+                    app->processEvents();
+                    QSet<QString> parsedFiles;
+                    result += parseFileIncludesForAutolink(
+                                editor->filename(),
+                                parsedFiles,
+                                parser);
+                }
+            }
+        }
+
+    }
+
+
     // Add global compiler linker extras
     if (compilerSet()->useCustomLinkParams() && !compilerSet()->customLinkParams().isEmpty()) {
        result += " "+compilerSet()->customCompileParams();
@@ -357,6 +392,30 @@ QString Compiler::getLibraryArguments()
 
     if (compilerSet()->staticLink()) {
         result += " -static";
+    }
+    return result;
+}
+
+QString Compiler::parseFileIncludesForAutolink(
+        const QString &filename,
+        QSet<QString> parsedFiles,
+        PCppParser& parser)
+{
+    QString result;
+    QString baseName = baseFileName(filename);
+    if (parsedFiles.contains(filename))
+        return result;
+    parsedFiles.insert(filename);
+    PAutolink autolink = pAutolinkManager->getLink(baseName);
+    if (autolink) {
+        result += ' '+autolink->linkOption;
+    }
+    QSet<QString> includedFiles = parser->getFileDirectIncludes(filename);
+    foreach (const QString& includeFilename, includedFiles) {
+        result += parseFileIncludesForAutolink(
+                    includeFilename,
+                    parsedFiles,
+                    parser);
     }
     return result;
 }

@@ -12,6 +12,7 @@
 #include "common.h"
 #include "colorscheme.h"
 #include "iconsmanager.h"
+#include "autolinkmanager.h"
 #include "parser/parserutils.h"
 
 QString getSettingFilename(const QString& filepath = QString()) {
@@ -82,6 +83,8 @@ int main(int argc, char *argv[])
         //Color scheme settings must be loaded after translation
         pColorManager = new ColorManager();
         pIconsManager = new IconsManager();
+        pAutolinkManager = new AutolinkManager();
+        pAutolinkManager->load();
 
         MainWindow mainWindow;
         pMainWindow = &mainWindow;

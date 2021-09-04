@@ -4,6 +4,7 @@
 #include <QThread>
 #include "settings.h"
 #include "../common.h"
+#include "../parser/cppparser.h"
 
 class Compiler : public QThread
 {
@@ -49,6 +50,10 @@ protected:
     virtual QString getCIncludeArguments();
     virtual QString getCppIncludeArguments();
     virtual QString getLibraryArguments();
+    virtual QString parseFileIncludesForAutolink(
+            const QString& filename,
+            QSet<QString> parsedFiles,
+            PCppParser& parser);
     void log(const QString& msg);
     void error(const QString& msg);
     void runCommand(const QString& cmd, const QString& arguments, const QString& workingDir, const QString& inputText=QString());

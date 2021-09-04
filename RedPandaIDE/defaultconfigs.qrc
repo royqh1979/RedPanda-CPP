@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/config">
+        <file alias="autolink.json">resources/autolink.json</file>
+    </qresource>
+</RCC>

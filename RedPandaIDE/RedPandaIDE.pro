@@ -14,6 +14,7 @@ QMAKE_CXXFLAGS_DEBUG += -Werror=return-type
 
 SOURCES += \
     HighlighterManager.cpp \
+    autolinkmanager.cpp \
     caretlist.cpp \
     codeformatter.cpp \
     colorscheme.cpp \
@@ -89,6 +90,7 @@ SOURCES += \
 
 HEADERS += \
     HighlighterManager.h \
+    autolinkmanager.h \
     caretlist.h \
     codeformatter.h \
     colorscheme.h \
@@ -196,6 +198,7 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 RESOURCES += \
     codes.qrc \
     colorschemes.qrc \
+    defaultconfigs.qrc \
     themes/dark/dark.qrc \
     themes/light/light.qrc \
     themes/dracula/dracula.qrc \
