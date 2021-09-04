@@ -84,7 +84,7 @@ bool FileCompiler::prepareForRebuild()
     QString exeName = getCompiledExecutableName(mFilename);
     QFile file(exeName);
 
-    if (!file.remove()) {
+    if (file.exists() && !file.remove()) {
         QFileInfo info(exeName);
         throw CompileError(tr("Can't delete the old executable file \"%1\".\n").arg(info.absoluteFilePath()));
     }

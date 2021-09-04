@@ -1497,9 +1497,12 @@ void MainWindow::onCompileFinished()
         for (int i=0;i<ui->tableIssues->count();i++) {
             PCompileIssue issue = ui->tableIssues->issue(i);
             if (issue->type == CompileIssueType::Error) {
+                if (e && e->filename() != issue->filename)
+                    continue;
                 ui->tableIssues->selectRow(i);
                 QModelIndex index =ui->tableIssues->model()->index(i,0);
                 emit ui->tableIssues->doubleClicked(index);
+                break;
             }
         }
 
@@ -1507,6 +1510,8 @@ void MainWindow::onCompileFinished()
         for (int i=0;i<ui->tableIssues->count();i++) {
             PCompileIssue issue = ui->tableIssues->issue(i);
             if (issue->type == CompileIssueType::Warning) {
+                if (e && e->filename() != issue->filename)
+                    continue;
                 ui->tableIssues->selectRow(i);
                 QModelIndex index =ui->tableIssues->model()->index(i,0);
                 emit ui->tableIssues->doubleClicked(index);
