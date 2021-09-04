@@ -119,6 +119,7 @@ public slots:
     void onEndParsing(int total, int updateView);
     void onEvalValueReady(const QString& value);
     void onEditorContextMenu(const QPoint& pos);
+    void onEditorTabContextMenu(const QPoint& pos);
 
 private:
     void openFiles(const QStringList& files);

@@ -1112,6 +1112,12 @@ void MainWindow::buildContextMenus()
     ui->watchView->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->watchView,&QWidget::customContextMenuRequested,
             this, &MainWindow::onWatchViewContextMenu);
+    ui->EditorTabsLeft->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui->EditorTabsLeft,&QWidget::customContextMenuRequested,
+            this, &MainWindow::onEditorTabContextMenu);
+    ui->EditorTabsRight->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui->EditorTabsRight,&QWidget::customContextMenuRequested,
+            this, &MainWindow::onEditorTabContextMenu);
 
 }
 
@@ -1245,6 +1251,11 @@ void MainWindow::onEditorContextMenu(const QPoint &pos)
         ui->actionBreakpoint_property->setEnabled(editor->hasBreakpoint(line));
     }
     menu.exec(editor->viewport()->mapToGlobal(pos));
+
+}
+
+void MainWindow::onEditorTabContextMenu(const QPoint &pos)
+{
 
 }
 
