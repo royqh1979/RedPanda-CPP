@@ -33,7 +33,7 @@ bool FileCompiler::prepareForCompile()
         mOutputFile = getCompiledExecutableName(mFilename);
         mArguments+=QString(" -o \"%1\"").arg(mOutputFile);
 
-        //remove the old file it exists
+        //remove the old file if it exists
         QFile outputFile(mOutputFile);
         if (outputFile.exists()) {
             if (!outputFile.remove()) {
