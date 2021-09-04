@@ -417,17 +417,23 @@ void changeTheme(const QString &themeName)
 {
     if (themeName.isEmpty() || themeName == "default") {
         QApplication::setStyle("Fusion");
+        QApplication* app = dynamic_cast<QApplication*>(QApplication::instance());
+        app->setStyleSheet("");
         return ;
     }
     QStyleFactory styleFactory;
     if (styleFactory.keys().contains(themeName)) {
         QApplication::setStyle(themeName);
+        QApplication* app = dynamic_cast<QApplication*>(QApplication::instance());
+        app->setStyleSheet("");
+        return;
     }
     QFile f(QString(":/themes/%1/style.qss").arg(themeName));
 
     if (!f.exists())   {
         qDebug()<<"Unable to set stylesheet, file not found\n";
     } else {
+        QApplication::setStyle("fusion");
         f.open(QFile::ReadOnly | QFile::Text);
         QTextStream ts(&f);
         dynamic_cast<QApplication*>(QApplication::instance())->setStyleSheet(ts.readAll());
