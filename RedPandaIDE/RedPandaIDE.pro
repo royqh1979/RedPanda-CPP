@@ -31,6 +31,7 @@ SOURCES += \
     parser/cpptokenizer.cpp \
     parser/parserutils.cpp \
     parser/statementmodel.cpp \
+    project.cpp \
     qsynedit/Search.cpp \
     qsynedit/SearchBase.cpp \
     qsynedit/SearchRegex.cpp \
@@ -109,6 +110,7 @@ HEADERS += \
     parser/parserutils.h \
     parser/statementmodel.h \
     platform.h \
+    project.h \
     qsynedit/Search.h \
     qsynedit/SearchBase.h \
     qsynedit/SearchRegex.h \
