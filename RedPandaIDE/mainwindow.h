@@ -354,6 +354,11 @@ private:
 protected:
     void closeEvent(QCloseEvent *event) override;
     void showEvent(QShowEvent* event) override;
+
+    // QWidget interface
+protected:
+    void dragEnterEvent(QDragEnterEvent *event) override;
+    void dropEvent(QDropEvent *event) override;
 };
 
 extern MainWindow* pMainWindow;

@@ -13,6 +13,7 @@
 #include <QCloseEvent>
 #include <QComboBox>
 #include <QDesktopServices>
+#include <QDragEnterEvent>
 #include <QFileDialog>
 #include <QInputDialog>
 #include <QLabel>
@@ -59,6 +60,7 @@ MainWindow::MainWindow(QWidget *parent)
                                  ui->EditorTabsRight,
                                  ui->splitterEditorPanel,
                                  ui->EditorPanel);
+    setAcceptDrops(true);
     setupActions();
     ui->EditorTabsRight->setVisible(false);
 
@@ -1511,6 +1513,24 @@ void MainWindow::showEvent(QShowEvent *event)
     } else {
         openCloseLeftPanel(false);
         mLeftPanelWidth = settings.leftPanelWidth();
+    }
+}
+
+void MainWindow::dragEnterEvent(QDragEnterEvent *event)
+{
+    if (event->mimeData()->hasUrls()){
+        event->acceptProposedAction();
+    }
+}
+
+void MainWindow::dropEvent(QDropEvent *event)
+{
+    if (event->mimeData()->hasUrls()) {
+        foreach(const QUrl& url, event->mimeData()->urls()){
+            if (!url.isLocalFile())
+                continue;
+            openFile(url.toLocalFile());
+        }
     }
 }
 
