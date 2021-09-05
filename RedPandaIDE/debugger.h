@@ -111,6 +111,9 @@ public:
     PBreakpoint setBreakPointCondition(int index, const QString& condition);
     const QList<PBreakpoint>& breakpoints() const;
     PBreakpoint breakpoint(int index) const;
+public slots:
+    void onFileDeleteLines(const QString& filename, int startLine, int count);
+    void onFileInsertLines(const QString& filename, int startLine, int count);
 private:
     QList<PBreakpoint> mList;
 };
@@ -182,6 +185,7 @@ public:
     void addBreakpoint(int line, const QString& filename);
     void deleteBreakpoints(const QString& filename);
     void deleteBreakpoints(const Editor* editor);
+    void deleteBreakpoints();
     void removeBreakpoint(int line, const Editor* editor);
     void removeBreakpoint(int line, const QString& filename);
     void removeBreakpoint(int index);

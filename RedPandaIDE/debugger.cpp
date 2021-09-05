@@ -172,6 +172,13 @@ void Debugger::deleteBreakpoints(const Editor *editor)
     deleteBreakpoints(editor->filename());
 }
 
+void Debugger::deleteBreakpoints()
+{
+    for (int i=mBreakpointModel->breakpoints().size()-1;i>=0;i--) {
+        removeBreakpoint(i);
+    }
+}
+
 void Debugger::removeBreakpoint(int line, const Editor *editor)
 {
     removeBreakpoint(line,editor->filename());
@@ -1546,6 +1553,36 @@ PBreakpoint BreakpointModel::breakpoint(int index) const
     if (index<0 && index>=mList.count())
         return PBreakpoint();
     return mList[index];
+}
+
+void BreakpointModel::onFileDeleteLines(const QString &filename, int startLine, int count)
+{
+    beginResetModel();
+    for (int i = mList.count()-1;i>=0;i--){
+        PBreakpoint breakpoint = mList[i];
+        if  (breakpoint->filename == filename
+             && breakpoint->line>=startLine) {
+            if (breakpoint->line >= startLine+count) {
+                breakpoint->line -= count;
+            } else {
+                mList.removeAt(i);
+            }
+        }
+    }
+    endResetModel();
+}
+
+void BreakpointModel::onFileInsertLines(const QString &filename, int startLine, int count)
+{
+    beginResetModel();
+    for (int i = mList.count()-1;i>=0;i--){
+        PBreakpoint breakpoint = mList[i];
+        if  (breakpoint->filename == filename
+             && breakpoint->line>=startLine) {
+            breakpoint->line+=count;
+        }
+    }
+    endResetModel();
 }
 
 

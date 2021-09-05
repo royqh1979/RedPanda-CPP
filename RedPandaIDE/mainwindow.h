@@ -145,6 +145,7 @@ private slots:
     void onWatchViewContextMenu(const QPoint& pos);
     void onTableIssuesContextMenu(const QPoint& pos);
     void onSearchViewContextMenu(const QPoint& pos);
+    void onBreakpointsViewContextMenu(const QPoint& pos);
 
     void on_actionNew_triggered();
 
@@ -350,13 +351,14 @@ private:
     QAction * mSearchViewClearAction;
     QAction * mSearchViewClearAllAction;
 
+    //actions for breakpoint view
+    QAction * mBreakpointViewPropertyAction;
+    QAction * mBreakpointViewRemoveAllAction;
+
    // QWidget interface
 protected:
     void closeEvent(QCloseEvent *event) override;
     void showEvent(QShowEvent* event) override;
-
-    // QWidget interface
-protected:
     void dragEnterEvent(QDragEnterEvent *event) override;
     void dropEvent(QDropEvent *event) override;
 };

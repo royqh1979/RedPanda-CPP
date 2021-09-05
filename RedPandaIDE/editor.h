@@ -154,6 +154,7 @@ private slots:
     void onLinesInserted(int first,int count);
 
 private:
+    void resetBreakpoints();
     QChar getCurrentChar();
     bool handleSymbolCompletion(QChar key);
     bool handleParentheseCompletion();

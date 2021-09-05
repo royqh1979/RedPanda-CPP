@@ -1165,11 +1165,33 @@ void Editor::onTipEvalValueReady(const QString &value)
 void Editor::onLinesDeleted(int first, int count)
 {
     pMainWindow->caretList().linesDeleted(this,first,count);
+    pMainWindow->debugger()->breakpointModel()->onFileDeleteLines(mFilename,first,count);
+    resetBreakpoints();
+    if (!pSettings->editor().syntaxCheckWhenLineChanged()) {
+        //todo: update syntax issues
+    }
 }
 
 void Editor::onLinesInserted(int first, int count)
 {
     pMainWindow->caretList().linesInserted(this,first,count);
+    pMainWindow->debugger()->breakpointModel()->onFileInsertLines(mFilename,first,count);
+    resetBreakpoints();
+    if (!pSettings->editor().syntaxCheckWhenLineChanged()) {
+        //todo: update syntax issues
+    }
+}
+
+void Editor::resetBreakpoints()
+{
+    mBreakpointLines.clear();
+    foreach (const PBreakpoint& breakpoint,
+             pMainWindow->debugger()->breakpointModel()->breakpoints()) {
+        if (breakpoint->filename == mFilename) {
+            mBreakpointLines.insert(breakpoint->line);
+        }
+    }
+    invalidate();
 }
 
 QChar Editor::getCurrentChar()
@@ -2503,9 +2525,8 @@ void Editor::reformat()
 {
     if (readOnly())
         return;
-    QFile file(":/codes/formatdemo.cpp");
-    if (!file.open(QFile::ReadOnly))
-        return;
+    //we must remove all breakpoints and syntax issues
+    onLinesDeleted(1,lines()->count());
     QByteArray content = lines()->text().toUtf8();
     QStringList args = pSettings->codeFormatter().getArguments();
     QByteArray newContent = runAndGetOutput("astyle.exe",
@@ -2516,6 +2537,7 @@ void Editor::reformat()
     selectAll();
     setSelText(QString::fromUtf8(newContent));
     reparse();
+    checkSyntaxInBack();
     pMainWindow->updateEditorActions();
 }
 

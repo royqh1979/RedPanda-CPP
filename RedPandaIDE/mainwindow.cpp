@@ -1200,6 +1200,39 @@ void MainWindow::buildContextMenus()
        mSearchResultModel.clear();
     });
 
+    //context menu signal for breakpoints view
+    ui->tblBreakpoints->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui->tblBreakpoints,&QWidget::customContextMenuRequested,
+             this, &MainWindow::onBreakpointsViewContextMenu);
+    mBreakpointViewPropertyAction = createActionFor(
+                tr("Breakpoint condition..."),
+                ui->tblBreakpoints);
+    connect(mBreakpointViewPropertyAction,&QAction::triggered,
+            [this](){
+        int index =ui->tblBreakpoints->selectionModel()->currentIndex().row();
+
+        PBreakpoint breakpoint = debugger()->breakpointModel()->breakpoint(
+                    index
+                    );
+        if (breakpoint) {
+            bool isOk;
+            QString s=QInputDialog::getText(this,
+                                      tr("Break point condition"),
+                                      tr("Enter the condition of the breakpoint:"),
+                                    QLineEdit::Normal,
+                                    breakpoint->condition,&isOk);
+            if (isOk) {
+                pMainWindow->debugger()->setBreakPointCondition(index,s);
+            }
+        }
+    });
+    mBreakpointViewRemoveAllAction = createActionFor(
+                tr("Remove all breakpoints"),
+                ui->tblBreakpoints);
+    connect(mBreakpointViewRemoveAllAction,&QAction::triggered,
+            [this](){
+        pMainWindow->debugger()->deleteBreakpoints();
+    });
 }
 
 void MainWindow::maximizeEditor()
@@ -1298,6 +1331,14 @@ void MainWindow::onSearchViewContextMenu(const QPoint &pos)
     menu.addAction(mSearchViewClearAction);
     menu.addAction(mSearchViewClearAllAction);
     menu.exec(ui->searchHistoryPanel->mapToGlobal(pos));
+}
+
+void MainWindow::onBreakpointsViewContextMenu(const QPoint &pos)
+{
+    QMenu menu(this);
+    menu.addAction(mBreakpointViewPropertyAction);
+    menu.addAction(mBreakpointViewRemoveAllAction);
+    menu.exec(ui->tblBreakpoints->mapToGlobal(pos));
 }
 
 void MainWindow::onEditorContextMenu(const QPoint &pos)
