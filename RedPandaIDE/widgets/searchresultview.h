@@ -57,6 +57,7 @@ public:
     PSearchResults currentResults();
     void setCurrentIndex(int index);
     void clear();
+    void removeSearchResults(int index);
 signals:
     void modelChanged();
     void currentChanged(int index);
@@ -92,6 +93,11 @@ public:
     int columnCount(const QModelIndex &parent) const override;
     QVariant data(const QModelIndex &index, int role) const override;
     SearchResultModel *searchResultModel() const;
+    bool getItemFileAndLineChar(
+            const QModelIndex&index,
+            QString& filename,
+            int& line,
+            int& startChar);
 public slots:
     void onResultModelChanged();
 private:

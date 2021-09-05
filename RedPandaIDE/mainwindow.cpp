@@ -1161,7 +1161,6 @@ void MainWindow::buildContextMenus()
                 QKeySequence("Ctrl+Shift+C"));
     connect(mTableIssuesCopyAllAction,&QAction::triggered,
             [this](){
-        qDebug()<<"Copy all";
         QClipboard* clipboard=QGuiApplication::clipboard();
         QMimeData * mimeData = new QMimeData();
         mimeData->setText(ui->tableIssues->toTxt());
@@ -1175,6 +1174,28 @@ void MainWindow::buildContextMenus()
     connect(mTableIssuesClearAction,&QAction::triggered,
             [this](){
         ui->tableIssues->clearIssues();
+    });
+
+    //context menu signal for search view
+    ui->searchHistoryPanel->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui->searchHistoryPanel, &QWidget::customContextMenuRequested,
+            this, &MainWindow::onSearchViewContextMenu);
+    mSearchViewClearAction = createActionFor(
+                tr("Remove this search"),
+                ui->searchHistoryPanel);
+    connect(mSearchViewClearAction, &QAction::triggered,
+            [this](){
+       int index = ui->cbSearchHistory->currentIndex();
+       if (index>=0) {
+           mSearchResultModel.removeSearchResults(index);
+       }
+    });
+    mSearchViewClearAllAction = createActionFor(
+                tr("Clear all searches"),
+                ui->searchHistoryPanel);
+    connect(mSearchViewClearAllAction,&QAction::triggered,
+            [this]() {
+       mSearchResultModel.clear();
     });
 
 }
@@ -1267,6 +1288,14 @@ void MainWindow::onTableIssuesContextMenu(const QPoint &pos)
     menu.addSeparator();
     menu.addAction(mTableIssuesClearAction);
     menu.exec(ui->tableIssues->mapToGlobal(pos));
+}
+
+void MainWindow::onSearchViewContextMenu(const QPoint &pos)
+{
+    QMenu menu(this);
+    menu.addAction(mSearchViewClearAction);
+    menu.addAction(mSearchViewClearAllAction);
+    menu.exec(ui->searchHistoryPanel->mapToGlobal(pos));
 }
 
 void MainWindow::onEditorContextMenu(const QPoint &pos)
@@ -2435,6 +2464,44 @@ void MainWindow::on_actionFile_Properties_triggered()
         FilePropertiesDialog dialog(editor,this);
         dialog.exec();
         dialog.setParent(nullptr);
+    }
+}
+
+void MainWindow::on_searchView_doubleClicked(const QModelIndex &index)
+{
+    QString filename;
+    int line;
+    int start;
+    if (mSearchResultTreeModel->getItemFileAndLineChar(
+                index,filename,line,start)) {
+        Editor *e = mEditorList->getEditorByFilename(filename);
+        if (e) {
+            e->setCaretPositionAndActivate(line,start);
+        }
+    }
+}
+
+
+void MainWindow::on_tblStackTrace_doubleClicked(const QModelIndex &index)
+{
+    PTrace trace = mDebugger->backtraceModel()->backtrace(index.row());
+    if (trace) {
+        Editor *e = mEditorList->getEditorByFilename(trace->filename);
+        if (e) {
+            e->setCaretPositionAndActivate(trace->line,1);
+        }
+    }
+}
+
+
+void MainWindow::on_tblBreakpoints_doubleClicked(const QModelIndex &index)
+{
+    PBreakpoint breakpoint = mDebugger->breakpointModel()->breakpoint(index.row());
+    if (breakpoint) {
+        Editor * e = mEditorList->getEditorByFilename(breakpoint->filename);
+        if (e) {
+            e->setCaretPositionAndActivate(breakpoint->line,1);
+        }
     }
 }
 

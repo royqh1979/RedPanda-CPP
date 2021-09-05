@@ -1541,6 +1541,13 @@ const QList<PBreakpoint> &BreakpointModel::breakpoints() const
     return mList;
 }
 
+PBreakpoint BreakpointModel::breakpoint(int index) const
+{
+    if (index<0 && index>=mList.count())
+        return PBreakpoint();
+    return mList[index];
+}
+
 
 BacktraceModel::BacktraceModel(QObject *parent):QAbstractTableModel(parent)
 {
@@ -1625,6 +1632,14 @@ void BacktraceModel::removeTrace(int row)
 const QList<PTrace> &BacktraceModel::backtraces() const
 {
     return mList;
+}
+
+PTrace BacktraceModel::backtrace(int index) const
+{
+    if (index>=0 && index < mList.count()){
+        return mList[index];
+    }
+    return PTrace();
 }
 
 WatchModel::WatchModel(QObject *parent):QAbstractItemModel(parent)

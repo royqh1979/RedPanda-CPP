@@ -111,6 +111,12 @@ void SearchResultModel::clear()
     emit modelChanged();
 }
 
+void SearchResultModel::removeSearchResults(int index)
+{
+    mSearchResults.removeAt(index);
+    emit modelChanged();
+}
+
 SearchResultTreeModel::SearchResultTreeModel(SearchResultModel *model, QObject *parent):
     QAbstractItemModel(parent),
     mSearchResultModel(model)
@@ -214,6 +220,34 @@ QVariant SearchResultTreeModel::data(const QModelIndex &index, int role) const
 SearchResultModel *SearchResultTreeModel::searchResultModel() const
 {
     return mSearchResultModel;
+}
+
+bool SearchResultTreeModel::getItemFileAndLineChar(const QModelIndex &index, QString &filename, int &line, int &startChar)
+{
+    if (!index.isValid()){
+        return false;
+    }
+    SearchResultTreeItem *item = static_cast<SearchResultTreeItem *>(index.internalPointer());
+    if (!item)
+        return false;
+
+    PSearchResults results = mSearchResultModel->currentResults();
+
+    if (!results ) {
+        // This is nothing this function is supposed to handle
+        return false;
+    }
+
+    SearchResultTreeItem *parent = item->parent;
+    if (parent==nullptr) { //is filename
+        return false;
+    } else {
+        filename = parent->filename;
+        line = item->line;
+        startChar = item->start;
+        return true;
+    }
+    return false;
 }
 
 void SearchResultTreeModel::onResultModelChanged()

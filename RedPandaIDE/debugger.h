@@ -110,6 +110,7 @@ public:
     void removeBreakpoint(int index);
     PBreakpoint setBreakPointCondition(int index, const QString& condition);
     const QList<PBreakpoint>& breakpoints() const;
+    PBreakpoint breakpoint(int index) const;
 private:
     QList<PBreakpoint> mList;
 };
@@ -127,6 +128,7 @@ public:
     void clear();
     void removeTrace(int index);
     const QList<PTrace>& backtraces() const;
+    PTrace backtrace(int index) const;
 private:
     QList<PTrace> mList;
 };

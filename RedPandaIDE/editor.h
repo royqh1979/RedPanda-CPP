@@ -119,8 +119,8 @@ public:
     void copyToClipboard() override;
     void cutToClipboard() override;
     void copyAsHTML();
-    void setCaretPosition(int line,int col);
-    void setCaretPositionAndActivate(int line,int col);
+    void setCaretPosition(int line,int aChar);
+    void setCaretPositionAndActivate(int line,int aChar);
 
     void addSyntaxIssues(int line, int startChar, int endChar, CompileIssueType errorType, const QString& hint);
     void clearSyntaxIssues();

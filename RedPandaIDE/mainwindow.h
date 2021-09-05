@@ -144,6 +144,7 @@ private slots:
 
     void onWatchViewContextMenu(const QPoint& pos);
     void onTableIssuesContextMenu(const QPoint& pos);
+    void onSearchViewContextMenu(const QPoint& pos);
 
     void on_actionNew_triggered();
 
@@ -289,6 +290,12 @@ private slots:
 
     void on_actionFile_Properties_triggered();
 
+    void on_searchView_doubleClicked(const QModelIndex &index);
+
+    void on_tblStackTrace_doubleClicked(const QModelIndex &index);
+
+    void on_tblBreakpoints_doubleClicked(const QModelIndex &index);
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;
@@ -338,6 +345,10 @@ private:
     QAction * mTableIssuesCopyAction;
     QAction * mTableIssuesCopyAllAction;
     QAction * mTableIssuesClearAction;
+
+    //actions for search result view
+    QAction * mSearchViewClearAction;
+    QAction * mSearchViewClearAllAction;
 
    // QWidget interface
 protected:

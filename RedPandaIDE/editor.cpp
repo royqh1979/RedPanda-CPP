@@ -904,18 +904,18 @@ void Editor::copyAsHTML()
     QGuiApplication::clipboard()->setMimeData(mimeData);
 }
 
-void Editor::setCaretPosition(int line, int col)
+void Editor::setCaretPosition(int line, int aChar)
 {
     this->uncollapseAroundLine(line);
-    this->setCaretXYCentered(true,BufferCoord{col,line});
+    this->setCaretXYCentered(true,BufferCoord{aChar,line});
 }
 
-void Editor::setCaretPositionAndActivate(int line, int col)
+void Editor::setCaretPositionAndActivate(int line, int aChar)
 {
     this->uncollapseAroundLine(line);
     if (!this->hasFocus())
         this->activate();
-    this->setCaretXYCentered(true,BufferCoord{col,line});
+    this->setCaretXYCentered(true,BufferCoord{aChar,line});
 }
 
 void Editor::addSyntaxIssues(int line, int startChar, int endChar, CompileIssueType errorType, const QString &hint)
