@@ -134,11 +134,16 @@ private:
     void buildContextMenus();
     void maximizeEditor();
     void openShell(const QString& folder, const QString& shellCommand);
+    QAction* createActionFor(const QString& text,
+                             QWidget* parent,
+                             QKeySequence shortcut=QKeySequence());
 
 private slots:
     void onAutoSaveTimeout();
-    void onWatchViewContextMenu(const QPoint& pos);
     void onFileChanged(const QString& path);
+
+    void onWatchViewContextMenu(const QPoint& pos);
+    void onTableIssuesContextMenu(const QPoint& pos);
 
     void on_actionNew_triggered();
 
@@ -328,6 +333,11 @@ private:
     bool mClosing;
     bool mSystemTurnedOff;
     QPoint mEditorContextMenuPos;
+
+    QAction * mTableIssuesCopyAction;
+    QAction * mTableIssuesCopyAllAction;
+    QAction * mTableIssuesSaveAction;
+    QAction * mTableIssuesClearAction;
 
    // QWidget interface
 protected:

@@ -10,7 +10,6 @@
 #include "widgets/cpudialog.h"
 #include "widgets/filepropertiesdialog.h"
 
-
 #include <QCloseEvent>
 #include <QComboBox>
 #include <QDesktopServices>
@@ -619,7 +618,6 @@ void MainWindow::checkSyntaxInBack(Editor *e)
         return;
 
     mCheckSyntaxInBack=true;
-    e->clearSyntaxIssues();
     ui->tableIssues->clearIssues();
     mCompilerManager->checkSyntax(e->filename(),e->lines()->text(),
                                   e->fileEncoding() == ENCODING_ASCII);
@@ -639,7 +637,6 @@ bool MainWindow::compile(bool rebuild)
 {
     Editor * editor = mEditorList->getEditor();
     if (editor != NULL ) {
-        editor->clearSyntaxIssues();
         ui->tableIssues->clearIssues();
         if (editor->modified()) {
             if (!editor->save(false,false))
@@ -1107,17 +1104,84 @@ void MainWindow::doAutoSave(Editor *e)
     e->saveFile(filename);
 }
 
+//static void limitActionShortCutScope(QAction* action,QWidget* scopeWidget) {
+//    action->setParent(scopeWidget);
+//    action->setShortcutContext(Qt::WidgetWithChildrenShortcut);
+//}
+
+QAction* MainWindow::createActionFor(
+        const QString& text,
+        QWidget* parent,
+        QKeySequence shortcut) {
+    QAction* action= new QAction(text,parent);
+    if (!shortcut.isEmpty())
+        action->setShortcut(shortcut);
+    action->setPriority(QAction::HighPriority);
+    action->setShortcutContext(Qt::WidgetWithChildrenShortcut);
+    parent->addAction(action);
+    return action;
+}
 void MainWindow::buildContextMenus()
 {
+
+//    //prevent these action from active when editor not focused
+//    limitActionShortCutScope(ui->actionCopy,ui->EditorPanel);
+//    limitActionShortCutScope(ui->actionCut,ui->EditorPanel);
+//    limitActionShortCutScope(ui->actionSelectAll,ui->EditorPanel);
+//    limitActionShortCutScope(ui->actionPaste,ui->EditorPanel);
+//    limitActionShortCutScope(ui->actionSave,ui->EditorPanel);
+
     ui->watchView->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->watchView,&QWidget::customContextMenuRequested,
             this, &MainWindow::onWatchViewContextMenu);
+
     ui->EditorTabsLeft->tabBar()->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->EditorTabsLeft->tabBar(),&QWidget::customContextMenuRequested,
             this, &MainWindow::onEditorTabContextMenu);
     ui->EditorTabsRight->tabBar()->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->EditorTabsRight->tabBar(),&QWidget::customContextMenuRequested,
             this, &MainWindow::onEditorTabContextMenu);
+
+    ui->tableIssues->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui->tableIssues,&QWidget::customContextMenuRequested,
+            this, &MainWindow::onTableIssuesContextMenu);
+    mTableIssuesCopyAction = createActionFor(
+                tr("Copy"),
+                ui->tableIssues,
+                QKeySequence("Ctrl+C"));
+    connect(mTableIssuesCopyAction,&QAction::triggered,
+            [this](){
+        QModelIndex index = ui->tableIssues->selectionModel()->currentIndex();
+        PCompileIssue issue = ui->tableIssues->issue(index);
+        if (issue) {
+            QClipboard* clipboard = QApplication::clipboard();
+            clipboard->setText(issue->description);
+        }
+    });
+    mTableIssuesCopyAllAction = createActionFor(
+                tr("Copy all"),
+                ui->tableIssues,
+                QKeySequence("Ctrl+Shift+C"));
+    connect(mTableIssuesCopyAllAction,&QAction::triggered,
+            [this](){
+        qDebug()<<"copy all";
+    });
+    mTableIssuesSaveAction = createActionFor(
+                tr("Save"),
+                ui->tableIssues,
+                QKeySequence("Ctrl+S"));
+    connect(mTableIssuesSaveAction,&QAction::triggered,
+            [this](){
+        qDebug()<<"Save";
+    });
+    mTableIssuesClearAction = createActionFor(
+                tr("Clear"),
+                ui->tableIssues);
+    connect(mTableIssuesClearAction,&QAction::triggered,
+            [this](){
+        qDebug()<<"Clear";
+        ui->tableIssues->clearIssues();
+    });
 
 }
 
@@ -1199,6 +1263,18 @@ void MainWindow::onWatchViewContextMenu(const QPoint &pos)
     menu.addAction(ui->actionRemove_All_Watches);
     menu.addAction(ui->actionModify_Watch);
     menu.exec(ui->watchView->mapToGlobal(pos));
+}
+
+void MainWindow::onTableIssuesContextMenu(const QPoint &pos)
+{
+    QMenu menu(this);
+    menu.addAction(mTableIssuesCopyAction);
+    menu.addAction(mTableIssuesCopyAllAction);
+    menu.addSeparator();
+    menu.addAction(mTableIssuesSaveAction);
+    menu.addSeparator();
+    menu.addAction(mTableIssuesClearAction);
+    menu.exec(ui->tableIssues->mapToGlobal(pos));
 }
 
 void MainWindow::onEditorContextMenu(const QPoint &pos)

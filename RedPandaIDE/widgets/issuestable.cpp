@@ -2,6 +2,9 @@
 #include "../utils.h"
 #include <QHeaderView>
 #include "../settings.h"
+#include "../mainwindow.h"
+#include "../editor.h"
+#include "../editorlist.h"
 
 
 IssuesTable::IssuesTable(QWidget *parent):
@@ -44,10 +47,20 @@ void IssuesModel::addIssue(PCompileIssue issue)
 
 void IssuesModel::clearIssues()
 {
+    QSet<QString> issueFiles;
+    foreach(const PCompileIssue& issue, mIssues) {
+        if (!(issue->filename.isEmpty())){
+            issueFiles.insert(issue->filename);
+        }
+    }
     if (mIssues.size()>0) {
         beginRemoveRows(QModelIndex(),0,mIssues.size()-1);
         mIssues.clear();
         endRemoveRows();
+    }
+    foreach (const QString& filename, issueFiles) {
+        Editor *e=pMainWindow->editorList()->getOpenedEditorByFilename(filename);
+        e->clearSyntaxIssues();
     }
 }
 
@@ -82,6 +95,8 @@ void IssuesTable::addIssue(PCompileIssue issue)
 
 PCompileIssue IssuesTable::issue(const QModelIndex &index)
 {
+    if (!index.isValid())
+        return PCompileIssue();
     return issue(index.row());
 }
 

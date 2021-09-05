@@ -255,7 +255,7 @@
         <enum>QTabWidget::South</enum>
        </property>
        <property name="currentIndex">
-        <number>3</number>
+        <number>0</number>
        </property>
        <widget class="QWidget" name="tabIssues">
         <attribute name="icon">
@@ -1104,6 +1104,9 @@
    <property name="shortcut">
     <string>Ctrl+X</string>
    </property>
+   <property name="shortcutContext">
+    <enum>Qt::WidgetWithChildrenShortcut</enum>
+   </property>
   </action>
   <action name="actionCopy">
    <property name="icon">
@@ -1116,6 +1119,9 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+C</string>
+   </property>
+   <property name="shortcutContext">
+    <enum>Qt::WidgetWithChildrenShortcut</enum>
    </property>
   </action>
   <action name="actionPaste">
@@ -1130,6 +1136,9 @@
    <property name="shortcut">
     <string>Ctrl+V</string>
    </property>
+   <property name="shortcutContext">
+    <enum>Qt::WidgetWithChildrenShortcut</enum>
+   </property>
   </action>
   <action name="actionSelectAll">
    <property name="text">
@@ -1137,6 +1146,9 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+A</string>
+   </property>
+   <property name="shortcutContext">
+    <enum>Qt::WidgetWithChildrenShortcut</enum>
    </property>
   </action>
   <action name="actionIndent">
