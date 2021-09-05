@@ -17,6 +17,7 @@
 #include <QInputDialog>
 #include <QLabel>
 #include <QMessageBox>
+#include <QMimeData>
 #include <QTranslator>
 
 #include "settingsdialog/settingsdialog.h"
@@ -1124,17 +1125,12 @@ QAction* MainWindow::createActionFor(
 void MainWindow::buildContextMenus()
 {
 
-//    //prevent these action from active when editor not focused
-//    limitActionShortCutScope(ui->actionCopy,ui->EditorPanel);
-//    limitActionShortCutScope(ui->actionCut,ui->EditorPanel);
-//    limitActionShortCutScope(ui->actionSelectAll,ui->EditorPanel);
-//    limitActionShortCutScope(ui->actionPaste,ui->EditorPanel);
-//    limitActionShortCutScope(ui->actionSave,ui->EditorPanel);
-
+    //context menu signal for the watch view
     ui->watchView->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->watchView,&QWidget::customContextMenuRequested,
             this, &MainWindow::onWatchViewContextMenu);
 
+    //context menu signal for Editor's tabbar
     ui->EditorTabsLeft->tabBar()->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->EditorTabsLeft->tabBar(),&QWidget::customContextMenuRequested,
             this, &MainWindow::onEditorTabContextMenu);
@@ -1142,6 +1138,7 @@ void MainWindow::buildContextMenus()
     connect(ui->EditorTabsRight->tabBar(),&QWidget::customContextMenuRequested,
             this, &MainWindow::onEditorTabContextMenu);
 
+    //context menu signal for Compile Issue view
     ui->tableIssues->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->tableIssues,&QWidget::customContextMenuRequested,
             this, &MainWindow::onTableIssuesContextMenu);
@@ -1164,22 +1161,19 @@ void MainWindow::buildContextMenus()
                 QKeySequence("Ctrl+Shift+C"));
     connect(mTableIssuesCopyAllAction,&QAction::triggered,
             [this](){
-        qDebug()<<"copy all";
-    });
-    mTableIssuesSaveAction = createActionFor(
-                tr("Save"),
-                ui->tableIssues,
-                QKeySequence("Ctrl+S"));
-    connect(mTableIssuesSaveAction,&QAction::triggered,
-            [this](){
-        qDebug()<<"Save";
+        qDebug()<<"Copy all";
+        QClipboard* clipboard=QGuiApplication::clipboard();
+        QMimeData * mimeData = new QMimeData();
+        mimeData->setText(ui->tableIssues->toTxt());
+        mimeData->setHtml(ui->tableIssues->toHtml());
+        clipboard->clear();
+        clipboard->setMimeData(mimeData);
     });
     mTableIssuesClearAction = createActionFor(
                 tr("Clear"),
                 ui->tableIssues);
     connect(mTableIssuesClearAction,&QAction::triggered,
             [this](){
-        qDebug()<<"Clear";
         ui->tableIssues->clearIssues();
     });
 
@@ -1270,8 +1264,6 @@ void MainWindow::onTableIssuesContextMenu(const QPoint &pos)
     QMenu menu(this);
     menu.addAction(mTableIssuesCopyAction);
     menu.addAction(mTableIssuesCopyAllAction);
-    menu.addSeparator();
-    menu.addAction(mTableIssuesSaveAction);
     menu.addSeparator();
     menu.addAction(mTableIssuesClearAction);
     menu.exec(ui->tableIssues->mapToGlobal(pos));

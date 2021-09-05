@@ -17,6 +17,11 @@ IssuesTable::IssuesTable(QWidget *parent):
     this->setColumnWidth(2,45);
 }
 
+const QVector<PCompileIssue> &IssuesTable::issues() const
+{
+    return mModel->issues();
+}
+
 IssuesModel *IssuesTable::issuesModel()
 {
     return mModel;
@@ -30,6 +35,39 @@ void IssuesTable::setErrorColor(QColor color)
 void IssuesTable::setWarningColor(QColor color)
 {
     mModel->setWarningColor(color);
+}
+
+QString IssuesTable::toHtml()
+{
+    QString result;
+    result.append(
+                QString("<table><thead><th>%1</th><th>%2</th><th>%3</th><th>%4</th></thead>")
+                .arg(tr("Filename"))
+                .arg(tr("Line"))
+                .arg(tr("Col"))
+                .arg(tr("Description")));
+    foreach (const PCompileIssue& issue, mModel->issues()) {
+        result.append(QString("<tr><td>%1</td><td>%2</td><td>%3</td><td>%4</td></tr>\n")
+                      .arg(issue->filename)
+                      .arg(issue->line)
+                      .arg(issue->column)
+                      .arg(issue->description));
+    }
+    result.append(QString("</table>"));
+    return result;
+}
+
+QString IssuesTable::toTxt()
+{
+    QString result;
+    foreach (const PCompileIssue& issue, mModel->issues()) {
+        result.append(QString("%1\t%2\t%3\t%4\n")
+                      .arg(issue->filename)
+                      .arg(issue->line)
+                      .arg(issue->column)
+                      .arg(issue->description));
+    }
+    return result;
 }
 
 IssuesModel::IssuesModel(QObject *parent):
@@ -81,6 +119,11 @@ PCompileIssue IssuesModel::issue(int row)
     }
 
     return mIssues[row];
+}
+
+const QVector<PCompileIssue> &IssuesModel::issues() const
+{
+    return mIssues;
 }
 
 int IssuesModel::count()

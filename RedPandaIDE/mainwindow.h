@@ -334,9 +334,9 @@ private:
     bool mSystemTurnedOff;
     QPoint mEditorContextMenuPos;
 
+    //actions for compile issue table
     QAction * mTableIssuesCopyAction;
     QAction * mTableIssuesCopyAllAction;
-    QAction * mTableIssuesSaveAction;
     QAction * mTableIssuesClearAction;
 
    // QWidget interface
