@@ -62,6 +62,62 @@ private:
     QByteArray mEncoding;
 };
 
+struct ProjectVersionInfo{
+    int major;
+    int minor;
+    int release;
+    int build;
+    int languageID;
+    int charsetID;
+    QString companyName;
+    QString fileVersion;
+    QString fileDescription;
+    QString internalName;
+    QString legalCopyright;
+    QString legalTrademarks;
+    QString originalFilename;
+    QString productName;
+    QString productVersion;
+    bool autoIncBuildNr;
+    bool syncProduct;
+};
+
+struct ProjectOptions{
+    ProjectType type;
+    int version;
+    bool useUTF8;
+    QStringList objfiles;
+    QString compilerCmd;
+    QString cppCompilerCmd;
+    QString linkerCmd;
+    QStringList includes;
+    QStringList libs;
+    QString privateResource;
+    QStringList resourceIncludes;
+    QStringList makeIncludes;
+    bool useGPP;
+    QString icon;
+    QString exeOutput;
+    QString objectOutput;
+    QString logOutput;
+    bool logOutputEnabled;
+    bool useCustomMakefile;
+    QString customMakefile;
+    bool usePrecompiledHeader;
+    bool precompiledHeader;
+    bool overrideOutput;
+    QString overridenOutput;
+    QString hostApplication;
+    bool includeVersionInfo;
+    bool supportXPThemes;
+    int compilerSet;
+    QString compilerOptions;
+    ProjectVersionInfo VersionInfo;
+    QString cmdLineArgs;
+    bool mStaticLink;
+    bool mAddCharset;
+};
+
 class Project : public QObject
 {
     Q_OBJECT
