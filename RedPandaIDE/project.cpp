@@ -1,10 +1,57 @@
 #include "project.h"
 #include "editor.h"
 #include "mainwindow.h"
+#include "utils.h"
+#include "systemconsts.h"
+
+#include <QDir>
+#include <QFileInfo>
 
 Project::Project(QObject *parent) : QObject(parent)
 {
 
+}
+
+QString Project::directory()
+{
+    QFileInfo fileInfo(mFilename);
+    return fileInfo.absolutePath();
+}
+
+QString Project::executableName()
+{
+    QString exeFileName;
+    if (mOptions.overrideOutput && !mOptions.overridenOutput.isEmpty()) {
+        exeFileName = mOptions.overridenOutput;
+    } else {
+        switch(mOptions.type) {
+        case ProjectType::StaticLib:
+            exeFileName = changeFileExt(baseFileName(mFilename),STATIC_LIB_EXT);
+            break;
+        case ProjectType::DynamicLib:
+            exeFileName = changeFileExt(baseFileName(mFilename),DYNAMIC_LIB_EXT);
+            break;
+        default:
+            exeFileName = changeFileExt(baseFileName(mFilename),EXECUTABLE_EXT);
+        }
+    }
+    QString exePath;
+    if (!mOptions.exeOutput.isEmpty()) {
+        QDir baseDir(directory());
+        exePath = baseDir.filePath(mOptions.exeOutput);
+    } else {
+        exePath = directory();
+    }
+    QDir exeDir(exePath);
+    return exeDir.filePath(exeFileName);
+}
+
+QString Project::makeFileName()
+{
+    if fOptions.UseCustomMakefile then
+      Result := fOptions.CustomMakefile
+    else
+      Result := Directory + DEV_MAKE_FILE;
 }
 
 const std::weak_ptr<Project> &ProjectUnit::parent() const

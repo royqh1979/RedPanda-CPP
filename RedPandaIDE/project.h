@@ -2,6 +2,7 @@
 #define PROJECT_H
 
 #include <QObject>
+#include <QSettings>
 #include <memory>
 
 enum class ProjectType {
@@ -13,6 +14,8 @@ enum class ProjectType {
 
 class Project;
 class Editor;
+class CppParser;
+
 class ProjectUnit {
 
 public:
@@ -61,6 +64,8 @@ private:
     bool mDetectEncoding;
     QByteArray mEncoding;
 };
+
+using PProjectUnit = std::shared_ptr<ProjectUnit>;
 
 struct ProjectVersionInfo{
     int major;
@@ -123,9 +128,24 @@ class Project : public QObject
     Q_OBJECT
 public:
     explicit Project(QObject *parent = nullptr);
-
+    QString directory();
+    QString executableName();
+    QString makeFileName();
+    procedure SetFileName(const value: AnsiString);
+    function GetModified: boolean;
+    procedure SetModified(value: boolean);
+    procedure SortUnitsByPriority;
+    procedure Open;
 signals:
-
+private:
+    QList<PProjectUnit> mUnits;
+    ProjectOptions mOptions;
+    QSettings mIniFile;
+    QString mFilename;
+    QString mName;
+    bool mModified;
+    QStringList mFolders;
+    std::shared_ptr<CppParser> mParser;
 };
 
 #endif // PROJECT_H
