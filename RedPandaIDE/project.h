@@ -45,7 +45,7 @@ public:
     void setDetectEncoding(bool newDetectEncoding);
     const QByteArray &encoding() const;
     void setEncoding(const QByteArray &newEncoding);
-    bool modified();
+    bool modified() const;
     void setModified(bool value);
     bool save();
 
@@ -131,12 +131,14 @@ public:
     QString directory();
     QString executableName();
     QString makeFileName();
+    bool modified();
+    void open();
     procedure SetFileName(const value: AnsiString);
-    function GetModified: boolean;
     procedure SetModified(value: boolean);
     procedure SortUnitsByPriority;
     procedure Open;
 signals:
+    void changed();
 private:
     QList<PProjectUnit> mUnits;
     ProjectOptions mOptions;

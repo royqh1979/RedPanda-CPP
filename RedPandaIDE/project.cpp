@@ -6,6 +6,7 @@
 
 #include <QDir>
 #include <QFileInfo>
+#include <QMessageBox>
 
 Project::Project(QObject *parent) : QObject(parent)
 {
@@ -48,10 +49,97 @@ QString Project::executableName()
 
 QString Project::makeFileName()
 {
-    if fOptions.UseCustomMakefile then
-      Result := fOptions.CustomMakefile
+    if (mOptions.useCustomMakefile)
+        return mOptions.customMakefile;
     else
-      Result := Directory + DEV_MAKE_FILE;
+        return QDir(directory()).filePath(MAKEFILE_NAME);
+}
+
+bool Project::modified()
+{
+    // Project file modified? Done
+    if (mModified)
+        return true;// quick exit avoids loop over all units
+
+    // Otherwise, check all units
+    foreach (const PProjectUnit& unit, mUnits){
+        if (unit->modified())
+            return true;
+    }
+    return false;
+}
+
+void Project::open()
+{
+    QFile fileInfo(mFilename);
+    if (fileInfo.exists()
+            && !fileInfo.isWritable()) {
+        if (QMessageBox::question(pMainWindow,
+                                  tr("Remove Readonly Attribute"),
+                                  tr("Project file '%1' is readonly.<br /> Remove the readonly attribute?")
+                                  .arg(mFilename),
+                                  QMessageBox::Yes | QMessageBox::No,
+                                  QMessageBox::Yes) == QMessageBox::Yes) {
+            fileInfo.setPermissions(
+                        QFileDevice::WriteOwner
+                        | QFileDevice::WriteGroup
+                        | QFileDevice::WriteUser
+                        );
+        }
+    }
+    loadOptions();
+
+    //fNode := MakeProjectNode;
+
+    checkProjectFileForUpdate();
+
+    mIniFile.beginGroup("Project");
+    int uCount  = mIniFile.value("UnitCount",0).toInt();
+    mIniFile.endGroup();
+    //createFolderNodes;
+    QDir dir(directory());
+    for (int i=0;i<uCount;i++) {
+        PProjectUnit newUnit = std::make_shared<ProjectUnit>();
+        mIniFile.beginGroup(QString("Unit%1").arg(i));
+        newUnit->setFileName(dir.filePath(mIniFile.value("FileName","").toString()));
+        if (!QFileInfo(newUnit->fileName()).exists()) {
+            QMessageBox::critical(pMainWindow,
+                                  tr("File Not Found"),
+                                  tr("Project file '%1' can't be found!")
+                                  .arg(newUnit->fileName()),
+                                  QMessageBox::Ok);
+            newUnit->setModified(true);
+        } else {
+            newUnit->setFolder(mIniFile.value("Folder","").toString());
+            newUnit->setCompile(mIniFile.value("Compile", true).toBool());
+            if finifile.ReadInteger('Unit' + IntToStr(i + 1), 'CompileCpp', 2) = 2 then
+              // check if feature not present in this file
+              CompileCpp := Self.Options.useGPP
+            else
+              CompileCpp := finifile.ReadBool('Unit' + IntToStr(i + 1), 'CompileCpp', False);
+            Link := finifile.ReadBool('Unit' + IntToStr(i + 1), 'Link', True);
+            Priority := finifile.ReadInteger('Unit' + IntToStr(i + 1), 'Priority', 1000);
+            OverrideBuildCmd := finifile.ReadBool('Unit' + IntToStr(i + 1), 'OverrideBuildCmd', False);
+            BuildCmd := finifile.ReadString('Unit' + IntToStr(i + 1), 'BuildCmd', '');
+            DetectEncoding := finifile.ReadBool('Unit' + IntToStr(i + 1), 'DetectEncoding', self.fOptions.UseUTF8);
+            //compitible old project files
+    //        UseUTF8:=finifile.ReadBool('Unit' + IntToStr(i + 1), 'UseUTF8', self.fOptions.UseUTF8);
+
+            Encoding :=
+              TFileEncodingType(finifile.ReadInteger('Unit' + IntToStr(i + 1), 'Encoding', 0));
+
+            Editor := nil;
+            New := FALSE;
+            fParent := self;
+
+            Node := MakeNewFileNode(ExtractFileName(FileName), False, FolderNodeFromName(Folder));
+            Node.Data := pointer(fUnits.Add(NewUnit));
+
+        }
+        mIniFile.endGroup();
+    }
+    emit changed();
+    //  RebuildNodes;
 }
 
 const std::weak_ptr<Project> &ProjectUnit::parent() const
@@ -184,7 +272,7 @@ void ProjectUnit::setEncoding(const QByteArray &newEncoding)
     mEncoding = newEncoding;
 }
 
-bool ProjectUnit::modified()
+bool ProjectUnit::modified() const
 {
     if (mEditor) {
         return mEditor->modified();

@@ -24,12 +24,14 @@
 #   define EXECUTABLE_EXT   "exe"
 #   define STATIC_LIB_EXT   "a"
 #   define DYNAMIC_LIB_EXT   "dll"
+#   define MAKEFILE_NAME    "makefile.win"
 #elif Q_OS_LINUX
 #   define PATH_SENSITIVITY Qt::CaseSensitive
 #   define NULL_FILE       "/dev/null"
 #   define EXECUTABLE_EXT   ""
 #   define STATIC_LIB_EXT   "a"
 #   define DYNAMIC_LIB_EXT   "d"
+#   define MAKEFILE_NAME    "makefile"
 #else
 #error "Only support windows and linux now!"
 #endif
