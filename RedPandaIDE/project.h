@@ -16,11 +16,21 @@ class Project;
 class Editor;
 class CppParser;
 
+struct FolderNode;
+using PFolderNode = std::shared_ptr<FolderNode>;
+struct FolderNode {
+    QString text;
+    FolderNode * parent;
+    int unitIndex;
+    QList<PFolderNode>  children;
+};
+
 class ProjectUnit {
 
 public:
-    const std::weak_ptr<Project> &parent() const;
-    void setParent(const std::weak_ptr<Project> &newParent);
+    explicit ProjectUnit(Project* parent);
+    Project* parent() const;
+    void setParent(Project* newParent);
     Editor *editor() const;
     void setEditor(Editor *newEditor);
     const QString &fileName() const;
@@ -50,7 +60,7 @@ public:
     bool save();
 
 private:
-    std::weak_ptr<Project> mParent;
+    Project* mParent;
     Editor* mEditor;
     QString mFileName;
     bool mNew;
@@ -63,6 +73,7 @@ private:
     int mPriority;
     bool mDetectEncoding;
     QByteArray mEncoding;
+    PFolderNode mNode;
 };
 
 using PProjectUnit = std::shared_ptr<ProjectUnit>;
@@ -132,22 +143,67 @@ public:
     QString executableName();
     QString makeFileName();
     bool modified();
-    void open();
-    procedure SetFileName(const value: AnsiString);
-    procedure SetModified(value: boolean);
-    procedure SortUnitsByPriority;
-    procedure Open;
+    void setFileName(const QString& value);
+    void setModified(bool value);
+
+    int  newUnit(bool newProject,
+                 PFolderNode parentNode,
+                 const QString customFileName);
+    PProjectUnit addUnit(const QString& inFileName,
+                PFolderNode parentNode,
+                bool rebuild);
+    function GetFolderPath(Node: TTreeNode): AnsiString;
+    procedure UpdateFolders;
+    procedure AddFolder(const s: AnsiString);
+    function OpenUnit(index: integer): TEditor;
+    procedure CloseUnit(index: integer);
+    procedure DoAutoOpen;
+    procedure SaveUnitAs(i: integer; sFileName: AnsiString); // save single [UnitX]
+    procedure SaveAll; // save [Project] and  all [UnitX]
+    procedure LoadLayout; // load all [UnitX]
+    procedure LoadUnitLayout(e: TEditor; Index: integer); // load single [UnitX] cursor positions
+    procedure SaveLayout; // save all [UnitX]
+    procedure SaveUnitLayout(e: TEditor; Index: integer); // save single [UnitX] cursor positions
+    function MakeProjectNode: TTreeNode;
+    function MakeNewFileNode(const s: AnsiString; IsFolder: boolean; NewParent: TTreeNode): TTreeNode;
+    procedure BuildPrivateResource(ForceSave: boolean = False);
+    procedure LoadOptions;
+    procedure SaveOptions;
+    function SaveUnits: Boolean;
+//    procedure Open;
+    function FileAlreadyExists(const s: AnsiString): boolean;
+    function RemoveFolder(Node: TTreeNode): boolean;
+    function RemoveEditor(index: integer; DoClose: boolean): boolean;
+    function GetUnitFromString(const s: AnsiString): integer;
+    procedure RebuildNodes;
+    function ListUnitStr(Separator: char): AnsiString;
+    procedure ExportToHTML;
+    function ShowOptions: Integer;
+    function AssignTemplate(const aFileName: AnsiString; aTemplate: TTemplate): boolean;
+    function FolderNodeFromName(const name: AnsiString): TTreeNode;
+    procedure CreateFolderNodes;
+    procedure UpdateNodeIndexes;
+    procedure SetNodeValue(value: TTreeNode);
+    procedure CheckProjectFileForUpdate;
+    procedure IncrementBuildNumber;
+    function GetCompilerOption(const OptionString: AnsiString): Char;
+    procedure SetCompilerOption(const OptionString: AnsiString; Value: Char);
+    procedure SaveToLog;
 signals:
     void changed();
 private:
+    void open();
+    void sortUnitsByPriority();
+private:
     QList<PProjectUnit> mUnits;
     ProjectOptions mOptions;
-    QSettings mIniFile;
+    std::shared_ptr<QSettings> mIniFile;
     QString mFilename;
     QString mName;
     bool mModified;
     QStringList mFolders;
     std::shared_ptr<CppParser> mParser;
+    PFolderNode mNode;
 };
 
 #endif // PROJECT_H

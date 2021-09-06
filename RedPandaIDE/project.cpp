@@ -89,19 +89,19 @@ void Project::open()
     }
     loadOptions();
 
-    //fNode := MakeProjectNode;
+    mNode = makeProjectNode();
 
     checkProjectFileForUpdate();
 
-    mIniFile.beginGroup("Project");
-    int uCount  = mIniFile.value("UnitCount",0).toInt();
-    mIniFile.endGroup();
+    mIniFile->beginGroup("Project");
+    int uCount  = mIniFile->value("UnitCount",0).toInt();
+    mIniFile->endGroup();
     //createFolderNodes;
     QDir dir(directory());
     for (int i=0;i<uCount;i++) {
         PProjectUnit newUnit = std::make_shared<ProjectUnit>();
-        mIniFile.beginGroup(QString("Unit%1").arg(i));
-        newUnit->setFileName(dir.filePath(mIniFile.value("FileName","").toString()));
+        mIniFile->beginGroup(QString("Unit%1").arg(i));
+        newUnit->setFileName(dir.filePath(mIniFile->value("FileName","").toString()));
         if (!QFileInfo(newUnit->fileName()).exists()) {
             QMessageBox::critical(pMainWindow,
                                   tr("File Not Found"),
@@ -110,42 +110,74 @@ void Project::open()
                                   QMessageBox::Ok);
             newUnit->setModified(true);
         } else {
-            newUnit->setFolder(mIniFile.value("Folder","").toString());
-            newUnit->setCompile(mIniFile.value("Compile", true).toBool());
+            newUnit->setFolder(mIniFile->value("Folder","").toString());
+            newUnit->setCompile(mIniFile->value("Compile", true).toBool());
             newUnit->setCompileCpp(
-                        mIniFile.value("CompileCpp",mOptions.useGPP).toBool());
+                        mIniFile->value("CompileCpp",mOptions.useGPP).toBool());
 
-            newUnit->setLink(mIniFile.value("Link", true).toBool());
-            newUnit->setPriority(mIniFile.value("Priority", 1000).toInt());
-            newUnit->setOverrideBuildCmd(mIniFile.value("OverrideBuildCmd", false).toInt());
-            newUnit->setBuildCmd(mIniFile.value("BuildCmd", "").toString());
-            DetectEncoding := finifile.ReadBool('Unit' + IntToStr(i + 1), 'DetectEncoding', self.fOptions.UseUTF8);
-            //compitible old project files
-    //        UseUTF8:=finifile.ReadBool('Unit' + IntToStr(i + 1), 'UseUTF8', self.fOptions.UseUTF8);
+            newUnit->setLink(mIniFile->value("Link", true).toBool());
+            newUnit->setPriority(mIniFile->value("Priority", 1000).toInt());
+            newUnit->setOverrideBuildCmd(mIniFile->value("OverrideBuildCmd", false).toInt());
+            newUnit->setBuildCmd(mIniFile->value("BuildCmd", "").toString());
+            newUnit->setDetectEncoding(mIniFile->value("DetectEncoding", mOptions.useUTF8).toBool());
+            newUnit->setEncoding(mIniFile->value("Encoding",ENCODING_SYSTEM_DEFAULT).toByteArray());
 
-            Encoding :=
-              TFileEncodingType(finifile.ReadInteger('Unit' + IntToStr(i + 1), 'Encoding', 0));
-
-            Editor := nil;
-            New := FALSE;
-            fParent := self;
-
-            Node := MakeNewFileNode(ExtractFileName(FileName), False, FolderNodeFromName(Folder));
-            Node.Data := pointer(fUnits.Add(NewUnit));
-
+            newUnit->setEditor(nullptr);
+            newUnit->setNew(false);
+            newUnit->setParent(this);
+            newUnit->setNode(makeNewFileNode(baseFileName(newUnit->fileName()), false, folderNodeFromName(newUnit->folder())));
+            newUnit->node()->unitIndex = mUnits.count();
+            mUnits.append(newUnit);
         }
-        mIniFile.endGroup();
+        mIniFile->endGroup();
     }
     emit changed();
-    //  RebuildNodes;
+    rebuildNodes();
 }
 
-const std::weak_ptr<Project> &ProjectUnit::parent() const
+void Project::setFileName(const QString &value)
+{
+    if (mFilename!=value) {
+        mIniFile->sync();
+        mIniFile.reset();
+        QFile::copy(mFilename,value);
+        mFilename = value;
+        setModified(true);
+        mIniFile = std::make_shared<QSettings>(mFilename);
+    }
+}
+
+void Project::setModified(bool value)
+{
+    QFile file(mFilename);
+    // only mark modified if *not* read-only
+    if (!file.exists()
+            || (file.exists() && file.isWritable())) {
+        mModified=value;
+    }
+
+}
+
+void Project::sortUnitsByPriority()
+{
+    std::sort(mUnits.begin(),mUnits.end(),[](const PProjectUnit& u1, const PProjectUnit& u2)->bool{
+        return (u1->priority()>u2->priority());
+    });
+}
+
+ProjectUnit::ProjectUnit(Project* parent)
+{
+    mEditor = nullptr;
+    mNode = nullptr;
+    mParent = parent;
+}
+
+Project *ProjectUnit::parent() const
 {
     return mParent;
 }
 
-void ProjectUnit::setParent(const std::weak_ptr<Project> &newParent)
+void ProjectUnit::setParent(Project* newParent)
 {
     mParent = newParent;
 }
@@ -288,10 +320,7 @@ void ProjectUnit::setModified(bool value)
 
     // If modified is set to true, mark project as modified too
     if (value) {
-        std::shared_ptr<Project> parent = mParent.lock();
-        if (parent) {
-            parent->setModified(true);
-        }
+        parent->setModified(true);
     }
 }
 
@@ -308,6 +337,9 @@ bool ProjectUnit::save()
         StringsToFile(temp,mFileName);
     } else if (mEditor and modified()) {
         result = mEditor->save();
+    }
+    if (mNode) {
+        mNode->text = baseFileName(mFileName);
     }
     return result;
 }
