@@ -112,15 +112,13 @@ void Project::open()
         } else {
             newUnit->setFolder(mIniFile.value("Folder","").toString());
             newUnit->setCompile(mIniFile.value("Compile", true).toBool());
-            if finifile.ReadInteger('Unit' + IntToStr(i + 1), 'CompileCpp', 2) = 2 then
-              // check if feature not present in this file
-              CompileCpp := Self.Options.useGPP
-            else
-              CompileCpp := finifile.ReadBool('Unit' + IntToStr(i + 1), 'CompileCpp', False);
-            Link := finifile.ReadBool('Unit' + IntToStr(i + 1), 'Link', True);
-            Priority := finifile.ReadInteger('Unit' + IntToStr(i + 1), 'Priority', 1000);
-            OverrideBuildCmd := finifile.ReadBool('Unit' + IntToStr(i + 1), 'OverrideBuildCmd', False);
-            BuildCmd := finifile.ReadString('Unit' + IntToStr(i + 1), 'BuildCmd', '');
+            newUnit->setCompileCpp(
+                        mIniFile.value("CompileCpp",mOptions.useGPP).toBool());
+
+            newUnit->setLink(mIniFile.value("Link", true).toBool());
+            newUnit->setPriority(mIniFile.value("Priority", 1000).toInt());
+            newUnit->setOverrideBuildCmd(mIniFile.value("OverrideBuildCmd", false).toInt());
+            newUnit->setBuildCmd(mIniFile.value("BuildCmd", "").toString());
             DetectEncoding := finifile.ReadBool('Unit' + IntToStr(i + 1), 'DetectEncoding', self.fOptions.UseUTF8);
             //compitible old project files
     //        UseUTF8:=finifile.ReadBool('Unit' + IntToStr(i + 1), 'UseUTF8', self.fOptions.UseUTF8);
