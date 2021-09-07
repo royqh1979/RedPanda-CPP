@@ -124,6 +124,8 @@ QString includeTrailingPathDelimiter(const QString& path);
 QString excludeTrailingPathDelimiter(const QString& path);
 FileType getFileType(const QString& filename);
 QString changeFileExt(const QString& filename, const QString& ext);
+QString extractRelativePath(const QString& base, const QString& dest);
+QString genMakePath(const QString& fileName,bool escapeSpaces, bool encloseInQuotes);
 QString getCompiledExecutableName(const QString& filename);
 void splitStringArguments(const QString& arguments, QStringList& argumentList);
 bool programHasConsole(const QString& filename);

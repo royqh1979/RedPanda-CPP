@@ -52,7 +52,7 @@ bool StdinCompiler::prepareForCompile()
     }
     mArguments += getLibraryArguments(fileType);
 
-    if (!QFile(mCompiler).exists()) {
+    if (!fileExists(mCompiler)) {
         throw CompileError(tr("The Compiler '%1' doesn't exists!").arg(mCompiler));
     }
 

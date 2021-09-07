@@ -126,7 +126,7 @@ bool isNonPrintableAsciiChar(char ch)
 
 bool fileExists(const QString &file)
 {
-    return QFileInfo(file).exists();
+    return fileExists(file);
 }
 
 bool fileExists(const QString &dir, const QString &fileName)
@@ -461,7 +461,7 @@ QString changeFileExt(const QString& filename, const QString& ext)
     if (suffix.isEmpty()) {
         return filename+"."+ext;
     } else {
-        return filename.mid(0,filename.length()-suffix.length()-1)+"."+ext;
+        return fileInfo.completeBaseName()+"."+ext;
     }
 }
 
@@ -620,4 +620,30 @@ QString baseFileName(const QString &fileName)
 {
     QFileInfo fileInfo(fileName);
     return fileInfo.fileName();
+}
+
+QString extractRelativePath(const QString &base, const QString &dest)
+{
+    QFileInfo baseInfo(base);
+    QDir baseDir;
+    if (baseInfo.isDir()) {
+        baseDir = baseInfo.absoluteDir();
+    } else {
+        baseDir = baseInfo.dir();
+    }
+    return baseDir.relativeFilePath(dest);
+}
+
+QString genMakePath(const QString &fileName, bool escapeSpaces, bool encloseInQuotes)
+{
+    QString result = fileName;
+
+    // Convert backslashes to slashes
+    result.replace('\\','/');
+    if (escapeSpaces) {
+        result.replace(' ',"\\ ");
+    }
+    if (encloseInQuotes)
+        result = '"'+result+'"';
+    return result;
 }

@@ -1339,22 +1339,22 @@ bool Settings::CompilerSet::dirsValid(QString &msg)
 bool Settings::CompilerSet::validateExes(QString &msg)
 {
     msg ="";
-    if (!QFile(mCCompiler).exists()) {
+    if (!fileExists(mCCompiler)) {
         msg += QObject::tr("Cannot find the %1 \"%2\"")
                 .arg("C Compiler")
                 .arg(mCCompiler);
     }
-    if (!QFile(mCppCompiler).exists()) {
+    if (!fileExists(mCppCompiler)) {
         msg += QObject::tr("Cannot find the %1 \"%2\"")
                 .arg("C++ Compiler")
                 .arg(mCppCompiler);
     }
-    if (!QFile(mMake).exists()) {
+    if (!fileExists(mMake)) {
         msg += QObject::tr("Cannot find the %1 \"%2\"")
                 .arg("Maker")
                 .arg(mMake);
     }
-    if (!QFile(mDebugger).exists()) {
+    if (!fileExists(mDebugger)) {
         msg += QObject::tr("Cannot find the %1 \"%2\"")
                 .arg("Maker")
                 .arg(mDebugger);

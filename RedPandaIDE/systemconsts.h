@@ -18,6 +18,10 @@
 #error "Only support windows now!"
 #endif
 
+#define DEV_PROJECT_EXT "dev"
+#define RC_EXT "rc"
+#define H_EXT "h"
+
 #ifdef Q_OS_WIN
 #   define PATH_SENSITIVITY Qt::CaseInsensitive
 #   define NULL_FILE       "NUL"

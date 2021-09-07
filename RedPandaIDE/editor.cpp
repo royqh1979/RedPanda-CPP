@@ -2100,7 +2100,7 @@ void Editor::cancelHint()
 QString Editor::getFileHint(const QString &s)
 {
     QString fileName = mParser->getHeaderFileName(mFilename, s);
-    if (QFileInfo(fileName).exists()) {
+    if (fileExists(fileName)) {
         return fileName + " - " + tr("Ctrl+click for more info");
     }
     return "";

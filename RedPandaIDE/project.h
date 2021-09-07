@@ -59,6 +59,9 @@ public:
     void setModified(bool value);
     bool save();
 
+    PFolderNode &node();
+    void setNode(const PFolderNode &newNode);
+
 private:
     Project* mParent;
     Editor* mEditor;
@@ -140,57 +143,59 @@ class Project : public QObject
 public:
     explicit Project(QObject *parent = nullptr);
     QString directory();
-    QString executableName();
+    QString executable();
     QString makeFileName();
     bool modified();
     void setFileName(const QString& value);
     void setModified(bool value);
 
-    int  newUnit(bool newProject,
-                 PFolderNode parentNode,
-                 const QString customFileName);
+    void addFolder(const QString& s);
     PProjectUnit addUnit(const QString& inFileName,
                 PFolderNode parentNode,
                 bool rebuild);
-    function GetFolderPath(Node: TTreeNode): AnsiString;
-    procedure UpdateFolders;
-    procedure AddFolder(const s: AnsiString);
-    function OpenUnit(index: integer): TEditor;
-    procedure CloseUnit(index: integer);
-    procedure DoAutoOpen;
-    procedure SaveUnitAs(i: integer; sFileName: AnsiString); // save single [UnitX]
-    procedure SaveAll; // save [Project] and  all [UnitX]
-    procedure LoadLayout; // load all [UnitX]
-    procedure LoadUnitLayout(e: TEditor; Index: integer); // load single [UnitX] cursor positions
-    procedure SaveLayout; // save all [UnitX]
-    procedure SaveUnitLayout(e: TEditor; Index: integer); // save single [UnitX] cursor positions
-    function MakeProjectNode: TTreeNode;
-    function MakeNewFileNode(const s: AnsiString; IsFolder: boolean; NewParent: TTreeNode): TTreeNode;
-    procedure BuildPrivateResource(ForceSave: boolean = False);
-    procedure LoadOptions;
-    procedure SaveOptions;
-    function SaveUnits: Boolean;
+    void buildPrivateResource(bool forceSave);
+
+    int  newUnit(bool newProject,
+                 PFolderNode parentNode,
+                 const QString customFileName);
+    QString getFolderPath(PFolderNode node);
+    void updateFolders();
+    Editor* openUnit(int index);
+    void closeUnit(int index);
+    void doAutoOpen();
+    void saveUnitAs(int i, const QString& sFileName); // save single [UnitX]
+    void saveAll(); // save [Project] and  all [UnitX]
+    void loadLayout(); // load all [UnitX]
+    void loadUnitLayout(Editor *e, int index); // load single [UnitX] cursor positions
+    void saveLayout(); // save all [UnitX]
+    void saveUnitLayout(Editor* e, int index); // save single [UnitX] cursor positions
+    PFolderNode makeProjectNode();
+    PFolderNode makeNewFileNode(const QString& s, bool isFolder, PFolderNode newParent);
+    void loadOptions();
+    void saveOptions();
+    bool saveUnits();
 //    procedure Open;
-    function FileAlreadyExists(const s: AnsiString): boolean;
-    function RemoveFolder(Node: TTreeNode): boolean;
-    function RemoveEditor(index: integer; DoClose: boolean): boolean;
-    function GetUnitFromString(const s: AnsiString): integer;
-    procedure RebuildNodes;
-    function ListUnitStr(Separator: char): AnsiString;
-    procedure ExportToHTML;
-    function ShowOptions: Integer;
-    function AssignTemplate(const aFileName: AnsiString; aTemplate: TTemplate): boolean;
-    function FolderNodeFromName(const name: AnsiString): TTreeNode;
-    procedure CreateFolderNodes;
-    procedure UpdateNodeIndexes;
-    procedure SetNodeValue(value: TTreeNode);
-    procedure CheckProjectFileForUpdate;
-    procedure IncrementBuildNumber;
-    function GetCompilerOption(const OptionString: AnsiString): Char;
-    procedure SetCompilerOption(const OptionString: AnsiString; Value: Char);
-    procedure SaveToLog;
+    bool fileAlreadyExists(const QString& s);
+    bool removeFolder(PFolderNode node);
+    bool removeEditor(int index, bool doClose);
+    int getUnitFromString(const QString& s);
+    void rebuildNodes();
+    QString listUnitStr(const QChar& separator);
+    void exportToHTML();
+    void showOptions();
+    // bool assignTemplate(const QString& aFileName, const PTemplate& aTemplate);
+    PFolderNode folderNodeFromName(const QString& name);
+    void createFolderNodes();
+    void updateNodeIndexes();
+    void setNodeValue(PFolderNode value);
+    void checkProjectFileForUpdate();
+    void incrementBuildNumber();
+    QChar getCompilerOption(const QString& optionString);
+    void setCompilerOption(const QString& optionString, const QChar& value);
+    void saveToLog();
 signals:
-    void changed();
+    void nodesChanged();
+    void modifyChanged(bool value);
 private:
     void open();
     void sortUnitsByPriority();

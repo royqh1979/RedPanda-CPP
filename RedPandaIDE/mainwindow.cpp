@@ -661,7 +661,7 @@ bool MainWindow::compile(bool rebuild)
 void MainWindow::runExecutable(const QString &exeName,const QString &filename)
 {
     // Check if it exists
-    if (!QFile(exeName).exists()) {
+    if (!fileExists(exeName)) {
         if (ui->actionCompile_Run->isEnabled()) {
             if (QMessageBox::question(this,tr("Confirm"),
                                      tr("Source file is not compiled.")
@@ -1417,7 +1417,7 @@ void MainWindow::onFileChanged(const QString &path)
 {
     Editor *e = mEditorList->getOpenedEditorByFilename(path);
     if (e) {
-        if (QFile(path).exists()) {
+        if (fileExists(path)) {
             e->activate();
             if (QMessageBox::question(this,tr("Compile"),
                                       tr("File '%1' was changed.").arg(path)+"<BR /><BR />" + tr("Reload its content from disk?"),
