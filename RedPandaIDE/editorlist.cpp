@@ -32,7 +32,7 @@ Editor* EditorList::newEditor(const QString& filename, const QByteArray& encodin
         pMainWindow->fileSystemWatcher()->addPath(filename);
     }
     return new Editor(parentPageControl,filename,encoding,inProject,newFile,parentPageControl);
-    //UpdateLayout;
+    updateLayout();
 }
 
 QTabWidget*  EditorList::getNewEditorPageControl() const {
@@ -43,6 +43,31 @@ QTabWidget*  EditorList::getNewEditorPageControl() const {
 QTabWidget* EditorList::getFocusedPageControl() const {
     //todo:
     return mLeftPageWidget;
+}
+
+void EditorList::showLayout(LayoutShowType layout)
+{
+    if (layout == mLayout)
+        return;
+    mLayout = layout;
+    // Apply widths if layout does not change
+    switch(mLayout) {
+    case LayoutShowType::lstLeft:
+    case LayoutShowType::lstNone:
+        mLeftPageWidget->setVisible(true);
+        mRightPageWidget->setVisible(false);
+        mSplitter->setVisible(false);
+        break;
+    case LayoutShowType::lstRight:
+        mLeftPageWidget->setVisible(false);
+        mRightPageWidget->setVisible(true);
+        mSplitter->setVisible(false);
+        break;
+    case LayoutShowType::lstBoth:
+        mLeftPageWidget->setVisible(true);
+        mRightPageWidget->setVisible(true);
+        mSplitter->setVisible(true);
+    }
 }
 
 Editor* EditorList::getEditor(int index, QTabWidget* tabsWidget) const {
@@ -91,10 +116,10 @@ bool EditorList::closeEditor(Editor* editor, bool transferFocus, bool force) {
 
     if (pSettings->history().addToOpenedFiles(editor->filename())) {
         pMainWindow->rebuildOpenedFileHisotryMenu();
+        updateLayout();
     }
 
     pMainWindow->fileSystemWatcher()->removePath(editor->filename());
-    //editor->deleteLater();
     delete editor;
 
     editor = getEditor();
@@ -215,6 +240,15 @@ bool EditorList::closeAll(bool force) {
     return true;
 }
 
+void EditorList::forceCloseEditor(Editor *editor)
+{
+    beginUpdate();
+    delete editor;
+    // Force layout update when creating, destroying or moving editors
+    updateLayout();
+    endUpdate();
+}
+
 Editor* EditorList::getOpenedEditorByFilename(const QString &filename)
 {
     QFileInfo fileInfo(filename);
@@ -257,4 +291,16 @@ bool EditorList::getContentFromOpenedEditor(const QString &filename, QStringList
         return false;
     buffer = e->lines()->contents();
     return true;
+}
+
+void EditorList::updateLayout()
+{
+    if (mLeftPageWidget->count() ==0 && mRightPageWidget->count() == 0)
+        showLayout(LayoutShowType::lstNone);
+    else if (mLeftPageWidget->count() > 0 && mRightPageWidget->count() == 0)
+        showLayout(LayoutShowType::lstLeft);
+    else if (mLeftPageWidget->count() ==0 && mRightPageWidget->count() > 0)
+        showLayout(LayoutShowType::lstRight);
+    else
+        showLayout(LayoutShowType::lstBoth);
 }

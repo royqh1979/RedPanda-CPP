@@ -10,7 +10,7 @@ class Editor;
 class EditorList
 {
 public:
-    enum class ShowType{
+    enum class LayoutShowType{
         lstNone,
         lstLeft,
         lstRight,
@@ -32,11 +32,15 @@ public:
 
     bool closeAll(bool force = false);
 
+    void forceCloseEditor(Editor* editor);
+
     Editor* getOpenedEditorByFilename(const QString& filename);
 
     Editor* getEditorByFilename(const QString& filename);
 
     bool getContentFromOpenedEditor(const QString& filename, QStringList& buffer);
+
+    void updateLayout();
 
     void beginUpdate();
     void endUpdate();
@@ -52,10 +56,11 @@ public:
 private:
     QTabWidget* getNewEditorPageControl() const;
     QTabWidget* getFocusedPageControl() const;
+    void showLayout(LayoutShowType layout);
 
 
 private:
-    ShowType mLayout;
+    LayoutShowType mLayout;
     QTabWidget *mLeftPageWidget;
     QTabWidget *mRightPageWidget;
     QSplitter *mSplitter;

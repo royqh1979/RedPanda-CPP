@@ -22,6 +22,7 @@
 #define RC_EXT "rc"
 #define RES_EXT "rc"
 #define H_EXT "h"
+#define DEV_INTERNAL_OPEN "$__DEV_INTERNAL_OPEN"
 
 #ifdef Q_OS_WIN
 #   define PATH_SENSITIVITY Qt::CaseInsensitive

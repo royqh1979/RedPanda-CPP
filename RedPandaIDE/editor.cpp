@@ -140,6 +140,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
 }
 
 Editor::~Editor() {
+    pMainWindow->fileSystemWatcher()->removePath(mFilename);
     pMainWindow->caretList().removeEditor(this);
     pMainWindow->updateCaretActions();
     if (mParentPageControl!=nullptr) {

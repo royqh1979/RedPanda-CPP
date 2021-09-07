@@ -3,14 +3,34 @@
 #include "mainwindow.h"
 #include "utils.h"
 #include "systemconsts.h"
+#include "editorlist.h"
+#include <parser/cppparser.h>
+#include "utils.h"
 
 #include <QDir>
 #include <QFileInfo>
 #include <QMessageBox>
 
-Project::Project(QObject *parent) : QObject(parent)
+Project::Project(const QString &filename, const QString &name, QObject *parent) : QObject(parent)
 {
-
+    mFilename = filename;
+    mIniFile = std::make_shared<QSettings>(filename,QSettings::IniFormat);
+    mParser = std::make_shared<CppParser>();
+    mParser->setOnGetFileStream(
+                std::bind(
+                    &EditorList::getContentFromOpenedEditor,pMainWindow->editorList(),
+                    std::placeholders::_1, std::placeholders::_2));
+    resetCppParser(mParser);
+    if (name == DEV_INTERNAL_OPEN)
+        open();
+    else {
+        mName = name;
+        mIniFile->beginGroup("Project");
+        mIniFile->setValue("filename", mFilename);
+        mIniFile->setValue("name", mName);
+        mIniFile->endGroup();
+        mNode = makeProjectNode();
+    }
 }
 
 QString Project::directory()
@@ -19,7 +39,7 @@ QString Project::directory()
     return fileInfo.absolutePath();
 }
 
-QString Project::executableName()
+QString Project::executable()
 {
     QString exeFileName;
     if (mOptions.overrideOutput && !mOptions.overridenOutput.isEmpty()) {
@@ -186,7 +206,7 @@ PProjectUnit Project::addUnit(const QString &inFileName, PFolderNode parentNode,
     newUnit->setNew(false);
     newUnit->setEditor(nullptr);
     newUnit->setFolder(getFolderPath(parentNode));
-    newUnit->setNode(makeNewFileNode(baseFileName(newUnit->fileName()), false, parentNode);
+    newUnit->setNode(makeNewFileNode(baseFileName(newUnit->fileName()), false, parentNode));
     newUnit->node()->unitIndex = mUnits.count();
     mUnits.append(newUnit);
 
@@ -268,21 +288,21 @@ void Project::buildPrivateResource(bool forceSave)
             && !mModified)
         return;
 
-    QStringList content;
-    content.append("/* THIS FILE WILL BE OVERWRITTEN BY DEV-C++ */");
-    content.append("/* DO NOT EDIT! */");
-    content.append("");
+    QStringList contents;
+    contents.append("/* THIS FILE WILL BE OVERWRITTEN BY DEV-C++ */");
+    contents.append("/* DO NOT EDIT! */");
+    contents.append("");
 
     if (mOptions.includeVersionInfo) {
-      content.append("#include <windows.h> // include for version info constants");
-      content.append("");
+      contents.append("#include <windows.h> // include for version info constants");
+      contents.append("");
     }
 
     foreach (const PProjectUnit& unit, mUnits) {
         if (
                 (getFileType(unit->fileName()) == FileType::WindowsResourceSource)
                 && unit->compile() )
-            content.append("#include \"" +
+            contents.append("#include \"" +
                            genMakePath(
                                extractRelativePath(directory(), unit->fileName()),
                                false,
@@ -290,47 +310,47 @@ void Project::buildPrivateResource(bool forceSave)
     }
 
     if (!mOptions.icon.isEmpty()) {
-        content.append("");
+        contents.append("");
         QString icon = QDir(directory()).absoluteFilePath(mOptions.icon);
         if (fileExists(icon)) {
             icon = extractRelativePath(mFilename, icon);
             icon.replace('\\', '/');
-            content.append("A ICON \"" + icon + '"');
+            contents.append("A ICON \"" + icon + '"');
         } else
             mOptions.icon = "";
     }
 
     if (mOptions.supportXPThemes) {
-      content.append("");
-      content.append("//");
-      content.append("// SUPPORT FOR WINDOWS XP THEMES:");
-      content.append("// THIS WILL MAKE THE PROGRAM USE THE COMMON CONTROLS");
-      content.append("// LIBRARY VERSION 6.0 (IF IT IS AVAILABLE)");
-      content.append("//");
+      contents.append("");
+      contents.append("//");
+      contents.append("// SUPPORT FOR WINDOWS XP THEMES:");
+      contents.append("// THIS WILL MAKE THE PROGRAM USE THE COMMON CONTROLS");
+      contents.append("// LIBRARY VERSION 6.0 (IF IT IS AVAILABLE)");
+      contents.append("//");
       if (!mOptions.exeOutput.isEmpty())
-          content.append(
+          contents.append(
                     "1 24 \"" +
                        genMakePath2(
                            includeTrailingPathDelimiter(mOptions.exeOutput)
                            + baseFileName(executable()))
                 + ".Manifest\"");
       else
-          content.append("1 24 \"" + baseFileName(executable()) + ".Manifest\"");
+          contents.append("1 24 \"" + baseFileName(executable()) + ".Manifest\"");
     }
 
     if (mOptions.includeVersionInfo) {
-        content.append("");
-        content.append("//");
-        content.append("// TO CHANGE VERSION INFORMATION, EDIT PROJECT OPTIONS...");
-        content.append("//");
-        content.append("1 VERSIONINFO");
-        content.append("FILEVERSION " +
+        contents.append("");
+        contents.append("//");
+        contents.append("// TO CHANGE VERSION INFORMATION, EDIT PROJECT OPTIONS...");
+        contents.append("//");
+        contents.append("1 VERSIONINFO");
+        contents.append("FILEVERSION " +
                        QString("%1,%2,%3,%4")
                        .arg(mOptions.versionInfo.major)
                        .arg(mOptions.versionInfo.minor)
                        .arg(mOptions.versionInfo.release)
                        .arg(mOptions.versionInfo.build));
-        content.append("PRODUCTVERSION " +
+        contents.append("PRODUCTVERSION " +
                        QString("%1,%2,%3,%4")
                        .arg(mOptions.versionInfo.major)
                        .arg(mOptions.versionInfo.minor)
@@ -339,67 +359,67 @@ void Project::buildPrivateResource(bool forceSave)
         switch(mOptions.type) {
         case ProjectType::GUI:
         case ProjectType::Console:
-            content.append("FILETYPE VFT_APP");
+            contents.append("FILETYPE VFT_APP");
             break;
         case ProjectType::StaticLib:
-            content.append("FILETYPE VFT_STATIC_LIB");
+            contents.append("FILETYPE VFT_STATIC_LIB");
             break;
         case ProjectType::DynamicLib:
-            content.append("FILETYPE VFT_DLL");
+            contents.append("FILETYPE VFT_DLL");
             break;
         }
-        content.append("{");
-        content.append("  BLOCK \"StringFileInfo\"");
-        content.append("  {");
-        content.append("    BLOCK \"" +
+        contents.append("{");
+        contents.append("  BLOCK \"StringFileInfo\"");
+        contents.append("  {");
+        contents.append("    BLOCK \"" +
                        QString("%1%2")
                        .arg(mOptions.versionInfo.languageID,4,16,QChar('0'))
                        .arg(mOptions.versionInfo.charsetID,4,16,QChar('0'))
                        + '"');
-        content.append("    {");
-        content.append("      VALUE \"CompanyName\", \""
+        contents.append("    {");
+        contents.append("      VALUE \"CompanyName\", \""
                        + mOptions.versionInfo.companyName
                        + "\"");
-        content.append("      VALUE \"FileVersion\", \""
+        contents.append("      VALUE \"FileVersion\", \""
                        + mOptions.versionInfo.fileVersion
                        + "\"");
-        content.append("      VALUE \"FileDescription\", \""
+        contents.append("      VALUE \"FileDescription\", \""
                        + mOptions.versionInfo.fileDescription
                        + "\"");
-        content.append("      VALUE \"InternalName\", \""
+        contents.append("      VALUE \"InternalName\", \""
                        + mOptions.versionInfo.internalName
                        + "\"");
-        content.append("      VALUE \"LegalCopyright\", \""
+        contents.append("      VALUE \"LegalCopyright\", \""
                        + mOptions.versionInfo.legalCopyright
                        + '"');
-        content.append("      VALUE \"LegalTrademarks\", \""
+        contents.append("      VALUE \"LegalTrademarks\", \""
                        + mOptions.versionInfo.legalTrademarks
                        + "\"");
-        content.append("      VALUE \"OriginalFilename\", \""
+        contents.append("      VALUE \"OriginalFilename\", \""
                        + mOptions.versionInfo.originalFilename
                        + "\"");
-        content.append("      VALUE \"ProductName\", \""
+        contents.append("      VALUE \"ProductName\", \""
                        + mOptions.versionInfo.productName + "\"");
-        content.append("      VALUE \"ProductVersion\", \""
+        contents.append("      VALUE \"ProductVersion\", \""
                        + mOptions.versionInfo.productVersion + "\"");
-        content.append("    }");
-        content.append("  }");
+        contents.append("    }");
+        contents.append("  }");
 
         // additional block for windows 95->NT
-        content.append("  BLOCK \"VarFileInfo\"");
-        content.append("  {");
-        content.append("    VALUE \"Translation\", " +
+        contents.append("  BLOCK \"VarFileInfo\"");
+        contents.append("  {");
+        contents.append("    VALUE \"Translation\", " +
                        QString("0x%1, %2")
                        .arg(mOptions.versionInfo.languageID,4,16,QChar('0'))
                        .arg(mOptions.versionInfo.charsetID));
-        content.append("  }");
+        contents.append("  }");
 
-        content.append("}");
+        contents.append("}");
     }
 
     rcFile = QDir(directory()).absoluteFilePath(rcFile);
-    if (content.count() > 3) {
-        StringsToFile(content,rcFile);
+    if (contents.count() > 3) {
+        StringsToFile(contents,rcFile);
         mOptions.privateResource = extractRelativePath(directory(), rcFile);
     } else {
       if (fileExists(rcFile))
@@ -446,47 +466,157 @@ void Project::buildPrivateResource(bool forceSave)
 
     // create private header file
     QString hFile = changeFileExt(rcFile, H_EXT);
-    content.clear();
+    contents.clear();
     QString def = baseFileName(rcFile);
     def.replace(".","_");
-    content.append("/* THIS FILE WILL BE OVERWRITTEN BY DEV-C++ */");
-    content.append("/* DO NOT EDIT ! */");
-    content.append("");
-    content.append("#ifndef " + def);
-    content.append("#define " + def);
-    content.append("");
-    content.append("/* VERSION DEFINITIONS */");
-    content.append("#define VER_STRING\t" +
+    contents.append("/* THIS FILE WILL BE OVERWRITTEN BY DEV-C++ */");
+    contents.append("/* DO NOT EDIT ! */");
+    contents.append("");
+    contents.append("#ifndef " + def);
+    contents.append("#define " + def);
+    contents.append("");
+    contents.append("/* VERSION DEFINITIONS */");
+    contents.append("#define VER_STRING\t" +
                    QString("\"%d.%d.%d.%d\"")
                    .arg(mOptions.versionInfo.major)
                    .arg(mOptions.versionInfo.minor)
                    .arg(mOptions.versionInfo.release)
                    .arg(mOptions.versionInfo.build));
-    content.append(QString("#define VER_MAJOR\t%1").arg(mOptions.versionInfo.major));
-    content.append(QString("#define VER_MINOR\t%1").arg(mOptions.versionInfo.minor));
-    content.append(QString("#define VER_RELEASE\t").arg(mOptions.versionInfo.release));
-    content.append(QString("#define VER_BUILD\t").arg(mOptions.versionInfo.build));
-    content.append(QString("#define COMPANY_NAME\t\"%1\"")
+    contents.append(QString("#define VER_MAJOR\t%1").arg(mOptions.versionInfo.major));
+    contents.append(QString("#define VER_MINOR\t%1").arg(mOptions.versionInfo.minor));
+    contents.append(QString("#define VER_RELEASE\t").arg(mOptions.versionInfo.release));
+    contents.append(QString("#define VER_BUILD\t").arg(mOptions.versionInfo.build));
+    contents.append(QString("#define COMPANY_NAME\t\"%1\"")
                    .arg(mOptions.versionInfo.companyName));
-    content.append(QString("#define FILE_VERSION\t\"%1\"")
+    contents.append(QString("#define FILE_VERSION\t\"%1\"")
                    .arg(mOptions.versionInfo.fileVersion));
-    content.append(QString("#define FILE_DESCRIPTION\t\"%1\"")
+    contents.append(QString("#define FILE_DESCRIPTION\t\"%1\"")
                    .arg(mOptions.versionInfo.fileDescription));
-    content.append(QString("#define INTERNAL_NAME\t\"%1\"")
+    contents.append(QString("#define INTERNAL_NAME\t\"%1\"")
                    .arg(mOptions.versionInfo.internalName));
-    content.append(QString("#define LEGAL_COPYRIGHT\t\"%1\"")
+    contents.append(QString("#define LEGAL_COPYRIGHT\t\"%1\"")
                    .arg(mOptions.versionInfo.legalCopyright));
-    content.append(QString("#define LEGAL_TRADEMARKS\t\"%1\"")
+    contents.append(QString("#define LEGAL_TRADEMARKS\t\"%1\"")
                    .arg(mOptions.versionInfo.legalTrademarks));
-    content.append(QString("#define ORIGINAL_FILENAME\t\"%1\"")
+    contents.append(QString("#define ORIGINAL_FILENAME\t\"%1\"")
                    .arg(mOptions.versionInfo.originalFilename));
-    content.append(QString("#define PRODUCT_NAME\t\"%1\"")
+    contents.append(QString("#define PRODUCT_NAME\t\"%1\"")
                    .arg(mOptions.versionInfo.productName));
-    content.append(QString("#define PRODUCT_VERSION\t\"%1\"")
+    contents.append(QString("#define PRODUCT_VERSION\t\"%1\"")
                    .arg(mOptions.versionInfo.productVersion));
-    content.append("");
-    content.append("#endif /*" + def + "*/");
-    StringsToFile(content,hFile);
+    contents.append("");
+    contents.append("#endif /*" + def + "*/");
+    StringsToFile(contents,hFile);
+}
+
+void Project::checkProjectFileForUpdate()
+{
+    bool cnvt = false;
+    mIniFile->beginGroup("Project");
+    int uCount = mIniFile->value("UnitCount", 0).toInt();
+    mIniFile->endGroup();
+    // check if using old way to store resources and fix it
+    QString oldRes = mIniFile->value("Resources", "").toString();
+    if (!oldRes.isEmpty()) {
+        QFile::copy(mFilename,mFilename+".bak");
+        QStringList sl;
+        sl = oldRes.split(';');
+        for (int i=0;i<sl.count();i++){
+            const QString& s = sl[i];
+            mIniFile->beginGroup(QString("Unit%1").arg(uCount+i));
+            mIniFile->setValue("Filename", s);
+            mIniFile->setValue("Folder", "Resources");
+            mIniFile->setValue("Compile",true);
+            mIniFile->endGroup();
+        }
+        mIniFile->beginGroup("Project");
+        mIniFile->setValue("UnitCount",uCount+sl.count());
+        QString folders = mIniFile->value("Folders","").toString();
+        if (!folders.isEmpty())
+            folders += ",Resources";
+        else
+            folders = "Resources";
+        mIniFile->setValue("Folders",folders);
+        mIniFile->endGroup();
+    }
+
+    mIniFile->beginGroup("Project");
+    mIniFile->remove("Resources");
+    mIniFile->remove("Focused");
+    mIniFile->remove("Order");
+    mIniFile->remove("DebugInfo");
+    mIniFile->remove("ProfileInfo");
+
+    if (cnvt)
+        QMessageBox::information(
+                    pMainWindow,
+                    tr("Project Updated"),
+                    tr("Your project was succesfully updated to a newer file format!")
+                    +"<br />"
+                    +tr("If something has gone wrong, we kept a backup-file: '%1'...")
+                    .arg(mFilename+".bak"),
+                    QMessageBox::Ok);
+}
+
+void Project::closeUnit(int index)
+{
+    PProjectUnit unit = mUnits[index];
+    if (unit->editor()) {
+        saveUnitLayout(unit->editor(),index);
+        pMainWindow->editorList()->forceCloseEditor(unit->editor());
+        unit->setEditor(nullptr);
+    }
+}
+
+void Project::createFolderNodes()
+{
+    mFolderNodes.clear();
+    for (int idx=0;idx<mFolders.count();idx++) {
+        PFolderNode node = mNode;
+        QString s = mFolders[idx];
+        int i = s.indexOf('/');
+        while (i>=0) {
+            PFolderNode findnode;
+            for (int c=0;c<node->children.count();c++) {
+                if (node->children[c]->text == s.mid(0,i))
+                    findnode = node->children[c];
+            }
+            if (!findnode)
+                node = makeNewFileNode(s.mid(0,i),true,node);
+            else
+                node = findnode;
+            node->unitIndex = -1;
+            s.remove(0,i);
+            i = s.indexOf('/');
+        }
+        node = makeNewFileNode(s, true, node);
+        node->unitIndex = -1;
+        mFolderNodes.append(node);
+    }
+}
+
+void Project::doAutoOpen()
+{
+    //todo:
+//    case devData.AutoOpen of
+//      0: begin
+//          for i := 0 to pred(fUnits.Count) do
+//            OpenUnit(i); // Open all
+//          if fUnits.Count > 0 then
+//            fUnits[0].Editor.Activate; // Show first
+//        end;
+//      1:
+//        if fUnits.Count > 0 then
+//          OpenUnit(0).Activate; // Open and show first
+//      2:
+//        LoadLayout; // Open previous selection
+//    end;
+
+}
+
+PCppParser Project::cppParser()
+{
+    return mParser;
 }
 
 void Project::sortUnitsByPriority()

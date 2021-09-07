@@ -141,7 +141,7 @@ class Project : public QObject
 {
     Q_OBJECT
 public:
-    explicit Project(QObject *parent = nullptr);
+    explicit Project(const QString& filename, const QString& name,QObject *parent = nullptr);
     QString directory();
     QString executable();
     QString makeFileName();
@@ -154,6 +154,10 @@ public:
                 PFolderNode parentNode,
                 bool rebuild);
     void buildPrivateResource(bool forceSave);
+    void checkProjectFileForUpdate();
+    void closeUnit(int index);
+    void createFolderNodes();
+    void doAutoOpen();
 
     int  newUnit(bool newProject,
                  PFolderNode parentNode,
@@ -161,8 +165,6 @@ public:
     QString getFolderPath(PFolderNode node);
     void updateFolders();
     Editor* openUnit(int index);
-    void closeUnit(int index);
-    void doAutoOpen();
     void saveUnitAs(int i, const QString& sFileName); // save single [UnitX]
     void saveAll(); // save [Project] and  all [UnitX]
     void loadLayout(); // load all [UnitX]
@@ -185,14 +187,14 @@ public:
     void showOptions();
     // bool assignTemplate(const QString& aFileName, const PTemplate& aTemplate);
     PFolderNode folderNodeFromName(const QString& name);
-    void createFolderNodes();
     void updateNodeIndexes();
     void setNodeValue(PFolderNode value);
-    void checkProjectFileForUpdate();
     void incrementBuildNumber();
     QChar getCompilerOption(const QString& optionString);
     void setCompilerOption(const QString& optionString, const QChar& value);
     void saveToLog();
+
+    std::shared_ptr<CppParser> cppParser();
 signals:
     void nodesChanged();
     void modifyChanged(bool value);
@@ -208,6 +210,7 @@ private:
     bool mModified;
     QStringList mFolders;
     std::shared_ptr<CppParser> mParser;
+    QList<PFolderNode> mFolderNodes;
     PFolderNode mNode;
 };
 
