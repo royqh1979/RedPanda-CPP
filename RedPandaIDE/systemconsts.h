@@ -20,6 +20,7 @@
 
 #define DEV_PROJECT_EXT "dev"
 #define RC_EXT "rc"
+#define RES_EXT "rc"
 #define H_EXT "h"
 
 #ifdef Q_OS_WIN

@@ -647,3 +647,13 @@ QString genMakePath(const QString &fileName, bool escapeSpaces, bool encloseInQu
         result = '"'+result+'"';
     return result;
 }
+
+QString genMakePath1(const QString &fileName)
+{
+    return genMakePath(fileName, false, true);
+}
+
+QString genMakePath2(const QString &fileName)
+{
+    return genMakePath(fileName, true, false);
+}

@@ -131,10 +131,10 @@ struct ProjectOptions{
     bool supportXPThemes;
     int compilerSet;
     QString compilerOptions;
-    ProjectVersionInfo VersionInfo;
+    ProjectVersionInfo versionInfo;
     QString cmdLineArgs;
-    bool mStaticLink;
-    bool mAddCharset;
+    bool staticLink;
+    bool addCharset;
 };
 
 class Project : public QObject

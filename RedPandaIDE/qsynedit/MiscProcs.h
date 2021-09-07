@@ -21,7 +21,9 @@ using IntArray = QVector<int>;
 using PIntArray = std::shared_ptr<IntArray>;
 
 int MinMax(int x, int mi, int ma);
+#ifndef Q_OS_WIN
 int MulDiv(int a, int b, int c);
+#endif
 void SwapInt(int& l, int &r);
 BufferCoord MaxBufferCoord(const BufferCoord& P1, const BufferCoord& P2);
 BufferCoord MinBufferCoord(const BufferCoord& P1, const BufferCoord& P2);

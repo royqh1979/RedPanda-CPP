@@ -772,7 +772,7 @@
      <x>0</x>
      <y>0</y>
      <width>946</width>
-     <height>22</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -1299,7 +1299,7 @@
     <string>Step Over</string>
    </property>
    <property name="shortcut">
-    <string>F7</string>
+    <string>F8</string>
    </property>
   </action>
   <action name="actionStep_Into">
@@ -1312,7 +1312,7 @@
     <string>Step Into</string>
    </property>
    <property name="shortcut">
-    <string>F8</string>
+    <string>F7</string>
    </property>
   </action>
   <action name="actionStep_Out">

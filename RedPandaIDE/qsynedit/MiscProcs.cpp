@@ -527,11 +527,13 @@ void SynDrawGradient(QPaintDevice *ACanvas, const QColor &AStartColor, const QCo
     }
 }
 
+#ifndef Q_OS_WIN
 int MulDiv(int a, int b, int c)
 {
     //todo: handle overflow?
     return a*b/c;
 }
+#endif
 
 SynFontStyles getFontStyles(const QFont &font)
 {

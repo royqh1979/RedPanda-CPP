@@ -126,6 +126,8 @@ FileType getFileType(const QString& filename);
 QString changeFileExt(const QString& filename, const QString& ext);
 QString extractRelativePath(const QString& base, const QString& dest);
 QString genMakePath(const QString& fileName,bool escapeSpaces, bool encloseInQuotes);
+QString genMakePath1(const QString& fileName);
+QString genMakePath2(const QString& fileName);
 QString getCompiledExecutableName(const QString& filename);
 void splitStringArguments(const QString& arguments, QStringList& argumentList);
 bool programHasConsole(const QString& filename);

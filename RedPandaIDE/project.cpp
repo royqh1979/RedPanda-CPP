@@ -250,39 +250,39 @@ void Project::buildPrivateResource(bool forceSave)
     // in many cases (like in importing a MSVC project)
     // the project's resource file has already the
     // <project_filename>.res filename.
-    QString res;
+    QString rcFile;
     if (!mOptions.privateResource.isEmpty()) {
-        res = QDir(directory()).filePath(mOptions.privateResource);
-        if (changeFileExt(res, DEV_PROJECT_EXT) == mFilename)
-            res = changeFileExt(mFilename,QString("_private") + RC_EXT);
+        rcFile = QDir(directory()).filePath(mOptions.privateResource);
+        if (changeFileExt(rcFile, DEV_PROJECT_EXT) == mFilename)
+            rcFile = changeFileExt(mFilename,QString("_private") + RC_EXT);
     } else
-        res = changeFileExt(mFilename,QString("_private") + RC_EXT);
-    res = extractRelativePath(mFilename, res);
-    res.replace(' ','_');
+        rcFile = changeFileExt(mFilename,QString("_private") + RC_EXT);
+    rcFile = extractRelativePath(mFilename, rcFile);
+    rcFile.replace(' ','_');
 
     // don't run the private resource file and header if not modified,
     // unless ForceSave is true
     if (!forceSave
-            && fileExists(res)
-            && fileExists(changeFileExt(res, H_EXT))
+            && fileExists(rcFile)
+            && fileExists(changeFileExt(rcFile, H_EXT))
             && !mModified)
         return;
 
-    QStringList resFile;
-    resFile.append("/* THIS FILE WILL BE OVERWRITTEN BY DEV-C++ */");
-    resFile.append("/* DO NOT EDIT! */");
-    resFile.append("");
+    QStringList content;
+    content.append("/* THIS FILE WILL BE OVERWRITTEN BY DEV-C++ */");
+    content.append("/* DO NOT EDIT! */");
+    content.append("");
 
     if (mOptions.includeVersionInfo) {
-      resFile.append("#include <windows.h> // include for version info constants");
-      resFile.append("");
-    end;
+      content.append("#include <windows.h> // include for version info constants");
+      content.append("");
+    }
 
     foreach (const PProjectUnit& unit, mUnits) {
         if (
                 (getFileType(unit->fileName()) == FileType::WindowsResourceSource)
                 && unit->compile() )
-            resFile.append("#include \"" +
+            content.append("#include \"" +
                            genMakePath(
                                extractRelativePath(directory(), unit->fileName()),
                                false,
@@ -290,168 +290,203 @@ void Project::buildPrivateResource(bool forceSave)
     }
 
     if (!mOptions.icon.isEmpty()) {
-        resFile.append("");
+        content.append("");
         QString icon = QDir(directory()).absoluteFilePath(mOptions.icon);
         if (fileExists(icon)) {
             icon = extractRelativePath(mFilename, icon);
             icon.replace('\\', '/');
-            resFile.append("A ICON \"" + icon + '"');
+            content.append("A ICON \"" + icon + '"');
         } else
             mOptions.icon = "";
     }
 
     if (mOptions.supportXPThemes) {
-      resFile.append("");
-      resFile.append("//");
-      resFile.append("// SUPPORT FOR WINDOWS XP THEMES:");
-      resFile.append("// THIS WILL MAKE THE PROGRAM USE THE COMMON CONTROLS");
-      resFile.append("// LIBRARY VERSION 6.0 (IF IT IS AVAILABLE)");
-      resFile.append("//");
+      content.append("");
+      content.append("//");
+      content.append("// SUPPORT FOR WINDOWS XP THEMES:");
+      content.append("// THIS WILL MAKE THE PROGRAM USE THE COMMON CONTROLS");
+      content.append("// LIBRARY VERSION 6.0 (IF IT IS AVAILABLE)");
+      content.append("//");
       if (!mOptions.exeOutput.isEmpty())
-          resFile.append(
+          content.append(
                     "1 24 \"" +
                        genMakePath2(
                            includeTrailingPathDelimiter(mOptions.exeOutput)
                            + baseFileName(executable()))
                 + ".Manifest\"");
       else
-          resFile.append("1 24 \"" + baseFileName(executable()) + ".Manifest\"");
+          content.append("1 24 \"" + baseFileName(executable()) + ".Manifest\"");
     }
 
-    if Options.IncludeVersionInfo then begin
-      resFile.append("');
-      resFile.append("//');
-      resFile.append("// TO CHANGE VERSION INFORMATION, EDIT PROJECT OPTIONS...');
-      resFile.append("//');
-      resFile.append("1 VERSIONINFO');
-      resFile.append("FILEVERSION ' + Format('%d,%d,%d,%d', [Options.VersionInfo.Major, Options.VersionInfo.Minor,
-        Options.VersionInfo.Release, Options.VersionInfo.Build]));
-      resFile.append("PRODUCTVERSION ' + Format('%d,%d,%d,%d', [Options.VersionInfo.Major, Options.VersionInfo.Minor,
-        Options.VersionInfo.Release, Options.VersionInfo.Build]));
-      case Options.typ of
-        dptGUI,
-          dptCon: resFile.append("FILETYPE VFT_APP');
-        dptStat: resFile.append("FILETYPE VFT_STATIC_LIB');
-        dptDyn: resFile.append("FILETYPE VFT_DLL');
-      end;
-      resFile.append("{');
-      resFile.append("  BLOCK "StringFileInfo"');
-      resFile.append("  {');
-      resFile.append("    BLOCK "' + Format('%4.4x%4.4x', [fOptions.VersionInfo.LanguageID, fOptions.VersionInfo.CharsetID])
-        +
-        '"');
-      resFile.append("    {');
-      resFile.append("      VALUE "CompanyName", "' + fOptions.VersionInfo.CompanyName + '"');
-      resFile.append("      VALUE "FileVersion", "' + fOptions.VersionInfo.FileVersion + '"');
-      resFile.append("      VALUE "FileDescription", "' + fOptions.VersionInfo.FileDescription + '"');
-      resFile.append("      VALUE "InternalName", "' + fOptions.VersionInfo.InternalName + '"');
-      resFile.append("      VALUE "LegalCopyright", "' + fOptions.VersionInfo.LegalCopyright + '"');
-      resFile.append("      VALUE "LegalTrademarks", "' + fOptions.VersionInfo.LegalTrademarks + '"');
-      resFile.append("      VALUE "OriginalFilename", "' + fOptions.VersionInfo.OriginalFilename + '"');
-      resFile.append("      VALUE "ProductName", "' + fOptions.VersionInfo.ProductName + '"');
-      resFile.append("      VALUE "ProductVersion", "' + fOptions.VersionInfo.ProductVersion + '"');
-      resFile.append("    }');
-      resFile.append("  }');
+    if (mOptions.includeVersionInfo) {
+        content.append("");
+        content.append("//");
+        content.append("// TO CHANGE VERSION INFORMATION, EDIT PROJECT OPTIONS...");
+        content.append("//");
+        content.append("1 VERSIONINFO");
+        content.append("FILEVERSION " +
+                       QString("%1,%2,%3,%4")
+                       .arg(mOptions.versionInfo.major)
+                       .arg(mOptions.versionInfo.minor)
+                       .arg(mOptions.versionInfo.release)
+                       .arg(mOptions.versionInfo.build));
+        content.append("PRODUCTVERSION " +
+                       QString("%1,%2,%3,%4")
+                       .arg(mOptions.versionInfo.major)
+                       .arg(mOptions.versionInfo.minor)
+                       .arg(mOptions.versionInfo.release)
+                       .arg(mOptions.versionInfo.build));
+        switch(mOptions.type) {
+        case ProjectType::GUI:
+        case ProjectType::Console:
+            content.append("FILETYPE VFT_APP");
+            break;
+        case ProjectType::StaticLib:
+            content.append("FILETYPE VFT_STATIC_LIB");
+            break;
+        case ProjectType::DynamicLib:
+            content.append("FILETYPE VFT_DLL");
+            break;
+        }
+        content.append("{");
+        content.append("  BLOCK \"StringFileInfo\"");
+        content.append("  {");
+        content.append("    BLOCK \"" +
+                       QString("%1%2")
+                       .arg(mOptions.versionInfo.languageID,4,16,QChar('0'))
+                       .arg(mOptions.versionInfo.charsetID,4,16,QChar('0'))
+                       + '"');
+        content.append("    {");
+        content.append("      VALUE \"CompanyName\", \""
+                       + mOptions.versionInfo.companyName
+                       + "\"");
+        content.append("      VALUE \"FileVersion\", \""
+                       + mOptions.versionInfo.fileVersion
+                       + "\"");
+        content.append("      VALUE \"FileDescription\", \""
+                       + mOptions.versionInfo.fileDescription
+                       + "\"");
+        content.append("      VALUE \"InternalName\", \""
+                       + mOptions.versionInfo.internalName
+                       + "\"");
+        content.append("      VALUE \"LegalCopyright\", \""
+                       + mOptions.versionInfo.legalCopyright
+                       + '"');
+        content.append("      VALUE \"LegalTrademarks\", \""
+                       + mOptions.versionInfo.legalTrademarks
+                       + "\"");
+        content.append("      VALUE \"OriginalFilename\", \""
+                       + mOptions.versionInfo.originalFilename
+                       + "\"");
+        content.append("      VALUE \"ProductName\", \""
+                       + mOptions.versionInfo.productName + "\"");
+        content.append("      VALUE \"ProductVersion\", \""
+                       + mOptions.versionInfo.productVersion + "\"");
+        content.append("    }");
+        content.append("  }");
 
-      // additional block for windows 95->NT
-      resFile.append("  BLOCK "VarFileInfo"');
-      resFile.append("  {');
-      resFile.append("    VALUE "Translation", ' + Format('0x%4.4x, %4.4d', [fOptions.VersionInfo.LanguageID,
-        fOptions.VersionInfo.CharsetID]));
-      resFile.append("  }');
+        // additional block for windows 95->NT
+        content.append("  BLOCK \"VarFileInfo\"");
+        content.append("  {");
+        content.append("    VALUE \"Translation\", " +
+                       QString("0x%1, %2")
+                       .arg(mOptions.versionInfo.languageID,4,16,QChar('0'))
+                       .arg(mOptions.versionInfo.charsetID));
+        content.append("  }");
 
-      resFile.append("}');
-    end;
+        content.append("}");
+    }
 
-    Res := GetRealPath(Res, Directory);
-    if resFile.Count > 3 then begin
-      if FileExists(Res) and not ForceSave then begin
-        Original := TStringList.Create;
-        Original.LoadFromFile(Res);
-        if CompareStr(Original.Text, resFile.Text) <> 0 then begin
-          resFile.SaveToFile(Res);
-        end;
-        Original.Free;
-      end else begin
-        resFile.SaveToFile(Res);
-      end;
-      fOptions.PrivateResource := ExtractRelativePath(Directory, Res);
-    end else begin
-      if FileExists(Res) then
-        DeleteFile(PAnsiChar(Res));
-      Res := ChangeFileExt(Res, RES_EXT);
-      if FileExists(Res) then
-        DeleteFile(PAnsiChar(Res));
-      fOptions.PrivateResource := '';
-    end;
-    if FileExists(Res) then
-      FileSetDate(Res, DateTimeToFileDate(Now)); // fix the "Clock skew detected" warning ;)
+    rcFile = QDir(directory()).absoluteFilePath(rcFile);
+    if (content.count() > 3) {
+        StringsToFile(content,rcFile);
+        mOptions.privateResource = extractRelativePath(directory(), rcFile);
+    } else {
+      if (fileExists(rcFile))
+          QFile::remove(rcFile);
+      QString resFile = changeFileExt(rcFile, RES_EXT);
+      if (fileExists(resFile))
+          QFile::remove(resFile);
+      mOptions.privateResource = "";
+    }
+//    if fileExists(Res) then
+//      FileSetDate(Res, DateTimeToFileDate(Now)); // fix the "Clock skew detected" warning ;)
 
     // create XP manifest
-    if fOptions.SupportXPThemes then begin
-      resFile.Clear;
-      resFile.append("<?xml version="1.0" encoding="UTF-8" standalone="yes"?>');
-      resFile.append("<assembly');
-      resFile.append("  xmlns="urn:schemas-microsoft-com:asm.v1"');
-      resFile.append("  manifestVersion="1.0">');
-      resFile.append("<assemblyIdentity');
-      resFile.append("    name="DevCpp.Apps.' + StringReplace(Name, ' ', '_', [rfReplaceAll]) + '"');
-      resFile.append("    processorArchitecture="*"');
-      resFile.append("    version="1.0.0.0"');
-      resFile.append("    type="win32"/>');
-      resFile.append("<description>' + Name + '</description>');
-      resFile.append("<dependency>');
-      resFile.append("    <dependentAssembly>');
-      resFile.append("        <assemblyIdentity');
-      resFile.append("            type="win32"');
-      resFile.append("            name="Microsoft.Windows.Common-Controls"');
-      resFile.append("            version="6.0.0.0"');
-      resFile.append("            processorArchitecture="*"');
-      resFile.append("            publicKeyToken="6595b64144ccf1df"');
-      resFile.append("            language="*"');
-      resFile.append("        />');
-      resFile.append("    </dependentAssembly>');
-      resFile.append("</dependency>');
-      resFile.append("</assembly>');
-      resFile.SaveToFile(Executable + '.Manifest');
-      FileSetDate(Executable + '.Manifest', DateTimeToFileDate(Now)); // fix the "Clock skew detected" warning ;)
-    end else if FileExists(Executable + '.Manifest') then
-      DeleteFile(PAnsiChar(Executable + '.Manifest'));
+    if (mOptions.supportXPThemes) {
+        QStringList content;
+        content.append("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>");
+        content.append("<assembly");
+        content.append("  xmlns=\"urn:schemas-microsoft-com:asm.v1\"");
+        content.append("  manifestVersion=\"1.0\">");
+        content.append("<assemblyIdentity");
+        QString name = mName;
+        name.replace(' ','_');
+        content.append("    name=\"DevCpp.Apps." + name + '\"');
+        content.append("    processorArchitecture=\"*\"");
+        content.append("    version=\"1.0.0.0\"");
+        content.append("    type=\"win32\"/>");
+        content.append("<description>" + name + "</description>");
+        content.append("<dependency>");
+        content.append("    <dependentAssembly>");
+        content.append("        <assemblyIdentity");
+        content.append("            type=\"win32\"");
+        content.append("            name=\"Microsoft.Windows.Common-Controls\"");
+        content.append("            version=\"6.0.0.0\"");
+        content.append("            processorArchitecture=\"*\"");
+        content.append("            publicKeyToken=\"6595b64144ccf1df\"");
+        content.append("            language=\"*\"");
+        content.append("        />");
+        content.append("    </dependentAssembly>");
+        content.append("</dependency>");
+        content.append("</assembly>");
+        StringsToFile(content,executable() + ".Manifest");
+    } else if (fileExists(executable() + ".Manifest"))
+        QFile::remove(executable() + ".Manifest");
 
     // create private header file
-    Res := ChangeFileExt(Res, H_EXT);
-    resFile.Clear;
-    Def := StringReplace(ExtractFilename(UpperCase(Res)), '.', '_', [rfReplaceAll]);
-    resFile.append("/* THIS FILE WILL BE OVERWRITTEN BY DEV-C++ */');
-    resFile.append("/* DO NOT EDIT ! */');
-    resFile.append("');
-    resFile.append("#ifndef ' + Def);
-    resFile.append("#define ' + Def);
-    resFile.append("');
-    resFile.append("/* VERSION DEFINITIONS */');
-    resFile.append("#define VER_STRING'#9 + Format('"%d.%d.%d.%d"', [fOptions.VersionInfo.Major, fOptions.VersionInfo.Minor,
-      fOptions.VersionInfo.Release, fOptions.VersionInfo.Build]));
-    resFile.append("#define VER_MAJOR'#9 + IntToStr(fOptions.VersionInfo.Major));
-    resFile.append("#define VER_MINOR'#9 + IntToStr(fOptions.VersionInfo.Minor));
-    resFile.append("#define VER_RELEASE'#9 + IntToStr(fOptions.VersionInfo.Release));
-    resFile.append("#define VER_BUILD'#9 + IntToStr(fOptions.VersionInfo.Build));
-    resFile.append("#define COMPANY_NAME'#9'"' + fOptions.VersionInfo.CompanyName + '"');
-    resFile.append("#define FILE_VERSION'#9'"' + fOptions.VersionInfo.FileVersion + '"');
-    resFile.append("#define FILE_DESCRIPTION'#9'"' + fOptions.VersionInfo.FileDescription + '"');
-    resFile.append("#define INTERNAL_NAME'#9'"' + fOptions.VersionInfo.InternalName + '"');
-    resFile.append("#define LEGAL_COPYRIGHT'#9'"' + fOptions.VersionInfo.LegalCopyright + '"');
-    resFile.append("#define LEGAL_TRADEMARKS'#9'"' + fOptions.VersionInfo.LegalTrademarks + '"');
-    resFile.append("#define ORIGINAL_FILENAME'#9'"' + fOptions.VersionInfo.OriginalFilename + '"');
-    resFile.append("#define PRODUCT_NAME'#9'"' + fOptions.VersionInfo.ProductName + '"');
-    resFile.append("#define PRODUCT_VERSION'#9'"' + fOptions.VersionInfo.ProductVersion + '"');
-    resFile.append("');
-    resFile.append("#endif /*' + Def + '*/');
-    resFile.SaveToFile(Res);
-
-    if FileExists(Res) then
-      FileSetDate(Res, DateTimeToFileDate(Now)); // fix the "Clock skew detected" warning ;)
-
-    resFile.Free;
+    QString hFile = changeFileExt(rcFile, H_EXT);
+    content.clear();
+    QString def = baseFileName(rcFile);
+    def.replace(".","_");
+    content.append("/* THIS FILE WILL BE OVERWRITTEN BY DEV-C++ */");
+    content.append("/* DO NOT EDIT ! */");
+    content.append("");
+    content.append("#ifndef " + def);
+    content.append("#define " + def);
+    content.append("");
+    content.append("/* VERSION DEFINITIONS */");
+    content.append("#define VER_STRING\t" +
+                   QString("\"%d.%d.%d.%d\"")
+                   .arg(mOptions.versionInfo.major)
+                   .arg(mOptions.versionInfo.minor)
+                   .arg(mOptions.versionInfo.release)
+                   .arg(mOptions.versionInfo.build));
+    content.append(QString("#define VER_MAJOR\t%1").arg(mOptions.versionInfo.major));
+    content.append(QString("#define VER_MINOR\t%1").arg(mOptions.versionInfo.minor));
+    content.append(QString("#define VER_RELEASE\t").arg(mOptions.versionInfo.release));
+    content.append(QString("#define VER_BUILD\t").arg(mOptions.versionInfo.build));
+    content.append(QString("#define COMPANY_NAME\t\"%1\"")
+                   .arg(mOptions.versionInfo.companyName));
+    content.append(QString("#define FILE_VERSION\t\"%1\"")
+                   .arg(mOptions.versionInfo.fileVersion));
+    content.append(QString("#define FILE_DESCRIPTION\t\"%1\"")
+                   .arg(mOptions.versionInfo.fileDescription));
+    content.append(QString("#define INTERNAL_NAME\t\"%1\"")
+                   .arg(mOptions.versionInfo.internalName));
+    content.append(QString("#define LEGAL_COPYRIGHT\t\"%1\"")
+                   .arg(mOptions.versionInfo.legalCopyright));
+    content.append(QString("#define LEGAL_TRADEMARKS\t\"%1\"")
+                   .arg(mOptions.versionInfo.legalTrademarks));
+    content.append(QString("#define ORIGINAL_FILENAME\t\"%1\"")
+                   .arg(mOptions.versionInfo.originalFilename));
+    content.append(QString("#define PRODUCT_NAME\t\"%1\"")
+                   .arg(mOptions.versionInfo.productName));
+    content.append(QString("#define PRODUCT_VERSION\t\"%1\"")
+                   .arg(mOptions.versionInfo.productVersion));
+    content.append("");
+    content.append("#endif /*" + def + "*/");
+    StringsToFile(content,hFile);
 }
 
 void Project::sortUnitsByPriority()
