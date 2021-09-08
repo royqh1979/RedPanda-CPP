@@ -158,6 +158,8 @@ public:
     void closeUnit(int index);
     void createFolderNodes();
     void doAutoOpen();
+    bool fileAlreadyExists(const QString& s);
+    PFolderNode folderNodeFromName(const QString& name);
 
     int  newUnit(bool newProject,
                  PFolderNode parentNode,
@@ -177,16 +179,14 @@ public:
     void saveOptions();
     bool saveUnits();
 //    procedure Open;
-    bool fileAlreadyExists(const QString& s);
     bool removeFolder(PFolderNode node);
     bool removeEditor(int index, bool doClose);
     int getUnitFromString(const QString& s);
     void rebuildNodes();
     QString listUnitStr(const QChar& separator);
-    void exportToHTML();
+
     void showOptions();
     // bool assignTemplate(const QString& aFileName, const PTemplate& aTemplate);
-    PFolderNode folderNodeFromName(const QString& name);
     void updateNodeIndexes();
     void setNodeValue(PFolderNode value);
     void incrementBuildNumber();
@@ -195,6 +195,8 @@ public:
     void saveToLog();
 
     std::shared_ptr<CppParser> cppParser();
+    const QString &filename() const;
+
 signals:
     void nodesChanged();
     void modifyChanged(bool value);

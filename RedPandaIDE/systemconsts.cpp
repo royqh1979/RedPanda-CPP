@@ -11,6 +11,7 @@ SystemConsts::SystemConsts(): mDefaultFileFilters()
     addDefaultFileFilter(QObject::tr("C++ files"),"*.cpp *.cc *.cxx");
     addDefaultFileFilter(QObject::tr("Header files"),"*.h *.hh");
     addDefaultFileFilter(QObject::tr("Text files"),"*.txt");
+    addDefaultFileFilter(QObject::tr("HTML files"),"*.html *.htm");
     addDefaultFileFilter(QObject::tr("All files"),"*");
 }
 
@@ -32,6 +33,11 @@ const QString &SystemConsts::defaultCPPFileFilter() const noexcept
 const QString &SystemConsts::defaultAllFileFilter() const noexcept
 {
     return mDefaultFileFilters.back();
+}
+
+const QString &SystemConsts::defaultHTMLFileFilter() const noexcept
+{
+    return mDefaultFileFilters[4];
 }
 
 void SystemConsts::addDefaultFileFilter(const QString &name, const QString &fileExtensions)

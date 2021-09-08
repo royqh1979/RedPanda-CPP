@@ -163,6 +163,7 @@ bool findComplement(const QString& s,
 void logToFile(const QString& s, const QString& filename, bool append=true);
 
 QString baseFileName(const QString& fileName);
+QString getSizeString(int size);
 
 class CppParser;
 void resetCppParser(std::shared_ptr<CppParser> parser);

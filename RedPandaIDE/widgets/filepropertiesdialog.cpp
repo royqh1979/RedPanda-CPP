@@ -111,15 +111,7 @@ void FilePropertiesDialog::on_cbFiles_currentIndexChanged(int index)
 
         int fileSize = info.size();
         // Pretty print total file size
-        if (fileSize < 1024) {
-            ui->txtFileSize->setText(QString("%1 ").arg(fileSize)+tr("bytes"));
-        } else if (fileSize < 1024 * 1024) {
-            ui->txtFileSize->setText(QString("%1 ").arg(fileSize / 1024.0)+tr("KB"));
-        } else if (fileSize < 1024 * 1024 * 1024) {
-            ui->txtFileSize->setText(QString("%1 ").arg(fileSize / 1024.0 / 1024.0)+tr("MB"));
-        } else {
-            ui->txtFileSize->setText(QString("%1 ").arg(fileSize / 1024.0 / 1024.0 / 1024.0)+tr("GB"));
-        }
+        ui->txtFileSize->setText(getSizeString(fileSize));
         ui->txtFileDate->setText( QLocale::system().toString(info.lastModified(), QLocale::LongFormat));
         ui->txtProject->setText("-");
         ui->txtPath->setText(editor->filename());

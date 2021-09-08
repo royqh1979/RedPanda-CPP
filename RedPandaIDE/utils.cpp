@@ -657,3 +657,16 @@ QString genMakePath2(const QString &fileName)
 {
     return genMakePath(fileName, true, false);
 }
+
+QString getSizeString(int size)
+{
+    if (size < 1024) {
+        return QString("%1 ").arg(size)+QObject::tr("bytes");
+    } else if (size < 1024 * 1024) {
+        return QString("%1 ").arg(size / 1024.0)+QObject::tr("KB");
+    } else if (size < 1024 * 1024 * 1024) {
+        return QString("%1 ").arg(size / 1024.0 / 1024.0)+QObject::tr("MB");
+    } else {
+        return QString("%1 ").arg(size / 1024.0 / 1024.0 / 1024.0)+QObject::tr("GB");
+    }
+}

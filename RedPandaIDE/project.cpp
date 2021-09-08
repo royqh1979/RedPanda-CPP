@@ -8,6 +8,7 @@
 #include "utils.h"
 
 #include <QDir>
+#include <QFileDialog>
 #include <QFileInfo>
 #include <QMessageBox>
 
@@ -614,6 +615,24 @@ void Project::doAutoOpen()
 
 }
 
+bool Project::fileAlreadyExists(const QString &s)
+{
+    foreach (const PProjectUnit& unit, mUnits) {
+        if (unit->fileName() == s)
+            return true;
+    }
+    return false;
+}
+
+PFolderNode Project::folderNodeFromName(const QString &name)
+{
+    int index = mFolders.indexOf(name);
+    if (index>=0) {
+        return mFolderNodes[index];
+    }
+    return mNode;
+}
+
 PCppParser Project::cppParser()
 {
     return mParser;
@@ -624,6 +643,11 @@ void Project::sortUnitsByPriority()
     std::sort(mUnits.begin(),mUnits.end(),[](const PProjectUnit& u1, const PProjectUnit& u2)->bool{
         return (u1->priority()>u2->priority());
     });
+}
+
+const QString &Project::filename() const
+{
+    return mFilename;
 }
 
 ProjectUnit::ProjectUnit(Project* parent)
