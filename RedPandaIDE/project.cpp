@@ -11,6 +11,7 @@
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QMessageBox>
+#include "settings.h"
 
 Project::Project(const QString &filename, const QString &name, QObject *parent) : QObject(parent)
 {
@@ -34,13 +35,13 @@ Project::Project(const QString &filename, const QString &name, QObject *parent) 
     }
 }
 
-QString Project::directory()
+QString Project::directory() const
 {
     QFileInfo fileInfo(mFilename);
     return fileInfo.absolutePath();
 }
 
-QString Project::executable()
+QString Project::executable() const
 {
     QString exeFileName;
     if (mOptions.overrideOutput && !mOptions.overridenOutput.isEmpty()) {
@@ -76,7 +77,7 @@ QString Project::makeFileName()
         return QDir(directory()).filePath(MAKEFILE_NAME);
 }
 
-bool Project::modified()
+bool Project::modified() const
 {
     // Project file modified? Done
     if (mModified)
@@ -633,6 +634,42 @@ PFolderNode Project::folderNodeFromName(const QString &name)
     return mNode;
 }
 
+QChar Project::getCompilerOption(const QString &optionString)
+{
+    // Does the option exist?
+    Settings::PCompilerSet compilerSet = pSettings->compilerSets().getSet(mOptions.compilerSet);
+    if (!compilerSet)
+        return '0';
+    int index = compilerSet->findOptionIndex(optionString);
+    if (index>=0 && index<mOptions.compilerOptions.length()) {
+        return mOptions.compilerOptions[index];
+    }
+    return '0';
+}
+
+QString Project::getFolderPath(PFolderNode node)
+{
+    QString result;
+    if (!node)
+        return result;
+
+    if (node->unitIndex>=0) // not a folder
+        return result;
+
+    FolderNode* p = node.get();
+    while (p && p->unitIndex==-1) {
+        if (!result.isEmpty())
+            result = p->text + "/" + result;
+        p = p->parent;
+    }
+    return result;
+}
+
+int Project::getUnitFromString(const QString &s)
+{
+    return indexInUnits(s);
+}
+
 PCppParser Project::cppParser()
 {
     return mParser;
@@ -643,6 +680,24 @@ void Project::sortUnitsByPriority()
     std::sort(mUnits.begin(),mUnits.end(),[](const PProjectUnit& u1, const PProjectUnit& u2)->bool{
         return (u1->priority()>u2->priority());
     });
+}
+
+int Project::indexInUnits(const QString &fileName) const
+{
+    QDir dir(directory());
+    for (int i=0;i<mUnits.count();i++) {
+        PProjectUnit unit = mUnits[i];
+        if (dir.absoluteFilePath(fileName) == dir.absoluteFilePath(unit->fileName()))
+            return i;
+    }
+    return -1;
+}
+
+int Project::indexInUnits(const Editor *editor) const
+{
+    if (!editor)
+        return -1;
+    return indexInUnits(editor->filename());
 }
 
 const QString &Project::filename() const

@@ -46,7 +46,7 @@ typedef struct {
 
 using PCompilerOption = std::shared_ptr<CompilerOption>;
 
-using CompilerOptionList=std::vector<std::shared_ptr<CompilerOption>>;
+using CompilerOptionList=QVector<std::shared_ptr<CompilerOption>>;
 
 class Settings
 {
@@ -802,6 +802,7 @@ public:
                 int value, const QString& setting,
                 const QStringList& choices = QStringList());
         PCompilerOption findOption(const QString& setting);
+        int findOptionIndex(const QString& setting);
         char getOptionValue(const QString& setting);
         void setOption(const QString& setting, char valueChar);
         void setOption(PCompilerOption& option, char valueChar);
@@ -941,6 +942,7 @@ public:
         int defaultIndex() const;
         void setDefaultIndex(int value);
         PCompilerSet defaultSet();
+        PCompilerSet getSet(int index);
     private:
         void savePath(const QString& name, const QString& path);
         void savePathList(const QString& name, const QStringList& pathList);

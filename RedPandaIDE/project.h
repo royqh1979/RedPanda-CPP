@@ -142,10 +142,10 @@ class Project : public QObject
     Q_OBJECT
 public:
     explicit Project(const QString& filename, const QString& name,QObject *parent = nullptr);
-    QString directory();
-    QString executable();
+    QString directory() const;
+    QString executable() const;
     QString makeFileName();
-    bool modified();
+    bool modified() const;
     void setFileName(const QString& value);
     void setModified(bool value);
 
@@ -160,11 +160,13 @@ public:
     void doAutoOpen();
     bool fileAlreadyExists(const QString& s);
     PFolderNode folderNodeFromName(const QString& name);
+    QChar getCompilerOption(const QString& optionString);
+    QString getFolderPath(PFolderNode node);
+    int getUnitFromString(const QString& s);
 
     int  newUnit(bool newProject,
                  PFolderNode parentNode,
                  const QString customFileName);
-    QString getFolderPath(PFolderNode node);
     void updateFolders();
     Editor* openUnit(int index);
     void saveUnitAs(int i, const QString& sFileName); // save single [UnitX]
@@ -181,7 +183,6 @@ public:
 //    procedure Open;
     bool removeFolder(PFolderNode node);
     bool removeEditor(int index, bool doClose);
-    int getUnitFromString(const QString& s);
     void rebuildNodes();
     QString listUnitStr(const QChar& separator);
 
@@ -190,7 +191,6 @@ public:
     void updateNodeIndexes();
     void setNodeValue(PFolderNode value);
     void incrementBuildNumber();
-    QChar getCompilerOption(const QString& optionString);
     void setCompilerOption(const QString& optionString, const QChar& value);
     void saveToLog();
 
@@ -203,6 +203,8 @@ signals:
 private:
     void open();
     void sortUnitsByPriority();
+    int indexInUnits(const QString& fileName) const;
+    int indexInUnits(const Editor* editor) const;
 private:
     QList<PProjectUnit> mUnits;
     ProjectOptions mOptions;

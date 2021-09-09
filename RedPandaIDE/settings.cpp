@@ -1223,6 +1223,17 @@ PCompilerOption Settings::CompilerSet::findOption(const QString &setting)
     return PCompilerOption();
 }
 
+int Settings::CompilerSet::findOptionIndex(const QString &setting)
+{
+    for (int i=0;i<mOptions.size();i++) {
+         PCompilerOption pOption = mOptions[i];
+        if (pOption->setting == setting) {
+            return i;
+        }
+    }
+    return -1;
+}
+
 char Settings::CompilerSet::getOptionValue(const QString &setting)
 {
     PCompilerOption pOption = findOption(setting);
@@ -2270,8 +2281,13 @@ void Settings::CompilerSets::setDefaultIndex(int value)
 
 Settings::PCompilerSet Settings::CompilerSets::defaultSet()
 {
-    if (mDefaultIndex>=0 && mDefaultIndex<mList.size()) {
-        return mList[mDefaultIndex];
+    return getSet(mDefaultIndex);
+}
+
+Settings::PCompilerSet Settings::CompilerSets::getSet(int index)
+{
+    if (index>=0 && index<mList.size()) {
+        return mList[index];
     }
     return PCompilerSet();
 }
