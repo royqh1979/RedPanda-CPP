@@ -715,6 +715,102 @@ void Project::loadLayout()
 
 }
 
+void Project::loadOptions()
+{
+    mIniFile->beginGroup("Project");
+    mName = mIniFile->value("name", "").toString();
+    mOptions.icon = mIniFile->value("icon", "").toString();
+    mOptions.version = mIniFile->value("Ver", 0).toInt();
+    if (mOptions.version > 0) { // ver > 0 is at least a v5 project
+        if (mOptions.version < 2) {
+            mOptions.version = 2;
+            QMessageBox::information(pMainWindow,
+                                     tr("Settings need update"),
+                                     tr("The compiler settings format of Dev-C++ has changed.")
+                                     +"<BR /><BR />"
+                                     +tr("Please update your settings at Project >> Project Options >> Compiler and save your project."),
+                                     QMessageBox::Ok);
+        }
+
+        mOptions.type = static_cast<ProjectType>(mIniFile->value("type", 0).toInt());
+        mOptions.compilerCmd = mIniFile->value("Compiler", "").toString();
+        mOptions.cppCompilerCmd = mIniFile->value("CppCompiler", "").toString();
+        fOptions.LinkerCmd := ReadString('Project', 'Linker', '');
+        fOptions.ObjFiles.DelimitedText := ReadString('Project', 'ObjFiles', '');
+        fOptions.Libs.DelimitedText := ReadString('Project', 'Libs', '');
+        fOptions.Includes.DelimitedText := ReadString('Project', 'Includes', '');
+        fOptions.PrivateResource := ReadString('Project', 'PrivateResource', '');
+        fOptions.ResourceIncludes.DelimitedText := ReadString('Project', 'ResourceIncludes', '');
+        fOptions.MakeIncludes.DelimitedText := ReadString('Project', 'MakeIncludes', '');
+        fOptions.UseGpp := ReadBool('Project', 'IsCpp', FALSE);
+        fOptions.ExeOutput := ReadString('Project', 'ExeOutput', '');
+        fOptions.ObjectOutput := ReadString('Project', 'ObjectOutput', '');
+        fOptions.LogOutput := ReadString('Project', 'LogOutput', '');
+        fOptions.LogOutputEnabled := ReadBool('Project', 'LogOutputEnabled', FALSE);
+        fOptions.OverrideOutput := ReadBool('Project', 'OverrideOutput', FALSE);
+        fOptions.OverridenOutput := ReadString('Project', 'OverrideOutputName', '');
+        fOptions.HostApplication := ReadString('Project', 'HostApplication', '');
+        fOptions.UseCustomMakefile := ReadBool('Project', 'UseCustomMakefile', FALSE);
+        fOptions.CustomMakefile := ReadString('Project', 'CustomMakefile', '');
+        fOptions.UsePrecompiledHeader := ReadBool('Project', 'UsePrecompiledHeader', FALSE);
+        fOptions.PrecompiledHeader := ReadString('Project', 'PrecompiledHeader', '');
+        fOptions.CmdLineArgs := ReadString('Project', 'CommandLine', '');
+        fFolders.CommaText := ReadString('Project', 'Folders', '');
+        fOptions.IncludeVersionInfo := ReadBool('Project', 'IncludeVersionInfo', False);
+        fOptions.SupportXPThemes := ReadBool('Project', 'SupportXPThemes', False);
+        fOptions.CompilerSet := ReadInteger('Project', 'CompilerSet', devCompilerSets.DefaultSetIndex);
+        if (fOptions.CompilerSet >= devCompilerSets.Count) or (fOptions.CompilerSet < 0)  then begin // TODO: change from indices to names
+          MessageDlg(Lang[ID_MSG_COMPILERNOTFOUND], mtError, [mbOk], 0);
+          fOptions.CompilerSet := devCompilerSets.DefaultSetIndex;
+          Modified := True;
+        end;
+        fOptions.CompilerOptions := ReadString('Project', 'CompilerSettings', '');
+        fOptions.StaticLink := ReadBool('Project','StaticLink',True);
+        fOptions.AddCharset := ReadBool('Project','AddCharset',True);
+        fOptions.UseUTF8 := ReadBool('Project','UseUTF8',False);
+        fOptions.VersionInfo.Major := ReadInteger('VersionInfo', 'Major', 0);
+        fOptions.VersionInfo.Minor := ReadInteger('VersionInfo', 'Minor', 1);
+        fOptions.VersionInfo.Release := ReadInteger('VersionInfo', 'Release', 1);
+        fOptions.VersionInfo.Build := ReadInteger('VersionInfo', 'Build', 1);
+        fOptions.VersionInfo.LanguageID := ReadInteger('VersionInfo', 'LanguageID', $0409);
+        fOptions.VersionInfo.CharsetID := ReadInteger('VersionInfo', 'CharsetID', $04E4);
+        fOptions.VersionInfo.CompanyName := ReadString('VersionInfo', 'CompanyName', '');
+        fOptions.VersionInfo.FileVersion := ReadString('VersionInfo', 'FileVersion', '0.1');
+        fOptions.VersionInfo.FileDescription := ReadString('VersionInfo', 'FileDescription',
+          'Developed using the Dev-C++ IDE');
+        fOptions.VersionInfo.InternalName := ReadString('VersionInfo', 'InternalName', '');
+        fOptions.VersionInfo.LegalCopyright := ReadString('VersionInfo', 'LegalCopyright', '');
+        fOptions.VersionInfo.LegalTrademarks := ReadString('VersionInfo', 'LegalTrademarks', '');
+        fOptions.VersionInfo.OriginalFilename := ReadString('VersionInfo', 'OriginalFilename',
+          ExtractFilename(Executable));
+        fOptions.VersionInfo.ProductName := ReadString('VersionInfo', 'ProductName', Name);
+        fOptions.VersionInfo.ProductVersion := ReadString('VersionInfo', 'ProductVersion', '0.1.1.1');
+        fOptions.VersionInfo.AutoIncBuildNr := ReadBool('VersionInfo', 'AutoIncBuildNr', False);
+        fOptions.VersionInfo.SyncProduct := ReadBool('VersionInfo', 'SyncProduct', False);
+      end else begin // dev-c < 4
+        fOptions.Ver := -1;
+        if not ReadBool('Project', 'NoConsole', TRUE) then
+          fOptions.typ := dptCon
+        else if ReadBool('Project', 'IsDLL', FALSE) then
+          fOptions.Typ := dptDyn
+        else
+          fOptions.typ := dptGUI;
+
+        fOptions.PrivateResource := ReadString('Project', 'PrivateResource', '');
+        fOptions.ResourceIncludes.DelimitedText := ReadString('Project', 'ResourceIncludes', '');
+        fOptions.ObjFiles.Add(ReadString('Project', 'ObjFiles', ''));
+        fOptions.Includes.Add(ReadString('Project', 'IncludeDirs', ''));
+        fOptions.CompilerCmd := ReadString('Project', 'CompilerOptions', '');
+        fOptions.usegpp := ReadBool('Project', 'Use_GPP', FALSE);
+        fOptions.ExeOutput := ReadString('Project', 'ExeOutput', '');
+        fOptions.ObjectOutput := ReadString('Project', 'ObjectOutput', '');
+        fOptions.OverrideOutput := ReadBool('Project', 'OverrideOutput', FALSE);
+        fOptions.OverridenOutput := ReadString('Project', 'OverrideOutputName', '');
+        fOptions.HostApplication := ReadString('Project', 'HostApplication', '');
+      end;
+    end;
+}
+
 PCppParser Project::cppParser()
 {
     return mParser;

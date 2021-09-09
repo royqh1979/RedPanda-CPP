@@ -6,10 +6,10 @@
 #include <memory>
 
 enum class ProjectType {
-    GUI,
-    Console,
-    StaticLib,
-    DynamicLib
+    GUI=0,
+    Console=1,
+    StaticLib=2,
+    DynamicLib=3
 };
 
 class Project;
@@ -166,6 +166,7 @@ public:
     void incrementBuildNumber();
     QString listUnitStr(const QChar& separator);
     void loadLayout(); // load all [UnitX]
+    void loadOptions();
 
     int  newUnit(bool newProject,
                  PFolderNode parentNode,
@@ -179,7 +180,6 @@ public:
     void saveUnitLayout(Editor* e, int index); // save single [UnitX] cursor positions
     PFolderNode makeProjectNode();
     PFolderNode makeNewFileNode(const QString& s, bool isFolder, PFolderNode newParent);
-    void loadOptions();
     void saveOptions();
     bool saveUnits();
 //    procedure Open;
