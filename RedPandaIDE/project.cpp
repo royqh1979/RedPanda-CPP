@@ -670,6 +670,51 @@ int Project::getUnitFromString(const QString &s)
     return indexInUnits(s);
 }
 
+void Project::incrementBuildNumber()
+{
+    mOptions.versionInfo.build++;
+    mOptions.versionInfo.fileVersion = QString("%1.%2.%3.%3")
+            .arg(mOptions.versionInfo.major)
+            .arg(mOptions.versionInfo.minor)
+            .arg(mOptions.versionInfo.release)
+            .arg(mOptions.versionInfo.build);
+    if (mOptions.versionInfo.syncProduct)
+        mOptions.versionInfo.productVersion = mOptions.versionInfo.fileVersion;
+    setModified(true);
+}
+
+QString Project::listUnitStr(const QChar &separator)
+{
+    QStringList units;
+    foreach (const PProjectUnit& unit, mUnits) {
+        units.append('"'+unit->fileName()+'"');
+    }
+    return units.join(separator);
+}
+
+void Project::loadLayout()
+{
+    QSettings layIni = QSettings(changeFileExt(filename(), "layout"),QSettings::IniFormat);
+    layIni.beginGroup("Editors");
+    int topLeft = layIni.value("Focused", -1).toInt();
+    //TopRight := layIni.ReadInteger('Editors', 'FocusedRight', -1);
+    QString temp =layIni.value("Order", "").toString();
+    layIni.endGroup();
+    QStringList sl = temp.split(",");
+
+    foreach (const QString& s,sl) {
+        bool ok;
+        int currIdx = s.toInt(&ok);
+        if (ok) {
+            openUnit(currIdx);
+        }
+    }
+    if (topLeft>=0 && topLeft<mUnits.count() && mUnits[topLeft]->editor()) {
+        mUnits[topLeft]->editor()->activate();
+    }
+
+}
+
 PCppParser Project::cppParser()
 {
     return mParser;
@@ -698,6 +743,16 @@ int Project::indexInUnits(const Editor *editor) const
     if (!editor)
         return -1;
     return indexInUnits(editor->filename());
+}
+
+std::shared_ptr<QSettings> &Project::iniFile()
+{
+    return mIniFile;
+}
+
+void Project::setIniFile(const std::shared_ptr<QSettings> &newIniFile)
+{
+    mIniFile = newIniFile;
 }
 
 const QString &Project::filename() const

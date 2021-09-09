@@ -163,6 +163,9 @@ public:
     QChar getCompilerOption(const QString& optionString);
     QString getFolderPath(PFolderNode node);
     int getUnitFromString(const QString& s);
+    void incrementBuildNumber();
+    QString listUnitStr(const QChar& separator);
+    void loadLayout(); // load all [UnitX]
 
     int  newUnit(bool newProject,
                  PFolderNode parentNode,
@@ -171,7 +174,6 @@ public:
     Editor* openUnit(int index);
     void saveUnitAs(int i, const QString& sFileName); // save single [UnitX]
     void saveAll(); // save [Project] and  all [UnitX]
-    void loadLayout(); // load all [UnitX]
     void loadUnitLayout(Editor *e, int index); // load single [UnitX] cursor positions
     void saveLayout(); // save all [UnitX]
     void saveUnitLayout(Editor* e, int index); // save single [UnitX] cursor positions
@@ -184,18 +186,19 @@ public:
     bool removeFolder(PFolderNode node);
     bool removeEditor(int index, bool doClose);
     void rebuildNodes();
-    QString listUnitStr(const QChar& separator);
 
     void showOptions();
     // bool assignTemplate(const QString& aFileName, const PTemplate& aTemplate);
     void updateNodeIndexes();
     void setNodeValue(PFolderNode value);
-    void incrementBuildNumber();
     void setCompilerOption(const QString& optionString, const QChar& value);
     void saveToLog();
 
     std::shared_ptr<CppParser> cppParser();
     const QString &filename() const;
+
+    std::shared_ptr<QSettings> &iniFile();
+    void setIniFile(const std::shared_ptr<QSettings> &newIniFile);
 
 signals:
     void nodesChanged();
