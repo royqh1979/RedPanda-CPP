@@ -1468,7 +1468,7 @@ QVariant BreakpointModel::data(const QModelIndex &index, int role) const
     case Qt::DisplayRole:
         switch (index.column()) {
         case 0: {
-            return baseFileName(breakpoint->filename);
+            return extractFileName(breakpoint->filename);
         }
         case 1:
             if (breakpoint->line>0)

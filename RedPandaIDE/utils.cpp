@@ -616,7 +616,7 @@ void logToFile(const QString &s, const QString &filename, bool append)
     }
 }
 
-QString baseFileName(const QString &fileName)
+QString extractFileName(const QString &fileName)
 {
     QFileInfo fileInfo(fileName);
     return fileInfo.fileName();
@@ -669,4 +669,23 @@ QString getSizeString(int size)
     } else {
         return QString("%1 ").arg(size / 1024.0 / 1024.0 / 1024.0)+QObject::tr("GB");
     }
+}
+
+int getNewFileNumber()
+{
+    static int count = 0;
+    count++;
+    return count;
+}
+
+QString extractFilePath(const QString &filePath)
+{
+    QFileInfo info(filePath);
+    return info.path();
+}
+
+QString extractAbsoluteFilePath(const QString &filePath)
+{
+    QFileInfo info(filePath);
+    return info.absoluteFilePath();
 }

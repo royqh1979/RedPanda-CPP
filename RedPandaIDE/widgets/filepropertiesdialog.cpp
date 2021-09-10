@@ -96,7 +96,7 @@ QVariant FilePropertiesModel::data(const QModelIndex &index, int role) const
         if (row>=0 && row < pMainWindow->editorList()->pageCount()) {
             Editor *editor = (*(pMainWindow->editorList()))[row];
             if (editor) {
-                return baseFileName(editor->filename());
+                return extractFileName(editor->filename());
             }
         }
     }

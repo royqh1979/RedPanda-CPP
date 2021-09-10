@@ -49,13 +49,13 @@ QString Project::executable() const
     } else {
         switch(mOptions.type) {
         case ProjectType::StaticLib:
-            exeFileName = changeFileExt(baseFileName(mFilename),STATIC_LIB_EXT);
+            exeFileName = changeFileExt(extractFileName(mFilename),STATIC_LIB_EXT);
             break;
         case ProjectType::DynamicLib:
-            exeFileName = changeFileExt(baseFileName(mFilename),DYNAMIC_LIB_EXT);
+            exeFileName = changeFileExt(extractFileName(mFilename),DYNAMIC_LIB_EXT);
             break;
         default:
-            exeFileName = changeFileExt(baseFileName(mFilename),EXECUTABLE_EXT);
+            exeFileName = changeFileExt(extractFileName(mFilename),EXECUTABLE_EXT);
         }
     }
     QString exePath;
@@ -147,7 +147,7 @@ void Project::open()
             newUnit->setEditor(nullptr);
             newUnit->setNew(false);
             newUnit->setParent(this);
-            newUnit->setNode(makeNewFileNode(baseFileName(newUnit->fileName()), false, folderNodeFromName(newUnit->folder())));
+            newUnit->setNode(makeNewFileNode(extractFileName(newUnit->fileName()), false, folderNodeFromName(newUnit->folder())));
             newUnit->node()->unitIndex = mUnits.count();
             mUnits.append(newUnit);
         }
@@ -192,6 +192,81 @@ PFolderNode Project::makeProjectNode()
     node->text = mName;
 }
 
+int Project::newUnit(bool newProject, PFolderNode parentNode, const QString customFileName)
+{
+    PProjectUnit newUnit = std::make_shared<ProjectUnit>();
+
+    // Select folder to add unit to
+    if (!parentNode)
+        parentNode = mNode; // project root node
+
+    if (parentNode->unitIndex>=0) { //it's a file
+        parentNode = mNode;
+    }
+    QString s;
+    QDir dir(directory());
+    // Find unused 'new' filename
+    if (customFileName.isEmpty()) {
+        do {
+            s = dir.absoluteFilePath(tr("untitled")+QString("%1").arg(getNewFileNumber()));
+        } while (fileExists(s));
+    } else {
+        s = dir.absoluteFilePath(customFileName);
+    }
+    // Add
+    int result = mUnits.count();
+    mUnits.append(newUnit);
+
+    // Set all properties
+    newUnit->setFileName(s);
+    newUnit->setNew(true);
+    newUnit->setEditor(nullptr);
+    newUnit->setFolder(getFolderPath(parentNode));
+    newUnit->setNode(makeNewFileNode(extractFileName(newUnit->fileName()),
+                                     false, parentNode));
+    newUnit->node()->unitIndex = result;
+    //parentNode.Expand(True);
+    newUnit->setCompile(true);
+    newUnit->setCompileCpp(mOptions.useGPP);
+    newUnit->setLink(true);
+    newUnit->setPriority(1000);
+    newUnit->setOverrideBuildCmd(false);
+    newUnit->setBuildCmd("");
+    newUnit->setModified(true);
+    return result;
+}
+
+Editor *Project::openUnit(int index)
+{
+    if ((index < 0) || (index >= mUnits.count()))
+        return nullptr;
+
+    PProjectUnit unit = mUnits[index];
+
+    if (!unit->fileName().isEmpty()) {
+        QDir dir(directory());
+        QString fullPath = dir.absoluteFilePath(unit->fileName());
+        Editor * editor = pMainWindow->editorList()->getOpenedEditorByFilename(fullPath);
+        if (editor) {//already opened in the editors
+            editor->setInProject(true);
+            return editor;
+        }
+        try
+          fEditor := MainForm.EditorList.NewEditor(FullPath, Encoding, true, false);
+          fEditor.InProject := True;
+          Encoding := fEditor.EncodingOption;
+          LoadUnitLayout(fEditor, index);
+          Result := fEditor;
+        except
+          MessageDlg(Format(Lang[ID_ERR_OPENFILE], [Filename]), mtError, [mbOK], 0);
+        end;
+
+    }
+
+  if FileName <> '' then begin
+  end;
+}
+
 void Project::addFolder(const QString &s)
 {
     if (mFolders.indexOf(s)<0) {
@@ -221,7 +296,7 @@ PProjectUnit Project::addUnit(const QString &inFileName, PFolderNode parentNode,
     newUnit->setNew(false);
     newUnit->setEditor(nullptr);
     newUnit->setFolder(getFolderPath(parentNode));
-    newUnit->setNode(makeNewFileNode(baseFileName(newUnit->fileName()), false, parentNode));
+    newUnit->setNode(makeNewFileNode(extractFileName(newUnit->fileName()), false, parentNode));
     newUnit->node()->unitIndex = mUnits.count();
     mUnits.append(newUnit);
 
@@ -347,10 +422,10 @@ void Project::buildPrivateResource(bool forceSave)
                     "1 24 \"" +
                        genMakePath2(
                            includeTrailingPathDelimiter(mOptions.exeOutput)
-                           + baseFileName(executable()))
+                           + extractFileName(executable()))
                 + ".Manifest\"");
       else
-          contents.append("1 24 \"" + baseFileName(executable()) + ".Manifest\"");
+          contents.append("1 24 \"" + extractFileName(executable()) + ".Manifest\"");
     }
 
     if (mOptions.includeVersionInfo) {
@@ -482,7 +557,7 @@ void Project::buildPrivateResource(bool forceSave)
     // create private header file
     QString hFile = changeFileExt(rcFile, H_EXT);
     contents.clear();
-    QString def = baseFileName(rcFile);
+    QString def = extractFileName(rcFile);
     def.replace(".","_");
     contents.append("/* THIS FILE WILL BE OVERWRITTEN BY DEV-C++ */");
     contents.append("/* DO NOT EDIT ! */");
@@ -804,7 +879,7 @@ void Project::loadOptions()
         mOptions.versionInfo.legalCopyright = mIniFile->value("LegalCopyright","").toString();
         mOptions.versionInfo.legalTrademarks = mIniFile->value("LegalTrademarks","").toString();
         mOptions.versionInfo.originalFilename = mIniFile->value("OriginalFilename",
-                                                                baseFileName(executable())).toString();
+                                                                extractFileName(executable())).toString();
         mOptions.versionInfo.productName = mIniFile->value("ProductName", mName).toString();
         mOptions.versionInfo.productVersion = mIniFile->value("ProductVersion", "0.1.1.1").toString();
         mOptions.versionInfo.autoIncBuildNr = mIniFile->value("AutoIncBuildNr", false).toBool();
@@ -860,6 +935,26 @@ int Project::indexInUnits(const Editor *editor) const
     if (!editor)
         return -1;
     return indexInUnits(editor->filename());
+}
+
+const PFolderNode &Project::node() const
+{
+    return mNode;
+}
+
+void Project::setNode(const PFolderNode &newNode)
+{
+    mNode = newNode;
+}
+
+const QString &Project::name() const
+{
+    return mName;
+}
+
+void Project::setName(const QString &newName)
+{
+    mName = newName;
 }
 
 std::shared_ptr<QSettings> &Project::iniFile()
@@ -1051,7 +1146,7 @@ bool ProjectUnit::save()
         result = mEditor->save();
     }
     if (mNode) {
-        mNode->text = baseFileName(mFileName);
+        mNode->text = extractFileName(mFileName);
     }
     return result;
 }

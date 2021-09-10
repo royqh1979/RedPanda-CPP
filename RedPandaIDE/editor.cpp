@@ -46,8 +46,6 @@ const char* SaveException::what() const noexcept {
     return mReasonBuffer;
 }
 
-int Editor::newfileCount=0;
-
 Editor::Editor(QWidget *parent):
     Editor(parent,QObject::tr("untitled"),ENCODING_SYSTEM_DEFAULT,false,true,nullptr)
 {
@@ -69,14 +67,13 @@ Editor::Editor(QWidget *parent, const QString& filename,
   mActiveBreakpointLine(-1),
   mLastIdCharPressed(0),
   mCurrentWord(),
-  mSelectionWord(),
+  mCurrentTipType(TipType::None),
   mOldSelectionWord(),
-  mCurrentTipType(TipType::None)
+  mSelectionWord()
 {
     mUseCppSyntax = pSettings->editor().defaultFileCpp();
     if (mFilename.isEmpty()) {
-        newfileCount++;
-        mFilename = tr("untitled%1").arg(newfileCount);
+        mFilename = tr("untitled")+QString("%1").arg(getNewFileNumber());
     }
     QFileInfo fileInfo(mFilename);
     if (mParentPageControl!=nullptr) {
@@ -2194,6 +2191,17 @@ QString Editor::getHintForFunction(const PStatement &statement, const PStatement
         }
     }
     return result;
+}
+
+void Editor::setInProject(bool newInProject)
+{
+    if (mInProject == newInProject)
+        return;
+    if (mInProject) {
+        initParser();
+    } else {
+        mParser = pMainWindow->project()->cppParser();
+    }
 }
 
 void Editor::gotoDeclaration(const BufferCoord &pos)

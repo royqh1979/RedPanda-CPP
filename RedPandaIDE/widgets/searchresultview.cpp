@@ -289,7 +289,7 @@ QVariant SearchResultListModel::data(const QModelIndex &index, int role) const
         } else if (results->searchType == SearchType::FindOccurences) {
             return tr("References to symbol \'%1\' at '%2':%3")
                     .arg(results->keyword)
-                    .arg(baseFileName(results->filename))
+                    .arg(extractFileName(results->filename))
                     .arg(results->symbolLine);
         }
     }

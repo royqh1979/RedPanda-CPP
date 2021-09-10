@@ -183,7 +183,7 @@ QVariant IssuesModel::data(const QModelIndex &index, int role) const
         switch (index.column()) {
         case 0: {
             if (role == Qt::DisplayRole)
-                return baseFileName(issue->filename);
+                return extractFileName(issue->filename);
             else
                 return issue->filename;
         }

@@ -403,7 +403,7 @@ QString Compiler::parseFileIncludesForAutolink(
         PCppParser& parser)
 {
     QString result;
-    QString baseName = baseFileName(filename);
+    QString baseName = extractFileName(filename);
     if (parsedFiles.contains(filename))
         return result;
     parsedFiles.insert(filename);

@@ -148,7 +148,6 @@ public:
     bool modified() const;
     void setFileName(const QString& value);
     void setModified(bool value);
-    PFolderNode makeNewFileNode(const QString& s, bool isFolder, PFolderNode newParent);
 
     void addFolder(const QString& s);
     PProjectUnit addUnit(const QString& inFileName,
@@ -168,18 +167,20 @@ public:
     QString listUnitStr(const QChar& separator);
     void loadLayout(); // load all [UnitX]
     void loadOptions();
-
+    PFolderNode makeNewFileNode(const QString& s, bool isFolder, PFolderNode newParent);
+    PFolderNode makeProjectNode();
     int  newUnit(bool newProject,
                  PFolderNode parentNode,
                  const QString customFileName);
-    void updateFolders();
     Editor* openUnit(int index);
+
+
+    void updateFolders();
     void saveUnitAs(int i, const QString& sFileName); // save single [UnitX]
     void saveAll(); // save [Project] and  all [UnitX]
     void loadUnitLayout(Editor *e, int index); // load single [UnitX] cursor positions
     void saveLayout(); // save all [UnitX]
     void saveUnitLayout(Editor* e, int index); // save single [UnitX] cursor positions
-    PFolderNode makeProjectNode();
     void saveOptions();
     bool saveUnits();
 //    procedure Open;
@@ -199,6 +200,12 @@ public:
 
     std::shared_ptr<QSettings> &iniFile();
     void setIniFile(const std::shared_ptr<QSettings> &newIniFile);
+
+    const QString &name() const;
+    void setName(const QString &newName);
+
+    const PFolderNode &node() const;
+    void setNode(const PFolderNode &newNode);
 
 signals:
     void nodesChanged();

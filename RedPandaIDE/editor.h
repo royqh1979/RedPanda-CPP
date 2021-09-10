@@ -198,7 +198,6 @@ private:
 
 
 private:
-    static int newfileCount;
     QByteArray mEncodingOption; // the encoding type set by the user
     QByteArray mFileEncoding; // the real encoding of the file (auto detected)
     QString mFilename;
@@ -253,6 +252,8 @@ public:
     bool event(QEvent *event) override;
 
     // QWidget interface
+    void setInProject(bool newInProject);
+
 protected:
     void mouseReleaseEvent(QMouseEvent *event) override;
 };
