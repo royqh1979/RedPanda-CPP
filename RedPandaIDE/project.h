@@ -135,6 +135,7 @@ struct ProjectOptions{
     QString cmdLineArgs;
     bool staticLink;
     bool addCharset;
+    QString encoding;
 };
 
 class Project : public QObject
@@ -167,26 +168,26 @@ public:
     QString listUnitStr(const QChar& separator);
     void loadLayout(); // load all [UnitX]
     void loadOptions();
+    void loadUnitLayout(Editor *e, int index); // load single [UnitX] cursor positions
     PFolderNode makeNewFileNode(const QString& s, bool isFolder, PFolderNode newParent);
     PFolderNode makeProjectNode();
     int  newUnit(bool newProject,
                  PFolderNode parentNode,
                  const QString customFileName);
     Editor* openUnit(int index);
+    void rebuildNodes();
+    bool removeEditor(int index, bool doClose);
 
 
     void updateFolders();
     void saveUnitAs(int i, const QString& sFileName); // save single [UnitX]
     void saveAll(); // save [Project] and  all [UnitX]
-    void loadUnitLayout(Editor *e, int index); // load single [UnitX] cursor positions
     void saveLayout(); // save all [UnitX]
     void saveUnitLayout(Editor* e, int index); // save single [UnitX] cursor positions
     void saveOptions();
     bool saveUnits();
 //    procedure Open;
     bool removeFolder(PFolderNode node);
-    bool removeEditor(int index, bool doClose);
-    void rebuildNodes();
 
     void showOptions();
     // bool assignTemplate(const QString& aFileName, const PTemplate& aTemplate);
@@ -206,6 +207,9 @@ public:
 
     const PFolderNode &node() const;
     void setNode(const PFolderNode &newNode);
+
+    const ProjectOptions &options() const;
+    void setOptions(const ProjectOptions &newOptions);
 
 signals:
     void nodesChanged();

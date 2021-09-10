@@ -251,20 +251,63 @@ Editor *Project::openUnit(int index)
             editor->setInProject(true);
             return editor;
         }
-        try
-          fEditor := MainForm.EditorList.NewEditor(FullPath, Encoding, true, false);
-          fEditor.InProject := True;
-          Encoding := fEditor.EncodingOption;
-          LoadUnitLayout(fEditor, index);
-          Result := fEditor;
-        except
-          MessageDlg(Format(Lang[ID_ERR_OPENFILE], [Filename]), mtError, [mbOK], 0);
-        end;
+        QByteArray encoding;
+        if (mOptions.useUTF8) {
+            encoding = ENCODING_UTF8;
+        } else
+            encoding = mOptions.encoding.toLocal8Bit();
+        editor = pMainWindow->editorList()->newEditor(fullPath, encoding, true, false);
+        editor->setInProject(true);
+        unit->setEditor(editor);
+        unit->setEncoding(encoding);
+        loadUnitLayout(editor,index);
+        return editor;
+    }
+}
 
+void Project::rebuildNodes()
+{
+    // Remember if folder nodes were expanded or collapsed
+    // Create a list of expanded folder nodes
+//    QStringList  oldPaths := TStringList.Create;
+//      with MainForm.ProjectView do
+//        for idx := 0 to Items.Count - 1 do begin
+//          tempnode := Items[idx];
+//          if tempnode.Expanded and (tempnode.Data = Pointer(-1)) then // data=pointer(-1) - it's folder
+//            oldPaths.Add(GetFolderPath(tempnode));
+//        end;
+
+    // Delete everything
+    mNode->children.clear();
+
+    // Recreate everything
+    createFolderNodes();
+
+    for (int idx=0;idx<mUnits.count();idx++) {
+        mUnits[idx]->setNode(
+                    makeNewFileNode(
+                        extractRelativePath(filename(),mUnits[idx]->fileName()),
+                        false,
+                        folderNodeFromName(mUnits[idx]->folder())
+                        )
+                    );
+        mUnits[idx]->node()->unitIndex = idx;
     }
 
-  if FileName <> '' then begin
-  end;
+//      // expand nodes expanded before recreating the project tree
+//      fNode.Collapse(True);
+//      with MainForm.ProjectView do
+//        for idx := 0 to Items.Count - 1 do begin
+//          tempnode := Items[idx];
+//          if (tempnode.Data = Pointer(-1)) then //it's a folder
+//            if oldPaths.IndexOf(GetFolderPath(tempnode)) >= 0 then
+//              tempnode.Expand(False);
+//        end;
+//      FreeAndNil(oldPaths);
+
+//      fNode.Expand(False);
+
+    emit nodesChanged();
 }
 
 void Project::addFolder(const QString &s)
@@ -865,6 +908,7 @@ void Project::loadOptions()
         mOptions.staticLink = mIniFile->value("StaticLink", true).toBool();
         mOptions.addCharset = mIniFile->value("AddCharset", true).toBool();
         mOptions.useUTF8 = mIniFile->value("UseUTF8", false).toBool();
+        mOptions.encoding = mIniFile->value("Encoding", ENCODING_SYSTEM_DEFAULT).toString();
         mOptions.versionInfo.major = mIniFile->value("Major", 0).toInt();
         mOptions.versionInfo.minor = mIniFile->value("Minor", 1).toInt();
         mOptions.versionInfo.release = mIniFile->value("Release", 1).toInt();
@@ -907,6 +951,19 @@ void Project::loadOptions()
     }
 }
 
+void Project::loadUnitLayout(Editor *e, int index)
+{
+    if (!e)
+        return;
+    QSettings layIni(changeFileExt(filename(), "layout"));
+    layIni.beginGroup(QString("Editor_%1").arg(index));
+    e->setCaretY(layIni.value("CursorRow",1).toInt());
+    e->setCaretX(layIni.value("CursorCol",1).toInt());
+    e->setTopLine(layIni.value("TopLine",1).toInt());
+    e->setLeftChar(layIni.value("LeftChar",1).toInt());
+    layIni.endGroup();
+}
+
 PCppParser Project::cppParser()
 {
     return mParser;
@@ -935,6 +992,16 @@ int Project::indexInUnits(const Editor *editor) const
     if (!editor)
         return -1;
     return indexInUnits(editor->filename());
+}
+
+const ProjectOptions &Project::options() const
+{
+    return mOptions;
+}
+
+void Project::setOptions(const ProjectOptions &newOptions)
+{
+    mOptions = newOptions;
 }
 
 const PFolderNode &Project::node() const
