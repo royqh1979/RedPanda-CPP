@@ -23,6 +23,7 @@ struct FolderNode {
     std::weak_ptr<FolderNode> parent;
     int unitIndex;
     QList<PFolderNode>  children;
+    int level;
 };
 
 class ProjectUnit {
@@ -171,23 +172,21 @@ public:
     void loadUnitLayout(Editor *e, int index); // load single [UnitX] cursor positions
     PFolderNode makeNewFileNode(const QString& s, bool isFolder, PFolderNode newParent);
     PFolderNode makeProjectNode();
-    int  newUnit(bool newProject,
-                 PFolderNode parentNode,
+    int  newUnit(PFolderNode parentNode,
                  const QString customFileName);
     Editor* openUnit(int index);
     void rebuildNodes();
     bool removeEditor(int index, bool doClose);
+    bool removeFolder(PFolderNode node);
+    void saveAll(); // save [Project] and  all [UnitX]
+    void saveLayout(); // save all [UnitX]
 
 
     void updateFolders();
     void saveUnitAs(int i, const QString& sFileName); // save single [UnitX]
-    void saveAll(); // save [Project] and  all [UnitX]
-    void saveLayout(); // save all [UnitX]
     void saveUnitLayout(Editor* e, int index); // save single [UnitX] cursor positions
     void saveOptions();
     bool saveUnits();
-//    procedure Open;
-    bool removeFolder(PFolderNode node);
 
     void showOptions();
     // bool assignTemplate(const QString& aFileName, const PTemplate& aTemplate);
@@ -219,6 +218,7 @@ private:
     void sortUnitsByPriority();
     int indexInUnits(const QString& fileName) const;
     int indexInUnits(const Editor* editor) const;
+    void removeFolderRecurse(PFolderNode node);
 private:
     QList<PProjectUnit> mUnits;
     ProjectOptions mOptions;

@@ -164,7 +164,7 @@ void Project::setFileName(const QString &value)
         QFile::copy(mFilename,value);
         mFilename = value;
         setModified(true);
-        mIniFile = std::make_shared<QSettings>(mFilename);
+        mIniFile = std::make_shared<QSettings>(mFilename, QSettings::IniFormat);
     }
 }
 
@@ -184,15 +184,21 @@ PFolderNode Project::makeNewFileNode(const QString &s, bool isFolder, PFolderNod
     PFolderNode node = std::make_shared<FolderNode>();
     node->parent = newParent;
     node->text = s;
+    if (newParent) {
+        node->level = newParent->level+1;
+    }
+    if (isFolder)
+        node->unitIndex = -1;
 }
 
 PFolderNode Project::makeProjectNode()
 {
     PFolderNode node = std::make_shared<FolderNode>();
     node->text = mName;
+    node->level = 0;
 }
 
-int Project::newUnit(bool newProject, PFolderNode parentNode, const QString customFileName)
+int Project::newUnit(PFolderNode parentNode, const QString customFileName)
 {
     PProjectUnit newUnit = std::make_shared<ProjectUnit>();
 
@@ -308,6 +314,182 @@ void Project::rebuildNodes()
 //      fNode.Expand(False);
 
     emit nodesChanged();
+}
+
+bool Project::removeEditor(int index, bool doClose)
+{
+    if (index<0 || index>=mUnits.count())
+        return false;
+
+    PProjectUnit unit = mUnits[index];
+
+    // Attempt to close it
+    if (doClose && (unit->editor())) {
+        if (!pMainWindow->editorList()->closeEditor(unit->editor()))
+            return false;
+    }
+
+//if not fUnits.GetItem(index).fNew then
+    mIniFile->remove("Unit"+QString("%1").arg(index+1));
+    PFolderNode node = unit->node();
+    PFolderNode parent = node->parent.lock();
+    if (parent) {
+        parent->children.removeAll(node);
+    }
+    mUnits.removeAt(index);
+    updateNodeIndexes();
+    setModified(true);
+    return true;
+}
+
+bool Project::removeFolder(PFolderNode node)
+{
+    return false;
+
+    // Sanity check
+    if (!node)
+        return false;
+
+    // Check if this is actually a folder
+    if (node->unitIndex>=0 || node->level<1)
+        return false;
+
+    // Let this function call itself
+    removeFolderRecurse(node);
+
+    // Update list of folders (sets modified)
+    updateFolders();
+    return true;
+}
+
+void Project::saveAll()
+{
+    if (!saveUnits())
+        return;
+    saveOptions(); // update other data, and save to disk
+    saveLayout(); // save current opened files, and which is "active".
+
+    // We have saved everything to disk, so mark unmodified
+    setModified(false);
+}
+
+void Project::saveLayout()
+{
+    QString s = changeFileExt(mFilename, "layout");
+    QSettings layIni(mFilename,QSettings::IniFormat);
+    QStringList sl;
+    // Write list of open project files
+    for (int i=0;i<pMainWindow->editorList()->pageCount();i++) {
+        Editor* e= (*(pMainWindow->editorList()))[i];
+        if (e && e->inProject())
+            sl.append(QString("%1").arg(indexInUnits(e)));
+    }
+    layIni.beginGroup("Editors");
+    layIni.setValue("Order",sl.join(","));
+
+    Editor *e, *e2;
+    // Remember what files were visible
+    pMainWindow->editorList()->getVisibleEditors(e, e2);
+    if (e)
+        layIni.setValue("Focused", indexInUnits(e));
+    layIni.endGroup();
+    // save editor info
+    for (int i=0;i<mUnits.count();i++) {
+        layIni.beginGroup(QString("Editor_%1").arg(i));
+        PProjectUnit unit = mUnits[i];
+        Editor* editor = unit->editor();
+        if (editor) {
+            layIni.setValue("CursorCol", editor->caretX());
+            layIni.setValue("CursorRow", editor->caretY());
+            layIni.setValue("TopLine", editor->topLine());
+            layIni.setValue("LeftChar", editor->leftChar());
+        }
+        layIni.endGroup();
+        // remove old data from project file
+        mIniFile->beginGroup(QString("Unit%1").arg(i+1));
+        mIniFile->remove("Open");
+        mIniFile->remove("Top");
+        mIniFile->remove("CursorCol");
+        mIniFile->remove("CursorRow");
+        mIniFile->remove("TopLine");
+        mIniFile->remove("LeftChar");
+        mIniFile->endGroup();
+    }
+}
+
+void Project::saveOptions()
+{
+    with finiFile do begin
+      WriteString('Project', 'FileName', ExtractRelativePath(Directory, fFileName));
+      WriteString('Project', 'Name', fName);
+      WriteInteger('Project', 'Type', fOptions.typ);
+      WriteInteger('Project', 'Ver', 2); // Is 2 as of Dev-C++ 5.2.0.3
+      WriteString('Project', 'ObjFiles', fOptions.ObjFiles.DelimitedText);
+      WriteString('Project', 'Includes', fOptions.Includes.DelimitedText);
+      WriteString('Project', 'Libs', fOptions.Libs.DelimitedText);
+      WriteString('Project', 'PrivateResource', fOptions.PrivateResource);
+      WriteString('Project', 'ResourceIncludes', fOptions.ResourceIncludes.DelimitedText);
+      WriteString('Project', 'MakeIncludes', fOptions.MakeIncludes.DelimitedText);
+      WriteString('Project', 'Compiler', fOptions.CompilerCmd);
+      WriteString('Project', 'CppCompiler', fOptions.CppCompilerCmd);
+      WriteString('Project', 'Linker', fOptions.LinkerCmd);
+      WriteBool('Project', 'IsCpp', fOptions.UseGpp);
+      WriteString('Project', 'Icon', ExtractRelativePath(Directory, fOptions.Icon));
+      WriteString('Project', 'ExeOutput', fOptions.ExeOutput);
+      WriteString('Project', 'ObjectOutput', fOptions.ObjectOutput);
+      WriteString('Project', 'LogOutput', fOptions.LogOutput);
+      WriteBool('Project', 'LogOutputEnabled', fOptions.LogOutputEnabled);
+      WriteBool('Project', 'OverrideOutput', fOptions.OverrideOutput);
+      WriteString('Project', 'OverrideOutputName', fOptions.OverridenOutput);
+      WriteString('Project', 'HostApplication', fOptions.HostApplication);
+      WriteBool('Project', 'UseCustomMakefile', fOptions.UseCustomMakefile);
+      WriteString('Project', 'CustomMakefile', fOptions.CustomMakefile);
+      WriteBool('Project', 'UsePrecompiledHeader', fOptions.UsePrecompiledHeader);
+      WriteString('Project', 'PrecompiledHeader', fOptions.PrecompiledHeader);
+      WriteString('Project', 'CommandLine', fOptions.CmdLineArgs);
+      WriteString('Project', 'Folders', fFolders.CommaText);
+      WriteBool('Project', 'IncludeVersionInfo', fOptions.IncludeVersionInfo);
+      WriteBool('Project', 'SupportXPThemes', fOptions.SupportXPThemes);
+      WriteInteger('Project', 'CompilerSet', fOptions.CompilerSet);
+      WriteString('Project', 'CompilerSettings', fOptions.CompilerOptions);
+      WriteBool('Project','StaticLink', fOptions.StaticLink);
+      WriteBool('Project','AddCharset', fOptions.AddCharset);
+      WriteBool('Project', 'UseUTF8', fOptions.UseUTF8);
+
+      WriteInteger('VersionInfo', 'Major', fOptions.VersionInfo.Major);
+      WriteInteger('VersionInfo', 'Minor', fOptions.VersionInfo.Minor);
+      WriteInteger('VersionInfo', 'Release', fOptions.VersionInfo.Release);
+      WriteInteger('VersionInfo', 'Build', fOptions.VersionInfo.Build);
+      WriteInteger('VersionInfo', 'LanguageID', fOptions.VersionInfo.LanguageID);
+      WriteInteger('VersionInfo', 'CharsetID', fOptions.VersionInfo.CharsetID);
+      WriteString('VersionInfo', 'CompanyName', fOptions.VersionInfo.CompanyName);
+      WriteString('VersionInfo', 'FileVersion', fOptions.VersionInfo.FileVersion);
+      WriteString('VersionInfo', 'FileDescription', fOptions.VersionInfo.FileDescription);
+      WriteString('VersionInfo', 'InternalName', fOptions.VersionInfo.InternalName);
+      WriteString('VersionInfo', 'LegalCopyright', fOptions.VersionInfo.LegalCopyright);
+      WriteString('VersionInfo', 'LegalTrademarks', fOptions.VersionInfo.LegalTrademarks);
+      WriteString('VersionInfo', 'OriginalFilename', fOptions.VersionInfo.OriginalFilename);
+      WriteString('VersionInfo', 'ProductName', fOptions.VersionInfo.ProductName);
+      WriteString('VersionInfo', 'ProductVersion', fOptions.VersionInfo.ProductVersion);
+      WriteBool('VersionInfo', 'AutoIncBuildNr', fOptions.VersionInfo.AutoIncBuildNr);
+      WriteBool('VersionInfo', 'SyncProduct', fOptions.VersionInfo.SyncProduct);
+
+      if fOptions.Ver <= 0 then begin
+        //delete outdated dev4 project options
+        DeleteKey('Project', 'NoConsole');
+        DeleteKey('Project', 'IsDLL');
+        DeleteKey('Project', 'ResFiles');
+        DeleteKey('Project', 'IncludeDirs');
+        DeleteKey('Project', 'CompilerOptions');
+        DeleteKey('Project', 'StaticLink');
+        DeleteKey('Project', 'StaticLink');
+        DeleteKey('Project', 'UseUTF8');
+        DeleteKey('Project', 'Use_GPP');
+      end;
+    end;
+
+    fINIFile.UpdateFile; // force flush
+
 }
 
 void Project::addFolder(const QString &s)
@@ -955,7 +1137,7 @@ void Project::loadUnitLayout(Editor *e, int index)
 {
     if (!e)
         return;
-    QSettings layIni(changeFileExt(filename(), "layout"));
+    QSettings layIni(changeFileExt(filename(), "layout"), QSettings::IniFormat);
     layIni.beginGroup(QString("Editor_%1").arg(index));
     e->setCaretY(layIni.value("CursorRow",1).toInt());
     e->setCaretX(layIni.value("CursorCol",1).toInt());
@@ -992,6 +1174,31 @@ int Project::indexInUnits(const Editor *editor) const
     if (!editor)
         return -1;
     return indexInUnits(editor->filename());
+}
+
+void Project::removeFolderRecurse(PFolderNode node)
+{
+    if (!node)
+        return ;
+    // Recursively remove folders
+    for (int i=node->children.count()-1;i>=0;i++) {
+        PFolderNode childNode = node->children[i];
+        // Remove folder inside folder
+        if (childNode->unitIndex<0 && childNode->level>0) {
+            removeFolderRecurse(childNode);
+        // Or remove editors at this level
+        } else if (childNode->unitIndex >= 0 && childNode->level > 0) {
+            // Remove editor in folder from project
+            int editorIndex = childNode->unitIndex;
+            if (!removeEditor(editorIndex,true))
+                return;
+        }
+    }
+
+    PFolderNode parent = node->parent.lock();
+    if (parent) {
+        parent->children.removeAll(node);
+    }
 }
 
 const ProjectOptions &Project::options() const
