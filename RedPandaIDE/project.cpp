@@ -141,8 +141,7 @@ void Project::open()
             newUnit->setPriority(mIniFile->value("Priority", 1000).toInt());
             newUnit->setOverrideBuildCmd(mIniFile->value("OverrideBuildCmd", false).toInt());
             newUnit->setBuildCmd(mIniFile->value("BuildCmd", "").toString());
-            newUnit->setDetectEncoding(mIniFile->value("DetectEncoding", mOptions.useUTF8).toBool());
-            newUnit->setEncoding(mIniFile->value("Encoding",ENCODING_SYSTEM_DEFAULT).toByteArray());
+            newUnit->setEncoding(mIniFile->value("FileEncoding",ENCODING_SYSTEM_DEFAULT).toByteArray());
 
             newUnit->setEditor(nullptr);
             newUnit->setNew(false);
@@ -161,7 +160,7 @@ void Project::setFileName(const QString &value)
     if (mFilename!=value) {
         mIniFile->sync();
         mIniFile.reset();
-        QFile::copy(mFilename,value);
+        QFile::rename(mFilename,value);
         mFilename = value;
         setModified(true);
         mIniFile = std::make_shared<QSettings>(mFilename, QSettings::IniFormat);
@@ -258,10 +257,7 @@ Editor *Project::openUnit(int index)
             return editor;
         }
         QByteArray encoding;
-        if (mOptions.useUTF8) {
-            encoding = ENCODING_UTF8;
-        } else
-            encoding = mOptions.encoding.toLocal8Bit();
+        encoding = mOptions.encoding.toLocal8Bit();
         editor = pMainWindow->editorList()->newEditor(fullPath, encoding, true, false);
         editor->setInProject(true);
         unit->setEditor(editor);
@@ -417,78 +413,183 @@ void Project::saveLayout()
     }
 }
 
+void Project::saveUnitAs(int i, const QString &sFileName)
+{
+    if ((i < 0) || (i >= mUnits.count()))
+        return;
+    PProjectUnit unit = mUnits[i];
+//    if (fileExists(unit->fileName())) {
+//        unit->setNew(false);
+//    }
+    unit->setNew(false);
+    unit->setFileName(sFileName);
+    mIniFile->beginGroup(QString("Unit%1").arg(i+1));
+    mIniFile->setValue("FileName",
+                       extractRelativePath(
+                           directory(),
+                           sFileName));
+    mIniFile->endGroup();
+    mIniFile->sync();
+    setModified(true);
+}
+
+void Project::saveUnitLayout(Editor *e, int index)
+{
+    if (!e)
+        return;
+    QSettings layIni = QSettings(changeFileExt(filename(), "layout"));
+    layIni.beginGroup(QString("Editor_%1").arg(index));
+    layIni.setValue("CursorCol", e->caretX());
+    layIni.setValue("CursorRow", e->caretY());
+    layIni.setValue("TopLine", e->topLine());
+    layIni.setValue("LeftChar", e->leftChar());
+    layIni.endGroup();
+}
+
+bool Project::saveUnits()
+{
+    int count = 0;
+    for (int idx = 0; idx < mUnits.count(); idx++) {
+        PProjectUnit unit = mUnits[idx];
+        bool rd_only = false;
+        mIniFile->beginGroup(QString("Unit%1").arg(count+1);
+        if (unit->modified() && fileExists(unit->fileName())
+            && isReadonly(unit->fileName)) {
+            // file is read-only
+            QMessageBox::critical(pMainWindow,
+                                  tr("Can't save file"),
+                                  tr("Can't save file '%1'").arg(unit->fileName()),
+                                  QMessageBox::Ok
+                                  );
+            rd_only = true;
+        }
+        if (!rd_only) {
+            if (!unit->save() && unit->isNew())
+                return false;
+        }
+
+        // saved new file or an existing file add to project file
+
+        mIniFile->setValue("FileName",
+                           extractRelativePath(
+                               directory(),
+                               unit->fileName()));
+        count++;
+        switch(getFileType(unit->fileName())) {
+        case FileType::CHeader:
+        case FileType::CSource:
+        case FileType::CppHeader:
+        case FileType::CppSource:
+            mIniFile->setValue("CompileCpp", unit->compileCpp());
+            break;
+        case FileType::WindowsResourceSource:
+            unit->setFolder("Resources");
+        }
+
+        mIniFile->setValue("Folder", unit->folder());
+        mIniFile->setValue("Compile", unit->compile());
+        mIniFile->setValue("Link", unit->link());
+        mIniFile->setValue("Priority", unit->priority());
+        mIniFile->setValue("OverrideBuildCmd", unit->overrideBuildCmd());
+        mIniFile->setValue("BuildCmd", unit->buildCmd());
+        mIniFile->setValue("DetectEncoding", unit->encoding()==ENCODING_AUTO_DETECT);
+        mIniFile->setValue("FileEncoding", unit->encoding());
+        mIniFile->endGroup();
+    }
+    mIniFile->beginGroup("Project");
+    mIniFile->setValue("UnitCount",count);
+    mIniFile->endGroup();
+    mIniFile->sync();
+    return true;
+}
+
+void Project::setCompilerOption(const QString &optionString, const QChar &value)
+{
+    if (mOptions.compilerSet<0 || mOptions.compilerSet>=pSettings->compilerSets().size()) {
+        return;
+    }
+    std::shared_ptr<Settings::CompilerSet> compilerSet = pSettings->compilerSets().list()[mOptions.compilerSet];
+    int optionIndex = compilerSet->findOptionIndex(optionString);
+    // Does the option exist?
+    if (optionIndex>=0){
+        mOptions.compilerOptions[optionIndex] = value;
+    }
+}
+
 void Project::saveOptions()
 {
-    with finiFile do begin
-      WriteString('Project', 'FileName', ExtractRelativePath(Directory, fFileName));
-      WriteString('Project', 'Name', fName);
-      WriteInteger('Project', 'Type', fOptions.typ);
-      WriteInteger('Project', 'Ver', 2); // Is 2 as of Dev-C++ 5.2.0.3
-      WriteString('Project', 'ObjFiles', fOptions.ObjFiles.DelimitedText);
-      WriteString('Project', 'Includes', fOptions.Includes.DelimitedText);
-      WriteString('Project', 'Libs', fOptions.Libs.DelimitedText);
-      WriteString('Project', 'PrivateResource', fOptions.PrivateResource);
-      WriteString('Project', 'ResourceIncludes', fOptions.ResourceIncludes.DelimitedText);
-      WriteString('Project', 'MakeIncludes', fOptions.MakeIncludes.DelimitedText);
-      WriteString('Project', 'Compiler', fOptions.CompilerCmd);
-      WriteString('Project', 'CppCompiler', fOptions.CppCompilerCmd);
-      WriteString('Project', 'Linker', fOptions.LinkerCmd);
-      WriteBool('Project', 'IsCpp', fOptions.UseGpp);
-      WriteString('Project', 'Icon', ExtractRelativePath(Directory, fOptions.Icon));
-      WriteString('Project', 'ExeOutput', fOptions.ExeOutput);
-      WriteString('Project', 'ObjectOutput', fOptions.ObjectOutput);
-      WriteString('Project', 'LogOutput', fOptions.LogOutput);
-      WriteBool('Project', 'LogOutputEnabled', fOptions.LogOutputEnabled);
-      WriteBool('Project', 'OverrideOutput', fOptions.OverrideOutput);
-      WriteString('Project', 'OverrideOutputName', fOptions.OverridenOutput);
-      WriteString('Project', 'HostApplication', fOptions.HostApplication);
-      WriteBool('Project', 'UseCustomMakefile', fOptions.UseCustomMakefile);
-      WriteString('Project', 'CustomMakefile', fOptions.CustomMakefile);
-      WriteBool('Project', 'UsePrecompiledHeader', fOptions.UsePrecompiledHeader);
-      WriteString('Project', 'PrecompiledHeader', fOptions.PrecompiledHeader);
-      WriteString('Project', 'CommandLine', fOptions.CmdLineArgs);
-      WriteString('Project', 'Folders', fFolders.CommaText);
-      WriteBool('Project', 'IncludeVersionInfo', fOptions.IncludeVersionInfo);
-      WriteBool('Project', 'SupportXPThemes', fOptions.SupportXPThemes);
-      WriteInteger('Project', 'CompilerSet', fOptions.CompilerSet);
-      WriteString('Project', 'CompilerSettings', fOptions.CompilerOptions);
-      WriteBool('Project','StaticLink', fOptions.StaticLink);
-      WriteBool('Project','AddCharset', fOptions.AddCharset);
-      WriteBool('Project', 'UseUTF8', fOptions.UseUTF8);
+    mIniFile->beginGroup("Project");
+    mIniFile->setValue("FileName", extractRelativePath(directory(), mFilename));
+    mIniFile->setValue("Name", mName);
+    mIniFile->setValue("Type", static_cast<int>(mOptions.type));
+    mIniFile->setValue("Ver", 3); // Is 3 as of Red Panda Dev-C++ 7.0
+    mIniFile->setValue("ObjFiles", mOptions.objFiles.join(";"));
+    mIniFile->setValue("Includes", mOptions.includes.join(";"));
+    mIniFile->setValue("Libs", mOptions.libs.join(";"));
+    mIniFile->setValue("PrivateResource", mOptions.privateResource);
+    mIniFile->setValue("ResourceIncludes", mOptions.resourceIncludes.join(";"));
+    mIniFile->setValue("MakeIncludes", mOptions.makeIncludes.join(";"));
+    mIniFile->setValue("Compiler", mOptions.compilerCmd);
+    mIniFile->setValue("CppCompiler", mOptions.cppCompilerCmd);
+    mIniFile->setValue("Linker", mOptions.linkerCmd);
+    mIniFile->setValue("IsCpp", mOptions.useGPP);
+    mIniFile->setValue("Icon", extractRelativePath(directory(), mOptions.icon));
+    mIniFile->setValue("ExeOutput", mOptions.exeOutput);
+    mIniFile->setValue("ObjectOutput", mOptions.objectOutput);
+    mIniFile->setValue("LogOutput", mOptions.logOutput);
+    mIniFile->setValue("LogOutputEnabled", mOptions.logOutputEnabled);
+    mIniFile->setValue("OverrideOutput", mOptions.overrideOutput);
+    mIniFile->setValue("OverrideOutputName", mOptions.overridenOutput);
+    mIniFile->setValue("HostApplication", mOptions.hostApplication);
+    mIniFile->setValue("UseCustomMakefile", mOptions.useCustomMakefile);
+    mIniFile->setValue("CustomMakefile", mOptions.customMakefile);
+    mIniFile->setValue("UsePrecompiledHeader", mOptions.usePrecompiledHeader);
+    mIniFile->setValue("PrecompiledHeader", mOptions.precompiledHeader);
+    mIniFile->setValue("CommandLine", mOptions.cmdLineArgs);
+    mIniFile->setValue("Folders", mFolders.join(";"));
+    mIniFile->setValue("IncludeVersionInfo", mOptions.includeVersionInfo);
+    mIniFile->setValue("SupportXPThemes", mOptions.supportXPThemes);
+    mIniFile->setValue("CompilerSet", mOptions.compilerSet);
+    mIniFile->setValue("CompilerSettings", mOptions.compilerOptions);
+    mIniFile->setValue("StaticLink", mOptions.staticLink);
+    mIniFile->setValue("AddCharset", mOptions.addCharset);
+    mIniFile->setValue("Encoding",mOptions.encoding);
+    //for Red Panda Dev C++ 6 compatibility
+    mIniFile->setValue("UseUTF8",mOptions.encoding == ENCODING_UTF8);
+    mIniFile->endGroup();
 
-      WriteInteger('VersionInfo', 'Major', fOptions.VersionInfo.Major);
-      WriteInteger('VersionInfo', 'Minor', fOptions.VersionInfo.Minor);
-      WriteInteger('VersionInfo', 'Release', fOptions.VersionInfo.Release);
-      WriteInteger('VersionInfo', 'Build', fOptions.VersionInfo.Build);
-      WriteInteger('VersionInfo', 'LanguageID', fOptions.VersionInfo.LanguageID);
-      WriteInteger('VersionInfo', 'CharsetID', fOptions.VersionInfo.CharsetID);
-      WriteString('VersionInfo', 'CompanyName', fOptions.VersionInfo.CompanyName);
-      WriteString('VersionInfo', 'FileVersion', fOptions.VersionInfo.FileVersion);
-      WriteString('VersionInfo', 'FileDescription', fOptions.VersionInfo.FileDescription);
-      WriteString('VersionInfo', 'InternalName', fOptions.VersionInfo.InternalName);
-      WriteString('VersionInfo', 'LegalCopyright', fOptions.VersionInfo.LegalCopyright);
-      WriteString('VersionInfo', 'LegalTrademarks', fOptions.VersionInfo.LegalTrademarks);
-      WriteString('VersionInfo', 'OriginalFilename', fOptions.VersionInfo.OriginalFilename);
-      WriteString('VersionInfo', 'ProductName', fOptions.VersionInfo.ProductName);
-      WriteString('VersionInfo', 'ProductVersion', fOptions.VersionInfo.ProductVersion);
-      WriteBool('VersionInfo', 'AutoIncBuildNr', fOptions.VersionInfo.AutoIncBuildNr);
-      WriteBool('VersionInfo', 'SyncProduct', fOptions.VersionInfo.SyncProduct);
+    mIniFile->beginGroup("VersionInfo");
+    mIniFile->setValue("Major", mOptions.versionInfo.major);
 
-      if fOptions.Ver <= 0 then begin
-        //delete outdated dev4 project options
-        DeleteKey('Project', 'NoConsole');
-        DeleteKey('Project', 'IsDLL');
-        DeleteKey('Project', 'ResFiles');
-        DeleteKey('Project', 'IncludeDirs');
-        DeleteKey('Project', 'CompilerOptions');
-        DeleteKey('Project', 'StaticLink');
-        DeleteKey('Project', 'StaticLink');
-        DeleteKey('Project', 'UseUTF8');
-        DeleteKey('Project', 'Use_GPP');
-      end;
-    end;
+    mIniFile->setValue("Minor", mOptions.versionInfo.minor);
+    mIniFile->setValue("Release", mOptions.versionInfo.release);
+    mIniFile->setValue("Build", mOptions.versionInfo.build);
+    mIniFile->setValue("LanguageID", mOptions.versionInfo.languageID);
+    mIniFile->setValue("CharsetID", mOptions.versionInfo.charsetID);
+    mIniFile->setValue("CompanyName", mOptions.versionInfo.companyName);
+    mIniFile->setValue("FileVersion", mOptions.versionInfo.fileVersion);
+    mIniFile->setValue("FileDescription", mOptions.versionInfo.fileDescription);
+    mIniFile->setValue("InternalName", mOptions.versionInfo.internalName);
+    mIniFile->setValue("LegalCopyright", mOptions.versionInfo.legalCopyright);
+    mIniFile->setValue("LegalTrademarks", mOptions.versionInfo.legalTrademarks);
+    mIniFile->setValue("OriginalFilename", mOptions.versionInfo.originalFilename);
+    mIniFile->setValue("ProductName", mOptions.versionInfo.productName);
+    mIniFile->setValue("ProductVersion", mOptions.versionInfo.productVersion);
+    mIniFile->setValue("AutoIncBuildNr", mOptions.versionInfo.autoIncBuildNr);
+    mIniFile->setValue("SyncProduct", mOptions.versionInfo.syncProduct);
+    mIniFile->endGroup();
 
-    fINIFile.UpdateFile; // force flush
+    //delete outdated dev4 project options
+    mIniFile->beginGroup("Project");
+    mIniFile->remove("NoConsole");
+    mIniFile->remove("IsDLL");
+    mIniFile->remove("ResFiles");
+    mIniFile->remove("IncludeDirs");
+    mIniFile->remove("CompilerOptions");
+    mIniFile->remove("Use_GPP");
+    mIniFile->endGroup();
+
+    mIniFile->sync(); // force flush
 
 }
 
@@ -1089,8 +1190,12 @@ void Project::loadOptions()
         mOptions.compilerOptions = mIniFile->value("CompilerSettings","").toString();
         mOptions.staticLink = mIniFile->value("StaticLink", true).toBool();
         mOptions.addCharset = mIniFile->value("AddCharset", true).toBool();
-        mOptions.useUTF8 = mIniFile->value("UseUTF8", false).toBool();
-        mOptions.encoding = mIniFile->value("Encoding", ENCODING_SYSTEM_DEFAULT).toString();
+        bool useUTF8 = mIniFile->value("UseUTF8", false).toBool();
+        if (useUTF8) {
+            mOptions.encoding = mIniFile->value("Encoding", ENCODING_SYSTEM_DEFAULT).toString();
+        } else {
+            mOptions.encoding = mIniFile->value("Encoding", ENCODING_UTF8).toString();
+        }
         mOptions.versionInfo.major = mIniFile->value("Major", 0).toInt();
         mOptions.versionInfo.minor = mIniFile->value("Minor", 1).toInt();
         mOptions.versionInfo.release = mIniFile->value("Release", 1).toInt();

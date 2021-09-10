@@ -52,8 +52,6 @@ public:
     void setLink(bool newLink);
     int priority() const;
     void setPriority(int newPriority);
-    bool detectEncoding() const;
-    void setDetectEncoding(bool newDetectEncoding);
     const QByteArray &encoding() const;
     void setEncoding(const QByteArray &newEncoding);
     bool modified() const;
@@ -75,7 +73,6 @@ private:
     QString mBuildCmd;
     bool mLink;
     int mPriority;
-    bool mDetectEncoding;
     QByteArray mEncoding;
     PFolderNode mNode;
 };
@@ -105,7 +102,6 @@ struct ProjectVersionInfo{
 struct ProjectOptions{
     ProjectType type;
     int version;
-    bool useUTF8;
     QStringList objFiles;
     QString compilerCmd;
     QString cppCompilerCmd;
@@ -180,20 +176,20 @@ public:
     bool removeFolder(PFolderNode node);
     void saveAll(); // save [Project] and  all [UnitX]
     void saveLayout(); // save all [UnitX]
+    void saveOptions();
+    void saveUnitAs(int i, const QString& sFileName); // save single [UnitX]
+    void saveUnitLayout(Editor* e, int index); // save single [UnitX] cursor positions
+    bool saveUnits();
+    void setCompilerOption(const QString& optionString, const QChar& value);
 
 
     void updateFolders();
-    void saveUnitAs(int i, const QString& sFileName); // save single [UnitX]
-    void saveUnitLayout(Editor* e, int index); // save single [UnitX] cursor positions
-    void saveOptions();
-    bool saveUnits();
 
     void showOptions();
     // bool assignTemplate(const QString& aFileName, const PTemplate& aTemplate);
     void updateNodeIndexes();
     void setNodeValue(PFolderNode value);
-    void setCompilerOption(const QString& optionString, const QChar& value);
-    void saveToLog();
+    //void saveToLog();
 
     std::shared_ptr<CppParser> cppParser();
     const QString &filename() const;
