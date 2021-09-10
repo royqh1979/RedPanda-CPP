@@ -179,6 +179,19 @@ void Project::setModified(bool value)
     }
 }
 
+PFolderNode Project::makeNewFileNode(const QString &s, bool isFolder, PFolderNode newParent)
+{
+    PFolderNode node = std::make_shared<FolderNode>();
+    node->parent = newParent;
+    node->text = s;
+}
+
+PFolderNode Project::makeProjectNode()
+{
+    PFolderNode node = std::make_shared<FolderNode>();
+    node->text = mName;
+}
+
 void Project::addFolder(const QString &s)
 {
     if (mFolders.indexOf(s)<0) {
@@ -656,11 +669,11 @@ QString Project::getFolderPath(PFolderNode node)
     if (node->unitIndex>=0) // not a folder
         return result;
 
-    FolderNode* p = node.get();
+    PFolderNode p = node;
     while (p && p->unitIndex==-1) {
         if (!result.isEmpty())
             result = p->text + "/" + result;
-        p = p->parent;
+        p = p->parent.lock();
     }
     return result;
 }
@@ -735,80 +748,88 @@ void Project::loadOptions()
         mOptions.type = static_cast<ProjectType>(mIniFile->value("type", 0).toInt());
         mOptions.compilerCmd = mIniFile->value("Compiler", "").toString();
         mOptions.cppCompilerCmd = mIniFile->value("CppCompiler", "").toString();
-        fOptions.LinkerCmd := ReadString('Project', 'Linker', '');
-        fOptions.ObjFiles.DelimitedText := ReadString('Project', 'ObjFiles', '');
-        fOptions.Libs.DelimitedText := ReadString('Project', 'Libs', '');
-        fOptions.Includes.DelimitedText := ReadString('Project', 'Includes', '');
-        fOptions.PrivateResource := ReadString('Project', 'PrivateResource', '');
-        fOptions.ResourceIncludes.DelimitedText := ReadString('Project', 'ResourceIncludes', '');
-        fOptions.MakeIncludes.DelimitedText := ReadString('Project', 'MakeIncludes', '');
-        fOptions.UseGpp := ReadBool('Project', 'IsCpp', FALSE);
-        fOptions.ExeOutput := ReadString('Project', 'ExeOutput', '');
-        fOptions.ObjectOutput := ReadString('Project', 'ObjectOutput', '');
-        fOptions.LogOutput := ReadString('Project', 'LogOutput', '');
-        fOptions.LogOutputEnabled := ReadBool('Project', 'LogOutputEnabled', FALSE);
-        fOptions.OverrideOutput := ReadBool('Project', 'OverrideOutput', FALSE);
-        fOptions.OverridenOutput := ReadString('Project', 'OverrideOutputName', '');
-        fOptions.HostApplication := ReadString('Project', 'HostApplication', '');
-        fOptions.UseCustomMakefile := ReadBool('Project', 'UseCustomMakefile', FALSE);
-        fOptions.CustomMakefile := ReadString('Project', 'CustomMakefile', '');
-        fOptions.UsePrecompiledHeader := ReadBool('Project', 'UsePrecompiledHeader', FALSE);
-        fOptions.PrecompiledHeader := ReadString('Project', 'PrecompiledHeader', '');
-        fOptions.CmdLineArgs := ReadString('Project', 'CommandLine', '');
-        fFolders.CommaText := ReadString('Project', 'Folders', '');
-        fOptions.IncludeVersionInfo := ReadBool('Project', 'IncludeVersionInfo', False);
-        fOptions.SupportXPThemes := ReadBool('Project', 'SupportXPThemes', False);
-        fOptions.CompilerSet := ReadInteger('Project', 'CompilerSet', devCompilerSets.DefaultSetIndex);
-        if (fOptions.CompilerSet >= devCompilerSets.Count) or (fOptions.CompilerSet < 0)  then begin // TODO: change from indices to names
-          MessageDlg(Lang[ID_MSG_COMPILERNOTFOUND], mtError, [mbOk], 0);
-          fOptions.CompilerSet := devCompilerSets.DefaultSetIndex;
-          Modified := True;
-        end;
-        fOptions.CompilerOptions := ReadString('Project', 'CompilerSettings', '');
-        fOptions.StaticLink := ReadBool('Project','StaticLink',True);
-        fOptions.AddCharset := ReadBool('Project','AddCharset',True);
-        fOptions.UseUTF8 := ReadBool('Project','UseUTF8',False);
-        fOptions.VersionInfo.Major := ReadInteger('VersionInfo', 'Major', 0);
-        fOptions.VersionInfo.Minor := ReadInteger('VersionInfo', 'Minor', 1);
-        fOptions.VersionInfo.Release := ReadInteger('VersionInfo', 'Release', 1);
-        fOptions.VersionInfo.Build := ReadInteger('VersionInfo', 'Build', 1);
-        fOptions.VersionInfo.LanguageID := ReadInteger('VersionInfo', 'LanguageID', $0409);
-        fOptions.VersionInfo.CharsetID := ReadInteger('VersionInfo', 'CharsetID', $04E4);
-        fOptions.VersionInfo.CompanyName := ReadString('VersionInfo', 'CompanyName', '');
-        fOptions.VersionInfo.FileVersion := ReadString('VersionInfo', 'FileVersion', '0.1');
-        fOptions.VersionInfo.FileDescription := ReadString('VersionInfo', 'FileDescription',
-          'Developed using the Dev-C++ IDE');
-        fOptions.VersionInfo.InternalName := ReadString('VersionInfo', 'InternalName', '');
-        fOptions.VersionInfo.LegalCopyright := ReadString('VersionInfo', 'LegalCopyright', '');
-        fOptions.VersionInfo.LegalTrademarks := ReadString('VersionInfo', 'LegalTrademarks', '');
-        fOptions.VersionInfo.OriginalFilename := ReadString('VersionInfo', 'OriginalFilename',
-          ExtractFilename(Executable));
-        fOptions.VersionInfo.ProductName := ReadString('VersionInfo', 'ProductName', Name);
-        fOptions.VersionInfo.ProductVersion := ReadString('VersionInfo', 'ProductVersion', '0.1.1.1');
-        fOptions.VersionInfo.AutoIncBuildNr := ReadBool('VersionInfo', 'AutoIncBuildNr', False);
-        fOptions.VersionInfo.SyncProduct := ReadBool('VersionInfo', 'SyncProduct', False);
-      end else begin // dev-c < 4
-        fOptions.Ver := -1;
-        if not ReadBool('Project', 'NoConsole', TRUE) then
-          fOptions.typ := dptCon
-        else if ReadBool('Project', 'IsDLL', FALSE) then
-          fOptions.Typ := dptDyn
-        else
-          fOptions.typ := dptGUI;
+        mOptions.linkerCmd = mIniFile->value("Linker", "").toString();
+        mOptions.objFiles = mIniFile->value("ObjFiles", "").toString().split(";");
+        mOptions.libs = mIniFile->value("Libs", "").toString().split(";");
+        mOptions.includes = mIniFile->value("Includes", "").toString().split(";");
+        mOptions.privateResource = mIniFile->value("PrivateResource", "").toString();
+        mOptions.resourceIncludes = mIniFile->value("ResourceIncludes", "").toString().split(";");
+        mOptions.makeIncludes = mIniFile->value("MakeIncludes","").toString().split(";");
+        mOptions.useGPP = mIniFile->value("IsCpp", false).toBool();
+        mOptions.exeOutput = mIniFile->value("ExeOutput", "").toString();
+        mOptions.objectOutput = mIniFile->value("ObjectOutput", "").toString();
+        mOptions.logOutput = mIniFile->value("LogOutput","").toString();
+        mOptions.logOutputEnabled = mIniFile->value("LogOutputEnabled", false).toBool();
+        mOptions.overrideOutput = mIniFile->value("OverrideOutput", false).toBool();
+        mOptions.overridenOutput = mIniFile->value("OverrideOutputName","").toString();
+        mOptions.hostApplication = mIniFile->value("HostApplication","").toString();
+        mOptions.useCustomMakefile = mIniFile->value("UseCustomMakefile", false).toBool();
+        mOptions.customMakefile = mIniFile->value("CustomMakefile","").toString();
+        mOptions.usePrecompiledHeader = mIniFile->value("UsePrecompiledHeader", false).toBool();
+        mOptions.precompiledHeader = mIniFile->value("PrecompiledHeader","").toString();
+        mOptions.cmdLineArgs = mIniFile->value("CommandLine","").toString();
+        mFolders = mIniFile->value("Folders","").toString().split(";");
+        mOptions.includeVersionInfo = mIniFile->value("IncludeVersionInfo", false).toBool();
+        mOptions.supportXPThemes = mIniFile->value("SupportXPThemes", false).toBool();
+        mOptions.compilerSet = mIniFile->value("CompilerSet", pSettings->compilerSets().defaultIndex()).toInt();
 
-        fOptions.PrivateResource := ReadString('Project', 'PrivateResource', '');
-        fOptions.ResourceIncludes.DelimitedText := ReadString('Project', 'ResourceIncludes', '');
-        fOptions.ObjFiles.Add(ReadString('Project', 'ObjFiles', ''));
-        fOptions.Includes.Add(ReadString('Project', 'IncludeDirs', ''));
-        fOptions.CompilerCmd := ReadString('Project', 'CompilerOptions', '');
-        fOptions.usegpp := ReadBool('Project', 'Use_GPP', FALSE);
-        fOptions.ExeOutput := ReadString('Project', 'ExeOutput', '');
-        fOptions.ObjectOutput := ReadString('Project', 'ObjectOutput', '');
-        fOptions.OverrideOutput := ReadBool('Project', 'OverrideOutput', FALSE);
-        fOptions.OverridenOutput := ReadString('Project', 'OverrideOutputName', '');
-        fOptions.HostApplication := ReadString('Project', 'HostApplication', '');
-      end;
-    end;
+        if (mOptions.compilerSet >= pSettings->compilerSets().size()
+                || mOptions.compilerSet < 0) { // TODO: change from indices to names
+            QMessageBox::critical(
+                        pMainWindow,
+                        tr("Compiler not found"),
+                        tr("The compiler set you have selected for this project, no longer exists.")
+                        +"<BR />"
+                        +tr("It will be substituted by the global compiler set."),
+                        QMessageBox::Ok
+                                  );
+            mOptions.compilerSet = pSettings->compilerSets().defaultIndex();
+            setModified(true);
+        }
+        mOptions.compilerOptions = mIniFile->value("CompilerSettings","").toString();
+        mOptions.staticLink = mIniFile->value("StaticLink", true).toBool();
+        mOptions.addCharset = mIniFile->value("AddCharset", true).toBool();
+        mOptions.useUTF8 = mIniFile->value("UseUTF8", false).toBool();
+        mOptions.versionInfo.major = mIniFile->value("Major", 0).toInt();
+        mOptions.versionInfo.minor = mIniFile->value("Minor", 1).toInt();
+        mOptions.versionInfo.release = mIniFile->value("Release", 1).toInt();
+        mOptions.versionInfo.build = mIniFile->value("Build", 1).toInt();
+        mOptions.versionInfo.languageID = mIniFile->value("LanguageID", 0x0409).toInt();
+        mOptions.versionInfo.charsetID = mIniFile->value("CharsetID", 0x04E4).toInt();
+        mOptions.versionInfo.companyName = mIniFile->value("CompanyName","").toString();
+        mOptions.versionInfo.fileVersion = mIniFile->value("FileVersion", "0.1").toString();
+        mOptions.versionInfo.fileDescription = mIniFile->value("FileDescription",
+          tr("Developed using the Red Panda Dev-C++ IDE")).toString();
+        mOptions.versionInfo.internalName = mIniFile->value("InternalName","").toString();
+        mOptions.versionInfo.legalCopyright = mIniFile->value("LegalCopyright","").toString();
+        mOptions.versionInfo.legalTrademarks = mIniFile->value("LegalTrademarks","").toString();
+        mOptions.versionInfo.originalFilename = mIniFile->value("OriginalFilename",
+                                                                baseFileName(executable())).toString();
+        mOptions.versionInfo.productName = mIniFile->value("ProductName", mName).toString();
+        mOptions.versionInfo.productVersion = mIniFile->value("ProductVersion", "0.1.1.1").toString();
+        mOptions.versionInfo.autoIncBuildNr = mIniFile->value("AutoIncBuildNr", false).toBool();
+        mOptions.versionInfo.syncProduct = mIniFile->value("SyncProduct", false).toBool();
+    } else { // dev-c < 4
+        mOptions.version = -1;
+        if (!mIniFile->value("NoConsole", true).toBool())
+            mOptions.type = ProjectType::Console;
+        else if (mIniFile->value("IsDLL", false).toBool())
+            mOptions.type = ProjectType::DynamicLib;
+        else
+            mOptions.type = ProjectType::GUI;
+
+        mOptions.privateResource = mIniFile->value("PrivateResource","").toString();
+        mOptions.resourceIncludes = mIniFile->value("ResourceIncludes","").toString().split(";");
+        mOptions.objFiles = mIniFile->value("ObjFiles","").toString().split(";");
+        mOptions.includes = mIniFile->value("IncludeDirs","").toString().split(";");
+        mOptions.compilerCmd = mIniFile->value("CompilerOptions","").toString();
+        mOptions.useGPP = mIniFile->value("Use_GPP", false).toBool();
+        mOptions.exeOutput = mIniFile->value("ExeOutput","").toString();
+        mOptions.objectOutput = mIniFile->value("ObjectOutput","").toString();
+        mOptions.overrideOutput = mIniFile->value("OverrideOutput", false).toBool();
+        mOptions.overridenOutput = mIniFile->value("OverrideOutputName","").toString();
+        mOptions.hostApplication = mIniFile->value("HostApplication","").toString();
+    }
 }
 
 PCppParser Project::cppParser()

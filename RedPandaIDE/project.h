@@ -20,7 +20,7 @@ struct FolderNode;
 using PFolderNode = std::shared_ptr<FolderNode>;
 struct FolderNode {
     QString text;
-    FolderNode * parent;
+    std::weak_ptr<FolderNode> parent;
     int unitIndex;
     QList<PFolderNode>  children;
 };
@@ -105,7 +105,7 @@ struct ProjectOptions{
     ProjectType type;
     int version;
     bool useUTF8;
-    QStringList objfiles;
+    QStringList objFiles;
     QString compilerCmd;
     QString cppCompilerCmd;
     QString linkerCmd;
@@ -123,7 +123,7 @@ struct ProjectOptions{
     bool useCustomMakefile;
     QString customMakefile;
     bool usePrecompiledHeader;
-    bool precompiledHeader;
+    QString precompiledHeader;
     bool overrideOutput;
     QString overridenOutput;
     QString hostApplication;
@@ -148,6 +148,7 @@ public:
     bool modified() const;
     void setFileName(const QString& value);
     void setModified(bool value);
+    PFolderNode makeNewFileNode(const QString& s, bool isFolder, PFolderNode newParent);
 
     void addFolder(const QString& s);
     PProjectUnit addUnit(const QString& inFileName,
@@ -179,7 +180,6 @@ public:
     void saveLayout(); // save all [UnitX]
     void saveUnitLayout(Editor* e, int index); // save single [UnitX] cursor positions
     PFolderNode makeProjectNode();
-    PFolderNode makeNewFileNode(const QString& s, bool isFolder, PFolderNode newParent);
     void saveOptions();
     bool saveUnits();
 //    procedure Open;
