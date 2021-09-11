@@ -303,6 +303,8 @@ private slots:
 
     void on_tblBreakpoints_doubleClicked(const QModelIndex &index);
 
+    void on_projectView_doubleClicked(const QModelIndex &index);
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;

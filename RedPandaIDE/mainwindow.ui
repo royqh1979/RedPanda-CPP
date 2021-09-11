@@ -108,7 +108,11 @@
               <number>0</number>
              </property>
              <item>
-              <widget class="QTreeView" name="projectView"/>
+              <widget class="QTreeView" name="projectView">
+               <attribute name="headerVisible">
+                <bool>false</bool>
+               </attribute>
+              </widget>
              </item>
             </layout>
            </widget>
@@ -789,7 +793,7 @@
      <x>0</x>
      <y>0</y>
      <width>946</width>
-     <height>22</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

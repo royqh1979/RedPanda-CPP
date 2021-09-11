@@ -124,8 +124,8 @@ void Project::open()
     QDir dir(directory());
     for (int i=0;i<uCount;i++) {
         PProjectUnit newUnit = std::make_shared<ProjectUnit>(this);
-        mIniFile->beginGroup(QString("Unit%1").arg(i));
-        newUnit->setFileName(dir.filePath(mIniFile->value("FileName","").toString()));
+        mIniFile->beginGroup(QString("Unit%1").arg(i+1));
+        newUnit->setFileName(dir.absoluteFilePath(mIniFile->value("FileName","").toString()));
         if (!QFileInfo(newUnit->fileName()).exists()) {
             QMessageBox::critical(pMainWindow,
                                   tr("File Not Found"),

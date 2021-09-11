@@ -6,11 +6,13 @@
 #include <QDebug>
 #include <QFileInfo>
 #include "settings.h"
+#include "project.h"
 
 EditorList::EditorList(QTabWidget* leftPageWidget,
       QTabWidget* rightPageWidget,
       QSplitter* splitter,
       QWidget* panel):
+    mLayout(LayoutShowType::lstLeft),
     mLeftPageWidget(leftPageWidget),
     mRightPageWidget(rightPageWidget),
     mSplitter(splitter),
@@ -31,8 +33,9 @@ Editor* EditorList::newEditor(const QString& filename, const QByteArray& encodin
     if (!filename.isEmpty() && QFile(filename).exists()) {
         pMainWindow->fileSystemWatcher()->addPath(filename);
     }
-    return new Editor(parentPageControl,filename,encoding,inProject,newFile,parentPageControl);
+    Editor * e = new Editor(parentPageControl,filename,encoding,inProject,newFile,parentPageControl);
     updateLayout();
+    return e;
 }
 
 QTabWidget*  EditorList::getNewEditorPageControl() const {
@@ -56,17 +59,14 @@ void EditorList::showLayout(LayoutShowType layout)
     case LayoutShowType::lstNone:
         mLeftPageWidget->setVisible(true);
         mRightPageWidget->setVisible(false);
-        mSplitter->setVisible(false);
         break;
     case LayoutShowType::lstRight:
         mLeftPageWidget->setVisible(false);
         mRightPageWidget->setVisible(true);
-        mSplitter->setVisible(false);
         break;
     case LayoutShowType::lstBoth:
         mLeftPageWidget->setVisible(true);
         mRightPageWidget->setVisible(true);
-        mSplitter->setVisible(true);
     }
 }
 
@@ -114,17 +114,22 @@ bool EditorList::closeEditor(Editor* editor, bool transferFocus, bool force) {
         //todo: activate & focus the previous editor
     }
 
-    if (pSettings->history().addToOpenedFiles(editor->filename())) {
-        pMainWindow->rebuildOpenedFileHisotryMenu();
-        updateLayout();
+    if (editor->inProject() && pMainWindow->project()) {
+        int projIndex = pMainWindow->project()->indexInUnits(editor);
+        if (projIndex>=0) {
+            pMainWindow->project()->closeUnit(projIndex);
+        }
+    } else {
+        if (pSettings->history().addToOpenedFiles(editor->filename())) {
+            pMainWindow->rebuildOpenedFileHisotryMenu();
+        }
+        delete editor;
     }
-
-    pMainWindow->fileSystemWatcher()->removePath(editor->filename());
-    delete editor;
-
-    editor = getEditor();
-    if (!force)
+    updateLayout();
+    if (!force) {
+        editor = getEditor();
         pMainWindow->updateClassBrowserForEditor(editor);
+    }
     return true;
 }
 
@@ -317,6 +322,8 @@ void EditorList::getVisibleEditors(Editor *&left, Editor *&right)
 
 void EditorList::updateLayout()
 {
+    qDebug()<<mLeftPageWidget->count();
+    qDebug()<<mRightPageWidget->count();
     if (mLeftPageWidget->count() ==0 && mRightPageWidget->count() == 0)
         showLayout(LayoutShowType::lstNone);
     else if (mLeftPageWidget->count() > 0 && mRightPageWidget->count() == 0)

@@ -2815,3 +2815,16 @@ std::shared_ptr<Project> MainWindow::project()
     return mProject;
 }
 
+
+void MainWindow::on_projectView_doubleClicked(const QModelIndex &index)
+{
+    if (!index.isValid())
+        return;
+    FolderNode * node = static_cast<FolderNode*>(index.internalPointer());
+    if (!node)
+        return;
+    if (node->unitIndex>=0) {
+        mProject->openUnit(node->unitIndex);
+    }
+}
+

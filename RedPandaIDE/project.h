@@ -183,6 +183,8 @@ public:
     QString getFolderPath(PFolderNode node);
     int getUnitFromString(const QString& s);
     void incrementBuildNumber();
+    int indexInUnits(const QString& fileName) const;
+    int indexInUnits(const Editor* editor) const;
     QString listUnitStr(const QChar& separator);
     void loadLayout(); // load all [UnitX]
     void loadOptions();
@@ -236,8 +238,6 @@ signals:
     void modifyChanged(bool value);
 private:
     void open();
-    int indexInUnits(const QString& fileName) const;
-    int indexInUnits(const Editor* editor) const;
     void removeFolderRecurse(PFolderNode node);
     void updateFolderNode(PFolderNode node);
 private:

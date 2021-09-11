@@ -102,7 +102,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
     }
 
     if (inProject) {
-        //todo:
+        mParser = pMainWindow->project()->cppParser();
     } else {
         initParser();
     }
@@ -145,7 +145,7 @@ Editor::~Editor() {
         int index = mParentPageControl->indexOf(this);
         mParentPageControl->removeTab(index);
     }
-    this->setParent(0);
+    this->setParent(nullptr);
 }
 
 void Editor::loadFile() {
