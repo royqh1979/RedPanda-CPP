@@ -2828,3 +2828,11 @@ void MainWindow::on_projectView_doubleClicked(const QModelIndex &index)
     }
 }
 
+
+void MainWindow::on_actionClose_Project_triggered()
+{
+    mClosing = true;
+    closeProject(true);
+    mClosing = false;
+}
+

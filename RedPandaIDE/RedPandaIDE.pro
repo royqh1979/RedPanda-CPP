@@ -19,11 +19,11 @@ SOURCES += \
     codeformatter.cpp \
     codetemplate.cpp \
     colorscheme.cpp \
+    platform.cpp \
     compiler/compiler.cpp \
     compiler/compilermanager.cpp \
     compiler/executablerunner.cpp \
     compiler/filecompiler.cpp \
-    compiler/platform.cpp \
     compiler/stdincompiler.cpp \
     cpprefacter.cpp \
     parser/cppparser.cpp \

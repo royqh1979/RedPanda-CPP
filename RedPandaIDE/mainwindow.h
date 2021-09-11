@@ -305,6 +305,8 @@ private slots:
 
     void on_projectView_doubleClicked(const QModelIndex &index);
 
+    void on_actionClose_Project_triggered();
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;

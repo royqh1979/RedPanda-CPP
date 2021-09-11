@@ -6,6 +6,7 @@
 #include "editorlist.h"
 #include <parser/cppparser.h>
 #include "utils.h"
+#include "platform.h"
 
 #include <QDir>
 #include <QFileDialog>
@@ -21,7 +22,7 @@ Project::Project(const QString &filename, const QString &name, QObject *parent) 
 {
     mFilename = filename;
     mIniFile = std::make_shared<QSettings>(filename,QSettings::IniFormat);
-    mIniFile->setIniCodec(QTextCodec::codecForLocale());
+    mIniFile->setIniCodec(QTextCodec::codecForName(getDefaultSystemEncoding()));
     mParser = std::make_shared<CppParser>();
     mParser->setOnGetFileStream(
                 std::bind(
@@ -42,11 +43,14 @@ Project::Project(const QString &filename, const QString &name, QObject *parent) 
 
 Project::~Project()
 {
+    pMainWindow->editorList()->beginUpdate();
     foreach (const PProjectUnit& unit, mUnits) {
         if (unit->editor()) {
-            unit->editor()->setInProject(false);
+            pMainWindow->editorList()->forceCloseEditor(unit->editor());
+            unit->setEditor(nullptr);
         }
     }
+    pMainWindow->editorList()->endUpdate();
 }
 
 QString Project::directory() const
@@ -166,7 +170,7 @@ void Project::setFileName(const QString &value)
         mFilename = value;
         setModified(true);
         mIniFile = std::make_shared<QSettings>(mFilename, QSettings::IniFormat);
-        mIniFile->setIniCodec(QTextCodec::codecForLocale());
+        mIniFile->setIniCodec(QTextCodec::codecForName(getDefaultSystemEncoding()));
     }
 }
 
