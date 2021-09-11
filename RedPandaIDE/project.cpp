@@ -466,9 +466,9 @@ bool Project::saveUnits()
     for (int idx = 0; idx < mUnits.count(); idx++) {
         PProjectUnit unit = mUnits[idx];
         bool rd_only = false;
-        mIniFile->beginGroup(QString("Unit%1").arg(count+1);
+        mIniFile->beginGroup(QString("Unit%1").arg(count+1));
         if (unit->modified() && fileExists(unit->fileName())
-            && isReadonly(unit->fileName)) {
+            && isReadOnly(unit->fileName())) {
             // file is read-only
             QMessageBox::critical(pMainWindow,
                                   tr("Can't save file"),
@@ -1376,6 +1376,11 @@ void Project::updateFolderNode(PFolderNode node)
     }
 }
 
+const QList<PProjectUnit> &Project::units() const
+{
+    return mUnits;
+}
+
 const ProjectOptions &Project::options() const
 {
     return mOptions;
@@ -1384,6 +1389,11 @@ const ProjectOptions &Project::options() const
 void Project::setOptions(const ProjectOptions &newOptions)
 {
     mOptions = newOptions;
+}
+
+const ProjectModel *Project::model() const
+{
+    return &mModel;
 }
 
 const PFolderNode &Project::node() const
@@ -1621,6 +1631,39 @@ void ProjectModel::endUpdate()
         endResetModel();
 }
 
+QModelIndex ProjectModel::index(int row, int column, const QModelIndex &parent) const
+{
+    if (!parent.isValid()) {
+        return createIndex(row,column,mProject->node().get());
+    }
+    FolderNode* parentNode = static_cast<FolderNode*>(parent.internalPointer());
+    if (!parentNode) {
+        return QModelIndex();
+    }
+    return createIndex(row,column,parentNode->children[row].get());
+}
+
+QModelIndex ProjectModel::parent(const QModelIndex &child) const
+{
+    if (!child.isValid())
+        return QModelIndex();
+    FolderNode * node = static_cast<FolderNode*>(child.internalPointer());
+    if (!node)
+        return QModelIndex();
+    PFolderNode parent = node->parent.lock();
+    if (!parent) // root node
+        return QModelIndex();
+    PFolderNode grand = parent->parent.lock();
+    if (!grand) {
+        return createIndex(0,0,parent.get());
+    }
+
+    int row = grand->children.indexOf(parent);
+    if (row<0)
+        return QModelIndex();
+    return createIndex(row,0,parent.get());
+}
+
 int ProjectModel::rowCount(const QModelIndex &parent) const
 {
     if (!parent.isValid())
@@ -1645,10 +1688,8 @@ QVariant ProjectModel::data(const QModelIndex &index, int role) const
     FolderNode* p = static_cast<FolderNode*>(index.internalPointer());
     if (!p)
         return QVariant();
-
-        return p->children.count();
-    } else {
-        return mProject->node()->children.count();
+    if (role == Qt::DisplayRole) {
+        return p->text;
     }
-
+    return QVariant();
 }

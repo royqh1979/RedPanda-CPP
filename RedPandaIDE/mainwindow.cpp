@@ -9,6 +9,7 @@
 #include "debugger.h"
 #include "widgets/cpudialog.h"
 #include "widgets/filepropertiesdialog.h"
+#include "project.h"
 
 #include <QCloseEvent>
 #include <QComboBox>
@@ -60,6 +61,7 @@ MainWindow::MainWindow(QWidget *parent)
                                  ui->EditorTabsRight,
                                  ui->splitterEditorPanel,
                                  ui->EditorPanel);
+    mProject = nullptr;
     setAcceptDrops(true);
     setupActions();
     ui->EditorTabsRight->setVisible(false);
@@ -366,54 +368,96 @@ void MainWindow::updateAppTitle()
 {
     QString appName("Red Panda Dev-C++");
     Editor *e = mEditorList->getEditor();
-    QString str;
     QCoreApplication *app = QApplication::instance();
     if (e && !e->inProject()) {
+        QString str;
         if (e->modified())
           str = e->filename() + " [*]";
         else
           str = e->filename();
         if (mDebugger->executing()) {
             setWindowTitle(QString("%1 - [%2] - %3 %4")
-                           .arg(str,appName,tr("Debugging"),DEVCPP_VERSION));
+                           .arg(str,tr("Debugging"),appName,DEVCPP_VERSION));
             app->setApplicationName(QString("%1 - [%2] - %3")
-                                    .arg(str,appName,tr("Debugging")));
+                                    .arg(str,tr("Debugging"),appName));
         } else if (mCompilerManager->running()) {
             setWindowTitle(QString("%1 - [%2] - %3 %4")
-                           .arg(str,appName,tr("Running"),DEVCPP_VERSION));
+                           .arg(str,tr("Running"),appName,DEVCPP_VERSION));
             app->setApplicationName(QString("%1 - [%2] - %3")
-                                    .arg(str,appName,tr("Running")));
+                                    .arg(str,tr("Running"),appName));
         } else if (mCompilerManager->compiling()) {
             setWindowTitle(QString("%1 - [%2] - %3 %4")
-                           .arg(str,appName,tr("Compiling"),DEVCPP_VERSION));
+                           .arg(str,tr("Compiling"),appName,DEVCPP_VERSION));
             app->setApplicationName(QString("%1 - [%2] - %3")
-                                    .arg(str,appName,tr("Compiling")));
+                                    .arg(str,tr("Compiling"),appName));
         } else {
             this->setWindowTitle(QString("%1 - %2 %3")
                                  .arg(str,appName,DEVCPP_VERSION));
             app->setApplicationName(QString("%1 - %2")
                                     .arg(str,appName));
         }
-    }
-// else if Assigned(fProject) then begin
-//  if fDebugger.Executing then begin
-//    Caption := Format('%s - [%s] - [Debugging] - %s %s',
-//      [fProject.Name, ExtractFilename(fProject.Filename), appName, DEVCPP_VERSION]);
-//    Application.Title := Format('%s - [Debugging] - %s', [fProject.Name, appName]);
-//  end else if devExecutor.Running then begin
-//    Caption := Format('%s - [%s] - [Executing] - %s %s',
-//      [fProject.Name, ExtractFilename(fProject.Filename), appName, DEVCPP_VERSION]);
-//    Application.Title := Format('%s - [Executing] - %s', [fProject.Name, appName]);
-//  end else if fCompiler.Compiling then begin
-//    Caption := Format('%s - [%s] - [Compiling] - %s %s',
-//      [fProject.Name, ExtractFilename(fProject.Filename), appName, DEVCPP_VERSION]);
-//    Application.Title := Format('%s - [Compiling] - %s', [fProject.Name, appName]);
-//  end else begin
-//    Caption := Format('%s - [%s] - %s %s',
-//      [fProject.Name, ExtractFilename(fProject.Filename), appName, DEVCPP_VERSION]);
-//    Application.Title := Format('%s - %s', [fProject.Name, appName]);
-//  end;
-    else {
+    } else if (e && e->inProject() && mProject) {
+        QString str,str2;
+        if (mProject->modified())
+            str = mProject->name() + " [*]";
+        else
+            str = mProject->name();
+        if (e->modified())
+          str2 = extractFileName(e->filename()) + " [*]";
+        else
+          str2 = extractFileName(e->filename());
+        if (mDebugger->executing()) {
+            setWindowTitle(QString("%1 - %2 [%3] - %4 %5")
+                           .arg(str,str2,
+                                tr("Debugging"),appName,DEVCPP_VERSION));
+            app->setApplicationName(QString("%1 - [%2] - %3")
+                                    .arg(str,tr("Debugging"),appName));
+        } else if (mCompilerManager->running()) {
+            setWindowTitle(QString("%1 - %2 [%3] - %4 %5")
+                           .arg(str,str2,
+                                tr("Running"),appName,DEVCPP_VERSION));
+            app->setApplicationName(QString("%1 - [%2] - %3")
+                                    .arg(str,tr("Running"),appName));
+        } else if (mCompilerManager->compiling()) {
+            setWindowTitle(QString("%1 - %2 [%3] - %4 %5")
+                           .arg(str,str2,
+                                tr("Compiling"),appName,DEVCPP_VERSION));
+            app->setApplicationName(QString("%1 - [%2] - %3")
+                                    .arg(str,tr("Compiling"),appName));
+        } else {
+            setWindowTitle(QString("%1 - %2 %3")
+                                 .arg(str,appName,DEVCPP_VERSION));
+            app->setApplicationName(QString("%1 - %2")
+                                    .arg(str,appName));
+        }
+    } else if (mProject) {
+        QString str,str2;
+        if (mProject->modified())
+            str = mProject->name() + " [*]";
+        else
+            str = mProject->name();
+        if (mDebugger->executing()) {
+            setWindowTitle(QString("%1 - [%2] - %3 %4")
+                           .arg(str,tr("Debugging"),appName,DEVCPP_VERSION));
+            app->setApplicationName(QString("%1 - [%2] - %3")
+                                    .arg(str,tr("Debugging"),appName));
+        } else if (mCompilerManager->running()) {
+            setWindowTitle(QString("%1 - [%2] - %3 %4")
+                           .arg(str,tr("Running"),appName,DEVCPP_VERSION));
+            app->setApplicationName(QString("%1 - [%2] - %3")
+                                    .arg(str,tr("Running"),appName));
+        } else if (mCompilerManager->compiling()) {
+            setWindowTitle(QString("%1 - [%2] - %3 %4")
+                           .arg(str,tr("Compiling"),appName,DEVCPP_VERSION));
+            app->setApplicationName(QString("%1 - [%2] - %3")
+                                    .arg(str,tr("Compiling"),appName));
+        } else {
+            this->setWindowTitle(QString("%1 - %2 %3")
+                                 .arg(str,appName,DEVCPP_VERSION));
+            app->setApplicationName(QString("%1 - %2")
+                                    .arg(str,appName));
+        }
+    } else {
         setWindowTitle(QString("%1 %2").arg(appName,DEVCPP_VERSION));
         app->setApplicationName(QString("%1").arg(appName));
     }
@@ -576,6 +620,7 @@ void MainWindow::openFile(const QString &filename)
         return;
     }
     try {
+        pSettings->history().removeFile(filename);
         editor = mEditorList->newEditor(filename,ENCODING_AUTO_DETECT,
                                         false,false);
         editor->activate();
@@ -585,6 +630,81 @@ void MainWindow::openFile(const QString &filename)
     }
 }
 
+void MainWindow::openProject(const QString &filename)
+{
+    if (!fileExists(filename)) {
+        return;
+    }
+    if (mProject) {
+        QString s;
+        if (mProject->name().isEmpty())
+            s = mProject->filename();
+        else
+            s = mProject->name();
+        if (QMessageBox::question(this,
+                                  tr("Close project"),
+                                  tr("Are you sure you want to close %1?")
+                                  .arg(s),
+                                  QMessageBox::Yes | QMessageBox::No,
+                                  QMessageBox::Yes) == QMessageBox::Yes) {
+            closeProject(false);
+        } else {
+            return;
+        }
+    }
+    ui->tabProject->setVisible(true);
+    ui->tabInfos->setCurrentWidget(ui->tabProject);
+    openCloseLeftPanel(true);
+//    {
+//    LeftPageControl.ActivePage := LeftProjectSheet;
+//    fLeftPageControlChanged := False;
+//    ClassBrowser.TabVisible:= False;
+//    }
+
+    // Only update class browser once
+    mClassBrowserModel.beginUpdate();
+    {
+        auto action = finally([this]{
+            mClassBrowserModel.endUpdate();
+        });
+        mProject = new Project(filename,DEV_INTERNAL_OPEN);
+            pSettings->history().removeFile(filename);
+
+    //  // if project manager isn't open then open it
+    //  if not devData.ShowLeftPages then
+    //    actProjectManager.Execute;
+            checkForDllProfiling();
+            updateAppTitle();
+            updateCompilerSet();
+
+            //parse the project
+            //  UpdateClassBrowsing;
+            scanActiveProject(true);
+            mProject->doAutoOpen();
+
+            //update editor's inproject flag
+            for (int i=0;i<mProject->units().count();i++) {
+                PProjectUnit unit = mProject->units()[i];
+                Editor* e = mEditorList->getOpenedEditorByFilename(unit->filename());
+                if (e) {
+                    unit->setEditor(e);
+                    unit->setEncoding(e->encodingOption());
+                    e->setInProject(true);
+                } else {
+                    unit->setEditor(nullptr);
+                    e->setInProject(false);
+                }
+            }
+
+            Editor * e = mEditorList->getEditor();
+            if (e) {
+                checkSyntaxInBack(e);
+            }
+            updateClassBrowserForEditor(e);
+    }
+    updateForEncodingInfo();
+}
+
 void MainWindow::setupActions() {
 
 }
@@ -592,12 +712,18 @@ void MainWindow::setupActions() {
 void MainWindow::updateCompilerSet()
 {
     mCompilerSet->clear();
-    int index=pSettings->compilerSets().defaultIndex();
     for (size_t i=0;i<pSettings->compilerSets().list().size();i++) {
         mCompilerSet->addItem(pSettings->compilerSets().list()[i]->name());
     }
+    int index=pSettings->compilerSets().defaultIndex();
+    if (mProject) {
+        Editor *e = mEditorList->getEditor();
+        if ( !e || e->inProject()) {
+            index = mProject->options().compilerSet;
+        }
+    }
     if (index < 0 || index>=mCompilerSet->count()) {
-        index = 0;
+        index = pSettings->compilerSets().defaultIndex();
     }
     mCompilerSet->setCurrentIndex(index);
 }
@@ -614,6 +740,9 @@ void MainWindow::checkSyntaxInBack(Editor *e)
     if (e==nullptr)
         return;
 
+    if (!pSettings->editor().syntaxCheck()) {
+        return;
+    }
 //    if not devEditor.AutoCheckSyntax then
 //      Exit;
     //not c or cpp file

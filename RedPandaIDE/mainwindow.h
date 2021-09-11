@@ -29,6 +29,7 @@ class Debugger;
 class CPUDialog;
 class QPlainTextEdit;
 class SearchDialog;
+class Project;
 
 class MainWindow : public QMainWindow
 {
@@ -124,6 +125,7 @@ public slots:
 private:
     void openFiles(const QStringList& files);
     void openFile(const QString& filename);
+    void openProject(const QString& filename);
     CompileTarget getCompileTarget();
     bool debugInferiorhasBreakpoint();
     void setupActions();
@@ -315,6 +317,7 @@ private:
     bool mQuitting;
     QElapsedTimer mParserTimer;
     QFileSystemWatcher mFileSystemWatcher;
+    Project* mProject;
 
     std::shared_ptr<CodeCompletionPopup> mCompletionPopup;
     std::shared_ptr<HeaderCompletionPopup> mHeaderCompletionPopup;

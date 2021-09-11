@@ -225,6 +225,10 @@ public:
     const ProjectOptions &options() const;
     void setOptions(const ProjectOptions &newOptions);
 
+    const ProjectModel* model() const;
+
+    const QList<PProjectUnit> &units() const;
+
 signals:
     void nodesChanged();
     void modifyChanged(bool value);

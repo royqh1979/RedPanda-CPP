@@ -680,6 +680,7 @@ public:
         const QStringList& openedFiles() const;
         const QStringList& openedProjects() const;
         bool addToOpenedFiles(const QString& filename);
+        void removeFile(const QString& filename);
     private:
         QStringList mOpenedFiles;
         QStringList mOpenedProjects;

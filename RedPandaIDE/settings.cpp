@@ -2658,6 +2658,16 @@ bool Settings::History::addToOpenedFiles(const QString &filename)
 
 }
 
+void Settings::History::removeFile(const QString &filename)
+{
+    int index = mOpenedFiles.indexOf(filename);
+    if (index>=0) {
+        mOpenedFiles.removeAt(index);
+    }
+    save();
+    return;
+}
+
 void Settings::History::doSave()
 {
     saveValue("opened_files", mOpenedFiles);
