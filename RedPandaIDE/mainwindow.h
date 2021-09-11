@@ -105,6 +105,8 @@ public:
     CaretList &caretList();
     void updateCaretActions();
 
+    std::shared_ptr<Project> project();
+
 public slots:
     void onCompileLog(const QString& msg);
     void onCompileIssue(PCompileIssue issue);
@@ -123,6 +125,7 @@ public slots:
     void onEditorTabContextMenu(const QPoint& pos);
 
 private:
+    void closeProject(bool refreshEditor);
     void openFiles(const QStringList& files);
     void openFile(const QString& filename);
     void openProject(const QString& filename);
@@ -139,6 +142,7 @@ private:
     QAction* createActionFor(const QString& text,
                              QWidget* parent,
                              QKeySequence shortcut=QKeySequence());
+    void scanActiveProject(bool parse=false);
 
 private slots:
     void onAutoSaveTimeout();
@@ -317,7 +321,7 @@ private:
     bool mQuitting;
     QElapsedTimer mParserTimer;
     QFileSystemWatcher mFileSystemWatcher;
-    Project* mProject;
+    std::shared_ptr<Project> mProject;
 
     std::shared_ptr<CodeCompletionPopup> mCompletionPopup;
     std::shared_ptr<HeaderCompletionPopup> mHeaderCompletionPopup;

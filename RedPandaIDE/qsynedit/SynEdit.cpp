@@ -1304,7 +1304,7 @@ void SynEdit::SetWordBlock(BufferCoord Value)
 //        Value.Char =
 //    else
 //        Value.Char = std::max(Value.Char, 1);
-    Value.Line = MinMax(Value.Line, 1, mLines->count());
+    Value.Line = minMax(Value.Line, 1, mLines->count());
     Value.Char = std::max(Value.Char, 1);
     QString TempString = mLines->getString(Value.Line - 1); //needed for CaretX = LineLength +1
     if (Value.Char > TempString.length()) {
@@ -2114,7 +2114,7 @@ void SynEdit::clearAreaList(SynEditingAreaList areaList)
 void SynEdit::computeCaret(int X, int Y)
 {
     DisplayCoord vCaretNearestPos = pixelsToNearestRowColumn(X, Y);
-    vCaretNearestPos.Row = MinMax(vCaretNearestPos.Row, 1, displayLineCount());
+    vCaretNearestPos.Row = minMax(vCaretNearestPos.Row, 1, displayLineCount());
     setInternalDisplayXY(vCaretNearestPos);
 }
 
@@ -2611,8 +2611,8 @@ void SynEdit::updateScrollbars()
                 } else {
                     nMin = 0;
                     nMax = MAX_SCROLL;
-                    nPage = MulDiv(MAX_SCROLL, mCharsInWindow, nMaxScroll);
-                    nPos = MulDiv(MAX_SCROLL, mLeftChar, nMaxScroll);
+                    nPage = mulDiv(MAX_SCROLL, mCharsInWindow, nMaxScroll);
+                    nPos = mulDiv(MAX_SCROLL, mLeftChar, nMaxScroll);
                 }
                 horizontalScrollBar()->setMinimum(nMin);
                 horizontalScrollBar()->setMaximum(nMax);
@@ -2632,8 +2632,8 @@ void SynEdit::updateScrollbars()
                 } else {
                     nMin = 0;
                     nMax = MAX_SCROLL;
-                    nPage = MulDiv(MAX_SCROLL, mLinesInWindow, nMaxScroll);
-                    nPos = MulDiv(MAX_SCROLL, mTopLine, nMaxScroll);
+                    nPage = mulDiv(MAX_SCROLL, mLinesInWindow, nMaxScroll);
+                    nPos = mulDiv(MAX_SCROLL, mTopLine, nMaxScroll);
                 }
                 verticalScrollBar()->setMinimum(nMin);
                 verticalScrollBar()->setMaximum(nMax);
@@ -3559,7 +3559,7 @@ void SynEdit::doUndoItem()
                     std::min(Item->changeStartPos().Line, Item->changeEndPos().Line)};
             } else {
                 TmpPos = BufferCoord{
-                        MinBufferCoord(
+                        minBufferCoord(
                             Item->changeStartPos(),
                             Item->changeEndPos())};
             }
@@ -5220,8 +5220,8 @@ void SynEdit::paintEvent(QPaintEvent *event)
         nC2 = mLeftChar +
           (rcClip.right() - mGutterWidth - 2 + mCharWidth - 1) / mCharWidth;
         // lines
-        nL1 = MinMax(mTopLine + rcClip.top() / mTextHeight, mTopLine, displayLineCount());
-        nL2 = MinMax(mTopLine + (rcClip.bottom() + mTextHeight - 1) / mTextHeight, 1, displayLineCount());
+        nL1 = minMax(mTopLine + rcClip.top() / mTextHeight, mTopLine, displayLineCount());
+        nL2 = minMax(mTopLine + (rcClip.bottom() + mTextHeight - 1) / mTextHeight, 1, displayLineCount());
 
         //qDebug()<<"Paint:"<<nL1<<nL2<<nC1<<nC2;
 
@@ -5432,7 +5432,7 @@ void SynEdit::mouseMoveEvent(QMouseEvent *event)
       // should we begin scrolling?
       computeScroll(X, Y);
       DisplayCoord P = pixelsToNearestRowColumn(X, Y);
-      P.Row = MinMax(P.Row, 1, displayLineCount());
+      P.Row = minMax(P.Row, 1, displayLineCount());
       if (mScrollDeltaX != 0)
           P.Column = displayX();
       if (mScrollDeltaY != 0)
@@ -5682,8 +5682,8 @@ void SynEdit::setBlockEnd(BufferCoord Value)
 {
     setActiveSelectionMode(mSelectionMode);
     if (!mOptions.testFlag(eoNoSelection)) {
-        Value.Line = MinMax(Value.Line, 1, mLines->count());
-        Value.Char = MinMax(Value.Char, 1, mLines->lengthOfLongestLine()+1);
+        Value.Line = minMax(Value.Line, 1, mLines->count());
+        Value.Char = minMax(Value.Char, 1, mLines->lengthOfLongestLine()+1);
         if (mActiveSelectionMode == SynSelectionMode::smNormal) {
           if (Value.Line >= 1 && Value.Line <= mLines->count())
               Value.Char = std::min(Value.Char, mLines->getString(Value.Line - 1).length() + 1);
@@ -5771,8 +5771,8 @@ void SynEdit::setBlockBegin(BufferCoord value)
     int nInval1, nInval2;
     bool SelChanged;
     setActiveSelectionMode(mSelectionMode);
-    value.Char = MinMax(value.Char, 1, mLines->lengthOfLongestLine()+1);
-    value.Line = MinMax(value.Line, 1, mLines->count());
+    value.Char = minMax(value.Char, 1, mLines->lengthOfLongestLine()+1);
+    value.Line = minMax(value.Line, 1, mLines->count());
     if (mActiveSelectionMode == SynSelectionMode::smNormal) {
         if (value.Line >= 1 && value.Line <= mLines->count())
             value.Char = std::min(value.Char, mLines->getString(value.Line - 1).length() + 1);
@@ -5876,7 +5876,7 @@ void SynEdit::onScrollTimeout()
     iMousePos = QCursor::pos();
     iMousePos = mapFromGlobal(iMousePos);
     C = pixelsToRowColumn(iMousePos.x(), iMousePos.y());
-    C.Row = MinMax(C.Row, 1, displayLineCount());
+    C.Row = minMax(C.Row, 1, displayLineCount());
     if (mScrollDeltaX != 0) {
         setLeftChar(leftChar() + mScrollDeltaX);
         X = leftChar();
@@ -5892,7 +5892,7 @@ void SynEdit::onScrollTimeout()
         Y = mTopLine;
         if (mScrollDeltaY > 0)  // scrolling down?
             Y+=mLinesInWindow - 1;
-        C.Row = MinMax(Y, 1, displayLineCount());
+        C.Row = minMax(Y, 1, displayLineCount());
     }
     BufferCoord vCaret = displayToBufferPos(C);
     if ((caretX() != vCaret.Char) || (caretY() != vCaret.Line)) {

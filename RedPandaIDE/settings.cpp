@@ -2668,6 +2668,32 @@ void Settings::History::removeFile(const QString &filename)
     return;
 }
 
+bool Settings::History::addToOpenedProjects(const QString &filename)
+{
+    if (!QFile(filename).exists())
+        return false;
+    int index = mOpenedProjects.indexOf(filename);
+    if (index>=0) {
+        mOpenedProjects.removeAt(index);
+    }
+    if (mOpenedProjects.size()>=15) {
+        mOpenedProjects.pop_back();
+    }
+    mOpenedProjects.push_front(filename);
+    save();
+    return true;
+}
+
+void Settings::History::removeProject(const QString &filename)
+{
+    int index = mOpenedProjects.indexOf(filename);
+    if (index>=0) {
+        mOpenedProjects.removeAt(index);
+    }
+    save();
+    return;
+}
+
 void Settings::History::doSave()
 {
     saveValue("opened_files", mOpenedFiles);

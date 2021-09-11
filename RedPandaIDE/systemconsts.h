@@ -52,7 +52,6 @@ public:
     const QString& defaultCFileFilter() const noexcept;
     const QString& defaultCPPFileFilter() const noexcept;
     const QString& defaultAllFileFilter() const noexcept;
-    const QString& defaultHTMLFileFilter() const noexcept;
     void addDefaultFileFilter(const QString& name, const QString& fileExtensions);
 private:
     QStringList mDefaultFileFilters;

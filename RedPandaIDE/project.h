@@ -160,6 +160,7 @@ class Project : public QObject
     Q_OBJECT
 public:
     explicit Project(const QString& filename, const QString& name,QObject *parent = nullptr);
+    ~Project();
     QString directory() const;
     QString executable() const;
     QString makeFileName();
@@ -194,6 +195,7 @@ public:
     void rebuildNodes();
     bool removeEditor(int index, bool doClose);
     bool removeFolder(PFolderNode node);
+    void resetParserProjectFiles();
     void saveAll(); // save [Project] and  all [UnitX]
     void saveLayout(); // save all [UnitX]
     void saveOptions();
@@ -225,7 +227,7 @@ public:
     const ProjectOptions &options() const;
     void setOptions(const ProjectOptions &newOptions);
 
-    const ProjectModel* model() const;
+    ProjectModel* model() ;
 
     const QList<PProjectUnit> &units() const;
 

@@ -20,19 +20,17 @@ class QColor;
 using IntArray = QVector<int>;
 using PIntArray = std::shared_ptr<IntArray>;
 
-int MinMax(int x, int mi, int ma);
-#ifndef Q_OS_WIN
-int MulDiv(int a, int b, int c);
-#endif
-void SwapInt(int& l, int &r);
-BufferCoord MaxBufferCoord(const BufferCoord& P1, const BufferCoord& P2);
-BufferCoord MinBufferCoord(const BufferCoord& P1, const BufferCoord& P2);
-QPoint MaxPoint(const QPoint& P1, const QPoint& P2);
-QPoint MinPoint(const QPoint& P1, const QPoint& P2);
+int minMax(int x, int mi, int ma);
+int mulDiv(int a, int b, int c);
+void swapInt(int& l, int &r);
+BufferCoord maxBufferCoord(const BufferCoord& P1, const BufferCoord& P2);
+BufferCoord minBufferCoord(const BufferCoord& P1, const BufferCoord& P2);
+QPoint maxPoint(const QPoint& P1, const QPoint& P2);
+QPoint minPoint(const QPoint& P1, const QPoint& P2);
 
-PIntArray GetIntArray(size_t Count, int InitialValue);
+PIntArray getIntArray(size_t Count, int InitialValue);
 
-void InternalFillRect(QPainter* painter, const QRect& rcPaint, const QColor& color);
+void internalFillRect(QPainter* painter, const QRect& rcPaint, const QColor& color);
 
 // Converting tabs to spaces: To use the function several times it's better
 // to use a function pointer that is set to the fastest conversion function.

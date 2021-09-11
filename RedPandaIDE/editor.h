@@ -142,6 +142,7 @@ public:
     void checkSyntaxInBack();
     void gotoDeclaration(const BufferCoord& pos);
     void gotoDefinition(const BufferCoord& pos);
+    void reparse();
 
     const PCppParser &parser();
 
@@ -173,7 +174,6 @@ private:
     void initParser();
     void undoSymbolCompletion(int pos);
     QuoteStatus getQuoteStatus();
-    void reparse();
 
     void showCompletion(bool autoComplete);
     void showHeaderCompletion(bool autoComplete);

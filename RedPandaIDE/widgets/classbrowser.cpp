@@ -343,7 +343,7 @@ void ClassBrowserModel::endUpdate()
 {
     mUpdateCount--;
     if (mUpdateCount == 0) {
-        if (!mParser->parsing()) {
+        if (mParser && !mParser->parsing()) {
             this->fillStatements();
         }
     }

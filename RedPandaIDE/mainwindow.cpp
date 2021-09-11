@@ -667,13 +667,14 @@ void MainWindow::openProject(const QString &filename)
         auto action = finally([this]{
             mClassBrowserModel.endUpdate();
         });
-        mProject = new Project(filename,DEV_INTERNAL_OPEN);
-            pSettings->history().removeFile(filename);
+        mProject = std::make_shared<Project>(filename,DEV_INTERNAL_OPEN);
+        ui->projectView->setModel(mProject->model());
+        pSettings->history().removeProject(filename);
 
     //  // if project manager isn't open then open it
     //  if not devData.ShowLeftPages then
     //    actProjectManager.Execute;
-            checkForDllProfiling();
+            //checkForDllProfiling();
             updateAppTitle();
             updateCompilerSet();
 
@@ -685,14 +686,13 @@ void MainWindow::openProject(const QString &filename)
             //update editor's inproject flag
             for (int i=0;i<mProject->units().count();i++) {
                 PProjectUnit unit = mProject->units()[i];
-                Editor* e = mEditorList->getOpenedEditorByFilename(unit->filename());
+                Editor* e = mEditorList->getOpenedEditorByFilename(unit->fileName());
                 if (e) {
                     unit->setEditor(e);
                     unit->setEncoding(e->encodingOption());
                     e->setInProject(true);
                 } else {
                     unit->setEditor(nullptr);
-                    e->setInProject(false);
                 }
             }
 
@@ -1261,6 +1261,21 @@ QAction* MainWindow::createActionFor(
     parent->addAction(action);
     return action;
 }
+
+void MainWindow::scanActiveProject(bool parse)
+{
+    if (!mProject)
+        return;
+    //UpdateClassBrowsing;
+    if (parse) {
+        resetCppParser(mProject->cppParser());
+        mProject->resetParserProjectFiles();
+        parseFileList(mProject->cppParser());
+    } else {
+        mProject->resetParserProjectFiles();
+    };
+}
+
 void MainWindow::buildContextMenus()
 {
 
@@ -1550,6 +1565,90 @@ void MainWindow::onEditorTabContextMenu(const QPoint &pos)
     menu.exec(tabBar->mapToGlobal(pos));
 }
 
+void MainWindow::closeProject(bool refreshEditor)
+{
+    // Stop executing program
+    on_actionStop_Execution_triggered();
+
+    // Only update file monitor once (and ignore updates)
+    bool oldBlock= mFileSystemWatcher.blockSignals(true);
+    {
+        auto action = finally([&,this]{
+            mFileSystemWatcher.blockSignals(oldBlock);
+        });
+        // TODO: should we save watches?
+        if (mProject->modified()) {
+            QString s;
+            if (mProject->name().isEmpty()) {
+                s = mProject->filename();
+            } else {
+                s = mProject->name();
+            }
+            if (mSystemTurnedOff) {
+                mProject->saveAll();
+            } else {
+                int answer = QMessageBox::question(
+                            this,
+                            tr("Save project"),
+                            tr("The project '%1' has modifications.").arg(s)
+                            + "<br />"
+                            + tr("Do you want to save it?"),
+                            QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel,
+                            QMessageBox::Yes);
+                switch (answer) {
+                case QMessageBox::Yes:
+                    mProject->saveAll();
+                    break;
+                case QMessageBox::No:
+                    mProject->setModified(false);
+                    mProject->saveLayout();
+                    break;
+                case QMessageBox::Cancel:
+                    mProject->saveLayout();
+                    return;
+                }
+            }
+        } else
+            mProject->saveLayout(); // always save layout, but not when SaveAll has been called
+
+        mClassBrowserModel.beginUpdate();
+        {
+            auto action2 = finally([this]{
+                mClassBrowserModel.endUpdate();
+            });
+            // Remember it
+            pSettings->history().addToOpenedProjects(mProject->filename());
+
+            mEditorList->beginUpdate();
+            {
+                auto action3 = finally([this]{
+                    mEditorList->endUpdate();
+                });
+                mProject.reset();
+
+                if (!mQuitting && refreshEditor) {
+                    //reset Class browsing
+                    ui->tabInfos->setCurrentWidget(ui->tabStructure);
+                    Editor * e = mEditorList->getEditor();
+                    updateClassBrowserForEditor(e);
+                } else {
+                    mClassBrowserModel.setParser(nullptr);
+                    mClassBrowserModel.setCurrentFile("");
+                }
+            }
+        }
+        if (!mQuitting) {
+            // Clear project browser
+            ui->projectView->setModel(nullptr);
+
+            // Clear error browser
+            ui->tableIssues->clearIssues();
+
+            ui->tabProject->setVisible(false);
+        }
+    }
+}
+
 void MainWindow::onFileChanged(const QString &path)
 {
     Editor *e = mEditorList->getOpenedEditorByFilename(path);
@@ -1637,11 +1736,7 @@ void MainWindow::on_actionOpen_triggered()
 {
     try {
         QString selectedFileFilter;
-        if (pSettings->editor().defaultFileCpp()){
-            selectedFileFilter = pSystemConsts->defaultCPPFileFilter();
-        } else {
-            selectedFileFilter = pSystemConsts->defaultCFileFilter();
-        }
+        selectedFileFilter = pSystemConsts->defaultAllFileFilter();
         QStringList files = QFileDialog::getOpenFileNames(pMainWindow,
             tr("Open"), QString(), pSystemConsts->defaultFileFilters().join(";;"),
             &selectedFileFilter);
@@ -1738,8 +1833,20 @@ void MainWindow::on_actionSaveAs_triggered()
 
 void MainWindow::on_actionOptions_triggered()
 {
+    bool oldCodeCompletion = pSettings->codeCompletion().enabled();
     SettingsDialog settingsDialog;
     settingsDialog.exec();
+    bool newCodeCompletion = pSettings->codeCompletion().enabled();
+    if (!oldCodeCompletion && newCodeCompletion) {
+        Editor *e = mEditorList->getEditor();
+        if (mProject && !e) {
+            scanActiveProject(true);
+        } else if (mProject && e && e->inProject()) {
+            scanActiveProject(true);
+        } else if (e) {
+            e->reparse();
+        }
+    }
 }
 
 void MainWindow::onCompilerSetChanged(int index)
@@ -2701,5 +2808,10 @@ void MainWindow::on_tblBreakpoints_doubleClicked(const QModelIndex &index)
             e->setCaretPositionAndActivate(breakpoint->line,1);
         }
     }
+}
+
+std::shared_ptr<Project> MainWindow::project()
+{
+    return mProject;
 }
 

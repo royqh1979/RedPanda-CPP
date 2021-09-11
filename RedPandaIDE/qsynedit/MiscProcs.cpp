@@ -5,20 +5,20 @@
 #include <algorithm>
 #include <QDebug>
 
-int MinMax(int x, int mi, int ma)
+int minMax(int x, int mi, int ma)
 {
     x = std::min(x, ma );
     return std::max( x, mi );
 }
 
-void SwapInt(int &l, int &r)
+void swapInt(int &l, int &r)
 {
     int tmp = r;
     r = l;
     l = tmp;
 }
 
-QPoint MaxPoint(const QPoint &P1, const QPoint &P2)
+QPoint maxPoint(const QPoint &P1, const QPoint &P2)
 {
     if ( (P2.y() > P1.y()) || ( (P2.y() == P1.y()) && (P2.x() > P1.x())) ) {
       return P2;
@@ -27,7 +27,7 @@ QPoint MaxPoint(const QPoint &P1, const QPoint &P2)
     }
 }
 
-QPoint MinPoint(const QPoint &P1, const QPoint &P2)
+QPoint minPoint(const QPoint &P1, const QPoint &P2)
 {
     if ( (P2.y() < P1.y()) || ( (P2.y() == P1.y()) && (P2.x() < P1.x())) ) {
       return P2;
@@ -36,12 +36,12 @@ QPoint MinPoint(const QPoint &P1, const QPoint &P2)
     }
 }
 
-PIntArray GetIntArray(size_t Count, int InitialValue)
+PIntArray getIntArray(size_t Count, int InitialValue)
 {
     return std::make_shared<IntArray>(Count,InitialValue);
 }
 
-void InternalFillRect(QPainter *painter, const QRect &rcPaint, const QColor& color)
+void internalFillRect(QPainter *painter, const QRect &rcPaint, const QColor& color)
 {
     painter->fillRect(rcPaint,color);
 }
@@ -527,13 +527,11 @@ void SynDrawGradient(QPaintDevice *ACanvas, const QColor &AStartColor, const QCo
     }
 }
 
-#ifndef Q_OS_WIN
-int MulDiv(int a, int b, int c)
+int mulDiv(int a, int b, int c)
 {
     //todo: handle overflow?
     return a*b/c;
 }
-#endif
 
 SynFontStyles getFontStyles(const QFont &font)
 {
@@ -615,7 +613,7 @@ void ensureNotAfter(BufferCoord &cord1, BufferCoord &cord2)
     }
 }
 
-BufferCoord MinBufferCoord(const BufferCoord &P1, const BufferCoord &P2)
+BufferCoord minBufferCoord(const BufferCoord &P1, const BufferCoord &P2)
 {
     if ( (P2.Line < P1.Line) || ( (P2.Line == P1.Line) && (P2.Char < P1.Char)) ) {
       return P2;
@@ -624,7 +622,7 @@ BufferCoord MinBufferCoord(const BufferCoord &P1, const BufferCoord &P2)
     }
 }
 
-BufferCoord MaxBufferCoord(const BufferCoord &P1, const BufferCoord &P2)
+BufferCoord maxBufferCoord(const BufferCoord &P1, const BufferCoord &P2)
 {
     if ( (P2.Line > P1.Line) || ( (P2.Line == P1.Line) && (P2.Char > P1.Char)) ) {
       return P2;

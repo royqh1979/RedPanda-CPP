@@ -11,7 +11,9 @@
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QMessageBox>
+#include <QTextCodec>
 #include "settings.h"
+#include <QDebug>
 
 Project::Project(const QString &filename, const QString &name, QObject *parent) :
     QObject(parent),
@@ -19,6 +21,7 @@ Project::Project(const QString &filename, const QString &name, QObject *parent) 
 {
     mFilename = filename;
     mIniFile = std::make_shared<QSettings>(filename,QSettings::IniFormat);
+    mIniFile->setIniCodec(QTextCodec::codecForLocale());
     mParser = std::make_shared<CppParser>();
     mParser->setOnGetFileStream(
                 std::bind(
@@ -34,6 +37,15 @@ Project::Project(const QString &filename, const QString &name, QObject *parent) 
         mIniFile->setValue("name", mName);
         mIniFile->endGroup();
         mNode = makeProjectNode();
+    }
+}
+
+Project::~Project()
+{
+    foreach (const PProjectUnit& unit, mUnits) {
+        if (unit->editor()) {
+            unit->editor()->setInProject(false);
+        }
     }
 }
 
@@ -100,34 +112,18 @@ void Project::open()
         mModel.endUpdate();
     });
     QFile fileInfo(mFilename);
-    if (fileInfo.exists()
-            && !fileInfo.isWritable()) {
-        if (QMessageBox::question(pMainWindow,
-                                  tr("Remove Readonly Attribute"),
-                                  tr("Project file '%1' is readonly.<br /> Remove the readonly attribute?")
-                                  .arg(mFilename),
-                                  QMessageBox::Yes | QMessageBox::No,
-                                  QMessageBox::Yes) == QMessageBox::Yes) {
-            fileInfo.setPermissions(
-                        QFileDevice::WriteOwner
-                        | QFileDevice::WriteGroup
-                        | QFileDevice::WriteUser
-                        );
-        }
-    }
     loadOptions();
 
     mNode = makeProjectNode();
 
     checkProjectFileForUpdate();
-
-    mIniFile->beginGroup("Project");
+    qDebug()<<"ini filename:"<<mIniFile->fileName();
     int uCount  = mIniFile->value("UnitCount",0).toInt();
     mIniFile->endGroup();
     //createFolderNodes;
     QDir dir(directory());
     for (int i=0;i<uCount;i++) {
-        PProjectUnit newUnit = std::make_shared<ProjectUnit>();
+        PProjectUnit newUnit = std::make_shared<ProjectUnit>(this);
         mIniFile->beginGroup(QString("Unit%1").arg(i));
         newUnit->setFileName(dir.filePath(mIniFile->value("FileName","").toString()));
         if (!QFileInfo(newUnit->fileName()).exists()) {
@@ -170,6 +166,7 @@ void Project::setFileName(const QString &value)
         mFilename = value;
         setModified(true);
         mIniFile = std::make_shared<QSettings>(mFilename, QSettings::IniFormat);
+        mIniFile->setIniCodec(QTextCodec::codecForLocale());
     }
 }
 
@@ -187,6 +184,7 @@ void Project::setModified(bool value)
 PFolderNode Project::makeNewFileNode(const QString &s, bool isFolder, PFolderNode newParent)
 {
     PFolderNode node = std::make_shared<FolderNode>();
+    newParent->children.append(node);
     node->parent = newParent;
     node->text = s;
     if (newParent) {
@@ -194,6 +192,7 @@ PFolderNode Project::makeNewFileNode(const QString &s, bool isFolder, PFolderNod
     }
     if (isFolder)
         node->unitIndex = -1;
+    return node;
 }
 
 PFolderNode Project::makeProjectNode()
@@ -201,11 +200,12 @@ PFolderNode Project::makeProjectNode()
     PFolderNode node = std::make_shared<FolderNode>();
     node->text = mName;
     node->level = 0;
+    return node;
 }
 
 int Project::newUnit(PFolderNode parentNode, const QString customFileName)
 {
-    PProjectUnit newUnit = std::make_shared<ProjectUnit>();
+    PProjectUnit newUnit = std::make_shared<ProjectUnit>(this);
 
     // Select folder to add unit to
     if (!parentNode)
@@ -271,6 +271,7 @@ Editor *Project::openUnit(int index)
         loadUnitLayout(editor,index);
         return editor;
     }
+    return nullptr;
 }
 
 void Project::rebuildNodes()
@@ -370,6 +371,18 @@ bool Project::removeFolder(PFolderNode node)
     // Update list of folders (sets modified)
     updateFolders();
     return true;
+}
+
+void Project::resetParserProjectFiles()
+{
+    mParser->clearProjectFiles();
+    mParser->clearProjectIncludePaths();
+    foreach (const PProjectUnit& unit, mUnits) {
+        mParser->addFileToScan(unit->fileName());
+    }
+    foreach (const QString& s, mOptions.includes) {
+        mParser->addProjectIncludePath(s);
+    }
 }
 
 void Project::saveAll()
@@ -978,7 +991,7 @@ void Project::checkProjectFileForUpdate()
     if (!oldRes.isEmpty()) {
         QFile::copy(mFilename,mFilename+".bak");
         QStringList sl;
-        sl = oldRes.split(';');
+        sl = oldRes.split(';',Qt::SkipEmptyParts);
         for (int i=0;i<sl.count();i++){
             const QString& s = sl[i];
             mIniFile->beginGroup(QString("Unit%1").arg(uCount+i));
@@ -1156,7 +1169,7 @@ void Project::loadLayout()
     //TopRight := layIni.ReadInteger('Editors', 'FocusedRight', -1);
     QString temp =layIni.value("Order", "").toString();
     layIni.endGroup();
-    QStringList sl = temp.split(",");
+    QStringList sl = temp.split(",",Qt::SkipEmptyParts);
 
     foreach (const QString& s,sl) {
         bool ok;
@@ -1177,6 +1190,7 @@ void Project::loadOptions()
     mName = mIniFile->value("name", "").toString();
     mOptions.icon = mIniFile->value("icon", "").toString();
     mOptions.version = mIniFile->value("Ver", 0).toInt();
+    mIniFile->endGroup();
     if (mOptions.version > 0) { // ver > 0 is at least a v5 project
         if (mOptions.version < 2) {
             mOptions.version = 2;
@@ -1188,16 +1202,17 @@ void Project::loadOptions()
                                      QMessageBox::Ok);
         }
 
+        mIniFile->beginGroup("Project");
         mOptions.type = static_cast<ProjectType>(mIniFile->value("type", 0).toInt());
         mOptions.compilerCmd = mIniFile->value("Compiler", "").toString();
         mOptions.cppCompilerCmd = mIniFile->value("CppCompiler", "").toString();
         mOptions.linkerCmd = mIniFile->value("Linker", "").toString();
-        mOptions.objFiles = mIniFile->value("ObjFiles", "").toString().split(";");
-        mOptions.libs = mIniFile->value("Libs", "").toString().split(";");
-        mOptions.includes = mIniFile->value("Includes", "").toString().split(";");
+        mOptions.objFiles = mIniFile->value("ObjFiles", "").toString().split(";",Qt::SkipEmptyParts);
+        mOptions.libs = mIniFile->value("Libs", "").toString().split(";",Qt::SkipEmptyParts);
+        mOptions.includes = mIniFile->value("Includes", "").toString().split(";",Qt::SkipEmptyParts);
         mOptions.privateResource = mIniFile->value("PrivateResource", "").toString();
-        mOptions.resourceIncludes = mIniFile->value("ResourceIncludes", "").toString().split(";");
-        mOptions.makeIncludes = mIniFile->value("MakeIncludes","").toString().split(";");
+        mOptions.resourceIncludes = mIniFile->value("ResourceIncludes", "").toString().split(";",Qt::SkipEmptyParts);
+        mOptions.makeIncludes = mIniFile->value("MakeIncludes","").toString().split(";",Qt::SkipEmptyParts);
         mOptions.useGPP = mIniFile->value("IsCpp", false).toBool();
         mOptions.exeOutput = mIniFile->value("ExeOutput", "").toString();
         mOptions.objectOutput = mIniFile->value("ObjectOutput", "").toString();
@@ -1211,7 +1226,7 @@ void Project::loadOptions()
         mOptions.usePrecompiledHeader = mIniFile->value("UsePrecompiledHeader", false).toBool();
         mOptions.precompiledHeader = mIniFile->value("PrecompiledHeader","").toString();
         mOptions.cmdLineArgs = mIniFile->value("CommandLine","").toString();
-        mFolders = mIniFile->value("Folders","").toString().split(";");
+        mFolders = mIniFile->value("Folders","").toString().split(";",Qt::SkipEmptyParts);
         mOptions.includeVersionInfo = mIniFile->value("IncludeVersionInfo", false).toBool();
         mOptions.supportXPThemes = mIniFile->value("SupportXPThemes", false).toBool();
         mOptions.compilerSet = mIniFile->value("CompilerSet", pSettings->compilerSets().defaultIndex()).toInt();
@@ -1238,6 +1253,9 @@ void Project::loadOptions()
         } else {
             mOptions.encoding = mIniFile->value("Encoding", ENCODING_UTF8).toString();
         }
+        mIniFile->endGroup();
+
+        mIniFile->beginGroup("VersionInfo");
         mOptions.versionInfo.major = mIniFile->value("Major", 0).toInt();
         mOptions.versionInfo.minor = mIniFile->value("Minor", 1).toInt();
         mOptions.versionInfo.release = mIniFile->value("Release", 1).toInt();
@@ -1257,8 +1275,10 @@ void Project::loadOptions()
         mOptions.versionInfo.productVersion = mIniFile->value("ProductVersion", "0.1.1.1").toString();
         mOptions.versionInfo.autoIncBuildNr = mIniFile->value("AutoIncBuildNr", false).toBool();
         mOptions.versionInfo.syncProduct = mIniFile->value("SyncProduct", false).toBool();
+        mIniFile->endGroup();
     } else { // dev-c < 4
-        mOptions.version = -1;
+        mOptions.version = 2;
+        mIniFile->beginGroup("Project");
         if (!mIniFile->value("NoConsole", true).toBool())
             mOptions.type = ProjectType::Console;
         else if (mIniFile->value("IsDLL", false).toBool())
@@ -1267,9 +1287,9 @@ void Project::loadOptions()
             mOptions.type = ProjectType::GUI;
 
         mOptions.privateResource = mIniFile->value("PrivateResource","").toString();
-        mOptions.resourceIncludes = mIniFile->value("ResourceIncludes","").toString().split(";");
-        mOptions.objFiles = mIniFile->value("ObjFiles","").toString().split(";");
-        mOptions.includes = mIniFile->value("IncludeDirs","").toString().split(";");
+        mOptions.resourceIncludes = mIniFile->value("ResourceIncludes","").toString().split(";",Qt::SkipEmptyParts);
+        mOptions.objFiles = mIniFile->value("ObjFiles","").toString().split(";",Qt::SkipEmptyParts);
+        mOptions.includes = mIniFile->value("IncludeDirs","").toString().split(";",Qt::SkipEmptyParts);
         mOptions.compilerCmd = mIniFile->value("CompilerOptions","").toString();
         mOptions.useGPP = mIniFile->value("Use_GPP", false).toBool();
         mOptions.exeOutput = mIniFile->value("ExeOutput","").toString();
@@ -1277,6 +1297,7 @@ void Project::loadOptions()
         mOptions.overrideOutput = mIniFile->value("OverrideOutput", false).toBool();
         mOptions.overridenOutput = mIniFile->value("OverrideOutputName","").toString();
         mOptions.hostApplication = mIniFile->value("HostApplication","").toString();
+        mIniFile->endGroup();
     }
 }
 
@@ -1391,7 +1412,7 @@ void Project::setOptions(const ProjectOptions &newOptions)
     mOptions = newOptions;
 }
 
-const ProjectModel *Project::model() const
+ProjectModel *Project::model()
 {
     return &mModel;
 }

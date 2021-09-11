@@ -28,6 +28,7 @@
 #include "debugger.h"
 #include "editorlist.h"
 #include <QDebug>
+#include "project.h"
 
 using namespace std;
 

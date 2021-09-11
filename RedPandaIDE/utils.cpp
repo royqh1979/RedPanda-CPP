@@ -126,7 +126,7 @@ bool isNonPrintableAsciiChar(char ch)
 
 bool fileExists(const QString &file)
 {
-    return fileExists(file);
+    return QFile(file).exists();
 }
 
 bool fileExists(const QString &dir, const QString &fileName)
@@ -202,7 +202,7 @@ FileType getFileType(const QString &filename)
 
 QString getCompiledExecutableName(const QString& filename)
 {
-    return changeFileExt(filename,EXECUTABE_EXT);
+    return changeFileExt(filename,EXECUTABLE_EXT);
 }
 
 void splitStringArguments(const QString &arguments, QStringList &argumentList)
