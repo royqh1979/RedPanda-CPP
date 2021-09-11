@@ -160,6 +160,9 @@ QString excludeTrailingPathDelimiter(const QString &path)
 
 FileType getFileType(const QString &filename)
 {
+    if (filename.endsWith(".dev",PATH_SENSITIVITY)) {
+        return FileType::Project;
+    }
     if (filename.endsWith(".c",PATH_SENSITIVITY)) {
         return FileType::CSource;
     }
@@ -688,4 +691,9 @@ QString extractAbsoluteFilePath(const QString &filePath)
 {
     QFileInfo info(filePath);
     return info.absoluteFilePath();
+}
+
+bool isReadOnly(const QString &filename)
+{
+    return QFile(filename).isWritable();
 }

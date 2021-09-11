@@ -554,6 +554,14 @@ void MainWindow::openFiles(const QStringList &files)
     auto end = finally([this] {
         this->mEditorList->endUpdate();
     });
+    //Check if there is a project file in the list and open it
+    for (const QString& file:files) {
+        if (getFileType(file)==FileType::Project) {
+            openProject(file);
+            return;
+        }
+    }
+    //Didn't find a project? Open all files
     for (const QString& file:files) {
         openFile(file);
     }

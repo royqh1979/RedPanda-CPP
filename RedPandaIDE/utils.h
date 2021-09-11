@@ -25,6 +25,7 @@ enum class FileType{
     CHeader, // c header (.h)
     CppHeader, // c++ header (.hpp)
     WindowsResourceSource, // resource source (.res)
+    Project, //Red Panda Dev-C++ Project (.dev)
     Other // any others
 };
 
@@ -166,6 +167,7 @@ QString extractFileName(const QString& fileName);
 QString extractFilePath(const QString& filePath);
 QString extractAbsoluteFilePath(const QString& filePath);
 QString getSizeString(int size);
+bool isReadOnly(const QString& filename);
 
 int getNewFileNumber();
 

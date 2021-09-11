@@ -40,6 +40,7 @@ public:
 
     bool getContentFromOpenedEditor(const QString& filename, QStringList& buffer);
 
+    void getVisibleEditors(Editor*& left, Editor*& right);
     void updateLayout();
 
     void beginUpdate();

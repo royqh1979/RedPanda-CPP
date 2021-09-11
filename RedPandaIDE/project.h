@@ -1,6 +1,7 @@
 #ifndef PROJECT_H
 #define PROJECT_H
 
+#include <QAbstractItemModel>
 #include <QObject>
 #include <QSettings>
 #include <memory>
@@ -135,6 +136,25 @@ struct ProjectOptions{
     QString encoding;
 };
 
+class ProjectModel : public QAbstractItemModel {
+    Q_OBJECT
+public:
+    explicit ProjectModel(Project* project, QObject* parent=nullptr);
+    void beginUpdate();
+    void endUpdate();
+private:
+    Project* mProject;
+    int mUpdateCount;
+
+    // QAbstractItemModel interface
+public:
+    QModelIndex index(int row, int column, const QModelIndex &parent) const override;
+    QModelIndex parent(const QModelIndex &child) const override;
+    int rowCount(const QModelIndex &parent) const override;
+    int columnCount(const QModelIndex &parent) const override;
+    QVariant data(const QModelIndex &index, int role) const override;
+};
+
 class Project : public QObject
 {
     Q_OBJECT
@@ -181,14 +201,13 @@ public:
     void saveUnitLayout(Editor* e, int index); // save single [UnitX] cursor positions
     bool saveUnits();
     void setCompilerOption(const QString& optionString, const QChar& value);
-
-
+    void sortUnitsByPriority();
+    void sortUnitsByAlpha();
     void updateFolders();
-
-    void showOptions();
-    // bool assignTemplate(const QString& aFileName, const PTemplate& aTemplate);
     void updateNodeIndexes();
-    void setNodeValue(PFolderNode value);
+
+    //void showOptions();
+    // bool assignTemplate(const QString& aFileName, const PTemplate& aTemplate);
     //void saveToLog();
 
     std::shared_ptr<CppParser> cppParser();
@@ -211,10 +230,10 @@ signals:
     void modifyChanged(bool value);
 private:
     void open();
-    void sortUnitsByPriority();
     int indexInUnits(const QString& fileName) const;
     int indexInUnits(const Editor* editor) const;
     void removeFolderRecurse(PFolderNode node);
+    void updateFolderNode(PFolderNode node);
 private:
     QList<PProjectUnit> mUnits;
     ProjectOptions mOptions;
@@ -226,6 +245,7 @@ private:
     std::shared_ptr<CppParser> mParser;
     QList<PFolderNode> mFolderNodes;
     PFolderNode mNode;
+    ProjectModel mModel;
 };
 
 #endif // PROJECT_H

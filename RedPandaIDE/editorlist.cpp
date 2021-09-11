@@ -293,6 +293,28 @@ bool EditorList::getContentFromOpenedEditor(const QString &filename, QStringList
     return true;
 }
 
+void EditorList::getVisibleEditors(Editor *&left, Editor *&right)
+{
+    switch(mLayout) {
+    case LayoutShowType::lstNone:
+        left = nullptr;
+        right = nullptr;
+        break;
+    case LayoutShowType::lstLeft:
+        left = getEditor(-1,mLeftPageWidget);
+        right = nullptr;
+        break;
+    case LayoutShowType::lstRight:
+        left = nullptr;
+        right = getEditor(-1,mRightPageWidget);
+        break;
+    case LayoutShowType::lstBoth:
+        left = getEditor(-1,mLeftPageWidget);
+        right = getEditor(-1,mRightPageWidget);
+        break;
+    }
+}
+
 void EditorList::updateLayout()
 {
     if (mLeftPageWidget->count() ==0 && mRightPageWidget->count() == 0)

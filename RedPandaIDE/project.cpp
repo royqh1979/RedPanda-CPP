@@ -13,7 +13,9 @@
 #include <QMessageBox>
 #include "settings.h"
 
-Project::Project(const QString &filename, const QString &name, QObject *parent) : QObject(parent)
+Project::Project(const QString &filename, const QString &name, QObject *parent) :
+    QObject(parent),
+    mModel(this)
 {
     mFilename = filename;
     mIniFile = std::make_shared<QSettings>(filename,QSettings::IniFormat);
@@ -93,6 +95,10 @@ bool Project::modified() const
 
 void Project::open()
 {
+    mModel.beginUpdate();
+    auto action = finally([this]{
+        mModel.endUpdate();
+    });
     QFile fileInfo(mFilename);
     if (fileInfo.exists()
             && !fileInfo.isWritable()) {
@@ -279,6 +285,7 @@ void Project::rebuildNodes()
 //            oldPaths.Add(GetFolderPath(tempnode));
 //        end;
 
+    mModel.beginUpdate();
     // Delete everything
     mNode->children.clear();
 
@@ -309,11 +316,16 @@ void Project::rebuildNodes()
 
 //      fNode.Expand(False);
 
+    mModel.endUpdate();
     emit nodesChanged();
 }
 
 bool Project::removeEditor(int index, bool doClose)
 {
+    mModel.beginUpdate();
+    auto action = finally([this]{
+        mModel.endUpdate();
+    });
     if (index<0 || index>=mUnits.count())
         return false;
 
@@ -340,8 +352,10 @@ bool Project::removeEditor(int index, bool doClose)
 
 bool Project::removeFolder(PFolderNode node)
 {
-    return false;
-
+    mModel.beginUpdate();
+    auto action = finally([this]{
+        mModel.endUpdate();
+    });
     // Sanity check
     if (!node)
         return false;
@@ -516,6 +530,25 @@ void Project::setCompilerOption(const QString &optionString, const QChar &value)
     }
 }
 
+void Project::updateFolders()
+{
+    mFolders.clear();
+    updateFolderNode(mNode);
+    for (int idx = 0; idx < mUnits.count();idx++)
+        mUnits[idx]->setFolder(
+                    getFolderPath(
+                        mUnits[idx]->node()->parent.lock()
+                        )
+                    );
+    setModified(true);
+}
+
+void Project::updateNodeIndexes()
+{
+    for (int idx = 0;idx<mUnits.count();idx++)
+        mUnits[idx]->node()->unitIndex = idx;
+}
+
 void Project::saveOptions()
 {
     mIniFile->beginGroup("Project");
@@ -596,6 +629,10 @@ void Project::saveOptions()
 void Project::addFolder(const QString &s)
 {
     if (mFolders.indexOf(s)<0) {
+        mModel.beginUpdate();
+        auto action = finally([this]{
+            mModel.endUpdate();
+        });
         mFolders.append(s);
         rebuildNodes();
         //todo: MainForm.ProjectView.Select(FolderNodeFromName(s));
@@ -651,8 +688,13 @@ PProjectUnit Project::addUnit(const QString &inFileName, PFolderNode parentNode,
     newUnit->setPriority(1000);
     newUnit->setOverrideBuildCmd(false);
     newUnit->setBuildCmd("");
-    if (rebuild)
+    if (rebuild) {
+        mModel.beginUpdate();
+        auto action = finally([this]{
+            mModel.endUpdate();
+        });
         rebuildNodes();
+    }
     setModified(true);
     return newUnit;
 }
@@ -1258,9 +1300,26 @@ PCppParser Project::cppParser()
 
 void Project::sortUnitsByPriority()
 {
+    mModel.beginUpdate();
+    auto action = finally([this]{
+        mModel.endUpdate();
+    });
     std::sort(mUnits.begin(),mUnits.end(),[](const PProjectUnit& u1, const PProjectUnit& u2)->bool{
         return (u1->priority()>u2->priority());
     });
+    rebuildNodes();
+}
+
+void Project::sortUnitsByAlpha()
+{
+    mModel.beginUpdate();
+    auto action = finally([this]{
+        mModel.endUpdate();
+    });
+    std::sort(mUnits.begin(),mUnits.end(),[](const PProjectUnit& u1, const PProjectUnit& u2)->bool{
+        return (extractFileName(u1->fileName())<extractFileName(u2->fileName()));
+    });
+    rebuildNodes();
 }
 
 int Project::indexInUnits(const QString &fileName) const
@@ -1303,6 +1362,17 @@ void Project::removeFolderRecurse(PFolderNode node)
     PFolderNode parent = node->parent.lock();
     if (parent) {
         parent->children.removeAll(node);
+    }
+}
+
+void Project::updateFolderNode(PFolderNode node)
+{
+    for (int i=0;i<node->children.count();i++){
+        PFolderNode child;
+        if (child->unitIndex<0) {
+            mFolders.append(getFolderPath(child));
+            updateFolderNode(child);
+        }
     }
 }
 
@@ -1468,16 +1538,6 @@ void ProjectUnit::setPriority(int newPriority)
     mPriority = newPriority;
 }
 
-bool ProjectUnit::detectEncoding() const
-{
-    return mDetectEncoding;
-}
-
-void ProjectUnit::setDetectEncoding(bool newDetectEncoding)
-{
-    mDetectEncoding = newDetectEncoding;
-}
-
 const QByteArray &ProjectUnit::encoding() const
 {
     return mEncoding;
@@ -1538,4 +1598,57 @@ PFolderNode &ProjectUnit::node()
 void ProjectUnit::setNode(const PFolderNode &newNode)
 {
     mNode = newNode;
+}
+
+ProjectModel::ProjectModel(Project *project, QObject *parent):
+    QAbstractItemModel(parent),
+    mProject(project)
+{
+    mUpdateCount = 0;
+}
+
+void ProjectModel::beginUpdate()
+{
+    if (mUpdateCount==0)
+        beginResetModel();
+    mUpdateCount++;
+}
+
+void ProjectModel::endUpdate()
+{
+    mUpdateCount--;
+    if (mUpdateCount==0)
+        endResetModel();
+}
+
+int ProjectModel::rowCount(const QModelIndex &parent) const
+{
+    if (!parent.isValid())
+        return 1;
+    FolderNode* p = static_cast<FolderNode*>(parent.internalPointer());
+    if (p) {
+        return p->children.count();
+    } else {
+        return mProject->node()->children.count();
+    }
+}
+
+int ProjectModel::columnCount(const QModelIndex &parent) const
+{
+    return 1;
+}
+
+QVariant ProjectModel::data(const QModelIndex &index, int role) const
+{
+    if (!index.isValid())
+        return QVariant();
+    FolderNode* p = static_cast<FolderNode*>(index.internalPointer());
+    if (!p)
+        return QVariant();
+
+        return p->children.count();
+    } else {
+        return mProject->node()->children.count();
+    }
+
 }
