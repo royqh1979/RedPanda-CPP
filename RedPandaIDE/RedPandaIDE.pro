@@ -92,6 +92,7 @@ SOURCES += \
     widgets/searchresultview.cpp
 
 HEADERS += \
+    ini.h \
     HighlighterManager.h \
     autolinkmanager.h \
     caretlist.h \
