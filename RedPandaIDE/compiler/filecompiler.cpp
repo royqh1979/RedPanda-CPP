@@ -49,18 +49,21 @@ bool FileCompiler::prepareForCompile()
     case FileType::CSource:
         mArguments += getCCompileArguments(mOnlyCheckSyntax);
         mArguments += getCIncludeArguments();
+        mArguments += getProjectIncludeArguments();
         strFileType = "C";
         mCompiler = compilerSet()->CCompiler();
         break;
     case FileType::CppSource:
-        mArguments += getCCompileArguments(mOnlyCheckSyntax);
-        mArguments += getCIncludeArguments();
+        mArguments += getCppCompileArguments(mOnlyCheckSyntax);
+        mArguments += getCppIncludeArguments();
+        mArguments += getProjectIncludeArguments();
         strFileType = "C++";
         mCompiler = compilerSet()->cppCompiler();
         break;
     default:
         throw CompileError(tr("Can't find the compiler for file %1").arg(mFilename));
     }
+
     mArguments += getLibraryArguments(fileType);
 
     if (!fileExists(mCompiler)) {

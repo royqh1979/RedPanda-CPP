@@ -759,8 +759,14 @@ void MainWindow::checkSyntaxInBack(Editor *e)
 
     mCheckSyntaxInBack=true;
     ui->tableIssues->clearIssues();
-    mCompilerManager->checkSyntax(e->filename(),e->lines()->text(),
-                                  e->fileEncoding() == ENCODING_ASCII);
+    CompileTarget target =getCompileTarget();
+    if (target ==CompileTarget::Project) {
+        mCompilerManager->checkSyntax(e->filename(),e->lines()->text(),
+                                          e->fileEncoding() == ENCODING_ASCII, mProject);
+    } else {
+        mCompilerManager->checkSyntax(e->filename(),e->lines()->text(),
+                                          e->fileEncoding() == ENCODING_ASCII, nullptr);
+    }
 //    if not PrepareForCompile(cttStdin,True) then begin
 //      fCheckSyntaxInBack:=False;
 //      Exit;
@@ -775,22 +781,43 @@ void MainWindow::checkSyntaxInBack(Editor *e)
 
 bool MainWindow::compile(bool rebuild)
 {
-    Editor * editor = mEditorList->getEditor();
-    if (editor != NULL ) {
-        ui->tableIssues->clearIssues();
-        if (editor->modified()) {
-            if (!editor->save(false,false))
+    CompileTarget target =getCompileTarget();
+    if (target == CompileTarget::Project) {
+        if (!mProject->saveUnits())
+            return false;
+        updateAppTitle();
+
+        // Check if saves have been succesful
+        for (int i=0; i<mEditorList->pageCount();i++) {
+            Editor * e= (*(mEditorList))[i];
+            if (e->inProject() && e->modified())
                 return false;
         }
-        if (mCompileSuccessionTask) {
-            mCompileSuccessionTask->filename = getCompiledExecutableName(editor->filename());
+
+        // Increment build number automagically
+        if (mProject->options().versionInfo.autoIncBuildNr) {
+            mProject->incrementBuildNumber();
         }
-        updateCompileActions();
-        openCloseBottomPanel(true);
-        ui->tabMessages->setCurrentWidget(ui->tabCompilerOutput);
-        updateAppTitle();
-        mCompilerManager->compile(editor->filename(),editor->fileEncoding(),rebuild);
-        return true;
+        mProject->buildPrivateResource();
+        mCompilerManager->compileProject(mProject);
+    } else {
+        Editor * editor = mEditorList->getEditor();
+        if (editor != NULL ) {
+            ui->tableIssues->clearIssues();
+            if (editor->modified()) {
+                if (!editor->save(false,false))
+                    return false;
+            }
+            if (mCompileSuccessionTask) {
+                mCompileSuccessionTask->filename = getCompiledExecutableName(editor->filename());
+            }
+            updateCompileActions();
+            openCloseBottomPanel(true);
+            ui->tabMessages->setCurrentWidget(ui->tabCompilerOutput);
+            updateAppTitle();
+            mCompilerManager->compile(editor->filename(),editor->fileEncoding(),rebuild);
+            return true;
+        }
     }
     return false;
 }
@@ -1802,7 +1829,17 @@ void MainWindow::dropEvent(QDropEvent *event)
         foreach(const QUrl& url, event->mimeData()->urls()){
             if (!url.isLocalFile())
                 continue;
-            openFile(url.toLocalFile());
+            QString file = url.toLocalFile();
+            if (getFileType(file)==FileType::Project) {
+                openProject(file);
+                return;
+            }
+        }
+        foreach(const QUrl& url, event->mimeData()->urls()){
+            if (!url.isLocalFile())
+                continue;
+            QString file = url.toLocalFile();
+            openFile(file);
         }
     }
 }
@@ -1813,6 +1850,8 @@ void MainWindow::on_actionSave_triggered()
     if (editor != NULL) {
         try {
             editor->save();
+            if (editor->inProject() && (mProject))
+                mProject->saveAll();
         } catch(FileError e) {
             QMessageBox::critical(this,tr("Error"),e.reason());
         }
@@ -2242,21 +2281,17 @@ CompileTarget MainWindow::getCompileTarget()
     Editor* e = mEditorList->getEditor();
     if (e!=nullptr) {
         // Treat makefiles as InProject files too
-//        if ((mProject) and (e.InProject or (fProject.MakeFileName = e.FileName)) then begin
-//            Result := cttProject;
-//        end else begin
-//          Result := cttFile;
-//        end;
-        target = CompileTarget::File;
+        if (mProject
+                && (e->inProject() || (mProject->makeFileName() == e->filename()))
+                ) {
+            target = CompileTarget::Project;
+        } else {
+            target = CompileTarget::File;
+        }
+    // No editors have been opened. Check if a project is open
+    } else if (mProject) {
+        target = CompileTarget::Project;
     }
-//      // No editors have been opened. Check if a project is open
-//    end else if Assigned(fProject) then begin
-//      Result := cttProject;
-
-//      // No project, no editor...
-//    end else begin
-//      Result := cttNone;
-//    end;
     return target;
 }
 

@@ -61,7 +61,7 @@ void CompilerManager::compile(const QString& filename, const QByteArray& encodin
     }
 }
 
-void CompilerManager::checkSyntax(const QString &filename, const QString &content, bool isAscii)
+void CompilerManager::checkSyntax(const QString &filename, const QString &content, bool isAscii, std::shared_ptr<Project> project)
 {
     if (!pSettings->compilerSets().defaultSet()) {
         QMessageBox::critical(pMainWindow,
@@ -77,6 +77,7 @@ void CompilerManager::checkSyntax(const QString &filename, const QString &conten
 
         mSyntaxCheckErrorCount = 0;
         mBackgroundSyntaxChecker = new StdinCompiler(filename,content,isAscii,true,true);
+        mBackgroundSyntaxChecker->setProject(project);
         connect(mBackgroundSyntaxChecker, &Compiler::compileFinished, this ,&CompilerManager::onSyntaxCheckFinished);
         connect(mBackgroundSyntaxChecker, &Compiler::compileIssue, this, &CompilerManager::onSyntaxCheckIssue);
         connect(mBackgroundSyntaxChecker, &Compiler::compileFinished, pMainWindow, &MainWindow::onCompileFinished);

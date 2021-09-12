@@ -15,6 +15,7 @@
 #include "../parser/cppparser.h"
 #include "../autolinkmanager.h"
 #include "../platform.h"
+#include "../project.h"
 
 #define COMPILE_PROCESS_END "---//END//----"
 
@@ -325,6 +326,18 @@ QString Compiler::getCIncludeArguments()
     return result;
 }
 
+QString Compiler::getProjectIncludeArguments()
+{
+    QString result;
+    if (mProject) {
+        foreach (const QString& folder,mProject->options().includes) {
+            result += QString(" -I\"%1\"").arg(folder);
+        }
+        result +=  QString(" -I\"%1\"").arg(extractFilePath(mProject->filename()));
+    }
+    return result;
+}
+
 QString Compiler::getCppIncludeArguments()
 {
     QString result;
@@ -481,6 +494,16 @@ void Compiler::runCommand(const QString &cmd, const QString  &arguments, const Q
             throw CompileError(tr("An unknown error occurred."));
         }
     }
+}
+
+const std::shared_ptr<Project> &Compiler::project() const
+{
+    return mProject;
+}
+
+void Compiler::setProject(const std::shared_ptr<Project> &newProject)
+{
+    mProject = newProject;
 }
 
 bool Compiler::isRebuild() const

@@ -174,7 +174,7 @@ public:
     PProjectUnit addUnit(const QString& inFileName,
                 PFolderNode parentNode,
                 bool rebuild);
-    void buildPrivateResource(bool forceSave);
+    void buildPrivateResource(bool forceSave=false);
     void checkProjectFileForUpdate(SimpleIni& ini);
     void closeUnit(int index);
     void createFolderNodes();

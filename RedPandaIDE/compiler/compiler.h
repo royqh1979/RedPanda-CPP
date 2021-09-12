@@ -6,6 +6,7 @@
 #include "../common.h"
 #include "../parser/cppparser.h"
 
+class Project;
 class Compiler : public QThread
 {
     Q_OBJECT
@@ -21,6 +22,9 @@ public:
 
     bool isRebuild() const;
     void setRebuild(bool isRebuild);
+
+    const std::shared_ptr<Project> &project() const;
+    void setProject(const std::shared_ptr<Project> &newProject);
 
 signals:
     void compileStarted();
@@ -48,6 +52,7 @@ protected:
     virtual QString getCCompileArguments(bool checkSyntax);
     virtual QString getCppCompileArguments(bool checkSyntax);
     virtual QString getCIncludeArguments();
+    virtual QString getProjectIncludeArguments();
     virtual QString getCppIncludeArguments();
     virtual QString getLibraryArguments(FileType fileType);
     virtual QString parseFileIncludesForAutolink(
@@ -69,6 +74,7 @@ protected:
     PCompileIssue mLastIssue;
     QString mFilename;
     bool mRebuild;
+    std::shared_ptr<Project> mProject;
 
 private:
     bool mStop;

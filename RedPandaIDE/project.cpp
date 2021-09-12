@@ -147,11 +147,14 @@ void Project::open()
             newUnit->setPriority(ini.GetLongValue(groupName,"Priority", 1000));
             newUnit->setOverrideBuildCmd(ini.GetBoolValue(groupName,"OverrideBuildCmd", false));
             newUnit->setBuildCmd(fromByteArray(ini.GetValue(groupName,"BuildCmd", "")));
-            QByteArray defaultEncoding = ENCODING_SYSTEM_DEFAULT;
+            QByteArray defaultEncoding = toByteArray(mOptions.encoding);
             if (ini.GetBoolValue(groupName,"DetectEncoding",true)){
                 defaultEncoding = ENCODING_AUTO_DETECT;
             }
             newUnit->setEncoding(ini.GetValue(groupName, "FileEncoding",defaultEncoding));
+            if (QTextCodec::codecForName(newUnit->encoding())==nullptr) {
+                newUnit->setEncoding(ENCODING_AUTO_DETECT);
+            }
             newUnit->setEditor(nullptr);
             newUnit->setNew(false);
             newUnit->setParent(this);
@@ -265,7 +268,7 @@ Editor *Project::openUnit(int index)
             return editor;
         }
         QByteArray encoding;
-        encoding = mOptions.encoding.toLocal8Bit();
+        encoding = unit->encoding();
         editor = pMainWindow->editorList()->newEditor(fullPath, encoding, true, false);
         editor->setInProject(true);
         unit->setEditor(editor);
@@ -399,8 +402,7 @@ void Project::saveAll()
 
 void Project::saveLayout()
 {
-    QString s = changeFileExt(mFilename, "layout");
-    QSettings layIni(mFilename,QSettings::IniFormat);
+    QSettings layIni(changeFileExt(mFilename, "layout"),QSettings::IniFormat);
     QStringList sl;
     // Write list of open project files
     for (int i=0;i<pMainWindow->editorList()->pageCount();i++) {
@@ -1244,9 +1246,9 @@ void Project::loadOptions(SimpleIni& ini)
         mOptions.addCharset = ini.GetBoolValue("Project", "AddCharset", true);
         bool useUTF8 = ini.GetBoolValue("Project", "UseUTF8", false);
         if (useUTF8) {
-            mOptions.encoding = fromByteArray(ini.GetValue("Project","Encoding", ENCODING_SYSTEM_DEFAULT));
-        } else {
             mOptions.encoding = fromByteArray(ini.GetValue("Project","Encoding", ENCODING_UTF8));
+        } else {
+            mOptions.encoding = fromByteArray(ini.GetValue("Project","Encoding", ENCODING_AUTO_DETECT));
         }
 
         mOptions.versionInfo.major = ini.GetLongValue("VersionInfo", "Major", 0);

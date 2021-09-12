@@ -194,6 +194,7 @@
 
 #ifndef INCLUDED_SimpleIni_h
 #define INCLUDED_SimpleIni_h
+#include <QDebug>
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1020)
 # pragma once
@@ -376,7 +377,7 @@ public:
     public:
         FileWriter(FILE * a_file) : m_file(a_file) { }
         void Write(const char * a_pBuf) {
-            fputs(a_pBuf, m_file);
+            fwrite(a_pBuf,sizeof(char),strlen(a_pBuf),m_file);
         }
     private:
         FileWriter(const FileWriter &);             // disable

@@ -8,6 +8,7 @@
 
 class ExecutableRunner;
 class Compiler;
+class Project;
 class CompilerManager : public QObject
 {
     Q_OBJECT
@@ -19,7 +20,8 @@ public:
     bool running();
 
     void compile(const QString& filename, const QByteArray& encoding, bool rebuild, bool silent=false,bool onlyCheckSyntax=false);
-    void checkSyntax(const QString&filename, const QString& content, bool isAscii);
+    void compileProject(std::shared_ptr<Project> project);
+    void checkSyntax(const QString&filename, const QString& content, bool isAscii, std::shared_ptr<Project> project);
     void run(const QString& filename, const QString& arguments, const QString& workDir);
     void stopRun();
     void stopCompile();

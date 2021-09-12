@@ -36,14 +36,16 @@ bool StdinCompiler::prepareForCompile()
         mArguments += " -x c - ";
         mArguments += getCCompileArguments(mOnlyCheckSyntax);
         mArguments += getCIncludeArguments();
+        mArguments += getProjectIncludeArguments();
         strFileType = "C";
         mCompiler = compilerSet()->CCompiler();
         break;
     case FileType::CppSource:
     case FileType::CppHeader:
         mArguments += " -x c++ - ";
-        mArguments += getCCompileArguments(mOnlyCheckSyntax);
-        mArguments += getCIncludeArguments();
+        mArguments += getCppCompileArguments(mOnlyCheckSyntax);
+        mArguments += getCppIncludeArguments();
+        mArguments += getProjectIncludeArguments();
         strFileType = "C++";
         mCompiler = compilerSet()->cppCompiler();
         break;
