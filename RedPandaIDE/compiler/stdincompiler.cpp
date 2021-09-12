@@ -12,11 +12,6 @@ StdinCompiler::StdinCompiler(const QString &filename, const QString& content,boo
 
 }
 
-Settings::PCompilerSet StdinCompiler::compilerSet()
-{
-    return pSettings->compilerSets().defaultSet();
-}
-
 bool StdinCompiler::prepareForCompile()
 {
     log(tr("Checking file syntax..."));

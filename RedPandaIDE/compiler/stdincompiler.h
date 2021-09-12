@@ -12,7 +12,6 @@ public:
 
     // Compiler interface
 protected:
-    Settings::PCompilerSet compilerSet() override;
     bool prepareForCompile() override;
 
 private:

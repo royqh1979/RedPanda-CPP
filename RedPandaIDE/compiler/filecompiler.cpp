@@ -15,11 +15,6 @@ FileCompiler::FileCompiler(const QString &filename, const QByteArray &encoding,b
 
 }
 
-Settings::PCompilerSet FileCompiler::compilerSet()
-{
-    return pSettings->compilerSets().defaultSet();
-}
-
 bool FileCompiler::prepareForCompile()
 {
     log(tr("Compiling single file..."));

@@ -20,6 +20,7 @@ SOURCES += \
     codeformatter.cpp \
     codetemplate.cpp \
     colorscheme.cpp \
+    compiler/projectcompiler.cpp \
     platform.cpp \
     compiler/compiler.cpp \
     compiler/compilermanager.cpp \
@@ -105,6 +106,7 @@ HEADERS += \
     compiler/compilermanager.h \
     compiler/executablerunner.h \
     compiler/filecompiler.h \
+    compiler/projectcompiler.h \
     compiler/stdincompiler.h \
     cpprefacter.h \
     parser/cppparser.h \

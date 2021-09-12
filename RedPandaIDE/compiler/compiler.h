@@ -44,7 +44,7 @@ protected:
     virtual CompileIssueType getIssueTypeFromOutputLine(QString &line);
 
 protected:
-    virtual Settings::PCompilerSet compilerSet() = 0;
+    virtual Settings::PCompilerSet compilerSet();
     virtual bool prepareForCompile() = 0;
     virtual QString pipedText() = 0;
     virtual bool prepareForRebuild() = 0;

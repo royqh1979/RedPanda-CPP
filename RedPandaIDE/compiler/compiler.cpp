@@ -32,32 +32,36 @@ Compiler::Compiler(const QString &filename, bool silent, bool onlyCheckSyntax):
 void Compiler::run()
 {
     emit compileStarted();
+    auto action = finally([this]{
+        emit compileFinished();
+    });
     try {
+        if (!prepareForCompile()){
+            return;
+        }
         if (mRebuild && !prepareForRebuild()) {
             throw CompileError(tr("Clean before rebuild failed."));
         }
-        if (prepareForCompile()){
-            mErrorCount = 0;
-            mWarningCount = 0;
-            QElapsedTimer timer;
-            timer.start();
-            runCommand(mCompiler, mArguments, QFileInfo(mCompiler).absolutePath(), pipedText());
-            log("");
-            log(tr("Compile Result:"));
-            log("------------------");
-            log(tr("- Errors: %1").arg(mErrorCount));
-            log(tr("- Warnings: %1").arg(mWarningCount));
-            if (!mOutputFile.isEmpty()) {
-                log(tr("- Output Filename: %1").arg(mOutputFile));
-                QLocale locale = QLocale::system();
-                log(tr("- Output Size: %1").arg(locale.formattedDataSize(QFileInfo(mOutputFile).size())));
-            }
-            log(tr("- Compilation Time: %1 secs").arg(timer.elapsed() / 1000.0));
+        mErrorCount = 0;
+        mWarningCount = 0;
+        QElapsedTimer timer;
+        timer.start();
+        runCommand(mCompiler, mArguments, QFileInfo(mCompiler).absolutePath(), pipedText());
+        log("");
+        log(tr("Compile Result:"));
+        log("------------------");
+        log(tr("- Errors: %1").arg(mErrorCount));
+        log(tr("- Warnings: %1").arg(mWarningCount));
+        if (!mOutputFile.isEmpty()) {
+            log(tr("- Output Filename: %1").arg(mOutputFile));
+            QLocale locale = QLocale::system();
+            log(tr("- Output Size: %1").arg(locale.formattedDataSize(QFileInfo(mOutputFile).size())));
         }
+        log(tr("- Compilation Time: %1 secs").arg(timer.elapsed() / 1000.0));
     } catch (CompileError e) {
         emit compileErrorOccured(e.reason());
     }
-    emit compileFinished();
+
 }
 
 QString Compiler::getFileNameFromOutputLine(QString &line) {
@@ -148,6 +152,11 @@ CompileIssueType Compiler::getIssueTypeFromOutputLine(QString &line)
         }
     }
     return result;
+}
+
+Settings::PCompilerSet Compiler::compilerSet()
+{
+    return pSettings->compilerSets().defaultSet();
 }
 
 void Compiler::processOutput(QString &line)
