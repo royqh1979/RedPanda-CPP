@@ -13,6 +13,7 @@ QMAKE_CXXFLAGS_DEBUG += -Werror=return-type
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    ConvertUTF.c \
     HighlighterManager.cpp \
     autolinkmanager.cpp \
     caretlist.cpp \
@@ -92,8 +93,9 @@ SOURCES += \
     widgets/searchresultview.cpp
 
 HEADERS += \
-    ini.h \
+    ConvertUTF.h \
     HighlighterManager.h \
+    SimpleIni.h \
     autolinkmanager.h \
     caretlist.h \
     codeformatter.h \

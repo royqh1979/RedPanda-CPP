@@ -5,7 +5,9 @@
 #include <QObject>
 #include <QSettings>
 #include <memory>
+#include "SimpleIni.h"
 
+using SimpleIni = CSimpleIniA;
 enum class ProjectType {
     GUI=0,
     Console=1,
@@ -173,7 +175,7 @@ public:
                 PFolderNode parentNode,
                 bool rebuild);
     void buildPrivateResource(bool forceSave);
-    void checkProjectFileForUpdate();
+    void checkProjectFileForUpdate(SimpleIni& ini);
     void closeUnit(int index);
     void createFolderNodes();
     void doAutoOpen();
@@ -187,7 +189,7 @@ public:
     int indexInUnits(const Editor* editor) const;
     QString listUnitStr(const QChar& separator);
     void loadLayout(); // load all [UnitX]
-    void loadOptions();
+    void loadOptions(SimpleIni& ini);
     void loadUnitLayout(Editor *e, int index); // load single [UnitX] cursor positions
     PFolderNode makeNewFileNode(const QString& s, bool isFolder, PFolderNode newParent);
     PFolderNode makeProjectNode();
@@ -217,9 +219,6 @@ public:
     std::shared_ptr<CppParser> cppParser();
     const QString &filename() const;
 
-    std::shared_ptr<QSettings> &iniFile();
-    void setIniFile(const std::shared_ptr<QSettings> &newIniFile);
-
     const QString &name() const;
     void setName(const QString &newName);
 
@@ -240,10 +239,12 @@ private:
     void open();
     void removeFolderRecurse(PFolderNode node);
     void updateFolderNode(PFolderNode node);
+    QByteArray toByteArray(const QString& s);
+    QString fromByteArray(const QByteArray& s);
+
 private:
     QList<PProjectUnit> mUnits;
     ProjectOptions mOptions;
-    std::shared_ptr<QSettings> mIniFile;
     QString mFilename;
     QString mName;
     bool mModified;

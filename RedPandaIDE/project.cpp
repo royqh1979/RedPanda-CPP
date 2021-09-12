@@ -15,14 +15,12 @@
 #include <QTextCodec>
 #include "settings.h"
 #include <QDebug>
-
+#include "SimpleIni.h"
 Project::Project(const QString &filename, const QString &name, QObject *parent) :
     QObject(parent),
     mModel(this)
 {
     mFilename = filename;
-    mIniFile = std::make_shared<QSettings>(filename,QSettings::IniFormat);
-    mIniFile->setIniCodec(QTextCodec::codecForName(getDefaultSystemEncoding()));
     mParser = std::make_shared<CppParser>();
     mParser->setOnGetFileStream(
                 std::bind(
@@ -33,10 +31,10 @@ Project::Project(const QString &filename, const QString &name, QObject *parent) 
         open();
     else {
         mName = name;
-        mIniFile->beginGroup("Project");
-        mIniFile->setValue("filename", mFilename);
-        mIniFile->setValue("name", mName);
-        mIniFile->endGroup();
+        SimpleIni ini;
+        ini.SetValue("Project","filename", toByteArray(extractRelativePath(directory(),mFilename)));
+        ini.SetValue("Project","name", toByteArray(mName));
+        ini.SaveFile(mFilename.toLocal8Bit());
         mNode = makeProjectNode();
     }
 }
@@ -115,21 +113,23 @@ void Project::open()
     auto action = finally([this]{
         mModel.endUpdate();
     });
-    QFile fileInfo(mFilename);
-    loadOptions();
+//    QFile fileInfo(mFilename);
+    SimpleIni ini;
+    ini.LoadFile(mFilename.toLocal8Bit());
+    loadOptions(ini);
 
     mNode = makeProjectNode();
 
-    checkProjectFileForUpdate();
-    qDebug()<<"ini filename:"<<mIniFile->fileName();
-    int uCount  = mIniFile->value("UnitCount",0).toInt();
-    mIniFile->endGroup();
+    checkProjectFileForUpdate(ini);
+    int uCount  = ini.GetLongValue("Project","UnitCount",0);
     //createFolderNodes;
     QDir dir(directory());
     for (int i=0;i<uCount;i++) {
         PProjectUnit newUnit = std::make_shared<ProjectUnit>(this);
-        mIniFile->beginGroup(QString("Unit%1").arg(i+1));
-        newUnit->setFileName(dir.absoluteFilePath(mIniFile->value("FileName","").toString()));
+        QByteArray groupName = toByteArray(QString("Unit%1").arg(i+1));
+        newUnit->setFileName(
+                    dir.absoluteFilePath(
+                        fromByteArray(ini.GetValue(groupName,"FileName",""))));
         if (!QFileInfo(newUnit->fileName()).exists()) {
             QMessageBox::critical(pMainWindow,
                                   tr("File Not Found"),
@@ -138,17 +138,20 @@ void Project::open()
                                   QMessageBox::Ok);
             newUnit->setModified(true);
         } else {
-            newUnit->setFolder(mIniFile->value("Folder","").toString());
-            newUnit->setCompile(mIniFile->value("Compile", true).toBool());
+            newUnit->setFolder(fromByteArray(ini.GetValue(groupName,"Folder","")));
+            newUnit->setCompile(ini.GetBoolValue(groupName,"Compile", true));
             newUnit->setCompileCpp(
-                        mIniFile->value("CompileCpp",mOptions.useGPP).toBool());
+                        ini.GetBoolValue(groupName,"CompileCpp",mOptions.useGPP));
 
-            newUnit->setLink(mIniFile->value("Link", true).toBool());
-            newUnit->setPriority(mIniFile->value("Priority", 1000).toInt());
-            newUnit->setOverrideBuildCmd(mIniFile->value("OverrideBuildCmd", false).toInt());
-            newUnit->setBuildCmd(mIniFile->value("BuildCmd", "").toString());
-            newUnit->setEncoding(mIniFile->value("FileEncoding",ENCODING_SYSTEM_DEFAULT).toByteArray());
-
+            newUnit->setLink(ini.GetBoolValue(groupName,"Link", true));
+            newUnit->setPriority(ini.GetLongValue(groupName,"Priority", 1000));
+            newUnit->setOverrideBuildCmd(ini.GetBoolValue(groupName,"OverrideBuildCmd", false));
+            newUnit->setBuildCmd(fromByteArray(ini.GetValue(groupName,"BuildCmd", "")));
+            QByteArray defaultEncoding = ENCODING_SYSTEM_DEFAULT;
+            if (ini.GetBoolValue(groupName,"DetectEncoding",true)){
+                defaultEncoding = ENCODING_AUTO_DETECT;
+            }
+            newUnit->setEncoding(ini.GetValue(groupName, "FileEncoding",defaultEncoding));
             newUnit->setEditor(nullptr);
             newUnit->setNew(false);
             newUnit->setParent(this);
@@ -156,7 +159,6 @@ void Project::open()
             newUnit->node()->unitIndex = mUnits.count();
             mUnits.append(newUnit);
         }
-        mIniFile->endGroup();
     }
     rebuildNodes();
 }
@@ -164,13 +166,9 @@ void Project::open()
 void Project::setFileName(const QString &value)
 {
     if (mFilename!=value) {
-        mIniFile->sync();
-        mIniFile.reset();
         QFile::rename(mFilename,value);
         mFilename = value;
         setModified(true);
-        mIniFile = std::make_shared<QSettings>(mFilename, QSettings::IniFormat);
-        mIniFile->setIniCodec(QTextCodec::codecForName(getDefaultSystemEncoding()));
     }
 }
 
@@ -343,7 +341,6 @@ bool Project::removeEditor(int index, bool doClose)
     }
 
 //if not fUnits.GetItem(index).fNew then
-    mIniFile->remove("Unit"+QString("%1").arg(index+1));
     PFolderNode node = unit->node();
     PFolderNode parent = node->parent.lock();
     if (parent) {
@@ -433,14 +430,16 @@ void Project::saveLayout()
         }
         layIni.endGroup();
         // remove old data from project file
-        mIniFile->beginGroup(QString("Unit%1").arg(i+1));
-        mIniFile->remove("Open");
-        mIniFile->remove("Top");
-        mIniFile->remove("CursorCol");
-        mIniFile->remove("CursorRow");
-        mIniFile->remove("TopLine");
-        mIniFile->remove("LeftChar");
-        mIniFile->endGroup();
+        SimpleIni ini;
+        ini.LoadFile(mFilename.toLocal8Bit());
+        QByteArray groupName = toByteArray(QString("Unit%1").arg(i+1));
+        ini.Delete(groupName,"Open");
+        ini.Delete(groupName,"Top");
+        ini.Delete(groupName,"CursorCol");
+        ini.Delete(groupName,"CursorRow");
+        ini.Delete(groupName,"TopLine");
+        ini.Delete(groupName,"LeftChar");
+        ini.SaveFile(mFilename.toLocal8Bit());
     }
 }
 
@@ -454,13 +453,17 @@ void Project::saveUnitAs(int i, const QString &sFileName)
 //    }
     unit->setNew(false);
     unit->setFileName(sFileName);
-    mIniFile->beginGroup(QString("Unit%1").arg(i+1));
-    mIniFile->setValue("FileName",
-                       extractRelativePath(
-                           directory(),
-                           sFileName));
-    mIniFile->endGroup();
-    mIniFile->sync();
+    SimpleIni ini;
+    ini.LoadFile(mFilename.toLocal8Bit());
+    QByteArray groupName = toByteArray(QString("Unit%1").arg(i+1));
+    ini.SetValue(
+                groupName,
+                "FileName",
+                toByteArray(
+                    extractRelativePath(
+                        directory(),
+                        sFileName)));
+    ini.SaveFile(mFilename.toLocal8Bit());
     setModified(true);
 }
 
@@ -480,10 +483,12 @@ void Project::saveUnitLayout(Editor *e, int index)
 bool Project::saveUnits()
 {
     int count = 0;
+    SimpleIni ini;
+    ini.LoadFile(mFilename.toLocal8Bit());
     for (int idx = 0; idx < mUnits.count(); idx++) {
         PProjectUnit unit = mUnits[idx];
         bool rd_only = false;
-        mIniFile->beginGroup(QString("Unit%1").arg(count+1));
+        QByteArray groupName = toByteArray(QString("Unit%1").arg(count+1));
         if (unit->modified() && fileExists(unit->fileName())
             && isReadOnly(unit->fileName())) {
             // file is read-only
@@ -500,37 +505,36 @@ bool Project::saveUnits()
         }
 
         // saved new file or an existing file add to project file
-
-        mIniFile->setValue("FileName",
-                           extractRelativePath(
-                               directory(),
-                               unit->fileName()));
+        ini.SetValue(
+                    groupName,
+                    "FileName",
+                    toByteArray(
+                        extractRelativePath(
+                            directory(),
+                            unit->fileName())));
         count++;
         switch(getFileType(unit->fileName())) {
         case FileType::CHeader:
         case FileType::CSource:
         case FileType::CppHeader:
         case FileType::CppSource:
-            mIniFile->setValue("CompileCpp", unit->compileCpp());
+            ini.SetBoolValue(groupName,"CompileCpp", unit->compileCpp());
             break;
         case FileType::WindowsResourceSource:
             unit->setFolder("Resources");
         }
 
-        mIniFile->setValue("Folder", unit->folder());
-        mIniFile->setValue("Compile", unit->compile());
-        mIniFile->setValue("Link", unit->link());
-        mIniFile->setValue("Priority", unit->priority());
-        mIniFile->setValue("OverrideBuildCmd", unit->overrideBuildCmd());
-        mIniFile->setValue("BuildCmd", unit->buildCmd());
-        mIniFile->setValue("DetectEncoding", unit->encoding()==ENCODING_AUTO_DETECT);
-        mIniFile->setValue("FileEncoding", unit->encoding());
-        mIniFile->endGroup();
+        ini.SetValue(groupName,"Folder", toByteArray(unit->folder()));
+        ini.SetBoolValue(groupName,"Compile", unit->compile());
+        ini.SetBoolValue(groupName,"Link", unit->link());
+        ini.SetLongValue(groupName,"Priority", unit->priority());
+        ini.SetBoolValue(groupName,"OverrideBuildCmd", unit->overrideBuildCmd());
+        ini.SetValue(groupName,"BuildCmd", toByteArray(unit->buildCmd()));
+        ini.SetBoolValue(groupName,"DetectEncoding", unit->encoding()==ENCODING_AUTO_DETECT);
+        ini.SetValue(groupName,"FileEncoding", toByteArray(unit->encoding()));
     }
-    mIniFile->beginGroup("Project");
-    mIniFile->setValue("UnitCount",count);
-    mIniFile->endGroup();
-    mIniFile->sync();
+    ini.SetLongValue("Project","UnitCount",count);
+    ini.SaveFile(mFilename.toLocal8Bit());
     return true;
 }
 
@@ -568,79 +572,74 @@ void Project::updateNodeIndexes()
 
 void Project::saveOptions()
 {
-    mIniFile->beginGroup("Project");
-    mIniFile->setValue("FileName", extractRelativePath(directory(), mFilename));
-    mIniFile->setValue("Name", mName);
-    mIniFile->setValue("Type", static_cast<int>(mOptions.type));
-    mIniFile->setValue("Ver", 3); // Is 3 as of Red Panda Dev-C++ 7.0
-    mIniFile->setValue("ObjFiles", mOptions.objFiles.join(";"));
-    mIniFile->setValue("Includes", mOptions.includes.join(";"));
-    mIniFile->setValue("Libs", mOptions.libs.join(";"));
-    mIniFile->setValue("PrivateResource", mOptions.privateResource);
-    mIniFile->setValue("ResourceIncludes", mOptions.resourceIncludes.join(";"));
-    mIniFile->setValue("MakeIncludes", mOptions.makeIncludes.join(";"));
-    mIniFile->setValue("Compiler", mOptions.compilerCmd);
-    mIniFile->setValue("CppCompiler", mOptions.cppCompilerCmd);
-    mIniFile->setValue("Linker", mOptions.linkerCmd);
-    mIniFile->setValue("IsCpp", mOptions.useGPP);
-    mIniFile->setValue("Icon", extractRelativePath(directory(), mOptions.icon));
-    mIniFile->setValue("ExeOutput", mOptions.exeOutput);
-    mIniFile->setValue("ObjectOutput", mOptions.objectOutput);
-    mIniFile->setValue("LogOutput", mOptions.logOutput);
-    mIniFile->setValue("LogOutputEnabled", mOptions.logOutputEnabled);
-    mIniFile->setValue("OverrideOutput", mOptions.overrideOutput);
-    mIniFile->setValue("OverrideOutputName", mOptions.overridenOutput);
-    mIniFile->setValue("HostApplication", mOptions.hostApplication);
-    mIniFile->setValue("UseCustomMakefile", mOptions.useCustomMakefile);
-    mIniFile->setValue("CustomMakefile", mOptions.customMakefile);
-    mIniFile->setValue("UsePrecompiledHeader", mOptions.usePrecompiledHeader);
-    mIniFile->setValue("PrecompiledHeader", mOptions.precompiledHeader);
-    mIniFile->setValue("CommandLine", mOptions.cmdLineArgs);
-    mIniFile->setValue("Folders", mFolders.join(";"));
-    mIniFile->setValue("IncludeVersionInfo", mOptions.includeVersionInfo);
-    mIniFile->setValue("SupportXPThemes", mOptions.supportXPThemes);
-    mIniFile->setValue("CompilerSet", mOptions.compilerSet);
-    mIniFile->setValue("CompilerSettings", mOptions.compilerOptions);
-    mIniFile->setValue("StaticLink", mOptions.staticLink);
-    mIniFile->setValue("AddCharset", mOptions.addCharset);
-    mIniFile->setValue("Encoding",mOptions.encoding);
+    SimpleIni ini;
+    ini.LoadFile(mFilename.toLocal8Bit());
+    ini.SetValue("Project","FileName", toByteArray(extractRelativePath(directory(), mFilename)));
+    ini.SetValue("Project","Name", toByteArray(mName));
+    ini.SetLongValue("Project","Type", static_cast<int>(mOptions.type));
+    ini.SetLongValue("Project","Ver", 3); // Is 3 as of Red Panda Dev-C++ 7.0
+    ini.SetValue("Project","ObjFiles", toByteArray(mOptions.objFiles.join(";")));
+    ini.SetValue("Project","Includes", toByteArray(mOptions.includes.join(";")));
+    ini.SetValue("Project","Libs", toByteArray(mOptions.libs.join(";")));
+    ini.SetValue("Project","PrivateResource", toByteArray(mOptions.privateResource));
+    ini.SetValue("Project","ResourceIncludes", toByteArray(mOptions.resourceIncludes.join(";")));
+    ini.SetValue("Project","MakeIncludes", toByteArray(mOptions.makeIncludes.join(";")));
+    ini.SetValue("Project","Compiler", toByteArray(mOptions.compilerCmd));
+    ini.SetValue("Project","CppCompiler", toByteArray(mOptions.cppCompilerCmd));
+    ini.SetValue("Project","Linker", toByteArray(mOptions.linkerCmd));
+    ini.SetBoolValue("Project","IsCpp", mOptions.useGPP);
+    ini.SetValue("Project","Icon", toByteArray(extractRelativePath(directory(), mOptions.icon)));
+    ini.SetValue("Project","ExeOutput", toByteArray(mOptions.exeOutput));
+    ini.SetValue("Project","ObjectOutput", toByteArray(mOptions.objectOutput));
+    ini.SetValue("Project","LogOutput", toByteArray(mOptions.logOutput));
+    ini.SetBoolValue("Project","LogOutputEnabled", mOptions.logOutputEnabled);
+    ini.SetBoolValue("Project","OverrideOutput", mOptions.overrideOutput);
+    ini.SetValue("Project","OverrideOutputName", toByteArray(mOptions.overridenOutput));
+    ini.SetValue("Project","HostApplication", toByteArray(mOptions.hostApplication));
+    ini.SetBoolValue("Project","UseCustomMakefile", mOptions.useCustomMakefile);
+    ini.SetValue("Project","CustomMakefile", toByteArray(mOptions.customMakefile));
+    ini.SetBoolValue("Project","UsePrecompiledHeader", mOptions.usePrecompiledHeader);
+    ini.SetValue("Project","PrecompiledHeader", toByteArray(mOptions.precompiledHeader));
+    ini.SetValue("Project","CommandLine", toByteArray(mOptions.cmdLineArgs));
+    ini.SetValue("Project","Folders", toByteArray(mFolders.join(";")));
+    ini.SetBoolValue("Project","IncludeVersionInfo", mOptions.includeVersionInfo);
+    ini.SetBoolValue("Project","SupportXPThemes", mOptions.supportXPThemes);
+    ini.SetLongValue("Project","CompilerSet", mOptions.compilerSet);
+    ini.SetValue("Project","CompilerSettings", toByteArray(mOptions.compilerOptions));
+    ini.SetBoolValue("Project","StaticLink", mOptions.staticLink);
+    ini.SetBoolValue("Project","AddCharset", mOptions.addCharset);
+    ini.SetValue("Project","Encoding",toByteArray(mOptions.encoding));
     //for Red Panda Dev C++ 6 compatibility
-    mIniFile->setValue("UseUTF8",mOptions.encoding == ENCODING_UTF8);
-    mIniFile->endGroup();
+    ini.SetBoolValue("Project","UseUTF8",mOptions.encoding == ENCODING_UTF8);
 
-    mIniFile->beginGroup("VersionInfo");
-    mIniFile->setValue("Major", mOptions.versionInfo.major);
+    ini.SetLongValue("VersionInfo","Major", mOptions.versionInfo.major);
+    ini.SetLongValue("VersionInfo","Minor", mOptions.versionInfo.minor);
+    ini.SetLongValue("VersionInfo","Release", mOptions.versionInfo.release);
+    ini.SetLongValue("VersionInfo","Build", mOptions.versionInfo.build);
+    ini.SetLongValue("VersionInfo","LanguageID", mOptions.versionInfo.languageID);
+    ini.SetLongValue("VersionInfo","CharsetID", mOptions.versionInfo.charsetID);
+    ini.SetValue("VersionInfo","CompanyName", toByteArray(mOptions.versionInfo.companyName));
+    ini.SetValue("VersionInfo","FileVersion", toByteArray(mOptions.versionInfo.fileVersion));
+    ini.SetValue("VersionInfo","FileDescription", toByteArray(mOptions.versionInfo.fileDescription));
+    ini.SetValue("VersionInfo","InternalName", toByteArray(mOptions.versionInfo.internalName));
+    ini.SetValue("VersionInfo","LegalCopyright", toByteArray(mOptions.versionInfo.legalCopyright));
+    ini.SetValue("VersionInfo","LegalTrademarks", toByteArray(mOptions.versionInfo.legalTrademarks));
+    ini.SetValue("VersionInfo","OriginalFilename", toByteArray(mOptions.versionInfo.originalFilename));
+    ini.SetValue("VersionInfo","ProductName", toByteArray(mOptions.versionInfo.productName));
+    ini.SetValue("VersionInfo","ProductVersion", toByteArray(mOptions.versionInfo.productVersion));
+    ini.SetBoolValue("VersionInfo","AutoIncBuildNr", mOptions.versionInfo.autoIncBuildNr);
+    ini.SetBoolValue("VersionInfo","SyncProduct", mOptions.versionInfo.syncProduct);
 
-    mIniFile->setValue("Minor", mOptions.versionInfo.minor);
-    mIniFile->setValue("Release", mOptions.versionInfo.release);
-    mIniFile->setValue("Build", mOptions.versionInfo.build);
-    mIniFile->setValue("LanguageID", mOptions.versionInfo.languageID);
-    mIniFile->setValue("CharsetID", mOptions.versionInfo.charsetID);
-    mIniFile->setValue("CompanyName", mOptions.versionInfo.companyName);
-    mIniFile->setValue("FileVersion", mOptions.versionInfo.fileVersion);
-    mIniFile->setValue("FileDescription", mOptions.versionInfo.fileDescription);
-    mIniFile->setValue("InternalName", mOptions.versionInfo.internalName);
-    mIniFile->setValue("LegalCopyright", mOptions.versionInfo.legalCopyright);
-    mIniFile->setValue("LegalTrademarks", mOptions.versionInfo.legalTrademarks);
-    mIniFile->setValue("OriginalFilename", mOptions.versionInfo.originalFilename);
-    mIniFile->setValue("ProductName", mOptions.versionInfo.productName);
-    mIniFile->setValue("ProductVersion", mOptions.versionInfo.productVersion);
-    mIniFile->setValue("AutoIncBuildNr", mOptions.versionInfo.autoIncBuildNr);
-    mIniFile->setValue("SyncProduct", mOptions.versionInfo.syncProduct);
-    mIniFile->endGroup();
 
     //delete outdated dev4 project options
-    mIniFile->beginGroup("Project");
-    mIniFile->remove("NoConsole");
-    mIniFile->remove("IsDLL");
-    mIniFile->remove("ResFiles");
-    mIniFile->remove("IncludeDirs");
-    mIniFile->remove("CompilerOptions");
-    mIniFile->remove("Use_GPP");
-    mIniFile->endGroup();
+    ini.Delete("Project","NoConsole");
+    ini.Delete("Project","IsDLL");
+    ini.Delete("Project","ResFiles");
+    ini.Delete("Project","IncludeDirs");
+    ini.Delete("Project","CompilerOptions");
+    ini.Delete("Project","Use_GPP");
 
-    mIniFile->sync(); // force flush
-
+    ini.SaveFile(mFilename.toLocal8Bit());
 }
 
 void Project::addFolder(const QString &s)
@@ -984,43 +983,38 @@ void Project::buildPrivateResource(bool forceSave)
     StringsToFile(contents,hFile);
 }
 
-void Project::checkProjectFileForUpdate()
+void Project::checkProjectFileForUpdate(SimpleIni &ini)
 {
     bool cnvt = false;
-    mIniFile->beginGroup("Project");
-    int uCount = mIniFile->value("UnitCount", 0).toInt();
-    mIniFile->endGroup();
+    int uCount = ini.GetLongValue("Project","UnitCount", 0);
     // check if using old way to store resources and fix it
-    QString oldRes = mIniFile->value("Resources", "").toString();
+    QString oldRes = QString::fromLocal8Bit(ini.GetValue("Project","Resources", ""));
     if (!oldRes.isEmpty()) {
         QFile::copy(mFilename,mFilename+".bak");
         QStringList sl;
         sl = oldRes.split(';',Qt::SkipEmptyParts);
         for (int i=0;i<sl.count();i++){
             const QString& s = sl[i];
-            mIniFile->beginGroup(QString("Unit%1").arg(uCount+i));
-            mIniFile->setValue("Filename", s);
-            mIniFile->setValue("Folder", "Resources");
-            mIniFile->setValue("Compile",true);
-            mIniFile->endGroup();
+            QByteArray groupName = toByteArray(QString("Unit%1").arg(uCount+i));
+            ini.SetValue(groupName,"Filename", toByteArray(s));
+            ini.SetValue(groupName,"Folder", "Resources");
+            ini.SetBoolValue(groupName,"Compile",true);
         }
-        mIniFile->beginGroup("Project");
-        mIniFile->setValue("UnitCount",uCount+sl.count());
-        QString folders = mIniFile->value("Folders","").toString();
+        ini.SetLongValue("Project","UnitCount",uCount+sl.count());
+        QString folders = QString::fromLocal8Bit(ini.GetValue("Project","Folders",""));
         if (!folders.isEmpty())
             folders += ",Resources";
         else
             folders = "Resources";
-        mIniFile->setValue("Folders",folders);
-        mIniFile->endGroup();
+        ini.SetValue("Project","Folders",toByteArray(folders));
+        cnvt = true;
+        ini.Delete("Project","Resources");
+        ini.Delete("Project","Focused");
+        ini.Delete("Project","Order");
+        ini.Delete("Project","DebugInfo");
+        ini.Delete("Project","ProfileInfo");
+        ini.SaveFile(mFilename.toLocal8Bit());
     }
-
-    mIniFile->beginGroup("Project");
-    mIniFile->remove("Resources");
-    mIniFile->remove("Focused");
-    mIniFile->remove("Order");
-    mIniFile->remove("DebugInfo");
-    mIniFile->remove("ProfileInfo");
 
     if (cnvt)
         QMessageBox::information(
@@ -1188,13 +1182,11 @@ void Project::loadLayout()
 
 }
 
-void Project::loadOptions()
+void Project::loadOptions(SimpleIni& ini)
 {
-    mIniFile->beginGroup("Project");
-    mName = mIniFile->value("name", "").toString();
-    mOptions.icon = mIniFile->value("icon", "").toString();
-    mOptions.version = mIniFile->value("Ver", 0).toInt();
-    mIniFile->endGroup();
+    mName = fromByteArray(ini.GetValue("Project","name", ""));
+    mOptions.icon = fromByteArray(ini.GetValue("Project", "icon", ""));
+    mOptions.version = ini.GetLongValue("Project", "Ver", 0);
     if (mOptions.version > 0) { // ver > 0 is at least a v5 project
         if (mOptions.version < 2) {
             mOptions.version = 2;
@@ -1206,34 +1198,33 @@ void Project::loadOptions()
                                      QMessageBox::Ok);
         }
 
-        mIniFile->beginGroup("Project");
-        mOptions.type = static_cast<ProjectType>(mIniFile->value("type", 0).toInt());
-        mOptions.compilerCmd = mIniFile->value("Compiler", "").toString();
-        mOptions.cppCompilerCmd = mIniFile->value("CppCompiler", "").toString();
-        mOptions.linkerCmd = mIniFile->value("Linker", "").toString();
-        mOptions.objFiles = mIniFile->value("ObjFiles", "").toString().split(";",Qt::SkipEmptyParts);
-        mOptions.libs = mIniFile->value("Libs", "").toString().split(";",Qt::SkipEmptyParts);
-        mOptions.includes = mIniFile->value("Includes", "").toString().split(";",Qt::SkipEmptyParts);
-        mOptions.privateResource = mIniFile->value("PrivateResource", "").toString();
-        mOptions.resourceIncludes = mIniFile->value("ResourceIncludes", "").toString().split(";",Qt::SkipEmptyParts);
-        mOptions.makeIncludes = mIniFile->value("MakeIncludes","").toString().split(";",Qt::SkipEmptyParts);
-        mOptions.useGPP = mIniFile->value("IsCpp", false).toBool();
-        mOptions.exeOutput = mIniFile->value("ExeOutput", "").toString();
-        mOptions.objectOutput = mIniFile->value("ObjectOutput", "").toString();
-        mOptions.logOutput = mIniFile->value("LogOutput","").toString();
-        mOptions.logOutputEnabled = mIniFile->value("LogOutputEnabled", false).toBool();
-        mOptions.overrideOutput = mIniFile->value("OverrideOutput", false).toBool();
-        mOptions.overridenOutput = mIniFile->value("OverrideOutputName","").toString();
-        mOptions.hostApplication = mIniFile->value("HostApplication","").toString();
-        mOptions.useCustomMakefile = mIniFile->value("UseCustomMakefile", false).toBool();
-        mOptions.customMakefile = mIniFile->value("CustomMakefile","").toString();
-        mOptions.usePrecompiledHeader = mIniFile->value("UsePrecompiledHeader", false).toBool();
-        mOptions.precompiledHeader = mIniFile->value("PrecompiledHeader","").toString();
-        mOptions.cmdLineArgs = mIniFile->value("CommandLine","").toString();
-        mFolders = mIniFile->value("Folders","").toString().split(";",Qt::SkipEmptyParts);
-        mOptions.includeVersionInfo = mIniFile->value("IncludeVersionInfo", false).toBool();
-        mOptions.supportXPThemes = mIniFile->value("SupportXPThemes", false).toBool();
-        mOptions.compilerSet = mIniFile->value("CompilerSet", pSettings->compilerSets().defaultIndex()).toInt();
+        mOptions.type = static_cast<ProjectType>(ini.GetLongValue("Project", "type", 0));
+        mOptions.compilerCmd = fromByteArray(ini.GetValue("Project", "Compiler", ""));
+        mOptions.cppCompilerCmd = fromByteArray(ini.GetValue("Project", "CppCompiler", ""));
+        mOptions.linkerCmd = fromByteArray(ini.GetValue("Project", "Linker", ""));
+        mOptions.objFiles = fromByteArray(ini.GetValue("Project", "ObjFiles", "")).split(";",Qt::SkipEmptyParts);
+        mOptions.libs = fromByteArray(ini.GetValue("Project", "Libs", "")).split(";",Qt::SkipEmptyParts);
+        mOptions.includes = fromByteArray(ini.GetValue("Project", "Includes", "")).split(";",Qt::SkipEmptyParts);
+        mOptions.privateResource = fromByteArray(ini.GetValue("Project", "PrivateResource", ""));
+        mOptions.resourceIncludes = fromByteArray(ini.GetValue("Project", "ResourceIncludes", "")).split(";",Qt::SkipEmptyParts);
+        mOptions.makeIncludes = fromByteArray(ini.GetValue("Project", "MakeIncludes", "")).split(";",Qt::SkipEmptyParts);
+        mOptions.useGPP = ini.GetBoolValue("Project", "IsCpp", false);
+        mOptions.exeOutput = fromByteArray(ini.GetValue("Project", "ExeOutput", ""));
+        mOptions.objectOutput = fromByteArray(ini.GetValue("Project", "ObjectOutput", ""));
+        mOptions.logOutput = fromByteArray(ini.GetValue("Project", "LogOutput", ""));
+        mOptions.logOutputEnabled = ini.GetBoolValue("Project", "LogOutputEnabled", false);
+        mOptions.overrideOutput = ini.GetBoolValue("Project", "OverrideOutput", false);
+        mOptions.overridenOutput = fromByteArray(ini.GetValue("Project", "OverrideOutputName", ""));
+        mOptions.hostApplication = fromByteArray(ini.GetValue("Project", "HostApplication", ""));
+        mOptions.useCustomMakefile = ini.GetBoolValue("Project", "UseCustomMakefile", false);
+        mOptions.customMakefile = fromByteArray(ini.GetValue("Project", "CustomMakefile", ""));
+        mOptions.usePrecompiledHeader = ini.GetBoolValue("Project", "UsePrecompiledHeader", false);
+        mOptions.precompiledHeader = fromByteArray(ini.GetValue("Project", "PrecompiledHeader", ""));
+        mOptions.cmdLineArgs = fromByteArray(ini.GetValue("Project", "CommandLine", ""));
+        mFolders = fromByteArray(ini.GetValue("Project", "Folders", "")).split(";",Qt::SkipEmptyParts);
+        mOptions.includeVersionInfo = ini.GetBoolValue("Project", "IncludeVersionInfo", false);
+        mOptions.supportXPThemes = ini.GetBoolValue("Project", "SupportXPThemes", false);
+        mOptions.compilerSet = ini.GetLongValue("Project", "CompilerSet", pSettings->compilerSets().defaultIndex());
 
         if (mOptions.compilerSet >= pSettings->compilerSets().size()
                 || mOptions.compilerSet < 0) { // TODO: change from indices to names
@@ -1248,60 +1239,56 @@ void Project::loadOptions()
             mOptions.compilerSet = pSettings->compilerSets().defaultIndex();
             setModified(true);
         }
-        mOptions.compilerOptions = mIniFile->value("CompilerSettings","").toString();
-        mOptions.staticLink = mIniFile->value("StaticLink", true).toBool();
-        mOptions.addCharset = mIniFile->value("AddCharset", true).toBool();
-        bool useUTF8 = mIniFile->value("UseUTF8", false).toBool();
+        mOptions.compilerOptions = fromByteArray(ini.GetValue("Project", "CompilerSettings", ""));
+        mOptions.staticLink = ini.GetBoolValue("Project", "StaticLink", true);
+        mOptions.addCharset = ini.GetBoolValue("Project", "AddCharset", true);
+        bool useUTF8 = ini.GetBoolValue("Project", "UseUTF8", false);
         if (useUTF8) {
-            mOptions.encoding = mIniFile->value("Encoding", ENCODING_SYSTEM_DEFAULT).toString();
+            mOptions.encoding = fromByteArray(ini.GetValue("Project","Encoding", ENCODING_SYSTEM_DEFAULT));
         } else {
-            mOptions.encoding = mIniFile->value("Encoding", ENCODING_UTF8).toString();
+            mOptions.encoding = fromByteArray(ini.GetValue("Project","Encoding", ENCODING_UTF8));
         }
-        mIniFile->endGroup();
 
-        mIniFile->beginGroup("VersionInfo");
-        mOptions.versionInfo.major = mIniFile->value("Major", 0).toInt();
-        mOptions.versionInfo.minor = mIniFile->value("Minor", 1).toInt();
-        mOptions.versionInfo.release = mIniFile->value("Release", 1).toInt();
-        mOptions.versionInfo.build = mIniFile->value("Build", 1).toInt();
-        mOptions.versionInfo.languageID = mIniFile->value("LanguageID", 0x0409).toInt();
-        mOptions.versionInfo.charsetID = mIniFile->value("CharsetID", 0x04E4).toInt();
-        mOptions.versionInfo.companyName = mIniFile->value("CompanyName","").toString();
-        mOptions.versionInfo.fileVersion = mIniFile->value("FileVersion", "0.1").toString();
-        mOptions.versionInfo.fileDescription = mIniFile->value("FileDescription",
-          tr("Developed using the Red Panda Dev-C++ IDE")).toString();
-        mOptions.versionInfo.internalName = mIniFile->value("InternalName","").toString();
-        mOptions.versionInfo.legalCopyright = mIniFile->value("LegalCopyright","").toString();
-        mOptions.versionInfo.legalTrademarks = mIniFile->value("LegalTrademarks","").toString();
-        mOptions.versionInfo.originalFilename = mIniFile->value("OriginalFilename",
-                                                                extractFileName(executable())).toString();
-        mOptions.versionInfo.productName = mIniFile->value("ProductName", mName).toString();
-        mOptions.versionInfo.productVersion = mIniFile->value("ProductVersion", "0.1.1.1").toString();
-        mOptions.versionInfo.autoIncBuildNr = mIniFile->value("AutoIncBuildNr", false).toBool();
-        mOptions.versionInfo.syncProduct = mIniFile->value("SyncProduct", false).toBool();
-        mIniFile->endGroup();
+        mOptions.versionInfo.major = ini.GetLongValue("VersionInfo", "Major", 0);
+        mOptions.versionInfo.minor = ini.GetLongValue("VersionInfo", "Minor", 1);
+        mOptions.versionInfo.release = ini.GetLongValue("VersionInfo", "Release", 1);
+        mOptions.versionInfo.build = ini.GetLongValue("VersionInfo", "Build", 1);
+        mOptions.versionInfo.languageID = ini.GetLongValue("VersionInfo", "LanguageID", 0x0409);
+        mOptions.versionInfo.charsetID = ini.GetLongValue("VersionInfo", "CharsetID", 0x04E4);
+        mOptions.versionInfo.companyName = fromByteArray(ini.GetValue("VersionInfo", "CompanyName", ""));
+        mOptions.versionInfo.fileVersion = fromByteArray(ini.GetValue("VersionInfo", "FileVersion", "0.1"));
+        mOptions.versionInfo.fileDescription = fromByteArray(ini.GetValue("VersionInfo", "FileDescription",
+          toByteArray(tr("Developed using the Red Panda Dev-C++ IDE"))));
+        mOptions.versionInfo.internalName = fromByteArray(ini.GetValue("VersionInfo", "InternalName", ""));
+        mOptions.versionInfo.legalCopyright = fromByteArray(ini.GetValue("VersionInfo", "LegalCopyright", ""));
+        mOptions.versionInfo.legalTrademarks = fromByteArray(ini.GetValue("VersionInfo", "LegalTrademarks", ""));
+        mOptions.versionInfo.originalFilename = fromByteArray(ini.GetValue("VersionInfo", "OriginalFilename",
+                                                                toByteArray(extractFileName(executable()))));
+        mOptions.versionInfo.productName = fromByteArray(ini.GetValue("VersionInfo", "ProductName", toByteArray(mName)));
+        mOptions.versionInfo.productVersion = fromByteArray(ini.GetValue("VersionInfo", "ProductVersion", "0.1.1.1"));
+        mOptions.versionInfo.autoIncBuildNr = ini.GetBoolValue("VersionInfo", "AutoIncBuildNr", false);
+        mOptions.versionInfo.syncProduct = ini.GetBoolValue("VersionInfo", "SyncProduct", false);
+
     } else { // dev-c < 4
         mOptions.version = 2;
-        mIniFile->beginGroup("Project");
-        if (!mIniFile->value("NoConsole", true).toBool())
+        if (!ini.GetBoolValue("VersionInfo", "NoConsole", true))
             mOptions.type = ProjectType::Console;
-        else if (mIniFile->value("IsDLL", false).toBool())
+        else if (ini.GetBoolValue("VersionInfo", "IsDLL", false))
             mOptions.type = ProjectType::DynamicLib;
         else
             mOptions.type = ProjectType::GUI;
 
-        mOptions.privateResource = mIniFile->value("PrivateResource","").toString();
-        mOptions.resourceIncludes = mIniFile->value("ResourceIncludes","").toString().split(";",Qt::SkipEmptyParts);
-        mOptions.objFiles = mIniFile->value("ObjFiles","").toString().split(";",Qt::SkipEmptyParts);
-        mOptions.includes = mIniFile->value("IncludeDirs","").toString().split(";",Qt::SkipEmptyParts);
-        mOptions.compilerCmd = mIniFile->value("CompilerOptions","").toString();
-        mOptions.useGPP = mIniFile->value("Use_GPP", false).toBool();
-        mOptions.exeOutput = mIniFile->value("ExeOutput","").toString();
-        mOptions.objectOutput = mIniFile->value("ObjectOutput","").toString();
-        mOptions.overrideOutput = mIniFile->value("OverrideOutput", false).toBool();
-        mOptions.overridenOutput = mIniFile->value("OverrideOutputName","").toString();
-        mOptions.hostApplication = mIniFile->value("HostApplication","").toString();
-        mIniFile->endGroup();
+        mOptions.privateResource = fromByteArray(ini.GetValue("Project", "PrivateResource", ""));
+        mOptions.resourceIncludes = fromByteArray(ini.GetValue("Project", "ResourceIncludes", "")).split(";",Qt::SkipEmptyParts);
+        mOptions.objFiles = fromByteArray(ini.GetValue("Project", "ObjFiles", "")).split(";",Qt::SkipEmptyParts);
+        mOptions.includes = fromByteArray(ini.GetValue("Project", "IncludeDirs", "")).split(";",Qt::SkipEmptyParts);
+        mOptions.compilerCmd = fromByteArray(ini.GetValue("Project", "CompilerOptions", ""));
+        mOptions.useGPP = ini.GetBoolValue("Project", "Use_GPP", false);
+        mOptions.exeOutput = fromByteArray(ini.GetValue("Project", "ExeOutput", ""));
+        mOptions.objectOutput = fromByteArray(ini.GetValue("Project", "ObjectOutput", ""));
+        mOptions.overrideOutput = ini.GetBoolValue("Project", "OverrideOutput", false);
+        mOptions.overridenOutput = fromByteArray(ini.GetValue("Project", "OverrideOutputName", ""));
+        mOptions.hostApplication = fromByteArray(ini.GetValue("Project", "HostApplication", ""));
     }
 }
 
@@ -1401,6 +1388,16 @@ void Project::updateFolderNode(PFolderNode node)
     }
 }
 
+QByteArray Project::toByteArray(const QString &s)
+{
+    return s.toLocal8Bit();
+}
+
+QString Project::fromByteArray(const QByteArray &s)
+{
+    return QString::fromLocal8Bit(s);
+}
+
 const QList<PProjectUnit> &Project::units() const
 {
     return mUnits;
@@ -1439,16 +1436,6 @@ const QString &Project::name() const
 void Project::setName(const QString &newName)
 {
     mName = newName;
-}
-
-std::shared_ptr<QSettings> &Project::iniFile()
-{
-    return mIniFile;
-}
-
-void Project::setIniFile(const std::shared_ptr<QSettings> &newIniFile)
-{
-    mIniFile = newIniFile;
 }
 
 const QString &Project::filename() const

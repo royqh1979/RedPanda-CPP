@@ -630,9 +630,9 @@ QString extractRelativePath(const QString &base, const QString &dest)
     QFileInfo baseInfo(base);
     QDir baseDir;
     if (baseInfo.isDir()) {
-        baseDir = baseInfo.absoluteDir();
+        baseDir = QDir(baseInfo.absoluteFilePath());
     } else {
-        baseDir = baseInfo.dir();
+        baseDir = baseInfo.absoluteDir();
     }
     return baseDir.relativeFilePath(dest);
 }
