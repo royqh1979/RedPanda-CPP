@@ -871,9 +871,9 @@ public:
         bool staticLink() const;
         void setStaticLink(bool newStaticLink);
 
-    private:
-        int charToValue(char valueChar);
 
+        static int charToValue(char valueChar);
+    private:
         // Initialization
         void setExecutables();
         void setUserInput();

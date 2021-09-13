@@ -22,6 +22,7 @@
 #define RC_EXT "rc"
 #define RES_EXT "rc"
 #define H_EXT "h"
+#define OBJ_EXT "o"
 #define DEV_INTERNAL_OPEN "$__DEV_INTERNAL_OPEN"
 
 #ifdef Q_OS_WIN

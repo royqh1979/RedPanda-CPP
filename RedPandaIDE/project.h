@@ -130,7 +130,7 @@ struct ProjectOptions{
     bool includeVersionInfo;
     bool supportXPThemes;
     int compilerSet;
-    QString compilerOptions;
+    QByteArray compilerOptions;
     ProjectVersionInfo versionInfo;
     QString cmdLineArgs;
     bool staticLink;
@@ -181,7 +181,7 @@ public:
     void doAutoOpen();
     bool fileAlreadyExists(const QString& s);
     PFolderNode folderNodeFromName(const QString& name);
-    QChar getCompilerOption(const QString& optionString);
+    char getCompilerOption(const QString& optionString);
     QString getFolderPath(PFolderNode node);
     int getUnitFromString(const QString& s);
     void incrementBuildNumber();
@@ -206,7 +206,7 @@ public:
     void saveUnitAs(int i, const QString& sFileName); // save single [UnitX]
     void saveUnitLayout(Editor* e, int index); // save single [UnitX] cursor positions
     bool saveUnits();
-    void setCompilerOption(const QString& optionString, const QChar& value);
+    void setCompilerOption(const QString& optionString, char value);
     void sortUnitsByPriority();
     void sortUnitsByAlpha();
     void updateFolders();

@@ -13,13 +13,16 @@ public:
 
 private:
     void buildMakeFile();
+    void createStandardMakeFile();
+    void newMakeFile(QFile& file);
+    void writeMakeHeader(QFile& file);
+    void writeMakeDefines(QFile& file);
+    void writeln(QFile& file, const QString& s="");
     // Compiler interface
 protected:
     bool prepareForCompile() override;
     QString pipedText() override;
     bool prepareForRebuild() override;
-private:
-    QString mMakefileName;
 };
 
 #endif // PROJECTCOMPILER_H

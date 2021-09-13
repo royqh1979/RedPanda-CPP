@@ -540,7 +540,7 @@ bool Project::saveUnits()
     return true;
 }
 
-void Project::setCompilerOption(const QString &optionString, const QChar &value)
+void Project::setCompilerOption(const QString &optionString, char value)
 {
     if (mOptions.compilerSet<0 || mOptions.compilerSet>=pSettings->compilerSets().size()) {
         return;
@@ -607,7 +607,7 @@ void Project::saveOptions()
     ini.SetBoolValue("Project","IncludeVersionInfo", mOptions.includeVersionInfo);
     ini.SetBoolValue("Project","SupportXPThemes", mOptions.supportXPThemes);
     ini.SetLongValue("Project","CompilerSet", mOptions.compilerSet);
-    ini.SetValue("Project","CompilerSettings", toByteArray(mOptions.compilerOptions));
+    ini.SetValue("Project","CompilerSettings", mOptions.compilerOptions);
     ini.SetBoolValue("Project","StaticLink", mOptions.staticLink);
     ini.SetBoolValue("Project","AddCharset", mOptions.addCharset);
     ini.SetValue("Project","Encoding",toByteArray(mOptions.encoding));
@@ -1103,7 +1103,7 @@ PFolderNode Project::folderNodeFromName(const QString &name)
     return mNode;
 }
 
-QChar Project::getCompilerOption(const QString &optionString)
+char Project::getCompilerOption(const QString &optionString)
 {
     // Does the option exist?
     Settings::PCompilerSet compilerSet = pSettings->compilerSets().getSet(mOptions.compilerSet);
@@ -1241,7 +1241,7 @@ void Project::loadOptions(SimpleIni& ini)
             mOptions.compilerSet = pSettings->compilerSets().defaultIndex();
             setModified(true);
         }
-        mOptions.compilerOptions = fromByteArray(ini.GetValue("Project", "CompilerSettings", ""));
+        mOptions.compilerOptions = ini.GetValue("Project", "CompilerSettings", "");
         mOptions.staticLink = ini.GetBoolValue("Project", "StaticLink", true);
         mOptions.addCharset = ini.GetBoolValue("Project", "AddCharset", true);
         bool useUTF8 = ini.GetBoolValue("Project", "UseUTF8", false);
