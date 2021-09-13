@@ -57,6 +57,7 @@ bool StdinCompiler::prepareForCompile()
     log("------------------");
     log(tr("%1 Compiler: %2").arg(strFileType).arg(mCompiler));
     log(tr("Command: %1 %2").arg(QFileInfo(mCompiler).fileName()).arg(mArguments));
+    mDirectory = extractFileDir(mFilename);
     return true;
 }
 

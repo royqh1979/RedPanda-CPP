@@ -825,6 +825,11 @@ void CppParser::unFreeze()
     mLockCount--;
 }
 
+QSet<QString> CppParser::scannedFiles()
+{
+    return mPreprocessor.scannedFiles();
+}
+
 QString CppParser::getScopePrefix(const PStatement& statement){
     switch (statement->classScope) {
     case StatementClassScope::scsPublic:

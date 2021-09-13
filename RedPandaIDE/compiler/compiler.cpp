@@ -46,7 +46,7 @@ void Compiler::run()
         mWarningCount = 0;
         QElapsedTimer timer;
         timer.start();
-        runCommand(mCompiler, mArguments, QFileInfo(mCompiler).absolutePath(), pipedText());
+        runCommand(mCompiler, mArguments, mDirectory, pipedText());
         log("");
         log(tr("Compile Result:"));
         log("------------------");
@@ -382,7 +382,7 @@ QString Compiler::getProjectIncludeArguments()
         foreach (const QString& folder,mProject->options().includes) {
             result += QString(" -I\"%1\"").arg(folder);
         }
-        result +=  QString(" -I\"%1\"").arg(extractFilePath(mProject->filename()));
+//        result +=  QString(" -I\"%1\"").arg(extractFilePath(mProject->filename()));
     }
     return result;
 }
@@ -479,9 +479,12 @@ QString Compiler::getLibraryArguments(FileType fileType)
         }
 
         if (!mProject->options().linkerCmd.isEmpty()) {
-            result += " " + mProject->options().linkerCmd;
+            QString s = mProject->options().linkerCmd;
+            if (!s.isEmpty()) {
+                s.replace("_@@_", " ");
+                result += " "+s;
+            }
         }
-
         if (mProject->options().staticLink)
             result += " -static";
     } else if (compilerSet()->staticLink()) {
@@ -520,6 +523,14 @@ void Compiler::runCommand(const QString &cmd, const QString  &arguments, const Q
     mStop = false;
     bool errorOccurred = false;
     process.setProgram(cmd);
+    QString cmdDir = extractFileDir(cmd);
+    if (!cmdDir.isEmpty()) {
+        QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+        QString path = env.value("PATH");
+        path = cmdDir + ';' + path;
+        env.insert("PATH",path);
+        process.setProcessEnvironment(env);
+    }
     process.setArguments(QProcess::splitCommand(arguments));
     process.setWorkingDirectory(workingDir);
 

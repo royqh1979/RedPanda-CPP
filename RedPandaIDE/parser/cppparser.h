@@ -77,6 +77,7 @@ public:
     bool parsing() const;
     void reset();
     void unFreeze(); // UnFree/UnLock (reparse while searching)
+    QSet<QString> scannedFiles();
 
 
 

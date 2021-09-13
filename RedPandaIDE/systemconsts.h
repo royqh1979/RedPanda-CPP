@@ -12,7 +12,7 @@
 #define MAKE_PROGRAM    "mingw32-make.exe"
 #define WINDRES_PROGRAM "windres.exe"
 #define GPROF_PROGRAM   "gprof.exe"
-#define CLEAN_PROGRAM   "del /q"
+#define CLEAN_PROGRAM   "del /q /f"
 #define CPP_PROGRAM     "cpp.exe"
 #else
 #error "Only support windows now!"

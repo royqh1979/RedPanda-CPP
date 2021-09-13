@@ -98,7 +98,8 @@ void IssuesModel::clearIssues()
     }
     foreach (const QString& filename, issueFiles) {
         Editor *e=pMainWindow->editorList()->getOpenedEditorByFilename(filename);
-        e->clearSyntaxIssues();
+        if (e)
+            e->clearSyntaxIssues();
     }
 }
 

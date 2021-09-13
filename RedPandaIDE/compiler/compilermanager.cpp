@@ -7,6 +7,7 @@
 #include "utils.h"
 #include "../settings.h"
 #include <QMessageBox>
+#include "projectcompiler.h"
 
 CompilerManager::CompilerManager(QObject *parent) : QObject(parent)
 {
@@ -50,6 +51,32 @@ void CompilerManager::compile(const QString& filename, const QByteArray& encodin
         }
         mCompileErrorCount = 0;
         mCompiler = new FileCompiler(filename,encoding,silent,onlyCheckSyntax);
+        mCompiler->setRebuild(rebuild);
+        connect(mCompiler, &Compiler::compileFinished, this ,&CompilerManager::onCompileFinished);
+        connect(mCompiler, &Compiler::compileIssue, this, &CompilerManager::onCompileIssue);
+        connect(mCompiler, &Compiler::compileFinished, pMainWindow, &MainWindow::onCompileFinished);
+        connect(mCompiler, &Compiler::compileOutput, pMainWindow, &MainWindow::onCompileLog);
+        connect(mCompiler, &Compiler::compileIssue, pMainWindow, &MainWindow::onCompileIssue);
+        connect(mCompiler, &Compiler::compileErrorOccured, pMainWindow, &MainWindow::onCompileErrorOccured);
+        mCompiler->start();
+    }
+}
+
+void CompilerManager::compileProject(std::shared_ptr<Project> project, bool rebuild, bool silent,bool onlyCheckSyntax)
+{
+    if (!pSettings->compilerSets().defaultSet()) {
+        QMessageBox::critical(pMainWindow,
+                              tr("No compiler set"),
+                              tr("No compiler set is configured.")+tr("Can't start debugging."));
+        return;
+    }
+    {
+        QMutexLocker locker(&mCompileMutex);
+        if (mCompiler!=nullptr) {
+            return;
+        }
+        mCompileErrorCount = 0;
+        mCompiler = new ProjectCompiler(project,silent,onlyCheckSyntax);
         mCompiler->setRebuild(rebuild);
         connect(mCompiler, &Compiler::compileFinished, this ,&CompilerManager::onCompileFinished);
         connect(mCompiler, &Compiler::compileIssue, this, &CompilerManager::onCompileIssue);

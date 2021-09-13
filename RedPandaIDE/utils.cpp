@@ -647,7 +647,8 @@ QString genMakePath(const QString &fileName, bool escapeSpaces, bool encloseInQu
         result.replace(' ',"\\ ");
     }
     if (encloseInQuotes)
-        result = '"'+result+'"';
+        if (result.contains(' '))
+            result = '"'+result+'"';
     return result;
 }
 
@@ -696,4 +697,9 @@ QString extractAbsoluteFilePath(const QString &filePath)
 bool isReadOnly(const QString &filename)
 {
     return QFile(filename).isWritable();
+}
+
+QString extractFileDir(const QString &fileName)
+{
+    return extractFilePath(fileName);
 }

@@ -5,6 +5,7 @@
 #include <QFileInfo>
 #include <QDebug>
 #include <QGlobalStatic>
+#include "../utils.h"
 
 QStringList CppDirectives;
 QStringList JavadocTags;
@@ -368,9 +369,11 @@ bool isSystemHeaderFile(const QString &fileName, const QSet<QString> &includePat
         QFileInfo info(fileName);
         if (info.exists()) { // full file name
             QDir dir = info.dir();
-            QString absPath = dir.absolutePath();
-            if (includePaths.contains(absPath))
-                return true;
+            QString absPath = excludeTrailingPathDelimiter(dir.absolutePath());
+            foreach (const QString& incPath, includePaths) {
+                if (absPath.startsWith(incPath))
+                    return true;
+            }
         }
     } else {
         //check if it's in the include dir

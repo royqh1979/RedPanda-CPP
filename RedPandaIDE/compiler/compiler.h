@@ -73,6 +73,7 @@ protected:
     int mWarningCount;
     PCompileIssue mLastIssue;
     QString mFilename;
+    QString mDirectory;
     bool mRebuild;
     std::shared_ptr<Project> mProject;
 

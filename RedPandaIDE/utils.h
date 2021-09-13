@@ -164,6 +164,7 @@ bool findComplement(const QString& s,
 void logToFile(const QString& s, const QString& filename, bool append=true);
 
 QString extractFileName(const QString& fileName);
+QString extractFileDir(const QString& fileName);
 QString extractFilePath(const QString& filePath);
 QString extractAbsoluteFilePath(const QString& filePath);
 QString getSizeString(int size);

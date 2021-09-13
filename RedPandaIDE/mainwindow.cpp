@@ -785,21 +785,27 @@ bool MainWindow::compile(bool rebuild)
     if (target == CompileTarget::Project) {
         if (!mProject->saveUnits())
             return false;
-        updateAppTitle();
-
         // Check if saves have been succesful
         for (int i=0; i<mEditorList->pageCount();i++) {
             Editor * e= (*(mEditorList))[i];
             if (e->inProject() && e->modified())
                 return false;
         }
+        ui->tableIssues->clearIssues();
 
         // Increment build number automagically
         if (mProject->options().versionInfo.autoIncBuildNr) {
             mProject->incrementBuildNumber();
         }
         mProject->buildPrivateResource();
-        mCompilerManager->compileProject(mProject);
+        if (mCompileSuccessionTask) {
+            mCompileSuccessionTask->filename = mProject->executable();
+        }
+        updateCompileActions();
+        openCloseBottomPanel(true);
+        ui->tabMessages->setCurrentWidget(ui->tabCompilerOutput);
+        mCompilerManager->compileProject(mProject,rebuild);
+        updateAppTitle();
     } else {
         Editor * editor = mEditorList->getEditor();
         if (editor != NULL ) {
@@ -814,8 +820,8 @@ bool MainWindow::compile(bool rebuild)
             updateCompileActions();
             openCloseBottomPanel(true);
             ui->tabMessages->setCurrentWidget(ui->tabCompilerOutput);
-            updateAppTitle();
             mCompilerManager->compile(editor->filename(),editor->fileEncoding(),rebuild);
+            updateAppTitle();
             return true;
         }
     }
@@ -878,14 +884,19 @@ void MainWindow::runExecutable(const QString &exeName,const QString &filename)
 
 void MainWindow::runExecutable()
 {
-    Editor * editor = mEditorList->getEditor();
-    if (editor != NULL ) {
-        if (editor->modified()) {
-            if (!editor->save(false,false))
-                return;
+    CompileTarget target =getCompileTarget();
+    if (target == CompileTarget::Project) {
+        runExecutable(mProject->executable(),mProject->filename());
+    } else {
+        Editor * editor = mEditorList->getEditor();
+        if (editor != NULL ) {
+            if (editor->modified()) {
+                if (!editor->save(false,false))
+                    return;
+            }
+            QString exeName= getCompiledExecutableName(editor->filename());
+            runExecutable(exeName,editor->filename());
         }
-        QString exeName= getCompiledExecutableName(editor->filename());
-        runExecutable(exeName,editor->filename());
     }
 }
 

@@ -1,7 +1,9 @@
 #include "projectcompiler.h"
-#include "project.h"
+#include "../project.h"
 #include "compilermanager.h"
 #include "../systemconsts.h"
+#include "../platform.h"
+#include "../editor.h"
 
 #include <QDir>
 
@@ -36,10 +38,36 @@ void ProjectCompiler::createStandardMakeFile()
     file.write("$(BIN): $(OBJ)\n");
     if (!mOnlyCheckSyntax) {
         if (mProject->options().useGPP) {
-            writeln(file,"$(BIN): $(OBJ)");
             writeln(file,"\t$(CPP) $(LINKOBJ) -o \"$(BIN)\" $(LIBS)");
         } else
             writeln(file,"\t$(CC) $(LINKOBJ) -o \"$(BIN)\" $(LIBS)");
+    }
+    writeMakeObjFilesRules(file);
+}
+
+void ProjectCompiler::createStaticMakeFile()
+{
+    QFile file(mProject->makeFileName());
+    newMakeFile(file);
+    file.write("$(BIN): $(LINKOBJ)");
+    if (!mOnlyCheckSyntax) {
+      writeln(file,"\tar r $(BIN) $(LINKOBJ)");
+      writeln(file,"\tranlib $(BIN)");
+    }
+    writeMakeObjFilesRules(file);
+}
+
+void ProjectCompiler::createDynamicMakeFile()
+{
+    QFile file(mProject->makeFileName());
+    newMakeFile(file);
+    file.write("$(BIN): $(LINKOBJ)");
+    if (!mOnlyCheckSyntax) {
+        if (mProject->options().useGPP) {
+          file.write("\t$(CPP) -mdll $(LINKOBJ) -o \"$(BIN)\" $(LIBS) -Wl,--output-def,$(DEF),--out-implib,$(STATIC)");
+        } else {
+          file.write("\t$(CC) -mdll $(LINKOBJ) -o \"$(BIN)\" $(LIBS) -Wl,--output-def,$(DEF),--out-implib,$(STATIC)");
+        }
     }
     writeMakeObjFilesRules(file);
 }
@@ -58,7 +86,7 @@ void ProjectCompiler::newMakeFile(QFile& file)
 
     // Create the actual file
     if (!file.open(QFile::WriteOnly | QFile::Truncate))
-        throw CompileError(tr("Can't open '%1' for write!").arg(mProject->makeFileName());
+        throw CompileError(tr("Can't open '%1' for write!").arg(mProject->makeFileName()));
 
     // Write header
     writeMakeHeader(file);
@@ -152,9 +180,9 @@ void ProjectCompiler::writeMakeDefines(QFile &file)
         cCompileArguments += " -D__DEBUG__";
         cppCompileArguments+= " -D__DEBUG__";
     }
-    writeln(file,"CPP      = " + compilerSet()->cppCompiler());
-    writeln(file,"CC       = " + compilerSet()->CCompiler());
-    writeln(file,"WINDRES  = " + compilerSet()->resourceCompiler());
+    writeln(file,"CPP      = " + extractFileName(compilerSet()->cppCompiler()));
+    writeln(file,"CC       = " + extractFileName(compilerSet()->CCompiler()));
+    writeln(file,"WINDRES  = " + extractFileName(compilerSet()->resourceCompiler()));
     if (!ObjResFile.isEmpty()) {
       writeln(file,"RES      = " + genMakePath1(ObjResFile));
       writeln(file,"OBJ      = " + Objects + " $(RES)");
@@ -198,6 +226,181 @@ void ProjectCompiler::writeMakeDefines(QFile &file)
     writeln(file);
 }
 
+void ProjectCompiler::writeMakeTarget(QFile &file)
+{
+    if (mOnlyCheckSyntax)
+        writeln(file, ".PHONY: all all-before all-after clean clean-custom $(OBJ) $(BIN)");
+    else
+        writeln(file, ".PHONY: all all-before all-after clean clean-custom");
+    writeln(file);
+    writeln(file, "all: all-before $(BIN) all-after");
+    writeln(file);
+    if (mProject->options().usePrecompiledHeader) {
+        writeln(file, "$(PCH) : $(PCH_H)");
+        writeln(file, "  $(CPP) -x c++-header \"$(PCH_H)\" -o \"$(PCH)\" $(CXXFLAGS)");
+        writeln(file);
+    }
+}
+
+void ProjectCompiler::writeMakeIncludes(QFile &file)
+{
+    foreach(const QString& s, mProject->options().makeIncludes) {
+        writeln(file, "include " + genMakePath1(s));
+    }
+    if (!mProject->options().makeIncludes.isEmpty()) {
+        writeln(file);
+    }
+}
+
+void ProjectCompiler::writeMakeClean(QFile &file)
+{
+    writeln(file, "clean: clean-custom");
+    if (mProject->options().type == ProjectType::DynamicLib)
+        writeln(file, "\t${RM} $(OBJ) $(BIN) $(DEF) $(STATIC)");
+    else
+        writeln(file, "\t${RM} $(OBJ) $(BIN)");
+    writeln(file);
+}
+
+void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
+{
+    PCppParser parser = mProject->cppParser();
+    QString precompileStr;
+    if (mProject->options().usePrecompiledHeader)
+        precompileStr = " $(PCH) ";
+
+    for (int i = 0;i<mProject->units().count();i++) {
+        PProjectUnit unit = mProject->units()[i];
+        FileType fileType = getFileType(unit->fileName());
+        // Only process source files
+        if (fileType!=FileType::CSource && fileType!=FileType::CppSource)
+            continue;
+
+        QString shortFileName = extractRelativePath(mProject->makeFileName(),unit->fileName());
+
+        writeln(file);
+        QString objStr=genMakePath2(shortFileName);
+        // if we have scanned it, use scanned info
+        if (parser && parser->scannedFiles().contains(unit->fileName())) {
+            QSet<QString> fileIncludes = parser->getFileIncludes(unit->fileName());
+            foreach (const QString& headerName, fileIncludes) {
+                if (headerName == unit->fileName())
+                    continue;
+                if (!parser->isSystemHeaderFile(headerName)
+                        && ! parser->isProjectHeaderFile(headerName)) {
+                    objStr = objStr + ' ' + genMakePath2(extractRelativePath(mProject->makeFileName(),headerName));
+                }
+            }
+        } else {
+            foreach (const PProjectUnit& u, mProject->units()) {
+                FileType fileType = getFileType(u->fileName());
+                if (fileType == FileType::CHeader || fileType==FileType::CppHeader)
+                    objStr = objStr + ' ' + genMakePath2(extractRelativePath(mProject->makeFileName(),u->fileName()));
+            }
+        }
+        QString ObjFileName;
+        if (!mProject->options().objectOutput.isEmpty()) {
+            ObjFileName = includeTrailingPathDelimiter(mProject->options().objectOutput) +
+                    extractFileName(unit->fileName());
+            ObjFileName = genMakePath1(extractRelativePath(mProject->makeFileName(), changeFileExt(ObjFileName, OBJ_EXT)));
+            if (!extractFileDir(ObjFileName).isEmpty()) {
+                objStr = genMakePath2(includeTrailingPathDelimiter(extractFileDir(ObjFileName))) + objStr;
+            }
+        } else {
+            ObjFileName = genMakePath1(changeFileExt(shortFileName, OBJ_EXT));
+        }
+
+        objStr = ObjFileName + ": "+objStr+precompileStr;
+
+        writeln(file,objStr);
+
+        // Write custom build command
+        if (unit->overrideBuildCmd() && !unit->buildCmd().isEmpty()) {
+            QString BuildCmd = unit->buildCmd();
+            BuildCmd.replace("<CRTAB>", "\n\t");
+            writeln(file, '\t' + BuildCmd);
+            // Or roll our own
+        } else {
+            QString encodingStr;
+            if (mProject->options().addCharset) {
+                if (unit->encoding() == ENCODING_AUTO_DETECT) {
+                    if (unit->editor())
+                        encodingStr = QString(" -finput-charset=%1 -fexec-charset=%2")
+                                .arg(unit->editor()->fileEncoding(),getDefaultSystemEncoding());
+                } else {
+                    encodingStr = QString(" -finput-charset=%1 -fexec-charset=%2")
+                          .arg(unit->encoding(),getDefaultSystemEncoding());
+                }
+            }
+
+            if (mOnlyCheckSyntax) {
+                if (unit->compileCpp())
+                    writeln(file, "\t$(CPP) -c " + genMakePath1(shortFileName) + " $(CXXFLAGS) " + encodingStr);
+                else
+                    writeln(file, "\t(CC) -c " + genMakePath1(shortFileName) + " $(CFLAGS) " + encodingStr);
+            } else {
+                if (unit->compileCpp())
+                    writeln(file, "\t$(CPP) -c " + genMakePath1(shortFileName) + " -o " + ObjFileName + " $(CXXFLAGS) " + encodingStr);
+                else
+                    writeln(file, "\t$(CC) -c " + genMakePath1(shortFileName) + " -o " + ObjFileName + " $(CFLAGS) " + encodingStr);
+            }
+        }
+    }
+
+    if (!mProject->options().privateResource.isEmpty()) {
+
+        // Concatenate all resource include directories
+        QString ResIncludes(" ");
+        for (int i=0;i<mProject->options().resourceIncludes.count();i++) {
+            QString filename = mProject->options().resourceIncludes[i];
+            if (!filename.isEmpty())
+                ResIncludes = ResIncludes + " --include-dir " + genMakePath1(filename);
+        }
+
+        QString ResFiles;
+        // Concatenate all resource filenames (not created when syntax checking)
+        if (!mOnlyCheckSyntax) {
+            foreach(const PProjectUnit& unit, mProject->units()) {
+                if (getFileType(unit->fileName())!=FileType::WindowsResourceSource)
+                    continue;
+                if (QFile(unit->fileName()).exists()) {
+                    QString ResFile = extractRelativePath(mProject->makeFileName(), unit->fileName());
+                    ResFiles = ResFiles + genMakePath2(ResFile) + ' ';
+                }
+            }
+            ResFiles = ResFiles.trimmed();
+        }
+
+        // Determine resource output file
+        QString ObjFileName;
+        if (!mProject->options().objectOutput.isEmpty()) {
+            ObjFileName = includeTrailingPathDelimiter(mProject->options().objectOutput) +
+                  changeFileExt(mProject->options().privateResource, RES_EXT);
+        } else {
+            ObjFileName = changeFileExt(mProject->options().privateResource, RES_EXT);
+        }
+        ObjFileName = genMakePath1(extractRelativePath(mProject->filename(), ObjFileName));
+        QString PrivResName = genMakePath1(extractRelativePath(mProject->filename(), mProject->options().privateResource));
+
+        // Build final cmd
+        QString WindresArgs;
+        if (getCCompileArguments(mOnlyCheckSyntax).contains("-m32"))
+              WindresArgs = " -F pe-i386";
+
+        if (mOnlyCheckSyntax) {
+            writeln(file);
+            writeln(file, ObjFileName + ':');
+            writeln(file, "\t$(WINDRES) -i " + PrivResName + WindresArgs + " --input-format=rc -o nul -O coff" + ResIncludes);
+        } else {
+            writeln(file);
+            writeln(file, ObjFileName + ": " + PrivResName + ' ' + ResFiles);
+            writeln(file, "\t$(WINDRES) -i " + PrivResName + WindresArgs + " --input-format=rc -o " + ObjFileName + " -O coff"
+                + ResIncludes);
+        }
+        writeln(file);
+    }
+}
+
 void ProjectCompiler::writeln(QFile &file, const QString &s)
 {
     if (!s.isEmpty())
@@ -231,8 +434,21 @@ bool ProjectCompiler::prepareForCompile()
 
     mCompiler = compilerSet()->make();
     if (mRebuild) {
-        mArguments = QString("-f \"%1\" clean all").arg(mProject->makeFileName());
+        mArguments = QString("-f \"%1\" clean all").arg(extractRelativePath(
+                                                            mProject->directory(),
+                                                            mProject->makeFileName()));
     } else {
-        mArguments = QString("-f \"%1\" all").arg(mProject->makeFileName());
+        mArguments = QString("-f \"%1\" all").arg(extractRelativePath(
+                                                      mProject->directory(),
+                                                      mProject->makeFileName()));
     }
+    mDirectory = mProject->directory();
+
+    log(tr("Processing makefile:"));
+    log("--------");
+    log(tr("- makefile processer: %1").arg(mCompiler));
+    log(tr("- Command: %1 %2").arg(mCompiler).arg(mArguments));
+    log("");
+
+    return true;
 }
