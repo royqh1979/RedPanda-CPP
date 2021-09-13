@@ -23,6 +23,9 @@
 #define RES_EXT "rc"
 #define H_EXT "h"
 #define OBJ_EXT "o"
+#define DEF_EXT "def"
+#define LIB_EXT "a"
+#define GCH_EXT "gch"
 #define DEV_INTERNAL_OPEN "$__DEV_INTERNAL_OPEN"
 
 #ifdef Q_OS_WIN

@@ -286,7 +286,6 @@ QString Compiler::getCCompileArguments(bool checkSyntax)
         if (
                 (mProject && (i < mProject->options().compilerOptions.length()))
                 || (!mProject && (pOption->value > 0))) {
-
             int value;
             if (mProject) {
                 value = Settings::CompilerSet::charToValue(mProject->options().compilerOptions[i]);
@@ -309,6 +308,14 @@ QString Compiler::getCCompileArguments(bool checkSyntax)
     if (compilerSet()->useCustomCompileParams() && !compilerSet()->customCompileParams().isEmpty()) {
         result += " "+compilerSet()->customCompileParams();
     }
+
+    if (mProject) {
+        QString s = mProject->options().compilerCmd;
+        if (!s.isEmpty()) {
+            s.replace("_@@_", " ");
+            result += " "+s;
+        }
+    }
     return result;
 }
 
@@ -320,14 +327,26 @@ QString Compiler::getCppCompileArguments(bool checkSyntax)
         result += " -fsyntax-only";
     }
 
-    foreach (const PCompilerOption& pOption, compilerSet()->options()) {
-        if (pOption->value > 0 && pOption->isCpp) {
-            if (pOption->choices.isEmpty()) {
-                result += " "+pOption->setting;
-            } else if (pOption->value < pOption->choices.size()) {
-                QStringList nameValue=pOption->choices[pOption->value].split('=');
-                if (nameValue.count()==2) {
-                    result += " "+pOption->setting + nameValue[1];
+    for (int i=0;i<compilerSet()->options().size();i++) {
+        PCompilerOption pOption = compilerSet()->options()[i];
+        // consider project specific options for the compiler, else global compiler options
+        if (
+                (mProject && (i < mProject->options().compilerOptions.length()))
+                || (!mProject && (pOption->value > 0))) {
+            int value;
+            if (mProject) {
+                value = Settings::CompilerSet::charToValue(mProject->options().compilerOptions[i]);
+            } else {
+                value = pOption->value;
+            }
+            if (value > 0 && pOption->isCpp) {
+                if (pOption->choices.isEmpty()) {
+                    result += " " + pOption->setting;
+                } else if (value < pOption->choices.size()) {
+                    QStringList nameValue=pOption->choices[value].split('=');
+                    if (nameValue.count()==2) {
+                        result += " " + pOption->setting + nameValue[1];
+                    }
                 }
             }
         }
@@ -335,6 +354,13 @@ QString Compiler::getCppCompileArguments(bool checkSyntax)
 
     if (compilerSet()->useCustomCompileParams() && !compilerSet()->customCompileParams().isEmpty()) {
         result += " "+compilerSet()->customCompileParams();
+    }
+    if (mProject) {
+        QString s = mProject->options().cppCompilerCmd;
+        if (!s.isEmpty()) {
+            s.replace("_@@_", " ");
+            result += " "+s;
+        }
     }
     return result;
 }
@@ -374,8 +400,16 @@ QString Compiler::getLibraryArguments(FileType fileType)
 {
     QString result;
 
+    //Add libraries
     foreach (const QString& folder, compilerSet()->libDirs()) {
         result += QString(" -L\"%1\"").arg(folder);
+    }
+
+    //add libs added via project
+    if (mProject) {
+        foreach (const QString& folder, mProject->options().libs){
+            result += QString(" -L\"%1\"").arg(folder);
+        }
     }
 
     //Add auto links
@@ -407,27 +441,50 @@ QString Compiler::getLibraryArguments(FileType fileType)
 
     }
 
+    //add compiler set link options
+    //options like "-static" must be added after "-lxxx"
+    for (int i=0;i<compilerSet()->options().size();i++) {
+        PCompilerOption pOption = compilerSet()->options()[i];
+        // consider project specific options for the compiler, else global compiler options
+        if (
+                (mProject && (i < mProject->options().compilerOptions.length()))
+                || (!mProject && (pOption->value > 0))) {
+            int value;
+            if (mProject) {
+                value = Settings::CompilerSet::charToValue(mProject->options().compilerOptions[i]);
+            } else {
+                value = pOption->value;
+            }
+            if (value > 0 && pOption->isLinker) {
+                if (pOption->choices.isEmpty()) {
+                    result += " " + pOption->setting;
+                } else if (value < pOption->choices.size()) {
+                    QStringList nameValue=pOption->choices[value].split('=');
+                    if (nameValue.count()==2) {
+                        result += " " + pOption->setting + nameValue[1];
+                    }
+                }
+            }
+        }
+    }
 
     // Add global compiler linker extras
     if (compilerSet()->useCustomLinkParams() && !compilerSet()->customLinkParams().isEmpty()) {
        result += " "+compilerSet()->customCompileParams();
     }
 
-    //options like "-static" must be added after "-lxxx"
-    foreach (const PCompilerOption& pOption, compilerSet()->options()) {
-        if (pOption->value > 0 && pOption->isLinker) {
-            if (pOption->choices.isEmpty()) {
-                result += " " + pOption->setting;
-            } else if (pOption->value < pOption->choices.size()) {
-                QStringList nameValue=pOption->choices[pOption->value].split('=');
-                if (nameValue.count()==2) {
-                    result += " " + pOption->setting + nameValue[1];
-                }
-            }
+    if (mProject) {
+        if (mProject->options().type == ProjectType::GUI) {
+            result += " -mwindows";
         }
-    }
 
-    if (compilerSet()->staticLink()) {
+        if (!mProject->options().linkerCmd.isEmpty()) {
+            result += " " + mProject->options().linkerCmd;
+        }
+
+        if (mProject->options().staticLink)
+            result += " -static";
+    } else if (compilerSet()->staticLink()) {
         result += " -static";
     }
     return result;

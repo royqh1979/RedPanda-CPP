@@ -17,6 +17,7 @@ private:
     void newMakeFile(QFile& file);
     void writeMakeHeader(QFile& file);
     void writeMakeDefines(QFile& file);
+    void writeMakeTarget(QFile& file);
     void writeln(QFile& file, const QString& s="");
     // Compiler interface
 protected:

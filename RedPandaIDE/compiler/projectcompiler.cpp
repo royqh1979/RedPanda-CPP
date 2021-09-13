@@ -96,7 +96,7 @@ void ProjectCompiler::writeMakeDefines(QFile &file)
 
     // Create a list of object files
     for (int i=0;i<mProject->units().count();i++) {
-        PProjectUnit unit = mProject[i];
+        PProjectUnit unit = mProject->units()[i];
         if (!unit->compile() && !unit->link())
             continue;
 
@@ -143,54 +143,59 @@ void ProjectCompiler::writeMakeDefines(QFile &file)
     // Get list of applicable flags
     QString  cCompileArguments = getCCompileArguments(mOnlyCheckSyntax);
     QString cppCompileArguments = getCppCompileArguments(mOnlyCheckSyntax);
-    QString libraryArguments = getLibraryArguments();
-    QString cIncludeArguments = getCIncludeArguments();
-    QString cppIncludeArguments = getCppIncludeArguments();
-    QString projectIncludeArguments = getProjectIncludeArguments();
+    QString libraryArguments = getLibraryArguments(FileType::Project);
+    QString cIncludeArguments = getCIncludeArguments() + " " + getProjectIncludeArguments();
+    QString cppIncludeArguments = getCppIncludeArguments() + " " +getProjectIncludeArguments();
 
-    if (Pos(' -g3', fCompileParams) > 0) or (Pos('-g3', fCompileParams) = 1) then begin
-      Writeln(F, 'CPP      = ' + fCompilerSet.gppName + ' -D__DEBUG__');
-      Writeln(F, 'CC       = ' + fCompilerSet.gccName + ' -D__DEBUG__');
-    end else begin
-      Writeln(F, 'CPP      = ' + fCompilerSet.gppName);
-      Writeln(F, 'CC       = ' + fCompilerSet.gccName);
-    end;
-    Writeln(F, 'WINDRES  = ' + fCompilerSet.windresName);
-    if (ObjResFile <> '') then begin
-      Writeln(F, 'RES      = ' + GenMakePath1(ObjResFile));
-      Writeln(F, 'OBJ      = ' + Objects + ' $(RES)');
-      Writeln(F, 'LINKOBJ  = ' + LinkObjects + ' $(RES)');
-    end else begin
-      Writeln(F, 'OBJ      = ' + Objects);
-      Writeln(F, 'LINKOBJ  = ' + LinkObjects);
-    end;
-    Writeln(F, 'LIBS     = ' + StringReplace(fLibrariesParams, '\', '/', [rfReplaceAll]));
-    Writeln(F, 'INCS     = ' + StringReplace(fIncludesParams, '\', '/', [rfReplaceAll]));
-    Writeln(F, 'CXXINCS  = ' + StringReplace(fCppIncludesParams, '\', '/', [rfReplaceAll]));
-    Writeln(F, 'BIN      = ' + GenMakePath1(ExtractRelativePath(Makefile, fProject.Executable)));
-    Writeln(F, 'CXXFLAGS = $(CXXINCS) ' + fCppCompileParams);
-    Writeln(F, 'ENCODINGS = -finput-charset=utf-8 -fexec-charset='+GetSystemCharsetName);
-    Writeln(F, 'CFLAGS   = $(INCS) ' + fCompileParams);
-  //  Writeln(F, 'RM       = ' + CLEAN_PROGRAM + ' -f'); // TODO: use del or rm?
-    Writeln(F, 'RM       = ' + CLEAN_PROGRAM + ' /f'); // TODO: use del or rm?
-    if fProject.Options.UsePrecompiledHeader then begin
-      Writeln(F, 'PCH_H = ' + fProject.Options.PrecompiledHeader );
-      Writeln(F, 'PCH = ' + fProject.Options.PrecompiledHeader +'.gch' );
-    end;
+    if (cCompileArguments.indexOf(" -g3")>=0
+            || cCompileArguments.startsWith("-g3")) {
+        cCompileArguments += " -D__DEBUG__";
+        cppCompileArguments+= " -D__DEBUG__";
+    }
+    writeln(file,"CPP      = " + compilerSet()->cppCompiler());
+    writeln(file,"CC       = " + compilerSet()->CCompiler());
+    writeln(file,"WINDRES  = " + compilerSet()->resourceCompiler());
+    if (!ObjResFile.isEmpty()) {
+      writeln(file,"RES      = " + genMakePath1(ObjResFile));
+      writeln(file,"OBJ      = " + Objects + " $(RES)");
+      writeln(file,"LINKOBJ  = " + LinkObjects + " $(RES)");
+    } else {
+      writeln(file,"OBJ      = " + Objects);
+      writeln(file,"LINKOBJ  = " + LinkObjects);
+    };
+    libraryArguments.replace('\\', '/');
+    writeln(file,"LIBS     = " + libraryArguments);
+    cIncludeArguments.replace('\\', '/');
+    writeln(file,"INCS     = " + cIncludeArguments);
+    cppIncludeArguments.replace('\\', '/');
+    writeln(file,"CXXINCS  = " + cppIncludeArguments);
+    writeln(file,"BIN      = " + genMakePath1(extractRelativePath(mProject->makeFileName(), mProject->executable())));
+    cppCompileArguments.replace('\\', '/');
+    writeln(file,"CXXFLAGS = $(CXXINCS) " + cppCompileArguments);
+    //writeln(file,"ENCODINGS = -finput-charset=utf-8 -fexec-charset='+GetSystemCharsetName);
+    cCompileArguments.replace('\\', '/');
+    writeln(file,"CFLAGS   = $(INCS) " + cCompileArguments);
+    writeln(file, QString("RM       = ") + CLEAN_PROGRAM );
+    if (mProject->options().usePrecompiledHeader){
+        writeln(file,"PCH_H = " + mProject->options().precompiledHeader );
+        writeln(file,"PCH = " + changeFileExt(mProject->options().precompiledHeader, GCH_EXT));
+   }
+
 
     // This needs to be put in before the clean command.
-    if fProject.Options.typ = dptDyn then begin
-      OutputFileDir := ExtractFilePath(Project.Executable);
-      LibOutputFile := OutputFileDir + 'lib' + ExtractFileName(Project.Executable);
-      if FileSamePath(LibOutputFile, Project.Directory) then
-        LibOutputFile := ExtractFileName(LibOutputFile)
-      else
-        LibOutputFile := ExtractRelativePath(Makefile, LibOutputFile);
+    if (mProject->options().type == ProjectType::DynamicLib) {
+        QString OutputFileDir = extractFilePath(mProject->executable());
+        QString libOutputFile = includeTrailingPathDelimiter(OutputFileDir) + "lib" + extractFileName(mProject->executable());
+        if (QFileInfo(libOutputFile).absoluteFilePath()
+                == mProject->directory())
+            libOutputFile = extractFileName(libOutputFile);
+        else
+            libOutputFile = extractRelativePath(mProject->makeFileName(), libOutputFile);
+        writeln(file,"DEF      = " + genMakePath1(changeFileExt(libOutputFile, DEF_EXT)));
+        writeln(file,"STATIC   = " + genMakePath1(changeFileExt(libOutputFile, LIB_EXT)));
 
-      Writeln(F, 'DEF      = ' + GenMakePath1(ChangeFileExt(LibOutputFile, DEF_EXT)));
-      Writeln(F, 'STATIC   = ' + GenMakePath1(ChangeFileExt(LibOutputFile, LIB_EXT)));
-    end;
-    Writeln(F);
+    }
+    writeln(file);
 }
 
 void ProjectCompiler::writeln(QFile &file, const QString &s)
