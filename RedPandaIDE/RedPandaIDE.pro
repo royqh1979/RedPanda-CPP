@@ -43,6 +43,7 @@ SOURCES += \
     settingsdialog/editorcodecompletionwidget.cpp \
     settingsdialog/editormiscwidget.cpp \
     settingsdialog/formattergeneralwidget.cpp \
+    settingsdialog/projectgeneralwidget.cpp \
     widgets/classbrowser.cpp \
     widgets/codecompletionlistview.cpp \
     widgets/codecompletionpopup.cpp \
@@ -125,6 +126,7 @@ HEADERS += \
     settingsdialog/editorcodecompletionwidget.h \
     settingsdialog/editormiscwidget.h \
     settingsdialog/formattergeneralwidget.h \
+    settingsdialog/projectgeneralwidget.h \
     widgets/classbrowser.h \
     widgets/codecompletionlistview.h \
     widgets/codecompletionpopup.h \
@@ -183,6 +185,7 @@ FORMS += \
     settingsdialog/editorcodecompletionwidget.ui \
     settingsdialog/editormiscwidget.ui \
     settingsdialog/formattergeneralwidget.ui \
+    settingsdialog/projectgeneralwidget.ui \
     widgets/cpudialog.ui \
     mainwindow.ui \
     settingsdialog/compilersetdirectorieswidget.ui \

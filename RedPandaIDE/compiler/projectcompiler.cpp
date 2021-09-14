@@ -326,10 +326,13 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
                 if (unit->encoding() == ENCODING_AUTO_DETECT) {
                     if (unit->editor() && unit->editor()->fileEncoding()!=ENCODING_ASCII)
                         encodingStr = QString(" -finput-charset=%1 -fexec-charset=%2")
-                                .arg(unit->editor()->fileEncoding(),getDefaultSystemEncoding());
+                                .arg(unit->editor()->fileEncoding(),getDefaultSystemEncoding());                        
                 } else if (unit->encoding()!=ENCODING_ASCII) {
                     encodingStr = QString(" -finput-charset=%1 -fexec-charset=%2")
                           .arg(unit->encoding(),getDefaultSystemEncoding());
+                } else if (unit->encoding()!=ENCODING_SYSTEM_DEFAULT) {
+                    encodingStr = QString(" -finput-charset=%1 -fexec-charset=%2")
+                          .arg(getDefaultSystemEncoding(),getDefaultSystemEncoding());
                 }
             }
 
