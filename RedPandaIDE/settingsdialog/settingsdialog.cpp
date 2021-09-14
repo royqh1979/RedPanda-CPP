@@ -16,6 +16,7 @@
 #include "executorgeneralwidget.h"
 #include "debuggeneralwidget.h"
 #include "formattergeneralwidget.h"
+#include "projectgeneralwidget.h"
 #include <QDebug>
 #include <QMessageBox>
 #include <QModelIndex>
@@ -136,6 +137,19 @@ PSettingsDialog SettingsDialog::optionDialog()
     dialog->addWidget(widget);
 
     widget = new FormatterGeneralWidget(tr("General"),tr("Code Formatter"));
+    widget->init();
+    dialog->addWidget(widget);
+
+    dialog->selectFirstWidget();
+
+    return dialog;
+}
+
+PSettingsDialog SettingsDialog::projectOptionDialog()
+{
+    PSettingsDialog dialog = std::make_shared<SettingsDialog>();
+
+    SettingsWidget* widget = new ProjectGeneralWidget(tr("General"),tr("Project"));
     widget->init();
     dialog->addWidget(widget);
 

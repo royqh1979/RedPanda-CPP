@@ -307,6 +307,8 @@ private slots:
 
     void on_actionClose_Project_triggered();
 
+    void on_actionProject_options_triggered();
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;

@@ -1405,14 +1405,9 @@ const QList<PProjectUnit> &Project::units() const
     return mUnits;
 }
 
-const ProjectOptions &Project::options() const
+ProjectOptions &Project::options()
 {
     return mOptions;
-}
-
-void Project::setOptions(const ProjectOptions &newOptions)
-{
-    mOptions = newOptions;
 }
 
 ProjectModel *Project::model()
@@ -1437,7 +1432,10 @@ const QString &Project::name() const
 
 void Project::setName(const QString &newName)
 {
-    mName = newName;
+    if (newName != mName) {
+        mName = newName;
+        mNode->text = newName;
+    }
 }
 
 const QString &Project::filename() const

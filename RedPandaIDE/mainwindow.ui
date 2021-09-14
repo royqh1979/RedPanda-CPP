@@ -276,7 +276,7 @@
         <enum>QTabWidget::South</enum>
        </property>
        <property name="currentIndex">
-        <number>4</number>
+        <number>1</number>
        </property>
        <widget class="QWidget" name="tabIssues">
         <attribute name="icon">
@@ -329,16 +329,6 @@
           </widget>
          </item>
         </layout>
-       </widget>
-       <widget class="QWidget" name="tabResource">
-        <attribute name="icon">
-         <iconset>
-          <normalon>:/icons/images/newlook24/068-resrc.png</normalon>
-         </iconset>
-        </attribute>
-        <attribute name="title">
-         <string>Resource</string>
-        </attribute>
        </widget>
        <widget class="QWidget" name="tabCompilerOutput">
         <attribute name="icon">
@@ -890,10 +880,17 @@
     <addaction name="actionNext_Editor"/>
     <addaction name="actionPrevious_Editor"/>
    </widget>
+   <widget class="QMenu" name="menuProject">
+    <property name="title">
+     <string>Project</string>
+    </property>
+    <addaction name="actionProject_options"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
    <addaction name="menuSearch"/>
    <addaction name="menuCode"/>
+   <addaction name="menuProject"/>
    <addaction name="menuExecute"/>
    <addaction name="menuTools"/>
    <addaction name="menuWindow"/>
@@ -1622,6 +1619,16 @@
    </property>
    <property name="text">
     <string>Close Project</string>
+   </property>
+  </action>
+  <action name="actionProject_options">
+   <property name="icon">
+    <iconset>
+     <normalon>:/icons/images/newlook24/060-projopt.png</normalon>
+    </iconset>
+   </property>
+   <property name="text">
+    <string>Project options</string>
    </property>
   </action>
  </widget>

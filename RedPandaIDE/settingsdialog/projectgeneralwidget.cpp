@@ -53,11 +53,27 @@ void ProjectGeneralWidget::doLoad()
     ui->cbDefaultEncoding->addItem(ENCODING_AUTO_DETECT);
     ui->cbDefaultEncoding->addItem(ENCODING_SYSTEM_DEFAULT);
     ui->cbDefaultEncoding->addItem(ENCODING_UTF8);
+    QList<QByteArray> codecNames;
+    QSet<QByteArray> codecAlias;
+    codecAlias.insert("system");
+    codecAlias.insert("utf-8");
+
     foreach (const QByteArray& name, QTextCodec::availableCodecs()){
-        if (name == "system")
+        QByteArray lname = name.toLower();
+        if (lname.startsWith("cp"))
             continue;
-        if (name == "utf-8")
+        if (codecAlias.contains(lname))
             continue;
+        codecNames.append(lname);
+        QTextCodec* codec = QTextCodec::codecForName(name);
+        if (codec) {
+            foreach (const QByteArray& alias, codec->aliases()) {
+                codecAlias.insert(alias.toLower());
+            }
+        }
+    }
+    std::sort(codecNames.begin(),codecNames.end());
+    foreach (const QByteArray& name,codecNames) {
         ui->cbDefaultEncoding->addItem(name);
     }
     ui->cbDefaultEncoding->setCurrentText(project->options().encoding);
@@ -71,4 +87,22 @@ void ProjectGeneralWidget::doLoad()
         QPixmap icon(project->options().icon);
         ui->lblICon->setPixmap(icon);
     }
+}
+
+void ProjectGeneralWidget::doSave()
+{
+    std::shared_ptr<Project> project = pMainWindow->project();
+    if (!project)
+        return;
+    project->setName(ui->txtName->text().trimmed());
+
+    project->options().encoding = ui->cbDefaultEncoding->currentText();
+
+    int row = std::max(0,ui->lstType->currentRow());
+    project->options().type = static_cast<ProjectType>(row);
+
+    project->options().useGPP = ui->cbDefaultCpp->isChecked();
+    project->options().supportXPThemes = ui->cbSupportXPTheme->isChecked();
+    project->options().icon = mIconPath;
+    project->saveOptions();
 }

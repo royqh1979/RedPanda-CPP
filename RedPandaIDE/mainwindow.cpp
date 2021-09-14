@@ -2878,3 +2878,13 @@ void MainWindow::on_actionClose_Project_triggered()
     mClosing = false;
 }
 
+
+void MainWindow::on_actionProject_options_triggered()
+{
+    if (!mProject)
+        return;
+    QString oldName = mProject->name();
+    PSettingsDialog dialog = SettingsDialog::projectOptionDialog();
+    dialog->exec();
+}
+

@@ -28,6 +28,7 @@ public:
     void selectFirstWidget();
 
     static PSettingsDialog optionDialog();
+    static PSettingsDialog projectOptionDialog();
 
 private slots:
     void widget_settings_changed(bool value);

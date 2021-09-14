@@ -225,8 +225,7 @@ public:
     const PFolderNode &node() const;
     void setNode(const PFolderNode &newNode);
 
-    const ProjectOptions &options() const;
-    void setOptions(const ProjectOptions &newOptions);
+    ProjectOptions &options();
 
     ProjectModel* model() ;
 
