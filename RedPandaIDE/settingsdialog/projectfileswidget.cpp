@@ -20,18 +20,7 @@ void ProjectFilesWidget::doLoad()
     std::shared_ptr<Project> project = pMainWindow->project();
     if (!project)
         return;
-    mUnits.clear();
-    foreach (const PProjectUnit& unit, project->units()) {
-        PProjectUnit unitCopy = std::make_shared<ProjectUnit>(project.get());
-        unitCopy->setPriority(unit->priority());
-        unitCopy->setCompile(unit->compile());
-        unitCopy->setLink(unit->link());
-        unitCopy->setCompileCpp(unit->compileCpp());
-        unitCopy->setOverrideBuildCmd(unit->overrideBuildCmd());
-        unitCopy->setBuildCmd(unit->buildCmd());
-        unitCopy->setEncoding(unit->encoding());
-        mUnits.append(unitCopy);
-    }
+    copyUnits();
     ui->treeProject->setModel(project->model());
     ui->treeProject->expandAll();
     ui->grpFileOptions->setEnabled(false);
@@ -55,6 +44,8 @@ void ProjectFilesWidget::doSave()
     }
     pMainWindow->project()->sortUnitsByPriority();
     pMainWindow->project()->saveUnits();
+    copyUnits();
+    ui->treeProject->clicked(ui->treeProject->currentIndex());
 }
 
 PProjectUnit ProjectFilesWidget::currentUnit()
@@ -70,6 +61,25 @@ PProjectUnit ProjectFilesWidget::currentUnit()
         return mUnits[i];
     } else
         return PProjectUnit();
+}
+
+void ProjectFilesWidget::copyUnits()
+{
+    std::shared_ptr<Project> project = pMainWindow->project();
+    if (!project)
+        return;
+    mUnits.clear();
+    foreach (const PProjectUnit& unit, project->units()) {
+        PProjectUnit unitCopy = std::make_shared<ProjectUnit>(project.get());
+        unitCopy->setPriority(unit->priority());
+        unitCopy->setCompile(unit->compile());
+        unitCopy->setLink(unit->link());
+        unitCopy->setCompileCpp(unit->compileCpp());
+        unitCopy->setOverrideBuildCmd(unit->overrideBuildCmd());
+        unitCopy->setBuildCmd(unit->buildCmd());
+        unitCopy->setEncoding(unit->encoding());
+        mUnits.append(unitCopy);
+    }
 }
 
 void ProjectFilesWidget::on_treeProject_doubleClicked(const QModelIndex &index)

@@ -21,6 +21,12 @@ ProjectGeneralWidget::~ProjectGeneralWidget()
     delete ui;
 }
 
+void ProjectGeneralWidget::refreshIcon()
+{
+    QPixmap icon(mIconPath);
+    ui->lblICon->setPixmap(icon);
+}
+
 void ProjectGeneralWidget::doLoad()
 {
     std::shared_ptr<Project> project = pMainWindow->project();
@@ -61,11 +67,8 @@ void ProjectGeneralWidget::doLoad()
     ui->cbDefaultCpp->setChecked(project->options().useGPP);
     ui->cbSupportXPTheme->setChecked(project->options().supportXPThemes);
     mIconPath = project->options().icon;
-    if (!mIconPath.isEmpty()) {
-        QPixmap icon(mIconPath);
-        ui->lblICon->setPixmap(icon);
-    }
-    ui->btnRemove->setEnabled(!mIconPath.isEmpty());
+    QPixmap icon(mIconPath);
+    refreshIcon();
 }
 
 void ProjectGeneralWidget::doSave()
@@ -82,7 +85,17 @@ void ProjectGeneralWidget::doSave()
 
     project->options().useGPP = ui->cbDefaultCpp->isChecked();
     project->options().supportXPThemes = ui->cbSupportXPTheme->isChecked();
-    project->options().icon = mIconPath;
+    if (mIconPath.isEmpty()
+            || ui->lblICon->pixmap(Qt::ReturnByValue).isNull()) {
+        project->options().icon = "";
+    } else {
+        QString iconPath = changeFileExt(project->filename(),"ico");
+        QFile::copy(mIconPath, iconPath);
+        project->options().icon = iconPath;
+        mIconPath = iconPath;
+        refreshIcon();
+    }
+
     project->saveOptions();
 }
 
@@ -95,8 +108,7 @@ void ProjectGeneralWidget::on_btnBrowse_clicked()
     if (!fileName.isEmpty()) {
         mIconPath = fileName;
         QPixmap icon(mIconPath);
-        ui->lblICon->setPixmap(icon);
-        setSettingsChanged();
+        refreshIcon();
     }
     ui->btnRemove->setEnabled(!mIconPath.isEmpty());
 }

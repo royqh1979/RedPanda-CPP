@@ -157,11 +157,11 @@ static void initCodePages(){
     CodePages.insert(50937,std::make_shared<CodePageInfo>(50937,"",""));
     CodePages.insert(50939,std::make_shared<CodePageInfo>(50939,"",""));
     CodePages.insert(51932,std::make_shared<CodePageInfo>(51932,"euc-jp",""));
-    CodePages.insert(51936,std::make_shared<CodePageInfo>(51936,"EUC-CN",""));
+    CodePages.insert(51936,std::make_shared<CodePageInfo>(51936,"euc-cn",""));
     CodePages.insert(51949,std::make_shared<CodePageInfo>(51949,"euc-kr",""));
     CodePages.insert(51950,std::make_shared<CodePageInfo>(51950,"",""));
     CodePages.insert(52936,std::make_shared<CodePageInfo>(52936,"hz-gb-2312",""));
-    CodePages.insert(54936,std::make_shared<CodePageInfo>(54936,"GB18030",""));
+    CodePages.insert(54936,std::make_shared<CodePageInfo>(54936,"gb18030",""));
     CodePages.insert(57002,std::make_shared<CodePageInfo>(57002,"x-iscii-de",""));
     CodePages.insert(57003,std::make_shared<CodePageInfo>(57003,"x-iscii-be",""));
     CodePages.insert(57004,std::make_shared<CodePageInfo>(57004,"x-iscii-ta",""));

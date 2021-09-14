@@ -19,7 +19,8 @@ public:
 private:
     Ui::ProjectGeneralWidget *ui;
     QString mIconPath;
-
+private:
+    void refreshIcon();
     // SettingsWidget interface
 protected:
     void doLoad() override;

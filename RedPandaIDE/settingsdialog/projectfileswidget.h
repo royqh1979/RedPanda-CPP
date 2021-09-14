@@ -28,6 +28,7 @@ protected:
     void doSave() override;
 private:
     PProjectUnit currentUnit();
+    void copyUnits();
 private slots:
     void on_treeProject_doubleClicked(const QModelIndex &index);
     void on_spinPriority_valueChanged(int arg1);
