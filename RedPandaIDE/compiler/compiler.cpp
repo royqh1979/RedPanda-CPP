@@ -1,6 +1,7 @@
 #include "compiler.h"
 #include "utils.h"
 #include "compilermanager.h"
+#include "../systemconsts.h"
 
 #include <QFileInfo>
 #include <QProcess>
@@ -527,7 +528,11 @@ void Compiler::runCommand(const QString &cmd, const QString  &arguments, const Q
     if (!cmdDir.isEmpty()) {
         QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
         QString path = env.value("PATH");
-        path = cmdDir + ';' + path;
+        if (path.isEmpty()) {
+            path = cmdDir;
+        } else {
+            path = cmdDir + PATH_SEPARATOR + path;
+        }
         env.insert("PATH",path);
         process.setProcessEnvironment(env);
     }

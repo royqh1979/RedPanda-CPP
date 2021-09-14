@@ -296,6 +296,16 @@ void Editor::setEncodingOption(const QByteArray& encoding) noexcept{
         loadFile();
     else
         pMainWindow->updateForEncodingInfo();
+    if (mInProject) {
+        std::shared_ptr<Project> project = pMainWindow->project();
+        if (project) {
+            int index = project->indexInUnits(this);
+            if (index>=0) {
+                PProjectUnit unit = project->units()[index];
+                unit->setEncoding(mEncodingOption);
+            }
+        }
+    }
 }
 const QByteArray& Editor::fileEncoding() const noexcept{
     return mFileEncoding;

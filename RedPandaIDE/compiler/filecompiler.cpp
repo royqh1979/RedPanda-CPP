@@ -68,7 +68,7 @@ bool FileCompiler::prepareForCompile()
     log(tr("Processing %1 source file:").arg(strFileType));
     log("------------------");
     log(tr("%1 Compiler: %2").arg(strFileType).arg(mCompiler));
-    log(tr("Command: %1 %2").arg(QFileInfo(mCompiler).fileName()).arg(mArguments));
+    log(tr("Command: %1 %2").arg(extractFileName(mCompiler)).arg(mArguments));
     mDirectory = extractFileDir(mFilename);
     return true;
 }

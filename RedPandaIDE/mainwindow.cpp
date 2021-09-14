@@ -1447,23 +1447,18 @@ void MainWindow::openShell(const QString &folder, const QString &shellCommand)
     });
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
     QString path = env.value("PATH");
-
+    QStringList pathAdded;
     if (pSettings->compilerSets().defaultSet()) {
         foreach(const QString& dir, pSettings->compilerSets().defaultSet()->binDirs()) {
-#ifdef Q_OS_WIN
-            path+=";";
-#else
-            path+=":";
-#endif
-            path+=dir;
+            pathAdded.append(dir);
         }
     }
-#ifdef Q_OS_WIN
-            path+=";";
-#else
-            path+=":";
-#endif
-    path+=pSettings->dirs().app();
+    pathAdded.append(pSettings->dirs().app());
+    if (!path.isEmpty()) {
+        path+= PATH_SEPARATOR + pathAdded.join(PATH_SEPARATOR);
+    } else {
+        path = pathAdded.join(PATH_SEPARATOR);
+    }
     env.insert("PATH",path);
     process.setProcessEnvironment(env);
     process.startDetached();
@@ -1884,8 +1879,9 @@ void MainWindow::on_actionSaveAs_triggered()
 void MainWindow::on_actionOptions_triggered()
 {
     bool oldCodeCompletion = pSettings->codeCompletion().enabled();
-    SettingsDialog settingsDialog;
-    settingsDialog.exec();
+    PSettingsDialog settingsDialog = SettingsDialog::optionDialog();
+    settingsDialog->exec();
+
     bool newCodeCompletion = pSettings->codeCompletion().enabled();
     if (!oldCodeCompletion && newCodeCompletion) {
         Editor *e = mEditorList->getEditor();

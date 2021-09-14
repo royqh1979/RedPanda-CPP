@@ -30,6 +30,7 @@
 
 #ifdef Q_OS_WIN
 #   define PATH_SENSITIVITY Qt::CaseInsensitive
+#   define PATH_SEPARATOR   ";"
 #   define NULL_FILE       "NUL"
 #   define EXECUTABLE_EXT   "exe"
 #   define STATIC_LIB_EXT   "a"
@@ -37,6 +38,7 @@
 #   define MAKEFILE_NAME    "makefile.win"
 #elif Q_OS_LINUX
 #   define PATH_SENSITIVITY Qt::CaseSensitive
+#   define PATH_SEPARATOR   ":"
 #   define NULL_FILE       "/dev/null"
 #   define EXECUTABLE_EXT   ""
 #   define STATIC_LIB_EXT   "a"

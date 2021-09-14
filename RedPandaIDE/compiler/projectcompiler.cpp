@@ -324,10 +324,10 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
             QString encodingStr;
             if (mProject->options().addCharset) {
                 if (unit->encoding() == ENCODING_AUTO_DETECT) {
-                    if (unit->editor())
+                    if (unit->editor() && unit->editor()->fileEncoding()!=ENCODING_ASCII)
                         encodingStr = QString(" -finput-charset=%1 -fexec-charset=%2")
                                 .arg(unit->editor()->fileEncoding(),getDefaultSystemEncoding());
-                } else {
+                } else if (unit->encoding()!=ENCODING_ASCII) {
                     encodingStr = QString(" -finput-charset=%1 -fexec-charset=%2")
                           .arg(unit->encoding(),getDefaultSystemEncoding());
                 }
@@ -447,7 +447,7 @@ bool ProjectCompiler::prepareForCompile()
     log(tr("Processing makefile:"));
     log("--------");
     log(tr("- makefile processer: %1").arg(mCompiler));
-    log(tr("- Command: %1 %2").arg(mCompiler).arg(mArguments));
+    log(tr("- Command: %1 %2").arg(extractFileName(mCompiler)).arg(mArguments));
     log("");
 
     return true;

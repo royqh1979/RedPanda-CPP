@@ -32,77 +32,6 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
 
     ui->btnApply->setEnabled(false);
 
-    pEnvironmentAppearenceWidget = new EnvironmentAppearenceWidget(tr("Appearence"),tr("Environment"));
-    pEnvironmentAppearenceWidget->init();
-    addWidget(pEnvironmentAppearenceWidget);
-
-    pCompilerSetOptionWidget = new CompilerSetOptionWidget(tr("Compiler Set"),tr("Compiler"));
-    pCompilerSetOptionWidget->init();
-    addWidget(pCompilerSetOptionWidget);
-
-    pCompilerAutolinkWidget = new CompilerAutolinkWidget(tr("Auto Link"),tr("Compiler"));
-    pCompilerAutolinkWidget->init();
-    addWidget(pCompilerAutolinkWidget);
-
-    pEditorGeneralWidget = new EditorGeneralWidget(tr("General"),tr("Editor"));
-    pEditorGeneralWidget->init();
-    addWidget(pEditorGeneralWidget);
-
-    pEditorFontWidget = new EditorFontWidget(tr("Font"),tr("Editor"));
-    pEditorFontWidget->init();
-    addWidget(pEditorFontWidget);
-
-    pEditorClipboardWidget = new EditorClipboardWidget(tr("Copy & Export"),tr("Editor"));
-    pEditorClipboardWidget->init();
-    addWidget(pEditorClipboardWidget);
-
-    pEditorColorSchemeWidget = new EditorColorSchemeWidget(tr("Color"),tr("Editor"));
-    pEditorColorSchemeWidget->init();
-    addWidget(pEditorColorSchemeWidget);
-
-    pEditorCodeCompletionWidget = new EditorCodeCompletionWidget(tr("Code Completion"),tr("Editor"));
-    pEditorCodeCompletionWidget->init();
-    addWidget(pEditorCodeCompletionWidget);
-
-    pEditorSymbolCompletionWidget = new EditorSymbolCompletionWidget(tr("Symbol Completion"),tr("Editor"));
-    pEditorSymbolCompletionWidget->init();
-    addWidget(pEditorSymbolCompletionWidget);
-
-    pEditorSyntaxCheckWidget = new EditorSyntaxCheckWidget(tr("Auto Syntax Checking"),tr("Editor"));
-    pEditorSyntaxCheckWidget->init();
-    addWidget(pEditorSyntaxCheckWidget);
-
-    pEditorAutoSaveWidget = new EditorAutoSaveWidget(tr("Auto save"),tr("Editor"));
-    pEditorAutoSaveWidget->init();
-    addWidget(pEditorAutoSaveWidget);
-
-    pEditorMiscWidget = new EditorMiscWidget(tr("Misc"),tr("Editor"));
-    pEditorMiscWidget->init();
-    addWidget(pEditorMiscWidget);
-
-
-    pExecutorGeneralWidget = new ExecutorGeneralWidget(tr("General"),tr("Program Runner"));
-    pExecutorGeneralWidget->init();
-    addWidget(pExecutorGeneralWidget);
-
-    pDebugGeneralWidget = new DebugGeneralWidget(tr("General"),tr("Debugger"));
-    pDebugGeneralWidget->init();
-    addWidget(pDebugGeneralWidget);
-
-    pFormatterGeneralWidget = new FormatterGeneralWidget(tr("General"),tr("Code Formatter"));
-    pFormatterGeneralWidget->init();
-    addWidget(pFormatterGeneralWidget);
-
-
-    ui->widgetsView->expandAll();
-    //select the first widget of the first group
-    auto groupIndex = ui->widgetsView->model()->index(0,0);
-    auto widgetIndex = ui->widgetsView->model()->index(0,0, groupIndex);
-    ui->widgetsView->selectionModel()->setCurrentIndex(
-                widgetIndex,
-                QItemSelectionModel::Select
-                );
-    on_widgetsView_clicked(widgetIndex);
 }
 
 SettingsDialog::~SettingsDialog()
@@ -130,7 +59,89 @@ void SettingsDialog::addWidget(SettingsWidget *pWidget)
     pWidgetItem->setData(mSettingWidgets.count()-1, GetWidgetIndexRole);
     pGroupItem->appendRow(pWidgetItem);
     connect(pWidget, &SettingsWidget::settingsChanged,
-                                this , &SettingsDialog::widget_settings_changed);
+            this , &SettingsDialog::widget_settings_changed);
+}
+
+void SettingsDialog::selectFirstWidget()
+{
+    ui->widgetsView->expandAll();
+    //select the first widget of the first group
+    auto groupIndex = ui->widgetsView->model()->index(0,0);
+    auto widgetIndex = ui->widgetsView->model()->index(0,0, groupIndex);
+    ui->widgetsView->selectionModel()->setCurrentIndex(
+                widgetIndex,
+                QItemSelectionModel::Select
+                );
+    on_widgetsView_clicked(widgetIndex);
+}
+
+PSettingsDialog SettingsDialog::optionDialog()
+{
+    PSettingsDialog dialog = std::make_shared<SettingsDialog>();
+
+    SettingsWidget* widget = new EnvironmentAppearenceWidget(tr("Appearence"),tr("Environment"));
+    widget->init();
+    dialog->addWidget(widget);
+
+    widget = new CompilerSetOptionWidget(tr("Compiler Set"),tr("Compiler"));
+    widget->init();
+    dialog->addWidget(widget);
+
+    widget = new CompilerAutolinkWidget(tr("Auto Link"),tr("Compiler"));
+    widget->init();
+    dialog->addWidget(widget);
+
+    widget = new EditorGeneralWidget(tr("General"),tr("Editor"));
+    widget->init();
+    dialog->addWidget(widget);
+
+    widget = new EditorFontWidget(tr("Font"),tr("Editor"));
+    widget->init();
+    dialog->addWidget(widget);
+
+    widget = new EditorClipboardWidget(tr("Copy & Export"),tr("Editor"));
+    widget->init();
+    dialog->addWidget(widget);
+
+    widget = new EditorColorSchemeWidget(tr("Color"),tr("Editor"));
+    widget->init();
+    dialog->addWidget(widget);
+
+    widget = new EditorCodeCompletionWidget(tr("Code Completion"),tr("Editor"));
+    widget->init();
+    dialog->addWidget(widget);
+
+    widget = new EditorSymbolCompletionWidget(tr("Symbol Completion"),tr("Editor"));
+    widget->init();
+    dialog->addWidget(widget);
+
+    widget = new EditorSyntaxCheckWidget(tr("Auto Syntax Checking"),tr("Editor"));
+    widget->init();
+    dialog->addWidget(widget);
+
+    widget = new EditorAutoSaveWidget(tr("Auto save"),tr("Editor"));
+    widget->init();
+    dialog->addWidget(widget);
+
+    widget = new EditorMiscWidget(tr("Misc"),tr("Editor"));
+    widget->init();
+    dialog->addWidget(widget);
+
+    widget = new ExecutorGeneralWidget(tr("General"),tr("Program Runner"));
+    widget->init();
+    dialog->addWidget(widget);
+
+    widget = new DebugGeneralWidget(tr("General"),tr("Debugger"));
+    widget->init();
+    dialog->addWidget(widget);
+
+    widget = new FormatterGeneralWidget(tr("General"),tr("Code Formatter"));
+    widget->init();
+    dialog->addWidget(widget);
+
+    dialog->selectFirstWidget();
+
+    return dialog;
 }
 
 
