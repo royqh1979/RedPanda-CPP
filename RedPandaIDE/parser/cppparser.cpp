@@ -68,13 +68,13 @@ void CppParser::addHardDefineByLine(const QString &line)
 void CppParser::addIncludePath(const QString &value)
 {
     QMutexLocker  locker(&mMutex);
-    mPreprocessor.includePaths().insert(value);
+    mPreprocessor.includePaths().insert(includeTrailingPathDelimiter(value));
 }
 
 void CppParser::addProjectIncludePath(const QString &value)
 {
     QMutexLocker  locker(&mMutex);
-    mPreprocessor.projectIncludePaths().insert(value);
+    mPreprocessor.projectIncludePaths().insert(includeTrailingPathDelimiter(value));
 }
 
 void CppParser::clearIncludePaths()

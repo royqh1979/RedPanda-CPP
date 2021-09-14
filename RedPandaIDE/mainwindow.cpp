@@ -2655,7 +2655,7 @@ void MainWindow::on_tabInfos_tabBarClicked(int index)
 
 void MainWindow::on_splitterInfos_splitterMoved(int, int)
 {
-    QList<int> sizes = ui->splitterMessages->sizes();
+    QList<int> sizes = ui->splitterInfos->sizes();
     mLeftPanelWidth = sizes[0];
 }
 

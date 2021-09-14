@@ -4,6 +4,8 @@
 #include <windows.h>
 #include <QDebug>
 #include "compilermanager.h"
+#include "../settings.h"
+#include "../systemconsts.h"
 
 ExecutableRunner::ExecutableRunner(const QString &filename, const QString &arguments, const QString &workDir):
     QThread(),
@@ -30,6 +32,22 @@ void ExecutableRunner::run()
     process.setProgram(mFilename);
     process.setArguments(QProcess::splitCommand(mArguments));
     process.setWorkingDirectory(mWorkDir);
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    QString path = env.value("PATH");
+    QStringList pathAdded;
+    if (pSettings->compilerSets().defaultSet()) {
+        foreach(const QString& dir, pSettings->compilerSets().defaultSet()->binDirs()) {
+            pathAdded.append(dir);
+        }
+    }
+    pathAdded.append(pSettings->dirs().app());
+    if (!path.isEmpty()) {
+        path+= PATH_SEPARATOR + pathAdded.join(PATH_SEPARATOR);
+    } else {
+        path = pathAdded.join(PATH_SEPARATOR);
+    }
+    env.insert("PATH",path);
+    process.setProcessEnvironment(env);
     process.setCreateProcessArgumentsModifier([](QProcess::CreateProcessArguments * args){
         args->flags |= CREATE_NEW_CONSOLE;
         args->startupInfo -> dwFlags &= ~STARTF_USESTDHANDLES;
@@ -60,6 +78,7 @@ void ExecutableRunner::run()
             break;
     }
     if (errorOccurred) {
+        qDebug()<<"process error:"<<process.error();
         switch (process.error()) {
         case QProcess::FailedToStart:
             emit runErrorOccurred(tr("The runner process '%1' failed to start.").arg(mFilename));

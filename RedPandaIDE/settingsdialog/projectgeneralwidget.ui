@@ -97,30 +97,7 @@
          <string>Icon</string>
         </property>
         <layout class="QGridLayout" name="gridLayout_2">
-         <item row="2" column="1">
-          <widget class="QPushButton" name="btnRemove">
-           <property name="text">
-            <string>Remove</string>
-           </property>
-           <property name="icon">
-            <iconset resource="../icons.qrc">
-             <normaloff>:/icons/images/newlook24/011-clrhist.png</normaloff>:/icons/images/newlook24/011-clrhist.png</iconset>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="1">
-          <widget class="QPushButton" name="btnLibrary">
-           <property name="text">
-            <string>Library</string>
-           </property>
-           <property name="icon">
-            <iconset>
-             <normalon>:/icons/images/newlook24/005-arricon.png</normalon>
-            </iconset>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="0" rowspan="3">
+         <item row="0" column="0" rowspan="2">
           <widget class="QWidget" name="widget" native="true">
            <layout class="QVBoxLayout" name="verticalLayout_2">
             <item>
@@ -140,15 +117,18 @@
              <widget class="QLabel" name="lblICon">
               <property name="minimumSize">
                <size>
-                <width>64</width>
-                <height>64</height>
+                <width>128</width>
+                <height>128</height>
                </size>
               </property>
               <property name="frameShape">
-               <enum>QFrame::Panel</enum>
+               <enum>QFrame::Box</enum>
               </property>
               <property name="text">
                <string/>
+              </property>
+              <property name="scaledContents">
+               <bool>false</bool>
               </property>
              </widget>
             </item>
@@ -169,6 +149,17 @@
           </widget>
          </item>
          <item row="1" column="1">
+          <widget class="QPushButton" name="btnRemove">
+           <property name="text">
+            <string>Remove</string>
+           </property>
+           <property name="icon">
+            <iconset resource="../icons.qrc">
+             <normaloff>:/icons/images/newlook24/011-clrhist.png</normaloff>:/icons/images/newlook24/011-clrhist.png</iconset>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
           <widget class="QPushButton" name="btnBrowse">
            <property name="text">
             <string>Browse</string>
@@ -179,6 +170,19 @@
             </iconset>
            </property>
           </widget>
+         </item>
+         <item row="2" column="1">
+          <spacer name="verticalSpacer_4">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
          </item>
         </layout>
        </widget>

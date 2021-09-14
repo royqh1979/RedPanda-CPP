@@ -369,7 +369,7 @@ bool isSystemHeaderFile(const QString &fileName, const QSet<QString> &includePat
         QFileInfo info(fileName);
         if (info.exists()) { // full file name
             QDir dir = info.dir();
-            QString absPath = excludeTrailingPathDelimiter(dir.absolutePath());
+            QString absPath = includeTrailingPathDelimiter(dir.absolutePath());
             foreach (const QString& incPath, includePaths) {
                 if (absPath.startsWith(incPath))
                     return true;

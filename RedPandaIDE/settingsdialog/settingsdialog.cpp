@@ -17,6 +17,7 @@
 #include "debuggeneralwidget.h"
 #include "formattergeneralwidget.h"
 #include "projectgeneralwidget.h"
+#include "projectfileswidget.h"
 #include <QDebug>
 #include <QMessageBox>
 #include <QModelIndex>
@@ -150,6 +151,10 @@ PSettingsDialog SettingsDialog::projectOptionDialog()
     PSettingsDialog dialog = std::make_shared<SettingsDialog>();
 
     SettingsWidget* widget = new ProjectGeneralWidget(tr("General"),tr("Project"));
+    widget->init();
+    dialog->addWidget(widget);
+
+    widget = new ProjectFilesWidget(tr("Files"),tr("Project"));
     widget->init();
     dialog->addWidget(widget);
 

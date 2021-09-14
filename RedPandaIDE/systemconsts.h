@@ -59,8 +59,17 @@ public:
     const QString& defaultCPPFileFilter() const noexcept;
     const QString& defaultAllFileFilter() const noexcept;
     void addDefaultFileFilter(const QString& name, const QString& fileExtensions);
+    const QStringList &iconFileFilters() const;
+    const QString& iconFileFilter() const;
+    void setIconFileFilters(const QStringList &newIconFileFilters);
+
+    const QStringList &codecNames() const;
+
 private:
+    void addFileFilter(QStringList filters, const QString& name, const QString& fileExtensions);
     QStringList mDefaultFileFilters;
+    QStringList mIconFileFilters;
+    QStringList mCodecNames;
 };
 
 extern SystemConsts* pSystemConsts;

@@ -2,7 +2,10 @@
 #include "ui_projectgeneralwidget.h"
 #include "../project.h"
 #include "../mainwindow.h"
+#include "settings.h"
+#include "../systemconsts.h"
 
+#include <QFileDialog>
 #include <QIcon>
 #include <QTextCodec>
 
@@ -50,32 +53,7 @@ void ProjectGeneralWidget::doLoad()
                           .arg(totalCount).arg(srcCount).arg(headerCount)
                           .arg(resCount).arg(otherCount));
 
-    ui->cbDefaultEncoding->addItem(ENCODING_AUTO_DETECT);
-    ui->cbDefaultEncoding->addItem(ENCODING_SYSTEM_DEFAULT);
-    ui->cbDefaultEncoding->addItem(ENCODING_UTF8);
-    QList<QByteArray> codecNames;
-    QSet<QByteArray> codecAlias;
-    codecAlias.insert("system");
-    codecAlias.insert("utf-8");
-
-    foreach (const QByteArray& name, QTextCodec::availableCodecs()){
-        QByteArray lname = name.toLower();
-        if (lname.startsWith("cp"))
-            continue;
-        if (codecAlias.contains(lname))
-            continue;
-        codecNames.append(lname);
-        QTextCodec* codec = QTextCodec::codecForName(name);
-        if (codec) {
-            foreach (const QByteArray& alias, codec->aliases()) {
-                codecAlias.insert(alias.toLower());
-            }
-        }
-    }
-    std::sort(codecNames.begin(),codecNames.end());
-    foreach (const QByteArray& name,codecNames) {
-        ui->cbDefaultEncoding->addItem(name);
-    }
+    ui->cbDefaultEncoding->addItems(pSystemConsts->codecNames());
     ui->cbDefaultEncoding->setCurrentText(project->options().encoding);
 
     ui->lstType->setCurrentRow( static_cast<int>(project->options().type));
@@ -84,9 +62,10 @@ void ProjectGeneralWidget::doLoad()
     ui->cbSupportXPTheme->setChecked(project->options().supportXPThemes);
     mIconPath = project->options().icon;
     if (!mIconPath.isEmpty()) {
-        QPixmap icon(project->options().icon);
+        QPixmap icon(mIconPath);
         ui->lblICon->setPixmap(icon);
     }
+    ui->btnRemove->setEnabled(!mIconPath.isEmpty());
 }
 
 void ProjectGeneralWidget::doSave()
@@ -106,3 +85,27 @@ void ProjectGeneralWidget::doSave()
     project->options().icon = mIconPath;
     project->saveOptions();
 }
+
+void ProjectGeneralWidget::on_btnBrowse_clicked()
+{
+    QString fileName = QFileDialog::getOpenFileName(this,
+                                                    tr("Select icon file"),
+                                                    pSettings->dirs().app(),
+                                                    tr("Icon Files (*.ico)"));
+    if (!fileName.isEmpty()) {
+        mIconPath = fileName;
+        QPixmap icon(mIconPath);
+        ui->lblICon->setPixmap(icon);
+        setSettingsChanged();
+    }
+    ui->btnRemove->setEnabled(!mIconPath.isEmpty());
+}
+
+
+void ProjectGeneralWidget::on_btnRemove_clicked()
+{
+    mIconPath = "";
+    ui->lblICon->setPixmap(QPixmap());
+    ui->btnRemove->setEnabled(!mIconPath.isEmpty());
+}
+

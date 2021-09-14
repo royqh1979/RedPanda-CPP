@@ -24,6 +24,9 @@ private:
 protected:
     void doLoad() override;
     void doSave() override;
+private slots:
+    void on_btnBrowse_clicked();
+    void on_btnRemove_clicked();
 };
 
 #endif // PROJECTGENERALWIDGET_H
