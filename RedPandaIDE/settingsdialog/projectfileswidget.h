@@ -39,6 +39,10 @@ private slots:
     void on_txtBuildCommand_textChanged();
     void on_cbEncoding_currentTextChanged(const QString &arg1);
     void on_treeProject_clicked(const QModelIndex &index);
+
+    // SettingsWidget interface
+public:
+    void init() override;
 };
 
 #endif // PROJECTFILESWIDGET_H

@@ -873,6 +873,7 @@ public:
 
 
         static int charToValue(char valueChar);
+        static char valueToChar(int val);
     private:
         // Initialization
         void setExecutables();

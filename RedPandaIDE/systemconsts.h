@@ -20,7 +20,7 @@
 
 #define DEV_PROJECT_EXT "dev"
 #define RC_EXT "rc"
-#define RES_EXT "rc"
+#define RES_EXT "res"
 #define H_EXT "h"
 #define OBJ_EXT "o"
 #define DEF_EXT "def"

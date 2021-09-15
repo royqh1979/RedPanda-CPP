@@ -18,6 +18,7 @@
 #include "formattergeneralwidget.h"
 #include "projectgeneralwidget.h"
 #include "projectfileswidget.h"
+#include "projectcompilerwidget.h"
 #include <QDebug>
 #include <QMessageBox>
 #include <QModelIndex>
@@ -155,6 +156,10 @@ PSettingsDialog SettingsDialog::projectOptionDialog()
     dialog->addWidget(widget);
 
     widget = new ProjectFilesWidget(tr("Files"),tr("Project"));
+    widget->init();
+    dialog->addWidget(widget);
+
+    widget = new ProjectCompilerWidget(tr("Compiler Set"),tr("Project"));
     widget->init();
     dialog->addWidget(widget);
 

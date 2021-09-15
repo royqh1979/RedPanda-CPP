@@ -1587,6 +1587,11 @@ int Settings::CompilerSet::charToValue(char valueChar)
     }
 }
 
+char Settings::CompilerSet::valueToChar(int val)
+{
+    return ValueToChar[val];
+}
+
 static void addExistingDirectory(QStringList& dirs, const QString& directory) {
     if (!directoryExists(directory))
         return;

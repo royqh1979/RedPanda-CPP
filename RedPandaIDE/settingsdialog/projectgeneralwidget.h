@@ -28,6 +28,10 @@ protected:
 private slots:
     void on_btnBrowse_clicked();
     void on_btnRemove_clicked();
+
+    // SettingsWidget interface
+public:
+    void init() override;
 };
 
 #endif // PROJECTGENERALWIDGET_H

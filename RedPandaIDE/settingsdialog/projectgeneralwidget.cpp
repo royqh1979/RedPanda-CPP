@@ -59,7 +59,6 @@ void ProjectGeneralWidget::doLoad()
                           .arg(totalCount).arg(srcCount).arg(headerCount)
                           .arg(resCount).arg(otherCount));
 
-    ui->cbDefaultEncoding->addItems(pSystemConsts->codecNames());
     ui->cbDefaultEncoding->setCurrentText(project->options().encoding);
 
     ui->lstType->setCurrentRow( static_cast<int>(project->options().type));
@@ -119,5 +118,12 @@ void ProjectGeneralWidget::on_btnRemove_clicked()
     mIconPath = "";
     ui->lblICon->setPixmap(QPixmap());
     ui->btnRemove->setEnabled(!mIconPath.isEmpty());
+}
+
+void ProjectGeneralWidget::init()
+{
+    SettingsWidget::init();
+    ui->cbDefaultEncoding->clear();
+    ui->cbDefaultEncoding->addItems(pSystemConsts->codecNames());
 }
 

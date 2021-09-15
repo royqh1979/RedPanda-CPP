@@ -193,7 +193,7 @@ FileType getFileType(const QString &filename)
     if (filename.endsWith(".inl",PATH_SENSITIVITY)) {
         return FileType::CppHeader;
     }
-    if (filename.endsWith(".res",PATH_SENSITIVITY)) {
+    if (filename.endsWith(".rc",PATH_SENSITIVITY)) {
         return FileType::WindowsResourceSource;
     }
     return FileType::Other;
@@ -461,10 +461,14 @@ QString changeFileExt(const QString& filename, const QString& ext)
     QFileInfo fileInfo(filename);
     QString suffix = fileInfo.suffix();
     QString name  = fileInfo.fileName();
+    QString path;
+    if (fileInfo.path() != ".") {
+        path = includeTrailingPathDelimiter(fileInfo.path());
+    }
     if (suffix.isEmpty()) {
-        return filename+"."+ext;
+        return path+filename+"."+ext;
     } else {
-        return fileInfo.completeBaseName()+"."+ext;
+        return path+fileInfo.completeBaseName()+"."+ext;
     }
 }
 

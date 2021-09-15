@@ -41,7 +41,7 @@
     <widget class="QWidget" name="widget" native="true"/>
    </item>
    <item row="2" column="0" colspan="3">
-    <widget class="QTabWidget" name="tabWidget">
+    <widget class="QTabWidget" name="tabOptions">
      <widget class="QWidget" name="tab">
       <attribute name="title">
        <string>Tab 1</string>

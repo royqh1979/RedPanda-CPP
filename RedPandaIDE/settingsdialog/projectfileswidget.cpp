@@ -24,9 +24,6 @@ void ProjectFilesWidget::doLoad()
     ui->treeProject->setModel(project->model());
     ui->treeProject->expandAll();
     ui->grpFileOptions->setEnabled(false);
-    ui->spinPriority->setMinimum(0);
-    ui->spinPriority->setMaximum(9999);
-    ui->cbEncoding->addItems(pSystemConsts->codecNames());
 }
 
 void ProjectFilesWidget::doSave()
@@ -180,5 +177,14 @@ void ProjectFilesWidget::on_cbEncoding_currentTextChanged(const QString &)
 void ProjectFilesWidget::on_treeProject_clicked(const QModelIndex &index)
 {
     on_treeProject_doubleClicked(index);
+}
+
+void ProjectFilesWidget::init()
+{
+    SettingsWidget::init();
+    ui->spinPriority->setMinimum(0);
+    ui->spinPriority->setMaximum(9999);
+    ui->cbEncoding->clear();
+    ui->cbEncoding->addItems(pSystemConsts->codecNames());
 }
 

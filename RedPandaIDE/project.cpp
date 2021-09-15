@@ -520,19 +520,19 @@ bool Project::saveUnits()
         case FileType::CSource:
         case FileType::CppHeader:
         case FileType::CppSource:
-            ini.SetBoolValue(groupName,"CompileCpp", unit->compileCpp());
+            ini.SetLongValue(groupName,"CompileCpp", unit->compileCpp());
             break;
         case FileType::WindowsResourceSource:
             unit->setFolder("Resources");
         }
 
         ini.SetValue(groupName,"Folder", toByteArray(unit->folder()));
-        ini.SetBoolValue(groupName,"Compile", unit->compile());
-        ini.SetBoolValue(groupName,"Link", unit->link());
+        ini.SetLongValue(groupName,"Compile", unit->compile());
+        ini.SetLongValue(groupName,"Link", unit->link());
         ini.SetLongValue(groupName,"Priority", unit->priority());
-        ini.SetBoolValue(groupName,"OverrideBuildCmd", unit->overrideBuildCmd());
+        ini.SetLongValue(groupName,"OverrideBuildCmd", unit->overrideBuildCmd());
         ini.SetValue(groupName,"BuildCmd", toByteArray(unit->buildCmd()));
-        ini.SetBoolValue(groupName,"DetectEncoding", unit->encoding()==ENCODING_AUTO_DETECT);
+        ini.SetLongValue(groupName,"DetectEncoding", unit->encoding()==ENCODING_AUTO_DETECT);
         ini.SetValue(groupName,"FileEncoding", toByteArray(unit->encoding()));
     }
     ini.SetLongValue("Project","UnitCount",count);
@@ -589,30 +589,30 @@ void Project::saveOptions()
     ini.SetValue("Project","Compiler", toByteArray(mOptions.compilerCmd));
     ini.SetValue("Project","CppCompiler", toByteArray(mOptions.cppCompilerCmd));
     ini.SetValue("Project","Linker", toByteArray(mOptions.linkerCmd));
-    ini.SetBoolValue("Project","IsCpp", mOptions.useGPP);
+    ini.SetLongValue("Project","IsCpp", mOptions.useGPP);
     ini.SetValue("Project","Icon", toByteArray(extractRelativePath(directory(), mOptions.icon)));
     ini.SetValue("Project","ExeOutput", toByteArray(mOptions.exeOutput));
     ini.SetValue("Project","ObjectOutput", toByteArray(mOptions.objectOutput));
     ini.SetValue("Project","LogOutput", toByteArray(mOptions.logOutput));
-    ini.SetBoolValue("Project","LogOutputEnabled", mOptions.logOutputEnabled);
-    ini.SetBoolValue("Project","OverrideOutput", mOptions.overrideOutput);
+    ini.SetLongValue("Project","LogOutputEnabled", mOptions.logOutputEnabled);
+    ini.SetLongValue("Project","OverrideOutput", mOptions.overrideOutput);
     ini.SetValue("Project","OverrideOutputName", toByteArray(mOptions.overridenOutput));
     ini.SetValue("Project","HostApplication", toByteArray(mOptions.hostApplication));
-    ini.SetBoolValue("Project","UseCustomMakefile", mOptions.useCustomMakefile);
+    ini.SetLongValue("Project","UseCustomMakefile", mOptions.useCustomMakefile);
     ini.SetValue("Project","CustomMakefile", toByteArray(mOptions.customMakefile));
-    ini.SetBoolValue("Project","UsePrecompiledHeader", mOptions.usePrecompiledHeader);
+    ini.SetLongValue("Project","UsePrecompiledHeader", mOptions.usePrecompiledHeader);
     ini.SetValue("Project","PrecompiledHeader", toByteArray(mOptions.precompiledHeader));
     ini.SetValue("Project","CommandLine", toByteArray(mOptions.cmdLineArgs));
     ini.SetValue("Project","Folders", toByteArray(mFolders.join(";")));
-    ini.SetBoolValue("Project","IncludeVersionInfo", mOptions.includeVersionInfo);
-    ini.SetBoolValue("Project","SupportXPThemes", mOptions.supportXPThemes);
+    ini.SetLongValue("Project","IncludeVersionInfo", mOptions.includeVersionInfo);
+    ini.SetLongValue("Project","SupportXPThemes", mOptions.supportXPThemes);
     ini.SetLongValue("Project","CompilerSet", mOptions.compilerSet);
     ini.SetValue("Project","CompilerSettings", mOptions.compilerOptions);
-    ini.SetBoolValue("Project","StaticLink", mOptions.staticLink);
-    ini.SetBoolValue("Project","AddCharset", mOptions.addCharset);
+    ini.SetLongValue("Project","StaticLink", mOptions.staticLink);
+    ini.SetLongValue("Project","AddCharset", mOptions.addCharset);
     ini.SetValue("Project","Encoding",toByteArray(mOptions.encoding));
     //for Red Panda Dev C++ 6 compatibility
-    ini.SetBoolValue("Project","UseUTF8",mOptions.encoding == ENCODING_UTF8);
+    ini.SetLongValue("Project","UseUTF8",mOptions.encoding == ENCODING_UTF8);
 
     ini.SetLongValue("VersionInfo","Major", mOptions.versionInfo.major);
     ini.SetLongValue("VersionInfo","Minor", mOptions.versionInfo.minor);
@@ -629,8 +629,8 @@ void Project::saveOptions()
     ini.SetValue("VersionInfo","OriginalFilename", toByteArray(mOptions.versionInfo.originalFilename));
     ini.SetValue("VersionInfo","ProductName", toByteArray(mOptions.versionInfo.productName));
     ini.SetValue("VersionInfo","ProductVersion", toByteArray(mOptions.versionInfo.productVersion));
-    ini.SetBoolValue("VersionInfo","AutoIncBuildNr", mOptions.versionInfo.autoIncBuildNr);
-    ini.SetBoolValue("VersionInfo","SyncProduct", mOptions.versionInfo.syncProduct);
+    ini.SetLongValue("VersionInfo","AutoIncBuildNr", mOptions.versionInfo.autoIncBuildNr);
+    ini.SetLongValue("VersionInfo","SyncProduct", mOptions.versionInfo.syncProduct);
 
 
     //delete outdated dev4 project options
@@ -749,10 +749,20 @@ void Project::buildPrivateResource(bool forceSave)
     QString rcFile;
     if (!mOptions.privateResource.isEmpty()) {
         rcFile = QDir(directory()).filePath(mOptions.privateResource);
-        if (changeFileExt(rcFile, DEV_PROJECT_EXT) == mFilename)
-            rcFile = changeFileExt(mFilename,QString("_private") + RC_EXT);
-    } else
-        rcFile = changeFileExt(mFilename,QString("_private") + RC_EXT);
+        if (changeFileExt(rcFile, DEV_PROJECT_EXT) == mFilename) {
+            QFileInfo fileInfo(mFilename);
+            rcFile = includeTrailingPathDelimiter(fileInfo.absolutePath())
+                    + fileInfo.baseName()
+                    + "_private."
+                    + RC_EXT;
+        }
+    } else {
+        QFileInfo fileInfo(mFilename);
+        rcFile = includeTrailingPathDelimiter(fileInfo.absolutePath())
+                + fileInfo.baseName()
+                + "_private."
+                + RC_EXT;
+    }
     rcFile = extractRelativePath(mFilename, rcFile);
     rcFile.replace(' ','_');
 
@@ -953,15 +963,15 @@ void Project::buildPrivateResource(bool forceSave)
     contents.append("");
     contents.append("/* VERSION DEFINITIONS */");
     contents.append("#define VER_STRING\t" +
-                   QString("\"%d.%d.%d.%d\"")
+                   QString("\"%1.%2.%3.%4\"")
                    .arg(mOptions.versionInfo.major)
                    .arg(mOptions.versionInfo.minor)
                    .arg(mOptions.versionInfo.release)
                    .arg(mOptions.versionInfo.build));
     contents.append(QString("#define VER_MAJOR\t%1").arg(mOptions.versionInfo.major));
     contents.append(QString("#define VER_MINOR\t%1").arg(mOptions.versionInfo.minor));
-    contents.append(QString("#define VER_RELEASE\t").arg(mOptions.versionInfo.release));
-    contents.append(QString("#define VER_BUILD\t").arg(mOptions.versionInfo.build));
+    contents.append(QString("#define VER_RELEASE\t%1").arg(mOptions.versionInfo.release));
+    contents.append(QString("#define VER_BUILD\t%1").arg(mOptions.versionInfo.build));
     contents.append(QString("#define COMPANY_NAME\t\"%1\"")
                    .arg(mOptions.versionInfo.companyName));
     contents.append(QString("#define FILE_VERSION\t\"%1\"")
@@ -1000,7 +1010,7 @@ void Project::checkProjectFileForUpdate(SimpleIni &ini)
             QByteArray groupName = toByteArray(QString("Unit%1").arg(uCount+i));
             ini.SetValue(groupName,"Filename", toByteArray(s));
             ini.SetValue(groupName,"Folder", "Resources");
-            ini.SetBoolValue(groupName,"Compile",true);
+            ini.SetLongValue(groupName,"Compile",true);
         }
         ini.SetLongValue("Project","UnitCount",uCount+sl.count());
         QString folders = QString::fromLocal8Bit(ini.GetValue("Project","Folders",""));
