@@ -45,8 +45,10 @@ SOURCES += \
     settingsdialog/formattergeneralwidget.cpp \
     settingsdialog/projectcompileparamaterswidget.cpp \
     settingsdialog/projectcompilerwidget.cpp \
+    settingsdialog/projectdirectorieswidget.cpp \
     settingsdialog/projectfileswidget.cpp \
     settingsdialog/projectgeneralwidget.cpp \
+    settingsdialog/projectprecompilewidget.cpp \
     widgets/classbrowser.cpp \
     widgets/codecompletionlistview.cpp \
     widgets/codecompletionpopup.cpp \
@@ -131,8 +133,10 @@ HEADERS += \
     settingsdialog/formattergeneralwidget.h \
     settingsdialog/projectcompileparamaterswidget.h \
     settingsdialog/projectcompilerwidget.h \
+    settingsdialog/projectdirectorieswidget.h \
     settingsdialog/projectfileswidget.h \
     settingsdialog/projectgeneralwidget.h \
+    settingsdialog/projectprecompilewidget.h \
     widgets/classbrowser.h \
     widgets/codecompletionlistview.h \
     widgets/codecompletionpopup.h \
@@ -193,8 +197,10 @@ FORMS += \
     settingsdialog/formattergeneralwidget.ui \
     settingsdialog/projectcompileparamaterswidget.ui \
     settingsdialog/projectcompilerwidget.ui \
+    settingsdialog/projectdirectorieswidget.ui \
     settingsdialog/projectfileswidget.ui \
     settingsdialog/projectgeneralwidget.ui \
+    settingsdialog/projectprecompilewidget.ui \
     widgets/cpudialog.ui \
     mainwindow.ui \
     settingsdialog/compilersetdirectorieswidget.ui \

@@ -101,7 +101,7 @@
           </spacer>
          </item>
          <item row="0" column="0">
-          <widget class="QLabel" name="lbCaretColor_4">
+          <widget class="QLabel" name="lbIndentLineColor">
            <property name="text">
             <string>Indent Line Color</string>
            </property>
