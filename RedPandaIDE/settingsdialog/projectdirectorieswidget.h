@@ -3,7 +3,6 @@
 
 #include <QWidget>
 #include "settingswidget.h"
-#include "compilersetdirectorieswidget.h"
 
 namespace Ui {
 class ProjectDirectoriesWidget;

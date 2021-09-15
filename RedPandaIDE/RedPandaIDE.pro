@@ -34,6 +34,7 @@ SOURCES += \
     parser/parserutils.cpp \
     parser/statementmodel.cpp \
     project.cpp \
+    projecttemplate.cpp \
     qsynedit/Search.cpp \
     qsynedit/SearchBase.cpp \
     qsynedit/SearchRegex.cpp \
@@ -48,7 +49,10 @@ SOURCES += \
     settingsdialog/projectdirectorieswidget.cpp \
     settingsdialog/projectfileswidget.cpp \
     settingsdialog/projectgeneralwidget.cpp \
+    settingsdialog/projectmakefilewidget.cpp \
+    settingsdialog/projectoutputwidget.cpp \
     settingsdialog/projectprecompilewidget.cpp \
+    settingsdialog/projectversioninfowidget.cpp \
     widgets/classbrowser.cpp \
     widgets/codecompletionlistview.cpp \
     widgets/codecompletionpopup.cpp \
@@ -91,6 +95,7 @@ SOURCES += \
     utils.cpp \
     widgets/coloredit.cpp \
     widgets/consolewidget.cpp \
+    widgets/custommakefileinfodialog.cpp \
     widgets/filepropertiesdialog.cpp \
     widgets/headercompletionpopup.cpp \
     widgets/issuestable.cpp \
@@ -122,6 +127,7 @@ HEADERS += \
     parser/statementmodel.h \
     platform.h \
     project.h \
+    projecttemplate.h \
     qsynedit/Search.h \
     qsynedit/SearchBase.h \
     qsynedit/SearchRegex.h \
@@ -136,7 +142,10 @@ HEADERS += \
     settingsdialog/projectdirectorieswidget.h \
     settingsdialog/projectfileswidget.h \
     settingsdialog/projectgeneralwidget.h \
+    settingsdialog/projectmakefilewidget.h \
+    settingsdialog/projectoutputwidget.h \
     settingsdialog/projectprecompilewidget.h \
+    settingsdialog/projectversioninfowidget.h \
     widgets/classbrowser.h \
     widgets/codecompletionlistview.h \
     widgets/codecompletionpopup.h \
@@ -180,6 +189,7 @@ HEADERS += \
     common.h \
     widgets/coloredit.h \
     widgets/consolewidget.h \
+    widgets/custommakefileinfodialog.h \
     widgets/filepropertiesdialog.h \
     widgets/headercompletionpopup.h \
     widgets/issuestable.h \
@@ -200,7 +210,10 @@ FORMS += \
     settingsdialog/projectdirectorieswidget.ui \
     settingsdialog/projectfileswidget.ui \
     settingsdialog/projectgeneralwidget.ui \
+    settingsdialog/projectmakefilewidget.ui \
+    settingsdialog/projectoutputwidget.ui \
     settingsdialog/projectprecompilewidget.ui \
+    settingsdialog/projectversioninfowidget.ui \
     widgets/cpudialog.ui \
     mainwindow.ui \
     settingsdialog/compilersetdirectorieswidget.ui \
@@ -214,6 +227,7 @@ FORMS += \
     settingsdialog/environmentappearencewidget.ui \
     settingsdialog/executorgeneralwidget.ui \
     settingsdialog/settingsdialog.ui \
+    widgets/custommakefileinfodialog.ui \
     widgets/filepropertiesdialog.ui \
     widgets/searchdialog.ui
 

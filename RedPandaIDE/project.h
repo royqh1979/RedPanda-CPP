@@ -83,6 +83,7 @@ private:
 using PProjectUnit = std::shared_ptr<ProjectUnit>;
 
 struct ProjectVersionInfo{
+    explicit ProjectVersionInfo();
     int major;
     int minor;
     int release;
@@ -238,8 +239,6 @@ private:
     void open();
     void removeFolderRecurse(PFolderNode node);
     void updateFolderNode(PFolderNode node);
-    QByteArray toByteArray(const QString& s);
-    QString fromByteArray(const QByteArray& s);
 
 private:
     QList<PProjectUnit> mUnits;
@@ -253,5 +252,8 @@ private:
     PFolderNode mNode;
     ProjectModel mModel;
 };
+
+QByteArray toByteArray(const QString& s);
+QString fromByteArray(const QByteArray& s);
 
 #endif // PROJECT_H

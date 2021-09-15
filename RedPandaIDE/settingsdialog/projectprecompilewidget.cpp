@@ -34,7 +34,7 @@ void ProjectPreCompileWidget::on_btnBrowse_triggered(QAction *arg1)
 {
     QString fileName = QFileDialog::getOpenFileName(
                 this,
-                tr("precompiled header"),
+                tr("Precompiled header"),
                 pMainWindow->project()->directory(),
                 tr("header files (*.h"));
     if (!fileName.isEmpty() && QFileInfo(fileName).exists()) {

@@ -22,6 +22,9 @@
 #include "projectcompileparamaterswidget.h"
 #include "projectdirectorieswidget.h"
 #include "projectprecompilewidget.h"
+#include "projectoutputwidget.h"
+#include "projectmakefilewidget.h"
+#include "projectversioninfowidget.h"
 #include <QDebug>
 #include <QMessageBox>
 #include <QModelIndex>
@@ -175,6 +178,18 @@ PSettingsDialog SettingsDialog::projectOptionDialog()
     dialog->addWidget(widget);
 
     widget = new ProjectPreCompileWidget(tr("Precompiled Header"),tr("Project"));
+    widget->init();
+    dialog->addWidget(widget);
+
+    widget = new ProjectMakefileWidget(tr("Makefile"),tr("Project"));
+    widget->init();
+    dialog->addWidget(widget);
+
+    widget = new ProjectOutputWidget(tr("Output"),tr("Project"));
+    widget->init();
+    dialog->addWidget(widget);
+
+    widget = new ProjectVersionInfoWidget(tr("Version info"),tr("Project"));
     widget->init();
     dialog->addWidget(widget);
 

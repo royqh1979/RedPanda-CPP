@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>CustomMakefileInfoDialog</class>
+ <widget class="QDialog" name="CustomMakefileInfoDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>849</width>
+    <height>512</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Dialog</string>
+  </property>
+  <layout class="QGridLayout">
+   <item row="1" column="1">
+    <widget class="QPushButton" name="pushButton">
+     <property name="text">
+      <string>Ok</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <spacer name="horizontalSpacer">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>40</width>
+       <height>20</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="1" column="2">
+    <spacer name="horizontalSpacer_2">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>40</width>
+       <height>20</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="0" column="0" colspan="3">
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Dev-C++'s Makefile has two important targets:&lt;/p&gt;&lt;p&gt;- all (which builds the executable)&lt;/p&gt;&lt;p&gt;- clean (which cleans up object files)&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&amp;quot;all&amp;quot; depends on 2 targets: all-before and all-after. All-before&lt;/p&gt;&lt;p&gt;gets called before the compilation process, and all-after gets&lt;/p&gt;&lt;p&gt;called after the compilation process.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&amp;quot;clean&amp;quot; depends on the target clean-custom, which gets called&lt;/p&gt;&lt;p&gt;before the cleaning process.&lt;br/&gt;&lt;/p&gt;&lt;p&gt;You can change the Makefile's behavior by defining the targets&lt;/p&gt;&lt;p&gt;that &amp;quot;all&amp;quot; and &amp;quot;clean&amp;quot; depend on.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+     <property name="textFormat">
+      <enum>Qt::RichText</enum>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
