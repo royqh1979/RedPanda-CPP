@@ -2677,11 +2677,8 @@ void Editor::applySettings()
     setTabWidth(pSettings->editor().tabWidth());
     setInsertCaret(pSettings->editor().caretForInsert());
     setOverwriteCaret(pSettings->editor().caretForOverwrite());
-    if (pSettings->editor().caretUseTextColor()) {
-        setCaretColor(palette().color(QPalette::Text));
-    } else {
-        setCaretColor(pSettings->editor().caretColor());
-    }
+    setCaretUseTextColor(pSettings->editor().caretUseTextColor());
+    setCaretColor(pSettings->editor().caretColor());
 
     QFont f=QFont(pSettings->editor().fontName(),pSettings->editor().fontSize());
     f.setStyleStrategy(QFont::PreferAntialias);

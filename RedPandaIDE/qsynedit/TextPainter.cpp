@@ -802,7 +802,7 @@ void SynEditTextPainter::PaintLines()
                   rcToken.setLeft(std::max(rcLine.left(), ColumnToXValue(nLineSelEnd)));
                   rcToken.setRight(std::min(rcLine.right(), ColumnToXValue(LastCol)));
                   PaintToken(sToken, nTokenColumnLen, 0, nLineSelEnd, LastCol,true);
-                  setDrawingColors(false);
+                  setDrawingColors(true);
                   rcToken.setLeft(std::max(rcLine.left(), ColumnToXValue(nLineSelStart)));
                   rcToken.setRight(std::min(rcLine.right(), ColumnToXValue(nLineSelEnd)));
                   PaintToken(sToken, nTokenColumnLen, 0, nLineSelStart, nLineSelEnd - 1,false);

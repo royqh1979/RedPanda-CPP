@@ -348,6 +348,9 @@ public:
     const QColor &rightEdgeColor() const;
     void setRightEdgeColor(const QColor &newRightEdgeColor);
 
+    bool caretUseTextColor() const;
+    void setCaretUseTextColor(bool newCaretUseTextColor);
+
 signals:
     void linesDeleted(int FirstLine, int Count);
     void linesInserted(int FirstLine, int Count);
@@ -573,6 +576,7 @@ private:
     QColor mSelectedForeground;
     QColor mSelectedBackground;
     QColor mCaretColor;
+    bool mCaretUseTextColor;
     QColor mActiveLineColor;
     PSynEditUndoList mUndoList;
     PSynEditUndoList mRedoList;

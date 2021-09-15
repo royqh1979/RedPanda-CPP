@@ -53,6 +53,7 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
     mOrigRedoList = mRedoList;
 
     mCaretColor = QColorConstants::Red;
+    mCaretUseTextColor = false;
     mActiveLineColor = QColorConstants::Svg::lightblue;
     mSelectedBackground = palette().color(QPalette::Highlight);
     mSelectedForeground = palette().color(QPalette::HighlightedText);
@@ -3163,7 +3164,11 @@ void SynEdit::paintCaret(QPainter &painter, const QRect rcClip)
     } else {
         ct =mOverwriteCaret;
     }
-    painter.setPen(mCaretColor);
+    if (mCaretUseTextColor) {
+        painter.setPen(palette().color(QPalette::Text));
+    } else {
+        painter.setPen(mCaretColor);
+    }
     switch(ct) {
     case SynEditCaretType::ctVerticalLine:
         painter.drawLine(rcClip.left()+1,rcClip.top(),rcClip.left()+1,rcClip.bottom());
@@ -3242,6 +3247,16 @@ void SynEdit::onScrolled(int)
     mLeftChar = horizontalScrollBar()->value();
     mTopLine = verticalScrollBar()->value();
     invalidate();
+}
+
+bool SynEdit::caretUseTextColor() const
+{
+    return mCaretUseTextColor;
+}
+
+void SynEdit::setCaretUseTextColor(bool newCaretUseTextColor)
+{
+    mCaretUseTextColor = newCaretUseTextColor;
 }
 
 const QColor &SynEdit::rightEdgeColor() const

@@ -95,3 +95,17 @@ void EditorGeneralWidget::doSave()
     pSettings->editor().save();
     pMainWindow->updateEditorSettings();
 }
+
+void EditorGeneralWidget::on_chkCaretUseTextColor_stateChanged(int )
+{
+    ui->lbCaretColor->setVisible(!ui->chkCaretUseTextColor->isChecked());
+    ui->colorCaret->setVisible(!ui->chkCaretUseTextColor->isChecked());
+}
+
+
+void EditorGeneralWidget::on_chkShowIndentLines_stateChanged(int)
+{
+    ui->lbIndentLineColor->setVisible(ui->chkShowIndentLines->isChecked());
+    ui->colorIndentLine->setVisible(ui->chkShowIndentLines->isChecked());
+}
+

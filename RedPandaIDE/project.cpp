@@ -266,6 +266,7 @@ Editor *Project::openUnit(int index)
         Editor * editor = pMainWindow->editorList()->getOpenedEditorByFilename(fullPath);
         if (editor) {//already opened in the editors
             editor->setInProject(true);
+            editor->activate();
             return editor;
         }
         QByteArray encoding;
@@ -274,6 +275,7 @@ Editor *Project::openUnit(int index)
         editor->setInProject(true);
         unit->setEditor(editor);
         unit->setEncoding(encoding);
+        editor->activate();
         loadUnitLayout(editor,index);
         return editor;
     }

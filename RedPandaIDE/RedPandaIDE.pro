@@ -43,6 +43,7 @@ SOURCES += \
     settingsdialog/editorcodecompletionwidget.cpp \
     settingsdialog/editormiscwidget.cpp \
     settingsdialog/formattergeneralwidget.cpp \
+    settingsdialog/projectcompileparamaterswidget.cpp \
     settingsdialog/projectcompilerwidget.cpp \
     settingsdialog/projectfileswidget.cpp \
     settingsdialog/projectgeneralwidget.cpp \
@@ -128,6 +129,7 @@ HEADERS += \
     settingsdialog/editorcodecompletionwidget.h \
     settingsdialog/editormiscwidget.h \
     settingsdialog/formattergeneralwidget.h \
+    settingsdialog/projectcompileparamaterswidget.h \
     settingsdialog/projectcompilerwidget.h \
     settingsdialog/projectfileswidget.h \
     settingsdialog/projectgeneralwidget.h \
@@ -189,6 +191,7 @@ FORMS += \
     settingsdialog/editorcodecompletionwidget.ui \
     settingsdialog/editormiscwidget.ui \
     settingsdialog/formattergeneralwidget.ui \
+    settingsdialog/projectcompileparamaterswidget.ui \
     settingsdialog/projectcompilerwidget.ui \
     settingsdialog/projectfileswidget.ui \
     settingsdialog/projectgeneralwidget.ui \

@@ -1190,8 +1190,6 @@ void MainWindow::openCloseBottomPanel(bool open)
     mBottomPanelOpenned = open;
     QSplitterHandle* handle = ui->splitterMessages->handle(1);
     handle->setEnabled(open);
-    int idxClose = ui->tabMessages->indexOf(ui->tabClose);
-    ui->tabMessages->setTabVisible(idxClose,open);
 }
 
 void MainWindow::openCloseLeftPanel(bool open)
@@ -2244,12 +2242,7 @@ void MainWindow::on_tabMessages_tabBarClicked(int index)
 
 void MainWindow::on_tabMessages_currentChanged(int index)
 {
-    int idxClose = ui->tabMessages->indexOf(ui->tabClose);
-    if (index == idxClose) {
-        openCloseBottomPanel(false);
-    } else {
-        openCloseBottomPanel(true);
-    }
+    openCloseBottomPanel(true);
 }
 
 void MainWindow::on_tabMessages_tabBarDoubleClicked(int index)
