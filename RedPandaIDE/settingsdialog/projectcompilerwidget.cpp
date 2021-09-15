@@ -94,6 +94,7 @@ void ProjectCompilerWidget::doSave()
         return;
     //read values in the options widget
     QTabWidget* pTab = ui->tabOptions;
+    mOptions.clear();
     for (int i=0;i<pTab->count();i++) {
         QString section = pTab->tabText(i);
         QWidget* pWidget = pTab->widget(i);
@@ -102,7 +103,6 @@ void ProjectCompilerWidget::doSave()
             for (int j=1;j<pLayout->rowCount()-1;j++) {
                 QString name = static_cast<QLabel *>(pLayout->itemAtPosition(j,0)->widget())->text();
                 QComboBox* pCombo = static_cast<QComboBox *>(pLayout->itemAtPosition(j,1)->widget());
-                mOptions.clear();
                 for (int index=0;index<pSet->options().count();index++) {
                      PCompilerOption pOption = pSet->options()[index];
                     if (pOption->section == section && pOption->name == name) {
@@ -115,13 +115,20 @@ void ProjectCompilerWidget::doSave()
     }
     pMainWindow->project()->options().compilerSet = ui->cbCompilerSet->currentIndex();
     pMainWindow->project()->options().compilerOptions = mOptions;
+    pMainWindow->project()->saveOptions();
 }
 
 void ProjectCompilerWidget::init()
 {
-    SettingsWidget::init();
     ui->cbCompilerSet->clear();
     for (const Settings::PCompilerSet& set:pSettings->compilerSets().list()){
         ui->cbCompilerSet->addItem(set->name());
     }
+    SettingsWidget::init();
 }
+
+void ProjectCompilerWidget::on_cbCompilerSet_currentIndexChanged(int)
+{
+    refreshOptions();
+}
+

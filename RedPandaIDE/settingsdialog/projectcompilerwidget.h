@@ -29,6 +29,8 @@ protected:
     // SettingsWidget interface
 public:
     void init() override;
+private slots:
+    void on_cbCompilerSet_currentIndexChanged(int index);
 };
 
 #endif // PROJECTCOMPILERWIDGET_H

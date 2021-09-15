@@ -7,6 +7,7 @@
 
 #include <QFileDialog>
 #include <QIcon>
+#include <QMessageBox>
 #include <QTextCodec>
 
 ProjectGeneralWidget::ProjectGeneralWidget(const QString &name, const QString &group, QWidget *parent) :
@@ -89,6 +90,15 @@ void ProjectGeneralWidget::doSave()
         project->options().icon = "";
     } else {
         QString iconPath = changeFileExt(project->filename(),"ico");
+        if (QFile(iconPath).exists()) {
+            if (!QFile::remove(iconPath)) {
+                QMessageBox::critical(this,
+                                      tr("Can't remove old icon file"),
+                                      tr("Can't remove old icon file '%1'")
+                                      .arg(iconPath),
+                                      QMessageBox::Ok);
+            }
+        }
         QFile::copy(mIconPath, iconPath);
         project->options().icon = iconPath;
         mIconPath = iconPath;
@@ -108,6 +118,7 @@ void ProjectGeneralWidget::on_btnBrowse_clicked()
         mIconPath = fileName;
         QPixmap icon(mIconPath);
         refreshIcon();
+        setSettingsChanged();
     }
     ui->btnRemove->setEnabled(!mIconPath.isEmpty());
 }
@@ -118,12 +129,13 @@ void ProjectGeneralWidget::on_btnRemove_clicked()
     mIconPath = "";
     ui->lblICon->setPixmap(QPixmap());
     ui->btnRemove->setEnabled(!mIconPath.isEmpty());
+    setSettingsChanged();
 }
 
 void ProjectGeneralWidget::init()
 {
-    SettingsWidget::init();
     ui->cbDefaultEncoding->clear();
     ui->cbDefaultEncoding->addItems(pSystemConsts->codecNames());
+    SettingsWidget::init();
 }
 

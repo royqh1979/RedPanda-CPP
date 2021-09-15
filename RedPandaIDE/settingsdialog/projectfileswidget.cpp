@@ -42,6 +42,7 @@ void ProjectFilesWidget::doSave()
     pMainWindow->project()->sortUnitsByPriority();
     pMainWindow->project()->saveUnits();
     copyUnits();
+    ui->treeProject->expandAll();
     ui->treeProject->clicked(ui->treeProject->currentIndex());
 }
 
@@ -79,13 +80,28 @@ void ProjectFilesWidget::copyUnits()
     }
 }
 
+void ProjectFilesWidget::disableFileOptions()
+{
+    ui->grpFileOptions->setEnabled(false);
+    ui->spinPriority->setValue(0);
+    ui->chkCompile->setChecked(false);
+    ui->chkLink->setChecked(false);
+    ui->chkCompileAsCPP->setChecked(false);
+    ui->chkOverrideBuildCommand->setChecked(false);
+    ui->txtBuildCommand->setPlainText("");
+}
+
 void ProjectFilesWidget::on_treeProject_doubleClicked(const QModelIndex &index)
 {
-    if (!index.isValid())
+    if (!index.isValid()) {
+        disableFileOptions();
         return ;
+    }
     FolderNode* node = static_cast<FolderNode*>(index.internalPointer());
-    if (!node)
+    if (!node) {
+        disableFileOptions();
         return;
+    }
     int i = node->unitIndex;
     if (i>=0) {
         PProjectUnit unit = mUnits[i];
@@ -99,13 +115,7 @@ void ProjectFilesWidget::on_treeProject_doubleClicked(const QModelIndex &index)
         ui->txtBuildCommand->setEnabled(ui->chkOverrideBuildCommand->isChecked());
         ui->cbEncoding->setCurrentText(unit->encoding());
     } else {
-        ui->grpFileOptions->setEnabled(false);
-        ui->spinPriority->setValue(0);
-        ui->chkCompile->setChecked(false);
-        ui->chkLink->setChecked(false);
-        ui->chkCompileAsCPP->setChecked(false);
-        ui->chkOverrideBuildCommand->setChecked(false);
-        ui->txtBuildCommand->setPlainText("");
+        disableFileOptions();
     }
 }
 
@@ -181,10 +191,10 @@ void ProjectFilesWidget::on_treeProject_clicked(const QModelIndex &index)
 
 void ProjectFilesWidget::init()
 {
-    SettingsWidget::init();
     ui->spinPriority->setMinimum(0);
     ui->spinPriority->setMaximum(9999);
     ui->cbEncoding->clear();
     ui->cbEncoding->addItems(pSystemConsts->codecNames());
+    SettingsWidget::init();
 }
 

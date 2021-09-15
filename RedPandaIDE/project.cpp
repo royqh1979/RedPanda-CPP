@@ -205,6 +205,7 @@ PFolderNode Project::makeProjectNode()
     PFolderNode node = std::make_shared<FolderNode>();
     node->text = mName;
     node->level = 0;
+    node->unitIndex = -1;
     return node;
 }
 
@@ -797,7 +798,7 @@ void Project::buildPrivateResource(bool forceSave)
 
     if (!mOptions.icon.isEmpty()) {
         contents.append("");
-        QString icon = QDir(directory()).absoluteFilePath(mOptions.icon);
+        QString icon = mOptions.icon;
         if (fileExists(icon)) {
             icon = extractRelativePath(mFilename, icon);
             icon.replace('\\', '/');
@@ -1197,7 +1198,7 @@ void Project::loadLayout()
 void Project::loadOptions(SimpleIni& ini)
 {
     mName = fromByteArray(ini.GetValue("Project","name", ""));
-    mOptions.icon = fromByteArray(ini.GetValue("Project", "icon", ""));
+    mOptions.icon = QDir(directory()).absoluteFilePath(fromByteArray(ini.GetValue("Project", "icon", "")));
     mOptions.version = ini.GetLongValue("Project", "Ver", 0);
     if (mOptions.version > 0) { // ver > 0 is at least a v5 project
         if (mOptions.version < 2) {
