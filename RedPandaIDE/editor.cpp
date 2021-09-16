@@ -150,11 +150,13 @@ Editor::~Editor() {
 }
 
 void Editor::loadFile(const QString& filename) {
-    if (!filename.isEmpty()) {
-        mFilename = filename;
+    if (filename.isEmpty()) {
+        QFile file(mFilename);
+        this->lines()->LoadFromFile(file,mEncodingOption,mFileEncoding);
+    } else {
+        QFile file(filename);
+        this->lines()->LoadFromFile(file,mEncodingOption,mFileEncoding);
     }
-    QFile file(mFilename);
-    this->lines()->LoadFromFile(file,mEncodingOption,mFileEncoding);
     //this->setModified(false);
     updateCaption();
     pMainWindow->updateForEncodingInfo();
@@ -174,6 +176,7 @@ void Editor::loadFile(const QString& filename) {
             checkSyntaxInBack();
         }
     }
+    mLastIdCharPressed = 0;
 }
 
 void Editor::saveFile(const QString &filename) {
@@ -192,7 +195,7 @@ void Editor::convertToEncoding(const QByteArray &encoding)
 }
 
 bool Editor::save(bool force, bool doReparse) {
-    if (this->mIsNew) {
+    if (this->mIsNew && !force) {
         return saveAs();
     }
     QFileInfo info(mFilename);
@@ -232,12 +235,17 @@ bool Editor::saveAs(){
         selectedFileFilter = pSystemConsts->defaultCPPFileFilter();
     else
         selectedFileFilter = pSystemConsts->defaultCFileFilter();
-    QString newName = QFileDialog::getSaveFileName(pMainWindow,
-        tr("Save As"), QString(), pSystemConsts->defaultFileFilters().join(";;"),
-        &selectedFileFilter);
-    if (newName.isEmpty()) {
+    QFileDialog dialog(this,tr("Save As"),extractFilePath(mFilename),
+                       pSystemConsts->defaultFileFilters().join(";;"));
+    dialog.selectNameFilter(selectedFileFilter);
+    dialog.selectFile(mFilename);
+    dialog.setFileMode(QFileDialog::AnyFile);
+    dialog.setOption(QFileDialog::DontConfirmOverwrite,false);
+
+    if (!dialog.exec()) {
         return false;
     }
+    QString newName = dialog.selectedFiles()[0];
     pMainWindow->fileSystemWatcher()->removePath(mFilename);
     if (pSettings->codeCompletion().enabled() && mParser)
         mParser->invalidateFile(mFilename);

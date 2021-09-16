@@ -2930,8 +2930,6 @@ void MainWindow::on_actionNew_Project_triggered()
                 return;
             }
         }
-        openCloseLeftPanel(true);
-        ui->tabInfos->setCornerWidget(ui->tabProject);
 
 //     if cbDefault.Checked then
 //        devData.DefCpp := rbCpp.Checked;
@@ -2960,6 +2958,10 @@ void MainWindow::on_actionNew_Project_triggered()
                                   QMessageBox::Ok);
         }
         mProject->saveAll();
+        ui->projectView->setModel(mProject->model());
+        openCloseLeftPanel(true);
+        ui->tabProject->setVisible(true);
+        ui->tabInfos->setCurrentWidget(ui->tabProject);
     }
 }
 

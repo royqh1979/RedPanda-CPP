@@ -604,13 +604,13 @@ bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate)
             PProjectUnit unit;
             if (aTemplate->options().useGPP) {
                 s = templateUnit->CppText;
-                unit = newUnit(mNode,templateUnit->CppName);
+                unit = newUnit(mNode, templateUnit->CppName);
             } else {
                 s = templateUnit->CText;
                 unit = newUnit(mNode,templateUnit->CName);
             }
             Editor * editor = pMainWindow->editorList()->newEditor(
-                        unit->fileName(),
+                        QDir(directory()).absoluteFilePath(unit->fileName()),
                         unit->encoding(),
                         true,
                         true);
