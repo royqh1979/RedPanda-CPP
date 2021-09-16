@@ -707,3 +707,13 @@ QString extractFileDir(const QString &fileName)
 {
     return extractFilePath(fileName);
 }
+
+QByteArray toByteArray(const QString &s)
+{
+    return s.toLocal8Bit();
+}
+
+QString fromByteArray(const QByteArray &s)
+{
+    return QString::fromLocal8Bit(s);
+}

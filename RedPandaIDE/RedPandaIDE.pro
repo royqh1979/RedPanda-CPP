@@ -34,6 +34,7 @@ SOURCES += \
     parser/parserutils.cpp \
     parser/statementmodel.cpp \
     project.cpp \
+    projectoptions.cpp \
     projecttemplate.cpp \
     qsynedit/Search.cpp \
     qsynedit/SearchBase.cpp \
@@ -99,6 +100,7 @@ SOURCES += \
     widgets/filepropertiesdialog.cpp \
     widgets/headercompletionpopup.cpp \
     widgets/issuestable.cpp \
+    widgets/newprojectdialog.cpp \
     widgets/qconsole.cpp \
     widgets/qpatchedcombobox.cpp \
     widgets/searchdialog.cpp \
@@ -127,6 +129,7 @@ HEADERS += \
     parser/statementmodel.h \
     platform.h \
     project.h \
+    projectoptions.h \
     projecttemplate.h \
     qsynedit/Search.h \
     qsynedit/SearchBase.h \
@@ -193,6 +196,7 @@ HEADERS += \
     widgets/filepropertiesdialog.h \
     widgets/headercompletionpopup.h \
     widgets/issuestable.h \
+    widgets/newprojectdialog.h \
     widgets/qconsole.h \
     widgets/qpatchedcombobox.h \
     widgets/searchdialog.h \
@@ -229,6 +233,7 @@ FORMS += \
     settingsdialog/settingsdialog.ui \
     widgets/custommakefileinfodialog.ui \
     widgets/filepropertiesdialog.ui \
+    widgets/newprojectdialog.ui \
     widgets/searchdialog.ui
 
 TRANSLATIONS += \

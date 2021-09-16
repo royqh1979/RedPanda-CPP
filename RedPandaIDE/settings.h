@@ -83,6 +83,8 @@ public:
         };
         explicit Dirs(Settings * settings);
         QString app() const;
+        QString templateDir() const;
+        QString projectDir() const;
         QString data(DataType dataType = DataType::None) const;
         QString config(DataType dataType = DataType::None) const;
 

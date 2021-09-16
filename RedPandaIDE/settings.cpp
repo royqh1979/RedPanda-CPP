@@ -152,6 +152,16 @@ QString Settings::Dirs::app() const
     return QApplication::instance()->applicationDirPath();
 }
 
+QString Settings::Dirs::templateDir() const
+{
+    return includeTrailingPathDelimiter(app()) + "templates";
+}
+
+QString Settings::Dirs::projectDir() const
+{
+    return includeTrailingPathDelimiter(app()) + "projects";
+}
+
 QString Settings::Dirs::data(Settings::Dirs::DataType dataType) const
 {
     using DataType = Settings::Dirs::DataType;

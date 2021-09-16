@@ -15,7 +15,7 @@
 #include <QTextCodec>
 #include "settings.h"
 #include <QDebug>
-#include "SimpleIni.h"
+
 Project::Project(const QString &filename, const QString &name, QObject *parent) :
     QObject(parent),
     mModel(this)
@@ -1403,16 +1403,6 @@ void Project::updateFolderNode(PFolderNode node)
     }
 }
 
-QByteArray toByteArray(const QString &s)
-{
-    return s.toLocal8Bit();
-}
-
-QString fromByteArray(const QByteArray &s)
-{
-    return QString::fromLocal8Bit(s);
-}
-
 const QList<PProjectUnit> &Project::units() const
 {
     return mUnits;
@@ -1717,25 +1707,4 @@ QVariant ProjectModel::data(const QModelIndex &index, int role) const
         return p->text;
     }
     return QVariant();
-}
-
-ProjectVersionInfo::ProjectVersionInfo()
-{
-    major = 1;
-    minor = 0;
-    release = 0;
-    build = 0;
-    languageID = 0x0409; // US English
-    charsetID = 0x04E4; // Windows multilingual
-    companyName = "";
-    fileVersion = "";
-    fileDescription = "Developed using the Red Panda Dev-C++ IDE";
-    internalName = "";
-    legalCopyright = "";
-    legalTrademarks = "";
-    originalFilename = "";
-    productName = "";
-    productVersion = "";
-    autoIncBuildNr = false;
-    syncProduct = true;
 }

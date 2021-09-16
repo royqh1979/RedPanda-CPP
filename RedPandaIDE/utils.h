@@ -8,6 +8,10 @@
 #include <QRect>
 #include <QStringList>
 #include <memory>
+#include "SimpleIni.h"
+
+using SimpleIni = CSimpleIniA;
+using PSimpleIni = std::shared_ptr<SimpleIni>;
 
 class QByteArray;
 class QTextStream;
@@ -169,6 +173,10 @@ QString extractFilePath(const QString& filePath);
 QString extractAbsoluteFilePath(const QString& filePath);
 QString getSizeString(int size);
 bool isReadOnly(const QString& filename);
+
+
+QByteArray toByteArray(const QString& s);
+QString fromByteArray(const QByteArray& s);
 
 int getNewFileNumber();
 
