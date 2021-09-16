@@ -96,6 +96,7 @@ public:
     QVariant data(const QModelIndex &index, int role) const override;
 };
 
+class ProjectTemplate;
 class Project : public QObject
 {
     Q_OBJECT
@@ -132,8 +133,8 @@ public:
     void loadUnitLayout(Editor *e, int index); // load single [UnitX] cursor positions
     PFolderNode makeNewFileNode(const QString& s, bool isFolder, PFolderNode newParent);
     PFolderNode makeProjectNode();
-    int  newUnit(PFolderNode parentNode,
-                 const QString customFileName);
+    PProjectUnit  newUnit(PFolderNode parentNode,
+                 const QString& customFileName);
     Editor* openUnit(int index);
     void rebuildNodes();
     bool removeEditor(int index, bool doClose);
@@ -152,7 +153,7 @@ public:
     void updateNodeIndexes();
 
     //void showOptions();
-    // bool assignTemplate(const QString& aFileName, const PTemplate& aTemplate);
+    bool assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate);
     //void saveToLog();
 
     std::shared_ptr<CppParser> cppParser();

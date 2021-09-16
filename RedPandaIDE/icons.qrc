@@ -454,5 +454,18 @@
         <file>images/editor/currentline.png</file>
         <file>images/editor/syntaxerror.png</file>
         <file>images/editor/syntaxwarning.png</file>
+        <file>images/associations/c.ico</file>
+        <file>images/associations/cpp.ico</file>
+        <file>images/associations/dev.ico</file>
+        <file>images/associations/devpackage.ico</file>
+        <file>images/associations/devpak.ico</file>
+        <file>images/associations/h.ico</file>
+        <file>images/associations/hpp.ico</file>
+        <file>images/associations/ide.ico</file>
+        <file>images/associations/IDE2.ico</file>
+        <file>images/associations/o.ico</file>
+        <file>images/associations/obj.ico</file>
+        <file>images/associations/rc.ico</file>
+        <file>images/associations/template.ico</file>
     </qresource>
 </RCC>

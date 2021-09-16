@@ -67,7 +67,7 @@ public:
     const QStringList &codecNames() const;
 
 private:
-    void addFileFilter(QStringList filters, const QString& name, const QString& fileExtensions);
+    void addFileFilter(QStringList& filters, const QString& name, const QString& fileExtensions);
     QStringList mDefaultFileFilters;
     QStringList mIconFileFilters;
     QStringList mCodecNames;

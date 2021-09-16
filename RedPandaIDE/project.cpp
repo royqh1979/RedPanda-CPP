@@ -7,6 +7,7 @@
 #include <parser/cppparser.h>
 #include "utils.h"
 #include "platform.h"
+#include "projecttemplate.h"
 
 #include <QDir>
 #include <QFileDialog>
@@ -209,7 +210,7 @@ PFolderNode Project::makeProjectNode()
     return node;
 }
 
-int Project::newUnit(PFolderNode parentNode, const QString customFileName)
+PProjectUnit Project::newUnit(PFolderNode parentNode, const QString& customFileName)
 {
     PProjectUnit newUnit = std::make_shared<ProjectUnit>(this);
 
@@ -231,7 +232,7 @@ int Project::newUnit(PFolderNode parentNode, const QString customFileName)
         s = dir.absoluteFilePath(customFileName);
     }
     // Add
-    int result = mUnits.count();
+    int count = mUnits.count();
     mUnits.append(newUnit);
 
     // Set all properties
@@ -241,7 +242,7 @@ int Project::newUnit(PFolderNode parentNode, const QString customFileName)
     newUnit->setFolder(getFolderPath(parentNode));
     newUnit->setNode(makeNewFileNode(extractFileName(newUnit->fileName()),
                                      false, parentNode));
-    newUnit->node()->unitIndex = result;
+    newUnit->node()->unitIndex = count;
     //parentNode.Expand(True);
     newUnit->setCompile(true);
     newUnit->setCompileCpp(mOptions.useGPP);
@@ -250,7 +251,7 @@ int Project::newUnit(PFolderNode parentNode, const QString customFileName)
     newUnit->setOverrideBuildCmd(false);
     newUnit->setBuildCmd("");
     newUnit->setModified(true);
-    return result;
+    return newUnit;
 }
 
 Editor *Project::openUnit(int index)
@@ -573,6 +574,59 @@ void Project::updateNodeIndexes()
 {
     for (int idx = 0;idx<mUnits.count();idx++)
         mUnits[idx]->node()->unitIndex = idx;
+}
+
+bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate)
+{
+    if (!aTemplate) {
+        return true;
+    }
+
+    mOptions = aTemplate->options();
+
+    // Copy icon to project directory
+    if (!mOptions.icon.isEmpty()) {
+        QString originIcon = QDir(pSettings->dirs().templateDir()).absoluteFilePath(mOptions.icon);
+        if (fileExists(originIcon)) {
+            QString destIcon = changeFileExt(mFilename,".ico");
+            QFile::copy(originIcon,destIcon);
+            mOptions.icon = destIcon;
+        } else {
+            mOptions.icon = "";
+        }
+    }
+    // Add list of files
+    if (aTemplate->version() > 0) {
+        for (int i=0;i<aTemplate->unitCount();i++) {
+            // Pick file contents
+            PTemplateUnit templateUnit = aTemplate->unit(i);
+            QString s;
+            PProjectUnit unit;
+            if (aTemplate->options().useGPP) {
+                s = templateUnit->CppText;
+                unit = newUnit(mNode,templateUnit->CppName);
+            } else {
+                s = templateUnit->CText;
+                unit = newUnit(mNode,templateUnit->CName);
+            }
+            Editor * editor = pMainWindow->editorList()->newEditor(
+                        unit->fileName(),
+                        unit->encoding(),
+                        true,
+                        true);
+
+            QString s2 = QDir(pSettings->dirs().templateDir()).absoluteFilePath(s);
+            if (QFile(s2).exists()) {
+                editor->loadFile(s2);
+            } else {
+                s.replace("#13#10","\r\n");
+                editor->insertString(s,false);
+            }
+            editor->save(true,false);
+            editor->activate();
+        }
+    }
+    return true;
 }
 
 void Project::saveOptions()

@@ -43,6 +43,8 @@ public:
     const ProjectOptions &options() const;
     void setOptions(const ProjectOptions &newOptions);
 
+    int version() const;
+
 private:
     QString mFileName;
     ProjectOptions mOptions;

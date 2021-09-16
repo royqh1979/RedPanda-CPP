@@ -104,7 +104,7 @@ public:
     bool inProject() const noexcept;
     bool isNew() const noexcept;
 
-    void loadFile();
+    void loadFile(const QString& filename = "");
     void saveFile(const QString& filename);
     void convertToEncoding(const QByteArray& encoding);
     bool save(bool force=false, bool reparse=true);
@@ -143,6 +143,7 @@ public:
     void gotoDeclaration(const BufferCoord& pos);
     void gotoDefinition(const BufferCoord& pos);
     void reparse();
+    void insertString(const QString& value, bool moveCursor);
 
     const PCppParser &parser();
 

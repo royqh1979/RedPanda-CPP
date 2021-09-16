@@ -10,6 +10,8 @@
 #include "widgets/cpudialog.h"
 #include "widgets/filepropertiesdialog.h"
 #include "project.h"
+#include "projecttemplate.h"
+#include "widgets/newprojectdialog.h"
 
 #include <QCloseEvent>
 #include <QComboBox>
@@ -87,6 +89,11 @@ MainWindow::MainWindow(QWidget *parent)
     ui->tableIssues->setWarningColor(QColor("Orange"));
 
 
+    mMenuNew = new QMenu();
+    mMenuNew->setTitle(tr("New"));
+    mMenuNew->addAction(ui->actionNew);
+    mMenuNew->addAction(ui->actionNew_Project);
+    ui->menuFile->insertMenu(ui->actionOpen,mMenuNew);
     mMenuEncoding = new QMenu();
     mMenuEncoding->setTitle(tr("File Encoding"));
     mMenuEncoding->addAction(ui->actionAuto_Detect);
@@ -2879,5 +2886,80 @@ void MainWindow::on_actionProject_options_triggered()
     QString oldName = mProject->name();
     PSettingsDialog dialog = SettingsDialog::projectOptionDialog();
     dialog->exec();
+}
+
+
+void MainWindow::on_actionNew_Project_triggered()
+{
+    NewProjectDialog dialog;
+    if (dialog.exec() == QDialog::Accepted) {
+        // Take care of the currently opened project
+        QString s;
+        if (mProject) {
+            if (mProject->name().isEmpty())
+                s = mProject->filename();
+            else
+                s = mProject->name();
+
+            // Ask if the user wants to close the current one. If not, abort
+            if (QMessageBox::question(this,
+                                     tr("New project"),
+                                     tr("Close %1 and start new project?").arg(s),
+                                     QMessageBox::Yes | QMessageBox::No,
+                                     QMessageBox::Yes)==QMessageBox::Yes) {
+                closeProject(false);
+            } else
+                return;
+        }
+
+        //Create the project folder
+        QDir dir(dialog.getLocation());
+        if (!dir.exists()) {
+            if (QMessageBox::question(this,
+                                      tr("Folder not exist"),
+                                      tr("Folder '%1' doesn't exist. Create it now?").arg(dialog.getLocation()),
+                                      QMessageBox::Yes | QMessageBox::No,
+                                      QMessageBox::Yes) != QMessageBox::Yes) {
+                return;
+            }
+            if (!dir.mkpath(dialog.getLocation())) {
+                QMessageBox::critical(this,
+                                      tr("Can't create folder"),
+                                      tr("Failed to create folder '%1'.").arg(dialog.getLocation()),
+                                      QMessageBox::Yes);
+                return;
+            }
+        }
+        openCloseLeftPanel(true);
+        ui->tabInfos->setCornerWidget(ui->tabProject);
+
+//     if cbDefault.Checked then
+//        devData.DefCpp := rbCpp.Checked;
+
+        s = includeTrailingPathDelimiter(dialog.getLocation())
+                + dialog.getProjectName() + "." + DEV_PROJECT_EXT;
+
+        if (fileExists(s)) {
+            QString saveName = QFileDialog::getSaveFileName(
+                        this,
+                        tr("Save new project as"),
+                        dialog.getLocation(),
+                        tr("Red panda Dev-C++ project file (*.dev)"));
+            if (!saveName.isEmpty()) {
+                s = saveName;
+            }
+        }
+
+        // Create an empty project
+        mProject = std::make_shared<Project>(s,dialog.getProjectName());
+        if (!mProject->assignTemplate(dialog.getTemplate())) {
+            mProject = nullptr;
+            QMessageBox::critical(this,
+                                  tr("New project fail"),
+                                  tr("Can't assign project template"),
+                                  QMessageBox::Ok);
+        }
+        mProject->saveAll();
+    }
 }
 

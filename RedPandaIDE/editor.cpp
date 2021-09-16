@@ -149,10 +149,13 @@ Editor::~Editor() {
     this->setParent(nullptr);
 }
 
-void Editor::loadFile() {
+void Editor::loadFile(const QString& filename) {
+    if (!filename.isEmpty()) {
+        mFilename = filename;
+    }
     QFile file(mFilename);
     this->lines()->LoadFromFile(file,mEncodingOption,mFileEncoding);
-    this->setModified(false);
+    //this->setModified(false);
     updateCaption();
     pMainWindow->updateForEncodingInfo();
     switch(getFileType(mFilename)) {
@@ -1678,6 +1681,20 @@ Editor::QuoteStatus Editor::getQuoteStatus()
 void Editor::reparse()
 {
     parseFile(mParser,mFilename,mInProject);
+}
+
+void Editor::insertString(const QString &value, bool moveCursor)
+{
+    beginUpdate();
+    auto action = finally([this]{
+        endUpdate();
+    });
+
+    BufferCoord oldCursorPos = caretXY();
+    setSelText(value);
+    if (!moveCursor) {
+        setCaretXY(oldCursorPos);
+    }
 }
 
 void Editor::showCompletion(bool autoComplete)

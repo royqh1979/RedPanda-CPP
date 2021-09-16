@@ -2,6 +2,7 @@
 #define NEWPROJECTDIALOG_H
 
 #include <QDialog>
+#include <QListWidget>
 #include <QTabBar>
 #include "projecttemplate.h"
 
@@ -16,14 +17,29 @@ class NewProjectDialog : public QDialog
 public:
     explicit NewProjectDialog(QWidget *parent = nullptr);
     ~NewProjectDialog();
+    PProjectTemplate getTemplate();
+    QString getLocation();
+    QString getProjectName();
+    bool isCProject();
+    bool isCppProject();
+    bool makeProjectDefault();
+private slots:
+    void updateView();
+    void updateProjectLocation();
+    void on_lstTemplates_itemDoubleClicked(QListWidgetItem *item);
+
+    void on_lstTemplates_currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous);
+    void on_btnBrowse_triggered(QAction *arg1);
+
 private:
     void addTemplate(const QString& filename);
     void readTemplateDir();
-    void updateView();
+    void rebuildTabs();
 private:
     Ui::NewProjectDialog *ui;
     QList<PProjectTemplate> mTemplates;
     QTabBar* mTemplatesTabBar;
+    QMap<QString,int> mCategories;
 };
 
 #endif // NEWPROJECTDIALOG_H

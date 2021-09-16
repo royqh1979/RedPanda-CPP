@@ -11,6 +11,7 @@ ProjectTemplate::ProjectTemplate(QObject *parent) : QObject(parent)
 int ProjectTemplate::unitCount()
 {
     if (!mIni || mVersion<=0)
+        return 0;
     return mIni->GetLongValue("Project","UnitCount",0);
 }
 
@@ -48,7 +49,7 @@ int ProjectTemplate::addUnit()
     if (!mIni || mVersion<=0)
         return -1;
     int count = unitCount() +1;
-    QByteArray section = toByteArray(QString("Unit%1").arg(count));
+    QByteArray section = toByteArray(QString("Unit%1").arg(count-1));
     mIni->SetValue(section, "C", "");
     mIni->SetValue(section, "Cpp", "");
     mIni->SetLongValue("Project", "UnitCount", count);
@@ -186,5 +187,10 @@ const ProjectOptions &ProjectTemplate::options() const
 void ProjectTemplate::setOptions(const ProjectOptions &newOptions)
 {
     mOptions = newOptions;
+}
+
+int ProjectTemplate::version() const
+{
+    return mVersion;
 }
 

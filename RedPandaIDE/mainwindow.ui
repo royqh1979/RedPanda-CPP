@@ -780,7 +780,6 @@
     <property name="title">
      <string>File</string>
     </property>
-    <addaction name="actionNew"/>
     <addaction name="actionOpen"/>
     <addaction name="separator"/>
     <addaction name="actionSave"/>
@@ -992,7 +991,10 @@
     </iconset>
    </property>
    <property name="text">
-    <string>New</string>
+    <string>New File</string>
+   </property>
+   <property name="toolTip">
+    <string>New File</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+N</string>
@@ -1619,6 +1621,16 @@
    </property>
    <property name="text">
     <string>Project options</string>
+   </property>
+  </action>
+  <action name="actionNew_Project">
+   <property name="icon">
+    <iconset>
+     <normalon>:/icons/images/newlook24/049-newproj.png</normalon>
+    </iconset>
+   </property>
+   <property name="text">
+    <string>New Project...</string>
    </property>
   </action>
  </widget>

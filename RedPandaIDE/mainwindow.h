@@ -308,6 +308,8 @@ private slots:
 
     void on_actionProject_options_triggered();
 
+    void on_actionNew_Project_triggered();
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;
@@ -317,6 +319,7 @@ private:
     QMenu *mMenuEncoding;
     QMenu *mMenuEncodingList;
     QMenu *mMenuRecentFiles;
+    QMenu *mMenuNew;
     QComboBox *mCompilerSet;
     CompilerManager *mCompilerManager;
     Debugger *mDebugger;

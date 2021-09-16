@@ -5,6 +5,8 @@
 
 #include <QDir>
 #include <QFile>
+#include <QFileDialog>
+#include <QPushButton>
 
 NewProjectDialog::NewProjectDialog(QWidget *parent) :
     QDialog(parent),
@@ -13,11 +15,69 @@ NewProjectDialog::NewProjectDialog(QWidget *parent) :
     ui->setupUi(this);
     mTemplatesTabBar = new QTabBar(this);
     ui->verticalLayout->insertWidget(0,mTemplatesTabBar);
+
+    readTemplateDir();
+    int i=0;
+    QString projectName;
+    QString location;
+    while (true) {
+        i++;
+        projectName = tr("Project %1").arg(i);
+        location = includeTrailingPathDelimiter(pSettings->dirs().projectDir()) + projectName;
+        if (!QDir(location).exists())
+            break;
+    }
+    ui->txtProjectName->setText(projectName);
+    ui->txtLocation->setText(location);
+
+    connect(mTemplatesTabBar,
+            &QTabBar::currentChanged,
+            this,
+            &NewProjectDialog::updateView
+            );
+    connect(ui->txtProjectName,
+            &QLineEdit::textChanged,
+            this,
+            &NewProjectDialog::updateProjectLocation);
 }
 
 NewProjectDialog::~NewProjectDialog()
 {
     delete ui;
+}
+
+PProjectTemplate NewProjectDialog::getTemplate()
+{
+    QListWidgetItem * item = ui->lstTemplates->currentItem();
+    if (!item)
+        return PProjectTemplate();
+    int index = item->data(Qt::UserRole).toInt();
+    return mTemplates[index];
+}
+
+QString NewProjectDialog::getLocation()
+{
+    return ui->txtLocation->text();
+}
+
+QString NewProjectDialog::getProjectName()
+{
+    return ui->txtProjectName->text();
+}
+
+bool NewProjectDialog::isCProject()
+{
+    return ui->rdCProject->isChecked();
+}
+
+bool NewProjectDialog::isCppProject()
+{
+    return ui->rdCppProject->isChecked();
+}
+
+bool NewProjectDialog::makeProjectDefault()
+{
+    return ui->chkMakeDefault->isChecked();
 }
 
 void NewProjectDialog::addTemplate(const QString &filename)
@@ -40,48 +100,125 @@ void NewProjectDialog::readTemplateDir()
             addTemplate(fileInfo.absoluteFilePath());
         }
     }
+    rebuildTabs();
     updateView();
 }
 
-void NewProjectDialog::updateView()
+void NewProjectDialog::rebuildTabs()
 {
     while (mTemplatesTabBar->count()>0) {
         mTemplatesTabBar->removeTab(0);
     }
-    QMap<QString,int> categories;
+
+    mCategories.clear();
     foreach (const PProjectTemplate& t, mTemplates) {
         QString category = t->category();
         if (category.isEmpty())
             category = tr("Default");
         // Add a page for each unique category
-        int tabIndex = categories.value(category,-1);
+        int tabIndex = mCategories.value(category,-1);
         if (tabIndex<0) {
             tabIndex = mTemplatesTabBar->addTab(category);
-            categories.insert(category,tabIndex);
+            mCategories.insert(category,tabIndex);
         }
     }
+    mTemplatesTabBar->setCurrentIndex(0);
+}
 
-
-        // Only add if we're viewing this category
-        if SameText(TemplateItem.Category, TabsMain.Tabs[TabsMain.TabIndex]) then begin
-          ListItem := ProjView.Items.Add;
-          ListItem.Caption := TemplateItem.Name;
-          ListItem.Data := pointer(I);
-          IconFileName := ValidateFile(TemplateItem.Icon, '', true);
-          if IconFileName <> '' then begin
-
-            // Add icon to central dump and tell ListItem to use it
-            IconItem := TIcon.Create;
-            try
-              IconItem.LoadFromFile(IconFileName); // ValidateFile prepends path
-              ListItem.ImageIndex := ImageList.AddIcon(IconItem);
-              if ListItem.ImageIndex = -1 then
-                ListItem.ImageIndex := 0;
-            finally
-              IconItem.Free;
-            end;
-          end else
-            ListItem.ImageIndex := 0; // don't use an icon
-        end;
+void NewProjectDialog::updateView()
+{
+    int index = std::max(0,mTemplatesTabBar->currentIndex());
+    if (index>=mTemplatesTabBar->count())
+        return;
+    ui->lstTemplates->clear();
+    for (int i=0;i<mTemplates.count();i++) {
+        const PProjectTemplate& t = mTemplates[i];
+        QString category = t->category();
+        if (category.isEmpty())
+            category = tr("Default");
+        QString tabText = mTemplatesTabBar->tabText(index);
+        if (category == tabText) {
+            QListWidgetItem * item;
+            QString iconFilename = QDir(pSettings->dirs().templateDir()).absoluteFilePath(t->icon());
+            QIcon icon(iconFilename);
+            if (icon.isNull()) {
+                //todo : use an default icon
+                item = new QListWidgetItem(
+                       QIcon(":/icons/images/associations/template.ico"),
+                       t->name());
+            } else {
+                 item = new QListWidgetItem(
+                        icon,
+                        t->name());
+            }
+            item->setData(Qt::UserRole,i);
+            ui->lstTemplates->addItem(item);
+        }
     }
 }
+
+void NewProjectDialog::updateProjectLocation()
+{
+    ui->txtLocation->setText(
+                includeTrailingPathDelimiter(
+                    extractFilePath(
+                        ui->txtLocation->text()))
+                + ui->txtProjectName->text()
+            );
+
+    QListWidgetItem * current = ui->lstTemplates->currentItem();
+    ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(
+                current && !ui->txtProjectName->text().isEmpty()
+                );
+}
+
+void NewProjectDialog::on_lstTemplates_itemDoubleClicked(QListWidgetItem *item)
+{
+    if (item)
+        accept();
+}
+
+
+void NewProjectDialog::on_lstTemplates_currentItemChanged(QListWidgetItem *current, QListWidgetItem *)
+{
+    if (current) {
+        int index = current->data(Qt::UserRole).toInt();
+        PProjectTemplate t = mTemplates[index];
+        ui->lblDescription->setText(t->description());
+        if (t->options().useGPP) {
+            ui->rdCppProject->setChecked(true);
+        } else {
+            ui->rdCProject->setChecked(true);
+        }
+    } else {
+        ui->lblDescription->setText("");
+        ui->rdCProject->setChecked(false);
+        ui->rdCppProject->setChecked(false);
+        ui->chkMakeDefault->setChecked(false);
+    }
+    ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(
+                current && !ui->txtProjectName->text().isEmpty()
+                );
+}
+
+
+void NewProjectDialog::on_btnBrowse_triggered(QAction *)
+{
+    QString dirPath = ui->txtLocation->text();
+    if (!QDir(dirPath).exists()) {
+        dirPath = pSettings->dirs().projectDir();
+    }
+    QString dir = QFileDialog::getExistingDirectory(
+                this,
+                "Project directory",
+                dirPath
+                );
+    if (!dir.isEmpty()) {
+        ui->txtLocation->setText(dir);
+        QListWidgetItem * current = ui->lstTemplates->currentItem();
+        ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(
+                    current && !ui->txtProjectName->text().isEmpty()
+                    );
+    }
+}
+

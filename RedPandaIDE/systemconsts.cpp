@@ -70,7 +70,7 @@ void SystemConsts::addDefaultFileFilter(const QString &name, const QString &file
     addFileFilter(mDefaultFileFilters,name,fileExtensions);
 }
 
-void SystemConsts::addFileFilter(QStringList filters, const QString &name, const QString &fileExtensions)
+void SystemConsts::addFileFilter(QStringList& filters, const QString &name, const QString &fileExtensions)
 {
     filters.append(name+ " (" + fileExtensions+")");
 }
