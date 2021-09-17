@@ -154,6 +154,7 @@ private slots:
     void onTableIssuesContextMenu(const QPoint& pos);
     void onSearchViewContextMenu(const QPoint& pos);
     void onBreakpointsViewContextMenu(const QPoint& pos);
+    void onProjectViewContextMenu(const QPoint& pos);
 
     void on_actionNew_triggered();
 
@@ -386,6 +387,13 @@ private:
     //actions for breakpoint view
     QAction * mBreakpointViewPropertyAction;
     QAction * mBreakpointViewRemoveAllAction;
+
+    //actions for project view
+    QAction * mProject_Add_Folder;
+    QAction * mProject_Rename_Unit;
+    QAction * mProject_Rename_Folder;
+    QAction * mProject_Remove_Folder;
+
 
    // QWidget interface
 protected:

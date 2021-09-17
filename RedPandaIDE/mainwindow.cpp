@@ -1468,6 +1468,35 @@ void MainWindow::buildContextMenus()
             [this](){
         pMainWindow->debugger()->deleteBreakpoints();
     });
+
+    //context menu signal for project view
+    ui->projectView->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui->projectView,&QWidget::customContextMenuRequested,
+             this, &MainWindow::onProjectViewContextMenu);
+    mProject_Rename_Unit = createActionFor(
+                tr("Rename File"),
+                ui->projectView);
+    connect(mProject_Rename_Unit, &QAction::triggered,
+            [this](){
+    });
+    mProject_Add_Folder = createActionFor(
+                tr("Add Folder"),
+                ui->projectView);
+    connect(mProject_Add_Folder, &QAction::triggered,
+            [this](){
+    });
+    mProject_Rename_Folder = createActionFor(
+                tr("Rename File"),
+                ui->projectView);
+    connect(mProject_Rename_Folder, &QAction::triggered,
+            [this](){
+    });
+    mProject_Remove_Folder = createActionFor(
+                tr("Rename File"),
+                ui->projectView);
+    connect(mProject_Remove_Folder, &QAction::triggered,
+            [this](){
+    });
 }
 
 void MainWindow::maximizeEditor()
@@ -1569,6 +1598,53 @@ void MainWindow::onBreakpointsViewContextMenu(const QPoint &pos)
     menu.addAction(mBreakpointViewPropertyAction);
     menu.addAction(mBreakpointViewRemoveAllAction);
     menu.exec(ui->tblBreakpoints->mapToGlobal(pos));
+}
+
+void MainWindow::onProjectViewContextMenu(const QPoint &pos)
+{
+    if (!mProject)
+        return;
+    bool onFolder = false;
+    bool onUnit = false;
+    bool onRoot = false;
+    bool folderEmpty = false;
+    int unitIndex = -1;
+    QModelIndex current = ui->projectView->selectionModel()->currentIndex();
+    if (current.isValid() && mProject) {
+        FolderNode * node = static_cast<FolderNode*>(current.internalPointer());
+        PFolderNode pNode = mProject->pointerToNode(node);
+        if (pNode) {
+            unitIndex = pNode->unitIndex;
+            onFolder = (unitIndex<0);
+            onUnit = (unitIndex >= 0);
+            onRoot = (pNode == mProject->node());
+            if (onFolder && !onRoot) {
+                folderEmpty = pNode->children.isEmpty();
+            }
+        }
+    }
+    QMenu menu(this);
+    updateProjectActions();
+    menu.addAction(ui->actionProject_New_File);
+    menu.addAction(ui->actionAdd_to_project);
+    menu.addAction(ui->actionRemove_from_project);
+    if (onUnit) {
+        menu.addAction(mProject_Rename_Unit);
+    }
+    menu.addSeparator();
+    if (onFolder) {
+        menu.addAction(mProject_Add_Folder);
+        if (!onRoot) {
+            menu.addAction(mProject_Rename_Folder);
+            if (folderEmpty) {
+                menu.addAction(mProject_Remove_Folder);
+            }
+        }
+        menu.addSeparator();
+    }
+    menu.addAction(ui->actionProject_options);
+
+    menu.exec(ui->projectView->mapToGlobal(pos));
 }
 
 void MainWindow::onEditorContextMenu(const QPoint &pos)
