@@ -36,7 +36,7 @@ void ProjectPreCompileWidget::on_btnBrowse_triggered(QAction *arg1)
                 this,
                 tr("Precompiled header"),
                 pMainWindow->project()->directory(),
-                tr("header files (*.h"));
+                tr("header files (*.h)"));
     if (!fileName.isEmpty() && QFileInfo(fileName).exists()) {
         ui->txtPrecompileHeader->setText(fileName);
     }

@@ -125,6 +125,7 @@ public slots:
     void onEditorTabContextMenu(const QPoint& pos);
 
 private:
+    void prepareProjectForCompile();
     void closeProject(bool refreshEditor);
     void updateProjectView();
     void openFiles(const QStringList& files);
@@ -322,6 +323,8 @@ private slots:
 
     void on_actionView_Makefile_triggered();
 
+    void on_actionMakeClean_triggered();
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;
@@ -331,6 +334,7 @@ private:
     QMenu *mMenuEncoding;
     QMenu *mMenuEncodingList;
     QMenu *mMenuRecentFiles;
+    QMenu *mMenuRecentProjects;
     QMenu *mMenuNew;
     QComboBox *mCompilerSet;
     CompilerManager *mCompilerManager;
@@ -338,6 +342,7 @@ private:
     CPUDialog *mCPUDialog;
     SearchDialog *mSearchDialog;
     QList<QAction *> mRecentFileActions;
+    QList<QAction *> mRecentProjectActions;
     bool mQuitting;
     QElapsedTimer mParserTimer;
     QFileSystemWatcher mFileSystemWatcher;

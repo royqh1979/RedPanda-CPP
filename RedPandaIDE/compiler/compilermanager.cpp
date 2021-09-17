@@ -88,6 +88,34 @@ void CompilerManager::compileProject(std::shared_ptr<Project> project, bool rebu
     }
 }
 
+void CompilerManager::cleanProject(std::shared_ptr<Project> project)
+{
+    if (!pSettings->compilerSets().defaultSet()) {
+        QMessageBox::critical(pMainWindow,
+                              tr("No compiler set"),
+                              tr("No compiler set is configured.")+tr("Can't start debugging."));
+        return;
+    }
+    {
+        QMutexLocker locker(&mCompileMutex);
+        if (mCompiler!=nullptr) {
+            return;
+        }
+        mCompileErrorCount = 0;
+        ProjectCompiler* compiler = new ProjectCompiler(project,false,false);
+        compiler->setOnlyClean(true);
+        mCompiler->setRebuild(false);
+        mCompiler = compiler;
+        connect(mCompiler, &Compiler::compileFinished, this ,&CompilerManager::onCompileFinished);
+        connect(mCompiler, &Compiler::compileIssue, this, &CompilerManager::onCompileIssue);
+        connect(mCompiler, &Compiler::compileFinished, pMainWindow, &MainWindow::onCompileFinished);
+        connect(mCompiler, &Compiler::compileOutput, pMainWindow, &MainWindow::onCompileLog);
+        connect(mCompiler, &Compiler::compileIssue, pMainWindow, &MainWindow::onCompileIssue);
+        connect(mCompiler, &Compiler::compileErrorOccured, pMainWindow, &MainWindow::onCompileErrorOccured);
+        mCompiler->start();
+    }
+}
+
 void CompilerManager::buildProjectMakefile(std::shared_ptr<Project> project)
 {
     if (!pSettings->compilerSets().defaultSet()) {

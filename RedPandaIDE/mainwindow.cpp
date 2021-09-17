@@ -108,6 +108,10 @@ MainWindow::MainWindow(QWidget *parent)
     ui->actionEncode_in_ANSI->setCheckable(true);
     ui->actionEncode_in_UTF_8->setCheckable(true);
 
+    mMenuRecentProjects = new QMenu();
+    mMenuRecentProjects->setTitle(tr("Recent Projects"));
+    ui->menuFile->insertMenu(ui->actionExit, mMenuRecentProjects);
+
     mMenuRecentFiles = new QMenu();
     mMenuRecentFiles->setTitle(tr("Recent Files"));
     ui->menuFile->insertMenu(ui->actionExit, mMenuRecentFiles);
@@ -154,6 +158,9 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(ui->menuFile, &QMenu::aboutToShow,
             this,&MainWindow::rebuildOpenedFileHisotryMenu);
+
+    connect(ui->menuProject, &QMenu::aboutToShow,
+            this, &MainWindow::updateProjectActions);
 
     buildContextMenus();
 }
@@ -262,7 +269,8 @@ void MainWindow::updateProjectActions()
     ui->actionView_Makefile->setEnabled(hasProject);
     ui->actionProject_New_File->setEnabled(hasProject);
     ui->actionAdd_to_project->setEnabled(hasProject);
-    ui->actionRemove_from_project->setEnabled(hasProject && ui->projectView->selectionModel()->hasSelection());
+    ui->actionRemove_from_project->setEnabled(hasProject && ui->projectView->selectionModel()->selectedIndexes().count()>0);
+    ui->actionMakeClean->setEnabled(hasProject);
     ui->actionProject_options->setEnabled(hasProject);
     ui->actionClose_Project->setEnabled(hasProject);
     updateCompileActions();
@@ -500,11 +508,20 @@ void MainWindow::updateDebugEval(const QString &value)
 void MainWindow::rebuildOpenedFileHisotryMenu()
 {
     mMenuRecentFiles->clear();
+    mMenuRecentProjects->clear();
+
     foreach (QAction* action,mRecentFileActions) {
         action->setParent(nullptr);
         action->deleteLater();
     }
     mRecentFileActions.clear();
+
+    foreach (QAction* action,mRecentProjectActions) {
+        action->setParent(nullptr);
+        action->deleteLater();
+    }
+    mRecentProjectActions.clear();
+
     if (pSettings->history().openedFiles().size()==0) {
         mMenuRecentFiles->setEnabled(false);
     } else {
@@ -519,6 +536,22 @@ void MainWindow::rebuildOpenedFileHisotryMenu()
         }
         mMenuRecentFiles->addActions(mRecentFileActions);
     }
+
+    if (pSettings->history().openedProjects().size()==0) {
+        mMenuRecentProjects->setEnabled(false);
+    } else {
+        mMenuRecentProjects->setEnabled(true);
+        for (const QString& filename: pSettings->history().openedProjects()) {
+            QAction* action = new QAction();
+            action->setText(filename);
+            connect(action, &QAction::triggered, [&filename,this](bool){
+                this->openProject(filename);
+            });
+            mRecentProjectActions.append(action);
+        }
+        mMenuRecentProjects->addActions(mRecentProjectActions);
+    }
+
 }
 
 void MainWindow::updateClassBrowserForEditor(Editor *editor)
@@ -1608,6 +1641,21 @@ void MainWindow::onEditorTabContextMenu(const QPoint &pos)
     menu.addAction(ui->actionFile_Properties);
 
     menu.exec(tabBar->mapToGlobal(pos));
+}
+
+void MainWindow::prepareProjectForCompile()
+{
+    if (!mProject)
+        return;
+    if (!mProject->saveUnits())
+        return;
+    // Check if saves have been succesful
+    for (int i=0; i<mEditorList->pageCount();i++) {
+        Editor * e= (*(mEditorList))[i];
+        if (e->inProject() && e->modified())
+            return;
+    }
+    mProject->buildPrivateResource();
 }
 
 void MainWindow::closeProject(bool refreshEditor)
@@ -3085,18 +3133,17 @@ void MainWindow::on_actionView_Makefile_triggered()
 {
     if (!mProject)
         return;
-    if (!mProject->saveUnits())
-        return;
-    // Check if saves have been succesful
-    for (int i=0; i<mEditorList->pageCount();i++) {
-        Editor * e= (*(mEditorList))[i];
-        if (e->inProject() && e->modified())
-            return;
-    }
-    mProject->buildPrivateResource();
+    prepareProjectForCompile();
     mCompilerManager->buildProjectMakefile(mProject);
-
     openFile(mProject->makeFileName());
+}
 
+
+void MainWindow::on_actionMakeClean_triggered()
+{
+    if (!mProject)
+        return;
+    prepareProjectForCompile();
+    mCompilerManager->cleanProject(mProject);
 }
 

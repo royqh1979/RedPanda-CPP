@@ -12,6 +12,9 @@ public:
     ProjectCompiler(std::shared_ptr<Project> project, bool silent,bool onlyCheckSyntax);
     void buildMakeFile();
 
+    bool onlyClean() const;
+    void setOnlyClean(bool newOnlyClean);
+
 private:
     void createStandardMakeFile();
     void createStaticMakeFile();
@@ -25,6 +28,8 @@ private:
     void writeMakeObjFilesRules(QFile& file);
     void writeln(QFile& file, const QString& s="");
     // Compiler interface
+private:
+    bool mOnlyClean;
 protected:
     bool prepareForCompile() override;
     QString pipedText() override;

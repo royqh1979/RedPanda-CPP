@@ -11,11 +11,11 @@ ProjectDirectoriesWidget::ProjectDirectoriesWidget(const QString &name, const QS
     ui->setupUi(this);
 
     mLibDirWidget = new CompilerSetDirectoriesWidget();
-    ui->tabDirs->addTab(mLibDirWidget,QObject::tr("Libraries"));
+    ui->tabDirs->addTab(mLibDirWidget,tr("Libraries"));
     mIncludeDirWidget = new CompilerSetDirectoriesWidget();
-    ui->tabDirs->addTab(mIncludeDirWidget,QObject::tr("Includes"));
+    ui->tabDirs->addTab(mIncludeDirWidget,tr("Includes"));
     mResourceDirWidget = new CompilerSetDirectoriesWidget();
-    ui->tabDirs->addTab(mResourceDirWidget,QObject::tr("Resources"));
+    ui->tabDirs->addTab(mResourceDirWidget,tr("Resources"));
 }
 
 

@@ -421,6 +421,16 @@ void ProjectCompiler::writeln(QFile &file, const QString &s)
     file.write("\n");
 }
 
+bool ProjectCompiler::onlyClean() const
+{
+    return mOnlyClean;
+}
+
+void ProjectCompiler::setOnlyClean(bool newOnlyClean)
+{
+    mOnlyClean = newOnlyClean;
+}
+
 QString ProjectCompiler::pipedText()
 {
     return QString();
@@ -446,7 +456,11 @@ bool ProjectCompiler::prepareForCompile()
     buildMakeFile();
 
     mCompiler = compilerSet()->make();
-    if (mRebuild) {
+    if (mOnlyClean) {
+        mArguments = QString("-f \"%1\" clean").arg(extractRelativePath(
+                                                            mProject->directory(),
+                                                            mProject->makeFileName()));
+    } if (mRebuild) {
         mArguments = QString("-f \"%1\" clean all").arg(extractRelativePath(
                                                             mProject->directory(),
                                                             mProject->makeFileName()));
