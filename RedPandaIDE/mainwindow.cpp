@@ -1463,7 +1463,7 @@ void MainWindow::openShell(const QString &folder, const QString &shellCommand)
     }
     pathAdded.append(pSettings->dirs().app());
     if (!path.isEmpty()) {
-        path+= PATH_SEPARATOR + pathAdded.join(PATH_SEPARATOR);
+        path= pathAdded.join(PATH_SEPARATOR) + PATH_SEPARATOR + path;
     } else {
         path = pathAdded.join(PATH_SEPARATOR);
     }
@@ -1926,6 +1926,7 @@ void MainWindow::onCompilerSetChanged(int index)
 void MainWindow::onCompileLog(const QString &msg)
 {
     ui->txtCompilerOutput->appendPlainText(msg);
+    ui->txtCompilerOutput->ensureCursorVisible();
 }
 
 void MainWindow::onCompileIssue(PCompileIssue issue)
@@ -3061,7 +3062,7 @@ void MainWindow::on_actionRemove_from_project_triggered()
             continue;
         FolderNode * node = static_cast<FolderNode*>(index.internalPointer());
         PFolderNode folderNode =  mProject->pointerToNode(node);
-        if (folderNode)
+        if (!folderNode)
             continue;
         selected.insert(folderNode->unitIndex);
     };
@@ -3073,5 +3074,25 @@ void MainWindow::on_actionRemove_from_project_triggered()
 
     mProject->model()->endUpdate();
     updateProjectView();
+}
+
+
+void MainWindow::on_actionView_Makefile_triggered()
+{
+    if (!mProject)
+        return;
+    if (!mProject->saveUnits())
+        return;
+    // Check if saves have been succesful
+    for (int i=0; i<mEditorList->pageCount();i++) {
+        Editor * e= (*(mEditorList))[i];
+        if (e->inProject() && e->modified())
+            return;
+    }
+    mProject->buildPrivateResource();
+    mCompilerManager->buildProjectMakefile(mProject);
+
+    openFile(mProject->makeFileName());
+
 }
 

@@ -88,6 +88,25 @@ void CompilerManager::compileProject(std::shared_ptr<Project> project, bool rebu
     }
 }
 
+void CompilerManager::buildProjectMakefile(std::shared_ptr<Project> project)
+{
+    if (!pSettings->compilerSets().defaultSet()) {
+        QMessageBox::critical(pMainWindow,
+                              tr("No compiler set"),
+                              tr("No compiler set is configured.")+tr("Can't start debugging."));
+        return;
+    }
+    {
+        QMutexLocker locker(&mCompileMutex);
+        if (mCompiler!=nullptr) {
+            return;
+        }
+        ProjectCompiler compiler(project,false,false);
+        compiler.buildMakeFile();
+    }
+
+}
+
 void CompilerManager::checkSyntax(const QString &filename, const QString &content, bool isAscii, std::shared_ptr<Project> project)
 {
     if (!pSettings->compilerSets().defaultSet()) {

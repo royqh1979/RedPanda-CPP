@@ -151,7 +151,7 @@ public:
     void sortUnitsByAlpha();
     void updateFolders();
     void updateNodeIndexes();
-    PFolderNode pointerToNode(FolderNode * p);
+    PFolderNode pointerToNode(FolderNode * p, PFolderNode parent=PFolderNode());
 
     //void showOptions();
     bool assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate);

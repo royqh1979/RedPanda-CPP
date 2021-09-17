@@ -110,7 +110,10 @@
              <item>
               <widget class="QTreeView" name="projectView">
                <property name="selectionMode">
-                <enum>QAbstractItemView::MultiSelection</enum>
+                <enum>QAbstractItemView::ExtendedSelection</enum>
+               </property>
+               <property name="selectionBehavior">
+                <enum>QAbstractItemView::SelectRows</enum>
                </property>
                <attribute name="headerVisible">
                 <bool>false</bool>
@@ -279,7 +282,7 @@
         <enum>QTabWidget::South</enum>
        </property>
        <property name="currentIndex">
-        <number>3</number>
+        <number>1</number>
        </property>
        <widget class="QWidget" name="tabIssues">
         <attribute name="icon">

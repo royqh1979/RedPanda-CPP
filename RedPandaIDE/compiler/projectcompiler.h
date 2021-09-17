@@ -10,9 +10,9 @@ class ProjectCompiler : public Compiler
     Q_OBJECT
 public:
     ProjectCompiler(std::shared_ptr<Project> project, bool silent,bool onlyCheckSyntax);
+    void buildMakeFile();
 
 private:
-    void buildMakeFile();
     void createStandardMakeFile();
     void createStaticMakeFile();
     void createDynamicMakeFile();

@@ -3,7 +3,6 @@
 #include <QMessageBox>
 #include <QVariant>
 #include <mainwindow.h>
-#include <QDebug>
 #include <QFileInfo>
 #include "settings.h"
 #include "project.h"
@@ -322,8 +321,6 @@ void EditorList::getVisibleEditors(Editor *&left, Editor *&right)
 
 void EditorList::updateLayout()
 {
-    qDebug()<<mLeftPageWidget->count();
-    qDebug()<<mRightPageWidget->count();
     if (mLeftPageWidget->count() ==0 && mRightPageWidget->count() == 0)
         showLayout(LayoutShowType::lstNone);
     else if (mLeftPageWidget->count() > 0 && mRightPageWidget->count() == 0)

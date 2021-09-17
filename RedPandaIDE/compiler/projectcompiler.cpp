@@ -121,6 +121,7 @@ void ProjectCompiler::writeMakeDefines(QFile &file)
     // Get list of object files
     QString Objects;
     QString LinkObjects;
+    QString cleanObjects;
 
     // Create a list of object files
     for (int i=0;i<mProject->units().count();i++) {
@@ -134,15 +135,19 @@ void ProjectCompiler::writeMakeDefines(QFile &file)
         if (fileType == FileType::CSource || fileType == FileType::CppSource) {
             if (!mProject->options().objectOutput.isEmpty()) {
                 // ofile = C:\MyProgram\obj\main.o
-                QString ObjFile = includeTrailingPathDelimiter(mProject->options().objectOutput)
+                QString fullObjFile = includeTrailingPathDelimiter(mProject->options().objectOutput)
                         + extractFileName(unit->fileName());
-                ObjFile = genMakePath1(extractRelativePath(mProject->directory(), changeFileExt(ObjFile, OBJ_EXT)));
+                QString relativeObjFile = extractRelativePath(mProject->directory(), changeFileExt(fullObjFile, OBJ_EXT));
+                QString ObjFile = genMakePath2(relativeObjFile);
                 Objects += ' ' + ObjFile;
 
-                if (unit->link())
-                    LinkObjects += ' ' + ObjFile;
+                cleanObjects += ' ' + genMakePath1(relativeObjFile);
+                if (unit->link()) {
+                    LinkObjects += ' ' + genMakePath1(relativeObjFile);
+                }
             } else {
-                Objects += ' ' + genMakePath1(changeFileExt(RelativeName, OBJ_EXT));
+                Objects += ' ' + genMakePath2(changeFileExt(RelativeName, OBJ_EXT));
+                cleanObjects += ' ' + genMakePath1(changeFileExt(RelativeName, OBJ_EXT));
                 if (unit->link())
                     LinkObjects = LinkObjects + ' ' + genMakePath1(changeFileExt(RelativeName, OBJ_EXT));
             }
@@ -187,9 +192,11 @@ void ProjectCompiler::writeMakeDefines(QFile &file)
       writeln(file,"RES      = " + genMakePath1(ObjResFile));
       writeln(file,"OBJ      = " + Objects + " $(RES)");
       writeln(file,"LINKOBJ  = " + LinkObjects + " $(RES)");
+      writeln(file,"CLEANOBJ  = " + cleanObjects + " $(RES)");
     } else {
       writeln(file,"OBJ      = " + Objects);
       writeln(file,"LINKOBJ  = " + LinkObjects);
+      writeln(file,"CLEANOBJ  = " + cleanObjects);
     };
     libraryArguments.replace('\\', '/');
     writeln(file,"LIBS     = " + libraryArguments);
@@ -256,9 +263,9 @@ void ProjectCompiler::writeMakeClean(QFile &file)
 {
     writeln(file, "clean: clean-custom");
     if (mProject->options().type == ProjectType::DynamicLib)
-        writeln(file, "\t${RM} $(OBJ) $(BIN) $(DEF) $(STATIC)");
+        writeln(file, "\t${RM} $(CLEANOBJ) $(BIN) $(DEF) $(STATIC)");
     else
-        writeln(file, "\t${RM} $(OBJ) $(BIN)");
+        writeln(file, "\t${RM} $(CLEANOBJ) $(BIN)");
     writeln(file);
 }
 
@@ -299,15 +306,18 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
             }
         }
         QString ObjFileName;
+        QString ObjFileName2;
         if (!mProject->options().objectOutput.isEmpty()) {
             ObjFileName = includeTrailingPathDelimiter(mProject->options().objectOutput) +
                     extractFileName(unit->fileName());
-            ObjFileName = genMakePath1(extractRelativePath(mProject->makeFileName(), changeFileExt(ObjFileName, OBJ_EXT)));
+            ObjFileName = genMakePath2(extractRelativePath(mProject->makeFileName(), changeFileExt(ObjFileName, OBJ_EXT)));
+            ObjFileName2 = genMakePath1(extractRelativePath(mProject->makeFileName(), changeFileExt(ObjFileName, OBJ_EXT)));
             if (!extractFileDir(ObjFileName).isEmpty()) {
                 objStr = genMakePath2(includeTrailingPathDelimiter(extractFileDir(ObjFileName))) + objStr;
             }
         } else {
-            ObjFileName = genMakePath1(changeFileExt(shortFileName, OBJ_EXT));
+            ObjFileName = genMakePath2(changeFileExt(shortFileName, OBJ_EXT));
+            ObjFileName2 = genMakePath1(changeFileExt(shortFileName, OBJ_EXT));
         }
 
         objStr = ObjFileName + ": "+objStr+precompileStr;
@@ -343,9 +353,9 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
                     writeln(file, "\t(CC) -c " + genMakePath1(shortFileName) + " $(CFLAGS) " + encodingStr);
             } else {
                 if (unit->compileCpp())
-                    writeln(file, "\t$(CPP) -c " + genMakePath1(shortFileName) + " -o " + ObjFileName + " $(CXXFLAGS) " + encodingStr);
+                    writeln(file, "\t$(CPP) -c " + genMakePath1(shortFileName) + " -o " + ObjFileName2 + " $(CXXFLAGS) " + encodingStr);
                 else
-                    writeln(file, "\t$(CC) -c " + genMakePath1(shortFileName) + " -o " + ObjFileName + " $(CFLAGS) " + encodingStr);
+                    writeln(file, "\t$(CC) -c " + genMakePath1(shortFileName) + " -o " + ObjFileName2 + " $(CFLAGS) " + encodingStr);
             }
         }
     }

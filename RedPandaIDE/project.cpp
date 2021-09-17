@@ -581,11 +581,17 @@ void Project::updateNodeIndexes()
         mUnits[idx]->node()->unitIndex = idx;
 }
 
-PFolderNode Project::pointerToNode(FolderNode *p)
+PFolderNode Project::pointerToNode(FolderNode *p, PFolderNode parent)
 {
-    foreach (const PFolderNode& node , mFolderNodes) {
+    if (!parent) {
+        parent = mNode;
+    }
+    foreach (const PFolderNode& node , parent->children) {
         if (node.get()==p)
             return node;
+        PFolderNode result = pointerToNode(p,node);
+        if (result)
+            return result;
     }
     return PFolderNode();
 }

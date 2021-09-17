@@ -320,6 +320,8 @@ private slots:
 
     void on_actionRemove_from_project_triggered();
 
+    void on_actionView_Makefile_triggered();
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;
