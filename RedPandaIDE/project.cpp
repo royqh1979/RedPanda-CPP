@@ -622,6 +622,7 @@ bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate)
                 s.replace("#13#10","\r\n");
                 editor->insertString(s,false);
             }
+            unit->setEditor(editor);
             editor->save(true,false);
             editor->activate();
         }

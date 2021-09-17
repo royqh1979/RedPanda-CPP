@@ -1692,7 +1692,7 @@ QVariant WatchModel::data(const QModelIndex &index, int role) const
     WatchVar* item = static_cast<WatchVar*>(index.internalPointer());
     switch (role) {
     case Qt::DisplayRole:
-        qDebug()<<"item->text:"<<item->text;
+        //qDebug()<<"item->text:"<<item->text;
         return item->text;
     }
     return QVariant();
@@ -1852,7 +1852,7 @@ void WatchModel::notifyUpdated(PWatchVar var)
     }
     if (row<0)
         return;
-    qDebug()<<"dataChanged"<<row<<":"<<var->text;
+    //qDebug()<<"dataChanged"<<row<<":"<<var->text;
     emit dataChanged(createIndex(row,0,var.get()),createIndex(row,0,var.get()));
 }
 
