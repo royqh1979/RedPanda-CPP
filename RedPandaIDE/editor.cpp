@@ -246,6 +246,15 @@ bool Editor::saveAs(){
         return false;
     }
     QString newName = dialog.selectedFiles()[0];
+
+    // Update project information
+    if (mInProject && pMainWindow->project()) {
+        int unitIndex = pMainWindow->project()->indexInUnits(mFilename);
+        if (unitIndex>=0) {
+            pMainWindow->project()->saveUnitAs(unitIndex,newName);
+        }
+    }
+
     pMainWindow->fileSystemWatcher()->removePath(mFilename);
     if (pSettings->codeCompletion().enabled() && mParser)
         mParser->invalidateFile(mFilename);
@@ -281,6 +290,9 @@ bool Editor::saveAs(){
         setUseCodeFolding(false);
     }
     setHighlighter(newHighlighter);
+    if (!newHighlighter || newHighlighter->getName() != SYN_HIGHLIGHTER_CPP) {
+        mSyntaxIssues.clear();
+    }
     applyColorScheme(pSettings->editor().colorScheme());
 
     reparse();

@@ -873,7 +873,7 @@
     <property name="title">
      <string>Project</string>
     </property>
-    <addaction name="actionNew_File"/>
+    <addaction name="actionProject_New_File"/>
     <addaction name="actionAdd_to_project"/>
     <addaction name="actionRemove_from_project"/>
     <addaction name="separator"/>
@@ -1640,7 +1640,7 @@
     <string>New Project...</string>
    </property>
   </action>
-  <action name="actionNew_File">
+  <action name="actionProject_New_File">
    <property name="icon">
     <iconset resource="icons.qrc">
      <normaloff>:/icons/images/newlook24/050-newsrc.png</normaloff>:/icons/images/newlook24/050-newsrc.png</iconset>

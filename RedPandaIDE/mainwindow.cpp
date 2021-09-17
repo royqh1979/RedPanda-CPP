@@ -1690,6 +1690,7 @@ void MainWindow::updateProjectView()
 {
     if (mProject) {
         ui->projectView->setModel(mProject->model());
+        ui->projectView->expandAll();
         openCloseLeftPanel(true);
         ui->tabProject->setVisible(true);
         ui->tabInfos->setCurrentWidget(ui->tabProject);
@@ -2979,6 +2980,70 @@ void MainWindow::on_actionNew_Project_triggered()
 
 void MainWindow::on_actionSaveAll_triggered()
 {
+    // Pause the change notifier
+    bool oldBlock = mFileSystemWatcher.blockSignals(true);
+    auto action = finally([oldBlock,this] {
+        mFileSystemWatcher.blockSignals(oldBlock);
+    });
+    if (mProject) {
+        mProject->saveAll();
+    }
 
+    // Make changes to files
+    for (int i=0;i<mEditorList->pageCount();i++) {
+        Editor * e= (*mEditorList)[i];
+        if (e->modified() && !e->inProject()) {
+            if (!e->save())
+                break;
+        }
+    }
+    updateAppTitle();
+}
+
+
+void MainWindow::on_actionProject_New_File_triggered()
+{
+    int idx = -1;
+    if (!mProject)
+        return;
+    QModelIndex current = ui->projectView->currentIndex();
+    FolderNode * node = nullptr;
+    if (current.isValid()) {
+        node = static_cast<FolderNode*>(current.internalPointer());
+    }
+    PProjectUnit newUnit = mProject->newUnit(
+                mProject->pointerToNode(node) );
+    idx = mProject->units().count()-1;
+    updateProjectView();
+    Editor * editor = mProject->openUnit(idx);
+    editor->setModified(true);
+    editor->activate();
+}
+
+
+void MainWindow::on_actionAdd_to_project_triggered()
+{
+    if (!mProject)
+        return;
+    QFileDialog dialog(this,tr("Add to project"),
+                       mProject->directory(),
+                       pSystemConsts->defaultFileFilters().join(";;"));
+    dialog.setFileMode(QFileDialog::ExistingFiles);
+    dialog.setOption(QFileDialog::DontConfirmOverwrite,true);
+    if (dialog.exec()) {
+        QModelIndex current = ui->projectView->currentIndex();
+        FolderNode * node = nullptr;
+        if (current.isValid()) {
+            node = static_cast<FolderNode*>(current.internalPointer());
+        }
+        PFolderNode folderNode =  mProject->pointerToNode(node);
+        foreach (const QString& filename, dialog.selectedFiles()) {
+            mProject->addUnit(filename,folderNode,false);
+            mProject->cppParser()->addFileToScan(filename);
+        }
+        mProject->rebuildNodes();
+        parseFileList(mProject->cppParser());
+        updateProjectView();
+    }
 }
 

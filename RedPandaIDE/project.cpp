@@ -274,7 +274,7 @@ Editor *Project::openUnit(int index)
         }
         QByteArray encoding;
         encoding = unit->encoding();
-        editor = pMainWindow->editorList()->newEditor(fullPath, encoding, true, false);
+        editor = pMainWindow->editorList()->newEditor(fullPath, encoding, true, unit->isNew());
         editor->setInProject(true);
         unit->setEditor(editor);
         unit->setEncoding(encoding);
@@ -531,7 +531,7 @@ bool Project::saveUnits()
         case FileType::WindowsResourceSource:
             unit->setFolder("Resources");
         }
-
+        unit->setNew(false);
         ini.SetValue(groupName,"Folder", toByteArray(unit->folder()));
         ini.SetLongValue(groupName,"Compile", unit->compile());
         ini.SetLongValue(groupName,"Link", unit->link());
@@ -576,6 +576,15 @@ void Project::updateNodeIndexes()
 {
     for (int idx = 0;idx<mUnits.count();idx++)
         mUnits[idx]->node()->unitIndex = idx;
+}
+
+PFolderNode Project::pointerToNode(FolderNode *p)
+{
+    foreach (const PFolderNode& node , mFolderNodes) {
+        if (node.get()==p)
+            return node;
+    }
+    return PFolderNode();
 }
 
 bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate)

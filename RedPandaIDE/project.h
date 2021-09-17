@@ -134,7 +134,7 @@ public:
     PFolderNode makeNewFileNode(const QString& s, bool isFolder, PFolderNode newParent);
     PFolderNode makeProjectNode();
     PProjectUnit  newUnit(PFolderNode parentNode,
-                 const QString& customFileName);
+                 const QString& customFileName="");
     Editor* openUnit(int index);
     void rebuildNodes();
     bool removeEditor(int index, bool doClose);
@@ -151,6 +151,7 @@ public:
     void sortUnitsByAlpha();
     void updateFolders();
     void updateNodeIndexes();
+    PFolderNode pointerToNode(FolderNode * p);
 
     //void showOptions();
     bool assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate);

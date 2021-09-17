@@ -314,6 +314,10 @@ private slots:
 
     void on_actionSaveAll_triggered();
 
+    void on_actionProject_New_File_triggered();
+
+    void on_actionAdd_to_project_triggered();
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;
