@@ -259,6 +259,10 @@ void MainWindow::updateEditorActions()
 void MainWindow::updateProjectActions()
 {
     bool hasProject = (mProject != nullptr);
+    ui->actionView_Makefile->setEnabled(hasProject);
+    ui->actionProject_New_File->setEnabled(hasProject);
+    ui->actionAdd_to_project->setEnabled(hasProject);
+    ui->actionRemove_from_project->setEnabled(hasProject && ui->projectView->selectionModel()->hasSelection());
     ui->actionProject_options->setEnabled(hasProject);
     ui->actionClose_Project->setEnabled(hasProject);
     updateCompileActions();
