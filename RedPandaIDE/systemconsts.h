@@ -26,6 +26,7 @@
 #define DEF_EXT "def"
 #define LIB_EXT "a"
 #define GCH_EXT "gch"
+#define ICON_EXT "ico"
 #define TEMPLATE_EXT "template"
 #define DEV_INTERNAL_OPEN "$__DEV_INTERNAL_OPEN"
 

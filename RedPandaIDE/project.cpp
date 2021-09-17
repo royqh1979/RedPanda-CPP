@@ -8,6 +8,7 @@
 #include "utils.h"
 #include "platform.h"
 #include "projecttemplate.h"
+#include "systemconsts.h"
 
 #include <QDir>
 #include <QFileDialog>
@@ -251,6 +252,7 @@ PProjectUnit Project::newUnit(PFolderNode parentNode, const QString& customFileN
     newUnit->setOverrideBuildCmd(false);
     newUnit->setBuildCmd("");
     newUnit->setModified(true);
+    newUnit->setEncoding(toByteArray(options().encoding));
     return newUnit;
 }
 
@@ -583,12 +585,13 @@ bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate)
     }
 
     mOptions = aTemplate->options();
+    mOptions.icon = aTemplate->icon();
 
     // Copy icon to project directory
     if (!mOptions.icon.isEmpty()) {
         QString originIcon = QDir(pSettings->dirs().templateDir()).absoluteFilePath(mOptions.icon);
         if (fileExists(originIcon)) {
-            QString destIcon = changeFileExt(mFilename,".ico");
+            QString destIcon = changeFileExt(mFilename,ICON_EXT);
             QFile::copy(originIcon,destIcon);
             mOptions.icon = destIcon;
         } else {
@@ -1255,7 +1258,12 @@ void Project::loadLayout()
 void Project::loadOptions(SimpleIni& ini)
 {
     mName = fromByteArray(ini.GetValue("Project","name", ""));
-    mOptions.icon = QDir(directory()).absoluteFilePath(fromByteArray(ini.GetValue("Project", "icon", "")));
+    QString icon = fromByteArray(ini.GetValue("Project", "icon", ""));
+    if (icon.isEmpty()) {
+        mOptions.icon = "";
+    } else {
+        mOptions.icon = QDir(directory()).absoluteFilePath(icon);
+    }
     mOptions.version = ini.GetLongValue("Project", "Ver", 0);
     if (mOptions.version > 0) { // ver > 0 is at least a v5 project
         if (mOptions.version < 2) {

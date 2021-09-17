@@ -456,12 +456,14 @@ int compareFileModifiedTime(const QString &filename1, const QString &filename2)
     return 0;
 }
 
-QString changeFileExt(const QString& filename, const QString& ext)
+QString changeFileExt(const QString& filename, QString ext)
 {
     QFileInfo fileInfo(filename);
     QString suffix = fileInfo.suffix();
     QString name  = fileInfo.fileName();
     QString path;
+    if (ext.startsWith("."))
+        ext.remove(0,1);
     if (fileInfo.path() != ".") {
         path = includeTrailingPathDelimiter(fileInfo.path());
     }

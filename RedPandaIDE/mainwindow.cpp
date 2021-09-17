@@ -116,8 +116,9 @@ MainWindow::MainWindow(QWidget *parent)
 
     mCPUDialog = nullptr;
 
+    updateProjectView();
     updateEditorActions();
-    updateCaretActions();
+    updateCaretActions();    
     applySettings();
     applyUISettings();
 
@@ -202,26 +203,11 @@ void MainWindow::updateEditorActions()
         ui->actionRedo->setEnabled(false);
         ui->actionSave->setEnabled(false);
         ui->actionSaveAs->setEnabled(false);
-        ui->actionSaveAll->setEnabled(false);
         ui->actionSelectAll->setEnabled(false);
         ui->actionToggleComment->setEnabled(false);
         ui->actionUnIndent->setEnabled(false);
         ui->actionUndo->setEnabled(false);
         ui->actionUnfoldAll->setEnabled(false);
-
-        ui->actionCompile->setEnabled(false);
-        ui->actionCompile_Run->setEnabled(false);
-        ui->actionRun->setEnabled(false);
-        ui->actionRebuild->setEnabled(false);
-        ui->actionStop_Execution->setEnabled(false);
-
-        ui->actionDebug->setEnabled(false);
-        ui->actionStep_Over->setEnabled(false);
-        ui->actionStep_Into->setEnabled(false);
-        ui->actionStep_Out->setEnabled(false);
-        ui->actionContinue->setEnabled(false);
-        ui->actionRun_To_Cursor->setEnabled(false);
-
         ui->actionFind->setEnabled(false);
         ui->actionReplace->setEnabled(false);
         ui->actionFind_Next->setEnabled(false);
@@ -249,7 +235,6 @@ void MainWindow::updateEditorActions()
         ui->actionUndo->setEnabled(e->canUndo());
         ui->actionSave->setEnabled(e->modified());
         ui->actionSaveAs->setEnabled(true);
-        ui->actionSaveAll->setEnabled(true);
         ui->actionSelectAll->setEnabled(e->lines()->count()>0);
         ui->actionToggleComment->setEnabled(!e->readOnly() && e->lines()->count()>0);
         ui->actionUnIndent->setEnabled(!e->readOnly() && e->lines()->count()>0);
@@ -265,21 +250,33 @@ void MainWindow::updateEditorActions()
 
         ui->actionClose->setEnabled(true);
         ui->actionClose_All->setEnabled(true);
+    }    
 
-        updateCompileActions();
-    }
+    updateCompileActions();
 
+}
+
+void MainWindow::updateProjectActions()
+{
+    bool hasProject = (mProject != nullptr);
+    ui->actionProject_options->setEnabled(hasProject);
+    ui->actionClose_Project->setEnabled(hasProject);
+    updateCompileActions();
 }
 
 void MainWindow::updateCompileActions()
 {
+    bool hasProject = (mProject!=nullptr);
+    bool editorCanCompile = false;
     Editor * e = mEditorList->getEditor();
-    if (!e)
-        return;
-    FileType fileType = getFileType(e->filename());
+    if (e) {
+        FileType fileType = getFileType(e->filename());
+        if (fileType == FileType::CSource
+                || fileType == FileType::CppSource)
+        editorCanCompile = true;
+    }
     if (mCompilerManager->compiling() || mCompilerManager->running() || mDebugger->executing()
-         || (fileType!= FileType::CSource
-             && fileType != FileType::CppSource)   ) {
+         || (!hasProject && !editorCanCompile)   ) {
         ui->actionCompile->setEnabled(false);
         ui->actionCompile_Run->setEnabled(false);
         ui->actionRun->setEnabled(false);
@@ -293,12 +290,18 @@ void MainWindow::updateCompileActions()
 
         ui->actionDebug->setEnabled(true);
     }
+
     ui->actionStep_Into->setEnabled(mDebugger->executing());
     ui->actionStep_Out->setEnabled(mDebugger->executing());
     ui->actionStep_Over->setEnabled(mDebugger->executing());
     ui->actionContinue->setEnabled(mDebugger->executing());
     ui->actionRun_To_Cursor->setEnabled(mDebugger->executing());
     ui->actionStop_Execution->setEnabled(mCompilerManager->running() || mDebugger->executing());
+
+    //it's not a compile action, but put here for convinience
+    ui->actionSaveAll->setEnabled(mProject!=nullptr
+            || mEditorList->pageCount()>0);
+
 }
 
 void MainWindow::updateEditorColorSchemes()
@@ -675,39 +678,39 @@ void MainWindow::openProject(const QString &filename)
             mClassBrowserModel.endUpdate();
         });
         mProject = std::make_shared<Project>(filename,DEV_INTERNAL_OPEN);
-        ui->projectView->setModel(mProject->model());
+        updateProjectView();
         pSettings->history().removeProject(filename);
 
     //  // if project manager isn't open then open it
     //  if not devData.ShowLeftPages then
     //    actProjectManager.Execute;
             //checkForDllProfiling();
-            updateAppTitle();
-            updateCompilerSet();
+        updateAppTitle();
+        updateCompilerSet();
 
-            //parse the project
-            //  UpdateClassBrowsing;
-            scanActiveProject(true);
-            mProject->doAutoOpen();
+        //parse the project
+        //  UpdateClassBrowsing;
+        scanActiveProject(true);
+        mProject->doAutoOpen();
 
-            //update editor's inproject flag
-            for (int i=0;i<mProject->units().count();i++) {
-                PProjectUnit unit = mProject->units()[i];
-                Editor* e = mEditorList->getOpenedEditorByFilename(unit->fileName());
-                if (e) {
-                    unit->setEditor(e);
-                    unit->setEncoding(e->encodingOption());
-                    e->setInProject(true);
-                } else {
-                    unit->setEditor(nullptr);
-                }
-            }
-
-            Editor * e = mEditorList->getEditor();
+        //update editor's inproject flag
+        for (int i=0;i<mProject->units().count();i++) {
+            PProjectUnit unit = mProject->units()[i];
+            Editor* e = mEditorList->getOpenedEditorByFilename(unit->fileName());
             if (e) {
-                checkSyntaxInBack(e);
+                unit->setEditor(e);
+                unit->setEncoding(e->encodingOption());
+                e->setInProject(true);
+            } else {
+                unit->setEditor(nullptr);
             }
-            updateClassBrowserForEditor(e);
+        }
+
+        Editor * e = mEditorList->getEditor();
+        if (e) {
+            checkSyntaxInBack(e);
+        }
+        updateClassBrowserForEditor(e);
     }
     updateForEncodingInfo();
 }
@@ -1676,15 +1679,26 @@ void MainWindow::closeProject(bool refreshEditor)
             }
         }
         if (!mQuitting) {
-            // Clear project browser
-            ui->projectView->setModel(nullptr);
-
             // Clear error browser
             ui->tableIssues->clearIssues();
-
-            ui->tabProject->setVisible(false);
+            updateProjectView();
         }
     }
+}
+
+void MainWindow::updateProjectView()
+{
+    if (mProject) {
+        ui->projectView->setModel(mProject->model());
+        openCloseLeftPanel(true);
+        ui->tabProject->setVisible(true);
+        ui->tabInfos->setCurrentWidget(ui->tabProject);
+    } else {
+        // Clear project browser
+        ui->projectView->setModel(nullptr);
+        ui->tabProject->setVisible(false);
+    }
+    updateProjectActions();
 }
 
 void MainWindow::onFileChanged(const QString &path)
@@ -2958,10 +2972,13 @@ void MainWindow::on_actionNew_Project_triggered()
                                   QMessageBox::Ok);
         }
         mProject->saveAll();
-        ui->projectView->setModel(mProject->model());
-        openCloseLeftPanel(true);
-        ui->tabProject->setVisible(true);
-        ui->tabInfos->setCurrentWidget(ui->tabProject);
+        updateProjectView();
     }
+}
+
+
+void MainWindow::on_actionSaveAll_triggered()
+{
+
 }
 

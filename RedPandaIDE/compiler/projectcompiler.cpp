@@ -38,9 +38,9 @@ void ProjectCompiler::createStandardMakeFile()
     file.write("$(BIN): $(OBJ)\n");
     if (!mOnlyCheckSyntax) {
         if (mProject->options().useGPP) {
-            writeln(file,"\t$(CPP) $(LINKOBJ) -o \"$(BIN)\" $(LIBS)");
+            writeln(file,"\t$(CPP) $(LINKOBJ) -o $(BIN) $(LIBS)");
         } else
-            writeln(file,"\t$(CC) $(LINKOBJ) -o \"$(BIN)\" $(LIBS)");
+            writeln(file,"\t$(CC) $(LINKOBJ) -o $(BIN) $(LIBS)");
     }
     writeMakeObjFilesRules(file);
 }
@@ -64,9 +64,9 @@ void ProjectCompiler::createDynamicMakeFile()
     file.write("$(BIN): $(LINKOBJ)");
     if (!mOnlyCheckSyntax) {
         if (mProject->options().useGPP) {
-          file.write("\t$(CPP) -mdll $(LINKOBJ) -o \"$(BIN)\" $(LIBS) -Wl,--output-def,$(DEF),--out-implib,$(STATIC)");
+          file.write("\t$(CPP) -mdll $(LINKOBJ) -o $(BIN) $(LIBS) -Wl,--output-def,$(DEF),--out-implib,$(STATIC)");
         } else {
-          file.write("\t$(CC) -mdll $(LINKOBJ) -o \"$(BIN)\" $(LIBS) -Wl,--output-def,$(DEF),--out-implib,$(STATIC)");
+          file.write("\t$(CC) -mdll $(LINKOBJ) -o $(BIN) $(LIBS) -Wl,--output-def,$(DEF),--out-implib,$(STATIC)");
         }
     }
     writeMakeObjFilesRules(file);

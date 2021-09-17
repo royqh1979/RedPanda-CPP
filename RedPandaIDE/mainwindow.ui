@@ -873,6 +873,13 @@
     <property name="title">
      <string>Project</string>
     </property>
+    <addaction name="actionNew_File"/>
+    <addaction name="actionAdd_to_project"/>
+    <addaction name="actionRemove_from_project"/>
+    <addaction name="separator"/>
+    <addaction name="actionView_Makefile"/>
+    <addaction name="actionMakeClean"/>
+    <addaction name="separator"/>
     <addaction name="actionProject_options"/>
    </widget>
    <addaction name="menuFile"/>
@@ -991,10 +998,10 @@
     </iconset>
    </property>
    <property name="text">
-    <string>New File</string>
+    <string>New Source File</string>
    </property>
    <property name="toolTip">
-    <string>New File</string>
+    <string>New Source File</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+N</string>
@@ -1631,6 +1638,47 @@
    </property>
    <property name="text">
     <string>New Project...</string>
+   </property>
+  </action>
+  <action name="actionNew_File">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/images/newlook24/050-newsrc.png</normaloff>:/icons/images/newlook24/050-newsrc.png</iconset>
+   </property>
+   <property name="text">
+    <string>New File</string>
+   </property>
+  </action>
+  <action name="actionAdd_to_project">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/images/newlook24/004-addsrc.png</normaloff>:/icons/images/newlook24/004-addsrc.png</iconset>
+   </property>
+   <property name="text">
+    <string>Add to project...</string>
+   </property>
+  </action>
+  <action name="actionRemove_from_project">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/images/newlook24/064-remsrc.png</normaloff>:/icons/images/newlook24/064-remsrc.png</iconset>
+   </property>
+   <property name="text">
+    <string>Remove from project</string>
+   </property>
+  </action>
+  <action name="actionView_Makefile">
+   <property name="text">
+    <string>View Makefile</string>
+   </property>
+  </action>
+  <action name="actionMakeClean">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/images/newlook24/011-clrhist.png</normaloff>:/icons/images/newlook24/011-clrhist.png</iconset>
+   </property>
+   <property name="text">
+    <string>Clean</string>
    </property>
   </action>
  </widget>

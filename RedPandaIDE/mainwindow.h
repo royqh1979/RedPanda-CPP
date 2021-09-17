@@ -58,6 +58,7 @@ public:
     void updateStatusbarMessage(const QString& s);
     void updateEditorSettings();
     void updateEditorActions();
+    void updateProjectActions();
     void updateCompileActions();
     void updateEditorColorSchemes();
     void updateCompilerSet();
@@ -125,6 +126,7 @@ public slots:
 
 private:
     void closeProject(bool refreshEditor);
+    void updateProjectView();
     void openFiles(const QStringList& files);
     void openFile(const QString& filename);
     void openProject(const QString& filename);
@@ -309,6 +311,8 @@ private slots:
     void on_actionProject_options_triggered();
 
     void on_actionNew_Project_triggered();
+
+    void on_actionSaveAll_triggered();
 
 private:
     Ui::MainWindow *ui;
