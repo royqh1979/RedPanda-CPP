@@ -318,6 +318,8 @@ private slots:
 
     void on_actionAdd_to_project_triggered();
 
+    void on_actionRemove_from_project_triggered();
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;

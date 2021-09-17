@@ -22,7 +22,7 @@ NewProjectDialog::NewProjectDialog(QWidget *parent) :
     QString location;
     while (true) {
         i++;
-        projectName = tr("Project %1").arg(i);
+        projectName = tr("Project%1").arg(i);
         location = includeTrailingPathDelimiter(pSettings->dirs().projectDir()) + projectName;
         if (!QDir(location).exists())
             break;

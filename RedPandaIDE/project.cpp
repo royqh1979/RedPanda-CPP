@@ -191,6 +191,9 @@ void Project::setModified(bool value)
 PFolderNode Project::makeNewFileNode(const QString &s, bool isFolder, PFolderNode newParent)
 {
     PFolderNode node = std::make_shared<FolderNode>();
+    if (!newParent) {
+        newParent = mNode;
+    }
     newParent->children.append(node);
     node->parent = newParent;
     node->text = s;

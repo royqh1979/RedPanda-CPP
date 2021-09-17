@@ -3047,3 +3047,31 @@ void MainWindow::on_actionAdd_to_project_triggered()
     }
 }
 
+
+void MainWindow::on_actionRemove_from_project_triggered()
+{
+    if (!mProject)
+        return;
+    if (!ui->projectView->selectionModel()->hasSelection())
+        return;
+    mProject->model()->beginUpdate();
+    QSet<int> selected;
+    foreach (const QModelIndex& index, ui->projectView->selectionModel()->selectedIndexes()){
+        if (!index.isValid())
+            continue;
+        FolderNode * node = static_cast<FolderNode*>(index.internalPointer());
+        PFolderNode folderNode =  mProject->pointerToNode(node);
+        if (folderNode)
+            continue;
+        selected.insert(folderNode->unitIndex);
+    };
+    for (int i=mProject->units().count()-1;i>=0;i--) {
+        if (selected.contains(i)) {
+            mProject->removeEditor(i,true);
+        }
+    }
+
+    mProject->model()->endUpdate();
+    updateProjectView();
+}
+
