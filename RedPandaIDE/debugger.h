@@ -156,9 +156,12 @@ public:
     const QList<PWatchVar>& watchVars();
     PWatchVar findWatchVar(const QString& name);
     PWatchVar findWatchVar(int gdbIndex);
+    void beginUpdate();
+    void endUpdate();
     void notifyUpdated(PWatchVar var);
 private:
     QList<PWatchVar> mWatchVars;
+    int mUpdateCount;
 };
 
 
@@ -208,6 +211,8 @@ public:
     void invalidateWatchVar(PWatchVar var);
     PWatchVar findWatchVar(const QString& name);
     void notifyWatchVarUpdated(PWatchVar var);
+    void notifyBeforeProcessWatchVar();
+    void notifyAfterProcessWatchVar();
 
 
     void updateDebugInfo();
