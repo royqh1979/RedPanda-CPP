@@ -2791,12 +2791,12 @@ Are you really want to continue?</source>
     <message>
         <location filename="mainwindow.ui" line="1703"/>
         <source>Open Folder in Explorer</source>
-        <translation type="unfinished"></translation>
+        <translation>在浏览器中打开</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="1712"/>
         <source>Open In Terminal</source>
-        <translation type="unfinished"></translation>
+        <translation>在终端中打开</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="98"/>
@@ -2975,33 +2975,33 @@ Are you really want to continue?</source>
     <message>
         <location filename="mainwindow.cpp" line="1479"/>
         <source>Rename File</source>
-        <translation type="unfinished"></translation>
+        <translation>重命名文件</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="1487"/>
         <location filename="mainwindow.cpp" line="1506"/>
         <source>Add Folder</source>
-        <translation type="unfinished"></translation>
+        <translation>添加文件夹</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="1503"/>
         <source>New folder</source>
-        <translation type="unfinished"></translation>
+        <translation>新文件夹</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="1507"/>
         <source>Folder name:</source>
-        <translation type="unfinished"></translation>
+        <translation>文件夹：</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="1521"/>
         <source>Rename Folder</source>
-        <translation type="unfinished"></translation>
+        <translation>重命名</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="1529"/>
         <source>Remove Folder</source>
-        <translation type="unfinished"></translation>
+        <translation>删除文件夹</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="1612"/>
@@ -3647,24 +3647,24 @@ Are you really want to continue?</source>
     <message>
         <location filename="project.cpp" line="1848"/>
         <source>File exists</source>
-        <translation type="unfinished"></translation>
+        <translation>文件已存在</translation>
     </message>
     <message>
         <location filename="project.cpp" line="1849"/>
         <source>File &apos;%1&apos; already exists. Delete it now?</source>
-        <translation type="unfinished"></translation>
+        <translation>文件&apos;%1&apos;已存在。是否删除？</translation>
     </message>
     <message>
         <location filename="project.cpp" line="1867"/>
         <location filename="project.cpp" line="1887"/>
         <source>Remove failed</source>
-        <translation type="unfinished"></translation>
+        <translation>删除失败</translation>
     </message>
     <message>
         <location filename="project.cpp" line="1868"/>
         <location filename="project.cpp" line="1888"/>
         <source>Failed to remove file &apos;%1&apos;</source>
-        <translation type="unfinished"></translation>
+        <translation>无法删除文件&apos;%1&apos;</translation>
     </message>
 </context>
 <context>

@@ -2003,7 +2003,7 @@ void MainWindow::closeEvent(QCloseEvent *event) {
     }
 
     if (mProject) {
-        mProject = nullptr;
+        closeProject(false);
     }
 
     delete mEditorList;
@@ -2991,7 +2991,9 @@ void MainWindow::on_actionOpen_Containing_Folder_triggered()
     if (editor) {
         QFileInfo info(editor->filename());
         if (!info.path().isEmpty()) {
-            QDesktopServices::openUrl(info.path());
+            QDesktopServices::openUrl(
+                        QUrl("file:///"+
+                             includeTrailingPathDelimiter(info.path()),QUrl::TolerantMode));
         }
     }
 }
@@ -3293,7 +3295,8 @@ void MainWindow::on_actionProject_Open_Folder_In_Explorer_triggered()
 {
     if (!mProject)
         return;
-    QDesktopServices::openUrl(mProject->directory());
+    QDesktopServices::openUrl(
+                QUrl("file:///"+includeTrailingPathDelimiter(mProject->directory()),QUrl::TolerantMode));
 }
 
 

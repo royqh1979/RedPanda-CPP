@@ -29,9 +29,10 @@ Project::Project(const QString &filename, const QString &name, QObject *parent) 
                     &EditorList::getContentFromOpenedEditor,pMainWindow->editorList(),
                     std::placeholders::_1, std::placeholders::_2));
     resetCppParser(mParser);
-    if (name == DEV_INTERNAL_OPEN)
+    if (name == DEV_INTERNAL_OPEN) {
         open();
-    else {
+        mModified = false;
+    } else {
         mName = name;
         SimpleIni ini;
         ini.SetValue("Project","filename", toByteArray(extractRelativePath(directory(),mFilename)));

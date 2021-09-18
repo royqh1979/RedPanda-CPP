@@ -20,6 +20,7 @@
 
 SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
 {
+    mModified = false;
     mPaintLock = 0;
     mPainterLock = 0;
     mPainting = false;
