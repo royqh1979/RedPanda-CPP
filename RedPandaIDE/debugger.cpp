@@ -1422,7 +1422,7 @@ void DebugReader::run()
         readed = mProcess->readAll();
         buffer += readed;
         if (getLastAnnotation(buffer) == AnnotationType::TPrompt) {
-            mOutput = buffer;
+            mOutput = QString::fromLocal8Bit(buffer);
             processDebugOutput();
             buffer.clear();
             mCmdRunning = false;

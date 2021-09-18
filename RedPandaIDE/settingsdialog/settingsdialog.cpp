@@ -25,6 +25,7 @@
 #include "projectoutputwidget.h"
 #include "projectmakefilewidget.h"
 #include "projectversioninfowidget.h"
+#include "projectdllhostwidget.h"
 #include <QDebug>
 #include <QMessageBox>
 #include <QModelIndex>
@@ -186,6 +187,10 @@ PSettingsDialog SettingsDialog::projectOptionDialog()
     dialog->addWidget(widget);
 
     widget = new ProjectOutputWidget(tr("Output"),tr("Project"));
+    widget->init();
+    dialog->addWidget(widget);
+
+    widget = new ProjectDLLHostWidget(tr("DLL host"),tr("Project"));
     widget->init();
     dialog->addWidget(widget);
 

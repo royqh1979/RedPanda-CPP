@@ -1013,14 +1013,14 @@ void MainWindow::debug()
                                       +tr("But it's missing."),
                                       QMessageBox::Ok);
                 return;
+            } else if (!fileExists(mProject->options().hostApplication)) {
+                QMessageBox::critical(this,
+                                      tr("Host application not exists"),
+                                      tr("Host application file '%1' doesn't exist.")
+                                      .arg(mProject->options().hostApplication),
+                                      QMessageBox::Ok);
+                return;
             }
-        } else if (!fileExists(mProject->options().hostApplication)) {
-            QMessageBox::critical(this,
-                                  tr("Host application not exists"),
-                                  tr("Host application file '%1' doesn't exist.")
-                                  .arg(mProject->options().hostApplication),
-                                  QMessageBox::Ok);
-            return;
         }
         // Reset UI, remove invalid breakpoints
         prepareDebugger();
@@ -1180,14 +1180,14 @@ void MainWindow::debug()
             mDebugger->updateDebugInfo();
             break;
         case CompileTarget::Project:
-//params := '';
+            params = "";
 //if fCompiler.UseRunParams then
 //  params := params + ' ' + fProject.Options.CmdLineArgs;
 //if fCompiler.UseInputFile then
 //  params := params + ' < "' + fCompiler.InputFile + '"';
 
-//fDebugger.SendCommand('start', params);
-//UpdateDebugInfo;
+            mDebugger->sendCommand("start",params);
+            mDebugger->updateDebugInfo();
             break;
         }
     } else {
@@ -1209,8 +1209,8 @@ void MainWindow::debug()
 //if fCompiler.UseInputFile then
 //  params := params + ' < "' + fCompiler.InputFile + '"';
 
-//fDebugger.SendCommand('run', params);
-//UpdateDebugInfo;
+            mDebugger->sendCommand("run",params);
+            mDebugger->updateDebugInfo();
             break;
         }
     }
@@ -2468,12 +2468,12 @@ void MainWindow::on_tabMessages_tabBarClicked(int index)
     }
 }
 
-void MainWindow::on_tabMessages_currentChanged(int index)
+void MainWindow::on_tabMessages_currentChanged(int)
 {
     openCloseBottomPanel(true);
 }
 
-void MainWindow::on_tabMessages_tabBarDoubleClicked(int index)
+void MainWindow::on_tabMessages_tabBarDoubleClicked(int )
 {
 
 }

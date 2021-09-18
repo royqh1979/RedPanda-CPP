@@ -613,6 +613,10 @@ bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate)
     }
 
     mOptions = aTemplate->options();
+    mOptions.compilerSet = pSettings->compilerSets().defaultIndex();
+    if (pSettings->compilerSets().defaultSet()) {
+        mOptions.compilerOptions = pSettings->compilerSets().defaultSet()->iniOptions();
+    }
     mOptions.icon = aTemplate->icon();
 
     // Copy icon to project directory

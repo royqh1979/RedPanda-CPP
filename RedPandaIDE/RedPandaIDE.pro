@@ -48,6 +48,7 @@ SOURCES += \
     settingsdialog/projectcompileparamaterswidget.cpp \
     settingsdialog/projectcompilerwidget.cpp \
     settingsdialog/projectdirectorieswidget.cpp \
+    settingsdialog/projectdllhostwidget.cpp \
     settingsdialog/projectfileswidget.cpp \
     settingsdialog/projectgeneralwidget.cpp \
     settingsdialog/projectmakefilewidget.cpp \
@@ -143,6 +144,7 @@ HEADERS += \
     settingsdialog/projectcompileparamaterswidget.h \
     settingsdialog/projectcompilerwidget.h \
     settingsdialog/projectdirectorieswidget.h \
+    settingsdialog/projectdllhostwidget.h \
     settingsdialog/projectfileswidget.h \
     settingsdialog/projectgeneralwidget.h \
     settingsdialog/projectmakefilewidget.h \
@@ -212,6 +214,7 @@ FORMS += \
     settingsdialog/projectcompileparamaterswidget.ui \
     settingsdialog/projectcompilerwidget.ui \
     settingsdialog/projectdirectorieswidget.ui \
+    settingsdialog/projectdllhostwidget.ui \
     settingsdialog/projectfileswidget.ui \
     settingsdialog/projectgeneralwidget.ui \
     settingsdialog/projectmakefilewidget.ui \
