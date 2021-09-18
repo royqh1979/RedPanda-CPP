@@ -109,6 +109,9 @@
              </property>
              <item>
               <widget class="QTreeView" name="projectView">
+               <property name="editTriggers">
+                <set>QAbstractItemView::EditKeyPressed|QAbstractItemView::SelectedClicked</set>
+               </property>
                <property name="selectionMode">
                 <enum>QAbstractItemView::ExtendedSelection</enum>
                </property>
@@ -882,6 +885,10 @@
     <addaction name="actionProject_New_File"/>
     <addaction name="actionAdd_to_project"/>
     <addaction name="actionRemove_from_project"/>
+    <addaction name="separator"/>
+    <addaction name="actionProject_Open_Folder_In_Explorer"/>
+    <addaction name="actionProject_Open_In_Terminal"/>
+    <addaction name="separator"/>
     <addaction name="separator"/>
     <addaction name="actionView_Makefile"/>
     <addaction name="actionMakeClean"/>
@@ -1685,6 +1692,24 @@
    </property>
    <property name="text">
     <string>Clean</string>
+   </property>
+  </action>
+  <action name="actionProject_Open_Folder_In_Explorer">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/images/newlook24/090-explorer.png</normaloff>:/icons/images/newlook24/090-explorer.png</iconset>
+   </property>
+   <property name="text">
+    <string>Open Folder in Explorer</string>
+   </property>
+  </action>
+  <action name="actionProject_Open_In_Terminal">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/images/newlook24/030-dos.png</normaloff>:/icons/images/newlook24/030-dos.png</iconset>
+   </property>
+   <property name="text">
+    <string>Open In Terminal</string>
    </property>
   </action>
  </widget>

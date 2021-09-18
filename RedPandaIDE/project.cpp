@@ -124,7 +124,7 @@ void Project::open()
 
     checkProjectFileForUpdate(ini);
     int uCount  = ini.GetLongValue("Project","UnitCount",0);
-    //createFolderNodes;
+    createFolderNodes();
     QDir dir(directory());
     for (int i=0;i<uCount;i++) {
         PProjectUnit newUnit = std::make_shared<ProjectUnit>(this);
@@ -454,14 +454,18 @@ void Project::saveLayout()
     }
 }
 
-void Project::saveUnitAs(int i, const QString &sFileName)
+void Project::saveUnitAs(int i, const QString &sFileName, bool syncEditor)
 {
     if ((i < 0) || (i >= mUnits.count()))
         return;
     PProjectUnit unit = mUnits[i];
-//    if (fileExists(unit->fileName())) {
-//        unit->setNew(false);
-//    }
+    if (fileExists(unit->fileName())) {
+        unit->setNew(false);
+    }
+    if (unit->editor() && syncEditor) {
+        //prevent recurse
+        unit->editor()->saveAs(sFileName,true);
+    }
     unit->setNew(false);
     unit->setFileName(sFileName);
     SimpleIni ini;
@@ -476,6 +480,11 @@ void Project::saveUnitAs(int i, const QString &sFileName)
                         sFileName)));
     ini.SaveFile(mFilename.toLocal8Bit());
     setModified(true);
+    if (!syncEditor) {
+        //the call it's from editor, we need to update model
+        mModel.beginUpdate();
+        mModel.endUpdate();
+    }
 }
 
 void Project::saveUnitLayout(Editor *e, int index)
@@ -1146,7 +1155,7 @@ void Project::createFolderNodes()
             else
                 node = findnode;
             node->unitIndex = -1;
-            s.remove(0,i);
+            s.remove(0,i+1);
             i = s.indexOf('/');
         }
         node = makeNewFileNode(s, true, node);
@@ -1215,9 +1224,11 @@ QString Project::getFolderPath(PFolderNode node)
         return result;
 
     PFolderNode p = node;
-    while (p && p->unitIndex==-1) {
+    while (p && p->unitIndex==-1 && p!=mNode) {
         if (!result.isEmpty())
             result = p->text + "/" + result;
+        else
+            result = p->text;
         p = p->parent.lock();
     }
     return result;
@@ -1476,7 +1487,7 @@ void Project::removeFolderRecurse(PFolderNode node)
 void Project::updateFolderNode(PFolderNode node)
 {
     for (int i=0;i<node->children.count();i++){
-        PFolderNode child;
+        PFolderNode child = node->children[i];
         if (child->unitIndex<0) {
             mFolders.append(getFolderPath(child));
             updateFolderNode(child);
@@ -1561,7 +1572,12 @@ const QString &ProjectUnit::fileName() const
 
 void ProjectUnit::setFileName(const QString &newFileName)
 {
-    mFileName = newFileName;
+    if (mFileName != newFileName) {
+        mFileName = newFileName;
+        if (mNode) {
+            mNode->text = extractFileName(mFileName);
+        }
+    }
 }
 
 bool ProjectUnit::isNew() const
@@ -1788,4 +1804,110 @@ QVariant ProjectModel::data(const QModelIndex &index, int role) const
         return p->text;
     }
     return QVariant();
+}
+
+Qt::ItemFlags ProjectModel::flags(const QModelIndex &index) const
+{
+    if (!index.isValid())
+        return Qt::NoItemFlags;
+    FolderNode* p = static_cast<FolderNode*>(index.internalPointer());
+    if (!p)
+        return Qt::NoItemFlags;
+    if (p==mProject->node().get())
+        return Qt::ItemIsEnabled;
+    return Qt::ItemIsEnabled | Qt::ItemIsEditable | Qt::ItemIsSelectable;
+}
+
+bool ProjectModel::setData(const QModelIndex &index, const QVariant &value, int role)
+{
+    if (!index.isValid())
+        return false;
+    FolderNode* p = static_cast<FolderNode*>(index.internalPointer());
+    PFolderNode node = mProject->pointerToNode(p);
+    if (!node)
+        return false;
+    if (role == Qt::EditRole) {
+        if (node == mProject->node())
+            return false;
+        int idx = node->unitIndex;
+        if (idx >= 0) {
+            //change unit name
+            PProjectUnit unit = mProject->units()[idx];
+            QString newName = value.toString().trimmed();
+            if (newName.isEmpty())
+                return false;
+            if (newName ==  node->text)
+                return false;
+            QString oldName = unit->fileName();
+            QString curDir = extractFilePath(oldName);
+            newName = QDir(curDir).absoluteFilePath(newName);
+            // Only continue if the user says so...
+            if (fileExists(newName) && newName.compare(oldName, PATH_SENSITIVITY)!=0) {
+                // don't remove when changing case for example
+                if (QMessageBox::question(pMainWindow,
+                                          tr("File exists"),
+                                          tr("File '%1' already exists. Delete it now?")
+                                          .arg(newName),
+                                          QMessageBox::Yes | QMessageBox::No,
+                                          QMessageBox::No) == QMessageBox::Yes) {
+                    // Close the target file...
+                    Editor * e= pMainWindow->editorList()->getOpenedEditorByFilename(newName);
+                    if (e)
+                        pMainWindow->editorList()->closeEditor(e);
+
+                    // Remove it from the current project...
+                    int projindex = mProject->indexInUnits(newName);
+                    if (projindex>=0) {
+                        mProject->removeEditor(projindex,false);
+                    }
+
+                    // All references to the file are removed. Delete the file from disk
+                    if (!QFile::remove(newName)) {
+                        QMessageBox::critical(pMainWindow,
+                                              tr("Remove failed"),
+                                              tr("Failed to remove file '%1'")
+                                              .arg(newName),
+                                              QMessageBox::Ok);
+                        return false;
+                    }
+                } else {
+                    return false;
+                }
+            }
+            // Target filename does not exist anymore. Do a rename
+            // change name in project file first (no actual file renaming on disk)
+            mProject->saveUnitAs(idx,newName);
+
+            // remove old file from monitor list
+            pMainWindow->fileSystemWatcher()->removePath(oldName);
+
+            // Finally, we can rename without issues
+            if (!QFile::remove(oldName)){
+                QMessageBox::critical(pMainWindow,
+                                      tr("Remove failed"),
+                                      tr("Failed to remove file '%1'")
+                                      .arg(oldName),
+                                      QMessageBox::Ok);
+                mProject->saveUnitAs(idx,oldName);
+                return false;
+            }
+
+            // Add new filename to file minitor
+            pMainWindow->fileSystemWatcher()->removePath(oldName);
+            return true;
+        } else {
+            //change folder name
+            QString newName = value.toString().trimmed();
+            if (newName.isEmpty())
+                return false;
+            if (newName ==  node->text)
+                return false;
+            node->text = newName;
+            mProject->updateFolders();
+            mProject->saveAll();
+            return true;
+        }
+
+    }
+    return false;
 }

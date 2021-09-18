@@ -71,7 +71,8 @@ Editor::Editor(QWidget *parent, const QString& filename,
   mCurrentWord(),
   mCurrentTipType(TipType::None),
   mOldSelectionWord(),
-  mSelectionWord()
+  mSelectionWord(),
+  mSaving(false)
 {
     mUseCppSyntax = pSettings->editor().defaultFileCpp();
     if (mFilename.isEmpty()) {
@@ -229,29 +230,47 @@ bool Editor::save(bool force, bool doReparse) {
     return true;
 }
 
-bool Editor::saveAs(){
-    QString selectedFileFilter;
-    if (pSettings->editor().defaultFileCpp())
-        selectedFileFilter = pSystemConsts->defaultCPPFileFilter();
-    else
-        selectedFileFilter = pSystemConsts->defaultCFileFilter();
-    QFileDialog dialog(this,tr("Save As"),extractFilePath(mFilename),
-                       pSystemConsts->defaultFileFilters().join(";;"));
-    dialog.selectNameFilter(selectedFileFilter);
-    dialog.selectFile(mFilename);
-    dialog.setFileMode(QFileDialog::AnyFile);
-    dialog.setOption(QFileDialog::DontConfirmOverwrite,false);
+bool Editor::saveAs(const QString &name, bool fromProject){
+    QString newName = name;
+    if (name.isEmpty()) {
+        QString selectedFileFilter;
+        if (pSettings->editor().defaultFileCpp())
+            selectedFileFilter = pSystemConsts->defaultCPPFileFilter();
+        else
+            selectedFileFilter = pSystemConsts->defaultCFileFilter();
+        QFileDialog dialog(this,tr("Save As"),extractFilePath(mFilename),
+                           pSystemConsts->defaultFileFilters().join(";;"));
+        dialog.selectNameFilter(selectedFileFilter);
+        dialog.selectFile(mFilename);
+        dialog.setFileMode(QFileDialog::AnyFile);
+        dialog.setOption(QFileDialog::DontConfirmOverwrite,false);
+        connect(&dialog, &QFileDialog::filterSelected,
+                [&dialog](const QString &filter){
+            int pos = filter.indexOf("*.");
+            if (pos>=0) {
+                QString suffix;
+                pos+=2;
+                while (pos<filter.length()) {
+                    if (filter[pos] == ';' || filter[pos] ==' ' || filter[pos] == ')')
+                        break;
+                    suffix+=filter[pos];
+                    pos++;
+                }
+                dialog.setDefaultSuffix(suffix);
+            }
+        });
 
-    if (!dialog.exec()) {
-        return false;
+        if (!dialog.exec()) {
+            return false;
+        }
+        newName = dialog.selectedFiles()[0];
     }
-    QString newName = dialog.selectedFiles()[0];
 
     // Update project information
-    if (mInProject && pMainWindow->project()) {
+    if (mInProject && pMainWindow->project() && !fromProject) {
         int unitIndex = pMainWindow->project()->indexInUnits(mFilename);
         if (unitIndex>=0) {
-            pMainWindow->project()->saveUnitAs(unitIndex,newName);
+            pMainWindow->project()->saveUnitAs(unitIndex,newName,false);
         }
     }
 

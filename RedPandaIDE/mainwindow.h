@@ -326,6 +326,10 @@ private slots:
 
     void on_actionMakeClean_triggered();
 
+    void on_actionProject_Open_Folder_In_Explorer_triggered();
+
+    void on_actionProject_Open_In_Terminal_triggered();
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;

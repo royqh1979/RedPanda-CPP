@@ -94,6 +94,8 @@ public:
     int rowCount(const QModelIndex &parent) const override;
     int columnCount(const QModelIndex &parent) const override;
     QVariant data(const QModelIndex &index, int role) const override;
+    Qt::ItemFlags flags(const QModelIndex &index) const override;
+    bool setData(const QModelIndex &index, const QVariant &value, int role) override;
 };
 
 class ProjectTemplate;
@@ -143,7 +145,7 @@ public:
     void saveAll(); // save [Project] and  all [UnitX]
     void saveLayout(); // save all [UnitX]
     void saveOptions();
-    void saveUnitAs(int i, const QString& sFileName); // save single [UnitX]
+    void saveUnitAs(int i, const QString& sFileName, bool syncEditor = true); // save single [UnitX]
     void saveUnitLayout(Editor* e, int index); // save single [UnitX] cursor positions
     bool saveUnits();
     void setCompilerOption(const QString& optionString, char value);

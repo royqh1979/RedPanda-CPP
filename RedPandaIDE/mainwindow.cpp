@@ -273,6 +273,8 @@ void MainWindow::updateProjectActions()
     ui->actionMakeClean->setEnabled(hasProject);
     ui->actionProject_options->setEnabled(hasProject);
     ui->actionClose_Project->setEnabled(hasProject);
+    ui->actionProject_Open_Folder_In_Explorer->setEnabled(hasProject);
+    ui->actionProject_Open_In_Terminal->setEnabled(hasProject);
     updateCompileActions();
 }
 
@@ -1478,24 +1480,70 @@ void MainWindow::buildContextMenus()
                 ui->projectView);
     connect(mProject_Rename_Unit, &QAction::triggered,
             [this](){
+        if (ui->projectView->currentIndex().isValid())
+            ui->projectView->edit(ui->projectView->currentIndex());
     });
     mProject_Add_Folder = createActionFor(
                 tr("Add Folder"),
                 ui->projectView);
     connect(mProject_Add_Folder, &QAction::triggered,
             [this](){
+        if (!mProject)
+            return;
+        QModelIndex current = ui->projectView->currentIndex();
+        if (!current.isValid()) {
+            return;
+        }
+        FolderNode * node = static_cast<FolderNode*>(current.internalPointer());
+        PFolderNode folderNode =  mProject->pointerToNode(node);
+        if (!folderNode)
+            folderNode = mProject->node();
+        if (folderNode->unitIndex>=0)
+            return;
+        QString s=tr("New folder");
+        bool ok;
+        s = QInputDialog::getText(ui->projectView,
+                              tr("Add Folder"),
+                              tr("Folder name:"),
+                              QLineEdit::Normal, s,
+                              &ok).trimmed();
+        if (ok && !s.isEmpty()) {
+            QString path = mProject->getFolderPath(folderNode);
+            if (path.isEmpty()) {
+                mProject->addFolder(s);
+            } else {
+                mProject->addFolder(path + '/' +s);
+            }
+            mProject->saveOptions();
+        }
     });
     mProject_Rename_Folder = createActionFor(
-                tr("Rename File"),
+                tr("Rename Folder"),
                 ui->projectView);
     connect(mProject_Rename_Folder, &QAction::triggered,
             [this](){
+        if (ui->projectView->currentIndex().isValid())
+            ui->projectView->edit(ui->projectView->currentIndex());
     });
     mProject_Remove_Folder = createActionFor(
-                tr("Rename File"),
+                tr("Remove Folder"),
                 ui->projectView);
     connect(mProject_Remove_Folder, &QAction::triggered,
             [this](){
+        if (!mProject)
+            return;
+        QModelIndex current = ui->projectView->currentIndex();
+        if (!current.isValid()) {
+            return;
+        }
+        FolderNode * node = static_cast<FolderNode*>(current.internalPointer());
+        PFolderNode folderNode =  mProject->pointerToNode(node);
+        if (!folderNode)
+            return;
+        if (folderNode->unitIndex>=0)
+            return;
+        mProject->removeFolder(folderNode);
+        mProject->saveOptions();
     });
 }
 
@@ -1617,17 +1665,22 @@ void MainWindow::onProjectViewContextMenu(const QPoint &pos)
             unitIndex = pNode->unitIndex;
             onFolder = (unitIndex<0);
             onUnit = (unitIndex >= 0);
-            onRoot = (pNode == mProject->node());
+            onRoot = false;
             if (onFolder && !onRoot) {
                 folderEmpty = pNode->children.isEmpty();
             }
+        } else {
+            onFolder = true;
+            onRoot = true;
         }
     }
     QMenu menu(this);
     updateProjectActions();
     menu.addAction(ui->actionProject_New_File);
     menu.addAction(ui->actionAdd_to_project);
-    menu.addAction(ui->actionRemove_from_project);
+    if (!onFolder) {
+        menu.addAction(ui->actionRemove_from_project);
+    }
     if (onUnit) {
         menu.addAction(mProject_Rename_Unit);
     }
@@ -1642,6 +1695,9 @@ void MainWindow::onProjectViewContextMenu(const QPoint &pos)
         }
         menu.addSeparator();
     }
+    menu.addAction(ui->actionProject_Open_Folder_In_Explorer);
+    menu.addAction(ui->actionProject_Open_In_Terminal);
+    menu.addSeparator();
     menu.addAction(ui->actionProject_options);
 
     menu.exec(ui->projectView->mapToGlobal(pos));
@@ -1818,6 +1874,8 @@ void MainWindow::updateProjectView()
 {
     if (mProject) {
         ui->projectView->setModel(mProject->model());
+        connect(mProject->model(), &QAbstractItemModel::modelReset,
+                ui->projectView,&QTreeView::expandAll);
         ui->projectView->expandAll();
         openCloseLeftPanel(true);
         ui->tabProject->setVisible(true);
@@ -1937,11 +1995,15 @@ void MainWindow::closeEvent(QCloseEvent *event) {
     settings.setLeftPanelWidth(mLeftPanelWidth);
     settings.setLeftPanelIndex(ui->tabInfos->currentIndex());
     settings.setLeftPanelOpenned(mLeftPanelOpenned);
-    settings.save();
+    settings.save();    
 
     if (!mEditorList->closeAll(false)) {
         event->ignore();
         return ;
+    }
+
+    if (mProject) {
+        mProject = nullptr;
     }
 
     delete mEditorList;
@@ -3143,6 +3205,7 @@ void MainWindow::on_actionProject_New_File_triggered()
     PProjectUnit newUnit = mProject->newUnit(
                 mProject->pointerToNode(node) );
     idx = mProject->units().count()-1;
+    mProject->saveUnits();
     updateProjectView();
     Editor * editor = mProject->openUnit(idx);
     editor->setModified(true);
@@ -3171,6 +3234,7 @@ void MainWindow::on_actionAdd_to_project_triggered()
             mProject->cppParser()->addFileToScan(filename);
         }
         mProject->rebuildNodes();
+        mProject->saveUnits();
         parseFileList(mProject->cppParser());
         updateProjectView();
     }
@@ -3200,6 +3264,7 @@ void MainWindow::on_actionRemove_from_project_triggered()
         }
     }
 
+    mProject->saveUnits();
     mProject->model()->endUpdate();
     updateProjectView();
 }
@@ -3221,5 +3286,21 @@ void MainWindow::on_actionMakeClean_triggered()
         return;
     prepareProjectForCompile();
     mCompilerManager->cleanProject(mProject);
+}
+
+
+void MainWindow::on_actionProject_Open_Folder_In_Explorer_triggered()
+{
+    if (!mProject)
+        return;
+    QDesktopServices::openUrl(mProject->directory());
+}
+
+
+void MainWindow::on_actionProject_Open_In_Terminal_triggered()
+{
+    if (!mProject)
+        return;
+    openShell(mProject->directory(),"cmd.exe");
 }
 

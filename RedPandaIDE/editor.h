@@ -108,7 +108,7 @@ public:
     void saveFile(const QString& filename);
     void convertToEncoding(const QByteArray& encoding);
     bool save(bool force=false, bool reparse=true);
-    bool saveAs();
+    bool saveAs(const QString& name="", bool fromProject = false);
     void activate();
 
     QTabWidget* pageControl() noexcept;
@@ -227,6 +227,8 @@ private:
     TipType mCurrentTipType;
     QString mOldSelectionWord;
     QString mSelectionWord;
+
+    bool mSaving;
 
     // QWidget interface
 protected:
