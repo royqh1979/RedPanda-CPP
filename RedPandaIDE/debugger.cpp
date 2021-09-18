@@ -343,10 +343,10 @@ PWatchVar Debugger::findWatchVar(const QString &name)
     return mWatchModel->findWatchVar(name);
 }
 
-void Debugger::notifyWatchVarUpdated(PWatchVar var)
-{
-    mWatchModel->notifyUpdated(var);
-}
+//void Debugger::notifyWatchVarUpdated(PWatchVar var)
+//{
+//    mWatchModel->notifyUpdated(var);
+//}
 
 void Debugger::notifyBeforeProcessWatchVar()
 {

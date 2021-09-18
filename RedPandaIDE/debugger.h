@@ -210,7 +210,7 @@ public:
     void invalidateWatchVar(const QString& name);
     void invalidateWatchVar(PWatchVar var);
     PWatchVar findWatchVar(const QString& name);
-    void notifyWatchVarUpdated(PWatchVar var);
+//    void notifyWatchVarUpdated(PWatchVar var);
     void notifyBeforeProcessWatchVar();
     void notifyAfterProcessWatchVar();
 
