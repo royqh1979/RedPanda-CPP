@@ -966,26 +966,30 @@ void MainWindow::debug()
     QFileInfo debugFile;
     switch(getCompileTarget()) {
     case CompileTarget::Project:
+        // Check if we enabled proper options
+        debugEnabled = mProject->getCompilerOption("-g3")!='0';
+        stripEnabled = mProject->getCompilerOption("-s")!='0';
+        // Ask the user if he wants to enable debugging...
+        if (((!debugEnabled) || stripEnabled) &&
+                (QMessageBox::question(this,
+                                      tr("Enable debugging"),
+                                      tr("You have not enabled debugging info (-g3) and/or stripped it from the executable (-s) in Compiler Options.<BR /><BR />Do you want to correct this now?")
+                                      ) == QMessageBox::Yes)) {
+            // Enable debugging, disable stripping
+            mProject->setCompilerOption("-g3",'1');
+            mProject->setCompilerOption("-s",'0');
+
+            // Save changes to compiler set
+            mProject->saveOptions();
+
+            mCompileSuccessionTask=std::make_shared<CompileSuccessionTask>();
+            mCompileSuccessionTask->type = CompileSuccessionTaskType::Debug;
+
+            compile();
+            return;
+        }
         break;
 //      cttProject: begin
-//          // Check if we enabled proper options
-//          DebugEnabled := fProject.GetCompilerOption('-g3') <> '0';
-//          StripEnabled := fProject.GetCompilerOption('-s') <> '0';
-
-//          // Ask the user if he wants to enable debugging...
-//          if (not DebugEnabled or StripEnabled) then begin
-//            if  (MessageDlg(Lang[ID_MSG_NODEBUGSYMBOLS], mtConfirmation, [mbYes,
-//              mbNo], 0) = mrYes) then begin
-
-//              // Enable debugging, disable stripping
-//              fProject.SetCompilerOption('-g3', '1');
-//              fProject.SetCompilerOption('-s', '0');
-
-//              fCompSuccessAction := csaDebug;
-//              actRebuildExecute(nil);
-//            end;
-//            Exit;
-//          end;
 
 //          // Did we compile?
 //          if not FileExists(fProject.Executable) then begin
