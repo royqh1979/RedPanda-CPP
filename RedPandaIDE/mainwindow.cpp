@@ -988,61 +988,72 @@ void MainWindow::debug()
             compile();
             return;
         }
+        // Did we compile?
+        if (!fileExists(mProject->executable())) {
+            if (QMessageBox::question(
+                        this,
+                        tr("Project not built"),
+                        tr("Project hasn't been built. Build it now?"),
+                        QMessageBox::Yes | QMessageBox::No,
+                        QMessageBox::Yes) == QMessageBox::Yes) {
+                mCompileSuccessionTask=std::make_shared<CompileSuccessionTask>();
+                mCompileSuccessionTask->type = CompileSuccessionTaskType::Debug;
+
+                compile();
+            }
+            return;
+        }
+        // Did we choose a host application for our DLL?
+        if (mProject->options().type == ProjectType::DynamicLib) {
+            if (mProject->options().hostApplication.isEmpty()) {
+                QMessageBox::critical(this,
+                                      tr("Host applcation missing"),
+                                      tr("DLL project needs a host application to run.")
+                                      +"<br />"
+                                      +tr("But it's missing."),
+                                      QMessageBox::Ok);
+                return;
+            }
+        } else if (!fileExists(mProject->options().hostApplication)) {
+            QMessageBox::critical(this,
+                                  tr("Host application not exists"),
+                                  tr("Host application file '%1' doesn't exist.")
+                                  .arg(mProject->options().hostApplication),
+                                  QMessageBox::Ok);
+            return;
+        }
+        // Reset UI, remove invalid breakpoints
+        prepareDebugger();
+        filePath = mProject->executable();
+
+//        mDebugger->setUseUTF8(e->fileEncoding() == ENCODING_UTF8 || e->fileEncoding() == ENCODING_UTF8_BOM);
+
+        if (!mDebugger->start())
+            return;
+        filePath.replace('\\','/');
+        mDebugger->sendCommand("file", '"' + filePath + '"');
+
+        if (mProject->options().type == ProjectType::DynamicLib) {
+            QString host =mProject->options().hostApplication;
+            host.replace('\\','/');
+            mDebugger->sendCommand("exec-file", '"' + host + '"');
+        }
+        for (int i=0;i<mProject->units().count();i++) {
+            QString file = mProject->units()[i]->fileName();
+            file.replace('\\','/');
+            mDebugger->sendCommand("dir", '"'+file+ '"');
+        }
+        for (int i=0;i<mProject->options().includes.count();i++) {
+            QString file = mProject->options().includes[i];
+            file.replace('\\','/');
+            mDebugger->sendCommand("dir", '"'+file+ '"');
+        }
+        for (int i=0;i<mProject->options().libs.count();i++) {
+            QString file = mProject->options().libs[i];
+            file.replace('\\','/');
+            mDebugger->sendCommand("dir", '"'+file+ '"');
+        }
         break;
-//      cttProject: begin
-
-//          // Did we compile?
-//          if not FileExists(fProject.Executable) then begin
-//            if MessageDlg(Lang[ID_ERR_PROJECTNOTCOMPILEDSUGGEST], mtConfirmation, [mbYes, mbNo], 0) = mrYes then begin
-//              fCompSuccessAction := csaDebug;
-//              actCompileExecute(nil);
-//            end;
-//            Exit;
-//          end;
-
-
-//          // Did we choose a host application for our DLL?
-//          if fProject.Options.typ = dptDyn then begin
-//            if fProject.Options.HostApplication = '' then begin
-//              MessageDlg(Lang[ID_ERR_HOSTMISSING], mtWarning, [mbOK], 0);
-//              exit;
-//            end else if not FileExists(fProject.Options.HostApplication) then begin
-//              MessageDlg(Lang[ID_ERR_HOSTNOTEXIST], mtWarning, [mbOK], 0);
-//              exit;
-//            end;
-//          end;
-
-//          // Reset UI, remove invalid breakpoints
-//          PrepareDebugger;
-
-//          filepath := fProject.Executable;
-
-//        if (!mDebugger->start())
-//            return;
-//          fDebugger.SendCommand('file', '"' + StringReplace(filepath, '\', '/', [rfReplaceAll]) + '"');
-
-//          if fProject.Options.typ = dptDyn then
-//            fDebugger.SendCommand('exec-file', '"' + StringReplace(fProject.Options.HostApplication, '\', '/',
-//              [rfReplaceAll])
-//              + '"');
-
-//          for i:=0 to fProject.Units.Count-1 do begin
-//            fDebugger.SendCommand('dir', '"'+StringReplace(
-//              ExtractFilePath(fProject.Units[i].FileName),'\', '/',[rfReplaceAll])
-//              + '"');
-//          end;
-//          for i:=0 to fProject.Options.Includes.Count-1 do begin
-//            fDebugger.SendCommand('dir', '"'+StringReplace(
-//              fProject.Options.Includes[i],'\', '/',[rfReplaceAll])
-//              + '"');
-//          end;
-//          for i:=0 to fProject.Options.Libs.Count-1 do begin
-//            fDebugger.SendCommand('dir', '"'+StringReplace(
-//              fProject.Options.Includes[i],'\', '/',[rfReplaceAll])
-//              + '"');
-//          end;
-
-//        end;
     case CompileTarget::File:
         // Check if we enabled proper options
         debugEnabled = compilerSet->getOptionValue("-g3")!='0';

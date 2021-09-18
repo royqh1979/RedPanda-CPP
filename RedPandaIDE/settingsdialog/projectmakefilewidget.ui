@@ -51,6 +51,13 @@
      </property>
     </widget>
    </item>
+   <item>
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>Include the following files into the makefile:</string>
+     </property>
+    </widget>
+   </item>
   </layout>
  </widget>
  <resources>
