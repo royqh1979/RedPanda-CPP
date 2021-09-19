@@ -2776,7 +2776,11 @@ int SynEdit::scanFrom(int Index)
         mHighlighter->nextToEol();
         iRange = mHighlighter->getRangeState();
         {
-            if (mLines->ranges(Result).state == iRange.state)
+            if (mLines->ranges(Result).state == iRange.state
+                    && mLines->braceLevels(Result) == mHighlighter->getBraceLevel()
+                    && mLines->bracketLevels(Result) == mHighlighter->getBracketLevel()
+                    && mLines->parenthesisLevels(Result) == mHighlighter->getParenthesisLevel()
+                    )
                 return Result;// avoid the final Decrement
         }
         mLines->setRange(Result,iRange);
@@ -2975,26 +2979,33 @@ void SynEdit::findSubFoldRange(PSynEditFoldRanges TopFoldRanges, int FoldIndex,P
 
         //we just use braceLevel
         if (useBraces) {
+            // Find an opening character on this line
+            CurLine = mLines->getString(Line);
+
             int curBraceLevel = mLines->braceLevels(Line);
             if (curBraceLevel > lastBraceLevel) {
-                // Add it to the top list of folds
-                Parent = parentFoldRanges->addByParts(
-                  Parent,
-                  TopFoldRanges,
-                  Line + 1,
-                  mCodeFolding.foldRegions.get(FoldIndex),
-                  Line + 1);
-                parentFoldRanges = Parent->subFoldRanges;
+                for (int i=0; i<curBraceLevel-lastBraceLevel;i++) {
+                    // Add it to the top list of folds
+                    Parent = parentFoldRanges->addByParts(
+                      Parent,
+                      TopFoldRanges,
+                      Line + 1,
+                      mCodeFolding.foldRegions.get(FoldIndex),
+                      Line + 1);
+                    parentFoldRanges = Parent->subFoldRanges;
+                }
             } else if (curBraceLevel < lastBraceLevel) {
-                // Stop the recursion if we find a closing char, and return to our parent
-                if (Parent) {
-                  Parent->toLine = Line + 1;
-                  Parent = Parent->parent;
-                  if (!Parent) {
-                      parentFoldRanges = TopFoldRanges;
-                  } else {
-                      parentFoldRanges = Parent->subFoldRanges;
-                  }
+                for (int i=0; i<lastBraceLevel-curBraceLevel;i++) {
+                    // Stop the recursion if we find a closing char, and return to our parent
+                    if (Parent) {
+                      Parent->toLine = Line + 1;
+                      Parent = Parent->parent;
+                      if (!Parent) {
+                          parentFoldRanges = TopFoldRanges;
+                      } else {
+                          parentFoldRanges = Parent->subFoldRanges;
+                      }
+                    }
                 }
             }
             lastBraceLevel = curBraceLevel;
