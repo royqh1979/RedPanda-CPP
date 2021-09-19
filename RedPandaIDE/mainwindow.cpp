@@ -760,6 +760,7 @@ void MainWindow::setupActions() {
 
 void MainWindow::updateCompilerSet()
 {
+    mCompilerSet->blockSignals(true);
     mCompilerSet->clear();
     for (size_t i=0;i<pSettings->compilerSets().list().size();i++) {
         mCompilerSet->addItem(pSettings->compilerSets().list()[i]->name());
@@ -775,6 +776,8 @@ void MainWindow::updateCompilerSet()
         index = pSettings->compilerSets().defaultIndex();
     }
     mCompilerSet->setCurrentIndex(index);
+    mCompilerSet->blockSignals(false);
+    mCompilerSet->update();
 }
 
 void MainWindow::updateDebuggerSettings()
@@ -1166,6 +1169,8 @@ void MainWindow::debug()
     mDebugger->sendCommand("set", "width 0"); // don't wrap output, very annoying
     mDebugger->sendCommand("set", "new-console on");
     mDebugger->sendCommand("set", "confirm off");
+    mDebugger->sendCommand("set", "print repeats 0"); // don't repeat elements
+    mDebugger->sendCommand("set", "print elements 0"); // don't limit elements
     mDebugger->sendCommand("cd", excludeTrailingPathDelimiter(debugFile.path())); // restore working directory
     if (!debugInferiorhasBreakpoint()) {
         QString params;
@@ -1790,6 +1795,26 @@ void MainWindow::onEditorTabContextMenu(const QPoint &pos)
     menu.exec(tabBar->mapToGlobal(pos));
 }
 
+void MainWindow::disableDebugActions()
+{
+    ui->actionStep_Into->setEnabled(false);
+    ui->actionStep_Over->setEnabled(false);
+    ui->actionStep_Out->setEnabled(false);
+    ui->actionRun_To_Cursor->setEnabled(false);
+    ui->actionContinue->setEnabled(false);
+    ui->cbEvaluate->setEnabled(false);
+}
+
+void MainWindow::enableDebugActions()
+{
+    ui->actionStep_Into->setEnabled(true);
+    ui->actionStep_Over->setEnabled(true);
+    ui->actionStep_Out->setEnabled(true);
+    ui->actionRun_To_Cursor->setEnabled(true);
+    ui->actionContinue->setEnabled(true);
+    ui->cbEvaluate->setEnabled(true);
+}
+
 void MainWindow::prepareProjectForCompile()
 {
     if (!mProject)
@@ -2124,6 +2149,14 @@ void MainWindow::onCompilerSetChanged(int index)
 {
     if (index<0)
         return;
+    if (mProject) {
+        Editor *e = mEditorList->getEditor();
+        if (!e || e->inProject()) {
+            mProject->options().compilerSet = index;
+            mProject->saveOptions();
+            return;
+        }
+    }
     pSettings->compilerSets().setDefaultIndex(index);
     pSettings->compilerSets().saveDefaultIndex();
 }
@@ -2155,6 +2188,11 @@ void MainWindow::onCompileIssue(PCompileIssue issue)
             e->addSyntaxIssues(line,col,issue->endColumn,issue->type,issue->description);
         }
     }
+}
+
+void MainWindow::onCompileStarted()
+{
+    ui->txtCompilerOutput->clear();
 }
 
 void MainWindow::onCompileFinished()

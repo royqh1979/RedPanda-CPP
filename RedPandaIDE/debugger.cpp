@@ -48,9 +48,11 @@ bool Debugger::start()
     connect(mReader, &QThread::finished,this,&Debugger::clearUpReader);
     connect(mReader, &DebugReader::parseFinished,this,&Debugger::syncFinishedParsing,Qt::BlockingQueuedConnection);
     connect(mReader, &DebugReader::changeDebugConsoleLastLine,this,&Debugger::onChangeDebugConsoleLastline);
-    connect(mReader, &DebugReader::addLocalWithLinebreak,this,&Debugger::onAddLocalWithLinebreak);
-    connect(mReader, &DebugReader::addLocalWithoutLinebreak,this,&Debugger::onAddLocalWithoutLinebreak);
+    connect(mReader, &DebugReader::addLocalLine,this,&Debugger::onAddLocalLine);
     connect(mReader, &DebugReader::clearLocals,this,&Debugger::onClearLocals);
+    connect(mReader, &DebugReader::cmdStarted,pMainWindow, &MainWindow::disableDebugActions);
+    connect(mReader, &DebugReader::cmdFinished,pMainWindow, &MainWindow::enableDebugActions);
+
     mReader->start();
     mReader->mStartSemaphore.acquire(1);
 
@@ -100,12 +102,7 @@ void Debugger::clearUpReader()
     }
 }
 
-void Debugger::onAddLocalWithoutLinebreak(const QString &text)
-{
-    pMainWindow->txtLocals()->insertPlainText(text);
-}
-
-void Debugger::onAddLocalWithLinebreak(const QString &text)
+void Debugger::onAddLocalLine(const QString &text)
 {
     pMainWindow->txtLocals()->appendPlainText(text);
 }
@@ -968,6 +965,7 @@ void DebugReader::handleLocalOutput()
     QString s = getNextFilledLine();
 
     bool nobreakLine = false;
+    QString line;
     while (true) {
         if (!s.startsWith("\032\032")) {
             s = TrimLeft(s);
@@ -979,9 +977,11 @@ void DebugReader::handleLocalOutput()
             }
             //todo: update local view
             if (nobreakLine && pMainWindow->txtLocals()->document()->lineCount()>0) {
-                emit addLocalWithoutLinebreak(s);
+                line += s;
+//                emit addLocalWithoutLinebreak(s);
             } else {
-                emit addLocalWithLinebreak(s);
+                emit addLocalLine(line);
+                line = s;
             }
             nobreakLine=false;
         } else {
@@ -990,6 +990,9 @@ void DebugReader::handleLocalOutput()
         s = getNextLine();
         if (!nobreakLine && s.isEmpty())
             break;
+    }
+    if (!line.isEmpty()) {
+        emit addLocalLine(line);
     }
 }
 
@@ -1237,10 +1240,11 @@ void DebugReader::processWatchOutput(PWatchVar watchVar)
     watchVar->children.clear();
     watchVar->value = "";
     // Process output parsed by ProcessEvalStruct
-    QString s = watchVar->name + " = " + processEvalOutput();
+    QString s = processEvalOutput();
 
     QStringList tokens = tokenize(s);
     PWatchVar parentVar = watchVar;
+    PWatchVar currentVar = watchVar;
 
     QVector<PWatchVar> varStack;
     int i=0;
@@ -1249,20 +1253,15 @@ void DebugReader::processWatchOutput(PWatchVar watchVar)
         QChar ch = token[0];
         if (ch =='_' || (ch>='a' && ch<='z')
                 || (ch>='A' && ch<='Z') || (ch>127)) {
-            if (parentVar != watchVar) {
-                //is identifier,create new child node
-                PWatchVar newVar = std::make_shared<WatchVar>();
-                newVar->parent = parentVar.get();
-                newVar->name = token;
-                if (parentVar)
-                    newVar->fullName = parentVar->fullName + '.'+token;
-                else
-                    newVar->fullName = token;
-                newVar->value = "";
-                newVar->gdbIndex = -1;
-                parentVar->children.append(newVar);
-                parentVar = newVar;
-            }
+            //is identifier,create new child node
+            PWatchVar newVar = std::make_shared<WatchVar>();
+            newVar->parent = parentVar.get();
+            newVar->name = token;
+            newVar->fullName = parentVar->fullName + '.'+token;
+            newVar->value = "";
+            newVar->gdbIndex = -1;
+            parentVar->children.append(newVar);
+            currentVar = newVar;
         } else if (ch == '{') {
             if (parentVar->value.isEmpty()) {
                 parentVar->value = "{";
@@ -1272,7 +1271,7 @@ void DebugReader::processWatchOutput(PWatchVar watchVar)
                 if (parentVar) {
                     int count = parentVar->children.count();
                     newVar->name = QString("[%1]").arg(count);
-                    newVar->fullName = parentVar->fullName + '.'+newVar->name;
+                    newVar->fullName = parentVar->fullName + newVar->name;
                 } else {
                     newVar->name = QString("[0]");
                     newVar->fullName = newVar->name;
@@ -1293,22 +1292,23 @@ void DebugReader::processWatchOutput(PWatchVar watchVar)
                 parentVar = varStack.back();
                 varStack.pop_back();
             }
-        } else if (ch == '=' || ch ==',' ) {
-            // just skip them
+        } else if (ch == '=') {
+            // just skip it
+        } else if (ch == ',') {
+
         } else {
-            if (parentVar->value.isEmpty()) {
-                parentVar->value = token;
+            if (currentVar) {
+                currentVar->value = token;
+                currentVar = nullptr;
             } else {
-                WatchVar* parent = parentVar->parent;
-                if (parent) {
-                    PWatchVar newVar = std::make_shared<WatchVar>();
-                    newVar->parent = parent;
-                    newVar->name = QString("[%1]")
-                            .arg(parent->children.count());
-                    newVar->value = token;
-                    newVar->gdbIndex = -1;
-                    parent->children.append(newVar);
-                }
+                PWatchVar newVar = std::make_shared<WatchVar>();
+                newVar->parent = parentVar.get();
+                newVar->name = QString("[%1]")
+                        .arg(parentVar->children.count());
+                newVar->fullName = parentVar->fullName + newVar->name;
+                newVar->value = token;
+                newVar->gdbIndex = -1;
+                parentVar->children.append(newVar);
             }
         }
         i++;
@@ -1381,6 +1381,7 @@ void DebugReader::runNextCmd()
             if (mUpdateCount>0) {
                 mUpdateCount=0;
             }
+            emit cmdFinished();
         }
         return;
     }
@@ -1389,9 +1390,10 @@ void DebugReader::runNextCmd()
         mCurrentCmd.reset();
     }
 
+    emit cmdStarted();
     PDebugCommand pCmd = mCmdQueue.dequeue();
     mCmdRunning = true;
-    mCurrentCmd = pCmd;
+    mCurrentCmd = pCmd;    
 
     QByteArray s;
     s=pCmd->command.toLocal8Bit();
@@ -1466,13 +1468,13 @@ QStringList DebugReader::tokenize(const QString &s)
                     break;
                 } else if (s[i] == '\\') {
                     i+=2;
-                    break;
+                    continue;
                 }
                 i++;
             }
             tEnd = std::min(i,s.length());
             result.append(s.mid(tStart,tEnd-tStart));
-        } if (ch == '\"') {
+        } else if (ch == '\"') {
             tStart = i;
             i++; //skip \'
             while (i<s.length()) {
@@ -1481,6 +1483,18 @@ QStringList DebugReader::tokenize(const QString &s)
                     break;
                 } else if (s[i] == '\\') {
                     i+=2;
+                    continue;
+                }
+                i++;
+            }
+            tEnd = std::min(i,s.length());
+            result.append(s.mid(tStart,tEnd-tStart));
+        } else if (ch == '<') {
+            tStart = i;
+            i++;
+            while (i<s.length()) {
+                if (s[i]=='>') {
+                    i++;
                     break;
                 }
                 i++;
@@ -1490,7 +1504,7 @@ QStringList DebugReader::tokenize(const QString &s)
         } else if (ch == '_' || ch.isLetterOrNumber()) {
             tStart = i;
             while (i<s.length()) {
-                if ((ch!='_') &&(!ch.isLetterOrNumber()))
+                if ((s[i]!='_') &&(!s[i].isLetterOrNumber()))
                     break;
                 i++;
             }
@@ -2042,6 +2056,19 @@ void WatchModel::notifyUpdated(PWatchVar var)
         return;
     //qDebug()<<"dataChanged"<<row<<":"<<var->text;
     emit dataChanged(createIndex(row,0,var.get()),createIndex(row,0,var.get()));
+}
+
+QVariant WatchModel::headerData(int section, Qt::Orientation orientation, int role) const
+{
+    if (orientation == Qt::Horizontal && role ==  Qt::DisplayRole) {
+        switch(section) {
+        case 0:
+            return tr("Expression");
+        case 1:
+            return tr("Value");
+        }
+    }
+    return QVariant();
 }
 
 RegisterModel::RegisterModel(QObject *parent):QAbstractTableModel(parent)

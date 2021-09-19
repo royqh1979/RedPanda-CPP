@@ -2959,6 +2959,9 @@ void SynEdit::findSubFoldRange(PSynEditFoldRanges TopFoldRanges, int FoldIndex,P
     PSynEditFoldRange  CollapsedFold;
     int Line = 0;
     QString CurLine;
+    bool useBraces = ( mCodeFolding.foldRegions.get(FoldIndex)->openSymbol == "{"
+            && mCodeFolding.foldRegions.get(FoldIndex)->closeSymbol == "}");
+    int lastBraceLevel = 0;
 
     if (!mHighlighter)
         return;
@@ -2970,59 +2973,87 @@ void SynEdit::findSubFoldRange(PSynEditFoldRanges TopFoldRanges, int FoldIndex,P
           continue;
         }
 
-        // Find an opening character on this line
-        CurLine = mLines->getString(Line);
-
-        mHighlighter->setState(mLines->ranges(Line),
-                               mLines->braceLevels(Line),
-                               mLines->bracketLevels(Line),
-                               mLines->parenthesisLevels(Line));
-        mHighlighter->setLine(CurLine,Line);
-
-        QString token;
-        int pos;
-        while (!mHighlighter->eol()) {
-            token = mHighlighter->getToken();
-            pos = mHighlighter->getTokenPos()+token.length();
-            PSynHighlighterAttribute attr = mHighlighter->getTokenAttribute();
-            // We've found a starting character and it have proper highlighting (ignore stuff inside comments...)
-            if (token == mCodeFolding.foldRegions.get(FoldIndex)->openSymbol && attr->name()==mCodeFolding.foldRegions.get(FoldIndex)->highlight) {
-                // And ignore lines with both opening and closing chars in them
-                if (lineHasChar(Line,pos,mCodeFolding.foldRegions.get(FoldIndex)->closeSymbol,
-                                mCodeFolding.foldRegions.get(FoldIndex)->highlight)<0) {
-                    // Add it to the top list of folds
-                    Parent = parentFoldRanges->addByParts(
-                      Parent,
-                      TopFoldRanges,
-                      Line + 1,
-                      mCodeFolding.foldRegions.get(FoldIndex),
-                      Line + 1);
-                    parentFoldRanges = Parent->subFoldRanges;
-
-                    // Skip until a newline
-                    break;
-                }
-
-            } else if (token == mCodeFolding.foldRegions.get(FoldIndex)->closeSymbol && attr->name()==mCodeFolding.foldRegions.get(FoldIndex)->highlight) {
-                // And ignore lines with both opening and closing chars in them
-                if (lineHasChar(Line,pos,mCodeFolding.foldRegions.get(FoldIndex)->openSymbol,
-                                mCodeFolding.foldRegions.get(FoldIndex)->highlight)<0) {
-                    // Stop the recursion if we find a closing char, and return to our parent
-                    if (Parent) {
-                      Parent->toLine = Line + 1;
-                      Parent = Parent->parent;
-                      if (!Parent) {
-                          parentFoldRanges = TopFoldRanges;
-                      } else {
-                          parentFoldRanges = Parent->subFoldRanges;
-                      }
-                    }
-
-                    // Skip until a newline
-                    break;
+        //we just use braceLevel
+        if (useBraces) {
+            int curBraceLevel = mLines->braceLevels(Line);
+            if (curBraceLevel > lastBraceLevel) {
+                // Add it to the top list of folds
+                Parent = parentFoldRanges->addByParts(
+                  Parent,
+                  TopFoldRanges,
+                  Line + 1,
+                  mCodeFolding.foldRegions.get(FoldIndex),
+                  Line + 1);
+                parentFoldRanges = Parent->subFoldRanges;
+            } else if (curBraceLevel < lastBraceLevel) {
+                // Stop the recursion if we find a closing char, and return to our parent
+                if (Parent) {
+                  Parent->toLine = Line + 1;
+                  Parent = Parent->parent;
+                  if (!Parent) {
+                      parentFoldRanges = TopFoldRanges;
+                  } else {
+                      parentFoldRanges = Parent->subFoldRanges;
+                  }
                 }
             }
-            mHighlighter->next();
+            lastBraceLevel = curBraceLevel;
+        } else {
+
+            // Find an opening character on this line
+            CurLine = mLines->getString(Line);
+
+            mHighlighter->setState(mLines->ranges(Line),
+                                   mLines->braceLevels(Line),
+                                   mLines->bracketLevels(Line),
+                                   mLines->parenthesisLevels(Line));
+            mHighlighter->setLine(CurLine,Line);
+
+            QString token;
+            int pos;
+            while (!mHighlighter->eol()) {
+                token = mHighlighter->getToken();
+                pos = mHighlighter->getTokenPos()+token.length();
+                PSynHighlighterAttribute attr = mHighlighter->getTokenAttribute();
+                // We've found a starting character and it have proper highlighting (ignore stuff inside comments...)
+                if (token == mCodeFolding.foldRegions.get(FoldIndex)->openSymbol && attr->name()==mCodeFolding.foldRegions.get(FoldIndex)->highlight) {
+                    // And ignore lines with both opening and closing chars in them
+                    if (lineHasChar(Line,pos,mCodeFolding.foldRegions.get(FoldIndex)->closeSymbol,
+                                    mCodeFolding.foldRegions.get(FoldIndex)->highlight)<0) {
+                        // Add it to the top list of folds
+                        Parent = parentFoldRanges->addByParts(
+                          Parent,
+                          TopFoldRanges,
+                          Line + 1,
+                          mCodeFolding.foldRegions.get(FoldIndex),
+                          Line + 1);
+                        parentFoldRanges = Parent->subFoldRanges;
+
+                        // Skip until a newline
+                        break;
+                    }
+
+                } else if (token == mCodeFolding.foldRegions.get(FoldIndex)->closeSymbol && attr->name()==mCodeFolding.foldRegions.get(FoldIndex)->highlight) {
+                    // And ignore lines with both opening and closing chars in them
+                    if (lineHasChar(Line,pos,mCodeFolding.foldRegions.get(FoldIndex)->openSymbol,
+                                    mCodeFolding.foldRegions.get(FoldIndex)->highlight)<0) {
+                        // Stop the recursion if we find a closing char, and return to our parent
+                        if (Parent) {
+                          Parent->toLine = Line + 1;
+                          Parent = Parent->parent;
+                          if (!Parent) {
+                              parentFoldRanges = TopFoldRanges;
+                          } else {
+                              parentFoldRanges = Parent->subFoldRanges;
+                          }
+                        }
+
+                        // Skip until a newline
+                        break;
+                    }
+                }
+                mHighlighter->next();
+            }
         }
         Line++;
     }

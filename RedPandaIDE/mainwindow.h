@@ -110,6 +110,7 @@ public:
 public slots:
     void onCompileLog(const QString& msg);
     void onCompileIssue(PCompileIssue issue);
+    void onCompileStarted();
     void onCompileFinished();
     void onCompileErrorOccured(const QString& reason);
     void onRunErrorOccured(const QString& reason);
@@ -123,6 +124,8 @@ public slots:
     void onEvalValueReady(const QString& value);
     void onEditorContextMenu(const QPoint& pos);
     void onEditorTabContextMenu(const QPoint& pos);
+    void disableDebugActions();
+    void enableDebugActions();
 
 private:
     void prepareProjectForCompile();

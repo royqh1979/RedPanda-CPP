@@ -54,6 +54,7 @@ void CompilerManager::compile(const QString& filename, const QByteArray& encodin
         mCompiler->setRebuild(rebuild);
         connect(mCompiler, &Compiler::compileFinished, this ,&CompilerManager::onCompileFinished);
         connect(mCompiler, &Compiler::compileIssue, this, &CompilerManager::onCompileIssue);
+        connect(mCompiler, &Compiler::compileStarted, pMainWindow, &MainWindow::onCompileStarted);
         connect(mCompiler, &Compiler::compileFinished, pMainWindow, &MainWindow::onCompileFinished);
         connect(mCompiler, &Compiler::compileOutput, pMainWindow, &MainWindow::onCompileLog);
         connect(mCompiler, &Compiler::compileIssue, pMainWindow, &MainWindow::onCompileIssue);
