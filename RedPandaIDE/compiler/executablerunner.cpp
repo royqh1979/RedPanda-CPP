@@ -78,7 +78,7 @@ void ExecutableRunner::run()
             break;
     }
     if (errorOccurred) {
-        qDebug()<<"process error:"<<process.error();
+        //qDebug()<<"process error:"<<process.error();
         switch (process.error()) {
         case QProcess::FailedToStart:
             emit runErrorOccurred(tr("The runner process '%1' failed to start.").arg(mFilename));

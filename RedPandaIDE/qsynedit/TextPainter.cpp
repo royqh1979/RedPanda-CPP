@@ -681,20 +681,23 @@ void SynEditTextPainter::GetBraceColorAttr(int level, PSynHighlighterAttribute &
         return;
     if (attr != edit->mHighlighter->symbolAttribute())
         return;
+    PSynHighlighterAttribute oldAttr = attr;
     switch(level % 4) {
     case 0:
-        attr = edit->mHighlighter->keywordAttribute();
+        attr = edit->mRainbowAttr0;
         break;
     case 1:
-        attr = edit->mHighlighter->symbolAttribute();
+        attr = edit->mRainbowAttr1;
         break;
     case 2:
-        attr = edit->mHighlighter->stringAttribute();
+        attr = edit->mRainbowAttr2;
         break;
     case 3:
-        attr = edit->mHighlighter->identifierAttribute();
+        attr = edit->mRainbowAttr3;
         break;
     }
+    if (!attr)
+        attr = oldAttr;
 }
 
 void SynEditTextPainter::PaintLines()

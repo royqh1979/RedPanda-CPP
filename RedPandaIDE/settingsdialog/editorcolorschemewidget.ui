@@ -336,6 +336,20 @@
      </layout>
     </widget>
    </item>
+   <item>
+    <widget class="Line" name="line_2">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="chkRainborParenthesis">
+     <property name="text">
+      <string>Rainbow parenthesis</string>
+     </property>
+    </widget>
+   </item>
   </layout>
   <action name="actionCopy_Scheme">
    <property name="text">

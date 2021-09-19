@@ -63,14 +63,26 @@ void ColorEdit::paintEvent(QPaintEvent *)
 {
     QPainter painter(this);
     QRect rect = QRect(lineWidth(),lineWidth(),width()-2*lineWidth(),height()-2*lineWidth());
-    if (mColor.isValid()) {
+    if (mColor.isValid() ) {
         //painter.fillRect(rect,mColor);
-        painter.setPen(contrast());
-        painter.setBrush(mColor);
+        if (isEnabled()) {
+            painter.setPen(contrast());
+            painter.setBrush(mColor);
+        } else {
+            painter.setBrush(palette().color(QPalette::Disabled,QPalette::Text));
+            painter.setBrush(palette().color(QPalette::Disabled,QPalette::Base));
+        }
         painter.drawRect(rect);
         painter.drawText(rect,Qt::AlignCenter, mColor.name());
     } else {
         //painter.fillRect(rect,palette().color(QPalette::Base));
+        if (isEnabled()) {
+            painter.setBrush(palette().color(QPalette::Text));
+            painter.setBrush(palette().color(QPalette::Base));
+        } else {
+            painter.setBrush(palette().color(QPalette::Disabled,QPalette::Text));
+            painter.setBrush(palette().color(QPalette::Disabled,QPalette::Base));
+        }
         painter.setPen(contrast());
         painter.setBrush(palette().color(QPalette::Base));
         painter.drawRect(rect);
@@ -78,7 +90,7 @@ void ColorEdit::paintEvent(QPaintEvent *)
     }
 }
 
-void ColorEdit::mouseReleaseEvent(QMouseEvent *event)
+void ColorEdit::mouseReleaseEvent(QMouseEvent *)
 {
     QColor c = QColorDialog::getColor();
     if (c.isValid()) {
@@ -86,12 +98,12 @@ void ColorEdit::mouseReleaseEvent(QMouseEvent *event)
     }
 }
 
-void ColorEdit::enterEvent(QEvent *event)
+void ColorEdit::enterEvent(QEvent *)
 {
     setCursor(Qt::PointingHandCursor);
 }
 
-void ColorEdit::leaveEvent(QEvent *event)
+void ColorEdit::leaveEvent(QEvent *)
 {
     setCursor(Qt::ArrowCursor);
 }

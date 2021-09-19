@@ -2771,9 +2771,33 @@ void Editor::applySettings()
     }
 }
 
+static PSynHighlighterAttribute createRainbowAttribute(const QString& attrName, const QString& schemeName, const QString& schemeItemName) {
+    PColorSchemeItem item = pColorManager->getItem(schemeName,schemeItemName);
+    if (item) {
+        PSynHighlighterAttribute attr = std::make_shared<SynHighlighterAttribute>(attrName);
+        attr->setForeground(item->foreground());
+        attr->setBackground(item->background());
+        return attr;
+    }
+    return PSynHighlighterAttribute();
+}
 void Editor::applyColorScheme(const QString& schemeName)
 {
+    SynEditorOptions options = getOptions();
+    options.setFlag(SynEditorOption::eoShowRainbowColor, pSettings->editor().rainbowParenthesis());
+    setOptions(options);
     highlighterManager.applyColorScheme(highlighter(),schemeName);
+    if (pSettings->editor().rainbowParenthesis()) {
+        PSynHighlighterAttribute attr0 =createRainbowAttribute(COLOR_SCHEME_BRACE_1,
+                                                               schemeName,COLOR_SCHEME_BRACE_1);
+        PSynHighlighterAttribute attr1 =createRainbowAttribute(COLOR_SCHEME_BRACE_2,
+                                                               schemeName,COLOR_SCHEME_BRACE_2);
+        PSynHighlighterAttribute attr2 =createRainbowAttribute(COLOR_SCHEME_BRACE_3,
+                                                               schemeName,COLOR_SCHEME_BRACE_3);
+        PSynHighlighterAttribute attr3 =createRainbowAttribute(COLOR_SCHEME_BRACE_4,
+                                                               schemeName,COLOR_SCHEME_BRACE_4);
+        setRainbowAttrs(attr0,attr1,attr2,attr3);
+    }
     PColorSchemeItem item = pColorManager->getItem(schemeName,COLOR_SCHEME_ACTIVE_LINE);
     if (item) {
         setActiveLineColor(item->background());

@@ -931,7 +931,11 @@ void MainWindow::runExecutable(const QString &exeName,const QString &filename)
         showMinimized();
     }
     updateAppTitle();
-    mCompilerManager->run(exeName,"",QFileInfo(exeName).absolutePath());
+    if (pSettings->executor().useParams()) {
+        mCompilerManager->run(exeName,pSettings->executor().params(),QFileInfo(exeName).absolutePath());
+    } else {
+        mCompilerManager->run(exeName,"",QFileInfo(exeName).absolutePath());
+    }
 }
 
 void MainWindow::runExecutable()
@@ -2649,12 +2653,12 @@ void MainWindow::on_actionAdd_Watch_triggered()
 {
     QString s = "";
     Editor *e = mEditorList->getEditor();
-    if (e==nullptr)
-        return;
-    if (e->selAvail()) {
-        s = e->selText();
-    } else {
-        s = e->WordAtCursor();
+    if (e!=nullptr) {
+        if (e->selAvail()) {
+            s = e->selText();
+        } else {
+            s = e->WordAtCursor();
+        }
     }
     bool isOk;
     s=QInputDialog::getText(this,

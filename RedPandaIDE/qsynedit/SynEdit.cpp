@@ -3292,6 +3292,26 @@ void SynEdit::onScrolled(int)
     invalidate();
 }
 
+const PSynHighlighterAttribute &SynEdit::rainbowAttr3() const
+{
+    return mRainbowAttr3;
+}
+
+const PSynHighlighterAttribute &SynEdit::rainbowAttr2() const
+{
+    return mRainbowAttr2;
+}
+
+const PSynHighlighterAttribute &SynEdit::rainbowAttr1() const
+{
+    return mRainbowAttr1;
+}
+
+const PSynHighlighterAttribute &SynEdit::rainbowAttr0() const
+{
+    return mRainbowAttr0;
+}
+
 bool SynEdit::caretUseTextColor() const
 {
     return mCaretUseTextColor;
@@ -5236,6 +5256,14 @@ bool SynEdit::isIdentChar(const QChar &ch)
         }
         return false;
     }
+}
+
+void SynEdit::setRainbowAttrs(const PSynHighlighterAttribute &attr0, const PSynHighlighterAttribute &attr1, const PSynHighlighterAttribute &attr2, const PSynHighlighterAttribute &attr3)
+{
+    mRainbowAttr0 = attr0;
+    mRainbowAttr1 = attr1;
+    mRainbowAttr2 = attr2;
+    mRainbowAttr3 = attr3;
 }
 
 void SynEdit::paintEvent(QPaintEvent *event)

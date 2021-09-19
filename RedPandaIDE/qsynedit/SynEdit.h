@@ -256,7 +256,10 @@ public:
     bool PointToLine(const QPoint& point, int& line);
     bool isIdentChar(const QChar& ch);
 
-
+    void setRainbowAttrs(const PSynHighlighterAttribute &attr0,
+                         const PSynHighlighterAttribute &attr1,
+                         const PSynHighlighterAttribute &attr2,
+                         const PSynHighlighterAttribute &attr3);
 // setter && getters
     int topLine() const;
     void setTopLine(int value);
@@ -350,6 +353,14 @@ public:
 
     bool caretUseTextColor() const;
     void setCaretUseTextColor(bool newCaretUseTextColor);
+
+    const PSynHighlighterAttribute &rainbowAttr0() const;
+
+    const PSynHighlighterAttribute &rainbowAttr1() const;
+
+    const PSynHighlighterAttribute &rainbowAttr2() const;
+
+    const PSynHighlighterAttribute &rainbowAttr3() const;
 
 signals:
     void linesDeleted(int FirstLine, int Count);
@@ -576,6 +587,11 @@ private:
     QColor mSelectedForeground;
     QColor mSelectedBackground;
     QColor mCaretColor;
+    PSynHighlighterAttribute mRainbowAttr0;
+    PSynHighlighterAttribute mRainbowAttr1;
+    PSynHighlighterAttribute mRainbowAttr2;
+    PSynHighlighterAttribute mRainbowAttr3;
+
     bool mCaretUseTextColor;
     QColor mActiveLineColor;
     PSynEditUndoList mUndoList;

@@ -460,6 +460,16 @@ void Settings::Editor::setCaretUseTextColor(bool newUseIdentifierColor)
     mCaretUseTextColor = newUseIdentifierColor;
 }
 
+bool Settings::Editor::rainbowParenthesis() const
+{
+    return mRainbowParenthesis;
+}
+
+void Settings::Editor::setRainbowParenthesis(bool newRainbowParenthesis)
+{
+    mRainbowParenthesis = newRainbowParenthesis;
+}
+
 int Settings::Editor::rightEdgeWidth() const
 {
     return mRightEdgeWidth;
@@ -933,6 +943,7 @@ void Settings::Editor::doSave()
 
     //color scheme
     saveValue("color_scheme", mColorScheme);
+    saveValue("rainbow_parenthesis",mRainbowParenthesis);
 
     //Symbol Completion
     saveValue("complete_symbols", mCompleteSymbols);
@@ -1032,6 +1043,7 @@ void Settings::Editor::doLoad()
 
     //color
     mColorScheme = stringValue("color_scheme", "VS Code");
+    mRainbowParenthesis = boolValue("rainbow_parenthesis", true);
 
     //Symbol Completion
     mCompleteSymbols = boolValue("complete_symbols",true);
@@ -2521,10 +2533,54 @@ void Settings::Executor::setMinimizeOnRun(bool minimizeOnRun)
     mMinimizeOnRun = minimizeOnRun;
 }
 
+bool Settings::Executor::useParams() const
+{
+    return mUseParams;
+}
+
+void Settings::Executor::setUseParams(bool newUseParams)
+{
+    mUseParams = newUseParams;
+}
+
+const QString &Settings::Executor::params() const
+{
+    return mParams;
+}
+
+void Settings::Executor::setParams(const QString &newParams)
+{
+    mParams = newParams;
+}
+
+bool Settings::Executor::redirectInput() const
+{
+    return mRedirectInput;
+}
+
+void Settings::Executor::setRedirectInput(bool newRedirectInput)
+{
+    mRedirectInput = newRedirectInput;
+}
+
+const QString &Settings::Executor::inputFilename() const
+{
+    return mInputFilename;
+}
+
+void Settings::Executor::setInputFilename(const QString &newInputFilename)
+{
+    mInputFilename = newInputFilename;
+}
+
 void Settings::Executor::doSave()
 {
     saveValue("pause_console", mPauseConsole);
     saveValue("minimize_on_run", mMinimizeOnRun);
+    saveValue("use_params",mUseParams);
+    saveValue("params",mParams);
+    saveValue("redirect_input",mRedirectInput);
+    saveValue("input_filename",mInputFilename);
 }
 
 bool Settings::Executor::pauseConsole() const
@@ -2541,6 +2597,11 @@ void Settings::Executor::doLoad()
 {
     mPauseConsole = boolValue("pause_console",true);
     mMinimizeOnRun = boolValue("minimize_on_run",false);
+    mUseParams = boolValue("use_params",false);
+    mParams = stringValue("params", "");
+    mRedirectInput = boolValue("redirect_input",false);
+    mInputFilename = stringValue("input_filename","");
+
 }
 
 

@@ -302,6 +302,9 @@ public:
         bool caretUseTextColor() const;
         void setCaretUseTextColor(bool newUseIdentifierColor);
 
+        bool rainbowParenthesis() const;
+        void setRainbowParenthesis(bool newRainbowParenthesis);
+
     private:
         //General
         // indents
@@ -366,6 +369,7 @@ public:
 
         //Color
         QString mColorScheme;
+        bool mRainbowParenthesis;
 
         //Symbol Completion
         bool mCompleteSymbols;
@@ -705,10 +709,23 @@ public:
         bool minimizeOnRun() const;
         void setMinimizeOnRun(bool minimizeOnRun);
 
+        bool useParams() const;
+        void setUseParams(bool newUseParams);
+        const QString &params() const;
+        void setParams(const QString &newParams);
+        bool redirectInput() const;
+        void setRedirectInput(bool newRedirectInput);
+        const QString &inputFilename() const;
+        void setInputFilename(const QString &newInputFilename);
+
     private:
         // general
         bool mPauseConsole;
         bool mMinimizeOnRun;
+        bool mUseParams;
+        QString mParams;
+        bool mRedirectInput;
+        QString mInputFilename;
 
     protected:
         void doSave() override;

@@ -1092,6 +1092,10 @@
    </property>
   </action>
   <action name="actionOptions">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/images/newlook24/061-rebuild.png</normaloff>:/icons/images/newlook24/061-rebuild.png</iconset>
+   </property>
    <property name="text">
     <string>Options</string>
    </property>

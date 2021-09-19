@@ -281,6 +281,7 @@ void EditorColorSchemeWidget::changeSchemeComboFont()
 void EditorColorSchemeWidget::doLoad()
 {
     ui->cbScheme->setCurrentText(pSettings->editor().colorScheme());
+    ui->chkRainborParenthesis->setChecked(pSettings->editor().rainbowParenthesis());
 }
 
 void EditorColorSchemeWidget::doSave()
@@ -290,6 +291,7 @@ void EditorColorSchemeWidget::doSave()
             pColorManager->saveScheme(name);
         }
         pSettings->editor().setColorScheme(ui->cbScheme->currentText());
+        pSettings->editor().setRainbowParenthesis(ui->chkRainborParenthesis->isChecked());
         pSettings->editor().save();
         pMainWindow->updateEditorColorSchemes();
     } catch (FileError e) {
