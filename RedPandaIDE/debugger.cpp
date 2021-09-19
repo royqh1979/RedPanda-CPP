@@ -247,7 +247,7 @@ void Debugger::addWatchVar(const QString &namein)
     PWatchVar var = std::make_shared<WatchVar>();
     var->parent= nullptr;
     var->name = namein;
-    var->text = QString("%1 = %2").arg(var->name).arg(tr("Execute to evaluate"));
+    var->value = tr("Execute to evaluate");
     var->gdbIndex = -1;
 
     mWatchModel->addWatchVar(var);
@@ -328,7 +328,7 @@ void Debugger::invalidateWatchVar(PWatchVar var)
     } else {
         value = tr("Execute to evaluate");
     }
-    var->text = QString("%1 = %2").arg(var->name).arg(value);
+    var->value = value;
     if (var->children.isEmpty()) {
         mWatchModel->notifyUpdated(var);
     } else {
@@ -1235,59 +1235,133 @@ void DebugReader::processWatchOutput(PWatchVar watchVar)
     // Do not remove root node of watch variable
 
     watchVar->children.clear();
-    watchVar->text = "";
+    watchVar->value = "";
     // Process output parsed by ProcessEvalStruct
     QString s = watchVar->name + " = " + processEvalOutput();
-    // add placeholder name for variable name so we can format structs using one rule
 
-    // Add children based on indent
-    QStringList lines = TextToLines(s);
-    PWatchVar parentVar=watchVar;
+    QStringList tokens = tokenize(s);
+    PWatchVar parentVar = watchVar;
+
     QVector<PWatchVar> varStack;
-    for (const QString& line:lines) {
-        // Format node text. Remove trailing comma
-        QString nodeText = line.trimmed();
-        if (nodeText.endsWith(',')) {
-            nodeText.remove(nodeText.length()-1,1);
-        }
-
-        if (nodeText.endsWith('{')) { // new member struct
-            if (parentVar->text.isEmpty()) { // root node, replace text only
-                parentVar->text = nodeText;
+    int i=0;
+    while (i<tokens.length()) {
+        QString token = tokens[i];
+        QChar ch = token[0];
+        if (ch =='_' || (ch>='a' && ch<='z')
+                || (ch>='A' && ch<='Z') || (ch>127)) {
+            if (parentVar != watchVar) {
+                //is identifier,create new child node
+                PWatchVar newVar = std::make_shared<WatchVar>();
+                newVar->parent = parentVar.get();
+                newVar->name = token;
+                if (parentVar)
+                    newVar->fullName = parentVar->fullName + '.'+token;
+                else
+                    newVar->fullName = token;
+                newVar->value = "";
+                newVar->gdbIndex = -1;
+                parentVar->children.append(newVar);
+                parentVar = newVar;
+            }
+        } else if (ch == '{') {
+            if (parentVar->value.isEmpty()) {
+                parentVar->value = "{";
             } else {
                 PWatchVar newVar = std::make_shared<WatchVar>();
                 newVar->parent = parentVar.get();
-                newVar->name = "";
-                newVar->text = nodeText;
-                newVar->gdbIndex = -1;
+                if (parentVar) {
+                    int count = parentVar->children.count();
+                    newVar->name = QString("[%1]").arg(count);
+                    newVar->fullName = parentVar->fullName + '.'+newVar->name;
+                } else {
+                    newVar->name = QString("[0]");
+                    newVar->fullName = newVar->name;
+                }
+                newVar->value = "{";
                 parentVar->children.append(newVar);
                 varStack.push_back(parentVar);
                 parentVar = newVar;
             }
-        } else if (nodeText.startsWith('}')) { // end of struct, change parent
-                PWatchVar newVar = std::make_shared<WatchVar>();
-                newVar->parent = parentVar.get();
-                newVar->name = "";
-                newVar->text = "}";
-                newVar->gdbIndex = -1;
-                parentVar->children.append(newVar);
-                if (!varStack.isEmpty()) {
-                    parentVar = varStack.back();
-                    varStack.pop_back();
-                }
-        } else { // next parent member/child
-            if (parentVar->text.isEmpty()) { // root node, replace text only
-                parentVar->text = nodeText;
+        } else if (ch == '}') {
+            PWatchVar newVar = std::make_shared<WatchVar>();
+            newVar->parent = parentVar.get();
+            newVar->name = "";
+            newVar->value = "}";
+            newVar->gdbIndex = -1;
+            parentVar->children.append(newVar);
+            if (!varStack.isEmpty()) {
+                parentVar = varStack.back();
+                varStack.pop_back();
+            }
+        } else if (ch == '=' || ch ==',' ) {
+            // just skip them
+        } else {
+            if (parentVar->value.isEmpty()) {
+                parentVar->value = token;
             } else {
-                PWatchVar newVar = std::make_shared<WatchVar>();
-                newVar->parent = parentVar.get();
-                newVar->name = "";
-                newVar->text = nodeText;
-                newVar->gdbIndex = -1;
-                parentVar->children.append(newVar);
+                WatchVar* parent = parentVar->parent;
+                if (parent) {
+                    PWatchVar newVar = std::make_shared<WatchVar>();
+                    newVar->parent = parent;
+                    newVar->name = QString("[%1]")
+                            .arg(parent->children.count());
+                    newVar->value = token;
+                    newVar->gdbIndex = -1;
+                    parent->children.append(newVar);
+                }
             }
         }
+        i++;
     }
+    // add placeholder name for variable name so we can format structs using one rule
+
+    // Add children based on indent
+//    QStringList lines = TextToLines(s);
+
+//    for (const QString& line:lines) {
+//        // Format node text. Remove trailing comma
+//        QString nodeText = line.trimmed();
+//        if (nodeText.endsWith(',')) {
+//            nodeText.remove(nodeText.length()-1,1);
+//        }
+
+//        if (nodeText.endsWith('{')) { // new member struct
+//            if (parentVar->text.isEmpty()) { // root node, replace text only
+//                parentVar->text = nodeText;
+//            } else {
+//                PWatchVar newVar = std::make_shared<WatchVar>();
+//                newVar->parent = parentVar.get();
+//                newVar->name = "";
+//                newVar->text = nodeText;
+//                newVar->gdbIndex = -1;
+//                parentVar->children.append(newVar);
+//                varStack.push_back(parentVar);
+//                parentVar = newVar;
+//            }
+//        } else if (nodeText.startsWith('}')) { // end of struct, change parent
+//                PWatchVar newVar = std::make_shared<WatchVar>();
+//                newVar->parent = parentVar.get();
+//                newVar->name = "";
+//                newVar->text = "}";
+//                newVar->gdbIndex = -1;
+//                parentVar->children.append(newVar);
+//                if (!varStack.isEmpty()) {
+//                    parentVar = varStack.back();
+//                    varStack.pop_back();
+//                }
+//        } else { // next parent member/child
+//            if (parentVar->text.isEmpty()) { // root node, replace text only
+//                parentVar->text = nodeText;
+//            } else {
+//                PWatchVar newVar = std::make_shared<WatchVar>();
+//                newVar->parent = parentVar.get();
+//                newVar->name = "";
+//                newVar->text = nodeText;
+//                newVar->gdbIndex = -1;
+//                parentVar->children.append(newVar);
+//            }
+//        }
+//    }
         // TODO: remember expansion state
 }
 
@@ -1365,6 +1439,69 @@ void DebugReader::skipToAnnotation()
     while (mIndex < mOutput.length() &&
            (mOutput[mIndex]==26))
         mIndex++;
+}
+
+QStringList DebugReader::tokenize(const QString &s)
+{
+    QStringList result;
+    int tStart,tEnd;
+    int i=0;
+    while (i<s.length()) {
+        QChar ch = s[i];
+        if (ch == ' ' || ch == '\t'
+                || ch == '\r'
+                || ch == '\n') {
+//            if (!current.isEmpty()) {
+//                result.append(current);
+//                current = "";
+//            }
+            i++;
+            continue;
+        } else if (ch == '\'') {
+            tStart = i;
+            i++; //skip \'
+            while (i<s.length()) {
+                if (s[i]=='\'') {
+                    i++;
+                    break;
+                } else if (s[i] == '\\') {
+                    i+=2;
+                    break;
+                }
+                i++;
+            }
+            tEnd = std::min(i,s.length());
+            result.append(s.mid(tStart,tEnd-tStart));
+        } if (ch == '\"') {
+            tStart = i;
+            i++; //skip \'
+            while (i<s.length()) {
+                if (s[i]=='\"') {
+                    i++;
+                    break;
+                } else if (s[i] == '\\') {
+                    i+=2;
+                    break;
+                }
+                i++;
+            }
+            tEnd = std::min(i,s.length());
+            result.append(s.mid(tStart,tEnd-tStart));
+        } else if (ch == '_' || ch.isLetterOrNumber()) {
+            tStart = i;
+            while (i<s.length()) {
+                if ((ch!='_') &&(!ch.isLetterOrNumber()))
+                    break;
+                i++;
+            }
+            tEnd = std::min(i,s.length());
+            result.append(s.mid(tStart,tEnd-tStart));
+        } else {
+            result.append(s[i]);
+            i++;
+        }
+    }
+    return result;
 }
 
 bool DebugReader::invalidateAllVars() const
@@ -1718,7 +1855,12 @@ QVariant WatchModel::data(const QModelIndex &index, int role) const
     switch (role) {
     case Qt::DisplayRole:
         //qDebug()<<"item->text:"<<item->text;
-        return item->text;
+        switch(index.column()) {
+        case 0:
+            return item->name;
+        case 1:
+            return item->value;
+        }
     }
     return QVariant();
 }
@@ -1738,10 +1880,6 @@ QModelIndex WatchModel::index(int row, int column, const QModelIndex &parent) co
         pChild = parentItem->children[row];
     }
     if (pChild) {
-        if (parentItem)
-            qDebug()<<row << " : " << column << " - " <<pChild->gdbIndex << " - " << parentItem->text;
-        else
-            qDebug()<<row << " : " << column << " - " <<pChild->gdbIndex;
         return createIndex(row,column,pChild.get());
     }
     return QModelIndex();
@@ -1791,7 +1929,7 @@ int WatchModel::rowCount(const QModelIndex &parent) const
 
 int WatchModel::columnCount(const QModelIndex&) const
 {
-    return 1;
+    return 2;
 }
 
 void WatchModel::addWatchVar(PWatchVar watchVar)

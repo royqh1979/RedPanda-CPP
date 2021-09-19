@@ -52,7 +52,8 @@ struct WatchVar;
 using  PWatchVar = std::shared_ptr<WatchVar>;
 struct WatchVar {
     QString name;
-    QString text;
+    QString value;
+    QString fullName;
     int gdbIndex;
     QList<PWatchVar> children;
     WatchVar * parent; //use raw point to prevent circular-reference
@@ -319,6 +320,7 @@ private:
     void runNextCmd();
     void skipSpaces();
     void skipToAnnotation();
+    QStringList tokenize(const QString& s);
 private:
     Debugger *mDebugger;
     QString mDebuggerPath;
