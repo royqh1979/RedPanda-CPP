@@ -3,3 +3,4 @@ Version 0.2
  - fix: add watch not work when there's no editor openned;
  - enhancement: rainbow parenthesis
  - enhancement: run executable with parameters
+ - add: widget for function tips

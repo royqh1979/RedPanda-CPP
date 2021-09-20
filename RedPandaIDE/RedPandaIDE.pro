@@ -99,6 +99,7 @@ SOURCES += \
     widgets/consolewidget.cpp \
     widgets/custommakefileinfodialog.cpp \
     widgets/filepropertiesdialog.cpp \
+    widgets/functiontipwidget.cpp \
     widgets/headercompletionpopup.cpp \
     widgets/issuestable.cpp \
     widgets/newprojectdialog.cpp \
@@ -196,6 +197,7 @@ HEADERS += \
     widgets/consolewidget.h \
     widgets/custommakefileinfodialog.h \
     widgets/filepropertiesdialog.h \
+    widgets/functiontipwidget.h \
     widgets/headercompletionpopup.h \
     widgets/issuestable.h \
     widgets/newprojectdialog.h \

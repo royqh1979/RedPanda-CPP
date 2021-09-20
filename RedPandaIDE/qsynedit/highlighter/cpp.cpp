@@ -279,7 +279,7 @@ void SynEditCppHighlighter::ansiCppProc()
         if ( isSpaceChar(mLine[mRun]) ) {
             mRange.spaceState = mRange.state;
             mRange.state = RangeState::rsSpace;
-            break;
+            return;
         }
         mRun+=1;
     }

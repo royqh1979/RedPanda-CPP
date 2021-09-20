@@ -12,6 +12,17 @@ struct BufferCoord {
     int Line;
 };
 
+/**
+ * Nomalized buffer posistion:
+ * (0,0) means at the start of the file ('\0')
+ * (1,count of lines+1) means at the end of the file ('\0')
+ * (length of the line+1, line) means at the line break of the line ('\n')
+ */
+struct NormalizedBufferCoord {
+    int Char;
+    int Line;
+};
+
 struct DisplayCoord {
     int Column;
     int Row;

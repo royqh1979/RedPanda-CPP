@@ -377,7 +377,7 @@ void Editor::undoSymbolCompletion(int pos)
         return;
     if (!pSettings->editor().removeSymbolPairs())
         return;
-    if (!GetHighlighterAttriAtRowCol(caretXY(), Token, tokenFinished, tokenType, Attr))
+    if (!getHighlighterAttriAtRowCol(caretXY(), Token, tokenFinished, tokenType, Attr))
         return;
     if ((tokenType == SynHighlighterTokenType::Comment) && (!tokenFinished))
         return ;
@@ -412,7 +412,7 @@ void Editor::undoSymbolCompletion(int pos)
          (pSettings->editor().completeBrace() && (DeletedChar == '{') && (NextChar == '}')) ||
          (pSettings->editor().completeSingleQuote() && (DeletedChar == '\'') && (NextChar == '\'')) ||
          (pSettings->editor().completeDoubleQuote() && (DeletedChar == '\"') && (NextChar == '\"'))) {
-         CommandProcessor(SynEditorCommand::ecDeleteChar);
+         commandProcessor(SynEditorCommand::ecDeleteChar);
     }
 }
 
@@ -730,7 +730,7 @@ bool Editor::event(QEvent *event)
         int line ;
         if (reason == TipType::Error) {
             pError = getSyntaxIssueAtPosition(p);
-        } else if (PointToLine(helpEvent->pos(),line)) {
+        } else if (pointToLine(helpEvent->pos(),line)) {
             //it's on gutter
             //see if its error;
             PSyntaxIssueList issues = getSyntaxIssuesAtLine(line);
@@ -750,7 +750,7 @@ bool Editor::event(QEvent *event)
             s = lines()->getString(p.Line - 1);
             isIncludeLine = mParser->isIncludeLine(s);
             if (!isIncludeLine)
-                s = WordAtRowCol(p);
+                s = wordAtRowCol(p);
             break;
         case TipType::Identifier:
             if (pMainWindow->debugger()->executing())
@@ -866,7 +866,7 @@ void Editor::mouseReleaseEvent(QMouseEvent *event)
             && (event->button() == Qt::LeftButton)) {
 
         BufferCoord p;
-        if (PointToCharLine(event->pos(),p)) {
+        if (pointToCharLine(event->pos(),p)) {
             QString s = lines()->getString(p.Line - 1);
             if (mParser->isIncludeLine(s)) {
                 QString filename = mParser->getHeaderFileName(mFilename,s);
@@ -988,7 +988,7 @@ void Editor::addSyntaxIssues(int line, int startChar, int endChar, CompileIssueT
         start = 1;
         token = lines()->getString(line-1);
     } else if (endChar < 1) {
-        if (!GetHighlighterAttriAtRowColEx(p,token,tokenType,tokenKind,start,attr))
+        if (!getHighlighterAttriAtRowColEx(p,token,tokenType,tokenKind,start,attr))
             return;
     } else {
         start = startChar;
@@ -1123,8 +1123,8 @@ void Editor::onStatusChanged(SynStatusChanges changes)
             BufferCoord wordBegin,wordEnd,bb,be;
             bb = blockBegin();
             be = blockEnd();
-            wordBegin = WordStartEx(bb);
-            wordEnd = WordEndEx(be);
+            wordBegin = wordStartEx(bb);
+            wordEnd = wordEndEx(be);
             if (wordBegin.Line == bb.Line
                     && wordBegin.Char == bb.Char
                     && wordEnd.Line == be.Line
@@ -1277,7 +1277,7 @@ bool Editor::handleSymbolCompletion(QChar key)
         QString Token;
         bool tokenFinished;
         SynHighlighterTokenType tokenType;
-        if (GetHighlighterAttriAtRowCol(HighlightPos, Token, tokenFinished, tokenType,Attr)) {
+        if (getHighlighterAttriAtRowCol(HighlightPos, Token, tokenFinished, tokenType,Attr)) {
             if ((tokenType == SynHighlighterTokenType::Comment) && (!tokenFinished))
                 return false;
             if ((tokenType == SynHighlighterTokenType::String) && (!tokenFinished)
@@ -1362,9 +1362,9 @@ bool Editor::handleParentheseCompletion()
     QuoteStatus status = getQuoteStatus();
     if (status == QuoteStatus::RawString || status == QuoteStatus::NotQuote) {
         beginUpdate();
-        CommandProcessor(SynEditorCommand::ecChar,'(');
+        commandProcessor(SynEditorCommand::ecChar,'(');
         BufferCoord oldCaret = caretXY();
-        CommandProcessor(SynEditorCommand::ecChar,')');
+        commandProcessor(SynEditorCommand::ecChar,')');
         setCaretXY(oldCaret);
         endUpdate();
         return true;
@@ -1400,9 +1400,9 @@ bool Editor::handleBracketCompletion()
 //    QuoteStatus status = getQuoteStatus();
 //    if (status == QuoteStatus::RawString || status == QuoteStatus::NotQuote) {
     beginUpdate();
-    CommandProcessor(SynEditorCommand::ecChar,'[');
+    commandProcessor(SynEditorCommand::ecChar,'[');
     BufferCoord oldCaret = caretXY();
-    CommandProcessor(SynEditorCommand::ecChar,']');
+    commandProcessor(SynEditorCommand::ecChar,']');
     setCaretXY(oldCaret);
     endUpdate();
     return true;
@@ -1425,10 +1425,10 @@ bool Editor::handleMultilineCommentCompletion()
 {
     if (((caretX() > 1) && (caretX()-1 < lineText().length())) && (lineText()[caretX() - 1] == '/')) {
         beginUpdate();
-        CommandProcessor(SynEditorCommand::ecChar,'*');
+        commandProcessor(SynEditorCommand::ecChar,'*');
         BufferCoord oldCaret = caretXY();
-        CommandProcessor(SynEditorCommand::ecChar,'*');
-        CommandProcessor(SynEditorCommand::ecChar,'/');
+        commandProcessor(SynEditorCommand::ecChar,'*');
+        commandProcessor(SynEditorCommand::ecChar,'/');
         setCaretXY(oldCaret);
         endUpdate();
         return true;
@@ -1445,9 +1445,9 @@ bool Editor::handleBraceCompletion()
         i--;
     }
     beginUpdate();
-    CommandProcessor(SynEditorCommand::ecChar,'{');
+    commandProcessor(SynEditorCommand::ecChar,'{');
     BufferCoord oldCaret = caretXY();
-    CommandProcessor(SynEditorCommand::ecChar,'}');
+    commandProcessor(SynEditorCommand::ecChar,'}');
     if (
         ( (s.startsWith("struct")
           || s.startsWith("class")
@@ -1458,7 +1458,7 @@ bool Editor::handleBraceCompletion()
           || s.startsWith("enum") )
           && !s.contains(';')
         ) || s.endsWith('=')) {
-        CommandProcessor(SynEditorCommand::ecChar,';');
+        commandProcessor(SynEditorCommand::ecChar,';');
     }
     setCaretXY(oldCaret);
     endUpdate();
@@ -1473,7 +1473,7 @@ bool Editor::handleBraceSkip()
     if (pos.Line != 0) {
         bool oldInsertMode = insertMode();
         setInsertMode(false); //set mode to overwrite
-        CommandProcessor(SynEditorCommand::ecChar,'}');
+        commandProcessor(SynEditorCommand::ecChar,'}');
         setInsertMode(oldInsertMode);
 //        setCaretXY( BufferCoord{caretX() + 1, caretY()}); // skip over
         return true;
@@ -1495,9 +1495,9 @@ bool Editor::handleSingleQuoteCompletion()
             if (ch == 0 || highlighter()->isWordBreakChar(ch) || highlighter()->isSpaceChar(ch)) {
                 // insert ''
                 beginUpdate();
-                CommandProcessor(SynEditorCommand::ecChar,'\'');
+                commandProcessor(SynEditorCommand::ecChar,'\'');
                 BufferCoord oldCaret = caretXY();
-                CommandProcessor(SynEditorCommand::ecChar,'\'');
+                commandProcessor(SynEditorCommand::ecChar,'\'');
                 setCaretXY(oldCaret);
                 endUpdate();
                 return true;
@@ -1521,9 +1521,9 @@ bool Editor::handleDoubleQuoteCompletion()
             if ((ch == 0) || highlighter()->isWordBreakChar(ch) || highlighter()->isSpaceChar(ch)) {
                 // insert ""
                 beginUpdate();
-                CommandProcessor(SynEditorCommand::ecChar,'"');
+                commandProcessor(SynEditorCommand::ecChar,'"');
                 BufferCoord oldCaret = caretXY();
-                CommandProcessor(SynEditorCommand::ecChar,'"');
+                commandProcessor(SynEditorCommand::ecChar,'"');
                 setCaretXY(oldCaret);
                 endUpdate();
                 return true;
@@ -1541,9 +1541,9 @@ bool Editor::handleGlobalIncludeCompletion()
     if (!s.startsWith("include"))  //it's not #include
         return false;
     beginUpdate();
-    CommandProcessor(SynEditorCommand::ecChar,'<');
+    commandProcessor(SynEditorCommand::ecChar,'<');
     BufferCoord oldCaret = caretXY();
-    CommandProcessor(SynEditorCommand::ecChar,'>');
+    commandProcessor(SynEditorCommand::ecChar,'>');
     setCaretXY(oldCaret);
     endUpdate();
     return true;
@@ -1753,7 +1753,7 @@ void Editor::showCompletion(bool autoComplete)
     bool tokenFinished;
     SynHighlighterTokenType tokenType;
     BufferCoord pBeginPos, pEndPos;
-    if (GetHighlighterAttriAtRowCol(
+    if (getHighlighterAttriAtRowCol(
                 BufferCoord{caretX() - 1,
                 caretY()}, s, tokenFinished,tokenType, attr)) {
         if (tokenType == SynHighlighterTokenType::PreprocessDirective) {//Preprocessor
@@ -1777,7 +1777,7 @@ void Editor::showCompletion(bool autoComplete)
     }
 
     // Position it at the top of the next line
-    QPoint p = RowColumnToPixels(displayXY());
+    QPoint p = rowColumnToPixels(displayXY());
     p+=QPoint(0,textHeight()+2);
     mCompletionPopup->move(mapToGlobal(p));
 
@@ -1830,7 +1830,7 @@ void Editor::showHeaderCompletion(bool autoComplete)
         return;
 
     // Position it at the top of the next line
-    QPoint p = RowColumnToPixels(displayXY());
+    QPoint p = rowColumnToPixels(displayXY());
     p.setY(p.y() + textHeight() + 2);
     mHeaderCompletionPopup->move(mapToGlobal(p));
 
@@ -1931,8 +1931,8 @@ void Editor::completionInsert(bool appendFunc)
     QString funcAddOn = "";
 
 // delete the part of the word that's already been typed ...
-    BufferCoord p = WordEnd();
-    setBlockBegin(WordStart());
+    BufferCoord p = wordEnd();
+    setBlockBegin(wordStart());
     setBlockEnd(p);
 
     // if we are inserting a function,
@@ -2125,7 +2125,7 @@ bool Editor::onHeaderCompletionKeyPressed(QKeyEvent *event)
 Editor::TipType Editor::getTipType(QPoint point, BufferCoord& pos)
 {
     // Only allow in the text area...
-    if (PointToCharLine(point, pos)) {
+    if (pointToCharLine(point, pos)) {
         if (!pMainWindow->debugger()->executing()
                 && getSyntaxIssueAtPosition(pos)) {
             return TipType::Error;
@@ -2135,12 +2135,12 @@ Editor::TipType Editor::getTipType(QPoint point, BufferCoord& pos)
         QString s;
 
         // Only allow hand tips in highlighted areas
-        if (GetHighlighterAttriAtRowCol(pos,s,attr)) {
+        if (getHighlighterAttriAtRowCol(pos,s,attr)) {
             // Only allow Identifiers, Preprocessor directives, and selection
             if (attr) {
                 if (selAvail()) {
                     // do not allow when dragging selection
-                    if (IsPointInSelection(pos))
+                    if (isPointInSelection(pos))
                         return TipType::Selection;
                 } else if (attr->name() == SYNS_AttrIdentifier)
                     return TipType::Identifier;

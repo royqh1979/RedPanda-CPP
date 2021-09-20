@@ -1735,7 +1735,7 @@ void MainWindow::onEditorContextMenu(const QPoint &pos)
     QMenu menu(this);
     BufferCoord p;
     mEditorContextMenuPos = pos;
-    if (editor->GetPositionOfMouse(p)) {
+    if (editor->getPositionOfMouse(p)) {
         //mouse on editing area
         menu.addAction(ui->actionCompile_Run);
         menu.addAction(ui->actionDebug);
@@ -1769,7 +1769,7 @@ void MainWindow::onEditorContextMenu(const QPoint &pos)
     } else {
         //mouse on gutter
         int line;
-        if (!editor->GetLineOfMouse(line))
+        if (!editor->getLineOfMouse(line))
             line=-1;
         menu.addAction(ui->actionToggle_Breakpoint);
         menu.addAction(ui->actionBreakpoint_property);
@@ -2657,7 +2657,7 @@ void MainWindow::on_actionAdd_Watch_triggered()
         if (e->selAvail()) {
             s = e->selText();
         } else {
-            s = e->WordAtCursor();
+            s = e->wordAtCursor();
         }
     }
     bool isOk;
@@ -2757,7 +2757,7 @@ void MainWindow::on_actionFind_triggered()
     if (mSearchDialog==nullptr) {
         mSearchDialog = new SearchDialog(this);
     }
-    QString s = e->WordAtCursor();
+    QString s = e->wordAtCursor();
     mSearchDialog->find(s);
 }
 
@@ -2768,7 +2768,7 @@ void MainWindow::on_actionFind_in_files_triggered()
     }
     Editor *e = mEditorList->getEditor();
     if (e) {
-        QString s = e->WordAtCursor();
+        QString s = e->wordAtCursor();
         mSearchDialog->findInFiles(s);
     } else {
         mSearchDialog->findInFiles("");
@@ -2783,7 +2783,7 @@ void MainWindow::on_actionReplace_triggered()
     if (mSearchDialog==nullptr) {
         mSearchDialog = new SearchDialog(this);
     }
-    QString s = e->WordAtCursor();
+    QString s = e->wordAtCursor();
     mSearchDialog->replace(s,s);
 }
 
@@ -2977,7 +2977,7 @@ void MainWindow::on_actionToggle_Breakpoint_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     int line;
-    if (editor && editor->PointToLine(mEditorContextMenuPos,line))
+    if (editor && editor->pointToLine(mEditorContextMenuPos,line))
         editor->toggleBreakpoint(line);
 }
 
@@ -3001,7 +3001,7 @@ void MainWindow::on_actionBreakpoint_property_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     int line;
-    if (editor && editor->PointToLine(mEditorContextMenuPos,line)) {
+    if (editor && editor->pointToLine(mEditorContextMenuPos,line)) {
         if (editor->hasBreakpoint(line))
             editor->modifyBreakpointProperty(line);
     }
@@ -3013,7 +3013,7 @@ void MainWindow::on_actionGoto_Declaration_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     BufferCoord pos;
-    if (editor && editor->PointToCharLine(mEditorContextMenuPos,pos)) {
+    if (editor && editor->pointToCharLine(mEditorContextMenuPos,pos)) {
         editor->gotoDeclaration(pos);
     }
 }
@@ -3023,7 +3023,7 @@ void MainWindow::on_actionGoto_Definition_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     BufferCoord pos;
-    if (editor && editor->PointToCharLine(mEditorContextMenuPos,pos)) {
+    if (editor && editor->pointToCharLine(mEditorContextMenuPos,pos)) {
         editor->gotoDefinition(pos);
     }
 }
@@ -3033,7 +3033,7 @@ void MainWindow::on_actionFind_references_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     BufferCoord pos;
-    if (editor && editor->PointToCharLine(mEditorContextMenuPos,pos)) {
+    if (editor && editor->pointToCharLine(mEditorContextMenuPos,pos)) {
         CppRefacter refactor;
         refactor.findOccurence(editor,pos);
         ui->tabMessages->setCurrentWidget(ui->tabSearch);
