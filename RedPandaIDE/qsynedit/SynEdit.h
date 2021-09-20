@@ -166,12 +166,14 @@ public:
     DisplayCoord bufferToDisplayPos(const BufferCoord& p) const;
     BufferCoord displayToBufferPos(const DisplayCoord& p) const;
 
-
+    //normalized buffer coord operations
     NormalizedBufferCoord moveBufferPos(const BufferCoord&p, int delta) const;
     NormalizedBufferCoord moveBufferPos(const NormalizedBufferCoord &p, int delta) const;
     NormalizedBufferCoord normalizeBufferPos(const BufferCoord& p) const;
     NormalizedBufferCoord normalizeBufferPos(int aChar, int aLine) const;
     QChar charAtNormalizedBufferPos(const NormalizedBufferCoord& p) const;
+    QStringList getContents(const NormalizedBufferCoord& pStart,const NormalizedBufferCoord& pEnd);
+    QString getJoinedContents(const NormalizedBufferCoord& pStart,const NormalizedBufferCoord& pEnd, const QString& joinStr);
 
     int leftSpaces(const QString& line) const;
     QString GetLeftSpacing(int charCount,bool wantTabs) const;

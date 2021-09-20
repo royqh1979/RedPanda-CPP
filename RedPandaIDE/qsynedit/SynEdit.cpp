@@ -783,6 +783,30 @@ QChar SynEdit::charAtNormalizedBufferPos(const NormalizedBufferCoord &p) const
     return s[p.Char-1];
 }
 
+QStringList SynEdit::getContents(const NormalizedBufferCoord &pStart, const NormalizedBufferCoord &pEnd)
+{
+    QStringList result;
+    if (mLines->count()==0)
+        return result;
+    if (pStart.Line>0) {
+        QString s = mLines->getString(pStart.Line-1);
+        result += s.mid(pStart.Char-1);
+    }
+    int endLine = std::min(pEnd.Line,mLines->count());
+    for (int i=pStart.Line;i<endLine-1;i++) {
+        result += mLines->getString(i);
+    }
+    if (pEnd.Line<=mLines->count()) {
+        result += mLines->getString(pEnd.Line-1).mid(0,pEnd.Char-1);
+    }
+    return result;
+}
+
+QString SynEdit::getJoinedContents(const NormalizedBufferCoord &pStart, const NormalizedBufferCoord &pEnd, const QString &joinStr)
+{
+    return getContents(pStart,pEnd).join(joinStr);
+}
+
 int SynEdit::leftSpaces(const QString &line) const
 {
     int result = 0;
