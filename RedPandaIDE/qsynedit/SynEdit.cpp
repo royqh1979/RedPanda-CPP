@@ -4144,7 +4144,7 @@ void SynEdit::setUseCodeFolding(bool value)
     }
 }
 
-SynEditCodeFolding &SynEdit::codeFolding() const
+SynEditCodeFolding &SynEdit::codeFolding()
 {
     return mCodeFolding;
 }

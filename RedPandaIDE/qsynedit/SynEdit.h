@@ -301,7 +301,7 @@ public:
     bool useCodeFolding() const;
     void setUseCodeFolding(bool value);
 
-    SynEditCodeFolding & codeFolding() const;
+    SynEditCodeFolding & codeFolding();
 
     QString lineText() const;
     void setLineText(const QString s);
