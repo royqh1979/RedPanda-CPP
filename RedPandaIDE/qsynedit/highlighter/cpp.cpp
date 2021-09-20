@@ -283,7 +283,7 @@ void SynEditCppHighlighter::ansiCppProc()
         }
         mRun+=1;
     }
-    mRange.state = RangeState::rsUnknown;
+    mRange.state = RangeState::rsCppCommentEnded;
     if (mLine[mRun-1] == '\\' && mLine[mRun]==0) { // continues on next line
         mRange.state = RangeState::rsCppComment;
     }

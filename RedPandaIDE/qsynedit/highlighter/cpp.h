@@ -44,7 +44,8 @@ class SynEditCppHighlighter: public SynHighlighter
         rsAsmBlock, rsDirective, rsDirectiveComment, rsString,
         rsMultiLineString, rsMultiLineDirective, rsCppComment,
         rsStringEscapeSeq, rsMultiLineStringEscapeSeq,
-        rsRawString, rsSpace,rsRawStringEscaping,rsRawStringNotEscaping,rsChar
+        rsRawString, rsSpace,rsRawStringEscaping,rsRawStringNotEscaping,rsChar,
+        rsCppCommentEnded
     };
 
 public:
