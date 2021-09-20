@@ -162,9 +162,17 @@ public:
     void invalidateGutterLines(int FirstLine, int LastLine);
     DisplayCoord pixelsToNearestRowColumn(int aX, int aY) const;
     DisplayCoord pixelsToRowColumn(int aX, int aY) const;
-    QPoint RowColumnToPixels(const DisplayCoord& coord) const;
+    QPoint rowColumnToPixels(const DisplayCoord& coord) const;
     DisplayCoord bufferToDisplayPos(const BufferCoord& p) const;
     BufferCoord displayToBufferPos(const DisplayCoord& p) const;
+
+
+    NormalizedBufferCoord moveBufferPos(const BufferCoord&p, int delta) const;
+    NormalizedBufferCoord moveBufferPos(const NormalizedBufferCoord &p, int delta) const;
+    NormalizedBufferCoord normalizeBufferPos(const BufferCoord& p) const;
+    NormalizedBufferCoord normalizeBufferPos(int aChar, int aLine) const;
+    QChar charAtNormalizedBufferPos(const NormalizedBufferCoord& p) const;
+
     int leftSpaces(const QString& line) const;
     QString GetLeftSpacing(int charCount,bool wantTabs) const;
     int charToColumn(int aLine, int aChar) const;
@@ -185,21 +193,21 @@ public:
     void lockPainter();
     void unlockPainter();
     bool selAvail() const;
-    QString WordAtCursor();
-    QString WordAtRowCol(const BufferCoord& XY);
+    QString wordAtCursor();
+    QString wordAtRowCol(const BufferCoord& XY);
 
     int charColumns(QChar ch) const;
     double dpiFactor() const;
-    bool IsPointInSelection(const BufferCoord& Value) const;
-    BufferCoord NextWordPos();
-    BufferCoord NextWordPosEx(const BufferCoord& XY);
-    BufferCoord WordStart();
-    BufferCoord WordStartEx(const BufferCoord& XY);
-    BufferCoord WordEnd();
-    BufferCoord WordEndEx(const BufferCoord& XY);
-    BufferCoord PrevWordPos();
-    BufferCoord PrevWordPosEx(const BufferCoord& XY);
-    void CommandProcessor(SynEditorCommand Command, QChar AChar = QChar(), void * pData = nullptr);
+    bool isPointInSelection(const BufferCoord& Value) const;
+    BufferCoord nextWordPos();
+    BufferCoord nextWordPosEx(const BufferCoord& XY);
+    BufferCoord wordStart();
+    BufferCoord wordStartEx(const BufferCoord& XY);
+    BufferCoord wordEnd();
+    BufferCoord wordEndEx(const BufferCoord& XY);
+    BufferCoord prevWordPos();
+    BufferCoord prevWordPosEx(const BufferCoord& XY);
+    void commandProcessor(SynEditorCommand Command, QChar AChar = QChar(), void * pData = nullptr);
     //Caret
     void showCaret();
     void hideCaret();
@@ -223,37 +231,37 @@ public:
     int maxScrollWidth() const;
     int maxScrollHeight() const;
 
-    bool GetHighlighterAttriAtRowCol(const BufferCoord& XY, QString& Token,
+    bool getHighlighterAttriAtRowCol(const BufferCoord& XY, QString& Token,
       PSynHighlighterAttribute& Attri);
-    bool GetHighlighterAttriAtRowCol(const BufferCoord& XY, QString& Token,
+    bool getHighlighterAttriAtRowCol(const BufferCoord& XY, QString& Token,
       bool& tokenFinished, SynHighlighterTokenType& TokenType,
       PSynHighlighterAttribute& Attri);
-    bool GetHighlighterAttriAtRowColEx(const BufferCoord& XY, QString& Token,
+    bool getHighlighterAttriAtRowColEx(const BufferCoord& XY, QString& Token,
       SynHighlighterTokenType& TokenType, SynTokenKind &TokenKind, int &Start,
       PSynHighlighterAttribute& Attri);
 
     //Commands
-    virtual void cutToClipboard() { CommandProcessor(SynEditorCommand::ecCut);}
-    virtual void copyToClipboard() { CommandProcessor(SynEditorCommand::ecCopy);}
-    virtual void pasteFromClipboard() { CommandProcessor(SynEditorCommand::ecPaste);}
-    virtual void undo()  { CommandProcessor(SynEditorCommand::ecUndo);}
-    virtual void redo()  { CommandProcessor(SynEditorCommand::ecRedo);}
-    virtual void zoomIn()  { CommandProcessor(SynEditorCommand::ecZoomIn);}
-    virtual void zoomOut()  { CommandProcessor(SynEditorCommand::ecZoomOut);}
-    virtual void selectAll() {  CommandProcessor(SynEditorCommand::ecSelectAll);}
-    virtual void tab() { CommandProcessor(SynEditorCommand::ecTab);}
-    virtual void untab() { CommandProcessor(SynEditorCommand::ecShiftTab);}
-    virtual void toggleComment() { CommandProcessor(SynEditorCommand::ecToggleComment);}
+    virtual void cutToClipboard() { commandProcessor(SynEditorCommand::ecCut);}
+    virtual void copyToClipboard() { commandProcessor(SynEditorCommand::ecCopy);}
+    virtual void pasteFromClipboard() { commandProcessor(SynEditorCommand::ecPaste);}
+    virtual void undo()  { commandProcessor(SynEditorCommand::ecUndo);}
+    virtual void redo()  { commandProcessor(SynEditorCommand::ecRedo);}
+    virtual void zoomIn()  { commandProcessor(SynEditorCommand::ecZoomIn);}
+    virtual void zoomOut()  { commandProcessor(SynEditorCommand::ecZoomOut);}
+    virtual void selectAll() {  commandProcessor(SynEditorCommand::ecSelectAll);}
+    virtual void tab() { commandProcessor(SynEditorCommand::ecTab);}
+    virtual void untab() { commandProcessor(SynEditorCommand::ecShiftTab);}
+    virtual void toggleComment() { commandProcessor(SynEditorCommand::ecToggleComment);}
 
     virtual void beginUpdate();
     virtual void endUpdate();
     virtual BufferCoord getMatchingBracket();
     virtual BufferCoord getMatchingBracketEx(BufferCoord APoint);
 
-    bool GetPositionOfMouse(BufferCoord& aPos);
-    bool GetLineOfMouse(int& line);
-    bool PointToCharLine(const QPoint& point, BufferCoord& coord);
-    bool PointToLine(const QPoint& point, int& line);
+    bool getPositionOfMouse(BufferCoord& aPos);
+    bool getLineOfMouse(int& line);
+    bool pointToCharLine(const QPoint& point, BufferCoord& coord);
+    bool pointToLine(const QPoint& point, int& line);
     bool isIdentChar(const QChar& ch);
 
     void setRainbowAttrs(const PSynHighlighterAttribute &attr0,
@@ -295,7 +303,7 @@ public:
 
     SynEditCodeFolding & codeFolding();
 
-    QString lineText();
+    QString lineText() const;
     void setLineText(const QString s);
 
     PSynEditStringList lines() const;
@@ -366,25 +374,25 @@ signals:
     void linesDeleted(int FirstLine, int Count);
     void linesInserted(int FirstLine, int Count);
 
-    void Changed();
+    void changed();
 
-    void ChainUndoAdded();
-    void ChainRedoAdded();
-    void ChainLinesChanging();
-    void ChainLinesChanged();
-    void ChainListCleared();
+//    void chainUndoAdded();
+//    void chainRedoAdded();
+//    void chainLinesChanging();
+//    void chainLinesChanged();
+//    void chainListCleared();
 
-    void ChainListDeleted(int Index, int Count);
-    void ChainListInserted(int Index, int Count);
-    void ChainListPutted(int Index, int Count);
+//    void chainListDeleted(int Index, int Count);
+//    void chainListInserted(int Index, int Count);
+//    void chainListPutted(int Index, int Count);
 
-    void FilesDropped(int X,int Y, const QStringList& AFiles);
+//    void filesDropped(int X,int Y, const QStringList& AFiles);
     void gutterClicked(Qt::MouseButton button, int x, int y, int line);
-    void ImeInputed(const QString& s);
+//    void imeInputed(const QString& s);
 
-    void contextHelp(const QString& word);
+//    void contextHelp(const QString& word);
 
-    void scrolled(SynScrollBarKind ScrollBar);
+//    void scrolled(SynScrollBarKind ScrollBar);
     void statusChanged(SynStatusChanges changes);
 
     void fontChanged();
@@ -466,34 +474,34 @@ private:
      * @param DX
      * @param SelectionCommand
      */
-    void MoveCaretHorz(int DX, bool isSelection);
-    void MoveCaretVert(int DY, bool isSelection);
-    void MoveCaretAndSelection(const BufferCoord& ptBefore, const BufferCoord& ptAfter,
+    void moveCaretHorz(int DX, bool isSelection);
+    void moveCaretVert(int DY, bool isSelection);
+    void moveCaretAndSelection(const BufferCoord& ptBefore, const BufferCoord& ptAfter,
                                bool isSelection);
-    void MoveCaretToLineStart(bool isSelection);
-    void MoveCaretToLineEnd(bool isSelection);
-    void SetSelectedTextEmpty();
-    void SetSelTextPrimitive(const QString& aValue);
-    void SetSelTextPrimitiveEx(SynSelectionMode PasteMode,
+    void moveCaretToLineStart(bool isSelection);
+    void moveCaretToLineEnd(bool isSelection);
+    void setSelectedTextEmpty();
+    void setSelTextPrimitive(const QString& aValue);
+    void setSelTextPrimitiveEx(SynSelectionMode PasteMode,
                                const QString& Value, bool AddToUndoList);
     void doLinesDeleted(int FirstLine, int Count);
     void doLinesInserted(int FirstLine, int Count);
-    void ProperSetLine(int ALine, const QString& ALineText);
-    void DeleteSelection(const BufferCoord& BB, const BufferCoord& BE);
-    void InsertText(const QString& Value, SynSelectionMode PasteMode,bool AddToUndoList);
-    int InsertTextByNormalMode(const QString& Value);
-    int InsertTextByColumnMode(const QString& Value,bool AddToUndoList);
-    int InsertTextByLineMode(const QString& Value);
-    void DeleteFromTo(const BufferCoord& start, const BufferCoord& end);
-    void SetSelWord();
-    void SetWordBlock(BufferCoord Value);
+    void properSetLine(int ALine, const QString& ALineText);
+    void deleteSelection(const BufferCoord& BB, const BufferCoord& BE);
+    void insertText(const QString& Value, SynSelectionMode PasteMode,bool AddToUndoList);
+    int insertTextByNormalMode(const QString& Value);
+    int insertTextByColumnMode(const QString& Value,bool AddToUndoList);
+    int insertTextByLineMode(const QString& Value);
+    void deleteFromTo(const BufferCoord& start, const BufferCoord& end);
+    void setSelWord();
+    void setWordBlock(BufferCoord Value);
 
 
     void processGutterClick(QMouseEvent* event);
 
     void clearUndo();
-    BufferCoord GetPreviousLeftBracket(int x,int y);
-    bool CanDoBlockIndent();
+    BufferCoord getPreviousLeftBracket(int x,int y);
+    bool canDoBlockIndent();
 
     //Commands
     void doDeleteLastChar();

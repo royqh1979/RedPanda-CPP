@@ -41,7 +41,7 @@ void FilePropertiesDialog::calcFile(Editor *editor,
             j++;
         QString token;
         PSynHighlighterAttribute attr;
-        if (editor->GetHighlighterAttriAtRowCol(BufferCoord{j+1,i+1},
+        if (editor->getHighlighterAttriAtRowCol(BufferCoord{j+1,i+1},
                                                 token,attr)) {
             // if it is preprocessor...
             if (attr->name() == SYNS_AttrPreprocessor) {
