@@ -470,62 +470,62 @@ void Settings::Editor::setRainbowParenthesis(bool newRainbowParenthesis)
     mRainbowParenthesis = newRainbowParenthesis;
 }
 
-bool Editor::showFunctionTips() const
+bool Settings::Editor::showFunctionTips() const
 {
     return mShowFunctionTips;
 }
 
-void Editor::setShowFunctionTips(bool newShowFunctionTips)
+void Settings::Editor::setShowFunctionTips(bool newShowFunctionTips)
 {
     mShowFunctionTips = newShowFunctionTips;
 }
 
-bool Editor::enableTooltips() const
+bool Settings::Editor::enableTooltips() const
 {
     return mEnableTooltips;
 }
 
-void Editor::setEnableTooltips(bool newEnableTooltips)
+void Settings::Editor::setEnableTooltips(bool newEnableTooltips)
 {
     mEnableTooltips = newEnableTooltips;
 }
 
-bool Editor::enableDebugTooltips() const
+bool Settings::Editor::enableDebugTooltips() const
 {
     return mEnableDebugTooltips;
 }
 
-void Editor::setEnableDebugTooltips(bool newEnableDebugTooltips)
+void Settings::Editor::setEnableDebugTooltips(bool newEnableDebugTooltips)
 {
     mEnableDebugTooltips = newEnableDebugTooltips;
 }
 
-bool Editor::enableIdentifierToolTips() const
+bool Settings::Editor::enableIdentifierToolTips() const
 {
     return mEnableIdentifierToolTips;
 }
 
-void Editor::setEnableIdentifierToolTips(bool newEnableIdentifierToolTips)
+void Settings::Editor::setEnableIdentifierToolTips(bool newEnableIdentifierToolTips)
 {
     mEnableIdentifierToolTips = newEnableIdentifierToolTips;
 }
 
-bool Editor::enableHeaderToolTips() const
+bool Settings::Editor::enableHeaderToolTips() const
 {
     return mEnableHeaderToolTips;
 }
 
-void Editor::setEnableHeaderToolTips(bool newEnableHeaderToolTips)
+void Settings::Editor::setEnableHeaderToolTips(bool newEnableHeaderToolTips)
 {
     mEnableHeaderToolTips = newEnableHeaderToolTips;
 }
 
-bool Editor::enableIssueToolTips() const
+bool Settings::Editor::enableIssueToolTips() const
 {
     return mEnableIssueToolTips;
 }
 
-void Editor::setEnableIssueToolTips(bool newEnableIssueToolTips)
+void Settings::Editor::setEnableIssueToolTips(bool newEnableIssueToolTips)
 {
     mEnableIssueToolTips = newEnableIssueToolTips;
 }
