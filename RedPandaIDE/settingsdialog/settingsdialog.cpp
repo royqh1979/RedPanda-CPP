@@ -10,6 +10,7 @@
 #include "editorcodecompletionwidget.h"
 #include "editorsyntaxcheckwidget.h"
 #include "editorsymbolcompletionwidget.h"
+#include "editortooltipswidget.h"
 #include "editorautosavewidget.h"
 #include "editormiscwidget.h"
 #include "environmentappearencewidget.h"
@@ -126,6 +127,10 @@ PSettingsDialog SettingsDialog::optionDialog()
     dialog->addWidget(widget);
 
     widget = new EditorSyntaxCheckWidget(tr("Auto Syntax Checking"),tr("Editor"));
+    widget->init();
+    dialog->addWidget(widget);
+
+    widget = new EditorTooltipsWidget(tr("Tooltips"),tr("Editor"));
     widget->init();
     dialog->addWidget(widget);
 

@@ -470,6 +470,66 @@ void Settings::Editor::setRainbowParenthesis(bool newRainbowParenthesis)
     mRainbowParenthesis = newRainbowParenthesis;
 }
 
+bool Editor::showFunctionTips() const
+{
+    return mShowFunctionTips;
+}
+
+void Editor::setShowFunctionTips(bool newShowFunctionTips)
+{
+    mShowFunctionTips = newShowFunctionTips;
+}
+
+bool Editor::enableTooltips() const
+{
+    return mEnableTooltips;
+}
+
+void Editor::setEnableTooltips(bool newEnableTooltips)
+{
+    mEnableTooltips = newEnableTooltips;
+}
+
+bool Editor::enableDebugTooltips() const
+{
+    return mEnableDebugTooltips;
+}
+
+void Editor::setEnableDebugTooltips(bool newEnableDebugTooltips)
+{
+    mEnableDebugTooltips = newEnableDebugTooltips;
+}
+
+bool Editor::enableIdentifierToolTips() const
+{
+    return mEnableIdentifierToolTips;
+}
+
+void Editor::setEnableIdentifierToolTips(bool newEnableIdentifierToolTips)
+{
+    mEnableIdentifierToolTips = newEnableIdentifierToolTips;
+}
+
+bool Editor::enableHeaderToolTips() const
+{
+    return mEnableHeaderToolTips;
+}
+
+void Editor::setEnableHeaderToolTips(bool newEnableHeaderToolTips)
+{
+    mEnableHeaderToolTips = newEnableHeaderToolTips;
+}
+
+bool Editor::enableIssueToolTips() const
+{
+    return mEnableIssueToolTips;
+}
+
+void Editor::setEnableIssueToolTips(bool newEnableIssueToolTips)
+{
+    mEnableIssueToolTips = newEnableIssueToolTips;
+}
+
 int Settings::Editor::rightEdgeWidth() const
 {
     return mRightEdgeWidth;
@@ -976,6 +1036,14 @@ void Settings::Editor::doSave()
     saveValue("readonly_system_header",mReadOnlySytemHeader);
     saveValue("auto_load_last_files",mAutoLoadLastFiles);
     saveValue("default_file_cpp",mDefaultFileCpp);
+
+    //tooltips
+    saveValue("enable_tooltips",mEnableTooltips);
+    saveValue("enable_debug_tooltips",mEnableDebugTooltips);
+    saveValue("enable_identifier_tooltips",mEnableIdentifierToolTips);
+    saveValue("enable_header_tooltips",mEnableHeaderToolTips);
+    saveValue("enable_issue_tooltips",mEnableIssueToolTips);
+    saveValue("show_function_tips",mShowFunctionTips);
 }
 
 void Settings::Editor::doLoad()
@@ -1078,6 +1146,14 @@ void Settings::Editor::doLoad()
     mReadOnlySytemHeader = boolValue("readonly_system_header",true);
     mAutoLoadLastFiles = boolValue("auto_load_last_files",true);
     mDefaultFileCpp = boolValue("default_file_cpp",true);
+
+    //tooltips
+    mEnableTooltips = boolValue("enable_tooltips",true);
+    mEnableDebugTooltips = boolValue("enable_debug_tooltips",true);
+    mEnableIdentifierToolTips = boolValue("enable_identifier_tooltips",true);
+    mEnableHeaderToolTips = boolValue("enable_header_tooltips", true);
+    mEnableIssueToolTips = boolValue("enable_issue_tooltips", true);
+    mShowFunctionTips = boolValue("show_function_tips",true);
 }
 
 SynEditCaretType Settings::Editor::caretForOverwrite() const

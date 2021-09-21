@@ -305,6 +305,20 @@ public:
         bool rainbowParenthesis() const;
         void setRainbowParenthesis(bool newRainbowParenthesis);
 
+        bool enableTooltips() const;
+        void setEnableTooltips(bool newEnableTooltips);
+        bool enableDebugTooltips() const;
+        void setEnableDebugTooltips(bool newEnableDebugTooltips);
+        bool enableIdentifierToolTips() const;
+        void setEnableIdentifierToolTips(bool newEnableIdentifierToolTips);
+        bool enableHeaderToolTips() const;
+        void setEnableHeaderToolTips(bool newEnableHeaderToolTips);
+        bool enableIssueToolTips() const;
+        void setEnableIssueToolTips(bool newEnableIssueToolTips);
+
+        bool showFunctionTips() const;
+        void setShowFunctionTips(bool newShowFunctionTips);
+
     private:
         //General
         // indents
@@ -402,6 +416,14 @@ public:
         bool mReadOnlySytemHeader;
         bool mAutoLoadLastFiles;
         bool mDefaultFileCpp;
+
+        //hints tooltip
+        bool mEnableTooltips;
+        bool mEnableDebugTooltips;
+        bool mEnableIdentifierToolTips;
+        bool mEnableHeaderToolTips;
+        bool mEnableIssueToolTips;
+        bool mShowFunctionTips;
 
         // _Base interface
     protected:

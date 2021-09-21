@@ -722,7 +722,9 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
 
 bool Editor::event(QEvent *event)
 {
-    if (event->type() == QEvent::HoverEnter || event->type() == QEvent::HoverMove) {
+    if ((event->type() == QEvent::HoverEnter || event->type() == QEvent::HoverMove)
+            && pSettings->editor().enableTooltips()
+            ) {
         QHoverEvent *helpEvent = static_cast<QHoverEvent *>(event);
         BufferCoord p;
         TipType reason = getTipType(helpEvent->pos(),p);
@@ -731,8 +733,7 @@ bool Editor::event(QEvent *event)
         if (reason == TipType::Error) {
             pError = getSyntaxIssueAtPosition(p);
         } else if (pointToLine(helpEvent->pos(),line)) {
-            //it's on gutter
-            //see if its error;
+            //issue tips is prefered
             PSyntaxIssueList issues = getSyntaxIssuesAtLine(line);
             if (issues && !issues->isEmpty()) {
                 reason = TipType::Error;
@@ -799,26 +800,30 @@ bool Editor::event(QEvent *event)
         switch (reason) {
         case TipType::Preprocessor:
             if (isIncludeLine) {
-                hint = getFileHint(s);
+                if (pSettings->editor().enableHeaderToolTips())
+                    hint = getFileHint(s);
             } else if (//devEditor.ParserHints and
                      !mCompletionPopup->isVisible()
                      && !mHeaderCompletionPopup->isVisible()) {
-                hint = getParserHint(s,p.Line);
+                if (pSettings->editor().enableIdentifierToolTips())
+                    hint = getParserHint(s,p.Line);
             }
             break;
         case TipType::Identifier:
         case TipType::Selection:
             if (!mCompletionPopup->isVisible()
                     && !mHeaderCompletionPopup->isVisible()) {
-                if (pMainWindow->debugger()->executing()) {
+                if (pMainWindow->debugger()->executing()
+                        && (pSettings->editor().enableDebugTooltips())) {
                     showDebugHint(s,p.Line);
-                } else { //if devEditor.ParserHints {
+                } else if (pSettings->editor().enableIdentifierToolTips()) { //if devEditor.ParserHints {
                     hint = getParserHint(s, p.Line);
                 }
             }
             break;
         case TipType::Error:
-            hint = getErrorHint(pError);
+            if (pSettings->editor().enableIssueToolTips())
+                hint = getErrorHint(pError);
         }
 //        qDebug()<<"hint:"<<hint;
         if (!hint.isEmpty()) {
