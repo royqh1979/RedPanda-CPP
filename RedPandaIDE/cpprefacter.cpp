@@ -79,11 +79,7 @@ PSearchResultTreeItem CppRefacter::findOccurenceInFile(
             editor.highlighter()->resetState();
         } else {
             editor.highlighter()->setState(
-                        editor.lines()->ranges(posY-1),
-                        editor.lines()->braceLevels(posY-1),
-                        editor.lines()->bracketLevels(posY-1),
-                        editor.lines()->parenthesisLevels(posY-1)
-                        );
+                        editor.lines()->ranges(posY-1));
         }
         editor.highlighter()->setLine(line,posY);
         while (!editor.highlighter()->eol()) {

@@ -130,9 +130,6 @@ private:
     bool mAsmStart;
     SynRangeState mRange;
 //    SynRangeState mSpaceRange;
-    int mParenthesisLevel;
-    int mBracketLevel;
-    int mBraceLevel;
     QString mLineString;
     QChar* mLine;
     int mLineSize;
@@ -173,12 +170,9 @@ public:
     int getTokenPos() override;
     void next() override;
     void setLine(const QString &newLine, int lineNumber) override;
-    int getBraceLevel() const override;
-    int getBracketLevel() const override;
-    int getParenthesisLevel() const override;
     bool isKeyword(const QString &word) override;
     SynHighlighterTokenType getTokenType() override;
-    void setState(SynRangeState rangeState, int braceLevel, int bracketLevel, int parenthesisLevel) override;
+    void setState(const SynRangeState& rangeState) override;
     void resetState() override;
     SynHighlighterClass getClass() const override;
     QString getName() const override;

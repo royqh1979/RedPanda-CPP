@@ -10,10 +10,16 @@
 #include <QVector>
 #include "../Types.h"
 
-typedef struct {
+struct SynRangeState {
     int state;
     int spaceState;
-} SynRangeState;
+    int braceLevel;
+    int bracketLevel;
+    int parenthesisLevel;
+    int leftBraces;
+    int rightBraces;
+    bool operator==(const SynRangeState& s2);
+};
 
 typedef int SynTokenKind;
 
@@ -92,9 +98,6 @@ public:
     virtual bool isLastLineStringNotFinished(int state) const = 0;
     virtual bool eol() const = 0;
     virtual SynRangeState getRangeState() const = 0;
-    virtual int getBraceLevel() const;
-    virtual int getBracketLevel() const;
-    virtual int getParenthesisLevel() const;
     virtual QString getToken() const=0;
     virtual PSynHighlighterAttribute getTokenAttribute() const=0;
     virtual SynHighlighterTokenType getTokenType();
@@ -103,7 +106,7 @@ public:
     virtual bool isKeyword(const QString& word);
     virtual void next() = 0;
     virtual void nextToEol();
-    virtual void setState(SynRangeState rangeState, int braceLevel, int bracketLevel, int parenthesisLevel) = 0;
+    virtual void setState(const SynRangeState& rangeState) = 0;
     virtual void setLine(const QString& newLine, int lineNumber) = 0;
     virtual void resetState() = 0;
 

@@ -48,21 +48,6 @@ PSynHighlighterAttribute SynHighlighter::symbolAttribute() const
     return mSymbolAttribute;
 }
 
-int SynHighlighter::getBraceLevel() const
-{
-    return 0;
-}
-
-int SynHighlighter::getBracketLevel() const
-{
-    return 0;
-}
-
-int SynHighlighter::getParenthesisLevel() const
-{
-    return 0;
-}
-
 SynHighlighterTokenType SynHighlighter::getTokenType()
 {
     return SynHighlighterTokenType::Default;
@@ -222,4 +207,15 @@ SynHighlighterAttribute::SynHighlighterAttribute(const QString &name):
     mStyles(SynFontStyle::fsNone)
 {
 
+}
+
+bool SynRangeState::operator==(const SynRangeState &s2)
+{
+    return (state == s2.state)
+            && (spaceState == s2.spaceState)
+            && (braceLevel == s2.braceLevel)
+            && (bracketLevel == s2.bracketLevel)
+            && (parenthesisLevel == s2.parenthesisLevel)
+            && (leftBraces == s2.leftBraces)
+            && (rightBraces == s2.rightBraces);
 }

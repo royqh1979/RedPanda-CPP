@@ -821,11 +821,7 @@ void SynEditTextPainter::PaintLines()
                 edit->mHighlighter->resetState();
             } else {
                 edit->mHighlighter->setState(
-                            edit->mLines->ranges(vLine-2),
-                            edit->mLines->braceLevels(vLine-2),
-                            edit->mLines->bracketLevels(vLine-2),
-                            edit->mLines->parenthesisLevels(vLine-2)
-                            );
+                            edit->mLines->ranges(vLine-2));
             }
             edit->mHighlighter->setLine(sLine, vLine - 1);
             // Try to concatenate as many tokens as possible to minimize the count
@@ -860,17 +856,17 @@ void SynEditTextPainter::PaintLines()
                     // It's at least partially visible. Get the token attributes now.
                     attr = edit->mHighlighter->getTokenAttribute();
                     if (sToken == "[") {
-                      GetBraceColorAttr(edit->mHighlighter->getBracketLevel(),attr);
+                      GetBraceColorAttr(edit->mHighlighter->getRangeState().bracketLevel,attr);
                     } else if (sToken == "]") {
-                      GetBraceColorAttr(edit->mHighlighter->getBracketLevel()+1,attr);
+                      GetBraceColorAttr(edit->mHighlighter->getRangeState().bracketLevel+1,attr);
                     } else if (sToken == "(") {
-                      GetBraceColorAttr(edit->mHighlighter->getParenthesisLevel(),attr);
+                      GetBraceColorAttr(edit->mHighlighter->getRangeState().parenthesisLevel,attr);
                     } else if (sToken == ")") {
-                      GetBraceColorAttr(edit->mHighlighter->getParenthesisLevel()+1,attr);
+                      GetBraceColorAttr(edit->mHighlighter->getRangeState().parenthesisLevel+1,attr);
                     } else if (sToken == "{") {
-                      GetBraceColorAttr(edit->mHighlighter->getBraceLevel(),attr);
+                      GetBraceColorAttr(edit->mHighlighter->getRangeState().braceLevel,attr);
                     } else if (sToken == "}") {
-                      GetBraceColorAttr(edit->mHighlighter->getBraceLevel()+1,attr);
+                      GetBraceColorAttr(edit->mHighlighter->getRangeState().braceLevel+1,attr);
                     }
                     AddHighlightToken(sToken, nTokenColumnsBefore - (vFirstChar - FirstCol),
                       nTokenColumnLen, vLine,attr);
@@ -908,7 +904,7 @@ void SynEditTextPainter::PaintLines()
                 sFold = " ... } ";
                 nFold = edit->stringColumns(sFold,edit->mLines->lineColumns(vLine-1));
                 attr = edit->mHighlighter->symbolAttribute();
-                GetBraceColorAttr(edit->mHighlighter->getBraceLevel(),attr);
+                GetBraceColorAttr(edit->mHighlighter->getRangeState().braceLevel,attr);
                 AddHighlightToken(sFold,edit->mLines->lineColumns(vLine-1)+1 - (vFirstChar - FirstCol)
                   , nFold, vLine, attr);
             }

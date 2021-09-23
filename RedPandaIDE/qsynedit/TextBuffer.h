@@ -22,9 +22,6 @@ struct SynEditStringRec {
   void * fObject;
   SynRangeState fRange;
   int fColumns;  //
-  int fParenthesisLevel;
-  int fBracketLevel;
-  int fBraceLevel;
 
 public:
   explicit SynEditStringRec();
@@ -55,13 +52,12 @@ public:
     int bracketLevels(int Index);
     int braceLevels(int Index);
     int lineColumns(int Index);
+    int leftBraces(int Index);
+    int rightBraces(int Index);
     int lengthOfLongestLine();
     QString lineBreak();
-    SynRangeState ranges(int Index);
-    void setRange(int Index, SynRangeState ARange);
-    void setParenthesisLevel(int Index, int level);
-    void setBracketLevel(int Index, int level);
-    void setBraceLevel(int Index, int level);
+    const SynRangeState& ranges(int Index);
+    void setRange(int Index, const SynRangeState& ARange);
     QString getString(int Index);
     int count();
     void* getObject(int Index);

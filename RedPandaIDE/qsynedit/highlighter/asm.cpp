@@ -373,10 +373,10 @@ bool SynEditASMHighlighter::isLastLineStringNotFinished(int state) const
 
 SynRangeState SynEditASMHighlighter::getRangeState() const
 {
-    return {0,0};
+    return {0,0,0,0,0,0,0};
 }
 
-void SynEditASMHighlighter::setState(SynRangeState , int , int , int)
+void SynEditASMHighlighter::setState(const SynRangeState&)
 {
 
 }

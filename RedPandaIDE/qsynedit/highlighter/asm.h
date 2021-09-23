@@ -75,7 +75,7 @@ public:
     bool isLastLineCommentNotFinished(int state) const override;
     bool isLastLineStringNotFinished(int state) const override;
     SynRangeState getRangeState() const override;
-    void setState(SynRangeState rangeState, int braceLevel, int bracketLevel, int parenthesisLevel) override;
+    void setState(const SynRangeState& rangeState) override;
     void resetState() override;
 };
 

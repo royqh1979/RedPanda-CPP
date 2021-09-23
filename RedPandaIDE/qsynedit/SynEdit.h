@@ -446,7 +446,7 @@ private:
     void recalcCharExtent();
     QString expandAtWideGlyphs(const QString& S);
     void updateModifiedStatus();
-    int scanFrom(int Index);
+    int scanFrom(int Index, int canStopIndex);
     void scanRanges();
     void uncollapse(PSynEditFoldRange FoldRange);
     void collapse(PSynEditFoldRange FoldRange);

@@ -30,7 +30,7 @@ public:
     void setIndex(int newIndex);
 signals:
 private:
-    QStringList splitArgs(const QString& args);
+    QStringList splitArgs(QString args);
 private:
     QLabel* mInfoLabel;
     QLabel* mTotalLabel;

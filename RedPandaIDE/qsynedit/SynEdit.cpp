@@ -343,10 +343,7 @@ bool SynEdit::getHighlighterAttriAtRowCol(const BufferCoord &XY, QString &Token,
         if (PosY == 0) {
             mHighlighter->resetState();
         } else {
-            mHighlighter->setState(mLines->ranges(PosY-1),
-                                   mLines->braceLevels(PosY-1),
-                                   mLines->bracketLevels(PosY-1),
-                                   mLines->parenthesisLevels(PosY-1));
+            mHighlighter->setState(mLines->ranges(PosY-1));
         }
         mHighlighter->setLine(Line, PosY);
         PosX = XY.Char;
@@ -384,10 +381,7 @@ bool SynEdit::getHighlighterAttriAtRowColEx(const BufferCoord &XY, QString &Toke
         if (PosY == 0) {
             mHighlighter->resetState();
         } else {
-            mHighlighter->setState(mLines->ranges(PosY-1),
-                                   mLines->braceLevels(PosY-1),
-                                   mLines->bracketLevels(PosY-1),
-                                   mLines->parenthesisLevels(PosY-1));
+            mHighlighter->setState(mLines->ranges(PosY-1));
         }
         mHighlighter->setLine(Line, PosY);
         PosX = XY.Char;
@@ -2858,7 +2852,7 @@ void SynEdit::updateModifiedStatus()
     setModified(!mUndoList->initialState());
 }
 
-int SynEdit::scanFrom(int Index)
+int SynEdit::scanFrom(int Index, int canStopIndex)
 {
     SynRangeState iRange;
     int Result = Index;
@@ -2868,27 +2862,18 @@ int SynEdit::scanFrom(int Index)
     if (Result == 0) {
         mHighlighter->resetState();
     } else {
-        mHighlighter->setState(mLines->ranges(Result-1),
-                               mLines->braceLevels(Result-1),
-                               mLines->bracketLevels(Result-1),
-                               mLines->parenthesisLevels(Result-1));
+        mHighlighter->setState(mLines->ranges(Result-1));
     }
     do {
         mHighlighter->setLine(mLines->getString(Result), Result);
         mHighlighter->nextToEol();
         iRange = mHighlighter->getRangeState();
-        {
+        if (Result > canStopIndex){
             if (mLines->ranges(Result).state == iRange.state
-                    && mLines->braceLevels(Result) == mHighlighter->getBraceLevel()
-                    && mLines->bracketLevels(Result) == mHighlighter->getBracketLevel()
-                    && mLines->parenthesisLevels(Result) == mHighlighter->getParenthesisLevel()
                     )
                 return Result;// avoid the final Decrement
         }
         mLines->setRange(Result,iRange);
-        mLines->setParenthesisLevel(Result,mHighlighter->getParenthesisLevel());
-        mLines->setBraceLevel(Result,mHighlighter->getBraceLevel());
-        mLines->setBracketLevel(Result,mHighlighter->getBracketLevel());
         Result ++ ;
     } while (Result < mLines->count());
     Result--;
@@ -2903,9 +2888,6 @@ void SynEdit::scanRanges()
             mHighlighter->setLine(mLines->getString(i), i);
             mHighlighter->nextToEol();
             mLines->setRange(i, mHighlighter->getRangeState());
-            mLines->setParenthesisLevel(i, mHighlighter->getParenthesisLevel());
-            mLines->setBracketLevel(i, mHighlighter->getBracketLevel());
-            mLines->setBraceLevel(i, mHighlighter->getBraceLevel());
         }
     }
 }
@@ -3067,7 +3049,6 @@ void SynEdit::findSubFoldRange(PSynEditFoldRanges TopFoldRanges, int FoldIndex,P
     QString CurLine;
     bool useBraces = ( mCodeFolding.foldRegions.get(FoldIndex)->openSymbol == "{"
             && mCodeFolding.foldRegions.get(FoldIndex)->closeSymbol == "}");
-    int lastBraceLevel = 0;
 
     if (!mHighlighter)
         return;
@@ -3083,21 +3064,8 @@ void SynEdit::findSubFoldRange(PSynEditFoldRanges TopFoldRanges, int FoldIndex,P
         if (useBraces) {
             // Find an opening character on this line
             CurLine = mLines->getString(Line);
-
-            int curBraceLevel = mLines->braceLevels(Line);
-            if (curBraceLevel > lastBraceLevel) {
-                for (int i=0; i<curBraceLevel-lastBraceLevel;i++) {
-                    // Add it to the top list of folds
-                    Parent = parentFoldRanges->addByParts(
-                      Parent,
-                      TopFoldRanges,
-                      Line + 1,
-                      mCodeFolding.foldRegions.get(FoldIndex),
-                      Line + 1);
-                    parentFoldRanges = Parent->subFoldRanges;
-                }
-            } else if (curBraceLevel < lastBraceLevel) {
-                for (int i=0; i<lastBraceLevel-curBraceLevel;i++) {
+            if (mLines->rightBraces(Line)>0) {
+                for (int i=0; i<mLines->rightBraces(Line);i++) {
                     // Stop the recursion if we find a closing char, and return to our parent
                     if (Parent) {
                       Parent->toLine = Line + 1;
@@ -3110,16 +3078,24 @@ void SynEdit::findSubFoldRange(PSynEditFoldRanges TopFoldRanges, int FoldIndex,P
                     }
                 }
             }
-            lastBraceLevel = curBraceLevel;
+            if (mLines->leftBraces(Line)>0) {
+                for (int i=0; i<mLines->leftBraces(Line);i++) {
+                    // Add it to the top list of folds
+                    Parent = parentFoldRanges->addByParts(
+                      Parent,
+                      TopFoldRanges,
+                      Line + 1,
+                      mCodeFolding.foldRegions.get(FoldIndex),
+                      Line + 1);
+                    parentFoldRanges = Parent->subFoldRanges;
+                }
+            }
         } else {
 
             // Find an opening character on this line
             CurLine = mLines->getString(Line);
 
-            mHighlighter->setState(mLines->ranges(Line),
-                                   mLines->braceLevels(Line),
-                                   mLines->bracketLevels(Line),
-                                   mLines->parenthesisLevels(Line));
+            mHighlighter->setState(mLines->ranges(Line));
             mHighlighter->setLine(CurLine,Line);
 
             QString token;
@@ -5793,7 +5769,7 @@ void SynEdit::onLinesDeleted(int index, int count)
     if (mUseCodeFolding)
         foldOnListDeleted(index + 1, count);
     if (mHighlighter && mLines->count() > 0)
-        scanFrom(index);
+        scanFrom(index, index);
     invalidateLines(index + 1, INT_MAX);
     invalidateGutterLines(index + 1, INT_MAX);
 }
@@ -5803,21 +5779,21 @@ void SynEdit::onLinesInserted(int index, int count)
     if (mUseCodeFolding)
         foldOnListInserted(index + 1, count);
     if (mHighlighter && mLines->count() > 0) {
-        int vLastScan = index;
-        do {
-            vLastScan = scanFrom(vLastScan);
-            vLastScan++;
-        } while (vLastScan < index + count) ;
+//        int vLastScan = index;
+//        do {
+          scanFrom(index, index+count);
+//            vLastScan++;
+//        } while (vLastScan < index + count) ;
     }
     invalidateLines(index + 1, INT_MAX);
     invalidateGutterLines(index + 1, INT_MAX);
 }
 
-void SynEdit::onLinesPutted(int index, int)
+void SynEdit::onLinesPutted(int index, int count)
 {
     int vEndLine = index + 1;
     if (mHighlighter) {
-        vEndLine = std::max(vEndLine, scanFrom(index) + 1);
+        vEndLine = std::max(vEndLine, scanFrom(index, index+count) + 1);
         // If this editor is chained then the real owner of text buffer will probably
         // have already parsed the changes, so ScanFrom will return immediately.
         if (mLines != mOrigLines)

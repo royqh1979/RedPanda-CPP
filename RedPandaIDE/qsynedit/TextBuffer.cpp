@@ -27,7 +27,7 @@ static void ListIndexOutOfBounds(int index) {
 int SynEditStringList::parenthesisLevels(int Index)
 {
     if (Index>=0 && Index < mList.size()) {
-        return mList[Index]->fParenthesisLevel;
+        return mList[Index]->fRange.parenthesisLevel;
     } else
         return 0;
 }
@@ -35,7 +35,7 @@ int SynEditStringList::parenthesisLevels(int Index)
 int SynEditStringList::bracketLevels(int Index)
 {
     if (Index>=0 && Index < mList.size()) {
-        return mList[Index]->fBracketLevel;
+        return mList[Index]->fRange.bracketLevel;
     } else
         return 0;
 }
@@ -43,7 +43,7 @@ int SynEditStringList::bracketLevels(int Index)
 int SynEditStringList::braceLevels(int Index)
 {
     if (Index>=0 && Index < mList.size()) {
-        return mList[Index]->fBraceLevel;
+        return mList[Index]->fRange.braceLevel;
     } else
         return 0;
 }
@@ -66,6 +66,22 @@ int SynEditStringList::lineColumns(int Index)
             return calculateLineColumns(Index);
         } else
             return mList[Index]->fColumns;
+    } else
+        return 0;
+}
+
+int SynEditStringList::leftBraces(int Index)
+{
+    if (Index>=0 && Index < mList.size()) {
+        return mList[Index]->fRange.leftBraces;
+    } else
+        return 0;
+}
+
+int SynEditStringList::rightBraces(int Index)
+{
+    if (Index>=0 && Index < mList.size()) {
+        return mList[Index]->fRange.rightBraces;
     } else
         return 0;
 }
@@ -104,12 +120,14 @@ QString SynEditStringList::lineBreak()
     return "\n";
 }
 
-SynRangeState SynEditStringList::ranges(int Index)
+const SynRangeState& SynEditStringList::ranges(int Index)
 {
     if (Index>=0 && Index < mList.size()) {
         return mList[Index]->fRange;
-    } else
-        return {0,0};
+    } else {
+         ListIndexOutOfBounds(Index);
+    }
+    return {0};
 }
 
 void SynEditStringList::InsertItem(int Index, const QString &s)
@@ -147,43 +165,13 @@ void SynEditStringList::setAppendNewLineAtEOF(bool appendNewLineAtEOF)
     mAppendNewLineAtEOF = appendNewLineAtEOF;
 }
 
-void SynEditStringList::setRange(int Index, SynRangeState ARange)
+void SynEditStringList::setRange(int Index, const SynRangeState& ARange)
 {
     if (Index<0 || Index>=mList.count()) {
         ListIndexOutOfBounds(Index);
     }
     beginUpdate();
     mList[Index]->fRange = ARange;
-    endUpdate();
-}
-
-void SynEditStringList::setParenthesisLevel(int Index, int level)
-{
-    if (Index<0 || Index>=mList.count()) {
-        ListIndexOutOfBounds(Index);
-    }
-    beginUpdate();
-    mList[Index]->fParenthesisLevel = level;
-    endUpdate();
-}
-
-void SynEditStringList::setBracketLevel(int Index, int level)
-{
-    if (Index<0 || Index>=mList.count()) {
-        ListIndexOutOfBounds(Index);
-    }
-    beginUpdate();
-    mList[Index]->fBracketLevel = level;
-    endUpdate();
-}
-
-void SynEditStringList::setBraceLevel(int Index, int level)
-{
-    if (Index<0 || Index>=mList.count()) {
-        ListIndexOutOfBounds(Index);
-    }
-    beginUpdate();
-    mList[Index]->fBraceLevel = level;
     endUpdate();
 }
 
@@ -687,11 +675,8 @@ void SynEditStringList::invalidAllLineColumns()
 SynEditStringRec::SynEditStringRec():
     fString(),
     fObject(nullptr),
-    fRange{0,0},
-    fColumns(-1),
-    fParenthesisLevel(0),
-    fBracketLevel(0),
-    fBraceLevel(0)
+    fRange{0,0,0,0,0,0,0},
+    fColumns(-1)
 {
 }
 

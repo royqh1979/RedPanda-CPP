@@ -66,10 +66,10 @@ void FunctionTooltipWidget::setIndex(int newIndex)
     mIndex = newIndex;
 }
 
-QStringList FunctionTooltipWidget::splitArgs(const QString &argStr)
+QStringList FunctionTooltipWidget::splitArgs(QString argStr)
 {
+    int i = 0;
     // Split up argument string by ,
-    int i;
     if (argStr.startsWith('(')) {
         i = 1; // assume it starts with ( and ends with )
     } else {
@@ -79,51 +79,18 @@ QStringList FunctionTooltipWidget::splitArgs(const QString &argStr)
 
     QStringList result;
     while (i < argStr.length()) {
-        if ((argStr[i] == ',') ||
-                ((i == argStr.length()-1) && (argStr[i] == ')'))) {
+        if ((argStr[i] == ',')) {
             // We've found "int* a" for example
             QString s = argStr.mid(paramStart,i-paramStart);
-
-            //remove default value
-            int assignPos = s.indexOf('=');
-            if (assignPos >= 0) {
-                s.truncate(assignPos);
-                s = s.trimmed();
-            }
-            // we don't support function pointer parameters now, till we can tokenize function parameters
-//        {
-//        // Can be a function pointer. If so, scan after last )
-//        BracePos := LastPos(')', S);
-//        if (BracePos > 0) then // it's a function pointer... begin
-//          SpacePos := LastPos(' ', Copy(S, BracePos, MaxInt)) // start search at brace
-//        end else begin
-//        }
-            int spacePos = s.lastIndexOf(' '); // Cut up at last space
-            if (spacePos >= 0) {
-                args = "";
-                int bracketPos = s.indexOf('[');
-                if (bracketPos >= 0) {
-                    args = s.mid(bracketPos);
-                    s.truncate(bracketPos);
-                }
-                addStatement(
-                            functionStatement,
-                            mCurrentFile,
-                            "", // do not override hint
-                            s.mid(0,spacePos), // 'int*'
-                            s.mid(spacePos+1), // a
-                            args,
-                            "",
-                            functionStatement->definitionLine,
-                            StatementKind::skParameter,
-                            StatementScope::ssLocal,
-                            StatementClassScope::scsNone,
-                            true,
-                            false);
-            }
+            result.append(s);
             paramStart = i + 1; // step over ,
         }
         i++;
+    }
+    QString s = argStr.mid(paramStart,i-paramStart);
+    s=s.trimmed();
+    if (!s.isEmpty()) {
+        result.append(s);
     }
     return result;
 }

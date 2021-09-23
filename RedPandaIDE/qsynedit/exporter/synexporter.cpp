@@ -63,10 +63,7 @@ void SynExporter::ExportRange(PSynEditStringList ALines, BufferCoord Start, Buff
     if (Start.Line == 1)
         mHighlighter->resetState();
     else
-        mHighlighter->setState(ALines->ranges(Start.Line-2),
-                               ALines->braceLevels(Start.Line-2),
-                               ALines->bracketLevels(Start.Line-2),
-                               ALines->parenthesisLevels(Start.Line-2));
+        mHighlighter->setState(ALines->ranges(Start.Line-2));
     for (int i = Start.Line; i<=Stop.Line; i++) {
         QString Line = ALines->getString(i-1);
         // order is important, since Start.Y might be equal to Stop.Y
