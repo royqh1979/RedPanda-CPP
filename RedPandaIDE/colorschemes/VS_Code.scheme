@@ -171,15 +171,15 @@
 		"foreground" : "#C0C0C0"
 	},
 	"brace/parenthesis/bracket level 1" : {
-		"foreground" : "#569CD6"
+                "foreground" : "#569CD6"
 	},
 	"brace/parenthesis/bracket level 2" : {
 		"foreground" : "#D4D4D4"
 	},
 	"brace/parenthesis/bracket level 3" : {
-		"foreground" : "#D69D85"
+                "foreground" : "#D69D85"
 	},
 	"brace/parenthesis/bracket level 4" : {
-		"foreground" : "#DCDCAA"
+                "foreground" : "#4EC9B0"
 	}
 }

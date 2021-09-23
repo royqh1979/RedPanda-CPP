@@ -73,7 +73,7 @@ int SynEditStringList::lineColumns(int Index)
 int SynEditStringList::leftBraces(int Index)
 {
     if (Index>=0 && Index < mList.size()) {
-        return mList[Index]->fRange.leftBraces;
+        return mList[Index]->fLeftBraces;
     } else
         return 0;
 }
@@ -81,7 +81,7 @@ int SynEditStringList::leftBraces(int Index)
 int SynEditStringList::rightBraces(int Index)
 {
     if (Index>=0 && Index < mList.size()) {
-        return mList[Index]->fRange.rightBraces;
+        return mList[Index]->fRightBraces;
     } else
         return 0;
 }
@@ -165,13 +165,15 @@ void SynEditStringList::setAppendNewLineAtEOF(bool appendNewLineAtEOF)
     mAppendNewLineAtEOF = appendNewLineAtEOF;
 }
 
-void SynEditStringList::setRange(int Index, const SynRangeState& ARange)
+void SynEditStringList::setRange(int Index, const SynRangeState& ARange, int ALeftBraces, int ARightBraces)
 {
     if (Index<0 || Index>=mList.count()) {
         ListIndexOutOfBounds(Index);
     }
     beginUpdate();
     mList[Index]->fRange = ARange;
+    mList[Index]->fLeftBraces = ALeftBraces;
+    mList[Index]->fRightBraces = ARightBraces;
     endUpdate();
 }
 
@@ -675,7 +677,7 @@ void SynEditStringList::invalidAllLineColumns()
 SynEditStringRec::SynEditStringRec():
     fString(),
     fObject(nullptr),
-    fRange{0,0,0,0,0,0,0},
+    fRange{0,0,0,0,0},
     fColumns(-1)
 {
 }

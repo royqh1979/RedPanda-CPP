@@ -21,6 +21,8 @@ struct SynEditStringRec {
   QString fString;
   void * fObject;
   SynRangeState fRange;
+  int fLeftBraces;
+  int fRightBraces;
   int fColumns;  //
 
 public:
@@ -57,7 +59,7 @@ public:
     int lengthOfLongestLine();
     QString lineBreak();
     const SynRangeState& ranges(int Index);
-    void setRange(int Index, const SynRangeState& ARange);
+    void setRange(int Index, const SynRangeState& ARange, int leftBraces, int rightBraces);
     QString getString(int Index);
     int count();
     void* getObject(int Index);

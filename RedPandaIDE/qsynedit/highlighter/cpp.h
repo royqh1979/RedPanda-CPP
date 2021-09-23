@@ -140,6 +140,8 @@ private:
     int mTokenId;
     ExtTokenKind mExtTokenId;
     int mLineNumber;
+    int mLeftBraces;
+    int mRightBraces;
 
     PSynHighlighterAttribute mAsmAttribute;
     PSynHighlighterAttribute mDirecAttribute;
@@ -155,8 +157,6 @@ private:
     PSynHighlighterAttribute mClassAttribute;
     PSynHighlighterAttribute mGlobalVarAttribute;
     PSynHighlighterAttribute mLocalVarAttribute;
-
-
 
     // SynHighligterBase interface
 public:
@@ -179,6 +179,9 @@ public:
 
     QString languageName() override;
     SynHighlighterLanguage language() override;
+
+    int getLeftBraces() override;
+    int getRightBraces() override;
 
     // SynHighlighter interface
 public:

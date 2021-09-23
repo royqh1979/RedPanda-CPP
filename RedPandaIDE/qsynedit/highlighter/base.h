@@ -16,8 +16,6 @@ struct SynRangeState {
     int braceLevel;
     int bracketLevel;
     int parenthesisLevel;
-    int leftBraces;
-    int rightBraces;
     bool operator==(const SynRangeState& s2);
 };
 
@@ -109,6 +107,9 @@ public:
     virtual void setState(const SynRangeState& rangeState) = 0;
     virtual void setLine(const QString& newLine, int lineNumber) = 0;
     virtual void resetState() = 0;
+
+    virtual int getLeftBraces();
+    virtual int getRightBraces();
 
     virtual QString languageName() = 0;
     virtual SynHighlighterLanguage language() = 0;

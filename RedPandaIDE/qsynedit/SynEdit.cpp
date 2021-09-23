@@ -2873,7 +2873,8 @@ int SynEdit::scanFrom(int Index, int canStopIndex)
                     )
                 return Result;// avoid the final Decrement
         }
-        mLines->setRange(Result,iRange);
+        mLines->setRange(Result,iRange, mHighlighter->getLeftBraces(),
+                         mHighlighter->getRightBraces());
         Result ++ ;
     } while (Result < mLines->count());
     Result--;
@@ -2887,7 +2888,9 @@ void SynEdit::scanRanges()
         for (int i =0;i<mLines->count();i++) {
             mHighlighter->setLine(mLines->getString(i), i);
             mHighlighter->nextToEol();
-            mLines->setRange(i, mHighlighter->getRangeState());
+            mLines->setRange(i, mHighlighter->getRangeState(),
+                             mHighlighter->getLeftBraces(),
+                             mHighlighter->getRightBraces());
         }
     }
 }

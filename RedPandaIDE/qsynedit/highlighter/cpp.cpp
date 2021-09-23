@@ -158,8 +158,8 @@ SynEditCppHighlighter::SynEditCppHighlighter(): SynHighlighter()
     mRange.braceLevel = 0;
     mRange.bracketLevel = 0;
     mRange.parenthesisLevel = 0;
-    mRange.leftBraces = 0;
-    mRange.rightBraces = 0;
+    mLeftBraces = 0;
+    mRightBraces = 0;
     mAsmStart = false;
 }
 
@@ -368,10 +368,10 @@ void SynEditCppHighlighter::braceCloseProc()
     }
 
     mRange.braceLevel -= 1;
-    if (mRange.leftBraces>0) {
-        mRange.leftBraces--;
+    if (mLeftBraces>0) {
+        mLeftBraces--;
     } else {
-        mRange.rightBraces++ ;
+        mRightBraces++ ;
     }
 }
 
@@ -385,7 +385,7 @@ void SynEditCppHighlighter::braceOpenProc()
         mAsmStart = true;
     }
     mRange.braceLevel += 1;
-    mRange.leftBraces++;
+    mLeftBraces++;
 }
 
 void SynEditCppHighlighter::colonProc()
@@ -1479,8 +1479,8 @@ void SynEditCppHighlighter::setLine(const QString &newLine, int lineNumber)
     mLine = mLineString.data();
     mLineNumber = lineNumber;
     mRun = 0;
-    mRange.leftBraces = 0;
-    mRange.rightBraces = 0;
+    mLeftBraces = 0;
+    mRightBraces = 0;
     next();
 }
 
@@ -1544,8 +1544,6 @@ SynHighlighterTokenType SynEditCppHighlighter::getTokenType()
 void SynEditCppHighlighter::setState(const SynRangeState& rangeState)
 {
     mRange = rangeState;
-    mRange.leftBraces = 0;
-    mRange.rightBraces = 0;
 }
 
 void SynEditCppHighlighter::resetState()
@@ -1555,8 +1553,6 @@ void SynEditCppHighlighter::resetState()
     mRange.braceLevel = 0;
     mRange.bracketLevel = 0;
     mRange.parenthesisLevel = 0;
-    mRange.leftBraces = 0;
-    mRange.rightBraces = 0;
 }
 
 SynHighlighterClass SynEditCppHighlighter::getClass() const
@@ -1577,6 +1573,16 @@ QString SynEditCppHighlighter::languageName()
 SynHighlighterLanguage SynEditCppHighlighter::language()
 {
     return SynHighlighterLanguage::Cpp;
+}
+
+int SynEditCppHighlighter::getLeftBraces()
+{
+    return mLeftBraces;
+}
+
+int SynEditCppHighlighter::getRightBraces()
+{
+    return mRightBraces;
 }
 
 SynRangeState SynEditCppHighlighter::getRangeState() const
