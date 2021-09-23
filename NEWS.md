@@ -6,3 +6,4 @@ Version 0.2
  - enhancement: run executable with parameters
  - add: widget for function tips
  - enhancement: options for editor tooltips
+ - fix: editor folder process error

@@ -368,7 +368,7 @@ void SynEditCppHighlighter::braceCloseProc()
     }
 
     mRange.braceLevel -= 1;
-    if (mRange.leftBraces<=mRange.rightBraces) {
+    if (mRange.leftBraces>0) {
         mRange.rightBraces++ ;
     } else {
         mRange.leftBraces--;
