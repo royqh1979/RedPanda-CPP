@@ -2386,57 +2386,61 @@ void Editor::updateFunctionTip()
     // Don't bother scanning the database when there's no identifier to scan for
 
     // Only do the cumbersome list filling when showing a new tooltip...
+
     if (s != pMainWindow->functionTip()->functionFullName()
             && !mParser->parsing()) {
         pMainWindow->functionTip()->clearTips();
-        mParser->fillListOfFunctions()
+        QList<PStatement> statements=mParser->getListOfFunctions(mFilename,
+                                                                  s,
+                                                                  FuncStartXY.Line);
+
+        foreach (const PStatement statement, statements) {
+            pMainWindow->functionTip()->addTip(
+                        statement->command,
+                        statement->fullName,
+                        statement->type,
+                        statement->args,
+                        statement->noNameArgs);
+        }
     }
 
+    // If we can't find it in our database, hide
+    if (pMainWindow->functionTip()->tipCount()<=0) {
+        return;
+    }
 
-  FSelIndex := 0;
-  FCustomSelIndex := False;
+    pMainWindow->functionTip()->setFunctioFullName(s);
+    pMainWindow->functionTip()->guessFunction(nCommas);
+    pMainWindow->functionTip()->setParamIndex(
+                getFunctionParamIndex(FFunctionStart,caretPos,FFunctionEnd)
+                );
+    pMainWindow->functionTip()->show();
+////    // get the current token position in the text
+////    // this is where the prototype name usually starts
+////    FTokenPos := CurPos - Length(S);
 
-  // Fill a cache of known functions...
-  FToolTips.BeginUpdate;
-  FToolTips.Clear;
-  FParser.FillListOfFunctions(fFileName,S,FuncStartXY.Line, FToolTips);
-  FToolTips.EndUpdate;
-end;
+//// Search for the best possible overload match according to comma count
+//if (shoFindBestMatchingToolTip in FOptions) then
 
-// If we can't find it in our database, hide
-if FToolTips.Count = 0 then begin
-  ReleaseHandle;
-  Exit;
-end;
+//  // Only do so when the user didn't select his own
+//  if not FCustomSelIndex then
+//    S := FindClosestToolTip(S, nCommas);
 
-FOldFunction := S;
+//// Select the current one
+//if (FSelIndex < FToolTips.Count) then
+//  S := FToolTips.Strings[FSelIndex];
 
-// get the current token position in the text
-// this is where the prototype name usually starts
-FTokenPos := CurPos - Length(S);
+//// set the hint caption
+//Caption := Trim(S);
 
-// Search for the best possible overload match according to comma count
-if (shoFindBestMatchingToolTip in FOptions) then
+//// we use the LookupEditor to get the highlighter-attributes
+//// from. check the DrawAdvanced method!
+//FLookupEditor.Text := Caption;
+//FLookupEditor.Highlighter := FEditor.Highlighter;
 
-  // Only do so when the user didn't select his own
-  if not FCustomSelIndex then
-    S := FindClosestToolTip(S, nCommas);
-
-// Select the current one
-if (FSelIndex < FToolTips.Count) then
-  S := FToolTips.Strings[FSelIndex];
-
-// set the hint caption
-Caption := Trim(S);
-
-// we use the LookupEditor to get the highlighter-attributes
-// from. check the DrawAdvanced method!
-FLookupEditor.Text := Caption;
-FLookupEditor.Highlighter := FEditor.Highlighter;
-
-// get the index of the current argument (where the cursor is)
-FCurParamIndex := GetCommaIndex(P, FFunctionStart + 1, CaretPos - 1);
-RethinkCoordAndActivate;
+//// get the index of the current argument (where the cursor is)
+//FCurParamIndex := GetCommaIndex(P, FFunctionStart + 1, CaretPos - 1);
+//RethinkCoordAndActivate;
 }
 
 void Editor::setInProject(bool newInProject)

@@ -23,6 +23,7 @@ public:
                 const QString& returnType, const QString& args,
                 const QString& noNameArgs);
     void clearTips();
+    int tipCount();
     int paramPos() const;
     void setParamPos(int newParamPos);
     void nextTip();

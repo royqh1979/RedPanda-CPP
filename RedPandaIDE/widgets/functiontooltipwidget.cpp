@@ -47,6 +47,11 @@ void FunctionTooltipWidget::clearTips()
     hide();
 }
 
+int FunctionTooltipWidget::tipCount()
+{
+    return mInfos.count();
+}
+
 int FunctionTooltipWidget::paramPos() const
 {
     return mParamPos;
