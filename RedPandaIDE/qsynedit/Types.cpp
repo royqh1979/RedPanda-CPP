@@ -1,7 +1,7 @@
 #include "Types.h"
 #include "SynEdit.h"
 #include <QDebug>
-NormalizedBufferCoord::NormalizedBufferCoord(const SynEdit *edit, int ch, int line)
+ContentsCoord::ContentsCoord(const SynEdit *edit, int ch, int line)
 {
     Q_ASSERT(edit!=nullptr);
     mEdit = edit;
@@ -10,7 +10,7 @@ NormalizedBufferCoord::NormalizedBufferCoord(const SynEdit *edit, int ch, int li
     normalize();
 }
 
-void NormalizedBufferCoord::normalize()
+void ContentsCoord::normalize()
 {
     if (mEdit->lines()->count()==0) {
         mChar = 0;
@@ -67,33 +67,33 @@ void NormalizedBufferCoord::normalize()
     return;
 }
 
-int NormalizedBufferCoord::line() const
+int ContentsCoord::line() const
 {
     return mLine;
 }
 
-void NormalizedBufferCoord::setLine(int newLine)
+void ContentsCoord::setLine(int newLine)
 {
     mLine = newLine;
 }
 
-bool NormalizedBufferCoord::atStart()
+bool ContentsCoord::atStart()
 {
     return mLine<1;
 }
 
-bool NormalizedBufferCoord::atEnd()
+bool ContentsCoord::atEnd()
 {
     Q_ASSERT(mEdit!=nullptr);
     return mLine>mEdit->lines()->count();
 }
 
-const SynEdit *NormalizedBufferCoord::edit() const
+const SynEdit *ContentsCoord::edit() const
 {
     return mEdit;
 }
 
-const NormalizedBufferCoord &NormalizedBufferCoord::operator=(const NormalizedBufferCoord &coord)
+const ContentsCoord &ContentsCoord::operator=(const ContentsCoord &coord)
 {
     mEdit = coord.mEdit;
     mChar = coord.mChar;
@@ -101,7 +101,7 @@ const NormalizedBufferCoord &NormalizedBufferCoord::operator=(const NormalizedBu
     return *this;
 }
 
-const NormalizedBufferCoord &NormalizedBufferCoord::operator=(const NormalizedBufferCoord &&coord)
+const ContentsCoord &ContentsCoord::operator=(const ContentsCoord &&coord)
 {
     if (this!=&coord) {
         mEdit = coord.mEdit;
@@ -111,38 +111,38 @@ const NormalizedBufferCoord &NormalizedBufferCoord::operator=(const NormalizedBu
     return *this;
 }
 
-bool NormalizedBufferCoord::operator==(const NormalizedBufferCoord &coord) const
+bool ContentsCoord::operator==(const ContentsCoord &coord) const
 {
     Q_ASSERT(mEdit == coord.mEdit);
     return (mLine == coord.mLine)
             && (mChar == coord.mChar);
 }
 
-bool NormalizedBufferCoord::operator<(const NormalizedBufferCoord &coord) const
+bool ContentsCoord::operator<(const ContentsCoord &coord) const
 {
     Q_ASSERT(mEdit == coord.mEdit);
     return (mLine < coord.mLine) || (mLine == coord.mLine && mChar < coord.mChar);
 }
 
-bool NormalizedBufferCoord::operator<=(const NormalizedBufferCoord &coord) const
+bool ContentsCoord::operator<=(const ContentsCoord &coord) const
 {
     Q_ASSERT(mEdit == coord.mEdit);
     return (mLine < coord.mLine) || (mLine == coord.mLine && mChar <= coord.mChar);
 }
 
-bool NormalizedBufferCoord::operator>(const NormalizedBufferCoord &coord) const
+bool ContentsCoord::operator>(const ContentsCoord &coord) const
 {
     Q_ASSERT(mEdit == coord.mEdit);
     return (mLine > coord.mLine) || (mLine == coord.mLine && mChar > coord.mChar);
 }
 
-bool NormalizedBufferCoord::operator>=(const NormalizedBufferCoord &coord) const
+bool ContentsCoord::operator>=(const ContentsCoord &coord) const
 {
     Q_ASSERT(mEdit == coord.mEdit);
     return (mLine > coord.mLine) || (mLine == coord.mLine && mChar >= coord.mChar);
 }
 
-size_t NormalizedBufferCoord::operator-(const NormalizedBufferCoord& coord) const
+size_t ContentsCoord::operator-(const ContentsCoord& coord) const
 {
     Q_ASSERT(mEdit == coord.mEdit);
     if (mLine == coord.mLine) {
@@ -163,38 +163,38 @@ size_t NormalizedBufferCoord::operator-(const NormalizedBufferCoord& coord) cons
     }
 }
 
-const NormalizedBufferCoord &NormalizedBufferCoord::operator+=(int delta)
+const ContentsCoord &ContentsCoord::operator+=(int delta)
 {
     mChar+=delta;
     normalize();
     return *this;
 }
 
-const NormalizedBufferCoord &NormalizedBufferCoord::operator-=(int delta)
+const ContentsCoord &ContentsCoord::operator-=(int delta)
 {
     mChar-=delta;
     normalize();
     return *this;
 }
 
-BufferCoord NormalizedBufferCoord::toBufferCoord() const
+BufferCoord ContentsCoord::toBufferCoord() const
 {
     return BufferCoord{mChar,mLine};
 }
 
-NormalizedBufferCoord NormalizedBufferCoord::operator-(int delta) const
+ContentsCoord ContentsCoord::operator-(int delta) const
 {
     Q_ASSERT(mEdit != nullptr);
-    return NormalizedBufferCoord(mEdit,mChar-delta,mLine);
+    return ContentsCoord(mEdit,mChar-delta,mLine);
 }
 
-NormalizedBufferCoord NormalizedBufferCoord::operator+(int delta) const
+ContentsCoord ContentsCoord::operator+(int delta) const
 {
     Q_ASSERT(mEdit != nullptr);
-    return NormalizedBufferCoord(mEdit,mChar+delta,mLine);
+    return ContentsCoord(mEdit,mChar+delta,mLine);
 }
 
-QChar NormalizedBufferCoord::operator*() const
+QChar ContentsCoord::operator*() const
 {
     Q_ASSERT(mEdit != nullptr);
     if (mLine < 1) {
@@ -210,26 +210,26 @@ QChar NormalizedBufferCoord::operator*() const
     return s[mChar-1];
 }
 
-NormalizedBufferCoord::NormalizedBufferCoord()
+ContentsCoord::ContentsCoord()
 {
     mEdit = nullptr;
     mLine = 0;
     mEdit = 0;
 }
 
-NormalizedBufferCoord::NormalizedBufferCoord(const NormalizedBufferCoord &coord):
-    NormalizedBufferCoord(coord.mEdit,
+ContentsCoord::ContentsCoord(const ContentsCoord &coord):
+    ContentsCoord(coord.mEdit,
                           coord.mChar,
                           coord.mLine)
 {
 }
 
-int NormalizedBufferCoord::ch() const
+int ContentsCoord::ch() const
 {
     return mChar;
 }
 
-void NormalizedBufferCoord::setCh(int newChar)
+void ContentsCoord::setCh(int newChar)
 {
     mChar = newChar;
 }
