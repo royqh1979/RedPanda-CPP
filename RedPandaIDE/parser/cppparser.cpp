@@ -95,23 +95,30 @@ void CppParser::clearProjectFiles()
     mProjectFiles.clear();
 }
 
-void CppParser::fillListOfFunctions(const QString &fileName, const QString &phrase, int line, QStringList &list)
+QList<PStatement> CppParser::getListOfFunctions(const QString &fileName, const QString &phrase, int line)
 {
     QMutexLocker locker(&mMutex);
-    list.clear();
+    QList<PStatement> result;
+    if (mParsing)
+        return result;
+
     PStatement statement = findStatementOf(fileName,phrase, line);
     if (!statement)
-        return;
+        return result;
     PStatement parentScope = statement->parentScope.lock();
     if (parentScope && parentScope->kind == StatementKind::skNamespace) {
         PStatementList namespaceStatementsList = findNamespace(parentScope->command);
         if (namespaceStatementsList) {
             for (PStatement& namespaceStatement  : *namespaceStatementsList) {
-                fillListOfFunctions(fileName,line,statement,namespaceStatement,list);
+                result.append(
+                            getListOfFunctions(fileName,line,statement,namespaceStatement));
             }
         }
     } else
-        fillListOfFunctions(fileName,line,statement,parentScope,list);
+        result.append(
+                    getListOfFunctions(fileName,line,statement,parentScope)
+                    );
+    return result;
 }
 
 PStatement CppParser::findAndScanBlockAt(const QString &filename, int line)
@@ -122,7 +129,6 @@ PStatement CppParser::findAndScanBlockAt(const QString &filename, int line)
     PFileIncludes fileIncludes = mPreprocessor.includesList().value(filename);
     if (!fileIncludes)
         return PStatement();
-
 
     PStatement statement = fileIncludes->scopes.findScopeAtLine(line);
     return statement;
@@ -3131,6 +3137,25 @@ void CppParser::fillListOfFunctions(const QString& fileName, int line,
             list.append(prettyPrintStatement(child,child->fileName,child->line));
         }
     }
+}
+
+QList<PStatement> CppParser::getListOfFunctions(const QString &fileName, int line, const PStatement &statement, const PStatement &scopeStatement)
+{
+    QList<PStatement> result;
+    StatementMap children = mStatementList.childrenStatements(scopeStatement);
+    for (const PStatement& child:children) {
+        if ((statement->command == child->command)
+#ifdef Q_OS_WIN
+                || (statement->command +'A' == child->command)
+                || (statement->command +'W' == child->command)
+#endif
+                ) {
+            if (line < child->line && (child->fileName == fileName))
+                continue;
+            result.append(child);
+        }
+    }
+    return result;
 }
 
 PStatement CppParser::findMemberOfStatement(const QString &phrase,

@@ -24,10 +24,9 @@ public:
     void clearIncludePaths();
     void clearProjectIncludePaths();
     void clearProjectFiles();
-    void fillListOfFunctions(const QString& fileName,
+    QList<PStatement> getListOfFunctions(const QString& fileName,
                              const QString& phrase,
-                             int line,
-                             QStringList& list);
+                             int line);
     PStatement findAndScanBlockAt(const QString& filename, int line);
     PFileIncludes findFileIncludes(const QString &filename, bool deleteIt = false);
     QString findFirstTemplateParamOf(const QString& fileName,
@@ -194,6 +193,9 @@ private:
     void fillListOfFunctions(const QString& fileName, int line,
                              const PStatement& statement,
                              const PStatement& scopeStatement, QStringList& list);
+    QList<PStatement> getListOfFunctions(const QString& fileName, int line,
+                                         const PStatement& statement,
+                                         const PStatement& scopeStatement);
     PStatement findMemberOfStatement(
             const QString& phrase,
             const PStatement& scopeStatement);
