@@ -1151,7 +1151,10 @@ void Editor::onStatusChanged(SynStatusChanges changes)
         }
         pMainWindow->updateStatusbarForLineCol();
 
-//      // Update the function tip
+        // Update the function tip
+        if (pSettings->editor().showFunctionTips()) {
+            updateFunctionTip();
+        }
 //      fFunctionTip.ForceHide := false;
 //      if Assigned(fFunctionTipTimer) then begin
 //        if fFunctionTip.Activated and FunctionTipAllowed then begin
@@ -1164,32 +1167,7 @@ void Editor::onStatusChanged(SynStatusChanges changes)
 //        end;
     }
 
-//      // Remove error line colors
-//      if not fIgnoreCaretChange then begin
-//        if (fErrorLine <> -1) and not fText.SelAvail then begin
-//          fText.InvalidateLine(fErrorLine);
-//          fText.InvalidateGutterLine(fErrorLine);
-//          fErrorLine := -1;
-//        end;
-//      end else
-//        fIgnoreCaretChange := false;
 
-//      if fText.SelAvail then begin
-//        if fText.GetWordAtRowCol(fText.CaretXY) = fText.SelText then begin
-//          fSelChanged:=True;
-//          BeginUpdate;
-//          EndUpdate;
-//        end else if fSelChanged then begin
-//          fSelChanged:=False; //invalidate to unhighlight others
-//          BeginUpdate;
-//          EndUpdate;
-//        end;
-//      end else if fSelChanged then begin
-//        fSelChanged:=False; //invalidate to unhighlight others
-//        BeginUpdate;
-//        EndUpdate;
-//      end;
-//  end;
 
     if (changes.testFlag(scInsertMode) | changes.testFlag(scReadOnly))
         pMainWindow->updateForStatusbarModeInfo();
@@ -2264,6 +2242,201 @@ QString Editor::getHintForFunction(const PStatement &statement, const PStatement
         }
     }
     return result;
+}
+
+void Editor::updateFunctionTip()
+{
+    BufferCoord caretPos = caretXY();
+    NormalizedBufferCoord curPos = normalizeBufferPos(caretPos);
+    NormalizedBufferCoord nextPos;
+    int nBraces = 0;
+    int nCommas = 0;
+    int FMaxScanLength = 500;
+    // Find out where the function ends...
+    for (int i=0;i<FMaxScanLength;i++) {
+        nextPos = moveBufferPos(curPos,1);
+        // Stopping characters...
+        QChar ch = charAtNormalizedBufferPos(curPos);
+        QChar nextCh = charAtNormalizedBufferPos(nextPos);
+        if (ch == '\0' || ch == ';') {
+            return;
+        // Opening brace, increase count
+        } else if (ch == '(') {
+            nBraces++;
+          // Ending brace, decrease count or success (found ending)!
+        } else if (ch == ')') {
+            nBraces--;
+            if (nBraces == -1)
+                break;
+
+          // Single line comments
+        } else if ((ch == '/') && (nextCh == '/')) {
+            // Walk up to an enter sequence
+            while (ch!='\0' && ch!='\n') {
+                curPos = nextPos;
+                nextPos = moveBufferPos(curPos,1);
+                ch = charAtNormalizedBufferPos(curPos);
+                nextCh = charAtNormalizedBufferPos(nextPos);
+            }
+
+
+            // Skip linebreak;
+            if (ch == '\n') {
+                curPos = nextPos;
+                nextPos = moveBufferPos(curPos,1);
+            }
+        } else if ((ch == '/') && (nextCh == '*')) {
+
+            // Walk up to "*/"
+            while (ch!='\0' && !(ch=='*' && nextCh=='/')) {
+                curPos = nextPos;
+                nextPos = moveBufferPos(curPos,1);
+                ch = charAtNormalizedBufferPos(curPos);
+                nextCh = charAtNormalizedBufferPos(nextPos);
+            }
+
+            // Step over
+            if (ch!='\0') {
+                curPos = nextPos;
+                nextPos = moveBufferPos(curPos,1);
+            }
+        } else
+            curPos = nextPos;
+    }
+
+    // If we couldn't find the closing brace or reached the FMaxScanLength...
+    if (nBraces!=-1) {
+        return;
+    }
+
+    NormalizedBufferCoord FFunctionEnd = curPos;
+    NormalizedBufferCoord prevPos;
+    // We've stopped at the ending ), start walking backwards )*here* with nBraces = -1
+    for (int i=0;i<FMaxScanLength;i++) {
+        prevPos = moveBufferPos(curPos,-1);
+        QChar ch = charAtNormalizedBufferPos(curPos);
+        QChar prevCh = charAtNormalizedBufferPos(prevPos);
+        if (prevCh == '*' && ch == '/' ) {
+            while (true) {
+                curPos = prevPos;
+                prevPos = moveBufferPos(curPos,-1);
+                ch = charAtNormalizedBufferPos(curPos);
+                prevCh = charAtNormalizedBufferPos(prevPos);
+                if (prevCh == '\0')
+                    return;
+                if (prevCh == '/' && ch == '*'  ) {
+                    curPos = prevPos;
+                    prevPos = moveBufferPos(curPos,-1);
+                    break;;
+                }
+            }
+        } else if (ch == ')') {
+            nBraces++ ;
+        } else if (ch == '(') {
+            nBraces--;
+            if (nBraces == -1) // found it!
+                break;;
+        } else if (ch == ',')  {
+            if (nBraces == 0)
+                nCommas++;
+        }
+        curPos = prevPos;
+        if (curPos.Line<1)
+            break;
+    }
+
+    // If we couldn't find the closing brace or reached the FMaxScanLength...
+    if (nBraces!=-1) {
+        return;
+    }
+
+    NormalizedBufferCoord FFunctionStart = curPos;
+
+    // Skip blanks
+    while (curPos.Line>=1) {
+        prevPos = moveBufferPos(curPos,-1);
+        QChar prevCh = charAtNormalizedBufferPos(prevPos);
+        if (prevCh == '\t' || prevCh == ' '
+                || prevCh == '\n') {
+            curPos = prevPos;
+        } else {
+            break;
+        }
+    }
+
+    prevPos = moveBufferPos(curPos,-1);
+    if (prevPos.Line<1)
+        return;
+    // Get the name of the function we're about to show
+    BufferCoord FuncStartXY;
+    FuncStartXY.Line = prevPos.Line;
+    FuncStartXY.Char = prevPos.Char;
+    QString token;
+    PSynHighlighterAttribute HLAttr;
+    if (!getHighlighterAttriAtRowCol(FuncStartXY,token,HLAttr)) {
+       return;
+    }
+    if (HLAttr->name()!=SYNS_AttrIdentifier)
+        return;
+
+    BufferCoord pWordBegin, pWordEnd;
+
+    QString s = getWordAtPosition(this, FuncStartXY, pWordBegin,pWordEnd, WordPurpose::wpInformation);
+
+    // Don't bother scanning the database when there's no identifier to scan for
+
+    // Only do the cumbersome list filling when showing a new tooltip...
+    if (s != pMainWindow->functionTip()->functionFullName()
+            && !mParser->parsing()) {
+        pMainWindow->functionTip()->clearTips();
+        mParser->fillListOfFunctions()
+    }
+
+
+  FSelIndex := 0;
+  FCustomSelIndex := False;
+
+  // Fill a cache of known functions...
+  FToolTips.BeginUpdate;
+  FToolTips.Clear;
+  FParser.FillListOfFunctions(fFileName,S,FuncStartXY.Line, FToolTips);
+  FToolTips.EndUpdate;
+end;
+
+// If we can't find it in our database, hide
+if FToolTips.Count = 0 then begin
+  ReleaseHandle;
+  Exit;
+end;
+
+FOldFunction := S;
+
+// get the current token position in the text
+// this is where the prototype name usually starts
+FTokenPos := CurPos - Length(S);
+
+// Search for the best possible overload match according to comma count
+if (shoFindBestMatchingToolTip in FOptions) then
+
+  // Only do so when the user didn't select his own
+  if not FCustomSelIndex then
+    S := FindClosestToolTip(S, nCommas);
+
+// Select the current one
+if (FSelIndex < FToolTips.Count) then
+  S := FToolTips.Strings[FSelIndex];
+
+// set the hint caption
+Caption := Trim(S);
+
+// we use the LookupEditor to get the highlighter-attributes
+// from. check the DrawAdvanced method!
+FLookupEditor.Text := Caption;
+FLookupEditor.Highlighter := FEditor.Highlighter;
+
+// get the index of the current argument (where the cursor is)
+FCurParamIndex := GetCommaIndex(P, FFunctionStart + 1, CaretPos - 1);
+RethinkCoordAndActivate;
 }
 
 void Editor::setInProject(bool newInProject)

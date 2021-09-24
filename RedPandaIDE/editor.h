@@ -197,6 +197,8 @@ private:
     QString getHintForFunction(const PStatement& statement, const PStatement& scope,
                                const QString& filename, int line);
 
+    void updateFunctionTip();
+
 
 private:
     QByteArray mEncodingOption; // the encoding type set by the user

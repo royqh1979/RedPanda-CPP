@@ -38,6 +38,7 @@ void FunctionTooltipWidget::addTip(const QString &name, const QString& fullname,
     info->returnType = returnType;
     info->params = splitArgs(args);
     info->nonameParams = splitArgs(noNameArgs);
+    mInfos.append(info);
 }
 
 void FunctionTooltipWidget::clearTips()
@@ -56,14 +57,47 @@ void FunctionTooltipWidget::setParamPos(int newParamPos)
     mParamPos = newParamPos;
 }
 
-int FunctionTooltipWidget::index() const
+void FunctionTooltipWidget::nextTip()
 {
-    return mIndex;
+    if (mInfos.length()>0)
+        mInfoIndex = std::min(mInfoIndex+1,mInfos.length()-1);
+    updateTip();
 }
 
-void FunctionTooltipWidget::setIndex(int newIndex)
+void FunctionTooltipWidget::previousTip()
 {
-    mIndex = newIndex;
+    if (mInfos.length()>0)
+        mInfoIndex = std::max(mInfoIndex-1,0);
+    updateTip();
+}
+
+void FunctionTooltipWidget::updateTip()
+{
+
+    mTotalLabel->setVisible(mInfos.length()>1);
+    mUpButton->setVisible(mInfos.length()>1);
+    mDownButton->setVisible(mInfos.length()>1);
+    mUpButton->setEnabled(mInfoIndex!=0);
+    mDownButton->setEnabled(mInfoIndex!=mInfos.length()-1);
+    if (mInfos.length()<=0)
+        return;
+    PFunctionInfo info = mInfos[mInfoIndex];
+    QString text = info->returnType+ " " + info->name;
+    if (info->params.length()==0) {
+        text += "()";
+    } else {
+        QStringList displayList;
+        for (int i=0;i<info->params.length();i++){
+            const QString& param = info->params[i];
+            if (mParamIndex == i) {
+                displayList.append(QString("<b>%1</b>").arg(param));
+            } else {
+                displayList.append(param);
+            }
+        }
+        text += "( "+displayList.join(", ") + ") ";
+    }
+    mInfoLabel->setText(text);
 }
 
 QStringList FunctionTooltipWidget::splitArgs(QString argStr)
@@ -93,4 +127,42 @@ QStringList FunctionTooltipWidget::splitArgs(QString argStr)
         result.append(s);
     }
     return result;
+}
+
+const QString &FunctionTooltipWidget::functionFullName() const
+{
+    return mFunctioFullName;
+}
+
+void FunctionTooltipWidget::setFunctioFullName(const QString &newFunctioFullName)
+{
+    mFunctioFullName = newFunctioFullName;
+}
+
+int FunctionTooltipWidget::paramIndex() const
+{
+    return mParamIndex;
+}
+
+void FunctionTooltipWidget::setParamIndex(int newParamIndex)
+{
+    mParamIndex = newParamIndex;
+}
+
+void FunctionTooltipWidget::closeEvent(QCloseEvent *)
+{
+
+}
+
+void FunctionTooltipWidget::showEvent(QShowEvent *)
+{
+    if (mInfos.length()>0) {
+        mInfoIndex = 0;
+    }
+    updateTip();
+}
+
+void FunctionTooltipWidget::hideEvent(QHideEvent *event)
+{
+    mInfos.clear();
 }

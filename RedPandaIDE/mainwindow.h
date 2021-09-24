@@ -9,6 +9,7 @@
 #include "widgets/classbrowser.h"
 #include "widgets/codecompletionpopup.h"
 #include "widgets/headercompletionpopup.h"
+#include "widgets/functiontooltipwidget.h"
 #include "caretlist.h"
 
 QT_BEGIN_NAMESPACE
@@ -102,6 +103,9 @@ public:
     const std::shared_ptr<CodeCompletionPopup> &completionPopup() const;
 
     const std::shared_ptr<HeaderCompletionPopup> &headerCompletionPopup() const;
+
+    const std::shared_ptr<FunctionTooltipWidget> &functionTip() const;
+
     CaretList &caretList();
     void updateCaretActions();
 
@@ -358,6 +362,7 @@ private:
 
     std::shared_ptr<CodeCompletionPopup> mCompletionPopup;
     std::shared_ptr<HeaderCompletionPopup> mHeaderCompletionPopup;
+    std::shared_ptr<FunctionTooltipWidget> mFunctionTip;
 
     SearchResultModel mSearchResultModel;
     PSearchResultListModel mSearchResultListModel;

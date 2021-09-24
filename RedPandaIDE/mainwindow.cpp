@@ -149,6 +149,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     mCompletionPopup = std::make_shared<CodeCompletionPopup>();
     mHeaderCompletionPopup = std::make_shared<HeaderCompletionPopup>();
+    mFunctionTip = std::make_shared<FunctionTooltipWidget>();
 
     updateAppTitle();
 
@@ -1965,6 +1966,11 @@ void MainWindow::onFileChanged(const QString &path)
 const std::shared_ptr<HeaderCompletionPopup> &MainWindow::headerCompletionPopup() const
 {
     return mHeaderCompletionPopup;
+}
+
+const std::shared_ptr<FunctionTooltipWidget> &MainWindow::functionTip() const
+{
+    return mFunctionTip;
 }
 
 const std::shared_ptr<CodeCompletionPopup> &MainWindow::completionPopup() const

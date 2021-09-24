@@ -25,9 +25,16 @@ public:
     void clearTips();
     int paramPos() const;
     void setParamPos(int newParamPos);
+    void nextTip();
+    void previousTip();
+    void updateTip();
 
-    int index() const;
-    void setIndex(int newIndex);
+    int paramIndex() const;
+    void setParamIndex(int newParamIndex);
+
+    const QString &functionFullName() const;
+    void setFunctioFullName(const QString &newFunctioFullName);
+
 signals:
 private:
     QStringList splitArgs(QString args);
@@ -37,8 +44,17 @@ private:
     QToolButton* mUpButton;
     QToolButton* mDownButton;
     int mParamPos;
-    int mIndex;
+    int mInfoIndex;
+    int mParamIndex;
+    QString mFunctioFullName;
+
     QList<PFunctionInfo> mInfos;
+
+    // QWidget interface
+protected:
+    void closeEvent(QCloseEvent *event) override;
+    void showEvent(QShowEvent *event) override;
+    void hideEvent(QHideEvent *event) override;
 };
 
 #endif // FUNCTIONTOOLTIPWIDGET_H
