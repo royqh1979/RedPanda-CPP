@@ -2247,21 +2247,20 @@ QString Editor::getHintForFunction(const PStatement &statement, const PStatement
 void Editor::updateFunctionTip()
 {
     BufferCoord caretPos = caretXY();
-    NormalizedBufferCoord curPos = normalizeBufferPos(caretPos);
-    NormalizedBufferCoord nextPos;
+    NormalizedBufferCoord curPos = fromBufferCoord(caretPos);
     int nBraces = 0;
     int nCommas = 0;
     int FMaxScanLength = 500;
     // Find out where the function ends...
     for (int i=0;i<FMaxScanLength;i++) {
-        nextPos = moveBufferPos(curPos,1);
         // Stopping characters...
-        QChar ch = charAtNormalizedBufferPos(curPos);
-        QChar nextCh = charAtNormalizedBufferPos(nextPos);
+        QChar ch = *curPos;
         if (ch == '\0' || ch == ';') {
             return;
         // Opening brace, increase count
-        } else if (ch == '(') {
+        }
+        QChar nextCh = *(curPos+1);
+        if (ch == '(') {
             nBraces++;
           // Ending brace, decrease count or success (found ending)!
         } else if (ch == ')') {
@@ -2273,35 +2272,30 @@ void Editor::updateFunctionTip()
         } else if ((ch == '/') && (nextCh == '/')) {
             // Walk up to an enter sequence
             while (ch!='\0' && ch!='\n') {
-                curPos = nextPos;
-                nextPos = moveBufferPos(curPos,1);
-                ch = charAtNormalizedBufferPos(curPos);
-                nextCh = charAtNormalizedBufferPos(nextPos);
+                curPos+=1;
+                ch = *curPos;
             }
 
 
             // Skip linebreak;
             if (ch == '\n') {
-                curPos = nextPos;
-                nextPos = moveBufferPos(curPos,1);
+                curPos += 1;
             }
         } else if ((ch == '/') && (nextCh == '*')) {
 
             // Walk up to "*/"
             while (ch!='\0' && !(ch=='*' && nextCh=='/')) {
-                curPos = nextPos;
-                nextPos = moveBufferPos(curPos,1);
-                ch = charAtNormalizedBufferPos(curPos);
-                nextCh = charAtNormalizedBufferPos(nextPos);
+                curPos += 1;
+                ch = *curPos;
+                nextCh = *(curPos+1);
             }
 
             // Step over
             if (ch!='\0') {
-                curPos = nextPos;
-                nextPos = moveBufferPos(curPos,1);
+                curPos+=1;
             }
         } else
-            curPos = nextPos;
+            curPos += 1;
     }
 
     // If we couldn't find the closing brace or reached the FMaxScanLength...
@@ -2310,24 +2304,21 @@ void Editor::updateFunctionTip()
     }
 
     NormalizedBufferCoord FFunctionEnd = curPos;
-    NormalizedBufferCoord prevPos;
+
     // We've stopped at the ending ), start walking backwards )*here* with nBraces = -1
     for (int i=0;i<FMaxScanLength;i++) {
-        prevPos = moveBufferPos(curPos,-1);
-        QChar ch = charAtNormalizedBufferPos(curPos);
-        QChar prevCh = charAtNormalizedBufferPos(prevPos);
+        QChar ch = *curPos;
+        QChar prevCh = *(curPos-1);
         if (prevCh == '*' && ch == '/' ) {
             while (true) {
-                curPos = prevPos;
-                prevPos = moveBufferPos(curPos,-1);
-                ch = charAtNormalizedBufferPos(curPos);
-                prevCh = charAtNormalizedBufferPos(prevPos);
+                curPos -= 1;
+                ch = *(curPos);
+                prevCh = *(curPos-1);
                 if (prevCh == '\0')
                     return;
                 if (prevCh == '/' && ch == '*'  ) {
-                    curPos = prevPos;
-                    prevPos = moveBufferPos(curPos,-1);
-                    break;;
+                    curPos -= 1;
+                    break;
                 }
             }
         } else if (ch == ')') {
@@ -2340,8 +2331,8 @@ void Editor::updateFunctionTip()
             if (nBraces == 0)
                 nCommas++;
         }
-        curPos = prevPos;
-        if (curPos.Line<1)
+        curPos -= 1;
+        if (curPos.atStart())
             break;
     }
 
@@ -2353,24 +2344,21 @@ void Editor::updateFunctionTip()
     NormalizedBufferCoord FFunctionStart = curPos;
 
     // Skip blanks
-    while (curPos.Line>=1) {
-        prevPos = moveBufferPos(curPos,-1);
-        QChar prevCh = charAtNormalizedBufferPos(prevPos);
+    while (!curPos.atStart()) {
+        QChar prevCh = *(curPos-1);
         if (prevCh == '\t' || prevCh == ' '
                 || prevCh == '\n') {
-            curPos = prevPos;
+            curPos-=1;
         } else {
             break;
         }
     }
 
-    prevPos = moveBufferPos(curPos,-1);
-    if (prevPos.Line<1)
+    NormalizedBufferCoord prevPos = curPos-1;
+    if (prevPos.atStart())
         return;
     // Get the name of the function we're about to show
-    BufferCoord FuncStartXY;
-    FuncStartXY.Line = prevPos.Line;
-    FuncStartXY.Char = prevPos.Char;
+    BufferCoord FuncStartXY = prevPos.toBufferCoord();
     QString token;
     PSynHighlighterAttribute HLAttr;
     if (!getHighlighterAttriAtRowCol(FuncStartXY,token,HLAttr)) {

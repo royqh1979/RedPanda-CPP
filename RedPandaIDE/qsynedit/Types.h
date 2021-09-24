@@ -12,15 +12,48 @@ struct BufferCoord {
     int Line;
 };
 
+class SynEdit;
 /**
  * Nomalized buffer posistion:
  * (0,0) means at the start of the file ('\0')
  * (1,count of lines+1) means at the end of the file ('\0')
  * (length of the line+1, line) means at the line break of the line ('\n')
  */
-struct NormalizedBufferCoord {
-    int Char;
-    int Line;
+
+class NormalizedBufferCoord {
+public:
+    NormalizedBufferCoord();
+    NormalizedBufferCoord(const NormalizedBufferCoord& coord);
+    int ch() const;
+    void setCh(int newChar);
+
+    int line() const;
+    void setLine(int newLine);
+    bool atStart();
+    bool atEnd();
+    const SynEdit *edit() const;
+    const NormalizedBufferCoord& operator=(const NormalizedBufferCoord& coord);
+    const NormalizedBufferCoord& operator=(const NormalizedBufferCoord&& coord);
+    bool operator==(const NormalizedBufferCoord& coord) const;
+    bool operator<(const NormalizedBufferCoord& coord) const;
+    bool operator<=(const NormalizedBufferCoord& coord) const;
+    bool operator>(const NormalizedBufferCoord& coord) const;
+    bool operator>=(const NormalizedBufferCoord& coord) const;
+    size_t operator-(const NormalizedBufferCoord& coord) const;
+    const NormalizedBufferCoord& operator+=(int delta);
+    const NormalizedBufferCoord& operator-=(int delta);
+    NormalizedBufferCoord operator+(int delta) const;
+    NormalizedBufferCoord operator-(int delta) const;
+    BufferCoord toBufferCoord() const;
+    QChar operator*() const;
+private:
+    NormalizedBufferCoord(const SynEdit* edit, int ch, int line);
+    void normalize();
+private:
+    int mChar;
+    int mLine;
+    const SynEdit* mEdit;
+    friend class SynEdit;
 };
 
 struct DisplayCoord {

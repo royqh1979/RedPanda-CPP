@@ -699,82 +699,14 @@ BufferCoord SynEdit::displayToBufferPos(const DisplayCoord &p) const
     return Result;
 }
 
-NormalizedBufferCoord SynEdit::moveBufferPos(const BufferCoord &p, int delta) const
+NormalizedBufferCoord SynEdit::fromBufferCoord(const BufferCoord &p) const
 {
-    return normalizeBufferPos(p.Char+delta,p.Line);
-
-
+    return createNormalizedBufferCoord(p.Char,p.Line);
 }
 
-NormalizedBufferCoord SynEdit::moveBufferPos(const NormalizedBufferCoord &p, int delta) const
+NormalizedBufferCoord SynEdit::createNormalizedBufferCoord(int aChar, int aLine) const
 {
-    return normalizeBufferPos(p.Char+delta,p.Line);
-}
-
-NormalizedBufferCoord SynEdit::normalizeBufferPos(const BufferCoord &p) const
-{
-    return normalizeBufferPos(p.Char,p.Line);
-}
-
-NormalizedBufferCoord SynEdit::normalizeBufferPos(int aChar, int aLine) const
-{
-    if (mLines->count()==0) {
-        return NormalizedBufferCoord{0,0};
-    }
-    int line = aLine-1;
-    int lineCount = mLines->count();
-    if (line>=lineCount) {
-        return NormalizedBufferCoord{
-            mLines->getString(lineCount-1).length()+1
-            ,lineCount};
-    }
-    if (line<0) {
-        return NormalizedBufferCoord{0,0};
-    }
-    if (aChar<1) {
-        while (true) {
-            line--;
-            if (line < 0) {
-                return NormalizedBufferCoord{0,0};
-            }
-            QString s =mLines->getString(line);
-            int len = s.length();
-            aChar+=len+1;
-            if (aChar>=1) {
-                return NormalizedBufferCoord{aChar,line+1};
-            }
-        }
-    }
-    while (true) {
-        QString s =mLines->getString(line);
-        int len = s.length();
-        if (aChar<=len+1 ) {
-            return NormalizedBufferCoord{aChar,line+1};
-        }
-        if (line == lineCount-1) {
-            return NormalizedBufferCoord{1,lineCount+1};
-        }
-        aChar -= len+1;
-        line++;
-    }
-}
-
-QChar SynEdit::charAtNormalizedBufferPos(const NormalizedBufferCoord &p) const
-{
-    if (p.Line < 1) {
-        return QChar('\0');
-    }
-    if (p.Line > mLines->count()) {
-        return QChar('\0');
-    }
-    if (p.Char == 0) {
-        return QChar('\n');
-    }
-    QString s = mLines->getString(p.Line-1);
-    if (p.Char > p.Line+1) {
-        return QChar('\n');
-    }
-    return s[p.Char-1];
+    return NormalizedBufferCoord(this,aChar,aLine);
 }
 
 QStringList SynEdit::getContents(const NormalizedBufferCoord &pStart, const NormalizedBufferCoord &pEnd)
@@ -782,16 +714,16 @@ QStringList SynEdit::getContents(const NormalizedBufferCoord &pStart, const Norm
     QStringList result;
     if (mLines->count()==0)
         return result;
-    if (pStart.Line>0) {
-        QString s = mLines->getString(pStart.Line-1);
-        result += s.mid(pStart.Char-1);
+    if (pStart.line()>0) {
+        QString s = mLines->getString(pStart.line()-1);
+        result += s.mid(pStart.ch()-1);
     }
-    int endLine = std::min(pEnd.Line,mLines->count());
-    for (int i=pStart.Line;i<endLine-1;i++) {
+    int endLine = std::min(pEnd.line(),mLines->count());
+    for (int i=pStart.line();i<endLine-1;i++) {
         result += mLines->getString(i);
     }
-    if (pEnd.Line<=mLines->count()) {
-        result += mLines->getString(pEnd.Line-1).mid(0,pEnd.Char-1);
+    if (pEnd.line()<=mLines->count()) {
+        result += mLines->getString(pEnd.line()-1).mid(0,pEnd.ch()-1);
     }
     return result;
 }
@@ -6075,4 +6007,20 @@ void SynEdit::onScrollTimeout()
         setBlockEnd(caretXY());
     }
     computeScroll(iMousePos.x(), iMousePos.y());
+}
+
+SynEdit::Contents::Contents(const SynEdit *edit)
+{
+    mEdit = edit;
+}
+
+QChar SynEdit::Contents::charAt(const NormalizedBufferCoord &coord) const
+{
+    Q_ASSERT(coord.edit() == mEdit);
+    return *coord;
+}
+
+QChar SynEdit::Contents::operator[](const NormalizedBufferCoord &coord) const
+{
+    return charAt(coord);
 }

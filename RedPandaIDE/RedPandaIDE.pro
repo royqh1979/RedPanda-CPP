@@ -39,6 +39,7 @@ SOURCES += \
     qsynedit/Search.cpp \
     qsynedit/SearchBase.cpp \
     qsynedit/SearchRegex.cpp \
+    qsynedit/Types.cpp \
     settingsdialog/compilerautolinkwidget.cpp \
     settingsdialog/debuggeneralwidget.cpp \
     settingsdialog/editorautosavewidget.cpp \
