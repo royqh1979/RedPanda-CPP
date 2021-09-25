@@ -105,7 +105,7 @@ void FunctionTooltipWidget::updateTip()
     mInfoLabel->setText(text);
 }
 
-void FunctionTooltipWidget::guesstFunction(int commas)
+void FunctionTooltipWidget::guessFunction(int commas)
 {
     for (int i=0;i<mInfos.size();i++) {
         if (mInfos[i]->params.count()>commas) {
