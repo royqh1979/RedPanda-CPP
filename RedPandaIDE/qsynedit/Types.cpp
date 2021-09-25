@@ -204,9 +204,10 @@ QChar ContentsCoord::operator*() const
         return QChar('\0');
     }
     QString s = mEdit->lines()->getString(mLine-1);
-    if (mChar > s.length()+1 ) {
+    if (mChar >= s.length()+1 ) {
         return QChar('\n');
     }
+    //qDebug()<<mLine<<":"<<mChar<<" '"<<s<<"'";
     return s[mChar-1];
 }
 

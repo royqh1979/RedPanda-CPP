@@ -14,7 +14,7 @@ struct FunctionInfo {
 
 using PFunctionInfo = std::shared_ptr<FunctionInfo>;
 
-class FunctionTooltipWidget : public QWidget
+class FunctionTooltipWidget : public QFrame
 {
     Q_OBJECT
 public:

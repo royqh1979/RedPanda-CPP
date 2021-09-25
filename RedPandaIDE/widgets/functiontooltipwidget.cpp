@@ -1,10 +1,11 @@
 #include "functiontooltipwidget.h"
 
 #include <QHBoxLayout>
+#include <QPushButton>
 
-FunctionTooltipWidget::FunctionTooltipWidget(QWidget *parent) : QWidget(parent)
+FunctionTooltipWidget::FunctionTooltipWidget(QWidget *parent) :
+    QFrame(parent, Qt::ToolTip | Qt::WindowStaysOnTopHint | Qt::WindowDoesNotAcceptFocus)
 {
-    setWindowFlags(Qt::Popup);
     setFocusPolicy(Qt::NoFocus);
     mInfoLabel = new QLabel(this);
     mInfoLabel->setWordWrap(true);
@@ -21,12 +22,17 @@ FunctionTooltipWidget::FunctionTooltipWidget(QWidget *parent) : QWidget(parent)
     mDownButton->setFixedSize(16, 16);
     mDownButton->setAutoRaise(true);
 
-
     this->setLayout(new QHBoxLayout());
+    layout()->setContentsMargins(0,0,0,0);
+    layout()->setSpacing(0);
     layout()->addWidget(mUpButton);
     layout()->addWidget(mTotalLabel);
     layout()->addWidget(mDownButton);
     layout()->addWidget(mInfoLabel);
+    connect(mUpButton,&QPushButton::clicked,
+            this,&FunctionTooltipWidget::previousTip);
+    connect(mDownButton,&QPushButton::clicked,
+            this,&FunctionTooltipWidget::nextTip);
 }
 
 void FunctionTooltipWidget::addTip(const QString &name, const QString& fullname,
@@ -102,11 +108,23 @@ void FunctionTooltipWidget::updateTip()
         }
         text += "( "+displayList.join(", ") + ") ";
     }
+    if (mInfos.length()>1) {
+        mTotalLabel->setText(QString("%1/%2").arg(mInfoIndex+1).arg(mInfos.length()));
+    }
+    int width = mInfoLabel->fontMetrics().horizontalAdvance(text);
+    if (width > 400) {
+        mInfoLabel->setMinimumWidth(410);
+    } else {
+        mInfoLabel->setMinimumWidth(width);
+    }
     mInfoLabel->setText(text);
 }
 
 void FunctionTooltipWidget::guessFunction(int commas)
 {
+    if (mInfoIndex>=0 && mInfoIndex<mInfos.count()
+            && mInfos[mInfoIndex]->params.count()>commas)
+        return;
     for (int i=0;i<mInfos.size();i++) {
         if (mInfos[i]->params.count()>commas) {
             mInfoIndex = i;
@@ -141,6 +159,8 @@ QStringList FunctionTooltipWidget::splitArgs(QString argStr)
     QString s = argStr.mid(paramStart,i-paramStart);
     s=s.trimmed();
     if (!s.isEmpty()) {
+        if (s.endsWith(')'))
+            s.truncate(s.length()-1);
         result.append(s);
     }
     return result;
@@ -164,6 +184,7 @@ int FunctionTooltipWidget::paramIndex() const
 void FunctionTooltipWidget::setParamIndex(int newParamIndex)
 {
     mParamIndex = newParamIndex;
+    updateTip();
 }
 
 void FunctionTooltipWidget::closeEvent(QCloseEvent *)
@@ -179,7 +200,8 @@ void FunctionTooltipWidget::showEvent(QShowEvent *)
     updateTip();
 }
 
-void FunctionTooltipWidget::hideEvent(QHideEvent *event)
+void FunctionTooltipWidget::hideEvent(QHideEvent *)
 {
     mInfos.clear();
+    mFunctioFullName = "";
 }

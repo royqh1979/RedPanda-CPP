@@ -594,7 +594,6 @@ void CppTokenizer::advance()
             mCurrent++;
         break;
     case '\\':
-
         if (isLineChar(*(mCurrent + 1)))
             skipSplitLine();
         else

@@ -464,6 +464,7 @@ void Editor::focusOutEvent(QFocusEvent *event)
     pMainWindow->updateEditorActions();
     pMainWindow->updateStatusbarForLineCol();
     pMainWindow->updateForStatusbarModeInfo();
+    pMainWindow->functionTip()->hide();
 }
 
 void Editor::keyPressEvent(QKeyEvent *event)
@@ -1784,6 +1785,7 @@ void Editor::showCompletion(bool autoComplete)
     });
     mCompletionPopup->setParser(mParser);
     mCompletionPopup->setUseCppKeyword(mUseCppSyntax);
+    pMainWindow->functionTip()->hide();
     mCompletionPopup->show();
 
     // Scan the current function body
@@ -1842,6 +1844,7 @@ void Editor::showHeaderCompletion(bool autoComplete)
     if (word.lastIndexOf('"')>0 || word.lastIndexOf('>')>0)
         return;
 
+    pMainWindow->functionTip()->hide();
     mHeaderCompletionPopup->show();
     mHeaderCompletionPopup->setSearchLocal(word.startsWith('"'));
     word.remove(0,1);
@@ -2246,6 +2249,10 @@ QString Editor::getHintForFunction(const PStatement &statement, const PStatement
 
 void Editor::updateFunctionTip()
 {
+    if (pMainWindow->completionPopup()->isVisible()) {
+        pMainWindow->functionTip()->hide();
+        return;
+    }
     BufferCoord caretPos = caretXY();
     ContentsCoord curPos = fromBufferCoord(caretPos);
     ContentsCoord cursorPos = curPos;
@@ -2257,6 +2264,7 @@ void Editor::updateFunctionTip()
         // Stopping characters...
         QChar ch = *curPos;
         if (ch == '\0' || ch == ';') {
+            pMainWindow->functionTip()->hide();
             return;
         // Opening brace, increase count
         }
@@ -2299,14 +2307,17 @@ void Editor::updateFunctionTip()
             curPos += 1;
     }
 
+    //qDebug()<<"first pass:"<<nBraces<<" "<<curPos.line()<<":"<<curPos.ch()<<" - '"<<*curPos<<"'";
     // If we couldn't find the closing brace or reached the FMaxScanLength...
     if (nBraces!=-1) {
+        pMainWindow->functionTip()->hide();
         return;
     }
 
     ContentsCoord FFunctionEnd = curPos;
 
     int paramPos = 0;
+    bool paramPosFounded = false;
     // We've stopped at the ending ), start walking backwards )*here* with nBraces = -1
     for (int i=0;i<FMaxScanLength;i++) {
         QChar ch = *curPos;
@@ -2316,8 +2327,10 @@ void Editor::updateFunctionTip()
                 curPos -= 1;
                 ch = *(curPos);
                 prevCh = *(curPos-1);
-                if (prevCh == '\0')
+                if (prevCh == '\0') {
+                    pMainWindow->functionTip()->hide();
                     return;
+                }
                 if (prevCh == '/' && ch == '*'  ) {
                     curPos -= 1;
                     break;
@@ -2331,8 +2344,9 @@ void Editor::updateFunctionTip()
                 break;;
         } else if (ch == ',')  {
             if (nBraces == 0) {
-                if (curPos <= cursorPos) {
+                if (curPos <= cursorPos && !paramPosFounded) {
                     paramPos = nCommas;
+                    paramPosFounded = true;
                 }
                 nCommas++;
             }
@@ -2341,10 +2355,13 @@ void Editor::updateFunctionTip()
         if (curPos.atStart())
             break;
     }
-    paramPos = nCommas - paramPos;
+    if (paramPosFounded)
+        paramPos = nCommas - paramPos;
 
+    //qDebug()<<"second pass:"<<nBraces<<","<<nCommas<<","<<paramPos<<" "<<curPos.line()<<":"<<curPos.ch()<<" - '"<<*curPos<<"'";
     // If we couldn't find the closing brace or reached the FMaxScanLength...
     if (nBraces!=-1) {
+        pMainWindow->functionTip()->hide();
         return;
     }
 
@@ -2362,22 +2379,31 @@ void Editor::updateFunctionTip()
     }
 
     ContentsCoord prevPos = curPos-1;
-    if (prevPos.atStart())
+    if (prevPos.atStart()) {
+        pMainWindow->functionTip()->hide();
         return;
+    }
     // Get the name of the function we're about to show
     BufferCoord FuncStartXY = prevPos.toBufferCoord();
     QString token;
     PSynHighlighterAttribute HLAttr;
     if (!getHighlighterAttriAtRowCol(FuncStartXY,token,HLAttr)) {
+       pMainWindow->functionTip()->hide();
        return;
     }
-    if (HLAttr->name()!=SYNS_AttrIdentifier)
+    if (HLAttr->name()!=SYNS_AttrIdentifier) {
+        pMainWindow->functionTip()->hide();
         return;
+    }
 
     BufferCoord pWordBegin, pWordEnd;
 
     QString s = getWordAtPosition(this, FuncStartXY, pWordBegin,pWordEnd, WordPurpose::wpInformation);
 
+//    qDebug()<<QString("find word at %1:%2 - '%3'")
+//              .arg(FuncStartXY.Line)
+//              .arg(FuncStartXY.Char)
+//              .arg(s);
     // Don't bother scanning the database when there's no identifier to scan for
 
     // Only do the cumbersome list filling when showing a new tooltip...
@@ -2401,8 +2427,13 @@ void Editor::updateFunctionTip()
 
     // If we can't find it in our database, hide
     if (pMainWindow->functionTip()->tipCount()<=0) {
+        pMainWindow->functionTip()->hide();
         return;
     }
+    // Position it at the top of the next line
+    QPoint p = rowColumnToPixels(displayXY());
+    p+=QPoint(0,textHeight()+2);
+    pMainWindow->functionTip()->move(mapToGlobal(p));
 
     pMainWindow->functionTip()->setFunctioFullName(s);
     pMainWindow->functionTip()->guessFunction(nCommas);
@@ -2410,32 +2441,6 @@ void Editor::updateFunctionTip()
                 paramPos
                 );
     pMainWindow->functionTip()->show();
-////    // get the current token position in the text
-////    // this is where the prototype name usually starts
-////    FTokenPos := CurPos - Length(S);
-
-//// Search for the best possible overload match according to comma count
-//if (shoFindBestMatchingToolTip in FOptions) then
-
-//  // Only do so when the user didn't select his own
-//  if not FCustomSelIndex then
-//    S := FindClosestToolTip(S, nCommas);
-
-//// Select the current one
-//if (FSelIndex < FToolTips.Count) then
-//  S := FToolTips.Strings[FSelIndex];
-
-//// set the hint caption
-//Caption := Trim(S);
-
-//// we use the LookupEditor to get the highlighter-attributes
-//// from. check the DrawAdvanced method!
-//FLookupEditor.Text := Caption;
-//FLookupEditor.Highlighter := FEditor.Highlighter;
-
-//// get the index of the current argument (where the cursor is)
-//FCurParamIndex := GetCommaIndex(P, FFunctionStart + 1, CaretPos - 1);
-//RethinkCoordAndActivate;
 }
 
 void Editor::setInProject(bool newInProject)
