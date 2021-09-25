@@ -111,6 +111,8 @@ public:
 
     std::shared_ptr<Project> project();
 
+    const std::shared_ptr<QHash<StatementKind, QColor> > &statementColors() const;
+
 public slots:
     void onCompileLog(const QString& msg);
     void onCompileIssue(PCompileIssue issue);
@@ -369,6 +371,7 @@ private:
     PSearchResultTreeModel mSearchResultTreeModel;
     PSearchResultTreeViewDelegate mSearchViewDelegate;
     ClassBrowserModel mClassBrowserModel;
+    std::shared_ptr<QHash<StatementKind, QColor>> mStatementColors;
 
     bool mCheckSyntaxInBack;
     bool mOpenClosingBottomPanel;

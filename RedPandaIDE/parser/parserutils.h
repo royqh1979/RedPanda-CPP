@@ -42,6 +42,7 @@ enum class SkipType {
     skNone // It's a keyword but don't process here
 };
 
+
 enum StatementKind  {
   skUnknown,
   skPreprocessor,
@@ -180,7 +181,7 @@ struct FileIncludes {
     QSet<QString> dependedFiles; // the files depends on me
 };
 using PFileIncludes = std::shared_ptr<FileIncludes>;
-
+using ColorCallback = std::function<QColor (PStatement)>;
 
 extern QStringList CppDirectives;
 extern QStringList JavadocTags;

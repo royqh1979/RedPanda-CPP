@@ -37,6 +37,10 @@ public:
     void beginUpdate();
     void endUpdate();
 
+
+    const std::shared_ptr<QHash<StatementKind, QColor> > &colors() const;
+    void setColors(const std::shared_ptr<QHash<StatementKind, QColor> > &newColors);
+
 public slots:
     void fillStatements();
 private:
@@ -54,10 +58,7 @@ private:
     QRecursiveMutex mMutex;
     QString mCurrentFile;
     bool mShowInheritedMembers;
-
-
-    // QAbstractItemModel interface
-public:
+    std::shared_ptr<QHash<StatementKind, QColor>> mColors;
 };
 
 #endif // CLASSBROWSER_H

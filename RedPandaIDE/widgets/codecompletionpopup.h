@@ -64,7 +64,8 @@ public:
 
     const PStatement &currentStatement() const;
     void setCurrentStatement(const PStatement &newCurrentStatement);
-    QHash<StatementKind, QColor>& colors();
+    const std::shared_ptr<QHash<StatementKind, QColor> >& colors() const;
+    void setColors(const std::shared_ptr<QHash<StatementKind, QColor> > &newColors);
 
 private:
     void addChildren(PStatement scopeStatement, const QString& fileName,
@@ -86,7 +87,7 @@ private:
     QString mPhrase;
     QHash<QString,int> mSymbolUsage;
     QRecursiveMutex mMutex;
-    QHash<StatementKind, QColor> mColors;
+    std::shared_ptr<QHash<StatementKind, QColor>> mColors;
 
     PCppParser mParser;
     PStatement mCurrentStatement;

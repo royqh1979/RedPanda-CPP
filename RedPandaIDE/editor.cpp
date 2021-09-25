@@ -715,7 +715,7 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
                 kind = StatementKind::skVariable;
             }
         }
-        foreground = mCompletionPopup->colors().value(kind,
+        foreground = mCompletionPopup->colors()->value(kind,
                                                       highlighter()->identifierAttribute()->foreground());
         return;
     }
@@ -3019,59 +3019,6 @@ void Editor::applyColorScheme(const QString& schemeName)
     if (item) {
         this->mBreakpointForegroundColor = item->foreground();
         this->mBreakpointBackgroundColor = item->background();
-    }
-    //color for code completion popup
-    if (mCompletionPopup) {
-        item = pColorManager->getItem(schemeName, SYNS_AttrFunction);
-        if (item) {
-            mCompletionPopup->colors().insert(StatementKind::skFunction,item->foreground());
-            mCompletionPopup->colors().insert(StatementKind::skConstructor,item->foreground());
-            mCompletionPopup->colors().insert(StatementKind::skDestructor,item->foreground());
-        }
-        item = pColorManager->getItem(schemeName, SYNS_AttrClass);
-        if (item) {
-            mCompletionPopup->colors().insert(StatementKind::skClass,item->foreground());
-            mCompletionPopup->colors().insert(StatementKind::skTypedef,item->foreground());
-            mCompletionPopup->colors().insert(StatementKind::skAlias,item->foreground());
-        }
-        item = pColorManager->getItem(schemeName, SYNS_AttrIdentifier);
-        if (item) {
-            mCompletionPopup->colors().insert(StatementKind::skEnumType,item->foreground());
-            mCompletionPopup->colors().insert(StatementKind::skEnumClassType,item->foreground());
-        }
-        item = pColorManager->getItem(schemeName, SYNS_AttrVariable);
-        if (item) {
-            mCompletionPopup->colors().insert(StatementKind::skVariable,item->foreground());
-        }
-        item = pColorManager->getItem(schemeName, SYNS_AttrLocalVariable);
-        if (item) {
-            mCompletionPopup->colors().insert(StatementKind::skLocalVariable,item->foreground());
-            mCompletionPopup->colors().insert(StatementKind::skParameter,item->foreground());
-        }
-        item = pColorManager->getItem(schemeName, SYNS_AttrGlobalVariable);
-        if (item) {
-            mCompletionPopup->colors().insert(StatementKind::skGlobalVariable,item->foreground());
-        }
-        item = pColorManager->getItem(schemeName, SYNS_AttrGlobalVariable);
-        if (item) {
-            mCompletionPopup->colors().insert(StatementKind::skGlobalVariable,item->foreground());
-        }
-        item = pColorManager->getItem(schemeName, SYNS_AttrPreprocessor);
-        if (item) {
-            mCompletionPopup->colors().insert(StatementKind::skPreprocessor,item->foreground());
-            mCompletionPopup->colors().insert(StatementKind::skEnum,item->foreground());
-            mHeaderCompletionPopup->setSuggestionColor(item->foreground());
-        }
-        item = pColorManager->getItem(schemeName, SYNS_AttrReservedWord);
-        if (item) {
-            mCompletionPopup->colors().insert(StatementKind::skKeyword,item->foreground());
-            mCompletionPopup->colors().insert(StatementKind::skUserCodeIn,item->foreground());
-        }
-        item = pColorManager->getItem(schemeName, SYNS_AttrString);
-        if (item) {
-            mCompletionPopup->colors().insert(StatementKind::skNamespace,item->foreground());
-            mCompletionPopup->colors().insert(StatementKind::skNamespaceAlias,item->foreground());
-        }
     }
     this->invalidate();
 }

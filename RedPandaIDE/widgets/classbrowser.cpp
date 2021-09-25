@@ -1,6 +1,9 @@
 #include "classbrowser.h"
 #include "../utils.h"
 #include <QDebug>
+#include <QColor>
+#include <QPalette>
+#include "../mainwindow.h"
 
 ClassBrowserModel::ClassBrowserModel(QObject *parent):QAbstractItemModel(parent)
 {
@@ -97,11 +100,9 @@ void ClassBrowserModel::fetchMore(const QModelIndex &parent)
 
 bool ClassBrowserModel::canFetchMore(const QModelIndex &parent) const
 {
-
     if (!parent.isValid()) { // top level
         return false;
     }
-
     ClassBrowserNode *parentNode = static_cast<ClassBrowserNode *>(parent.internalPointer());
     if (!parentNode->childrenFetched) {
         if (parentNode->statement && !parentNode->statement->children.isEmpty())
@@ -123,6 +124,17 @@ QVariant ClassBrowserModel::data(const QModelIndex &index, int role) const
     if (role == Qt::DisplayRole) {
         if (node->statement) {
             return node->statement->command;
+        }
+    } else if (role == Qt::ForegroundRole) {
+        if (node->statement) {
+            PStatement statement = (node->statement);
+            StatementKind kind;
+            if (mParser) {
+                kind = mParser->getKindOfStatement(statement);
+            } else {
+                kind = statement->kind;
+            }
+            return mColors->value(kind,pMainWindow->palette().color(QPalette::Text));
         }
     }
     return QVariant();
@@ -324,6 +336,16 @@ PStatement ClassBrowserModel::createDummy(PStatement statement)
     return result;
 }
 
+const std::shared_ptr<QHash<StatementKind, QColor> > &ClassBrowserModel::colors() const
+{
+    return mColors;
+}
+
+void ClassBrowserModel::setColors(const std::shared_ptr<QHash<StatementKind, QColor> > &newColors)
+{
+    mColors = newColors;
+}
+
 const QString &ClassBrowserModel::currentFile() const
 {
     return mCurrentFile;
@@ -348,5 +370,3 @@ void ClassBrowserModel::endUpdate()
         }
     }
 }
-
-

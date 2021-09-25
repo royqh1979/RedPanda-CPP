@@ -21,6 +21,5 @@ private:
     KeyPressedCallback mKeypressedCallback;
 };
 
-using ColorCallback = std::function<QColor (PStatement)>;
 
 #endif // CODECOMPLETIONLISTVIEW_H

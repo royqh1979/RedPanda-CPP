@@ -19,7 +19,7 @@ CodeCompletionPopup::CodeCompletionPopup(QWidget *parent) :
         } else {
             kind = statement->kind;
         }
-        return mColors.value(kind,palette().color(QPalette::Text));
+        return mColors->value(kind,palette().color(QPalette::Text));
     });
     mListView->setModel(mModel);
     setLayout(new QVBoxLayout());
@@ -709,6 +709,11 @@ bool CodeCompletionPopup::isIncluded(const QString &fileName)
     return mIncludedFiles.contains(fileName);
 }
 
+void CodeCompletionPopup::setColors(const std::shared_ptr<QHash<StatementKind, QColor> > &newColors)
+{
+    mColors = newColors;
+}
+
 const QString &CodeCompletionPopup::phrase() const
 {
     return mPhrase;
@@ -729,7 +734,7 @@ void CodeCompletionPopup::setCurrentStatement(const PStatement &newCurrentStatem
     mCurrentStatement = newCurrentStatement;
 }
 
-QHash<StatementKind, QColor> &CodeCompletionPopup::colors()
+const std::shared_ptr<QHash<StatementKind, QColor> >& CodeCompletionPopup::colors() const
 {
     return mColors;
 }

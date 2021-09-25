@@ -147,10 +147,13 @@ MainWindow::MainWindow(QWidget *parent)
     connect(&mFileSystemWatcher,&QFileSystemWatcher::fileChanged,
             this, &MainWindow::onFileChanged);
 
+    mStatementColors = std::make_shared<QHash<StatementKind, QColor> >();
     mCompletionPopup = std::make_shared<CodeCompletionPopup>();
+    mCompletionPopup->setColors(mStatementColors);
     mHeaderCompletionPopup = std::make_shared<HeaderCompletionPopup>();
     mFunctionTip = std::make_shared<FunctionTooltipWidget>();
 
+    mClassBrowserModel.setColors(mStatementColors);
     updateAppTitle();
 
     connect(&mAutoSaveTimer, &QTimer::timeout,
@@ -164,6 +167,8 @@ MainWindow::MainWindow(QWidget *parent)
             this, &MainWindow::updateProjectActions);
 
     buildContextMenus();
+
+    updateEditorColorSchemes();
 }
 
 MainWindow::~MainWindow()
@@ -322,6 +327,59 @@ void MainWindow::updateCompileActions()
 void MainWindow::updateEditorColorSchemes()
 {
     mEditorList->applyColorSchemes(pSettings->editor().colorScheme());
+    QString schemeName = pSettings->editor().colorScheme();
+    //color for code completion popup
+    PColorSchemeItem item;
+    item = pColorManager->getItem(schemeName, SYNS_AttrFunction);
+    if (item) {
+        mStatementColors->insert(StatementKind::skFunction,item->foreground());
+        mStatementColors->insert(StatementKind::skConstructor,item->foreground());
+        mStatementColors->insert(StatementKind::skDestructor,item->foreground());
+    }
+    item = pColorManager->getItem(schemeName, SYNS_AttrClass);
+    if (item) {
+        mStatementColors->insert(StatementKind::skClass,item->foreground());
+        mStatementColors->insert(StatementKind::skTypedef,item->foreground());
+        mStatementColors->insert(StatementKind::skAlias,item->foreground());
+    }
+    item = pColorManager->getItem(schemeName, SYNS_AttrIdentifier);
+    if (item) {
+        mStatementColors->insert(StatementKind::skEnumType,item->foreground());
+        mStatementColors->insert(StatementKind::skEnumClassType,item->foreground());
+    }
+    item = pColorManager->getItem(schemeName, SYNS_AttrVariable);
+    if (item) {
+        mStatementColors->insert(StatementKind::skVariable,item->foreground());
+    }
+    item = pColorManager->getItem(schemeName, SYNS_AttrLocalVariable);
+    if (item) {
+        mStatementColors->insert(StatementKind::skLocalVariable,item->foreground());
+        mStatementColors->insert(StatementKind::skParameter,item->foreground());
+    }
+    item = pColorManager->getItem(schemeName, SYNS_AttrGlobalVariable);
+    if (item) {
+        mStatementColors->insert(StatementKind::skGlobalVariable,item->foreground());
+    }
+    item = pColorManager->getItem(schemeName, SYNS_AttrGlobalVariable);
+    if (item) {
+        mStatementColors->insert(StatementKind::skGlobalVariable,item->foreground());
+    }
+    item = pColorManager->getItem(schemeName, SYNS_AttrPreprocessor);
+    if (item) {
+        mStatementColors->insert(StatementKind::skPreprocessor,item->foreground());
+        mStatementColors->insert(StatementKind::skEnum,item->foreground());
+        mHeaderCompletionPopup->setSuggestionColor(item->foreground());
+    }
+    item = pColorManager->getItem(schemeName, SYNS_AttrReservedWord);
+    if (item) {
+        mStatementColors->insert(StatementKind::skKeyword,item->foreground());
+        mStatementColors->insert(StatementKind::skUserCodeIn,item->foreground());
+    }
+    item = pColorManager->getItem(schemeName, SYNS_AttrString);
+    if (item) {
+        mStatementColors->insert(StatementKind::skNamespace,item->foreground());
+        mStatementColors->insert(StatementKind::skNamespaceAlias,item->foreground());
+    }
 }
 
 void MainWindow::applySettings()
@@ -3368,5 +3426,10 @@ void MainWindow::on_actionProject_Open_In_Terminal_triggered()
     if (!mProject)
         return;
     openShell(mProject->directory(),"cmd.exe");
+}
+
+const std::shared_ptr<QHash<StatementKind, QColor> > &MainWindow::statementColors() const
+{
+    return mStatementColors;
 }
 
