@@ -138,6 +138,7 @@ class SynEdit : public QAbstractScrollArea
 {
     Q_OBJECT
 public:
+    explicit SynEdit(QWidget* parent=nullptr);
     /**
      * Returns how many rows are there in the editor
      * @return
@@ -165,10 +166,10 @@ public:
     BufferCoord displayToBufferPos(const DisplayCoord& p) const;
 
     //normalized buffer coord operations
-    NormalizedBufferCoord fromBufferCoord(const BufferCoord& p) const;
-    NormalizedBufferCoord createNormalizedBufferCoord(int aChar,int aLine) const;
-    QStringList getContents(const NormalizedBufferCoord& pStart,const NormalizedBufferCoord& pEnd);
-    QString getJoinedContents(const NormalizedBufferCoord& pStart,const NormalizedBufferCoord& pEnd, const QString& joinStr);
+    ContentsCoord fromBufferCoord(const BufferCoord& p) const;
+    ContentsCoord createNormalizedBufferCoord(int aChar,int aLine) const;
+    QStringList getContents(const ContentsCoord& pStart,const ContentsCoord& pEnd);
+    QString getJoinedContents(const ContentsCoord& pStart,const ContentsCoord& pEnd, const QString& joinStr);
 
     int leftSpaces(const QString& line) const;
     QString GetLeftSpacing(int charCount,bool wantTabs) const;

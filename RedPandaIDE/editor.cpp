@@ -2247,7 +2247,8 @@ QString Editor::getHintForFunction(const PStatement &statement, const PStatement
 void Editor::updateFunctionTip()
 {
     BufferCoord caretPos = caretXY();
-    NormalizedBufferCoord curPos = fromBufferCoord(caretPos);
+    ContentsCoord curPos = fromBufferCoord(caretPos);
+    ContentsCoord cursorPos = curPos;
     int nBraces = 0;
     int nCommas = 0;
     int FMaxScanLength = 500;
@@ -2303,8 +2304,9 @@ void Editor::updateFunctionTip()
         return;
     }
 
-    NormalizedBufferCoord FFunctionEnd = curPos;
+    ContentsCoord FFunctionEnd = curPos;
 
+    int paramPos = 0;
     // We've stopped at the ending ), start walking backwards )*here* with nBraces = -1
     for (int i=0;i<FMaxScanLength;i++) {
         QChar ch = *curPos;
@@ -2328,20 +2330,25 @@ void Editor::updateFunctionTip()
             if (nBraces == -1) // found it!
                 break;;
         } else if (ch == ',')  {
-            if (nBraces == 0)
+            if (nBraces == 0) {
+                if (curPos <= cursorPos) {
+                    paramPos = nCommas;
+                }
                 nCommas++;
+            }
         }
         curPos -= 1;
         if (curPos.atStart())
             break;
     }
+    paramPos = nCommas - paramPos;
 
     // If we couldn't find the closing brace or reached the FMaxScanLength...
     if (nBraces!=-1) {
         return;
     }
 
-    NormalizedBufferCoord FFunctionStart = curPos;
+    ContentsCoord FFunctionStart = curPos;
 
     // Skip blanks
     while (!curPos.atStart()) {
@@ -2354,7 +2361,7 @@ void Editor::updateFunctionTip()
         }
     }
 
-    NormalizedBufferCoord prevPos = curPos-1;
+    ContentsCoord prevPos = curPos-1;
     if (prevPos.atStart())
         return;
     // Get the name of the function we're about to show
@@ -2400,7 +2407,7 @@ void Editor::updateFunctionTip()
     pMainWindow->functionTip()->setFunctioFullName(s);
     pMainWindow->functionTip()->guessFunction(nCommas);
     pMainWindow->functionTip()->setParamIndex(
-                getFunctionParamIndex(FFunctionStart,caretPos,FFunctionEnd)
+                paramPos
                 );
     pMainWindow->functionTip()->show();
 ////    // get the current token position in the text

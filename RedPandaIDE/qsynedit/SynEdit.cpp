@@ -699,17 +699,17 @@ BufferCoord SynEdit::displayToBufferPos(const DisplayCoord &p) const
     return Result;
 }
 
-NormalizedBufferCoord SynEdit::fromBufferCoord(const BufferCoord &p) const
+ContentsCoord SynEdit::fromBufferCoord(const BufferCoord &p) const
 {
     return createNormalizedBufferCoord(p.Char,p.Line);
 }
 
-NormalizedBufferCoord SynEdit::createNormalizedBufferCoord(int aChar, int aLine) const
+ContentsCoord SynEdit::createNormalizedBufferCoord(int aChar, int aLine) const
 {
-    return NormalizedBufferCoord(this,aChar,aLine);
+    return ContentsCoord(this,aChar,aLine);
 }
 
-QStringList SynEdit::getContents(const NormalizedBufferCoord &pStart, const NormalizedBufferCoord &pEnd)
+QStringList SynEdit::getContents(const ContentsCoord &pStart, const ContentsCoord &pEnd)
 {
     QStringList result;
     if (mLines->count()==0)
@@ -728,7 +728,7 @@ QStringList SynEdit::getContents(const NormalizedBufferCoord &pStart, const Norm
     return result;
 }
 
-QString SynEdit::getJoinedContents(const NormalizedBufferCoord &pStart, const NormalizedBufferCoord &pEnd, const QString &joinStr)
+QString SynEdit::getJoinedContents(const ContentsCoord &pStart, const ContentsCoord &pEnd, const QString &joinStr)
 {
     return getContents(pStart,pEnd).join(joinStr);
 }
@@ -6007,20 +6007,4 @@ void SynEdit::onScrollTimeout()
         setBlockEnd(caretXY());
     }
     computeScroll(iMousePos.x(), iMousePos.y());
-}
-
-SynEdit::Contents::Contents(const SynEdit *edit)
-{
-    mEdit = edit;
-}
-
-QChar SynEdit::Contents::charAt(const NormalizedBufferCoord &coord) const
-{
-    Q_ASSERT(coord.edit() == mEdit);
-    return *coord;
-}
-
-QChar SynEdit::Contents::operator[](const NormalizedBufferCoord &coord) const
-{
-    return charAt(coord);
 }

@@ -105,6 +105,18 @@ void FunctionTooltipWidget::updateTip()
     mInfoLabel->setText(text);
 }
 
+void FunctionTooltipWidget::guesstFunction(int commas)
+{
+    for (int i=0;i<mInfos.size();i++) {
+        if (mInfos[i]->params.count()>commas) {
+            mInfoIndex = i;
+            return;
+        }
+    }
+    mInfoIndex = 0;
+    return;
+}
+
 QStringList FunctionTooltipWidget::splitArgs(QString argStr)
 {
     int i = 0;
@@ -161,7 +173,7 @@ void FunctionTooltipWidget::closeEvent(QCloseEvent *)
 
 void FunctionTooltipWidget::showEvent(QShowEvent *)
 {
-    if (mInfos.length()>0) {
+    if (mInfoIndex<0 || mInfoIndex>= mInfos.count()) {
         mInfoIndex = 0;
     }
     updateTip();

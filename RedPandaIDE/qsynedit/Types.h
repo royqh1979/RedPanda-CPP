@@ -20,10 +20,10 @@ class SynEdit;
  * (length of the line+1, line) means at the line break of the line ('\n')
  */
 
-class NormalizedBufferCoord {
+class ContentsCoord {
 public:
-    NormalizedBufferCoord();
-    NormalizedBufferCoord(const NormalizedBufferCoord& coord);
+    ContentsCoord();
+    ContentsCoord(const ContentsCoord& coord);
     int ch() const;
     void setCh(int newChar);
 
@@ -32,22 +32,22 @@ public:
     bool atStart();
     bool atEnd();
     const SynEdit *edit() const;
-    const NormalizedBufferCoord& operator=(const NormalizedBufferCoord& coord);
-    const NormalizedBufferCoord& operator=(const NormalizedBufferCoord&& coord);
-    bool operator==(const NormalizedBufferCoord& coord) const;
-    bool operator<(const NormalizedBufferCoord& coord) const;
-    bool operator<=(const NormalizedBufferCoord& coord) const;
-    bool operator>(const NormalizedBufferCoord& coord) const;
-    bool operator>=(const NormalizedBufferCoord& coord) const;
-    size_t operator-(const NormalizedBufferCoord& coord) const;
-    const NormalizedBufferCoord& operator+=(int delta);
-    const NormalizedBufferCoord& operator-=(int delta);
-    NormalizedBufferCoord operator+(int delta) const;
-    NormalizedBufferCoord operator-(int delta) const;
+    const ContentsCoord& operator=(const ContentsCoord& coord);
+    const ContentsCoord& operator=(const ContentsCoord&& coord);
+    bool operator==(const ContentsCoord& coord) const;
+    bool operator<(const ContentsCoord& coord) const;
+    bool operator<=(const ContentsCoord& coord) const;
+    bool operator>(const ContentsCoord& coord) const;
+    bool operator>=(const ContentsCoord& coord) const;
+    size_t operator-(const ContentsCoord& coord) const;
+    const ContentsCoord& operator+=(int delta);
+    const ContentsCoord& operator-=(int delta);
+    ContentsCoord operator+(int delta) const;
+    ContentsCoord operator-(int delta) const;
     BufferCoord toBufferCoord() const;
     QChar operator*() const;
 private:
-    NormalizedBufferCoord(const SynEdit* edit, int ch, int line);
+    ContentsCoord(const SynEdit* edit, int ch, int line);
     void normalize();
 private:
     int mChar;

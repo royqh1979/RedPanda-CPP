@@ -29,6 +29,7 @@ public:
     void nextTip();
     void previousTip();
     void updateTip();
+    void guesstFunction(int commas);
 
     int paramIndex() const;
     void setParamIndex(int newParamIndex);
