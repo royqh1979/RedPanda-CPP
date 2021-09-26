@@ -229,6 +229,7 @@ private:
     TipType mCurrentTipType;
     QString mOldSelectionWord;
     QString mSelectionWord;
+    QCursor mOldHintCursor;
 
     bool mSaving;
 

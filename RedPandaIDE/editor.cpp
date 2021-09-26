@@ -137,6 +137,8 @@ Editor::Editor(QWidget *parent, const QString& filename,
     setContextMenuPolicy(Qt::CustomContextMenu);
     connect(this, &QWidget::customContextMenuRequested,
             pMainWindow, &MainWindow::onEditorContextMenu);
+
+    mOldHintCursor = Qt::IBeamCursor;
 }
 
 Editor::~Editor() {
@@ -771,17 +773,13 @@ bool Editor::event(QEvent *event)
             return true;
         }
 
-        //qDebug()<<s<<" -- "<<(int)reason;
-        // Don't rescan the same stuff over and over again (that's slow)
-        //  if (s = fCurrentWord) and (fText.Hint<>'') then
         s = s.trimmed();
         if ((s == mCurrentWord) && (mCurrentTipType == reason)) {
-//            QApplication* app = dynamic_cast<QApplication *>(QApplication::instance());
-//            if (app->keyboardModifiers().testFlag(Qt::ControlModifier)) {
             if (helpEvent->modifiers() == Qt::ControlModifier) {
+                mOldHintCursor = cursor();
                 setCursor(Qt::PointingHandCursor);
-            } else {
-                setCursor(Qt::ArrowCursor);
+            } else if (cursor() == Qt::PointingHandCursor) {
+                setCursor(mOldHintCursor);
             }
             event->ignore();
             return true; // do NOT remove hint when subject stays the same
@@ -828,13 +826,17 @@ bool Editor::event(QEvent *event)
             //            QApplication* app = dynamic_cast<QApplication *>(QApplication::instance());
             //            if (app->keyboardModifiers().testFlag(Qt::ControlModifier)) {
             if (helpEvent->modifiers() == Qt::ControlModifier) {
+                mOldHintCursor = cursor();
                 setCursor(Qt::PointingHandCursor);
-            } else {
-                setCursor(Qt::ArrowCursor);
+            } else if (cursor() == Qt::PointingHandCursor) {
+                setCursor(mOldHintCursor);
             }
             QToolTip::showText(mapToGlobal(helpEvent->pos()),hint);
             event->ignore();
         } else {
+            if (cursor() == Qt::PointingHandCursor) {
+                setCursor(mOldHintCursor);
+            }
             event->ignore();
         }
         return true;
@@ -2143,7 +2145,8 @@ void Editor::cancelHint()
     QToolTip::hideText();
     mCurrentWord = "";
     mCurrentTipType = TipType::None;
-    setCursor(Qt::IBeamCursor);
+    if (cursor() == Qt::PointingHandCursor)
+        setCursor(mOldHintCursor);
 }
 
 QString Editor::getFileHint(const QString &s)
