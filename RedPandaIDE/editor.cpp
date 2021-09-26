@@ -137,8 +137,6 @@ Editor::Editor(QWidget *parent, const QString& filename,
     setContextMenuPolicy(Qt::CustomContextMenu);
     connect(this, &QWidget::customContextMenuRequested,
             pMainWindow, &MainWindow::onEditorContextMenu);
-
-    mOldHintCursor = Qt::IBeamCursor;
 }
 
 Editor::~Editor() {
@@ -776,10 +774,9 @@ bool Editor::event(QEvent *event)
         s = s.trimmed();
         if ((s == mCurrentWord) && (mCurrentTipType == reason)) {
             if (helpEvent->modifiers() == Qt::ControlModifier) {
-                mOldHintCursor = cursor();
                 setCursor(Qt::PointingHandCursor);
-            } else if (cursor() == Qt::PointingHandCursor) {
-                setCursor(mOldHintCursor);
+            } else {
+                updateMouseCursor();
             }
             event->ignore();
             return true; // do NOT remove hint when subject stays the same
@@ -826,17 +823,14 @@ bool Editor::event(QEvent *event)
             //            QApplication* app = dynamic_cast<QApplication *>(QApplication::instance());
             //            if (app->keyboardModifiers().testFlag(Qt::ControlModifier)) {
             if (helpEvent->modifiers() == Qt::ControlModifier) {
-                mOldHintCursor = cursor();
                 setCursor(Qt::PointingHandCursor);
             } else if (cursor() == Qt::PointingHandCursor) {
-                setCursor(mOldHintCursor);
+                updateMouseCursor();
             }
             QToolTip::showText(mapToGlobal(helpEvent->pos()),hint);
             event->ignore();
         } else {
-            if (cursor() == Qt::PointingHandCursor) {
-                setCursor(mOldHintCursor);
-            }
+            updateMouseCursor();
             event->ignore();
         }
         return true;
@@ -2058,7 +2052,7 @@ bool Editor::onCompletionKeyPressed(QKeyEvent *event)
 bool Editor::onHeaderCompletionKeyPressed(QKeyEvent *event)
 {
     bool processed = false;
-    if (!mCompletionPopup->isEnabled())
+    if (!mHeaderCompletionPopup->isEnabled())
         return false;
     QString phrase;
     BufferCoord pBeginPos,pEndPos;
@@ -2081,6 +2075,8 @@ bool Editor::onHeaderCompletionKeyPressed(QKeyEvent *event)
         headerCompletionInsert();
         mHeaderCompletionPopup->hide();
         return true;
+    case Qt::Key_Shift:
+        return false;
     default:
         if (event->text().isEmpty()) {
             //stop completion
@@ -2090,7 +2086,9 @@ bool Editor::onHeaderCompletionKeyPressed(QKeyEvent *event)
         }
     }
     QChar ch = event->text().front();
-    if (isIdentChar(ch)) {
+
+    if (isIdentChar(ch) || ch == '.'
+            || ch =='_' || ch=='+') {
         setSelText(ch);
         phrase = getWordAtPosition(this,caretXY(),
                                             pBeginPos,pEndPos,
@@ -2145,8 +2143,7 @@ void Editor::cancelHint()
     QToolTip::hideText();
     mCurrentWord = "";
     mCurrentTipType = TipType::None;
-    if (cursor() == Qt::PointingHandCursor)
-        setCursor(mOldHintCursor);
+    updateMouseCursor();
 }
 
 QString Editor::getFileHint(const QString &s)
@@ -2569,11 +2566,13 @@ QString getWordAtPosition(SynEdit *editor, const BufferCoord &p, BufferCoord &pW
     // Copy backward until begin of path
     if (purpose == Editor::WordPurpose::wpHeaderCompletion) {
         while ((wordBegin >= 0) && (wordBegin < len)) {
-            if (editor->isIdentChar(s[wordBegin]))
+            if (editor->isIdentChar(s[wordBegin])) {
                 wordBegin--;
-            else if (s[wordBegin] == '/'
-                     || s[wordBegin] == '\\'
-                     || s[wordBegin] == '.') {
+            } else if (s[wordBegin] == '.'
+                    || s[wordBegin] == '+') {
+                wordBegin--;
+            } else if (s[wordBegin] == '/'
+                     || s[wordBegin] == '\\') {
                 wordBegin--;
                 break;
             } else

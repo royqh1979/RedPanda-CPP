@@ -373,13 +373,24 @@ void ClassBrowserModel::filterChildren(ClassBrowserNode *node, const StatementMa
             addChild(node,statement);
         }
     }
-    if (pSettings->ui().classBrowserSortAlpha()) {
+    if (pSettings->ui().classBrowserSortAlpha()
+            && pSettings->ui().classBrowserSortType()) {
+        std::sort(node->children.begin(),node->children.end(),
+                  [](ClassBrowserNode* node1,ClassBrowserNode* node2) {
+            if (node1->statement->kind < node2->statement->kind) {
+                return true;
+            } else if (node1->statement->kind == node2->statement->kind) {
+                return node1->statement->command < node2->statement->command;
+            } else {
+                return false;
+            }
+        });
+    } else if (pSettings->ui().classBrowserSortAlpha()) {
         std::sort(node->children.begin(),node->children.end(),
                   [](ClassBrowserNode* node1,ClassBrowserNode* node2) {
             return node1->statement->command < node2->statement->command;
         });
-    }
-    if (pSettings->ui().classBrowserSortType()) {
+    } else if (pSettings->ui().classBrowserSortType()) {
         std::sort(node->children.begin(),node->children.end(),
                   [](ClassBrowserNode* node1,ClassBrowserNode* node2) {
             return node1->statement->kind < node2->statement->kind;

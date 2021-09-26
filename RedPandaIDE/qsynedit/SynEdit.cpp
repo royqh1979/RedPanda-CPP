@@ -5285,6 +5285,17 @@ void SynEdit::setRainbowAttrs(const PSynHighlighterAttribute &attr0, const PSynH
     mRainbowAttr3 = attr3;
 }
 
+void SynEdit::updateMouseCursor(){
+    QPoint p = mapFromGlobal(cursor().pos());
+    if (p.y() >= clientHeight() || p.x()>= clientWidth()) {
+        setCursor(Qt::ArrowCursor);
+    } else if (p.x() > mGutterWidth) {
+        setCursor(Qt::IBeamCursor);
+    } else {
+        setCursor(Qt::ArrowCursor);
+    }
+}
+
 void SynEdit::paintEvent(QPaintEvent *event)
 {
     if (mPainterLock>0)
@@ -5388,10 +5399,7 @@ bool SynEdit::event(QEvent *event)
         synFontChanged();
         break;
     case QEvent::MouseMove: {
-        QPoint p = mapFromGlobal(cursor().pos());
-        if (p.y() >= clientHeight() || p.x()>= clientWidth()) {
-            setCursor(Qt::ArrowCursor);
-        }
+        updateMouseCursor();
         break;
     }
     }
@@ -5545,11 +5553,7 @@ void SynEdit::mouseMoveEvent(QMouseEvent *event)
       internalSetCaretXY(displayToBufferPos(P));
       setBlockEnd(caretXY());
     } else if (buttons == Qt::NoButton) {
-        if (X > mGutterWidth) {
-            setCursor(Qt::IBeamCursor);
-        } else {
-            setCursor(Qt::ArrowCursor);
-        }
+        updateMouseCursor();
     }
 }
 

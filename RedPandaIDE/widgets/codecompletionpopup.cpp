@@ -186,6 +186,15 @@ void CodeCompletionPopup::addStatement(PStatement statement, const QString &file
     mFullCompletionStatementList.append(statement);
 }
 
+static bool nameComparator(PStatement statement1,PStatement statement2) {
+    if (statement1->caseMatch && !statement2->caseMatch) {
+        return true;
+    } else if (!statement1->caseMatch && statement2->caseMatch) {
+        return false;
+    } else
+        return statement1->command < statement2->command;
+}
+
 static bool defaultComparator(PStatement statement1,PStatement statement2) {
     // Show user template first
     if (statement1->kind == StatementKind::skUserCodeIn) {
@@ -203,7 +212,7 @@ static bool defaultComparator(PStatement statement1,PStatement statement2) {
                && (statement2->kind == StatementKind::skKeyword)) {
         return false;
     } else
-        return statement1->command < statement2->command;
+        return nameComparator(statement1,statement2);
 }
 
 static bool sortByScopeComparator(PStatement statement1,PStatement statement2){
@@ -235,9 +244,8 @@ static bool sortByScopeComparator(PStatement statement1,PStatement statement2){
     } else if (statement1->scope == StatementScope::ssGlobal
                && statement2->scope != StatementScope::ssGlobal ) {
         return false;
-        // otherwise, sort by name
     } else
-        return statement1->command < statement2->command;
+        return nameComparator(statement1,statement2);
 }
 
 static bool sortWithUsageComparator(PStatement statement1,PStatement statement2) {
@@ -262,7 +270,7 @@ static bool sortWithUsageComparator(PStatement statement1,PStatement statement2)
                && (statement2->kind != StatementKind::skKeyword)) {
         return false;
     } else
-        return statement1->command < statement2->command;
+        return nameComparator(statement1,statement2);
 }
 
 static bool sortByScopeWithUsageComparator(PStatement statement1,PStatement statement2){
@@ -299,9 +307,8 @@ static bool sortByScopeWithUsageComparator(PStatement statement1,PStatement stat
     } else if (statement1->scope == StatementScope::ssGlobal
                && statement2->scope != StatementScope::ssGlobal ) {
         return false;
-        // otherwise, sort by name
     } else
-        return statement1->command < statement2->command;
+        return nameComparator(statement1,statement2);
 }
 
 void CodeCompletionPopup::filterList(const QString &member)
@@ -331,8 +338,16 @@ void CodeCompletionPopup::filterList(const QString &member)
             Qt::CaseSensitivity cs = (mIgnoreCase?
                                           Qt::CaseInsensitive:
                                           Qt::CaseSensitive);
-            if (statement->command.startsWith(member, cs))
+            if (statement->command.startsWith(member, cs)) {
+                if (mIgnoreCase) {
+                    statement->caseMatch =
+                            statement->command.startsWith(
+                                member,Qt::CaseSensitive);
+                } else {
+                    statement->caseMatch = true;
+                }
                 mCompletionStatementList.append(statement);
+            }
         }
     } else
         mCompletionStatementList.append(mFullCompletionStatementList);

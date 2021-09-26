@@ -266,6 +266,8 @@ public:
                          const PSynHighlighterAttribute &attr1,
                          const PSynHighlighterAttribute &attr2,
                          const PSynHighlighterAttribute &attr3);
+
+    void updateMouseCursor();
 // setter && getters
     int topLine() const;
     void setTopLine(int value);

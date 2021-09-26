@@ -111,7 +111,7 @@ struct Statement {
     QString type; // type "int"
     QString command; // identifier/name of statement "foo"
     QString args; // args "(int a,float b)"
-    QStringList argList;
+    QStringList argList; //not used yet
     QString value; // Used for macro defines/typedef, "100" in "#defin COUNT 100"
     StatementKind kind; // kind of statement class/variable/function/etc
     QList<std::weak_ptr<Statement>> inheritanceList; // list of statements this one inherits from, can be nil
@@ -134,6 +134,7 @@ struct Statement {
     QSet<QString> usingList; // using namespaces
     int usageCount; //Usage Count, used by TCodeCompletion
     int freqTop; // Usage Count Rank, used by TCodeCompletion
+    bool caseMatch; // if match with case, used by TCodeCompletion
     QString noNameArgs;// Args without name
 };
 
