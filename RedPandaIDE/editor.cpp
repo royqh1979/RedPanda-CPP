@@ -152,11 +152,9 @@ Editor::~Editor() {
 
 void Editor::loadFile(const QString& filename) {
     if (filename.isEmpty()) {
-        QFile file(mFilename);
-        this->lines()->LoadFromFile(file,mEncodingOption,mFileEncoding);
+        this->lines()->LoadFromFile(mFilename,mEncodingOption,mFileEncoding);
     } else {
-        QFile file(filename);
-        this->lines()->LoadFromFile(file,mEncodingOption,mFileEncoding);
+        this->lines()->LoadFromFile(filename,mEncodingOption,mFileEncoding);
     }
     //this->setModified(false);
     updateCaption();
@@ -299,7 +297,6 @@ bool Editor::saveAs(const QString &name, bool fromProject){
     default:
         mUseCppSyntax = pSettings->editor().defaultFileCpp();
     }
-
 
     //update (reassign highlighter)
     PSynHighlighter newHighlighter = HighlighterManager().getHighlighter(mFilename);

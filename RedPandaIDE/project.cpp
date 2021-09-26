@@ -15,6 +15,7 @@
 #include <QFileInfo>
 #include <QMessageBox>
 #include <QTextCodec>
+#include <QMessageBox>
 #include "settings.h"
 #include <QDebug>
 
@@ -644,6 +645,7 @@ bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate)
                 s = templateUnit->CText;
                 unit = newUnit(mNode,templateUnit->CName);
             }
+
             Editor * editor = pMainWindow->editorList()->newEditor(
                         QDir(directory()).absoluteFilePath(unit->fileName()),
                         unit->encoding(),
@@ -651,7 +653,7 @@ bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate)
                         true);
 
             QString s2 = QDir(pSettings->dirs().templateDir()).absoluteFilePath(s);
-            if (QFile(s2).exists()) {
+            if (fileExists(s2)) {
                 editor->loadFile(s2);
             } else {
                 s.replace("#13#10","\r\n");

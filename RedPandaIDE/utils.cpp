@@ -66,6 +66,15 @@ const QByteArray GuessTextEncoding(const QByteArray& text){
     return ENCODING_UTF8;
 }
 
+bool isTextAllAscii(const QByteArray& text) {
+    for (char c:text) {
+        if (c<0 || c>127) {
+            return false;
+        }
+    }
+    return true;
+}
+
 bool isTextAllAscii(const QString& text) {
     for (QChar c:text) {
         if (c.unicode()>127) {

@@ -17,6 +17,7 @@
 #include <QPaintEvent>
 #include <QResizeEvent>
 #include <QStyleHints>
+#include <QMessageBox>
 
 SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
 {
@@ -454,7 +455,7 @@ BufferCoord SynEdit::getMatchingBracketEx(BufferCoord APoint)
                 // search for the matching bracket (that is until NumBrackets = 0)
                 NumBrackets = 1;
                 if (i%2==1) {
-                    do {
+                    while (true) {
                         // search until start of line
                         while (PosX > 1) {
                             PosX--;
@@ -486,9 +487,9 @@ BufferCoord SynEdit::getMatchingBracketEx(BufferCoord APoint)
                         PosY--;
                         Line = mLines->getString(PosY - 1);
                         PosX = Line.length() + 1;
-                    } while (true);
+                    }
                 } else {
-                    do {
+                    while (true) {
                         // search until end of line
                         Len = Line.length();
                         while (PosX < Len) {
@@ -521,7 +522,7 @@ BufferCoord SynEdit::getMatchingBracketEx(BufferCoord APoint)
                         PosY++;
                         Line = mLines->getString(PosY - 1);
                         PosX = 0;
-                    } while (true);
+                    }
                 }
                 // don't test the other brackets, we're done
                 break;
@@ -2810,6 +2811,8 @@ int SynEdit::scanFrom(int Index, int canStopIndex)
         Result ++ ;
     } while (Result < mLines->count());
     Result--;
+    if (mUseCodeFolding)
+        rescan();
     return Result;
 }
 
@@ -2825,6 +2828,8 @@ void SynEdit::scanRanges()
                              mHighlighter->getRightBraces());
         }
     }
+    if (mUseCodeFolding)
+        rescan();
 }
 
 void SynEdit::uncollapse(PSynEditFoldRange FoldRange)
@@ -2914,6 +2919,7 @@ void SynEdit::rescanForFoldRanges()
 
     // Did we leave any collapsed folds and are we viewing a code file?
     if (mAllFoldRanges.count() > 0) {
+
         // Add folds to a separate list
         PSynEditFoldRanges TemporaryAllFoldRanges = std::make_shared<SynEditFoldRanges>();
         scanForFoldRanges(TemporaryAllFoldRanges);
@@ -2932,6 +2938,7 @@ void SynEdit::rescanForFoldRanges()
         }
 
     } else {
+
         // We ended up with no folds after deleting, just pass standard data...
         PSynEditFoldRanges temp(&mAllFoldRanges, null_deleter);
         scanForFoldRanges(temp);
@@ -2941,10 +2948,10 @@ void SynEdit::rescanForFoldRanges()
 void SynEdit::scanForFoldRanges(PSynEditFoldRanges TopFoldRanges)
 {
     PSynEditFoldRanges parentFoldRanges = TopFoldRanges;
-      // Recursively scan for folds (all types)
-      for (int i= 0 ; i< mCodeFolding.foldRegions.count() ; i++ ) {
-          findSubFoldRange(TopFoldRanges, i,parentFoldRanges,PSynEditFoldRange());
-      }
+    // Recursively scan for folds (all types)
+    for (int i= 0 ; i< mCodeFolding.foldRegions.count() ; i++ ) {
+        findSubFoldRange(TopFoldRanges, i,parentFoldRanges,PSynEditFoldRange());
+    }
 }
 
 //this func should only be used in findSubFoldRange
@@ -2982,11 +2989,11 @@ void SynEdit::findSubFoldRange(PSynEditFoldRanges TopFoldRanges, int FoldIndex,P
     PSynEditFoldRange  CollapsedFold;
     int Line = 0;
     QString CurLine;
+    if (!mHighlighter)
+        return;
     bool useBraces = ( mCodeFolding.foldRegions.get(FoldIndex)->openSymbol == "{"
             && mCodeFolding.foldRegions.get(FoldIndex)->closeSymbol == "}");
 
-    if (!mHighlighter)
-        return;
     while (Line < mLines->count()) { // index is valid for LinesToScan and fLines
         // If there is a collapsed fold over here, skip it
         CollapsedFold = collapsedFoldStartAtLine(Line + 1); // only collapsed folds remain
@@ -4075,7 +4082,6 @@ void SynEdit::setUseCodeFolding(bool value)
 {
     if (mUseCodeFolding!=value) {
         mUseCodeFolding = value;
-        rescan();
     }
 }
 
@@ -5659,8 +5665,6 @@ void SynEdit::onLinesChanged()
 {
     SynSelectionMode vOldMode;
     mStateFlags.setFlag(SynStateFlag::sfLinesChanging, false);
-    if (mUseCodeFolding)
-        rescan();
 
     updateScrollbars();
     vOldMode = mActiveSelectionMode;
@@ -5671,7 +5675,6 @@ void SynEdit::onLinesChanged()
     else
         invalidateRect(mInvalidateRect);
     mInvalidateRect = {0,0,0,0};
-
     if (mGutter.showLineNumbers() && (mGutter.autoSize()))
         mGutter.autoSizeDigitCount(mLines->count());
     //if (!mOptions.testFlag(SynEditorOption::eoScrollPastEof))

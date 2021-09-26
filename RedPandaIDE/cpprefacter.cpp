@@ -63,8 +63,7 @@ PSearchResultTreeItem CppRefacter::findOccurenceInFile(
         editor.lines()->setContents(buffer);
     } else {
         QByteArray encoding;
-        QFile file(filename);
-        editor.lines()->LoadFromFile(file,ENCODING_AUTO_DETECT,encoding);
+        editor.lines()->LoadFromFile(filename,ENCODING_AUTO_DETECT,encoding);
     }
     editor.setHighlighter(HighlighterManager().getCppHighlighter());
     int posY = 0;

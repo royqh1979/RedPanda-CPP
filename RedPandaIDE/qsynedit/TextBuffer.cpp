@@ -7,6 +7,7 @@
 #include "SynEdit.h"
 #include "../utils.h"
 #include "../platform.h"
+#include <QMessageBox>
 
 SynEditStringList::SynEditStringList(SynEdit *pEdit, QObject *parent):
       QObject(parent),
@@ -477,15 +478,15 @@ void SynEditStringList::InsertText(int Index, const QString &NewText)
     InsertStrings(Index,lines);
 }
 
-void SynEditStringList::LoadFromFile(QFile &file, const QByteArray& encoding, QByteArray& realEncoding)
+void SynEditStringList::LoadFromFile(const QString& filename, const QByteArray& encoding, QByteArray& realEncoding)
 {
-    if (!file.open(QFile::ReadOnly))
+    QFile file(filename);
+    if (!file.open(QFile::ReadOnly ))
         throw FileError(tr("Can't open file '%1' for read!").arg(file.fileName()));
     beginUpdate();
     auto action = finally([this]{
         endUpdate();
     });
-
     //test for utf8 / utf 8 bom
     if (encoding == ENCODING_AUTO_DETECT) {
         if (file.atEnd()) {
@@ -514,7 +515,7 @@ void SynEditStringList::LoadFromFile(QFile &file, const QByteArray& encoding, QB
             mFileEndingType = FileEndingType::Mac;
         }
         clear();
-        do {
+        while (true) {
             if (allAscii) {
                 allAscii = isTextAllAscii(line);
             }
@@ -532,7 +533,8 @@ void SynEditStringList::LoadFromFile(QFile &file, const QByteArray& encoding, QB
                 break;
             }
             line = file.readLine();
-        } while (true);
+        }
+        emit inserted(0,mList.count());
         if (!needReread) {
             if (allAscii)
                 realEncoding = ENCODING_ASCII;
@@ -545,15 +547,6 @@ void SynEditStringList::LoadFromFile(QFile &file, const QByteArray& encoding, QB
 
     if (realEncoding == ENCODING_SYSTEM_DEFAULT) {
         realEncoding = getDefaultSystemEncoding();
-        QFile file("f:\\test.txt");
-        if (file.open(QFile::WriteOnly|QFile::Truncate)) {
-            file.write("----test----\n");
-            for (QByteArray a:QTextCodec::codecForLocale()->aliases()) {
-                file.write(a);
-                file.write("\n");
-            }
-            file.close();
-        }
     }
     file.reset();
     QTextStream textStream(&file);
@@ -569,6 +562,7 @@ void SynEditStringList::LoadFromFile(QFile &file, const QByteArray& encoding, QB
     while (textStream.readLineInto(&line)) {
         addItem(TrimRight(line));
     }
+    emit inserted(0,mList.count());
 }
 
 

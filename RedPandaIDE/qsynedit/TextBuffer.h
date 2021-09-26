@@ -86,7 +86,7 @@ public:
     void InsertLines(int Index, int NumLines);
     void InsertStrings(int Index, const QStringList& NewStrings);
     void InsertText(int Index,const QString& NewText);
-    void LoadFromFile(QFile& file, const QByteArray& encoding, QByteArray& realEncoding);
+    void LoadFromFile(const QString& filename, const QByteArray& encoding, QByteArray& realEncoding);
     void SaveToFile(QFile& file, const QByteArray& encoding, QByteArray& realEncoding);
 
     bool getAppendNewLineAtEOF() const;

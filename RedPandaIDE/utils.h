@@ -114,6 +114,7 @@ bool isGreenEdition();
 
 const QByteArray GuessTextEncoding(const QByteArray& text);
 
+bool isTextAllAscii(const QByteArray& text);
 bool isTextAllAscii(const QString& text);
 
 QByteArray runAndGetOutput(const QString& cmd, const QString& workingDir, const QStringList& arguments,
