@@ -173,6 +173,7 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
+    delete mEditorList;
     delete ui;
 }
 
@@ -2237,8 +2238,9 @@ void MainWindow::closeEvent(QCloseEvent *event) {
     if (mProject) {
         closeProject(false);
     }
+    mCompilerManager->stopCompile();
+    mCompilerManager->stopRun();
 
-    delete mEditorList;
     event->accept();
     return;
 }

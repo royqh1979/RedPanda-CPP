@@ -27,6 +27,7 @@ public:
     void run(const QString& filename, const QString& arguments, const QString& workDir);
     void stopRun();
     void stopCompile();
+    void stopCheckSyntax();
     bool canCompile(const QString& filename);
     int compileErrorCount() const;
 

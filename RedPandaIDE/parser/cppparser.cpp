@@ -1845,7 +1845,7 @@ void CppParser::handleEnum()
                     cmd = mTokenizer[mIndex]->text;
                     args = "";
                 }
-                if (!isEnumClass) {
+                if (isEnumClass) {
                     if (enumStatement) {
                         addStatement(
                           enumStatement,
@@ -1864,6 +1864,23 @@ void CppParser::handleEnum()
                           false);
                     }
                 } else {
+                    if (enumStatement) {
+                        addStatement(
+                          enumStatement,
+                          mCurrentFile,
+                          lastType + "::" + mTokenizer[mIndex]->text, // override hint
+                          lastType,
+                          cmd,
+                          args,
+                          "",
+                          //mTokenizer[mIndex]^.Line,
+                          startLine,
+                          StatementKind::skEnum,
+                          getScope(),
+                          mClassScope,
+                          true,
+                          false);
+                    }
                     addStatement(
                       getCurrentScope(),
                       mCurrentFile,
@@ -3066,8 +3083,6 @@ void CppParser::internalParse(const QString &fileName)
 //        mPreprocessor.dumpIncludesListTo("f:\\includes.txt");
 //        mStatementList.dump("f:\\stats.txt");
 //        mTokenizer.dumpTokens("f:\\tokens.txt");
-#endif
-#ifdef QT_DEBUG
 //        mStatementList.dumpAll("f:\\all-stats.txt");
 #endif
     }
@@ -3411,12 +3426,12 @@ QString CppParser::splitPhrase(const QString &phrase, QString &sClazz, QString &
     int firstOpStart = phrase.length() + 1;
     int firstOpEnd = phrase.length() + 1;
     for (int i = 0; i<phrase.length();i++) {
-        if ((i+1<phrase.length()) && (phrase[i] == '-') && (phrase[i + 1] == '>') && (bracketLevel=0)) {
+        if ((i+1<phrase.length()) && (phrase[i] == '-') && (phrase[i + 1] == '>') && (bracketLevel==0)) {
             firstOpStart = i;
             firstOpEnd = i+2;
             sOperator = "->";
             break;
-        } else if ((i+1<phrase.length()) && (phrase[i] == ':') && (phrase[i + 1] == ':') && (bracketLevel=0)) {
+        } else if ((i+1<phrase.length()) && (phrase[i] == ':') && (phrase[i + 1] == ':') && (bracketLevel==0)) {
             firstOpStart = i;
             firstOpEnd = i+2;
             sOperator = "::";

@@ -195,6 +195,13 @@ void CompilerManager::stopCompile()
         mCompiler->stopCompile();
 }
 
+void CompilerManager::stopCheckSyntax()
+{
+    QMutexLocker locker(&mCompileMutex);
+    if (mBackgroundSyntaxChecker!=nullptr)
+        mBackgroundSyntaxChecker->stopCompile();
+}
+
 bool CompilerManager::canCompile(const QString &filename)
 {
     return !compiling();

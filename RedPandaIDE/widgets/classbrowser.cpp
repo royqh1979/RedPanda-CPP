@@ -153,14 +153,14 @@ QVariant ClassBrowserModel::data(const QModelIndex &index, int role) const
             case StatementKind::skTypedef:
                 return QIcon(":/icons/images/classparser/type.ico");
             case StatementKind::skClass:
-            case StatementKind::skEnumClassType:
-            case StatementKind::skEnumType:
                 return QIcon(":/icons/images/classparser/class.ico");
             case StatementKind::skNamespace:
             case StatementKind::skNamespaceAlias:
                 return QIcon(":/icons/images/classparser/namespace.ico");
             case StatementKind::skPreprocessor:
                 return QIcon(":/icons/images/classparser/define.ico");
+            case StatementKind::skEnumClassType:
+            case StatementKind::skEnumType:
             case StatementKind::skEnum:
                 return QIcon(":/icons/images/classparser/enum.ico");
             case StatementKind::skFunction:
@@ -286,7 +286,9 @@ void ClassBrowserModel::addChild(ClassBrowserNode *node, PStatement statement)
 //    newNode->childrenFetched = false;
     node->children.append(newNode.get());
     mNodes.append(newNode);
-    filterChildren(newNode.get(), statement->children);
+    //don't show enum type's children values (they are displayed in parent scope)
+    if (statement->kind != StatementKind::skEnumType)
+        filterChildren(newNode.get(), statement->children);
 }
 
 void ClassBrowserModel::addMembers(const QSet<QString> &includedFiles)

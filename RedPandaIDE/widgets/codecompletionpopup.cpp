@@ -646,8 +646,8 @@ void CodeCompletionPopup::getCompletionFor(const QString &fileName, const QStrin
                 }
             //todo friend
             } else if ((opType == MemberOperatorType::otDColon)
-                       && (statement->kind == StatementKind::skEnumType)
-                       && (statement->kind == StatementKind::skEnumClassType)) {
+                       && ((statement->kind == StatementKind::skEnumType)
+                       || (statement->kind == StatementKind::skEnumClassType))) {
                 //we can add all child enum definess
                 PStatement classTypeStatement = statement;
                 if (!isIncluded(classTypeStatement->fileName) &&
