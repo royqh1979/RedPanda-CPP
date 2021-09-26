@@ -293,7 +293,7 @@ void MainWindow::updateCompileActions()
     if (e) {
         FileType fileType = getFileType(e->filename());
         if (fileType == FileType::CSource
-                || fileType == FileType::CppSource)
+                || fileType == FileType::CppSource || e->isNew())
         editorCanCompile = true;
     }
     if (mCompilerManager->compiling() || mCompilerManager->running() || mDebugger->executing()
@@ -2428,8 +2428,19 @@ void MainWindow::onCompileFinished()
         e->invalidate();
     }
 
-    // Jump to problem location, sorted by significance
-    if ((mCompilerManager->compileErrorCount() > 0) && (!mCheckSyntaxInBack)) {
+    //run succession task if there aren't any errors
+    if (mCompileSuccessionTask && mCompilerManager->compileErrorCount()==0) {
+        switch (mCompileSuccessionTask->type) {
+        case MainWindow::CompileSuccessionTaskType::Run:
+            runExecutable(mCompileSuccessionTask->filename);
+            break;
+        case MainWindow::CompileSuccessionTaskType::Debug:
+            debug();
+            break;
+        }
+        mCompileSuccessionTask.reset();
+        // Jump to problem location, sorted by significance
+    } else if ((mCompilerManager->compileIssueCount() > 0) && (!mCheckSyntaxInBack)) {
         // First try to find errors
         for (int i=0;i<ui->tableIssues->count();i++) {
             PCompileIssue issue = ui->tableIssues->issue(i);
@@ -2453,34 +2464,6 @@ void MainWindow::onCompileFinished()
                 QModelIndex index =ui->tableIssues->model()->index(i,0);
                 emit ui->tableIssues->doubleClicked(index);
             }
-        }
-        // Then try to find anything with a line number...
-//      for I := 0 to CompilerOutput.Items.Count - 1 do begin
-//        if not SameStr(CompilerOutput.Items[I].Caption, '') then begin
-//          CompilerOutput.Selected := CompilerOutput.Items[I];
-//          CompilerOutput.Selected.MakeVisible(False);
-//          CompilerOutputDblClick(CompilerOutput);
-//          Exit;
-//        end;
-//      end;
-
-      // Then try to find a resource error
-//      if ResourceOutput.Items.Count > 0 then begin
-//        ResourceOutput.Selected := ResourceOutput.Items[0];
-//        ResourceOutput.Selected.MakeVisible(False);
-//        CompilerOutputDblClick(ResourceOutput);
-//      end;
-    } else {
-        if (mCompileSuccessionTask) {
-            switch (mCompileSuccessionTask->type) {
-            case MainWindow::CompileSuccessionTaskType::Run:
-                runExecutable(mCompileSuccessionTask->filename);
-                break;
-            case MainWindow::CompileSuccessionTaskType::Debug:
-                debug();
-                break;
-            }
-            mCompileSuccessionTask.reset();
         }
     }
     mCheckSyntaxInBack=false;

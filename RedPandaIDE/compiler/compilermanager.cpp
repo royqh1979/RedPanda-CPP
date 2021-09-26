@@ -222,9 +222,11 @@ void CompilerManager::onRunnerTerminated()
     p->deleteLater();
 }
 
-void CompilerManager::onCompileIssue(PCompileIssue)
+void CompilerManager::onCompileIssue(PCompileIssue issue)
 {
-    mCompileErrorCount ++;
+    if (issue->type == CompileIssueType::Error)
+        mCompileErrorCount++;
+    mCompileIssueCount++;
 }
 
 void CompilerManager::onSyntaxCheckFinished()
@@ -234,9 +236,22 @@ void CompilerManager::onSyntaxCheckFinished()
     mBackgroundSyntaxChecker=nullptr;
 }
 
-void CompilerManager::onSyntaxCheckIssue(PCompileIssue)
+void CompilerManager::onSyntaxCheckIssue(PCompileIssue issue)
 {
-    mSyntaxCheckErrorCount++;
+    if (issue->type == CompileIssueType::Error)
+        mSyntaxCheckErrorCount++;
+    mSyntaxCheckIssueCount++;
+
+}
+
+int CompilerManager::syntaxCheckIssueCount() const
+{
+    return mSyntaxCheckIssueCount;
+}
+
+int CompilerManager::compileIssueCount() const
+{
+    return mCompileIssueCount;
 }
 
 int CompilerManager::syntaxCheckErrorCount() const

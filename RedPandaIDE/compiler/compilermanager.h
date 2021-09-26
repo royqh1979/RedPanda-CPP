@@ -33,6 +33,10 @@ public:
 
     int syntaxCheckErrorCount() const;
 
+    int compileIssueCount() const;
+
+    int syntaxCheckIssueCount() const;
+
 private slots:
     void onRunnerTerminated();
     void onCompileFinished();
@@ -43,7 +47,9 @@ private slots:
 private:
     Compiler* mCompiler;
     int mCompileErrorCount;
+    int mCompileIssueCount;
     int mSyntaxCheckErrorCount;
+    int mSyntaxCheckIssueCount;
     Compiler* mBackgroundSyntaxChecker;
     ExecutableRunner* mRunner;
     QMutex mCompileMutex;

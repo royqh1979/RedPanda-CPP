@@ -1,4 +1,5 @@
 Version 0.2
+ - change: continue to run / debug if there are compiling warnings (but no errors)
  - enhancement: class browser syntax colors and icons
  - enhancement: function tips
  - enhancement: project support
