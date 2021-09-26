@@ -467,5 +467,24 @@
         <file>images/associations/obj.ico</file>
         <file>images/associations/rc.ico</file>
         <file>images/associations/template.ico</file>
+        <file>images/classparser/class.ico</file>
+        <file>images/classparser/define.ico</file>
+        <file>images/classparser/enum.ico</file>
+        <file>images/classparser/global.ico</file>
+        <file>images/classparser/global_method.ico</file>
+        <file>images/classparser/method_inherited.ico</file>
+        <file>images/classparser/method_inherited_protected.ico</file>
+        <file>images/classparser/method_private.ico</file>
+        <file>images/classparser/method_protected.ico</file>
+        <file>images/classparser/method_public.ico</file>
+        <file>images/classparser/namespace.ico</file>
+        <file>images/classparser/static_method.ico</file>
+        <file>images/classparser/static_var.ico</file>
+        <file>images/classparser/type.ico</file>
+        <file>images/classparser/var_inherited.ico</file>
+        <file>images/classparser/var_inherited_protected.ico</file>
+        <file>images/classparser/var_private.ico</file>
+        <file>images/classparser/var_protected.ico</file>
+        <file>images/classparser/var_public.ico</file>
     </qresource>
 </RCC>

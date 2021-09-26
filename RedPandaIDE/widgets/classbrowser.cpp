@@ -10,7 +10,7 @@ ClassBrowserModel::ClassBrowserModel(QObject *parent):QAbstractItemModel(parent)
     mRoot = new ClassBrowserNode();
     mRoot->parent = nullptr;
     mRoot->statement = PStatement();
-    mRoot->childrenFetched = true;
+//    mRoot->childrenFetched = true;
     mUpdating = false;
     mUpdateCount = 0;
     mShowInheritedMembers = false;
@@ -54,14 +54,14 @@ bool ClassBrowserModel::hasChildren(const QModelIndex &parent) const
 {
     ClassBrowserNode *parentNode;
     if (!parent.isValid()) { // top level
-        return mRoot->children.count();
+        return mRoot->children.count()>0;
     } else {
         parentNode = static_cast<ClassBrowserNode *>(parent.internalPointer());
-        if (parentNode->childrenFetched)
-            return parentNode->children.count();
-        if (parentNode->statement)
-            return !parentNode->statement->children.isEmpty();
-        return false;
+//        if (parentNode->childrenFetched)
+        return parentNode->children.count()>0;
+//        if (parentNode->statement)
+//            return !parentNode->statement->children.isEmpty();
+//        return false;
     }
 }
 
@@ -81,37 +81,37 @@ int ClassBrowserModel::columnCount(const QModelIndex&) const
     return 1;
 }
 
-void ClassBrowserModel::fetchMore(const QModelIndex &parent)
-{
-    if (!parent.isValid()) { // top level
-        return;
-    }
+//void ClassBrowserModel::fetchMore(const QModelIndex &parent)
+//{
+//    if (!parent.isValid()) { // top level
+//        return;
+//    }
 
-    ClassBrowserNode *parentNode = static_cast<ClassBrowserNode *>(parent.internalPointer());
-    if (!parentNode->childrenFetched) {
-        parentNode->childrenFetched = true;
-        if (parentNode->statement && !parentNode->statement->children.isEmpty()) {
-            filterChildren(parentNode, parentNode->statement->children);
-            beginInsertRows(parent,0,parentNode->children.count());
-            endInsertRows();
-        }
-    }
-}
+//    ClassBrowserNode *parentNode = static_cast<ClassBrowserNode *>(parent.internalPointer());
+//    if (!parentNode->childrenFetched) {
+//        parentNode->childrenFetched = true;
+//        if (parentNode->statement && !parentNode->statement->children.isEmpty()) {
+//            filterChildren(parentNode, parentNode->statement->children);
+//            beginInsertRows(parent,0,parentNode->children.count());
+//            endInsertRows();
+//        }
+//    }
+//}
 
-bool ClassBrowserModel::canFetchMore(const QModelIndex &parent) const
-{
-    if (!parent.isValid()) { // top level
-        return false;
-    }
-    ClassBrowserNode *parentNode = static_cast<ClassBrowserNode *>(parent.internalPointer());
-    if (!parentNode->childrenFetched) {
-        if (parentNode->statement && !parentNode->statement->children.isEmpty())
-            return true;
-        else
-            parentNode->childrenFetched = true;
-    }
-    return false;
-}
+//bool ClassBrowserModel::canFetchMore(const QModelIndex &parent) const
+//{
+//    if (!parent.isValid()) { // top level
+//        return false;
+//    }
+//    ClassBrowserNode *parentNode = static_cast<ClassBrowserNode *>(parent.internalPointer());
+//    if (!parentNode->childrenFetched) {
+//        if (parentNode->statement && !parentNode->statement->children.isEmpty())
+//            return true;
+//        else
+//            parentNode->childrenFetched = true;
+//    }
+//    return false;
+//}
 
 QVariant ClassBrowserModel::data(const QModelIndex &index, int role) const
 {
@@ -123,7 +123,7 @@ QVariant ClassBrowserModel::data(const QModelIndex &index, int role) const
         return QVariant();
     if (role == Qt::DisplayRole) {
         if (node->statement) {
-            return node->statement->command;
+            return node->statement->command + node->statement->args;
         }
     } else if (role == Qt::ForegroundRole) {
         if (node->statement) {
@@ -136,6 +136,70 @@ QVariant ClassBrowserModel::data(const QModelIndex &index, int role) const
             }
             return mColors->value(kind,pMainWindow->palette().color(QPalette::Text));
         }
+    } else if (role == Qt::DecorationRole) {
+        if (node->statement) {
+            PStatement statement = (node->statement);
+            StatementKind kind;
+            if (mParser) {
+                kind = mParser->getKindOfStatement(statement);
+            } else {
+                kind = statement->kind;
+            }
+            switch (kind) {
+            case StatementKind::skTypedef:
+                return QIcon(":/icons/images/classparser/type.ico");
+            case StatementKind::skClass:
+            case StatementKind::skEnumClassType:
+            case StatementKind::skEnumType:
+                return QIcon(":/icons/images/classparser/class.ico");
+            case StatementKind::skNamespace:
+            case StatementKind::skNamespaceAlias:
+                return QIcon(":/icons/images/classparser/namespace.ico");
+            case StatementKind::skPreprocessor:
+                return QIcon(":/icons/images/classparser/define.ico");
+            case StatementKind::skEnum:
+                return QIcon(":/icons/images/classparser/enum.ico");
+            case StatementKind::skFunction:
+            case StatementKind::skConstructor:
+            case StatementKind::skDestructor:
+                if (statement->scope == StatementScope::ssGlobal)
+                    return QIcon(":/icons/images/classparser/global_method.ico");
+                if (statement->isInherited) {
+                    if (statement->classScope == StatementClassScope::scsProtected) {
+                        return QIcon(":/icons/images/classparser/method_inherited_protected.ico");
+                    } else if (statement->classScope == StatementClassScope::scsPublic) {
+                        return QIcon(":/icons/images/classparser/method_inherited.ico");
+                    }
+                } else {
+                    if (statement->classScope == StatementClassScope::scsProtected) {
+                        return QIcon(":/icons/images/classparser/method_protected.ico");
+                    } else if (statement->classScope == StatementClassScope::scsPublic) {
+                        return QIcon(":/icons/images/classparser/method_public.ico");
+                    } else {
+                        return QIcon(":/icons/images/classparser/method_private.ico");
+                    }
+                }
+            case StatementKind::skVariable:
+                if (statement->scope == StatementScope::ssGlobal)
+                    return QIcon(":/icons/images/classparser/global.ico");
+                if (statement->isInherited) {
+                    if (statement->classScope == StatementClassScope::scsProtected) {
+                        return QIcon(":/icons/images/classparser/var_inherited_protected.ico");
+                    } else if (statement->classScope == StatementClassScope::scsPublic) {
+                        return QIcon(":/icons/images/classparser/var_inherited.ico");
+                    }
+                } else {
+                    if (statement->classScope == StatementClassScope::scsProtected) {
+                        return QIcon(":/icons/images/classparser/var_protected.ico");
+                    } else if (statement->classScope == StatementClassScope::scsPublic) {
+                        return QIcon(":/icons/images/classparser/var_public.ico");
+                    } else {
+                        return QIcon(":/icons/images/classparser/var_private.ico");
+                    }
+                }
+            }
+        }
+
     }
     return QVariant();
 }
@@ -215,9 +279,10 @@ void ClassBrowserModel::addChild(ClassBrowserNode *node, PStatement statement)
     PClassBrowserNode newNode = std::make_shared<ClassBrowserNode>();
     newNode->parent = node;
     newNode->statement = statement;
-    newNode->childrenFetched = false;
+//    newNode->childrenFetched = false;
     node->children.append(newNode.get());
     mNodes.append(newNode);
+    filterChildren(newNode.get(), statement->children);
 }
 
 void ClassBrowserModel::addMembers(const QSet<QString> &includedFiles)

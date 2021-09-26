@@ -1,4 +1,5 @@
 Version 0.2
+ - enhancement: class browser syntax colors and icons
  - enhancement: function tips
  - enhancement: project support
  - enhancement: paint color editor use system palette's disabled group color

@@ -460,7 +460,7 @@ void Editor::focusOutEvent(QFocusEvent *event)
                 this,
                 &SynEdit::invalidate);
     }
-    pMainWindow->updateClassBrowserForEditor(nullptr);
+    //pMainWindow->updateClassBrowserForEditor(nullptr);
     pMainWindow->updateEditorActions();
     pMainWindow->updateStatusbarForLineCol();
     pMainWindow->updateForStatusbarModeInfo();

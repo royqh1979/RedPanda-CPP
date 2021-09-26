@@ -339,6 +339,8 @@ private slots:
 
     void on_actionProject_Open_In_Terminal_triggered();
 
+    void on_classBrowser_doubleClicked(const QModelIndex &index);
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;
@@ -409,6 +411,12 @@ private:
     QAction * mProject_Rename_Folder;
     QAction * mProject_Remove_Folder;
 
+    //actions for class browser
+    QAction * mClassBrowser_Sort_By_Type;
+    QAction * mClassBrowser_Sort_By_Name;
+    QAction * mClassBrowser_Show_Inheritance;
+    QAction * mClassBrowser_goto_declaration;
+    QAction * mClassBrowser_goto_definition;
 
    // QWidget interface
 protected:

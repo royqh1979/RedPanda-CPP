@@ -1628,6 +1628,19 @@ void MainWindow::buildContextMenus()
         mProject->removeFolder(folderNode);
         mProject->saveOptions();
     });
+
+    //context menu signal for class browser
+    ui->classBrowser->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui->classBrowser,&QWidget::customContextMenuRequested,
+             this, &MainWindow::onClassBrowserContextMenu);
+    mClassBrowser_Sort_By_Type = createActionFor(
+                tr("Sort By Type"),
+                ui->classBrowser);
+    mClassBrowser_Sort_By_Type->setIcon(QIcon(":/icons/images/newlook24/077-sort-type.png"));
+    QAction * mClassBrowser_Sort_By_Name;
+    QAction * mClassBrowser_Show_Inheritance;
+    QAction * mClassBrowser_goto_declaration;
+    QAction * mClassBrowser_goto_definition;
 }
 
 void MainWindow::maximizeEditor()
@@ -3431,5 +3444,11 @@ void MainWindow::on_actionProject_Open_In_Terminal_triggered()
 const std::shared_ptr<QHash<StatementKind, QColor> > &MainWindow::statementColors() const
 {
     return mStatementColors;
+}
+
+
+void MainWindow::on_classBrowser_doubleClicked(const QModelIndex &index)
+{
+
 }
 

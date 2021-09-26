@@ -8,7 +8,7 @@ struct ClassBrowserNode {
     ClassBrowserNode* parent;
     PStatement statement;
     QVector<ClassBrowserNode *> children;
-    bool childrenFetched;
+//    bool childrenFetched;
 };
 
 using PClassBrowserNode = std::shared_ptr<ClassBrowserNode>;
@@ -26,8 +26,8 @@ public:
     bool hasChildren(const QModelIndex &parent) const override;
     int rowCount(const QModelIndex &parent) const override;
     int columnCount(const QModelIndex &parent) const override;
-    void fetchMore(const QModelIndex &parent) override;
-    bool canFetchMore(const QModelIndex &parent) const override;
+//    void fetchMore(const QModelIndex &parent) override;
+//    bool canFetchMore(const QModelIndex &parent) const override;
     QVariant data(const QModelIndex &index, int role) const override;
     const PCppParser &parser() const;
     void setParser(const PCppParser &newCppParser);
@@ -59,6 +59,7 @@ private:
     QString mCurrentFile;
     bool mShowInheritedMembers;
     std::shared_ptr<QHash<StatementKind, QColor>> mColors;
+
 };
 
 #endif // CLASSBROWSER_H
