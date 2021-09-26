@@ -164,6 +164,7 @@ private slots:
     void onSearchViewContextMenu(const QPoint& pos);
     void onBreakpointsViewContextMenu(const QPoint& pos);
     void onProjectViewContextMenu(const QPoint& pos);
+    void onClassBrowserContextMenu(const QPoint& pos);
 
     void on_actionNew_triggered();
 
@@ -414,9 +415,10 @@ private:
     //actions for class browser
     QAction * mClassBrowser_Sort_By_Type;
     QAction * mClassBrowser_Sort_By_Name;
-    QAction * mClassBrowser_Show_Inheritance;
+    QAction * mClassBrowser_Show_Inherited;
     QAction * mClassBrowser_goto_declaration;
     QAction * mClassBrowser_goto_definition;
+    QWidget * mClassBrowserToolbar;
 
    // QWidget interface
 protected:

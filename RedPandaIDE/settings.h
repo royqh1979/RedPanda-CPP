@@ -777,6 +777,15 @@ public:
         int leftPanelIndex() const;
         void setLeftPanelIndex(int newLeftPanelIndex);
 
+        bool classBrowserSortAlpha() const;
+        void setClassBrowserSortAlpha(bool newClassBrowserSortAlpha);
+
+        bool classBrowserSortType() const;
+        void setClassBrowserSortType(bool newClassBrowserSortType);
+
+        bool classBrowserShowInherited() const;
+        void setClassBrowserShowInherited(bool newClassBrowserShowInherited);
+
     private:
         QByteArray mMainWindowState;
         QByteArray mMainWindowGeometry;
@@ -786,6 +795,9 @@ public:
         bool mLeftPanelOpenned;
         int mLeftPanelWidth;
         int mLeftPanelIndex;
+        bool mClassBrowserSortAlpha;
+        bool mClassBrowserSortType;
+        bool mClassBrowserShowInherited;
 
     protected:
         void doSave() override;

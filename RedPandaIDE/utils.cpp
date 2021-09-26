@@ -131,6 +131,8 @@ bool fileExists(const QString &file)
 
 bool fileExists(const QString &dir, const QString &fileName)
 {
+    if (dir.isEmpty() || fileName.isEmpty())
+        return false;
     QDir dirInfo(dir);
     return dirInfo.exists(fileName);
 }

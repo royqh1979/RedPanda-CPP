@@ -57,7 +57,6 @@ private:
     int mUpdateCount;
     QRecursiveMutex mMutex;
     QString mCurrentFile;
-    bool mShowInheritedMembers;
     std::shared_ptr<QHash<StatementKind, QColor>> mColors;
 
 };

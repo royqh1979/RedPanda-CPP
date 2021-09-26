@@ -1630,17 +1630,102 @@ void MainWindow::buildContextMenus()
     });
 
     //context menu signal for class browser
-    ui->classBrowser->setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(ui->classBrowser,&QWidget::customContextMenuRequested,
+    ui->tabStructure->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui->tabStructure,&QWidget::customContextMenuRequested,
              this, &MainWindow::onClassBrowserContextMenu);
     mClassBrowser_Sort_By_Type = createActionFor(
                 tr("Sort By Type"),
-                ui->classBrowser);
+                ui->tabStructure);
+    mClassBrowser_Sort_By_Type->setCheckable(true);
     mClassBrowser_Sort_By_Type->setIcon(QIcon(":/icons/images/newlook24/077-sort-type.png"));
-    QAction * mClassBrowser_Sort_By_Name;
-    QAction * mClassBrowser_Show_Inheritance;
-    QAction * mClassBrowser_goto_declaration;
-    QAction * mClassBrowser_goto_definition;
+    mClassBrowser_Sort_By_Name = createActionFor(
+                tr("Sort alphabetically"),
+                ui->tabStructure);
+    mClassBrowser_Sort_By_Name->setCheckable(true);
+    mClassBrowser_Sort_By_Name->setIcon(QIcon(":/icons/images/newlook24/076-sort-alpha.png"));
+    mClassBrowser_Show_Inherited = createActionFor(
+                tr("Show inherited members"),
+                ui->tabStructure);
+    mClassBrowser_Show_Inherited->setCheckable(true);
+    mClassBrowser_Show_Inherited->setIcon(QIcon(":/icons/images/newlook24/075-show-inheritance.png"));
+    mClassBrowser_goto_declaration = createActionFor(
+                tr("Goto declaration"),
+                ui->tabStructure);
+    mClassBrowser_goto_definition = createActionFor(
+                tr("Goto definition"),
+                ui->tabStructure);
+
+    mClassBrowser_Sort_By_Name->setChecked(pSettings->ui().classBrowserSortAlpha());
+    mClassBrowser_Sort_By_Type->setChecked(pSettings->ui().classBrowserSortType());
+    mClassBrowser_Show_Inherited->setChecked(pSettings->ui().classBrowserShowInherited());
+    connect(mClassBrowser_Sort_By_Name, &QAction::toggled,
+            [this](){
+        pSettings->ui().setClassBrowserSortAlpha(mClassBrowser_Sort_By_Name->isChecked());
+        pSettings->ui().save();
+        mClassBrowserModel.fillStatements();
+    });
+    connect(mClassBrowser_Sort_By_Type, &QAction::toggled,
+            [this](){
+        pSettings->ui().setClassBrowserSortType(mClassBrowser_Sort_By_Type->isChecked());
+        pSettings->ui().save();
+        mClassBrowserModel.fillStatements();
+    });
+    connect(mClassBrowser_Show_Inherited, &QAction::toggled,
+            [this](){
+        pSettings->ui().setClassBrowserShowInherited(mClassBrowser_Show_Inherited->isChecked());
+        pSettings->ui().save();
+        mClassBrowserModel.fillStatements();
+    });
+
+    connect(mClassBrowser_goto_definition,&QAction::triggered,
+            [this](){
+        QModelIndex index = ui->classBrowser->currentIndex();
+        if (!index.isValid())
+            return ;
+        ClassBrowserNode * node = static_cast<ClassBrowserNode*>(index.internalPointer());
+        if (!node)
+            return ;
+        PStatement statement = node->statement;
+        if (!statement) {
+            return;
+        }
+        QString filename;
+        int line;
+        filename = statement->definitionFileName;
+        line = statement->definitionLine;
+        Editor* e = pMainWindow->editorList()->getEditorByFilename(filename);
+        if (e) {
+            e->setCaretPositionAndActivate(line,1);
+        }
+    });
+
+    connect(mClassBrowser_goto_declaration,&QAction::triggered,
+            [this](){
+        on_classBrowser_doubleClicked(ui->classBrowser->currentIndex());
+    });
+
+    //toolbar for class browser
+    mClassBrowserToolbar = new QWidget();
+    QVBoxLayout* layout = dynamic_cast<QVBoxLayout*>( ui->tabStructure->layout());
+    layout->insertWidget(0,mClassBrowserToolbar);
+    QHBoxLayout* hlayout =  new QHBoxLayout();
+    hlayout->setContentsMargins(2,2,2,2);
+    mClassBrowserToolbar->setLayout(hlayout);
+    QToolButton * toolButton;
+    toolButton = new QToolButton;
+    toolButton->setDefaultAction(mClassBrowser_Sort_By_Type);
+    hlayout->addWidget(toolButton);
+    toolButton = new QToolButton;
+    toolButton->setDefaultAction(mClassBrowser_Sort_By_Name);
+    hlayout->addWidget(toolButton);
+    QFrame * vLine = new QFrame();
+    vLine->setFrameShape(QFrame::VLine);
+    vLine->setFrameShadow(QFrame::Sunken);
+    hlayout->addWidget(vLine);
+    toolButton = new QToolButton;
+    toolButton->setDefaultAction(mClassBrowser_Show_Inherited);
+    hlayout->addWidget(toolButton);
+    hlayout->addStretch();
 }
 
 void MainWindow::maximizeEditor()
@@ -1795,6 +1880,32 @@ void MainWindow::onProjectViewContextMenu(const QPoint &pos)
     menu.addAction(ui->actionProject_Open_In_Terminal);
     menu.addSeparator();
     menu.addAction(ui->actionProject_options);
+
+    menu.exec(ui->projectView->mapToGlobal(pos));
+}
+
+void MainWindow::onClassBrowserContextMenu(const QPoint &pos)
+{
+    QMenu menu(this);
+    bool canGoto = false;
+    QModelIndex index = ui->classBrowser->currentIndex();
+    if (index.isValid()) {
+        ClassBrowserNode * node = static_cast<ClassBrowserNode*>(index.internalPointer());
+        if (node) {
+            PStatement statement = node->statement;
+            if (statement) {
+                canGoto = true;
+            }
+        }
+    }
+    mClassBrowser_goto_declaration->setEnabled(canGoto);
+    mClassBrowser_goto_definition->setEnabled(canGoto);
+    menu.addAction(mClassBrowser_goto_declaration);
+    menu.addAction(mClassBrowser_goto_definition);
+    menu.addSeparator();
+    menu.addAction(mClassBrowser_Sort_By_Name);
+    menu.addAction(mClassBrowser_Sort_By_Type);
+    menu.addAction(mClassBrowser_Show_Inherited);
 
     menu.exec(ui->projectView->mapToGlobal(pos));
 }
@@ -3449,6 +3560,22 @@ const std::shared_ptr<QHash<StatementKind, QColor> > &MainWindow::statementColor
 
 void MainWindow::on_classBrowser_doubleClicked(const QModelIndex &index)
 {
-
+    if (!index.isValid())
+        return ;
+    ClassBrowserNode * node = static_cast<ClassBrowserNode*>(index.internalPointer());
+    if (!node)
+        return ;
+    PStatement statement = node->statement;
+    if (!statement) {
+        return;
+    }
+    QString filename;
+    int line;
+    filename = statement->fileName;
+    line = statement->line;
+    Editor* e = pMainWindow->editorList()->getEditorByFilename(filename);
+    if (e) {
+        e->setCaretPositionAndActivate(line,1);
+    }
 }
 

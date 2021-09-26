@@ -3959,6 +3959,36 @@ void Settings::UI::setLeftPanelIndex(int newLeftPanelIndex)
     mLeftPanelIndex = newLeftPanelIndex;
 }
 
+bool Settings::UI::classBrowserShowInherited() const
+{
+    return mClassBrowserShowInherited;
+}
+
+void Settings::UI::setClassBrowserShowInherited(bool newClassBrowserShowInherited)
+{
+    mClassBrowserShowInherited = newClassBrowserShowInherited;
+}
+
+bool Settings::UI::classBrowserSortType() const
+{
+    return mClassBrowserSortType;
+}
+
+void Settings::UI::setClassBrowserSortType(bool newClassBrowserSortType)
+{
+    mClassBrowserSortType = newClassBrowserSortType;
+}
+
+bool Settings::UI::classBrowserSortAlpha() const
+{
+    return mClassBrowserSortAlpha;
+}
+
+void Settings::UI::setClassBrowserSortAlpha(bool newClassBrowserSortAlpha)
+{
+    mClassBrowserSortAlpha = newClassBrowserSortAlpha;
+}
+
 const QByteArray &Settings::UI::mainWindowState() const
 {
     return mMainWindowState;
@@ -3979,6 +4009,9 @@ void Settings::UI::doSave()
     saveValue("left_panel_openned",mLeftPanelOpenned);
     saveValue("left_panel_width",mLeftPanelWidth);
     saveValue("left_panel_index",mLeftPanelIndex);
+    saveValue("class_browser_sort_alphabetically",mClassBrowserSortAlpha);
+    saveValue("class_browser_sort_by_type",mClassBrowserSortType);
+    saveValue("class_browser_show_inherited",mClassBrowserShowInherited);
 }
 
 void Settings::UI::doLoad()
@@ -3991,4 +4024,7 @@ void Settings::UI::doLoad()
     mLeftPanelOpenned = boolValue("left_panel_openned",true);
     mLeftPanelWidth = intValue("left_panel_width",250);
     mLeftPanelIndex = intValue("left_panel_index",2);
+    mClassBrowserSortAlpha = boolValue("class_browser_sort_alphabetically",true);
+    mClassBrowserSortType = boolValue("class_browser_sort_by_type",true);
+    mClassBrowserShowInherited = boolValue("class_browser_show_inherited",true);
 }

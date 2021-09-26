@@ -4,6 +4,7 @@
 #include <QColor>
 #include <QPalette>
 #include "../mainwindow.h"
+#include "../settings.h"
 
 ClassBrowserModel::ClassBrowserModel(QObject *parent):QAbstractItemModel(parent)
 {
@@ -13,7 +14,6 @@ ClassBrowserModel::ClassBrowserModel(QObject *parent):QAbstractItemModel(parent)
 //    mRoot->childrenFetched = true;
     mUpdating = false;
     mUpdateCount = 0;
-    mShowInheritedMembers = false;
 }
 
 ClassBrowserModel::~ClassBrowserModel()
@@ -133,6 +133,10 @@ QVariant ClassBrowserModel::data(const QModelIndex &index, int role) const
                 kind = mParser->getKindOfStatement(statement);
             } else {
                 kind = statement->kind;
+            }
+            if (kind == StatementKind::skKeyword) {
+                if (statement->command.startsWith('#'))
+                    kind = StatementKind::skPreprocessor;
             }
             return mColors->value(kind,pMainWindow->palette().color(QPalette::Text));
         }
@@ -299,7 +303,7 @@ void ClassBrowserModel::filterChildren(ClassBrowserNode *node, const StatementMa
     for (PStatement statement:statements) {
         if (statement->kind == StatementKind::skBlock)
             continue;
-        if (statement->isInherited && !mShowInheritedMembers)
+        if (statement->isInherited && !pSettings->ui().classBrowserShowInherited())
             continue;
 
         if (statement == node->statement) // prevent infinite recursion
@@ -367,13 +371,18 @@ void ClassBrowserModel::filterChildren(ClassBrowserNode *node, const StatementMa
             addChild(node,statement);
         }
     }
-//    if sortAlphabetically and sortByType then begin
-//      filtered.Sort(@CompareByAlphaAndType);
-//    end else if sortAlphabetically then begin
-//      filtered.Sort(@CompareByAlpha);
-//    end else if sortByType then begin
-//      filtered.Sort(@CompareByType);
-    //    end;
+    if (pSettings->ui().classBrowserSortAlpha()) {
+        std::sort(node->children.begin(),node->children.end(),
+                  [](ClassBrowserNode* node1,ClassBrowserNode* node2) {
+            return node1->statement->command < node2->statement->command;
+        });
+    }
+    if (pSettings->ui().classBrowserSortType()) {
+        std::sort(node->children.begin(),node->children.end(),
+                  [](ClassBrowserNode* node1,ClassBrowserNode* node2) {
+            return node1->statement->kind < node2->statement->kind;
+        });
+    }
 }
 
 PStatement ClassBrowserModel::createDummy(PStatement statement)

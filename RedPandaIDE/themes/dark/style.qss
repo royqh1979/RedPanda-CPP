@@ -788,6 +788,10 @@ QToolBar::separator:vertical {
   image: url(":/qss_icons/dark/rc/toolbar_separator_vertical.png");
 }
 
+QToolBar QToolButton {
+  background-color: #455364;
+}
+
 QToolButton#qt_toolbar_ext_button {
   background: #455364;
   border: 0px;
@@ -1071,7 +1075,8 @@ https://doc.qt.io/qt-5/stylesheet-examples.html#customizing-qtoolbutton
 
 --------------------------------------------------------------------------- */
 QToolButton {
-  background-color: #455364;
+  /* background-color: #455364; */
+  background-color: #19232D;
   color: #E0E1E3;
   border-radius: 4px;
   padding: 2px;
