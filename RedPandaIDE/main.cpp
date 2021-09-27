@@ -95,6 +95,8 @@ int main(int argc, char *argv[])
 
         MainWindow mainWindow;
         pMainWindow = &mainWindow;
+        if (pSettings->editor().autoLoadLastFiles())
+            pMainWindow->loadLastOpens();
         mainWindow.show();
         int retCode = app.exec();
         // save settings

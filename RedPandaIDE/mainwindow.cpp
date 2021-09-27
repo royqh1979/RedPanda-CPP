@@ -169,6 +169,7 @@ MainWindow::MainWindow(QWidget *parent)
     buildContextMenus();
 
     updateEditorColorSchemes();
+
 }
 
 MainWindow::~MainWindow()
@@ -1447,12 +1448,96 @@ void MainWindow::scanActiveProject(bool parse)
 
 void MainWindow::saveLastOpens()
 {
+    QString filename = includeTrailingPathDelimiter(pSettings->dirs().config()) + DEV_LASTOPENS_FILE;
+    if (fileExists(filename)) {
+        if (!QFile::remove(filename)) {
+            QMessageBox::critical(this,
+                                  tr("Save last open info error"),
+                                  tr("Can't remove old last open information file '%1'")
+                                  .arg(filename),
+                                  QMessageBox::Ok);
+            return;
+        }
 
+    }
+    SimpleIni lastOpenIni;
+    lastOpenIni.SetLongValue("LastOpens","Count", mEditorList->pageCount());
+    if (mProject) {
+        lastOpenIni.SetValue("LastOpens","Project",mProject->filename().toLocal8Bit());
+    }
+    for (int i=0;i<mEditorList->pageCount();i++) {
+      Editor * editor = (*mEditorList)[i];
+      QByteArray sectionName = QString("Editor_%1").arg(i).toLocal8Bit();
+      lastOpenIni.SetValue(sectionName,"FileName", editor->filename().toLocal8Bit());
+      lastOpenIni.SetBoolValue(sectionName, "OnLeft",editor->pageControl() != ui->EditorTabsRight);
+      lastOpenIni.SetBoolValue(sectionName, "Focused",editor->hasFocus());
+      lastOpenIni.SetLongValue(sectionName, "CursorCol", editor->caretX());
+      lastOpenIni.SetLongValue(sectionName, "CursorRow", editor->caretY());
+      lastOpenIni.SetLongValue(sectionName, "TopLine", editor->topLine());
+      lastOpenIni.SetLongValue(sectionName, "LeftChar", editor->leftChar());
+    }
+    if (lastOpenIni.SaveFile(filename.toLocal8Bit())!=SI_Error::SI_OK) {
+        QMessageBox::critical(this,
+                              tr("Save last open info error"),
+                              tr("Can't save last open info file '%1'")
+                              .arg(filename),
+                              QMessageBox::Ok);
+        return;
+    }
 }
 
 void MainWindow::loadLastOpens()
 {
-
+    QString filename = includeTrailingPathDelimiter(pSettings->dirs().config()) + DEV_LASTOPENS_FILE;
+    if (!fileExists(filename))
+        return;
+    SimpleIni lastOpenIni;
+    if (lastOpenIni.LoadFile(filename.toLocal8Bit())!=SI_Error::SI_OK) {
+        QMessageBox::critical(this,
+                              tr("Load last open info error"),
+                              tr("Can't load last open info file '%1'")
+                              .arg(filename),
+                              QMessageBox::Ok);
+        return;
+    }
+    Editor *  focusedEditor = nullptr;
+    int count = lastOpenIni.GetLongValue("LastOpens","Count",0);
+    for (int i=0;i<count;i++) {
+        QByteArray sectionName = QString("Editor_%1").arg(i).toLocal8Bit();
+        QString editorFilename = lastOpenIni.GetValue(sectionName,"FileName","");
+        if (!fileExists(editorFilename))
+            continue;
+        bool onLeft = lastOpenIni.GetBoolValue(sectionName,"OnLeft",true);
+//        if onLeft then
+//      page := EditorList.LeftPageControl
+//    else
+//      page := EditorList.RightPageControl;
+        Editor * editor = mEditorList->newEditor(editorFilename,ENCODING_AUTO_DETECT,false,false);
+        if (!editor)
+            continue;
+        BufferCoord pos;
+        pos.Char = lastOpenIni.GetLongValue(sectionName,"CursorCol", 1);
+        pos.Line = lastOpenIni.GetLongValue(sectionName,"CursorRow", 1);
+        editor->setCaretXY(pos);
+        editor->setTopLine(
+                    lastOpenIni.GetLongValue(sectionName,"TopLine", 1)
+                    );
+        editor->setLeftChar(
+                    lastOpenIni.GetLongValue(sectionName,"LeftChar", 1)
+                    );
+        if (lastOpenIni.GetBoolValue(sectionName,"Focused",false))
+            focusedEditor = editor;
+        pSettings->history().removeFile(editorFilename);
+    }
+    QString projectFilename = lastOpenIni.GetValue("LastOpens", "Project","");
+    if (fileExists(projectFilename)) {
+        openProject(filename);
+    } else {
+        updateEditorActions();
+        updateForEncodingInfo();
+    }
+    if (!focusedEditor)
+        focusedEditor->activate();
 }
 
 void MainWindow::buildContextMenus()
@@ -2240,13 +2325,24 @@ void MainWindow::closeEvent(QCloseEvent *event) {
     settings.setLeftPanelOpenned(mLeftPanelOpenned);
     settings.save();    
 
-    if (mProject) {
-        closeProject(false);
+    if (pSettings->editor().autoLoadLastFiles()) {
+        saveLastOpens();
+    } else {
+        //if don't save last open files, close project before editors, to save project openned editors;
+        if (mProject) {
+            closeProject(false);
+        }
     }
 
     if (!mEditorList->closeAll(false)) {
         event->ignore();
         return ;
+    }
+
+    if (pSettings->editor().autoLoadLastFiles()) {
+        if (mProject) {
+            closeProject(false);
+        }
     }
 
 

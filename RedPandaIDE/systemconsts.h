@@ -29,6 +29,7 @@
 #define ICON_EXT "ico"
 #define TEMPLATE_EXT "template"
 #define DEV_INTERNAL_OPEN "$__DEV_INTERNAL_OPEN"
+#define DEV_LASTOPENS_FILE "lastopens.ini"
 
 #ifdef Q_OS_WIN
 #   define PATH_SENSITIVITY Qt::CaseInsensitive

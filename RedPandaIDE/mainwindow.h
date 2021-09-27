@@ -81,12 +81,13 @@ public:
     void addDebugOutput(const QString& text);
     void changeDebugOutputLastline(const QString& text);
     void updateDebugEval(const QString& value);
-
     void rebuildOpenedFileHisotryMenu();
-
     void updateClassBrowserForEditor(Editor* editor);
-
     void resetAutoSaveTimer();
+
+    void saveLastOpens();
+    void loadLastOpens();
+
 
     QPlainTextEdit* txtLocals();
 
@@ -154,8 +155,6 @@ private:
                              QWidget* parent,
                              QKeySequence shortcut=QKeySequence());
     void scanActiveProject(bool parse=false);
-    void saveLastOpens();
-    void loadLastOpens();
 
 private slots:
     void onAutoSaveTimeout();

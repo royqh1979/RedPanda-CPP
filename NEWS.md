@@ -1,6 +1,7 @@
 Version 0.2
  - fix : header file completion stop work when input '.'
  - change: continue to run / debug if there are compiling warnings (but no errors)
+ - enhancement: auto load last open files at start
  - enhancement: class browser syntax colors and icons
  - enhancement: function tips
  - enhancement: project support
