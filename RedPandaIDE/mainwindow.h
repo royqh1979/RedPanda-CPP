@@ -154,6 +154,8 @@ private:
                              QWidget* parent,
                              QKeySequence shortcut=QKeySequence());
     void scanActiveProject(bool parse=false);
+    void saveLastOpens();
+    void loadLastOpens();
 
 private slots:
     void onAutoSaveTimeout();

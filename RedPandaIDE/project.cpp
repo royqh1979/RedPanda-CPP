@@ -1187,7 +1187,7 @@ void Project::doAutoOpen()
 //      2:
 //        LoadLayout; // Open previous selection
 //    end;
-
+    loadLayout();
 }
 
 bool Project::fileAlreadyExists(const QString &s)

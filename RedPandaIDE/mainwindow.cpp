@@ -1445,6 +1445,16 @@ void MainWindow::scanActiveProject(bool parse)
     };
 }
 
+void MainWindow::saveLastOpens()
+{
+
+}
+
+void MainWindow::loadLastOpens()
+{
+
+}
+
 void MainWindow::buildContextMenus()
 {
 
@@ -2230,14 +2240,16 @@ void MainWindow::closeEvent(QCloseEvent *event) {
     settings.setLeftPanelOpenned(mLeftPanelOpenned);
     settings.save();    
 
+    if (mProject) {
+        closeProject(false);
+    }
+
     if (!mEditorList->closeAll(false)) {
         event->ignore();
         return ;
     }
 
-    if (mProject) {
-        closeProject(false);
-    }
+
     mCompilerManager->stopCompile();
     mCompilerManager->stopRun();
 
