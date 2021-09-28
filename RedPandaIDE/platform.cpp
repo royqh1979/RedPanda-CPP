@@ -54,6 +54,9 @@ QList<PCharsetInfo> CharsetInfoManager::findCharsetsByLanguageName(const QString
                 && info->enabled)
             result.append(info);
     }
+    std::sort(result.begin(),result.end(),[](const PCharsetInfo& info1,const PCharsetInfo& info2){
+        return (info1->name < info2->name);
+    });
     return result;
 }
 
