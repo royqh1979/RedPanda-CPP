@@ -2814,6 +2814,35 @@ void CppParser::handleUsing()
 
     mIndex++; //skip 'using'
 
+    //handle things like 'using vec = std::vector; '
+    if (mIndex+1 < mTokenizer.tokenCount()
+            && mTokenizer[mIndex+1]->text == "=") {
+        QString fullName = mTokenizer[mIndex]->text;
+        QString aliasName;
+        mIndex+=2;
+        while (mIndex<mTokenizer.tokenCount() &&
+               mTokenizer[mIndex]->text!=';') {
+            aliasName += mTokenizer[mIndex]->text;
+            mIndex++;
+        }
+        addStatement(
+                    getCurrentScope(),
+                    mCurrentFile,
+                    "using "+fullName+" = " + aliasName, //hint text
+                    aliasName, // name of the alias (type)
+                    fullName, // command
+                    "", // args
+                    "", // values
+                    startLine,
+                    StatementKind::skTypedef,
+                    getScope(),
+                    mClassScope,
+                    true,
+                    false);
+        // skip ;
+        mIndex++;
+        return;
+    }
     //handle things like 'using std::vector;'
     if ((mIndex+2>=mTokenizer.tokenCount())
             || (mTokenizer[mIndex]->text != "namespace")) {
@@ -3078,12 +3107,12 @@ void CppParser::internalParse(const QString &fileName)
                 break;
         }
 #ifdef QT_DEBUG
-//        StringsToFile(mPreprocessor.result(),"f:\\preprocess.txt");
-//        mPreprocessor.dumpDefinesTo("f:\\defines.txt");
-//        mPreprocessor.dumpIncludesListTo("f:\\includes.txt");
-//        mStatementList.dump("f:\\stats.txt");
-//        mTokenizer.dumpTokens("f:\\tokens.txt");
-//        mStatementList.dumpAll("f:\\all-stats.txt");
+        StringsToFile(mPreprocessor.result(),"f:\\preprocess.txt");
+        mPreprocessor.dumpDefinesTo("f:\\defines.txt");
+        mPreprocessor.dumpIncludesListTo("f:\\includes.txt");
+        mStatementList.dump("f:\\stats.txt");
+        mTokenizer.dumpTokens("f:\\tokens.txt");
+        mStatementList.dumpAll("f:\\all-stats.txt");
 #endif
     }
 }

@@ -1,3 +1,6 @@
+Version 0.2.2
+ - enhancement: support C++ using type alias;
+
 Version 0.2.1
  - fix: crash when load last opens
 

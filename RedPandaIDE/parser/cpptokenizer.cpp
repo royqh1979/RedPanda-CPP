@@ -578,9 +578,15 @@ void CppTokenizer::advance()
         else
             mCurrent++;
         break;
-    case '=':
-        skipAssignment();
+    case '=': {
+        if (mTokenList.size()>2
+                && mTokenList[mTokenList.size()-2]->text == "using") {
+            addToken("=",mCurrentLine);
+            mCurrent++;
+        } else
+            skipAssignment();
         break;
+    }
     case '&':
     case '*':
     case '!':
