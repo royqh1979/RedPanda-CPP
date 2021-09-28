@@ -295,6 +295,7 @@ QString CppTokenizer::getWord(bool bSkipParenthesis, bool bSkipArray, bool bSkip
         } else if (bSkipArray && (*mCurrent == '[')) {
             // Append array stuff
             while(true) {
+                offset = mCurrent;
                 skipPair('[', ']');
                 result += QString(offset,mCurrent-offset);
                 simplifyArgs(result);

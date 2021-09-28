@@ -546,7 +546,7 @@ void SynEditStringList::LoadFromFile(const QString& filename, const QByteArray& 
     }
 
     if (realEncoding == ENCODING_SYSTEM_DEFAULT) {
-        realEncoding = getDefaultSystemEncoding();
+        realEncoding = pCharsetInfoManager->getDefaultSystemEncoding();
     }
     file.reset();
     QTextStream textStream(&file);
@@ -603,8 +603,11 @@ void SynEditStringList::SaveToFile(QFile &file, const QByteArray& encoding, QByt
     if (encoding == ENCODING_AUTO_DETECT) {
         if (allAscii)
             realEncoding = ENCODING_ASCII;
-        else
+        else if (codec->name() == "System") {
+            realEncoding = pCharsetInfoManager->getDefaultSystemEncoding();
+        } else {
             realEncoding = codec->name();
+        }
     }
 }
 

@@ -12,6 +12,7 @@
 #include "project.h"
 #include "projecttemplate.h"
 #include "widgets/newprojectdialog.h"
+#include "platform.h"
 
 #include <QCloseEvent>
 #include <QComboBox>
@@ -94,19 +95,8 @@ MainWindow::MainWindow(QWidget *parent)
     mMenuNew->addAction(ui->actionNew);
     mMenuNew->addAction(ui->actionNew_Project);
     ui->menuFile->insertMenu(ui->actionOpen,mMenuNew);
-    mMenuEncoding = new QMenu();
-    mMenuEncoding->setTitle(tr("File Encoding"));
-    mMenuEncoding->addAction(ui->actionAuto_Detect);
-    mMenuEncoding->addAction(ui->actionEncode_in_ANSI);
-    mMenuEncoding->addAction(ui->actionEncode_in_UTF_8);
-    mMenuEncoding->addSeparator();
-    mMenuEncoding->addAction(ui->actionConvert_to_ANSI);
-    mMenuEncoding->addAction(ui->actionConvert_to_UTF_8);
-    ui->menuEdit->insertMenu(ui->actionFoldAll,mMenuEncoding);
-    ui->menuEdit->insertSeparator(ui->actionFoldAll);
-    ui->actionAuto_Detect->setCheckable(true);
-    ui->actionEncode_in_ANSI->setCheckable(true);
-    ui->actionEncode_in_UTF_8->setCheckable(true);
+
+    buildEncodingMenu();
 
     mMenuRecentProjects = new QMenu();
     mMenuRecentProjects->setTitle(tr("Recent Projects"));
@@ -181,10 +171,17 @@ MainWindow::~MainWindow()
 void MainWindow::updateForEncodingInfo() {
     Editor * editor = mEditorList->getEditor();
     if (editor!=NULL) {
-        mFileEncodingStatus->setText(
-                    QString("%1(%2)")
-                    .arg(QString(editor->encodingOption())
-                         ,QString(editor->fileEncoding())));
+        if (editor->encodingOption() != editor->fileEncoding()) {
+            mFileEncodingStatus->setText(
+                        QString("%1(%2)")
+                        .arg(QString(editor->encodingOption())
+                             ,QString(editor->fileEncoding())));
+        } else {
+            mFileEncodingStatus->setText(
+                        QString("%1")
+                        .arg(QString(editor->encodingOption()))
+                        );
+        }
         ui->actionAuto_Detect->setChecked(editor->encodingOption() == ENCODING_AUTO_DETECT);
         ui->actionEncode_in_ANSI->setChecked(editor->encodingOption() == ENCODING_SYSTEM_DEFAULT);
         ui->actionEncode_in_UTF_8->setChecked(editor->encodingOption() == ENCODING_UTF8);
@@ -312,12 +309,9 @@ void MainWindow::updateCompileActions()
 
         ui->actionDebug->setEnabled(true);
     }
-
-    ui->actionStep_Into->setEnabled(mDebugger->executing());
-    ui->actionStep_Out->setEnabled(mDebugger->executing());
-    ui->actionStep_Over->setEnabled(mDebugger->executing());
-    ui->actionContinue->setEnabled(mDebugger->executing());
-    ui->actionRun_To_Cursor->setEnabled(mDebugger->executing());
+    if (!mDebugger->executing()) {
+        disableDebugActions();
+    }
     ui->actionStop_Execution->setEnabled(mCompilerManager->running() || mDebugger->executing());
 
     //it's not a compile action, but put here for convinience
@@ -357,10 +351,6 @@ void MainWindow::updateEditorColorSchemes()
     if (item) {
         mStatementColors->insert(StatementKind::skLocalVariable,item->foreground());
         mStatementColors->insert(StatementKind::skParameter,item->foreground());
-    }
-    item = pColorManager->getItem(schemeName, SYNS_AttrGlobalVariable);
-    if (item) {
-        mStatementColors->insert(StatementKind::skGlobalVariable,item->foreground());
     }
     item = pColorManager->getItem(schemeName, SYNS_AttrGlobalVariable);
     if (item) {
@@ -1818,6 +1808,60 @@ void MainWindow::buildContextMenus()
     hlayout->addStretch();
 }
 
+void MainWindow::buildEncodingMenu()
+{
+    QMenu* menuCharsets = new QMenu();
+    menuCharsets->setTitle(tr("Character sets"));
+    QStringList languages = pCharsetInfoManager->languageNames();
+    foreach (const QString& langName, languages) {
+        QMenu* menuLang = new QMenu();
+        menuLang->setTitle(langName);
+        menuCharsets->addMenu(menuLang);
+        QList<PCharsetInfo> charInfos = pCharsetInfoManager->findCharsetsByLanguageName(langName);
+        connect(menuLang,&QMenu::aboutToShow,
+                [langName,menuLang,this]() {
+            menuLang->clear();
+            Editor* editor = mEditorList->getEditor();
+            QList<PCharsetInfo> charInfos = pCharsetInfoManager->findCharsetsByLanguageName(langName);
+            foreach (const PCharsetInfo& info, charInfos) {
+                QAction * action = new QAction(info->name);
+                action->setCheckable(true);
+                if (editor)
+                    action->setChecked(info->name == editor->encodingOption());
+                connect(action, &QAction::triggered,
+                        [info,this](){
+                    Editor * editor = mEditorList->getEditor();
+                    if (editor == nullptr)
+                        return;
+                    try {
+                        editor->setEncodingOption(info->name);
+                    } catch(FileError e) {
+                        QMessageBox::critical(this,tr("Error"),e.reason());
+                    }
+                });
+                menuLang->addAction(action);
+            }
+        });
+    }
+
+    mMenuEncoding = new QMenu();
+    mMenuEncoding->setTitle(tr("File Encoding"));
+    mMenuEncoding->addAction(ui->actionAuto_Detect);
+    mMenuEncoding->addAction(ui->actionEncode_in_ANSI);
+    mMenuEncoding->addAction(ui->actionEncode_in_UTF_8);
+
+    mMenuEncoding->addMenu(menuCharsets);
+    mMenuEncoding->addSeparator();
+    mMenuEncoding->addAction(ui->actionConvert_to_ANSI);
+    mMenuEncoding->addAction(ui->actionConvert_to_UTF_8);
+
+    ui->menuEdit->insertMenu(ui->actionFoldAll,mMenuEncoding);
+    ui->menuEdit->insertSeparator(ui->actionFoldAll);
+    ui->actionAuto_Detect->setCheckable(true);
+    ui->actionEncode_in_ANSI->setCheckable(true);
+    ui->actionEncode_in_UTF_8->setCheckable(true);
+}
+
 void MainWindow::maximizeEditor()
 {
     if (mLeftPanelOpenned || mBottomPanelOpenned) {
@@ -2074,6 +2118,7 @@ void MainWindow::onEditorTabContextMenu(const QPoint &pos)
 
 void MainWindow::disableDebugActions()
 {
+    qDebug()<<"disabled";
     ui->actionStep_Into->setEnabled(false);
     ui->actionStep_Over->setEnabled(false);
     ui->actionStep_Out->setEnabled(false);
@@ -2084,6 +2129,7 @@ void MainWindow::disableDebugActions()
 
 void MainWindow::enableDebugActions()
 {
+    qDebug()<<"enabled";
     ui->actionStep_Into->setEnabled(true);
     ui->actionStep_Over->setEnabled(true);
     ui->actionStep_Out->setEnabled(true);

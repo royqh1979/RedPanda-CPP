@@ -183,9 +183,10 @@ QVariant ClassBrowserModel::data(const QModelIndex &index, int role) const
                         return QIcon(":/icons/images/classparser/method_private.ico");
                     }
                 }
+            case StatementKind::skGlobalVariable:
+                return QIcon(":/icons/images/classparser/global.ico");
             case StatementKind::skVariable:
                 if (statement->scope == StatementScope::ssGlobal)
-                    return QIcon(":/icons/images/classparser/global.ico");
                 if (statement->isInherited) {
                     if (statement->classScope == StatementClassScope::scsProtected) {
                         return QIcon(":/icons/images/classparser/var_inherited_protected.ico");

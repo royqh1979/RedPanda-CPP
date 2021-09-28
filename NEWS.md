@@ -2,6 +2,11 @@ Version 0.2.2
  - enhancement: support C++ using type alias;
  - fix: when press shift, completion popu window will hide
  - enhancement: options in debugger setting widget, to skip system/project/custom header&project files when step into
+ - fix: icon not correctly displayed for global variables in the class browser 
+ - enhancement: more charset selection in the edit menu
+ - fix: can't correctly get system default encoding name when save file
+ - fix: Tokenizer can't correctly handle array parameters
+ - fix: debug actions enabled states not correct updated when processing debug mouse tooltips
 
 Version 0.2.1
  - fix: crash when load last opens

@@ -149,6 +149,7 @@ private:
     void prepareDebugger();
     void doAutoSave(Editor *e);
     void buildContextMenus();
+    void buildEncodingMenu();
     void maximizeEditor();
     void openShell(const QString& folder, const QString& shellCommand);
     QAction* createActionFor(const QString& text,

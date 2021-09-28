@@ -1390,10 +1390,11 @@ void DebugReader::runNextCmd()
         mCurrentCmd.reset();
     }
 
-    emit cmdStarted();
     PDebugCommand pCmd = mCmdQueue.dequeue();
     mCmdRunning = true;
     mCurrentCmd = pCmd;    
+    if (mCurrentCmd->updateWatch)
+        emit cmdStarted();
 
     QByteArray s;
     s=pCmd->command.toLocal8Bit();

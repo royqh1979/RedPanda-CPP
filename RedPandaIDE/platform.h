@@ -19,7 +19,7 @@ struct CharsetInfo{
 using PCharsetInfo = std::shared_ptr<CharsetInfo>;
 
 class CharsetInfoManager: public QObject {
-    Q_OBJECT;
+    Q_OBJECT
 public:
     explicit CharsetInfoManager();
     QByteArray getDefaultSystemEncoding();
@@ -27,7 +27,7 @@ public:
     QStringList languageNames();
     QList<PCharsetInfo> findCharsetsByLanguageName(const QString& languageName);
 private:
-    static QList<PCharsetInfo> mCodePages;
+    QList<PCharsetInfo> mCodePages;
 };
 
 using PCharsetInfoManager = std::shared_ptr<CharsetInfo>;

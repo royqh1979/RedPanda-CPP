@@ -3107,12 +3107,12 @@ void CppParser::internalParse(const QString &fileName)
                 break;
         }
 #ifdef QT_DEBUG
-        StringsToFile(mPreprocessor.result(),"f:\\preprocess.txt");
-        mPreprocessor.dumpDefinesTo("f:\\defines.txt");
-        mPreprocessor.dumpIncludesListTo("f:\\includes.txt");
-        mStatementList.dump("f:\\stats.txt");
-        mTokenizer.dumpTokens("f:\\tokens.txt");
-        mStatementList.dumpAll("f:\\all-stats.txt");
+//        StringsToFile(mPreprocessor.result(),"f:\\preprocess.txt");
+//        mPreprocessor.dumpDefinesTo("f:\\defines.txt");
+//        mPreprocessor.dumpIncludesListTo("f:\\includes.txt");
+//        mStatementList.dump("f:\\stats.txt");
+//        mTokenizer.dumpTokens("f:\\tokens.txt");
+//        mStatementList.dumpAll("f:\\all-stats.txt");
 #endif
     }
 }
