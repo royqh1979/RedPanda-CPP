@@ -1,5 +1,7 @@
 Version 0.2.2
  - enhancement: support C++ using type alias;
+ - fix: when press shift, completion popu window will hide
+ - enhancement: options in debugger setting widget, to skip system/project/custom header&project files when step into
 
 Version 0.2.1
  - fix: crash when load last opens

@@ -828,6 +828,13 @@ public:
         bool blendMode() const;
         void setBlendMode(bool blendMode);
 
+        bool skipSystemLibraries() const;
+        void setSkipSystemLibraries(bool newSkipSystemLibraries);
+        bool skipProjectLibraries() const;
+        void setSkipProjectLibraries(bool newSkipProjectLibraries);
+        bool skipCustomLibraries() const;
+        void setSkipCustomLibraries(bool newSkipCustomLibraries);
+
     private:
         bool mShowCommandLog;
         bool mShowAnnotations;
@@ -836,6 +843,9 @@ public:
         int mFontSize;
         bool mUseIntelStyle;
         bool mBlendMode;
+        bool mSkipSystemLibraries;
+        bool mSkipProjectLibraries;
+        bool mSkipCustomLibraries;
 
         // _Base interface
     protected:

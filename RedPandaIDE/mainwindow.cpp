@@ -1109,18 +1109,12 @@ void MainWindow::debug()
         for (int i=0;i<mProject->units().count();i++) {
             QString file = mProject->units()[i]->fileName();
             file.replace('\\','/');
-            mDebugger->sendCommand("dir", '"'+file+ '"');
+            mDebugger->sendCommand("file", '"'+file+ '"');
         }
-        for (int i=0;i<mProject->options().includes.count();i++) {
-            QString file = mProject->options().includes[i];
-            file.replace('\\','/');
-            mDebugger->sendCommand("dir", '"'+file+ '"');
-        }
-        for (int i=0;i<mProject->options().libs.count();i++) {
-            QString file = mProject->options().libs[i];
-            file.replace('\\','/');
-            mDebugger->sendCommand("dir", '"'+file+ '"');
-        }
+        includeOrSkipDirs(mProject->options().includes,
+                          pSettings->debugger().skipProjectLibraries());
+        includeOrSkipDirs(mProject->options().libs,
+                          pSettings->debugger().skipProjectLibraries());
         break;
     case CompileTarget::File:
         // Check if we enabled proper options
@@ -1183,7 +1177,6 @@ void MainWindow::debug()
                 }
             }
 
-
             prepareDebugger();
 
             mDebugger->setUseUTF8(e->fileEncoding() == ENCODING_UTF8 || e->fileEncoding() == ENCODING_UTF8_BOM);
@@ -1197,32 +1190,16 @@ void MainWindow::debug()
     updateEditorActions();
 
     // Add library folders
-    foreach (QString dir,compilerSet->libDirs()) {
-        mDebugger->sendCommand("dir",
-                               QString("\"%1\"").arg(dir.replace('\\','/')));
-    }
-    foreach (QString dir,compilerSet->defaultLibDirs()) {
-        mDebugger->sendCommand("dir",
-                               QString("\"%1\"").arg(dir.replace('\\','/')));
-    }
-    // Add include folders
-    foreach (QString dir,compilerSet->CIncludeDirs()) {
-        mDebugger->sendCommand("dir",
-                               QString("\"%1\"").arg(dir.replace('\\','/')));
-    }
-    foreach (QString dir,compilerSet->CppIncludeDirs()) {
-        mDebugger->sendCommand("dir",
-                               QString("\"%1\"").arg(dir.replace('\\','/')));
-    }
-    foreach (QString dir,compilerSet->defaultCIncludeDirs()) {
-        mDebugger->sendCommand("dir",
-                               QString("\"%1\"").arg(dir.replace('\\','/')));
-    }
-    foreach (QString dir,compilerSet->defaultCppIncludeDirs()) {
-        mDebugger->sendCommand("dir",
-                               QString("\"%1\"").arg(dir.replace('\\','/')));
-    }
+    includeOrSkipDirs(compilerSet->libDirs(), pSettings->debugger().skipCustomLibraries());
+    includeOrSkipDirs(compilerSet->CIncludeDirs(), pSettings->debugger().skipCustomLibraries());
+    includeOrSkipDirs(compilerSet->CppIncludeDirs(), pSettings->debugger().skipCustomLibraries());
 
+    //gcc system libraries is auto loaded by gdb
+    if (pSettings->debugger().skipSystemLibraries()) {
+        includeOrSkipDirs(compilerSet->defaultCIncludeDirs(),true);
+        includeOrSkipDirs(compilerSet->defaultCIncludeDirs(),true);
+        includeOrSkipDirs(compilerSet->defaultCppIncludeDirs(),true);
+    }
 
     // Add breakpoints and watch vars
 //    for i := 0 to fDebugger.WatchVarList.Count - 1 do
@@ -1376,7 +1353,6 @@ void MainWindow::prepareDebugger()
     openCloseBottomPanel(true);
     openCloseLeftPanel(true);
 
-
     // Reset watch vars
     //    mDebugger->deleteWatchVars(false);
 }
@@ -1444,6 +1420,24 @@ void MainWindow::scanActiveProject(bool parse)
     } else {
         mProject->resetParserProjectFiles();
     };
+}
+
+void MainWindow::includeOrSkipDirs(const QStringList &dirs, bool skip)
+{
+    Q_ASSERT(mDebugger);
+    foreach (QString dir,dirs) {
+        QString dirName = dir.replace('\\','/');
+        if (skip) {
+            mDebugger->sendCommand(
+                        "skip",
+                        QString("-gfi \"%1/%2\"")
+                        .arg(dirName,"*.*"));
+        } else {
+            mDebugger->sendCommand(
+                        "dir",
+                        QString("\"%1\"").arg(dirName));
+        }
+    }
 }
 
 void MainWindow::saveLastOpens()

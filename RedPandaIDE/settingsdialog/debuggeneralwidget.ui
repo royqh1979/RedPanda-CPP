@@ -15,6 +15,27 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
+    <widget class="QCheckBox" name="chkSkipSystemLib">
+     <property name="text">
+      <string>Skip system header and library files when step into</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="chkSkipProjectLib">
+     <property name="text">
+      <string>Skip project header and library files when step into</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="chkSkipCustomLib">
+     <property name="text">
+      <string>Skip custom header and library files when step into</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QGroupBox" name="groupBox">
      <property name="title">
       <string>Debug Console</string>

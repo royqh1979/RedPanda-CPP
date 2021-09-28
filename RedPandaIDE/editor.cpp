@@ -2011,6 +2011,9 @@ bool Editor::onCompletionKeyPressed(QKeyEvent *event)
     QString phrase;
     BufferCoord pBeginPos,pEndPos;
     switch (event->key()) {
+    case Qt::Key_Shift:
+        //ignore it
+        return true;
     case Qt::Key_Backspace:
         ExecuteCommand(
                     SynEditorCommand::ecDeleteLastChar,

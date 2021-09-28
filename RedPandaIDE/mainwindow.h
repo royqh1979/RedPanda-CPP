@@ -155,7 +155,7 @@ private:
                              QWidget* parent,
                              QKeySequence shortcut=QKeySequence());
     void scanActiveProject(bool parse=false);
-
+    void includeOrSkipDirs(const QStringList& dirs, bool skip);
 private slots:
     void onAutoSaveTimeout();
     void onFileChanged(const QString& path);

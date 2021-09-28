@@ -2726,6 +2726,36 @@ void Settings::Debugger::setBlendMode(bool blendMode)
     mBlendMode = blendMode;
 }
 
+bool Settings::Debugger::skipSystemLibraries() const
+{
+    return mSkipSystemLibraries;
+}
+
+void Settings::Debugger::setSkipSystemLibraries(bool newSkipSystemLibraries)
+{
+    mSkipSystemLibraries = newSkipSystemLibraries;
+}
+
+bool Settings::Debugger::skipProjectLibraries() const
+{
+    return mSkipProjectLibraries;
+}
+
+void Settings::Debugger::setSkipProjectLibraries(bool newSkipProjectLibraries)
+{
+    mSkipProjectLibraries = newSkipProjectLibraries;
+}
+
+bool Settings::Debugger::skipCustomLibraries() const
+{
+    return mSkipCustomLibraries;
+}
+
+void Settings::Debugger::setSkipCustomLibraries(bool newSkipCustomLibraries)
+{
+    mSkipCustomLibraries = newSkipCustomLibraries;
+}
+
 bool Settings::Debugger::useIntelStyle() const
 {
     return mUseIntelStyle;
@@ -2765,6 +2795,10 @@ void Settings::Debugger::doSave()
     saveValue("font_size",mFontSize);
     saveValue("use_intel_style",mUseIntelStyle);
     saveValue("blend_mode",mBlendMode);
+    saveValue("skip_system_lib", mSkipSystemLibraries);
+    saveValue("skip_project_lib", mSkipProjectLibraries);
+    saveValue("skip_custom_lib", mSkipCustomLibraries);
+
 }
 
 void Settings::Debugger::doLoad()
@@ -2776,6 +2810,9 @@ void Settings::Debugger::doLoad()
     mFontSize = intValue("font_size",10);
     mUseIntelStyle = boolValue("use_intel_style",true);
     mBlendMode = boolValue("blend_mode",true);
+    mSkipSystemLibraries = boolValue("skip_system_lib",true);
+    mSkipProjectLibraries = boolValue("skip_project_lib",true);
+    mSkipCustomLibraries = boolValue("skip_custom_lib",false);
 }
 
 Settings::History::History(Settings *settings):_Base(settings, SETTING_HISTORY)

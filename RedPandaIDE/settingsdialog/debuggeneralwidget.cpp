@@ -28,6 +28,9 @@ void DebugGeneralWidget::doLoad()
         ui->rbATT->setChecked(true);
     }
     ui->chkBlendMode->setChecked(pSettings->debugger().blendMode());
+    ui->chkSkipSystemLib->setChecked(pSettings->debugger().skipSystemLibraries());
+    ui->chkSkipProjectLib->setChecked(pSettings->debugger().skipProjectLibraries());
+    ui->chkSkipCustomLib->setChecked(pSettings->debugger().skipCustomLibraries());
 }
 
 void DebugGeneralWidget::doSave()
@@ -39,7 +42,9 @@ void DebugGeneralWidget::doSave()
     pSettings->debugger().setShowAnnotations(ui->chkShowFullAnnotation->isChecked());
     pSettings->debugger().setUseIntelStyle(ui->rbIntel->isChecked());
     pSettings->debugger().setBlendMode(ui->chkBlendMode->isChecked());
-
+    pSettings->debugger().setSkipSystemLibraries(ui->chkSkipSystemLib->isChecked());
+    pSettings->debugger().setSkipProjectLibraries(ui->chkSkipProjectLib->isChecked());
+    pSettings->debugger().setSkipCustomLibraries(ui->chkSkipCustomLib->isChecked());
     pSettings->debugger().save();
     pMainWindow->updateDebuggerSettings();
 }
