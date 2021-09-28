@@ -1536,7 +1536,7 @@ void MainWindow::loadLastOpens()
         updateEditorActions();
         updateForEncodingInfo();
     }
-    if (!focusedEditor)
+    if (focusedEditor)
         focusedEditor->activate();
 }
 

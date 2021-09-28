@@ -1,3 +1,6 @@
+Version 0.2.1
+ - fix: crash when load last opens
+
 Version 0.2
  - fix : header file completion stop work when input '.'
  - change: continue to run / debug if there are compiling warnings (but no errors)

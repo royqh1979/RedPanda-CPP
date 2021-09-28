@@ -29,7 +29,7 @@ Editor* EditorList::newEditor(const QString& filename, const QByteArray& encodin
         parentPageControl = getNewEditorPageControl();
     else
         parentPageControl = page;
-    if (!filename.isEmpty() && QFile(filename).exists()) {
+    if (fileExists(filename)) {
         pMainWindow->fileSystemWatcher()->addPath(filename);
     }
     Editor * e = new Editor(parentPageControl,filename,encoding,inProject,newFile,parentPageControl);
@@ -255,6 +255,8 @@ void EditorList::forceCloseEditor(Editor *editor)
 
 Editor* EditorList::getOpenedEditorByFilename(const QString &filename)
 {
+    if (filename.isEmpty())
+        return nullptr;
     QFileInfo fileInfo(filename);
     QString fullname = fileInfo.absoluteFilePath();
     for (int i=0;i<mLeftPageWidget->count();i++) {
@@ -274,6 +276,8 @@ Editor* EditorList::getOpenedEditorByFilename(const QString &filename)
 
 Editor *EditorList::getEditorByFilename(const QString &filename)
 {
+    if (filename.isEmpty())
+        return nullptr;
     //check if an editor is already openned
     Editor* e=getOpenedEditorByFilename(filename);
     if (e!=nullptr)

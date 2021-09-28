@@ -110,7 +110,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
     }
 
     if (pSettings->editor().readOnlySytemHeader()
-            && (mParser->isSystemHeaderFile(filename) || mParser->isProjectHeaderFile(filename))) {
+            && (mParser->isSystemHeaderFile(mFilename) || mParser->isProjectHeaderFile(mFilename))) {
         this->setModified(false);
         setReadOnly(true);
         updateCaption();
@@ -316,6 +316,11 @@ bool Editor::saveAs(const QString &name, bool fromProject){
     if (pSettings->editor().syntaxCheckWhenSave())
         pMainWindow->checkSyntaxInBack(this);
 
+    if (pSettings->editor().readOnlySytemHeader()
+            && (!mParser->isSystemHeaderFile(mFilename) && !mParser->isProjectHeaderFile(mFilename))) {
+        setReadOnly(false);
+        updateCaption();
+    }
     return true;
 }
 
@@ -681,8 +686,8 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
     //selection
     if (selAvail() && highlighter()) {
         if ((
-          (attr->name() == SYNS_AttrIdentifier)
-          || (attr->name() == SYNS_AttrReservedWord)
+          (attr == highlighter()->identifierAttribute())
+          || (attr == highlighter()->keywordAttribute())
           || (attr->name() == SYNS_AttrPreprocessor)
           )
           && (token == mSelectionWord)) {
@@ -694,7 +699,7 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
 
 
 //    qDebug()<<token<<"-"<<attr->name()<<" - "<<line<<" : "<<aChar;
-    if (mParser && mCompletionPopup && (attr->name() == SYNS_AttrIdentifier)) {
+    if (mParser && mCompletionPopup && (attr == highlighter()->identifierAttribute())) {
         BufferCoord p{aChar,line};
         BufferCoord pBeginPos,pEndPos;
         QString s= getWordAtPosition(this,p, pBeginPos,pEndPos, WordPurpose::wpInformation);
@@ -2125,7 +2130,7 @@ Editor::TipType Editor::getTipType(QPoint point, BufferCoord& pos)
                     // do not allow when dragging selection
                     if (isPointInSelection(pos))
                         return TipType::Selection;
-                } else if (attr->name() == SYNS_AttrIdentifier)
+                } else if (attr == highlighter()->identifierAttribute())
                     return TipType::Identifier;
                 else if (attr->name() == SYNS_AttrPreprocessor)
                     return TipType::Preprocessor;
@@ -2388,7 +2393,7 @@ void Editor::updateFunctionTip()
        pMainWindow->functionTip()->hide();
        return;
     }
-    if (HLAttr->name()!=SYNS_AttrIdentifier) {
+    if (HLAttr != highlighter()->identifierAttribute()) {
         pMainWindow->functionTip()->hide();
         return;
     }

@@ -376,7 +376,7 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
             foreach(const PProjectUnit& unit, mProject->units()) {
                 if (getFileType(unit->fileName())!=FileType::WindowsResourceSource)
                     continue;
-                if (QFile(unit->fileName()).exists()) {
+                if (fileExists(unit->fileName())) {
                     QString ResFile = extractRelativePath(mProject->makeFileName(), unit->fileName());
                     ResFiles = ResFiles + genMakePath2(ResFile) + ' ';
                 }

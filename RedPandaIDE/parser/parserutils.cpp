@@ -356,6 +356,8 @@ QString getSystemHeaderFilename(const QString &fileName, const QSet<QString>& in
 
 bool isSystemHeaderFile(const QString &fileName, const QSet<QString> &includePaths)
 {
+    if (fileName.isEmpty())
+        return false;
     if (includePaths.isEmpty())
         return false;
     bool isFullName = false;

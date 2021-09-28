@@ -135,6 +135,8 @@ bool isNonPrintableAsciiChar(char ch)
 
 bool fileExists(const QString &file)
 {
+    if (file.isEmpty())
+        return false;
     return QFile(file).exists();
 }
 
@@ -148,6 +150,8 @@ bool fileExists(const QString &dir, const QString &fileName)
 
 bool directoryExists(const QString &file)
 {
+    if (file.isEmpty())
+        return false;
    QFileInfo dir(file);
    return dir.exists() && dir.isDir();
 }
