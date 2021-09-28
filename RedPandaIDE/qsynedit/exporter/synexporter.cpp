@@ -15,7 +15,7 @@ SynExporter::SynExporter()
     mForegroundColor = QGuiApplication::palette().color(QPalette::Text);
     mUseBackground = false;
     mExportAsText = false;
-    mCharset = getDefaultSystemEncoding();
+    mCharset = pCharsetInfoManager->getDefaultSystemEncoding();
     mFileEndingType = FileEndingType::Windows;
     clear();
     setTitle("");

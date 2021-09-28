@@ -260,7 +260,7 @@ QString Compiler::getCharsetArgument(const QByteArray& encoding)
     QString result;
     if (compilerSet()->autoAddCharsetParams() && encoding != ENCODING_ASCII) {
         QString encodingName;
-        QString systemEncodingName=getDefaultSystemEncoding();
+        QString systemEncodingName=pCharsetInfoManager->getDefaultSystemEncoding();
         if (encoding == ENCODING_SYSTEM_DEFAULT) {
             encodingName = systemEncodingName;
         } else if (encoding == ENCODING_UTF8_BOM) {

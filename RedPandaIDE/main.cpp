@@ -13,6 +13,7 @@
 #include "colorscheme.h"
 #include "iconsmanager.h"
 #include "autolinkmanager.h"
+#include "platform.h"
 #include "parser/parserutils.h"
 
 QString getSettingFilename(const QString& filepath = QString()) {
@@ -75,7 +76,8 @@ int main(int argc, char *argv[])
 
         SystemConsts systemConsts;
         pSystemConsts = &systemConsts;
-
+        pCharsetInfoManager = new CharsetInfoManager();
+        auto charsetInfoManager = std::unique_ptr<CharsetInfoManager>(pCharsetInfoManager);
         //load settings
         pSettings = new Settings(settingFilename);
         auto settings = std::unique_ptr<Settings>(pSettings);

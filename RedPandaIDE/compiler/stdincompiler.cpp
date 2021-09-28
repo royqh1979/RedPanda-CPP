@@ -24,7 +24,7 @@ bool StdinCompiler::prepareForCompile()
         fileType = FileType::CppSource;
     QString strFileType;
     if (!mIsAscii)
-        mArguments += getCharsetArgument(getDefaultSystemEncoding());
+        mArguments += getCharsetArgument(pCharsetInfoManager->getDefaultSystemEncoding());
     switch(fileType) {
     case FileType::CSource:
     case FileType::CHeader:

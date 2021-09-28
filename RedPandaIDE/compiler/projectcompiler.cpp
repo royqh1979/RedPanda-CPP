@@ -333,16 +333,20 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
         } else {
             QString encodingStr;
             if (mProject->options().addCharset) {
+                QByteArray defaultSystemEncoding = pCharsetInfoManager->getDefaultSystemEncoding();
                 if (unit->encoding() == ENCODING_AUTO_DETECT) {
                     if (unit->editor() && unit->editor()->fileEncoding()!=ENCODING_ASCII)
                         encodingStr = QString(" -finput-charset=%1 -fexec-charset=%2")
-                                .arg(unit->editor()->fileEncoding(),getDefaultSystemEncoding());                        
+                                .arg(unit->editor()->fileEncoding(),
+                                     defaultSystemEncoding);
                 } else if (unit->encoding()!=ENCODING_ASCII) {
                     encodingStr = QString(" -finput-charset=%1 -fexec-charset=%2")
-                          .arg(unit->encoding(),getDefaultSystemEncoding());
+                          .arg(unit->encoding(),
+                               defaultSystemEncoding);
                 } else if (unit->encoding()!=ENCODING_SYSTEM_DEFAULT) {
                     encodingStr = QString(" -finput-charset=%1 -fexec-charset=%2")
-                          .arg(getDefaultSystemEncoding(),getDefaultSystemEncoding());
+                          .arg(defaultSystemEncoding,
+                               defaultSystemEncoding);
                 }
             }
 
