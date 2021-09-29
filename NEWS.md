@@ -7,6 +7,9 @@ Version 0.2.2
  - fix: can't correctly get system default encoding name when save file
  - fix: Tokenizer can't correctly handle array parameters
  - fix: debug actions enabled states not correct updated when processing debug mouse tooltips
+ - enhancement: redesign charset selection in the project options dialog's file widget
+ - fix: can't correctly load last open files / project with non-asii characters in path
+ - fix: can't coorectly load last open project
 
 Version 0.2.1
  - fix: crash when load last opens

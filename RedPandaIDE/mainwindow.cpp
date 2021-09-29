@@ -1488,7 +1488,7 @@ void MainWindow::loadLastOpens()
     int count = lastOpenIni.GetLongValue("LastOpens","Count",0);
     for (int i=0;i<count;i++) {
         QByteArray sectionName = QString("Editor_%1").arg(i).toLocal8Bit();
-        QString editorFilename = lastOpenIni.GetValue(sectionName,"FileName","");
+        QString editorFilename = QString::fromLocal8Bit(lastOpenIni.GetValue(sectionName,"FileName",""));
         if (!fileExists(editorFilename))
             continue;
         bool onLeft = lastOpenIni.GetBoolValue(sectionName,"OnLeft",true);
@@ -1513,9 +1513,9 @@ void MainWindow::loadLastOpens()
             focusedEditor = editor;
         pSettings->history().removeFile(editorFilename);
     }
-    QString projectFilename = lastOpenIni.GetValue("LastOpens", "Project","");
+    QString projectFilename = QString::fromLocal8Bit((lastOpenIni.GetValue("LastOpens", "Project","")));
     if (fileExists(projectFilename)) {
-        openProject(filename);
+        openProject(projectFilename);
     } else {
         updateEditorActions();
         updateForEncodingInfo();
@@ -2118,7 +2118,6 @@ void MainWindow::onEditorTabContextMenu(const QPoint &pos)
 
 void MainWindow::disableDebugActions()
 {
-    qDebug()<<"disabled";
     ui->actionStep_Into->setEnabled(false);
     ui->actionStep_Over->setEnabled(false);
     ui->actionStep_Out->setEnabled(false);
@@ -2129,7 +2128,6 @@ void MainWindow::disableDebugActions()
 
 void MainWindow::enableDebugActions()
 {
-    qDebug()<<"enabled";
     ui->actionStep_Into->setEnabled(true);
     ui->actionStep_Over->setEnabled(true);
     ui->actionStep_Out->setEnabled(true);

@@ -10,9 +10,6 @@
 
 CharsetInfoManager* pCharsetInfoManager;
 
-static void initmCodePages(){
-}
-
 QByteArray CharsetInfoManager::getDefaultSystemEncoding()
 {
     DWORD acp = GetACP();

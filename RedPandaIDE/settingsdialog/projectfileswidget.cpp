@@ -2,6 +2,7 @@
 #include "ui_projectfileswidget.h"
 #include "../mainwindow.h"
 #include "../systemconsts.h"
+#include "../platform.h"
 
 ProjectFilesWidget::ProjectFilesWidget(const QString &name, const QString &group, QWidget *parent) :
     SettingsWidget(name,group,parent),
@@ -177,10 +178,24 @@ void ProjectFilesWidget::on_txtBuildCommand_textChanged()
 
 void ProjectFilesWidget::on_cbEncoding_currentTextChanged(const QString &)
 {
-    PProjectUnit unit = currentUnit();
-    if(!unit)
-        return;
-    unit->setEncoding(ui->cbEncoding->currentText().toLocal8Bit());
+    QString userData = ui->cbEncoding->currentData().toString();
+    if (userData == ENCODING_AUTO_DETECT
+            || userData == ENCODING_SYSTEM_DEFAULT
+            || userData == ENCODING_UTF8) {
+        PProjectUnit unit = currentUnit();
+        if(!unit)
+            return;
+        unit->setEncoding(userData.toLocal8Bit());
+        ui->cbEncodingDetail->setVisible(false);
+        ui->cbEncodingDetail->clear();
+    } else {
+        ui->cbEncodingDetail->setVisible(true);
+        ui->cbEncodingDetail->clear();
+        QList<PCharsetInfo> infos = pCharsetInfoManager->findCharsetsByLanguageName(userData);
+        foreach (const PCharsetInfo& info, infos) {
+            ui->cbEncodingDetail->addItem(info->name);
+        }
+    }
 }
 
 
@@ -193,8 +208,25 @@ void ProjectFilesWidget::init()
 {
     ui->spinPriority->setMinimum(0);
     ui->spinPriority->setMaximum(9999);
+    ui->cbEncodingDetail->setVisible(false);
     ui->cbEncoding->clear();
-    ui->cbEncoding->addItems(pSystemConsts->codecNames());
+    ui->cbEncoding->addItem(tr("Auto detect"),ENCODING_AUTO_DETECT);
+    ui->cbEncoding->addItem(tr("ANSI"),ENCODING_SYSTEM_DEFAULT);
+    ui->cbEncoding->addItem(tr("UTF-8"),ENCODING_UTF8);
+    foreach (const QString& langName, pCharsetInfoManager->languageNames()) {
+        ui->cbEncoding->addItem(langName,langName);
+    }
     SettingsWidget::init();
+}
+
+
+void ProjectFilesWidget::on_cbEncodingDetail_currentTextChanged(const QString &arg1)
+{
+    PProjectUnit unit = currentUnit();
+    if(!unit)
+        return;
+    unit->setEncoding(ui->cbEncodingDetail->currentText().toLocal8Bit());
+    ui->cbEncodingDetail->setVisible(false);
+    ui->cbEncodingDetail->clear();
 }
 

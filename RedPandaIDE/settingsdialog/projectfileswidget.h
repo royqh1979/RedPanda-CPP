@@ -42,6 +42,8 @@ private slots:
     void on_treeProject_clicked(const QModelIndex &index);
 
     // SettingsWidget interface
+    void on_cbEncodingDetail_currentTextChanged(const QString &arg1);
+
 public:
     void init() override;
 };
