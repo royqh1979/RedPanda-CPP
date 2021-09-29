@@ -88,7 +88,6 @@ public:
     void saveLastOpens();
     void loadLastOpens();
 
-
     QPlainTextEdit* txtLocals();
 
     CPUDialog *cpuDialog() const;
@@ -125,10 +124,13 @@ public slots:
     void cleanUpCPUDialog();
     void onDebugCommandInput(const QString& command);
     void onDebugEvaluateInput();
+    void onDebugMemoryAddressInput();
     void onParserProgress(const QString& fileName, int total, int current);
     void onStartParsing();
     void onEndParsing(int total, int updateView);
     void onEvalValueReady(const QString& value);
+    void onMemoryExamineReady(const QStringList& value);
+    void onLocalsReady(const QStringList& value);
     void onEditorContextMenu(const QPoint& pos);
     void onEditorTabContextMenu(const QPoint& pos);
     void disableDebugActions();

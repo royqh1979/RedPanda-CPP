@@ -10,9 +10,11 @@ Version 0.2.2
  - enhancement: redesign charset selection in the project options dialog's file widget
  - fix: can't correctly load last open files / project with non-asii characters in path
  - fix: can't coorectly load last open project
+ - fix: can't coorectly show code completion for array elements
  - enhancement: show caret when show code/header completions
  - fix: correctly display pointer info in watch console
  - enhancement: search in project
+ - enhancement: view memory when debugging
 
 Version 0.2.1
  - fix: crash when load last opens

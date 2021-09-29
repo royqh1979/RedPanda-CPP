@@ -48,8 +48,7 @@ bool Debugger::start()
     connect(mReader, &QThread::finished,this,&Debugger::clearUpReader);
     connect(mReader, &DebugReader::parseFinished,this,&Debugger::syncFinishedParsing,Qt::BlockingQueuedConnection);
     connect(mReader, &DebugReader::changeDebugConsoleLastLine,this,&Debugger::onChangeDebugConsoleLastline);
-    connect(mReader, &DebugReader::addLocalLine,this,&Debugger::onAddLocalLine);
-    connect(mReader, &DebugReader::clearLocals,this,&Debugger::onClearLocals);
+    connect(this, &Debugger::localsReady,pMainWindow,&MainWindow::onLocalsReady);
     connect(mReader, &DebugReader::cmdStarted,pMainWindow, &MainWindow::disableDebugActions);
     connect(mReader, &DebugReader::cmdFinished,pMainWindow, &MainWindow::enableDebugActions);
 
@@ -100,16 +99,6 @@ void Debugger::clearUpReader()
 
         pMainWindow->updateEditorActions();
     }
-}
-
-void Debugger::onAddLocalLine(const QString &text)
-{
-    pMainWindow->txtLocals()->appendPlainText(text);
-}
-
-void Debugger::onClearLocals()
-{
-    pMainWindow->txtLocals()->clear();
 }
 
 RegisterModel *Debugger::registerModel() const
@@ -458,6 +447,18 @@ void Debugger::syncFinishedParsing()
         mReader->doevalready = false;
     }
 
+    if (mReader->doupdatememoryview) {
+        emit memoryExamineReady(mReader->mMemoryValue);
+        mReader->mMemoryValue.clear();
+        mReader->doupdatememoryview=false;
+    }
+
+    if (mReader->doupdatelocal) {
+        emit localsReady(mReader->mLocalsValue);
+        mReader->mLocalsValue.clear();
+        mReader->doupdatelocal=false;
+    }
+
     // show command output
     if (pSettings->debugger().showCommandLog() ||
             (mReader->mCurrentCmd && mReader->mCurrentCmd->showInConsole)) {
@@ -648,6 +649,8 @@ AnnotationType DebugReader::getAnnotation(const QString &s)
         } else if ((mCurrentCmd) && (mCurrentCmd->command == "disas")) {
             // Another hack to catch assembler            
             result = AnnotationType::TInfoAsm;
+        } else if ((mCurrentCmd) && (mCurrentCmd->command.startsWith("x/"))) {
+            result = AnnotationType::TMemory;
         }
         return result;
     } else if (s == "error-begin") {
@@ -980,7 +983,7 @@ void DebugReader::handleLocalOutput()
                 line += s;
 //                emit addLocalWithoutLinebreak(s);
             } else {
-                emit addLocalLine(line);
+                mLocalsValue.append(line);
                 line = s;
             }
             nobreakLine=false;
@@ -992,18 +995,42 @@ void DebugReader::handleLocalOutput()
             break;
     }
     if (!line.isEmpty()) {
-        emit addLocalLine(line);
+        mLocalsValue.append(line);
     }
 }
 
 void DebugReader::handleLocals()
 {
-    emit clearLocals();
+    mLocalsValue.clear();
     handleLocalOutput();
+}
+
+void DebugReader::handleMemory()
+{
+    doupdatememoryview = true;
+    // name(spaces)hexvalue(tab)decimalvalue
+    mMemoryValue.clear();
+    QString s = getNextFilledLine();
+    bool isAnnotation = false;
+    while (true) {
+        if (!s.startsWith("\032\032")) {
+            s = s.trimmed();
+            if (!s.isEmpty()) {
+                mMemoryValue.append(s);
+            }
+            isAnnotation = false;
+        } else {
+            isAnnotation = true;
+        }
+        s = getNextLine();
+        if (!isAnnotation && s.isEmpty())
+            break;
+    }
 }
 
 void DebugReader::handleParams(){
     handleLocalOutput();
+    doupdatelocal = true;
 }
 
 void DebugReader::handleRegisters()
@@ -1129,6 +1156,8 @@ void DebugReader::processDebugOutput()
    dodisassemblerready = false;
    doregistersready = false;
    doevalready = false;
+   doupdatememoryview = false;
+   doupdatelocal = false;
    doprocessexited = false;
    doupdateexecution = false;
    doreceivedsignal = false;
@@ -1167,6 +1196,9 @@ void DebugReader::processDebugOutput()
            break;
        case AnnotationType::TParam:
            handleParams();
+           break;
+       case AnnotationType::TMemory:
+           handleMemory();
            break;
        case AnnotationType::TErrorBegin:
            handleError();

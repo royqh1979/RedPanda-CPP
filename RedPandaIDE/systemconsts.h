@@ -3,6 +3,8 @@
 
 #include <QStringList>
 
+#define DEVCPP_VERSION "0.2.2"
+
 #ifdef Q_OS_WIN
 #define APP_SETTSINGS_FILENAME "redpandacpp.ini"
 #define GCC_PROGRAM     "gcc.exe"
@@ -50,8 +52,6 @@
 #else
 #error "Only support windows and linux now!"
 #endif
-
-#define DEVCPP_VERSION "0.2.0"
 
 class SystemConsts
 {

@@ -36,7 +36,7 @@ enum class AnnotationType {
   TFieldBegin, TFieldEnd, TFieldValue, TFieldNameEnd,
   TInfoReg, TInfoAsm,
   TUnknown, TEOF,
-  TLocal, TParam
+  TLocal, TParam, TMemory
 };
 
 struct DebugCommand{
@@ -238,6 +238,8 @@ public:
 
 signals:
     void evalValueReady(const QString& s);
+    void memoryExamineReady(const QStringList& s);
+    void localsReady(const QStringList& s);
 public slots:
     void stop();
 
@@ -252,8 +254,7 @@ private slots:
     void syncFinishedParsing();
     void onChangeDebugConsoleLastline(const QString& text);
     void clearUpReader();
-    void onAddLocalLine(const QString& text);
-    void onClearLocals();
+
 private:
     bool mExecuting;
     bool mCommandChanged;
@@ -291,8 +292,6 @@ signals:
     void updateWatch();
     void processError(QProcess::ProcessError error);
     void changeDebugConsoleLastLine(const QString& text);
-    void addLocalLine(const QString& text);
-    void clearLocals();
     void cmdStarted();
     void cmdFinished();
 private:
@@ -312,6 +311,7 @@ private:
     void handleFrames();
     void handleLocalOutput();
     void handleLocals();
+    void handleMemory();
     void handleParams();
     void handleRegisters();
     void handleSignal();
@@ -348,6 +348,8 @@ private:
     QString mBreakPointFile;
     QString mOutput;
     QString mEvalValue;
+    QStringList mMemoryValue;
+    QStringList mLocalsValue;
     QString mSignal;
     bool mUseUTF8;
 
@@ -361,6 +363,8 @@ private:
     bool doupdateexecution;
     bool doreceivedsignal;
     bool doreceivedsfwarning;
+    bool doupdatememoryview;
+    bool doupdatelocal;
 
     bool mStop;
     friend class Debugger;

@@ -120,6 +120,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->debugConsole,&QConsole::commandInput,this,&MainWindow::onDebugCommandInput);
     connect(ui->cbEvaluate->lineEdit(), &QLineEdit::returnPressed,
             this, &MainWindow::onDebugEvaluateInput);
+    connect(ui->cbMemoryAddress->lineEdit(), &QLineEdit::returnPressed,
+            this, &MainWindow::onDebugMemoryAddressInput);
 
     mSearchResultTreeModel = std::make_shared<SearchResultTreeModel>(&mSearchResultModel);
     mSearchResultListModel = std::make_shared<SearchResultListModel>(&mSearchResultModel);
@@ -556,6 +558,7 @@ void MainWindow::updateDebugEval(const QString &value)
 {
     ui->txtEvalOutput->clear();
     ui->txtEvalOutput->appendPlainText(value);
+    ui->txtEvalOutput->moveCursor(QTextCursor::Start);
 }
 
 void MainWindow::rebuildOpenedFileHisotryMenu()
@@ -2124,6 +2127,7 @@ void MainWindow::disableDebugActions()
     ui->actionRun_To_Cursor->setEnabled(false);
     ui->actionContinue->setEnabled(false);
     ui->cbEvaluate->setEnabled(false);
+    ui->cbMemoryAddress->setEnabled(false);
 }
 
 void MainWindow::enableDebugActions()
@@ -2134,6 +2138,7 @@ void MainWindow::enableDebugActions()
     ui->actionRun_To_Cursor->setEnabled(true);
     ui->actionContinue->setEnabled(true);
     ui->cbEvaluate->setEnabled(true);
+    ui->cbMemoryAddress->setEnabled(true);
 }
 
 void MainWindow::prepareProjectForCompile()
@@ -3017,6 +3022,16 @@ void MainWindow::onDebugEvaluateInput()
     }
 }
 
+void MainWindow::onDebugMemoryAddressInput()
+{
+    QString s=ui->cbMemoryAddress->currentText().trimmed();
+    if (!s.isEmpty()) {
+        connect(mDebugger, &Debugger::memoryExamineReady,
+                   this, &MainWindow::onMemoryExamineReady);
+        mDebugger->sendCommand("x/64bx",s,false);
+    }
+}
+
 void MainWindow::onParserProgress(const QString &fileName, int total, int current)
 {
     // Mention every 5% progress
@@ -3066,6 +3081,27 @@ void MainWindow::onEvalValueReady(const QString &value)
     updateDebugEval(value);
     disconnect(mDebugger, &Debugger::evalValueReady,
                this, &MainWindow::onEvalValueReady);
+}
+
+void MainWindow::onMemoryExamineReady(const QStringList &value)
+{
+    ui->txtMemoryView->clear();
+    foreach (QString s, value) {
+        s.replace("\t","  ");
+        ui->txtMemoryView->appendPlainText(s);
+    }
+    ui->txtMemoryView->moveCursor(QTextCursor::Start);
+    disconnect(mDebugger, &Debugger::memoryExamineReady,
+               this, &MainWindow::onMemoryExamineReady);
+}
+
+void MainWindow::onLocalsReady(const QStringList &value)
+{
+    ui->txtLocals->clear();
+    foreach (QString s, value) {
+        ui->txtLocals->appendPlainText(s);
+    }
+    ui->txtLocals->moveCursor(QTextCursor::Start);
 }
 
 void MainWindow::on_actionFind_triggered()
