@@ -451,7 +451,7 @@ void changeTheme(const QString &themeName)
     if (!f.exists())   {
         qDebug()<<"Unable to set stylesheet, file not found\n";
     } else {
-        QApplication::setStyle("fusion");
+        QApplication::setStyle("Windowsvista");
         f.open(QFile::ReadOnly | QFile::Text);
         QTextStream ts(&f);
         dynamic_cast<QApplication*>(QApplication::instance())->setStyleSheet(ts.readAll());

@@ -6,6 +6,7 @@
 #include "../editorlist.h"
 #include "../qsynedit/Search.h"
 #include "../qsynedit/SearchRegex.h"
+#include "../project.h"
 #include <QMessageBox>
 #include <QDebug>
 
@@ -68,6 +69,7 @@ void SearchDialog::findInFiles(const QString &text)
 void SearchDialog::findInFiles(const QString &keyword, SearchFileScope scope, SynSearchOptions options)
 {
     mTabBar->setCurrentIndex(1);
+
     ui->cbFind->setCurrentText(keyword);
     switch(scope) {
     case SearchFileScope::currentFile:
@@ -119,7 +121,8 @@ void SearchDialog::onTabChanged()
 
     // Disable project search option when none is open
 //    rbProjectFiles.Enabled := Assigned(MainForm.Project);
-    ui->rbProject->setEnabled(false);
+    ui->rbProject->setEnabled(pMainWindow->project()!=nullptr);
+    ui->rbOpenFiles->setEnabled(pMainWindow->editorList()->pageCount()>0);
 //    if not Assigned(MainForm.Project) then
 //      rbOpenFiles.Checked := true;
 
@@ -289,6 +292,38 @@ void SearchDialog::on_btnExecute_clicked()
             }
             pMainWindow->searchResultModel()->notifySearchResultsUpdated();
         } else if (ui->rbProject->isChecked()) {
+            PSearchResults results = pMainWindow->searchResultModel()->addSearchResults(
+                        keyword,
+                        mSearchOptions,
+                        SearchFileScope::wholeProject
+                        );
+            for (int i=0;i<pMainWindow->project()->units().count();i++) {
+                Editor * e = pMainWindow->project()->units()[i]->editor();
+                QString curFilename =  pMainWindow->project()->units()[i]->fileName();
+                if (e) {
+                    fileSearched++;
+                    PSearchResultTreeItem parentItem = batchFindInEditor(e,
+                                                                         keyword);
+                    int t = parentItem->results.size();
+                    findCount+=t;
+                    if (t>0) {
+                        fileHitted++;
+                        results->results.append(parentItem);
+                    }
+                } else if (fileExists(curFilename)) {
+                    Editor editor(nullptr,curFilename,ENCODING_AUTO_DETECT,false,false,nullptr);
+                    fileSearched++;
+                    PSearchResultTreeItem parentItem = batchFindInEditor(&editor,
+                                                                         keyword);
+                    int t = parentItem->results.size();
+                    findCount+=t;
+                    if (t>0) {
+                        fileHitted++;
+                        results->results.append(parentItem);
+                    }
+
+                }
+            }
             //    end else if rbProjectFiles.Checked then begin
             //      for I := 0 to MainForm.Project.Units.Count - 1 do begin
             //        e := MainForm.Project.Units[i].Editor;

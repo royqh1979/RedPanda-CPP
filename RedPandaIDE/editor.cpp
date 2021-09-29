@@ -2615,7 +2615,7 @@ QString getWordAtPosition(SynEdit *editor, const BufferCoord &p, BufferCoord &pW
                 if (!findComplement(s, ']', '[', wordBegin, -1))
                     break;
                 else
-                    wordBegin++; // step over mathing [
+                    wordBegin--; // step over mathing [
             } else if (editor->isIdentChar(s[wordBegin])) {
                 wordBegin--;
             } else if (s[wordBegin] == '.'

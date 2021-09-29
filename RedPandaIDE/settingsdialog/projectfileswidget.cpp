@@ -226,7 +226,5 @@ void ProjectFilesWidget::on_cbEncodingDetail_currentTextChanged(const QString &a
     if(!unit)
         return;
     unit->setEncoding(ui->cbEncodingDetail->currentText().toLocal8Bit());
-    ui->cbEncodingDetail->setVisible(false);
-    ui->cbEncodingDetail->clear();
 }
 

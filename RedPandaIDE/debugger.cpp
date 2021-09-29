@@ -1281,7 +1281,9 @@ void DebugReader::processWatchOutput(PWatchVar watchVar)
                 varStack.push_back(parentVar);
                 parentVar = newVar;
             }
+            currentVar = nullptr;
         } else if (ch == '}') {
+            currentVar = nullptr;
             PWatchVar newVar = std::make_shared<WatchVar>();
             newVar->parent = parentVar.get();
             newVar->name = "";
@@ -1295,11 +1297,14 @@ void DebugReader::processWatchOutput(PWatchVar watchVar)
         } else if (ch == '=') {
             // just skip it
         } else if (ch == ',') {
-
+                currentVar = nullptr;
         } else {
             if (currentVar) {
-                currentVar->value = token;
-                currentVar = nullptr;
+                if (currentVar->value.isEmpty()) {
+                    currentVar->value = token;
+                } else {
+                    currentVar->value += " "+token;
+                }
             } else {
                 PWatchVar newVar = std::make_shared<WatchVar>();
                 newVar->parent = parentVar.get();
@@ -1495,6 +1500,18 @@ QStringList DebugReader::tokenize(const QString &s)
             i++;
             while (i<s.length()) {
                 if (s[i]=='>') {
+                    i++;
+                    break;
+                }
+                i++;
+            }
+            tEnd = std::min(i,s.length());
+            result.append(s.mid(tStart,tEnd-tStart));
+        } else if (ch == '(') {
+            tStart = i;
+            i++;
+            while (i<s.length()) {
+                if (s[i]==')') {
                     i++;
                     break;
                 }

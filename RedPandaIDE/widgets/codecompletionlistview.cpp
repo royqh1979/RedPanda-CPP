@@ -24,7 +24,6 @@ void CodeCompletionListView::focusInEvent(QFocusEvent *event)
 {
     Editor *editor = pMainWindow->editorList()->getEditor();
     if (editor) {
-        qDebug()<<"popup:show caret";
         editor->showCaret();
     }
 }

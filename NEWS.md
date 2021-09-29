@@ -11,6 +11,8 @@ Version 0.2.2
  - fix: can't correctly load last open files / project with non-asii characters in path
  - fix: can't coorectly load last open project
  - enhancement: show caret when show code/header completions
+ - fix: correctly display pointer info in watch console
+ - enhancement: search in project
 
 Version 0.2.1
  - fix: crash when load last opens
