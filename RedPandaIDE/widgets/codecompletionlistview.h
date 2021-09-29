@@ -19,6 +19,10 @@ protected:
     void keyPressEvent(QKeyEvent *event) override;
 private:
     KeyPressedCallback mKeypressedCallback;
+
+    // QWidget interface
+protected:
+    void focusInEvent(QFocusEvent *event) override;
 };
 
 

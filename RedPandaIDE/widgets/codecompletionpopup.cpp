@@ -1,5 +1,8 @@
 #include "codecompletionpopup.h"
 #include "../utils.h"
+#include "../mainwindow.h"
+#include "../editor.h"
+#include "../editorlist.h"
 
 #include <QKeyEvent>
 #include <QVBoxLayout>

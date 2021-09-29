@@ -1502,10 +1502,19 @@ QStringList DebugReader::tokenize(const QString &s)
             }
             tEnd = std::min(i,s.length());
             result.append(s.mid(tStart,tEnd-tStart));
-        } else if (ch == '_' || ch.isLetterOrNumber()) {
+        } else if (ch == '_' ||
+                   ch == '.' ||
+                   ch == '+' ||
+                   ch == '-' ||
+                   ch.isLetterOrNumber() ) {
             tStart = i;
             while (i<s.length()) {
-                if ((s[i]!='_') &&(!s[i].isLetterOrNumber()))
+                ch = s[i];
+                if (!(ch == '_' ||
+                     ch == '.' ||
+                     ch == '+' ||
+                     ch == '-' ||
+                     ch.isLetterOrNumber() ))
                     break;
                 i++;
             }
