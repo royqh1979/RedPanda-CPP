@@ -42,6 +42,7 @@ void EditorAutoSaveWidget::doLoad()
         break;
     case astAllOpennedFiles:
         ui->rbAllOpennedFiles->setChecked(true);
+        break;
     default:
         ui->rbProjectFiles->setChecked(true);
     }

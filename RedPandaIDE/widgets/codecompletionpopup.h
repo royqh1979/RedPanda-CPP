@@ -85,7 +85,6 @@ private:
     QSet<QString> mUsings;
     QSet<QString> mAddedStatements;
     QString mPhrase;
-    QHash<QString,int> mSymbolUsage;
     QRecursiveMutex mMutex;
     std::shared_ptr<QHash<StatementKind, QColor>> mColors;
 

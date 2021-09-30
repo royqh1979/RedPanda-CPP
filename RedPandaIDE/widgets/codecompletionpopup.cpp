@@ -3,6 +3,7 @@
 #include "../mainwindow.h"
 #include "../editor.h"
 #include "../editorlist.h"
+#include "../symbolusagemanager.h"
 
 #include <QKeyEvent>
 #include <QVBoxLayout>
@@ -360,10 +361,13 @@ void CodeCompletionPopup::filterList(const QString &member)
         int thirdCount = 0;
         int usageCount;
         foreach (const PStatement& statement,mCompletionStatementList) {
-            if (statement->usageCount == 0) {
-                usageCount = mSymbolUsage.value(statement->fullName,0);
-                if (usageCount == 0)
-                    continue;
+            if (statement->usageCount == -1) {
+                PSymbolUsage usage = pMainWindow->symbolUsageManager()->findUsage(statement->fullName);
+                if (usage) {
+                    usageCount = usage->count;
+                } else {
+                    usageCount = 0;
+                }
                 statement->usageCount = usageCount;
             } else
                 usageCount = statement->usageCount;

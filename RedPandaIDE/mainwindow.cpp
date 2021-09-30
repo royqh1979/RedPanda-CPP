@@ -123,6 +123,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->cbMemoryAddress->lineEdit(), &QLineEdit::returnPressed,
             this, &MainWindow::onDebugMemoryAddressInput);
 
+    mSymbolUsageManager = std::make_shared<SymbolUsageManager>();
+    mSymbolUsageManager->load();
     mSearchResultTreeModel = std::make_shared<SearchResultTreeModel>(&mSearchResultModel);
     mSearchResultListModel = std::make_shared<SearchResultListModel>(&mSearchResultModel);
     mSearchViewDelegate = std::make_shared<SearchResultTreeViewDelegate>(mSearchResultTreeModel);
@@ -2391,7 +2393,7 @@ void MainWindow::closeEvent(QCloseEvent *event) {
 
     mCompilerManager->stopCompile();
     mCompilerManager->stopRun();
-
+    mSymbolUsageManager->save();
     event->accept();
     return;
 }
@@ -3746,3 +3748,7 @@ void MainWindow::on_classBrowser_doubleClicked(const QModelIndex &index)
     }
 }
 
+PSymbolUsageManager &MainWindow::symbolUsageManager()
+{
+    return mSymbolUsageManager;
+}

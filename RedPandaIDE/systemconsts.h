@@ -32,7 +32,8 @@
 #define TEMPLATE_EXT "template"
 #define DEV_INTERNAL_OPEN "$__DEV_INTERNAL_OPEN"
 #define DEV_LASTOPENS_FILE "lastopens.ini"
-
+#define DEV_SYMBOLUSAGE_FILE  "symbolusage.json"
+#define DEV_CODESNIPPET_FILE  "codesnippets.json"
 #ifdef Q_OS_WIN
 #   define PATH_SENSITIVITY Qt::CaseInsensitive
 #   define PATH_SEPARATOR   ";"

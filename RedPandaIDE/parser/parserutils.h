@@ -5,7 +5,7 @@
 #include <QSet>
 #include <memory>
 
-struct CodeIns {
+struct CodeSnippet {
     QString caption; //Name
     QString prefix; //Prefix used in code suggestion
     QString code;  //Code body
@@ -13,7 +13,7 @@ struct CodeIns {
     int section;  //Section in the menu
 };
 
-using PCodeIns = std::shared_ptr<CodeIns>;
+using PCodeIns = std::shared_ptr<CodeSnippet>;
 
 // preprocess/ macro define
 struct Define {

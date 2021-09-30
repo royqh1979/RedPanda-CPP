@@ -1900,17 +1900,13 @@ void Editor::completionInsert(bool appendFunc)
     PStatement statement = mCompletionPopup->selectedStatement();
     if (!statement)
         return;
-//    if devCodeCompletion.RecordUsage and (Statement^._Kind <> skUserCodeIn) then begin
-//        idx:=Utils.FastIndexOf(dmMain.SymbolUsage,Statement^._FullName);
-//        if idx = -1 then begin
-//            usageCount:=1;
-//            dmMain.SymbolUsage.AddObject(Statement^._FullName, pointer(1))
-//        end else begin
-//            usageCount := 1 + integer(dmMain.SymbolUsage.Objects[idx]);
-//            dmMain.SymbolUsage.Objects[idx] := pointer( usageCount );
-//        end;
-//        Statement^._UsageCount := usageCount;
-//    end;
+
+    if (pSettings->codeCompletion().recordUsage()
+            && statement->kind != StatementKind::skUserCodeIn) {
+        statement->usageCount+=1;
+        pMainWindow->symbolUsageManager()->updateUsage(statement->fullName,
+                                                         statement->usageCount);
+    }
 
     QString funcAddOn = "";
 

@@ -13,8 +13,9 @@ Version 0.2.2
  - fix: can't coorectly show code completion for array elements
  - enhancement: show caret when show code/header completions
  - fix: correctly display pointer info in watch console
- - enhancement: search in project
+ - implement: search in project
  - enhancement: view memory when debugging
+ - implement: symbol usage count
 
 Version 0.2.1
  - fix: crash when load last opens

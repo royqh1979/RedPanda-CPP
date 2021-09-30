@@ -23,6 +23,8 @@ private:
 protected:
     void doLoad() override;
     void doSave() override;
+private slots:
+    void on_btnClearUsageData_clicked();
 };
 
 #endif // EDITORCODECOMPLETIONWIDGET_H

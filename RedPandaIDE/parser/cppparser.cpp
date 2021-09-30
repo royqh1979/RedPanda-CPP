@@ -1077,7 +1077,7 @@ PStatement CppParser::addStatement(const PStatement& parent,
         result->fullName =  newCommand;
     else
         result->fullName =  getFullStatementName(newCommand, parent);
-    result->usageCount = 0;
+    result->usageCount = -1;
     result->freqTop = 0;
     mStatementList.add(result);
     if (result->kind == StatementKind::skNamespace) {

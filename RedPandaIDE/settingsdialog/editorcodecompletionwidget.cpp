@@ -1,6 +1,8 @@
 #include "editorcodecompletionwidget.h"
 #include "ui_editorcodecompletionwidget.h"
 #include "../settings.h"
+#include "../mainwindow.h"
+#include "../symbolusagemanager.h"
 
 EditorCodeCompletionWidget::EditorCodeCompletionWidget(const QString& name, const QString& group,
                                                        QWidget *parent) :
@@ -54,5 +56,11 @@ void EditorCodeCompletionWidget::doSave()
     pSettings->codeCompletion().setShowCodeIns(ui->chkShowCodeIns->isChecked());
 
     pSettings->codeCompletion().save();
+}
+
+
+void EditorCodeCompletionWidget::on_btnClearUsageData_clicked()
+{
+    pMainWindow->symbolUsageManager()->reset();
 }
 

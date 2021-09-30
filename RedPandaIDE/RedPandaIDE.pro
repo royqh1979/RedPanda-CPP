@@ -18,6 +18,7 @@ SOURCES += \
     autolinkmanager.cpp \
     caretlist.cpp \
     codeformatter.cpp \
+    codesnippetsmanager.cpp \
     codetemplate.cpp \
     colorscheme.cpp \
     compiler/projectcompiler.cpp \
@@ -57,6 +58,7 @@ SOURCES += \
     settingsdialog/projectoutputwidget.cpp \
     settingsdialog/projectprecompilewidget.cpp \
     settingsdialog/projectversioninfowidget.cpp \
+    symbolusagemanager.cpp \
     widgets/classbrowser.cpp \
     widgets/codecompletionlistview.cpp \
     widgets/codecompletionpopup.cpp \
@@ -117,6 +119,7 @@ HEADERS += \
     autolinkmanager.h \
     caretlist.h \
     codeformatter.h \
+    codesnippetsmanager.h \
     codetemplate.h \
     colorscheme.h \
     compiler/compiler.h \
@@ -155,6 +158,7 @@ HEADERS += \
     settingsdialog/projectoutputwidget.h \
     settingsdialog/projectprecompilewidget.h \
     settingsdialog/projectversioninfowidget.h \
+    symbolusagemanager.h \
     widgets/classbrowser.h \
     widgets/codecompletionlistview.h \
     widgets/codecompletionpopup.h \

@@ -11,6 +11,7 @@
 #include "widgets/headercompletionpopup.h"
 #include "widgets/functiontooltipwidget.h"
 #include "caretlist.h"
+#include "symbolusagemanager.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -112,6 +113,8 @@ public:
     std::shared_ptr<Project> project();
 
     const std::shared_ptr<QHash<StatementKind, QColor> > &statementColors() const;
+
+    PSymbolUsageManager &symbolUsageManager();
 
 public slots:
     void onCompileLog(const QString& msg);
@@ -379,6 +382,7 @@ private:
     PSearchResultTreeViewDelegate mSearchViewDelegate;
     ClassBrowserModel mClassBrowserModel;
     std::shared_ptr<QHash<StatementKind, QColor>> mStatementColors;
+    PSymbolUsageManager mSymbolUsageManager;
 
     bool mCheckSyntaxInBack;
     bool mOpenClosingBottomPanel;
