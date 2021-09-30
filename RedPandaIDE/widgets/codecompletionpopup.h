@@ -50,8 +50,8 @@ public:
     bool showKeywords() const;
     void setShowKeywords(bool newShowKeywords);
 
-    bool showCodeIns() const;
-    void setShowCodeIns(bool newShowCodeIns);
+    bool showCodeSnippets() const;
+    void setShowCodeSnippets(bool newShowCodeIns);
 
     bool ignoreCase() const;
     void setIgnoreCase(bool newIgnoreCase);
@@ -77,7 +77,7 @@ private:
 private:
     CodeCompletionListView * mListView;
     CodeCompletionListModel* mModel;
-    QList<PCodeSnippet> mCodeInsList; //(Code template list)
+    QList<PCodeSnippet> mCodeSnippets; //(Code template list)
     //QList<PStatement> mCodeInsStatements; //temporary (user code template) statements created when show code suggestion
     StatementList mFullCompletionStatementList;
     StatementList mCompletionStatementList;
@@ -94,7 +94,7 @@ private:
     bool mOnlyGlobals;
     bool mRecordUsage;
     bool mShowKeywords;
-    bool mShowCodeIns;
+    bool mShowCodeSnippets;
     bool mIgnoreCase;
     bool mSortByScope;
     bool mUseCppKeyword;
@@ -108,6 +108,8 @@ protected:
 public:
     bool event(QEvent *event) override;
     const QString &phrase() const;
+    const QList<PCodeSnippet> &codeSnippets() const;
+    void setCodeSnippets(const QList<PCodeSnippet> &newCodeSnippets);
 };
 
 #endif // CODECOMPLETIONPOPUP_H

@@ -11,6 +11,18 @@
 #include "widgets/codecompletionpopup.h"
 #include "widgets/headercompletionpopup.h"
 
+#define USER_CODE_IN_INSERT_POS "%INSERT%"
+#define USER_CODE_IN_REPL_POS_BEGIN "%REPL_BEGIN%"
+#define USER_CODE_IN_REPL_POS_END "%REPL_END%"
+
+struct TabStop {
+    int x;
+    int endX;
+    int y;
+};
+
+using PTabStop = std::shared_ptr<TabStop>;
+
 class SaveException: public std::exception {
 
 public:
@@ -144,6 +156,7 @@ public:
     void gotoDefinition(const BufferCoord& pos);
     void reparse();
     void insertString(const QString& value, bool moveCursor);
+    void insertCodeSnippet(const QString& code);
 
     const PCppParser &parser();
 
@@ -231,6 +244,14 @@ private:
     QString mSelectionWord;
 
     bool mSaving;
+
+    int mXOffsetSince;
+    int mTabStopBegin;
+    int mTabStopEnd;
+    int mTabStopY;
+    QString mLineBeforeTabStop;
+    QString mLineAfterTabStop;
+    QList<PTabStop> mUserCodeInTabStops;
 
     // QWidget interface
 protected:

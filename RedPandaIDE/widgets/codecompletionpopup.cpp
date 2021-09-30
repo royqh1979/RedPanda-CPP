@@ -201,12 +201,12 @@ static bool nameComparator(PStatement statement1,PStatement statement2) {
 
 static bool defaultComparator(PStatement statement1,PStatement statement2) {
     // Show user template first
-    if (statement1->kind == StatementKind::skUserCodeIn) {
-        if (statement2->kind != StatementKind::skUserCodeIn)
+    if (statement1->kind == StatementKind::skUserCodeSnippet) {
+        if (statement2->kind != StatementKind::skUserCodeSnippet)
             return true;
         else
             return statement1->command < statement2->command;
-    } else if (statement2->kind == StatementKind::skUserCodeIn) {
+    } else if (statement2->kind == StatementKind::skUserCodeSnippet) {
         return false;
         // show keywords first
     } else if ((statement1->kind == StatementKind::skKeyword)
@@ -221,12 +221,12 @@ static bool defaultComparator(PStatement statement1,PStatement statement2) {
 
 static bool sortByScopeComparator(PStatement statement1,PStatement statement2){
     // Show user template first
-    if (statement1->kind == StatementKind::skUserCodeIn) {
-        if (statement2->kind != StatementKind::skUserCodeIn)
+    if (statement1->kind == StatementKind::skUserCodeSnippet) {
+        if (statement2->kind != StatementKind::skUserCodeSnippet)
             return true;
         else
             return statement1->command < statement2->command;
-    } else if (statement2->kind == StatementKind::skUserCodeIn) {
+    } else if (statement2->kind == StatementKind::skUserCodeSnippet) {
         return false;
         // show keywords first
     } else if (statement1->kind == StatementKind::skKeyword) {
@@ -254,12 +254,12 @@ static bool sortByScopeComparator(PStatement statement1,PStatement statement2){
 
 static bool sortWithUsageComparator(PStatement statement1,PStatement statement2) {
     // Show user template first
-    if (statement1->kind == StatementKind::skUserCodeIn) {
-        if (statement2->kind != StatementKind::skUserCodeIn)
+    if (statement1->kind == StatementKind::skUserCodeSnippet) {
+        if (statement2->kind != StatementKind::skUserCodeSnippet)
             return true;
         else
             return statement1->command < statement2->command;
-    } else if (statement2->kind == StatementKind::skUserCodeIn) {
+    } else if (statement2->kind == StatementKind::skUserCodeSnippet) {
         return false;
         //show most freq first
     } else if (statement1->freqTop > statement2->freqTop) {
@@ -279,12 +279,12 @@ static bool sortWithUsageComparator(PStatement statement1,PStatement statement2)
 
 static bool sortByScopeWithUsageComparator(PStatement statement1,PStatement statement2){
     // Show user template first
-    if (statement1->kind == StatementKind::skUserCodeIn) {
-        if (statement2->kind != StatementKind::skUserCodeIn)
+    if (statement1->kind == StatementKind::skUserCodeSnippet) {
+        if (statement2->kind != StatementKind::skUserCodeSnippet)
             return true;
         else
             return statement1->command < statement2->command;
-    } else if (statement2->kind == StatementKind::skUserCodeIn) {
+    } else if (statement2->kind == StatementKind::skUserCodeSnippet) {
         return false;
         //show most freq first
     } else if (statement1->freqTop > statement2->freqTop) {
@@ -474,7 +474,7 @@ void CodeCompletionPopup::getCompletionFor(const QString &fileName, const QStrin
                 foreach (const PCodeSnippet& codeIn,mCodeSnippets) {
                     PStatement statement = std::make_shared<Statement>();
                     statement->command = codeIn->prefix;
-                    statement->kind = StatementKind::skUserCodeIn;
+                    statement->kind = StatementKind::skUserCodeSnippet;
                     statement->fullName = codeIn->prefix;
                     statement->usageCount = 0;
                     statement->freqTop = 0;
@@ -801,12 +801,12 @@ void CodeCompletionPopup::setIgnoreCase(bool newIgnoreCase)
     mIgnoreCase = newIgnoreCase;
 }
 
-bool CodeCompletionPopup::showCodeIns() const
+bool CodeCompletionPopup::showCodeSnippets() const
 {
     return mShowCodeSnippets;
 }
 
-void CodeCompletionPopup::setShowCodeIns(bool newShowCodeIns)
+void CodeCompletionPopup::setShowCodeSnippets(bool newShowCodeIns)
 {
     mShowCodeSnippets = newShowCodeIns;
 }

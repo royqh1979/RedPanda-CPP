@@ -1727,38 +1727,36 @@ void Editor::insertCodeSnippet(const QString &code)
     mTabStopY =0;
     mLineBeforeTabStop = "";
     mLineAfterTabStop = "";
-    QStringList sl;
-    QString newSl;
     // prevent lots of repaints
     beginUpdate();
     auto action = finally([this]{
         endUpdate();
     });
-      fText.BeginUpdate;
-      try
-        sl.Text:=ParseMacros(Code);
-        lastI:=0;
-        spaceCount := Length(Text.GetLeftSpacing(
-          Text.LeftSpacesEx(fText.LineText,True), True));
-        for i:=0 to sl.Count -1 do begin
-          lastPos := 0;
-          s:= sl[i];
-          if i>0 then
-            lastPos := -spaceCount;
-          while True do begin
-            insertPos := Pos(USER_CODE_IN_INSERT_POS,s);
-            if insertPos = 0 then // no %INSERT% macro in this line now
-              break;
-            System.new(p);
-            Delete(s,insertPos,Length(USER_CODE_IN_INSERT_POS));
-            dec(insertPos);
-            p.x:=insertPos - lastPos;
-            p.endX := p.x;
-            p.y:=i-lastI;
-            lastPos := insertPos;
-            lastI:=i;
-            fUserCodeInTabStops.Add(p);
-          end;
+    QStringList sl = parseMacros(code);
+    int lastI=0;
+    int spaceCount = GetLeftSpacing(
+                leftSpaces(lineText()),true).length();
+    QStringList newSl;
+    int insertPos;
+    for (int i=0;i<sl.count();i++) {
+        int lastPos = 0;
+        QString s = sl[i];
+        if (i>0)
+            lastPos = -spaceCount;
+        while (true) {
+            insertPos = s.indexOf(USER_CODE_IN_INSERT_POS);
+            if (insertPos < 0) // no %INSERT% macro in this line now
+                break;
+            PTabStop p = std::make_shared<TabStop>();
+            s.remove(insertPos,USER_CODE_IN_INSERT_POS.length());
+            insertPos--;
+            p->x = insertPos - lastPos;
+            p->endX = p->x;
+            p->y = i - lastI;
+            lastPos = insertPos;
+            lastI = i;
+            mUserCodeInTabStops.append(p);
+        }
           while True do begin
             insertPos := Pos(USER_CODE_IN_REPL_POS_BEGIN,s);
             if insertPos = 0 then // no %INSERT% macro in this line now
@@ -1782,7 +1780,7 @@ void Editor::insertCodeSnippet(const QString &code)
             fUserCodeInTabStops.Add(p);
           end;
           newSl.Add(s);
-        end;
+    }
         CursorPos := Text.CaretXY;
         s:=newSl.Text;
         if EndsStr(#13#10,s) then
@@ -1798,10 +1796,6 @@ void Editor::insertCodeSnippet(const QString &code)
         end;
         if Code <> '' then
           fLastIdCharPressed := 0;
-        // prevent lots of repaints
-      finally
-        fText.EndUpdate;
-      end;
 }
 
 void Editor::showCompletion(bool autoComplete)
