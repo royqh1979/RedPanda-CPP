@@ -32,8 +32,9 @@ void SymbolUsageManager::load()
     if (error.error != QJsonParseError::NoError) {
         QMessageBox::critical(nullptr,
                               tr("Load symbol usage info failed"),
-                              tr("Can't parse symbol usage file '%1'.")
-                              .arg(filename));
+                              tr("Can't parse symbol usage file '%1': %2")
+                              .arg(filename)
+                              .arg(error.errorString()));
     }
 
     mUsages.clear();

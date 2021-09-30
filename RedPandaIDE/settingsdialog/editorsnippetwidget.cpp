@@ -3,6 +3,8 @@
 #include "../mainwindow.h"
 #include "../codesnippetsmanager.h"
 
+#include <QItemSelectionModel>
+
 EditorSnippetWidget::EditorSnippetWidget(const QString& name, const QString& group,
                                          QWidget *parent) :
     SettingsWidget(name,group,parent),
@@ -20,6 +22,21 @@ EditorSnippetWidget::EditorSnippetWidget(const QString& name, const QString& gro
             return;
         PCodeSnippet snippet = mModel.snippets()[index.row()];
         snippet->code = ui->editCode->lines()->text();
+        setSettingsChanged();
+    });
+    connect(ui->tblSnippets->selectionModel(), &QItemSelectionModel::currentChanged,
+            [this] {
+        QModelIndex index = ui->tblSnippets->currentIndex();
+        if (!index.isValid()) {
+            ui->editCode->setEnabled(false);
+            ui->editCode->lines()->clear();
+        } else {
+            mUpdatingCode = true;
+            ui->editCode->setEnabled(true);
+            PCodeSnippet snippet = mModel.snippets()[index.row()];
+            ui->editCode->lines()->setText(snippet->code);
+            mUpdatingCode = false;
+        }
     });
 }
 
@@ -39,32 +56,22 @@ void EditorSnippetWidget::doSave()
     pMainWindow->codeSnippetManager()->save();
 }
 
-void EditorSnippetWidget::on_tblSnippets_clicked(const QModelIndex &index)
+void EditorSnippetWidget::on_btnAdd_clicked()
 {
-    if (!index.isValid())
-        return;
-    mUpdatingCode = true;
-    PCodeSnippet snippet = mModel.snippets()[index.row()];
-    ui->editCode->lines()->setText(snippet->code);
-    mUpdatingCode = false;
-}
-
-
-void EditorSnippetWidget::on_btnAdd_triggered(QAction *arg1)
-{
-    mModel.addSnippet(QString("Code %1").arg(getNewFileNumber()),
+    mModel.addSnippet(QString("").arg(getNewFileNumber()),
                       "",
                       "",
                       "",
                       -1);
+    ui->tblSnippets->setCurrentIndex(mModel.lastSnippetCaption());
+    ui->tblSnippets->edit(mModel.lastSnippetCaption());
 }
 
 
-void EditorSnippetWidget::on_btnRemove_triggered(QAction *arg1)
+void EditorSnippetWidget::on_btnRemove_clicked()
 {
     QModelIndex index = ui->tblSnippets->currentIndex();
     if (!index.isValid())
         return;
     mModel.remove(index.row());
 }
-

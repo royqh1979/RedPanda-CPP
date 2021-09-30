@@ -1718,6 +1718,92 @@ void Editor::insertString(const QString &value, bool moveCursor)
     }
 }
 
+void Editor::insertCodeSnippet(const QString &code)
+{
+    clearUserCodeInTabStops();
+    mXOffsetSince = 0;
+    mTabStopBegin = -1;
+    mTabStopEnd = -1;
+    mTabStopY =0;
+    mLineBeforeTabStop = "";
+    mLineAfterTabStop = "";
+    QStringList sl;
+    QString newSl;
+    // prevent lots of repaints
+    beginUpdate();
+    auto action = finally([this]{
+        endUpdate();
+    });
+      fText.BeginUpdate;
+      try
+        sl.Text:=ParseMacros(Code);
+        lastI:=0;
+        spaceCount := Length(Text.GetLeftSpacing(
+          Text.LeftSpacesEx(fText.LineText,True), True));
+        for i:=0 to sl.Count -1 do begin
+          lastPos := 0;
+          s:= sl[i];
+          if i>0 then
+            lastPos := -spaceCount;
+          while True do begin
+            insertPos := Pos(USER_CODE_IN_INSERT_POS,s);
+            if insertPos = 0 then // no %INSERT% macro in this line now
+              break;
+            System.new(p);
+            Delete(s,insertPos,Length(USER_CODE_IN_INSERT_POS));
+            dec(insertPos);
+            p.x:=insertPos - lastPos;
+            p.endX := p.x;
+            p.y:=i-lastI;
+            lastPos := insertPos;
+            lastI:=i;
+            fUserCodeInTabStops.Add(p);
+          end;
+          while True do begin
+            insertPos := Pos(USER_CODE_IN_REPL_POS_BEGIN,s);
+            if insertPos = 0 then // no %INSERT% macro in this line now
+              break;
+            System.new(p);
+            Delete(s,insertPos,Length(USER_CODE_IN_REPL_POS_BEGIN));
+            dec(insertPos);
+            p.x:=insertPos - lastPos;
+
+            insertEndPos := insertPos + Pos(USER_CODE_IN_REPL_POS_END,copy(s,insertPos+1,MaxInt));
+            if insertEndPos <= insertPos then begin
+              p.endX := length(s);
+            end else begin
+              Delete(s,insertEndPos,Length(USER_CODE_IN_REPL_POS_END));
+              dec(insertEndPos);
+              p.endX := insertEndPos - lastPos;
+            end;
+            p.y:=i-lastI;
+            lastPos := insertEndPos;
+            lastI:=i;
+            fUserCodeInTabStops.Add(p);
+          end;
+          newSl.Add(s);
+        end;
+        CursorPos := Text.CaretXY;
+        s:=newSl.Text;
+        if EndsStr(#13#10,s) then
+          Delete(s,Length(s)-1,2)
+        else if EndsStr(#10, s) then
+          Delete(s,Length(s),1);
+        fText.SelText := s;
+        Text.CaretXY := CursorPos; //restore cursor pos before insert
+        if fUserCodeInTabStops.Count > 0  then begin
+          fTabStopBegin :=Text.CaretX;
+          fTabStopEnd := Text.CaretX;
+          PopUserCodeInTabStops;
+        end;
+        if Code <> '' then
+          fLastIdCharPressed := 0;
+        // prevent lots of repaints
+      finally
+        fText.EndUpdate;
+      end;
+}
+
 void Editor::showCompletion(bool autoComplete)
 {
     if (!pSettings->codeCompletion().enabled())
@@ -1766,7 +1852,10 @@ void Editor::showCompletion(bool autoComplete)
     mCompletionPopup->setRecordUsage(pSettings->codeCompletion().recordUsage());
     mCompletionPopup->setSortByScope(pSettings->codeCompletion().sortByScope());
     mCompletionPopup->setShowKeywords(pSettings->codeCompletion().showKeywords());
-    mCompletionPopup->setShowCodeIns(pSettings->codeCompletion().showCodeIns());
+    mCompletionPopup->setShowCodeSnippets(pSettings->codeCompletion().showCodeIns());
+    if (pSettings->codeCompletion().showCodeIns()) {
+        mCompletionPopup->setCodeSnippets(pMainWindow->codeSnippetManager()->snippets());
+    }
     mCompletionPopup->setIgnoreCase(pSettings->codeCompletion().ignoreCase());
     mCompletionPopup->resize(pSettings->codeCompletion().width(),
                              pSettings->codeCompletion().height());
@@ -1902,7 +1991,7 @@ void Editor::completionInsert(bool appendFunc)
         return;
 
     if (pSettings->codeCompletion().recordUsage()
-            && statement->kind != StatementKind::skUserCodeIn) {
+            && statement->kind != StatementKind::skUserCodeSnippet) {
         statement->usageCount+=1;
         pMainWindow->symbolUsageManager()->updateUsage(statement->fullName,
                                                          statement->usageCount);
@@ -1929,8 +2018,9 @@ void Editor::completionInsert(bool appendFunc)
     }
 
     // ... by replacing the selection
-    if (statement->kind == StatementKind::skUserCodeIn) { // it's a user code template
-        //insertUserCodeIn(Statement->value);
+    if (statement->kind == StatementKind::skUserCodeSnippet) { // it's a user code template
+        // insertUserCodeIn(Statement->value);
+        insertCodeSnippet(statement->value);
     } else {
         if (
                 (statement->kind == StatementKind::skKeyword

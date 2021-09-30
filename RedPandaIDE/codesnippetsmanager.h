@@ -16,6 +16,7 @@ public:
             int menuSection);
     void remove(int index);
     void clear();
+    QModelIndex lastSnippetCaption();
 
     // QAbstractItemModel interface
 public:

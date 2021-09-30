@@ -371,7 +371,7 @@ void MainWindow::updateEditorColorSchemes()
     item = pColorManager->getItem(schemeName, SYNS_AttrReservedWord);
     if (item) {
         mStatementColors->insert(StatementKind::skKeyword,item->foreground());
-        mStatementColors->insert(StatementKind::skUserCodeIn,item->foreground());
+        mStatementColors->insert(StatementKind::skUserCodeSnippet,item->foreground());
     }
     item = pColorManager->getItem(schemeName, SYNS_AttrString);
     if (item) {

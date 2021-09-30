@@ -60,7 +60,7 @@ enum StatementKind  {
   skNamespace,
   skNamespaceAlias,
   skBlock,
-  skUserCodeIn,  // user code template
+  skUserCodeSnippet,  // user code template
   skKeyword, // keywords
   skGlobalVariable,
   skLocalVariable,

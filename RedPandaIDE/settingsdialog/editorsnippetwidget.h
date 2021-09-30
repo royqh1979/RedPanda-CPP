@@ -27,9 +27,8 @@ protected:
     void doLoad() override;
     void doSave() override;
 private slots:
-    void on_tblSnippets_clicked(const QModelIndex &index);
-    void on_btnAdd_triggered(QAction *arg1);
-    void on_btnRemove_triggered(QAction *arg1);
+    void on_btnRemove_clicked();
+    void on_btnAdd_clicked();
 };
 
 #endif // EDITORSNIPPETWIDGET_H

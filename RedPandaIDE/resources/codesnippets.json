@@ -1,0 +1,65 @@
+[
+    {
+        "caption": "for(;;)",
+        "code": "for(%REPL_BEGIN%int i=0%REPL_END%;%REPL_BEGIN%i<=0%REPL_END%;%REPL_BEGIN%i++%REPL_END%){\r\n\t%REPL_BEGIN%//TODO%REPL_END%\r\n}",
+        "description": "",
+        "prefix": "for(;;)",
+        "section": -1
+    },
+    {
+        "caption": "if else",
+        "code": "if(%REPL_BEGIN%1%REPL_END%){\r\n\t%REPL_BEGIN%//TODO%REPL_END%\r\n}else{\r\n\t%REPL_BEGIN%//TODO%REPL_END%\r\n}",
+        "description": "",
+        "prefix": "if_else",
+        "section": -1
+    },
+    {
+        "caption": "if else if",
+        "code": "if(%REPL_BEGIN%1%REPL_END%){\r\n\t%REPL_BEGIN%//TODO%REPL_END%\r\n}else if(%REPL_BEGIN%1%REPL_END%){\r\n\t%REPL_BEGIN%//TODO%REPL_END%\r\n}else{\r\n\t%REPL_BEGIN%//TODO%REPL_END%\r\n}",
+        "description": "",
+        "prefix": "if_else_if",
+        "section": -1
+    },
+    {
+        "caption": "if()",
+        "code": "if(%REPL_BEGIN%1%REPL_END%){\r\n\t%REPL_BEGIN%//TODO%REPL_END%\r\n}",
+        "description": "",
+        "prefix": "if()",
+        "section": -1
+    },
+    {
+        "caption": "while()",
+        "code": "while(%REPL_BEGIN%1%REPL_END%){\r\n\t%REPL_BEGIN%//TODO%REPL_END%\r\n}",
+        "description": "",
+        "prefix": "while()",
+        "section": -1
+    },
+    {
+        "caption": "class{;;}",
+        "code": "class %REPL_BEGIN%YourClassName%REPL_END% {\r\n\t\t%REPL_BEGIN%int YourVar%REPL_END%;\r\n\tpublic:\r\n\t\t%REPL_BEGIN%YourClassName%REPL_END%() {\r\n\r\n\t\t}\r\n\t\t~%REPL_BEGIN%YourClassName%REPL_END%() {\r\n\r\n\t\t}\r\n\t\t%REPL_BEGIN%void YourMethodOrFunction%REPL_END%() {\r\n\r\n\t\t}\r\n};",
+        "description": "",
+        "prefix": "class{;;}",
+        "section": -1
+    },
+    {
+        "caption": "switch(){}",
+        "code": "switch (%REPL_BEGIN%1%REPL_END%) {\r\n\tcase %REPL_BEGIN%1%REPL_END%:\r\n\t\t%REPL_BEGIN%//TODO%REPL_END%\r\n\t\tbreak;\r\n\tcase %REPL_BEGIN%2%REPL_END%:\r\n\t\t%REPL_BEGIN%//TODO%REPL_END%\r\n\t\tbreak;\r\n\tdefault:\r\n\t\t%REPL_BEGIN%//TODO%REPL_END%\r\n\t\tbreak;\r\n}",
+        "description": "",
+        "prefix": "switch(){}",
+        "section": -1
+    },
+    {
+        "caption": "do{}while()",
+        "code": "do{\r\n\t%REPL_BEGIN%//TODO%REPL_END%\r\n}while(%REPL_BEGIN%1%REPL_END%);",
+        "description": "",
+        "prefix": "do{}while()",
+        "section": -1
+    },
+    {
+        "caption": "function()",
+        "code": "%REPL_BEGIN%int YourFunctionName%REPL_END%(%REPL_BEGIN%int YourParaments%REPL_END%){\r\n\t%REPL_BEGIN%//TODO%REPL_END%\r\n\treturn %REPL_BEGIN%0%REPL_END%;\r\n}",
+        "description": "",
+        "prefix": "function()",
+        "section": -1
+    }
+]

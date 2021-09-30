@@ -15,13 +15,56 @@ CodeSnippetsManager::CodeSnippetsManager(QObject *parent) : QObject(parent)
 
 void CodeSnippetsManager::load()
 {
-   //if config file not exists, copy it from data
+    //if config file not exists, copy it from data
+    QString filename = includeTrailingPathDelimiter(pSettings->dirs().config()) + DEV_CODESNIPPET_FILE;
+    if (!fileExists(filename)) {
+        QString defaultFilename = ":/config/codesnippets.json";
+        if (!QFile::copy(
+                    defaultFilename,
+                    filename)) {
+            QMessageBox::critical(nullptr,
+                                  tr("Load default code snippets failed"),
+                                  tr("Can't copy default code snippets '%1' to '%2'.")
+                                  .arg(defaultFilename)
+                                  .arg(filename));
+        }
+    }
     //read config file
+    QFile file(filename);
+    if (!file.open(QFile::ReadOnly)) {
+        QMessageBox::critical(nullptr,
+                              tr("Read code snippets failed"),
+                              tr("Can't open code snippet file '%1' for read.")
+                              .arg(filename));
+    }
+
+    QByteArray json = file.readAll();
+    QJsonParseError error;
+    QJsonDocument doc = QJsonDocument::fromJson(json,&error);
+    if (error.error != QJsonParseError::NoError) {
+        QMessageBox::critical(nullptr,
+                              tr("Read code snippets failed"),
+                              tr("Read code snippet file '%1' failed:%2")
+                              .arg(filename)
+                              .arg(error.errorString()));
+    }
+    mSnippets.clear();
+    QJsonArray array = doc.array();
+    foreach (const QJsonValue& value,array) {
+        QJsonObject object = value.toObject();
+        PCodeSnippet snippet = std::make_shared<CodeSnippet>();
+        snippet->caption = object["caption"].toString();
+        snippet->prefix = object["prefix"].toString();
+        snippet->code = object["code"].toString();
+        snippet->desc = object["description"].toString();
+        snippet->section = object["section"].toInt();
+        mSnippets.append(snippet);
+    }
 }
 
 void CodeSnippetsManager::save()
 {
-    QString filename = pSettings->dirs().config() + DEV_CODESNIPPET_FILE;
+    QString filename = includeTrailingPathDelimiter(pSettings->dirs().config()) + DEV_CODESNIPPET_FILE;
     QFile file(filename);
     if (!file.open(QFile::WriteOnly | QFile::Truncate)) {
         QMessageBox::critical(nullptr,
@@ -87,12 +130,18 @@ void CodeSnippetsModel::clear()
     endRemoveRows();
 }
 
-int CodeSnippetsModel::rowCount(const QModelIndex &parent) const
+QModelIndex CodeSnippetsModel::lastSnippetCaption()
+{
+    Q_ASSERT(mSnippets.count()>0);
+    return createIndex(mSnippets.count()-1,0);
+}
+
+int CodeSnippetsModel::rowCount(const QModelIndex &) const
 {
     return mSnippets.count();
 }
 
-int CodeSnippetsModel::columnCount(const QModelIndex &parent) const
+int CodeSnippetsModel::columnCount(const QModelIndex &) const
 {
     return 4;
 }

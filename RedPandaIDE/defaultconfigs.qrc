@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/config">
         <file alias="autolink.json">resources/autolink.json</file>
+        <file alias="codesnippets.json">resources/codesnippets.json</file>
     </qresource>
 </RCC>

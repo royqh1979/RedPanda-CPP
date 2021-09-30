@@ -37,7 +37,7 @@ CodeCompletionPopup::CodeCompletionPopup(QWidget *parent) :
 
     mOnlyGlobals = false;
     mShowCount = 1000;
-    mShowCodeIns = true;
+    mShowCodeSnippets = true;
 
     mIgnoreCase = false;
 
@@ -469,9 +469,9 @@ void CodeCompletionPopup::getCompletionFor(const QString &fileName, const QStrin
         int i = mParser->findLastOperator(phrase);
         if (i < 0 ) { // don't have any scope prefix
 
-            if (mShowCodeIns) {
+            if (mShowCodeSnippets) {
                 //add custom code templates
-                foreach (const PCodeSnippet& codeIn,mCodeInsList) {
+                foreach (const PCodeSnippet& codeIn,mCodeSnippets) {
                     PStatement statement = std::make_shared<Statement>();
                     statement->command = codeIn->prefix;
                     statement->kind = StatementKind::skUserCodeIn;
@@ -731,6 +731,16 @@ bool CodeCompletionPopup::isIncluded(const QString &fileName)
     return mIncludedFiles.contains(fileName);
 }
 
+const QList<PCodeSnippet> &CodeCompletionPopup::codeSnippets() const
+{
+    return mCodeSnippets;
+}
+
+void CodeCompletionPopup::setCodeSnippets(const QList<PCodeSnippet> &newCodeSnippets)
+{
+    mCodeSnippets = newCodeSnippets;
+}
+
 void CodeCompletionPopup::setColors(const std::shared_ptr<QHash<StatementKind, QColor> > &newColors)
 {
     mColors = newColors;
@@ -793,12 +803,12 @@ void CodeCompletionPopup::setIgnoreCase(bool newIgnoreCase)
 
 bool CodeCompletionPopup::showCodeIns() const
 {
-    return mShowCodeIns;
+    return mShowCodeSnippets;
 }
 
 void CodeCompletionPopup::setShowCodeIns(bool newShowCodeIns)
 {
-    mShowCodeIns = newShowCodeIns;
+    mShowCodeSnippets = newShowCodeIns;
 }
 
 bool CodeCompletionPopup::showKeywords() const
