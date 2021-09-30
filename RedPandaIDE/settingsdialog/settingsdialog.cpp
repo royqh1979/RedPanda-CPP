@@ -12,6 +12,7 @@
 #include "editorsymbolcompletionwidget.h"
 #include "editortooltipswidget.h"
 #include "editorautosavewidget.h"
+#include "editorsnippetwidget.h"
 #include "editormiscwidget.h"
 #include "environmentappearencewidget.h"
 #include "executorgeneralwidget.h"
@@ -123,6 +124,10 @@ PSettingsDialog SettingsDialog::optionDialog()
     dialog->addWidget(widget);
 
     widget = new EditorSymbolCompletionWidget(tr("Symbol Completion"),tr("Editor"));
+    widget->init();
+    dialog->addWidget(widget);
+
+    widget = new EditorSnippetWidget(tr("Snippet"),tr("Editor"));
     widget->init();
     dialog->addWidget(widget);
 

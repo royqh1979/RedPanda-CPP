@@ -77,7 +77,7 @@ private:
 private:
     CodeCompletionListView * mListView;
     CodeCompletionListModel* mModel;
-    QList<PCodeIns> mCodeInsList; //(Code template list)
+    QList<PCodeSnippet> mCodeInsList; //(Code template list)
     //QList<PStatement> mCodeInsStatements; //temporary (user code template) statements created when show code suggestion
     StatementList mFullCompletionStatementList;
     StatementList mCompletionStatementList;

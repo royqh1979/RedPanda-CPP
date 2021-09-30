@@ -49,8 +49,19 @@ void CodeSnippetsManager::save()
     }
 }
 
-void CodeSnippetsManager::addSnippet(const QString &caption, const QString &prefix, const QString &code, const QString &description, int menuSection)
+const QList<PCodeSnippet> &CodeSnippetsManager::snippets() const
 {
+    return mSnippets;
+}
+
+void CodeSnippetsManager::setSnippets(const QList<PCodeSnippet> &newSnippets)
+{
+    mSnippets = newSnippets;
+}
+
+void CodeSnippetsModel::addSnippet(const QString &caption, const QString &prefix, const QString &code, const QString &description, int menuSection)
+{
+    beginInsertRows(QModelIndex(),mSnippets.count(),mSnippets.count());
     PCodeSnippet snippet = std::make_shared<CodeSnippet>();
     snippet->caption = caption;
     snippet->prefix = prefix;
@@ -58,22 +69,22 @@ void CodeSnippetsManager::addSnippet(const QString &caption, const QString &pref
     snippet->desc = description;
     snippet->section = menuSection;
     mSnippets.append(snippet);
+    endInsertRows();
 }
 
-void CodeSnippetsManager::remove(int index)
+void CodeSnippetsModel::remove(int index)
 {
     Q_ASSERT(index>=0 && index<mSnippets.count());
+    beginRemoveRows(QModelIndex(),index,index);
     mSnippets.removeAt(index);
+    endRemoveRows();
 }
 
-void CodeSnippetsManager::clear()
+void CodeSnippetsModel::clear()
 {
+    beginRemoveRows(QModelIndex(),0,mSnippets.count()-1);
     mSnippets.clear();
-}
-
-const QList<PCodeSnippet> &CodeSnippetsManager::snippets() const
-{
-    return mSnippets;
+    endRemoveRows();
 }
 
 int CodeSnippetsModel::rowCount(const QModelIndex &parent) const
@@ -86,9 +97,52 @@ int CodeSnippetsModel::columnCount(const QModelIndex &parent) const
     return 4;
 }
 
+QVariant CodeSnippetsModel::data(const QModelIndex &index, int role) const
+{
+    if (!index.isValid()) {
+        return QVariant();
+    }
+    if (role==Qt::DisplayRole) {
+        int row = index.row();
+        PCodeSnippet snippet = mSnippets[row];
+        switch(index.column()) {
+        case 0:
+            return snippet->caption;
+        case 1:
+            return snippet->prefix;
+        case 2:
+            return snippet->desc;
+        case 3:
+            return snippet->section;
+        }
+    }
+    return QVariant();
+}
+
 bool CodeSnippetsModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
-
+    if (!index.isValid()) {
+        return false;
+    }
+    if (role==Qt::EditRole) {
+        int row = index.row();
+        PCodeSnippet snippet = mSnippets[row];
+        switch(index.column()) {
+        case 0:
+            snippet->caption = value.toString();
+            return true;
+        case 1:
+            snippet->prefix = value.toString();
+            return true;
+        case 2:
+            snippet->desc = value.toString();
+            return true;
+        case 3:
+            snippet->section = value.toInt();
+            return true;
+        }
+    }
+    return false;
 }
 
 QVariant CodeSnippetsModel::headerData(int section, Qt::Orientation orientation, int role) const
@@ -106,4 +160,21 @@ QVariant CodeSnippetsModel::headerData(int section, Qt::Orientation orientation,
         }
     }
     return QVariant();
+}
+
+Qt::ItemFlags CodeSnippetsModel::flags(const QModelIndex &) const
+{
+    return Qt::ItemIsEditable | Qt::ItemIsEnabled | Qt::ItemIsSelectable;
+}
+
+const QList<PCodeSnippet> &CodeSnippetsModel::snippets() const
+{
+    return mSnippets;
+}
+
+void CodeSnippetsModel::updateSnippets(const QList<PCodeSnippet> &snippets)
+{
+    beginResetModel();
+    mSnippets = snippets;
+    endResetModel();
 }

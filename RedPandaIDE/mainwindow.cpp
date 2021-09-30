@@ -125,6 +125,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     mSymbolUsageManager = std::make_shared<SymbolUsageManager>();
     mSymbolUsageManager->load();
+    mCodeSnippetManager = std::make_shared<CodeSnippetsManager>();
+    mCodeSnippetManager->load();
     mSearchResultTreeModel = std::make_shared<SearchResultTreeModel>(&mSearchResultModel);
     mSearchResultListModel = std::make_shared<SearchResultListModel>(&mSearchResultModel);
     mSearchViewDelegate = std::make_shared<SearchResultTreeViewDelegate>(mSearchResultTreeModel);
@@ -3746,6 +3748,11 @@ void MainWindow::on_classBrowser_doubleClicked(const QModelIndex &index)
     if (e) {
         e->setCaretPositionAndActivate(line,1);
     }
+}
+
+PCodeSnippetManager &MainWindow::codeSnippetManager()
+{
+    return mCodeSnippetManager;
 }
 
 PSymbolUsageManager &MainWindow::symbolUsageManager()

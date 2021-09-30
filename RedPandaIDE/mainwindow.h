@@ -12,6 +12,7 @@
 #include "widgets/functiontooltipwidget.h"
 #include "caretlist.h"
 #include "symbolusagemanager.h"
+#include "codesnippetsmanager.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -115,6 +116,8 @@ public:
     const std::shared_ptr<QHash<StatementKind, QColor> > &statementColors() const;
 
     PSymbolUsageManager &symbolUsageManager();
+
+    PCodeSnippetManager &codeSnippetManager();
 
 public slots:
     void onCompileLog(const QString& msg);
@@ -383,6 +386,7 @@ private:
     ClassBrowserModel mClassBrowserModel;
     std::shared_ptr<QHash<StatementKind, QColor>> mStatementColors;
     PSymbolUsageManager mSymbolUsageManager;
+    PCodeSnippetManager mCodeSnippetManager;
 
     bool mCheckSyntaxInBack;
     bool mOpenClosingBottomPanel;

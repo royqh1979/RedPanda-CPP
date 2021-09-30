@@ -46,6 +46,7 @@ SOURCES += \
     settingsdialog/editorautosavewidget.cpp \
     settingsdialog/editorcodecompletionwidget.cpp \
     settingsdialog/editormiscwidget.cpp \
+    settingsdialog/editorsnippetwidget.cpp \
     settingsdialog/editortooltipswidget.cpp \
     settingsdialog/formattergeneralwidget.cpp \
     settingsdialog/projectcompileparamaterswidget.cpp \
@@ -146,6 +147,7 @@ HEADERS += \
     settingsdialog/editorautosavewidget.h \
     settingsdialog/editorcodecompletionwidget.h \
     settingsdialog/editormiscwidget.h \
+    settingsdialog/editorsnippetwidget.h \
     settingsdialog/editortooltipswidget.h \
     settingsdialog/formattergeneralwidget.h \
     settingsdialog/projectcompileparamaterswidget.h \
@@ -219,6 +221,7 @@ FORMS += \
     settingsdialog/editorautosavewidget.ui \
     settingsdialog/editorcodecompletionwidget.ui \
     settingsdialog/editormiscwidget.ui \
+    settingsdialog/editorsnippetwidget.ui \
     settingsdialog/editortooltipswidget.ui \
     settingsdialog/formattergeneralwidget.ui \
     settingsdialog/projectcompileparamaterswidget.ui \

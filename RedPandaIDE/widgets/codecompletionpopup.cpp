@@ -471,7 +471,7 @@ void CodeCompletionPopup::getCompletionFor(const QString &fileName, const QStrin
 
             if (mShowCodeIns) {
                 //add custom code templates
-                foreach (const PCodeIns& codeIn,mCodeInsList) {
+                foreach (const PCodeSnippet& codeIn,mCodeInsList) {
                     PStatement statement = std::make_shared<Statement>();
                     statement->command = codeIn->prefix;
                     statement->kind = StatementKind::skUserCodeIn;

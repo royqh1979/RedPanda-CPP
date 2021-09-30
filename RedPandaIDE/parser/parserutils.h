@@ -13,7 +13,7 @@ struct CodeSnippet {
     int section;  //Section in the menu
 };
 
-using PCodeIns = std::shared_ptr<CodeSnippet>;
+using PCodeSnippet = std::shared_ptr<CodeSnippet>;
 
 // preprocess/ macro define
 struct Define {
