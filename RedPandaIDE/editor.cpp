@@ -1737,18 +1737,17 @@ void Editor::insertCodeSnippet(const QString &code)
     int spaceCount = GetLeftSpacing(
                 leftSpaces(lineText()),true).length();
     QStringList newSl;
-    int insertPos;
     for (int i=0;i<sl.count();i++) {
         int lastPos = 0;
         QString s = sl[i];
         if (i>0)
             lastPos = -spaceCount;
         while (true) {
-            insertPos = s.indexOf(USER_CODE_IN_INSERT_POS);
+            int insertPos = s.indexOf(USER_CODE_IN_INSERT_POS);
             if (insertPos < 0) // no %INSERT% macro in this line now
                 break;
             PTabStop p = std::make_shared<TabStop>();
-            s.remove(insertPos,USER_CODE_IN_INSERT_POS.length());
+            s.remove(insertPos, QString(USER_CODE_IN_INSERT_POS).length());
             insertPos--;
             p->x = insertPos - lastPos;
             p->endX = p->x;
@@ -1757,45 +1756,52 @@ void Editor::insertCodeSnippet(const QString &code)
             lastI = i;
             mUserCodeInTabStops.append(p);
         }
-          while True do begin
-            insertPos := Pos(USER_CODE_IN_REPL_POS_BEGIN,s);
-            if insertPos = 0 then // no %INSERT% macro in this line now
-              break;
-            System.new(p);
-            Delete(s,insertPos,Length(USER_CODE_IN_REPL_POS_BEGIN));
-            dec(insertPos);
-            p.x:=insertPos - lastPos;
+        lastPos = 0;
+        while (true) {
+            int insertPos = s.indexOf(USER_CODE_IN_REPL_POS_BEGIN);
+            if (insertPos < 0) // no %INSERT% macro in this line now
+                break;
+            PTabStop p = std::make_shared<TabStop>();
+            s.remove(insertPos, QString(USER_CODE_IN_REPL_POS_BEGIN).length());
+            insertPos--;
+            p->x = insertPos - lastPos;
 
-            insertEndPos := insertPos + Pos(USER_CODE_IN_REPL_POS_END,copy(s,insertPos+1,MaxInt));
-            if insertEndPos <= insertPos then begin
-              p.endX := length(s);
-            end else begin
-              Delete(s,insertEndPos,Length(USER_CODE_IN_REPL_POS_END));
-              dec(insertEndPos);
-              p.endX := insertEndPos - lastPos;
-            end;
-            p.y:=i-lastI;
-            lastPos := insertEndPos;
-            lastI:=i;
-            fUserCodeInTabStops.Add(p);
-          end;
-          newSl.Add(s);
+
+            int insertEndPos = insertPos +
+                    s.mid(insertPos).indexOf(USER_CODE_IN_REPL_POS_END);
+            if (insertEndPos < insertPos) {
+                p->endX = s.length();
+            } else {
+                s.remove(insertEndPos, QString(USER_CODE_IN_REPL_POS_END).length());
+                insertEndPos--;
+                p->endX = insertEndPos - lastPos;
+            }
+            p->y=i-lastI;
+            lastPos = insertEndPos;
+            lastI = i;
+            mUserCodeInTabStops.append(p);
+        }
+        newSl.append(s);
     }
-        CursorPos := Text.CaretXY;
-        s:=newSl.Text;
-        if EndsStr(#13#10,s) then
-          Delete(s,Length(s)-1,2)
-        else if EndsStr(#10, s) then
-          Delete(s,Length(s),1);
-        fText.SelText := s;
-        Text.CaretXY := CursorPos; //restore cursor pos before insert
-        if fUserCodeInTabStops.Count > 0  then begin
-          fTabStopBegin :=Text.CaretX;
-          fTabStopEnd := Text.CaretX;
-          PopUserCodeInTabStops;
-        end;
-        if Code <> '' then
-          fLastIdCharPressed := 0;
+
+    BufferCoord cursorPos = caretXY();
+    QString s = LinesToText(newSl);
+//        if EndsStr(#13#10,s) then
+//          Delete(s,Length(s)-1,2)
+//        else if EndsStr(#10, s) then
+//          Delete(s,Length(s),1);
+    setSelText(s);
+    setCaretXY(cursorPos); //restore cursor pos before insert
+//        fText.SelText := s;
+//        Text.CaretXY := CursorPos;
+    if (mUserCodeInTabStops.count()>0) {
+        mTabStopBegin = caretX();
+        mTabStopEnd = caretX();
+        popUserCodeInTabStops();
+    }
+    if (!code.isEmpty()) {
+        mLastIdCharPressed = 0;
+    }
 }
 
 void Editor::showCompletion(bool autoComplete)
@@ -2526,6 +2532,11 @@ void Editor::updateFunctionTip()
                 paramPos
                 );
     pMainWindow->functionTip()->show();
+}
+
+void Editor::clearUserCodeInTabStops()
+{
+    mUserCodeInTabStops.clear();
 }
 
 void Editor::setInProject(bool newInProject)

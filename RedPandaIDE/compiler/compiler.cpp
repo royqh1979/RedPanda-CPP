@@ -307,14 +307,14 @@ QString Compiler::getCCompileArguments(bool checkSyntax)
     }
 
     if (compilerSet()->useCustomCompileParams() && !compilerSet()->customCompileParams().isEmpty()) {
-        result += " "+compilerSet()->customCompileParams();
+        result += " "+ parseMacros(compilerSet()->customCompileParams());
     }
 
     if (mProject) {
         QString s = mProject->options().compilerCmd;
         if (!s.isEmpty()) {
             s.replace("_@@_", " ");
-            result += " "+s;
+            result += " "+parseMacros(s);
         }
     }
     return result;
@@ -354,13 +354,13 @@ QString Compiler::getCppCompileArguments(bool checkSyntax)
     }
 
     if (compilerSet()->useCustomCompileParams() && !compilerSet()->customCompileParams().isEmpty()) {
-        result += " "+compilerSet()->customCompileParams();
+        result += " "+ parseMacros(compilerSet()->customCompileParams());
     }
     if (mProject) {
         QString s = mProject->options().cppCompilerCmd;
         if (!s.isEmpty()) {
             s.replace("_@@_", " ");
-            result += " "+s;
+            result += " "+parseMacros(s);
         }
     }
     return result;

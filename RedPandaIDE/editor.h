@@ -211,6 +211,7 @@ private:
                                const QString& filename, int line);
 
     void updateFunctionTip();
+    void clearUserCodeInTabStops();
 
 
 private:

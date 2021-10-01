@@ -145,6 +145,9 @@ void ReadStreamToLines(QTextStream* stream, LineProcessFunc lineFunc);
 
 QStringList TextToLines(const QString& text);
 void TextToLines(const QString& text, LineProcessFunc lineFunc);
+QString LinesToText(const QStringList& lines);
+
+QString parseMacros(const QString& s);
 
 QStringList ReadFileToLines(const QString& fileName, QTextCodec* codec);
 QStringList ReadFileToLines(const QString& fileName);

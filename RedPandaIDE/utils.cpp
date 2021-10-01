@@ -18,6 +18,9 @@
 #include "parser/cppparser.h"
 #include "settings.h"
 #include "mainwindow.h"
+#include "editorlist.h"
+#include "editor.h"
+#include "project.h"
 
 const QByteArray GuessTextEncoding(const QByteArray& text){
     bool allAscii;
@@ -733,4 +736,75 @@ QByteArray toByteArray(const QString &s)
 QString fromByteArray(const QByteArray &s)
 {
     return QString::fromLocal8Bit(s);
+}
+
+QString LinesToText(const QStringList &lines)
+{
+    return lines.join("\n");
+}
+
+QString parseMacros(const QString &s)
+{
+    QString result = s;
+    Editor *e = pMainWindow->editorList()->getEditor();
+
+    result.replace("<DEFAULT>", pSettings->dirs().app());
+    result.replace("<DEVCPP>", pSettings->dirs().app());
+    result.replace("<DEVCPPVERSION>", DEVCPP_VERSION);
+    result.replace("<EXECPATH>", pSettings->dirs().app());
+    QDate today = QDate::currentDate();
+    QDateTime now = QDateTime::currentDateTime();
+
+    result.replace("<DATE>", "yyyy-MM-dd");
+    result.replace("<DATETIME>", "hh::mm::ss");
+
+    Settings::PCompilerSet compilerSet = pSettings->compilerSets().defaultSet();
+    if (compilerSet) {
+        // Only provide the first cpp include dir
+        if (compilerSet->defaultCppIncludeDirs().count()>0)
+            result.replace("<INCLUDE>", compilerSet->defaultCppIncludeDirs().front());
+        else
+            result.replace("<INCLUDE>","");
+
+        // Only provide the first lib dir
+        if (compilerSet->defaultLibDirs().count()>0)
+            result.replace("<LIB>", compilerSet->defaultCppIncludeDirs().front());
+        else
+            result.replace("<LIB>","");
+    }
+
+    // Project-dependent macros
+    if (pMainWindow->project()) {
+        result.replace("<EXENAME>", pMainWindow->project()->executable());
+        result.replace("<PROJECTNAME>", pMainWindow->project()->name());
+        result.replace("<PROJECTFILE>", pMainWindow->project()->filename());
+        result.replace("<PROJECTPATH>", pMainWindow->project()->directory());
+//        result.replace("<SOURCESPCLIST>', MainForm.Project.ListUnitStr(' '));
+        result.replace("<SOURCESPCLIST>","");
+    } else if (e!=nullptr) { // Non-project editor macros
+        result.replace("<EXENAME>", changeFileExt(e->filename(),EXECUTABLE_EXT));
+        result.replace("<PROJECTNAME>",e->filename());
+        result.replace("<PROJECTFILE>",e->filename());
+        result.replace("<PROJECTPATH>", extractFileDir(e->filename()));
+        result.replace("<SOURCESPCLIST>", ""); // clear unchanged macros
+    } else {
+        result.replace("<EXENAME>", "");
+        result.replace("<PROJECTNAME>", "");
+        result.replace("<PROJECTFILE>", "");
+        result.replace("<PROJECTPATH>", "");
+        result.replace("<SOURCESPCLIST>", ""); // clear unchanged macros
+    }
+
+    // Editor macros
+    if (e!=nullptr) {
+        result.replace("<SOURCENAME>", extractFileName(e->filename()));
+        result.replace("<SOURCEFILE>", e->filename());
+        result.replace("<SOURCEPATH>", extractFileDir(e->filename()));
+        result.replace("<WORDXY>", e->wordAtCursor());
+    } else {
+        result.replace("<SOURCENAME>", "");
+        result.replace("<SOURCEFILE>", "");
+        result.replace("<SOURCEPATH>", "");
+        result.replace("<WORDXY>", "");
+    }
 }
