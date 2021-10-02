@@ -24,6 +24,7 @@ Version 0.5.0
  - implement: context menu for debug console
  - fix: errors in debug console
  - fix: speed up the parsing process of debugger
+ - ehancement: check if debugger path contains non-ascii characters (this will prevent it from work)
 
 Version 0.2.1
  - fix: crash when load last opens

@@ -35,8 +35,18 @@ bool Debugger::start()
     }
     mExecuting = true;
     QString debuggerPath = compilerSet->debugger();
-    QFile debuggerProgram(debuggerPath);
-    if (!debuggerProgram.exists()) {
+    //QFile debuggerProgram(debuggerPath);
+    if (!isTextAllAscii(debuggerPath)) {
+        mExecuting = false;
+        QMessageBox::critical(pMainWindow,
+                              tr("Debugger path error"),
+                              tr("Debugger's path \"%1\" contains non-ascii characters.")
+                              .arg(debuggerPath)
+                              + "<br />"
+                              + tr("This prevents it from executing."));
+        return false;
+    }
+    if (!fileExists(debuggerPath)) {
         mExecuting = false;
         QMessageBox::critical(pMainWindow,
                               tr("Debugger not exists"),

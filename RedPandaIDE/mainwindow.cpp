@@ -1588,11 +1588,18 @@ void MainWindow::buildContextMenus()
 
     //context menu signal for Editor's tabbar
     ui->EditorTabsLeft->tabBar()->setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(ui->EditorTabsLeft->tabBar(),&QWidget::customContextMenuRequested,
-            this, &MainWindow::onEditorTabContextMenu);
+    connect(ui->EditorTabsLeft->tabBar(),
+            &QWidget::customContextMenuRequested,
+            this,
+            &MainWindow::onEditorTabContextMenu
+            );
+
     ui->EditorTabsRight->tabBar()->setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(ui->EditorTabsRight->tabBar(),&QWidget::customContextMenuRequested,
-            this, &MainWindow::onEditorTabContextMenu);
+    connect(ui->EditorTabsRight->tabBar(),
+            &QWidget::customContextMenuRequested,
+            this,
+            &MainWindow::onEditorTabContextMenu
+            );
 
     //context menu signal for Compile Issue view
     ui->tableIssues->setContextMenuPolicy(Qt::CustomContextMenu);
