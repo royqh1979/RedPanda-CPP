@@ -1665,7 +1665,7 @@ void DebugReader::run()
         } else if (!mCmdRunning && readed.isEmpty()){
             runNextCmd();
         } else if (readed.isEmpty()){
-            msleep(100);
+            msleep(1);
         }
     }
     if (errorOccurred) {

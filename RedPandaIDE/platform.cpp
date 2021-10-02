@@ -2,9 +2,9 @@
 #include <QObject>
 #include <memory>
 #include <QMap>
-
-#ifdef Q_OS_WIN
 #include <QSet>
+#ifdef Q_OS_WIN
+
 #include <windows.h>
 #endif
 

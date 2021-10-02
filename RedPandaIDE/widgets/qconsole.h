@@ -115,6 +115,10 @@ public:
     void changeLastLine(const QString& line);
     QString getLastLine();
     void clear();
+    void copy();
+    void paste();
+    void selectAll();
+    QString selText();
 
 signals:
     void commandInput(const QString& command);
@@ -180,6 +184,7 @@ private:
     bool hasSelection();
     int computeScrollY(int Y);
     RowColumn pixelsToNearestRowColumn(int x,int y);
+    QString lineBreak();
 
 
 private slots:

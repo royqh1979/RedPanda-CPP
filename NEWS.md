@@ -21,6 +21,9 @@ Version 0.3.0
  - enhancement: use up/down key to navigate function parameter tooltip
  - enhancement: press esc to close function parameter tooltip
  - enhancement: code suggestion for unicode identifiers
+ - implement: context menu for debug console
+ - fix: errors in debug console
+ - fix: speed up the parsing process of debugger
 
 Version 0.2.1
  - fix: crash when load last opens

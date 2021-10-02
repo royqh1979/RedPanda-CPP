@@ -1338,6 +1338,9 @@ void MainWindow::prepareDebugger()
 
     // Clear logs
     ui->debugConsole->clear();
+    if (!pSettings->debugger().showCommandLog()) {
+        ui->debugConsole->addLine("(gdb) ");
+    }
     ui->txtEvalOutput->clear();
 
     // Restore when no watch vars are shown
@@ -1538,6 +1541,51 @@ void MainWindow::buildContextMenus()
     ui->watchView->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->watchView,&QWidget::customContextMenuRequested,
             this, &MainWindow::onWatchViewContextMenu);
+
+    //context menu signal for the watch view
+    ui->debugConsole->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui->debugConsole,&QWidget::customContextMenuRequested,
+            this, &MainWindow::onDebugConsoleContextMenu);
+    mDebugConsole_ShowCommandLog = createActionFor(
+                tr("Show debug logs in the debug console"),
+                ui->debugConsole);
+    mDebugConsole_ShowCommandLog->setCheckable(true);
+    connect(mDebugConsole_ShowCommandLog, &QAction::toggled,
+            [this]() {
+        pSettings->debugger().setShowCommandLog(mDebugConsole_ShowCommandLog->isChecked());
+        pSettings->debugger().save();
+    });
+    mDebugConsole_Copy=createActionFor(
+                tr("Copy"),
+                ui->debugConsole,
+                QKeySequence("Ctrl+C"));
+    connect(mDebugConsole_Copy, &QAction::triggered,
+            [this]() {
+        ui->debugConsole->copy();
+    });
+    mDebugConsole_Paste=createActionFor(
+                tr("Paste"),
+                ui->debugConsole,
+                QKeySequence("Ctrl+V"));
+    connect(mDebugConsole_Paste, &QAction::triggered,
+            [this]() {
+        ui->debugConsole->paste();
+    });
+    mDebugConsole_SelectAll=createActionFor(
+                tr("Select All"),
+                ui->debugConsole,
+                QKeySequence("Ctrl+A"));
+    connect(mDebugConsole_SelectAll, &QAction::triggered,
+            [this]() {
+        ui->debugConsole->selectAll();
+    });
+    mDebugConsole_Clear=createActionFor(
+                tr("Clear"),
+                ui->debugConsole);
+    connect(mDebugConsole_Clear, &QAction::triggered,
+            [this]() {
+        ui->debugConsole->clear();
+    });
 
     //context menu signal for Editor's tabbar
     ui->EditorTabsLeft->tabBar()->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -2049,6 +2097,23 @@ void MainWindow::onClassBrowserContextMenu(const QPoint &pos)
     menu.addAction(mClassBrowser_Show_Inherited);
 
     menu.exec(ui->projectView->mapToGlobal(pos));
+}
+
+void MainWindow::onDebugConsoleContextMenu(const QPoint &pos)
+{
+    QMenu menu(this);
+
+    bool oldBlock = mDebugConsole_ShowCommandLog->blockSignals(true);
+    mDebugConsole_ShowCommandLog->setChecked(pSettings->debugger().showCommandLog());
+    mDebugConsole_ShowCommandLog->blockSignals(oldBlock);
+
+    menu.addAction(mDebugConsole_Copy);
+    menu.addAction(mDebugConsole_Paste);
+    menu.addAction(mDebugConsole_SelectAll);
+    menu.addAction(mDebugConsole_Clear);
+    menu.addSeparator();
+    menu.addAction(mDebugConsole_ShowCommandLog);
+    menu.exec(ui->debugConsole->mapToGlobal(pos));
 }
 
 void MainWindow::onEditorContextMenu(const QPoint &pos)
@@ -2655,7 +2720,7 @@ void MainWindow::cleanUpCPUDialog()
 void MainWindow::onDebugCommandInput(const QString &command)
 {
     if (mDebugger->executing()) {
-        mDebugger->sendCommand(command,"");
+        mDebugger->sendCommand(command,"",true,true);
     }
 }
 

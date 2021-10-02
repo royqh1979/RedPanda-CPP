@@ -11,6 +11,7 @@
 #include <QDebug>
 #include <QTimer>
 #include <QApplication>
+#include <QClipboard>
 #include "../utils.h"
 
 QConsole::QConsole(QWidget *parent):
@@ -180,6 +181,63 @@ void QConsole::clear()
     mSelectionBegin = {0,0};
     mSelectionEnd = {0,0};
     mCaretChar = 0;
+    updateScrollbars();
+}
+
+void QConsole::copy()
+{
+    if (!this->hasSelection())
+        return;
+    QString s = selText();
+    QClipboard* clipboard=QGuiApplication::clipboard();
+    clipboard->clear();
+    clipboard->setText(s);
+}
+
+void QConsole::paste()
+{
+    if (mReadonly)
+        return;
+    QClipboard* clipboard=QGuiApplication::clipboard();
+    textInputed(clipboard->text());
+}
+
+void QConsole::selectAll()
+{
+    if (mContents.lines()>0) {
+        mSelectionBegin = {1,1};
+        mSelectionEnd = { mContents.getLastLine().length()+1,mContents.lines()};
+    }
+}
+
+QString QConsole::selText()
+{
+    if (!hasSelection())
+        return "";
+    int ColFrom = selectionBegin().ch;
+    int First = selectionBegin().line;
+    int ColTo = selectionEnd().ch;
+    int Last = selectionEnd().line;
+    if (First == Last) {
+        QString s = mContents.getLine(First);
+        if (First == mContents.lines()) {
+            s += this->mCommand;
+        }
+        return s.mid(ColFrom, ColTo - ColFrom);
+
+    } else  {
+        QString result = mContents.getLine(First).mid(ColFrom);
+        result+= lineBreak();
+        for (int i = First + 1; i<=Last - 1; i++) {
+            result += mContents.getLine(i);
+            result+= lineBreak();
+        }
+        QString s = mContents.getLine(Last);
+        if (Last == mContents.lines())
+            s+= this->mCommand;
+        result += s.leftRef(ColTo);
+        return result;
+    }
 }
 
 void QConsole::recalcCharExtent() {
@@ -645,6 +703,7 @@ void QConsole::paintEvent(QPaintEvent *event)
     //Get the invalidated rect.
     QRect rcClip = event->rect();
     QRect rcCaret= getCaretRect();
+
     if (rcCaret == rcClip) {
         // only update caret
         painter.drawImage(rcCaret,*mContentImage,rcCaret);
@@ -656,6 +715,7 @@ void QConsole::paintEvent(QPaintEvent *event)
         nL2 = std::min(std::max(mTopRow + (rcClip.bottom() + mRowHeight - 1) / mRowHeight, 1), maxScrollHeight() + mRowsInWindow  - 1);
         QPainter cachePainter(mContentImage.get());
         cachePainter.setFont(font());
+        painter.fillRect(rcClip,mBackground);
         paintRows(cachePainter,nL1,nL2);
         painter.drawImage(rcClip,*mContentImage,rcClip);
     }
@@ -839,6 +899,11 @@ RowColumn QConsole::pixelsToNearestRowColumn(int x, int y)
       std::max(0, (x - 2) / mColumnWidth),
       mTopRow + (y / mRowHeight)-1
     };
+}
+
+QString QConsole::lineBreak()
+{
+    return "\r\n";
 }
 
 

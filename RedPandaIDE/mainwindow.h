@@ -175,6 +175,7 @@ private slots:
     void onBreakpointsViewContextMenu(const QPoint& pos);
     void onProjectViewContextMenu(const QPoint& pos);
     void onClassBrowserContextMenu(const QPoint& pos);
+    void onDebugConsoleContextMenu(const QPoint& pos);
 
     void on_actionNew_triggered();
 
@@ -431,6 +432,13 @@ private:
     QAction * mClassBrowser_goto_declaration;
     QAction * mClassBrowser_goto_definition;
     QWidget * mClassBrowserToolbar;
+
+    //action for debug console
+    QAction * mDebugConsole_ShowCommandLog;
+    QAction * mDebugConsole_Clear;
+    QAction * mDebugConsole_Copy;
+    QAction * mDebugConsole_Paste;
+    QAction * mDebugConsole_SelectAll;
 
    // QWidget interface
 protected:

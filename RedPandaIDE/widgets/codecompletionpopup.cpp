@@ -569,7 +569,11 @@ void CodeCompletionPopup::getCompletionFor(const QString &fileName, const QStrin
             }
             PStatement parentTypeStatement;
             PStatement statement = mParser->findStatementOf(
-                        fileName, scopeName,mCurrentStatement,parentTypeStatement);
+                        fileName,
+                        scopeName,
+                        mCurrentStatement,
+                        parentTypeStatement);
+
             if (!statement)
                 return;
             // find the most inner scope statement that has a name (not a block)
