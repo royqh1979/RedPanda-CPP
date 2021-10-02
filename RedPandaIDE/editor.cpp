@@ -512,11 +512,11 @@ void Editor::keyPressEvent(QKeyEvent *event)
                 handled = true;
                 QStringList params;
                 QStringList insertString;
-        insertString:= TStringList.Create;
-        try
-          insertString.Add('');
-          funcName := fParser.FindFunctionDoc(fFileName,fText.CaretY+1,
-            params,isVoid);
+                insertString.append("");
+                bool isVoid;
+                QString funcName = mParser->FindFunctionDoc(mFilename,
+                                                            caretY()+1,
+                                                            params,isVoid);
           if funcName <> '' then begin
             insertString.Add(' * @brief '+USER_CODE_IN_INSERT_POS);
             insertString.Add(' * ');
@@ -533,10 +533,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
             insertString.Add(' **/');
           end;
           InsertUserCodeIn(insertString.Text);
-        finally
-          insertString.Free;
-          params.Free;
-        end;
+
       end else if fText.Highlighter.GetIsLastLineCommentNotFinish(fText.Lines.Ranges[fText.CaretY-2]) then
         s:=trimLeft(fText.LineText);
         if StartsStr('* ',s) then begin

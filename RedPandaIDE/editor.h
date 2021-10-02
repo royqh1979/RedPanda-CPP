@@ -212,6 +212,7 @@ private:
 
     void updateFunctionTip();
     void clearUserCodeInTabStops();
+    void popUserCodeInTabStops();
 
 
 private:
