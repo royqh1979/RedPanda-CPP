@@ -122,6 +122,14 @@ Editor::Editor(QWidget *parent, const QString& filename,
     applySettings();
     applyColorScheme(pSettings->editor().colorScheme());
 
+    //Initialize User Code Template stuff;
+    mXOffsetSince =0;
+    mTabStopY=-1;
+    mTabStopBegin= -1;
+    mTabStopEnd= -1;
+    //mLineBeforeTabStop="";
+    //mLineAfterTabStop = "";
+
     connect(this,&SynEdit::statusChanged,this,&Editor::onStatusChanged);
     connect(this,&SynEdit::gutterClicked,this,&Editor::onGutterClicked);
 
@@ -483,6 +491,65 @@ void Editor::keyPressEvent(QKeyEvent *event)
         return;
 
     switch (event->key()) {
+    case Qt::Key_Return:
+        mLastIdCharPressed = 0;
+        if (mTabStopBegin>=0) { // editing user code template
+            handled = true;
+            mTabStopBegin = -1;
+            invalidateLine(caretY());
+            clearUserCodeInTabStops();
+        } else {
+            QString s = lineText().mid(0,caretX()-1).trimmed();
+            if (s=="/**") { //javadoc style docstring
+                s = lineText().mid(caretX()-1).trimmed();
+                if (s=="*/") {
+                    BufferCoord p = caretXY();
+                    setBlockBegin(p);
+                    p.Char = lineText().length()+1;
+                    setBlockEnd(p);
+                    setSelText("");
+                }
+                handled = true;
+                QStringList params;
+                QStringList insertString;
+        insertString:= TStringList.Create;
+        try
+          insertString.Add('');
+          funcName := fParser.FindFunctionDoc(fFileName,fText.CaretY+1,
+            params,isVoid);
+          if funcName <> '' then begin
+            insertString.Add(' * @brief '+USER_CODE_IN_INSERT_POS);
+            insertString.Add(' * ');
+            for i:=0 to params.Count-1 do begin
+              insertString.Add(' * @param '+params[i]+' '+USER_CODE_IN_INSERT_POS);
+            end;
+            if not isVoid then begin
+              insertString.Add(' * ');
+              insertString.Add(' * @return '+USER_CODE_IN_INSERT_POS);
+            end;
+            insertString.Add(' **/');
+          end else begin
+            insertString.Add(' * '+USER_CODE_IN_INSERT_POS);
+            insertString.Add(' **/');
+          end;
+          InsertUserCodeIn(insertString.Text);
+        finally
+          insertString.Free;
+          params.Free;
+        end;
+      end else if fText.Highlighter.GetIsLastLineCommentNotFinish(fText.Lines.Ranges[fText.CaretY-2]) then
+        s:=trimLeft(fText.LineText);
+        if StartsStr('* ',s) then begin
+          Key:=0;
+          s:=#13#10+'* ';
+          self.insertString(s,false);
+          p:=fText.CaretXY;
+          inc(p.Line);
+          p.Char := length(fText.Lines[p.Line-1])+1;
+          fText.CaretXY := p;
+        end;
+    end;
+  end;
     case Qt::Key_Delete:
         // remove completed character
         mLastIdCharPressed = 0;
@@ -624,19 +691,16 @@ void Editor::onGutterPaint(QPainter &painter, int aLine, int X, int Y)
 void Editor::onGetEditingAreas(int Line, SynEditingAreaList &areaList)
 {
     areaList.clear();
-//    if (fTabStopBegin >=0) and (fTabStopY=Line) then begin
-//      areaType:=eatEditing;
-//      System.new(p);
-//      spaceCount := fText.LeftSpacesEx(fLineBeforeTabStop,True);
-//      spaceBefore := Length(fLineBeforeTabStop) - Length(TrimLeft(fLineBeforeTabStop));
-//      p.beginX := fTabStopBegin + spaceCount - spaceBefore ;
-//      p.endX := fTabStopEnd + spaceCount - spaceBefore ;
-//      p.color := dmMain.Cpp.StringAttri.Foreground;
-//      areaList.Add(p);
-//      ColBorder := dmMain.Cpp.StringAttri.Foreground;
-//      Exit;
-//    end;
-//    StrToThemeColor(tc,devEditor.Syntax.Values[cWN]);
+    if (mTabStopBegin>=0 && mTabStopY == Line) {
+        PSynEditingArea p = make_shared<SynEditingArea>();
+        p->type = SynEditingAreaType::eatRectangleBorder;
+        int spaceCount = leftSpaces(mLineBeforeTabStop);
+        int spaceBefore = mLineBeforeTabStop.length()-TrimLeft(mLineBeforeTabStop).length();
+        p->beginX = mTabStopBegin + spaceCount - spaceBefore ;
+        p->endX = mTabStopEnd + spaceCount - spaceBefore ;
+        p->color = highlighter()->stringAttribute()->foreground();
+        areaList.append(p);
+    }
     PSyntaxIssueList lst = getSyntaxIssuesAtLine(Line);
     if (lst) {
         for (const PSyntaxIssue& issue: *lst) {
@@ -1107,18 +1171,23 @@ void Editor::onStatusChanged(SynStatusChanges changes)
         updateCaption();
     }
 
-//    if (fTabStopBegin >=0) and (fTabStopY=fText.CaretY) then begin
-//      if StartsStr(fLineBeforeTabStop,fText.LineText) and EndsStr(fLineAfterTabStop, fText.LineText) then
-//        fTabStopBegin := Length(fLineBeforeTabStop);
-//        if fLineAfterTabStop = '' then
-//          fTabStopEnd := Length(fText.LineText)+1
-//        else
-//          fTabStopEnd := Length(fText.LineText) - Length(fLineAfterTabStop);
-//        fXOffsetSince := fTabStopEnd - fText.CaretX;
-//        if (fText.CaretX < fTabStopBegin) or (fText.CaretX >  (fTabStopEnd+1)) then begin
-//          fTabStopBegin :=-1;
-//        end;
-//    end;
+    if (changes.testFlag(SynStatusChange::scCaretX)
+            || changes.testFlag(SynStatusChange::scCaretY)) {
+        if (mTabStopBegin >=0 && mTabStopY==caretY()) {
+            if (lineText().startsWith(mLineBeforeTabStop)
+                && lineText().endsWith(mLineAfterTabStop))
+                mTabStopBegin = mLineBeforeTabStop.length();
+            if (mLineAfterTabStop.isEmpty())
+                mTabStopEnd = lineText().length()+1;
+            else
+                mTabStopEnd = lineText().length()
+                        - mLineAfterTabStop.length();
+            mXOffsetSince = mTabStopEnd - caretX();
+            if (caretX() < mTabStopBegin ||
+                    caretX() >  (mTabStopEnd+1))
+                mTabStopBegin = -1;
+        }
+    }
 
     // scSelection includes anything caret related
     if (changes.testFlag(SynStatusChange::scSelection)) {
@@ -2537,6 +2606,40 @@ void Editor::updateFunctionTip()
 void Editor::clearUserCodeInTabStops()
 {
     mUserCodeInTabStops.clear();
+}
+
+void Editor::popUserCodeInTabStops()
+{
+    if (mTabStopBegin < 0) {
+      clearUserCodeInTabStops();
+      return;
+    }
+    BufferCoord newCursorPos;
+    int tabStopEnd;
+    if (mUserCodeInTabStops.count() > 0) {
+        PTabStop p = mUserCodeInTabStops.front();
+        // Update the cursor
+        if (p->y ==0) {
+          newCursorPos.Char = mTabStopEnd + p->x;
+          tabStopEnd = mTabStopEnd + p->endX;
+        } else {
+          newCursorPos.Char = p->x;
+          tabStopEnd = p->endX;
+        }
+        newCursorPos.Line = caretY() + p->y;
+        setCaretXY(newCursorPos);
+
+        mTabStopY = caretY();
+        setBlockBegin(newCursorPos);
+        newCursorPos.Char = tabStopEnd;
+        setBlockEnd(newCursorPos);
+        mTabStopBegin= caretX();
+        mTabStopEnd = tabStopEnd;
+        mLineBeforeTabStop = lineText().mid(0, mTabStopBegin) ;
+        mLineAfterTabStop = lineText().mid(mTabStopEnd+1) ;
+        mXOffsetSince=0;
+        mUserCodeInTabStops.pop_front();
+    }
 }
 
 void Editor::setInProject(bool newInProject)
