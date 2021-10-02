@@ -510,52 +510,107 @@ void Editor::keyPressEvent(QKeyEvent *event)
                     setSelText("");
                 }
                 handled = true;
-                QStringList params;
                 QStringList insertString;
                 insertString.append("");
-                bool isVoid;
-                QString funcName = mParser->FindFunctionDoc(mFilename,
-                                                            caretY()+1,
-                                                            params,isVoid);
-          if funcName <> '' then begin
-            insertString.Add(' * @brief '+USER_CODE_IN_INSERT_POS);
-            insertString.Add(' * ');
-            for i:=0 to params.Count-1 do begin
-              insertString.Add(' * @param '+params[i]+' '+USER_CODE_IN_INSERT_POS);
-            end;
-            if not isVoid then begin
-              insertString.Add(' * ');
-              insertString.Add(' * @return '+USER_CODE_IN_INSERT_POS);
-            end;
-            insertString.Add(' **/');
-          end else begin
-            insertString.Add(' * '+USER_CODE_IN_INSERT_POS);
-            insertString.Add(' **/');
-          end;
-          InsertUserCodeIn(insertString.Text);
-
-      end else if fText.Highlighter.GetIsLastLineCommentNotFinish(fText.Lines.Ranges[fText.CaretY-2]) then
-        s:=trimLeft(fText.LineText);
-        if StartsStr('* ',s) then begin
-          Key:=0;
-          s:=#13#10+'* ';
-          self.insertString(s,false);
-          p:=fText.CaretXY;
-          inc(p.Line);
-          p.Char := length(fText.Lines[p.Line-1])+1;
-          fText.CaretXY := p;
-        end;
-    end;
-  end;
+                PStatement function = mParser->findFunctionAt(mFilename,caretY()+1);
+                if (function) {
+                    QStringList params;
+                    QString funcName = function->command;
+                    bool isVoid = (function->type  == "void");
+                    foreach (const PStatement& child, function->children) {
+                        if (child->kind == StatementKind::skParameter)
+                            params.append(child->command);
+                    }
+                    insertString.append(QString(" * @brief ")+USER_CODE_IN_INSERT_POS);
+                    insertString.append(" * ");
+                    foreach (const QString& param, params) {
+                        insertString.append(QString(" * @param %1 %2")
+                                            .arg(param, USER_CODE_IN_INSERT_POS));
+                    }
+                    if (!isVoid) {
+                        insertString.append(" * ");
+                        insertString.append(QString(" * @return ")+USER_CODE_IN_INSERT_POS);
+                    }
+                    insertString.append(" **/");
+                } else {
+                    insertString.append(QString(" * ")+USER_CODE_IN_INSERT_POS);
+                    insertString.append(" **/");
+                }
+                insertCodeSnippet(LinesToText(insertString));
+            } else if (highlighter()
+                       && caretY()>=2
+                       && highlighter()->isLastLineCommentNotFinished(
+                           lines()->ranges(caretY()-2).state)) {
+                s=TrimLeft(lineText());
+                if (s.startsWith("* ")) {
+                    handled = true;
+                    s+=lineBreak()+"* ";
+                    insertString(s,false);
+                    BufferCoord p = caretXY();
+                    p.Line++;
+                    p.Char = lines()->getString(p.Line-1).length()+1;
+                    setCaretXY(p);
+                }
+            }
+        }
+        return;
+    case Qt::Key_Escape: // Update function tip
+        mLastIdCharPressed = 0;
+        if (mTabStopBegin>=0) {
+            mTabStopBegin = -1;
+            invalidateLine(caretY());
+            clearUserCodeInTabStops();
+        }
+        pMainWindow->functionTip()->hide();
+        return;
+    case Qt::Key_Tab:
+        if (mUserCodeInTabStops.count()>0) {
+            handled = true;
+            int oldLine = caretY();
+            popUserCodeInTabStops();
+            if (oldLine!=caretY()) {
+                invalidateLine(oldLine);
+            }
+            invalidateLine(caretY());
+        } else {
+            if (mTabStopBegin >= 0) {
+                handled = true;
+                mTabStopBegin = -1;
+                invalidateLine(caretY());
+            }
+        }
+        return;
+    case Qt::Key_Up:
+        if (pMainWindow->functionTip()->isVisible()) {
+            handled = true;
+            pMainWindow->functionTip()->previousTip();
+        } else {
+            mLastIdCharPressed = 0;
+            clearUserCodeInTabStops();
+        }
+        return;
+    case Qt::Key_Down:
+        if (pMainWindow->functionTip()->isVisible()) {
+            handled = true;
+            pMainWindow->functionTip()->nextTip();
+        } else {
+            mLastIdCharPressed = 0;
+            clearUserCodeInTabStops();
+        }
+        return;
     case Qt::Key_Delete:
         // remove completed character
         mLastIdCharPressed = 0;
-        undoSymbolCompletion(caretX());
+        if (!selAvail()) {
+            undoSymbolCompletion(caretX());
+        }
         return;
     case Qt::Key_Backspace:
         // remove completed character
         mLastIdCharPressed = 0;
-        undoSymbolCompletion(caretX()-1);
+        if (!selAvail()) {
+            undoSymbolCompletion(caretX()-1);
+        }
         return;
     }
 
@@ -1170,19 +1225,31 @@ void Editor::onStatusChanged(SynStatusChanges changes)
 
     if (changes.testFlag(SynStatusChange::scCaretX)
             || changes.testFlag(SynStatusChange::scCaretY)) {
-        if (mTabStopBegin >=0 && mTabStopY==caretY()) {
-            if (lineText().startsWith(mLineBeforeTabStop)
-                && lineText().endsWith(mLineAfterTabStop))
-                mTabStopBegin = mLineBeforeTabStop.length();
-            if (mLineAfterTabStop.isEmpty())
-                mTabStopEnd = lineText().length()+1;
-            else
-                mTabStopEnd = lineText().length()
-                        - mLineAfterTabStop.length();
-            mXOffsetSince = mTabStopEnd - caretX();
-            if (caretX() < mTabStopBegin ||
-                    caretX() >  (mTabStopEnd+1))
-                mTabStopBegin = -1;
+        if (mTabStopBegin >=0) {
+            if (mTabStopY==caretY()) {
+                if (mLineAfterTabStop.isEmpty()) {
+                    if (lineText().startsWith(mLineBeforeTabStop))
+                        mTabStopBegin = mLineBeforeTabStop.length()+1;
+                    mTabStopEnd = lineText().length()+1;
+                } else {
+                    if (lineText().startsWith(mLineBeforeTabStop)
+                        && lineText().endsWith(mLineAfterTabStop))
+                        mTabStopBegin = mLineBeforeTabStop.length();
+                    mTabStopEnd = lineText().length()
+                            - mLineAfterTabStop.length();
+                }
+                mXOffsetSince = mTabStopEnd - caretX();
+                if (caretX() < mTabStopBegin ||
+                        caretX() >  (mTabStopEnd+1)) {
+                    mTabStopBegin = -1;
+                }
+            } else {
+                if (mTabStopBegin>=0) {
+                    invalidateLine(mTabStopY);
+                    mTabStopBegin = -1;
+                    clearUserCodeInTabStops();
+                }
+            }
         }
     }
 
@@ -1804,10 +1871,10 @@ void Editor::insertCodeSnippet(const QString &code)
                 leftSpaces(lineText()),true).length();
     QStringList newSl;
     for (int i=0;i<sl.count();i++) {
-        int lastPos = 0;
+        int lastPos = -1;
         QString s = sl[i];
         if (i>0)
-            lastPos = -spaceCount;
+            lastPos = -spaceCount-1;
         while (true) {
             int insertPos = s.indexOf(USER_CODE_IN_INSERT_POS);
             if (insertPos < 0) // no %INSERT% macro in this line now
@@ -1822,7 +1889,9 @@ void Editor::insertCodeSnippet(const QString &code)
             lastI = i;
             mUserCodeInTabStops.append(p);
         }
-        lastPos = 0;
+        lastPos = -1;
+        if (i>0)
+            lastPos = -spaceCount-1;
         while (true) {
             int insertPos = s.indexOf(USER_CODE_IN_REPL_POS_BEGIN);
             if (insertPos < 0) // no %INSERT% macro in this line now
@@ -1831,7 +1900,6 @@ void Editor::insertCodeSnippet(const QString &code)
             s.remove(insertPos, QString(USER_CODE_IN_REPL_POS_BEGIN).length());
             insertPos--;
             p->x = insertPos - lastPos;
-
 
             int insertEndPos = insertPos +
                     s.mid(insertPos).indexOf(USER_CODE_IN_REPL_POS_END);
@@ -2067,8 +2135,8 @@ void Editor::completionInsert(bool appendFunc)
 
 // delete the part of the word that's already been typed ...
     BufferCoord p = wordEnd();
-    setBlockBegin(wordStart());
-    setBlockEnd(p);
+    BufferCoord pStart = wordStart();
+    setCaretAndSelection(pStart,pStart,p);
 
     // if we are inserting a function,
     if (appendFunc) {
@@ -2086,6 +2154,7 @@ void Editor::completionInsert(bool appendFunc)
     // ... by replacing the selection
     if (statement->kind == StatementKind::skUserCodeSnippet) { // it's a user code template
         // insertUserCodeIn(Statement->value);
+        //first move caret to the begin of the word to be replaced
         insertCodeSnippet(statement->value);
     } else {
         if (
@@ -2620,20 +2689,21 @@ void Editor::popUserCodeInTabStops()
           newCursorPos.Char = mTabStopEnd + p->x;
           tabStopEnd = mTabStopEnd + p->endX;
         } else {
-          newCursorPos.Char = p->x;
-          tabStopEnd = p->endX;
+          newCursorPos.Char = p->x+1;
+          tabStopEnd = p->endX+1;
         }
-        newCursorPos.Line = caretY() + p->y;
+        mTabStopY = caretY() + p->y;
+        newCursorPos.Line = mTabStopY;
+
         setCaretXY(newCursorPos);
 
-        mTabStopY = caretY();
         setBlockBegin(newCursorPos);
         newCursorPos.Char = tabStopEnd;
         setBlockEnd(newCursorPos);
         mTabStopBegin= caretX();
         mTabStopEnd = tabStopEnd;
         mLineBeforeTabStop = lineText().mid(0, mTabStopBegin) ;
-        mLineAfterTabStop = lineText().mid(mTabStopEnd+1) ;
+        mLineAfterTabStop = lineText().mid(mTabStopEnd) ;
         mXOffsetSince=0;
         mUserCodeInTabStops.pop_front();
     }

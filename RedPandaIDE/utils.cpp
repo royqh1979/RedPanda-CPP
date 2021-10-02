@@ -807,4 +807,5 @@ QString parseMacros(const QString &s)
         result.replace("<SOURCEPATH>", "");
         result.replace("<WORDXY>", "");
     }
+    return result;
 }

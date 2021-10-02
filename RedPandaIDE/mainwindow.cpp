@@ -83,8 +83,8 @@ MainWindow::MainWindow(QWidget *parent)
     ui->tblStackTrace->setModel(mDebugger->backtraceModel());
     ui->watchView->setModel(mDebugger->watchModel());
 
-    ui->actionIndent->setShortcut(Qt::Key_Tab);
-    ui->actionUnIndent->setShortcut(Qt::Key_Tab | Qt::ShiftModifier);
+//    ui->actionIndent->setShortcut(Qt::Key_Tab);
+//    ui->actionUnIndent->setShortcut(Qt::Key_Tab | Qt::ShiftModifier);
 
     ui->tableIssues->setErrorColor(QColor("Red"));
     ui->tableIssues->setWarningColor(QColor("Orange"));

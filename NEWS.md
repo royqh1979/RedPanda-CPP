@@ -1,4 +1,4 @@
-Version 0.2.2
+Version 0.3.0
  - enhancement: support C++ using type alias;
  - fix: when press shift, completion popu window will hide
  - enhancement: options in debugger setting widget, to skip system/project/custom header&project files when step into
@@ -16,6 +16,10 @@ Version 0.2.2
  - implement: search in project
  - enhancement: view memory when debugging
  - implement: symbol usage count
+ - implement: user code snippet / template
+ - implement: auto generate javadoc-style docstring for functions
+ - enhancement: use up/down key to navigate function parameter tooltip
+ - enhancement: press esc to close function parameter tooltip
 
 Version 0.2.1
  - fix: crash when load last opens

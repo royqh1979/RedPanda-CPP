@@ -474,6 +474,7 @@ void CodeCompletionPopup::getCompletionFor(const QString &fileName, const QStrin
                 foreach (const PCodeSnippet& codeIn,mCodeSnippets) {
                     PStatement statement = std::make_shared<Statement>();
                     statement->command = codeIn->prefix;
+                    statement->value = codeIn->code;
                     statement->kind = StatementKind::skUserCodeSnippet;
                     statement->fullName = codeIn->prefix;
                     statement->usageCount = 0;

@@ -5395,6 +5395,16 @@ void SynEdit::timerEvent(QTimerEvent *event)
 bool SynEdit::event(QEvent *event)
 {
     switch(event->type()) {
+    case QEvent::KeyPress:{
+        QKeyEvent* keyEvent = static_cast<QKeyEvent *>(event);
+        if(keyEvent->key() == Qt::Key_Tab || keyEvent->key() == Qt::Key_Backtab)
+        {
+            // process tab key presse event
+            keyPressEvent(keyEvent);
+            return true;
+        }
+    }
+        break;
     case QEvent::FontChange:
         synFontChanged();
         break;
