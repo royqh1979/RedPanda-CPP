@@ -1573,8 +1573,7 @@ void MainWindow::buildContextMenus()
     });
     mDebugConsole_SelectAll=createActionFor(
                 tr("Select All"),
-                ui->debugConsole,
-                QKeySequence("Ctrl+A"));
+                ui->debugConsole);
     connect(mDebugConsole_SelectAll, &QAction::triggered,
             [this]() {
         ui->debugConsole->selectAll();

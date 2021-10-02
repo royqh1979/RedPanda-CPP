@@ -684,12 +684,12 @@ void QConsole::keyPressEvent(QKeyEvent *event)
     QAbstractScrollArea::keyPressEvent(event);
 }
 
-void QConsole::focusInEvent(QFocusEvent *event)
+void QConsole::focusInEvent(QFocusEvent *)
 {
     showCaret();
 }
 
-void QConsole::focusOutEvent(QFocusEvent *event)
+void QConsole::focusOutEvent(QFocusEvent *)
 {
     hideCaret();
 }
@@ -715,7 +715,9 @@ void QConsole::paintEvent(QPaintEvent *event)
         nL2 = std::min(std::max(mTopRow + (rcClip.bottom() + mRowHeight - 1) / mRowHeight, 1), maxScrollHeight() + mRowsInWindow  - 1);
         QPainter cachePainter(mContentImage.get());
         cachePainter.setFont(font());
-        painter.fillRect(rcClip,mBackground);
+        if (viewport()->rect() == rcClip) {
+            painter.fillRect(rcClip, mBackground);
+        }
         paintRows(cachePainter,nL1,nL2);
         painter.drawImage(rcClip,*mContentImage,rcClip);
     }
