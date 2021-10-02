@@ -200,6 +200,7 @@ private:
 
     bool onCompletionKeyPressed(QKeyEvent* event);
     bool onHeaderCompletionKeyPressed(QKeyEvent* event);
+    bool onCompletionInputMethod(QInputMethodEvent *event);
 
     TipType getTipType(QPoint point, BufferCoord& pos);
     void cancelHint();
@@ -283,6 +284,10 @@ public:
 
 protected:
     void mouseReleaseEvent(QMouseEvent *event) override;
+
+    // QWidget interface
+protected:
+    void inputMethodEvent(QInputMethodEvent *) override;
 };
 
 QString getWordAtPosition(SynEdit* editor,

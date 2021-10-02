@@ -1000,7 +1000,10 @@ void CppPreprocessor::skipToPreprocessor()
 
 bool CppPreprocessor::isWordChar(const QChar &ch)
 {
-    if (ch=='_' || (ch>='a' && ch<='z') || (ch>='A' && ch<='Z') || (ch>='0' && ch<='9')) {
+    if (ch=='_'
+            // || (ch>='a' && ch<='z') || (ch>='A' && ch<='Z')
+            || ch.isLetter()
+            || (ch>='0' && ch<='9')) {
         return true;
     }
     return false;
@@ -1009,7 +1012,9 @@ bool CppPreprocessor::isWordChar(const QChar &ch)
 bool CppPreprocessor::isIdentChar(const QChar &ch)
 {
     if (ch=='_' || ch == '*' || ch == '&' || ch == '~' ||
-            (ch>='a' && ch<='z') || (ch>='A' && ch<='Z') || (ch>='0' && ch<='9')) {
+            ch.isLetter()
+            //(ch>='a' && ch<='z') || (ch>='A' && ch<='Z')
+            || (ch>='0' && ch<='9')) {
         return true;
     }
     return false;
@@ -1048,7 +1053,9 @@ bool CppPreprocessor::isOperatorChar(const QChar &ch)
 
 bool CppPreprocessor::isMacroIdentChar(const QChar &ch)
 {
-    return (ch>='A' && ch<='Z') || (ch>='a' && ch<='z') || ch == '_';
+    //return (ch>='A' && ch<='Z') || (ch>='a' && ch<='z')
+    return ch.isLetter()
+            || ch == '_';
 }
 
 bool CppPreprocessor::isDigit(const QChar &ch)

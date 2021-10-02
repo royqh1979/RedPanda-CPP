@@ -5,7 +5,6 @@
 
 CodeCompletionListView::CodeCompletionListView(QWidget *parent) : QListView(parent)
 {
-
 }
 
 void CodeCompletionListView::keyPressEvent(QKeyEvent *event)
@@ -20,7 +19,7 @@ void CodeCompletionListView::keyPressEvent(QKeyEvent *event)
     }
 }
 
-void CodeCompletionListView::focusInEvent(QFocusEvent *event)
+void CodeCompletionListView::focusInEvent(QFocusEvent *)
 {
     Editor *editor = pMainWindow->editorList()->getEditor();
     if (editor) {

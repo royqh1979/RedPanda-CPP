@@ -5,6 +5,7 @@
 #include <QKeyEvent>
 #include "../parser/parserutils.h"
 using KeyPressedCallback = std::function<bool (QKeyEvent *)>;
+using InputMethodCallback = std::function<bool (QInputMethodEvent*)>;
 
 class CodeCompletionListView: public QListView {
     Q_OBJECT
@@ -14,6 +15,9 @@ public:
     // QWidget interface
     const KeyPressedCallback &keypressedCallback() const;
     void setKeypressedCallback(const KeyPressedCallback &newKeypressedCallback);
+
+    const InputMethodCallback &inputMethodCallback() const;
+    void setInputMethodCallback(const InputMethodCallback &newInputMethodCallback);
 
 protected:
     void keyPressEvent(QKeyEvent *event) override;

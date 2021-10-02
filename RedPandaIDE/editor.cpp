@@ -1004,6 +1004,56 @@ void Editor::mouseReleaseEvent(QMouseEvent *event)
     SynEdit::mouseReleaseEvent(event);
 }
 
+void Editor::inputMethodEvent(QInputMethodEvent *event)
+{
+    bool handled = false;
+    auto action = finally([this,&handled,event](){
+       if (!handled)
+           SynEdit::inputMethodEvent(event);
+    });
+    if (pMainWindow->completionPopup()->isVisible()) {
+        if (onCompletionInputMethod(event)) {
+            handled = true;
+            return;
+        }
+    } else {
+        QString s = event->commitString();
+        if (!s.isEmpty()) {
+            mLastIdCharPressed+=s.length();
+            if (pSettings->codeCompletion().enabled()
+                    && pSettings->codeCompletion().showCompletionWhileInput() ) {
+                if (mLastIdCharPressed>=1) {
+                    QString lastWord = getPreviousWordAtPositionForSuggestion(caretXY());
+                    if (!lastWord.isEmpty()) {
+                        if (CppTypeKeywords.contains(lastWord)) {
+                            return;
+                        }
+                        PStatement statement = mParser->findStatementOf(
+                                    mFilename,
+                                    lastWord,
+                                    caretY());
+                        StatementKind kind = mParser->getKindOfStatement(statement);
+                        if (kind == StatementKind::skClass
+                                || kind == StatementKind::skEnumClassType
+                                || kind == StatementKind::skEnumType
+                                || kind == StatementKind::skTypedef) {
+                            //last word is a typedef/class/struct, this is a var or param define, and dont show suggestion
+      //                      if devEditor.UseTabnine then
+      //                        ShowTabnineCompletion;
+                            return;
+                        }
+                    }
+                    setSelText(s);
+                    showCompletion(false);
+                    handled = true;
+                    return;
+                }
+
+            }
+        }
+    }
+}
+
 void Editor::copyToClipboard()
 {
     if (pSettings->editor().copySizeLimit()) {
@@ -2233,6 +2283,9 @@ bool Editor::onCompletionKeyPressed(QKeyEvent *event)
     BufferCoord pBeginPos,pEndPos;
     switch (event->key()) {
     case Qt::Key_Shift:
+    case Qt::Key_Control:
+    case Qt::Key_Meta:
+    case Qt::Key_Alt:
         //ignore it
         return true;
     case Qt::Key_Backspace:
@@ -2329,6 +2382,25 @@ bool Editor::onHeaderCompletionKeyPressed(QKeyEvent *event)
         //stop completion
         mHeaderCompletionPopup->hide();
         keyPressEvent(event);
+        return true;
+    }
+    return processed;
+}
+
+bool Editor::onCompletionInputMethod(QInputMethodEvent *event)
+{
+    bool processed = false;
+    if (!mCompletionPopup->isVisible())
+        return processed;
+    QString s=event->commitString();
+    if (!s.isEmpty()) {
+        setSelText(s);
+        BufferCoord pBeginPos,pEndPos;
+        QString phrase = getWordAtPosition(this,caretXY(),
+                                            pBeginPos,pEndPos,
+                                            WordPurpose::wpCompletion);
+        mLastIdCharPressed = phrase.length();
+        mCompletionPopup->search(phrase, false);
         return true;
     }
     return processed;

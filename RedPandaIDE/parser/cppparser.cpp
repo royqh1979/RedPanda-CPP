@@ -3593,8 +3593,9 @@ bool CppParser::isSpaceChar(const QChar &ch)
 
 bool CppParser::isWordChar(const QChar &ch)
 {
-    return (ch>= 'A' && ch<='Z')
-            || (ch>='a' && ch<='z')
+//    return (ch>= 'A' && ch<='Z')
+//            || (ch>='a' && ch<='z')
+    return ch.isLetter()
             || ch == '_'
             || ch == '*'
             || ch == '&';
@@ -3602,8 +3603,9 @@ bool CppParser::isWordChar(const QChar &ch)
 
 bool CppParser::isLetterChar(const QChar &ch)
 {
-    return (ch>= 'A' && ch<='Z')
-            || (ch>='a' && ch<='z')
+//    return (ch>= 'A' && ch<='Z')
+//            || (ch>='a' && ch<='z')
+    return ch.isLetter()
             || ch == '_';
 }
 

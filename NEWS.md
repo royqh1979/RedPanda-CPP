@@ -20,6 +20,7 @@ Version 0.3.0
  - implement: auto generate javadoc-style docstring for functions
  - enhancement: use up/down key to navigate function parameter tooltip
  - enhancement: press esc to close function parameter tooltip
+ - enhancement: code suggestion for unicode identifiers
 
 Version 0.2.1
  - fix: crash when load last opens
