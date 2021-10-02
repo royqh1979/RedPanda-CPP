@@ -1732,7 +1732,7 @@ void Editor::insertCodeSnippet(const QString &code)
     auto action = finally([this]{
         endUpdate();
     });
-    QStringList sl = parseMacros(code);
+    QStringList sl = TextToLines(parseMacros(code));
     int lastI=0;
     int spaceCount = GetLeftSpacing(
                 leftSpaces(lineText()),true).length();
