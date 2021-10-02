@@ -186,6 +186,10 @@ public:
     // SynHighlighter interface
 public:
     SynRangeState getRangeState() const override;
+
+    // SynHighlighter interface
+public:
+    bool isIdentChar(const QChar &ch) const override;
 };
 
 #endif // SYNEDITCPPHIGHLIGHTER_H

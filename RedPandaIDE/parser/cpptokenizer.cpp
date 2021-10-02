@@ -616,8 +616,9 @@ void CppTokenizer::advance()
 
 bool CppTokenizer::isLetterChar(const QChar &ch)
 {
-    return (ch>= 'A' && ch<='Z')
-            || (ch>='a' && ch<='z')
+//    return (ch>= 'A' && ch<='Z')
+//            || (ch>='a' && ch<='z')
+    return ch.isLetter()
             || ch == '_'
             || ch == '*'
             || ch == '&'

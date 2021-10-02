@@ -1589,3 +1589,8 @@ SynRangeState SynEditCppHighlighter::getRangeState() const
 {
     return mRange;
 }
+
+bool SynEditCppHighlighter::isIdentChar(const QChar &ch) const
+{
+    return ch=='_' || ch.isDigit() || ch.isLetter();
+}
