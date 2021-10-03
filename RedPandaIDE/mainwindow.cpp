@@ -130,6 +130,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->cbMemoryAddress->lineEdit(), &QLineEdit::returnPressed,
             this, &MainWindow::onDebugMemoryAddressInput);
 
+    mTodoParser = std::make_shared<TodoParser>();
     mSymbolUsageManager = std::make_shared<SymbolUsageManager>();
     mSymbolUsageManager->load();
     mCodeSnippetManager = std::make_shared<CodeSnippetsManager>();
@@ -140,6 +141,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->cbSearchHistory->setModel(mSearchResultListModel.get());
     ui->searchView->setModel(mSearchResultTreeModel.get());
     ui->searchView->setItemDelegate(mSearchViewDelegate.get());
+    ui->tableTODO->setModel(&mTodoModel);
     connect(mSearchResultTreeModel.get() , &QAbstractItemModel::modelReset,
             ui->searchView,&QTreeView::expandAll);
     ui->replacePanel->setVisible(false);
@@ -2276,6 +2278,21 @@ void MainWindow::enableDebugActions()
     ui->cbMemoryAddress->setEnabled(true);
 }
 
+void MainWindow::onTodoParseStarted()
+{
+    mTodoModel.clear();
+}
+
+void MainWindow::onTodoParsing(const QString &filename, int lineNo, int ch, const QString &line)
+{
+    mTodoModel.addItem(filename,lineNo,ch,line);
+}
+
+void MainWindow::onTodoParseFinished()
+{
+
+}
+
 void MainWindow::prepareProjectForCompile()
 {
     if (!mProject)
@@ -3875,6 +3892,11 @@ void MainWindow::on_classBrowser_doubleClicked(const QModelIndex &index)
     }
 }
 
+const PTodoParser &MainWindow::todoParser() const
+{
+    return mTodoParser;
+}
+
 PCodeSnippetManager &MainWindow::codeSnippetManager()
 {
     return mCodeSnippetManager;
@@ -3884,3 +3906,34 @@ PSymbolUsageManager &MainWindow::symbolUsageManager()
 {
     return mSymbolUsageManager;
 }
+
+void MainWindow::on_EditorTabsLeft_currentChanged(int index)
+{
+    Editor * editor = mEditorList->getEditor();
+    if (editor) {
+        editor->reparseTodo();
+    }
+}
+
+
+void MainWindow::on_EditorTabsRight_currentChanged(int index)
+{
+    Editor * editor = mEditorList->getEditor();
+    if (editor) {
+        editor->reparseTodo();
+    }
+}
+
+
+void MainWindow::on_tableTODO_doubleClicked(const QModelIndex &index)
+{
+    PTodoItem item = mTodoModel.getItem(index);
+    if (item) {
+        Editor * editor = mEditorList->getOpenedEditorByFilename(item->filename);
+        if (editor) {
+            editor->setCaretPositionAndActivate(item->lineNo,item->ch+1);
+        }
+    }
+
+}
+

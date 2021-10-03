@@ -4,6 +4,7 @@ Version 0.6.0
  - fix: can't save code snippets modifications
  - fix: errors in code snippet processing
  - change: auto open a new editor at start
+ - enhancement: todo view
 
 Version 0.5.0
  - enhancement: support C++ using type alias;

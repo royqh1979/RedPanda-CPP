@@ -13,6 +13,7 @@
 #include "caretlist.h"
 #include "symbolusagemanager.h"
 #include "codesnippetsmanager.h"
+#include "todoparser.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -121,6 +122,8 @@ public:
 
     PCodeSnippetManager &codeSnippetManager();
 
+    const PTodoParser &todoParser() const;
+
 public slots:
     void onCompileLog(const QString& msg);
     void onCompileIssue(PCompileIssue issue);
@@ -143,6 +146,9 @@ public slots:
     void onEditorTabContextMenu(const QPoint& pos);
     void disableDebugActions();
     void enableDebugActions();
+    void onTodoParseStarted();
+    void onTodoParsing(const QString& filename, int lineNo, int ch, const QString& line);
+    void onTodoParseFinished();
 
 private:
     void prepareProjectForCompile();
@@ -357,6 +363,12 @@ private slots:
 
     void on_classBrowser_doubleClicked(const QModelIndex &index);
 
+    void on_EditorTabsLeft_currentChanged(int index);
+
+    void on_EditorTabsRight_currentChanged(int index);
+
+    void on_tableTODO_doubleClicked(const QModelIndex &index);
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;
@@ -385,6 +397,7 @@ private:
     std::shared_ptr<HeaderCompletionPopup> mHeaderCompletionPopup;
     std::shared_ptr<FunctionTooltipWidget> mFunctionTip;
 
+    TodoModel mTodoModel;
     SearchResultModel mSearchResultModel;
     PSearchResultListModel mSearchResultListModel;
     PSearchResultTreeModel mSearchResultTreeModel;
@@ -393,6 +406,7 @@ private:
     std::shared_ptr<QHash<StatementKind, QColor>> mStatementColors;
     PSymbolUsageManager mSymbolUsageManager;
     PCodeSnippetManager mCodeSnippetManager;
+    PTodoParser mTodoParser;
 
     bool mCheckSyntaxInBack;
     bool mOpenClosingBottomPanel;

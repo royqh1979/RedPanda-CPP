@@ -182,6 +182,7 @@ void Editor::loadFile(const QString& filename) {
         if (pSettings->editor().syntaxCheckWhenLineChanged()) {
             checkSyntaxInBack();
         }
+        reparseTodo();
     }
     mLastIdCharPressed = 0;
 }
@@ -192,6 +193,7 @@ void Editor::saveFile(const QString &filename) {
     pMainWindow->updateForEncodingInfo();
     if (pSettings->editor().syntaxCheckWhenSave())
         checkSyntaxInBack();
+    reparseTodo();
 }
 
 void Editor::convertToEncoding(const QByteArray &encoding)
@@ -1279,6 +1281,7 @@ void Editor::onStatusChanged(SynStatusChanges changes)
         reparse();
         if (pSettings->editor().syntaxCheckWhenLineChanged())
             checkSyntaxInBack();
+        reparseTodo();
     }
     mLineCount = lines()->count();
     if (changes.testFlag(scModified)) {
@@ -1897,6 +1900,11 @@ Editor::QuoteStatus Editor::getQuoteStatus()
 void Editor::reparse()
 {
     parseFile(mParser,mFilename,mInProject);
+}
+
+void Editor::reparseTodo()
+{
+    pMainWindow->todoParser()->parseFile(mFilename);
 }
 
 void Editor::insertString(const QString &value, bool moveCursor)
@@ -3150,6 +3158,7 @@ void Editor::reformat()
     setSelText(QString::fromUtf8(newContent));
     reparse();
     checkSyntaxInBack();
+    reparseTodo();
     pMainWindow->updateEditorActions();
 }
 

@@ -806,13 +806,17 @@
          </item>
         </layout>
        </widget>
-       <widget class="QWidget" name="tabTodo">
+       <widget class="QWidget" name="tabTODO">
         <attribute name="title">
          <string>TODO</string>
         </attribute>
         <layout class="QHBoxLayout" name="horizontalLayout_5">
          <item>
-          <widget class="QTableView" name="tblTodo"/>
+          <widget class="QTableView" name="tableTODO">
+           <attribute name="horizontalHeaderStretchLastSection">
+            <bool>true</bool>
+           </attribute>
+          </widget>
          </item>
         </layout>
        </widget>

@@ -155,6 +155,7 @@ public:
     void gotoDeclaration(const BufferCoord& pos);
     void gotoDefinition(const BufferCoord& pos);
     void reparse();
+    void reparseTodo();
     void insertString(const QString& value, bool moveCursor);
     void insertCodeSnippet(const QString& code);
 

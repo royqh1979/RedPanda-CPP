@@ -118,6 +118,7 @@ public:
     virtual bool isWordBreakChar(const QChar& ch);
     bool enabled() const;
     void setEnabled(bool value);
+    virtual PSynHighlighterAttribute getAttribute(const QString& name) const;
 
 protected:
     PSynHighlighterAttribute mCommentAttribute;
@@ -130,8 +131,6 @@ protected:
     void addAttribute(PSynHighlighterAttribute attribute);
     void clearAttributes();
     virtual int attributesCount() const;
-
-    virtual PSynHighlighterAttribute getAttribute(const QString& name) const;
 
 private:
     QMap<QString,PSynHighlighterAttribute> mAttributes;
