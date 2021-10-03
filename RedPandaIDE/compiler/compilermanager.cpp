@@ -8,6 +8,7 @@
 #include "../settings.h"
 #include <QMessageBox>
 #include "projectcompiler.h"
+#include "../platform.h"
 
 CompilerManager::CompilerManager(QObject *parent) : QObject(parent)
 {
@@ -43,6 +44,18 @@ void CompilerManager::compile(const QString& filename, const QByteArray& encodin
                               tr("No compiler set"),
                               tr("No compiler set is configured.")+tr("Can't start debugging."));
         return;
+    }
+    if (pSettings->compilerSets().defaultSet()->compilerType() == "Clang"
+            && (
+                (encoding!= ENCODING_ASCII && encoding!=ENCODING_UTF8)
+                || (encoding == ENCODING_UTF8
+                    && pCharsetInfoManager->getDefaultSystemEncoding()!=ENCODING_UTF8)
+            )) {
+        QMessageBox::information(pMainWindow,
+                              tr("Encoding not support"),
+                              tr("Clang only support utf-8 encoding.")
+                                 +"<br />"
+                                 +tr("Strings in the program might be wrongly processed."));
     }
     {
         QMutexLocker locker(&mCompileMutex);

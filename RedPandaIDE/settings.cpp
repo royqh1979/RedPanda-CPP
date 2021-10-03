@@ -2481,6 +2481,7 @@ void Settings::CompilerSets::saveSet(int index)
     mSettings->mSettings.setValue("Type", pSet->type());
     mSettings->mSettings.setValue("Name", pSet->name());
     mSettings->mSettings.setValue("Target", pSet->target());
+    mSettings->mSettings.setValue("CompilerType", pSet->compilerType());
 
     // Paths
     savePathList("Bins",pSet->binDirs());
@@ -2542,6 +2543,7 @@ Settings::PCompilerSet Settings::CompilerSets::loadSet(int index)
     pSet->setType(mSettings->mSettings.value("Type").toString());
     pSet->setName(mSettings->mSettings.value("Name").toString());
     pSet->setTarget(mSettings->mSettings.value("Target").toString());
+    pSet->setCompilerType(mSettings->mSettings.value("CompilerType").toString());
 
     // Paths
     loadPathList("Bins",pSet->binDirs());

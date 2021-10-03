@@ -258,7 +258,8 @@ void Compiler::stopCompile()
 QString Compiler::getCharsetArgument(const QByteArray& encoding)
 {
     QString result;
-    if (compilerSet()->autoAddCharsetParams() && encoding != ENCODING_ASCII) {
+    if (compilerSet()->autoAddCharsetParams() && encoding != ENCODING_ASCII
+            && compilerSet()->compilerType()!="Clang") {
         QString encodingName;
         QString systemEncodingName=pCharsetInfoManager->getDefaultSystemEncoding();
         if (encoding == ENCODING_SYSTEM_DEFAULT) {

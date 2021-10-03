@@ -7,6 +7,7 @@ Version 0.6.0
  - enhancement: todo view
  - add: about dialog
  - implement: correctly recognize clang (msys2 build)
+ - enhancement: don't add encoding options when using clang to compile (clang only support utf-8)
 
 Version 0.5.0
  - enhancement: support C++ using type alias;
