@@ -65,7 +65,7 @@ void TodoThread::run()
             attr = highlighter->getTokenAttribute();
             if (attr == commentAttr) {
                 QString token = highlighter->getToken();
-                int pos = token.indexOf("TODO:",Qt::CaseInsensitive);
+                int pos = token.indexOf("TODO:",0,Qt::CaseInsensitive);
                 if (pos>=0) {
                     emit todoFound(
                                 mFilename,
