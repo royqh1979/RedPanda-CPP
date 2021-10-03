@@ -1,19 +1,24 @@
-# RedPanda-CPP
+# RedPanda Dev-C++ 7
 A light-weight C/C++ IDE based on Qt
-
-This project is an attempt to port Red Panda Dev-C++ from delphi to Qt, to support non-windows systems.
+This project is the successor of Red Panda Dev-C++ 6.
 
 Features implemented:
 * basic code editing (synedit)
 * syntax highlight for C/C++ code
 * symbol completion
 * search/replace
-* Compile & run single file
-* debug single file
-
-Features to be implement:
+* Compile & run 
+* debug
 * code intellisense (auto completion)
-* reformat code
 * project support
-* refactor ( symbol rename)
+
+New Features:
+* code intellisense for unicode identifiers
+* TODO view
+* memory view in the debug panel
+* code intellisense for clang (msys2 version)
+* skip system header files when step into in debugging
+* better color scheme support
+* C++ 14 using type alias support
+* some bug fixes for 6.7.5
 
