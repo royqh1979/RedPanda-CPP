@@ -472,14 +472,16 @@ void CodeCompletionPopup::getCompletionFor(const QString &fileName, const QStrin
             if (mShowCodeSnippets) {
                 //add custom code templates
                 foreach (const PCodeSnippet& codeIn,mCodeSnippets) {
-                    PStatement statement = std::make_shared<Statement>();
-                    statement->command = codeIn->prefix;
-                    statement->value = codeIn->code;
-                    statement->kind = StatementKind::skUserCodeSnippet;
-                    statement->fullName = codeIn->prefix;
-                    statement->usageCount = 0;
-                    statement->freqTop = 0;
-                    mFullCompletionStatementList.append(statement);
+                    if (!codeIn->code.isEmpty()) {
+                        PStatement statement = std::make_shared<Statement>();
+                        statement->command = codeIn->prefix;
+                        statement->value = codeIn->code;
+                        statement->kind = StatementKind::skUserCodeSnippet;
+                        statement->fullName = codeIn->prefix;
+                        statement->usageCount = 0;
+                        statement->freqTop = 0;
+                        mFullCompletionStatementList.append(statement);
+                    }
                 }
             }
 

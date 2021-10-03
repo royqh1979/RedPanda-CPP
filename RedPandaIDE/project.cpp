@@ -1807,7 +1807,7 @@ QVariant ProjectModel::data(const QModelIndex &index, int role) const
     FolderNode* p = static_cast<FolderNode*>(index.internalPointer());
     if (!p)
         return QVariant();
-    if (role == Qt::DisplayRole) {
+    if (role == Qt::DisplayRole || role==Qt::EditRole) {
         return p->text;
     }
     return QVariant();

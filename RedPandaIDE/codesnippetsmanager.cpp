@@ -18,16 +18,27 @@ void CodeSnippetsManager::load()
     //if config file not exists, copy it from data
     QString filename = includeTrailingPathDelimiter(pSettings->dirs().config()) + DEV_CODESNIPPET_FILE;
     if (!fileExists(filename)) {
-        QString defaultFilename = ":/config/codesnippets.json";
-        if (!QFile::copy(
-                    defaultFilename,
-                    filename)) {
+        QString preFileName = ":/config/codesnippets.json";
+        QFile preFile(preFileName);
+        if (!preFile.open(QFile::ReadOnly)) {
             QMessageBox::critical(nullptr,
                                   tr("Load default code snippets failed"),
                                   tr("Can't copy default code snippets '%1' to '%2'.")
-                                  .arg(defaultFilename)
+                                  .arg(preFileName)
                                   .arg(filename));
+            return;
         }
+        QByteArray content=preFile.readAll();
+        QFile file(filename);
+        if (!file.open(QFile::WriteOnly|QFile::Truncate)) {
+            QMessageBox::critical(nullptr,
+                                  tr("Load default code snippets failed"),
+                                  tr("Can't copy default code snippets '%1' to '%2'.")
+                                  .arg(preFileName)
+                                  .arg(filename));
+            return;
+        }
+        file.write(content);
     }
     //read config file
     QFile file(filename);
@@ -71,6 +82,7 @@ void CodeSnippetsManager::save()
                               tr("Save code snippets failed"),
                               tr("Can't open code snippet file '%1' for write.")
                               .arg(filename));
+        return;
     }
     QJsonArray array;
     foreach (const PCodeSnippet& snippet,mSnippets) {
@@ -89,6 +101,7 @@ void CodeSnippetsManager::save()
                               tr("Save code snippets failed"),
                               tr("Write to code snippet file '%1' failed.")
                               .arg(filename));
+        return;
     }
 }
 
@@ -151,7 +164,8 @@ QVariant CodeSnippetsModel::data(const QModelIndex &index, int role) const
     if (!index.isValid()) {
         return QVariant();
     }
-    if (role==Qt::DisplayRole) {
+    if (role==Qt::DisplayRole
+            || role == Qt::EditRole) {
         int row = index.row();
         PCodeSnippet snippet = mSnippets[row];
         switch(index.column()) {

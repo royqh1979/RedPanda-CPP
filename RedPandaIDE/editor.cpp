@@ -532,6 +532,18 @@ void Editor::keyPressEvent(QKeyEvent *event)
                         insertString.append(QString(" * @return ")+USER_CODE_IN_INSERT_POS);
                     }
                     insertString.append(" **/");
+                } else if (caretY()==1) { /* file header */
+                    insertString.append(QString(" *	@file %1%2%3")
+                                        .arg(USER_CODE_IN_REPL_POS_BEGIN)
+                                        .arg(mFilename)
+                                        .arg(USER_CODE_IN_REPL_POS_END));
+                    insertString.append(QString(" *	@brief: ")+ USER_CODE_IN_INSERT_POS);
+                    insertString.append(QString(" *	@version: ")+ USER_CODE_IN_INSERT_POS);
+                    insertString.append(QString(" *	@copyright: ")+ USER_CODE_IN_INSERT_POS);
+                    insertString.append(QString(" *	@author: ")+ USER_CODE_IN_INSERT_POS);
+                    insertString.append(QString(" *	@date: ") + QDateTime::currentDateTime().toString("yyyy-MM-dd hh::mm"));
+                    insertString.append(" * ");
+                    insertString.append(" **/");
                 } else {
                     insertString.append(QString(" * ")+USER_CODE_IN_INSERT_POS);
                     insertString.append(" **/");
@@ -544,7 +556,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
                 s=TrimLeft(lineText());
                 if (s.startsWith("* ")) {
                     handled = true;
-                    s+=lineBreak()+"* ";
+                    s=lineBreak()+"* ";
                     insertString(s,false);
                     BufferCoord p = caretXY();
                     p.Line++;
