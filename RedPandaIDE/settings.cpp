@@ -1282,6 +1282,7 @@ Settings::CompilerSet::CompilerSet(const Settings::CompilerSet &set):
     mName(set.mName),
     mDefines(set.mDefines),
     mTarget(set.mTarget),
+    mCompilerType(set.mCompilerType),
     mUseCustomCompileParams(set.mUseCustomCompileParams),
     mUseCustomLinkParams(set.mUseCustomLinkParams),
     mCustomCompileParams(set.mCustomCompileParams),
@@ -1726,36 +1727,50 @@ void Settings::CompilerSet::setProperties(const QString &binDir)
         mTarget = "i686";
 
     //Find version number
-    targetStr = "gcc version ";
+    targetStr = "clang version ";
     delimPos1 = output.indexOf(targetStr);
-    if (delimPos1<0)
-        return; // unknown binary
-    delimPos1+=strlen(targetStr);
-    delimPos2 = delimPos1;
-    while (delimPos2<output.length() && !isNonPrintableAsciiChar(output[delimPos2]))
-        delimPos2++;
-    mVersion = output.mid(delimPos1,delimPos2-delimPos1);
+    if (delimPos1>=0) {
+        mCompilerType = "Clang";
+        delimPos1+=strlen(targetStr);
+        delimPos2 = delimPos1;
+        while (delimPos2<output.length() && !isNonPrintableAsciiChar(output[delimPos2]))
+            delimPos2++;
+        mVersion = output.mid(delimPos1,delimPos2-delimPos1);
 
-    // Find compiler builder
-    delimPos1 = delimPos2;
-    while ((delimPos1 < output.length()) && !(output[delimPos1] == '('))
-        delimPos1++;
-    while ((delimPos2 < output.length()) && !(output[delimPos2] == ')'))
-        delimPos2++;
-    mType = output.mid(delimPos1 + 1, delimPos2 - delimPos1 - 1);
+        mName = "Clang " + mVersion;
+    } else {
+        mCompilerType = "GCC";
+        targetStr = "gcc version ";
+        delimPos1 = output.indexOf(targetStr);
+        if (delimPos1<0)
+            return; // unknown binary
+        delimPos1+=strlen(targetStr);
+        delimPos2 = delimPos1;
+        while (delimPos2<output.length() && !isNonPrintableAsciiChar(output[delimPos2]))
+            delimPos2++;
+        mVersion = output.mid(delimPos1,delimPos2-delimPos1);
 
-    // Assemble user friendly name if we don't have one yet
-    if (mName == "") {
-        if (mType.contains("tdm64")) {
-            mName = "TDM-GCC " + mVersion;
-        } else if (mType.contains("tdm")) {
-            mName = "TDM-GCC " + mVersion;
-        } else if (mType.contains("MSYS2")) {
-            mName = "MinGW-w64 GCC " + mVersion;
-        } else if (mType.contains("GCC")) {
-            mName = "MinGW GCC " + mVersion;
-        } else {
-            mName = "MinGW GCC " + mVersion;
+        // Find compiler builder
+        delimPos1 = delimPos2;
+        while ((delimPos1 < output.length()) && !(output[delimPos1] == '('))
+            delimPos1++;
+        while ((delimPos2 < output.length()) && !(output[delimPos2] == ')'))
+            delimPos2++;
+        mType = output.mid(delimPos1 + 1, delimPos2 - delimPos1 - 1);
+
+        // Assemble user friendly name if we don't have one yet
+        if (mName == "") {
+            if (mType.contains("tdm64")) {
+                mName = "TDM-GCC " + mVersion;
+            } else if (mType.contains("tdm")) {
+                mName = "TDM-GCC " + mVersion;
+            } else if (mType.contains("MSYS2")) {
+                mName = "MinGW-w64 GCC " + mVersion;
+            } else if (mType.contains("GCC")) {
+                mName = "MinGW GCC " + mVersion;
+            } else {
+                mName = "MinGW GCC " + mVersion;
+            }
         }
     }
 
@@ -2129,6 +2144,16 @@ QByteArray Settings::CompilerSet::getCompilerOutput(const QString &binDir, const
 {
     QByteArray result = runAndGetOutput(includeTrailingPathDelimiter(binDir)+binFile, binDir, arguments);
     return result.trimmed();
+}
+
+void Settings::CompilerSet::setCompilerType(const QString &newCompilerType)
+{
+    mCompilerType = newCompilerType;
+}
+
+const QString &Settings::CompilerSet::compilerType() const
+{
+    return mCompilerType;
 }
 
 bool Settings::CompilerSet::staticLink() const

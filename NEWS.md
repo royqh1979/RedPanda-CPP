@@ -6,6 +6,7 @@ Version 0.6.0
  - change: auto open a new editor at start
  - enhancement: todo view
  - add: about dialog
+ - implement: correctly recognize clang (msys2 build)
 
 Version 0.5.0
  - enhancement: support C++ using type alias;

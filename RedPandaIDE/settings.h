@@ -937,6 +937,10 @@ public:
 
         static int charToValue(char valueChar);
         static char valueToChar(int val);
+        const QString &compilerType() const;
+
+        void setCompilerType(const QString &newCompilerType);
+
     private:
         // Initialization
         void setExecutables();
@@ -972,6 +976,7 @@ public:
         QString mName; // "TDM-GCC 4.7.1 Release"
         QStringList mDefines; // list of predefined constants
         QString mTarget; // 'X86_64' / 'i686'
+        QString mCompilerType;
 
         // User settings
         bool mUseCustomCompileParams;
