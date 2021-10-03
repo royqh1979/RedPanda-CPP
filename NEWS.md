@@ -2,6 +2,8 @@ Version 0.6.0
  - fix: old data not displayed when editing code snippets
  - fix: shift-tab for unindent not work
  - fix: can't save code snippets modifications
+ - fix: errors in code snippet processing
+ - change: auto open a new editor at start
 
 Version 0.5.0
  - enhancement: support C++ using type alias;

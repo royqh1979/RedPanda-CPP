@@ -90,6 +90,8 @@ public:
     void saveLastOpens();
     void loadLastOpens();
 
+    void newEditor();
+
     QPlainTextEdit* txtLocals();
 
     CPUDialog *cpuDialog() const;
@@ -176,6 +178,8 @@ private slots:
     void onProjectViewContextMenu(const QPoint& pos);
     void onClassBrowserContextMenu(const QPoint& pos);
     void onDebugConsoleContextMenu(const QPoint& pos);
+
+    void onShowInsertCodeSnippetMenu();
 
     void on_actionNew_triggered();
 
@@ -364,6 +368,7 @@ private:
     QMenu *mMenuRecentFiles;
     QMenu *mMenuRecentProjects;
     QMenu *mMenuNew;
+    QMenu *mMenuInsertCodeSnippet;
     QComboBox *mCompilerSet;
     CompilerManager *mCompilerManager;
     Debugger *mDebugger;

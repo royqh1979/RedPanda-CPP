@@ -108,6 +108,13 @@ MainWindow::MainWindow(QWidget *parent)
     ui->menuFile->insertSeparator(ui->actionExit);
     rebuildOpenedFileHisotryMenu();
 
+    mMenuInsertCodeSnippet = new QMenu();
+    mMenuInsertCodeSnippet->setTitle("Insert Snippet");
+    ui->menuCode->insertMenu(ui->actionReformat_Code,mMenuInsertCodeSnippet);
+    ui->menuCode->insertSeparator(ui->actionReformat_Code);
+    connect(mMenuInsertCodeSnippet,&QMenu::aboutToShow,
+            this, onShowInsertCodeSnippetMenu);
+
     mCPUDialog = nullptr;
 
     updateProjectView();
@@ -161,6 +168,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(ui->menuProject, &QMenu::aboutToShow,
             this, &MainWindow::updateProjectActions);
+
 
     buildContextMenus();
 
@@ -1534,6 +1542,18 @@ void MainWindow::loadLastOpens()
         focusedEditor->activate();
 }
 
+void MainWindow::newEditor()
+{
+    try {
+        Editor * editor=mEditorList->newEditor("",ENCODING_AUTO_DETECT,false,true);
+        editor->activate();
+        updateForEncodingInfo();
+    }  catch (FileError e) {
+        QMessageBox::critical(this,tr("Error"),e.reason());
+    }
+
+}
+
 void MainWindow::buildContextMenus()
 {
 
@@ -2122,6 +2142,46 @@ void MainWindow::onDebugConsoleContextMenu(const QPoint &pos)
     menu.exec(ui->debugConsole->mapToGlobal(pos));
 }
 
+void MainWindow::onShowInsertCodeSnippetMenu()
+{
+    mMenuInsertCodeSnippet->clear();
+    QList<PCodeSnippet> snippets;
+    foreach (const PCodeSnippet& snippet, mCodeSnippetManager->snippets()) {
+        if (snippet->section>=0 && !snippet->caption.isEmpty())
+            snippets.append(snippet);
+    }
+    if (snippets.isEmpty())
+        return;
+    std::sort(snippets.begin(),snippets.end(),[](const PCodeSnippet& s1, const PCodeSnippet& s2){
+        return s1->section<s2->section;
+    });
+    int section = 0;
+    int sectionCount = 0;
+    int count = 0;
+    bool sectionNotEmpty = false;
+    foreach (const PCodeSnippet& snippet, snippets) {
+        if (snippet->section>section && sectionCount<6) {
+            section = snippet->section;
+            sectionCount++;
+            if (sectionNotEmpty)
+                mMenuInsertCodeSnippet->addSeparator();
+        }
+        QAction * action = mMenuInsertCodeSnippet->addAction(snippet->caption);
+        connect(action, &QAction::triggered,
+                [snippet,this](){
+            Editor * editor = mEditorList->getEditor();
+            if (editor) {
+                editor->insertCodeSnippet(snippet->code);
+            }
+        });
+        sectionNotEmpty = true;
+        count++;
+        if (count>15)
+            break;
+    }
+
+}
+
 void MainWindow::onEditorContextMenu(const QPoint &pos)
 {
     Editor * editor = mEditorList->getEditor();
@@ -2402,13 +2462,7 @@ CPUDialog *MainWindow::cpuDialog() const
 
 void MainWindow::on_actionNew_triggered()
 {
-    try {
-        Editor * editor=mEditorList->newEditor("",ENCODING_AUTO_DETECT,false,true);
-        editor->activate();
-        updateForEncodingInfo();
-    }  catch (FileError e) {
-        QMessageBox::critical(this,tr("Error"),e.reason());
-    }
+    newEditor();
 }
 
 void MainWindow::on_EditorTabsLeft_tabCloseRequested(int index)

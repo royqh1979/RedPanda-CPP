@@ -522,7 +522,8 @@ void Editor::keyPressEvent(QKeyEvent *event)
                             params.append(child->command);
                     }
                     insertString.append(QString(" * @brief ")+USER_CODE_IN_INSERT_POS);
-                    insertString.append(" * ");
+                    if (!params.isEmpty())
+                        insertString.append(" * ");
                     foreach (const QString& param, params) {
                         insertString.append(QString(" * @param %1 %2")
                                             .arg(param, USER_CODE_IN_INSERT_POS));
@@ -532,18 +533,17 @@ void Editor::keyPressEvent(QKeyEvent *event)
                         insertString.append(QString(" * @return ")+USER_CODE_IN_INSERT_POS);
                     }
                     insertString.append(" **/");
-                } else if (caretY()==1) { /* file header */
-                    insertString.append(QString(" *	@file %1%2%3")
-                                        .arg(USER_CODE_IN_REPL_POS_BEGIN)
-                                        .arg(mFilename)
-                                        .arg(USER_CODE_IN_REPL_POS_END));
-                    insertString.append(QString(" *	@brief: ")+ USER_CODE_IN_INSERT_POS);
-                    insertString.append(QString(" *	@version: ")+ USER_CODE_IN_INSERT_POS);
-                    insertString.append(QString(" *	@copyright: ")+ USER_CODE_IN_INSERT_POS);
-                    insertString.append(QString(" *	@author: ")+ USER_CODE_IN_INSERT_POS);
-                    insertString.append(QString(" *	@date: ") + QDateTime::currentDateTime().toString("yyyy-MM-dd hh::mm"));
-                    insertString.append(" * ");
-                    insertString.append(" **/");
+//                } else if (caretY()==1) { /* file header */
+//                    insertString.append(QString(" * @file %1<SOURCEPATH>%2")
+//                                        .arg(USER_CODE_IN_REPL_POS_BEGIN)
+//                                        .arg(USER_CODE_IN_REPL_POS_END));
+//                    insertString.append(QString(" * @brief: ")+ USER_CODE_IN_INSERT_POS);
+//                    insertString.append(QString(" * @version: ")+ USER_CODE_IN_INSERT_POS);
+//                    insertString.append(QString(" * @copyright: ")+ USER_CODE_IN_INSERT_POS);
+//                    insertString.append(QString(" * @author: ")+ USER_CODE_IN_INSERT_POS);
+//                    insertString.append(" * @date: <DATETIME>");
+//                    insertString.append(" * ");
+//                    insertString.append(" **/");
                 } else {
                     insertString.append(QString(" * ")+USER_CODE_IN_INSERT_POS);
                     insertString.append(" **/");
@@ -758,10 +758,10 @@ void Editor::onGetEditingAreas(int Line, SynEditingAreaList &areaList)
     if (mTabStopBegin>=0 && mTabStopY == Line) {
         PSynEditingArea p = make_shared<SynEditingArea>();
         p->type = SynEditingAreaType::eatRectangleBorder;
-        int spaceCount = leftSpaces(mLineBeforeTabStop);
-        int spaceBefore = mLineBeforeTabStop.length()-TrimLeft(mLineBeforeTabStop).length();
-        p->beginX = mTabStopBegin + spaceCount - spaceBefore ;
-        p->endX = mTabStopEnd + spaceCount - spaceBefore ;
+//        int spaceCount = leftSpaces(mLineBeforeTabStop);
+//        int spaceBefore = mLineBeforeTabStop.length()-TrimLeft(mLineBeforeTabStop).length();
+        p->beginX = charToColumn(Line,mTabStopBegin);
+        p->endX =  charToColumn(Line,mTabStopEnd) ;
         p->color = highlighter()->stringAttribute()->foreground();
         areaList.append(p);
     }
@@ -1296,9 +1296,9 @@ void Editor::onStatusChanged(SynStatusChanges changes)
                 } else {
                     if (lineText().startsWith(mLineBeforeTabStop)
                         && lineText().endsWith(mLineAfterTabStop))
-                        mTabStopBegin = mLineBeforeTabStop.length();
+                        mTabStopBegin = mLineBeforeTabStop.length()+1;
                     mTabStopEnd = lineText().length()
-                            - mLineAfterTabStop.length();
+                            - mLineAfterTabStop.length()+1;
                 }
                 mXOffsetSince = mTabStopEnd - caretX();
                 if (caretX() < mTabStopBegin ||
@@ -1933,34 +1933,34 @@ void Editor::insertCodeSnippet(const QString &code)
                 leftSpaces(lineText()),true).length();
     QStringList newSl;
     for (int i=0;i<sl.count();i++) {
-        int lastPos = -1;
+        int lastPos = 0;
         QString s = sl[i];
         if (i>0)
-            lastPos = -spaceCount-1;
+            lastPos = -spaceCount;
         while (true) {
             int insertPos = s.indexOf(USER_CODE_IN_INSERT_POS);
             if (insertPos < 0) // no %INSERT% macro in this line now
                 break;
             PTabStop p = std::make_shared<TabStop>();
             s.remove(insertPos, QString(USER_CODE_IN_INSERT_POS).length());
-            insertPos--;
+            //insertPos--;
             p->x = insertPos - lastPos;
-            p->endX = p->x;
+            p->endX = p->x ;
             p->y = i - lastI;
             lastPos = insertPos;
             lastI = i;
             mUserCodeInTabStops.append(p);
         }
-        lastPos = -1;
+        lastPos = 0;
         if (i>0)
-            lastPos = -spaceCount-1;
+            lastPos = -spaceCount;
         while (true) {
             int insertPos = s.indexOf(USER_CODE_IN_REPL_POS_BEGIN);
             if (insertPos < 0) // no %INSERT% macro in this line now
                 break;
             PTabStop p = std::make_shared<TabStop>();
             s.remove(insertPos, QString(USER_CODE_IN_REPL_POS_BEGIN).length());
-            insertPos--;
+            //insertPos--;
             p->x = insertPos - lastPos;
 
             int insertEndPos = insertPos +
@@ -1969,7 +1969,7 @@ void Editor::insertCodeSnippet(const QString &code)
                 p->endX = s.length();
             } else {
                 s.remove(insertEndPos, QString(USER_CODE_IN_REPL_POS_END).length());
-                insertEndPos--;
+                //insertEndPos--;
                 p->endX = insertEndPos - lastPos;
             }
             p->y=i-lastI;
@@ -2766,28 +2766,29 @@ void Editor::popUserCodeInTabStops()
     }
     BufferCoord newCursorPos;
     int tabStopEnd;
+    int tabStopBegin;
     if (mUserCodeInTabStops.count() > 0) {
         PTabStop p = mUserCodeInTabStops.front();
         // Update the cursor
         if (p->y ==0) {
-          newCursorPos.Char = mTabStopEnd + p->x;
+          tabStopBegin = mTabStopEnd + p->x;
           tabStopEnd = mTabStopEnd + p->endX;
         } else {
-          newCursorPos.Char = p->x+1;
+          tabStopBegin = p->x+1;
           tabStopEnd = p->endX+1;
         }
         mTabStopY = caretY() + p->y;
         newCursorPos.Line = mTabStopY;
-
+        newCursorPos.Char = tabStopBegin;
         setCaretXY(newCursorPos);
-
         setBlockBegin(newCursorPos);
         newCursorPos.Char = tabStopEnd;
         setBlockEnd(newCursorPos);
-        mTabStopBegin= caretX();
+
+        mTabStopBegin = tabStopBegin;
         mTabStopEnd = tabStopEnd;
-        mLineBeforeTabStop = lineText().mid(0, mTabStopBegin) ;
-        mLineAfterTabStop = lineText().mid(mTabStopEnd) ;
+        mLineBeforeTabStop = lineText().mid(0, mTabStopBegin-1) ;
+        mLineAfterTabStop = lineText().mid(mTabStopEnd-1) ;
         mXOffsetSince=0;
         mUserCodeInTabStops.pop_front();
     }

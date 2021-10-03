@@ -15,6 +15,7 @@
 #include "autolinkmanager.h"
 #include "platform.h"
 #include "parser/parserutils.h"
+#include "editorlist.h"
 
 QString getSettingFilename(const QString& filepath = QString()) {
     QString filename;
@@ -99,6 +100,9 @@ int main(int argc, char *argv[])
         pMainWindow = &mainWindow;
         if (pSettings->editor().autoLoadLastFiles())
             pMainWindow->loadLastOpens();
+        if (pMainWindow->editorList()->pageCount()==0) {
+            pMainWindow->newEditor();
+        }
         mainWindow.show();
         int retCode = app.exec();
         // save settings

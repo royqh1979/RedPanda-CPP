@@ -755,8 +755,8 @@ QString parseMacros(const QString &s)
     QDate today = QDate::currentDate();
     QDateTime now = QDateTime::currentDateTime();
 
-    result.replace("<DATE>", "yyyy-MM-dd");
-    result.replace("<DATETIME>", "hh::mm::ss");
+    result.replace("<DATE>", today.toString("yyyy-MM-dd"));
+    result.replace("<DATETIME>", now.toString("yyyy-MM-dd hh:mm:ss"));
 
     Settings::PCompilerSet compilerSet = pSettings->compilerSets().defaultSet();
     if (compilerSet) {
