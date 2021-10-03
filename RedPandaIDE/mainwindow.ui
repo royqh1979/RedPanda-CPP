@@ -85,7 +85,7 @@
             <enum>QTabWidget::West</enum>
            </property>
            <property name="currentIndex">
-            <number>2</number>
+            <number>0</number>
            </property>
            <property name="usesScrollButtons">
             <bool>true</bool>
@@ -191,11 +191,6 @@
               </widget>
              </item>
             </layout>
-           </widget>
-           <widget class="QWidget" name="tabFiles">
-            <attribute name="title">
-             <string>Files</string>
-            </attribute>
            </widget>
           </widget>
           <widget class="QWidget" name="EditorPanel" native="true">
@@ -807,6 +802,10 @@
         </layout>
        </widget>
        <widget class="QWidget" name="tabTODO">
+        <attribute name="icon">
+         <iconset resource="icons.qrc">
+          <normaloff>:/icons/images/newlook24/039-gobook.png</normaloff>:/icons/images/newlook24/039-gobook.png</iconset>
+        </attribute>
         <attribute name="title">
          <string>TODO</string>
         </attribute>
@@ -944,6 +943,12 @@
     <addaction name="separator"/>
     <addaction name="actionProject_options"/>
    </widget>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>Help</string>
+    </property>
+    <addaction name="actionAbout"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
    <addaction name="menuSearch"/>
@@ -952,6 +957,7 @@
    <addaction name="menuExecute"/>
    <addaction name="menuTools"/>
    <addaction name="menuWindow"/>
+   <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <widget class="QToolBar" name="toolbarMain">
@@ -1763,6 +1769,15 @@
    </property>
    <property name="text">
     <string>Open In Terminal</string>
+   </property>
+  </action>
+  <action name="actionAbout">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/images/newlook24/001-about.png</normaloff>:/icons/images/newlook24/001-about.png</iconset>
+   </property>
+   <property name="text">
+    <string>About</string>
    </property>
   </action>
  </widget>

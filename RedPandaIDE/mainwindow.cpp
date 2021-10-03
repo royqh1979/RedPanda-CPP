@@ -13,6 +13,7 @@
 #include "projecttemplate.h"
 #include "widgets/newprojectdialog.h"
 #include "platform.h"
+#include "widgets/aboutdialog.h"
 
 #include <QCloseEvent>
 #include <QComboBox>
@@ -3935,5 +3936,12 @@ void MainWindow::on_tableTODO_doubleClicked(const QModelIndex &index)
         }
     }
 
+}
+
+
+void MainWindow::on_actionAbout_triggered()
+{
+    AboutDialog dialog;
+    dialog.exec();
 }
 

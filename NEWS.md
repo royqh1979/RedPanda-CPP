@@ -5,6 +5,7 @@ Version 0.6.0
  - fix: errors in code snippet processing
  - change: auto open a new editor at start
  - enhancement: todo view
+ - add: about dialog
 
 Version 0.5.0
  - enhancement: support C++ using type alias;

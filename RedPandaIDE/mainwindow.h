@@ -369,6 +369,8 @@ private slots:
 
     void on_tableTODO_doubleClicked(const QModelIndex &index);
 
+    void on_actionAbout_triggered();
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;
