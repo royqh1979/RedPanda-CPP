@@ -22,6 +22,7 @@
 #include <QFileDialog>
 #include <QInputDialog>
 #include <QLabel>
+#include <QLineEdit>
 #include <QMessageBox>
 #include <QMimeData>
 #include <QTranslator>
@@ -114,7 +115,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->menuCode->insertMenu(ui->actionReformat_Code,mMenuInsertCodeSnippet);
     ui->menuCode->insertSeparator(ui->actionReformat_Code);
     connect(mMenuInsertCodeSnippet,&QMenu::aboutToShow,
-            this, onShowInsertCodeSnippetMenu);
+            this, &MainWindow::onShowInsertCodeSnippetMenu);
 
     mCPUDialog = nullptr;
 
@@ -3943,5 +3944,53 @@ void MainWindow::on_actionAbout_triggered()
 {
     AboutDialog dialog;
     dialog.exec();
+}
+
+
+void MainWindow::on_actionRename_Symbol_triggered()
+{
+    Editor * editor = mEditorList->getEditor();
+    if (!editor)
+        return;
+    editor->beginUpdate();
+//    mClassBrowserModel.beginUpdate();
+    QCursor oldCursor = editor->cursor();
+    editor->setCursor(Qt::CursorShape::WaitCursor);
+    auto action = finally([this,oldCursor,editor]{
+        editor->endUpdate();
+//        mClassBrowserModel.EndTreeUpdate;
+        editor->setCursor(oldCursor);
+    });
+    QString word = editor->wordAtCursor();
+    if (word.isEmpty())
+        return;
+
+//    if (!isIdentifier(word)) {
+//        return;
+//    }
+
+    if (isKeyword(word)) {
+        return;
+    }
+
+    bool ok;
+    QString newWord = QInputDialog::getText(editor,
+                                            tr("Rename Symbol"),
+                                            tr("New Name"),
+                                            QLineEdit::Normal,word, &ok);
+    if (!ok)
+        return;
+
+    if (word == newWord)
+        return;
+
+    PCppParser parser = editor->parser();
+    BufferCoord oldCaretXY = editor->caretXY();
+    //here we must reparse the file in sync, or rename may fail
+    parser->parseFile(editor->filename(), editor->inProject(), false, false);
+    CppRefacter refactor;
+    refactor.renameSymbol(editor,oldCaretXY,word,newWord);
+    editor->reparse();
+
 }
 

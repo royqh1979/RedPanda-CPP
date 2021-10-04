@@ -371,6 +371,8 @@ private slots:
 
     void on_actionAbout_triggered();
 
+    void on_actionRename_Symbol_triggered();
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;

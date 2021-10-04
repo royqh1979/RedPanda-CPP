@@ -411,6 +411,8 @@ protected:
     virtual void onProcessCommand(SynEditorCommand Command, QChar AChar, void * pData);
     virtual void onCommandProcessed(SynEditorCommand Command, QChar AChar, void * pData);
     virtual void ExecuteCommand(SynEditorCommand Command, QChar AChar, void * pData);
+    virtual void onEndFirstPaintLock();
+    virtual void onBeginFirstPaintLock();
 
 private:
     void clearAreaList(SynEditingAreaList areaList);

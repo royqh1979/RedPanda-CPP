@@ -2461,6 +2461,9 @@ void SynEdit::doPasteFromClipboard()
 
 void SynEdit::incPaintLock()
 {
+    if (mPaintLock==0) {
+        onBeginFirstPaintLock();
+    }
     mPaintLock ++ ;
 }
 
@@ -2477,6 +2480,7 @@ void SynEdit::decPaintLock()
             updateCaret();
         if (mStatusChanges!=0)
             doOnStatusChange(mStatusChanges);
+        onEndFirstPaintLock();
     }
 }
 
@@ -5253,6 +5257,16 @@ void SynEdit::ExecuteCommand(SynEditorCommand Command, QChar AChar, void *pData)
 //      DecPaintLock;
 //    end;
 //  end;
+
+}
+
+void SynEdit::onEndFirstPaintLock()
+{
+
+}
+
+void SynEdit::onBeginFirstPaintLock()
+{
 
 }
 

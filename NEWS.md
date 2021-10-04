@@ -8,6 +8,8 @@ Version 0.6.0
  - add: about dialog
  - implement: correctly recognize clang (msys2 build)
  - enhancement: don't add encoding options when using clang to compile (clang only support utf-8)
+ - enhancement: find occurence in project
+ - implement: refactor in file
 
 Version 0.5.0
  - enhancement: support C++ using type alias;

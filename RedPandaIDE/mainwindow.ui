@@ -949,10 +949,17 @@
     </property>
     <addaction name="actionAbout"/>
    </widget>
+   <widget class="QMenu" name="menuRefactor">
+    <property name="title">
+     <string>Refactor</string>
+    </property>
+    <addaction name="actionRename_Symbol"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
    <addaction name="menuSearch"/>
    <addaction name="menuCode"/>
+   <addaction name="menuRefactor"/>
    <addaction name="menuProject"/>
    <addaction name="menuExecute"/>
    <addaction name="menuTools"/>
@@ -1778,6 +1785,14 @@
    </property>
    <property name="text">
     <string>About</string>
+   </property>
+  </action>
+  <action name="actionRename_Symbol">
+   <property name="text">
+    <string>Rename Symbol</string>
+   </property>
+   <property name="shortcut">
+    <string>Shift+F6</string>
    </property>
   </action>
  </widget>
