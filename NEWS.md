@@ -10,6 +10,9 @@ Version 0.6.0
  - enhancement: don't add encoding options when using clang to compile (clang only support utf-8)
  - enhancement: find occurence in project
  - implement: refactor in file
+ - enhancement: replace in files
+ - enhancement: refactor in project (using search symbol occurence and replace in files)
+ - fix: search in files
 
 Version 0.5.0
  - enhancement: support C++ using type alias;

@@ -15,7 +15,7 @@ public:
     int length(int aIndex) override;
     int result(int aIndex) override;
     int resultCount() override;
-    int findAll(const QString &keyword) override;
+    int findAll(const QString &text) override;
     QString replace(const QString &aOccurrence, const QString &aReplacement) override;
     void setPattern(const QString &value) override;
     void setOptions(const SynSearchOptions &options) override;

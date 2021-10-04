@@ -119,7 +119,8 @@ void SearchResultModel::removeSearchResults(int index)
 
 SearchResultTreeModel::SearchResultTreeModel(SearchResultModel *model, QObject *parent):
     QAbstractItemModel(parent),
-    mSearchResultModel(model)
+    mSearchResultModel(model),
+    mSelectable(false)
 {
     connect(mSearchResultModel,&SearchResultModel::currentChanged,
             this,&SearchResultTreeModel::onResultModelChanged);
@@ -213,6 +214,21 @@ QVariant SearchResultTreeModel::data(const QModelIndex &index, int role) const
                  .arg(item->text);
          }
     }
+    if (role == Qt::CheckStateRole && mSelectable) {
+
+        PSearchResults results = mSearchResultModel->currentResults();
+
+         if (!results || !index.isValid() ) {
+             // This is nothing this function is supposed to handle
+             return QVariant();
+         }
+
+         if (item->parent==nullptr) { //is filename
+             return QVariant();
+         } else {
+             return (item->selected)?Qt::Checked:Qt::Unchecked;
+         }
+    }
     return QVariant();
 
 }
@@ -254,6 +270,69 @@ void SearchResultTreeModel::onResultModelChanged()
 {
     beginResetModel();
     endResetModel();
+}
+
+Qt::ItemFlags SearchResultTreeModel::flags(const QModelIndex &index) const
+{
+    Qt::ItemFlags flags=Qt::ItemIsEnabled | Qt::ItemIsSelectable;
+    if (mSelectable) {
+        flags.setFlag(Qt::ItemIsUserCheckable);
+    }
+    return flags;
+}
+
+bool SearchResultTreeModel::setData(const QModelIndex &index, const QVariant &value, int role)
+{
+    if (!index.isValid()){
+        return false;
+    }
+    SearchResultTreeItem *item = static_cast<SearchResultTreeItem *>(index.internalPointer());
+    if (!item)
+        return false;
+    if (role == Qt::CheckStateRole && mSelectable) {
+
+        PSearchResults results = mSearchResultModel->currentResults();
+
+         if (!results || !index.isValid() ) {
+             // This is nothing this function is supposed to handle
+             return false;
+         }
+
+         if (item->parent==nullptr) { //is filename
+             return false;
+         } else {
+             item->selected = value.toBool();
+             return true;
+         }
+    }
+    return false;
+
+}
+
+bool SearchResultTreeModel::selectable() const
+{
+    return mSelectable;
+}
+
+void SearchResultTreeModel::setSelectable(bool newSelectable)
+{
+    if (newSelectable!=mSelectable) {
+        beginResetModel();
+        mSelectable = newSelectable;
+        if (mSelectable) {
+            //select all items by default
+            PSearchResults results = mSearchResultModel->currentResults();
+            if (results) {
+                foreach (const PSearchResultTreeItem& file, results->results) {
+                    file->selected = false;
+                    foreach (const PSearchResultTreeItem& item, file->results) {
+                        item->selected = true;
+                    }
+                }
+            }
+        }
+        endResetModel();
+    }
 }
 
 SearchResultListModel::SearchResultListModel(SearchResultModel *model, QObject *parent):

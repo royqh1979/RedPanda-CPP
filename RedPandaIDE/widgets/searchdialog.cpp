@@ -21,6 +21,7 @@ SearchDialog::SearchDialog(QWidget *parent) :
     mTabBar->addTab(tr("Find"));
     mTabBar->addTab(tr("Find in files"));
     mTabBar->addTab(tr("Replace"));
+    mTabBar->addTab(tr("Replace in files"));
     mTabBar->setExpanding(false);
     ui->dialogLayout->insertWidget(0,mTabBar);
     connect(mTabBar,&QTabBar::currentChanged,this, &SearchDialog::onTabChanged);
@@ -101,7 +102,7 @@ void SearchDialog::replace(const QString &sFind, const QString &sReplace)
 void SearchDialog::onTabChanged()
 {
     bool isfind = (mTabBar->currentIndex() == 0);
-    bool isfindfiles = (mTabBar->currentIndex() == 1);
+    bool isfindfiles = (mTabBar->currentIndex() == 1 || mTabBar->currentIndex() == 3 );
     bool isreplace = (mTabBar->currentIndex() == 2);
 
     ui->lblReplace->setVisible(isreplace);
@@ -246,7 +247,7 @@ void SearchDialog::on_btnExecute_clicked()
             });
         }
 
-    } else if (actionType == SearchAction::FindFiles) {
+    } else if (actionType == SearchAction::FindFiles || actionType == SearchAction::ReplaceFiles) {
         int fileSearched = 0;
         int fileHitted = 0;
         QString keyword = ui->cbFind->currentText();
@@ -339,7 +340,7 @@ void SearchDialog::on_btnExecute_clicked()
             //        end;
         }
         if (findCount>0)
-            pMainWindow->showSearchPanel();
+            pMainWindow->showSearchPanel(actionType == SearchAction::ReplaceFiles);
     }
 }
 

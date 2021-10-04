@@ -72,7 +72,7 @@ public:
     void runExecutable(const QString& exeName, const QString& filename=QString());
     void runExecutable();
     void debug();
-    void showSearchPanel();
+    void showSearchPanel(bool showReplace = false);
 
     void applySettings();
     void applyUISettings();
@@ -173,6 +173,8 @@ private:
                              QKeySequence shortcut=QKeySequence());
     void scanActiveProject(bool parse=false);
     void includeOrSkipDirs(const QStringList& dirs, bool skip);
+    void showSearchReplacePanel(bool show);
+
 private slots:
     void onAutoSaveTimeout();
     void onFileChanged(const QString& path);
@@ -372,6 +374,8 @@ private slots:
     void on_actionAbout_triggered();
 
     void on_actionRename_Symbol_triggered();
+
+    void on_btnReplace_clicked();
 
 private:
     Ui::MainWindow *ui;

@@ -24,7 +24,7 @@ int SynSearch::resultCount()
     return mResults.count();
 }
 
-int SynSearch::findAll(const QString &keyword)
+int SynSearch::findAll(const QString &text)
 {
     mResults.clear();
     if (pattern().isEmpty())
@@ -33,18 +33,18 @@ int SynSearch::findAll(const QString &keyword)
     int next=-1;
     while (true) {
         if (options().testFlag(ssoMatchCase)) {
-            next = keyword.indexOf(pattern(),start,Qt::CaseSensitive);
+            next = text.indexOf(pattern(),start,Qt::CaseSensitive);
         } else {
-            next = keyword.indexOf(pattern(),start,Qt::CaseInsensitive);
+            next = text.indexOf(pattern(),start,Qt::CaseInsensitive);
         }
         if (next<0) {
             break;
         }
-        start = next + keyword.length();
+        start = next + pattern().length();
         if (options().testFlag(ssoWholeWord)) {
-            if (((next<=0) || isDelimitChar(keyword[next-1]))
+            if (((next<=0) || isDelimitChar(text[next-1]))
                     &&
-                    ( (start>=keyword.length()) || isDelimitChar(keyword[start]) )
+                    ( (start>=text.length()) || isDelimitChar(text[start]) )
                  ) {
                 mResults.append(next);
             }

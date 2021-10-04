@@ -26,6 +26,7 @@ struct SearchResultTreeItem {
     QString text;
     SearchResultTreeItem* parent;
     SearchResultTreeItemList results;
+    bool selected;
 };
 
 struct SearchResults{
@@ -98,10 +99,22 @@ public:
             QString& filename,
             int& line,
             int& startChar);
+    bool selectable() const;
+    void setSelectable(bool newSelectable);
+
 public slots:
     void onResultModelChanged();
 private:
     SearchResultModel *mSearchResultModel;
+    bool mSelectable;
+
+    // QAbstractItemModel interface
+public:
+    Qt::ItemFlags flags(const QModelIndex &index) const override;
+
+    // QAbstractItemModel interface
+public:
+    bool setData(const QModelIndex &index, const QVariant &value, int role) override;
 };
 
 using PSearchResultTreeModel = std::shared_ptr<SearchResultTreeModel>;

@@ -1272,9 +1272,10 @@ void MainWindow::debug()
     }
 }
 
-void MainWindow::showSearchPanel()
+void MainWindow::showSearchPanel(bool showReplace)
 {
     openCloseBottomPanel(true);
+    showSearchReplacePanel(showReplace);
     ui->tabMessages->setCurrentWidget(ui->tabSearch);
 }
 
@@ -3539,8 +3540,7 @@ void MainWindow::on_actionFind_references_triggered()
     if (editor && editor->pointToCharLine(mEditorContextMenuPos,pos)) {
         CppRefacter refactor;
         refactor.findOccurence(editor,pos);
-        ui->tabMessages->setCurrentWidget(ui->tabSearch);
-        openCloseBottomPanel(true);
+        showSearchPanel(true);
     }
 }
 
@@ -3973,6 +3973,37 @@ void MainWindow::on_actionRename_Symbol_triggered()
         return;
     }
 
+    BufferCoord oldCaretXY = editor->caretXY();
+    if (editor->inProject() && mProject) {
+        mProject->cppParser()->parseFileList();
+        BufferCoord pBeginPos,pEndPos;
+        QString phrase = getWordAtPosition(editor,oldCaretXY,pBeginPos,pEndPos,Editor::WordPurpose::wpInformation);
+        // Find it's definition
+        PStatement oldStatement = editor->parser()->findStatementOf(
+                    editor->filename(),
+                    phrase,
+                    oldCaretXY.Line);
+        // definition of the symbol not found
+        if (!oldStatement)
+            return;
+        // found but not in this file
+        if (editor->filename() != oldStatement->fileName
+            || editor->filename() != oldStatement->definitionFileName) {
+            // it's defined in system header, dont rename
+            if (mProject->cppParser()->isSystemHeaderFile(oldStatement->fileName)) {
+                QMessageBox::critical(editor,
+                            tr("Rename Error"),
+                            tr("Symbol '%1' is defined in system header.")
+                                      .arg(oldStatement->fullName));
+                return;
+            }
+            CppRefacter refactor;
+            refactor.findOccurence(editor,oldCaretXY);
+            showSearchPanel(true);
+            return;
+        }
+    }
+
     bool ok;
     QString newWord = QInputDialog::getText(editor,
                                             tr("Rename Symbol"),
@@ -3985,7 +4016,6 @@ void MainWindow::on_actionRename_Symbol_triggered()
         return;
 
     PCppParser parser = editor->parser();
-    BufferCoord oldCaretXY = editor->caretXY();
     //here we must reparse the file in sync, or rename may fail
     parser->parseFile(editor->filename(), editor->inProject(), false, false);
     CppRefacter refactor;
@@ -3994,3 +4024,53 @@ void MainWindow::on_actionRename_Symbol_triggered()
 
 }
 
+
+void MainWindow::showSearchReplacePanel(bool show)
+{
+    ui->replacePanel->setVisible(show);
+    ui->cbSearchHistory->setDisabled(show);
+    if (show && mSearchResultModel.currentResults()) {
+        ui->cbReplaceInHistory->setCurrentText(
+                    mSearchResultModel.currentResults()->keyword);
+    }
+    mSearchResultTreeModel->setSelectable(show);
+}
+
+
+void MainWindow::on_btnReplace_clicked()
+{
+    //select all items by default
+    PSearchResults results = mSearchResultModel.currentResults();
+    if (!results) {
+        return;
+    }
+    QString newWord = ui->cbReplaceInHistory->currentText();
+    foreach (const PSearchResultTreeItem& file, results->results) {
+        QStringList contents;
+        Editor* editor = mEditorList->getEditorByFilename(file->filename);
+        if (!editor) {
+            QMessageBox::critical(this,
+                                  tr("Replace Error"),
+                                  tr("Can't open file '%1' for replace!").arg(file->filename));
+            return;
+        }
+        contents = editor->lines()->contents();
+        for (int i=file->results.count()-1;i>=0;i--) {
+            const PSearchResultTreeItem& item = file->results[i];
+            QString line = contents[item->line-1];
+            if (line.mid(item->start-1,results->keyword.length())!=results->keyword) {
+                QMessageBox::critical(editor,
+                            tr("Replace Error"),
+                            tr("Contents has changed since last search!"));
+                return;
+            }
+            line.remove(item->start-1,results->keyword.length());
+            line.insert(item->start-1, newWord);
+            contents[item->line-1] = line;
+        }
+        editor->selectAll();
+        editor->setSelText(contents.join(editor->lineBreak()));
+    }
+    showSearchReplacePanel(false);
+    openCloseBottomPanel(false);
+}
