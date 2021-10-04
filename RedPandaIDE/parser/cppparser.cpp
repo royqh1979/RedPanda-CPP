@@ -68,25 +68,25 @@ void CppParser::addHardDefineByLine(const QString &line)
 void CppParser::addIncludePath(const QString &value)
 {
     QMutexLocker  locker(&mMutex);
-    mPreprocessor.includePaths().insert(includeTrailingPathDelimiter(value));
+    mPreprocessor.addIncludePath(includeTrailingPathDelimiter(value));
 }
 
 void CppParser::addProjectIncludePath(const QString &value)
 {
     QMutexLocker  locker(&mMutex);
-    mPreprocessor.projectIncludePaths().insert(includeTrailingPathDelimiter(value));
+    mPreprocessor.addProjectIncludePath(includeTrailingPathDelimiter(value));
 }
 
 void CppParser::clearIncludePaths()
 {
     QMutexLocker  locker(&mMutex);
-    mPreprocessor.includePaths().clear();
+    mPreprocessor.clearIncludePaths();
 }
 
 void CppParser::clearProjectIncludePaths()
 {
     QMutexLocker  locker(&mMutex);
-    mPreprocessor.projectIncludePaths().clear();
+    mPreprocessor.clearProjectIncludePaths();
 }
 
 void CppParser::clearProjectFiles()
@@ -819,8 +819,8 @@ void CppParser::reset()
         mNamespaces.clear();
         mInlineNamespaces.clear();
 
-        mPreprocessor.projectIncludePaths().clear();
-        mPreprocessor.includePaths().clear();
+        mPreprocessor.clearProjectIncludePaths();
+        mPreprocessor.clearIncludePaths();
         mProjectFiles.clear();
     }
 }

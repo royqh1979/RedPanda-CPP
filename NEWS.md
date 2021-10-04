@@ -17,6 +17,7 @@ Version 0.6.0
  - implement: when startup , open file provided by command line options
  - implement: open files pasted by clipboard
  - fix: code fold parsing not correct
+ - enhancement: support #include_next (and clang libc++)
 
 Version 0.5.0
  - enhancement: support C++ using type alias;

@@ -60,15 +60,19 @@ public:
 
     void dumpDefinesTo(const QString& fileName) const;
     void dumpIncludesListTo(const QString& fileName) const;
+    void addIncludePath(const QString& fileName);
+    void addProjectIncludePath(const QString& fileName);
+    void clearIncludePaths();
+    void clearProjectIncludePaths();
     QStringList result() const;
 
     QHash<QString, PFileIncludes> &includesList();
 
     QSet<QString> &scannedFiles();
 
-    QSet<QString> &includePaths();
+    const QSet<QString> &includePaths();
 
-    QSet<QString> &projectIncludePaths();
+    const QSet<QString> &projectIncludePaths();
 
     const DefineMap &hardDefines() const;
 
@@ -82,7 +86,7 @@ private:
     void simplify(QString& output);
     void handleBranch(const QString& line);
     void handleDefine(const QString& line);
-    void handleInclude(const QString& line);
+    void handleInclude(const QString& line, bool fromNext=false);
     void handlePreprocessor(const QString& value);
     void handleUndefine(const QString& line);
     QString expandMacros(const QString& line, int depth);
@@ -183,6 +187,9 @@ private:
     QSet<QString> mIncludePaths;
     //{ List of current project's include path }
     QSet<QString> mProjectIncludePaths;
+    //we also need include paths in order (for #include_next)
+    QList<QString> mIncludePathList;
+    QList<QString> mProjectIncludeList;
 
     bool mParseSystem;
     bool mParseLocal;

@@ -70,6 +70,10 @@ void FunctionTooltipWidget::setParamPos(int newParamPos)
 
 void FunctionTooltipWidget::nextTip()
 {
+    if (mInfoIndex>=mInfos.length()-1) {
+        hide();
+        return;
+    }
     if (mInfos.length()>0)
         mInfoIndex = std::min(mInfoIndex+1,mInfos.length()-1);
     updateTip();
@@ -77,6 +81,10 @@ void FunctionTooltipWidget::nextTip()
 
 void FunctionTooltipWidget::previousTip()
 {
+    if (mInfoIndex==0) {
+        hide();
+        return ;
+    }
     if (mInfos.length()>0)
         mInfoIndex = std::max(mInfoIndex-1,0);
     updateTip();
