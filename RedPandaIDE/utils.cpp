@@ -557,16 +557,16 @@ void resetCppParser(std::shared_ptr<CppParser> parser)
     Settings::PCompilerSet compilerSet = pSettings->compilerSets().defaultSet();
     parser->clearIncludePaths();
     if (compilerSet) {
-        for (QString file:compilerSet->CIncludeDirs()) {
+        foreach  (const QString& file,compilerSet->CppIncludeDirs()) {
             parser->addIncludePath(file);
         }
-        for (QString file:compilerSet->CppIncludeDirs()) {
+        foreach  (const QString& file,compilerSet->CIncludeDirs()) {
             parser->addIncludePath(file);
         }
-        for (QString file:compilerSet->defaultCIncludeDirs()) {
+        foreach  (const QString& file,compilerSet->defaultCppIncludeDirs()) {
             parser->addIncludePath(file);
         }
-        for (QString file:compilerSet->defaultCppIncludeDirs()) {
+        foreach  (const QString& file,compilerSet->defaultCIncludeDirs()) {
             parser->addIncludePath(file);
         }
         //TODO: Add default include dirs last, just like gcc does

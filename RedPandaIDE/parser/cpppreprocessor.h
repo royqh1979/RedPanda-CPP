@@ -76,6 +76,10 @@ public:
 
     const DefineMap &hardDefines() const;
 
+    const QList<QString> &includePathList() const;
+
+    const QList<QString> &projectIncludePathList() const;
+
 signals:
 
 private:
@@ -189,7 +193,7 @@ private:
     QSet<QString> mProjectIncludePaths;
     //we also need include paths in order (for #include_next)
     QList<QString> mIncludePathList;
-    QList<QString> mProjectIncludeList;
+    QList<QString> mProjectIncludePathList;
 
     bool mParseSystem;
     bool mParseLocal;

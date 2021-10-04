@@ -294,7 +294,7 @@ void initParser()
 }
 
 QString getHeaderFilename(const QString &relativeTo, const QString &line,
-                          const QSet<QString>& includePaths, const QSet<QString>& projectIncludePaths) {
+                          const QStringList& includePaths, const QStringList& projectIncludePaths) {
     QString result = "";
 
     // Handle <>
@@ -341,7 +341,7 @@ QString getLocalHeaderFilename(const QString &relativeTo, const QString &fileNam
     return "";
 }
 
-QString getSystemHeaderFilename(const QString &fileName, const QSet<QString>& includePaths)
+QString getSystemHeaderFilename(const QString &fileName, const QStringList& includePaths)
 {
 
     // Search compiler include directories

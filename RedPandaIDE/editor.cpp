@@ -472,12 +472,6 @@ void Editor::focusOutEvent(QFocusEvent *event)
                 this,
                 &SynEdit::invalidate);
     }
-    if (mHeaderCompletionPopup)
-        mHeaderCompletionPopup->hide();
-    if (mCompletionPopup)
-        mCompletionPopup->hide();
-    if (pMainWindow->functionTip())
-        pMainWindow->functionTip()->hide();
     //pMainWindow->updateClassBrowserForEditor(nullptr);
     pMainWindow->updateEditorActions();
     pMainWindow->updateStatusbarForLineCol();
@@ -1072,6 +1066,16 @@ void Editor::inputMethodEvent(QInputMethodEvent *event)
             }
         }
     }
+}
+
+void Editor::closeEvent(QCloseEvent *)
+{
+    if (mHeaderCompletionPopup)
+        mHeaderCompletionPopup->hide();
+    if (mCompletionPopup)
+        mCompletionPopup->hide();
+    if (pMainWindow->functionTip())
+        pMainWindow->functionTip()->hide();
 }
 
 void Editor::copyToClipboard()

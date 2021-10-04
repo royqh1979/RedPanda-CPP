@@ -4,6 +4,7 @@
 #include <QFile>
 #include <QTextCodec>
 #include <QDebug>
+#include <QMessageBox>
 
 CppPreprocessor::CppPreprocessor()
 {
@@ -214,14 +215,18 @@ void CppPreprocessor::dumpIncludesListTo(const QString &fileName) const
 
 void CppPreprocessor::addIncludePath(const QString &fileName)
 {
-    mIncludePaths.insert(fileName);
-    mIncludePathList.append(fileName);
+    if (!mIncludePaths.contains(fileName)) {
+        mIncludePaths.insert(fileName);
+        mIncludePathList.append(fileName);
+    }
 }
 
 void CppPreprocessor::addProjectIncludePath(const QString &fileName)
 {
-    mProjectIncludePaths.insert(fileName);
-    mProjectIncludeList.append(fileName);
+    if (!mProjectIncludePaths.contains(fileName)) {
+        mProjectIncludePaths.insert(fileName);
+        mProjectIncludePathList.append(fileName);
+    }
 }
 
 void CppPreprocessor::clearIncludePaths()
@@ -233,7 +238,7 @@ void CppPreprocessor::clearIncludePaths()
 void CppPreprocessor::clearProjectIncludePaths()
 {
     mProjectIncludePaths.clear();
-    mProjectIncludeList.clear();
+    mProjectIncludePathList.clear();
 }
 
 QString CppPreprocessor::getNextPreprocessor()
@@ -356,28 +361,30 @@ void CppPreprocessor::handleInclude(const QString &line, bool fromNext)
     QString fileName;
     // Get full header file name
     QString currentDir = includeTrailingPathDelimiter(extractFileDir(file->fileName));
-    QSet<QString> includes;
-    QSet<QString> projectIncludes;
-    if (fromNext && mIncludePaths.contains(currentDir)) {
-        bool found = false;
-        foreach(const QString& s, mIncludePathList) {
-            if (found)
-                includes.insert(s);
-            if (s == currentDir)
-                found = true;
+    QStringList includes;
+    QStringList projectIncludes;
+    bool found;
+    if (fromNext && mIncludePaths.contains(currentDir))
+        found = false;
+    else
+        found = true;
+    foreach(const QString& s, mIncludePathList) {
+        if (found) {
+            includes.append(s);
         }
-    } else
-        includes = mIncludePaths;
-    if (fromNext && mProjectIncludePaths.contains(currentDir)) {
-        bool found = false;
-        foreach(const QString& s, mProjectIncludeList) {
-            if (found)
-                projectIncludes.insert(s);
-            if (s == currentDir)
-                found = true;
-        }
-    } else
-        projectIncludes = mProjectIncludePaths;
+        if (s == currentDir)
+            found = true;
+    }
+    if (fromNext && mProjectIncludePaths.contains(currentDir))
+        found = false;
+    else
+        found = true;
+    foreach(const QString& s, mProjectIncludePathList) {
+        if (found)
+            projectIncludes.append(s);
+        if (s == currentDir)
+            found = true;
+    }
     fileName = getHeaderFilename(
                 file->fileName,
                 line,
@@ -403,10 +410,10 @@ void CppPreprocessor::handlePreprocessor(const QString &value)
              || value.startsWith("else") || value.startsWith("elif")
              || value.startsWith("endif"))
         handleBranch(value);
-    else if (value.startsWith("include"))
-        handleInclude(value);
     else if (value.startsWith("include_next"))
         handleInclude(value,true);
+    else if (value.startsWith("include"))
+        handleInclude(value);
 }
 
 void CppPreprocessor::handleUndefine(const QString &line)
@@ -1708,6 +1715,16 @@ int CppPreprocessor::evaluateExpression(QString line)
     if (skipSpaces(line,pos))
         return -1;
     return result;
+}
+
+const QList<QString> &CppPreprocessor::projectIncludePathList() const
+{
+    return mProjectIncludePathList;
+}
+
+const QList<QString> &CppPreprocessor::includePathList() const
+{
+    return mIncludePathList;
 }
 
 const DefineMap &CppPreprocessor::hardDefines() const

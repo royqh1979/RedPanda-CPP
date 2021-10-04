@@ -289,6 +289,10 @@ protected:
     // QWidget interface
 protected:
     void inputMethodEvent(QInputMethodEvent *) override;
+
+    // QWidget interface
+protected:
+    void closeEvent(QCloseEvent *event) override;
 };
 
 QString getWordAtPosition(SynEdit* editor,

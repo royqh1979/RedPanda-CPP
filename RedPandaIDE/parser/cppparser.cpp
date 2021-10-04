@@ -558,8 +558,8 @@ QSet<QString> CppParser::getFileUsings(const QString &filename)
 QString CppParser::getHeaderFileName(const QString &relativeTo, const QString &line)
 {
     QMutexLocker locker(&mMutex);
-    return ::getHeaderFilename(relativeTo, line, mPreprocessor.includePaths(),
-                             mPreprocessor.projectIncludePaths());
+    return ::getHeaderFilename(relativeTo, line, mPreprocessor.includePathList(),
+                             mPreprocessor.projectIncludePathList());
 }
 
 StatementKind CppParser::getKindOfStatement(const PStatement& statement)

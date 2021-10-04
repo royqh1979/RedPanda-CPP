@@ -18,6 +18,7 @@ Version 0.6.0
  - implement: open files pasted by clipboard
  - fix: code fold parsing not correct
  - enhancement: support #include_next (and clang libc++)
+ - fix:  hide popup windows when the editor is closed
 
 Version 0.5.0
  - enhancement: support C++ using type alias;
