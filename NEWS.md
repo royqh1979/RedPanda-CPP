@@ -16,6 +16,7 @@ Version 0.6.0
  - implement: register file associations
  - implement: when startup , open file provided by command line options
  - implement: open files pasted by clipboard
+ - fix: code fold parsing not correct
 
 Version 0.5.0
  - enhancement: support C++ using type alias;

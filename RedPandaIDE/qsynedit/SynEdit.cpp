@@ -2792,7 +2792,7 @@ void SynEdit::updateModifiedStatus()
 int SynEdit::scanFrom(int Index, int canStopIndex)
 {
     SynRangeState iRange;
-    int Result = Index;
+    int Result = std::max(0,Index);
     if (Result >= mLines->count())
         return Result;
 
@@ -5735,7 +5735,7 @@ void SynEdit::onLinesDeleted(int index, int count)
     if (mUseCodeFolding)
         foldOnListDeleted(index + 1, count);
     if (mHighlighter && mLines->count() > 0)
-        scanFrom(index, index);
+        scanFrom(index-1, index+1);
     invalidateLines(index + 1, INT_MAX);
     invalidateGutterLines(index + 1, INT_MAX);
 }
@@ -5747,7 +5747,7 @@ void SynEdit::onLinesInserted(int index, int count)
     if (mHighlighter && mLines->count() > 0) {
 //        int vLastScan = index;
 //        do {
-          scanFrom(index, index+count);
+          scanFrom(index-1, index+2+count);
 //            vLastScan++;
 //        } while (vLastScan < index + count) ;
     }
