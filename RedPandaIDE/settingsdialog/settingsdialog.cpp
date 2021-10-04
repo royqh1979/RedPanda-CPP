@@ -15,6 +15,7 @@
 #include "editorsnippetwidget.h"
 #include "editormiscwidget.h"
 #include "environmentappearencewidget.h"
+#include "environmentfileassociationwidget.h"
 #include "executorgeneralwidget.h"
 #include "debuggeneralwidget.h"
 #include "formattergeneralwidget.h"
@@ -92,6 +93,10 @@ PSettingsDialog SettingsDialog::optionDialog()
     PSettingsDialog dialog = std::make_shared<SettingsDialog>();
 
     SettingsWidget* widget = new EnvironmentAppearenceWidget(tr("Appearence"),tr("Environment"));
+    widget->init();
+    dialog->addWidget(widget);
+
+    widget = new EnvironmentFileAssociationWidget(tr("FileAssociation"),tr("Environment"));
     widget->init();
     dialog->addWidget(widget);
 

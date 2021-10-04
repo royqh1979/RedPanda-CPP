@@ -13,6 +13,7 @@ Version 0.6.0
  - enhancement: replace in files
  - enhancement: refactor in project (using search symbol occurence and replace in files)
  - fix: search in files
+ - implement: register file associations
 
 Version 0.5.0
  - enhancement: support C++ using type alias;

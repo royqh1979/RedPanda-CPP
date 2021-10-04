@@ -377,6 +377,8 @@ private slots:
 
     void on_btnReplace_clicked();
 
+    void on_btnCancelReplace_clicked();
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;

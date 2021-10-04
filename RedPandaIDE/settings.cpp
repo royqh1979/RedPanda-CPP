@@ -189,6 +189,11 @@ QString Settings::Dirs::config(Settings::Dirs::DataType dataType) const
     return "";
 }
 
+QString Settings::Dirs::executable() const
+{
+    return QApplication::instance()->applicationFilePath();
+}
+
 void Settings::Dirs::doSave()
 {
 

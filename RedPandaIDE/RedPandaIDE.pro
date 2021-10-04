@@ -48,6 +48,7 @@ SOURCES += \
     settingsdialog/editormiscwidget.cpp \
     settingsdialog/editorsnippetwidget.cpp \
     settingsdialog/editortooltipswidget.cpp \
+    settingsdialog/environmentfileassociationwidget.cpp \
     settingsdialog/formattergeneralwidget.cpp \
     settingsdialog/projectcompileparamaterswidget.cpp \
     settingsdialog/projectcompilerwidget.cpp \
@@ -151,6 +152,7 @@ HEADERS += \
     settingsdialog/editormiscwidget.h \
     settingsdialog/editorsnippetwidget.h \
     settingsdialog/editortooltipswidget.h \
+    settingsdialog/environmentfileassociationwidget.h \
     settingsdialog/formattergeneralwidget.h \
     settingsdialog/projectcompileparamaterswidget.h \
     settingsdialog/projectcompilerwidget.h \
@@ -227,6 +229,7 @@ FORMS += \
     settingsdialog/editormiscwidget.ui \
     settingsdialog/editorsnippetwidget.ui \
     settingsdialog/editortooltipswidget.ui \
+    settingsdialog/environmentfileassociationwidget.ui \
     settingsdialog/formattergeneralwidget.ui \
     settingsdialog/projectcompileparamaterswidget.ui \
     settingsdialog/projectcompilerwidget.ui \
@@ -275,7 +278,7 @@ RESOURCES += \
     icons.qrc \
     translations.qrc
 
-RC_ICONS = images/devcpp.ico
+RC_ICONS = images/devcpp.ico images/associations/c.ico images/associations/cpp.ico images/associations/h.ico images/associations/hpp.ico images/associations/dev.ico
 
 #win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../../QScintilla/src/release/ -lqscintilla2_qt5d
 #else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../../QScintilla/src/debug/ -lqscintilla2_qt5d

@@ -777,6 +777,13 @@
              </widget>
             </item>
             <item>
+             <widget class="QPushButton" name="btnCancelReplace">
+              <property name="text">
+               <string>Cancel</string>
+              </property>
+             </widget>
+            </item>
+            <item>
              <spacer name="horizontalSpacer_2">
               <property name="orientation">
                <enum>Qt::Horizontal</enum>

@@ -87,6 +87,7 @@ public:
         QString projectDir() const;
         QString data(DataType dataType = DataType::None) const;
         QString config(DataType dataType = DataType::None) const;
+        QString executable() const;
 
         // _Base interface
     protected:
