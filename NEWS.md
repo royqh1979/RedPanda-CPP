@@ -9,12 +9,12 @@ Version 0.6.0
  - implement: correctly recognize clang (msys2 build)
  - enhancement: don't add encoding options when using clang to compile (clang only support utf-8)
  - enhancement: find occurence in project
- - implement: refactor in file
+ - implement: rename symbol in file
  - enhancement: replace in files
- - enhancement: refactor in project (using search symbol occurence and replace in files)
+ - enhancement: rename symbol in project (using search symbol occurence and replace in files)
  - fix: search in files
  - implement: register file associations
- - implement: when startup , open file provided by commmand line options
+ - implement: when startup , open file provided by command line options
  - implement: open files pasted by clipboard
 
 Version 0.5.0
