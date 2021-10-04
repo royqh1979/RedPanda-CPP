@@ -69,7 +69,7 @@ void FileAssociationModel::updateAssociationStates()
                     "."+item->suffix,
                     "DevCpp."+item->suffix,
                     item->name,
-                    "open",
+                    "Open",
                     pSettings->dirs().executable()+" \"%1\""
                     );
         item->defaultSelected = item->selected;
@@ -111,7 +111,7 @@ void FileAssociationModel::saveAssociations()
             PFileAssociationItem item = fileTypeDescriptions[fileType];
             ok = registerFileType(fileType,
                                   item->name,
-                                  "open",
+                                  "Open",
                                   pSettings->dirs().executable(),
                                   item->icon);
         } else {
@@ -167,7 +167,7 @@ bool FileAssociationModel::checkAssociation(const QString &extension, const QStr
     if (result != ERROR_SUCCESS )
         return false;
 
-    QString keyString = QString("%1\\shell\\%2\\command").arg(filetype).arg(verb);
+    QString keyString = QString("%1\\Shell\\%2\\Command").arg(filetype).arg(verb);
     QString value1,value2;
     if (!readRegistry(HKEY_CLASSES_ROOT,keyString.toLocal8Bit(),value1))
         return false;
@@ -254,7 +254,7 @@ bool FileAssociationModel::registerFileType(const QString &filetype, const QStri
                          keyString.toLocal8Bit(),
                          value.toLocal8Bit()))
         return false;
-    keyString = QString("%1\\shell\\%2\\command").arg(filetype).arg(verb);
+    keyString = QString("%1\\Shell\\%2\\Command").arg(filetype).arg(verb);
     value = serverApp+" \"%1\"";
     if (!writeRegistry(HKEY_CLASSES_ROOT,
                          keyString.toLocal8Bit(),

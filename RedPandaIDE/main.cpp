@@ -98,10 +98,16 @@ int main(int argc, char *argv[])
 
         MainWindow mainWindow;
         pMainWindow = &mainWindow;
-        if (pSettings->editor().autoLoadLastFiles())
-            pMainWindow->loadLastOpens();
-        if (pMainWindow->editorList()->pageCount()==0) {
-            pMainWindow->newEditor();
+        if (app.arguments().count()>1) {
+            QStringList filesToOpen = app.arguments();
+            filesToOpen.pop_front();
+            pMainWindow->openFiles(filesToOpen);
+        } else {
+            if (pSettings->editor().autoLoadLastFiles())
+                pMainWindow->loadLastOpens();
+            if (pMainWindow->editorList()->pageCount()==0) {
+                pMainWindow->newEditor();
+            }
         }
         mainWindow.show();
         int retCode = app.exec();

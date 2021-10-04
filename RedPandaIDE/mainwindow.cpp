@@ -2857,9 +2857,25 @@ void MainWindow::on_actionCopy_triggered()
 
 void MainWindow::on_actionPaste_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
-    if (editor != NULL ) {
-        editor->pasteFromClipboard();
+    QClipboard* clipboard = QGuiApplication::clipboard();
+    const QMimeData* data = clipboard->mimeData();
+    if (!data)
+        return;
+    if (data->hasUrls()) {
+        QStringList filesToOpen;
+        foreach (const QUrl& url, data->urls()) {
+            QString s = url.toLocalFile();
+            if (!s.isEmpty()) {
+                filesToOpen.append(s);
+            }
+        }
+        if (!filesToOpen.isEmpty())
+            openFiles(filesToOpen);
+    } else {
+        Editor * editor = mEditorList->getEditor();
+        if (editor != NULL ) {
+            editor->pasteFromClipboard();
+        }
     }
 }
 

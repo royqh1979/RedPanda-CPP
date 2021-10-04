@@ -91,6 +91,8 @@ public:
     void saveLastOpens();
     void loadLastOpens();
 
+    void openFiles(const QStringList& files);
+
     void newEditor();
 
     QPlainTextEdit* txtLocals();
@@ -154,7 +156,6 @@ private:
     void prepareProjectForCompile();
     void closeProject(bool refreshEditor);
     void updateProjectView();
-    void openFiles(const QStringList& files);
     void openFile(const QString& filename);
     void openProject(const QString& filename);
     CompileTarget getCompileTarget();
