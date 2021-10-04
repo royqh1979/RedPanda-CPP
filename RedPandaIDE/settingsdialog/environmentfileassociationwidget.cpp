@@ -84,7 +84,8 @@ void FileAssociationModel::saveAssociations()
     QMap<QString,PFileAssociationItem> fileTypeDescriptions;
 
     foreach (const PFileAssociationItem& item, mItems) {
-        if (item->selected == item->defaultSelected)
+        if (item->selected == item->defaultSelected
+                && !item->selected)
             continue;
         bool ok;
         fileTypes.insert("DevCpp."+item->suffix);
