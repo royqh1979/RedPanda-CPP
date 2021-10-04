@@ -2137,6 +2137,24 @@ bool SynEdit::canDoBlockIndent()
     return true;
 }
 
+QRect SynEdit::calculateCaretRect()
+{
+    DisplayCoord coord = displayXY();
+    if (!mInputPreeditString.isEmpty()) {
+        QString sLine = lineText().left(mCaretX-1)
+                + mInputPreeditString
+                + lineText().mid(mCaretX-1);
+        coord.Column = charToColumn(sLine,mCaretX+mInputPreeditString.length());
+    }
+    QPoint caretPos = rowColumnToPixels(coord);
+    int caretWidth=mCharWidth;
+    if (mCaretY <= mLines->count() && mCaretX <= mLines->getString(mCaretY-1).length()) {
+        caretWidth = charColumns(mLines->getString(mCaretY-1)[mCaretX-1])*mCharWidth;
+    }
+    return QRect(caretPos.x(),caretPos.y(),caretWidth,
+                  mTextHeight);
+}
+
 void SynEdit::clearAreaList(SynEditingAreaList areaList)
 {
     areaList.clear();
@@ -2687,16 +2705,7 @@ void SynEdit::updateScrollbars()
 void SynEdit::updateCaret()
 {
     mStateFlags.setFlag(SynStateFlag::sfCaretChanged,false);
-    DisplayCoord coord = displayXY();
-    QPoint caretPos = rowColumnToPixels(coord);
-    int caretWidth=mCharWidth;
-    //qDebug()<<"caret"<<mCaretX<<mCaretY;
-    if (mCaretY <= mLines->count() && mCaretX <= mLines->getString(mCaretY-1).length()) {
-        caretWidth = charColumns(mLines->getString(mCaretY-1)[mCaretX-1])*mCharWidth;
-    }
-    QRect rcCaret(caretPos.x(),caretPos.y(),caretWidth,
-                  mTextHeight);
-    invalidateRect(rcCaret);
+    invalidateRect(calculateCaretRect());
 }
 
 void SynEdit::recalcCharExtent()
@@ -5325,14 +5334,7 @@ void SynEdit::paintEvent(QPaintEvent *event)
     QPainter painter(viewport());
     //Get the invalidated rect.
     QRect rcClip = event->rect();
-    DisplayCoord coord = displayXY();
-    QPoint caretPos = rowColumnToPixels(coord);
-    int caretWidth=mCharWidth;
-    if (mCaretY <= mLines->count() && mCaretX <= mLines->getString(mCaretY-1).length()) {
-        caretWidth = charColumns(mLines->getString(mCaretY-1)[mCaretX-1])*mCharWidth;
-    }
-    QRect rcCaret(caretPos.x(),caretPos.y(),caretWidth,
-                  mTextHeight);
+    QRect rcCaret = calculateCaretRect();
 
     if (rcCaret == rcClip) {
         // only update caret
@@ -5595,6 +5597,15 @@ void SynEdit::mouseDoubleClickEvent(QMouseEvent *event)
 
 void SynEdit::inputMethodEvent(QInputMethodEvent *event)
 {
+    qDebug()<<"---";
+    qDebug()<<event->replacementStart()<<":"<<event->replacementLength()<<" - "
+           << event->preeditString()<<" - "<<event->commitString();
+
+    QString oldString = mInputPreeditString;
+    mInputPreeditString = event->preeditString();
+    if (oldString!=mInputPreeditString) {
+        invalidateLine(mCaretY);
+    }
     QString s = event->commitString();
     if (!s.isEmpty()) {
         commandProcessor(SynEditorCommand::ecImeStr,QChar(),&s);

@@ -1020,49 +1020,40 @@ void Editor::mouseReleaseEvent(QMouseEvent *event)
 
 void Editor::inputMethodEvent(QInputMethodEvent *event)
 {
-    bool handled = false;
-    auto action = finally([this,&handled,event](){
-       if (!handled)
-           SynEdit::inputMethodEvent(event);
-    });
+    SynEdit::inputMethodEvent(event);
+    QString s = event->commitString();
+    if (s.isEmpty())
+        return;
     if (pMainWindow->completionPopup()->isVisible()) {
-        if (onCompletionInputMethod(event)) {
-            handled = true;
-            return;
-        }
+        onCompletionInputMethod(event);
+        return;
     } else {
-        QString s = event->commitString();
-        if (!s.isEmpty()) {
-            mLastIdCharPressed+=s.length();
-            if (pSettings->codeCompletion().enabled()
-                    && pSettings->codeCompletion().showCompletionWhileInput() ) {
-                if (mLastIdCharPressed>=1) {
-                    QString lastWord = getPreviousWordAtPositionForSuggestion(caretXY());
-                    if (!lastWord.isEmpty()) {
-                        if (CppTypeKeywords.contains(lastWord)) {
-                            return;
-                        }
-                        PStatement statement = mParser->findStatementOf(
-                                    mFilename,
-                                    lastWord,
-                                    caretY());
-                        StatementKind kind = mParser->getKindOfStatement(statement);
-                        if (kind == StatementKind::skClass
-                                || kind == StatementKind::skEnumClassType
-                                || kind == StatementKind::skEnumType
-                                || kind == StatementKind::skTypedef) {
-                            //last word is a typedef/class/struct, this is a var or param define, and dont show suggestion
-      //                      if devEditor.UseTabnine then
-      //                        ShowTabnineCompletion;
-                            return;
-                        }
+        mLastIdCharPressed+=s.length();
+        if (pSettings->codeCompletion().enabled()
+                && pSettings->codeCompletion().showCompletionWhileInput() ) {
+            if (mLastIdCharPressed>=1) {
+                QString lastWord = getPreviousWordAtPositionForSuggestion(caretXY());
+                if (!lastWord.isEmpty()) {
+                    if (CppTypeKeywords.contains(lastWord)) {
+                        return;
                     }
-                    setSelText(s);
-                    showCompletion(false);
-                    handled = true;
-                    return;
+                    PStatement statement = mParser->findStatementOf(
+                                mFilename,
+                                lastWord,
+                                caretY());
+                    StatementKind kind = mParser->getKindOfStatement(statement);
+                    if (kind == StatementKind::skClass
+                            || kind == StatementKind::skEnumClassType
+                            || kind == StatementKind::skEnumType
+                            || kind == StatementKind::skTypedef) {
+                        //last word is a typedef/class/struct, this is a var or param define, and dont show suggestion
+  //                      if devEditor.UseTabnine then
+  //                        ShowTabnineCompletion;
+                        return;
+                    }
                 }
-
+                showCompletion(false);
+                return;
             }
         }
     }
@@ -2424,7 +2415,6 @@ bool Editor::onCompletionInputMethod(QInputMethodEvent *event)
         return processed;
     QString s=event->commitString();
     if (!s.isEmpty()) {
-        setSelText(s);
         BufferCoord pBeginPos,pEndPos;
         QString phrase = getWordAtPosition(this,caretXY(),
                                             pBeginPos,pEndPos,

@@ -19,6 +19,7 @@ Version 0.6.0
  - fix: code fold parsing not correct
  - enhancement: support #include_next (and clang libc++)
  - fix:  hide popup windows when the editor is closed
+ - enhancement: show pinyin when input chinese characters
 
 Version 0.5.0
  - enhancement: support C++ using type alias;

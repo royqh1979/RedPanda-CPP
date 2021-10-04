@@ -505,6 +505,8 @@ private:
     BufferCoord getPreviousLeftBracket(int x,int y);
     bool canDoBlockIndent();
 
+    QRect calculateCaretRect();
+
     //Commands
     void doDeleteLastChar();
     void doDeleteCurrentChar();
@@ -667,6 +669,8 @@ private:
     int m_blinkStatus;
 
     QCursor mDefaultCursor;
+
+    QString mInputPreeditString;
 
 friend class SynEditTextPainter;
 

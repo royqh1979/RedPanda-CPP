@@ -731,6 +731,10 @@ void SynEditTextPainter::PaintLines()
         sLine = edit->mLines->getString(vLine - 1);
         // determine whether will be painted with ActiveLineColor
         bCurrentLine = (edit->mCaretY == vLine);
+        if (bCurrentLine && !edit->mInputPreeditString.isEmpty()) {
+            sLine = sLine.left(edit->mCaretX-1) + edit->mInputPreeditString
+                    + sLine.mid(edit->mCaretX-1);
+        }
         // Initialize the text and background colors, maybe the line should
         // use special values for them.
         colFG = edit->palette().color(QPalette::Text);
@@ -792,7 +796,11 @@ void SynEditTextPainter::PaintLines()
         rcToken = rcLine;
         if (!edit->mHighlighter || !edit->mHighlighter->enabled()) {
               sToken = sLine;
-              nTokenColumnLen = edit->mLines->lineColumns(vLine-1);
+              if (bCurrentLine) {
+                  nTokenColumnLen = edit->stringColumns(sLine,0);
+              } else {
+                  nTokenColumnLen = edit->mLines->lineColumns(vLine-1);
+              }
               if (edit->mOptions.testFlag(eoShowSpecialChars) && (!bLineSelected) && (!bSpecialLine) && (nTokenColumnLen < vLastChar)) {
                   sToken = sToken + SynLineBreakGlyph;
                   nTokenColumnLen += edit->charColumns(SynLineBreakGlyph);
@@ -845,7 +853,7 @@ void SynEditTextPainter::PaintLines()
                         throw BaseError(SynEdit::tr("The highlighter seems to be in an infinite loop"));
                     }
                 }
-                nTokenColumnsBefore = edit->charToColumn(vLine,edit->mHighlighter->getTokenPos()+1)-1;
+                nTokenColumnsBefore = edit->charToColumn(sLine,edit->mHighlighter->getTokenPos()+1)-1;
                 nTokenColumnLen = edit->stringColumns(sToken, nTokenColumnsBefore);
                 if (nTokenColumnsBefore + nTokenColumnLen >= vFirstChar) {
                     if (nTokenColumnsBefore + nTokenColumnLen >= vLastChar) {
@@ -914,6 +922,14 @@ void SynEditTextPainter::PaintLines()
             PaintHighlightToken(true);
 
             //Paint editingAreaBorders
+            if (bCurrentLine && edit->mInputPreeditString.length()>0) {
+                PSynEditingArea area = std::make_shared<SynEditingArea>();
+                area->beginX = edit->mCaretX;
+                area->endX = edit->mCaretX + edit->mInputPreeditString.length();
+                area->type = SynEditingAreaType::eatUnderLine;
+                area->color = colFG;
+                areaList.append(area);
+            }
             PaintEditAreas(areaList);
         }
 
