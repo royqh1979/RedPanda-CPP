@@ -4074,3 +4074,9 @@ void MainWindow::on_btnReplace_clicked()
     showSearchReplacePanel(false);
     openCloseBottomPanel(false);
 }
+
+void MainWindow::on_btnCancelReplace_clicked()
+{
+    showSearchReplacePanel(false);
+}
+
