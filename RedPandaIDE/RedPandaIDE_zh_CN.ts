@@ -3230,7 +3230,7 @@ Are you really want to continue?</source>
     </message>
     <message>
         <location filename="mainwindow.ui" line="1792"/>
-        <location filename="mainwindow.cpp" line="4001"/>
+        <location filename="mainwindow.cpp" line="4009"/>
         <source>Rename Symbol</source>
         <translation>重命名符号</translation>
     </message>
@@ -3624,23 +3624,33 @@ Are you really want to continue?</source>
         <translation>添加到项目</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4002"/>
+        <location filename="mainwindow.cpp" line="3995"/>
+        <source>Rename Error</source>
+        <translation>重命名出错</translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="3996"/>
+        <source>Symbol &apos;%1&apos; is defined in system header.</source>
+        <translation>符号&apos;%1&apos;在系统头文件中定义，无法修改。</translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="4010"/>
         <source>New Name</source>
         <translation>新名称</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4045"/>
-        <location filename="mainwindow.cpp" line="4055"/>
+        <location filename="mainwindow.cpp" line="4053"/>
+        <location filename="mainwindow.cpp" line="4063"/>
         <source>Replace Error</source>
         <translation>替换出错</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4046"/>
+        <location filename="mainwindow.cpp" line="4054"/>
         <source>Can&apos;t open file &apos;%1&apos; for replace!</source>
         <translation>无法打开文件&apos;%1&apos;进行替换！</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="4056"/>
+        <location filename="mainwindow.cpp" line="4064"/>
         <source>Contents has changed since last search!</source>
         <translation>内容和上次查找时不一致。</translation>
     </message>

@@ -4079,4 +4079,3 @@ void MainWindow::on_btnCancelReplace_clicked()
 {
     showSearchReplacePanel(false);
 }
-
