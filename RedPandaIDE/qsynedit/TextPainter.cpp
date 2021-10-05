@@ -971,7 +971,7 @@ void SynEditTextPainter::PaintLines()
             //Paint editingAreaBorders
             foreach (const PSynEditingArea& area, areaList) {
                 if (bCurrentLine && edit->mInputPreeditString.length()>0) {
-                    if (area->beginX >= edit->mCaretX) {
+                    if (area->beginX > edit->mCaretX) {
                         area->beginX+=edit->mInputPreeditString.length();
                     }
                     if (area->endX > edit->mCaretX) {

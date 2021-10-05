@@ -20,6 +20,8 @@ Version 0.6.0
  - enhancement: support #include_next (and clang libc++)
  - fix:  hide popup windows when the editor is closed
  - enhancement: show pinyin when input chinese characters
+ - fix: add mutex lock to prevent rare conditions when editor is modifying and the content is read
+ - fix: makefile generated for static / dynamic library projects not right
 
 Version 0.5.0
  - enhancement: support C++ using type alias;

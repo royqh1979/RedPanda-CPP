@@ -762,8 +762,8 @@ void Editor::onGetEditingAreas(int Line, SynEditingAreaList &areaList)
         p->type = SynEditingAreaType::eatRectangleBorder;
 //        int spaceCount = leftSpaces(mLineBeforeTabStop);
 //        int spaceBefore = mLineBeforeTabStop.length()-TrimLeft(mLineBeforeTabStop).length();
-        p->beginX = charToColumn(Line,mTabStopBegin);
-        p->endX =  charToColumn(Line,mTabStopEnd) ;
+        p->beginX = mTabStopBegin;
+        p->endX =  mTabStopEnd;
         p->color = highlighter()->stringAttribute()->foreground();
         areaList.append(p);
     }

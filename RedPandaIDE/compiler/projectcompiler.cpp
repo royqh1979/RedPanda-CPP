@@ -49,7 +49,7 @@ void ProjectCompiler::createStaticMakeFile()
 {
     QFile file(mProject->makeFileName());
     newMakeFile(file);
-    file.write("$(BIN): $(LINKOBJ)");
+    writeln(file,"$(BIN): $(LINKOBJ)");
     if (!mOnlyCheckSyntax) {
       writeln(file,"\tar r $(BIN) $(LINKOBJ)");
       writeln(file,"\tranlib $(BIN)");
@@ -61,7 +61,7 @@ void ProjectCompiler::createDynamicMakeFile()
 {
     QFile file(mProject->makeFileName());
     newMakeFile(file);
-    file.write("$(BIN): $(LINKOBJ)");
+    writeln(file,"$(BIN): $(LINKOBJ)");
     if (!mOnlyCheckSyntax) {
         if (mProject->options().useGPP) {
           file.write("\t$(CPP) -mdll $(LINKOBJ) -o $(BIN) $(LIBS) -Wl,--output-def,$(DEF),--out-implib,$(STATIC)");
