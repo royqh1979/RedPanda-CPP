@@ -86,10 +86,6 @@ Editor* EditorList::getEditor(int index, QTabWidget* tabsWidget) const {
 }
 
 bool EditorList::closeEditor(Editor* editor, bool transferFocus, bool force) {
-    beginUpdate();
-    auto end = finally([this] {
-        this->endUpdate();
-    });
     if (editor == NULL)
         return false;
     if (force) {
@@ -97,7 +93,7 @@ bool EditorList::closeEditor(Editor* editor, bool transferFocus, bool force) {
     } else if ( (editor->modified()) && (!editor->empty())) {
         // ask user if he wants to save
         QMessageBox::StandardButton reply;
-        reply = QMessageBox::question(pMainWindow,QObject::tr("Save"),
+        reply = QMessageBox::question(editor,QObject::tr("Save"),
                                       QString(QObject::tr("Save changes to %1?")).arg(editor->filename()),
                                       QMessageBox::Yes|QMessageBox::No|QMessageBox::Cancel);
         if (reply == QMessageBox::Cancel) {
@@ -108,6 +104,11 @@ bool EditorList::closeEditor(Editor* editor, bool transferFocus, bool force) {
             }
         }
     }
+
+    beginUpdate();
+    auto end = finally([this] {
+        this->endUpdate();
+    });
 
     if (transferFocus && (editor->pageControl()->currentWidget()==editor)) {
         //todo: activate & focus the previous editor
@@ -226,10 +227,10 @@ Editor *EditorList::operator[](int index)
 }
 
 bool EditorList::closeAll(bool force) {
-    beginUpdate();
-    auto end = finally([this] {
-        this->endUpdate();
-    });
+//    beginUpdate();
+//    auto end = finally([this] {
+//        this->endUpdate();
+//    });
     while (mLeftPageWidget->count()>0) {
         if (!closeEditor(getEditor(0,mLeftPageWidget),false,force)) {
             return false;

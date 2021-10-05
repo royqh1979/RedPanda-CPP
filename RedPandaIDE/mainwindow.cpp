@@ -2603,7 +2603,7 @@ void MainWindow::on_actionSave_triggered()
             if (editor->inProject() && (mProject))
                 mProject->saveAll();
         } catch(FileError e) {
-            QMessageBox::critical(this,tr("Error"),e.reason());
+            QMessageBox::critical(editor,tr("Error"),e.reason());
         }
     }    
 }
@@ -2615,7 +2615,7 @@ void MainWindow::on_actionSaveAs_triggered()
         try {
             editor->saveAs();
         } catch(FileError e) {
-            QMessageBox::critical(this,tr("Error"),e.reason());
+            QMessageBox::critical(editor,tr("Error"),e.reason());
         }
     }
 }
