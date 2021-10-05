@@ -4070,7 +4070,7 @@ void MainWindow::on_btnReplace_clicked()
                                   tr("Can't open file '%1' for replace!").arg(file->filename));
             return;
         }
-        contents = editor->lines()->contents();
+        contents = editor->contents();
         for (int i=file->results.count()-1;i>=0;i--) {
             const PSearchResultTreeItem& item = file->results[i];
             QString line = contents[item->line-1];

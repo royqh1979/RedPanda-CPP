@@ -5,6 +5,7 @@
 #include <QCursor>
 #include <QDateTime>
 #include <QFrame>
+#include <QMutex>
 #include <QStringList>
 #include <QTimer>
 #include <QWidget>
@@ -255,6 +256,8 @@ public:
     virtual void endUpdate();
     virtual BufferCoord getMatchingBracket();
     virtual BufferCoord getMatchingBracketEx(BufferCoord APoint);
+
+    QStringList contents();
 
     bool getPositionOfMouse(BufferCoord& aPos);
     bool getLineOfMouse(int& line);
@@ -671,6 +674,8 @@ private:
     QCursor mDefaultCursor;
 
     QString mInputPreeditString;
+
+    QRecursiveMutex mMutex;
 
 friend class SynEditTextPainter;
 

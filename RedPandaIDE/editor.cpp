@@ -1181,8 +1181,10 @@ void Editor::addSyntaxIssues(int line, int startChar, int endChar, CompileIssueT
     }
     pError->startChar = start;
     pError->endChar = start + token.length();
-    pError->col = charToColumn(line,pError->startChar);
-    pError->endCol = charToColumn(line,pError->endChar);
+//    pError->col = charToColumn(line,pError->startChar);
+//    pError->endCol = charToColumn(line,pError->endChar);
+    pError->col = pError->startChar;
+    pError->endCol = pError->endChar;
     pError->hint = hint;
     pError->token = token;
     pError->issueType = errorType;

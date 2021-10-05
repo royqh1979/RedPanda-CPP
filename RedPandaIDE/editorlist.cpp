@@ -297,7 +297,7 @@ bool EditorList::getContentFromOpenedEditor(const QString &filename, QStringList
     Editor * e= getOpenedEditorByFilename(filename);
     if (!e)
         return false;
-    buffer = e->lines()->contents();
+    buffer = e->contents();
     return true;
 }
 

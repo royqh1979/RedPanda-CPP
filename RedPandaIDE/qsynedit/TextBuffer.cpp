@@ -230,7 +230,8 @@ void SynEditStringList::setContents(const QStringList &text)
 QStringList SynEditStringList::contents()
 {
     QStringList Result;
-    foreach (const PSynEditStringRec& line, mList) {
+    SynEditStringRecList list = mList;
+    foreach (const PSynEditStringRec& line, list) {
         Result.append(line->fString);
     }
     return Result;

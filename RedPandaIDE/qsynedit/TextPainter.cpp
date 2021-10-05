@@ -301,6 +301,14 @@ void SynEditTextPainter::ComputeSelectionInfo()
             }
         } else
             bAnySelection = false;
+        if (edit->mInputPreeditString.length()>0) {
+            if (vStart.Line == edit->mCaretY && vStart.Char >=edit->mCaretX) {
+                vStart.Char+=edit->mInputPreeditString.length();
+            }
+            if (vEnd.Line == edit->mCaretY && vEnd.Char >edit->mCaretX) {
+                vEnd.Char+=edit->mInputPreeditString.length();
+            }
+        }
         // If there is any visible selection so far, then test if there is an
         // intersection with the area to be painted.
         if (bAnySelection) {
@@ -310,6 +318,20 @@ void SynEditTextPainter::ComputeSelectionInfo()
                 // Transform the selection from text space into screen space
                 vSelStart = edit->bufferToDisplayPos(vStart);
                 vSelEnd = edit->bufferToDisplayPos(vEnd);
+                if (edit->mInputPreeditString.length()
+                        && vStart.Line == edit->mCaretY) {
+                    QString sLine = edit->lineText().left(edit->mCaretX-1)
+                            + edit->mInputPreeditString
+                            + edit->lineText().mid(edit->mCaretX-1);
+                    vSelStart.Column = edit->charToColumn(sLine,vStart.Char);
+                }
+                if (edit->mInputPreeditString.length()
+                        && vEnd.Line == edit->mCaretY) {
+                    QString sLine = edit->lineText().left(edit->mCaretX-1)
+                            + edit->mInputPreeditString
+                            + edit->lineText().mid(edit->mCaretX-1);
+                    vSelEnd.Column = edit->charToColumn(sLine,vEnd.Char);
+                }
                 // In the column selection mode sort the begin and end of the selection,
                 // this makes the painting code simpler.
                 if (edit->mActiveSelectionMode == SynSelectionMode::smColumn && vSelStart.Column > vSelEnd.Column)
@@ -365,6 +387,8 @@ void SynEditTextPainter::PaintToken(const QString &Token, int TokenCols, int Col
                     }
                     startPaint = true;
                 }
+                if (tokenColLen+charCols > Last)
+                    break;
                 //painter->drawText(nX,rcToken.bottom()-painter->fontMetrics().descent()*edit->dpiFactor() , Token[i]);
                 if (startPaint) {
                     painter->drawText(nX,rcToken.bottom()-painter->fontMetrics().descent() , Token[i]);
@@ -372,8 +396,6 @@ void SynEditTextPainter::PaintToken(const QString &Token, int TokenCols, int Col
                 }
 
                 tokenColLen += charCols;
-                if (tokenColLen > Last)
-                    break;
             }
         }
 
@@ -712,6 +734,7 @@ void SynEditTextPainter::PaintLines()
     int vLastChar;
     SynEditingAreaList  areaList;
     PSynEditFoldRange foldRange;
+    PSynHighlighterAttribute preeditAttr;
     int nFold;
     QString sFold;
 
@@ -806,6 +829,10 @@ void SynEditTextPainter::PaintLines()
                   nTokenColumnLen += edit->charColumns(SynLineBreakGlyph);
               }
               if (bComplexLine) {
+                  setDrawingColors(true);
+                  rcToken.setLeft(std::max(rcLine.left(), ColumnToXValue(nLineSelStart)));
+                  rcToken.setRight(std::min(rcLine.right(), ColumnToXValue(nLineSelEnd)));
+                  PaintToken(sToken, nTokenColumnLen, 0, nLineSelStart, nLineSelEnd,false);
                   setDrawingColors(false);
                   rcToken.setLeft(std::max(rcLine.left(), ColumnToXValue(FirstCol)));
                   rcToken.setRight(std::min(rcLine.right(), ColumnToXValue(nLineSelStart)));
@@ -813,13 +840,19 @@ void SynEditTextPainter::PaintLines()
                   rcToken.setLeft(std::max(rcLine.left(), ColumnToXValue(nLineSelEnd)));
                   rcToken.setRight(std::min(rcLine.right(), ColumnToXValue(LastCol)));
                   PaintToken(sToken, nTokenColumnLen, 0, nLineSelEnd, LastCol,true);
-                  setDrawingColors(true);
-                  rcToken.setLeft(std::max(rcLine.left(), ColumnToXValue(nLineSelStart)));
-                  rcToken.setRight(std::min(rcLine.right(), ColumnToXValue(nLineSelEnd)));
-                  PaintToken(sToken, nTokenColumnLen, 0, nLineSelStart, nLineSelEnd - 1,false);
               } else {
                   setDrawingColors(bLineSelected);
                   PaintToken(sToken, nTokenColumnLen, 0, FirstCol, LastCol,bLineSelected);
+              }
+              //Paint editingAreaBorders
+              if (bCurrentLine && edit->mInputPreeditString.length()>0) {
+                  PSynEditingArea area = std::make_shared<SynEditingArea>();
+                  area->beginX = edit->charToColumn(sLine,edit->mCaretX);
+                  area->endX = edit->charToColumn(sLine,edit->mCaretX + edit->mInputPreeditString.length());
+                  area->type = SynEditingAreaType::eatUnderLine;
+                  area->color = colFG;
+                  areaList.append(area);
+                  PaintEditAreas(areaList);
               }
         } else {
             // Initialize highlighter with line text and range info. It is
@@ -876,6 +909,19 @@ void SynEditTextPainter::PaintLines()
                     } else if (sToken == "}") {
                       GetBraceColorAttr(edit->mHighlighter->getRangeState().braceLevel+1,attr);
                     }
+                    if (bCurrentLine && edit->mInputPreeditString.length()>0) {
+                        int startPos = edit->mHighlighter->getTokenPos()+1;
+                        int endPos = edit->mHighlighter->getTokenPos() + sToken.length();
+                        qDebug()<<startPos<<":"<<endPos<<" - "+sToken+" - "<<edit->mCaretX<<":"<<edit->mCaretX+edit->mInputPreeditString.length();
+                        if (!(endPos < edit->mCaretX
+                                || startPos >= edit->mCaretX+edit->mInputPreeditString.length())) {
+                            if (!preeditAttr) {
+                                preeditAttr = attr;
+                            } else {
+                                attr = preeditAttr;
+                            }
+                        }
+                    }
                     AddHighlightToken(sToken, nTokenColumnsBefore - (vFirstChar - FirstCol),
                       nTokenColumnLen, vLine,attr);
                 }
@@ -921,13 +967,30 @@ void SynEditTextPainter::PaintLines()
             // of the invalid area with the correct colors.
             PaintHighlightToken(true);
 
+
             //Paint editingAreaBorders
+            foreach (const PSynEditingArea& area, areaList) {
+                if (bCurrentLine && edit->mInputPreeditString.length()>0) {
+                    if (area->beginX >= edit->mCaretX) {
+                        area->beginX+=edit->mInputPreeditString.length();
+                    }
+                    if (area->endX > edit->mCaretX) {
+                        area->endX+=edit->mInputPreeditString.length();
+                    }
+                }
+                area->beginX = edit->charToColumn(sLine, area->beginX);
+                area->endX = edit->charToColumn(sLine,area->endX);
+            }
             if (bCurrentLine && edit->mInputPreeditString.length()>0) {
                 PSynEditingArea area = std::make_shared<SynEditingArea>();
-                area->beginX = edit->mCaretX;
-                area->endX = edit->mCaretX + edit->mInputPreeditString.length();
+                area->beginX = edit->charToColumn(sLine, edit->mCaretX);
+                area->endX = edit->charToColumn(sLine, edit->mCaretX + edit->mInputPreeditString.length());
                 area->type = SynEditingAreaType::eatUnderLine;
-                area->color = colFG;
+                if (preeditAttr) {
+                    area->color = preeditAttr->foreground();
+                } else {
+                    area->color = colFG;
+                }
                 areaList.append(area);
             }
             PaintEditAreas(areaList);
@@ -948,5 +1011,3 @@ void SynEditTextPainter::drawMark(PSynEditMark , int &, int )
 {
     //todo
 }
-
-

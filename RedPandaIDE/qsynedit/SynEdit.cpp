@@ -532,6 +532,12 @@ BufferCoord SynEdit::getMatchingBracketEx(BufferCoord APoint)
     return BufferCoord{0,0};
 }
 
+QStringList SynEdit::contents()
+{
+    QMutexLocker locker(&mMutex);
+    return lines()->contents();
+}
+
 bool SynEdit::getPositionOfMouse(BufferCoord &aPos)
 {
     QPoint point = QCursor::pos();
@@ -891,7 +897,8 @@ void SynEdit::invalidateLine(int Line)
     QRect rcInval;
     if (mPainterLock >0)
         return;
-    if (Line<1 || Line>mLines->count() || !isVisible())
+    if (Line<1 || (Line>mLines->count() &&
+                   Line!=1) || !isVisible())
         return;
 
     // invalidate text area of this line
@@ -4325,6 +4332,7 @@ void SynEdit::setSelTextPrimitiveEx(SynSelectionMode PasteMode, const QString &V
 
 void SynEdit::setSelText(const QString &Value)
 {
+    QMutexLocker locker(&mMutex);
     mUndoList->BeginBlock();
     auto action = finally([this]{
         mUndoList->EndBlock();
@@ -4865,6 +4873,7 @@ void SynEdit::onCommandProcessed(SynEditorCommand , QChar , void *)
 
 void SynEdit::ExecuteCommand(SynEditorCommand Command, QChar AChar, void *pData)
 {
+    QMutexLocker locker(&mMutex);
     incPaintLock();
     auto action=finally([this] {
         decPaintLock();
@@ -5597,9 +5606,8 @@ void SynEdit::mouseDoubleClickEvent(QMouseEvent *event)
 
 void SynEdit::inputMethodEvent(QInputMethodEvent *event)
 {
-    qDebug()<<"---";
-    qDebug()<<event->replacementStart()<<":"<<event->replacementLength()<<" - "
-           << event->preeditString()<<" - "<<event->commitString();
+//    qDebug()<<event->replacementStart()<<":"<<event->replacementLength()<<" - "
+//           << event->preeditString()<<" - "<<event->commitString();
 
     QString oldString = mInputPreeditString;
     mInputPreeditString = event->preeditString();
