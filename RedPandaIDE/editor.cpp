@@ -24,6 +24,9 @@
 #include <QToolTip>
 #include <QApplication>
 #include <QInputDialog>
+#include <QPrinter>
+#include <QPrintDialog>
+#include <QTextDocument>
 #include "iconsmanager.h"
 #include "debugger.h"
 #include "editorlist.h"
@@ -1997,6 +2000,44 @@ void Editor::insertCodeSnippet(const QString &code)
     }
 }
 
+void Editor::print()
+{
+    QPrinter printer;
+
+    QPrintDialog dialog(&printer, this);
+    dialog.setWindowTitle(tr("Print Document"));
+//    if (editor->selAvail())
+//        dialog.addEnabledOption(QAbstractPrintDialog::PrintSelection);
+    if (dialog.exec() != QDialog::Accepted) {
+        return;
+    }
+    QTextDocument doc;
+//    if (editor->selAvail()) {
+//        doc.setPlainText(editor->selText());
+//    } else {
+    QStringList lst = contents();
+    for (int i=0;i<lst.length();i++) {
+        int columns = 0;
+        QString line = lst[i];
+        QString newLine;
+        for (QChar ch:line) {
+            if (ch=='\t') {
+                int charCol = tabWidth() - (columns % tabWidth());
+                newLine += QString(charCol,' ');
+                columns += charCol;
+            } else {
+                newLine+=ch;
+                columns+=charColumns(ch);
+            }
+        }
+        lst[i]=newLine;
+    }
+    doc.setDefaultFont(font());
+    doc.setPlainText(lst.join(lineBreak()));
+    doc.print(&printer);
+
+}
+
 void Editor::showCompletion(bool autoComplete)
 {
     if (!pSettings->codeCompletion().enabled())
@@ -3136,7 +3177,7 @@ void Editor::reformat()
         return;
     //we must remove all breakpoints and syntax issues
     onLinesDeleted(1,lines()->count());
-    QByteArray content = lines()->text().toUtf8();
+    QByteArray content = text().toUtf8();
     QStringList args = pSettings->codeFormatter().getArguments();
     QByteArray newContent = runAndGetOutput("astyle.exe",
                                             pSettings->dirs().app(),

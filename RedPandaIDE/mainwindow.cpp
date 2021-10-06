@@ -234,6 +234,7 @@ void MainWindow::updateEditorActions()
         ui->actionRedo->setEnabled(false);
         ui->actionSave->setEnabled(false);
         ui->actionSaveAs->setEnabled(false);
+        ui->actionPrint->setEnabled(false);
         ui->actionSelectAll->setEnabled(false);
         ui->actionToggleComment->setEnabled(false);
         ui->actionUnIndent->setEnabled(false);
@@ -266,6 +267,7 @@ void MainWindow::updateEditorActions()
         ui->actionUndo->setEnabled(e->canUndo());
         ui->actionSave->setEnabled(e->modified());
         ui->actionSaveAs->setEnabled(true);
+        ui->actionPrint->setEnabled(true);
         ui->actionSelectAll->setEnabled(e->lines()->count()>0);
         ui->actionToggleComment->setEnabled(!e->readOnly() && e->lines()->count()>0);
         ui->actionUnIndent->setEnabled(!e->readOnly() && e->lines()->count()>0);
@@ -891,10 +893,10 @@ void MainWindow::checkSyntaxInBack(Editor *e)
     ui->tableIssues->clearIssues();
     CompileTarget target =getCompileTarget();
     if (target ==CompileTarget::Project) {
-        mCompilerManager->checkSyntax(e->filename(),e->lines()->text(),
+        mCompilerManager->checkSyntax(e->filename(),e->text(),
                                           e->fileEncoding() == ENCODING_ASCII, mProject);
     } else {
-        mCompilerManager->checkSyntax(e->filename(),e->lines()->text(),
+        mCompilerManager->checkSyntax(e->filename(),e->text(),
                                           e->fileEncoding() == ENCODING_ASCII, nullptr);
     }
 //    if not PrepareForCompile(cttStdin,True) then begin
@@ -4108,3 +4110,12 @@ void MainWindow::on_btnCancelReplace_clicked()
 {
     showSearchReplacePanel(false);
 }
+
+void MainWindow::on_actionPrint_triggered()
+{
+    Editor * editor = mEditorList->getEditor();
+    if (!editor)
+        return;
+    editor->print();
+}
+

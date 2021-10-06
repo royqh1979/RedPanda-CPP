@@ -158,6 +158,7 @@ public:
     void reparseTodo();
     void insertString(const QString& value, bool moveCursor);
     void insertCodeSnippet(const QString& code);
+    void print();
 
     const PCppParser &parser();
 

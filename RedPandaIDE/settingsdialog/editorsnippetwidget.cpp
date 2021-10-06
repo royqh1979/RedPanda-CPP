@@ -21,7 +21,7 @@ EditorSnippetWidget::EditorSnippetWidget(const QString& name, const QString& gro
         if (!index.isValid())
             return;
         PCodeSnippet snippet = mModel.snippets()[index.row()];
-        snippet->code = ui->editCode->lines()->text();
+        snippet->code = ui->editCode->text();
         setSettingsChanged();
     });
     connect(ui->tblSnippets->selectionModel(), &QItemSelectionModel::currentChanged,

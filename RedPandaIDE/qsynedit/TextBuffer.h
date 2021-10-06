@@ -50,23 +50,23 @@ class SynEditStringList : public QObject
 public:
     explicit SynEditStringList(SynEdit* pEdit,QObject* parent=nullptr);
 
-    int parenthesisLevels(int Index);
-    int bracketLevels(int Index);
-    int braceLevels(int Index);
+    int parenthesisLevels(int Index) const;
+    int bracketLevels(int Index) const;
+    int braceLevels(int Index) const;
     int lineColumns(int Index);
-    int leftBraces(int Index);
-    int rightBraces(int Index);
+    int leftBraces(int Index) const;
+    int rightBraces(int Index) const;
     int lengthOfLongestLine();
-    QString lineBreak();
-    const SynRangeState& ranges(int Index);
+    QString lineBreak() const;
+    const SynRangeState& ranges(int Index) const;
     void setRange(int Index, const SynRangeState& ARange, int leftBraces, int rightBraces);
-    QString getString(int Index);
-    int count();
-    void* getObject(int Index);
-    QString text();
+    QString getString(int Index) const;
+    int count() const ;
+    void* getObject(int Index) const;
+    QString text() const;
     void setText(const QString& text);
     void setContents(const QStringList& text);
-    QStringList contents();
+    QStringList contents() const;
 
     void putString(int Index, const QString& s);
     void putObject(int Index, void * AObject);
@@ -111,7 +111,7 @@ signals:
     void inserted(int index, int count);
     void putted(int index, int count);
 protected:
-    QString getTextStr();
+    QString getTextStr() const;
     void SetUpdateState(bool Updating);
     void InsertItem(int Index, const QString& s);
     void addItem(const QString& s);

@@ -538,6 +538,12 @@ QStringList SynEdit::contents()
     return lines()->contents();
 }
 
+QString SynEdit::text()
+{
+    QMutexLocker locker(&mMutex);
+    return lines()->text();
+}
+
 bool SynEdit::getPositionOfMouse(BufferCoord &aPos)
 {
     QPoint point = QCursor::pos();
@@ -4147,7 +4153,7 @@ void SynEdit::setHighlighter(const PSynHighlighter &highlighter)
     invalidate();
 }
 
-PSynEditStringList SynEdit::lines() const
+const PSynEditStringList& SynEdit::lines() const
 {
     return mLines;
 }

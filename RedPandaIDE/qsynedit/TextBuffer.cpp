@@ -25,7 +25,7 @@ static void ListIndexOutOfBounds(int index) {
 
 
 
-int SynEditStringList::parenthesisLevels(int Index)
+int SynEditStringList::parenthesisLevels(int Index) const
 {
     if (Index>=0 && Index < mList.size()) {
         return mList[Index]->fRange.parenthesisLevel;
@@ -33,7 +33,7 @@ int SynEditStringList::parenthesisLevels(int Index)
         return 0;
 }
 
-int SynEditStringList::bracketLevels(int Index)
+int SynEditStringList::bracketLevels(int Index) const
 {
     if (Index>=0 && Index < mList.size()) {
         return mList[Index]->fRange.bracketLevel;
@@ -41,7 +41,7 @@ int SynEditStringList::bracketLevels(int Index)
         return 0;
 }
 
-int SynEditStringList::braceLevels(int Index)
+int SynEditStringList::braceLevels(int Index) const
 {
     if (Index>=0 && Index < mList.size()) {
         return mList[Index]->fRange.braceLevel;
@@ -71,7 +71,7 @@ int SynEditStringList::lineColumns(int Index)
         return 0;
 }
 
-int SynEditStringList::leftBraces(int Index)
+int SynEditStringList::leftBraces(int Index) const
 {
     if (Index>=0 && Index < mList.size()) {
         return mList[Index]->fLeftBraces;
@@ -79,7 +79,7 @@ int SynEditStringList::leftBraces(int Index)
         return 0;
 }
 
-int SynEditStringList::rightBraces(int Index)
+int SynEditStringList::rightBraces(int Index) const
 {
     if (Index>=0 && Index < mList.size()) {
         return mList[Index]->fRightBraces;
@@ -87,8 +87,7 @@ int SynEditStringList::rightBraces(int Index)
         return 0;
 }
 
-int SynEditStringList::lengthOfLongestLine()
-{
+int SynEditStringList::lengthOfLongestLine() {
     if (mIndexOfLongestLine < 0) {
         int MaxLen = -1;
         mIndexOfLongestLine = -1;
@@ -108,7 +107,7 @@ int SynEditStringList::lengthOfLongestLine()
         return 0;
 }
 
-QString SynEditStringList::lineBreak()
+QString SynEditStringList::lineBreak() const
 {
     switch(mFileEndingType) {
     case FileEndingType::Linux:
@@ -121,7 +120,7 @@ QString SynEditStringList::lineBreak()
     return "\n";
 }
 
-const SynRangeState& SynEditStringList::ranges(int Index)
+const SynRangeState& SynEditStringList::ranges(int Index) const
 {
     if (Index>=0 && Index < mList.size()) {
         return mList[Index]->fRange;
@@ -178,7 +177,7 @@ void SynEditStringList::setRange(int Index, const SynRangeState& ARange, int ALe
     endUpdate();
 }
 
-QString SynEditStringList::getString(int Index)
+QString SynEditStringList::getString(int Index) const
 {
     if (Index<0 || Index>=mList.count()) {
         return QString();
@@ -186,12 +185,12 @@ QString SynEditStringList::getString(int Index)
     return mList[Index]->fString;
 }
 
-int SynEditStringList::count()
+int SynEditStringList::count() const
 {
     return mList.count();
 }
 
-void *SynEditStringList::getObject(int Index)
+void *SynEditStringList::getObject(int Index) const
 {
     if (Index<0 || Index>=mList.count()) {
         return nullptr;
@@ -199,7 +198,7 @@ void *SynEditStringList::getObject(int Index)
     return mList[Index]->fObject;
 }
 
-QString SynEditStringList::text()
+QString SynEditStringList::text() const
 {
     return getTextStr();
 }
@@ -227,7 +226,7 @@ void SynEditStringList::setContents(const QStringList &text)
     }
 }
 
-QStringList SynEditStringList::contents()
+QStringList SynEditStringList::contents() const
 {
     QStringList Result;
     SynEditStringRecList list = mList;
@@ -371,7 +370,7 @@ void SynEditStringList::deleteAt(int Index)
     endUpdate();
 }
 
-QString SynEditStringList::getTextStr()
+QString SynEditStringList::getTextStr() const
 {
     QString result;
     for (int i=0;i<mList.count()-1;i++) {

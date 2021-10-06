@@ -258,6 +258,7 @@ public:
     virtual BufferCoord getMatchingBracketEx(BufferCoord APoint);
 
     QStringList contents();
+    QString text();
 
     bool getPositionOfMouse(BufferCoord& aPos);
     bool getLineOfMouse(int& line);
@@ -309,7 +310,7 @@ public:
     QString lineText() const;
     void setLineText(const QString s);
 
-    PSynEditStringList lines() const;
+    const PSynEditStringList& lines() const;
     bool empty();
 
     SynSelectionMode selectionMode() const;

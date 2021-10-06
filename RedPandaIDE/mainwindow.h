@@ -383,6 +383,8 @@ private slots:
 
     void on_btnCancelReplace_clicked();
 
+    void on_actionPrint_triggered();
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;
