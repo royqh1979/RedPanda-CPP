@@ -5,6 +5,7 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include "systemconsts.h"
 
 AutolinkManager* pAutolinkManager;
 
@@ -21,7 +22,7 @@ PAutolink AutolinkManager::getLink(const QString &header) const
 void AutolinkManager::load()
 {
     QDir dir(pSettings->dirs().config());
-    QString filename=dir.filePath(AUTOLINK_CONFIG);
+    QString filename=dir.filePath(DEV_AUTOLINK_FILE);
     QFile file(filename);
     if (!file.exists()) {
         QFile preFile(":/config/autolink.json");
@@ -52,7 +53,7 @@ void AutolinkManager::load()
 void AutolinkManager::save()
 {
     QDir dir(pSettings->dirs().config());
-    QString filename=dir.filePath(AUTOLINK_CONFIG);
+    QString filename=dir.filePath(DEV_AUTOLINK_FILE);
     QFile file(filename);
     if (file.open(QFile::WriteOnly|QFile::Truncate)) {
         QJsonDocument doc(toJson());

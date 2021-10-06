@@ -14,6 +14,7 @@
 #include "symbolusagemanager.h"
 #include "codesnippetsmanager.h"
 #include "todoparser.h"
+#include "shortcutmanager.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -87,7 +88,7 @@ public:
     void rebuildOpenedFileHisotryMenu();
     void updateClassBrowserForEditor(Editor* editor);
     void resetAutoSaveTimer();
-
+    void updateShortcuts();
     void saveLastOpens();
     void loadLastOpens();
 

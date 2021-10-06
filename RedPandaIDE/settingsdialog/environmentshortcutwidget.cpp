@@ -9,6 +9,8 @@ EnvironmentShortcutWidget::EnvironmentShortcutWidget(const QString& name, const 
 {
     ui->setupUi(this);
     ui->tblShortcut->setModel(&mModel);
+    connect(&mModel, &EnvironmentShortcutModel::shortcutChanged,
+            this, &SettingsWidget::setSettingsChanged);
 }
 
 EnvironmentShortcutWidget::~EnvironmentShortcutWidget()
@@ -23,10 +25,11 @@ void EnvironmentShortcutWidget::doLoad()
 
 void EnvironmentShortcutWidget::doSave()
 {
-    foreach (const PEnvironmentShortCut& shortcut, mModel.shortcuts()) {
-        shortcut->action->setShortcut(QKeySequence::fromString(shortcut->shortcut));
-        shortcut->shortcut = shortcut->action->shortcut().toString();
-    }
+    ShortcutManager manager;
+    manager.setShortcuts(mModel.shortcuts());
+    manager.save();
+    pMainWindow->updateShortcuts();
+    mModel.reload();
 }
 
 EnvironmentShortcutModel::EnvironmentShortcutModel(QObject *parent):QAbstractTableModel(parent)
@@ -41,6 +44,8 @@ void EnvironmentShortcutModel::reload()
     QList<QAction*> actions = pMainWindow->findChildren<QAction*>(QString(),Qt::FindDirectChildrenOnly);
     QList<QMenu*> menus = pMainWindow->mainWidget()->menubar->findChildren<QMenu*>();
     foreach( const QMenu* menu, menus) {
+        if (menu->title().isEmpty())
+            continue;
         loadShortCutsOfMenu(menu, actions);
     }
     endResetModel();
@@ -62,7 +67,7 @@ QVariant EnvironmentShortcutModel::data(const QModelIndex &index, int role) cons
         return QVariant();
     }
     if (role==Qt::DisplayRole || role == Qt::EditRole) {
-        PEnvironmentShortCut item = mShortcuts[index.row()];
+        PEnvironmentShortcut item = mShortcuts[index.row()];
         switch( index.column()) {
         case 0:
             return item->fullPath;
@@ -81,8 +86,12 @@ bool EnvironmentShortcutModel::setData(const QModelIndex &index, const QVariant 
     if (role == Qt::EditRole) {
         if (index.column()!=1)
             return false;
-        PEnvironmentShortCut item = mShortcuts[index.row()];
-        item->shortcut = value.toString();
+        PEnvironmentShortcut item = mShortcuts[index.row()];
+        QString s = value.toString().trimmed();
+        if (s!=item->shortcut) {
+            item->shortcut = value.toString();
+            emit shortcutChanged();
+        }
         return true;
     }
     return false;
@@ -112,20 +121,29 @@ Qt::ItemFlags EnvironmentShortcutModel::flags(const QModelIndex &index) const
     return flags;
 }
 
-const QList<PEnvironmentShortCut> &EnvironmentShortcutModel::shortcuts() const
+const QList<PEnvironmentShortcut> &EnvironmentShortcutModel::shortcuts() const
 {
     return mShortcuts;
+}
+
+void EnvironmentShortcutModel::shortcutsUpdated()
+{
+    beginResetModel();
+    endResetModel();
 }
 
 void EnvironmentShortcutModel::loadShortCutsOfMenu(const QMenu *menu, QList<QAction *> &globalActions)
 {
     QList<QAction*> actions = menu->actions();
     foreach (QAction* action,actions) {
-        PEnvironmentShortCut item = std::make_shared<EnvironmentShortCut>();
-        item->name = action->objectName();
-        item->fullPath = QString("%1 > %2").arg(menu->title(),action->text());
-        item->action = action;
-        item->shortcut = action->shortcut().toString().trimmed();
+        if (!action->text().isEmpty()) {
+            PEnvironmentShortcut item = std::make_shared<EnvironmentShortcut>();
+            item->name = action->objectName();
+            item->fullPath = QString("%1 > %2").arg(menu->title(),action->text());
+            item->action = action;
+            item->shortcut = action->shortcut().toString().trimmed();
+            mShortcuts.append(item);
+        }
         globalActions.removeAll(action);
     }
 }

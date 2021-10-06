@@ -7,8 +7,6 @@
 #include <QVector>
 #include <QMap>
 
-#define AUTOLINK_CONFIG "autolink.json"
-
 struct Autolink {
     QString header;
     QString linkOption;

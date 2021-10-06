@@ -47,6 +47,7 @@ void CodeSnippetsManager::load()
                               tr("Read code snippets failed"),
                               tr("Can't open code snippet file '%1' for read.")
                               .arg(filename));
+        return;
     }
 
     QByteArray json = file.readAll();
@@ -58,6 +59,7 @@ void CodeSnippetsManager::load()
                               tr("Read code snippet file '%1' failed:%2")
                               .arg(filename)
                               .arg(error.errorString()));
+        return;
     }
     mSnippets.clear();
     QJsonArray array = doc.array();

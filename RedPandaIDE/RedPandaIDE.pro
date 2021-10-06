@@ -61,6 +61,7 @@ SOURCES += \
     settingsdialog/projectoutputwidget.cpp \
     settingsdialog/projectprecompilewidget.cpp \
     settingsdialog/projectversioninfowidget.cpp \
+    shortcutmanager.cpp \
     symbolusagemanager.cpp \
     todoparser.cpp \
     widgets/aboutdialog.cpp \
@@ -166,6 +167,7 @@ HEADERS += \
     settingsdialog/projectoutputwidget.h \
     settingsdialog/projectprecompilewidget.h \
     settingsdialog/projectversioninfowidget.h \
+    shortcutmanager.h \
     symbolusagemanager.h \
     todoparser.h \
     widgets/aboutdialog.h \

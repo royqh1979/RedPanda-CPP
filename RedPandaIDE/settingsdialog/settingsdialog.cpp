@@ -15,6 +15,7 @@
 #include "editorsnippetwidget.h"
 #include "editormiscwidget.h"
 #include "environmentappearencewidget.h"
+#include "environmentshortcutwidget.h"
 #include "environmentfileassociationwidget.h"
 #include "executorgeneralwidget.h"
 #include "debuggeneralwidget.h"
@@ -96,7 +97,11 @@ PSettingsDialog SettingsDialog::optionDialog()
     widget->init();
     dialog->addWidget(widget);
 
-    widget = new EnvironmentFileAssociationWidget(tr("FileAssociation"),tr("Environment"));
+    widget = new EnvironmentFileAssociationWidget(tr("File Association"),tr("Environment"));
+    widget->init();
+    dialog->addWidget(widget);
+
+    widget = new EnvironmentShortcutWidget(tr("Shortcuts"),tr("Environment"));
     widget->init();
     dialog->addWidget(widget);
 

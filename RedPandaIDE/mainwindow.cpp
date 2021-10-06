@@ -178,6 +178,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     updateEditorColorSchemes();
 
+    updateShortcuts();
 }
 
 MainWindow::~MainWindow()
@@ -664,6 +665,13 @@ void MainWindow::resetAutoSaveTimer()
     } else {
         mAutoSaveTimer.stop();
     }
+}
+
+void MainWindow::updateShortcuts()
+{
+    ShortcutManager manager;
+    manager.load();
+    manager.applyTo(findChildren<QAction*>());
 }
 
 QPlainTextEdit *MainWindow::txtLocals()
