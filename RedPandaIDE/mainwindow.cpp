@@ -4052,6 +4052,11 @@ void MainWindow::showSearchReplacePanel(bool show)
     mSearchResultTreeModel->setSelectable(show);
 }
 
+Ui::MainWindow *MainWindow::mainWidget() const
+{
+    return ui;
+}
+
 
 void MainWindow::on_btnReplace_clicked()
 {

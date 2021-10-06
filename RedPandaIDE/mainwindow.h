@@ -97,6 +97,8 @@ public:
 
     QPlainTextEdit* txtLocals();
 
+    Ui::MainWindow* mainWidget() const;
+
     CPUDialog *cpuDialog() const;
 
     Debugger *debugger() const;

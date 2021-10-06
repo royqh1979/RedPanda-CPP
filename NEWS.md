@@ -23,6 +23,7 @@ Version 0.6.0
  - fix: add mutex lock to prevent rare conditions when editor is modifying and the content is read
  - fix: makefile generated for static / dynamic library projects not right
  - fix: editors disappeared when close/close all
+ - implement: config shortcuts
 
 Version 0.5.0
  - enhancement: support C++ using type alias;
