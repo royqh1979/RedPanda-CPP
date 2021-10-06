@@ -9,6 +9,7 @@
 #include <QStandardPaths>
 #include <QMessageBox>
 #include <QStringList>
+#include <QAbstractNativeEventFilter>
 #include "common.h"
 #include "colorscheme.h"
 #include "iconsmanager.h"
@@ -16,6 +17,27 @@
 #include "platform.h"
 #include "parser/parserutils.h"
 #include "editorlist.h"
+#include <windows.h>
+
+class WindowLogoutEventFilter : public QAbstractNativeEventFilter {
+
+    // QAbstractNativeEventFilter interface
+public:
+    bool nativeEventFilter(const QByteArray &eventType, void *message, long *result) override;
+};
+
+bool WindowLogoutEventFilter::nativeEventFilter(const QByteArray &eventType, void *message, long *result){
+    MSG * pMsg = static_cast<MSG *>(message);
+    if (pMsg->message == WM_QUERYENDSESSION) {
+            if (!pMainWindow->close()) {
+                *result = 0;
+            } else {
+                *result = 1;
+            }
+        return true;
+    }
+    return false;
+}
 
 QString getSettingFilename(const QString& filepath = QString()) {
     QString filename;
@@ -110,6 +132,8 @@ int main(int argc, char *argv[])
             }
         }
         mainWindow.show();
+        WindowLogoutEventFilter filter;
+        app.installNativeEventFilter(&filter);
         int retCode = app.exec();
         // save settings
         // settings->compilerSets().saveSets();

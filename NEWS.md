@@ -24,6 +24,7 @@ Version 0.6.0
  - fix: makefile generated for static / dynamic library projects not right
  - fix: editors disappeared when close/close all
  - implement: config shortcuts
+ - implement: handle windows logout message
 
 Version 0.5.0
  - enhancement: support C++ using type alias;
