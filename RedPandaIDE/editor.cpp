@@ -578,21 +578,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
         pMainWindow->functionTip()->hide();
         return;
     case Qt::Key_Tab:
-        if (mUserCodeInTabStops.count()>0) {
-            handled = true;
-            int oldLine = caretY();
-            popUserCodeInTabStops();
-            if (oldLine!=caretY()) {
-                invalidateLine(oldLine);
-            }
-            invalidateLine(caretY());
-        } else {
-            if (mTabStopBegin >= 0) {
-                handled = true;
-                mTabStopBegin = -1;
-                invalidateLine(caretY());
-            }
-        }
+        tab();
         return;
     case Qt::Key_Up:
         if (pMainWindow->functionTip()->isVisible()) {
@@ -3175,6 +3161,26 @@ void Editor::checkSyntaxInBack()
 const PCppParser &Editor::parser()
 {
     return mParser;
+}
+
+void Editor::tab()
+{
+    if (mUserCodeInTabStops.count()>0) {
+        int oldLine = caretY();
+        popUserCodeInTabStops();
+        if (oldLine!=caretY()) {
+            invalidateLine(oldLine);
+        }
+        invalidateLine(caretY());
+        return;
+    } else {
+        if (mTabStopBegin >= 0) {
+            mTabStopBegin = -1;
+            invalidateLine(caretY());
+            return;
+        }
+    }
+    SynEdit::tab();
 }
 
 int Editor::gutterClickedLine() const

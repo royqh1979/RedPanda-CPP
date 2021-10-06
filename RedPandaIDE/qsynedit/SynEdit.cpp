@@ -2387,7 +2387,7 @@ void SynEdit::doAddChar(QChar AChar)
             }
         }
     }
-    setSelText(AChar);
+    doSetSelText(AChar);
     mUndoList->EndBlock();
 
     //DoOnPaintTransient(ttAfter);
@@ -2402,7 +2402,7 @@ void SynEdit::doCutToClipboard()
         mUndoList->EndBlock();
     });
     internalDoCopyToClipboard(selText());
-    setSelText("");
+    doSetSelText("");
 }
 
 void SynEdit::doCopyToClipboard()
@@ -3535,7 +3535,7 @@ void SynEdit::doAddStr(const QString &s)
         BE.Char = BB.Char + s.length();
         setCaretAndSelection(caretXY(),BB,BE);
     }
-    setSelText(s);
+    doSetSelText(s);
 }
 
 void SynEdit::doUndo()
@@ -4330,9 +4330,8 @@ void SynEdit::setSelTextPrimitiveEx(SynSelectionMode PasteMode, const QString &V
         internalSetCaretY(1);
 }
 
-void SynEdit::setSelText(const QString &Value)
+void SynEdit::doSetSelText(const QString &Value)
 {
-    QMutexLocker locker(&mMutex);
     mUndoList->BeginBlock();
     auto action = finally([this]{
         mUndoList->EndBlock();
@@ -4494,7 +4493,7 @@ int SynEdit::searchReplace(const QString &sSearch, const QString &sReplace, SynS
                         mUndoList->BeginBlock();
                         dobatchReplace = true;
                     }
-                    setSelText(replaceText);
+                    doSetSelText(replaceText);
                     nReplaceLen = caretX() - nFound;
                     // fix the caret position and the remaining results
                     if (!bBackward) {
@@ -5904,6 +5903,13 @@ void SynEdit::setSelLength(int Value)
         BufferCoord iNewStart{x,y};
         setCaretAndSelection(iNewStart, iNewStart, mBlockBegin);
     }
+}
+
+void SynEdit::setSelText(const QString &text)
+{
+    QMutexLocker locker(&mMutex);
+
+    doSetSelText(text);
 }
 
 BufferCoord SynEdit::blockBegin() const

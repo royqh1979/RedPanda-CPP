@@ -1264,6 +1264,9 @@
    <property name="text">
     <string>Indent</string>
    </property>
+   <property name="shortcut">
+    <string>Tab</string>
+   </property>
   </action>
   <action name="actionUnIndent">
    <property name="icon">
@@ -1273,6 +1276,9 @@
    </property>
    <property name="text">
     <string>UnIndent</string>
+   </property>
+   <property name="shortcut">
+    <string>Shift+Tab</string>
    </property>
   </action>
   <action name="actionToggleComment">

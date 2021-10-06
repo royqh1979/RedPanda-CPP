@@ -2899,7 +2899,7 @@ void MainWindow::on_actionUnIndent_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor != NULL ) {
-        editor->untab();
+        editor->shifttab();
     }
 }
 

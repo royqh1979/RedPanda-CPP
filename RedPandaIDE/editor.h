@@ -161,6 +161,8 @@ public:
 
     const PCppParser &parser();
 
+    void tab() override;
+
 private slots:
     void onModificationChanged(bool status) ;
     void onStatusChanged(SynStatusChanges changes);

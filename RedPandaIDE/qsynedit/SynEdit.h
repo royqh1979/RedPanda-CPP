@@ -221,8 +221,8 @@ public:
 
     void uncollapseAroundLine(int line);
     PSynEditFoldRange foldHidesLine(int line);
-    void setSelText(const QString& Value);
     void setSelLength(int Value);
+    void setSelText(const QString& text);
 
     int searchReplace(const QString& sSearch, const QString& sReplace, SynSearchOptions options,
                PSynSearchBase searchEngine,  SynSearchMathedProc matchedCallback = nullptr);
@@ -249,7 +249,7 @@ public:
     virtual void zoomOut()  { commandProcessor(SynEditorCommand::ecZoomOut);}
     virtual void selectAll() {  commandProcessor(SynEditorCommand::ecSelectAll);}
     virtual void tab() { commandProcessor(SynEditorCommand::ecTab);}
-    virtual void untab() { commandProcessor(SynEditorCommand::ecShiftTab);}
+    virtual void shifttab() { commandProcessor(SynEditorCommand::ecShiftTab);}
     virtual void toggleComment() { commandProcessor(SynEditorCommand::ecToggleComment);}
 
     virtual void beginUpdate();
@@ -432,6 +432,8 @@ private:
     QRect clientRect();
     void synFontChanged();
     void doOnPaintTransient(SynTransientType TransientType);
+    void doSetSelText(const QString& Value);
+
     void updateLastCaretX();
     void ensureCursorPosVisible();
     void ensureCursorPosVisibleEx(bool ForceToMiddle);
@@ -675,7 +677,7 @@ private:
 
     QString mInputPreeditString;
 
-    QRecursiveMutex mMutex;
+    QMutex mMutex;
 
 friend class SynEditTextPainter;
 
