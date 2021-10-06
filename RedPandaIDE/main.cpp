@@ -29,12 +29,15 @@ public:
 bool WindowLogoutEventFilter::nativeEventFilter(const QByteArray &eventType, void *message, long *result){
     MSG * pMsg = static_cast<MSG *>(message);
     if (pMsg->message == WM_QUERYENDSESSION) {
+        if (pMsg->lParam == 0
+                || (pMsg->lParam & ENDSESSION_LOGOFF)) {
             if (!pMainWindow->close()) {
                 *result = 0;
             } else {
                 *result = 1;
             }
-        return true;
+            return true;
+        }
     }
     return false;
 }

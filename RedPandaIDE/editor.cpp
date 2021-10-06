@@ -2794,6 +2794,7 @@ void Editor::setInProject(bool newInProject)
 {
     if (mInProject == newInProject)
         return;
+    mInProject = newInProject;
     if (mInProject) {
         initParser();
     } else {

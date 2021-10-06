@@ -25,6 +25,7 @@ Version 0.6.0
  - fix: editors disappeared when close/close all
  - implement: config shortcuts
  - implement: handle windows logout message
+ - fix: editor's inproject property not correctly setted (and may cause devcpp to crash when close project)
 
 Version 0.5.0
  - enhancement: support C++ using type alias;
