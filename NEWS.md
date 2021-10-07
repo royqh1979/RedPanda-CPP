@@ -27,6 +27,7 @@ Version 0.6.0
  - implement: handle windows logout message
  - fix: editor's inproject property not correctly setted (and may cause devcpp to crash when close project)
  - implement: print
+ - implement: tools configuration
 
 Version 0.5.0
  - enhancement: support C++ using type alias;

@@ -30,6 +30,7 @@
 #include "projectmakefilewidget.h"
 #include "projectversioninfowidget.h"
 #include "projectdllhostwidget.h"
+#include "toolsgeneralwidget.h"
 #include <QDebug>
 #include <QMessageBox>
 #include <QModelIndex>
@@ -166,6 +167,10 @@ PSettingsDialog SettingsDialog::optionDialog()
     dialog->addWidget(widget);
 
     widget = new FormatterGeneralWidget(tr("General"),tr("Code Formatter"));
+    widget->init();
+    dialog->addWidget(widget);
+
+    widget = new ToolsGeneralWidget(tr("General"),tr("Tools"));
     widget->init();
     dialog->addWidget(widget);
 

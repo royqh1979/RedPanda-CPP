@@ -14,6 +14,7 @@
 #include "widgets/newprojectdialog.h"
 #include "platform.h"
 #include "widgets/aboutdialog.h"
+#include "shortcutmanager.h"
 
 #include <QCloseEvent>
 #include <QComboBox>
@@ -137,6 +138,8 @@ MainWindow::MainWindow(QWidget *parent)
     mSymbolUsageManager->load();
     mCodeSnippetManager = std::make_shared<CodeSnippetsManager>();
     mCodeSnippetManager->load();
+    mToolsManager = std::make_shared<ToolsManager>();
+    mToolsManager->load();
     mSearchResultTreeModel = std::make_shared<SearchResultTreeModel>(&mSearchResultModel);
     mSearchResultListModel = std::make_shared<SearchResultListModel>(&mSearchResultModel);
     mSearchViewDelegate = std::make_shared<SearchResultTreeViewDelegate>(mSearchResultTreeModel);
@@ -179,6 +182,8 @@ MainWindow::MainWindow(QWidget *parent)
     updateEditorColorSchemes();
 
     updateShortcuts();
+
+    updateTools();
 }
 
 MainWindow::~MainWindow()
@@ -584,32 +589,17 @@ void MainWindow::rebuildOpenedFileHisotryMenu()
 {
     mMenuRecentFiles->clear();
     mMenuRecentProjects->clear();
-
-    foreach (QAction* action,mRecentFileActions) {
-        action->setParent(nullptr);
-        action->deleteLater();
-    }
-    mRecentFileActions.clear();
-
-    foreach (QAction* action,mRecentProjectActions) {
-        action->setParent(nullptr);
-        action->deleteLater();
-    }
-    mRecentProjectActions.clear();
-
     if (pSettings->history().openedFiles().size()==0) {
         mMenuRecentFiles->setEnabled(false);
     } else {
         mMenuRecentFiles->setEnabled(true);
         for (const QString& filename: pSettings->history().openedFiles()) {
-            QAction* action = new QAction();
-            action->setText(filename);
+            QAction* action = new QAction(filename,mMenuRecentFiles);
             connect(action, &QAction::triggered, [&filename,this](bool){
                 this->openFile(filename);
             });
-            mRecentFileActions.append(action);
+            mMenuRecentFiles->addAction(action);
         }
-        mMenuRecentFiles->addActions(mRecentFileActions);
     }
 
     if (pSettings->history().openedProjects().size()==0) {
@@ -617,14 +607,12 @@ void MainWindow::rebuildOpenedFileHisotryMenu()
     } else {
         mMenuRecentProjects->setEnabled(true);
         for (const QString& filename: pSettings->history().openedProjects()) {
-            QAction* action = new QAction();
-            action->setText(filename);
+            QAction* action = new QAction(filename,mMenuRecentProjects);
             connect(action, &QAction::triggered, [&filename,this](bool){
                 this->openProject(filename);
             });
-            mRecentProjectActions.append(action);
+            mMenuRecentProjects->addAction(action);
         }
-        mMenuRecentProjects->addActions(mRecentProjectActions);
     }
 
 }
@@ -1555,6 +1543,36 @@ void MainWindow::loadLastOpens()
     }
     if (focusedEditor)
         focusedEditor->activate();
+}
+
+void MainWindow::updateTools()
+{
+    ui->menuTools->clear();
+    ui->menuTools->addAction(ui->actionOptions);
+    if (!mToolsManager->tools().isEmpty()) {
+        ui->menuTools->addSeparator();
+        int count = 0;
+        foreach (const PToolItem& item, mToolsManager->tools()) {
+            QAction* action = new QAction(item->title,ui->menuTools);
+            connect(action, &QAction::triggered,
+                    [item] (){
+                if (item->pauseAfterExit
+                        && programHasConsole(parseMacros(item->program))) {
+                    executeFile(
+                                includeTrailingPathDelimiter(pSettings->dirs().app())+"ConsolePauser.exe",
+                                " 0 \""+parseMacros(item->program)+"\" "+parseMacros(item->parameters),
+                                parseMacros(item->workingDirectory));
+                } else {
+                    executeFile(
+                                parseMacros(item->program),
+                                parseMacros(item->parameters),
+                                parseMacros(item->workingDirectory));
+
+                }
+            });
+            ui->menuTools->addAction(action);
+        }
+    }
 }
 
 void MainWindow::newEditor()
@@ -4117,5 +4135,10 @@ void MainWindow::on_actionPrint_triggered()
     if (!editor)
         return;
     editor->print();
+}
+
+const PToolsManager &MainWindow::toolsManager() const
+{
+    return mToolsManager;
 }
 

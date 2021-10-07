@@ -748,8 +748,8 @@ QString parseMacros(const QString &s)
     QString result = s;
     Editor *e = pMainWindow->editorList()->getEditor();
 
-    result.replace("<DEFAULT>", pSettings->dirs().app());
-    result.replace("<DEVCPP>", pSettings->dirs().app());
+    result.replace("<DEFAULT>", QDir().absolutePath());
+    result.replace("<DEVCPP>", pSettings->dirs().executable());
     result.replace("<DEVCPPVERSION>", DEVCPP_VERSION);
     result.replace("<EXECPATH>", pSettings->dirs().app());
     QDate today = QDate::currentDate();
@@ -780,19 +780,19 @@ QString parseMacros(const QString &s)
         result.replace("<PROJECTFILE>", pMainWindow->project()->filename());
         result.replace("<PROJECTPATH>", pMainWindow->project()->directory());
 //        result.replace("<SOURCESPCLIST>', MainForm.Project.ListUnitStr(' '));
-        result.replace("<SOURCESPCLIST>","");
+//        result.replace("<SOURCESPCLIST>","");
     } else if (e!=nullptr) { // Non-project editor macros
         result.replace("<EXENAME>", changeFileExt(e->filename(),EXECUTABLE_EXT));
-        result.replace("<PROJECTNAME>",e->filename());
+        result.replace("<PROJECTNAME>", extractFileName(e->filename()));
         result.replace("<PROJECTFILE>",e->filename());
         result.replace("<PROJECTPATH>", extractFileDir(e->filename()));
-        result.replace("<SOURCESPCLIST>", ""); // clear unchanged macros
+//        result.replace("<SOURCESPCLIST>", ""); // clear unchanged macros
     } else {
         result.replace("<EXENAME>", "");
         result.replace("<PROJECTNAME>", "");
         result.replace("<PROJECTFILE>", "");
         result.replace("<PROJECTPATH>", "");
-        result.replace("<SOURCESPCLIST>", ""); // clear unchanged macros
+//        result.replace("<SOURCESPCLIST>", ""); // clear unchanged macros
     }
 
     // Editor macros
@@ -808,4 +808,15 @@ QString parseMacros(const QString &s)
         result.replace("<WORDXY>", "");
     }
     return result;
+}
+
+void executeFile(const QString &fileName, const QString &params, const QString &workingDir)
+{
+    ShellExecuteA(NULL,
+                  NULL,
+                  fileName.toLocal8Bit(),
+                  params.toLocal8Bit(),
+                  workingDir.toLocal8Bit(),
+                  SW_SHOW
+                  );
 }

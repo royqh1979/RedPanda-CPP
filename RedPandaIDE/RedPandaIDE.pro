@@ -65,6 +65,7 @@ SOURCES += \
     shortcutmanager.cpp \
     symbolusagemanager.cpp \
     todoparser.cpp \
+    toolsmanager.cpp \
     widgets/aboutdialog.cpp \
     widgets/classbrowser.cpp \
     widgets/codecompletionlistview.cpp \
@@ -113,6 +114,7 @@ SOURCES += \
     widgets/functiontooltipwidget.cpp \
     widgets/headercompletionpopup.cpp \
     widgets/issuestable.cpp \
+    widgets/macroinfomodel.cpp \
     widgets/newprojectdialog.cpp \
     widgets/qconsole.cpp \
     widgets/qpatchedcombobox.cpp \
@@ -172,6 +174,7 @@ HEADERS += \
     shortcutmanager.h \
     symbolusagemanager.h \
     todoparser.h \
+    toolsmanager.h \
     widgets/aboutdialog.h \
     widgets/classbrowser.h \
     widgets/codecompletionlistview.h \
@@ -221,6 +224,7 @@ HEADERS += \
     widgets/functiontooltipwidget.h \
     widgets/headercompletionpopup.h \
     widgets/issuestable.h \
+    widgets/macroinfomodel.h \
     widgets/newprojectdialog.h \
     widgets/qconsole.h \
     widgets/qpatchedcombobox.h \

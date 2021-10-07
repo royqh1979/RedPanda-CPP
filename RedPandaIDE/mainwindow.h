@@ -14,7 +14,8 @@
 #include "symbolusagemanager.h"
 #include "codesnippetsmanager.h"
 #include "todoparser.h"
-#include "shortcutmanager.h"
+#include "toolsmanager.h"
+
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -91,6 +92,7 @@ public:
     void updateShortcuts();
     void saveLastOpens();
     void loadLastOpens();
+    void updateTools();
 
     void openFiles(const QStringList& files);
 
@@ -128,6 +130,8 @@ public:
     PCodeSnippetManager &codeSnippetManager();
 
     const PTodoParser &todoParser() const;
+
+    const PToolsManager &toolsManager() const;
 
 public slots:
     void onCompileLog(const QString& msg);
@@ -402,8 +406,6 @@ private:
     Debugger *mDebugger;
     CPUDialog *mCPUDialog;
     SearchDialog *mSearchDialog;
-    QList<QAction *> mRecentFileActions;
-    QList<QAction *> mRecentProjectActions;
     bool mQuitting;
     QElapsedTimer mParserTimer;
     QFileSystemWatcher mFileSystemWatcher;
@@ -423,6 +425,7 @@ private:
     PSymbolUsageManager mSymbolUsageManager;
     PCodeSnippetManager mCodeSnippetManager;
     PTodoParser mTodoParser;
+    PToolsManager mToolsManager;
 
     bool mCheckSyntaxInBack;
     bool mOpenClosingBottomPanel;

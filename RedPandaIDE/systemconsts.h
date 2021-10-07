@@ -36,6 +36,7 @@
 #define DEV_CODESNIPPET_FILE  "codesnippets.json"
 #define DEV_AUTOLINK_FILE "autolink.json"
 #define DEV_SHORTCUT_FILE "shortcuts.json"
+#define DEV_TOOLS_FILE "tools.json"
 
 #ifdef Q_OS_WIN
 #   define PATH_SENSITIVITY Qt::CaseInsensitive
