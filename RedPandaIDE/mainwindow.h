@@ -133,6 +133,8 @@ public:
 
     const PToolsManager &toolsManager() const;
 
+    bool shouldRemoveAllSettings() const;
+
 public slots:
     void onCompileLog(const QString& msg);
     void onCompileIssue(PCompileIssue issue);
@@ -434,6 +436,7 @@ private:
     bool mOpenClosingLeftPanel;
     int mLeftPanelWidth;
     bool mLeftPanelOpenned;
+    bool mShouldRemoveAllSettings;
     PCompileSuccessionTask mCompileSuccessionTask;
 
     QTimer mAutoSaveTimer;

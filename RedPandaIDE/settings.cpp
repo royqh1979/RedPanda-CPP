@@ -3888,7 +3888,7 @@ void Settings::CodeFormatter::doSave()
 
 void Settings::CodeFormatter::doLoad()
 {
-    mBraceStyle = intValue("brace_style", FormatterBraceStyle::fbsDefault);
+    mBraceStyle = intValue("brace_style", FormatterBraceStyle::fbsJava);
     mIndentStyle = intValue("indent_style",FormatterIndentType::fitTab); // 0 isspaces, 1 is tab
     mTabWidth = intValue("tab_width",4);
     mAttachNamespaces = boolValue("attach_namespaces",false);
@@ -3896,15 +3896,15 @@ void Settings::CodeFormatter::doLoad()
     mAttachInlines = boolValue("attach_inlines",false);
     mAttachExternC = boolValue("attach_extern_c",false);
     mAttachClosingWhile = boolValue("attach_closing_while",false);
-    mIndentClasses = boolValue("indent_classes",false);
+    mIndentClasses = boolValue("indent_classes",true);
     mIndentModifiers = boolValue("indent_modifiers",false);
-    mIndentSwitches = boolValue("indent_switches",false);
+    mIndentSwitches = boolValue("indent_switches",true);
     mIndentCases = boolValue("indent_cases",false);
-    mIndentNamespaces = boolValue("indent_namespaces",false);
+    mIndentNamespaces = boolValue("indent_namespaces",true);
     mIndentAfterParens = boolValue("indent_after_parents",false);
     mIndentContinuation = boolValue("indent_continuation",false);
     mIndentLabels = boolValue("indent_labels",false);
-    mIndentPreprocBlock = boolValue("indent_preproc_block",false);
+    mIndentPreprocBlock = boolValue("indent_preproc_block",true);
     mIndentPreprocCond = boolValue("indent_preproc_cond",false);
     mIndentPreprocDefine = boolValue("indent_preproc_define",false);
     mIndentCol1Comments = boolValue("indent_col1_comments",false);
@@ -3912,13 +3912,13 @@ void Settings::CodeFormatter::doLoad()
     mMaxContinuationIndent = intValue("max_continuation_indent",40);
     mBreakBlocks = boolValue("break_blocks",false);
     mBreakBlocksAll = boolValue("break_blocks_all",false);
-    mPadOper = boolValue("pad_oper",false);
-    mPadComma = boolValue("pad_comma",false);
+    mPadOper = boolValue("pad_oper",true);
+    mPadComma = boolValue("pad_comma",true);
     mPadParen = boolValue("pad_paren",false);
     mPadParenOut = boolValue("pad_paren_out",false);
     mPadFirstParenOut = boolValue("pad_first_paren_out",false);
     mPadParenIn = boolValue("pad_parent_in",false);
-    mPadHeader = boolValue("pad_header",false);
+    mPadHeader = boolValue("pad_header",true);
     mUnpadParen = boolValue("unpad_paren",false);
     mDeleteEmptyLines = boolValue("delete_empty_lines",false);
     mDeleteMultipleEmptyLines = boolValue("delete_multiple_empty_lines",false);
@@ -3941,7 +3941,7 @@ void Settings::CodeFormatter::doLoad()
     mCloseTemplates = boolValue("close_templates",false);
     mRemoveCommentPrefix = boolValue("remove_comment_prefix",false);
     mBreakMaxCodeLength = boolValue("break_max_code_length",false);
-    mMaxCodeLength = intValue("max_code_length",200);
+    mMaxCodeLength = intValue("max_code_length",80);
     mBreakAfterLogical = boolValue("break_after_logical",false);
 }
 

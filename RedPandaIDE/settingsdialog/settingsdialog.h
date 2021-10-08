@@ -30,7 +30,10 @@ public:
     static PSettingsDialog optionDialog();
     static PSettingsDialog projectOptionDialog();
 
+    bool appShouldQuit() const;
+
 private slots:
+    void closeAndQuit();
     void widget_settings_changed(bool value);
     void on_widgetsView_clicked(const QModelIndex &index);
 
@@ -45,6 +48,7 @@ private:
     Ui::SettingsDialog *ui;
     QList<SettingsWidget*> mSettingWidgets;
     QStandardItemModel model;
+    bool mAppShouldQuit;
 
 //    CompilerSetOptionWidget *pCompilerSetOptionWidget;
 //    CompilerAutolinkWidget *pCompilerAutolinkWidget;

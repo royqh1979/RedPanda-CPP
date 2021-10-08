@@ -49,6 +49,7 @@ SOURCES += \
     settingsdialog/editorsnippetwidget.cpp \
     settingsdialog/editortooltipswidget.cpp \
     settingsdialog/environmentfileassociationwidget.cpp \
+    settingsdialog/environmentfolderswidget.cpp \
     settingsdialog/environmentshortcutwidget.cpp \
     settingsdialog/formattergeneralwidget.cpp \
     settingsdialog/projectcompileparamaterswidget.cpp \
@@ -158,6 +159,7 @@ HEADERS += \
     settingsdialog/editorsnippetwidget.h \
     settingsdialog/editortooltipswidget.h \
     settingsdialog/environmentfileassociationwidget.h \
+    settingsdialog/environmentfolderswidget.h \
     settingsdialog/environmentshortcutwidget.h \
     settingsdialog/formattergeneralwidget.h \
     settingsdialog/projectcompileparamaterswidget.h \
@@ -240,6 +242,7 @@ FORMS += \
     settingsdialog/editorsnippetwidget.ui \
     settingsdialog/editortooltipswidget.ui \
     settingsdialog/environmentfileassociationwidget.ui \
+    settingsdialog/environmentfolderswidget.ui \
     settingsdialog/environmentshortcutwidget.ui \
     settingsdialog/formattergeneralwidget.ui \
     settingsdialog/projectcompileparamaterswidget.ui \

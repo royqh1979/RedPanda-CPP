@@ -138,8 +138,14 @@ int main(int argc, char *argv[])
         WindowLogoutEventFilter filter;
         app.installNativeEventFilter(&filter);
         int retCode = app.exec();
+        QString configDir = pSettings->dirs().config();
+        delete pSettings;
         // save settings
         // settings->compilerSets().saveSets();
+        if (mainWindow.shouldRemoveAllSettings()) {
+            QDir dir(configDir);
+            dir.removeRecursively();
+        }
         return retCode;
     }  catch (BaseError e) {
         QMessageBox::critical(nullptr,QApplication::tr("Error"),e.reason());

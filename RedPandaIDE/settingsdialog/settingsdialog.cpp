@@ -17,6 +17,7 @@
 #include "environmentappearencewidget.h"
 #include "environmentshortcutwidget.h"
 #include "environmentfileassociationwidget.h"
+#include "environmentfolderswidget.h"
 #include "executorgeneralwidget.h"
 #include "debuggeneralwidget.h"
 #include "formattergeneralwidget.h"
@@ -46,6 +47,8 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     model.setHorizontalHeaderLabels(QStringList());
 
     ui->btnApply->setEnabled(false);
+
+    mAppShouldQuit = false;
 
 }
 
@@ -105,6 +108,16 @@ PSettingsDialog SettingsDialog::optionDialog()
     widget = new EnvironmentShortcutWidget(tr("Shortcuts"),tr("Environment"));
     widget->init();
     dialog->addWidget(widget);
+
+    widget = new EnvironmentFoldersWidget(tr("Folders"),tr("Environment"));
+    widget->init();
+    dialog->addWidget(widget);
+
+    connect((EnvironmentFoldersWidget*)widget,
+            &EnvironmentFoldersWidget::shouldQuitApp,
+            dialog.get(),
+            &SettingsDialog::closeAndQuit,
+            Qt::QueuedConnection);
 
     widget = new CompilerSetOptionWidget(tr("Compiler Set"),tr("Compiler"));
     widget->init();
@@ -288,4 +301,15 @@ void SettingsDialog::saveCurrentPageSettings(bool confirm)
         }
     }
     pWidget->save();
+}
+
+bool SettingsDialog::appShouldQuit() const
+{
+    return mAppShouldQuit;
+}
+
+void SettingsDialog::closeAndQuit()
+{
+    mAppShouldQuit = true;
+    close();
 }

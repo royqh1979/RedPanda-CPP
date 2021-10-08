@@ -46,9 +46,10 @@ MainWindow::MainWindow(QWidget *parent)
       ui(new Ui::MainWindow),
       mSearchDialog(nullptr),
       mQuitting(false),
+      mCheckSyntaxInBack(false),
       mOpenClosingBottomPanel(false),
       mOpenClosingLeftPanel(false),
-      mCheckSyntaxInBack(false),
+      mShouldRemoveAllSettings(false),
       mClosing(false),
       mSystemTurnedOff(false)
 {
@@ -2534,18 +2535,20 @@ void MainWindow::on_actionOpen_triggered()
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {
-    Settings::UI& settings = pSettings->ui();
-    settings.setMainWindowState(saveState());
-    settings.setMainWindowGeometry(saveGeometry());
-    settings.setBottomPanelHeight(mBottomPanelHeight);
-    settings.setBottomPanelIndex(ui->tabMessages->currentIndex());
-    settings.setBottomPanelOpenned(mBottomPanelOpenned);
-    settings.setLeftPanelWidth(mLeftPanelWidth);
-    settings.setLeftPanelIndex(ui->tabInfos->currentIndex());
-    settings.setLeftPanelOpenned(mLeftPanelOpenned);
-    settings.save();    
+    if (!mShouldRemoveAllSettings) {
+        Settings::UI& settings = pSettings->ui();
+        settings.setMainWindowState(saveState());
+        settings.setMainWindowGeometry(saveGeometry());
+        settings.setBottomPanelHeight(mBottomPanelHeight);
+        settings.setBottomPanelIndex(ui->tabMessages->currentIndex());
+        settings.setBottomPanelOpenned(mBottomPanelOpenned);
+        settings.setLeftPanelWidth(mLeftPanelWidth);
+        settings.setLeftPanelIndex(ui->tabInfos->currentIndex());
+        settings.setLeftPanelOpenned(mLeftPanelOpenned);
+        settings.save();
+    }
 
-    if (pSettings->editor().autoLoadLastFiles()) {
+    if (!mShouldRemoveAllSettings && pSettings->editor().autoLoadLastFiles()) {
         saveLastOpens();
     } else {
         //if don't save last open files, close project before editors, to save project openned editors;
@@ -2559,7 +2562,7 @@ void MainWindow::closeEvent(QCloseEvent *event) {
         return ;
     }
 
-    if (pSettings->editor().autoLoadLastFiles()) {
+    if (!mShouldRemoveAllSettings && pSettings->editor().autoLoadLastFiles()) {
         if (mProject) {
             closeProject(false);
         }
@@ -2568,7 +2571,8 @@ void MainWindow::closeEvent(QCloseEvent *event) {
 
     mCompilerManager->stopCompile();
     mCompilerManager->stopRun();
-    mSymbolUsageManager->save();
+    if (!mShouldRemoveAllSettings)
+        mSymbolUsageManager->save();
     event->accept();
     return;
 }
@@ -2653,6 +2657,11 @@ void MainWindow::on_actionOptions_triggered()
     bool oldCodeCompletion = pSettings->codeCompletion().enabled();
     PSettingsDialog settingsDialog = SettingsDialog::optionDialog();
     settingsDialog->exec();
+    if (settingsDialog->appShouldQuit()) {
+        mShouldRemoveAllSettings = true;
+        close();
+        return;
+    }
 
     bool newCodeCompletion = pSettings->codeCompletion().enabled();
     if (!oldCodeCompletion && newCodeCompletion) {
@@ -4135,6 +4144,11 @@ void MainWindow::on_actionPrint_triggered()
     if (!editor)
         return;
     editor->print();
+}
+
+bool MainWindow::shouldRemoveAllSettings() const
+{
+    return mShouldRemoveAllSettings;
 }
 
 const PToolsManager &MainWindow::toolsManager() const

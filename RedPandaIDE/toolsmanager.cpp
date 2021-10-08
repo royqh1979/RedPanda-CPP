@@ -81,8 +81,8 @@ void ToolsManager::save()
     doc.setArray(array);
     if (file.write(doc.toJson())<0) {
         QMessageBox::critical(nullptr,
-                              tr("Save tool config failed"),
-                              tr("Write to tool config file '%1' failed.")
+                              tr("Save tools config failed"),
+                              tr("Write to tools config file '%1' failed.")
                               .arg(filename));
         return;
     }

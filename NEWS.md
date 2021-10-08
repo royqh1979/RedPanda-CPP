@@ -28,6 +28,8 @@ Version 0.6.0
  - fix: editor's inproject property not correctly setted (and may cause devcpp to crash when close project)
  - implement: print
  - implement: tools configuration
+ - implement: default settings for code formatter
+ - implement: remove all custom settings
 
 Version 0.5.0
  - enhancement: support C++ using type alias;
