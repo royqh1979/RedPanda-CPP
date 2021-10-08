@@ -1,3 +1,6 @@
+Version 0.6.1
+ - fix: editor deadlock
+
 Version 0.6.0
  - fix: old data not displayed when editing code snippets
  - fix: shift-tab for unindent not work

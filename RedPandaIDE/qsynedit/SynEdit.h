@@ -678,7 +678,7 @@ private:
 
     QString mInputPreeditString;
 
-    QMutex mMutex;
+    QRecursiveMutex mMutex;
 
 friend class SynEditTextPainter;
 
