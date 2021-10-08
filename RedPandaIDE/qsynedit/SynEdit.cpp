@@ -534,13 +534,13 @@ BufferCoord SynEdit::getMatchingBracketEx(BufferCoord APoint)
 
 QStringList SynEdit::contents()
 {
-    QMutexLocker locker(&mMutex);
+    //QMutexLocker locker(&mMutex);
     return lines()->contents();
 }
 
 QString SynEdit::text()
 {
-    QMutexLocker locker(&mMutex);
+    //QMutexLocker locker(&mMutex);
     return lines()->text();
 }
 
