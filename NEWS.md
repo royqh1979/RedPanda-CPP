@@ -1,3 +1,6 @@
+Version 0.6.3
+ - fix: should use c++ syntax to check ".h" files
+    
 Version 0.6.2 
  - fix: The Enter key in the numpad doesn't work
  - fix: The compiled executable not fully write to the disk before run it

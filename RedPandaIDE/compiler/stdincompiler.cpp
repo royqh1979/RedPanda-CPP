@@ -27,7 +27,6 @@ bool StdinCompiler::prepareForCompile()
         mArguments += getCharsetArgument(pCharsetInfoManager->getDefaultSystemEncoding());
     switch(fileType) {
     case FileType::CSource:
-    case FileType::CHeader:
         mArguments += " -x c - ";
         mArguments += getCCompileArguments(mOnlyCheckSyntax);
         mArguments += getCIncludeArguments();
@@ -37,6 +36,7 @@ bool StdinCompiler::prepareForCompile()
         break;
     case FileType::CppSource:
     case FileType::CppHeader:
+    case FileType::CHeader:
         mArguments += " -x c++ - ";
         mArguments += getCppCompileArguments(mOnlyCheckSyntax);
         mArguments += getCppIncludeArguments();
