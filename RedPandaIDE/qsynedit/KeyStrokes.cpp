@@ -203,6 +203,8 @@ void SynEditKeyStrokes::resetDefaults()
     add(SynEditorCommand::ecRedo, Qt::Key_Backspace, Qt::AltModifier|Qt::ShiftModifier);
     add(SynEditorCommand::ecLineBreak, Qt::Key_Return, Qt::NoModifier);
     add(SynEditorCommand::ecLineBreak, Qt::Key_Return, Qt::ShiftModifier);
+    add(SynEditorCommand::ecLineBreak, Qt::Key_Enter, Qt::KeypadModifier);
+    add(SynEditorCommand::ecLineBreak, Qt::Key_Enter, Qt::KeypadModifier|Qt::ShiftModifier);
     add(SynEditorCommand::ecTab, Qt::Key_Tab, Qt::NoModifier);
     add(SynEditorCommand::ecShiftTab, Qt::Key_Backtab, Qt::ShiftModifier);
     add(SynEditorCommand::ecShiftTab, Qt::Key_Tab, Qt::ShiftModifier);

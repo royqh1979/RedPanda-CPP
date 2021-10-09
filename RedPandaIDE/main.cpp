@@ -139,10 +139,11 @@ int main(int argc, char *argv[])
         app.installNativeEventFilter(&filter);
         int retCode = app.exec();
         QString configDir = pSettings->dirs().config();
-        delete pSettings;
         // save settings
         // settings->compilerSets().saveSets();
         if (mainWindow.shouldRemoveAllSettings()) {
+            settings.release();
+            delete pSettings;
             QDir dir(configDir);
             dir.removeRecursively();
         }

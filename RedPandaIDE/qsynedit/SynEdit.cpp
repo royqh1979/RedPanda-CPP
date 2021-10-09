@@ -21,6 +21,8 @@
 
 SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
 {
+    mLastKey = 0;
+    mLastKeyModifiers = Qt::NoModifier;
     mModified = false;
     mPaintLock = 0;
     mPainterLock = 0;

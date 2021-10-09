@@ -497,6 +497,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
 
     switch (event->key()) {
     case Qt::Key_Return:
+    case Qt::Key_Enter:
         mLastIdCharPressed = 0;
         if (mTabStopBegin>=0) { // editing user code template
             handled = true;
@@ -2352,6 +2353,7 @@ bool Editor::onCompletionKeyPressed(QKeyEvent *event)
         mCompletionPopup->hide();
         return true;
     case Qt::Key_Return:
+    case Qt::Key_Enter:
     case Qt::Key_Tab:
         completionInsert(pSettings->codeCompletion().appendFunc());
         return true;
@@ -2403,6 +2405,7 @@ bool Editor::onHeaderCompletionKeyPressed(QKeyEvent *event)
         mHeaderCompletionPopup->hide();
         return true;
     case Qt::Key_Return:
+    case Qt::Key_Enter:
     case Qt::Key_Tab:
         headerCompletionInsert();
         mHeaderCompletionPopup->hide();

@@ -2767,6 +2767,7 @@ void MainWindow::onCompileFinished()
 
     //run succession task if there aren't any errors
     if (mCompileSuccessionTask && mCompilerManager->compileErrorCount()==0) {
+        QThread::msleep(500); // wait for exec file writed to disk;
         switch (mCompileSuccessionTask->type) {
         case MainWindow::CompileSuccessionTaskType::Run:
             runExecutable(mCompileSuccessionTask->filename);

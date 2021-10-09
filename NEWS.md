@@ -1,5 +1,8 @@
 Version 0.6.1
  - fix: editor deadlock
+ - fix: The Enter key in the numpad doesn't work
+ - fix: The compiled executable not fully write to the disk before run it
+ - fix: settings object not correctly released when exit
 
 Version 0.6.0
  - fix: old data not displayed when editing code snippets

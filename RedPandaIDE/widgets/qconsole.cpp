@@ -554,6 +554,7 @@ void QConsole::keyPressEvent(QKeyEvent *event)
 {
     switch(event->key()) {
     case Qt::Key_Return:
+    case Qt::Key_Enter:
         event->accept();
         if (mReadonly)
             return;
