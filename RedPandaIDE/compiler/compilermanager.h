@@ -52,9 +52,9 @@ private:
     int mSyntaxCheckIssueCount;
     Compiler* mBackgroundSyntaxChecker;
     ExecutableRunner* mRunner;
-    QMutex mCompileMutex;
-    QMutex mBackgroundSyntaxCheckMutex;
-    QMutex mRunnerMutex;
+    QRecursiveMutex mCompileMutex;
+    QRecursiveMutex mBackgroundSyntaxCheckMutex;
+    QRecursiveMutex mRunnerMutex;
 };
 
 class CompileError : public BaseError {

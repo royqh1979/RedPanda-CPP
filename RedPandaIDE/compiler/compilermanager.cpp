@@ -65,10 +65,11 @@ void CompilerManager::compile(const QString& filename, const QByteArray& encodin
         mCompileErrorCount = 0;
         mCompiler = new FileCompiler(filename,encoding,silent,onlyCheckSyntax);
         mCompiler->setRebuild(rebuild);
-        connect(mCompiler, &Compiler::compileFinished, this ,&CompilerManager::onCompileFinished);
+        connect(mCompiler, &Compiler::finished, mCompiler, &QObject::deleteLater);
+        connect(mCompiler, &Compiler::compileFinished, this, &CompilerManager::onCompileFinished);
         connect(mCompiler, &Compiler::compileIssue, this, &CompilerManager::onCompileIssue);
         connect(mCompiler, &Compiler::compileStarted, pMainWindow, &MainWindow::onCompileStarted);
-        connect(mCompiler, &Compiler::compileFinished, pMainWindow, &MainWindow::onCompileFinished);
+
         connect(mCompiler, &Compiler::compileOutput, pMainWindow, &MainWindow::onCompileLog);
         connect(mCompiler, &Compiler::compileIssue, pMainWindow, &MainWindow::onCompileIssue);
         connect(mCompiler, &Compiler::compileErrorOccured, pMainWindow, &MainWindow::onCompileErrorOccured);
@@ -92,9 +93,12 @@ void CompilerManager::compileProject(std::shared_ptr<Project> project, bool rebu
         mCompileErrorCount = 0;
         mCompiler = new ProjectCompiler(project,silent,onlyCheckSyntax);
         mCompiler->setRebuild(rebuild);
-        connect(mCompiler, &Compiler::compileFinished, this ,&CompilerManager::onCompileFinished);
+        connect(mCompiler, &Compiler::finished, mCompiler, &QObject::deleteLater);
+        connect(mCompiler, &Compiler::compileFinished, this, &CompilerManager::onCompileFinished);
+
         connect(mCompiler, &Compiler::compileIssue, this, &CompilerManager::onCompileIssue);
-        connect(mCompiler, &Compiler::compileFinished, pMainWindow, &MainWindow::onCompileFinished);
+        connect(mCompiler, &Compiler::compileStarted, pMainWindow, &MainWindow::onCompileStarted);
+
         connect(mCompiler, &Compiler::compileOutput, pMainWindow, &MainWindow::onCompileLog);
         connect(mCompiler, &Compiler::compileIssue, pMainWindow, &MainWindow::onCompileIssue);
         connect(mCompiler, &Compiler::compileErrorOccured, pMainWindow, &MainWindow::onCompileErrorOccured);
@@ -120,9 +124,12 @@ void CompilerManager::cleanProject(std::shared_ptr<Project> project)
         compiler->setOnlyClean(true);
         mCompiler->setRebuild(false);
         mCompiler = compiler;
-        connect(mCompiler, &Compiler::compileFinished, this ,&CompilerManager::onCompileFinished);
+        connect(mCompiler, &Compiler::finished, mCompiler, &QObject::deleteLater);
+        connect(mCompiler, &Compiler::compileFinished, this, &CompilerManager::onCompileFinished);
+
         connect(mCompiler, &Compiler::compileIssue, this, &CompilerManager::onCompileIssue);
-        connect(mCompiler, &Compiler::compileFinished, pMainWindow, &MainWindow::onCompileFinished);
+        connect(mCompiler, &Compiler::compileStarted, pMainWindow, &MainWindow::onCompileStarted);
+
         connect(mCompiler, &Compiler::compileOutput, pMainWindow, &MainWindow::onCompileLog);
         connect(mCompiler, &Compiler::compileIssue, pMainWindow, &MainWindow::onCompileIssue);
         connect(mCompiler, &Compiler::compileErrorOccured, pMainWindow, &MainWindow::onCompileErrorOccured);
@@ -166,9 +173,10 @@ void CompilerManager::checkSyntax(const QString &filename, const QString &conten
         mSyntaxCheckErrorCount = 0;
         mBackgroundSyntaxChecker = new StdinCompiler(filename,content,isAscii,true,true);
         mBackgroundSyntaxChecker->setProject(project);
-        connect(mBackgroundSyntaxChecker, &Compiler::compileFinished, this ,&CompilerManager::onSyntaxCheckFinished);
+        connect(mBackgroundSyntaxChecker, &Compiler::finished, mBackgroundSyntaxChecker, &QThread::deleteLater);
         connect(mBackgroundSyntaxChecker, &Compiler::compileIssue, this, &CompilerManager::onSyntaxCheckIssue);
-        connect(mBackgroundSyntaxChecker, &Compiler::compileFinished, pMainWindow, &MainWindow::onCompileFinished);
+        connect(mBackgroundSyntaxChecker, &Compiler::compileStarted, pMainWindow, &MainWindow::onCompileStarted);
+        connect(mBackgroundSyntaxChecker, &Compiler::compileFinished, this, &CompilerManager::onSyntaxCheckFinished);
         connect(mBackgroundSyntaxChecker, &Compiler::compileOutput, pMainWindow, &MainWindow::onCompileLog);
         connect(mBackgroundSyntaxChecker, &Compiler::compileIssue, pMainWindow, &MainWindow::onCompileIssue);
         connect(mBackgroundSyntaxChecker, &Compiler::compileErrorOccured, pMainWindow, &MainWindow::onCompileErrorOccured);
@@ -210,7 +218,7 @@ void CompilerManager::stopCompile()
 
 void CompilerManager::stopCheckSyntax()
 {
-    QMutexLocker locker(&mCompileMutex);
+    QMutexLocker locker(&mBackgroundSyntaxCheckMutex);
     if (mBackgroundSyntaxChecker!=nullptr)
         mBackgroundSyntaxChecker->stopCompile();
 }
@@ -223,8 +231,8 @@ bool CompilerManager::canCompile(const QString &filename)
 void CompilerManager::onCompileFinished()
 {
     QMutexLocker locker(&mCompileMutex);
-    delete mCompiler;
     mCompiler=nullptr;
+    pMainWindow->onCompileFinished(false);
 }
 
 void CompilerManager::onRunnerTerminated()
@@ -245,8 +253,8 @@ void CompilerManager::onCompileIssue(PCompileIssue issue)
 void CompilerManager::onSyntaxCheckFinished()
 {
     QMutexLocker locker(&mBackgroundSyntaxCheckMutex);
-    delete mBackgroundSyntaxChecker;
     mBackgroundSyntaxChecker=nullptr;
+    pMainWindow->onCompileFinished(true);
 }
 
 void CompilerManager::onSyntaxCheckIssue(PCompileIssue issue)

@@ -2210,10 +2210,11 @@ static void setReleaseOptions(Settings::PCompilerSet pSet) {
         pSet->setOption(pOption,'1');
     }
 
-    pOption = pSet->findOption("-static");
-    if (pOption) {
-        pSet->setOption(pOption,'1');
-    }
+//    pOption = pSet->findOption("-static");
+//    if (pOption) {
+//        pSet->setOption(pOption,'1');
+//    }
+    pSet->setStaticLink(true);
 }
 
 static void setDebugOptions(Settings::PCompilerSet pSet) {
@@ -2229,10 +2230,11 @@ static void setDebugOptions(Settings::PCompilerSet pSet) {
     if (pOption) {
         pSet->setOption(pOption,'1');
     }
-    pOption = pSet->findOption("-static");
-    if (pOption) {
-        pSet->setOption(pOption,'1');
-    }
+//    pOption = pSet->findOption("-static");
+//    if (pOption) {
+//        pSet->setOption(pOption,'1');
+//    }
+    pSet->setStaticLink(false);
 }
 
 static void setProfileOptions(Settings::PCompilerSet pSet) {
@@ -2241,10 +2243,11 @@ static void setProfileOptions(Settings::PCompilerSet pSet) {
         pSet->setOption(pOption,'1');
     }
 
-    pOption = pSet->findOption("-static");
-    if (pOption) {
-        pSet->setOption(pOption,'1');
-    }
+//    pOption = pSet->findOption("-static");
+//    if (pOption) {
+//        pSet->setOption(pOption,'1');
+//    }
+    pSet->setStaticLink(false);
 }
 
 void Settings::CompilerSets::addSets(const QString &folder)

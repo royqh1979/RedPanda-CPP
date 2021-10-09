@@ -1114,11 +1114,7 @@ void MainWindow::debug()
             host.replace('\\','/');
             mDebugger->sendCommand("exec-file", '"' + host + '"');
         }
-        for (int i=0;i<mProject->units().count();i++) {
-            QString file = mProject->units()[i]->fileName();
-            file.replace('\\','/');
-            mDebugger->sendCommand("file", '"'+file+ '"');
-        }
+
         includeOrSkipDirs(mProject->options().includes,
                           pSettings->debugger().skipProjectLibraries());
         includeOrSkipDirs(mProject->options().libs,
@@ -2535,6 +2531,7 @@ void MainWindow::on_actionOpen_triggered()
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {
+    mQuitting = true;
     if (!mShouldRemoveAllSettings) {
         Settings::UI& settings = pSettings->ui();
         settings.setMainWindowState(saveState());
@@ -2558,6 +2555,7 @@ void MainWindow::closeEvent(QCloseEvent *event) {
     }
 
     if (!mEditorList->closeAll(false)) {
+        mQuitting = false;
         event->ignore();
         return ;
     }
@@ -2695,6 +2693,8 @@ void MainWindow::onCompilerSetChanged(int index)
 void MainWindow::onCompileLog(const QString &msg)
 {
     ui->txtCompilerOutput->appendPlainText(msg);
+    ui->txtCompilerOutput->moveCursor(QTextCursor::End);
+    ui->txtCompilerOutput->moveCursor(QTextCursor::StartOfLine);
     ui->txtCompilerOutput->ensureCursorVisible();
 }
 
@@ -2726,22 +2726,27 @@ void MainWindow::onCompileStarted()
     ui->txtCompilerOutput->clear();
 }
 
-void MainWindow::onCompileFinished()
+void MainWindow::onCompileFinished(bool isCheckSyntax)
 {
+    if (mQuitting) {
+        if (isCheckSyntax)
+            mCheckSyntaxInBack = false;
+        else
+            mCompileSuccessionTask = nullptr;
+        return;
+    }
     // Update tab caption
     int i = ui->tabMessages->indexOf(ui->tabIssues);
-    if (i==-1)
-        return;
-    ui->tabMessages->setTabText(i, tr("Issues") +
+    if (i==-1) {
+        ui->tabMessages->setTabText(i, tr("Issues") +
                                 QString(" (%1)").arg(ui->tableIssues->model()->rowCount()));
+    }
 
     // Close it if there's nothing to show
-    if (mCheckSyntaxInBack) {
+    if (isCheckSyntax) {
       // check syntax in back, don't change message panel
     } else if (
         (ui->tableIssues->count() == 0)
-//        and (ResourceOutput.Items.Count = 0)
-//        and devData.AutoCloseProgress
                ) {
         openCloseBottomPanel(false);
         // Or open it if there is anything to show
@@ -2750,12 +2755,6 @@ void MainWindow::onCompileFinished()
             if (ui->tabMessages->currentIndex() != i) {
                 ui->tabMessages->setCurrentIndex(i);
             }
-//      end else if (ResourceOutput.Items.Count > 0) then begin
-//        if MessageControl.ActivePage <> ResSheet then begin
-//          MessageControl.ActivePage := ResSheet;
-//          fMessageControlChanged := False;
-//        end;
-//      end;
             openCloseBottomPanel(true);
         }
     }
@@ -2765,46 +2764,48 @@ void MainWindow::onCompileFinished()
         e->invalidate();
     }
 
-    //run succession task if there aren't any errors
-    if (mCompileSuccessionTask && mCompilerManager->compileErrorCount()==0) {
-        QThread::msleep(500); // wait for exec file writed to disk;
-        switch (mCompileSuccessionTask->type) {
-        case MainWindow::CompileSuccessionTaskType::Run:
-            runExecutable(mCompileSuccessionTask->filename);
-            break;
-        case MainWindow::CompileSuccessionTaskType::Debug:
-            debug();
-            break;
-        }
-        mCompileSuccessionTask.reset();
-        // Jump to problem location, sorted by significance
-    } else if ((mCompilerManager->compileIssueCount() > 0) && (!mCheckSyntaxInBack)) {
-        // First try to find errors
-        for (int i=0;i<ui->tableIssues->count();i++) {
-            PCompileIssue issue = ui->tableIssues->issue(i);
-            if (issue->type == CompileIssueType::Error) {
-                if (e && e->filename() != issue->filename)
-                    continue;
-                ui->tableIssues->selectRow(i);
-                QModelIndex index =ui->tableIssues->model()->index(i,0);
-                emit ui->tableIssues->doubleClicked(index);
+    if (!isCheckSyntax) {
+        //run succession task if there aren't any errors
+        if (mCompileSuccessionTask && mCompilerManager->compileErrorCount()==0) {
+            switch (mCompileSuccessionTask->type) {
+            case MainWindow::CompileSuccessionTaskType::Run:
+                runExecutable(mCompileSuccessionTask->filename);
+                break;
+            case MainWindow::CompileSuccessionTaskType::Debug:
+                debug();
                 break;
             }
-        }
+            mCompileSuccessionTask.reset();
+            // Jump to problem location, sorted by significance
+        } else if ((mCompilerManager->compileIssueCount() > 0) && (!mCheckSyntaxInBack)) {
+            // First try to find errors
+            for (int i=0;i<ui->tableIssues->count();i++) {
+                PCompileIssue issue = ui->tableIssues->issue(i);
+                if (issue->type == CompileIssueType::Error) {
+                    if (e && e->filename() != issue->filename)
+                        continue;
+                    ui->tableIssues->selectRow(i);
+                    QModelIndex index =ui->tableIssues->model()->index(i,0);
+                    emit ui->tableIssues->doubleClicked(index);
+                    break;
+                }
+            }
 
-        // Then try to find warnings
-        for (int i=0;i<ui->tableIssues->count();i++) {
-            PCompileIssue issue = ui->tableIssues->issue(i);
-            if (issue->type == CompileIssueType::Warning) {
-                if (e && e->filename() != issue->filename)
-                    continue;
-                ui->tableIssues->selectRow(i);
-                QModelIndex index =ui->tableIssues->model()->index(i,0);
-                emit ui->tableIssues->doubleClicked(index);
+            // Then try to find warnings
+            for (int i=0;i<ui->tableIssues->count();i++) {
+                PCompileIssue issue = ui->tableIssues->issue(i);
+                if (issue->type == CompileIssueType::Warning) {
+                    if (e && e->filename() != issue->filename)
+                        continue;
+                    ui->tableIssues->selectRow(i);
+                    QModelIndex index =ui->tableIssues->model()->index(i,0);
+                    emit ui->tableIssues->doubleClicked(index);
+                }
             }
         }
+    } else {
+        mCheckSyntaxInBack=false;
     }
-    mCheckSyntaxInBack=false;
     updateCompileActions();
     updateAppTitle();
 }

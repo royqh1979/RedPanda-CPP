@@ -139,7 +139,7 @@ public slots:
     void onCompileLog(const QString& msg);
     void onCompileIssue(PCompileIssue issue);
     void onCompileStarted();
-    void onCompileFinished();
+    void onCompileFinished(bool isCheckSyntax);
     void onCompileErrorOccured(const QString& reason);
     void onRunErrorOccured(const QString& reason);
     void onRunFinished();

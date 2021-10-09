@@ -1,8 +1,13 @@
-Version 0.6.1
- - fix: editor deadlock
+Version 0.6.2 
  - fix: The Enter key in the numpad doesn't work
  - fix: The compiled executable not fully write to the disk before run it
  - fix: settings object not correctly released when exit
+ - fix: shouldn't check syntax when save modifications before compiling
+ - fix: shouldn't scroll to the end of the last line when update compile logs
+ - fix: can't debug project
+
+Version 0.6.1
+ - fix: editor deadlock
 
 Version 0.6.0
  - fix: old data not displayed when editing code snippets

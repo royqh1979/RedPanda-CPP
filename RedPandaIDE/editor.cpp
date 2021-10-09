@@ -194,9 +194,6 @@ void Editor::saveFile(const QString &filename) {
     QFile file(filename);
     this->lines()->SaveToFile(file,mEncodingOption,mFileEncoding);
     pMainWindow->updateForEncodingInfo();
-    if (pSettings->editor().syntaxCheckWhenSave())
-        checkSyntaxInBack();
-    reparseTodo();
 }
 
 void Editor::convertToEncoding(const QByteArray &encoding)
@@ -238,6 +235,9 @@ bool Editor::save(bool force, bool doReparse) {
     if (doReparse && mParser) {
         reparse();
     }
+    if (doReparse && pSettings->editor().syntaxCheckWhenSave())
+        checkSyntaxInBack();
+    reparseTodo();
     return true;
 }
 
@@ -328,6 +328,8 @@ bool Editor::saveAs(const QString &name, bool fromProject){
 
     if (pSettings->editor().syntaxCheckWhenSave())
         pMainWindow->checkSyntaxInBack(this);
+    reparseTodo();
+
 
     if (pSettings->editor().readOnlySytemHeader()
             && (!mParser->isSystemHeaderFile(mFilename) && !mParser->isProjectHeaderFile(mFilename))) {
