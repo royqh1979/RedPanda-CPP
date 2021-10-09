@@ -271,6 +271,8 @@ PStatement CppParser::findStatementOf(const QString &fileName, const QString &ph
                 if (statement)
                     break;
             }
+            if (!statement)
+                statement = findStatementStartingFrom(fileName,nextScopeWord,currentScope->parentScope.lock(),force);
         } else {
             statement = findStatementStartingFrom(fileName,nextScopeWord,parentScopeType,force);
         }

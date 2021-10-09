@@ -4,6 +4,7 @@ Version 0.6.3
  - fix: project's file not correctly syntaxed when open in editor
  - libturtle update: add fill() / setBackgroundColor() /setBackgroundImage() functions
  - fix: code fold calculation not correct, when editing code
+ - fix: can't correctly find definition of the symbols in namespace
     
 Version 0.6.2 
  - fix: The Enter key in the numpad doesn't work
