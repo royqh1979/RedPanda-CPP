@@ -2831,8 +2831,14 @@ int SynEdit::scanFrom(int Index, int canStopIndex)
         iRange = mHighlighter->getRangeState();
         if (Result > canStopIndex){
             if (mLines->ranges(Result).state == iRange.state
-                    )
+                    && mLines->ranges(Result).braceLevel == iRange.braceLevel
+                    && mLines->ranges(Result).parenthesisLevel == iRange.parenthesisLevel
+                    && mLines->ranges(Result).bracketLevel == iRange.bracketLevel
+                    ) {
+                if (mUseCodeFolding)
+                    rescan();
                 return Result;// avoid the final Decrement
+            }
         }
         mLines->setRange(Result,iRange, mHighlighter->getLeftBraces(),
                          mHighlighter->getRightBraces());
@@ -5761,7 +5767,7 @@ void SynEdit::onLinesDeleted(int index, int count)
     if (mUseCodeFolding)
         foldOnListDeleted(index + 1, count);
     if (mHighlighter && mLines->count() > 0)
-        scanFrom(index-1, index+1);
+        scanFrom(index, index+1);
     invalidateLines(index + 1, INT_MAX);
     invalidateGutterLines(index + 1, INT_MAX);
 }
@@ -5773,7 +5779,7 @@ void SynEdit::onLinesInserted(int index, int count)
     if (mHighlighter && mLines->count() > 0) {
 //        int vLastScan = index;
 //        do {
-          scanFrom(index-1, index+2+count);
+          scanFrom(index, index+count);
 //            vLastScan++;
 //        } while (vLastScan < index + count) ;
     }

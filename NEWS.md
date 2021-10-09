@@ -3,6 +3,7 @@ Version 0.6.3
  - fix: can't copy contents in a readonly editor
  - fix: project's file not correctly syntaxed when open in editor
  - libturtle update: add fill() / setBackgroundColor() /setBackgroundImage() functions
+ - fix: code fold calculation not correct, when editing code
     
 Version 0.6.2 
  - fix: The Enter key in the numpad doesn't work
