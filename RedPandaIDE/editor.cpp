@@ -2842,9 +2842,19 @@ void Editor::setInProject(bool newInProject)
         return;
     mInProject = newInProject;
     if (mInProject) {
-        initParser();
-    } else {
         mParser = pMainWindow->project()->cppParser();
+        if (isVisible()) {
+            if (mParser && mParser->parsing()) {
+                connect(mParser.get(),
+                        &CppParser::onEndParsing,
+                        this,
+                        &SynEdit::invalidate);
+            } else {
+                invalidate();
+            }
+        }
+    } else {
+        initParser();
     }
 }
 

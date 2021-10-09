@@ -5047,7 +5047,7 @@ void SynEdit::ExecuteCommand(SynEditorCommand Command, QChar AChar, void *pData)
             doCutToClipboard();
         break;
     case SynEditorCommand::ecCopy:
-        if (!mReadOnly && selAvail())
+        if (selAvail())
             doCopyToClipboard();
         break;
     case SynEditorCommand::ecPaste:
