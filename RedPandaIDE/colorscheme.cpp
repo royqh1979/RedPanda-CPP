@@ -200,19 +200,19 @@ PColorSchemeItem ColorSchemeItem::fromJson(const QJsonObject &json)
         item->setBold(false);
     }
     if (json.contains("italic") && json["italic"].isBool()) {
-        item->setBold(json["italic"].toBool());
+        item->setItalic(json["italic"].toBool());
     } else {
         item->setItalic(false);
     }
     if (json.contains("underlined") && json["underlined"].isBool()) {
-        item->setBold(json["underlined"].toBool());
+        item->setUnderlined(json["underlined"].toBool());
     } else {
         item->setUnderlined(false);
     }
     if (json.contains("strikeout") && json["strikeout"].isBool()) {
-        item->setBold(json["strikeout"].toBool());
+        item->setStrikeout(json["strikeout"].toBool());
     } else {
-        item->setUnderlined(false);
+        item->setStrikeout(false);
     }
     return item;
 }

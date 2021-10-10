@@ -1,6 +1,7 @@
 Version 0.6.4
  - fix: code completion popup not show after '->' inputted
  - fix: font styles in the color scheme settings not in effect
+ - fix: editor's font style shouldn't affect gutter's font style
 
 Version 0.6.3
  - fix: should use c++ syntax to check ".h" files

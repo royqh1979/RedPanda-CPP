@@ -100,6 +100,13 @@ void SynEditTextPainter::paintGutter(const QRect& clip)
 
         if (edit->mGutter.useFontStyle()) {
             painter->setFont(edit->mGutter.font());
+        } else {
+            QFont newFont = painter->font();
+            newFont.setBold(false);
+            newFont.setItalic(false);
+            newFont.setStrikeOut(false);
+            newFont.setUnderline(false);
+            painter->setFont(newFont);
         }
         if (edit->mGutter.textColor().isValid()) {
             painter->setPen(edit->mGutter.textColor());
