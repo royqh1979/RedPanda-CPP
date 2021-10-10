@@ -1142,8 +1142,6 @@ void Editor::copyAsHTML()
     QMimeData * mimeData = new QMimeData;
 
     //sethtml will convert buffer to QString , which will cause encoding trouble
-    StringToFile(QString::fromLocal8Bit(SynExporterHTML.buffer()),"f:\\buffer.html");
-
     mimeData->setData(SynExporterHTML.clipboardFormat(),SynExporterHTML.buffer());
     mimeData->setText(selText());
 
