@@ -1,3 +1,6 @@
+Version 0.6.4
+ - fix: code completion popup not show after '->' inputted
+
 Version 0.6.3
  - fix: should use c++ syntax to check ".h" files
  - fix: can't copy contents in a readonly editor

@@ -703,10 +703,16 @@ void Editor::keyPressEvent(QKeyEvent *event)
         case '[':
         case ']':
         case '<':
-        case '>':
         case '*':
             handled = handleSymbolCompletion(ch);
             return;
+        case '>':
+            if ((caretX() <= 1) || lineText().isEmpty()
+                    ||  lineText()[caretX() - 2] != '-') {
+                handled = handleSymbolCompletion(ch);
+                return;
+            }
+            break;
         }
     }
 
@@ -1750,14 +1756,14 @@ bool Editor::handleCodeCompletion(QChar key)
         return true;
     case '>':
         setSelText(key);
-        if ((caretX() > 1) && (lineText().length() >= 1) &&
-                (lineText()[caretX() - 2] == '-'))
+        if ((caretX() > 2) && (lineText().length() >= 2) &&
+                (lineText()[caretX() - 3] == '-'))
             showCompletion(false);
         return true;
     case ':':
         setSelText(key);
-        if ((caretX() > 1) && (lineText().length() >= 1) &&
-                (lineText()[caretX() - 2] == ':'))
+        if ((caretX() > 2) && (lineText().length() >= 2) &&
+                (lineText()[caretX() - 3] == ':'))
             showCompletion(false);
         return true;
     case '/':
