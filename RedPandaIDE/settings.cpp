@@ -1108,12 +1108,12 @@ void Settings::Editor::doLoad()
     mCopySizeLimit = boolValue("copy_limit",true);
     mCopyCharLimits = intValue("copy_char_limits",100);
     mCopyLineLimits = intValue("copy_line_limits",100000);
-    mCopyWithFormatAs = intValue("copy_with_format_as",0);
+    mCopyWithFormatAs = intValue("copy_with_format_as",1);
     mCopyRTFUseBackground = boolValue("copy_rtf_use_background",false);
-    mCopyRTFUseEditorColor = boolValue("copy_rtf_use_editor_color_scheme",true);
+    mCopyRTFUseEditorColor = boolValue("copy_rtf_use_editor_color_scheme",false);
     mCopyRTFColorScheme = stringValue("copy_rtf_color_scheme","Intellij Classic");
     mCopyHTMLUseBackground = boolValue("copy_html_use_background",false);
-    mCopyHTMLUseEditorColor = boolValue("copy_html_use_editor_color_scheme",true);
+    mCopyHTMLUseEditorColor = boolValue("copy_html_use_editor_color_scheme",false);
     mCopyHTMLColorScheme = stringValue("copy_html_color_scheme","Intellij Classic");
 
     //color

@@ -155,6 +155,7 @@ QStringList ReadFileToLines(const QString& fileName, QTextCodec* codec);
 QStringList ReadFileToLines(const QString& fileName);
 void ReadFileToLines(const QString& fileName, QTextCodec* codec, LineProcessFunc lineFunc);
 void StringsToFile(const QStringList& list, const QString& fileName);
+void StringToFile(const QString& str, const QString& fileName);
 
 void decodeKey(int combinedKey, int& key, Qt::KeyboardModifiers& modifiers);
 void inflateRect(QRect& rect, int delta);

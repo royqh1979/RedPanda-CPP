@@ -126,7 +126,7 @@ void SynHTMLExporter::FormatNewLine()
 QString SynHTMLExporter::GetFooter()
 {
     QString Result = "";
-    Result = "</span>" + lineBreak() + "</code></pre>" + lineBreak();
+    Result = "</span></code></pre>" + lineBreak();
     if (mCreateHTMLFragment)
         Result += "<!--EndFragment-->";
     Result += "</body>"+lineBreak()+ "</html>";
@@ -172,7 +172,7 @@ QString SynHTMLExporter::GetHeader()
     if (mCreateHTMLFragment) {
         Result += "<!--StartFragment-->";
     }
-    Result += QString("<pre>"+lineBreak()+"<code><span style=\"font: %1pt %2;\">")
+    Result += QString("<pre><code><span style=\"font: %1pt %2;\">")
             .arg(mFont.pointSize())
             .arg(mFont.family());
 

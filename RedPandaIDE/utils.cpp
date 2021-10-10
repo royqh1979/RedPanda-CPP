@@ -820,3 +820,12 @@ void executeFile(const QString &fileName, const QString &params, const QString &
                   SW_SHOW
                   );
 }
+
+void StringToFile(const QString &str, const QString &fileName)
+{
+    QFile file(fileName);
+    if (file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        QTextStream stream(&file);
+        stream<<str;
+    }
+}

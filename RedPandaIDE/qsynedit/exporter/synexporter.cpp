@@ -99,7 +99,8 @@ void SynExporter::ExportRange(PSynEditStringList ALines, BufferCoord Start, Buff
             FormatToken(Token);
             mHighlighter->next();
         }
-        FormatNewLine();
+        if (i!=Stop.Line)
+            FormatNewLine();
     }
     if (!mFirstAttribute)
         FormatAfterLastAttribute();
