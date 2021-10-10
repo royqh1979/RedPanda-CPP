@@ -146,8 +146,8 @@ void EditorColorSchemeWidget::setCurrentSchemeModified()
     if (scheme) {
         scheme->setCustomed(true);
     }
-    if (mModifiedSchemes.contains(ui->cbScheme->currentText()))
-        return;
+//    if (mModifiedSchemes.contains(ui->cbScheme->currentText()))
+//        return;
     mModifiedSchemes.insert(ui->cbScheme->currentText());
     ui->cbScheme->setItemData(ui->cbScheme->currentIndex(),
                               mModifiedSchemeComboFont,Qt::FontRole);
@@ -441,3 +441,5 @@ void EditorColorSchemeWidget::on_actionDelete_Scheme_triggered()
         QMessageBox::critical(this,tr("Error"),e.reason());
     }
 }
+
+

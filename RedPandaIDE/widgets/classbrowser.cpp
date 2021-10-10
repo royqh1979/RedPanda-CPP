@@ -5,6 +5,7 @@
 #include <QPalette>
 #include "../mainwindow.h"
 #include "../settings.h"
+#include "../colorscheme.h"
 
 ClassBrowserModel::ClassBrowserModel(QObject *parent):QAbstractItemModel(parent)
 {
@@ -138,7 +139,11 @@ QVariant ClassBrowserModel::data(const QModelIndex &index, int role) const
                 if (statement->command.startsWith('#'))
                     kind = StatementKind::skPreprocessor;
             }
-            return mColors->value(kind,pMainWindow->palette().color(QPalette::Text));
+            PColorSchemeItem item = mColors->value(kind,PColorSchemeItem());
+            if (item) {
+                return item->foreground();
+            }
+            return pMainWindow->palette().color(QPalette::Text);
         }
     } else if (role == Qt::DecorationRole) {
         if (node->statement) {
@@ -424,12 +429,12 @@ PStatement ClassBrowserModel::createDummy(PStatement statement)
     return result;
 }
 
-const std::shared_ptr<QHash<StatementKind, QColor> > &ClassBrowserModel::colors() const
+const std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > &ClassBrowserModel::colors() const
 {
     return mColors;
 }
 
-void ClassBrowserModel::setColors(const std::shared_ptr<QHash<StatementKind, QColor> > &newColors)
+void ClassBrowserModel::setColors(const std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > &newColors)
 {
     mColors = newColors;
 }

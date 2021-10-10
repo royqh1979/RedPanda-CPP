@@ -35,6 +35,7 @@ class CPUDialog;
 class QPlainTextEdit;
 class SearchDialog;
 class Project;
+class ColorSchemeItem;
 
 class MainWindow : public QMainWindow
 {
@@ -123,7 +124,7 @@ public:
 
     std::shared_ptr<Project> project();
 
-    const std::shared_ptr<QHash<StatementKind, QColor> > &statementColors() const;
+    const std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > &statementColors() const;
 
     PSymbolUsageManager &symbolUsageManager();
 
@@ -423,7 +424,7 @@ private:
     PSearchResultTreeModel mSearchResultTreeModel;
     PSearchResultTreeViewDelegate mSearchViewDelegate;
     ClassBrowserModel mClassBrowserModel;
-    std::shared_ptr<QHash<StatementKind, QColor>> mStatementColors;
+    std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > mStatementColors;
     PSymbolUsageManager mSymbolUsageManager;
     PCodeSnippetManager mCodeSnippetManager;
     PTodoParser mTodoParser;

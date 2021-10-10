@@ -96,18 +96,11 @@ void HighlighterManager::applyColorScheme(PSynHighlighter highlighter, const QSt
                 attr->setBackground(item->background());
                 attr->setForeground(item->foreground());
                 SynFontStyles styles = SynFontStyle::fsNone;
-                if (item->bold()) {
-                    styles.setFlag(SynFontStyle::fsBold);
-                }
-                if (item->italic()) {
-                    styles.setFlag(SynFontStyle::fsItalic);
-                }
-                if (item->underlined()) {
-                    styles.setFlag(SynFontStyle::fsUnderline);
-                }
-                if (item->strikeout()) {
-                    styles.setFlag(SynFontStyle::fsStrikeOut);
-                }
+                styles.setFlag(SynFontStyle::fsBold, item->bold());
+                styles.setFlag(SynFontStyle::fsItalic, item->italic());
+                styles.setFlag(SynFontStyle::fsUnderline, item->underlined());
+                styles.setFlag(SynFontStyle::fsStrikeOut, item->strikeout());
+                attr->setStyles(styles);
             }
         }
     }

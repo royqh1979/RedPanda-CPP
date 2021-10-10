@@ -15,6 +15,7 @@
 #include "platform.h"
 #include "widgets/aboutdialog.h"
 #include "shortcutmanager.h"
+#include "colorscheme.h"
 
 #include <QCloseEvent>
 #include <QComboBox>
@@ -158,7 +159,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(&mFileSystemWatcher,&QFileSystemWatcher::fileChanged,
             this, &MainWindow::onFileChanged);
 
-    mStatementColors = std::make_shared<QHash<StatementKind, QColor> >();
+    mStatementColors = std::make_shared<QHash<StatementKind, PColorSchemeItem> >();
     mCompletionPopup = std::make_shared<CodeCompletionPopup>();
     mCompletionPopup->setColors(mStatementColors);
     mHeaderCompletionPopup = std::make_shared<HeaderCompletionPopup>();
@@ -355,49 +356,49 @@ void MainWindow::updateEditorColorSchemes()
     PColorSchemeItem item;
     item = pColorManager->getItem(schemeName, SYNS_AttrFunction);
     if (item) {
-        mStatementColors->insert(StatementKind::skFunction,item->foreground());
-        mStatementColors->insert(StatementKind::skConstructor,item->foreground());
-        mStatementColors->insert(StatementKind::skDestructor,item->foreground());
+        mStatementColors->insert(StatementKind::skFunction,item);
+        mStatementColors->insert(StatementKind::skConstructor,item);
+        mStatementColors->insert(StatementKind::skDestructor,item);
     }
     item = pColorManager->getItem(schemeName, SYNS_AttrClass);
     if (item) {
-        mStatementColors->insert(StatementKind::skClass,item->foreground());
-        mStatementColors->insert(StatementKind::skTypedef,item->foreground());
-        mStatementColors->insert(StatementKind::skAlias,item->foreground());
+        mStatementColors->insert(StatementKind::skClass,item);
+        mStatementColors->insert(StatementKind::skTypedef,item);
+        mStatementColors->insert(StatementKind::skAlias,item);
     }
     item = pColorManager->getItem(schemeName, SYNS_AttrIdentifier);
     if (item) {
-        mStatementColors->insert(StatementKind::skEnumType,item->foreground());
-        mStatementColors->insert(StatementKind::skEnumClassType,item->foreground());
+        mStatementColors->insert(StatementKind::skEnumType,item);
+        mStatementColors->insert(StatementKind::skEnumClassType,item);
     }
     item = pColorManager->getItem(schemeName, SYNS_AttrVariable);
     if (item) {
-        mStatementColors->insert(StatementKind::skVariable,item->foreground());
+        mStatementColors->insert(StatementKind::skVariable,item);
     }
     item = pColorManager->getItem(schemeName, SYNS_AttrLocalVariable);
     if (item) {
-        mStatementColors->insert(StatementKind::skLocalVariable,item->foreground());
-        mStatementColors->insert(StatementKind::skParameter,item->foreground());
+        mStatementColors->insert(StatementKind::skLocalVariable,item);
+        mStatementColors->insert(StatementKind::skParameter,item);
     }
     item = pColorManager->getItem(schemeName, SYNS_AttrGlobalVariable);
     if (item) {
-        mStatementColors->insert(StatementKind::skGlobalVariable,item->foreground());
+        mStatementColors->insert(StatementKind::skGlobalVariable,item);
     }
     item = pColorManager->getItem(schemeName, SYNS_AttrPreprocessor);
     if (item) {
-        mStatementColors->insert(StatementKind::skPreprocessor,item->foreground());
-        mStatementColors->insert(StatementKind::skEnum,item->foreground());
+        mStatementColors->insert(StatementKind::skPreprocessor,item);
+        mStatementColors->insert(StatementKind::skEnum,item);
         mHeaderCompletionPopup->setSuggestionColor(item->foreground());
     }
     item = pColorManager->getItem(schemeName, SYNS_AttrReservedWord);
     if (item) {
-        mStatementColors->insert(StatementKind::skKeyword,item->foreground());
-        mStatementColors->insert(StatementKind::skUserCodeSnippet,item->foreground());
+        mStatementColors->insert(StatementKind::skKeyword,item);
+        mStatementColors->insert(StatementKind::skUserCodeSnippet,item);
     }
     item = pColorManager->getItem(schemeName, SYNS_AttrString);
     if (item) {
-        mStatementColors->insert(StatementKind::skNamespace,item->foreground());
-        mStatementColors->insert(StatementKind::skNamespaceAlias,item->foreground());
+        mStatementColors->insert(StatementKind::skNamespace,item);
+        mStatementColors->insert(StatementKind::skNamespaceAlias,item);
     }
 }
 
@@ -3922,7 +3923,7 @@ void MainWindow::on_actionProject_Open_In_Terminal_triggered()
     openShell(mProject->directory(),"cmd.exe");
 }
 
-const std::shared_ptr<QHash<StatementKind, QColor> > &MainWindow::statementColors() const
+const std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > &MainWindow::statementColors() const
 {
     return mStatementColors;
 }

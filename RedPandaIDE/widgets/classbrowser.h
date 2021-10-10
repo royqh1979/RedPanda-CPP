@@ -13,6 +13,8 @@ struct ClassBrowserNode {
 
 using PClassBrowserNode = std::shared_ptr<ClassBrowserNode>;
 
+class ColorSchemeItem;
+
 class ClassBrowserModel : public QAbstractItemModel{
     Q_OBJECT
         // QAbstractItemModel interface
@@ -38,8 +40,8 @@ public:
     void endUpdate();
 
 
-    const std::shared_ptr<QHash<StatementKind, QColor> > &colors() const;
-    void setColors(const std::shared_ptr<QHash<StatementKind, QColor> > &newColors);
+    const std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > &colors() const;
+    void setColors(const std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > &newColors);
 
 public slots:
     void fillStatements();
@@ -57,7 +59,7 @@ private:
     int mUpdateCount;
     QRecursiveMutex mMutex;
     QString mCurrentFile;
-    std::shared_ptr<QHash<StatementKind, QColor>> mColors;
+    std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > mColors;
 
 };
 

@@ -6,6 +6,7 @@
 #include "parser/cppparser.h"
 #include "codecompletionlistview.h"
 
+class ColorSchemeItem;
 class CodeCompletionListModel : public QAbstractListModel {
     Q_OBJECT
 public:
@@ -64,8 +65,8 @@ public:
 
     const PStatement &currentStatement() const;
     void setCurrentStatement(const PStatement &newCurrentStatement);
-    const std::shared_ptr<QHash<StatementKind, QColor> >& colors() const;
-    void setColors(const std::shared_ptr<QHash<StatementKind, QColor> > &newColors);
+    const std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > >& colors() const;
+    void setColors(const std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > &newColors);
 
 private:
     void addChildren(PStatement scopeStatement, const QString& fileName,
@@ -86,7 +87,7 @@ private:
     QSet<QString> mAddedStatements;
     QString mPhrase;
     QRecursiveMutex mMutex;
-    std::shared_ptr<QHash<StatementKind, QColor>> mColors;
+    std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > mColors;
 
     PCppParser mParser;
     PStatement mCurrentStatement;

@@ -4,6 +4,7 @@
 #include "../editor.h"
 #include "../editorlist.h"
 #include "../symbolusagemanager.h"
+#include "../colorscheme.h"
 
 #include <QKeyEvent>
 #include <QVBoxLayout>
@@ -23,7 +24,11 @@ CodeCompletionPopup::CodeCompletionPopup(QWidget *parent) :
         } else {
             kind = statement->kind;
         }
-        return mColors->value(kind,palette().color(QPalette::Text));
+        PColorSchemeItem item = mColors->value(kind,PColorSchemeItem());
+        if (item) {
+            return item->foreground();
+        }
+        return palette().color(QPalette::Text);
     });
     mListView->setModel(mModel);
     setLayout(new QVBoxLayout());
@@ -748,7 +753,7 @@ void CodeCompletionPopup::setCodeSnippets(const QList<PCodeSnippet> &newCodeSnip
     mCodeSnippets = newCodeSnippets;
 }
 
-void CodeCompletionPopup::setColors(const std::shared_ptr<QHash<StatementKind, QColor> > &newColors)
+void CodeCompletionPopup::setColors(const std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > &newColors)
 {
     mColors = newColors;
 }
@@ -773,7 +778,7 @@ void CodeCompletionPopup::setCurrentStatement(const PStatement &newCurrentStatem
     mCurrentStatement = newCurrentStatement;
 }
 
-const std::shared_ptr<QHash<StatementKind, QColor> >& CodeCompletionPopup::colors() const
+const std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > >& CodeCompletionPopup::colors() const
 {
     return mColors;
 }

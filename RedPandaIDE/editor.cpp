@@ -845,8 +845,18 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
                 kind = StatementKind::skVariable;
             }
         }
-        foreground = mCompletionPopup->colors()->value(kind,
-                                                      highlighter()->identifierAttribute()->foreground());
+        PColorSchemeItem item = pMainWindow->statementColors()->value(kind,PColorSchemeItem());
+
+        if (item) {
+            foreground = item->foreground();
+            //background = item->background();
+            style.setFlag(SynFontStyle::fsBold,item->bold());
+            style.setFlag(SynFontStyle::fsItalic,item->italic());
+            style.setFlag(SynFontStyle::fsUnderline,item->underlined());
+            style.setFlag(SynFontStyle::fsStrikeOut,item->strikeout());
+        } else {
+            foreground = highlighter()->identifierAttribute()->foreground();
+        }
         return;
     }
 }
