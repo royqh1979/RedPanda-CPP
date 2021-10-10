@@ -1123,7 +1123,7 @@ void Editor::copyAsHTML()
 {
     if (!selAvail())
         return;
-    SynHTMLExporter SynExporterHTML;
+    SynHTMLExporter SynExporterHTML(tabWidth());
 
     SynExporterHTML.setTitle(QFileInfo(mFilename).fileName());
     SynExporterHTML.setExportAsText(false);
@@ -1142,6 +1142,8 @@ void Editor::copyAsHTML()
     QMimeData * mimeData = new QMimeData;
 
     //sethtml will convert buffer to QString , which will cause encoding trouble
+    StringToFile(QString::fromLocal8Bit(SynExporterHTML.buffer()),"f:\\buffer.html");
+
     mimeData->setData(SynExporterHTML.clipboardFormat(),SynExporterHTML.buffer());
     mimeData->setText(selText());
 

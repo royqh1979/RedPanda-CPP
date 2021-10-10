@@ -2,7 +2,7 @@
 #include "../MiscProcs.h"
 #include <functional>
 
-SynHTMLExporter::SynHTMLExporter()
+SynHTMLExporter::SynHTMLExporter(int tabSize)
 {
     mClipboardFormat = "text/html";
     mDefaultFilter = "HTML Documents (*.htm;*.html)|*.htm;*.html";
@@ -11,6 +11,8 @@ SynHTMLExporter::SynHTMLExporter()
     mReplaceReserved['<'] = "&lt;";
     mReplaceReserved['>'] = "&gt;";
     mReplaceReserved['"'] = "&quot;";
+    mReplaceReserved[' '] = "&nbsp;";
+    mReplaceReserved['\t'] = mReplaceReserved[' '].repeated(tabSize);
     mCreateHTMLFragment = false;
 }
 
@@ -120,13 +122,14 @@ void SynHTMLExporter::FormatBeforeFirstAttribute(bool, bool, SynFontStyles)
 
 void SynHTMLExporter::FormatNewLine()
 {
+    AddData("<br />");
     AddNewLine();
 }
 
 QString SynHTMLExporter::GetFooter()
 {
     QString Result = "";
-    Result = "</span></code></pre>" + lineBreak();
+    Result = "</span>" + lineBreak();
     if (mCreateHTMLFragment)
         Result += "<!--EndFragment-->";
     Result += "</body>"+lineBreak()+ "</html>";
@@ -172,7 +175,7 @@ QString SynHTMLExporter::GetHeader()
     if (mCreateHTMLFragment) {
         Result += "<!--StartFragment-->";
     }
-    Result += QString("<pre><code><span style=\"font: %1pt %2;\">")
+    Result += QString("<span style=\"font: %1pt %2;\">")
             .arg(mFont.pointSize())
             .arg(mFont.family());
 

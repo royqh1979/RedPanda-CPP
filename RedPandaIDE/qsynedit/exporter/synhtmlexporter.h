@@ -6,7 +6,7 @@
 class SynHTMLExporter : public SynExporter
 {
 public:
-    SynHTMLExporter();
+    SynHTMLExporter(int tabSize);
     bool createHTMLFragment() const;
     void setCreateHTMLFragment(bool createHTMLFragment);
 
