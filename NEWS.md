@@ -5,7 +5,8 @@ Version 0.6.5
  - fix: not correctly parse gdb's output
  - fix: path not correctly setted for the debugger process
  - fix: indent line not correctly drawed
-
+ - enhancement: use rainbox color to draw indent guide lines
+ - implement: highlight matching brackets
 
 Version 0.6.4
  - fix: code completion popup not show after '->' inputted

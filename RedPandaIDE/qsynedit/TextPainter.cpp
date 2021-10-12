@@ -607,7 +607,6 @@ void SynEditTextPainter::AddHighlightToken(const QString &Token, int ColumnsBefo
         Foreground = edit->palette().color(QPalette::Text);
     }
 
-    //todo : change char(getTokenPos) to column?
     edit->onPreparePaintHighlightToken(cLine,edit->mHighlighter->getTokenPos()+1,
         Token,p_Attri,Style,Foreground,Background);
 
@@ -672,11 +671,27 @@ void SynEditTextPainter::PaintFoldAttributes()
             while (LastNonBlank + 1 < edit->mLines->count() && edit->mLines->getString(LastNonBlank).trimmed().isEmpty())
                 LastNonBlank++;
             LineIndent = edit->getLineIndent(edit->mLines->getString(LastNonBlank));
+            int braceLevel = edit->mLines->ranges(LastNonBlank).braceLevel;
+            int indentLevel = braceLevel ;
+            if (edit->mTabWidth>0)
+                indentLevel = LineIndent / edit->mTabWidth;
+            int levelDiff = std::max(0,braceLevel - indentLevel);
             // Step horizontal coord
-            TabSteps = edit->mTabWidth;
+            //TabSteps = edit->mTabWidth;
+            TabSteps = 0;
+            indentLevel = 0;
             while (TabSteps < LineIndent) {
                 X = TabSteps * edit->mCharWidth + edit->textOffset() - 2;
                 TabSteps+=edit->mTabWidth;
+                indentLevel++ ;
+                if (edit->mHighlighter) {
+                    PSynHighlighterAttribute attr = edit->mHighlighter->symbolAttribute();
+                    GetBraceColorAttr(indentLevel,attr);
+                    if (attr!=edit->mHighlighter->symbolAttribute()) {
+                        dottedPen.setColor(attr->foreground());
+                        painter->setPen(dottedPen);
+                    }
+                }
 
                 // Move to top of vertical line
                 painter->drawLine(X,Y,X,Y+edit->mTextHeight);

@@ -825,6 +825,23 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
         }
     }
 
+    if (!selAvail() && attr->name() == SYNS_AttrSymbol) {
+        qDebug()<<line<<":"<<aChar<<" - "<<mHighlightCharPos1.Line<<":"<<mHighlightCharPos1.Char<<" - "<<mHighlightCharPos2.Line<<":"<<mHighlightCharPos2.Char;
+
+        if ( (line == mHighlightCharPos1.Line)
+                && (aChar == mHighlightCharPos1.Char)) {
+            foreground = selectedForeground();
+            background = selectedBackground();
+            return;
+        }
+        if ((line == mHighlightCharPos2.Line)
+                && (aChar == mHighlightCharPos2.Char)) {
+            foreground = selectedForeground();
+            background = selectedBackground();
+            return;
+        }
+    }
+
 
 //    qDebug()<<token<<"-"<<attr->name()<<" - "<<line<<" : "<<aChar;
     if (mParser && (attr == highlighter()->identifierAttribute())) {
@@ -1309,6 +1326,8 @@ void Editor::onStatusChanged(SynStatusChanges changes)
 
     if (changes.testFlag(SynStatusChange::scCaretX)
             || changes.testFlag(SynStatusChange::scCaretY)) {
+        mHighlightCharPos1 = BufferCoord{0,0};
+        mHighlightCharPos2 = BufferCoord{0,0};
         if (mTabStopBegin >=0) {
             if (mTabStopY==caretY()) {
                 if (mLineAfterTabStop.isEmpty()) {
@@ -1334,6 +1353,35 @@ void Editor::onStatusChanged(SynStatusChanges changes)
                     clearUserCodeInTabStops();
                 }
             }
+        } else if (!selAvail() && highlighter()){
+            // Is there a bracket char before us?
+            int lineLength = lineText().length();
+            int ch = caretX() - 2;
+            BufferCoord coord;
+            if (ch>=0 && ch<lineLength &&  isBraceChar(lineText()[ch]) ) {
+                coord.Char = ch+1;
+                coord.Line = caretY();
+            }
+            //or after us?
+            ch = caretX()-1;
+            if (ch>=0 && ch<lineLength &&  isBraceChar(lineText()[ch]) ) {
+                coord.Char = ch+1;
+                coord.Line = caretY();
+            }
+            PSynHighlighterAttribute attr;
+            QString token;
+            if (getHighlighterAttriAtRowCol(coord,token,attr)
+                    && attr == highlighter()->symbolAttribute()) {
+                BufferCoord complementCharPos = getMatchingBracketEx(coord);
+                if (!foldHidesLine(coord.Line)
+                        && !foldHidesLine(complementCharPos.Line)) {
+                    mHighlightCharPos1 = coord;
+                    mHighlightCharPos2 = complementCharPos;
+                    invalidateLine(mHighlightCharPos1.Line);
+                    invalidateLine(mHighlightCharPos2.Line);
+                }
+            }
+
         }
     }
 
@@ -1430,6 +1478,21 @@ void Editor::onLinesInserted(int first, int count)
     resetBreakpoints();
     if (!pSettings->editor().syntaxCheckWhenLineChanged()) {
         //todo: update syntax issues
+    }
+}
+
+bool Editor::isBraceChar(QChar ch)
+{
+    switch( ch.unicode()) {
+    case '{':
+    case '}':
+    case '[':
+    case ']':
+    case '(':
+    case ')':
+        return true;
+    default:
+        return false;
     }
 }
 
@@ -3542,13 +3605,13 @@ void Editor::applyColorScheme(const QString& schemeName)
     setOptions(options);
     highlighterManager.applyColorScheme(highlighter(),schemeName);
     if (pSettings->editor().rainbowParenthesis()) {
-        PSynHighlighterAttribute attr0 =createRainbowAttribute(COLOR_SCHEME_BRACE_1,
+        PSynHighlighterAttribute attr0 =createRainbowAttribute(SYNS_AttrSymbol,
                                                                schemeName,COLOR_SCHEME_BRACE_1);
-        PSynHighlighterAttribute attr1 =createRainbowAttribute(COLOR_SCHEME_BRACE_2,
+        PSynHighlighterAttribute attr1 =createRainbowAttribute(SYNS_AttrSymbol,
                                                                schemeName,COLOR_SCHEME_BRACE_2);
-        PSynHighlighterAttribute attr2 =createRainbowAttribute(COLOR_SCHEME_BRACE_3,
+        PSynHighlighterAttribute attr2 =createRainbowAttribute(SYNS_AttrSymbol,
                                                                schemeName,COLOR_SCHEME_BRACE_3);
-        PSynHighlighterAttribute attr3 =createRainbowAttribute(COLOR_SCHEME_BRACE_4,
+        PSynHighlighterAttribute attr3 =createRainbowAttribute(SYNS_AttrSymbol,
                                                                schemeName,COLOR_SCHEME_BRACE_4);
         setRainbowAttrs(attr0,attr1,attr2,attr3);
     }

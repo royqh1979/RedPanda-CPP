@@ -175,6 +175,7 @@ private slots:
     void onLinesInserted(int first,int count);
 
 private:
+    bool isBraceChar(QChar ch);
     void resetBreakpoints();
     QChar getCurrentChar();
     bool handleSymbolCompletion(QChar key);
@@ -261,6 +262,8 @@ private:
     QString mLineBeforeTabStop;
     QString mLineAfterTabStop;
     QList<PTabStop> mUserCodeInTabStops;
+    BufferCoord mHighlightCharPos1;
+    BufferCoord mHighlightCharPos2;
 
     // QWidget interface
 protected:
