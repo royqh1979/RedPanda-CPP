@@ -838,7 +838,7 @@ int SynEdit::getLineIndent(const QString &line) const
 {
     int indents = 0;
     for (QChar ch:line) {
-        switch(ch.digitValue()) {
+        switch(ch.unicode()) {
         case '\t':
             indents+=mTabWidth;
             break;

@@ -1976,6 +1976,19 @@ void Settings::CompilerSet::setDirectories(const QString& binDir)
     }
 }
 
+int Settings::CompilerSet::mainVersion()
+{
+    int i = mVersion.indexOf('.');
+    if (i<0)
+        return -1;
+    bool ok;
+    int num = mVersion.left(i).toInt(&ok);
+    if (!ok)
+        return -1;
+    return num;
+
+}
+
 void Settings::CompilerSet::setUserInput()
 {
     mUseCustomCompileParams = false;

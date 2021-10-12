@@ -875,6 +875,7 @@ public:
         void setOption(PCompilerOption& option, char valueChar);
         void setProperties(const QString& binDir);
         void setDirectories(const QString& binDir);
+        int mainVersion();
 
         bool dirsValid(QString& msg);
         bool validateExes(QString& msg);

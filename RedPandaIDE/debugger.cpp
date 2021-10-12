@@ -4,6 +4,7 @@
 #include "editor.h"
 #include "settings.h"
 #include "widgets/cpudialog.h"
+#include "systemconsts.h"
 
 #include <QFile>
 #include <QFileInfo>
@@ -792,7 +793,7 @@ QString DebugReader::getNextLine()
     if (mIndex>=mOutput.length())
         return "";
     // Skip ONE enter sequence (CRLF, CR, LF, etc.)
-    if ((mOutput[mIndex] == '\r') && (mOutput[mIndex] == '\n')) // DOS
+    if ((mOutput[mIndex] == '\r') && (mIndex+1<mOutput.length()) &&  (mOutput[mIndex+1] == '\n')) // DOS
         mIndex+=2;
     else if (mOutput[mIndex] == '\r')  // UNIX
         mIndex++;
@@ -1629,6 +1630,18 @@ void DebugReader::run()
     mProcess = new QProcess();
     mProcess->setProgram(cmd);
     mProcess->setArguments(QProcess::splitCommand(arguments));
+    QString cmdDir = extractFileDir(cmd);
+    if (!cmdDir.isEmpty()) {
+        QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+        QString path = env.value("PATH");
+        if (path.isEmpty()) {
+            path = cmdDir;
+        } else {
+            path = cmdDir + PATH_SEPARATOR + path;
+        }
+        env.insert("PATH",path);
+        mProcess->setProcessEnvironment(env);
+    }
     mProcess->setWorkingDirectory(workingDir);
 
     connect(mProcess, &QProcess::errorOccurred,

@@ -3487,6 +3487,9 @@ void Editor::applySettings()
     setCaretUseTextColor(pSettings->editor().caretUseTextColor());
     setCaretColor(pSettings->editor().caretColor());
 
+    codeFolding().indentGuides = pSettings->editor().showIndentLines();
+    codeFolding().indentGuidesColor = pSettings->editor().indentLineColor();
+
     QFont f=QFont(pSettings->editor().fontName(),pSettings->editor().fontSize());
     f.setStyleStrategy(QFont::PreferAntialias);
     setFont(f);
