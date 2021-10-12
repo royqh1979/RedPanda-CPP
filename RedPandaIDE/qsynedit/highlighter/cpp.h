@@ -53,7 +53,7 @@ public:
 
     PSynHighlighterAttribute asmAttribute() const;
 
-    PSynHighlighterAttribute direcAttribute() const;
+    PSynHighlighterAttribute preprocessorAttribute() const;
 
     PSynHighlighterAttribute invalidAttribute() const;
 
@@ -144,7 +144,7 @@ private:
     int mRightBraces;
 
     PSynHighlighterAttribute mAsmAttribute;
-    PSynHighlighterAttribute mDirecAttribute;
+    PSynHighlighterAttribute mPreprocessorAttribute;
     PSynHighlighterAttribute mInvalidAttribute;
     PSynHighlighterAttribute mNumberAttribute;
     PSynHighlighterAttribute mFloatAttribute;

@@ -1,3 +1,8 @@
+Version 0.6.5
+ - implement: export as rtf / export as html
+ - fix: the contents copied/exported are not correctly syntax colored
+ - fix: stop execution if the source file is not compiled and user choose not to compile it
+
 Version 0.6.4
  - fix: code completion popup not show after '->' inputted
  - fix: font styles in the color scheme settings not in effect

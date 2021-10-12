@@ -138,8 +138,8 @@ SynEditCppHighlighter::SynEditCppHighlighter(): SynHighlighter()
     addAttribute(mNumberAttribute);
     mOctAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrOctal);
     addAttribute(mOctAttribute);
-    mDirecAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrPreprocessor);
-    addAttribute(mDirecAttribute);
+    mPreprocessorAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrPreprocessor);
+    addAttribute(mPreprocessorAttribute);
     mKeywordAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrReservedWord);
     addAttribute(mKeywordAttribute);
     mWhitespaceAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrSpace);
@@ -168,9 +168,9 @@ PSynHighlighterAttribute SynEditCppHighlighter::asmAttribute() const
     return mAsmAttribute;
 }
 
-PSynHighlighterAttribute SynEditCppHighlighter::direcAttribute() const
+PSynHighlighterAttribute SynEditCppHighlighter::preprocessorAttribute() const
 {
-    return mDirecAttribute;
+    return mPreprocessorAttribute;
 }
 
 PSynHighlighterAttribute SynEditCppHighlighter::invalidAttribute() const
@@ -1369,7 +1369,7 @@ PSynHighlighterAttribute SynEditCppHighlighter::getTokenAttribute() const
     case TokenKind::Comment:
         return mCommentAttribute;
     case TokenKind::Directive:
-        return mDirecAttribute;
+        return mPreprocessorAttribute;
     case TokenKind::Identifier:
         return mIdentifierAttribute;
     case TokenKind::Key:

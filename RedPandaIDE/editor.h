@@ -159,6 +159,8 @@ public:
     void insertString(const QString& value, bool moveCursor);
     void insertCodeSnippet(const QString& code);
     void print();
+    void exportAsRTF(const QString& rtfFilename);
+    void exportAsHTML(const QString& htmlFilename);
 
     const PCppParser &parser();
 
@@ -218,7 +220,8 @@ private:
     void updateFunctionTip();
     void clearUserCodeInTabStops();
     void popUserCodeInTabStops();
-
+    void onExportedFormatToken(PSynHighlighter syntaxHighlighter, int Line, int column, const QString& token,
+        PSynHighlighterAttribute &attr);
 private:
     QByteArray mEncodingOption; // the encoding type set by the user
     QByteArray mFileEncoding; // the real encoding of the file (auto detected)

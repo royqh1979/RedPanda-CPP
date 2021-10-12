@@ -6,8 +6,8 @@
 
 
 
-using FormatTokenHandler = std::function<void(int Line, int column, const QString& token,
-    PSynHighlighterAttribute attr)>;
+using FormatTokenHandler = std::function<void(PSynHighlighter syntaxHighlighter, int Line, int column, const QString& token,
+    PSynHighlighterAttribute& attr)>;
 class SynExporter
 {
 

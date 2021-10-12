@@ -94,7 +94,7 @@ void SynExporter::ExportRange(PSynEditStringList ALines, BufferCoord Start, Buff
 
             QString Token = ReplaceReservedChars(token);
             if (mOnFormatToken)
-                mOnFormatToken(i, mHighlighter->getTokenPos(), mHighlighter->getToken(),attri);
+                mOnFormatToken(mHighlighter, i, mHighlighter->getTokenPos()+1, mHighlighter->getToken(),attri);
             SetTokenAttribute(attri);
             FormatToken(Token);
             mHighlighter->next();
@@ -115,13 +115,16 @@ void SynExporter::SaveToFile(const QString &AFileName)
     QFile file(AFileName);
     if (file.open(QIODevice::WriteOnly)) {
         SaveToStream(file);
-        file.close();
+    } else {
+        throw FileError(QObject::tr("Can't open file '%1' to write!"));
     }
 }
 
 void SynExporter::SaveToStream(QIODevice &AStream)
 {
-    AStream.write(mBuffer);
+    if (AStream.write(mBuffer)<0) {
+        throw FileError(QObject::tr("Failed to write data."));
+    }
 }
 
 bool SynExporter::exportAsText() const

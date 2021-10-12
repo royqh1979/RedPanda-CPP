@@ -392,6 +392,10 @@ private slots:
 
     void on_actionPrint_triggered();
 
+    void on_actionExport_As_RTF_triggered();
+
+    void on_actionExport_As_HTML_triggered();
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;
@@ -399,6 +403,7 @@ private:
     QLabel *mFileEncodingStatus;
     QLabel *mFileModeStatus;
     QMenu *mMenuEncoding;
+    QMenu *mMenuExport;
     QMenu *mMenuEncodingList;
     QMenu *mMenuRecentFiles;
     QMenu *mMenuRecentProjects;

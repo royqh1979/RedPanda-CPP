@@ -827,7 +827,7 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
 
 
 //    qDebug()<<token<<"-"<<attr->name()<<" - "<<line<<" : "<<aChar;
-    if (mParser && mCompletionPopup && (attr == highlighter()->identifierAttribute())) {
+    if (mParser && (attr == highlighter()->identifierAttribute())) {
         BufferCoord p{aChar,line};
         BufferCoord pBeginPos,pEndPos;
         QString s= getWordAtPosition(this,p, pBeginPos,pEndPos, WordPurpose::wpInformation);
@@ -1123,26 +1123,34 @@ void Editor::copyAsHTML()
 {
     if (!selAvail())
         return;
-    SynHTMLExporter SynExporterHTML(tabWidth());
+    SynHTMLExporter exporter(tabWidth());
 
-    SynExporterHTML.setTitle(QFileInfo(mFilename).fileName());
-    SynExporterHTML.setExportAsText(false);
-    SynExporterHTML.setUseBackground(pSettings->editor().copyHTMLUseBackground());
-    SynExporterHTML.setFont(font());
+    exporter.setTitle(QFileInfo(mFilename).fileName());
+    exporter.setExportAsText(false);
+    exporter.setUseBackground(pSettings->editor().copyHTMLUseBackground());
+    exporter.setFont(font());
     PSynHighlighter hl = highlighter();
     if (!pSettings->editor().copyHTMLUseEditorColor()) {
         hl = highlighterManager.copyHighlighter(highlighter());
         highlighterManager.applyColorScheme(hl,pSettings->editor().copyHTMLColorScheme());
     }
-    SynExporterHTML.setHighlighter(hl);
-    SynExporterHTML.setCreateHTMLFragment(true);
+    exporter.setHighlighter(hl);
+    exporter.setOnFormatToken(std::bind(&Editor::onExportedFormatToken,
+                                        this,
+                                        std::placeholders::_1,
+                                        std::placeholders::_2,
+                                        std::placeholders::_3,
+                                        std::placeholders::_4,
+                                        std::placeholders::_5
+                                        ));
+    exporter.setCreateHTMLFragment(true);
 
-    SynExporterHTML.ExportRange(lines(),blockBegin(),blockEnd());
+    exporter.ExportRange(lines(),blockBegin(),blockEnd());
 
     QMimeData * mimeData = new QMimeData;
 
     //sethtml will convert buffer to QString , which will cause encoding trouble
-    mimeData->setData(SynExporterHTML.clipboardFormat(),SynExporterHTML.buffer());
+    mimeData->setData(exporter.clipboardFormat(),exporter.buffer());
     mimeData->setText(selText());
 
     QGuiApplication::clipboard()->clear();
@@ -2057,6 +2065,56 @@ void Editor::print()
 
 }
 
+void Editor::exportAsRTF(const QString &rtfFilename)
+{
+    SynRTFExporter exporter;
+    exporter.setTitle(extractFileName(rtfFilename));
+    exporter.setExportAsText(true);
+    exporter.setUseBackground(pSettings->editor().copyRTFUseBackground());
+    exporter.setFont(font());
+    PSynHighlighter hl = highlighter();
+    if (!pSettings->editor().copyRTFUseEditorColor()) {
+        hl = highlighterManager.copyHighlighter(highlighter());
+        highlighterManager.applyColorScheme(hl,pSettings->editor().copyRTFColorScheme());
+    }
+    exporter.setHighlighter(hl);
+    exporter.setOnFormatToken(std::bind(&Editor::onExportedFormatToken,
+                                        this,
+                                        std::placeholders::_1,
+                                        std::placeholders::_2,
+                                        std::placeholders::_3,
+                                        std::placeholders::_4,
+                                        std::placeholders::_5
+                                        ));
+    exporter.ExportAll(lines());
+    exporter.SaveToFile(rtfFilename);
+}
+
+void Editor::exportAsHTML(const QString &htmlFilename)
+{
+    SynHTMLExporter exporter(tabWidth());
+    exporter.setTitle(extractFileName(htmlFilename));
+    exporter.setExportAsText(false);
+    exporter.setUseBackground(pSettings->editor().copyHTMLUseBackground());
+    exporter.setFont(font());
+    PSynHighlighter hl = highlighter();
+    if (!pSettings->editor().copyHTMLUseEditorColor()) {
+        hl = highlighterManager.copyHighlighter(highlighter());
+        highlighterManager.applyColorScheme(hl,pSettings->editor().copyHTMLColorScheme());
+    }
+    exporter.setHighlighter(hl);
+    exporter.setOnFormatToken(std::bind(&Editor::onExportedFormatToken,
+                                        this,
+                                        std::placeholders::_1,
+                                        std::placeholders::_2,
+                                        std::placeholders::_3,
+                                        std::placeholders::_4,
+                                        std::placeholders::_5
+                                        ));
+    exporter.ExportAll(lines());
+    exporter.SaveToFile(htmlFilename);
+}
+
 void Editor::showCompletion(bool autoComplete)
 {
     if (!pSettings->codeCompletion().enabled())
@@ -2849,6 +2907,74 @@ void Editor::popUserCodeInTabStops()
         mLineAfterTabStop = lineText().mid(mTabStopEnd-1) ;
         mXOffsetSince=0;
         mUserCodeInTabStops.pop_front();
+    }
+}
+
+void Editor::onExportedFormatToken(PSynHighlighter syntaxHighlighter, int Line, int column, const QString &token, PSynHighlighterAttribute& attr)
+{
+    if (!syntaxHighlighter)
+        return;
+    if (token.isEmpty())
+        return;
+    //don't do this
+    if (mCompletionPopup->isVisible() || mHeaderCompletionPopup->isVisible())
+        return;
+
+    if (mParser && (attr == syntaxHighlighter->identifierAttribute())) {
+        BufferCoord p{column,Line};
+        BufferCoord pBeginPos,pEndPos;
+        QString s= getWordAtPosition(this,p, pBeginPos,pEndPos, WordPurpose::wpInformation);
+//        qDebug()<<s;
+        PStatement statement = mParser->findStatementOf(mFilename,
+          s , p.Line);
+        StatementKind kind = mParser->getKindOfStatement(statement);
+        if (kind == StatementKind::skUnknown) {
+            if ((pEndPos.Line>=1)
+              && (pEndPos.Char>=0)
+              && (pEndPos.Char < lines()->getString(pEndPos.Line-1).length())
+              && (lines()->getString(pEndPos.Line-1)[pEndPos.Char] == '(')) {
+                kind = StatementKind::skFunction;
+            } else {
+                kind = StatementKind::skVariable;
+            }
+        }
+        SynEditCppHighlighter* cppHighlighter = dynamic_cast<SynEditCppHighlighter*>(syntaxHighlighter.get());
+        switch(kind) {
+        case StatementKind::skFunction:
+        case StatementKind::skConstructor:
+        case StatementKind::skDestructor:
+            attr = cppHighlighter->functionAttribute();
+            break;
+        case StatementKind::skClass:
+        case StatementKind::skTypedef:
+        case StatementKind::skAlias:
+            attr = cppHighlighter->classAttribute();
+            break;
+        case StatementKind::skEnumClassType:
+        case StatementKind::skEnumType:
+            break;
+        case StatementKind::skLocalVariable:
+        case StatementKind::skParameter:
+            attr = cppHighlighter->localVarAttribute();
+            break;
+        case StatementKind::skVariable:
+            attr = cppHighlighter->variableAttribute();
+            break;
+        case StatementKind::skGlobalVariable:
+            attr = cppHighlighter->globalVarAttribute();
+            break;
+        case StatementKind::skEnum:
+        case StatementKind::skPreprocessor:
+            attr = cppHighlighter->preprocessorAttribute();
+            break;
+        case StatementKind::skKeyword:
+            attr = cppHighlighter->keywordAttribute();
+            break;
+        case StatementKind::skNamespace:
+        case StatementKind::skNamespaceAlias:
+            attr = cppHighlighter->stringAttribute();
+            break;
+        }
     }
 }
 

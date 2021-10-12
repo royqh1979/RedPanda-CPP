@@ -101,6 +101,11 @@ MainWindow::MainWindow(QWidget *parent)
     mMenuNew->addAction(ui->actionNew_Project);
     ui->menuFile->insertMenu(ui->actionOpen,mMenuNew);
 
+    mMenuExport = new QMenu(tr("Export"));
+    mMenuExport->addAction(ui->actionExport_As_RTF);
+    mMenuExport->addAction(ui->actionExport_As_HTML);
+    ui->menuFile->insertMenu(ui->actionPrint,mMenuExport);
+
     buildEncodingMenu();
 
     mMenuRecentProjects = new QMenu();
@@ -241,6 +246,8 @@ void MainWindow::updateEditorActions()
         ui->actionRedo->setEnabled(false);
         ui->actionSave->setEnabled(false);
         ui->actionSaveAs->setEnabled(false);
+        ui->actionExport_As_HTML->setEnabled(false);
+        ui->actionExport_As_RTF->setEnabled(false);
         ui->actionPrint->setEnabled(false);
         ui->actionSelectAll->setEnabled(false);
         ui->actionToggleComment->setEnabled(false);
@@ -274,6 +281,8 @@ void MainWindow::updateEditorActions()
         ui->actionUndo->setEnabled(e->canUndo());
         ui->actionSave->setEnabled(e->modified());
         ui->actionSaveAs->setEnabled(true);
+        ui->actionExport_As_HTML->setEnabled(true);
+        ui->actionExport_As_RTF->setEnabled(true);
         ui->actionPrint->setEnabled(true);
         ui->actionSelectAll->setEnabled(e->lines()->count()>0);
         ui->actionToggleComment->setEnabled(!e->readOnly() && e->lines()->count()>0);
@@ -960,8 +969,8 @@ void MainWindow::runExecutable(const QString &exeName,const QString &filename)
                                      +"<br /><br />"+tr("Compile now?"),
                     QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
                 ui->actionCompile_Run->trigger();
-                return;
             }
+            return;
         } else {
             QMessageBox::critical(this,"Error",
                                   tr("Source file is not compiled."));
@@ -977,6 +986,9 @@ void MainWindow::runExecutable(const QString &exeName,const QString &filename)
                     ui->actionCompile_Run->trigger();
                     return;
                 }
+            } else {
+                QMessageBox::warning(this,"Error",
+                                       tr("Source file is more recent than executable."));
             }
         }
     }
@@ -4157,5 +4169,49 @@ bool MainWindow::shouldRemoveAllSettings() const
 const PToolsManager &MainWindow::toolsManager() const
 {
     return mToolsManager;
+}
+
+
+void MainWindow::on_actionExport_As_RTF_triggered()
+{
+    Editor * editor = mEditorList->getEditor();
+    if (!editor)
+        return;
+    QString rtfFile = QFileDialog::getSaveFileName(editor,
+                                 tr("Export As RTF"),
+                                 extractFilePath(editor->filename()),
+                                 tr("Rich Text Format Files (*.rtf)")
+                                 );
+    if (rtfFile.isEmpty())
+        return;
+    try {
+        editor->exportAsRTF(rtfFile);
+    } catch (FileError e) {
+        QMessageBox::critical(editor,
+                              "Error",
+                              e.reason());
+    }
+}
+
+
+void MainWindow::on_actionExport_As_HTML_triggered()
+{
+    Editor * editor = mEditorList->getEditor();
+    if (!editor)
+        return;
+    QString htmlFile = QFileDialog::getSaveFileName(editor,
+                                 tr("Export As HTML"),
+                                 extractFilePath(editor->filename()),
+                                 tr("HTML Files (*.html)")
+                                 );
+    if (htmlFile.isEmpty())
+        return;
+    try {
+        editor->exportAsHTML(htmlFile);
+    } catch (FileError e) {
+        QMessageBox::critical(editor,
+                              "Error",
+                              e.reason());
+    }
 }
 

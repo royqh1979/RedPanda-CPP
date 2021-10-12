@@ -57,7 +57,7 @@ PSynHighlighter HighlighterManager::getCppHighlighter()
     highlighter->localVarAttribute()->setForeground(QColorConstants::Black);
     highlighter->numberAttribute()->setForeground(0x1750EB);
     highlighter->octAttribute()->setForeground(QColorConstants::Svg::purple);
-    highlighter->direcAttribute()->setForeground(0x1f542e);
+    highlighter->preprocessorAttribute()->setForeground(0x1f542e);
     highlighter->keywordAttribute()->setForeground(0x0033b3);
     highlighter->whitespaceAttribute()->setForeground(QColorConstants::Svg::silver);
     highlighter->stringAttribute()->setForeground(0x007d17);

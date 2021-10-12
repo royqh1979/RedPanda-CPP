@@ -1822,6 +1822,16 @@
     <string>Ctrl+P</string>
    </property>
   </action>
+  <action name="actionExport_As_RTF">
+   <property name="text">
+    <string>Export As RTF</string>
+   </property>
+  </action>
+  <action name="actionExport_As_HTML">
+   <property name="text">
+    <string>Export As HTML</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>
