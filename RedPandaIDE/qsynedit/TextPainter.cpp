@@ -668,7 +668,7 @@ void SynEditTextPainter::PaintFoldAttributes()
             }
             // Get next nonblank line
             LastNonBlank = vLine - 1;
-            while (LastNonBlank + 1 < edit->mLines->count() && edit->mLines->getString(LastNonBlank).trimmed().isEmpty())
+            while (LastNonBlank + 1 < edit->mLines->count() && edit->mLines->getString(LastNonBlank).isEmpty())
                 LastNonBlank++;
             LineIndent = edit->getLineIndent(edit->mLines->getString(LastNonBlank));
             int braceLevel = edit->mLines->ranges(LastNonBlank).braceLevel;

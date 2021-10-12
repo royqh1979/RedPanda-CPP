@@ -1326,6 +1326,8 @@ void Editor::onStatusChanged(SynStatusChanges changes)
 
     if (changes.testFlag(SynStatusChange::scCaretX)
             || changes.testFlag(SynStatusChange::scCaretY)) {
+        invalidateLine(mHighlightCharPos1.Line);
+        invalidateLine(mHighlightCharPos2.Line);
         mHighlightCharPos1 = BufferCoord{0,0};
         mHighlightCharPos2 = BufferCoord{0,0};
         if (mTabStopBegin >=0) {
