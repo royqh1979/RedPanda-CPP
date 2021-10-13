@@ -11,6 +11,7 @@
 #include <QMessageBox>
 #include <QPlainTextEdit>
 #include <QDebug>
+#include <QDir>
 
 Debugger::Debugger(QObject *parent) : QObject(parent)
 {
@@ -660,8 +661,6 @@ AnnotationType DebugReader::getAnnotation(const QString &s)
             result = AnnotationType::TMemory;
         }
         return result;
-    } else if (s == "error") {
-        return AnnotationType::TError;
     } else if (s == "error-begin") {
         return AnnotationType::TErrorBegin;
     } else if (s == "error-end") {
@@ -884,18 +883,6 @@ void DebugReader::handleError()
         // Update current..
         mDebugger->invalidateWatchVar(watchName);
     }
-}
-
-void DebugReader::handleErrorExit()
-{
-    if ((mCurrentCmd) && (
-                mCurrentCmd->command == "next"
-                || mCurrentCmd->command == "step"
-                || mCurrentCmd->command == "finish"
-                || mCurrentCmd->command == "continue")) {
-        handleExit();
-    }
-
 }
 
 void DebugReader::handleExit()
@@ -1199,9 +1186,6 @@ void DebugReader::processDebugOutput()
            break;
        case AnnotationType::TSignal:
            handleSignal();
-           break;
-       case AnnotationType::TError:
-           handleErrorExit();
            break;
        case AnnotationType::TExit:
            handleExit();
@@ -1637,16 +1621,19 @@ void DebugReader::run()
     mStop = false;
     bool errorOccurred = false;
     QString cmd = mDebuggerPath;
+//    QString arguments = "--annotate=2";
     QString arguments = "--annotate=2 --silent";
     QString workingDir = QFileInfo(mDebuggerPath).path();
 
     mProcess = new QProcess();
     mProcess->setProgram(cmd);
     mProcess->setArguments(QProcess::splitCommand(arguments));
+    mProcess->setProcessChannelMode(QProcess::MergedChannels);
     QString cmdDir = extractFileDir(cmd);
     if (!cmdDir.isEmpty()) {
         QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
         QString path = env.value("PATH");
+        cmdDir.replace("/",QDir::separator());
         if (path.isEmpty()) {
             path = cmdDir;
         } else {
@@ -1661,20 +1648,13 @@ void DebugReader::run()
                     [&](){
                         errorOccurred= true;
                     });
-//    mProcess.connect(&process, &QProcess::readyReadStandardError,[&process,this](){
-//        this->error(QString::fromLocal8Bit( process.readAllStandardError()));
-//    });
-//    mProcess.connect(&mProcess, &QProcess::readyReadStandardOutput,[&process,this](){
-//        this->log(QString::fromLocal8Bit( process.readAllStandardOutput()));
-//    });
-//    process.connect(&mProcess, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),[&process,this](){
-//        this->error(COMPILE_PROCESS_END);
-//    });
+    QByteArray buffer;
+    QByteArray readed;
+
     mProcess->start();
     mProcess->waitForStarted(5000);
     mStartSemaphore.release(1);
-    QByteArray buffer;
-    QByteArray readed;
+
     while (true) {
         mProcess->waitForFinished(1);
         if (mProcess->state()!=QProcess::Running) {

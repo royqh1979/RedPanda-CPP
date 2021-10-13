@@ -26,7 +26,6 @@ enum class AnnotationType {
   TFrameSourceFile, TFrameSourceBegin, TFrameSourceLine, TFrameFunctionName, TFrameWhere,
   TFrameArgs,
   TFrameBegin, TFrameEnd,
-  TError,
   TErrorBegin, TErrorEnd,
   TArrayBegin, TArrayEnd,
   TElt, TEltRep, TEltRepEnd,
@@ -308,7 +307,6 @@ private:
     void handleDisassembly();
     void handleDisplay();
     void handleError();
-    void handleErrorExit();
     void handleExit();
     void handleFrames();
     void handleLocalOutput();

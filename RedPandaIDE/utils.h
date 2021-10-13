@@ -190,6 +190,11 @@ int getNewFileNumber();
 class CppParser;
 void resetCppParser(std::shared_ptr<CppParser> parser);
 
+
+/**
+ * from https://github.com/Microsoft/GSL
+ **/
+
 template <class F>
 class final_action
 {

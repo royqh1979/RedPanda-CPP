@@ -40,8 +40,8 @@ enum class SynEditorCommand {
     ecPageRight       = 12,   // Move cursor left one page
     ecPageTop         = 13,   // Move cursor to top of page
     ecPageBottom      = 14,   // Move cursor to bottom of page
-    ecEditorTop       = 15,   // Move cursor to absolute beginning
-    ecEditorBottom    = 16,   // Move cursor to absolute end
+    ecEditorStart       = 15,   // Move cursor to absolute beginning
+    ecEditorEnd    = 16,   // Move cursor to absolute end
     ecGotoXY          = 17,   // Move cursor to specific coordinates, Data = PPoint
 
 //******************************************************************************
@@ -67,8 +67,8 @@ enum class SynEditorCommand {
     ecSelPageRight    = ecPageRight + ecSelection,
     ecSelPageTop      = ecPageTop + ecSelection,
     ecSelPageBottom   = ecPageBottom + ecSelection,
-    ecSelEditorTop    = ecEditorTop + ecSelection,
-    ecSelEditorBottom = ecEditorBottom + ecSelection,
+    ecSelEditorStart    = ecEditorStart + ecSelection,
+    ecSelEditorEnd = ecEditorEnd + ecSelection,
     ecSelGotoXY       = ecGotoXY + ecSelection,  // Data = PPoint
 
     ecSelWord         = 198,

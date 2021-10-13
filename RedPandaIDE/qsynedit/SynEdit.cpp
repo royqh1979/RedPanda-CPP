@@ -4953,14 +4953,17 @@ void SynEdit::ExecuteCommand(SynEditorCommand Command, QChar AChar, void *pData)
     case SynEditorCommand::ecSelPageBottom:
         moveCaretVert(mTopLine+mLinesInWindow-1-mCaretY, Command == SynEditorCommand::ecSelPageBottom);
         break;
-    case SynEditorCommand::ecEditorTop:
-    case SynEditorCommand::ecSelEditorTop:
-        moveCaretVert(1-mCaretY, Command == SynEditorCommand::ecSelEditorTop);
+    case SynEditorCommand::ecEditorStart:
+    case SynEditorCommand::ecSelEditorStart:
+        moveCaretVert(1-mCaretY, Command == SynEditorCommand::ecSelEditorStart);
+        moveCaretToLineStart(Command == SynEditorCommand::ecSelEditorStart);
         break;
-    case SynEditorCommand::ecEditorBottom:
-    case SynEditorCommand::ecSelEditorBottom:
-        if (!mLines->empty())
-            moveCaretVert(mLines->count()-mCaretY, Command == SynEditorCommand::ecSelEditorBottom);
+    case SynEditorCommand::ecEditorEnd:
+    case SynEditorCommand::ecSelEditorEnd:
+        if (!mLines->empty()) {
+            moveCaretVert(mLines->count()-mCaretY, Command == SynEditorCommand::ecSelEditorEnd);
+            moveCaretToLineEnd(Command == SynEditorCommand::ecSelEditorStart);
+        }
         break;
     // goto special line / column position
     case SynEditorCommand::ecGotoXY:
@@ -5517,8 +5520,8 @@ void SynEdit::mousePressEvent(QMouseEvent *event)
         //I couldn't track down why, but sometimes (and definitely not all the time)
         //the block positioning is lost.  This makes sure that the block is
         //maintained in case they started a drag operation on the block
-        mBlockBegin = TmpBegin;
-        mBlockEnd = TmpEnd;
+//        setBlockBegin(TmpBegin);
+//        setBlockEnd(TmpEnd);
 
         setMouseTracking(true);
         //if mousedown occurred in selected block begin drag operation
@@ -5530,19 +5533,19 @@ void SynEdit::mousePressEvent(QMouseEvent *event)
         if (bStartDrag) {
             mStateFlags.setFlag(SynStateFlag::sfWaitForDragging);
         } else {
-            if (event->modifiers() == Qt::ShiftModifier)
+            if (event->modifiers() == Qt::ShiftModifier) {
                 //BlockBegin and BlockEnd are restored to their original position in the
                 //code from above and SetBlockEnd will take care of proper invalidation
                 setBlockEnd(caretXY());
-            else if (mOptions.testFlag(eoAltSetsColumnMode) &&
+            } else if (mOptions.testFlag(eoAltSetsColumnMode) &&
                      (mActiveSelectionMode != SynSelectionMode::smLine)) {
                 if (event->modifiers() == Qt::AltModifier)
                     setSelectionMode(SynSelectionMode::smColumn);
                 else
                     setSelectionMode(SynSelectionMode::smNormal);
+                //Selection mode must be set before calling SetBlockBegin
+                setBlockBegin(caretXY());
             }
-            //Selection mode must be set before calling SetBlockBegin
-            setBlockBegin(caretXY());
         }
     }
 }

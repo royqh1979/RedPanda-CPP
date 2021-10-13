@@ -185,12 +185,12 @@ void SynEditKeyStrokes::resetDefaults()
     add(SynEditorCommand::ecSelPageTop, Qt::Key_PageUp, Qt::ShiftModifier|Qt::ControlModifier);
     add(SynEditorCommand::ecLineStart, Qt::Key_Home, Qt::NoModifier);
     add(SynEditorCommand::ecSelLineStart, Qt::Key_Home, Qt::ShiftModifier);
-    add(SynEditorCommand::ecEditorTop, Qt::Key_Home, Qt::ControlModifier);
-    add(SynEditorCommand::ecSelEditorTop, Qt::Key_Home, Qt::ShiftModifier|Qt::ControlModifier);
+    add(SynEditorCommand::ecEditorStart, Qt::Key_Home, Qt::ControlModifier);
+    add(SynEditorCommand::ecSelEditorStart, Qt::Key_Home, Qt::ShiftModifier|Qt::ControlModifier);
     add(SynEditorCommand::ecLineEnd, Qt::Key_End, Qt::NoModifier);
     add(SynEditorCommand::ecSelLineEnd, Qt::Key_End, Qt::ShiftModifier);
-    add(SynEditorCommand::ecEditorBottom, Qt::Key_End, Qt::ControlModifier);
-    add(SynEditorCommand::ecSelEditorBottom, Qt::Key_End, Qt::ShiftModifier|Qt::ControlModifier);
+    add(SynEditorCommand::ecEditorEnd, Qt::Key_End, Qt::ControlModifier);
+    add(SynEditorCommand::ecSelEditorEnd, Qt::Key_End, Qt::ShiftModifier|Qt::ControlModifier);
     add(SynEditorCommand::ecToggleMode, Qt::Key_Insert, Qt::NoModifier);
     add(SynEditorCommand::ecCopy, Qt::Key_Insert, Qt::ControlModifier);
     add(SynEditorCommand::ecCut, Qt::Key_Delete, Qt::ShiftModifier);
