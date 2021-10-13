@@ -644,10 +644,6 @@ AnnotationType DebugReader::getAnnotation(const QString &s)
         return AnnotationType::TPrompt;
     } else if (s == "post-prompt") {
         AnnotationType result = AnnotationType::TPostPrompt;
-
-        int IndexBackup = mIndex;
-        QString t = getNextFilledLine();
-        mIndex = IndexBackup;
         //hack to catch local
         if ((mCurrentCmd) && (mCurrentCmd->command == "info locals")) {
             result = AnnotationType::TLocal;
@@ -664,6 +660,8 @@ AnnotationType DebugReader::getAnnotation(const QString &s)
             result = AnnotationType::TMemory;
         }
         return result;
+    } else if (s == "error") {
+        return AnnotationType::TError;
     } else if (s == "error-begin") {
         return AnnotationType::TErrorBegin;
     } else if (s == "error-end") {
@@ -886,6 +884,18 @@ void DebugReader::handleError()
         // Update current..
         mDebugger->invalidateWatchVar(watchName);
     }
+}
+
+void DebugReader::handleErrorExit()
+{
+    if ((mCurrentCmd) && (
+                mCurrentCmd->command == "next"
+                || mCurrentCmd->command == "step"
+                || mCurrentCmd->command == "finish"
+                || mCurrentCmd->command == "continue")) {
+        handleExit();
+    }
+
 }
 
 void DebugReader::handleExit()
@@ -1189,6 +1199,9 @@ void DebugReader::processDebugOutput()
            break;
        case AnnotationType::TSignal:
            handleSignal();
+           break;
+       case AnnotationType::TError:
+           handleErrorExit();
            break;
        case AnnotationType::TExit:
            handleExit();

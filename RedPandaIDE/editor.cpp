@@ -848,7 +848,7 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
     }
 
     if (!selAvail() && attr->name() == SYNS_AttrSymbol) {
-        qDebug()<<line<<":"<<aChar<<" - "<<mHighlightCharPos1.Line<<":"<<mHighlightCharPos1.Char<<" - "<<mHighlightCharPos2.Line<<":"<<mHighlightCharPos2.Char;
+//        qDebug()<<line<<":"<<aChar<<" - "<<mHighlightCharPos1.Line<<":"<<mHighlightCharPos1.Char<<" - "<<mHighlightCharPos2.Line<<":"<<mHighlightCharPos2.Char;
 
         if ( (line == mHighlightCharPos1.Line)
                 && (aChar == mHighlightCharPos1.Char)) {

@@ -1,3 +1,7 @@
+Version 0.6.7
+ - fix: debugger won't exit when the program has exited.
+ - adjust: the max value of the debug console's vertical scrollbar.
+
 Version 0.6.6
  - fix: crash when create new file
  - implement: two editor view
