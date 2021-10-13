@@ -1,3 +1,7 @@
+Version 0.6.6
+ - fix: crash when create new file
+ - implement: two editor view
+
 Version 0.6.5
  - implement: export as rtf / export as html
  - fix: the contents copied/exported are not correctly syntax colored

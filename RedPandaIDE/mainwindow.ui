@@ -1832,6 +1832,14 @@
     <string>Export As HTML</string>
    </property>
   </action>
+  <action name="actionMove_To_Other_View">
+   <property name="text">
+    <string>Move To Other View</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+M</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>

@@ -155,7 +155,9 @@ public slots:
     void onMemoryExamineReady(const QStringList& value);
     void onLocalsReady(const QStringList& value);
     void onEditorContextMenu(const QPoint& pos);
-    void onEditorTabContextMenu(const QPoint& pos);
+    void onEditorRightTabContextMenu(const QPoint& pos);
+    void onEditorLeftTabContextMenu(const QPoint& pos);
+    void onEditorTabContextMenu(QTabWidget* tabWidget, const QPoint& pos);
     void disableDebugActions();
     void enableDebugActions();
     void onTodoParseStarted();
@@ -203,6 +205,7 @@ private slots:
     void on_actionNew_triggered();
 
     void on_EditorTabsLeft_tabCloseRequested(int index);
+    void on_EditorTabsRight_tabCloseRequested(int index);
 
     void on_actionOpen_triggered();
 
@@ -315,6 +318,7 @@ private slots:
     void on_splitterMessages_splitterMoved(int pos, int index);
 
     void on_EditorTabsLeft_tabBarDoubleClicked(int index);
+    void on_EditorTabsRight_tabBarDoubleClicked(int index);
 
     void on_actionClose_triggered();
 
@@ -377,7 +381,6 @@ private slots:
     void on_classBrowser_doubleClicked(const QModelIndex &index);
 
     void on_EditorTabsLeft_currentChanged(int index);
-
     void on_EditorTabsRight_currentChanged(int index);
 
     void on_tableTODO_doubleClicked(const QModelIndex &index);
@@ -395,6 +398,8 @@ private slots:
     void on_actionExport_As_RTF_triggered();
 
     void on_actionExport_As_HTML_triggered();
+
+    void on_actionMove_To_Other_View_triggered();
 
 private:
     Ui::MainWindow *ui;

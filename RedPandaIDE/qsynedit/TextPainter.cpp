@@ -670,6 +670,8 @@ void SynEditTextPainter::PaintFoldAttributes()
             LastNonBlank = vLine - 1;
             while (LastNonBlank + 1 < edit->mLines->count() && edit->mLines->getString(LastNonBlank).isEmpty())
                 LastNonBlank++;
+            if (LastNonBlank>=edit->lines()->count())
+                continue;
             LineIndent = edit->getLineIndent(edit->mLines->getString(LastNonBlank));
             int braceLevel = edit->mLines->ranges(LastNonBlank).braceLevel;
             int indentLevel = braceLevel ;

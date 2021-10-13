@@ -382,6 +382,28 @@ bool Editor::isNew() const noexcept {
 QTabWidget* Editor::pageControl() noexcept{
     return mParentPageControl;
 }
+static int findWidgetInPageControl(QTabWidget* pageControl, QWidget* child) {
+    for (int i=0;i<pageControl->count();i++) {
+        if (pageControl->widget(i)==child)
+            return i;
+    }
+    return -1;
+}
+void Editor::setPageControl(QTabWidget *newPageControl)
+{
+    if (mParentPageControl==newPageControl)
+        return;
+    if (mParentPageControl!=nullptr) {
+        int index = findWidgetInPageControl(mParentPageControl,this);
+        if (index>=0)
+            mParentPageControl->removeTab(index);
+    }
+    mParentPageControl= newPageControl;
+    if (newPageControl!=nullptr) {
+        mParentPageControl->addTab(this,"");
+        updateCaption();
+    }
+}
 
 void Editor::undoSymbolCompletion(int pos)
 {

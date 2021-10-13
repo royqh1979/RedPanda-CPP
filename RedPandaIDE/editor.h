@@ -124,6 +124,7 @@ public:
     void activate();
 
     QTabWidget* pageControl() noexcept;
+    void setPageControl(QTabWidget* newPageControl);
 
     void updateCaption(const QString& newCaption=QString());
     void applySettings();

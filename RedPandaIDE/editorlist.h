@@ -11,7 +11,6 @@ class EditorList
 {
 public:
     enum class LayoutShowType{
-        lstNone,
         lstLeft,
         lstRight,
         lstBoth
@@ -24,11 +23,13 @@ public:
 
     Editor* newEditor(const QString& filename, const QByteArray& encoding,
                      bool inProject, bool newFile,
-                     QTabWidget* page=NULL);
+                     QTabWidget* page=nullptr);
 
-    Editor* getEditor(int index=-1, QTabWidget* tabsWidget=NULL) const;
+    Editor* getEditor(int index=-1, QTabWidget* tabsWidget=nullptr) const;
 
     bool closeEditor(Editor* editor, bool transferFocus=true, bool force=false);
+
+    bool swapEditor(Editor* editor);
 
     bool closeAll(bool force = false);
 

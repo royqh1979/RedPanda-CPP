@@ -1654,14 +1654,14 @@ void MainWindow::buildContextMenus()
     connect(ui->EditorTabsLeft->tabBar(),
             &QWidget::customContextMenuRequested,
             this,
-            &MainWindow::onEditorTabContextMenu
+            &MainWindow::onEditorLeftTabContextMenu
             );
 
     ui->EditorTabsRight->tabBar()->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->EditorTabsRight->tabBar(),
             &QWidget::customContextMenuRequested,
             this,
-            &MainWindow::onEditorTabContextMenu
+            &MainWindow::onEditorRightTabContextMenu
             );
 
     //context menu signal for Compile Issue view
@@ -2278,21 +2278,38 @@ void MainWindow::onEditorContextMenu(const QPoint &pos)
 
 }
 
-void MainWindow::onEditorTabContextMenu(const QPoint &pos)
+void MainWindow::onEditorRightTabContextMenu(const QPoint &pos)
 {
-    int index = ui->EditorTabsLeft->tabBar()->tabAt(pos);
+    onEditorTabContextMenu(ui->EditorTabsRight,pos);
+}
+
+void MainWindow::onEditorLeftTabContextMenu(const QPoint &pos)
+{
+    onEditorTabContextMenu(ui->EditorTabsLeft,pos);
+}
+
+
+void MainWindow::onEditorTabContextMenu(QTabWidget* tabWidget, const QPoint &pos)
+{
+    int index = tabWidget->tabBar()->tabAt(pos);
     if (index<0)
         return;
-    ui->EditorTabsLeft->setCurrentIndex(index);
+    tabWidget->setCurrentIndex(index);
     QMenu menu(this);
-    QTabBar* tabBar = ui->EditorTabsLeft->tabBar();
+    QTabBar* tabBar = tabWidget->tabBar();
     menu.addAction(ui->actionClose);
     menu.addAction(ui->actionClose_All);
     menu.addSeparator();
     menu.addAction(ui->actionOpen_Containing_Folder);
     menu.addAction(ui->actionOpen_Terminal);
     menu.addSeparator();
+    menu.addAction(ui->actionMove_To_Other_View);
+    menu.addSeparator();
     menu.addAction(ui->actionFile_Properties);
+    ui->actionMove_To_Other_View->setEnabled(
+                tabWidget==ui->EditorTabsRight
+                || tabWidget->count()>1
+                );
 
     menu.exec(tabBar->mapToGlobal(pos));
 }
@@ -2526,6 +2543,12 @@ void MainWindow::on_actionNew_triggered()
 void MainWindow::on_EditorTabsLeft_tabCloseRequested(int index)
 {
     Editor* editor = mEditorList->getEditor(index,ui->EditorTabsLeft);
+    mEditorList->closeEditor(editor);
+}
+
+void MainWindow::on_EditorTabsRight_tabCloseRequested(int index)
+{
+    Editor* editor = mEditorList->getEditor(index,ui->EditorTabsRight);
     mEditorList->closeEditor(editor);
 }
 
@@ -3507,6 +3530,11 @@ void MainWindow::on_EditorTabsLeft_tabBarDoubleClicked(int index)
     maximizeEditor();
 }
 
+void MainWindow::on_EditorTabsRight_tabBarDoubleClicked(int index)
+{
+    maximizeEditor();
+}
+
 
 void MainWindow::on_actionClose_triggered()
 {
@@ -3979,7 +4007,7 @@ PSymbolUsageManager &MainWindow::symbolUsageManager()
 
 void MainWindow::on_EditorTabsLeft_currentChanged(int index)
 {
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorList->getEditor(-1,ui->EditorTabsLeft);
     if (editor) {
         editor->reparseTodo();
     }
@@ -3988,7 +4016,7 @@ void MainWindow::on_EditorTabsLeft_currentChanged(int index)
 
 void MainWindow::on_EditorTabsRight_currentChanged(int index)
 {
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorList->getEditor(-1,ui->EditorTabsRight);
     if (editor) {
         editor->reparseTodo();
     }
@@ -4212,6 +4240,15 @@ void MainWindow::on_actionExport_As_HTML_triggered()
         QMessageBox::critical(editor,
                               "Error",
                               e.reason());
+    }
+}
+
+
+void MainWindow::on_actionMove_To_Other_View_triggered()
+{
+    Editor * editor = mEditorList->getEditor();
+    if (editor) {
+        mEditorList->swapEditor(editor);
     }
 }
 

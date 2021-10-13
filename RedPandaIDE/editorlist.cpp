@@ -24,8 +24,8 @@ EditorList::EditorList(QTabWidget* leftPageWidget,
 Editor* EditorList::newEditor(const QString& filename, const QByteArray& encoding,
                  bool inProject, bool newFile,
                  QTabWidget* page) {
-    QTabWidget * parentPageControl = NULL;
-    if (page == NULL)
+    QTabWidget * parentPageControl = nullptr;
+    if (page == nullptr)
         parentPageControl = getNewEditorPageControl();
     else
         parentPageControl = page;
@@ -38,13 +38,25 @@ Editor* EditorList::newEditor(const QString& filename, const QByteArray& encodin
 }
 
 QTabWidget*  EditorList::getNewEditorPageControl() const {
-    //todo: return widget depends on layout
-    return mLeftPageWidget;
+    return getFocusedPageControl();
 }
 
 QTabWidget* EditorList::getFocusedPageControl() const {
     //todo:
-    return mLeftPageWidget;
+    switch(mLayout) {
+    case LayoutShowType::lstLeft:
+        return mLeftPageWidget;
+    case LayoutShowType::lstRight:
+        return mRightPageWidget;
+    case LayoutShowType::lstBoth: {
+        Editor* editor = dynamic_cast<Editor*>(mRightPageWidget->currentWidget());
+        if (editor && editor->hasFocus())
+            return mRightPageWidget;
+        return mLeftPageWidget;
+    }
+    default:
+        return nullptr;
+    }
 }
 
 void EditorList::showLayout(LayoutShowType layout)
@@ -55,7 +67,6 @@ void EditorList::showLayout(LayoutShowType layout)
     // Apply widths if layout does not change
     switch(mLayout) {
     case LayoutShowType::lstLeft:
-    case LayoutShowType::lstNone:
         mLeftPageWidget->setVisible(true);
         mRightPageWidget->setVisible(false);
         break;
@@ -71,16 +82,18 @@ void EditorList::showLayout(LayoutShowType layout)
 
 Editor* EditorList::getEditor(int index, QTabWidget* tabsWidget) const {
     QTabWidget* selectedWidget;
-    if (tabsWidget == NULL) {
-        selectedWidget = getFocusedPageControl(); // todo: get focused widget
+    if (tabsWidget == nullptr) {
+        selectedWidget = getFocusedPageControl();
     } else {
         selectedWidget = tabsWidget;
     }
+    if (!selectedWidget)
+        return nullptr;
     if (index == -1) {
         index = selectedWidget->currentIndex();
     }
     if (index<0 || index >= selectedWidget->count()) {
-        return NULL;
+        return nullptr;
     }
     return (Editor*)selectedWidget->widget(index);
 }
@@ -130,6 +143,25 @@ bool EditorList::closeEditor(Editor* editor, bool transferFocus, bool force) {
         editor = getEditor();
         pMainWindow->updateClassBrowserForEditor(editor);
     }
+    return true;
+}
+
+bool EditorList::swapEditor(Editor *editor)
+{
+    Q_ASSERT(editor!=nullptr);
+    beginUpdate();
+    auto action = finally([this](){
+        endUpdate();
+    });
+    //remember old index
+    QTabWidget* fromPageControl = editor->pageControl();
+    if (fromPageControl == mLeftPageWidget) {
+        editor->setPageControl(mRightPageWidget);
+    } else {
+        editor->setPageControl(mLeftPageWidget);
+    }
+    updateLayout();
+    editor->activate();
     return true;
 }
 
@@ -241,7 +273,6 @@ bool EditorList::closeAll(bool force) {
             return false;
         }
     }
-
     return true;
 }
 
@@ -305,10 +336,6 @@ bool EditorList::getContentFromOpenedEditor(const QString &filename, QStringList
 void EditorList::getVisibleEditors(Editor *&left, Editor *&right)
 {
     switch(mLayout) {
-    case LayoutShowType::lstNone:
-        left = nullptr;
-        right = nullptr;
-        break;
     case LayoutShowType::lstLeft:
         left = getEditor(-1,mLeftPageWidget);
         right = nullptr;
@@ -326,11 +353,9 @@ void EditorList::getVisibleEditors(Editor *&left, Editor *&right)
 
 void EditorList::updateLayout()
 {
-    if (mLeftPageWidget->count() ==0 && mRightPageWidget->count() == 0)
-        showLayout(LayoutShowType::lstNone);
-    else if (mLeftPageWidget->count() > 0 && mRightPageWidget->count() == 0)
+    if (mRightPageWidget->count() == 0)
         showLayout(LayoutShowType::lstLeft);
-    else if (mLeftPageWidget->count() ==0 && mRightPageWidget->count() > 0)
+    else if (mLeftPageWidget->count() ==0)
         showLayout(LayoutShowType::lstRight);
     else
         showLayout(LayoutShowType::lstBoth);
