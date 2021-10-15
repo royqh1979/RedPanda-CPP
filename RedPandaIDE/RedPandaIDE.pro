@@ -65,6 +65,7 @@ SOURCES += \
     settingsdialog/toolsgeneralwidget.cpp \
     shortcutmanager.cpp \
     symbolusagemanager.cpp \
+    thememanager.cpp \
     todoparser.cpp \
     toolsmanager.cpp \
     widgets/aboutdialog.cpp \
@@ -176,6 +177,7 @@ HEADERS += \
     settingsdialog/toolsgeneralwidget.h \
     shortcutmanager.h \
     symbolusagemanager.h \
+    thememanager.h \
     todoparser.h \
     toolsmanager.h \
     widgets/aboutdialog.h \
