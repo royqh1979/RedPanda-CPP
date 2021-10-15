@@ -3479,7 +3479,7 @@ Are you really want to continue?</source>
     <message>
         <location filename="mainwindow.ui" line="1852"/>
         <source>C/C++ Reference</source>
-        <translation type="unfinished">C/C++参考</translation>
+        <translation>C/C++参考</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="1977"/>
@@ -3529,7 +3529,7 @@ Are you really want to continue?</source>
         <location filename="mainwindow.cpp" line="688"/>
         <source>Line:%1 Col:%2 Selected:%3 Lines:%4 Length:%5</source>
         <oldsource>Line: %1 Col: %2 Selected: %3 Lines: %4 Length: %5</oldsource>
-        <translation type="unfinished">行: %1 列: %2 已选择 :%3 总行数: %4 总长度: %5</translation>
+        <translation>行: %1 列: %2 已选择 :%3 总行数: %4 总长度: %5</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="706"/>
