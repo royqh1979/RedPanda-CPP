@@ -4262,3 +4262,18 @@ void MainWindow::on_actionMove_To_Other_View_triggered()
     }
 }
 
+
+void MainWindow::on_actionC_C_Reference_triggered()
+{
+    if (pSettings->environment().language()=="zh_CN") {
+        QFileInfo fileInfo(includeTrailingPathDelimiter(pSettings->dirs().app())+"cppreference-zh.chm");
+        if (fileInfo.exists()) {
+            QDesktopServices::openUrl(QUrl::fromLocalFile(fileInfo.absoluteFilePath()));
+        } else {
+            QDesktopServices::openUrl(QUrl("https://zh.cppreference.com/w/cpp"));
+        }
+    } else {
+        QDesktopServices::openUrl(QUrl("https://en.cppreference.com/w/cpp"));
+    }
+}
+

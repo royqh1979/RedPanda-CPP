@@ -403,6 +403,8 @@ private slots:
 
     void on_actionMove_To_Other_View_triggered();
 
+    void on_actionC_C_Reference_triggered();
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;

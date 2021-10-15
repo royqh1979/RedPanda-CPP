@@ -85,7 +85,7 @@
             <enum>QTabWidget::West</enum>
            </property>
            <property name="currentIndex">
-            <number>0</number>
+            <number>1</number>
            </property>
            <property name="usesScrollButtons">
             <bool>true</bool>
@@ -387,6 +387,9 @@
          <string>Debug</string>
         </attribute>
         <layout class="QHBoxLayout" name="horizontalLayout_4">
+         <property name="spacing">
+          <number>7</number>
+         </property>
          <property name="leftMargin">
           <number>0</number>
          </property>
@@ -403,6 +406,9 @@
           <widget class="QSplitter" name="splitter">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="handleWidth">
+            <number>3</number>
            </property>
            <widget class="QFrame" name="frmEvaluate">
             <property name="frameShape">
@@ -956,6 +962,7 @@
     <property name="title">
      <string>Help</string>
     </property>
+    <addaction name="actionC_C_Reference"/>
     <addaction name="actionAbout"/>
    </widget>
    <widget class="QMenu" name="menuRefactor">
@@ -1838,6 +1845,11 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+M</string>
+   </property>
+  </action>
+  <action name="actionC_C_Reference">
+   <property name="text">
+    <string>C/C++ Reference</string>
    </property>
   </action>
  </widget>

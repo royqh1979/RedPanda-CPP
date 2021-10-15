@@ -1,3 +1,6 @@
+Version 0.6.8
+ - enhancement: add link to cppreference in the help menu
+
 Version 0.6.7
  - fix: messages send to the gdb process's standard error are not received
  - adjust: the max value of the debug console's vertical scrollbar.
