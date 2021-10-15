@@ -283,7 +283,7 @@
         <enum>QTabWidget::South</enum>
        </property>
        <property name="currentIndex">
-        <number>1</number>
+        <number>2</number>
        </property>
        <widget class="QWidget" name="tabIssues">
         <attribute name="icon">
@@ -388,16 +388,16 @@
         </attribute>
         <layout class="QHBoxLayout" name="horizontalLayout_4">
          <property name="leftMargin">
-          <number>2</number>
+          <number>0</number>
          </property>
          <property name="topMargin">
-          <number>2</number>
+          <number>0</number>
          </property>
          <property name="rightMargin">
-          <number>2</number>
+          <number>0</number>
          </property>
          <property name="bottomMargin">
-          <number>2</number>
+          <number>0</number>
          </property>
          <item>
           <widget class="QSplitter" name="splitter">

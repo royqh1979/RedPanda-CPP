@@ -3,6 +3,7 @@ Version 0.6.7
  - adjust: the max value of the debug console's vertical scrollbar.
  - fix: shfit+click not correctly set selection's end
  - fix: ctrl+home/end not correctly set cursor to start/end of the editor
+ - enhancement: click the encoding info in the statusbar will show encoding menu
 
 Version 0.6.6
  - fix: crash when create new file

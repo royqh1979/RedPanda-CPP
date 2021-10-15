@@ -15,6 +15,7 @@
 #include "codesnippetsmanager.h"
 #include "todoparser.h"
 #include "toolsmanager.h"
+#include "widgets/labelwithmenu.h"
 
 
 QT_BEGIN_NAMESPACE
@@ -199,6 +200,7 @@ private slots:
     void onProjectViewContextMenu(const QPoint& pos);
     void onClassBrowserContextMenu(const QPoint& pos);
     void onDebugConsoleContextMenu(const QPoint& pos);
+    void onFileEncodingContextMenu(const QPoint& pos);
 
     void onShowInsertCodeSnippetMenu();
 
@@ -405,7 +407,7 @@ private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;
     QLabel *mFileInfoStatus;
-    QLabel *mFileEncodingStatus;
+    LabelWithMenu *mFileEncodingStatus;
     QLabel *mFileModeStatus;
     QMenu *mMenuEncoding;
     QMenu *mMenuExport;

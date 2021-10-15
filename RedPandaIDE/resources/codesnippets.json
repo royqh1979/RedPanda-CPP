@@ -61,5 +61,19 @@
         "description": "",
         "prefix": "function()",
         "section": -1
+    },
+    {
+        "caption": "Comment Header",
+        "code": "/**\r\n * @file %REPL_BEGIN%<SOURCENAME>%REPL_END% \r\n * @brief: %INSERT%\r\n * @version: %INSERT% \r\n * @copyright: %INSERT%\r\n * @author: %INSERT%\r\n * @date: <DATETIME>\r\n * \r\n **/",
+        "description": "",
+        "prefix": "",
+        "section": 0
+    },
+    {
+        "caption": "Date/Time",
+        "code": "<DATETIME>",
+        "description": "",
+        "prefix": "",
+        "section": 0
     }
 ]

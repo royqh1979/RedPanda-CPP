@@ -57,7 +57,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
     // status bar
     mFileInfoStatus=new QLabel();
-    mFileEncodingStatus = new QLabel();
+    mFileEncodingStatus = new LabelWithMenu();
     mFileModeStatus = new QLabel();
     mFileInfoStatus->setStyleSheet("margin-left:10px; margin-right:10px");
     mFileEncodingStatus->setStyleSheet("margin-left:10px; margin-right:10px");
@@ -119,7 +119,7 @@ MainWindow::MainWindow(QWidget *parent)
     rebuildOpenedFileHisotryMenu();
 
     mMenuInsertCodeSnippet = new QMenu();
-    mMenuInsertCodeSnippet->setTitle("Insert Snippet");
+    mMenuInsertCodeSnippet->setTitle(tr("Insert Snippet"));
     ui->menuCode->insertMenu(ui->actionReformat_Code,mMenuInsertCodeSnippet);
     ui->menuCode->insertSeparator(ui->actionReformat_Code);
     connect(mMenuInsertCodeSnippet,&QMenu::aboutToShow,
@@ -686,11 +686,11 @@ void MainWindow::updateStatusbarForLineCol()
     if (e!=nullptr) {
         int col = e->charToColumn(e->caretY(),e->caretX());
         QString msg = tr("Line:%1 Col:%2 Selected:%3 Lines:%4 Length:%5")
-                .arg(e->caretY(),4)
-                .arg(col,3)
-                .arg(e->selText().length(),6)
-                .arg(e->lines()->count(),4)
-                .arg(e->lines()->getTextLength(),6);
+                .arg(e->caretY())
+                .arg(col)
+                .arg(e->selText().length())
+                .arg(e->lines()->count())
+                .arg(e->lines()->getTextLength());
         mFileInfoStatus->setText(msg);
     } else {
         mFileInfoStatus->setText("");
@@ -1930,6 +1930,11 @@ void MainWindow::buildContextMenus()
     toolButton->setDefaultAction(mClassBrowser_Show_Inherited);
     hlayout->addWidget(toolButton);
     hlayout->addStretch();
+
+    //menu for statusbar
+    mFileEncodingStatus->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(mFileEncodingStatus,&QWidget::customContextMenuRequested,
+             this, &MainWindow::onFileEncodingContextMenu);
 }
 
 void MainWindow::buildEncodingMenu()
@@ -2183,6 +2188,11 @@ void MainWindow::onDebugConsoleContextMenu(const QPoint &pos)
     menu.addSeparator();
     menu.addAction(mDebugConsole_ShowCommandLog);
     menu.exec(ui->debugConsole->mapToGlobal(pos));
+}
+
+void MainWindow::onFileEncodingContextMenu(const QPoint &pos)
+{
+    mMenuEncoding->exec(mFileEncodingStatus->mapToGlobal(pos));
 }
 
 void MainWindow::onShowInsertCodeSnippetMenu()

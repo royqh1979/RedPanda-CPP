@@ -115,6 +115,7 @@ SOURCES += \
     widgets/functiontooltipwidget.cpp \
     widgets/headercompletionpopup.cpp \
     widgets/issuestable.cpp \
+    widgets/labelwithmenu.cpp \
     widgets/macroinfomodel.cpp \
     widgets/newprojectdialog.cpp \
     widgets/qconsole.cpp \
@@ -226,6 +227,7 @@ HEADERS += \
     widgets/functiontooltipwidget.h \
     widgets/headercompletionpopup.h \
     widgets/issuestable.h \
+    widgets/labelwithmenu.h \
     widgets/macroinfomodel.h \
     widgets/newprojectdialog.h \
     widgets/qconsole.h \
