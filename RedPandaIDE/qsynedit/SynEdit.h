@@ -5,7 +5,6 @@
 #include <QCursor>
 #include <QDateTime>
 #include <QFrame>
-#include <QMutex>
 #include <QStringList>
 #include <QTimer>
 #include <QWidget>
@@ -677,8 +676,6 @@ private:
     QCursor mDefaultCursor;
 
     QString mInputPreeditString;
-
-    QRecursiveMutex mMutex;
 
 friend class SynEditTextPainter;
 

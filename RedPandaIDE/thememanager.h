@@ -3,10 +3,6 @@
 
 #include <QObject>
 
-class AppTheme {
-    QPalette
-};
-
 class ThemeManager : public QObject
 {
     Q_OBJECT

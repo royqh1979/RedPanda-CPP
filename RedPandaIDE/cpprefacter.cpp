@@ -121,7 +121,7 @@ PSearchResultTreeItem CppRefacter::findOccurenceInFile(
         editor.lines()->setContents(buffer);
     } else {
         QByteArray encoding;
-        editor.lines()->LoadFromFile(filename,ENCODING_AUTO_DETECT,encoding);
+        editor.lines()->loadFromFile(filename,ENCODING_AUTO_DETECT,encoding);
     }
     editor.setHighlighter(HighlighterManager().getCppHighlighter());
     int posY = 0;
@@ -182,7 +182,7 @@ void CppRefacter::renameSymbolInFile(const QString &filename, const PStatement &
         editor.lines()->setContents(buffer);
     } else {
         QByteArray encoding;
-        editor.lines()->LoadFromFile(filename,ENCODING_AUTO_DETECT,encoding);
+        editor.lines()->loadFromFile(filename,ENCODING_AUTO_DETECT,encoding);
     }
     QStringList newContents;
     editor.setHighlighter(HighlighterManager().getCppHighlighter());
@@ -235,7 +235,7 @@ void CppRefacter::renameSymbolInFile(const QString &filename, const PStatement &
     } else {
         QByteArray realEncoding;
         QFile file(filename);
-        editor.lines()->SaveToFile(file,ENCODING_AUTO_DETECT, realEncoding);
+        editor.lines()->saveToFile(file,ENCODING_AUTO_DETECT, realEncoding);
     }
 }
 

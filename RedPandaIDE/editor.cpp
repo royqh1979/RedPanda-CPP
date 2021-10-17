@@ -163,9 +163,9 @@ Editor::~Editor() {
 
 void Editor::loadFile(const QString& filename) {
     if (filename.isEmpty()) {
-        this->lines()->LoadFromFile(mFilename,mEncodingOption,mFileEncoding);
+        this->lines()->loadFromFile(mFilename,mEncodingOption,mFileEncoding);
     } else {
-        this->lines()->LoadFromFile(filename,mEncodingOption,mFileEncoding);
+        this->lines()->loadFromFile(filename,mEncodingOption,mFileEncoding);
     }
     //this->setModified(false);
     updateCaption();
@@ -192,7 +192,7 @@ void Editor::loadFile(const QString& filename) {
 
 void Editor::saveFile(const QString &filename) {
     QFile file(filename);
-    this->lines()->SaveToFile(file,mEncodingOption,mFileEncoding);
+    this->lines()->saveToFile(file,mEncodingOption,mFileEncoding);
     pMainWindow->updateForEncodingInfo();
 }
 

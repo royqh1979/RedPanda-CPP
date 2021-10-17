@@ -3,6 +3,7 @@
 
 #include <QStringList>
 #include "highlighter/base.h"
+#include <QMutex>
 #include <QVector>
 #include <memory>
 #include "MiscProcs.h"
@@ -50,23 +51,23 @@ class SynEditStringList : public QObject
 public:
     explicit SynEditStringList(SynEdit* pEdit,QObject* parent=nullptr);
 
-    int parenthesisLevels(int Index) const;
-    int bracketLevels(int Index) const;
-    int braceLevels(int Index) const;
+    int parenthesisLevels(int Index);
+    int bracketLevels(int Index);
+    int braceLevels(int Index);
     int lineColumns(int Index);
-    int leftBraces(int Index) const;
-    int rightBraces(int Index) const;
+    int leftBraces(int Index);
+    int rightBraces(int Index);
     int lengthOfLongestLine();
     QString lineBreak() const;
-    const SynRangeState& ranges(int Index) const;
+    const SynRangeState& ranges(int Index);
     void setRange(int Index, const SynRangeState& ARange, int leftBraces, int rightBraces);
-    QString getString(int Index) const;
-    int count() const ;
-    void* getObject(int Index) const;
-    QString text() const;
+    QString getString(int Index);
+    int count();
+    void* getObject(int Index);
+    QString text();
     void setText(const QString& text);
     void setContents(const QStringList& text);
-    QStringList contents() const;
+    QStringList contents();
 
     void putString(int Index, const QString& s);
     void putObject(int Index, void * AObject);
@@ -81,20 +82,18 @@ public:
     void clear();
     void deleteAt(int Index);
     void deleteLines(int Index, int NumLines);
-    void Exchange(int Index1, int Index2);
-    void Insert(int Index, const QString& s);
-    void InsertLines(int Index, int NumLines);
-    void InsertStrings(int Index, const QStringList& NewStrings);
-    void InsertText(int Index,const QString& NewText);
-    void LoadFromFile(const QString& filename, const QByteArray& encoding, QByteArray& realEncoding);
-    void SaveToFile(QFile& file, const QByteArray& encoding, QByteArray& realEncoding);
+    void exchange(int Index1, int Index2);
+    void insert(int Index, const QString& s);
+    void insertLines(int Index, int NumLines);
+    void insertStrings(int Index, const QStringList& NewStrings);
+    void insertText(int Index,const QString& NewText);
+    void loadFromFile(const QString& filename, const QByteArray& encoding, QByteArray& realEncoding);
+    void saveToFile(QFile& file, const QByteArray& encoding, QByteArray& realEncoding);
 
-    bool getAppendNewLineAtEOF() const;
+    bool getAppendNewLineAtEOF();
     void setAppendNewLineAtEOF(bool appendNewLineAtEOF);
 
-    ConvertTabsProcEx getConvertTabsProc() const;
-
-    FileEndingType getFileEndingType() const;
+    FileEndingType getFileEndingType();
     void setFileEndingType(const FileEndingType &fileEndingType);
 
     bool empty();
@@ -112,10 +111,11 @@ signals:
     void putted(int index, int count);
 protected:
     QString getTextStr() const;
-    void SetUpdateState(bool Updating);
-    void InsertItem(int Index, const QString& s);
+    void setUpdateState(bool Updating);
+    void insertItem(int Index, const QString& s);
     void addItem(const QString& s);
-    void PutTextStr(const QString& text);
+    void putTextStr(const QString& text);
+    void internalClear();
 
 private:
     SynEditStringRecList mList;
@@ -125,9 +125,9 @@ private:
     //int mCapacity;
     FileEndingType mFileEndingType;
     bool mAppendNewLineAtEOF;
-    ConvertTabsProcEx mConvertTabsProc;
     int mIndexOfLongestLine;
     int mUpdateCount;
+    QRecursiveMutex mMutex;
 
     int calculateLineColumns(int Index);
 };

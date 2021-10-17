@@ -2032,6 +2032,8 @@ void MainWindow::openShell(const QString &folder, const QString &shellCommand)
 
 void MainWindow::onAutoSaveTimeout()
 {
+    if (mQuitting)
+        return;
     if (!pSettings->editor().enableAutoSave())
         return;
     int updateCount = 0;
@@ -2050,6 +2052,15 @@ void MainWindow::onAutoSaveTimeout()
         }
         break;
     case astAllProjectFiles:
+        if (!mProject)
+            return;
+        for (int i=0;i<mEditorList->pageCount();i++) {
+            Editor *e = (*mEditorList)[i];
+            if (!e->inProject())
+                return;
+            doAutoSave(e);
+            updateCount++;
+        }
         //todo: auto save project files
         break;
     }

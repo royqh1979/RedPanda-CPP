@@ -536,13 +536,11 @@ BufferCoord SynEdit::getMatchingBracketEx(BufferCoord APoint)
 
 QStringList SynEdit::contents()
 {
-    //QMutexLocker locker(&mMutex);
     return lines()->contents();
 }
 
 QString SynEdit::text()
 {
-    //QMutexLocker locker(&mMutex);
     return lines()->text();
 }
 
@@ -1750,7 +1748,7 @@ void SynEdit::doDuplicateLine()
 {
     if (!mReadOnly && (mLines->count() > 0)) {
         doOnPaintTransient(SynTransientType::ttBefore);
-        mLines->Insert(mCaretY, lineText());
+        mLines->insert(mCaretY, lineText());
         doLinesInserted(mCaretY + 1, 1);
         mUndoList->AddChange(SynChangeReason::crLineBreak,
                              caretXY(), caretXY(), "", SynSelectionMode::smNormal);
@@ -1774,7 +1772,7 @@ void SynEdit::doMoveSelUp()
         doLinesDeleted(OrigBlockBegin.Line - 1, 1); // before start, 1 based
 
         // Insert line below selection
-        mLines->Insert(OrigBlockEnd.Line - 1, s);
+        mLines->insert(OrigBlockEnd.Line - 1, s);
         doLinesInserted(OrigBlockEnd.Line, 1);
 
         // Restore caret and selection
@@ -1820,7 +1818,7 @@ void SynEdit::doMoveSelDown()
         doLinesDeleted(OrigBlockEnd.Line, 1); // before start, 1 based
 
         // Insert line above selection
-        mLines->Insert(OrigBlockBegin.Line - 1, s);
+        mLines->insert(OrigBlockBegin.Line - 1, s);
         doLinesInserted(OrigBlockBegin.Line, 1);
 
         // Restore caret and selection
@@ -1895,7 +1893,7 @@ void SynEdit::insertLine(bool moveCaret)
     if (Len > 0) {
         if (Len >= mCaretX) {
             if (mCaretX <= 1) {
-                mLines->Insert(mCaretY - 1, "");
+                mLines->insert(mCaretY - 1, "");
                 nLinesInserted++;
                 mUndoList->AddChange(SynChangeReason::crLineBreak, caretXY(), caretXY(), Temp2,
                                      SynSelectionMode::smNormal);
@@ -1925,7 +1923,7 @@ void SynEdit::insertLine(bool moveCaret)
                     }
                 }
                 QString indentSpacesForRightLineText = GetLeftSpacing(indentSpaces,true);
-                mLines->Insert(mCaretY, indentSpacesForRightLineText+rightLineText);
+                mLines->insert(mCaretY, indentSpacesForRightLineText+rightLineText);
                 nLinesInserted++;
 
                 //SpaceCount1 = mLines->getString(mCaretY).length(); //???
@@ -1936,7 +1934,7 @@ void SynEdit::insertLine(bool moveCaret)
                     indentSpaces = indentSpacesOfLeftLineText;
                     indentSpaces += mTabWidth;
                     indentSpacesForRightLineText = GetLeftSpacing(indentSpaces,true);
-                    mLines->Insert(mCaretY, indentSpacesForRightLineText);
+                    mLines->insert(mCaretY, indentSpacesForRightLineText);
                     nLinesInserted++;
                     mUndoList->AddChange(SynChangeReason::crLineBreak, caretXY(), caretXY(), "",
                             SynSelectionMode::smNormal);
@@ -1954,7 +1952,7 @@ void SynEdit::insertLine(bool moveCaret)
                     SpaceCount2 = leftSpaces(Temp);
                 } while ((BackCounter != 0) && (Temp == ""));
             }
-            mLines->Insert(mCaretY, "");
+            mLines->insert(mCaretY, "");
             nLinesInserted++;
             BufferCoord Caret = caretXY();
             if (moveCaret) {
@@ -1988,7 +1986,7 @@ void SynEdit::insertLine(bool moveCaret)
                 BackCounter--;
             }
         }
-        mLines->Insert(mCaretY - 1, "");
+        mLines->insert(mCaretY - 1, "");
         nLinesInserted++;
         mUndoList->AddChange(SynChangeReason::crLineBreak, caretXY(), caretXY(), "",
                              SynSelectionMode::smNormal);
@@ -4690,7 +4688,7 @@ int SynEdit::insertTextByNormalMode(const QString &Value)
     if (P<Value.length()) {
         Str = sLeftSide + Value.mid(0, P - Start);
         properSetLine(mCaretY - 1, Str);
-        mLines->InsertLines(mCaretY, CountLines(Value,P));
+        mLines->insertLines(mCaretY, CountLines(Value,P));
     } else {
         Str = sLeftSide + Value + sRightSide;
         properSetLine(mCaretY - 1, Str);
@@ -4810,7 +4808,7 @@ int SynEdit::insertTextByLineMode(const QString &Value)
         else
             Str = "";
         if ((mCaretY == mLines->count()) || mInserting) {
-            mLines->Insert(mCaretY - 1, "");
+            mLines->insert(mCaretY - 1, "");
             Result++;
         }
         properSetLine(mCaretY - 1, Str);
@@ -4886,7 +4884,6 @@ void SynEdit::onCommandProcessed(SynEditorCommand , QChar , void *)
 
 void SynEdit::ExecuteCommand(SynEditorCommand Command, QChar AChar, void *pData)
 {
-    QMutexLocker locker(&mMutex);
     incPaintLock();
     auto action=finally([this] {
         decPaintLock();
@@ -5924,8 +5921,6 @@ void SynEdit::setSelLength(int Value)
 
 void SynEdit::setSelText(const QString &text)
 {
-    QMutexLocker locker(&mMutex);
-
     doSetSelText(text);
 }
 
