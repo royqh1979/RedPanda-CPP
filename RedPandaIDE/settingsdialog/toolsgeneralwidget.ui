@@ -83,7 +83,11 @@
        <number>0</number>
       </property>
       <item>
-       <widget class="QListView" name="lstTools"/>
+       <widget class="QListView" name="lstTools">
+        <property name="alternatingRowColors">
+         <bool>true</bool>
+        </property>
+       </widget>
       </item>
       <item>
        <widget class="QWidget" name="panelEdit" native="true">

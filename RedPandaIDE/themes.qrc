@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/">
+        <file>themes/dark.json</file>
+        <file>themes/default.json</file>
+        <file>themes/dark_close.png</file>
+    </qresource>
+</RCC>

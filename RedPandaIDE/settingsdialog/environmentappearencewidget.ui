@@ -98,7 +98,11 @@
        <number>0</number>
       </property>
       <item>
-       <widget class="QFontComboBox" name="cbFont"/>
+       <widget class="QFontComboBox" name="cbFont">
+        <property name="editable">
+         <bool>false</bool>
+        </property>
+       </widget>
       </item>
       <item>
        <spacer name="horizontalSpacer_2">

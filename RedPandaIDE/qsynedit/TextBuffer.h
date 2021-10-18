@@ -215,7 +215,8 @@ public:
 
 signals:
     void addedUndo();
-
+protected:
+    void EnsureMaxEntries();
 protected:
     int mBlockChangeNumber;
     int mBlockCount;
@@ -226,7 +227,6 @@ protected:
     int mNextChangeNumber;
     int mInitialChangeNumber;
     bool mInsideRedo;
-    void EnsureMaxEntries();
 };
 
 using PSynEditUndoList = std::shared_ptr<SynEditUndoList>;

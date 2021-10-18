@@ -122,6 +122,9 @@
      <property name="defaultDropAction">
       <enum>Qt::MoveAction</enum>
      </property>
+     <property name="alternatingRowColors">
+      <bool>true</bool>
+     </property>
     </widget>
    </item>
   </layout>

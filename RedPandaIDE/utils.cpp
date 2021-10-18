@@ -434,32 +434,32 @@ QString TrimLeft(const QString &s)
     }
 }
 
-void changeTheme(const QString &themeName)
-{
-    if (themeName.isEmpty() || themeName == "default") {
-        QApplication::setStyle("Fusion");
-        QApplication* app = dynamic_cast<QApplication*>(QApplication::instance());
-        app->setStyleSheet("");
-        return ;
-    }
-    QStyleFactory styleFactory;
-    if (styleFactory.keys().contains(themeName)) {
-        QApplication::setStyle(themeName);
-        QApplication* app = dynamic_cast<QApplication*>(QApplication::instance());
-        app->setStyleSheet("");
-        return;
-    }
-    QFile f(QString(":/themes/%1/style.qss").arg(themeName));
+//void changeTheme(const QString &themeName)
+//{
+//    if (themeName.isEmpty() || themeName == "default") {
+//        QApplication::setStyle("Fusion");
+//        QApplication* app = dynamic_cast<QApplication*>(QApplication::instance());
+//        //app->setStyleSheet("");
+//        return ;
+//    }
+//    QStyleFactory styleFactory;
+//    if (styleFactory.keys().contains(themeName)) {
+//        QApplication::setStyle(themeName);
+//        QApplication* app = dynamic_cast<QApplication*>(QApplication::instance());
+//        app->setStyleSheet("");
+//        return;
+//    }
+//    QFile f(QString(":/themes/%1/style.qss").arg(themeName));
 
-    if (!f.exists())   {
-        qDebug()<<"Unable to set stylesheet, file not found\n";
-    } else {
-        QApplication::setStyle("Windowsvista");
-        f.open(QFile::ReadOnly | QFile::Text);
-        QTextStream ts(&f);
-        dynamic_cast<QApplication*>(QApplication::instance())->setStyleSheet(ts.readAll());
-    }
-}
+//    if (!f.exists())   {
+//        qDebug()<<"Unable to set stylesheet, file not found\n";
+//    } else {
+//        QApplication::setStyle("Fusion");
+//        f.open(QFile::ReadOnly | QFile::Text);
+//        QTextStream ts(&f);
+//        dynamic_cast<QApplication*>(QApplication::instance())->setStyleSheet(ts.readAll());
+//    }
+//}
 
 int compareFileModifiedTime(const QString &filename1, const QString &filename2)
 {

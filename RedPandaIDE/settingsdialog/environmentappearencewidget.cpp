@@ -13,12 +13,12 @@ EnvironmentAppearenceWidget::EnvironmentAppearenceWidget(const QString& name, co
     ui->setupUi(this);
     ui->cbTheme->addItem("default");
     ui->cbTheme->addItem("dark");
-    ui->cbTheme->addItem("dracula");
-    ui->cbTheme->addItem("light");
-    QStyleFactory factory;
-    for (QString name:factory.keys()) {
-        ui->cbTheme->addItem(name);
-    }
+//    ui->cbTheme->addItem("dracula");
+//    ui->cbTheme->addItem("light");
+//    QStyleFactory factory;
+//    for (QString name:factory.keys()) {
+//        ui->cbTheme->addItem(name);
+//    }
     ui->cbLanguage->addItem("English","en");
     ui->cbLanguage->addItem(tr("Simplified Chinese"),"zh_CN");
 }

@@ -16,6 +16,9 @@
   <layout class="QHBoxLayout" name="horizontalLayout">
    <item>
     <widget class="QTableView" name="tblShortcut">
+     <property name="alternatingRowColors">
+      <bool>true</bool>
+     </property>
      <attribute name="horizontalHeaderStretchLastSection">
       <bool>true</bool>
      </attribute>

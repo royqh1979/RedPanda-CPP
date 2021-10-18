@@ -29,7 +29,7 @@ private slots:
     void on_lstTemplates_itemDoubleClicked(QListWidgetItem *item);
 
     void on_lstTemplates_currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous);
-    void on_btnBrowse_triggered(QAction *arg1);
+    void on_btnBrowse_clicked();
 
 private:
     void addTemplate(const QString& filename);

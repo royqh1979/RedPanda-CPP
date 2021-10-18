@@ -78,6 +78,9 @@
       </item>
       <item>
        <widget class="QTableView" name="tblAutolinks">
+        <property name="alternatingRowColors">
+         <bool>true</bool>
+        </property>
         <property name="textElideMode">
          <enum>Qt::ElideNone</enum>
         </property>

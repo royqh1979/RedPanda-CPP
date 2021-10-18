@@ -112,6 +112,7 @@ SOURCES += \
     widgets/coloredit.cpp \
     widgets/consolewidget.cpp \
     widgets/custommakefileinfodialog.cpp \
+    widgets/darkfusionstyle.cpp \
     widgets/filepropertiesdialog.cpp \
     widgets/functiontooltipwidget.cpp \
     widgets/headercompletionpopup.cpp \
@@ -225,6 +226,7 @@ HEADERS += \
     widgets/coloredit.h \
     widgets/consolewidget.h \
     widgets/custommakefileinfodialog.h \
+    widgets/darkfusionstyle.h \
     widgets/filepropertiesdialog.h \
     widgets/functiontooltipwidget.h \
     widgets/headercompletionpopup.h \
@@ -291,9 +293,7 @@ RESOURCES += \
     codes.qrc \
     colorschemes.qrc \
     defaultconfigs.qrc \
-    themes/dark/dark.qrc \
-    themes/light/light.qrc \
-    themes/dracula/dracula.qrc \
+    themes.qrc \
     icons.qrc \
     translations.qrc
 

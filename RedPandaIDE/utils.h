@@ -165,7 +165,7 @@ QString TrimLeft(const QString& s);
 bool StringIsBlank(const QString& s);
 int compareFileModifiedTime(const QString& filename1, const QString& filename2);
 
-void changeTheme(const QString& themeName);
+//void changeTheme(const QString& themeName);
 
 bool findComplement(const QString& s,
                        const QChar& fromToken,

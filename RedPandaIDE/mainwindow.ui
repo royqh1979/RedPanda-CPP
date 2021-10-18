@@ -324,6 +324,9 @@
            <property name="showDropIndicator" stdset="0">
             <bool>false</bool>
            </property>
+           <property name="alternatingRowColors">
+            <bool>true</bool>
+           </property>
            <property name="selectionMode">
             <enum>QAbstractItemView::SingleSelection</enum>
            </property>
@@ -470,7 +473,7 @@
              <enum>QTabWidget::North</enum>
             </property>
             <property name="currentIndex">
-             <number>0</number>
+             <number>1</number>
             </property>
             <widget class="QWidget" name="tabDebugConsole">
              <attribute name="title">
@@ -520,6 +523,9 @@
               </property>
               <item>
                <widget class="QTableView" name="tblStackTrace">
+                <property name="alternatingRowColors">
+                 <bool>true</bool>
+                </property>
                 <property name="selectionMode">
                  <enum>QAbstractItemView::SingleSelection</enum>
                 </property>
@@ -555,6 +561,9 @@
               </property>
               <item>
                <widget class="QTableView" name="tblBreakpoints">
+                <property name="alternatingRowColors">
+                 <bool>true</bool>
+                </property>
                 <property name="selectionMode">
                  <enum>QAbstractItemView::SingleSelection</enum>
                 </property>

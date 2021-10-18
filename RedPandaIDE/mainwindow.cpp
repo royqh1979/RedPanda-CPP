@@ -16,6 +16,8 @@
 #include "widgets/aboutdialog.h"
 #include "shortcutmanager.h"
 #include "colorscheme.h"
+#include "thememanager.h"
+#include "widgets/darkfusionstyle.h"
 
 #include <QCloseEvent>
 #include <QComboBox>
@@ -413,12 +415,19 @@ void MainWindow::updateEditorColorSchemes()
 
 void MainWindow::applySettings()
 {
-    changeTheme(pSettings->environment().theme());
+    //changeTheme(pSettings->environment().theme());
+    ThemeManager themeManager;
+    PAppTheme appTheme = themeManager.theme(pSettings->environment().theme());
+    if (appTheme->isDark())
+        QApplication::setStyle(new DarkFusionStyle());
+    else
+        QApplication::setStyle("fusion");
+    qApp->setPalette(appTheme->palette());
+
     QFont font(pSettings->environment().interfaceFont(),
                pSettings->environment().interfaceFontSize());
     font.setStyleStrategy(QFont::PreferAntialias);
-    QApplication * app = dynamic_cast<QApplication*>(QApplication::instance());
-    app->setFont(font);
+    qApp->setFont(font);
     this->setFont(font);
     updateDebuggerSettings();
 }

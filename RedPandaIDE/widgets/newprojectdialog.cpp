@@ -202,7 +202,7 @@ void NewProjectDialog::on_lstTemplates_currentItemChanged(QListWidgetItem *curre
 }
 
 
-void NewProjectDialog::on_btnBrowse_triggered(QAction *)
+void NewProjectDialog::on_btnBrowse_clicked()
 {
     QString dirPath = ui->txtLocation->text();
     if (!QDir(dirPath).exists()) {

@@ -1,6 +1,8 @@
 Version 0.6.8
  - enhancement: add link to cppreference in the help menu
  - fix: add mutex lock to prevent editor crash in rare conditions
+ - fix: In the create project dialog, the browser button doesn't work
+ - change: use QStyle to implement the dark style
 
 Version 0.6.7
  - fix: messages send to the gdb process's standard error are not received
