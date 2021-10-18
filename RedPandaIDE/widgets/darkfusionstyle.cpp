@@ -709,7 +709,7 @@ void DarkFusionStyle::drawPrimitive(PrimitiveElement elem, const QStyleOption *o
 
         QLinearGradient gradient = qt_fusion_gradient(rect, (isEnabled && option->state & State_MouseOver ) ? buttonColor : buttonColor.darker(104));
         p->setPen(Qt::transparent);
-        p->setBrush(isDown ? QBrush(buttonColor.darker(110)) : gradient);
+        p->setBrush(isDown ? QBrush(buttonColor.lighter(250)) : gradient);
         p->drawRoundedRect(r, 2.0, 2.0);
         p->setBrush(Qt::NoBrush);
 
