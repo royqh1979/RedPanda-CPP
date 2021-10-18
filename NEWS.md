@@ -3,6 +3,8 @@ Version 0.6.8
  - fix: add mutex lock to prevent editor crash in rare conditions
  - fix: In the create project dialog, the browser button doesn't work
  - enhancement: use QStyle to implement the dark style, and better control of the style's look and feel 
+ - enhancement: add link to C/C++ reference website in the help menu
+ - enhancement: add link to EGE website, if locale is zh_CN
 
 Version 0.6.7
  - fix: messages send to the gdb process's standard error are not received

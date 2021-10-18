@@ -972,6 +972,7 @@
      <string>Help</string>
     </property>
     <addaction name="actionC_C_Reference"/>
+    <addaction name="actionEGE_Manual"/>
     <addaction name="actionAbout"/>
    </widget>
    <widget class="QMenu" name="menuRefactor">
@@ -1859,6 +1860,11 @@
   <action name="actionC_C_Reference">
    <property name="text">
     <string>C/C++ Reference</string>
+   </property>
+  </action>
+  <action name="actionEGE_Manual">
+   <property name="text">
+    <string>EGE Manual</string>
    </property>
   </action>
  </widget>

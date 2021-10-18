@@ -405,6 +405,8 @@ private slots:
 
     void on_actionC_C_Reference_triggered();
 
+    void on_actionEGE_Manual_triggered();
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;

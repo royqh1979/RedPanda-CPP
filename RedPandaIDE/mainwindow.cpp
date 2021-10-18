@@ -185,6 +185,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->menuProject, &QMenu::aboutToShow,
             this, &MainWindow::updateProjectActions);
 
+    ui->actionEGE_Manual->setVisible(pSettings->environment().language()=="zh_CN");
 
     buildContextMenus();
 
@@ -4295,5 +4296,11 @@ void MainWindow::on_actionC_C_Reference_triggered()
     } else {
         QDesktopServices::openUrl(QUrl("https://en.cppreference.com/w/cpp"));
     }
+}
+
+
+void MainWindow::on_actionEGE_Manual_triggered()
+{
+    QDesktopServices::openUrl(QUrl("https://xege.org/ege-open-source"));
 }
 
