@@ -1522,22 +1522,21 @@ void SynEdit::doToggleComment()
 
 void SynEdit::doDeleteLastChar()
 {
-    //  if not ReadOnly then begin
+    if (mReadOnly)
+        return ;
     doOnPaintTransientEx(SynTransientType::ttBefore, true);
     auto action = finally([this]{
         ensureCursorPosVisible();
         doOnPaintTransientEx(SynTransientType::ttAfter, true);
     });
-    //            try
+
     if (selAvail()) {
         setSelectedTextEmpty();
         return;
     }
     QString Temp = lineText();
-    //TabBuffer := Lines.ExpandedStrings[CaretY - 1];
     int Len = Temp.length();
     BufferCoord Caret = caretXY();
-//    int vTabTrim = 0;
     QString helper = "";
     if (mCaretX > Len + 1) {
 //        if (mOptions.setFlag(eoSmartTabDelete)) {

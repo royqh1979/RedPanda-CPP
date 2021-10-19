@@ -1,9 +1,11 @@
+Version 0.7.0
+ - fix: Backspace still works in readonly mode
+
 Version 0.6.8
  - enhancement: add link to cppreference in the help menu
  - fix: add mutex lock to prevent editor crash in rare conditions
  - fix: In the create project dialog, the browser button doesn't work
  - enhancement: use QStyle to implement the dark style, and better control of the style's look and feel 
- - enhancement: add link to C/C++ reference website in the help menu
  - enhancement: add link to EGE website, if locale is zh_CN
 
 Version 0.6.7
