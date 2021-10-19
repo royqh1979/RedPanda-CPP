@@ -2202,7 +2202,7 @@ void SynEdit::computeScroll(int X, int Y)
         mScrollDeltaY = (Y - iScrollBounds.top()) / mTextHeight - 1;
     else if (Y >= iScrollBounds.bottom())
         mScrollDeltaY = (Y - iScrollBounds.bottom()) / mTextHeight + 1;
-      else
+    else
         mScrollDeltaY = 0;
 
     if (mScrollDeltaX!=0 || mScrollDeltaY!=0)

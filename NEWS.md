@@ -1,5 +1,6 @@
 Version 0.7.0
  - fix: Backspace still works in readonly mode
+ - fix: save as file dialog's operation mode is not correct
 
 Version 0.6.8
  - enhancement: add link to cppreference in the help menu

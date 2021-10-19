@@ -245,16 +245,21 @@ bool Editor::saveAs(const QString &name, bool fromProject){
     QString newName = name;
     if (name.isEmpty()) {
         QString selectedFileFilter;
-        if (pSettings->editor().defaultFileCpp())
+        QString defaultExt;
+        if (pSettings->editor().defaultFileCpp()) {
             selectedFileFilter = pSystemConsts->defaultCPPFileFilter();
-        else
+            defaultExt = "cpp";
+        } else {
             selectedFileFilter = pSystemConsts->defaultCFileFilter();
+            defaultExt = "c";
+        }
         QFileDialog dialog(this,tr("Save As"),extractFilePath(mFilename),
                            pSystemConsts->defaultFileFilters().join(";;"));
         dialog.selectNameFilter(selectedFileFilter);
+        dialog.setDefaultSuffix(defaultExt);
         dialog.selectFile(mFilename);
         dialog.setFileMode(QFileDialog::AnyFile);
-        dialog.setOption(QFileDialog::DontConfirmOverwrite,false);
+        dialog.setAcceptMode(QFileDialog::AcceptSave);
         connect(&dialog, &QFileDialog::filterSelected,
                 [&dialog](const QString &filter){
             int pos = filter.indexOf("*.");

@@ -3910,7 +3910,7 @@ void MainWindow::on_actionAdd_to_project_triggered()
                        mProject->directory(),
                        pSystemConsts->defaultFileFilters().join(";;"));
     dialog.setFileMode(QFileDialog::ExistingFiles);
-    dialog.setOption(QFileDialog::DontConfirmOverwrite,true);
+    dialog.setAcceptMode(QFileDialog::AcceptOpen);
     if (dialog.exec()) {
         QModelIndex current = ui->projectView->currentIndex();
         FolderNode * node = nullptr;
