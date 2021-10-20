@@ -97,6 +97,9 @@ Editor::Editor(QWidget *parent, const QString& filename,
         else
             mFileEncoding = mEncodingOption;
         highlighter=highlighterManager.getCppHighlighter();
+        if (parentPageControl!=nullptr) {
+            insertCodeSnippet(pMainWindow->codeSnippetManager()->newFileTemplate());
+        }
     }
 
     if (highlighter) {

@@ -19,7 +19,6 @@ SOURCES += \
     caretlist.cpp \
     codeformatter.cpp \
     codesnippetsmanager.cpp \
-    codetemplate.cpp \
     colorscheme.cpp \
     compiler/projectcompiler.cpp \
     platform.cpp \
@@ -133,7 +132,6 @@ HEADERS += \
     caretlist.h \
     codeformatter.h \
     codesnippetsmanager.h \
-    codetemplate.h \
     colorscheme.h \
     compiler/compiler.h \
     compiler/compilermanager.h \

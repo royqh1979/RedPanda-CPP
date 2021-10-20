@@ -38,6 +38,8 @@ EditorSnippetWidget::EditorSnippetWidget(const QString& name, const QString& gro
             mUpdatingCode = false;
         }
     });
+    connect(ui->editFileTemplate,&Editor::changed,
+            this, &SettingsWidget::setSettingsChanged);
 }
 
 EditorSnippetWidget::~EditorSnippetWidget()
@@ -48,11 +50,13 @@ EditorSnippetWidget::~EditorSnippetWidget()
 void EditorSnippetWidget::doLoad()
 {
     mModel.updateSnippets(pMainWindow->codeSnippetManager()->snippets());
+    ui->editFileTemplate->lines()->setText(pMainWindow->codeSnippetManager()->newFileTemplate());
 }
 
 void EditorSnippetWidget::doSave()
 {
     pMainWindow->codeSnippetManager()->setSnippets(mModel.snippets());
+    pMainWindow->codeSnippetManager()->setNewFileTemplate(ui->editFileTemplate->text());
     pMainWindow->codeSnippetManager()->save();
 }
 

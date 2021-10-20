@@ -129,7 +129,7 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
 
     synFontChanged();
 
-    showCaret();
+    hideCaret();
 
     connect(horizontalScrollBar(),&QScrollBar::valueChanged,
             this, &SynEdit::onScrolled);

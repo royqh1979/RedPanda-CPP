@@ -273,69 +273,89 @@
 <context>
     <name>CodeSnippetsManager</name>
     <message>
-        <location filename="codesnippetsmanager.cpp" line="25"/>
-        <location filename="codesnippetsmanager.cpp" line="35"/>
+        <location filename="codesnippetsmanager.cpp" line="37"/>
+        <location filename="codesnippetsmanager.cpp" line="47"/>
         <source>Load default code snippets failed</source>
         <translation>载入缺省代码模板失败</translation>
     </message>
     <message>
-        <location filename="codesnippetsmanager.cpp" line="26"/>
-        <location filename="codesnippetsmanager.cpp" line="36"/>
+        <location filename="codesnippetsmanager.cpp" line="38"/>
+        <location filename="codesnippetsmanager.cpp" line="48"/>
         <source>Can&apos;t copy default code snippets &apos;%1&apos; to &apos;%2&apos;.</source>
         <translation>无法将缺省代码模板&apos;%1&apos;复制到&apos;%2&apos;。</translation>
     </message>
     <message>
-        <location filename="codesnippetsmanager.cpp" line="47"/>
-        <location filename="codesnippetsmanager.cpp" line="58"/>
+        <location filename="codesnippetsmanager.cpp" line="59"/>
+        <location filename="codesnippetsmanager.cpp" line="70"/>
         <source>Read code snippets failed</source>
         <translation>读取代码模板失败</translation>
     </message>
     <message>
-        <location filename="codesnippetsmanager.cpp" line="48"/>
+        <location filename="codesnippetsmanager.cpp" line="60"/>
         <source>Can&apos;t open code snippet file &apos;%1&apos; for read.</source>
         <translation>无法读入代码模板文件&apos;%1&apos;</translation>
     </message>
     <message>
-        <location filename="codesnippetsmanager.cpp" line="59"/>
+        <location filename="codesnippetsmanager.cpp" line="71"/>
         <source>Read code snippet file &apos;%1&apos; failed:%2</source>
         <translation>读取代码模板文件&apos;%1&apos;失败：%2</translation>
     </message>
     <message>
-        <location filename="codesnippetsmanager.cpp" line="84"/>
-        <location filename="codesnippetsmanager.cpp" line="103"/>
+        <location filename="codesnippetsmanager.cpp" line="96"/>
+        <location filename="codesnippetsmanager.cpp" line="115"/>
         <source>Save code snippets failed</source>
         <translation>保存代码模板失败</translation>
     </message>
     <message>
-        <location filename="codesnippetsmanager.cpp" line="85"/>
+        <location filename="codesnippetsmanager.cpp" line="97"/>
         <source>Can&apos;t open code snippet file &apos;%1&apos; for write.</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="codesnippetsmanager.cpp" line="104"/>
+        <location filename="codesnippetsmanager.cpp" line="116"/>
         <source>Write to code snippet file &apos;%1&apos; failed.</source>
         <translation>写入代码片段文件&apos;%1&apos;失败。</translation>
+    </message>
+    <message>
+        <location filename="codesnippetsmanager.cpp" line="132"/>
+        <source>Load new file template failed</source>
+        <translation>载入新文件模板失败</translation>
+    </message>
+    <message>
+        <location filename="codesnippetsmanager.cpp" line="133"/>
+        <source>Can&apos;t open new file template file &apos;%1&apos; for read.</source>
+        <translation>无法读取新文件模板文件&apos;%1&apos;。</translation>
+    </message>
+    <message>
+        <location filename="codesnippetsmanager.cpp" line="146"/>
+        <source>Save new file template failed</source>
+        <translation>保存新文件模板失败</translation>
+    </message>
+    <message>
+        <location filename="codesnippetsmanager.cpp" line="147"/>
+        <source>Can&apos;t open new file template file &apos;%1&apos; for write.</source>
+        <translation>无法写入新文件模板文件&apos;%1&apos;。</translation>
     </message>
 </context>
 <context>
     <name>CodeSnippetsModel</name>
     <message>
-        <location filename="codesnippetsmanager.cpp" line="218"/>
+        <location filename="codesnippetsmanager.cpp" line="272"/>
         <source>Caption</source>
         <translation>名称</translation>
     </message>
     <message>
-        <location filename="codesnippetsmanager.cpp" line="220"/>
+        <location filename="codesnippetsmanager.cpp" line="274"/>
         <source>Completion Prefix</source>
         <translation>代码补全前缀</translation>
     </message>
     <message>
-        <location filename="codesnippetsmanager.cpp" line="222"/>
+        <location filename="codesnippetsmanager.cpp" line="276"/>
         <source>Description</source>
         <translation>描述</translation>
     </message>
     <message>
-        <location filename="codesnippetsmanager.cpp" line="224"/>
+        <location filename="codesnippetsmanager.cpp" line="278"/>
         <source>Menu Section</source>
         <translation>菜单节</translation>
     </message>
@@ -931,76 +951,76 @@ Are you really want to continue?</source>
         <translation type="vanished">失败</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="213"/>
-        <location filename="editor.cpp" line="227"/>
-        <location filename="editor.cpp" line="303"/>
-        <location filename="editor.cpp" line="1130"/>
-        <location filename="editor.cpp" line="1135"/>
-        <location filename="editor.cpp" line="1153"/>
-        <location filename="editor.cpp" line="1158"/>
+        <location filename="editor.cpp" line="216"/>
+        <location filename="editor.cpp" line="230"/>
+        <location filename="editor.cpp" line="306"/>
+        <location filename="editor.cpp" line="1133"/>
+        <location filename="editor.cpp" line="1138"/>
+        <location filename="editor.cpp" line="1156"/>
+        <location filename="editor.cpp" line="1161"/>
         <source>Error</source>
         <translation>错误</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="214"/>
+        <location filename="editor.cpp" line="217"/>
         <source>File %1 is not writable!</source>
         <translation>无法写入文件&quot;%1&quot;</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="256"/>
+        <location filename="editor.cpp" line="259"/>
         <source>Save As</source>
         <translation>另存为</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="1131"/>
+        <location filename="editor.cpp" line="1134"/>
         <source>The text to be copied exceeds count limit!</source>
         <translation>要复制的内容超过了行数限制！</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="1136"/>
+        <location filename="editor.cpp" line="1139"/>
         <source>The text to be copied exceeds character limit!</source>
         <translation>要复制的内容超过了字符数限制！</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="1154"/>
+        <location filename="editor.cpp" line="1157"/>
         <source>The text to be cut exceeds count limit!</source>
         <translation>要剪切的内容超过了行数限制！</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="1159"/>
+        <location filename="editor.cpp" line="1162"/>
         <source>The text to be cut exceeds character limit!</source>
         <translation>要剪切的内容超过了字符数限制！</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="2127"/>
+        <location filename="editor.cpp" line="2130"/>
         <source>Print Document</source>
         <translation>打印文档</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="2674"/>
-        <location filename="editor.cpp" line="2711"/>
-        <location filename="editor.cpp" line="2762"/>
+        <location filename="editor.cpp" line="2677"/>
+        <location filename="editor.cpp" line="2714"/>
+        <location filename="editor.cpp" line="2765"/>
         <source>Ctrl+click for more info</source>
         <translation>Ctrl+单击以获取更多信息</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="3107"/>
-        <location filename="editor.cpp" line="3137"/>
+        <location filename="editor.cpp" line="3110"/>
+        <location filename="editor.cpp" line="3140"/>
         <source>Symbol &apos;%1&apos; not found!</source>
         <translation>未找到符号&apos;%1&apos;!</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="3526"/>
+        <location filename="editor.cpp" line="3529"/>
         <source>Break point condition</source>
         <translation>断点条件</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="3527"/>
+        <location filename="editor.cpp" line="3530"/>
         <source>Enter the condition of the breakpoint:</source>
         <translation>输入当前断点的生效条件:</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="3704"/>
+        <location filename="editor.cpp" line="3707"/>
         <source>Readonly</source>
         <translation>只读</translation>
     </message>
@@ -1506,14 +1526,24 @@ Are you really want to continue?</source>
         <translation>表单</translation>
     </message>
     <message>
-        <location filename="settingsdialog/editorsnippetwidget.ui" line="73"/>
+        <location filename="settingsdialog/editorsnippetwidget.ui" line="24"/>
+        <source>Code Snippets</source>
+        <translation>代码模板</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/editorsnippetwidget.ui" line="83"/>
         <source>Add</source>
         <translation>添加</translation>
     </message>
     <message>
-        <location filename="settingsdialog/editorsnippetwidget.ui" line="84"/>
+        <location filename="settingsdialog/editorsnippetwidget.ui" line="94"/>
         <source>Remove</source>
         <translation>删除</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/editorsnippetwidget.ui" line="134"/>
+        <source>New File Template</source>
+        <translation>新文件模板</translation>
     </message>
 </context>
 <context>

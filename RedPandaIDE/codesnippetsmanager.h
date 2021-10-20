@@ -41,14 +41,25 @@ public:
 
     void load();
     void save();
+
     const QList<PCodeSnippet> &snippets() const;
 
     void setSnippets(const QList<PCodeSnippet> &newSnippets);
 
+    const QString &newFileTemplate() const;
+    void setNewFileTemplate(const QString &newNewFileTemplate);
+
 signals:
 
 private:
+    void loadSnippets();
+    void saveSnippets();
+    void loadNewFileTemplate();
+    void saveNewFileTemplate();
+
+private:
     QList<PCodeSnippet> mSnippets;
+    QString mNewFileTemplate;
 };
 
 using PCodeSnippetManager = std::shared_ptr<CodeSnippetsManager>;

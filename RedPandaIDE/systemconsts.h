@@ -43,6 +43,7 @@
 #define DEV_LASTOPENS_FILE "lastopens.ini"
 #define DEV_SYMBOLUSAGE_FILE  "symbolusage.json"
 #define DEV_CODESNIPPET_FILE  "codesnippets.json"
+#define DEV_NEWFILETEMPLATES_FILE "newfiletemplate.txt"
 #define DEV_AUTOLINK_FILE "autolink.json"
 #define DEV_SHORTCUT_FILE "shortcuts.json"
 #define DEV_TOOLS_FILE "tools.json"

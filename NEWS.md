@@ -2,6 +2,8 @@ Version 0.7.0
  - fix: Backspace still works in readonly mode
  - fix: save as file dialog's operation mode is not correct
  - enhancement: fill indents in the editor (Turned off by default)
+ - enhancement: new file template
+ - fix: when an editor is created, its caret will be displayed even it doesn't have focus
 
 Version 0.6.8
  - enhancement: add link to cppreference in the help menu

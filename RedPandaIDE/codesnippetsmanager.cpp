@@ -15,6 +15,18 @@ CodeSnippetsManager::CodeSnippetsManager(QObject *parent) : QObject(parent)
 
 void CodeSnippetsManager::load()
 {
+    loadSnippets();
+    loadNewFileTemplate();
+}
+
+void CodeSnippetsManager::save()
+{
+    saveSnippets();
+    saveNewFileTemplate();
+}
+
+void CodeSnippetsManager::loadSnippets()
+{
     //if config file not exists, copy it from data
     QString filename = includeTrailingPathDelimiter(pSettings->dirs().config()) + DEV_CODESNIPPET_FILE;
     if (!fileExists(filename)) {
@@ -75,7 +87,7 @@ void CodeSnippetsManager::load()
     }
 }
 
-void CodeSnippetsManager::save()
+void CodeSnippetsManager::saveSnippets()
 {
     QString filename = includeTrailingPathDelimiter(pSettings->dirs().config()) + DEV_CODESNIPPET_FILE;
     QFile file(filename);
@@ -107,6 +119,38 @@ void CodeSnippetsManager::save()
     }
 }
 
+void CodeSnippetsManager::loadNewFileTemplate()
+{
+    QString filename = includeTrailingPathDelimiter(pSettings->dirs().config()) + DEV_NEWFILETEMPLATES_FILE;
+    QFile file(filename);
+    if (!file.exists()) {
+        mNewFileTemplate = "";
+        return;
+    }
+    if (!file.open(QFile::ReadOnly)) {
+        QMessageBox::critical(nullptr,
+                              tr("Load new file template failed"),
+                              tr("Can't open new file template file '%1' for read.")
+                              .arg(filename));
+        return;
+    }
+    mNewFileTemplate=QString::fromUtf8(file.readAll());
+}
+
+void CodeSnippetsManager::saveNewFileTemplate()
+{
+    QString filename = includeTrailingPathDelimiter(pSettings->dirs().config()) + DEV_NEWFILETEMPLATES_FILE;
+    QFile file(filename);
+    if (!file.open(QFile::WriteOnly | QFile::Truncate)) {
+        QMessageBox::critical(nullptr,
+                              tr("Save new file template failed"),
+                              tr("Can't open new file template file '%1' for write.")
+                              .arg(filename));
+        return;
+    }
+    file.write(mNewFileTemplate.toUtf8());
+}
+
 const QList<PCodeSnippet> &CodeSnippetsManager::snippets() const
 {
     return mSnippets;
@@ -115,6 +159,16 @@ const QList<PCodeSnippet> &CodeSnippetsManager::snippets() const
 void CodeSnippetsManager::setSnippets(const QList<PCodeSnippet> &newSnippets)
 {
     mSnippets = newSnippets;
+}
+
+const QString &CodeSnippetsManager::newFileTemplate() const
+{
+    return mNewFileTemplate;
+}
+
+void CodeSnippetsManager::setNewFileTemplate(const QString &newNewFileTemplate)
+{
+    mNewFileTemplate = newNewFileTemplate;
 }
 
 void CodeSnippetsModel::addSnippet(const QString &caption, const QString &prefix, const QString &code, const QString &description, int menuSection)
