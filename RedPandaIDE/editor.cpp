@@ -83,6 +83,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
     }
     QFileInfo fileInfo(mFilename);
     if (mParentPageControl!=nullptr) {
+        mParentPageControl->addTab(this,"");
         updateCaption();
     }
 
