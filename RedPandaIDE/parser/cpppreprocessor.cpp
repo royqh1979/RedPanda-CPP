@@ -1317,7 +1317,25 @@ bool CppPreprocessor::evalNumber(const QString &expr, int &result, int &pos)
         pos++;
     }
     bool ok;
-    result = s.toInt(&ok,0);
+
+    if (s.endsWith("LL",Qt::CaseInsensitive)) {
+        s.remove(s.length()-2,2);
+        result = s.toLongLong(&ok,0);
+    } else if (s.endsWith("L",Qt::CaseInsensitive)) {
+        s.remove(s.length()-1,1);
+        result = s.toLong(&ok,0);
+    } else if (s.endsWith("ULL",Qt::CaseInsensitive)) {
+        s.remove(s.length()-3,3);
+        result = s.toULongLong(&ok,0);
+    } else if (s.endsWith("UL",Qt::CaseInsensitive)) {
+        s.remove(s.length()-2,2);
+        result = s.toULong(&ok,0);
+    } else if (s.endsWith("U",Qt::CaseInsensitive)) {
+        s.remove(s.length()-1,1);
+        result = s.toUInt(&ok,0);
+    } else {
+        result = s.toInt(&ok,0);
+    }
     return ok;
 }
 

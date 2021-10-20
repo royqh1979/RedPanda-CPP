@@ -6,6 +6,7 @@ Version 0.7.0
  - fix: when an editor is created, its caret will be displayed even it doesn't have focus
  - enhancement: set mouse wheel scroll speed in the editor general option tab ( 3 lines by default)
  - fix: don't highlight '#' with spaces preceeding it as error
+ - fix: correctly handle integer with 'L' suffix in #if directives ( so <thread> can be correctly parsed )
 
 Version 0.6.8
  - enhancement: add link to cppreference in the help menu

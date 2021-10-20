@@ -708,13 +708,17 @@ void SynEditTextPainter::PaintFoldAttributes()
                     }
                 }
                 if (edit->mCodeFolding.fillIndents) {
-                    int X1=TabSteps * edit->mCharWidth + edit->textOffset() - 2;
+                    int X1;
+                    if (TabSteps>LineIndent)
+                        X1 = LineIndent * edit->mCharWidth + edit->textOffset() - 2;
+                    else
+                        X1 = TabSteps * edit->mCharWidth + edit->textOffset() - 2;
                     gradientStart.setAlpha(20);
                     gradientEnd.setAlpha(10);
                     QLinearGradient gradient(X,Y,X1,Y);
-                    gradient.setColorAt(0,gradientStart);
-                    gradient.setColorAt(1,gradientEnd);
-                    painter->fillRect(X,Y,edit->mTabWidth * edit->mCharWidth,edit->mTextHeight,gradient);
+                    gradient.setColorAt(1,gradientStart);
+                    gradient.setColorAt(0,gradientEnd);
+                    painter->fillRect(X,Y,(X1-X),edit->mTextHeight,gradient);
                 }
 
                 // Move to top of vertical line
