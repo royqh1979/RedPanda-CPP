@@ -5,6 +5,7 @@ Version 0.7.0
  - enhancement: new file template
  - fix: when an editor is created, its caret will be displayed even it doesn't have focus
  - enhancement: set mouse wheel scroll speed in the editor general option tab ( 3 lines by default)
+ - fix: don't highlight '#' with spaces preceeding it as error
 
 Version 0.6.8
  - enhancement: add link to cppreference in the help menu

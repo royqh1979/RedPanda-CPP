@@ -409,7 +409,8 @@ void SynEditCppHighlighter::commaProc()
 
 void SynEditCppHighlighter::directiveProc()
 {
-    if (mLine[0]!='#') { // '#' is not first char on the line, treat it as an invalid char
+    QString preContents = mLineString.left(mRun).trimmed();
+    if (!preContents.isEmpty()) { // '#' is not first non-space char on the line, treat it as an invalid char
        mTokenId = TokenKind::Unknown;
        mRun+=1;
        return;
