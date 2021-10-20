@@ -32,7 +32,6 @@ private:
     void renameSymbolInFile(
             const QString& filename,
             const PStatement& statement,
-            const QString& word,
             const QString& newWord,
             const PCppParser& parser);
 };

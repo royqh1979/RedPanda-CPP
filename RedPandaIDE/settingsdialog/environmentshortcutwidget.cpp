@@ -51,12 +51,12 @@ void EnvironmentShortcutModel::reload()
     endResetModel();
 }
 
-int EnvironmentShortcutModel::rowCount(const QModelIndex &parent) const
+int EnvironmentShortcutModel::rowCount(const QModelIndex &) const
 {
     return mShortcuts.count();
 }
 
-int EnvironmentShortcutModel::columnCount(const QModelIndex &parent) const
+int EnvironmentShortcutModel::columnCount(const QModelIndex &) const
 {
     return 2;
 }

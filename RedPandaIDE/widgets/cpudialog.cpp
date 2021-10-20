@@ -97,7 +97,7 @@ void CPUDialog::on_rdATT_toggled(bool)
     pSettings->debugger().save();
 }
 
-void CPUDialog::on_chkBlendMode_stateChanged(int arg1)
+void CPUDialog::on_chkBlendMode_stateChanged(int)
 {
     updateInfo();
     pSettings->debugger().setBlendMode(ui->chkBlendMode->isCheckable());

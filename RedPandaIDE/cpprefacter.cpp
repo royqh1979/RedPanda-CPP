@@ -103,7 +103,7 @@ void CppRefacter::renameSymbol(Editor *editor, const BufferCoord &pos, const QSt
                               tr("New symbol already exists!"));
         return;
     }
-    renameSymbolInFile(editor->filename(),oldStatement,word,newWord, editor->parser());
+    renameSymbolInFile(editor->filename(),oldStatement,newWord, editor->parser());
 }
 
 PSearchResultTreeItem CppRefacter::findOccurenceInFile(
@@ -173,7 +173,7 @@ PSearchResultTreeItem CppRefacter::findOccurenceInFile(
     return parentItem;
 }
 
-void CppRefacter::renameSymbolInFile(const QString &filename, const PStatement &statement, const QString &word, const QString &newWord, const PCppParser &parser)
+void CppRefacter::renameSymbolInFile(const QString &filename, const PStatement &statement,  const QString &newWord, const PCppParser &parser)
 {
     QStringList buffer;
     SynEdit editor;

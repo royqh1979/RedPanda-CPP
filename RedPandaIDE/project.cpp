@@ -544,6 +544,8 @@ bool Project::saveUnits()
             break;
         case FileType::WindowsResourceSource:
             unit->setFolder("Resources");
+        default:
+            break;
         }
         unit->setNew(false);
         ini.SetValue(groupName,"Folder", toByteArray(unit->folder()));
@@ -1795,7 +1797,7 @@ int ProjectModel::rowCount(const QModelIndex &parent) const
     }
 }
 
-int ProjectModel::columnCount(const QModelIndex &parent) const
+int ProjectModel::columnCount(const QModelIndex &) const
 {
     return 1;
 }

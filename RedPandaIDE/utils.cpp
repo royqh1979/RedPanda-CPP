@@ -71,7 +71,7 @@ const QByteArray GuessTextEncoding(const QByteArray& text){
 
 bool isTextAllAscii(const QByteArray& text) {
     for (char c:text) {
-        if (c<0 || c>127) {
+        if (c<0) {
             return false;
         }
     }

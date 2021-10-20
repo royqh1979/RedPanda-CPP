@@ -80,6 +80,16 @@ void EditorList::showLayout(LayoutShowType layout)
     }
 }
 
+QTabWidget *EditorList::rightPageWidget() const
+{
+    return mRightPageWidget;
+}
+
+QTabWidget *EditorList::leftPageWidget() const
+{
+    return mLeftPageWidget;
+}
+
 Editor* EditorList::getEditor(int index, QTabWidget* tabsWidget) const {
     QTabWidget* selectedWidget;
     if (tabsWidget == nullptr) {

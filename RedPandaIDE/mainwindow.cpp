@@ -1143,57 +1143,46 @@ void MainWindow::debug()
         includeOrSkipDirs(mProject->options().libs,
                           pSettings->debugger().skipProjectLibraries());
         break;
-    case CompileTarget::File:
-        // Check if we enabled proper options
-        debugEnabled = compilerSet->getOptionValue("-g3")!='0';
-        stripEnabled = compilerSet->getOptionValue("-s")!='0';
-        // Ask the user if he wants to enable debugging...
-        if (((!debugEnabled) || stripEnabled) &&
-                (QMessageBox::question(this,
-                                      tr("Enable debugging"),
-                                      tr("You have not enabled debugging info (-g3) and/or stripped it from the executable (-s) in Compiler Options.<BR /><BR />Do you want to correct this now?")
-                                      ) == QMessageBox::Yes)) {
-            // Enable debugging, disable stripping
-            compilerSet->setOption("-g3",'1');
-            compilerSet->setOption("-s",'0');
+    case CompileTarget::File: {
+            // Check if we enabled proper options
+            debugEnabled = compilerSet->getOptionValue("-g3")!='0';
+            stripEnabled = compilerSet->getOptionValue("-s")!='0';
+            // Ask the user if he wants to enable debugging...
+            if (((!debugEnabled) || stripEnabled) &&
+                    (QMessageBox::question(this,
+                                          tr("Enable debugging"),
+                                          tr("You have not enabled debugging info (-g3) and/or stripped it from the executable (-s) in Compiler Options.<BR /><BR />Do you want to correct this now?")
+                                          ) == QMessageBox::Yes)) {
+                // Enable debugging, disable stripping
+                compilerSet->setOption("-g3",'1');
+                compilerSet->setOption("-s",'0');
 
-            // Save changes to compiler set
-            pSettings->compilerSets().saveSet(pSettings->compilerSets().defaultIndex());
+                // Save changes to compiler set
+                pSettings->compilerSets().saveSet(pSettings->compilerSets().defaultIndex());
 
-            mCompileSuccessionTask=std::make_shared<CompileSuccessionTask>();
-            mCompileSuccessionTask->type = CompileSuccessionTaskType::Debug;
+                mCompileSuccessionTask=std::make_shared<CompileSuccessionTask>();
+                mCompileSuccessionTask->type = CompileSuccessionTaskType::Debug;
 
-            compile();
-            return;
-        }
-
-        Editor* e = mEditorList->getEditor();
-        if (e!=nullptr) {
-            // Did we saved?
-            if (e->modified()) {
-                // if file is modified,save it first
-                if (!e->save(false,false))
-                        return;
+                compile();
+                return;
             }
 
-
-            // Did we compiled?
-            filePath = getCompiledExecutableName(e->filename());
-            debugFile.setFile(filePath);
-            if (!debugFile.exists()) {
-                if (QMessageBox::question(this,tr("Compile"),
-                                          tr("Source file is not compiled.")+"<BR /><BR />" + tr("Compile now?"),
-                                          QMessageBox::Yes|QMessageBox::No,
-                                          QMessageBox::Yes) == QMessageBox::Yes) {
-                    mCompileSuccessionTask=std::make_shared<CompileSuccessionTask>();
-                    mCompileSuccessionTask->type = CompileSuccessionTaskType::Debug;
-                    compile();
-                    return;
+            Editor* e = mEditorList->getEditor();
+            if (e!=nullptr) {
+                // Did we saved?
+                if (e->modified()) {
+                    // if file is modified,save it first
+                    if (!e->save(false,false))
+                            return;
                 }
-            } else {
-                if (compareFileModifiedTime(e->filename(),filePath)>=0) {
+
+
+                // Did we compiled?
+                filePath = getCompiledExecutableName(e->filename());
+                debugFile.setFile(filePath);
+                if (!debugFile.exists()) {
                     if (QMessageBox::question(this,tr("Compile"),
-                                              tr("Source file is more recent than executable.")+"<BR /><BR />" + tr("Recompile?"),
+                                              tr("Source file is not compiled.")+"<BR /><BR />" + tr("Compile now?"),
                                               QMessageBox::Yes|QMessageBox::No,
                                               QMessageBox::Yes) == QMessageBox::Yes) {
                         mCompileSuccessionTask=std::make_shared<CompileSuccessionTask>();
@@ -1201,16 +1190,30 @@ void MainWindow::debug()
                         compile();
                         return;
                     }
+                } else {
+                    if (compareFileModifiedTime(e->filename(),filePath)>=0) {
+                        if (QMessageBox::question(this,tr("Compile"),
+                                                  tr("Source file is more recent than executable.")+"<BR /><BR />" + tr("Recompile?"),
+                                                  QMessageBox::Yes|QMessageBox::No,
+                                                  QMessageBox::Yes) == QMessageBox::Yes) {
+                            mCompileSuccessionTask=std::make_shared<CompileSuccessionTask>();
+                            mCompileSuccessionTask->type = CompileSuccessionTaskType::Debug;
+                            compile();
+                            return;
+                        }
+                    }
                 }
+
+                prepareDebugger();
+
+                mDebugger->setUseUTF8(e->fileEncoding() == ENCODING_UTF8 || e->fileEncoding() == ENCODING_UTF8_BOM);
+                if (!mDebugger->start())
+                    return;
+                mDebugger->sendCommand("file", QString("\"%1\"").arg(debugFile.filePath().replace('\\','/')));
             }
-
-            prepareDebugger();
-
-            mDebugger->setUseUTF8(e->fileEncoding() == ENCODING_UTF8 || e->fileEncoding() == ENCODING_UTF8_BOM);
-            if (!mDebugger->start())
-                return;
-            mDebugger->sendCommand("file", QString("\"%1\"").arg(debugFile.filePath().replace('\\','/')));
         }
+        break;
+    default:
         break;
     }
 
@@ -1263,6 +1266,8 @@ void MainWindow::debug()
             mDebugger->sendCommand("start",params);
             mDebugger->updateDebugInfo();
             break;
+        default:
+            break;
         }
     } else {
         QString params;
@@ -1285,6 +1290,8 @@ void MainWindow::debug()
 
             mDebugger->sendCommand("run",params);
             mDebugger->updateDebugInfo();
+            break;
+        default:
             break;
         }
     }
@@ -1494,7 +1501,7 @@ void MainWindow::saveLastOpens()
       Editor * editor = (*mEditorList)[i];
       QByteArray sectionName = QString("Editor_%1").arg(i).toLocal8Bit();
       lastOpenIni.SetValue(sectionName,"FileName", editor->filename().toLocal8Bit());
-      lastOpenIni.SetBoolValue(sectionName, "OnLeft",editor->pageControl() != ui->EditorTabsRight);
+      lastOpenIni.SetBoolValue(sectionName, "OnLeft",editor->pageControl() != mEditorList->rightPageWidget());
       lastOpenIni.SetBoolValue(sectionName, "Focused",editor->hasFocus());
       lastOpenIni.SetLongValue(sectionName, "CursorCol", editor->caretX());
       lastOpenIni.SetLongValue(sectionName, "CursorRow", editor->caretY());
@@ -1533,11 +1540,12 @@ void MainWindow::loadLastOpens()
         if (!fileExists(editorFilename))
             continue;
         bool onLeft = lastOpenIni.GetBoolValue(sectionName,"OnLeft",true);
-//        if onLeft then
-//      page := EditorList.LeftPageControl
-//    else
-//      page := EditorList.RightPageControl;
-        Editor * editor = mEditorList->newEditor(editorFilename,ENCODING_AUTO_DETECT,false,false);
+        QTabWidget* page;
+        if (onLeft)
+            page = mEditorList->leftPageWidget();
+        else
+            page = mEditorList->rightPageWidget();
+        Editor * editor = mEditorList->newEditor(editorFilename,ENCODING_AUTO_DETECT,false,false,page);
         if (!editor)
             continue;
         BufferCoord pos;
@@ -1571,7 +1579,6 @@ void MainWindow::updateTools()
     ui->menuTools->addAction(ui->actionOptions);
     if (!mToolsManager->tools().isEmpty()) {
         ui->menuTools->addSeparator();
-        int count = 0;
         foreach (const PToolItem& item, mToolsManager->tools()) {
             QAction* action = new QAction(item->title,ui->menuTools);
             connect(action, &QAction::triggered,
@@ -1764,7 +1771,7 @@ void MainWindow::buildContextMenus()
                 tr("Remove all breakpoints"),
                 ui->tblBreakpoints);
     connect(mBreakpointViewRemoveAllAction,&QAction::triggered,
-            [this](){
+            [](){
         pMainWindow->debugger()->deleteBreakpoints();
     });
 
@@ -2642,7 +2649,7 @@ void MainWindow::closeEvent(QCloseEvent *event) {
     return;
 }
 
-void MainWindow::showEvent(QShowEvent *event)
+void MainWindow::showEvent(QShowEvent *)
 {
     const Settings::UI& settings = pSettings->ui();
     ui->tabMessages->setCurrentIndex(settings.bottomPanelIndex());
@@ -2840,6 +2847,8 @@ void MainWindow::onCompileFinished(bool isCheckSyntax)
                 break;
             case MainWindow::CompileSuccessionTaskType::Debug:
                 debug();
+                break;
+            default:
                 break;
             }
             mCompileSuccessionTask.reset();
@@ -3556,12 +3565,12 @@ void MainWindow::on_splitterMessages_splitterMoved(int, int)
 }
 
 
-void MainWindow::on_EditorTabsLeft_tabBarDoubleClicked(int index)
+void MainWindow::on_EditorTabsLeft_tabBarDoubleClicked(int)
 {
     maximizeEditor();
 }
 
-void MainWindow::on_EditorTabsRight_tabBarDoubleClicked(int index)
+void MainWindow::on_EditorTabsRight_tabBarDoubleClicked(int)
 {
     maximizeEditor();
 }
@@ -4036,7 +4045,7 @@ PSymbolUsageManager &MainWindow::symbolUsageManager()
     return mSymbolUsageManager;
 }
 
-void MainWindow::on_EditorTabsLeft_currentChanged(int index)
+void MainWindow::on_EditorTabsLeft_currentChanged(int)
 {
     Editor * editor = mEditorList->getEditor(-1,ui->EditorTabsLeft);
     if (editor) {
@@ -4045,7 +4054,7 @@ void MainWindow::on_EditorTabsLeft_currentChanged(int index)
 }
 
 
-void MainWindow::on_EditorTabsRight_currentChanged(int index)
+void MainWindow::on_EditorTabsRight_currentChanged(int)
 {
     Editor * editor = mEditorList->getEditor(-1,ui->EditorTabsRight);
     if (editor) {
@@ -4083,7 +4092,7 @@ void MainWindow::on_actionRename_Symbol_triggered()
 //    mClassBrowserModel.beginUpdate();
     QCursor oldCursor = editor->cursor();
     editor->setCursor(Qt::CursorShape::WaitCursor);
-    auto action = finally([this,oldCursor,editor]{
+    auto action = finally([oldCursor,editor]{
         editor->endUpdate();
 //        mClassBrowserModel.EndTreeUpdate;
         editor->setCursor(oldCursor);

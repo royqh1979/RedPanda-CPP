@@ -27,7 +27,7 @@ void ProjectDLLHostWidget::doSave()
     pMainWindow->project()->options().hostApplication = ui->txtHost->text();
 }
 
-void ProjectDLLHostWidget::on_btnBrowse_triggered(QAction *arg1)
+void ProjectDLLHostWidget::on_btnBrowse_clicked()
 {
     QString filename = QFileDialog::getOpenFileName(
                 this,

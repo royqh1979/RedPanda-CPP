@@ -96,8 +96,8 @@ void ExecutableRunner::run()
         case QProcess::ReadError:
             emit runErrorOccurred(tr("An error occurred when attempting to read from the runner process."));
             break;
-//        default:
-//            emit runErrorOccurred(tr("An unknown error occurred."));
+        default:
+            break;
         }
     }
     emit terminated();

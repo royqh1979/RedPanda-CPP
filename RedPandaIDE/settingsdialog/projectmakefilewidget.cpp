@@ -38,7 +38,7 @@ void ProjectMakefileWidget::doSave()
 
 }
 
-void ProjectMakefileWidget::on_btnBrowse_triggered(QAction *arg1)
+void ProjectMakefileWidget::on_btnBrowse_clicked()
 {
     QString fileName = QFileDialog::getOpenFileName(
                 this,

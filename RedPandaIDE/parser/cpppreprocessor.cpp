@@ -822,6 +822,8 @@ void CppPreprocessor::parseArgs(PDefine define)
         case DefineArgTokenType::Symbol:
             formatStr+=token->value;
             break;
+        default:
+            break;
         }
         lastTokenType = token->type;
     }
@@ -941,6 +943,8 @@ QStringList CppPreprocessor::removeComments(const QStringList &text)
                 case ContentType::RawStringPrefix:
                     delimiter+=ch;
                     break;
+                default:
+                    break;
                 }
                 s+=ch;
                 break;
@@ -954,6 +958,8 @@ QStringList CppPreprocessor::removeComments(const QStringList &text)
                     break;
                 case ContentType::RawStringPrefix:
                     delimiter+=ch;
+                    break;
+                default:
                     break;
                 }
                 s+=ch;
@@ -975,6 +981,8 @@ QStringList CppPreprocessor::removeComments(const QStringList &text)
                 switch(currentType) {
                 case ContentType::RawStringPrefix:
                     currentType = ContentType::RawString;
+                    break;
+                default:
                     break;
                 }
                 s+=ch;

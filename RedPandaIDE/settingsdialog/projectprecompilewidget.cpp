@@ -30,7 +30,7 @@ void ProjectPreCompileWidget::doSave()
     pMainWindow->project()->saveOptions();
 }
 
-void ProjectPreCompileWidget::on_btnBrowse_triggered(QAction *arg1)
+void ProjectPreCompileWidget::on_btnBrowse_clicked()
 {
     QString fileName = QFileDialog::getOpenFileName(
                 this,

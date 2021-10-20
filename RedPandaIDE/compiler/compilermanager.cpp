@@ -223,7 +223,7 @@ void CompilerManager::stopCheckSyntax()
         mBackgroundSyntaxChecker->stopCompile();
 }
 
-bool CompilerManager::canCompile(const QString &filename)
+bool CompilerManager::canCompile(const QString &)
 {
     return !compiling();
 }

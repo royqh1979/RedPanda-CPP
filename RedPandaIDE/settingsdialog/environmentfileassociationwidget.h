@@ -29,7 +29,6 @@ signals:
 private:
     bool checkAssociation(const QString& extension,
                           const QString& filetype,
-                          const QString& description,
                           const QString& verb,
                           const QString& serverApp);
     bool registerAssociation(const QString& extension,

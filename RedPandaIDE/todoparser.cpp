@@ -111,7 +111,7 @@ PTodoItem TodoModel::getItem(const QModelIndex &index)
     return mItems[index.row()];
 }
 
-int TodoModel::rowCount(const QModelIndex &parent) const
+int TodoModel::rowCount(const QModelIndex &) const
 {
     return mItems.count();
 }
@@ -153,7 +153,7 @@ QVariant TodoModel::headerData(int section, Qt::Orientation orientation, int rol
     return QVariant();
 }
 
-int TodoModel::columnCount(const QModelIndex &parent) const
+int TodoModel::columnCount(const QModelIndex &) const
 {
     return 4;
 }

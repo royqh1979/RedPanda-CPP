@@ -26,7 +26,7 @@ public:
     bool nativeEventFilter(const QByteArray &eventType, void *message, long *result) override;
 };
 
-bool WindowLogoutEventFilter::nativeEventFilter(const QByteArray &eventType, void *message, long *result){
+bool WindowLogoutEventFilter::nativeEventFilter(const QByteArray & /*eventType*/, void *message, long *result){
     MSG * pMsg = static_cast<MSG *>(message);
     if (pMsg->message == WM_QUERYENDSESSION) {
         if (pMsg->lParam == 0

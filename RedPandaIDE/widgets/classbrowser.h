@@ -47,7 +47,7 @@ public slots:
     void fillStatements();
 private:
     void addChild(ClassBrowserNode* node, PStatement statement);
-    void addMembers(const QSet<QString>& includedFiles);
+    void addMembers();
     void filterChildren(ClassBrowserNode * node, const StatementMap& statements);
     PStatement createDummy(PStatement statement);
 private:

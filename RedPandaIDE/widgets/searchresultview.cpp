@@ -272,7 +272,7 @@ void SearchResultTreeModel::onResultModelChanged()
     endResetModel();
 }
 
-Qt::ItemFlags SearchResultTreeModel::flags(const QModelIndex &index) const
+Qt::ItemFlags SearchResultTreeModel::flags(const QModelIndex &) const
 {
     Qt::ItemFlags flags=Qt::ItemIsEnabled | Qt::ItemIsSelectable;
     if (mSelectable) {

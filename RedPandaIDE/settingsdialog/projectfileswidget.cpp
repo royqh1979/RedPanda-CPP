@@ -220,7 +220,7 @@ void ProjectFilesWidget::init()
 }
 
 
-void ProjectFilesWidget::on_cbEncodingDetail_currentTextChanged(const QString &arg1)
+void ProjectFilesWidget::on_cbEncodingDetail_currentTextChanged(const QString &)
 {
     PProjectUnit unit = currentUnit();
     if(!unit)

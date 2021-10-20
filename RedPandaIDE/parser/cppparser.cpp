@@ -896,6 +896,8 @@ QString CppParser::prettyPrintStatement(const PStatement& statement, const QStri
             result += statement->fullName; // A::B::C::Bar
             result += statement->args; // (int a)
             break;
+        default:
+            break;
         }
     }
     return result;
@@ -927,6 +929,7 @@ int CppParser::getFirstTemplateParamEnd(const QString &s, int startAt)
         case ',':
             if (level == 1)
                 return i;
+            break;
         case '>':
             level--;
             if (level==0)

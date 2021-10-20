@@ -188,10 +188,12 @@ QVariant ClassBrowserModel::data(const QModelIndex &index, int role) const
                         return QIcon(":/icons/images/classparser/method_private.ico");
                     }
                 }
+                break;
             case StatementKind::skGlobalVariable:
                 return QIcon(":/icons/images/classparser/global.ico");
             case StatementKind::skVariable:
-                if (statement->scope == StatementScope::ssGlobal)
+//                if (statement->scope == StatementScope::ssGlobal)
+//                    return QIcon(":/icons/images/classparser/global.ico");
                 if (statement->isInherited) {
                     if (statement->classScope == StatementClassScope::scsProtected) {
                         return QIcon(":/icons/images/classparser/var_inherited_protected.ico");
@@ -207,6 +209,9 @@ QVariant ClassBrowserModel::data(const QModelIndex &index, int role) const
                         return QIcon(":/icons/images/classparser/var_private.ico");
                     }
                 }
+                break;
+            default:
+                    break;
             }
         }
 
@@ -272,9 +277,9 @@ void ClassBrowserModel::fillStatements()
             });
             QString mParserSerialId = mParser->serialId();
             if (!mCurrentFile.isEmpty()) {
-                QSet<QString> includedFiles = mParser->getFileIncludes(mCurrentFile);
+                // QSet<QString> includedFiles = mParser->getFileIncludes(mCurrentFile);
 
-                addMembers(includedFiles);
+                addMembers();
                 // Remember selection
 //                  if fLastSelection <> '' then
 //                    ReSelect;
@@ -297,7 +302,7 @@ void ClassBrowserModel::addChild(ClassBrowserNode *node, PStatement statement)
         filterChildren(newNode.get(), statement->children);
 }
 
-void ClassBrowserModel::addMembers(const QSet<QString> &includedFiles)
+void ClassBrowserModel::addMembers()
 {
     // show statements in the file
     PFileIncludes p = mParser->findFileIncludes(mCurrentFile);

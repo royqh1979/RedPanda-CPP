@@ -68,7 +68,7 @@ void FileAssociationModel::updateAssociationStates()
         item->selected = checkAssociation(
                     "."+item->suffix,
                     "DevCpp."+item->suffix,
-                    item->name,
+//                    item->name,
                     "Open",
                     pSettings->dirs().executable()+" \"%1\""
                     );
@@ -131,7 +131,7 @@ void FileAssociationModel::saveAssociations()
 bool readRegistry(HKEY key,QByteArray subKey, QString& value) {
     DWORD dataSize;
     LONG result;
-    result = RegGetValueA(HKEY_CLASSES_ROOT,subKey,
+    result = RegGetValueA(key,subKey,
                  "", RRF_RT_REG_SZ | RRF_RT_REG_MULTI_SZ,
                  NULL,
                  NULL,
@@ -153,7 +153,7 @@ bool readRegistry(HKEY key,QByteArray subKey, QString& value) {
     return true;
 }
 
-bool FileAssociationModel::checkAssociation(const QString &extension, const QString &filetype, const QString &description, const QString &verb, const QString &serverApp)
+bool FileAssociationModel::checkAssociation(const QString &extension, const QString &filetype, const QString &verb, const QString &serverApp)
 {
     HKEY key;
     LONG result;
@@ -264,7 +264,7 @@ bool FileAssociationModel::registerFileType(const QString &filetype, const QStri
     return true;
 }
 
-int FileAssociationModel::rowCount(const QModelIndex &parent) const
+int FileAssociationModel::rowCount(const QModelIndex &) const
 {
     return mItems.count();
 }

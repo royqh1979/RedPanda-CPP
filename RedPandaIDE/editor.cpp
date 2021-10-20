@@ -83,7 +83,6 @@ Editor::Editor(QWidget *parent, const QString& filename,
     }
     QFileInfo fileInfo(mFilename);
     if (mParentPageControl!=nullptr) {
-        int index = mParentPageControl->addTab(this,QString());
         updateCaption();
     }
 
@@ -1007,6 +1006,9 @@ bool Editor::event(QEvent *event)
         case TipType::Error:
             if (pSettings->editor().enableIssueToolTips())
                 hint = getErrorHint(pError);
+            break;
+        default:
+            break;
         }
 //        qDebug()<<"hint:"<<hint;
         if (!hint.isEmpty()) {
@@ -1922,12 +1924,15 @@ Editor::QuoteStatus Editor::getQuoteStatus()
             case QuoteStatus::RawString:
                 Result=QuoteStatus::RawStringNoEscape;
                 break;
-            //case RawStringNoEscape: do nothing
+            default:
+                break;
             }
         } else if (Line[i] == ')') {
             switch(Result) {
             case QuoteStatus::RawStringNoEscape:
                 Result=QuoteStatus::RawString;
+                break;
+            default:
                 break;
             }
         } else if (Line[i] == '"') {
@@ -1950,7 +1955,8 @@ Editor::QuoteStatus Editor::getQuoteStatus()
             case QuoteStatus::RawString:
                 Result=QuoteStatus::NotQuote;
                 break;
-            //RawStringNoEscape: do nothing
+            default:
+                break;
             }
         } else if (Line[i] == '\'') {
             switch(Result) {
@@ -1968,6 +1974,8 @@ Editor::QuoteStatus Editor::getQuoteStatus()
                 break;
             case QuoteStatus::DoubleQuoteEscape:
                 Result = QuoteStatus::DoubleQuote;
+                break;
+            default:
                 break;
             }
         } else if (Line[i] == '\\') {
@@ -1987,6 +1995,8 @@ Editor::QuoteStatus Editor::getQuoteStatus()
             case QuoteStatus::DoubleQuoteEscape:
                 Result = QuoteStatus::DoubleQuote;
                 break;
+            default:
+                break;
             }
         } else {
             switch(Result) {
@@ -2004,6 +2014,8 @@ Editor::QuoteStatus Editor::getQuoteStatus()
                 break;
             case QuoteStatus::DoubleQuoteEscape:
                 Result = QuoteStatus::DoubleQuote;
+                break;
+            default:
                 break;
             }
         }
@@ -2835,7 +2847,7 @@ void Editor::updateFunctionTip()
         return;
     }
 
-    ContentsCoord FFunctionEnd = curPos;
+    //ContentsCoord FFunctionEnd = curPos;
 
     int paramPos = 0;
     bool paramPosFounded = false;
@@ -2886,7 +2898,7 @@ void Editor::updateFunctionTip()
         return;
     }
 
-    ContentsCoord FFunctionStart = curPos;
+    //ContentsCoord FFunctionStart = curPos;
 
     // Skip blanks
     while (!curPos.atStart()) {
@@ -3068,6 +3080,8 @@ void Editor::onExportedFormatToken(PSynHighlighter syntaxHighlighter, int Line, 
         case StatementKind::skNamespace:
         case StatementKind::skNamespaceAlias:
             attr = cppHighlighter->stringAttribute();
+            break;
+        default:
             break;
         }
     }

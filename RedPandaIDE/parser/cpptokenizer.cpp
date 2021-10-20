@@ -134,7 +134,7 @@ QString CppTokenizer::getForInit()
     return "";
 }
 
-QString CppTokenizer::getNextToken(bool bSkipParenthesis, bool bSkipArray, bool bSkipBlock)
+QString CppTokenizer::getNextToken(bool /* bSkipParenthesis */, bool bSkipArray, bool bSkipBlock)
 {
     QString result;
     bool done = false;

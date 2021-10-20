@@ -1217,6 +1217,8 @@ void DebugReader::processDebugOutput()
        case AnnotationType::TSource:
            handleSource();
            break;
+       default:
+           break;
        }
    } while (nextAnnotation != AnnotationType::TEOF);
 
@@ -1264,6 +1266,8 @@ QString DebugReader::processEvalOutput()
         case AnnotationType::TValueHistoryEnd:
         case AnnotationType::TDisplayEnd:
             shouldExit = true;
+        default:
+            break;
         }
         result += nextLine;
     } while (!shouldExit);
@@ -2151,12 +2155,12 @@ RegisterModel::RegisterModel(QObject *parent):QAbstractTableModel(parent)
 
 }
 
-int RegisterModel::rowCount(const QModelIndex &parent) const
+int RegisterModel::rowCount(const QModelIndex &) const
 {
     return mRegisters.count();
 }
 
-int RegisterModel::columnCount(const QModelIndex &parent) const
+int RegisterModel::columnCount(const QModelIndex &) const
 {
     return 3;
 }

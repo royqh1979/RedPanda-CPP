@@ -55,6 +55,10 @@ public:
 
     Editor* operator[](int index);
 
+    QTabWidget *leftPageWidget() const;
+
+    QTabWidget *rightPageWidget() const;
+
 private:
     QTabWidget* getNewEditorPageControl() const;
     QTabWidget* getFocusedPageControl() const;

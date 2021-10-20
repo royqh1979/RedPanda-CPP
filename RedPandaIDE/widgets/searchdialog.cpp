@@ -84,9 +84,9 @@ void SearchDialog::findInFiles(const QString &keyword, SearchFileScope scope, Sy
         break;
     }
     // Apply options
-    ui->chkRegExp->setChecked(mSearchOptions.testFlag(ssoRegExp));
-    ui->chkCaseSensetive->setChecked(mSearchOptions.testFlag(ssoMatchCase));
-    ui->chkWholeWord->setChecked(mSearchOptions.testFlag(ssoWholeWord));
+    ui->chkRegExp->setChecked(options.testFlag(ssoRegExp));
+    ui->chkCaseSensetive->setChecked(options.testFlag(ssoMatchCase));
+    ui->chkWholeWord->setChecked(options.testFlag(ssoWholeWord));
 
     show();
 }
@@ -223,7 +223,7 @@ void SearchDialog::on_btnExecute_clicked()
             bool doPrompt = ui->chkPrompt->isChecked();
             findCount+=execute(e,ui->cbFind->currentText(),ui->cbReplace->currentText(),
                                [&doPrompt](const QString& sSearch,
-                               const QString& sReplace, int Line, int ch, int wordLen){
+                               const QString& /*sReplace*/, int /*Line*/, int /*ch*/, int /*wordLen*/){
                 if (doPrompt) {
                     switch(QMessageBox::question(pMainWindow,
                                           tr("Replace"),
