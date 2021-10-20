@@ -373,6 +373,9 @@ public:
 
     const PSynHighlighterAttribute &rainbowAttr3() const;
 
+    int mouseWheelScrollSpeed() const;
+    void setMouseWheelScrollSpeed(int newMouseWheelScrollSpeed);
+
 signals:
     void linesDeleted(int FirstLine, int Count);
     void linesInserted(int FirstLine, int Count);
@@ -676,6 +679,8 @@ private:
     QCursor mDefaultCursor;
 
     QString mInputPreeditString;
+
+    int mMouseWheelScrollSpeed;
 
 friend class SynEditTextPainter;
 

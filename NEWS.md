@@ -4,6 +4,7 @@ Version 0.7.0
  - enhancement: fill indents in the editor (Turned off by default)
  - enhancement: new file template
  - fix: when an editor is created, its caret will be displayed even it doesn't have focus
+ - enhancement: set mouse wheel scroll speed in the editor general option tab ( 3 lines by default)
 
 Version 0.6.8
  - enhancement: add link to cppreference in the help menu

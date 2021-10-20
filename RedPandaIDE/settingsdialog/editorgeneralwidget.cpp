@@ -59,6 +59,8 @@ void EditorGeneralWidget::doLoad()
     ui->chkScrollPastEOL->setChecked(pSettings->editor().scrollPastEol());
     ui->chkScrollHalfPage->setChecked(pSettings->editor().halfPageScroll());
     ui->chkScrollByOneLess->setChecked(pSettings->editor().scrollByOneLess());
+    ui->spinMouseWheelScrollSpeed->setValue(pSettings->editor().mouseWheelScrollSpeed());
+
     //right margin line;
     ui->grpRightEdge->setChecked(pSettings->editor().showRightEdgeLine());
     ui->spRightEdge->setValue(pSettings->editor().rightEdgeWidth());
@@ -90,6 +92,7 @@ void EditorGeneralWidget::doSave()
     pSettings->editor().setScrollPastEol(ui->chkScrollPastEOL->isChecked());
     pSettings->editor().setScrollByOneLess(ui->chkScrollByOneLess->isChecked());
     pSettings->editor().setHalfPageScroll(ui->chkScrollHalfPage->isChecked());
+    pSettings->editor().setMouseWheelScrollSpeed(ui->spinMouseWheelScrollSpeed->value());
 
     //right margin line;
     pSettings->editor().setShowRightEdgeLine(ui->grpRightEdge->isChecked());

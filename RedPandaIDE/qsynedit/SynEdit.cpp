@@ -66,6 +66,8 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
     //  fRightEdge has to be set before FontChanged is called for the first time
     mRightEdge = 80;
 
+    mMouseWheelScrollSpeed = 1;
+
     mGutter.setRightOffset(21);
     mGutter.connect(&mGutter, &SynGutter::changed, this, &SynEdit::onGutterChanged);
     mGutterWidth = mGutter.realGutterWidth(charWidth());
@@ -3343,6 +3345,16 @@ void SynEdit::onScrolled(int)
     invalidate();
 }
 
+int SynEdit::mouseWheelScrollSpeed() const
+{
+    return mMouseWheelScrollSpeed;
+}
+
+void SynEdit::setMouseWheelScrollSpeed(int newMouseWheelScrollSpeed)
+{
+    mMouseWheelScrollSpeed = newMouseWheelScrollSpeed;
+}
+
 const PSynHighlighterAttribute &SynEdit::rainbowAttr3() const
 {
     return mRainbowAttr3;
@@ -5643,11 +5655,11 @@ void SynEdit::leaveEvent(QEvent *)
 void SynEdit::wheelEvent(QWheelEvent *event)
 {
     if (event->angleDelta().y()>0) {
-        verticalScrollBar()->setValue(verticalScrollBar()->value()-1);
+        verticalScrollBar()->setValue(verticalScrollBar()->value()-mMouseWheelScrollSpeed);
         event->accept();
         return;
     } else if (event->angleDelta().y()<0) {
-        verticalScrollBar()->setValue(verticalScrollBar()->value()+1);
+        verticalScrollBar()->setValue(verticalScrollBar()->value()+mMouseWheelScrollSpeed);
         event->accept();
         return;
     }

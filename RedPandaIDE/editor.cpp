@@ -3619,6 +3619,8 @@ void Editor::applySettings()
     } else {
         setRightEdge(0);
     }
+
+    setMouseWheelScrollSpeed(pSettings->editor().mouseWheelScrollSpeed());
 }
 
 static PSynHighlighterAttribute createRainbowAttribute(const QString& attrName, const QString& schemeName, const QString& schemeItemName) {

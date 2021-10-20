@@ -497,6 +497,16 @@ void Settings::Editor::setFillIndents(bool newFillIndents)
     mfillIndents = newFillIndents;
 }
 
+int Settings::Editor::mouseWheelScrollSpeed() const
+{
+    return mMouseWheelScrollSpeed;
+}
+
+void Settings::Editor::setMouseWheelScrollSpeed(int newMouseWheelScrollSpeed)
+{
+    mMouseWheelScrollSpeed = newMouseWheelScrollSpeed;
+}
+
 bool Settings::Editor::enableTooltips() const
 {
     return mEnableTooltips;
@@ -983,6 +993,7 @@ void Settings::Editor::doSave()
     saveValue("scroll_past_eol", mScrollPastEol);
     saveValue("scroll_by_one_less", mScrollByOneLess);
     saveValue("half_page_scroll", mHalfPageScroll);
+    saveValue("mouse_wheel_scroll_speed", mMouseWheelScrollSpeed);
 
     //right edge
     saveValue("show_right_edge_line",mShowRightEdgeLine);
@@ -1090,6 +1101,8 @@ void Settings::Editor::doLoad()
     mScrollPastEol = boolValue("scroll_past_eol", true);
     mScrollByOneLess = boolValue("scroll_by_one_less", false);
     mHalfPageScroll = boolValue("half_page_scroll",false);
+    mMouseWheelScrollSpeed = intValue("mouse_wheel_scroll_speed", 3);
+
 
     //right edge
     mShowRightEdgeLine = boolValue("show_right_edge_line",false);

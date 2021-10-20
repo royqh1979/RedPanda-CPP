@@ -323,6 +323,9 @@ public:
         bool fillIndents() const;
         void setFillIndents(bool newFillIndents);
 
+        int mouseWheelScrollSpeed() const;
+        void setMouseWheelScrollSpeed(int newMouseWheelScrollSpeed);
+
     private:
         //General
         // indents
@@ -348,6 +351,7 @@ public:
         bool mScrollPastEol;
         bool mScrollByOneLess;
         bool mHalfPageScroll;
+        int mMouseWheelScrollSpeed;
 
         //right margin
         bool mShowRightEdgeLine;
