@@ -1,6 +1,7 @@
 Version 0.7.0
  - fix: Backspace still works in readonly mode
  - fix: save as file dialog's operation mode is not correct
+ - enhancement: fill indents in the editor (Turned off by default)
 
 Version 0.6.8
  - enhancement: add link to cppreference in the help menu

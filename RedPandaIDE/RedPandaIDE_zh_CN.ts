@@ -933,11 +933,11 @@ Are you really want to continue?</source>
     <message>
         <location filename="editor.cpp" line="213"/>
         <location filename="editor.cpp" line="227"/>
-        <location filename="editor.cpp" line="298"/>
-        <location filename="editor.cpp" line="1125"/>
+        <location filename="editor.cpp" line="303"/>
         <location filename="editor.cpp" line="1130"/>
-        <location filename="editor.cpp" line="1148"/>
+        <location filename="editor.cpp" line="1135"/>
         <location filename="editor.cpp" line="1153"/>
+        <location filename="editor.cpp" line="1158"/>
         <source>Error</source>
         <translation>错误</translation>
     </message>
@@ -947,60 +947,60 @@ Are you really want to continue?</source>
         <translation>无法写入文件&quot;%1&quot;</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="252"/>
+        <location filename="editor.cpp" line="256"/>
         <source>Save As</source>
         <translation>另存为</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="1126"/>
+        <location filename="editor.cpp" line="1131"/>
         <source>The text to be copied exceeds count limit!</source>
         <translation>要复制的内容超过了行数限制！</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="1131"/>
+        <location filename="editor.cpp" line="1136"/>
         <source>The text to be copied exceeds character limit!</source>
         <translation>要复制的内容超过了字符数限制！</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="1149"/>
+        <location filename="editor.cpp" line="1154"/>
         <source>The text to be cut exceeds count limit!</source>
         <translation>要剪切的内容超过了行数限制！</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="1154"/>
+        <location filename="editor.cpp" line="1159"/>
         <source>The text to be cut exceeds character limit!</source>
         <translation>要剪切的内容超过了字符数限制！</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="2122"/>
+        <location filename="editor.cpp" line="2127"/>
         <source>Print Document</source>
         <translation>打印文档</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="2669"/>
-        <location filename="editor.cpp" line="2706"/>
-        <location filename="editor.cpp" line="2757"/>
+        <location filename="editor.cpp" line="2674"/>
+        <location filename="editor.cpp" line="2711"/>
+        <location filename="editor.cpp" line="2762"/>
         <source>Ctrl+click for more info</source>
         <translation>Ctrl+单击以获取更多信息</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="3102"/>
-        <location filename="editor.cpp" line="3132"/>
+        <location filename="editor.cpp" line="3107"/>
+        <location filename="editor.cpp" line="3137"/>
         <source>Symbol &apos;%1&apos; not found!</source>
         <translation>未找到符号&apos;%1&apos;!</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="3521"/>
+        <location filename="editor.cpp" line="3526"/>
         <source>Break point condition</source>
         <translation>断点条件</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="3522"/>
+        <location filename="editor.cpp" line="3527"/>
         <source>Enter the condition of the breakpoint:</source>
         <translation>输入当前断点的生效条件:</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="3698"/>
+        <location filename="editor.cpp" line="3704"/>
         <source>Readonly</source>
         <translation>只读</translation>
     </message>
@@ -4857,175 +4857,175 @@ Are you really want to continue?</source>
         <translation>无法载入自动链接设置</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1397"/>
-        <location filename="settings.cpp" line="1416"/>
+        <location filename="settings.cpp" line="1409"/>
         <location filename="settings.cpp" line="1428"/>
         <location filename="settings.cpp" line="1440"/>
+        <location filename="settings.cpp" line="1452"/>
         <source>The following %1 directories don&apos;t exist:</source>
         <translation>下列%1文件夹不存在：</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1398"/>
-        <location filename="settings.cpp" line="1408"/>
+        <location filename="settings.cpp" line="1410"/>
+        <location filename="settings.cpp" line="1420"/>
         <source>binary</source>
         <translation>二进制</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1407"/>
+        <location filename="settings.cpp" line="1419"/>
         <source>No %1 directories have been specified.</source>
         <translation>未指定%1文件夹</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1417"/>
+        <location filename="settings.cpp" line="1429"/>
         <source>C include</source>
         <translation>C包含</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1429"/>
         <location filename="settings.cpp" line="1441"/>
+        <location filename="settings.cpp" line="1453"/>
         <source>C++ include</source>
         <translation>C++包含</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1460"/>
-        <location filename="settings.cpp" line="1465"/>
-        <location filename="settings.cpp" line="1470"/>
-        <location filename="settings.cpp" line="1475"/>
+        <location filename="settings.cpp" line="1472"/>
+        <location filename="settings.cpp" line="1477"/>
+        <location filename="settings.cpp" line="1482"/>
+        <location filename="settings.cpp" line="1487"/>
         <source>Cannot find the %1 &quot;%2&quot;</source>
         <translation>无法找到%1程序&quot;%2&quot;</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2003"/>
+        <location filename="settings.cpp" line="2015"/>
         <source>C options</source>
         <translation>C语言选项</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2004"/>
+        <location filename="settings.cpp" line="2016"/>
         <source>Support all ANSI standard C programs (-ansi)</source>
         <translation>支持所有ANSI标准C程序(-ansi)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2005"/>
+        <location filename="settings.cpp" line="2017"/>
         <source>Do not recognize asm,inline or typeof as a keyword (-fno-asm)</source>
         <translation>不支持将asm、inline和typeof作为关键字(-fno-asm)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2006"/>
+        <location filename="settings.cpp" line="2018"/>
         <source>Imitate traditional C preprocessors (-traditional-cpp)</source>
         <translation>模仿传统C预处理器行为(-traditional-cpp)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2009"/>
+        <location filename="settings.cpp" line="2021"/>
         <source>Code Generation</source>
         <translation>代码生成</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2038"/>
+        <location filename="settings.cpp" line="2050"/>
         <source>Optimize for the following machine (-march)</source>
         <translation>生成特定机器的专用指令(-march)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2039"/>
+        <location filename="settings.cpp" line="2051"/>
         <source>Optimize less, while maintaining full compatibility (-tune)</source>
         <translation>完整兼容特定机器，较少优化(-tune)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2059"/>
+        <location filename="settings.cpp" line="2071"/>
         <source>Enable use of specific instructions (-mx)</source>
         <translation>启用特定指令集(-mx)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2070"/>
+        <location filename="settings.cpp" line="2082"/>
         <source>Optimization level (-Ox)</source>
         <translation>优化级别(-Ox)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2077"/>
+        <location filename="settings.cpp" line="2089"/>
         <source>Compile with the following pointer size (-mx)</source>
         <translation>使用下列指针大小编译(-mx)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2100"/>
+        <location filename="settings.cpp" line="2112"/>
         <source>Language standard (-std)</source>
         <translation>语言标准(-std)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2113"/>
+        <location filename="settings.cpp" line="2125"/>
         <source>Profile</source>
         <translation>性能分析</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2122"/>
+        <location filename="settings.cpp" line="2134"/>
         <source>Generate debugging information (-g3)</source>
         <translation>生成调试信息(-g3)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2114"/>
+        <location filename="settings.cpp" line="2126"/>
         <source>Generate profiling info for analysis (-pg)</source>
         <translation>生成性能分析信息(-pg)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2103"/>
+        <location filename="settings.cpp" line="2115"/>
         <source>Warnings</source>
         <translation>代码警告</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2104"/>
+        <location filename="settings.cpp" line="2116"/>
         <source>Inhibit all warning messages (-w)</source>
         <translation>忽略所有警告信息(-w)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2105"/>
+        <location filename="settings.cpp" line="2117"/>
         <source>Show most warnings (-Wall)</source>
         <translation>启用常见问题警告(-Wall)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2106"/>
+        <location filename="settings.cpp" line="2118"/>
         <source>Show some more warnings (-Wextra)</source>
         <translation>启用更多问题警告(-Wextra)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2107"/>
+        <location filename="settings.cpp" line="2119"/>
         <source>Check ISO C/C++/C++0x conformance (-pedantic)</source>
         <translation>检查ISO C/C++/C++0x语法一致性(-pedantic)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2108"/>
+        <location filename="settings.cpp" line="2120"/>
         <source>Only check the code for syntax errors (-fsyntax-only)</source>
         <translation>只进行语法检查（不编译）(-fsyntax-only)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2109"/>
+        <location filename="settings.cpp" line="2121"/>
         <source>Make all warnings into errors (-Werror)</source>
         <translation>将警告作为错误处理(-Werror)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2110"/>
+        <location filename="settings.cpp" line="2122"/>
         <source>Abort compilation on first error (-Wfatal-errors)</source>
         <translation>遇到第一个错误后立即中止编译(-Wfatal-errors)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2117"/>
+        <location filename="settings.cpp" line="2129"/>
         <source>Linker</source>
         <translation>链接器</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2118"/>
+        <location filename="settings.cpp" line="2130"/>
         <source>Link an Objective C program (-lobjc)</source>
         <translation>链接Objective-C程序 (-lobjc)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2119"/>
+        <location filename="settings.cpp" line="2131"/>
         <source>Do not use standard system libraries (-nostdlib)</source>
         <translation>不使用标准库和系统启动文件(-nostdlib)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2120"/>
+        <location filename="settings.cpp" line="2132"/>
         <source>Do not create a console window (-mwindows)</source>
         <translation>不产生控制台窗口(-mwindows)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2121"/>
+        <location filename="settings.cpp" line="2133"/>
         <source>Strip executable (-s)</source>
         <translation>剥除附加信息(-s)</translation>
     </message>
@@ -5034,43 +5034,43 @@ Are you really want to continue?</source>
         <translation type="vanished">链接Ojbective C程序(-lobjc)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2125"/>
+        <location filename="settings.cpp" line="2137"/>
         <source>Output</source>
         <translation>输出</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2126"/>
+        <location filename="settings.cpp" line="2138"/>
         <source>Put comments in generated assembly code (-fverbose-asm)</source>
         <translation>在生成的汇编代码中加入注释(-fverbose-asm)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2128"/>
+        <location filename="settings.cpp" line="2140"/>
         <source>Use pipes instead of temporary files during compilation (-pipe)</source>
         <translation>编译时使用管道而不是临时文件(-pipe)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2127"/>
+        <location filename="settings.cpp" line="2139"/>
         <source>Do not assemble, compile and generate the assemble code (-S)</source>
         <translation>只生成汇编代码(-S)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2344"/>
-        <location filename="settings.cpp" line="2369"/>
+        <location filename="settings.cpp" line="2356"/>
+        <location filename="settings.cpp" line="2381"/>
         <source>Confirm</source>
         <translation>确认</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2345"/>
+        <location filename="settings.cpp" line="2357"/>
         <source>The following problems were found during validation of compiler set &quot;%1&quot;:</source>
         <translation>在验证编译器设置&quot;%1&quot;时遇到了下列问题：</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2370"/>
+        <location filename="settings.cpp" line="2382"/>
         <source>Compiler set not configuared.</source>
         <translation>未配置编译器设置。</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2372"/>
+        <location filename="settings.cpp" line="2384"/>
         <source>Would you like Red Panda C++ to search for compilers in the following locations: &lt;BR /&gt;&apos;%1&apos;&lt;BR /&gt;&apos;%2&apos;? </source>
         <translation>您需要小熊猫C++在下列位置搜索编译器吗：&lt;br /&gt;%1&lt;br /&gt;%2</translation>
     </message>
@@ -6097,8 +6097,8 @@ Are you really want to continue?</source>
 <context>
     <name>SynEdit</name>
     <message>
-        <location filename="qsynedit/TextPainter.cpp" line="909"/>
-        <location filename="qsynedit/TextPainter.cpp" line="910"/>
+        <location filename="qsynedit/TextPainter.cpp" line="936"/>
+        <location filename="qsynedit/TextPainter.cpp" line="937"/>
         <source>The highlighter seems to be in an infinite loop</source>
         <translation>高亮处理进入了死循环</translation>
     </message>
@@ -6320,87 +6320,92 @@ Are you really want to continue?</source>
         <translation>缩进提示线颜色</translation>
     </message>
     <message>
-        <location filename="settingsdialog/editorgeneralwidget.ui" line="129"/>
+        <location filename="settingsdialog/editorgeneralwidget.ui" line="126"/>
+        <source>Fill Indents</source>
+        <translation>填充缩进区域</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/editorgeneralwidget.ui" line="136"/>
         <source>Caret</source>
         <translation>光标</translation>
     </message>
     <message>
-        <location filename="settingsdialog/editorgeneralwidget.ui" line="135"/>
+        <location filename="settingsdialog/editorgeneralwidget.ui" line="142"/>
         <source>Move caret to the first non-space char in the current line when press HOME key</source>
         <translation>按下HOME键时，光标定位在本行的第一个非空格字符处</translation>
     </message>
     <message>
-        <location filename="settingsdialog/editorgeneralwidget.ui" line="142"/>
+        <location filename="settingsdialog/editorgeneralwidget.ui" line="149"/>
         <source>Move caret to the last non-space char in the current line when press END key</source>
         <translation>按下End键时，光标定位在本行的最后一个非空格字符处</translation>
     </message>
     <message>
-        <location filename="settingsdialog/editorgeneralwidget.ui" line="149"/>
+        <location filename="settingsdialog/editorgeneralwidget.ui" line="156"/>
         <source>Keep X position of the caret when moving vertically</source>
         <translation>在上下移动光标时，记住起始时光标所在栏数</translation>
     </message>
     <message>
-        <location filename="settingsdialog/editorgeneralwidget.ui" line="184"/>
+        <location filename="settingsdialog/editorgeneralwidget.ui" line="191"/>
         <source>Caret for inserting mode</source>
         <translation>插入状态下的光标</translation>
     </message>
     <message>
-        <location filename="settingsdialog/editorgeneralwidget.ui" line="221"/>
+        <location filename="settingsdialog/editorgeneralwidget.ui" line="228"/>
         <source>Use text color as caret color</source>
         <translation>使用文字颜色作为光标颜色</translation>
     </message>
     <message>
-        <location filename="settingsdialog/editorgeneralwidget.ui" line="234"/>
+        <location filename="settingsdialog/editorgeneralwidget.ui" line="241"/>
         <source>Scroll</source>
         <translation>滚动条</translation>
     </message>
     <message>
-        <location filename="settingsdialog/editorgeneralwidget.ui" line="240"/>
+        <location filename="settingsdialog/editorgeneralwidget.ui" line="247"/>
         <source>Auto hide scroll bars</source>
         <translation>自动隐藏滚动条</translation>
     </message>
     <message>
-        <location filename="settingsdialog/editorgeneralwidget.ui" line="247"/>
+        <location filename="settingsdialog/editorgeneralwidget.ui" line="254"/>
         <source>Can scroll the last char to the left edge of the editor</source>
         <translation>可以将每行末尾字符滚动到编辑器最左侧</translation>
     </message>
     <message>
-        <location filename="settingsdialog/editorgeneralwidget.ui" line="254"/>
+        <location filename="settingsdialog/editorgeneralwidget.ui" line="261"/>
         <source>Can scroll the last line to the top edge of the editor</source>
         <translation>可以将最后一行滚动到编辑器最上方</translation>
     </message>
     <message>
-        <location filename="settingsdialog/editorgeneralwidget.ui" line="261"/>
+        <location filename="settingsdialog/editorgeneralwidget.ui" line="268"/>
         <source>Page Up/Down scrolls half a page</source>
         <translation>翻页键只滚动半页</translation>
     </message>
     <message>
-        <location filename="settingsdialog/editorgeneralwidget.ui" line="268"/>
+        <location filename="settingsdialog/editorgeneralwidget.ui" line="275"/>
         <source>Forces page scroll to be one line less</source>
         <translation>在滚动页时少滚动一行</translation>
     </message>
     <message>
-        <location filename="settingsdialog/editorgeneralwidget.ui" line="278"/>
+        <location filename="settingsdialog/editorgeneralwidget.ui" line="285"/>
         <source>Show right edge line</source>
         <translation>显示右边缘线</translation>
     </message>
     <message>
-        <location filename="settingsdialog/editorgeneralwidget.ui" line="290"/>
+        <location filename="settingsdialog/editorgeneralwidget.ui" line="297"/>
         <source>Right egde width</source>
         <translation>右边缘宽度</translation>
     </message>
     <message>
-        <location filename="settingsdialog/editorgeneralwidget.ui" line="342"/>
+        <location filename="settingsdialog/editorgeneralwidget.ui" line="349"/>
         <source>Right edge line color</source>
         <translation>右边缘颜色</translation>
     </message>
     <message>
-        <location filename="settingsdialog/editorgeneralwidget.ui" line="214"/>
+        <location filename="settingsdialog/editorgeneralwidget.ui" line="221"/>
         <source>Caret for overwriting mode</source>
         <translation>覆写状态下的光标</translation>
     </message>
     <message>
-        <location filename="settingsdialog/editorgeneralwidget.ui" line="194"/>
+        <location filename="settingsdialog/editorgeneralwidget.ui" line="201"/>
         <source>Caret Color</source>
         <translation>光标颜色</translation>
     </message>

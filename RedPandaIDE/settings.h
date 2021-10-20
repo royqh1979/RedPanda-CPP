@@ -320,6 +320,9 @@ public:
         bool showFunctionTips() const;
         void setShowFunctionTips(bool newShowFunctionTips);
 
+        bool fillIndents() const;
+        void setFillIndents(bool newFillIndents);
+
     private:
         //General
         // indents
@@ -329,6 +332,7 @@ public:
         int mTabWidth;
         bool mShowIndentLines;
         QColor mIndentLineColor;
+        bool mfillIndents;
         // caret
         bool mEnhanceHomeKey;
         bool mEnhanceEndKey;

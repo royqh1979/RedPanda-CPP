@@ -5,8 +5,8 @@
 
 #define DEVCPP_VERSION "0.6.9"
 
-#ifdef Q_OS_WIN
 #define APP_SETTSINGS_FILENAME "redpandacpp.ini"
+#ifdef Q_OS_WIN
 #define GCC_PROGRAM     "gcc.exe"
 #define GPP_PROGRAM     "g++.exe"
 #define GDB_PROGRAM     "gdb.exe"
@@ -16,8 +16,17 @@
 #define GPROF_PROGRAM   "gprof.exe"
 #define CLEAN_PROGRAM   "del /q /f"
 #define CPP_PROGRAM     "cpp.exe"
+#elif defined(Q_OS_LINUX)
+#define GCC_PROGRAM     "gcc"
+#define GPP_PROGRAM     "g++"
+#define GDB_PROGRAM     "gdb"
+#define GDB32_PROGRAM   "gdb32"
+#define MAKE_PROGRAM    "make"
+#define GPROF_PROGRAM   "gprof"
+#define CLEAN_PROGRAM   "rm -rf"
+#define CPP_PROGRAM     "cpp"
 #else
-#error "Only support windows now!"
+#error "Only support windows and linux now!"
 #endif
 
 #define DEV_PROJECT_EXT "dev"
@@ -46,7 +55,7 @@
 #   define STATIC_LIB_EXT   "a"
 #   define DYNAMIC_LIB_EXT   "dll"
 #   define MAKEFILE_NAME    "makefile.win"
-#elif Q_OS_LINUX
+#elif defined(Q_OS_LINUX)
 #   define PATH_SENSITIVITY Qt::CaseSensitive
 #   define PATH_SEPARATOR   ":"
 #   define NULL_FILE       "/dev/null"

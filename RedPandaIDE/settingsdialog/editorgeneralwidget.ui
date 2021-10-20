@@ -120,6 +120,13 @@
         </layout>
        </widget>
       </item>
+      <item>
+       <widget class="QCheckBox" name="chkFillIndents">
+        <property name="text">
+         <string>Fill Indents</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>

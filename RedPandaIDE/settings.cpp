@@ -487,6 +487,16 @@ void Settings::Editor::setShowFunctionTips(bool newShowFunctionTips)
     mShowFunctionTips = newShowFunctionTips;
 }
 
+bool Settings::Editor::fillIndents() const
+{
+    return mfillIndents;
+}
+
+void Settings::Editor::setFillIndents(bool newFillIndents)
+{
+    mfillIndents = newFillIndents;
+}
+
 bool Settings::Editor::enableTooltips() const
 {
     return mEnableTooltips;
@@ -957,6 +967,7 @@ void Settings::Editor::doSave()
     saveValue("tab_width", mTabWidth);
     saveValue("show_indent_lines", mShowIndentLines);
     saveValue("indent_line_color",mIndentLineColor);
+    saveValue("fill_indents",mfillIndents);
     // caret
     saveValue("enhance_home_key",mEnhanceHomeKey);
     saveValue("enhance_end_key",mEnhanceEndKey);
@@ -1063,6 +1074,7 @@ void Settings::Editor::doLoad()
     mTabWidth = intValue("tab_width",4);
     mShowIndentLines = boolValue("show_indent_lines",true);
     mIndentLineColor = colorValue("indent_line_color",QColorConstants::Svg::silver);
+    mfillIndents = boolValue("fill_indents", false);
     // caret
     mEnhanceHomeKey = boolValue("enhance_home_key", true);
     mEnhanceEndKey = boolValue("enhance_end_key",true);

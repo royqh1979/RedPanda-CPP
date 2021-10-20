@@ -44,6 +44,7 @@ void EditorGeneralWidget::doLoad()
     ui->spTabWidth->setValue(pSettings->editor().tabWidth());
     ui->chkShowIndentLines->setChecked(pSettings->editor().showIndentLines());
     ui->colorIndentLine->setColor(pSettings->editor().indentLineColor());
+    ui->chkFillIndents->setChecked(pSettings->editor().fillIndents());
     //carets
     ui->chkEnhanceHome->setChecked(pSettings->editor().enhanceHomeKey());
     ui->chkEnhanceEndKey->setChecked(pSettings->editor().enhanceEndKey());
@@ -73,6 +74,8 @@ void EditorGeneralWidget::doSave()
     pSettings->editor().setTabWidth(ui->spTabWidth->value());
     pSettings->editor().setShowIndentLines(ui->chkShowIndentLines->isChecked());
     pSettings->editor().setIndentLineColor(ui->colorIndentLine->color());
+    pSettings->editor().setFillIndents(ui->chkFillIndents->isChecked());
+
     //carets
     pSettings->editor().setEnhanceHomeKey(ui->chkEnhanceHome->isChecked());
     pSettings->editor().setEnhanceEndKey(ui->chkEnhanceEndKey->isChecked());

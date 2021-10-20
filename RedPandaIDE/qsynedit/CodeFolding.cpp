@@ -23,6 +23,7 @@ PSynEditFoldRegion SynEditFoldRegions::get(int index)
 }
 
 SynEditCodeFolding::SynEditCodeFolding():
+    fillIndents(false),
     indentGuides(true),
     showCollapsedLine(true),
     collapsedLineColor(QColor("black")),

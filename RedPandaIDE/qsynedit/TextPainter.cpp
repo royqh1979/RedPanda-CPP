@@ -650,12 +650,17 @@ void SynEditTextPainter::PaintFoldAttributes()
     // Paint indent guides. Use folds to determine indent value of these
     // Use a separate loop so we can use a custom pen
     // Paint indent guides using custom pen
-    if (edit->mCodeFolding.indentGuides) {
-        QPen dottedPen(Qt::PenStyle::DashLine);
-        dottedPen.setColor(edit->mCodeFolding.indentGuidesColor);
-
+    if (edit->mCodeFolding.indentGuides || edit->mCodeFolding.fillIndents) {
+        QColor paintColor;
+        if (edit->mCodeFolding.indentGuidesColor.isValid()) {
+            paintColor = edit->mCodeFolding.indentGuidesColor;
+        } else  {
+            paintColor = edit->palette().color(QPalette::Text);
+        }
+        QColor gradientStart = paintColor;
+        QColor gradientEnd = paintColor;
         QPen oldPen = painter->pen();
-        painter->setPen(dottedPen);
+
         // Now loop through all the lines. The indices are valid for Lines.
         for (cRow = aFirstRow; cRow<=aLastRow;cRow++) {
             vLine = edit->rowToLine(cRow);
@@ -682,21 +687,43 @@ void SynEditTextPainter::PaintFoldAttributes()
             //TabSteps = edit->mTabWidth;
             TabSteps = 0;
             indentLevel = 0;
+
             while (TabSteps < LineIndent) {
                 X = TabSteps * edit->mCharWidth + edit->textOffset() - 2;
                 TabSteps+=edit->mTabWidth;
                 indentLevel++ ;
                 if (edit->mHighlighter) {
-                    PSynHighlighterAttribute attr = edit->mHighlighter->symbolAttribute();
-                    GetBraceColorAttr(indentLevel,attr);
-                    if (attr!=edit->mHighlighter->symbolAttribute()) {
-                        dottedPen.setColor(attr->foreground());
-                        painter->setPen(dottedPen);
+                    if (edit->mCodeFolding.indentGuides) {
+                        PSynHighlighterAttribute attr = edit->mHighlighter->symbolAttribute();
+                        GetBraceColorAttr(indentLevel,attr);
+                        paintColor = attr->foreground();
                     }
+                    if (edit->mCodeFolding.fillIndents) {
+                        PSynHighlighterAttribute attr = edit->mHighlighter->symbolAttribute();
+                        GetBraceColorAttr(indentLevel,attr);
+                        gradientStart=attr->foreground();
+                        attr = edit->mHighlighter->symbolAttribute();
+                        GetBraceColorAttr(indentLevel+1,attr);
+                        gradientStart=attr->foreground();
+                    }
+                }
+                if (edit->mCodeFolding.fillIndents) {
+                    int X1=TabSteps * edit->mCharWidth + edit->textOffset() - 2;
+                    gradientStart.setAlpha(20);
+                    gradientEnd.setAlpha(10);
+                    QLinearGradient gradient(X,Y,X1,Y);
+                    gradient.setColorAt(0,gradientStart);
+                    gradient.setColorAt(1,gradientEnd);
+                    painter->fillRect(X,Y,edit->mTabWidth * edit->mCharWidth,edit->mTextHeight,gradient);
                 }
 
                 // Move to top of vertical line
-                painter->drawLine(X,Y,X,Y+edit->mTextHeight);
+                if (edit->mCodeFolding.indentGuides) {
+                    QPen dottedPen(Qt::PenStyle::DashLine);
+                    dottedPen.setColor(paintColor);
+                    painter->setPen(dottedPen);
+                    painter->drawLine(X,Y,X,Y+edit->mTextHeight);
+                }
             }
         }
         painter->setPen(oldPen);
@@ -920,18 +947,24 @@ void SynEditTextPainter::PaintLines()
                     }
                     // It's at least partially visible. Get the token attributes now.
                     attr = edit->mHighlighter->getTokenAttribute();
-                    if (sToken == "[") {
-                      GetBraceColorAttr(edit->mHighlighter->getRangeState().bracketLevel,attr);
-                    } else if (sToken == "]") {
-                      GetBraceColorAttr(edit->mHighlighter->getRangeState().bracketLevel+1,attr);
-                    } else if (sToken == "(") {
-                      GetBraceColorAttr(edit->mHighlighter->getRangeState().parenthesisLevel,attr);
-                    } else if (sToken == ")") {
-                      GetBraceColorAttr(edit->mHighlighter->getRangeState().parenthesisLevel+1,attr);
-                    } else if (sToken == "{") {
-                      GetBraceColorAttr(edit->mHighlighter->getRangeState().braceLevel,attr);
-                    } else if (sToken == "}") {
-                      GetBraceColorAttr(edit->mHighlighter->getRangeState().braceLevel+1,attr);
+                    if (sToken == "["
+                            || sToken == "("
+                            || sToken == "{"
+                            ) {
+                        SynRangeState rangeState = edit->mHighlighter->getRangeState();
+                        GetBraceColorAttr(rangeState.bracketLevel
+                                          +rangeState.braceLevel
+                                          +rangeState.parenthesisLevel
+                                          ,attr);
+                    } else if (sToken == "]"
+                               || sToken == ")"
+                               || sToken == "}"
+                               ){
+                        SynRangeState rangeState = edit->mHighlighter->getRangeState();
+                        GetBraceColorAttr(rangeState.bracketLevel
+                                          +rangeState.braceLevel
+                                          +rangeState.parenthesisLevel+1,
+                                          attr);
                     }
                     if (bCurrentLine && edit->mInputPreeditString.length()>0) {
                         int startPos = edit->mHighlighter->getTokenPos()+1;

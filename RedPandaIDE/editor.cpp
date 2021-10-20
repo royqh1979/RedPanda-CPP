@@ -3581,6 +3581,7 @@ void Editor::applySettings()
 
     codeFolding().indentGuides = pSettings->editor().showIndentLines();
     codeFolding().indentGuidesColor = pSettings->editor().indentLineColor();
+    codeFolding().fillIndents = pSettings->editor().fillIndents();
 
     QFont f=QFont(pSettings->editor().fontName(),pSettings->editor().fontSize());
     f.setStyleStrategy(QFont::PreferAntialias);

@@ -29,6 +29,7 @@ struct SynEditFoldRegion {
 
 struct SynEditCodeFolding {
       bool indentGuides;
+      bool fillIndents;
       bool showCollapsedLine;
       QColor collapsedLineColor;
       QColor folderBarLinesColor;
