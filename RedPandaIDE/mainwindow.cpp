@@ -90,6 +90,11 @@ MainWindow::MainWindow(QWidget *parent)
     ui->tblStackTrace->setModel(mDebugger->backtraceModel());
     ui->watchView->setModel(mDebugger->watchModel());
 
+    mDebugger->breakpointModel()->load(includeTrailingPathDelimiter(pSettings->dirs().config())
+                                       +DEV_BREAKPOINTS_FILE);
+    mDebugger->watchModel()->load(includeTrailingPathDelimiter(pSettings->dirs().config())
+                                       +DEV_WATCH_FILE);
+
 //    ui->actionIndent->setShortcut(Qt::Key_Tab);
 //    ui->actionUnIndent->setShortcut(Qt::Key_Tab | Qt::ShiftModifier);
 
@@ -1655,7 +1660,15 @@ void MainWindow::buildContextMenus()
             [this]() {
         QModelIndex index = ui->tableBookmark->currentIndex();
         if (index.isValid()) {
-            mBookmarkModel->removeBookmarkAt(index.row());
+            PBookmark bookmark = mBookmarkModel->bookmark(index.row());
+            if (bookmark) {
+                Editor * editor = mEditorList->getOpenedEditorByFilename(bookmark->filename);
+                if (editor) {
+                    editor->removeBookmark(bookmark->line);
+                } else {
+                    mBookmarkModel->removeBookmarkAt(index.row());
+                }
+            }
         }
     });
     mBookmark_RemoveAll=createActionFor(
@@ -1664,6 +1677,10 @@ void MainWindow::buildContextMenus()
     connect(mBookmark_RemoveAll, &QAction::triggered,
             [this]() {
         mBookmarkModel->clear();
+        for (int i=0;i<mEditorList->pageCount();i++) {
+            Editor * editor = (*mEditorList)[i];
+            editor->clearBookmarks();
+        }
     });
     mBookmark_Modify=createActionFor(
                 tr("Modify Description"),
@@ -1677,10 +1694,10 @@ void MainWindow::buildContextMenus()
                 QString desc = QInputDialog::getText(ui->tableBookmark,tr("Bookmark Description"),
                                                  tr("Description:"),QLineEdit::Normal,
                                                  bookmark->description);
-            desc = desc.trimmed();
-            mBookmarkModel->updateDescription(bookmark->filename,bookmark->line,desc);
+                desc = desc.trimmed();
+                mBookmarkModel->updateDescription(bookmark->filename,bookmark->line,desc);
+            }
         }
-        mBookmarkModel->clear();
     });
 
     //context menu signal for the watch view
@@ -2695,6 +2712,19 @@ void MainWindow::closeEvent(QCloseEvent *event) {
         settings.save();
         mBookmarkModel->save(includeTrailingPathDelimiter(pSettings->dirs().config())
                              +DEV_BOOKMARK_FILE);
+        if (pSettings->debugger().autosaveBreakpoints())
+            mDebugger->breakpointModel()->save(includeTrailingPathDelimiter(pSettings->dirs().config())
+                                           +DEV_BREAKPOINTS_FILE);
+        else
+            removeFile(includeTrailingPathDelimiter(pSettings->dirs().config())
+                          +DEV_BREAKPOINTS_FILE);
+        if (pSettings->debugger().autosaveWatches())
+            mDebugger->watchModel()->save(includeTrailingPathDelimiter(pSettings->dirs().config())
+                                           +DEV_WATCH_FILE);
+        else
+            removeFile(includeTrailingPathDelimiter(pSettings->dirs().config())
+                          +DEV_WATCH_FILE);
+
     }
 
     if (!mShouldRemoveAllSettings && pSettings->editor().autoLoadLastFiles()) {

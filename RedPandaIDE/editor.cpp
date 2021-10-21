@@ -151,6 +151,9 @@ Editor::Editor(QWidget *parent, const QString& filename,
     setContextMenuPolicy(Qt::CustomContextMenu);
     connect(this, &QWidget::customContextMenuRequested,
             pMainWindow, &MainWindow::onEditorContextMenu);
+
+    resetBookmarks();
+    resetBreakpoints();
 }
 
 Editor::~Editor() {
@@ -3553,6 +3556,13 @@ void Editor::removeBookmark(int line)
 bool Editor::hasBookmark(int line)
 {
     return mBookmarkLines.contains(line);
+}
+
+void Editor::clearBookmarks()
+{
+    mBookmarkLines.clear();
+    pMainWindow->bookmarkModel()->removeBookmarks(mFilename);
+    invalidateGutter();
 }
 
 void Editor::removeBreakpointFocus()

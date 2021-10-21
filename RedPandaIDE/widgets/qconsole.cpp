@@ -444,13 +444,13 @@ void QConsole::contentsLayouted()
     updateScrollbars();
 }
 
-void QConsole::contentsRowsAdded(int rowCount)
+void QConsole::contentsRowsAdded(int )
 {
     ensureCaretVisible();
     updateScrollbars();
 }
 
-void QConsole::contentsLastRowsRemoved(int rowCount)
+void QConsole::contentsLastRowsRemoved(int )
 {
     ensureCaretVisible();
     updateScrollbars();
@@ -466,7 +466,6 @@ void QConsole::scrollTimerHandler()
 
 {
     QPoint iMousePos;
-    int X, Y;
 
     iMousePos = QCursor::pos();
     iMousePos = mapFromGlobal(iMousePos);
@@ -834,7 +833,7 @@ bool QConsole::caretInSelection()
 {
     if (!hasSelection())
         return false;
-    LineChar selBegin = selectionBegin();
+    //LineChar selBegin = selectionBegin();
     LineChar selEnd = selectionEnd();
     QString lastline = mContents.getLastLine();
     int editBeginChar = lastline.length() - mCurrentEditableLine.length();
@@ -930,6 +929,8 @@ bool QConsole::event(QEvent *event)
         mInactiveSelectionBackground = palette().color(QPalette::Inactive,QPalette::Highlight);
         mInactiveSelectionForeground = palette().color(QPalette::Inactive,QPalette::HighlightedText);
         break;
+    default:
+        break;
     }
     return QAbstractScrollArea::event(event);
 }
@@ -940,8 +941,7 @@ void QConsole::resizeEvent(QResizeEvent *)
     std::shared_ptr<QImage> image = std::make_shared<QImage>(clientWidth(),clientHeight(),
                                                             QImage::Format_ARGB32);
     if (mContentImage) {
-        QRect newRect = image->rect().intersected(mContentImage->rect());
-
+        //QRect newRect = image->rect().intersected(mContentImage->rect());
         QPainter painter(image.get());
         painter.fillRect(viewport()->rect(),mBackground);
 //        painter.drawImage(newRect,*mContentImage);

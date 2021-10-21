@@ -23,6 +23,7 @@ public:
     PBookmark bookmark(int i);
     PBookmark bookmark(const QString&filename, int line);
     bool removeBookmark(const QString&filename, int line);
+    void removeBookmarks(const QString& filename);
     void clear();
     bool updateDescription(const QString&filename, int line, const QString& description);
     void save(const QString& filename);

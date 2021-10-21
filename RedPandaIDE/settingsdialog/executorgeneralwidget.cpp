@@ -38,7 +38,7 @@ void ExecutorGeneralWidget::doSave()
     pSettings->executor().save();
 }
 
-void ExecutorGeneralWidget::on_btnBrowse_triggered(QAction *arg1)
+void ExecutorGeneralWidget::on_btnBrowse_clicked()
 {
     QString filename = QFileDialog::getOpenFileName(
                 this,

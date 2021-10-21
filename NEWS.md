@@ -8,6 +8,9 @@ Version 0.7.0
  - fix: don't highlight '#' with spaces preceeding it as error
  - fix: correctly handle integer with 'L' suffix in #if directives ( so <thread> can be correctly parsed )
  - enhancement: bookmark view
+ - enhancement: autosave/load bookmarks
+ - enhancement: autosave/load breakpoints 
+ - enhancement: autosave/load watches
 
 Version 0.6.8
  - enhancement: add link to cppreference in the help menu

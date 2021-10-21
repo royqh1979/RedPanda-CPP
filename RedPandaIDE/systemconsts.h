@@ -48,6 +48,8 @@
 #define DEV_SHORTCUT_FILE "shortcuts.json"
 #define DEV_TOOLS_FILE "tools.json"
 #define DEV_BOOKMARK_FILE "bookmarks.json"
+#define DEV_BREAKPOINTS_FILE "breakpoints.json"
+#define DEV_WATCH_FILE "watch.json"
 
 #ifdef Q_OS_WIN
 #   define PATH_SENSITIVITY Qt::CaseInsensitive

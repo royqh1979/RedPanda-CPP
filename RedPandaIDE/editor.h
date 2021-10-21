@@ -150,6 +150,7 @@ public:
     void addBookmark(int line,const QString& description);
     void removeBookmark(int line);
     bool hasBookmark(int line);
+    void clearBookmarks();
     void removeBreakpointFocus();
     void modifyBreakpointProperty(int line);
     void setActiveBreakpointFocus(int Line, bool setFocus=true);

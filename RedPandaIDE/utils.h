@@ -128,6 +128,7 @@ bool isNonPrintableAsciiChar(char ch);
 bool fileExists(const QString& file);
 bool fileExists(const QString& dir, const QString& fileName);
 bool directoryExists(const QString& file);
+bool removeFile(const QString& filename);
 QString includeTrailingPathDelimiter(const QString& path);
 QString excludeTrailingPathDelimiter(const QString& path);
 FileType getFileType(const QString& filename);

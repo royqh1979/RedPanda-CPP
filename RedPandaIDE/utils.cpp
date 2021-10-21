@@ -829,3 +829,9 @@ void StringToFile(const QString &str, const QString &fileName)
         stream<<str;
     }
 }
+
+bool removeFile(const QString &filename)
+{
+    QFile file(filename);
+    return file.remove();
+}

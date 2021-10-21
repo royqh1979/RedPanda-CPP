@@ -3518,7 +3518,7 @@ SynEditorOptions SynEdit::getOptions() const
 void SynEdit::setOptions(const SynEditorOptions &Value)
 {
     if (Value != mOptions) {
-        bool bSetDrag = mOptions.testFlag(eoDropFiles) != Value.testFlag(eoDropFiles);
+        //bool bSetDrag = mOptions.testFlag(eoDropFiles) != Value.testFlag(eoDropFiles);
         //if  (!mOptions.testFlag(eoScrollPastEol))
         setLeftChar(mLeftChar);
         //if (!mOptions.testFlag(eoScrollPastEof))
@@ -3795,6 +3795,8 @@ void SynEdit::doUndoItem()
                         Item->changeStr(),
                         Item->changeSelMode());
             break;
+        default:
+            break;
         }
     }
 }
@@ -4013,6 +4015,8 @@ void SynEdit::doRedoItem()
                                  Item->changeEndPos(), Item->changeStr(), Item->changeSelMode());
             break;
         }
+        default:
+            break;
         }
     }
 }
@@ -5099,6 +5103,8 @@ void SynEdit::ExecuteCommand(SynEditorCommand Command, QChar AChar, void *pData)
     case SynEditorCommand::ecToggleComment:
         doToggleComment();
         break;
+    default:
+        break;
     }
 
 //    procedure ForceCaretX(aCaretX: integer);
@@ -5461,6 +5467,8 @@ bool SynEdit::event(QEvent *event)
         updateMouseCursor();
         break;
     }
+    default:
+        break;
     }
     return QAbstractScrollArea::event(event);
 }
@@ -5498,8 +5506,8 @@ void SynEdit::mousePressEvent(QMouseEvent *event)
     bool bWasSel = false;
     bool bStartDrag = false;
     mMouseMoved = false;
-    BufferCoord TmpBegin = mBlockBegin;
-    BufferCoord TmpEnd = mBlockEnd;
+//    BufferCoord TmpBegin = mBlockBegin;
+//    BufferCoord TmpEnd = mBlockEnd;
     Qt::MouseButton button = event->button();
     int X=event->pos().x();
     int Y=event->pos().y();

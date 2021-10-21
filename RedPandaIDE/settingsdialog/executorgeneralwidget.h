@@ -24,7 +24,7 @@ protected:
     void doLoad() override;
     void doSave() override;
 private slots:
-    void on_btnBrowse_triggered(QAction *arg1);
+    void on_btnBrowse_clicked();
 };
 
 #endif // EXECUTORGENERALWIDGET_H

@@ -85,7 +85,7 @@ QString SynHTMLExporter::MakeValidName(const QString &Name)
     return Result;
 }
 
-bool SynHTMLExporter::StyleNameCallback(PSynHighlighter Highlighter, PSynHighlighterAttribute Attri, const QString& UniqueAttriName, QList<void *> params)
+bool SynHTMLExporter::StyleNameCallback(PSynHighlighter /*Highlighter*/, PSynHighlighterAttribute Attri, const QString& UniqueAttriName, QList<void *> params)
 {
     PSynHighlighterAttribute& AttriToFind = *static_cast<PSynHighlighterAttribute*>(params[0]);
     QString& StyleName = *static_cast<QString *>(params[1]);

@@ -31,6 +31,8 @@ void DebugGeneralWidget::doLoad()
     ui->chkSkipSystemLib->setChecked(pSettings->debugger().skipSystemLibraries());
     ui->chkSkipProjectLib->setChecked(pSettings->debugger().skipProjectLibraries());
     ui->chkSkipCustomLib->setChecked(pSettings->debugger().skipCustomLibraries());
+    ui->chkAutosaveBreakpoints->setChecked(pSettings->debugger().autosaveBreakpoints());
+    ui->chkAutosaveWatches->setChecked(pSettings->debugger().autosaveWatches());
 }
 
 void DebugGeneralWidget::doSave()
@@ -45,6 +47,8 @@ void DebugGeneralWidget::doSave()
     pSettings->debugger().setSkipSystemLibraries(ui->chkSkipSystemLib->isChecked());
     pSettings->debugger().setSkipProjectLibraries(ui->chkSkipProjectLib->isChecked());
     pSettings->debugger().setSkipCustomLibraries(ui->chkSkipCustomLib->isChecked());
+    pSettings->debugger().setAutosaveBreakpoints(ui->chkAutosaveBreakpoints->isChecked());
+    pSettings->debugger().setAutosaveWatches(ui->chkAutosaveWatches->isChecked());
     pSettings->debugger().save();
     pMainWindow->updateDebuggerSettings();
 }

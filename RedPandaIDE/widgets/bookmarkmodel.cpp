@@ -67,6 +67,16 @@ bool BookmarkModel::removeBookmark(const QString &filename, int line)
     return false;
 }
 
+void BookmarkModel::removeBookmarks(const QString &filename)
+{
+    for (int i=mBookmarks.count()-1;i>=0;i--) {
+        PBookmark bookmark = mBookmarks[i];
+        if (bookmark->filename.compare(filename, PATH_SENSITIVITY) == 0) {
+            removeBookmarkAt(i);
+        }
+    }
+}
+
 void BookmarkModel::clear()
 {
     beginResetModel();

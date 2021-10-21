@@ -844,6 +844,12 @@ public:
         bool skipCustomLibraries() const;
         void setSkipCustomLibraries(bool newSkipCustomLibraries);
 
+        bool autosaveBreakpoints() const;
+        void setAutosaveBreakpoints(bool newAutosaveBreakpoints);
+
+        bool autosaveWatches() const;
+        void setAutosaveWatches(bool newAutosaveWatches);
+
     private:
         bool mShowCommandLog;
         bool mShowAnnotations;
@@ -855,6 +861,8 @@ public:
         bool mSkipSystemLibraries;
         bool mSkipProjectLibraries;
         bool mSkipCustomLibraries;
+        bool mAutosaveBreakpoints;
+        bool mAutosaveWatches;
 
         // _Base interface
     protected:

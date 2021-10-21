@@ -63,6 +63,7 @@ struct Breakpoint {
     int line;
     QString filename;
     QString condition;
+    bool enabled;
 };
 
 using PBreakpoint = std::shared_ptr<Breakpoint>;
@@ -112,6 +113,8 @@ public:
     PBreakpoint setBreakPointCondition(int index, const QString& condition);
     const QList<PBreakpoint>& breakpoints() const;
     PBreakpoint breakpoint(int index) const;
+    void save(const QString& filename);
+    void load(const QString& filename);
 public slots:
     void onFileDeleteLines(const QString& filename, int startLine, int count);
     void onFileInsertLines(const QString& filename, int startLine, int count);
@@ -160,6 +163,8 @@ public:
     void beginUpdate();
     void endUpdate();
     void notifyUpdated(PWatchVar var);
+    void save(const QString& filename);
+    void load(const QString& filename);
 private:
     QList<PWatchVar> mWatchVars;
     int mUpdateCount;

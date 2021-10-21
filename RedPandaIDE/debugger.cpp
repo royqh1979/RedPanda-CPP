@@ -12,6 +12,9 @@
 #include <QPlainTextEdit>
 #include <QDebug>
 #include <QDir>
+#include <QJsonArray>
+#include <QJsonObject>
+#include <QJsonDocument>
 
 Debugger::Debugger(QObject *parent) : QObject(parent)
 {
@@ -149,6 +152,7 @@ void Debugger::addBreakpoint(int line, const QString &filename)
     bp->line = line;
     bp->filename = filename;
     bp->condition = "";
+    bp->enabled = true;
     mBreakpointModel->addBreakpoint(bp);
     if (mExecuting) {
         sendBreakpointCommand(bp);
@@ -1810,6 +1814,65 @@ PBreakpoint BreakpointModel::breakpoint(int index) const
     return mList[index];
 }
 
+void BreakpointModel::save(const QString &filename)
+{
+    QFile file(filename);
+    if (file.open(QFile::WriteOnly | QFile::Truncate)) {
+        QJsonArray array;
+        foreach (const PBreakpoint& breakpoint, mList) {
+            QJsonObject obj;
+            obj["filename"]=breakpoint->filename;
+            obj["line"]=breakpoint->line;
+            obj["condition"]=breakpoint->condition;
+            obj["enabled"]=breakpoint->enabled;
+            array.append(obj);
+        }
+        QJsonDocument doc;
+        doc.setArray(array);
+        if (file.write(doc.toJson())<0) {
+            throw FileError(tr("Save file '%1' failed.")
+                            .arg(filename));
+        }
+    } else {
+        throw FileError(tr("Can't open file '%1' for write.")
+                        .arg(filename));
+    }
+}
+
+void BreakpointModel::load(const QString &filename)
+{
+    clear();
+    QFile file(filename);
+    if (!file.exists())
+        return;
+    if (file.open(QFile::ReadOnly)) {
+        QByteArray content = file.readAll();
+        QJsonParseError error;
+        QJsonDocument doc(QJsonDocument::fromJson(content,&error));
+        if (error.error  != QJsonParseError::NoError) {
+            throw FileError(tr("Error in json file '%1':%2 : %3")
+                            .arg(filename)
+                            .arg(error.offset)
+                            .arg(error.errorString()));
+        }
+        QJsonArray array = doc.array();
+        for  (int i=0;i<array.count();i++) {
+            QJsonValue value = array[i];
+            QJsonObject obj=value.toObject();
+            PBreakpoint breakpoint = std::make_shared<Breakpoint>();
+            breakpoint->filename = obj["filename"].toString();
+            breakpoint->line = obj["line"].toInt();
+            breakpoint->condition = obj["condition"].toString();
+            breakpoint->enabled = obj["enabled"].toBool();
+
+            addBreakpoint(breakpoint);
+        }
+    } else {
+        throw FileError(tr("Can't open file '%1' for read.")
+                        .arg(filename));
+    }
+}
+
 void BreakpointModel::onFileDeleteLines(const QString &filename, int startLine, int count)
 {
     for (int i = mList.count()-1;i>=0;i--){
@@ -2134,6 +2197,63 @@ void WatchModel::notifyUpdated(PWatchVar var)
     //qDebug()<<"dataChanged"<<row<<":"<<var->text;
     emit dataChanged(createIndex(row,0,var.get()),createIndex(row,0,var.get()));
 }
+
+void WatchModel::save(const QString &filename)
+{
+    QFile file(filename);
+    if (file.open(QFile::WriteOnly | QFile::Truncate)) {
+        QJsonArray array;
+        foreach (const PWatchVar& watchVar, mWatchVars) {
+            QJsonObject obj;
+            obj["name"]=watchVar->name;
+            array.append(obj);
+        }
+        QJsonDocument doc;
+        doc.setArray(array);
+        if (file.write(doc.toJson())<0) {
+            throw FileError(tr("Save file '%1' failed.")
+                            .arg(filename));
+        }
+    } else {
+        throw FileError(tr("Can't open file '%1' for write.")
+                        .arg(filename));
+    }
+}
+
+void WatchModel::load(const QString &filename)
+{
+    clear();
+    QFile file(filename);
+    if (!file.exists())
+        return;
+    if (file.open(QFile::ReadOnly)) {
+        QByteArray content = file.readAll();
+        QJsonParseError error;
+        QJsonDocument doc(QJsonDocument::fromJson(content,&error));
+        if (error.error  != QJsonParseError::NoError) {
+            throw FileError(tr("Error in json file '%1':%2 : %3")
+                            .arg(filename)
+                            .arg(error.offset)
+                            .arg(error.errorString()));
+        }
+        QJsonArray array = doc.array();
+        for  (int i=0;i<array.count();i++) {
+            QJsonValue value = array[i];
+            QJsonObject obj=value.toObject();
+            PWatchVar var = std::make_shared<WatchVar>();
+            var->parent= nullptr;
+            var->name = obj["name"].toString();
+            var->value = tr("Execute to evaluate");
+            var->gdbIndex = -1;
+
+            addWatchVar(var);
+        }
+    } else {
+        throw FileError(tr("Can't open file '%1' for read.")
+                        .arg(filename));
+    }
+}
+
 
 QVariant WatchModel::headerData(int section, Qt::Orientation orientation, int role) const
 {

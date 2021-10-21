@@ -2831,6 +2831,26 @@ void Settings::Debugger::setSkipCustomLibraries(bool newSkipCustomLibraries)
     mSkipCustomLibraries = newSkipCustomLibraries;
 }
 
+bool Settings::Debugger::autosaveWatches() const
+{
+    return mAutosaveWatches;
+}
+
+void Settings::Debugger::setAutosaveWatches(bool newAutosaveWatches)
+{
+    mAutosaveWatches = newAutosaveWatches;
+}
+
+bool Settings::Debugger::autosaveBreakpoints() const
+{
+    return mAutosaveBreakpoints;
+}
+
+void Settings::Debugger::setAutosaveBreakpoints(bool newAutosaveBreakpoints)
+{
+    mAutosaveBreakpoints = newAutosaveBreakpoints;
+}
+
 bool Settings::Debugger::useIntelStyle() const
 {
     return mUseIntelStyle;
@@ -2873,6 +2893,8 @@ void Settings::Debugger::doSave()
     saveValue("skip_system_lib", mSkipSystemLibraries);
     saveValue("skip_project_lib", mSkipProjectLibraries);
     saveValue("skip_custom_lib", mSkipCustomLibraries);
+    saveValue("autosave_breakpoints",mAutosaveBreakpoints);
+    saveValue("autosave_watches",mAutosaveWatches);
 
 }
 
@@ -2888,6 +2910,8 @@ void Settings::Debugger::doLoad()
     mSkipSystemLibraries = boolValue("skip_system_lib",true);
     mSkipProjectLibraries = boolValue("skip_project_lib",true);
     mSkipCustomLibraries = boolValue("skip_custom_lib",false);
+    mAutosaveBreakpoints = boolValue("autosave_breakpoints",true);
+    mAutosaveWatches = boolValue("autosave_watches",true);
 }
 
 Settings::History::History(Settings *settings):_Base(settings, SETTING_HISTORY)
