@@ -4,6 +4,7 @@
 #include <QFileSystemWatcher>
 #include <QMainWindow>
 #include <QTimer>
+#include <QFileSystemModel>
 #include "common.h"
 #include "widgets/searchresultview.h"
 #include "widgets/classbrowser.h"
@@ -458,6 +459,7 @@ private:
     PCodeSnippetManager mCodeSnippetManager;
     PTodoParser mTodoParser;
     PToolsManager mToolsManager;
+    QFileSystemModel mFileSystemModel;
 
     bool mCheckSyntaxInBack;
     bool mOpenClosingBottomPanel;
@@ -503,6 +505,16 @@ private:
     QAction * mClassBrowser_goto_declaration;
     QAction * mClassBrowser_goto_definition;
     QWidget * mClassBrowserToolbar;
+
+    //actions for files view
+    QAction * mFilesView_Open;
+    QAction * mFilesView_OpenWithExternal;
+    QAction * mFilesView_OpenInTerminal;
+    QAction * mFilesView_OpenInExplorer;
+    QAction * mFilesView_OnlyShowDevFiles;
+    QAction * mFilesView_LocateCurrent;
+
+    QWidget * mFilesViewToolbar;
 
     //action for debug console
     QAction * mDebugConsole_ShowCommandLog;

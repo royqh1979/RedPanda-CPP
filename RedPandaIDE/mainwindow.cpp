@@ -90,10 +90,23 @@ MainWindow::MainWindow(QWidget *parent)
     ui->tblStackTrace->setModel(mDebugger->backtraceModel());
     ui->watchView->setModel(mDebugger->watchModel());
 
-    mDebugger->breakpointModel()->load(includeTrailingPathDelimiter(pSettings->dirs().config())
-                                       +DEV_BREAKPOINTS_FILE);
-    mDebugger->watchModel()->load(includeTrailingPathDelimiter(pSettings->dirs().config())
+    try {
+        mDebugger->breakpointModel()->load(includeTrailingPathDelimiter(pSettings->dirs().config())
+                                           +DEV_BREAKPOINTS_FILE);
+    } catch (FileError &e) {
+        QMessageBox::warning(nullptr,
+                             tr("Error"),
+                             e.reason());
+    }
+    try {
+        mDebugger->watchModel()->load(includeTrailingPathDelimiter(pSettings->dirs().config())
                                        +DEV_WATCH_FILE);
+    } catch (FileError &e) {
+        QMessageBox::warning(nullptr,
+                             tr("Error"),
+                             e.reason());
+    }
+
 
 //    ui->actionIndent->setShortcut(Qt::Key_Tab);
 //    ui->actionUnIndent->setShortcut(Qt::Key_Tab | Qt::ShiftModifier);
@@ -149,14 +162,39 @@ MainWindow::MainWindow(QWidget *parent)
 
     mTodoParser = std::make_shared<TodoParser>();
     mSymbolUsageManager = std::make_shared<SymbolUsageManager>();
-    mSymbolUsageManager->load();
+    try {
+        mSymbolUsageManager->load();
+    } catch (FileError &e) {
+        QMessageBox::warning(nullptr,
+                         tr("Error"),
+                         e.reason());
+    }
+
     mCodeSnippetManager = std::make_shared<CodeSnippetsManager>();
-    mCodeSnippetManager->load();
+    try {
+        mCodeSnippetManager->load();
+    } catch (FileError &e) {
+        QMessageBox::warning(nullptr,
+                             tr("Error"),
+                             e.reason());
+    }
     mToolsManager = std::make_shared<ToolsManager>();
-    mToolsManager->load();
+    try {
+        mToolsManager->load();
+    } catch (FileError &e) {
+        QMessageBox::warning(nullptr,
+                             tr("Error"),
+                             e.reason());
+    }
     mBookmarkModel = std::make_shared<BookmarkModel>();
-    mBookmarkModel->load(includeTrailingPathDelimiter(pSettings->dirs().config())
+    try {
+        mBookmarkModel->load(includeTrailingPathDelimiter(pSettings->dirs().config())
                          +DEV_BOOKMARK_FILE);
+    } catch (FileError &e) {
+        QMessageBox::warning(nullptr,
+                             tr("Error"),
+                             e.reason());
+    }
     ui->tableBookmark->setModel(mBookmarkModel.get());
     mSearchResultTreeModel = std::make_shared<SearchResultTreeModel>(&mSearchResultModel);
     mSearchResultListModel = std::make_shared<SearchResultListModel>(&mSearchResultModel);
@@ -169,6 +207,10 @@ MainWindow::MainWindow(QWidget *parent)
             ui->searchView,&QTreeView::expandAll);
     ui->replacePanel->setVisible(false);
 
+
+    ui->treeFiles->setModel(&mFileSystemModel);
+    mFileSystemModel.setRootPath(pSettings->environment().currentFolder());
+    ui->treeFiles->setRootIndex(mFileSystemModel.index(pSettings->environment().currentFolder()));
     //class browser
     ui->classBrowser->setModel(&mClassBrowserModel);
 
@@ -2030,6 +2072,8 @@ void MainWindow::buildContextMenus()
     mFileEncodingStatus->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(mFileEncodingStatus,&QWidget::customContextMenuRequested,
              this, &MainWindow::onFileEncodingContextMenu);
+
+    //
 }
 
 void MainWindow::buildEncodingMenu()
@@ -2710,18 +2754,37 @@ void MainWindow::closeEvent(QCloseEvent *event) {
         settings.setLeftPanelIndex(ui->tabInfos->currentIndex());
         settings.setLeftPanelOpenned(mLeftPanelOpenned);
         settings.save();
-        mBookmarkModel->save(includeTrailingPathDelimiter(pSettings->dirs().config())
+        try {
+            mBookmarkModel->save(includeTrailingPathDelimiter(pSettings->dirs().config())
                              +DEV_BOOKMARK_FILE);
-        if (pSettings->debugger().autosaveBreakpoints())
-            mDebugger->breakpointModel()->save(includeTrailingPathDelimiter(pSettings->dirs().config())
-                                           +DEV_BREAKPOINTS_FILE);
-        else
+        } catch (FileError& e) {
+            QMessageBox::warning(nullptr,
+                             tr("Save Error"),
+                             e.reason());
+        }
+
+        if (pSettings->debugger().autosaveBreakpoints()) {
+            try {
+                mDebugger->breakpointModel()->save(includeTrailingPathDelimiter(pSettings->dirs().config())
+                                               +DEV_BREAKPOINTS_FILE);
+            } catch (FileError& e) {
+                QMessageBox::warning(nullptr,
+                                 tr("Save Error"),
+                                 e.reason());
+            }
+        } else
             removeFile(includeTrailingPathDelimiter(pSettings->dirs().config())
                           +DEV_BREAKPOINTS_FILE);
-        if (pSettings->debugger().autosaveWatches())
-            mDebugger->watchModel()->save(includeTrailingPathDelimiter(pSettings->dirs().config())
-                                           +DEV_WATCH_FILE);
-        else
+        if (pSettings->debugger().autosaveWatches()) {
+            try {
+                mDebugger->watchModel()->save(includeTrailingPathDelimiter(pSettings->dirs().config())
+                                               +DEV_WATCH_FILE);
+            } catch (FileError& e) {
+                QMessageBox::warning(nullptr,
+                                 tr("Save Error"),
+                                 e.reason());
+            }
+        } else
             removeFile(includeTrailingPathDelimiter(pSettings->dirs().config())
                           +DEV_WATCH_FILE);
 

@@ -204,6 +204,32 @@
              </item>
             </layout>
            </widget>
+           <widget class="QWidget" name="tabFiles">
+            <attribute name="icon">
+             <iconset resource="icons.qrc">
+              <normaloff>:/icons/images/newlook24/018-copy.png</normaloff>:/icons/images/newlook24/018-copy.png</iconset>
+            </attribute>
+            <attribute name="title">
+             <string>Files</string>
+            </attribute>
+            <layout class="QVBoxLayout" name="verticalLayout_3">
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <widget class="QTreeView" name="treeFiles"/>
+             </item>
+            </layout>
+           </widget>
           </widget>
           <widget class="QWidget" name="EditorPanel" native="true">
            <property name="sizePolicy">

@@ -6,10 +6,12 @@
 #include <QGroupBox>
 #include <QLineEdit>
 #include <QListView>
+#include <QMessageBox>
 #include <QPlainTextEdit>
 #include <QRadioButton>
 #include <QSpinBox>
 #include "../widgets/coloredit.h"
+#include "../utils.h"
 
 SettingsWidget::SettingsWidget(const QString &name, const QString &group, QWidget *parent):
     QWidget(parent),
@@ -27,14 +29,26 @@ void SettingsWidget::init()
 
 void SettingsWidget::load()
 {
-    doLoad();
-    clearSettingsChanged();
+    try {
+        doLoad();
+        clearSettingsChanged();
+    } catch (FileError & e) {
+        QMessageBox::warning(nullptr,
+                         tr("Load Error"),
+                         e.reason());
+    }
 }
 
 void SettingsWidget::save()
 {
-    doSave();
-    clearSettingsChanged();
+    try {
+        doSave();
+        clearSettingsChanged();
+    } catch (FileError & e) {
+        QMessageBox::warning(nullptr,
+                         tr("Save Error"),
+                         e.reason());
+    }
 }
 
 void SettingsWidget::connectAbstractItemView(QAbstractItemView *pView)

@@ -5,6 +5,7 @@
 #include <vector>
 #include <memory>
 #include <QColor>
+#include <QString>
 #include "qsynedit/SynEdit.h"
 
 /**
@@ -455,6 +456,9 @@ public:
         QString language() const;
         void setLanguage(const QString &language);
 
+        const QString &currentFolder() const;
+        void setCurrentFolder(const QString &newCurrentFolder);
+
     private:
 
         //Appearence
@@ -462,6 +466,7 @@ public:
         QString mInterfaceFont;
         int mInterfaceFontSize;
         QString mLanguage;
+        QString mCurrentFolder;
         // _Base interface
     protected:
         void doSave() override;
