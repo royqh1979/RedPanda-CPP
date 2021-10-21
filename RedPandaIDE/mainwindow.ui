@@ -295,7 +295,7 @@
         <enum>QTabWidget::South</enum>
        </property>
        <property name="currentIndex">
-        <number>4</number>
+        <number>5</number>
        </property>
        <property name="iconSize">
         <size>
@@ -859,6 +859,33 @@
          </item>
         </layout>
        </widget>
+       <widget class="QWidget" name="tabBookmark">
+        <attribute name="icon">
+         <iconset resource="icons.qrc">
+          <normaloff>:/icons/images/newlook24/039-gobook.png</normaloff>:/icons/images/newlook24/039-gobook.png</iconset>
+        </attribute>
+        <attribute name="title">
+         <string>Bookmark</string>
+        </attribute>
+        <layout class="QHBoxLayout" name="horizontalLayout_14">
+         <item>
+          <widget class="QTableView" name="tableBookmark">
+           <property name="alternatingRowColors">
+            <bool>true</bool>
+           </property>
+           <property name="selectionMode">
+            <enum>QAbstractItemView::SingleSelection</enum>
+           </property>
+           <property name="selectionBehavior">
+            <enum>QAbstractItemView::SelectRows</enum>
+           </property>
+           <attribute name="horizontalHeaderStretchLastSection">
+            <bool>true</bool>
+           </attribute>
+          </widget>
+         </item>
+        </layout>
+       </widget>
       </widget>
      </widget>
     </item>
@@ -955,6 +982,10 @@
     <addaction name="actionBack"/>
     <addaction name="actionForward"/>
     <addaction name="separator"/>
+    <addaction name="separator"/>
+    <addaction name="actionAdd_bookmark"/>
+    <addaction name="actionRemove_Bookmark"/>
+    <addaction name="actionModify_Bookmark_Description"/>
     <addaction name="separator"/>
     <addaction name="actionReformat_Code"/>
    </widget>
@@ -1883,6 +1914,29 @@
   <action name="actionEGE_Manual">
    <property name="text">
     <string>EGE Manual</string>
+   </property>
+  </action>
+  <action name="actionAdd_bookmark">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/images/newlook24/003-addbook.png</normaloff>:/icons/images/newlook24/003-addbook.png</iconset>
+   </property>
+   <property name="text">
+    <string>Add Bookmark</string>
+   </property>
+  </action>
+  <action name="actionRemove_Bookmark">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/images/newlook24/064-remsrc.png</normaloff>:/icons/images/newlook24/064-remsrc.png</iconset>
+   </property>
+   <property name="text">
+    <string>Remove Bookmark</string>
+   </property>
+  </action>
+  <action name="actionModify_Bookmark_Description">
+   <property name="text">
+    <string>Modify Bookmark Description</string>
    </property>
   </action>
  </widget>

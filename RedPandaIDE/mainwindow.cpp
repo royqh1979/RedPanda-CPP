@@ -149,6 +149,10 @@ MainWindow::MainWindow(QWidget *parent)
     mCodeSnippetManager->load();
     mToolsManager = std::make_shared<ToolsManager>();
     mToolsManager->load();
+    mBookmarkModel = std::make_shared<BookmarkModel>();
+    mBookmarkModel->load(includeTrailingPathDelimiter(pSettings->dirs().config())
+                         +DEV_BOOKMARK_FILE);
+    ui->tableBookmark->setModel(mBookmarkModel.get());
     mSearchResultTreeModel = std::make_shared<SearchResultTreeModel>(&mSearchResultModel);
     mSearchResultListModel = std::make_shared<SearchResultListModel>(&mSearchResultModel);
     mSearchViewDelegate = std::make_shared<SearchResultTreeViewDelegate>(mSearchResultTreeModel);
@@ -267,6 +271,10 @@ void MainWindow::updateEditorActions()
 
         ui->actionClose->setEnabled(false);
         ui->actionClose_All->setEnabled(false);
+
+        ui->actionAdd_bookmark->setEnabled(false);
+        ui->actionRemove_Bookmark->setEnabled(false);
+        ui->actionModify_Bookmark_Description->setEnabled(false);
     } else {
         ui->actionAuto_Detect->setEnabled(true);
         ui->actionEncode_in_ANSI->setEnabled(true);
@@ -302,7 +310,12 @@ void MainWindow::updateEditorActions()
 
         ui->actionClose->setEnabled(true);
         ui->actionClose_All->setEnabled(true);
-    }    
+
+        int line = e->caretY();
+        ui->actionAdd_bookmark->setEnabled(e->lines()->count()>0 && !e->hasBookmark(line));
+        ui->actionRemove_Bookmark->setEnabled(e->hasBookmark(line));
+        ui->actionModify_Bookmark_Description->setEnabled(e->hasBookmark(line));
+    }
 
     updateCompileActions();
 
@@ -1478,6 +1491,15 @@ void MainWindow::includeOrSkipDirs(const QStringList &dirs, bool skip)
     }
 }
 
+void MainWindow::onBookmarkContextMenu(const QPoint &pos)
+{
+    QMenu menu(this);
+    menu.addAction(mBookmark_Remove);
+    menu.addAction(mBookmark_RemoveAll);
+    menu.addAction(mBookmark_Modify);
+    menu.exec(ui->tableBookmark->mapToGlobal(pos));
+}
+
 void MainWindow::saveLastOpens()
 {
     QString filename = includeTrailingPathDelimiter(pSettings->dirs().config()) + DEV_LASTOPENS_FILE;
@@ -1621,6 +1643,45 @@ void MainWindow::buildContextMenus()
     ui->watchView->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->watchView,&QWidget::customContextMenuRequested,
             this, &MainWindow::onWatchViewContextMenu);
+
+    //context menu signal for the bookmark view
+    ui->tableBookmark->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui->tableBookmark,&QWidget::customContextMenuRequested,
+            this, &MainWindow::onBookmarkContextMenu);
+    mBookmark_Remove=createActionFor(
+                tr("Remove"),
+                ui->tableBookmark);
+    connect(mBookmark_Remove, &QAction::triggered,
+            [this]() {
+        QModelIndex index = ui->tableBookmark->currentIndex();
+        if (index.isValid()) {
+            mBookmarkModel->removeBookmarkAt(index.row());
+        }
+    });
+    mBookmark_RemoveAll=createActionFor(
+                tr("Remove All"),
+                ui->tableBookmark);
+    connect(mBookmark_RemoveAll, &QAction::triggered,
+            [this]() {
+        mBookmarkModel->clear();
+    });
+    mBookmark_Modify=createActionFor(
+                tr("Modify Description"),
+                ui->tableBookmark);
+    connect(mBookmark_Modify, &QAction::triggered,
+            [this]() {
+        QModelIndex index = ui->tableBookmark->currentIndex();
+        if (index.isValid()) {
+            PBookmark bookmark = mBookmarkModel->bookmark(index.row());
+            if (bookmark) {
+                QString desc = QInputDialog::getText(ui->tableBookmark,tr("Bookmark Description"),
+                                                 tr("Description:"),QLineEdit::Normal,
+                                                 bookmark->description);
+            desc = desc.trimmed();
+            mBookmarkModel->updateDescription(bookmark->filename,bookmark->line,desc);
+        }
+        mBookmarkModel->clear();
+    });
 
     //context menu signal for the watch view
     ui->debugConsole->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -2271,7 +2332,9 @@ void MainWindow::onEditorContextMenu(const QPoint &pos)
     QMenu menu(this);
     BufferCoord p;
     mEditorContextMenuPos = pos;
+    int line;
     if (editor->getPositionOfMouse(p)) {
+        line=p.Line;
         //mouse on editing area
         menu.addAction(ui->actionCompile_Run);
         menu.addAction(ui->actionDebug);
@@ -2296,6 +2359,10 @@ void MainWindow::onEditorContextMenu(const QPoint &pos)
         menu.addAction(ui->actionToggle_Breakpoint);
         menu.addAction(ui->actionClear_all_breakpoints);
         menu.addSeparator();
+        menu.addAction(ui->actionAdd_bookmark);
+        menu.addAction(ui->actionRemove_Bookmark);
+        menu.addAction(ui->actionModify_Bookmark_Description);
+        menu.addSeparator();
         menu.addAction(ui->actionFile_Properties);
 
         //these actions needs parser
@@ -2304,16 +2371,25 @@ void MainWindow::onEditorContextMenu(const QPoint &pos)
         ui->actionFind_references->setEnabled(!editor->parser()->parsing());
     } else {
         //mouse on gutter
-        int line;
+
         if (!editor->getLineOfMouse(line))
             line=-1;
         menu.addAction(ui->actionToggle_Breakpoint);
         menu.addAction(ui->actionBreakpoint_property);
         menu.addAction(ui->actionClear_all_breakpoints);
-        ui->actionBreakpoint_property->setEnabled(editor->hasBreakpoint(line));
+        menu.addSeparator();
+        menu.addAction(ui->actionAdd_bookmark);
+        menu.addAction(ui->actionRemove_Bookmark);
+        menu.addAction(ui->actionModify_Bookmark_Description);
     }
+    ui->actionBreakpoint_property->setEnabled(editor->hasBreakpoint(line));
+    ui->actionAdd_bookmark->setEnabled(
+                line>=0 && editor->lines()->count()>0
+                && !editor->hasBreakpoint(line)
+                );
+    ui->actionRemove_Bookmark->setEnabled(editor->hasBreakpoint(line));
+    ui->actionModify_Bookmark_Description->setEnabled(editor->hasBreakpoint(line));
     menu.exec(editor->viewport()->mapToGlobal(pos));
-
 }
 
 void MainWindow::onEditorRightTabContextMenu(const QPoint &pos)
@@ -2617,6 +2693,8 @@ void MainWindow::closeEvent(QCloseEvent *event) {
         settings.setLeftPanelIndex(ui->tabInfos->currentIndex());
         settings.setLeftPanelOpenned(mLeftPanelOpenned);
         settings.save();
+        mBookmarkModel->save(includeTrailingPathDelimiter(pSettings->dirs().config())
+                             +DEV_BOOKMARK_FILE);
     }
 
     if (!mShouldRemoveAllSettings && pSettings->editor().autoLoadLastFiles()) {
@@ -4311,5 +4389,67 @@ void MainWindow::on_actionC_C_Reference_triggered()
 void MainWindow::on_actionEGE_Manual_triggered()
 {
     QDesktopServices::openUrl(QUrl("https://xege.org/ege-open-source"));
+}
+
+const PBookmarkModel &MainWindow::bookmarkModel() const
+{
+    return mBookmarkModel;
+}
+
+
+void MainWindow::on_actionAdd_bookmark_triggered()
+{
+    Editor* editor = mEditorList->getEditor();
+    int line;
+    if (editor && editor->pointToLine(mEditorContextMenuPos,line)) {
+        if (editor->lines()->count()<=0)
+            return;
+        QString desc = QInputDialog::getText(editor,tr("Bookmark Description"),
+                                             tr("Description:"),QLineEdit::Normal,
+                                             editor->lines()->getString(line-1).trimmed());
+        desc = desc.trimmed();
+        editor->addBookmark(line,desc);
+    }
+}
+
+
+void MainWindow::on_actionRemove_Bookmark_triggered()
+{
+    Editor* editor = mEditorList->getEditor();
+    int line;
+    if (editor && editor->pointToLine(mEditorContextMenuPos,line)) {
+        editor->removeBookmark(line);
+    }
+}
+
+
+void MainWindow::on_tableBookmark_doubleClicked(const QModelIndex &index)
+{
+    if (!index.isValid())
+        return;
+    PBookmark bookmark = mBookmarkModel->bookmark(index.row());
+    if (bookmark) {
+        Editor *editor= mEditorList->getEditorByFilename(bookmark->filename);
+        if (editor) {
+            editor->setCaretPositionAndActivate(bookmark->line,1);
+        }
+    }
+}
+
+
+void MainWindow::on_actionModify_Bookmark_Description_triggered()
+{
+    Editor* editor = mEditorList->getEditor();
+    int line;
+    if (editor && editor->pointToLine(mEditorContextMenuPos,line)) {
+        PBookmark bookmark = mBookmarkModel->bookmark(editor->filename(),line);
+        if (bookmark) {
+            QString desc = QInputDialog::getText(editor,tr("Bookmark Description"),
+                                                 tr("Description:"),QLineEdit::Normal,
+                                                 bookmark->description);
+            desc = desc.trimmed();
+            mBookmarkModel->updateDescription(editor->filename(),line,desc);
+        }
+    }
 }
 

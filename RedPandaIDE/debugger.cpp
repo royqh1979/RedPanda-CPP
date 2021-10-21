@@ -1812,32 +1812,30 @@ PBreakpoint BreakpointModel::breakpoint(int index) const
 
 void BreakpointModel::onFileDeleteLines(const QString &filename, int startLine, int count)
 {
-    beginResetModel();
     for (int i = mList.count()-1;i>=0;i--){
         PBreakpoint breakpoint = mList[i];
         if  (breakpoint->filename == filename
              && breakpoint->line>=startLine) {
             if (breakpoint->line >= startLine+count) {
                 breakpoint->line -= count;
+                emit dataChanged(createIndex(i,0),createIndex(i,2));
             } else {
-                mList.removeAt(i);
+                removeBreakpoint(i);
             }
         }
     }
-    endResetModel();
 }
 
 void BreakpointModel::onFileInsertLines(const QString &filename, int startLine, int count)
 {
-    beginResetModel();
     for (int i = mList.count()-1;i>=0;i--){
         PBreakpoint breakpoint = mList[i];
         if  (breakpoint->filename == filename
              && breakpoint->line>=startLine) {
             breakpoint->line+=count;
+            emit dataChanged(createIndex(i,0),createIndex(i,2));
         }
     }
-    endResetModel();
 }
 
 

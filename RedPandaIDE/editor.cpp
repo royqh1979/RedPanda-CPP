@@ -779,6 +779,9 @@ void Editor::onGutterPaint(QPainter &painter, int aLine, int X, int Y)
             }
             return;
         }
+        if (hasBookmark(aLine)) {
+            painter.drawPixmap(X,Y,*(pIconsManager->bookmark()));
+        }
     }
 }
 
@@ -1500,7 +1503,9 @@ void Editor::onLinesDeleted(int first, int count)
 {
     pMainWindow->caretList().linesDeleted(this,first,count);
     pMainWindow->debugger()->breakpointModel()->onFileDeleteLines(mFilename,first,count);
+    pMainWindow->bookmarkModel()->onFileDeleteLines(mFilename,first,count);
     resetBreakpoints();
+    resetBookmarks();
     if (!pSettings->editor().syntaxCheckWhenLineChanged()) {
         //todo: update syntax issues
     }
@@ -1510,7 +1515,9 @@ void Editor::onLinesInserted(int first, int count)
 {
     pMainWindow->caretList().linesInserted(this,first,count);
     pMainWindow->debugger()->breakpointModel()->onFileInsertLines(mFilename,first,count);
+    pMainWindow->bookmarkModel()->onFileInsertLines(mFilename,first,count);
     resetBreakpoints();
+    resetBookmarks();
     if (!pSettings->editor().syntaxCheckWhenLineChanged()) {
         //todo: update syntax issues
     }
@@ -1529,6 +1536,12 @@ bool Editor::isBraceChar(QChar ch)
     default:
         return false;
     }
+}
+
+void Editor::resetBookmarks()
+{
+    mBookmarkLines=pMainWindow->bookmarkModel()->bookmarksInFile(mFilename);
+    invalidate();
 }
 
 void Editor::resetBreakpoints()
@@ -3521,6 +3534,25 @@ void Editor::clearBreakpoints()
 bool Editor::hasBreakpoint(int line)
 {
     return mBreakpointLines.contains(line);
+}
+
+void Editor::addBookmark(int line, const QString& description)
+{
+    mBookmarkLines.insert(line);
+    pMainWindow->bookmarkModel()->addBookmark(mFilename,line,description);
+    invalidateGutterLine(line);
+}
+
+void Editor::removeBookmark(int line)
+{
+    mBookmarkLines.remove(line);
+    pMainWindow->bookmarkModel()->removeBookmark(mFilename,line);
+    invalidateGutterLine(line);
+}
+
+bool Editor::hasBookmark(int line)
+{
+    return mBookmarkLines.contains(line);
 }
 
 void Editor::removeBreakpointFocus()

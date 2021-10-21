@@ -47,6 +47,7 @@
 #define DEV_AUTOLINK_FILE "autolink.json"
 #define DEV_SHORTCUT_FILE "shortcuts.json"
 #define DEV_TOOLS_FILE "tools.json"
+#define DEV_BOOKMARK_FILE "bookmarks.json"
 
 #ifdef Q_OS_WIN
 #   define PATH_SENSITIVITY Qt::CaseInsensitive

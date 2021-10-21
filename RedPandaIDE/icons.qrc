@@ -486,5 +486,6 @@
         <file>images/classparser/var_private.ico</file>
         <file>images/classparser/var_protected.ico</file>
         <file>images/classparser/var_public.ico</file>
+        <file>images/editor/bookmark.png</file>
     </qresource>
 </RCC>

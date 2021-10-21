@@ -20,12 +20,15 @@ public:
 
     PIcon activeBreakpoint() const;
 
+    const PIcon &bookmark() const;
+
 signals:
 private:
     PIcon mSyntaxError;
     PIcon mSyntaxWarning;
     PIcon mBreakpoint;
     PIcon mActiveBreakpoint;
+    PIcon mBookmark;
 };
 
 extern IconsManager* pIconsManager;

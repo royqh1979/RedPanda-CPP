@@ -147,6 +147,9 @@ public:
     void toggleBreakpoint(int line);
     void clearBreakpoints();
     bool hasBreakpoint(int line);
+    void addBookmark(int line,const QString& description);
+    void removeBookmark(int line);
+    bool hasBookmark(int line);
     void removeBreakpointFocus();
     void modifyBreakpointProperty(int line);
     void setActiveBreakpointFocus(int Line, bool setFocus=true);
@@ -177,6 +180,7 @@ private slots:
 
 private:
     bool isBraceChar(QChar ch);
+    void resetBookmarks();
     void resetBreakpoints();
     QChar getCurrentChar();
     bool handleSymbolCompletion(QChar key);
@@ -242,6 +246,7 @@ private:
     int mLineCount;
     int mGutterClickedLine;
     QSet<int> mBreakpointLines;
+    QSet<int> mBookmarkLines;
     int mActiveBreakpointLine;
     PCppParser mParser;
     std::shared_ptr<CodeCompletionPopup> mCompletionPopup;

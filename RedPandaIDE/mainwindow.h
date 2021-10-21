@@ -16,6 +16,7 @@
 #include "todoparser.h"
 #include "toolsmanager.h"
 #include "widgets/labelwithmenu.h"
+#include "widgets/bookmarkmodel.h"
 
 
 QT_BEGIN_NAMESPACE
@@ -137,6 +138,8 @@ public:
 
     bool shouldRemoveAllSettings() const;
 
+    const PBookmarkModel &bookmarkModel() const;
+
 public slots:
     void onCompileLog(const QString& msg);
     void onCompileIssue(PCompileIssue issue);
@@ -194,6 +197,7 @@ private slots:
     void onFileChanged(const QString& path);
 
     void onWatchViewContextMenu(const QPoint& pos);
+    void onBookmarkContextMenu(const QPoint& pos);
     void onTableIssuesContextMenu(const QPoint& pos);
     void onSearchViewContextMenu(const QPoint& pos);
     void onBreakpointsViewContextMenu(const QPoint& pos);
@@ -407,6 +411,14 @@ private slots:
 
     void on_actionEGE_Manual_triggered();
 
+    void on_actionAdd_bookmark_triggered();
+
+    void on_actionRemove_Bookmark_triggered();
+
+    void on_tableBookmark_doubleClicked(const QModelIndex &index);
+
+    void on_actionModify_Bookmark_Description_triggered();
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;
@@ -436,6 +448,7 @@ private:
 
     TodoModel mTodoModel;
     SearchResultModel mSearchResultModel;
+    PBookmarkModel mBookmarkModel;
     PSearchResultListModel mSearchResultListModel;
     PSearchResultTreeModel mSearchResultTreeModel;
     PSearchResultTreeViewDelegate mSearchViewDelegate;
@@ -497,6 +510,10 @@ private:
     QAction * mDebugConsole_Copy;
     QAction * mDebugConsole_Paste;
     QAction * mDebugConsole_SelectAll;
+    //action for bookmarks
+    QAction * mBookmark_Remove;
+    QAction * mBookmark_RemoveAll;
+    QAction * mBookmark_Modify;
 
    // QWidget interface
 protected:

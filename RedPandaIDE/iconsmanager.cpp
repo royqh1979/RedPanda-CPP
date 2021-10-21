@@ -8,6 +8,8 @@ IconsManager::IconsManager(QObject *parent) : QObject(parent)
     mSyntaxWarning = std::make_shared<QPixmap>(":/icons/images/editor/syntaxwarning.png");
     mBreakpoint = std::make_shared<QPixmap>(":/icons/images/editor/breakpoint.png");
     mActiveBreakpoint = std::make_shared<QPixmap>(":/icons/images/editor/currentline.png");
+    mBookmark = std::make_shared<QPixmap>(":/icons/images/editor/bookmark.png");
+
 }
 
 PIcon IconsManager::syntaxError() const
@@ -28,4 +30,9 @@ PIcon IconsManager::breakpoint() const
 PIcon IconsManager::activeBreakpoint() const
 {
     return mActiveBreakpoint;
+}
+
+const PIcon &IconsManager::bookmark() const
+{
+    return mBookmark;
 }
