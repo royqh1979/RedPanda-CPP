@@ -47,7 +47,7 @@ TodoThread::TodoThread(const QString& filename, QObject *parent): QThread(parent
 void TodoThread::run()
 {
     PSynHighlighter highlighter = highlighterManager.getCppHighlighter();
-    emit parseStarted();
+    emit parseStarted(mFilename);
     auto action = finally([this]{
         emit parseFinished();
     });

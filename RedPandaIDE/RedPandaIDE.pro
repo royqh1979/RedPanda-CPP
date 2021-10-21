@@ -68,6 +68,7 @@ SOURCES += \
     todoparser.cpp \
     toolsmanager.cpp \
     widgets/aboutdialog.cpp \
+    widgets/bookmarkmodel.cpp \
     widgets/classbrowser.cpp \
     widgets/codecompletionlistview.cpp \
     widgets/codecompletionpopup.cpp \
@@ -180,6 +181,7 @@ HEADERS += \
     todoparser.h \
     toolsmanager.h \
     widgets/aboutdialog.h \
+    widgets/bookmarkmodel.h \
     widgets/classbrowser.h \
     widgets/codecompletionlistview.h \
     widgets/codecompletionpopup.h \
