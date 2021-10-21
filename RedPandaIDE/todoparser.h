@@ -43,7 +43,7 @@ class TodoThread: public QThread
 public:
     explicit TodoThread(const QString& filename, QObject* parent = nullptr);
 signals:
-    void parseStarted();
+    void parseStarted(const QString& filename);
     void todoFound(const QString& filename, int lineNo, int ch, const QString& line);
     void parseFinished();
 private:

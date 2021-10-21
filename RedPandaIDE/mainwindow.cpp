@@ -2374,7 +2374,7 @@ void MainWindow::enableDebugActions()
     ui->cbMemoryAddress->setEnabled(true);
 }
 
-void MainWindow::onTodoParseStarted()
+void MainWindow::onTodoParseStarted(const QString& filename)
 {
     mTodoModel.clear();
 }

@@ -161,7 +161,7 @@ public slots:
     void onEditorTabContextMenu(QTabWidget* tabWidget, const QPoint& pos);
     void disableDebugActions();
     void enableDebugActions();
-    void onTodoParseStarted();
+    void onTodoParseStarted(const QString& filename);
     void onTodoParsing(const QString& filename, int lineNo, int ch, const QString& line);
     void onTodoParseFinished();
 
