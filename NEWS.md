@@ -1,3 +1,6 @@
+Version 0.7.1
+ - fix: can't add bookmark at a breakpoint line
+
 Version 0.7.0
  - fix: Backspace still works in readonly mode
  - fix: save as file dialog's operation mode is not correct

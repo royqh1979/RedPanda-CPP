@@ -2557,8 +2557,8 @@ void MainWindow::onEditorContextMenu(const QPoint &pos)
                 line>=0 && editor->lines()->count()>0
                 && !editor->hasBreakpoint(line)
                 );
-    ui->actionRemove_Bookmark->setEnabled(editor->hasBreakpoint(line));
-    ui->actionModify_Bookmark_Description->setEnabled(editor->hasBreakpoint(line));
+    ui->actionRemove_Bookmark->setEnabled(editor->hasBookmark(line));
+    ui->actionModify_Bookmark_Description->setEnabled(editor->hasBookmark(line));
     menu.exec(editor->viewport()->mapToGlobal(pos));
 }
 
