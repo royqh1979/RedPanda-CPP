@@ -495,6 +495,7 @@ void Editor::focusInEvent(QFocusEvent *event)
                 this,
                 &SynEdit::invalidate);
     }
+    pMainWindow->updateAppTitle();
     pMainWindow->updateEditorActions();
     pMainWindow->updateStatusbarForLineCol();
     pMainWindow->updateForStatusbarModeInfo();
@@ -511,7 +512,6 @@ void Editor::focusOutEvent(QFocusEvent *event)
                 &SynEdit::invalidate);
     }
     //pMainWindow->updateClassBrowserForEditor(nullptr);
-    pMainWindow->updateEditorActions();
     pMainWindow->updateStatusbarForLineCol();
     pMainWindow->updateForStatusbarModeInfo();
     pMainWindow->functionTip()->hide();

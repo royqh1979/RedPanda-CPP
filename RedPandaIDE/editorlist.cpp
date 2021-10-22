@@ -153,6 +153,9 @@ bool EditorList::closeEditor(Editor* editor, bool transferFocus, bool force) {
         editor = getEditor();
         pMainWindow->updateClassBrowserForEditor(editor);
     }
+    if (pageCount()==0) {
+        pMainWindow->updateAppTitle();
+    }
     return true;
 }
 
@@ -283,6 +286,7 @@ bool EditorList::closeAll(bool force) {
             return false;
         }
     }
+    pMainWindow->updateAppTitle();
     return true;
 }
 

@@ -2619,6 +2619,9 @@ void Settings::Environment::doLoad()
     mInterfaceFontSize = intValue("interface font size",10);
     mLanguage = stringValue("language", QLocale::system().name());
     mCurrentFolder = stringValue("current_folder",QDir::currentPath());
+    if (!fileExists(mCurrentFolder)) {
+        mCurrentFolder = QDir::currentPath();
+    }
 }
 
 int Settings::Environment::interfaceFontSize() const

@@ -748,7 +748,7 @@ QString parseMacros(const QString &s)
     QString result = s;
     Editor *e = pMainWindow->editorList()->getEditor();
 
-    result.replace("<DEFAULT>", QDir().absolutePath());
+    result.replace("<DEFAULT>", QDir::currentPath());
     result.replace("<DEVCPP>", pSettings->dirs().executable());
     result.replace("<DEVCPPVERSION>", DEVCPP_VERSION);
     result.replace("<EXECPATH>", pSettings->dirs().app());

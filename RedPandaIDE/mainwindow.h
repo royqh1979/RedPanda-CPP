@@ -192,6 +192,7 @@ private:
     void scanActiveProject(bool parse=false);
     void includeOrSkipDirs(const QStringList& dirs, bool skip);
     void showSearchReplacePanel(bool show);
+    void setFilesViewRoot(const QString& path);
 
 private slots:
     void onAutoSaveTimeout();
@@ -206,6 +207,7 @@ private slots:
     void onClassBrowserContextMenu(const QPoint& pos);
     void onDebugConsoleContextMenu(const QPoint& pos);
     void onFileEncodingContextMenu(const QPoint& pos);
+    void onFilesViewContextMenu(const QPoint& pos);
 
     void onShowInsertCodeSnippetMenu();
 
@@ -420,6 +422,12 @@ private slots:
 
     void on_actionModify_Bookmark_Description_triggered();
 
+    void on_actionLocate_in_Files_View_triggered();
+
+    void on_treeFiles_doubleClicked(const QModelIndex &index);
+
+    void on_actionOpen_Folder_triggered();
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;
@@ -511,9 +519,6 @@ private:
     QAction * mFilesView_OpenWithExternal;
     QAction * mFilesView_OpenInTerminal;
     QAction * mFilesView_OpenInExplorer;
-    QAction * mFilesView_OnlyShowDevFiles;
-    QAction * mFilesView_LocateCurrent;
-
     QWidget * mFilesViewToolbar;
 
     //action for debug console

@@ -207,10 +207,14 @@ MainWindow::MainWindow(QWidget *parent)
             ui->searchView,&QTreeView::expandAll);
     ui->replacePanel->setVisible(false);
 
-
+    //files view
     ui->treeFiles->setModel(&mFileSystemModel);
-    mFileSystemModel.setRootPath(pSettings->environment().currentFolder());
-    ui->treeFiles->setRootIndex(mFileSystemModel.index(pSettings->environment().currentFolder()));
+    mFileSystemModel.setReadOnly(true);
+    setFilesViewRoot(pSettings->environment().currentFolder());
+    for (int i=1;i<mFileSystemModel.columnCount();i++) {
+        ui->treeFiles->hideColumn(i);
+    }
+
     //class browser
     ui->classBrowser->setModel(&mClassBrowserModel);
 
@@ -322,6 +326,8 @@ void MainWindow::updateEditorActions()
         ui->actionAdd_bookmark->setEnabled(false);
         ui->actionRemove_Bookmark->setEnabled(false);
         ui->actionModify_Bookmark_Description->setEnabled(false);
+
+        ui->actionLocate_in_Files_View->setEnabled(false);
     } else {
         ui->actionAuto_Detect->setEnabled(true);
         ui->actionEncode_in_ANSI->setEnabled(true);
@@ -362,6 +368,8 @@ void MainWindow::updateEditorActions()
         ui->actionAdd_bookmark->setEnabled(e->lines()->count()>0 && !e->hasBookmark(line));
         ui->actionRemove_Bookmark->setEnabled(e->hasBookmark(line));
         ui->actionModify_Bookmark_Description->setEnabled(e->hasBookmark(line));
+
+        ui->actionLocate_in_Files_View->setEnabled(!e->isNew());
     }
 
     updateCompileActions();
@@ -2047,33 +2055,113 @@ void MainWindow::buildContextMenus()
 
     //toolbar for class browser
     mClassBrowserToolbar = new QWidget();
-    QVBoxLayout* layout = dynamic_cast<QVBoxLayout*>( ui->tabStructure->layout());
-    layout->insertWidget(0,mClassBrowserToolbar);
-    QHBoxLayout* hlayout =  new QHBoxLayout();
-    hlayout->setContentsMargins(2,2,2,2);
-    mClassBrowserToolbar->setLayout(hlayout);
-    QToolButton * toolButton;
-    toolButton = new QToolButton;
-    toolButton->setDefaultAction(mClassBrowser_Sort_By_Type);
-    hlayout->addWidget(toolButton);
-    toolButton = new QToolButton;
-    toolButton->setDefaultAction(mClassBrowser_Sort_By_Name);
-    hlayout->addWidget(toolButton);
-    QFrame * vLine = new QFrame();
-    vLine->setFrameShape(QFrame::VLine);
-    vLine->setFrameShadow(QFrame::Sunken);
-    hlayout->addWidget(vLine);
-    toolButton = new QToolButton;
-    toolButton->setDefaultAction(mClassBrowser_Show_Inherited);
-    hlayout->addWidget(toolButton);
-    hlayout->addStretch();
+    {
+        QVBoxLayout* layout = dynamic_cast<QVBoxLayout*>( ui->tabStructure->layout());
+        layout->insertWidget(0,mClassBrowserToolbar);
+        QHBoxLayout* hlayout =  new QHBoxLayout();
+        hlayout->setContentsMargins(2,2,2,2);
+        mClassBrowserToolbar->setLayout(hlayout);
+        QToolButton * toolButton;
+        toolButton = new QToolButton;
+        toolButton->setDefaultAction(mClassBrowser_Sort_By_Type);
+        hlayout->addWidget(toolButton);
+        toolButton = new QToolButton;
+        toolButton->setDefaultAction(mClassBrowser_Sort_By_Name);
+        hlayout->addWidget(toolButton);
+        QFrame * vLine = new QFrame();
+        vLine->setFrameShape(QFrame::VLine);
+        vLine->setFrameShadow(QFrame::Sunken);
+        hlayout->addWidget(vLine);
+        toolButton = new QToolButton;
+        toolButton->setDefaultAction(mClassBrowser_Show_Inherited);
+        hlayout->addWidget(toolButton);
+        hlayout->addStretch();
+    }
 
     //menu for statusbar
     mFileEncodingStatus->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(mFileEncodingStatus,&QWidget::customContextMenuRequested,
              this, &MainWindow::onFileEncodingContextMenu);
 
-    //
+    //menu for files view
+    ui->treeFiles->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui->treeFiles,&QWidget::customContextMenuRequested,
+             this, &MainWindow::onFilesViewContextMenu);
+    mFilesView_Open = createActionFor(
+                tr("Open in Editor"),
+                ui->treeFiles);
+    connect(mFilesView_Open, &QAction::triggered,
+            [this]() {
+        QString path = mFileSystemModel.filePath(ui->treeFiles->currentIndex());
+        if (!path.isEmpty() && QFileInfo(path).isFile()) {
+            Editor *editor=mEditorList->getEditorByFilename(path);
+            if (editor)
+                editor->activate();
+        }
+    });
+    mFilesView_OpenWithExternal = createActionFor(
+                tr("Open in External Program"),
+                ui->treeFiles);
+    connect(mFilesView_OpenWithExternal, &QAction::triggered,
+            [this]() {
+        QString path = mFileSystemModel.filePath(ui->treeFiles->currentIndex());
+        if (!path.isEmpty() && QFileInfo(path).isFile()) {
+            QDesktopServices::openUrl(QUrl::fromLocalFile(path));
+        }
+    });
+    mFilesView_OpenInTerminal = createActionFor(
+                tr("Open in Terminal"),
+                ui->treeFiles);
+    mFilesView_OpenInTerminal->setIcon(ui->actionOpen_Terminal->icon());
+    connect(mFilesView_OpenInTerminal, &QAction::triggered,
+            [this]() {
+        QString path = mFileSystemModel.filePath(ui->treeFiles->currentIndex());
+        if (!path.isEmpty()) {
+            QFileInfo fileInfo(path);
+            openShell(fileInfo.path(),"cmd.exe");
+        }
+    });
+    mFilesView_OpenInExplorer = createActionFor(
+                tr("Open in Windows Explorer"),
+                ui->treeFiles);
+    mFilesView_OpenInExplorer->setIcon(ui->actionOpen_Containing_Folder->icon());
+    connect(mFilesView_OpenInExplorer, &QAction::triggered,
+            [this]() {
+        QString path = mFileSystemModel.filePath(ui->treeFiles->currentIndex());
+        if (!path.isEmpty()) {
+            QFileInfo info(path);
+            if (info.isFile()){
+                QDesktopServices::openUrl(
+                            QUrl("file:///"+
+                                 includeTrailingPathDelimiter(info.path()),QUrl::TolerantMode));
+            } else if (info.isDir()){
+                QDesktopServices::openUrl(
+                            QUrl("file:///"+
+                                 includeTrailingPathDelimiter(path),QUrl::TolerantMode));
+            }
+        }
+    });
+
+    //toolbar for files view
+    mFilesViewToolbar = new QWidget();
+    {
+        QVBoxLayout* layout = dynamic_cast<QVBoxLayout*>( ui->tabFiles->layout());
+        layout->insertWidget(0,mFilesViewToolbar);
+        QHBoxLayout* hlayout =  new QHBoxLayout();
+        hlayout->setContentsMargins(2,2,2,2);
+        mFilesViewToolbar->setLayout(hlayout);
+        QToolButton * toolButton;
+        toolButton = new QToolButton;
+        toolButton->setDefaultAction(ui->actionOpen_Folder);
+        toolButton->setFixedSize(32,32);
+        hlayout->addWidget(toolButton);
+        toolButton = new QToolButton;
+        toolButton->setDefaultAction(ui->actionLocate_in_Files_View);
+        toolButton->setFixedSize(32,32);
+        hlayout->addWidget(toolButton);
+        hlayout->addStretch();
+    }
+
 }
 
 void MainWindow::buildEncodingMenu()
@@ -2345,6 +2433,26 @@ void MainWindow::onFileEncodingContextMenu(const QPoint &pos)
     mMenuEncoding->exec(mFileEncodingStatus->mapToGlobal(pos));
 }
 
+void MainWindow::onFilesViewContextMenu(const QPoint &pos)
+{
+
+    QMenu menu(this);
+    menu.addAction(ui->actionOpen_Folder);
+    menu.addSeparator();
+    menu.addAction(mFilesView_Open);
+    menu.addAction(mFilesView_OpenWithExternal);
+    menu.addSeparator();
+    menu.addAction(mFilesView_OpenInTerminal);
+    menu.addAction(mFilesView_OpenInExplorer);
+    QString path = mFileSystemModel.filePath(ui->treeFiles->currentIndex());
+    QFileInfo info(path);
+    mFilesView_Open->setEnabled(info.isFile());
+    mFilesView_OpenWithExternal->setEnabled(info.isFile());
+    mFilesView_OpenInTerminal->setEnabled(!path.isEmpty());
+    mFilesView_OpenInExplorer->setEnabled(!path.isEmpty());
+    menu.exec(ui->treeFiles->mapToGlobal(pos));
+}
+
 void MainWindow::onShowInsertCodeSnippetMenu()
 {
     mMenuInsertCodeSnippet->clear();
@@ -2407,7 +2515,7 @@ void MainWindow::onEditorContextMenu(const QPoint &pos)
         menu.addSeparator();
         menu.addAction(ui->actionOpen_Containing_Folder);
         menu.addAction(ui->actionOpen_Terminal);
-
+        menu.addAction(ui->actionLocate_in_Files_View);
         menu.addSeparator();
         menu.addAction(ui->actionReformat_Code);
         menu.addSeparator();
@@ -2443,6 +2551,7 @@ void MainWindow::onEditorContextMenu(const QPoint &pos)
         menu.addAction(ui->actionRemove_Bookmark);
         menu.addAction(ui->actionModify_Bookmark_Description);
     }
+    ui->actionLocate_in_Files_View->setEnabled(!editor->isNew());
     ui->actionBreakpoint_property->setEnabled(editor->hasBreakpoint(line));
     ui->actionAdd_bookmark->setEnabled(
                 line>=0 && editor->lines()->count()>0
@@ -2477,6 +2586,7 @@ void MainWindow::onEditorTabContextMenu(QTabWidget* tabWidget, const QPoint &pos
     menu.addSeparator();
     menu.addAction(ui->actionOpen_Containing_Folder);
     menu.addAction(ui->actionOpen_Terminal);
+    menu.addAction(ui->actionLocate_in_Files_View);
     menu.addSeparator();
     menu.addAction(ui->actionMove_To_Other_View);
     menu.addSeparator();
@@ -2485,7 +2595,10 @@ void MainWindow::onEditorTabContextMenu(QTabWidget* tabWidget, const QPoint &pos
                 tabWidget==ui->EditorTabsRight
                 || tabWidget->count()>1
                 );
-
+    Editor * editor = dynamic_cast<Editor *>(tabWidget->widget(index));
+    if (editor ) {
+        ui->actionLocate_in_Files_View->setEnabled(!editor->isNew());
+    }
     menu.exec(tabBar->mapToGlobal(pos));
 }
 
@@ -2754,6 +2867,9 @@ void MainWindow::closeEvent(QCloseEvent *event) {
         settings.setLeftPanelIndex(ui->tabInfos->currentIndex());
         settings.setLeftPanelOpenned(mLeftPanelOpenned);
         settings.save();
+
+        //save current folder ( for files view )
+        pSettings->environment().save();
         try {
             mBookmarkModel->save(includeTrailingPathDelimiter(pSettings->dirs().config())
                              +DEV_BOOKMARK_FILE);
@@ -4343,6 +4459,15 @@ void MainWindow::showSearchReplacePanel(bool show)
     mSearchResultTreeModel->setSelectable(show);
 }
 
+void MainWindow::setFilesViewRoot(const QString &path)
+{
+    mFileSystemModel.setRootPath(path);
+    ui->treeFiles->setRootIndex(mFileSystemModel.index(path));
+    pSettings->environment().setCurrentFolder(path);
+    ui->txtFilesPath->setText(path);
+    ui->txtFilesPath->setCursorPosition(1);
+}
+
 Ui::MainWindow *MainWindow::mainWidget() const
 {
     return ui;
@@ -4543,6 +4668,42 @@ void MainWindow::on_actionModify_Bookmark_Description_triggered()
             desc = desc.trimmed();
             mBookmarkModel->updateDescription(editor->filename(),line,desc);
         }
+    }
+}
+
+
+void MainWindow::on_actionLocate_in_Files_View_triggered()
+{
+    Editor * editor = mEditorList->getEditor();
+    if (editor) {
+        QString fileDir = extractFileDir(editor->filename());
+        if (!fileDir.isEmpty()) {
+            setFilesViewRoot(fileDir);
+            ui->treeFiles->setCurrentIndex(mFileSystemModel.index(editor->filename()));
+        }
+    }
+}
+
+
+void MainWindow::on_treeFiles_doubleClicked(const QModelIndex &index)
+{
+    QString filepath = mFileSystemModel.filePath(index);
+    QFileInfo file(filepath);
+    if (file.isFile()) {
+        Editor * editor = mEditorList->getEditorByFilename(filepath);
+        if (editor) {
+            editor->activate();
+        }
+    }
+}
+
+
+void MainWindow::on_actionOpen_Folder_triggered()
+{
+    QString folder = QFileDialog::getExistingDirectory(this,tr("Open Folder"),
+                                                       pSettings->environment().currentFolder());
+    if (!folder.isEmpty()) {
+        setFilesViewRoot(folder);
     }
 }
 

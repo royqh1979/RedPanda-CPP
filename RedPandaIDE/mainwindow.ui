@@ -85,7 +85,7 @@
             <enum>QTabWidget::West</enum>
            </property>
            <property name="currentIndex">
-            <number>2</number>
+            <number>3</number>
            </property>
            <property name="usesScrollButtons">
             <bool>true</bool>
@@ -213,6 +213,9 @@
              <string>Files</string>
             </attribute>
             <layout class="QVBoxLayout" name="verticalLayout_3">
+             <property name="spacing">
+              <number>0</number>
+             </property>
              <property name="leftMargin">
               <number>0</number>
              </property>
@@ -226,7 +229,24 @@
               <number>0</number>
              </property>
              <item>
-              <widget class="QTreeView" name="treeFiles"/>
+              <widget class="QLineEdit" name="txtFilesPath">
+               <property name="frame">
+                <bool>true</bool>
+               </property>
+               <property name="readOnly">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QTreeView" name="treeFiles">
+               <property name="editTriggers">
+                <set>QAbstractItemView::EditKeyPressed|QAbstractItemView::SelectedClicked</set>
+               </property>
+               <property name="dragDropMode">
+                <enum>QAbstractItemView::DragOnly</enum>
+               </property>
+              </widget>
              </item>
             </layout>
            </widget>
@@ -931,6 +951,7 @@
      <string>File</string>
     </property>
     <addaction name="actionOpen"/>
+    <addaction name="actionOpen_Folder"/>
     <addaction name="separator"/>
     <addaction name="actionSave"/>
     <addaction name="actionSaveAs"/>
@@ -1963,6 +1984,24 @@
   <action name="actionModify_Bookmark_Description">
    <property name="text">
     <string>Modify Bookmark Description</string>
+   </property>
+  </action>
+  <action name="actionLocate_in_Files_View">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/images/newlook24/046-Locate.png</normaloff>:/icons/images/newlook24/046-Locate.png</iconset>
+   </property>
+   <property name="text">
+    <string>Locate in Files View</string>
+   </property>
+  </action>
+  <action name="actionOpen_Folder">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/images/newlook24/053-open.png</normaloff>:/icons/images/newlook24/053-open.png</iconset>
+   </property>
+   <property name="text">
+    <string>Open Folder</string>
    </property>
   </action>
  </widget>

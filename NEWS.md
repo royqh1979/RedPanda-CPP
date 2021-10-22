@@ -11,6 +11,7 @@ Version 0.7.0
  - enhancement: autosave/load bookmarks
  - enhancement: autosave/load breakpoints 
  - enhancement: autosave/load watches
+ - implement: files view
 
 Version 0.6.8
  - enhancement: add link to cppreference in the help menu
