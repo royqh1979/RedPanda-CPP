@@ -556,7 +556,7 @@ void MainWindow::setActiveBreakpoint(QString FileName, int Line, bool setFocus)
 
 void MainWindow::updateAppTitle()
 {
-    QString appName("Red Panda Dev-C++");
+    QString appName=tr("Red Panda Dev-C++");
     Editor *e = mEditorList->getEditor();
     QCoreApplication *app = QApplication::instance();
     if (e && !e->inProject()) {

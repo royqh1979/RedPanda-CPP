@@ -1,5 +1,7 @@
 Version 0.7.1
  - fix: can't add bookmark at a breakpoint line
+ - fix: app name in the title bar not translated
+ - use new app icon
 
 Version 0.7.0
  - fix: Backspace still works in readonly mode

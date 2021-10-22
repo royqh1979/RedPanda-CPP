@@ -133,17 +133,17 @@
         <translation>无法读取文件&apos;%1&apos;.</translation>
     </message>
     <message>
-        <location filename="widgets/bookmarkmodel.cpp" line="238"/>
+        <location filename="widgets/bookmarkmodel.cpp" line="237"/>
         <source>Description</source>
         <translation>描述</translation>
     </message>
     <message>
-        <location filename="widgets/bookmarkmodel.cpp" line="240"/>
+        <location filename="widgets/bookmarkmodel.cpp" line="239"/>
         <source>Line</source>
         <translation>行</translation>
     </message>
     <message>
-        <location filename="widgets/bookmarkmodel.cpp" line="242"/>
+        <location filename="widgets/bookmarkmodel.cpp" line="241"/>
         <source>Filename</source>
         <translation>文件名</translation>
     </message>
@@ -1011,7 +1011,7 @@ Are you really want to continue?</source>
 <context>
     <name>Editor</name>
     <message>
-        <location filename="editor.cpp" line="82"/>
+        <location filename="editor.cpp" line="83"/>
         <source>untitled</source>
         <translation>无标题</translation>
     </message>
@@ -1024,76 +1024,76 @@ Are you really want to continue?</source>
         <translation type="vanished">失败</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="219"/>
-        <location filename="editor.cpp" line="233"/>
-        <location filename="editor.cpp" line="309"/>
-        <location filename="editor.cpp" line="1142"/>
-        <location filename="editor.cpp" line="1147"/>
-        <location filename="editor.cpp" line="1165"/>
-        <location filename="editor.cpp" line="1170"/>
+        <location filename="editor.cpp" line="225"/>
+        <location filename="editor.cpp" line="239"/>
+        <location filename="editor.cpp" line="315"/>
+        <location filename="editor.cpp" line="1148"/>
+        <location filename="editor.cpp" line="1153"/>
+        <location filename="editor.cpp" line="1171"/>
+        <location filename="editor.cpp" line="1176"/>
         <source>Error</source>
         <translation>错误</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="220"/>
+        <location filename="editor.cpp" line="226"/>
         <source>File %1 is not writable!</source>
         <translation>无法写入文件&quot;%1&quot;</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="262"/>
+        <location filename="editor.cpp" line="268"/>
         <source>Save As</source>
         <translation>另存为</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="1143"/>
+        <location filename="editor.cpp" line="1149"/>
         <source>The text to be copied exceeds count limit!</source>
         <translation>要复制的内容超过了行数限制！</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="1148"/>
+        <location filename="editor.cpp" line="1154"/>
         <source>The text to be copied exceeds character limit!</source>
         <translation>要复制的内容超过了字符数限制！</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="1166"/>
+        <location filename="editor.cpp" line="1172"/>
         <source>The text to be cut exceeds count limit!</source>
         <translation>要剪切的内容超过了行数限制！</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="1171"/>
+        <location filename="editor.cpp" line="1177"/>
         <source>The text to be cut exceeds character limit!</source>
         <translation>要剪切的内容超过了字符数限制！</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="2159"/>
+        <location filename="editor.cpp" line="2165"/>
         <source>Print Document</source>
         <translation>打印文档</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="2706"/>
-        <location filename="editor.cpp" line="2743"/>
-        <location filename="editor.cpp" line="2794"/>
+        <location filename="editor.cpp" line="2712"/>
+        <location filename="editor.cpp" line="2749"/>
+        <location filename="editor.cpp" line="2800"/>
         <source>Ctrl+click for more info</source>
         <translation>Ctrl+单击以获取更多信息</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="3141"/>
-        <location filename="editor.cpp" line="3171"/>
+        <location filename="editor.cpp" line="3147"/>
+        <location filename="editor.cpp" line="3177"/>
         <source>Symbol &apos;%1&apos; not found!</source>
         <translation>未找到符号&apos;%1&apos;!</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="3586"/>
+        <location filename="editor.cpp" line="3592"/>
         <source>Break point condition</source>
         <translation>断点条件</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="3587"/>
+        <location filename="editor.cpp" line="3593"/>
         <source>Enter the condition of the breakpoint:</source>
         <translation>输入当前断点的生效条件:</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="3766"/>
+        <location filename="editor.cpp" line="3772"/>
         <source>Readonly</source>
         <translation>只读</translation>
     </message>
@@ -3631,7 +3631,7 @@ Are you really want to continue?</source>
     </message>
     <message>
         <location filename="mainwindow.ui" line="2004"/>
-        <location filename="mainwindow.cpp" line="4703"/>
+        <location filename="mainwindow.cpp" line="4705"/>
         <source>Open Folder</source>
         <translation>打开文件夹</translation>
     </message>
@@ -3854,6 +3854,11 @@ Are you really want to continue?</source>
         <location filename="mainwindow.cpp" line="142"/>
         <source>Insert Snippet</source>
         <translation>插入代码段</translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="559"/>
+        <source>Red Panda Dev-C++</source>
+        <translation>小熊猫Dev-C++</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="1707"/>
@@ -4983,12 +4988,12 @@ Are you really want to continue?</source>
 <context>
     <name>QObject</name>
     <message>
-        <location filename="editorlist.cpp" line="119"/>
+        <location filename="editorlist.cpp" line="120"/>
         <source>Save</source>
         <translation>保存</translation>
     </message>
     <message>
-        <location filename="editorlist.cpp" line="120"/>
+        <location filename="editorlist.cpp" line="121"/>
         <source>Save changes to %1?</source>
         <translation>将修改保存到&quot;%1&quot;？</translation>
     </message>
