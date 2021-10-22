@@ -188,7 +188,6 @@ void BookmarkModel::removeBookmarkAt(int i)
     endRemoveRows();
 }
 
-#ifdef QT_DEBUG
 bool BookmarkModel::isBookmarkExists(const QString &filename, int line)
 {
     foreach (const PBookmark& bookmark, mBookmarks) {
@@ -245,4 +244,4 @@ QVariant BookmarkModel::headerData(int section, Qt::Orientation orientation, int
     }
     return QVariant();
 }
-#endif
+

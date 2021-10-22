@@ -12,6 +12,7 @@ Version 0.7.0
  - enhancement: autosave/load breakpoints 
  - enhancement: autosave/load watches
  - implement: files view
+ - fix: app's title not update when editor closed
 
 Version 0.6.8
  - enhancement: add link to cppreference in the help menu

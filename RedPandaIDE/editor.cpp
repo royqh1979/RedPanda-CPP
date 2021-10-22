@@ -77,6 +77,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
   mSelectionWord(),
   mSaving(false)
 {
+    mFilename.replace("/",QDir::separator());
     mUseCppSyntax = pSettings->editor().defaultFileCpp();
     if (mFilename.isEmpty()) {
         mFilename = tr("untitled")+QString("%1").arg(getNewFileNumber());
@@ -97,9 +98,6 @@ Editor::Editor(QWidget *parent, const QString& filename,
         else
             mFileEncoding = mEncodingOption;
         highlighter=highlighterManager.getCppHighlighter();
-        if (parentPageControl!=nullptr) {
-            insertCodeSnippet(pMainWindow->codeSnippetManager()->newFileTemplate());
-        }
     }
 
     if (highlighter) {
@@ -152,8 +150,16 @@ Editor::Editor(QWidget *parent, const QString& filename,
     connect(this, &QWidget::customContextMenuRequested,
             pMainWindow, &MainWindow::onEditorContextMenu);
 
-    resetBookmarks();
-    resetBreakpoints();
+    if (isNew && parentPageControl!=nullptr) {
+        QString fileTemplate = pMainWindow->codeSnippetManager()->newFileTemplate();
+        if (!fileTemplate.isEmpty()) {
+            insertCodeSnippet(fileTemplate);
+        }
+    }
+    if (!isNew && parentPageControl!=nullptr) {
+        resetBookmarks();
+        resetBreakpoints();
+    }
 }
 
 Editor::~Editor() {

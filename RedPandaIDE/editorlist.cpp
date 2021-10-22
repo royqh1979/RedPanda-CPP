@@ -6,6 +6,7 @@
 #include <QFileInfo>
 #include "settings.h"
 #include "project.h"
+#include "systemconsts.h"
 
 EditorList::EditorList(QTabWidget* leftPageWidget,
       QTabWidget* rightPageWidget,
@@ -299,15 +300,18 @@ void EditorList::forceCloseEditor(Editor *editor)
     endUpdate();
 }
 
-Editor* EditorList::getOpenedEditorByFilename(const QString &filename)
+Editor* EditorList::getOpenedEditorByFilename(QString filename)
 {
     if (filename.isEmpty())
         return nullptr;
+    filename.replace("/",QDir::separator());
     QFileInfo fileInfo(filename);
     QString fullname = fileInfo.absoluteFilePath();
+    fullname.replace("/",QDir::separator());
     for (int i=0;i<mLeftPageWidget->count();i++) {
         Editor* e = static_cast<Editor*>(mLeftPageWidget->widget(i));
-        if (e->filename().compare(filename)==0 || e->filename().compare(fullname)==0) {
+        if (e->filename().compare(filename, PATH_SENSITIVITY)==0 ||
+                e->filename().compare(fullname, PATH_SENSITIVITY)==0) {
             return e;
         }
     }
@@ -320,10 +324,11 @@ Editor* EditorList::getOpenedEditorByFilename(const QString &filename)
     return nullptr;
 }
 
-Editor *EditorList::getEditorByFilename(const QString &filename)
+Editor *EditorList::getEditorByFilename(QString filename)
 {
     if (filename.isEmpty())
         return nullptr;
+    filename.replace("/",QDir::separator());
     //check if an editor is already openned
     Editor* e=getOpenedEditorByFilename(filename);
     if (e!=nullptr)
@@ -333,6 +338,7 @@ Editor *EditorList::getEditorByFilename(const QString &filename)
     //Create a new editor
     QFileInfo fileInfo(filename);
     QString fullname = fileInfo.absoluteFilePath();
+    fullname.replace("/",QDir::separator());
     if (fileInfo.exists())
         return newEditor(fullname,ENCODING_AUTO_DETECT,false,false);
     return nullptr;

@@ -33,9 +33,8 @@ public slots:
     void onFileDeleteLines(const QString& filename, int startLine, int count);
     void onFileInsertLines(const QString& filename, int startLine, int count);
 private:
-#ifdef QT_DEBUG
     bool isBookmarkExists(const QString&filename, int line);
-#endif
+
 private:
     QList<PBookmark> mBookmarks;
 

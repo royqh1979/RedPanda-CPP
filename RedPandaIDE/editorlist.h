@@ -35,9 +35,9 @@ public:
 
     void forceCloseEditor(Editor* editor);
 
-    Editor* getOpenedEditorByFilename(const QString& filename);
+    Editor* getOpenedEditorByFilename(QString filename);
 
-    Editor* getEditorByFilename(const QString& filename);
+    Editor* getEditorByFilename(QString filename);
 
     bool getContentFromOpenedEditor(const QString& filename, QStringList& buffer);
 
