@@ -4680,6 +4680,8 @@ void MainWindow::on_actionLocate_in_Files_View_triggered()
         if (!fileDir.isEmpty()) {
             setFilesViewRoot(fileDir);
             ui->treeFiles->setCurrentIndex(mFileSystemModel.index(editor->filename()));
+            ui->tabInfos->setCurrentWidget(ui->tabFiles);
+            openCloseLeftPanel(true);
         }
     }
 }
