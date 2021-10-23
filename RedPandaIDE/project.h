@@ -31,7 +31,7 @@ public:
     Editor *editor() const;
     void setEditor(Editor *newEditor);
     const QString &fileName() const;
-    void setFileName(const QString &newFileName);
+    void setFileName(QString newFileName);
     bool isNew() const;
     void setNew(bool newNew);
     const QString &folder() const;
@@ -109,7 +109,7 @@ public:
     QString executable() const;
     QString makeFileName();
     bool modified() const;
-    void setFileName(const QString& value);
+    void setFileName(QString value);
     void setModified(bool value);
 
     void addFolder(const QString& s);

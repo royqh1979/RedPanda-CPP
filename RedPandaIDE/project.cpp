@@ -23,7 +23,7 @@ Project::Project(const QString &filename, const QString &name, QObject *parent) 
     QObject(parent),
     mModel(this)
 {
-    mFilename = filename;
+    mFilename = QFileInfo(filename).absoluteFilePath();
     mParser = std::make_shared<CppParser>();
     mParser->setOnGetFileStream(
                 std::bind(
@@ -170,8 +170,9 @@ void Project::open()
     rebuildNodes();
 }
 
-void Project::setFileName(const QString &value)
+void Project::setFileName(QString value)
 {
+    value = QFileInfo(value).absoluteFilePath();
     if (mFilename!=value) {
         QFile::rename(mFilename,value);
         mFilename = value;
@@ -1579,8 +1580,9 @@ const QString &ProjectUnit::fileName() const
     return mFileName;
 }
 
-void ProjectUnit::setFileName(const QString &newFileName)
+void ProjectUnit::setFileName(QString newFileName)
 {
+    newFileName = QFileInfo(newFileName).absoluteFilePath();
     if (mFileName != newFileName) {
         mFileName = newFileName;
         if (mNode) {
