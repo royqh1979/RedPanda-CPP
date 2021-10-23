@@ -2086,7 +2086,7 @@ void CppParser::handleMethod(const QString &sType, const QString &sName, const Q
                         mClassScope,
                         true,
                         isStatic);
-            scanMethodArgs(functionStatement, functionStatement->args);
+            scanMethodArgs(functionStatement, sArgs);
             // add variable this to the class function
             if (functionClass && functionClass->kind == StatementKind::skClass &&
                     !isStatic) {
