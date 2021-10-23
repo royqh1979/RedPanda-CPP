@@ -1722,7 +1722,7 @@ void MainWindow::buildContextMenus()
         }
     });
     mBookmark_RemoveAll=createActionFor(
-                tr("Remove All"),
+                tr("Remove All Bookmarks"),
                 ui->tableBookmark);
     connect(mBookmark_RemoveAll, &QAction::triggered,
             [this]() {
@@ -1896,7 +1896,7 @@ void MainWindow::buildContextMenus()
         }
     });
     mBreakpointViewRemoveAllAction = createActionFor(
-                tr("Remove all breakpoints"),
+                tr("Remove All Breakpoints"),
                 ui->tblBreakpoints);
     connect(mBreakpointViewRemoveAllAction,&QAction::triggered,
             [](){
@@ -3098,9 +3098,22 @@ void MainWindow::onCompileFinished(bool isCheckSyntax)
     }
     // Update tab caption
     int i = ui->tabMessages->indexOf(ui->tabIssues);
-    if (i==-1) {
-        ui->tabMessages->setTabText(i, tr("Issues") +
-                                QString(" (%1)").arg(ui->tableIssues->model()->rowCount()));
+    if (i!=-1) {
+        if (isCheckSyntax) {
+            if (mCompilerManager->syntaxCheckIssueCount()>0) {
+                ui->tabMessages->setTabText(i, tr("Issues") +
+                                    QString(" (%1)").arg(mCompilerManager->syntaxCheckIssueCount()));
+            } else {
+                ui->tabMessages->setTabText(i, tr("Issues"));
+            }
+        } else {
+            if (mCompilerManager->compileIssueCount()>0) {
+                ui->tabMessages->setTabText(i, tr("Issues") +
+                                    QString(" (%1)").arg(mCompilerManager->compileIssueCount()));
+            } else {
+                ui->tabMessages->setTabText(i, tr("Issues"));
+            }
+        }
     }
 
     // Close it if there's nothing to show

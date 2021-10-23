@@ -16,7 +16,10 @@ CompilerManager::CompilerManager(QObject *parent) : QObject(parent)
     mBackgroundSyntaxChecker = nullptr;
     mRunner = nullptr;
     mSyntaxCheckErrorCount = 0;
+    mSyntaxCheckIssueCount = 0;
     mCompileErrorCount = 0;
+    mCompileIssueCount = 0;
+    mSyntaxCheckErrorCount = 0;
 }
 
 bool CompilerManager::compiling()
@@ -63,6 +66,7 @@ void CompilerManager::compile(const QString& filename, const QByteArray& encodin
             return;
         }
         mCompileErrorCount = 0;
+        mCompileIssueCount = 0;
         mCompiler = new FileCompiler(filename,encoding,silent,onlyCheckSyntax);
         mCompiler->setRebuild(rebuild);
         connect(mCompiler, &Compiler::finished, mCompiler, &QObject::deleteLater);
@@ -91,6 +95,7 @@ void CompilerManager::compileProject(std::shared_ptr<Project> project, bool rebu
             return;
         }
         mCompileErrorCount = 0;
+        mCompileIssueCount = 0;
         mCompiler = new ProjectCompiler(project,silent,onlyCheckSyntax);
         mCompiler->setRebuild(rebuild);
         connect(mCompiler, &Compiler::finished, mCompiler, &QObject::deleteLater);
@@ -120,6 +125,7 @@ void CompilerManager::cleanProject(std::shared_ptr<Project> project)
             return;
         }
         mCompileErrorCount = 0;
+        mCompileIssueCount = 0;
         ProjectCompiler* compiler = new ProjectCompiler(project,false,false);
         compiler->setOnlyClean(true);
         mCompiler->setRebuild(false);
@@ -171,6 +177,7 @@ void CompilerManager::checkSyntax(const QString &filename, const QString &conten
         }
 
         mSyntaxCheckErrorCount = 0;
+        mSyntaxCheckIssueCount = 0;
         mBackgroundSyntaxChecker = new StdinCompiler(filename,content,isAscii,true,true);
         mBackgroundSyntaxChecker->setProject(project);
         connect(mBackgroundSyntaxChecker, &Compiler::finished, mBackgroundSyntaxChecker, &QThread::deleteLater);

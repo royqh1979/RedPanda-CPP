@@ -341,7 +341,7 @@
         <enum>QTabWidget::South</enum>
        </property>
        <property name="currentIndex">
-        <number>5</number>
+        <number>2</number>
        </property>
        <property name="iconSize">
         <size>
@@ -1639,7 +1639,7 @@
   </action>
   <action name="actionRemove_All_Watches">
    <property name="text">
-    <string>Remove All</string>
+    <string>Remove All Watches</string>
    </property>
   </action>
   <action name="actionModify_Watch">
