@@ -541,10 +541,7 @@ void MainWindow::removeActiveBreakpoints()
 void MainWindow::setActiveBreakpoint(QString FileName, int Line, bool setFocus)
 {
     removeActiveBreakpoints();
-
-
     // Then active the current line in the current file
-    FileName.replace('/',QDir::separator());
     Editor *e = mEditorList->getEditorByFilename(FileName);
     if (e!=nullptr) {
         e->setActiveBreakpointFocus(Line,setFocus);
@@ -1616,6 +1613,7 @@ void MainWindow::loadLastOpens()
         QString editorFilename = QString::fromLocal8Bit(lastOpenIni.GetValue(sectionName,"FileName",""));
         if (!fileExists(editorFilename))
             continue;
+        editorFilename = QFileInfo(editorFilename).absoluteFilePath();
         bool onLeft = lastOpenIni.GetBoolValue(sectionName,"OnLeft",true);
         QTabWidget* page;
         if (onLeft)

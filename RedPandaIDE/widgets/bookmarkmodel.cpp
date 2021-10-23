@@ -2,6 +2,7 @@
 #include "../systemconsts.h"
 
 #include <QFile>
+#include <QFileInfo>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -142,7 +143,7 @@ void BookmarkModel::load(const QString& filename)
         for  (int i=0;i<array.count();i++) {
             QJsonValue value = array[i];
             QJsonObject obj=value.toObject();
-            addBookmark(obj["filename"].toString(),
+            addBookmark( QFileInfo(obj["filename"].toString()).absoluteFilePath(),
                     obj["line"].toInt(),
                     obj["description"].toString());
 

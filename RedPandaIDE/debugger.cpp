@@ -1860,7 +1860,7 @@ void BreakpointModel::load(const QString &filename)
             QJsonValue value = array[i];
             QJsonObject obj=value.toObject();
             PBreakpoint breakpoint = std::make_shared<Breakpoint>();
-            breakpoint->filename = obj["filename"].toString();
+            breakpoint->filename = QFileInfo(obj["filename"].toString()).absoluteFilePath();
             breakpoint->line = obj["line"].toInt();
             breakpoint->condition = obj["condition"].toString();
             breakpoint->enabled = obj["enabled"].toBool();

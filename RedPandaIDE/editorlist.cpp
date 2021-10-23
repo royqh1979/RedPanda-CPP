@@ -304,10 +304,8 @@ Editor* EditorList::getOpenedEditorByFilename(QString filename)
 {
     if (filename.isEmpty())
         return nullptr;
-    filename.replace("/",QDir::separator());
     QFileInfo fileInfo(filename);
     QString fullname = fileInfo.absoluteFilePath();
-    fullname.replace("/",QDir::separator());
     for (int i=0;i<mLeftPageWidget->count();i++) {
         Editor* e = static_cast<Editor*>(mLeftPageWidget->widget(i));
         if (e->filename().compare(filename, PATH_SENSITIVITY)==0 ||
@@ -328,7 +326,6 @@ Editor *EditorList::getEditorByFilename(QString filename)
 {
     if (filename.isEmpty())
         return nullptr;
-    filename.replace("/",QDir::separator());
     //check if an editor is already openned
     Editor* e=getOpenedEditorByFilename(filename);
     if (e!=nullptr)
@@ -338,7 +335,6 @@ Editor *EditorList::getEditorByFilename(QString filename)
     //Create a new editor
     QFileInfo fileInfo(filename);
     QString fullname = fileInfo.absoluteFilePath();
-    fullname.replace("/",QDir::separator());
     if (fileInfo.exists())
         return newEditor(fullname,ENCODING_AUTO_DETECT,false,false);
     return nullptr;

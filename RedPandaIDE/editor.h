@@ -116,8 +116,8 @@ public:
     bool inProject() const noexcept;
     bool isNew() const noexcept;
 
-    void loadFile(const QString& filename = "");
-    void saveFile(const QString& filename);
+    void loadFile(QString filename = "");
+    void saveFile(QString filename);
     void convertToEncoding(const QByteArray& encoding);
     bool save(bool force=false, bool reparse=true);
     bool saveAs(const QString& name="", bool fromProject = false);

@@ -61,7 +61,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
                   QTabWidget* parentPageControl):
   SynEdit(parent),
   mEncodingOption(encoding),
-  mFilename(filename),
+  mFilename(QFileInfo(filename).absoluteFilePath()),
   mParentPageControl(parentPageControl),
   mInProject(inProject),
   mIsNew(isNew),
@@ -77,7 +77,6 @@ Editor::Editor(QWidget *parent, const QString& filename,
   mSelectionWord(),
   mSaving(false)
 {
-    mFilename.replace("/",QDir::separator());
     mUseCppSyntax = pSettings->editor().defaultFileCpp();
     if (mFilename.isEmpty()) {
         mFilename = tr("untitled")+QString("%1").arg(getNewFileNumber());
@@ -173,10 +172,11 @@ Editor::~Editor() {
     this->setParent(nullptr);
 }
 
-void Editor::loadFile(const QString& filename) {
+void Editor::loadFile(QString filename) {
     if (filename.isEmpty()) {
         this->lines()->loadFromFile(mFilename,mEncodingOption,mFileEncoding);
     } else {
+        filename = QFileInfo(filename).absoluteFilePath();
         this->lines()->loadFromFile(filename,mEncodingOption,mFileEncoding);
     }
     //this->setModified(false);
@@ -202,7 +202,7 @@ void Editor::loadFile(const QString& filename) {
     mLastIdCharPressed = 0;
 }
 
-void Editor::saveFile(const QString &filename) {
+void Editor::saveFile(QString filename) {
     QFile file(filename);
     this->lines()->saveToFile(file,mEncodingOption,mFileEncoding);
     pMainWindow->updateForEncodingInfo();

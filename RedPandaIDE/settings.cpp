@@ -3003,10 +3003,20 @@ void Settings::History::doSave()
     saveValue("opened_projects", mOpenedProjects);
 }
 
+static QStringList filterValidPathes(const QStringList& files) {
+    QStringList lst;
+    foreach (const QString& filePath, files) {
+        if (fileExists(filePath)) {
+            lst.append(QFileInfo(filePath).absoluteFilePath());
+        }
+    }
+    return lst;
+}
+
 void Settings::History::doLoad()
 {
-    mOpenedFiles = stringListValue("opened_files");
-    mOpenedProjects =stringListValue("opened_projects");
+    mOpenedFiles = filterValidPathes(stringListValue("opened_files"));
+    mOpenedProjects = filterValidPathes(stringListValue("opened_projects"));
 }
 
 Settings::CodeCompletion::CodeCompletion(Settings *settings):_Base(settings, SETTING_CODE_COMPLETION)
