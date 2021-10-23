@@ -12,15 +12,17 @@ class IconsManager : public QObject
 public:
     explicit IconsManager(QObject *parent = nullptr);
 
-    PIcon syntaxError() const;
+    const PIcon &syntaxError() const;
 
-    PIcon syntaxWarning() const;
+    const PIcon &syntaxWarning() const;
 
-    PIcon breakpoint() const;
+    const PIcon &breakpoint() const;
 
-    PIcon activeBreakpoint() const;
+    const PIcon &activeBreakpoint() const;
 
     const PIcon &bookmark() const;
+
+    const PIcon &folder() const;
 
 signals:
 private:
@@ -29,6 +31,7 @@ private:
     PIcon mBreakpoint;
     PIcon mActiveBreakpoint;
     PIcon mBookmark;
+    PIcon mFolder;
 };
 
 extern IconsManager* pIconsManager;

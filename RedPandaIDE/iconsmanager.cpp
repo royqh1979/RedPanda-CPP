@@ -9,25 +9,25 @@ IconsManager::IconsManager(QObject *parent) : QObject(parent)
     mBreakpoint = std::make_shared<QPixmap>(":/icons/images/editor/breakpoint.png");
     mActiveBreakpoint = std::make_shared<QPixmap>(":/icons/images/editor/currentline.png");
     mBookmark = std::make_shared<QPixmap>(":/icons/images/editor/bookmark.png");
-
+    mFolder = std::make_shared<QPixmap>(":/icons/images/newlook24/090-explorer.png");
 }
 
-PIcon IconsManager::syntaxError() const
+const PIcon &IconsManager::syntaxError() const
 {
     return mSyntaxError;
 }
 
-PIcon IconsManager::syntaxWarning() const
+const PIcon &IconsManager::syntaxWarning() const
 {
     return mSyntaxWarning;
 }
 
-PIcon IconsManager::breakpoint() const
+const PIcon &IconsManager::breakpoint() const
 {
     return mBreakpoint;
 }
 
-PIcon IconsManager::activeBreakpoint() const
+const PIcon &IconsManager::activeBreakpoint() const
 {
     return mActiveBreakpoint;
 }
@@ -35,4 +35,9 @@ PIcon IconsManager::activeBreakpoint() const
 const PIcon &IconsManager::bookmark() const
 {
     return mBookmark;
+}
+
+const PIcon &IconsManager::folder() const
+{
+    return mFolder;
 }

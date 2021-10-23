@@ -3,6 +3,9 @@ Version 0.7.2
  - fix: issue count not correctly displayed when syntax check/compile finished
  - fix: function declaration's parameters not correctly parsed, if it have a definition which have different parameter names
  - fix: file path seperator used in the app is not unified, and cause errors somtimes.
+ - enhancement: icons in project view
+ - fix: sometimes option widget will show confirm dialog even not changed
+ - enhancement: only editor area will receive file drop events
 
 Version 0.7.1
  - fix: can't add bookmark at a breakpoint line

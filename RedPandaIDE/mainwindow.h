@@ -141,6 +141,9 @@ public:
 
     const PBookmarkModel &bookmarkModel() const;
 
+    void openFile(const QString& filename, QTabWidget* page=nullptr);
+    void openProject(const QString& filename);
+
 public slots:
     void onCompileLog(const QString& msg);
     void onCompileIssue(PCompileIssue issue);
@@ -173,8 +176,6 @@ private:
     void prepareProjectForCompile();
     void closeProject(bool refreshEditor);
     void updateProjectView();
-    void openFile(const QString& filename);
-    void openProject(const QString& filename);
     CompileTarget getCompileTarget();
     bool debugInferiorhasBreakpoint();
     void setupActions();
@@ -536,8 +537,8 @@ private:
 protected:
     void closeEvent(QCloseEvent *event) override;
     void showEvent(QShowEvent* event) override;
-    void dragEnterEvent(QDragEnterEvent *event) override;
-    void dropEvent(QDropEvent *event) override;
+//    void dragEnterEvent(QDragEnterEvent *event) override;
+//    void dropEvent(QDropEvent *event) override;
 };
 
 extern MainWindow* pMainWindow;

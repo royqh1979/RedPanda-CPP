@@ -72,7 +72,6 @@ MainWindow::MainWindow(QWidget *parent)
                                  ui->splitterEditorPanel,
                                  ui->EditorPanel);
     mProject = nullptr;
-    setAcceptDrops(true);
     setupActions();
     ui->EditorTabsRight->setVisible(false);
 
@@ -815,7 +814,7 @@ void MainWindow::openFiles(const QStringList &files)
     mEditorList->endUpdate();
 }
 
-void MainWindow::openFile(const QString &filename)
+void MainWindow::openFile(const QString &filename, QTabWidget* page)
 {
     Editor* editor = mEditorList->getOpenedEditorByFilename(filename);
     if (editor!=nullptr) {
@@ -825,7 +824,7 @@ void MainWindow::openFile(const QString &filename)
     try {
         pSettings->history().removeFile(filename);
         editor = mEditorList->newEditor(filename,ENCODING_AUTO_DETECT,
-                                        false,false);
+                                        false, false, page);
         editor->activate();
         this->updateForEncodingInfo();
     } catch (FileError e) {
@@ -2955,33 +2954,33 @@ void MainWindow::showEvent(QShowEvent *)
     }
 }
 
-void MainWindow::dragEnterEvent(QDragEnterEvent *event)
-{
-    if (event->mimeData()->hasUrls()){
-        event->acceptProposedAction();
-    }
-}
+//void MainWindow::dragEnterEvent(QDragEnterEvent *event)
+//{
+//    if (event->mimeData()->hasUrls()){
+//        event->acceptProposedAction();
+//    }
+//}
 
-void MainWindow::dropEvent(QDropEvent *event)
-{
-    if (event->mimeData()->hasUrls()) {
-        foreach(const QUrl& url, event->mimeData()->urls()){
-            if (!url.isLocalFile())
-                continue;
-            QString file = url.toLocalFile();
-            if (getFileType(file)==FileType::Project) {
-                openProject(file);
-                return;
-            }
-        }
-        foreach(const QUrl& url, event->mimeData()->urls()){
-            if (!url.isLocalFile())
-                continue;
-            QString file = url.toLocalFile();
-            openFile(file);
-        }
-    }
-}
+//void MainWindow::dropEvent(QDropEvent *event)
+//{
+//    if (event->mimeData()->hasUrls()) {
+//        foreach(const QUrl& url, event->mimeData()->urls()){
+//            if (!url.isLocalFile())
+//                continue;
+//            QString file = url.toLocalFile();
+//            if (getFileType(file)==FileType::Project) {
+//                openProject(file);
+//                return;
+//            }
+//        }
+//        foreach(const QUrl& url, event->mimeData()->urls()){
+//            if (!url.isLocalFile())
+//                continue;
+//            QString file = url.toLocalFile();
+//            openFile(file);
+//        }
+//    }
+//}
 
 void MainWindow::on_actionSave_triggered()
 {

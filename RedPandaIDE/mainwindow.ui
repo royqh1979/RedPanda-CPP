@@ -85,7 +85,7 @@
             <enum>QTabWidget::West</enum>
            </property>
            <property name="currentIndex">
-            <number>3</number>
+            <number>0</number>
            </property>
            <property name="usesScrollButtons">
             <bool>true</bool>
@@ -115,6 +115,15 @@
               <widget class="QTreeView" name="projectView">
                <property name="editTriggers">
                 <set>QAbstractItemView::EditKeyPressed|QAbstractItemView::SelectedClicked</set>
+               </property>
+               <property name="dragEnabled">
+                <bool>true</bool>
+               </property>
+               <property name="dragDropMode">
+                <enum>QAbstractItemView::InternalMove</enum>
+               </property>
+               <property name="defaultDropAction">
+                <enum>Qt::MoveAction</enum>
                </property>
                <property name="selectionMode">
                 <enum>QAbstractItemView::ExtendedSelection</enum>
@@ -288,7 +297,7 @@
               <property name="handleWidth">
                <number>1</number>
               </property>
-              <widget class="QTabWidget" name="EditorTabsLeft">
+              <widget class="EditorsTabWidget" name="EditorTabsLeft">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Ignored" vsizetype="Expanding">
                  <horstretch>0</horstretch>
@@ -308,7 +317,7 @@
                 <bool>true</bool>
                </property>
               </widget>
-              <widget class="QTabWidget" name="EditorTabsRight">
+              <widget class="EditorsTabWidget" name="EditorTabsRight">
                <property name="enabled">
                 <bool>true</bool>
                </property>
@@ -2015,6 +2024,12 @@
    <class>QConsole</class>
    <extends>QFrame</extends>
    <header location="global">widgets/qconsole.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>EditorsTabWidget</class>
+   <extends>QTabWidget</extends>
+   <header location="global">widgets/editorstabwidget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

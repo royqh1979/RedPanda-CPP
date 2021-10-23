@@ -9,6 +9,7 @@
 #include "platform.h"
 #include "projecttemplate.h"
 #include "systemconsts.h"
+#include "iconsmanager.h"
 
 #include <QDir>
 #include <QFileDialog>
@@ -16,6 +17,7 @@
 #include <QMessageBox>
 #include <QTextCodec>
 #include <QMessageBox>
+#include <QFileIconProvider>
 #include "settings.h"
 #include <QDebug>
 
@@ -1813,6 +1815,16 @@ QVariant ProjectModel::data(const QModelIndex &index, int role) const
         return QVariant();
     if (role == Qt::DisplayRole || role==Qt::EditRole) {
         return p->text;
+    } else if (role == Qt::DecorationRole) {
+        QFileIconProvider provider;
+        if (p->unitIndex>=0) {
+            return provider.icon(mProject->units()[p->unitIndex]->fileName());
+        } else {
+            QIcon icon = provider.icon(QFileIconProvider::Folder);
+            if (icon.isNull())
+                return *(pIconsManager->folder());
+            return icon;
+        }
     }
     return QVariant();
 }
@@ -1826,7 +1838,10 @@ Qt::ItemFlags ProjectModel::flags(const QModelIndex &index) const
         return Qt::NoItemFlags;
     if (p==mProject->node().get())
         return Qt::ItemIsEnabled;
-    return Qt::ItemIsEnabled | Qt::ItemIsEditable | Qt::ItemIsSelectable;
+    Qt::ItemFlags flags = Qt::ItemIsEnabled | Qt::ItemIsEditable | Qt::ItemIsSelectable | Qt::ItemIsDragEnabled;
+    if (p->unitIndex<0)
+        flags.setFlag(Qt::ItemIsDropEnabled);
+    return flags;
 }
 
 bool ProjectModel::setData(const QModelIndex &index, const QVariant &value, int role)
@@ -1921,4 +1936,18 @@ bool ProjectModel::setData(const QModelIndex &index, const QVariant &value, int 
 
     }
     return false;
+}
+
+bool ProjectModel::canDropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent) const
+{
+    if (action != Qt::MoveAction)
+        return false;
+    QModelIndex idx = index(row,column,parent);
+    if (!idx.isValid())
+        return false;
+    FolderNode* p = static_cast<FolderNode*>(idx.internalPointer());
+    PFolderNode node = mProject->pointerToNode(p);
+    if (node->unitIndex>=0)
+        return false;
+    return true;
 }

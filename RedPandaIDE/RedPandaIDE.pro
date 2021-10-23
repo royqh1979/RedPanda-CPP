@@ -113,6 +113,7 @@ SOURCES += \
     widgets/consolewidget.cpp \
     widgets/custommakefileinfodialog.cpp \
     widgets/darkfusionstyle.cpp \
+    widgets/editorstabwidget.cpp \
     widgets/filepropertiesdialog.cpp \
     widgets/functiontooltipwidget.cpp \
     widgets/headercompletionpopup.cpp \
@@ -227,6 +228,7 @@ HEADERS += \
     widgets/consolewidget.h \
     widgets/custommakefileinfodialog.h \
     widgets/darkfusionstyle.h \
+    widgets/editorstabwidget.h \
     widgets/filepropertiesdialog.h \
     widgets/functiontooltipwidget.h \
     widgets/headercompletionpopup.h \
