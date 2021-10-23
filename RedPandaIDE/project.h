@@ -101,6 +101,9 @@ public:
     // QAbstractItemModel interface
 public:
     bool canDropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent) const override;
+    QStringList mimeTypes() const override;
+    QMimeData *mimeData(const QModelIndexList &indexes) const override;
+    Qt::DropActions supportedDropActions() const override;
 };
 
 class ProjectTemplate;

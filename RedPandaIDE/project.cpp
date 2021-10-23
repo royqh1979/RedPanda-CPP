@@ -602,6 +602,8 @@ PFolderNode Project::pointerToNode(FolderNode *p, PFolderNode parent)
     if (!parent) {
         parent = mNode;
     }
+    if (p==mNode.get())
+        return mNode;
     foreach (const PFolderNode& node , parent->children) {
         if (node.get()==p)
             return node;
@@ -1765,6 +1767,8 @@ QModelIndex ProjectModel::index(int row, int column, const QModelIndex &parent) 
     if (!parentNode) {
         return QModelIndex();
     }
+    if (row<0 || row>=parentNode->children.count())
+        return QModelIndex();
     return createIndex(row,column,parentNode->children[row].get());
 }
 
@@ -1942,12 +1946,36 @@ bool ProjectModel::canDropMimeData(const QMimeData *data, Qt::DropAction action,
 {
     if (action != Qt::MoveAction)
         return false;
-    QModelIndex idx = index(row,column,parent);
+    QModelIndex idx;
+    if (row >= rowCount(parent) || row < 0) {
+        qDebug()<<"above/below";
+        idx = parent;
+    } else {
+        idx= index(row,column,parent);
+    }
     if (!idx.isValid())
         return false;
     FolderNode* p = static_cast<FolderNode*>(idx.internalPointer());
     PFolderNode node = mProject->pointerToNode(p);
+    qDebug()<<node->text;
     if (node->unitIndex>=0)
         return false;
     return true;
+}
+
+QStringList ProjectModel::mimeTypes() const
+{
+    QStringList t=QAbstractItemModel::mimeTypes();
+    return t;
+}
+
+QMimeData *ProjectModel::mimeData(const QModelIndexList &indexes) const
+{
+    QMimeData * d= QAbstractItemModel::mimeData(indexes);
+    return d;
+}
+
+Qt::DropActions ProjectModel::supportedDropActions() const
+{
+    return Qt::MoveAction;
 }

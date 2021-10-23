@@ -131,6 +131,9 @@
                <property name="selectionBehavior">
                 <enum>QAbstractItemView::SelectRows</enum>
                </property>
+               <property name="autoExpandDelay">
+                <number>500</number>
+               </property>
                <attribute name="headerVisible">
                 <bool>false</bool>
                </attribute>
