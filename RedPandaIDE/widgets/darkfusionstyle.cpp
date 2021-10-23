@@ -114,7 +114,7 @@ static bool isMacSystemPalette(const QPalette &pal){
 
 // Used for grip handles
 static QColor calcDarkShade() {
-    return QColor(255, 255, 255, 90);
+    return QColor(255, 255, 255, 150);
 }
 static QColor calcLightShade() {
     return QColor(0, 0, 0, 60);

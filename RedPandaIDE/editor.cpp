@@ -3637,6 +3637,8 @@ void Editor::applySettings()
     options.setFlag(eoScrollPastEof,pSettings->editor().scrollPastEof());
     options.setFlag(eoScrollByOneLess,pSettings->editor().scrollByOneLess());
     options.setFlag(eoHalfPageScroll,pSettings->editor().halfPageScroll());
+    options.setFlag(eoHalfPageScroll,pSettings->editor().halfPageScroll());
+    options.setFlag(eoShowRainbowColor, pSettings->editor().rainbowParenthesis());
     setOptions(options);
 
     setTabWidth(pSettings->editor().tabWidth());

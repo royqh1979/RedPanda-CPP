@@ -1,3 +1,6 @@
+Version 0.7.2
+ - fix: rainbow parenthesis stop functioning when change editor's general options
+
 Version 0.7.1
  - fix: can't add bookmark at a breakpoint line
  - fix: app name in the title bar not translated
