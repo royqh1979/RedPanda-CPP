@@ -8,6 +8,7 @@ Version 0.7.2
  - enhancement: only editor area will receive file drop events
  - enhancement: change project file's folder by drag and drop in the project view
  - enhancement: open project file by drag it to the editor area
+ - fix: the "add bookmark" menu item is not correctly disabled on a bookmarked line
 
 Version 0.7.1
  - fix: can't add bookmark at a breakpoint line

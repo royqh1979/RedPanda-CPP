@@ -1833,8 +1833,10 @@ Qt::ItemFlags ProjectModel::flags(const QModelIndex &index) const
     if (p==mProject->node().get())
         return Qt::ItemIsEnabled | Qt::ItemIsDropEnabled;
     Qt::ItemFlags flags = Qt::ItemIsEnabled | Qt::ItemIsEditable | Qt::ItemIsSelectable | Qt::ItemIsDragEnabled;
-    if (p->unitIndex<0)
+    if (p->unitIndex<0) {
         flags.setFlag(Qt::ItemIsDropEnabled);
+        flags.setFlag(Qt::ItemIsDragEnabled,false);
+    }
     return flags;
 }
 
@@ -1948,7 +1950,7 @@ QModelIndex ProjectModel::getParentIndex(FolderNode * node) const
     return createIndex(row,0,parent.get());
 }
 
-bool ProjectModel::canDropMimeData(const QMimeData * data, Qt::DropAction action, int row, int column, const QModelIndex &parent) const
+bool ProjectModel::canDropMimeData(const QMimeData * data, Qt::DropAction action, int /*row*/, int /*column*/, const QModelIndex &parent) const
 {
 
     if (!data || action != Qt::MoveAction)
@@ -1993,7 +1995,7 @@ Qt::DropActions ProjectModel::supportedDropActions() const
     return Qt::MoveAction;
 }
 
-bool ProjectModel::dropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent)
+bool ProjectModel::dropMimeData(const QMimeData *data, Qt::DropAction action, int /*row*/, int /*column*/, const QModelIndex &parent)
 {
     // check if the action is supported
     if (!data || action != Qt::MoveAction)

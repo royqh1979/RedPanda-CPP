@@ -2552,7 +2552,7 @@ void MainWindow::onEditorContextMenu(const QPoint &pos)
     ui->actionBreakpoint_property->setEnabled(editor->hasBreakpoint(line));
     ui->actionAdd_bookmark->setEnabled(
                 line>=0 && editor->lines()->count()>0
-                && !editor->hasBreakpoint(line)
+                && !editor->hasBookmark(line)
                 );
     ui->actionRemove_Bookmark->setEnabled(editor->hasBookmark(line));
     ui->actionModify_Bookmark_Description->setEnabled(editor->hasBookmark(line));
