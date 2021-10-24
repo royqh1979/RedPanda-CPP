@@ -3114,6 +3114,16 @@ void Editor::onExportedFormatToken(PSynHighlighter syntaxHighlighter, int Line, 
     }
 }
 
+bool Editor::useCppSyntax() const
+{
+    return mUseCppSyntax;
+}
+
+void Editor::setUseCppSyntax(bool newUseCppSyntax)
+{
+    mUseCppSyntax = newUseCppSyntax;
+}
+
 void Editor::setInProject(bool newInProject)
 {
     if (mInProject == newInProject)

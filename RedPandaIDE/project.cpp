@@ -661,8 +661,14 @@ bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate)
                         true);
 
             QString s2 = QDir(pSettings->dirs().templateDir()).absoluteFilePath(s);
-            if (fileExists(s2)) {
-                editor->loadFile(s2);
+            if (fileExists(s2) && !s.isEmpty()) {
+                try {
+                    editor->loadFile(s2);
+                } catch(FileError& e) {
+                    QMessageBox::critical(pMainWindow,
+                                          tr("Error Load File"),
+                                          e.reason());
+                }
             } else {
                 s.replace("#13#10","\r\n");
                 editor->insertString(s,false);

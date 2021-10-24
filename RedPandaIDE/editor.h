@@ -299,6 +299,9 @@ public:
     // QWidget interface
     void setInProject(bool newInProject);
 
+    bool useCppSyntax() const;
+    void setUseCppSyntax(bool newUseCppSyntax);
+
 protected:
     void mouseReleaseEvent(QMouseEvent *event) override;
 

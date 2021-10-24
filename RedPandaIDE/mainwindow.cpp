@@ -4169,6 +4169,7 @@ void MainWindow::on_actionNew_Project_triggered()
                                   tr("Can't assign project template"),
                                   QMessageBox::Ok);
         }
+        mProject->options().useGPP = dialog.isCppProject();
         mProject->saveAll();
         updateProjectView();
     }
@@ -4209,11 +4210,12 @@ void MainWindow::on_actionProject_New_File_triggered()
         node = static_cast<FolderNode*>(current.internalPointer());
     }
     PProjectUnit newUnit = mProject->newUnit(
-                mProject->pointerToNode(node) );
+                mProject->pointerToNode(node));
     idx = mProject->units().count()-1;
     mProject->saveUnits();
     updateProjectView();
     Editor * editor = mProject->openUnit(idx);
+    editor->setUseCppSyntax(mProject->options().useGPP);
     editor->setModified(true);
     editor->activate();
 }
