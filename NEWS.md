@@ -6,6 +6,8 @@ Version 0.7.2
  - enhancement: icons in project view
  - fix: sometimes option widget will show confirm dialog even not changed
  - enhancement: only editor area will receive file drop events
+ - enhancement: change project file's folder by drag and drop in the project view
+ - enhancement: open project file by drag it to the editor area
 
 Version 0.7.1
  - fix: can't add bookmark at a breakpoint line

@@ -18,6 +18,7 @@
 #include <QTextCodec>
 #include <QMessageBox>
 #include <QFileIconProvider>
+#include <QMimeData>
 #include "settings.h"
 #include <QDebug>
 
@@ -1779,18 +1780,7 @@ QModelIndex ProjectModel::parent(const QModelIndex &child) const
     FolderNode * node = static_cast<FolderNode*>(child.internalPointer());
     if (!node)
         return QModelIndex();
-    PFolderNode parent = node->parent.lock();
-    if (!parent) // root node
-        return QModelIndex();
-    PFolderNode grand = parent->parent.lock();
-    if (!grand) {
-        return createIndex(0,0,parent.get());
-    }
-
-    int row = grand->children.indexOf(parent);
-    if (row<0)
-        return QModelIndex();
-    return createIndex(row,0,parent.get());
+    return getParentIndex(node);
 }
 
 int ProjectModel::rowCount(const QModelIndex &parent) const
@@ -1841,7 +1831,7 @@ Qt::ItemFlags ProjectModel::flags(const QModelIndex &index) const
     if (!p)
         return Qt::NoItemFlags;
     if (p==mProject->node().get())
-        return Qt::ItemIsEnabled;
+        return Qt::ItemIsEnabled | Qt::ItemIsDropEnabled;
     Qt::ItemFlags flags = Qt::ItemIsEnabled | Qt::ItemIsEditable | Qt::ItemIsSelectable | Qt::ItemIsDragEnabled;
     if (p->unitIndex<0)
         flags.setFlag(Qt::ItemIsDropEnabled);
@@ -1942,40 +1932,146 @@ bool ProjectModel::setData(const QModelIndex &index, const QVariant &value, int 
     return false;
 }
 
-bool ProjectModel::canDropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent) const
+QModelIndex ProjectModel::getParentIndex(FolderNode * node) const
 {
-    if (action != Qt::MoveAction)
-        return false;
-    QModelIndex idx;
-    if (row >= rowCount(parent) || row < 0) {
-        qDebug()<<"above/below";
-        idx = parent;
-    } else {
-        idx= index(row,column,parent);
+    PFolderNode parent = node->parent.lock();
+    if (!parent) // root node
+        return QModelIndex();
+    PFolderNode grand = parent->parent.lock();
+    if (!grand) {
+        return createIndex(0,0,parent.get());
     }
-    if (!idx.isValid())
+
+    int row = grand->children.indexOf(parent);
+    if (row<0)
+        return QModelIndex();
+    return createIndex(row,0,parent.get());
+}
+
+bool ProjectModel::canDropMimeData(const QMimeData * data, Qt::DropAction action, int row, int column, const QModelIndex &parent) const
+{
+
+    if (!data || action != Qt::MoveAction)
         return false;
-    FolderNode* p = static_cast<FolderNode*>(idx.internalPointer());
+    if (!parent.isValid())
+        return false;
+    // check if the format is supported
+    QStringList types = mimeTypes();
+    if (types.isEmpty())
+        return false;
+    QString format = types.at(0);
+    if (!data->hasFormat(format))
+        return false;
+
+    QModelIndex idx = parent;
+//    if (row >= rowCount(parent) || row < 0) {
+//        return false;
+//    } else {
+//        idx= index(row,column,parent);
+//    }
+    FolderNode* p= static_cast<FolderNode*>(idx.internalPointer());
     PFolderNode node = mProject->pointerToNode(p);
-    qDebug()<<node->text;
     if (node->unitIndex>=0)
         return false;
+    QByteArray encoded = data->data(format);
+    QDataStream stream(&encoded, QIODevice::ReadOnly);
+    while (!stream.atEnd()) {
+        int r, c;
+        intptr_t v;
+        stream >> r >> c >> v;
+        FolderNode* droppedPointer= (FolderNode*)(v);
+        PFolderNode droppedNode = mProject->pointerToNode(droppedPointer);
+        PFolderNode oldParent = droppedNode->parent.lock();
+        if (oldParent == node)
+            return false;
+    }
     return true;
-}
-
-QStringList ProjectModel::mimeTypes() const
-{
-    QStringList t=QAbstractItemModel::mimeTypes();
-    return t;
-}
-
-QMimeData *ProjectModel::mimeData(const QModelIndexList &indexes) const
-{
-    QMimeData * d= QAbstractItemModel::mimeData(indexes);
-    return d;
 }
 
 Qt::DropActions ProjectModel::supportedDropActions() const
 {
     return Qt::MoveAction;
+}
+
+bool ProjectModel::dropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent)
+{
+    // check if the action is supported
+    if (!data || action != Qt::MoveAction)
+        return false;
+    // check if the format is supported
+    QStringList types = mimeTypes();
+    if (types.isEmpty())
+        return false;
+    QString format = types.at(0);
+    if (!data->hasFormat(format))
+        return false;
+
+    if (!parent.isValid())
+        return false;
+    FolderNode* p= static_cast<FolderNode*>(parent.internalPointer());
+    PFolderNode node = mProject->pointerToNode(p);
+
+    QByteArray encoded = data->data(format);
+    QDataStream stream(&encoded, QIODevice::ReadOnly);
+    QVector<int> rows,cols;
+    QVector<intptr_t> pointers;
+    while (!stream.atEnd()) {
+        int r, c;
+        intptr_t v;
+        stream >> r >> c >> v;
+        rows.append(r);
+        cols.append(c);
+        pointers.append(v);
+    }
+    for (int i=pointers.count()-1;i>=0;i--) {
+        int r = rows[i];
+        intptr_t v = pointers[i];
+        FolderNode* droppedPointer= (FolderNode*)(v);
+        PFolderNode droppedNode = mProject->pointerToNode(droppedPointer);
+        PFolderNode oldParent = droppedNode->parent.lock();
+        QModelIndex oldParentIndex = getParentIndex(droppedPointer);
+        beginRemoveRows(oldParentIndex,r,r);
+        if (oldParent)
+            oldParent->children.removeAt(r);
+        endRemoveRows();
+        droppedNode->parent = node;
+        node->children.append(droppedNode);
+        if (droppedNode->unitIndex>=0) {
+            PProjectUnit unit = mProject->units()[droppedNode->unitIndex];
+            unit->setFolder(mProject->getFolderPath(node));
+        }
+        QModelIndex newParentIndex = getParentIndex(droppedPointer);
+        beginInsertRows(newParentIndex,node->children.count()-1,node->children.count()-1);
+        endInsertRows();
+        mProject->saveAll();
+        return true;
+    }
+
+    return false;
+}
+
+QMimeData *ProjectModel::mimeData(const QModelIndexList &indexes) const
+{
+    if (indexes.count() <= 0)
+        return nullptr;
+    QStringList types = mimeTypes();
+    if (types.isEmpty())
+        return nullptr;
+    QMimeData *data = new QMimeData();
+    QString format = types.at(0);
+    QByteArray encoded;
+    QDataStream stream(&encoded, QIODevice::WriteOnly);
+    QModelIndexList::ConstIterator it = indexes.begin();
+    QList<QUrl> urls;
+    for (; it != indexes.end(); ++it) {
+        stream << (*it).row() << (*it).column() << (intptr_t)((*it).internalPointer());
+        FolderNode* p = static_cast<FolderNode*>((*it).internalPointer());
+        if (p && p->unitIndex>=0) {
+            urls.append(QUrl::fromLocalFile(mProject->units()[p->unitIndex]->fileName()));
+        }
+    }
+    if (!urls.isEmpty())
+        data->setUrls(urls);
+    data->setData(format, encoded);
+    return data;
 }
