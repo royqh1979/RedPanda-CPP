@@ -7,6 +7,7 @@ Version 0.7.3
  - fix: the "add bookmark" menu item is not correctly disabled on a bookmarked line
  - enhancement: "use utf8 by default" in editor's misc setting
  - fix: syntax issues not correctly cleared when the file was saved as another name.
+ - enhancement: when running a program, redirect a data file to its stdin
 
 Version 0.7.2
  - fix: rainbow parenthesis stop functioning when change editor's general options

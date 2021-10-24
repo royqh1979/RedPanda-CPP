@@ -197,12 +197,26 @@ void CompilerManager::run(const QString &filename, const QString &arguments, con
     if (mRunner!=nullptr) {
         return;
     }
+    QChar redirectChar = '0';
+    QString redirectInputFilename;
+    bool redirectInput=false;
+    if (pSettings->executor().redirectInput()
+            && !pSettings->executor().inputFilename().isEmpty()) {
+        redirectInput =true;
+        redirectChar = '1';
+        redirectInputFilename = pSettings->executor().inputFilename();
+    }
     if (pSettings->executor().pauseConsole() && programHasConsole(filename)) {
-        QString newArguments = QString(" 0 \"%1\" %2").arg(toLocalPath(filename)).arg(arguments);
+        QString newArguments = QString(" %1 \"%2\" %3")
+                .arg(redirectChar)
+                .arg(toLocalPath(filename)).arg(arguments);
         mRunner = new ExecutableRunner(includeTrailingPathDelimiter(pSettings->dirs().app())+"ConsolePauser.exe",newArguments,workDir);
+        if (redirectInput)
+            mRunner->setRedirectConsoleProgram(true);
     } else {
         mRunner = new ExecutableRunner(filename,arguments,workDir);
     }
+    mRunner->setRedirectInputFilename(redirectInputFilename);
     connect(mRunner, &ExecutableRunner::finished, this ,&CompilerManager::onRunnerTerminated);
     connect(mRunner, &ExecutableRunner::finished, pMainWindow ,&MainWindow::onRunFinished);
     connect(mRunner, &ExecutableRunner::runErrorOccurred, pMainWindow ,&MainWindow::onRunErrorOccured);

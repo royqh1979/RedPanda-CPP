@@ -835,3 +835,12 @@ bool removeFile(const QString &filename)
     QFile file(filename);
     return file.remove();
 }
+
+QByteArray ReadFileToByteArray(const QString &fileName)
+{
+    QFile file(fileName);
+    if (file.open(QFile::ReadOnly)) {
+        return file.readAll();
+    }
+    return QByteArray();
+}

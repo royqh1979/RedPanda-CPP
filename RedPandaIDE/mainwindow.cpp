@@ -1115,11 +1115,11 @@ void MainWindow::runExecutable(const QString &exeName,const QString &filename)
         showMinimized();
     }
     updateAppTitle();
+    QString params;
     if (pSettings->executor().useParams()) {
-        mCompilerManager->run(exeName,pSettings->executor().params(),QFileInfo(exeName).absolutePath());
-    } else {
-        mCompilerManager->run(exeName,"",QFileInfo(exeName).absolutePath());
+        params = pSettings->executor().params();
     }
+    mCompilerManager->run(exeName,params,QFileInfo(exeName).absolutePath());
 }
 
 void MainWindow::runExecutable()

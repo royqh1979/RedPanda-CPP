@@ -9,6 +9,12 @@ class ExecutableRunner : public QThread
 public:
     ExecutableRunner(const QString& filename, const QString& arguments, const QString& workDir);
 
+    const QString &redirectInputFilename() const;
+    void setRedirectInputFilename(const QString &newDataFile);
+
+    bool redirectConsoleProgram() const;
+    void setRedirectConsoleProgram(bool newRedirectConsoleProgram);
+
 signals:
     void started();
     void terminated();
@@ -22,6 +28,8 @@ private:
     QString mArguments;
     QString mWorkDir;
     bool mStop;
+    QString mRedirectInputFilename;
+    bool mRedirectConsoleProgram;
 
     // QThread interface
 protected:

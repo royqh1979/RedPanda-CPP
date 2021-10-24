@@ -154,6 +154,7 @@ QString parseMacros(const QString& s);
 
 QStringList ReadFileToLines(const QString& fileName, QTextCodec* codec);
 QStringList ReadFileToLines(const QString& fileName);
+QByteArray ReadFileToByteArray(const QString& fileName);
 void ReadFileToLines(const QString& fileName, QTextCodec* codec, LineProcessFunc lineFunc);
 void StringsToFile(const QStringList& list, const QString& fileName);
 void StringToFile(const QString& str, const QString& fileName);

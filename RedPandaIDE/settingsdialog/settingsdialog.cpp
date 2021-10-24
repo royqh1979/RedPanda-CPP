@@ -250,6 +250,7 @@ bool SettingsDialog::setCurrentWidget(const QString &widgetName, const QString &
     for (int i=0;i<pGroupItem->rowCount();i++) {
         QStandardItem* pWidgetItem = pGroupItem->child(i);
         if (pWidgetItem->text() == widgetName) {
+            ui->widgetsView->setCurrentIndex(pWidgetItem->index());
             on_widgetsView_clicked(pWidgetItem->index());
             return true;
         }
