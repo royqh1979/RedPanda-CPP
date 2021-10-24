@@ -30,6 +30,8 @@ public:
     static PSettingsDialog optionDialog();
     static PSettingsDialog projectOptionDialog();
 
+    bool setCurrentWidget(const QString &widgetName, const QString &groupName);
+
     bool appShouldQuit() const;
 
 private slots:

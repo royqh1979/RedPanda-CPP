@@ -241,6 +241,22 @@ PSettingsDialog SettingsDialog::projectOptionDialog()
     return dialog;
 }
 
+bool SettingsDialog::setCurrentWidget(const QString &widgetName, const QString &groupName)
+{
+    QList<QStandardItem*> items = model.findItems(groupName);
+    if (items.isEmpty())
+        return false;
+    QStandardItem* pGroupItem = items[0];
+    for (int i=0;i<pGroupItem->rowCount();i++) {
+        QStandardItem* pWidgetItem = pGroupItem->child(i);
+        if (pWidgetItem->text() == widgetName) {
+            on_widgetsView_clicked(pWidgetItem->index());
+            return true;
+        }
+    }
+    return false;
+}
+
 
 void SettingsDialog::on_widgetsView_clicked(const QModelIndex &index)
 {

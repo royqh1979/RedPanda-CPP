@@ -992,6 +992,8 @@
     <addaction name="actionCompile_Run"/>
     <addaction name="actionRebuild"/>
     <addaction name="separator"/>
+    <addaction name="actionRun_Parameters"/>
+    <addaction name="separator"/>
     <addaction name="actionDebug"/>
     <addaction name="actionStep_Over"/>
     <addaction name="actionStep_Into"/>
@@ -2014,6 +2016,15 @@
    </property>
    <property name="text">
     <string>Open Folder</string>
+   </property>
+  </action>
+  <action name="actionRun_Parameters">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/images/newlook24/014-compopt.png</normaloff>:/icons/images/newlook24/014-compopt.png</iconset>
+   </property>
+   <property name="text">
+    <string>Running Parameters...</string>
    </property>
   </action>
  </widget>

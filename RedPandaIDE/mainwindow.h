@@ -143,6 +143,7 @@ public:
 
     void openFile(const QString& filename, QTabWidget* page=nullptr);
     void openProject(const QString& filename);
+    void changeOptions(const QString& widgetName=QString(), const QString& groupName=QString());
 
 public slots:
     void onCompileLog(const QString& msg);
@@ -428,6 +429,8 @@ private slots:
     void on_treeFiles_doubleClicked(const QModelIndex &index);
 
     void on_actionOpen_Folder_triggered();
+
+    void on_actionRun_Parameters_triggered();
 
 private:
     Ui::MainWindow *ui;

@@ -907,6 +907,34 @@ void MainWindow::openProject(const QString &filename)
     updateForEncodingInfo();
 }
 
+void MainWindow::changeOptions(const QString &widgetName, const QString &groupName)
+{
+    bool oldCodeCompletion = pSettings->codeCompletion().enabled();
+    PSettingsDialog settingsDialog = SettingsDialog::optionDialog();
+    if (!groupName.isEmpty()) {
+        settingsDialog->setCurrentWidget(widgetName, groupName);
+    }
+    settingsDialog->exec();
+    if (settingsDialog->appShouldQuit()) {
+        mShouldRemoveAllSettings = true;
+        close();
+        return;
+    }
+
+    bool newCodeCompletion = pSettings->codeCompletion().enabled();
+    if (!oldCodeCompletion && newCodeCompletion) {
+        Editor *e = mEditorList->getEditor();
+        if (mProject && !e) {
+            scanActiveProject(true);
+        } else if (mProject && e && e->inProject()) {
+            scanActiveProject(true);
+        } else if (e) {
+            e->reparse();
+        }
+    }
+
+}
+
 void MainWindow::setupActions() {
 
 }
@@ -3012,26 +3040,7 @@ void MainWindow::on_actionSaveAs_triggered()
 
 void MainWindow::on_actionOptions_triggered()
 {
-    bool oldCodeCompletion = pSettings->codeCompletion().enabled();
-    PSettingsDialog settingsDialog = SettingsDialog::optionDialog();
-    settingsDialog->exec();
-    if (settingsDialog->appShouldQuit()) {
-        mShouldRemoveAllSettings = true;
-        close();
-        return;
-    }
-
-    bool newCodeCompletion = pSettings->codeCompletion().enabled();
-    if (!oldCodeCompletion && newCodeCompletion) {
-        Editor *e = mEditorList->getEditor();
-        if (mProject && !e) {
-            scanActiveProject(true);
-        } else if (mProject && e && e->inProject()) {
-            scanActiveProject(true);
-        } else if (e) {
-            e->reparse();
-        }
-    }
+    changeOptions();
 }
 
 void MainWindow::onCompilerSetChanged(int index)
@@ -4719,5 +4728,14 @@ void MainWindow::on_actionOpen_Folder_triggered()
     if (!folder.isEmpty()) {
         setFilesViewRoot(folder);
     }
+}
+
+
+void MainWindow::on_actionRun_Parameters_triggered()
+{
+    changeOptions(
+                SettingsDialog::tr("General"),
+                SettingsDialog::tr("Program Runner")
+                );
 }
 
