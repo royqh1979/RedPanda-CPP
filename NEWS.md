@@ -6,6 +6,7 @@ Version 0.7.3
  - enhancement: open project file by drag it to the editor area
  - fix: the "add bookmark" menu item is not correctly disabled on a bookmarked line
  - enhancement: "use utf8 by default" in editor's misc setting
+ - fix: syntax issues not correctly cleared when the file was saved as another name.
 
 Version 0.7.2
  - fix: rainbow parenthesis stop functioning when change editor's general options

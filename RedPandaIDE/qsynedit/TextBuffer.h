@@ -59,7 +59,7 @@ public:
     int rightBraces(int Index);
     int lengthOfLongestLine();
     QString lineBreak() const;
-    const SynRangeState& ranges(int Index);
+    SynRangeState ranges(int Index);
     void setRange(int Index, const SynRangeState& ARange, int leftBraces, int rightBraces);
     QString getString(int Index);
     int count();

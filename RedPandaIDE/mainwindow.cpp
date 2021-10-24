@@ -1679,7 +1679,9 @@ void MainWindow::updateTools()
 void MainWindow::newEditor()
 {
     try {
-        Editor * editor=mEditorList->newEditor("",ENCODING_AUTO_DETECT,false,true);
+        Editor * editor=mEditorList->newEditor("",
+                                               pSettings->editor().useUTF8ByDefault()?ENCODING_UTF8:ENCODING_AUTO_DETECT,
+                                               false,true);
         editor->activate();
         updateForEncodingInfo();
     }  catch (FileError e) {

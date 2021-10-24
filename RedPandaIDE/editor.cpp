@@ -305,6 +305,7 @@ bool Editor::saveAs(const QString &name, bool fromProject){
         }
     }
 
+    clearSyntaxIssues();
     pMainWindow->fileSystemWatcher()->removePath(mFilename);
     if (pSettings->codeCompletion().enabled() && mParser)
         mParser->invalidateFile(mFilename);

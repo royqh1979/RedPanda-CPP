@@ -479,8 +479,8 @@ void SynEditTextPainter::PaintHighlightToken(bool bFillToEOL)
     } else {
       bSel = bLineSelected;
       bComplexToken = false;
-//      bU1 = false; // to shut up compiler warning.
-//      bU2 = false; // to shut up compiler warning.
+      bU1 = false; // to shut up compiler warning.
+      bU2 = false; // to shut up compiler warning.
     }
     // Any token chars accumulated?
     if (TokenAccu.Columns > 0) {
