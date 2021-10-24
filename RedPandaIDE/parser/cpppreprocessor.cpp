@@ -1320,21 +1320,21 @@ bool CppPreprocessor::evalNumber(const QString &expr, int &result, int &pos)
 
     if (s.endsWith("LL",Qt::CaseInsensitive)) {
         s.remove(s.length()-2,2);
-        result = s.toLongLong(&ok,0);
+        result = s.toLongLong(&ok);
     } else if (s.endsWith("L",Qt::CaseInsensitive)) {
         s.remove(s.length()-1,1);
-        result = s.toLong(&ok,0);
+        result = s.toLong(&ok);
     } else if (s.endsWith("ULL",Qt::CaseInsensitive)) {
         s.remove(s.length()-3,3);
-        result = s.toULongLong(&ok,0);
+        result = s.toULongLong(&ok);
     } else if (s.endsWith("UL",Qt::CaseInsensitive)) {
         s.remove(s.length()-2,2);
-        result = s.toULong(&ok,0);
+        result = s.toULong(&ok);
     } else if (s.endsWith("U",Qt::CaseInsensitive)) {
         s.remove(s.length()-1,1);
-        result = s.toUInt(&ok,0);
+        result = s.toUInt(&ok);
     } else {
-        result = s.toInt(&ok,0);
+        result = s.toInt(&ok);
     }
     return ok;
 }
@@ -1578,7 +1578,9 @@ bool CppPreprocessor::evalBitAndExpr(const QString &expr, int &result, int &pos)
     while (true) {
         if (!skipSpaces(expr,pos))
             break;
-        if (expr[pos]=='&') {
+        if (expr[pos]=='&'
+                && (pos == expr.length()
+                || expr[pos+1]!='&')) {
             pos++;
             int rightResult;
             if (!evalEqualExpr(expr,rightResult,pos))
@@ -1626,7 +1628,9 @@ bool CppPreprocessor::evalBitOrExpr(const QString &expr, int &result, int &pos)
     while (true) {
         if (!skipSpaces(expr,pos))
             break;
-        if (expr[pos] == '|') {
+        if (expr[pos] == '|'
+                && (pos == expr.length()
+                || expr[pos+1]!='|')) {
             pos++;
             int rightResult;
             if (!evalBitXorExpr(expr,rightResult,pos))
