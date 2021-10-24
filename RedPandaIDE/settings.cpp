@@ -507,6 +507,16 @@ void Settings::Editor::setMouseWheelScrollSpeed(int newMouseWheelScrollSpeed)
     mMouseWheelScrollSpeed = newMouseWheelScrollSpeed;
 }
 
+bool Settings::Editor::useUTF8ByDefault() const
+{
+    return mUseUTF8ByDefault;
+}
+
+void Settings::Editor::setUseUTF8ByDefault(bool newUseUTF8ByDefault)
+{
+    mUseUTF8ByDefault = newUseUTF8ByDefault;
+}
+
 bool Settings::Editor::enableTooltips() const
 {
     return mEnableTooltips;
@@ -1065,6 +1075,8 @@ void Settings::Editor::doSave()
     saveValue("readonly_system_header",mReadOnlySytemHeader);
     saveValue("auto_load_last_files",mAutoLoadLastFiles);
     saveValue("default_file_cpp",mDefaultFileCpp);
+    saveValue("use_utf8_by_default",mUseUTF8ByDefault);
+
 
     //tooltips
     saveValue("enable_tooltips",mEnableTooltips);
@@ -1178,6 +1190,7 @@ void Settings::Editor::doLoad()
     mReadOnlySytemHeader = boolValue("readonly_system_header",true);
     mAutoLoadLastFiles = boolValue("auto_load_last_files",true);
     mDefaultFileCpp = boolValue("default_file_cpp",true);
+    mUseUTF8ByDefault = boolValue("use_utf8_by_default",false);
 
     //tooltips
     mEnableTooltips = boolValue("enable_tooltips",true);

@@ -24,6 +24,7 @@ void EditorMiscWidget::doLoad()
     } else {
         ui->rbCFile->setChecked(true);
     }
+    ui->chkUseUTF8ByDefault->setChecked(pSettings->editor().useUTF8ByDefault());
 }
 
 void EditorMiscWidget::doSave()
@@ -31,5 +32,6 @@ void EditorMiscWidget::doSave()
     pSettings->editor().setReadOnlySytemHeader(ui->chkReadonlySystemHeaders->isChecked());
     pSettings->editor().setAutoLoadLastFiles(ui->chkLoadLastFiles->isChecked());
     pSettings->editor().setDefaultFileCpp(ui->rbCppFile->isChecked());
+    pSettings->editor().setUseUTF8ByDefault(ui->chkUseUTF8ByDefault->isChecked());
     pSettings->editor().save();
 }

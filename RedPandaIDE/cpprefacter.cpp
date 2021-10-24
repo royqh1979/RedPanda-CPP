@@ -5,6 +5,7 @@
 #include "editorlist.h"
 #include <QFile>
 #include <QMessageBox>
+#include <QTextCodec>
 #include "HighlighterManager.h"
 #include "project.h"
 
@@ -235,7 +236,9 @@ void CppRefacter::renameSymbolInFile(const QString &filename, const PStatement &
     } else {
         QByteArray realEncoding;
         QFile file(filename);
-        editor.lines()->saveToFile(file,ENCODING_AUTO_DETECT, realEncoding);
+        editor.lines()->saveToFile(file,ENCODING_AUTO_DETECT,
+                                   pSettings->editor().useUTF8ByDefault()? ENCODING_UTF8 : QTextCodec::codecForLocale()->name(),
+                                   realEncoding);
     }
 }
 

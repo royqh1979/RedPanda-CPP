@@ -327,6 +327,9 @@ public:
         int mouseWheelScrollSpeed() const;
         void setMouseWheelScrollSpeed(int newMouseWheelScrollSpeed);
 
+        bool useUTF8ByDefault() const;
+        void setUseUTF8ByDefault(bool newUseUTF8ByDefault);
+
     private:
         //General
         // indents
@@ -426,6 +429,7 @@ public:
         bool mReadOnlySytemHeader;
         bool mAutoLoadLastFiles;
         bool mDefaultFileCpp;
+        bool mUseUTF8ByDefault;
 
         //hints tooltip
         bool mEnableTooltips;

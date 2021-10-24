@@ -1,14 +1,18 @@
-Version 0.7.2
- - fix: rainbow parenthesis stop functioning when change editor's general options
- - fix: issue count not correctly displayed when syntax check/compile finished
- - fix: function declaration's parameters not correctly parsed, if it have a definition which have different parameter names
- - fix: file path seperator used in the app is not unified, and cause errors somtimes.
+Version 0.7.3
  - enhancement: icons in project view
  - fix: sometimes option widget will show confirm dialog even not changed
  - enhancement: only editor area will receive file drop events
  - enhancement: change project file's folder by drag and drop in the project view
  - enhancement: open project file by drag it to the editor area
  - fix: the "add bookmark" menu item is not correctly disabled on a bookmarked line
+ - enhancement: "use utf8 by default" in editor's misc setting
+
+Version 0.7.2
+ - fix: rainbow parenthesis stop functioning when change editor's general options
+ - fix: issue count not correctly displayed when syntax check/compile finished
+ - fix: function declaration's parameters not correctly parsed, if it have a definition which have different parameter names
+ - fix: file path seperator used in the app is not unified, and cause errors somtimes.
+
 
 Version 0.7.1
  - fix: can't add bookmark at a breakpoint line

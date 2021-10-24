@@ -128,7 +128,7 @@ QString SynEditStringList::lineBreak() const
     return "\n";
 }
 
-const SynRangeState& SynEditStringList::ranges(int Index)
+SynRangeState SynEditStringList::ranges(int Index)
 {
     QMutexLocker locker(&mMutex);
     if (Index>=0 && Index < mList.size()) {
@@ -588,7 +588,8 @@ void SynEditStringList::loadFromFile(const QString& filename, const QByteArray& 
 
 
 
-void SynEditStringList::saveToFile(QFile &file, const QByteArray& encoding, QByteArray& realEncoding)
+void SynEditStringList::saveToFile(QFile &file, const QByteArray& encoding,
+                                   const QByteArray& defaultEncoding, QByteArray& realEncoding)
 {
     QMutexLocker locker(&mMutex);
     if (!file.open(QFile::WriteOnly | QFile::Truncate))
@@ -607,7 +608,9 @@ void SynEditStringList::saveToFile(QFile &file, const QByteArray& encoding, QByt
     } else if (realEncoding == ENCODING_SYSTEM_DEFAULT) {
         codec = QTextCodec::codecForLocale();
     } else if (realEncoding == ENCODING_AUTO_DETECT) {
-        codec = QTextCodec::codecForLocale();
+        codec = QTextCodec::codecForName(defaultEncoding);
+        if (!codec)
+            codec = QTextCodec::codecForLocale();
     } else {
         codec = QTextCodec::codecForName(realEncoding);
     }

@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
+    <width>515</width>
     <height>300</height>
    </rect>
   </property>
@@ -25,6 +25,13 @@
     <widget class="QCheckBox" name="chkLoadLastFiles">
      <property name="text">
       <string>Auto load files being open when Red Panda C++ last exited.</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="chkUseUTF8ByDefault">
+     <property name="text">
+      <string>Use UTF-8 as the default encoding for new file</string>
      </property>
     </widget>
    </item>

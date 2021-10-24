@@ -27,6 +27,7 @@
 #include <QPrinter>
 #include <QPrintDialog>
 #include <QTextDocument>
+#include <QTextCodec>
 #include "iconsmanager.h"
 #include "debugger.h"
 #include "editorlist.h"
@@ -204,7 +205,9 @@ void Editor::loadFile(QString filename) {
 
 void Editor::saveFile(QString filename) {
     QFile file(filename);
-    this->lines()->saveToFile(file,mEncodingOption,mFileEncoding);
+    this->lines()->saveToFile(file,mEncodingOption,
+                              pSettings->editor().useUTF8ByDefault()? ENCODING_UTF8 : QTextCodec::codecForLocale()->name(),
+                              mFileEncoding);
     pMainWindow->updateForEncodingInfo();
 }
 
