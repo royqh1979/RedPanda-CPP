@@ -615,6 +615,14 @@ PFolderNode Project::pointerToNode(FolderNode *p, PFolderNode parent)
     return PFolderNode();
 }
 
+void Project::setCompilerSet(int compilerSetIndex)
+{
+    if (mOptions.compilerSet != compilerSetIndex) {
+        mOptions.compilerSet = compilerSetIndex;
+        updateCompilerSetType();
+    }
+}
+
 bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate)
 {
     if (!aTemplate) {
@@ -716,6 +724,7 @@ void Project::saveOptions()
     ini.SetLongValue("Project","IncludeVersionInfo", mOptions.includeVersionInfo);
     ini.SetLongValue("Project","SupportXPThemes", mOptions.supportXPThemes);
     ini.SetLongValue("Project","CompilerSet", mOptions.compilerSet);
+    ini.SetLongValue("Project","CompilerSetType", mOptions.compilerSetType);
     ini.SetValue("Project","CompilerSettings", mOptions.compilerOptions);
     ini.SetLongValue("Project","StaticLink", mOptions.staticLink);
     ini.SetLongValue("Project","AddCharset", mOptions.addCharset);
@@ -1370,6 +1379,11 @@ void Project::loadOptions(SimpleIni& ini)
         mOptions.compilerOptions = ini.GetValue("Project", "CompilerSettings", "");
         mOptions.staticLink = ini.GetBoolValue("Project", "StaticLink", true);
         mOptions.addCharset = ini.GetBoolValue("Project", "AddCharset", true);
+
+        mOptions.compilerSetType = ini.GetLongValue("Project","CompilerSetType",-1);
+        if (mOptions.compilerSetType<0) {
+            updateCompilerSetType();
+        }
         bool useUTF8 = ini.GetBoolValue("Project", "UseUTF8", false);
         if (useUTF8) {
             mOptions.encoding = fromByteArray(ini.GetValue("Project","Encoding", ENCODING_UTF8));
@@ -1513,6 +1527,19 @@ void Project::updateFolderNode(PFolderNode node)
             mFolders.append(getFolderPath(child));
             updateFolderNode(child);
         }
+    }
+}
+
+void Project::updateCompilerSetType()
+{
+    Settings::PCompilerSet defaultSet = pSettings->compilerSets().getSet(mOptions.compilerSet);
+    if (defaultSet) {
+        mOptions.compilerSetType=defaultSet->compilerSetType();
+        mOptions.staticLink = defaultSet->staticLink();
+        mOptions.compilerOptions = defaultSet->iniOptions();
+    } else {
+        mOptions.compilerSetType=CST_DEBUG;
+        mOptions.staticLink = false;
     }
 }
 

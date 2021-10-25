@@ -2204,6 +2204,16 @@ QByteArray Settings::CompilerSet::getCompilerOutput(const QString &binDir, const
     return result.trimmed();
 }
 
+int Settings::CompilerSet::compilerSetType() const
+{
+    return mCompilerSetType;
+}
+
+void Settings::CompilerSet::setCompilerSetType(int newCompilerSetType)
+{
+    mCompilerSetType = newCompilerSetType;
+}
+
 void Settings::CompilerSet::setCompilerType(const QString &newCompilerType)
 {
     mCompilerType = newCompilerType;
@@ -2318,14 +2328,17 @@ void Settings::CompilerSets::addSets(const QString &folder)
         platformName = "32-bit";
     }
     baseSet->setName(baseName + " " + platformName + " Release");
+    baseSet->setCompilerSetType(CompilerSetType::CST_RELEASE);
     setReleaseOptions(baseSet);
 
     baseSet = addSet(folder);
     baseSet->setName(baseName + " " + platformName + " Debug");
+    baseSet->setCompilerSetType(CompilerSetType::CST_DEBUG);
     setDebugOptions(baseSet);
 
     baseSet = addSet(folder);
     baseSet->setName(baseName + " " + platformName + " Profiling");
+    baseSet->setCompilerSetType(CompilerSetType::CST_PROFILING);
     setProfileOptions(baseSet);
 
     mDefaultIndex = mList.size() - 2;
@@ -2543,6 +2556,7 @@ void Settings::CompilerSets::saveSet(int index)
     mSettings->mSettings.setValue("Name", pSet->name());
     mSettings->mSettings.setValue("Target", pSet->target());
     mSettings->mSettings.setValue("CompilerType", pSet->compilerType());
+    mSettings->mSettings.setValue("CompilerSetType", pSet->compilerSetType());
 
     // Paths
     savePathList("Bins",pSet->binDirs());
@@ -2605,6 +2619,7 @@ Settings::PCompilerSet Settings::CompilerSets::loadSet(int index)
     pSet->setName(mSettings->mSettings.value("Name").toString());
     pSet->setTarget(mSettings->mSettings.value("Target").toString());
     pSet->setCompilerType(mSettings->mSettings.value("CompilerType").toString());
+    pSet->setCompilerSetType(mSettings->mSettings.value("CompilerSetType").toInt());
 
     // Paths
     loadPathList("Bins",pSet->binDirs());

@@ -15,20 +15,6 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QCheckBox" name="chkAddCharset">
-     <property name="text">
-      <string>Add encoding options to compiler</string>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QCheckBox" name="chkStaticLink">
-     <property name="text">
-      <string>Statically link libraries</string>
-     </property>
-    </widget>
-   </item>
-   <item>
     <widget class="QLabel" name="label">
      <property name="text">
       <string>Additional build options:</string>

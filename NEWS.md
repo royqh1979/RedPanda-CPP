@@ -14,6 +14,8 @@ Version 0.7.3
  - fix: compiler autolinks options widget don't show autolink infos
  - fix: autolink parameters are repeated when compile single files
  - enhancement: prompt for filename when create new project unit file
+ - fix: options not correctly set when change compiler set in the project settings
+ - change: reset compiler settings when change the project compiler set
 
 Version 0.7.2
  - fix: rainbow parenthesis stop functioning when change editor's general options

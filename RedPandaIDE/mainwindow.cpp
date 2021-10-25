@@ -3050,7 +3050,17 @@ void MainWindow::onCompilerSetChanged(int index)
     if (mProject) {
         Editor *e = mEditorList->getEditor();
         if (!e || e->inProject()) {
-            mProject->options().compilerSet = index;
+            if(QMessageBox::warning(
+                        e,
+                        tr("Change Project Compiler Set"),
+                        tr("Change the project's compiler set will lose all custom compiler set options.")
+                        +"<br />"
+                        + tr("Do you really want to do that?"),
+                        QMessageBox::Yes | QMessageBox::No,
+                        QMessageBox::No) != QMessageBox::Yes) {
+                return;
+            }
+            mProject->setCompilerSet(index);
             mProject->saveOptions();
             return;
         }

@@ -34,6 +34,12 @@ extern const char ValueToChar[28];
 
 class Settings;
 
+enum CompilerSetType {
+    CST_RELEASE,
+    CST_DEBUG,
+    CST_PROFILING
+};
+
 typedef struct {
     QString name; // language table index of "Generate debugging info"
     QString section; // language table index of "C options"
@@ -968,6 +974,9 @@ public:
 
         void setCompilerType(const QString &newCompilerType);
 
+        int compilerSetType() const;
+        void setCompilerSetType(int newCompilerSetType);
+
     private:
         // Initialization
         void setExecutables();
@@ -1003,7 +1012,8 @@ public:
         QString mName; // "TDM-GCC 4.7.1 Release"
         QStringList mDefines; // list of predefined constants
         QString mTarget; // 'X86_64' / 'i686'
-        QString mCompilerType;
+        QString mCompilerType; // 'Clang' / 'GCC'
+        int mCompilerSetType; // RELEASE/ DEBUG/ Profile
 
         // User settings
         bool mUseCustomCompileParams;

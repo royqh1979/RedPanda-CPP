@@ -18,9 +18,10 @@ ProjectCompilerWidget::~ProjectCompilerWidget()
 
 void ProjectCompilerWidget::refreshOptions()
 {
-    Settings::PCompilerSet pSet = pSettings->compilerSets().defaultSet();
+    Settings::PCompilerSet pSet = pSettings->compilerSets().getSet(ui->cbCompilerSet->currentIndex());
     if (!pSet)
         return;
+    mOptions = pSet->iniOptions();
     QTabWidget* pTab = ui->tabOptions;
     while (pTab->count()>0) {
         QWidget* p=pTab->widget(0);
@@ -79,10 +80,15 @@ void ProjectCompilerWidget::refreshOptions()
         QSpacerItem* horizontalSpacer = new QSpacerItem(10, 100, QSizePolicy::Minimum, QSizePolicy::Expanding);
         pLayout->addItem(horizontalSpacer,row,0);
     }
+
+    ui->chkStaticLink->setChecked(pSet->staticLink());
 }
 
 void ProjectCompilerWidget::doLoad()
 {
+    ui->chkAddCharset->setChecked(pMainWindow->project()->options().addCharset);
+    ui->chkStaticLink->setChecked(pMainWindow->project()->options().staticLink);
+
     mOptions = pMainWindow->project()->options().compilerOptions;
     ui->cbCompilerSet->setCurrentIndex(pMainWindow->project()->options().compilerSet);
 }
@@ -113,8 +119,10 @@ void ProjectCompilerWidget::doSave()
             }
         }
     }
-    pMainWindow->project()->options().compilerSet = ui->cbCompilerSet->currentIndex();
+    pMainWindow->project()->setCompilerSet(ui->cbCompilerSet->currentIndex());
     pMainWindow->project()->options().compilerOptions = mOptions;
+    pMainWindow->project()->options().addCharset = ui->chkAddCharset->isChecked();
+    pMainWindow->project()->options().staticLink = ui->chkStaticLink->isChecked();
     pMainWindow->project()->saveOptions();
 }
 

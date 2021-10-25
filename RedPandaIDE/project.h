@@ -163,6 +163,7 @@ public:
     void updateFolders();
     void updateNodeIndexes();
     PFolderNode pointerToNode(FolderNode * p, PFolderNode parent=PFolderNode());
+    void setCompilerSet(int compilerSetIndex);
 
     //void showOptions();
     bool assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate);
@@ -190,6 +191,7 @@ private:
     void open();
     void removeFolderRecurse(PFolderNode node);
     void updateFolderNode(PFolderNode node);
+    void updateCompilerSetType();
 
 private:
     QList<PProjectUnit> mUnits;

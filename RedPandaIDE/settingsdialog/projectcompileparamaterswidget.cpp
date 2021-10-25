@@ -17,8 +17,6 @@ ProjectCompileParamatersWidget::~ProjectCompileParamatersWidget()
 
 void ProjectCompileParamatersWidget::doLoad()
 {
-    ui->chkAddCharset->setChecked(pMainWindow->project()->options().addCharset);
-    ui->chkStaticLink->setChecked(pMainWindow->project()->options().staticLink);
     ui->txtCCompiler->setPlainText(pMainWindow->project()->options().compilerCmd);
     ui->txtCPPCompiler->setPlainText(pMainWindow->project()->options().cppCompilerCmd);
     ui->txtLinker->setPlainText(pMainWindow->project()->options().linkerCmd);
@@ -26,8 +24,6 @@ void ProjectCompileParamatersWidget::doLoad()
 
 void ProjectCompileParamatersWidget::doSave()
 {
-    pMainWindow->project()->options().addCharset = ui->chkAddCharset->isChecked();
-    pMainWindow->project()->options().staticLink = ui->chkStaticLink->isChecked();
     pMainWindow->project()->options().compilerCmd = ui->txtCCompiler->toPlainText();
     pMainWindow->project()->options().cppCompilerCmd = ui->txtCPPCompiler->toPlainText();
     pMainWindow->project()->options().linkerCmd = ui->txtLinker->toPlainText();
