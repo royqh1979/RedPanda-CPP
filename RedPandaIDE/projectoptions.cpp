@@ -33,6 +33,7 @@ ProjectOptions::ProjectOptions()
     includeVersionInfo = false;
     supportXPThemes = false;
     compilerSet = 0;
+    compilerSetType = 0;
     staticLink = true;
     addCharset = true;
 }
