@@ -11,6 +11,7 @@ Version 0.7.3
  - fix: can't correctly handle '&&' and '||' in the #if directive (and correctly parse windows.h header file)
  - fix: crash when create an empty project
  - fix: syntax issues' filepath info not correct when build projects 
+ - fix: compiler autolinks options widget don't show autolink infos
 
 Version 0.7.2
  - fix: rainbow parenthesis stop functioning when change editor's general options

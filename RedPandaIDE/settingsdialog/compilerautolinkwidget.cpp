@@ -181,7 +181,9 @@ const QList<PAutolink> &AutolinkModel::links() const
 
 void AutolinkModel::setLinks(const QMap<QString, PAutolink> &newLinks)
 {
+    beginResetModel();
     mLinks = newLinks.values();
+    endResetModel();
 }
 
 int AutolinkModel::findLink(const QString &header)
