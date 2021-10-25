@@ -16,6 +16,8 @@ Version 0.7.3
  - enhancement: prompt for filename when create new project unit file
  - fix: options not correctly set when change compiler set in the project settings
  - change: reset compiler settings when change the project compiler set
+ - enhancement: use project's compiler set type info to find a nearest system compiler set, when the project compiler set is not valid.
+ - fix: toolbar's compiler set info not correctly updated when change it in the project settings dialog.
 
 Version 0.7.2
  - fix: rainbow parenthesis stop functioning when change editor's general options

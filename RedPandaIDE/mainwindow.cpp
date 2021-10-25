@@ -4108,6 +4108,7 @@ void MainWindow::on_actionProject_options_triggered()
     QString oldName = mProject->name();
     PSettingsDialog dialog = SettingsDialog::projectOptionDialog();
     dialog->exec();
+    updateCompilerSet();
 }
 
 

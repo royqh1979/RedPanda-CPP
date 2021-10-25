@@ -1374,13 +1374,22 @@ void Project::loadOptions(SimpleIni& ini)
                         QMessageBox::Ok
                                   );
             mOptions.compilerSet = pSettings->compilerSets().defaultIndex();
+            int compilerSetType = ini.GetLongValue("Project","CompilerSetType",-1);
+            if (compilerSetType>=0) {
+                for (int i=0;i<pSettings->compilerSets().size();i++) {
+                    Settings::PCompilerSet pSet = pSettings->compilerSets().getSet(i);
+                    if (pSet && pSet->compilerSetType() == compilerSetType) {
+                        mOptions.compilerSet = i;
+                        break;
+                    }
+                }
+            }
             setModified(true);
         }
         mOptions.compilerOptions = ini.GetValue("Project", "CompilerSettings", "");
         mOptions.staticLink = ini.GetBoolValue("Project", "StaticLink", true);
         mOptions.addCharset = ini.GetBoolValue("Project", "AddCharset", true);
 
-        mOptions.compilerSetType = ini.GetLongValue("Project","CompilerSetType",-1);
         if (mOptions.compilerSetType<0) {
             updateCompilerSetType();
         }
