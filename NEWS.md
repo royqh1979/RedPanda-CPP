@@ -13,6 +13,7 @@ Version 0.7.3
  - fix: syntax issues' filepath info not correct when build projects 
  - fix: compiler autolinks options widget don't show autolink infos
  - fix: autolink parameters are repeated when compile single files
+ - enhancement: prompt for filename when create new project unit file
 
 Version 0.7.2
  - fix: rainbow parenthesis stop functioning when change editor's general options

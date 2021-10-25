@@ -4209,14 +4209,37 @@ void MainWindow::on_actionProject_New_File_triggered()
     if (current.isValid()) {
         node = static_cast<FolderNode*>(current.internalPointer());
     }
+    QString newFileName;
+    do {
+        newFileName = tr("untitled")+QString("%1").arg(getNewFileNumber());
+        if (mProject->options().useGPP) {
+            newFileName+=".cpp";
+        } else {
+            newFileName+=".c";
+        }
+    } while (fileExists(QDir(mProject->directory()).absoluteFilePath(newFileName)));
+
+    newFileName = QInputDialog::getText(
+                this,
+                tr("New Project File Name"),
+                tr("File Name:"),
+                QLineEdit::Normal,
+                newFileName);
+    if (newFileName.isEmpty())
+        return;
+    if (fileExists(QDir(mProject->directory()).absoluteFilePath(newFileName))) {
+        QMessageBox::critical(this,tr("File Already Exists!"),
+                              tr("File '%1' already exists!").arg(newFileName));
+        return;
+    }
     PProjectUnit newUnit = mProject->newUnit(
-                mProject->pointerToNode(node));
+                mProject->pointerToNode(node),newFileName);
     idx = mProject->units().count()-1;
     mProject->saveUnits();
     updateProjectView();
     Editor * editor = mProject->openUnit(idx);
-    editor->setUseCppSyntax(mProject->options().useGPP);
-    editor->setModified(true);
+    //editor->setUseCppSyntax(mProject->options().useGPP);
+    //editor->setModified(true);
     editor->activate();
 }
 

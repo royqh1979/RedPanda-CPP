@@ -1725,7 +1725,7 @@ bool ProjectUnit::save()
         // file is neither open, nor saved
         QStringList temp;
         StringsToFile(temp,mFileName);
-    } else if (mEditor and modified()) {
+    } else if (mEditor && mEditor->modified()) {
         result = mEditor->save();
     }
     if (mNode) {
