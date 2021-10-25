@@ -195,6 +195,7 @@ private:
     void includeOrSkipDirs(const QStringList& dirs, bool skip);
     void showSearchReplacePanel(bool show);
     void setFilesViewRoot(const QString& path);
+    void clearIssues();
 
 private slots:
     void onAutoSaveTimeout();

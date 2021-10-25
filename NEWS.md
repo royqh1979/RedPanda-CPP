@@ -10,6 +10,7 @@ Version 0.7.3
  - enhancement: when running a program, redirect a data file to its stdin
  - fix: can't correctly handle '&&' and '||' in the #if directive (and correctly parse windows.h header file)
  - fix: crash when create an empty project
+ - fix: syntax issues' filepath info not correct when build projects 
 
 Version 0.7.2
  - fix: rainbow parenthesis stop functioning when change editor's general options

@@ -59,7 +59,8 @@ bool FileCompiler::prepareForCompile()
         throw CompileError(tr("Can't find the compiler for file %1").arg(mFilename));
     }
 
-    mArguments += getLibraryArguments(fileType);
+    if (!mOnlyCheckSyntax)
+        mArguments += getLibraryArguments(fileType);
 
     if (!fileExists(mCompiler)) {
         throw CompileError(tr("The Compiler '%1' doesn't exists!").arg(mCompiler));

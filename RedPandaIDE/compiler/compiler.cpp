@@ -295,6 +295,8 @@ QString Compiler::getCCompileArguments(bool checkSyntax)
                 value = pOption->value;
             }
             if (value > 0 && pOption->isC) {
+                if (checkSyntax && pOption->isLinker)
+                    continue;
                 if (pOption->choices.isEmpty()) {
                     result += " " + pOption->setting;
                 } else if (value < pOption->choices.size()) {
@@ -342,6 +344,8 @@ QString Compiler::getCppCompileArguments(bool checkSyntax)
                 value = pOption->value;
             }
             if (value > 0 && pOption->isCpp) {
+                if (checkSyntax && pOption->isLinker)
+                    continue;
                 if (pOption->choices.isEmpty()) {
                     result += " " + pOption->setting;
                 } else if (value < pOption->choices.size()) {

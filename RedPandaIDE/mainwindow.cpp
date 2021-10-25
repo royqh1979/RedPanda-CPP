@@ -991,7 +991,7 @@ void MainWindow::checkSyntaxInBack(Editor *e)
         return;
 
     mCheckSyntaxInBack=true;
-    ui->tableIssues->clearIssues();
+    clearIssues();
     CompileTarget target =getCompileTarget();
     if (target ==CompileTarget::Project) {
         mCompilerManager->checkSyntax(e->filename(),e->text(),
@@ -1024,7 +1024,7 @@ bool MainWindow::compile(bool rebuild)
             if (e->inProject() && e->modified())
                 return false;
         }
-        ui->tableIssues->clearIssues();
+        clearIssues();
 
         // Increment build number automagically
         if (mProject->options().versionInfo.autoIncBuildNr) {
@@ -1042,7 +1042,7 @@ bool MainWindow::compile(bool rebuild)
     } else {
         Editor * editor = mEditorList->getEditor();
         if (editor != NULL ) {
-            ui->tableIssues->clearIssues();
+            clearIssues();
             if (editor->modified()) {
                 if (!editor->save(false,false))
                     return false;
@@ -1871,7 +1871,7 @@ void MainWindow::buildContextMenus()
                 ui->tableIssues);
     connect(mTableIssuesClearAction,&QAction::triggered,
             [this](){
-        ui->tableIssues->clearIssues();
+        clearIssues();
     });
 
     //context menu signal for search view
@@ -2755,7 +2755,7 @@ void MainWindow::closeProject(bool refreshEditor)
         }
         if (!mQuitting) {
             // Clear error browser
-            ui->tableIssues->clearIssues();
+            clearIssues();
             updateProjectView();
         }
     }
@@ -4489,6 +4489,15 @@ void MainWindow::setFilesViewRoot(const QString &path)
     pSettings->environment().setCurrentFolder(path);
     ui->txtFilesPath->setText(path);
     ui->txtFilesPath->setCursorPosition(1);
+}
+
+void MainWindow::clearIssues()
+{
+    int i = ui->tabMessages->indexOf(ui->tabIssues);
+    if (i!=-1) {
+        ui->tabMessages->setTabText(i, tr("Issues"));
+    }
+    ui->tableIssues->clearIssues();
 }
 
 Ui::MainWindow *MainWindow::mainWidget() const
