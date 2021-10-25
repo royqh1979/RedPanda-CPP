@@ -12,8 +12,11 @@ public:
     const QString &redirectInputFilename() const;
     void setRedirectInputFilename(const QString &newDataFile);
 
-    bool redirectConsoleProgram() const;
-    void setRedirectConsoleProgram(bool newRedirectConsoleProgram);
+    bool redirectInput() const;
+    void setRedirectInput(bool isRedirect);
+
+    bool startConsole() const;
+    void setStartConsole(bool newStartConsole);
 
 signals:
     void started();
@@ -29,7 +32,8 @@ private:
     QString mWorkDir;
     bool mStop;
     QString mRedirectInputFilename;
-    bool mRedirectConsoleProgram;
+    bool mRedirectInput;
+    bool mStartConsole;
 
     // QThread interface
 protected:

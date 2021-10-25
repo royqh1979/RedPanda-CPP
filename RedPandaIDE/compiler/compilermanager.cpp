@@ -10,6 +10,11 @@
 #include "projectcompiler.h"
 #include "../platform.h"
 
+enum RunProgramFlag {
+    RPF_PAUSE_CONSOLE =     0x0001,
+    RPF_REDIRECT_INPUT =    0x0002
+};
+
 CompilerManager::CompilerManager(QObject *parent) : QObject(parent)
 {
     mCompiler = nullptr;
@@ -197,26 +202,31 @@ void CompilerManager::run(const QString &filename, const QString &arguments, con
     if (mRunner!=nullptr) {
         return;
     }
-    QChar redirectChar = '0';
     QString redirectInputFilename;
     bool redirectInput=false;
     if (pSettings->executor().redirectInput()
             && !pSettings->executor().inputFilename().isEmpty()) {
         redirectInput =true;
-        redirectChar = '1';
         redirectInputFilename = pSettings->executor().inputFilename();
     }
-    if (pSettings->executor().pauseConsole() && programHasConsole(filename)) {
+    if (programHasConsole(filename)) {
+        int consoleFlag=0;
+        if (redirectInput)
+            consoleFlag |= RPF_REDIRECT_INPUT;
+        if (pSettings->executor().pauseConsole())
+            consoleFlag |= RPF_PAUSE_CONSOLE;
         QString newArguments = QString(" %1 \"%2\" %3")
-                .arg(redirectChar)
+                .arg(consoleFlag)
                 .arg(toLocalPath(filename)).arg(arguments);
         mRunner = new ExecutableRunner(includeTrailingPathDelimiter(pSettings->dirs().app())+"ConsolePauser.exe",newArguments,workDir);
-        if (redirectInput)
-            mRunner->setRedirectConsoleProgram(true);
+        mRunner->setStartConsole(true);
     } else {
         mRunner = new ExecutableRunner(filename,arguments,workDir);
     }
-    mRunner->setRedirectInputFilename(redirectInputFilename);
+    if (redirectInput) {
+        mRunner->setRedirectInput(true);
+        mRunner->setRedirectInputFilename(redirectInputFilename);
+    }
     connect(mRunner, &ExecutableRunner::finished, this ,&CompilerManager::onRunnerTerminated);
     connect(mRunner, &ExecutableRunner::finished, pMainWindow ,&MainWindow::onRunFinished);
     connect(mRunner, &ExecutableRunner::runErrorOccurred, pMainWindow ,&MainWindow::onRunErrorOccured);

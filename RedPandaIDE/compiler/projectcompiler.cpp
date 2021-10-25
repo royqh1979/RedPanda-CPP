@@ -352,14 +352,14 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
 
             if (mOnlyCheckSyntax) {
                 if (unit->compileCpp())
-                    writeln(file, "\t$(CPP) -c " + genMakePath1(shortFileName) + " $(CXXFLAGS) " + encodingStr);
+                    writeln(file, "\t$(CPP) -c " + genMakePath1(unit->fileName()) + " $(CXXFLAGS) " + encodingStr);
                 else
-                    writeln(file, "\t(CC) -c " + genMakePath1(shortFileName) + " $(CFLAGS) " + encodingStr);
+                    writeln(file, "\t(CC) -c " + genMakePath1(unit->fileName()) + " $(CFLAGS) " + encodingStr);
             } else {
                 if (unit->compileCpp())
-                    writeln(file, "\t$(CPP) -c " + genMakePath1(shortFileName) + " -o " + ObjFileName2 + " $(CXXFLAGS) " + encodingStr);
+                    writeln(file, "\t$(CPP) -c " + genMakePath1(unit->fileName()) + " -o " + ObjFileName2 + " $(CXXFLAGS) " + encodingStr);
                 else
-                    writeln(file, "\t$(CC) -c " + genMakePath1(shortFileName) + " -o " + ObjFileName2 + " $(CFLAGS) " + encodingStr);
+                    writeln(file, "\t$(CC) -c " + genMakePath1(unit->fileName()) + " -o " + ObjFileName2 + " $(CFLAGS) " + encodingStr);
             }
         }
     }

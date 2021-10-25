@@ -13,7 +13,8 @@ ExecutableRunner::ExecutableRunner(const QString &filename, const QString &argum
     mArguments(arguments),
     mWorkDir(workDir),
     mStop(false),
-    mRedirectConsoleProgram(false)
+    mRedirectInput(false),
+    mStartConsole(false)
 {
 
 }
@@ -23,14 +24,24 @@ void ExecutableRunner::stop()
     mStop = true;
 }
 
-bool ExecutableRunner::redirectConsoleProgram() const
+bool ExecutableRunner::startConsole() const
 {
-    return mRedirectConsoleProgram;
+    return mStartConsole;
 }
 
-void ExecutableRunner::setRedirectConsoleProgram(bool newRedirectConsoleProgram)
+void ExecutableRunner::setStartConsole(bool newStartConsole)
 {
-    mRedirectConsoleProgram = newRedirectConsoleProgram;
+    mStartConsole = newStartConsole;
+}
+
+bool ExecutableRunner::redirectInput() const
+{
+    return mRedirectInput;
+}
+
+void ExecutableRunner::setRedirectInput(bool isRedirect)
+{
+    mRedirectInput = isRedirect;
 }
 
 const QString &ExecutableRunner::redirectInputFilename() const
@@ -69,28 +80,26 @@ void ExecutableRunner::run()
     }
     env.insert("PATH",path);
     process.setProcessEnvironment(env);
-    if (redirectConsoleProgram()) {
-        process.setCreateProcessArgumentsModifier([](QProcess::CreateProcessArguments * args){
+    process.setCreateProcessArgumentsModifier([this](QProcess::CreateProcessArguments * args){
+        if (mStartConsole) {
             args->flags |= CREATE_NEW_CONSOLE;
-        });
-    } else {
-        process.setCreateProcessArgumentsModifier([](QProcess::CreateProcessArguments * args){
-            args->flags |= CREATE_NEW_CONSOLE;
+        }
+        if (!mRedirectInput) {
             args->startupInfo -> dwFlags &= ~STARTF_USESTDHANDLES;
-        });
-    }
+        }
+    });
     process.connect(&process, &QProcess::errorOccurred,
                     [&](){
                         errorOccurred= true;
                     });
 //    qDebug() << mFilename;
 //    qDebug() << QProcess::splitCommand(mArguments);
-    if (!redirectConsoleProgram()) {
+    if (!redirectInput()) {
         process.closeWriteChannel();
     }
     process.start();
     process.waitForStarted(5000);
-    if (process.state()==QProcess::Running && redirectConsoleProgram()) {
+    if (process.state()==QProcess::Running && redirectInput()) {
         process.write(ReadFileToByteArray(redirectInputFilename()));
         process.closeWriteChannel();
     }

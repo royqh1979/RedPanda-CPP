@@ -9,6 +9,11 @@ using std::string;
 #define MAX_COMMAND_LENGTH 32768
 #define MAX_ERROR_LENGTH 2048
 
+enum RunProgramFlag {
+    RPF_PAUSE_CONSOLE =     0x0001,
+    RPF_REDIRECT_INPUT =    0x0002
+};
+
 HANDLE hJob;
 
 LONGLONG GetClockTick() {
@@ -87,9 +92,11 @@ void PauseExit(int exitcode, bool reInp) {
 	exit(exitcode);
 }
 
-string GetCommand(int argc,char** argv,bool &reInp) {
+string GetCommand(int argc,char** argv,bool &reInp,bool &pauseAfterExit) {
 	string result;
-	reInp = (strcmp(argv[1],"0")!=0) ;
+	int flags = atoi(argv[1]);
+	reInp = flags & RPF_REDIRECT_INPUT;
+	pauseAfterExit = flags & RPF_PAUSE_CONSOLE;
 	for(int i = 2;i < argc;i++) {
 /*
 		// Quote the first argument in case the path name contains spaces
@@ -183,8 +190,9 @@ int main(int argc, char** argv) {
     }
 
 	bool reInp;
+	bool pauseAfterExit;
 	// Then build the to-run application command
-	string command = GetCommand(argc,argv,reInp);
+	string command = GetCommand(argc,argv,reInp, pauseAfterExit);
 	HANDLE hOutput = NULL;
 	if (reInp) {
 		SECURITY_ATTRIBUTES sa;
@@ -197,9 +205,9 @@ int main(int argc, char** argv) {
 	    SetStdHandle(STD_OUTPUT_HANDLE, hOutput);
 	    SetStdHandle(STD_ERROR_HANDLE, hOutput);
 		freopen("CONOUT$","w+",stdout);
-		freopen("CONOUT$","w+",stderr);			
+		freopen("CONOUT$","w+",stderr);
 	}
-	
+
 	// Save starting timestamp
 	LONGLONG starttime = GetClockTick();
 
@@ -213,5 +221,7 @@ int main(int argc, char** argv) {
 	// Done? Print return value of executed program
 	printf("\n--------------------------------");
 	printf("\nProcess exited after %.4g seconds with return value %lu\n",seconds,returnvalue);
-	PauseExit(returnvalue,reInp);
+	if (pauseAfterExit)
+		PauseExit(returnvalue,reInp);
+	return 0;
 }
