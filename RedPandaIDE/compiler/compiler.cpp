@@ -501,7 +501,7 @@ QString Compiler::getLibraryArguments(FileType fileType)
 
 QString Compiler::parseFileIncludesForAutolink(
         const QString &filename,
-        QSet<QString> parsedFiles,
+        QSet<QString>& parsedFiles,
         PCppParser& parser)
 {
     QString result;

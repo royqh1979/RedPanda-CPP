@@ -57,7 +57,7 @@ protected:
     virtual QString getLibraryArguments(FileType fileType);
     virtual QString parseFileIncludesForAutolink(
             const QString& filename,
-            QSet<QString> parsedFiles,
+            QSet<QString>& parsedFiles,
             PCppParser& parser);
     void log(const QString& msg);
     void error(const QString& msg);
