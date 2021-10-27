@@ -1479,7 +1479,7 @@ void MainWindow::prepareDebugger()
     // Focus on the debugging buttons
     ui->tabInfos->setCurrentWidget(ui->tabWatch);
     ui->tabMessages->setCurrentWidget(ui->tabDebug);
-    ui->debugViews->setCurrentWidget(ui->tabDebugConsole);
+    ui->debugViews->setCurrentWidget(ui->tabLocals);
     openCloseBottomPanel(true);
     openCloseLeftPanel(true);
 
@@ -1926,8 +1926,32 @@ void MainWindow::buildContextMenus()
                 tr("Remove All Breakpoints"),
                 ui->tblBreakpoints);
     connect(mBreakpointViewRemoveAllAction,&QAction::triggered,
-            [](){
+            [this](){
         pMainWindow->debugger()->deleteBreakpoints();
+        for (int i=0;i<mEditorList->pageCount();i++) {
+            Editor * e = (*(mEditorList))[i];
+            if (e) {
+                e->resetBreakpoints();
+            }
+        }
+    });
+    mBreakpointViewRemoveAction = createActionFor(
+                tr("Remove Breakpoint"),
+                ui->tblBreakpoints);
+    connect(mBreakpointViewRemoveAction,&QAction::triggered,
+            [this](){
+        int index =ui->tblBreakpoints->selectionModel()->currentIndex().row();
+
+        PBreakpoint breakpoint = debugger()->breakpointModel()->breakpoint(index);
+        if (breakpoint) {
+            Editor * e = mEditorList->getOpenedEditorByFilename(breakpoint->filename);
+            if (e) {
+                if (e->hasBreakpoint(breakpoint->line))
+                    e->toggleBreakpoint(breakpoint->line);
+            } else {
+                debugger()->breakpointModel()->removeBreakpoint(index);
+            }
+        }
     });
 
     //context menu signal for project view
@@ -2354,6 +2378,9 @@ void MainWindow::onBreakpointsViewContextMenu(const QPoint &pos)
     QMenu menu(this);
     menu.addAction(mBreakpointViewPropertyAction);
     menu.addAction(mBreakpointViewRemoveAllAction);
+    menu.addAction(mBreakpointViewRemoveAction);
+    mBreakpointViewPropertyAction->setEnabled(ui->tblBreakpoints->currentIndex().isValid());
+    mBreakpointViewRemoveAction->setEnabled(ui->tblBreakpoints->currentIndex().isValid());
     menu.exec(ui->tblBreakpoints->mapToGlobal(pos));
 }
 

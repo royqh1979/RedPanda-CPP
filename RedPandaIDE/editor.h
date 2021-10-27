@@ -166,6 +166,7 @@ public:
     void print();
     void exportAsRTF(const QString& rtfFilename);
     void exportAsHTML(const QString& htmlFilename);
+    void resetBreakpoints();
 
     const PCppParser &parser();
 
@@ -182,7 +183,6 @@ private slots:
 private:
     bool isBraceChar(QChar ch);
     void resetBookmarks();
-    void resetBreakpoints();
     QChar getCurrentChar();
     bool handleSymbolCompletion(QChar key);
     bool handleParentheseCompletion();

@@ -504,6 +504,7 @@ private:
     //actions for breakpoint view
     QAction * mBreakpointViewPropertyAction;
     QAction * mBreakpointViewRemoveAllAction;
+    QAction * mBreakpointViewRemoveAction;
 
     //actions for project view
     QAction * mProject_Add_Folder;
