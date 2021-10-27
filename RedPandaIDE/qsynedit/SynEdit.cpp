@@ -1987,7 +1987,7 @@ void SynEdit::insertLine(bool moveCaret)
                 BackCounter--;
             }
         }
-        mLines->insert(mCaretY - 1, "");
+        mLines->insert(mCaretY - 1, GetLeftSpacing(SpaceCount2,true));
         nLinesInserted++;
         mUndoList->AddChange(SynChangeReason::crLineBreak, caretXY(), caretXY(), "",
                              SynSelectionMode::smNormal);

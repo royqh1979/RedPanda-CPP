@@ -1,5 +1,7 @@
 Version 0.7.4
  - fix: when debug a project, and have breakpoints that not in opened editors, dev-cpp will crash
+ - fix: when a file is parsing in background, exit dev-cpp will crash
+ - fix: "tab to spaces" option in the editor general options widget doesn't work
 
 Version 0.7.3
  - enhancement: icons in project view

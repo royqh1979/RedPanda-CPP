@@ -32,6 +32,7 @@ CppParser::CppParser(QObject *parent) : QObject(parent)
     mIsHeader = false;
     mIsProjectFile = false;
 
+    mCppKeywords = CppKeywords;
     //mNamespaces;
     //mBlockBeginSkips;
     //mBlockEndSkips;
@@ -1289,7 +1290,7 @@ bool CppParser::checkForForBlock()
 
 bool CppParser::checkForKeyword()
 {
-    SkipType st = CppKeywords.value(mTokenizer[mIndex]->text,SkipType::skNone);
+    SkipType st = mCppKeywords.value(mTokenizer[mIndex]->text,SkipType::skNone);
     return st!=SkipType::skNone;
 }
 
@@ -1960,7 +1961,7 @@ void CppParser::handleForBlock()
 void CppParser::handleKeyword()
 {
     // Skip
-    SkipType skipType = CppKeywords.value(mTokenizer[mIndex]->text,SkipType::skNone);
+    SkipType skipType = mCppKeywords.value(mTokenizer[mIndex]->text,SkipType::skNone);
     switch (skipType) {
     case SkipType::skItself:
         // skip it;

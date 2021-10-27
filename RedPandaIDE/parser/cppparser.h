@@ -369,6 +369,7 @@ private:
 
     QRecursiveMutex mMutex;
     GetFileStreamCallBack mOnGetFileStream;
+    QMap<QString,SkipType> mCppKeywords;
 };
 using PCppParser = std::shared_ptr<CppParser>;
 
