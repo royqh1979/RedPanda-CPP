@@ -4,6 +4,8 @@ Version 0.7.4
  - fix: "tab to spaces" option in the editor general options widget doesn't work
  - fix: when remove all breakpoints in the debug breakpoint view,  debug tags in the opened editors are not correctly updated.
  - change: when start debuging, show local view instead of the debug console.
+ - update bundled compiler to msys2 mingw-w64 gcc 11.2 and gdb 10.2
+ - update bundled xege to the lastest git build
 
 Version 0.7.3
  - enhancement: icons in project view
