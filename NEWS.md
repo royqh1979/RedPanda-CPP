@@ -1,3 +1,6 @@
+Version 0.7.4
+ - fix: when debug a project, and have breakpoints that not in opened editors, dev-cpp will crash
+
 Version 0.7.3
  - enhancement: icons in project view
  - fix: sometimes option widget will show confirm dialog even not changed

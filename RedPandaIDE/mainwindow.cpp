@@ -3501,7 +3501,7 @@ bool MainWindow::debugInferiorhasBreakpoint()
     } else {
         for (const PBreakpoint& breakpoint:mDebugger->breakpointModel()->breakpoints()) {
             Editor* e1 = mEditorList->getOpenedEditorByFilename(breakpoint->filename);
-            if (e1->inProject()) {
+            if (e1 && e1->inProject()) {
                 return true;
             }
         }

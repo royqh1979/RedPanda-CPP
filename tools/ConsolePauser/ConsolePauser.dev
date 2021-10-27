@@ -36,6 +36,7 @@ UseUTF8 = 0
 StaticLink = 1
 AddCharset = 1
 Encoding = AUTO
+CompilerSetType = 0
 
 
 [VersionInfo]
