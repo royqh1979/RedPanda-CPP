@@ -3,6 +3,15 @@
 
 #include <QFont>
 
+static const QSet<QString> StatementKeyWords {
+    "if",
+    "for",
+    "try",
+    "catch"
+};
+
+
+
 const QSet<QString> SynEditCppHighlighter::Keywords {
     "and",
     "and_eq",
@@ -366,6 +375,7 @@ void SynEditCppHighlighter::braceCloseProc()
     } else {
         mRange.rightBraces++ ;
     }
+    popIndentsByType(BraceIndentType);
 }
 
 void SynEditCppHighlighter::braceOpenProc()
@@ -379,6 +389,15 @@ void SynEditCppHighlighter::braceOpenProc()
     }
     mRange.braceLevel += 1;
     mRange.leftBraces++;
+    if (!mRange.indents.isEmpty() && mRange.indents.back() == StatementIndentType) {
+        // if last indent is started by 'if' 'for' etc
+        // just replace it
+        mRange.indents.replace(mRange.indents.length()-1,1,BraceIndentType);
+        mRange.indentStartLines.replace(mRange.indents.length()-1,mLineNumber);
+    } else {
+        mRange.indents.append(BraceIndentType);
+        mRange.indentStartLines.append(mLineNumber);
+    }
 }
 
 void SynEditCppHighlighter::colonProc()
@@ -520,6 +539,10 @@ void SynEditCppHighlighter::identProc()
     mRun=wordEnd;
     if (isKeyword(word)) {
         mTokenId = TokenKind::Key;
+        if (StatementKeyWords.contains(word)) {
+            mRange.indents.append(StatementIndentType);
+            mRange.indentStartLines.append(mLineNumber);
+        }
     } else {
         mTokenId = TokenKind::Identifier;
     }
@@ -885,6 +908,7 @@ void SynEditCppHighlighter::roundCloseProc()
     } else {
         mRange.rightParenthesis++ ;
     }
+    popIndentsByType(ParenthesisIndentType);
 }
 
 void SynEditCppHighlighter::roundOpenProc()
@@ -894,6 +918,8 @@ void SynEditCppHighlighter::roundOpenProc()
     mExtTokenId = ExtTokenKind::RoundOpen;
     mRange.parenthesisLevel++;
     mRange.leftParenthesis++;
+    mRange.indents.append(ParenthesisIndentType);
+    mRange.indentStartLines.append(mLineNumber);
 }
 
 void SynEditCppHighlighter::semiColonProc()
@@ -903,6 +929,10 @@ void SynEditCppHighlighter::semiColonProc()
     mExtTokenId = ExtTokenKind::SemiColon;
     if (mRange.state == RangeState::rsAsm)
         mRange.state = RangeState::rsUnknown;
+    if (mRange.indents.back() == StatementIndentType) {
+        mRange.indents.remove(mRange.indents.length()-1,1);
+        mRange.indentStartLines.pop_back();
+    }
 }
 
 void SynEditCppHighlighter::slashProc()
@@ -961,6 +991,7 @@ void SynEditCppHighlighter::squareCloseProc()
     } else {
         mRange.rightBrackets++ ;
     }
+    popIndentsByType(BracketIndentType);
 }
 
 void SynEditCppHighlighter::squareOpenProc()
@@ -970,6 +1001,8 @@ void SynEditCppHighlighter::squareOpenProc()
     mExtTokenId = ExtTokenKind::SquareOpen;
     mRange.bracketLevel++;
     mRange.leftBrackets++;
+    mRange.indents.append(BracketIndentType);
+    mRange.indentStartLines.append(mLineNumber);
 }
 
 void SynEditCppHighlighter::starProc()
@@ -1333,6 +1366,19 @@ void SynEditCppHighlighter::processChar()
     }
 }
 
+void SynEditCppHighlighter::popIndentsByType(QChar indentType)
+{
+    while (!mRange.indents.isEmpty() && mRange.indents.back()!=indentType) {
+        mRange.indents.remove(mRange.indents.length()-1,1);
+        mRange.indentStartLines.pop_back();
+    }
+    if (!mRange.indents.isEmpty()) {
+        mRange.indents.remove(mRange.indents.length()-1,1);
+        mRange.indentStartLines.pop_back();
+    }
+
+}
+
 bool SynEditCppHighlighter::getTokenFinished() const
 {
     if (mTokenId == TokenKind::Comment
@@ -1576,6 +1622,8 @@ void SynEditCppHighlighter::resetState()
     mRange.rightBraces = 0;
     mRange.rightBrackets = 0;
     mRange.rightParenthesis = 0;
+    mRange.indents = "";
+    mRange.indentStartLines.clear();
     mAsmStart = false;
 }
 

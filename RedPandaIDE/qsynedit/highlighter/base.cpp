@@ -215,5 +215,13 @@ bool SynRangeState::operator==(const SynRangeState &s2)
             && (spaceState == s2.spaceState)
             && (braceLevel == s2.braceLevel)
             && (bracketLevel == s2.bracketLevel)
-            && (parenthesisLevel == s2.parenthesisLevel);
+            && (parenthesisLevel == s2.parenthesisLevel)
+            && (leftBraces == s2.leftBraces)
+            && (leftParenthesis = s2.leftParenthesis)
+            && (leftBrackets == s2.leftBrackets)
+            && (rightBraces == s2.rightBraces)
+            && (rightParenthesis = s2.rightParenthesis)
+            && (rightBrackets == s2.rightBrackets)
+            && (indents == s2.indents)
+            ;
 }

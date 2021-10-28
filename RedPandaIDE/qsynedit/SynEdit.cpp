@@ -1368,7 +1368,7 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
 {
     if (!mHighlighter)
         return 0;
-    line = std::min(line, line = mLines->count()+1);
+    line = std::min(line, mLines->count()+1);
     if (line<=1)
         return 0;
     int startLine = line-1;
@@ -1382,20 +1382,24 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
         startLine -- ;
     }
     if (startLine>=1) {
-        SynRangeState range = mLines->ranges(startLine-1);
         indentSpaces = leftSpaces(s);
         if (addIndent) {
-            int left = range.leftBraces+range.leftBrackets+range.leftParenthesis;
-            indentSpaces+=left*mTabWidth;
-            mHighlighter->setState(range);
-            mHighlighter->setLine(lineText,line);
-            mHighlighter->nextToEol();
-            range = mHighlighter->getRangeState();
-            //todo: if line ends with unclosed comment or string
-            if (s.trimmed().endsWith(':'))
+            SynRangeState range = mLines->ranges(startLine-1);
+            if ((!range.indentStartLines.isEmpty()
+                    && range.indentStartLines.back() == startLine-1)
+                || (s.trimmed().endsWith(':'))
+                    ) {
                 indentSpaces += mTabWidth;
-            int right = range.rightBraces+range.rightBrackets+range.leftParenthesis;
-            indentSpaces-=right*mTabWidth;
+            }
+            mHighlighter->setState(range);
+            mHighlighter->setLine(lineText,line-1);
+            mHighlighter->nextToEol();
+            SynRangeState newRange = mHighlighter->getRangeState();
+            while (!newRange.indentStartLines.isEmpty() && newRange.indentStartLines.back()==line-1) {
+                newRange.indentStartLines.pop_back();
+            }
+            if (newRange.indentStartLines.length() < range.indentStartLines.length())
+                indentSpaces-=mTabWidth;
         }
     }
     return std::max(0,indentSpaces);
@@ -1921,20 +1925,14 @@ void SynEdit::insertLine(bool moveCaret)
     QString Temp = lineText();
     QString Temp2 = Temp;
     QString Temp3;
-    int SpaceCount2;
     PSynHighlighterAttribute Attr;
 
     // This is sloppy, but the Right Thing would be to track the column of markers
     // too, so they could be moved depending on whether they are after the caret...
     int InsDelta = (mCaretX == 1)?1:0;
-    int Len = Temp.length();
     QString leftLineText = lineText().mid(0, mCaretX - 1);
     QString rightLineText = lineText().mid(mCaretX-1);
     bool notInComment=true;
-    if (getHighlighterAttriAtRowCol(BufferCoord{leftLineText.length(), mCaretY},
-                                    leftLineText, Attr)) {
-        notInComment = (Attr != mHighlighter->commentAttribute());
-    }
     properSetLine(mCaretY-1,leftLineText);
     //update range stated for line mCaretY
     if (mHighlighter) {
@@ -1946,8 +1944,12 @@ void SynEdit::insertLine(bool moveCaret)
         mHighlighter->setLine(leftLineText, mCaretY-1);
         mHighlighter->nextToEol();
         mLines->setRange(mCaretY-1,mHighlighter->getRangeState());
+        notInComment = !mHighlighter->isLastLineCommentNotFinished(
+                    mHighlighter->getRangeState().state)
+                && !mHighlighter->isLastLineStringNotFinished(
+                    mHighlighter->getRangeState().state);
     }
-    int indentSpaces = calcIndentSpaces(mCaretY,
+    int indentSpaces = calcIndentSpaces(mCaretY+1,
                                         rightLineText,mOptions.testFlag(eoAddIndent)
                                         && notInComment);
     if (mOptions.testFlag(eoAutoIndent)) {
@@ -1962,7 +1964,7 @@ void SynEdit::insertLine(bool moveCaret)
               SynSelectionMode::smNormal);
     //insert new line in middle of "{" and "}"
     if (notInComment && leftLineText.endsWith('{') && rightLineText.startsWith('}')) {
-        indentSpaces = calcIndentSpaces(mCaretY, "" , mOptions.testFlag(eoAddIndent)
+        indentSpaces = calcIndentSpaces(mCaretY+1, "" , mOptions.testFlag(eoAddIndent)
                                                                && notInComment);
         indentSpacesForRightLineText = GetLeftSpacing(indentSpaces,true);
         mLines->insert(mCaretY, indentSpacesForRightLineText);

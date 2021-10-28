@@ -10,6 +10,11 @@
 #include <QVector>
 #include "../Types.h"
 
+constexpr QChar BraceIndentType('{');
+constexpr QChar ParenthesisIndentType('(');
+constexpr QChar BracketIndentType('[');
+constexpr QChar StatementIndentType('K');
+
 struct SynRangeState {
     int state;
     int spaceState;
@@ -22,6 +27,8 @@ struct SynRangeState {
     int rightBrackets;
     int leftParenthesis;
     int rightParenthesis;
+    QString indents;
+    QVector<int> indentStartLines;
     bool operator==(const SynRangeState& s2);
 };
 
