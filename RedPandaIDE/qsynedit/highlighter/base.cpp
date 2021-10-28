@@ -64,16 +64,6 @@ void SynHighlighter::nextToEol()
         next();
 }
 
-int SynHighlighter::getLeftBraces()
-{
-    return 0;
-}
-
-int SynHighlighter::getRightBraces()
-{
-    return 0;
-}
-
 bool SynHighlighter::isSpaceChar(const QChar &ch)
 {
     return ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n';

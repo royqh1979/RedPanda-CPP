@@ -180,9 +180,6 @@ public:
     QString languageName() override;
     SynHighlighterLanguage language() override;
 
-    int getLeftBraces() override;
-    int getRightBraces() override;
-
     // SynHighlighter interface
 public:
     SynRangeState getRangeState() const override;

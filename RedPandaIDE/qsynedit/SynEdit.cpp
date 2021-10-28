@@ -1364,6 +1364,39 @@ void SynEdit::setWordBlock(BufferCoord Value)
         setCaretAndSelection(v_WordEnd, v_WordStart, v_WordEnd);
 }
 
+int SynEdit::calcIndentSpaces(int line, const QString& lineText)
+{
+    if (!mHighlighter)
+        return 0;
+    line = std::min(line, line = mLines->count()+1);
+    if (line<=1)
+        return 0;
+    int startLine = line-1;
+    int indentSpaces = 0;
+    QString s;
+    while (startLine>=1) {
+        s = mLines->getString(startLine-1);
+        if (!s.trimmed().isEmpty()) {
+            break;
+        }
+        startLine -- ;
+    }
+    if (startLine>=1) {
+        SynRangeState range = mLines->ranges(startLine-1);
+        indentSpaces = leftSpaces(s);
+        int left = range.leftBraces+range.leftBrackets+range.leftParenthesis;
+        indentSpaces+=left*mTabWidth;
+
+        mHighlighter->setLine(lineText,line);
+        mHighlighter->setState(range);
+        mHighlighter->nextToEol();
+        range = mHighlighter->getRangeState();
+        int right = range.rightBraces+range.rightBrackets+range.leftParenthesis;
+        indentSpaces-=right*mTabWidth;
+    }
+    return std::max(0,indentSpaces);
+}
+
 void SynEdit::doSelectAll()
 {
     BufferCoord LastPt;
@@ -1894,7 +1927,8 @@ void SynEdit::insertLine(bool moveCaret)
     if (Len > 0) {
         if (Len >= mCaretX) {
             if (mCaretX <= 1) {
-                mLines->insert(mCaretY - 1, "");
+                mLines->insert(mCaretY - 1,
+                                   GetLeftSpacing(calcIndentSpaces(mCaretY,""),true));
                 nLinesInserted++;
                 mUndoList->AddChange(SynChangeReason::crLineBreak, caretXY(), caretXY(), Temp2,
                                      SynSelectionMode::smNormal);
@@ -1944,7 +1978,7 @@ void SynEdit::insertLine(bool moveCaret)
                     internalSetCaretXY(BufferCoord{indentSpacesForRightLineText.length()+1,mCaretY + 1});
             }
         } else {
-            SpaceCount2 = 0;
+            SpaceCount2 = calcIndentSpaces(mCaretY,"");
             int BackCounter = mCaretY;
             if (mOptions.testFlag(eoAutoIndent)) {
                 do {
@@ -1953,7 +1987,7 @@ void SynEdit::insertLine(bool moveCaret)
                     SpaceCount2 = leftSpaces(Temp);
                 } while ((BackCounter != 0) && (Temp == ""));
             }
-            mLines->insert(mCaretY, "");
+            mLines->insert(mCaretY, GetLeftSpacing(,true)));
             nLinesInserted++;
             BufferCoord Caret = caretXY();
             if (moveCaret) {
@@ -2839,8 +2873,7 @@ int SynEdit::scanFrom(int Index, int canStopIndex)
                 return Result;// avoid the final Decrement
             }
         }
-        mLines->setRange(Result,iRange, mHighlighter->getLeftBraces(),
-                         mHighlighter->getRightBraces());
+        mLines->setRange(Result,iRange);
         Result ++ ;
     } while (Result < mLines->count());
     Result--;
@@ -2856,9 +2889,7 @@ void SynEdit::scanRanges()
         for (int i =0;i<mLines->count();i++) {
             mHighlighter->setLine(mLines->getString(i), i);
             mHighlighter->nextToEol();
-            mLines->setRange(i, mHighlighter->getRangeState(),
-                             mHighlighter->getLeftBraces(),
-                             mHighlighter->getRightBraces());
+            mLines->setRange(i, mHighlighter->getRangeState());
         }
     }
     if (mUseCodeFolding)

@@ -506,6 +506,8 @@ private:
     void setSelWord();
     void setWordBlock(BufferCoord Value);
 
+    int calcIndentSpaces(int line, const QString& lineText = "");
+
 
     void processGutterClick(QMouseEvent* event);
 

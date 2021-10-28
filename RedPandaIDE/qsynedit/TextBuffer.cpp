@@ -80,7 +80,7 @@ int SynEditStringList::leftBraces(int Index)
 {
     QMutexLocker locker(&mMutex);
     if (Index>=0 && Index < mList.size()) {
-        return mList[Index]->fLeftBraces;
+        return mList[Index]->fRange.leftBraces;
     } else
         return 0;
 }
@@ -89,7 +89,7 @@ int SynEditStringList::rightBraces(int Index)
 {
     QMutexLocker locker(&mMutex);
     if (Index>=0 && Index < mList.size()) {
-        return mList[Index]->fRightBraces;
+        return mList[Index]->fRange.rightBraces;
     } else
         return 0;
 }
@@ -171,7 +171,7 @@ void SynEditStringList::setAppendNewLineAtEOF(bool appendNewLineAtEOF)
     mAppendNewLineAtEOF = appendNewLineAtEOF;
 }
 
-void SynEditStringList::setRange(int Index, const SynRangeState& ARange, int ALeftBraces, int ARightBraces)
+void SynEditStringList::setRange(int Index, const SynRangeState& ARange)
 {
     QMutexLocker locker(&mMutex);
     if (Index<0 || Index>=mList.count()) {
@@ -179,8 +179,6 @@ void SynEditStringList::setRange(int Index, const SynRangeState& ARange, int ALe
     }
     beginUpdate();
     mList[Index]->fRange = ARange;
-    mList[Index]->fLeftBraces = ALeftBraces;
-    mList[Index]->fRightBraces = ARightBraces;
     endUpdate();
 }
 

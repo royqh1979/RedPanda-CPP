@@ -153,14 +153,7 @@ SynEditCppHighlighter::SynEditCppHighlighter(): SynHighlighter()
     mVariableAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrVariable);
     addAttribute(mVariableAttribute);
 
-    mRange.state = RangeState::rsUnknown;
-    mRange.spaceState = RangeState::rsUnknown;
-    mRange.braceLevel = 0;
-    mRange.bracketLevel = 0;
-    mRange.parenthesisLevel = 0;
-    mLeftBraces = 0;
-    mRightBraces = 0;
-    mAsmStart = false;
+    resetState();
 }
 
 PSynHighlighterAttribute SynEditCppHighlighter::asmAttribute() const
@@ -368,10 +361,10 @@ void SynEditCppHighlighter::braceCloseProc()
     }
 
     mRange.braceLevel -= 1;
-    if (mLeftBraces>0) {
-        mLeftBraces--;
+    if (mRange.leftBraces>0) {
+        mRange.leftBraces--;
     } else {
-        mRightBraces++ ;
+        mRange.rightBraces++ ;
     }
 }
 
@@ -385,7 +378,7 @@ void SynEditCppHighlighter::braceOpenProc()
         mAsmStart = true;
     }
     mRange.braceLevel += 1;
-    mLeftBraces++;
+    mRange.leftBraces++;
 }
 
 void SynEditCppHighlighter::colonProc()
@@ -887,6 +880,11 @@ void SynEditCppHighlighter::roundCloseProc()
     mTokenId = TokenKind::Symbol;
     mExtTokenId = ExtTokenKind::RoundClose;
     mRange.parenthesisLevel--;
+    if (mRange.leftParenthesis>0) {
+        mRange.leftParenthesis--;
+    } else {
+        mRange.rightParenthesis++ ;
+    }
 }
 
 void SynEditCppHighlighter::roundOpenProc()
@@ -895,6 +893,7 @@ void SynEditCppHighlighter::roundOpenProc()
     mTokenId = TokenKind::Symbol;
     mExtTokenId = ExtTokenKind::RoundOpen;
     mRange.parenthesisLevel++;
+    mRange.leftParenthesis++;
 }
 
 void SynEditCppHighlighter::semiColonProc()
@@ -957,6 +956,11 @@ void SynEditCppHighlighter::squareCloseProc()
     mTokenId = TokenKind::Symbol;
     mExtTokenId = ExtTokenKind::SquareClose;
     mRange.bracketLevel--;
+    if (mRange.leftBrackets>0) {
+        mRange.leftBrackets--;
+    } else {
+        mRange.rightBrackets++ ;
+    }
 }
 
 void SynEditCppHighlighter::squareOpenProc()
@@ -965,6 +969,7 @@ void SynEditCppHighlighter::squareOpenProc()
     mTokenId = TokenKind::Symbol;
     mExtTokenId = ExtTokenKind::SquareOpen;
     mRange.bracketLevel++;
+    mRange.leftBrackets++;
 }
 
 void SynEditCppHighlighter::starProc()
@@ -1480,8 +1485,6 @@ void SynEditCppHighlighter::setLine(const QString &newLine, int lineNumber)
     mLine = mLineString.data();
     mLineNumber = lineNumber;
     mRun = 0;
-    mLeftBraces = 0;
-    mRightBraces = 0;
     next();
 }
 
@@ -1545,6 +1548,13 @@ SynHighlighterTokenType SynEditCppHighlighter::getTokenType()
 void SynEditCppHighlighter::setState(const SynRangeState& rangeState)
 {
     mRange = rangeState;
+    // current line's left / right parenthesis count should be reset before parsing each line
+    mRange.leftBraces = 0;
+    mRange.leftBrackets = 0;
+    mRange.leftParenthesis = 0;
+    mRange.rightBraces = 0;
+    mRange.rightBrackets = 0;
+    mRange.rightParenthesis = 0;
 }
 
 void SynEditCppHighlighter::resetState()
@@ -1554,6 +1564,13 @@ void SynEditCppHighlighter::resetState()
     mRange.braceLevel = 0;
     mRange.bracketLevel = 0;
     mRange.parenthesisLevel = 0;
+    mRange.leftBraces = 0;
+    mRange.leftBrackets = 0;
+    mRange.leftParenthesis = 0;
+    mRange.rightBraces = 0;
+    mRange.rightBrackets = 0;
+    mRange.rightParenthesis = 0;
+    mAsmStart = false;
 }
 
 SynHighlighterClass SynEditCppHighlighter::getClass() const
@@ -1574,16 +1591,6 @@ QString SynEditCppHighlighter::languageName()
 SynHighlighterLanguage SynEditCppHighlighter::language()
 {
     return SynHighlighterLanguage::Cpp;
-}
-
-int SynEditCppHighlighter::getLeftBraces()
-{
-    return mLeftBraces;
-}
-
-int SynEditCppHighlighter::getRightBraces()
-{
-    return mRightBraces;
 }
 
 SynRangeState SynEditCppHighlighter::getRangeState() const
