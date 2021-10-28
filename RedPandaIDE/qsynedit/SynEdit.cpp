@@ -1364,7 +1364,7 @@ void SynEdit::setWordBlock(BufferCoord Value)
         setCaretAndSelection(v_WordEnd, v_WordStart, v_WordEnd);
 }
 
-int SynEdit::calcIndentSpaces(int line, const QString& lineText)
+int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
 {
     if (!mHighlighter)
         return 0;
@@ -1384,15 +1384,19 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText)
     if (startLine>=1) {
         SynRangeState range = mLines->ranges(startLine-1);
         indentSpaces = leftSpaces(s);
-        int left = range.leftBraces+range.leftBrackets+range.leftParenthesis;
-        indentSpaces+=left*mTabWidth;
-
-        mHighlighter->setLine(lineText,line);
-        mHighlighter->setState(range);
-        mHighlighter->nextToEol();
-        range = mHighlighter->getRangeState();
-        int right = range.rightBraces+range.rightBrackets+range.leftParenthesis;
-        indentSpaces-=right*mTabWidth;
+        if (addIndent) {
+            int left = range.leftBraces+range.leftBrackets+range.leftParenthesis;
+            indentSpaces+=left*mTabWidth;
+            mHighlighter->setState(range);
+            mHighlighter->setLine(lineText,line);
+            mHighlighter->nextToEol();
+            range = mHighlighter->getRangeState();
+            //todo: if line ends with unclosed comment or string
+            if (s.trimmed().endsWith(':'))
+                indentSpaces += mTabWidth;
+            int right = range.rightBraces+range.rightBrackets+range.leftParenthesis;
+            indentSpaces-=right*mTabWidth;
+        }
     }
     return std::max(0,indentSpaces);
 }
@@ -1924,111 +1928,156 @@ void SynEdit::insertLine(bool moveCaret)
     // too, so they could be moved depending on whether they are after the caret...
     int InsDelta = (mCaretX == 1)?1:0;
     int Len = Temp.length();
-    if (Len > 0) {
-        if (Len >= mCaretX) {
-            if (mCaretX <= 1) {
-                mLines->insert(mCaretY - 1,
-                                   GetLeftSpacing(calcIndentSpaces(mCaretY,""),true));
-                nLinesInserted++;
-                mUndoList->AddChange(SynChangeReason::crLineBreak, caretXY(), caretXY(), Temp2,
-                                     SynSelectionMode::smNormal);
-                if (moveCaret)
-                    internalSetCaretY(mCaretY + 1);
-            } else {
-                QString leftLineText = lineText().mid(0, mCaretX - 1);
-                QString rightLineText = lineText().mid(mCaretX-1);
-                int indentSpacesOfLeftLineText = leftSpaces(leftLineText);
-                int indentSpaces = indentSpacesOfLeftLineText;
-                bool notInComment=true;
-                properSetLine(mCaretY-1,leftLineText);
-                if (mOptions.testFlag(eoAutoIndent)) {
-                    rightLineText=TrimLeft(rightLineText);
-                }
-                if (getHighlighterAttriAtRowCol(BufferCoord{leftLineText.length(), mCaretY},
-                                                leftLineText, Attr)) {
-                    notInComment = (Attr != mHighlighter->commentAttribute());
-                }
-                leftLineText = leftLineText.trimmed();
-                if (mOptions.testFlag(eoAddIndent)) { // only add indent to source files
-                    if (notInComment) { // and outside of comments
-                        if (leftLineText.endsWith(':') || leftLineText.endsWith('{'))
-                            indentSpaces+=mTabWidth;
-                        if (rightLineText.startsWith('}'))
-                            indentSpaces-=mTabWidth;
-                    }
-                }
-                QString indentSpacesForRightLineText = GetLeftSpacing(indentSpaces,true);
-                mLines->insert(mCaretY, indentSpacesForRightLineText+rightLineText);
-                nLinesInserted++;
-
-                //SpaceCount1 = mLines->getString(mCaretY).length(); //???
-                mUndoList->AddChange(SynChangeReason::crLineBreak, caretXY(), caretXY(), rightLineText,
-                          SynSelectionMode::smNormal);
-                //insert new line in middle of "{" and "}"
-                if (notInComment && leftLineText.endsWith('{') && rightLineText.startsWith('}')) {
-                    indentSpaces = indentSpacesOfLeftLineText;
-                    indentSpaces += mTabWidth;
-                    indentSpacesForRightLineText = GetLeftSpacing(indentSpaces,true);
-                    mLines->insert(mCaretY, indentSpacesForRightLineText);
-                    nLinesInserted++;
-                    mUndoList->AddChange(SynChangeReason::crLineBreak, caretXY(), caretXY(), "",
-                            SynSelectionMode::smNormal);
-                }
-                if (moveCaret)
-                    internalSetCaretXY(BufferCoord{indentSpacesForRightLineText.length()+1,mCaretY + 1});
-            }
+    QString leftLineText = lineText().mid(0, mCaretX - 1);
+    QString rightLineText = lineText().mid(mCaretX-1);
+    bool notInComment=true;
+    if (getHighlighterAttriAtRowCol(BufferCoord{leftLineText.length(), mCaretY},
+                                    leftLineText, Attr)) {
+        notInComment = (Attr != mHighlighter->commentAttribute());
+    }
+    properSetLine(mCaretY-1,leftLineText);
+    //update range stated for line mCaretY
+    if (mHighlighter) {
+        if (mCaretY==1) {
+            mHighlighter->resetState();
         } else {
-            SpaceCount2 = calcIndentSpaces(mCaretY,"");
-            int BackCounter = mCaretY;
-            if (mOptions.testFlag(eoAutoIndent)) {
-                do {
-                    BackCounter--;
-                    Temp = mLines->getString(BackCounter);
-                    SpaceCount2 = leftSpaces(Temp);
-                } while ((BackCounter != 0) && (Temp == ""));
-            }
-            mLines->insert(mCaretY, GetLeftSpacing(,true)));
-            nLinesInserted++;
-            BufferCoord Caret = caretXY();
-            if (moveCaret) {
-                QString Temp4=GetLeftSpacing(SpaceCount2,true);
-                if (SpaceCount2 > 0) {
-                }
-                if (mOptions.testFlag(eoAddIndent) && getHighlighterAttriAtRowCol(BufferCoord{Temp.length(), mCaretY},
-                          Temp, Attr)) { // only add indent to source files
-                    if (Attr != mHighlighter->commentAttribute()) { // and outside of comments
-                        Temp = Temp.trimmed();
-                        if (Temp.endsWith('{') || Temp.endsWith(':')) { // add more indent for these too
-                            Temp4=GetLeftSpacing(mTabWidth,true)+Temp4;
-                        }
-                    }
-                }
-                mLines->putString(mCaretY,Temp4); // copy previous indent
-                internalSetCaretXY(BufferCoord{Temp4.length()+1, mCaretY + 1});
-            }
-            mUndoList->AddChange(SynChangeReason::crLineBreak, Caret, Caret, "", SynSelectionMode::smNormal);
+            mHighlighter->setState(mLines->ranges(mCaretY-2));
         }
-    } else {
-        if (mLines->count() == 0)
-            mLines->add("");
-        SpaceCount2 = 0;
-        if (mOptions.testFlag(eoAutoIndent)) {
-            int BackCounter = mCaretY - 1;
-            while (BackCounter >= 0) {
-                SpaceCount2 = leftSpaces(mLines->getString(BackCounter));
-                if (mLines->getString(BackCounter).length() > 0)
-                    break;
-                BackCounter--;
-            }
-        }
-        mLines->insert(mCaretY - 1, GetLeftSpacing(SpaceCount2,true));
+        mHighlighter->setLine(leftLineText, mCaretY-1);
+        mHighlighter->nextToEol();
+        mLines->setRange(mCaretY-1,mHighlighter->getRangeState());
+    }
+    int indentSpaces = calcIndentSpaces(mCaretY,
+                                        rightLineText,mOptions.testFlag(eoAddIndent)
+                                        && notInComment);
+    if (mOptions.testFlag(eoAutoIndent)) {
+        rightLineText=TrimLeft(rightLineText);
+    }
+    QString indentSpacesForRightLineText = GetLeftSpacing(indentSpaces,true);
+    mLines->insert(mCaretY, indentSpacesForRightLineText+rightLineText);
+    nLinesInserted++;
+
+    //SpaceCount1 = mLines->getString(mCaretY).length(); //???
+    mUndoList->AddChange(SynChangeReason::crLineBreak, caretXY(), caretXY(), rightLineText,
+              SynSelectionMode::smNormal);
+    //insert new line in middle of "{" and "}"
+    if (notInComment && leftLineText.endsWith('{') && rightLineText.startsWith('}')) {
+        indentSpaces = calcIndentSpaces(mCaretY, "" , mOptions.testFlag(eoAddIndent)
+                                                               && notInComment);
+        indentSpacesForRightLineText = GetLeftSpacing(indentSpaces,true);
+        mLines->insert(mCaretY, indentSpacesForRightLineText);
         nLinesInserted++;
         mUndoList->AddChange(SynChangeReason::crLineBreak, caretXY(), caretXY(), "",
-                             SynSelectionMode::smNormal);
-        if (moveCaret) {
-            internalSetCaretXY(BufferCoord{1, mCaretY + 1});
-        }
+                SynSelectionMode::smNormal);
     }
+    if (moveCaret)
+        internalSetCaretXY(BufferCoord{indentSpacesForRightLineText.length()+1,mCaretY + 1});
+
+
+//    if (Len > 0) {
+//        if (Len >= mCaretX) {
+//            if (mCaretX <= 1) {
+//                mLines->insert(mCaretY - 1, "");
+//                nLinesInserted++;
+//                mUndoList->AddChange(SynChangeReason::crLineBreak, caretXY(), caretXY(), Temp2,
+//                                     SynSelectionMode::smNormal);
+//                if (moveCaret)
+//                    internalSetCaretY(mCaretY + 1);
+//            } else {
+//                QString leftLineText = lineText().mid(0, mCaretX - 1);
+//                QString rightLineText = lineText().mid(mCaretX-1);
+//                int indentSpacesOfLeftLineText = leftSpaces(leftLineText);
+//                int indentSpaces = indentSpacesOfLeftLineText;
+//                bool notInComment=true;
+//                properSetLine(mCaretY-1,leftLineText);
+//                if (mOptions.testFlag(eoAutoIndent)) {
+//                    rightLineText=TrimLeft(rightLineText);
+//                }
+//                if (getHighlighterAttriAtRowCol(BufferCoord{leftLineText.length(), mCaretY},
+//                                                leftLineText, Attr)) {
+//                    notInComment = (Attr != mHighlighter->commentAttribute());
+//                }
+//                leftLineText = leftLineText.trimmed();
+//                if (mOptions.testFlag(eoAddIndent)) { // only add indent to source files
+//                    if (notInComment) { // and outside of comments
+//                        if (leftLineText.endsWith(':') || leftLineText.endsWith('{'))
+//                            indentSpaces+=mTabWidth;
+//                        if (rightLineText.startsWith('}'))
+//                            indentSpaces-=mTabWidth;
+//                    }
+//                }
+//                QString indentSpacesForRightLineText = GetLeftSpacing(indentSpaces,true);
+//                mLines->insert(mCaretY, indentSpacesForRightLineText+rightLineText);
+//                nLinesInserted++;
+
+//                //SpaceCount1 = mLines->getString(mCaretY).length(); //???
+//                mUndoList->AddChange(SynChangeReason::crLineBreak, caretXY(), caretXY(), rightLineText,
+//                          SynSelectionMode::smNormal);
+//                //insert new line in middle of "{" and "}"
+//                if (notInComment && leftLineText.endsWith('{') && rightLineText.startsWith('}')) {
+//                    indentSpaces = indentSpacesOfLeftLineText;
+//                    indentSpaces += mTabWidth;
+//                    indentSpacesForRightLineText = GetLeftSpacing(indentSpaces,true);
+//                    mLines->insert(mCaretY, indentSpacesForRightLineText);
+//                    nLinesInserted++;
+//                    mUndoList->AddChange(SynChangeReason::crLineBreak, caretXY(), caretXY(), "",
+//                            SynSelectionMode::smNormal);
+//                }
+//                if (moveCaret)
+//                    internalSetCaretXY(BufferCoord{indentSpacesForRightLineText.length()+1,mCaretY + 1});
+//            }
+//        } else {
+//            SpaceCount2 = 0;
+//            int BackCounter = mCaretY;
+//            if (mOptions.testFlag(eoAutoIndent)) {
+//                do {
+//                    BackCounter--;
+//                    Temp = mLines->getString(BackCounter);
+//                    SpaceCount2 = leftSpaces(Temp);
+//                } while ((BackCounter != 0) && (Temp == ""));
+//            }
+//            mLines->insert(mCaretY, "");
+//            nLinesInserted++;
+//            BufferCoord Caret = caretXY();
+//            if (moveCaret) {
+//                QString Temp4=GetLeftSpacing(SpaceCount2,true);
+//                if (SpaceCount2 > 0) {
+//                }
+//                if (mOptions.testFlag(eoAddIndent) && getHighlighterAttriAtRowCol(BufferCoord{Temp.length(), mCaretY},
+//                          Temp, Attr)) { // only add indent to source files
+//                    if (Attr != mHighlighter->commentAttribute()) { // and outside of comments
+//                        Temp = Temp.trimmed();
+//                        if (Temp.endsWith('{') || Temp.endsWith(':')) { // add more indent for these too
+//                            Temp4=GetLeftSpacing(mTabWidth,true)+Temp4;
+//                        }
+//                    }
+//                }
+//                mLines->putString(mCaretY,Temp4); // copy previous indent
+//                internalSetCaretXY(BufferCoord{Temp4.length()+1, mCaretY + 1});
+//            }
+//            mUndoList->AddChange(SynChangeReason::crLineBreak, Caret, Caret, "", SynSelectionMode::smNormal);
+//        }
+//    } else {
+//        if (mLines->count() == 0)
+//            mLines->add("");
+//        SpaceCount2 = 0;
+//        if (mOptions.testFlag(eoAutoIndent)) {
+//            int BackCounter = mCaretY - 1;
+//            while (BackCounter >= 0) {
+//                SpaceCount2 = leftSpaces(mLines->getString(BackCounter));
+//                if (mLines->getString(BackCounter).length() > 0)
+//                    break;
+//                BackCounter--;
+//            }
+//        }
+//        mLines->insert(mCaretY - 1, GetLeftSpacing(SpaceCount2,true));
+//        nLinesInserted++;
+//        mUndoList->AddChange(SynChangeReason::crLineBreak, caretXY(), caretXY(), "",
+//                             SynSelectionMode::smNormal);
+//        if (moveCaret) {
+//            internalSetCaretXY(BufferCoord{1, mCaretY + 1});
+//        }
+//    }
     doLinesInserted(mCaretY - InsDelta, nLinesInserted);
     setBlockBegin(caretXY());
     setBlockEnd(caretXY());

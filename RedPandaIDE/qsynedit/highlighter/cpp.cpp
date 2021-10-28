@@ -1485,6 +1485,12 @@ void SynEditCppHighlighter::setLine(const QString &newLine, int lineNumber)
     mLine = mLineString.data();
     mLineNumber = lineNumber;
     mRun = 0;
+    mRange.leftBraces = 0;
+    mRange.leftBrackets = 0;
+    mRange.leftParenthesis = 0;
+    mRange.rightBraces = 0;
+    mRange.rightBrackets = 0;
+    mRange.rightParenthesis = 0;
     next();
 }
 

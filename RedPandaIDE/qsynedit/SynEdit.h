@@ -506,7 +506,7 @@ private:
     void setSelWord();
     void setWordBlock(BufferCoord Value);
 
-    int calcIndentSpaces(int line, const QString& lineText = "");
+    int calcIndentSpaces(int line, const QString& lineText, bool addIndent);
 
 
     void processGutterClick(QMouseEvent* event);
