@@ -1424,10 +1424,18 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
             mHighlighter->setState(rangePreceeding);
             mHighlighter->setLine(lineText.trimmed(),line-1);
             SynRangeState rangeAfterFirstToken = mHighlighter->getRangeState();
+            QString firstToken = mHighlighter->getToken();
+            PSynHighlighterAttribute attr = mHighlighter->getTokenAttribute();
             if (rangeAfterFirstToken.indents.length() < rangePreceeding.indents.length()) {
                 indentSpaces -= mTabWidth;
             } else if (rangeAfterFirstToken.getLastIndent() == BraceIndentType
                        && rangePreceeding.getLastIndent() == StatementIndentType) {
+                indentSpaces -= mTabWidth;
+            } else if (attr == mHighlighter->keywordAttribute()
+                       &&  lineText.endsWith(':')
+                       && (
+                       firstToken == "public" || firstToken == "private"
+                       || firstToken == "protected" || firstToken == "case")) {
                 indentSpaces -= mTabWidth;
             }
         }
@@ -2480,6 +2488,33 @@ void SynEdit::doAddChar(QChar AChar)
     mUndoList->BeginBlock();
     if (mOptions.testFlag(eoAutoIndent) && mHighlighter
             && (oldCaretY<=mLines->count())) {
+        //unindent if ':' at end of the line
+        if (AChar == ':') {
+            QString line = mLines->getString(oldCaretY-1);
+            if (line.length() < oldCaretX) {
+                int indentSpaces = calcIndentSpaces(oldCaretY,line+":", true);
+                if (indentSpaces != leftSpaces(line)) {
+                    QString temp = GetLeftSpacing(indentSpaces,true) + TrimLeft(line);
+                    int i = temp.length();
+                    mLines->putString(oldCaretY-1,temp);
+                    internalSetCaretXY(BufferCoord{i+1,oldCaretY});
+                    mUndoList->AddChange(
+                                SynChangeReason::crDelete,
+                                BufferCoord{1, oldCaretY},
+                                BufferCoord{line.length()+1, oldCaretY},
+                                line,
+                                SynSelectionMode::smNormal
+                                );
+                    mUndoList->AddChange(
+                                SynChangeReason::crInsert,
+                                BufferCoord{1, oldCaretY},
+                                BufferCoord{temp.length()+1, oldCaretY},
+                                "",
+                                SynSelectionMode::smNormal
+                                );
+                }
+            }
+        }
         //unindent if '{' is after an statement like 'if' 'for'
         if (AChar == '{') {
             QString temp = mLines->getString(oldCaretY-1).mid(0,oldCaretX-1);

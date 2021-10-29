@@ -1903,7 +1903,8 @@ bool Editor::handleCodeCompletion(QChar key)
             showCompletion(false);
         return true;
     case ':':
-        setSelText(key);
+        ExecuteCommand(SynEditorCommand::ecChar,':',nullptr);
+        //setSelText(key);
         if ((caretX() > 2) && (lineText().length() >= 2) &&
                 (lineText()[caretX() - 3] == ':'))
             showCompletion(false);
