@@ -1991,7 +1991,11 @@ void SynEdit::insertLine(bool moveCaret)
     mUndoList->AddChange(SynChangeReason::crLineBreak, caretXY(), caretXY(), rightLineText,
               SynSelectionMode::smNormal);
     //insert new line in middle of "{" and "}"
-    if (notInComment && leftLineText.endsWith('{') && rightLineText.startsWith('}')) {
+    if (notInComment &&
+            ( (leftLineText.endsWith('{') && rightLineText.startsWith('}'))
+             || (leftLineText.endsWith('(') && rightLineText.startsWith(')'))
+             ||  (leftLineText.endsWith('[') && rightLineText.startsWith(')'))
+              )) {
         indentSpaces = calcIndentSpaces(mCaretY+1, "" , mOptions.testFlag(eoAutoIndent)
                                                                && notInComment);
         indentSpacesForRightLineText = GetLeftSpacing(indentSpaces,true);
