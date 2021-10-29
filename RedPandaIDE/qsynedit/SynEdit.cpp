@@ -3476,6 +3476,7 @@ void SynEdit::onSizeOrFontChanged(bool bFont)
     if (mCharWidth != 0) {
         mCharsInWindow = std::max(clientWidth() - mGutterWidth - 2, 0) / mCharWidth;
         mLinesInWindow = clientHeight() / mTextHeight;
+        bool scrollBarChangedSettings = mStateFlags.testFlag(SynStateFlag::sfScrollbarChanged);
         if (bFont) {
             if (mGutter.showLineNumbers())
                 onGutterChanged();
@@ -3485,7 +3486,7 @@ void SynEdit::onSizeOrFontChanged(bool bFont)
             invalidate();
         } else
             updateScrollbars();
-        mStateFlags.setFlag(SynStateFlag::sfScrollbarChanged,false);
+        mStateFlags.setFlag(SynStateFlag::sfScrollbarChanged,scrollBarChangedSettings);
         //if (!mOptions.testFlag(SynEditorOption::eoScrollPastEol))
         setLeftChar(mLeftChar);
         //if (!mOptions.testFlag(SynEditorOption::eoScrollPastEof))
