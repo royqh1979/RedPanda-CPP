@@ -26,7 +26,7 @@ struct SynRangeState {
     QString indents; // indents stack (each char represents an indent) (needed by auto indent)
     int firstIndentThisLine; /* index of first indent that appended to the indents
                               *  stack at this line ( need by auto indent) */
-    QChar lastMatchingIndent; /* the last indent matched ( and removed )
+    QString matchingIndents; /* the indent matched ( and removed )
                               but not started at this line
                                 (need by auto indent) */
     bool operator==(const SynRangeState& s2);

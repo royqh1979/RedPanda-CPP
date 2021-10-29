@@ -982,7 +982,6 @@ void Settings::Editor::doSave()
 
     // indents
     saveValue("auto_indent", mAutoIndent);
-    saveValue("add_indent", mAddIndent);
     saveValue("tab_to_spaces", mTabToSpaces);
     saveValue("tab_width", mTabWidth);
     saveValue("show_indent_lines", mShowIndentLines);
@@ -1092,7 +1091,6 @@ void Settings::Editor::doLoad()
 
     // indents
     mAutoIndent = boolValue("auto_indent", true);
-    mAddIndent = boolValue("add_indent", true);
     mTabToSpaces = boolValue("tab_to_spaces",false);
     mTabWidth = intValue("tab_width",4);
     mShowIndentLines = boolValue("show_indent_lines",true);
@@ -1279,16 +1277,6 @@ bool Settings::Editor::tabToSpaces() const
 void Settings::Editor::setTabToSpaces(bool tabToSpaces)
 {
     mTabToSpaces = tabToSpaces;
-}
-
-bool Settings::Editor::addIndent() const
-{
-    return mAddIndent;
-}
-
-void Settings::Editor::setAddIndent(bool addIndent)
-{
-    mAddIndent = addIndent;
 }
 
 Settings::CompilerSet::CompilerSet(const QString& compilerFolder):

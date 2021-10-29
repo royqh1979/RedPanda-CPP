@@ -65,8 +65,8 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(SynStateFlags)
 
 enum SynEditorOption {
   eoAltSetsColumnMode = 0x00000001, //Holding down the Alt Key will put the selection mode into columnar format
-  eoAutoIndent =        0x00000002, //Will indent the caret on new lines with the same amount of leading white space as the preceding line
-  eoAddIndent =         0x00000004, //Will add one tab width of indent when typing { and :, and remove the same amount when typing }
+  eoAutoIndent =        0x00000002, //Will auto calculate the indent when input
+//  eoAddIndent =         0x00000004, //Will add one tab width of indent when typing { and :, and remove the same amount when typing }
   eoDragDropEditing =   0x00000008, //Allows you to select a block of text and drag it within the document to another location
   eoDropFiles =         0x00000010, //Allows the editor accept OLE file drops
   eoEnhanceHomeKey =    0x00000020, //enhances home key positioning, similar to visual studio
@@ -455,14 +455,15 @@ private:
     QString expandAtWideGlyphs(const QString& S);
     void updateModifiedStatus();
     int scanFrom(int Index, int canStopIndex);
-    void scanRanges();
+    void rescanRange(int line);
+    void rescanRanges();
     void uncollapse(PSynEditFoldRange FoldRange);
     void collapse(PSynEditFoldRange FoldRange);
 
     void foldOnListInserted(int Line, int Count);
     void foldOnListDeleted(int Line, int Count);
     void foldOnListCleared();
-    void rescan(); // rescan for folds
+    void rescanFolds(); // rescan for folds
     void rescanForFoldRanges();
     void scanForFoldRanges(PSynEditFoldRanges TopFoldRanges);
     int lineHasChar(int Line, int startChar, QChar character, const QString& highlighterAttrName);

@@ -1,3 +1,7 @@
+Version 0.7.5
+ - enhancement: more accurate auto indent calculation
+ - change: remove "add indent" option in the editor general options widget ( It's merged with "auto indent" option)
+
 Version 0.7.4
  - fix: when debug a project, and have breakpoints that not in opened editors, dev-cpp will crash
  - fix: when a file is parsing in background, exit dev-cpp will crash

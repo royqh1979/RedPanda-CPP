@@ -3638,7 +3638,6 @@ void Editor::applySettings()
             eoRightMouseMovesCursor | eoScrollByOneLess | eoTabIndent | eoHideShowScrollbars;
 
     //options
-    options.setFlag(eoAddIndent,pSettings->editor().addIndent());
     options.setFlag(eoAutoIndent,pSettings->editor().autoIndent());
     options.setFlag(eoTabsToSpaces,pSettings->editor().tabToSpaces());
 

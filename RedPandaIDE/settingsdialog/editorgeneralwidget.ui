@@ -28,13 +28,6 @@
        </widget>
       </item>
       <item>
-       <widget class="QCheckBox" name="chkAddIndent">
-        <property name="text">
-         <string>Add Indent after { and :</string>
-        </property>
-       </widget>
-      </item>
-      <item>
        <widget class="QCheckBox" name="chkTabToSpaces">
         <property name="text">
          <string>Replace tab with spaces</string>

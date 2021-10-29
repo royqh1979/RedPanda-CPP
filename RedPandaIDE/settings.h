@@ -340,7 +340,6 @@ public:
         //General
         // indents
         bool mAutoIndent;
-        bool mAddIndent;
         bool mTabToSpaces;
         int mTabWidth;
         bool mShowIndentLines;

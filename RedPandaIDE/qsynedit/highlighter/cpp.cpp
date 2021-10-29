@@ -389,7 +389,7 @@ void SynEditCppHighlighter::braceOpenProc()
     }
     mRange.braceLevel += 1;
     mRange.leftBraces++;
-    if (!mRange.indents.isEmpty() && mRange.indents.back() == StatementIndentType) {
+    if (mRange.getLastIndent() == StatementIndentType) {
         // if last indent is started by 'if' 'for' etc
         // just replace it
         popIndents(StatementIndentType);
@@ -925,7 +925,7 @@ void SynEditCppHighlighter::semiColonProc()
     mExtTokenId = ExtTokenKind::SemiColon;
     if (mRange.state == RangeState::rsAsm)
         mRange.state = RangeState::rsUnknown;
-    if (mRange.indents.back() == StatementIndentType) {
+    if (mRange.getLastIndent() == StatementIndentType) {
         popIndents(StatementIndentType);
     }
 }
@@ -1362,7 +1362,7 @@ void SynEditCppHighlighter::popIndents(QChar indentType)
     if (!mRange.indents.isEmpty()) {
         int idx = mRange.indents.length()-1;
         if (idx < mRange.firstIndentThisLine) {
-            mRange.lastMatchingIndent = mRange.indents[idx];
+            mRange.matchingIndents.append(mRange.indents[idx]);
         }
         mRange.indents.remove(idx,1);
     }
@@ -1531,7 +1531,7 @@ void SynEditCppHighlighter::setLine(const QString &newLine, int lineNumber)
     mRange.leftBraces = 0;
     mRange.rightBraces = 0;
     mRange.firstIndentThisLine = mRange.indents.length();
-    mRange.lastMatchingIndent = QChar();
+    mRange.matchingIndents = "";
     next();
 }
 
@@ -1599,7 +1599,7 @@ void SynEditCppHighlighter::setState(const SynRangeState& rangeState)
     mRange.leftBraces = 0;
     mRange.rightBraces = 0;
     mRange.firstIndentThisLine = mRange.indents.length();
-    mRange.lastMatchingIndent = QChar();
+    mRange.matchingIndents = "";
 }
 
 void SynEditCppHighlighter::resetState()
@@ -1613,7 +1613,7 @@ void SynEditCppHighlighter::resetState()
     mRange.rightBraces = 0;
     mRange.indents = "";
     mRange.firstIndentThisLine = 0;
-    mRange.lastMatchingIndent = QChar();
+    mRange.matchingIndents = "";
     mAsmStart = false;
 }
 
