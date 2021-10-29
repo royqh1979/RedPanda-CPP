@@ -3,6 +3,8 @@ Version 0.7.5
  - change: remove "add indent" option in the editor general options widget ( It's merged with "auto indent" option)
  - enhancement: auto insert a new line when input an enter between '(' and ')' or between '[' and ']'
  - fix: correctly updates cursor position when pasting from clipboard
+ - enhancement: auto unindent when input protected: public: private: case *:
+ - enhancement: can use PageDown / PageUp / Home / End to scroll in the auto completion popup
 
 Version 0.7.4
  - fix: when debug a project, and have breakpoints that not in opened editors, dev-cpp will crash
