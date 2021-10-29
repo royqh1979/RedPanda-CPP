@@ -7,7 +7,8 @@ static const QSet<QString> StatementKeyWords {
     "if",
     "for",
     "try",
-    "catch"
+    "catch",
+    "else"
 };
 
 

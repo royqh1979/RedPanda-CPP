@@ -3334,6 +3334,7 @@ void MainWindow::on_actionPaste_triggered()
         Editor * editor = mEditorList->getEditor();
         if (editor != NULL ) {
             editor->pasteFromClipboard();
+            editor->activate();
         }
     }
 }
