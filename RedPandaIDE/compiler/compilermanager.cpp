@@ -1,7 +1,6 @@
 #include "compilermanager.h"
 #include "filecompiler.h"
 #include "stdincompiler.h"
-#include <QDebug>
 #include "../mainwindow.h"
 #include "executablerunner.h"
 #include "utils.h"

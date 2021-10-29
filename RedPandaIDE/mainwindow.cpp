@@ -37,7 +37,6 @@
 #include <QClipboard>
 #include <QMessageBox>
 #include <QTextCodec>
-#include <QDebug>
 #include "cpprefacter.h"
 
 #include <widgets/searchdialog.h>

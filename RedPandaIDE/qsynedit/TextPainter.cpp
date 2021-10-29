@@ -973,7 +973,7 @@ void SynEditTextPainter::PaintLines()
                     if (bCurrentLine && edit->mInputPreeditString.length()>0) {
                         int startPos = edit->mHighlighter->getTokenPos()+1;
                         int endPos = edit->mHighlighter->getTokenPos() + sToken.length();
-                        qDebug()<<startPos<<":"<<endPos<<" - "+sToken+" - "<<edit->mCaretX<<":"<<edit->mCaretX+edit->mInputPreeditString.length();
+                        //qDebug()<<startPos<<":"<<endPos<<" - "+sToken+" - "<<edit->mCaretX<<":"<<edit->mCaretX+edit->mInputPreeditString.length();
                         if (!(endPos < edit->mCaretX
                                 || startPos >= edit->mCaretX+edit->mInputPreeditString.length())) {
                             if (!preeditAttr) {

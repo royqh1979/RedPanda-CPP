@@ -1,6 +1,5 @@
 #include "MiscClasses.h"
 #include "algorithm"
-#include <QDebug>
 
 SynGutter::SynGutter(QObject *parent):
     QObject(parent)

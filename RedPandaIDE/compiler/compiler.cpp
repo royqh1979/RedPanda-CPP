@@ -7,7 +7,6 @@
 #include <QProcess>
 #include <QString>
 #include <QTextCodec>
-#include <QDebug>
 #include <QTime>
 #include <QApplication>
 #include "../editor.h"

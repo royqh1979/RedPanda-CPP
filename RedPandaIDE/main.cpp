@@ -5,7 +5,6 @@
 #include <QApplication>
 #include <QDir>
 #include <QTranslator>
-#include <QDebug>
 #include <QStandardPaths>
 #include <QMessageBox>
 #include <QStringList>

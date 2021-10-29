@@ -20,7 +20,6 @@
 #include <QFileIconProvider>
 #include <QMimeData>
 #include "settings.h"
-#include <QDebug>
 
 Project::Project(const QString &filename, const QString &name, QObject *parent) :
     QObject(parent),

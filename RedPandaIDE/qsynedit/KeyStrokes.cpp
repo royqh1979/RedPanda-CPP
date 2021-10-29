@@ -1,5 +1,4 @@
 #include "KeyStrokes.h"
-#include <QDebug>
 
 SynEditKeyStroke::SynEditKeyStroke()
 {

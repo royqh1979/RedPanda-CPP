@@ -3,7 +3,6 @@
 #include <QPainter>
 #include <QTextStream>
 #include <algorithm>
-#include <QDebug>
 
 int minMax(int x, int mi, int ma)
 {
