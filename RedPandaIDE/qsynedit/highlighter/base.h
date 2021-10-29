@@ -13,23 +13,24 @@
 constexpr QChar BraceIndentType('{');
 constexpr QChar ParenthesisIndentType('(');
 constexpr QChar BracketIndentType('[');
-constexpr QChar StatementIndentType('K');
+constexpr QChar StatementIndentType('S');
 
 struct SynRangeState {
-    int state;
-    int spaceState;
-    int braceLevel;
-    int bracketLevel;
-    int parenthesisLevel;
-    int leftBraces;
-    int rightBraces;
-    int leftBrackets;
-    int rightBrackets;
-    int leftParenthesis;
-    int rightParenthesis;
-    QString indents;
-    QVector<int> indentStartLines;
+    int state;  // current syntax parsing state
+    int spaceState; // the last syntax parsing state before meeting space
+    int braceLevel; // current braces embedding level (needed by rainbow color)
+    int bracketLevel; // current brackets embedding level (needed by rainbow color)
+    int parenthesisLevel; // current parenthesis embedding level (needed by rainbow color)
+    int leftBraces; // unpairing left braces in the current line ( needed by block folding)
+    int rightBraces; // unparing right braces in the current line (needed by block folding)
+    QString indents; // indents stack (each char represents an indent) (needed by auto indent)
+    int firstIndentThisLine; /* index of first indent that appended to the indents
+                              *  stack at this line ( need by auto indent) */
+    QChar lastMatchingIndent; /* the last indent matched ( and removed )
+                              but not started at this line
+                                (need by auto indent) */
     bool operator==(const SynRangeState& s2);
+    QChar getLastIndent();
 };
 
 typedef int SynTokenKind;

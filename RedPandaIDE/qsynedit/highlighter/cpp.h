@@ -125,7 +125,8 @@ private:
     void unknownProc();
     void xorSymbolProc();
     void processChar();
-    void popIndentsByType(QChar indentType);
+    void popIndents(QChar indentType);
+    void pushIndents(QChar indentType);
 
 private:
     bool mAsmStart;

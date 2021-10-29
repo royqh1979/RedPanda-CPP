@@ -1371,8 +1371,8 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
     line = std::min(line, mLines->count()+1);
     if (line<=1)
         return 0;
+    // find the first non-empty preceeding line
     int startLine = line-1;
-    int indentSpaces = 0;
     QString s;
     while (startLine>=1) {
         s = mLines->getString(startLine-1);
@@ -1381,25 +1381,37 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
         }
         startLine -- ;
     }
+    int indentSpaces = 0;
     if (startLine>=1) {
         indentSpaces = leftSpaces(s);
         if (addIndent) {
-            SynRangeState range = mLines->ranges(startLine-1);
-            if ((!range.indentStartLines.isEmpty()
-                    && range.indentStartLines.back() == startLine-1)
+            SynRangeState rangePreceeding = mLines->ranges(startLine-1);
+            if (!rangePreceeding.lastMatchingIndent.isNull()) {
+                // find the indent's start line, and use it's indent as the default indent;
+                int l = startLine-1;
+                while (l>=1) {
+                    SynRangeState range = mLines->ranges(l-1);
+                    if (range.indents.mid(range.firstIndentThisLine).contains(rangePreceeding.lastMatchingIndent)) {
+                        indentSpaces = leftSpaces(mLines->getString(l-1));
+                        break;
+                    }
+                    l--;
+                }
+            }
+            if ((rangePreceeding.firstIndentThisLine < rangePreceeding.indents.length()) // there are indents added at this (preceeding) line
                 || (s.trimmed().endsWith(':'))
                     ) {
                 indentSpaces += mTabWidth;
             }
-            mHighlighter->setState(range);
-            mHighlighter->setLine(lineText,line-1);
-            mHighlighter->nextToEol();
-            SynRangeState newRange = mHighlighter->getRangeState();
-            while (!newRange.indentStartLines.isEmpty() && newRange.indentStartLines.back()==line-1) {
-                newRange.indentStartLines.pop_back();
+            mHighlighter->setState(rangePreceeding);
+            mHighlighter->setLine(lineText.trimmed(),line-1);
+            SynRangeState rangeAfterFirstToken = mHighlighter->getRangeState();
+            if (rangeAfterFirstToken.indents.length() < rangePreceeding.indents.length()) {
+                indentSpaces -= mTabWidth;
+            } else if (rangeAfterFirstToken.getLastIndent() == BraceIndentType
+                       && rangePreceeding.getLastIndent() == StatementIndentType) {
+                indentSpaces -= mTabWidth;
             }
-            if (newRange.indentStartLines.length() < range.indentStartLines.length())
-                indentSpaces-=mTabWidth;
         }
     }
     return std::max(0,indentSpaces);

@@ -211,17 +211,16 @@ SynHighlighterAttribute::SynHighlighterAttribute(const QString &name):
 
 bool SynRangeState::operator==(const SynRangeState &s2)
 {
+    // indents contains the information of brace/parenthesis/brackets embedded levels
     return (state == s2.state)
             && (spaceState == s2.spaceState)
-            && (braceLevel == s2.braceLevel)
-            && (bracketLevel == s2.bracketLevel)
-            && (parenthesisLevel == s2.parenthesisLevel)
-            && (leftBraces == s2.leftBraces)
-            && (leftParenthesis = s2.leftParenthesis)
-            && (leftBrackets == s2.leftBrackets)
-            && (rightBraces == s2.rightBraces)
-            && (rightParenthesis = s2.rightParenthesis)
-            && (rightBrackets == s2.rightBrackets)
             && (indents == s2.indents)
             ;
+}
+
+QChar SynRangeState::getLastIndent()
+{
+    if (indents.isEmpty())
+        return QChar();
+    return indents.back();
 }
