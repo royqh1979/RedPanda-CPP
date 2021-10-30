@@ -127,7 +127,7 @@ QVariant ClassBrowserModel::data(const QModelIndex &index, int role) const
             return node->statement->command + node->statement->args;
         }
     } else if (role == Qt::ForegroundRole) {
-        if (node->statement) {
+        if (mColors && node->statement) {
             PStatement statement = (node->statement);
             StatementKind kind;
             if (mParser) {
@@ -143,8 +143,8 @@ QVariant ClassBrowserModel::data(const QModelIndex &index, int role) const
             if (item) {
                 return item->foreground();
             }
-            return pMainWindow->palette().color(QPalette::Text);
         }
+        return pMainWindow->palette().color(QPalette::Text);
     } else if (role == Qt::DecorationRole) {
         if (node->statement) {
             PStatement statement = (node->statement);

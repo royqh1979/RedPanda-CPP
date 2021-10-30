@@ -4,6 +4,8 @@ Version 0.7.6
  - enhancement: the line containing 'public:' / 'private:' / 'protected:' / 'case *:' will use of indents of the surrounding '{' line, instead of just unindent one level
  - enhancement: correctly handle auto indents for multi-level embedding complex statements like 'for(...) if (...) printf();
  - change: Don't use 'pause' in the console pauser, in case of privilege problems.
+ - enhancement: correctly handle auto indents for statement span many lines;
+ - enhancment: only use colors have good contrasts with the background in the class browser and code completion suggestion window
 
 Version 0.7.5
  - enhancement: more accurate auto indent calculation

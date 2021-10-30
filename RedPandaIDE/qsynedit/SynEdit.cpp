@@ -1455,13 +1455,6 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
                     int len = matchingIndents.length();
                     while (i<len && !newIndents.isEmpty()) {
                         int indent = matchingIndents[i];
-                        if (indent >= sitStatemntBrace) {
-                            int counts = indent - sitStatemntBrace;
-                            for (int j=0;j<counts;j++) {
-                                matchingIndents.insert(i+1,sitStatement);
-                            }
-                            len = matchingIndents.length();
-                        }
                         int idx = newIndents.lastIndexOf(indent);
                         if (idx >=0) {
                             newIndents.remove(idx,newIndents.length()-idx);
@@ -1471,10 +1464,20 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
                         i++;
                     }
                     if (i>=len) {
-                        indentSpaces = leftSpaces(mLines->getString(l-1));
-//                        if (newIndents.length()>0)
-//                            indentSpaces+=mTabWidth;
-                        break;
+                        // we found the where the indent started
+                        if (len>0 && !range.matchingIndents.isEmpty()
+                                &&
+                                ( matchingIndents.back()== sitBrace
+                                  || matchingIndents.back() == sitStatement
+                                ) ) {
+                            // but it's not a complete statement
+                            matchingIndents = range.matchingIndents;
+                        } else {
+                            indentSpaces = leftSpaces(mLines->getString(l-1));
+                            if (newIndents.length()>0)
+                                indentSpaces+=mTabWidth;
+                            break;
+                        }
                     } else {
                         matchingIndents = range.matchingIndents + matchingIndents.mid(i);
                     }

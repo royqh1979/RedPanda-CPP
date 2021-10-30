@@ -425,56 +425,67 @@ void MainWindow::updateCompileActions()
             || mEditorList->pageCount()>0);
 
 }
+static bool haveGoodContrast(const QColor& c1, const QColor &c2) {
+    int lightness1 = c1.lightness();
+    int lightness2 = c2.lightness();
+    return std::abs(lightness1 - lightness2)>=150;
+}
 
 void MainWindow::updateEditorColorSchemes()
 {
+    if (!mStatementColors)
+        return;
+    mStatementColors->clear();
+
     mEditorList->applyColorSchemes(pSettings->editor().colorScheme());
     QString schemeName = pSettings->editor().colorScheme();
     //color for code completion popup
     PColorSchemeItem item;
+
     item = pColorManager->getItem(schemeName, SYNS_AttrFunction);
-    if (item) {
+    QColor baseColor = palette().color(QPalette::Base);
+    if (item && haveGoodContrast(item->foreground(), baseColor)) {
         mStatementColors->insert(StatementKind::skFunction,item);
         mStatementColors->insert(StatementKind::skConstructor,item);
         mStatementColors->insert(StatementKind::skDestructor,item);
     }
     item = pColorManager->getItem(schemeName, SYNS_AttrClass);
-    if (item) {
+    if (item && haveGoodContrast(item->foreground(), baseColor)) {
         mStatementColors->insert(StatementKind::skClass,item);
         mStatementColors->insert(StatementKind::skTypedef,item);
         mStatementColors->insert(StatementKind::skAlias,item);
     }
     item = pColorManager->getItem(schemeName, SYNS_AttrIdentifier);
-    if (item) {
+    if (item && haveGoodContrast(item->foreground(), baseColor)) {
         mStatementColors->insert(StatementKind::skEnumType,item);
         mStatementColors->insert(StatementKind::skEnumClassType,item);
     }
     item = pColorManager->getItem(schemeName, SYNS_AttrVariable);
-    if (item) {
+    if (item && haveGoodContrast(item->foreground(), baseColor)) {
         mStatementColors->insert(StatementKind::skVariable,item);
     }
     item = pColorManager->getItem(schemeName, SYNS_AttrLocalVariable);
-    if (item) {
+    if (item && haveGoodContrast(item->foreground(), baseColor)) {
         mStatementColors->insert(StatementKind::skLocalVariable,item);
         mStatementColors->insert(StatementKind::skParameter,item);
     }
     item = pColorManager->getItem(schemeName, SYNS_AttrGlobalVariable);
-    if (item) {
+    if (item && haveGoodContrast(item->foreground(), baseColor)) {
         mStatementColors->insert(StatementKind::skGlobalVariable,item);
     }
     item = pColorManager->getItem(schemeName, SYNS_AttrPreprocessor);
-    if (item) {
+    if (item && haveGoodContrast(item->foreground(), baseColor)) {
         mStatementColors->insert(StatementKind::skPreprocessor,item);
         mStatementColors->insert(StatementKind::skEnum,item);
         mHeaderCompletionPopup->setSuggestionColor(item->foreground());
     }
     item = pColorManager->getItem(schemeName, SYNS_AttrReservedWord);
-    if (item) {
+    if (item && haveGoodContrast(item->foreground(), baseColor)) {
         mStatementColors->insert(StatementKind::skKeyword,item);
         mStatementColors->insert(StatementKind::skUserCodeSnippet,item);
     }
     item = pColorManager->getItem(schemeName, SYNS_AttrString);
-    if (item) {
+    if (item && haveGoodContrast(item->foreground(), baseColor)) {
         mStatementColors->insert(StatementKind::skNamespace,item);
         mStatementColors->insert(StatementKind::skNamespaceAlias,item);
     }
@@ -490,6 +501,7 @@ void MainWindow::applySettings()
     else
         QApplication::setStyle("fusion");
     qApp->setPalette(appTheme->palette());
+    updateEditorColorSchemes();
 
     QFont font(pSettings->environment().interfaceFont(),
                pSettings->environment().interfaceFontSize());

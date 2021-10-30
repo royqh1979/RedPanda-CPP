@@ -126,7 +126,6 @@ private:
     void xorSymbolProc();
     void processChar();
     void popIndents(int indentType);
-    int popStatementIndents();
     void pushIndents(int indentType);
 
 private:

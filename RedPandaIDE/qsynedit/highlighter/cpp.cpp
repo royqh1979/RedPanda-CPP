@@ -393,8 +393,9 @@ void SynEditCppHighlighter::braceOpenProc()
     if (mRange.getLastIndent() == sitStatement) {
         // if last indent is started by 'if' 'for' etc
         // just replace it
-        int counts = popStatementIndents();
-        pushIndents(sitStatemntBrace+counts);
+        while (mRange.getLastIndent() == sitStatement)
+            popIndents(sitStatement);
+        pushIndents(sitBrace);
 //        int idx = mRange.indents.length()-1;
 //        if (idx < mRange.firstIndentThisLine) {
 //            mRange.firstIndentThisLine = idx;
@@ -1358,8 +1359,6 @@ void SynEditCppHighlighter::processChar()
 void SynEditCppHighlighter::popIndents(int indentType)
 {
     while (!mRange.indents.isEmpty() && mRange.indents.back()!=indentType) {
-        if (indentType == sitBrace && mRange.indents.back() >= sitStatemntBrace)
-            break;
         mRange.indents.pop_back();
     }
     if (!mRange.indents.isEmpty()) {
@@ -1369,20 +1368,6 @@ void SynEditCppHighlighter::popIndents(int indentType)
         }
         mRange.indents.pop_back();
     }
-}
-
-int SynEditCppHighlighter::popStatementIndents()
-{
-    int counts = 0;
-    while (!mRange.indents.isEmpty() && mRange.indents.back() == sitStatement) {
-        int idx = mRange.indents.length()-1;
-        if (idx < mRange.firstIndentThisLine) {
-//            mRange.matchingIndents.append(mRange.indents[idx]);
-            counts++;
-        }
-        mRange.indents.pop_back();
-    }
-    return counts;
 }
 
 void SynEditCppHighlighter::pushIndents(int indentType)

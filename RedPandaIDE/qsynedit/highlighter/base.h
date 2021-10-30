@@ -15,7 +15,6 @@ enum SynIndentType {
     sitParenthesis = 1,
     sitBracket = 2,
     sitStatement = 3,
-    sitStatemntBrace = 100
 };
 
 struct SynRangeState {
