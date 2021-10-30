@@ -1,3 +1,7 @@
+Version 0.7.6
+ - change: don't auto insert a new line when input an enter between '(' and ')' or between '[' and ']' (indent instead)
+ - enhancement: the line containing '}' will use the indents of the matching '{' line, instead of just unindent one level
+
 Version 0.7.5
  - enhancement: more accurate auto indent calculation
  - change: remove "add indent" option in the editor general options widget ( It's merged with "auto indent" option)

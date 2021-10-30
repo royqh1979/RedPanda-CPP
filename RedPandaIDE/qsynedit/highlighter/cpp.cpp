@@ -376,7 +376,7 @@ void SynEditCppHighlighter::braceCloseProc()
     } else {
         mRange.rightBraces++ ;
     }
-    popIndents(BraceIndentType);
+    popIndents(sitBrace);
 }
 
 void SynEditCppHighlighter::braceOpenProc()
@@ -390,18 +390,18 @@ void SynEditCppHighlighter::braceOpenProc()
     }
     mRange.braceLevel += 1;
     mRange.leftBraces++;
-    if (mRange.getLastIndent() == StatementIndentType) {
+    if (mRange.getLastIndent() == sitStatement) {
         // if last indent is started by 'if' 'for' etc
         // just replace it
-        popIndents(StatementIndentType);
-        pushIndents(BraceIndentType);
+        int counts = popStatementIndents();
+        pushIndents(sitStatemntBrace+counts);
 //        int idx = mRange.indents.length()-1;
 //        if (idx < mRange.firstIndentThisLine) {
 //            mRange.firstIndentThisLine = idx;
 //        }
 //        mRange.indents.replace(idx,1,BraceIndentType);
     } else {
-        pushIndents(BraceIndentType);
+        pushIndents(sitBrace);
     }
 }
 
@@ -545,7 +545,7 @@ void SynEditCppHighlighter::identProc()
     if (isKeyword(word)) {
         mTokenId = TokenKind::Key;
         if (StatementKeyWords.contains(word)) {
-            pushIndents(StatementIndentType);
+            pushIndents(sitStatement);
         }
     } else {
         mTokenId = TokenKind::Identifier;
@@ -907,7 +907,7 @@ void SynEditCppHighlighter::roundCloseProc()
     mTokenId = TokenKind::Symbol;
     mExtTokenId = ExtTokenKind::RoundClose;
     mRange.parenthesisLevel--;
-    popIndents(ParenthesisIndentType);
+    popIndents(sitParenthesis);
 }
 
 void SynEditCppHighlighter::roundOpenProc()
@@ -916,7 +916,7 @@ void SynEditCppHighlighter::roundOpenProc()
     mTokenId = TokenKind::Symbol;
     mExtTokenId = ExtTokenKind::RoundOpen;
     mRange.parenthesisLevel++;
-    pushIndents(ParenthesisIndentType);
+    pushIndents(sitParenthesis);
 }
 
 void SynEditCppHighlighter::semiColonProc()
@@ -926,8 +926,8 @@ void SynEditCppHighlighter::semiColonProc()
     mExtTokenId = ExtTokenKind::SemiColon;
     if (mRange.state == RangeState::rsAsm)
         mRange.state = RangeState::rsUnknown;
-    if (mRange.getLastIndent() == StatementIndentType) {
-        popIndents(StatementIndentType);
+    if (mRange.getLastIndent() == sitStatement) {
+        popIndents(sitStatement);
     }
 }
 
@@ -982,7 +982,7 @@ void SynEditCppHighlighter::squareCloseProc()
     mTokenId = TokenKind::Symbol;
     mExtTokenId = ExtTokenKind::SquareClose;
     mRange.bracketLevel--;
-    popIndents(BracketIndentType);
+    popIndents(sitBracket);
 }
 
 void SynEditCppHighlighter::squareOpenProc()
@@ -991,7 +991,7 @@ void SynEditCppHighlighter::squareOpenProc()
     mTokenId = TokenKind::Symbol;
     mExtTokenId = ExtTokenKind::SquareOpen;
     mRange.bracketLevel++;
-    pushIndents(BracketIndentType);
+    pushIndents(sitBracket);
 }
 
 void SynEditCppHighlighter::starProc()
@@ -1355,26 +1355,42 @@ void SynEditCppHighlighter::processChar()
     }
 }
 
-void SynEditCppHighlighter::popIndents(QChar indentType)
+void SynEditCppHighlighter::popIndents(int indentType)
 {
     while (!mRange.indents.isEmpty() && mRange.indents.back()!=indentType) {
-        mRange.indents.remove(mRange.indents.length()-1,1);
+        if (indentType == sitBrace && mRange.indents.back() >= sitStatemntBrace)
+            break;
+        mRange.indents.pop_back();
     }
     if (!mRange.indents.isEmpty()) {
         int idx = mRange.indents.length()-1;
         if (idx < mRange.firstIndentThisLine) {
             mRange.matchingIndents.append(mRange.indents[idx]);
         }
-        mRange.indents.remove(idx,1);
+        mRange.indents.pop_back();
     }
 }
 
-void SynEditCppHighlighter::pushIndents(QChar indentType)
+int SynEditCppHighlighter::popStatementIndents()
+{
+    int counts = 0;
+    while (!mRange.indents.isEmpty() && mRange.indents.back() == sitStatement) {
+        int idx = mRange.indents.length()-1;
+        if (idx < mRange.firstIndentThisLine) {
+//            mRange.matchingIndents.append(mRange.indents[idx]);
+            counts++;
+        }
+        mRange.indents.pop_back();
+    }
+    return counts;
+}
+
+void SynEditCppHighlighter::pushIndents(int indentType)
 {
     int idx = mRange.indents.length();
     if (idx<mRange.firstIndentThisLine)
         mRange.firstIndentThisLine = idx;
-    mRange.indents.append(indentType);
+    mRange.indents.push_back(indentType);
 }
 
 bool SynEditCppHighlighter::getTokenFinished() const
@@ -1532,7 +1548,7 @@ void SynEditCppHighlighter::setLine(const QString &newLine, int lineNumber)
     mRange.leftBraces = 0;
     mRange.rightBraces = 0;
     mRange.firstIndentThisLine = mRange.indents.length();
-    mRange.matchingIndents = "";
+    mRange.matchingIndents.clear();
     next();
 }
 
@@ -1600,7 +1616,7 @@ void SynEditCppHighlighter::setState(const SynRangeState& rangeState)
     mRange.leftBraces = 0;
     mRange.rightBraces = 0;
     mRange.firstIndentThisLine = mRange.indents.length();
-    mRange.matchingIndents = "";
+    mRange.matchingIndents.clear();
 }
 
 void SynEditCppHighlighter::resetState()
@@ -1612,9 +1628,9 @@ void SynEditCppHighlighter::resetState()
     mRange.parenthesisLevel = 0;
     mRange.leftBraces = 0;
     mRange.rightBraces = 0;
-    mRange.indents = "";
+    mRange.indents.clear();
     mRange.firstIndentThisLine = 0;
-    mRange.matchingIndents = "";
+    mRange.matchingIndents.clear();
     mAsmStart = false;
 }
 

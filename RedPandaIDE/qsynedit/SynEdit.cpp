@@ -1100,7 +1100,37 @@ void SynEdit::clearUndo()
     mRedoList->Clear();
 }
 
-BufferCoord SynEdit::getPreviousLeftBracket(int x, int y)
+int SynEdit::findIndentsStartLine(int line, QVector<int> indents)
+{
+    line--;
+    if (line<0 || line>=mLines->count())
+        return -1;
+    while (line>=1) {
+        SynRangeState range = mLines->ranges(line);
+        QVector<int> newIndents = range.indents.mid(range.firstIndentThisLine);
+        int i = 0;
+        int len = indents.length();
+        while (i<len && !newIndents.isEmpty()) {
+            int indent = indents[i];
+            int idx = newIndents.lastIndexOf(indent);
+            if (idx >=0) {
+                newIndents.remove(idx,newIndents.size());
+            } else {
+                break;
+            }
+            i++;
+        }
+        if (i>=len) {
+            return line+1;
+        } else {
+            indents = range.matchingIndents + indents.mid(i);
+        }
+        line--;
+    }
+    return -1;
+}
+
+BufferCoord SynEdit::getPreviousLeftBrace(int x, int y)
 {
     QChar Test;
     QString vDummy;
@@ -1386,20 +1416,55 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
         indentSpaces = leftSpaces(s);
         if (addIndent) {
             SynRangeState rangePreceeding = mLines->ranges(startLine-1);
-            if (!rangePreceeding.matchingIndents.isEmpty()) {
+            mHighlighter->setState(rangePreceeding);
+            mHighlighter->setLine(lineText.trimmed(),line-1);
+            SynRangeState rangeAfterFirstToken = mHighlighter->getRangeState();
+            QString firstToken = mHighlighter->getToken();
+            PSynHighlighterAttribute attr = mHighlighter->getTokenAttribute();
+            if (attr == mHighlighter->keywordAttribute()
+                                  &&  lineText.endsWith(':')
+                                  && (
+                                  firstToken == "public" || firstToken == "private"
+                                  || firstToken == "protected" || firstToken == "case")) {
+                mHighlighter->setState(rangePreceeding);
+                mHighlighter->setLine("}",line-1);
+                rangeAfterFirstToken = mHighlighter->getRangeState();
+                firstToken = mHighlighter->getToken();
+                attr = mHighlighter->getTokenAttribute();
+            }
+            bool dontAddIndent = false;
+            QVector<int> matchingIndents;
+            int l;
+            if (attr == mHighlighter->symbolAttribute()
+                    && firstToken == '}' ) {
+                matchingIndents = rangeAfterFirstToken.matchingIndents;
+                dontAddIndent = true;
+                l = startLine;
+            } else {
+                matchingIndents = rangePreceeding.matchingIndents;
+                l = startLine-1;
+            }
+
+            if (!matchingIndents.isEmpty()
+                    ) {
                 // find the indent's start line, and use it's indent as the default indent;
-                QString matchingIndents = rangePreceeding.matchingIndents;
-                int l = startLine-1;
                 while (l>=1) {
                     SynRangeState range = mLines->ranges(l-1);
-                    QString newIndents = range.indents.mid(range.firstIndentThisLine);
+                    QVector<int> newIndents = range.indents.mid(range.firstIndentThisLine);
                     int i = 0;
                     int len = matchingIndents.length();
                     while (i<len && !newIndents.isEmpty()) {
-                        QChar indent = matchingIndents[i];
+                        int indent = matchingIndents[i];
+                        if (indent >= sitStatemntBrace) {
+                            int counts = indent - sitStatemntBrace;
+                            for (int j=0;j<counts;j++) {
+                                matchingIndents.insert(i+1,sitStatement);
+                            }
+                            len = matchingIndents.length();
+                        }
                         int idx = newIndents.lastIndexOf(indent);
                         if (idx >=0) {
-                            newIndents.truncate(idx);
+                            newIndents.remove(idx,newIndents.length()-idx);
                         } else {
                             break;
                         }
@@ -1407,8 +1472,8 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
                     }
                     if (i>=len) {
                         indentSpaces = leftSpaces(mLines->getString(l-1));
-                        if (newIndents.length()>0)
-                            indentSpaces+=mTabWidth;
+//                        if (newIndents.length()>0)
+//                            indentSpaces+=mTabWidth;
                         break;
                     } else {
                         matchingIndents = range.matchingIndents + matchingIndents.mid(i);
@@ -1416,27 +1481,12 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
                     l--;
                 }
             }
-            if ((rangePreceeding.firstIndentThisLine < rangePreceeding.indents.length()) // there are indents added at this (preceeding) line
-                || (s.trimmed().endsWith(':'))
+            if (!dontAddIndent &&
+                   (
+                        (rangePreceeding.firstIndentThisLine < rangePreceeding.indents.length()) // there are indents added at this (preceeding) line
+                        || s.trimmed().endsWith(':'))
                     ) {
                 indentSpaces += mTabWidth;
-            }
-            mHighlighter->setState(rangePreceeding);
-            mHighlighter->setLine(lineText.trimmed(),line-1);
-            SynRangeState rangeAfterFirstToken = mHighlighter->getRangeState();
-            QString firstToken = mHighlighter->getToken();
-            PSynHighlighterAttribute attr = mHighlighter->getTokenAttribute();
-            if (rangeAfterFirstToken.indents.length() < rangePreceeding.indents.length()) {
-                indentSpaces -= mTabWidth;
-            } else if (rangeAfterFirstToken.getLastIndent() == BraceIndentType
-                       && rangePreceeding.getLastIndent() == StatementIndentType) {
-                indentSpaces -= mTabWidth;
-            } else if (attr == mHighlighter->keywordAttribute()
-                       &&  lineText.endsWith(':')
-                       && (
-                       firstToken == "public" || firstToken == "private"
-                       || firstToken == "protected" || firstToken == "case")) {
-                indentSpaces -= mTabWidth;
             }
         }
     }
@@ -2002,10 +2052,8 @@ void SynEdit::insertLine(bool moveCaret)
               SynSelectionMode::smNormal);
     //insert new line in middle of "{" and "}"
     if (notInComment &&
-            ( (leftLineText.endsWith('{') && rightLineText.startsWith('}'))
-             || (leftLineText.endsWith('(') && rightLineText.startsWith(')'))
-             ||  (leftLineText.endsWith('[') && rightLineText.startsWith(')'))
-              )) {
+            ( leftLineText.endsWith('{') && rightLineText.startsWith('}')
+             )) {
         indentSpaces = calcIndentSpaces(mCaretY+1, "" , mOptions.testFlag(eoAutoIndent)
                                                                && notInComment);
         indentSpacesForRightLineText = GetLeftSpacing(indentSpaces,true);

@@ -10,10 +10,13 @@
 #include <QVector>
 #include "../Types.h"
 
-constexpr QChar BraceIndentType('{');
-constexpr QChar ParenthesisIndentType('(');
-constexpr QChar BracketIndentType('[');
-constexpr QChar StatementIndentType('S');
+enum SynIndentType {
+    sitBrace = 0,
+    sitParenthesis = 1,
+    sitBracket = 2,
+    sitStatement = 3,
+    sitStatemntBrace = 100
+};
 
 struct SynRangeState {
     int state;  // current syntax parsing state
@@ -23,14 +26,14 @@ struct SynRangeState {
     int parenthesisLevel; // current parenthesis embedding level (needed by rainbow color)
     int leftBraces; // unpairing left braces in the current line ( needed by block folding)
     int rightBraces; // unparing right braces in the current line (needed by block folding)
-    QString indents; // indents stack (each char represents an indent) (needed by auto indent)
+    QVector<int> indents; // indents stack (needed by auto indent)
     int firstIndentThisLine; /* index of first indent that appended to the indents
                               *  stack at this line ( need by auto indent) */
-    QString matchingIndents; /* the indent matched ( and removed )
+    QVector<int> matchingIndents; /* the indent matched ( and removed )
                               but not started at this line
                                 (need by auto indent) */
     bool operator==(const SynRangeState& s2);
-    QChar getLastIndent();
+    int getLastIndent();
 };
 
 typedef int SynTokenKind;

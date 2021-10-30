@@ -513,7 +513,8 @@ private:
     void processGutterClick(QMouseEvent* event);
 
     void clearUndo();
-    BufferCoord getPreviousLeftBracket(int x,int y);
+    int findIndentsStartLine(int line, QVector<int> indents);
+    BufferCoord getPreviousLeftBrace(int x,int y);
     bool canDoBlockIndent();
 
     QRect calculateCaretRect();

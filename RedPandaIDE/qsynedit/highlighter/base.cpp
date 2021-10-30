@@ -218,9 +218,9 @@ bool SynRangeState::operator==(const SynRangeState &s2)
             ;
 }
 
-QChar SynRangeState::getLastIndent()
+int SynRangeState::getLastIndent()
 {
     if (indents.isEmpty())
-        return QChar();
+        return -1;
     return indents.back();
 }
