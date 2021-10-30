@@ -926,7 +926,7 @@ void SynEditCppHighlighter::semiColonProc()
     mExtTokenId = ExtTokenKind::SemiColon;
     if (mRange.state == RangeState::rsAsm)
         mRange.state = RangeState::rsUnknown;
-    if (mRange.getLastIndent() == sitStatement) {
+    while (mRange.getLastIndent() == sitStatement) {
         popIndents(sitStatement);
     }
 }
