@@ -33,6 +33,7 @@ CppParser::CppParser(QObject *parent) : QObject(parent)
     mIsProjectFile = false;
 
     mCppKeywords = CppKeywords;
+    mCppTypeKeywords = CppTypeKeywords;
     //mNamespaces;
     //mBlockBeginSkips;
     //mBlockEndSkips;
@@ -3566,7 +3567,7 @@ QString CppParser::removeArgNames(const QString &args)
             } else if (!word.trimmed().isEmpty()) {
                 if (!typeGetted) {
                     currentArg += ' ' + word;
-                    if (CppTypeKeywords.contains(word) || !isKeyword(word))
+                    if (mCppTypeKeywords.contains(word) || !isKeyword(word))
                         typeGetted = true;
                 } else {
                     if (isKeyword(word))

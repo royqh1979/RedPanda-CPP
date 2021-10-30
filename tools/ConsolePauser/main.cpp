@@ -58,37 +58,14 @@ void PauseExit(int exitcode, bool reInp) {
             FILE_SHARE_READ , &sa, OPEN_EXISTING, /*FILE_ATTRIBUTE_NORMAL*/0, NULL);
             //si.hStdInput = hInp;
         SetStdHandle(STD_INPUT_HANDLE,hInp);
+		freopen("CONIN$","r",stdin);
     }
-	//system("pause");
-
-	STARTUPINFO si;
-	PROCESS_INFORMATION pi;
-	memset(&si,0,sizeof(si));
-	si.cb = sizeof(si);
-	memset(&pi,0,sizeof(pi));
-
-	DWORD dwCreationFlags = CREATE_BREAKAWAY_FROM_JOB;
-
-
-	if(!CreateProcess(NULL, (LPSTR)"cmd /c \"pause\"", NULL, NULL, true, dwCreationFlags, NULL, NULL, &si, &pi)) {
-		printf("\n--------------------------------");
-		printf("\nFailed to execute 'pause' ");
-		printf("\nError %lu: %s\n",GetLastError(),GetErrorMessage().c_str());
-		system("pause");
-		exit(exitcode);
-	}
-    WINBOOL bSuccess = AssignProcessToJobObject( hJob, pi.hProcess );
-    if ( bSuccess == FALSE ) {
-        printf( "AssignProcessToJobObject failed: error %d\n", GetLastError() );
-        system("pause");
-        exit(exitcode);
-    }
-
-	WaitForSingleObject(pi.hProcess, INFINITE); // Wait for it to finish
+	printf("\n");
+	printf("Press ANY key to continue...\n");
+	getchar();
     if (reInp) {
         CloseHandle(hInp);
     }
-    CloseHandle( hJob );
 	exit(exitcode);
 }
 

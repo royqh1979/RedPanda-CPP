@@ -3,7 +3,7 @@
 
 #include <QStringList>
 
-#define DEVCPP_VERSION "0.7.5"
+#define DEVCPP_VERSION "0.7.6"
 
 #define APP_SETTSINGS_FILENAME "redpandacpp.ini"
 #ifdef Q_OS_WIN
