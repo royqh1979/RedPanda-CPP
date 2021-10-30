@@ -3,6 +3,7 @@ Version 0.7.6
  - enhancement: the line containing '}' will use the indents of the matching '{' line, instead of just unindent one level
  - enhancement: the line containing 'public:' / 'private:' / 'protected:' / 'case *:' will use of indents of the surrounding '{' line, instead of just unindent one level
  - enhancement: correctly handle auto indents for multi-level embedding complex statements like 'for(...) if (...) printf();
+ - change: Don't use 'pause' in the console pauser, in case of privilege problems.
 
 Version 0.7.5
  - enhancement: more accurate auto indent calculation
