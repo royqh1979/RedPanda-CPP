@@ -428,7 +428,7 @@ void MainWindow::updateCompileActions()
 static bool haveGoodContrast(const QColor& c1, const QColor &c2) {
     int lightness1 = c1.lightness();
     int lightness2 = c2.lightness();
-    return std::abs(lightness1 - lightness2)>=150;
+    return std::abs(lightness1 - lightness2)>=100;
 }
 
 void MainWindow::updateEditorColorSchemes()
@@ -478,6 +478,8 @@ void MainWindow::updateEditorColorSchemes()
         mStatementColors->insert(StatementKind::skPreprocessor,item);
         mStatementColors->insert(StatementKind::skEnum,item);
         mHeaderCompletionPopup->setSuggestionColor(item->foreground());
+    } else  {
+        mHeaderCompletionPopup->setSuggestionColor(palette().color(QPalette::Text));
     }
     item = pColorManager->getItem(schemeName, SYNS_AttrReservedWord);
     if (item && haveGoodContrast(item->foreground(), baseColor)) {
