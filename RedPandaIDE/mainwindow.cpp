@@ -1355,19 +1355,11 @@ void MainWindow::debug()
         case CompileTarget::None:
             return;
         case CompileTarget::File:
-//            if (mCompiler->useRunParams) {
-
-//            }
             mDebugger->sendCommand("start",params);
             mDebugger->updateDebugInfo();
             break;
         case CompileTarget::Project:
             params = "";
-//if fCompiler.UseRunParams then
-//  params := params + ' ' + fProject.Options.CmdLineArgs;
-//if fCompiler.UseInputFile then
-//  params := params + ' < "' + fCompiler.InputFile + '"';
-
             mDebugger->sendCommand("start",params);
             mDebugger->updateDebugInfo();
             break;
@@ -1384,12 +1376,6 @@ void MainWindow::debug()
             mDebugger->updateDebugInfo();
             break;
         case CompileTarget::Project:
-//params := '';
-//if fCompiler.UseRunParams then
-//  params := params + ' ' + fProject.Options.CmdLineArgs;
-//if fCompiler.UseInputFile then
-//  params := params + ' < "' + fCompiler.InputFile + '"';
-
             mDebugger->sendCommand("run",params);
             mDebugger->updateDebugInfo();
             break;
