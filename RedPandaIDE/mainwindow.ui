@@ -1159,6 +1159,8 @@
    <addaction name="actionRun"/>
    <addaction name="actionCompile_Run"/>
    <addaction name="actionRebuild"/>
+   <addaction name="separator"/>
+   <addaction name="actionRun_Parameters"/>
   </widget>
   <widget class="QToolBar" name="toolbarDebug">
    <property name="windowTitle">

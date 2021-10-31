@@ -7,6 +7,7 @@ Version 0.7.6
  - enhancement: correctly handle auto indents for statement span many lines;
  - enhancment: only use colors have good contrasts with the background in the class browser and code completion suggestion window
  - fix: bottom and left panel properties not correctly saved when hiding the main window
+ - fix: When debugging, if value of the variable pointed by the mouse cursor is too long, tooltip will fill the whole screen.
 
 Version 0.7.5
  - enhancement: more accurate auto indent calculation

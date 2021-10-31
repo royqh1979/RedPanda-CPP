@@ -1506,7 +1506,13 @@ void Editor::onGutterClicked(Qt::MouseButton button, int , int , int line)
 void Editor::onTipEvalValueReady(const QString &value)
 {
     if (mCurrentWord == mCurrentDebugTipWord) {
-        QToolTip::showText(QCursor::pos(), mCurrentDebugTipWord + " = " + value );
+        QString newValue;
+        if (value.length()>100) {
+            newValue = value.left(100) + "...";
+        } else {
+            newValue = value;
+        }
+        QToolTip::showText(QCursor::pos(), mCurrentDebugTipWord + " = " + newValue);
     }
     disconnect(pMainWindow->debugger(), &Debugger::evalValueReady,
                this, &Editor::onTipEvalValueReady);
