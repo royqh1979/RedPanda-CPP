@@ -1380,9 +1380,6 @@ void MainWindow::debug()
         case CompileTarget::None:
             return;
         case CompileTarget::File:
-//            if (mCompiler->useRunParams) {
-
-//            }
             mDebugger->sendCommand("run",params);
             mDebugger->updateDebugInfo();
             break;
@@ -3022,6 +3019,17 @@ void MainWindow::showEvent(QShowEvent *)
         openCloseLeftPanel(false);
         mLeftPanelWidth = settings.leftPanelWidth();
     }
+}
+
+void MainWindow::hideEvent(QHideEvent *)
+{
+    Settings::UI& settings = pSettings->ui();
+    settings.setBottomPanelIndex(ui->tabMessages->currentIndex());
+    settings.setBottomPanelOpenned(mBottomPanelOpenned);
+    settings.setBottomPanelHeight(mBottomPanelHeight);
+    settings.setLeftPanelIndex(ui->tabInfos->currentIndex());
+    settings.setLeftPanelOpenned(mLeftPanelOpenned);
+    settings.setLeftPanelWidth(mLeftPanelWidth);
 }
 
 //void MainWindow::dragEnterEvent(QDragEnterEvent *event)

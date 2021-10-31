@@ -6,6 +6,7 @@ Version 0.7.6
  - change: Don't use 'pause' in the console pauser, in case of privilege problems.
  - enhancement: correctly handle auto indents for statement span many lines;
  - enhancment: only use colors have good contrasts with the background in the class browser and code completion suggestion window
+ - fix: bottom and left panel properties not correctly saved when hiding the main window
 
 Version 0.7.5
  - enhancement: more accurate auto indent calculation
