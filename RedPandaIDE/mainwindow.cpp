@@ -205,6 +205,18 @@ MainWindow::MainWindow(QWidget *parent)
             ui->searchView,&QTreeView::expandAll);
     ui->replacePanel->setVisible(false);
 
+    mOJProblemSetNameCounter++;
+    mOJProblemSetModel.rename(tr("Problem Set %1").arg(mOJProblemSetNameCounter));
+    ui->lstProblemSet->setModel(&mOJProblemSetModel);
+    ui->lstProblemCases->setModel(&mOJProblemModel);
+    connect(ui->lstProblemSet->selectionModel(),
+            &QItemSelectionModel::currentRowChanged,
+            this, &MainWindow::onProblemSetIndexChanged);
+    connect(ui->lstProblemCases->selectionModel(),
+            &QItemSelectionModel::currentRowChanged,
+            this, &MainWindow::onProblemCaseIndexChanged);
+    ui->tabProblem->setVisible(false);
+
     //files view
     ui->treeFiles->setModel(&mFileSystemModel);
     mFileSystemModel.setReadOnly(true);
@@ -2501,6 +2513,63 @@ void MainWindow::onFilesViewContextMenu(const QPoint &pos)
     mFilesView_OpenInTerminal->setEnabled(!path.isEmpty());
     mFilesView_OpenInExplorer->setEnabled(!path.isEmpty());
     menu.exec(ui->treeFiles->mapToGlobal(pos));
+}
+
+void MainWindow::onProblemSetIndexChanged(const QModelIndex &current, const QModelIndex &previous)
+{
+    QModelIndex idx = current;
+//    if (previous.isValid()) {
+//        QModelIndex caseIdx = ui->lstProblemCases->currentIndex();
+//        if (caseIdx.isValid()) {
+//            POJProblemCase problemCase = mOJProblemModel.getCase(caseIdx.row());
+//            problemCase->input = ui->txtProblemCaseInput->toPlainText();
+//            problemCase->expected = ui->txtProblemCaseExpected->toPlainText();
+//            problemCase->output = ui->txtProblemCaseOutput->toPlainText();
+//        }
+//    }
+    if (!idx.isValid()) {
+        ui->btnRemoveProblem->setEnabled(false);
+        ui->tabProblem->setVisible(false);
+    } else {
+        ui->btnRemoveProblem->setEnabled(true);
+        POJProblem problem = mOJProblemSetModel.problem(idx.row());
+        mOJProblemModel.setProblem(problem);
+        ui->lblProblem->setText(problem->name);
+        ui->tabProblem->setVisible(true);
+        openCloseBottomPanel(true);
+        ui->tabMessages->setCurrentWidget(ui->tabProblem);
+    }
+}
+
+void MainWindow::onProblemCaseIndexChanged(const QModelIndex &current, const QModelIndex &previous)
+{
+    QModelIndex idx = current;
+    if (previous.isValid()) {
+        POJProblemCase problemCase = mOJProblemModel.getCase(previous.row());
+        problemCase->input = ui->txtProblemCaseInput->toPlainText();
+        problemCase->expected = ui->txtProblemCaseExpected->toPlainText();
+        problemCase->output = ui->txtProblemCaseOutput->toPlainText();
+    }
+    if (idx.isValid()) {
+        POJProblemCase problemCase = mOJProblemModel.getCase(idx.row());
+        if (problemCase) {
+            ui->btnRemoveProblemCase->setEnabled(true);
+            ui->txtProblemCaseInput->setText(problemCase->input);
+            ui->txtProblemCaseInput->setReadOnly(false);
+            ui->txtProblemCaseExpected->setText(problemCase->expected);
+            ui->txtProblemCaseExpected->setReadOnly(false);
+            ui->txtProblemCaseOutput->setText(problemCase->output);
+            ui->txtProblemCaseOutput->setReadOnly(true);
+            return;
+        }
+    }
+    ui->btnRemoveProblemCase->setEnabled(false);
+    ui->txtProblemCaseInput->clear();
+    ui->txtProblemCaseInput->setReadOnly(true);
+    ui->txtProblemCaseExpected->clear();
+    ui->txtProblemCaseExpected->setReadOnly(true);
+    ui->txtProblemCaseOutput->clear();
+    ui->txtProblemCaseOutput->setReadOnly(true);
 }
 
 void MainWindow::onShowInsertCodeSnippetMenu()
@@ -4817,5 +4886,90 @@ void MainWindow::on_actionRun_Parameters_triggered()
                 SettingsDialog::tr("General"),
                 SettingsDialog::tr("Program Runner")
                 );
+}
+
+
+void MainWindow::on_btnNewProblemSet_clicked()
+{
+    mOJProblemSetNameCounter++;
+    mOJProblemSetModel.create(tr("Problem Set %1").arg(mOJProblemSetNameCounter));
+}
+
+
+void MainWindow::on_btnAddProblem_clicked()
+{
+    int startCount = mOJProblemSetModel.count();
+    QString name;
+    while (true) {
+        name = tr("Problem %1").arg(startCount);
+        if (!mOJProblemSetModel.problemNameUsed(name))
+            break;
+    }
+    POJProblem problem = std::make_shared<OJProblem>();
+    problem->name = name;
+    mOJProblemSetModel.addProblem(problem);
+    ui->lstProblemSet->setCurrentIndex(mOJProblemSetModel.index(mOJProblemSetModel.count()-1));
+}
+
+
+void MainWindow::on_btnRemoveProblem_clicked()
+{
+    QModelIndex idx = ui->lstProblemSet->currentIndex();
+    if (!idx.isValid())
+        return;
+    mOJProblemSetModel.removeProblem(idx.row());
+}
+
+
+void MainWindow::on_btnSaveProblemSet_clicked()
+{
+    QString fileName = QFileDialog::getSaveFileName(
+                this,
+                tr("Save Problem Set"),
+                QDir().absolutePath(),
+                tr("Problem Set Files (*.pbs)"));
+    if (!fileName.isEmpty()) {
+        try {
+            mOJProblemSetModel.saveToFile(fileName);
+        } catch (FileError& error) {
+            QMessageBox::critical(this,tr("Save Error"),
+                                  error.reason());
+        }
+    }
+}
+
+
+void MainWindow::on_btnLoadProblemSet_clicked()
+{
+    QString fileName = QFileDialog::getOpenFileName(
+                this,
+                tr("Load Problem Set"),
+                QDir().absolutePath(),
+                tr("Problem Set Files (*.pbs)"));
+    if (!fileName.isEmpty()) {
+        try {
+            mOJProblemSetModel.loadFromFile(fileName);
+        } catch (FileError& error) {
+            QMessageBox::critical(this,tr("Load Error"),
+                                  error.reason());
+        }
+    }
+}
+
+
+void MainWindow::on_btnAddProblemCase_clicked()
+{
+    int startCount = mOJProblemModel.count();
+    QString name;
+    while (true) {
+        name = tr("Problem Case %1").arg(startCount);
+        if (!mOJProblemSetModel.problemNameUsed(name))
+            break;
+    }
+    POJProblemCase problemCase = std::make_shared<OJProblemCase>();
+    problemCase->name = name;
+    problemCase->testState = ProblemCaseTestState::NoTested;
+    mOJProblemModel.addCase(problemCase);
+    ui->lstProblemCases->setCurrentIndex(mOJProblemModel.index(mOJProblemModel.count()-1));
 }
 

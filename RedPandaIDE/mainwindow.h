@@ -18,6 +18,7 @@
 #include "toolsmanager.h"
 #include "widgets/labelwithmenu.h"
 #include "widgets/bookmarkmodel.h"
+#include "widgets/ojproblemsetmodel.h"
 
 
 QT_BEGIN_NAMESPACE
@@ -211,6 +212,8 @@ private slots:
     void onDebugConsoleContextMenu(const QPoint& pos);
     void onFileEncodingContextMenu(const QPoint& pos);
     void onFilesViewContextMenu(const QPoint& pos);
+    void onProblemSetIndexChanged(const QModelIndex &current, const QModelIndex &previous);
+    void onProblemCaseIndexChanged(const QModelIndex &current, const QModelIndex &previous);
 
     void onShowInsertCodeSnippetMenu();
 
@@ -433,6 +436,18 @@ private slots:
 
     void on_actionRun_Parameters_triggered();
 
+    void on_btnNewProblemSet_clicked();
+
+    void on_btnAddProblem_clicked();
+
+    void on_btnRemoveProblem_clicked();
+
+    void on_btnSaveProblemSet_clicked();
+
+    void on_btnLoadProblemSet_clicked();
+
+    void on_btnAddProblemCase_clicked();
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;
@@ -473,6 +488,9 @@ private:
     PTodoParser mTodoParser;
     PToolsManager mToolsManager;
     QFileSystemModel mFileSystemModel;
+    OJProblemSetModel mOJProblemSetModel;
+    OJProblemModel mOJProblemModel;
+    int mOJProblemSetNameCounter;
 
     bool mCheckSyntaxInBack;
     bool mOpenClosingBottomPanel;

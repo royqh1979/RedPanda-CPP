@@ -14,7 +14,9 @@ struct OJProblemCase {
     QString name;
     QString input;
     QString expected;
-    ProblemCaseTestState testState;
+
+    QString output; // no persistence
+    ProblemCaseTestState testState; // no persistence
 };
 
 using POJProblemCase = std::shared_ptr<OJProblemCase>;
@@ -24,17 +26,27 @@ struct OJProblem {
     QVector<POJProblemCase> cases;
 };
 
-using POJProbelm = std::shared_ptr<OJProblem>;
+using POJProblem = std::shared_ptr<OJProblem>;
 
-class OJProblemCaseModel: public QAbstractListModel {
+struct OJProblemSet {
+    QString name;
+    QVector<POJProblem> problems;
+};
+
+class OJProblemModel: public QAbstractListModel {
     Q_OBJECT
 public:
-    explicit OJProblemCaseModel(QObject *parent = nullptr);
-    const POJProbelm &problem() const;
-    void setProblem(const POJProbelm &newProblem);
+    explicit OJProblemModel(QObject *parent = nullptr);
+    const POJProblem &problem() const;
+    void setProblem(const POJProblem &newProblem);
+    void addCase(POJProblemCase problemCase);
+    void removeCase(int index);
+    POJProblemCase getCase(int index);
+    void clear();
+    int count();
 
 private:
-    POJProbelm mProblem;
+    POJProblem mProblem;
 
     // QAbstractItemModel interface
 public:
@@ -47,6 +59,25 @@ class OJProblemSetModel : public QAbstractListModel
     Q_OBJECT
 public:
     explicit OJProblemSetModel(QObject *parent = nullptr);
+    void clear();
+    int count();
+    void create(const QString& name);
+    void rename(const QString& newName);
+    QString name();
+    void addProblem(POJProblem problem);
+    POJProblem problem(int index);
+    void removeProblem(int index);
+    bool problemNameUsed(const QString& name);
+    void removeAllProblems();
+    void saveToFile(const QString& fileName);
+    void loadFromFile(const QString& fileName);
+private:
+    OJProblemSet mProblemSet;
+
+    // QAbstractItemModel interface
+public:
+    int rowCount(const QModelIndex &parent) const override;
+    QVariant data(const QModelIndex &index, int role) const override;
 };
 
 #endif // OJPROBLEMSETMODEL_H
