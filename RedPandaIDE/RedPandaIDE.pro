@@ -121,6 +121,7 @@ SOURCES += \
     widgets/labelwithmenu.cpp \
     widgets/macroinfomodel.cpp \
     widgets/newprojectdialog.cpp \
+    widgets/ojproblemsetmodel.cpp \
     widgets/qconsole.cpp \
     widgets/qpatchedcombobox.cpp \
     widgets/searchdialog.cpp \
@@ -236,6 +237,7 @@ HEADERS += \
     widgets/labelwithmenu.h \
     widgets/macroinfomodel.h \
     widgets/newprojectdialog.h \
+    widgets/ojproblemsetmodel.h \
     widgets/qconsole.h \
     widgets/qpatchedcombobox.h \
     widgets/searchdialog.h \
