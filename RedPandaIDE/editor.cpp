@@ -222,29 +222,27 @@ bool Editor::save(bool force, bool doReparse) {
     if (this->mIsNew && !force) {
         return saveAs();
     }
-    QFileInfo info(mFilename);
     //is this file writable;
-    if (!force && !info.isWritable()) {
-        QMessageBox::critical(pMainWindow,tr("Error"),
-                                 tr("File %1 is not writable!").arg(mFilename));
-        return false;
-    }
-    if (this->modified()|| force) {
-        pMainWindow->fileSystemWatcher()->removePath(mFilename);
-        try {
-            saveFile(mFilename);
-            pMainWindow->fileSystemWatcher()->addPath(mFilename);
-            setModified(false);
-            mIsNew = false;
-            this->updateCaption();
-        }  catch (SaveException& exception) {
-            if (!force) {
-                QMessageBox::critical(pMainWindow,tr("Error"),
-                                     exception.reason());
-            }
-            pMainWindow->fileSystemWatcher()->addPath(mFilename);
-            return false;
+    pMainWindow->fileSystemWatcher()->removePath(mFilename);
+    try {
+//        QFileInfo info(mFilename);
+//        if (!force && !info.isWritable()) {
+//            QMessageBox::critical(pMainWindow,tr("Error"),
+//                                     tr("File %1 is not writable!").arg(mFilename));
+//            return false;
+//        }
+        saveFile(mFilename);
+        pMainWindow->fileSystemWatcher()->addPath(mFilename);
+        setModified(false);
+        mIsNew = false;
+        this->updateCaption();
+    }  catch (SaveException& exception) {
+        if (!force) {
+            QMessageBox::critical(pMainWindow,tr("Error"),
+                                 exception.reason());
         }
+        pMainWindow->fileSystemWatcher()->addPath(mFilename);
+        return false;
     }
 
     if (doReparse && mParser) {

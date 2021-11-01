@@ -205,6 +205,9 @@ MainWindow::MainWindow(QWidget *parent)
     connect(mSearchResultTreeModel.get() , &QAbstractItemModel::modelReset,
             ui->searchView,&QTreeView::expandAll);
     ui->replacePanel->setVisible(false);
+    ui->tabProblem->setEnabled(false);
+    ui->btnRemoveProblem->setEnabled(false);
+    ui->btnRemoveProblemCase->setEnabled(false);
 
     mOJProblemSetNameCounter=1;
     mOJProblemSetModel.rename(tr("Problem Set %1").arg(mOJProblemSetNameCounter));
@@ -216,6 +219,9 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->lstProblemCases->selectionModel(),
             &QItemSelectionModel::currentRowChanged,
             this, &MainWindow::onProblemCaseIndexChanged);
+    connect(&mOJProblemSetModel, &OJProblemSetModel::problemNameChanged,
+            this , &MainWindow::onProblemNameChanged);
+    ui->pbProblemCases->setVisible(false);
 
     //files view
     ui->treeFiles->setModel(&mFileSystemModel);
@@ -1135,6 +1141,8 @@ void MainWindow::runExecutable(const QString &exeName,const QString &filename,Ru
         if (problem) {
             mCompilerManager->runProblem(exeName,params,QFileInfo(exeName).absolutePath(),
                                      problem->cases);
+            openCloseBottomPanel(true);
+            ui->tabMessages->setCurrentWidget(ui->tabProblem);
         }
     } else if (runType == RunType::CurrentProblemCase) {
         QModelIndex index = ui->lstProblemCases->currentIndex();
@@ -1142,6 +1150,8 @@ void MainWindow::runExecutable(const QString &exeName,const QString &filename,Ru
             POJProblemCase problemCase =mOJProblemModel.getCase(index.row());
             mCompilerManager->runProblem(exeName,params,QFileInfo(exeName).absolutePath(),
                                      problemCase);
+            openCloseBottomPanel(true);
+            ui->tabMessages->setCurrentWidget(ui->tabProblem);
         }
     }
     updateAppTitle();
@@ -2518,24 +2528,22 @@ void MainWindow::onFilesViewContextMenu(const QPoint &pos)
 void MainWindow::onProblemSetIndexChanged(const QModelIndex &current, const QModelIndex &previous)
 {
     QModelIndex idx = current;
-//    if (previous.isValid()) {
-//        QModelIndex caseIdx = ui->lstProblemCases->currentIndex();
-//        if (caseIdx.isValid()) {
-//            POJProblemCase problemCase = mOJProblemModel.getCase(caseIdx.row());
-//            problemCase->input = ui->txtProblemCaseInput->toPlainText();
-//            problemCase->expected = ui->txtProblemCaseExpected->toPlainText();
-//            problemCase->output = ui->txtProblemCaseOutput->toPlainText();
-//        }
-//    }
     if (!idx.isValid()) {
         ui->btnRemoveProblem->setEnabled(false);
+        mOJProblemModel.setProblem(nullptr);
+        ui->txtProblemCaseExpected->clear();
+        ui->txtProblemCaseInput->clear();
+        ui->txtProblemCaseOutput->clear();
+        ui->tabProblem->setEnabled(false);
     } else {
         ui->btnRemoveProblem->setEnabled(true);
         POJProblem problem = mOJProblemSetModel.problem(idx.row());
         mOJProblemModel.setProblem(problem);
         ui->lblProblem->setText(problem->name);
+        ui->lstProblemCases->setCurrentIndex(mOJProblemModel.index(0,0));
         openCloseBottomPanel(true);
         ui->tabMessages->setCurrentWidget(ui->tabProblem);
+        ui->tabProblem->setEnabled(true);
     }
 }
 
@@ -2567,6 +2575,15 @@ void MainWindow::onProblemCaseIndexChanged(const QModelIndex &current, const QMo
     ui->txtProblemCaseExpected->setReadOnly(true);
     ui->txtProblemCaseOutput->clear();
     ui->txtProblemCaseOutput->setReadOnly(true);
+}
+
+void MainWindow::onProblemNameChanged(int index)
+{
+    QModelIndex idx = ui->lstProblemSet->currentIndex();
+    if (idx.isValid() && index == idx.row()) {
+        POJProblem problem = mOJProblemSetModel.problem(idx.row());
+        ui->lblProblem->setText(problem->name);
+    }
 }
 
 void MainWindow::onShowInsertCodeSnippetMenu()
@@ -2894,6 +2911,7 @@ void MainWindow::onFileChanged(const QString &path)
                 e->setModified(true);
                 e->updateCaption();
             }
+            mFileSystemWatcher.removePath(e->filename());
         }
     }
 }
@@ -3332,12 +3350,14 @@ void MainWindow::onRunFinished()
 
 void MainWindow::onRunProblemFinished()
 {
+    ui->pbProblemCases->setVisible(false);
     updateCompileActions();
     updateAppTitle();
 }
 
 void MainWindow::onOJProblemCaseStarted(const QString& id,int current, int total)
 {
+    ui->pbProblemCases->setVisible(true);
     ui->pbProblemCases->setMaximum(total);
     ui->pbProblemCases->setValue(current);
     int row = mOJProblemModel.getCaseIndexById(id);
@@ -5021,6 +5041,7 @@ void MainWindow::on_btnLoadProblemSet_clicked()
         }
     }
     ui->lblProblemSet->setText(mOJProblemSetModel.name());
+    ui->lstProblemSet->setCurrentIndex(mOJProblemSetModel.index(0,0));
 }
 
 

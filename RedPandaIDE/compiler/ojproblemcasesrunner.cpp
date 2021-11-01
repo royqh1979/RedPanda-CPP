@@ -21,9 +21,9 @@ OJProblemCasesRunner::OJProblemCasesRunner(const QString& filename, const QStrin
 
 void OJProblemCasesRunner::runCase(int index,POJProblemCase problemCase)
 {
-    emit caseStarted(problemCase->getId(),mProblemCases.count(),index);
+    emit caseStarted(problemCase->getId(),index, mProblemCases.count());
     auto action = finally([this,&index, &problemCase]{
-        emit caseFinished(problemCase->getId(),mProblemCases.count(),index);
+        emit caseFinished(problemCase->getId(), index, mProblemCases.count());
     });
     QProcess process;
     bool errorOccurred = false;

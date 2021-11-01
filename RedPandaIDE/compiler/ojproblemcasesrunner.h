@@ -14,8 +14,8 @@ public:
     explicit OJProblemCasesRunner(const QString& filename, const QString& arguments, const QString& workDir,
                                   POJProblemCase problemCase, QObject *parent = nullptr);
 signals:
-    void caseStarted(const QString& id, int total, int current);
-    void caseFinished(const QString& id, int total, int current);
+    void caseStarted(const QString& id, int current, int total);
+    void caseFinished(const QString& id, int current, int total);
 private:
     void runCase(int index, POJProblemCase problemCase);
 private:

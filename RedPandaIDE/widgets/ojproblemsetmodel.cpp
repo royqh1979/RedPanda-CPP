@@ -57,7 +57,9 @@ POJProblem OJProblemSetModel::problem(int index)
 void OJProblemSetModel::removeProblem(int index)
 {
     Q_ASSERT(index>=0 && index < mProblemSet.problems.count());
+    beginRemoveRows(QModelIndex(),index,index);
     mProblemSet.problems.removeAt(index);
+    endRemoveRows();
 }
 
 bool OJProblemSetModel::problemNameUsed(const QString &name)
@@ -169,6 +171,7 @@ bool OJProblemSetModel::setData(const QModelIndex &index, const QVariant &value,
         QString s = value.toString();
         if (!s.isEmpty()) {
             mProblemSet.problems[index.row()]->name = s;
+            emit problemNameChanged(index.row());
             return true;
         }
     }

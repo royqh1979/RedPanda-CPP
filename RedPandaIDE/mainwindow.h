@@ -226,6 +226,7 @@ private slots:
     void onFilesViewContextMenu(const QPoint& pos);
     void onProblemSetIndexChanged(const QModelIndex &current, const QModelIndex &previous);
     void onProblemCaseIndexChanged(const QModelIndex &current, const QModelIndex &previous);
+    void onProblemNameChanged(int index);
 
     void onShowInsertCodeSnippetMenu();
 
