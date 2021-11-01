@@ -36,6 +36,7 @@ SOURCES += \
     parser/parserutils.cpp \
     parser/statementmodel.cpp \
     problems/ojproblemset.cpp \
+    problems/problemcasevalidator.cpp \
     project.cpp \
     projectoptions.cpp \
     projecttemplate.cpp \
@@ -156,6 +157,7 @@ HEADERS += \
     parser/statementmodel.h \
     platform.h \
     problems/ojproblemset.h \
+    problems/problemcasevalidator.h \
     problems/problemcasevalidator.h \
     project.h \
     projectoptions.h \
