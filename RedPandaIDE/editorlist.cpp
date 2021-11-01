@@ -134,9 +134,9 @@ bool EditorList::closeEditor(Editor* editor, bool transferFocus, bool force) {
         this->endUpdate();
     });
 
-    if (transferFocus && (editor->pageControl()->currentWidget()==editor)) {
-        //todo: activate & focus the previous editor
-    }
+//    if (transferFocus && (editor->pageControl()->currentWidget()==editor)) {
+//        //todo: activate & focus the previous editor
+//    }
 
     if (editor->inProject() && pMainWindow->project()) {
         int projIndex = pMainWindow->project()->indexInUnits(editor);
@@ -152,7 +152,8 @@ bool EditorList::closeEditor(Editor* editor, bool transferFocus, bool force) {
     updateLayout();
     if (!force) {
         editor = getEditor();
-        pMainWindow->updateClassBrowserForEditor(editor);
+        editor->activate();
+        //pMainWindow->updateClassBrowserForEditor(editor);
     }
     if (pageCount()==0) {
         pMainWindow->updateAppTitle();

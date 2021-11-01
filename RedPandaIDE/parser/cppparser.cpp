@@ -1775,7 +1775,7 @@ void CppParser::handleEnum()
             if (!mTokenizer[i + 1]->text.startsWith(';'))
                 enumName = mTokenizer[i + 1]->text.trimmed();
         }
-    } else { // enum NAME {...};
+    } else if (mIndex+1< mTokenizer.tokenCount() && mTokenizer[mIndex+1]->text.startsWith('{')){ // enum NAME {...};
         if ( (mIndex< mTokenizer.tokenCount()) && mTokenizer[mIndex]->text == "class") {
             //enum class {...} NAME
             isEnumClass = true;
@@ -1791,6 +1791,10 @@ void CppParser::handleEnum()
         // An opening brace must be present after NAME
         if ((mIndex >= mTokenizer.tokenCount()) || !mTokenizer[mIndex]->text.startsWith('{'))
             return;
+    } else {
+        // enum NAME blahblah
+        // it's an old c-style enum variable definition
+        return;
     }
 
     // Add statement for enum name too
