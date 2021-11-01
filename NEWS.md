@@ -1,3 +1,6 @@
+Version 0.7.7
+ - change: "save" action will be enabled no matter contents in the current editor is modified or not
+
 Version 0.7.6
  - change: don't auto insert a new line when input an enter between '(' and ')' or between '[' and ']' (indent instead)
  - enhancement: the line containing '}' will use the indents of the matching '{' line, instead of just unindent one level

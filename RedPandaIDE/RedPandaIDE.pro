@@ -83,7 +83,6 @@ SOURCES += \
     iconsmanager.cpp \
     main.cpp \
     mainwindow.cpp \
-    problems/problemcasevalidator.cpp \
     qsynedit/CodeFolding.cpp \
     qsynedit/Constants.cpp \
     qsynedit/KeyStrokes.cpp \
@@ -157,7 +156,6 @@ HEADERS += \
     parser/statementmodel.h \
     platform.h \
     problems/ojproblemset.h \
-    problems/problemcasevalidator.h \
     problems/problemcasevalidator.h \
     project.h \
     projectoptions.h \

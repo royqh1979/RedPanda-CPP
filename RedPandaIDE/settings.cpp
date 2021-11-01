@@ -2385,7 +2385,9 @@ void Settings::CompilerSets::loadSets()
                                      .arg(pCurrentSet->name())
                                      +"<br /><br />"
                                      +msg
-                                     +"Would you like Red Panda C++ to remove them for you and add the default paths to the valid paths?<br /><br />Leaving those directories will lead to problems during compilation.<br /><br />Unless you know exactly what you're doing, it is recommended that you click Yes.",
+                                     +QObject::tr("Would you like Red Panda C++ to remove them for you and add the default paths to the valid paths?")
+                                     +"<br /><br />"
+                                     +QObject::tr("Leaving those directories will lead to problems during compilation.<br /><br />Unless you know exactly what you're doing, it is recommended that you click Yes."),
                                      QMessageBox::Yes | QMessageBox::No) != QMessageBox::Yes) {
                 return;
             }

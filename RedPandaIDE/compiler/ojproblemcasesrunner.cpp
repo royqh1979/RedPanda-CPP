@@ -62,6 +62,7 @@ void OJProblemCasesRunner::runCase(int index,POJProblemCase problemCase)
     QByteArray readed;
     while (true) {
         process.waitForFinished(1000);
+        readed += process.readAll();
         if (process.state()!=QProcess::Running) {
             break;
         }
@@ -73,7 +74,6 @@ void OJProblemCasesRunner::runCase(int index,POJProblemCase problemCase)
             process.kill();
             break;
         }
-        readed += process.readAll();
         if (errorOccurred)
             break;
     }

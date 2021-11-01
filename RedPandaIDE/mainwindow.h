@@ -53,7 +53,9 @@ class MainWindow : public QMainWindow
 
     enum class CompileSuccessionTaskType {
         None,
-        Run,
+        RunNormal,
+        RunProblemCases,
+        RunCurrentProblemCase,
         Debug,
         Profile
     };
@@ -206,6 +208,7 @@ private:
     void showSearchReplacePanel(bool show);
     void setFilesViewRoot(const QString& path);
     void clearIssues();
+    void doCompileRun(RunType runType);
 
 private slots:
     void onAutoSaveTimeout();

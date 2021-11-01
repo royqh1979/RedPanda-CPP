@@ -216,7 +216,6 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->lstProblemCases->selectionModel(),
             &QItemSelectionModel::currentRowChanged,
             this, &MainWindow::onProblemCaseIndexChanged);
-    ui->tabProblem->setVisible(false);
 
     //files view
     ui->treeFiles->setModel(&mFileSystemModel);
@@ -354,7 +353,7 @@ void MainWindow::updateEditorActions()
         ui->actionPaste->setEnabled(!e->readOnly() && !QGuiApplication::clipboard()->text().isEmpty());
         ui->actionRedo->setEnabled(e->canRedo());
         ui->actionUndo->setEnabled(e->canUndo());
-        ui->actionSave->setEnabled(e->modified());
+        ui->actionSave->setEnabled(!e->readOnly());
         ui->actionSaveAs->setEnabled(true);
         ui->actionExport_As_HTML->setEnabled(true);
         ui->actionExport_As_RTF->setEnabled(true);
@@ -1096,7 +1095,7 @@ void MainWindow::runExecutable(const QString &exeName,const QString &filename,Ru
                                      tr("Source file is not compiled.")
                                      +"<br /><br />"+tr("Compile now?"),
                     QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
-                ui->actionCompile_Run->trigger();
+                doCompileRun(runType);
             }
             return;
         } else {
@@ -1111,7 +1110,7 @@ void MainWindow::runExecutable(const QString &exeName,const QString &filename,Ru
                                          tr("Source file is more recent than executable.")
                                          +"<br /><br />"+tr("Recompile now?"),
                         QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
-                    ui->actionCompile_Run->trigger();
+                    doCompileRun(runType);
                     return;
                 }
             } else {
@@ -1120,21 +1119,6 @@ void MainWindow::runExecutable(const QString &exeName,const QString &filename,Ru
             }
         }
     }
-      // Pause programs if they contain a console
-//          if devData.ConsolePause and ProgramHasConsole(FileToRun) then begin
-//            if fUseRunParams then
-//              Parameters := '"' + FileToRun + '" ' + fRunParams
-//            else
-//              Parameters := '"' + FileToRun + '"';
-
-//            FileToRun := devDirs.Exec + 'ConsolePauser.exe';
-//          end else begin
-//            if fUseRunParams then
-//              Parameters := fRunParams
-//            else
-//              Parameters := '';
-//            FileToRun := FileToRun;
-//          end;
 
     updateCompileActions();
     QString params;
@@ -2545,13 +2529,11 @@ void MainWindow::onProblemSetIndexChanged(const QModelIndex &current, const QMod
 //    }
     if (!idx.isValid()) {
         ui->btnRemoveProblem->setEnabled(false);
-        ui->tabProblem->setVisible(false);
     } else {
         ui->btnRemoveProblem->setEnabled(true);
         POJProblem problem = mOJProblemSetModel.problem(idx.row());
         mOJProblemModel.setProblem(problem);
         ui->lblProblem->setText(problem->name);
-        ui->tabProblem->setVisible(true);
         openCloseBottomPanel(true);
         ui->tabMessages->setCurrentWidget(ui->tabProblem);
     }
@@ -2564,7 +2546,6 @@ void MainWindow::onProblemCaseIndexChanged(const QModelIndex &current, const QMo
         POJProblemCase problemCase = mOJProblemModel.getCase(previous.row());
         problemCase->input = ui->txtProblemCaseInput->toPlainText();
         problemCase->expected = ui->txtProblemCaseExpected->toPlainText();
-        problemCase->output = ui->txtProblemCaseOutput->toPlainText();
     }
     if (idx.isValid()) {
         POJProblemCase problemCase = mOJProblemModel.getCase(idx.row());
@@ -3279,8 +3260,14 @@ void MainWindow::onCompileFinished(bool isCheckSyntax)
         //run succession task if there aren't any errors
         if (mCompileSuccessionTask && mCompilerManager->compileErrorCount()==0) {
             switch (mCompileSuccessionTask->type) {
-            case MainWindow::CompileSuccessionTaskType::Run:
+            case MainWindow::CompileSuccessionTaskType::RunNormal:
                 runExecutable(mCompileSuccessionTask->filename);
+                break;
+            case MainWindow::CompileSuccessionTaskType::RunProblemCases:
+                runExecutable(mCompileSuccessionTask->filename,QString(),RunType::ProblemCases);
+                break;
+            case MainWindow::CompileSuccessionTaskType::RunCurrentProblemCase:
+                runExecutable(mCompileSuccessionTask->filename,QString(),RunType::CurrentProblemCase);
                 break;
             case MainWindow::CompileSuccessionTaskType::Debug:
                 debug();
@@ -3598,9 +3585,7 @@ void MainWindow::on_tabMessages_tabBarDoubleClicked(int )
 
 void MainWindow::on_actionCompile_Run_triggered()
 {
-    mCompileSuccessionTask = std::make_shared<CompileSuccessionTask>();
-    mCompileSuccessionTask->type = CompileSuccessionTaskType::Run;
-    compile();
+    doCompileRun(RunType::Normal);
 }
 
 void MainWindow::on_actionRebuild_triggered()
@@ -4686,6 +4671,22 @@ void MainWindow::clearIssues()
         ui->tabMessages->setTabText(i, tr("Issues"));
     }
     ui->tableIssues->clearIssues();
+}
+
+void MainWindow::doCompileRun(RunType runType)
+{
+    mCompileSuccessionTask = std::make_shared<CompileSuccessionTask>();
+    switch (runType) {
+    case RunType::CurrentProblemCase:
+        mCompileSuccessionTask->type = CompileSuccessionTaskType::RunCurrentProblemCase;
+        break;
+    case RunType::ProblemCases:
+        mCompileSuccessionTask->type = CompileSuccessionTaskType::RunProblemCases;
+        break;
+    default:
+        mCompileSuccessionTask->type = CompileSuccessionTaskType::RunNormal;
+    }
+    compile();
 }
 
 Ui::MainWindow *MainWindow::mainWidget() const

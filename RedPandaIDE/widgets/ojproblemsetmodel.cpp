@@ -289,7 +289,7 @@ QVariant OJProblemModel::data(const QModelIndex &index, int role) const
         case ProblemCaseTestState::Failed:
             return QIcon(":/icons/images/newlook24/008-close.png");
         case ProblemCaseTestState::Passed:
-            return QIcon(":/icons/images/newlook24/007-bughelp.png");
+            return QIcon(":/icons/images/newlook24/007-bughlp.png");
         case ProblemCaseTestState::Testing:
             return QIcon(":/icons/images/newlook24/052-next.png");
         default:
