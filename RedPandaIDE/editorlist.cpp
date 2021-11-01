@@ -152,8 +152,10 @@ bool EditorList::closeEditor(Editor* editor, bool transferFocus, bool force) {
     updateLayout();
     if (!force) {
         editor = getEditor();
-        editor->activate();
-        //pMainWindow->updateClassBrowserForEditor(editor);
+        if (transferFocus && editor)
+            editor->activate();
+        else
+            pMainWindow->updateClassBrowserForEditor(editor);
     }
     if (pageCount()==0) {
         pMainWindow->updateAppTitle();

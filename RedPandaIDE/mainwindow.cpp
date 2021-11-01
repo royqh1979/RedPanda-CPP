@@ -3358,6 +3358,11 @@ void MainWindow::onOJProblemCaseFinished(const QString &id, int current, int tot
                     ProblemCaseTestState::Passed:
                     ProblemCaseTestState::Failed;
         mOJProblemModel.update(row);
+        QModelIndex idx = ui->lstProblemCases->currentIndex();
+        if (idx.isValid()) {
+            if (row == idx.row())
+                ui->txtProblemCaseOutput->setText(problemCase->output);
+        }
     }
     ui->pbProblemCases->setMaximum(total);
     ui->pbProblemCases->setValue(current);
