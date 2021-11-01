@@ -3314,6 +3314,7 @@ void MainWindow::onCompileErrorOccured(const QString &reason)
 
 void MainWindow::onRunErrorOccured(const QString &reason)
 {
+    mCompilerManager->stopRun();
     QMessageBox::critical(this,tr("Run Failed"),reason);
 }
 
@@ -4891,8 +4892,18 @@ void MainWindow::on_actionRun_Parameters_triggered()
 
 void MainWindow::on_btnNewProblemSet_clicked()
 {
+    if (mOJProblemSetModel.count()>0) {
+        if (QMessageBox::warning(this,
+                             tr("New Problem Set"),
+                             tr("The current problem set is not empty.")
+                             +"<br />"
+                             +tr("Do you want to save it?"),
+                             QMessageBox::Yes | QMessageBox::No)!=QMessageBox::Yes)
+            return;
+    }
     mOJProblemSetNameCounter++;
     mOJProblemSetModel.create(tr("Problem Set %1").arg(mOJProblemSetNameCounter));
+    ui->lblProblemSet->setText(mOJProblemSetModel.name());
 }
 
 
@@ -4954,6 +4965,7 @@ void MainWindow::on_btnLoadProblemSet_clicked()
                                   error.reason());
         }
     }
+    ui->lblProblemSet->setText(mOJProblemSetModel.name());
 }
 
 

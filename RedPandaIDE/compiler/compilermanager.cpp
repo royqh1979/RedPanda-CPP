@@ -3,6 +3,7 @@
 #include "stdincompiler.h"
 #include "../mainwindow.h"
 #include "executablerunner.h"
+#include "ojproblemcasesrunner.h"
 #include "utils.h"
 #include "../settings.h"
 #include <QMessageBox>
@@ -208,6 +209,7 @@ void CompilerManager::run(const QString &filename, const QString &arguments, con
         redirectInput =true;
         redirectInputFilename = pSettings->executor().inputFilename();
     }
+    ExecutableRunner * execRunner;
     if (programHasConsole(filename)) {
         int consoleFlag=0;
         if (redirectInput)
@@ -217,18 +219,49 @@ void CompilerManager::run(const QString &filename, const QString &arguments, con
         QString newArguments = QString(" %1 \"%2\" %3")
                 .arg(consoleFlag)
                 .arg(toLocalPath(filename)).arg(arguments);
-        mRunner = new ExecutableRunner(includeTrailingPathDelimiter(pSettings->dirs().app())+"ConsolePauser.exe",newArguments,workDir);
-        mRunner->setStartConsole(true);
+        execRunner = new ExecutableRunner(includeTrailingPathDelimiter(pSettings->dirs().app())+"ConsolePauser.exe",newArguments,workDir);
+        execRunner->setStartConsole(true);
     } else {
-        mRunner = new ExecutableRunner(filename,arguments,workDir);
+        execRunner = new ExecutableRunner(filename,arguments,workDir);
     }
     if (redirectInput) {
-        mRunner->setRedirectInput(true);
-        mRunner->setRedirectInputFilename(redirectInputFilename);
+        execRunner->setRedirectInput(true);
+        execRunner->setRedirectInputFilename(redirectInputFilename);
     }
-    connect(mRunner, &ExecutableRunner::finished, this ,&CompilerManager::onRunnerTerminated);
-    connect(mRunner, &ExecutableRunner::finished, pMainWindow ,&MainWindow::onRunFinished);
-    connect(mRunner, &ExecutableRunner::runErrorOccurred, pMainWindow ,&MainWindow::onRunErrorOccured);
+    mRunner = execRunner;
+    connect(mRunner, &Runner::finished, this ,&CompilerManager::onRunnerTerminated);
+    connect(mRunner, &Runner::finished, pMainWindow ,&MainWindow::onRunFinished);
+    connect(mRunner, &Runner::runErrorOccurred, pMainWindow ,&MainWindow::onRunErrorOccured);
+    mRunner->start();
+}
+
+void CompilerManager::runProblem(const QString &filename, const QString &arguments, const QString &workDir, POJProblemCase problemCase)
+{
+    QMutexLocker locker(&mRunnerMutex);
+    if (mRunner!=nullptr) {
+        return;
+    }
+    OJProblemCasesRunner * execRunner = new OJProblemCasesRunner(filename,arguments,workDir,problemCase);
+    mRunner = execRunner;
+    connect(mRunner, &Runner::finished, this ,&CompilerManager::onRunnerTerminated);
+    connect(mRunner, &Runner::finished, pMainWindow ,&MainWindow::onRunFinished);
+    connect(mRunner, &Runner::runErrorOccurred, pMainWindow ,&MainWindow::onRunErrorOccured);
+//    connect(execRunner, &OJProblemCasesRunner::caseStarted, pMainWindow, &MainWindow::onOJProblemCaseStarted);
+    mRunner->start();
+}
+
+void CompilerManager::runProblem(const QString &filename, const QString &arguments, const QString &workDir, QVector<POJProblemCase> problemCases)
+{
+    QMutexLocker locker(&mRunnerMutex);
+    if (mRunner!=nullptr) {
+        return;
+    }
+    OJProblemCasesRunner * execRunner = new OJProblemCasesRunner(filename,arguments,workDir,problemCases);
+    mRunner = execRunner;
+    connect(mRunner, &Runner::finished, this ,&CompilerManager::onRunnerTerminated);
+    connect(mRunner, &Runner::finished, pMainWindow ,&MainWindow::onRunFinished);
+    connect(mRunner, &Runner::runErrorOccurred, pMainWindow ,&MainWindow::onRunErrorOccured);
+//    connect(execRunner, &OJProblemCasesRunner::caseStarted, pMainWindow, &MainWindow::onOJProblemCaseStarted);
     mRunner->start();
 }
 
@@ -268,7 +301,7 @@ void CompilerManager::onCompileFinished()
 void CompilerManager::onRunnerTerminated()
 {
     QMutexLocker locker(&mRunnerMutex);
-    ExecutableRunner* p=mRunner;
+    Runner* p=mRunner;
     mRunner=nullptr;
     p->deleteLater();
 }

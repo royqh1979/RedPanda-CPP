@@ -153,10 +153,29 @@ QVariant OJProblemSetModel::data(const QModelIndex &index, int role) const
 {
     if (!index.isValid())
         return QVariant();
-    if (role == Qt::DisplayRole) {
+    if (role == Qt::DisplayRole || role == Qt::EditRole) {
         return mProblemSet.problems[index.row()]->name;
     }
     return QVariant();
+}
+
+bool OJProblemSetModel::setData(const QModelIndex &index, const QVariant &value, int role)
+{
+    if (!index.isValid())
+        return false;
+    if (role == Qt::EditRole) {
+        QString s = value.toString();
+        if (!s.isEmpty()) {
+            mProblemSet.problems[index.row()]->name = s;
+            return true;
+        }
+    }
+    return false;
+}
+
+Qt::ItemFlags OJProblemSetModel::flags(const QModelIndex &) const
+{
+    return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable;
 }
 
 OJProblemModel::OJProblemModel(QObject *parent): QAbstractListModel(parent)
@@ -233,8 +252,19 @@ QVariant OJProblemModel::data(const QModelIndex &index, int role) const
         return QVariant();
     if (mProblem==nullptr)
         return QVariant();
-    if (role == Qt::DisplayRole) {
+    if (role == Qt::DisplayRole || role == Qt::EditRole) {
         return mProblem->cases[index.row()]->name;
     }
     return QVariant();
+}
+
+bool OJProblemModel::setData(const QModelIndex &index, const QVariant &value, int role)
+{
+    if (!index.isValid())
+        return false;
+}
+
+Qt::ItemFlags OJProblemModel::flags(const QModelIndex &) const
+{
+    return Qt::ItemIsEnabled | Qt::ItemIsEditable | Qt::ItemIsSelectable;
 }

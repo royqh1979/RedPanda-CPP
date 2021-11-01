@@ -20,7 +20,9 @@ SOURCES += \
     codeformatter.cpp \
     codesnippetsmanager.cpp \
     colorscheme.cpp \
+    compiler/ojproblemcasesrunner.cpp \
     compiler/projectcompiler.cpp \
+    compiler/runner.cpp \
     platform.cpp \
     compiler/compiler.cpp \
     compiler/compilermanager.cpp \
@@ -140,7 +142,9 @@ HEADERS += \
     compiler/compilermanager.h \
     compiler/executablerunner.h \
     compiler/filecompiler.h \
+    compiler/ojproblemcasesrunner.h \
     compiler/projectcompiler.h \
+    compiler/runner.h \
     compiler/stdincompiler.h \
     cpprefacter.h \
     parser/cppparser.h \

@@ -6,9 +6,11 @@
 #include "../utils.h"
 #include "../common.h"
 
-class ExecutableRunner;
+class Runner;
 class Compiler;
 class Project;
+class OJProblemCase;
+using POJProblemCase = std::shared_ptr<OJProblemCase>;
 class CompilerManager : public QObject
 {
     Q_OBJECT
@@ -25,6 +27,8 @@ public:
     void buildProjectMakefile(std::shared_ptr<Project> project);
     void checkSyntax(const QString&filename, const QString& content, bool isAscii, std::shared_ptr<Project> project);
     void run(const QString& filename, const QString& arguments, const QString& workDir);
+    void runProblem(const QString& filename, const QString& arguments, const QString& workDir, POJProblemCase problemCase);
+    void runProblem(const QString& filename, const QString& arguments, const QString& workDir, QVector<POJProblemCase> problemCases);
     void stopRun();
     void stopCompile();
     void stopCheckSyntax();
@@ -51,7 +55,7 @@ private:
     int mSyntaxCheckErrorCount;
     int mSyntaxCheckIssueCount;
     Compiler* mBackgroundSyntaxChecker;
-    ExecutableRunner* mRunner;
+    Runner* mRunner;
     QRecursiveMutex mCompileMutex;
     QRecursiveMutex mBackgroundSyntaxCheckMutex;
     QRecursiveMutex mRunnerMutex;

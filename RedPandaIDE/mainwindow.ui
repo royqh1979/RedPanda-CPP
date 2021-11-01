@@ -263,6 +263,10 @@
             </layout>
            </widget>
            <widget class="QWidget" name="tabProblemSet">
+            <attribute name="icon">
+             <iconset resource="icons.qrc">
+              <normaloff>:/icons/images/newlook24/014-compopt.png</normaloff>:/icons/images/newlook24/014-compopt.png</iconset>
+            </attribute>
             <attribute name="title">
              <string>Problem Set</string>
             </attribute>
@@ -391,7 +395,14 @@
               </widget>
              </item>
              <item>
-              <widget class="QListView" name="lstProblemSet"/>
+              <widget class="QListView" name="lstProblemSet">
+               <property name="alternatingRowColors">
+                <bool>true</bool>
+               </property>
+               <property name="selectionBehavior">
+                <enum>QAbstractItemView::SelectRows</enum>
+               </property>
+              </widget>
              </item>
             </layout>
            </widget>
@@ -1223,6 +1234,16 @@
                  </widget>
                 </item>
                 <item>
+                 <widget class="QProgressBar" name="pbProblemCases">
+                  <property name="value">
+                   <number>24</number>
+                  </property>
+                  <property name="format">
+                   <string>%v/%m</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
                  <spacer name="horizontalSpacer_4">
                   <property name="orientation">
                    <enum>Qt::Horizontal</enum>
@@ -1239,7 +1260,14 @@
               </widget>
              </item>
              <item>
-              <widget class="QListView" name="lstProblemCases"/>
+              <widget class="QListView" name="lstProblemCases">
+               <property name="alternatingRowColors">
+                <bool>true</bool>
+               </property>
+               <property name="selectionBehavior">
+                <enum>QAbstractItemView::SelectRows</enum>
+               </property>
+              </widget>
              </item>
             </layout>
            </widget>

@@ -1,59 +1,31 @@
-#include "executablerunner.h"
-
-#include <QProcess>
-#include <windows.h>
-#include <QDebug>
-#include "compilermanager.h"
+#include "ojproblemcasesrunner.h"
+#include "../utils.h"
 #include "../settings.h"
 #include "../systemconsts.h"
+#include "../widgets/ojproblemsetmodel.h"
+#include <QProcess>
 
-ExecutableRunner::ExecutableRunner(const QString &filename, const QString &arguments, const QString &workDir
-                                   ,QObject* parent):
-    Runner(filename,arguments,workDir,parent),
-    mRedirectInput(false),
-    mStartConsole(false)
+OJProblemCasesRunner::OJProblemCasesRunner(const QString& filename, const QString& arguments, const QString& workDir,
+                                           const QVector<POJProblemCase>& problemCases, QObject *parent):
+    Runner(filename,arguments,workDir,parent)
 {
-
+    mProblemCases = problemCases;
 }
 
-bool ExecutableRunner::startConsole() const
+OJProblemCasesRunner::OJProblemCasesRunner(const QString& filename, const QString& arguments, const QString& workDir,
+                                           POJProblemCase problemCase, QObject *parent):
+    Runner(filename,arguments,workDir,parent)
 {
-    return mStartConsole;
+    mProblemCases.append(problemCase);
 }
 
-void ExecutableRunner::setStartConsole(bool newStartConsole)
+void OJProblemCasesRunner::runCase(int index,POJProblemCase problemCase)
 {
-    mStartConsole = newStartConsole;
-}
-
-bool ExecutableRunner::redirectInput() const
-{
-    return mRedirectInput;
-}
-
-void ExecutableRunner::setRedirectInput(bool isRedirect)
-{
-    mRedirectInput = isRedirect;
-}
-
-const QString &ExecutableRunner::redirectInputFilename() const
-{
-    return mRedirectInputFilename;
-}
-
-void ExecutableRunner::setRedirectInputFilename(const QString &newDataFile)
-{
-    mRedirectInputFilename = newDataFile;
-}
-
-void ExecutableRunner::run()
-{
-    emit started();
-    auto action = finally([this]{
-        emit terminated();
+    emit caseStarted(mProblemCases.count(),index);
+    auto action = finally([this,&index]{
+        emit caseStarted(mProblemCases.count(),index);
     });
     QProcess process;
-    mStop = false;
     bool errorOccurred = false;
 
     process.setProgram(mFilename);
@@ -75,29 +47,19 @@ void ExecutableRunner::run()
     }
     env.insert("PATH",path);
     process.setProcessEnvironment(env);
-    process.setCreateProcessArgumentsModifier([this](QProcess::CreateProcessArguments * args){
-        if (mStartConsole) {
-            args->flags |= CREATE_NEW_CONSOLE;
-        }
-        if (!mRedirectInput) {
-            args->startupInfo -> dwFlags &= ~STARTF_USESTDHANDLES;
-        }
-    });
+    process.setProcessChannelMode(QProcess::MergedChannels);
     process.connect(&process, &QProcess::errorOccurred,
                     [&](){
                         errorOccurred= true;
                     });
-//    qDebug() << mFilename;
-//    qDebug() << QProcess::splitCommand(mArguments);
-    if (!redirectInput()) {
-        process.closeWriteChannel();
-    }
+    problemCase->output.clear();
     process.start();
     process.waitForStarted(5000);
-    if (process.state()==QProcess::Running && redirectInput()) {
-        process.write(ReadFileToByteArray(redirectInputFilename()));
+    if (process.state()==QProcess::Running) {
+        process.write(problemCase->input.toUtf8());
         process.closeWriteChannel();
     }
+    QByteArray readed;
     while (true) {
         process.waitForFinished(1000);
         if (process.state()!=QProcess::Running) {
@@ -111,6 +73,7 @@ void ExecutableRunner::run()
             process.kill();
             break;
         }
+        readed += process.readAll();
         if (errorOccurred)
             break;
     }
@@ -137,4 +100,21 @@ void ExecutableRunner::run()
             break;
         }
     }
+    problemCase->output = QString::fromUtf8(readed);
 }
+
+void OJProblemCasesRunner::run()
+{
+    emit started();
+    auto action = finally([this]{
+        emit terminated();
+    });
+    for (int i=0;i<mProblemCases.size();i++) {
+        if (mStop)
+            break;
+        POJProblemCase problemCase =mProblemCases[i];
+        runCase(i,problemCase);
+    }
+}
+
+
