@@ -23,7 +23,6 @@ public:
     const PIcon &bookmark() const;
 
     const PIcon &folder() const;
-
 signals:
 private:
     PIcon mSyntaxError;

@@ -3,9 +3,7 @@
 
 #include "runner.h"
 #include <QVector>
-
-class OJProblemCase;
-using POJProblemCase = std::shared_ptr<OJProblemCase>;
+#include "../problems/ojproblemset.h"
 
 class OJProblemCasesRunner : public Runner
 {
@@ -16,8 +14,8 @@ public:
     explicit OJProblemCasesRunner(const QString& filename, const QString& arguments, const QString& workDir,
                                   POJProblemCase problemCase, QObject *parent = nullptr);
 signals:
-    void caseStarted(int total, int current);
-    void caseFinished(int total, int current);
+    void caseStarted(const QString& id, int total, int current);
+    void caseFinished(const QString& id, int total, int current);
 private:
     void runCase(int index, POJProblemCase problemCase);
 private:

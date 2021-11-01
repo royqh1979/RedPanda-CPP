@@ -3,35 +3,7 @@
 
 #include <QAbstractListModel>
 #include <memory>
-
-enum class ProblemCaseTestState {
-    NoTested,
-    Passed,
-    Failed
-};
-
-struct OJProblemCase {
-    QString name;
-    QString input;
-    QString expected;
-
-    QString output; // no persistence
-    ProblemCaseTestState testState; // no persistence
-};
-
-using POJProblemCase = std::shared_ptr<OJProblemCase>;
-
-struct OJProblem {
-    QString name;
-    QVector<POJProblemCase> cases;
-};
-
-using POJProblem = std::shared_ptr<OJProblem>;
-
-struct OJProblemSet {
-    QString name;
-    QVector<POJProblem> problems;
-};
+#include "../problems/ojproblemset.h"
 
 class OJProblemModel: public QAbstractListModel {
     Q_OBJECT
@@ -42,8 +14,11 @@ public:
     void addCase(POJProblemCase problemCase);
     void removeCase(int index);
     POJProblemCase getCase(int index);
+    POJProblemCase getCaseById(const QString& id);
+    int getCaseIndexById(const QString& id);
     void clear();
     int count();
+    void update(int row);
 
 private:
     POJProblem mProblem;

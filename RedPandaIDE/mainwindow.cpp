@@ -18,6 +18,7 @@
 #include "colorscheme.h"
 #include "thememanager.h"
 #include "widgets/darkfusionstyle.h"
+#include "problems/problemcasevalidator.h"
 
 #include <QCloseEvent>
 #include <QComboBox>
@@ -205,7 +206,7 @@ MainWindow::MainWindow(QWidget *parent)
             ui->searchView,&QTreeView::expandAll);
     ui->replacePanel->setVisible(false);
 
-    mOJProblemSetNameCounter++;
+    mOJProblemSetNameCounter=1;
     mOJProblemSetModel.rename(tr("Problem Set %1").arg(mOJProblemSetNameCounter));
     ui->lstProblemSet->setModel(&mOJProblemSetModel);
     ui->lstProblemCases->setModel(&mOJProblemModel);
@@ -1086,7 +1087,7 @@ bool MainWindow::compile(bool rebuild)
     return false;
 }
 
-void MainWindow::runExecutable(const QString &exeName,const QString &filename)
+void MainWindow::runExecutable(const QString &exeName,const QString &filename,RunType runType)
 {
     // Check if it exists
     if (!fileExists(exeName)) {
@@ -1136,22 +1137,37 @@ void MainWindow::runExecutable(const QString &exeName,const QString &filename)
 //          end;
 
     updateCompileActions();
-    if (pSettings->executor().minimizeOnRun()) {
-        showMinimized();
-    }
-    updateAppTitle();
     QString params;
     if (pSettings->executor().useParams()) {
         params = pSettings->executor().params();
     }
-    mCompilerManager->run(exeName,params,QFileInfo(exeName).absolutePath());
+    if (runType==RunType::Normal) {
+        if (pSettings->executor().minimizeOnRun()) {
+            showMinimized();
+        }
+        mCompilerManager->run(exeName,params,QFileInfo(exeName).absolutePath());
+    } else if (runType == RunType::ProblemCases) {
+        POJProblem problem = mOJProblemModel.problem();
+        if (problem) {
+            mCompilerManager->runProblem(exeName,params,QFileInfo(exeName).absolutePath(),
+                                     problem->cases);
+        }
+    } else if (runType == RunType::CurrentProblemCase) {
+        QModelIndex index = ui->lstProblemCases->currentIndex();
+        if (index.isValid()) {
+            POJProblemCase problemCase =mOJProblemModel.getCase(index.row());
+            mCompilerManager->runProblem(exeName,params,QFileInfo(exeName).absolutePath(),
+                                     problemCase);
+        }
+    }
+    updateAppTitle();
 }
 
-void MainWindow::runExecutable()
+void MainWindow::runExecutable(RunType runType)
 {
     CompileTarget target =getCompileTarget();
     if (target == CompileTarget::Project) {
-        runExecutable(mProject->executable(),mProject->filename());
+        runExecutable(mProject->executable(),mProject->filename(),runType);
     } else {
         Editor * editor = mEditorList->getEditor();
         if (editor != NULL ) {
@@ -1160,7 +1176,7 @@ void MainWindow::runExecutable()
                     return;
             }
             QString exeName= getCompiledExecutableName(editor->filename());
-            runExecutable(exeName,editor->filename());
+            runExecutable(exeName,editor->filename(),runType);
         }
     }
 }
@@ -3327,6 +3343,39 @@ void MainWindow::onRunFinished()
     updateAppTitle();
 }
 
+void MainWindow::onRunProblemFinished()
+{
+    updateCompileActions();
+    updateAppTitle();
+}
+
+void MainWindow::onOJProblemCaseStarted(const QString& id,int current, int total)
+{
+    ui->pbProblemCases->setMaximum(total);
+    ui->pbProblemCases->setValue(current);
+    int row = mOJProblemModel.getCaseIndexById(id);
+    if (row>=0) {
+        POJProblemCase problemCase = mOJProblemModel.getCase(row);
+        problemCase->testState = ProblemCaseTestState::Testing;
+        mOJProblemModel.update(row);
+    }
+}
+
+void MainWindow::onOJProblemCaseFinished(const QString &id, int current, int total)
+{
+    int row = mOJProblemModel.getCaseIndexById(id);
+    if (row>=0) {
+        POJProblemCase problemCase = mOJProblemModel.getCase(row);
+        ProblemCaseValidator validator;
+        problemCase->testState = validator.validate(problemCase)?
+                    ProblemCaseTestState::Passed:
+                    ProblemCaseTestState::Failed;
+        mOJProblemModel.update(row);
+    }
+    ui->pbProblemCases->setMaximum(total);
+    ui->pbProblemCases->setValue(current);
+}
+
 void MainWindow::cleanUpCPUDialog()
 {
     CPUDialog* ptr=mCPUDialog;
@@ -4983,5 +5032,10 @@ void MainWindow::on_btnAddProblemCase_clicked()
     problemCase->testState = ProblemCaseTestState::NoTested;
     mOJProblemModel.addCase(problemCase);
     ui->lstProblemCases->setCurrentIndex(mOJProblemModel.index(mOJProblemModel.count()-1));
+}
+
+void MainWindow::on_btnRunAllProblemCases_clicked()
+{
+    runExecutable(RunType::ProblemCases);
 }
 

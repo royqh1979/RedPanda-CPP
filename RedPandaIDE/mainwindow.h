@@ -29,6 +29,12 @@ enum class CompileTarget {
     Invalid, None, File, Project, SyntaxCheck
 };
 
+enum class RunType {
+    Normal,
+    CurrentProblemCase,
+    ProblemCases
+};
+
 class EditorList;
 class QLabel;
 class QComboBox;
@@ -76,8 +82,8 @@ public:
     void updateDebuggerSettings();
     void checkSyntaxInBack(Editor* e);
     bool compile(bool rebuild=false);
-    void runExecutable(const QString& exeName, const QString& filename=QString());
-    void runExecutable();
+    void runExecutable(const QString& exeName, const QString& filename=QString(),RunType runType = RunType::Normal);
+    void runExecutable(RunType runType = RunType::Normal);
     void debug();
     void showSearchPanel(bool showReplace = false);
 
@@ -154,6 +160,9 @@ public slots:
     void onCompileErrorOccured(const QString& reason);
     void onRunErrorOccured(const QString& reason);
     void onRunFinished();
+    void onRunProblemFinished();
+    void onOJProblemCaseStarted(const QString& id, int current, int total);
+    void onOJProblemCaseFinished(const QString& id, int current, int total);
     void cleanUpCPUDialog();
     void onDebugCommandInput(const QString& command);
     void onDebugEvaluateInput();
@@ -447,6 +456,8 @@ private slots:
     void on_btnLoadProblemSet_clicked();
 
     void on_btnAddProblemCase_clicked();
+
+    void on_btnRunAllProblemCases_clicked();
 
 private:
     Ui::MainWindow *ui;

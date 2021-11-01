@@ -244,9 +244,9 @@ void CompilerManager::runProblem(const QString &filename, const QString &argumen
     OJProblemCasesRunner * execRunner = new OJProblemCasesRunner(filename,arguments,workDir,problemCase);
     mRunner = execRunner;
     connect(mRunner, &Runner::finished, this ,&CompilerManager::onRunnerTerminated);
-    connect(mRunner, &Runner::finished, pMainWindow ,&MainWindow::onRunFinished);
+    connect(mRunner, &Runner::finished, pMainWindow ,&MainWindow::onRunProblemFinished);
     connect(mRunner, &Runner::runErrorOccurred, pMainWindow ,&MainWindow::onRunErrorOccured);
-//    connect(execRunner, &OJProblemCasesRunner::caseStarted, pMainWindow, &MainWindow::onOJProblemCaseStarted);
+    connect(execRunner, &OJProblemCasesRunner::caseStarted, pMainWindow, &MainWindow::onOJProblemCaseStarted);
     mRunner->start();
 }
 
@@ -259,9 +259,9 @@ void CompilerManager::runProblem(const QString &filename, const QString &argumen
     OJProblemCasesRunner * execRunner = new OJProblemCasesRunner(filename,arguments,workDir,problemCases);
     mRunner = execRunner;
     connect(mRunner, &Runner::finished, this ,&CompilerManager::onRunnerTerminated);
-    connect(mRunner, &Runner::finished, pMainWindow ,&MainWindow::onRunFinished);
+    connect(mRunner, &Runner::finished, pMainWindow ,&MainWindow::onRunProblemFinished);
     connect(mRunner, &Runner::runErrorOccurred, pMainWindow ,&MainWindow::onRunErrorOccured);
-//    connect(execRunner, &OJProblemCasesRunner::caseStarted, pMainWindow, &MainWindow::onOJProblemCaseStarted);
+    connect(execRunner, &OJProblemCasesRunner::caseStarted, pMainWindow, &MainWindow::onOJProblemCaseStarted);
     mRunner->start();
 }
 

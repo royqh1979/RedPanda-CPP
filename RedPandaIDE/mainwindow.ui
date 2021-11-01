@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1036</width>
+    <width>1114</width>
     <height>742</height>
    </rect>
   </property>
@@ -1206,20 +1206,6 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="QToolButton" name="btnRunCurrentProblemCase">
-                  <property name="toolTip">
-                   <string>Run Current Case</string>
-                  </property>
-                  <property name="text">
-                   <string>Run Current Case</string>
-                  </property>
-                  <property name="icon">
-                   <iconset resource="icons.qrc">
-                    <normaloff>:/icons/images/newlook24/069-run.png</normaloff>:/icons/images/newlook24/069-run.png</iconset>
-                  </property>
-                 </widget>
-                </item>
-                <item>
                  <widget class="QToolButton" name="btnRunAllProblemCases">
                   <property name="toolTip">
                    <string>Run All Cases</string>
@@ -1229,17 +1215,7 @@
                   </property>
                   <property name="icon">
                    <iconset resource="icons.qrc">
-                    <normaloff>:/icons/images/newlook24/021-Debug-Continue.png</normaloff>:/icons/images/newlook24/021-Debug-Continue.png</iconset>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QProgressBar" name="pbProblemCases">
-                  <property name="value">
-                   <number>24</number>
-                  </property>
-                  <property name="format">
-                   <string>%v/%m</string>
+                    <normaloff>:/icons/images/newlook24/069-run.png</normaloff>:/icons/images/newlook24/069-run.png</iconset>
                   </property>
                  </widget>
                 </item>
@@ -1255,6 +1231,16 @@
                    </size>
                   </property>
                  </spacer>
+                </item>
+                <item>
+                 <widget class="QProgressBar" name="pbProblemCases">
+                  <property name="value">
+                   <number>24</number>
+                  </property>
+                  <property name="format">
+                   <string>%v/%m</string>
+                  </property>
+                 </widget>
                 </item>
                </layout>
               </widget>
@@ -1331,7 +1317,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1036</width>
+     <width>1114</width>
      <height>25</height>
     </rect>
    </property>

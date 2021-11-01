@@ -1,10 +1,12 @@
 #include "ojproblemsetmodel.h"
 
 #include <QFile>
+#include <QIcon>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include "../utils.h"
+#include "../iconsmanager.h"
 
 OJProblemSetModel::OJProblemSetModel(QObject *parent) : QAbstractListModel(parent)
 {
@@ -223,6 +225,29 @@ POJProblemCase OJProblemModel::getCase(int index)
     return mProblem->cases[index];
 }
 
+POJProblemCase OJProblemModel::getCaseById(const QString& id)
+{
+    if (mProblem==nullptr)
+        return POJProblemCase();
+    foreach (const POJProblemCase& problemCase, mProblem->cases){
+        if (problemCase->getId() == id)
+            return problemCase;
+    }
+    return POJProblemCase();
+}
+
+int OJProblemModel::getCaseIndexById(const QString &id)
+{
+    if (mProblem==nullptr)
+        return -1;
+    for (int i=0;i<mProblem->cases.size();i++) {
+        const POJProblemCase& problemCase = mProblem->cases[i];
+        if (problemCase->getId() == id)
+            return i;
+    }
+    return -1;
+}
+
 void OJProblemModel::clear()
 {
     if (mProblem==nullptr)
@@ -237,6 +262,11 @@ int OJProblemModel::count()
     if (mProblem == nullptr)
         return 0;
     return mProblem->cases.count();
+}
+
+void OJProblemModel::update(int row)
+{
+    emit dataChanged(index(row,0),index(row,0));
 }
 
 int OJProblemModel::rowCount(const QModelIndex &) const
@@ -254,6 +284,17 @@ QVariant OJProblemModel::data(const QModelIndex &index, int role) const
         return QVariant();
     if (role == Qt::DisplayRole || role == Qt::EditRole) {
         return mProblem->cases[index.row()]->name;
+    } else if (role == Qt::DecorationRole) {
+        switch (mProblem->cases[index.row()]->testState) {
+        case ProblemCaseTestState::Failed:
+            return QIcon(":/icons/images/newlook24/008-close.png");
+        case ProblemCaseTestState::Passed:
+            return QIcon(":/icons/images/newlook24/007-bughelp.png");
+        case ProblemCaseTestState::Testing:
+            return QIcon(":/icons/images/newlook24/052-next.png");
+        default:
+            return QVariant();
+        }
     }
     return QVariant();
 }
@@ -262,6 +303,16 @@ bool OJProblemModel::setData(const QModelIndex &index, const QVariant &value, in
 {
     if (!index.isValid())
         return false;
+    if (mProblem==nullptr)
+        return false;
+    if (role == Qt::DisplayRole || role == Qt::EditRole) {
+        QString s = value.toString();
+        if (!s.isEmpty()) {
+            mProblem->cases[index.row()]->name = s;
+            return true;
+        }
+    }
+    return false;
 }
 
 Qt::ItemFlags OJProblemModel::flags(const QModelIndex &) const
