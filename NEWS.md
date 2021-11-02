@@ -3,6 +3,11 @@ Version 0.7.8
  - fix: current input/expected not correctly applied when save/run problem cases
  - fix: colors of the syntax issues view are not correctly set using the current color sheme
  - change: The error color of color scheme "vs code" 
+ - add: "C Reference" in the help menu
+ - fix: Custom editor colors shouldn't be tested for high contrast with the default background color
+ - fix: Custom color settings not correctly displayed in the options widget
+ - enhancement: add hit counts in the search result view
+ - fix: editor actions' state not correctly updated after close editors.
 
 Version 0.7.7
  - enhancement: Problem Set 

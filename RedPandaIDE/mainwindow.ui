@@ -497,7 +497,7 @@
         <enum>QTabWidget::South</enum>
        </property>
        <property name="currentIndex">
-        <number>0</number>
+        <number>6</number>
        </property>
        <property name="iconSize">
         <size>
@@ -1460,6 +1460,7 @@
     <property name="title">
      <string>Help</string>
     </property>
+    <addaction name="actionC_Reference"/>
     <addaction name="actionC_C_Reference"/>
     <addaction name="actionEGE_Manual"/>
     <addaction name="actionAbout"/>
@@ -2350,7 +2351,10 @@
   </action>
   <action name="actionC_C_Reference">
    <property name="text">
-    <string>C/C++ Reference</string>
+    <string>C++ Reference</string>
+   </property>
+   <property name="toolTip">
+    <string>C++ Reference</string>
    </property>
   </action>
   <action name="actionEGE_Manual">
@@ -2406,6 +2410,11 @@
    </property>
    <property name="text">
     <string>Running Parameters...</string>
+   </property>
+  </action>
+  <action name="actionC_Reference">
+   <property name="text">
+    <string>C Reference</string>
    </property>
   </action>
  </widget>

@@ -852,3 +852,9 @@ QByteArray getHTTPBody(const QByteArray& content) {
     }
     return "";
 }
+
+bool haveGoodContrast(const QColor& c1, const QColor &c2) {
+    int lightness1 = c1.lightness();
+    int lightness2 = c2.lightness();
+    return std::abs(lightness1 - lightness2)>=80;
+}

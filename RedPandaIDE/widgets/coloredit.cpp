@@ -23,7 +23,7 @@ void ColorEdit::setColor(const QColor &value)
         mColor=value;
         emit colorChanged(value);
         resize(sizeHint());
-//        update();
+        repaint();
     }
 }
 

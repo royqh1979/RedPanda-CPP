@@ -236,6 +236,8 @@ bool HeaderCompletionPopup::event(QEvent *event)
     case QEvent::FontChange:
         mListView->setFont(font());
         break;
+    default:
+        break;
     }
     return result;
 }

@@ -25,7 +25,7 @@ CodeCompletionPopup::CodeCompletionPopup(QWidget *parent) :
             kind = statement->kind;
         }
         PColorSchemeItem item = mColors->value(kind,PColorSchemeItem());
-        if (item) {
+        if (item && haveGoodContrast(item->foreground(),palette().color(QPalette::Base))) {
             return item->foreground();
         }
         return palette().color(QPalette::Text);

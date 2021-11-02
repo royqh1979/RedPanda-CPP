@@ -150,7 +150,7 @@ void OJProblemSetModel::loadFromFile(const QString &fileName)
     }
 }
 
-int OJProblemSetModel::rowCount(const QModelIndex &parent) const
+int OJProblemSetModel::rowCount(const QModelIndex &) const
 {
     return mProblemSet.problems.count();
 }

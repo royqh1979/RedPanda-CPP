@@ -6,6 +6,7 @@
 #include "../mainwindow.h"
 #include "../settings.h"
 #include "../colorscheme.h"
+#include "../utils.h"
 
 ClassBrowserModel::ClassBrowserModel(QObject *parent):QAbstractItemModel(parent)
 {
@@ -140,8 +141,10 @@ QVariant ClassBrowserModel::data(const QModelIndex &index, int role) const
                     kind = StatementKind::skPreprocessor;
             }
             PColorSchemeItem item = mColors->value(kind,PColorSchemeItem());
-            if (item) {
+            if (item && haveGoodContrast(item->foreground(), pMainWindow->palette().color(QPalette::Base))) {
                 return item->foreground();
+            } else {
+                return QVariant();
             }
         }
         return pMainWindow->palette().color(QPalette::Text);

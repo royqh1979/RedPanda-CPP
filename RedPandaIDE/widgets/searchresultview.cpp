@@ -208,7 +208,8 @@ QVariant SearchResultTreeModel::data(const QModelIndex &index, int role) const
          }
 
          if (item->parent==nullptr) { //is filename
-             return item->filename;
+             return QString("%1(%2)").arg(item->filename)
+                     .arg(item->results.count());
          } else {
              return QString("%1 %2: %3").arg(tr("Line")).arg(item->line)
                  .arg(item->text);

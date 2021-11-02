@@ -231,6 +231,7 @@ private slots:
     void onProblemCaseIndexChanged(const QModelIndex &current, const QModelIndex &previous);
     void onProblemNameChanged(int index);
     void onNewProblemConnection();
+    void onEditorClosed();
 
     void onShowInsertCodeSnippetMenu();
 
@@ -466,6 +467,10 @@ private slots:
     void on_btnAddProblemCase_clicked();
 
     void on_btnRunAllProblemCases_clicked();
+
+    void on_actionC_Reference_triggered();
+
+    void on_btnRemoveProblemCase_clicked();
 
 private:
     Ui::MainWindow *ui;

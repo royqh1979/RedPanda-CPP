@@ -76,6 +76,8 @@ MainWindow::MainWindow(QWidget *parent)
                                  ui->EditorTabsRight,
                                  ui->splitterEditorPanel,
                                  ui->EditorPanel);
+    connect(mEditorList, &EditorList::editorClosed,
+               this, &MainWindow::onEditorClosed);
     mProject = nullptr;
     setupActions();
     ui->EditorTabsRight->setVisible(false);
@@ -447,11 +449,6 @@ void MainWindow::updateCompileActions()
             || mEditorList->pageCount()>0);
 
 }
-static bool haveGoodContrast(const QColor& c1, const QColor &c2) {
-    int lightness1 = c1.lightness();
-    int lightness2 = c2.lightness();
-    return std::abs(lightness1 - lightness2)>=100;
-}
 
 void MainWindow::updateEditorColorSchemes()
 {
@@ -466,50 +463,54 @@ void MainWindow::updateEditorColorSchemes()
 
     item = pColorManager->getItem(schemeName, SYNS_AttrFunction);
     QColor baseColor = palette().color(QPalette::Base);
-    if (item && haveGoodContrast(item->foreground(), baseColor)) {
+    if (item) {
         mStatementColors->insert(StatementKind::skFunction,item);
         mStatementColors->insert(StatementKind::skConstructor,item);
         mStatementColors->insert(StatementKind::skDestructor,item);
     }
     item = pColorManager->getItem(schemeName, SYNS_AttrClass);
-    if (item && haveGoodContrast(item->foreground(), baseColor)) {
+    if (item) {
         mStatementColors->insert(StatementKind::skClass,item);
         mStatementColors->insert(StatementKind::skTypedef,item);
         mStatementColors->insert(StatementKind::skAlias,item);
     }
     item = pColorManager->getItem(schemeName, SYNS_AttrIdentifier);
-    if (item && haveGoodContrast(item->foreground(), baseColor)) {
+    if (item) {
         mStatementColors->insert(StatementKind::skEnumType,item);
         mStatementColors->insert(StatementKind::skEnumClassType,item);
     }
     item = pColorManager->getItem(schemeName, SYNS_AttrVariable);
-    if (item && haveGoodContrast(item->foreground(), baseColor)) {
+    if (item) {
         mStatementColors->insert(StatementKind::skVariable,item);
     }
     item = pColorManager->getItem(schemeName, SYNS_AttrLocalVariable);
-    if (item && haveGoodContrast(item->foreground(), baseColor)) {
+    if (item) {
         mStatementColors->insert(StatementKind::skLocalVariable,item);
         mStatementColors->insert(StatementKind::skParameter,item);
     }
     item = pColorManager->getItem(schemeName, SYNS_AttrGlobalVariable);
-    if (item && haveGoodContrast(item->foreground(), baseColor)) {
+    if (item) {
         mStatementColors->insert(StatementKind::skGlobalVariable,item);
     }
     item = pColorManager->getItem(schemeName, SYNS_AttrPreprocessor);
-    if (item && haveGoodContrast(item->foreground(), baseColor)) {
+    if (item) {
         mStatementColors->insert(StatementKind::skPreprocessor,item);
         mStatementColors->insert(StatementKind::skEnum,item);
-        mHeaderCompletionPopup->setSuggestionColor(item->foreground());
+        if (haveGoodContrast(item->foreground(), baseColor)) {
+            mHeaderCompletionPopup->setSuggestionColor(item->foreground());
+        } else {
+            mHeaderCompletionPopup->setSuggestionColor(palette().color(QPalette::Text));
+        }
     } else  {
         mHeaderCompletionPopup->setSuggestionColor(palette().color(QPalette::Text));
     }
     item = pColorManager->getItem(schemeName, SYNS_AttrReservedWord);
-    if (item && haveGoodContrast(item->foreground(), baseColor)) {
+    if (item) {
         mStatementColors->insert(StatementKind::skKeyword,item);
         mStatementColors->insert(StatementKind::skUserCodeSnippet,item);
     }
     item = pColorManager->getItem(schemeName, SYNS_AttrString);
-    if (item && haveGoodContrast(item->foreground(), baseColor)) {
+    if (item) {
         mStatementColors->insert(StatementKind::skNamespace,item);
         mStatementColors->insert(StatementKind::skNamespaceAlias,item);
     }
@@ -1119,7 +1120,7 @@ bool MainWindow::compile(bool rebuild)
         Editor * editor = mEditorList->getEditor();
         if (editor != NULL ) {
             clearIssues();
-            if (editor->modified()) {
+            if (editor->modified() || editor->isNew()) {
                 if (!editor->save(false,false))
                     return false;
             }
@@ -1210,7 +1211,7 @@ void MainWindow::runExecutable(RunType runType)
     } else {
         Editor * editor = mEditorList->getEditor();
         if (editor != NULL ) {
-            if (editor->modified()) {
+            if (editor->modified() || editor->isNew()) {
                 if (!editor->save(false,false))
                     return;
             }
@@ -1342,12 +1343,11 @@ void MainWindow::debug()
             Editor* e = mEditorList->getEditor();
             if (e!=nullptr) {
                 // Did we saved?
-                if (e->modified()) {
+                if (e->modified() || e->isNew()) {
                     // if file is modified,save it first
                     if (!e->save(false,false))
                             return;
                 }
-
 
                 // Did we compiled?
                 filePath = getCompiledExecutableName(e->filename());
@@ -1386,7 +1386,9 @@ void MainWindow::debug()
         }
         break;
     default:
-        break;
+        //don't compile
+        updateEditorActions();
+        return;
     }
 
     updateEditorActions();
@@ -2671,6 +2673,14 @@ void MainWindow::onNewProblemConnection()
         }
     }
     clientConnection->disconnectFromHost();
+}
+
+void MainWindow::onEditorClosed()
+{
+    if (mQuitting)
+        return;
+    updateEditorActions();
+    updateAppTitle();
 }
 
 void MainWindow::onShowInsertCodeSnippetMenu()
@@ -5198,5 +5208,24 @@ void MainWindow::on_btnRunAllProblemCases_clicked()
 {
     applyCurrentProblemCaseChanges();
     runExecutable(RunType::ProblemCases);
+}
+
+
+void MainWindow::on_actionC_Reference_triggered()
+{
+    if (pSettings->environment().language()=="zh_CN") {
+        QDesktopServices::openUrl(QUrl("https://zh.cppreference.com/w/c"));
+    } else {
+        QDesktopServices::openUrl(QUrl("https://en.cppreference.com/w/c"));
+    }
+}
+
+
+void MainWindow::on_btnRemoveProblemCase_clicked()
+{
+    QModelIndex idx = ui->lstProblemCases->currentIndex();
+    if (idx.isValid()) {
+        mOJProblemModel.removeCase(idx.row());
+    }
 }
 

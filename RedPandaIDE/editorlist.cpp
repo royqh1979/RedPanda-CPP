@@ -11,7 +11,9 @@
 EditorList::EditorList(QTabWidget* leftPageWidget,
       QTabWidget* rightPageWidget,
       QSplitter* splitter,
-      QWidget* panel):
+      QWidget* panel,
+      QObject* parent):
+    QObject(parent),
     mLayout(LayoutShowType::lstLeft),
     mLeftPageWidget(leftPageWidget),
     mRightPageWidget(rightPageWidget),
@@ -157,9 +159,7 @@ bool EditorList::closeEditor(Editor* editor, bool transferFocus, bool force) {
         else
             pMainWindow->updateClassBrowserForEditor(editor);
     }
-    if (pageCount()==0) {
-        pMainWindow->updateAppTitle();
-    }
+    emit editorClosed();
     return true;
 }
 
@@ -290,7 +290,6 @@ bool EditorList::closeAll(bool force) {
             return false;
         }
     }
-    pMainWindow->updateAppTitle();
     return true;
 }
 
@@ -301,6 +300,7 @@ void EditorList::forceCloseEditor(Editor *editor)
     // Force layout update when creating, destroying or moving editors
     updateLayout();
     endUpdate();
+    emit editorClosed();
 }
 
 Editor* EditorList::getOpenedEditorByFilename(QString filename)

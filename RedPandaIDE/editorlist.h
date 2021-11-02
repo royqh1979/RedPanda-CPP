@@ -7,8 +7,9 @@
 #include "utils.h"
 
 class Editor;
-class EditorList
+class EditorList : public QObject
 {
+    Q_OBJECT
 public:
     enum class LayoutShowType{
         lstLeft,
@@ -19,7 +20,7 @@ public:
     explicit EditorList(QTabWidget* leftPageWidget,
                         QTabWidget* rightPageWidget,
                         QSplitter* splitter,
-                        QWidget* panel);
+                        QWidget* panel, QObject* parent = nullptr);
 
     Editor* newEditor(const QString& filename, const QByteArray& encoding,
                      bool inProject, bool newFile,
@@ -58,6 +59,9 @@ public:
     QTabWidget *leftPageWidget() const;
 
     QTabWidget *rightPageWidget() const;
+
+signals:
+    void editorClosed();
 
 private:
     QTabWidget* getNewEditorPageControl() const;
