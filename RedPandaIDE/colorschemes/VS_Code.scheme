@@ -151,8 +151,7 @@
 	"Breakpoint" : {
 	},
 	"Error" : {
-		"foreground" : "#C0C0C0",
-		"background" : "#800000"
+                "foreground" : "#ff2f32"
 	},
 	"Active Breakpoint" : {
 		"foreground" : "#FFFFCE",
