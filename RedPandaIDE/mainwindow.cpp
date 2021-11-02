@@ -26,10 +26,14 @@
 #include <QDragEnterEvent>
 #include <QFileDialog>
 #include <QInputDialog>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QLabel>
 #include <QLineEdit>
 #include <QMessageBox>
 #include <QMimeData>
+#include <QTcpSocket>
 #include <QTranslator>
 
 #include "settingsdialog/settingsdialog.h"
@@ -209,6 +213,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->btnRemoveProblem->setEnabled(false);
     ui->btnRemoveProblemCase->setEnabled(false);
 
+    //problem set
     mOJProblemSetNameCounter=1;
     mOJProblemSetModel.rename(tr("Problem Set %1").arg(mOJProblemSetNameCounter));
     ui->lstProblemSet->setModel(&mOJProblemSetModel);
@@ -222,6 +227,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(&mOJProblemSetModel, &OJProblemSetModel::problemNameChanged,
             this , &MainWindow::onProblemNameChanged);
     ui->pbProblemCases->setVisible(false);
+    connect(&mTcpServer,&QTcpServer::newConnection,
+            this, &MainWindow::onNewProblemConnection);
 
     //files view
     ui->treeFiles->setModel(&mFileSystemModel);
@@ -528,6 +535,12 @@ void MainWindow::applySettings()
     font.setStyleStrategy(QFont::PreferAntialias);
     qApp->setFont(font);
     this->setFont(font);
+
+    if (!mTcpServer.listen(QHostAddress::LocalHost,10045)) {
+        QMessageBox::critical(nullptr,
+                              tr("Listen failed"),
+                              tr("Can't listen to port %1").arg(10045));
+    }
     updateDebuggerSettings();
 }
 
@@ -2535,11 +2548,12 @@ void MainWindow::onProblemSetIndexChanged(const QModelIndex &current, const QMod
         ui->txtProblemCaseInput->clear();
         ui->txtProblemCaseOutput->clear();
         ui->tabProblem->setEnabled(false);
+        ui->lblProblem->clear();
     } else {
         ui->btnRemoveProblem->setEnabled(true);
         POJProblem problem = mOJProblemSetModel.problem(idx.row());
         mOJProblemModel.setProblem(problem);
-        ui->lblProblem->setText(problem->name);
+        ui->lblProblem->setText(mOJProblemModel.getTitle());
         ui->lstProblemCases->setCurrentIndex(mOJProblemModel.index(0,0));
         openCloseBottomPanel(true);
         ui->tabMessages->setCurrentWidget(ui->tabProblem);
@@ -2582,8 +2596,51 @@ void MainWindow::onProblemNameChanged(int index)
     QModelIndex idx = ui->lstProblemSet->currentIndex();
     if (idx.isValid() && index == idx.row()) {
         POJProblem problem = mOJProblemSetModel.problem(idx.row());
-        ui->lblProblem->setText(problem->name);
+        ui->lblProblem->setText(mOJProblemModel.getTitle());
     }
+}
+
+void MainWindow::onNewProblemConnection()
+{
+    QTcpSocket* clientConnection = mTcpServer.nextPendingConnection();
+    mTcpServer.connect(clientConnection, &QAbstractSocket::disconnected,
+            clientConnection, &QObject::deleteLater);
+    QByteArray content;
+    while (clientConnection->state() == QTcpSocket::ConnectedState) {
+        clientConnection->waitForReadyRead();
+        content += clientConnection->readAll();
+    }
+    content += clientConnection->readAll();
+    content = getHTTPBody(content);
+    QJsonParseError error;
+    QJsonDocument doc = QJsonDocument::fromJson(content,&error);
+    if (error.error!=QJsonParseError::NoError) {
+        qDebug()<<"Read http content failed!";
+        qDebug()<<error.errorString();
+        return;
+    }
+    QJsonObject obj=doc.object();
+    QString name = obj["name"].toString();
+    if (!mOJProblemSetModel.problemNameUsed(name)) {
+        POJProblem problem = std::make_shared<OJProblem>();
+        problem->name = name;
+        problem->url = obj["url"].toString();
+        QJsonArray caseArray = obj["tests"].toArray();
+        foreach ( const QJsonValue& val, caseArray) {
+            QJsonObject caseObj = val.toObject();
+            POJProblemCase problemCase = std::make_shared<OJProblemCase>();
+            problemCase->testState = ProblemCaseTestState::NotTested;
+            problemCase->name = tr("Problem Case %1").arg(problem->cases.count()+1);
+            problemCase->input = caseObj["input"].toString();
+            problemCase->expected = caseObj["output"].toString();
+            problem->cases.append(problemCase);
+        }
+        mOJProblemSetModel.addProblem(problem);
+        if (!ui->lstProblemSet->currentIndex().isValid()) {
+            ui->lstProblemSet->setCurrentIndex(mOJProblemSetModel.index(0,0));
+        }
+    }
+    clientConnection->disconnectFromHost();
 }
 
 void MainWindow::onShowInsertCodeSnippetMenu()
@@ -3386,6 +3443,7 @@ void MainWindow::onOJProblemCaseFinished(const QString &id, int current, int tot
     }
     ui->pbProblemCases->setMaximum(total);
     ui->pbProblemCases->setValue(current);
+    ui->lblProblem->setText(mOJProblemModel.getTitle());
 }
 
 void MainWindow::cleanUpCPUDialog()
@@ -4973,8 +5031,9 @@ void MainWindow::on_btnNewProblemSet_clicked()
                              tr("The current problem set is not empty.")
                              +"<br />"
                              +tr("Do you want to save it?"),
-                             QMessageBox::Yes | QMessageBox::No)!=QMessageBox::Yes)
-            return;
+                             QMessageBox::Yes | QMessageBox::No)==QMessageBox::Yes) {
+            on_btnSaveProblemSet_clicked();
+        }
     }
     mOJProblemSetNameCounter++;
     mOJProblemSetModel.create(tr("Problem Set %1").arg(mOJProblemSetNameCounter));
@@ -5056,7 +5115,7 @@ void MainWindow::on_btnAddProblemCase_clicked()
     }
     POJProblemCase problemCase = std::make_shared<OJProblemCase>();
     problemCase->name = name;
-    problemCase->testState = ProblemCaseTestState::NoTested;
+    problemCase->testState = ProblemCaseTestState::NotTested;
     mOJProblemModel.addCase(problemCase);
     ui->lstProblemCases->setCurrentIndex(mOJProblemModel.index(mOJProblemModel.count()-1));
 }

@@ -35,6 +35,9 @@
      <property name="text">
       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Based on Qt %1 (%2)&lt;/p&gt;&lt;p&gt;Build time: %3 %4&lt;/p&gt;&lt;p&gt;Copyright 2020-2021 royqh1979@gmail.com&lt;/p&gt;&lt;p&gt;Homepage: &lt;a href=&quot;https://sourceforge.net/projects/dev-cpp-2020/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#007af4;&quot;&gt;https://sourceforge.net/projects/dev-cpp-2020/&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
+     <property name="openExternalLinks">
+      <bool>true</bool>
+     </property>
     </widget>
    </item>
    <item>

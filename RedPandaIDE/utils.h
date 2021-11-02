@@ -166,6 +166,7 @@ QString TrimRight(const QString& s);
 QString TrimLeft(const QString& s);
 bool StringIsBlank(const QString& s);
 int compareFileModifiedTime(const QString& filename1, const QString& filename2);
+QByteArray getHTTPBody(const QByteArray& content);
 
 //void changeTheme(const QString& themeName);
 

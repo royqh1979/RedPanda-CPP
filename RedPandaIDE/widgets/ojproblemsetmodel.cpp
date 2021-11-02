@@ -86,6 +86,7 @@ void OJProblemSetModel::saveToFile(const QString &fileName)
         foreach (const POJProblem& problem, mProblemSet.problems) {
             QJsonObject problemObj;
             problemObj["name"]=problem->name;
+            problemObj["url"]=problem->url;
             QJsonArray cases;
             foreach (const POJProblemCase& problemCase, problem->cases) {
                 QJsonObject caseObj;
@@ -129,6 +130,7 @@ void OJProblemSetModel::loadFromFile(const QString &fileName)
             QJsonObject problemObj = problemVal.toObject();
             POJProblem problem = std::make_shared<OJProblem>();
             problem->name = problemObj["name"].toString();
+            problem->url = problemObj["url"].toString();
             QJsonArray casesArray = problemObj["cases"].toArray();
             foreach (const QJsonValue& caseVal, casesArray) {
                 QJsonObject caseObj = caseVal.toObject();
@@ -136,7 +138,7 @@ void OJProblemSetModel::loadFromFile(const QString &fileName)
                 problemCase->name = caseObj["name"].toString();
                 problemCase->input = caseObj["input"].toString();
                 problemCase->expected = caseObj["expected"].toString();
-                problemCase->testState = ProblemCaseTestState::NoTested;
+                problemCase->testState = ProblemCaseTestState::NotTested;
                 problem->cases.append(problemCase);
             }
             mProblemSet.problems.append(problem);
@@ -270,6 +272,24 @@ int OJProblemModel::count()
 void OJProblemModel::update(int row)
 {
     emit dataChanged(index(row,0),index(row,0));
+}
+
+QString OJProblemModel::getTitle()
+{
+    if (!mProblem)
+        return "";
+    int total = mProblem->cases.count();
+    int passed = 0;
+    foreach (const POJProblemCase& problemCase, mProblem->cases) {
+        if (problemCase->testState == ProblemCaseTestState::Passed)
+            passed ++ ;
+    }
+    QString title = QString("%1 (%2/%3)").arg(mProblem->name)
+            .arg(passed).arg(total);
+    if (!mProblem->url.isEmpty()) {
+        title = QString("<a href=\"%1\">%2</a>").arg(mProblem->url,title);
+    }
+    return title;
 }
 
 int OJProblemModel::rowCount(const QModelIndex &) const

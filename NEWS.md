@@ -4,6 +4,8 @@ Version 0.7.7
  - fix: can't parse old c-style enum variable definition like "enum Test test;"
  - fix: remove the file change monitor if it's remove from the disk
  - fix: don't test if a file is writable before save to it (because qt can't do that test reliably).
+ - enhancement: Problem Set 
+ - enhancement: Competitive Companion Support
 
 Version 0.7.6
  - change: don't auto insert a new line when input an enter between '(' and ')' or between '[' and ']' (indent instead)

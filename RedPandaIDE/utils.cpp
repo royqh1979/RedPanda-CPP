@@ -844,3 +844,11 @@ QByteArray ReadFileToByteArray(const QString &fileName)
     }
     return QByteArray();
 }
+
+QByteArray getHTTPBody(const QByteArray& content) {
+    int i= content.indexOf("\r\n\r\n");
+    if (i>=0) {
+        return content.mid(i+4);
+    }
+    return "";
+}

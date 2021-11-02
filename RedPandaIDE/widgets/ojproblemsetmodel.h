@@ -19,6 +19,7 @@ public:
     void clear();
     int count();
     void update(int row);
+    QString getTitle();
 
 private:
     POJProblem mProblem;

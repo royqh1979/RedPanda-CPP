@@ -5,6 +5,7 @@
 #include <QMainWindow>
 #include <QTimer>
 #include <QFileSystemModel>
+#include <QTcpServer>
 #include "common.h"
 #include "widgets/searchresultview.h"
 #include "widgets/classbrowser.h"
@@ -227,6 +228,7 @@ private slots:
     void onProblemSetIndexChanged(const QModelIndex &current, const QModelIndex &previous);
     void onProblemCaseIndexChanged(const QModelIndex &current, const QModelIndex &previous);
     void onProblemNameChanged(int index);
+    void onNewProblemConnection();
 
     void onShowInsertCodeSnippetMenu();
 
@@ -524,6 +526,7 @@ private:
     bool mClosing;
     bool mSystemTurnedOff;
     QPoint mEditorContextMenuPos;
+    QTcpServer mTcpServer;
 
     //actions for compile issue table
     QAction * mTableIssuesCopyAction;

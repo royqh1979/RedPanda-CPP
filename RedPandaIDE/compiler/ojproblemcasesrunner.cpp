@@ -66,7 +66,7 @@ void OJProblemCasesRunner::runCase(int index,POJProblemCase problemCase)
         if (process.state()!=QProcess::Running) {
             break;
         }
-        if (mStop) {
+        if (mStop) {            
             process.closeReadChannel(QProcess::StandardOutput);
             process.closeReadChannel(QProcess::StandardError);
             process.closeWriteChannel();
@@ -77,6 +77,7 @@ void OJProblemCasesRunner::runCase(int index,POJProblemCase problemCase)
         if (errorOccurred)
             break;
     }
+    readed += process.readAll();
     if (errorOccurred) {
         //qDebug()<<"process error:"<<process.error();
         switch (process.error()) {

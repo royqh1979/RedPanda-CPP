@@ -5,7 +5,7 @@
 #include <QVector>
 
 enum class ProblemCaseTestState {
-    NoTested,
+    NotTested,
     Testing,
     Passed,
     Failed
@@ -30,6 +30,7 @@ using POJProblemCase = std::shared_ptr<OJProblemCase>;
 
 struct OJProblem {
     QString name;
+    QString url;
     QVector<POJProblemCase> cases;
 };
 
