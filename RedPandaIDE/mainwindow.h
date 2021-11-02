@@ -210,6 +210,8 @@ private:
     void setFilesViewRoot(const QString& path);
     void clearIssues();
     void doCompileRun(RunType runType);
+    void updateProblemCaseOutput(POJProblemCase problemCase);
+    void applyCurrentProblemCaseChanges();
 
 private slots:
     void onAutoSaveTimeout();
@@ -527,6 +529,7 @@ private:
     bool mSystemTurnedOff;
     QPoint mEditorContextMenuPos;
     QTcpServer mTcpServer;
+    QColor mErrorColor;
 
     //actions for compile issue table
     QAction * mTableIssuesCopyAction;

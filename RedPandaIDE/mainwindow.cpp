@@ -34,6 +34,7 @@
 #include <QMessageBox>
 #include <QMimeData>
 #include <QTcpSocket>
+#include <QTextBlock>
 #include <QTranslator>
 
 #include "settingsdialog/settingsdialog.h"
@@ -113,10 +114,6 @@ MainWindow::MainWindow(QWidget *parent)
 
 //    ui->actionIndent->setShortcut(Qt::Key_Tab);
 //    ui->actionUnIndent->setShortcut(Qt::Key_Tab | Qt::ShiftModifier);
-
-    ui->tableIssues->setErrorColor(QColor("Red"));
-    ui->tableIssues->setWarningColor(QColor("Orange"));
-
 
     mMenuNew = new QMenu();
     mMenuNew->setTitle(tr("New"));
@@ -515,6 +512,19 @@ void MainWindow::updateEditorColorSchemes()
     if (item && haveGoodContrast(item->foreground(), baseColor)) {
         mStatementColors->insert(StatementKind::skNamespace,item);
         mStatementColors->insert(StatementKind::skNamespaceAlias,item);
+    }
+    item = pColorManager->getItem(schemeName, COLOR_SCHEME_ERROR);
+    if (item && haveGoodContrast(item->foreground(), baseColor)) {
+        mErrorColor = item->foreground();
+    } else {
+        mErrorColor = palette().color(QPalette::Text);
+    }
+    ui->tableIssues->setErrorColor(mErrorColor);
+    item = pColorManager->getItem(schemeName, COLOR_SCHEME_WARNING);
+    if (item && haveGoodContrast(item->foreground(), baseColor)) {
+        ui->tableIssues->setWarningColor(item->foreground());
+    } else {
+        ui->tableIssues->setWarningColor(palette().color(QPalette::Text));
     }
 }
 
@@ -2560,7 +2570,7 @@ void MainWindow::onFilesViewContextMenu(const QPoint &pos)
     menu.exec(ui->treeFiles->mapToGlobal(pos));
 }
 
-void MainWindow::onProblemSetIndexChanged(const QModelIndex &current, const QModelIndex &previous)
+void MainWindow::onProblemSetIndexChanged(const QModelIndex &current, const QModelIndex &/* previous */)
 {
     QModelIndex idx = current;
     if (!idx.isValid()) {
@@ -2599,8 +2609,7 @@ void MainWindow::onProblemCaseIndexChanged(const QModelIndex &current, const QMo
             ui->txtProblemCaseInput->setReadOnly(false);
             ui->txtProblemCaseExpected->setText(problemCase->expected);
             ui->txtProblemCaseExpected->setReadOnly(false);
-            ui->txtProblemCaseOutput->setText(problemCase->output);
-            ui->txtProblemCaseOutput->setReadOnly(true);
+            updateProblemCaseOutput(problemCase);
             return;
         }
     }
@@ -2610,7 +2619,6 @@ void MainWindow::onProblemCaseIndexChanged(const QModelIndex &current, const QMo
     ui->txtProblemCaseExpected->clear();
     ui->txtProblemCaseExpected->setReadOnly(true);
     ui->txtProblemCaseOutput->clear();
-    ui->txtProblemCaseOutput->setReadOnly(true);
 }
 
 void MainWindow::onProblemNameChanged(int index)
@@ -2836,7 +2844,7 @@ void MainWindow::enableDebugActions()
     ui->cbMemoryAddress->setEnabled(true);
 }
 
-void MainWindow::onTodoParseStarted(const QString& filename)
+void MainWindow::onTodoParseStarted(const QString&)
 {
     mTodoModel.clear();
 }
@@ -3459,8 +3467,9 @@ void MainWindow::onOJProblemCaseFinished(const QString &id, int current, int tot
         mOJProblemModel.update(row);
         QModelIndex idx = ui->lstProblemCases->currentIndex();
         if (idx.isValid()) {
-            if (row == idx.row())
-                ui->txtProblemCaseOutput->setText(problemCase->output);
+            if (row == idx.row()) {
+                updateProblemCaseOutput(problemCase);
+            }
         }
     }
     ui->pbProblemCases->setMaximum(total);
@@ -4794,6 +4803,48 @@ void MainWindow::doCompileRun(RunType runType)
     compile();
 }
 
+void MainWindow::updateProblemCaseOutput(POJProblemCase problemCase)
+{
+    ui->txtProblemCaseOutput->clear();
+    ui->txtProblemCaseOutput->setText(problemCase->output);
+    if (problemCase->testState == ProblemCaseTestState::Failed) {
+        QStringList output = TextToLines(problemCase->output);
+        QStringList expected = TextToLines(problemCase->expected);
+        for (int i=0;i<output.count();i++) {
+            if (i>=expected.count() || output[i]!=expected[i]) {
+                QTextBlock block = ui->txtProblemCaseOutput->document()->findBlockByLineNumber(i);
+                QTextCursor cur(block);
+                cur.select(QTextCursor::LineUnderCursor);
+                QTextCharFormat format = cur.charFormat();
+                format.setUnderlineColor(mErrorColor);
+                format.setUnderlineStyle(QTextCharFormat::WaveUnderline);
+                cur.setCharFormat(format);
+            }
+        }
+        if (output.count()<expected.count()) {
+            QTextBlock block = ui->txtProblemCaseOutput->document()->findBlockByLineNumber(output.count()-1);
+            QTextCursor cur(block);
+            cur.select(QTextCursor::LineUnderCursor);
+            QTextCharFormat format = cur.charFormat();
+            format.setUnderlineColor(mErrorColor);
+            format.setUnderlineStyle(QTextCharFormat::WaveUnderline);
+            cur.setCharFormat(format);
+        }
+    }
+}
+
+void MainWindow::applyCurrentProblemCaseChanges()
+{
+    QModelIndex idx = ui->lstProblemCases->currentIndex();
+    if (idx.isValid()) {
+        POJProblemCase problemCase = mOJProblemModel.getCase(idx.row());
+        if (problemCase) {
+            problemCase->input = ui->txtProblemCaseInput->toPlainText();
+            problemCase->expected = ui->txtProblemCaseExpected->toPlainText();
+        }
+    }
+}
+
 Ui::MainWindow *MainWindow::mainWidget() const
 {
     return ui;
@@ -5097,6 +5148,7 @@ void MainWindow::on_btnSaveProblemSet_clicked()
                 tr("Problem Set Files (*.pbs)"));
     if (!fileName.isEmpty()) {
         try {
+            applyCurrentProblemCaseChanges();
             mOJProblemSetModel.saveToFile(fileName);
         } catch (FileError& error) {
             QMessageBox::critical(this,tr("Save Error"),
@@ -5144,6 +5196,7 @@ void MainWindow::on_btnAddProblemCase_clicked()
 
 void MainWindow::on_btnRunAllProblemCases_clicked()
 {
+    applyCurrentProblemCaseChanges();
     runExecutable(RunType::ProblemCases);
 }
 

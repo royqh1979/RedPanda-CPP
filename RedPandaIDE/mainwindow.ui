@@ -497,7 +497,7 @@
         <enum>QTabWidget::South</enum>
        </property>
        <property name="currentIndex">
-        <number>6</number>
+        <number>0</number>
        </property>
        <property name="iconSize">
         <size>
@@ -1308,7 +1308,11 @@
               <widget class="QTextEdit" name="txtProblemCaseInput"/>
              </item>
              <item row="1" column="1">
-              <widget class="QTextEdit" name="txtProblemCaseOutput"/>
+              <widget class="QTextEdit" name="txtProblemCaseOutput">
+               <property name="readOnly">
+                <bool>true</bool>
+               </property>
+              </widget>
              </item>
              <item row="1" column="2">
               <widget class="QTextEdit" name="txtProblemCaseExpected"/>

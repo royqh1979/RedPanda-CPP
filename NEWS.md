@@ -1,3 +1,8 @@
+Version 0.7.8
+ - enhancement: In problem view's output control, indicates which line is different with the expected
+ - fix: current input/expected not correctly applied when save/run problem cases
+ - fix: colors of the syntax issues view are not correctly set using the current color sheme
+
 Version 0.7.7
  - enhancement: Problem Set 
  - enhancement: Competitive Companion Support
