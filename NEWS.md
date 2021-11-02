@@ -1,11 +1,13 @@
 Version 0.7.7
+ - enhancement: Problem Set 
+ - enhancement: Competitive Companion Support
  - change: "save" action will be enabled no matter contents in the current editor is modified or not
  - fix: focus not correctly set when the current editor is closed
  - fix: can't parse old c-style enum variable definition like "enum Test test;"
  - fix: remove the file change monitor if it's remove from the disk
  - fix: don't test if a file is writable before save to it (because qt can't do that test reliably).
- - enhancement: Problem Set 
- - enhancement: Competitive Companion Support
+ - fix: when search in project, files opened for search shouldn't be parsed for symbols.
+ - fix: when search in project, the search history is not correctly updated.
 
 Version 0.7.6
  - change: don't auto insert a new line when input an enter between '(' and ')' or between '[' and ']' (indent instead)

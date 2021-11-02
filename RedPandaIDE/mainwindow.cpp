@@ -536,10 +536,32 @@ void MainWindow::applySettings()
     qApp->setFont(font);
     this->setFont(font);
 
-    if (!mTcpServer.listen(QHostAddress::LocalHost,10045)) {
-        QMessageBox::critical(nullptr,
-                              tr("Listen failed"),
-                              tr("Can't listen to port %1").arg(10045));
+    mTcpServer.close();
+    int idxProblem = ui->tabMessages->indexOf(ui->tabProblem);
+    ui->tabMessages->setTabEnabled(idxProblem,pSettings->executor().enableProblemSet());
+    int idxProblemSet = ui->tabInfos->indexOf(ui->tabProblemSet);
+    ui->tabInfos->setTabEnabled(idxProblemSet,pSettings->executor().enableProblemSet());
+    if (pSettings->executor().enableProblemSet()) {
+        if (pSettings->executor().enableCompetitiveCompanion()) {
+            if (!mTcpServer.listen(QHostAddress::LocalHost,pSettings->executor().competivieCompanionPort())) {
+                QMessageBox::critical(nullptr,
+                                      tr("Listen failed"),
+                                      tr("Can't listen to port %1 form Competitve Companion.").arg(10045)
+                                      + "<BR/>"
+                                      +tr("You can turn off competitive companion support in the Problem Set options.")
+                                      + "<BR/>"
+                                      +tr("Or You can choose a different port number and try again."));
+            }
+        }
+        if (idxProblem<0)
+            ui->tabMessages->addTab(ui->tabProblem,tr("Problem"));
+        if (idxProblemSet<0)
+            ui->tabInfos->addTab(ui->tabProblemSet, tr("Problem Set"));
+    } else {
+        if (idxProblem>=0)
+            ui->tabMessages->removeTab(idxProblem);
+        if (idxProblemSet>=0)
+            ui->tabInfos->removeTab(idxProblemSet);
     }
     updateDebuggerSettings();
 }
@@ -3118,7 +3140,7 @@ void MainWindow::closeEvent(QCloseEvent *event) {
         }
     }
 
-
+    mTcpServer.close();
     mCompilerManager->stopCompile();
     mCompilerManager->stopRun();
     if (!mShouldRemoveAllSettings)

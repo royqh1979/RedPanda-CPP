@@ -44,9 +44,9 @@ private slots:
 
    void on_btnExecute_clicked();
 private:
-   int execute(Editor* editor, const QString& sSearch,
+   int execute(SynEdit* editor, const QString& sSearch,
                const QString& sReplace, SynSearchMathedProc matchCallback = nullptr);
-   std::shared_ptr<SearchResultTreeItem> batchFindInEditor(Editor* editor,const QString& keyword);
+   std::shared_ptr<SearchResultTreeItem> batchFindInEditor(SynEdit * editor,const QString& filename, const QString& keyword);
 private:
     Ui::SearchDialog *ui;
     QTabBar *mTabBar;

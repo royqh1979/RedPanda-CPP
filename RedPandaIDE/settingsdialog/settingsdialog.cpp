@@ -19,6 +19,7 @@
 #include "environmentfileassociationwidget.h"
 #include "environmentfolderswidget.h"
 #include "executorgeneralwidget.h"
+#include "executorproblemsetwidget.h"
 #include "debuggeneralwidget.h"
 #include "formattergeneralwidget.h"
 #include "projectgeneralwidget.h"
@@ -172,6 +173,10 @@ PSettingsDialog SettingsDialog::optionDialog()
     dialog->addWidget(widget);
 
     widget = new ExecutorGeneralWidget(tr("General"),tr("Program Runner"));
+    widget->init();
+    dialog->addWidget(widget);
+
+    widget = new ExecutorProblemSetWidget(tr("Problem Set"),tr("Program Runner"));
     widget->init();
     dialog->addWidget(widget);
 

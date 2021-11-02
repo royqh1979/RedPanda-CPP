@@ -763,6 +763,15 @@ public:
         const QString &inputFilename() const;
         void setInputFilename(const QString &newInputFilename);
 
+        bool enableProblemSet() const;
+        void setEnableProblemSet(bool newEnableProblemSet);
+
+        bool enableCompetitiveCompanion() const;
+        void setEnableCompetitiveCompanion(bool newEnableCompetitiveCompanion);
+
+        int competivieCompanionPort() const;
+        void setCompetivieCompanionPort(int newCompetivieCompanionPort);
+
     private:
         // general
         bool mPauseConsole;
@@ -771,6 +780,11 @@ public:
         QString mParams;
         bool mRedirectInput;
         QString mInputFilename;
+
+        //Problem Set
+        bool mEnableProblemSet;
+        bool mEnableCompetitiveCompanion;
+        int mCompetivieCompanionPort;
 
     protected:
         void doSave() override;

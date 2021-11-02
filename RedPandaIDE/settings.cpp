@@ -2757,6 +2757,36 @@ void Settings::Executor::setInputFilename(const QString &newInputFilename)
     mInputFilename = newInputFilename;
 }
 
+int Settings::Executor::competivieCompanionPort() const
+{
+    return mCompetivieCompanionPort;
+}
+
+void Settings::Executor::setCompetivieCompanionPort(int newCompetivieCompanionPort)
+{
+    mCompetivieCompanionPort = newCompetivieCompanionPort;
+}
+
+bool Settings::Executor::enableCompetitiveCompanion() const
+{
+    return mEnableCompetitiveCompanion;
+}
+
+void Settings::Executor::setEnableCompetitiveCompanion(bool newEnableCompetitiveCompanion)
+{
+    mEnableCompetitiveCompanion = newEnableCompetitiveCompanion;
+}
+
+bool Settings::Executor::enableProblemSet() const
+{
+    return mEnableProblemSet;
+}
+
+void Settings::Executor::setEnableProblemSet(bool newEnableProblemSet)
+{
+    mEnableProblemSet = newEnableProblemSet;
+}
+
 void Settings::Executor::doSave()
 {
     saveValue("pause_console", mPauseConsole);
@@ -2765,6 +2795,8 @@ void Settings::Executor::doSave()
     saveValue("params",mParams);
     saveValue("redirect_input",mRedirectInput);
     saveValue("input_filename",mInputFilename);
+    //problem set
+
 }
 
 bool Settings::Executor::pauseConsole() const
@@ -2786,6 +2818,9 @@ void Settings::Executor::doLoad()
     mRedirectInput = boolValue("redirect_input",false);
     mInputFilename = stringValue("input_filename","");
 
+    mEnableProblemSet = boolValue("enable_proble_set",true);
+    mEnableCompetitiveCompanion = boolValue("enable_competivie_companion",true);
+    mCompetivieCompanionPort = intValue("competitive_companion_port",10045);
 }
 
 
