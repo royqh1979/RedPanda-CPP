@@ -141,7 +141,7 @@ QVariant ClassBrowserModel::data(const QModelIndex &index, int role) const
                     kind = StatementKind::skPreprocessor;
             }
             PColorSchemeItem item = mColors->value(kind,PColorSchemeItem());
-            if (item && haveGoodContrast(item->foreground(), pMainWindow->palette().color(QPalette::Base))) {
+            if (item) {
                 return item->foreground();
             } else {
                 return pMainWindow->palette().color(QPalette::Text);

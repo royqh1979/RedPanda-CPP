@@ -534,10 +534,12 @@ void MainWindow::updateEditorColorSchemes()
         pal.setColor(QPalette::Text,item->foreground());
         mCompletionPopup->setPalette(pal);
         mHeaderCompletionPopup->setPalette(pal);
+        ui->classBrowser->setPalette(pal);
     } else {
         QPalette pal = palette();
         mCompletionPopup->setPalette(pal);
         mHeaderCompletionPopup->setPalette(pal);
+        ui->classBrowser->setPalette(pal);
     }
 }
 
