@@ -16,6 +16,7 @@ SynEditTextPainter::SynEditTextPainter(SynEdit *edit, QPainter *painter, int Fir
 
 void SynEditTextPainter::paintTextLines(const QRect& clip)
 {
+    painter->fillRect(clip, edit->mBackgroundColor);
     AClip = clip;
     vFirstLine = edit->rowToLine(aFirstRow);
     vLastLine = edit->rowToLine(aLastRow);
@@ -81,14 +82,6 @@ void SynEditTextPainter::paintGutter(const QRect& clip)
 
     AClip = clip;
 
-    //todo: Does the following comment still apply?
-    // Changed to use fTextDrawer.BeginDrawing and fTextDrawer.EndDrawing only
-    // when absolutely necessary.  Note: Never change brush / pen / font of the
-    // canvas inside of this block (only through methods of fTextDrawer)!
-    // If we have to draw the line numbers then we don't want to erase
-    // the background first. Do it line by line with TextRect instead
-    // and fill only the area after the last visible line.
-    //painter->setClipRect(AClip);
     painter->fillRect(AClip,edit->mGutter.color());
 
     rcLine=AClip;
@@ -108,16 +101,22 @@ void SynEditTextPainter::paintGutter(const QRect& clip)
             newFont.setUnderline(false);
             painter->setFont(newFont);
         }
+        QColor textColor;
         if (edit->mGutter.textColor().isValid()) {
-            painter->setPen(edit->mGutter.textColor());
+            textColor = edit->mGutter.textColor();
         } else {
-            painter->setPen(edit->palette().color(QPalette::Text));
+            textColor = edit->mForegroundColor;
         }
         // draw each line if it is not hidden by a fold
         for (int cRow = aFirstRow; cRow <= aLastRow; cRow++) {
             vLine = edit->rowToLine(cRow);
             if ((vLine > edit->mLines->count()) && (edit->mLines->count() > 0 ))
                 break;
+            if (edit->mCaretY==vLine && edit->mGutter.activeLineTextColor().isValid()) {
+                painter->setPen(edit->mGutter.activeLineTextColor());
+            } else {
+                painter->setPen(textColor);
+            }
             vLineTop = (cRow - edit->mTopLine) * edit->mTextHeight;
 
             // next line rect
@@ -270,14 +269,8 @@ QColor SynEditTextPainter::colEditorBG()
     if (edit->mActiveLineColor.isValid() && bCurrentLine) {
         return edit->mActiveLineColor;
     } else {
-        if (edit->mHighlighter) {
-            PSynHighlighterAttribute attr = edit->mHighlighter->whitespaceAttribute();
-            if (attr && attr->background().isValid()) {
-                return attr->background();
-            }
-        }
+        return edit->mBackgroundColor;
     }
-    return edit->palette().color(QPalette::Base);
 }
 
 void SynEditTextPainter::ComputeSelectionInfo()
@@ -351,13 +344,19 @@ void SynEditTextPainter::ComputeSelectionInfo()
 void SynEditTextPainter::setDrawingColors(bool Selected)
 {
     if (Selected) {
-        painter->setPen(colSelFG);
-        painter->setBrush(colSelBG);
-        painter->setBackground(colSelBG);
+        if (colSelFG.isValid())
+            painter->setPen(colSelFG);
+        else
+            painter->setPen(colFG);
+        if (colSelBG.isValid())
+            painter->setBrush(colSelBG);
+        else
+            painter->setBrush(colBG);
+        painter->setBackground(edit->mBackgroundColor);
     } else {
         painter->setPen(colFG);
         painter->setBrush(colBG);
-        painter->setBackground(colBG);
+        painter->setBackground(edit->mBackgroundColor);
     }
 }
 
@@ -376,7 +375,9 @@ void SynEditTextPainter::PaintToken(const QString &Token, int TokenCols, int Col
         nX = ColumnToXValue(First);
         First -= ColumnsBefore;
         Last -= ColumnsBefore;
-        painter->fillRect(rcToken,painter->brush());
+        QRect rcTokenBack = rcToken;
+        rcTokenBack.setWidth(rcTokenBack.width()-1);
+        painter->fillRect(rcTokenBack,painter->brush());
         if (First > TokenCols) {
         } else {
             int tokenColLen=0;
@@ -588,8 +589,6 @@ void SynEditTextPainter::AddHighlightToken(const QString &Token, int ColumnsBefo
     SynFontStyles Style;
     bool bSpacesTest,bIsSpaces;
 
-//    qDebug()<<"Add highlight token"<<Token<<ColumnsBefore<<TokenColumns<<cLine;
-
     if (p_Attri) {
         Foreground = p_Attri->foreground();
         Background = p_Attri->background();
@@ -604,7 +603,7 @@ void SynEditTextPainter::AddHighlightToken(const QString &Token, int ColumnsBefo
         Background = colEditorBG();
     }
     if (!Foreground.isValid()) {
-        Foreground = edit->palette().color(QPalette::Text);
+        Foreground = edit->mForegroundColor;
     }
 
     edit->onPreparePaintHighlightToken(cLine,edit->mHighlighter->getTokenPos()+1,
@@ -618,7 +617,7 @@ void SynEditTextPainter::AddHighlightToken(const QString &Token, int ColumnsBefo
         if (TokenAccu.Style == Style ||  ( (Style & SynFontStyle::fsUnderline) == (TokenAccu.Style & fsUnderline)
                                            && TokenIsSpaces(bSpacesTest,Token,bIsSpaces)) ) {
             // either special colors or same colors
-            if ((bSpecialLine && !(edit->mOptions.testFlag(SynEditorOption::eoSpecialLineDefaultFg))) || bLineSelected ||
+            if ((bSpecialLine && !(edit->mOptions.testFlag(SynEditorOption::eoSpecialLineDefaultFg)))  ||
               // background color must be the same and
             ((TokenAccu.BG == Background) &&
               // foreground color must be the same or token is only spaces
@@ -819,14 +818,8 @@ void SynEditTextPainter::PaintLines()
         colBG = colEditorBG();
         bSpecialLine = edit->onGetSpecialLineColors(vLine, colFG, colBG);
 
-        if (bSpecialLine) {
-            // The selection colors are just swapped, like seen in Delphi.
-            colSelFG = colBG;
-            colSelBG = colFG;
-        } else {
-            colSelFG = edit->mSelectedForeground;
-            colSelBG = edit->mSelectedBackground;
-        }
+        colSelFG = edit->mSelectedForeground;
+        colSelBG = edit->mSelectedBackground;
         edit->onGetEditingAreas(vLine, areaList);
         // Removed word wrap support
         vFirstChar = FirstCol;
@@ -867,8 +860,10 @@ void SynEditTextPainter::PaintLines()
         } //endif bAnySelection
 
         // Update the rcLine rect to this line.
-        rcLine.setTop(rcLine.bottom());
-        rcLine.setBottom(rcLine.bottom()+edit->mTextHeight);
+//        rcLine.setTop(rcLine.bottom());
+//        rcLine.setBottom(rcLine.bottom()+edit->mTextHeight);
+        rcLine.setTop((cRow - edit->mTopLine) * edit->mTextHeight);
+        rcLine.setHeight(edit->mTextHeight);
 
         bLineSelected = (!bComplexLine) && (nLineSelStart > 0);
         rcToken = rcLine;

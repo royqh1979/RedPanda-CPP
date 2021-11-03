@@ -73,7 +73,7 @@ void ColorEdit::paintEvent(QPaintEvent *)
             painter.setBrush(palette().color(QPalette::Disabled,QPalette::Base));
         }
         painter.drawRect(rect);
-        painter.drawText(rect,Qt::AlignCenter, mColor.name());
+        painter.drawText(rect,Qt::AlignCenter, mColor.name(QColor::HexArgb));
     } else {
         //painter.fillRect(rect,palette().color(QPalette::Base));
         if (isEnabled()) {
@@ -92,7 +92,8 @@ void ColorEdit::paintEvent(QPaintEvent *)
 
 void ColorEdit::mouseReleaseEvent(QMouseEvent *)
 {
-    QColor c = QColorDialog::getColor();
+    QColor c = QColorDialog::getColor(mColor,nullptr,tr("Color"),
+                                      QColorDialog::ShowAlphaChannel | QColorDialog::DontUseNativeDialog);
     if (c.isValid()) {
         setColor(c);
     }

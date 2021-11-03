@@ -113,7 +113,6 @@
 	},
 	"Space" : {
 		"foreground" : "#505050",
-		"background" : "#1E1E1E",
 		"bold" : false,
 		"italic" : false,
 		"underlined" : false,
@@ -140,13 +139,22 @@
 		"underlined" : false,
 		"strikeout" : false
 	},
+    "Editor Text": {
+        "foreground" : "#ffffff",
+		"background" : "#1E1E1E"
+    },
+    "Current Highlighted Word": {
+        "background": "#50ffffff"
+    },
 	"Selected text" : {
-		"foreground" : "#000000",
-		"background" : "#808080"
+		"background" : "#3c55aaff"
 	},
 	"Gutter" : {
 		"foreground" : "#858585",
 		"background" : "#1E1E1E"
+	},
+	"Gutter Active Line" : {
+		"foreground" : "#C0C0C0"
 	},
 	"Breakpoint" : {
 	},

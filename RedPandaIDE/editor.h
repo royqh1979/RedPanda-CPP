@@ -243,6 +243,8 @@ private:
     QColor mActiveBreakpointBackgroundColor;
     QColor mBreakpointForegroundColor;
     QColor mBreakpointBackgroundColor;
+    QColor mCurrentHighlighWordForeground;
+    QColor mCurrentHighlighWordBackground;
     int mSyntaxErrorLine;
     int mLineCount;
     int mGutterClickedLine;
@@ -257,8 +259,8 @@ private:
     QString mCurrentWord;
     QString mCurrentDebugTipWord;
     TipType mCurrentTipType;
-    QString mOldSelectionWord;
-    QString mSelectionWord;
+    QString mOldHighlightedWord;
+    QString mCurrentHighlightedWord;
 
     bool mSaving;
 

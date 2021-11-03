@@ -8,6 +8,11 @@ Version 0.7.8
  - fix: Custom color settings not correctly displayed in the options widget
  - enhancement: add hit counts in the search result view
  - fix: editor actions' state not correctly updated after close editors.
+ - fix: When replace in the editor, "Yes to All" and "No" button doesn't work correctly.
+ - fix: crash when editing non-c/c++ files
+ - enhancement: set the alpha value of scheme colors
+ - enhancement: can use symbols' own scheme color to draw selection
+ - enhancement: can use different colors to highlight the current word and the selections
 
 Version 0.7.7
  - enhancement: Problem Set 

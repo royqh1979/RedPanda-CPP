@@ -189,28 +189,32 @@ void EditorColorSchemeWidget::onItemSelectionChanged()
             ui->colorForeground->setEnabled(define->hasForeground());
             ui->grpFontStyles->setEnabled(define->hasFontStyle());
             PColorSchemeItem item = pColorManager->getItem(ui->cbScheme->currentText(), name);
-            if (item) {
-                if (define->hasBackground()) {
-                    setColorProp(ui->colorBackground, ui->cbBackground,item->background());
-                } else {
-                    setColorProp(ui->colorBackground, ui->cbBackground,QColor());
+            if (!item) {
+                PColorScheme scheme = pColorManager->get(ui->cbScheme->currentText());
+                if (scheme) {
+                    scheme->addItem(name);
                 }
-                if (define->hasForeground()) {
-                    setColorProp(ui->colorForeground, ui->cbForeground,item->foreground());
-                } else {
-                    setColorProp(ui->colorForeground, ui->cbForeground,QColor());
-                }
-                if (define->hasFontStyle()) {
-                    ui->cbBold->setChecked(item->bold());
-                    ui->cbItalic->setChecked(item->italic());
-                    ui->cbUnderlined->setChecked(item->underlined());
-                    ui->cbStrikeout->setChecked(item->strikeout());
-                } else {
-                    ui->cbBold->setChecked(false);
-                    ui->cbItalic->setChecked(false);
-                    ui->cbUnderlined->setChecked(false);
-                    ui->cbStrikeout->setChecked(false);
-                }
+            }
+            if (define->hasBackground() && item) {
+                setColorProp(ui->colorBackground, ui->cbBackground,item->background());
+            } else {
+                setColorProp(ui->colorBackground, ui->cbBackground,QColor());
+            }
+            if (define->hasForeground() && item) {
+                setColorProp(ui->colorForeground, ui->cbForeground,item->foreground());
+            } else {
+                setColorProp(ui->colorForeground, ui->cbForeground,QColor());
+            }
+            if (define->hasFontStyle() && item) {
+                ui->cbBold->setChecked(item->bold());
+                ui->cbItalic->setChecked(item->italic());
+                ui->cbUnderlined->setChecked(item->underlined());
+                ui->cbStrikeout->setChecked(item->strikeout());
+            } else {
+                ui->cbBold->setChecked(false);
+                ui->cbItalic->setChecked(false);
+                ui->cbUnderlined->setChecked(false);
+                ui->cbStrikeout->setChecked(false);
             }
         }
     }

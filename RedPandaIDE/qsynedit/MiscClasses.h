@@ -76,6 +76,9 @@ public:
     QColor textColor() const;
     void setTextColor(const QColor &value);
 
+    const QColor &activeLineTextColor() const;
+    void setActiveLineTextColor(const QColor &newActiveLineTextColor);
+
 signals:
     void changed();
 private:
@@ -84,6 +87,7 @@ private:
     bool mAutoSize;
     QColor mBorderColor;
     QColor mTextColor;
+    QColor mActiveLineTextColor;
     QColor mColor;
     int mDigitCount;
     QFont mFont;

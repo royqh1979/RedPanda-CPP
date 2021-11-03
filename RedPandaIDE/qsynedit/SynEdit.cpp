@@ -1077,7 +1077,7 @@ void SynEdit::processGutterClick(QMouseEvent *event)
             rect.setLeft(mGutterWidth - mGutter.rightOffset());
             rect.setRight(rect.left() + mGutter.rightOffset() - 4);
             rect.setTop((RowColumn.Row - mTopLine) * mTextHeight);
-            rect.setBottom(rect.top() + mTextHeight);
+            rect.setBottom(rect.top() + mTextHeight - 1);
             if (rect.contains(QPoint(X, Y))) {
                 if (FoldRange->collapsed)
                     uncollapse(FoldRange);
@@ -3081,6 +3081,8 @@ int SynEdit::scanFrom(int Index, int canStopIndex)
 
 void SynEdit::rescanRange(int line)
 {
+    if (!mHighlighter)
+        return;
     line--;
     line = std::max(0,line);
     if (line >= mLines->count())
@@ -3507,7 +3509,7 @@ void SynEdit::paintCaret(QPainter &painter, const QRect rcClip)
         ct =mOverwriteCaret;
     }
     if (mCaretUseTextColor) {
-        painter.setPen(palette().color(QPalette::Text));
+        painter.setPen(mForegroundColor);
     } else {
         painter.setPen(mCaretColor);
     }
@@ -3590,6 +3592,26 @@ void SynEdit::onScrolled(int)
     mLeftChar = horizontalScrollBar()->value();
     mTopLine = verticalScrollBar()->value();
     invalidate();
+}
+
+const QColor &SynEdit::backgroundColor() const
+{
+    return mBackgroundColor;
+}
+
+void SynEdit::setBackgroundColor(const QColor &newBackgroundColor)
+{
+    mBackgroundColor = newBackgroundColor;
+}
+
+const QColor &SynEdit::foregroundColor() const
+{
+    return mForegroundColor;
+}
+
+void SynEdit::setForegroundColor(const QColor &newForegroundColor)
+{
+    mForegroundColor = newForegroundColor;
 }
 
 int SynEdit::mouseWheelScrollSpeed() const
@@ -4698,6 +4720,8 @@ int SynEdit::searchReplace(const QString &sSearch, const QString &sReplace, SynS
             doOnPaintTransient(SynTransientType::ttAfter);
         });
         int i;
+        // If it's a search only we can leave the procedure now.
+        SynSearchAction searchAction = SynSearchAction::Exit;
         while ((ptCurrent.Line >= ptStart.Line) && (ptCurrent.Line <= ptEnd.Line)) {
             int nInLine = searchEngine->findAll(mLines->getString(ptCurrent.Line - 1));
             int iResultOffset = 0;
@@ -4748,8 +4772,7 @@ int SynEdit::searchReplace(const QString &sSearch, const QString &sReplace, SynS
                     internalSetCaretXY(blockBegin());
                 else
                     internalSetCaretXY(ptCurrent);
-                // If it's a search only we can leave the procedure now.
-                SynSearchAction searchAction = SynSearchAction::Exit;
+
                 QString replaceText = searchEngine->replace(selText(), sReplace);
                 if (matchedCallback && !dobatchReplace) {
                     searchAction = matchedCallback(sSearch,replaceText,ptCurrent.Line,

@@ -60,6 +60,14 @@ PColorScheme ColorScheme::load(const QString &filename)
     return ColorScheme::fromJson(doc.object());
 }
 
+void ColorScheme::addItem(const QString& name)
+{
+    if (mItems.contains(name))
+        return;
+    PColorSchemeItem item = std::make_shared<ColorSchemeItem>();
+    mItems[name]=item;
+}
+
 QMap<QString, PColorSchemeItem> ColorScheme::items()
 {
     return mItems;
@@ -220,12 +228,12 @@ PColorSchemeItem ColorSchemeItem::fromJson(const QJsonObject &json)
 void ColorSchemeItem::toJson(QJsonObject &json)
 {
     if (mForeground.isValid()) {
-        json["foreground"] = mForeground.name();
+        json["foreground"] = mForeground.name(QColor::HexArgb);
     } else if (json.contains("foreground")){
         json.remove("foreground");
     }
     if (mBackground.isValid()) {
-        json["background"] = mBackground.name();
+        json["background"] = mBackground.name(QColor::HexArgb);
     } else if (json.contains("background")){
         json.remove("background");
     }
@@ -503,6 +511,10 @@ void ColorManager::initItemDefines()
               QObject::tr("Gutter"),
               QObject::tr("Editor"),
               true,true,true);
+    addDefine(COLOR_SCHEME_GUTTER_ACTIVE_LINE,
+              QObject::tr("Gutter Active Line"),
+              QObject::tr("Editor"),
+              true,false,false);
     //Active Line
     addDefine(COLOR_SCHEME_ACTIVE_LINE,
               QObject::tr("Active Line"),
@@ -528,6 +540,17 @@ void ColorManager::initItemDefines()
               QObject::tr("Selection"),
               QObject::tr("Editor"),
               true,true,false);
+
+    addDefine(COLOR_SCHEME_TEXT,
+              QObject::tr("Editor Text"),
+              QObject::tr("Editor"),
+              true,true,false);
+
+    addDefine(COLOR_SCHEME_CURRENT_HIGHLIGHTED_WORD,
+              QObject::tr("Current Highlighted Word"),
+              QObject::tr("Editor"),
+              true,true,false);
+
     //Syntax Error
     addDefine(COLOR_SCHEME_ERROR,
               QObject::tr("Error"),

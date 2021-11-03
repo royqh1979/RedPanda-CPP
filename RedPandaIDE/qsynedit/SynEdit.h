@@ -376,6 +376,12 @@ public:
     int mouseWheelScrollSpeed() const;
     void setMouseWheelScrollSpeed(int newMouseWheelScrollSpeed);
 
+    const QColor &foregroundColor() const;
+    void setForegroundColor(const QColor &newForegroundColor);
+
+    const QColor &backgroundColor() const;
+    void setBackgroundColor(const QColor &newBackgroundColor);
+
 signals:
     void linesDeleted(int FirstLine, int Count);
     void linesInserted(int FirstLine, int Count);
@@ -610,6 +616,8 @@ private:
     PSynHighlighter mHighlighter;
     QColor mSelectedForeground;
     QColor mSelectedBackground;
+    QColor mForegroundColor;
+    QColor mBackgroundColor;
     QColor mCaretColor;
     PSynHighlighterAttribute mRainbowAttr0;
     PSynHighlighterAttribute mRainbowAttr1;

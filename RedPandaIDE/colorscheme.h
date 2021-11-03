@@ -11,7 +11,10 @@
 #define COLOR_SCHEME_ERROR  "Error"
 #define COLOR_SCHEME_ACTIVE_BREAKPOINT  "Active Breakpoint"
 #define COLOR_SCHEME_GUTTER "Gutter"
+#define COLOR_SCHEME_GUTTER_ACTIVE_LINE "Gutter Active Line"
 #define COLOR_SCHEME_SELECTION "Selected text"
+#define COLOR_SCHEME_TEXT "Editor Text"
+#define COLOR_SCHEME_CURRENT_HIGHLIGHTED_WORD "Current Highlighted Word"
 #define COLOR_SCHEME_FOLD_LINE "Fold Line"
 #define COLOR_SCHEME_ACTIVE_LINE "Active Line"
 #define COLOR_SCHEME_WARNING "Warning"
@@ -68,6 +71,8 @@ public:
     explicit ColorScheme();
 
     static PColorScheme load(const QString& filename);
+
+    void addItem(const QString& name);
 
     QMap<QString,PColorSchemeItem> items();
 

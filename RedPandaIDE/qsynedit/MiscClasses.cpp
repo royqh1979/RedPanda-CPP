@@ -56,6 +56,16 @@ void SynGutter::setChanged()
     emit changed();
 }
 
+const QColor &SynGutter::activeLineTextColor() const
+{
+    return mActiveLineTextColor;
+}
+
+void SynGutter::setActiveLineTextColor(const QColor &newActiveLineTextColor)
+{
+    mActiveLineTextColor = newActiveLineTextColor;
+}
+
 QColor SynGutter::textColor() const
 {
     return mTextColor;
