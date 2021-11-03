@@ -460,7 +460,6 @@ void MainWindow::updateEditorColorSchemes()
     QString schemeName = pSettings->editor().colorScheme();
     //color for code completion popup
     PColorSchemeItem item;
-
     item = pColorManager->getItem(schemeName, SYNS_AttrFunction);
     QColor baseColor = palette().color(QPalette::Base);
     if (item) {
@@ -496,11 +495,12 @@ void MainWindow::updateEditorColorSchemes()
     if (item) {
         mStatementColors->insert(StatementKind::skPreprocessor,item);
         mStatementColors->insert(StatementKind::skEnum,item);
-        if (haveGoodContrast(item->foreground(), baseColor)) {
-            mHeaderCompletionPopup->setSuggestionColor(item->foreground());
-        } else {
-            mHeaderCompletionPopup->setSuggestionColor(palette().color(QPalette::Text));
-        }
+//        if (haveGoodContrast(item->foreground(), baseColor)) {
+//            mHeaderCompletionPopup->setSuggestionColor(item->foreground());
+//        } else {
+//            mHeaderCompletionPopup->setSuggestionColor(palette().color(QPalette::Text));
+//        }
+        mHeaderCompletionPopup->setSuggestionColor(item->foreground());
     } else  {
         mHeaderCompletionPopup->setSuggestionColor(palette().color(QPalette::Text));
     }
@@ -526,6 +526,18 @@ void MainWindow::updateEditorColorSchemes()
         ui->tableIssues->setWarningColor(item->foreground());
     } else {
         ui->tableIssues->setWarningColor(palette().color(QPalette::Text));
+    }
+    item = pColorManager->getItem(schemeName, COLOR_SCHEME_TEXT);
+    if (item) {
+        QPalette pal = palette();
+        pal.setColor(QPalette::Base,item->background());
+        pal.setColor(QPalette::Text,item->foreground());
+        mCompletionPopup->setPalette(pal);
+        mHeaderCompletionPopup->setPalette(pal);
+    } else {
+        QPalette pal = palette();
+        mCompletionPopup->setPalette(pal);
+        mHeaderCompletionPopup->setPalette(pal);
     }
 }
 
