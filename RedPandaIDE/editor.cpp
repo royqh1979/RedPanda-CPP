@@ -78,6 +78,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
   mCurrentHighlightedWord(),
   mSaving(false)
 {
+    mCurrentLineModified = false;
     mUseCppSyntax = pSettings->editor().defaultFileCpp();
     if (mFilename.isEmpty()) {
         mFilename = tr("untitled")+QString("%1").arg(getNewFileNumber());
@@ -1355,24 +1356,28 @@ Editor::PSyntaxIssue Editor::getSyntaxIssueAtPosition(const BufferCoord &pos)
     return PSyntaxIssue();
 }
 
-void Editor::onModificationChanged(bool) {
-    updateCaption();
-}
-
 void Editor::onStatusChanged(SynStatusChanges changes)
 {
-    if (!changes.testFlag(SynStatusChange::scReadOnly)
+    if ((!changes.testFlag(SynStatusChange::scReadOnly)
             && !changes.testFlag(SynStatusChange::scInsertMode)
             && (lines()->count()!=mLineCount)
-            && (lines()->count()!=0) && ((mLineCount>0) || (lines()->count()>1))) {
+            && (lines()->count()!=0) && ((mLineCount>0) || (lines()->count()>1)))
+            ||
+        (mCurrentLineModified
+            && !changes.testFlag(SynStatusChange::scReadOnly)
+            && changes.testFlag(SynStatusChange::scCaretY))) {
+        mCurrentLineModified = false;
         reparse();
         if (pSettings->editor().syntaxCheckWhenLineChanged())
             checkSyntaxInBack();
         reparseTodo();
     }
     mLineCount = lines()->count();
-    if (changes.testFlag(scModified)) {
+    if (changes.testFlag(scModifyChanged)) {
         updateCaption();
+    }
+    if (changes.testFlag(scModified)) {
+        mCurrentLineModified = true;
     }
 
     if (changes.testFlag(SynStatusChange::scCaretX)

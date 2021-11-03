@@ -173,7 +173,6 @@ public:
     void tab() override;
 
 private slots:
-    void onModificationChanged(bool status) ;
     void onStatusChanged(SynStatusChanges changes);
     void onGutterClicked(Qt::MouseButton button, int x, int y, int line);
     void onTipEvalValueReady(const QString& value);
@@ -263,7 +262,7 @@ private:
     QString mCurrentHighlightedWord;
 
     bool mSaving;
-
+    bool mCurrentLineModified;
     int mXOffsetSince;
     int mTabStopBegin;
     int mTabStopEnd;

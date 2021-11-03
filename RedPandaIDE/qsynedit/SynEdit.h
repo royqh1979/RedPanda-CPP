@@ -40,10 +40,11 @@ enum SynStatusChange {
     scLeftChar = 0x0008,
     scTopLine = 0x0010,
     scInsertMode = 0x0020,
-    scModified = 0x0040,
+    scModifyChanged = 0x0040,
     scSelection = 0x0080,
     scReadOnly = 0x0100,
-    scOpenFile = 0x0200
+    scOpenFile = 0x0200,
+    scModified = 0x0400
 };
 
 Q_DECLARE_FLAGS(SynStatusChanges, SynStatusChange)

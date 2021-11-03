@@ -16,6 +16,7 @@ Version 0.7.8
  - enhancement: can set editor's default background / foreground color. They must be setted to make the custom color schemes correctly.
  - enhancement: can set the color for the current line's number in the gutter
  - all predefined color schemes updated. 
+ - enhancement: check syntax/parse symbols when modifed and cursor's line changed.
 
 Version 0.7.7
  - enhancement: Problem Set 

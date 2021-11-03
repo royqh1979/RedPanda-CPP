@@ -5977,14 +5977,16 @@ bool SynEdit::modified() const
 
 void SynEdit::setModified(bool Value)
 {
-    if (Value)
+    if (Value) {
         mLastModifyTime = QDateTime::currentDateTime();
+        emit statusChanged(SynStatusChange::scModified);
+    }
     if (Value != mModified) {
         mModified = Value;
         if (mOptions.testFlag(SynEditorOption::eoGroupUndo) && (!Value) && mUndoList->CanUndo())
             mUndoList->AddGroupBreak();
         mUndoList->setInitialState(!Value);
-        emit statusChanged(SynStatusChange::scModified);
+        emit statusChanged(SynStatusChange::scModifyChanged);
     }
 }
 
