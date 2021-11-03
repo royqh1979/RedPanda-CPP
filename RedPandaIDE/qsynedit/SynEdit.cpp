@@ -213,6 +213,8 @@ void SynEdit::setCaretXYEx(bool CallEnsureCursorPos, BufferCoord value)
         value.Line = 1;
         if (!mOptions.testFlag(SynEditorOption::eoScrollPastEol)) {
             nMaxX = 1;
+        } else {
+            nMaxX = mLines->getString(value.Line-1).length()+1;
         }
     } else {
         nMaxX = mLines->getString(value.Line-1).length()+1;
@@ -3411,7 +3413,7 @@ QString SynEdit::substringByColumns(const QString &s, int startColumn, int &colL
     int len = s.length();
     int columns = 0;
     int i = 0;
-    int oldColumns;
+    int oldColumns=0;
     while (columns < startColumn) {
         oldColumns = columns;
         if (i>=len)
