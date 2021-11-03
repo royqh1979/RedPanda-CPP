@@ -15,6 +15,7 @@
 #include <windows.h>
 #include <QStyleFactory>
 #include <QDateTime>
+#include <QColor>
 #include "parser/cppparser.h"
 #include "settings.h"
 #include "mainwindow.h"
@@ -854,7 +855,7 @@ QByteArray getHTTPBody(const QByteArray& content) {
 }
 
 bool haveGoodContrast(const QColor& c1, const QColor &c2) {
-    int lightness1 = c1.lightness();
-    int lightness2 = c2.lightness();
-    return std::abs(lightness1 - lightness2)>=80;
+    int lightness1 = qGray(c1.rgb());
+    int lightness2 = qGray(c2.rgb());
+    return std::abs(lightness1 - lightness2)>=100;
 }

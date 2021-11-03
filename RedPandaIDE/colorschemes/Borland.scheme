@@ -112,8 +112,6 @@
 		"strikeout" : false
 	},
 	"Space" : {
-		"foreground" : "#1313FF",
-		"background" : "#000080",
 		"bold" : false,
 		"italic" : false,
 		"underlined" : false,
@@ -140,17 +138,24 @@
 		"underlined" : false,
 		"strikeout" : false
 	},
+    "Editor Text": {
+        "foreground" : "#FFFF00",
+		"background" : "#000080"
+    },
+    "Current Highlighted Word": {
+        "background": "#50ffffff"
+    },
 	"Selected text" : {
-		"foreground" : "#000000",
-		"background" : "#C0C0C0"
+		"background" : "#64aa00ff"
 	},
 	"Gutter" : {
 		"foreground" : "#FFFF00",
 		"background" : "#000080"
 	},
+	"Gutter Active Line" : {
+		"foreground" : "#FFFFFF"
+	},
 	"Breakpoint" : {
-		"foreground" : "#FFFFFF",
-		"background" : "#FF0000"
 	},
 	"Error" : {
 		"foreground" : "#FFFFFF",
@@ -164,7 +169,7 @@
 		"foreground" : "#FFFF00"
 	},
 	"Active Line" : {
-		"background" : "#000050"
+		"background" : "#645555ff"
 	},
 	"Warning" : {
 		"foreground" : "#FFAA00"

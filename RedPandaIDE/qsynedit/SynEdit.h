@@ -80,7 +80,7 @@ enum SynEditorOption {
   eoScrollPastEof =     0x00002000, //Allows the cursor to go past the end of file marker
   eoScrollPastEol =     0x00004000, //Allows the cursor to go past the last character into the white space at the end of a line
   eoShowSpecialChars =  0x00008000, //Shows the special Characters
-  eoSpecialLineDefaultFg = 0x00010000, //disables the foreground text color override when using the OnSpecialLineColor event
+//  eoSpecialLineDefaultFg = 0x00010000, //disables the foreground text color override when using the OnSpecialLineColor event
   eoTabIndent =         0x00020000, //When active <Tab> and <Shift><Tab> act as block indent, unindent when text is selected
   eoTabsToSpaces =      0x00040000, //Converts a tab character to a specified number of space characters
   eoShowRainbowColor =  0x00080000,

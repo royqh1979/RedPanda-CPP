@@ -144,7 +144,7 @@ QVariant ClassBrowserModel::data(const QModelIndex &index, int role) const
             if (item && haveGoodContrast(item->foreground(), pMainWindow->palette().color(QPalette::Base))) {
                 return item->foreground();
             } else {
-                return QVariant();
+                return pMainWindow->palette().color(QPalette::Text);
             }
         }
         return pMainWindow->palette().color(QPalette::Text);

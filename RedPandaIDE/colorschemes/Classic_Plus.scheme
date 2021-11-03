@@ -112,8 +112,6 @@
 		"strikeout" : false
 	},
 	"Space" : {
-		"foreground" : "#C0C0C0",
-		"background" : "#FFFFFF",
 		"bold" : false,
 		"italic" : false,
 		"underlined" : false,
@@ -141,24 +139,20 @@
 		"strikeout" : false
 	},
 	"Selected text" : {
-		"foreground" : "#FFFFFF",
-		"background" : "#000080"
+		"background" : "#64aaff7f"
 	},
 	"Gutter" : {
 		"foreground" : "#000000",
 		"background" : "#F0F0F0"
 	},
 	"Breakpoint" : {
-		"foreground" : "#FFFFFF",
-		"background" : "#FF0000"
 	},
 	"Error" : {
 		"foreground" : "#FFFFFF",
 		"background" : "#800000"
 	},
 	"Active Breakpoint" : {
-		"foreground" : "#FFFFFF",
-		"background" : "#0000FF"
+		"background" : "#500055ff"
 	},
 	"Fold Line" : {
 		"foreground" : "#000000"
@@ -169,6 +163,16 @@
 	"Warning" : {
 		"foreground" : "#9B6900"
 	},
+    "Gutter Active Line": {
+        "foreground": "#ff0000ff"
+    },
+    "Current Highlighted Word": {
+        "background": "#64ffaaff"
+    },
+    "Editor Text": {
+        "background": "#ffffffff",
+        "foreground": "#ff000000"
+    },
 	"Indent Guide Line" : {
 		"foreground" : "#C0C0C0"
 	},

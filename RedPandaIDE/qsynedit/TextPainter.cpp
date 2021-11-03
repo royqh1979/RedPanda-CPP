@@ -486,13 +486,17 @@ void SynEditTextPainter::PaintHighlightToken(bool bFillToEOL)
     // Any token chars accumulated?
     if (TokenAccu.Columns > 0) {
         // Initialize the colors and the font style.
-        if (!bSpecialLine) {
-          colBG = TokenAccu.BG;
-          colFG = TokenAccu.FG;
+        colBG = TokenAccu.BG;
+        colFG = TokenAccu.FG;
+        if (bSpecialLine) {
+            if (colSpFG.isValid())
+                colFG = colSpFG;
+            if (colSpBG.isValid())
+                colBG = colSpBG;
         }
 
-        if (bSpecialLine && edit->mOptions.testFlag(eoSpecialLineDefaultFg))
-            colFG = TokenAccu.FG;
+//        if (bSpecialLine && edit->mOptions.testFlag(eoSpecialLineDefaultFg))
+//            colFG = TokenAccu.FG;
         QFont font = edit->font();
         font.setBold(TokenAccu.Style & SynFontStyle::fsBold);
         font.setItalic(TokenAccu.Style & SynFontStyle::fsItalic);
@@ -528,7 +532,9 @@ void SynEditTextPainter::PaintHighlightToken(bool bFillToEOL)
 
     // Fill the background to the end of this line if necessary.
     if (bFillToEOL && rcToken.left() < rcLine.right()) {
-        if (!bSpecialLine)
+        if (bSpecialLine && colSpBG.isValid())
+            colBG = colSpBG;
+        else
             colBG = colEditorBG();
         if (bComplexLine) {
             nX1 = ColumnToXValue(nLineSelStart);
@@ -599,7 +605,10 @@ void SynEditTextPainter::AddHighlightToken(const QString &Token, int ColumnsBefo
         Style = getFontStyles(edit->font());
     }
 
-    if (!Background.isValid() || (edit->mActiveLineColor.isValid() && bCurrentLine)) {
+//    if (!Background.isValid() || (edit->mActiveLineColor.isValid() && bCurrentLine)) {
+//        Background = colEditorBG();
+//    }
+    if (!Background.isValid() ) {
         Background = colEditorBG();
     }
     if (!Foreground.isValid()) {
@@ -616,8 +625,7 @@ void SynEditTextPainter::AddHighlightToken(const QString &Token, int ColumnsBefo
         // font style must be the same or token is only spaces
         if (TokenAccu.Style == Style ||  ( (Style & SynFontStyle::fsUnderline) == (TokenAccu.Style & fsUnderline)
                                            && TokenIsSpaces(bSpacesTest,Token,bIsSpaces)) ) {
-            // either special colors or same colors
-            if ((bSpecialLine && !(edit->mOptions.testFlag(SynEditorOption::eoSpecialLineDefaultFg)))  ||
+            if (
               // background color must be the same and
             ((TokenAccu.BG == Background) &&
               // foreground color must be the same or token is only spaces
@@ -814,9 +822,11 @@ void SynEditTextPainter::PaintLines()
         }
         // Initialize the text and background colors, maybe the line should
         // use special values for them.
-        colFG = edit->palette().color(QPalette::Text);
+        colFG = edit->mForegroundColor;
         colBG = colEditorBG();
-        bSpecialLine = edit->onGetSpecialLineColors(vLine, colFG, colBG);
+        colSpFG = QColor();
+        colSpBG = QColor();
+        bSpecialLine = edit->onGetSpecialLineColors(vLine, colSpFG, colSpBG);
 
         colSelFG = edit->mSelectedForeground;
         colSelBG = edit->mSelectedBackground;
@@ -1022,7 +1032,6 @@ void SynEditTextPainter::PaintLines()
             // Draw anything that's left in the TokenAccu record. Fill to the end
             // of the invalid area with the correct colors.
             PaintHighlightToken(true);
-
 
             //Paint editingAreaBorders
             foreach (const PSynEditingArea& area, areaList) {

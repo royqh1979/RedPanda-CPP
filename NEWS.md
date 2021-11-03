@@ -11,8 +11,11 @@ Version 0.7.8
  - fix: When replace in the editor, "Yes to All" and "No" button doesn't work correctly.
  - fix: crash when editing non-c/c++ files
  - enhancement: set the alpha value of scheme colors
- - enhancement: can use symbols' own scheme color to draw selection
+ - enhancement: can use symbols' own foreground color to draw selection or the current line
  - enhancement: can use different colors to highlight the current word and the selections
+ - enhancement: can set editor's default background / foreground color. They must be setted to make the custom color schemes correctly.
+ - enhancement: can set the color for the current line's number in the gutter
+ - all predefined color schemes updated. 
 
 Version 0.7.7
  - enhancement: Problem Set 

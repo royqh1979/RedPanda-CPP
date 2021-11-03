@@ -154,7 +154,7 @@
 		"background" : "#1E1E1E"
 	},
 	"Gutter Active Line" : {
-		"foreground" : "#C0C0C0"
+		"foreground" : "#ffffffff"
 	},
 	"Breakpoint" : {
 	},

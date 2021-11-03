@@ -52,7 +52,7 @@ QSize ColorEdit::sizeHint() const
 {
     QRect rect;
     if (mColor.isValid() )
-        rect = fontMetrics().boundingRect(mColor.name());
+        rect = fontMetrics().boundingRect(mColor.name(QColor::HexArgb));
     else
         rect = fontMetrics().boundingRect(tr("NONE"));
     return QSize{rect.width()+ 10,

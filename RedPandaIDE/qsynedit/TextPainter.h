@@ -58,6 +58,7 @@ private:
     bool bSpecialLine, bLineSelected, bCurrentLine;
     QColor colFG, colBG;
     QColor colSelFG, colSelBG;
+    QColor colSpFG, colSpBG;
     // info about selection of the current line
     int nLineSelStart, nLineSelEnd;
     bool bComplexLine;

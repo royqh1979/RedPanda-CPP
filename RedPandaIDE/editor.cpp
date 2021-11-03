@@ -829,15 +829,14 @@ void Editor::onGetEditingAreas(int Line, SynEditingAreaList &areaList)
 bool Editor::onGetSpecialLineColors(int Line, QColor &foreground, QColor &backgroundColor)
 {
     if (Line == mActiveBreakpointLine &&
-            mActiveBreakpointForegroundColor.isValid()
-            && mActiveBreakpointBackgroundColor.isValid()) {
-        foreground = mActiveBreakpointForegroundColor;
+        mActiveBreakpointBackgroundColor.isValid()) {
+        if (mActiveBreakpointForegroundColor.isValid())
+            foreground = mActiveBreakpointForegroundColor;
         backgroundColor = mActiveBreakpointBackgroundColor;
         return true;
-    } else if (hasBreakpoint(Line)  &&
-               mBreakpointForegroundColor.isValid()
-               && mBreakpointBackgroundColor.isValid()) {
-        foreground = mBreakpointForegroundColor;
+    } else if (hasBreakpoint(Line) && mBreakpointBackgroundColor.isValid()) {
+        if (mBreakpointForegroundColor.isValid())
+            foreground = mBreakpointForegroundColor;
         backgroundColor = mBreakpointBackgroundColor;
         return true;
     }
@@ -857,7 +856,7 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
         return;
 
 //    qDebug()<<token<<"-"<<attr->name()<<" - "<<line<<" : "<<aChar;
-    if (mParser && (attr == highlighter()->identifierAttribute())) {
+    if (mParser && highlighter() && (attr == highlighter()->identifierAttribute())) {
         BufferCoord p{aChar,line};
         BufferCoord pBeginPos,pEndPos;
         QString s= getWordAtPosition(this,p, pBeginPos,pEndPos, WordPurpose::wpInformation);
@@ -890,35 +889,35 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
     }
 
     //selection
-    if (highlighter()) {
-        if ((
-          (attr == highlighter()->identifierAttribute())
-          || (attr == highlighter()->keywordAttribute())
-          || (attr->name() == SYNS_AttrPreprocessor)
-          )
-          && (token == mCurrentHighlightedWord)) {
+    if (highlighter() && attr) {
+        if (((attr == highlighter()->identifierAttribute())
+                || (attr == highlighter()->keywordAttribute())
+                || (attr->name() == SYNS_AttrPreprocessor)
+                )
+            && (token == mCurrentHighlightedWord)) {
             if (mCurrentHighlighWordForeground.isValid())
                 foreground = mCurrentHighlighWordForeground;
             if (mCurrentHighlighWordBackground.isValid())
                 background = mCurrentHighlighWordBackground;
+        } else if (!selAvail() && attr->name() == SYNS_AttrSymbol) {
+            //        qDebug()<<line<<":"<<aChar<<" - "<<mHighlightCharPos1.Line<<":"<<mHighlightCharPos1.Char<<" - "<<mHighlightCharPos2.Line<<":"<<mHighlightCharPos2.Char;
+            if ( (line == mHighlightCharPos1.Line)
+                    && (aChar == mHighlightCharPos1.Char)) {
+                if (mCurrentHighlighWordForeground.isValid())
+                    foreground = mCurrentHighlighWordForeground;
+                if (mCurrentHighlighWordBackground.isValid())
+                    background = mCurrentHighlighWordBackground;
+            }
+            if ((line == mHighlightCharPos2.Line)
+                    && (aChar == mHighlightCharPos2.Char)) {
+                if (mCurrentHighlighWordForeground.isValid())
+                    foreground = mCurrentHighlighWordForeground;
+                if (mCurrentHighlighWordBackground.isValid())
+                    background = mCurrentHighlighWordBackground;
+            }
         }
-    } else if (token == mCurrentHighlightedWord) {
-        if (mCurrentHighlighWordForeground.isValid())
-            foreground = mCurrentHighlighWordForeground;
-        if (mCurrentHighlighWordBackground.isValid())
-            background = mCurrentHighlighWordBackground;
-    } else if (!selAvail() && attr->name() == SYNS_AttrSymbol) {
-//        qDebug()<<line<<":"<<aChar<<" - "<<mHighlightCharPos1.Line<<":"<<mHighlightCharPos1.Char<<" - "<<mHighlightCharPos2.Line<<":"<<mHighlightCharPos2.Char;
-
-        if ( (line == mHighlightCharPos1.Line)
-                && (aChar == mHighlightCharPos1.Char)) {
-            if (mCurrentHighlighWordForeground.isValid())
-                foreground = mCurrentHighlighWordForeground;
-            if (mCurrentHighlighWordBackground.isValid())
-                background = mCurrentHighlighWordBackground;
-        }
-        if ((line == mHighlightCharPos2.Line)
-                && (aChar == mHighlightCharPos2.Char)) {
+    } else {
+        if (token == mCurrentHighlightedWord) {
             if (mCurrentHighlighWordForeground.isValid())
                 foreground = mCurrentHighlighWordForeground;
             if (mCurrentHighlighWordBackground.isValid())
@@ -1441,7 +1440,11 @@ void Editor::onStatusChanged(SynStatusChanges changes)
 
     // scSelection includes anything caret related
     if (changes.testFlag(SynStatusChange::scSelection)) {
-        mCurrentHighlightedWord = wordAtCursor();
+        if (!selAvail()) {
+            mCurrentHighlightedWord = wordAtCursor();
+        } else {
+            mCurrentHighlightedWord = "";
+        }
 //        mSelectionWord="";
 //        if (selAvail()) {
 //            BufferCoord wordBegin,wordEnd,bb,be;
