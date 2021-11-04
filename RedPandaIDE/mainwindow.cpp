@@ -19,6 +19,7 @@
 #include "thememanager.h"
 #include "widgets/darkfusionstyle.h"
 #include "problems/problemcasevalidator.h"
+#include "widgets/ojproblempropertywidget.h"
 
 #include <QCloseEvent>
 #include <QComboBox>
@@ -569,13 +570,13 @@ void MainWindow::applySettings()
     if (pSettings->executor().enableProblemSet()) {
         if (pSettings->executor().enableCompetitiveCompanion()) {
             if (!mTcpServer.listen(QHostAddress::LocalHost,pSettings->executor().competivieCompanionPort())) {
-                QMessageBox::critical(nullptr,
-                                      tr("Listen failed"),
-                                      tr("Can't listen to port %1 form Competitve Companion.").arg(10045)
-                                      + "<BR/>"
-                                      +tr("You can turn off competitive companion support in the Problem Set options.")
-                                      + "<BR/>"
-                                      +tr("Or You can choose a different port number and try again."));
+//                QMessageBox::critical(nullptr,
+//                                      tr("Listen failed"),
+//                                      tr("Can't listen to port %1 form Competitve Companion.").arg(10045)
+//                                      + "<BR/>"
+//                                      +tr("You can turn off competitive companion support in the Problem Set options.")
+//                                      + "<BR/>"
+//                                      +tr("Or You can choose a different port number and try again."));
             }
         }
         if (idxProblem<0)
@@ -1799,6 +1800,35 @@ void MainWindow::newEditor()
 
 void MainWindow::buildContextMenus()
 {
+    //context menu signal for the problem list view
+    ui->lstProblemSet->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui->lstProblemSet, &QWidget::customContextMenuRequested,
+            this, &MainWindow::onLstProblemSetContextMenu);
+    mProblem_Properties = createActionFor(
+                tr("Properties..."),
+                ui->lstProblemSet
+                );
+    connect(mProblem_Properties, &QAction::triggered,
+            [this]() {
+        QModelIndex idx = ui->lstProblemSet->currentIndex();
+        if (!idx.isValid())
+            return;
+        POJProblem problem=mOJProblemSetModel.problem(idx.row());
+        if (!problem)
+            return;
+        OJProblemPropertyWidget dialog;
+        dialog.setName(problem->name);
+        dialog.setUrl(problem->url);
+        dialog.setDescription(problem->description);
+        if (dialog.exec() == QDialog::Accepted) {
+            problem->url = dialog.url();
+            problem->description = dialog.description();
+            if (problem == mOJProblemModel.problem()) {
+                ui->lblProblem->setText(mOJProblemModel.getTitle());
+                ui->lblProblem->setToolTip(mOJProblemModel.getTooltip());
+            }
+        }
+    });
 
     //context menu signal for the watch view
     ui->watchView->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -2586,6 +2616,15 @@ void MainWindow::onFilesViewContextMenu(const QPoint &pos)
     menu.exec(ui->treeFiles->mapToGlobal(pos));
 }
 
+void MainWindow::onLstProblemSetContextMenu(const QPoint &pos)
+{
+    QMenu menu(this);
+    menu.addAction(mProblem_Properties);
+    QModelIndex idx =ui->lstProblemCases->currentIndex();
+    mProblem_Properties->setEnabled(idx.isValid());
+    menu.exec(ui->lstProblemSet->mapToGlobal(pos));
+}
+
 void MainWindow::onProblemSetIndexChanged(const QModelIndex &current, const QModelIndex &/* previous */)
 {
     QModelIndex idx = current;
@@ -2597,11 +2636,13 @@ void MainWindow::onProblemSetIndexChanged(const QModelIndex &current, const QMod
         ui->txtProblemCaseOutput->clear();
         ui->tabProblem->setEnabled(false);
         ui->lblProblem->clear();
+        ui->lblProblem->setToolTip("");
     } else {
         ui->btnRemoveProblem->setEnabled(true);
         POJProblem problem = mOJProblemSetModel.problem(idx.row());
         mOJProblemModel.setProblem(problem);
         ui->lblProblem->setText(mOJProblemModel.getTitle());
+        ui->lblProblem->setToolTip(mOJProblemModel.getTooltip());
         ui->lstProblemCases->setCurrentIndex(mOJProblemModel.index(0,0));
         openCloseBottomPanel(true);
         ui->tabMessages->setCurrentWidget(ui->tabProblem);
@@ -2643,6 +2684,7 @@ void MainWindow::onProblemNameChanged(int index)
     if (idx.isValid() && index == idx.row()) {
         POJProblem problem = mOJProblemSetModel.problem(idx.row());
         ui->lblProblem->setText(mOJProblemModel.getTitle());
+        ui->lblProblem->setToolTip(mOJProblemModel.getTooltip());
     }
 }
 
@@ -3498,7 +3540,7 @@ void MainWindow::onOJProblemCaseFinished(const QString &id, int current, int tot
     }
     ui->pbProblemCases->setMaximum(total);
     ui->pbProblemCases->setValue(current);
-    ui->lblProblem->setText(mOJProblemModel.getTitle());
+//    ui->lblProblem->setText(mOJProblemModel.getProblemTitle());
 }
 
 void MainWindow::cleanUpCPUDialog()

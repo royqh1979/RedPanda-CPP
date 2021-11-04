@@ -31,6 +31,7 @@ using POJProblemCase = std::shared_ptr<OJProblemCase>;
 struct OJProblem {
     QString name;
     QString url;
+    QString description;
     QVector<POJProblemCase> cases;
 };
 

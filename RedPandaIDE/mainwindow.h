@@ -227,6 +227,7 @@ private slots:
     void onDebugConsoleContextMenu(const QPoint& pos);
     void onFileEncodingContextMenu(const QPoint& pos);
     void onFilesViewContextMenu(const QPoint& pos);
+    void onLstProblemSetContextMenu(const QPoint& pos);
     void onProblemSetIndexChanged(const QModelIndex &current, const QModelIndex &previous);
     void onProblemCaseIndexChanged(const QModelIndex &current, const QModelIndex &previous);
     void onProblemNameChanged(int index);
@@ -581,6 +582,9 @@ private:
     QAction * mBookmark_Remove;
     QAction * mBookmark_RemoveAll;
     QAction * mBookmark_Modify;
+
+    //action for problem set
+    QAction * mProblem_Properties;
 
    // QWidget interface
 protected:

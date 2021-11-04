@@ -126,6 +126,7 @@ SOURCES += \
     widgets/labelwithmenu.cpp \
     widgets/macroinfomodel.cpp \
     widgets/newprojectdialog.cpp \
+    widgets/ojproblempropertywidget.cpp \
     widgets/ojproblemsetmodel.cpp \
     widgets/qconsole.cpp \
     widgets/qpatchedcombobox.cpp \
@@ -247,6 +248,7 @@ HEADERS += \
     widgets/labelwithmenu.h \
     widgets/macroinfomodel.h \
     widgets/newprojectdialog.h \
+    widgets/ojproblempropertywidget.h \
     widgets/ojproblemsetmodel.h \
     widgets/qconsole.h \
     widgets/qpatchedcombobox.h \
@@ -294,6 +296,7 @@ FORMS += \
     widgets/custommakefileinfodialog.ui \
     widgets/filepropertiesdialog.ui \
     widgets/newprojectdialog.ui \
+    widgets/ojproblempropertywidget.ui \
     widgets/searchdialog.ui
 
 TRANSLATIONS += \

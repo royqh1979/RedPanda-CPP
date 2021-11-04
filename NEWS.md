@@ -17,6 +17,8 @@ Version 0.7.8
  - enhancement: can set the color for the current line's number in the gutter
  - all predefined color schemes updated. 
  - enhancement: check syntax/parse symbols when modifed and cursor's line changed.
+ - enhancement: edit problem properties
+ - enhancement: show problem description in the problem name lable's tooltip
 
 Version 0.7.7
  - enhancement: Problem Set 

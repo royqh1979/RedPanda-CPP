@@ -20,6 +20,7 @@ public:
     int count();
     void update(int row);
     QString getTitle();
+    QString getTooltip();
 
 private:
     POJProblem mProblem;

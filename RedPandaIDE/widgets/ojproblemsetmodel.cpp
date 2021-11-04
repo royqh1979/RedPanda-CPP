@@ -87,6 +87,7 @@ void OJProblemSetModel::saveToFile(const QString &fileName)
             QJsonObject problemObj;
             problemObj["name"]=problem->name;
             problemObj["url"]=problem->url;
+            problemObj["description"]=problem->description;
             QJsonArray cases;
             foreach (const POJProblemCase& problemCase, problem->cases) {
                 QJsonObject caseObj;
@@ -131,6 +132,7 @@ void OJProblemSetModel::loadFromFile(const QString &fileName)
             POJProblem problem = std::make_shared<OJProblem>();
             problem->name = problemObj["name"].toString();
             problem->url = problemObj["url"].toString();
+            problem->description = problemObj["description"].toString();
             QJsonArray casesArray = problemObj["cases"].toArray();
             foreach (const QJsonValue& caseVal, casesArray) {
                 QJsonObject caseObj = caseVal.toObject();
@@ -290,6 +292,18 @@ QString OJProblemModel::getTitle()
         title = QString("<a href=\"%1\">%2</a>").arg(mProblem->url,title);
     }
     return title;
+}
+
+QString OJProblemModel::getTooltip()
+{
+    if (!mProblem)
+        return "";
+    QString s;
+    s=QString("<h3>%1</h3>").arg(mProblem->name);
+    if (!mProblem->description.isEmpty())
+        s+=QString("<p>%1</p>")
+            .arg(mProblem->description);
+    return s;
 }
 
 int OJProblemModel::rowCount(const QModelIndex &) const
