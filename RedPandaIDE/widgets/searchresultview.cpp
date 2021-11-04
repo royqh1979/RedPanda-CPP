@@ -414,7 +414,8 @@ void SearchResultTreeViewDelegate::paint(QPainter *painter, const QStyleOptionVi
 
      QString fullText;
      if (item->parent==nullptr) { //is filename
-         fullText = item->filename;
+         fullText = QString("%1(%2)").arg(item->filename)
+                     .arg(item->results.count());
      } else {
          fullText = QString("%1 %2: %3").arg(tr("Line")).arg(item->line)
              .arg(item->text);

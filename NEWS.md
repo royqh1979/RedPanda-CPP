@@ -1,3 +1,9 @@
+Version 0.7.9
+ - fix: find in the current file is not correcly saved in the search history
+ - fix: hit info not correctly displayed in the search result view
+ - fix: If find in files found no hits, search result view will not be shown.
+ - fix: wront indents when paste one line content
+
 Version 0.7.8
  - enhancement: In problem view's output control, indicates which line is different with the expected
  - fix: current input/expected not correctly applied when save/run problem cases

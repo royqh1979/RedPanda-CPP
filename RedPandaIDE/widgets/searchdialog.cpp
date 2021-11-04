@@ -151,6 +151,8 @@ void SearchDialog::on_btnCancel_clicked()
 void SearchDialog::on_btnExecute_clicked()
 {
     int findCount = 0;
+    ui->cbFind->addItem(ui->cbFind->currentText());
+    ui->cbReplace->addItem(ui->cbReplace->currentText());
 
     SearchAction actionType;
     switch (mTabBar->currentIndex()) {
@@ -279,7 +281,7 @@ void SearchDialog::on_btnExecute_clicked()
             PSearchResults results = pMainWindow->searchResultModel()->addSearchResults(
                         keyword,
                         mSearchOptions,
-                        SearchFileScope::openedFiles
+                        SearchFileScope::currentFile
                         );
             Editor * e= pMainWindow->editorList()->getEditor();
             if (e!=nullptr) {
@@ -337,8 +339,7 @@ void SearchDialog::on_btnExecute_clicked()
             }
             pMainWindow->searchResultModel()->notifySearchResultsUpdated();
         }
-        if (findCount>0)
-            pMainWindow->showSearchPanel(actionType == SearchAction::ReplaceFiles);
+        pMainWindow->showSearchPanel(actionType == SearchAction::ReplaceFiles);
     }
 }
 

@@ -4974,7 +4974,11 @@ int SynEdit::insertTextByNormalMode(const QString &Value)
     Start = 0;
     P = GetEOL(Value,Start);
     if (P<Value.length()) {
-        Str = sLeftSide + TrimLeft(Value.mid(0, P - Start));
+        QString s = TrimLeft(Value.mid(0, P - Start));
+        if (sLeftSide.isEmpty()) {
+            sLeftSide = GetLeftSpacing(calcIndentSpaces(caretY,s,true),true);
+        }
+        Str = sLeftSide + s;
         properSetLine(caretY - 1, Str);
         mLines->insertLines(caretY, CountLines(Value,P));
     } else {
@@ -4994,17 +4998,17 @@ int SynEdit::insertTextByNormalMode(const QString &Value)
         P = GetEOL(Value,Start);
         if (P == Start) {
           if (P<Value.length())
-              Str = "";
+              Str = GetLeftSpacing(calcIndentSpaces(caretY,"",true),true);
           else
               Str = sRightSide;
         } else {
             Str = Value.mid(Start, P-Start);
             if (P>=Value.length())
                 Str += sRightSide;
-        }
-        if (mOptions.testFlag(eoAutoIndent)) {
-            int indentSpaces = calcIndentSpaces(caretY,Str,true);
-            Str = GetLeftSpacing(indentSpaces,true)+TrimLeft(Str);
+            if (mOptions.testFlag(eoAutoIndent)) {
+                int indentSpaces = calcIndentSpaces(caretY,Str,true);
+                Str = GetLeftSpacing(indentSpaces,true)+TrimLeft(Str);
+            }
         }
         properSetLine(caretY - 1, Str);
         rescanRange(caretY);
