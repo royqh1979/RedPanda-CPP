@@ -31,15 +31,17 @@ PSearchResults SearchResultModel::addSearchResults(const QString &keyword, SynSe
     return results;
 }
 
-PSearchResults SearchResultModel::addSearchResults(const QString &keyword, const QString &filename, int symbolLine)
+PSearchResults SearchResultModel::addSearchResults(
+        const QString& symbolFullname,
+        SearchFileScope scope)
 {
     int index=-1;
     for (int i=0;i<mSearchResults.size();i++) {
         PSearchResults results = mSearchResults[i];
         if (results->searchType == SearchType::FindOccurences
-                && results->keyword == keyword
-                && results->filename == filename
-                && results->symbolLine == symbolLine) {
+                && results->scope == scope
+                && results->keyword == symbolFullname
+                ) {
             index=i;
             break;
         }
@@ -51,10 +53,10 @@ PSearchResults SearchResultModel::addSearchResults(const QString &keyword, const
         mSearchResults.pop_back();
     }
     PSearchResults results = std::make_shared<SearchResults>();
-    results->keyword = keyword;
-    results->filename = filename;
-    results->symbolLine = symbolLine;
+    results->keyword = symbolFullname;
+    results->filename = "";
     results->searchType = SearchType::FindOccurences;
+    results->scope = scope;
     mSearchResults.push_front(results);
     mCurrentIndex = 0;
     return results;
@@ -367,10 +369,13 @@ QVariant SearchResultListModel::data(const QModelIndex &index, int role) const
                 return tr("Open Files:") + QString(" \"%1\"").arg(results->keyword);
             }
         } else if (results->searchType == SearchType::FindOccurences) {
-            return tr("References to symbol \'%1\' at '%2':%3")
-                    .arg(results->keyword)
-                    .arg(extractFileName(results->filename))
-                    .arg(results->symbolLine);
+            if (results->scope == SearchFileScope::currentFile) {
+                return tr("Find Usages in Current File: '%1'")
+                    .arg(results->keyword);
+            } else {
+                return tr("Find Usages in Project: '%1'")
+                    .arg(results->keyword);
+            }
         }
     }
     return QVariant();

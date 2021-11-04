@@ -35,23 +35,33 @@ bool CppRefacter::findOccurence(Editor *editor, const BufferCoord &pos)
 
     std::shared_ptr<Project> project = pMainWindow->project();
     if (editor->inProject() && project) {
+        PSearchResults results = pMainWindow->searchResultModel()->addSearchResults(
+                    statement->fullName,
+                    SearchFileScope::wholeProject
+                    );
         foreach (const PProjectUnit& unit, project->units()) {
             if (isCfile(unit->fileName()) || isHfile(unit->fileName())) {
-                findOccurenceInFile(
-                        phrase,
-                        unit->fileName(),
-                        statement,
-                        pos.Line,
-                        editor->parser());
+                PSearchResultTreeItem item = findOccurenceInFile(
+                            unit->fileName(),
+                            statement,
+                            editor->parser());
+                if (item && !(item->results.isEmpty())) {
+                    results->results.append(item);
+                }
             }
         }
     } else {
-        findOccurenceInFile(
-                    phrase,
+        PSearchResults results = pMainWindow->searchResultModel()->addSearchResults(
+                    statement->fullName,
+                    SearchFileScope::currentFile
+                    );
+        PSearchResultTreeItem item = findOccurenceInFile(
                     editor->filename(),
                     statement,
-                    pos.Line,
                     editor->parser());
+        if (item && !(item->results.isEmpty())) {
+            results->results.append(item);
+        }
     }
     pMainWindow->searchResultModel()->notifySearchResultsUpdated();
     return true;
@@ -239,27 +249,5 @@ void CppRefacter::renameSymbolInFile(const QString &filename, const PStatement &
         editor.lines()->saveToFile(file,ENCODING_AUTO_DETECT,
                                    pSettings->editor().useUTF8ByDefault()? ENCODING_UTF8 : QTextCodec::codecForLocale()->name(),
                                    realEncoding);
-    }
-}
-
-void CppRefacter::findOccurenceInFile(
-        const QString& phrase,
-        const QString &filename,
-        const PStatement &statement,
-        int line,
-        const PCppParser &parser)
-{
-    PSearchResults results = pMainWindow->searchResultModel()->addSearchResults(
-                phrase,
-                filename,
-                line
-                );
-
-    PSearchResultTreeItem item = findOccurenceInFile(
-                filename,
-                statement,
-                parser);
-    if (item && !(item->results.isEmpty())) {
-        results->results.append(item);
     }
 }

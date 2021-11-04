@@ -19,12 +19,6 @@ public:
     void renameSymbol(Editor* editor, const BufferCoord& pos, const QString& word, const QString& newWord);
 signals:
 private:
-    void findOccurenceInFile(
-            const QString& phrase,
-            const QString& filename,
-            const PStatement& statement,
-            int line,
-            const PCppParser& parser);
     PSearchResultTreeItem findOccurenceInFile(
             const QString& filename,
             const PStatement& statement,

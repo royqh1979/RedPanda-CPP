@@ -35,7 +35,6 @@ struct SearchResults{
     SearchFileScope scope;
     SearchType searchType;
     QString filename;
-    int symbolLine;
     QList<PSearchResultTreeItem> results;
 };
 
@@ -48,9 +47,8 @@ public:
     PSearchResults addSearchResults(const QString& keyword,SynSearchOptions options,
                                     SearchFileScope scope);
     PSearchResults addSearchResults(
-            const QString& keyword,
-            const QString& filename,
-            int symbolLine);
+            const QString& symbolFullname,
+            SearchFileScope scope);
     PSearchResults results(int index);
     void notifySearchResultsUpdated();
     int currentIndex() const;

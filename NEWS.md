@@ -3,6 +3,7 @@ Version 0.7.9
  - fix: hit info not correctly displayed in the search result view
  - fix: If find in files found no hits, search result view will not be shown.
  - fix: wront indents when paste one line content
+ - fix: Results of "find symbol usage" in project not correctly set in the search result view
 
 Version 0.7.8
  - enhancement: In problem view's output control, indicates which line is different with the expected
