@@ -5,6 +5,7 @@
 using std::string;
 #include <stdio.h>
 #include <windows.h>
+#include <conio.h>
 
 #define MAX_COMMAND_LENGTH 32768
 #define MAX_ERROR_LENGTH 2048
@@ -61,8 +62,8 @@ void PauseExit(int exitcode, bool reInp) {
 		freopen("CONIN$","r",stdin);
     }
 	printf("\n");
-	printf("Press ANY key to continue...\n");
-	getchar();
+	printf("Press ANY key to exit...\n");
+	getch();
     if (reInp) {
         CloseHandle(hInp);
     }

@@ -1,3 +1,6 @@
+Version 0.8.1 For Dev-C++ 7 Beta
+ - fix: ConsolePaurser.exe only exits when press ENTER
+
 Version 0.8 For Dev-C++ 7 Beta
  - fix: find in the current file is not correcly saved in the search history
  - fix: hit info not correctly displayed in the search result view
