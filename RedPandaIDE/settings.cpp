@@ -1128,7 +1128,7 @@ void Settings::Editor::doLoad()
     //Font
     //font
     mFontName = stringValue("font_name","consolas");
-    mFontSize = intValue("font_size",QGuiApplication::font().pointSize());
+    mFontSize = intValue("font_size",14);
     mFontOnlyMonospaced = boolValue("font_only_monospaced",true);
 
     //gutter

@@ -89,21 +89,26 @@ bool isTextAllAscii(const QString& text) {
 }
 
 
-static bool gIsGreenEdition = false;
+static bool gIsGreenEdition = true;
 static bool gIsGreenEditionInited = false;
 bool isGreenEdition()
 {
     if (!gIsGreenEditionInited) {
         QString keyString = QString("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\RedPanda-C++");
-        QString value1,value2;
-        if (!readRegistry(HKEY_LOCAL_MACHINE,keyString.toLocal8Bit(),value1))
-            return false;
-        QSettings settings("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\RedPanda-C++",
-                           QSettings::NativeFormat);
-        QString regPath = extractFileDir(QFileInfo(settings.value("UninstallString").toString()).absolutePath());
+        QString value;
+        if (!readRegistry(HKEY_LOCAL_MACHINE,keyString.toLocal8Bit(),"UninstallString",value)) {
+            keyString = "SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\RedPanda-C++";
+            if (!readRegistry(HKEY_LOCAL_MACHINE,keyString.toLocal8Bit(),"UninstallString",value)) {
+                value="";
+            }
+        }
+        if (!value.isEmpty()) {
+            QString regPath = extractFileDir(value);
 
-        QString appPath = QApplication::instance()->applicationDirPath();
-        gIsGreenEdition = ( excludeTrailingPathDelimiter(regPath) != excludeTrailingPathDelimiter(appPath));
+            QString appPath = QApplication::instance()->applicationDirPath();
+            gIsGreenEdition = excludeTrailingPathDelimiter(regPath).compare(excludeTrailingPathDelimiter(appPath),
+                                                                            Qt::CaseInsensitive)!=0;
+        }
         gIsGreenEditionInited = true;
     }
     return gIsGreenEdition;
@@ -864,19 +869,19 @@ bool haveGoodContrast(const QColor& c1, const QColor &c2) {
     return std::abs(lightness1 - lightness2)>=120;
 }
 
-bool readRegistry(HKEY key,QByteArray subKey, QString& value) {
+bool readRegistry(HKEY key,const QByteArray& subKey, const QByteArray& name, QString& value) {
     DWORD dataSize;
     LONG result;
     result = RegGetValueA(key,subKey,
-                 "", RRF_RT_REG_SZ | RRF_RT_REG_MULTI_SZ,
+                 name, RRF_RT_REG_SZ | RRF_RT_REG_MULTI_SZ,
                  NULL,
                  NULL,
                  &dataSize);
     if (result!=ERROR_SUCCESS)
         return false;
     char * buffer = new char[dataSize+10];
-    result = RegGetValueA(HKEY_CLASSES_ROOT,subKey,
-                 "", RRF_RT_REG_SZ | RRF_RT_REG_MULTI_SZ,
+    result = RegGetValueA(key,subKey,
+                 name, RRF_RT_REG_SZ | RRF_RT_REG_MULTI_SZ,
                  NULL,
                  buffer,
                  &dataSize);

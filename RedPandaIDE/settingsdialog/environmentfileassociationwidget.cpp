@@ -145,9 +145,9 @@ bool FileAssociationModel::checkAssociation(const QString &extension, const QStr
 
     QString keyString = QString("%1\\Shell\\%2\\Command").arg(filetype).arg(verb);
     QString value1,value2;
-    if (!readRegistry(HKEY_CLASSES_ROOT,keyString.toLocal8Bit(),value1))
+    if (!readRegistry(HKEY_CLASSES_ROOT,keyString.toLocal8Bit(),"",value1))
         return false;
-    if (!readRegistry(HKEY_CLASSES_ROOT,extension.toLocal8Bit(),value2))
+    if (!readRegistry(HKEY_CLASSES_ROOT,extension.toLocal8Bit(),"",value2))
         return false;
 
     return (value2 == filetype)
