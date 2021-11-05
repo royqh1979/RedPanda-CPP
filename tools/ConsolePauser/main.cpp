@@ -62,7 +62,7 @@ void PauseExit(int exitcode, bool reInp) {
 		freopen("CONIN$","r",stdin);
     }
 	printf("\n");
-	printf("Press ANY key to exit...\n");
+	printf("Press ANY key to exit...");
 	getch();
     if (reInp) {
         CloseHandle(hInp);
