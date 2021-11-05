@@ -213,8 +213,37 @@ PStatementList CppParser::findNamespace(const QString &name)
     return mNamespaces.value(name,PStatementList());
 }
 
+PStatement CppParser::findStatement(const QString &fullname)
+{
+    QMutexLocker locker(&mMutex);
+    if (fullname.isEmpty())
+        return PStatement();
+    QStringList phrases = fullname.split("::");
+    if (phrases.isEmpty())
+        return PStatement();
+    PStatement parentStatement;
+    PStatement statement;
+    foreach (const QString& phrase, phrases) {
+        if (parentStatement && parentStatement->kind == StatementKind::skNamespace) {
+            PStatementList lst = findNamespace(parentStatement->fullName);
+            foreach (const PStatement& namespaceStatement, *lst) {
+                statement = findMemberOfStatement(phrase,namespaceStatement);
+                if (statement)
+                    break;
+            }
+        } else {
+            statement = findMemberOfStatement(phrase,parentStatement);
+        }
+        if (!statement)
+            return PStatement();
+        parentStatement = statement;
+    }
+    return statement;
+}
+
 PStatement CppParser::findStatementOf(const QString &fileName, const QString &phrase, int line)
 {
+    QMutexLocker locker(&mMutex);
     return findStatementOf(fileName,phrase,findAndScanBlockAt(fileName,line));
 }
 

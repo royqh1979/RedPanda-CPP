@@ -2259,6 +2259,11 @@ static void setReleaseOptions(Settings::PCompilerSet pSet) {
         pSet->setOption(pOption,'1');
     }
 
+    pOption = pSet->findOption("-pipe");
+    if (pOption) {
+        pSet->setOption(pOption,'1');
+    }
+
 //    pOption = pSet->findOption("-static");
 //    if (pOption) {
 //        pSet->setOption(pOption,'1');
@@ -2279,6 +2284,11 @@ static void setDebugOptions(Settings::PCompilerSet pSet) {
     if (pOption) {
         pSet->setOption(pOption,'1');
     }
+    pOption = pSet->findOption("-pipe");
+    if (pOption) {
+        pSet->setOption(pOption,'1');
+    }
+
 //    pOption = pSet->findOption("-static");
 //    if (pOption) {
 //        pSet->setOption(pOption,'1');
@@ -2288,6 +2298,11 @@ static void setDebugOptions(Settings::PCompilerSet pSet) {
 
 static void setProfileOptions(Settings::PCompilerSet pSet) {
     PCompilerOption pOption = pSet->findOption("-pg");
+    if (pOption) {
+        pSet->setOption(pOption,'1');
+    }
+
+    pOption = pSet->findOption("-pipe");
     if (pOption) {
         pSet->setOption(pOption,'1');
     }

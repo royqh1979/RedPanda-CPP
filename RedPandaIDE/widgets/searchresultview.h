@@ -32,6 +32,7 @@ struct SearchResultTreeItem {
 struct SearchResults{
     SynSearchOptions options;
     QString keyword;
+    QString statementFullname;
     SearchFileScope scope;
     SearchType searchType;
     QString filename;
@@ -47,6 +48,7 @@ public:
     PSearchResults addSearchResults(const QString& keyword,SynSearchOptions options,
                                     SearchFileScope scope);
     PSearchResults addSearchResults(
+            const QString& keyword,
             const QString& symbolFullname,
             SearchFileScope scope);
     PSearchResults results(int index);

@@ -32,6 +32,7 @@ PSearchResults SearchResultModel::addSearchResults(const QString &keyword, SynSe
 }
 
 PSearchResults SearchResultModel::addSearchResults(
+        const QString& keyword,
         const QString& symbolFullname,
         SearchFileScope scope)
 {
@@ -40,7 +41,7 @@ PSearchResults SearchResultModel::addSearchResults(
         PSearchResults results = mSearchResults[i];
         if (results->searchType == SearchType::FindOccurences
                 && results->scope == scope
-                && results->keyword == symbolFullname
+                && results->statementFullname == symbolFullname
                 ) {
             index=i;
             break;
@@ -53,7 +54,8 @@ PSearchResults SearchResultModel::addSearchResults(
         mSearchResults.pop_back();
     }
     PSearchResults results = std::make_shared<SearchResults>();
-    results->keyword = symbolFullname;
+    results->keyword = keyword;
+    results->statementFullname = symbolFullname;
     results->filename = "";
     results->searchType = SearchType::FindOccurences;
     results->scope = scope;
@@ -320,22 +322,22 @@ bool SearchResultTreeModel::selectable() const
 void SearchResultTreeModel::setSelectable(bool newSelectable)
 {
     if (newSelectable!=mSelectable) {
-        beginResetModel();
         mSelectable = newSelectable;
-        if (mSelectable) {
-            //select all items by default
-            PSearchResults results = mSearchResultModel->currentResults();
-            if (results) {
-                foreach (const PSearchResultTreeItem& file, results->results) {
-                    file->selected = false;
-                    foreach (const PSearchResultTreeItem& item, file->results) {
-                        item->selected = true;
-                    }
+    }
+    beginResetModel();
+    if (mSelectable) {
+        //select all items by default
+        PSearchResults results = mSearchResultModel->currentResults();
+        if (results) {
+            foreach (const PSearchResultTreeItem& file, results->results) {
+                file->selected = false;
+                foreach (const PSearchResultTreeItem& item, file->results) {
+                    item->selected = true;
                 }
             }
         }
-        endResetModel();
     }
+    endResetModel();
 }
 
 SearchResultListModel::SearchResultListModel(SearchResultModel *model, QObject *parent):

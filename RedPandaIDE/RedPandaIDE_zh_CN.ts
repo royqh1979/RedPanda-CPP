@@ -813,18 +813,18 @@ Are you really want to continue?</source>
 <context>
     <name>CppRefacter</name>
     <message>
-        <location filename="cpprefacter.cpp" line="91"/>
-        <location filename="cpprefacter.cpp" line="103"/>
+        <location filename="cpprefacter.cpp" line="101"/>
+        <location filename="cpprefacter.cpp" line="113"/>
         <source>Rename Symbol Error</source>
         <translation>重命名符号失败</translation>
     </message>
     <message>
-        <location filename="cpprefacter.cpp" line="92"/>
+        <location filename="cpprefacter.cpp" line="102"/>
         <source>Can&apos;t rename symbols not defined in this file.</source>
         <translation>无法重命名不在本文件中定义的符号</translation>
     </message>
     <message>
-        <location filename="cpprefacter.cpp" line="104"/>
+        <location filename="cpprefacter.cpp" line="114"/>
         <source>New symbol already exists!</source>
         <translation>新符号名称已被使用！</translation>
     </message>
@@ -5562,33 +5562,33 @@ Are you really want to continue?</source>
         <translation>只生成汇编代码(-S)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2383"/>
-        <location filename="settings.cpp" line="2410"/>
+        <location filename="settings.cpp" line="2398"/>
+        <location filename="settings.cpp" line="2425"/>
         <source>Confirm</source>
         <translation>确认</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2384"/>
+        <location filename="settings.cpp" line="2399"/>
         <source>The following problems were found during validation of compiler set &quot;%1&quot;:</source>
         <translation>在验证编译器设置&quot;%1&quot;时遇到了下列问题：</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2388"/>
+        <location filename="settings.cpp" line="2403"/>
         <source>Would you like Red Panda C++ to remove them for you and add the default paths to the valid paths?</source>
         <translation>是否让小熊猫C++删除这些配置，并尝试重新建立配置？</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2390"/>
+        <location filename="settings.cpp" line="2405"/>
         <source>Leaving those directories will lead to problems during compilation.&lt;br /&gt;&lt;br /&gt;Unless you know exactly what you&apos;re doing, it is recommended that you click Yes.</source>
         <translation>如果仍然保留这些设置，可能会导致编译错误。&lt;br /&gt;&lt;br /&gt;请选择“是”，除非您清楚的知道选择“否”的后果，</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2411"/>
+        <location filename="settings.cpp" line="2426"/>
         <source>Compiler set not configuared.</source>
         <translation>未配置编译器设置。</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2413"/>
+        <location filename="settings.cpp" line="2428"/>
         <source>Would you like Red Panda C++ to search for compilers in the following locations: &lt;BR /&gt;&apos;%1&apos;&lt;BR /&gt;&apos;%2&apos;? </source>
         <translation>您需要小熊猫C++在下列位置搜索编译器吗：&lt;br /&gt;%1&lt;br /&gt;%2</translation>
     </message>
@@ -6114,7 +6114,7 @@ Are you really want to continue?</source>
     <message>
         <location filename="widgets/searchdialog.cpp" line="23"/>
         <location filename="widgets/searchdialog.cpp" line="136"/>
-        <location filename="widgets/searchdialog.cpp" line="229"/>
+        <location filename="widgets/searchdialog.cpp" line="231"/>
         <source>Replace</source>
         <translation>替换</translation>
     </message>
@@ -6124,7 +6124,7 @@ Are you really want to continue?</source>
         <translation>在文件中替换</translation>
     </message>
     <message>
-        <location filename="widgets/searchdialog.cpp" line="230"/>
+        <location filename="widgets/searchdialog.cpp" line="232"/>
         <source>Replace this occurrence of &apos;&apos;%1&apos;&apos;?</source>
         <translation>替换这里的&quot;%1&quot;？</translation>
     </message>
@@ -6132,30 +6132,39 @@ Are you really want to continue?</source>
 <context>
     <name>SearchResultListModel</name>
     <message>
-        <location filename="widgets/searchresultview.cpp" line="363"/>
+        <location filename="widgets/searchresultview.cpp" line="365"/>
         <source>Current File:</source>
         <translation>当前文件：</translation>
     </message>
     <message>
-        <location filename="widgets/searchresultview.cpp" line="365"/>
+        <location filename="widgets/searchresultview.cpp" line="367"/>
         <source>Files In Project:</source>
         <translation>项目中的文件：</translation>
     </message>
     <message>
-        <location filename="widgets/searchresultview.cpp" line="367"/>
+        <location filename="widgets/searchresultview.cpp" line="369"/>
         <source>Open Files:</source>
         <translation>打开的文件：</translation>
     </message>
     <message>
-        <location filename="widgets/searchresultview.cpp" line="370"/>
+        <location filename="widgets/searchresultview.cpp" line="373"/>
+        <source>Find Usages in Current File: &apos;%1&apos;</source>
+        <translation>在当前文件查找符号&quot;%1&quot;</translation>
+    </message>
+    <message>
+        <location filename="widgets/searchresultview.cpp" line="376"/>
+        <source>Find Usages in Project: &apos;%1&apos;</source>
+        <translation type="unfinished">在项目中查找符号&quot;%1&quot;</translation>
+    </message>
+    <message>
         <source>References to symbol &apos;%1&apos; at &apos;%2&apos;:%3</source>
-        <translation>符号&apos;%1&apos;出现在&apos;%2&apos;: %3</translation>
+        <translation type="vanished">符号&apos;%1&apos;出现在&apos;%2&apos;: %3</translation>
     </message>
 </context>
 <context>
     <name>SearchResultTreeModel</name>
     <message>
-        <location filename="widgets/searchresultview.cpp" line="214"/>
+        <location filename="widgets/searchresultview.cpp" line="216"/>
         <source>Line</source>
         <translation>行</translation>
     </message>
@@ -6163,8 +6172,8 @@ Are you really want to continue?</source>
 <context>
     <name>SearchResultTreeViewDelegate</name>
     <message>
-        <location filename="widgets/searchresultview.cpp" line="419"/>
-        <location filename="widgets/searchresultview.cpp" line="433"/>
+        <location filename="widgets/searchresultview.cpp" line="425"/>
+        <location filename="widgets/searchresultview.cpp" line="439"/>
         <source>Line</source>
         <translation>行</translation>
     </message>

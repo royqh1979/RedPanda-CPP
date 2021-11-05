@@ -148,11 +148,23 @@ void SearchDialog::on_btnCancel_clicked()
     this->close();
 }
 
+static void saveComboHistory(QComboBox* cb,const QString& text) {
+    QString s = text.trimmed();
+    if (s.isEmpty())
+        return;
+    int i = cb->findText(s);
+    if (i>=0) {
+        cb->removeItem(i);
+    }
+    cb->insertItem(0,s);
+    cb->setCurrentText(s);
+}
+
 void SearchDialog::on_btnExecute_clicked()
 {
     int findCount = 0;
-    ui->cbFind->addItem(ui->cbFind->currentText());
-    ui->cbReplace->addItem(ui->cbReplace->currentText());
+    saveComboHistory(ui->cbFind,ui->cbFind->currentText());
+    saveComboHistory(ui->cbReplace,ui->cbReplace->currentText());
 
     SearchAction actionType;
     switch (mTabBar->currentIndex()) {

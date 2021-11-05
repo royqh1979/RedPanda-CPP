@@ -4087,23 +4087,28 @@ void MainWindow::on_cbSearchHistory_currentIndexChanged(int index)
 {
     mSearchResultModel.setCurrentIndex(index);
     PSearchResults results = mSearchResultModel.results(index);
-    if (results && results->searchType == SearchType::Search) {
-        ui->btnSearchAgin->setEnabled(true);
+    if (results) {
+        ui->btnSearchAgain->setEnabled(true);
     } else {
-        ui->btnSearchAgin->setEnabled(false);
+        ui->btnSearchAgain->setEnabled(false);
     }
 }
 
-void MainWindow::on_btnSearchAgin_clicked()
+void MainWindow::on_btnSearchAgain_clicked()
 {
     if (mSearchDialog==nullptr) {
         mSearchDialog = new SearchDialog(this);
     }
     PSearchResults results=mSearchResultModel.currentResults();
-    if (results){
+    if (!results)
+        return;
+    if (results->searchType == SearchType::Search){
         mSearchDialog->findInFiles(results->keyword,
                                    results->scope,
                                    results->options);
+    } else if (results->searchType == SearchType::FindOccurences) {
+        CppRefacter refactor;
+        refactor.findOccurence(results->statementFullname,results->scope);
     }
 }
 

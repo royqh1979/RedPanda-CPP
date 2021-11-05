@@ -497,7 +497,7 @@
         <enum>QTabWidget::South</enum>
        </property>
        <property name="currentIndex">
-        <number>6</number>
+        <number>3</number>
        </property>
        <property name="iconSize">
         <size>
@@ -932,7 +932,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QPushButton" name="btnSearchAgin">
+             <widget class="QPushButton" name="btnSearchAgain">
               <property name="enabled">
                <bool>false</bool>
               </property>

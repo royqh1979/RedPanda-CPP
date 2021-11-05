@@ -1,9 +1,11 @@
-Version 0.7.9
+Beta Version 0.8 For Dev-C++ 7
  - fix: find in the current file is not correcly saved in the search history
  - fix: hit info not correctly displayed in the search result view
  - fix: If find in files found no hits, search result view will not be shown.
  - fix: wront indents when paste one line content
  - fix: Results of "find symbol usage" in project not correctly set in the search result view
+ - change: turn on gcc compiler's "-pipe" option by default, to use pipe instead of temp files in compiliation (and make the life of SSD longer)
+ - fix: correctly save input histories for the find combo box in the Find dialog
 
 Version 0.7.8
  - enhancement: In problem view's output control, indicates which line is different with the expected
