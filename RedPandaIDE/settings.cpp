@@ -7,6 +7,7 @@
 #include "systemconsts.h"
 #include <QDebug>
 #include <QMessageBox>
+#include <QStandardPaths>
 
 const char ValueToChar[28] = {'0', '1', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',
                               'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
@@ -159,7 +160,12 @@ QString Settings::Dirs::templateDir() const
 
 QString Settings::Dirs::projectDir() const
 {
-    return includeTrailingPathDelimiter(app()) + "projects";
+    if (isGreenEdition()) {
+        return includeTrailingPathDelimiter(app()) + "projects";
+    } else {
+        return includeTrailingPathDelimiter(QStandardPaths::standardLocations(QStandardPaths::DocumentsLocation)[0])
+                         + "projects";
+    }
 }
 
 QString Settings::Dirs::data(Settings::Dirs::DataType dataType) const

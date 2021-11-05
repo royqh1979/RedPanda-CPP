@@ -9,6 +9,7 @@
 #include <QMessageBox>
 #include <QStringList>
 #include <QAbstractNativeEventFilter>
+#include <QDir>
 #include "common.h"
 #include "colorscheme.h"
 #include "iconsmanager.h"
@@ -81,6 +82,9 @@ int main(int argc, char *argv[])
     //Translation must be loaded first
     QTranslator trans;
     QString settingFilename = getSettingFilename();
+    if (!isGreenEdition()) {
+        QDir::setCurrent(QStandardPaths::standardLocations(QStandardPaths::DocumentsLocation)[0]);
+    }
     if (settingFilename.isEmpty())
         return -1;
     {

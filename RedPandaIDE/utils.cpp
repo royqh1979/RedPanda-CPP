@@ -94,12 +94,16 @@ static bool gIsGreenEditionInited = false;
 bool isGreenEdition()
 {
     if (!gIsGreenEditionInited) {
+        QString keyString = QString("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\RedPanda-C++");
+        QString value1,value2;
+        if (!readRegistry(HKEY_LOCAL_MACHINE,keyString.toLocal8Bit(),value1))
+            return false;
         QSettings settings("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\RedPanda-C++",
                            QSettings::NativeFormat);
-        QString regPath = QFileInfo(settings.value("UninstallString").toString()).absolutePath();
+        QString regPath = extractFileDir(QFileInfo(settings.value("UninstallString").toString()).absolutePath());
 
         QString appPath = QApplication::instance()->applicationDirPath();
-        gIsGreenEdition = (regPath != appPath);
+        gIsGreenEdition = ( excludeTrailingPathDelimiter(regPath) != excludeTrailingPathDelimiter(appPath));
         gIsGreenEditionInited = true;
     }
     return gIsGreenEdition;
@@ -858,4 +862,29 @@ bool haveGoodContrast(const QColor& c1, const QColor &c2) {
     int lightness1 = qGray(c1.rgb());
     int lightness2 = qGray(c2.rgb());
     return std::abs(lightness1 - lightness2)>=120;
+}
+
+bool readRegistry(HKEY key,QByteArray subKey, QString& value) {
+    DWORD dataSize;
+    LONG result;
+    result = RegGetValueA(key,subKey,
+                 "", RRF_RT_REG_SZ | RRF_RT_REG_MULTI_SZ,
+                 NULL,
+                 NULL,
+                 &dataSize);
+    if (result!=ERROR_SUCCESS)
+        return false;
+    char * buffer = new char[dataSize+10];
+    result = RegGetValueA(HKEY_CLASSES_ROOT,subKey,
+                 "", RRF_RT_REG_SZ | RRF_RT_REG_MULTI_SZ,
+                 NULL,
+                 buffer,
+                 &dataSize);
+    if (result!=ERROR_SUCCESS) {
+        delete[] buffer;
+        return false;
+    }
+    value=QString::fromLocal8Bit(buffer);
+    delete [] buffer;
+    return true;
 }
