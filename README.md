@@ -22,6 +22,9 @@ Editing Improvements:
 * Enhanced auto indent 
 * Better code folding support
 
+Debuging Improvements:
+* Better complex value display
+
 Code Intellisense Improvements:
 * Support UTF-8 identifiers
 * Support C++ 14 using type alias
