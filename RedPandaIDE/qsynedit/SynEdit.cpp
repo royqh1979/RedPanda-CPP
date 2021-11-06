@@ -1440,7 +1440,7 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
             QVector<int> matchingIndents;
             int l;
             if (attr == mHighlighter->symbolAttribute()
-                    && firstToken == '}' ) {
+                    && (firstToken == '}' || firstToken == '{')) {
                 matchingIndents = rangeAfterFirstToken.matchingIndents;
                 dontAddIndent = true;
                 l = startLine;
