@@ -2743,9 +2743,13 @@ void MainWindow::onNewProblemConnection()
             problem->cases.append(problemCase);
         }
         mOJProblemSetModel.addProblem(problem);
-        if (!ui->lstProblemSet->currentIndex().isValid()) {
-            ui->lstProblemSet->setCurrentIndex(mOJProblemSetModel.index(0,0));
-        }
+        ui->tabInfos->setCurrentWidget(ui->tabProblemSet);
+        ui->lstProblemSet->setCurrentIndex(mOJProblemSetModel.index(
+                                               mOJProblemSetModel.count()-1
+                                               ,0));
+        showNormal();
+        raise(); // for mac OS?
+        activateWindow();
     }
 }
 
