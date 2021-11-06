@@ -2667,7 +2667,7 @@ void MainWindow::onLstProblemSetContextMenu(const QPoint &pos)
                         this,
                         tr("Select Answer Source File"),
                         QString(),
-                        tr("C/C++Source Files (*.c *.cpp *.cc *.cxx")
+                        tr("C/C++Source Files (*.c *.cpp *.cc *.cxx)")
                         );
             if (!filename.isEmpty()) {
                 QDir::setCurrent(extractFileDir(filename));
