@@ -2619,9 +2619,68 @@ void MainWindow::onFilesViewContextMenu(const QPoint &pos)
 void MainWindow::onLstProblemSetContextMenu(const QPoint &pos)
 {
     QMenu menu(this);
-    menu.addAction(mProblem_Properties);
-    QModelIndex idx =ui->lstProblemCases->currentIndex();
+    QModelIndex idx = ui->lstProblemSet->currentIndex();
     mProblem_Properties->setEnabled(idx.isValid());
+    if (idx.isValid()) {
+        POJProblem problem = mOJProblemSetModel.problem(idx.row());
+        QMenu * menuSetAnswer = new QMenu(&menu);
+        QActionGroup *actionGroup = new QActionGroup(menuSetAnswer);
+        bool answerFound=false;
+        menuSetAnswer->setTitle(tr("Set answer to..."));
+        for (int i=0;i<mEditorList->pageCount();i++) {
+            Editor *e = (*mEditorList)[i];
+            if (e->isNew())
+                continue;
+            QString filename = e->filename();
+            QAction* action = new QAction(filename,menuSetAnswer);
+            action->setCheckable(true);
+            action->setActionGroup(actionGroup);
+
+            if (filename.compare(problem->answerProgram, PATH_SENSITIVITY)==0) {
+                action->setChecked(true);
+                answerFound = true;
+            }
+            menuSetAnswer->addAction(action);
+        }
+        if (!answerFound && !problem->answerProgram.isEmpty()) {
+            QAction* action = new QAction(problem->answerProgram,menuSetAnswer);
+            action->setCheckable(true);
+            action->setChecked(true);
+            action->setActionGroup(actionGroup);
+            menuSetAnswer->addAction(action);
+        }
+        connect(actionGroup, &QActionGroup::triggered,
+                [problem,this](QAction* action) {
+            if (action->text().compare(problem->answerProgram, PATH_SENSITIVITY)
+                    !=0)
+                problem->answerProgram = action->text();
+            else
+                problem->answerProgram = "";
+            if (problem == mOJProblemModel.problem()) {
+                ui->btnOpenProblemAnswer->setEnabled(!problem->answerProgram.isEmpty());
+            }
+        });
+        QAction * action = new QAction(tr("select other file..."),menuSetAnswer);
+        connect(action, &QAction::triggered,
+                [problem,this](){
+            QString filename = QFileDialog::getOpenFileName(
+                        this,
+                        tr("Select Answer Source File"),
+                        QString(),
+                        tr("C/C++Source Files (*.c *.cpp *.cc *.cxx")
+                        );
+            if (!filename.isEmpty()) {
+                QDir::setCurrent(extractFileDir(filename));
+                problem->answerProgram = filename;
+                if (problem == mOJProblemModel.problem()) {
+                    ui->btnOpenProblemAnswer->setEnabled(!problem->answerProgram.isEmpty());
+                }
+            }
+        });
+        menuSetAnswer->addAction(action);
+        menu.addMenu(menuSetAnswer);
+    }
+    menu.addAction(mProblem_Properties);
     menu.exec(ui->lstProblemSet->mapToGlobal(pos));
 }
 
@@ -2637,6 +2696,7 @@ void MainWindow::onProblemSetIndexChanged(const QModelIndex &current, const QMod
         ui->tabProblem->setEnabled(false);
         ui->lblProblem->clear();
         ui->lblProblem->setToolTip("");
+        ui->tabProblem->setEnabled(false);
     } else {
         ui->btnRemoveProblem->setEnabled(true);
         POJProblem problem = mOJProblemSetModel.problem(idx.row());
@@ -2647,6 +2707,7 @@ void MainWindow::onProblemSetIndexChanged(const QModelIndex &current, const QMod
         openCloseBottomPanel(true);
         ui->tabMessages->setCurrentWidget(ui->tabProblem);
         ui->tabProblem->setEnabled(true);
+        ui->btnOpenProblemAnswer->setEnabled(!problem->answerProgram.isEmpty());
     }
 }
 
@@ -3157,6 +3218,9 @@ void MainWindow::on_actionOpen_triggered()
         QStringList files = QFileDialog::getOpenFileNames(pMainWindow,
             tr("Open"), QString(), pSystemConsts->defaultFileFilters().join(";;"),
             &selectedFileFilter);
+        if (!files.isEmpty()) {
+            QDir::setCurrent(extractFileDir(files[0]));
+        }
         openFiles(files);
     }  catch (FileError e) {
         QMessageBox::critical(this,tr("Error"),e.reason());
@@ -5240,6 +5304,7 @@ void MainWindow::on_btnSaveProblemSet_clicked()
                 QDir().absolutePath(),
                 tr("Problem Set Files (*.pbs)"));
     if (!fileName.isEmpty()) {
+        QDir::setCurrent(extractFileDir(fileName));
         try {
             applyCurrentProblemCaseChanges();
             mOJProblemSetModel.saveToFile(fileName);
@@ -5256,9 +5321,10 @@ void MainWindow::on_btnLoadProblemSet_clicked()
     QString fileName = QFileDialog::getOpenFileName(
                 this,
                 tr("Load Problem Set"),
-                QDir().absolutePath(),
+                QString(),
                 tr("Problem Set Files (*.pbs)"));
     if (!fileName.isEmpty()) {
+        QDir::setCurrent(extractFileDir(fileName));
         try {
             mOJProblemSetModel.loadFromFile(fileName);
         } catch (FileError& error) {
@@ -5309,6 +5375,18 @@ void MainWindow::on_btnRemoveProblemCase_clicked()
     QModelIndex idx = ui->lstProblemCases->currentIndex();
     if (idx.isValid()) {
         mOJProblemModel.removeCase(idx.row());
+    }
+}
+
+
+void MainWindow::on_btnOpenProblemAnswer_clicked()
+{
+    POJProblem problem = mOJProblemModel.problem();
+    if (!problem || problem->answerProgram.isEmpty())
+        return;
+    Editor *e = mEditorList->getEditorByFilename(problem->answerProgram);
+    if (e) {
+        e->activate();
     }
 }
 

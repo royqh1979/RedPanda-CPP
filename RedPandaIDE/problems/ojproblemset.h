@@ -32,6 +32,7 @@ struct OJProblem {
     QString name;
     QString url;
     QString description;
+    QString answerProgram;
     QVector<POJProblemCase> cases;
 };
 

@@ -290,10 +290,11 @@ bool Editor::saveAs(const QString &name, bool fromProject){
             }
         });
 
-        if (!dialog.exec()) {
+        if (dialog.exec()!=QFileDialog::Accepted) {
             return false;
         }
         newName = dialog.selectedFiles()[0];
+        QDir::setCurrent(extractFileDir(newName));
     }
 
     // Update project information

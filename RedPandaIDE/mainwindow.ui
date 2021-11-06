@@ -1224,6 +1224,20 @@
                  </widget>
                 </item>
                 <item>
+                 <widget class="QToolButton" name="btnOpenProblemAnswer">
+                  <property name="toolTip">
+                   <string>Open Anwser Source File</string>
+                  </property>
+                  <property name="text">
+                   <string>Open Anwser Source File</string>
+                  </property>
+                  <property name="icon">
+                   <iconset resource="icons.qrc">
+                    <normaloff>:/icons/images/newlook24/047-makefl.png</normaloff>:/icons/images/newlook24/047-makefl.png</iconset>
+                  </property>
+                 </widget>
+                </item>
+                <item>
                  <widget class="Line" name="line">
                   <property name="orientation">
                    <enum>Qt::Vertical</enum>

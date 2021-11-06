@@ -4,6 +4,8 @@ Version 0.8.1 For Dev-C++ 7 Beta
  - fix: Red Panda C++ will freeze when receiving contents from Competitve Companion in chrome/edge
  - enhancement: when problem from competitive companion received, activate RedPanda C++ if it's minimized.
  - enhancement: when problem from competitive companion received, show the problem and problem set views.
+ - enhancement: set problem's answer source file 
+ - enhancement: open the problem's answer source file in editor
 
 Version 0.8 For Dev-C++ 7 Beta
  - fix: find in the current file is not correcly saved in the search history

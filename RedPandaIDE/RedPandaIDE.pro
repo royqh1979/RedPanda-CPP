@@ -1,4 +1,4 @@
-QT       += core gui printsupport network
+QT       += core gui printsupport network svg
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -318,10 +318,3 @@ RESOURCES += \
     translations.qrc
 
 RC_ICONS = images/devcpp.ico images/associations/c.ico images/associations/cpp.ico images/associations/h.ico images/associations/hpp.ico images/associations/dev.ico
-
-#win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../../QScintilla/src/release/ -lqscintilla2_qt5d
-#else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../../QScintilla/src/debug/ -lqscintilla2_qt5d
-#else:unix: LIBS += -L$$OUT_PWD/../../QScintilla/src/ -lqscintilla2_qt5d
-
-#INCLUDEPATH += $$PWD/../../QScintilla/src
-#DEPENDPATH += $$PWD/../../QScintilla/src

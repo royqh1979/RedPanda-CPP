@@ -88,6 +88,7 @@ void OJProblemSetModel::saveToFile(const QString &fileName)
             problemObj["name"]=problem->name;
             problemObj["url"]=problem->url;
             problemObj["description"]=problem->description;
+            problemObj["answer_program"] = problem->answerProgram;
             QJsonArray cases;
             foreach (const POJProblemCase& problemCase, problem->cases) {
                 QJsonObject caseObj;
@@ -133,6 +134,7 @@ void OJProblemSetModel::loadFromFile(const QString &fileName)
             problem->name = problemObj["name"].toString();
             problem->url = problemObj["url"].toString();
             problem->description = problemObj["description"].toString();
+            problem->answerProgram = problemObj["answer_program"].toString();
             QJsonArray casesArray = problemObj["cases"].toArray();
             foreach (const QJsonValue& caseVal, casesArray) {
                 QJsonObject caseObj = caseVal.toObject();

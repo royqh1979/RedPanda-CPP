@@ -473,6 +473,8 @@ private slots:
 
     void on_btnRemoveProblemCase_clicked();
 
+    void on_btnOpenProblemAnswer_clicked();
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;
