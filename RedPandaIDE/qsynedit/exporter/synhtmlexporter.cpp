@@ -171,6 +171,27 @@ QString SynHTMLExporter::GetHeader()
             .arg(ColorToHTML(mForegroundColor))
             .arg(ColorToHTML(mBackgroundColor))
             .arg(Styles);
+    if (mCreateHTMLFragment) {
+        HTMLAsTextHeader = "<?xml version=\"1.0\" encoding=\"%2\"?>"+lineBreak() +
+                    "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">" + lineBreak() +
+                    "<html xmlns=\"http://www.w3.org/1999/xhtml\">" + lineBreak() +
+                    "<head>"+ lineBreak() +
+                    "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=%1\" />" + lineBreak() +
+                    "<meta name=\"generator\" content=\"SynEdit HTML exporter\" />" + lineBreak() +
+                    "<style type=\"text/css\">"+ lineBreak() +
+                    "<!--" + lineBreak() +
+                    "body { color: %2; background-color: %3; }"+ lineBreak() +
+                    "%4" +
+                    "-->" + lineBreak() +
+                    "</style>" + lineBreak() +
+                    "</head>" + lineBreak() +
+                    "<body>" + lineBreak();
+        Header = HTMLAsTextHeader
+                    .arg(QString(mCharset))
+                    .arg(ColorToHTML(mForegroundColor))
+                    .arg(ColorToHTML(mBackgroundColor))
+                    .arg(Styles);
+    }
     QString Result = Header;
     if (mCreateHTMLFragment) {
         Result += "<!--StartFragment-->";
