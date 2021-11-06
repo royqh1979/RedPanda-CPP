@@ -9,6 +9,7 @@ Version 0.8.1 For Dev-C++ 7 Beta
  - fix: if the proceeding line is a comment, current line should not recalculate indent
  - fix: if the proceeding line ends with ':' in comments, current line should not indent
  - enhancement: right click the problem set name label to rename it
+ - change: memory view and locals view use debug console's font settings
 
 Version 0.8 For Dev-C++ 7 Beta
  - fix: find in the current file is not correcly saved in the search history

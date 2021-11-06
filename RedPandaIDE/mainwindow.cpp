@@ -1055,9 +1055,11 @@ void MainWindow::updateCompilerSet()
 
 void MainWindow::updateDebuggerSettings()
 {
-    ui->debugConsole->setFont(QFont(
-                                  pSettings->debugger().fontName(),
-                                  pSettings->debugger().fontSize()));
+    QFont font(pSettings->debugger().fontName(),
+               pSettings->debugger().fontSize());
+    ui->debugConsole->setFont(font);
+    ui->txtMemoryView->setFont(font);
+    ui->txtLocals->setFont(font);
 }
 
 void MainWindow::checkSyntaxInBack(Editor *e)

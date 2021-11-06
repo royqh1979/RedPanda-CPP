@@ -8,6 +8,7 @@
 #include <QDebug>
 #include <QMessageBox>
 #include <QStandardPaths>
+#include <QScreen>
 
 const char ValueToChar[28] = {'0', '1', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',
                               'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
@@ -1142,7 +1143,7 @@ void Settings::Editor::doLoad()
     mGutterLineNumbersStartZero = boolValue("gutter_line_numbers_start_zero",false);
     mGutterUseCustomFont = boolValue("gutter_use_custom_font",false);
     mGutterFontName = stringValue("gutter_font_name","consolas");
-    mGutterFontSize = intValue("gutter_font_size",QGuiApplication::font().pointSize());
+    mGutterFontSize = intValue("gutter_font_size",14);
     mGutterFontOnlyMonospaced = boolValue("gutter_font_only_monospaced",true);
 
     //copy
@@ -2993,7 +2994,7 @@ void Settings::Debugger::doLoad()
     mShowAnnotations = boolValue("show_annotations",false);
     mFontName = stringValue("font_name","Consolas");
     mOnlyShowMono = boolValue("only_show_mono",true);
-    mFontSize = intValue("font_size",10);
+    mFontSize = intValue("font_size",12);
     mUseIntelStyle = boolValue("use_intel_style",true);
     mBlendMode = boolValue("blend_mode",true);
     mSkipSystemLibraries = boolValue("skip_system_lib",true);
