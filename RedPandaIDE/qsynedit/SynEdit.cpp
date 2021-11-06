@@ -1416,9 +1416,11 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
     int indentSpaces = 0;
     if (startLine>=1) {
         indentSpaces = leftSpaces(s);
-        if (addIndent) {
-            SynRangeState rangePreceeding = mLines->ranges(startLine-1);
-            mHighlighter->setState(rangePreceeding);
+        SynRangeState rangePreceeding = mLines->ranges(startLine-1);
+        mHighlighter->setState(rangePreceeding);
+        if (addIndent
+                && !mHighlighter->isLastLineCommentNotFinished(rangePreceeding.state)
+                && !mHighlighter->isLastLineStringNotFinished(rangePreceeding.state)) {
             mHighlighter->setLine(lineText.trimmed(),line-1);
             SynRangeState rangeAfterFirstToken = mHighlighter->getRangeState();
             QString firstToken = mHighlighter->getToken();
@@ -1486,12 +1488,25 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
                     l--;
                 }
             }
-            if (!dontAddIndent &&
-                   (
-                        (rangePreceeding.firstIndentThisLine < rangePreceeding.indents.length()) // there are indents added at this (preceeding) line
-                        || s.trimmed().endsWith(':'))
-                    ) {
-                indentSpaces += mTabWidth;
+            if (!dontAddIndent) {
+                if (rangePreceeding.firstIndentThisLine < rangePreceeding.indents.length()) {
+                    indentSpaces += mTabWidth;
+                    dontAddIndent = true;
+                }
+            }
+
+            if (!dontAddIndent && !s.isEmpty()) {
+                BufferCoord coord;
+                QString token;
+                PSynHighlighterAttribute attr;
+                coord.Line = startLine;
+                coord.Char = lines()->getString(startLine-1).length();
+                if (getHighlighterAttriAtRowCol(coord,token,attr)
+                        && attr == mHighlighter->symbolAttribute()
+                        && token == ":") {
+                    indentSpaces += mTabWidth;
+                    dontAddIndent = true;
+                }
             }
         }
     }
