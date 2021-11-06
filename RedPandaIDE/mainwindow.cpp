@@ -1830,6 +1830,23 @@ void MainWindow::buildContextMenus()
         }
     });
 
+    //context menu signal for the Problem Set lable
+    ui->lblProblemSet->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui->lblProblemSet, &QWidget::customContextMenuRequested,
+            [this] {
+        QString newName = QInputDialog::getText(
+                    ui->lblProblemSet,
+                    tr("Set Problem Set Name"),
+                    tr("Problem Set Name:"),
+                    QLineEdit::Normal,
+                    ui->lblProblemSet->text());
+        newName = newName.trimmed();
+        if (!newName.isEmpty()){
+            mOJProblemSetModel.rename(newName);
+            ui->lblProblemSet->setText(mOJProblemSetModel.name());
+        }
+    });
+
     //context menu signal for the watch view
     ui->watchView->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->watchView,&QWidget::customContextMenuRequested,
