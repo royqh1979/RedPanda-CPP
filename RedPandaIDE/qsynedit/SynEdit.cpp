@@ -1418,9 +1418,7 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
         indentSpaces = leftSpaces(s);
         SynRangeState rangePreceeding = mLines->ranges(startLine-1);
         mHighlighter->setState(rangePreceeding);
-        if (addIndent
-                && !mHighlighter->isLastLineCommentNotFinished(rangePreceeding.state)
-                && !mHighlighter->isLastLineStringNotFinished(rangePreceeding.state)) {
+        if (addIndent) {
             mHighlighter->setLine(lineText.trimmed(),line-1);
             SynRangeState rangeAfterFirstToken = mHighlighter->getRangeState();
             QString firstToken = mHighlighter->getToken();
@@ -1430,6 +1428,7 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
                                   && (
                                   firstToken == "public" || firstToken == "private"
                                   || firstToken == "protected" || firstToken == "case")) {
+                // public: private: protecte: case: should indents like it's parent statement
                 mHighlighter->setState(rangePreceeding);
                 mHighlighter->setLine("}",line-1);
                 rangeAfterFirstToken = mHighlighter->getRangeState();
@@ -1437,14 +1436,71 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
                 attr = mHighlighter->getTokenAttribute();
             }
             bool dontAddIndent = false;
+            bool addOwnIndent = false;
             QVector<int> matchingIndents;
             int l;
             if (attr == mHighlighter->symbolAttribute()
                     && (firstToken == '}' || firstToken == '{')) {
+                // current line starts with '}' or '{', we should consider them to calc indents
                 matchingIndents = rangeAfterFirstToken.matchingIndents;
                 dontAddIndent = true;
                 l = startLine;
+            } else if (mHighlighter->isLastLineCommentNotFinished(rangePreceeding.state)
+                       && (lineText.startsWith(' ')
+                           || lineText.startsWith('\t'))
+                       ) {
+                // last line is a not finished comment, and this line start with indents
+                // we should use indents of the line comment beginning, plus this line's indents
+                addOwnIndent=true;
+                int commentStartLine = startLine-1;
+                SynRangeState range;
+                while (commentStartLine>=1) {
+                    range = mLines->ranges(commentStartLine-1);
+                    if (!mHighlighter->isLastLineCommentNotFinished(range.state)){
+                        commentStartLine++;
+                        break;
+                    }
+                    if (!range.matchingIndents.isEmpty()
+                            || range.firstIndentThisLine<range.indents.length())
+                        break;
+                    commentStartLine--;
+                }
+                if (commentStartLine<1)
+                    commentStartLine = 1;
+                indentSpaces = leftSpaces(mLines->getString(commentStartLine-1));
+                range = mLines->ranges(commentStartLine-1);
+                matchingIndents = range.matchingIndents;
+                dontAddIndent = true;
+                l = commentStartLine;
+            } else if (mHighlighter->isLastLineStringNotFinished(rangePreceeding.state)
+                       && (lineText.startsWith(' ')
+                           || lineText.startsWith('\t'))
+                       ) {
+                // last line is a not finished string, and this line start with indents
+                // we should use indents of the line string beginning, plus this line's indents
+                addOwnIndent=true;
+                int commentStartLine = startLine-1;
+                SynRangeState range;
+                while (commentStartLine>=1) {
+                    range = mLines->ranges(commentStartLine-1);
+                    if (!mHighlighter->isLastLineStringNotFinished(range.state)){
+                        commentStartLine++;
+                        break;
+                    }
+                    if (!range.matchingIndents.isEmpty()
+                            || range.firstIndentThisLine<range.indents.length())
+                        break;
+                    commentStartLine--;
+                }
+                if (commentStartLine<1)
+                    commentStartLine = 1;
+                indentSpaces = leftSpaces(mLines->getString(commentStartLine-1));
+                range = mLines->ranges(commentStartLine-1);
+                matchingIndents = range.matchingIndents;
+                dontAddIndent = true;
+                l = commentStartLine;
             } else {
+                // we just use infos till preceeding line's end to calc indents
                 matchingIndents = rangePreceeding.matchingIndents;
                 l = startLine-1;
             }
@@ -1507,6 +1563,9 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
                     indentSpaces += mTabWidth;
                     dontAddIndent = true;
                 }
+            }
+            if (addOwnIndent) {
+                indentSpaces += leftSpaces(lineText);
             }
         }
     }

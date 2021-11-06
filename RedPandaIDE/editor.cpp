@@ -607,11 +607,15 @@ void Editor::keyPressEvent(QKeyEvent *event)
                 s=TrimLeft(lineText());
                 if (s.startsWith("* ")) {
                     handled = true;
+                    int right = lines()->getString(caretY()-1).length()-caretX();
                     s=lineBreak()+"* ";
                     insertString(s,false);
                     BufferCoord p = caretXY();
                     p.Line++;
                     p.Char = lines()->getString(p.Line-1).length()+1;
+                    if (right>0) {
+                        p.Char -=right+1;
+                    }
                     setCaretXY(p);
                 }
             }

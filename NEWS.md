@@ -6,12 +6,12 @@ Version 0.8.1 For Dev-C++ 7 Beta
  - enhancement: when problem from competitive companion received, show the problem and problem set views.
  - enhancement: set problem's answer source file 
  - enhancement: open the problem's answer source file in editor
- - fix: if the proceeding line is a comment, current line should not recalculate indent
  - fix: if the proceeding line ends with ':' in comments, current line should not indent
  - enhancement: right click the problem set name label to rename it
  - change: memory view and locals view use debug console's font settings
  - fix: one line 'while' statement dosen't correctly indents
  - fix: line start with  '{' that follow an un-ended 'if'/'for' statement is not correctly un-indented
+ - fix: multi-line comments indents calculation
 
 Version 0.8 For Dev-C++ 7 Beta
  - fix: find in the current file is not correcly saved in the search history
