@@ -42,4 +42,6 @@ struct OJProblemSet {
     QVector<POJProblem> problems;
 };
 
+using POJProblemSet  = std::shared_ptr<OJProblemSet>;
+
 #endif // OJPROBLEMSET_H

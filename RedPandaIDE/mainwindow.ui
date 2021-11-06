@@ -272,7 +272,7 @@
             </attribute>
             <layout class="QVBoxLayout" name="verticalLayout_6">
              <property name="spacing">
-              <number>7</number>
+              <number>3</number>
              </property>
              <property name="leftMargin">
               <number>0</number>
@@ -288,8 +288,17 @@
              </property>
              <item>
               <widget class="QLabel" name="lblProblemSet">
+               <property name="frameShape">
+                <enum>QFrame::Panel</enum>
+               </property>
+               <property name="frameShadow">
+                <enum>QFrame::Plain</enum>
+               </property>
                <property name="text">
                 <string>Problem Set</string>
+               </property>
+               <property name="margin">
+                <number>5</number>
                </property>
               </widget>
              </item>
@@ -497,7 +506,7 @@
         <enum>QTabWidget::South</enum>
        </property>
        <property name="currentIndex">
-        <number>3</number>
+        <number>6</number>
        </property>
        <property name="iconSize">
         <size>
@@ -1089,6 +1098,10 @@
         </layout>
        </widget>
        <widget class="QWidget" name="tabProblem">
+        <attribute name="icon">
+         <iconset resource="icons.qrc">
+          <normaloff>:/icons/images/newlook24/015-compres.png</normaloff>:/icons/images/newlook24/015-compres.png</iconset>
+        </attribute>
         <attribute name="title">
          <string>Problem</string>
         </attribute>
@@ -1112,6 +1125,9 @@
            </property>
            <widget class="QWidget" name="widget_4" native="true">
             <layout class="QVBoxLayout" name="verticalLayout_7">
+             <property name="spacing">
+              <number>3</number>
+             </property>
              <property name="leftMargin">
               <number>0</number>
              </property>
@@ -1126,8 +1142,14 @@
              </property>
              <item>
               <widget class="QLabel" name="lblProblem">
+               <property name="frameShape">
+                <enum>QFrame::Box</enum>
+               </property>
                <property name="text">
                 <string>Problem</string>
+               </property>
+               <property name="margin">
+                <number>5</number>
                </property>
                <property name="openExternalLinks">
                 <bool>true</bool>
@@ -1305,17 +1327,28 @@
               </widget>
              </item>
              <item row="1" column="0">
-              <widget class="QTextEdit" name="txtProblemCaseInput"/>
+              <widget class="QTextEdit" name="txtProblemCaseInput">
+               <property name="lineWrapMode">
+                <enum>QTextEdit::NoWrap</enum>
+               </property>
+              </widget>
              </item>
              <item row="1" column="1">
               <widget class="QTextEdit" name="txtProblemCaseOutput">
+               <property name="lineWrapMode">
+                <enum>QTextEdit::NoWrap</enum>
+               </property>
                <property name="readOnly">
                 <bool>true</bool>
                </property>
               </widget>
              </item>
              <item row="1" column="2">
-              <widget class="QTextEdit" name="txtProblemCaseExpected"/>
+              <widget class="QTextEdit" name="txtProblemCaseExpected">
+               <property name="lineWrapMode">
+                <enum>QTextEdit::NoWrap</enum>
+               </property>
+              </widget>
              </item>
             </layout>
            </widget>

@@ -2691,15 +2691,34 @@ void MainWindow::onProblemNameChanged(int index)
 void MainWindow::onNewProblemConnection()
 {
     QTcpSocket* clientConnection = mTcpServer.nextPendingConnection();
-    mTcpServer.connect(clientConnection, &QAbstractSocket::disconnected,
+
+    connect(clientConnection, &QAbstractSocket::disconnected,
             clientConnection, &QObject::deleteLater);
     QByteArray content;
+    int unreadCount = 0;
     while (clientConnection->state() == QTcpSocket::ConnectedState) {
-        clientConnection->waitForReadyRead();
-        content += clientConnection->readAll();
+        clientConnection->waitForReadyRead(100);
+        QByteArray readed = clientConnection->readAll();
+        if (readed.isEmpty()) {
+            unreadCount ++;
+            if (!content.isEmpty() || unreadCount>30)
+                break;
+        } else {
+            unreadCount = 0;
+        }
+        content += readed;
     }
     content += clientConnection->readAll();
+    clientConnection->write("HTTP/1.1 200 OK");
+    clientConnection->disconnectFromHost();
+//    qDebug()<<"---------";
+//    qDebug()<<content;
     content = getHTTPBody(content);
+//    qDebug()<<"*********";
+//    qDebug()<<content;
+    if (content.isEmpty()) {
+        return;
+    }
     QJsonParseError error;
     QJsonDocument doc = QJsonDocument::fromJson(content,&error);
     if (error.error!=QJsonParseError::NoError) {
@@ -2728,7 +2747,6 @@ void MainWindow::onNewProblemConnection()
             ui->lstProblemSet->setCurrentIndex(mOJProblemSetModel.index(0,0));
         }
     }
-    clientConnection->disconnectFromHost();
 }
 
 void MainWindow::onEditorClosed()
