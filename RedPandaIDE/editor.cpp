@@ -1664,9 +1664,7 @@ bool Editor::handleSymbolCompletion(QChar key)
           }
           return false;
     case '*':
-        qDebug()<<"???";
           status = getQuoteStatus();
-        qDebug()<<(int)status;
           if (pSettings->editor().completeComment() && (status == QuoteStatus::NotQuote)) {
               return handleMultilineCommentCompletion();
           }
@@ -1771,7 +1769,6 @@ bool Editor::handleBracketSkip()
 
 bool Editor::handleMultilineCommentCompletion()
 {
-    qDebug()<<caretX()-1<<" "<<lineText().length();
     if ((caretX()-2 < lineText().length()) && (lineText()[caretX() - 2] == '/')) {
         beginUpdate();
         commandProcessor(SynEditorCommand::ecChar,'*');

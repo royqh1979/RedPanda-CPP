@@ -15,6 +15,7 @@ Version 0.8.1 For Dev-C++ 7 Beta
  - fix: Installer should install the app in "program files", not "program files (x86)"
  - fix: symbol completion for '/*' not work
  - fix: javadoc-style docstring indents calculation
+ - fix: indents calculation for the line succeeding "*/"
 
 Version 0.8 For Dev-C++ 7 Beta
  - fix: find in the current file is not correcly saved in the search history

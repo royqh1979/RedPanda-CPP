@@ -1396,6 +1396,26 @@ void SynEdit::setWordBlock(BufferCoord Value)
         setCaretAndSelection(v_WordEnd, v_WordStart, v_WordEnd);
 }
 
+int SynEdit::findCommentStartLine(int searchStartLine)
+{
+    int commentStartLine = searchStartLine;
+    SynRangeState range;
+    while (commentStartLine>=1) {
+        range = mLines->ranges(commentStartLine-1);
+        if (!mHighlighter->isLastLineCommentNotFinished(range.state)){
+            commentStartLine++;
+            break;
+        }
+        if (!range.matchingIndents.isEmpty()
+                || range.firstIndentThisLine<range.indents.length())
+            break;
+        commentStartLine--;
+    }
+    if (commentStartLine<1)
+        commentStartLine = 1;
+    return commentStartLine;
+}
+
 int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
 {
     if (!mHighlighter)
@@ -1422,6 +1442,12 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
             QString trimmedS = s.trimmed();
             QString trimmedLineText = lineText.trimmed();
             mHighlighter->setLine(trimmedLineText,line-1);
+            int statePrePre;
+            if (startLine>1) {
+                statePrePre = mLines->ranges(startLine-2).state;
+            } else {
+                statePrePre = 0;
+            }
             SynRangeState rangeAfterFirstToken = mHighlighter->getRangeState();
             QString firstToken = mHighlighter->getToken();
             PSynHighlighterAttribute attr = mHighlighter->getTokenAttribute();
@@ -1454,29 +1480,26 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
                 // it means this line is a docstring, should indents according to
                 // the line the comment beginning , and add 1 additional space
                 additionIndent = 1;
-                int commentStartLine = startLine-1;
+                int commentStartLine = findCommentStartLine(startLine-1);
                 SynRangeState range;
-                while (commentStartLine>=1) {
-                    range = mLines->ranges(commentStartLine-1);
-                    if (!mHighlighter->isLastLineCommentNotFinished(range.state)){
-                        commentStartLine++;
-                        break;
-                    }
-                    if (!range.matchingIndents.isEmpty()
-                            || range.firstIndentThisLine<range.indents.length())
-                        break;
-                    commentStartLine--;
-                }
-                if (commentStartLine<1)
-                    commentStartLine = 1;
                 indentSpaces = leftSpaces(mLines->getString(commentStartLine-1));
                 range = mLines->ranges(commentStartLine-1);
                 matchingIndents = range.matchingIndents;
                 dontAddIndent = true;
                 l = commentStartLine;
-            } else if (trimmedS.startsWith("*")) {
-                // fix indents for line like " */"
-                indentSpaces--;
+            } else if ( mHighlighter->isLastLineCommentNotFinished(statePrePre)
+                        && rangePreceeding.matchingIndents.isEmpty()
+                        && rangePreceeding.firstIndentThisLine>=rangePreceeding.indents.length()
+                        && !mHighlighter->isLastLineCommentNotFinished(rangePreceeding.state)) {
+                // the preceeding line is the end of comment
+                // we should use the indents of the start line of the comment
+                int commentStartLine = findCommentStartLine(startLine-2);
+                SynRangeState range;
+                indentSpaces = leftSpaces(mLines->getString(commentStartLine-1));
+                range = mLines->ranges(commentStartLine-1);
+                matchingIndents = range.matchingIndents;
+                dontAddIndent = true;
+                l = commentStartLine;
             } else {
                 // we just use infos till preceeding line's end to calc indents
                 matchingIndents = rangePreceeding.matchingIndents;
