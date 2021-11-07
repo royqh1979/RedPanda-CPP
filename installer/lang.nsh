@@ -1,5 +1,5 @@
 ﻿/* English 1033 */
-LangString MessageAppName 2052 "Red Panda Dev-C++"
+LangString MessageAppName 1033 "Red Panda Dev-C++"
 LangString MessageSectionMain 1033 "The Red Panda Dev-C++ IDE (Integrated Development Environment)"
 LangString MessageSectionIcons 1033 "Various icons that you can use in your programs"
 LangString MessageSectionMinGW 1033 "The ${COMPILERNAME} compiler and associated tools, headers and libraries"

@@ -3,7 +3,7 @@
 
 !define COMPILERNAME "MinGW-w64 X86_64 GCC 11.2"
 !define COMPILERFOLDER "MinGW64"
-!define DEVCPP_VERSION "beta.0.8.0"
+!define DEVCPP_VERSION "beta.0.8.1"
 !define FINALNAME "RedPanda-Cpp.7.${DEVCPP_VERSION}.${COMPILERNAME}.Setup.exe"
 !define DISPLAY_NAME "Red Panda Dev-C++ 7 ${DEVCPP_VERSION}"
 
@@ -23,8 +23,6 @@ LicenseData "LICENSE"
 InstallDir $PROGRAMFILES64\RedPanda-Cpp
 ####################################################################
 # Interface Settings
-
-SetRegView 64
 
 ShowInstDetails show
 AutoCloseWindow false
@@ -78,6 +76,7 @@ Section "$(SectionMainName)" SectionMain
   
   SetOutPath $INSTDIR
 
+  SetRegView 64
   ; Allways create an uninstaller
   WriteUninstaller "$INSTDIR\uninstall.exe"
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++" "DisplayName" "Redpanda-C++"
@@ -255,7 +254,7 @@ Section "$(SectionDesktopLaunchName)" SectionDesktopLaunch
   
   ; always use current user desktop, normal users can't delete all users' shortcuts
   SetShellVarContext current
-  CreateShortCut "$DESKTOP\Red Panda Dev-C++.lnk" "$INSTDIR\RedPandaIDE.exe"
+  CreateShortCut "$DESKTOP\$(MessageAppName).lnk" "$INSTDIR\RedPandaIDE.exe"
 SectionEnd
 
 SubSectionEnd
@@ -423,30 +422,6 @@ Function UninstallExisting
     done:
 FunctionEnd
 
-Function UninstallExisting
-    ReadRegStr $R0 HKLM  "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++"  "UninstallString"
-
-    StrCmp $R0 "" done
-
-    Push $R0
-    Call GetParent
-    Pop $R1
-
-    MessageBox MB_OKCANCEL|MB_ICONEXCLAMATION \
-        "$(MessageUninstallExisting)" \
-        IDOK uninst
-    Abort
-
-    ;Run the uninstaller
-    uninst:
-        ClearErrors
-        HideWindow
-        ClearErrors
-        ExecWait '"$R0" _?=$R1'
-        BringToFront
-
-    done:
-FunctionEnd
 ####################################################################
 # uninstall
 
@@ -460,11 +435,6 @@ Section "Uninstall"
 
   ; Remove start menu stuff, located in all users folder
   SetShellVarContext all 
-  Delete "$SMPROGRAMS\Dev-C++\Red Panda Dev-C++.lnk"
-  Delete "$SMPROGRAMS\Dev-C++\License.lnk"
-  Delete "$SMPROGRAMS\Dev-C++\Uninstall Red Panda Dev-C++.lnk"
-  RMDir "$SMPROGRAMS\Dev-C++"
-
   Delete "$SMPROGRAMS\$(MessageAppName)\$(MessageAppName).lnk"
   Delete "$SMPROGRAMS\$(MessageAppName)\License.lnk"
   Delete "$SMPROGRAMS\$(MessageAppName)\Uninstall $(MessageAppName).lnk"
@@ -472,8 +442,8 @@ Section "Uninstall"
   
   ; Remove desktop stuff, located in current user folder
   SetShellVarContext current
-  Delete "$QUICKLAUNCH\Red Panda Dev-C++.lnk"
-  Delete "$DESKTOP\Red Panda Dev-C++.lnk"
+  Delete "$QUICKLAUNCH\$(MessageAppName).lnk"
+  Delete "$DESKTOP\$(MessageAppName).lnk"
 
   ; Restore file associations
   StrCpy $0 ".dev"
