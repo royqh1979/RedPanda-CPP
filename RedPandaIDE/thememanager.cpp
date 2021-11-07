@@ -115,6 +115,7 @@ void AppTheme::load(const QString &filename)
         QJsonObject obj=doc.object();
         mName = obj["name"].toString();
         mIsDark = obj["isDark"].toBool(false);
+        mDefaultColorScheme = obj["default scheme"].toString();
         QJsonObject colors = obj["palette"].toObject();
         const QMetaObject &m = *metaObject();
         QMetaEnum e = m.enumerator(m.indexOfEnumerator("ColorRole"));
@@ -154,6 +155,16 @@ QPalette AppTheme::initialPalette()
 {
     static QPalette palette = copyPalette(QApplication::palette());
     return palette;
+}
+
+const QString &AppTheme::defaultColorScheme() const
+{
+    return mDefaultColorScheme;
+}
+
+void AppTheme::setDefaultColorScheme(const QString &newDefaultColorScheme)
+{
+    mDefaultColorScheme = newDefaultColorScheme;
 }
 
 bool AppTheme::isDark() const

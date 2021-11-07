@@ -1,6 +1,7 @@
 {
         "name":"default",
         "isDark":false,
+        "default scheme": "Intellij Classic",
 	"palette": {
 	}
 }

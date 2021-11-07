@@ -5,6 +5,7 @@
 #include <QStyleFactory>
 #include "../settings.h"
 #include "../mainwindow.h"
+#include "../thememanager.h"
 
 EnvironmentAppearenceWidget::EnvironmentAppearenceWidget(const QString& name, const QString& group, QWidget *parent) :
     SettingsWidget(name,group,parent),
@@ -44,6 +45,14 @@ void EnvironmentAppearenceWidget::doLoad()
 
 void EnvironmentAppearenceWidget::doSave()
 {
+    if (pSettings->environment().theme()!=ui->cbTheme->currentText()) {
+        ThemeManager themeManager;
+        PAppTheme appTheme = themeManager.theme(ui->cbTheme->currentText());
+        if (appTheme && !appTheme->defaultColorScheme().isEmpty()) {
+            pSettings->editor().setColorScheme(appTheme->defaultColorScheme());
+            pMainWindow->updateEditorColorSchemes();
+        }
+    }
     pSettings->environment().setTheme(ui->cbTheme->currentText());
     pSettings->environment().setInterfaceFont(ui->cbFont->currentFont().family());
     pSettings->environment().setInterfaceFontSize(ui->spinFontSize->value());

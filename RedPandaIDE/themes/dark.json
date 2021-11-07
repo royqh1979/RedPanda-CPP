@@ -1,6 +1,7 @@
 {
     "name":"dark",
     "isDark": true,
+    "default scheme": "VS Code",
     "palette": {
         "PaletteWindow":"#19232D",
         "PaletteWindowText":"#E0E1E3",

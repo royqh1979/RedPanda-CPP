@@ -15,6 +15,7 @@ EditorColorSchemeWidget::EditorColorSchemeWidget(const QString& name, const QStr
     ui(new Ui::EditorColorSchemeWidget)
 {
     ui->setupUi(this);
+    mStatementColors = std::make_shared<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> >>();
 
     mDefaultSchemeComboFont = ui->cbScheme->font();
     mModifiedSchemeComboFont = mDefaultSchemeComboFont;
@@ -67,6 +68,7 @@ EditorColorSchemeWidget::EditorColorSchemeWidget(const QString& name, const QStr
             "}\n"
                 );
     ui->editDemo->setReadOnly(true);
+    ui->editDemo->setStatementColors(mStatementColors);
     onItemSelectionChanged();
 }
 
@@ -225,6 +227,7 @@ void EditorColorSchemeWidget::onItemSelectionChanged()
 
 void EditorColorSchemeWidget::onSettingChanged()
 {
+    pColorManager->updateStatementColors(mStatementColors,ui->cbScheme->currentText());
     ui->editDemo->applyColorScheme(ui->cbScheme->currentText());
 }
 

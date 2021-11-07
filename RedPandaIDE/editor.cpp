@@ -161,6 +161,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
         resetBookmarks();
         resetBreakpoints();
     }
+    mStatementColors = pMainWindow->statementColors();
 }
 
 Editor::~Editor() {
@@ -880,7 +881,7 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
                 kind = StatementKind::skVariable;
             }
         }
-        PColorSchemeItem item = pMainWindow->statementColors()->value(kind,PColorSchemeItem());
+        PColorSchemeItem item = mStatementColors->value(kind,PColorSchemeItem());
 
         if (item) {
             foreground = item->foreground();
@@ -3136,6 +3137,16 @@ void Editor::onExportedFormatToken(PSynHighlighter syntaxHighlighter, int Line, 
             break;
         }
     }
+}
+
+const std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > &Editor::statementColors() const
+{
+    return mStatementColors;
+}
+
+void Editor::setStatementColors(const std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > &newStatementColors)
+{
+    mStatementColors = newStatementColors;
 }
 
 bool Editor::useCppSyntax() const

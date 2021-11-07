@@ -459,61 +459,15 @@ void MainWindow::updateEditorColorSchemes()
 
     mEditorList->applyColorSchemes(pSettings->editor().colorScheme());
     QString schemeName = pSettings->editor().colorScheme();
+    pColorManager->updateStatementColors(mStatementColors,schemeName);
     //color for code completion popup
     PColorSchemeItem item;
-    item = pColorManager->getItem(schemeName, SYNS_AttrFunction);
     QColor baseColor = palette().color(QPalette::Base);
-    if (item) {
-        mStatementColors->insert(StatementKind::skFunction,item);
-        mStatementColors->insert(StatementKind::skConstructor,item);
-        mStatementColors->insert(StatementKind::skDestructor,item);
-    }
-    item = pColorManager->getItem(schemeName, SYNS_AttrClass);
-    if (item) {
-        mStatementColors->insert(StatementKind::skClass,item);
-        mStatementColors->insert(StatementKind::skTypedef,item);
-        mStatementColors->insert(StatementKind::skAlias,item);
-    }
-    item = pColorManager->getItem(schemeName, SYNS_AttrIdentifier);
-    if (item) {
-        mStatementColors->insert(StatementKind::skEnumType,item);
-        mStatementColors->insert(StatementKind::skEnumClassType,item);
-    }
-    item = pColorManager->getItem(schemeName, SYNS_AttrVariable);
-    if (item) {
-        mStatementColors->insert(StatementKind::skVariable,item);
-    }
-    item = pColorManager->getItem(schemeName, SYNS_AttrLocalVariable);
-    if (item) {
-        mStatementColors->insert(StatementKind::skLocalVariable,item);
-        mStatementColors->insert(StatementKind::skParameter,item);
-    }
-    item = pColorManager->getItem(schemeName, SYNS_AttrGlobalVariable);
-    if (item) {
-        mStatementColors->insert(StatementKind::skGlobalVariable,item);
-    }
     item = pColorManager->getItem(schemeName, SYNS_AttrPreprocessor);
     if (item) {
-        mStatementColors->insert(StatementKind::skPreprocessor,item);
-        mStatementColors->insert(StatementKind::skEnum,item);
-//        if (haveGoodContrast(item->foreground(), baseColor)) {
-//            mHeaderCompletionPopup->setSuggestionColor(item->foreground());
-//        } else {
-//            mHeaderCompletionPopup->setSuggestionColor(palette().color(QPalette::Text));
-//        }
         mHeaderCompletionPopup->setSuggestionColor(item->foreground());
     } else  {
         mHeaderCompletionPopup->setSuggestionColor(palette().color(QPalette::Text));
-    }
-    item = pColorManager->getItem(schemeName, SYNS_AttrReservedWord);
-    if (item) {
-        mStatementColors->insert(StatementKind::skKeyword,item);
-        mStatementColors->insert(StatementKind::skUserCodeSnippet,item);
-    }
-    item = pColorManager->getItem(schemeName, SYNS_AttrString);
-    if (item) {
-        mStatementColors->insert(StatementKind::skNamespace,item);
-        mStatementColors->insert(StatementKind::skNamespaceAlias,item);
     }
     item = pColorManager->getItem(schemeName, COLOR_SCHEME_ERROR);
     if (item && haveGoodContrast(item->foreground(), baseColor)) {

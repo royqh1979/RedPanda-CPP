@@ -661,6 +661,56 @@ bool ColorManager::saveScheme(const QString &name)
     return true;
 }
 
+void ColorManager::updateStatementColors(std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > statementColors, const QString &schemeName)
+{
+    PColorSchemeItem item;
+    item = getItem(schemeName, SYNS_AttrFunction);
+    if (item) {
+        statementColors->insert(StatementKind::skFunction,item);
+        statementColors->insert(StatementKind::skConstructor,item);
+        statementColors->insert(StatementKind::skDestructor,item);
+    }
+    item = getItem(schemeName, SYNS_AttrClass);
+    if (item) {
+        statementColors->insert(StatementKind::skClass,item);
+        statementColors->insert(StatementKind::skTypedef,item);
+        statementColors->insert(StatementKind::skAlias,item);
+    }
+    item = getItem(schemeName, SYNS_AttrIdentifier);
+    if (item) {
+        statementColors->insert(StatementKind::skEnumType,item);
+        statementColors->insert(StatementKind::skEnumClassType,item);
+    }
+    item = getItem(schemeName, SYNS_AttrVariable);
+    if (item) {
+        statementColors->insert(StatementKind::skVariable,item);
+    }
+    item = getItem(schemeName, SYNS_AttrLocalVariable);
+    if (item) {
+        statementColors->insert(StatementKind::skLocalVariable,item);
+        statementColors->insert(StatementKind::skParameter,item);
+    }
+    item = getItem(schemeName, SYNS_AttrGlobalVariable);
+    if (item) {
+        statementColors->insert(StatementKind::skGlobalVariable,item);
+    }
+    item = getItem(schemeName, SYNS_AttrPreprocessor);
+    if (item) {
+        statementColors->insert(StatementKind::skPreprocessor,item);
+        statementColors->insert(StatementKind::skEnum,item);
+    }
+    item = getItem(schemeName, SYNS_AttrReservedWord);
+    if (item) {
+        statementColors->insert(StatementKind::skKeyword,item);
+        statementColors->insert(StatementKind::skUserCodeSnippet,item);
+    }
+    item = getItem(schemeName, SYNS_AttrString);
+    if (item) {
+        statementColors->insert(StatementKind::skNamespace,item);
+        statementColors->insert(StatementKind::skNamespaceAlias,item);
+    }
+}
+
 QString ColorManager::generateFullPathname(const QString &name, bool isBundled, bool isCustomed)
 {
     QString filename = generateFilename(name,isCustomed);

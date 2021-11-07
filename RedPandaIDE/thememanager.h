@@ -66,12 +66,16 @@ public:
 
     bool isDark() const;
 
+    const QString &defaultColorScheme() const;
+    void setDefaultColorScheme(const QString &newDefaultColorScheme);
+
 private:
     static QPalette initialPalette();
 private:
     QHash<int,QColor> mColors;
     QString mName;
     bool mIsDark;
+    QString mDefaultColorScheme;
 };
 
 using PAppTheme = std::shared_ptr<AppTheme>;

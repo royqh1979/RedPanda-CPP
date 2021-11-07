@@ -2,7 +2,8 @@
 #define COLORSCHEME_H
 
 #include <QColor>
-#include <qsynedit/highlighter/base.h>
+#include "qsynedit/highlighter/base.h"
+#include "parser/statementmodel.h"
 
 #define EXT_COLOR_SCHEME ".scheme"
 #define EXT_PREFIX_CUSTOM ".custom"
@@ -146,6 +147,9 @@ public:
     bool removeDefine(const QString &name);
     PColorSchemeItemDefine getDefine(const QString& name);
     bool saveScheme(const QString &name);
+    void updateStatementColors(
+            std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > statementColors,
+            const QString& schemeName);
 private:
     QString generateFullPathname(const QString& name, bool isBundled, bool isCustomed);
     QString generateFilename(const QString& name, bool isCustomed);

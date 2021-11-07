@@ -45,6 +45,7 @@ private:
     QFont mModifiedSchemeComboFont;
     QSet<QString> mModifiedSchemes;
     QMenu mMenu;
+    std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > mStatementColors;
 
     // SettingsWidget interface
 protected:

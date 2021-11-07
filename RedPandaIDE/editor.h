@@ -272,6 +272,7 @@ private:
     QList<PTabStop> mUserCodeInTabStops;
     BufferCoord mHighlightCharPos1;
     BufferCoord mHighlightCharPos2;
+    std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > mStatementColors;
 
     // QWidget interface
 protected:
@@ -302,6 +303,9 @@ public:
 
     bool useCppSyntax() const;
     void setUseCppSyntax(bool newUseCppSyntax);
+
+    const std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > &statementColors() const;
+    void setStatementColors(const std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > &newStatementColors);
 
 protected:
     void mouseReleaseEvent(QMouseEvent *event) override;
