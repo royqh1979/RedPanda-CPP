@@ -282,11 +282,6 @@ void SynEditCppHighlighter::ansiCppProc()
         }
     }
     while (mLine[mRun]!=0) {
-        if ( isSpaceChar(mLine[mRun]) ) {
-            mRange.spaceState = mRange.state;
-            mRange.state = RangeState::rsSpace;
-            return;
-        }
         mRun+=1;
     }
     mRange.state = RangeState::rsCppCommentEnded;
@@ -321,12 +316,6 @@ void SynEditCppHighlighter::ansiCProc()
             } else
                 mRun+=1;
             break;
-        case 9:
-        case 32:
-            mRange.spaceState = mRange.state;
-            mRange.state = RangeState::rsSpace;
-            finishProcess = true;
-            break;
         default:
             mRun+=1;
         }
@@ -339,11 +328,6 @@ void SynEditCppHighlighter::asciiCharProc()
 {
     mTokenId = TokenKind::Char;
     do {
-        if (isSpaceChar(mLine[mRun])) {
-            mRange.spaceState = RangeState::rsChar;
-            mRange.state = RangeState::rsSpace;
-            return;
-        }
         if (mLine[mRun] == '\\') {
             if (mLine[mRun+1] == '\'' || mLine[mRun+1] == '\\') {
                 mRun+=1;
@@ -436,11 +420,6 @@ void SynEditCppHighlighter::directiveProc()
     }
     mTokenId = TokenKind::Directive;
     do {
-        if (isSpaceChar(mLine[mRun])) {
-            mRange.spaceState = RangeState::rsMultiLineDirective;
-            mRange.state = RangeState::rsSpace;
-            return;
-        }
         switch(mLine[mRun].unicode()) {
         case '/': //comment?
             switch (mLine[mRun+1].unicode()) {
@@ -473,11 +452,6 @@ void SynEditCppHighlighter::directiveEndProc()
     }
     mRange.state = RangeState::rsUnknown;
     do {
-        if (isSpaceChar(mLine[mRun])) {
-            mRange.spaceState = RangeState::rsMultiLineDirective;
-            mRange.state = RangeState::rsSpace;
-            return;
-        }
         switch(mLine[mRun].unicode()) {
         case '/': //comment?
             switch (mLine[mRun+1].unicode()) {
@@ -887,16 +861,6 @@ void SynEditCppHighlighter::rawStringProc()
         case ')':
             noEscaping = false;
             break;
-        case ' ':
-        case '\t':
-            mRange.state = rsSpace;
-            if (noEscaping) {
-                mRange.spaceState = RangeState::rsRawStringNotEscaping;
-            } else {
-                mRange.spaceState = RangeState::rsRawStringEscaping;
-            }
-            return;
-            break;
         }
         mRun+=1;
     }
@@ -974,8 +938,7 @@ void SynEditCppHighlighter::spaceProc()
     mTokenId = TokenKind::Space;
     while (mLine[mRun]>=1 && mLine[mRun]<=32)
         mRun+=1;
-    mRange.state = mRange.spaceState;
-    mRange.spaceState = RangeState::rsUnknown;
+    mRange.state = RangeState::rsUnknown;
 }
 
 void SynEditCppHighlighter::squareCloseProc()
@@ -1021,11 +984,6 @@ void SynEditCppHighlighter::stringEndProc()
         if (mLine[mRun]=='"') {
             mRun += 1;
             break;
-        }
-        if (isSpaceChar(mLine[mRun])) {
-            mRange.spaceState = RangeState::rsMultiLineString;
-            mRange.state = RangeState::rsSpace;
-            return;
         }
         if (mLine[mRun].unicode()=='\\') {
             switch(mLine[mRun+1].unicode()) {
@@ -1159,11 +1117,6 @@ void SynEditCppHighlighter::stringProc()
         if (mLine[mRun]=='"') {
             mRun+=1;
             break;
-        }
-        if (isSpaceChar(mLine[mRun])) {
-            mRange.spaceState = RangeState::rsString;
-            mRange.state = RangeState::rsSpace;
-            return;
         }
         if (mLine[mRun].unicode()=='\\') {
             switch(mLine[mRun+1].unicode()) {
@@ -1488,9 +1441,6 @@ void SynEditCppHighlighter::next()
         case RangeState::rsMultiLineString:
             stringEndProc();
             break;
-        case RangeState::rsSpace:
-            spaceProc();
-            break;
         case RangeState::rsRawStringEscaping:
         case RangeState::rsRawStringNotEscaping:
             rawStringProc();
@@ -1608,7 +1558,6 @@ void SynEditCppHighlighter::setState(const SynRangeState& rangeState)
 void SynEditCppHighlighter::resetState()
 {
     mRange.state = RangeState::rsUnknown;
-    mRange.spaceState = RangeState::rsUnknown;
     mRange.braceLevel = 0;
     mRange.bracketLevel = 0;
     mRange.parenthesisLevel = 0;

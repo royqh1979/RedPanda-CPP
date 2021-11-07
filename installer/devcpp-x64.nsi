@@ -3,7 +3,7 @@
 
 !define COMPILERNAME "MinGW-w64 X86_64 GCC 11.2"
 !define COMPILERFOLDER "MinGW64"
-!define DEVCPP_VERSION "0.8.0.beta"
+!define DEVCPP_VERSION "beta.0.8.0"
 !define FINALNAME "RedPanda-Cpp.7.${DEVCPP_VERSION}.${COMPILERNAME}.Setup.exe"
 !define DISPLAY_NAME "Red Panda Dev-C++ 7 ${DEVCPP_VERSION}"
 
@@ -20,9 +20,11 @@ OutFile "${FINALNAME}"
 Caption "${DISPLAY_NAME}"
 
 LicenseData "LICENSE"
-InstallDir $PROGRAMFILES\RedPanda-Cpp
+InstallDir $PROGRAMFILES64\RedPanda-Cpp
 ####################################################################
 # Interface Settings
+
+SetRegView 64
 
 ShowInstDetails show
 AutoCloseWindow false
@@ -39,7 +41,7 @@ InstType "Minimal";2
 InstType "Safe";3
 
 ## Remember the installer language
-!define MUI_LANGDLL_REGISTRY_ROOT "HKCU"
+!define MUI_LANGDLL_REGISTRY_ROOT "HKLM"
 !define MUI_LANGDLL_REGISTRY_KEY "Software\RedPanda-C++"
 !define MUI_LANGDLL_REGISTRY_VALUENAME "Installer Language"
 
@@ -67,31 +69,6 @@ InstType "Safe";3
 
 !insertmacro MUI_LANGUAGE "English"
 !insertmacro MUI_LANGUAGE "SimpChinese"
-!insertmacro MUI_LANGUAGE "TradChinese"
-!insertmacro MUI_LANGUAGE "Bulgarian"
-!insertmacro MUI_LANGUAGE "Catalan"
-!insertmacro MUI_LANGUAGE "Croatian"
-!insertmacro MUI_LANGUAGE "Czech"
-!insertmacro MUI_LANGUAGE "Danish"
-!insertmacro MUI_LANGUAGE "Dutch"
-!insertmacro MUI_LANGUAGE "Estonian"
-!insertmacro MUI_LANGUAGE "French"
-!insertmacro MUI_LANGUAGE "German"
-!insertmacro MUI_LANGUAGE "Greek"
-!insertmacro MUI_LANGUAGE "Hungarian"
-!insertmacro MUI_LANGUAGE "Italian"
-!insertmacro MUI_LANGUAGE "Korean"
-!insertmacro MUI_LANGUAGE "Latvian"
-!insertmacro MUI_LANGUAGE "Polish"
-!insertmacro MUI_LANGUAGE "Portuguese"
-!insertmacro MUI_LANGUAGE "Romanian"
-!insertmacro MUI_LANGUAGE "Russian"
-!insertmacro MUI_LANGUAGE "Slovak"
-!insertmacro MUI_LANGUAGE "Slovenian"
-!insertmacro MUI_LANGUAGE "Spanish"
-!insertmacro MUI_LANGUAGE "Swedish"
-!insertmacro MUI_LANGUAGE "Turkish"
-!insertmacro MUI_LANGUAGE "Ukrainian"
 
 ####################################################################
 # Files, by option section
@@ -267,10 +244,10 @@ Section "$(SectionMenuLaunchName)" SectionMenuLaunch
   ; always use all user start menu, normal users can delete these
   SetShellVarContext all 
   StrCpy $0 $SMPROGRAMS ; start menu Programs folder
-  CreateDirectory "$0\Dev-C++"
-  CreateShortCut "$0\Dev-C++\Red Panda Dev-C++.lnk" "$INSTDIR\RedPandaIDE.exe"
-  CreateShortCut "$0\Dev-C++\License.lnk" "$INSTDIR\LICENSE"
-  CreateShortCut "$0\Dev-C++\Uninstall Red Panda Dev-C++.lnk" "$INSTDIR\uninstall.exe"
+  CreateDirectory "$0\$(MessageAppName)"
+  CreateShortCut "$0\$(MessageAppName)\$(MessageAppName).lnk" "$INSTDIR\RedPandaIDE.exe"
+  CreateShortCut "$0\$(MessageAppName)\License.lnk" "$INSTDIR\LICENSE"
+  CreateShortCut "$0\$(MessageAppName)\Uninstall $(MessageAppName).lnk" "$INSTDIR\uninstall.exe"
 SectionEnd
 
 Section "$(SectionDesktopLaunchName)" SectionDesktopLaunch
@@ -286,7 +263,7 @@ SubSectionEnd
 Section "$(SectionConfigName)" SectionConfig
   SectionIn 3
 
-  RMDir /r "$APPDATA\RedPanda-C++"
+  RMDir /r "$APPDATA\RedPandaIDE"
   
 SectionEnd
 
@@ -318,6 +295,9 @@ FunctionEnd
 Function myGuiInit
 
   ; uninstall existing
+  SetRegView 32
+  Call UninstallExisting
+  SetRegView 64
   Call UninstallExisting
 
 FunctionEnd
@@ -442,6 +422,31 @@ Function UninstallExisting
 
     done:
 FunctionEnd
+
+Function UninstallExisting
+    ReadRegStr $R0 HKLM  "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++"  "UninstallString"
+
+    StrCmp $R0 "" done
+
+    Push $R0
+    Call GetParent
+    Pop $R1
+
+    MessageBox MB_OKCANCEL|MB_ICONEXCLAMATION \
+        "$(MessageUninstallExisting)" \
+        IDOK uninst
+    Abort
+
+    ;Run the uninstaller
+    uninst:
+        ClearErrors
+        HideWindow
+        ClearErrors
+        ExecWait '"$R0" _?=$R1'
+        BringToFront
+
+    done:
+FunctionEnd
 ####################################################################
 # uninstall
 
@@ -459,6 +464,11 @@ Section "Uninstall"
   Delete "$SMPROGRAMS\Dev-C++\License.lnk"
   Delete "$SMPROGRAMS\Dev-C++\Uninstall Red Panda Dev-C++.lnk"
   RMDir "$SMPROGRAMS\Dev-C++"
+
+  Delete "$SMPROGRAMS\$(MessageAppName)\$(MessageAppName).lnk"
+  Delete "$SMPROGRAMS\$(MessageAppName)\License.lnk"
+  Delete "$SMPROGRAMS\$(MessageAppName)\Uninstall $(MessageAppName).lnk"
+  RMDir "$SMPROGRAMS\$(MessageAppName)"
   
   ; Remove desktop stuff, located in current user folder
   SetShellVarContext current
@@ -510,7 +520,7 @@ Section "Uninstall"
   IfSilent +2 ; Don't ask when running in silent mode
   MessageBox MB_YESNO "$(MessageRemoveConfig)" IDNO Done
 
-  RMDir /r "$APPDATA\RedPanda-C++"
+  RMDir /r "$APPDATA\RedPandaIDE"
 
 Done:
 SectionEnd

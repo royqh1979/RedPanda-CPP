@@ -19,7 +19,6 @@ enum SynIndentType {
 
 struct SynRangeState {
     int state;  // current syntax parsing state
-    int spaceState; // the last syntax parsing state before meeting space
     int braceLevel; // current braces embedding level (needed by rainbow color)
     int bracketLevel; // current brackets embedding level (needed by rainbow color)
     int parenthesisLevel; // current parenthesis embedding level (needed by rainbow color)

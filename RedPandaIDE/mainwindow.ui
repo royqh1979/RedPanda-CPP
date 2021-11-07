@@ -1233,7 +1233,7 @@
                   </property>
                   <property name="icon">
                    <iconset resource="icons.qrc">
-                    <normaloff>:/icons/images/newlook24/047-makefl.png</normaloff>:/icons/images/newlook24/047-makefl.png</iconset>
+                    <normaloff>:/icons/images/newlook24/091-openproblemanswer.png</normaloff>:/icons/images/newlook24/091-openproblemanswer.png</iconset>
                   </property>
                  </widget>
                 </item>
@@ -1254,7 +1254,7 @@
                   </property>
                   <property name="icon">
                    <iconset resource="icons.qrc">
-                    <normaloff>:/icons/images/newlook24/069-run.png</normaloff>:/icons/images/newlook24/069-run.png</iconset>
+                    <normaloff>:/icons/images/newlook24/092-runallproblemcases.png</normaloff>:/icons/images/newlook24/092-runallproblemcases.png</iconset>
                   </property>
                  </widget>
                 </item>

@@ -583,7 +583,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
                         insertString.append(" * ");
                         insertString.append(QString(" * @return ")+USER_CODE_IN_INSERT_POS);
                     }
-                    insertString.append(" **/");
+                    insertString.append(" */");
 //                } else if (caretY()==1) { /* file header */
 //                    insertString.append(QString(" * @file %1<SOURCEPATH>%2")
 //                                        .arg(USER_CODE_IN_REPL_POS_BEGIN)
@@ -597,7 +597,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
 //                    insertString.append(" **/");
                 } else {
                     insertString.append(QString(" * ")+USER_CODE_IN_INSERT_POS);
-                    insertString.append(" **/");
+                    insertString.append(" */");
                 }
                 insertCodeSnippet(LinesToText(insertString));
             } else if (highlighter()
@@ -1664,7 +1664,9 @@ bool Editor::handleSymbolCompletion(QChar key)
           }
           return false;
     case '*':
+        qDebug()<<"???";
           status = getQuoteStatus();
+        qDebug()<<(int)status;
           if (pSettings->editor().completeComment() && (status == QuoteStatus::NotQuote)) {
               return handleMultilineCommentCompletion();
           }
@@ -1769,7 +1771,8 @@ bool Editor::handleBracketSkip()
 
 bool Editor::handleMultilineCommentCompletion()
 {
-    if (((caretX() > 1) && (caretX()-1 < lineText().length())) && (lineText()[caretX() - 1] == '/')) {
+    qDebug()<<caretX()-1<<" "<<lineText().length();
+    if ((caretX()-2 < lineText().length()) && (lineText()[caretX() - 2] == '/')) {
         beginUpdate();
         commandProcessor(SynEditorCommand::ecChar,'*');
         BufferCoord oldCaret = caretXY();

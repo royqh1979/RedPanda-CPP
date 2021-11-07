@@ -12,6 +12,9 @@ Version 0.8.1 For Dev-C++ 7 Beta
  - fix: one line 'while' statement dosen't correctly indents
  - fix: line start with  '{' that follow an un-ended 'if'/'for' statement is not correctly un-indented
  - fix: multi-line comments indents calculation
+ - fix: Installer should install the app in "program files", not "program files (x86)"
+ - fix: symbol completion for '/*' not work
+ - fix: javadoc-style docstring indents calculation
 
 Version 0.8 For Dev-C++ 7 Beta
  - fix: find in the current file is not correcly saved in the search history

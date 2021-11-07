@@ -213,7 +213,6 @@ bool SynRangeState::operator==(const SynRangeState &s2)
 {
     // indents contains the information of brace/parenthesis/brackets embedded levels
     return (state == s2.state)
-            && (spaceState == s2.spaceState)
             && (indents == s2.indents)
             ;
 }

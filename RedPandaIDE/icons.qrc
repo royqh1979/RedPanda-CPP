@@ -487,5 +487,7 @@
         <file>images/classparser/var_protected.ico</file>
         <file>images/classparser/var_public.ico</file>
         <file>images/editor/bookmark.png</file>
+        <file>images/newlook24/091-openproblemanswer.png</file>
+        <file>images/newlook24/092-runallproblemcases.png</file>
     </qresource>
 </RCC>

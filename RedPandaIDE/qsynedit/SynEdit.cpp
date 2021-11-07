@@ -1419,7 +1419,9 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
         SynRangeState rangePreceeding = mLines->ranges(startLine-1);
         mHighlighter->setState(rangePreceeding);
         if (addIndent) {
-            mHighlighter->setLine(lineText.trimmed(),line-1);
+            QString trimmedS = s.trimmed();
+            QString trimmedLineText = lineText.trimmed();
+            mHighlighter->setLine(trimmedLineText,line-1);
             SynRangeState rangeAfterFirstToken = mHighlighter->getRangeState();
             QString firstToken = mHighlighter->getToken();
             PSynHighlighterAttribute attr = mHighlighter->getTokenAttribute();
@@ -1436,7 +1438,7 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
                 attr = mHighlighter->getTokenAttribute();
             }
             bool dontAddIndent = false;
-            bool addOwnIndent = false;
+            int additionIndent = 0;
             QVector<int> matchingIndents;
             int l;
             if (attr == mHighlighter->symbolAttribute()
@@ -1446,12 +1448,12 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
                 dontAddIndent = true;
                 l = startLine;
             } else if (mHighlighter->isLastLineCommentNotFinished(rangePreceeding.state)
-                       && (lineText.startsWith(' ')
-                           || lineText.startsWith('\t'))
+                       && (trimmedLineText.startsWith("*"))
                        ) {
-                // last line is a not finished comment, and this line start with indents
-                // we should use indents of the line comment beginning, plus this line's indents
-                addOwnIndent=true;
+                // last line is a not finished comment, and this line start with "*"
+                // it means this line is a docstring, should indents according to
+                // the line the comment beginning , and add 1 additional space
+                additionIndent = 1;
                 int commentStartLine = startLine-1;
                 SynRangeState range;
                 while (commentStartLine>=1) {
@@ -1472,33 +1474,9 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
                 matchingIndents = range.matchingIndents;
                 dontAddIndent = true;
                 l = commentStartLine;
-            } else if (mHighlighter->isLastLineStringNotFinished(rangePreceeding.state)
-                       && (lineText.startsWith(' ')
-                           || lineText.startsWith('\t'))
-                       ) {
-                // last line is a not finished string, and this line start with indents
-                // we should use indents of the line string beginning, plus this line's indents
-                addOwnIndent=true;
-                int commentStartLine = startLine-1;
-                SynRangeState range;
-                while (commentStartLine>=1) {
-                    range = mLines->ranges(commentStartLine-1);
-                    if (!mHighlighter->isLastLineStringNotFinished(range.state)){
-                        commentStartLine++;
-                        break;
-                    }
-                    if (!range.matchingIndents.isEmpty()
-                            || range.firstIndentThisLine<range.indents.length())
-                        break;
-                    commentStartLine--;
-                }
-                if (commentStartLine<1)
-                    commentStartLine = 1;
-                indentSpaces = leftSpaces(mLines->getString(commentStartLine-1));
-                range = mLines->ranges(commentStartLine-1);
-                matchingIndents = range.matchingIndents;
-                dontAddIndent = true;
-                l = commentStartLine;
+            } else if (trimmedS.startsWith("*")) {
+                // fix indents for line like " */"
+                indentSpaces--;
             } else {
                 // we just use infos till preceeding line's end to calc indents
                 matchingIndents = rangePreceeding.matchingIndents;
@@ -1564,9 +1542,7 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
                     dontAddIndent = true;
                 }
             }
-            if (addOwnIndent) {
-                indentSpaces += leftSpaces(lineText);
-            }
+            indentSpaces += additionIndent;
         }
     }
     return std::max(0,indentSpaces);
