@@ -313,6 +313,7 @@ void SynEditCppHighlighter::ansiCProc()
                 } else {
                     mRange.state = RangeState::rsUnknown;
                 }
+                finishProcess = true;
             } else
                 mRun+=1;
             break;

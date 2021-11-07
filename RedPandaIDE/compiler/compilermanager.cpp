@@ -216,10 +216,14 @@ void CompilerManager::run(const QString &filename, const QString &arguments, con
             consoleFlag |= RPF_REDIRECT_INPUT;
         if (pSettings->executor().pauseConsole())
             consoleFlag |= RPF_PAUSE_CONSOLE;
-        QString newArguments = QString(" %1 \"%2\" %3")
-                .arg(consoleFlag)
-                .arg(toLocalPath(filename)).arg(arguments);
-        execRunner = new ExecutableRunner(includeTrailingPathDelimiter(pSettings->dirs().app())+"ConsolePauser.exe",newArguments,workDir);
+        if (consoleFlag!=0) {
+            QString newArguments = QString(" %1 \"%2\" %3")
+                    .arg(consoleFlag)
+                    .arg(toLocalPath(filename)).arg(arguments);
+            execRunner = new ExecutableRunner(includeTrailingPathDelimiter(pSettings->dirs().app())+"ConsolePauser.exe",newArguments,workDir);
+        } else {
+            execRunner = new ExecutableRunner(filename,arguments,workDir);
+        }
         execRunner->setStartConsole(true);
     } else {
         execRunner = new ExecutableRunner(filename,arguments,workDir);

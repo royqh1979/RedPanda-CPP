@@ -1,3 +1,6 @@
+Version 0.8.2 For Dev-C++ 7 Beta
+ - fix: highlighter can't correctly find the end of ANSI C-style Comments
+
 Version 0.8.1 For Dev-C++ 7 Beta
  - fix: ConsolePaurser.exe only exits when press ENTER
  - fix: input/output/expected textedit in the problem view shouldn't autowrap lines

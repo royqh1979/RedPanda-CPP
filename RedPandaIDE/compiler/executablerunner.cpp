@@ -87,11 +87,9 @@ void ExecutableRunner::run()
                     [&](){
                         errorOccurred= true;
                     });
-//    qDebug() << mFilename;
-//    qDebug() << QProcess::splitCommand(mArguments);
-    if (!redirectInput()) {
-        process.closeWriteChannel();
-    }
+//    if (!redirectInput()) {
+//        process.closeWriteChannel();
+//    }
     process.start();
     process.waitForStarted(5000);
     if (process.state()==QProcess::Running && redirectInput()) {
