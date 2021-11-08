@@ -167,6 +167,7 @@ public:
     void exportAsRTF(const QString& rtfFilename);
     void exportAsHTML(const QString& htmlFilename);
     void resetBreakpoints();
+    bool notParsed();
 
     const PCppParser &parser();
 

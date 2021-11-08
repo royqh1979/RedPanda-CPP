@@ -4774,24 +4774,22 @@ PSymbolUsageManager &MainWindow::symbolUsageManager()
 
 static void updateEditorParser(QTabWidget* tabWidget,
                                Editor* editor) {
-    qDebug()<<"update editors";
-    qDebug()<<pSettings->codeCompletion().clearWhenEditorHidden();
     if (pSettings->codeCompletion().clearWhenEditorHidden()) {
         for (int i=0;i<tabWidget->count();i++) {
             Editor * e = (Editor*)(tabWidget->widget(i));
             if (!e->inProject()) {
-                if (e==editor) {
-                    resetCppParser(e->parser());
-                    e->reparse();
-                } else {
-                    qDebug()<<"clear editor:"<<e->filename();
-                    //e->initParser();
+                if (e!=editor && e->parser() && !e->notParsed()) {
                     e->parser()->reset();
                 }
             }
         }
     }
+    if (editor && editor->parser() && editor->notParsed()) {
+        resetCppParser(editor->parser());
+        editor->reparse();
+    }
 }
+
 void MainWindow::on_EditorTabsLeft_currentChanged(int)
 {
     Editor * editor = mEditorList->getEditor(-1,ui->EditorTabsLeft);

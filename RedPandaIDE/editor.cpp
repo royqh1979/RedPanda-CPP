@@ -1595,6 +1595,13 @@ void Editor::resetBreakpoints()
     invalidate();
 }
 
+bool Editor::notParsed()
+{
+    if (!mParser)
+        return true;
+    return mParser->findFileIncludes(mFilename)==nullptr;
+}
+
 QChar Editor::getCurrentChar()
 {
     if (lineText().length()<caretX())
