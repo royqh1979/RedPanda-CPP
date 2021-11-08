@@ -524,7 +524,8 @@ private:
     BufferCoord getPreviousLeftBrace(int x,int y);
     bool canDoBlockIndent();
 
-    QRect calculateCaretRect();
+    QRect calculateCaretRect() const;
+    QRect calculateInputCaretRect() const;
 
     //Commands
     void doDeleteLastChar();
@@ -717,6 +718,10 @@ void wheelEvent(QWheelEvent *event) override;
 // QAbstractScrollArea interface
 protected:
 bool viewportEvent(QEvent * event) override;
+
+// QWidget interface
+public:
+QVariant inputMethodQuery(Qt::InputMethodQuery property) const override;
 };
 
 #endif // SYNEDIT_H

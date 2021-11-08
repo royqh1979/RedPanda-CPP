@@ -60,6 +60,7 @@ MainWindow::MainWindow(QWidget *parent)
       mOpenClosingLeftPanel(false),
       mShouldRemoveAllSettings(false),
       mClosing(false),
+      mOpenningFiles(false),
       mSystemTurnedOff(false)
 {
     ui->setupUi(this);
@@ -727,7 +728,7 @@ void MainWindow::rebuildOpenedFileHisotryMenu()
         for (const QString& filename: pSettings->history().openedFiles()) {
             QAction* action = new QAction(filename,mMenuRecentFiles);
             connect(action, &QAction::triggered, [&filename,this](bool){
-                this->openFile(filename);
+                openFile(filename);
             });
             mMenuRecentFiles->addAction(action);
         }
@@ -843,8 +844,12 @@ void MainWindow::updateStatusbarMessage(const QString &s)
 void MainWindow::openFiles(const QStringList &files)
 {
     mEditorList->beginUpdate();
+    mOpenningFiles = true;
     auto end = finally([this] {
         this->mEditorList->endUpdate();
+        mOpenningFiles = false;
+        updateEditorParser(ui->EditorTabsLeft);
+        updateEditorParser(ui->EditorTabsRight);
     });
     //Check if there is a project file in the list and open it
     for (const QString& file:files) {
@@ -4772,8 +4777,10 @@ PSymbolUsageManager &MainWindow::symbolUsageManager()
     return mSymbolUsageManager;
 }
 
-static void updateEditorParser(QTabWidget* tabWidget,
-                               Editor* editor) {
+void MainWindow::updateEditorParser(QTabWidget* tabWidget) {
+    if (mOpenningFiles)
+        return;
+    Editor * editor = mEditorList->getEditor(-1,tabWidget);
     if (pSettings->codeCompletion().clearWhenEditorHidden()) {
         for (int i=0;i<tabWidget->count();i++) {
             Editor * e = (Editor*)(tabWidget->widget(i));
@@ -4790,13 +4797,26 @@ static void updateEditorParser(QTabWidget* tabWidget,
     }
 }
 
+void MainWindow::updateEditorHideTime(QTabWidget* tabWidget) {
+    Editor * editor = mEditorList->getEditor(-1,tabWidget);
+    for (int i=0;i<tabWidget->count();i++) {
+        Editor * e = (Editor*)(tabWidget->widget(i));
+        if (e!=editor) {
+            if (!e->hideTime().isValid())
+                e->setHideTime(QDateTime::currentDateTime());
+        } else {
+            e->setHideTime(QDateTime());
+        }
+    }
+}
 void MainWindow::on_EditorTabsLeft_currentChanged(int)
 {
     Editor * editor = mEditorList->getEditor(-1,ui->EditorTabsLeft);
     if (editor) {
         editor->reparseTodo();
     }
-    updateEditorParser(ui->EditorTabsLeft,editor);
+    updateEditorParser(ui->EditorTabsLeft);
+    updateEditorHideTime(ui->EditorTabsLeft);
 }
 
 
@@ -4806,7 +4826,8 @@ void MainWindow::on_EditorTabsRight_currentChanged(int)
     if (editor) {
         editor->reparseTodo();
     }
-    updateEditorParser(ui->EditorTabsRight,editor);
+    updateEditorParser(ui->EditorTabsRight);
+    updateEditorHideTime(ui->EditorTabsRight);
 }
 
 
@@ -5381,5 +5402,10 @@ void MainWindow::on_btnOpenProblemAnswer_clicked()
     if (e) {
         e->activate();
     }
+}
+
+bool MainWindow::openningFiles() const
+{
+    return mOpenningFiles;
 }
 

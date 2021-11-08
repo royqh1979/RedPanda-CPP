@@ -2404,7 +2404,7 @@ bool SynEdit::canDoBlockIndent()
     return true;
 }
 
-QRect SynEdit::calculateCaretRect()
+QRect SynEdit::calculateCaretRect() const
 {
     DisplayCoord coord = displayXY();
     if (!mInputPreeditString.isEmpty()) {
@@ -2419,7 +2419,19 @@ QRect SynEdit::calculateCaretRect()
         caretWidth = charColumns(mLines->getString(mCaretY-1)[mCaretX-1])*mCharWidth;
     }
     return QRect(caretPos.x(),caretPos.y(),caretWidth,
-                  mTextHeight);
+                 mTextHeight);
+}
+
+QRect SynEdit::calculateInputCaretRect() const
+{
+    DisplayCoord coord = displayXY();
+    QPoint caretPos = rowColumnToPixels(coord);
+    int caretWidth=mCharWidth;
+    if (mCaretY <= mLines->count() && mCaretX <= mLines->getString(mCaretY-1).length()) {
+        caretWidth = charColumns(mLines->getString(mCaretY-1)[mCaretX-1])*mCharWidth;
+    }
+    return QRect(caretPos.x(),caretPos.y(),caretWidth,
+                 mTextHeight);
 }
 
 void SynEdit::clearAreaList(SynEditingAreaList areaList)
@@ -2946,6 +2958,10 @@ void SynEdit::setStatusChanged(SynStatusChanges changes)
 
 void SynEdit::doOnStatusChange(SynStatusChanges)
 {
+    if (mStatusChanges.testFlag(SynStatusChange::scCaretX)
+            || mStatusChanges.testFlag(SynStatusChange::scCaretY)) {
+        qApp->inputMethod()->update(Qt::ImCursorPosition);
+    }
     emit statusChanged(mStatusChanges);
     mStatusChanges = SynStatusChange::scNone;
 }
@@ -6037,6 +6053,19 @@ bool SynEdit::viewportEvent(QEvent * event)
 //        break;
 //    }
     return QAbstractScrollArea::viewportEvent(event);
+}
+
+QVariant SynEdit::inputMethodQuery(Qt::InputMethodQuery property) const
+{
+    QRect rect = calculateInputCaretRect();
+
+    switch(property) {
+    case Qt::ImCursorRectangle:
+        return rect;
+    default:
+        return QWidget::inputMethodQuery(property);
+    }
+
 }
 
 int SynEdit::maxScrollHeight() const

@@ -55,6 +55,7 @@ SOURCES += \
     settingsdialog/editortooltipswidget.cpp \
     settingsdialog/environmentfileassociationwidget.cpp \
     settingsdialog/environmentfolderswidget.cpp \
+    settingsdialog/environmentperformancewidget.cpp \
     settingsdialog/environmentshortcutwidget.cpp \
     settingsdialog/executorproblemsetwidget.cpp \
     settingsdialog/formattergeneralwidget.cpp \
@@ -176,6 +177,7 @@ HEADERS += \
     settingsdialog/editortooltipswidget.h \
     settingsdialog/environmentfileassociationwidget.h \
     settingsdialog/environmentfolderswidget.h \
+    settingsdialog/environmentperformancewidget.h \
     settingsdialog/environmentshortcutwidget.h \
     settingsdialog/executorproblemsetwidget.h \
     settingsdialog/formattergeneralwidget.h \
@@ -267,6 +269,7 @@ FORMS += \
     settingsdialog/editortooltipswidget.ui \
     settingsdialog/environmentfileassociationwidget.ui \
     settingsdialog/environmentfolderswidget.ui \
+    settingsdialog/environmentperformancewidget.ui \
     settingsdialog/environmentshortcutwidget.ui \
     settingsdialog/executorproblemsetwidget.ui \
     settingsdialog/formattergeneralwidget.ui \

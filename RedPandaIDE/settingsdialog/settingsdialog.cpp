@@ -18,6 +18,7 @@
 #include "environmentshortcutwidget.h"
 #include "environmentfileassociationwidget.h"
 #include "environmentfolderswidget.h"
+#include "environmentperformancewidget.h"
 #include "executorgeneralwidget.h"
 #include "executorproblemsetwidget.h"
 #include "debuggeneralwidget.h"
@@ -111,6 +112,10 @@ PSettingsDialog SettingsDialog::optionDialog()
     dialog->addWidget(widget);
 
     widget = new EnvironmentFoldersWidget(tr("Folders"),tr("Environment"));
+    widget->init();
+    dialog->addWidget(widget);
+
+    widget = new EnvironmentPerformanceWidget(tr("Performance"),tr("Environment"));
     widget->init();
     dialog->addWidget(widget);
 

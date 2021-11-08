@@ -261,6 +261,7 @@ private:
     TipType mCurrentTipType;
     QString mOldHighlightedWord;
     QString mCurrentHighlightedWord;
+    QDateTime mHideTime;
 
     bool mSaving;
     bool mCurrentLineModified;
@@ -307,6 +308,9 @@ public:
 
     const std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > &statementColors() const;
     void setStatementColors(const std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > &newStatementColors);
+
+    const QDateTime &hideTime() const;
+    void setHideTime(const QDateTime &newHideTime);
 
 protected:
     void mouseReleaseEvent(QMouseEvent *event) override;

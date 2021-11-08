@@ -3262,7 +3262,7 @@ void Settings::CodeCompletion::doLoad()
     mIgnoreCase = boolValue("ignore_case",true);
     mAppendFunc = boolValue("append_func",true);
     mShowCodeIns = boolValue("show_code_ins",true);
-    mClearWhenEditorHidden = boolValue("clear_when_editor_hidden",true);
+    mClearWhenEditorHidden = boolValue("clear_when_editor_hidden",false);
 }
 
 Settings::CodeFormatter::CodeFormatter(Settings *settings):

@@ -1375,7 +1375,11 @@ void Editor::onStatusChanged(SynStatusChanges changes)
             && !changes.testFlag(SynStatusChange::scReadOnly)
             && changes.testFlag(SynStatusChange::scCaretY))) {
         mCurrentLineModified = false;
-        reparse();
+        if (pSettings->codeCompletion().clearWhenEditorHidden()
+                && changes.testFlag(SynStatusChange::scOpenFile)) {
+        } else{
+            reparse();
+        }
         if (pSettings->editor().syntaxCheckWhenLineChanged())
             checkSyntaxInBack();
         reparseTodo();
@@ -1458,28 +1462,7 @@ void Editor::onStatusChanged(SynStatusChanges changes)
         } else {
             mCurrentHighlightedWord = "";
         }
-//        mSelectionWord="";
-//        if (selAvail()) {
-//            BufferCoord wordBegin,wordEnd,bb,be;
-//            bb = blockBegin();
-//            be = blockEnd();
-//            wordBegin = wordStartEx(bb);
-//            wordEnd = wordEndEx(be);
-//            if (wordBegin.Line == bb.Line
-//                    && wordBegin.Char == bb.Char
-//                    && wordEnd.Line == be.Line
-//                    && wordEnd.Char == be.Char) {
-//                if (wordBegin.Line>=1 && wordBegin.Line<=lines()->count()) {
-//                    QString line = lines()->getString(wordBegin.Line-1);
-//                    mSelectionWord = line.mid(wordBegin.Char-1,wordEnd.Char-wordBegin.Char);
-//                }
-//            }
-////            qDebug()<<QString("(%1,%2)").arg(bb.Line).arg(bb.Char)
-////                   <<" - "<<QString("(%1,%2)").arg(be.Line).arg(be.Char)
-////                  <<" - "<<QString("(%1,%2)").arg(wordBegin.Line).arg(wordBegin.Char)
-////                 <<" - "<<QString("(%1,%2)").arg(wordEnd.Line).arg(wordEnd.Char)
-////                <<" : "<<mSelectionWord;
-//        }
+
         if (mOldHighlightedWord != mCurrentHighlightedWord) {
             invalidate();
             mOldHighlightedWord = mCurrentHighlightedWord;
@@ -1490,16 +1473,6 @@ void Editor::onStatusChanged(SynStatusChanges changes)
         if (pSettings->editor().showFunctionTips()) {
             updateFunctionTip();
         }
-//      fFunctionTip.ForceHide := false;
-//      if Assigned(fFunctionTipTimer) then begin
-//        if fFunctionTip.Activated and FunctionTipAllowed then begin
-//          fFunctionTip.Parser := fParser;
-//          fFunctionTip.FileName := fFileName;
-//          fFunctionTip.Show;
-//        end else begin // Reset the timer
-//          fFunctionTipTimer.Enabled := false;
-//          fFunctionTipTimer.Enabled := true;
-//        end;
     }
 
 
@@ -3146,6 +3119,16 @@ void Editor::onExportedFormatToken(PSynHighlighter syntaxHighlighter, int Line, 
             break;
         }
     }
+}
+
+const QDateTime &Editor::hideTime() const
+{
+    return mHideTime;
+}
+
+void Editor::setHideTime(const QDateTime &newHideTime)
+{
+    mHideTime = newHideTime;
 }
 
 const std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > &Editor::statementColors() const

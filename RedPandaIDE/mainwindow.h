@@ -155,6 +155,8 @@ public:
     void openProject(const QString& filename);
     void changeOptions(const QString& widgetName=QString(), const QString& groupName=QString());
 
+    bool openningFiles() const;
+
 public slots:
     void onCompileLog(const QString& msg);
     void onCompileIssue(PCompileIssue issue);
@@ -212,6 +214,8 @@ private:
     void doCompileRun(RunType runType);
     void updateProblemCaseOutput(POJProblemCase problemCase);
     void applyCurrentProblemCaseChanges();
+    void updateEditorParser(QTabWidget* tabWidget);
+    void updateEditorHideTime(QTabWidget* tabWidget);
 
 private slots:
     void onAutoSaveTimeout();
@@ -534,6 +538,7 @@ private:
     CaretList mCaretList;
 
     bool mClosing;
+    bool mOpenningFiles;
     bool mSystemTurnedOff;
     QPoint mEditorContextMenuPos;
     QTcpServer mTcpServer;
