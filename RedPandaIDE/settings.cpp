@@ -3262,7 +3262,21 @@ void Settings::CodeCompletion::doLoad()
     mIgnoreCase = boolValue("ignore_case",true);
     mAppendFunc = boolValue("append_func",true);
     mShowCodeIns = boolValue("show_code_ins",true);
-    mClearWhenEditorHidden = boolValue("clear_when_editor_hidden",false);
+
+    bool doClear = true;
+
+#ifdef Q_OS_WIN
+    MEMORYSTATUSEX statex;
+
+    statex.dwLength = sizeof (statex);
+
+    GlobalMemoryStatusEx (&statex);
+    if (statex.ullAvailPhys > (long long int)3*1024*1024*1024) {
+        doClear = false;
+    }
+#endif
+
+    mClearWhenEditorHidden = boolValue("clear_when_editor_hidden",doClear);
 }
 
 Settings::CodeFormatter::CodeFormatter(Settings *settings):

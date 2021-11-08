@@ -2,8 +2,9 @@ Version 0.8.2 For Dev-C++ 7 Beta
  - fix: highlighter can't correctly find the end of ANSI C-style Comments
  - enhancement: add default color scheme to themes. Change theme option will change color scheme too.
  - fix: when changing options in the option dialog's color scheme panle, color of the demo editor won't be not correctly updated
- - enhancement: add option to auto clear parsed symbols when the editor is hidden ( to reduce total memory usage / turned off by default) 
- - fix: correct set the position of chinese input methods
+ - enhancement: auto clear parsed symbols when the editor is hidden ( to reduce memory usage of un-active editors)
+ - fix: when inputing in the editor, correctly set the position of the input method panel
+ - fix: correctly display watch & local variable names when debugging
 
 Version 0.8.1 For Dev-C++ 7 Beta
  - fix: ConsolePaurser.exe only exits when press ENTER

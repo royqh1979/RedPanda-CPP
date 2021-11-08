@@ -1450,9 +1450,9 @@ void DebugReader::runNextCmd()
         emit cmdStarted();
 
     QByteArray s;
-    s=pCmd->command.toLocal8Bit();
+    s=pCmd->command.toUtf8();
     if (!pCmd->params.isEmpty()) {
-        s+=' '+pCmd->params.toLocal8Bit();
+        s+=' '+pCmd->params.toUtf8();
     }
     s+= "\n";
     if (mProcess->write(s)<0) {
@@ -1681,7 +1681,7 @@ void DebugReader::run()
         readed = mProcess->readAll();
         buffer += readed;
         if (getLastAnnotation(buffer) == AnnotationType::TPrompt) {
-            mOutput = QString::fromLocal8Bit(buffer);
+            mOutput = QString::fromUtf8(buffer);
             processDebugOutput();
             buffer.clear();
             mCmdRunning = false;
