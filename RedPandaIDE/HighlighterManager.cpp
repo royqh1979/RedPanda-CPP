@@ -5,7 +5,6 @@
 #include "qsynedit/highlighter/asm.h"
 #include "qsynedit/Constants.h"
 #include "colorscheme.h"
-#include <QDebug>
 
 HighlighterManager highlighterManager;
 

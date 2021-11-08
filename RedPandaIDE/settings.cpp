@@ -3109,6 +3109,16 @@ void Settings::CodeCompletion::setShowCodeIns(bool newShowCodeIns)
     mShowCodeIns = newShowCodeIns;
 }
 
+bool Settings::CodeCompletion::clearWhenEditorHidden() const
+{
+    return mClearWhenEditorHidden;
+}
+
+void Settings::CodeCompletion::setClearWhenEditorHidden(bool newClearWhenEditorHidden)
+{
+    mClearWhenEditorHidden = newClearWhenEditorHidden;
+}
+
 bool Settings::CodeCompletion::appendFunc() const
 {
     return mAppendFunc;
@@ -3233,6 +3243,7 @@ void Settings::CodeCompletion::doSave()
     saveValue("ignore_case",mIgnoreCase);
     saveValue("append_func",mAppendFunc);
     saveValue("show_code_ins",mShowCodeIns);
+    saveValue("clear_when_editor_hidden",mClearWhenEditorHidden);
 }
 
 
@@ -3251,6 +3262,7 @@ void Settings::CodeCompletion::doLoad()
     mIgnoreCase = boolValue("ignore_case",true);
     mAppendFunc = boolValue("append_func",true);
     mShowCodeIns = boolValue("show_code_ins",true);
+    mClearWhenEditorHidden = boolValue("clear_when_editor_hidden",true);
 }
 
 Settings::CodeFormatter::CodeFormatter(Settings *settings):

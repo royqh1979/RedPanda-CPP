@@ -34,6 +34,7 @@ void EditorCodeCompletionWidget::doLoad()
     ui->chkIgnoreCases->setChecked(pSettings->codeCompletion().ignoreCase());
     ui->chkAppendFunc->setChecked(pSettings->codeCompletion().appendFunc());
     ui->chkShowCodeIns->setChecked(pSettings->codeCompletion().showCodeIns());
+    ui->chkClearWhenEditorHidden->setChecked(pSettings->codeCompletion().clearWhenEditorHidden());
 }
 
 void EditorCodeCompletionWidget::doSave()
@@ -54,6 +55,7 @@ void EditorCodeCompletionWidget::doSave()
     pSettings->codeCompletion().setIgnoreCase(ui->chkIgnoreCases->isChecked());
     pSettings->codeCompletion().setAppendFunc(ui->chkAppendFunc->isChecked());
     pSettings->codeCompletion().setShowCodeIns(ui->chkShowCodeIns->isChecked());
+    pSettings->codeCompletion().setClearWhenEditorHidden(ui->chkClearWhenEditorHidden->isChecked());
 
     pSettings->codeCompletion().save();
 }

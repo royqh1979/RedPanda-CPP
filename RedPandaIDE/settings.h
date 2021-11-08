@@ -521,6 +521,9 @@ public:
         bool showCodeIns() const;
         void setShowCodeIns(bool newShowCodeIns);
 
+        bool clearWhenEditorHidden() const;
+        void setClearWhenEditorHidden(bool newClearWhenEditorHidden);
+
     private:
         int mWidth;
         int mHeight;
@@ -534,6 +537,7 @@ public:
         bool mIgnoreCase;
         bool mAppendFunc;
         bool mShowCodeIns;
+        bool mClearWhenEditorHidden;
 
         // _Base interface
     protected:

@@ -564,7 +564,9 @@ void Editor::keyPressEvent(QKeyEvent *event)
                 handled = true;
                 QStringList insertString;
                 insertString.append("");
-                PStatement function = mParser->findFunctionAt(mFilename,caretY()+1);
+                PStatement function;
+                if (mParser)
+                    function = mParser->findFunctionAt(mFilename,caretY()+1);
                 if (function) {
                     QStringList params;
                     QString funcName = function->command;
@@ -678,7 +680,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
         if (pSettings->codeCompletion().enabled()
                 && pSettings->codeCompletion().showCompletionWhileInput() ) {
             if (mLastIdCharPressed==1) {
-                if (mParser->isIncludeLine(lineText())) {
+                if (mParser && mParser->isIncludeLine(lineText())) {
                     // is a #include line
                     setSelText(ch);
                     showHeaderCompletion(false);

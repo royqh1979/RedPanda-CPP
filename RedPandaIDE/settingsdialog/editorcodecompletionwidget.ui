@@ -27,6 +27,13 @@
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_3">
       <item>
+       <widget class="QCheckBox" name="chkClearWhenEditorHidden">
+        <property name="text">
+         <string>Clear all parsed symbols when editor is hidden</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QCheckBox" name="chkShowSuggestionWhileTyping">
         <property name="text">
          <string>Show completion suggestions while typing</string>
