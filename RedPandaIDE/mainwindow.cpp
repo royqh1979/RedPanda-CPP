@@ -569,7 +569,7 @@ void MainWindow::applyUISettings()
     ui->actionFiles->setChecked(settings.showFiles());
     showHideInfosTab(ui->tabFiles,settings.showFiles());
     ui->actionProblem_Set->setChecked(settings.showProblemSet());
-    showHideInfosTab(ui->tabProblem,settings.showProblem());
+    showHideInfosTab(ui->tabProblemSet,settings.showProblemSet());
 
     ui->actionIssues->setChecked(settings.showIssues());
     showHideMessagesTab(ui->tabIssues,settings.showIssues());
@@ -5588,7 +5588,7 @@ void MainWindow::on_actionProblem_Set_triggered()
 {
     bool state = ui->actionProblem_Set->isChecked();
     ui->actionProblem_Set->setChecked(state);
-    showHideInfosTab(ui->tabProblem,state);
+    showHideInfosTab(ui->tabProblemSet,state);
 }
 
 

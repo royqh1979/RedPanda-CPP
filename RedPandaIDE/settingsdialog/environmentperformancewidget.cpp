@@ -17,6 +17,18 @@ EnvironmentPerformanceWidget::~EnvironmentPerformanceWidget()
 void EnvironmentPerformanceWidget::doLoad()
 {
     ui->chkClearWhenEditorHidden->setChecked(pSettings->codeCompletion().clearWhenEditorHidden());
+#ifdef Q_OS_WIN
+    MEMORYSTATUSEX statex;
+
+    statex.dwLength = sizeof (statex);
+
+    GlobalMemoryStatusEx (&statex);
+    if (statex.ullAvailPhys < (long long int)1024*1024*1024) {
+        ui->chkClearWhenEditorHidden->setEnabled(false);
+        ui->chkClearWhenEditorHidden->setChecked(true);
+        pSettings->codeCompletion().setClearWhenEditorHidden(true);
+    }
+#endif
 }
 
 void EnvironmentPerformanceWidget::doSave()
