@@ -71,6 +71,8 @@ MainWindow::MainWindow(QWidget *parent)
     mFileInfoStatus->setStyleSheet("margin-left:10px; margin-right:10px");
     mFileEncodingStatus->setStyleSheet("margin-left:10px; margin-right:10px");
     mFileModeStatus->setStyleSheet("margin-left:10px; margin-right:10px");
+    prepareTabInfosData();
+    prepareTabMessagesData();
     ui->statusbar->insertPermanentWidget(0,mFileModeStatus);
     ui->statusbar->insertPermanentWidget(0,mFileEncodingStatus);
     ui->statusbar->insertPermanentWidget(0,mFileInfoStatus);
@@ -151,11 +153,11 @@ MainWindow::MainWindow(QWidget *parent)
 
     mCPUDialog = nullptr;
 
-    updateProjectView();
-    updateEditorActions();
-    updateCaretActions();    
     applySettings();
     applyUISettings();
+    updateProjectView();
+    updateEditorActions();
+    updateCaretActions();
 
 
     connect(ui->debugConsole,&QConsole::commandInput,this,&MainWindow::onDebugCommandInput);
@@ -252,7 +254,6 @@ MainWindow::MainWindow(QWidget *parent)
     mFunctionTip = std::make_shared<FunctionTooltipWidget>();
 
     mClassBrowserModel.setColors(mStatementColors);
-    updateAppTitle();
 
     connect(&mAutoSaveTimer, &QTimer::timeout,
             this, &MainWindow::onAutoSaveTimeout);
@@ -266,6 +267,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     ui->actionEGE_Manual->setVisible(pSettings->environment().language()=="zh_CN");
 
+    updateAppTitle();
     buildContextMenus();
 
     updateEditorColorSchemes();
@@ -552,23 +554,38 @@ void MainWindow::applyUISettings()
     const Settings::UI& settings = pSettings->ui();
     restoreGeometry(settings.mainWindowGeometry());
     restoreState(settings.mainWindowState());
-    //we can show/hide left/bottom panels here, cause mainwindow layout is not calculated
-//    ui->tabMessages->setCurrentIndex(settings.bottomPanelIndex());
-//    if (settings.bottomPanelOpenned()) {
-//        mBottomPanelHeight = settings.bottomPanelHeight();
-//        openCloseBottomPanel(true);
-//    } else {
-//        openCloseBottomPanel(false);
-//        mBottomPanelHeight = settings.bottomPanelHeight();
-//    }
-//    ui->tabInfos->setCurrentIndex(settings.leftPanelIndex());
-//    if (settings.leftPanelOpenned()) {
-//        mLeftPanelWidth = settings.leftPanelWidth();
-//        openCloseLeftPanel(true);
-//    } else {
-//        openCloseLeftPanel(false);
-//        mLeftPanelWidth = settings.leftPanelWidth();
-//    }
+    ui->actionTool_Window_Bars->setChecked(settings.showToolWindowBars());
+    ui->tabInfos->setVisible(settings.showToolWindowBars());
+    ui->tabMessages->setVisible(settings.showToolWindowBars());
+    ui->actionStatus_Bar->setChecked(settings.showStatusBar());
+    ui->statusbar->setVisible(settings.showStatusBar());
+
+    ui->actionProject->setChecked(settings.showProject());
+    showHideInfosTab(ui->tabProject,settings.showProject());
+    ui->actionWatch->setChecked(settings.showWatch());
+    showHideInfosTab(ui->tabWatch,settings.showWatch());
+    ui->actionStructure->setChecked(settings.showStructure());
+    showHideInfosTab(ui->tabStructure,settings.showStructure());
+    ui->actionFiles->setChecked(settings.showFiles());
+    showHideInfosTab(ui->tabFiles,settings.showFiles());
+    ui->actionProblem_Set->setChecked(settings.showProblemSet());
+    showHideInfosTab(ui->tabProblem,settings.showProblem());
+
+    ui->actionIssues->setChecked(settings.showIssues());
+    showHideMessagesTab(ui->tabIssues,settings.showIssues());
+    ui->actionCompile_Log->setChecked(settings.showCompileLog());
+    showHideMessagesTab(ui->tabCompilerOutput,settings.showCompileLog());
+    ui->actionDebug_Window->setChecked(settings.showDebug());
+    showHideMessagesTab(ui->tabDebug,settings.showDebug());
+    ui->actionSearch->setChecked(settings.showSearch());
+    showHideMessagesTab(ui->tabSearch,settings.showSearch());
+    ui->actionTODO->setChecked(settings.showTODO());
+    showHideMessagesTab(ui->tabTODO,settings.showTODO());
+    ui->actionBookmark->setChecked(settings.showBookmark());
+    showHideMessagesTab(ui->tabBookmark,settings.showBookmark());
+    ui->actionProblem->setChecked(settings.showProblem());
+    showHideMessagesTab(ui->tabProblem,settings.showProblem());
+    //we can't show/hide left/bottom panels here, cause mainwindow layout is not calculated
 }
 
 QFileSystemWatcher *MainWindow::fileSystemWatcher()
@@ -3218,6 +3235,22 @@ void MainWindow::closeEvent(QCloseEvent *event) {
         settings.setLeftPanelWidth(mLeftPanelWidth);
         settings.setLeftPanelIndex(ui->tabInfos->currentIndex());
         settings.setLeftPanelOpenned(mLeftPanelOpenned);
+
+        settings.setShowStatusBar(ui->actionStatus_Bar->isChecked());
+        settings.setShowToolWindowBars(ui->actionTool_Window_Bars->isChecked());
+
+        settings.setShowProject(ui->actionProject->isChecked());
+        settings.setShowWatch(ui->actionWatch->isChecked());
+        settings.setShowStructure(ui->actionStructure->isChecked());
+        settings.setShowFiles(ui->actionFiles->isChecked());
+        settings.setShowProblemSet(ui->actionProblem_Set->isChecked());
+
+        settings.setShowIssues(ui->actionIssues->isChecked());
+        settings.setShowDebug(ui->actionDebug_Window->isChecked());
+        settings.setShowSearch(ui->actionSearch->isChecked());
+        settings.setShowTODO(ui->actionTODO->isChecked());
+        settings.setShowBookmark(ui->actionBookmark->isChecked());
+        settings.setShowProblem(ui->actionProblem->isChecked());
         settings.save();
 
         //save current folder ( for files view )
@@ -4810,6 +4843,95 @@ void MainWindow::updateEditorHideTime(QTabWidget* tabWidget) {
         }
     }
 }
+
+static int findTabIndex(QTabWidget* tabWidget , QWidget* w) {
+    for (int i=0;i<tabWidget->count();i++) {
+        if (w==tabWidget->widget(i))
+            return i;
+    }
+    return -1;
+}
+
+void MainWindow::showHideInfosTab(QWidget *widget, bool show)
+{
+    int idx = findTabIndex(ui->tabInfos,widget);
+    if (idx>=0) {
+        if (!show) {
+            ui->tabInfos->removeTab(idx);
+        }
+    } else {
+        if (show && mTabInfosData.contains(widget)) {
+            PTabWidgetInfo info = mTabInfosData[widget];
+            int insert = -1;
+            for (int i=0;i<ui->tabInfos->count();i++) {
+                QWidget * w=ui->tabInfos->widget(i);
+                PTabWidgetInfo infoW = mTabInfosData[w];
+                if (infoW->order>info->order) {
+                    insert = i;
+                    break;
+                }
+            }
+            if (insert>=0) {
+                ui->tabInfos->insertTab(insert, widget, info->icon, info->text);
+            } else {
+                ui->tabInfos->addTab(widget, info->icon, info->text);
+            }
+        }
+    }
+}
+
+void MainWindow::showHideMessagesTab(QWidget *widget, bool show)
+{
+    int idx = findTabIndex(ui->tabMessages,widget);
+    if (idx>=0) {
+        if (!show) {
+            ui->tabMessages->removeTab(idx);
+        }
+    } else {
+        if (show && mTabMessagesData.contains(widget)) {
+            PTabWidgetInfo info = mTabMessagesData[widget];
+            int insert = -1;
+            for (int i=0;i<ui->tabMessages->count();i++) {
+                QWidget * w=ui->tabMessages->widget(i);
+                PTabWidgetInfo infoW = mTabMessagesData[w];
+                if (infoW->order>info->order) {
+                    insert = i;
+                    break;
+                }
+            }
+            if (insert>=0) {
+                ui->tabMessages->insertTab(insert, widget, info->icon, info->text);
+            } else {
+                ui->tabMessages->addTab(widget, info->icon, info->text);
+            }
+        }
+    }
+}
+
+
+void MainWindow::prepareTabInfosData()
+{
+    for (int i=0;i<ui->tabInfos->count();i++) {
+        QWidget* widget = ui->tabInfos->widget(i);
+        PTabWidgetInfo info = std::make_shared<TabWidgetInfo>();
+        info->order =i;
+        info->text = ui->tabInfos->tabText(i);
+        info->icon = ui->tabInfos->tabIcon(i);
+        mTabInfosData[widget]=info;
+    }
+}
+
+void MainWindow::prepareTabMessagesData()
+{
+    for (int i=0;i<ui->tabMessages->count();i++) {
+        QWidget* widget = ui->tabMessages->widget(i);
+        PTabWidgetInfo info = std::make_shared<TabWidgetInfo>();
+        info->order =i;
+        info->text = ui->tabMessages->tabText(i);
+        info->icon = ui->tabMessages->tabIcon(i);
+        mTabMessagesData[widget]=info;
+    }
+}
 void MainWindow::on_EditorTabsLeft_currentChanged(int)
 {
     Editor * editor = mEditorList->getEditor(-1,ui->EditorTabsLeft);
@@ -5408,5 +5530,121 @@ void MainWindow::on_btnOpenProblemAnswer_clicked()
 bool MainWindow::openningFiles() const
 {
     return mOpenningFiles;
+}
+
+
+void MainWindow::on_actionTool_Window_Bars_triggered()
+{
+    bool state = ui->tabInfos->isVisible();
+    state = !state;
+    ui->tabInfos->setVisible(state);
+    ui->tabMessages->setVisible(state);
+    ui->actionTool_Window_Bars->setChecked(state);
+}
+
+
+void MainWindow::on_actionStatus_Bar_triggered()
+{
+    bool state = ui->statusbar->isVisible();
+    state = !state;
+    ui->statusbar->setVisible(state);
+    ui->actionStatus_Bar->setChecked(state);
+}
+
+
+void MainWindow::on_actionProject_triggered()
+{
+    bool state = ui->actionProject->isChecked();
+    ui->actionProject->setChecked(state);
+    showHideInfosTab(ui->tabProject,state);
+}
+
+
+void MainWindow::on_actionWatch_triggered()
+{
+    bool state = ui->actionWatch->isChecked();
+    ui->actionWatch->setChecked(state);
+    showHideInfosTab(ui->tabWatch,state);
+}
+
+
+void MainWindow::on_actionStructure_triggered()
+{
+    bool state = ui->actionStructure->isChecked();
+    ui->actionStructure->setChecked(state);
+    showHideInfosTab(ui->tabStructure,state);
+}
+
+
+void MainWindow::on_actionFiles_triggered()
+{
+    bool state = ui->actionFiles->isChecked();
+    ui->actionFiles->setChecked(state);
+    showHideInfosTab(ui->tabFiles,state);
+}
+
+
+void MainWindow::on_actionProblem_Set_triggered()
+{
+    bool state = ui->actionProblem_Set->isChecked();
+    ui->actionProblem_Set->setChecked(state);
+    showHideInfosTab(ui->tabProblem,state);
+}
+
+
+void MainWindow::on_actionIssues_triggered()
+{
+    bool state = ui->actionIssues->isChecked();
+    ui->actionIssues->setChecked(state);
+    showHideMessagesTab(ui->tabIssues,state);
+}
+
+
+void MainWindow::on_actionCompile_Log_triggered()
+{
+    bool state = ui->actionCompile_Log->isChecked();
+    ui->actionCompile_Log->setChecked(state);
+    showHideMessagesTab(ui->tabCompilerOutput,state);
+}
+
+
+void MainWindow::on_actionDebug_Window_triggered()
+{
+    bool state = ui->actionCompile_Log->isChecked();
+    ui->actionDebug_Window->setChecked(state);
+    showHideMessagesTab(ui->tabDebug, state);
+}
+
+
+void MainWindow::on_actionSearch_triggered()
+{
+    bool state = ui->actionSearch->isChecked();
+    ui->actionSearch->setChecked(state);
+    showHideMessagesTab(ui->tabSearch,state);
+}
+
+
+
+void MainWindow::on_actionTODO_triggered()
+{
+    bool state = ui->actionTODO->isChecked();
+    ui->actionTODO->setChecked(state);
+    showHideMessagesTab(ui->tabTODO,state);
+}
+
+
+void MainWindow::on_actionBookmark_triggered()
+{
+    bool state = ui->actionBookmark->isChecked();
+    ui->actionBookmark->setChecked(state);
+    showHideMessagesTab(ui->tabBookmark,state);
+}
+
+
+void MainWindow::on_actionProblem_triggered()
+{
+    bool state = ui->actionProblem->isChecked();
+    ui->actionProblem->setChecked(state);
+    showHideMessagesTab(ui->tabProblem,state);
 }
 

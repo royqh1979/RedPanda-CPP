@@ -1540,7 +1540,6 @@
      <addaction name="actionBookmark"/>
      <addaction name="actionProblem"/>
     </widget>
-    <addaction name="actionToolbar"/>
     <addaction name="actionTool_Window_Bars"/>
     <addaction name="menuTool_Windows"/>
     <addaction name="actionStatus_Bar"/>
@@ -2490,14 +2489,6 @@
   <action name="actionC_Reference">
    <property name="text">
     <string>C Reference</string>
-   </property>
-  </action>
-  <action name="actionToolbar">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Toolbar</string>
    </property>
   </action>
   <action name="actionTool_Window_Bars">

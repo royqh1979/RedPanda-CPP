@@ -3277,6 +3277,12 @@ void Settings::CodeCompletion::doLoad()
 #endif
 
     mClearWhenEditorHidden = boolValue("clear_when_editor_hidden",doClear);
+
+#ifdef Q_OS_WIN
+    if (statex.ullAvailPhys < (long long int)1024*1024*1024) {
+        mClearWhenEditorHidden = true;
+    }
+#endif
 }
 
 Settings::CodeFormatter::CodeFormatter(Settings *settings):

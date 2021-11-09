@@ -1,3 +1,9 @@
+Version 0.8.3 For Dev-C++ 7 Beta
+ - enhancement: View menu
+ - enhancement: hide/show statusbar
+ - enhancement: hide/show left/bottom tool window bars
+ - enhancement: hide/show individual left/bottom tool window
+
 Version 0.8.2 For Dev-C++ 7 Beta
  - fix: highlighter can't correctly find the end of ANSI C-style Comments
  - enhancement: add default color scheme to themes. Change theme option will change color scheme too.

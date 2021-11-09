@@ -65,8 +65,14 @@ class MainWindow : public QMainWindow
         CompileSuccessionTaskType type;
         QString filename;
     };
-
     using PCompileSuccessionTask = std::shared_ptr<CompileSuccessionTask>;
+
+    struct TabWidgetInfo {
+        int order;
+        QString text;
+        QIcon icon;
+    };
+    using PTabWidgetInfo = std::shared_ptr<TabWidgetInfo>;
 
 public:
     MainWindow(QWidget *parent = nullptr);
@@ -216,6 +222,10 @@ private:
     void applyCurrentProblemCaseChanges();
     void updateEditorParser(QTabWidget* tabWidget);
     void updateEditorHideTime(QTabWidget* tabWidget);
+    void showHideInfosTab(QWidget *widget, bool show);
+    void showHideMessagesTab(QWidget *widget, bool show);
+    void prepareTabInfosData();
+    void prepareTabMessagesData();
 
 private slots:
     void onAutoSaveTimeout();
@@ -479,6 +489,34 @@ private slots:
 
     void on_btnOpenProblemAnswer_clicked();
 
+    void on_actionTool_Window_Bars_triggered();
+
+    void on_actionStatus_Bar_triggered();
+
+    void on_actionProject_triggered();
+
+    void on_actionWatch_triggered();
+
+    void on_actionStructure_triggered();
+
+    void on_actionFiles_triggered();
+
+    void on_actionProblem_Set_triggered();
+
+    void on_actionIssues_triggered();
+
+    void on_actionCompile_Log_triggered();
+
+    void on_actionDebug_Window_triggered();
+
+    void on_actionSearch_triggered();
+
+    void on_actionTODO_triggered();
+
+    void on_actionBookmark_triggered();
+
+    void on_actionProblem_triggered();
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;
@@ -532,6 +570,9 @@ private:
     bool mLeftPanelOpenned;
     bool mShouldRemoveAllSettings;
     PCompileSuccessionTask mCompileSuccessionTask;
+
+    QMap<QWidget*, PTabWidgetInfo> mTabInfosData;
+    QMap<QWidget*, PTabWidgetInfo> mTabMessagesData;
 
     QTimer mAutoSaveTimer;
 
