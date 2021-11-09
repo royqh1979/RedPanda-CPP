@@ -827,6 +827,51 @@ public:
         bool classBrowserShowInherited() const;
         void setClassBrowserShowInherited(bool newClassBrowserShowInherited);
 
+        bool showToolbar() const;
+        void setShowToolbar(bool newShowToolbar);
+
+        bool showStatusBar() const;
+        void setShowStatusBar(bool newShowStatusBar);
+
+        bool showToolWindowBars() const;
+        void setShowToolWindowBars(bool newShowToolWindowBars);
+
+        bool showProject() const;
+        void setShowProject(bool newShowProject);
+
+        bool showWatch() const;
+        void setShowWatch(bool newShowWatch);
+
+        bool showStructure() const;
+        void setShowStructure(bool newShowStructure);
+
+        bool showFiles() const;
+        void setShowFiles(bool newShowFiles);
+
+        bool showProblemSet() const;
+        void setShowProblemSet(bool newShowProblemSet);
+
+        bool showIssues() const;
+        void setShowIssues(bool newShowIssues);
+
+        bool showCompileLog() const;
+        void setShowCompileLog(bool newShowCompileLog);
+
+        bool showDebug() const;
+        void setShowDebug(bool newShowDebug);
+
+        bool showSearch() const;
+        void setShowSearch(bool newShowSearch);
+
+        bool showTODO() const;
+        void setShowTODO(bool newShowTODO);
+
+        bool showBookmark() const;
+        void setShowBookmark(bool newShowBookmark);
+
+        bool showProblem() const;
+        void setShowProblem(bool newShowProblem);
+
     private:
         QByteArray mMainWindowState;
         QByteArray mMainWindowGeometry;
@@ -839,6 +884,25 @@ public:
         bool mClassBrowserSortAlpha;
         bool mClassBrowserSortType;
         bool mClassBrowserShowInherited;
+
+        //view
+        bool mShowToolbar;
+        bool mShowStatusBar;
+        bool mShowToolWindowBars;
+
+        bool mShowProject;
+        bool mShowWatch;
+        bool mShowStructure;
+        bool mShowFiles;
+        bool mShowProblemSet;
+
+        bool mShowIssues;
+        bool mShowCompileLog;
+        bool mShowDebug;
+        bool mShowSearch;
+        bool mShowTODO;
+        bool mShowBookmark;
+        bool mShowProblem;
 
     protected:
         void doSave() override;

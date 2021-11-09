@@ -85,7 +85,7 @@
             <enum>QTabWidget::West</enum>
            </property>
            <property name="currentIndex">
-            <number>4</number>
+            <number>0</number>
            </property>
            <property name="usesScrollButtons">
             <bool>true</bool>
@@ -1518,8 +1518,36 @@
     </property>
     <addaction name="actionRename_Symbol"/>
    </widget>
+   <widget class="QMenu" name="menuView">
+    <property name="title">
+     <string>View</string>
+    </property>
+    <widget class="QMenu" name="menuTool_Windows">
+     <property name="title">
+      <string>Tool Windows</string>
+     </property>
+     <addaction name="actionProject"/>
+     <addaction name="actionWatch"/>
+     <addaction name="actionStructure"/>
+     <addaction name="actionFiles"/>
+     <addaction name="actionProblem_Set"/>
+     <addaction name="separator"/>
+     <addaction name="actionIssues"/>
+     <addaction name="actionCompile_Log"/>
+     <addaction name="actionDebug_Window"/>
+     <addaction name="actionSearch"/>
+     <addaction name="actionTODO"/>
+     <addaction name="actionBookmark"/>
+     <addaction name="actionProblem"/>
+    </widget>
+    <addaction name="actionToolbar"/>
+    <addaction name="actionTool_Window_Bars"/>
+    <addaction name="menuTool_Windows"/>
+    <addaction name="actionStatus_Bar"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
+   <addaction name="menuView"/>
    <addaction name="menuSearch"/>
    <addaction name="menuCode"/>
    <addaction name="menuRefactor"/>
@@ -2462,6 +2490,126 @@
   <action name="actionC_Reference">
    <property name="text">
     <string>C Reference</string>
+   </property>
+  </action>
+  <action name="actionToolbar">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Toolbar</string>
+   </property>
+  </action>
+  <action name="actionTool_Window_Bars">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Tool Window Bars</string>
+   </property>
+  </action>
+  <action name="actionStatus_Bar">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Status Bar</string>
+   </property>
+  </action>
+  <action name="actionProject">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Project</string>
+   </property>
+  </action>
+  <action name="actionWatch">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Watch</string>
+   </property>
+  </action>
+  <action name="actionStructure">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Structure</string>
+   </property>
+  </action>
+  <action name="actionFiles">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Files</string>
+   </property>
+  </action>
+  <action name="actionProblem_Set">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Problem Set</string>
+   </property>
+  </action>
+  <action name="actionIssues">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Issues</string>
+   </property>
+  </action>
+  <action name="actionCompile_Log">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Compile Log</string>
+   </property>
+  </action>
+  <action name="actionDebug_Window">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Debug</string>
+   </property>
+  </action>
+  <action name="actionSearch">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Search</string>
+   </property>
+  </action>
+  <action name="actionTODO">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>TODO</string>
+   </property>
+  </action>
+  <action name="actionBookmark">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Bookmark</string>
+   </property>
+  </action>
+  <action name="actionProblem">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Problem</string>
    </property>
   </action>
  </widget>

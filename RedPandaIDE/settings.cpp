@@ -4231,6 +4231,156 @@ void Settings::UI::setClassBrowserShowInherited(bool newClassBrowserShowInherite
     mClassBrowserShowInherited = newClassBrowserShowInherited;
 }
 
+bool Settings::UI::showProblem() const
+{
+    return mShowProblem;
+}
+
+void Settings::UI::setShowProblem(bool newShowProblem)
+{
+    mShowProblem = newShowProblem;
+}
+
+bool Settings::UI::showBookmark() const
+{
+    return mShowBookmark;
+}
+
+void Settings::UI::setShowBookmark(bool newShowBookmark)
+{
+    mShowBookmark = newShowBookmark;
+}
+
+bool Settings::UI::showTODO() const
+{
+    return mShowTODO;
+}
+
+void Settings::UI::setShowTODO(bool newShowTODO)
+{
+    mShowTODO = newShowTODO;
+}
+
+bool Settings::UI::showSearch() const
+{
+    return mShowSearch;
+}
+
+void Settings::UI::setShowSearch(bool newShowSearch)
+{
+    mShowSearch = newShowSearch;
+}
+
+bool Settings::UI::showDebug() const
+{
+    return mShowDebug;
+}
+
+void Settings::UI::setShowDebug(bool newShowDebug)
+{
+    mShowDebug = newShowDebug;
+}
+
+bool Settings::UI::showCompileLog() const
+{
+    return mShowCompileLog;
+}
+
+void Settings::UI::setShowCompileLog(bool newShowCompileLog)
+{
+    mShowCompileLog = newShowCompileLog;
+}
+
+bool Settings::UI::showIssues() const
+{
+    return mShowIssues;
+}
+
+void Settings::UI::setShowIssues(bool newShowIssues)
+{
+    mShowIssues = newShowIssues;
+}
+
+bool Settings::UI::showProblemSet() const
+{
+    return mShowProblemSet;
+}
+
+void Settings::UI::setShowProblemSet(bool newShowProblemSet)
+{
+    mShowProblemSet = newShowProblemSet;
+}
+
+bool Settings::UI::showFiles() const
+{
+    return mShowFiles;
+}
+
+void Settings::UI::setShowFiles(bool newShowFiles)
+{
+    mShowFiles = newShowFiles;
+}
+
+bool Settings::UI::showStructure() const
+{
+    return mShowStructure;
+}
+
+void Settings::UI::setShowStructure(bool newShowStructure)
+{
+    mShowStructure = newShowStructure;
+}
+
+bool Settings::UI::showWatch() const
+{
+    return mShowWatch;
+}
+
+void Settings::UI::setShowWatch(bool newShowWatch)
+{
+    mShowWatch = newShowWatch;
+}
+
+bool Settings::UI::showProject() const
+{
+    return mShowProject;
+}
+
+void Settings::UI::setShowProject(bool newShowProject)
+{
+    mShowProject = newShowProject;
+}
+
+bool Settings::UI::showToolWindowBars() const
+{
+    return mShowToolWindowBars;
+}
+
+void Settings::UI::setShowToolWindowBars(bool newShowToolWindowBars)
+{
+    mShowToolWindowBars = newShowToolWindowBars;
+}
+
+bool Settings::UI::showStatusBar() const
+{
+    return mShowStatusBar;
+}
+
+void Settings::UI::setShowStatusBar(bool newShowStatusBar)
+{
+    mShowStatusBar = newShowStatusBar;
+}
+
+bool Settings::UI::showToolbar() const
+{
+    return mShowToolbar;
+}
+
+void Settings::UI::setShowToolbar(bool newShowToolbar)
+{
+    mShowToolbar = newShowToolbar;
+}
+
 bool Settings::UI::classBrowserSortType() const
 {
     return mClassBrowserSortType;
@@ -4274,6 +4424,25 @@ void Settings::UI::doSave()
     saveValue("class_browser_sort_alphabetically",mClassBrowserSortAlpha);
     saveValue("class_browser_sort_by_type",mClassBrowserSortType);
     saveValue("class_browser_show_inherited",mClassBrowserShowInherited);
+
+    //view
+    saveValue("show_toolbar", mShowToolbar);
+    saveValue("show_statusbar", mShowStatusBar);
+    saveValue("show_tool_windowbars", mShowToolWindowBars);
+
+    saveValue("show_project", mShowProject);
+    saveValue("show_watch", mShowWatch);
+    saveValue("show_structure", mShowStructure);
+    saveValue("show_file", mShowFiles);
+    saveValue("show_problem_set", mShowProblemSet);
+
+    saveValue("show_issues", mShowIssues);
+    saveValue("show_compile_log", mShowCompileLog);
+    saveValue("show_debug", mShowDebug);
+    saveValue("show_search", mShowSearch);
+    saveValue("show_todo", mShowTODO);
+    saveValue("show_bookmark", mShowBookmark);
+    saveValue("show_problem", mShowProblem);
 }
 
 void Settings::UI::doLoad()
@@ -4289,4 +4458,23 @@ void Settings::UI::doLoad()
     mClassBrowserSortAlpha = boolValue("class_browser_sort_alphabetically",true);
     mClassBrowserSortType = boolValue("class_browser_sort_by_type",true);
     mClassBrowserShowInherited = boolValue("class_browser_show_inherited",true);
+
+    //view
+    mShowToolbar = boolValue("show_toolbar",true);
+    mShowStatusBar = boolValue("show_statusbar",true);
+    mShowToolWindowBars = boolValue("show_tool_windowbars",true);
+
+    mShowProject = boolValue("show_project",true);
+    mShowWatch = boolValue("show_watch",true);
+    mShowStructure = boolValue("show_structure",true);
+    mShowFiles = boolValue("show_file",true);
+    mShowProblemSet = boolValue("show_problem_set",true);
+
+    mShowIssues = boolValue("show_issues",true);
+    mShowCompileLog = boolValue("show_compile_log",true);
+    mShowDebug = boolValue("show_debug",true);
+    mShowSearch = boolValue("show_search",true);
+    mShowTODO = boolValue("show_todo",true);
+    mShowBookmark = boolValue("show_bookmark",true);
+    mShowProblem = boolValue("show_problem",true);
 }
