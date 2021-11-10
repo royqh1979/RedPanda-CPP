@@ -1708,9 +1708,15 @@ QString DebugReader::removeToken(const QString &line)
 {
     int p=0;
     while (p<line.length()) {
-        char ch=line[p];
-
+        QChar ch=line[p];
+        if (ch<'0' || ch>'9') {
+            break;
+        }
+        p++;
     }
+    if (p<line.length())
+        return line.mid(p);
+    return line;
 }
 
 bool DebugReader::processExited() const
@@ -1819,7 +1825,7 @@ void DebugReader::run()
 
 
         if ( readed.endsWith("\r\n")&& outputTerminated(buffer)) {
-            processDebugOutput(QString::fromUtf8(buffer));
+            processDebugOutput(QString::fromLocal8Bit(buffer));
             buffer.clear();
             mCmdRunning = false;
             runNextCmd();
