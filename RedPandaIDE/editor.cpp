@@ -2279,8 +2279,7 @@ void Editor::showCompletion(bool autoComplete)
         if (tokenType == SynHighlighterTokenType::PreprocessDirective) {//Preprocessor
             word = getWordAtPosition(this,caretXY(),pBeginPos,pEndPos, WordPurpose::wpDirective);
             if (!word.startsWith('#')) {
-                //showTabnineCompletion();
-                return;
+                word = "";
             }
         } else if (tokenType == SynHighlighterTokenType::Comment) { //Comment, javadoc tag
             word = getWordAtPosition(this,caretXY(),pBeginPos,pEndPos, WordPurpose::wpJavadoc);

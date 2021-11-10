@@ -85,7 +85,7 @@
             <enum>QTabWidget::West</enum>
            </property>
            <property name="currentIndex">
-            <number>0</number>
+            <number>1</number>
            </property>
            <property name="usesScrollButtons">
             <bool>true</bool>
@@ -171,10 +171,10 @@
                 <enum>Qt::ElideNone</enum>
                </property>
                <property name="wordWrap">
-                <bool>true</bool>
-               </property>
-               <attribute name="headerVisible">
                 <bool>false</bool>
+               </property>
+               <attribute name="headerDefaultSectionSize">
+                <number>50</number>
                </attribute>
               </widget>
              </item>

@@ -1296,7 +1296,6 @@ void MainWindow::debug()
         if (!mDebugger->start())
             return;
         filePath.replace('\\','/');
-        mDebugger->sendCommand("set","host charset UTF-8");
         mDebugger->sendCommand("file", '"' + filePath + '"');
 
         if (mProject->options().type == ProjectType::DynamicLib) {
