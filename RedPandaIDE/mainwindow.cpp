@@ -1296,13 +1296,14 @@ void MainWindow::debug()
         if (!mDebugger->start())
             return;
         filePath.replace('\\','/');
-        mDebugger->sendCommand("set","host charset UTF-8");
-        mDebugger->sendCommand("file", '"' + filePath + '"');
+        mDebugger->sendCommand("-gdb-set","mi-async on");
+        mDebugger->sendCommand("-gdb-set","host-charset UTF-8");
+        mDebugger->sendCommand("-file-exec-and-symbols", '"' + filePath + '"');
 
         if (mProject->options().type == ProjectType::DynamicLib) {
             QString host =mProject->options().hostApplication;
             host.replace('\\','/');
-            mDebugger->sendCommand("exec-file", '"' + host + '"');
+            mDebugger->sendCommand("-file-exec-file", '"' + host + '"');
         }
 
         includeOrSkipDirs(mProject->options().includes,
@@ -1375,7 +1376,9 @@ void MainWindow::debug()
                 mDebugger->setUseUTF8(e->fileEncoding() == ENCODING_UTF8 || e->fileEncoding() == ENCODING_UTF8_BOM);
                 if (!mDebugger->start())
                     return;
-                mDebugger->sendCommand("file", QString("\"%1\"").arg(debugFile.filePath().replace('\\','/')));
+                mDebugger->sendCommand("-gdb-set","mi-async on");
+                mDebugger->sendCommand("-gdb-set","host-charset UTF-8");
+                mDebugger->sendCommand("-file-exec-and-symbols", QString("\"%1\"").arg(debugFile.filePath().replace('\\','/')));
             }
         }
         break;
@@ -1406,40 +1409,37 @@ void MainWindow::debug()
     mDebugger->sendAllBreakpointsToDebugger();
 
     // Run the debugger
-    mDebugger->sendCommand("set", "width 0"); // don't wrap output, very annoying
-    mDebugger->sendCommand("set", "new-console on");
-    mDebugger->sendCommand("set", "confirm off");
-    mDebugger->sendCommand("set", "print repeats 0"); // don't repeat elements
-    mDebugger->sendCommand("set", "print elements 0"); // don't limit elements
-    mDebugger->sendCommand("cd", excludeTrailingPathDelimiter(debugFile.path())); // restore working directory
+    mDebugger->sendCommand("-gdb-set", "width 0"); // don't wrap output, very annoying
+    mDebugger->sendCommand("-gdb-set", "new-console on");
+    mDebugger->sendCommand("-gdb-set", "confirm off");
+    mDebugger->sendCommand("-gdb-set", "print repeats 0"); // don't repeat elements
+    mDebugger->sendCommand("-gdb-set", "print elements 0"); // don't limit elements
+    mDebugger->sendCommand("-environment-cd", excludeTrailingPathDelimiter(debugFile.path())); // restore working directory
     if (!debugInferiorhasBreakpoint()) {
-        QString params;
         switch(getCompileTarget()) {
         case CompileTarget::None:
             return;
         case CompileTarget::File:
-            mDebugger->sendCommand("start",params);
+            mDebugger->sendCommand("-exec-run", "--start");
             mDebugger->updateDebugInfo();
             break;
         case CompileTarget::Project:
-            params = "";
-            mDebugger->sendCommand("start",params);
+            mDebugger->sendCommand("-exec-run", "--start");
             mDebugger->updateDebugInfo();
             break;
         default:
             break;
         }
     } else {
-        QString params;
         switch(getCompileTarget()) {
         case CompileTarget::None:
             return;
         case CompileTarget::File:
-            mDebugger->sendCommand("run",params);
+            mDebugger->sendCommand("-exec-run","");
             mDebugger->updateDebugInfo();
             break;
         case CompileTarget::Project:
-            mDebugger->sendCommand("run",params);
+            mDebugger->sendCommand("-exec-run","");
             mDebugger->updateDebugInfo();
             break;
         default:
@@ -1617,13 +1617,13 @@ void MainWindow::includeOrSkipDirs(const QStringList &dirs, bool skip)
     foreach (QString dir,dirs) {
         QString dirName = dir.replace('\\','/');
         if (skip) {
-            mDebugger->sendCommand(
-                        "skip",
-                        QString("-gfi \"%1/%2\"")
-                        .arg(dirName,"*.*"));
+//            mDebugger->sendCommand(
+//                        "skip",
+//                        QString("-gfi \"%1/%2\"")
+//                        .arg(dirName,"*.*"));
         } else {
             mDebugger->sendCommand(
-                        "dir",
+                        "-environment-directory",
                         QString("\"%1\"").arg(dirName));
         }
     }
@@ -3932,7 +3932,7 @@ void MainWindow::on_actionStep_Over_triggered()
     if (mDebugger->executing()) {
         //WatchView.Items.BeginUpdate();
         mDebugger->invalidateAllVars();
-        mDebugger->sendCommand("next", "");
+        mDebugger->sendCommand("-exec-next", "");
         mDebugger->updateDebugInfo();
         mDebugger->refreshWatchVars();
     }
@@ -3943,7 +3943,7 @@ void MainWindow::on_actionStep_Into_triggered()
     if (mDebugger->executing()) {
         //WatchView.Items.BeginUpdate();
         mDebugger->invalidateAllVars();
-        mDebugger->sendCommand("step", "");
+        mDebugger->sendCommand("-exec-step", "");
         mDebugger->updateDebugInfo();
         mDebugger->refreshWatchVars();
     }
@@ -3955,7 +3955,7 @@ void MainWindow::on_actionStep_Out_triggered()
     if (mDebugger->executing()) {
         //WatchView.Items.BeginUpdate();
         mDebugger->invalidateAllVars();
-        mDebugger->sendCommand("finish", "");
+        mDebugger->sendCommand("-exec-finish", "");
         mDebugger->updateDebugInfo();
         mDebugger->refreshWatchVars();
     }
@@ -3969,8 +3969,8 @@ void MainWindow::on_actionRun_To_Cursor_triggered()
         if (e!=nullptr) {
             //WatchView.Items.BeginUpdate();
             mDebugger->invalidateAllVars();
-            mDebugger->sendCommand("tbreak", QString(" %1").arg(e->caretY()));
-            mDebugger->sendCommand("continue", "");
+            mDebugger->sendCommand("-break-insert", QString("-t --line %1").arg(e->caretY()));
+            mDebugger->sendCommand("-exec-continue", "");
             mDebugger->updateDebugInfo();
             mDebugger->refreshWatchVars();
         }
@@ -3983,7 +3983,7 @@ void MainWindow::on_actionContinue_triggered()
     if (mDebugger->executing()) {
         //WatchView.Items.BeginUpdate();
         mDebugger->invalidateAllVars();
-        mDebugger->sendCommand("continue", "");
+        mDebugger->sendCommand("-exec-continue", "");
         mDebugger->updateDebugInfo();
         mDebugger->refreshWatchVars();
     }
@@ -4044,7 +4044,7 @@ void MainWindow::onDebugMemoryAddressInput()
     if (!s.isEmpty()) {
         connect(mDebugger, &Debugger::memoryExamineReady,
                    this, &MainWindow::onMemoryExamineReady);
-        mDebugger->sendCommand("x/64bx",s,false);
+        mDebugger->sendCommand("-data-read-memory/64bx",s,false);
     }
 }
 

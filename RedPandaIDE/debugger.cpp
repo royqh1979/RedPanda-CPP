@@ -224,10 +224,10 @@ void Debugger::setBreakPointCondition(int index, const QString &condition)
 {
     PBreakpoint breakpoint=mBreakpointModel->setBreakPointCondition(index,condition);
     if (condition.isEmpty()) {
-        sendCommand("cond",
+        sendCommand("-break-condition",
                     QString("%1").arg(breakpoint->line));
     } else {
-        sendCommand("cond",
+        sendCommand("-break-condition",
                     QString("%1 %2").arg(breakpoint->line).arg(condition));
     }
 }
@@ -362,9 +362,8 @@ void Debugger::notifyAfterProcessWatchVar()
 
 void Debugger::updateDebugInfo()
 {
-    sendCommand("backtrace", "");
-    sendCommand("info locals", "");
-    sendCommand("info args", "");
+    sendCommand("-stack-list-frames", "");
+    sendCommand("-stack-list-variables", "--skip-unavailable --allvalues");
 }
 
 bool Debugger::useUTF8() const
@@ -403,13 +402,14 @@ void Debugger::sendBreakpointCommand(PBreakpoint breakpoint)
         // break "filename":linenum
         QString condition;
         if (!breakpoint->condition.isEmpty()) {
-            condition = " if " + breakpoint->condition;
+            condition = " -c " + breakpoint->condition;
         }
         QString filename = breakpoint->filename;
         filename.replace('\\','/');
-        sendCommand("break",
-                    QString("\"%1\":%2").arg(filename)
-                    .arg(breakpoint->line)+condition);
+        sendCommand("-break-insert",
+                    QString("%1 --source \"%2\" --line %3")
+                    .arg(condition,filename)
+                    .arg(breakpoint->line));
     }
 }
 
@@ -770,6 +770,16 @@ AnnotationType DebugReader::getNextAnnotation()
 
     // Get part this line, after #26#26
     return getAnnotation(getNextWord());
+}
+
+bool DebugReader::outputTerminated(QByteArray &text)
+{
+    QStringList lines = TextToLines(QString::fromUtf8(text));
+    foreach (const QString& line,lines) {
+        if (line == "(gdb)")
+            return true;
+    }
+    return false;
 }
 
 QString DebugReader::getNextFilledLine()
@@ -1175,6 +1185,29 @@ void DebugReader::processDebugOutput()
    doreceivedsignal = false;
    doupdatecpuwindow = false;
    doreceivedsfwarning = false;
+
+   QStringList lines = TextToLines(mOutput);
+
+   mOutputLine = 0;
+   while (mOutputLine<lines.length()) {
+        QString line = lines[mOutputLine];
+        line = removeToken(line);
+        mOutputLine++;
+        if (line.isEmpty()) {
+            continue;
+        }
+        switch (line[0].unicode()) {
+        case '~': // console stream output
+        case '@': // target stream output
+        case '&': // log stream output
+            //todo: process console stream output
+            break;
+        case '^': // result record
+            case '
+
+        }
+   }
+
 
    // Global checks
    if (mOutput.indexOf("warning: Source file is more recent than executable.") >= 0)
@@ -1630,7 +1663,7 @@ void DebugReader::run()
     bool errorOccurred = false;
     QString cmd = mDebuggerPath;
 //    QString arguments = "--annotate=2";
-    QString arguments = "--annotate=2 --silent";
+    QString arguments = "--interpret=mi --silent";
     QString workingDir = QFileInfo(mDebuggerPath).path();
 
     mProcess = new QProcess();
@@ -1680,7 +1713,8 @@ void DebugReader::run()
             break;
         readed = mProcess->readAll();
         buffer += readed;
-        if (getLastAnnotation(buffer) == AnnotationType::TPrompt) {
+
+        if ( readed.endsWith("\r\n")&& outputTerminated(buffer)) {
             mOutput = QString::fromUtf8(buffer);
             processDebugOutput();
             buffer.clear();

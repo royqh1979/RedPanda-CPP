@@ -305,6 +305,7 @@ private:
     AnnotationType getAnnotation(const QString& s);
     AnnotationType getLastAnnotation(const QByteArray& text);
     AnnotationType getNextAnnotation();
+    bool outputTerminated(QByteArray& text);
     QString getNextFilledLine();
     QString getNextLine();
     QString getNextWord();
@@ -372,6 +373,8 @@ private:
     bool doupdatelocal;
 
     bool mStop;
+
+    int mOutputLine;
     friend class Debugger;
     // QThread interface
 protected:
