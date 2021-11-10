@@ -1,5 +1,6 @@
 Version 0.8.4 For Dev-C++ 7 Beta
  - enhancement: auto save/load the default open folder in the configuration file
+ - fix: shouldn't auto add '()' when char succeeding the completed function name is '('
 
 Version 0.8.3 For Dev-C++ 7 Beta
  - enhancement: View menu
