@@ -2462,7 +2462,7 @@ void Editor::completionInsert(bool appendFunc)
                 || statement->kind == StatementKind::skConstructor
                 || statement->kind == StatementKind::skDestructor) {
             if ((p.Char >= lineText().length()) // it's the last char on line
-                    || (lineText().at(p.Char) != '(')) {  // it don't have '(' after it
+                    || (lineText().at(p.Char-1) != '(')) {  // it don't have '(' after it
                 if (statement->fullName!="std::endl")
                     funcAddOn = "()";
             }
