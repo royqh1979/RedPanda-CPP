@@ -1159,7 +1159,16 @@ AnnotationType DebugReader::peekNextAnnotation()
     return result;
 }
 
-void DebugReader::processDebugOutput()
+void DebugReader::processResultRecord(const QString &line)
+{
+    if (line.startsWith("^exit")) {
+        doprocessexited = true;
+        return;
+    }
+
+}
+
+void DebugReader::processDebugOutput(const QString& debugOutput)
 {
     // Only update once per update at most
     //WatchView.Items.BeginUpdate;
@@ -1186,13 +1195,11 @@ void DebugReader::processDebugOutput()
    doupdatecpuwindow = false;
    doreceivedsfwarning = false;
 
-   QStringList lines = TextToLines(mOutput);
+   QStringList lines = TextToLines(debugOutput);
 
-   mOutputLine = 0;
-   while (mOutputLine<lines.length()) {
-        QString line = lines[mOutputLine];
+   for (int i=0;i<lines.count();i++) {
+        QString line = lines[i];
         line = removeToken(line);
-        mOutputLine++;
         if (line.isEmpty()) {
             continue;
         }
@@ -1203,8 +1210,12 @@ void DebugReader::processDebugOutput()
             //todo: process console stream output
             break;
         case '^': // result record
-            case '
-
+            processResultRecord(line);
+            break;
+        case '*': // exec async output
+        case '+': // status async output
+        case '=': // notify async output
+            break;
         }
    }
 
@@ -1715,8 +1726,7 @@ void DebugReader::run()
         buffer += readed;
 
         if ( readed.endsWith("\r\n")&& outputTerminated(buffer)) {
-            mOutput = QString::fromUtf8(buffer);
-            processDebugOutput();
+            processDebugOutput(QString::fromUtf8(buffer));
             buffer.clear();
             mCmdRunning = false;
             runNextCmd();

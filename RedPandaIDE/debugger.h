@@ -324,7 +324,9 @@ private:
     void handleSource();
     void handleValueHistoryValue();
     AnnotationType peekNextAnnotation();
-    void processDebugOutput();
+
+    void processResultRecord(const QString& line);
+    void processDebugOutput(const QString& debugOutput);
     QString processEvalOutput();
     void processWatchOutput(PWatchVar WatchVar);
     void runNextCmd();
@@ -352,7 +354,6 @@ private:
     int mIndex;
     int mBreakPointLine;
     QString mBreakPointFile;
-    QString mOutput;
     QString mEvalValue;
     QStringList mMemoryValue;
     QStringList mLocalsValue;
@@ -374,7 +375,6 @@ private:
 
     bool mStop;
 
-    int mOutputLine;
     friend class Debugger;
     // QThread interface
 protected:
