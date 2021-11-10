@@ -1296,7 +1296,6 @@ void MainWindow::debug()
         if (!mDebugger->start())
             return;
         filePath.replace('\\','/');
-        mDebugger->sendCommand("-gdb-set","host-charset UTF-8");
         mDebugger->sendCommand("-file-exec-and-symbols", '"' + filePath + '"');
 
         if (mProject->options().type == ProjectType::DynamicLib) {
@@ -1375,7 +1374,6 @@ void MainWindow::debug()
                 mDebugger->setUseUTF8(e->fileEncoding() == ENCODING_UTF8 || e->fileEncoding() == ENCODING_UTF8_BOM);
                 if (!mDebugger->start())
                     return;
-                mDebugger->sendCommand("-gdb-set","host-charset UTF-8");
                 mDebugger->sendCommand("-file-exec-and-symbols", QString("\"%1\"").arg(debugFile.filePath().replace('\\','/')));
             }
         }

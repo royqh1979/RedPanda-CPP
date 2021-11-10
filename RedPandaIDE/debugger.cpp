@@ -1580,9 +1580,9 @@ void DebugReader::runNextCmd()
         emit cmdStarted();
 
     QByteArray s;
-    s=pCmd->command.toUtf8();
+    s=pCmd->command.toLocal8Bit();
     if (!pCmd->params.isEmpty()) {
-        s+=' '+pCmd->params.toUtf8();
+        s+= ' '+pCmd->params.toLocal8Bit();
     }
     s+= "\n";
     if (mProcess->write(s)<0) {
@@ -1816,6 +1816,7 @@ void DebugReader::run()
             break;
         readed = mProcess->readAll();
         buffer += readed;
+
 
         if ( readed.endsWith("\r\n")&& outputTerminated(buffer)) {
             processDebugOutput(QString::fromUtf8(buffer));

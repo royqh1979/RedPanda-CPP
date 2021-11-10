@@ -1,6 +1,9 @@
 Version 0.8.4 For Dev-C++ 7 Beta
  - enhancement: auto save/load the default open folder in the configuration file
  - fix: shouldn't auto add '()' when char succeeding the completed function name is '('
+ - fix: can't show code completion popup if symbol is proceed with an operator '~' ( and it's not a destructor)
+ - fix: can't show code completion popup when define MACRO
+ - fix: can't debug files with chinese characters in the path
 
 Version 0.8.3 For Dev-C++ 7 Beta
  - enhancement: View menu

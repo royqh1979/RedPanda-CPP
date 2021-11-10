@@ -72,6 +72,11 @@ void CodeCompletionPopup::prepareSearch(const QString &phrase, const QString &fi
     mIncludedFiles = mParser->getFileIncludes(filename);
     getCompletionFor(filename,phrase,line);
 
+    if (mFullCompletionStatementList.isEmpty() && phrase.startsWith('~')) {
+        mPhrase = phrase.mid(1);
+        getCompletionFor(filename,mPhrase,line);
+    }
+
     //todo: notify model
 //CodeComplForm.lbCompletion.Font.Size := FontSize;
 //CodeComplForm.lbCompletion.ItemHeight := CodeComplForm.lbCompletion.Canvas.TextHeight('F')+6;
@@ -110,6 +115,13 @@ bool CodeCompletionPopup::search(const QString &phrase, bool autoHideOnSingleRes
     QString symbol = phrase.mid(i);
     // filter fFullCompletionStatementList to fCompletionStatementList
     filterList(symbol);
+
+    //if can't find a destructor, maybe '~' is only an operator
+    if (mCompletionStatementList.isEmpty() && phrase.startsWith('~')) {
+        symbol = phrase.mid(1);
+        filterList(symbol);
+    }
+
     mModel->notifyUpdated();
     setCursor(oldCursor);
 
