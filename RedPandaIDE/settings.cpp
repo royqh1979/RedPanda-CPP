@@ -2658,9 +2658,14 @@ void Settings::Environment::doLoad()
     mInterfaceFont = stringValue("interface font","Segoe UI");
     mInterfaceFontSize = intValue("interface font size",10);
     mLanguage = stringValue("language", QLocale::system().name());
+
     mCurrentFolder = stringValue("current_folder",QDir::currentPath());
     if (!fileExists(mCurrentFolder)) {
         mCurrentFolder = QDir::currentPath();
+    }
+    mDefaultOpenFolder = stringValue("default_open_folder",QDir::currentPath());
+    if (!fileExists(mDefaultOpenFolder)) {
+        mDefaultOpenFolder = QDir::currentPath();
     }
 }
 
@@ -2694,6 +2699,16 @@ void Settings::Environment::setCurrentFolder(const QString &newCurrentFolder)
     mCurrentFolder = newCurrentFolder;
 }
 
+const QString &Settings::Environment::defaultOpenFolder() const
+{
+    return mDefaultOpenFolder;
+}
+
+void Settings::Environment::setDefaultOpenFolder(const QString &newDefaultOpenFolder)
+{
+    mDefaultOpenFolder = newDefaultOpenFolder;
+}
+
 void Settings::Environment::doSave()
 {
     //Appearence
@@ -2701,7 +2716,9 @@ void Settings::Environment::doSave()
     saveValue("interface font", mInterfaceFont);
     saveValue("interface font size", mInterfaceFontSize);
     saveValue("language", mLanguage);
+
     saveValue("current_folder",mCurrentFolder);
+    saveValue("default_open_folder",mDefaultOpenFolder);
 }
 
 QString Settings::Environment::interfaceFont() const

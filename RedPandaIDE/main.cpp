@@ -124,6 +124,10 @@ int main(int argc, char *argv[])
                                   QMessageBox::Ok);
         }
 
+        //set default open folder
+        QDir::setCurrent(pSettings->environment().defaultOpenFolder());
+
+
         MainWindow mainWindow;
         pMainWindow = &mainWindow;
         if (app.arguments().count()>1) {

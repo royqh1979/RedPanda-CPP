@@ -1,3 +1,6 @@
+Version 0.8.4 For Dev-C++ 7 Beta
+ - enhancement: auto save/load the default open folder in the configuration file
+
 Version 0.8.3 For Dev-C++ 7 Beta
  - enhancement: View menu
  - enhancement: hide/show statusbar

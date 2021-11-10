@@ -468,6 +468,9 @@ public:
         const QString &currentFolder() const;
         void setCurrentFolder(const QString &newCurrentFolder);
 
+        const QString &defaultOpenFolder() const;
+        void setDefaultOpenFolder(const QString &newDefaultOpenFolder);
+
     private:
 
         //Appearence
@@ -476,6 +479,8 @@ public:
         int mInterfaceFontSize;
         QString mLanguage;
         QString mCurrentFolder;
+
+        QString mDefaultOpenFolder;
         // _Base interface
     protected:
         void doSave() override;

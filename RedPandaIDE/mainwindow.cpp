@@ -3254,6 +3254,7 @@ void MainWindow::closeEvent(QCloseEvent *event) {
         settings.save();
 
         //save current folder ( for files view )
+        pSettings->environment().setDefaultOpenFolder(QDir::currentPath());
         pSettings->environment().save();
         try {
             mBookmarkModel->save(includeTrailingPathDelimiter(pSettings->dirs().config())
