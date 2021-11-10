@@ -18,27 +18,6 @@ enum class DebugCommandSource {
     Other
 };
 
-enum class AnnotationType {
-  TPrePrompt, TPrompt, TPostPrompt,
-  TSource,
-  TDisplayBegin, TDisplayEnd,
-  TDisplayExpression,
-  TFrameSourceFile, TFrameSourceBegin, TFrameSourceLine, TFrameFunctionName, TFrameWhere,
-  TFrameArgs,
-  TFrameBegin, TFrameEnd,
-  TErrorBegin, TErrorEnd,
-  TArrayBegin, TArrayEnd,
-  TElt, TEltRep, TEltRepEnd,
-  TExit,
-  TSignal, TSignalName, TSignalNameEnd, TSignalString, TSignalStringEnd,
-  TValueHistoryValue, TValueHistoryBegin, TValueHistoryEnd,
-  TArgBegin, TArgEnd, TArgValue, TArgNameEnd,
-  TFieldBegin, TFieldEnd, TFieldValue, TFieldNameEnd,
-  TInfoReg, TInfoAsm,
-  TUnknown, TEOF,
-  TLocal, TParam, TMemory
-};
-
 struct DebugCommand{
     QString command;
     QString params;
@@ -284,9 +263,15 @@ public:
     void stopDebug();
 
     bool commandRunning();
+    bool waitStart();
 
     bool invalidateAllVars() const;
     void setInvalidateAllVars(bool invalidateAllVars);
+
+    bool inferiorPaused() const;
+
+    bool processExited() const;
+
 
 signals:
     void parseStarted();
@@ -301,15 +286,7 @@ signals:
     void cmdFinished();
 private:
     void clearCmdQueue();
-    bool findAnnotation(AnnotationType annotation);
-    AnnotationType getAnnotation(const QString& s);
-    AnnotationType getLastAnnotation(const QByteArray& text);
-    AnnotationType getNextAnnotation();
     bool outputTerminated(QByteArray& text);
-    QString getNextFilledLine();
-    QString getNextLine();
-    QString getNextWord();
-    QString getRemainingLine();
     void handleDisassembly();
     void handleDisplay();
     void handleError();
@@ -323,8 +300,11 @@ private:
     void handleSignal();
     void handleSource();
     void handleValueHistoryValue();
-    AnnotationType peekNextAnnotation();
 
+    void processConsoleOutput(const QString& line);
+    void processResult(const QString& result);
+    void processExecAsyncRecord(const QString& line);
+    void processError(const QString& errorLine);
     void processResultRecord(const QString& line);
     void processDebugOutput(const QString& debugOutput);
     QString processEvalOutput();
@@ -333,6 +313,7 @@ private:
     void skipSpaces();
     void skipToAnnotation();
     QStringList tokenize(const QString& s);
+    QString removeToken(const QString& line);
 private:
     Debugger *mDebugger;
     QString mDebuggerPath;
@@ -365,7 +346,6 @@ private:
     bool dodisassemblerready;
     bool doregistersready;
     bool doevalready;
-    bool doprocessexited;
     bool doupdatecpuwindow;
     bool doupdateexecution;
     bool doreceivedsignal;
@@ -373,9 +353,11 @@ private:
     bool doupdatememoryview;
     bool doupdatelocal;
 
-    bool mStop;
+    bool mInferiorPaused;
+    bool mProcessExited;
+    QStringList mConsoleOutput;
 
-    friend class Debugger;
+    bool mStop;
     // QThread interface
 protected:
     void run() override;

@@ -68,7 +68,7 @@ bool Debugger::start()
     connect(mReader, &DebugReader::cmdFinished,pMainWindow, &MainWindow::enableDebugActions);
 
     mReader->start();
-    mReader->mStartSemaphore.acquire(1);
+    mReader->waitStart();
 
     pMainWindow->updateAppTitle();
 
@@ -450,7 +450,7 @@ void Debugger::syncFinishedParsing()
     }
 
     // The program to debug has stopped. Stop the debugger
-    if (mReader->doprocessexited) {
+    if (mReader->processExited()) {
         stop();
         return;
     }
@@ -1151,21 +1151,103 @@ void DebugReader::handleValueHistoryValue()
     doevalready = true;
 }
 
-AnnotationType DebugReader::peekNextAnnotation()
+void DebugReader::processConsoleOutput(const QString& line)
 {
-    int indexBackup = mIndex; // do NOT modifiy curpos
-    AnnotationType result = getNextAnnotation();
-    mIndex = indexBackup;
-    return result;
+    if (line.length()>3 && line.startsWith("~\"") && line.endsWith("\"")) {
+        mConsoleOutput.append(line.mid(2,line.length()-3));
+    }
+}
+
+void DebugReader::processResult(const QString &result)
+{
+    int pos = result.indexOf('=');
+    QString name = result.mid(0,pos);
+    QString value = result.mid(pos+1);
+    if (name == "bkpt") {
+        // info about breakpoint
+        handleBreakpoint(value);
+    } else if (name == "BreakpointTable") {
+        // info about breakpoint table
+        handleBreakpointTable(value);
+    } else if (name == "stack") {
+        // info about frame stack
+        handleFrameStack(value);
+    } else if (name == "variables") {
+        // info about local variables & arguments
+        handleVariables(value);
+    } else if (name == "frame") {
+        // info about current selected frame
+        handleFrame(value);
+    } else if (name == "asm_insns") {
+        // info about disassembled codes
+        handleDisassembled(value);
+    } else if (name == "value") {
+        handleEval(value);
+    } else if (name=="register-names") {
+        handleRegisterNames(value);
+    } else if (name == "register-values") {
+        handleRegisterValues(value);
+    } else if (name == "memory") {
+        handleMemory(value);
+    }
+}
+
+void DebugReader::processExecAsyncRecord(const QString &line)
+{
+    if (line.startsWith("*running")) {
+        mInferiorPaused = false;
+        return;
+    }
+    if (line.startsWith("*stopped")) {
+        mInferiorPaused = true;
+        QStringList props = line.split(',');
+        if (props.count()<2)
+            return;
+        QString reason = props[1];
+        QRegExp exp("^reason=\"(.+)\"$");
+        reason = exp.cap(1);
+        if (reason.isEmpty())
+            return;
+        if (reason.startsWith("exited")) {
+            //inferior exited, gdb should terminate too
+            mProcessExited = true;
+            return;
+        }
+        if (reason==("signal-received")) {
+            //todo: signal received
+            return;
+        }
+    }
+}
+
+void DebugReader::processError(const QString &errorLine)
+{
+    //todo
 }
 
 void DebugReader::processResultRecord(const QString &line)
 {
     if (line.startsWith("^exit")) {
-        doprocessexited = true;
+        mProcessExited = true;
         return;
     }
-
+    if (line.startsWith("^error")) {
+        processError(line);
+        return;
+    }
+    if (line.startsWith("^done")
+            || line.startsWith("^running")) {
+        int pos = line.indexOf(',');
+        if (pos>=0) {
+            QString result = line.mid(pos+1);
+            processResult(result);
+        }
+        return ;
+    }
+    if (line.startsWith("^connected")) {
+        //TODO: connected to remote target
+        return;
+    }
 }
 
 void DebugReader::processDebugOutput(const QString& debugOutput)
@@ -1181,6 +1263,8 @@ void DebugReader::processDebugOutput(const QString& debugOutput)
 
     emit parseStarted();
 
+    mConsoleOutput.clear();
+
    //try
 
    dobacktraceready = false;
@@ -1189,7 +1273,6 @@ void DebugReader::processDebugOutput(const QString& debugOutput)
    doevalready = false;
    doupdatememoryview = false;
    doupdatelocal = false;
-   doprocessexited = false;
    doupdateexecution = false;
    doreceivedsignal = false;
    doupdatecpuwindow = false;
@@ -1205,14 +1288,17 @@ void DebugReader::processDebugOutput(const QString& debugOutput)
         }
         switch (line[0].unicode()) {
         case '~': // console stream output
+            processConsoleOutput(line);
+            break;
         case '@': // target stream output
         case '&': // log stream output
-            //todo: process console stream output
             break;
         case '^': // result record
             processResultRecord(line);
             break;
         case '*': // exec async output
+            processExecAsyncRecord(line);
+            break;
         case '+': // status async output
         case '=': // notify async output
             break;
@@ -1522,25 +1608,6 @@ void DebugReader::runNextCmd()
     }
 }
 
-void DebugReader::skipSpaces()
-{
-    while (mIndex < mOutput.length() &&
-           (mOutput[mIndex]=='\t' || mOutput[mIndex]==' '))
-        mIndex++;
-}
-
-void DebugReader::skipToAnnotation()
-{
-    // Walk up to the next annotation
-    while (mIndex < mOutput.length() &&
-           (mOutput[mIndex]!=26))
-        mIndex++;
-    // Crawl through the remaining ->'s
-    while (mIndex < mOutput.length() &&
-           (mOutput[mIndex]==26))
-        mIndex++;
-}
-
 QStringList DebugReader::tokenize(const QString &s)
 {
     QStringList result;
@@ -1637,6 +1704,25 @@ QStringList DebugReader::tokenize(const QString &s)
     return result;
 }
 
+QString DebugReader::removeToken(const QString &line)
+{
+    int p=0;
+    while (p<line.length()) {
+        char ch=line[p];
+
+    }
+}
+
+bool DebugReader::processExited() const
+{
+    return mProcessExited;
+}
+
+bool DebugReader::inferiorPaused() const
+{
+    return mInferiorPaused;
+}
+
 bool DebugReader::invalidateAllVars() const
 {
     return mInvalidateAllVars;
@@ -1667,10 +1753,17 @@ bool DebugReader::commandRunning()
     return !mCmdQueue.isEmpty();
 }
 
+bool DebugReader::waitStart()
+{
+    mStartSemaphore.acquire(1);
+}
+
 
 void DebugReader::run()
 {
     mStop = false;
+    mInferiorPaused = false;
+    mProcessExited = false;
     bool errorOccurred = false;
     QString cmd = mDebuggerPath;
 //    QString arguments = "--annotate=2";
@@ -1706,7 +1799,6 @@ void DebugReader::run()
     mProcess->start();
     mProcess->waitForStarted(5000);
     mStartSemaphore.release(1);
-
     while (true) {
         mProcess->waitForFinished(1);
         if (mProcess->state()!=QProcess::Running) {
