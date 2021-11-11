@@ -1,3 +1,7 @@
+Version 0.8.5 For Dev-C++ 7 Beta
+ - enhancement: use lighter color to draw menu seperators
+ - enhancement: differentiate selected and unselected tab bars
+
 Version 0.8.4 For Dev-C++ 7 Beta
  - enhancement: auto save/load the default open folder in the configuration file
  - fix: shouldn't auto add '()' when char succeeding the completed function name is '('

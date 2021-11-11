@@ -793,3 +793,161 @@ QIcon DarkFusionStyle::standardIcon(StandardPixmap standardIcon, const QStyleOpt
 
     return QProxyStyle::standardIcon(standardIcon, option, widget);
 }
+
+void DarkFusionStyle::drawControl(ControlElement element, const QStyleOption *option, QPainter *painter,
+                               const QWidget *widget) const
+{
+    QRect rect = option->rect;
+    QColor outline = calcOutline(option->palette);
+    QColor highlightedOutline = calcHighlightedOutline(option->palette);
+    QColor shadow = calcDarkShade();
+
+
+    switch (element) {
+    case CE_MenuItem:
+        painter->save();
+        // Draws one item in a popup menu.
+        if (const QStyleOptionMenuItem *menuItem = qstyleoption_cast<const QStyleOptionMenuItem *>(option)) {
+            QColor highlightOutline = highlightedOutline;
+            QColor highlight = option->palette.highlight().color();
+            if (menuItem->menuItemType == QStyleOptionMenuItem::Separator) {
+                int w = 0;
+                const int margin = int(QStyleHelper::dpiScaled(5, option));
+                if (!menuItem->text.isEmpty()) {
+                    painter->setFont(menuItem->font);
+                    proxy()->drawItemText(painter, menuItem->rect.adjusted(margin, 0, -margin, 0), Qt::AlignLeft | Qt::AlignVCenter,
+                                          menuItem->palette, menuItem->state & State_Enabled, menuItem->text,
+                                          QPalette::Text);
+                    w = menuItem->fontMetrics.horizontalAdvance(menuItem->text) + margin;
+                }
+                painter->setPen(shadow.darker(150));
+                bool reverse = menuItem->direction == Qt::RightToLeft;
+                painter->drawLine(menuItem->rect.left() + margin + (reverse ? 0 : w), menuItem->rect.center().y(),
+                                  menuItem->rect.right() - margin - (reverse ? w : 0), menuItem->rect.center().y());
+                painter->restore();
+                break;
+            }
+        }
+        QProxyStyle::drawControl(element, option, painter, widget);
+        break;
+    case CE_TabBarTabShape:
+        painter->save();
+        if (const QStyleOptionTab *tab = qstyleoption_cast<const QStyleOptionTab *>(option)) {
+
+            bool rtlHorTabs = (tab->direction == Qt::RightToLeft
+                               && (tab->shape == QTabBar::RoundedNorth
+                                   || tab->shape == QTabBar::RoundedSouth));
+            bool selected = tab->state & State_Selected;
+            bool lastTab = ((!rtlHorTabs && tab->position == QStyleOptionTab::End)
+                            || (rtlHorTabs
+                                && tab->position == QStyleOptionTab::Beginning));
+            bool onlyOne = tab->position == QStyleOptionTab::OnlyOneTab;
+            int tabOverlap = pixelMetric(PM_TabBarTabOverlap, option, widget);
+            rect = option->rect.adjusted(0, 0, (onlyOne || lastTab) ? 0 : tabOverlap, 0);
+
+            QRect r2(rect);
+            int x1 = r2.left();
+            int x2 = r2.right();
+            int y1 = r2.top();
+            int y2 = r2.bottom();
+
+            painter->setPen(calcInnerContrastLine());
+
+            QTransform rotMatrix;
+            bool flip = false;
+            painter->setPen(shadow);
+
+            switch (tab->shape) {
+            case QTabBar::RoundedNorth:
+                break;
+            case QTabBar::RoundedSouth:
+                rotMatrix.rotate(180);
+                rotMatrix.translate(0, -rect.height() + 1);
+                rotMatrix.scale(-1, 1);
+                painter->setTransform(rotMatrix, true);
+                break;
+            case QTabBar::RoundedWest:
+                rotMatrix.rotate(180 + 90);
+                rotMatrix.scale(-1, 1);
+                flip = true;
+                painter->setTransform(rotMatrix, true);
+                break;
+            case QTabBar::RoundedEast:
+                rotMatrix.rotate(90);
+                rotMatrix.translate(0, - rect.width() + 1);
+                flip = true;
+                painter->setTransform(rotMatrix, true);
+                break;
+            default:
+                painter->restore();
+                QCommonStyle::drawControl(element, tab, painter, widget);
+                return;
+            }
+
+            if (flip) {
+                QRect tmp = rect;
+                rect = QRect(tmp.y(), tmp.x(), tmp.height(), tmp.width());
+                int temp = x1;
+                x1 = y1;
+                y1 = temp;
+                temp = x2;
+                x2 = y2;
+                y2 = temp;
+            }
+
+            painter->setRenderHint(QPainter::Antialiasing, true);
+            painter->translate(0.5, 0.5);
+
+            QColor tabFrameColor = tab->features & QStyleOptionTab::HasFrame ?
+                        calcTabFrameColor(option->palette) :
+                        option->palette.window().color();
+
+            QLinearGradient fillGradient(rect.topLeft(), rect.bottomLeft());
+            QLinearGradient outlineGradient(rect.topLeft(), rect.bottomLeft());
+            QPen outlinePen = outline.lighter(110);
+            if (selected) {
+                fillGradient.setColorAt(0, tabFrameColor.lighter(250));
+                //                QColor highlight = option->palette.highlight().color();
+                //                if (option->state & State_HasFocus && option->state & State_KeyboardFocusChange) {
+                //                    fillGradient.setColorAt(0, highlight.lighter(130));
+                //                    outlineGradient.setColorAt(0, highlight.darker(130));
+                //                    fillGradient.setColorAt(0.14, highlight);
+                //                    outlineGradient.setColorAt(0.14, highlight.darker(130));
+                //                    fillGradient.setColorAt(0.1401, tabFrameColor);
+                //                    outlineGradient.setColorAt(0.1401, highlight.darker(130));
+                //                }
+                fillGradient.setColorAt(0.85, tabFrameColor.lighter(150));
+                fillGradient.setColorAt(1, tabFrameColor);
+                outlineGradient.setColorAt(1, outline);
+                outlinePen = QPen(outlineGradient, 1);
+            } else {
+                fillGradient.setColorAt(0, tabFrameColor.darker(108));
+                fillGradient.setColorAt(0.85, tabFrameColor.darker(108));
+                fillGradient.setColorAt(1, tabFrameColor.darker(116));
+            }
+
+            QRect drawRect = rect.adjusted(0, selected ? 0 : 2, 0, 3);
+            painter->setPen(outlinePen);
+            painter->save();
+            painter->setClipRect(rect.adjusted(-1, -1, 1, selected ? -2 : -3));
+            painter->setBrush(fillGradient);
+            painter->drawRoundedRect(drawRect.adjusted(0, 0, -1, -1), 2.0, 2.0);
+            painter->setBrush(Qt::NoBrush);
+            painter->setPen(calcInnerContrastLine());
+            painter->drawRoundedRect(drawRect.adjusted(1, 1, -2, -1), 2.0, 2.0);
+            painter->restore();
+
+            if (selected) {
+                painter->fillRect(rect.left() + 1, rect.bottom() - 1, rect.width() - 2, rect.bottom() - 1, tabFrameColor);
+                painter->fillRect(QRect(rect.bottomRight() + QPoint(-2, -1), QSize(1, 1)), calcInnerContrastLine());
+                painter->fillRect(QRect(rect.bottomLeft() + QPoint(0, -1), QSize(1, 1)), calcInnerContrastLine());
+                painter->fillRect(QRect(rect.bottomRight() + QPoint(-1, -1), QSize(1, 1)), calcInnerContrastLine());
+            }
+        }
+        painter->restore();
+        break;
+    default:
+        QProxyStyle::drawControl(element, option, painter, widget);
+        break;
+    }
+}

@@ -12,6 +12,8 @@ public:
     // QStyle interface
 public:
     void drawPrimitive(PrimitiveElement pe, const QStyleOption *opt, QPainter *p, const QWidget *w) const override;
+    void drawControl(ControlElement ce, const QStyleOption *option, QPainter *painter,
+                     const QWidget *widget) const override;
     QIcon standardIcon(StandardPixmap standardIcon, const QStyleOption *option = nullptr,
                        const QWidget *widget = nullptr) const override;
 };
