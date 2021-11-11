@@ -173,6 +173,9 @@ private:
     void removeScopeLevel(int line); // removes level
     int skipBraces(int startAt);
     int skipBracket(int startAt);
+
+    void internalClear();
+
     bool checkForCatchBlock();
     bool checkForEnum();
     bool checkForForBlock();

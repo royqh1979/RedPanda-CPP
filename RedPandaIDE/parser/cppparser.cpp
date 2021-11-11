@@ -1297,6 +1297,18 @@ int CppParser::skipBracket(int startAt)
     return startAt;
 }
 
+void CppParser::internalClear()
+{
+    mCurrentScope.clear();
+    mCurrentClassScope.clear();
+    mIndex = 0;
+    mClassScope = StatementClassScope::scsNone;
+    mSkipList.clear();
+    mBlockBeginSkips.clear();
+    mBlockEndSkips.clear();
+    mInlineNamespaceEndSkips.clear();
+}
+
 bool CppParser::checkForCatchBlock()
 {
 //    return  mIndex < mTokenizer.tokenCount() &&
@@ -3127,7 +3139,8 @@ void CppParser::internalParse(const QString &fileName)
         mPreprocessor.setScanOptions(mParseGlobalHeaders, mParseLocalHeaders);
         mPreprocessor.preprocess(fileName, buffer);
 
-        QStringList prerocessResult = mPreprocessor.result();
+        QStringList preprocessResult = mPreprocessor.result();
+        //reduce memory usage
         mPreprocessor.clearResult();
 #ifdef QT_DEBUG
 //        StringsToFile(mPreprocessor.result(),"f:\\preprocess.txt");
@@ -3136,28 +3149,26 @@ void CppParser::internalParse(const QString &fileName)
 #endif
 
         // Tokenize the preprocessed buffer file
-        mTokenizer.tokenize(prerocessResult);
+        mTokenizer.tokenize(preprocessResult);
+        //reduce memory usage
+        preprocessResult.clear();
         if (mTokenizer.tokenCount() == 0)
             return;
 
         // Process the token list
-        mCurrentScope.clear();
-        mCurrentClassScope.clear();
-        mIndex = 0;
-        mClassScope = StatementClassScope::scsNone;
-        mSkipList.clear();
-        mBlockBeginSkips.clear();
-        mBlockEndSkips.clear();
-        mInlineNamespaceEndSkips.clear();
+        internalClear();
         while(true) {
             if (!handleStatement())
                 break;
         }
+        //reduce memory usage
+        internalClear();
 #ifdef QT_DEBUG
 //        mTokenizer.dumpTokens("f:\\tokens.txt");
 //        mStatementList.dump("f:\\stats.txt");
 //        mStatementList.dumpAll("f:\\all-stats.txt");
 #endif
+        //reduce memory usage
         mTokenizer.reset();
     }
 }
