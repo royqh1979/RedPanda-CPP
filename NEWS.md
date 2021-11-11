@@ -1,3 +1,7 @@
+Version 0.8.6 For Dev-C++ 7 Beta
+ - enhancement: greatly reduces memory usage for symbol parsing ( memory needed for bits/stdc++.h reduced from 150m+ to 50m+)
+ - fix: currect compiler set not correctly updated when switch between normal file and project file
+
 Version 0.8.5 For Dev-C++ 7 Beta
  - enhancement: use lighter color to draw menu seperators
  - enhancement: differentiate selected and unselected tab bars

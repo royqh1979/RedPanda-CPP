@@ -46,17 +46,12 @@ public:
 
     explicit CppPreprocessor();
     void clear();
-    void addDefineByParts(const QString& name, const QString& args,
-                          const QString& value, bool hardCoded);
+    void clearResult();
     void getDefineParts(const QString& input, QString &name, QString &args, QString &value);
-    void addDefineByLine(const QString& line, bool hardCoded);
-    PDefine getDefine(const QString& name);
-    PDefine getHardDefine(const QString& name);
+    void addHardDefineByLine(const QString& line);
     void reset(); //reset but don't clear generated defines
-    void resetDefines();
     void setScanOptions(bool parseSystem, bool parseLocal);
     void preprocess(const QString& fileName, QStringList buffer = QStringList());
-    void invalidDefinesInFile(const QString& fileName);
 
     void dumpDefinesTo(const QString& fileName) const;
     void dumpIncludesListTo(const QString& fileName) const;
@@ -97,7 +92,7 @@ private:
     void expandMacro(const QString& line, QString& newLine, QString& word, int& i, int depth);
     QString removeGCCAttributes(const QString& line);
     void removeGCCAttribute(const QString&line, QString& newLine, int &i, const QString& word);
-
+    PDefine getDefine(const QString& name);
     // current file stuff
     PParsedFile getInclude(int index);
     void openInclude(const QString& fileName, QStringList bufferedText=QStringList());
@@ -110,6 +105,12 @@ private:
     // include stuff
     PFileIncludes getFileIncludesEntry(const QString& FileName);
     void addDefinesInFile(const QString& fileName);
+    void resetDefines();
+    void addDefineByParts(const QString& name, const QString& args,
+                          const QString& value, bool hardCoded);
+    void addDefineByLine(const QString& line, bool hardCoded);
+    PDefine getHardDefine(const QString& name);
+    void invalidDefinesInFile(const QString& fileName);
 
     void parseArgs(PDefine define);
     QList<PDefineArgToken> tokenizeValue(const QString& value);
@@ -181,24 +182,26 @@ private:
     QStringList mResult;
     PFileIncludes mCurrentIncludes;
     int mPreProcIndex;
-    QHash<QString,PFileIncludes> mIncludesList;
-    DefineMap mHardDefines; // set by "cpp -dM -E -xc NUL"
-    DefineMap mDefines; // working set, editable
-    QHash<QString, PDefineMap> mFileDefines; //dictionary to save defines for each headerfile;
     QList<PParsedFile> mIncludes; // stack of files we've stepped into. last one is current file, first one is source file
     QList<bool> mBranchResults;// stack of branch results (boolean). last one is current branch, first one is outermost branch
-    //{ List of current compiler set's include path}
-    QSet<QString> mIncludePaths;
+    DefineMap mDefines; // working set, editable
+    QSet<QString> mProcessed; // dictionary to save filename already processed
+
+    //used by parser even preprocess finished
+    DefineMap mHardDefines; // set by "cpp -dM -E -xc NUL"
+    QHash<QString,PFileIncludes> mIncludesList;
+    QHash<QString, PDefineMap> mFileDefines; //dictionary to save defines for each headerfile;
     //{ List of current project's include path }
     QSet<QString> mProjectIncludePaths;
     //we also need include paths in order (for #include_next)
     QList<QString> mIncludePathList;
     QList<QString> mProjectIncludePathList;
+    //{ List of current compiler set's include path}
+    QSet<QString> mIncludePaths;
 
     bool mParseSystem;
     bool mParseLocal;
     QSet<QString> mScannedFiles;
-    QSet<QString> mProcessed; // dictionary to save filename already processed
 };
 
 #endif // CPPPREPROCESSOR_H

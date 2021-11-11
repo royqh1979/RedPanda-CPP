@@ -61,9 +61,9 @@ void CppParser::addHardDefineByLine(const QString &line)
 {
     QMutexLocker  locker(&mMutex);
     if (line.startsWith('#')) {
-        mPreprocessor.addDefineByLine(line.mid(1).trimmed(), true);
+        mPreprocessor.addHardDefineByLine(line.mid(1).trimmed());
     } else {
-        mPreprocessor.addDefineByLine(line, true);
+        mPreprocessor.addHardDefineByLine(line);
     }
 }
 
@@ -3127,9 +3127,16 @@ void CppParser::internalParse(const QString &fileName)
         mPreprocessor.setScanOptions(mParseGlobalHeaders, mParseLocalHeaders);
         mPreprocessor.preprocess(fileName, buffer);
 
+        QStringList prerocessResult = mPreprocessor.result();
+        mPreprocessor.clearResult();
+#ifdef QT_DEBUG
+//        StringsToFile(mPreprocessor.result(),"f:\\preprocess.txt");
+//        mPreprocessor.dumpDefinesTo("f:\\defines.txt");
+//        mPreprocessor.dumpIncludesListTo("f:\\includes.txt");
+#endif
 
         // Tokenize the preprocessed buffer file
-        mTokenizer.tokenize(mPreprocessor.result());
+        mTokenizer.tokenize(prerocessResult);
         if (mTokenizer.tokenCount() == 0)
             return;
 
@@ -3147,13 +3154,11 @@ void CppParser::internalParse(const QString &fileName)
                 break;
         }
 #ifdef QT_DEBUG
-//        StringsToFile(mPreprocessor.result(),"f:\\preprocess.txt");
-//        mPreprocessor.dumpDefinesTo("f:\\defines.txt");
-//        mPreprocessor.dumpIncludesListTo("f:\\includes.txt");
-//        mStatementList.dump("f:\\stats.txt");
 //        mTokenizer.dumpTokens("f:\\tokens.txt");
+//        mStatementList.dump("f:\\stats.txt");
 //        mStatementList.dumpAll("f:\\all-stats.txt");
 #endif
+        mTokenizer.reset();
     }
 }
 

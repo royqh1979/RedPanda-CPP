@@ -22,6 +22,18 @@ void CppPreprocessor::clear()
     mCurrentIncludes.reset();
 }
 
+void CppPreprocessor::clearResult()
+{
+    mFileName.clear();
+    mBuffer.clear();
+    mResult.clear();
+    mCurrentIncludes = nullptr;
+    mIncludes.clear(); // stack of files we've stepped into. last one is current file, first one is source file
+    mBranchResults.clear();// stack of branch results (boolean). last one is current branch, first one is outermost branch
+    mDefines.clear(); // working set, editable
+    mProcessed.clear(); // dictionary to save filename already processed
+}
+
 void CppPreprocessor::addDefineByParts(const QString &name, const QString &args, const QString &value, bool hardCoded)
 {
     // Check for duplicates
@@ -89,6 +101,11 @@ void CppPreprocessor::getDefineParts(const QString &input, QString &name, QStrin
         args = "";
     }
     value = removeGCCAttributes(s.mid(i+1).trimmed());
+}
+
+void CppPreprocessor::addHardDefineByLine(const QString &line)
+{
+    addDefineByLine(line,true);
 }
 
 void CppPreprocessor::addDefineByLine(const QString &line, bool hardCoded)
