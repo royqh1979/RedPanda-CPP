@@ -147,7 +147,7 @@ void QConsole::addLine(const QString &line)
 
 void QConsole::addText(const QString &text)
 {
-    QStringList lst = TextToLines(text);
+    QStringList lst = textToLines(text);
     for (const QString& line:lst) {
         addLine(line);
     }

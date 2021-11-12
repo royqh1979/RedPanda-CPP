@@ -15,6 +15,7 @@
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QJsonDocument>
+#include <QJsonDocument>
 
 Debugger::Debugger(QObject *parent) : QObject(parent)
 {
@@ -485,7 +486,7 @@ void Debugger::syncFinishedParsing()
             pMainWindow->addDebugOutput("");
             pMainWindow->addDebugOutput("");
         } else {
-            QStringList strList = TextToLines(mReader->mOutput);
+            QStringList strList = textToLines(mReader->mOutput);
             QStringList outStrList;
             bool addToLastLine=false;
             for (int i=0;i<strList.size();i++) {
@@ -774,7 +775,7 @@ AnnotationType DebugReader::getNextAnnotation()
 
 bool DebugReader::outputTerminated(QByteArray &text)
 {
-    QStringList lines = TextToLines(QString::fromUtf8(text));
+    QStringList lines = textToLines(QString::fromUtf8(text));
     foreach (const QString& line,lines) {
         if (line == "(gdb)")
             return true;
@@ -993,7 +994,7 @@ void DebugReader::handleLocalOutput()
     QString line;
     while (true) {
         if (!s.startsWith("\032\032")) {
-            s = TrimLeft(s);
+            s = trimLeft(s);
             if (s == "No locals.") {
                 return;
             }
@@ -1067,7 +1068,7 @@ void DebugReader::handleRegisters()
         reg->name = s.mid(0,x);
         s.remove(0,x);
         // Remove spaces
-        s = TrimLeft(s);
+        s = trimLeft(s);
 
         // Cut hex value from 1 to first tab
         x = s.indexOf('\t');
@@ -1075,7 +1076,7 @@ void DebugReader::handleRegisters()
             x = s.indexOf(' ');
         reg->hexValue = s.mid(0,x);
         s.remove(0,x); // delete tab too
-        s = TrimLeft(s);
+        s = trimLeft(s);
 
         // Remaining part contains decimal value
         reg->decValue = s;
@@ -1120,7 +1121,7 @@ void DebugReader::handleSignal()
 void DebugReader::handleSource()
 {
     // source filename:line:offset:beg/middle/end:addr
-    QString s = TrimLeft(getRemainingLine());
+    QString s = trimLeft(getRemainingLine());
 
     // remove offset, beg/middle/end, address
     for (int i=0;i<3;i++) {
@@ -1151,18 +1152,18 @@ void DebugReader::handleValueHistoryValue()
     doevalready = true;
 }
 
-void DebugReader::processConsoleOutput(const QString& line)
+void DebugReader::processConsoleOutput(const QByteArray& line)
 {
     if (line.length()>3 && line.startsWith("~\"") && line.endsWith("\"")) {
-        mConsoleOutput.append(line.mid(2,line.length()-3));
+        mConsoleOutput.append(QString::fromLocal8Bit(line.mid(2,line.length()-3)));
     }
 }
 
-void DebugReader::processResult(const QString &result)
+void DebugReader::processResult(const QByteArray &result)
 {
     int pos = result.indexOf('=');
-    QString name = result.mid(0,pos);
-    QString value = result.mid(pos+1);
+    QByteArray name = result.mid(0,pos);
+    QByteArray value = result.mid(pos+1);
     if (name == "bkpt") {
         // info about breakpoint
         handleBreakpoint(value);
@@ -1220,12 +1221,12 @@ void DebugReader::processExecAsyncRecord(const QString &line)
     }
 }
 
-void DebugReader::processError(const QString &errorLine)
+void DebugReader::processError(const QByteArray &errorLine)
 {
-    //todo
+    mConsoleOutput.append(QString::fromLocal8Bit(errorLine));
 }
 
-void DebugReader::processResultRecord(const QString &line)
+void DebugReader::processResultRecord(const QByteArray &line)
 {
     if (line.startsWith("^exit")) {
         mProcessExited = true;
@@ -1239,7 +1240,7 @@ void DebugReader::processResultRecord(const QString &line)
             || line.startsWith("^running")) {
         int pos = line.indexOf(',');
         if (pos>=0) {
-            QString result = line.mid(pos+1);
+            QByteArray result = line.mid(pos+1);
             processResult(result);
         }
         return ;
@@ -1250,7 +1251,7 @@ void DebugReader::processResultRecord(const QString &line)
     }
 }
 
-void DebugReader::processDebugOutput(const QString& debugOutput)
+void DebugReader::processDebugOutput(const QByteArray& debugOutput)
 {
     // Only update once per update at most
     //WatchView.Items.BeginUpdate;
@@ -1278,15 +1279,15 @@ void DebugReader::processDebugOutput(const QString& debugOutput)
    doupdatecpuwindow = false;
    doreceivedsfwarning = false;
 
-   QStringList lines = TextToLines(debugOutput);
+   QList<QByteArray> lines = splitByteArrayToLines(debugOutput);
 
    for (int i=0;i<lines.count();i++) {
-        QString line = lines[i];
+        QByteArray line = lines[i];
         line = removeToken(line);
         if (line.isEmpty()) {
             continue;
         }
-        switch (line[0].unicode()) {
+        switch (line[0]) {
         case '~': // console stream output
             processConsoleOutput(line);
             break;
@@ -1704,7 +1705,24 @@ QStringList DebugReader::tokenize(const QString &s)
     return result;
 }
 
-QString DebugReader::removeToken(const QString &line)
+void DebugReader::handleBreakpoint(const QByteArray &breakpointRecord)
+{
+    //we have to convert record from local encoding to utf8
+    //because QJsonDocument only handle utf8-encoded json strings
+    QString temp = QString::fromLocal8Bit(breakpointRecord);
+    QByteArray record = temp.toUtf8();
+    QJsonParseError error;
+    QJsonDocument doc = QJsonDocument::fromJson(record,&error);
+    if (error.error!=QJsonParseError::NoError) {
+        mConsoleOutput.append(QString("Error when parsing breakpoint record \"%1\":").arg(temp));
+        mConsoleOutput.append(error.errorString());
+        return;
+    }
+    QJsonObject obj = doc.object();
+
+}
+
+QByteArray DebugReader::removeToken(const QByteArray &line)
 {
     int p=0;
     while (p<line.length()) {
@@ -1825,7 +1843,7 @@ void DebugReader::run()
 
 
         if ( readed.endsWith("\r\n")&& outputTerminated(buffer)) {
-            processDebugOutput(QString::fromLocal8Bit(buffer));
+            processDebugOutput(buffer);
             buffer.clear();
             mCmdRunning = false;
             runNextCmd();

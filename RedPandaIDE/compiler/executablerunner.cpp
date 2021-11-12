@@ -93,7 +93,7 @@ void ExecutableRunner::run()
     process.start();
     process.waitForStarted(5000);
     if (process.state()==QProcess::Running && redirectInput()) {
-        process.write(ReadFileToByteArray(redirectInputFilename()));
+        process.write(readFileToByteArray(redirectInputFilename()));
         process.closeWriteChannel();
     }
     while (true) {

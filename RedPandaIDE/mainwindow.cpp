@@ -5099,8 +5099,8 @@ void MainWindow::updateProblemCaseOutput(POJProblemCase problemCase)
     ui->txtProblemCaseOutput->clear();
     ui->txtProblemCaseOutput->setText(problemCase->output);
     if (problemCase->testState == ProblemCaseTestState::Failed) {
-        QStringList output = TextToLines(problemCase->output);
-        QStringList expected = TextToLines(problemCase->expected);
+        QStringList output = textToLines(problemCase->output);
+        QStringList expected = textToLines(problemCase->expected);
         for (int i=0;i<output.count();i++) {
             if (i>=expected.count() || output[i]!=expected[i]) {
                 QTextBlock block = ui->txtProblemCaseOutput->document()->findBlockByLineNumber(i);

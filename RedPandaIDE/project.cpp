@@ -1020,7 +1020,7 @@ void Project::buildPrivateResource(bool forceSave)
 
     rcFile = QDir(directory()).absoluteFilePath(rcFile);
     if (contents.count() > 3) {
-        StringsToFile(contents,rcFile);
+        stringsToFile(contents,rcFile);
         mOptions.privateResource = extractRelativePath(directory(), rcFile);
     } else {
       if (fileExists(rcFile))
@@ -1061,7 +1061,7 @@ void Project::buildPrivateResource(bool forceSave)
         content.append("    </dependentAssembly>");
         content.append("</dependency>");
         content.append("</assembly>");
-        StringsToFile(content,executable() + ".Manifest");
+        stringsToFile(content,executable() + ".Manifest");
     } else if (fileExists(executable() + ".Manifest"))
         QFile::remove(executable() + ".Manifest");
 
@@ -1107,7 +1107,7 @@ void Project::buildPrivateResource(bool forceSave)
                    .arg(mOptions.versionInfo.productVersion));
     contents.append("");
     contents.append("#endif /*" + def + "*/");
-    StringsToFile(contents,hFile);
+    stringsToFile(contents,hFile);
 }
 
 void Project::checkProjectFileForUpdate(SimpleIni &ini)
@@ -1757,7 +1757,7 @@ bool ProjectUnit::save()
     if (!mEditor && !fileExists(mFileName)) {
         // file is neither open, nor saved
         QStringList temp;
-        StringsToFile(temp,mFileName);
+        stringsToFile(temp,mFileName);
     } else if (mEditor && mEditor->modified()) {
         result = mEditor->save();
     }

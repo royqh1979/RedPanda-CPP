@@ -492,7 +492,7 @@ void SynEditStringList::insertText(int Index, const QString &NewText)
     }
     if (NewText.isEmpty())
         return;
-    QStringList lines = TextToLines(NewText);
+    QStringList lines = textToLines(NewText);
     insertStrings(Index,lines);
 }
 
@@ -539,14 +539,14 @@ void SynEditStringList::loadFromFile(const QString& filename, const QByteArray& 
                 allAscii = isTextAllAscii(line);
             }
             if (allAscii) {
-                addItem(TrimRight(QString::fromLatin1(line)));
+                addItem(trimRight(QString::fromLatin1(line)));
             } else {
                 QString newLine = codec->toUnicode(line.constData(),line.length(),&state);
                 if (state.invalidChars>0) {
                     needReread = true;
                     break;
                 }
-                addItem(TrimRight(newLine));
+                addItem(trimRight(newLine));
             }
             if (file.atEnd()){
                 break;
@@ -579,7 +579,7 @@ void SynEditStringList::loadFromFile(const QString& filename, const QByteArray& 
     QString line;
     internalClear();
     while (textStream.readLineInto(&line)) {
-        addItem(TrimRight(line));
+        addItem(trimRight(line));
     }
     emit inserted(0,mList.count());
 }

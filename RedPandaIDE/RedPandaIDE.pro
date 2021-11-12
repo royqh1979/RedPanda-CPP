@@ -25,6 +25,7 @@ SOURCES += \
     compiler/ojproblemcasesrunner.cpp \
     compiler/projectcompiler.cpp \
     compiler/runner.cpp \
+    gdbmiresultparser.cpp \
     platform.cpp \
     compiler/compiler.cpp \
     compiler/compilermanager.cpp \
@@ -154,6 +155,7 @@ HEADERS += \
     compiler/runner.h \
     compiler/stdincompiler.h \
     cpprefacter.h \
+    gdbmiresultparser.h \
     parser/cppparser.h \
     parser/cpppreprocessor.h \
     parser/cpptokenizer.h \

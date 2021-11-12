@@ -602,12 +602,12 @@ void Editor::keyPressEvent(QKeyEvent *event)
                     insertString.append(QString(" * ")+USER_CODE_IN_INSERT_POS);
                     insertString.append(" */");
                 }
-                insertCodeSnippet(LinesToText(insertString));
+                insertCodeSnippet(linesToText(insertString));
             } else if (highlighter()
                        && caretY()>=2
                        && highlighter()->isLastLineCommentNotFinished(
                            lines()->ranges(caretY()-2).state)) {
-                s=TrimLeft(lineText());
+                s=trimLeft(lineText());
                 if (s.startsWith("* ")) {
                     handled = true;
                     int right = lines()->getString(caretY()-1).length()-caretX();
@@ -2095,7 +2095,7 @@ void Editor::insertCodeSnippet(const QString &code)
     auto action = finally([this]{
         endUpdate();
     });
-    QStringList sl = TextToLines(parseMacros(code));
+    QStringList sl = textToLines(parseMacros(code));
     int lastI=0;
     int spaceCount = GetLeftSpacing(
                 leftSpaces(lineText()),true).length();
@@ -2149,7 +2149,7 @@ void Editor::insertCodeSnippet(const QString &code)
     }
 
     BufferCoord cursorPos = caretXY();
-    QString s = LinesToText(newSl);
+    QString s = linesToText(newSl);
 //        if EndsStr(#13#10,s) then
 //          Delete(s,Length(s)-1,2)
 //        else if EndsStr(#10, s) then

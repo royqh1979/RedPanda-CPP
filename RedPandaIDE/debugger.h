@@ -39,6 +39,9 @@ struct WatchVar {
 };
 
 struct Breakpoint {
+    int number; // breakpoint number
+    QString type; // type of the breakpoint
+    QString catch_type;
     int line;
     QString filename;
     QString condition;
@@ -301,19 +304,20 @@ private:
     void handleSource();
     void handleValueHistoryValue();
 
-    void processConsoleOutput(const QString& line);
-    void processResult(const QString& result);
-    void processExecAsyncRecord(const QString& line);
-    void processError(const QString& errorLine);
-    void processResultRecord(const QString& line);
-    void processDebugOutput(const QString& debugOutput);
+
     QString processEvalOutput();
     void processWatchOutput(PWatchVar WatchVar);
     void runNextCmd();
-    void skipSpaces();
-    void skipToAnnotation();
     QStringList tokenize(const QString& s);
-    QString removeToken(const QString& line);
+
+    void handleBreakpoint(const QByteArray& breakpointRecord);
+    void processConsoleOutput(const QByteArray& line);
+    void processResult(const QByteArray& result);
+    void processExecAsyncRecord(const QByteArray& line);
+    void processError(const QByteArray& errorLine);
+    void processResultRecord(const QByteArray& line);
+    void processDebugOutput(const QByteArray& debugOutput);
+    QByteArray removeToken(const QByteArray& line);
 private:
     Debugger *mDebugger;
     QString mDebuggerPath;
