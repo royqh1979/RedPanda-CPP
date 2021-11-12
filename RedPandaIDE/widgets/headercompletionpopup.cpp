@@ -227,6 +227,7 @@ void HeaderCompletionPopup::hideEvent(QHideEvent *)
 {
     mCompletionList.clear();
     mFullCompletionList.clear();
+    mParser = nullptr;
 }
 
 bool HeaderCompletionPopup::event(QEvent *event)

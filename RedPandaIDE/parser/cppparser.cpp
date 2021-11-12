@@ -61,9 +61,9 @@ void CppParser::addHardDefineByLine(const QString &line)
 {
     QMutexLocker  locker(&mMutex);
     if (line.startsWith('#')) {
-        mPreprocessor.addDefineByLine(line.mid(1).trimmed(), true);
+        mPreprocessor.addHardDefineByLine(line.mid(1).trimmed());
     } else {
-        mPreprocessor.addDefineByLine(line, true);
+        mPreprocessor.addHardDefineByLine(line);
     }
 }
 
@@ -1295,6 +1295,18 @@ int CppParser::skipBracket(int startAt)
         i++;
     }
     return startAt;
+}
+
+void CppParser::internalClear()
+{
+    mCurrentScope.clear();
+    mCurrentClassScope.clear();
+    mIndex = 0;
+    mClassScope = StatementClassScope::scsNone;
+    mSkipList.clear();
+    mBlockBeginSkips.clear();
+    mBlockEndSkips.clear();
+    mInlineNamespaceEndSkips.clear();
 }
 
 bool CppParser::checkForCatchBlock()
@@ -3127,33 +3139,37 @@ void CppParser::internalParse(const QString &fileName)
         mPreprocessor.setScanOptions(mParseGlobalHeaders, mParseLocalHeaders);
         mPreprocessor.preprocess(fileName, buffer);
 
-
-        // Tokenize the preprocessed buffer file
-        mTokenizer.tokenize(mPreprocessor.result());
-        if (mTokenizer.tokenCount() == 0)
-            return;
-
-        // Process the token list
-        mCurrentScope.clear();
-        mCurrentClassScope.clear();
-        mIndex = 0;
-        mClassScope = StatementClassScope::scsNone;
-        mSkipList.clear();
-        mBlockBeginSkips.clear();
-        mBlockEndSkips.clear();
-        mInlineNamespaceEndSkips.clear();
-        while(true) {
-            if (!handleStatement())
-                break;
-        }
+        QStringList preprocessResult = mPreprocessor.result();
+        //reduce memory usage
+        mPreprocessor.clearResult();
 #ifdef QT_DEBUG
 //        StringsToFile(mPreprocessor.result(),"f:\\preprocess.txt");
 //        mPreprocessor.dumpDefinesTo("f:\\defines.txt");
 //        mPreprocessor.dumpIncludesListTo("f:\\includes.txt");
-//        mStatementList.dump("f:\\stats.txt");
+#endif
+
+        // Tokenize the preprocessed buffer file
+        mTokenizer.tokenize(preprocessResult);
+        //reduce memory usage
+        preprocessResult.clear();
+        if (mTokenizer.tokenCount() == 0)
+            return;
+
+        // Process the token list
+        internalClear();
+        while(true) {
+            if (!handleStatement())
+                break;
+        }
+        //reduce memory usage
+        internalClear();
+#ifdef QT_DEBUG
 //        mTokenizer.dumpTokens("f:\\tokens.txt");
+//        mStatementList.dump("f:\\stats.txt");
 //        mStatementList.dumpAll("f:\\all-stats.txt");
 #endif
+        //reduce memory usage
+        mTokenizer.reset();
     }
 }
 

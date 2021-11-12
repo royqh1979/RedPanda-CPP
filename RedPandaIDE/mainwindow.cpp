@@ -91,7 +91,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->toolbarCompilerSet->addWidget(mCompilerSet);
     connect(mCompilerSet,QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &MainWindow::onCompilerSetChanged);
-    updateCompilerSet();
+    //updateCompilerSet();
 
     mCompilerManager = new CompilerManager(this);
     mDebugger = new Debugger(this);
@@ -399,7 +399,7 @@ void MainWindow::updateEditorActions()
     }
 
     updateCompileActions();
-
+    updateCompilerSet();
 }
 
 void MainWindow::updateProjectActions()

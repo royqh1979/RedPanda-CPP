@@ -894,6 +894,7 @@ void CodeCompletionPopup::hideEvent(QHideEvent *event)
     mIncludedFiles.clear();
     mUsings.clear();
     mAddedStatements.clear();
+    mParser = nullptr;
     QWidget::hideEvent(event);
 }
 
