@@ -151,10 +151,12 @@ Editor::Editor(QWidget *parent, const QString& filename,
     connect(this, &QWidget::customContextMenuRequested,
             pMainWindow, &MainWindow::onEditorContextMenu);
 
+    mCanAutoSave = false;
     if (isNew && parentPageControl!=nullptr) {
         QString fileTemplate = pMainWindow->codeSnippetManager()->newFileTemplate();
         if (!fileTemplate.isEmpty()) {
             insertCodeSnippet(fileTemplate);
+            mCanAutoSave = true;
         }
     }
     if (!isNew && parentPageControl!=nullptr) {
@@ -1390,6 +1392,8 @@ void Editor::onStatusChanged(SynStatusChanges changes)
     }
     if (changes.testFlag(scModified)) {
         mCurrentLineModified = true;
+        if (mParentPageControl!=nullptr)
+            mCanAutoSave = true;
     }
 
     if (changes.testFlag(SynStatusChange::scCaretX)
@@ -3118,6 +3122,16 @@ void Editor::onExportedFormatToken(PSynHighlighter syntaxHighlighter, int Line, 
             break;
         }
     }
+}
+
+bool Editor::canAutoSave() const
+{
+    return mCanAutoSave;
+}
+
+void Editor::setCanAutoSave(bool newCanAutoSave)
+{
+    mCanAutoSave = newCanAutoSave;
 }
 
 const QDateTime &Editor::hideTime() const

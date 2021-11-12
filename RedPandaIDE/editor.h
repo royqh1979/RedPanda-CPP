@@ -269,6 +269,7 @@ private:
     int mTabStopBegin;
     int mTabStopEnd;
     int mTabStopY;
+    bool mCanAutoSave;
     QString mLineBeforeTabStop;
     QString mLineAfterTabStop;
     QList<PTabStop> mUserCodeInTabStops;
@@ -311,6 +312,9 @@ public:
 
     const QDateTime &hideTime() const;
     void setHideTime(const QDateTime &newHideTime);
+
+    bool canAutoSave() const;
+    void setCanAutoSave(bool newCanAutoSave);
 
 protected:
     void mouseReleaseEvent(QMouseEvent *event) override;

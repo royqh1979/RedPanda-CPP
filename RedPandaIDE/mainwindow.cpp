@@ -799,8 +799,10 @@ void MainWindow::updateClassBrowserForEditor(Editor *editor)
 void MainWindow::resetAutoSaveTimer()
 {
     if (pSettings->editor().enableAutoSave()) {
+        mAutoSaveTimer.stop();
         //minute to milliseconds
         mAutoSaveTimer.start(pSettings->editor().autoSaveInterval()*60*1000);
+        onAutoSaveTimeout();
     } else {
         mAutoSaveTimer.stop();
     }
@@ -1547,35 +1549,47 @@ void MainWindow::prepareDebugger()
 
 void MainWindow::doAutoSave(Editor *e)
 {
-    if (!e)
-        return;
-    if (!e->modified())
+
+    if (!e || !e->canAutoSave())
         return;
     QString filename = e->filename();
-    QFileInfo fileInfo(filename);
-    QDir parent = fileInfo.absoluteDir();
-    QString baseName = fileInfo.completeBaseName();
-    QString suffix = fileInfo.suffix();
-    switch(pSettings->editor().autoSaveStrategy()) {
-    case assOverwrite:
-        break;
-    case assAppendUnixTimestamp:
-        filename = parent.filePath(
-                    QString("%1.%2.%3")
-                    .arg(baseName)
-                    .arg(QDateTime::currentSecsSinceEpoch())
-                    .arg(suffix));
-        break;
-    case assAppendFormatedTimeStamp: {
-        QDateTime time = QDateTime::currentDateTime();
-        filename = parent.filePath(
-                    QString("%1.%2.%3")
-                    .arg(baseName)
-                    .arg(time.toString("yyyy.MM.dd.hh.mm.ss"))
-                    .arg(suffix));
+    try {
+        QFileInfo fileInfo(filename);
+        QDir parent = fileInfo.absoluteDir();
+        QString baseName = fileInfo.completeBaseName();
+        QString suffix = fileInfo.suffix();
+        switch(pSettings->editor().autoSaveStrategy()) {
+        case assOverwrite:
+            e->save();
+            return;
+        case assAppendUnixTimestamp:
+            filename = parent.filePath(
+                        QString("%1.%2.%3")
+                        .arg(baseName)
+                        .arg(QDateTime::currentSecsSinceEpoch())
+                        .arg(suffix));
+            break;
+        case assAppendFormatedTimeStamp: {
+            QDateTime time = QDateTime::currentDateTime();
+            filename = parent.filePath(
+                        QString("%1.%2.%3")
+                        .arg(baseName)
+                        .arg(time.toString("yyyy.MM.dd.hh.mm.ss"))
+                        .arg(suffix));
+        }
+        }
+        if (e->isNew()) {
+            e->saveAs();
+        } else {
+            e->saveFile(filename);
+            e->setCanAutoSave(false);
+        }
+    } catch (FileError& error) {
+        QMessageBox::critical(e,
+                              tr("Auto Save Error"),
+                              tr("Auto save \"%1\" to \"%2\" failed:%3")
+                              .arg(e->filename(), filename, error.reason()));
     }
-    }
-    e->saveFile(filename);
 }
 
 //static void limitActionShortCutScope(QAction* action,QWidget* scopeWidget) {
