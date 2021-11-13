@@ -2660,7 +2660,7 @@ void SynEdit::doAddChar(QChar AChar)
                                 SynChangeReason::crInsert,
                                 BufferCoord{1, oldCaretY},
                                 BufferCoord{temp.length()+1, oldCaretY},
-                                "",
+                                temp,
                                 SynSelectionMode::smNormal
                                 );
                 }
@@ -2687,7 +2687,7 @@ void SynEdit::doAddChar(QChar AChar)
                                 SynChangeReason::crInsert,
                                 BufferCoord{1, oldCaretY},
                                 BufferCoord{temp.length()+1, oldCaretY},
-                                "",
+                                temp,
                                 SynSelectionMode::smNormal
                                 );
                 }
@@ -2701,37 +2701,7 @@ void SynEdit::doAddChar(QChar AChar)
             if (temp.trimmed().isEmpty()) {
                 int indentSpaces = calcIndentSpaces(oldCaretY,"{", true);
                 if (indentSpaces != leftSpaces(temp)) {
-                    QString line = mLines->getString(oldCaretY-1) + right;
-                    QString temp = GetLeftSpacing(indentSpaces,true);
-                    int i = temp.length();
-                    mLines->putString(oldCaretY-1,temp);
-                    internalSetCaretXY(BufferCoord{i+1,oldCaretY});
-                    mUndoList->AddChange(
-                                SynChangeReason::crDelete,
-                                BufferCoord{1, oldCaretY},
-                                BufferCoord{line.length()+1, oldCaretY},
-                                line,
-                                SynSelectionMode::smNormal
-                                );
-                    mUndoList->AddChange(
-                                SynChangeReason::crInsert,
-                                BufferCoord{1, oldCaretY},
-                                BufferCoord{temp.length()+1, oldCaretY},
-                                "",
-                                SynSelectionMode::smNormal
-                                );
-                }
-            }
-        } else
-        // Remove TabWidth of indent of the current line when typing a }
-        if (AChar == '}') {
-            QString temp = mLines->getString(oldCaretY-1).mid(0,oldCaretX-1);
-            QString right = mLines->getString(oldCaretY-1).mid(oldCaretX);
-            // and the first nonblank char is this new }
-            if (temp.trimmed().isEmpty()) {
-                int indentSpaces = calcIndentSpaces(oldCaretY,"}", true);
-                QString line = mLines->getString(oldCaretY-1);
-                if (indentSpaces != leftSpaces(temp)) {
+                    QString line = mLines->getString(oldCaretY-1);
                     QString temp = GetLeftSpacing(indentSpaces,true) + right;
                     int i = temp.length();
                     mLines->putString(oldCaretY-1,temp);
@@ -2747,7 +2717,37 @@ void SynEdit::doAddChar(QChar AChar)
                                 SynChangeReason::crInsert,
                                 BufferCoord{1, oldCaretY},
                                 BufferCoord{temp.length()+1, oldCaretY},
-                                "",
+                                temp,
+                                SynSelectionMode::smNormal
+                                );
+                }
+            }
+        } else
+        // Remove TabWidth of indent of the current line when typing a }
+        if (AChar == '}') {
+            QString temp = mLines->getString(oldCaretY-1).mid(0,oldCaretX-1);
+            QString right = mLines->getString(oldCaretY-1).mid(oldCaretX);
+            // and the first nonblank char is this new }
+            if (temp.trimmed().isEmpty()) {
+                int indentSpaces = calcIndentSpaces(oldCaretY,"}", true);
+                if (indentSpaces != leftSpaces(temp)) {
+                    QString line = mLines->getString(oldCaretY-1);
+                    QString temp = GetLeftSpacing(indentSpaces,true) + right;
+                    int i = temp.length();
+                    mLines->putString(oldCaretY-1,temp);
+                    internalSetCaretXY(BufferCoord{i+1,oldCaretY});
+                    mUndoList->AddChange(
+                                SynChangeReason::crDelete,
+                                BufferCoord{1, oldCaretY},
+                                BufferCoord{line.length()+1, oldCaretY},
+                                line,
+                                SynSelectionMode::smNormal
+                                );
+                    mUndoList->AddChange(
+                                SynChangeReason::crInsert,
+                                BufferCoord{1, oldCaretY},
+                                BufferCoord{temp.length()+1, oldCaretY},
+                                temp,
                                 SynSelectionMode::smNormal
                                 );
                 }
