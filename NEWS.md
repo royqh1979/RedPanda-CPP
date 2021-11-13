@@ -3,6 +3,9 @@ Version 0.8.7 For Dev-C++ 7 Beta
  - fix: when enter '{' or '}' at beginning of line, auto indent will remove all contents of the line
  - fix: auto indent should be turned off when reformat code
  - fix: auto indent should be turned off when replace in code 
+ - enhancement: drag & drop text in the editor
+ - enhancement: auto calcuate caret line size basing on font size
+ - enhancement: shift+mouse wheel to scroll horizontally 
 
 Version 0.8.6 For Dev-C++ 7 Beta
  - enhancement: greatly reduces memory usage for symbol parsing ( memory needed for bits/stdc++.h reduced from 150m+ to 80m+)

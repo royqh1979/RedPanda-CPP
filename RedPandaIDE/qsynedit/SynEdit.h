@@ -696,6 +696,10 @@ private:
 
     int mMouseWheelScrollSpeed;
 
+    BufferCoord mDragCaretSave;
+    BufferCoord mDragSelBeginSave;
+    BufferCoord mDragSelEndSave;
+
 friend class SynEditTextPainter;
 
 // QWidget interface
@@ -722,6 +726,13 @@ bool viewportEvent(QEvent * event) override;
 // QWidget interface
 public:
 QVariant inputMethodQuery(Qt::InputMethodQuery property) const override;
+
+// QWidget interface
+protected:
+void dragEnterEvent(QDragEnterEvent *event) override;
+void dropEvent(QDropEvent *event) override;
+void dragMoveEvent(QDragMoveEvent *event) override;
+void dragLeaveEvent(QDragLeaveEvent *event) override;
 };
 
 #endif // SYNEDIT_H
