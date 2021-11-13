@@ -807,8 +807,8 @@ void DarkFusionStyle::drawControl(ControlElement element, const QStyleOption *op
     case CE_MenuItem:
         // Draws one item in a popup menu.
         if (const QStyleOptionMenuItem *menuItem = qstyleoption_cast<const QStyleOptionMenuItem *>(option)) {
-            QColor highlightOutline = highlightedOutline;
-            QColor highlight = option->palette.highlight().color();
+            //QColor highlightOutline = highlightedOutline;
+            //QColor highlight = option->palette.highlight().color();
             if (menuItem->menuItemType == QStyleOptionMenuItem::Separator) {
                 painter->save();
                 int w = 0;

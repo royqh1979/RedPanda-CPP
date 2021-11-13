@@ -5991,7 +5991,7 @@ void SynEdit::mouseMoveEvent(QMouseEvent *event)
             mimeData->setText(selText());
             drag->setMimeData(mimeData);
 
-            Qt::DropAction dropAction = drag->exec(Qt::CopyAction | Qt::MoveAction);
+            drag->exec(Qt::CopyAction | Qt::MoveAction);
             //drag->setPixmap(iconPixmap);
             //BeginDrag(false);
         }
@@ -6146,7 +6146,7 @@ void SynEdit::dragMoveEvent(QDragMoveEvent *event)
     showCaret();
 }
 
-void SynEdit::dragLeaveEvent(QDragLeaveEvent *event)
+void SynEdit::dragLeaveEvent(QDragLeaveEvent *)
 {
     setCaretXY(mDragCaretSave);
     setBlockBegin(mDragSelBeginSave);

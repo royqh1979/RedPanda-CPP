@@ -8,6 +8,7 @@ Version 0.8.7 For Dev-C++ 7 Beta
  - enhancement: shift+mouse wheel to scroll horizontally 
  - fix: greatly reduces paste time 
  - fix: auto indent shouldn't use preprocessor's indent to calculate 
+ - fix: option "don't add leading zeros to line numbers" not work
 
 Version 0.8.6 For Dev-C++ 7 Beta
  - enhancement: greatly reduces memory usage for symbol parsing ( memory needed for bits/stdc++.h reduced from 150m+ to 80m+)
