@@ -3528,7 +3528,12 @@ void Editor::reformat()
                                             content);
 
     selectAll();
+    SynEditorOptions oldOptions = getOptions();
+    SynEditorOptions newOptions = oldOptions;
+    newOptions.setFlag(SynEditorOption::eoAutoIndent,false);
+    setOptions(newOptions);
     setSelText(QString::fromUtf8(newContent));
+    setOptions(oldOptions);
     reparse();
     checkSyntaxInBack();
     reparseTodo();

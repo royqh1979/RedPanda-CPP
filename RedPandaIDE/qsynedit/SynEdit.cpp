@@ -1,4 +1,5 @@
 #include "SynEdit.h"
+#include "highlighter/cpp.h"
 #include <QApplication>
 #include <QFontMetrics>
 #include <algorithm>
@@ -1473,7 +1474,14 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
                 matchingIndents = rangeAfterFirstToken.matchingIndents;
                 dontAddIndent = true;
                 l = startLine;
-            } else if (mHighlighter->isLastLineCommentNotFinished(rangePreceeding.state)
+            } else if (mHighlighter->getClass() == SynHighlighterClass::CppHighlighter
+                       && trimmedLineText.startsWith('#')
+                       && attr == ((SynEditCppHighlighter *)mHighlighter.get())->preprocessorAttribute()) {
+                dontAddIndent = true;
+                indentSpaces=0;
+                l=0;
+            } else if (mHighlighter->getClass() == SynHighlighterClass::CppHighlighter
+                       && mHighlighter->isLastLineCommentNotFinished(rangePreceeding.state)
                        && (trimmedLineText.startsWith("*"))
                        ) {
                 // last line is a not finished comment, and this line start with "*"
@@ -2624,8 +2632,40 @@ void SynEdit::doAddChar(QChar AChar)
     }
 
     mUndoList->BeginBlock();
-    if (mOptions.testFlag(eoAutoIndent) && mHighlighter
-            && (oldCaretY<=mLines->count())) {
+    if (mOptions.testFlag(eoAutoIndent)
+            && mHighlighter
+            && mHighlighter->getClass()==SynHighlighterClass::CppHighlighter
+            && (oldCaretY<=mLines->count()) ) {
+
+        if (AChar == '#') {
+            QString temp = mLines->getString(oldCaretY-1).mid(0,oldCaretX-1);
+            QString right = mLines->getString(oldCaretY-1).mid(oldCaretX);
+            // and the first nonblank char is this new {
+            if (temp.trimmed().isEmpty()) {
+                int indentSpaces = calcIndentSpaces(oldCaretY,"#", true);
+                QString line = mLines->getString(oldCaretY-1);
+                if (indentSpaces==0 && leftSpaces(temp)!=0) {
+                    QString temp = right;
+                    int i = temp.length();
+                    mLines->putString(oldCaretY-1,"");
+                    internalSetCaretXY(BufferCoord{i+1,oldCaretY});
+                    mUndoList->AddChange(
+                                SynChangeReason::crDelete,
+                                BufferCoord{1, oldCaretY},
+                                BufferCoord{line.length()+1, oldCaretY},
+                                line,
+                                SynSelectionMode::smNormal
+                                );
+                    mUndoList->AddChange(
+                                SynChangeReason::crInsert,
+                                BufferCoord{1, oldCaretY},
+                                BufferCoord{temp.length()+1, oldCaretY},
+                                "",
+                                SynSelectionMode::smNormal
+                                );
+                }
+            }
+        } else
         //unindent if ':' at end of the line
         if (AChar == ':') {
             QString line = mLines->getString(oldCaretY-1);
@@ -2652,15 +2692,16 @@ void SynEdit::doAddChar(QChar AChar)
                                 );
                 }
             }
-        }
+        } else
         //unindent if '{' is after an statement like 'if' 'for'
         if (AChar == '{') {
             QString temp = mLines->getString(oldCaretY-1).mid(0,oldCaretX-1);
+            QString right = mLines->getString(oldCaretY-1).mid(oldCaretX);
             // and the first nonblank char is this new {
             if (temp.trimmed().isEmpty()) {
                 int indentSpaces = calcIndentSpaces(oldCaretY,"{", true);
-                QString line = mLines->getString(oldCaretY-1);
-                if (indentSpaces != leftSpaces(line)) {
+                if (indentSpaces != leftSpaces(temp)) {
+                    QString line = mLines->getString(oldCaretY-1) + right;
                     QString temp = GetLeftSpacing(indentSpaces,true);
                     int i = temp.length();
                     mLines->putString(oldCaretY-1,temp);
@@ -2681,16 +2722,17 @@ void SynEdit::doAddChar(QChar AChar)
                                 );
                 }
             }
-        }
+        } else
         // Remove TabWidth of indent of the current line when typing a }
         if (AChar == '}') {
             QString temp = mLines->getString(oldCaretY-1).mid(0,oldCaretX-1);
+            QString right = mLines->getString(oldCaretY-1).mid(oldCaretX);
             // and the first nonblank char is this new }
             if (temp.trimmed().isEmpty()) {
                 int indentSpaces = calcIndentSpaces(oldCaretY,"}", true);
                 QString line = mLines->getString(oldCaretY-1);
-                if (indentSpaces != leftSpaces(line)) {
-                    QString temp = GetLeftSpacing(indentSpaces,true);
+                if (indentSpaces != leftSpaces(temp)) {
+                    QString temp = GetLeftSpacing(indentSpaces,true) + right;
                     int i = temp.length();
                     mLines->putString(oldCaretY-1,temp);
                     internalSetCaretXY(BufferCoord{i+1,oldCaretY});
