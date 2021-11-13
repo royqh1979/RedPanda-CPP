@@ -6,6 +6,7 @@ Version 0.8.7 For Dev-C++ 7 Beta
  - enhancement: drag & drop text in the editor
  - enhancement: auto calcuate caret line size basing on font size
  - enhancement: shift+mouse wheel to scroll horizontally 
+ - fix: greatly reduces paste time 
 
 Version 0.8.6 For Dev-C++ 7 Beta
  - enhancement: greatly reduces memory usage for symbol parsing ( memory needed for bits/stdc++.h reduced from 150m+ to 80m+)

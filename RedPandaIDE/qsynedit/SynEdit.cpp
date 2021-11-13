@@ -4942,12 +4942,13 @@ void SynEdit::doLinesInserted(int firstLine, int count)
 //    end;
 }
 
-void SynEdit::properSetLine(int ALine, const QString &ALineText)
+void SynEdit::properSetLine(int ALine, const QString &ALineText, bool notify)
 {
-    if (mOptions.testFlag(eoTrimTrailingSpaces))
-        mLines->putString(ALine,TrimRight(ALineText));
-    else
-        mLines->putString(ALine,ALineText);
+    if (mOptions.testFlag(eoTrimTrailingSpaces)) {
+        mLines->putString(ALine,TrimRight(ALineText),notify);
+    } else {
+        mLines->putString(ALine,ALineText,notify);
+    }
 }
 
 void SynEdit::deleteSelection(const BufferCoord &BB, const BufferCoord &BE)
@@ -5041,6 +5042,10 @@ void SynEdit::insertText(const QString &Value, SynSelectionMode PasteMode,bool A
 
 int SynEdit::insertTextByNormalMode(const QString &Value)
 {
+    mLines->beginUpdate();
+    auto actionLines = finally([this] {
+        mLines->endUpdate();
+    });
     QString sLeftSide;
     QString sRightSide;
     QString Str;
@@ -5090,9 +5095,9 @@ int SynEdit::insertTextByNormalMode(const QString &Value)
         Start = P;
         P = GetEOL(Value,Start);
         if (P == Start) {
-          if (P<Value.length())
-              Str = GetLeftSpacing(calcIndentSpaces(caretY,"",true),true);
-          else
+            if (P<Value.length())
+                Str = GetLeftSpacing(calcIndentSpaces(caretY,"",true),true);
+            else
               Str = sRightSide;
         } else {
             Str = Value.mid(Start, P-Start);
@@ -5103,7 +5108,7 @@ int SynEdit::insertTextByNormalMode(const QString &Value)
                 Str = GetLeftSpacing(indentSpaces,true)+TrimLeft(Str);
             }
         }
-        properSetLine(caretY - 1, Str);
+        properSetLine(caretY - 1, Str,false);
         rescanRange(caretY);
         Result++;
     }

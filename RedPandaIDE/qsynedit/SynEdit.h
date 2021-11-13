@@ -504,7 +504,7 @@ private:
                                const QString& Value, bool AddToUndoList);
     void doLinesDeleted(int FirstLine, int Count);
     void doLinesInserted(int FirstLine, int Count);
-    void properSetLine(int ALine, const QString& ALineText);
+    void properSetLine(int ALine, const QString& ALineText, bool notify = true);
     void deleteSelection(const BufferCoord& BB, const BufferCoord& BE);
     void insertText(const QString& Value, SynSelectionMode PasteMode,bool AddToUndoList);
     int insertTextByNormalMode(const QString& Value);

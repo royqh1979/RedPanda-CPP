@@ -67,7 +67,7 @@ public:
     void setContents(const QStringList& text);
     QStringList contents();
 
-    void putString(int Index, const QString& s);
+    void putString(int Index, const QString& s, bool notify=true);
     void putObject(int Index, void * AObject);
 
     void beginUpdate();
