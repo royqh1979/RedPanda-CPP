@@ -219,6 +219,8 @@ public:
                               const BufferCoord& ptBefore,
                               const BufferCoord& ptAfter);
 
+    void collapseAll();
+    void unCollpaseAll();
     void uncollapseAroundLine(int line);
     PSynEditFoldRange foldHidesLine(int line);
     void setSelLength(int Value);

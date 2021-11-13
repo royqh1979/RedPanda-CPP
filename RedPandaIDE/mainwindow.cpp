@@ -3773,7 +3773,7 @@ void MainWindow::on_actionUnfoldAll_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor != NULL ) {
-        //editor->clearFolds();
+        editor->unCollpaseAll();
     }
 }
 
@@ -3781,8 +3781,7 @@ void MainWindow::on_actionFoldAll_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor != NULL ) {
-        //editor->clearFolds();
-        //editor->foldAll();
+        editor->collapseAll();
     }
 }
 

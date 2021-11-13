@@ -1066,6 +1066,20 @@ void SynEdit::setCaretAndSelection(const BufferCoord &ptCaret, const BufferCoord
     setBlockEnd(ptAfter);
 }
 
+void SynEdit::collapseAll()
+{
+    for (int i = mAllFoldRanges.count()-1;i>=0;i--){
+        collapse(mAllFoldRanges[i]);
+    }
+}
+
+void SynEdit::unCollpaseAll()
+{
+    for (int i = mAllFoldRanges.count()-1;i>=0;i--){
+        uncollapse(mAllFoldRanges[i]);
+    }
+}
+
 void SynEdit::processGutterClick(QMouseEvent *event)
 {
     int X = event->pos().x();
@@ -5054,6 +5068,7 @@ int SynEdit::insertTextByNormalMode(const QString &Value)
     bool bChangeScroll;
 //    int SpaceCount;
     int Result = 0;
+    int startLine = mCaretY;
     sLeftSide = lineText().mid(0, mCaretX - 1);
     if (mCaretX - 1 > sLeftSide.length()) {
         if (StringIsBlank(sLeftSide))
@@ -5122,6 +5137,7 @@ int SynEdit::insertTextByNormalMode(const QString &Value)
           internalSetCaretXY(BufferCoord{lineText().length()+1,caretY});
     } else
         internalSetCaretXY(BufferCoord{Str.length() - sRightSide.length()+1,caretY});
+    onLinesPutted(startLine-1,Result+1);
     return Result;
 }
 
