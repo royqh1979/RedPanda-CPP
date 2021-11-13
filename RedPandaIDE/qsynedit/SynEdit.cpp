@@ -1434,7 +1434,7 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
     QString s;
     while (startLine>=1) {
         s = mLines->getString(startLine-1);
-        if (!s.trimmed().isEmpty()) {
+        if (!s.startsWith('#') && !s.trimmed().isEmpty()) {
             break;
         }
         startLine -- ;
