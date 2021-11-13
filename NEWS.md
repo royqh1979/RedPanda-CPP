@@ -1,6 +1,15 @@
+Version 0.8.7 For Dev-C++ 7 Beta
+ - enhancement: auto indent line to column 1 when enter '#' at beginning of line
+ - fix: when enter '{' or '}' at beginning of line, auto indent will remove all contents of the line
+ - fix: auto indent should be turned off when reformat code
+ - fix: auto indent should be turned off when replace in code 
+
 Version 0.8.6 For Dev-C++ 7 Beta
  - enhancement: greatly reduces memory usage for symbol parsing ( memory needed for bits/stdc++.h reduced from 150m+ to 80m+)
  - fix: currect compiler set not correctly updated when switch between normal file and project file
+ - fix: editor auto save settings not saved and applied
+ - fix: only auto save files that has new modifications 
+ - fix: correctly auto save files with it's own name
 
 Version 0.8.5 For Dev-C++ 7 Beta
  - enhancement: use lighter color to draw menu seperators

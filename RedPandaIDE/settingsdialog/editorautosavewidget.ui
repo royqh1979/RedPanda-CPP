@@ -15,7 +15,7 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QGroupBox" name="chkEnableAutoSave">
+    <widget class="QGroupBox" name="grpEnableAutoSave">
      <property name="title">
       <string>Enable auto save</string>
      </property>

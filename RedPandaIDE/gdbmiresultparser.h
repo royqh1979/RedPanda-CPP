@@ -2,6 +2,7 @@
 #define GDBMIRESULTPARSER_H
 
 #include <QByteArray>
+#include <QList>
 #include <QVector>
 
 
@@ -38,10 +39,9 @@ class GDBMIResultParser
         explicit ParseValue(const ParseObject &object);
         explicit ParseValue(const QList<ParseObject>& array);
         ParseValue(const ParseValue&) = delete;
-        void addObject(const PParseObject& object);
         const QString &value() const;
-        QList<ParseObject> &array() const;
-        const PParseObject &object() const;
+        const QList<ParseObject> &array() const;
+        const ParseObject &object() const;
         ParseValueType type() const;
         ParseValue& operator=(const QString& value);
         ParseValue& operator=(const ParseObject& object);

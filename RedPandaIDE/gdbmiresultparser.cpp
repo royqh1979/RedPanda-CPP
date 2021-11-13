@@ -146,7 +146,7 @@ bool GDBMIResultParser::parseArray(char *&p, ParseValue &value)
     if (*p!=']') {
         while (*p!=0) {
             skipSpaces(p);
-            QObject obj;
+            ParseObject obj;
             bool result = parseObject(p,obj);
             if (result) {
                 array.append(obj);
@@ -202,7 +202,7 @@ const QString &GDBMIResultParser::ParseValue::value() const
     return mValue;
 }
 
-const QList<GDBMIResultParser::ParseObject> &GDBMIResultParser::ParseValue::array() const
+const QList<::GDBMIResultParser::ParseObject> &GDBMIResultParser::ParseValue::array() const
 {
     return mArray;
 }
@@ -228,23 +228,16 @@ GDBMIResultParser::ParseValue::ParseValue(const QString &value):
 {
 }
 
-GDBMIResultParser::ParseValue::ParseValue(const PParseObject &object):
+GDBMIResultParser::ParseValue::ParseValue(const ParseObject &object):
     mObject(object),
     mType(ParseValueType::Object)
 {
 }
 
-GDBMIResultParser::ParseValue::ParseValue(const QList<PParseObject> &array):
+GDBMIResultParser::ParseValue::ParseValue(const QList<ParseObject> &array):
     mArray(array),
     mType(ParseValueType::Array)
 {
-}
-
-void GDBMIResultParser::ParseValue::addObject(const PParseObject &object)
-{
-    Q_ASSERT(mType == ParseValueType::Array || mType == ParseValueType::NotAssigned);
-    mType = ParseValueType::Array;
-    mArray.append(object);
 }
 
 GDBMIResultParser::ParseValue &GDBMIResultParser::ParseValue::operator=(const QString &value)

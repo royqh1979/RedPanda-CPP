@@ -34,7 +34,7 @@ void EditorAutoSaveWidget::doLoad()
 {
     //pSettings->editor().load();
     //font
-    ui->chkEnableAutoSave->setChecked(pSettings->editor().enableAutoSave());
+    ui->grpEnableAutoSave->setChecked(pSettings->editor().enableAutoSave());
     ui->spinInterval->setValue(pSettings->editor().autoSaveInterval());
     switch(pSettings->editor().autoSaveTarget()) {
     case astCurrentFile:
@@ -60,7 +60,7 @@ void EditorAutoSaveWidget::doLoad()
 
 void EditorAutoSaveWidget::doSave()
 {
-    pSettings->editor().setEnableAutoSave(ui->chkEnableAutoSave->isChecked());
+    pSettings->editor().setEnableAutoSave(ui->grpEnableAutoSave->isChecked());
     pSettings->editor().setAutoSaveInterval(ui->spinInterval->value());
     if (ui->rbCurrentFile->isChecked())
         pSettings->editor().setAutoSaveTarget(astCurrentFile);
@@ -74,6 +74,8 @@ void EditorAutoSaveWidget::doSave()
         pSettings->editor().setAutoSaveStrategy(assAppendUnixTimestamp);
     else
         pSettings->editor().setAutoSaveStrategy(assAppendFormatedTimeStamp);
+    pSettings->editor().save();
+    pMainWindow->resetAutoSaveTimer();
 }
 
 void EditorAutoSaveWidget::on_rbOverwrite_toggled(bool)

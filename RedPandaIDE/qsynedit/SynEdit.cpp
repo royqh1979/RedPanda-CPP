@@ -1,4 +1,5 @@
 #include "SynEdit.h"
+#include "highlighter/cpp.h"
 #include <QApplication>
 #include <QFontMetrics>
 #include <algorithm>
@@ -1473,7 +1474,14 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
                 matchingIndents = rangeAfterFirstToken.matchingIndents;
                 dontAddIndent = true;
                 l = startLine;
-            } else if (mHighlighter->isLastLineCommentNotFinished(rangePreceeding.state)
+            } else if (mHighlighter->getClass() == SynHighlighterClass::CppHighlighter
+                       && trimmedLineText.startsWith('#')
+                       && attr == ((SynEditCppHighlighter *)mHighlighter.get())->preprocessorAttribute()) {
+                dontAddIndent = true;
+                indentSpaces=0;
+                l=0;
+            } else if (mHighlighter->getClass() == SynHighlighterClass::CppHighlighter
+                       && mHighlighter->isLastLineCommentNotFinished(rangePreceeding.state)
                        && (trimmedLineText.startsWith("*"))
                        ) {
                 // last line is a not finished comment, and this line start with "*"
@@ -1785,7 +1793,7 @@ void SynEdit::doDeleteLastChar()
             mLines->deleteAt(mCaretY);
             doLinesDeleted(mCaretY+1, 1);
             if (mOptions.testFlag(eoTrimTrailingSpaces))
-                Temp = trimRight(Temp);
+                Temp = TrimRight(Temp);
             setLineText(lineText() + Temp);
             helper = lineBreak(); //"/r/n"
         }
@@ -2119,7 +2127,7 @@ void SynEdit::insertLine(bool moveCaret)
                                         rightLineText,mOptions.testFlag(eoAutoIndent)
                                         && notInComment);
     if (mOptions.testFlag(eoAutoIndent)) {
-        rightLineText=trimLeft(rightLineText);
+        rightLineText=TrimLeft(rightLineText);
     }
     QString indentSpacesForRightLineText = GetLeftSpacing(indentSpaces,true);
     mLines->insert(mCaretY, indentSpacesForRightLineText+rightLineText);
@@ -2624,17 +2632,21 @@ void SynEdit::doAddChar(QChar AChar)
     }
 
     mUndoList->BeginBlock();
-    if (mOptions.testFlag(eoAutoIndent) && mHighlighter
-            && (oldCaretY<=mLines->count())) {
+    // auto
+    if (mOptions.testFlag(eoAutoIndent)
+            && mHighlighter
+            && mHighlighter->getClass()==SynHighlighterClass::CppHighlighter
+            && (oldCaretY<=mLines->count()) ) {
+
         //unindent if ':' at end of the line
         if (AChar == ':') {
             QString line = mLines->getString(oldCaretY-1);
             if (line.length() < oldCaretX) {
                 int indentSpaces = calcIndentSpaces(oldCaretY,line+":", true);
                 if (indentSpaces != leftSpaces(line)) {
-                    QString temp = GetLeftSpacing(indentSpaces,true) + trimLeft(line);
-                    int i = temp.length();
-                    mLines->putString(oldCaretY-1,temp);
+                    QString newLine = GetLeftSpacing(indentSpaces,true) + TrimLeft(line);
+                    int i = newLine.length();
+                    mLines->putString(oldCaretY-1,newLine);
                     internalSetCaretXY(BufferCoord{i+1,oldCaretY});
                     mUndoList->AddChange(
                                 SynChangeReason::crDelete,
@@ -2646,66 +2658,35 @@ void SynEdit::doAddChar(QChar AChar)
                     mUndoList->AddChange(
                                 SynChangeReason::crInsert,
                                 BufferCoord{1, oldCaretY},
-                                BufferCoord{temp.length()+1, oldCaretY},
-                                "",
+                                BufferCoord{newLine.length()+1, oldCaretY},
+                                newLine,
                                 SynSelectionMode::smNormal
                                 );
                 }
             }
-        }
-        //unindent if '{' is after an statement like 'if' 'for'
-        if (AChar == '{') {
-            QString temp = mLines->getString(oldCaretY-1).mid(0,oldCaretX-1);
+        } else if (AChar == '{' || AChar == '}' || AChar == '#') {
+            //Reindent line when add '{' '}' and '#' at the beginning
+            QString left = mLines->getString(oldCaretY-1).mid(0,oldCaretX-1);
             // and the first nonblank char is this new {
-            if (temp.trimmed().isEmpty()) {
-                int indentSpaces = calcIndentSpaces(oldCaretY,"{", true);
-                QString line = mLines->getString(oldCaretY-1);
-                if (indentSpaces != leftSpaces(line)) {
-                    QString temp = GetLeftSpacing(indentSpaces,true);
-                    int i = temp.length();
-                    mLines->putString(oldCaretY-1,temp);
-                    internalSetCaretXY(BufferCoord{i+1,oldCaretY});
+            if (left.trimmed().isEmpty()) {
+                int indentSpaces = calcIndentSpaces(oldCaretY,AChar, true);
+                if (indentSpaces != leftSpaces(left)) {
+                    QString right = mLines->getString(oldCaretY-1).mid(oldCaretX);
+                    QString newLeft = GetLeftSpacing(indentSpaces,true);
+                    mLines->putString(oldCaretY-1,newLeft+right);
+                    internalSetCaretXY(BufferCoord{newLeft.length()+1,oldCaretY});
                     mUndoList->AddChange(
                                 SynChangeReason::crDelete,
                                 BufferCoord{1, oldCaretY},
-                                BufferCoord{line.length()+1, oldCaretY},
-                                line,
+                                BufferCoord{left.length()+1, oldCaretY},
+                                left,
                                 SynSelectionMode::smNormal
                                 );
                     mUndoList->AddChange(
                                 SynChangeReason::crInsert,
                                 BufferCoord{1, oldCaretY},
-                                BufferCoord{temp.length()+1, oldCaretY},
-                                "",
-                                SynSelectionMode::smNormal
-                                );
-                }
-            }
-        }
-        // Remove TabWidth of indent of the current line when typing a }
-        if (AChar == '}') {
-            QString temp = mLines->getString(oldCaretY-1).mid(0,oldCaretX-1);
-            // and the first nonblank char is this new }
-            if (temp.trimmed().isEmpty()) {
-                int indentSpaces = calcIndentSpaces(oldCaretY,"}", true);
-                QString line = mLines->getString(oldCaretY-1);
-                if (indentSpaces != leftSpaces(line)) {
-                    QString temp = GetLeftSpacing(indentSpaces,true);
-                    int i = temp.length();
-                    mLines->putString(oldCaretY-1,temp);
-                    internalSetCaretXY(BufferCoord{i+1,oldCaretY});
-                    mUndoList->AddChange(
-                                SynChangeReason::crDelete,
-                                BufferCoord{1, oldCaretY},
-                                BufferCoord{line.length()+1, oldCaretY},
-                                line,
-                                SynSelectionMode::smNormal
-                                );
-                    mUndoList->AddChange(
-                                SynChangeReason::crInsert,
-                                BufferCoord{1, oldCaretY},
-                                BufferCoord{temp.length()+1, oldCaretY},
-                                "",
+                                BufferCoord{newLeft.length()+1, oldCaretY},
+                                newLeft,
                                 SynSelectionMode::smNormal
                                 );
                 }
@@ -4881,6 +4862,8 @@ int SynEdit::searchReplace(const QString &sSearch, const QString &sReplace, SynS
                         mUndoList->BeginBlock();
                         dobatchReplace = true;
                     }
+                    bool oldAutoIndent = mOptions.testFlag(SynEditorOption::eoAutoIndent);
+                    mOptions.setFlag(SynEditorOption::eoAutoIndent,false);
                     doSetSelText(replaceText);
                     nReplaceLen = caretX() - nFound;
                     // fix the caret position and the remaining results
@@ -4894,6 +4877,7 @@ int SynEdit::searchReplace(const QString &sSearch, const QString &sReplace, SynS
                             }
                         }
                     }
+                    mOptions.setFlag(SynEditorOption::eoAutoIndent,oldAutoIndent);
                 }
             }
             // search next / previous line
@@ -4941,7 +4925,7 @@ void SynEdit::doLinesInserted(int firstLine, int count)
 void SynEdit::properSetLine(int ALine, const QString &ALineText)
 {
     if (mOptions.testFlag(eoTrimTrailingSpaces))
-        mLines->putString(ALine,trimRight(ALineText));
+        mLines->putString(ALine,TrimRight(ALineText));
     else
         mLines->putString(ALine,ALineText);
 }
@@ -5047,7 +5031,7 @@ int SynEdit::insertTextByNormalMode(const QString &Value)
     int Result = 0;
     sLeftSide = lineText().mid(0, mCaretX - 1);
     if (mCaretX - 1 > sLeftSide.length()) {
-        if (stringIsBlank(sLeftSide))
+        if (StringIsBlank(sLeftSide))
             sLeftSide = GetLeftSpacing(displayX() - 1, true);
         else
             sLeftSide += QString(mCaretX - 1 - sLeftSide.length(),' ');
@@ -5063,7 +5047,7 @@ int SynEdit::insertTextByNormalMode(const QString &Value)
     Start = 0;
     P = GetEOL(Value,Start);
     if (P<Value.length()) {
-        QString s = trimLeft(Value.mid(0, P - Start));
+        QString s = TrimLeft(Value.mid(0, P - Start));
         if (sLeftSide.isEmpty()) {
             sLeftSide = GetLeftSpacing(calcIndentSpaces(caretY,s,true),true);
         }
@@ -5096,7 +5080,7 @@ int SynEdit::insertTextByNormalMode(const QString &Value)
                 Str += sRightSide;
             if (mOptions.testFlag(eoAutoIndent)) {
                 int indentSpaces = calcIndentSpaces(caretY,Str,true);
-                Str = GetLeftSpacing(indentSpaces,true)+trimLeft(Str);
+                Str = GetLeftSpacing(indentSpaces,true)+TrimLeft(Str);
             }
         }
         properSetLine(caretY - 1, Str);
