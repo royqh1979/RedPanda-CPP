@@ -2,8 +2,6 @@
 
 #include <QList>
 
-static GDBMIResultParser::ParseValue EMPTY_PARSE_VALUE;
-
 GDBMIResultParser::GDBMIResultParser()
 {
     mResultTypes.insert("bkpt",GDBMIResultType::Breakpoint);
@@ -33,22 +31,23 @@ bool GDBMIResultParser::parse(const QByteArray &record, GDBMIResultType &type, P
     return true;
 }
 
-bool GDBMIResultParser::parseNameAndValue(char *&p, QByteArray &name, ParseValue &value)
+bool GDBMIResultParser::parseNameAndValue(const char *&p, QByteArray &name, ParseValue &value)
 {
     skipSpaces(p);
-    char* nameStart =p;
+    const char* nameStart =p;
     while (*p!=0 && isNameChar(*p)) {
         p++;
     }
     if (*p==0)
         return false;
+    name = QByteArray(nameStart,p-nameStart);
     skipSpaces(p);
     if (*p!='=')
         return false;
     return parseValue(p,value);
 }
 
-bool GDBMIResultParser::parseValue(char *&p, ParseValue &value)
+bool GDBMIResultParser::parseValue(const char *&p, ParseValue &value)
 {
     skipSpaces(p);
     bool result;
@@ -82,12 +81,12 @@ bool GDBMIResultParser::parseValue(char *&p, ParseValue &value)
     return true;
 }
 
-bool GDBMIResultParser::parseStringValue(char *&p, QByteArray& stringValue)
+bool GDBMIResultParser::parseStringValue(const char *&p, QByteArray& stringValue)
 {
     if (*p!='"')
         return false;
     p++;
-    char* valueStart = p;
+    const char* valueStart = p;
     while (*p!=0) {
         if (*p == '"') {
             break;
@@ -105,7 +104,7 @@ bool GDBMIResultParser::parseStringValue(char *&p, QByteArray& stringValue)
     return false;
 }
 
-bool GDBMIResultParser::parseObject(char *&p, ParseObject &obj)
+bool GDBMIResultParser::parseObject(const char *&p, ParseObject &obj)
 {
     if (*p!='{')
         return false;
@@ -137,12 +136,11 @@ bool GDBMIResultParser::parseObject(char *&p, ParseObject &obj)
     return false;
 }
 
-bool GDBMIResultParser::parseArray(char *&p, ParseValue &value)
+bool GDBMIResultParser::parseArray(const char *&p, QList<GDBMIResultParser::ParseObject> &array)
 {
     if (*p!='[')
         return false;
     p++;
-    QList<ParseObject> array;
     if (*p!=']') {
         while (*p!=0) {
             skipSpaces(p);
@@ -163,7 +161,6 @@ bool GDBMIResultParser::parseArray(char *&p, ParseValue &value)
         }
     }
     if (*p==']') {
-        value = array;
         p++; //skip ']'
         return true;
     }
@@ -191,7 +188,7 @@ bool GDBMIResultParser::isSpaceChar(char ch)
     return false;
 }
 
-void GDBMIResultParser::skipSpaces(char *&p)
+void GDBMIResultParser::skipSpaces(const char *&p)
 {
     while (*p!=0 && isSpaceChar(*p))
         p++;
@@ -262,11 +259,11 @@ GDBMIResultParser::ParseValue &GDBMIResultParser::ParseValue::operator=(const QL
 }
 
 
-const GDBMIResultParser::ParseValue &GDBMIResultParser::ParseObject::operator[](const QByteArray &name) const
+const GDBMIResultParser::ParseValue GDBMIResultParser::ParseObject::operator[](const QByteArray &name) const
 {
     if (mProps.contains(name))
         return mProps[name];
-    return EMPTY_PARSE_VALUE;
+    return ParseValue();
 }
 
 GDBMIResultParser::ParseObject &GDBMIResultParser::ParseObject::operator=(const ParseObject &object)

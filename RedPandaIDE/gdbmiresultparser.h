@@ -2,8 +2,9 @@
 #define GDBMIRESULTPARSER_H
 
 #include <QByteArray>
+#include <QHash>
 #include <QList>
-#include <QVector>
+#include <memory>
 
 
 enum class GDBMIResultType {
@@ -23,6 +24,7 @@ enum class GDBMIResultType {
 
 class GDBMIResultParser
 {
+public:
     enum class ParseValueType {
         Value,
         Object,
@@ -30,7 +32,16 @@ class GDBMIResultParser
         NotAssigned
     };
 
-    class ParseObject;
+    class ParseValue;
+
+    class ParseObject {
+    public:
+        const ParseValue operator[](const QByteArray& name) const;
+        ParseValue& operator[](const QByteArray& name);
+        ParseObject& operator=(const ParseObject& object);
+    private:
+        QHash<QByteArray, ParseValue> mProps;
+    };
 
     class ParseValue {
     public:
@@ -56,24 +67,16 @@ class GDBMIResultParser
 
     using PParseValue = std::shared_ptr<ParseValue>;
 
-    class ParseObject {
-        const ParseValue& operator[](const QByteArray& name) const;
-        ParseValue& operator[](const QByteArray& name);
-        ParseObject& operator=(const ParseObject& object);
-    private:
-        QHash<QByteArray, ParseValue> mProps;
-    };
-
 public:
     GDBMIResultParser();
     bool parse(const QByteArray& record, GDBMIResultType& type, ParseValue& value);
 private:
-    bool parseNameAndValue(char* &p,QByteArray& name, ParseValue& value);
-    bool parseValue(char* &p, ParseValue& value);
-    bool parseStringValue(char*&p, QByteArray& stringValue);
-    bool parseObject(char*&p, ParseObject& obj);
-    bool parseArray(char*&p, QList<ParseObject>& array);
-    void skipSpaces(char* &p);
+    bool parseNameAndValue(const char *&p,QByteArray& name, ParseValue& value);
+    bool parseValue(const char* &p, ParseValue& value);
+    bool parseStringValue(const char*&p, QByteArray& stringValue);
+    bool parseObject(const char*&p, ParseObject& obj);
+    bool parseArray(const char*&p, QList<ParseObject>& array);
+    void skipSpaces(const char* &p);
     bool isNameChar(char ch);
     bool isSpaceChar(char ch);
 private:
