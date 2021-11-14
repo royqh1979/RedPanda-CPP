@@ -20,6 +20,7 @@
 #include "widgets/darkfusionstyle.h"
 #include "problems/problemcasevalidator.h"
 #include "widgets/ojproblempropertywidget.h"
+#include "version.h"
 
 #include <QCloseEvent>
 #include <QComboBox>
@@ -511,6 +512,10 @@ void MainWindow::applySettings()
     else
         QApplication::setStyle("fusion");
     qApp->setPalette(appTheme->palette());
+    //fix for qstatusbar bug
+    mFileEncodingStatus->setPalette(appTheme->palette());
+    mFileModeStatus->setPalette(appTheme->palette());
+    mFileInfoStatus->setPalette(appTheme->palette());
     updateEditorColorSchemes();
 
     QFont font(pSettings->environment().interfaceFont(),

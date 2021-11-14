@@ -1,3 +1,6 @@
+Version 0.8.9 For Dev-C++ 7 Beta
+ - fix: text color of labels in statusbar not correctly updated when change theme
+
 Version 0.8.8 For Dev-C++ 7 Beta
  - enhancement: drag & drop text in the editor
  - enhancement: auto calcuate caret line size basing on font size

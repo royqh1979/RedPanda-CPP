@@ -4,6 +4,7 @@
 #include "../systemconsts.h"
 #include "../platform.h"
 #include "../editor.h"
+#include "../version.h"
 
 #include <QDir>
 

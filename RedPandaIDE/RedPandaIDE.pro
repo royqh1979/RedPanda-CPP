@@ -197,6 +197,7 @@ HEADERS += \
     thememanager.h \
     todoparser.h \
     toolsmanager.h \
+    version.h \
     widgets/aboutdialog.h \
     widgets/bookmarkmodel.h \
     widgets/classbrowser.h \
