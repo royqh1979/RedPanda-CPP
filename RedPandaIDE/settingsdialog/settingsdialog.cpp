@@ -99,6 +99,8 @@ PSettingsDialog SettingsDialog::optionDialog()
 {
     PSettingsDialog dialog = std::make_shared<SettingsDialog>();
 
+    dialog->setWindowTitle(tr("Options"));
+
     SettingsWidget* widget = new EnvironmentAppearenceWidget(tr("Appearence"),tr("Environment"));
     widget->init();
     dialog->addWidget(widget);
@@ -205,6 +207,8 @@ PSettingsDialog SettingsDialog::optionDialog()
 PSettingsDialog SettingsDialog::projectOptionDialog()
 {
     PSettingsDialog dialog = std::make_shared<SettingsDialog>();
+
+    dialog->setWindowTitle(tr("Project Options"));
 
     SettingsWidget* widget = new ProjectGeneralWidget(tr("General"),tr("Project"));
     widget->init();

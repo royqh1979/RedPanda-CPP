@@ -2677,12 +2677,14 @@ void MainWindow::onLstProblemSetContextMenu(const QPoint &pos)
         QAction * action = new QAction(tr("select other file..."),menuSetAnswer);
         connect(action, &QAction::triggered,
                 [problem,this](){
+            QFileDialog dialog;
             QString filename = QFileDialog::getOpenFileName(
                         this,
                         tr("Select Answer Source File"),
                         QString(),
-                        tr("C/C++Source Files (*.c *.cpp *.cc *.cxx)")
-                        );
+                        tr("C/C++Source Files (*.c *.cpp *.cc *.cxx)"),
+                        nullptr,
+                        dialog.options() | QFileDialog::DontUseNativeDialog);
             if (!filename.isEmpty()) {
                 QDir::setCurrent(extractFileDir(filename));
                 problem->answerProgram = filename;
