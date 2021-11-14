@@ -1,3 +1,6 @@
+Version 0.8.10 For Dev-C++ 7 Beta
+ - fix: Shouldn't update auto link settings, if the header name to be modified is unchanged
+
 Version 0.8.9 For Dev-C++ 7 Beta
  - fix: text color of labels in statusbar not correctly updated when change theme
 
