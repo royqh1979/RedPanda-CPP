@@ -340,7 +340,7 @@ void Project::rebuildNodes()
     emit nodesChanged();
 }
 
-bool Project::removeEditor(int index, bool doClose)
+bool Project::removeUnit(int index, bool doClose , bool removeFile)
 {
     mModel.beginUpdate();
     auto action = finally([this]{
@@ -355,6 +355,10 @@ bool Project::removeEditor(int index, bool doClose)
     if (doClose && (unit->editor())) {
         if (!pMainWindow->editorList()->closeEditor(unit->editor()))
             return false;
+    }
+
+    if (removeFile) {
+        QFile::remove(unit->fileName());
     }
 
 //if not fUnits.GetItem(index).fNew then
@@ -788,10 +792,17 @@ PProjectUnit Project::addUnit(const QString &inFileName, PFolderNode parentNode,
     newUnit = std::make_shared<ProjectUnit>(this);
 
     // Set all properties
-    newUnit->setEncoding(toByteArray(mOptions.encoding));
     newUnit->setFileName(QDir(directory()).filePath(inFileName));
     newUnit->setNew(false);
-    newUnit->setEditor(nullptr);
+    Editor * e= pMainWindow->editorList()->getOpenedEditorByFilename(newUnit->fileName());
+    if (e) {
+        newUnit->setEditor(e);
+        newUnit->setEncoding(e->encodingOption());
+        e->setInProject(true);
+    } else {
+        newUnit->setEditor(nullptr);
+        newUnit->setEncoding(ENCODING_AUTO_DETECT);
+    }
     newUnit->setFolder(getFolderPath(parentNode));
     newUnit->setNode(makeNewFileNode(extractFileName(newUnit->fileName()), false, parentNode));
     newUnit->node()->unitIndex = mUnits.count();
@@ -1515,7 +1526,7 @@ void Project::removeFolderRecurse(PFolderNode node)
         } else if (childNode->unitIndex >= 0 && childNode->level > 0) {
             // Remove editor in folder from project
             int editorIndex = childNode->unitIndex;
-            if (!removeEditor(editorIndex,true))
+            if (!removeUnit(editorIndex,true))
                 return;
         }
     }
@@ -1920,7 +1931,7 @@ bool ProjectModel::setData(const QModelIndex &index, const QVariant &value, int 
                     // Remove it from the current project...
                     int projindex = mProject->indexInUnits(newName);
                     if (projindex>=0) {
-                        mProject->removeEditor(projindex,false);
+                        mProject->removeUnit(projindex,false);
                     }
 
                     // All references to the file are removed. Delete the file from disk

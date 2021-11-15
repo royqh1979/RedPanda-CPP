@@ -3211,6 +3211,15 @@ CPUDialog *MainWindow::cpuDialog() const
 
 void MainWindow::on_actionNew_triggered()
 {
+    if (mProject) {
+        if (QMessageBox::question(this,
+                                  tr("New Project File?"),
+                                  tr("Do you want to add the new file to the project?"),
+                                  QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
+            newProjectUnitFile();
+            return;
+        }
+    }
     newEditor();
 }
 
@@ -4654,46 +4663,7 @@ void MainWindow::on_actionSaveAll_triggered()
 
 void MainWindow::on_actionProject_New_File_triggered()
 {
-    int idx = -1;
-    if (!mProject)
-        return;
-    QModelIndex current = ui->projectView->currentIndex();
-    FolderNode * node = nullptr;
-    if (current.isValid()) {
-        node = static_cast<FolderNode*>(current.internalPointer());
-    }
-    QString newFileName;
-    do {
-        newFileName = tr("untitled")+QString("%1").arg(getNewFileNumber());
-        if (mProject->options().useGPP) {
-            newFileName+=".cpp";
-        } else {
-            newFileName+=".c";
-        }
-    } while (fileExists(QDir(mProject->directory()).absoluteFilePath(newFileName)));
-
-    newFileName = QInputDialog::getText(
-                this,
-                tr("New Project File Name"),
-                tr("File Name:"),
-                QLineEdit::Normal,
-                newFileName);
-    if (newFileName.isEmpty())
-        return;
-    if (fileExists(QDir(mProject->directory()).absoluteFilePath(newFileName))) {
-        QMessageBox::critical(this,tr("File Already Exists!"),
-                              tr("File '%1' already exists!").arg(newFileName));
-        return;
-    }
-    PProjectUnit newUnit = mProject->newUnit(
-                mProject->pointerToNode(node),newFileName);
-    idx = mProject->units().count()-1;
-    mProject->saveUnits();
-    updateProjectView();
-    Editor * editor = mProject->openUnit(idx);
-    //editor->setUseCppSyntax(mProject->options().useGPP);
-    //editor->setModified(true);
-    editor->activate();
+    newProjectUnitFile();
 }
 
 
@@ -4742,9 +4712,14 @@ void MainWindow::on_actionRemove_from_project_triggered()
             continue;
         selected.insert(folderNode->unitIndex);
     };
+
+    bool removeFile = (QMessageBox::question(this,tr("Remove file"),
+                              tr("Remove the file from disk?"),
+                              QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes);
+
     for (int i=mProject->units().count()-1;i>=0;i--) {
         if (selected.contains(i)) {
-            mProject->removeEditor(i,true);
+            mProject->removeUnit(i,true,removeFile);
         }
     }
 
@@ -4951,6 +4926,50 @@ void MainWindow::prepareTabMessagesData()
         info->icon = ui->tabMessages->tabIcon(i);
         mTabMessagesData[widget]=info;
     }
+}
+
+void MainWindow::newProjectUnitFile()
+{
+    if (!mProject)
+        return;
+    int idx = -1;
+    QModelIndex current = ui->projectView->currentIndex();
+    FolderNode * node = nullptr;
+    if (current.isValid()) {
+        node = static_cast<FolderNode*>(current.internalPointer());
+    }
+    QString newFileName;
+    do {
+        newFileName = tr("untitled")+QString("%1").arg(getNewFileNumber());
+        if (mProject->options().useGPP) {
+            newFileName+=".cpp";
+        } else {
+            newFileName+=".c";
+        }
+    } while (fileExists(QDir(mProject->directory()).absoluteFilePath(newFileName)));
+
+    newFileName = QInputDialog::getText(
+                this,
+                tr("New Project File Name"),
+                tr("File Name:"),
+                QLineEdit::Normal,
+                newFileName);
+    if (newFileName.isEmpty())
+        return;
+    if (fileExists(QDir(mProject->directory()).absoluteFilePath(newFileName))) {
+        QMessageBox::critical(this,tr("File Already Exists!"),
+                              tr("File '%1' already exists!").arg(newFileName));
+        return;
+    }
+    PProjectUnit newUnit = mProject->newUnit(
+                mProject->pointerToNode(node),newFileName);
+    idx = mProject->units().count()-1;
+    mProject->saveUnits();
+    updateProjectView();
+    Editor * editor = mProject->openUnit(idx);
+    //editor->setUseCppSyntax(mProject->options().useGPP);
+    //editor->setModified(true);
+    editor->activate();
 }
 void MainWindow::on_EditorTabsLeft_currentChanged(int)
 {
@@ -5383,9 +5402,10 @@ void MainWindow::on_treeFiles_doubleClicked(const QModelIndex &index)
     QString filepath = mFileSystemModel.filePath(index);
     QFileInfo file(filepath);
     if (file.isFile()) {
-        Editor * editor = mEditorList->getEditorByFilename(filepath);
-        if (editor) {
-            editor->activate();
+        if (getFileType(filepath)==FileType::Project) {
+            openProject(filepath);
+        } else {
+            openFile(filepath);
         }
     }
 }

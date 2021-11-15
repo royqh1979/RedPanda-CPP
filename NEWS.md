@@ -1,6 +1,11 @@
 Version 0.8.10 For Dev-C++ 7 Beta
  - fix: Shouldn't update auto link settings, if the header name to be modified is unchanged
  - fix: add unit to project not correctly set new unit file's encoding
+ - fix: correctly set encoding for the new added project unit file
+ - fix: if there's a project openned, new file should ask user if he want to add the new file to the project
+ - fix: when adding a file openned in the editor to the project, properties of it are not correctly setted.
+ - enhancement: when remove a file from the project, also ask if user want to remove it from disk
+ - fix: double click a project's .dev file in the Files panel should load the project
 
 Version 0.8.9 For Dev-C++ 7 Beta
  - fix: text color of labels in statusbar not correctly updated when change theme
