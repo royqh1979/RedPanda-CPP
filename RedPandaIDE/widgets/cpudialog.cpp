@@ -13,11 +13,27 @@ CPUDialog::CPUDialog(QWidget *parent) :
     setWindowFlags(windowFlags() | Qt::WindowMinimizeButtonHint | Qt::WindowMaximizeButtonHint);
     ui->setupUi(this);
     ui->txtCode->setHighlighter(highlighterManager.getCppHighlighter());
+    ui->txtCode->setReadOnly(true);
+    ui->txtCode->gutter().setShowLineNumbers(false);
+    ui->txtCode->setCaretUseTextColor(true);
+
+    ui->txtCode->codeFolding().indentGuides = false;
+    ui->txtCode->codeFolding().fillIndents = false;
+    ui->txtCode->setRightEdge(0);
+    ui->txtCode->setUseCodeFolding(false);
     highlighterManager.applyColorScheme(ui->txtCode->highlighter(),
                                         pSettings->editor().colorScheme());
     PColorSchemeItem item = pColorManager->getItem(pSettings->editor().colorScheme(),COLOR_SCHEME_ACTIVE_LINE);
     if (item) {
         ui->txtCode->setActiveLineColor(item->background());
+    }
+    item = pColorManager->getItem(pSettings->editor().colorScheme(),COLOR_SCHEME_TEXT);
+    if (item) {
+        ui->txtCode->setForegroundColor(item->foreground());
+        ui->txtCode->setBackgroundColor(item->background());
+    } else {
+        ui->txtCode->setForegroundColor(palette().color(QPalette::Text));
+        ui->txtCode->setBackgroundColor(palette().color(QPalette::Base));
     }
     ui->lstRegister->setModel(pMainWindow->debugger()->registerModel());
 

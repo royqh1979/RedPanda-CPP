@@ -59,6 +59,8 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
     mRedoList->connect(mRedoList.get(), &SynEditUndoList::addedUndo, this, &SynEdit::onRedoAdded);
     mOrigRedoList = mRedoList;
 
+    mForegroundColor=palette().color(QPalette::Text);
+    mBackgroundColor=palette().color(QPalette::Base);
     mCaretColor = QColorConstants::Red;
     mCaretUseTextColor = false;
     mActiveLineColor = QColorConstants::Svg::lightblue;

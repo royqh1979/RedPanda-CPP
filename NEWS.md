@@ -1,3 +1,6 @@
+Version 0.8.11 For Dev-C++ 7 Beta
+ - fix: text color for cpu info dialog not correctly setted
+
 Version 0.8.10 For Dev-C++ 7 Beta
  - fix: Shouldn't update auto link settings, if the header name to be modified is unchanged
  - fix: add unit to project not correctly set new unit file's encoding
