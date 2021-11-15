@@ -260,7 +260,7 @@ PProjectUnit Project::newUnit(PFolderNode parentNode, const QString& customFileN
     newUnit->setOverrideBuildCmd(false);
     newUnit->setBuildCmd("");
     newUnit->setModified(true);
-    newUnit->setEncoding(toByteArray(options().encoding));
+    newUnit->setEncoding(toByteArray(mOptions.encoding));
     return newUnit;
 }
 
@@ -285,7 +285,7 @@ Editor *Project::openUnit(int index)
         editor = pMainWindow->editorList()->newEditor(fullPath, encoding, true, unit->isNew());
         editor->setInProject(true);
         unit->setEditor(editor);
-        unit->setEncoding(encoding);
+        //unit->setEncoding(encoding);
         editor->activate();
         loadUnitLayout(editor,index);
         return editor;
@@ -788,6 +788,7 @@ PProjectUnit Project::addUnit(const QString &inFileName, PFolderNode parentNode,
     newUnit = std::make_shared<ProjectUnit>(this);
 
     // Set all properties
+    newUnit->setEncoding(toByteArray(mOptions.encoding));
     newUnit->setFileName(QDir(directory()).filePath(inFileName));
     newUnit->setNew(false);
     newUnit->setEditor(nullptr);
