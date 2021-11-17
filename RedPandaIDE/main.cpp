@@ -91,8 +91,8 @@ int main(int argc, char *argv[])
         QSettings languageSetting(settingFilename,QSettings::IniFormat);
         languageSetting.beginGroup(SETTING_ENVIRONMENT);
         QString language = languageSetting.value("language",QLocale::system().name()).toString();
-        trans.load("RedPandaIDE_"+language,":/translations");
-        app.installTranslator(&trans);
+        if (trans.load("RedPandaIDE_"+language,":/translations"))
+            app.installTranslator(&trans);
     }
 
     qRegisterMetaType<PCompileIssue>("PCompileIssue");
