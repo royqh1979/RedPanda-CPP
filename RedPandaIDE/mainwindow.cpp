@@ -3143,7 +3143,7 @@ void MainWindow::onFileChanged(const QString &path)
     if (e) {
         if (fileExists(path)) {
             e->activate();
-            if (QMessageBox::question(this,tr("Compile"),
+            if (QMessageBox::question(this,tr("File Changed"),
                                       tr("File '%1' was changed.").arg(path)+"<BR /><BR />" + tr("Reload its content from disk?"),
                                       QMessageBox::Yes|QMessageBox::No,
                                       QMessageBox::No) == QMessageBox::Yes) {
@@ -3154,7 +3154,7 @@ void MainWindow::onFileChanged(const QString &path)
                 }
             }
         } else {
-            if (QMessageBox::question(this,tr("Compile"),
+            if (QMessageBox::question(this,tr("File Changed"),
                                       tr("File '%1' was removed.").arg(path)+"<BR /><BR />" + tr("Keep it open?"),
                                       QMessageBox::Yes|QMessageBox::No,
                                       QMessageBox::Yes) == QMessageBox::No) {

@@ -1969,7 +1969,7 @@ bool ProjectModel::setData(const QModelIndex &index, const QVariant &value, int 
             }
 
             // Add new filename to file minitor
-            pMainWindow->fileSystemWatcher()->removePath(oldName);
+            pMainWindow->fileSystemWatcher()->addPath(newName);
             return true;
         } else {
             //change folder name
