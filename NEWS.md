@@ -1,3 +1,8 @@
+Version 0.8.12 For Dev-C++ 7 Beta
+ - fix: control keys in the numpad doesn't work in the editor
+ - fix: project layout infos are wrongly saved to registry 
+ - fix: project layout infos are not correctly saved/loaded
+
 Version 0.8.11 For Dev-C++ 7 Beta
  - fix: text color for cpu info dialog not correctly setted
 

@@ -108,7 +108,9 @@ PSynEditKeyStroke SynEditKeyStrokes::findCommand(SynEditorCommand command)
 PSynEditKeyStroke SynEditKeyStrokes::findKeycode(int key, Qt::KeyboardModifiers modifiers)
 {
     for (PSynEditKeyStroke& keyStroke:mList) {
-        if (keyStroke->key() == key && keyStroke->keyModifiers()==modifiers && keyStroke->key2()==0)
+        if (keyStroke->key() == key
+                && keyStroke->keyModifiers()  == (modifiers & ~ Qt::KeypadModifier)
+                && keyStroke->key2()==0)
             return keyStroke;
     }
     return PSynEditKeyStroke();
@@ -118,8 +120,10 @@ PSynEditKeyStroke SynEditKeyStrokes::findKeycode2(int key, Qt::KeyboardModifiers
                                                   int key2, Qt::KeyboardModifiers modifiers2)
 {
     for (PSynEditKeyStroke& keyStroke:mList) {
-        if (keyStroke->key() == key && keyStroke->keyModifiers()==modifiers && keyStroke->key2()==key2
-                && keyStroke->keyModifiers2() ==modifiers2)
+        if (keyStroke->key() == key
+                && keyStroke->keyModifiers()==(modifiers & ~ Qt::KeypadModifier)
+                && keyStroke->key2()==key2
+                && keyStroke->keyModifiers2()== (modifiers2 & ~ Qt::KeypadModifier))
             return keyStroke;
     }
     return PSynEditKeyStroke();
