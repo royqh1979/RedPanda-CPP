@@ -1,4 +1,7 @@
-Version 0.8.12 For Dev-C++ 7 Beta
+Version 0.9.1 For Dev-C++ 7 Beta
+ - enhancement: code completion suggestion for "__func__" variable
+
+Version 0.9.0 For Dev-C++ 7 Beta
  - fix: control keys in the numpad doesn't work in the editor
  - fix: project layout infos are wrongly saved to registry 
  - fix: project layout infos are not correctly saved/loaded

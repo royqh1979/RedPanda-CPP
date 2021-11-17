@@ -2153,6 +2153,21 @@ void CppParser::handleMethod(const QString &sType, const QString &sName, const Q
                             true,
                             false);
             }
+            // add "__func__ variable"
+            addStatement(
+                        functionStatement,
+                        mCurrentFile,
+                        "", //dont override hint
+                        "static const char ",
+                        "__func__",
+                        "[]",
+                        "\""+scopelessName+"\"",
+                        startLine+1,
+                        StatementKind::skVariable,
+                        StatementScope::ssLocal,
+                        StatementClassScope::scsNone,
+                        true,
+                        false);
         } else {
             functionStatement = addStatement(
                         functionClass,
