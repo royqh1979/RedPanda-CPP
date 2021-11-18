@@ -794,6 +794,11 @@ QIcon DarkFusionStyle::standardIcon(StandardPixmap standardIcon, const QStyleOpt
     return QProxyStyle::standardIcon(standardIcon, option, widget);
 }
 
+void DarkFusionStyle::drawComplexControl(ComplexControl control, const QStyleOptionComplex *option, QPainter *painter, const QWidget *widget) const
+{
+    QProxyStyle::drawComplexControl(control,option,painter,widget);
+}
+
 void DarkFusionStyle::drawControl(ControlElement element, const QStyleOption *option, QPainter *painter,
                                const QWidget *widget) const
 {

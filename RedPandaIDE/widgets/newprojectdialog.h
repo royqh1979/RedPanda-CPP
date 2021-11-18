@@ -20,6 +20,7 @@ public:
     PProjectTemplate getTemplate();
     QString getLocation();
     QString getProjectName();
+    bool useAsDefaultProjectDir();
     bool isCProject();
     bool isCppProject();
     bool makeProjectDefault();

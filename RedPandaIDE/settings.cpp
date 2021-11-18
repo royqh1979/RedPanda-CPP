@@ -87,6 +87,7 @@ void Settings::load()
     mCodeCompletion.load();
     mCodeFormatter.load();
     mUI.load();
+    mDirs.load();
 }
 
 Settings::Dirs &Settings::dirs()
@@ -161,12 +162,7 @@ QString Settings::Dirs::templateDir() const
 
 QString Settings::Dirs::projectDir() const
 {
-    if (isGreenEdition()) {
-        return includeTrailingPathDelimiter(app()) + "projects";
-    } else {
-        return includeTrailingPathDelimiter(QStandardPaths::standardLocations(QStandardPaths::DocumentsLocation)[0])
-                         + "projects";
-    }
+    return mProjectDir;
 }
 
 QString Settings::Dirs::data(Settings::Dirs::DataType dataType) const
@@ -205,12 +201,24 @@ QString Settings::Dirs::executable() const
 
 void Settings::Dirs::doSave()
 {
-
+    saveValue("projectDir",mProjectDir);
 }
 
 void Settings::Dirs::doLoad()
 {
+    QString defaultProjectDir;
+    if (isGreenEdition()) {
+        defaultProjectDir = includeTrailingPathDelimiter(app()) + "projects";
+    } else {
+        defaultProjectDir = includeTrailingPathDelimiter(QStandardPaths::standardLocations(QStandardPaths::DocumentsLocation)[0])
+                         + "projects";
+    }
+    mProjectDir = stringValue("projectDir",defaultProjectDir);
+}
 
+void Settings::Dirs::setProjectDir(const QString &newProjectDir)
+{
+    mProjectDir = newProjectDir;
 }
 
 Settings::_Base::_Base(Settings *settings, const QString &groupName):
@@ -522,6 +530,26 @@ bool Settings::Editor::useUTF8ByDefault() const
 void Settings::Editor::setUseUTF8ByDefault(bool newUseUTF8ByDefault)
 {
     mUseUTF8ByDefault = newUseUTF8ByDefault;
+}
+
+bool Settings::Editor::highlightMathingBraces() const
+{
+    return mHighlightMathingBraces;
+}
+
+void Settings::Editor::setHighlightMathingBraces(bool newHighlightMathingBraces)
+{
+    mHighlightMathingBraces = newHighlightMathingBraces;
+}
+
+bool Settings::Editor::highlightCurrentWord() const
+{
+    return mHighlightCurrentWord;
+}
+
+void Settings::Editor::setHighlightCurrentWord(bool newHighlightCurrentWord)
+{
+    mHighlightCurrentWord = newHighlightCurrentWord;
 }
 
 bool Settings::Editor::enableTooltips() const
@@ -994,6 +1022,7 @@ void Settings::Editor::doSave()
     saveValue("show_indent_lines", mShowIndentLines);
     saveValue("indent_line_color",mIndentLineColor);
     saveValue("fill_indents",mfillIndents);
+
     // caret
     saveValue("enhance_home_key",mEnhanceHomeKey);
     saveValue("enhance_end_key",mEnhanceEndKey);
@@ -1002,6 +1031,10 @@ void Settings::Editor::doSave()
     saveValue("caret_for_overwrite",static_cast<int>(mCaretForOverwrite));
     saveValue("caret_use_text_color",mCaretUseTextColor);
     saveValue("caret_color",mCaretColor);
+
+    //highlight
+    saveValue("highlight_matching_braces",mHighlightMathingBraces);
+    saveValue("highlight_current_word",mHighlightCurrentWord);
 
     //scroll
     saveValue("auto_hide_scroll_bar", mAutoHideScrollbar);
@@ -1111,6 +1144,10 @@ void Settings::Editor::doLoad()
     mCaretForOverwrite = static_cast<SynEditCaretType>( intValue("caret_for_overwrite",static_cast<int>(SynEditCaretType::ctBlock)));
     mCaretUseTextColor = boolValue("caret_use_text_color",true);
     mCaretColor = colorValue("caret_color",QColorConstants::Svg::yellow);
+
+    //highlight
+    mHighlightMathingBraces = boolValue("highlight_matching_braces",true);
+    mHighlightCurrentWord = boolValue("highlight_current_word",true);
 
     //scroll
     mAutoHideScrollbar = boolValue("auto_hide_scroll_bar", false);

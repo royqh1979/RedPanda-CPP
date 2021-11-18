@@ -52,6 +52,9 @@ void EditorGeneralWidget::doLoad()
     setCaretTypeIndex(ui->cbCaretForOverwrite,pSettings->editor().caretForOverwrite());
     ui->chkCaretUseTextColor->setChecked(pSettings->editor().caretUseTextColor());
     ui->colorCaret->setColor(pSettings->editor().caretColor());
+    //highlight
+    ui->chkHighlightCurrentWord->setChecked(pSettings->editor().highlightCurrentWord());
+    ui->chkHighlightMatchingBraces->setChecked(pSettings->editor().highlightMathingBraces());
     //scrolls;
     ui->chkAutoHideScrollBars->setChecked(pSettings->editor().autoHideScrollbar());
     ui->chkScrollPastEOF->setChecked(pSettings->editor().scrollPastEof());
@@ -84,6 +87,10 @@ void EditorGeneralWidget::doSave()
     pSettings->editor().setCaretForOverwrite(getCaretTypeIndex(ui->cbCaretForOverwrite));
     pSettings->editor().setCaretUseTextColor(ui->chkCaretUseTextColor->isChecked());
     pSettings->editor().setCaretColor(ui->colorCaret->color());
+    //highlight
+    pSettings->editor().setHighlightCurrentWord(ui->chkHighlightCurrentWord->isChecked());
+    pSettings->editor().setHighlightMathingBraces(ui->chkHighlightMatchingBraces->isChecked());
+
     //scrolls;
     pSettings->editor().setAutoHideScrollbar(ui->chkAutoHideScrollBars->isChecked());
     pSettings->editor().setScrollPastEof(ui->chkScrollPastEOF->isChecked());

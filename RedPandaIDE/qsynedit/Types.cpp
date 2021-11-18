@@ -234,3 +234,8 @@ void ContentsCoord::setCh(int newChar)
 {
     mChar = newChar;
 }
+
+bool BufferCoord::operator==(const BufferCoord &coord)
+{
+    return coord.Char == Char && coord.Line == Line;
+}

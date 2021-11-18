@@ -920,7 +920,8 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
                 foreground = mCurrentHighlighWordForeground;
             if (mCurrentHighlighWordBackground.isValid())
                 background = mCurrentHighlighWordBackground;
-        } else if (!selAvail() && attr->name() == SYNS_AttrSymbol) {
+        } else if (!selAvail() && attr->name() == SYNS_AttrSymbol
+                   && pSettings->editor().highlightMathingBraces()) {
             //        qDebug()<<line<<":"<<aChar<<" - "<<mHighlightCharPos1.Line<<":"<<mHighlightCharPos1.Char<<" - "<<mHighlightCharPos2.Line<<":"<<mHighlightCharPos2.Char;
             if ( (line == mHighlightCharPos1.Line)
                     && (aChar == mHighlightCharPos1.Char)) {
@@ -1408,10 +1409,6 @@ void Editor::onStatusChanged(SynStatusChanges changes)
 
     if (changes.testFlag(SynStatusChange::scCaretX)
             || changes.testFlag(SynStatusChange::scCaretY)) {
-        invalidateLine(mHighlightCharPos1.Line);
-        invalidateLine(mHighlightCharPos2.Line);
-        mHighlightCharPos1 = BufferCoord{0,0};
-        mHighlightCharPos2 = BufferCoord{0,0};
         if (mTabStopBegin >=0) {
             if (mTabStopY==caretY()) {
                 if (mLineAfterTabStop.isEmpty()) {
@@ -1437,7 +1434,11 @@ void Editor::onStatusChanged(SynStatusChanges changes)
                     clearUserCodeInTabStops();
                 }
             }
-        } else if (!selAvail() && highlighter()){
+        } else if (!selAvail() && highlighter() && pSettings->editor().highlightMathingBraces()){
+            invalidateLine(mHighlightCharPos1.Line);
+            invalidateLine(mHighlightCharPos2.Line);
+            mHighlightCharPos1 = BufferCoord{0,0};
+            mHighlightCharPos2 = BufferCoord{0,0};
             // Is there a bracket char before us?
             int lineLength = lineText().length();
             int ch = caretX() - 2;
@@ -1471,8 +1472,11 @@ void Editor::onStatusChanged(SynStatusChanges changes)
 
     // scSelection includes anything caret related
     if (changes.testFlag(SynStatusChange::scSelection)) {
-        if (!selAvail()) {
+        if (!selAvail() && pSettings->editor().highlightCurrentWord()) {
             mCurrentHighlightedWord = wordAtCursor();
+        } else if (selAvail() && blockBegin() == wordStart()
+                   && blockEnd() == wordEnd()){
+            mCurrentHighlightedWord = selText();
         } else {
             mCurrentHighlightedWord = "";
         }

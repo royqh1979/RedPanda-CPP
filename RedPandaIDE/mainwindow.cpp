@@ -4567,6 +4567,10 @@ void MainWindow::on_actionNew_Project_triggered()
 {
     NewProjectDialog dialog;
     if (dialog.exec() == QDialog::Accepted) {
+        if (dialog.useAsDefaultProjectDir()) {
+            pSettings->dirs().setProjectDir(dialog.getLocation());
+            pSettings->dirs().save();
+        }
         // Take care of the currently opened project
         QString s;
         if (mProject) {
@@ -4587,19 +4591,20 @@ void MainWindow::on_actionNew_Project_triggered()
         }
 
         //Create the project folder
-        QDir dir(dialog.getLocation());
+        QString location = includeTrailingPathDelimiter(dialog.getLocation())+dialog.getProjectName();
+        QDir dir(location);
         if (!dir.exists()) {
             if (QMessageBox::question(this,
                                       tr("Folder not exist"),
-                                      tr("Folder '%1' doesn't exist. Create it now?").arg(dialog.getLocation()),
+                                      tr("Folder '%1' doesn't exist. Create it now?").arg(location),
                                       QMessageBox::Yes | QMessageBox::No,
                                       QMessageBox::Yes) != QMessageBox::Yes) {
                 return;
             }
-            if (!dir.mkpath(dialog.getLocation())) {
+            if (!dir.mkpath(location)) {
                 QMessageBox::critical(this,
                                       tr("Can't create folder"),
-                                      tr("Failed to create folder '%1'.").arg(dialog.getLocation()),
+                                      tr("Failed to create folder '%1'.").arg(location),
                                       QMessageBox::Yes);
                 return;
             }
@@ -4608,14 +4613,14 @@ void MainWindow::on_actionNew_Project_triggered()
 //     if cbDefault.Checked then
 //        devData.DefCpp := rbCpp.Checked;
 
-        s = includeTrailingPathDelimiter(dialog.getLocation())
+        s = includeTrailingPathDelimiter(location)
                 + dialog.getProjectName() + "." + DEV_PROJECT_EXT;
 
         if (fileExists(s)) {
             QString saveName = QFileDialog::getSaveFileName(
                         this,
                         tr("Save new project as"),
-                        dialog.getLocation(),
+                        location,
                         tr("Red panda Dev-C++ project file (*.dev)"));
             if (!saveName.isEmpty()) {
                 s = saveName;

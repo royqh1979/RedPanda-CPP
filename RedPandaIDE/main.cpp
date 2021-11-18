@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
     QApplication app(argc, argv);
 
     //Translation must be loaded first
-    QTranslator trans;
+    QTranslator trans,transQt;
     QString settingFilename = getSettingFilename();
     if (!isGreenEdition()) {
         QDir::setCurrent(QStandardPaths::standardLocations(QStandardPaths::DocumentsLocation)[0]);
@@ -91,8 +91,13 @@ int main(int argc, char *argv[])
         QSettings languageSetting(settingFilename,QSettings::IniFormat);
         languageSetting.beginGroup(SETTING_ENVIRONMENT);
         QString language = languageSetting.value("language",QLocale::system().name()).toString();
-        if (trans.load("RedPandaIDE_"+language,":/translations"))
+
+        if (trans.load("RedPandaIDE_"+language,":/translations")) {
             app.installTranslator(&trans);
+        }
+        if (transQt.load("qt_"+language,":/translations")) {
+            app.installTranslator(&transQt);
+        }
     }
 
     qRegisterMetaType<PCompileIssue>("PCompileIssue");

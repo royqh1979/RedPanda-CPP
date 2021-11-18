@@ -3,6 +3,8 @@ Version 0.9.1 For Dev-C++ 7 Beta
  - fix: ide failed to start, if there are errors in the compiler set settings
  - fix: numpad's enter key doesn't work
  - enhancement: code completion suggestion for phrase after long/short/signed/unsigned
+ - enhancement: save/load default projects folder
+ - enhancement: add editor general options "highlight current word" and "highlight matching braces"
 
 Version 0.9.0 For Dev-C++ 7 Beta
  - fix: control keys in the numpad doesn't work in the editor

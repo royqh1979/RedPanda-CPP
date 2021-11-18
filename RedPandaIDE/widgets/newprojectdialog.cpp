@@ -20,11 +20,12 @@ NewProjectDialog::NewProjectDialog(QWidget *parent) :
     int i=0;
     QString projectName;
     QString location;
+    location = excludeTrailingPathDelimiter(pSettings->dirs().projectDir());
     while (true) {
         i++;
         projectName = tr("Project%1").arg(i);
-        location = includeTrailingPathDelimiter(pSettings->dirs().projectDir()) + projectName;
-        if (!QDir(location).exists())
+        QString tempLocation = includeTrailingPathDelimiter(location)+projectName;
+        if (!QDir(tempLocation).exists())
             break;
     }
     ui->txtProjectName->setText(projectName);
@@ -63,6 +64,11 @@ QString NewProjectDialog::getLocation()
 QString NewProjectDialog::getProjectName()
 {
     return ui->txtProjectName->text();
+}
+
+bool NewProjectDialog::useAsDefaultProjectDir()
+{
+    return ui->chkAsDefaultLocation->isChecked();
 }
 
 bool NewProjectDialog::isCProject()
@@ -159,12 +165,7 @@ void NewProjectDialog::updateView()
 
 void NewProjectDialog::updateProjectLocation()
 {
-    ui->txtLocation->setText(
-                includeTrailingPathDelimiter(
-                    extractFilePath(
-                        ui->txtLocation->text()))
-                + ui->txtProjectName->text()
-            );
+    QString newLocation = ui->txtLocation->text();
 
     QListWidgetItem * current = ui->lstTemplates->currentItem();
     ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(
@@ -210,7 +211,7 @@ void NewProjectDialog::on_btnBrowse_clicked()
     }
     QString dir = QFileDialog::getExistingDirectory(
                 this,
-                "Project directory",
+                "Choose directory",
                 dirPath
                 );
     if (!dir.isEmpty()) {
