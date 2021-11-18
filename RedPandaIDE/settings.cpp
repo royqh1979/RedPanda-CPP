@@ -2393,11 +2393,19 @@ void Settings::CompilerSets::loadSets()
     mDefaultIndex =mSettings->mSettings.value(SETTING_COMPILTER_SETS_DEFAULT_INDEX,-1).toInt();
     int listSize = mSettings->mSettings.value(SETTING_COMPILTER_SETS_COUNT,0).toInt();
     mSettings->mSettings.endGroup();
+    bool loadError = false;
     for (int i=0;i<listSize;i++) {
         PCompilerSet pSet=loadSet(i);
+        if (!pSet) {
+            loadError = true;
+            break;
+        }
         mList.push_back(pSet);
     }
-
+    if (loadError) {
+        mList.clear();
+        mDefaultIndex = -1;
+    }
     PCompilerSet pCurrentSet = defaultSet();
     if (pCurrentSet) {
         QString msg;
@@ -2419,6 +2427,9 @@ void Settings::CompilerSets::loadSets()
                 mDefaultIndex =  mList.size()-1;
             pCurrentSet = defaultSet();
             if (!pCurrentSet) {
+                mList.clear();
+                mDefaultIndex = -1;
+                saveSets();
                 return;
             }
             saveSet(mDefaultIndex);
@@ -2442,6 +2453,9 @@ void Settings::CompilerSets::loadSets()
         findSets();
         pCurrentSet = defaultSet();
         if (!pCurrentSet) {
+            mList.clear();
+            mDefaultIndex = -1;
+            saveSets();
             return;
         }
         saveSets();
@@ -2641,6 +2655,8 @@ Settings::PCompilerSet Settings::CompilerSets::loadSet(int index)
 
     mSettings->mSettings.endGroup();
 
+    if (pSet->binDirs().isEmpty())
+        return PCompilerSet();
     pSet->setDirectories(pSet->binDirs()[0]);
     pSet->setDefines();
     return pSet;
