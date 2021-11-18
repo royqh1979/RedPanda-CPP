@@ -184,6 +184,8 @@ int main(int argc, char** argv) {
 	    SetStdHandle(STD_ERROR_HANDLE, hOutput);
 		freopen("CONOUT$","w+",stdout);
 		freopen("CONOUT$","w+",stderr);
+	} else {
+		FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
 	}
 
 	// Save starting timestamp

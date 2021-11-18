@@ -1,3 +1,6 @@
+Version 0.9.2 For Dev-C++ 7 Beta
+ - fix: console program that needs input may crash
+
 Version 0.9.1 For Dev-C++ 7 Beta
  - enhancement: code completion suggestion for "__func__" variable
  - fix: ide failed to start, if there are errors in the compiler set settings
