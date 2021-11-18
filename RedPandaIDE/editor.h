@@ -202,7 +202,7 @@ private:
     void undoSymbolCompletion(int pos);
     QuoteStatus getQuoteStatus();
 
-    void showCompletion(bool autoComplete);
+    void showCompletion(const QString& preWord, bool autoComplete);
     void showHeaderCompletion(bool autoComplete);
 
     bool testInFunc(int x,int y);

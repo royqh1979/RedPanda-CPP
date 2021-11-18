@@ -2,6 +2,7 @@ Version 0.9.1 For Dev-C++ 7 Beta
  - enhancement: code completion suggestion for "__func__" variable
  - fix: ide failed to start, if there are errors in the compiler set settings
  - fix: numpad's enter key doesn't work
+ - enhancement: code completion suggestion for phrase after long/short/signed/unsigned
 
 Version 0.9.0 For Dev-C++ 7 Beta
  - fix: control keys in the numpad doesn't work in the editor

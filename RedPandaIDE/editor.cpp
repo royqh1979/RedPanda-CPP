@@ -692,6 +692,16 @@ void Editor::keyPressEvent(QKeyEvent *event)
                     QString lastWord = getPreviousWordAtPositionForSuggestion(caretXY());
                     if (!lastWord.isEmpty()) {
                         if (CppTypeKeywords.contains(lastWord)) {
+                            if (lastWord == "long" ||
+                                    lastWord == "short" ||
+                                    lastWord == "signed" ||
+                                    lastWord == "unsigned"
+                                    ) {
+                                setSelText(ch);
+                                showCompletion(lastWord,false);
+                                handled=true;
+                                return;
+                            }
                             //last word is a type keyword, this is a var or param define, and dont show suggestion
       //                  if devEditor.UseTabnine then
       //                    ShowTabnineCompletion;
@@ -713,7 +723,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
                         }
                     }
                     setSelText(ch);
-                    showCompletion(false);
+                    showCompletion("",false);
                     handled=true;
                     return;
                 }
@@ -727,7 +737,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
                     && pSettings->codeCompletion().showCompletionWhileInput() ) {
                 mLastIdCharPressed++;
                 setSelText(ch);
-                showCompletion(false);
+                showCompletion("",false);
                 handled=true;
                 return;
             }
@@ -739,7 +749,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
                     && pSettings->codeCompletion().showCompletionWhileInput() ) {
                 mLastIdCharPressed++;
                 setSelText(ch);
-                showCompletion(false);
+                showCompletion("",false);
                 handled=true;
                 return;
             }
@@ -1139,7 +1149,7 @@ void Editor::inputMethodEvent(QInputMethodEvent *event)
                         return;
                     }
                 }
-                showCompletion(false);
+                showCompletion("",false);
                 return;
             }
         }
@@ -1904,20 +1914,20 @@ bool Editor::handleCodeCompletion(QChar key)
     switch(key.unicode()) {
     case '.':
         setSelText(key);
-        showCompletion(false);
+        showCompletion("",false);
         return true;
     case '>':
         setSelText(key);
         if ((caretX() > 2) && (lineText().length() >= 2) &&
                 (lineText()[caretX() - 3] == '-'))
-            showCompletion(false);
+            showCompletion("",false);
         return true;
     case ':':
         ExecuteCommand(SynEditorCommand::ecChar,':',nullptr);
         //setSelText(key);
         if ((caretX() > 2) && (lineText().length() >= 2) &&
                 (lineText()[caretX() - 3] == ':'))
-            showCompletion(false);
+            showCompletion("",false);
         return true;
     case '/':
     case '\\':
@@ -2260,7 +2270,7 @@ void Editor::exportAsHTML(const QString &htmlFilename)
     exporter.SaveToFile(htmlFilename);
 }
 
-void Editor::showCompletion(bool autoComplete)
+void Editor::showCompletion(const QString& preWord,bool autoComplete)
 {
     if (!pSettings->codeCompletion().enabled())
         return;
@@ -2337,8 +2347,7 @@ void Editor::showCompletion(bool autoComplete)
 
     if (word.isEmpty())
         word=getWordAtPosition(this,caretXY(),pBeginPos,pEndPos, WordPurpose::wpCompletion);
-    //if not fCompletionBox.Visible then
-    mCompletionPopup->prepareSearch(word, mFilename, pBeginPos.Line);
+    mCompletionPopup->prepareSearch(preWord, word, mFilename, pBeginPos.Line);
 
     // Filter the whole statement list
     if (mCompletionPopup->search(word, autoComplete)) { //only one suggestion and it's not input while typing

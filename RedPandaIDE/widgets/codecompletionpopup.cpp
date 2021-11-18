@@ -59,7 +59,7 @@ void CodeCompletionPopup::setKeypressedCallback(const KeyPressedCallback &newKey
     mListView->setKeypressedCallback(newKeypressedCallback);
 }
 
-void CodeCompletionPopup::prepareSearch(const QString &phrase, const QString &filename, int line)
+void CodeCompletionPopup::prepareSearch(const QString& preWord,const QString &phrase, const QString &filename, int line)
 {
     QMutexLocker locker(&mMutex);
     if (!isEnabled())
@@ -69,19 +69,19 @@ void CodeCompletionPopup::prepareSearch(const QString &phrase, const QString &fi
     QCursor oldCursor = cursor();
     setCursor(Qt::CursorShape::WaitCursor);
 
-    mIncludedFiles = mParser->getFileIncludes(filename);
-    getCompletionFor(filename,phrase,line);
+    if (preWord.isEmpty()) {
+        mIncludedFiles = mParser->getFileIncludes(filename);
+        getCompletionFor(filename,phrase,line);
 
-    if (mFullCompletionStatementList.isEmpty() && phrase.startsWith('~')) {
-        mPhrase = phrase.mid(1);
-        getCompletionFor(filename,mPhrase,line);
+        if (mFullCompletionStatementList.isEmpty() && phrase.startsWith('~')) {
+            mPhrase = phrase.mid(1);
+            getCompletionFor(filename,mPhrase,line);
+        }
+    } else {
+        mPhrase = phrase;
+        getFullCompletionListFor(preWord);
     }
 
-    //todo: notify model
-//CodeComplForm.lbCompletion.Font.Size := FontSize;
-//CodeComplForm.lbCompletion.ItemHeight := CodeComplForm.lbCompletion.Canvas.TextHeight('F')+6;
-// Round(2 * FontSize);
-//CodeComplForm.Update;
     setCursor(oldCursor);
 }
 
@@ -453,13 +453,14 @@ void CodeCompletionPopup::getCompletionFor(const QString &fileName, const QStrin
         if (phrase.startsWith('#')) {
             if (mShowKeywords) {
                 foreach (const QString& keyword, CppDirectives) {
-                    PStatement statement = std::make_shared<Statement>();
-                    statement->command = keyword;
-                    statement->kind = StatementKind::skKeyword;
-                    statement->fullName = keyword;
-                    statement->usageCount = 0;
-                    statement->freqTop = 0;
-                    mFullCompletionStatementList.append(statement);
+                    addKeyword(keyword);
+//                    PStatement statement = std::make_shared<Statement>();
+//                    statement->command = keyword;
+//                    statement->kind = StatementKind::skKeyword;
+//                    statement->fullName = keyword;
+//                    statement->usageCount = 0;
+//                    statement->freqTop = 0;
+//                    mFullCompletionStatementList.append(statement);
                 }
             }
             return;
@@ -469,13 +470,14 @@ void CodeCompletionPopup::getCompletionFor(const QString &fileName, const QStrin
         if (phrase.startsWith('@')) {
             if (mShowKeywords) {
                 foreach (const QString& keyword,JavadocTags) {
-                    PStatement statement = std::make_shared<Statement>();
-                    statement->command = keyword;
-                    statement->kind = StatementKind::skKeyword;
-                    statement->fullName = keyword;
-                    statement->usageCount = 0;
-                    statement->freqTop = 0;
-                    mFullCompletionStatementList.append(statement);
+                    addKeyword(keyword);
+//                    PStatement statement = std::make_shared<Statement>();
+//                    statement->command = keyword;
+//                    statement->kind = StatementKind::skKeyword;
+//                    statement->fullName = keyword;
+//                    statement->usageCount = 0;
+//                    statement->freqTop = 0;
+//                    mFullCompletionStatementList.append(statement);
                 }
             }
             return;
@@ -506,23 +508,25 @@ void CodeCompletionPopup::getCompletionFor(const QString &fileName, const QStrin
                 //add keywords
                 if (mUseCppKeyword) {
                     foreach (const QString& keyword,CppKeywords.keys()) {
-                        PStatement statement = std::make_shared<Statement>();
-                        statement->command = keyword;
-                        statement->kind = StatementKind::skKeyword;
-                        statement->fullName = keyword;
-                        statement->usageCount = 0;
-                        statement->freqTop = 0;
-                        mFullCompletionStatementList.append(statement);
+                        addKeyword(keyword);
+//                        PStatement statement = std::make_shared<Statement>();
+//                        statement->command = keyword;
+//                        statement->kind = StatementKind::skKeyword;
+//                        statement->fullName = keyword;
+//                        statement->usageCount = 0;
+//                        statement->freqTop = 0;
+//                        mFullCompletionStatementList.append(statement);
                     }
                 } else {
                     foreach (const QString& keyword,CKeywords) {
-                        PStatement statement = std::make_shared<Statement>();
-                        statement->command = keyword;
-                        statement->kind = StatementKind::skKeyword;
-                        statement->fullName = keyword;
-                        statement->usageCount = 0;
-                        statement->freqTop = 0;
-                        mFullCompletionStatementList.append(statement);
+                        addKeyword(keyword);
+//                        PStatement statement = std::make_shared<Statement>();
+//                        statement->command = keyword;
+//                        statement->kind = StatementKind::skKeyword;
+//                        statement->fullName = keyword;
+//                        statement->usageCount = 0;
+//                        statement->freqTop = 0;
+//                        mFullCompletionStatementList.append(statement);
                     }
                 }
             }
@@ -748,6 +752,39 @@ void CodeCompletionPopup::getCompletionFor(const QString &fileName, const QStrin
             }
         }
     }
+}
+
+void CodeCompletionPopup::getFullCompletionListFor(const QString &preWord)
+{
+    mFullCompletionStatementList.clear();
+    if (preWord == "long") {
+        addKeyword("long");
+        addKeyword("double");
+        addKeyword("int");
+    } else if (preWord == "short") {
+        addKeyword("int");
+    } else if (preWord == "signed") {
+        addKeyword("long");
+        addKeyword("short");
+        addKeyword("int");
+        addKeyword("char");
+    } else if (preWord == "unsigned") {
+        addKeyword("long");
+        addKeyword("short");
+        addKeyword("int");
+        addKeyword("char");
+    }
+}
+
+void CodeCompletionPopup::addKeyword(const QString &keyword)
+{
+    PStatement statement = std::make_shared<Statement>();
+    statement->command = keyword;
+    statement->kind = StatementKind::skKeyword;
+    statement->fullName = keyword;
+    statement->usageCount = 0;
+    statement->freqTop = 0;
+    mFullCompletionStatementList.append(statement);
 }
 
 bool CodeCompletionPopup::isIncluded(const QString &fileName)
