@@ -19,7 +19,7 @@ CPUDialog::CPUDialog(QWidget *parent) :
 
     ui->txtCode->codeFolding().indentGuides = false;
     ui->txtCode->codeFolding().fillIndents = false;
-    ui->txtCode->setRightEdge(0);
+    ui->txtCode->setGutterWidth(0);
     ui->txtCode->setUseCodeFolding(false);
     highlighterManager.applyColorScheme(ui->txtCode->highlighter(),
                                         pSettings->editor().colorScheme());

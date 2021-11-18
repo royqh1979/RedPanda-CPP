@@ -1715,7 +1715,7 @@ Are you really want to continue?</source>
     <message>
         <location filename="settingsdialog/editorsyntaxcheckwidget.ui" line="49"/>
         <source>Check when count of lines changed</source>
-        <translation>在文件函数变化时检查</translation>
+        <translation>在文件行数或者光标所在行变化时检查</translation>
     </message>
 </context>
 <context>
@@ -7101,7 +7101,7 @@ Are you really want to continue?</source>
     <message>
         <location filename="settingsdialog/editorgeneralwidget.ui" line="234"/>
         <source>Highlight</source>
-        <translation type="unfinished">高亮显示</translation>
+        <translation>高亮显示</translation>
     </message>
     <message>
         <location filename="settingsdialog/editorgeneralwidget.ui" line="240"/>

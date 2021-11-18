@@ -119,7 +119,8 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
     mBlockEnd = mBlockBegin;
     mOptions = eoAutoIndent
             | eoDragDropEditing | eoEnhanceEndKey | eoTabIndent |
-             eoGroupUndo | eoKeepCaretX | eoSelectWordByDblClick;
+             eoGroupUndo | eoKeepCaretX | eoSelectWordByDblClick
+            | eoHideShowScrollbars ;
 
     mScrollTimer = new QTimer(this);
     mScrollTimer->setInterval(100);

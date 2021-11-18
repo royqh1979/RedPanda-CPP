@@ -534,7 +534,7 @@ void MainWindow::applySettings()
             if (!mTcpServer.listen(QHostAddress::LocalHost,pSettings->executor().competivieCompanionPort())) {
 //                QMessageBox::critical(nullptr,
 //                                      tr("Listen failed"),
-//                                      tr("Can't listen to port %1 form Competitve Companion.").arg(10045)
+//                                      tr("Can't listen to port %1 form Competitive Companion.").arg(10045)
 //                                      + "<BR/>"
 //                                      +tr("You can turn off competitive companion support in the Problem Set options.")
 //                                      + "<BR/>"
@@ -574,7 +574,8 @@ void MainWindow::applyUISettings()
     ui->actionFiles->setChecked(settings.showFiles());
     showHideInfosTab(ui->tabFiles,settings.showFiles());
     ui->actionProblem_Set->setChecked(settings.showProblemSet());
-    showHideInfosTab(ui->tabProblemSet,settings.showProblemSet());
+    showHideInfosTab(ui->tabProblemSet,settings.showProblemSet()
+                     && pSettings->executor().enableProblemSet());
 
     ui->actionIssues->setChecked(settings.showIssues());
     showHideMessagesTab(ui->tabIssues,settings.showIssues());
@@ -589,7 +590,8 @@ void MainWindow::applyUISettings()
     ui->actionBookmark->setChecked(settings.showBookmark());
     showHideMessagesTab(ui->tabBookmark,settings.showBookmark());
     ui->actionProblem->setChecked(settings.showProblem());
-    showHideMessagesTab(ui->tabProblem,settings.showProblem());
+    showHideMessagesTab(ui->tabProblem,settings.showProblem()
+                        && pSettings->executor().enableProblemSet());
     //we can't show/hide left/bottom panels here, cause mainwindow layout is not calculated
 }
 
