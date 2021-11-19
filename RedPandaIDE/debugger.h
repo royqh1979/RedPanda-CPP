@@ -13,6 +13,8 @@
 #include <QSemaphore>
 #include <QThread>
 #include <memory>
+#include "gdbmiresultparser.h"
+
 enum class DebugCommandSource {
     Console,
     Other
@@ -188,6 +190,8 @@ public:
     PBreakpoint breakpointAt(int line, const Editor* editor, int &index);
     void setBreakPointCondition(int index, const QString& condition);
     void sendAllBreakpointsToDebugger();
+    void validateBreakpoint(int line, const QString& filename, int number);
+    void invalidateAllBreakpoints();
 
     //watch vars
     void addWatchVar(const QString& namein);
@@ -310,7 +314,7 @@ private:
     void runNextCmd();
     QStringList tokenize(const QString& s);
 
-    void handleBreakpoint(const QByteArray& breakpointRecord);
+    void handleBreakpoint(const GDBMIResultParser::ParseObject& breakpoint);
     void processConsoleOutput(const QByteArray& line);
     void processResult(const QByteArray& result);
     void processExecAsyncRecord(const QByteArray& line);
@@ -357,6 +361,7 @@ private:
     bool doupdatememoryview;
     bool doupdatelocal;
 
+    //
     bool mInferiorPaused;
     bool mProcessExited;
     QStringList mConsoleOutput;

@@ -12,10 +12,6 @@
 #include <QPlainTextEdit>
 #include <QDebug>
 #include <QDir>
-#include <QJsonArray>
-#include <QJsonObject>
-#include <QJsonDocument>
-#include <QJsonDocument>
 
 Debugger::Debugger(QObject *parent) : QObject(parent)
 {
@@ -150,6 +146,7 @@ void Debugger::addBreakpoint(int line, const Editor* editor)
 void Debugger::addBreakpoint(int line, const QString &filename)
 {
     PBreakpoint bp=std::make_shared<Breakpoint>();
+    bp->number = -1;
     bp->line = line;
     bp->filename = filename;
     bp->condition = "";
@@ -422,13 +419,12 @@ void Debugger::sendClearBreakpointCommand(int index)
 void Debugger::sendClearBreakpointCommand(PBreakpoint breakpoint)
 {
     // Debugger already running? Remove it from GDB
-    if (breakpoint && mExecuting) {
+    if (breakpoint && breakpoint->number>=0 && mExecuting) {
         //clear "filename":linenum
         QString filename = breakpoint->filename;
         filename.replace('\\','/');
-        sendCommand("clear",
-                QString("\"%1\":%2").arg(filename)
-                .arg(breakpoint->line));
+        sendCommand("-break-delete",
+                QString("%1").arg(breakpoint->number));
     }
 }
 
@@ -1162,6 +1158,18 @@ void DebugReader::processConsoleOutput(const QByteArray& line)
 void DebugReader::processResult(const QByteArray &result)
 {
     int pos = result.indexOf('=');
+    GDBMIResultParser parser;
+    GDBMIResultType resultType;
+    GDBMIResultParser::ParseValue parseValue;
+    bool parseOk = parser.parse(result,resultType,parseValue);
+    if (!parseOk)
+        return;
+    switch(resultType) {
+    case GDBMIResultType::Breakpoint:
+        handleBreakpoint(parseValue.object());
+        return;
+    }
+
     QByteArray name = result.mid(0,pos);
     QByteArray value = result.mid(pos+1);
     if (name == "bkpt") {
@@ -1711,6 +1719,9 @@ void DebugReader::handleBreakpoint(const QByteArray &breakpointRecord)
     //because QJsonDocument only handle utf8-encoded json strings
     QString temp = QString::fromLocal8Bit(breakpointRecord);
     QByteArray record = temp.toUtf8();
+    GDBMIResultParser parser;
+    GDBMIR
+    parser.parse(breakpointRecord,)
     QJsonParseError error;
     QJsonDocument doc = QJsonDocument::fromJson(record,&error);
     if (error.error!=QJsonParseError::NoError) {
