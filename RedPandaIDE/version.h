@@ -2,6 +2,6 @@
 #define VERSION_H
 #include <QObject>
 
-#define DEVCPP_VERSION "beta.0.9.1"
+#define DEVCPP_VERSION "beta.0.9.2"
 
 #endif // VERSION_H

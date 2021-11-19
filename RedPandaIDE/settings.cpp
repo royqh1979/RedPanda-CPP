@@ -2888,6 +2888,9 @@ void Settings::Executor::doSave()
     saveValue("redirect_input",mRedirectInput);
     saveValue("input_filename",mInputFilename);
     //problem set
+    saveValue("enable_proble_set", mEnableProblemSet);
+    saveValue("enable_competivie_companion", mEnableCompetitiveCompanion);
+    saveValue("competitive_companion_port", mCompetivieCompanionPort);
 
 }
 
