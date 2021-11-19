@@ -95,7 +95,11 @@ QString SynGutter::formatLineNumber(int line)
 {
     line += (mLineNumberStart - 1);
     QString result = QString::number(line);
-    return QString(mAutoSizeDigitCount - result.length(),'0') + result;
+    if (mLeadingZeros) {
+        return QString(mAutoSizeDigitCount - result.length(),'0') + result;
+    } else {
+        return result;
+    }
 }
 
 int SynGutter::realGutterWidth(int charWidth)
@@ -315,10 +319,9 @@ void SynGutter::setBorderColor(const QColor &value)
 }
 
 
-SynEditMark::SynEditMark(QObject *parent)
+SynEditMark::SynEditMark(QObject * /*parent*/)
 {
     mBookmarkNum = -1;
-
 }
 
 int SynEditMark::Char() const
@@ -405,7 +408,7 @@ void SynEditMark::setLine(int line)
     }
 }
 
-SynBookMarkOpt::SynBookMarkOpt(QObject *parent)
+SynBookMarkOpt::SynBookMarkOpt(QObject */*parent*/)
 {
     mDrawBookmarksFirst = true;
     mEnableKeys = true;

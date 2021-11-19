@@ -1,3 +1,45 @@
+Version 0.9.2 For Dev-C++ 7 Beta
+ - fix: gutter of the disassembly code control in the cpu info dialog is grayed
+ - fix: problem set & problem views not correctly hidden when disabled in the executor / problem set options 
+ - fix: executor / problem set options not correctly saved
+
+Version 0.9.1 For Dev-C++ 7 Beta
+ - enhancement: code completion suggestion for "__func__" variable
+ - fix: ide failed to start, if there are errors in the compiler set settings
+ - fix: numpad's enter key doesn't work
+ - enhancement: code completion suggestion for phrase after long/short/signed/unsigned
+ - enhancement: save/load default projects folder
+ - enhancement: add editor general options "highlight current word" and "highlight matching braces"
+
+Version 0.9.0 For Dev-C++ 7 Beta
+ - fix: control keys in the numpad doesn't work in the editor
+ - fix: project layout infos are wrongly saved to registry 
+ - fix: project layout infos are not correctly saved/loaded
+
+Version 0.8.11 For Dev-C++ 7 Beta
+ - fix: text color for cpu info dialog not correctly setted
+
+Version 0.8.10 For Dev-C++ 7 Beta
+ - fix: Shouldn't update auto link settings, if the header name to be modified is unchanged
+ - fix: add unit to project not correctly set new unit file's encoding
+ - fix: correctly set encoding for the new added project unit file
+ - fix: if there's a project openned, new file should ask user if he want to add the new file to the project
+ - fix: when adding a file openned in the editor to the project, properties of it are not correctly setted.
+ - enhancement: when remove a file from the project, also ask if user want to remove it from disk
+ - fix: double click a project's .dev file in the Files panel should load the project
+
+Version 0.8.9 For Dev-C++ 7 Beta
+ - fix: text color of labels in statusbar not correctly updated when change theme
+
+Version 0.8.8 For Dev-C++ 7 Beta
+ - enhancement: drag & drop text in the editor
+ - enhancement: auto calcuate caret line size basing on font size
+ - enhancement: shift+mouse wheel to scroll horizontally 
+ - fix: greatly reduces paste time 
+ - fix: auto indent shouldn't use preprocessor's indent to calculate 
+ - fix: option "don't add leading zeros to line numbers" not work
+ - fix: "collapse all" and "uncollapse all" doesn't work
+
 Version 0.8.7 For Dev-C++ 7 Beta
  - enhancement: auto indent line to column 1 when enter '#' at beginning of line
  - fix: when enter '{' or '}' at beginning of line, auto indent will remove all contents of the line

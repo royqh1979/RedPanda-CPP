@@ -10,6 +10,7 @@ enum class SynSelectionMode {smNormal, smLine, smColumn};
 struct BufferCoord {
     int Char;
     int Line;
+    bool operator==(const BufferCoord& coord);
 };
 
 class SynEdit;

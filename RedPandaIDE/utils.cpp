@@ -22,6 +22,7 @@
 #include "editorlist.h"
 #include "editor.h"
 #include "project.h"
+#include "version.h"
 
 const QByteArray GuessTextEncoding(const QByteArray& text){
     bool allAscii;

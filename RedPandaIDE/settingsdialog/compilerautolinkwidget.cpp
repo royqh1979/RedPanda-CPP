@@ -110,6 +110,8 @@ bool AutolinkModel::setData(const QModelIndex &index, const QVariant &value, int
         if (index.column() == 0) {
             if (s.isEmpty())
                 return false;
+            if (link->header == s)
+                return false;
             if (findLink(s)>=0) {
                 QMessageBox::warning(pMainWindow,
                                      tr("Header exists"),

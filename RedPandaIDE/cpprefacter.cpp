@@ -48,7 +48,7 @@ bool CppRefacter::findOccurence(Editor *editor, const BufferCoord &pos)
 bool CppRefacter::findOccurence(const QString &statementFullname, SearchFileScope scope)
 {
     PCppParser parser;
-    Editor * editor;
+    Editor * editor=nullptr;
     std::shared_ptr<Project> project;
     if (scope == SearchFileScope::currentFile) {
         editor = pMainWindow->editorList()->getEditor();

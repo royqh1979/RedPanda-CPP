@@ -794,6 +794,11 @@ QIcon DarkFusionStyle::standardIcon(StandardPixmap standardIcon, const QStyleOpt
     return QProxyStyle::standardIcon(standardIcon, option, widget);
 }
 
+void DarkFusionStyle::drawComplexControl(ComplexControl control, const QStyleOptionComplex *option, QPainter *painter, const QWidget *widget) const
+{
+    QProxyStyle::drawComplexControl(control,option,painter,widget);
+}
+
 void DarkFusionStyle::drawControl(ControlElement element, const QStyleOption *option, QPainter *painter,
                                const QWidget *widget) const
 {
@@ -807,8 +812,8 @@ void DarkFusionStyle::drawControl(ControlElement element, const QStyleOption *op
     case CE_MenuItem:
         // Draws one item in a popup menu.
         if (const QStyleOptionMenuItem *menuItem = qstyleoption_cast<const QStyleOptionMenuItem *>(option)) {
-            QColor highlightOutline = highlightedOutline;
-            QColor highlight = option->palette.highlight().color();
+            //QColor highlightOutline = highlightedOutline;
+            //QColor highlight = option->palette.highlight().color();
             if (menuItem->menuItemType == QStyleOptionMenuItem::Separator) {
                 painter->save();
                 int w = 0;

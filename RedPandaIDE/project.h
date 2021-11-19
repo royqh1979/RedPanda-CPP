@@ -148,7 +148,7 @@ public:
                  const QString& customFileName="");
     Editor* openUnit(int index);
     void rebuildNodes();
-    bool removeEditor(int index, bool doClose);
+    bool removeUnit(int index, bool doClose, bool removeFile = false);
     bool removeFolder(PFolderNode node);
     void resetParserProjectFiles();
     void saveAll(); // save [Project] and  all [UnitX]

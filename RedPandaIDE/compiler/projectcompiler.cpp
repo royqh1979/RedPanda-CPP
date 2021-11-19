@@ -4,6 +4,7 @@
 #include "../systemconsts.h"
 #include "../platform.h"
 #include "../editor.h"
+#include "../version.h"
 
 #include <QDir>
 
@@ -339,13 +340,13 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
                         encodingStr = QString(" -finput-charset=%1 -fexec-charset=%2")
                                 .arg(unit->editor()->fileEncoding(),
                                      defaultSystemEncoding);
-                } else if (unit->encoding()!=ENCODING_ASCII) {
-                    encodingStr = QString(" -finput-charset=%1 -fexec-charset=%2")
-                          .arg(unit->encoding(),
-                               defaultSystemEncoding);
-                } else if (unit->encoding()!=ENCODING_SYSTEM_DEFAULT) {
+                } else if (unit->encoding()==ENCODING_SYSTEM_DEFAULT) {
                     encodingStr = QString(" -finput-charset=%1 -fexec-charset=%2")
                           .arg(defaultSystemEncoding,
+                               defaultSystemEncoding);
+                } else if (unit->encoding()!=ENCODING_ASCII && !unit->encoding().isEmpty()) {
+                    encodingStr = QString(" -finput-charset=%1 -fexec-charset=%2")
+                          .arg(unit->encoding(),
                                defaultSystemEncoding);
                 }
             }

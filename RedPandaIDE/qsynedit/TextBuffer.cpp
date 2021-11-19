@@ -397,7 +397,7 @@ QString SynEditStringList::getTextStr() const
     return result;
 }
 
-void SynEditStringList::putString(int Index, const QString &s) {
+void SynEditStringList::putString(int Index, const QString &s, bool notify) {
     QMutexLocker locker(&mMutex);
     if (Index == mList.count()) {
         add(s);
@@ -409,7 +409,8 @@ void SynEditStringList::putString(int Index, const QString &s) {
         mIndexOfLongestLine = -1;
         mList[Index]->fString = s;
         mList[Index]->fColumns = -1;
-        emit putted(Index,1);
+        if (notify)
+            emit putted(Index,1);
         endUpdate();
     }
 }

@@ -154,6 +154,8 @@ void initParser()
     //CppTypeKeywords.insert("unsigned");
     CppTypeKeywords.insert("void");
     CppTypeKeywords.insert("wchar_t");
+    CppTypeKeywords.insert("signed");
+    CppTypeKeywords.insert("unsigned");
 
     // it's part of type info
     CppKeywords.insert("const",SkipType::skNone);

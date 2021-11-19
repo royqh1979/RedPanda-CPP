@@ -96,10 +96,13 @@ public:
         QString config(DataType dataType = DataType::None) const;
         QString executable() const;
 
-        // _Base interface
+        void setProjectDir(const QString &newProjectDir);
+
     protected:
         void doSave() override;
         void doLoad() override;
+    private:
+        QString mProjectDir;
     };
 
     class Editor: public _Base {
@@ -336,6 +339,12 @@ public:
         bool useUTF8ByDefault() const;
         void setUseUTF8ByDefault(bool newUseUTF8ByDefault);
 
+        bool highlightCurrentWord() const;
+        void setHighlightCurrentWord(bool newHighlightCurrentWord);
+
+        bool highlightMathingBraces() const;
+        void setHighlightMathingBraces(bool newHighlightMathingBraces);
+
     private:
         //General
         // indents
@@ -353,6 +362,10 @@ public:
         SynEditCaretType mCaretForOverwrite;
         bool mCaretUseTextColor;
         QColor mCaretColor;
+
+        //highlights
+        bool mHighlightCurrentWord;
+        bool mHighlightMathingBraces;
 
         //scroll
         bool mAutoHideScrollbar;

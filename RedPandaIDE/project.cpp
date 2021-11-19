@@ -260,7 +260,7 @@ PProjectUnit Project::newUnit(PFolderNode parentNode, const QString& customFileN
     newUnit->setOverrideBuildCmd(false);
     newUnit->setBuildCmd("");
     newUnit->setModified(true);
-    newUnit->setEncoding(toByteArray(options().encoding));
+    newUnit->setEncoding(toByteArray(mOptions.encoding));
     return newUnit;
 }
 
@@ -285,7 +285,7 @@ Editor *Project::openUnit(int index)
         editor = pMainWindow->editorList()->newEditor(fullPath, encoding, true, unit->isNew());
         editor->setInProject(true);
         unit->setEditor(editor);
-        unit->setEncoding(encoding);
+        //unit->setEncoding(encoding);
         editor->activate();
         loadUnitLayout(editor,index);
         return editor;
@@ -340,7 +340,7 @@ void Project::rebuildNodes()
     emit nodesChanged();
 }
 
-bool Project::removeEditor(int index, bool doClose)
+bool Project::removeUnit(int index, bool doClose , bool removeFile)
 {
     mModel.beginUpdate();
     auto action = finally([this]{
@@ -355,6 +355,10 @@ bool Project::removeEditor(int index, bool doClose)
     if (doClose && (unit->editor())) {
         if (!pMainWindow->editorList()->closeEditor(unit->editor()))
             return false;
+    }
+
+    if (removeFile) {
+        QFile::remove(unit->fileName());
     }
 
 //if not fUnits.GetItem(index).fNew then
@@ -416,7 +420,7 @@ void Project::saveAll()
 
 void Project::saveLayout()
 {
-    QSettings layIni(changeFileExt(mFilename, "layout"),QSettings::IniFormat);
+    SimpleIni layIni;
     QStringList sl;
     // Write list of open project files
     for (int i=0;i<pMainWindow->editorList()->pageCount();i++) {
@@ -424,39 +428,37 @@ void Project::saveLayout()
         if (e && e->inProject())
             sl.append(QString("%1").arg(indexInUnits(e)));
     }
-    layIni.beginGroup("Editors");
-    layIni.setValue("Order",sl.join(","));
+    layIni.SetValue("Editors","Order",sl.join(",").toUtf8());
 
     Editor *e, *e2;
     // Remember what files were visible
     pMainWindow->editorList()->getVisibleEditors(e, e2);
     if (e)
-        layIni.setValue("Focused", indexInUnits(e));
-    layIni.endGroup();
+        layIni.SetLongValue("Editors","Focused", indexInUnits(e));
     // save editor info
     for (int i=0;i<mUnits.count();i++) {
-        layIni.beginGroup(QString("Editor_%1").arg(i));
+        QByteArray groupName = QString("Editor_%1").arg(i).toUtf8();
         PProjectUnit unit = mUnits[i];
         Editor* editor = unit->editor();
         if (editor) {
-            layIni.setValue("CursorCol", editor->caretX());
-            layIni.setValue("CursorRow", editor->caretY());
-            layIni.setValue("TopLine", editor->topLine());
-            layIni.setValue("LeftChar", editor->leftChar());
+            layIni.SetLongValue(groupName,"CursorCol", editor->caretX());
+            layIni.SetLongValue(groupName,"CursorRow", editor->caretY());
+            layIni.SetLongValue(groupName,"TopLine", editor->topLine());
+            layIni.SetLongValue(groupName,"LeftChar", editor->leftChar());
         }
-        layIni.endGroup();
         // remove old data from project file
         SimpleIni ini;
-        ini.LoadFile(mFilename.toLocal8Bit());
-        QByteArray groupName = toByteArray(QString("Unit%1").arg(i+1));
+        ini.LoadFile(filename().toLocal8Bit());
+        groupName = toByteArray(QString("Unit%1").arg(i+1));
         ini.Delete(groupName,"Open");
         ini.Delete(groupName,"Top");
         ini.Delete(groupName,"CursorCol");
         ini.Delete(groupName,"CursorRow");
         ini.Delete(groupName,"TopLine");
         ini.Delete(groupName,"LeftChar");
-        ini.SaveFile(mFilename.toLocal8Bit());
+        ini.SaveFile(filename().toLocal8Bit());
     }
+    layIni.SaveFile(changeFileExt(filename(), "layout").toLocal8Bit());
 }
 
 void Project::saveUnitAs(int i, const QString &sFileName, bool syncEditor)
@@ -496,20 +498,22 @@ void Project::saveUnitLayout(Editor *e, int index)
 {
     if (!e)
         return;
-    QSettings layIni = QSettings(changeFileExt(filename(), "layout"));
-    layIni.beginGroup(QString("Editor_%1").arg(index));
-    layIni.setValue("CursorCol", e->caretX());
-    layIni.setValue("CursorRow", e->caretY());
-    layIni.setValue("TopLine", e->topLine());
-    layIni.setValue("LeftChar", e->leftChar());
-    layIni.endGroup();
+    SimpleIni layIni;
+    QByteArray groupName = (QString("Editor_%1").arg(index)).toUtf8();
+    layIni.SetLongValue(groupName,"CursorCol", e->caretX());
+    layIni.SetLongValue(groupName,"CursorRow", e->caretY());
+    layIni.SetLongValue(groupName,"TopLine", e->topLine());
+    layIni.SetLongValue(groupName,"LeftChar", e->leftChar());
+    layIni.SaveFile((changeFileExt(filename(), "layout")).toLocal8Bit());
 }
 
 bool Project::saveUnits()
 {
     int count = 0;
     SimpleIni ini;
-    ini.LoadFile(mFilename.toLocal8Bit());
+    SI_Error error = ini.LoadFile(mFilename.toLocal8Bit());
+    if (error != SI_Error::SI_OK)
+        return false;
     for (int idx = 0; idx < mUnits.count(); idx++) {
         PProjectUnit unit = mUnits[idx];
         bool rd_only = false;
@@ -790,7 +794,15 @@ PProjectUnit Project::addUnit(const QString &inFileName, PFolderNode parentNode,
     // Set all properties
     newUnit->setFileName(QDir(directory()).filePath(inFileName));
     newUnit->setNew(false);
-    newUnit->setEditor(nullptr);
+    Editor * e= pMainWindow->editorList()->getOpenedEditorByFilename(newUnit->fileName());
+    if (e) {
+        newUnit->setEditor(e);
+        newUnit->setEncoding(e->encodingOption());
+        e->setInProject(true);
+    } else {
+        newUnit->setEditor(nullptr);
+        newUnit->setEncoding(ENCODING_AUTO_DETECT);
+    }
     newUnit->setFolder(getFolderPath(parentNode));
     newUnit->setNode(makeNewFileNode(extractFileName(newUnit->fileName()), false, parentNode));
     newUnit->node()->unitIndex = mUnits.count();
@@ -1290,12 +1302,13 @@ QString Project::listUnitStr(const QChar &separator)
 
 void Project::loadLayout()
 {
-    QSettings layIni = QSettings(changeFileExt(filename(), "layout"),QSettings::IniFormat);
-    layIni.beginGroup("Editors");
-    int topLeft = layIni.value("Focused", -1).toInt();
+    SimpleIni layIni;
+    SI_Error error = layIni.LoadFile(changeFileExt(filename(), "layout").toLocal8Bit());
+    if (error!=SI_OK)
+        return;
+    int topLeft = layIni.GetLongValue("Editors","Focused",1);
     //TopRight := layIni.ReadInteger('Editors', 'FocusedRight', -1);
-    QString temp =layIni.value("Order", "").toString();
-    layIni.endGroup();
+    QString temp =layIni.GetValue("Editors","Order", "");
     QStringList sl = temp.split(",",Qt::SkipEmptyParts);
 
     foreach (const QString& s,sl) {
@@ -1308,7 +1321,6 @@ void Project::loadLayout()
     if (topLeft>=0 && topLeft<mUnits.count() && mUnits[topLeft]->editor()) {
         mUnits[topLeft]->editor()->activate();
     }
-
 }
 
 void Project::loadOptions(SimpleIni& ini)
@@ -1444,13 +1456,16 @@ void Project::loadUnitLayout(Editor *e, int index)
 {
     if (!e)
         return;
-    QSettings layIni(changeFileExt(filename(), "layout"), QSettings::IniFormat);
-    layIni.beginGroup(QString("Editor_%1").arg(index));
-    e->setCaretY(layIni.value("CursorRow",1).toInt());
-    e->setCaretX(layIni.value("CursorCol",1).toInt());
-    e->setTopLine(layIni.value("TopLine",1).toInt());
-    e->setLeftChar(layIni.value("LeftChar",1).toInt());
-    layIni.endGroup();
+    SimpleIni layIni;
+    SI_Error error;
+    error = layIni.LoadFile(changeFileExt(filename(), "layout").toLocal8Bit());
+    if (error != SI_Error::SI_OK)
+        return;
+    QByteArray groupName = (QString("Editor_%1").arg(index)).toUtf8();
+    e->setCaretY(layIni.GetLongValue(groupName,"CursorRow",1));
+    e->setCaretX(layIni.GetLongValue(groupName,"CursorCol",1));
+    e->setTopLine(layIni.GetLongValue(groupName,"TopLine",1));
+    e->setLeftChar(layIni.GetLongValue(groupName,"LeftChar",1));
 }
 
 PCppParser Project::cppParser()
@@ -1514,7 +1529,7 @@ void Project::removeFolderRecurse(PFolderNode node)
         } else if (childNode->unitIndex >= 0 && childNode->level > 0) {
             // Remove editor in folder from project
             int editorIndex = childNode->unitIndex;
-            if (!removeEditor(editorIndex,true))
+            if (!removeUnit(editorIndex,true))
                 return;
         }
     }
@@ -1919,7 +1934,7 @@ bool ProjectModel::setData(const QModelIndex &index, const QVariant &value, int 
                     // Remove it from the current project...
                     int projindex = mProject->indexInUnits(newName);
                     if (projindex>=0) {
-                        mProject->removeEditor(projindex,false);
+                        mProject->removeUnit(projindex,false);
                     }
 
                     // All references to the file are removed. Delete the file from disk
@@ -1954,7 +1969,7 @@ bool ProjectModel::setData(const QModelIndex &index, const QVariant &value, int 
             }
 
             // Add new filename to file minitor
-            pMainWindow->fileSystemWatcher()->removePath(oldName);
+            pMainWindow->fileSystemWatcher()->addPath(newName);
             return true;
         } else {
             //change folder name

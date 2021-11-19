@@ -58,6 +58,7 @@ void EnvironmentAppearenceWidget::doSave()
     pSettings->environment().setInterfaceFontSize(ui->spinFontSize->value());
     pSettings->environment().setLanguage(ui->cbLanguage->currentData().toString());
 
+    pSettings->editor().save();
     pSettings->environment().save();
     pMainWindow->applySettings();
 }

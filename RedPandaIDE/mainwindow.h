@@ -226,6 +226,7 @@ private:
     void showHideMessagesTab(QWidget *widget, bool show);
     void prepareTabInfosData();
     void prepareTabMessagesData();
+    void newProjectUnitFile();
 
 private slots:
     void onAutoSaveTimeout();

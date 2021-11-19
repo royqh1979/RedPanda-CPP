@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/translations">
         <file>RedPandaIDE_zh_CN.qm</file>
+        <file>qt_zh_CN.qm</file>
     </qresource>
 </RCC>

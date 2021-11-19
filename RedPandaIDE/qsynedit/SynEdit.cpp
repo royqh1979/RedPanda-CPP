@@ -19,6 +19,8 @@
 #include <QResizeEvent>
 #include <QStyleHints>
 #include <QMessageBox>
+#include <QDrag>
+#include <QMimeData>
 
 SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
 {
@@ -57,6 +59,8 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
     mRedoList->connect(mRedoList.get(), &SynEditUndoList::addedUndo, this, &SynEdit::onRedoAdded);
     mOrigRedoList = mRedoList;
 
+    mForegroundColor=palette().color(QPalette::Text);
+    mBackgroundColor=palette().color(QPalette::Base);
     mCaretColor = QColorConstants::Red;
     mCaretUseTextColor = false;
     mActiveLineColor = QColorConstants::Svg::lightblue;
@@ -115,7 +119,8 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
     mBlockEnd = mBlockBegin;
     mOptions = eoAutoIndent
             | eoDragDropEditing | eoEnhanceEndKey | eoTabIndent |
-             eoGroupUndo | eoKeepCaretX | eoSelectWordByDblClick;
+             eoGroupUndo | eoKeepCaretX | eoSelectWordByDblClick
+            | eoHideShowScrollbars ;
 
     mScrollTimer = new QTimer(this);
     mScrollTimer->setInterval(100);
@@ -142,6 +147,7 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
     setAttribute(Qt::WA_InputMethodEnabled);
 
     //setMouseTracking(true);
+    setAcceptDrops(true);
 }
 
 int SynEdit::displayLineCount() const
@@ -1063,6 +1069,20 @@ void SynEdit::setCaretAndSelection(const BufferCoord &ptCaret, const BufferCoord
     setBlockEnd(ptAfter);
 }
 
+void SynEdit::collapseAll()
+{
+    for (int i = mAllFoldRanges.count()-1;i>=0;i--){
+        collapse(mAllFoldRanges[i]);
+    }
+}
+
+void SynEdit::unCollpaseAll()
+{
+    for (int i = mAllFoldRanges.count()-1;i>=0;i--){
+        uncollapse(mAllFoldRanges[i]);
+    }
+}
+
 void SynEdit::processGutterClick(QMouseEvent *event)
 {
     int X = event->pos().x();
@@ -1208,6 +1228,8 @@ void SynEdit::showCaret()
 {
     if (m_blinkTimerId==0)
         m_blinkTimerId = startTimer(500);
+    m_blinkStatus = 1;
+    updateCaret();
 }
 
 void SynEdit::hideCaret()
@@ -1429,7 +1451,7 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
     QString s;
     while (startLine>=1) {
         s = mLines->getString(startLine-1);
-        if (!s.trimmed().isEmpty()) {
+        if (!s.startsWith('#') && !s.trimmed().isEmpty()) {
             break;
         }
         startLine -- ;
@@ -3580,25 +3602,40 @@ void SynEdit::paintCaret(QPainter &painter, const QRect rcClip)
     } else {
         ct =mOverwriteCaret;
     }
+    QColor caretColor;
     if (mCaretUseTextColor) {
-        painter.setPen(mForegroundColor);
+        caretColor = mForegroundColor;
     } else {
-        painter.setPen(mCaretColor);
+        caretColor = mCaretColor;
     }
     switch(ct) {
-    case SynEditCaretType::ctVerticalLine:
-        painter.drawLine(rcClip.left()+1,rcClip.top(),rcClip.left()+1,rcClip.bottom());
+    case SynEditCaretType::ctVerticalLine: {
+        QRect caretRC;
+        int size = std::max(1,(rcClip.bottom()-rcClip.top())/15);
+        caretRC.setLeft(rcClip.left()+1);
+        caretRC.setTop(rcClip.top());
+        caretRC.setBottom(rcClip.bottom());
+        caretRC.setRight(rcClip.left()+1+size);
+        painter.fillRect(caretRC,caretColor);
         break;
-    case SynEditCaretType::ctHorizontalLine:
-        painter.drawLine(rcClip.left(),rcClip.bottom()-1,rcClip.right(),rcClip.bottom()-1);
+    }
+    case SynEditCaretType::ctHorizontalLine: {
+        QRect caretRC;
+        int size = std::max(1,(rcClip.bottom()-rcClip.top())/15);
+        caretRC.setLeft(rcClip.left());
+        caretRC.setTop(rcClip.bottom()-1+size);
+        caretRC.setBottom(rcClip.bottom()-1);
+        caretRC.setRight(rcClip.right());
+        painter.fillRect(caretRC,caretColor);
         break;
+    }
     case SynEditCaretType::ctBlock:
-        painter.fillRect(rcClip, mCaretColor);
+        painter.fillRect(rcClip, caretColor);
         break;
     case SynEditCaretType::ctHalfBlock:
         QRect rc=rcClip;
         rc.setTop(rcClip.top()+rcClip.height() / 2);
-        painter.fillRect(rcClip, mCaretColor);
+        painter.fillRect(rcClip, caretColor);
         break;
     }
 }
@@ -4922,12 +4959,13 @@ void SynEdit::doLinesInserted(int firstLine, int count)
 //    end;
 }
 
-void SynEdit::properSetLine(int ALine, const QString &ALineText)
+void SynEdit::properSetLine(int ALine, const QString &ALineText, bool notify)
 {
-    if (mOptions.testFlag(eoTrimTrailingSpaces))
-        mLines->putString(ALine,TrimRight(ALineText));
-    else
-        mLines->putString(ALine,ALineText);
+    if (mOptions.testFlag(eoTrimTrailingSpaces)) {
+        mLines->putString(ALine,TrimRight(ALineText),notify);
+    } else {
+        mLines->putString(ALine,ALineText,notify);
+    }
 }
 
 void SynEdit::deleteSelection(const BufferCoord &BB, const BufferCoord &BE)
@@ -5021,6 +5059,10 @@ void SynEdit::insertText(const QString &Value, SynSelectionMode PasteMode,bool A
 
 int SynEdit::insertTextByNormalMode(const QString &Value)
 {
+    mLines->beginUpdate();
+    auto actionLines = finally([this] {
+        mLines->endUpdate();
+    });
     QString sLeftSide;
     QString sRightSide;
     QString Str;
@@ -5029,6 +5071,7 @@ int SynEdit::insertTextByNormalMode(const QString &Value)
     bool bChangeScroll;
 //    int SpaceCount;
     int Result = 0;
+    int startLine = mCaretY;
     sLeftSide = lineText().mid(0, mCaretX - 1);
     if (mCaretX - 1 > sLeftSide.length()) {
         if (StringIsBlank(sLeftSide))
@@ -5070,9 +5113,9 @@ int SynEdit::insertTextByNormalMode(const QString &Value)
         Start = P;
         P = GetEOL(Value,Start);
         if (P == Start) {
-          if (P<Value.length())
-              Str = GetLeftSpacing(calcIndentSpaces(caretY,"",true),true);
-          else
+            if (P<Value.length())
+                Str = GetLeftSpacing(calcIndentSpaces(caretY,"",true),true);
+            else
               Str = sRightSide;
         } else {
             Str = Value.mid(Start, P-Start);
@@ -5083,7 +5126,7 @@ int SynEdit::insertTextByNormalMode(const QString &Value)
                 Str = GetLeftSpacing(indentSpaces,true)+TrimLeft(Str);
             }
         }
-        properSetLine(caretY - 1, Str);
+        properSetLine(caretY - 1, Str,false);
         rescanRange(caretY);
         Result++;
     }
@@ -5097,6 +5140,7 @@ int SynEdit::insertTextByNormalMode(const QString &Value)
           internalSetCaretXY(BufferCoord{lineText().length()+1,caretY});
     } else
         internalSetCaretXY(BufferCoord{Str.length() - sRightSide.length()+1,caretY});
+    onLinesPutted(startLine-1,Result+1);
     return Result;
 }
 
@@ -5899,7 +5943,7 @@ void SynEdit::mousePressEvent(QMouseEvent *event)
         mStateFlags.setFlag(SynStateFlag::sfWaitForDragging,false);
         if (bWasSel && mOptions.testFlag(eoDragDropEditing) && (X >= mGutterWidth + 2)
                 && (mSelectionMode == SynSelectionMode::smNormal) && isPointInSelection(displayToBufferPos(pixelsToRowColumn(X, Y))) ) {
-          bStartDrag = true;
+            bStartDrag = true;
         }
         if (bStartDrag) {
             mStateFlags.setFlag(SynStateFlag::sfWaitForDragging);
@@ -5959,7 +6003,15 @@ void SynEdit::mouseMoveEvent(QMouseEvent *event)
 
     if ((mStateFlags.testFlag(SynStateFlag::sfWaitForDragging))) {
         if ( ( event->pos() - mMouseDownPos).manhattanLength()>=QApplication::startDragDistance()) {
-            mStateFlags.setFlag(SynStateFlag::sfWaitForDragging);
+            mStateFlags.setFlag(SynStateFlag::sfWaitForDragging,false);
+            QDrag *drag = new QDrag(this);
+            QMimeData *mimeData = new QMimeData;
+
+            mimeData->setText(selText());
+            drag->setMimeData(mimeData);
+
+            drag->exec(Qt::CopyAction | Qt::MoveAction);
+            //drag->setPixmap(iconPixmap);
             //BeginDrag(false);
         }
 //    } else if ((buttons == Qt::LeftButton) && (X > mGutterWidth)) {
@@ -6017,14 +6069,26 @@ void SynEdit::leaveEvent(QEvent *)
 
 void SynEdit::wheelEvent(QWheelEvent *event)
 {
-    if (event->angleDelta().y()>0) {
-        verticalScrollBar()->setValue(verticalScrollBar()->value()-mMouseWheelScrollSpeed);
-        event->accept();
-        return;
-    } else if (event->angleDelta().y()<0) {
-        verticalScrollBar()->setValue(verticalScrollBar()->value()+mMouseWheelScrollSpeed);
-        event->accept();
-        return;
+    if (event->modifiers() == Qt::ShiftModifier) {
+        if (event->angleDelta().y()>0) {
+            horizontalScrollBar()->setValue(horizontalScrollBar()->value()-mMouseWheelScrollSpeed);
+            event->accept();
+            return;
+        } else if (event->angleDelta().y()<0) {
+            horizontalScrollBar()->setValue(horizontalScrollBar()->value()+mMouseWheelScrollSpeed);
+            event->accept();
+            return;
+        }
+    } else {
+        if (event->angleDelta().y()>0) {
+            verticalScrollBar()->setValue(verticalScrollBar()->value()-mMouseWheelScrollSpeed);
+            event->accept();
+            return;
+        } else if (event->angleDelta().y()<0) {
+            verticalScrollBar()->setValue(verticalScrollBar()->value()+mMouseWheelScrollSpeed);
+            event->accept();
+            return;
+        }
     }
     QAbstractScrollArea::wheelEvent(event);
 }
@@ -6050,6 +6114,63 @@ QVariant SynEdit::inputMethodQuery(Qt::InputMethodQuery property) const
         return QWidget::inputMethodQuery(property);
     }
 
+}
+
+void SynEdit::dragEnterEvent(QDragEnterEvent *event)
+{
+    if (event->mimeData()->hasFormat("text/plain")) {
+        event->acceptProposedAction();
+        mDragCaretSave = caretXY();
+        mDragSelBeginSave = blockBegin();
+        mDragSelEndSave = blockEnd();
+        BufferCoord coord = displayToBufferPos(pixelsToNearestRowColumn(event->pos().x(),
+                                                                        event->pos().y()));
+        setCaretXY(coord);
+        setBlockBegin(mDragSelBeginSave);
+        setBlockEnd(mDragSelEndSave);
+        showCaret();
+    }
+}
+
+void SynEdit::dropEvent(QDropEvent *event)
+{
+    mUndoList->BeginBlock();
+    auto action = finally([this] {
+        mUndoList->EndBlock();
+    });
+    if (event->proposedAction() == Qt::DropAction::MoveAction) {
+        setBlockBegin(mDragSelBeginSave);
+        setBlockEnd(mDragSelEndSave);
+        setSelText("");
+    }
+    BufferCoord coord = displayToBufferPos(pixelsToNearestRowColumn(event->pos().x(),
+                                                                    event->pos().y()));
+    setCaretXY(coord);
+    setSelText(event->mimeData()->text());
+    event->acceptProposedAction();
+}
+
+void SynEdit::dragMoveEvent(QDragMoveEvent *event)
+{
+    if (event->keyboardModifiers() ==  Qt::ControlModifier) {
+        event->setDropAction(Qt::CopyAction);
+    } else {
+        event->setDropAction(Qt::MoveAction);
+    }
+    BufferCoord coord = displayToBufferPos(pixelsToNearestRowColumn(event->pos().x(),
+                                                                    event->pos().y()));
+    setCaretXY(coord);
+    setBlockBegin(mDragSelBeginSave);
+    setBlockEnd(mDragSelEndSave);
+    showCaret();
+}
+
+void SynEdit::dragLeaveEvent(QDragLeaveEvent *)
+{
+    setCaretXY(mDragCaretSave);
+    setBlockBegin(mDragSelBeginSave);
+    setBlockEnd(mDragSelEndSave);
+    showCaret();
 }
 
 int SynEdit::maxScrollHeight() const

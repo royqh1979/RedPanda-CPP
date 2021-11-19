@@ -20,6 +20,7 @@
 #include "widgets/darkfusionstyle.h"
 #include "problems/problemcasevalidator.h"
 #include "widgets/ojproblempropertywidget.h"
+#include "version.h"
 
 #include <QCloseEvent>
 #include <QComboBox>
@@ -511,6 +512,10 @@ void MainWindow::applySettings()
     else
         QApplication::setStyle("fusion");
     qApp->setPalette(appTheme->palette());
+    //fix for qstatusbar bug
+    mFileEncodingStatus->setPalette(appTheme->palette());
+    mFileModeStatus->setPalette(appTheme->palette());
+    mFileInfoStatus->setPalette(appTheme->palette());
     updateEditorColorSchemes();
 
     QFont font(pSettings->environment().interfaceFont(),
@@ -529,7 +534,7 @@ void MainWindow::applySettings()
             if (!mTcpServer.listen(QHostAddress::LocalHost,pSettings->executor().competivieCompanionPort())) {
 //                QMessageBox::critical(nullptr,
 //                                      tr("Listen failed"),
-//                                      tr("Can't listen to port %1 form Competitve Companion.").arg(10045)
+//                                      tr("Can't listen to port %1 form Competitive Companion.").arg(10045)
 //                                      + "<BR/>"
 //                                      +tr("You can turn off competitive companion support in the Problem Set options.")
 //                                      + "<BR/>"
@@ -569,7 +574,8 @@ void MainWindow::applyUISettings()
     ui->actionFiles->setChecked(settings.showFiles());
     showHideInfosTab(ui->tabFiles,settings.showFiles());
     ui->actionProblem_Set->setChecked(settings.showProblemSet());
-    showHideInfosTab(ui->tabProblemSet,settings.showProblemSet());
+    showHideInfosTab(ui->tabProblemSet,settings.showProblemSet()
+                     && pSettings->executor().enableProblemSet());
 
     ui->actionIssues->setChecked(settings.showIssues());
     showHideMessagesTab(ui->tabIssues,settings.showIssues());
@@ -584,7 +590,8 @@ void MainWindow::applyUISettings()
     ui->actionBookmark->setChecked(settings.showBookmark());
     showHideMessagesTab(ui->tabBookmark,settings.showBookmark());
     ui->actionProblem->setChecked(settings.showProblem());
-    showHideMessagesTab(ui->tabProblem,settings.showProblem());
+    showHideMessagesTab(ui->tabProblem,settings.showProblem()
+                        && pSettings->executor().enableProblemSet());
     //we can't show/hide left/bottom panels here, cause mainwindow layout is not calculated
 }
 
@@ -2669,12 +2676,14 @@ void MainWindow::onLstProblemSetContextMenu(const QPoint &pos)
         QAction * action = new QAction(tr("select other file..."),menuSetAnswer);
         connect(action, &QAction::triggered,
                 [problem,this](){
+            QFileDialog dialog;
             QString filename = QFileDialog::getOpenFileName(
                         this,
                         tr("Select Answer Source File"),
                         QString(),
-                        tr("C/C++Source Files (*.c *.cpp *.cc *.cxx)")
-                        );
+                        tr("C/C++Source Files (*.c *.cpp *.cc *.cxx)"),
+                        nullptr,
+                        dialog.options() | QFileDialog::DontUseNativeDialog);
             if (!filename.isEmpty()) {
                 QDir::setCurrent(extractFileDir(filename));
                 problem->answerProgram = filename;
@@ -3133,7 +3142,7 @@ void MainWindow::onFileChanged(const QString &path)
     if (e) {
         if (fileExists(path)) {
             e->activate();
-            if (QMessageBox::question(this,tr("Compile"),
+            if (QMessageBox::question(this,tr("File Changed"),
                                       tr("File '%1' was changed.").arg(path)+"<BR /><BR />" + tr("Reload its content from disk?"),
                                       QMessageBox::Yes|QMessageBox::No,
                                       QMessageBox::No) == QMessageBox::Yes) {
@@ -3144,7 +3153,7 @@ void MainWindow::onFileChanged(const QString &path)
                 }
             }
         } else {
-            if (QMessageBox::question(this,tr("Compile"),
+            if (QMessageBox::question(this,tr("File Changed"),
                                       tr("File '%1' was removed.").arg(path)+"<BR /><BR />" + tr("Keep it open?"),
                                       QMessageBox::Yes|QMessageBox::No,
                                       QMessageBox::Yes) == QMessageBox::No) {
@@ -3201,6 +3210,15 @@ CPUDialog *MainWindow::cpuDialog() const
 
 void MainWindow::on_actionNew_triggered()
 {
+    if (mProject) {
+        if (QMessageBox::question(this,
+                                  tr("New Project File?"),
+                                  tr("Do you want to add the new file to the project?"),
+                                  QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
+            newProjectUnitFile();
+            return;
+        }
+    }
     newEditor();
 }
 
@@ -3770,7 +3788,7 @@ void MainWindow::on_actionUnfoldAll_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor != NULL ) {
-        //editor->clearFolds();
+        editor->unCollpaseAll();
     }
 }
 
@@ -3778,8 +3796,7 @@ void MainWindow::on_actionFoldAll_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor != NULL ) {
-        //editor->clearFolds();
-        //editor->foldAll();
+        editor->collapseAll();
     }
 }
 
@@ -4549,6 +4566,10 @@ void MainWindow::on_actionNew_Project_triggered()
 {
     NewProjectDialog dialog;
     if (dialog.exec() == QDialog::Accepted) {
+        if (dialog.useAsDefaultProjectDir()) {
+            pSettings->dirs().setProjectDir(dialog.getLocation());
+            pSettings->dirs().save();
+        }
         // Take care of the currently opened project
         QString s;
         if (mProject) {
@@ -4569,19 +4590,20 @@ void MainWindow::on_actionNew_Project_triggered()
         }
 
         //Create the project folder
-        QDir dir(dialog.getLocation());
+        QString location = includeTrailingPathDelimiter(dialog.getLocation())+dialog.getProjectName();
+        QDir dir(location);
         if (!dir.exists()) {
             if (QMessageBox::question(this,
                                       tr("Folder not exist"),
-                                      tr("Folder '%1' doesn't exist. Create it now?").arg(dialog.getLocation()),
+                                      tr("Folder '%1' doesn't exist. Create it now?").arg(location),
                                       QMessageBox::Yes | QMessageBox::No,
                                       QMessageBox::Yes) != QMessageBox::Yes) {
                 return;
             }
-            if (!dir.mkpath(dialog.getLocation())) {
+            if (!dir.mkpath(location)) {
                 QMessageBox::critical(this,
                                       tr("Can't create folder"),
-                                      tr("Failed to create folder '%1'.").arg(dialog.getLocation()),
+                                      tr("Failed to create folder '%1'.").arg(location),
                                       QMessageBox::Yes);
                 return;
             }
@@ -4590,14 +4612,14 @@ void MainWindow::on_actionNew_Project_triggered()
 //     if cbDefault.Checked then
 //        devData.DefCpp := rbCpp.Checked;
 
-        s = includeTrailingPathDelimiter(dialog.getLocation())
+        s = includeTrailingPathDelimiter(location)
                 + dialog.getProjectName() + "." + DEV_PROJECT_EXT;
 
         if (fileExists(s)) {
             QString saveName = QFileDialog::getSaveFileName(
                         this,
                         tr("Save new project as"),
-                        dialog.getLocation(),
+                        location,
                         tr("Red panda Dev-C++ project file (*.dev)"));
             if (!saveName.isEmpty()) {
                 s = saveName;
@@ -4645,46 +4667,7 @@ void MainWindow::on_actionSaveAll_triggered()
 
 void MainWindow::on_actionProject_New_File_triggered()
 {
-    int idx = -1;
-    if (!mProject)
-        return;
-    QModelIndex current = ui->projectView->currentIndex();
-    FolderNode * node = nullptr;
-    if (current.isValid()) {
-        node = static_cast<FolderNode*>(current.internalPointer());
-    }
-    QString newFileName;
-    do {
-        newFileName = tr("untitled")+QString("%1").arg(getNewFileNumber());
-        if (mProject->options().useGPP) {
-            newFileName+=".cpp";
-        } else {
-            newFileName+=".c";
-        }
-    } while (fileExists(QDir(mProject->directory()).absoluteFilePath(newFileName)));
-
-    newFileName = QInputDialog::getText(
-                this,
-                tr("New Project File Name"),
-                tr("File Name:"),
-                QLineEdit::Normal,
-                newFileName);
-    if (newFileName.isEmpty())
-        return;
-    if (fileExists(QDir(mProject->directory()).absoluteFilePath(newFileName))) {
-        QMessageBox::critical(this,tr("File Already Exists!"),
-                              tr("File '%1' already exists!").arg(newFileName));
-        return;
-    }
-    PProjectUnit newUnit = mProject->newUnit(
-                mProject->pointerToNode(node),newFileName);
-    idx = mProject->units().count()-1;
-    mProject->saveUnits();
-    updateProjectView();
-    Editor * editor = mProject->openUnit(idx);
-    //editor->setUseCppSyntax(mProject->options().useGPP);
-    //editor->setModified(true);
-    editor->activate();
+    newProjectUnitFile();
 }
 
 
@@ -4733,9 +4716,14 @@ void MainWindow::on_actionRemove_from_project_triggered()
             continue;
         selected.insert(folderNode->unitIndex);
     };
+
+    bool removeFile = (QMessageBox::question(this,tr("Remove file"),
+                              tr("Remove the file from disk?"),
+                              QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes);
+
     for (int i=mProject->units().count()-1;i>=0;i--) {
         if (selected.contains(i)) {
-            mProject->removeEditor(i,true);
+            mProject->removeUnit(i,true,removeFile);
         }
     }
 
@@ -4942,6 +4930,50 @@ void MainWindow::prepareTabMessagesData()
         info->icon = ui->tabMessages->tabIcon(i);
         mTabMessagesData[widget]=info;
     }
+}
+
+void MainWindow::newProjectUnitFile()
+{
+    if (!mProject)
+        return;
+    int idx = -1;
+    QModelIndex current = ui->projectView->currentIndex();
+    FolderNode * node = nullptr;
+    if (current.isValid()) {
+        node = static_cast<FolderNode*>(current.internalPointer());
+    }
+    QString newFileName;
+    do {
+        newFileName = tr("untitled")+QString("%1").arg(getNewFileNumber());
+        if (mProject->options().useGPP) {
+            newFileName+=".cpp";
+        } else {
+            newFileName+=".c";
+        }
+    } while (fileExists(QDir(mProject->directory()).absoluteFilePath(newFileName)));
+
+    newFileName = QInputDialog::getText(
+                this,
+                tr("New Project File Name"),
+                tr("File Name:"),
+                QLineEdit::Normal,
+                newFileName);
+    if (newFileName.isEmpty())
+        return;
+    if (fileExists(QDir(mProject->directory()).absoluteFilePath(newFileName))) {
+        QMessageBox::critical(this,tr("File Already Exists!"),
+                              tr("File '%1' already exists!").arg(newFileName));
+        return;
+    }
+    PProjectUnit newUnit = mProject->newUnit(
+                mProject->pointerToNode(node),newFileName);
+    idx = mProject->units().count()-1;
+    mProject->saveUnits();
+    updateProjectView();
+    Editor * editor = mProject->openUnit(idx);
+    //editor->setUseCppSyntax(mProject->options().useGPP);
+    //editor->setModified(true);
+    editor->activate();
 }
 void MainWindow::on_EditorTabsLeft_currentChanged(int)
 {
@@ -5374,9 +5406,10 @@ void MainWindow::on_treeFiles_doubleClicked(const QModelIndex &index)
     QString filepath = mFileSystemModel.filePath(index);
     QFileInfo file(filepath);
     if (file.isFile()) {
-        Editor * editor = mEditorList->getEditorByFilename(filepath);
-        if (editor) {
-            editor->activate();
+        if (getFileType(filepath)==FileType::Project) {
+            openProject(filepath);
+        } else {
+            openFile(filepath);
         }
     }
 }

@@ -31,7 +31,7 @@ public:
     ~CodeCompletionPopup();
 
     void setKeypressedCallback(const KeyPressedCallback &newKeypressedCallback);
-    void prepareSearch(const QString& phrase, const QString& filename, int line);
+    void prepareSearch(const QString& preWord, const QString& phrase, const QString& filename, int line);
     bool search(const QString& phrase, bool autoHideOnSingleResult);
 
     PStatement selectedStatement();
@@ -74,6 +74,8 @@ private:
     void addStatement(PStatement statement, const QString& fileName, int line);
     void filterList(const QString& member);
     void getCompletionFor(const QString& fileName,const QString& phrase, int line);
+    void getFullCompletionListFor(const QString& preWord);
+    void addKeyword(const QString& keyword);
     bool isIncluded(const QString& fileName);
 private:
     CodeCompletionListView * mListView;
