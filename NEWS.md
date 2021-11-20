@@ -2,6 +2,7 @@ Version 0.9.2 For Dev-C++ 7 Beta
  - fix: gutter of the disassembly code control in the cpu info dialog is grayed
  - fix: problem set & problem views not correctly hidden when disabled in the executor / problem set options 
  - fix: executor / problem set options not correctly saved
+ - fix: option "Move caret to the first non-space char in the current line when press HOME key" dosen't work fine.
 
 Version 0.9.1 For Dev-C++ 7 Beta
  - enhancement: code completion suggestion for "__func__" variable

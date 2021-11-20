@@ -4652,7 +4652,7 @@ void SynEdit::moveCaretToLineStart(bool isSelection)
 {
     int newX;
     // home key enhancement
-    if (mOptions.testFlag(SynEditorOption::eoEnhanceHomeKey) && (lineToRow(mCaretY) == displayY())) {
+    if (mOptions.testFlag(SynEditorOption::eoEnhanceHomeKey)) {
         QString s = mLines->getString(mCaretY - 1);
 
         int first_nonblank = 0;
@@ -4660,11 +4660,10 @@ void SynEdit::moveCaretToLineStart(bool isSelection)
         while ((first_nonblank < vMaxX) && (s[first_nonblank] == ' ' || s[first_nonblank] == '\t')) {
             first_nonblank++;
         }
-
         newX = mCaretX;
 
-        if (newX > first_nonblank)
-            newX = first_nonblank;
+        if (newX > first_nonblank+1)
+            newX = first_nonblank+1;
         else
             newX = 1;
     } else
