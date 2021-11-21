@@ -46,20 +46,20 @@ public:
     class ParseValue {
     public:
         explicit ParseValue();
-        explicit ParseValue(const QString& value);
+        explicit ParseValue(const QByteArray& value);
         explicit ParseValue(const ParseObject &object);
         explicit ParseValue(const QList<ParseObject>& array);
         ParseValue(const ParseValue&) = delete;
-        const QString &value() const;
+        const QByteArray &value() const;
         const QList<ParseObject> &array() const;
         const ParseObject &object() const;
         ParseValueType type() const;
-        ParseValue& operator=(const QString& value);
+        ParseValue& operator=(const QByteArray& value);
         ParseValue& operator=(const ParseObject& object);
         ParseValue& operator=(const QList<ParseObject>& array);
         ParseValue& operator=(const ParseValue& value);
     private:
-        QString mValue;
+        QByteArray mValue;
         QList<ParseObject> mArray;
         ParseObject mObject;
         ParseValueType mType;

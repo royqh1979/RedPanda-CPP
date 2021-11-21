@@ -63,6 +63,8 @@ bool Debugger::start()
     connect(this, &Debugger::localsReady,pMainWindow,&MainWindow::onLocalsReady);
     connect(mReader, &DebugReader::cmdStarted,pMainWindow, &MainWindow::disableDebugActions);
     connect(mReader, &DebugReader::cmdFinished,pMainWindow, &MainWindow::enableDebugActions);
+    connect(mReader, &DebugReader::breakpointInfoGetted, mBreakpointModel,
+            &BreakpointModel::updateBreakpointNumber);
 
     mReader->start();
     mReader->waitStart();
@@ -1713,24 +1715,13 @@ QStringList DebugReader::tokenize(const QString &s)
     return result;
 }
 
-void DebugReader::handleBreakpoint(const QByteArray &breakpointRecord)
+void DebugReader::handleBreakpoint(const GDBMIResultParser::ParseObject& breakpoint)
 {
-    //we have to convert record from local encoding to utf8
-    //because QJsonDocument only handle utf8-encoded json strings
-    QString temp = QString::fromLocal8Bit(breakpointRecord);
-    QByteArray record = temp.toUtf8();
-    GDBMIResultParser parser;
-    GDBMIR
-    parser.parse(breakpointRecord,)
-    QJsonParseError error;
-    QJsonDocument doc = QJsonDocument::fromJson(record,&error);
-    if (error.error!=QJsonParseError::NoError) {
-        mConsoleOutput.append(QString("Error when parsing breakpoint record \"%1\":").arg(temp));
-        mConsoleOutput.append(error.errorString());
-        return;
-    }
-    QJsonObject obj = doc.object();
-
+    // gdb use system encoding for file path
+    QString filename = QString::fromLocal8Bit(breakpoint["filename"].value());
+    int line = breakpoint["line"].intValue();
+    int number = breakpoint["number"].intValue();
+    emit breakpointInfoGetted(filename, line , number);
 }
 
 QByteArray DebugReader::removeToken(const QByteArray &line)
@@ -1966,6 +1957,14 @@ void BreakpointModel::removeBreakpoint(int row)
     endRemoveRows();
 }
 
+void BreakpointModel::invalidateAllBreakpointNumbers()
+{
+    foreach (PBreakpoint bp,mList) {
+        bp->number = -1;
+    }
+    //emit dateChanged(createIndex(0,0),)
+}
+
 PBreakpoint BreakpointModel::setBreakPointCondition(int index, const QString &condition)
 {
     PBreakpoint breakpoint = mList[index];
@@ -2042,6 +2041,17 @@ void BreakpointModel::load(const QString &filename)
     } else {
         throw FileError(tr("Can't open file '%1' for read.")
                         .arg(filename));
+    }
+}
+
+void BreakpointModel::updateBreakpointNumber(const QString &filename, int line, int number)
+{
+    QFileInfo file(filename);
+    QString fn = file.absoluteFilePath();
+    foreach (PBreakpoint bp, mList) {
+        if (bp->filename == fn && bp->line == line) {
+            bp->number = number;
+        }
     }
 }
 

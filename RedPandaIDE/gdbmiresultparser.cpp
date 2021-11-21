@@ -194,19 +194,33 @@ void GDBMIResultParser::skipSpaces(const char *&p)
         p++;
 }
 
-const QString &GDBMIResultParser::ParseValue::value() const
+const QByteArray &GDBMIResultParser::ParseValue::value() const
 {
+    Q_ASSERT(mType == ParseValueType::Value);
     return mValue;
 }
 
 const QList<::GDBMIResultParser::ParseObject> &GDBMIResultParser::ParseValue::array() const
 {
+    Q_ASSERT(mType == ParseValueType::Array);
     return mArray;
 }
 
 const GDBMIResultParser::ParseObject &GDBMIResultParser::ParseValue::object() const
 {
+    Q_ASSERT(mType == ParseValueType::Object);
     return mObject;
+}
+
+int GDBMIResultParser::ParseValue::intValue(int defaultValue) const
+{
+    Q_ASSERT(mType == ParseValueType::Value);
+    bool ok;
+    int value = QString(mValue).toInt(&ok);
+    if (ok)
+        return value;
+    else
+        return defaultValue;
 }
 
 GDBMIResultParser::ParseValueType GDBMIResultParser::ParseValue::type() const
@@ -219,7 +233,7 @@ GDBMIResultParser::ParseValue::ParseValue():
 
 }
 
-GDBMIResultParser::ParseValue::ParseValue(const QString &value):
+GDBMIResultParser::ParseValue::ParseValue(const QByteArray &value):
     mValue(value),
     mType(ParseValueType::Value)
 {
@@ -237,7 +251,7 @@ GDBMIResultParser::ParseValue::ParseValue(const QList<ParseObject> &array):
 {
 }
 
-GDBMIResultParser::ParseValue &GDBMIResultParser::ParseValue::operator=(const QString &value)
+GDBMIResultParser::ParseValue &GDBMIResultParser::ParseValue::operator=(const QByteArray &value)
 {
     Q_ASSERT(mType == ParseValueType::NotAssigned);
     mType = ParseValueType::Value;

@@ -100,6 +100,8 @@ public:
     void save(const QString& filename);
     void load(const QString& filename);
 public slots:
+    void updateBreakpointNumber(const QString& filename, int line, int number);
+    void invalidateAllBreakpointNumbers(); // call this when gdb is stopped
     void onFileDeleteLines(const QString& filename, int startLine, int count);
     void onFileInsertLines(const QString& filename, int startLine, int count);
 private:
@@ -291,6 +293,8 @@ signals:
     void changeDebugConsoleLastLine(const QString& text);
     void cmdStarted();
     void cmdFinished();
+
+    void breakpointInfoGetted(const QString& filename, int line, int number);
 private:
     void clearCmdQueue();
     bool outputTerminated(QByteArray& text);
