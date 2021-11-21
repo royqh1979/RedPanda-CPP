@@ -53,6 +53,7 @@ public:
         const QByteArray &value() const;
         const QList<ParseObject> &array() const;
         const ParseObject &object() const;
+        int intValue(int defaultValue=-1) const;
         ParseValueType type() const;
         ParseValue& operator=(const QByteArray& value);
         ParseValue& operator=(const ParseObject& object);
@@ -70,7 +71,9 @@ public:
 public:
     GDBMIResultParser();
     bool parse(const QByteArray& record, GDBMIResultType& type, ParseValue& value);
+    bool parseAsyncResult(const QByteArray& record, QByteArray& result, ParseObject& multiValue);
 private:
+    bool parseMultiValues(const char*p, ParseObject& multiValue);
     bool parseNameAndValue(const char *&p,QByteArray& name, ParseValue& value);
     bool parseValue(const char* &p, ParseValue& value);
     bool parseStringValue(const char*&p, QByteArray& stringValue);

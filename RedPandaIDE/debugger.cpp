@@ -1203,28 +1203,35 @@ void DebugReader::processResult(const QByteArray &result)
     }
 }
 
-void DebugReader::processExecAsyncRecord(const QString &line)
+void DebugReader::processExecAsyncRecord(const QByteArray &line)
 {
-    if (line.startsWith("*running")) {
+    QByteArray result;
+    GDBMIResultParser::ParseObject multiValues;
+    GDBMIResultParser parser;
+    if (!parser.parseAsyncResult(line,result,multiValues))
+        return;
+    if (result == "running") {
         mInferiorPaused = false;
         return;
     }
-    if (line.startsWith("*stopped")) {
+    if (result == "*stopped") {
         mInferiorPaused = true;
-        QStringList props = line.split(',');
-        if (props.count()<2)
-            return;
-        QString reason = props[1];
-        QRegExp exp("^reason=\"(.+)\"$");
-        reason = exp.cap(1);
-        if (reason.isEmpty())
-            return;
-        if (reason.startsWith("exited")) {
+        QByteArray reason = multiValues["reason"].value();
+        if (reason == "exited") {
             //inferior exited, gdb should terminate too
             mProcessExited = true;
             return;
         }
-        if (reason==("signal-received")) {
+        if (reason == "exited-normally") {
+            //inferior exited, gdb should terminate too
+            mProcessExited = true;
+            return;
+        }
+        if (reason == "signal-received") {
+            //todo: signal received
+            return;
+        }
+        if (reason == "breakpoint-hit") {
             //todo: signal received
             return;
         }
@@ -1718,7 +1725,7 @@ QStringList DebugReader::tokenize(const QString &s)
 void DebugReader::handleBreakpoint(const GDBMIResultParser::ParseObject& breakpoint)
 {
     // gdb use system encoding for file path
-    QString filename = QString::fromLocal8Bit(breakpoint["filename"].value());
+    QString filename = QFileInfo(QString::fromLocal8Bit(breakpoint["filename"].value())).absoluteFilePath();
     int line = breakpoint["line"].intValue();
     int number = breakpoint["number"].intValue();
     emit breakpointInfoGetted(filename, line , number);
@@ -2046,10 +2053,8 @@ void BreakpointModel::load(const QString &filename)
 
 void BreakpointModel::updateBreakpointNumber(const QString &filename, int line, int number)
 {
-    QFileInfo file(filename);
-    QString fn = file.absoluteFilePath();
     foreach (PBreakpoint bp, mList) {
-        if (bp->filename == fn && bp->line == line) {
+        if (bp->filename == filename && bp->line == line) {
             bp->number = number;
         }
     }

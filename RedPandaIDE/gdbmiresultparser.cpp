@@ -31,6 +31,42 @@ bool GDBMIResultParser::parse(const QByteArray &record, GDBMIResultType &type, P
     return true;
 }
 
+bool GDBMIResultParser::parseAsyncResult(const QByteArray &record, QByteArray &result, ParseObject &multiValue)
+{
+    const char* p =record.data();
+    if (*p!='*')
+        return false;
+    p++;
+    const char* start;
+    while (*p && *p!=',')
+        p++;
+    result = QByteArray(start,p-start);
+    if (*p==0)
+        return true;
+    return parseMultiValues(p,multiValue);
+}
+
+bool GDBMIResultParser::parseMultiValues(const char* p, ParseObject &multiValue)
+{
+    while (*p) {
+        QByteArray propName;
+        ParseValue propValue;
+        bool result = parseNameAndValue(p,propName,propValue);
+        if (result) {
+            multiValue[propName]=propValue;
+        } else {
+            return false;
+        }
+        skipSpaces(p);
+        if (*p!=',')
+            return false;
+        p++; //skip ','
+        skipSpaces(p);
+        p++;
+    }
+    return true;
+}
+
 bool GDBMIResultParser::parseNameAndValue(const char *&p, QByteArray &name, ParseValue &value)
 {
     skipSpaces(p);
