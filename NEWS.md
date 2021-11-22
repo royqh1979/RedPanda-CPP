@@ -1,5 +1,6 @@
 Version 0.9.3 For Dev-C++ 7 Beta
  - fix: the count in the title of issues view isn't correct
+ - fix: columns calculation not correct when paint lines containing chinese characters
 
 Version 0.9.2 For Dev-C++ 7 Beta
  - fix: gutter of the disassembly code control in the cpu info dialog is grayed

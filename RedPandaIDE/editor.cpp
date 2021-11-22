@@ -876,7 +876,6 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
     if (token.isEmpty())
         return;
 
-//    qDebug()<<token<<"-"<<attr->name()<<" - "<<line<<" : "<<aChar;
     if (mParser && highlighter() && (attr == highlighter()->identifierAttribute())) {
         BufferCoord p{aChar,line};
         BufferCoord pBeginPos,pEndPos;

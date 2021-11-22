@@ -250,6 +250,10 @@ void SynEdit::setCaretXYEx(bool CallEnsureCursorPos, BufferCoord value)
                 invalidateLine(mCaretY);
                 invalidateLine(oldCaretY);
             }
+            if (mGutter.activeLineTextColor().isValid()) {
+                invalidateGutterLine(mCaretY);
+                invalidateGutterLine(oldCaretY);
+            }
             mStatusChanges.setFlag(SynStatusChange::scCaretY);
         }
         // Call UpdateLastCaretX before DecPaintLock because the event handler it
@@ -829,7 +833,7 @@ int SynEdit::columnToChar(int aLine, int aColumn) const
 
 int SynEdit::stringColumns(const QString &line, int colsBefore) const
 {
-    int columns = colsBefore;
+    int columns = std::max(0,colsBefore);
     int charCols;
     for (int i=0;i<line.length();i++) {
         QChar ch = line[i];
