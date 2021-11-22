@@ -5436,6 +5436,8 @@ void SynEdit::ExecuteCommand(SynEditorCommand Command, QChar AChar, void *pData)
         clearAll();
         break;
     case SynEditorCommand::ecInsertLine:
+        insertLine(Command == SynEditorCommand::ecInsertLine);
+        break;
     case SynEditorCommand::ecLineBreak:
         insertLine(Command == SynEditorCommand::ecLineBreak);
         break;

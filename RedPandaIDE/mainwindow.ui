@@ -1449,6 +1449,12 @@
     <addaction name="separator"/>
     <addaction name="actionFoldAll"/>
     <addaction name="actionUnfoldAll"/>
+    <addaction name="separator"/>
+    <addaction name="actionDelete_Line"/>
+    <addaction name="actionDuplicate_Line"/>
+    <addaction name="actionDelete_Word"/>
+    <addaction name="actionDelete_to_BOL"/>
+    <addaction name="actionDelete_to_EOL"/>
    </widget>
    <widget class="QMenu" name="menuSearch">
     <property name="title">
@@ -2601,6 +2607,31 @@
    </property>
    <property name="text">
     <string>Problem</string>
+   </property>
+  </action>
+  <action name="actionDelete_Line">
+   <property name="text">
+    <string>Delete Line</string>
+   </property>
+  </action>
+  <action name="actionDuplicate_Line">
+   <property name="text">
+    <string>Duplicate Line</string>
+   </property>
+  </action>
+  <action name="actionDelete_Word">
+   <property name="text">
+    <string>Delete Word</string>
+   </property>
+  </action>
+  <action name="actionDelete_to_EOL">
+   <property name="text">
+    <string>Delete to EOL</string>
+   </property>
+  </action>
+  <action name="actionDelete_to_BOL">
+   <property name="text">
+    <string>Delete to BOL</string>
    </property>
   </action>
  </widget>

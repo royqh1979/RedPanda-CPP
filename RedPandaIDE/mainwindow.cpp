@@ -5695,3 +5695,57 @@ void MainWindow::on_actionProblem_triggered()
     showHideMessagesTab(ui->tabProblem,state);
 }
 
+
+void MainWindow::on_actionInsert_Line_triggered()
+{
+    Editor *e=mEditorList->getEditor();
+    if (e) {
+        e->insertLine();
+    }
+}
+
+
+void MainWindow::on_actionDelete_Line_triggered()
+{
+    Editor *e=mEditorList->getEditor();
+    if (e) {
+        e->deleteLine();
+    }
+}
+
+
+void MainWindow::on_actionDuplicate_Line_triggered()
+{
+    Editor *e=mEditorList->getEditor();
+    if (e) {
+        e->duplicateLine();
+    }
+}
+
+
+void MainWindow::on_actionDelete_Word_triggered()
+{
+    Editor *e=mEditorList->getEditor();
+    if (e) {
+        e->deleteWord();
+    }
+}
+
+
+void MainWindow::on_actionDelete_to_EOL_triggered()
+{
+    Editor *e=mEditorList->getEditor();
+    if (e) {
+        e->deleteToEOL();
+    }
+}
+
+
+void MainWindow::on_actionDelete_to_BOL_triggered()
+{
+    Editor *e=mEditorList->getEditor();
+    if (e) {
+        e->deleteToBOL();
+    }
+}
+

@@ -1593,6 +1593,36 @@ bool Editor::notParsed()
     return mParser->findFileIncludes(mFilename)==nullptr;
 }
 
+void Editor::insertLine()
+{
+    ExecuteCommand(SynEditorCommand::ecInsertLine,QChar(),nullptr);
+}
+
+void Editor::deleteWord()
+{
+    ExecuteCommand(SynEditorCommand::ecDeleteWord,QChar(),nullptr);
+}
+
+void Editor::deleteLine()
+{
+    ExecuteCommand(SynEditorCommand::ecDeleteLine,QChar(),nullptr);
+}
+
+void Editor::duplicateLine()
+{
+    ExecuteCommand(SynEditorCommand::ecDuplicateLine,QChar(),nullptr);
+}
+
+void Editor::deleteToEOL()
+{
+    ExecuteCommand(SynEditorCommand::ecDeleteEOL,QChar(),nullptr);
+}
+
+void Editor::deleteToBOL()
+{
+    ExecuteCommand(SynEditorCommand::ecDeleteBOL,QChar(),nullptr);
+}
+
 QChar Editor::getCurrentChar()
 {
     if (lineText().length()<caretX())

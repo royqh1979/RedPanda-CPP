@@ -518,6 +518,18 @@ private slots:
 
     void on_actionProblem_triggered();
 
+    void on_actionInsert_Line_triggered();
+
+    void on_actionDelete_Line_triggered();
+
+    void on_actionDuplicate_Line_triggered();
+
+    void on_actionDelete_Word_triggered();
+
+    void on_actionDelete_to_EOL_triggered();
+
+    void on_actionDelete_to_BOL_triggered();
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;
