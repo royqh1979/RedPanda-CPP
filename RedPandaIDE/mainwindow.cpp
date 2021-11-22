@@ -5695,16 +5695,6 @@ void MainWindow::on_actionProblem_triggered()
     showHideMessagesTab(ui->tabProblem,state);
 }
 
-
-void MainWindow::on_actionInsert_Line_triggered()
-{
-    Editor *e=mEditorList->getEditor();
-    if (e) {
-        e->insertLine();
-    }
-}
-
-
 void MainWindow::on_actionDelete_Line_triggered()
 {
     Editor *e=mEditorList->getEditor();

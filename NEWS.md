@@ -5,6 +5,8 @@ Version 0.9.2 For Dev-C++ 7 Beta
  - fix: option "Move caret to the first non-space char in the current line when press HOME key" dosen't work fine.
  - fix: ctrl+left can't correctly move to the beginning of the last word
  - enhancement: add "delete line"/"duplicate line"/"delete word"/"delete to EOL"/"delete to BOL" in the edit menu
+ - fix: crash when run "Project" / "Clean Make files"
+ - fix: when make project and del non-existing files, shouldn't show error messages
 
 Version 0.9.1 For Dev-C++ 7 Beta
  - enhancement: code completion suggestion for "__func__" variable
