@@ -1375,7 +1375,7 @@ BufferCoord SynEdit::prevWordPosEx(const BufferCoord &XY)
             }
         } else {
             // if previous char is a "whitespace" search for the last IdentChar
-            if (Line[CX - 2].isSpace())
+            if (!isWordChar(Line[CX - 2]))
                 CX = StrRScanForWordChar(Line, CX - 1);
             if (CX > 0) // search for the first IdentChar of this "word"
                 CX = StrRScanForNonWordChar(Line, CX - 1)+1;
