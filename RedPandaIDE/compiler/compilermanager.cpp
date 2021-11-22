@@ -330,8 +330,9 @@ void CompilerManager::onSyntaxCheckIssue(PCompileIssue issue)
 {
     if (issue->type == CompileIssueType::Error)
         mSyntaxCheckErrorCount++;
-    mSyntaxCheckIssueCount++;
-
+    if (issue->type == CompileIssueType::Error ||
+            issue->type == CompileIssueType::Warning)
+        mSyntaxCheckIssueCount++;
 }
 
 int CompilerManager::syntaxCheckIssueCount() const

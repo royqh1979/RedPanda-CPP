@@ -1,3 +1,6 @@
+Version 0.9.3 For Dev-C++ 7 Beta
+ - fix: the count in the title of issues view isn't correct
+
 Version 0.9.2 For Dev-C++ 7 Beta
  - fix: gutter of the disassembly code control in the cpu info dialog is grayed
  - fix: problem set & problem views not correctly hidden when disabled in the executor / problem set options 
