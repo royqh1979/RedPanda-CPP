@@ -2613,15 +2613,24 @@
    <property name="text">
     <string>Delete Line</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+D</string>
+   </property>
   </action>
   <action name="actionDuplicate_Line">
    <property name="text">
     <string>Duplicate Line</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+E</string>
+   </property>
   </action>
   <action name="actionDelete_Word">
    <property name="text">
     <string>Delete Word</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+D</string>
    </property>
   </action>
   <action name="actionDelete_to_EOL">

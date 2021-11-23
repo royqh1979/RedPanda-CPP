@@ -3568,6 +3568,8 @@ void Editor::reformat()
                                             pSettings->dirs().app(),
                                             args,
                                             content);
+    int oldTopLine = topLine();
+    BufferCoord mOldCaret = caretXY();
 
     selectAll();
     SynEditorOptions oldOptions = getOptions();
@@ -3575,6 +3577,8 @@ void Editor::reformat()
     newOptions.setFlag(SynEditorOption::eoAutoIndent,false);
     setOptions(newOptions);
     setSelText(QString::fromUtf8(newContent));
+    setCaretXY(mOldCaret);
+    setTopLine(oldTopLine);
     setOptions(oldOptions);
     reparse();
     checkSyntaxInBack();
