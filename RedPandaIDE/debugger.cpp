@@ -12,6 +12,9 @@
 #include <QPlainTextEdit>
 #include <QDebug>
 #include <QDir>
+#include <QJsonDocument>
+#include <QJsonArray>
+#include <QJsonObject>
 
 Debugger::Debugger(QObject *parent) : QObject(parent)
 {
@@ -63,6 +66,7 @@ bool Debugger::start()
     connect(this, &Debugger::localsReady,pMainWindow,&MainWindow::onLocalsReady);
     connect(mReader, &DebugReader::cmdStarted,pMainWindow, &MainWindow::disableDebugActions);
     connect(mReader, &DebugReader::cmdFinished,pMainWindow, &MainWindow::enableDebugActions);
+
     connect(mReader, &DebugReader::breakpointInfoGetted, mBreakpointModel,
             &BreakpointModel::updateBreakpointNumber);
 
@@ -455,23 +459,17 @@ void Debugger::syncFinishedParsing()
     }
 
     // An evaluation variable has been processed. Forward the results
-    if (mReader->doevalready) {
+    if (mReader->evalReady()) {
         //pMainWindow->updateDebugEval(mReader->mEvalValue);
-        emit evalValueReady(mReader->mEvalValue);
-        mReader->mEvalValue="";
-        mReader->doevalready = false;
+        emit evalValueReady(mReader->evalValue());
     }
 
-    if (mReader->doupdatememoryview) {
-        emit memoryExamineReady(mReader->mMemoryValue);
-        mReader->mMemoryValue.clear();
-        mReader->doupdatememoryview=false;
+    if (mReader->updateMemory()) {
+        emit memoryExamineReady(mReader->memoryValue());
     }
 
-    if (mReader->doupdatelocal) {
-        emit localsReady(mReader->mLocalsValue);
-        mReader->mLocalsValue.clear();
-        mReader->doupdatelocal=false;
+    if (mReader->updateLocals()) {
+        emit localsReady(mReader->localsValue());
     }
 
     // show command output
@@ -521,16 +519,17 @@ void Debugger::syncFinishedParsing()
         }
     }
 
-    if (mReader->doupdateexecution) {
-        if (mReader->mCurrentCmd && mReader->mCurrentCmd->source == DebugCommandSource::Console) {
-            pMainWindow->setActiveBreakpoint(mReader->mBreakPointFile, mReader->mBreakPointLine,false);
+    if (mReader->updateExecution()) {
+        if (mReader->currentCmd() && mReader->currentCmd()->source == DebugCommandSource::Console) {
+            pMainWindow->setActiveBreakpoint(mReader->breakPointFile(), mReader->breakPointLine(),false);
         } else {
-            pMainWindow->setActiveBreakpoint(mReader->mBreakPointFile, mReader->mBreakPointLine);
+            pMainWindow->setActiveBreakpoint(mReader->breakPointFile(), mReader->breakPointLine());
         }
         refreshWatchVars(); // update variable information
     }
 
-    if (mReader->doreceivedsignal) {
+    if (mReader->signalReceived()) {
+
 //SignalDialog := CreateMessageDialog(fSignal, mtError, [mbOk]);
 //SignalCheck := TCheckBox.Create(SignalDialog);
 
@@ -563,7 +562,7 @@ void Debugger::syncFinishedParsing()
 
 
     // CPU form updates itself when spawned, don't update twice!
-    if ((mReader->doupdatecpuwindow && !spawnedcpuform) && (pMainWindow->cpuDialog()!=nullptr)) {
+    if ((mReader->updateCPUInfo() && !spawnedcpuform) && (pMainWindow->cpuDialog()!=nullptr)) {
         pMainWindow->cpuDialog()->updateInfo();
     }
 }
@@ -903,86 +902,6 @@ void DebugReader::handleExit()
     doprocessexited=true;
 }
 
-void DebugReader::handleFrames()
-{
-    QString s = getNextLine();
-
-    // Is this a backtrace dump?
-    if (s.startsWith("#")) {
-        if (s.startsWith("#0")) {
-            mDebugger->backtraceModel()->clear();
-        }
-        // Find function name
-        if (!findAnnotation(AnnotationType::TFrameFunctionName))
-            return;
-
-        PTrace trace = std::make_shared<Trace>();
-        trace->funcname = getNextLine();
-
-        // Find argument list start
-        if (!findAnnotation(AnnotationType::TFrameArgs))
-            return;
-
-        // Arguments are either () or detailed list
-        s = getNextLine();
-
-        while (peekNextAnnotation() == AnnotationType::TArgBegin) {
-
-            // argument name
-            if (!findAnnotation(AnnotationType::TArgBegin))
-                return;
-
-            s = s + getNextLine();
-
-            // =
-            if (!findAnnotation(AnnotationType::TArgNameEnd))
-                return;
-            s = s + ' ' + getNextLine() + ' '; // should be =
-
-            // argument value
-            if (!findAnnotation(AnnotationType::TArgValue))
-                return;
-
-            s = s + getNextLine();
-
-            // argument end
-            if (!findAnnotation(AnnotationType::TArgEnd))
-                return;
-
-            s = s + getNextLine();
-        }
-
-        trace->funcname = trace->funcname + s.trimmed();
-
-        // source info
-        if (peekNextAnnotation() == AnnotationType::TFrameSourceBegin) {
-            // Find filename
-            if (!findAnnotation(AnnotationType::TFrameSourceFile))
-                return;
-            trace->filename = getNextLine();
-            // find line
-            if (!findAnnotation(AnnotationType::TFrameSourceLine))
-                return;
-            trace->line = getNextLine().trimmed().toInt();
-        } else {
-            trace->filename = "";
-            trace->line = 0;
-        }
-        mDebugger->backtraceModel()->addTrace(trace);
-
-        // Skip over the remaining frame part...
-        if (!findAnnotation(AnnotationType::TFrameEnd))
-            return;
-
-        // Not another one coming? Done!
-        if (peekNextAnnotation() != AnnotationType::TFrameBegin) {
-            // End of stack trace dump!
-              dobacktraceready = true;
-        }
-    } else
-        doupdatecpuwindow = true;
-}
-
 void DebugReader::handleLocalOutput()
 {
     // name(spaces)hexvalue(tab)decimalvalue
@@ -1167,8 +1086,21 @@ void DebugReader::processResult(const QByteArray &result)
     if (!parseOk)
         return;
     switch(resultType) {
+    case GDBMIResultType::BreakpointTable:
+    case GDBMIResultType::Frame:
+    case GDBMIResultType::Locals:
+        break;
     case GDBMIResultType::Breakpoint:
         handleBreakpoint(parseValue.object());
+        return;
+    case GDBMIResultType::FrameStack:
+        handleStack(parseValue.array());
+        return;
+    case GDBMIResultType::LocalVariables:
+        handleLocalVariables(parseValue.array());
+        return;
+    case GDBMIResultType::Evaluation:
+        handleEvaluation(parseValue.value());
         return;
     }
 
@@ -1227,13 +1159,12 @@ void DebugReader::processExecAsyncRecord(const QByteArray &line)
             mProcessExited = true;
             return;
         }
+        mUpdateExecution = true;
+        mUpdateCPUInfo = true;
+        mBreakPointFile = multiValues["fullname"].pathValue();
+        mBreakPointLine = multiValues["line"].intValue();
         if (reason == "signal-received") {
-            //todo: signal received
-            return;
-        }
-        if (reason == "breakpoint-hit") {
-            //todo: signal received
-            return;
+            mSignalReceived = true;
         }
     }
 }
@@ -1282,10 +1213,16 @@ void DebugReader::processDebugOutput(const QByteArray& debugOutput)
     emit parseStarted();
 
     mConsoleOutput.clear();
+    mLocalsValue.clear();
+    mEvalValue.clear();
+    mMemoryValue.clear();
 
-   //try
+    mUpdateExecution = false;
+    mSignalReceived = false;
+    mUpdateCPUInfo = false;
+    mUpdateLocals = false;
+    mEvalReady = false;
 
-   dobacktraceready = false;
    dodisassemblerready = false;
    doregistersready = false;
    doevalready = false;
@@ -1725,10 +1662,56 @@ QStringList DebugReader::tokenize(const QString &s)
 void DebugReader::handleBreakpoint(const GDBMIResultParser::ParseObject& breakpoint)
 {
     // gdb use system encoding for file path
-    QString filename = QFileInfo(QString::fromLocal8Bit(breakpoint["filename"].value())).absoluteFilePath();
+    QString filename = breakpoint["fullname"].value();
     int line = breakpoint["line"].intValue();
     int number = breakpoint["number"].intValue();
     emit breakpointInfoGetted(filename, line , number);
+}
+
+void DebugReader::handleStack(const QList<GDBMIResultParser::ParseValue> & stack)
+{
+    mDebugger->backtraceModel()->clear();
+    foreach (const GDBMIResultParser::ParseValue& frameValue, stack) {
+        GDBMIResultParser::ParseObject frameObject = frameValue.object();
+        PTrace trace = std::make_shared<Trace>();
+        trace->funcname = frameObject["func"].value();
+        trace->filename = frameObject["fullname"].pathValue();
+        trace->line = frameObject["fullname"].intValue();
+        trace->level = frameObject["level"].intValue(0);
+        trace->address = frameObject["addr"].value();
+        mDebugger->backtraceModel()->addTrace(trace);
+    }
+}
+
+void DebugReader::handleLocalVariables(const QList<GDBMIResultParser::ParseValue> &variables)
+{
+    mUpdateLocals=true;
+    foreach (const GDBMIResultParser::ParseValue& varValue, variables) {
+        GDBMIResultParser::ParseObject varObject = varValue.object();
+        mLocalsValue.append(QString("%1 = %2")
+                            .arg(varObject["name"].value(),varObject["value"].value()));
+    }
+}
+
+void DebugReader::handleEvaluation(const QString &value)
+{
+    mEvalReady = true;
+    mEvalValue = value;
+}
+
+void DebugReader::handleMemory(const QList<GDBMIResultParser::ParseValue> &rows)
+{
+    mUpdateMemory = true;
+    foreach (const GDBMIResultParser::ParseValue& row, rows) {
+        GDBMIResultParser::ParseObject rowObject = row.object();
+        QList<GDBMIResultParser::ParseValue> data = rowObject["data"].array();
+        QStringList values;
+        foreach (const GDBMIResultParser::ParseValue& val, data) {
+            values.append(val.value());
+        }
+        mLocalsValue.append(QString("%1 %2")
+                            .arg(rowObject["addr"].value(),values.join(" ")));
+    }
 }
 
 QByteArray DebugReader::removeToken(const QByteArray &line)
@@ -1744,6 +1727,71 @@ QByteArray DebugReader::removeToken(const QByteArray &line)
     if (p<line.length())
         return line.mid(p);
     return line;
+}
+
+const QStringList &DebugReader::memoryValue() const
+{
+    return mMemoryValue;
+}
+
+bool DebugReader::updateMemory() const
+{
+    return mUpdateMemory;
+}
+
+const QString &DebugReader::evalValue() const
+{
+    return mEvalValue;
+}
+
+bool DebugReader::evalReady() const
+{
+    return mEvalReady;
+}
+
+const QStringList &DebugReader::localsValue() const
+{
+    return mLocalsValue;
+}
+
+bool DebugReader::updateLocals() const
+{
+    return mUpdateLocals;
+}
+
+bool DebugReader::updateCPUInfo() const
+{
+    return mUpdateCPUInfo;
+}
+
+const PDebugCommand &DebugReader::currentCmd() const
+{
+    return mCurrentCmd;
+}
+
+const QString &DebugReader::breakPointFile() const
+{
+    return mBreakPointFile;
+}
+
+int DebugReader::breakPointLine() const
+{
+    return mBreakPointLine;
+}
+
+const QStringList &DebugReader::consoleOutput() const
+{
+    return mConsoleOutput;
+}
+
+bool DebugReader::signalReceived() const
+{
+    return mSignalReceived;
+}
+
+bool DebugReader::updateExecution() const
+{
+    return mUpdateExecution;
 }
 
 bool DebugReader::processExited() const
@@ -1790,7 +1838,6 @@ bool DebugReader::waitStart()
 {
     mStartSemaphore.acquire(1);
 }
-
 
 void DebugReader::run()
 {
@@ -2056,6 +2103,7 @@ void BreakpointModel::updateBreakpointNumber(const QString &filename, int line, 
     foreach (PBreakpoint bp, mList) {
         if (bp->filename == filename && bp->line == line) {
             bp->number = number;
+            return;
         }
     }
 }

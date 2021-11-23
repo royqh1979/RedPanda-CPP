@@ -1,5 +1,6 @@
 #include "gdbmiresultparser.h"
 
+#include <QFileInfo>
 #include <QList>
 
 GDBMIResultParser::GDBMIResultParser()
@@ -172,7 +173,7 @@ bool GDBMIResultParser::parseObject(const char *&p, ParseObject &obj)
     return false;
 }
 
-bool GDBMIResultParser::parseArray(const char *&p, QList<GDBMIResultParser::ParseObject> &array)
+bool GDBMIResultParser::parseArray(const char *&p, QList<GDBMIResultParser::ParseValue> &array)
 {
     if (*p!='[')
         return false;
@@ -180,10 +181,10 @@ bool GDBMIResultParser::parseArray(const char *&p, QList<GDBMIResultParser::Pars
     if (*p!=']') {
         while (*p!=0) {
             skipSpaces(p);
-            ParseObject obj;
-            bool result = parseObject(p,obj);
+            ParseValue val;
+            bool result = parseValue(p,val);
             if (result) {
-                array.append(obj);
+                array.append(val);
             } else {
                 return false;
             }
@@ -236,7 +237,7 @@ const QByteArray &GDBMIResultParser::ParseValue::value() const
     return mValue;
 }
 
-const QList<::GDBMIResultParser::ParseObject> &GDBMIResultParser::ParseValue::array() const
+const QList<::GDBMIResultParser::ParseValue> &GDBMIResultParser::ParseValue::array() const
 {
     Q_ASSERT(mType == ParseValueType::Array);
     return mArray;
@@ -257,6 +258,12 @@ int GDBMIResultParser::ParseValue::intValue(int defaultValue) const
         return value;
     else
         return defaultValue;
+}
+
+QString GDBMIResultParser::ParseValue::pathValue() const
+{
+    Q_ASSERT(mType == ParseValueType::Value);
+    return QFileInfo(QString::fromLocal8Bit(mValue)).absoluteFilePath();
 }
 
 GDBMIResultParser::ParseValueType GDBMIResultParser::ParseValue::type() const
@@ -281,7 +288,7 @@ GDBMIResultParser::ParseValue::ParseValue(const ParseObject &object):
 {
 }
 
-GDBMIResultParser::ParseValue::ParseValue(const QList<ParseObject> &array):
+GDBMIResultParser::ParseValue::ParseValue(const QList<ParseValue> &array):
     mArray(array),
     mType(ParseValueType::Array)
 {
@@ -301,7 +308,7 @@ GDBMIResultParser::ParseValue &GDBMIResultParser::ParseValue::operator=(const Pa
     mObject = object;
 }
 
-GDBMIResultParser::ParseValue &GDBMIResultParser::ParseValue::operator=(const QList<ParseObject>& array)
+GDBMIResultParser::ParseValue &GDBMIResultParser::ParseValue::operator=(const QList<ParseValue>& array)
 {
     Q_ASSERT(mType == ParseValueType::NotAssigned);
     mType = ParseValueType::Array;

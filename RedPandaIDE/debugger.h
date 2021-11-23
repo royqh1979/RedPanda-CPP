@@ -55,7 +55,9 @@ using PBreakpoint = std::shared_ptr<Breakpoint>;
 struct Trace {
     QString funcname;
     QString filename;
+    QString address;
     int line;
+    int level;
 };
 
 using PTrace = std::shared_ptr<Trace>;
@@ -281,6 +283,31 @@ public:
 
     bool processExited() const;
 
+    bool updateExecution() const;
+
+    bool signalReceived() const;
+
+    const QStringList &consoleOutput() const;
+
+    int breakPointLine() const;
+
+    const QString &breakPointFile() const;
+
+    const PDebugCommand &currentCmd() const;
+
+    bool updateCPUInfo() const;
+
+    bool updateLocals() const;
+
+    const QStringList &localsValue() const;
+
+    bool evalReady() const;
+
+    const QString &evalValue() const;
+
+    bool updateMemory() const;
+
+    const QStringList &memoryValue() const;
 
 signals:
     void parseStarted();
@@ -302,7 +329,6 @@ private:
     void handleDisplay();
     void handleError();
     void handleExit();
-    void handleFrames();
     void handleLocalOutput();
     void handleLocals();
     void handleMemory();
@@ -319,6 +345,10 @@ private:
     QStringList tokenize(const QString& s);
 
     void handleBreakpoint(const GDBMIResultParser::ParseObject& breakpoint);
+    void handleStack(const QList<GDBMIResultParser::ParseValue> & stack);
+    void handleLocalVariables(const QList<GDBMIResultParser::ParseValue> & variables);
+    void handleEvaluation(const QString& value);
+    void handleMemory(const QList<GDBMIResultParser::ParseValue> & rows);
     void processConsoleOutput(const QByteArray& line);
     void processResult(const QByteArray& result);
     void processExecAsyncRecord(const QByteArray& line);
@@ -345,16 +375,11 @@ private:
 
     //fWatchView: TTreeView;
     int mIndex;
-    int mBreakPointLine;
-    QString mBreakPointFile;
-    QString mEvalValue;
-    QStringList mMemoryValue;
-    QStringList mLocalsValue;
+
     QString mSignal;
     bool mUseUTF8;
 
     // attempt to cut down on Synchronize calls
-    bool dobacktraceready;
     bool dodisassemblerready;
     bool doregistersready;
     bool doevalready;
@@ -363,12 +388,24 @@ private:
     bool doreceivedsignal;
     bool doreceivedsfwarning;
     bool doupdatememoryview;
-    bool doupdatelocal;
 
     //
     bool mInferiorPaused;
     bool mProcessExited;
+
+    bool mUpdateExecution;
+    bool mSignalReceived;
+    bool mUpdateCPUInfo;
+    bool mUpdateLocals;
+    bool mEvalReady;
+    bool mUpdateMemory;
+
     QStringList mConsoleOutput;
+    int mBreakPointLine;
+    QString mBreakPointFile;
+    QStringList mLocalsValue;
+    QString mEvalValue;
+    QStringList mMemoryValue;
 
     bool mStop;
     // QThread interface

@@ -48,20 +48,21 @@ public:
         explicit ParseValue();
         explicit ParseValue(const QByteArray& value);
         explicit ParseValue(const ParseObject &object);
-        explicit ParseValue(const QList<ParseObject>& array);
+        explicit ParseValue(const QList<ParseValue>& array);
         ParseValue(const ParseValue&) = delete;
         const QByteArray &value() const;
-        const QList<ParseObject> &array() const;
+        const QList<ParseValue> &array() const;
         const ParseObject &object() const;
         int intValue(int defaultValue=-1) const;
+        QString pathValue() const;
         ParseValueType type() const;
         ParseValue& operator=(const QByteArray& value);
         ParseValue& operator=(const ParseObject& object);
-        ParseValue& operator=(const QList<ParseObject>& array);
+        ParseValue& operator=(const QList<ParseValue>& array);
         ParseValue& operator=(const ParseValue& value);
     private:
         QByteArray mValue;
-        QList<ParseObject> mArray;
+        QList<ParseValue> mArray;
         ParseObject mObject;
         ParseValueType mType;
     };
@@ -78,7 +79,7 @@ private:
     bool parseValue(const char* &p, ParseValue& value);
     bool parseStringValue(const char*&p, QByteArray& stringValue);
     bool parseObject(const char*&p, ParseObject& obj);
-    bool parseArray(const char*&p, QList<ParseObject>& array);
+    bool parseArray(const char*&p, QList<ParseValue>& array);
     void skipSpaces(const char* &p);
     bool isNameChar(char ch);
     bool isSpaceChar(char ch);
