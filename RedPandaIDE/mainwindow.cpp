@@ -1287,7 +1287,7 @@ void MainWindow::debug()
         if (mProject->modified()  &&
                 QMessageBox::question(
                     this,
-                    tr("Compile Project"),
+                    tr("Rebuild Project"),
                     tr("Project has been modified, do you want to rebuild it?")
                                                       ) == QMessageBox::Yes) {
             mCompileSuccessionTask=std::make_shared<CompileSuccessionTask>();
