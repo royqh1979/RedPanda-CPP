@@ -4,6 +4,7 @@ Version 0.9.3 For Dev-C++ 7 Beta
  - fix: restore caret position after reformat code
  - enhancement: ask user to rebuild project, when run/debug the project and it has been modified
  - fix: correct set the enabled state of "delete line"/"insert line"/"delete word"/"delete to BOL"/"delete to EOL" menu items
+ - fix: undo "delete word"/"delete to BOL"/"delete to EOL" correct reset caret position
 
 Version 0.9.2 For Dev-C++ 7 Beta
  - fix: gutter of the disassembly code control in the cpu info dialog is grayed

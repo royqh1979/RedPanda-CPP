@@ -5246,13 +5246,18 @@ void SynEdit::deleteFromTo(const BufferCoord &start, const BufferCoord &end)
         return;
     doOnPaintTransient(SynTransientType::ttBefore);
     if ((start.Char != end.Char) || (start.Line != end.Line)) {
+        BufferCoord oldCaret = caretXY();
         setBlockBegin(start);
         setBlockEnd(end);
         setActiveSelectionMode(SynSelectionMode::smNormal);
         QString helper = selText();
         setSelTextPrimitive("");
+        mUndoList->BeginBlock();
+        mUndoList->AddChange(SynChangeReason::crCaret, oldCaret, start,
+                "", SynSelectionMode::smNormal);
         mUndoList->AddChange(SynChangeReason::crSilentDeleteAfterCursor, start, end,
                 helper, SynSelectionMode::smNormal);
+        mUndoList->EndBlock();
         internalSetCaretXY(start);
     }
     doOnPaintTransient(SynTransientType::ttAfter);
