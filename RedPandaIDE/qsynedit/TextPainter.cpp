@@ -995,7 +995,7 @@ void SynEditTextPainter::PaintLines()
                 edit->mHighlighter->next();
             }
             // Don't assume HL.GetTokenPos is valid after HL.GetEOL == True.
-            nTokenColumnsBefore += edit->stringColumns(sToken,nTokenColumnsBefore-1);
+            nTokenColumnsBefore += edit->stringColumns(sToken,nTokenColumnsBefore);
             if (edit->mHighlighter->eol() && (nTokenColumnsBefore < vLastChar)) {
                 int lineColumns = edit->mLines->lineColumns(vLine-1);
                 // Draw text that couldn't be parsed by the highlighter, if any.

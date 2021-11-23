@@ -219,11 +219,13 @@ void SynEditKeyStrokes::resetDefaults()
     add(SynEditorCommand::ecCut, Qt::Key_X, Qt::ControlModifier);
     add(SynEditorCommand::ecBlockIndent, Qt::Key_I, Qt::ControlModifier|Qt::ShiftModifier);
     add(SynEditorCommand::ecBlockUnindent, Qt::Key_U, Qt::ControlModifier|Qt::ShiftModifier);
-    add(SynEditorCommand::ecLineBreak, Qt::Key_M, Qt::ControlModifier);
-    add(SynEditorCommand::ecInsertLine, Qt::Key_N, Qt::ControlModifier);
-    add(SynEditorCommand::ecDeleteWord, Qt::Key_T, Qt::ControlModifier);
-    add(SynEditorCommand::ecDeleteLine, Qt::Key_Y, Qt::ControlModifier);
-    add(SynEditorCommand::ecDeleteEOL, Qt::Key_Y, Qt::ControlModifier|Qt::ShiftModifier);
+//    add(SynEditorCommand::ecLineBreak, Qt::Key_M, Qt::ControlModifier);
+//    add(SynEditorCommand::ecInsertLine, Qt::Key_N, Qt::ControlModifier);
+//    add(SynEditorCommand::ecDeleteWord, Qt::Key_T, Qt::ControlModifier);
+//    add(SynEditorCommand::ecDeleteLine, Qt::Key_Y, Qt::ControlModifier);
+//    add(SynEditorCommand::ecDeleteEOL, Qt::Key_Y, Qt::ControlModifier|Qt::ShiftModifier);
+//    add(SynEditorCommand::ecDuplicateLine, Qt::Key_D, Qt::ControlModifier);
+
     add(SynEditorCommand::ecUndo, Qt::Key_Z, Qt::ControlModifier);
     add(SynEditorCommand::ecRedo, Qt::Key_Z, Qt::ControlModifier|Qt::ShiftModifier);
     add(SynEditorCommand::ecGotoMarker0, Qt::Key_0, Qt::ControlModifier);

@@ -133,8 +133,8 @@ void CompilerManager::cleanProject(std::shared_ptr<Project> project)
         mCompileIssueCount = 0;
         ProjectCompiler* compiler = new ProjectCompiler(project,false,false);
         compiler->setOnlyClean(true);
-        mCompiler->setRebuild(false);
         mCompiler = compiler;
+        mCompiler->setRebuild(false);
         connect(mCompiler, &Compiler::finished, mCompiler, &QObject::deleteLater);
         connect(mCompiler, &Compiler::compileFinished, this, &CompilerManager::onCompileFinished);
 
@@ -330,8 +330,9 @@ void CompilerManager::onSyntaxCheckIssue(PCompileIssue issue)
 {
     if (issue->type == CompileIssueType::Error)
         mSyntaxCheckErrorCount++;
-    mSyntaxCheckIssueCount++;
-
+    if (issue->type == CompileIssueType::Error ||
+            issue->type == CompileIssueType::Warning)
+        mSyntaxCheckIssueCount++;
 }
 
 int CompilerManager::syntaxCheckIssueCount() const

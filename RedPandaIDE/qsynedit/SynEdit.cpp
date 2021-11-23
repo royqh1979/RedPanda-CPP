@@ -250,6 +250,10 @@ void SynEdit::setCaretXYEx(bool CallEnsureCursorPos, BufferCoord value)
                 invalidateLine(mCaretY);
                 invalidateLine(oldCaretY);
             }
+            if (mGutter.activeLineTextColor().isValid()) {
+                invalidateGutterLine(mCaretY);
+                invalidateGutterLine(oldCaretY);
+            }
             mStatusChanges.setFlag(SynStatusChange::scCaretY);
         }
         // Call UpdateLastCaretX before DecPaintLock because the event handler it
@@ -829,7 +833,7 @@ int SynEdit::columnToChar(int aLine, int aColumn) const
 
 int SynEdit::stringColumns(const QString &line, int colsBefore) const
 {
-    int columns = colsBefore;
+    int columns = std::max(0,colsBefore);
     int charCols;
     for (int i=0;i<line.length();i++) {
         QChar ch = line[i];
@@ -1375,7 +1379,7 @@ BufferCoord SynEdit::prevWordPosEx(const BufferCoord &XY)
             }
         } else {
             // if previous char is a "whitespace" search for the last IdentChar
-            if (Line[CX - 2].isSpace())
+            if (!isWordChar(Line[CX - 2]))
                 CX = StrRScanForWordChar(Line, CX - 1);
             if (CX > 0) // search for the first IdentChar of this "word"
                 CX = StrRScanForNonWordChar(Line, CX - 1)+1;
@@ -5242,13 +5246,18 @@ void SynEdit::deleteFromTo(const BufferCoord &start, const BufferCoord &end)
         return;
     doOnPaintTransient(SynTransientType::ttBefore);
     if ((start.Char != end.Char) || (start.Line != end.Line)) {
+        BufferCoord oldCaret = caretXY();
         setBlockBegin(start);
         setBlockEnd(end);
         setActiveSelectionMode(SynSelectionMode::smNormal);
         QString helper = selText();
         setSelTextPrimitive("");
+        mUndoList->BeginBlock();
+        mUndoList->AddChange(SynChangeReason::crCaret, oldCaret, start,
+                "", SynSelectionMode::smNormal);
         mUndoList->AddChange(SynChangeReason::crSilentDeleteAfterCursor, start, end,
                 helper, SynSelectionMode::smNormal);
+        mUndoList->EndBlock();
         internalSetCaretXY(start);
     }
     doOnPaintTransient(SynTransientType::ttAfter);
@@ -5436,6 +5445,8 @@ void SynEdit::ExecuteCommand(SynEditorCommand Command, QChar AChar, void *pData)
         clearAll();
         break;
     case SynEditorCommand::ecInsertLine:
+        insertLine(Command == SynEditorCommand::ecInsertLine);
+        break;
     case SynEditorCommand::ecLineBreak:
         insertLine(Command == SynEditorCommand::ecLineBreak);
         break;

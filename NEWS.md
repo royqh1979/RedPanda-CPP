@@ -1,8 +1,20 @@
+Version 0.9.3 For Dev-C++ 7 Beta
+ - fix: the count in the title of issues view isn't correct
+ - fix: columns calculation not correct when paint lines containing chinese characters
+ - fix: restore caret position after reformat code
+ - enhancement: ask user to rebuild project, when run/debug the project and it has been modified
+ - fix: correct set the enabled state of "delete line"/"insert line"/"delete word"/"delete to BOL"/"delete to EOL" menu items
+ - fix: undo "delete word"/"delete to BOL"/"delete to EOL" correct reset caret position
+
 Version 0.9.2 For Dev-C++ 7 Beta
  - fix: gutter of the disassembly code control in the cpu info dialog is grayed
  - fix: problem set & problem views not correctly hidden when disabled in the executor / problem set options 
  - fix: executor / problem set options not correctly saved
  - fix: option "Move caret to the first non-space char in the current line when press HOME key" dosen't work fine.
+ - fix: ctrl+left can't correctly move to the beginning of the last word
+ - enhancement: add "delete line"/"duplicate line"/"delete word"/"delete to EOL"/"delete to BOL" in the edit menu
+ - fix: crash when run "Project" / "Clean Make files"
+ - fix: when make project and del non-existing files, shouldn't show error messages
 
 Version 0.9.1 For Dev-C++ 7 Beta
  - enhancement: code completion suggestion for "__func__" variable

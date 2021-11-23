@@ -168,6 +168,12 @@ public:
     void exportAsHTML(const QString& htmlFilename);
     void resetBreakpoints();
     bool notParsed();
+    void insertLine();
+    void deleteWord();
+    void deleteLine();
+    void duplicateLine();
+    void deleteToEOL();
+    void deleteToBOL();
 
     const PCppParser &parser();
 

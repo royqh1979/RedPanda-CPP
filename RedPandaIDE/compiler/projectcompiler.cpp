@@ -9,7 +9,8 @@
 #include <QDir>
 
 ProjectCompiler::ProjectCompiler(std::shared_ptr<Project> project, bool silent, bool onlyCheckSyntax):
-    Compiler("",silent,onlyCheckSyntax)
+    Compiler("",silent,onlyCheckSyntax),
+    mOnlyClean(false)
 {
     setProject(project);
 }
@@ -264,9 +265,9 @@ void ProjectCompiler::writeMakeClean(QFile &file)
 {
     writeln(file, "clean: clean-custom");
     if (mProject->options().type == ProjectType::DynamicLib)
-        writeln(file, "\t${RM} $(CLEANOBJ) $(BIN) $(DEF) $(STATIC)");
+        writeln(file, "\t${RM} $(CLEANOBJ) $(BIN) $(DEF) $(STATIC) > NUL 2>&1");
     else
-        writeln(file, "\t${RM} $(CLEANOBJ) $(BIN)");
+        writeln(file, "\t${RM} $(CLEANOBJ) $(BIN) > NUL 2>&1");
     writeln(file);
 }
 
@@ -465,7 +466,7 @@ bool ProjectCompiler::prepareForCompile()
         mArguments = QString("-f \"%1\" clean").arg(extractRelativePath(
                                                             mProject->directory(),
                                                             mProject->makeFileName()));
-    } if (mRebuild) {
+    } else if (mRebuild) {
         mArguments = QString("-f \"%1\" clean all").arg(extractRelativePath(
                                                             mProject->directory(),
                                                             mProject->makeFileName()));

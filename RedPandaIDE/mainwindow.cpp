@@ -339,6 +339,12 @@ void MainWindow::updateEditorActions()
         ui->actionUnIndent->setEnabled(false);
         ui->actionUndo->setEnabled(false);
         ui->actionUnfoldAll->setEnabled(false);
+        ui->actionDelete_Line->setEnabled(false);
+        ui->actionDelete_Word->setEnabled(false);
+        ui->actionDuplicate_Line->setEnabled(false);
+        ui->actionDelete_to_BOL->setEnabled(false);
+        ui->actionDelete_to_EOL->setEnabled(false);
+
         ui->actionFind->setEnabled(false);
         ui->actionReplace->setEnabled(false);
         ui->actionFind_Next->setEnabled(false);
@@ -379,6 +385,11 @@ void MainWindow::updateEditorActions()
         ui->actionToggleComment->setEnabled(!e->readOnly() && e->lines()->count()>0);
         ui->actionUnIndent->setEnabled(!e->readOnly() && e->lines()->count()>0);
         ui->actionUnfoldAll->setEnabled(e->lines()->count()>0);
+        ui->actionDelete_Line->setEnabled(!e->readOnly() && e->lines()->count()>0);
+        ui->actionDelete_Word->setEnabled(!e->readOnly() && e->lines()->count()>0);
+        ui->actionDuplicate_Line->setEnabled(!e->readOnly() && e->lines()->count()>0);
+        ui->actionDelete_to_BOL->setEnabled(!e->readOnly() && e->lines()->count()>0);
+        ui->actionDelete_to_EOL->setEnabled(!e->readOnly() && e->lines()->count()>0);
 
         ui->actionFind->setEnabled(true);
         ui->actionReplace->setEnabled(true);
@@ -1079,30 +1090,14 @@ void MainWindow::checkSyntaxInBack(Editor *e)
         mCompilerManager->checkSyntax(e->filename(),e->text(),
                                           e->fileEncoding() == ENCODING_ASCII, nullptr);
     }
-//    if not PrepareForCompile(cttStdin,True) then begin
-//      fCheckSyntaxInBack:=False;
-//      Exit;
-//    end;
-//    if e.InProject then begin
-//      if not assigned(MainForm.fProject) then
-//        Exit;
-//      fSyntaxChecker.Project := MainForm.fProject;
-//    end;
-    //    fSyntaxChecker.CheckSyntax(True);
 }
 
 bool MainWindow::compile(bool rebuild)
 {
     CompileTarget target =getCompileTarget();
     if (target == CompileTarget::Project) {
-        if (!mProject->saveUnits())
-            return false;
-        // Check if saves have been succesful
-        for (int i=0; i<mEditorList->pageCount();i++) {
-            Editor * e= (*(mEditorList))[i];
-            if (e->inProject() && e->modified())
-                return false;
-        }
+        if (mProject->modified())
+            mProject->saveAll();
         clearIssues();
 
         // Increment build number automagically
@@ -1209,6 +1204,18 @@ void MainWindow::runExecutable(RunType runType)
 {
     CompileTarget target =getCompileTarget();
     if (target == CompileTarget::Project) {
+        if (mProject->modified()  &&
+                QMessageBox::question(
+                    this,
+                    tr("Rebuild Project"),
+                    tr("Project has been modified, do you want to rebuild it?")
+                                                      ) == QMessageBox::Yes) {
+            mProject->saveAll();
+            mCompileSuccessionTask=std::make_shared<CompileSuccessionTask>();
+            mCompileSuccessionTask->type = CompileSuccessionTaskType::RunNormal;
+            compile();
+            return;
+        }
         runExecutable(mProject->executable(),mProject->filename(),runType);
     } else {
         Editor * editor = mEditorList->getEditor();
@@ -1275,6 +1282,17 @@ void MainWindow::debug()
 
                 compile();
             }
+            return;
+        }
+        if (mProject->modified()  &&
+                QMessageBox::question(
+                    this,
+                    tr("Rebuild Project"),
+                    tr("Project has been modified, do you want to rebuild it?")
+                                                      ) == QMessageBox::Yes) {
+            mCompileSuccessionTask=std::make_shared<CompileSuccessionTask>();
+            mCompileSuccessionTask->type = CompileSuccessionTaskType::Debug;
+            compile();
             return;
         }
         // Did we choose a host application for our DLL?
@@ -5690,5 +5708,48 @@ void MainWindow::on_actionProblem_triggered()
     bool state = ui->actionProblem->isChecked();
     ui->actionProblem->setChecked(state);
     showHideMessagesTab(ui->tabProblem,state);
+}
+
+void MainWindow::on_actionDelete_Line_triggered()
+{
+    Editor *e=mEditorList->getEditor();
+    if (e) {
+        e->deleteLine();
+    }
+}
+
+void MainWindow::on_actionDuplicate_Line_triggered()
+{
+    Editor *e=mEditorList->getEditor();
+    if (e) {
+        e->duplicateLine();
+    }
+}
+
+
+void MainWindow::on_actionDelete_Word_triggered()
+{
+    Editor *e=mEditorList->getEditor();
+    if (e) {
+        e->deleteWord();
+    }
+}
+
+
+void MainWindow::on_actionDelete_to_EOL_triggered()
+{
+    Editor *e=mEditorList->getEditor();
+    if (e) {
+        e->deleteToEOL();
+    }
+}
+
+
+void MainWindow::on_actionDelete_to_BOL_triggered()
+{
+    Editor *e=mEditorList->getEditor();
+    if (e) {
+        e->deleteToBOL();
+    }
 }
 

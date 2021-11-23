@@ -876,7 +876,6 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
     if (token.isEmpty())
         return;
 
-//    qDebug()<<token<<"-"<<attr->name()<<" - "<<line<<" : "<<aChar;
     if (mParser && highlighter() && (attr == highlighter()->identifierAttribute())) {
         BufferCoord p{aChar,line};
         BufferCoord pBeginPos,pEndPos;
@@ -1591,6 +1590,36 @@ bool Editor::notParsed()
     if (!mParser)
         return true;
     return mParser->findFileIncludes(mFilename)==nullptr;
+}
+
+void Editor::insertLine()
+{
+    ExecuteCommand(SynEditorCommand::ecInsertLine,QChar(),nullptr);
+}
+
+void Editor::deleteWord()
+{
+    ExecuteCommand(SynEditorCommand::ecDeleteWord,QChar(),nullptr);
+}
+
+void Editor::deleteLine()
+{
+    ExecuteCommand(SynEditorCommand::ecDeleteLine,QChar(),nullptr);
+}
+
+void Editor::duplicateLine()
+{
+    ExecuteCommand(SynEditorCommand::ecDuplicateLine,QChar(),nullptr);
+}
+
+void Editor::deleteToEOL()
+{
+    ExecuteCommand(SynEditorCommand::ecDeleteEOL,QChar(),nullptr);
+}
+
+void Editor::deleteToBOL()
+{
+    ExecuteCommand(SynEditorCommand::ecDeleteBOL,QChar(),nullptr);
 }
 
 QChar Editor::getCurrentChar()
@@ -3539,6 +3568,8 @@ void Editor::reformat()
                                             pSettings->dirs().app(),
                                             args,
                                             content);
+    int oldTopLine = topLine();
+    BufferCoord mOldCaret = caretXY();
 
     selectAll();
     SynEditorOptions oldOptions = getOptions();
@@ -3546,6 +3577,8 @@ void Editor::reformat()
     newOptions.setFlag(SynEditorOption::eoAutoIndent,false);
     setOptions(newOptions);
     setSelText(QString::fromUtf8(newContent));
+    setCaretXY(mOldCaret);
+    setTopLine(oldTopLine);
     setOptions(oldOptions);
     reparse();
     checkSyntaxInBack();

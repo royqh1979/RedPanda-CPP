@@ -506,7 +506,7 @@
         <enum>QTabWidget::South</enum>
        </property>
        <property name="currentIndex">
-        <number>6</number>
+        <number>0</number>
        </property>
        <property name="iconSize">
         <size>
@@ -702,7 +702,7 @@
              <enum>QTabWidget::North</enum>
             </property>
             <property name="currentIndex">
-             <number>2</number>
+             <number>0</number>
             </property>
             <widget class="QWidget" name="tabDebugConsole">
              <attribute name="title">
@@ -1381,7 +1381,7 @@
      <x>0</x>
      <y>0</y>
      <width>1114</width>
-     <height>25</height>
+     <height>30</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -1449,6 +1449,12 @@
     <addaction name="separator"/>
     <addaction name="actionFoldAll"/>
     <addaction name="actionUnfoldAll"/>
+    <addaction name="separator"/>
+    <addaction name="actionDelete_Line"/>
+    <addaction name="actionDuplicate_Line"/>
+    <addaction name="actionDelete_Word"/>
+    <addaction name="actionDelete_to_BOL"/>
+    <addaction name="actionDelete_to_EOL"/>
    </widget>
    <widget class="QMenu" name="menuSearch">
     <property name="title">
@@ -2601,6 +2607,46 @@
    </property>
    <property name="text">
     <string>Problem</string>
+   </property>
+  </action>
+  <action name="actionDelete_Line">
+   <property name="text">
+    <string>Delete Line</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+D</string>
+   </property>
+  </action>
+  <action name="actionDuplicate_Line">
+   <property name="text">
+    <string>Duplicate Line</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+E</string>
+   </property>
+  </action>
+  <action name="actionDelete_Word">
+   <property name="text">
+    <string>Delete Word</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+D</string>
+   </property>
+  </action>
+  <action name="actionDelete_to_EOL">
+   <property name="text">
+    <string>Delete to EOL</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Del</string>
+   </property>
+  </action>
+  <action name="actionDelete_to_BOL">
+   <property name="text">
+    <string>Delete to BOL</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Backspace</string>
    </property>
   </action>
  </widget>
