@@ -1,3 +1,6 @@
+Version 0.9.4 For Dev-C++ 7 Beta
+ - fix: code format indent settings not correctly saved
+
 Version 0.9.3 For Dev-C++ 7 Beta
  - fix: the count in the title of issues view isn't correct
  - fix: columns calculation not correct when paint lines containing chinese characters
