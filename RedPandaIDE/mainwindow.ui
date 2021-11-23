@@ -2637,10 +2637,16 @@
    <property name="text">
     <string>Delete to EOL</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+Del</string>
+   </property>
   </action>
   <action name="actionDelete_to_BOL">
    <property name="text">
     <string>Delete to BOL</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Backspace</string>
    </property>
   </action>
  </widget>
