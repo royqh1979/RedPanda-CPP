@@ -1410,9 +1410,6 @@ void MainWindow::debug()
         updateEditorActions();
         return;
     }
-    mDebugger->sendCommand("-gdb-set","mi-async on");
-    mDebugger->sendCommand("-gdb-set","target-async on");
-    mDebugger->sendCommand("-gdb-show", "mi-async");
 
     updateEditorActions();
 
@@ -4069,7 +4066,7 @@ void MainWindow::onDebugEvaluateInput()
     if (!s.isEmpty()) {
         connect(mDebugger, &Debugger::evalValueReady,
                    this, &MainWindow::onEvalValueReady);
-        mDebugger->sendCommand("print",s);
+        mDebugger->sendCommand("-data-evaluate-expression",s);
     }
 }
 
@@ -4079,7 +4076,7 @@ void MainWindow::onDebugMemoryAddressInput()
     if (!s.isEmpty()) {
         connect(mDebugger, &Debugger::memoryExamineReady,
                    this, &MainWindow::onMemoryExamineReady);
-        mDebugger->sendCommand("-data-read-memory/64bx",s);
+        mDebugger->sendCommand("-data-read-memory",QString("%1 x 1 8 8 ").arg(s));
     }
 }
 
@@ -5734,7 +5731,6 @@ void MainWindow::on_actionDelete_to_EOL_triggered()
     }
 }
 
-
 void MainWindow::on_actionDelete_to_BOL_triggered()
 {
     Editor *e=mEditorList->getEditor();
@@ -5742,12 +5738,3 @@ void MainWindow::on_actionDelete_to_BOL_triggered()
         e->deleteToBOL();
     }
 }
-
-
-void MainWindow::on_actionPause_triggered()
-{
-    if (mDebugger->executing()) {
-        mDebugger->sendCommand("-exec-interrupt","-a");
-    }
-}
-

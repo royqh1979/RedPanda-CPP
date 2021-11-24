@@ -87,9 +87,9 @@ void CPUDialog::sendSyntaxCommand()
 {
     // Set disassembly flavor
     if (ui->rdIntel->isChecked()) {
-        pMainWindow->debugger()->sendCommand("set disassembly-flavor", "intel");
+        pMainWindow->debugger()->sendCommand("-gdb-set", "disassembly-flavor intel");
     } else {
-        pMainWindow->debugger()->sendCommand("set disassembly-flavor", "att");
+        pMainWindow->debugger()->sendCommand("-gdb-set", "disassembly-flavor att");
     }
 }
 

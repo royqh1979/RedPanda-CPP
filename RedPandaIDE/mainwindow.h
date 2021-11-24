@@ -528,8 +528,6 @@ private slots:
 
     void on_actionDelete_to_BOL_triggered();
 
-    void on_actionPause_triggered();
-
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;

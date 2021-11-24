@@ -623,8 +623,10 @@ void DebugReader::processResult(const QByteArray &result)
 {
     GDBMIResultParser parser;
     GDBMIResultType resultType;
-    GDBMIResultParser::ParseValue parseValue;
-    bool parseOk = parser.parse(result,resultType,parseValue);
+    GDBMIResultParser::ParseObject multiValues;
+    if (!mCurrentCmd)
+        return;
+    bool parseOk = parser.parse(result, mCurrentCmd->command, resultType,multiValues);
     if (!parseOk)
         return;
     switch(resultType) {
@@ -633,16 +635,19 @@ void DebugReader::processResult(const QByteArray &result)
     case GDBMIResultType::Locals:
         break;
     case GDBMIResultType::Breakpoint:
-        handleBreakpoint(parseValue.object());
+        handleBreakpoint(multiValues["bkpt"].object());
         return;
     case GDBMIResultType::FrameStack:
-        handleStack(parseValue.array());
+        handleStack(multiValues["stack"].array());
         return;
     case GDBMIResultType::LocalVariables:
-        handleLocalVariables(parseValue.array());
+        handleLocalVariables(multiValues["variables"].array());
         return;
     case GDBMIResultType::Evaluation:
-        handleEvaluation(parseValue.value());
+        handleEvaluation(multiValues["value"].value());
+        return;
+    case GDBMIResultType::Memory:
+        handleMemory(multiValues["memory"].array());
         return;
     }
 
@@ -1005,9 +1010,9 @@ void DebugReader::runNextCmd()
     if (pSettings->debugger().showCommandLog() ) {
         //update debug console
         if (!pSettings->debugger().showAnnotations()) {
-            emit changeDebugConsoleLastLine("(gdb)"+pCmd->command + ' ' + pCmd->params);
+            emit changeDebugConsoleLastLine(pCmd->command + ' ' + pCmd->params);
         } else {
-            emit changeDebugConsoleLastLine("(gdb)"+pCmd->command + ' ' + pCmd->params);
+            emit changeDebugConsoleLastLine(pCmd->command + ' ' + pCmd->params);
         }
     }
 }
@@ -1121,7 +1126,7 @@ bool DebugReader::outputTerminated(const QByteArray &text)
 void DebugReader::handleBreakpoint(const GDBMIResultParser::ParseObject& breakpoint)
 {
     // gdb use system encoding for file path
-    QString filename = breakpoint["fullname"].value();
+    QString filename = breakpoint["fullname"].pathValue();
     int line = breakpoint["line"].intValue();
     int number = breakpoint["number"].intValue();
     emit breakpointInfoGetted(filename, line , number);
@@ -1322,10 +1327,6 @@ void DebugReader::run()
         readed = mProcess->readAll();
         buffer += readed;
 
-        if (!readed.isEmpty()) {
-            qDebug()<<"*******";
-            qDebug()<<readed;
-        }
         if (readed.endsWith("\n")&& outputTerminated(buffer)) {
             processDebugOutput(buffer);
             buffer.clear();
@@ -1341,8 +1342,6 @@ void DebugReader::run()
         emit processError(mProcess->error());
     }
 }
-
-
 
 BreakpointModel::BreakpointModel(QObject *parent):QAbstractTableModel(parent)
 {

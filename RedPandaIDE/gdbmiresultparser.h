@@ -76,7 +76,7 @@ public:
 
 public:
     GDBMIResultParser();
-    bool parse(const QByteArray& record, GDBMIResultType& type, ParseValue& value);
+    bool parse(const QByteArray& record, const QString& command, GDBMIResultType& type, ParseObject& multiValues);
     bool parseAsyncResult(const QByteArray& record, QByteArray& result, ParseObject& multiValue);
 private:
     bool parseMultiValues(const char*p, ParseObject& multiValue);
@@ -89,7 +89,7 @@ private:
     bool isNameChar(char ch);
     bool isSpaceChar(char ch);
 private:
-    QHash<QByteArray, GDBMIResultType> mResultTypes;
+    QHash<QString, GDBMIResultType> mResultTypes;
 };
 
 #endif // GDBMIRESULTPARSER_H

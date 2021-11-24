@@ -1424,7 +1424,6 @@
     <addaction name="actionStep_Over"/>
     <addaction name="actionStep_Into"/>
     <addaction name="actionRun_To_Cursor"/>
-    <addaction name="actionPause"/>
     <addaction name="actionContinue"/>
     <addaction name="actionStop_Execution"/>
     <addaction name="separator"/>
@@ -1643,7 +1642,6 @@
    <addaction name="actionStep_Over"/>
    <addaction name="actionStep_Into"/>
    <addaction name="actionStep_Out"/>
-   <addaction name="actionPause"/>
    <addaction name="actionContinue"/>
    <addaction name="actionStop_Execution"/>
    <addaction name="separator"/>
@@ -2649,18 +2647,6 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+Backspace</string>
-   </property>
-  </action>
-  <action name="actionPause">
-   <property name="icon">
-    <iconset resource="icons.qrc">
-     <normaloff>:/icons/images/newlook24/093-pause.png</normaloff>:/icons/images/newlook24/093-pause.png</iconset>
-   </property>
-   <property name="text">
-    <string>Pause</string>
-   </property>
-   <property name="shortcut">
-    <string>F3</string>
    </property>
   </action>
  </widget>

@@ -6,30 +6,29 @@
 
 GDBMIResultParser::GDBMIResultParser()
 {
-    mResultTypes.insert("bkpt",GDBMIResultType::Breakpoint);
-    mResultTypes.insert("BreakpointTable",GDBMIResultType::BreakpointTable);
-    mResultTypes.insert("stack",GDBMIResultType::FrameStack);
-    mResultTypes.insert("variables", GDBMIResultType::LocalVariables);
-    mResultTypes.insert("frame",GDBMIResultType::Frame);
-    mResultTypes.insert("asm_insns",GDBMIResultType::Disassembly);
-    mResultTypes.insert("value",GDBMIResultType::Evaluation);
-    mResultTypes.insert("register-names",GDBMIResultType::RegisterNames);
-    mResultTypes.insert("register-values",GDBMIResultType::RegisterValues);
-    mResultTypes.insert("memory",GDBMIResultType::Memory);
+    mResultTypes.insert("-break-insert",GDBMIResultType::Breakpoint);
+    //mResultTypes.insert("BreakpointTable",GDBMIResultType::BreakpointTable);
+    mResultTypes.insert("-stack-list-frames",GDBMIResultType::FrameStack);
+    mResultTypes.insert("-stack-list-variables", GDBMIResultType::LocalVariables);
+    //mResultTypes.insert("frame",GDBMIResultType::Frame);
+    mResultTypes.insert("-data-disassemble",GDBMIResultType::Disassembly);
+    mResultTypes.insert("-data-evaluate-expression",GDBMIResultType::Evaluation);
+//    mResultTypes.insert("register-names",GDBMIResultType::RegisterNames);
+//    mResultTypes.insert("register-values",GDBMIResultType::RegisterValues);
+    mResultTypes.insert("-data-read-memory",GDBMIResultType::Memory);
 }
 
-bool GDBMIResultParser::parse(const QByteArray &record, GDBMIResultType &type, ParseValue& value)
+bool GDBMIResultParser::parse(const QByteArray &record, const QString& command, GDBMIResultType &type, ParseObject& multiValues)
 {
     const char* p = record.data();
-    QByteArray name;
-    bool result = parseNameAndValue(p,name,value);
+    bool result = parseMultiValues(p,multiValues);
     if (!result)
         return false;
 //    if (*p!=0)
 //        return false;
-    if (!mResultTypes.contains(name))
+    if (!mResultTypes.contains(command))
         return false;
-    type = mResultTypes[name];
+    type = mResultTypes[command];
     return true;
 }
 
