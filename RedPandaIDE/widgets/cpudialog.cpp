@@ -57,7 +57,7 @@ void CPUDialog::updateInfo()
     if (pMainWindow->debugger()->executing()) {
         // Load the registers..
         sendSyntaxCommand();
-        pMainWindow->debugger()->sendCommand("info", "registers");
+        //pMainWindow->debugger()->sendCommand("info", "registers");
         if (ui->chkBlendMode->isChecked())
             pMainWindow->debugger()->sendCommand("disas", "/s");
         else
