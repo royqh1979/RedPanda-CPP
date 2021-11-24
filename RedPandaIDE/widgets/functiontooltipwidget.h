@@ -37,7 +37,6 @@ public:
     const QString &functionFullName() const;
     void setFunctioFullName(const QString &newFunctioFullName);
 
-signals:
 private:
     QStringList splitArgs(QString args);
 private:

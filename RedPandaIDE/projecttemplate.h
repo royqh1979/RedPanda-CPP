@@ -54,8 +54,6 @@ private:
     QString mIcon; // icon in project form
     PSimpleIni mIni;
     int mVersion;
-signals:
-
 };
 using PProjectTemplate = std::shared_ptr<ProjectTemplate>;
 

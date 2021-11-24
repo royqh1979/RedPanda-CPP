@@ -309,6 +309,8 @@ public:
 
     const QStringList &memoryValue() const;
 
+    bool receivedSFWarning() const;
+
 signals:
     void parseStarted();
     void invalidateAllVars();
@@ -322,6 +324,11 @@ signals:
     void cmdFinished();
 
     void breakpointInfoGetted(const QString& filename, int line, int number);
+    void inferiorContinued();
+    void inferiorStopped(const QString& filename, int line);
+    void localsUpdated(const QStringList& localsValue);
+    void evalUpdated(const QString& value);
+    void memoryUpdated(const QStringList& memoryValues);
 private:
     void clearCmdQueue();
     bool outputTerminated(QByteArray& text);
@@ -374,7 +381,6 @@ private:
     QProcess* mProcess;
 
     //fWatchView: TTreeView;
-    int mIndex;
 
     QString mSignal;
     bool mUseUTF8;
@@ -390,22 +396,18 @@ private:
     bool doupdatememoryview;
 
     //
-    bool mInferiorPaused;
+    bool mInferiorRunning;
     bool mProcessExited;
 
     bool mUpdateExecution;
     bool mSignalReceived;
     bool mUpdateCPUInfo;
-    bool mUpdateLocals;
-    bool mEvalReady;
-    bool mUpdateMemory;
+    bool mReceivedSFWarning;
 
     QStringList mConsoleOutput;
     int mBreakPointLine;
     QString mBreakPointFile;
-    QStringList mLocalsValue;
-    QString mEvalValue;
-    QStringList mMemoryValue;
+
 
     bool mStop;
     // QThread interface

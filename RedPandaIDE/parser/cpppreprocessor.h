@@ -74,9 +74,6 @@ public:
     const QList<QString> &includePathList() const;
 
     const QList<QString> &projectIncludePathList() const;
-
-signals:
-
 private:
     void preprocessBuffer();
     void skipToEndOfPreprocessor();

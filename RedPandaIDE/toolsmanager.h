@@ -24,8 +24,6 @@ public:
     const QList<PToolItem> &tools() const;
     PToolItem findTool(const QString& title);
     void setTools(const QList<PToolItem> &newTools);
-
-signals:
 private:
     QList<PToolItem> mTools;
 };

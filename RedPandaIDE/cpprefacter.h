@@ -19,7 +19,6 @@ public:
     bool findOccurence(const QString& statementFullname, SearchFileScope scope);
 
     void renameSymbol(Editor* editor, const BufferCoord& pos, const QString& word, const QString& newWord);
-signals:
 private:
     void doFindOccurenceInEditor(PStatement statement, Editor* editor, const PCppParser& parser);
     void doFindOccurenceInProject(PStatement statement, std::shared_ptr<Project> project, const PCppParser& parser);

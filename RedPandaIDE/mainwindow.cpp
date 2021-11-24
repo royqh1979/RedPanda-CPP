@@ -2895,7 +2895,7 @@ void MainWindow::onShowInsertCodeSnippetMenu()
 
 }
 
-void MainWindow::onEditorContextMenu(const QPoint &pos)
+void MainWindow::onEditorContextMenu(const QPoint& pos)
 {
     Editor * editor = mEditorList->getEditor();
     if (!editor)
@@ -2964,12 +2964,12 @@ void MainWindow::onEditorContextMenu(const QPoint &pos)
     menu.exec(editor->viewport()->mapToGlobal(pos));
 }
 
-void MainWindow::onEditorRightTabContextMenu(const QPoint &pos)
+void MainWindow::onEditorRightTabContextMenu(const QPoint& pos)
 {
     onEditorTabContextMenu(ui->EditorTabsRight,pos);
 }
 
-void MainWindow::onEditorLeftTabContextMenu(const QPoint &pos)
+void MainWindow::onEditorLeftTabContextMenu(const QPoint& pos)
 {
     onEditorTabContextMenu(ui->EditorTabsLeft,pos);
 }
@@ -3031,7 +3031,7 @@ void MainWindow::onTodoParseStarted(const QString&)
     mTodoModel.clear();
 }
 
-void MainWindow::onTodoParsing(const QString &filename, int lineNo, int ch, const QString &line)
+void MainWindow::onTodoParsing(const QString& filename, int lineNo, int ch, const QString& line)
 {
     mTodoModel.addItem(filename,lineNo,ch,line);
 }
@@ -3485,7 +3485,7 @@ void MainWindow::onCompilerSetChanged(int index)
     pSettings->compilerSets().saveDefaultIndex();
 }
 
-void MainWindow::onCompileLog(const QString &msg)
+void MainWindow::onCompileLog(const QString& msg)
 {
     ui->txtCompilerOutput->appendPlainText(msg);
     ui->txtCompilerOutput->moveCursor(QTextCursor::End);
@@ -3626,12 +3626,12 @@ void MainWindow::onCompileFinished(bool isCheckSyntax)
     updateAppTitle();
 }
 
-void MainWindow::onCompileErrorOccured(const QString &reason)
+void MainWindow::onCompileErrorOccured(const QString& reason)
 {
     QMessageBox::critical(this,tr("Compile Failed"),reason);
 }
 
-void MainWindow::onRunErrorOccured(const QString &reason)
+void MainWindow::onRunErrorOccured(const QString& reason)
 {
     mCompilerManager->stopRun();
     QMessageBox::critical(this,tr("Run Failed"),reason);
@@ -3666,7 +3666,7 @@ void MainWindow::onOJProblemCaseStarted(const QString& id,int current, int total
     }
 }
 
-void MainWindow::onOJProblemCaseFinished(const QString &id, int current, int total)
+void MainWindow::onOJProblemCaseFinished(const QString& id, int current, int total)
 {
     int row = mOJProblemModel.getCaseIndexById(id);
     if (row>=0) {
@@ -3695,7 +3695,7 @@ void MainWindow::cleanUpCPUDialog()
     ptr->deleteLater();
 }
 
-void MainWindow::onDebugCommandInput(const QString &command)
+void MainWindow::onDebugCommandInput(const QString& command)
 {
     if (mDebugger->executing()) {
         mDebugger->sendCommand(command,"",true,true);
@@ -4137,14 +4137,14 @@ void MainWindow::onEndParsing(int total, int)
     }
 }
 
-void MainWindow::onEvalValueReady(const QString &value)
+void MainWindow::onEvalValueReady(const QString& value)
 {
     updateDebugEval(value);
     disconnect(mDebugger, &Debugger::evalValueReady,
                this, &MainWindow::onEvalValueReady);
 }
 
-void MainWindow::onMemoryExamineReady(const QStringList &value)
+void MainWindow::onMemoryExamineReady(const QStringList& value)
 {
     ui->txtMemoryView->clear();
     foreach (QString s, value) {
@@ -4156,7 +4156,7 @@ void MainWindow::onMemoryExamineReady(const QStringList &value)
                this, &MainWindow::onMemoryExamineReady);
 }
 
-void MainWindow::onLocalsReady(const QStringList &value)
+void MainWindow::onLocalsReady(const QStringList& value)
 {
     ui->txtLocals->clear();
     foreach (QString s, value) {

@@ -26,8 +26,6 @@ public:
     void setShortcuts(QList<PEnvironmentShortcut> shortcuts);
     void applyTo(QList<QAction*> actions);
     void applyTo(QAction* action);
-signals:
-private:
 
 private:
     QMap<QString,PEnvironmentShortcut> mShortcuts;

@@ -49,8 +49,6 @@ public:
     const QString &newFileTemplate() const;
     void setNewFileTemplate(const QString &newNewFileTemplate);
 
-signals:
-
 private:
     void loadSnippets();
     void saveSnippets();

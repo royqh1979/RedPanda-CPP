@@ -21,7 +21,6 @@ public:
     const TokenList& tokens();
     PToken operator[](int i);
     int tokenCount();
-signals:
 private:
     void addToken(const QString& sText, int iLine);
     void advance();

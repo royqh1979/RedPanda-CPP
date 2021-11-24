@@ -86,7 +86,6 @@ class ThemeManager : public QObject
 public:
     explicit ThemeManager(QObject *parent = nullptr);
     PAppTheme theme(const QString& themeName);
-signals:
 };
 
 #endif // THEMEMANAGER_H

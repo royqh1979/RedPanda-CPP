@@ -1513,7 +1513,7 @@ void Editor::onGutterClicked(Qt::MouseButton button, int , int , int line)
     mGutterClickedLine = line;
 }
 
-void Editor::onTipEvalValueReady(const QString &value)
+void Editor::onTipEvalValueReady(const QString& value)
 {
     if (mCurrentWord == mCurrentDebugTipWord) {
         QString newValue;

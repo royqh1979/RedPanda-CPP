@@ -22,7 +22,6 @@ public:
     void reset();
     PSymbolUsage findUsage(const QString& fullName) const;
     void updateUsage(const QString& symbol, int count);
-signals:
 private:
     QHash<QString, PSymbolUsage> mUsages;
 };

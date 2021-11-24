@@ -63,12 +63,16 @@ bool Debugger::start()
     connect(mReader, &QThread::finished,this,&Debugger::clearUpReader);
     connect(mReader, &DebugReader::parseFinished,this,&Debugger::syncFinishedParsing,Qt::BlockingQueuedConnection);
     connect(mReader, &DebugReader::changeDebugConsoleLastLine,this,&Debugger::onChangeDebugConsoleLastline);
-    connect(this, &Debugger::localsReady,pMainWindow,&MainWindow::onLocalsReady);
     connect(mReader, &DebugReader::cmdStarted,pMainWindow, &MainWindow::disableDebugActions);
     connect(mReader, &DebugReader::cmdFinished,pMainWindow, &MainWindow::enableDebugActions);
 
     connect(mReader, &DebugReader::breakpointInfoGetted, mBreakpointModel,
             &BreakpointModel::updateBreakpointNumber);
+    connect(mReader, &DebugReader::localsUpdated, pMainWindow,
+            &MainWindow::onLocalsReady);
+    connect(mReader, &DebugReader::memoryUpdated,[this](const QStringList memory) {
+        emit memoryExamineReady(memory);
+    });
 
     mReader->start();
     mReader->waitStart();
@@ -439,7 +443,7 @@ void Debugger::syncFinishedParsing()
     bool spawnedcpuform = false;
 
     // GDB determined that the source code is more recent than the executable. Ask the user if he wants to rebuild.
-    if (mReader->doreceivedsfwarning) {
+    if (mReader->receivedSFWarning()) {
         if (QMessageBox::question(pMainWindow,
                                   tr("Compile"),
                                   tr("Source file is more recent than executable.")+"<BR /><BR />" + tr("Recompile?"),
@@ -456,20 +460,6 @@ void Debugger::syncFinishedParsing()
     if (mReader->processExited()) {
         stop();
         return;
-    }
-
-    // An evaluation variable has been processed. Forward the results
-    if (mReader->evalReady()) {
-        //pMainWindow->updateDebugEval(mReader->mEvalValue);
-        emit evalValueReady(mReader->evalValue());
-    }
-
-    if (mReader->updateMemory()) {
-        emit memoryExamineReady(mReader->memoryValue());
-    }
-
-    if (mReader->updateLocals()) {
-        emit localsReady(mReader->localsValue());
     }
 
     // show command output
@@ -567,7 +557,7 @@ void Debugger::syncFinishedParsing()
     }
 }
 
-void Debugger::onChangeDebugConsoleLastline(const QString &text)
+void Debugger::onChangeDebugConsoleLastline(const QString& text)
 {
     //pMainWindow->changeDebugOutputLastline(text);
     pMainWindow->addDebugOutput(text);
@@ -1143,11 +1133,12 @@ void DebugReader::processExecAsyncRecord(const QByteArray &line)
     if (!parser.parseAsyncResult(line,result,multiValues))
         return;
     if (result == "running") {
-        mInferiorPaused = false;
+        mInferiorRunning = true;
+        emit inferiorContinued();
         return;
     }
     if (result == "*stopped") {
-        mInferiorPaused = true;
+        mInferiorRunning = false;
         QByteArray reason = multiValues["reason"].value();
         if (reason == "exited") {
             //inferior exited, gdb should terminate too
@@ -1159,10 +1150,14 @@ void DebugReader::processExecAsyncRecord(const QByteArray &line)
             mProcessExited = true;
             return;
         }
-        mUpdateExecution = true;
+        if (reason == "exited-signalled") {
+            //inferior exited, gdb should terminate too
+            mProcessExited = true;
+            mSignalReceived = true;
+            return;
+        }
         mUpdateCPUInfo = true;
-        mBreakPointFile = multiValues["fullname"].pathValue();
-        mBreakPointLine = multiValues["line"].intValue();
+        emit inferiorStopped(multiValues["fullname"].pathValue(), multiValues["line"].intValue());
         if (reason == "signal-received") {
             mSignalReceived = true;
         }
@@ -1222,6 +1217,7 @@ void DebugReader::processDebugOutput(const QByteArray& debugOutput)
     mUpdateCPUInfo = false;
     mUpdateLocals = false;
     mEvalReady = false;
+    mReceivedSFWarning = false;
 
    dodisassemblerready = false;
    doregistersready = false;
@@ -1259,62 +1255,6 @@ void DebugReader::processDebugOutput(const QByteArray& debugOutput)
             break;
         }
    }
-
-
-   // Global checks
-   if (mOutput.indexOf("warning: Source file is more recent than executable.") >= 0)
-       doreceivedsfwarning = true;
-
-   mIndex = 0;
-   AnnotationType nextAnnotation;
-   do {
-       nextAnnotation = getNextAnnotation();
-       switch(nextAnnotation) {
-       case AnnotationType::TValueHistoryValue:
-           handleValueHistoryValue();
-           break;
-       case AnnotationType::TSignal:
-           handleSignal();
-           break;
-       case AnnotationType::TExit:
-           handleExit();
-           break;
-       case AnnotationType::TFrameBegin:
-           handleFrames();
-           break;
-       case AnnotationType::TInfoAsm:
-           handleDisassembly();
-           break;
-       case AnnotationType::TInfoReg:
-           handleRegisters();
-           break;
-       case AnnotationType::TLocal:
-           handleLocals();
-           break;
-       case AnnotationType::TParam:
-           handleParams();
-           break;
-       case AnnotationType::TMemory:
-           handleMemory();
-           break;
-       case AnnotationType::TErrorBegin:
-           handleError();
-           break;
-       case AnnotationType::TDisplayBegin:
-           handleDisplay();
-           break;
-       case AnnotationType::TSource:
-           handleSource();
-           break;
-       default:
-           break;
-       }
-   } while (nextAnnotation != AnnotationType::TEOF);
-
-     // Only update once per update at most
-   //finally
-     //WatchView.Items.EndUpdate;
-   //end;
 
    emit parseFinished();
 }
@@ -1685,23 +1625,23 @@ void DebugReader::handleStack(const QList<GDBMIResultParser::ParseValue> & stack
 
 void DebugReader::handleLocalVariables(const QList<GDBMIResultParser::ParseValue> &variables)
 {
-    mUpdateLocals=true;
+    QStringList locals;
     foreach (const GDBMIResultParser::ParseValue& varValue, variables) {
         GDBMIResultParser::ParseObject varObject = varValue.object();
-        mLocalsValue.append(QString("%1 = %2")
+        locals.append(QString("%1 = %2")
                             .arg(varObject["name"].value(),varObject["value"].value()));
     }
+    emit localsUpdated(locals);
 }
 
 void DebugReader::handleEvaluation(const QString &value)
 {
-    mEvalReady = true;
-    mEvalValue = value;
+    emit evalUpdated(value);
 }
 
 void DebugReader::handleMemory(const QList<GDBMIResultParser::ParseValue> &rows)
 {
-    mUpdateMemory = true;
+    QStringList memory;
     foreach (const GDBMIResultParser::ParseValue& row, rows) {
         GDBMIResultParser::ParseObject rowObject = row.object();
         QList<GDBMIResultParser::ParseValue> data = rowObject["data"].array();
@@ -1709,9 +1649,10 @@ void DebugReader::handleMemory(const QList<GDBMIResultParser::ParseValue> &rows)
         foreach (const GDBMIResultParser::ParseValue& val, data) {
             values.append(val.value());
         }
-        mLocalsValue.append(QString("%1 %2")
+        memory.append(QString("%1 %2")
                             .arg(rowObject["addr"].value(),values.join(" ")));
     }
+    emit memoryUpdated(memory);
 }
 
 QByteArray DebugReader::removeToken(const QByteArray &line)
@@ -1727,6 +1668,11 @@ QByteArray DebugReader::removeToken(const QByteArray &line)
     if (p<line.length())
         return line.mid(p);
     return line;
+}
+
+bool DebugReader::receivedSFWarning() const
+{
+    return mReceivedSFWarning;
 }
 
 const QStringList &DebugReader::memoryValue() const
@@ -1842,7 +1788,7 @@ bool DebugReader::waitStart()
 void DebugReader::run()
 {
     mStop = false;
-    mInferiorPaused = false;
+    mInferiorRunning = false;
     mProcessExited = false;
     bool errorOccurred = false;
     QString cmd = mDebuggerPath;
@@ -2098,7 +2044,7 @@ void BreakpointModel::load(const QString &filename)
     }
 }
 
-void BreakpointModel::updateBreakpointNumber(const QString &filename, int line, int number)
+void BreakpointModel::updateBreakpointNumber(const QString& filename, int line, int number)
 {
     foreach (PBreakpoint bp, mList) {
         if (bp->filename == filename && bp->line == line) {
@@ -2108,7 +2054,7 @@ void BreakpointModel::updateBreakpointNumber(const QString &filename, int line, 
     }
 }
 
-void BreakpointModel::onFileDeleteLines(const QString &filename, int startLine, int count)
+void BreakpointModel::onFileDeleteLines(const QString& filename, int startLine, int count)
 {
     for (int i = mList.count()-1;i>=0;i--){
         PBreakpoint breakpoint = mList[i];
@@ -2124,7 +2070,7 @@ void BreakpointModel::onFileDeleteLines(const QString &filename, int startLine, 
     }
 }
 
-void BreakpointModel::onFileInsertLines(const QString &filename, int startLine, int count)
+void BreakpointModel::onFileInsertLines(const QString& filename, int startLine, int count)
 {
     for (int i = mList.count()-1;i>=0;i--){
         PBreakpoint breakpoint = mList[i];
