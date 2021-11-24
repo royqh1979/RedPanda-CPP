@@ -176,6 +176,7 @@ public:
     void sendCommand(const QString& command, const QString& params,
                      DebugCommandSource source = DebugCommandSource::Other);
     bool commandRunning();
+    bool inferiorRunning();
 
     //breakpoints
     void addBreakpoint(int line, const Editor* editor);
@@ -209,9 +210,6 @@ public:
 //    void notifyWatchVarUpdated(PWatchVar var);
     void notifyBeforeProcessWatchVar();
     void notifyAfterProcessWatchVar();
-
-
-    void updateDebugInfo();
 
     bool useUTF8() const;
     void setUseUTF8(bool useUTF8);
@@ -307,6 +305,8 @@ public:
 
     const QStringList &fullOutput() const;
 
+    bool inferiorRunning() const;
+
 signals:
     void parseStarted();
     void invalidateAllVars();
@@ -365,16 +365,6 @@ private:
 
     QString mSignal;
     bool mUseUTF8;
-
-    // attempt to cut down on Synchronize calls
-    bool dodisassemblerready;
-    bool doregistersready;
-    bool doevalready;
-    bool doupdatecpuwindow;
-    bool doupdateexecution;
-    bool doreceivedsignal;
-    bool doreceivedsfwarning;
-    bool doupdatememoryview;
 
     //
     QList<PDebugCommand> mInferiorStoppedHookCommands;

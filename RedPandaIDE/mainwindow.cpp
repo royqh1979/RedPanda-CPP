@@ -1410,6 +1410,9 @@ void MainWindow::debug()
         updateEditorActions();
         return;
     }
+    mDebugger->sendCommand("-gdb-set","mi-async on");
+    mDebugger->sendCommand("-gdb-set","target-async on");
+    mDebugger->sendCommand("-gdb-show", "mi-async");
 
     updateEditorActions();
 
@@ -3013,13 +3016,13 @@ void MainWindow::disableDebugActions()
 
 void MainWindow::enableDebugActions()
 {
-    ui->actionStep_Into->setEnabled(true);
-    ui->actionStep_Over->setEnabled(true);
-    ui->actionStep_Out->setEnabled(true);
-    ui->actionRun_To_Cursor->setEnabled(true);
-    ui->actionContinue->setEnabled(true);
-    ui->cbEvaluate->setEnabled(true);
-    ui->cbMemoryAddress->setEnabled(true);
+    ui->actionStep_Into->setEnabled(!mDebugger->inferiorRunning());
+    ui->actionStep_Over->setEnabled(!mDebugger->inferiorRunning());
+    ui->actionStep_Out->setEnabled(!mDebugger->inferiorRunning());
+    ui->actionRun_To_Cursor->setEnabled(!mDebugger->inferiorRunning());
+    ui->actionContinue->setEnabled(!mDebugger->inferiorRunning());
+    ui->cbEvaluate->setEnabled(!mDebugger->inferiorRunning());
+    ui->cbMemoryAddress->setEnabled(!mDebugger->inferiorRunning());
 }
 
 void MainWindow::onTodoParseStarted(const QString&)
@@ -4018,8 +4021,6 @@ void MainWindow::on_actionContinue_triggered()
         //WatchView.Items.BeginUpdate();
         mDebugger->invalidateAllVars();
         mDebugger->sendCommand("-exec-continue", "");
-        mDebugger->updateDebugInfo();
-        mDebugger->refreshWatchVars();
     }
 }
 
@@ -5739,6 +5740,14 @@ void MainWindow::on_actionDelete_to_BOL_triggered()
     Editor *e=mEditorList->getEditor();
     if (e) {
         e->deleteToBOL();
+    }
+}
+
+
+void MainWindow::on_actionPause_triggered()
+{
+    if (mDebugger->executing()) {
+        mDebugger->sendCommand("-exec-interrupt","-a");
     }
 }
 

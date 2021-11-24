@@ -51,8 +51,6 @@ bool GDBMIResultParser::parseAsyncResult(const QByteArray &record, QByteArray &r
 
 bool GDBMIResultParser::parseMultiValues(const char* p, ParseObject &multiValue)
 {
-    qDebug()<<"-------";
-    qDebug()<<QByteArray(p);
     while (*p) {
         QByteArray propName;
         ParseValue propValue;
@@ -223,7 +221,6 @@ bool GDBMIResultParser::parseObject(const char *&p, ParseObject &obj)
             QByteArray propName;
             ParseValue propValue;
             bool result = parseNameAndValue(p,propName,propValue);
-            qDebug()<<result<<propName<<QByteArray(p);
             if (result) {
                 obj[propName]=propValue;
             } else {
@@ -254,14 +251,25 @@ bool GDBMIResultParser::parseArray(const char *&p, QList<GDBMIResultParser::Pars
     if (*p!=']') {
         while (*p!=0) {
             skipSpaces(p);
-            ParseValue val;
-            bool result = parseValue(p,val);
-            if (result) {
-                array.append(val);
+            if (*p=='{' || *p=='"' || *p=='[') {
+                ParseValue val;
+                bool result = parseValue(p,val);
+                if (result) {
+                    array.append(val);
+                } else {
+                    return false;
+                }
             } else {
-                return false;
+                QByteArray name;
+                ParseValue val;
+                bool result = parseNameAndValue(p,name,val);
+                if (result) {
+                    array.append(val);
+                } else {
+                    return false;
+                }
             }
-            skipSpaces(p);
+            skipSpaces(p);            
             if (*p==']')
                 break;
             if (*p!=',')

@@ -65,6 +65,7 @@ bool Debugger::start()
     connect(mReader, &DebugReader::changeDebugConsoleLastLine,this,&Debugger::onChangeDebugConsoleLastline);
     connect(mReader, &DebugReader::cmdStarted,pMainWindow, &MainWindow::disableDebugActions);
     connect(mReader, &DebugReader::cmdFinished,pMainWindow, &MainWindow::enableDebugActions);
+    connect(mReader, &DebugReader::inferiorStopped, pMainWindow, &MainWindow::enableDebugActions);
 
     connect(mReader, &DebugReader::breakpointInfoGetted, mBreakpointModel,
             &BreakpointModel::updateBreakpointNumber);
@@ -76,9 +77,13 @@ bool Debugger::start()
     connect(mReader, &DebugReader::evalUpdated,[this](const QString& value) {
         emit evalValueReady(value);
     });
+    connect(mReader, &DebugReader::inferiorContinued,pMainWindow,
+            &MainWindow::removeActiveBreakpoints);
     connect(mReader, &DebugReader::inferiorStopped,pMainWindow,
             &MainWindow::setActiveBreakpoint);
 
+    mReader->registerInferiorStoppedCommand("-stack-list-frames","");
+    mReader->registerInferiorStoppedCommand("-stack-list-variables", "--all-values");
     mReader->start();
     mReader->waitStart();
 
@@ -149,6 +154,14 @@ bool Debugger::commandRunning()
 {
     if (mExecuting && mReader) {
         return mReader->commandRunning();
+    }
+    return false;
+}
+
+bool Debugger::inferiorRunning()
+{
+    if (mExecuting && mReader) {
+        return mReader->inferiorRunning();
     }
     return false;
 }
@@ -373,12 +386,6 @@ void Debugger::notifyAfterProcessWatchVar()
     mWatchModel->endUpdate();
 }
 
-void Debugger::updateDebugInfo()
-{
-    sendCommand("-stack-list-frames", "");
-    sendCommand("-stack-list-variables", "--skip-unavailable --allvalues");
-}
-
 bool Debugger::useUTF8() const
 {
     return mUseUTF8;
@@ -461,11 +468,7 @@ void Debugger::syncFinishedParsing()
         }
     }
 
-    // The program to debug has stopped. Stop the debugger
-    if (mReader->processExited()) {
-        stop();
-        return;
-    }
+
 
     // show command output
     if (pSettings->debugger().showCommandLog() ) {
@@ -478,6 +481,12 @@ void Debugger::syncFinishedParsing()
                 pMainWindow->addDebugOutput(line);
             }
         }
+    }
+
+    // The program to debug has stopped. Stop the debugger
+    if (mReader->processExited()) {
+        stop();
+        return;
     }
 
     // Some part of the CPU form has been updated
@@ -646,7 +655,6 @@ void DebugReader::processExecAsyncRecord(const QByteArray &line)
     GDBMIResultParser parser;
     if (!parser.parseAsyncResult(line,result,multiValues))
         return;
-    qDebug()<<result<<line;
     if (result == "running") {
         mInferiorRunning = true;
         mCurrentAddress=0;
@@ -682,7 +690,6 @@ void DebugReader::processExecAsyncRecord(const QByteArray &line)
             mCurrentLine = frameObj["line"].intValue();
             mCurrentFile = frameObj["fullname"].pathValue();
         }
-        qDebug()<<mCurrentFile<<mCurrentLine;
         if (reason == "signal-received") {
             mSignalReceived = true;
         }
@@ -773,6 +780,8 @@ void DebugReader::processDebugOutput(const QByteArray& debugOutput)
    }
 
    emit parseFinished();
+   mConsoleOutput.clear();
+   mFullOutput.clear();
 }
 
 void DebugReader::runInferiorStoppedHook()
@@ -1126,7 +1135,7 @@ void DebugReader::handleStack(const QList<GDBMIResultParser::ParseValue> & stack
         PTrace trace = std::make_shared<Trace>();
         trace->funcname = frameObject["func"].value();
         trace->filename = frameObject["fullname"].pathValue();
-        trace->line = frameObject["fullname"].intValue();
+        trace->line = frameObject["line"].intValue();
         trace->level = frameObject["level"].intValue(0);
         trace->address = frameObject["addr"].value();
         mDebugger->backtraceModel()->addTrace(trace);
@@ -1178,6 +1187,11 @@ QByteArray DebugReader::removeToken(const QByteArray &line)
     if (p<line.length())
         return line.mid(p);
     return line;
+}
+
+bool DebugReader::inferiorRunning() const
+{
+    return mInferiorRunning;
 }
 
 const QStringList &DebugReader::fullOutput() const
@@ -1308,7 +1322,11 @@ void DebugReader::run()
         readed = mProcess->readAll();
         buffer += readed;
 
-        if ( readed.endsWith("\n")&& outputTerminated(buffer)) {
+        if (!readed.isEmpty()) {
+            qDebug()<<"*******";
+            qDebug()<<readed;
+        }
+        if (readed.endsWith("\n")&& outputTerminated(buffer)) {
             processDebugOutput(buffer);
             buffer.clear();
             mCmdRunning = false;
@@ -1316,7 +1334,7 @@ void DebugReader::run()
         } else if (!mCmdRunning && readed.isEmpty()){
             runNextCmd();
         } else if (readed.isEmpty()){
-            msleep(1);
+            msleep(100);
         }
     }
     if (errorOccurred) {
