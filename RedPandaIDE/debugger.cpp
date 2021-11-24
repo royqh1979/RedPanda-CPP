@@ -71,12 +71,10 @@ bool Debugger::start()
             &BreakpointModel::updateBreakpointNumber);
     connect(mReader, &DebugReader::localsUpdated, pMainWindow,
             &MainWindow::onLocalsReady);
-    connect(mReader, &DebugReader::memoryUpdated,[this](const QStringList& memory) {
-        emit memoryExamineReady(memory);
-    });
-    connect(mReader, &DebugReader::evalUpdated,[this](const QString& value) {
-        emit evalValueReady(value);
-    });
+    connect(mReader, &DebugReader::memoryUpdated,this,
+            &Debugger::updateMemory);
+    connect(mReader, &DebugReader::evalUpdated,this,
+            &Debugger::updateEval);
     connect(mReader, &DebugReader::disassemblyUpdate,this,
             &Debugger::updateDisassembly);
     connect(mReader, &DebugReader::inferiorContinued,pMainWindow,
@@ -554,10 +552,20 @@ void Debugger::syncFinishedParsing()
     }
 }
 
-void Debugger::updateDisassembly(const QStringList &value)
+void Debugger::updateMemory(const QStringList &value)
+{
+    emit memoryExamineReady(value);
+}
+
+void Debugger::updateEval(const QString &value)
+{
+    emit evalValueReady(value);
+}
+
+void Debugger::updateDisassembly(const QString& file, const QString& func, const QStringList &value)
 {
     if (pMainWindow->cpuDialog()) {
-        pMainWindow->cpuDialog()->setDisassembly(value);
+        pMainWindow->cpuDialog()->setDisassembly(file,func,value);
     }
 }
 
@@ -752,6 +760,7 @@ void DebugReader::processExecAsyncRecord(const QByteArray &line)
         mCurrentAddress=0;
         mCurrentFile.clear();
         mCurrentLine=-1;
+        mCurrentFunc.clear();
         emit inferiorContinued();
         return;
     }
@@ -781,6 +790,7 @@ void DebugReader::processExecAsyncRecord(const QByteArray &line)
             mCurrentAddress = frameObj["addr"].hexValue();
             mCurrentLine = frameObj["line"].intValue();
             mCurrentFile = frameObj["fullname"].pathValue();
+            mCurrentFunc = frameObj["func"].value();
         }
         if (reason == "signal-received") {
             mSignalReceived = true;
@@ -800,7 +810,6 @@ void DebugReader::processError(const QByteArray &errorLine)
 
 void DebugReader::processResultRecord(const QByteArray &line)
 {
-    qDebug()<<"process Result:"<<line;
     if (line.startsWith("^exit")) {
         mProcessExited = true;
         return;
@@ -812,26 +821,18 @@ void DebugReader::processResultRecord(const QByteArray &line)
     if (line.startsWith("^done")
             || line.startsWith("^running")) {
         int pos = line.indexOf(',');
-        qDebug()<<pos<<mCurrentCmd.get();
         if (pos>=0) {
             QByteArray result = line.mid(pos+1);
             processResult(result);
         } else if (mCurrentCmd && !(mCurrentCmd->command.startsWith('-'))) {
-            qDebug()<<"yes";
-            qDebug()<<mCurrentCmd->command;
             if (mCurrentCmd->command == "disas") {
-                qDebug()<<"yest0";
-                QStringList disOutput = mConsoleOutput;
-                qDebug()<<"yest1";
-                if (disOutput.length()>=2) {
-                    qDebug()<<"yest2";
+                 QStringList disOutput = mConsoleOutput;
+                if (disOutput.length()>=3) {
                     disOutput.pop_back();
                     disOutput.pop_front();
-                    qDebug()<<"yest4";
+                    disOutput.pop_front();
                 }
-                qDebug()<<"yest5";
-                emit disassemblyUpdate(disOutput);
-                qDebug()<<"yest6";
+                emit disassemblyUpdate(mCurrentFile,mCurrentFunc, disOutput);
             }
         }
         return ;
@@ -861,20 +862,15 @@ void DebugReader::processDebugOutput(const QByteArray& debugOutput)
     mSignalReceived = false;
     mUpdateCPUInfo = false;
     mReceivedSFWarning = false;
-    qDebug()<<"before split";
     QList<QByteArray> lines = splitByteArrayToLines(debugOutput);
-    qDebug()<<"after split";
 
     for (int i=0;i<lines.count();i++) {
          QByteArray line = lines[i];
-         qDebug()<<i<<line;
          mFullOutput.append(line);
-         qDebug()<<"token removed";
          line = removeToken(line);
          if (line.isEmpty()) {
              continue;
          }
-         qDebug()<<"parse line";
          switch (line[0]) {
          case '~': // console stream output
              processConsoleOutput(line);
@@ -892,14 +888,10 @@ void DebugReader::processDebugOutput(const QByteArray& debugOutput)
          case '=': // notify async output
              break;
          }
-         qDebug()<<"parse line finished";
     }
-    qDebug()<<"after parse";
     emit parseFinished();
-    qDebug()<<"after parse sync";
     mConsoleOutput.clear();
     mFullOutput.clear();
-    qDebug()<<"parseFinished";
 }
 
 void DebugReader::runInferiorStoppedHook()
@@ -1098,13 +1090,11 @@ void DebugReader::runNextCmd()
     QMutexLocker locker(&mCmdQueueMutex);
 
     if (mCurrentCmd) {
-        qDebug()<<"--- reset ---";
         mCurrentCmd.reset();
         emit cmdFinished();
     }
     if (mCmdQueue.isEmpty())
         return;
-    qDebug()<<"****************";
 
     PDebugCommand pCmd = mCmdQueue.dequeue();
     mCmdRunning = true;
@@ -1117,7 +1107,6 @@ void DebugReader::runNextCmd()
         s+= ' '+pCmd->params.toLocal8Bit();
     }
     s+= "\n";
-    qDebug()<<s;
     if (mProcess->write(s)<0) {
         emit writeToDebugFailed();
     }
@@ -1444,15 +1433,10 @@ void DebugReader::run()
         buffer += readed;
 
         if (readed.endsWith("\n")&& outputTerminated(buffer)) {
-            qDebug()<<"-----";
             processDebugOutput(buffer);
-            qDebug()<<"---1----";
             buffer.clear();
-            qDebug()<<"---2----";
             mCmdRunning = false;
-            qDebug()<<"---3----";
             runNextCmd();
-            qDebug()<<"---4----";
         } else if (!mCmdRunning && readed.isEmpty()){
             runNextCmd();
         } else if (readed.isEmpty()){

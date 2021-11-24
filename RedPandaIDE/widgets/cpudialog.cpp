@@ -65,14 +65,12 @@ void CPUDialog::updateInfo()
     }
 }
 
-void CPUDialog::setDisassembly(const QStringList &lines)
+void CPUDialog::setDisassembly(const QString& file, const QString& funcName,const QStringList& lines)
 {
-    if (lines.size()>0) {
-        ui->txtFunctionName->setText(lines[0]);
-    }
+    ui->txtFunctionName->setText(QString("%1:%2").arg(file, funcName));
     int activeLine = -1;
     ui->txtCode->lines()->clear();
-    for (int i=1;i<lines.size();i++) {
+    for (int i=0;i<lines.size();i++) {
         QString line = lines[i];
         if (line.startsWith("=>")) {
             activeLine = i;

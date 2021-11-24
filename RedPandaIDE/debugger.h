@@ -241,7 +241,9 @@ private:
 
 private slots:
     void syncFinishedParsing();
-    void updateDisassembly(const QStringList& value);
+    void updateMemory(const QStringList& value);
+    void updateEval(const QString& value);
+    void updateDisassembly(const QString& file, const QString& func,const QStringList& value);
     void onChangeDebugConsoleLastline(const QString& text);
     void clearUpReader();
 
@@ -324,7 +326,7 @@ signals:
     void localsUpdated(const QStringList& localsValue);
     void evalUpdated(const QString& value);
     void memoryUpdated(const QStringList& memoryValues);
-    void disassemblyUpdate(const QStringList& result);
+    void disassemblyUpdate(const QString& filename, const QString& funcName, const QStringList& result);
 private:
     void clearCmdQueue();
 
@@ -379,6 +381,7 @@ private:
 
     int mCurrentLine;
     int mCurrentAddress;
+    QString mCurrentFunc;
     QString mCurrentFile;
     QStringList mConsoleOutput;
     QStringList mFullOutput;

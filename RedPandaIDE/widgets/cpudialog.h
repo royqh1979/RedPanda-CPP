@@ -15,7 +15,8 @@ public:
     explicit CPUDialog(QWidget *parent = nullptr);
     ~CPUDialog();
     void updateInfo();
-    void setDisassembly(const QStringList& lines);
+public slots:
+    void setDisassembly(const QString& file, const QString& funcName,const QStringList& lines);
 signals:
     void closed();
 private:
