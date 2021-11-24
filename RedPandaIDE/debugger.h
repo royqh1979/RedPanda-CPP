@@ -23,8 +23,6 @@ enum class DebugCommandSource {
 struct DebugCommand{
     QString command;
     QString params;
-    bool updateWatch;
-    bool showInConsole;
     DebugCommandSource source;
 };
 
@@ -176,8 +174,6 @@ public:
     // Play/pause
     bool start();
     void sendCommand(const QString& command, const QString& params,
-                     bool updateWatch = true,
-                     bool showInConsole = false,
                      DebugCommandSource source = DebugCommandSource::Other);
     bool commandRunning();
 
@@ -267,14 +263,14 @@ class DebugReader : public QThread
     Q_OBJECT
 public:
     explicit DebugReader(Debugger* debugger, QObject *parent = nullptr);
-    void postCommand(const QString &Command, const QString &Params,
-                     bool UpdateWatch, bool ShowInConsole, DebugCommandSource  Source);
+    void postCommand(const QString &Command, const QString &Params, DebugCommandSource  Source);
+    void registerInferiorStoppedCommand(const QString &Command, const QString &Params);
     QString debuggerPath() const;
     void setDebuggerPath(const QString &debuggerPath);
     void stopDebug();
 
     bool commandRunning();
-    bool waitStart();
+    void waitStart();
 
     bool invalidateAllVars() const;
     void setInvalidateAllVars(bool invalidateAllVars);
@@ -282,8 +278,6 @@ public:
     bool inferiorPaused() const;
 
     bool processExited() const;
-
-    bool updateExecution() const;
 
     bool signalReceived() const;
 
@@ -311,13 +305,13 @@ public:
 
     bool receivedSFWarning() const;
 
+    const QStringList &fullOutput() const;
+
 signals:
     void parseStarted();
     void invalidateAllVars();
     void parseFinished();
     void writeToDebugFailed();
-    void pauseWatchUpdate();
-    void updateWatch();
     void processError(QProcess::ProcessError error);
     void changeDebugConsoleLastLine(const QString& text);
     void cmdStarted();
@@ -325,32 +319,19 @@ signals:
 
     void breakpointInfoGetted(const QString& filename, int line, int number);
     void inferiorContinued();
-    void inferiorStopped(const QString& filename, int line);
+    void inferiorStopped(const QString& filename, int line, bool setFocus);
     void localsUpdated(const QStringList& localsValue);
     void evalUpdated(const QString& value);
     void memoryUpdated(const QStringList& memoryValues);
 private:
     void clearCmdQueue();
-    bool outputTerminated(QByteArray& text);
-    void handleDisassembly();
-    void handleDisplay();
-    void handleError();
-    void handleExit();
-    void handleLocalOutput();
-    void handleLocals();
-    void handleMemory();
-    void handleParams();
-    void handleRegisters();
-    void handleSignal();
-    void handleSource();
-    void handleValueHistoryValue();
-
 
     QString processEvalOutput();
     void processWatchOutput(PWatchVar WatchVar);
     void runNextCmd();
     QStringList tokenize(const QString& s);
 
+    bool outputTerminated(const QByteArray& text);
     void handleBreakpoint(const GDBMIResultParser::ParseObject& breakpoint);
     void handleStack(const QList<GDBMIResultParser::ParseValue> & stack);
     void handleLocalVariables(const QList<GDBMIResultParser::ParseValue> & variables);
@@ -362,6 +343,7 @@ private:
     void processError(const QByteArray& errorLine);
     void processResultRecord(const QByteArray& line);
     void processDebugOutput(const QByteArray& debugOutput);
+    void runInferiorStoppedHook();
     QByteArray removeToken(const QByteArray& line);
 private:
     Debugger *mDebugger;
@@ -369,7 +351,6 @@ private:
     QRecursiveMutex mCmdQueueMutex;
     QSemaphore mStartSemaphore;
     QQueue<PDebugCommand> mCmdQueue;
-    int mUpdateCount;
     bool mInvalidateAllVars;
 
     //fOnInvalidateAllVars: TInvalidateAllVarsEvent;
@@ -396,19 +377,19 @@ private:
     bool doupdatememoryview;
 
     //
+    QList<PDebugCommand> mInferiorStoppedHookCommands;
     bool mInferiorRunning;
     bool mProcessExited;
 
-    bool mUpdateExecution;
     bool mSignalReceived;
     bool mUpdateCPUInfo;
     bool mReceivedSFWarning;
 
+    int mCurrentLine;
+    int mCurrentAddress;
+    QString mCurrentFile;
     QStringList mConsoleOutput;
-    int mBreakPointLine;
-    QString mBreakPointFile;
-
-
+    QStringList mFullOutput;
     bool mStop;
     // QThread interface
 protected:

@@ -2826,7 +2826,7 @@ void Editor::showDebugHint(const QString &s, int line)
     connect(pMainWindow->debugger(), &Debugger::evalValueReady,
                this, &Editor::onTipEvalValueReady);
     mCurrentDebugTipWord = s;
-    pMainWindow->debugger()->sendCommand("print",s,false);
+    pMainWindow->debugger()->sendCommand("print",s);
 }
 
 QString Editor::getErrorHint(const PSyntaxIssue& issue)

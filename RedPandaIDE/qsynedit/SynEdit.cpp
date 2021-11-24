@@ -1819,7 +1819,7 @@ void SynEdit::doDeleteLastChar()
             mLines->deleteAt(mCaretY);
             doLinesDeleted(mCaretY+1, 1);
             if (mOptions.testFlag(eoTrimTrailingSpaces))
-                Temp = TrimRight(Temp);
+                Temp = trimRight(Temp);
             setLineText(lineText() + Temp);
             helper = lineBreak(); //"/r/n"
         }
@@ -2153,7 +2153,7 @@ void SynEdit::insertLine(bool moveCaret)
                                         rightLineText,mOptions.testFlag(eoAutoIndent)
                                         && notInComment);
     if (mOptions.testFlag(eoAutoIndent)) {
-        rightLineText=TrimLeft(rightLineText);
+        rightLineText=trimLeft(rightLineText);
     }
     QString indentSpacesForRightLineText = GetLeftSpacing(indentSpaces,true);
     mLines->insert(mCaretY, indentSpacesForRightLineText+rightLineText);
@@ -2670,7 +2670,7 @@ void SynEdit::doAddChar(QChar AChar)
             if (line.length() < oldCaretX) {
                 int indentSpaces = calcIndentSpaces(oldCaretY,line+":", true);
                 if (indentSpaces != leftSpaces(line)) {
-                    QString newLine = GetLeftSpacing(indentSpaces,true) + TrimLeft(line);
+                    QString newLine = GetLeftSpacing(indentSpaces,true) + trimLeft(line);
                     int i = newLine.length();
                     mLines->putString(oldCaretY-1,newLine);
                     internalSetCaretXY(BufferCoord{i+1,oldCaretY});
@@ -4965,7 +4965,7 @@ void SynEdit::doLinesInserted(int firstLine, int count)
 void SynEdit::properSetLine(int ALine, const QString &ALineText, bool notify)
 {
     if (mOptions.testFlag(eoTrimTrailingSpaces)) {
-        mLines->putString(ALine,TrimRight(ALineText),notify);
+        mLines->putString(ALine,trimRight(ALineText),notify);
     } else {
         mLines->putString(ALine,ALineText,notify);
     }
@@ -5077,7 +5077,7 @@ int SynEdit::insertTextByNormalMode(const QString &Value)
     int startLine = mCaretY;
     sLeftSide = lineText().mid(0, mCaretX - 1);
     if (mCaretX - 1 > sLeftSide.length()) {
-        if (StringIsBlank(sLeftSide))
+        if (stringIsBlank(sLeftSide))
             sLeftSide = GetLeftSpacing(displayX() - 1, true);
         else
             sLeftSide += QString(mCaretX - 1 - sLeftSide.length(),' ');
@@ -5093,7 +5093,7 @@ int SynEdit::insertTextByNormalMode(const QString &Value)
     Start = 0;
     P = GetEOL(Value,Start);
     if (P<Value.length()) {
-        QString s = TrimLeft(Value.mid(0, P - Start));
+        QString s = trimLeft(Value.mid(0, P - Start));
         if (sLeftSide.isEmpty()) {
             sLeftSide = GetLeftSpacing(calcIndentSpaces(caretY,s,true),true);
         }
@@ -5126,7 +5126,7 @@ int SynEdit::insertTextByNormalMode(const QString &Value)
                 Str += sRightSide;
             if (mOptions.testFlag(eoAutoIndent)) {
                 int indentSpaces = calcIndentSpaces(caretY,Str,true);
-                Str = GetLeftSpacing(indentSpaces,true)+TrimLeft(Str);
+                Str = GetLeftSpacing(indentSpaces,true)+trimLeft(Str);
             }
         }
         properSetLine(caretY - 1, Str,false);

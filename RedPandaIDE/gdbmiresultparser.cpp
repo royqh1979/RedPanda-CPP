@@ -2,6 +2,7 @@
 
 #include <QFileInfo>
 #include <QList>
+#include <QDebug>
 
 GDBMIResultParser::GDBMIResultParser()
 {
@@ -38,17 +39,20 @@ bool GDBMIResultParser::parseAsyncResult(const QByteArray &record, QByteArray &r
     if (*p!='*')
         return false;
     p++;
-    const char* start;
+    const char* start=p;
     while (*p && *p!=',')
         p++;
     result = QByteArray(start,p-start);
     if (*p==0)
         return true;
+    p++;
     return parseMultiValues(p,multiValue);
 }
 
 bool GDBMIResultParser::parseMultiValues(const char* p, ParseObject &multiValue)
 {
+    qDebug()<<"-------";
+    qDebug()<<QByteArray(p);
     while (*p) {
         QByteArray propName;
         ParseValue propValue;
@@ -59,11 +63,12 @@ bool GDBMIResultParser::parseMultiValues(const char* p, ParseObject &multiValue)
             return false;
         }
         skipSpaces(p);
+        if (*p==0)
+            break;
         if (*p!=',')
             return false;
         p++; //skip ','
         skipSpaces(p);
-        p++;
     }
     return true;
 }
@@ -81,6 +86,7 @@ bool GDBMIResultParser::parseNameAndValue(const char *&p, QByteArray &name, Pars
     skipSpaces(p);
     if (*p!='=')
         return false;
+    p++;
     return parseValue(p,value);
 }
 
@@ -96,7 +102,7 @@ bool GDBMIResultParser::parseValue(const char *&p, ParseValue &value)
         break;
     }
     case '[': {
-        QList<ParseObject> array;
+        QList<ParseValue> array;
         result = parseArray(p,array);
         value = array;
         break;
@@ -113,8 +119,6 @@ bool GDBMIResultParser::parseValue(const char *&p, ParseValue &value)
     if (!result)
         return false;
     skipSpaces(p);
-    if (*p!=0 && *p!=',')
-        return false;
     return true;
 }
 
@@ -123,18 +127,85 @@ bool GDBMIResultParser::parseStringValue(const char *&p, QByteArray& stringValue
     if (*p!='"')
         return false;
     p++;
-    const char* valueStart = p;
+    stringValue.clear();
     while (*p!=0) {
         if (*p == '"') {
             break;
         } else if (*p=='\\' && *(p+1)!=0) {
-            p+=2;
+            p++;
+            switch (*p) {
+            case '\'':
+                stringValue+=0x27;
+                p++;
+                break;
+            case '"':
+                stringValue+=0x22;
+                p++;
+                break;
+            case '?':
+                stringValue+=0x3f;
+                p++;
+                break;
+            case '\\':
+                stringValue+=0x5c;
+                p++;
+                break;
+            case 'a':
+                stringValue+=0x07;
+                p++;
+                break;
+            case 'b':
+                stringValue+=0x08;
+                p++;
+                break;
+            case 'f':
+                stringValue+=0x0c;
+                p++;
+                break;
+            case 'n':
+                stringValue+=0x0a;
+                p++;
+                break;
+            case 'r':
+                stringValue+=0x0d;
+                p++;
+                break;
+            case 't':
+                stringValue+=0x09;
+                p++;
+                break;
+            case 'v':
+                stringValue+=0x0b;
+                p++;
+                break;
+            case '0':
+            case '1':
+            case '2':
+            case '3':
+            case '4':
+            case '5':
+            case '6':
+            case '7':
+            {
+                int i=0;
+                for (i=0;i<3;i++) {
+                    if (*(p+i)<'0' || *(p+i)>'7')
+                        break;
+                }
+                QByteArray numStr(p,i);
+                bool ok;
+                unsigned char ch = numStr.toInt(&ok,8);
+                stringValue+=ch;
+                p+=i;
+                break;
+            }
+            }
         } else {
+            stringValue+=*p;
             p++;
         }
     }
     if (*p=='"') {
-        stringValue = QByteArray(valueStart,p-valueStart);
         p++; //skip '"'
         return true;
     }
@@ -152,6 +223,7 @@ bool GDBMIResultParser::parseObject(const char *&p, ParseObject &obj)
             QByteArray propName;
             ParseValue propValue;
             bool result = parseNameAndValue(p,propName,propValue);
+            qDebug()<<result<<propName<<QByteArray(p);
             if (result) {
                 obj[propName]=propValue;
             } else {
@@ -160,8 +232,9 @@ bool GDBMIResultParser::parseObject(const char *&p, ParseObject &obj)
             skipSpaces(p);
             if (*p=='}')
                 break;
-            if (*p!=',')
+            if (*p!=',') {
                 return false;
+            }
             p++; //skip ','
             skipSpaces(p);
         }
@@ -260,6 +333,17 @@ int GDBMIResultParser::ParseValue::intValue(int defaultValue) const
         return defaultValue;
 }
 
+int GDBMIResultParser::ParseValue::hexValue(int defaultValue) const
+{
+    Q_ASSERT(mType == ParseValueType::Value);
+    bool ok;
+    int value = QString(mValue).toInt(&ok,16);
+    if (ok)
+        return value;
+    else
+        return defaultValue;
+}
+
 QString GDBMIResultParser::ParseValue::pathValue() const
 {
     Q_ASSERT(mType == ParseValueType::Value);
@@ -269,6 +353,11 @@ QString GDBMIResultParser::ParseValue::pathValue() const
 GDBMIResultParser::ParseValueType GDBMIResultParser::ParseValue::type() const
 {
     return mType;
+}
+
+bool GDBMIResultParser::ParseValue::isValid() const
+{
+    return mType!=ParseValueType::NotAssigned;
 }
 
 GDBMIResultParser::ParseValue::ParseValue():
@@ -294,11 +383,29 @@ GDBMIResultParser::ParseValue::ParseValue(const QList<ParseValue> &array):
 {
 }
 
+GDBMIResultParser::ParseValue::ParseValue(const ParseValue &value):
+    mValue(value.mValue),
+    mArray(value.mArray),
+    mObject(value.mObject),
+    mType(value.mType)
+{
+}
+
+GDBMIResultParser::ParseValue &GDBMIResultParser::ParseValue::operator=(const GDBMIResultParser::ParseValue &value)
+{
+    mType = value.mType;
+    mValue = value.mValue;
+    mArray = value.mArray;
+    mObject = value.mObject;
+    return *this;
+}
+
 GDBMIResultParser::ParseValue &GDBMIResultParser::ParseValue::operator=(const QByteArray &value)
 {
     Q_ASSERT(mType == ParseValueType::NotAssigned);
     mType = ParseValueType::Value;
     mValue = value;
+    return *this;
 }
 
 GDBMIResultParser::ParseValue &GDBMIResultParser::ParseValue::operator=(const ParseObject& object)
@@ -306,6 +413,7 @@ GDBMIResultParser::ParseValue &GDBMIResultParser::ParseValue::operator=(const Pa
     Q_ASSERT(mType == ParseValueType::NotAssigned);
     mType = ParseValueType::Object;
     mObject = object;
+    return *this;
 }
 
 GDBMIResultParser::ParseValue &GDBMIResultParser::ParseValue::operator=(const QList<ParseValue>& array)
@@ -313,19 +421,34 @@ GDBMIResultParser::ParseValue &GDBMIResultParser::ParseValue::operator=(const QL
     Q_ASSERT(mType == ParseValueType::NotAssigned);
     mType = ParseValueType::Array;
     mArray = array;
+    return *this;
 }
 
 
-const GDBMIResultParser::ParseValue GDBMIResultParser::ParseObject::operator[](const QByteArray &name) const
+GDBMIResultParser::ParseObject::ParseObject()
 {
-    if (mProps.contains(name))
-        return mProps[name];
+
+}
+
+GDBMIResultParser::ParseObject::ParseObject(const ParseObject &object):
+    mProps(object.mProps)
+{
+
+}
+
+GDBMIResultParser::ParseValue GDBMIResultParser::ParseObject::operator[](const QByteArray &name) const
+{
+    if (mProps.contains(name)) {
+        ParseValue value(mProps[name]);
+        return value;
+    }
     return ParseValue();
 }
 
 GDBMIResultParser::ParseObject &GDBMIResultParser::ParseObject::operator=(const ParseObject &object)
 {
     mProps = object.mProps;
+    return *this;
 }
 
 GDBMIResultParser::ParseValue &GDBMIResultParser::ParseObject::operator[](const QByteArray &name) {

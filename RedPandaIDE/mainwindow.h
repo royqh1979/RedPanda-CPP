@@ -101,7 +101,6 @@ public:
     QFileSystemWatcher* fileSystemWatcher();
 
     void removeActiveBreakpoints();
-    void setActiveBreakpoint(QString FileName, int Line, bool setFocus=true);
     void updateAppTitle();
     void addDebugOutput(const QString& text);
     void changeDebugOutputLastline(const QString& text);
@@ -193,6 +192,7 @@ public slots:
     void onTodoParseStarted(const QString& filename);
     void onTodoParsing(const QString& filename, int lineNo, int ch, const QString& line);
     void onTodoParseFinished();
+    void setActiveBreakpoint(QString FileName, int Line, bool setFocus);
 
 private:
     void prepareProjectForCompile();

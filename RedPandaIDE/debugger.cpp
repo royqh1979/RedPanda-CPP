@@ -70,9 +70,14 @@ bool Debugger::start()
             &BreakpointModel::updateBreakpointNumber);
     connect(mReader, &DebugReader::localsUpdated, pMainWindow,
             &MainWindow::onLocalsReady);
-    connect(mReader, &DebugReader::memoryUpdated,[this](const QStringList memory) {
+    connect(mReader, &DebugReader::memoryUpdated,[this](const QStringList& memory) {
         emit memoryExamineReady(memory);
     });
+    connect(mReader, &DebugReader::evalUpdated,[this](const QString& value) {
+        emit evalValueReady(value);
+    });
+    connect(mReader, &DebugReader::inferiorStopped,pMainWindow,
+            &MainWindow::setActiveBreakpoint);
 
     mReader->start();
     mReader->waitStart();
@@ -133,10 +138,10 @@ WatchModel *Debugger::watchModel() const
     return mWatchModel;
 }
 
-void Debugger::sendCommand(const QString &command, const QString &params, bool updateWatch, bool showInConsole, DebugCommandSource source)
+void Debugger::sendCommand(const QString &command, const QString &params, DebugCommandSource source)
 {
     if (mExecuting && mReader) {
-        mReader->postCommand(command,params,updateWatch,showInConsole,source);
+        mReader->postCommand(command,params,source);
     }
 }
 
@@ -463,60 +468,41 @@ void Debugger::syncFinishedParsing()
     }
 
     // show command output
-    if (pSettings->debugger().showCommandLog() ||
-            (mReader->mCurrentCmd && mReader->mCurrentCmd->showInConsole)) {
+    if (pSettings->debugger().showCommandLog() ) {
         if (pSettings->debugger().showAnnotations()) {
-            QString strOutput = mReader->mOutput;
-            strOutput.replace(QChar(26),'>');
-            pMainWindow->addDebugOutput(strOutput);
-            pMainWindow->addDebugOutput("");
-            pMainWindow->addDebugOutput("");
-        } else {
-            QStringList strList = textToLines(mReader->mOutput);
-            QStringList outStrList;
-            bool addToLastLine=false;
-            for (int i=0;i<strList.size();i++) {
-                QString strOutput=strList[i];
-                if (strOutput.startsWith("\032\032")) {
-                    addToLastLine = true;
-                } else {
-                    if (addToLastLine && outStrList.size()>0) {
-                        outStrList[outStrList.size()-1]+=strOutput;
-                    } else {
-                        outStrList.append(strOutput);
-                    }
-                    addToLastLine = false;
-                }
+            for (const QString& line:mReader->fullOutput()) {
+                pMainWindow->addDebugOutput(line);
             }
-            for (const QString& line:outStrList) {
+        } else {
+            for (const QString& line:mReader->consoleOutput()) {
                 pMainWindow->addDebugOutput(line);
             }
         }
     }
 
     // Some part of the CPU form has been updated
-    if (pMainWindow->cpuDialog()!=nullptr && !mReader->doreceivedsignal) {
-        if (mReader->doregistersready) {
-            mRegisterModel->update(mReader->mRegisters);
-            mReader->mRegisters.clear();
-            mReader->doregistersready = false;
-        }
+    if (pMainWindow->cpuDialog()!=nullptr && !mReader->signalReceived()) {
+//        if (mReader->doregistersready) {
+//            mRegisterModel->update(mReader->mRegisters);
+//            mReader->mRegisters.clear();
+//            mReader->doregistersready = false;
+//        }
 
-        if (mReader->dodisassemblerready) {
-            pMainWindow->cpuDialog()->setDisassembly(mReader->mDisassembly);
-            mReader->mDisassembly.clear();
-            mReader->dodisassemblerready = false;
-        }
+//        if (mReader->dodisassemblerready) {
+//            pMainWindow->cpuDialog()->setDisassembly(mReader->mDisassembly);
+//            mReader->mDisassembly.clear();
+//            mReader->dodisassemblerready = false;
+//        }
     }
 
-    if (mReader->updateExecution()) {
-        if (mReader->currentCmd() && mReader->currentCmd()->source == DebugCommandSource::Console) {
-            pMainWindow->setActiveBreakpoint(mReader->breakPointFile(), mReader->breakPointLine(),false);
-        } else {
-            pMainWindow->setActiveBreakpoint(mReader->breakPointFile(), mReader->breakPointLine());
-        }
-        refreshWatchVars(); // update variable information
-    }
+//    if (mReader->updateExecution()) {
+//        if (mReader->currentCmd() && mReader->currentCmd()->source == DebugCommandSource::Console) {
+//            pMainWindow->setActiveBreakpoint(mReader->breakPointFile(), mReader->breakPointLine(),false);
+//        } else {
+//            pMainWindow->setActiveBreakpoint(mReader->breakPointFile(), mReader->breakPointLine());
+//        }
+//        refreshWatchVars(); // update variable information
+//    }
 
     if (mReader->signalReceived()) {
 
@@ -588,475 +574,33 @@ DebugReader::DebugReader(Debugger* debugger, QObject *parent) : QThread(parent),
     mInvalidateAllVars = false;
 }
 
-void DebugReader::postCommand(const QString &Command, const QString &Params, bool UpdateWatch, bool ShowInConsole, DebugCommandSource Source)
+void DebugReader::postCommand(const QString &Command, const QString &Params,
+                               DebugCommandSource Source)
 {
     QMutexLocker locker(&mCmdQueueMutex);
-    if (mCmdQueue.isEmpty() && UpdateWatch) {
-        emit pauseWatchUpdate();
-        mUpdateCount++;
-    }
     PDebugCommand pCmd = std::make_shared<DebugCommand>();
     pCmd->command = Command;
     pCmd->params = Params;
-    pCmd->updateWatch = UpdateWatch;
-    pCmd->showInConsole = ShowInConsole;
     pCmd->source = Source;
     mCmdQueue.enqueue(pCmd);
 //    if (!mCmdRunning)
-//        runNextCmd();
+    //        runNextCmd();
+}
+
+void DebugReader::registerInferiorStoppedCommand(const QString &Command, const QString &Params)
+{
+    QMutexLocker locker(&mCmdQueueMutex);
+    PDebugCommand pCmd = std::make_shared<DebugCommand>();
+    pCmd->command = Command;
+    pCmd->params = Params;
+    pCmd->source = DebugCommandSource::Other;
+    mInferiorStoppedHookCommands.append(pCmd);
 }
 
 void DebugReader::clearCmdQueue()
 {
     QMutexLocker locker(&mCmdQueueMutex);
     mCmdQueue.clear();
-
-    if (mUpdateCount>0) {
-        emit updateWatch();
-        mUpdateCount=0;
-    }
-}
-
-bool DebugReader::findAnnotation(AnnotationType annotation)
-{
-    AnnotationType NextAnnotation;
-    do {
-        NextAnnotation = getNextAnnotation();
-        if (NextAnnotation == AnnotationType::TEOF)
-            return false;
-    } while (NextAnnotation != annotation);
-
-    return true;
-}
-
-AnnotationType DebugReader::getAnnotation(const QString &s)
-{
-    if (s == "pre-prompt") {
-        return AnnotationType::TPrePrompt;
-    } else if (s == "prompt") {
-        return AnnotationType::TPrompt;
-    } else if (s == "post-prompt") {
-        AnnotationType result = AnnotationType::TPostPrompt;
-        //hack to catch local
-        if ((mCurrentCmd) && (mCurrentCmd->command == "info locals")) {
-            result = AnnotationType::TLocal;
-        } else if ((mCurrentCmd) && (mCurrentCmd->command == "info args")) {
-            //hack to catch params
-            result = AnnotationType::TParam;
-        } else if ((mCurrentCmd) && (mCurrentCmd->command == "info") && (mCurrentCmd->params=="registers")) {
-            // Hack fix to catch register dump
-            result = AnnotationType::TInfoReg;
-        } else if ((mCurrentCmd) && (mCurrentCmd->command == "disas")) {
-            // Another hack to catch assembler            
-            result = AnnotationType::TInfoAsm;
-        } else if ((mCurrentCmd) && (mCurrentCmd->command.startsWith("x/"))) {
-            result = AnnotationType::TMemory;
-        }
-        return result;
-    } else if (s == "error-begin") {
-        return AnnotationType::TErrorBegin;
-    } else if (s == "error-end") {
-      return AnnotationType::TErrorEnd;
-    } else if (s == "display-begin") {
-      return AnnotationType::TDisplayBegin;
-    } else if (s == "display-expression") {
-      return AnnotationType::TDisplayExpression;
-    } else if (s == "display-end") {
-      return AnnotationType::TDisplayEnd;
-    } else if (s == "frame-source-begin") {
-      return AnnotationType::TFrameSourceBegin;
-    } else if (s == "frame-source-file") {
-      return AnnotationType::TFrameSourceFile;
-    } else if (s == "frame-source-line") {
-      return AnnotationType::TFrameSourceLine;
-    } else if (s == "frame-function-name") {
-      return AnnotationType::TFrameFunctionName;
-    } else if (s == "frame-args") {
-      return AnnotationType::TFrameArgs;
-    } else if (s == "frame-begin") {
-      return AnnotationType::TFrameBegin;
-    } else if (s == "frame-end") {
-      return AnnotationType::TFrameEnd;
-    } else if (s == "frame-where") {
-      return AnnotationType::TFrameWhere;
-    } else if (s == "source") {
-      return AnnotationType::TSource;
-    } else if (s == "exited") {
-      return AnnotationType::TExit;
-    } else if (s == "arg-begin") {
-      return AnnotationType::TArgBegin;
-    } else if (s == "arg-name-end") {
-      return AnnotationType::TArgNameEnd;
-    } else if (s == "arg-value") {
-      return AnnotationType::TArgValue;
-    } else if (s == "arg-end") {
-      return AnnotationType::TArgEnd;
-    } else if (s == "array-section-begin") {
-      return AnnotationType::TArrayBegin;
-    } else if (s == "array-section-end") {
-      return AnnotationType::TArrayEnd;
-    } else if (s == "elt") {
-      return AnnotationType::TElt;
-    } else if (s == "elt-rep") {
-      return AnnotationType::TEltRep;
-    } else if (s == "elt-rep-end") {
-      return AnnotationType::TEltRepEnd;
-    } else if (s == "field-begin") {
-      return AnnotationType::TFieldBegin;
-    } else if (s == "field-name-end") {
-      return AnnotationType::TFieldNameEnd;
-    } else if (s == "field-value") {
-      return AnnotationType::TFieldValue;
-    } else if (s == "field-end") {
-      return AnnotationType::TFieldEnd;
-    } else if (s == "value-history-value") {
-      return AnnotationType::TValueHistoryValue;
-    } else if (s == "value-history-begin") {
-      return AnnotationType::TValueHistoryBegin;
-    } else if (s == "value-history-end") {
-      return AnnotationType::TValueHistoryEnd;
-    } else if (s == "signal") {
-      return AnnotationType::TSignal;
-    } else if (s == "signal-name") {
-      return AnnotationType::TSignalName;
-    } else if (s == "signal-name-end") {
-      return AnnotationType::TSignalNameEnd;
-    } else if (s == "signal-string") {
-      return AnnotationType::TSignalString;
-    } else if (s == "signal-string-end") {
-      return AnnotationType::TSignalStringEnd;
-    } else if (mIndex >= mOutput.length()) {
-      return AnnotationType::TEOF;
-    } else {
-      return AnnotationType::TUnknown;;
-    }
-}
-
-AnnotationType DebugReader::getLastAnnotation(const QByteArray &text)
-{
-    int curpos = text.length()-1;
-    // Walk back until end of #26's
-    while ((curpos >= 0) && (text[curpos] != 26))
-        curpos--;
-
-    curpos++;
-
-    // Tiny rewrite of GetNextWord for special purposes
-    QString s = "";
-    while ((curpos < text.length()) && (text[curpos]>32)) {
-        s = s + text[curpos];
-        curpos++;
-    }
-
-    return getAnnotation(s);
-}
-
-AnnotationType DebugReader::getNextAnnotation()
-{
-    // Skip until end of #26's, i.e. GDB formatted output
-    skipToAnnotation();
-
-    // Get part this line, after #26#26
-    return getAnnotation(getNextWord());
-}
-
-bool DebugReader::outputTerminated(QByteArray &text)
-{
-    QStringList lines = textToLines(QString::fromUtf8(text));
-    foreach (const QString& line,lines) {
-        if (line == "(gdb)")
-            return true;
-    }
-    return false;
-}
-
-QString DebugReader::getNextFilledLine()
-{
-    // Walk up to an enter sequence
-    while (mIndex<mOutput.length() && mOutput[mIndex]!='\r' && mOutput[mIndex]!='\n' && mOutput[mIndex]!=0)
-        mIndex++;
-    // Skip enter sequences (CRLF, CR, LF, etc.)
-    while (mIndex<mOutput.length() && mOutput[mIndex]=='\r' && mOutput[mIndex]=='\n' && mOutput[mIndex]==0)
-        mIndex++;
-    // Return next line
-    return getRemainingLine();
-}
-
-QString DebugReader::getNextLine()
-{
-    // Walk up to an enter sequence
-    while (mIndex<mOutput.length() && mOutput[mIndex]!='\r' && mOutput[mIndex]!='\n' && mOutput[mIndex]!=0)
-        mIndex++;
-
-    // End of output. Exit
-    if (mIndex>=mOutput.length())
-        return "";
-    // Skip ONE enter sequence (CRLF, CR, LF, etc.)
-    if ((mOutput[mIndex] == '\r') && (mIndex+1<mOutput.length()) &&  (mOutput[mIndex+1] == '\n')) // DOS
-        mIndex+=2;
-    else if (mOutput[mIndex] == '\r')  // UNIX
-        mIndex++;
-    else if (mOutput[mIndex] == '\n') // MAC
-        mIndex++;
-    // Return next line
-    return getRemainingLine();
-}
-
-QString DebugReader::getNextWord()
-{
-    QString Result;
-
-    // Called when at a space? Skip over
-    skipSpaces();
-
-    // Skip until a space
-    while (mIndex<mOutput.length() && mOutput[mIndex]>32) {
-        Result += mOutput[mIndex];
-        mIndex++;
-    }
-    return Result;
-}
-
-QString DebugReader::getRemainingLine()
-{
-    QString Result;
-
-    // Return part of line still ahead of us
-    while (mIndex<mOutput.length() && mOutput[mIndex]!='\r' && mOutput[mIndex]!='\n' && mOutput[mIndex]!=0) {
-        Result += mOutput[mIndex];
-        mIndex++;
-    }
-    return Result;
-}
-
-void DebugReader::handleDisassembly()
-{
-    // Get info message
-    QString s = getNextLine();
-
-    // the full function name will be saved at index 0
-    mDisassembly.append(s.mid(36));
-
-    s = getNextLine();
-
-    // Add lines of disassembly
-    while (s != "End of assembler dump.") {
-        if(!s.isEmpty())
-            mDisassembly.append(s);
-        s = getNextLine();
-    }
-
-    dodisassemblerready = true;
-}
-
-void DebugReader::handleDisplay()
-{
-    QString s = getNextLine(); // watch index
-
-    if (!findAnnotation(AnnotationType::TDisplayExpression))
-        return;
-    QString watchName = getNextLine(); // watch name
-    // Find watchVar we're talking about
-    PWatchVar watchVar = mDebugger->findWatchVar(watchName);
-    if (watchVar) {
-        // Advance up to the value
-        if (!findAnnotation(AnnotationType::TDisplayExpression))
-            return;;
-        // Refresh GDB index so we can undisplay this by index
-        watchVar->gdbIndex = s.toInt();
-        mDebugger->notifyBeforeProcessWatchVar();
-        processWatchOutput(watchVar);
-        mDebugger->notifyAfterProcessWatchVar();
-        //mDebugger->notifyWatchVarUpdated(watchVar);
-    }
-}
-
-void DebugReader::handleError()
-{
-    QString s = getNextLine(); // error text
-    if (s.startsWith("Cannot find bounds of current function")) {
-      //We have exited
-      handleExit();
-    } else if (s.startsWith("No symbol \"")) {
-        int head = s.indexOf('\"');
-        int tail = s.lastIndexOf('\"');
-        QString watchName = s.mid(head+1, tail-head-1);
-
-        // Update current..
-        mDebugger->invalidateWatchVar(watchName);
-    }
-}
-
-void DebugReader::handleExit()
-{
-    doprocessexited=true;
-}
-
-void DebugReader::handleLocalOutput()
-{
-    // name(spaces)hexvalue(tab)decimalvalue
-    QString s = getNextFilledLine();
-
-    bool nobreakLine = false;
-    QString line;
-    while (true) {
-        if (!s.startsWith("\032\032")) {
-            s = trimLeft(s);
-            if (s == "No locals.") {
-                return;
-            }
-            if (s == "No arguments.") {
-                return;
-            }
-            //todo: update local view
-            if (nobreakLine && pMainWindow->txtLocals()->document()->lineCount()>0) {
-                line += s;
-//                emit addLocalWithoutLinebreak(s);
-            } else {
-                mLocalsValue.append(line);
-                line = s;
-            }
-            nobreakLine=false;
-        } else {
-            nobreakLine = true;
-        }
-        s = getNextLine();
-        if (!nobreakLine && s.isEmpty())
-            break;
-    }
-    if (!line.isEmpty()) {
-        mLocalsValue.append(line);
-    }
-}
-
-void DebugReader::handleLocals()
-{
-    mLocalsValue.clear();
-    handleLocalOutput();
-}
-
-void DebugReader::handleMemory()
-{
-    doupdatememoryview = true;
-    // name(spaces)hexvalue(tab)decimalvalue
-    mMemoryValue.clear();
-    QString s = getNextFilledLine();
-    bool isAnnotation = false;
-    while (true) {
-        if (!s.startsWith("\032\032")) {
-            s = s.trimmed();
-            if (!s.isEmpty()) {
-                mMemoryValue.append(s);
-            }
-            isAnnotation = false;
-        } else {
-            isAnnotation = true;
-        }
-        s = getNextLine();
-        if (!isAnnotation && s.isEmpty())
-            break;
-    }
-}
-
-void DebugReader::handleParams(){
-    handleLocalOutput();
-    doupdatelocal = true;
-}
-
-void DebugReader::handleRegisters()
-{
-    // name(spaces)hexvalue(tab)decimalvalue
-    QString s = getNextFilledLine();
-
-    while (true) {
-        PRegister reg = std::make_shared<Register>();
-        // Cut name from 1 to first space
-        int x = s.indexOf(' ');
-        reg->name = s.mid(0,x);
-        s.remove(0,x);
-        // Remove spaces
-        s = trimLeft(s);
-
-        // Cut hex value from 1 to first tab
-        x = s.indexOf('\t');
-        if (x<0)
-            x = s.indexOf(' ');
-        reg->hexValue = s.mid(0,x);
-        s.remove(0,x); // delete tab too
-        s = trimLeft(s);
-
-        // Remaining part contains decimal value
-        reg->decValue = s;
-
-        if (!reg->name.trimmed().isEmpty())
-            mRegisters.append(reg);
-        s = getNextLine();
-        if (s.isEmpty())
-            break;
-    }
-
-    doregistersready = true;
-}
-
-void DebugReader::handleSignal()
-{
-    mSignal = getNextFilledLine(); // Program received signal
-
-    if (!findAnnotation(AnnotationType::TSignalName))
-        return;
-
-    mSignal = mSignal + getNextFilledLine(); // signal code
-
-    if (!findAnnotation(AnnotationType::TSignalNameEnd))
-        return;
-
-    mSignal = mSignal + getNextFilledLine(); // comma
-
-    if (!findAnnotation(AnnotationType::TSignalString))
-        return;
-
-    mSignal = mSignal + getNextFilledLine(); // user friendly description
-
-    if (!findAnnotation(AnnotationType::TSignalStringEnd))
-        return;
-
-    mSignal = mSignal + getNextFilledLine(); // period
-
-    doreceivedsignal = true;
-}
-
-void DebugReader::handleSource()
-{
-    // source filename:line:offset:beg/middle/end:addr
-    QString s = trimLeft(getRemainingLine());
-
-    // remove offset, beg/middle/end, address
-    for (int i=0;i<3;i++) {
-        int delimPos = s.lastIndexOf(':');
-        if (delimPos >= 0)
-            s.remove(delimPos,INT_MAX);
-        else
-            return; // Wrong format. Don't bother to continue
-    }
-
-    // get line
-    int delimPos = s.lastIndexOf(':');
-    if (delimPos >= 0) {
-        mBreakPointLine = s.mid(delimPos+1).toInt();
-        s.remove(delimPos, INT_MAX);
-    }
-
-    // get file
-    mBreakPointFile = s;
-
-    doupdateexecution = true;
-    doupdatecpuwindow = true;
-}
-
-void DebugReader::handleValueHistoryValue()
-{
-    mEvalValue = processEvalOutput();
-    doevalready = true;
 }
 
 void DebugReader::processConsoleOutput(const QByteArray& line)
@@ -1068,7 +612,6 @@ void DebugReader::processConsoleOutput(const QByteArray& line)
 
 void DebugReader::processResult(const QByteArray &result)
 {
-    int pos = result.indexOf('=');
     GDBMIResultParser parser;
     GDBMIResultType resultType;
     GDBMIResultParser::ParseValue parseValue;
@@ -1094,35 +637,6 @@ void DebugReader::processResult(const QByteArray &result)
         return;
     }
 
-    QByteArray name = result.mid(0,pos);
-    QByteArray value = result.mid(pos+1);
-    if (name == "bkpt") {
-        // info about breakpoint
-        handleBreakpoint(value);
-    } else if (name == "BreakpointTable") {
-        // info about breakpoint table
-        handleBreakpointTable(value);
-    } else if (name == "stack") {
-        // info about frame stack
-        handleFrameStack(value);
-    } else if (name == "variables") {
-        // info about local variables & arguments
-        handleVariables(value);
-    } else if (name == "frame") {
-        // info about current selected frame
-        handleFrame(value);
-    } else if (name == "asm_insns") {
-        // info about disassembled codes
-        handleDisassembled(value);
-    } else if (name == "value") {
-        handleEval(value);
-    } else if (name=="register-names") {
-        handleRegisterNames(value);
-    } else if (name == "register-values") {
-        handleRegisterValues(value);
-    } else if (name == "memory") {
-        handleMemory(value);
-    }
 }
 
 void DebugReader::processExecAsyncRecord(const QByteArray &line)
@@ -1132,12 +646,16 @@ void DebugReader::processExecAsyncRecord(const QByteArray &line)
     GDBMIResultParser parser;
     if (!parser.parseAsyncResult(line,result,multiValues))
         return;
+    qDebug()<<result<<line;
     if (result == "running") {
         mInferiorRunning = true;
+        mCurrentAddress=0;
+        mCurrentFile.clear();
+        mCurrentLine=-1;
         emit inferiorContinued();
         return;
     }
-    if (result == "*stopped") {
+    if (result == "stopped") {
         mInferiorRunning = false;
         QByteArray reason = multiValues["reason"].value();
         if (reason == "exited") {
@@ -1157,10 +675,22 @@ void DebugReader::processExecAsyncRecord(const QByteArray &line)
             return;
         }
         mUpdateCPUInfo = true;
-        emit inferiorStopped(multiValues["fullname"].pathValue(), multiValues["line"].intValue());
+        GDBMIResultParser::ParseValue frame(multiValues["frame"]);
+        if (frame.isValid()) {
+            GDBMIResultParser::ParseObject frameObj = frame.object();
+            mCurrentAddress = frameObj["addr"].hexValue();
+            mCurrentLine = frameObj["line"].intValue();
+            mCurrentFile = frameObj["fullname"].pathValue();
+        }
+        qDebug()<<mCurrentFile<<mCurrentLine;
         if (reason == "signal-received") {
             mSignalReceived = true;
         }
+        runInferiorStoppedHook();
+        if (mCurrentCmd && mCurrentCmd->source == DebugCommandSource::Console)
+            emit inferiorStopped(mCurrentFile, mCurrentLine,false);
+        else
+            emit inferiorStopped(mCurrentFile, mCurrentLine,true);
     }
 }
 
@@ -1208,31 +738,17 @@ void DebugReader::processDebugOutput(const QByteArray& debugOutput)
     emit parseStarted();
 
     mConsoleOutput.clear();
-    mLocalsValue.clear();
-    mEvalValue.clear();
-    mMemoryValue.clear();
+    mFullOutput.clear();
 
-    mUpdateExecution = false;
     mSignalReceived = false;
     mUpdateCPUInfo = false;
-    mUpdateLocals = false;
-    mEvalReady = false;
     mReceivedSFWarning = false;
-
-   dodisassemblerready = false;
-   doregistersready = false;
-   doevalready = false;
-   doupdatememoryview = false;
-   doupdatelocal = false;
-   doupdateexecution = false;
-   doreceivedsignal = false;
-   doupdatecpuwindow = false;
-   doreceivedsfwarning = false;
 
    QList<QByteArray> lines = splitByteArrayToLines(debugOutput);
 
    for (int i=0;i<lines.count();i++) {
         QByteArray line = lines[i];
+        mFullOutput.append(line);
         line = removeToken(line);
         if (line.isEmpty()) {
             continue;
@@ -1259,47 +775,54 @@ void DebugReader::processDebugOutput(const QByteArray& debugOutput)
    emit parseFinished();
 }
 
+void DebugReader::runInferiorStoppedHook()
+{
+    foreach (const PDebugCommand& cmd, mInferiorStoppedHookCommands) {
+        mCmdQueue.push_front(cmd);
+    }
+}
+
 QString DebugReader::processEvalOutput()
 {
     int indent = 0;
 
     // First line gets special treatment
-    QString result = getNextLine();
+    QString result ="";
     if (result.startsWith('{'))
         indent+=4;
 
     // Collect all data, add formatting in between
-    AnnotationType nextAnnotation;
-    QString nextLine;
-    bool shouldExit = false;
-    do {
-        nextAnnotation = getNextAnnotation();
-        nextLine = getNextLine();
-        switch(nextAnnotation) {
-        // Change indent if { or } is found
-        case AnnotationType::TFieldBegin:
-            result += "\r\n" + QString(4,' ');
-            break;
-        case AnnotationType::TFieldValue:
-            if (nextLine.startsWith('{') && (peekNextAnnotation() !=
-                                             AnnotationType::TArrayBegin))
-                indent+=4;
-            break;
-        case AnnotationType::TFieldEnd:
-            if (nextLine.endsWith('}')) {
-                indent-=4;
-                result += "\r\n" + QString(4,' ');
-            }
-            break;
-        case AnnotationType::TEOF:
-        case AnnotationType::TValueHistoryEnd:
-        case AnnotationType::TDisplayEnd:
-            shouldExit = true;
-        default:
-            break;
-        }
-        result += nextLine;
-    } while (!shouldExit);
+//    AnnotationType nextAnnotation;
+//    QString nextLine;
+//    bool shouldExit = false;
+//    do {
+//        nextAnnotation = getNextAnnotation();
+//        nextLine = getNextLine();
+//        switch(nextAnnotation) {
+//        // Change indent if { or } is found
+//        case AnnotationType::TFieldBegin:
+//            result += "\r\n" + QString(4,' ');
+//            break;
+//        case AnnotationType::TFieldValue:
+//            if (nextLine.startsWith('{') && (peekNextAnnotation() !=
+//                                             AnnotationType::TArrayBegin))
+//                indent+=4;
+//            break;
+//        case AnnotationType::TFieldEnd:
+//            if (nextLine.endsWith('}')) {
+//                indent-=4;
+//                result += "\r\n" + QString(4,' ');
+//            }
+//            break;
+//        case AnnotationType::TEOF:
+//        case AnnotationType::TValueHistoryEnd:
+//        case AnnotationType::TDisplayEnd:
+//            shouldExit = true;
+//        default:
+//            break;
+//        }
+//        result += nextLine;
+//    } while (!shouldExit);
     return result;
 }
 
@@ -1445,34 +968,19 @@ void DebugReader::processWatchOutput(PWatchVar watchVar)
 
 void DebugReader::runNextCmd()
 {
-    bool doUpdate=false;
-
-    auto action = finally([this,&doUpdate] {
-        if (doUpdate) {
-            emit updateWatch();
-        }
-    });
     QMutexLocker locker(&mCmdQueueMutex);
-    if (mCmdQueue.isEmpty()) {
-        if ((mCurrentCmd) && (mCurrentCmd->updateWatch)) {
-            doUpdate=true;
-            if (mUpdateCount>0) {
-                mUpdateCount=0;
-            }
-            emit cmdFinished();
-        }
-        return;
-    }
 
     if (mCurrentCmd) {
         mCurrentCmd.reset();
+        emit cmdFinished();
     }
+    if (mCmdQueue.isEmpty())
+        return;
 
     PDebugCommand pCmd = mCmdQueue.dequeue();
     mCmdRunning = true;
     mCurrentCmd = pCmd;    
-    if (mCurrentCmd->updateWatch)
-        emit cmdStarted();
+    emit cmdStarted();
 
     QByteArray s;
     s=pCmd->command.toLocal8Bit();
@@ -1485,20 +993,12 @@ void DebugReader::runNextCmd()
     }
 
 //  if devDebugger.ShowCommandLog or pCmd^.ShowInConsole then begin
-    if (pSettings->debugger().showCommandLog() || pCmd->showInConsole) {
+    if (pSettings->debugger().showCommandLog() ) {
         //update debug console
-        // if not devDebugger.ShowAnnotations then begin
         if (!pSettings->debugger().showAnnotations()) {
-//            if MainForm.DebugOutput.Lines.Count>0 then begin
-//              MainForm.DebugOutput.Lines.Delete(MainForm.DebugOutput.Lines.Count-1);
-//            end;
             emit changeDebugConsoleLastLine("(gdb)"+pCmd->command + ' ' + pCmd->params);
-//            MainForm.DebugOutput.Lines.Add('(gdb)'+pCmd^.Cmd + ' ' + pCmd^.params);
-//            MainForm.DebugOutput.Lines.Add('');
         } else {
             emit changeDebugConsoleLastLine("(gdb)"+pCmd->command + ' ' + pCmd->params);
-//            MainForm.DebugOutput.Lines.Add(pCmd^.Cmd + ' ' + pCmd^.params);
-//            MainForm.DebugOutput.Lines.Add('');
         }
     }
 }
@@ -1599,6 +1099,16 @@ QStringList DebugReader::tokenize(const QString &s)
     return result;
 }
 
+bool DebugReader::outputTerminated(const QByteArray &text)
+{
+    QStringList lines = textToLines(QString::fromUtf8(text));
+    foreach (const QString& line,lines) {
+        if (line.trimmed() == "(gdb)")
+            return true;
+    }
+    return false;
+}
+
 void DebugReader::handleBreakpoint(const GDBMIResultParser::ParseObject& breakpoint)
 {
     // gdb use system encoding for file path
@@ -1670,39 +1180,14 @@ QByteArray DebugReader::removeToken(const QByteArray &line)
     return line;
 }
 
+const QStringList &DebugReader::fullOutput() const
+{
+    return mFullOutput;
+}
+
 bool DebugReader::receivedSFWarning() const
 {
     return mReceivedSFWarning;
-}
-
-const QStringList &DebugReader::memoryValue() const
-{
-    return mMemoryValue;
-}
-
-bool DebugReader::updateMemory() const
-{
-    return mUpdateMemory;
-}
-
-const QString &DebugReader::evalValue() const
-{
-    return mEvalValue;
-}
-
-bool DebugReader::evalReady() const
-{
-    return mEvalReady;
-}
-
-const QStringList &DebugReader::localsValue() const
-{
-    return mLocalsValue;
-}
-
-bool DebugReader::updateLocals() const
-{
-    return mUpdateLocals;
 }
 
 bool DebugReader::updateCPUInfo() const
@@ -1715,16 +1200,6 @@ const PDebugCommand &DebugReader::currentCmd() const
     return mCurrentCmd;
 }
 
-const QString &DebugReader::breakPointFile() const
-{
-    return mBreakPointFile;
-}
-
-int DebugReader::breakPointLine() const
-{
-    return mBreakPointLine;
-}
-
 const QStringList &DebugReader::consoleOutput() const
 {
     return mConsoleOutput;
@@ -1735,19 +1210,9 @@ bool DebugReader::signalReceived() const
     return mSignalReceived;
 }
 
-bool DebugReader::updateExecution() const
-{
-    return mUpdateExecution;
-}
-
 bool DebugReader::processExited() const
 {
     return mProcessExited;
-}
-
-bool DebugReader::inferiorPaused() const
-{
-    return mInferiorPaused;
 }
 
 bool DebugReader::invalidateAllVars() const
@@ -1780,7 +1245,7 @@ bool DebugReader::commandRunning()
     return !mCmdQueue.isEmpty();
 }
 
-bool DebugReader::waitStart()
+void DebugReader::waitStart()
 {
     mStartSemaphore.acquire(1);
 }
@@ -1843,8 +1308,7 @@ void DebugReader::run()
         readed = mProcess->readAll();
         buffer += readed;
 
-
-        if ( readed.endsWith("\r\n")&& outputTerminated(buffer)) {
+        if ( readed.endsWith("\n")&& outputTerminated(buffer)) {
             processDebugOutput(buffer);
             buffer.clear();
             mCmdRunning = false;

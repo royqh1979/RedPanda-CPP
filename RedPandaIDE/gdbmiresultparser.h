@@ -36,7 +36,9 @@ public:
 
     class ParseObject {
     public:
-        const ParseValue operator[](const QByteArray& name) const;
+        explicit ParseObject();
+        ParseObject(const ParseObject& object);
+        ParseValue operator[](const QByteArray& name) const;
         ParseValue& operator[](const QByteArray& name);
         ParseObject& operator=(const ParseObject& object);
     private:
@@ -49,13 +51,16 @@ public:
         explicit ParseValue(const QByteArray& value);
         explicit ParseValue(const ParseObject &object);
         explicit ParseValue(const QList<ParseValue>& array);
-        ParseValue(const ParseValue&) = delete;
+        ParseValue(const ParseValue& value);
         const QByteArray &value() const;
         const QList<ParseValue> &array() const;
         const ParseObject &object() const;
         int intValue(int defaultValue=-1) const;
+        int hexValue(int defaultValue=-1) const;
+
         QString pathValue() const;
         ParseValueType type() const;
+        bool isValid() const;
         ParseValue& operator=(const QByteArray& value);
         ParseValue& operator=(const ParseObject& object);
         ParseValue& operator=(const QList<ParseValue>& array);

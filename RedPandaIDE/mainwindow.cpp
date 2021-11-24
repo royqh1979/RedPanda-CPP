@@ -1444,11 +1444,9 @@ void MainWindow::debug()
             return;
         case CompileTarget::File:
             mDebugger->sendCommand("-exec-run", "--start");
-            mDebugger->updateDebugInfo();
             break;
         case CompileTarget::Project:
             mDebugger->sendCommand("-exec-run", "--start");
-            mDebugger->updateDebugInfo();
             break;
         default:
             break;
@@ -1459,11 +1457,9 @@ void MainWindow::debug()
             return;
         case CompileTarget::File:
             mDebugger->sendCommand("-exec-run","");
-            mDebugger->updateDebugInfo();
             break;
         case CompileTarget::Project:
             mDebugger->sendCommand("-exec-run","");
-            mDebugger->updateDebugInfo();
             break;
         default:
             break;
@@ -3698,7 +3694,7 @@ void MainWindow::cleanUpCPUDialog()
 void MainWindow::onDebugCommandInput(const QString& command)
 {
     if (mDebugger->executing()) {
-        mDebugger->sendCommand(command,"",true,true);
+        mDebugger->sendCommand(command,"");
     }
 }
 
@@ -3978,8 +3974,6 @@ void MainWindow::on_actionStep_Over_triggered()
         //WatchView.Items.BeginUpdate();
         mDebugger->invalidateAllVars();
         mDebugger->sendCommand("-exec-next", "");
-        mDebugger->updateDebugInfo();
-        mDebugger->refreshWatchVars();
     }
 }
 
@@ -3989,8 +3983,6 @@ void MainWindow::on_actionStep_Into_triggered()
         //WatchView.Items.BeginUpdate();
         mDebugger->invalidateAllVars();
         mDebugger->sendCommand("-exec-step", "");
-        mDebugger->updateDebugInfo();
-        mDebugger->refreshWatchVars();
     }
 
 }
@@ -4001,8 +3993,6 @@ void MainWindow::on_actionStep_Out_triggered()
         //WatchView.Items.BeginUpdate();
         mDebugger->invalidateAllVars();
         mDebugger->sendCommand("-exec-finish", "");
-        mDebugger->updateDebugInfo();
-        mDebugger->refreshWatchVars();
     }
 
 }
@@ -4014,10 +4004,9 @@ void MainWindow::on_actionRun_To_Cursor_triggered()
         if (e!=nullptr) {
             //WatchView.Items.BeginUpdate();
             mDebugger->invalidateAllVars();
-            mDebugger->sendCommand("-break-insert", QString("-t --line %1").arg(e->caretY()));
-            mDebugger->sendCommand("-exec-continue", "");
-            mDebugger->updateDebugInfo();
-            mDebugger->refreshWatchVars();
+            mDebugger->sendCommand("-exec-until", QString("\"%1\":%2")
+                                   .arg(e->filename())
+                                   .arg(e->caretY()));
         }
     }
 
@@ -4079,7 +4068,7 @@ void MainWindow::onDebugEvaluateInput()
     if (!s.isEmpty()) {
         connect(mDebugger, &Debugger::evalValueReady,
                    this, &MainWindow::onEvalValueReady);
-        mDebugger->sendCommand("print",s,false);
+        mDebugger->sendCommand("print",s);
     }
 }
 
@@ -4089,7 +4078,7 @@ void MainWindow::onDebugMemoryAddressInput()
     if (!s.isEmpty()) {
         connect(mDebugger, &Debugger::memoryExamineReady,
                    this, &MainWindow::onMemoryExamineReady);
-        mDebugger->sendCommand("-data-read-memory/64bx",s,false);
+        mDebugger->sendCommand("-data-read-memory/64bx",s);
     }
 }
 
