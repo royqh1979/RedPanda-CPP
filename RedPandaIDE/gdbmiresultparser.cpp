@@ -18,6 +18,9 @@ GDBMIResultParser::GDBMIResultParser()
     mResultTypes.insert("-data-read-memory",GDBMIResultType::Memory);
     mResultTypes.insert("-data-list-register-names",GDBMIResultType::RegisterNames);
     mResultTypes.insert("-data-list-register-values",GDBMIResultType::RegisterValues);
+    mResultTypes.insert("-var-create",GDBMIResultType::CreateVar);
+    mResultTypes.insert("-var-list-children",GDBMIResultType::ListVarChildren);
+    mResultTypes.insert("-var-update",GDBMIResultType::UpdateVarValue);
 }
 
 bool GDBMIResultParser::parse(const QByteArray &record, const QString& command, GDBMIResultType &type, ParseObject& multiValues)
@@ -290,6 +293,8 @@ bool GDBMIResultParser::isNameChar(char ch)
 {
     if (ch=='-')
         return true;
+    if (ch=='_')
+        return true;
     if (ch>='a' && ch<='z')
         return true;
     if (ch>='A' && ch<='Z')
@@ -315,19 +320,16 @@ void GDBMIResultParser::skipSpaces(const char *&p)
 
 const QByteArray &GDBMIResultParser::ParseValue::value() const
 {
-    Q_ASSERT(mType == ParseValueType::Value);
     return mValue;
 }
 
 const QList<::GDBMIResultParser::ParseValue> &GDBMIResultParser::ParseValue::array() const
 {
-    Q_ASSERT(mType == ParseValueType::Array);
     return mArray;
 }
 
 const GDBMIResultParser::ParseObject &GDBMIResultParser::ParseValue::object() const
 {
-    Q_ASSERT(mType == ParseValueType::Object);
     return mObject;
 }
 

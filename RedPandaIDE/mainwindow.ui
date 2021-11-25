@@ -85,7 +85,7 @@
             <enum>QTabWidget::West</enum>
            </property>
            <property name="currentIndex">
-            <number>3</number>
+            <number>1</number>
            </property>
            <property name="usesScrollButtons">
             <bool>true</bool>
@@ -174,7 +174,7 @@
                 <bool>false</bool>
                </property>
                <attribute name="headerDefaultSectionSize">
-                <number>50</number>
+                <number>100</number>
                </attribute>
               </widget>
              </item>

@@ -131,34 +131,51 @@ public:
     QModelIndex index(int row, int column,
                       const QModelIndex &parent = QModelIndex()) const override;
     QModelIndex parent(const QModelIndex &index) const override;
-
+    QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
+    void fetchMore(const QModelIndex &parent) override;
+    bool canFetchMore(const QModelIndex &parent) const override;
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
+    bool hasChildren(const QModelIndex &parent) const override;
     void addWatchVar(PWatchVar watchVar);
     void removeWatchVar(const QString& expression);
     void removeWatchVar(const QModelIndex& index);
     void clear();
     const QList<PWatchVar>& watchVars();
-    PWatchVar findWatchVar(const QString& name);
-    PWatchVar findWatchVar(int gdbIndex);
+    PWatchVar findWatchVar(const QModelIndex& index);
+    PWatchVar findWatchVar(const QString& expr);
+    void resetAllVarInfos();
+    void clearAllVarInfos();
     void beginUpdate();
     void endUpdate();
     void notifyUpdated(PWatchVar var);
     void save(const QString& filename);
     void load(const QString& filename);
+public  slots:
+    void updateVarInfo(const QString& expression,
+                    const QString& name,
+                    int numChild,
+                    const QString& value,
+                    const QString& type,
+                    bool hasMore);
+    void prepareVarChildren(const QString& parentName, int numChild, bool hasMore);
+    void addVarChild(const QString& parentName, const QString& name,
+                     const QString& exp, int numChild,
+                     const QString& value, const QString& type,
+                     bool hasMore);
+    void updateVarValue(const QString& name, const QString& val,
+                         const QString& inScope, bool typeChanged,
+                         const QString& newType, int newNumChildren,
+                         bool hasMore);
+signals:
+    void fetchChildren(const QString& name);
+private:
+    QModelIndex index(PWatchVar var) const;
+    QModelIndex index(WatchVar* pVar) const;
 private:
     QList<PWatchVar> mWatchVars;
+    QHash<QString,PWatchVar> mVarIndex;
     int mUpdateCount;
-
-    // QAbstractItemModel interface
-public:
-    QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
-    void fetchMore(const QModelIndex &parent);
-    bool canFetchMore(const QModelIndex &parent) const;
-
-    // QAbstractItemModel interface
-public:
-    bool hasChildren(const QModelIndex &parent) const;
 };
 
 
@@ -192,25 +209,16 @@ public:
     PBreakpoint breakpointAt(int line, const Editor* editor, int &index);
     void setBreakPointCondition(int index, const QString& condition);
     void sendAllBreakpointsToDebugger();
-    void validateBreakpoint(int line, const QString& filename, int number);
-    void invalidateAllBreakpoints();
 
     //watch vars
-    void addWatchVar(const QString& namein);
-//    void removeWatchVar(nodein: TTreeNode); overload;
-    void renameWatchVar(const QString& oldname, const QString& newname);
+    void addWatchVar(const QString& expression);
+    void modifyWatchVarExpression(const QString& oldExpr, const QString& newExpr);
 
-    void refreshWatchVars();
     void removeWatchVars(bool deleteparent);
     void removeWatchVar(const QModelIndex& index);
-    void invalidateAllVars();
-    void sendAllWatchvarsToDebugger();
-    void invalidateWatchVar(const QString& name);
-    void invalidateWatchVar(PWatchVar var);
-    PWatchVar findWatchVar(const QString& name);
+    void sendAllWatchVarsToDebugger();
+    PWatchVar findWatchVar(const QString& expression);
 //    void notifyWatchVarUpdated(PWatchVar var);
-    void notifyBeforeProcessWatchVar();
-    void notifyAfterProcessWatchVar();
 
     BacktraceModel* backtraceModel();
     BreakpointModel* breakpointModel();
@@ -246,7 +254,8 @@ private slots:
     void clearUpReader();
     void updateRegisterNames(const QStringList& registerNames);
     void updateRegisterValues(const QHash<int,QString>& values);
-
+    void refreshWatchVars();
+    void fetchVarChildren(const QString& varName);
 private:
     bool mExecuting;
     bool mCommandChanged;
@@ -271,9 +280,6 @@ public:
 
     bool commandRunning();
     void waitStart();
-
-    bool invalidateAllVars() const;
-    void setInvalidateAllVars(bool invalidateAllVars);
 
     bool inferiorPaused() const;
 
@@ -332,11 +338,24 @@ signals:
     void disassemblyUpdate(const QString& filename, const QString& funcName, const QStringList& result);
     void registerNamesUpdated(const QStringList& registerNames);
     void registerValuesUpdated(const QHash<int,QString>& values);
+    void varCreated(const QString& expression,
+                    const QString& name,
+                    int numChild,
+                    const QString& value,
+                    const QString& type,
+                    bool hasMore);
+    void prepareVarChildren(const QString& parentName,int numChild, bool hasMore);
+    void addVarChild(const QString& parentName, const QString& name,
+                     const QString& exp, int numChild,
+                     const QString& value, const QString& type,
+                     bool hasMore);
+    void varValueUpdated(const QString& name, const QString& val,
+                         const QString& inScope, bool typeChanged,
+                         const QString& newType, int newNumChildren,
+                         bool hasMore);
 private:
     void clearCmdQueue();
 
-    QString processEvalOutput();
-    void processWatchOutput(PWatchVar WatchVar);
     void runNextCmd();
     QStringList tokenize(const QString& s);
 
@@ -348,6 +367,9 @@ private:
     void handleMemory(const QList<GDBMIResultParser::ParseValue> & rows);
     void handleRegisterNames(const QList<GDBMIResultParser::ParseValue> & names);
     void handleRegisterValue(const QList<GDBMIResultParser::ParseValue> & values);
+    void handleCreateVar(const GDBMIResultParser::ParseObject& multiVars);
+    void handleListVarChildren(const GDBMIResultParser::ParseObject& multiVars);
+    void handleUpdateVarValue(const QList<GDBMIResultParser::ParseValue> &changes);
     void processConsoleOutput(const QByteArray& line);
     void processResult(const QByteArray& result);
     void processExecAsyncRecord(const QByteArray& line);
@@ -362,7 +384,6 @@ private:
     QRecursiveMutex mCmdQueueMutex;
     QSemaphore mStartSemaphore;
     QQueue<PDebugCommand> mCmdQueue;
-    bool mInvalidateAllVars;
 
     //fOnInvalidateAllVars: TInvalidateAllVarsEvent;
     bool mCmdRunning;

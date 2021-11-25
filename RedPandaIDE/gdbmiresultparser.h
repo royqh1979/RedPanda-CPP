@@ -19,8 +19,9 @@ enum class GDBMIResultType {
     RegisterNames,
     RegisterValues,
     Memory,
-    VariableInfo,
-
+    CreateVar,
+    ListVarChildren,
+    UpdateVarValue
 };
 
 

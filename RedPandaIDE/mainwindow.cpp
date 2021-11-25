@@ -1444,10 +1444,6 @@ void MainWindow::debug()
         includeOrSkipDirs(compilerSet->defaultCppIncludeDirs(),true);
     }
 
-    // Add breakpoints and watch vars
-//    for i := 0 to fDebugger.WatchVarList.Count - 1 do
-//      fDebugger.AddWatchVar(i);
-    mDebugger->sendAllWatchvarsToDebugger();
     mDebugger->sendAllBreakpointsToDebugger();
 
     // Run the debugger
@@ -1677,10 +1673,10 @@ void MainWindow::includeOrSkipDirs(const QStringList &dirs, bool skip)
     foreach (QString dir,dirs) {
         QString dirName = dir.replace('\\','/');
         if (skip) {
-//            mDebugger->sendCommand(
-//                        "skip",
-//                        QString("-gfi \"%1/%2\"")
-//                        .arg(dirName,"*.*"));
+            mDebugger->sendCommand(
+                        "skip",
+                        QString("-gfi \"%1/%2\"")
+                        .arg(dirName,"*.*"));
         } else {
             mDebugger->sendCommand(
                         "-environment-directory",
@@ -4001,7 +3997,6 @@ void MainWindow::on_actionStep_Over_triggered()
 {
     if (mDebugger->executing()) {
         //WatchView.Items.BeginUpdate();
-        mDebugger->invalidateAllVars();
         mDebugger->sendCommand("-exec-next", "");
     }
 }
@@ -4010,7 +4005,6 @@ void MainWindow::on_actionStep_Into_triggered()
 {
     if (mDebugger->executing()) {
         //WatchView.Items.BeginUpdate();
-        mDebugger->invalidateAllVars();
         mDebugger->sendCommand("-exec-step", "");
     }
 
@@ -4020,7 +4014,6 @@ void MainWindow::on_actionStep_Out_triggered()
 {
     if (mDebugger->executing()) {
         //WatchView.Items.BeginUpdate();
-        mDebugger->invalidateAllVars();
         mDebugger->sendCommand("-exec-finish", "");
     }
 
@@ -4032,7 +4025,6 @@ void MainWindow::on_actionRun_To_Cursor_triggered()
         Editor *e=mEditorList->getEditor();
         if (e!=nullptr) {
             //WatchView.Items.BeginUpdate();
-            mDebugger->invalidateAllVars();
             mDebugger->sendCommand("-exec-until", QString("\"%1\":%2")
                                    .arg(e->filename())
                                    .arg(e->caretY()));
@@ -4045,7 +4037,6 @@ void MainWindow::on_actionContinue_triggered()
 {
     if (mDebugger->executing()) {
         //WatchView.Items.BeginUpdate();
-        mDebugger->invalidateAllVars();
         mDebugger->sendCommand("-exec-continue", "");
     }
 }

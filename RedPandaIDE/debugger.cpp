@@ -27,6 +27,9 @@ Debugger::Debugger(QObject *parent) : QObject(parent)
     mReader = nullptr;
     mCommandChanged = false;
     mLeftPageIndexBackup = -1;
+
+    connect(mWatchModel, &WatchModel::fetchChildren,
+            this, &Debugger::fetchVarChildren);
 }
 
 bool Debugger::start()
@@ -58,6 +61,7 @@ bool Debugger::start()
                               tr("Can''t find debugger in : \"%1\"").arg(debuggerPath));
         return false;
     }
+    mWatchModel->resetAllVarInfos();
     mReader = new DebugReader(this);
     mReader->setDebuggerPath(debuggerPath);
     connect(mReader, &QThread::finished,this,&Debugger::clearUpReader);
@@ -81,10 +85,20 @@ bool Debugger::start()
             &Debugger::updateRegisterNames);
     connect(mReader, &DebugReader::registerValuesUpdated, this,
             &Debugger::updateRegisterValues);
+    connect(mReader, &DebugReader::varCreated,mWatchModel,
+            &WatchModel::updateVarInfo);
+    connect(mReader, &DebugReader::prepareVarChildren,mWatchModel,
+            &WatchModel::prepareVarChildren);
+    connect(mReader, &DebugReader::addVarChild,mWatchModel,
+            &WatchModel::addVarChild);
+    connect(mReader, &DebugReader::varValueUpdated,mWatchModel,
+            &WatchModel::updateVarValue);
     connect(mReader, &DebugReader::inferiorContinued,pMainWindow,
             &MainWindow::removeActiveBreakpoints);
     connect(mReader, &DebugReader::inferiorStopped,pMainWindow,
             &MainWindow::setActiveBreakpoint);
+    connect(mReader, &DebugReader::inferiorStopped,this,
+            &Debugger::refreshWatchVars);
 
     mReader->registerInferiorStoppedCommand("-stack-list-frames","");
     mReader->registerInferiorStoppedCommand("-stack-list-variables", "--all-values");
@@ -110,10 +124,6 @@ void Debugger::clearUpReader()
         mReader->deleteLater();
         mReader=nullptr;
 
-//        if WatchVarList.Count = 0 then // nothing worth showing, restore view
-//          MainForm.LeftPageControl.ActivePageIndex := LeftPageIndexBackup;
-
-//        // Close CPU window
         if (pMainWindow->cpuDialog()!=nullptr) {
             pMainWindow->cpuDialog()->close();
         }
@@ -129,9 +139,9 @@ void Debugger::clearUpReader()
 
         mBacktraceModel->clear();
 
-        for(PWatchVar var:mWatchModel->watchVars()) {
-            invalidateWatchVar(var);
-        }
+        mWatchModel->clearAllVarInfos();
+
+        mBreakpointModel->invalidateAllBreakpointNumbers();
 
         pMainWindow->updateEditorActions();
     }
@@ -279,37 +289,43 @@ void Debugger::sendAllBreakpointsToDebugger()
     }
 }
 
-void Debugger::addWatchVar(const QString &namein)
+void Debugger::addWatchVar(const QString &expression)
 {
     // Don't allow duplicates...
-    PWatchVar oldVar = mWatchModel->findWatchVar(namein);
+    PWatchVar oldVar = mWatchModel->findWatchVar(expression);
     if (oldVar)
         return;
 
     PWatchVar var = std::make_shared<WatchVar>();
     var->parent= nullptr;
-    var->expression = namein;
+    var->expression = expression;
     var->value = tr("Execute to evaluate");
     var->numChild = 0;
     var->hasMore = false;
+    var->parent = nullptr;
 
     mWatchModel->addWatchVar(var);
     sendWatchCommand(var);
 }
 
-void Debugger::renameWatchVar(const QString &oldname, const QString &newname)
+void Debugger::modifyWatchVarExpression(const QString &oldExpr, const QString &newExpr)
 {
     // check if name already exists;
-    PWatchVar var = mWatchModel->findWatchVar(newname);
+    PWatchVar var = mWatchModel->findWatchVar(newExpr);
     if (var)
         return;
 
-    var = mWatchModel->findWatchVar(oldname);
+    var = mWatchModel->findWatchVar(oldExpr);
     if (var) {
-        var->name = newname;
-        if (mExecuting && var->gdbIndex!=-1)
+        if (mExecuting && !var->expression.isEmpty())
             sendRemoveWatchCommand(var);
-        invalidateWatchVar(var);
+        var->expression = newExpr;
+        var->type.clear();
+        var->value.clear();
+        var->hasMore = false;
+        var->numChild=0;
+        var->name.clear();
+        var->children.clear();
 
         if (mExecuting) {
             sendWatchCommand(var);
@@ -319,9 +335,16 @@ void Debugger::renameWatchVar(const QString &oldname, const QString &newname)
 
 void Debugger::refreshWatchVars()
 {
-    for (PWatchVar var:mWatchModel->watchVars()) {
-        if (var->gdbIndex == -1)
-            sendWatchCommand(var);
+    if (mExecuting) {
+        sendAllWatchVarsToDebugger();
+        sendCommand("-var-update"," --all-values *");
+    }
+}
+
+void Debugger::fetchVarChildren(const QString &varName)
+{
+    if (mExecuting) {
+        sendCommand("-var-list-children",varName);
     }
 }
 
@@ -332,75 +355,37 @@ void Debugger::removeWatchVars(bool deleteparent)
     } else {
         for(const PWatchVar& var:mWatchModel->watchVars()) {
             sendRemoveWatchCommand(var);
-            invalidateWatchVar(var);
         }
+        mWatchModel->clearAllVarInfos();
     }
 }
 
 void Debugger::removeWatchVar(const QModelIndex &index)
 {
+    PWatchVar var = mWatchModel->findWatchVar(index);
+    if (!var)
+        return;
+    sendRemoveWatchCommand(var);
     mWatchModel->removeWatchVar(index);
 }
 
-void Debugger::invalidateAllVars()
-{
-    mReader->setInvalidateAllVars(true);
-}
-
-void Debugger::sendAllWatchvarsToDebugger()
+void Debugger::sendAllWatchVarsToDebugger()
 {
     for (PWatchVar var:mWatchModel->watchVars()) {
-        sendWatchCommand(var);
+        if (var->name.isEmpty())
+            sendWatchCommand(var);
     }
 }
 
-void Debugger::invalidateWatchVar(const QString &name)
+PWatchVar Debugger::findWatchVar(const QString &expression)
 {
-    PWatchVar var = mWatchModel->findWatchVar(name);
-    if (var) {
-        invalidateWatchVar(var);
-    }
-}
-
-void Debugger::invalidateWatchVar(PWatchVar var)
-{
-    var->gdbIndex = -1;
-    QString value;
-    if (mExecuting) {
-        value = tr("Not found in current context");
-    } else {
-        value = tr("Execute to evaluate");
-    }
-    var->value = value;
-    if (var->children.isEmpty()) {
-        mWatchModel->notifyUpdated(var);
-    } else {
-        mWatchModel->beginUpdate();
-        var->children.clear();
-        mWatchModel->endUpdate();
-    }
-}
-
-PWatchVar Debugger::findWatchVar(const QString &name)
-{
-    return mWatchModel->findWatchVar(name);
+    return mWatchModel->findWatchVar(expression);
 }
 
 //void Debugger::notifyWatchVarUpdated(PWatchVar var)
 //{
 //    mWatchModel->notifyUpdated(var);
 //}
-
-void Debugger::notifyBeforeProcessWatchVar()
-{
-    mWatchModel->beginUpdate();
-}
-
-void Debugger::notifyAfterProcessWatchVar()
-{
-    mWatchModel->endUpdate();
-}
-
 BacktraceModel* Debugger::backtraceModel()
 {
     return mBacktraceModel;
@@ -413,7 +398,7 @@ BreakpointModel *Debugger::breakpointModel()
 
 void Debugger::sendWatchCommand(PWatchVar var)
 {
-    sendCommand("-var-carete", QString(" - %1").arg(var->expression));
+    sendCommand("-var-create", var->expression);
 }
 
 void Debugger::sendRemoveWatchCommand(PWatchVar var)
@@ -587,7 +572,6 @@ DebugReader::DebugReader(Debugger* debugger, QObject *parent) : QThread(parent),
     mDebugger = debugger;
     mProcess = nullptr;
     mCmdRunning = false;
-    mInvalidateAllVars = false;
 }
 
 void DebugReader::postCommand(const QString &Command, const QString &Params,
@@ -740,6 +724,15 @@ void DebugReader::processResult(const QByteArray &result)
     case GDBMIResultType::RegisterValues:
         handleRegisterValue(multiValues["register-values"].array());
         return;
+    case GDBMIResultType::CreateVar:
+        handleCreateVar(multiValues);
+        return;
+    case GDBMIResultType::ListVarChildren:
+        handleListVarChildren(multiValues);
+        return;
+    case GDBMIResultType::UpdateVarValue:
+        handleUpdateVarValue(multiValues["changelist"].array());
+        return;
     }
 
 }
@@ -846,12 +839,6 @@ void DebugReader::processDebugOutput(const QByteArray& debugOutput)
     // Only update once per update at most
     //WatchView.Items.BeginUpdate;
 
-    if (mInvalidateAllVars) {
-         //invalidate all vars when there's first output
-         mDebugger->removeWatchVars(false);
-         mInvalidateAllVars = false;
-    }
-
     emit parseStarted();
 
     mConsoleOutput.clear();
@@ -899,190 +886,6 @@ void DebugReader::runInferiorStoppedHook()
     }
 }
 
-QString DebugReader::processEvalOutput()
-{
-    int indent = 0;
-
-    // First line gets special treatment
-    QString result ="";
-    if (result.startsWith('{'))
-        indent+=4;
-
-    // Collect all data, add formatting in between
-//    AnnotationType nextAnnotation;
-//    QString nextLine;
-//    bool shouldExit = false;
-//    do {
-//        nextAnnotation = getNextAnnotation();
-//        nextLine = getNextLine();
-//        switch(nextAnnotation) {
-//        // Change indent if { or } is found
-//        case AnnotationType::TFieldBegin:
-//            result += "\r\n" + QString(4,' ');
-//            break;
-//        case AnnotationType::TFieldValue:
-//            if (nextLine.startsWith('{') && (peekNextAnnotation() !=
-//                                             AnnotationType::TArrayBegin))
-//                indent+=4;
-//            break;
-//        case AnnotationType::TFieldEnd:
-//            if (nextLine.endsWith('}')) {
-//                indent-=4;
-//                result += "\r\n" + QString(4,' ');
-//            }
-//            break;
-//        case AnnotationType::TEOF:
-//        case AnnotationType::TValueHistoryEnd:
-//        case AnnotationType::TDisplayEnd:
-//            shouldExit = true;
-//        default:
-//            break;
-//        }
-//        result += nextLine;
-//    } while (!shouldExit);
-    return result;
-}
-
-void DebugReader::processWatchOutput(PWatchVar watchVar)
-{
-//    // Expand if it was expanded or if it didn't have any children
-//    bool ParentWasExpanded = false;
-
-    // Do not remove root node of watch variable
-
-    watchVar->children.clear();
-    watchVar->value = "";
-    // Process output parsed by ProcessEvalStruct
-    QString s = processEvalOutput();
-
-    QStringList tokens = tokenize(s);
-    PWatchVar parentVar = watchVar;
-    PWatchVar currentVar = watchVar;
-
-    QVector<PWatchVar> varStack;
-    int i=0;
-    while (i<tokens.length()) {
-        QString token = tokens[i];
-        QChar ch = token[0];
-        if (ch =='_' || (ch>='a' && ch<='z')
-                || (ch>='A' && ch<='Z') || (ch>127)) {
-            //is identifier,create new child node
-            PWatchVar newVar = std::make_shared<WatchVar>();
-            newVar->parent = parentVar.get();
-            newVar->name = token;
-            newVar->fullName = parentVar->fullName + '.'+token;
-            newVar->value = "";
-            newVar->gdbIndex = -1;
-            parentVar->children.append(newVar);
-            currentVar = newVar;
-        } else if (ch == '{') {
-            if (parentVar->value.isEmpty()) {
-                parentVar->value = "{";
-            } else {
-                PWatchVar newVar = std::make_shared<WatchVar>();
-                newVar->parent = parentVar.get();
-                if (parentVar) {
-                    int count = parentVar->children.count();
-                    newVar->name = QString("[%1]").arg(count);
-                    newVar->fullName = parentVar->fullName + newVar->name;
-                } else {
-                    newVar->name = QString("[0]");
-                    newVar->fullName = newVar->name;
-                }
-                newVar->value = "{";
-                parentVar->children.append(newVar);
-                varStack.push_back(parentVar);
-                parentVar = newVar;
-            }
-            currentVar = nullptr;
-        } else if (ch == '}') {
-            currentVar = nullptr;
-            PWatchVar newVar = std::make_shared<WatchVar>();
-            newVar->parent = parentVar.get();
-            newVar->name = "";
-            newVar->value = "}";
-            newVar->gdbIndex = -1;
-            parentVar->children.append(newVar);
-            if (!varStack.isEmpty()) {
-                parentVar = varStack.back();
-                varStack.pop_back();
-            }
-        } else if (ch == '=') {
-            // just skip it
-        } else if (ch == ',') {
-                currentVar = nullptr;
-        } else {
-            if (currentVar) {
-                if (currentVar->value.isEmpty()) {
-                    currentVar->value = token;
-                } else {
-                    currentVar->value += " "+token;
-                }
-            } else {
-                PWatchVar newVar = std::make_shared<WatchVar>();
-                newVar->parent = parentVar.get();
-                newVar->name = QString("[%1]")
-                        .arg(parentVar->children.count());
-                newVar->fullName = parentVar->fullName + newVar->name;
-                newVar->value = token;
-                newVar->gdbIndex = -1;
-                parentVar->children.append(newVar);
-            }
-        }
-        i++;
-    }
-    // add placeholder name for variable name so we can format structs using one rule
-
-    // Add children based on indent
-//    QStringList lines = TextToLines(s);
-
-//    for (const QString& line:lines) {
-//        // Format node text. Remove trailing comma
-//        QString nodeText = line.trimmed();
-//        if (nodeText.endsWith(',')) {
-//            nodeText.remove(nodeText.length()-1,1);
-//        }
-
-//        if (nodeText.endsWith('{')) { // new member struct
-//            if (parentVar->text.isEmpty()) { // root node, replace text only
-//                parentVar->text = nodeText;
-//            } else {
-//                PWatchVar newVar = std::make_shared<WatchVar>();
-//                newVar->parent = parentVar.get();
-//                newVar->name = "";
-//                newVar->text = nodeText;
-//                newVar->gdbIndex = -1;
-//                parentVar->children.append(newVar);
-//                varStack.push_back(parentVar);
-//                parentVar = newVar;
-//            }
-//        } else if (nodeText.startsWith('}')) { // end of struct, change parent
-//                PWatchVar newVar = std::make_shared<WatchVar>();
-//                newVar->parent = parentVar.get();
-//                newVar->name = "";
-//                newVar->text = "}";
-//                newVar->gdbIndex = -1;
-//                parentVar->children.append(newVar);
-//                if (!varStack.isEmpty()) {
-//                    parentVar = varStack.back();
-//                    varStack.pop_back();
-//                }
-//        } else { // next parent member/child
-//            if (parentVar->text.isEmpty()) { // root node, replace text only
-//                parentVar->text = nodeText;
-//            } else {
-//                PWatchVar newVar = std::make_shared<WatchVar>();
-//                newVar->parent = parentVar.get();
-//                newVar->name = "";
-//                newVar->text = nodeText;
-//                newVar->gdbIndex = -1;
-//                parentVar->children.append(newVar);
-//            }
-//        }
-//    }
-        // TODO: remember expansion state
-}
-
 void DebugReader::runNextCmd()
 {
     QMutexLocker locker(&mCmdQueueMutex);
@@ -1100,10 +903,19 @@ void DebugReader::runNextCmd()
     emit cmdStarted();
 
     QByteArray s;
+    QByteArray params;
     s=pCmd->command.toLocal8Bit();
     if (!pCmd->params.isEmpty()) {
-        s+= ' '+pCmd->params.toLocal8Bit();
+        params = pCmd->params.toLocal8Bit();
     }
+    if (pCmd->command == "-var-create") {
+        //hack for variable creation,to easy remember var expression
+        params = " - @ "+params;
+    } else if (pCmd->command == "-var-list-children") {
+        //hack for list variable children,to easy remember var expression
+        params = " --all-values " + params;
+    }
+    s+=" "+params;
     s+= "\n";
     if (mProcess->write(s)<0) {
         emit writeToDebugFailed();
@@ -1113,9 +925,9 @@ void DebugReader::runNextCmd()
     if (pSettings->debugger().enableDebugConsole() ) {
         //update debug console
         if (!pSettings->debugger().showDetailLog()) {
-            emit changeDebugConsoleLastLine(pCmd->command + ' ' + pCmd->params);
+            emit changeDebugConsoleLastLine(pCmd->command + ' ' + params);
         } else {
-            emit changeDebugConsoleLastLine(pCmd->command + ' ' + pCmd->params);
+            emit changeDebugConsoleLastLine(pCmd->command + ' ' + params);
         }
     }
 }
@@ -1309,6 +1121,62 @@ void DebugReader::handleRegisterValue(const QList<GDBMIResultParser::ParseValue>
     emit registerValuesUpdated(result);
 }
 
+void DebugReader::handleCreateVar(const GDBMIResultParser::ParseObject &multiVars)
+{
+    if (!mCurrentCmd)
+        return;
+    QString expression = mCurrentCmd->params;
+    QString name = multiVars["name"].value();
+    int numChild = multiVars["numchild"].intValue(0);
+    QString value = multiVars["value"].value();
+    QString type = multiVars["type"].value();
+    bool hasMore = multiVars["has_more"].value() != "0";
+    emit varCreated(expression,name,numChild,value,type,hasMore);
+}
+
+void DebugReader::handleListVarChildren(const GDBMIResultParser::ParseObject &multiVars)
+{
+    if (!mCurrentCmd)
+        return;
+    QString parentName = mCurrentCmd->params;
+    int parentNumChild = multiVars["numchild"].intValue(0);
+    QList<GDBMIResultParser::ParseValue> children = multiVars["children"].array();
+    bool hasMore = multiVars["has_more"].value()!="0";
+    emit prepareVarChildren(parentName,parentNumChild,hasMore);
+    foreach(const GDBMIResultParser::ParseValue& child, children) {
+        GDBMIResultParser::ParseObject childObj = child.object();
+        QString name = childObj["name"].value();
+        QString exp = childObj["exp"].value();
+        int numChild = childObj["numchild"].intValue(0);
+        QString value = childObj["value"].value();
+        QString type = childObj["type"].value();
+        bool hasMore = childObj["has_more"].value() != "0";
+        emit addVarChild(parentName,
+                         name,
+                         exp,
+                         numChild,
+                         value,
+                         type,
+                         hasMore);
+    }
+}
+
+void DebugReader::handleUpdateVarValue(const QList<GDBMIResultParser::ParseValue> &changes)
+{
+    foreach (const GDBMIResultParser::ParseValue& value, changes) {
+        GDBMIResultParser::ParseObject obj = value.object();
+        QString name = obj["name"].value();
+        QString val = obj["value"].value();
+        QString inScope = obj["in_scope"].value();
+        bool typeChanged = (obj["type_changed"].value()=="true");
+        QString newType = obj["new_type"].value();
+        int newNumChildren = obj["new_num_children"].intValue(-1);
+        bool hasMore = (obj["has_more"].value() == "1");
+        emit varValueUpdated(name,val,inScope,typeChanged,newType,newNumChildren,
+                             hasMore);
+    }
+}
+
 QByteArray DebugReader::removeToken(const QByteArray &line)
 {
     int p=0;
@@ -1372,16 +1240,6 @@ bool DebugReader::signalReceived() const
 bool DebugReader::processExited() const
 {
     return mProcessExited;
-}
-
-bool DebugReader::invalidateAllVars() const
-{
-    return mInvalidateAllVars;
-}
-
-void DebugReader::setInvalidateAllVars(bool invalidateAllVars)
-{
-    mInvalidateAllVars = invalidateAllVars;
 }
 
 QString DebugReader::debuggerPath() const
@@ -1810,7 +1668,6 @@ QVariant WatchModel::data(const QModelIndex &index, int role) const
     WatchVar* item = static_cast<WatchVar*>(index.internalPointer());
     switch (role) {
     case Qt::DisplayRole:
-        //qDebug()<<"item->text:"<<item->text;
         switch(index.column()) {
         case 0:
             return item->expression;
@@ -1827,7 +1684,6 @@ QModelIndex WatchModel::index(int row, int column, const QModelIndex &parent) co
 {
     if (!hasIndex(row,column,parent))
         return QModelIndex();
-
     WatchVar* parentItem;
     PWatchVar pChild;
     if (!parent.isValid()) {
@@ -1897,9 +1753,9 @@ void WatchModel::addWatchVar(PWatchVar watchVar)
             return;
         }
     }
-    this->beginInsertRows(QModelIndex(),mWatchVars.size(),mWatchVars.size());
+    beginInsertRows(QModelIndex(),mWatchVars.count(),mWatchVars.count());
     mWatchVars.append(watchVar);
-    this->endInsertRows();
+    endInsertRows();
 }
 
 void WatchModel::removeWatchVar(const QString &express)
@@ -1909,6 +1765,8 @@ void WatchModel::removeWatchVar(const QString &express)
         if (express == var->expression) {
             this->beginResetModel();
             //this->beginRemoveRows(QModelIndex(),i,i);
+            if (mVarIndex.contains(var->name))
+                mVarIndex.remove(var->name);
             mWatchVars.removeAt(i);
             //this->endRemoveRows();
             this->endResetModel();
@@ -1920,6 +1778,9 @@ void WatchModel::removeWatchVar(const QModelIndex &index)
 {
     int r=index.row();
     this->beginRemoveRows(QModelIndex(),r,r);
+    PWatchVar var = mWatchVars[r];
+    if (mVarIndex.contains(var->name))
+        mVarIndex.remove(var->name);
     mWatchVars.removeAt(r);
     this->endRemoveRows();
 }
@@ -1936,24 +1797,124 @@ const QList<PWatchVar> &WatchModel::watchVars()
     return mWatchVars;
 }
 
-PWatchVar WatchModel::findWatchVar(const QString &name)
+PWatchVar WatchModel::findWatchVar(const QModelIndex &index)
+{
+    if (!index.isValid())
+        return PWatchVar();
+    int r=index.row();
+    return mWatchVars[r];
+}
+
+PWatchVar WatchModel::findWatchVar(const QString &expr)
 {
     for (PWatchVar var:mWatchVars) {
-        if (name == var->name) {
+        if (expr == var->expression) {
             return var;
         }
     }
     return PWatchVar();
 }
 
-PWatchVar WatchModel::findWatchVar(int gdbIndex)
+void WatchModel::resetAllVarInfos()
 {
-    for (PWatchVar var:mWatchVars) {
-        if (gdbIndex == var->gdbIndex) {
-            return var;
-        }
+    beginResetModel();
+    foreach (PWatchVar var, mWatchVars) {
+        var->name.clear();
+        var->value = tr("Not Valid");
+        var->numChild = 0;
+        var->hasMore = false;
+        var->type.clear();
+        var->children.clear();
     }
-    return PWatchVar();
+    mVarIndex.clear();
+    endResetModel();
+}
+
+void WatchModel::updateVarInfo(const QString &expression, const QString &name, int numChild, const QString &value, const QString &type, bool hasMore)
+{
+    PWatchVar var = findWatchVar(expression);
+    if (!var)
+        return;
+    var->name = name;
+    var->value = value;
+    var->numChild = numChild;
+    var->hasMore = hasMore;
+    var->type = type;
+    mVarIndex.insert(name,var);
+    QModelIndex idx = index(var);
+    if (!idx.isValid())
+        return;
+    emit dataChanged(idx,createIndex(idx.row(),2,var.get()));
+}
+
+void WatchModel::prepareVarChildren(const QString &parentName, int numChild, bool hasMore)
+{
+    PWatchVar var = mVarIndex.value(parentName,PWatchVar());
+    if (var) {
+        var->numChild = numChild;
+        var->hasMore = hasMore;
+    }
+}
+
+void WatchModel::addVarChild(const QString &parentName, const QString &name,
+                             const QString &exp, int numChild, const QString &value,
+                             const QString &type, bool hasMore)
+{
+    PWatchVar var = mVarIndex.value(parentName,PWatchVar());
+    if (!var)
+        return;
+    beginInsertRows(index(var),var->children.count(),var->children.count());
+    PWatchVar child = std::make_shared<WatchVar>();
+    child->name = name;
+    child->expression = exp;
+    child->numChild = numChild;
+    child->value = value;
+    child->type = type;
+    child->hasMore = hasMore;
+    child->parent = var.get();
+    var->children.append(child);
+    endInsertRows();
+    mVarIndex.insert(name,child);
+}
+
+void WatchModel::updateVarValue(const QString &name, const QString &val, const QString &inScope, bool typeChanged, const QString &newType, int newNumChildren, bool hasMore)
+{
+    PWatchVar var = mVarIndex.value(name,PWatchVar());
+    if (!var)
+        return;
+    if (inScope == "true") {
+        var->value = val;
+    } else{
+        var->value = tr("Not Valid");
+    }
+    if (typeChanged) {
+        var->type = newType;
+    }
+    QModelIndex idx = index(var);
+    if (newNumChildren>=0
+            && var->numChild!=newNumChildren) {
+        beginRemoveRows(idx,0,var->children.count());
+        var->children.clear();
+        endRemoveRows();
+        var->numChild = newNumChildren;
+    }
+    var->hasMore = hasMore;
+    emit dataChanged(idx,createIndex(idx.row(),2,var.get()));
+}
+
+void WatchModel::clearAllVarInfos()
+{
+    beginResetModel();
+    foreach (PWatchVar var, mWatchVars) {
+        var->name.clear();
+        var->value = tr("Execute to evaluate");
+        var->numChild = 0;
+        var->hasMore = false;
+        var->type.clear();
+        var->children.clear();
+    }
+    mVarIndex.clear();
+    endResetModel();
 }
 
 void WatchModel::beginUpdate()
@@ -2036,12 +1997,48 @@ void WatchModel::load(const QString &filename)
             var->value = tr("Execute to evaluate");
             var->numChild = 0;
             var->hasMore=false;
+            var->parent = nullptr;
 
             addWatchVar(var);
         }
     } else {
         throw FileError(tr("Can't open file '%1' for read.")
                         .arg(filename));
+    }
+}
+
+QModelIndex WatchModel::index(PWatchVar var) const
+{
+    if (!var)
+        return QModelIndex();
+    return index(var.get());
+}
+
+QModelIndex WatchModel::index(WatchVar* pVar) const {
+    if (pVar==nullptr)
+        return QModelIndex();
+    if (pVar->parent) {
+        int row=-1;
+        for (int i=0;i<pVar->parent->children.count();i++) {
+            if (pVar->parent->children[i].get() == pVar) {
+                row = i;
+                break;
+            }
+        }
+        if (row<0)
+            return QModelIndex();
+        return createIndex(row,0,pVar);
+    } else {
+        int row=-1;
+        for (int i=0;i<mWatchVars.count();i++) {
+            if (mWatchVars[i].get() == pVar) {
+                row = i;
+                break;
+            }
+        }
+        if (row<0)
+            return QModelIndex();
+        return createIndex(row,0,pVar);
     }
 }
 
@@ -2063,7 +2060,13 @@ QVariant WatchModel::headerData(int section, Qt::Orientation orientation, int ro
 
 void WatchModel::fetchMore(const QModelIndex &parent)
 {
-    //todo
+    if (!parent.isValid()) {
+        return;
+    }
+    WatchVar* item = static_cast<WatchVar*>(parent.internalPointer());
+    item->hasMore = false;
+    item->numChild = item->children.count();
+    emit fetchChildren(item->name);
 }
 
 bool WatchModel::canFetchMore(const QModelIndex &parent) const
@@ -2072,13 +2075,13 @@ bool WatchModel::canFetchMore(const QModelIndex &parent) const
         return false;
     }
     WatchVar* item = static_cast<WatchVar*>(parent.internalPointer());
-    return item->numChild>item->children.count();
+    return item->numChild>item->children.count() || item->hasMore;
 }
 
 bool WatchModel::hasChildren(const QModelIndex &parent) const
 {
     if (!parent.isValid()) {
-        return false;
+        return true;
     }
     WatchVar* item = static_cast<WatchVar*>(parent.internalPointer());
     return item->numChild>0;
