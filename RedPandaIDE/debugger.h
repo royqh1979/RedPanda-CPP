@@ -205,9 +205,6 @@ public:
     void notifyBeforeProcessWatchVar();
     void notifyAfterProcessWatchVar();
 
-    bool useUTF8() const;
-    void setUseUTF8(bool useUTF8);
-
     BacktraceModel* backtraceModel();
     BreakpointModel* breakpointModel();
     bool executing() const;
@@ -247,7 +244,6 @@ private:
     bool mExecuting;
     bool mCommandChanged;
     BreakpointModel *mBreakpointModel;
-    bool mUseUTF8;
     BacktraceModel *mBacktraceModel;
     WatchModel *mWatchModel;
     RegisterModel *mRegisterModel;

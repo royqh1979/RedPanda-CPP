@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>677</width>
+    <width>704</width>
     <height>563</height>
    </rect>
   </property>
@@ -36,7 +36,7 @@
     </widget>
    </item>
    <item>
-    <widget class="QGroupBox" name="groupBox">
+    <widget class="QGroupBox" name="grpEnableDebugConsole">
      <property name="title">
       <string>Debug Console</string>
      </property>
@@ -143,16 +143,9 @@
        </widget>
       </item>
       <item>
-       <widget class="QCheckBox" name="chkShowLog">
+       <widget class="QCheckBox" name="chkShowDetailLog">
         <property name="text">
-         <string>Show debug logs in the debug console</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QCheckBox" name="chkShowFullAnnotation">
-        <property name="text">
-         <string>Show full gdb annotations</string>
+         <string>Show detail debug logs</string>
         </property>
        </widget>
       </item>
@@ -180,6 +173,13 @@
        </widget>
       </item>
      </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="chkShowCPUWhenSignaled">
+     <property name="text">
+      <string>Show CPU Window when signal received</string>
+     </property>
     </widget>
    </item>
    <item>

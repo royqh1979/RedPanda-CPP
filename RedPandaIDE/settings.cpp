@@ -2924,24 +2924,24 @@ Settings::Debugger::Debugger(Settings *settings):_Base(settings, SETTING_DEBUGGE
 
 }
 
-bool Settings::Debugger::showCommandLog() const
+bool Settings::Debugger::enableDebugConsole() const
 {
-    return mShowCommandLog;
+    return mEnableDebugConsole;
 }
 
-void Settings::Debugger::setShowCommandLog(bool showCommandLog)
+void Settings::Debugger::setEnableDebugConsole(bool showCommandLog)
 {
-    mShowCommandLog = showCommandLog;
+    mEnableDebugConsole = showCommandLog;
 }
 
-bool Settings::Debugger::showAnnotations() const
+bool Settings::Debugger::showDetailLog() const
 {
-    return mShowAnnotations;
+    return mShowDetailLog;
 }
 
-void Settings::Debugger::setShowAnnotations(bool showAnnotations)
+void Settings::Debugger::setShowDetailLog(bool showAnnotations)
 {
-    mShowAnnotations = showAnnotations;
+    mShowDetailLog = showAnnotations;
 }
 
 QString Settings::Debugger::fontName() const
@@ -3004,6 +3004,16 @@ void Settings::Debugger::setAutosaveWatches(bool newAutosaveWatches)
     mAutosaveWatches = newAutosaveWatches;
 }
 
+bool Settings::Debugger::openCPUInfoWhenSignaled() const
+{
+    return mOpenCPUInfoWhenSignaled;
+}
+
+void Settings::Debugger::setOpenCPUInfoWhenSignaled(bool newOpenCPUInfoWhenSignaled)
+{
+    mOpenCPUInfoWhenSignaled = newOpenCPUInfoWhenSignaled;
+}
+
 bool Settings::Debugger::autosaveBreakpoints() const
 {
     return mAutosaveBreakpoints;
@@ -3046,8 +3056,8 @@ void Settings::Debugger::setOnlyShowMono(bool onlyShowMono)
 
 void Settings::Debugger::doSave()
 {
-    saveValue("show_command_log", mShowCommandLog);
-    saveValue("show_annotations", mShowAnnotations);
+    saveValue("enable_debug_console", mEnableDebugConsole);
+    saveValue("show_detail_log", mShowDetailLog);
     saveValue("font_name",mFontName);
     saveValue("only_show_mono",mOnlyShowMono);
     saveValue("font_size",mFontSize);
@@ -3058,13 +3068,14 @@ void Settings::Debugger::doSave()
     saveValue("skip_custom_lib", mSkipCustomLibraries);
     saveValue("autosave_breakpoints",mAutosaveBreakpoints);
     saveValue("autosave_watches",mAutosaveWatches);
+    saveValue("open_cpu_info_when_signaled",mOpenCPUInfoWhenSignaled);
 
 }
 
 void Settings::Debugger::doLoad()
 {
-    mShowCommandLog = boolValue("show_command_log",true);
-    mShowAnnotations = boolValue("show_annotations",false);
+    mEnableDebugConsole = boolValue("enable_debug_console",true);
+    mShowDetailLog = boolValue("show_detail_log",false);
     mFontName = stringValue("font_name","Consolas");
     mOnlyShowMono = boolValue("only_show_mono",true);
     mFontSize = intValue("font_size",12);
@@ -3075,6 +3086,7 @@ void Settings::Debugger::doLoad()
     mSkipCustomLibraries = boolValue("skip_custom_lib",false);
     mAutosaveBreakpoints = boolValue("autosave_breakpoints",true);
     mAutosaveWatches = boolValue("autosave_watches",true);
+    mOpenCPUInfoWhenSignaled = boolValue("open_cpu_info_when_signaled",true);
 }
 
 Settings::History::History(Settings *settings):_Base(settings, SETTING_HISTORY)

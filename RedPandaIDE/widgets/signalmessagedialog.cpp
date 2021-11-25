@@ -22,3 +22,8 @@ bool SignalMessageDialog::openCPUInfo()
 {
     return ui->chkOpenCPUInfo->isChecked();
 }
+
+void SignalMessageDialog::setOpenCPUInfo(bool value)
+{
+    ui->chkOpenCPUInfo->setChecked(value);
+}

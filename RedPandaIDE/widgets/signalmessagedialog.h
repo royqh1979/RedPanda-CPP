@@ -16,6 +16,7 @@ public:
     ~SignalMessageDialog();
     void setMessage(const QString& message);
     bool openCPUInfo();
+    void setOpenCPUInfo(bool value);
 
 private:
     Ui::SignalMessageDialog *ui;

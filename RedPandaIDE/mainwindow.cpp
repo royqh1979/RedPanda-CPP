@@ -49,6 +49,14 @@
 
 #include <widgets/searchdialog.h>
 
+static int findTabIndex(QTabWidget* tabWidget , QWidget* w) {
+    for (int i=0;i<tabWidget->count();i++) {
+        if (w==tabWidget->widget(i))
+            return i;
+    }
+    return -1;
+}
+
 MainWindow* pMainWindow;
 
 MainWindow::MainWindow(QWidget *parent)
@@ -1056,6 +1064,18 @@ void MainWindow::updateDebuggerSettings()
     ui->debugConsole->setFont(font);
     ui->txtMemoryView->setFont(font);
     ui->txtLocals->setFont(font);
+
+    int idx = findTabIndex(ui->debugViews,ui->tabDebugConsole);
+    if (idx>=0) {
+        if (!pSettings->debugger().enableDebugConsole()) {
+            ui->debugViews->removeTab(idx);
+        }
+    } else {
+        if (pSettings->debugger().enableDebugConsole()) {
+            ui->debugViews->insertTab(0, ui->tabDebugConsole, tr("Debug Console"));
+        }
+    }
+
 }
 
 void MainWindow::checkSyntaxInBack(Editor *e)
@@ -1398,7 +1418,6 @@ void MainWindow::debug()
 
                 prepareDebugger();
 
-                mDebugger->setUseUTF8(e->fileEncoding() == ENCODING_UTF8 || e->fileEncoding() == ENCODING_UTF8_BOM);
                 if (!mDebugger->start())
                     return;
                 mDebugger->sendCommand("-file-exec-and-symbols", QString("\"%1\"").arg(debugFile.filePath().replace('\\','/')));
@@ -1556,7 +1575,7 @@ void MainWindow::prepareDebugger()
 
     // Clear logs
     ui->debugConsole->clear();
-    if (!pSettings->debugger().showCommandLog()) {
+    if (!pSettings->debugger().enableDebugConsole()) {
         ui->debugConsole->addLine("(gdb) ");
     }
     ui->txtEvalOutput->clear();
@@ -1927,13 +1946,13 @@ void MainWindow::buildContextMenus()
     ui->debugConsole->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->debugConsole,&QWidget::customContextMenuRequested,
             this, &MainWindow::onDebugConsoleContextMenu);
-    mDebugConsole_ShowCommandLog = createActionFor(
-                tr("Show debug logs in the debug console"),
+    mDebugConsole_ShowDetailLog = createActionFor(
+                tr("Show detail debug logs"),
                 ui->debugConsole);
-    mDebugConsole_ShowCommandLog->setCheckable(true);
-    connect(mDebugConsole_ShowCommandLog, &QAction::toggled,
+    mDebugConsole_ShowDetailLog->setCheckable(true);
+    connect(mDebugConsole_ShowDetailLog, &QAction::toggled,
             [this]() {
-        pSettings->debugger().setShowCommandLog(mDebugConsole_ShowCommandLog->isChecked());
+        pSettings->debugger().setShowDetailLog(mDebugConsole_ShowDetailLog->isChecked());
         pSettings->debugger().save();
     });
     mDebugConsole_Copy=createActionFor(
@@ -2615,16 +2634,16 @@ void MainWindow::onDebugConsoleContextMenu(const QPoint &pos)
 {
     QMenu menu(this);
 
-    bool oldBlock = mDebugConsole_ShowCommandLog->blockSignals(true);
-    mDebugConsole_ShowCommandLog->setChecked(pSettings->debugger().showCommandLog());
-    mDebugConsole_ShowCommandLog->blockSignals(oldBlock);
+    bool oldBlock = mDebugConsole_ShowDetailLog->blockSignals(true);
+    mDebugConsole_ShowDetailLog->setChecked(pSettings->debugger().showDetailLog());
+    mDebugConsole_ShowDetailLog->blockSignals(oldBlock);
 
     menu.addAction(mDebugConsole_Copy);
     menu.addAction(mDebugConsole_Paste);
     menu.addAction(mDebugConsole_SelectAll);
     menu.addAction(mDebugConsole_Clear);
     menu.addSeparator();
-    menu.addAction(mDebugConsole_ShowCommandLog);
+    menu.addAction(mDebugConsole_ShowDetailLog);
     menu.exec(ui->debugConsole->mapToGlobal(pos));
 }
 
@@ -3704,7 +3723,7 @@ void MainWindow::cleanUpCPUDialog()
 void MainWindow::onDebugCommandInput(const QString& command)
 {
     if (mDebugger->executing()) {
-        mDebugger->sendCommand(command,"");
+        mDebugger->sendCommand(command,"", DebugCommandSource::Console);
     }
 }
 
@@ -4852,14 +4871,6 @@ void MainWindow::updateEditorHideTime(QTabWidget* tabWidget) {
             e->setHideTime(QDateTime());
         }
     }
-}
-
-static int findTabIndex(QTabWidget* tabWidget , QWidget* w) {
-    for (int i=0;i<tabWidget->count();i++) {
-        if (w==tabWidget->widget(i))
-            return i;
-    }
-    return -1;
 }
 
 void MainWindow::showHideInfosTab(QWidget *widget, bool show)

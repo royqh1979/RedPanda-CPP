@@ -633,7 +633,7 @@ private:
     QWidget * mFilesViewToolbar;
 
     //action for debug console
-    QAction * mDebugConsole_ShowCommandLog;
+    QAction * mDebugConsole_ShowDetailLog;
     QAction * mDebugConsole_Clear;
     QAction * mDebugConsole_Copy;
     QAction * mDebugConsole_Paste;

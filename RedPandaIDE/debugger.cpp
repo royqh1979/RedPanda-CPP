@@ -24,7 +24,6 @@ Debugger::Debugger(QObject *parent) : QObject(parent)
     mWatchModel = new WatchModel(this);
     mRegisterModel = new RegisterModel(this);
     mExecuting = false;
-    mUseUTF8 = false;
     mReader = nullptr;
     mCommandChanged = false;
     mLeftPageIndexBackup = -1;
@@ -401,16 +400,6 @@ void Debugger::notifyAfterProcessWatchVar()
     mWatchModel->endUpdate();
 }
 
-bool Debugger::useUTF8() const
-{
-    return mUseUTF8;
-}
-
-void Debugger::setUseUTF8(bool useUTF8)
-{
-    mUseUTF8 = useUTF8;
-}
-
 BacktraceModel* Debugger::backtraceModel()
 {
     return mBacktraceModel;
@@ -486,8 +475,8 @@ void Debugger::syncFinishedParsing()
 
 
     // show command output
-    if (pSettings->debugger().showCommandLog() ) {
-        if (pSettings->debugger().showAnnotations()) {
+    if (pSettings->debugger().enableDebugConsole() ) {
+        if (pSettings->debugger().showDetailLog()) {
             for (const QString& line:mReader->fullOutput()) {
                 pMainWindow->addDebugOutput(line);
             }
@@ -506,6 +495,7 @@ void Debugger::syncFinishedParsing()
 
     if (mReader->signalReceived()) {
         SignalMessageDialog dialog(pMainWindow);
+        dialog.setOpenCPUInfo(pSettings->debugger().openCPUInfoWhenSignaled());
         dialog.setMessage(
                     tr("Signal \"%1\" Received: ").arg(mReader->signalName())
                     + "<br />"
@@ -1119,9 +1109,9 @@ void DebugReader::runNextCmd()
     }
 
 //  if devDebugger.ShowCommandLog or pCmd^.ShowInConsole then begin
-    if (pSettings->debugger().showCommandLog() ) {
+    if (pSettings->debugger().enableDebugConsole() ) {
         //update debug console
-        if (!pSettings->debugger().showAnnotations()) {
+        if (!pSettings->debugger().showDetailLog()) {
             emit changeDebugConsoleLastLine(pCmd->command + ' ' + pCmd->params);
         } else {
             emit changeDebugConsoleLastLine(pCmd->command + ' ' + pCmd->params);
