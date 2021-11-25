@@ -107,8 +107,9 @@ bool Project::modified() const
 
     // Otherwise, check all units
     foreach (const PProjectUnit& unit, mUnits){
-        if (unit->modified())
+        if (unit->modified()) {
             return true;
+        }
     }
     return false;
 }
@@ -184,10 +185,7 @@ void Project::setFileName(QString value)
 
 void Project::setModified(bool value)
 {
-    QFile file(mFilename);
-    // only mark modified if *not* read-only
-    if (!file.exists()
-            || (file.exists() && file.isWritable())) {
+    if (mModified!=value) {
         mModified=value;
         emit modifyChanged(mModified);
     }

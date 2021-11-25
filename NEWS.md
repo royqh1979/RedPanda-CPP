@@ -1,6 +1,7 @@
 Version 0.10.0 For Dev-C++ 7 Beta
  - enhancement: use gdb/mi interface to  communicate with gdb debug session
  - enhancement: better display of watch vars
+ - fix: project's modified flag not cleared after saved
 
 Version 0.9.3 For Dev-C++ 7 Beta
  - fix: the count in the title of issues view isn't correct
