@@ -1,3 +1,7 @@
+Version 0.10.1 For Dev-C++ 7 Beta
+ - fix: can't correctly expand watch expression that has spaces in it
+ - fix: can't correctly display stl containers in watch
+
 Version 0.10.0 For Dev-C++ 7 Beta
  - enhancement: use gdb/mi interface to  communicate with gdb debug session
  - enhancement: better display of watch vars

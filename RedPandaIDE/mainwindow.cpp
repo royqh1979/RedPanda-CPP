@@ -1447,6 +1447,7 @@ void MainWindow::debug()
     mDebugger->sendAllBreakpointsToDebugger();
 
     // Run the debugger
+    mDebugger->sendCommand("-enable-pretty-printing","");
     mDebugger->sendCommand("-data-list-register-names","");
     mDebugger->sendCommand("-gdb-set", "width 0"); // don't wrap output, very annoying
     mDebugger->sendCommand("-gdb-set", "new-console on");

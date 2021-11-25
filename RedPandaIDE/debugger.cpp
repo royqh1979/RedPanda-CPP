@@ -913,7 +913,7 @@ void DebugReader::runNextCmd()
         params = " - @ "+params;
     } else if (pCmd->command == "-var-list-children") {
         //hack for list variable children,to easy remember var expression
-        params = " --all-values " + params;
+        params = " --all-values \"" + params+'\"';
     }
     s+=" "+params;
     s+= "\n";
@@ -1853,6 +1853,11 @@ void WatchModel::prepareVarChildren(const QString &parentName, int numChild, boo
     if (var) {
         var->numChild = numChild;
         var->hasMore = hasMore;
+        if (var->children.count()>0) {
+            beginRemoveRows(index(var),0,var->children.count()-1);
+            var->children.clear();
+            endRemoveRows();
+        }
     }
 }
 
@@ -1891,14 +1896,15 @@ void WatchModel::updateVarValue(const QString &name, const QString &val, const Q
         var->type = newType;
     }
     QModelIndex idx = index(var);
+    bool oldHasMore = var->hasMore;
+    var->hasMore = hasMore;
     if (newNumChildren>=0
             && var->numChild!=newNumChildren) {
-        beginRemoveRows(idx,0,var->children.count());
-        var->children.clear();
-        endRemoveRows();
         var->numChild = newNumChildren;
+        fetchMore(idx);
+    } else  if (!oldHasMore && hasMore) {
+        fetchMore(idx);
     }
-    var->hasMore = hasMore;
     emit dataChanged(idx,createIndex(idx.row(),2,var.get()));
 }
 
