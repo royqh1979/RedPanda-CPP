@@ -31,9 +31,11 @@ struct WatchVar;
 using  PWatchVar = std::shared_ptr<WatchVar>;
 struct WatchVar {
     QString name;
+    QString expression;
+    bool hasMore;
     QString value;
-    QString fullName;
-    int gdbIndex;
+    QString type;
+    int numChild;
     QList<PWatchVar> children;
     WatchVar * parent; //use raw point to prevent circular-reference
 };
@@ -133,8 +135,7 @@ public:
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
     void addWatchVar(PWatchVar watchVar);
-    void removeWatchVar(const QString& name);
-    void removeWatchVar(int gdbIndex);
+    void removeWatchVar(const QString& expression);
     void removeWatchVar(const QModelIndex& index);
     void clear();
     const QList<PWatchVar>& watchVars();
@@ -152,6 +153,12 @@ private:
     // QAbstractItemModel interface
 public:
     QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
+    void fetchMore(const QModelIndex &parent);
+    bool canFetchMore(const QModelIndex &parent) const;
+
+    // QAbstractItemModel interface
+public:
+    bool hasChildren(const QModelIndex &parent) const;
 };
 
 

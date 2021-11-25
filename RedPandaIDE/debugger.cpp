@@ -288,9 +288,10 @@ void Debugger::addWatchVar(const QString &namein)
 
     PWatchVar var = std::make_shared<WatchVar>();
     var->parent= nullptr;
-    var->name = namein;
+    var->expression = namein;
     var->value = tr("Execute to evaluate");
-    var->gdbIndex = -1;
+    var->numChild = 0;
+    var->hasMore = false;
 
     mWatchModel->addWatchVar(var);
     sendWatchCommand(var);
@@ -412,12 +413,12 @@ BreakpointModel *Debugger::breakpointModel()
 
 void Debugger::sendWatchCommand(PWatchVar var)
 {
-    sendCommand("display", var->name);
+    sendCommand("-var-carete", QString(" - %1").arg(var->expression));
 }
 
 void Debugger::sendRemoveWatchCommand(PWatchVar var)
 {
-    sendCommand("undisplay",QString("%1").arg(var->gdbIndex));
+    sendCommand("-var-delete",QString("%1").arg(var->name));
 }
 
 void Debugger::sendBreakpointCommand(PBreakpoint breakpoint)
@@ -1812,8 +1813,10 @@ QVariant WatchModel::data(const QModelIndex &index, int role) const
         //qDebug()<<"item->text:"<<item->text;
         switch(index.column()) {
         case 0:
-            return item->name;
+            return item->expression;
         case 1:
+            return item->type;
+        case 2:
             return item->value;
         }
     }
@@ -1884,13 +1887,13 @@ int WatchModel::rowCount(const QModelIndex &parent) const
 
 int WatchModel::columnCount(const QModelIndex&) const
 {
-    return 2;
+    return 3;
 }
 
 void WatchModel::addWatchVar(PWatchVar watchVar)
 {
     for (PWatchVar var:mWatchVars) {
-        if (watchVar->name == var->name) {
+        if (watchVar->expression == var->expression) {
             return;
         }
     }
@@ -1899,25 +1902,11 @@ void WatchModel::addWatchVar(PWatchVar watchVar)
     this->endInsertRows();
 }
 
-void WatchModel::removeWatchVar(const QString &name)
+void WatchModel::removeWatchVar(const QString &express)
 {
     for (int i=mWatchVars.size()-1;i>=0;i--) {
         PWatchVar var = mWatchVars[i];
-        if (name == var->name) {
-            this->beginResetModel();
-            //this->beginRemoveRows(QModelIndex(),i,i);
-            mWatchVars.removeAt(i);
-            //this->endRemoveRows();
-            this->endResetModel();
-        }
-    }
-}
-
-void WatchModel::removeWatchVar(int gdbIndex)
-{
-    for (int i=mWatchVars.size()-1;i>=0;i--) {
-        PWatchVar var = mWatchVars[i];
-        if (gdbIndex == var->gdbIndex) {
+        if (express == var->expression) {
             this->beginResetModel();
             //this->beginRemoveRows(QModelIndex(),i,i);
             mWatchVars.removeAt(i);
@@ -2006,7 +1995,7 @@ void WatchModel::save(const QString &filename)
         QJsonArray array;
         foreach (const PWatchVar& watchVar, mWatchVars) {
             QJsonObject obj;
-            obj["name"]=watchVar->name;
+            obj["expression"]=watchVar->expression;
             array.append(obj);
         }
         QJsonDocument doc;
@@ -2043,9 +2032,10 @@ void WatchModel::load(const QString &filename)
             QJsonObject obj=value.toObject();
             PWatchVar var = std::make_shared<WatchVar>();
             var->parent= nullptr;
-            var->name = obj["name"].toString();
+            var->expression = obj["expression"].toString();
             var->value = tr("Execute to evaluate");
-            var->gdbIndex = -1;
+            var->numChild = 0;
+            var->hasMore=false;
 
             addWatchVar(var);
         }
@@ -2063,10 +2053,35 @@ QVariant WatchModel::headerData(int section, Qt::Orientation orientation, int ro
         case 0:
             return tr("Expression");
         case 1:
+            return tr("Type");
+        case 2:
             return tr("Value");
         }
     }
     return QVariant();
+}
+
+void WatchModel::fetchMore(const QModelIndex &parent)
+{
+    //todo
+}
+
+bool WatchModel::canFetchMore(const QModelIndex &parent) const
+{
+    if (!parent.isValid()) {
+        return false;
+    }
+    WatchVar* item = static_cast<WatchVar*>(parent.internalPointer());
+    return item->numChild>item->children.count();
+}
+
+bool WatchModel::hasChildren(const QModelIndex &parent) const
+{
+    if (!parent.isValid()) {
+        return false;
+    }
+    WatchVar* item = static_cast<WatchVar*>(parent.internalPointer());
+    return item->numChild>0;
 }
 
 RegisterModel::RegisterModel(QObject *parent):QAbstractTableModel(parent)
