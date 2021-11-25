@@ -60,14 +60,6 @@ struct Trace {
 
 using PTrace = std::shared_ptr<Trace>;
 
-struct Register {
-    QString name;
-    QString hexValue;
-    QString decValue;
-};
-
-using PRegister = std::shared_ptr<Register>;
-
 class RegisterModel: public QAbstractTableModel {
     Q_OBJECT
 public:
@@ -76,10 +68,12 @@ public:
     int columnCount(const QModelIndex &parent) const override;
     QVariant data(const QModelIndex &index, int role) const override;
     QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
-    void update(const QList<PRegister>& regs);
+    void updateNames(const QStringList& regNames);
+    void updateValues(const QHash<int,QString> registerValues);
     void clear();
 private:
-    QList<PRegister> mRegisters;
+    QStringList mRegisterNames;
+    QHash<int,QString> mRegisterValues;
 };
 
 class BreakpointModel: public QAbstractTableModel {
@@ -246,6 +240,8 @@ private slots:
     void updateDisassembly(const QString& file, const QString& func,const QStringList& value);
     void onChangeDebugConsoleLastline(const QString& text);
     void clearUpReader();
+    void updateRegisterNames(const QStringList& registerNames);
+    void updateRegisterValues(const QHash<int,QString>& values);
 
 private:
     bool mExecuting;
@@ -310,6 +306,10 @@ public:
 
     bool inferiorRunning() const;
 
+    const QString &signalName() const;
+
+    const QString &signalMeaning() const;
+
 signals:
     void parseStarted();
     void invalidateAllVars();
@@ -327,6 +327,8 @@ signals:
     void evalUpdated(const QString& value);
     void memoryUpdated(const QStringList& memoryValues);
     void disassemblyUpdate(const QString& filename, const QString& funcName, const QStringList& result);
+    void registerNamesUpdated(const QStringList& registerNames);
+    void registerValuesUpdated(const QHash<int,QString>& values);
 private:
     void clearCmdQueue();
 
@@ -341,6 +343,8 @@ private:
     void handleLocalVariables(const QList<GDBMIResultParser::ParseValue> & variables);
     void handleEvaluation(const QString& value);
     void handleMemory(const QList<GDBMIResultParser::ParseValue> & rows);
+    void handleRegisterNames(const QList<GDBMIResultParser::ParseValue> & names);
+    void handleRegisterValue(const QList<GDBMIResultParser::ParseValue> & values);
     void processConsoleOutput(const QByteArray& line);
     void processResult(const QByteArray& result);
     void processExecAsyncRecord(const QByteArray& line);
@@ -360,15 +364,12 @@ private:
     //fOnInvalidateAllVars: TInvalidateAllVarsEvent;
     bool mCmdRunning;
     PDebugCommand mCurrentCmd;
-    QList<PRegister> mRegisters;
-    QStringList mDisassembly;
-
     QProcess* mProcess;
 
     //fWatchView: TTreeView;
 
-    QString mSignal;
-    bool mUseUTF8;
+    QString mSignalName;
+    QString mSignalMeaning;
 
     //
     QList<PDebugCommand> mInferiorStoppedHookCommands;

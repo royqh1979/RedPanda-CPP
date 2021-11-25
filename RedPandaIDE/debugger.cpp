@@ -15,6 +15,7 @@
 #include <QJsonDocument>
 #include <QJsonArray>
 #include <QJsonObject>
+#include "widgets/signalmessagedialog.h"
 
 Debugger::Debugger(QObject *parent) : QObject(parent)
 {
@@ -77,6 +78,10 @@ bool Debugger::start()
             &Debugger::updateEval);
     connect(mReader, &DebugReader::disassemblyUpdate,this,
             &Debugger::updateDisassembly);
+    connect(mReader, &DebugReader::registerNamesUpdated, this,
+            &Debugger::updateRegisterNames);
+    connect(mReader, &DebugReader::registerValuesUpdated, this,
+            &Debugger::updateRegisterValues);
     connect(mReader, &DebugReader::inferiorContinued,pMainWindow,
             &MainWindow::removeActiveBreakpoints);
     connect(mReader, &DebugReader::inferiorStopped,pMainWindow,
@@ -131,6 +136,16 @@ void Debugger::clearUpReader()
 
         pMainWindow->updateEditorActions();
     }
+}
+
+void Debugger::updateRegisterNames(const QStringList &registerNames)
+{
+    mRegisterModel->updateNames(registerNames);
+}
+
+void Debugger::updateRegisterValues(const QHash<int, QString> &values)
+{
+    mRegisterModel->updateValues(values);
 }
 
 RegisterModel *Debugger::registerModel() const
@@ -489,31 +504,16 @@ void Debugger::syncFinishedParsing()
         return;
     }
 
-    // Some part of the CPU form has been updated
-    if (pMainWindow->cpuDialog()!=nullptr && !mReader->signalReceived()) {
-//        if (mReader->doregistersready) {
-//            mRegisterModel->update(mReader->mRegisters);
-//            mReader->mRegisters.clear();
-//            mReader->doregistersready = false;
-//        }
-
-//        if (mReader->dodisassemblerready) {
-//            pMainWindow->cpuDialog()->setDisassembly(mReader->mDisassembly);
-//            mReader->mDisassembly.clear();
-//            mReader->dodisassemblerready = false;
-//        }
-    }
-
-//    if (mReader->updateExecution()) {
-//        if (mReader->currentCmd() && mReader->currentCmd()->source == DebugCommandSource::Console) {
-//            pMainWindow->setActiveBreakpoint(mReader->breakPointFile(), mReader->breakPointLine(),false);
-//        } else {
-//            pMainWindow->setActiveBreakpoint(mReader->breakPointFile(), mReader->breakPointLine());
-//        }
-//        refreshWatchVars(); // update variable information
-//    }
-
     if (mReader->signalReceived()) {
+        SignalMessageDialog dialog(pMainWindow);
+        dialog.setMessage(
+                    tr("Signal \"%1\" Received: ").arg(mReader->signalName())
+                    + "<br />"
+                    + mReader->signalMeaning());
+        int result = dialog.exec();
+        if (result == QDialog::Accepted && dialog.openCPUInfo()) {
+            pMainWindow->showCPUInfoDialog();
+        }
 
 //SignalDialog := CreateMessageDialog(fSignal, mtError, [mbOk]);
 //SignalCheck := TCheckBox.Create(SignalDialog);
@@ -595,7 +595,6 @@ DebugReader::DebugReader(Debugger* debugger, QObject *parent) : QThread(parent),
 {
     mDebugger = debugger;
     mProcess = nullptr;
-    mUseUTF8 = false;
     mCmdRunning = false;
     mInvalidateAllVars = false;
 }
@@ -744,6 +743,12 @@ void DebugReader::processResult(const QByteArray &result)
     case GDBMIResultType::Memory:
         handleMemory(multiValues["memory"].array());
         return;
+    case GDBMIResultType::RegisterNames:
+        handleRegisterNames(multiValues["register-names"].array());
+        return;
+    case GDBMIResultType::RegisterValues:
+        handleRegisterValue(multiValues["register-values"].array());
+        return;
     }
 
 }
@@ -794,6 +799,8 @@ void DebugReader::processExecAsyncRecord(const QByteArray &line)
         }
         if (reason == "signal-received") {
             mSignalReceived = true;
+            mSignalName = multiValues["signal-name"].value();
+            mSignalMeaning = multiValues["signal-meaning"].value();
         }
         runInferiorStoppedHook();
         if (mCurrentCmd && mCurrentCmd->source == DebugCommandSource::Console)
@@ -1284,6 +1291,33 @@ void DebugReader::handleMemory(const QList<GDBMIResultParser::ParseValue> &rows)
     emit memoryUpdated(memory);
 }
 
+void DebugReader::handleRegisterNames(const QList<GDBMIResultParser::ParseValue> &names)
+{
+    QStringList nameList;
+    foreach (const GDBMIResultParser::ParseValue& nameValue, names) {
+        nameList.append(nameValue.value());
+    }
+    emit registerNamesUpdated(nameList);
+}
+
+void DebugReader::handleRegisterValue(const QList<GDBMIResultParser::ParseValue> &values)
+{
+    QHash<int,QString> result;
+    foreach (const GDBMIResultParser::ParseValue& val, values) {
+        GDBMIResultParser::ParseObject obj = val.object();
+        int number = obj["number"].intValue();
+        QString value = obj["value"].value();
+        bool ok;
+        long long intVal;
+        intVal = value.toLongLong(&ok,10);
+        if (ok) {
+            value = QString("0x%1").arg(intVal,0,16);
+        }
+        result.insert(number,value);
+    }
+    emit registerValuesUpdated(result);
+}
+
 QByteArray DebugReader::removeToken(const QByteArray &line)
 {
     int p=0;
@@ -1297,6 +1331,16 @@ QByteArray DebugReader::removeToken(const QByteArray &line)
     if (p<line.length())
         return line.mid(p);
     return line;
+}
+
+const QString &DebugReader::signalMeaning() const
+{
+    return mSignalMeaning;
+}
+
+const QString &DebugReader::signalName() const
+{
+    return mSignalName;
 }
 
 bool DebugReader::inferiorRunning() const
@@ -2042,32 +2086,27 @@ RegisterModel::RegisterModel(QObject *parent):QAbstractTableModel(parent)
 
 int RegisterModel::rowCount(const QModelIndex &) const
 {
-    return mRegisters.count();
+    return mRegisterNames.count();
 }
 
 int RegisterModel::columnCount(const QModelIndex &) const
 {
-    return 3;
+    return 2;
 }
 
 QVariant RegisterModel::data(const QModelIndex &index, int role) const
 {
     if (!index.isValid())
         return QVariant();
-    if (index.row()<0 || index.row() >= static_cast<int>(mRegisters.size()))
-        return QVariant();
-    PRegister reg = mRegisters[index.row()];
-    if (!reg)
+    if (index.row()<0 || index.row() >= static_cast<int>(mRegisterNames.size()))
         return QVariant();
     switch (role) {
     case Qt::DisplayRole:
         switch (index.column()) {
         case 0:
-            return reg->name;
+            return mRegisterNames[index.row()];
         case 1:
-            return reg->hexValue;
-        case 2:
-            return reg->decValue;
+            return mRegisterValues.value(index.row(),"");
         default:
             return QVariant();
         }
@@ -2083,26 +2122,31 @@ QVariant RegisterModel::headerData(int section, Qt::Orientation orientation, int
         case 0:
             return tr("Register");
         case 1:
-            return tr("Value(Hex)");
-        case 2:
-            return tr("Value(Dec)");
+            return tr("Value");
         }
     }
     return QVariant();
 }
 
-void RegisterModel::update(const QList<PRegister> &regs)
+void RegisterModel::updateNames(const QStringList &regNames)
 {
     beginResetModel();
-    mRegisters.clear();
-    mRegisters.append(regs);
+    mRegisterNames = regNames;
     endResetModel();
+}
+
+void RegisterModel::updateValues(const QHash<int, QString> registerValues)
+{
+    mRegisterValues= registerValues;
+    emit dataChanged(createIndex(0,1),
+                     createIndex(mRegisterNames.count()-1,1));
 }
 
 
 void RegisterModel::clear()
 {
     beginResetModel();
-    mRegisters.clear();
+    mRegisterNames.clear();
+    mRegisterValues.clear();
     endResetModel();
 }

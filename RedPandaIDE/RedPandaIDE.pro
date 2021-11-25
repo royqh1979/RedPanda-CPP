@@ -135,7 +135,8 @@ SOURCES += \
     widgets/qconsole.cpp \
     widgets/qpatchedcombobox.cpp \
     widgets/searchdialog.cpp \
-    widgets/searchresultview.cpp
+    widgets/searchresultview.cpp \
+    widgets/signalmessagedialog.cpp
 
 HEADERS += \
     ConvertUTF.h \
@@ -260,7 +261,8 @@ HEADERS += \
     widgets/qconsole.h \
     widgets/qpatchedcombobox.h \
     widgets/searchdialog.h \
-    widgets/searchresultview.h
+    widgets/searchresultview.h \
+    widgets/signalmessagedialog.h
 
 FORMS += \
     settingsdialog/compilerautolinkwidget.ui \
@@ -305,7 +307,8 @@ FORMS += \
     widgets/filepropertiesdialog.ui \
     widgets/newprojectdialog.ui \
     widgets/ojproblempropertywidget.ui \
-    widgets/searchdialog.ui
+    widgets/searchdialog.ui \
+    widgets/signalmessagedialog.ui
 
 TRANSLATIONS += \
     RedPandaIDE_zh_CN.ts

@@ -57,7 +57,7 @@ void CPUDialog::updateInfo()
     if (pMainWindow->debugger()->executing()) {
         // Load the registers..
         sendSyntaxCommand();
-        //pMainWindow->debugger()->sendCommand("info", "registers");
+        pMainWindow->debugger()->sendCommand("-data-list-register-values", "N");
         if (ui->chkBlendMode->isChecked())
             pMainWindow->debugger()->sendCommand("disas", "/s");
         else
@@ -78,7 +78,7 @@ void CPUDialog::setDisassembly(const QString& file, const QString& funcName,cons
         ui->txtCode->lines()->add(line);
     }
     if (activeLine!=-1)
-        ui->txtCode->setCaretXY(BufferCoord{1,activeLine});
+        ui->txtCode->setCaretXYCentered(true,BufferCoord{1,activeLine});
 }
 
 void CPUDialog::sendSyntaxCommand()

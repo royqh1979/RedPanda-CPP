@@ -1432,6 +1432,7 @@ void MainWindow::debug()
     mDebugger->sendAllBreakpointsToDebugger();
 
     // Run the debugger
+    mDebugger->sendCommand("-data-list-register-names","");
     mDebugger->sendCommand("-gdb-set", "width 0"); // don't wrap output, very annoying
     mDebugger->sendCommand("-gdb-set", "new-console on");
     mDebugger->sendCommand("-gdb-set", "confirm off");
@@ -1472,6 +1473,15 @@ void MainWindow::showSearchPanel(bool showReplace)
     openCloseBottomPanel(true);
     showSearchReplacePanel(showReplace);
     ui->tabMessages->setCurrentWidget(ui->tabSearch);
+}
+
+void MainWindow::showCPUInfoDialog()
+{
+    if (mCPUDialog==nullptr) {
+        mCPUDialog = new CPUDialog(this);
+        connect(mCPUDialog, &CPUDialog::closed, this, &MainWindow::cleanUpCPUDialog);
+    }
+    mCPUDialog->show();
 }
 
 void MainWindow::openCloseBottomPanel(bool open)
@@ -4048,11 +4058,7 @@ void MainWindow::on_actionAdd_Watch_triggered()
 
 void MainWindow::on_actionView_CPU_Window_triggered()
 {
-    if (mCPUDialog==nullptr) {
-        mCPUDialog = new CPUDialog(this);
-        connect(mCPUDialog, &CPUDialog::closed, this, &MainWindow::cleanUpCPUDialog);
-    }
-    mCPUDialog->show();
+    showCPUInfoDialog();
 }
 
 void MainWindow::on_actionExit_triggered()

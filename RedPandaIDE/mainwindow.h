@@ -95,6 +95,7 @@ public:
     void runExecutable(RunType runType = RunType::Normal);
     void debug();
     void showSearchPanel(bool showReplace = false);
+    void showCPUInfoDialog();
 
     void applySettings();
     void applyUISettings();
