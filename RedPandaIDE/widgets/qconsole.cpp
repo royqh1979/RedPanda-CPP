@@ -276,7 +276,7 @@ void QConsole::setTopRow(int value)
 
 int QConsole::maxScrollHeight()
 {
-    return std::max(mContents.rows()-mRowsInWindow,1);
+    return std::max(mContents.rows()-mRowsInWindow+1,1);
 }
 
 void QConsole::updateScrollbars()

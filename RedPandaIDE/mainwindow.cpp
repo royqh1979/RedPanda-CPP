@@ -741,6 +741,8 @@ void MainWindow::updateAppTitle()
 
 void MainWindow::addDebugOutput(const QString &text)
 {
+    if (!pSettings->debugger().enableDebugConsole())
+        return;
     if (text.isEmpty()) {
         ui->debugConsole->addLine("");
     } else {
@@ -1572,7 +1574,7 @@ void MainWindow::prepareDebugger()
 
     // Clear logs
     ui->debugConsole->clear();
-    if (!pSettings->debugger().enableDebugConsole()) {
+    if (pSettings->debugger().enableDebugConsole()) {
         ui->debugConsole->addLine("(gdb) ");
     }
     ui->txtEvalOutput->clear();

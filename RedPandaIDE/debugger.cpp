@@ -467,8 +467,18 @@ void Debugger::syncFinishedParsing()
                 pMainWindow->addDebugOutput(line);
             }
         } else {
-            for (const QString& line:mReader->consoleOutput()) {
-                pMainWindow->addDebugOutput(line);
+            if (mReader->currentCmd() && mReader->currentCmd()->command == "disas") {
+
+            } else {
+                for (const QString& line:mReader->consoleOutput()) {
+                    pMainWindow->addDebugOutput(line);
+                }
+                if (
+                       (mReader->currentCmd()
+                        && mReader->currentCmd()->source== DebugCommandSource::Console)
+                        || !mReader->consoleOutput().isEmpty() ) {
+                    pMainWindow->addDebugOutput("(gdb)");
+                }
             }
         }
     }
@@ -851,7 +861,8 @@ void DebugReader::processDebugOutput(const QByteArray& debugOutput)
 
     for (int i=0;i<lines.count();i++) {
          QByteArray line = lines[i];
-         mFullOutput.append(line);
+         if (pSettings->debugger().showDetailLog())
+            mFullOutput.append(line);
          line = removeToken(line);
          if (line.isEmpty()) {
              continue;
@@ -924,9 +935,8 @@ void DebugReader::runNextCmd()
 //  if devDebugger.ShowCommandLog or pCmd^.ShowInConsole then begin
     if (pSettings->debugger().enableDebugConsole() ) {
         //update debug console
-        if (!pSettings->debugger().showDetailLog()) {
-            emit changeDebugConsoleLastLine(pCmd->command + ' ' + params);
-        } else {
+        if (pSettings->debugger().showDetailLog()
+                && pCmd->source != DebugCommandSource::Console) {
             emit changeDebugConsoleLastLine(pCmd->command + ' ' + params);
         }
     }
@@ -1333,7 +1343,7 @@ void DebugReader::run()
         } else if (!mCmdRunning && readed.isEmpty()){
             runNextCmd();
         } else if (readed.isEmpty()){
-            msleep(100);
+            msleep(1);
         }
     }
     if (errorOccurred) {
