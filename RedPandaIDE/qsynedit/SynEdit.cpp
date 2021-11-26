@@ -6194,10 +6194,10 @@ void SynEdit::dragMoveEvent(QDragMoveEvent *event)
 
 void SynEdit::dragLeaveEvent(QDragLeaveEvent *)
 {
-    setCaretXY(mDragCaretSave);
-    setBlockBegin(mDragSelBeginSave);
-    setBlockEnd(mDragSelEndSave);
-    showCaret();
+//    setCaretXY(mDragCaretSave);
+//    setBlockBegin(mDragSelBeginSave);
+//    setBlockEnd(mDragSelEndSave);
+//    showCaret();
     mScrollTimer->stop();
     mDragging = false;
 }

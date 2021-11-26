@@ -3,6 +3,7 @@ Version 0.10.1 For Dev-C++ 7 Beta
  - fix: can't correctly display stl containers in watch
  - fix: the last line in the debug console is not correctly displayed
  - enhancement: scroll while dragging text in the editor
+ - fix: dragging out of the editor shouldn't reset the caret back 
 
 Version 0.10.0 For Dev-C++ 7 Beta
  - enhancement: use gdb/mi interface to  communicate with gdb debug session
