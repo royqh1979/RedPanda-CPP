@@ -34,7 +34,6 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
     mOrigLines = mLines;
     //fPlugins := TList.Create;
     mMouseMoved = false;
-    mDragging = false;
     mUndoing = false;
     mLines->connect(mLines.get(), &SynEditStringList::changed, this, &SynEdit::onLinesChanged);
     mLines->connect(mLines.get(), &SynEditStringList::changing, this, &SynEdit::onLinesChanging);
@@ -124,7 +123,7 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
             | eoHideShowScrollbars ;
 
     mScrollTimer = new QTimer(this);
-    mScrollTimer->setInterval(100);
+    //mScrollTimer->setInterval(100);
     connect(mScrollTimer, &QTimer::timeout,this, &SynEdit::onScrollTimeout);
 
     mScrollHintColor = QColorConstants::Yellow;
@@ -667,9 +666,9 @@ DisplayCoord SynEdit::pixelsToNearestRowColumn(int aX, int aY) const
     // don't return a partially visible last line
     if (aY >= mLinesInWindow * mTextHeight) {
         aY = mLinesInWindow * mTextHeight - 1;
-        if (aY < 0)
-            aY = 0;
     }
+    if (aY < 0)
+        aY = 0;
     return {
       std::max(1, (int)(leftChar() + round(f))),
       std::max(1, mTopLine + (aY / mTextHeight))
@@ -1764,6 +1763,52 @@ void SynEdit::doToggleComment()
         doComment();
 }
 
+void SynEdit::doMouseScroll(bool isDragging)
+{
+    QPoint iMousePos;
+    DisplayCoord C;
+    int X, Y;
+
+    iMousePos = QCursor::pos();
+    iMousePos = mapFromGlobal(iMousePos);
+    C = pixelsToRowColumn(iMousePos.x(), iMousePos.y());
+    C.Row = minMax(C.Row, 1, displayLineCount());
+    if (mScrollDeltaX != 0) {
+        setLeftChar(leftChar() + mScrollDeltaX);
+        X = leftChar();
+        if (mScrollDeltaX > 0) // scrolling right?
+            X+=charsInWindow();
+        C.Column = X;
+    }
+    if (mScrollDeltaY != 0) {
+        if (QApplication::queryKeyboardModifiers().testFlag(Qt::ShiftModifier))
+          setTopLine(mTopLine + mScrollDeltaY * mLinesInWindow);
+        else
+          setTopLine(mTopLine + mScrollDeltaY);
+        Y = mTopLine;
+        if (mScrollDeltaY > 0)  // scrolling down?
+            Y+=mLinesInWindow - 1;
+        C.Row = minMax(Y, 1, displayLineCount());
+    }
+    BufferCoord vCaret = displayToBufferPos(C);
+    if ((caretX() != vCaret.Char) || (caretY() != vCaret.Line)) {
+        // changes to line / column in one go
+        incPaintLock();
+        auto action = finally([this]{
+            decPaintLock();
+        });
+        internalSetCaretXY(vCaret);
+
+        // if MouseCapture is True we're changing selection. otherwise we're dragging
+        if (isDragging) {
+            setBlockBegin(mDragSelBeginSave);
+            setBlockEnd(mDragSelEndSave);
+        } else
+            setBlockEnd(caretXY());
+    }
+    computeScroll(iMousePos.x(), iMousePos.y(),isDragging);
+}
+
 void SynEdit::doDeleteLastChar()
 {
     if (mReadOnly)
@@ -2481,19 +2526,25 @@ void SynEdit::computeCaret(int X, int Y)
     setInternalDisplayXY(vCaretNearestPos);
 }
 
-void SynEdit::computeScroll(int X, int Y)
+void SynEdit::computeScroll(int X, int Y, bool isDragging)
 {
+    if (!isDragging) {
+        Qt::MouseButtons buttons = qApp->mouseButtons();
+        if (!buttons.testFlag(Qt::LeftButton))
+            return;
+    }
     QRect iScrollBounds; // relative to the client area
-    int dispX,dispY = 2;
-    if (mDragging) {
+    int dispX=2,dispY = 2;
+    if (isDragging) {
         dispX = mCharWidth / 2 -1;
         dispY = mTextHeight/ 2 -1;
     }
-
-    iScrollBounds = QRect(mGutterWidth+frameWidth()+dispX,
-                          frameWidth()+dispY,
-                          mCharsInWindow * mCharWidth-2*dispX,
-                          mLinesInWindow * mTextHeight-2*dispY);
+    int left = mGutterWidth+frameWidth()+dispX;
+    int top = frameWidth()+dispY;
+    iScrollBounds = QRect(left,
+                          top,
+                          clientWidth()-left-dispX,
+                          clientHeight()-top-dispY);
 
     if (X < iScrollBounds.left())
         mScrollDeltaX = (X - iScrollBounds.left()) / mCharWidth - 1;
@@ -2502,6 +2553,10 @@ void SynEdit::computeScroll(int X, int Y)
     else
         mScrollDeltaX = 0;
 
+    if (isDragging && (X<0 || X>clientRect().width())) {
+        mScrollDeltaX = 0;
+    }
+
     if (Y < iScrollBounds.top())
         mScrollDeltaY = (Y - iScrollBounds.top()) / mTextHeight - 1;
     else if (Y >= iScrollBounds.bottom())
@@ -2509,8 +2564,17 @@ void SynEdit::computeScroll(int X, int Y)
     else
         mScrollDeltaY = 0;
 
-    if (mScrollDeltaX!=0 || mScrollDeltaY!=0)
-        mScrollTimer->start();
+    if (isDragging && (Y<0 || Y>clientRect().height())) {
+        mScrollDeltaY = 0;
+    }
+
+    if (mScrollDeltaX!=0 || mScrollDeltaY!=0) {
+        if (isDragging) {
+            mScrollTimer->singleShot(100,this,&SynEdit::onDraggingScrollTimeout);
+        } else  {
+            mScrollTimer->singleShot(100,this,&SynEdit::onScrollTimeout);
+        }
+    }
 }
 
 void SynEdit::doBlockIndent()
@@ -2842,11 +2906,6 @@ void SynEdit::decPaintLock()
             doOnStatusChange(mStatusChanges);
         onEndFirstPaintLock();
     }
-}
-
-bool SynEdit::mouseCapture()
-{
-    return hasMouseTracking();
 }
 
 int SynEdit::clientWidth()
@@ -5988,7 +6047,7 @@ void SynEdit::mouseReleaseEvent(QMouseEvent *event)
         processGutterClick(event);
     }
 
-    mScrollTimer->stop();
+    //mScrollTimer->stop();
 //    if ((button = ) and (Shift = [ssRight]) and Assigned(PopupMenu) then
 //      exit;
     //setMouseTracking(false);
@@ -6011,9 +6070,6 @@ void SynEdit::mouseMoveEvent(QMouseEvent *event)
     Qt::MouseButtons buttons = event->buttons();
     int X=event->pos().x();
     int Y=event->pos().y();
-//    if (!hasMouseTracking())
-//        return;
-
     if ((mStateFlags.testFlag(SynStateFlag::sfWaitForDragging))) {
         if ( ( event->pos() - mMouseDownPos).manhattanLength()>=QApplication::startDragDistance()) {
             mStateFlags.setFlag(SynStateFlag::sfWaitForDragging,false);
@@ -6027,18 +6083,17 @@ void SynEdit::mouseMoveEvent(QMouseEvent *event)
             //drag->setPixmap(iconPixmap);
             //BeginDrag(false);
         }
-//    } else if ((buttons == Qt::LeftButton) && (X > mGutterWidth)) {
     } else if ((buttons == Qt::LeftButton)) {
-      // should we begin scrolling?
-      computeScroll(X, Y);
-      DisplayCoord P = pixelsToNearestRowColumn(X, Y);
-      P.Row = minMax(P.Row, 1, displayLineCount());
-      if (mScrollDeltaX != 0)
-          P.Column = displayX();
-      if (mScrollDeltaY != 0)
-          P.Row = displayY();
-      internalSetCaretXY(displayToBufferPos(P));
-      setBlockEnd(caretXY());
+        // should we begin scrolling?
+        computeScroll(X, Y,false);
+        DisplayCoord P = pixelsToNearestRowColumn(X, Y);
+        P.Row = minMax(P.Row, 1, displayLineCount());
+        if (mScrollDeltaX != 0)
+            P.Column = displayX();
+        if (mScrollDeltaY != 0)
+            P.Row = displayY();
+        internalSetCaretXY(displayToBufferPos(P));
+        setBlockEnd(caretXY());
     } else if (buttons == Qt::NoButton) {
         updateMouseCursor();
     }
@@ -6132,7 +6187,6 @@ QVariant SynEdit::inputMethodQuery(Qt::InputMethodQuery property) const
 void SynEdit::dragEnterEvent(QDragEnterEvent *event)
 {
     if (event->mimeData()->hasFormat("text/plain")) {
-        mDragging = true;
         event->acceptProposedAction();
         mDragCaretSave = caretXY();
         mDragSelBeginSave = blockBegin();
@@ -6148,21 +6202,26 @@ void SynEdit::dragEnterEvent(QDragEnterEvent *event)
 
 void SynEdit::dropEvent(QDropEvent *event)
 {
+    //mScrollTimer->stop();
     mUndoList->BeginBlock();
     auto action = finally([this] {
         mUndoList->EndBlock();
     });
+    BufferCoord coord = displayToBufferPos(pixelsToNearestRowColumn(event->pos().x(),
+                                                                    event->pos().y()));
+    int topLine = mTopLine;
+    int leftChar = mLeftChar;
     if (event->proposedAction() == Qt::DropAction::MoveAction) {
         setBlockBegin(mDragSelBeginSave);
         setBlockEnd(mDragSelEndSave);
         setSelText("");
     }
-    BufferCoord coord = displayToBufferPos(pixelsToNearestRowColumn(event->pos().x(),
-                                                                    event->pos().y()));
+    setTopLine(topLine);
+    setLeftChar(leftChar);
     setCaretXY(coord);
     setSelText(event->mimeData()->text());
     event->acceptProposedAction();
-    mDragging = false;
+
 }
 
 void SynEdit::dragMoveEvent(QDragMoveEvent *event)
@@ -6174,15 +6233,7 @@ void SynEdit::dragMoveEvent(QDragMoveEvent *event)
     }
     // should we begin scrolling?
     computeScroll(event->pos().x(),
-                  event->pos().y());
-//    DisplayCoord P = pixelsToNearestRowColumn(X, Y);
-//    P.Row = minMax(P.Row, 1, displayLineCount());
-//    if (mScrollDeltaX != 0)
-//        P.Column = displayX();
-//    if (mScrollDeltaY != 0)
-//        P.Row = displayY();
-//    internalSetCaretXY(displayToBufferPos(P));
-//    setBlockEnd(caretXY());
+                  event->pos().y(),true);
 
     BufferCoord coord = displayToBufferPos(pixelsToNearestRowColumn(event->pos().x(),
                                                                     event->pos().y()));
@@ -6198,8 +6249,6 @@ void SynEdit::dragLeaveEvent(QDragLeaveEvent *)
 //    setBlockBegin(mDragSelBeginSave);
 //    setBlockEnd(mDragSelEndSave);
 //    showCaret();
-    mScrollTimer->stop();
-    mDragging = false;
 }
 
 int SynEdit::maxScrollHeight() const
@@ -6575,46 +6624,10 @@ void SynEdit::onGutterChanged()
 
 void SynEdit::onScrollTimeout()
 {
-    QPoint iMousePos;
-    DisplayCoord C;
-    int X, Y;
+    doMouseScroll(false);
+}
 
-    iMousePos = QCursor::pos();
-    iMousePos = mapFromGlobal(iMousePos);
-    C = pixelsToRowColumn(iMousePos.x(), iMousePos.y());
-    C.Row = minMax(C.Row, 1, displayLineCount());
-    if (mScrollDeltaX != 0) {
-        setLeftChar(leftChar() + mScrollDeltaX);
-        X = leftChar();
-        if (mScrollDeltaX > 0) // scrolling right?
-            X+=charsInWindow();
-        C.Column = X;
-    }
-    if (mScrollDeltaY != 0) {
-        if (QApplication::queryKeyboardModifiers().testFlag(Qt::ShiftModifier))
-          setTopLine(mTopLine + mScrollDeltaY * mLinesInWindow);
-        else
-          setTopLine(mTopLine + mScrollDeltaY);
-        Y = mTopLine;
-        if (mScrollDeltaY > 0)  // scrolling down?
-            Y+=mLinesInWindow - 1;
-        C.Row = minMax(Y, 1, displayLineCount());
-    }
-    BufferCoord vCaret = displayToBufferPos(C);
-    if ((caretX() != vCaret.Char) || (caretY() != vCaret.Line)) {
-        // changes to line / column in one go
-        incPaintLock();
-        auto action = finally([this]{
-            decPaintLock();
-        });
-        internalSetCaretXY(vCaret);
-
-        // if MouseCapture is True we're changing selection. otherwise we're dragging
-        if (mDragging) {
-            setBlockBegin(mDragSelBeginSave);
-            setBlockEnd(mDragSelEndSave);
-        } else
-            setBlockEnd(caretXY());
-    }
-    computeScroll(iMousePos.x(), iMousePos.y());
+void SynEdit::onDraggingScrollTimeout()
+{
+    doMouseScroll(true);
 }

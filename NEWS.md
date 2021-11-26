@@ -1,3 +1,7 @@
+Version 0.10.2 For Dev-C++ 7 Beta
+ - fix: select by mouse can't correctly set mouse's column position
+ - fix: dragging out of the editor and back will cause error
+
 Version 0.10.1 For Dev-C++ 7 Beta
  - fix: can't correctly expand watch expression that has spaces in it
  - fix: can't correctly display stl containers in watch
