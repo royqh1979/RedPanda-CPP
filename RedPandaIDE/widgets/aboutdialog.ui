@@ -54,6 +54,9 @@
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
        <widget class="QPlainTextEdit" name="plainTextEdit">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
         <property name="plainText">
          <string>    This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
