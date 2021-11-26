@@ -6203,23 +6203,58 @@ void SynEdit::dragEnterEvent(QDragEnterEvent *event)
 void SynEdit::dropEvent(QDropEvent *event)
 {
     //mScrollTimer->stop();
-    mUndoList->BeginBlock();
-    auto action = finally([this] {
-        mUndoList->EndBlock();
-    });
+
     BufferCoord coord = displayToBufferPos(pixelsToNearestRowColumn(event->pos().x(),
                                                                     event->pos().y()));
-    int topLine = mTopLine;
-    int leftChar = mLeftChar;
-    if (event->proposedAction() == Qt::DropAction::MoveAction) {
-        setBlockBegin(mDragSelBeginSave);
-        setBlockEnd(mDragSelEndSave);
-        setSelText("");
-    }
-    setTopLine(topLine);
-    setLeftChar(leftChar);
     setCaretXY(coord);
-    setSelText(event->mimeData()->text());
+    if (coord>=mDragSelBeginSave && coord<=mDragSelEndSave) {
+        //do nothing if drag onto itself
+    } else if (event->proposedAction() == Qt::DropAction::CopyAction) {
+        //just copy it
+        setSelText(event->mimeData()->text());
+    } else if (event->proposedAction() == Qt::DropAction::MoveAction)  {
+        int topLine = mTopLine;
+        int leftChar = mLeftChar;
+        mUndoList->BeginBlock();
+        if (coord < mDragSelBeginSave ) {
+            //delete old
+            setBlockBegin(mDragSelBeginSave);
+            setBlockEnd(mDragSelEndSave);
+            setSelText("");
+            //paste to new position
+            setTopLine(topLine);
+            setLeftChar(leftChar);
+            setCaretXY(coord);
+            setSelText(event->mimeData()->text());
+        } else {
+            //paste to new position
+            setTopLine(topLine);
+            setLeftChar(leftChar);
+            setCaretXY(coord);
+            setSelText(event->mimeData()->text());
+            //delete old
+            setBlockBegin(mDragSelBeginSave);
+            setBlockEnd(mDragSelEndSave);
+            setSelText("");
+            //set caret to right pos
+            if (mDragSelBeginSave.Line == mDragSelEndSave.Line) {
+                if (coord.Line == mDragSelEndSave.Line) {
+                    coord.Char -= mDragSelEndSave.Char-mDragSelBeginSave.Char;
+                }
+            } else {
+                if (coord.Line == mDragSelEndSave.Line) {
+                    coord.Char -= mDragSelEndSave.Char-1;
+                } else {
+                    coord.Line -= mDragSelEndSave.Line-mDragSelBeginSave.Line;
+                    topLine -= mDragSelEndSave.Line-mDragSelBeginSave.Line;
+                }
+            }
+            setTopLine(topLine);
+            setLeftChar(leftChar);
+            setCaretXY(coord);
+        }
+        mUndoList->EndBlock();
+    }
     event->acceptProposedAction();
 
 }

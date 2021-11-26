@@ -239,3 +239,32 @@ bool BufferCoord::operator==(const BufferCoord &coord)
 {
     return coord.Char == Char && coord.Line == Line;
 }
+
+bool BufferCoord::operator>=(const BufferCoord &coord)
+{
+    return (Line > coord.Line)
+            || (Line == coord.Line && Char >= coord.Char);
+}
+
+bool BufferCoord::operator>(const BufferCoord &coord)
+{
+    return (Line > coord.Line)
+            || (Line == coord.Line && Char > coord.Char);
+}
+
+bool BufferCoord::operator<(const BufferCoord &coord)
+{
+    return (Line < coord.Line)
+            || (Line == coord.Line && Char < coord.Char);
+}
+
+bool BufferCoord::operator<=(const BufferCoord &coord)
+{
+    return (Line < coord.Line)
+            || (Line == coord.Line && Char <= coord.Char);
+}
+
+bool BufferCoord::operator!=(const BufferCoord &coord)
+{
+    return coord.Char != Char || coord.Line != Line;
+}
