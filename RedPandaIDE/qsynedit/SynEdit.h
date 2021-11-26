@@ -701,6 +701,7 @@ private:
     BufferCoord mDragCaretSave;
     BufferCoord mDragSelBeginSave;
     BufferCoord mDragSelEndSave;
+    bool mDragging;
 
 friend class SynEditTextPainter;
 
