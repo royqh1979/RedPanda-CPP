@@ -4,6 +4,7 @@ Version 0.10.2 For Dev-C++ 7 Beta
  - fix: dragging text from lines in the front to lines back will cause error
  - fix: dragging text onto itself should do nothing
  - fix：license info in the about dialog should be readonly
+ - enhancement: change project name in the project view
 
 Version 0.10.1 For Dev-C++ 7 Beta
  - fix: can't correctly expand watch expression that has spaces in it

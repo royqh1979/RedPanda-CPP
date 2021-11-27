@@ -7,7 +7,6 @@
 #include <QFileInfo>
 #include <QProcess>
 #include <QProcessEnvironment>
-#include <QSettings>
 #include <QString>
 #include <QTextCodec>
 #include <QtGlobal>

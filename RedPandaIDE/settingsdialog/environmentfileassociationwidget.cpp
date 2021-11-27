@@ -4,7 +4,6 @@
 #include "../settings.h"
 
 #include <QMessageBox>
-#include <QSettings>
 #include <windows.h>
 
 EnvironmentFileAssociationWidget::EnvironmentFileAssociationWidget(const QString& name, const QString& group, QWidget *parent) :
