@@ -43,7 +43,7 @@ QConsole::QConsole(QWidget *parent):
     mBlinkStatus = 0;
     //enable input method
     setAttribute(Qt::WA_InputMethodEnabled);
-    setMouseTracking(false);
+//    setMouseTracking(false);
     recalcCharExtent();
     mScrollTimer = new QTimer(this);
     mScrollTimer->setInterval(100);
@@ -147,7 +147,7 @@ void QConsole::addLine(const QString &line)
 
 void QConsole::addText(const QString &text)
 {
-    QStringList lst = TextToLines(text);
+    QStringList lst = textToLines(text);
     for (const QString& line:lst) {
         addLine(line);
     }
@@ -276,7 +276,7 @@ void QConsole::setTopRow(int value)
 
 int QConsole::maxScrollHeight()
 {
-    return std::max(mContents.rows()-mRowsInWindow,1);
+    return std::max(mContents.rows()-mRowsInWindow+1,1);
 }
 
 void QConsole::updateScrollbars()
@@ -504,7 +504,7 @@ void QConsole::mousePressEvent(QMouseEvent *event)
     //fKbdHandler.ExecuteMouseDown(Self, Button, Shift, X, Y);
 
     if (button == Qt::LeftButton) {
-        setMouseTracking(true);
+//        setMouseTracking(true);
         RowColumn mousePosRC = pixelsToNearestRowColumn(X,Y);
         LineChar mousePos = mContents.rowColumnToLineChar(mousePosRC);
         //I couldn't track down why, but sometimes (and definitely not all the time)
@@ -522,7 +522,7 @@ void QConsole::mouseReleaseEvent(QMouseEvent *event)
 {
     QAbstractScrollArea::mouseReleaseEvent(event);
     mScrollTimer->stop();
-    setMouseTracking(false);
+//    setMouseTracking(false);
 
 }
 

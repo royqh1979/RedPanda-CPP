@@ -49,6 +49,14 @@
 
 #include <widgets/searchdialog.h>
 
+static int findTabIndex(QTabWidget* tabWidget , QWidget* w) {
+    for (int i=0;i<tabWidget->count();i++) {
+        if (w==tabWidget->widget(i))
+            return i;
+    }
+    return -1;
+}
+
 MainWindow* pMainWindow;
 
 MainWindow::MainWindow(QWidget *parent)
@@ -733,6 +741,8 @@ void MainWindow::updateAppTitle()
 
 void MainWindow::addDebugOutput(const QString &text)
 {
+    if (!pSettings->debugger().enableDebugConsole())
+        return;
     if (text.isEmpty()) {
         ui->debugConsole->addLine("");
     } else {
@@ -1056,6 +1066,18 @@ void MainWindow::updateDebuggerSettings()
     ui->debugConsole->setFont(font);
     ui->txtMemoryView->setFont(font);
     ui->txtLocals->setFont(font);
+
+    int idx = findTabIndex(ui->debugViews,ui->tabDebugConsole);
+    if (idx>=0) {
+        if (!pSettings->debugger().enableDebugConsole()) {
+            ui->debugViews->removeTab(idx);
+        }
+    } else {
+        if (pSettings->debugger().enableDebugConsole()) {
+            ui->debugViews->insertTab(0, ui->tabDebugConsole, tr("Debug Console"));
+        }
+    }
+
 }
 
 void MainWindow::checkSyntaxInBack(Editor *e)
@@ -1323,12 +1345,12 @@ void MainWindow::debug()
         if (!mDebugger->start())
             return;
         filePath.replace('\\','/');
-        mDebugger->sendCommand("file", '"' + filePath + '"');
+        mDebugger->sendCommand("-file-exec-and-symbols", '"' + filePath + '"');
 
         if (mProject->options().type == ProjectType::DynamicLib) {
             QString host =mProject->options().hostApplication;
             host.replace('\\','/');
-            mDebugger->sendCommand("exec-file", '"' + host + '"');
+            mDebugger->sendCommand("-file-exec-file", '"' + host + '"');
         }
 
         includeOrSkipDirs(mProject->options().includes,
@@ -1398,10 +1420,9 @@ void MainWindow::debug()
 
                 prepareDebugger();
 
-                mDebugger->setUseUTF8(e->fileEncoding() == ENCODING_UTF8 || e->fileEncoding() == ENCODING_UTF8_BOM);
                 if (!mDebugger->start())
                     return;
-                mDebugger->sendCommand("file", QString("\"%1\"").arg(debugFile.filePath().replace('\\','/')));
+                mDebugger->sendCommand("-file-exec-and-symbols", QString("\"%1\"").arg(debugFile.filePath().replace('\\','/')));
             }
         }
         break;
@@ -1425,48 +1446,39 @@ void MainWindow::debug()
         includeOrSkipDirs(compilerSet->defaultCppIncludeDirs(),true);
     }
 
-    // Add breakpoints and watch vars
-//    for i := 0 to fDebugger.WatchVarList.Count - 1 do
-//      fDebugger.AddWatchVar(i);
-    mDebugger->sendAllWatchvarsToDebugger();
     mDebugger->sendAllBreakpointsToDebugger();
 
     // Run the debugger
-    mDebugger->sendCommand("set", "width 0"); // don't wrap output, very annoying
-    mDebugger->sendCommand("set", "new-console on");
-    mDebugger->sendCommand("set", "confirm off");
-    mDebugger->sendCommand("set", "print repeats 0"); // don't repeat elements
-    mDebugger->sendCommand("set", "print elements 0"); // don't limit elements
-    mDebugger->sendCommand("cd", excludeTrailingPathDelimiter(debugFile.path())); // restore working directory
+    mDebugger->sendCommand("-enable-pretty-printing","");
+    mDebugger->sendCommand("-data-list-register-names","");
+    mDebugger->sendCommand("-gdb-set", "width 0"); // don't wrap output, very annoying
+    mDebugger->sendCommand("-gdb-set", "new-console on");
+    mDebugger->sendCommand("-gdb-set", "confirm off");
+    mDebugger->sendCommand("-gdb-set", "print repeats 0"); // don't repeat elements
+    mDebugger->sendCommand("-gdb-set", "print elements 0"); // don't limit elements
+    mDebugger->sendCommand("-environment-cd", excludeTrailingPathDelimiter(debugFile.path())); // restore working directory
     if (!debugInferiorhasBreakpoint()) {
-        QString params;
         switch(getCompileTarget()) {
         case CompileTarget::None:
             return;
         case CompileTarget::File:
-            mDebugger->sendCommand("start",params);
-            mDebugger->updateDebugInfo();
+            mDebugger->sendCommand("-exec-run", "--start");
             break;
         case CompileTarget::Project:
-            params = "";
-            mDebugger->sendCommand("start",params);
-            mDebugger->updateDebugInfo();
+            mDebugger->sendCommand("-exec-run", "--start");
             break;
         default:
             break;
         }
     } else {
-        QString params;
         switch(getCompileTarget()) {
         case CompileTarget::None:
             return;
         case CompileTarget::File:
-            mDebugger->sendCommand("run",params);
-            mDebugger->updateDebugInfo();
+            mDebugger->sendCommand("-exec-run","");
             break;
         case CompileTarget::Project:
-            mDebugger->sendCommand("run",params);
-            mDebugger->updateDebugInfo();
+            mDebugger->sendCommand("-exec-run","");
             break;
         default:
             break;
@@ -1479,6 +1491,15 @@ void MainWindow::showSearchPanel(bool showReplace)
     openCloseBottomPanel(true);
     showSearchReplacePanel(showReplace);
     ui->tabMessages->setCurrentWidget(ui->tabSearch);
+}
+
+void MainWindow::showCPUInfoDialog()
+{
+    if (mCPUDialog==nullptr) {
+        mCPUDialog = new CPUDialog(this);
+        connect(mCPUDialog, &CPUDialog::closed, this, &MainWindow::cleanUpCPUDialog);
+    }
+    mCPUDialog->show();
 }
 
 void MainWindow::openCloseBottomPanel(bool open)
@@ -1553,7 +1574,7 @@ void MainWindow::prepareDebugger()
 
     // Clear logs
     ui->debugConsole->clear();
-    if (!pSettings->debugger().showCommandLog()) {
+    if (pSettings->debugger().enableDebugConsole()) {
         ui->debugConsole->addLine("(gdb) ");
     }
     ui->txtEvalOutput->clear();
@@ -1661,7 +1682,7 @@ void MainWindow::includeOrSkipDirs(const QStringList &dirs, bool skip)
                         .arg(dirName,"*.*"));
         } else {
             mDebugger->sendCommand(
-                        "dir",
+                        "-environment-directory",
                         QString("\"%1\"").arg(dirName));
         }
     }
@@ -1924,13 +1945,13 @@ void MainWindow::buildContextMenus()
     ui->debugConsole->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->debugConsole,&QWidget::customContextMenuRequested,
             this, &MainWindow::onDebugConsoleContextMenu);
-    mDebugConsole_ShowCommandLog = createActionFor(
-                tr("Show debug logs in the debug console"),
+    mDebugConsole_ShowDetailLog = createActionFor(
+                tr("Show detail debug logs"),
                 ui->debugConsole);
-    mDebugConsole_ShowCommandLog->setCheckable(true);
-    connect(mDebugConsole_ShowCommandLog, &QAction::toggled,
+    mDebugConsole_ShowDetailLog->setCheckable(true);
+    connect(mDebugConsole_ShowDetailLog, &QAction::toggled,
             [this]() {
-        pSettings->debugger().setShowCommandLog(mDebugConsole_ShowCommandLog->isChecked());
+        pSettings->debugger().setShowDetailLog(mDebugConsole_ShowDetailLog->isChecked());
         pSettings->debugger().save();
     });
     mDebugConsole_Copy=createActionFor(
@@ -2612,16 +2633,16 @@ void MainWindow::onDebugConsoleContextMenu(const QPoint &pos)
 {
     QMenu menu(this);
 
-    bool oldBlock = mDebugConsole_ShowCommandLog->blockSignals(true);
-    mDebugConsole_ShowCommandLog->setChecked(pSettings->debugger().showCommandLog());
-    mDebugConsole_ShowCommandLog->blockSignals(oldBlock);
+    bool oldBlock = mDebugConsole_ShowDetailLog->blockSignals(true);
+    mDebugConsole_ShowDetailLog->setChecked(pSettings->debugger().showDetailLog());
+    mDebugConsole_ShowDetailLog->blockSignals(oldBlock);
 
     menu.addAction(mDebugConsole_Copy);
     menu.addAction(mDebugConsole_Paste);
     menu.addAction(mDebugConsole_SelectAll);
     menu.addAction(mDebugConsole_Clear);
     menu.addSeparator();
-    menu.addAction(mDebugConsole_ShowCommandLog);
+    menu.addAction(mDebugConsole_ShowDetailLog);
     menu.exec(ui->debugConsole->mapToGlobal(pos));
 }
 
@@ -2898,7 +2919,7 @@ void MainWindow::onShowInsertCodeSnippetMenu()
 
 }
 
-void MainWindow::onEditorContextMenu(const QPoint &pos)
+void MainWindow::onEditorContextMenu(const QPoint& pos)
 {
     Editor * editor = mEditorList->getEditor();
     if (!editor)
@@ -2967,12 +2988,12 @@ void MainWindow::onEditorContextMenu(const QPoint &pos)
     menu.exec(editor->viewport()->mapToGlobal(pos));
 }
 
-void MainWindow::onEditorRightTabContextMenu(const QPoint &pos)
+void MainWindow::onEditorRightTabContextMenu(const QPoint& pos)
 {
     onEditorTabContextMenu(ui->EditorTabsRight,pos);
 }
 
-void MainWindow::onEditorLeftTabContextMenu(const QPoint &pos)
+void MainWindow::onEditorLeftTabContextMenu(const QPoint& pos)
 {
     onEditorTabContextMenu(ui->EditorTabsLeft,pos);
 }
@@ -3020,13 +3041,13 @@ void MainWindow::disableDebugActions()
 
 void MainWindow::enableDebugActions()
 {
-    ui->actionStep_Into->setEnabled(true);
-    ui->actionStep_Over->setEnabled(true);
-    ui->actionStep_Out->setEnabled(true);
-    ui->actionRun_To_Cursor->setEnabled(true);
-    ui->actionContinue->setEnabled(true);
-    ui->cbEvaluate->setEnabled(true);
-    ui->cbMemoryAddress->setEnabled(true);
+    ui->actionStep_Into->setEnabled(!mDebugger->inferiorRunning());
+    ui->actionStep_Over->setEnabled(!mDebugger->inferiorRunning());
+    ui->actionStep_Out->setEnabled(!mDebugger->inferiorRunning());
+    ui->actionRun_To_Cursor->setEnabled(!mDebugger->inferiorRunning());
+    ui->actionContinue->setEnabled(!mDebugger->inferiorRunning());
+    ui->cbEvaluate->setEnabled(!mDebugger->inferiorRunning());
+    ui->cbMemoryAddress->setEnabled(!mDebugger->inferiorRunning());
 }
 
 void MainWindow::onTodoParseStarted(const QString&)
@@ -3034,7 +3055,7 @@ void MainWindow::onTodoParseStarted(const QString&)
     mTodoModel.clear();
 }
 
-void MainWindow::onTodoParsing(const QString &filename, int lineNo, int ch, const QString &line)
+void MainWindow::onTodoParsing(const QString& filename, int lineNo, int ch, const QString& line)
 {
     mTodoModel.addItem(filename,lineNo,ch,line);
 }
@@ -3488,7 +3509,7 @@ void MainWindow::onCompilerSetChanged(int index)
     pSettings->compilerSets().saveDefaultIndex();
 }
 
-void MainWindow::onCompileLog(const QString &msg)
+void MainWindow::onCompileLog(const QString& msg)
 {
     ui->txtCompilerOutput->appendPlainText(msg);
     ui->txtCompilerOutput->moveCursor(QTextCursor::End);
@@ -3629,12 +3650,12 @@ void MainWindow::onCompileFinished(bool isCheckSyntax)
     updateAppTitle();
 }
 
-void MainWindow::onCompileErrorOccured(const QString &reason)
+void MainWindow::onCompileErrorOccured(const QString& reason)
 {
     QMessageBox::critical(this,tr("Compile Failed"),reason);
 }
 
-void MainWindow::onRunErrorOccured(const QString &reason)
+void MainWindow::onRunErrorOccured(const QString& reason)
 {
     mCompilerManager->stopRun();
     QMessageBox::critical(this,tr("Run Failed"),reason);
@@ -3669,7 +3690,7 @@ void MainWindow::onOJProblemCaseStarted(const QString& id,int current, int total
     }
 }
 
-void MainWindow::onOJProblemCaseFinished(const QString &id, int current, int total)
+void MainWindow::onOJProblemCaseFinished(const QString& id, int current, int total)
 {
     int row = mOJProblemModel.getCaseIndexById(id);
     if (row>=0) {
@@ -3698,10 +3719,10 @@ void MainWindow::cleanUpCPUDialog()
     ptr->deleteLater();
 }
 
-void MainWindow::onDebugCommandInput(const QString &command)
+void MainWindow::onDebugCommandInput(const QString& command)
 {
     if (mDebugger->executing()) {
-        mDebugger->sendCommand(command,"",true,true);
+        mDebugger->sendCommand(command,"", DebugCommandSource::Console);
     }
 }
 
@@ -3979,10 +4000,7 @@ void MainWindow::on_actionStep_Over_triggered()
 {
     if (mDebugger->executing()) {
         //WatchView.Items.BeginUpdate();
-        mDebugger->invalidateAllVars();
-        mDebugger->sendCommand("next", "");
-        mDebugger->updateDebugInfo();
-        mDebugger->refreshWatchVars();
+        mDebugger->sendCommand("-exec-next", "");
     }
 }
 
@@ -3990,10 +4008,7 @@ void MainWindow::on_actionStep_Into_triggered()
 {
     if (mDebugger->executing()) {
         //WatchView.Items.BeginUpdate();
-        mDebugger->invalidateAllVars();
-        mDebugger->sendCommand("step", "");
-        mDebugger->updateDebugInfo();
-        mDebugger->refreshWatchVars();
+        mDebugger->sendCommand("-exec-step", "");
     }
 
 }
@@ -4002,10 +4017,7 @@ void MainWindow::on_actionStep_Out_triggered()
 {
     if (mDebugger->executing()) {
         //WatchView.Items.BeginUpdate();
-        mDebugger->invalidateAllVars();
-        mDebugger->sendCommand("finish", "");
-        mDebugger->updateDebugInfo();
-        mDebugger->refreshWatchVars();
+        mDebugger->sendCommand("-exec-finish", "");
     }
 
 }
@@ -4016,11 +4028,9 @@ void MainWindow::on_actionRun_To_Cursor_triggered()
         Editor *e=mEditorList->getEditor();
         if (e!=nullptr) {
             //WatchView.Items.BeginUpdate();
-            mDebugger->invalidateAllVars();
-            mDebugger->sendCommand("tbreak", QString(" %1").arg(e->caretY()));
-            mDebugger->sendCommand("continue", "");
-            mDebugger->updateDebugInfo();
-            mDebugger->refreshWatchVars();
+            mDebugger->sendCommand("-exec-until", QString("\"%1\":%2")
+                                   .arg(e->filename())
+                                   .arg(e->caretY()));
         }
     }
 
@@ -4030,10 +4040,7 @@ void MainWindow::on_actionContinue_triggered()
 {
     if (mDebugger->executing()) {
         //WatchView.Items.BeginUpdate();
-        mDebugger->invalidateAllVars();
-        mDebugger->sendCommand("continue", "");
-        mDebugger->updateDebugInfo();
-        mDebugger->refreshWatchVars();
+        mDebugger->sendCommand("-exec-continue", "");
     }
 }
 
@@ -4064,11 +4071,7 @@ void MainWindow::on_actionAdd_Watch_triggered()
 
 void MainWindow::on_actionView_CPU_Window_triggered()
 {
-    if (mCPUDialog==nullptr) {
-        mCPUDialog = new CPUDialog(this);
-        connect(mCPUDialog, &CPUDialog::closed, this, &MainWindow::cleanUpCPUDialog);
-    }
-    mCPUDialog->show();
+    showCPUInfoDialog();
 }
 
 void MainWindow::on_actionExit_triggered()
@@ -4082,7 +4085,7 @@ void MainWindow::onDebugEvaluateInput()
     if (!s.isEmpty()) {
         connect(mDebugger, &Debugger::evalValueReady,
                    this, &MainWindow::onEvalValueReady);
-        mDebugger->sendCommand("print",s,false);
+        mDebugger->sendCommand("-data-evaluate-expression",s);
     }
 }
 
@@ -4092,7 +4095,7 @@ void MainWindow::onDebugMemoryAddressInput()
     if (!s.isEmpty()) {
         connect(mDebugger, &Debugger::memoryExamineReady,
                    this, &MainWindow::onMemoryExamineReady);
-        mDebugger->sendCommand("x/64bx",s,false);
+        mDebugger->sendCommand("-data-read-memory",QString("%1 x 1 8 8 ").arg(s));
     }
 }
 
@@ -4140,14 +4143,14 @@ void MainWindow::onEndParsing(int total, int)
     }
 }
 
-void MainWindow::onEvalValueReady(const QString &value)
+void MainWindow::onEvalValueReady(const QString& value)
 {
     updateDebugEval(value);
     disconnect(mDebugger, &Debugger::evalValueReady,
                this, &MainWindow::onEvalValueReady);
 }
 
-void MainWindow::onMemoryExamineReady(const QStringList &value)
+void MainWindow::onMemoryExamineReady(const QStringList& value)
 {
     ui->txtMemoryView->clear();
     foreach (QString s, value) {
@@ -4159,7 +4162,7 @@ void MainWindow::onMemoryExamineReady(const QStringList &value)
                this, &MainWindow::onMemoryExamineReady);
 }
 
-void MainWindow::onLocalsReady(const QStringList &value)
+void MainWindow::onLocalsReady(const QStringList& value)
 {
     ui->txtLocals->clear();
     foreach (QString s, value) {
@@ -4864,14 +4867,6 @@ void MainWindow::updateEditorHideTime(QTabWidget* tabWidget) {
     }
 }
 
-static int findTabIndex(QTabWidget* tabWidget , QWidget* w) {
-    for (int i=0;i<tabWidget->count();i++) {
-        if (w==tabWidget->widget(i))
-            return i;
-    }
-    return -1;
-}
-
 void MainWindow::showHideInfosTab(QWidget *widget, bool show)
 {
     int idx = findTabIndex(ui->tabInfos,widget);
@@ -5166,8 +5161,8 @@ void MainWindow::updateProblemCaseOutput(POJProblemCase problemCase)
     ui->txtProblemCaseOutput->clear();
     ui->txtProblemCaseOutput->setText(problemCase->output);
     if (problemCase->testState == ProblemCaseTestState::Failed) {
-        QStringList output = TextToLines(problemCase->output);
-        QStringList expected = TextToLines(problemCase->expected);
+        QStringList output = textToLines(problemCase->output);
+        QStringList expected = textToLines(problemCase->expected);
         for (int i=0;i<output.count();i++) {
             if (i>=expected.count() || output[i]!=expected[i]) {
                 QTextBlock block = ui->txtProblemCaseOutput->document()->findBlockByLineNumber(i);
@@ -5747,7 +5742,6 @@ void MainWindow::on_actionDelete_to_EOL_triggered()
     }
 }
 
-
 void MainWindow::on_actionDelete_to_BOL_triggered()
 {
     Editor *e=mEditorList->getEditor();
@@ -5755,4 +5749,3 @@ void MainWindow::on_actionDelete_to_BOL_triggered()
         e->deleteToBOL();
     }
 }
-

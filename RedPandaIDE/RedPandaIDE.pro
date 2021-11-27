@@ -25,6 +25,7 @@ SOURCES += \
     compiler/ojproblemcasesrunner.cpp \
     compiler/projectcompiler.cpp \
     compiler/runner.cpp \
+    gdbmiresultparser.cpp \
     platform.cpp \
     compiler/compiler.cpp \
     compiler/compilermanager.cpp \
@@ -134,7 +135,8 @@ SOURCES += \
     widgets/qconsole.cpp \
     widgets/qpatchedcombobox.cpp \
     widgets/searchdialog.cpp \
-    widgets/searchresultview.cpp
+    widgets/searchresultview.cpp \
+    widgets/signalmessagedialog.cpp
 
 HEADERS += \
     ConvertUTF.h \
@@ -154,6 +156,7 @@ HEADERS += \
     compiler/runner.h \
     compiler/stdincompiler.h \
     cpprefacter.h \
+    gdbmiresultparser.h \
     parser/cppparser.h \
     parser/cpppreprocessor.h \
     parser/cpptokenizer.h \
@@ -258,7 +261,8 @@ HEADERS += \
     widgets/qconsole.h \
     widgets/qpatchedcombobox.h \
     widgets/searchdialog.h \
-    widgets/searchresultview.h
+    widgets/searchresultview.h \
+    widgets/signalmessagedialog.h
 
 FORMS += \
     settingsdialog/compilerautolinkwidget.ui \
@@ -303,7 +307,8 @@ FORMS += \
     widgets/filepropertiesdialog.ui \
     widgets/newprojectdialog.ui \
     widgets/ojproblempropertywidget.ui \
-    widgets/searchdialog.ui
+    widgets/searchdialog.ui \
+    widgets/signalmessagedialog.ui
 
 TRANSLATIONS += \
     RedPandaIDE_zh_CN.ts

@@ -107,8 +107,9 @@ bool Project::modified() const
 
     // Otherwise, check all units
     foreach (const PProjectUnit& unit, mUnits){
-        if (unit->modified())
+        if (unit->modified()) {
             return true;
+        }
     }
     return false;
 }
@@ -184,10 +185,7 @@ void Project::setFileName(QString value)
 
 void Project::setModified(bool value)
 {
-    QFile file(mFilename);
-    // only mark modified if *not* read-only
-    if (!file.exists()
-            || (file.exists() && file.isWritable())) {
+    if (mModified!=value) {
         mModified=value;
         emit modifyChanged(mModified);
     }
@@ -1032,7 +1030,7 @@ void Project::buildPrivateResource(bool forceSave)
 
     rcFile = QDir(directory()).absoluteFilePath(rcFile);
     if (contents.count() > 3) {
-        StringsToFile(contents,rcFile);
+        stringsToFile(contents,rcFile);
         mOptions.privateResource = extractRelativePath(directory(), rcFile);
     } else {
       if (fileExists(rcFile))
@@ -1073,7 +1071,7 @@ void Project::buildPrivateResource(bool forceSave)
         content.append("    </dependentAssembly>");
         content.append("</dependency>");
         content.append("</assembly>");
-        StringsToFile(content,executable() + ".Manifest");
+        stringsToFile(content,executable() + ".Manifest");
     } else if (fileExists(executable() + ".Manifest"))
         QFile::remove(executable() + ".Manifest");
 
@@ -1119,7 +1117,7 @@ void Project::buildPrivateResource(bool forceSave)
                    .arg(mOptions.versionInfo.productVersion));
     contents.append("");
     contents.append("#endif /*" + def + "*/");
-    StringsToFile(contents,hFile);
+    stringsToFile(contents,hFile);
 }
 
 void Project::checkProjectFileForUpdate(SimpleIni &ini)
@@ -1599,6 +1597,7 @@ void Project::setName(const QString &newName)
     if (newName != mName) {
         mName = newName;
         mNode->text = newName;
+        setModified(true);
     }
 }
 
@@ -1772,7 +1771,7 @@ bool ProjectUnit::save()
     if (!mEditor && !fileExists(mFileName)) {
         // file is neither open, nor saved
         QStringList temp;
-        StringsToFile(temp,mFileName);
+        stringsToFile(temp,mFileName);
     } else if (mEditor && mEditor->modified()) {
         result = mEditor->save();
     }
@@ -1885,7 +1884,7 @@ Qt::ItemFlags ProjectModel::flags(const QModelIndex &index) const
     if (!p)
         return Qt::NoItemFlags;
     if (p==mProject->node().get())
-        return Qt::ItemIsEnabled | Qt::ItemIsDropEnabled;
+        return Qt::ItemIsEnabled | Qt::ItemIsDropEnabled | Qt::ItemIsEditable;
     Qt::ItemFlags flags = Qt::ItemIsEnabled | Qt::ItemIsEditable | Qt::ItemIsSelectable | Qt::ItemIsDragEnabled;
     if (p->unitIndex<0) {
         flags.setFlag(Qt::ItemIsDropEnabled);
@@ -1903,8 +1902,13 @@ bool ProjectModel::setData(const QModelIndex &index, const QVariant &value, int 
     if (!node)
         return false;
     if (role == Qt::EditRole) {
-        if (node == mProject->node())
-            return false;
+        if (node == mProject->node()) {
+            QString newName = value.toString().trimmed();
+            if (newName.isEmpty())
+                return false;
+            mProject->setName(newName);
+            return true;
+        }
         int idx = node->unitIndex;
         if (idx >= 0) {
             //change unit name

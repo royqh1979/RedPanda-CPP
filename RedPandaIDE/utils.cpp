@@ -7,7 +7,6 @@
 #include <QFileInfo>
 #include <QProcess>
 #include <QProcessEnvironment>
-#include <QSettings>
 #include <QString>
 #include <QTextCodec>
 #include <QtGlobal>
@@ -292,25 +291,25 @@ QString toLocalPath(const QString &filename)
     return newPath;
 }
 
-QStringList TextToLines(const QString &text)
+QStringList textToLines(const QString &text)
 {
     QTextStream stream(&((QString&)text),QIODevice::ReadOnly);
-    return ReadStreamToLines(&stream);
+    return readStreamToLines(&stream);
 }
 
-QStringList ReadFileToLines(const QString& fileName, QTextCodec* codec)
+QStringList readFileToLines(const QString& fileName, QTextCodec* codec)
 {
     QFile file(fileName);
     if (file.open(QFile::ReadOnly)) {
         QTextStream stream(&file);
         stream.setCodec(codec);
         stream.setAutoDetectUnicode(false);
-        return ReadStreamToLines(&stream);
+        return readStreamToLines(&stream);
     }
     return QStringList();
 }
 
-QStringList ReadStreamToLines(QTextStream *stream)
+QStringList readStreamToLines(QTextStream *stream)
 {
     QStringList list;
     QString s;
@@ -320,7 +319,7 @@ QStringList ReadStreamToLines(QTextStream *stream)
     return list;
 }
 
-void ReadStreamToLines(QTextStream *stream,
+void readStreamToLines(QTextStream *stream,
                               LineProcessFunc lineFunc)
 {
     QString s;
@@ -329,20 +328,20 @@ void ReadStreamToLines(QTextStream *stream,
     }
 }
 
-void TextToLines(const QString &text, LineProcessFunc lineFunc)
+void textToLines(const QString &text, LineProcessFunc lineFunc)
 {
     QTextStream stream(&((QString&)text),QIODevice::ReadOnly);
-    ReadStreamToLines(&stream,lineFunc);
+    readStreamToLines(&stream,lineFunc);
 }
 
-void ReadFileToLines(const QString &fileName, QTextCodec *codec, LineProcessFunc lineFunc)
+void readFileToLines(const QString &fileName, QTextCodec *codec, LineProcessFunc lineFunc)
 {
     QFile file(fileName);
     if (file.open(QFile::ReadOnly)) {
         QTextStream stream(&file);
         stream.setCodec(codec);
         stream.setAutoDetectUnicode(false);
-        ReadStreamToLines(&stream, lineFunc);
+        readStreamToLines(&stream, lineFunc);
     }
 }
 
@@ -402,7 +401,7 @@ void inflateRect(QRect &rect, int dx, int dy)
     rect.setBottom(rect.bottom()+dy);
 }
 
-QString TrimRight(const QString &s)
+QString trimRight(const QString &s)
 {
     if (s.isEmpty())
         return s;
@@ -418,7 +417,7 @@ QString TrimRight(const QString &s)
     }
 }
 
-bool StringIsBlank(const QString &s)
+bool stringIsBlank(const QString &s)
 {
     for (QChar ch:s) {
         if (ch != ' ' && ch != '\t')
@@ -427,7 +426,7 @@ bool StringIsBlank(const QString &s)
     return true;
 }
 
-QString TrimLeft(const QString &s)
+QString trimLeft(const QString &s)
 {
     if (s.isEmpty())
         return s;
@@ -503,7 +502,7 @@ QString changeFileExt(const QString& filename, QString ext)
     }
 }
 
-QStringList ReadFileToLines(const QString &fileName)
+QStringList readFileToLines(const QString &fileName)
 {
     QFile file(fileName);
     if (file.size()<=0)
@@ -540,7 +539,7 @@ QStringList ReadFileToLines(const QString &fileName)
     return result;
 }
 
-void StringsToFile(const QStringList &list, const QString &fileName)
+void stringsToFile(const QStringList &list, const QString &fileName)
 {
     QFile file(fileName);
     if (file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
@@ -749,7 +748,7 @@ QString fromByteArray(const QByteArray &s)
     return QString::fromLocal8Bit(s);
 }
 
-QString LinesToText(const QStringList &lines)
+QString linesToText(const QStringList &lines)
 {
     return lines.join("\n");
 }
@@ -832,7 +831,7 @@ void executeFile(const QString &fileName, const QString &params, const QString &
                   );
 }
 
-void StringToFile(const QString &str, const QString &fileName)
+void stringToFile(const QString &str, const QString &fileName)
 {
     QFile file(fileName);
     if (file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
@@ -847,7 +846,7 @@ bool removeFile(const QString &filename)
     return file.remove();
 }
 
-QByteArray ReadFileToByteArray(const QString &fileName)
+QByteArray readFileToByteArray(const QString &fileName)
 {
     QFile file(fileName);
     if (file.open(QFile::ReadOnly)) {
@@ -893,4 +892,41 @@ bool readRegistry(HKEY key,const QByteArray& subKey, const QByteArray& name, QSt
     value=QString::fromLocal8Bit(buffer);
     delete [] buffer;
     return true;
+}
+
+QList<QByteArray> splitByteArrayToLines(const QByteArray &content)
+{
+    QList<QByteArray> lines;
+    const char* p =content.constData();
+    const char* end = p+content.length();
+    const char* lineStart = p;
+    QByteArray line;
+    while (p<=end) {
+        char ch=*p;
+        switch(ch) {
+        case '\r':
+            line = QByteArray(lineStart, p-lineStart);
+            lines.append(line);
+            p++;
+            if (*p=='\n')
+                p++;
+            lineStart = p;
+            break;
+        case '\n':
+            line = QByteArray(lineStart, p-lineStart);
+            lines.append(line);
+            p++;
+            lineStart = p;
+            break;
+        default:
+            p++;
+        }
+    }
+    if (lineStart>end) {
+        lines.append("");
+    } else {
+        line = QByteArray(lineStart, end-lineStart+1);
+        lines.append(line);
+    }
+    return lines;
 }

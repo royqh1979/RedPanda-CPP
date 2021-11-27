@@ -1,5 +1,25 @@
+Version 0.10.2 For Dev-C++ 7 Beta
+ - fix: select by mouse can't correctly set mouse's column position
+ - fix: dragging out of the editor and back will cause error
+ - fix: dragging text from lines in the front to lines back will cause error
+ - fix: dragging text onto itself should do nothing
+ - fix：license info in the about dialog should be readonly
+ - enhancement: change project name in the project view
+
+Version 0.10.1 For Dev-C++ 7 Beta
+ - fix: can't correctly expand watch expression that has spaces in it
+ - fix: can't correctly display stl containers in watch
+ - fix: the last line in the debug console is not correctly displayed
+ - enhancement: scroll while dragging text in the editor
+ - fix: dragging out of the editor shouldn't reset the caret back 
+
+Version 0.10.0 For Dev-C++ 7 Beta
+ - enhancement: use gdb/mi interface to  communicate with gdb debug session
+ - enhancement: better display of watch vars
+ - fix: project's modified flag not cleared after saved
+
 Version 0.9.4 For Dev-C++ 7 Beta
- - fix: code format indent settings not correctly saved
+ - fix: code formatter's "indent type" option not correctly saved
 
 Version 0.9.3 For Dev-C++ 7 Beta
  - fix: the count in the title of issues view isn't correct

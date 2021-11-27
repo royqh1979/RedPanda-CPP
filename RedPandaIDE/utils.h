@@ -143,28 +143,30 @@ bool programHasConsole(const QString& filename);
 QString toLocalPath(const QString& filename);
 using LineProcessFunc =  std::function<void(const QString&)>;
 
-QStringList ReadStreamToLines(QTextStream* stream);
-void ReadStreamToLines(QTextStream* stream, LineProcessFunc lineFunc);
+QStringList readStreamToLines(QTextStream* stream);
+void readStreamToLines(QTextStream* stream, LineProcessFunc lineFunc);
 
-QStringList TextToLines(const QString& text);
-void TextToLines(const QString& text, LineProcessFunc lineFunc);
-QString LinesToText(const QStringList& lines);
+QStringList textToLines(const QString& text);
+void textToLines(const QString& text, LineProcessFunc lineFunc);
+QString linesToText(const QStringList& lines);
+
+QList<QByteArray> splitByteArrayToLines(const QByteArray& content);
 
 QString parseMacros(const QString& s);
 
-QStringList ReadFileToLines(const QString& fileName, QTextCodec* codec);
-QStringList ReadFileToLines(const QString& fileName);
-QByteArray ReadFileToByteArray(const QString& fileName);
-void ReadFileToLines(const QString& fileName, QTextCodec* codec, LineProcessFunc lineFunc);
-void StringsToFile(const QStringList& list, const QString& fileName);
-void StringToFile(const QString& str, const QString& fileName);
+QStringList readFileToLines(const QString& fileName, QTextCodec* codec);
+QStringList readFileToLines(const QString& fileName);
+QByteArray readFileToByteArray(const QString& fileName);
+void readFileToLines(const QString& fileName, QTextCodec* codec, LineProcessFunc lineFunc);
+void stringsToFile(const QStringList& list, const QString& fileName);
+void stringToFile(const QString& str, const QString& fileName);
 
 void decodeKey(int combinedKey, int& key, Qt::KeyboardModifiers& modifiers);
 void inflateRect(QRect& rect, int delta);
 void inflateRect(QRect& rect, int dx, int dy);
-QString TrimRight(const QString& s);
-QString TrimLeft(const QString& s);
-bool StringIsBlank(const QString& s);
+QString trimRight(const QString& s);
+QString trimLeft(const QString& s);
+bool stringIsBlank(const QString& s);
 int compareFileModifiedTime(const QString& filename1, const QString& filename2);
 QByteArray getHTTPBody(const QByteArray& content);
 bool haveGoodContrast(const QColor& c1, const QColor &c2);

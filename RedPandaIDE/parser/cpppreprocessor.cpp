@@ -680,7 +680,7 @@ void CppPreprocessor::openInclude(const QString &fileName, QStringList bufferedT
             if (!bufferedText.isEmpty()) {
                 parsedFile->buffer  = bufferedText;
             } else {
-                parsedFile->buffer = ReadFileToLines(fileName);
+                parsedFile->buffer = readFileToLines(fileName);
             }
         }
     } else {

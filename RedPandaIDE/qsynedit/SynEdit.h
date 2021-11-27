@@ -432,11 +432,10 @@ protected:
 private:
     void clearAreaList(SynEditingAreaList areaList);
     void computeCaret(int X, int Y);
-    void computeScroll(int X, int Y);
+    void computeScroll(int X, int Y, bool isDragging);
 
     void incPaintLock();
     void decPaintLock();
-    bool mouseCapture();
     int clientWidth();
     int clientHeight();
     int clientTop();
@@ -562,6 +561,7 @@ private:
     void doComment();
     void doUncomment();
     void doToggleComment();
+    void doMouseScroll(bool isDragging);
 
 
 private slots:
@@ -575,6 +575,7 @@ private slots:
     void onLinesPutted(int index, int count);
     void onRedoAdded();
     void onScrollTimeout();
+    void onDraggingScrollTimeout();
     void onUndoAdded();
     void onSizeOrFontChanged(bool bFont);
     void onChanged();
@@ -701,6 +702,7 @@ private:
     BufferCoord mDragCaretSave;
     BufferCoord mDragSelBeginSave;
     BufferCoord mDragSelEndSave;
+    bool mDragging;
 
 friend class SynEditTextPainter;
 

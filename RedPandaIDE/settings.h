@@ -930,11 +930,11 @@ public:
     class Debugger: public _Base {
     public:
         explicit Debugger(Settings* settings);
-        bool showCommandLog() const;
-        void setShowCommandLog(bool showCommandLog);
+        bool enableDebugConsole() const;
+        void setEnableDebugConsole(bool showCommandLog);
 
-        bool showAnnotations() const;
-        void setShowAnnotations(bool showAnnotations);
+        bool showDetailLog() const;
+        void setShowDetailLog(bool showAnnotations);
 
         bool onlyShowMono() const;
         void setOnlyShowMono(bool onlyShowMono);
@@ -964,9 +964,12 @@ public:
         bool autosaveWatches() const;
         void setAutosaveWatches(bool newAutosaveWatches);
 
+        bool openCPUInfoWhenSignaled() const;
+        void setOpenCPUInfoWhenSignaled(bool newOpenCPUInfoWhenSignaled);
+
     private:
-        bool mShowCommandLog;
-        bool mShowAnnotations;
+        bool mEnableDebugConsole;
+        bool mShowDetailLog;
         QString mFontName;
         bool mOnlyShowMono;
         int mFontSize;
@@ -977,6 +980,7 @@ public:
         bool mSkipCustomLibraries;
         bool mAutosaveBreakpoints;
         bool mAutosaveWatches;
+        bool mOpenCPUInfoWhenSignaled;
 
         // _Base interface
     protected:

@@ -64,7 +64,6 @@ public:
     void parseFile(const QString& filename);
     bool parsing() const;
 
-signals:
 private:
     TodoThread* mThread;
     QRecursiveMutex mMutex;

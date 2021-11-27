@@ -57,7 +57,7 @@ void CPUDialog::updateInfo()
     if (pMainWindow->debugger()->executing()) {
         // Load the registers..
         sendSyntaxCommand();
-        pMainWindow->debugger()->sendCommand("info", "registers");
+        pMainWindow->debugger()->sendCommand("-data-list-register-values", "N");
         if (ui->chkBlendMode->isChecked())
             pMainWindow->debugger()->sendCommand("disas", "/s");
         else
@@ -65,14 +65,12 @@ void CPUDialog::updateInfo()
     }
 }
 
-void CPUDialog::setDisassembly(const QStringList &lines)
+void CPUDialog::setDisassembly(const QString& file, const QString& funcName,const QStringList& lines)
 {
-    if (lines.size()>0) {
-        ui->txtFunctionName->setText(lines[0]);
-    }
+    ui->txtFunctionName->setText(QString("%1:%2").arg(file, funcName));
     int activeLine = -1;
     ui->txtCode->lines()->clear();
-    for (int i=1;i<lines.size();i++) {
+    for (int i=0;i<lines.size();i++) {
         QString line = lines[i];
         if (line.startsWith("=>")) {
             activeLine = i;
@@ -80,16 +78,16 @@ void CPUDialog::setDisassembly(const QStringList &lines)
         ui->txtCode->lines()->add(line);
     }
     if (activeLine!=-1)
-        ui->txtCode->setCaretXY(BufferCoord{1,activeLine});
+        ui->txtCode->setCaretXYCentered(true,BufferCoord{1,activeLine});
 }
 
 void CPUDialog::sendSyntaxCommand()
 {
     // Set disassembly flavor
     if (ui->rdIntel->isChecked()) {
-        pMainWindow->debugger()->sendCommand("set disassembly-flavor", "intel");
+        pMainWindow->debugger()->sendCommand("-gdb-set", "disassembly-flavor intel");
     } else {
-        pMainWindow->debugger()->sendCommand("set disassembly-flavor", "att");
+        pMainWindow->debugger()->sendCommand("-gdb-set", "disassembly-flavor att");
     }
 }
 

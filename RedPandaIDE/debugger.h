@@ -13,37 +13,16 @@
 #include <QSemaphore>
 #include <QThread>
 #include <memory>
+#include "gdbmiresultparser.h"
+
 enum class DebugCommandSource {
     Console,
     Other
 };
 
-enum class AnnotationType {
-  TPrePrompt, TPrompt, TPostPrompt,
-  TSource,
-  TDisplayBegin, TDisplayEnd,
-  TDisplayExpression,
-  TFrameSourceFile, TFrameSourceBegin, TFrameSourceLine, TFrameFunctionName, TFrameWhere,
-  TFrameArgs,
-  TFrameBegin, TFrameEnd,
-  TErrorBegin, TErrorEnd,
-  TArrayBegin, TArrayEnd,
-  TElt, TEltRep, TEltRepEnd,
-  TExit,
-  TSignal, TSignalName, TSignalNameEnd, TSignalString, TSignalStringEnd,
-  TValueHistoryValue, TValueHistoryBegin, TValueHistoryEnd,
-  TArgBegin, TArgEnd, TArgValue, TArgNameEnd,
-  TFieldBegin, TFieldEnd, TFieldValue, TFieldNameEnd,
-  TInfoReg, TInfoAsm,
-  TUnknown, TEOF,
-  TLocal, TParam, TMemory
-};
-
 struct DebugCommand{
     QString command;
     QString params;
-    bool updateWatch;
-    bool showInConsole;
     DebugCommandSource source;
 };
 
@@ -52,14 +31,19 @@ struct WatchVar;
 using  PWatchVar = std::shared_ptr<WatchVar>;
 struct WatchVar {
     QString name;
+    QString expression;
+    bool hasMore;
     QString value;
-    QString fullName;
-    int gdbIndex;
+    QString type;
+    int numChild;
     QList<PWatchVar> children;
     WatchVar * parent; //use raw point to prevent circular-reference
 };
 
 struct Breakpoint {
+    int number; // breakpoint number
+    QString type; // type of the breakpoint
+    QString catch_type;
     int line;
     QString filename;
     QString condition;
@@ -71,18 +55,12 @@ using PBreakpoint = std::shared_ptr<Breakpoint>;
 struct Trace {
     QString funcname;
     QString filename;
+    QString address;
     int line;
+    int level;
 };
 
 using PTrace = std::shared_ptr<Trace>;
-
-struct Register {
-    QString name;
-    QString hexValue;
-    QString decValue;
-};
-
-using PRegister = std::shared_ptr<Register>;
 
 class RegisterModel: public QAbstractTableModel {
     Q_OBJECT
@@ -92,10 +70,12 @@ public:
     int columnCount(const QModelIndex &parent) const override;
     QVariant data(const QModelIndex &index, int role) const override;
     QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
-    void update(const QList<PRegister>& regs);
+    void updateNames(const QStringList& regNames);
+    void updateValues(const QHash<int,QString> registerValues);
     void clear();
 private:
-    QList<PRegister> mRegisters;
+    QStringList mRegisterNames;
+    QHash<int,QString> mRegisterValues;
 };
 
 class BreakpointModel: public QAbstractTableModel {
@@ -116,6 +96,8 @@ public:
     void save(const QString& filename);
     void load(const QString& filename);
 public slots:
+    void updateBreakpointNumber(const QString& filename, int line, int number);
+    void invalidateAllBreakpointNumbers(); // call this when gdb is stopped
     void onFileDeleteLines(const QString& filename, int startLine, int count);
     void onFileInsertLines(const QString& filename, int startLine, int count);
 private:
@@ -149,29 +131,51 @@ public:
     QModelIndex index(int row, int column,
                       const QModelIndex &parent = QModelIndex()) const override;
     QModelIndex parent(const QModelIndex &index) const override;
-
+    QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
+    void fetchMore(const QModelIndex &parent) override;
+    bool canFetchMore(const QModelIndex &parent) const override;
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
+    bool hasChildren(const QModelIndex &parent) const override;
     void addWatchVar(PWatchVar watchVar);
-    void removeWatchVar(const QString& name);
-    void removeWatchVar(int gdbIndex);
+    void removeWatchVar(const QString& expression);
     void removeWatchVar(const QModelIndex& index);
     void clear();
     const QList<PWatchVar>& watchVars();
-    PWatchVar findWatchVar(const QString& name);
-    PWatchVar findWatchVar(int gdbIndex);
+    PWatchVar findWatchVar(const QModelIndex& index);
+    PWatchVar findWatchVar(const QString& expr);
+    void resetAllVarInfos();
+    void clearAllVarInfos();
     void beginUpdate();
     void endUpdate();
     void notifyUpdated(PWatchVar var);
     void save(const QString& filename);
     void load(const QString& filename);
+public  slots:
+    void updateVarInfo(const QString& expression,
+                    const QString& name,
+                    int numChild,
+                    const QString& value,
+                    const QString& type,
+                    bool hasMore);
+    void prepareVarChildren(const QString& parentName, int numChild, bool hasMore);
+    void addVarChild(const QString& parentName, const QString& name,
+                     const QString& exp, int numChild,
+                     const QString& value, const QString& type,
+                     bool hasMore);
+    void updateVarValue(const QString& name, const QString& val,
+                         const QString& inScope, bool typeChanged,
+                         const QString& newType, int newNumChildren,
+                         bool hasMore);
+signals:
+    void fetchChildren(const QString& name);
+private:
+    QModelIndex index(PWatchVar var) const;
+    QModelIndex index(WatchVar* pVar) const;
 private:
     QList<PWatchVar> mWatchVars;
+    QHash<QString,PWatchVar> mVarIndex;
     int mUpdateCount;
-
-    // QAbstractItemModel interface
-public:
-    QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
 };
 
 
@@ -188,10 +192,9 @@ public:
     // Play/pause
     bool start();
     void sendCommand(const QString& command, const QString& params,
-                     bool updateWatch = true,
-                     bool showInConsole = false,
                      DebugCommandSource source = DebugCommandSource::Other);
     bool commandRunning();
+    bool inferiorRunning();
 
     //breakpoints
     void addBreakpoint(int line, const Editor* editor);
@@ -208,27 +211,14 @@ public:
     void sendAllBreakpointsToDebugger();
 
     //watch vars
-    void addWatchVar(const QString& namein);
-//    void removeWatchVar(nodein: TTreeNode); overload;
-    void renameWatchVar(const QString& oldname, const QString& newname);
+    void addWatchVar(const QString& expression);
+    void modifyWatchVarExpression(const QString& oldExpr, const QString& newExpr);
 
-    void refreshWatchVars();
     void removeWatchVars(bool deleteparent);
     void removeWatchVar(const QModelIndex& index);
-    void invalidateAllVars();
-    void sendAllWatchvarsToDebugger();
-    void invalidateWatchVar(const QString& name);
-    void invalidateWatchVar(PWatchVar var);
-    PWatchVar findWatchVar(const QString& name);
+    void sendAllWatchVarsToDebugger();
+    PWatchVar findWatchVar(const QString& expression);
 //    void notifyWatchVarUpdated(PWatchVar var);
-    void notifyBeforeProcessWatchVar();
-    void notifyAfterProcessWatchVar();
-
-
-    void updateDebugInfo();
-
-    bool useUTF8() const;
-    void setUseUTF8(bool useUTF8);
 
     BacktraceModel* backtraceModel();
     BreakpointModel* breakpointModel();
@@ -257,14 +247,19 @@ private:
 
 private slots:
     void syncFinishedParsing();
+    void updateMemory(const QStringList& value);
+    void updateEval(const QString& value);
+    void updateDisassembly(const QString& file, const QString& func,const QStringList& value);
     void onChangeDebugConsoleLastline(const QString& text);
     void clearUpReader();
-
+    void updateRegisterNames(const QStringList& registerNames);
+    void updateRegisterValues(const QHash<int,QString>& values);
+    void refreshWatchVars();
+    void fetchVarChildren(const QString& varName);
 private:
     bool mExecuting;
     bool mCommandChanged;
     BreakpointModel *mBreakpointModel;
-    bool mUseUTF8;
     BacktraceModel *mBacktraceModel;
     WatchModel *mWatchModel;
     RegisterModel *mRegisterModel;
@@ -277,102 +272,145 @@ class DebugReader : public QThread
     Q_OBJECT
 public:
     explicit DebugReader(Debugger* debugger, QObject *parent = nullptr);
-    void postCommand(const QString &Command, const QString &Params,
-                     bool UpdateWatch, bool ShowInConsole, DebugCommandSource  Source);
+    void postCommand(const QString &Command, const QString &Params, DebugCommandSource  Source);
+    void registerInferiorStoppedCommand(const QString &Command, const QString &Params);
     QString debuggerPath() const;
     void setDebuggerPath(const QString &debuggerPath);
     void stopDebug();
 
     bool commandRunning();
+    void waitStart();
 
-    bool invalidateAllVars() const;
-    void setInvalidateAllVars(bool invalidateAllVars);
+    bool inferiorPaused() const;
+
+    bool processExited() const;
+
+    bool signalReceived() const;
+
+    const QStringList &consoleOutput() const;
+
+    int breakPointLine() const;
+
+    const QString &breakPointFile() const;
+
+    const PDebugCommand &currentCmd() const;
+
+    bool updateCPUInfo() const;
+
+    bool updateLocals() const;
+
+    const QStringList &localsValue() const;
+
+    bool evalReady() const;
+
+    const QString &evalValue() const;
+
+    bool updateMemory() const;
+
+    const QStringList &memoryValue() const;
+
+    bool receivedSFWarning() const;
+
+    const QStringList &fullOutput() const;
+
+    bool inferiorRunning() const;
+
+    const QString &signalName() const;
+
+    const QString &signalMeaning() const;
 
 signals:
     void parseStarted();
     void invalidateAllVars();
     void parseFinished();
     void writeToDebugFailed();
-    void pauseWatchUpdate();
-    void updateWatch();
     void processError(QProcess::ProcessError error);
     void changeDebugConsoleLastLine(const QString& text);
     void cmdStarted();
     void cmdFinished();
+
+    void breakpointInfoGetted(const QString& filename, int line, int number);
+    void inferiorContinued();
+    void inferiorStopped(const QString& filename, int line, bool setFocus);
+    void localsUpdated(const QStringList& localsValue);
+    void evalUpdated(const QString& value);
+    void memoryUpdated(const QStringList& memoryValues);
+    void disassemblyUpdate(const QString& filename, const QString& funcName, const QStringList& result);
+    void registerNamesUpdated(const QStringList& registerNames);
+    void registerValuesUpdated(const QHash<int,QString>& values);
+    void varCreated(const QString& expression,
+                    const QString& name,
+                    int numChild,
+                    const QString& value,
+                    const QString& type,
+                    bool hasMore);
+    void prepareVarChildren(const QString& parentName,int numChild, bool hasMore);
+    void addVarChild(const QString& parentName, const QString& name,
+                     const QString& exp, int numChild,
+                     const QString& value, const QString& type,
+                     bool hasMore);
+    void varValueUpdated(const QString& name, const QString& val,
+                         const QString& inScope, bool typeChanged,
+                         const QString& newType, int newNumChildren,
+                         bool hasMore);
 private:
     void clearCmdQueue();
-    bool findAnnotation(AnnotationType annotation);
-    AnnotationType getAnnotation(const QString& s);
-    AnnotationType getLastAnnotation(const QByteArray& text);
-    AnnotationType getNextAnnotation();
-    QString getNextFilledLine();
-    QString getNextLine();
-    QString getNextWord();
-    QString getRemainingLine();
-    void handleDisassembly();
-    void handleDisplay();
-    void handleError();
-    void handleExit();
-    void handleFrames();
-    void handleLocalOutput();
-    void handleLocals();
-    void handleMemory();
-    void handleParams();
-    void handleRegisters();
-    void handleSignal();
-    void handleSource();
-    void handleValueHistoryValue();
-    AnnotationType peekNextAnnotation();
-    void processDebugOutput();
-    QString processEvalOutput();
-    void processWatchOutput(PWatchVar WatchVar);
+
     void runNextCmd();
-    void skipSpaces();
-    void skipToAnnotation();
     QStringList tokenize(const QString& s);
+
+    bool outputTerminated(const QByteArray& text);
+    void handleBreakpoint(const GDBMIResultParser::ParseObject& breakpoint);
+    void handleStack(const QList<GDBMIResultParser::ParseValue> & stack);
+    void handleLocalVariables(const QList<GDBMIResultParser::ParseValue> & variables);
+    void handleEvaluation(const QString& value);
+    void handleMemory(const QList<GDBMIResultParser::ParseValue> & rows);
+    void handleRegisterNames(const QList<GDBMIResultParser::ParseValue> & names);
+    void handleRegisterValue(const QList<GDBMIResultParser::ParseValue> & values);
+    void handleCreateVar(const GDBMIResultParser::ParseObject& multiVars);
+    void handleListVarChildren(const GDBMIResultParser::ParseObject& multiVars);
+    void handleUpdateVarValue(const QList<GDBMIResultParser::ParseValue> &changes);
+    void processConsoleOutput(const QByteArray& line);
+    void processResult(const QByteArray& result);
+    void processExecAsyncRecord(const QByteArray& line);
+    void processError(const QByteArray& errorLine);
+    void processResultRecord(const QByteArray& line);
+    void processDebugOutput(const QByteArray& debugOutput);
+    void runInferiorStoppedHook();
+    QByteArray removeToken(const QByteArray& line);
 private:
     Debugger *mDebugger;
     QString mDebuggerPath;
     QRecursiveMutex mCmdQueueMutex;
     QSemaphore mStartSemaphore;
     QQueue<PDebugCommand> mCmdQueue;
-    int mUpdateCount;
-    bool mInvalidateAllVars;
 
     //fOnInvalidateAllVars: TInvalidateAllVarsEvent;
     bool mCmdRunning;
     PDebugCommand mCurrentCmd;
-    QList<PRegister> mRegisters;
-    QStringList mDisassembly;
-
     QProcess* mProcess;
 
     //fWatchView: TTreeView;
-    int mIndex;
-    int mBreakPointLine;
-    QString mBreakPointFile;
-    QString mOutput;
-    QString mEvalValue;
-    QStringList mMemoryValue;
-    QStringList mLocalsValue;
-    QString mSignal;
-    bool mUseUTF8;
 
-    // attempt to cut down on Synchronize calls
-    bool dobacktraceready;
-    bool dodisassemblerready;
-    bool doregistersready;
-    bool doevalready;
-    bool doprocessexited;
-    bool doupdatecpuwindow;
-    bool doupdateexecution;
-    bool doreceivedsignal;
-    bool doreceivedsfwarning;
-    bool doupdatememoryview;
-    bool doupdatelocal;
+    QString mSignalName;
+    QString mSignalMeaning;
 
+    //
+    QList<PDebugCommand> mInferiorStoppedHookCommands;
+    bool mInferiorRunning;
+    bool mProcessExited;
+
+    bool mSignalReceived;
+    bool mUpdateCPUInfo;
+    bool mReceivedSFWarning;
+
+    int mCurrentLine;
+    int mCurrentAddress;
+    QString mCurrentFunc;
+    QString mCurrentFile;
+    QStringList mConsoleOutput;
+    QStringList mFullOutput;
     bool mStop;
-    friend class Debugger;
     // QThread interface
 protected:
     void run() override;

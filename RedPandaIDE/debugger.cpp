@@ -12,9 +12,10 @@
 #include <QPlainTextEdit>
 #include <QDebug>
 #include <QDir>
+#include <QJsonDocument>
 #include <QJsonArray>
 #include <QJsonObject>
-#include <QJsonDocument>
+#include "widgets/signalmessagedialog.h"
 
 Debugger::Debugger(QObject *parent) : QObject(parent)
 {
@@ -23,10 +24,12 @@ Debugger::Debugger(QObject *parent) : QObject(parent)
     mWatchModel = new WatchModel(this);
     mRegisterModel = new RegisterModel(this);
     mExecuting = false;
-    mUseUTF8 = false;
     mReader = nullptr;
     mCommandChanged = false;
     mLeftPageIndexBackup = -1;
+
+    connect(mWatchModel, &WatchModel::fetchChildren,
+            this, &Debugger::fetchVarChildren);
 }
 
 bool Debugger::start()
@@ -58,17 +61,49 @@ bool Debugger::start()
                               tr("Can''t find debugger in : \"%1\"").arg(debuggerPath));
         return false;
     }
+    mWatchModel->resetAllVarInfos();
     mReader = new DebugReader(this);
     mReader->setDebuggerPath(debuggerPath);
     connect(mReader, &QThread::finished,this,&Debugger::clearUpReader);
     connect(mReader, &DebugReader::parseFinished,this,&Debugger::syncFinishedParsing,Qt::BlockingQueuedConnection);
     connect(mReader, &DebugReader::changeDebugConsoleLastLine,this,&Debugger::onChangeDebugConsoleLastline);
-    connect(this, &Debugger::localsReady,pMainWindow,&MainWindow::onLocalsReady);
     connect(mReader, &DebugReader::cmdStarted,pMainWindow, &MainWindow::disableDebugActions);
     connect(mReader, &DebugReader::cmdFinished,pMainWindow, &MainWindow::enableDebugActions);
+    connect(mReader, &DebugReader::inferiorStopped, pMainWindow, &MainWindow::enableDebugActions);
 
+    connect(mReader, &DebugReader::breakpointInfoGetted, mBreakpointModel,
+            &BreakpointModel::updateBreakpointNumber);
+    connect(mReader, &DebugReader::localsUpdated, pMainWindow,
+            &MainWindow::onLocalsReady);
+    connect(mReader, &DebugReader::memoryUpdated,this,
+            &Debugger::updateMemory);
+    connect(mReader, &DebugReader::evalUpdated,this,
+            &Debugger::updateEval);
+    connect(mReader, &DebugReader::disassemblyUpdate,this,
+            &Debugger::updateDisassembly);
+    connect(mReader, &DebugReader::registerNamesUpdated, this,
+            &Debugger::updateRegisterNames);
+    connect(mReader, &DebugReader::registerValuesUpdated, this,
+            &Debugger::updateRegisterValues);
+    connect(mReader, &DebugReader::varCreated,mWatchModel,
+            &WatchModel::updateVarInfo);
+    connect(mReader, &DebugReader::prepareVarChildren,mWatchModel,
+            &WatchModel::prepareVarChildren);
+    connect(mReader, &DebugReader::addVarChild,mWatchModel,
+            &WatchModel::addVarChild);
+    connect(mReader, &DebugReader::varValueUpdated,mWatchModel,
+            &WatchModel::updateVarValue);
+    connect(mReader, &DebugReader::inferiorContinued,pMainWindow,
+            &MainWindow::removeActiveBreakpoints);
+    connect(mReader, &DebugReader::inferiorStopped,pMainWindow,
+            &MainWindow::setActiveBreakpoint);
+    connect(mReader, &DebugReader::inferiorStopped,this,
+            &Debugger::refreshWatchVars);
+
+    mReader->registerInferiorStoppedCommand("-stack-list-frames","");
+    mReader->registerInferiorStoppedCommand("-stack-list-variables", "--all-values");
     mReader->start();
-    mReader->mStartSemaphore.acquire(1);
+    mReader->waitStart();
 
     pMainWindow->updateAppTitle();
 
@@ -89,10 +124,6 @@ void Debugger::clearUpReader()
         mReader->deleteLater();
         mReader=nullptr;
 
-//        if WatchVarList.Count = 0 then // nothing worth showing, restore view
-//          MainForm.LeftPageControl.ActivePageIndex := LeftPageIndexBackup;
-
-//        // Close CPU window
         if (pMainWindow->cpuDialog()!=nullptr) {
             pMainWindow->cpuDialog()->close();
         }
@@ -108,12 +139,22 @@ void Debugger::clearUpReader()
 
         mBacktraceModel->clear();
 
-        for(PWatchVar var:mWatchModel->watchVars()) {
-            invalidateWatchVar(var);
-        }
+        mWatchModel->clearAllVarInfos();
+
+        mBreakpointModel->invalidateAllBreakpointNumbers();
 
         pMainWindow->updateEditorActions();
     }
+}
+
+void Debugger::updateRegisterNames(const QStringList &registerNames)
+{
+    mRegisterModel->updateNames(registerNames);
+}
+
+void Debugger::updateRegisterValues(const QHash<int, QString> &values)
+{
+    mRegisterModel->updateValues(values);
 }
 
 RegisterModel *Debugger::registerModel() const
@@ -126,10 +167,10 @@ WatchModel *Debugger::watchModel() const
     return mWatchModel;
 }
 
-void Debugger::sendCommand(const QString &command, const QString &params, bool updateWatch, bool showInConsole, DebugCommandSource source)
+void Debugger::sendCommand(const QString &command, const QString &params, DebugCommandSource source)
 {
     if (mExecuting && mReader) {
-        mReader->postCommand(command,params,updateWatch,showInConsole,source);
+        mReader->postCommand(command,params,source);
     }
 }
 
@@ -137,6 +178,14 @@ bool Debugger::commandRunning()
 {
     if (mExecuting && mReader) {
         return mReader->commandRunning();
+    }
+    return false;
+}
+
+bool Debugger::inferiorRunning()
+{
+    if (mExecuting && mReader) {
+        return mReader->inferiorRunning();
     }
     return false;
 }
@@ -149,6 +198,7 @@ void Debugger::addBreakpoint(int line, const Editor* editor)
 void Debugger::addBreakpoint(int line, const QString &filename)
 {
     PBreakpoint bp=std::make_shared<Breakpoint>();
+    bp->number = -1;
     bp->line = line;
     bp->filename = filename;
     bp->condition = "";
@@ -224,10 +274,10 @@ void Debugger::setBreakPointCondition(int index, const QString &condition)
 {
     PBreakpoint breakpoint=mBreakpointModel->setBreakPointCondition(index,condition);
     if (condition.isEmpty()) {
-        sendCommand("cond",
+        sendCommand("-break-condition",
                     QString("%1").arg(breakpoint->line));
     } else {
-        sendCommand("cond",
+        sendCommand("-break-condition",
                     QString("%1 %2").arg(breakpoint->line).arg(condition));
     }
 }
@@ -239,36 +289,43 @@ void Debugger::sendAllBreakpointsToDebugger()
     }
 }
 
-void Debugger::addWatchVar(const QString &namein)
+void Debugger::addWatchVar(const QString &expression)
 {
     // Don't allow duplicates...
-    PWatchVar oldVar = mWatchModel->findWatchVar(namein);
+    PWatchVar oldVar = mWatchModel->findWatchVar(expression);
     if (oldVar)
         return;
 
     PWatchVar var = std::make_shared<WatchVar>();
     var->parent= nullptr;
-    var->name = namein;
+    var->expression = expression;
     var->value = tr("Execute to evaluate");
-    var->gdbIndex = -1;
+    var->numChild = 0;
+    var->hasMore = false;
+    var->parent = nullptr;
 
     mWatchModel->addWatchVar(var);
     sendWatchCommand(var);
 }
 
-void Debugger::renameWatchVar(const QString &oldname, const QString &newname)
+void Debugger::modifyWatchVarExpression(const QString &oldExpr, const QString &newExpr)
 {
     // check if name already exists;
-    PWatchVar var = mWatchModel->findWatchVar(newname);
+    PWatchVar var = mWatchModel->findWatchVar(newExpr);
     if (var)
         return;
 
-    var = mWatchModel->findWatchVar(oldname);
+    var = mWatchModel->findWatchVar(oldExpr);
     if (var) {
-        var->name = newname;
-        if (mExecuting && var->gdbIndex!=-1)
+        if (mExecuting && !var->expression.isEmpty())
             sendRemoveWatchCommand(var);
-        invalidateWatchVar(var);
+        var->expression = newExpr;
+        var->type.clear();
+        var->value.clear();
+        var->hasMore = false;
+        var->numChild=0;
+        var->name.clear();
+        var->children.clear();
 
         if (mExecuting) {
             sendWatchCommand(var);
@@ -278,9 +335,16 @@ void Debugger::renameWatchVar(const QString &oldname, const QString &newname)
 
 void Debugger::refreshWatchVars()
 {
-    for (PWatchVar var:mWatchModel->watchVars()) {
-        if (var->gdbIndex == -1)
-            sendWatchCommand(var);
+    if (mExecuting) {
+        sendAllWatchVarsToDebugger();
+        sendCommand("-var-update"," --all-values *");
+    }
+}
+
+void Debugger::fetchVarChildren(const QString &varName)
+{
+    if (mExecuting) {
+        sendCommand("-var-list-children",varName);
     }
 }
 
@@ -291,92 +355,37 @@ void Debugger::removeWatchVars(bool deleteparent)
     } else {
         for(const PWatchVar& var:mWatchModel->watchVars()) {
             sendRemoveWatchCommand(var);
-            invalidateWatchVar(var);
         }
+        mWatchModel->clearAllVarInfos();
     }
 }
 
 void Debugger::removeWatchVar(const QModelIndex &index)
 {
+    PWatchVar var = mWatchModel->findWatchVar(index);
+    if (!var)
+        return;
+    sendRemoveWatchCommand(var);
     mWatchModel->removeWatchVar(index);
 }
 
-void Debugger::invalidateAllVars()
-{
-    mReader->setInvalidateAllVars(true);
-}
-
-void Debugger::sendAllWatchvarsToDebugger()
+void Debugger::sendAllWatchVarsToDebugger()
 {
     for (PWatchVar var:mWatchModel->watchVars()) {
-        sendWatchCommand(var);
+        if (var->name.isEmpty())
+            sendWatchCommand(var);
     }
 }
 
-void Debugger::invalidateWatchVar(const QString &name)
+PWatchVar Debugger::findWatchVar(const QString &expression)
 {
-    PWatchVar var = mWatchModel->findWatchVar(name);
-    if (var) {
-        invalidateWatchVar(var);
-    }
-}
-
-void Debugger::invalidateWatchVar(PWatchVar var)
-{
-    var->gdbIndex = -1;
-    QString value;
-    if (mExecuting) {
-        value = tr("Not found in current context");
-    } else {
-        value = tr("Execute to evaluate");
-    }
-    var->value = value;
-    if (var->children.isEmpty()) {
-        mWatchModel->notifyUpdated(var);
-    } else {
-        mWatchModel->beginUpdate();
-        var->children.clear();
-        mWatchModel->endUpdate();
-    }
-}
-
-PWatchVar Debugger::findWatchVar(const QString &name)
-{
-    return mWatchModel->findWatchVar(name);
+    return mWatchModel->findWatchVar(expression);
 }
 
 //void Debugger::notifyWatchVarUpdated(PWatchVar var)
 //{
 //    mWatchModel->notifyUpdated(var);
 //}
-
-void Debugger::notifyBeforeProcessWatchVar()
-{
-    mWatchModel->beginUpdate();
-}
-
-void Debugger::notifyAfterProcessWatchVar()
-{
-    mWatchModel->endUpdate();
-}
-
-void Debugger::updateDebugInfo()
-{
-    sendCommand("backtrace", "");
-    sendCommand("info locals", "");
-    sendCommand("info args", "");
-}
-
-bool Debugger::useUTF8() const
-{
-    return mUseUTF8;
-}
-
-void Debugger::setUseUTF8(bool useUTF8)
-{
-    mUseUTF8 = useUTF8;
-}
-
 BacktraceModel* Debugger::backtraceModel()
 {
     return mBacktraceModel;
@@ -389,12 +398,12 @@ BreakpointModel *Debugger::breakpointModel()
 
 void Debugger::sendWatchCommand(PWatchVar var)
 {
-    sendCommand("display", var->name);
+    sendCommand("-var-create", var->expression);
 }
 
 void Debugger::sendRemoveWatchCommand(PWatchVar var)
 {
-    sendCommand("undisplay",QString("%1").arg(var->gdbIndex));
+    sendCommand("-var-delete",QString("%1").arg(var->name));
 }
 
 void Debugger::sendBreakpointCommand(PBreakpoint breakpoint)
@@ -403,13 +412,14 @@ void Debugger::sendBreakpointCommand(PBreakpoint breakpoint)
         // break "filename":linenum
         QString condition;
         if (!breakpoint->condition.isEmpty()) {
-            condition = " if " + breakpoint->condition;
+            condition = " -c " + breakpoint->condition;
         }
         QString filename = breakpoint->filename;
         filename.replace('\\','/');
-        sendCommand("break",
-                    QString("\"%1\":%2").arg(filename)
-                    .arg(breakpoint->line)+condition);
+        sendCommand("-break-insert",
+                    QString("%1 --source \"%2\" --line %3")
+                    .arg(condition,filename)
+                    .arg(breakpoint->line));
     }
 }
 
@@ -421,13 +431,12 @@ void Debugger::sendClearBreakpointCommand(int index)
 void Debugger::sendClearBreakpointCommand(PBreakpoint breakpoint)
 {
     // Debugger already running? Remove it from GDB
-    if (breakpoint && mExecuting) {
+    if (breakpoint && breakpoint->number>=0 && mExecuting) {
         //clear "filename":linenum
         QString filename = breakpoint->filename;
         filename.replace('\\','/');
-        sendCommand("clear",
-                QString("\"%1\":%2").arg(filename)
-                .arg(breakpoint->line));
+        sendCommand("-break-delete",
+                QString("%1").arg(breakpoint->number));
     }
 }
 
@@ -436,7 +445,7 @@ void Debugger::syncFinishedParsing()
     bool spawnedcpuform = false;
 
     // GDB determined that the source code is more recent than the executable. Ask the user if he wants to rebuild.
-    if (mReader->doreceivedsfwarning) {
+    if (mReader->receivedSFWarning()) {
         if (QMessageBox::question(pMainWindow,
                                   tr("Compile"),
                                   tr("Source file is more recent than executable.")+"<BR /><BR />" + tr("Recompile?"),
@@ -449,89 +458,49 @@ void Debugger::syncFinishedParsing()
         }
     }
 
+
+
+    // show command output
+    if (pSettings->debugger().enableDebugConsole() ) {
+        if (pSettings->debugger().showDetailLog()) {
+            for (const QString& line:mReader->fullOutput()) {
+                pMainWindow->addDebugOutput(line);
+            }
+        } else {
+            if (mReader->currentCmd() && mReader->currentCmd()->command == "disas") {
+
+            } else {
+                for (const QString& line:mReader->consoleOutput()) {
+                    pMainWindow->addDebugOutput(line);
+                }
+                if (
+                       (mReader->currentCmd()
+                        && mReader->currentCmd()->source== DebugCommandSource::Console)
+                        || !mReader->consoleOutput().isEmpty() ) {
+                    pMainWindow->addDebugOutput("(gdb)");
+                }
+            }
+        }
+    }
+
     // The program to debug has stopped. Stop the debugger
-    if (mReader->doprocessexited) {
+    if (mReader->processExited()) {
         stop();
         return;
     }
 
-    // An evaluation variable has been processed. Forward the results
-    if (mReader->doevalready) {
-        //pMainWindow->updateDebugEval(mReader->mEvalValue);
-        emit evalValueReady(mReader->mEvalValue);
-        mReader->mEvalValue="";
-        mReader->doevalready = false;
-    }
-
-    if (mReader->doupdatememoryview) {
-        emit memoryExamineReady(mReader->mMemoryValue);
-        mReader->mMemoryValue.clear();
-        mReader->doupdatememoryview=false;
-    }
-
-    if (mReader->doupdatelocal) {
-        emit localsReady(mReader->mLocalsValue);
-        mReader->mLocalsValue.clear();
-        mReader->doupdatelocal=false;
-    }
-
-    // show command output
-    if (pSettings->debugger().showCommandLog() ||
-            (mReader->mCurrentCmd && mReader->mCurrentCmd->showInConsole)) {
-        if (pSettings->debugger().showAnnotations()) {
-            QString strOutput = mReader->mOutput;
-            strOutput.replace(QChar(26),'>');
-            pMainWindow->addDebugOutput(strOutput);
-            pMainWindow->addDebugOutput("");
-            pMainWindow->addDebugOutput("");
-        } else {
-            QStringList strList = TextToLines(mReader->mOutput);
-            QStringList outStrList;
-            bool addToLastLine=false;
-            for (int i=0;i<strList.size();i++) {
-                QString strOutput=strList[i];
-                if (strOutput.startsWith("\032\032")) {
-                    addToLastLine = true;
-                } else {
-                    if (addToLastLine && outStrList.size()>0) {
-                        outStrList[outStrList.size()-1]+=strOutput;
-                    } else {
-                        outStrList.append(strOutput);
-                    }
-                    addToLastLine = false;
-                }
-            }
-            for (const QString& line:outStrList) {
-                pMainWindow->addDebugOutput(line);
-            }
-        }
-    }
-
-    // Some part of the CPU form has been updated
-    if (pMainWindow->cpuDialog()!=nullptr && !mReader->doreceivedsignal) {
-        if (mReader->doregistersready) {
-            mRegisterModel->update(mReader->mRegisters);
-            mReader->mRegisters.clear();
-            mReader->doregistersready = false;
+    if (mReader->signalReceived()) {
+        SignalMessageDialog dialog(pMainWindow);
+        dialog.setOpenCPUInfo(pSettings->debugger().openCPUInfoWhenSignaled());
+        dialog.setMessage(
+                    tr("Signal \"%1\" Received: ").arg(mReader->signalName())
+                    + "<br />"
+                    + mReader->signalMeaning());
+        int result = dialog.exec();
+        if (result == QDialog::Accepted && dialog.openCPUInfo()) {
+            pMainWindow->showCPUInfoDialog();
         }
 
-        if (mReader->dodisassemblerready) {
-            pMainWindow->cpuDialog()->setDisassembly(mReader->mDisassembly);
-            mReader->mDisassembly.clear();
-            mReader->dodisassemblerready = false;
-        }
-    }
-
-    if (mReader->doupdateexecution) {
-        if (mReader->mCurrentCmd && mReader->mCurrentCmd->source == DebugCommandSource::Console) {
-            pMainWindow->setActiveBreakpoint(mReader->mBreakPointFile, mReader->mBreakPointLine,false);
-        } else {
-            pMainWindow->setActiveBreakpoint(mReader->mBreakPointFile, mReader->mBreakPointLine);
-        }
-        refreshWatchVars(); // update variable information
-    }
-
-    if (mReader->doreceivedsignal) {
 //SignalDialog := CreateMessageDialog(fSignal, mtError, [mbOk]);
 //SignalCheck := TCheckBox.Create(SignalDialog);
 
@@ -564,12 +533,29 @@ void Debugger::syncFinishedParsing()
 
 
     // CPU form updates itself when spawned, don't update twice!
-    if ((mReader->doupdatecpuwindow && !spawnedcpuform) && (pMainWindow->cpuDialog()!=nullptr)) {
+    if ((mReader->updateCPUInfo() && !spawnedcpuform) && (pMainWindow->cpuDialog()!=nullptr)) {
         pMainWindow->cpuDialog()->updateInfo();
     }
 }
 
-void Debugger::onChangeDebugConsoleLastline(const QString &text)
+void Debugger::updateMemory(const QStringList &value)
+{
+    emit memoryExamineReady(value);
+}
+
+void Debugger::updateEval(const QString &value)
+{
+    emit evalValueReady(value);
+}
+
+void Debugger::updateDisassembly(const QString& file, const QString& func, const QStringList &value)
+{
+    if (pMainWindow->cpuDialog()) {
+        pMainWindow->cpuDialog()->setDisassembly(file,func,value);
+    }
+}
+
+void Debugger::onChangeDebugConsoleLastline(const QString& text)
 {
     //pMainWindow->changeDebugOutputLastline(text);
     pMainWindow->addDebugOutput(text);
@@ -595,906 +581,365 @@ DebugReader::DebugReader(Debugger* debugger, QObject *parent) : QThread(parent),
 {
     mDebugger = debugger;
     mProcess = nullptr;
-    mUseUTF8 = false;
     mCmdRunning = false;
-    mInvalidateAllVars = false;
 }
 
-void DebugReader::postCommand(const QString &Command, const QString &Params, bool UpdateWatch, bool ShowInConsole, DebugCommandSource Source)
+void DebugReader::postCommand(const QString &Command, const QString &Params,
+                               DebugCommandSource Source)
 {
     QMutexLocker locker(&mCmdQueueMutex);
-    if (mCmdQueue.isEmpty() && UpdateWatch) {
-        emit pauseWatchUpdate();
-        mUpdateCount++;
-    }
     PDebugCommand pCmd = std::make_shared<DebugCommand>();
     pCmd->command = Command;
     pCmd->params = Params;
-    pCmd->updateWatch = UpdateWatch;
-    pCmd->showInConsole = ShowInConsole;
     pCmd->source = Source;
     mCmdQueue.enqueue(pCmd);
 //    if (!mCmdRunning)
-//        runNextCmd();
+    //        runNextCmd();
+}
+
+void DebugReader::registerInferiorStoppedCommand(const QString &Command, const QString &Params)
+{
+    QMutexLocker locker(&mCmdQueueMutex);
+    PDebugCommand pCmd = std::make_shared<DebugCommand>();
+    pCmd->command = Command;
+    pCmd->params = Params;
+    pCmd->source = DebugCommandSource::Other;
+    mInferiorStoppedHookCommands.append(pCmd);
 }
 
 void DebugReader::clearCmdQueue()
 {
     QMutexLocker locker(&mCmdQueueMutex);
     mCmdQueue.clear();
-
-    if (mUpdateCount>0) {
-        emit updateWatch();
-        mUpdateCount=0;
-    }
 }
 
-bool DebugReader::findAnnotation(AnnotationType annotation)
+void DebugReader::processConsoleOutput(const QByteArray& line)
 {
-    AnnotationType NextAnnotation;
-    do {
-        NextAnnotation = getNextAnnotation();
-        if (NextAnnotation == AnnotationType::TEOF)
-            return false;
-    } while (NextAnnotation != annotation);
-
-    return true;
-}
-
-AnnotationType DebugReader::getAnnotation(const QString &s)
-{
-    if (s == "pre-prompt") {
-        return AnnotationType::TPrePrompt;
-    } else if (s == "prompt") {
-        return AnnotationType::TPrompt;
-    } else if (s == "post-prompt") {
-        AnnotationType result = AnnotationType::TPostPrompt;
-        //hack to catch local
-        if ((mCurrentCmd) && (mCurrentCmd->command == "info locals")) {
-            result = AnnotationType::TLocal;
-        } else if ((mCurrentCmd) && (mCurrentCmd->command == "info args")) {
-            //hack to catch params
-            result = AnnotationType::TParam;
-        } else if ((mCurrentCmd) && (mCurrentCmd->command == "info") && (mCurrentCmd->params=="registers")) {
-            // Hack fix to catch register dump
-            result = AnnotationType::TInfoReg;
-        } else if ((mCurrentCmd) && (mCurrentCmd->command == "disas")) {
-            // Another hack to catch assembler            
-            result = AnnotationType::TInfoAsm;
-        } else if ((mCurrentCmd) && (mCurrentCmd->command.startsWith("x/"))) {
-            result = AnnotationType::TMemory;
-        }
-        return result;
-    } else if (s == "error-begin") {
-        return AnnotationType::TErrorBegin;
-    } else if (s == "error-end") {
-      return AnnotationType::TErrorEnd;
-    } else if (s == "display-begin") {
-      return AnnotationType::TDisplayBegin;
-    } else if (s == "display-expression") {
-      return AnnotationType::TDisplayExpression;
-    } else if (s == "display-end") {
-      return AnnotationType::TDisplayEnd;
-    } else if (s == "frame-source-begin") {
-      return AnnotationType::TFrameSourceBegin;
-    } else if (s == "frame-source-file") {
-      return AnnotationType::TFrameSourceFile;
-    } else if (s == "frame-source-line") {
-      return AnnotationType::TFrameSourceLine;
-    } else if (s == "frame-function-name") {
-      return AnnotationType::TFrameFunctionName;
-    } else if (s == "frame-args") {
-      return AnnotationType::TFrameArgs;
-    } else if (s == "frame-begin") {
-      return AnnotationType::TFrameBegin;
-    } else if (s == "frame-end") {
-      return AnnotationType::TFrameEnd;
-    } else if (s == "frame-where") {
-      return AnnotationType::TFrameWhere;
-    } else if (s == "source") {
-      return AnnotationType::TSource;
-    } else if (s == "exited") {
-      return AnnotationType::TExit;
-    } else if (s == "arg-begin") {
-      return AnnotationType::TArgBegin;
-    } else if (s == "arg-name-end") {
-      return AnnotationType::TArgNameEnd;
-    } else if (s == "arg-value") {
-      return AnnotationType::TArgValue;
-    } else if (s == "arg-end") {
-      return AnnotationType::TArgEnd;
-    } else if (s == "array-section-begin") {
-      return AnnotationType::TArrayBegin;
-    } else if (s == "array-section-end") {
-      return AnnotationType::TArrayEnd;
-    } else if (s == "elt") {
-      return AnnotationType::TElt;
-    } else if (s == "elt-rep") {
-      return AnnotationType::TEltRep;
-    } else if (s == "elt-rep-end") {
-      return AnnotationType::TEltRepEnd;
-    } else if (s == "field-begin") {
-      return AnnotationType::TFieldBegin;
-    } else if (s == "field-name-end") {
-      return AnnotationType::TFieldNameEnd;
-    } else if (s == "field-value") {
-      return AnnotationType::TFieldValue;
-    } else if (s == "field-end") {
-      return AnnotationType::TFieldEnd;
-    } else if (s == "value-history-value") {
-      return AnnotationType::TValueHistoryValue;
-    } else if (s == "value-history-begin") {
-      return AnnotationType::TValueHistoryBegin;
-    } else if (s == "value-history-end") {
-      return AnnotationType::TValueHistoryEnd;
-    } else if (s == "signal") {
-      return AnnotationType::TSignal;
-    } else if (s == "signal-name") {
-      return AnnotationType::TSignalName;
-    } else if (s == "signal-name-end") {
-      return AnnotationType::TSignalNameEnd;
-    } else if (s == "signal-string") {
-      return AnnotationType::TSignalString;
-    } else if (s == "signal-string-end") {
-      return AnnotationType::TSignalStringEnd;
-    } else if (mIndex >= mOutput.length()) {
-      return AnnotationType::TEOF;
-    } else {
-      return AnnotationType::TUnknown;;
-    }
-}
-
-AnnotationType DebugReader::getLastAnnotation(const QByteArray &text)
-{
-    int curpos = text.length()-1;
-    // Walk back until end of #26's
-    while ((curpos >= 0) && (text[curpos] != 26))
-        curpos--;
-
-    curpos++;
-
-    // Tiny rewrite of GetNextWord for special purposes
-    QString s = "";
-    while ((curpos < text.length()) && (text[curpos]>32)) {
-        s = s + text[curpos];
-        curpos++;
-    }
-
-    return getAnnotation(s);
-}
-
-AnnotationType DebugReader::getNextAnnotation()
-{
-    // Skip until end of #26's, i.e. GDB formatted output
-    skipToAnnotation();
-
-    // Get part this line, after #26#26
-    return getAnnotation(getNextWord());
-}
-
-QString DebugReader::getNextFilledLine()
-{
-    // Walk up to an enter sequence
-    while (mIndex<mOutput.length() && mOutput[mIndex]!='\r' && mOutput[mIndex]!='\n' && mOutput[mIndex]!=0)
-        mIndex++;
-    // Skip enter sequences (CRLF, CR, LF, etc.)
-    while (mIndex<mOutput.length() && mOutput[mIndex]=='\r' && mOutput[mIndex]=='\n' && mOutput[mIndex]==0)
-        mIndex++;
-    // Return next line
-    return getRemainingLine();
-}
-
-QString DebugReader::getNextLine()
-{
-    // Walk up to an enter sequence
-    while (mIndex<mOutput.length() && mOutput[mIndex]!='\r' && mOutput[mIndex]!='\n' && mOutput[mIndex]!=0)
-        mIndex++;
-
-    // End of output. Exit
-    if (mIndex>=mOutput.length())
-        return "";
-    // Skip ONE enter sequence (CRLF, CR, LF, etc.)
-    if ((mOutput[mIndex] == '\r') && (mIndex+1<mOutput.length()) &&  (mOutput[mIndex+1] == '\n')) // DOS
-        mIndex+=2;
-    else if (mOutput[mIndex] == '\r')  // UNIX
-        mIndex++;
-    else if (mOutput[mIndex] == '\n') // MAC
-        mIndex++;
-    // Return next line
-    return getRemainingLine();
-}
-
-QString DebugReader::getNextWord()
-{
-    QString Result;
-
-    // Called when at a space? Skip over
-    skipSpaces();
-
-    // Skip until a space
-    while (mIndex<mOutput.length() && mOutput[mIndex]>32) {
-        Result += mOutput[mIndex];
-        mIndex++;
-    }
-    return Result;
-}
-
-QString DebugReader::getRemainingLine()
-{
-    QString Result;
-
-    // Return part of line still ahead of us
-    while (mIndex<mOutput.length() && mOutput[mIndex]!='\r' && mOutput[mIndex]!='\n' && mOutput[mIndex]!=0) {
-        Result += mOutput[mIndex];
-        mIndex++;
-    }
-    return Result;
-}
-
-void DebugReader::handleDisassembly()
-{
-    // Get info message
-    QString s = getNextLine();
-
-    // the full function name will be saved at index 0
-    mDisassembly.append(s.mid(36));
-
-    s = getNextLine();
-
-    // Add lines of disassembly
-    while (s != "End of assembler dump.") {
-        if(!s.isEmpty())
-            mDisassembly.append(s);
-        s = getNextLine();
-    }
-
-    dodisassemblerready = true;
-}
-
-void DebugReader::handleDisplay()
-{
-    QString s = getNextLine(); // watch index
-
-    if (!findAnnotation(AnnotationType::TDisplayExpression))
-        return;
-    QString watchName = getNextLine(); // watch name
-    // Find watchVar we're talking about
-    PWatchVar watchVar = mDebugger->findWatchVar(watchName);
-    if (watchVar) {
-        // Advance up to the value
-        if (!findAnnotation(AnnotationType::TDisplayExpression))
-            return;;
-        // Refresh GDB index so we can undisplay this by index
-        watchVar->gdbIndex = s.toInt();
-        mDebugger->notifyBeforeProcessWatchVar();
-        processWatchOutput(watchVar);
-        mDebugger->notifyAfterProcessWatchVar();
-        //mDebugger->notifyWatchVarUpdated(watchVar);
-    }
-}
-
-void DebugReader::handleError()
-{
-    QString s = getNextLine(); // error text
-    if (s.startsWith("Cannot find bounds of current function")) {
-      //We have exited
-      handleExit();
-    } else if (s.startsWith("No symbol \"")) {
-        int head = s.indexOf('\"');
-        int tail = s.lastIndexOf('\"');
-        QString watchName = s.mid(head+1, tail-head-1);
-
-        // Update current..
-        mDebugger->invalidateWatchVar(watchName);
-    }
-}
-
-void DebugReader::handleExit()
-{
-    doprocessexited=true;
-}
-
-void DebugReader::handleFrames()
-{
-    QString s = getNextLine();
-
-    // Is this a backtrace dump?
-    if (s.startsWith("#")) {
-        if (s.startsWith("#0")) {
-            mDebugger->backtraceModel()->clear();
-        }
-        // Find function name
-        if (!findAnnotation(AnnotationType::TFrameFunctionName))
-            return;
-
-        PTrace trace = std::make_shared<Trace>();
-        trace->funcname = getNextLine();
-
-        // Find argument list start
-        if (!findAnnotation(AnnotationType::TFrameArgs))
-            return;
-
-        // Arguments are either () or detailed list
-        s = getNextLine();
-
-        while (peekNextAnnotation() == AnnotationType::TArgBegin) {
-
-            // argument name
-            if (!findAnnotation(AnnotationType::TArgBegin))
-                return;
-
-            s = s + getNextLine();
-
-            // =
-            if (!findAnnotation(AnnotationType::TArgNameEnd))
-                return;
-            s = s + ' ' + getNextLine() + ' '; // should be =
-
-            // argument value
-            if (!findAnnotation(AnnotationType::TArgValue))
-                return;
-
-            s = s + getNextLine();
-
-            // argument end
-            if (!findAnnotation(AnnotationType::TArgEnd))
-                return;
-
-            s = s + getNextLine();
-        }
-
-        trace->funcname = trace->funcname + s.trimmed();
-
-        // source info
-        if (peekNextAnnotation() == AnnotationType::TFrameSourceBegin) {
-            // Find filename
-            if (!findAnnotation(AnnotationType::TFrameSourceFile))
-                return;
-            trace->filename = getNextLine();
-            // find line
-            if (!findAnnotation(AnnotationType::TFrameSourceLine))
-                return;
-            trace->line = getNextLine().trimmed().toInt();
-        } else {
-            trace->filename = "";
-            trace->line = 0;
-        }
-        mDebugger->backtraceModel()->addTrace(trace);
-
-        // Skip over the remaining frame part...
-        if (!findAnnotation(AnnotationType::TFrameEnd))
-            return;
-
-        // Not another one coming? Done!
-        if (peekNextAnnotation() != AnnotationType::TFrameBegin) {
-            // End of stack trace dump!
-              dobacktraceready = true;
-        }
-    } else
-        doupdatecpuwindow = true;
-}
-
-void DebugReader::handleLocalOutput()
-{
-    // name(spaces)hexvalue(tab)decimalvalue
-    QString s = getNextFilledLine();
-
-    bool nobreakLine = false;
-    QString line;
-    while (true) {
-        if (!s.startsWith("\032\032")) {
-            s = TrimLeft(s);
-            if (s == "No locals.") {
-                return;
-            }
-            if (s == "No arguments.") {
-                return;
-            }
-            //todo: update local view
-            if (nobreakLine && pMainWindow->txtLocals()->document()->lineCount()>0) {
-                line += s;
-//                emit addLocalWithoutLinebreak(s);
+    if (line.length()>3 && line.startsWith("~\"") && line.endsWith("\"")) {
+        QByteArray s=line.mid(2,line.length()-3);
+        QByteArray stringValue;
+        const char *p=s.data();
+        while (*p!=0) {
+            if (*p=='\\' && *(p+1)!=0) {
+                p++;
+                switch (*p) {
+                case '\'':
+                    stringValue+=0x27;
+                    p++;
+                    break;
+                case '"':
+                    stringValue+=0x22;
+                    p++;
+                    break;
+                case '?':
+                    stringValue+=0x3f;
+                    p++;
+                    break;
+                case '\\':
+                    stringValue+=0x5c;
+                    p++;
+                    break;
+                case 'a':
+                    stringValue+=0x07;
+                    p++;
+                    break;
+                case 'b':
+                    stringValue+=0x08;
+                    p++;
+                    break;
+                case 'f':
+                    stringValue+=0x0c;
+                    p++;
+                    break;
+                case 'n':
+                    stringValue+=0x0a;
+                    p++;
+                    break;
+                case 'r':
+                    stringValue+=0x0d;
+                    p++;
+                    break;
+                case 't':
+                    stringValue+=0x09;
+                    p++;
+                    break;
+                case 'v':
+                    stringValue+=0x0b;
+                    p++;
+                    break;
+                case '0':
+                case '1':
+                case '2':
+                case '3':
+                case '4':
+                case '5':
+                case '6':
+                case '7':
+                {
+                    int i=0;
+                    for (i=0;i<3;i++) {
+                        if (*(p+i)<'0' || *(p+i)>'7')
+                            break;
+                    }
+                    QByteArray numStr(p,i);
+                    bool ok;
+                    unsigned char ch = numStr.toInt(&ok,8);
+                    stringValue+=ch;
+                    p+=i;
+                    break;
+                }
+                }
             } else {
-                mLocalsValue.append(line);
-                line = s;
+                stringValue+=*p;
+                p++;
             }
-            nobreakLine=false;
-        } else {
-            nobreakLine = true;
         }
-        s = getNextLine();
-        if (!nobreakLine && s.isEmpty())
-            break;
-    }
-    if (!line.isEmpty()) {
-        mLocalsValue.append(line);
+        mConsoleOutput.append(QString::fromLocal8Bit(stringValue));
     }
 }
 
-void DebugReader::handleLocals()
+void DebugReader::processResult(const QByteArray &result)
 {
-    mLocalsValue.clear();
-    handleLocalOutput();
+    GDBMIResultParser parser;
+    GDBMIResultType resultType;
+    GDBMIResultParser::ParseObject multiValues;
+    if (!mCurrentCmd)
+        return;
+    bool parseOk = parser.parse(result, mCurrentCmd->command, resultType,multiValues);
+    if (!parseOk)
+        return;
+    switch(resultType) {
+    case GDBMIResultType::BreakpointTable:
+    case GDBMIResultType::Frame:
+    case GDBMIResultType::Locals:
+        break;
+    case GDBMIResultType::Breakpoint:
+        handleBreakpoint(multiValues["bkpt"].object());
+        return;
+    case GDBMIResultType::FrameStack:
+        handleStack(multiValues["stack"].array());
+        return;
+    case GDBMIResultType::LocalVariables:
+        handleLocalVariables(multiValues["variables"].array());
+        return;
+    case GDBMIResultType::Evaluation:
+        handleEvaluation(multiValues["value"].value());
+        return;
+    case GDBMIResultType::Memory:
+        handleMemory(multiValues["memory"].array());
+        return;
+    case GDBMIResultType::RegisterNames:
+        handleRegisterNames(multiValues["register-names"].array());
+        return;
+    case GDBMIResultType::RegisterValues:
+        handleRegisterValue(multiValues["register-values"].array());
+        return;
+    case GDBMIResultType::CreateVar:
+        handleCreateVar(multiValues);
+        return;
+    case GDBMIResultType::ListVarChildren:
+        handleListVarChildren(multiValues);
+        return;
+    case GDBMIResultType::UpdateVarValue:
+        handleUpdateVarValue(multiValues["changelist"].array());
+        return;
+    }
+
 }
 
-void DebugReader::handleMemory()
+void DebugReader::processExecAsyncRecord(const QByteArray &line)
 {
-    doupdatememoryview = true;
-    // name(spaces)hexvalue(tab)decimalvalue
-    mMemoryValue.clear();
-    QString s = getNextFilledLine();
-    bool isAnnotation = false;
-    while (true) {
-        if (!s.startsWith("\032\032")) {
-            s = s.trimmed();
-            if (!s.isEmpty()) {
-                mMemoryValue.append(s);
-            }
-            isAnnotation = false;
-        } else {
-            isAnnotation = true;
+    QByteArray result;
+    GDBMIResultParser::ParseObject multiValues;
+    GDBMIResultParser parser;
+    if (!parser.parseAsyncResult(line,result,multiValues))
+        return;
+    if (result == "running") {
+        mInferiorRunning = true;
+        mCurrentAddress=0;
+        mCurrentFile.clear();
+        mCurrentLine=-1;
+        mCurrentFunc.clear();
+        emit inferiorContinued();
+        return;
+    }
+    if (result == "stopped") {
+        mInferiorRunning = false;
+        QByteArray reason = multiValues["reason"].value();
+        if (reason == "exited") {
+            //inferior exited, gdb should terminate too
+            mProcessExited = true;
+            return;
         }
-        s = getNextLine();
-        if (!isAnnotation && s.isEmpty())
-            break;
-    }
-}
-
-void DebugReader::handleParams(){
-    handleLocalOutput();
-    doupdatelocal = true;
-}
-
-void DebugReader::handleRegisters()
-{
-    // name(spaces)hexvalue(tab)decimalvalue
-    QString s = getNextFilledLine();
-
-    while (true) {
-        PRegister reg = std::make_shared<Register>();
-        // Cut name from 1 to first space
-        int x = s.indexOf(' ');
-        reg->name = s.mid(0,x);
-        s.remove(0,x);
-        // Remove spaces
-        s = TrimLeft(s);
-
-        // Cut hex value from 1 to first tab
-        x = s.indexOf('\t');
-        if (x<0)
-            x = s.indexOf(' ');
-        reg->hexValue = s.mid(0,x);
-        s.remove(0,x); // delete tab too
-        s = TrimLeft(s);
-
-        // Remaining part contains decimal value
-        reg->decValue = s;
-
-        if (!reg->name.trimmed().isEmpty())
-            mRegisters.append(reg);
-        s = getNextLine();
-        if (s.isEmpty())
-            break;
-    }
-
-    doregistersready = true;
-}
-
-void DebugReader::handleSignal()
-{
-    mSignal = getNextFilledLine(); // Program received signal
-
-    if (!findAnnotation(AnnotationType::TSignalName))
-        return;
-
-    mSignal = mSignal + getNextFilledLine(); // signal code
-
-    if (!findAnnotation(AnnotationType::TSignalNameEnd))
-        return;
-
-    mSignal = mSignal + getNextFilledLine(); // comma
-
-    if (!findAnnotation(AnnotationType::TSignalString))
-        return;
-
-    mSignal = mSignal + getNextFilledLine(); // user friendly description
-
-    if (!findAnnotation(AnnotationType::TSignalStringEnd))
-        return;
-
-    mSignal = mSignal + getNextFilledLine(); // period
-
-    doreceivedsignal = true;
-}
-
-void DebugReader::handleSource()
-{
-    // source filename:line:offset:beg/middle/end:addr
-    QString s = TrimLeft(getRemainingLine());
-
-    // remove offset, beg/middle/end, address
-    for (int i=0;i<3;i++) {
-        int delimPos = s.lastIndexOf(':');
-        if (delimPos >= 0)
-            s.remove(delimPos,INT_MAX);
+        if (reason == "exited-normally") {
+            //inferior exited, gdb should terminate too
+            mProcessExited = true;
+            return;
+        }
+        if (reason == "exited-signalled") {
+            //inferior exited, gdb should terminate too
+            mProcessExited = true;
+            mSignalReceived = true;
+            return;
+        }
+        mUpdateCPUInfo = true;
+        GDBMIResultParser::ParseValue frame(multiValues["frame"]);
+        if (frame.isValid()) {
+            GDBMIResultParser::ParseObject frameObj = frame.object();
+            mCurrentAddress = frameObj["addr"].hexValue();
+            mCurrentLine = frameObj["line"].intValue();
+            mCurrentFile = frameObj["fullname"].pathValue();
+            mCurrentFunc = frameObj["func"].value();
+        }
+        if (reason == "signal-received") {
+            mSignalReceived = true;
+            mSignalName = multiValues["signal-name"].value();
+            mSignalMeaning = multiValues["signal-meaning"].value();
+        }
+        runInferiorStoppedHook();
+        if (mCurrentCmd && mCurrentCmd->source == DebugCommandSource::Console)
+            emit inferiorStopped(mCurrentFile, mCurrentLine,false);
         else
-            return; // Wrong format. Don't bother to continue
+            emit inferiorStopped(mCurrentFile, mCurrentLine,true);
     }
+}
 
-    // get line
-    int delimPos = s.lastIndexOf(':');
-    if (delimPos >= 0) {
-        mBreakPointLine = s.mid(delimPos+1).toInt();
-        s.remove(delimPos, INT_MAX);
+void DebugReader::processError(const QByteArray &errorLine)
+{
+    mConsoleOutput.append(QString::fromLocal8Bit(errorLine));
+}
+
+void DebugReader::processResultRecord(const QByteArray &line)
+{
+    if (line.startsWith("^exit")) {
+        mProcessExited = true;
+        return;
     }
-
-    // get file
-    mBreakPointFile = s;
-
-    doupdateexecution = true;
-    doupdatecpuwindow = true;
+    if (line.startsWith("^error")) {
+        processError(line);
+        return;
+    }
+    if (line.startsWith("^done")
+            || line.startsWith("^running")) {
+        int pos = line.indexOf(',');
+        if (pos>=0) {
+            QByteArray result = line.mid(pos+1);
+            processResult(result);
+        } else if (mCurrentCmd && !(mCurrentCmd->command.startsWith('-'))) {
+            if (mCurrentCmd->command == "disas") {
+                 QStringList disOutput = mConsoleOutput;
+                if (disOutput.length()>=3) {
+                    disOutput.pop_back();
+                    disOutput.pop_front();
+                    disOutput.pop_front();
+                }
+                emit disassemblyUpdate(mCurrentFile,mCurrentFunc, disOutput);
+            }
+        }
+        return ;
+    }
+    if (line.startsWith("^connected")) {
+        //TODO: connected to remote target
+        return;
+    }
 }
 
-void DebugReader::handleValueHistoryValue()
-{
-    mEvalValue = processEvalOutput();
-    doevalready = true;
-}
-
-AnnotationType DebugReader::peekNextAnnotation()
-{
-    int indexBackup = mIndex; // do NOT modifiy curpos
-    AnnotationType result = getNextAnnotation();
-    mIndex = indexBackup;
-    return result;
-}
-
-void DebugReader::processDebugOutput()
+void DebugReader::processDebugOutput(const QByteArray& debugOutput)
 {
     // Only update once per update at most
     //WatchView.Items.BeginUpdate;
 
-    if (mInvalidateAllVars) {
-         //invalidate all vars when there's first output
-         mDebugger->removeWatchVars(false);
-         mInvalidateAllVars = false;
-    }
-
     emit parseStarted();
 
-   //try
+    mConsoleOutput.clear();
+    mFullOutput.clear();
 
-   dobacktraceready = false;
-   dodisassemblerready = false;
-   doregistersready = false;
-   doevalready = false;
-   doupdatememoryview = false;
-   doupdatelocal = false;
-   doprocessexited = false;
-   doupdateexecution = false;
-   doreceivedsignal = false;
-   doupdatecpuwindow = false;
-   doreceivedsfwarning = false;
+    mSignalReceived = false;
+    mUpdateCPUInfo = false;
+    mReceivedSFWarning = false;
+    QList<QByteArray> lines = splitByteArrayToLines(debugOutput);
 
-   // Global checks
-   if (mOutput.indexOf("warning: Source file is more recent than executable.") >= 0)
-       doreceivedsfwarning = true;
-
-   mIndex = 0;
-   AnnotationType nextAnnotation;
-   do {
-       nextAnnotation = getNextAnnotation();
-       switch(nextAnnotation) {
-       case AnnotationType::TValueHistoryValue:
-           handleValueHistoryValue();
-           break;
-       case AnnotationType::TSignal:
-           handleSignal();
-           break;
-       case AnnotationType::TExit:
-           handleExit();
-           break;
-       case AnnotationType::TFrameBegin:
-           handleFrames();
-           break;
-       case AnnotationType::TInfoAsm:
-           handleDisassembly();
-           break;
-       case AnnotationType::TInfoReg:
-           handleRegisters();
-           break;
-       case AnnotationType::TLocal:
-           handleLocals();
-           break;
-       case AnnotationType::TParam:
-           handleParams();
-           break;
-       case AnnotationType::TMemory:
-           handleMemory();
-           break;
-       case AnnotationType::TErrorBegin:
-           handleError();
-           break;
-       case AnnotationType::TDisplayBegin:
-           handleDisplay();
-           break;
-       case AnnotationType::TSource:
-           handleSource();
-           break;
-       default:
-           break;
-       }
-   } while (nextAnnotation != AnnotationType::TEOF);
-
-     // Only update once per update at most
-   //finally
-     //WatchView.Items.EndUpdate;
-   //end;
-
-   emit parseFinished();
-}
-
-QString DebugReader::processEvalOutput()
-{
-    int indent = 0;
-
-    // First line gets special treatment
-    QString result = getNextLine();
-    if (result.startsWith('{'))
-        indent+=4;
-
-    // Collect all data, add formatting in between
-    AnnotationType nextAnnotation;
-    QString nextLine;
-    bool shouldExit = false;
-    do {
-        nextAnnotation = getNextAnnotation();
-        nextLine = getNextLine();
-        switch(nextAnnotation) {
-        // Change indent if { or } is found
-        case AnnotationType::TFieldBegin:
-            result += "\r\n" + QString(4,' ');
-            break;
-        case AnnotationType::TFieldValue:
-            if (nextLine.startsWith('{') && (peekNextAnnotation() !=
-                                             AnnotationType::TArrayBegin))
-                indent+=4;
-            break;
-        case AnnotationType::TFieldEnd:
-            if (nextLine.endsWith('}')) {
-                indent-=4;
-                result += "\r\n" + QString(4,' ');
-            }
-            break;
-        case AnnotationType::TEOF:
-        case AnnotationType::TValueHistoryEnd:
-        case AnnotationType::TDisplayEnd:
-            shouldExit = true;
-        default:
-            break;
-        }
-        result += nextLine;
-    } while (!shouldExit);
-    return result;
-}
-
-void DebugReader::processWatchOutput(PWatchVar watchVar)
-{
-//    // Expand if it was expanded or if it didn't have any children
-//    bool ParentWasExpanded = false;
-
-    // Do not remove root node of watch variable
-
-    watchVar->children.clear();
-    watchVar->value = "";
-    // Process output parsed by ProcessEvalStruct
-    QString s = processEvalOutput();
-
-    QStringList tokens = tokenize(s);
-    PWatchVar parentVar = watchVar;
-    PWatchVar currentVar = watchVar;
-
-    QVector<PWatchVar> varStack;
-    int i=0;
-    while (i<tokens.length()) {
-        QString token = tokens[i];
-        QChar ch = token[0];
-        if (ch =='_' || (ch>='a' && ch<='z')
-                || (ch>='A' && ch<='Z') || (ch>127)) {
-            //is identifier,create new child node
-            PWatchVar newVar = std::make_shared<WatchVar>();
-            newVar->parent = parentVar.get();
-            newVar->name = token;
-            newVar->fullName = parentVar->fullName + '.'+token;
-            newVar->value = "";
-            newVar->gdbIndex = -1;
-            parentVar->children.append(newVar);
-            currentVar = newVar;
-        } else if (ch == '{') {
-            if (parentVar->value.isEmpty()) {
-                parentVar->value = "{";
-            } else {
-                PWatchVar newVar = std::make_shared<WatchVar>();
-                newVar->parent = parentVar.get();
-                if (parentVar) {
-                    int count = parentVar->children.count();
-                    newVar->name = QString("[%1]").arg(count);
-                    newVar->fullName = parentVar->fullName + newVar->name;
-                } else {
-                    newVar->name = QString("[0]");
-                    newVar->fullName = newVar->name;
-                }
-                newVar->value = "{";
-                parentVar->children.append(newVar);
-                varStack.push_back(parentVar);
-                parentVar = newVar;
-            }
-            currentVar = nullptr;
-        } else if (ch == '}') {
-            currentVar = nullptr;
-            PWatchVar newVar = std::make_shared<WatchVar>();
-            newVar->parent = parentVar.get();
-            newVar->name = "";
-            newVar->value = "}";
-            newVar->gdbIndex = -1;
-            parentVar->children.append(newVar);
-            if (!varStack.isEmpty()) {
-                parentVar = varStack.back();
-                varStack.pop_back();
-            }
-        } else if (ch == '=') {
-            // just skip it
-        } else if (ch == ',') {
-                currentVar = nullptr;
-        } else {
-            if (currentVar) {
-                if (currentVar->value.isEmpty()) {
-                    currentVar->value = token;
-                } else {
-                    currentVar->value += " "+token;
-                }
-            } else {
-                PWatchVar newVar = std::make_shared<WatchVar>();
-                newVar->parent = parentVar.get();
-                newVar->name = QString("[%1]")
-                        .arg(parentVar->children.count());
-                newVar->fullName = parentVar->fullName + newVar->name;
-                newVar->value = token;
-                newVar->gdbIndex = -1;
-                parentVar->children.append(newVar);
-            }
-        }
-        i++;
+    for (int i=0;i<lines.count();i++) {
+         QByteArray line = lines[i];
+         if (pSettings->debugger().showDetailLog())
+            mFullOutput.append(line);
+         line = removeToken(line);
+         if (line.isEmpty()) {
+             continue;
+         }
+         switch (line[0]) {
+         case '~': // console stream output
+             processConsoleOutput(line);
+             break;
+         case '@': // target stream output
+         case '&': // log stream output
+             break;
+         case '^': // result record
+             processResultRecord(line);
+             break;
+         case '*': // exec async output
+             processExecAsyncRecord(line);
+             break;
+         case '+': // status async output
+         case '=': // notify async output
+             break;
+         }
     }
-    // add placeholder name for variable name so we can format structs using one rule
+    emit parseFinished();
+    mConsoleOutput.clear();
+    mFullOutput.clear();
+}
 
-    // Add children based on indent
-//    QStringList lines = TextToLines(s);
-
-//    for (const QString& line:lines) {
-//        // Format node text. Remove trailing comma
-//        QString nodeText = line.trimmed();
-//        if (nodeText.endsWith(',')) {
-//            nodeText.remove(nodeText.length()-1,1);
-//        }
-
-//        if (nodeText.endsWith('{')) { // new member struct
-//            if (parentVar->text.isEmpty()) { // root node, replace text only
-//                parentVar->text = nodeText;
-//            } else {
-//                PWatchVar newVar = std::make_shared<WatchVar>();
-//                newVar->parent = parentVar.get();
-//                newVar->name = "";
-//                newVar->text = nodeText;
-//                newVar->gdbIndex = -1;
-//                parentVar->children.append(newVar);
-//                varStack.push_back(parentVar);
-//                parentVar = newVar;
-//            }
-//        } else if (nodeText.startsWith('}')) { // end of struct, change parent
-//                PWatchVar newVar = std::make_shared<WatchVar>();
-//                newVar->parent = parentVar.get();
-//                newVar->name = "";
-//                newVar->text = "}";
-//                newVar->gdbIndex = -1;
-//                parentVar->children.append(newVar);
-//                if (!varStack.isEmpty()) {
-//                    parentVar = varStack.back();
-//                    varStack.pop_back();
-//                }
-//        } else { // next parent member/child
-//            if (parentVar->text.isEmpty()) { // root node, replace text only
-//                parentVar->text = nodeText;
-//            } else {
-//                PWatchVar newVar = std::make_shared<WatchVar>();
-//                newVar->parent = parentVar.get();
-//                newVar->name = "";
-//                newVar->text = nodeText;
-//                newVar->gdbIndex = -1;
-//                parentVar->children.append(newVar);
-//            }
-//        }
-//    }
-        // TODO: remember expansion state
+void DebugReader::runInferiorStoppedHook()
+{
+    foreach (const PDebugCommand& cmd, mInferiorStoppedHookCommands) {
+        mCmdQueue.push_front(cmd);
+    }
 }
 
 void DebugReader::runNextCmd()
 {
-    bool doUpdate=false;
-
-    auto action = finally([this,&doUpdate] {
-        if (doUpdate) {
-            emit updateWatch();
-        }
-    });
     QMutexLocker locker(&mCmdQueueMutex);
-    if (mCmdQueue.isEmpty()) {
-        if ((mCurrentCmd) && (mCurrentCmd->updateWatch)) {
-            doUpdate=true;
-            if (mUpdateCount>0) {
-                mUpdateCount=0;
-            }
-            emit cmdFinished();
-        }
-        return;
-    }
 
     if (mCurrentCmd) {
         mCurrentCmd.reset();
+        emit cmdFinished();
     }
+    if (mCmdQueue.isEmpty())
+        return;
 
     PDebugCommand pCmd = mCmdQueue.dequeue();
     mCmdRunning = true;
     mCurrentCmd = pCmd;    
-    if (mCurrentCmd->updateWatch)
-        emit cmdStarted();
+    emit cmdStarted();
 
     QByteArray s;
+    QByteArray params;
     s=pCmd->command.toLocal8Bit();
     if (!pCmd->params.isEmpty()) {
-        s+= ' '+pCmd->params.toLocal8Bit();
+        params = pCmd->params.toLocal8Bit();
     }
+    if (pCmd->command == "-var-create") {
+        //hack for variable creation,to easy remember var expression
+        params = " - @ "+params;
+    } else if (pCmd->command == "-var-list-children") {
+        //hack for list variable children,to easy remember var expression
+        params = " --all-values \"" + params+'\"';
+    }
+    s+=" "+params;
     s+= "\n";
     if (mProcess->write(s)<0) {
         emit writeToDebugFailed();
     }
 
 //  if devDebugger.ShowCommandLog or pCmd^.ShowInConsole then begin
-    if (pSettings->debugger().showCommandLog() || pCmd->showInConsole) {
+    if (pSettings->debugger().enableDebugConsole() ) {
         //update debug console
-        // if not devDebugger.ShowAnnotations then begin
-        if (!pSettings->debugger().showAnnotations()) {
-//            if MainForm.DebugOutput.Lines.Count>0 then begin
-//              MainForm.DebugOutput.Lines.Delete(MainForm.DebugOutput.Lines.Count-1);
-//            end;
-            emit changeDebugConsoleLastLine("(gdb)"+pCmd->command + ' ' + pCmd->params);
-//            MainForm.DebugOutput.Lines.Add('(gdb)'+pCmd^.Cmd + ' ' + pCmd^.params);
-//            MainForm.DebugOutput.Lines.Add('');
-        } else {
-            emit changeDebugConsoleLastLine("(gdb)"+pCmd->command + ' ' + pCmd->params);
-//            MainForm.DebugOutput.Lines.Add(pCmd^.Cmd + ' ' + pCmd^.params);
-//            MainForm.DebugOutput.Lines.Add('');
+        if (pSettings->debugger().showDetailLog()
+                && pCmd->source != DebugCommandSource::Console) {
+            emit changeDebugConsoleLastLine(pCmd->command + ' ' + params);
         }
     }
-}
-
-void DebugReader::skipSpaces()
-{
-    while (mIndex < mOutput.length() &&
-           (mOutput[mIndex]=='\t' || mOutput[mIndex]==' '))
-        mIndex++;
-}
-
-void DebugReader::skipToAnnotation()
-{
-    // Walk up to the next annotation
-    while (mIndex < mOutput.length() &&
-           (mOutput[mIndex]!=26))
-        mIndex++;
-    // Crawl through the remaining ->'s
-    while (mIndex < mOutput.length() &&
-           (mOutput[mIndex]==26))
-        mIndex++;
 }
 
 QStringList DebugReader::tokenize(const QString &s)
@@ -1593,14 +1038,218 @@ QStringList DebugReader::tokenize(const QString &s)
     return result;
 }
 
-bool DebugReader::invalidateAllVars() const
+bool DebugReader::outputTerminated(const QByteArray &text)
 {
-    return mInvalidateAllVars;
+    QStringList lines = textToLines(QString::fromUtf8(text));
+    foreach (const QString& line,lines) {
+        if (line.trimmed() == "(gdb)")
+            return true;
+    }
+    return false;
 }
 
-void DebugReader::setInvalidateAllVars(bool invalidateAllVars)
+void DebugReader::handleBreakpoint(const GDBMIResultParser::ParseObject& breakpoint)
 {
-    mInvalidateAllVars = invalidateAllVars;
+    // gdb use system encoding for file path
+    QString filename = breakpoint["fullname"].pathValue();
+    int line = breakpoint["line"].intValue();
+    int number = breakpoint["number"].intValue();
+    emit breakpointInfoGetted(filename, line , number);
+}
+
+void DebugReader::handleStack(const QList<GDBMIResultParser::ParseValue> & stack)
+{
+    mDebugger->backtraceModel()->clear();
+    foreach (const GDBMIResultParser::ParseValue& frameValue, stack) {
+        GDBMIResultParser::ParseObject frameObject = frameValue.object();
+        PTrace trace = std::make_shared<Trace>();
+        trace->funcname = frameObject["func"].value();
+        trace->filename = frameObject["fullname"].pathValue();
+        trace->line = frameObject["line"].intValue();
+        trace->level = frameObject["level"].intValue(0);
+        trace->address = frameObject["addr"].value();
+        mDebugger->backtraceModel()->addTrace(trace);
+    }
+}
+
+void DebugReader::handleLocalVariables(const QList<GDBMIResultParser::ParseValue> &variables)
+{
+    QStringList locals;
+    foreach (const GDBMIResultParser::ParseValue& varValue, variables) {
+        GDBMIResultParser::ParseObject varObject = varValue.object();
+        locals.append(QString("%1 = %2")
+                            .arg(varObject["name"].value(),varObject["value"].value()));
+    }
+    emit localsUpdated(locals);
+}
+
+void DebugReader::handleEvaluation(const QString &value)
+{
+    emit evalUpdated(value);
+}
+
+void DebugReader::handleMemory(const QList<GDBMIResultParser::ParseValue> &rows)
+{
+    QStringList memory;
+    foreach (const GDBMIResultParser::ParseValue& row, rows) {
+        GDBMIResultParser::ParseObject rowObject = row.object();
+        QList<GDBMIResultParser::ParseValue> data = rowObject["data"].array();
+        QStringList values;
+        foreach (const GDBMIResultParser::ParseValue& val, data) {
+            values.append(val.value());
+        }
+        memory.append(QString("%1 %2")
+                            .arg(rowObject["addr"].value(),values.join(" ")));
+    }
+    emit memoryUpdated(memory);
+}
+
+void DebugReader::handleRegisterNames(const QList<GDBMIResultParser::ParseValue> &names)
+{
+    QStringList nameList;
+    foreach (const GDBMIResultParser::ParseValue& nameValue, names) {
+        nameList.append(nameValue.value());
+    }
+    emit registerNamesUpdated(nameList);
+}
+
+void DebugReader::handleRegisterValue(const QList<GDBMIResultParser::ParseValue> &values)
+{
+    QHash<int,QString> result;
+    foreach (const GDBMIResultParser::ParseValue& val, values) {
+        GDBMIResultParser::ParseObject obj = val.object();
+        int number = obj["number"].intValue();
+        QString value = obj["value"].value();
+        bool ok;
+        long long intVal;
+        intVal = value.toLongLong(&ok,10);
+        if (ok) {
+            value = QString("0x%1").arg(intVal,0,16);
+        }
+        result.insert(number,value);
+    }
+    emit registerValuesUpdated(result);
+}
+
+void DebugReader::handleCreateVar(const GDBMIResultParser::ParseObject &multiVars)
+{
+    if (!mCurrentCmd)
+        return;
+    QString expression = mCurrentCmd->params;
+    QString name = multiVars["name"].value();
+    int numChild = multiVars["numchild"].intValue(0);
+    QString value = multiVars["value"].value();
+    QString type = multiVars["type"].value();
+    bool hasMore = multiVars["has_more"].value() != "0";
+    emit varCreated(expression,name,numChild,value,type,hasMore);
+}
+
+void DebugReader::handleListVarChildren(const GDBMIResultParser::ParseObject &multiVars)
+{
+    if (!mCurrentCmd)
+        return;
+    QString parentName = mCurrentCmd->params;
+    int parentNumChild = multiVars["numchild"].intValue(0);
+    QList<GDBMIResultParser::ParseValue> children = multiVars["children"].array();
+    bool hasMore = multiVars["has_more"].value()!="0";
+    emit prepareVarChildren(parentName,parentNumChild,hasMore);
+    foreach(const GDBMIResultParser::ParseValue& child, children) {
+        GDBMIResultParser::ParseObject childObj = child.object();
+        QString name = childObj["name"].value();
+        QString exp = childObj["exp"].value();
+        int numChild = childObj["numchild"].intValue(0);
+        QString value = childObj["value"].value();
+        QString type = childObj["type"].value();
+        bool hasMore = childObj["has_more"].value() != "0";
+        emit addVarChild(parentName,
+                         name,
+                         exp,
+                         numChild,
+                         value,
+                         type,
+                         hasMore);
+    }
+}
+
+void DebugReader::handleUpdateVarValue(const QList<GDBMIResultParser::ParseValue> &changes)
+{
+    foreach (const GDBMIResultParser::ParseValue& value, changes) {
+        GDBMIResultParser::ParseObject obj = value.object();
+        QString name = obj["name"].value();
+        QString val = obj["value"].value();
+        QString inScope = obj["in_scope"].value();
+        bool typeChanged = (obj["type_changed"].value()=="true");
+        QString newType = obj["new_type"].value();
+        int newNumChildren = obj["new_num_children"].intValue(-1);
+        bool hasMore = (obj["has_more"].value() == "1");
+        emit varValueUpdated(name,val,inScope,typeChanged,newType,newNumChildren,
+                             hasMore);
+    }
+}
+
+QByteArray DebugReader::removeToken(const QByteArray &line)
+{
+    int p=0;
+    while (p<line.length()) {
+        QChar ch=line[p];
+        if (ch<'0' || ch>'9') {
+            break;
+        }
+        p++;
+    }
+    if (p<line.length())
+        return line.mid(p);
+    return line;
+}
+
+const QString &DebugReader::signalMeaning() const
+{
+    return mSignalMeaning;
+}
+
+const QString &DebugReader::signalName() const
+{
+    return mSignalName;
+}
+
+bool DebugReader::inferiorRunning() const
+{
+    return mInferiorRunning;
+}
+
+const QStringList &DebugReader::fullOutput() const
+{
+    return mFullOutput;
+}
+
+bool DebugReader::receivedSFWarning() const
+{
+    return mReceivedSFWarning;
+}
+
+bool DebugReader::updateCPUInfo() const
+{
+    return mUpdateCPUInfo;
+}
+
+const PDebugCommand &DebugReader::currentCmd() const
+{
+    return mCurrentCmd;
+}
+
+const QStringList &DebugReader::consoleOutput() const
+{
+    return mConsoleOutput;
+}
+
+bool DebugReader::signalReceived() const
+{
+    return mSignalReceived;
+}
+
+bool DebugReader::processExited() const
+{
+    return mProcessExited;
 }
 
 QString DebugReader::debuggerPath() const
@@ -1623,14 +1272,20 @@ bool DebugReader::commandRunning()
     return !mCmdQueue.isEmpty();
 }
 
+void DebugReader::waitStart()
+{
+    mStartSemaphore.acquire(1);
+}
 
 void DebugReader::run()
 {
     mStop = false;
+    mInferiorRunning = false;
+    mProcessExited = false;
     bool errorOccurred = false;
     QString cmd = mDebuggerPath;
 //    QString arguments = "--annotate=2";
-    QString arguments = "--annotate=2 --silent";
+    QString arguments = "--interpret=mi --silent";
     QString workingDir = QFileInfo(mDebuggerPath).path();
 
     mProcess = new QProcess();
@@ -1662,7 +1317,6 @@ void DebugReader::run()
     mProcess->start();
     mProcess->waitForStarted(5000);
     mStartSemaphore.release(1);
-
     while (true) {
         mProcess->waitForFinished(1);
         if (mProcess->state()!=QProcess::Running) {
@@ -1680,9 +1334,9 @@ void DebugReader::run()
             break;
         readed = mProcess->readAll();
         buffer += readed;
-        if (getLastAnnotation(buffer) == AnnotationType::TPrompt) {
-            mOutput = QString::fromLocal8Bit(buffer);
-            processDebugOutput();
+
+        if (readed.endsWith("\n")&& outputTerminated(buffer)) {
+            processDebugOutput(buffer);
             buffer.clear();
             mCmdRunning = false;
             runNextCmd();
@@ -1696,8 +1350,6 @@ void DebugReader::run()
         emit processError(mProcess->error());
     }
 }
-
-
 
 BreakpointModel::BreakpointModel(QObject *parent):QAbstractTableModel(parent)
 {
@@ -1794,6 +1446,14 @@ void BreakpointModel::removeBreakpoint(int row)
     endRemoveRows();
 }
 
+void BreakpointModel::invalidateAllBreakpointNumbers()
+{
+    foreach (PBreakpoint bp,mList) {
+        bp->number = -1;
+    }
+    //emit dateChanged(createIndex(0,0),)
+}
+
 PBreakpoint BreakpointModel::setBreakPointCondition(int index, const QString &condition)
 {
     PBreakpoint breakpoint = mList[index];
@@ -1873,7 +1533,17 @@ void BreakpointModel::load(const QString &filename)
     }
 }
 
-void BreakpointModel::onFileDeleteLines(const QString &filename, int startLine, int count)
+void BreakpointModel::updateBreakpointNumber(const QString& filename, int line, int number)
+{
+    foreach (PBreakpoint bp, mList) {
+        if (bp->filename == filename && bp->line == line) {
+            bp->number = number;
+            return;
+        }
+    }
+}
+
+void BreakpointModel::onFileDeleteLines(const QString& filename, int startLine, int count)
 {
     for (int i = mList.count()-1;i>=0;i--){
         PBreakpoint breakpoint = mList[i];
@@ -1889,7 +1559,7 @@ void BreakpointModel::onFileDeleteLines(const QString &filename, int startLine, 
     }
 }
 
-void BreakpointModel::onFileInsertLines(const QString &filename, int startLine, int count)
+void BreakpointModel::onFileInsertLines(const QString& filename, int startLine, int count)
 {
     for (int i = mList.count()-1;i>=0;i--){
         PBreakpoint breakpoint = mList[i];
@@ -2008,11 +1678,12 @@ QVariant WatchModel::data(const QModelIndex &index, int role) const
     WatchVar* item = static_cast<WatchVar*>(index.internalPointer());
     switch (role) {
     case Qt::DisplayRole:
-        //qDebug()<<"item->text:"<<item->text;
         switch(index.column()) {
         case 0:
-            return item->name;
+            return item->expression;
         case 1:
+            return item->type;
+        case 2:
             return item->value;
         }
     }
@@ -2023,7 +1694,6 @@ QModelIndex WatchModel::index(int row, int column, const QModelIndex &parent) co
 {
     if (!hasIndex(row,column,parent))
         return QModelIndex();
-
     WatchVar* parentItem;
     PWatchVar pChild;
     if (!parent.isValid()) {
@@ -2083,42 +1753,30 @@ int WatchModel::rowCount(const QModelIndex &parent) const
 
 int WatchModel::columnCount(const QModelIndex&) const
 {
-    return 2;
+    return 3;
 }
 
 void WatchModel::addWatchVar(PWatchVar watchVar)
 {
     for (PWatchVar var:mWatchVars) {
-        if (watchVar->name == var->name) {
+        if (watchVar->expression == var->expression) {
             return;
         }
     }
-    this->beginInsertRows(QModelIndex(),mWatchVars.size(),mWatchVars.size());
+    beginInsertRows(QModelIndex(),mWatchVars.count(),mWatchVars.count());
     mWatchVars.append(watchVar);
-    this->endInsertRows();
+    endInsertRows();
 }
 
-void WatchModel::removeWatchVar(const QString &name)
+void WatchModel::removeWatchVar(const QString &express)
 {
     for (int i=mWatchVars.size()-1;i>=0;i--) {
         PWatchVar var = mWatchVars[i];
-        if (name == var->name) {
+        if (express == var->expression) {
             this->beginResetModel();
             //this->beginRemoveRows(QModelIndex(),i,i);
-            mWatchVars.removeAt(i);
-            //this->endRemoveRows();
-            this->endResetModel();
-        }
-    }
-}
-
-void WatchModel::removeWatchVar(int gdbIndex)
-{
-    for (int i=mWatchVars.size()-1;i>=0;i--) {
-        PWatchVar var = mWatchVars[i];
-        if (gdbIndex == var->gdbIndex) {
-            this->beginResetModel();
-            //this->beginRemoveRows(QModelIndex(),i,i);
+            if (mVarIndex.contains(var->name))
+                mVarIndex.remove(var->name);
             mWatchVars.removeAt(i);
             //this->endRemoveRows();
             this->endResetModel();
@@ -2130,6 +1788,9 @@ void WatchModel::removeWatchVar(const QModelIndex &index)
 {
     int r=index.row();
     this->beginRemoveRows(QModelIndex(),r,r);
+    PWatchVar var = mWatchVars[r];
+    if (mVarIndex.contains(var->name))
+        mVarIndex.remove(var->name);
     mWatchVars.removeAt(r);
     this->endRemoveRows();
 }
@@ -2146,24 +1807,130 @@ const QList<PWatchVar> &WatchModel::watchVars()
     return mWatchVars;
 }
 
-PWatchVar WatchModel::findWatchVar(const QString &name)
+PWatchVar WatchModel::findWatchVar(const QModelIndex &index)
+{
+    if (!index.isValid())
+        return PWatchVar();
+    int r=index.row();
+    return mWatchVars[r];
+}
+
+PWatchVar WatchModel::findWatchVar(const QString &expr)
 {
     for (PWatchVar var:mWatchVars) {
-        if (name == var->name) {
+        if (expr == var->expression) {
             return var;
         }
     }
     return PWatchVar();
 }
 
-PWatchVar WatchModel::findWatchVar(int gdbIndex)
+void WatchModel::resetAllVarInfos()
 {
-    for (PWatchVar var:mWatchVars) {
-        if (gdbIndex == var->gdbIndex) {
-            return var;
+    beginResetModel();
+    foreach (PWatchVar var, mWatchVars) {
+        var->name.clear();
+        var->value = tr("Not Valid");
+        var->numChild = 0;
+        var->hasMore = false;
+        var->type.clear();
+        var->children.clear();
+    }
+    mVarIndex.clear();
+    endResetModel();
+}
+
+void WatchModel::updateVarInfo(const QString &expression, const QString &name, int numChild, const QString &value, const QString &type, bool hasMore)
+{
+    PWatchVar var = findWatchVar(expression);
+    if (!var)
+        return;
+    var->name = name;
+    var->value = value;
+    var->numChild = numChild;
+    var->hasMore = hasMore;
+    var->type = type;
+    mVarIndex.insert(name,var);
+    QModelIndex idx = index(var);
+    if (!idx.isValid())
+        return;
+    emit dataChanged(idx,createIndex(idx.row(),2,var.get()));
+}
+
+void WatchModel::prepareVarChildren(const QString &parentName, int numChild, bool hasMore)
+{
+    PWatchVar var = mVarIndex.value(parentName,PWatchVar());
+    if (var) {
+        var->numChild = numChild;
+        var->hasMore = hasMore;
+        if (var->children.count()>0) {
+            beginRemoveRows(index(var),0,var->children.count()-1);
+            var->children.clear();
+            endRemoveRows();
         }
     }
-    return PWatchVar();
+}
+
+void WatchModel::addVarChild(const QString &parentName, const QString &name,
+                             const QString &exp, int numChild, const QString &value,
+                             const QString &type, bool hasMore)
+{
+    PWatchVar var = mVarIndex.value(parentName,PWatchVar());
+    if (!var)
+        return;
+    beginInsertRows(index(var),var->children.count(),var->children.count());
+    PWatchVar child = std::make_shared<WatchVar>();
+    child->name = name;
+    child->expression = exp;
+    child->numChild = numChild;
+    child->value = value;
+    child->type = type;
+    child->hasMore = hasMore;
+    child->parent = var.get();
+    var->children.append(child);
+    endInsertRows();
+    mVarIndex.insert(name,child);
+}
+
+void WatchModel::updateVarValue(const QString &name, const QString &val, const QString &inScope, bool typeChanged, const QString &newType, int newNumChildren, bool hasMore)
+{
+    PWatchVar var = mVarIndex.value(name,PWatchVar());
+    if (!var)
+        return;
+    if (inScope == "true") {
+        var->value = val;
+    } else{
+        var->value = tr("Not Valid");
+    }
+    if (typeChanged) {
+        var->type = newType;
+    }
+    QModelIndex idx = index(var);
+    bool oldHasMore = var->hasMore;
+    var->hasMore = hasMore;
+    if (newNumChildren>=0
+            && var->numChild!=newNumChildren) {
+        var->numChild = newNumChildren;
+        fetchMore(idx);
+    } else  if (!oldHasMore && hasMore) {
+        fetchMore(idx);
+    }
+    emit dataChanged(idx,createIndex(idx.row(),2,var.get()));
+}
+
+void WatchModel::clearAllVarInfos()
+{
+    beginResetModel();
+    foreach (PWatchVar var, mWatchVars) {
+        var->name.clear();
+        var->value = tr("Execute to evaluate");
+        var->numChild = 0;
+        var->hasMore = false;
+        var->type.clear();
+        var->children.clear();
+    }
+    mVarIndex.clear();
+    endResetModel();
 }
 
 void WatchModel::beginUpdate()
@@ -2205,7 +1972,7 @@ void WatchModel::save(const QString &filename)
         QJsonArray array;
         foreach (const PWatchVar& watchVar, mWatchVars) {
             QJsonObject obj;
-            obj["name"]=watchVar->name;
+            obj["expression"]=watchVar->expression;
             array.append(obj);
         }
         QJsonDocument doc;
@@ -2242,15 +2009,52 @@ void WatchModel::load(const QString &filename)
             QJsonObject obj=value.toObject();
             PWatchVar var = std::make_shared<WatchVar>();
             var->parent= nullptr;
-            var->name = obj["name"].toString();
+            var->expression = obj["expression"].toString();
             var->value = tr("Execute to evaluate");
-            var->gdbIndex = -1;
+            var->numChild = 0;
+            var->hasMore=false;
+            var->parent = nullptr;
 
             addWatchVar(var);
         }
     } else {
         throw FileError(tr("Can't open file '%1' for read.")
                         .arg(filename));
+    }
+}
+
+QModelIndex WatchModel::index(PWatchVar var) const
+{
+    if (!var)
+        return QModelIndex();
+    return index(var.get());
+}
+
+QModelIndex WatchModel::index(WatchVar* pVar) const {
+    if (pVar==nullptr)
+        return QModelIndex();
+    if (pVar->parent) {
+        int row=-1;
+        for (int i=0;i<pVar->parent->children.count();i++) {
+            if (pVar->parent->children[i].get() == pVar) {
+                row = i;
+                break;
+            }
+        }
+        if (row<0)
+            return QModelIndex();
+        return createIndex(row,0,pVar);
+    } else {
+        int row=-1;
+        for (int i=0;i<mWatchVars.count();i++) {
+            if (mWatchVars[i].get() == pVar) {
+                row = i;
+                break;
+            }
+        }
+        if (row<0)
+            return QModelIndex();
+        return createIndex(row,0,pVar);
     }
 }
 
@@ -2262,10 +2066,41 @@ QVariant WatchModel::headerData(int section, Qt::Orientation orientation, int ro
         case 0:
             return tr("Expression");
         case 1:
+            return tr("Type");
+        case 2:
             return tr("Value");
         }
     }
     return QVariant();
+}
+
+void WatchModel::fetchMore(const QModelIndex &parent)
+{
+    if (!parent.isValid()) {
+        return;
+    }
+    WatchVar* item = static_cast<WatchVar*>(parent.internalPointer());
+    item->hasMore = false;
+    item->numChild = item->children.count();
+    emit fetchChildren(item->name);
+}
+
+bool WatchModel::canFetchMore(const QModelIndex &parent) const
+{
+    if (!parent.isValid()) {
+        return false;
+    }
+    WatchVar* item = static_cast<WatchVar*>(parent.internalPointer());
+    return item->numChild>item->children.count() || item->hasMore;
+}
+
+bool WatchModel::hasChildren(const QModelIndex &parent) const
+{
+    if (!parent.isValid()) {
+        return true;
+    }
+    WatchVar* item = static_cast<WatchVar*>(parent.internalPointer());
+    return item->numChild>0;
 }
 
 RegisterModel::RegisterModel(QObject *parent):QAbstractTableModel(parent)
@@ -2275,32 +2110,27 @@ RegisterModel::RegisterModel(QObject *parent):QAbstractTableModel(parent)
 
 int RegisterModel::rowCount(const QModelIndex &) const
 {
-    return mRegisters.count();
+    return mRegisterNames.count();
 }
 
 int RegisterModel::columnCount(const QModelIndex &) const
 {
-    return 3;
+    return 2;
 }
 
 QVariant RegisterModel::data(const QModelIndex &index, int role) const
 {
     if (!index.isValid())
         return QVariant();
-    if (index.row()<0 || index.row() >= static_cast<int>(mRegisters.size()))
-        return QVariant();
-    PRegister reg = mRegisters[index.row()];
-    if (!reg)
+    if (index.row()<0 || index.row() >= static_cast<int>(mRegisterNames.size()))
         return QVariant();
     switch (role) {
     case Qt::DisplayRole:
         switch (index.column()) {
         case 0:
-            return reg->name;
+            return mRegisterNames[index.row()];
         case 1:
-            return reg->hexValue;
-        case 2:
-            return reg->decValue;
+            return mRegisterValues.value(index.row(),"");
         default:
             return QVariant();
         }
@@ -2316,26 +2146,31 @@ QVariant RegisterModel::headerData(int section, Qt::Orientation orientation, int
         case 0:
             return tr("Register");
         case 1:
-            return tr("Value(Hex)");
-        case 2:
-            return tr("Value(Dec)");
+            return tr("Value");
         }
     }
     return QVariant();
 }
 
-void RegisterModel::update(const QList<PRegister> &regs)
+void RegisterModel::updateNames(const QStringList &regNames)
 {
     beginResetModel();
-    mRegisters.clear();
-    mRegisters.append(regs);
+    mRegisterNames = regNames;
     endResetModel();
+}
+
+void RegisterModel::updateValues(const QHash<int, QString> registerValues)
+{
+    mRegisterValues= registerValues;
+    emit dataChanged(createIndex(0,1),
+                     createIndex(mRegisterNames.count()-1,1));
 }
 
 
 void RegisterModel::clear()
 {
     beginResetModel();
-    mRegisters.clear();
+    mRegisterNames.clear();
+    mRegisterValues.clear();
     endResetModel();
 }

@@ -489,5 +489,6 @@
         <file>images/editor/bookmark.png</file>
         <file>images/newlook24/091-openproblemanswer.png</file>
         <file>images/newlook24/092-runallproblemcases.png</file>
+        <file>images/newlook24/093-pause.png</file>
     </qresource>
 </RCC>

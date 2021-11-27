@@ -20,13 +20,14 @@ void DebugGeneralWidget::doLoad()
     ui->chkOnlyMono->setChecked(pSettings->debugger().onlyShowMono());
     ui->cbFont->setCurrentFont(QFont(pSettings->debugger().fontName()));
     ui->sbFontSize->setValue(pSettings->debugger().fontSize());
-    ui->chkShowLog->setChecked(pSettings->debugger().showCommandLog());
-    ui->chkShowFullAnnotation->setChecked(pSettings->debugger().showAnnotations());
+    ui->grpEnableDebugConsole->setChecked(pSettings->debugger().enableDebugConsole());
+    ui->chkShowDetailLog->setChecked(pSettings->debugger().showDetailLog());
     if (pSettings->debugger().useIntelStyle()) {
         ui->rbIntel->setChecked(true);
     } else {
         ui->rbATT->setChecked(true);
     }
+    ui->chkShowCPUWhenSignaled->setChecked(pSettings->debugger().openCPUInfoWhenSignaled());
     ui->chkBlendMode->setChecked(pSettings->debugger().blendMode());
     ui->chkSkipSystemLib->setChecked(pSettings->debugger().skipSystemLibraries());
     ui->chkSkipProjectLib->setChecked(pSettings->debugger().skipProjectLibraries());
@@ -40,8 +41,9 @@ void DebugGeneralWidget::doSave()
     pSettings->debugger().setOnlyShowMono(ui->chkOnlyMono->isChecked());
     pSettings->debugger().setFontName(ui->cbFont->currentFont().family());
     pSettings->debugger().setFontSize(ui->sbFontSize->value());
-    pSettings->debugger().setShowCommandLog(ui->chkShowLog->isChecked());
-    pSettings->debugger().setShowAnnotations(ui->chkShowFullAnnotation->isChecked());
+    pSettings->debugger().setEnableDebugConsole(ui->grpEnableDebugConsole->isChecked());
+    pSettings->debugger().setShowDetailLog(ui->chkShowDetailLog->isChecked());
+    pSettings->debugger().setOpenCPUInfoWhenSignaled(ui->chkShowCPUWhenSignaled);
     pSettings->debugger().setUseIntelStyle(ui->rbIntel->isChecked());
     pSettings->debugger().setBlendMode(ui->chkBlendMode->isChecked());
     pSettings->debugger().setSkipSystemLibraries(ui->chkSkipSystemLib->isChecked());

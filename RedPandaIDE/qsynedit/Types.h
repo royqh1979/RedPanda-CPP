@@ -11,6 +11,11 @@ struct BufferCoord {
     int Char;
     int Line;
     bool operator==(const BufferCoord& coord);
+    bool operator>=(const BufferCoord& coord);
+    bool operator>(const BufferCoord& coord);
+    bool operator<(const BufferCoord& coord);
+    bool operator<=(const BufferCoord& coord);
+    bool operator!=(const BufferCoord& coord);
 };
 
 class SynEdit;

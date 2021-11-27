@@ -22,8 +22,6 @@ public:
 #ifdef QT_DEBUG
     void dumpAll(const QString& logFile);
 #endif
-signals:
-
 private:
     void addMember(StatementMap& map, const PStatement& statement);
     int deleteMember(StatementMap& map, const PStatement& statement);

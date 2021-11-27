@@ -2,8 +2,6 @@
 #define PROJECT_H
 
 #include <QAbstractItemModel>
-#include <QObject>
-#include <QSettings>
 #include <memory>
 #include "projectoptions.h"
 #include "utils.h"
