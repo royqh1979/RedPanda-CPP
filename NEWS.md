@@ -1,3 +1,6 @@
+Version 0.10.3 For Dev-C++ 7 Beta
+ - enhancement: treat files ended with ".C" or ".CPP"  as C++ files
+
 Version 0.10.2 For Dev-C++ 7 Beta
  - fix: select by mouse can't correctly set mouse's column position
  - fix: dragging out of the editor and back will cause error

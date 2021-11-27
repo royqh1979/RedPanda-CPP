@@ -191,6 +191,12 @@ FileType getFileType(const QString &filename)
     if (filename.endsWith(".dev",PATH_SENSITIVITY)) {
         return FileType::Project;
     }
+    if (filename.endsWith(".C")) {
+        return FileType::CppSource;
+    }
+    if (filename.endsWith(".CPP")) {
+        return FileType::CppSource;
+    }
     if (filename.endsWith(".c",PATH_SENSITIVITY)) {
         return FileType::CSource;
     }
@@ -205,6 +211,9 @@ FileType getFileType(const QString &filename)
     }
     if (filename.endsWith(".c++",PATH_SENSITIVITY)) {
         return FileType::CppSource;
+    }
+    if (filename.endsWith(".H")) {
+        return FileType::CHeader;
     }
     if (filename.endsWith(".h",PATH_SENSITIVITY)) {
         return FileType::CHeader;

@@ -22,7 +22,9 @@ PSynHighlighter HighlighterManager::getHighlighter(const QString &filename)
         QString suffix = info.suffix();
         if (suffix.isEmpty() || suffix == "c" || suffix == "cpp" || suffix == "cxx"
                 || suffix == "cc" || suffix == "h" || suffix == "hpp"
-                || suffix == "hxx" || suffix == "hh") {
+                || suffix == "hxx" || suffix == "hh" || suffix == "C"
+                || suffix == "CPP" || suffix =="H" || suffix == "c++"
+                || suffix == "h++") {
             return getCppHighlighter();
         }
     }
