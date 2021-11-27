@@ -1,3 +1,6 @@
+Version 0.10.3 For Dev-C++ 7 Beta
+ - enhancement: add option "ignore spaces when validating problem cases" to the "Executor"/"Problem Set" option tab.
+
 Version 0.10.2 For Dev-C++ 7 Beta
  - fix: select by mouse can't correctly set mouse's column position
  - fix: dragging out of the editor and back will cause error

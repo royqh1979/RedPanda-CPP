@@ -794,6 +794,9 @@ public:
         int competivieCompanionPort() const;
         void setCompetivieCompanionPort(int newCompetivieCompanionPort);
 
+        bool ignoreSpacesWhenValidatingCases() const;
+        void setIgnoreSpacesWhenValidatingCases(bool newIgnoreSpacesWhenValidatingCases);
+
     private:
         // general
         bool mPauseConsole;
@@ -807,6 +810,7 @@ public:
         bool mEnableProblemSet;
         bool mEnableCompetitiveCompanion;
         int mCompetivieCompanionPort;
+        bool mIgnoreSpacesWhenValidatingCases;
 
     protected:
         void doSave() override;
