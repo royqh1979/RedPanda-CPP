@@ -3,7 +3,7 @@
 
 !define COMPILERNAME "MinGW-w64 X86_64 GCC 11.2"
 !define COMPILERFOLDER "MinGW64"
-!define DEVCPP_VERSION "beta.0.8.1"
+!define DEVCPP_VERSION "beta.0.10.3"
 !define FINALNAME "RedPanda-Cpp.7.${DEVCPP_VERSION}.${COMPILERNAME}.Setup.exe"
 !define DISPLAY_NAME "Red Panda Dev-C++ 7 ${DEVCPP_VERSION}"
 
