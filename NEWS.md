@@ -3,6 +3,8 @@ Version 0.10.4 For Dev-C++ 7 Beta
  - fix: can't correctly undo/redo unindent
  - change: press tab when there are selections will do indent
  - change: press shift+tab when there are selections will do unindent
+ - enhancement: press home will switch between begin of line and the position of fisrt non-space char
+ - enhancement: press end will switch between end of line and the position of last non-space char 
 
 Version 0.10.3 For Dev-C++ 7 Beta
  - enhancement: treat files ended with ".C" or ".CPP"  as C++ files

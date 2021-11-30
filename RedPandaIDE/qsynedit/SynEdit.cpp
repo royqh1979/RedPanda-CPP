@@ -4705,7 +4705,8 @@ void SynEdit::moveCaretToLineStart(bool isSelection)
         }
         newX = mCaretX;
 
-        if (newX > first_nonblank+1)
+        if ((newX > first_nonblank+1)
+                || (newX == 1))
             newX = first_nonblank+1;
         else
             newX = 1;
@@ -4725,10 +4726,10 @@ void SynEdit::moveCaretToLineEnd(bool isSelection)
             vLastNonBlank--;
         vLastNonBlank++;
         vNewX = mCaretX;
-        if (vNewX > vLastNonBlank)
-            vNewX = vText.length() + 1;
-        else
+        if ((vNewX <= vLastNonBlank) || (vNewX == vText.length() + 1))
             vNewX = vLastNonBlank + 1;
+        else
+            vNewX = vText.length() + 1;
     } else
         vNewX = lineText().length() + 1;
 
