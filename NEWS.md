@@ -1,6 +1,8 @@
 Version 0.10.4 For Dev-C++ 7 Beta
- - fix: indent can't be correctly undo
+ - fix: can't correctly undo/redo indent 
+ - fix: can't correctly undo/redo unindent
  - change: press tab when there are selections will do indent
+ - change: press shift+tab when there are selections will do unindent
 
 Version 0.10.3 For Dev-C++ 7 Beta
  - enhancement: treat files ended with ".C" or ".CPP"  as C++ files
