@@ -2582,24 +2582,18 @@ void SynEdit::doBlockIndent()
 {
     BufferCoord  oldCaretPos;
     BufferCoord  BB, BE;
-    QString StrToInsert;
+    QString strToInsert;
     int e,x,i;
-    QString Spaces;
+    QString spaces;
     SynSelectionMode oldSelectionMode;
-    BufferCoord InsertionPos;
+    BufferCoord insertionPos;
 
     oldSelectionMode = mActiveSelectionMode;
     oldCaretPos = caretXY();
-    StrToInsert = nullptr;
+    strToInsert = nullptr;
 
     auto action = finally([&,this]{
-        if (BB.Char > 1)
-            BB.Char += Spaces.length();
-        if (BE.Char > 1)
-          BE.Char+=Spaces.length();
-        setCaretAndSelection(oldCaretPos,
-          BB, BE);
-        setActiveSelectionMode(oldSelectionMode);
+
     });
     // keep current selection detail
     if (selAvail()) {
@@ -2621,41 +2615,48 @@ void SynEdit::doBlockIndent()
           x = caretX() + 1;
     }
     if (mOptions.testFlag(eoTabsToSpaces)) {
-        Spaces = QString(mTabWidth,' ') ;
+        spaces = QString(mTabWidth,' ') ;
     } else {
-        Spaces = "\t";
+        spaces = "\t";
     }
     for (i = BB.Line; i<e;i++) {
-        StrToInsert+=Spaces+lineBreak();
+        strToInsert+=spaces+lineBreak();
     }
-    StrToInsert+=Spaces;
+    strToInsert+=spaces;
 
     {
         mUndoList->BeginBlock();
         auto action2=finally([this]{
             mUndoList->EndBlock();
         });
-        InsertionPos.Line = BB.Line;
-        if (mActiveSelectionMode == SynSelectionMode::smColumn)
-          InsertionPos.Char = std::min(BB.Char, BE.Char);
-        else
-          InsertionPos.Char = 1;
-        insertBlock(InsertionPos, InsertionPos, StrToInsert, true);
-        mUndoList->AddChange(SynChangeReason::crIndent, BB, BE, "", SynSelectionMode::smColumn);
+        mUndoList->AddChange(SynChangeReason::crCaret, oldCaretPos, oldCaretPos,"", oldSelectionMode);
         //We need to save the position of the end block for redo
-        mUndoList->AddChange(SynChangeReason::crIndent,
-          {BB.Char + Spaces.length(), BB.Line},
-          {BE.Char + Spaces.length(), BE.Line},
-          "", SynSelectionMode::smColumn);
+        mUndoList->AddChange(SynChangeReason::crSelection,mBlockBegin,mBlockEnd,"", oldSelectionMode);
         //adjust the x position of orgcaretpos appropriately
+        insertionPos.Line = BB.Line;
+        if (mActiveSelectionMode == SynSelectionMode::smColumn)
+          insertionPos.Char = std::min(BB.Char, BE.Char);
+        else
+          insertionPos.Char = 1;
+        insertBlock(insertionPos, insertionPos, strToInsert, true);
+        //adjust caret and selection
         oldCaretPos.Char = x;
+        if (BB.Char > 1)
+            BB.Char += spaces.length();
+        if (BE.Char > 1)
+          BE.Char+=spaces.length();
+        mUndoList->AddChange(SynChangeReason::crSelection,BB,BE,"", oldSelectionMode);
+        mUndoList->AddChange(SynChangeReason::crCaret,oldCaretPos,oldCaretPos,"",oldSelectionMode);
+        setCaretAndSelection(oldCaretPos,
+          BB, BE);
+        setActiveSelectionMode(oldSelectionMode);
     }
 }
 
 void SynEdit::doBlockUnindent()
 {
-    int LastIndent = 0;
-    int FirstIndent = 0;
+    int lastIndent = 0;
+    int firstIndent = 0;
 
     BufferCoord BB,BE;
     // keep current selection detail
@@ -2674,40 +2675,40 @@ void SynEdit::doBlockUnindent()
     if (BE.Char == 1)
         e = BE.Line - 1;
     // build string to delete
-    QString FullStrToDelete;
+    QString fullStrToDelete;
     for (int i = BB.Line; i<= e;i++) {
-        QString Line = mLines->getString(i - 1);
-        FullStrToDelete += Line;
-        if (i!=e-1)
-            FullStrToDelete += lineBreak();
-        if (Line.isEmpty())
+        QString line = mLines->getString(i - 1);
+        if (!fullStrToDelete.isEmpty())
+            fullStrToDelete+=lineBreak();
+        fullStrToDelete += line;
+        if (line.isEmpty())
             continue;
-        if (Line[0]!=' ' && Line[0]!='\t')
+        if (line[0]!=' ' && line[0]!='\t')
             continue;
         int charsToDelete = 0;
         while (charsToDelete < mTabWidth &&
-               charsToDelete < Line.length() &&
-               Line[charsToDelete] == ' ')
+               charsToDelete < line.length() &&
+               line[charsToDelete] == ' ')
             charsToDelete++;
         if (charsToDelete == 0)
             charsToDelete = 1;
         if (i==BB.Line)
-            FirstIndent = charsToDelete;
+            firstIndent = charsToDelete;
         if (i==e)
-            LastIndent = charsToDelete;
+            lastIndent = charsToDelete;
         if (i==oldCaretPos.Line)
             x = charsToDelete;
-        QString TempString = Line.mid(charsToDelete);
-        mLines->putString(i-1,TempString);
+        QString tempString = line.mid(charsToDelete);
+        mLines->putString(i-1,tempString);
     }
     mUndoList->AddChange(
-                SynChangeReason::crUnindent, BB, BE, FullStrToDelete, mActiveSelectionMode);
+                SynChangeReason::crUnindent, BB, BE, fullStrToDelete, mActiveSelectionMode);
   // restore selection
   //adjust the x position of orgcaretpos appropriately
 
     oldCaretPos.Char -= x;
-    BB.Char -= FirstIndent;
-    BE.Char -= LastIndent;
+    BB.Char -= firstIndent;
+    BE.Char -= lastIndent;
     setCaretAndSelection(oldCaretPos, BB, BE);
 }
 
@@ -4224,10 +4225,8 @@ void SynEdit::doUndoItem()
                             Item->changeStr(),
                             false);
             else {
-                int BeginX = std::min(Item->changeStartPos().Char,
-                                      Item->changeEndPos().Char);
-                insertBlock(BufferCoord{BeginX, Item->changeStartPos().Line},
-                            BufferCoord{BeginX, Item->changeEndPos().Line},
+                insertBlock(BufferCoord{Item->changeStartPos().Char, Item->changeStartPos().Line},
+                            BufferCoord{Item->changeEndPos().Char, Item->changeEndPos().Line},
                             Item->changeStr(), false);
             }
             setCaretAndSelection(
