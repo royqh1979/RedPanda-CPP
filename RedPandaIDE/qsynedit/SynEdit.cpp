@@ -2442,8 +2442,9 @@ bool SynEdit::canDoBlockIndent()
     BufferCoord BE;
 
     if (selAvail()) {
-        BB = blockBegin();
-        BE = blockEnd();
+//        BB = blockBegin();
+//        BE = blockEnd();
+        return true;
     } else {
         BB = caretXY();
         BE = caretXY();
@@ -2579,16 +2580,16 @@ void SynEdit::computeScroll(int X, int Y, bool isDragging)
 
 void SynEdit::doBlockIndent()
 {
-    BufferCoord  OrgCaretPos;
+    BufferCoord  oldCaretPos;
     BufferCoord  BB, BE;
     QString StrToInsert;
     int e,x,i;
     QString Spaces;
-    SynSelectionMode OrgSelectionMode;
+    SynSelectionMode oldSelectionMode;
     BufferCoord InsertionPos;
 
-    OrgSelectionMode = mActiveSelectionMode;
-    OrgCaretPos = caretXY();
+    oldSelectionMode = mActiveSelectionMode;
+    oldCaretPos = caretXY();
     StrToInsert = nullptr;
 
     auto action = finally([&,this]{
@@ -2596,9 +2597,9 @@ void SynEdit::doBlockIndent()
             BB.Char += Spaces.length();
         if (BE.Char > 1)
           BE.Char+=Spaces.length();
-        setCaretAndSelection(OrgCaretPos,
+        setCaretAndSelection(oldCaretPos,
           BB, BE);
-        setActiveSelectionMode(OrgSelectionMode);
+        setActiveSelectionMode(oldSelectionMode);
     });
     // keep current selection detail
     if (selAvail()) {
@@ -2647,7 +2648,7 @@ void SynEdit::doBlockIndent()
           {BE.Char + Spaces.length(), BE.Line},
           "", SynSelectionMode::smColumn);
         //adjust the x position of orgcaretpos appropriately
-        OrgCaretPos.Char = x;
+        oldCaretPos.Char = x;
     }
 }
 
@@ -2665,7 +2666,7 @@ void SynEdit::doBlockUnindent()
         BB = caretXY();
         BE = caretXY();
     }
-    BufferCoord OrgCaretPos = caretXY();
+    BufferCoord oldCaretPos = caretXY();
     int x = 0;
 
     int e = BE.Line;
@@ -2694,7 +2695,7 @@ void SynEdit::doBlockUnindent()
             FirstIndent = charsToDelete;
         if (i==e)
             LastIndent = charsToDelete;
-        if (i==OrgCaretPos.Line)
+        if (i==oldCaretPos.Line)
             x = charsToDelete;
         QString TempString = Line.mid(charsToDelete);
         mLines->putString(i-1,TempString);
@@ -2704,10 +2705,10 @@ void SynEdit::doBlockUnindent()
   // restore selection
   //adjust the x position of orgcaretpos appropriately
 
-    OrgCaretPos.Char -= x;
+    oldCaretPos.Char -= x;
     BB.Char -= FirstIndent;
     BE.Char -= LastIndent;
-    setCaretAndSelection(OrgCaretPos, BB, BE);
+    setCaretAndSelection(oldCaretPos, BB, BE);
 }
 
 void SynEdit::doAddChar(QChar AChar)
@@ -4117,6 +4118,7 @@ void SynEdit::doUndoItem()
                         Item->changeStartPos(),
                         Item->changeEndPos());
             QString TmpStr = selText();
+            qDebug()<<TmpStr;
             setSelTextPrimitiveEx(
                         Item->changeSelMode(),
                         Item->changeStr(),
@@ -4532,11 +4534,12 @@ QString SynEdit::selText()
                   std::swap(ColFrom, ColTo);
               QString result;
               for (int i = First; i <= Last; i++) {
-                  int l = columnToChar(i,ColFrom);
-                  int r = columnToChar(i,ColTo-1);
+                  int l = columnToChar(i+1,ColFrom);
+                  int r = columnToChar(i+1,ColTo-1)+1;
                   QString s = mLines->getString(i);
                   result += s.mid(l-1,r-l);
-                  result+=lineBreak();
+                  if (i<Last)
+                      result+=lineBreak();
               }
               return result;
         }
@@ -5062,8 +5065,8 @@ void SynEdit::deleteSelection(const BufferCoord &BB, const BufferCoord &BE)
             std::swap(ColFrom, ColTo);
         QString result;
         for (int i = First; i <= Last; i++) {
-            int l = columnToChar(i,ColFrom);
-            int r = columnToChar(i,ColTo-1);
+            int l = columnToChar(i+1,ColFrom);
+            int r = columnToChar(i+1,ColTo-1)+1;
             QString s = mLines->getString(i);
             s.remove(l-1,r-l);
             properSetLine(i,s);

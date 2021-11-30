@@ -1,5 +1,10 @@
+Version 0.10.4 For Dev-C++ 7 Beta
+ - fix: indent can't be correctly undo
+ - change: press tab when there are selections will do indent
+
 Version 0.10.3 For Dev-C++ 7 Beta
  - enhancement: treat files ended with ".C" or ".CPP"  as C++ files
+ - enhancement: add option "ignore spaces when validating problem cases" to the "Executor"/"Problem Set" option tab.
 
 Version 0.10.2 For Dev-C++ 7 Beta
  - fix: select by mouse can't correctly set mouse's column position
