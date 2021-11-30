@@ -1205,7 +1205,7 @@ void MainWindow::runExecutable(const QString &exeName,const QString &filename,Ru
         POJProblem problem = mOJProblemModel.problem();
         if (problem) {
             mCompilerManager->runProblem(exeName,params,QFileInfo(exeName).absolutePath(),
-                                     problem->cases);
+                                         problem->cases);
             openCloseBottomPanel(true);
             ui->tabMessages->setCurrentWidget(ui->tabProblem);
         }
@@ -2760,7 +2760,11 @@ void MainWindow::onProblemSetIndexChanged(const QModelIndex &current, const QMod
         mOJProblemModel.setProblem(problem);
         ui->lblProblem->setText(mOJProblemModel.getTitle());
         ui->lblProblem->setToolTip(mOJProblemModel.getTooltip());
-        ui->lstProblemCases->setCurrentIndex(mOJProblemModel.index(0,0));
+        if (mOJProblemModel.count()>0) {
+            ui->lstProblemCases->setCurrentIndex(mOJProblemModel.index(0,0));
+        } else {
+            onProblemCaseIndexChanged(QModelIndex(),QModelIndex());
+        }
         openCloseBottomPanel(true);
         ui->tabMessages->setCurrentWidget(ui->tabProblem);
         ui->tabProblem->setEnabled(true);
@@ -3696,7 +3700,7 @@ void MainWindow::onOJProblemCaseFinished(const QString& id, int current, int tot
     if (row>=0) {
         POJProblemCase problemCase = mOJProblemModel.getCase(row);
         ProblemCaseValidator validator;
-        problemCase->testState = validator.validate(problemCase)?
+        problemCase->testState = validator.validate(problemCase,pSettings->executor().ignoreSpacesWhenValidatingCases())?
                     ProblemCaseTestState::Passed:
                     ProblemCaseTestState::Failed;
         mOJProblemModel.update(row);
@@ -5749,3 +5753,13 @@ void MainWindow::on_actionDelete_to_BOL_triggered()
         e->deleteToBOL();
     }
 }
+
+
+void MainWindow::on_btnCaseValidateOptions_clicked()
+{
+    changeOptions(
+                SettingsDialog::tr("Problem Set"),
+                SettingsDialog::tr("Program Runner")
+                );
+}
+

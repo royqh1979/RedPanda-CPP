@@ -2859,6 +2859,16 @@ void Settings::Executor::setCompetivieCompanionPort(int newCompetivieCompanionPo
     mCompetivieCompanionPort = newCompetivieCompanionPort;
 }
 
+bool Settings::Executor::ignoreSpacesWhenValidatingCases() const
+{
+    return mIgnoreSpacesWhenValidatingCases;
+}
+
+void Settings::Executor::setIgnoreSpacesWhenValidatingCases(bool newIgnoreSpacesWhenValidatingCases)
+{
+    mIgnoreSpacesWhenValidatingCases = newIgnoreSpacesWhenValidatingCases;
+}
+
 bool Settings::Executor::enableCompetitiveCompanion() const
 {
     return mEnableCompetitiveCompanion;
@@ -2891,7 +2901,7 @@ void Settings::Executor::doSave()
     saveValue("enable_proble_set", mEnableProblemSet);
     saveValue("enable_competivie_companion", mEnableCompetitiveCompanion);
     saveValue("competitive_companion_port", mCompetivieCompanionPort);
-
+    saveValue("ignore_spaces_when_validating_cases", mIgnoreSpacesWhenValidatingCases);
 }
 
 bool Settings::Executor::pauseConsole() const
@@ -2916,6 +2926,7 @@ void Settings::Executor::doLoad()
     mEnableProblemSet = boolValue("enable_proble_set",true);
     mEnableCompetitiveCompanion = boolValue("enable_competivie_companion",true);
     mCompetivieCompanionPort = intValue("competitive_companion_port",10045);
+    mIgnoreSpacesWhenValidatingCases = boolValue("ignore_spaces_when_validating_cases",false);
 }
 
 

@@ -317,7 +317,7 @@ void FormatterGeneralWidget::updateCodeFormatter(Settings::CodeFormatter &format
     PFormatterStyleItem item = mStylesModel.getStyle(ui->cbBraceStyle->currentIndex());
     if (item)
         format.setBraceStyle(item->style);
-    if (ui->rbIndentSpaces) {
+    if (ui->rbIndentSpaces->isChecked()) {
         format.setIndentStyle(FormatterIndentType::fitSpace);
     } else {
         format.setIndentStyle(FormatterIndentType::fitTab);

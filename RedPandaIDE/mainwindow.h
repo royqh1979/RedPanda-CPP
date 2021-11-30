@@ -529,6 +529,8 @@ private slots:
 
     void on_actionDelete_to_BOL_triggered();
 
+    void on_btnCaseValidateOptions_clicked();
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;

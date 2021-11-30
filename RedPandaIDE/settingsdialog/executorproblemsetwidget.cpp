@@ -20,6 +20,7 @@ void ExecutorProblemSetWidget::doLoad()
     ui->grpProblemSet->setChecked(pSettings->executor().enableProblemSet());
     ui->grpCompetitiveCompanion->setChecked(pSettings->executor().enableCompetitiveCompanion());
     ui->spinPortNumber->setValue(pSettings->executor().competivieCompanionPort());
+    ui->chkIgnoreSpacesWhenValidatingCases->setChecked(pSettings->executor().ignoreSpacesWhenValidatingCases());
 }
 
 void ExecutorProblemSetWidget::doSave()
@@ -27,6 +28,7 @@ void ExecutorProblemSetWidget::doSave()
     pSettings->executor().setEnableProblemSet(ui->grpProblemSet->isChecked());
     pSettings->executor().setEnableCompetitiveCompanion(ui->grpCompetitiveCompanion->isChecked());
     pSettings->executor().setCompetivieCompanionPort(ui->spinPortNumber->value());
+    pSettings->executor().setIgnoreSpacesWhenValidatingCases(ui->chkIgnoreSpacesWhenValidatingCases->isChecked());
     pSettings->executor().save();
     pMainWindow->applySettings();
 }
