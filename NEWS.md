@@ -5,6 +5,7 @@ Version 0.10.4 For Dev-C++ 7 Beta
  - change: press shift+tab when there are selections will do unindent
  - enhancement: press home will switch between begin of line and the position of fisrt non-space char
  - enhancement: press end will switch between end of line and the position of last non-space char 
+ - enhancement: use "Microsoft Yahei" as the default UI font whe running in Simplified Chinese Windows
 
 Version 0.10.3 For Dev-C++ 7 Beta
  - enhancement: treat files ended with ".C" or ".CPP"  as C++ files

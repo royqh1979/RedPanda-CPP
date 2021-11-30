@@ -2708,7 +2708,16 @@ void Settings::Environment::doLoad()
 {
     //Appearence
     mTheme = stringValue("theme","dark");
-    mInterfaceFont = stringValue("interface font","Segoe UI");
+    QString defaultFontName = "Segoe UI";
+    if (QLocale::system().name() == "zh_CN") {
+        QString fontName;
+        fontName = "Microsoft Yahei";
+        QFont font(fontName);
+        if (font.exactMatch()) {
+            defaultFontName = fontName;
+        }
+    }
+    mInterfaceFont = stringValue("interface font",defaultFontName);
     mInterfaceFontSize = intValue("interface font size",10);
     mLanguage = stringValue("language", QLocale::system().name());
 
