@@ -175,6 +175,8 @@ public:
     void deleteToEOL();
     void deleteToBOL();
 
+    QStringList getExpressionAtPositionForCompletion(const BufferCoord& pos);
+
     const PCppParser &parser();
 
     void tab() override;

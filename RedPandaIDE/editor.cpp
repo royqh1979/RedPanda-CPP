@@ -1622,6 +1622,101 @@ void Editor::deleteToBOL()
     ExecuteCommand(SynEditorCommand::ecDeleteBOL,QChar(),nullptr);
 }
 
+enum class LastSymbolType {
+    Identifier,
+    MemberOperator,
+    MatchingBracket,
+    BracketMatched,
+    MatchingParenthesis,
+    ParenthesisMatched,
+    None
+};
+
+QStringList Editor::getExpressionAtPositionForCompletion(const BufferCoord &pos)
+{
+    QStringList result;
+    if (!highlighter())
+        return result;
+    int line = pos.Line-1;
+    int ch = pos.Char-1;
+    QString symbolToMatch;
+    int symbolMatchingLevel = 0;
+    LastSymbolType lastSymbolType=LastSymbolType::None;
+    while (true) {
+        if (line>=lines()->count() || line<0)
+            break;
+        QStringList tokens;
+        if (line==0) {
+            highlighter()->resetState();
+        } else {
+            highlighter()->setState(lines()->ranges(line-1));
+        }
+        QString sLine = lines()->getString(line);
+        highlighter()->setLine(sLine,line-1);
+        while (!highlighter()->eol()) {
+            int start = highlighter()->getTokenPos() + 1;
+            QString token = highlighter()->getToken();
+            int endPos = start + token.length()-1;
+            if (start>ch) {
+                break;
+            }
+            PSynHighlighterAttribute attr = highlighter()->getTokenAttribute();
+            if ( (line == pos.Line-1)
+                 && (start<=ch) && (ch<=endPos)) {
+                if (attr==highlighter()->commentAttribute() || attr == highlighter()->stringAttribute()) {
+                    return result;
+                }
+            }
+            if (attr!=highlighter()->commentAttribute() && attr!=highlighter()->whitespaceAttribute()){
+                tokens.append(token);
+            }
+            highlighter()->next();
+        }
+        for (int i=tokens.count()-1;i>=0;i--) {
+            QString token = tokens[i];
+            switch(lastSymbolType) {
+            case LastSymbolType::None:
+            case LastSymbolType::MemberOperator:
+            case LastSymbolType::SymbolMatched:
+                if ((token =="::" || token == "." || token == "->")
+                        && lastSymbolType!=LastSymbolType::None
+                    ){
+                    lastSymbolType=LastSymbolType::MemberOperator;
+                } else if (token == ")" ) {
+                    lastSymbolType=LastSymbolType::MatchingSymbol;
+                    symbolToMatch = "(";
+                    symbolMatchingLevel = 0;
+                } else if (token == "]") {
+                    lastSymbolType=LastSymbolType::MatchingSymbol;
+                    symbolToMatch = "[";
+                    symbolMatchingLevel = 0;
+                } else if (isIdentChar(token.front())) {
+                    lastSymbolType=LastSymbolType::Identifier;
+                } else
+                    return result;
+                result.push_front(token);
+                break;
+            case LastSymbolType::Identifier:
+                if (token =="::" || token == "." || token == "->") {
+                    lastSymbolType=LastSymbolType::MemberOperator;
+                    result.push_front(token);
+                } else
+                    return result; // stop matching;
+            case LastSymbolType::MatchingSymbol:
+                if (token==symbolToMatch && symbolMatchingLevel==0) {
+                    lastSymbolType=LastSymbolType::MemberOperator;
+
+                }
+            }
+        }
+
+        line--;
+        if (line>=0)
+            ch = lines()->getString(line).length()+1;
+    }
+    return result;
+}
+
 QChar Editor::getCurrentChar()
 {
     if (lineText().length()<caretX())
