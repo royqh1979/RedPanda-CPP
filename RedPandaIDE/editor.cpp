@@ -1622,16 +1622,6 @@ void Editor::deleteToBOL()
     ExecuteCommand(SynEditorCommand::ecDeleteBOL,QChar(),nullptr);
 }
 
-enum class LastSymbolType {
-    Identifier,
-    MemberOperator,
-    MatchingBracket,
-    BracketMatched,
-    MatchingParenthesis,
-    ParenthesisMatched,
-    None
-};
-
 QStringList Editor::getExpressionAtPositionForCompletion(const BufferCoord &pos)
 {
     QStringList result;
@@ -1639,7 +1629,6 @@ QStringList Editor::getExpressionAtPositionForCompletion(const BufferCoord &pos)
         return result;
     int line = pos.Line-1;
     int ch = pos.Char-1;
-    QString symbolToMatch;
     int symbolMatchingLevel = 0;
     LastSymbolType lastSymbolType=LastSymbolType::None;
     while (true) {
@@ -1677,18 +1666,19 @@ QStringList Editor::getExpressionAtPositionForCompletion(const BufferCoord &pos)
             switch(lastSymbolType) {
             case LastSymbolType::None:
             case LastSymbolType::MemberOperator:
-            case LastSymbolType::SymbolMatched:
+            case LastSymbolType::ParenthesisMatched:
+            case LastSymbolType::BracketMatched:
                 if ((token =="::" || token == "." || token == "->")
-                        && lastSymbolType!=LastSymbolType::None
+                        && lastSymbolType!=LastSymbolType::MemberOperator
                     ){
                     lastSymbolType=LastSymbolType::MemberOperator;
                 } else if (token == ")" ) {
-                    lastSymbolType=LastSymbolType::MatchingSymbol;
-                    symbolToMatch = "(";
+                    lastSymbolType=LastSymbolType::MatchingParenthesis;
                     symbolMatchingLevel = 0;
                 } else if (token == "]") {
-                    lastSymbolType=LastSymbolType::MatchingSymbol;
-                    symbolToMatch = "[";
+                    if (lastSymbolType == LastSymbolType::BracketMatched)
+                        return result;
+                    lastSymbolType=LastSymbolType::MatchingBracket;
                     symbolMatchingLevel = 0;
                 } else if (isIdentChar(token.front())) {
                     lastSymbolType=LastSymbolType::Identifier;
@@ -1702,11 +1692,31 @@ QStringList Editor::getExpressionAtPositionForCompletion(const BufferCoord &pos)
                     result.push_front(token);
                 } else
                     return result; // stop matching;
-            case LastSymbolType::MatchingSymbol:
-                if (token==symbolToMatch && symbolMatchingLevel==0) {
-                    lastSymbolType=LastSymbolType::MemberOperator;
-
+                break;
+            case LastSymbolType::MatchingParenthesis:
+                if (token=="(") {
+                    if (symbolMatchingLevel==0) {
+                        lastSymbolType=LastSymbolType::ParenthesisMatched;
+                    } else {
+                        symbolMatchingLevel--;
+                    }
+                } else if (token==")") {
+                    symbolMatchingLevel++;
                 }
+                result.push_front(token);
+                break;
+            case LastSymbolType::MatchingBracket:
+                if (token=="[") {
+                    if (symbolMatchingLevel==0) {
+                        lastSymbolType=LastSymbolType::BracketMatched;
+                    } else {
+                        symbolMatchingLevel--;
+                    }
+                } else if (token=="]") {
+                    symbolMatchingLevel++;
+                }
+                result.push_front(token);
+                break;
             }
         }
 
@@ -2473,8 +2483,10 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete)
                 mParser->findAndScanBlockAt(mFilename, caretY())
                 );
 
-    if (word.isEmpty())
-        word=getWordAtPosition(this,caretXY(),pBeginPos,pEndPos, WordPurpose::wpCompletion);
+    if (word.isEmpty()) {
+        //word=getWordAtPosition(this,caretXY(),pBeginPos,pEndPos, WordPurpose::wpCompletion);
+        word = getExpressionAtPositionForCompletion(caretXY()).join("");
+    }
     mCompletionPopup->prepareSearch(preWord, word, mFilename, pBeginPos.Line);
 
     // Filter the whole statement list
@@ -2725,7 +2737,10 @@ bool Editor::onCompletionKeyPressed(QKeyEvent *event)
     QChar ch = event->text().front();
     if (isIdentChar(ch)) {
         setSelText(ch);
-        phrase = getWordAtPosition(this,caretXY(),
+        if (purpose == WordPurpose::wpCompletion) {
+            phrase = getExpressionAtPositionForCompletion(caretXY()).join("");
+        } else
+            phrase = getWordAtPosition(this,caretXY(),
                                             pBeginPos,pEndPos,
                                             purpose);
         mLastIdCharPressed = phrase.length();
@@ -2804,10 +2819,11 @@ bool Editor::onCompletionInputMethod(QInputMethodEvent *event)
         return processed;
     QString s=event->commitString();
     if (!s.isEmpty()) {
-        BufferCoord pBeginPos,pEndPos;
-        QString phrase = getWordAtPosition(this,caretXY(),
-                                            pBeginPos,pEndPos,
-                                            WordPurpose::wpCompletion);
+        QString phrase = getExpressionAtPositionForCompletion(caretXY()).join("");
+//        BufferCoord pBeginPos,pEndPos;
+//        QString phrase = getWordAtPosition(this,caretXY(),
+//                                            pBeginPos,pEndPos,
+//                                            WordPurpose::wpCompletion);
         mLastIdCharPressed = phrase.length();
         mCompletionPopup->search(phrase, false);
         return true;

@@ -41,6 +41,16 @@ class Editor : public SynEdit
 {
     Q_OBJECT
 public:
+    enum class LastSymbolType {
+        Identifier,
+        MemberOperator,
+        MatchingBracket,
+        BracketMatched,
+        MatchingParenthesis,
+        ParenthesisMatched,
+        None
+    };
+
     enum MarginNumber {
         LineNumberMargin = 0,
         MarkerMargin = 1,
