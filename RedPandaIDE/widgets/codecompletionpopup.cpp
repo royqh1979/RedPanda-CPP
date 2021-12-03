@@ -85,6 +85,30 @@ void CodeCompletionPopup::prepareSearch(const QString& preWord,const QString &ph
     setCursor(oldCursor);
 }
 
+void CodeCompletionPopup::prepareSearch(const QString &preWord, const QStringList &expression, const QString &filename, int line)
+{
+    QMutexLocker locker(&mMutex);
+    if (!isEnabled())
+        return;
+    //Screen.Cursor := crHourglass;
+    QCursor oldCursor = cursor();
+    setCursor(Qt::CursorShape::WaitCursor);
+
+    if (preWord.isEmpty()) {
+        mIncludedFiles = mParser->getFileIncludes(filename);
+        getCompletionFor(expression,filename,line);
+
+        if (mFullCompletionStatementList.isEmpty() &&
+                (!expression.isEmpty() && expression.startsWith("~"))) {
+            getCompletionFor(expression.mid(1),filename,line);
+        }
+    } else {
+        getFullCompletionListFor(preWord);
+    }
+
+    setCursor(oldCursor);
+}
+
 bool CodeCompletionPopup::search(const QString &phrase, bool autoHideOnSingleResult)
 {
     QMutexLocker locker(&mMutex);

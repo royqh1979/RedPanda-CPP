@@ -565,8 +565,13 @@ void SynEditCppHighlighter::minusProc()
         mExtTokenId = ExtTokenKind::Decrement;
         break;
     case '>':
-        mRun += 2;
-        mExtTokenId = ExtTokenKind::Arrow;
+        if (mLine[mRun+2]=='*') {
+            mRun += 3;
+            mExtTokenId = ExtTokenKind::PointerToMemberOfPointer;
+        } else {
+            mRun += 2;
+            mExtTokenId = ExtTokenKind::Arrow;
+        }
         break;
     default:
         mRun += 1;
@@ -824,7 +829,10 @@ void SynEditCppHighlighter::plusProc()
 void SynEditCppHighlighter::pointProc()
 {
     mTokenId = TokenKind::Symbol;
-    if (mLine[mRun+1] == '.' && mLine[mRun+2] == '.') {
+    if (mLine[mRun+1] == '*' ) {
+        mRun+=2;
+        mExtTokenId = ExtTokenKind::PointerToMemberOfObject;
+    } else if (mLine[mRun+1] == '.' && mLine[mRun+2] == '.') {
         mRun+=3;
         mExtTokenId = ExtTokenKind::Ellipse;
     } else if (mLine[mRun+1]>='0' && mLine[mRun+1]<='9') {

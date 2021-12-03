@@ -43,11 +43,20 @@ class Editor : public SynEdit
 public:
     enum class LastSymbolType {
         Identifier,
-        MemberOperator,
+        ScopeResolutionOperator, //'::'
+        ObjectMemberOperator, //'.'
+        PointerMemberOperator, //'->'
+        PointerToMemberOfObjectOperator, //'.*'
+        PointerToMemberOfPointerOperator, //'->*'
         MatchingBracket,
         BracketMatched,
         MatchingParenthesis,
         ParenthesisMatched,
+        TildeSign,    // '~'
+        AsteriskSign, // '*'
+        AmpersandSign, // '&'
+        MatchingAngleQuotation,
+        AngleQuotationMatched,
         None
     };
 

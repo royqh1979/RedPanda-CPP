@@ -1664,32 +1664,129 @@ QStringList Editor::getExpressionAtPositionForCompletion(const BufferCoord &pos)
         for (int i=tokens.count()-1;i>=0;i--) {
             QString token = tokens[i];
             switch(lastSymbolType) {
-            case LastSymbolType::None:
-            case LastSymbolType::MemberOperator:
-            case LastSymbolType::ParenthesisMatched:
-            case LastSymbolType::BracketMatched:
-                if ((token =="::" || token == "." || token == "->")
-                        && lastSymbolType!=LastSymbolType::MemberOperator
-                    ){
-                    lastSymbolType=LastSymbolType::MemberOperator;
-                } else if (token == ")" ) {
+            case LastSymbolType::ScopeResolutionOperator: //before '::'
+                if (token==">") {
+                    lastSymbolType=LastSymbolType::MatchingAngleQuotation;
+                    symbolMatchingLevel=0;
+                } else if (isIdentChar(token.front())) {
+                    lastSymbolType=LastSymbolType::Identifier;
+                } else
+                    return result;
+                break;
+            case LastSymbolType::ObjectMemberOperator: //before '.'
+            case LastSymbolType::PointerMemberOperator: //before '->'
+            case LastSymbolType::PointerToMemberOfObjectOperator: //before '.*'
+            case LastSymbolType::PointerToMemberOfPointerOperator: //before '->*'
+                if (token == ")" ) {
                     lastSymbolType=LastSymbolType::MatchingParenthesis;
                     symbolMatchingLevel = 0;
                 } else if (token == "]") {
-                    if (lastSymbolType == LastSymbolType::BracketMatched)
-                        return result;
                     lastSymbolType=LastSymbolType::MatchingBracket;
                     symbolMatchingLevel = 0;
                 } else if (isIdentChar(token.front())) {
                     lastSymbolType=LastSymbolType::Identifier;
                 } else
                     return result;
-                result.push_front(token);
                 break;
+            case LastSymbolType::AsteriskSign: // before '*':
+                if (token == '*') {
+
+                } else
+                    return result;
+                break;
+            case LastSymbolType::AmpersandSign: // before '&':
+                return result;
+                break;
+            case LastSymbolType::ParenthesisMatched: //before '()'
+                if (token == ".") {
+                    lastSymbolType=LastSymbolType::ObjectMemberOperator;
+                } else if (token=="->") {
+                    lastSymbolType = LastSymbolType::PointerMemberOperator;
+                } else if (token == ".*") {
+                    lastSymbolType = LastSymbolType::PointerToMemberOfObjectOperator;
+                } else if (token == "->*"){
+                    lastSymbolType = LastSymbolType::PointerToMemberOfPointerOperator;
+                } else if (token==">") {
+                    lastSymbolType=LastSymbolType::MatchingAngleQuotation;
+                    symbolMatchingLevel=0;
+                } else if (token == ")" ) {
+                    lastSymbolType=LastSymbolType::MatchingParenthesis;
+                    symbolMatchingLevel = 0;
+                } else if (token == "]") {
+                    lastSymbolType=LastSymbolType::MatchingBracket;
+                    symbolMatchingLevel = 0;
+                } else if (token == "*") {
+                    lastSymbolType=LastSymbolType::AsteriskSign;
+                } else if (token == "&") {
+                    lastSymbolType=LastSymbolType::AmpersandSign;
+                } else if (isIdentChar(token.front())) {
+                    lastSymbolType=LastSymbolType::Identifier;
+                } else
+                    return result;
+                break;
+            case LastSymbolType::BracketMatched: //before '[]'
+                if (token == ")" ) {
+                    lastSymbolType=LastSymbolType::MatchingParenthesis;
+                    symbolMatchingLevel = 0;
+                } else if (token == "]") {
+                    lastSymbolType=LastSymbolType::MatchingBracket;
+                    symbolMatchingLevel = 0;
+                } else if (isIdentChar(token.front())) {
+                    lastSymbolType=LastSymbolType::Identifier;
+                } else
+                    return result;
+                break;
+            case LastSymbolType::AngleQuotationMatched: //before '<>'
+                if (isIdentChar(token.front())) {
+                    lastSymbolType=LastSymbolType::Identifier;
+                } else
+                    return result;
+                break;
+            case LastSymbolType::None:
+                if (token =="::") {
+                    lastSymbolType=LastSymbolType::ScopeResolutionOperator;
+                } else if (token == ".") {
+                    lastSymbolType=LastSymbolType::ObjectMemberOperator;
+                } else if (token=="->") {
+                    lastSymbolType = LastSymbolType::PointerMemberOperator;
+                } else if (token == ".*") {
+                    lastSymbolType = LastSymbolType::PointerToMemberOfObjectOperator;
+                } else if (token == "->*"){
+                    lastSymbolType = LastSymbolType::PointerToMemberOfPointerOperator;
+                } else if (token == ")" ) {
+                    lastSymbolType=LastSymbolType::MatchingParenthesis;
+                    symbolMatchingLevel = 0;
+                } else if (token == "]") {
+                    lastSymbolType=LastSymbolType::MatchingBracket;
+                    symbolMatchingLevel = 0;
+                } else if (isIdentChar(token.front())) {
+                    lastSymbolType=LastSymbolType::Identifier;
+                } else
+                    return result;
+                break;
+            case LastSymbolType::TildeSign:
+                if (token =="::") {
+                    lastSymbolType=LastSymbolType::ScopeResolutionOperator;
+                } else
+                    return result;
+                break;;
             case LastSymbolType::Identifier:
-                if (token =="::" || token == "." || token == "->") {
-                    lastSymbolType=LastSymbolType::MemberOperator;
-                    result.push_front(token);
+                if (token =="::") {
+                    lastSymbolType=LastSymbolType::ScopeResolutionOperator;
+                } else if (token == ".") {
+                    lastSymbolType=LastSymbolType::ObjectMemberOperator;
+                } else if (token=="->") {
+                    lastSymbolType = LastSymbolType::PointerMemberOperator;
+                } else if (token == ".*") {
+                    lastSymbolType = LastSymbolType::PointerToMemberOfObjectOperator;
+                } else if (token == "->*"){
+                    lastSymbolType = LastSymbolType::PointerToMemberOfPointerOperator;
+                } else if (token == "~") {
+                    lastSymbolType=LastSymbolType::TildeSign;
+                } else if (token == "*") {
+                    lastSymbolType=LastSymbolType::AsteriskSign;
+                } else if (token == "&") {
+                    lastSymbolType=LastSymbolType::AmpersandSign;
                 } else
                     return result; // stop matching;
                 break;
@@ -1703,7 +1800,6 @@ QStringList Editor::getExpressionAtPositionForCompletion(const BufferCoord &pos)
                 } else if (token==")") {
                     symbolMatchingLevel++;
                 }
-                result.push_front(token);
                 break;
             case LastSymbolType::MatchingBracket:
                 if (token=="[") {
@@ -1715,9 +1811,20 @@ QStringList Editor::getExpressionAtPositionForCompletion(const BufferCoord &pos)
                 } else if (token=="]") {
                     symbolMatchingLevel++;
                 }
-                result.push_front(token);
+                break;
+            case LastSymbolType::MatchingAngleQuotation:
+                if (token=="<") {
+                    if (symbolMatchingLevel==0) {
+                        lastSymbolType=LastSymbolType::MatchingAngleQuotation;
+                    } else {
+                        symbolMatchingLevel--;
+                    }
+                } else if (token==">") {
+                    symbolMatchingLevel++;
+                }
                 break;
             }
+            result.push_front(token);
         }
 
         line--;
