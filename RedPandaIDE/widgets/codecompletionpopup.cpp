@@ -854,6 +854,7 @@ void CodeCompletionPopup::getCompletionFor(const QStringList &expression, const 
                 }
             }
         }
+
         if (lastMemberOperatorPos<0) {
             //the identifier to be completed is not a member of variable/class
             if (mShowCodeSnippets) {
@@ -932,7 +933,7 @@ void CodeCompletionPopup::getCompletionFor(const QStringList &expression, const 
                 addChildren(nullptr, fileName, line);
                 return;
             }
-            QStringList ownerExpression = expression.mid(1,lastMemberOperatorPos);
+            QStringList ownerExpression = expression.mid(0,lastMemberOperatorPos);
             QStringList memberExpression = expression.mid(lastMemberOperatorPos+1);
             if (memberExpression.length()==2 && memberExpression.front()!="~")
                 return;
@@ -946,11 +947,16 @@ void CodeCompletionPopup::getCompletionFor(const QStringList &expression, const 
                         scopeName,
                         mCurrentStatement,
                         parentTypeStatement);
+            qDebug()<<scopeName;
+            qDebug()<<memberOperator;
+            qDebug()<<memberExpression;
             if(!ownerStatement ) {
+                qDebug()<<"not found!";
                 return;
             }
+            qDebug()<<"found: "<<ownerStatement->fullName;
             if (memberOperator == "::") {
-                if (ownerStatement->kind!=StatementKind::skNamespace) {
+                if (ownerStatement->kind==StatementKind::skNamespace) {
                     //there might be many statements corresponding to one namespace;
                     PStatementList namespaceStatementsList =
                             mParser->findNamespace(ownerStatement->fullName);

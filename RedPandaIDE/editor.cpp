@@ -2592,9 +2592,12 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete)
 
     if (word.isEmpty()) {
         //word=getWordAtPosition(this,caretXY(),pBeginPos,pEndPos, WordPurpose::wpCompletion);
-        word = getExpressionAtPositionForCompletion(caretXY()).join("");
+        QStringList expression = getExpressionAtPositionForCompletion(caretXY());
+        word = expression.join("");
+        mCompletionPopup->prepareSearch(preWord, expression, mFilename, pBeginPos.Line);
+    } else {
+        mCompletionPopup->prepareSearch(preWord, word, mFilename, pBeginPos.Line);
     }
-    mCompletionPopup->prepareSearch(preWord, word, mFilename, pBeginPos.Line);
 
     // Filter the whole statement list
     if (mCompletionPopup->search(word, autoComplete)) { //only one suggestion and it's not input while typing
