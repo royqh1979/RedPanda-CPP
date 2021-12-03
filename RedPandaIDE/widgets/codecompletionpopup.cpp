@@ -45,6 +45,11 @@ CodeCompletionPopup::CodeCompletionPopup(QWidget *parent) :
     mShowCodeSnippets = true;
 
     mIgnoreCase = false;
+    mMemberOperators.insert(".");
+    mMemberOperators.insert("::");
+    mMemberOperators.insert("->");
+    mMemberOperators.insert("->*");
+    mMemberOperators.insert(".*");
 
 }
 
@@ -554,6 +559,392 @@ void CodeCompletionPopup::getCompletionFor(const QString &fileName, const QStrin
                     }
                 }
             }
+
+            PStatement scopeStatement = mCurrentStatement;
+            // repeat until reach global
+            while (scopeStatement) {
+                //add members of current scope that not added before
+                if (scopeStatement->kind == StatementKind::skClass) {
+                    addChildren(scopeStatement, fileName, -1);
+                } else {
+                    addChildren(scopeStatement, fileName, line);
+                }
+
+                // add members of all usings (in current scope ) and not added before
+                foreach (const QString& namespaceName,scopeStatement->usingList) {
+                    PStatementList namespaceStatementsList =
+                            mParser->findNamespace(namespaceName);
+                    if (!namespaceStatementsList)
+                        continue;
+                    foreach (const PStatement& namespaceStatement,*namespaceStatementsList) {
+                        addChildren(namespaceStatement, fileName, line);
+                    }
+                }
+                scopeStatement=scopeStatement->parentScope.lock();
+            }
+
+            // add all global members and not added before
+            addChildren(nullptr, fileName, line);
+
+            // add members of all fusings
+            mUsings = mParser->getFileUsings(fileName);
+            foreach (const QString& namespaceName, mUsings) {
+                PStatementList namespaceStatementsList =
+                        mParser->findNamespace(namespaceName);
+                if (!namespaceStatementsList)
+                    continue;
+                foreach (const PStatement& namespaceStatement, *namespaceStatementsList) {
+                    addChildren(namespaceStatement, fileName, line);
+                }
+            }
+        } else { //we are in some statement's scope
+            MemberOperatorType opType=getOperatorType(phrase,i);
+            QString scopeName = phrase.mid(0,i);
+            if (opType == MemberOperatorType::otDColon) {
+                if (scopeName.isEmpty()) {
+                    // start with '::', we only find in global
+                    // add all global members and not added before
+                    addChildren(nullptr, fileName, line);
+                    return;
+                } else {
+                    //assume the scope its a namespace
+                    PStatementList namespaceStatementsList =
+                            mParser->findNamespace(scopeName);
+                    if (namespaceStatementsList) {
+                        foreach (const PStatement& namespaceStatement, *namespaceStatementsList) {
+                            addChildren(namespaceStatement, fileName, line);
+                        }
+                        return;
+                    }
+                    //namespace not found let's go on
+                }
+            }
+            PStatement parentTypeStatement;
+            PStatement statement = mParser->findStatementOf(
+                        fileName,
+                        scopeName,
+                        mCurrentStatement,
+                        parentTypeStatement);
+
+            if (!statement)
+                return;
+            // find the most inner scope statement that has a name (not a block)
+            PStatement scopeTypeStatement = mCurrentStatement;
+            while (scopeTypeStatement && !isScopeTypeKind(scopeTypeStatement->kind)) {
+                scopeTypeStatement = scopeTypeStatement->parentScope.lock();
+            }
+            if (
+                    (opType == MemberOperatorType::otArrow
+                     ||  opType == MemberOperatorType::otDot)
+                    && (
+                        statement->kind == StatementKind::skVariable
+                        || statement->kind == StatementKind::skParameter
+                        || statement->kind == StatementKind::skFunction)
+                    ) {
+                // Get type statement  of current (scope) statement
+                PStatement classTypeStatement;
+                PStatement parentScope = statement->parentScope.lock();
+                if ((statement->kind == StatementKind::skFunction)
+                        && parentScope
+                        && STLContainers.contains(parentScope->fullName)
+                        && STLElementMethods.contains(statement->command)){
+                    // it's an element method of STL container
+                    // we must find the type in the template parameter
+
+                    // get the function's owner variable's definition
+                    int lastI = mParser->findLastOperator(scopeName);
+                    QString lastScopeName = scopeName.mid(0,lastI);
+                    PStatement lastScopeStatement =
+                            mParser->findStatementOf(
+                                fileName, lastScopeName,
+                                mCurrentStatement,parentTypeStatement);
+                    if (!lastScopeStatement)
+                        return;
+
+
+                    QString typeName =
+                            mParser->findFirstTemplateParamOf(
+                                fileName,lastScopeStatement->type,
+                                lastScopeStatement->parentScope.lock());
+                    classTypeStatement = mParser->findTypeDefinitionOf(
+                                fileName, typeName,
+                                lastScopeStatement->parentScope.lock());
+                } else
+                    classTypeStatement=mParser->findTypeDefinitionOf(
+                                fileName, statement->type,parentTypeStatement);
+
+                if (!classTypeStatement)
+                    return;
+                //is a smart pointer
+                if (STLPointers.contains(classTypeStatement->fullName)
+                   && (opType == MemberOperatorType::otArrow)) {
+                    QString typeName= mParser->findFirstTemplateParamOf(
+                                fileName,
+                                statement->type,
+                                parentScope);
+                    classTypeStatement = mParser->findTypeDefinitionOf(
+                                fileName,
+                                typeName,
+                                parentScope);
+                    if (!classTypeStatement)
+                        return;
+                }
+                //is a stl container operator[]
+                if (STLContainers.contains(classTypeStatement->fullName)
+                        && scopeName.endsWith(']')) {
+                    QString typeName= mParser->findFirstTemplateParamOf(
+                                fileName,
+                                statement->type,
+                                parentScope);
+                    classTypeStatement = mParser->findTypeDefinitionOf(
+                                fileName,
+                                typeName,
+                                parentScope);
+                    if (!classTypeStatement)
+                        return;
+                }
+                if (!isIncluded(classTypeStatement->fileName) &&
+                    !isIncluded(classTypeStatement->definitionFileName))
+                    return;
+                if ((classTypeStatement == scopeTypeStatement) || (statement->command == "this")) {
+                    //we can use all members
+                    addChildren(classTypeStatement,fileName,-1);
+                } else { // we can only use public members
+                    const StatementMap& children = mParser->statementList().childrenStatements(classTypeStatement);
+                    if (children.isEmpty())
+                        return;
+                    foreach (const PStatement& childStatement, children) {
+                        if ((childStatement->classScope==StatementClassScope::scsPublic)
+                                && !(
+                                    childStatement->kind == StatementKind::skConstructor
+                                    || childStatement->kind == StatementKind::skDestructor)
+                                && !mAddedStatements.contains(childStatement->command)) {
+                            addStatement(childStatement,fileName,-1);
+                        }
+                    }
+                }
+            //todo friend
+            } else if ((opType == MemberOperatorType::otDColon)
+                       && ((statement->kind == StatementKind::skEnumType)
+                       || (statement->kind == StatementKind::skEnumClassType))) {
+                //we can add all child enum definess
+                PStatement classTypeStatement = statement;
+                if (!isIncluded(classTypeStatement->fileName) &&
+                    !isIncluded(classTypeStatement->definitionFileName))
+                    return;
+                const StatementMap& children =
+                        mParser->statementList().childrenStatements(classTypeStatement);
+                foreach (const PStatement& child,children) {
+                    addStatement(child,fileName,line);
+                }
+            } else if ((opType == MemberOperatorType::otDColon)
+                       && (statement->kind == StatementKind::skClass)) {
+                PStatement classTypeStatement = statement;
+                if (!isIncluded(classTypeStatement->fileName) &&
+                    !isIncluded(classTypeStatement->definitionFileName))
+                    return;
+                if (classTypeStatement == scopeTypeStatement) {
+                    //we can use all static members
+                    const StatementMap& children =
+                            mParser->statementList().childrenStatements(classTypeStatement);
+                    foreach (const PStatement& childStatement, children) {
+                        if (
+                          (childStatement->isStatic)
+                           || (childStatement->kind == StatementKind::skTypedef
+                            || childStatement->kind == StatementKind::skClass
+                            || childStatement->kind == StatementKind::skEnum
+                            || childStatement->kind == StatementKind::skEnumClassType
+                            || childStatement->kind == StatementKind::skEnumType
+                               )) {
+                            addStatement(childStatement,fileName,-1);
+                        }
+                    }
+                } else {
+                    // we can only use public static members
+                    const StatementMap& children =
+                            mParser->statementList().childrenStatements(classTypeStatement);
+                    foreach (const PStatement& childStatement,children) {
+                        if (
+                          (childStatement->isStatic)
+                           || (childStatement->kind == StatementKind::skTypedef
+                            || childStatement->kind == StatementKind::skClass
+                            || childStatement->kind == StatementKind::skEnum
+                            || childStatement->kind == StatementKind::skEnumClassType
+                            || childStatement->kind == StatementKind::skEnumType
+                               )) {
+                            if (childStatement->classScope == StatementClassScope::scsPublic)
+                                addStatement(childStatement,fileName,-1);
+                        }
+                    }
+                }
+              //todo friend
+            }
+        }
+    }
+}
+
+void CodeCompletionPopup::getCompletionFor(const QStringList &expression, const QString &fileName, int line)
+{
+    if (expression.isEmpty())
+        return;
+
+    if(!mParser)
+        return;
+    if (!mParser->enabled())
+        return;
+
+    if (!mParser->freeze())
+        return;
+    {
+        auto action = finally([this]{
+            mParser->unFreeze();
+        });
+
+        if (expression.length()==1 ) {
+            QString phrase = expression.back();
+            //C++ preprocessor directives
+            if (phrase.startsWith('#')) {
+                if (mShowKeywords) {
+                    foreach (const QString& keyword, CppDirectives) {
+                        addKeyword(keyword);
+                    }
+                }
+                return;
+            }
+
+            //docstring tags (javadoc style)
+            if (phrase.startsWith('@')) {
+                if (mShowKeywords) {
+                    foreach (const QString& keyword,JavadocTags) {
+                        addKeyword(keyword);
+                    }
+                }
+                return;
+            }
+        }
+
+        //find position of the last member operator
+        int lastMemberOperatorPos = -1;
+        int currentMatchingLevel = 0;
+        QString matchingSignLeft;
+        QString matchingSignRight;
+        for (int i=0;i<expression.length();i++) {
+            QString token = expression[i];
+            if (currentMatchingLevel == 0) {
+                if (mMemberOperators.contains(token)) {
+                    lastMemberOperatorPos = i;
+                } else if (token == "(") {
+                    matchingSignLeft = "(";
+                    matchingSignRight = ")";
+                    currentMatchingLevel++;
+                } else if (token == "[") {
+                    matchingSignLeft = "[";
+                    matchingSignRight = "]";
+                    currentMatchingLevel++;
+                } else if (token == "<") {
+                    matchingSignLeft = "<";
+                    matchingSignRight = ">";
+                    currentMatchingLevel++;
+                }
+            } else {
+                if (token == matchingSignLeft) {
+                    currentMatchingLevel++;
+                } else if (token == matchingSignRight) {
+                    currentMatchingLevel--;
+                }
+            }
+        }
+        if (lastMemberOperatorPos<0) {
+            //the identifier to be completed is not a member of variable/class
+            if (mShowCodeSnippets) {
+                //add custom code templates
+                foreach (const PCodeSnippet& codeIn,mCodeSnippets) {
+                    if (!codeIn->code.isEmpty()) {
+                        PStatement statement = std::make_shared<Statement>();
+                        statement->command = codeIn->prefix;
+                        statement->value = codeIn->code;
+                        statement->kind = StatementKind::skUserCodeSnippet;
+                        statement->fullName = codeIn->prefix;
+                        statement->usageCount = 0;
+                        statement->freqTop = 0;
+                        mFullCompletionStatementList.append(statement);
+                    }
+                }
+            }
+
+            if (mShowKeywords) {
+                //add keywords
+                if (mUseCppKeyword) {
+                    foreach (const QString& keyword,CppKeywords.keys()) {
+                        addKeyword(keyword);
+                    }
+                } else {
+                    foreach (const QString& keyword,CKeywords) {
+                        addKeyword(keyword);
+                    }
+                }
+            }
+
+        } else {
+            //the identifier to be completed is a member of variable/class
+            QString memberOperator = expression[lastMemberOperatorPos];
+            if (memberOperator == "::" && lastMemberOperatorPos==0) {
+                // start with '::', we only find in global
+                // add all global members and not added before
+                addChildren(nullptr, fileName, line);
+                return;
+            }
+            QStringList ownerExpression = expression.mid(1,lastMemberOperatorPos);
+            QStringList memberExpression = expression.mid(lastMemberOperatorPos+1);
+            if (memberExpression.length()==2 && memberExpression.front()!="~")
+                return;
+            if (memberExpression.length()>2)
+                return;
+            PStatement scope = mCurrentStatement;//the scope the expression in
+            PStatement parentTypeStatement;
+            PStatement ownerStatement = mParser->findStatement(
+                        fileName,
+                        expression.mid(0,lastMemberOperatorPos),
+                        mCurrentStatement,
+                        parentTypeStatement);
+            if (memberOperator == "::") {
+                if(!ownerStatement ) {
+                    return;
+                }
+                if (ownerStatement->kind!=StatementKind::skNamespace) {
+                    //there might be many statements corresponding to one namespace;
+                    PStatementList namespaceStatementsList =
+                            mParser->findNamespace(ownerStatement->fullName);
+                    if (namespaceStatementsList) {
+                        foreach (const PStatement& namespaceStatement, *namespaceStatementsList) {
+                            addChildren(namespaceStatement, fileName, line);
+                        }
+                    }
+                    return;
+                }
+            } else {
+            }
+        }
+        bool ownScoped = false; // expression has it's own scope
+        int pos = 0;
+        PStatement scope=mCurrentStatement; //the scope the expression in
+        PStatement exprStatement; // the scope that parsed expression is
+        while (pos<expression.length()) {
+            bool result = resolveScope(exprStatement, expression, pos,ownScoped);
+            if (!result)
+                return;
+
+
+        }
+        while (true) {
+        }
+        if (expression.front()=="(") {
+
+        } else {
+        }
+        if (!ownScoped) {
+
+        }
 
             PStatement scopeStatement = mCurrentStatement;
             // repeat until reach global

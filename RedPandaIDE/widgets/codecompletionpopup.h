@@ -80,6 +80,7 @@ private:
     void addKeyword(const QString& keyword);
     bool isIncluded(const QString& fileName);
 private:
+    QSet<QString> mMemberOperators;
     CodeCompletionListView * mListView;
     CodeCompletionListModel* mModel;
     QList<PCodeSnippet> mCodeSnippets; //(Code template list)
