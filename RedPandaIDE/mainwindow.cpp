@@ -4594,6 +4594,10 @@ void MainWindow::on_actionNew_Project_triggered()
 {
     NewProjectDialog dialog;
     if (dialog.exec() == QDialog::Accepted) {
+        if (dialog.makeDefaultLanguage()) {
+            pSettings->editor().setDefaultFileCpp(dialog.isCppProject());
+            pSettings->editor().save();
+        }
         if (dialog.useAsDefaultProjectDir()) {
             pSettings->dirs().setProjectDir(dialog.getLocation());
             pSettings->dirs().save();
@@ -4656,14 +4660,13 @@ void MainWindow::on_actionNew_Project_triggered()
 
         // Create an empty project
         mProject = std::make_shared<Project>(s,dialog.getProjectName());
-        if (!mProject->assignTemplate(dialog.getTemplate())) {
+        if (!mProject->assignTemplate(dialog.getTemplate(),dialog.isCppProject())) {
             mProject = nullptr;
             QMessageBox::critical(this,
                                   tr("New project fail"),
                                   tr("Can't assign project template"),
                                   QMessageBox::Ok);
         }
-        mProject->options().useGPP = dialog.isCppProject();
         mProject->saveAll();
         updateProjectView();
     }

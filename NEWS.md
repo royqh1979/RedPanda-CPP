@@ -1,3 +1,8 @@
+Version 0.11.0 For Dev-C++ 7 Beta
+ - enhancement: use token list instead of single string to do code completion ( intial version)
+ - fix: language options in the project wizard don't work
+ - fix: "ake as default language" option in the project wizard doesn't work
+
 Version 0.10.4 For Dev-C++ 7 Beta
  - fix: can't correctly undo/redo indent 
  - fix: can't correctly undo/redo unindent

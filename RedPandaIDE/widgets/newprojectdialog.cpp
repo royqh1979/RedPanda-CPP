@@ -81,9 +81,9 @@ bool NewProjectDialog::isCppProject()
     return ui->rdCppProject->isChecked();
 }
 
-bool NewProjectDialog::makeProjectDefault()
+bool NewProjectDialog::makeDefaultLanguage()
 {
-    return ui->chkMakeDefault->isChecked();
+    return ui->chkMakeDefaultLanguage->isChecked();
 }
 
 void NewProjectDialog::addTemplate(const QString &filename)
@@ -187,15 +187,21 @@ void NewProjectDialog::on_lstTemplates_currentItemChanged(QListWidgetItem *curre
         PProjectTemplate t = mTemplates[index];
         ui->lblDescription->setText(t->description());
         if (t->options().useGPP) {
+            ui->rdCProject->setEnabled(false);
             ui->rdCppProject->setChecked(true);
         } else {
-            ui->rdCProject->setChecked(true);
+            ui->rdCProject->setEnabled(true);
+            if (pSettings->editor().defaultFileCpp()) {
+                ui->rdCppProject->setChecked(true);
+            } else {
+                ui->rdCProject->setChecked(true);
+            }
         }
     } else {
         ui->lblDescription->setText("");
         ui->rdCProject->setChecked(false);
         ui->rdCppProject->setChecked(false);
-        ui->chkMakeDefault->setChecked(false);
+        ui->chkMakeDefaultLanguage->setChecked(false);
     }
     ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(
                 current && !ui->txtProjectName->text().isEmpty()

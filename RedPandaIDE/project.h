@@ -164,7 +164,7 @@ public:
     void setCompilerSet(int compilerSetIndex);
 
     //void showOptions();
-    bool assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate);
+    bool assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate, bool useCpp);
     //void saveToLog();
 
     std::shared_ptr<CppParser> cppParser();

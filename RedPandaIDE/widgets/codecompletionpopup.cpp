@@ -947,14 +947,14 @@ void CodeCompletionPopup::getCompletionFor(const QStringList &expression, const 
                         scopeName,
                         mCurrentStatement,
                         parentTypeStatement);
-            qDebug()<<scopeName;
-            qDebug()<<memberOperator;
-            qDebug()<<memberExpression;
+//            qDebug()<<scopeName;
+//            qDebug()<<memberOperator;
+//            qDebug()<<memberExpression;
             if(!ownerStatement ) {
-                qDebug()<<"not found!";
+//                qDebug()<<"not found!";
                 return;
             }
-            qDebug()<<"found: "<<ownerStatement->fullName;
+//            qDebug()<<"found: "<<ownerStatement->fullName;
             if (memberOperator == "::") {
                 if (ownerStatement->kind==StatementKind::skNamespace) {
                     //there might be many statements corresponding to one namespace;

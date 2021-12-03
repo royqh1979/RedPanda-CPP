@@ -50,7 +50,7 @@
           <number>10</number>
          </property>
          <item row="2" column="0">
-          <widget class="QCheckBox" name="chkMakeDefault">
+          <widget class="QCheckBox" name="chkMakeDefaultLanguage">
            <property name="text">
             <string>Make default language</string>
            </property>

@@ -1,0 +1,17 @@
+[Template]
+ver=1
+Name=GLUT
+Icon=CL_GLUT.ico
+Description=A simple GLUT program
+Category=Multimedia
+[Unit0]
+CppName=main.cpp
+C=CL_GLUT_cpp.txt
+[Project]
+UnitCount=1
+Type=0
+IsCpp=1
+linker=-lm -lfreeglut_static -lopengl32 -lwinmm -lgdi32_@@__@@_
+
+
+

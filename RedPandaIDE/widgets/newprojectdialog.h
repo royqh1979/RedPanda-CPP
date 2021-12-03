@@ -23,7 +23,7 @@ public:
     bool useAsDefaultProjectDir();
     bool isCProject();
     bool isCppProject();
-    bool makeProjectDefault();
+    bool makeDefaultLanguage();
 private slots:
     void updateView();
     void updateProjectLocation();

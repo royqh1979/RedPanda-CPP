@@ -624,14 +624,14 @@ void Project::setCompilerSet(int compilerSetIndex)
     }
 }
 
-bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate)
+bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate, bool useCpp)
 {
     if (!aTemplate) {
         return true;
     }
-
     mOptions = aTemplate->options();
     mOptions.compilerSet = pSettings->compilerSets().defaultIndex();
+    mOptions.useGPP = useCpp;
     updateCompilerSetType();
     mOptions.icon = aTemplate->icon();
 
@@ -653,7 +653,7 @@ bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate)
             PTemplateUnit templateUnit = aTemplate->unit(i);
             QString s;
             PProjectUnit unit;
-            if (aTemplate->options().useGPP) {
+            if (options().useGPP) {
                 s = templateUnit->CppText;
                 unit = newUnit(mNode, templateUnit->CppName);
             } else {
