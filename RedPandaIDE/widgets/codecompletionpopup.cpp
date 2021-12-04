@@ -79,17 +79,17 @@ void CodeCompletionPopup::prepareSearch(
         mIncludedFiles = mParser->getFileIncludes(filename);
         getCompletionFor(ownerExpression,memberOperator,memberExpression, filename,line);
     } else {
-        getFullCompletionListFor(preWord);
+        getCompletionListForPreWord(preWord);
     }
 
     setCursor(oldCursor);
 }
 
-bool CodeCompletionPopup::search(const QString &phrase, bool autoHideOnSingleResult)
+bool CodeCompletionPopup::search(const QString &memberPhrase, bool autoHideOnSingleResult)
 {
     QMutexLocker locker(&mMutex);
 
-    mMemberPhrase = phrase;
+    mMemberPhrase = memberPhrase;
 
     if (!isEnabled()) {
         hide();
@@ -99,9 +99,8 @@ bool CodeCompletionPopup::search(const QString &phrase, bool autoHideOnSingleRes
     QCursor oldCursor = cursor();
     setCursor(Qt::CursorShape::WaitCursor);
 
-    QString symbol = phrase;
     // filter fFullCompletionStatementList to fCompletionStatementList
-    filterList(symbol);
+    filterList(memberPhrase);
 
     //if can't find a destructor, maybe '~' is only an operator
 //    if (mCompletionStatementList.isEmpty() && phrase.startsWith('~')) {
@@ -118,7 +117,7 @@ bool CodeCompletionPopup::search(const QString &phrase, bool autoHideOnSingleRes
         // if only one suggestion and auto hide , don't show the frame
         if(mCompletionStatementList.count() == 1)
             if (autoHideOnSingleResult
-                    || (symbol == mCompletionStatementList.front()->command)) {
+                    || (memberPhrase == mCompletionStatementList.front()->command)) {
             return true;
         }
     } else {
@@ -552,9 +551,9 @@ void CodeCompletionPopup::getCompletionFor(
                         scopeName,
                         mCurrentStatement,
                         parentTypeStatement);
-            qDebug()<<scopeName;
-            qDebug()<<memberOperator;
-            qDebug()<<memberExpression;
+//            qDebug()<<scopeName;
+//            qDebug()<<memberOperator;
+//            qDebug()<<memberExpression;
             if(!ownerStatement ) {
 //                qDebug()<<"not found!";
                 return;
@@ -729,7 +728,7 @@ void CodeCompletionPopup::getCompletionFor(
     }
 }
 
-void CodeCompletionPopup::getFullCompletionListFor(const QString &preWord)
+void CodeCompletionPopup::getCompletionListForPreWord(const QString &preWord)
 {
     mFullCompletionStatementList.clear();
     if (preWord == "long") {
