@@ -79,31 +79,15 @@ public:
     void unFreeze(); // UnFree/UnLock (reparse while searching)
     QSet<QString> scannedFiles();
 
-
-
-    //void getSourcePair(const QString& fName, QString& CFile, QString& HFile);
-
-//  int suggestMemberInsertionLine(PStatement parentStatement,
-//                                   StatementClassScope Scope,
-//                                   bool addScopeStr);
-//      {
-//    function GetSystemHeaderFileName(const FileName: AnsiString): AnsiString; // <file.h>
-//    function GetProjectHeaderFileName(const FileName: AnsiString): AnsiString; // <file.h>
-//    function GetLocalHeaderFileName(const RelativeTo, FileName: AnsiString): AnsiString; // "file.h"
-//    }
-    //QString statementKindStr(StatementKind value);
-    //QString statementClassScopeStr(StatementClassScope value);
-
     QString prettyPrintStatement(const PStatement& statement, const QString& filename, int line = -1);
 
+    /**
+     * @brief test if the token is a member/scope operator
+     * @param token
+     * @return true if it is, false if not
+     */
+    bool isMemberOperator(QString token);
 
-
-//    StatementKind findKindOfStatementOf(const QString& fileName,
-//                                     const QString& phrase,
-//                                     int line);
-//    QString getHintFromStatement(const QString& fileName,
-//                                 const QString& phrase,
-//                                 int line);
     bool enabled() const;
     void setEnabled(bool newEnabled);
 
@@ -327,8 +311,6 @@ private:
     bool isTypeStatement(StatementKind kind);
 
     void updateSerialId();
-
-
 private:
     int mParserId;
     int mSerialCount;
@@ -375,6 +357,7 @@ private:
     GetFileStreamCallBack mOnGetFileStream;
     QMap<QString,SkipType> mCppKeywords;
     QSet<QString> mCppTypeKeywords;
+    QSet<QString> mMemberOperators;
 };
 using PCppParser = std::shared_ptr<CppParser>;
 

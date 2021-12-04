@@ -38,6 +38,11 @@ CppParser::CppParser(QObject *parent) : QObject(parent)
     //mBlockBeginSkips;
     //mBlockEndSkips;
     //mInlineNamespaceEndSkips;
+    mMemberOperators.insert(".");
+    mMemberOperators.insert("::");
+    mMemberOperators.insert("->");
+    mMemberOperators.insert("->*");
+    mMemberOperators.insert(".*");
 }
 
 CppParser::~CppParser()
@@ -333,7 +338,7 @@ PStatement CppParser::findStatementOf(const QString &fileName, const QString &ph
         if (!statement)
             return PStatement();
     }
-
+    qDebug()<<"-----";
     PStatement lastScopeStatement;
     QString typeName;
     PStatement typeStatement;
@@ -3285,6 +3290,10 @@ PStatement CppParser::findMemberOfStatement(const QString &phrase,
     int p = phrase.indexOf('[');
     if (p>=0)
         s.truncate(p);
+    //remove ()
+    p = phrase.indexOf('(');
+    if (p>=0)
+        s.truncate(p);
 
     //remove <>
     p =s.indexOf('<');
@@ -3817,6 +3826,11 @@ bool CppParser::isTypeStatement(StatementKind kind)
 void CppParser::updateSerialId()
 {
     mSerialId = QString("%1 %2").arg(mParserId).arg(mSerialCount);
+}
+
+bool CppParser::isMemberOperator(QString token)
+{
+    return mMemberOperators.contains(token);
 }
 
 const StatementModel &CppParser::statementList() const

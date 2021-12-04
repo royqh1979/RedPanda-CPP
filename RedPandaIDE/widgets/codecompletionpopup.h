@@ -31,8 +31,12 @@ public:
     ~CodeCompletionPopup();
 
     void setKeypressedCallback(const KeyPressedCallback &newKeypressedCallback);
-    void prepareSearch(const QString& preWord, const QString& phrase, const QString& filename, int line);
-    void prepareSearch(const QString& preWord, const QStringList & expression, const QString& filename, int line);
+    void prepareSearch(const QString& preWord,
+                       const QStringList & ownerExpression,
+                       const QString& memberOperator,
+                       const QStringList& memberExpression,
+                       const QString& filename,
+                       int line);
     bool search(const QString& phrase, bool autoHideOnSingleResult);
 
     PStatement selectedStatement();
@@ -68,19 +72,24 @@ public:
     void setCurrentStatement(const PStatement &newCurrentStatement);
     const std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > >& colors() const;
     void setColors(const std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > &newColors);
-
+    const QString &memberPhrase() const;
+    const QList<PCodeSnippet> &codeSnippets() const;
+    void setCodeSnippets(const QList<PCodeSnippet> &newCodeSnippets);
 private:
     void addChildren(PStatement scopeStatement, const QString& fileName,
                      int line);
     void addStatement(PStatement statement, const QString& fileName, int line);
     void filterList(const QString& member);
-    void getCompletionFor(const QString& fileName,const QString& phrase, int line);
-    void getCompletionFor(const QStringList& expression, const QString& fileName,int line);
+    void getCompletionFor(
+            const QStringList& ownerExpression,
+            const QString& memberOperator,
+            const QStringList& memberExpression,
+            const QString& fileName,
+            int line);
     void getFullCompletionListFor(const QString& preWord);
     void addKeyword(const QString& keyword);
     bool isIncluded(const QString& fileName);
 private:
-    QSet<QString> mMemberOperators;
     CodeCompletionListView * mListView;
     CodeCompletionListModel* mModel;
     QList<PCodeSnippet> mCodeSnippets; //(Code template list)
@@ -90,7 +99,8 @@ private:
     QSet<QString> mIncludedFiles;
     QSet<QString> mUsings;
     QSet<QString> mAddedStatements;
-    QString mPhrase;
+    QString mMemberPhrase;
+    QString mMemberOperator;
     QRecursiveMutex mMutex;
     std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > mColors;
 
@@ -113,9 +123,7 @@ protected:
     // QObject interface
 public:
     bool event(QEvent *event) override;
-    const QString &phrase() const;
-    const QList<PCodeSnippet> &codeSnippets() const;
-    void setCodeSnippets(const QList<PCodeSnippet> &newCodeSnippets);
+    const QString &memberOperator() const;
 };
 
 #endif // CODECOMPLETIONPOPUP_H

@@ -194,7 +194,11 @@ public:
     void deleteToEOL();
     void deleteToBOL();
 
-    QStringList getExpressionAtPositionForCompletion(const BufferCoord& pos);
+    QStringList getOwnerExpressionAndMemberAtPositionForCompletion(
+            const BufferCoord& pos,
+            QString& memberOperator,
+            QStringList& memberExpression);
+    QString getWordForCompletionSearch(const BufferCoord& pos,bool permitTilde);
 
     const PCppParser &parser();
 
@@ -256,6 +260,8 @@ private:
     void popUserCodeInTabStops();
     void onExportedFormatToken(PSynHighlighter syntaxHighlighter, int Line, int column, const QString& token,
         PSynHighlighterAttribute &attr);
+    QStringList getExpressionAtPositionForCompletion(
+            const BufferCoord& pos);
 private:
     QByteArray mEncodingOption; // the encoding type set by the user
     QByteArray mFileEncoding; // the real encoding of the file (auto detected)
