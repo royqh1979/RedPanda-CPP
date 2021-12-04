@@ -338,7 +338,6 @@ PStatement CppParser::findStatementOf(const QString &fileName, const QString &ph
         if (!statement)
             return PStatement();
     }
-    qDebug()<<"-----";
     PStatement lastScopeStatement;
     QString typeName;
     PStatement typeStatement;
@@ -402,6 +401,18 @@ PStatement CppParser::findStatementOf(const QString &fileName, const QString &ph
         }
     }
     return statement;
+}
+
+PStatement CppParser::findStatement(
+        const QString &fileName,
+        const QStringList &phraseExpression,
+        const PStatement &currentScope)
+{
+    QMutexLocker locker(&mMutex);
+    if (mParsing)
+        return PStatement();
+    int pos = 0;
+    return doFindStatement(fileName,phraseExpression,pos,currentScope,PStatement());
 }
 
 PStatement CppParser::findStatementOf(const QString &fileName, const QString &phrase, const PStatement& currentClass, bool force)
@@ -3343,6 +3354,66 @@ PStatement CppParser::findStatementInNamespace(const QString &name, const QStrin
             return result;
     }
     return PStatement();
+}
+
+PStatement CppParser::doParseSubExpression3(const QString &fileName,
+                                            const QStringList &phraseExpression,
+                                            int &pos,
+                                            const PStatement &currentScope,
+                                            const PStatement &ownerStatement)
+{
+    if (pos>=phraseExpression.length())
+        return PStatement();
+    if (phraseExpression[pos]=="*") {
+        pos++;
+        return doParseSubExpression3(fileName,
+                                     phraseExpression,
+                                     pos,
+                                     currentScope,
+                                     ownerStatement);
+    } else if (phraseExpression[pos]=="&") {
+        pos++;
+        return doParseSubExpression3(fileName,
+                                     phraseExpression,
+                                     pos,
+                                     currentScope,
+                                     ownerStatement);
+    }
+    return doParseSubExpression2(fileName,
+                                 phraseExpression,
+                                 pos,
+                                 currentScope,
+                                 ownerStatement);
+}
+
+PStatement CppParser::doFindStatement(const QString &fileName,
+                                      const QStringList &phraseExpression,
+                                      int& pos,
+                                      const PStatement &currentScope,
+                                      const PStatement &ownerStatement)
+{
+    if (pos>=phraseExpression.length())
+        return PStatement();
+    //find the start scope statement
+    PStatement currentStatement = doParseSubExpression3(fileName,phraseExpression,pos,currentScope, ownerStatement);
+    while (pos < phraseExpression.length() ) {
+        if (currentStatement &&
+                (currentStatement->kind == StatementKind::skVariable
+                 || currentStatement->kind == StatementKind::skFunction)
+                && (phraseExpression[pos]==".*"
+                    || phraseExpression[pos]=="->*")) {
+            pos++; // skip '::';
+            PStatement currentStatementScope = findTypeDefinitionOf(
+                        fileName,
+                        currentStatement->type,
+                        currentStatement->parentScope.lock());
+            currentStatement =  doParseSubExpression3(fileName,phraseExpression,pos,currentScope, currentStatementScope);
+
+        } else {
+            break;
+        }
+    }
+    return currentStatement;
 }
 
 int CppParser::getBracketEnd(const QString &s, int startAt)

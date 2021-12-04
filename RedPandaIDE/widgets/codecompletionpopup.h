@@ -37,7 +37,7 @@ public:
                        const QStringList& memberExpression,
                        const QString& filename,
                        int line);
-    bool search(const QString& phrase, bool autoHideOnSingleResult);
+    bool search(const QString& memberPhrase, bool autoHideOnSingleResult);
 
     PStatement selectedStatement();
 
@@ -86,7 +86,7 @@ private:
             const QStringList& memberExpression,
             const QString& fileName,
             int line);
-    void getFullCompletionListFor(const QString& preWord);
+    void getCompletionListForPreWord(const QString& preWord);
     void addKeyword(const QString& keyword);
     bool isIncluded(const QString& fileName);
 private:

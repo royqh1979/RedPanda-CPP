@@ -49,6 +49,9 @@ public:
                                const QString& phrase,
                                const PStatement& currentClass,
                                bool force = false);
+    PStatement findStatement(const QString& fileName,
+                               const QStringList& phraseExpression,
+                               const PStatement& currentScope);
     //{Find statement starting from startScope}
     PStatement findStatementStartingFrom(const QString& fileName,
                                          const QString& phrase,
@@ -198,6 +201,18 @@ private:
     PStatement findStatementInNamespace(
             const QString& name,
             const QString& namespaceName);
+
+    PStatement doParseSubExpression3(
+            const QString& fileName,
+            const QStringList& phraseExpression,
+            int &pos,
+            const PStatement& currentScope,
+            const PStatement& ownerStatement);
+    PStatement doFindStatement(const QString& fileName,
+                               const QStringList& phraseExpression,
+                               int &pos,
+                               const PStatement& currentScope,
+                               const PStatement& ownerStatement);
     int getBracketEnd(const QString& s, int startAt);
     StatementClassScope getClassScope(int index);
     int getCurrentBlockBeginSkip();
@@ -311,6 +326,8 @@ private:
     bool isTypeStatement(StatementKind kind);
 
     void updateSerialId();
+
+
 private:
     int mParserId;
     int mSerialCount;
