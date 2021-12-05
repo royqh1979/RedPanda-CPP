@@ -3369,27 +3369,50 @@ PStatement CppParser::doParseSubExpression3(const QString &fileName,
     if (pos>=phraseExpression.length())
         return PStatement();
     if (phraseExpression[pos]=="*") {
-        pos++;
-        return doParseSubExpression3(fileName,
+        pos++; //skip "*"
+        PStatement statement = doParseSubExpression3(fileName,
                                      phraseExpression,
                                      pos,
                                      currentScope,
                                      freeScoped);
+        //todo:
+        return statement;
     } else if (phraseExpression[pos]=="&") {
-        pos++;
-        return doParseSubExpression3(fileName,
+        pos++; //skip "&"
+        PStatement statement = doParseSubExpression3(fileName,
                                      phraseExpression,
                                      pos,
                                      currentScope,
                                      freeScoped);
+        //todo:
+        return statement;
     } else if (phraseExpression[pos]=="++"
                || phraseExpression[pos]=="--") {
-        pos++;
+        pos++; //skip "++" or "--"
         return doParseSubExpression3(fileName,
                                      phraseExpression,
                                      pos,
                                      currentScope,
                                      freeScoped);
+    } else if (phraseExpression[pos]=="(") {
+        //parse
+        pos++;
+        PStatement typeStatement = doFindStatement(fileName,phraseExpression,pos,currentScope,freeScoped);
+        if (pos >= phraseExpression.length() || phraseExpression[pos]!=")") {
+            return PStatement();
+        } else if (typeStatement &&
+                   (typeStatement->kind == StatementKind::skClass
+                   || typeStatement->kind == StatementKind::skEnumType
+                   || typeStatement->kind == StatementKind::skEnumClassType
+                   || typeStatement->kind == StatementKind::skTypedef)) {
+            PStatement statement = doParseSubExpression3(fileName,
+                                             phraseExpression,
+                                             pos,
+                                             currentScope,
+                                             freeScoped);
+            return typeStatement;
+        }   else
+            return PStatement();
     }
     return doParseSubExpression2(fileName,
                                  phraseExpression,
