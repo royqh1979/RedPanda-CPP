@@ -207,12 +207,42 @@ private:
             const QStringList& phraseExpression,
             int &pos,
             const PStatement& currentScope,
-            const PStatement& ownerStatement);
+            bool freeScoped);
+    PStatement doParseSubExpression2(
+            const QString& fileName,
+            const QStringList& phraseExpression,
+            int &pos,
+            const PStatement& currentScope,
+            bool freeScoped);
+    PStatement doParseSubExpression1(
+            const QString& fileName,
+            const QStringList& phraseExpression,
+            int &pos,
+            const PStatement& currentScope,
+            bool freeScoped);
+    PStatement doParseSubExpression0(
+            const QString& fileName,
+            const QStringList& phraseExpression,
+            int &pos,
+            const PStatement& currentScope,
+            bool freeScoped);
+
+    /**
+     * @brief find the expression's corresponding statement in the specified file and scope
+     * If the statement is free scoped, if it's not member of the currentScope,
+     * we'll search it in the currentScope's outer scope recursively
+     * @param fileName
+     * @param phraseExpression
+     * @param pos
+     * @param currentScope
+     * @param freeScope if the statement is free scoped.
+     * @return
+     */
     PStatement doFindStatement(const QString& fileName,
                                const QStringList& phraseExpression,
                                int &pos,
                                const PStatement& currentScope,
-                               const PStatement& ownerStatement);
+                               bool freeScoped);
     int getBracketEnd(const QString& s, int startAt);
     StatementClassScope getClassScope(int index);
     int getCurrentBlockBeginSkip();

@@ -252,7 +252,11 @@ PStatement CppParser::findStatementOf(const QString &fileName, const QString &ph
     return findStatementOf(fileName,phrase,findAndScanBlockAt(fileName,line));
 }
 
-PStatement CppParser::findStatementOf(const QString &fileName, const QString &phrase, const PStatement& currentScope, PStatement &parentScopeType, bool force)
+PStatement CppParser::findStatementOf(const QString &fileName,
+                                      const QString &phrase,
+                                      const PStatement& currentScope,
+                                      PStatement &parentScopeType,
+                                      bool force)
 {
     QMutexLocker locker(&mMutex);
     PStatement result;
@@ -412,7 +416,7 @@ PStatement CppParser::findStatement(
     if (mParsing)
         return PStatement();
     int pos = 0;
-    return doFindStatement(fileName,phraseExpression,pos,currentScope,PStatement());
+    return doFindStatement(fileName,phraseExpression,pos,currentScope,true);
 }
 
 PStatement CppParser::findStatementOf(const QString &fileName, const QString &phrase, const PStatement& currentClass, bool force)
@@ -3360,7 +3364,7 @@ PStatement CppParser::doParseSubExpression3(const QString &fileName,
                                             const QStringList &phraseExpression,
                                             int &pos,
                                             const PStatement &currentScope,
-                                            const PStatement &ownerStatement)
+                                            bool freeScoped)
 {
     if (pos>=phraseExpression.length())
         return PStatement();
@@ -3370,45 +3374,156 @@ PStatement CppParser::doParseSubExpression3(const QString &fileName,
                                      phraseExpression,
                                      pos,
                                      currentScope,
-                                     ownerStatement);
+                                     freeScoped);
     } else if (phraseExpression[pos]=="&") {
         pos++;
         return doParseSubExpression3(fileName,
                                      phraseExpression,
                                      pos,
                                      currentScope,
-                                     ownerStatement);
+                                     freeScoped);
+    } else if (phraseExpression[pos]=="++"
+               || phraseExpression[pos]=="--") {
+        pos++;
+        return doParseSubExpression3(fileName,
+                                     phraseExpression,
+                                     pos,
+                                     currentScope,
+                                     freeScoped);
     }
     return doParseSubExpression2(fileName,
                                  phraseExpression,
                                  pos,
                                  currentScope,
-                                 ownerStatement);
+                                 freeScoped);
+}
+
+PStatement CppParser::doParseSubExpression2(const QString &fileName,
+                                            const QStringList &phraseExpression,
+                                            int &pos, const PStatement &currentScope,
+                                            bool freeScoped)
+{
+    if (pos>=phraseExpression.length())
+        return PStatement();
+    PStatement current = doParseSubExpression1(fileName,
+                                               phraseExpression,
+                                               pos,
+                                               currentScope,
+                                               freeScoped);
+    if (!current)
+        return PStatement();
+    pos++;
+    while (pos<phraseExpression.length()) {
+        if (phraseExpression[pos]=="++" || phraseExpression[pos]=="--") {
+            pos++;
+        } else if (phraseExpression[pos] == "(") {
+            //skip to ")"
+            if (current->kind == StatementKind::skClass) {
+                //type cast
+            } else if (current->kind == StatementKind::skFunction) {
+                //function call
+            }
+        } else if (phraseExpression[pos] == "[") {
+            //skip to "]"
+        } else if (phraseExpression[pos] == ".") {
+            pos++;
+            current = doParseSubExpression1(fileName,
+                                            phraseExpression,
+                                            pos,
+                                            current,
+                                            false);
+        } else if (phraseExpression[pos] == "->") {
+            pos++;
+            current = doParseSubExpression1(fileName,
+                                            phraseExpression,
+                                            pos,
+                                            current,
+                                            false);
+        } else
+            break;
+    }
+
+}
+
+PStatement CppParser::doParseSubExpression1(const QString &fileName,
+                                            const QStringList &phraseExpression,
+                                            int &pos,
+                                            const PStatement &currentScope,
+                                            bool freeScoped)
+{
+    if (pos>=phraseExpression.length())
+        return PStatement();
+    PStatement current = doParseSubExpression0(fileName,
+                                               phraseExpression,
+                                               pos,
+                                               currentScope,
+                                               freeScoped);
+    pos++;
+    while (pos<phraseExpression.length()) {
+        if (phraseExpression[pos]=="::" ) {
+            pos++;
+            if (!current) {
+                //global scope
+            } else if (current->kind == StatementKind::skClass) {
+                //static member
+            } else if (current->kind == StatementKind::skNamespace) {
+
+            } else if (current->kind == StatementKind::skNamespaceAlias) {
+
+            }
+        } else
+            break;
+    }
+    return current;
+}
+
+PStatement CppParser::doParseSubExpression0(const QString &fileName,
+                                            const QStringList &phraseExpression,
+                                            int &pos, const PStatement &currentScope,
+                                            bool freeScoped)
+{
+    if (pos>=phraseExpression.length())
+        return PStatement();
+    if (phraseExpression[pos]=="(") {
+        pos++;
+        PStatement statement = doFindStatement(fileName,phraseExpression,pos,currentScope,freeScoped);
+        if (pos >= phraseExpression.length() || phraseExpression[pos]!=")")
+            return PStatement();
+        else
+            return statement;
+    } else if (isIdentifier(phraseExpression[pos])) {
+
+    } else if (isIntegerLiteral(phraseExpression[pos])) {
+    } else if (isIntegerLiteral(phraseExpression[pos])) {
+    } else if (isFloatLiteral(phraseExpression[pos])) {
+    } else if (isStringLiteral(phraseExpression[pos])) {
+
+    } else
+        return PStatement();
+
 }
 
 PStatement CppParser::doFindStatement(const QString &fileName,
                                       const QStringList &phraseExpression,
                                       int& pos,
                                       const PStatement &currentScope,
-                                      const PStatement &ownerStatement)
+                                      bool freeScoped)
 {
     if (pos>=phraseExpression.length())
         return PStatement();
     //find the start scope statement
-    PStatement currentStatement = doParseSubExpression3(fileName,phraseExpression,pos,currentScope, ownerStatement);
+    PStatement currentStatement = doParseSubExpression3(fileName,phraseExpression,pos,currentScope, freeScoped);
     while (pos < phraseExpression.length() ) {
         if (currentStatement &&
-                (currentStatement->kind == StatementKind::skVariable
-                 || currentStatement->kind == StatementKind::skFunction)
+                (currentStatement->kind == StatementKind::skVariable)
                 && (phraseExpression[pos]==".*"
                     || phraseExpression[pos]=="->*")) {
-            pos++; // skip '::';
+            pos++;
             PStatement currentStatementScope = findTypeDefinitionOf(
                         fileName,
                         currentStatement->type,
                         currentStatement->parentScope.lock());
-            currentStatement =  doParseSubExpression3(fileName,phraseExpression,pos,currentScope, currentStatementScope);
-
+            currentStatement =  doParseSubExpression3(fileName,phraseExpression,pos,currentStatementScope,false);
         } else {
             break;
         }
