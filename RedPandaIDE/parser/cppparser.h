@@ -243,6 +243,7 @@ private:
                                int &pos,
                                const PStatement& currentScope,
                                bool freeScoped);
+
     int getBracketEnd(const QString& s, int startAt);
     StatementClassScope getClassScope(int index);
     int getCurrentBlockBeginSkip();
