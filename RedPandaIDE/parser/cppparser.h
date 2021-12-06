@@ -49,8 +49,15 @@ public:
                                const QString& phrase,
                                const PStatement& currentClass,
                                bool force = false);
-    PStatement findStatement(const QString& fileName,
-                               const QStringList& phraseExpression,
+    /**
+     * @brief evaluate the expression
+     * @param fileName
+     * @param expression
+     * @param currentScope
+     * @return the statement of the evaluation result
+     */
+    PStatement evalExpression(const QString& fileName,
+                               const QStringList& expression,
                                const PStatement& currentScope);
     //{Find statement starting from startScope}
     PStatement findStatementStartingFrom(const QString& fileName,
@@ -202,47 +209,58 @@ private:
             const QString& name,
             const QString& namespaceName);
 
-    PStatement doParseSubExpression3(
-            const QString& fileName,
-            const QStringList& phraseExpression,
-            int &pos,
-            const PStatement& currentScope,
-            bool freeScoped);
-    PStatement doParseSubExpression2(
-            const QString& fileName,
-            const QStringList& phraseExpression,
-            int &pos,
-            const PStatement& currentScope,
-            bool freeScoped);
-    PStatement doParseSubExpression1(
-            const QString& fileName,
-            const QStringList& phraseExpression,
-            int &pos,
-            const PStatement& currentScope,
-            bool freeScoped);
-    PStatement doParseSubExpression0(
-            const QString& fileName,
-            const QStringList& phraseExpression,
-            int &pos,
-            const PStatement& currentScope,
-            bool freeScoped);
-
     /**
-     * @brief find the expression's corresponding statement in the specified file and scope
-     * If the statement is free scoped, if it's not member of the currentScope,
-     * we'll search it in the currentScope's outer scope recursively
+     * @brief evaluate the expression (starting from pos) in the scope
      * @param fileName
      * @param phraseExpression
      * @param pos
-     * @param currentScope
-     * @param freeScope if the statement is free scoped.
+     * @param scope
+     * @param previousResult the result of evalution for expression from 0 to pos-1
+     * @param freeScoped if the expression left is
      * @return
      */
-    PStatement doFindStatement(const QString& fileName,
+    PStatement doEvalExpression(const QString& fileName,
                                const QStringList& phraseExpression,
                                int &pos,
-                               const PStatement& currentScope,
+                               const PStatement& scope,
+                               const PStatement& previousResult,
                                bool freeScoped);
+
+    PStatement doEvalPointerToMembers(
+            const QString& fileName,
+            const QStringList& phraseExpression,
+            int &pos,
+            const PStatement& scope,
+            const PStatement& previousResult,
+            bool freeScoped);
+    PStatement doEvalCCast(
+            const QString& fileName,
+            const QStringList& phraseExpression,
+            int &pos,
+            const PStatement& scope,
+            const PStatement& previousResult,
+            bool freeScoped);
+    PStatement doEvalMemberAccess(
+            const QString& fileName,
+            const QStringList& phraseExpression,
+            int &pos,
+            const PStatement& scope,
+            const PStatement& previousResult,
+            bool freeScoped);
+    PStatement doEvalScopeResolution(
+            const QString& fileName,
+            const QStringList& phraseExpression,
+            int &pos,
+            const PStatement& scope,
+            const PStatement& previousResult,
+            bool freeScoped);
+    PStatement doParseSubExpressionForType0(
+            const QString& fileName,
+            const QStringList& phraseExpression,
+            int &pos,
+            const PStatement& scope,
+            const PStatement& previousResult,
+            bool freeScoped);
 
     int getBracketEnd(const QString& s, int startAt);
     StatementClassScope getClassScope(int index);
