@@ -98,6 +98,14 @@ struct RemovedStatement{
   QString noNameArgs; // Args without name
 };
 
+enum class EvalStatementKind {
+    Namespace,
+    Type,
+    Variable,
+    Literal,
+    Function
+};
+
 using PRemovedStatement = std::shared_ptr<RemovedStatement>;
 
 struct Statement;
@@ -137,6 +145,22 @@ struct Statement {
     bool caseMatch; // if match with case, used by TCodeCompletion
     QString noNameArgs;// Args without name
 };
+
+struct EvalStatement;
+using PEvalStatement = std::shared_ptr<EvalStatement>;
+// Statement for evaluation result
+struct EvalStatement {
+    QString baseType; // type "int"
+    EvalStatementKind kind; // namespace / type / variable / function / literal
+    int pointerLevel; // 0 for "int", 1 for "int *", 2 for "int **"...
+    PStatement baseStatement; // if not literal or primitive type, the base statement
+public:
+    PEvalStatement create(const QString& baseType,
+                      EvalStatementKind kind,
+                      const PStatement& baseStatement,
+                      int pointerLevel = 0);
+};
+
 
 struct UsingNamespace {
     QStringList namespaces; // List['std','foo'] for using namespace std::foo;

@@ -56,7 +56,7 @@ public:
      * @param currentScope
      * @return the statement of the evaluation result
      */
-    PStatement evalExpression(const QString& fileName,
+    PEvalStatement evalExpression(const QString& fileName,
                                const QStringList& expression,
                                const PStatement& currentScope);
     //{Find statement starting from startScope}
@@ -219,47 +219,47 @@ private:
      * @param freeScoped if the expression left is
      * @return
      */
-    PStatement doEvalExpression(const QString& fileName,
+    PEvalStatement doEvalExpression(const QString& fileName,
                                const QStringList& phraseExpression,
                                int &pos,
                                const PStatement& scope,
-                               const PStatement& previousResult,
+                               const PEvalStatement& previousResult,
                                bool freeScoped);
 
-    PStatement doEvalPointerToMembers(
+    PEvalStatement doEvalPointerToMembers(
             const QString& fileName,
             const QStringList& phraseExpression,
             int &pos,
             const PStatement& scope,
-            const PStatement& previousResult,
+            const PEvalStatement& previousResult,
             bool freeScoped);
-    PStatement doEvalCCast(
+    PEvalStatement doEvalCCast(
             const QString& fileName,
             const QStringList& phraseExpression,
             int &pos,
             const PStatement& scope,
-            const PStatement& previousResult,
+            const PEvalStatement& previousResult,
             bool freeScoped);
-    PStatement doEvalMemberAccess(
+    PEvalStatement doEvalMemberAccess(
             const QString& fileName,
             const QStringList& phraseExpression,
             int &pos,
             const PStatement& scope,
-            const PStatement& previousResult,
+            const PEvalStatement& previousResult,
             bool freeScoped);
-    PStatement doEvalScopeResolution(
+    PEvalStatement doEvalScopeResolution(
             const QString& fileName,
             const QStringList& phraseExpression,
             int &pos,
             const PStatement& scope,
-            const PStatement& previousResult,
+            const PEvalStatement& previousResult,
             bool freeScoped);
-    PStatement doParseSubExpressionForType0(
+    PEvalStatement doEvalTerm(
             const QString& fileName,
             const QStringList& phraseExpression,
             int &pos,
             const PStatement& scope,
-            const PStatement& previousResult,
+            const PEvalStatement& previousResult,
             bool freeScoped);
 
     int getBracketEnd(const QString& s, int startAt);
