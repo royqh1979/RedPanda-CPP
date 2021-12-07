@@ -499,12 +499,26 @@ bool isScopeTypeKind(StatementKind kind)
     }
 }
 
-PEvalStatement EvalStatement::create(const QString &baseType, EvalStatementKind kind, const PStatement &baseStatement, int pointerLevel)
+PEvalStatement EvalStatement::create(
+        const QString &baseType,
+        EvalStatementKind kind,
+        const PStatement &baseStatement,
+        const PStatement &effetiveTypeStatement,
+        int pointerLevel)
 {
     PEvalStatement result = std::make_shared<EvalStatement>();
     result->baseType = baseType;
     result->kind = kind;
     result->baseStatement = baseStatement;
+    result->effectiveTypeStatement = effectiveTypeStatement;
     result->pointerLevel = pointerLevel;
     return result;
+}
+
+void EvalStatement::assignType(const PEvalStatement &typeStatement)
+{
+    Q_ASSERT(typeStatement && typeStatement->kind==EvalStatementKind::Type);
+    baseType = typeStatement->baseType;
+    pointerLevel = typeStatement->pointerLevel;
+    effectiveTypeStatement = typeStatement->baseStatement;
 }

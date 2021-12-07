@@ -1,6 +1,7 @@
 #include "cppparser.h"
 #include "parserutils.h"
 #include "../utils.h"
+#include "../qsynedit/highlighter/cpp.h"
 
 #include <QApplication>
 #include <QDate>
@@ -302,20 +303,7 @@ PStatement CppParser::findStatementOf(const QString &fileName,
         //unqualified name
         parentScopeType = currentScope;
         remainder = splitPhrase(remainder,nextScopeWord,operatorToken,memberName);
-        if (currentScope && (currentScope->kind == StatementKind::skNamespace)) {
-            PStatementList namespaceList = mNamespaces.value(currentScope->fullName);
-            if (!namespaceList || namespaceList->isEmpty())
-                return PStatement();
-            for (PStatement& currentNamespace:*namespaceList){
-                statement = findMemberOfStatement(nextScopeWord,currentNamespace);
-                if (statement)
-                    break;
-            }
-            if (!statement)
-                statement = findStatementStartingFrom(fileName,nextScopeWord,currentScope->parentScope.lock(),force);
-        } else {
-            statement = findStatementStartingFrom(fileName,nextScopeWord,parentScopeType,force);
-        }
+        statement = findStatementStartingFrom(fileName,nextScopeWord,parentScopeType);
         if (!statement)
             return PStatement();
     }
@@ -430,12 +418,8 @@ PStatement CppParser::findStatementOf(const QString &fileName, const QString &ph
     return findStatementOf(fileName,phrase,currentClass,statementParentType,force);
 }
 
-PStatement CppParser::findStatementStartingFrom(const QString &fileName, const QString &phrase, const PStatement& startScope, bool force)
+PStatement CppParser::findStatementStartingFrom(const QString &fileName, const QString &phrase, const PStatement& startScope)
 {
-    QMutexLocker locker(&mMutex);
-    if (mParsing && !force)
-        return PStatement();
-
     PStatement scopeStatement = startScope;
 
     // repeat until reach global
@@ -1762,7 +1746,9 @@ PStatement CppParser::getTypeDef(const PStatement& statement,
     if (!statement) {
         return PStatement();
     }
-    if (statement->kind == StatementKind::skClass) {
+    if (statement->kind == StatementKind::skClass
+            || statement->kind == StatementKind::skEnumType
+            || statement->kind == StatementKind::skEnumClassType) {
         return statement;
     } else if (statement->kind == StatementKind::skTypedef) {
         if (statement->type == aType) // prevent infinite loop
@@ -3553,7 +3539,7 @@ PEvalStatement CppParser::doEvalMemberAccess(const QString &fileName,
                     newResult->assignType(result);
                 pos++; // skip ")"
                 result = newResult;
-            } else if (result->kind == StatementKind::Function) {
+            } else if (result->kind == EvalStatementKind::Function) {
                 doSkipInExpression("(",")");
                 //function call
                 result->kind = EvalStatementKind::Variable;
@@ -3638,7 +3624,7 @@ PEvalStatement CppParser::doEvalTerm(const QString &fileName,
         return result;
     if (phraseExpression[pos]=="(") {
         pos++;
-        PStatement statement = doEvalExpression(fileName,phraseExpression,pos,currentScope,freeScoped);
+        result = doEvalExpression(fileName,phraseExpression,pos,scope,PEvalStatement(),freeScoped);
         if (pos >= phraseExpression.length() || phraseExpression[pos]!=")")
             return PEvalStatement();
         else {
@@ -3646,7 +3632,17 @@ PEvalStatement CppParser::doEvalTerm(const QString &fileName,
             return result;
         }
     } else if (isIdentifier(phraseExpression[pos])) {
-
+        PStatement statement;
+        if (!freeScoped && !previousResult) {
+            statement = findMemberOfStatement(phraseExpression[pos],PStatement());
+            pos++;
+        } else if (freeScoped && !previousResult) {
+            statement = findStatementStartingFrom(
+                        fileName,
+                        phraseExpression[pos],
+                        scope,
+                        true);
+    }
     } else if (isIntegerLiteral(phraseExpression[pos])) {
     } else if (isIntegerLiteral(phraseExpression[pos])) {
     } else if (isFloatLiteral(phraseExpression[pos])) {
@@ -3654,6 +3650,99 @@ PEvalStatement CppParser::doEvalTerm(const QString &fileName,
 
     } else
         return PStatement();
+
+}
+
+PEvalStatement CppParser::doCreateEvalType(const PStatement &typeStatement)
+{
+    Q_ASSERT(typeStatement);
+    Q_ASSERT(typeStatement->kind == StatementKind::skClass
+             || typeStatement->kind == StatementKind::skEnumType
+             || typeStatement->kind == StatementKind::skEnumClassType);
+    return EvalStatement::create(
+                typeStatement->fullName,
+                EvalStatementKind::Type,
+                typeStatement,
+                typeStatement);
+}
+
+PEvalStatement CppParser::doCreateEvalVariable(const QString &fileName, PStatement varStatement, const PStatement &scope)
+{
+    Q_ASSERT(varStatement);
+    Q_ASSERT(varStatement->kind == StatementKind::skVariable);
+    QString baseType;
+    int pointerLevel=0;
+    PStatement typeStatement  = doParseEvalTypeInfo(
+                fileName,
+                varStatement->parentScope.lock(),
+                varStatement->type,
+                baseType,
+                pointerLevel);
+    return EvalStatement::create(
+                baseType,
+                EvalStatementKind::Variable,
+                varStatement,
+                typeStatement,
+                pointerLevel
+                );
+}
+
+PStatement CppParser::doParseEvalTypeInfo(
+        const QString &fileName,
+        const PStatement &scope,
+        const QString &type,
+        QString &baseType,
+        int &pointerLevel)
+{
+    // Remove pointer stuff from type
+    QString s = type; // 'Type' is a keyword
+    int position = s.length()-1;
+    SynEditCppHighlighter highlighter;
+    highlighter.resetState();
+    highlighter.setLine(type,0);
+    int bracketLevel = 0;
+    int templateLevel  = 0;
+    while(!highlighter.eol()) {
+        QString token = highlighter.getToken();
+        if (bracketLevel == 0 && templateLevel ==0) {
+            if (token == "*")
+                pointerLevel++;
+            else if (token == "&")
+                pointerLevel--;
+            else if (highlighter.getTokenAttribute() == highlighter.identifierAttribute()) {
+                if (token!= "const")
+                    baseType = token;
+            } else if (token == "[") {
+                bracketLevel++;
+            } else if (token == "<") {
+                templateLevel++;
+            }
+        } else if (bracketLevel > 0) {
+            if (token == "[") {
+                bracketLevel++;
+            } else if (token == "]") {
+                bracketLevel++;
+            }
+        } else if (templateLevel > 0) {
+            if (token == "<") {
+                templateLevel++;
+            } else if (token == ">") {
+                templateLevel++;
+            }
+        }
+        highlighter.next();
+    }
+    while ((position >= 0) && (s[position] == '*'
+                               || s[position] == ' '
+                               || s[position] == '&')) {
+        if (s[position]=='*') {
+
+        }
+        position--;
+    }
+
+    PStatement statement = findStatementOf(fileName,s,scope);
+    return getTypeDef(statement,fileName,type);
 
 }
 

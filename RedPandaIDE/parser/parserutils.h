@@ -148,17 +148,26 @@ struct Statement {
 
 struct EvalStatement;
 using PEvalStatement = std::shared_ptr<EvalStatement>;
-// Statement for evaluation result
+/**
+ * @brief Statement for evaluation result
+ * Ex. (Test*)(y+1)
+ * it's baseStatement is the statement for y
+ * it's effetiveTypeStatement is Test
+ */
 struct EvalStatement {
     QString baseType; // type "int"
     EvalStatementKind kind; // namespace / type / variable / function / literal
     int pointerLevel; // 0 for "int", 1 for "int *", 2 for "int **"...
     PStatement baseStatement; // if not literal or primitive type, the base statement
+    PStatement effectiveTypeStatement;
 public:
-    PEvalStatement create(const QString& baseType,
+    static PEvalStatement create(const QString& baseType,
                       EvalStatementKind kind,
                       const PStatement& baseStatement,
+                      const PStatement& typeStatement,
                       int pointerLevel = 0);
+    void assignType(const PEvalStatement& typeStatement);
+
 };
 
 

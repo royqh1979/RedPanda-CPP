@@ -59,11 +59,6 @@ public:
     PEvalStatement evalExpression(const QString& fileName,
                                const QStringList& expression,
                                const PStatement& currentScope);
-    //{Find statement starting from startScope}
-    PStatement findStatementStartingFrom(const QString& fileName,
-                                         const QString& phrase,
-                                         const PStatement& startScope,
-                                         bool force = false);
     PStatement findTypeDefinitionOf(const QString& fileName,
                                     const QString& aType,
                                     const PStatement& currentClass);
@@ -209,6 +204,12 @@ private:
             const QString& name,
             const QString& namespaceName);
 
+    //{Find statement starting from startScope}
+    PStatement findStatementStartingFrom(const QString& fileName,
+                                         const QString& phrase,
+                                         const PStatement& startScope);
+
+
     /**
      * @brief evaluate the expression (starting from pos) in the scope
      * @param fileName
@@ -261,6 +262,18 @@ private:
             const PStatement& scope,
             const PEvalStatement& previousResult,
             bool freeScoped);
+
+
+    PEvalStatement doCreateEvalType(const PStatement& typeStatement);
+
+    PEvalStatement doCreateEvalVariable(const QString& fileName, PStatement varStatement, const PStatement& scope);
+
+    PStatement doParseEvalTypeInfo(
+            const QString& fileName,
+            const PStatement& scope,
+            const QString& type,
+            QString& baseType,
+            int& pointerLevel);
 
     int getBracketEnd(const QString& s, int startAt);
     StatementClassScope getClassScope(int index);
