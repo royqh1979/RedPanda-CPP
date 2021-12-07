@@ -263,10 +263,12 @@ private:
             const PEvalStatement& previousResult,
             bool freeScoped);
 
+    PEvalStatement doCreateEvalNamespace(const PStatement& namespaceStatement);
 
-    PEvalStatement doCreateEvalType(const PStatement& typeStatement);
+    PEvalStatement doCreateEvalType(const QString& fileName,const PStatement& typeStatement);
 
-    PEvalStatement doCreateEvalVariable(const QString& fileName, PStatement varStatement, const PStatement& scope);
+    PEvalStatement doCreateEvalVariable(const QString& fileName, PStatement varStatement);
+    PEvalStatement doCreateEvalFunction(const QString& fileName, PStatement funcStatement);
 
     PStatement doParseEvalTypeInfo(
             const QString& fileName,

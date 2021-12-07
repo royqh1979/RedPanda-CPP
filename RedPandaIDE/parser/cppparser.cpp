@@ -3633,16 +3633,48 @@ PEvalStatement CppParser::doEvalTerm(const QString &fileName,
         }
     } else if (isIdentifier(phraseExpression[pos])) {
         PStatement statement;
-        if (!freeScoped && !previousResult) {
-            statement = findMemberOfStatement(phraseExpression[pos],PStatement());
-            pos++;
-        } else if (freeScoped && !previousResult) {
-            statement = findStatementStartingFrom(
-                        fileName,
-                        phraseExpression[pos],
-                        scope,
-                        true);
-    }
+        if (freeScoped) {
+            if (previousResult) {
+                statement = findStatementStartingFrom(
+                            fileName,
+                            phraseExpression[pos],
+                            previousResult->baseStatement);
+            } else {
+                statement = findStatementStartingFrom(
+                            fileName,
+                            phraseExpression[pos],
+                            scope);
+            }
+        } else {
+            if (!previousResult) {
+                statement = findStatementInScope(phraseExpression[pos],PStatement());
+            } else {
+                statement = findStatementInScope(phraseExpression[pos],previousResult->baseStatement);
+            }
+        }
+        pos++;
+        if (statement) {
+            switch (statement->kind) {
+            case StatementKind::skNamespace:
+                result = doCreateEvalNamespace(statement);
+                break;
+            case StatementKind::skVariable:
+                result = doCreateEvalVariable(fileName,statement);
+                break;
+            case StatementKind::skEnumType:
+            case StatementKind::skClass:
+            case StatementKind::skEnumClassType:
+            case StatementKind::skTypedef:
+                result = doCreateEvalType(fileName,statement);
+                break;
+            case StatementKind::skFunction:
+                result = ;
+                break;
+            }
+        } else {
+            if (isTypeStatement())
+            result = PEvalStatement();
+        }
     } else if (isIntegerLiteral(phraseExpression[pos])) {
     } else if (isIntegerLiteral(phraseExpression[pos])) {
     } else if (isFloatLiteral(phraseExpression[pos])) {
@@ -3653,23 +3685,50 @@ PEvalStatement CppParser::doEvalTerm(const QString &fileName,
 
 }
 
-PEvalStatement CppParser::doCreateEvalType(const PStatement &typeStatement)
+PEvalStatement CppParser::doCreateEvalNamespace(const PStatement &namespaceStatement)
 {
-    Q_ASSERT(typeStatement);
-    Q_ASSERT(typeStatement->kind == StatementKind::skClass
-             || typeStatement->kind == StatementKind::skEnumType
-             || typeStatement->kind == StatementKind::skEnumClassType);
-    return EvalStatement::create(
+    if (!namespaceStatement)
+        return PEvalStatement();
+    return std::make_shared<EvalStatement>(
+                namespaceStatement->fullName,
+                EvalStatementKind::Namespace,
+                namespaceStatement,
+                PStatement());
+}
+
+PEvalStatement CppParser::doCreateEvalType(const QString& fileName,const PStatement &typeStatement)
+{
+    if (!typeStatement)
+        return PEvalStatement();
+    if (typeStatement->kind == StatementKind::skTypedef) {
+        QString baseType;
+        int pointerLevel=0;
+        PStatement statement  = doParseEvalTypeInfo(
+                    fileName,
+                    typeStatement->parentScope.lock(),
+                    typeStatement->type,
+                    baseType,
+                    pointerLevel);
+        return std::make_shared<EvalStatement>(
+                    baseType,
+                    EvalStatementKind::Type,
+                    typeStatement,
+                    PStatement(),
+                    pointerLevel
+                    );
+    } else {
+        return std::make_shared<EvalStatement>(
                 typeStatement->fullName,
                 EvalStatementKind::Type,
                 typeStatement,
-                typeStatement);
+                PStatement());
+    }
 }
 
-PEvalStatement CppParser::doCreateEvalVariable(const QString &fileName, PStatement varStatement, const PStatement &scope)
+PEvalStatement CppParser::doCreateEvalVariable(const QString &fileName, PStatement varStatement)
 {
-    Q_ASSERT(varStatement);
-    Q_ASSERT(varStatement->kind == StatementKind::skVariable);
+    if (!varStatement)
+        return PEvalStatement();
     QString baseType;
     int pointerLevel=0;
     PStatement typeStatement  = doParseEvalTypeInfo(
@@ -3678,10 +3737,31 @@ PEvalStatement CppParser::doCreateEvalVariable(const QString &fileName, PStateme
                 varStatement->type,
                 baseType,
                 pointerLevel);
-    return EvalStatement::create(
+    return std::make_shared<EvalStatement>(
                 baseType,
                 EvalStatementKind::Variable,
                 varStatement,
+                typeStatement,
+                pointerLevel
+                );
+}
+
+PEvalStatement CppParser::doCreateEvalFunction(const QString &fileName, PStatement funcStatement)
+{
+    if (!funcStatement)
+        return PEvalStatement();
+    QString baseType;
+    int pointerLevel=0;
+    PStatement typeStatement  = doParseEvalTypeInfo(
+                fileName,
+                funcStatement->parentScope.lock(),
+                funcStatement->type,
+                baseType,
+                pointerLevel);
+    return std::make_shared<EvalStatement>(
+                baseType,
+                EvalStatementKind::Function,
+                funcStatement,
                 typeStatement,
                 pointerLevel
                 );

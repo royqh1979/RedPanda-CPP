@@ -161,7 +161,7 @@ struct EvalStatement {
     PStatement baseStatement; // if not literal or primitive type, the base statement
     PStatement effectiveTypeStatement;
 public:
-    static PEvalStatement create(const QString& baseType,
+    EvalStatement (const QString& baseType,
                       EvalStatementKind kind,
                       const PStatement& baseStatement,
                       const PStatement& typeStatement,
