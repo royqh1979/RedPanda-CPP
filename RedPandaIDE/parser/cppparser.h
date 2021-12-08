@@ -227,6 +227,13 @@ private:
                                const PEvalStatement& previousResult,
                                bool freeScoped);
 
+    PEvalStatement doEvalPointerArithmetic(
+            const QString& fileName,
+            const QStringList& phraseExpression,
+            int &pos,
+            const PStatement& scope,
+            const PEvalStatement& previousResult,
+            bool freeScoped);
     PEvalStatement doEvalPointerToMembers(
             const QString& fileName,
             const QStringList& phraseExpression,

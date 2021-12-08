@@ -3360,12 +3360,61 @@ PEvalStatement CppParser::doEvalExpression(const QString& fileName,
                                        bool freeScoped)
 {
     //dummy function to easy later upgrades
-    return doEvalPointerToMembers(fileName,
+    return doEvalPointerArithmetic(fileName,
                                         phraseExpression,
                                         pos,
                                         scope,
                                         previousResult,
-                                        freeScoped);
+                                   freeScoped);
+}
+
+PEvalStatement CppParser::doEvalPointerArithmetic(const QString &fileName, const QStringList &phraseExpression, int &pos, const PStatement &scope, const PEvalStatement &previousResult, bool freeScoped)
+{
+    if (pos>=phraseExpression.length())
+        return PEvalStatement();
+    //find the start scope statement
+    PEvalStatement currentResult = doEvalPointerToMembers(
+                fileName,
+                phraseExpression,
+                pos,
+                scope,
+                previousResult,
+                freeScoped);
+    while (pos < phraseExpression.length()) {
+        if (!currentResult)
+            break;
+        if (currentResult &&
+                (phraseExpression[pos]=="+"
+                    || phraseExpression[pos]=="-")) {
+            if (currentResult->kind == EvalStatementKind::Variable) {
+                pos++;
+                PEvalStatement op2=doEvalPointerToMembers(
+                            fileName,
+                            phraseExpression,
+                            pos,
+                            scope,
+                            currentResult,
+                            false);
+                //todo operator+/- overload
+            } else if (currentResult->kind == EvalStatementKind::Literal
+                       && currentResult->baseType == "int") {
+                pos++;
+                PEvalStatement op2=doEvalPointerToMembers(
+                            fileName,
+                            phraseExpression,
+                            pos,
+                            scope,
+                            currentResult,
+                            false);
+                currentResult = op2;
+            } else
+                break;
+        } else
+            break;
+    }
+    qDebug()<<pos<<"pointer add member end";
+    return currentResult;
+
 }
 
 PEvalStatement CppParser::doEvalPointerToMembers(
@@ -3611,13 +3660,32 @@ PEvalStatement CppParser::doEvalScopeResolution(const QString &fileName,
         if (phraseExpression[pos]=="::" ) {
             pos++;
             if (!result) {
-                //global scope
+                //global
+                result = doEvalTerm(fileName,
+                                    phraseExpression,
+                                    pos,
+                                    PStatement(),
+                                    PEvalStatement(),
+                                    false);
             } else if (result->kind == EvalStatementKind::Type) {
-                //static member
+                //class static member
+                result = doEvalTerm(fileName,
+                                    phraseExpression,
+                                    pos,
+                                    scope,
+                                    result,
+                                    false);
             } else if (result->kind == EvalStatementKind::Namespace) {
-
-            } else
-                result = PEvalStatement();
+                //namespace
+                result = doEvalTerm(fileName,
+                                    phraseExpression,
+                                    pos,
+                                    scope,
+                                    result,
+                                    false);
+            }
+            if (!result)
+                break;
         } else
             break;
     }
@@ -3724,15 +3792,19 @@ PEvalStatement CppParser::doEvalTerm(const QString &fileName,
             }
         } else if (isIntegerLiteral(phraseExpression[pos])) {
             result = doCreateEvalLiteral("int");
+            pos++;
         } else if (isFloatLiteral(phraseExpression[pos])) {
             result = doCreateEvalLiteral("double");
+            pos++;
         } else if (isStringLiteral(phraseExpression[pos])) {
             result = doCreateEvalLiteral("char");
             result->pointerLevel = 1;
+            pos++;
         } else if (isCharLiteral(phraseExpression[pos])) {
             result = doCreateEvalLiteral("char");
+            pos++;
         } else
-            result = PEvalStatement();
+            return result;
         if (result) {
             qDebug()<<"term kind:"<<(int)result->kind;
         }
@@ -3933,11 +4005,13 @@ PStatement CppParser::doParseEvalTypeInfo(
                 pointerLevel--;
             else if (highlighter.getTokenAttribute() == highlighter.identifierAttribute()) {
                 if (token!= "const")
-                    baseType = token;
+                    baseType += token;
             } else if (token == "[") {
                 bracketLevel++;
             } else if (token == "<") {
                 templateLevel++;
+            } else if (token == "::") {
+                baseType += token;
             }
         } else if (bracketLevel > 0) {
             if (token == "[") {
