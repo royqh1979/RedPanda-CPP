@@ -829,17 +829,6 @@ QString parseMacros(const QString &s)
     return result;
 }
 
-void executeFile(const QString &fileName, const QString &params, const QString &workingDir)
-{
-    ShellExecuteA(NULL,
-                  NULL,
-                  fileName.toLocal8Bit(),
-                  params.toLocal8Bit(),
-                  workingDir.toLocal8Bit(),
-                  SW_SHOW
-                  );
-}
-
 void stringToFile(const QString &str, const QString &fileName)
 {
     QFile file(fileName);

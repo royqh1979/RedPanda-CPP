@@ -301,7 +301,7 @@ void SettingsDialog::widget_settings_changed(bool value)
     ui->btnApply->setEnabled(value);
 }
 
-void SettingsDialog::on_btnCancle_pressed()
+void SettingsDialog::on_btnCancel_pressed()
 {
     this->close();
 }

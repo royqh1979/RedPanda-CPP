@@ -39,7 +39,7 @@ private slots:
     void widget_settings_changed(bool value);
     void on_widgetsView_clicked(const QModelIndex &index);
 
-    void on_btnCancle_pressed();
+    void on_btnCancel_pressed();
 
     void on_btnApply_pressed();
 

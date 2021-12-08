@@ -2678,7 +2678,7 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete)
                     caretXY(),
                     memberOperator,
                     memberExpression);
-        qDebug()<<ownerExpression<<memberExpression;
+//        qDebug()<<ownerExpression<<memberExpression;
         word = memberExpression.join("");
         mCompletionPopup->prepareSearch(
                     preWord,

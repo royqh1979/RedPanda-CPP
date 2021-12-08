@@ -121,8 +121,6 @@ QByteArray runAndGetOutput(const QString& cmd, const QString& workingDir, const 
                            const QByteArray& inputContent = QByteArray(),
                            bool inheritEnvironment = false);
 
-void executeFile(const QString& fileName, const QString& params, const QString& workingDir);
-
 bool isNonPrintableAsciiChar(char ch);
 
 bool fileExists(const QString& file);
