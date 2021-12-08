@@ -1660,15 +1660,19 @@ QStringList Editor::getOwnerExpressionAndMemberAtPositionForCompletion(
         }
     }
 
+    QStringList ownerExpression;
     if (lastMemberOperatorPos<0) {
         memberOperator = "";
         memberExpression = expression;
-        return QStringList();
     } else {
         memberOperator = expression[lastMemberOperatorPos];
         memberExpression = expression.mid(lastMemberOperatorPos+1);
-        return expression.mid(0,lastMemberOperatorPos);
+        ownerExpression = expression.mid(0,lastMemberOperatorPos);
     }
+    if (memberExpression.length()>1) {
+        memberExpression = memberExpression.mid(memberExpression.length()-1,1);
+    }
+    return ownerExpression;
 }
 
 QStringList Editor::getExpressionAtPositionForCompletion(
@@ -2674,6 +2678,7 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete)
                     caretXY(),
                     memberOperator,
                     memberExpression);
+        qDebug()<<ownerExpression<<memberExpression;
         word = memberExpression.join("");
         mCompletionPopup->prepareSearch(
                     preWord,
@@ -2681,14 +2686,14 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete)
                     memberOperator,
                     memberExpression,
                     mFilename,
-                    pBeginPos.Line);
+                    caretY());
     } else {
         QStringList memberExpression;
         memberExpression.append(word);
         mCompletionPopup->prepareSearch(preWord,
                                         QStringList(),
                                         "",
-                                        memberExpression, mFilename, pBeginPos.Line);
+                                        memberExpression, mFilename, caretY());
     }
 
     // Filter the whole statement list

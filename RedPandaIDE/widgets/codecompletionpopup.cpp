@@ -559,7 +559,7 @@ void CodeCompletionPopup::getCompletionFor(
 //            qDebug()<<memberOperator;
 //            qDebug()<<memberExpression;
             if(!ownerStatement  || !ownerStatement->effectiveTypeStatement) {
-                qDebug()<<"statement not found!";
+//                qDebug()<<"statement not found!";
                 return;
             }
 //            qDebug()<<"found: "<<ownerStatement->fullName;
@@ -595,10 +595,11 @@ void CodeCompletionPopup::getCompletionFor(
                 //is a smart pointer
                 if (STLPointers.contains(classTypeStatement->fullName)
                    && (memberOperator == "->"
-                       || memberOperator == "->*")) {
+                       || memberOperator == "->*")
+                        && ownerStatement->baseStatement) {
                     QString typeName= mParser->findFirstTemplateParamOf(
                                 fileName,
-                                ownerStatement->baseType,
+                                ownerStatement->baseStatement->type,
                                 scope);
                     classTypeStatement = mParser->findTypeDefinitionOf(
                                 fileName,
