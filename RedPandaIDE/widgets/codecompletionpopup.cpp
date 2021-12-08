@@ -543,27 +543,31 @@ void CodeCompletionPopup::getCompletionFor(
                 return;
             if (memberExpression.length()>2)
                 return;
-            QString scopeName = ownerExpression.join("");
+
             PStatement scope = mCurrentStatement;//the scope the expression in
             PStatement parentTypeStatement;
-            PStatement ownerStatement = mParser->findStatementOf(
-                        fileName,
-                        scopeName,
-                        mCurrentStatement,
-                        parentTypeStatement);
+//            QString scopeName = ownerExpression.join("");
+//            PStatement ownerStatement = mParser->findStatementOf(
+//                        fileName,
+//                        scopeName,
+//                        mCurrentStatement,
+//                        parentTypeStatement);
+            PEvalStatement ownerStatement = mParser->evalExpression(fileName,
+                                        ownerExpression,
+                                        scope);
 //            qDebug()<<scopeName;
 //            qDebug()<<memberOperator;
 //            qDebug()<<memberExpression;
-            if(!ownerStatement ) {
-//                qDebug()<<"not found!";
+            if(!ownerStatement  || !ownerStatement->effectiveTypeStatement) {
+                qDebug()<<"statement not found!";
                 return;
             }
 //            qDebug()<<"found: "<<ownerStatement->fullName;
             if (memberOperator == "::") {
-                if (ownerStatement->kind==StatementKind::skNamespace) {
+                if (ownerStatement->kind==EvalStatementKind::Namespace) {
                     //there might be many statements corresponding to one namespace;
                     PStatementList namespaceStatementsList =
-                            mParser->findNamespace(ownerStatement->fullName);
+                            mParser->findNamespace(ownerStatement->baseType);
                     if (namespaceStatementsList) {
                         foreach (const PStatement& namespaceStatement, *namespaceStatementsList) {
                             addChildren(namespaceStatement, fileName, line);
@@ -581,41 +585,10 @@ void CodeCompletionPopup::getCompletionFor(
             if (
                     (memberOperator != "::")
                     && (
-                        ownerStatement->kind == StatementKind::skVariable
-                        || ownerStatement->kind == StatementKind::skParameter
-                        || ownerStatement->kind == StatementKind::skFunction)
+                        ownerStatement->kind == EvalStatementKind::Variable)
                     ) {
                 // Get type statement  of current (scope) statement
-                PStatement classTypeStatement;
-                PStatement parentScope = ownerStatement->parentScope.lock();
-                if ((ownerStatement->kind == StatementKind::skFunction)
-                        && parentScope
-                        && STLContainers.contains(parentScope->fullName)
-                        && STLElementMethods.contains(ownerStatement->command)){
-                    // it's an element method of STL container
-                    // we must find the type in the template parameter
-
-                    // get the function's owner variable's definition
-                    int lastI = mParser->findLastOperator(scopeName);
-                    QString lastScopeName = scopeName.mid(0,lastI);
-                    PStatement lastScopeStatement =
-                            mParser->findStatementOf(
-                                fileName, lastScopeName,
-                                mCurrentStatement,parentTypeStatement);
-                    if (!lastScopeStatement)
-                        return;
-
-
-                    QString typeName =
-                            mParser->findFirstTemplateParamOf(
-                                fileName,lastScopeStatement->type,
-                                lastScopeStatement->parentScope.lock());
-                    classTypeStatement = mParser->findTypeDefinitionOf(
-                                fileName, typeName,
-                                lastScopeStatement->parentScope.lock());
-                } else
-                    classTypeStatement=mParser->findTypeDefinitionOf(
-                                fileName, ownerStatement->type,parentTypeStatement);
+                PStatement classTypeStatement = ownerStatement->effectiveTypeStatement;
 
                 if (!classTypeStatement)
                     return;
@@ -625,33 +598,19 @@ void CodeCompletionPopup::getCompletionFor(
                        || memberOperator == "->*")) {
                     QString typeName= mParser->findFirstTemplateParamOf(
                                 fileName,
-                                ownerStatement->type,
-                                parentScope);
+                                ownerStatement->baseType,
+                                scope);
                     classTypeStatement = mParser->findTypeDefinitionOf(
                                 fileName,
                                 typeName,
-                                parentScope);
-                    if (!classTypeStatement)
-                        return;
-                }
-                //is a stl container operator[]
-                if (STLContainers.contains(classTypeStatement->fullName)
-                        && scopeName.endsWith(']')) {
-                    QString typeName= mParser->findFirstTemplateParamOf(
-                                fileName,
-                                ownerStatement->type,
-                                parentScope);
-                    classTypeStatement = mParser->findTypeDefinitionOf(
-                                fileName,
-                                typeName,
-                                parentScope);
+                                scope);
                     if (!classTypeStatement)
                         return;
                 }
                 if (!isIncluded(classTypeStatement->fileName) &&
                     !isIncluded(classTypeStatement->definitionFileName))
                     return;
-                if ((classTypeStatement == scopeTypeStatement) || (ownerStatement->command == "this")) {
+                if ((classTypeStatement == scopeTypeStatement) || (ownerStatement->effectiveTypeStatement->command == "this")) {
                     //we can use all members
                     addChildren(classTypeStatement,fileName,-1);
                 } else { // we can only use public members
@@ -670,59 +629,58 @@ void CodeCompletionPopup::getCompletionFor(
                 }
             //todo friend
             } else if ((memberOperator == "::")
-                       && ((ownerStatement->kind == StatementKind::skEnumType)
-                       || (ownerStatement->kind == StatementKind::skEnumClassType))) {
+                       && (ownerStatement->kind == EvalStatementKind::Type)) {
                 //we can add all child enum definess
-                PStatement classTypeStatement = ownerStatement;
+                PStatement classTypeStatement = ownerStatement->effectiveTypeStatement;
+                if (!classTypeStatement)
+                    return;
                 if (!isIncluded(classTypeStatement->fileName) &&
                     !isIncluded(classTypeStatement->definitionFileName))
                     return;
-                const StatementMap& children =
-                        mParser->statementList().childrenStatements(classTypeStatement);
-                foreach (const PStatement& child,children) {
-                    addStatement(child,fileName,line);
-                }
-            } else if ((memberOperator == "::")
-                       && (ownerStatement->kind == StatementKind::skClass)) {
-                PStatement classTypeStatement = ownerStatement;
-                if (!isIncluded(classTypeStatement->fileName) &&
-                    !isIncluded(classTypeStatement->definitionFileName))
-                    return;
-                if (classTypeStatement == scopeTypeStatement) {
-                    //we can use all static members
+                if (classTypeStatement->kind == StatementKind::skEnumType
+                        || classTypeStatement->kind == StatementKind::skEnumClassType) {
                     const StatementMap& children =
                             mParser->statementList().childrenStatements(classTypeStatement);
-                    foreach (const PStatement& childStatement, children) {
-                        if (
-                          (childStatement->isStatic)
-                           || (childStatement->kind == StatementKind::skTypedef
-                            || childStatement->kind == StatementKind::skClass
-                            || childStatement->kind == StatementKind::skEnum
-                            || childStatement->kind == StatementKind::skEnumClassType
-                            || childStatement->kind == StatementKind::skEnumType
-                               )) {
-                            addStatement(childStatement,fileName,-1);
-                        }
+                    foreach (const PStatement& child,children) {
+                        addStatement(child,fileName,line);
                     }
                 } else {
-                    // we can only use public static members
-                    const StatementMap& children =
-                            mParser->statementList().childrenStatements(classTypeStatement);
-                    foreach (const PStatement& childStatement,children) {
-                        if (
-                          (childStatement->isStatic)
-                           || (childStatement->kind == StatementKind::skTypedef
-                            || childStatement->kind == StatementKind::skClass
-                            || childStatement->kind == StatementKind::skEnum
-                            || childStatement->kind == StatementKind::skEnumClassType
-                            || childStatement->kind == StatementKind::skEnumType
-                               )) {
-                            if (childStatement->classScope == StatementClassScope::scsPublic)
+                    //class
+                    if (classTypeStatement == scopeTypeStatement) {
+                        //we can use all static members
+                        const StatementMap& children =
+                                mParser->statementList().childrenStatements(classTypeStatement);
+                        foreach (const PStatement& childStatement, children) {
+                            if (
+                              (childStatement->isStatic)
+                               || (childStatement->kind == StatementKind::skTypedef
+                                || childStatement->kind == StatementKind::skClass
+                                || childStatement->kind == StatementKind::skEnum
+                                || childStatement->kind == StatementKind::skEnumClassType
+                                || childStatement->kind == StatementKind::skEnumType
+                                   )) {
                                 addStatement(childStatement,fileName,-1);
+                            }
+                        }
+                    } else {
+                        // we can only use public static members
+                        const StatementMap& children =
+                                mParser->statementList().childrenStatements(classTypeStatement);
+                        foreach (const PStatement& childStatement,children) {
+                            if (
+                              (childStatement->isStatic)
+                               || (childStatement->kind == StatementKind::skTypedef
+                                || childStatement->kind == StatementKind::skClass
+                                || childStatement->kind == StatementKind::skEnum
+                                || childStatement->kind == StatementKind::skEnumClassType
+                                || childStatement->kind == StatementKind::skEnumType
+                                   )) {
+                                if (childStatement->classScope == StatementClassScope::scsPublic)
+                                    addStatement(childStatement,fileName,-1);
+                            }
                         }
                     }
                 }
-              //todo friend
             }
         }
     }

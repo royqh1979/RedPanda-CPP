@@ -403,6 +403,7 @@ PEvalStatement CppParser::evalExpression(
     QMutexLocker locker(&mMutex);
     if (mParsing)
         return PEvalStatement();
+    qDebug()<<phraseExpression;
     int pos = 0;
     return doEvalExpression(fileName,
                             phraseExpression,
@@ -3385,7 +3386,7 @@ PEvalStatement CppParser::doEvalPointerToMembers(
                 scope,
                 previousResult,
                 freeScoped);
-    while (pos < phraseExpression.length() ) {
+    while (pos < phraseExpression.length()) {
         if (!currentResult)
             break;
         if (currentResult &&
@@ -3405,8 +3406,9 @@ PEvalStatement CppParser::doEvalPointerToMembers(
                 currentResult->pointerLevel++;
             }
         } else
-            currentResult=PEvalStatement();
+            break;
     }
+//    qDebug()<<pos<<"pointer member end";
     return currentResult;
 }
 
@@ -3459,6 +3461,7 @@ PEvalStatement CppParser::doEvalCCast(const QString &fileName,
         //parse
         int startPos = pos;
         pos++;
+        qDebug()<<"parse type cast ()";
         PEvalStatement evalType = doEvalExpression(
                     fileName,
                     phraseExpression,
@@ -3466,10 +3469,13 @@ PEvalStatement CppParser::doEvalCCast(const QString &fileName,
                     scope,
                     PEvalStatement(),
                     true);
+        qDebug()<<pos;
         if (pos >= phraseExpression.length() || phraseExpression[pos]!=")") {
             return PEvalStatement();
         } else if (evalType &&
                    (evalType->kind == EvalStatementKind::Type)) {
+            pos++; // skip ")"
+            qDebug()<<"parse type cast exp";
             //it's a type cast
             result = doEvalCCast(fileName,
                         phraseExpression,
@@ -3477,8 +3483,10 @@ PEvalStatement CppParser::doEvalCCast(const QString &fileName,
                         scope,
                         previousResult,
                         freeScoped);
-            if (result)
+            if (result) {
+                qDebug()<<"type cast";
                 result->assignType(evalType);
+            }
         }   else //it's not a type cast
             result = doEvalMemberAccess(
                         fileName,
@@ -3495,6 +3503,11 @@ PEvalStatement CppParser::doEvalCCast(const QString &fileName,
                 scope,
                 previousResult,
                 freeScoped);
+    if (result) {
+        qDebug()<<pos<<(int)result->kind<<result->baseType;
+    } else {
+        qDebug()<<"!!!!!!!!!!!not found";
+    }
     return result;
 }
 
@@ -3506,6 +3519,7 @@ PEvalStatement CppParser::doEvalMemberAccess(const QString &fileName,
                                                    bool freeScoped)
 
 {
+//    qDebug()<<"eval member access "<<pos<<phraseExpression;
     PEvalStatement result;
     if (pos>=phraseExpression.length())
         return result;
@@ -3516,10 +3530,8 @@ PEvalStatement CppParser::doEvalMemberAccess(const QString &fileName,
                 scope,
                 previousResult,
                 freeScoped);
-    bool isFreeScoped = freeScoped;
     if (!result)
         return PEvalStatement();
-    pos++;
     while (pos<phraseExpression.length()) {
         if (!result)
             break;
@@ -3540,17 +3552,16 @@ PEvalStatement CppParser::doEvalMemberAccess(const QString &fileName,
                 pos++; // skip ")"
                 result = newResult;
             } else if (result->kind == EvalStatementKind::Function) {
-                doSkipInExpression("(",")");
+                doSkipInExpression(phraseExpression,pos,"(",")");
                 //function call
                 result->kind = EvalStatementKind::Variable;
             } else
                 result = PEvalStatement();
         } else if (phraseExpression[pos] == "[") {
             //skip to "]"
-            doSkipInExpression("[","]");
+            doSkipInExpression(phraseExpression,pos,"[","]");
             //todo: STL container;
             result->pointerLevel--;
-            return
         } else if (phraseExpression[pos] == ".") {
             pos++;
             result = doEvalScopeResolution(
@@ -3560,6 +3571,7 @@ PEvalStatement CppParser::doEvalMemberAccess(const QString &fileName,
                         scope,
                         result,
                         false);
+            qDebug()<<(result!=nullptr)<<pos<<"after .";
         } else if (phraseExpression[pos] == "->") {
             pos++;
             //todo: STL container
@@ -3574,7 +3586,7 @@ PEvalStatement CppParser::doEvalMemberAccess(const QString &fileName,
         } else
             break;
     }
-
+    return result;
 }
 
 PEvalStatement CppParser::doEvalScopeResolution(const QString &fileName,
@@ -3584,6 +3596,7 @@ PEvalStatement CppParser::doEvalScopeResolution(const QString &fileName,
                                                    const PEvalStatement& previousResult,
                                                    bool freeScoped)
 {
+//    qDebug()<<"eval scope res "<<pos<<phraseExpression;
     PEvalStatement result;
     if (pos>=phraseExpression.length())
         return result;
@@ -3594,7 +3607,6 @@ PEvalStatement CppParser::doEvalScopeResolution(const QString &fileName,
                 scope,
                 previousResult,
                 freeScoped);
-    pos++;
     while (pos<phraseExpression.length()) {
         if (phraseExpression[pos]=="::" ) {
             pos++;
@@ -3609,6 +3621,7 @@ PEvalStatement CppParser::doEvalScopeResolution(const QString &fileName,
         } else
             break;
     }
+//    qDebug()<<pos<<"scope end";
     return result;
 }
 
@@ -3619,6 +3632,11 @@ PEvalStatement CppParser::doEvalTerm(const QString &fileName,
                                                    const PEvalStatement& previousResult,
                                                    bool freeScoped)
 {
+    if (previousResult) {
+        qDebug()<<"eval term "<<pos<<phraseExpression<<previousResult->baseType<<freeScoped;
+    } else {
+        qDebug()<<"eval term "<<pos<<phraseExpression<<"no type"<<freeScoped;
+    }
     PEvalStatement result;
     if (pos>=phraseExpression.length())
         return result;
@@ -3631,58 +3649,112 @@ PEvalStatement CppParser::doEvalTerm(const QString &fileName,
             pos++; // skip ")";
             return result;
         }
-    } else if (isIdentifier(phraseExpression[pos])) {
-        PStatement statement;
-        if (freeScoped) {
-            if (previousResult) {
-                statement = findStatementStartingFrom(
-                            fileName,
-                            phraseExpression[pos],
-                            previousResult->baseStatement);
-            } else {
-                statement = findStatementStartingFrom(
-                            fileName,
-                            phraseExpression[pos],
-                            scope);
-            }
-        } else {
-            if (!previousResult) {
-                statement = findStatementInScope(phraseExpression[pos],PStatement());
-            } else {
-                statement = findStatementInScope(phraseExpression[pos],previousResult->baseStatement);
-            }
+    } else {
+        int pointerLevel = 0;
+        //skip "struct", "const", "static", etc
+        while(pos < phraseExpression.length()) {
+            QString token = phraseExpression[pos];
+            if (token=="*") // for expression like (const * char)?
+                pointerLevel++;
+            else if (mCppTypeKeywords.contains(token)
+                    || !mCppKeywords.contains(token))
+                break;
+            pos++;
         }
-        pos++;
-        if (statement) {
-            switch (statement->kind) {
-            case StatementKind::skNamespace:
-                result = doCreateEvalNamespace(statement);
-                break;
-            case StatementKind::skVariable:
-                result = doCreateEvalVariable(fileName,statement);
-                break;
-            case StatementKind::skEnumType:
-            case StatementKind::skClass:
-            case StatementKind::skEnumClassType:
-            case StatementKind::skTypedef:
-                result = doCreateEvalType(fileName,statement);
-                break;
-            case StatementKind::skFunction:
-                result = ;
-                break;
+
+        if (pos>=phraseExpression.length() || phraseExpression[pos]==")")
+            return result;
+        if (mCppKeywords.contains(phraseExpression[pos])) {
+            result = doCreateEvalType(phraseExpression[pos]);
+            pos++;
+        } else if (isIdentifier(phraseExpression[pos])) {
+            PStatement statement;
+            if (freeScoped) {
+                if (!previousResult) {
+                    statement = findStatementStartingFrom(
+                                fileName,
+                                phraseExpression[pos],
+                                scope);
+                } else {
+                    statement = findStatementStartingFrom(
+                                fileName,
+                                phraseExpression[pos],
+                                previousResult->effectiveTypeStatement);
+                }
+            } else {
+                if (!previousResult) {
+                    statement = findStatementInScope(phraseExpression[pos],PStatement());
+                } else {
+                    if (previousResult->effectiveTypeStatement) {
+                        qDebug()<<phraseExpression[pos]<<previousResult->effectiveTypeStatement->fullName;
+                    } else {
+                        qDebug()<<phraseExpression[pos]<<"no type";
+                    }
+                    statement = findStatementInScope(phraseExpression[pos],previousResult->effectiveTypeStatement);
+//                    if (!statement) {
+//                        qDebug()<<"not found!";
+//                    } else {
+//                        qDebug()<<statement->fullName;
+//                        qDebug()<<statement->kind;
+//                    }
+                }
             }
-        } else {
-            if (isTypeStatement())
+            pos++;
+            if (statement) {
+                switch (statement->kind) {
+                case StatementKind::skNamespace:
+                    result = doCreateEvalNamespace(statement);
+                    break;
+                case StatementKind::skVariable:
+                case StatementKind::skParameter:
+                    result = doCreateEvalVariable(fileName,statement);
+                    break;
+                case StatementKind::skEnumType:
+                case StatementKind::skClass:
+                case StatementKind::skEnumClassType:
+                case StatementKind::skTypedef:
+                    result = doCreateEvalType(fileName,statement);
+                    break;
+                case StatementKind::skFunction:
+                    result = doCreateEvalFunction(fileName,statement);
+                    break;
+                default:
+                    result = PEvalStatement();
+                }
+            }
+        } else if (isIntegerLiteral(phraseExpression[pos])) {
+            result = doCreateEvalLiteral("int");
+        } else if (isFloatLiteral(phraseExpression[pos])) {
+            result = doCreateEvalLiteral("double");
+        } else if (isStringLiteral(phraseExpression[pos])) {
+            result = doCreateEvalLiteral("char");
+            result->pointerLevel = 1;
+        } else if (isCharLiteral(phraseExpression[pos])) {
+            result = doCreateEvalLiteral("char");
+        } else
             result = PEvalStatement();
+        if (result) {
+            qDebug()<<"term kind:"<<(int)result->kind;
         }
-    } else if (isIntegerLiteral(phraseExpression[pos])) {
-    } else if (isIntegerLiteral(phraseExpression[pos])) {
-    } else if (isFloatLiteral(phraseExpression[pos])) {
-    } else if (isStringLiteral(phraseExpression[pos])) {
-
-    } else
-        return PStatement();
-
+        if (result && result->kind == EvalStatementKind::Type) {
+            //skip "struct", "const", "static", etc
+            while(pos < phraseExpression.length()) {
+                QString token = phraseExpression[pos];
+                if (token=="*") // for expression like (const * char)?
+                    pointerLevel++;
+                else if (mCppTypeKeywords.contains(token)
+                        || !mCppKeywords.contains(token))
+                    break;
+                pos++;
+            }
+            result->pointerLevel = pointerLevel;
+        }
+    }
+//    qDebug()<<pos<<" term end";
+//    if (!result) {
+//        qDebug()<<"not found !!!!";
+//    }
+    return result;
 }
 
 PEvalStatement CppParser::doCreateEvalNamespace(const PStatement &namespaceStatement)
@@ -3692,8 +3764,8 @@ PEvalStatement CppParser::doCreateEvalNamespace(const PStatement &namespaceState
     return std::make_shared<EvalStatement>(
                 namespaceStatement->fullName,
                 EvalStatementKind::Namespace,
-                namespaceStatement,
-                PStatement());
+                PStatement(),
+                namespaceStatement);
 }
 
 PEvalStatement CppParser::doCreateEvalType(const QString& fileName,const PStatement &typeStatement)
@@ -3712,17 +3784,26 @@ PEvalStatement CppParser::doCreateEvalType(const QString& fileName,const PStatem
         return std::make_shared<EvalStatement>(
                     baseType,
                     EvalStatementKind::Type,
-                    typeStatement,
                     PStatement(),
+                    typeStatement,                    
                     pointerLevel
                     );
     } else {
         return std::make_shared<EvalStatement>(
                 typeStatement->fullName,
                 EvalStatementKind::Type,
-                typeStatement,
-                PStatement());
+                PStatement(),
+                typeStatement);
     }
+}
+
+PEvalStatement CppParser::doCreateEvalType(const QString &primitiveType)
+{
+    return std::make_shared<EvalStatement>(
+                primitiveType,
+                EvalStatementKind::Type,
+                PStatement(),
+                PStatement());
 }
 
 PEvalStatement CppParser::doCreateEvalVariable(const QString &fileName, PStatement varStatement)
@@ -3765,6 +3846,67 @@ PEvalStatement CppParser::doCreateEvalFunction(const QString &fileName, PStateme
                 typeStatement,
                 pointerLevel
                 );
+}
+
+PEvalStatement CppParser::doCreateEvalLiteral(const QString &type)
+{
+    return std::make_shared<EvalStatement>(
+                type,
+                EvalStatementKind::Literal,
+                PStatement(),
+                PStatement());
+}
+
+void CppParser::doSkipInExpression(const QStringList &expression, int &pos, const QString &startSymbol, const QString &endSymbol)
+{
+    int level = 0;
+    while (pos<expression.length()) {
+        QString token = expression[pos];
+        if (token == startSymbol) {
+            level++;
+        } else if (token == endSymbol) {
+            level--;
+            if (level==0)
+                return;
+        }
+        pos++;
+    }
+}
+
+bool CppParser::isIdentifier(const QString &token) const
+{
+    return (!token.isEmpty() && isLetterChar(token.front())
+            && !token.contains('\"'));
+}
+
+bool CppParser::isIntegerLiteral(const QString &token) const
+{
+    if (token.isEmpty())
+        return false;
+    QChar ch = token.front();
+    return (ch>='0' && ch<='9' && !token.contains(".") && !token.contains("e"));
+}
+
+bool CppParser::isFloatLiteral(const QString &token) const
+{
+    if (token.isEmpty())
+        return false;
+    QChar ch = token.front();
+    return (ch>='0' && ch<='9' && (token.contains(".") || token.contains("e")));
+}
+
+bool CppParser::isStringLiteral(const QString &token) const
+{
+    if (token.isEmpty())
+        return false;
+    return (!token.startsWith('\'') && token.contains('"'));
+}
+
+bool CppParser::isCharLiteral(const QString &token) const
+{
+    if (token.isEmpty())
+        return false;
+    return (token.startsWith('\''));
 }
 
 PStatement CppParser::doParseEvalTypeInfo(
@@ -3820,9 +3962,8 @@ PStatement CppParser::doParseEvalTypeInfo(
         }
         position--;
     }
-
-    PStatement statement = findStatementOf(fileName,s,scope);
-    return getTypeDef(statement,fileName,type);
+    PStatement statement = findStatementOf(fileName,baseType,scope);
+    return getTypeDef(statement,fileName,baseType);
 
 }
 
@@ -4147,12 +4288,12 @@ QString CppParser::removeArgNames(const QString &args)
     return result;
 }
 
-bool CppParser::isSpaceChar(const QChar &ch)
+bool CppParser::isSpaceChar(const QChar &ch) const
 {
     return ch==' ' || ch =='\t';
 }
 
-bool CppParser::isWordChar(const QChar &ch)
+bool CppParser::isWordChar(const QChar &ch) const
 {
 //    return (ch>= 'A' && ch<='Z')
 //            || (ch>='a' && ch<='z')
@@ -4162,7 +4303,7 @@ bool CppParser::isWordChar(const QChar &ch)
             || ch == '&';
 }
 
-bool CppParser::isLetterChar(const QChar &ch)
+bool CppParser::isLetterChar(const QChar &ch) const
 {
 //    return (ch>= 'A' && ch<='Z')
 //            || (ch>='a' && ch<='z')
@@ -4170,12 +4311,12 @@ bool CppParser::isLetterChar(const QChar &ch)
             || ch == '_';
 }
 
-bool CppParser::isDigitChar(const QChar &ch)
+bool CppParser::isDigitChar(const QChar &ch) const
 {
     return (ch>='0' && ch<='9');
 }
 
-bool CppParser::isSeperator(const QChar &ch)  {
+bool CppParser::isSeperator(const QChar &ch) const  {
     switch(ch.unicode()){
     case '(':
     case ';':
@@ -4189,7 +4330,7 @@ bool CppParser::isSeperator(const QChar &ch)  {
     }
 }
 
-bool CppParser::isblockChar(const QChar &ch)
+bool CppParser::isblockChar(const QChar &ch) const
 {
     switch(ch.unicode()){
     case ';':
@@ -4201,7 +4342,7 @@ bool CppParser::isblockChar(const QChar &ch)
     }
 }
 
-bool CppParser::isInvalidVarPrefixChar(const QChar &ch)
+bool CppParser::isInvalidVarPrefixChar(const QChar &ch) const
 {
     switch (ch.unicode()) {
     case '#':
@@ -4222,12 +4363,12 @@ bool CppParser::isInvalidVarPrefixChar(const QChar &ch)
     }
 }
 
-bool CppParser::isBraceChar(const QChar &ch)
+bool CppParser::isBraceChar(const QChar &ch) const
 {
     return ch == '{' || ch =='}';
 }
 
-bool CppParser::isLineChar(const QChar &ch)
+bool CppParser::isLineChar(const QChar &ch) const
 {
     return ch=='\n' || ch=='\r';
 }
@@ -4279,7 +4420,7 @@ bool CppParser::isNotFuncArgs(const QString &args)
     return false;
 }
 
-bool CppParser::isNamedScope(StatementKind kind)
+bool CppParser::isNamedScope(StatementKind kind) const
 {
     switch(kind) {
     case StatementKind::skClass:
@@ -4291,7 +4432,7 @@ bool CppParser::isNamedScope(StatementKind kind)
     }
 }
 
-bool CppParser::isTypeStatement(StatementKind kind)
+bool CppParser::isTypeStatement(StatementKind kind) const
 {
     switch(kind) {
     case StatementKind::skClass:
@@ -4309,7 +4450,7 @@ void CppParser::updateSerialId()
     mSerialId = QString("%1 %2").arg(mParserId).arg(mSerialCount);
 }
 
-bool CppParser::isMemberOperator(QString token)
+bool CppParser::isMemberOperator(QString token)  const
 {
     return mMemberOperators.contains(token);
 }

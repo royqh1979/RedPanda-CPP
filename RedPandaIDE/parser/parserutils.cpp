@@ -518,5 +518,5 @@ void EvalStatement::assignType(const PEvalStatement &typeStatement)
     Q_ASSERT(typeStatement && typeStatement->kind==EvalStatementKind::Type);
     baseType = typeStatement->baseType;
     pointerLevel = typeStatement->pointerLevel;
-    effectiveTypeStatement = typeStatement->baseStatement;
+    effectiveTypeStatement = typeStatement->effectiveTypeStatement;
 }

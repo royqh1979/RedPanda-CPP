@@ -91,7 +91,7 @@ public:
      * @param token
      * @return true if it is, false if not
      */
-    bool isMemberOperator(QString token);
+    bool isMemberOperator(QString token)  const;
 
     bool enabled() const;
     void setEnabled(bool newEnabled);
@@ -266,10 +266,17 @@ private:
     PEvalStatement doCreateEvalNamespace(const PStatement& namespaceStatement);
 
     PEvalStatement doCreateEvalType(const QString& fileName,const PStatement& typeStatement);
+    PEvalStatement doCreateEvalType(const QString& primitiveType);
 
     PEvalStatement doCreateEvalVariable(const QString& fileName, PStatement varStatement);
     PEvalStatement doCreateEvalFunction(const QString& fileName, PStatement funcStatement);
-
+    PEvalStatement doCreateEvalLiteral(const QString& type);
+    void  doSkipInExpression(const QStringList& expression, int&pos, const QString& startSymbol, const QString& endSymbol);
+    bool isIdentifier(const QString& token) const;
+    bool isIntegerLiteral(const QString& token) const;
+    bool isFloatLiteral(const QString& token) const;
+    bool isStringLiteral(const QString& token) const;
+    bool isCharLiteral(const QString& token) const;
     PStatement doParseEvalTypeInfo(
             const QString& fileName,
             const PStatement& scope,
@@ -351,27 +358,27 @@ private:
 
     QString removeArgNames(const QString& args);
 
-    bool isSpaceChar(const QChar& ch);
+    bool isSpaceChar(const QChar& ch) const;
 
-    bool isWordChar(const QChar& ch);
+    bool isWordChar(const QChar& ch) const;
 
-    bool isLetterChar(const QChar& ch);
+    bool isLetterChar(const QChar& ch) const;
 
-    bool isDigitChar(const QChar& ch);
+    bool isDigitChar(const QChar& ch) const;
 
     /*'(', ';', ':', '{', '}', '#' */
-    bool isSeperator(const QChar& ch);
+    bool isSeperator(const QChar& ch) const;
 
     /*';', '{', '}'*/
-    bool isblockChar(const QChar& ch);
+    bool isblockChar(const QChar& ch) const;
 
     /* '#', ',', ';', ':', '{', '}', '!', '/', '+', '-', '<', '>' */
-    bool isInvalidVarPrefixChar(const QChar& ch);
+    bool isInvalidVarPrefixChar(const QChar& ch) const;
 
     /*'{', '}' */
-    bool isBraceChar(const QChar& ch);
+    bool isBraceChar(const QChar& ch) const;
 
-    bool isLineChar(const QChar& ch);
+    bool isLineChar(const QChar& ch) const;
 
     bool isNotFuncArgs(const QString& args);
 
@@ -380,14 +387,14 @@ private:
      * @param kind
      * @return
      */
-    bool isNamedScope(StatementKind kind);
+    bool isNamedScope(StatementKind kind) const;
 
     /**
      * @brief Test if a statement is a class/struct/union/enum/enum class/typedef
      * @param kind
      * @return
      */
-    bool isTypeStatement(StatementKind kind);
+    bool isTypeStatement(StatementKind kind) const;
 
     void updateSerialId();
 
