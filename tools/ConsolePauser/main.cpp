@@ -61,6 +61,8 @@ void PauseExit(int exitcode, bool reInp) {
         SetStdHandle(STD_INPUT_HANDLE,hInp);
 		freopen("CONIN$","r",stdin);
     }
+	FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
+	fflush(stdin);
 	printf("\n");
 	printf("Press ANY key to exit...");
 	getch();
