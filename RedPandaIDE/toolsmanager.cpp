@@ -17,8 +17,17 @@ void ToolsManager::load()
 {
     //if config file not exists, copy it from data
     QString filename = includeTrailingPathDelimiter(pSettings->dirs().config()) + DEV_TOOLS_FILE;
-    if (!fileExists(filename))
+    if (!fileExists(filename)) {
+        mTools.clear();
+        PToolItem item = std::make_shared<ToolItem>();
+        item->title = tr("Remove Compiled");
+        item->program = "del";
+        item->workingDirectory = "<SOURCEPATH>";
+        item->parameters = "<EXENAME>";
+        item->pauseAfterExit = false;
+        mTools.append(item);
         return;
+    }
     //read config file
     QFile file(filename);
     if (!file.open(QFile::ReadOnly)) {
@@ -36,8 +45,7 @@ void ToolsManager::load()
         QMessageBox::critical(nullptr,
                               tr("Read tools config failed"),
                               tr("Read tools config file '%1' failed:%2")
-                              .arg(filename)
-                              .arg(error.errorString()));
+                              .arg(filename,error.errorString()));
         return;
     }
     mTools.clear();

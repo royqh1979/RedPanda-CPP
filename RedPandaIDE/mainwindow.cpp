@@ -1801,7 +1801,7 @@ void MainWindow::updateTools()
     if (!mToolsManager->tools().isEmpty()) {
         ui->menuTools->addSeparator();
         foreach (const PToolItem& item, mToolsManager->tools()) {
-            QAction* action = new QAction(tr(item->title.toUtf8()),ui->menuTools);
+            QAction* action = new QAction(item->title,ui->menuTools);
             connect(action, &QAction::triggered,
                     [item] (){
                 QString program = parseMacros(item->program);

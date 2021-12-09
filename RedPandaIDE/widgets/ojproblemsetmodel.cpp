@@ -15,9 +15,9 @@ OJProblemSetModel::OJProblemSetModel(QObject *parent) : QAbstractListModel(paren
 
 void OJProblemSetModel::clear()
 {
-    beginRemoveRows(QModelIndex(),0,mProblemSet.problems.count()-1);
+    beginResetModel();
     mProblemSet.problems.clear();
-    endRemoveRows();
+    endResetModel();
 }
 
 int OJProblemSetModel::count()
@@ -261,9 +261,9 @@ void OJProblemModel::clear()
 {
     if (mProblem==nullptr)
         return;
-    beginRemoveRows(QModelIndex(),0,mProblem->cases.count()-1);
+    beginResetModel();
     mProblem->cases.clear();
-    endRemoveRows();
+    endResetModel();
 }
 
 int OJProblemModel::count()

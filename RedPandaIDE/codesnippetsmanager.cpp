@@ -194,9 +194,9 @@ void CodeSnippetsModel::remove(int index)
 
 void CodeSnippetsModel::clear()
 {
-    beginRemoveRows(QModelIndex(),0,mSnippets.count()-1);
+    beginResetModel();
     mSnippets.clear();
-    endRemoveRows();
+    endResetModel();
 }
 
 QModelIndex CodeSnippetsModel::lastSnippetCaption()

@@ -7074,34 +7074,39 @@ Are you really want to continue?</source>
 <context>
     <name>ToolsManager</name>
     <message>
-        <location filename="toolsmanager.cpp" line="26"/>
-        <location filename="toolsmanager.cpp" line="37"/>
+        <location filename="toolsmanager.cpp" line="23"/>
+        <source>Remove Compiled</source>
+        <translation>删除编译文件</translation>
+    </message>
+    <message>
+        <location filename="toolsmanager.cpp" line="35"/>
+        <location filename="toolsmanager.cpp" line="46"/>
         <source>Read tools config failed</source>
         <translation>读取工具配置失败</translation>
     </message>
     <message>
-        <location filename="toolsmanager.cpp" line="27"/>
+        <location filename="toolsmanager.cpp" line="36"/>
         <source>Can&apos;t open tools config file &apos;%1&apos; for read.</source>
         <translation>无法读取工具配置文件&apos;%1&apos;</translation>
     </message>
     <message>
-        <location filename="toolsmanager.cpp" line="38"/>
+        <location filename="toolsmanager.cpp" line="47"/>
         <source>Read tools config file &apos;%1&apos; failed:%2</source>
         <translation>读取工具配置文件&apos;%1&apos;失败:%2</translation>
     </message>
     <message>
-        <location filename="toolsmanager.cpp" line="65"/>
-        <location filename="toolsmanager.cpp" line="84"/>
+        <location filename="toolsmanager.cpp" line="73"/>
+        <location filename="toolsmanager.cpp" line="92"/>
         <source>Save tools config failed</source>
         <translation>保存工具配置失败</translation>
     </message>
     <message>
-        <location filename="toolsmanager.cpp" line="66"/>
+        <location filename="toolsmanager.cpp" line="74"/>
         <source>Can&apos;t open tools config file &apos;%1&apos; for write.</source>
         <translation>无法写入工具配置文件&apos;%1&apos;。</translation>
     </message>
     <message>
-        <location filename="toolsmanager.cpp" line="85"/>
+        <location filename="toolsmanager.cpp" line="93"/>
         <source>Write to tools config file &apos;%1&apos; failed.</source>
         <oldsource>Write to tool config file &apos;%1&apos; failed.</oldsource>
         <translation>写入工具配置文件&apos;%1&apos;失败。</translation>

@@ -1434,9 +1434,9 @@ void BreakpointModel::addBreakpoint(PBreakpoint p)
 
 void BreakpointModel::clear()
 {
-    beginRemoveRows(QModelIndex(),0,mList.size()-1);
+    beginResetModel();
     mList.clear();
-    endRemoveRows();
+    endResetModel();
 }
 
 void BreakpointModel::removeBreakpoint(int row)
@@ -1640,9 +1640,9 @@ void BacktraceModel::addTrace(PTrace p)
 
 void BacktraceModel::clear()
 {
-    beginRemoveRows(QModelIndex(),0,mList.size()-1);
+    beginResetModel();
     mList.clear();
-    endRemoveRows();
+    endResetModel();
 }
 
 void BacktraceModel::removeTrace(int row)
