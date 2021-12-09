@@ -2,6 +2,9 @@ Version 0.11.0 For Dev-C++ 7 Beta
  - enhancement: use token list instead of single string to do code completion ( intial version)
  - fix: language options in the project wizard don't work
  - fix: "ake as default language" option in the project wizard doesn't work
+ - fix: typo errors in settings dialog
+ - enhancement: console pauser clears STDIN buffer before show "press any key to continue..."
+ - fix: path in macros should use system's path separator
 
 Version 0.10.4 For Dev-C++ 7 Beta
  - fix: can't correctly undo/redo indent 

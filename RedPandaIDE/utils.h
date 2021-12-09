@@ -8,6 +8,7 @@
 #include <QRect>
 #include <QStringList>
 #include <memory>
+#include <QThread>
 #include "SimpleIni.h"
 
 using SimpleIni = CSimpleIniA;
@@ -120,6 +121,8 @@ bool isTextAllAscii(const QString& text);
 QByteArray runAndGetOutput(const QString& cmd, const QString& workingDir, const QStringList& arguments,
                            const QByteArray& inputContent = QByteArray(),
                            bool inheritEnvironment = false);
+
+void executeFile(const QString& fileName, const QString& params, const QString& workingDir);
 
 bool isNonPrintableAsciiChar(char ch);
 

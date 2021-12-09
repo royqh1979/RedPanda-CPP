@@ -87,7 +87,7 @@ string GetCommand(int argc,char** argv,bool &reInp,bool &pauseAfterExit) {
 //		result += string(argv[i]);
 //		}
 */
-		// Quote the first argument in case the path name contains spaces
+		// Quote the argument in case the path name contains spaces
 		result += string("\"") + string(argv[i]) + string("\"");
 
 		// Add a space except for the last argument

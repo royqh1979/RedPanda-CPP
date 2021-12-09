@@ -22,6 +22,7 @@
 #include "editor.h"
 #include "project.h"
 #include "version.h"
+#include "compiler/executablerunner.h"
 
 const QByteArray GuessTextEncoding(const QByteArray& text){
     bool allAscii;
@@ -824,6 +825,30 @@ QString parseMacros(const QString &s)
         result.replace("<WORDXY>", "");
     }
     return result;
+}
+
+void executeFile(const QString &fileName, const QString &params, const QString &workingDir)
+{
+    qDebug()<<fileName;
+    qDebug()<<params;
+    qDebug()<<workingDir;
+    ExecutableRunner* runner=new ExecutableRunner(
+                fileName,
+                params,
+                workingDir);
+    runner->connect(runner, &QThread::finished,
+                    [runner](){
+        qDebug()<<"finished";
+        runner->deleteLater();
+    });
+    runner->connect(runner, &Runner::runErrorOccurred,
+            [](const QString& s){
+        qDebug()<<"error occured";
+        qDebug()<<s;
+    });
+    qDebug()<<"running";
+    runner->setStartConsole(true);
+    runner->start();
 }
 
 void stringToFile(const QString &str, const QString &fileName)

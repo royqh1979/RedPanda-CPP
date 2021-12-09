@@ -1803,18 +1803,26 @@ void MainWindow::updateTools()
             QAction* action = new QAction(item->title,ui->menuTools);
             connect(action, &QAction::triggered,
                     [item] (){
-                if (item->pauseAfterExit
-                        && programHasConsole(parseMacros(item->program))) {
-                    executeFile(
-                                includeTrailingPathDelimiter(pSettings->dirs().app())+"ConsolePauser.exe",
-                                " 0 \""+parseMacros(item->program)+"\" "+parseMacros(item->parameters),
-                                parseMacros(item->workingDirectory));
+                QString program = parseMacros(item->program);
+                QString workDir = parseMacros(item->workingDirectory);
+                if (program == "del") {
+                    QString current = QDir::currentPath();
+                    QDir::setCurrent(workDir);
+                    qDebug()<<(program+" "+parseMacros(item->parameters));
+                    system((program+" "+parseMacros(item->parameters)).toLocal8Bit());
+                    QDir::setCurrent(current);
                 } else {
-                    executeFile(
-                                parseMacros(item->program),
-                                parseMacros(item->parameters),
-                                parseMacros(item->workingDirectory));
-
+                    if (item->pauseAfterExit) {
+                        executeFile(
+                                    includeTrailingPathDelimiter(pSettings->dirs().app())+"ConsolePauser.exe",
+                                    " 0 \""+localizePath(program)+"\" "+parseMacros(item->parameters),
+                                    workDir);
+                    } else {
+                        executeFile(
+                                    program,
+                                    parseMacros(item->parameters),
+                                    workDir);
+                    }
                 }
             });
             ui->menuTools->addAction(action);
