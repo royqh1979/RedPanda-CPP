@@ -5,6 +5,7 @@ Version 0.11.0 For Dev-C++ 7 Beta
  - fix: typo errors in settings dialog
  - enhancement: console pauser clears STDIN buffer before show "press any key to continue..."
  - fix: path in macros should use system's path separator
+ - fix: custom tools doesn't work
 
 Version 0.10.4 For Dev-C++ 7 Beta
  - fix: can't correctly undo/redo indent 

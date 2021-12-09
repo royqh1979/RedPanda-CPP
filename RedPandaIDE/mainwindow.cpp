@@ -36,6 +36,7 @@
 #include <QMessageBox>
 #include <QMimeData>
 #include <QTcpSocket>
+#include <QTemporaryFile>
 #include <QTextBlock>
 #include <QTranslator>
 
@@ -1800,30 +1801,48 @@ void MainWindow::updateTools()
     if (!mToolsManager->tools().isEmpty()) {
         ui->menuTools->addSeparator();
         foreach (const PToolItem& item, mToolsManager->tools()) {
-            QAction* action = new QAction(item->title,ui->menuTools);
+            QAction* action = new QAction(tr(item->title.toUtf8()),ui->menuTools);
             connect(action, &QAction::triggered,
                     [item] (){
                 QString program = parseMacros(item->program);
                 QString workDir = parseMacros(item->workingDirectory);
-                if (program == "del") {
-                    QString current = QDir::currentPath();
-                    QDir::setCurrent(workDir);
-                    qDebug()<<(program+" "+parseMacros(item->parameters));
-                    system((program+" "+parseMacros(item->parameters)).toLocal8Bit());
-                    QDir::setCurrent(current);
+                QString params = parseMacros(item->parameters);
+                if (!program.endsWith(".bat",Qt::CaseInsensitive)) {
+                    QTemporaryFile file(QDir::tempPath()+QDir::separator()+"XXXXXX.bat");
+                    file.setAutoRemove(false);
+                    if (file.open()) {
+                        file.write(QString("cd /d \"%1\"")
+                                   .arg(localizePath(workDir))
+                                   .toLocal8Bit()+LINE_BREAKER);
+                        file.write((program+" "+params).toLocal8Bit()
+                                   + LINE_BREAKER);
+                        file.close();
+                        if (item->pauseAfterExit) {
+                            executeFile(
+                                        includeTrailingPathDelimiter(pSettings->dirs().app())+"ConsolePauser.exe",
+                                        " 1 \""+localizePath(file.fileName())+"\" ",
+                                        workDir, file.fileName());
+                        } else {
+                            executeFile(
+                                        file.fileName(),
+                                        "",
+                                        workDir, file.fileName());
+                        }
+                    }
                 } else {
                     if (item->pauseAfterExit) {
                         executeFile(
                                     includeTrailingPathDelimiter(pSettings->dirs().app())+"ConsolePauser.exe",
-                                    " 0 \""+localizePath(program)+"\" "+parseMacros(item->parameters),
-                                    workDir);
+                                    " 1 \""+program+"\" "+params,
+                                    workDir, "");
                     } else {
                         executeFile(
                                     program,
-                                    parseMacros(item->parameters),
-                                    workDir);
+                                    params,
+                                    workDir, "");
                     }
                 }
+
             });
             ui->menuTools->addAction(action);
         }

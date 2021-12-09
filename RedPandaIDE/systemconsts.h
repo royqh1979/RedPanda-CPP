@@ -52,6 +52,7 @@
 #ifdef Q_OS_WIN
 #   define PATH_SENSITIVITY Qt::CaseInsensitive
 #   define PATH_SEPARATOR   ";"
+#   define LINE_BREAKER     "\r\n"
 #   define NULL_FILE       "NUL"
 #   define EXECUTABLE_EXT   "exe"
 #   define STATIC_LIB_EXT   "a"
@@ -60,6 +61,7 @@
 #elif defined(Q_OS_LINUX)
 #   define PATH_SENSITIVITY Qt::CaseSensitive
 #   define PATH_SEPARATOR   ":"
+#   define LINE_BREAKER     "\n"
 #   define NULL_FILE       "/dev/null"
 #   define EXECUTABLE_EXT   ""
 #   define STATIC_LIB_EXT   "a"

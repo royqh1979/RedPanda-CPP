@@ -786,30 +786,27 @@ QString parseMacros(const QString &s)
             result.replace("<LIB>","");
     }
 
-    // Project-dependent macros
-    if (pMainWindow->project()) {
+    if (e!=nullptr && !e->inProject()) { // Non-project editor macros
+            result.replace("<EXENAME>", extractFileName(changeFileExt(e->filename(),EXECUTABLE_EXT)));
+            result.replace("<EXEFILE>", localizePath(changeFileExt(e->filename(),EXECUTABLE_EXT)));
+            result.replace("<PROJECTNAME>", extractFileName(e->filename()));
+            result.replace("<PROJECTFILE>", localizePath(e->filename()));
+            result.replace("<PROJECTFILENAME>", extractFileName(e->filename()));
+            result.replace("<PROJECTPATH>", localizePath(extractFileDir(e->filename())));
+    } else if (pMainWindow->project()) {
         result.replace("<EXENAME>", extractFileName(pMainWindow->project()->executable()));
         result.replace("<EXEFILE>", localizePath(pMainWindow->project()->executable()));
         result.replace("<PROJECTNAME>", pMainWindow->project()->name());
         result.replace("<PROJECTFILE>", localizePath(pMainWindow->project()->filename()));
         result.replace("<PROJECTFILENAME>", extractFileName(pMainWindow->project()->filename()));
         result.replace("<PROJECTPATH>", localizePath(pMainWindow->project()->directory()));
-//        result.replace("<SOURCESPCLIST>', MainForm.Project.ListUnitStr(' '));
-//        result.replace("<SOURCESPCLIST>","");
-    } else if (e!=nullptr) { // Non-project editor macros
-        result.replace("<EXENAME>", extractFileName(changeFileExt(e->filename(),EXECUTABLE_EXT)));
-        result.replace("<EXEFILE>", localizePath(changeFileExt(e->filename(),EXECUTABLE_EXT)));
-        result.replace("<PROJECTNAME>", extractFileName(e->filename()));
-        result.replace("<PROJECTFILE>", localizePath(e->filename()));
-        result.replace("<PROJECTFILENAME>", extractFileName(e->filename()));
-        result.replace("<PROJECTPATH>", localizePath(extractFileDir(e->filename())));
-//        result.replace("<SOURCESPCLIST>", ""); // clear unchanged macros
     } else {
         result.replace("<EXENAME>", "");
+        result.replace("<EXEFILE>", "");
         result.replace("<PROJECTNAME>", "");
         result.replace("<PROJECTFILE>", "");
+        result.replace("<PROJECTFILENAME>", "");
         result.replace("<PROJECTPATH>", "");
-//        result.replace("<SOURCESPCLIST>", ""); // clear unchanged macros
     }
 
     // Editor macros
@@ -827,26 +824,23 @@ QString parseMacros(const QString &s)
     return result;
 }
 
-void executeFile(const QString &fileName, const QString &params, const QString &workingDir)
+void executeFile(const QString &fileName, const QString &params, const QString &workingDir, const QString &tempFile)
 {
-    qDebug()<<fileName;
-    qDebug()<<params;
-    qDebug()<<workingDir;
     ExecutableRunner* runner=new ExecutableRunner(
                 fileName,
                 params,
                 workingDir);
     runner->connect(runner, &QThread::finished,
-                    [runner](){
-        qDebug()<<"finished";
+                    [runner,tempFile](){
+        if (!tempFile.isEmpty()) {
+            QFile::remove(tempFile);
+        }
         runner->deleteLater();
     });
     runner->connect(runner, &Runner::runErrorOccurred,
-            [](const QString& s){
-        qDebug()<<"error occured";
-        qDebug()<<s;
+            [](const QString&){
+        //todo
     });
-    qDebug()<<"running";
     runner->setStartConsole(true);
     runner->start();
 }

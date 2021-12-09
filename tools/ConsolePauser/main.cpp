@@ -78,15 +78,6 @@ string GetCommand(int argc,char** argv,bool &reInp,bool &pauseAfterExit) {
 	reInp = flags & RPF_REDIRECT_INPUT;
 	pauseAfterExit = flags & RPF_PAUSE_CONSOLE;
 	for(int i = 2;i < argc;i++) {
-/*
-		// Quote the first argument in case the path name contains spaces
-//		if(i == 1) {
-//			result += string("\"") + string(argv[i]) + string("\"");
-//		} else {
-		// Quote the first argument in case the path name contains spaces
-//		result += string(argv[i]);
-//		}
-*/
 		// Quote the argument in case the path name contains spaces
 		result += string("\"") + string(argv[i]) + string("\"");
 

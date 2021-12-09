@@ -17,7 +17,7 @@ ToolsGeneralWidget::ToolsGeneralWidget(const QString &name, const QString &group
     finishEditing(false);
     connect(ui->lstTools->selectionModel(), &QItemSelectionModel::currentRowChanged,
             this,&ToolsGeneralWidget::onToolsCurrentChanged);
-    connect(ui->txtDirectory,&QLineEdit::textChanged,
+    connect(ui->txtProgram,&QLineEdit::textChanged,
             this, &ToolsGeneralWidget::updateDemo);
     connect(ui->txtParameters,&QLineEdit::textChanged,
             this, &ToolsGeneralWidget::updateDemo);

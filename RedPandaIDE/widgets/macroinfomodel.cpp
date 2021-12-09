@@ -2,7 +2,7 @@
 
 MacroInfoModel::MacroInfoModel(QObject *parent) : QAbstractListModel(parent)
 {
-    addMacroInfo("<Default>", tr("The default directory"));
+    addMacroInfo("<DEFAULT>", tr("The default directory"));
     addMacroInfo("<DEVCPP>", tr("Path to the Red Panda C++'s executable file."));
     addMacroInfo("<DEVCPPVERSION>", tr("Version of the Red Panda C++"));
     addMacroInfo("<EXECPATH>", tr("PATH to the Red Panda C++'s installation folder."));
