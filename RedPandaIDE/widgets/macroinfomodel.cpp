@@ -11,12 +11,14 @@ MacroInfoModel::MacroInfoModel(QObject *parent) : QAbstractListModel(parent)
     addMacroInfo("<INCLUDE>", tr("The first include directory of the working compiler set."));
     addMacroInfo("<LIB>", tr("The first lib directory of the working compiler set."));
     addMacroInfo("<EXENAME>", tr("The compiled filename"));
+    addMacroInfo("<EXEFILE>", tr("Full path to the compiled file"));
     addMacroInfo("<SOURCENAME>", tr("Filename of the current source file"));
     addMacroInfo("<SOURCEFILE>", tr("Full path to the current source file"));
     addMacroInfo("<SOURCEPATH>", tr("Path to the current source file's parent folder"));
     addMacroInfo("<WORDXY>", tr("Word at the cursor in the active editor"));
     addMacroInfo("<PROJECTNAME>", tr("Name of the current project"));
     addMacroInfo("<PROJECTFILE>", tr("Full path to the current project file"));
+    addMacroInfo("<PROJECTFILENAME>", tr("Name of the current project file"));
     addMacroInfo("<PROJECTPATH>", tr("Path to the current project's folder"));
 }
 

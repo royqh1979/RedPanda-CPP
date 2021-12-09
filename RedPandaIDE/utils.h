@@ -138,7 +138,6 @@ QString genMakePath2(const QString& fileName);
 QString getCompiledExecutableName(const QString& filename);
 void splitStringArguments(const QString& arguments, QStringList& argumentList);
 bool programHasConsole(const QString& filename);
-QString toLocalPath(const QString& filename);
 using LineProcessFunc =  std::function<void(const QString&)>;
 
 QStringList readStreamToLines(QTextStream* stream);
@@ -178,6 +177,7 @@ bool findComplement(const QString& s,
                        int increment);
 void logToFile(const QString& s, const QString& filename, bool append=true);
 
+QString localizePath(const QString& path);
 QString extractFileName(const QString& fileName);
 QString extractFileDir(const QString& fileName);
 QString extractFilePath(const QString& filePath);

@@ -1802,18 +1802,20 @@ void MainWindow::updateTools()
         foreach (const PToolItem& item, mToolsManager->tools()) {
             QAction* action = new QAction(item->title,ui->menuTools);
             connect(action, &QAction::triggered,
-                    [item,this] (){
-                QString params = parseMacros(item->parameters);
-                params.replace("/",QDir::separator());
-                QByteArray newContent = runAndGetOutput(
+                    [item] (){
+                if (item->pauseAfterExit
+                        && programHasConsole(parseMacros(item->program))) {
+                    executeFile(
+                                includeTrailingPathDelimiter(pSettings->dirs().app())+"ConsolePauser.exe",
+                                " 0 \""+parseMacros(item->program)+"\" "+parseMacros(item->parameters),
+                                parseMacros(item->workingDirectory));
+                } else {
+                    executeFile(
                                 parseMacros(item->program),
-                                parseMacros(item->workingDirectory),
-                                QProcess::splitCommand(params),
-                                QByteArray(),
-                                true
-                                );
-                qDebug()<<"running"<<item->program;
-                ui->txtCompilerOutput->appendPlainText(QString::fromLocal8Bit(newContent));
+                                parseMacros(item->parameters),
+                                parseMacros(item->workingDirectory));
+
+                }
             });
             ui->menuTools->addAction(action);
         }

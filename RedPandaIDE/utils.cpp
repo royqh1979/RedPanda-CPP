@@ -293,13 +293,6 @@ bool programHasConsole(const QString &filename)
     return result;
 }
 
-QString toLocalPath(const QString &filename)
-{
-    QString newPath {filename};
-    newPath.replace("/",QDir::separator());
-    return newPath;
-}
-
 QStringList textToLines(const QString &text)
 {
     QTextStream stream(&((QString&)text),QIODevice::ReadOnly);
@@ -767,10 +760,10 @@ QString parseMacros(const QString &s)
     QString result = s;
     Editor *e = pMainWindow->editorList()->getEditor();
 
-    result.replace("<DEFAULT>", QDir::currentPath());
-    result.replace("<DEVCPP>", pSettings->dirs().executable());
+    result.replace("<DEFAULT>", localizePath(QDir::currentPath()));
+    result.replace("<DEVCPP>", localizePath(pSettings->dirs().executable()));
     result.replace("<DEVCPPVERSION>", DEVCPP_VERSION);
-    result.replace("<EXECPATH>", pSettings->dirs().app());
+    result.replace("<EXECPATH>", localizePath(pSettings->dirs().app()));
     QDate today = QDate::currentDate();
     QDateTime now = QDateTime::currentDateTime();
 
@@ -781,30 +774,34 @@ QString parseMacros(const QString &s)
     if (compilerSet) {
         // Only provide the first cpp include dir
         if (compilerSet->defaultCppIncludeDirs().count()>0)
-            result.replace("<INCLUDE>", compilerSet->defaultCppIncludeDirs().front());
+            result.replace("<INCLUDE>", localizePath(compilerSet->defaultCppIncludeDirs().front()));
         else
             result.replace("<INCLUDE>","");
 
         // Only provide the first lib dir
         if (compilerSet->defaultLibDirs().count()>0)
-            result.replace("<LIB>", compilerSet->defaultCppIncludeDirs().front());
+            result.replace("<LIB>", localizePath(compilerSet->defaultCppIncludeDirs().front()));
         else
             result.replace("<LIB>","");
     }
 
     // Project-dependent macros
     if (pMainWindow->project()) {
-        result.replace("<EXENAME>", pMainWindow->project()->executable());
+        result.replace("<EXENAME>", extractFileName(pMainWindow->project()->executable()));
+        result.replace("<EXEFILE>", localizePath(pMainWindow->project()->executable()));
         result.replace("<PROJECTNAME>", pMainWindow->project()->name());
-        result.replace("<PROJECTFILE>", pMainWindow->project()->filename());
-        result.replace("<PROJECTPATH>", pMainWindow->project()->directory());
+        result.replace("<PROJECTFILE>", localizePath(pMainWindow->project()->filename()));
+        result.replace("<PROJECTFILENAME>", extractFileName(pMainWindow->project()->filename()));
+        result.replace("<PROJECTPATH>", localizePath(pMainWindow->project()->directory()));
 //        result.replace("<SOURCESPCLIST>', MainForm.Project.ListUnitStr(' '));
 //        result.replace("<SOURCESPCLIST>","");
     } else if (e!=nullptr) { // Non-project editor macros
-        result.replace("<EXENAME>", changeFileExt(e->filename(),EXECUTABLE_EXT));
+        result.replace("<EXENAME>", extractFileName(changeFileExt(e->filename(),EXECUTABLE_EXT)));
+        result.replace("<EXEFILE>", localizePath(changeFileExt(e->filename(),EXECUTABLE_EXT)));
         result.replace("<PROJECTNAME>", extractFileName(e->filename()));
-        result.replace("<PROJECTFILE>",e->filename());
-        result.replace("<PROJECTPATH>", extractFileDir(e->filename()));
+        result.replace("<PROJECTFILE>", localizePath(e->filename()));
+        result.replace("<PROJECTFILENAME>", extractFileName(e->filename()));
+        result.replace("<PROJECTPATH>", localizePath(extractFileDir(e->filename())));
 //        result.replace("<SOURCESPCLIST>", ""); // clear unchanged macros
     } else {
         result.replace("<EXENAME>", "");
@@ -817,8 +814,8 @@ QString parseMacros(const QString &s)
     // Editor macros
     if (e!=nullptr) {
         result.replace("<SOURCENAME>", extractFileName(e->filename()));
-        result.replace("<SOURCEFILE>", e->filename());
-        result.replace("<SOURCEPATH>", extractFileDir(e->filename()));
+        result.replace("<SOURCEFILE>", localizePath(e->filename()));
+        result.replace("<SOURCEPATH>", localizePath(extractFileDir(e->filename())));
         result.replace("<WORDXY>", e->wordAtCursor());
     } else {
         result.replace("<SOURCENAME>", "");
@@ -927,4 +924,11 @@ QList<QByteArray> splitByteArrayToLines(const QByteArray &content)
         lines.append(line);
     }
     return lines;
+}
+
+QString localizePath(const QString &path)
+{
+    QString result = path;
+    result.replace("/",QDir::separator());
+    return result;
 }
