@@ -1,3 +1,6 @@
+Version 0.11.1 For Dev-C++ 7 Beta
+ - enhancement: Problem's test case shouldn't accept rich text inputs
+
 Version 0.11.0 For Dev-C++ 7 Beta
  - enhancement: redesign the expression parser for code completion
  - fix: "make as default language" option in the project wizard doesn't work

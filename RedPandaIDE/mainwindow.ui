@@ -1356,6 +1356,9 @@
                <property name="lineWrapMode">
                 <enum>QTextEdit::NoWrap</enum>
                </property>
+               <property name="acceptRichText">
+                <bool>false</bool>
+               </property>
               </widget>
              </item>
              <item row="1" column="1">
@@ -1372,6 +1375,9 @@
               <widget class="QTextEdit" name="txtProblemCaseExpected">
                <property name="lineWrapMode">
                 <enum>QTextEdit::NoWrap</enum>
+               </property>
+               <property name="acceptRichText">
+                <bool>false</bool>
                </property>
               </widget>
              </item>
@@ -1392,7 +1398,7 @@
      <x>0</x>
      <y>0</y>
      <width>1114</width>
-     <height>25</height>
+     <height>30</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
