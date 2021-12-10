@@ -126,6 +126,8 @@ SOURCES += \
     widgets/filepropertiesdialog.cpp \
     widgets/functiontooltipwidget.cpp \
     widgets/headercompletionpopup.cpp \
+    widgets/initwizard/initchooselanguagewidget.cpp \
+    widgets/initwizard/initwizarddialog.cpp \
     widgets/issuestable.cpp \
     widgets/labelwithmenu.cpp \
     widgets/macroinfomodel.cpp \
@@ -252,6 +254,8 @@ HEADERS += \
     widgets/filepropertiesdialog.h \
     widgets/functiontooltipwidget.h \
     widgets/headercompletionpopup.h \
+    widgets/initwizard/initchooselanguagewidget.h \
+    widgets/initwizard/initwizarddialog.h \
     widgets/issuestable.h \
     widgets/labelwithmenu.h \
     widgets/macroinfomodel.h \
@@ -305,6 +309,8 @@ FORMS += \
     settingsdialog/settingsdialog.ui \
     widgets/custommakefileinfodialog.ui \
     widgets/filepropertiesdialog.ui \
+    widgets/initwizard/initchooselanguagewidget.ui \
+    widgets/initwizard/initwizarddialog.ui \
     widgets/newprojectdialog.ui \
     widgets/ojproblempropertywidget.ui \
     widgets/searchdialog.ui \
