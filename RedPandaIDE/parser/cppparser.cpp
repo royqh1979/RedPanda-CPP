@@ -132,8 +132,9 @@ QList<PStatement> CppParser::getListOfFunctions(const QString &fileName, const Q
 PStatement CppParser::findAndScanBlockAt(const QString &filename, int line)
 {
     QMutexLocker locker(&mMutex);
-    if (mParsing)
+    if (mParsing) {
         return PStatement();
+    }
     PFileIncludes fileIncludes = mPreprocessor.includesList().value(filename);
     if (!fileIncludes)
         return PStatement();

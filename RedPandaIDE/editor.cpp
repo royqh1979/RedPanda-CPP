@@ -1752,18 +1752,19 @@ QStringList Editor::getExpressionAtPositionForCompletion(
                 return result;
                 break;
             case LastSymbolType::ParenthesisMatched: //before '()'
-                if (token == ".") {
-                    lastSymbolType=LastSymbolType::ObjectMemberOperator;
-                } else if (token=="->") {
-                    lastSymbolType = LastSymbolType::PointerMemberOperator;
-                } else if (token == ".*") {
-                    lastSymbolType = LastSymbolType::PointerToMemberOfObjectOperator;
-                } else if (token == "->*"){
-                    lastSymbolType = LastSymbolType::PointerToMemberOfPointerOperator;
-                } else if (token==">") {
-                    lastSymbolType=LastSymbolType::MatchingAngleQuotation;
-                    symbolMatchingLevel=0;
-                } else if (token == ")" ) {
+//                if (token == ".") {
+//                    lastSymbolType=LastSymbolType::ObjectMemberOperator;
+//                } else if (token=="->") {
+//                    lastSymbolType = LastSymbolType::PointerMemberOperator;
+//                } else if (token == ".*") {
+//                    lastSymbolType = LastSymbolType::PointerToMemberOfObjectOperator;
+//                } else if (token == "->*"){
+//                    lastSymbolType = LastSymbolType::PointerToMemberOfPointerOperator;
+//                } else if (token==">") {
+//                    lastSymbolType=LastSymbolType::MatchingAngleQuotation;
+//                    symbolMatchingLevel=0;
+//                } else
+                if (token == ")" ) {
                     lastSymbolType=LastSymbolType::MatchingParenthesis;
                     symbolMatchingLevel = 0;
                 } else if (token == "]") {
