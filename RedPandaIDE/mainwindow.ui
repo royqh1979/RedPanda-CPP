@@ -85,7 +85,7 @@
             <enum>QTabWidget::West</enum>
            </property>
            <property name="currentIndex">
-            <number>1</number>
+            <number>2</number>
            </property>
            <property name="usesScrollButtons">
             <bool>true</bool>
@@ -1398,7 +1398,7 @@
      <x>0</x>
      <y>0</y>
      <width>1114</width>
-     <height>30</height>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

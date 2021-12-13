@@ -264,18 +264,6 @@ void EditorList::selectPreviousPage()
     }
 }
 
-void EditorList::notifyDPIChanged(int dpi)
-{
-    for (int i=0;i<mLeftPageWidget->count();i++) {
-        Editor* e = static_cast<Editor*>(mLeftPageWidget->widget(i));
-        e->changeDPI(dpi);
-    }
-    for (int i=0;i<mRightPageWidget->count();i++) {
-        Editor* e = static_cast<Editor*>(mRightPageWidget->widget(i));
-        e->changeDPI(dpi);
-    }
-}
-
 Editor *EditorList::operator[](int index)
 {
     if (index>=0 && index<mLeftPageWidget->count()) {

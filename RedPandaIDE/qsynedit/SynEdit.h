@@ -275,8 +275,7 @@ public:
 
     void updateMouseCursor();
 
-    void changeDPI(int dpi);
-// setter && getters
+    // setter && getters
     int topLine() const;
     void setTopLine(int value);
 
@@ -705,8 +704,6 @@ private:
     BufferCoord mDragSelBeginSave;
     BufferCoord mDragSelEndSave;
     bool mDragging;
-
-    int mDPI;
 
 friend class SynEditTextPainter;
 

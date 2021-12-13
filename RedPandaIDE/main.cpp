@@ -41,11 +41,8 @@ bool WindowLogoutEventFilter::nativeEventFilter(const QByteArray & /*eventType*/
         }
         break;
     case WM_DPICHANGED:
-        if (pMainWindow) {
-            int dpi = HIWORD(pMsg->wParam);
-            pMainWindow->notifyDPIChanged(dpi);
-        }
-       break;
+        //todo
+        break;
     }
     return false;
 }

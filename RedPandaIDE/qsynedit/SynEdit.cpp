@@ -24,7 +24,6 @@
 
 SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
 {
-    mDPI = -1;
     mLastKey = 0;
     mLastKeyModifiers = Qt::NoModifier;
     mModified = false;
@@ -149,8 +148,6 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
 
     //setMouseTracking(true);
     setAcceptDrops(true);
-
-    mDPI = fontMetrics().fontDpi();
 }
 
 int SynEdit::displayLineCount() const
@@ -5809,26 +5806,8 @@ void SynEdit::updateMouseCursor(){
     }
 }
 
-void SynEdit::changeDPI(int dpi)
-{
-    if (dpi!=mDPI) {
-        mDPI=dpi;
-    }
-}
-
 void SynEdit::paintEvent(QPaintEvent *event)
 {
-    if (fontMetrics().fontDpi()!=mDPI) {
-        QFont f;
-        f.setFamily(font().family());
-        f.setPointSize(font().pointSize());
-        f.setBold(font().bold());
-        f.setItalic(font().bold());
-        f.setUnderline(font().underline());
-        f.setStrikeOut(font().strikeOut());
-        setFont(f);
-        return;
-    }
     if (mPainterLock>0)
         return;
     if (mPainting)
@@ -5840,6 +5819,17 @@ void SynEdit::paintEvent(QPaintEvent *event)
 
     // Now paint everything while the caret is hidden.
     QPainter painter(viewport());
+    if (fontMetrics().fontDpi()!=painter.device()->logicalDpiX()) {
+        QFont f;
+        f.setFamily(font().family());
+        f.setPointSize(font().pointSize());
+        f.setBold(font().bold());
+        f.setItalic(font().bold());
+        f.setUnderline(font().underline());
+        f.setStrikeOut(font().strikeOut());
+        setFont(f);
+        return;
+    }
     //Get the invalidated rect.
     QRect rcClip = event->rect();
     QRect rcCaret = calculateCaretRect();

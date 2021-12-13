@@ -77,7 +77,8 @@ void ExecutableRunner::run()
     process.setProcessEnvironment(env);
     process.setCreateProcessArgumentsModifier([this](QProcess::CreateProcessArguments * args){
         if (mStartConsole) {
-            args->flags |= CREATE_NEW_CONSOLE;
+            args->flags |=  CREATE_NEW_CONSOLE;
+            args->flags &= ~CREATE_NO_WINDOW;
         }
         if (!mRedirectInput) {
             args->startupInfo -> dwFlags &= ~STARTF_USESTDHANDLES;
