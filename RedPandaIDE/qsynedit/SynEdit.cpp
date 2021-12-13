@@ -6261,7 +6261,19 @@ void SynEdit::dragLeaveEvent(QDragLeaveEvent *)
 //    setCaretXY(mDragCaretSave);
 //    setBlockBegin(mDragSelBeginSave);
 //    setBlockEnd(mDragSelEndSave);
-//    showCaret();
+    //    showCaret();
+}
+
+bool SynEdit::nativeEvent(const QByteArray &eventType, void *message, long *result)
+{
+#ifdef Q_OS_WIN
+    MSG* msg = (MSG*)message;
+    if (msg && msg->message == WM_DPICHANGED) {
+        qDebug()<<"dpi changed!";
+        synFontChanged();
+    }
+#endif
+    return QAbstractScrollArea::nativeEvent(eventType,message,result);
 }
 
 int SynEdit::maxScrollHeight() const

@@ -38,6 +38,8 @@ bool WindowLogoutEventFilter::nativeEventFilter(const QByteArray & /*eventType*/
             }
             return true;
         }
+    } else if (pMsg->message == WM_DPICHANGED) {
+        qDebug()<<"app dpi changed!";
     }
     return false;
 }
@@ -77,6 +79,7 @@ QString getSettingFilename(const QString& filepath = QString()) {
 
 int main(int argc, char *argv[])
 {
+    //QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     QApplication app(argc, argv);
 
     //Translation must be loaded first
