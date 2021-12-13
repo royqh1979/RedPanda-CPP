@@ -163,6 +163,10 @@ public:
 
     bool openningFiles() const;
 
+    void notifyDPIChanged(int dpi);
+
+signals:
+    void dpiChanged(int dpi);
 public slots:
     void onCompileLog(const QString& msg);
     void onCompileIssue(PCompileIssue issue);
@@ -194,6 +198,7 @@ public slots:
     void onTodoParsing(const QString& filename, int lineNo, int ch, const QString& line);
     void onTodoParseFinished();
     void setActiveBreakpoint(QString FileName, int Line, bool setFocus);
+    void onDPIChanged();
 
 private:
     void prepareProjectForCompile();

@@ -274,6 +274,8 @@ public:
                          const PSynHighlighterAttribute &attr3);
 
     void updateMouseCursor();
+
+    void changeDPI(int dpi);
 // setter && getters
     int topLine() const;
     void setTopLine(int value);
@@ -704,6 +706,8 @@ private:
     BufferCoord mDragSelEndSave;
     bool mDragging;
 
+    int mDPI;
+
 friend class SynEditTextPainter;
 
 // QWidget interface
@@ -737,10 +741,6 @@ void dragEnterEvent(QDragEnterEvent *event) override;
 void dropEvent(QDropEvent *event) override;
 void dragMoveEvent(QDragMoveEvent *event) override;
 void dragLeaveEvent(QDragLeaveEvent *event) override;
-
-// QWidget interface
-protected:
-bool nativeEvent(const QByteArray &eventType, void *message, long *result) override;
 };
 
 #endif // SYNEDIT_H

@@ -28,7 +28,8 @@ public:
 
 bool WindowLogoutEventFilter::nativeEventFilter(const QByteArray & /*eventType*/, void *message, long *result){
     MSG * pMsg = static_cast<MSG *>(message);
-    if (pMsg->message == WM_QUERYENDSESSION) {
+    switch(pMsg->message) {
+    case WM_QUERYENDSESSION:
         if (pMsg->lParam == 0
                 || (pMsg->lParam & ENDSESSION_LOGOFF)) {
             if (!pMainWindow->close()) {
@@ -38,8 +39,13 @@ bool WindowLogoutEventFilter::nativeEventFilter(const QByteArray & /*eventType*/
             }
             return true;
         }
-    } else if (pMsg->message == WM_DPICHANGED) {
-        qDebug()<<"app dpi changed!";
+        break;
+    case WM_DPICHANGED:
+        if (pMainWindow) {
+            int dpi = HIWORD(pMsg->wParam);
+            pMainWindow->notifyDPIChanged(dpi);
+        }
+       break;
     }
     return false;
 }

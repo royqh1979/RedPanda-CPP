@@ -175,6 +175,8 @@ MainWindow::MainWindow(QWidget *parent)
             this, &MainWindow::onDebugEvaluateInput);
     connect(ui->cbMemoryAddress->lineEdit(), &QLineEdit::returnPressed,
             this, &MainWindow::onDebugMemoryAddressInput);
+    connect(this,&MainWindow::dpiChanged,
+            this,&MainWindow::onDPIChanged);
 
     mTodoParser = std::make_shared<TodoParser>();
     mSymbolUsageManager = std::make_shared<SymbolUsageManager>();
@@ -639,6 +641,11 @@ void MainWindow::setActiveBreakpoint(QString FileName, int Line, bool setFocus)
     if (setFocus) {
         this->activateWindow();
     }
+}
+
+void MainWindow::dpiChanged(int dpi)
+{
+    mEditorList->notifyDPIChanged(dpi);
 }
 
 void MainWindow::updateAppTitle()
@@ -5624,6 +5631,11 @@ void MainWindow::on_btnOpenProblemAnswer_clicked()
 bool MainWindow::openningFiles() const
 {
     return mOpenningFiles;
+}
+
+void MainWindow::notifyDPIChanged(int dpi)
+{
+    emit dpiChanged(dpi);
 }
 
 

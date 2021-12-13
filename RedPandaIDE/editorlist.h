@@ -53,6 +53,7 @@ public:
     int pageCount();
     void selectNextPage();
     void selectPreviousPage();
+    void notifyDPIChanged(int dpi);
 
     Editor* operator[](int index);
 

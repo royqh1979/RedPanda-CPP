@@ -24,6 +24,7 @@
 
 SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
 {
+    mDPI = -1;
     mLastKey = 0;
     mLastKeyModifiers = Qt::NoModifier;
     mModified = false;
@@ -148,6 +149,8 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
 
     //setMouseTracking(true);
     setAcceptDrops(true);
+
+    mDPI = fontMetrics().fontDpi();
 }
 
 int SynEdit::displayLineCount() const
@@ -3138,8 +3141,9 @@ void SynEdit::recalcCharExtent()
 
     mTextHeight  = 0;
     mCharWidth = 0;
-    mTextHeight = fontMetrics().lineSpacing();
-    mCharWidth = fontMetrics().horizontalAdvance("M");
+    QFontMetrics fm(font());
+    mTextHeight = fm.lineSpacing();
+    mCharWidth = fm.horizontalAdvance("M");
     if (hasStyles[0]) { // has bold font
         QFont f = font();
         f.setBold(true);
@@ -3177,8 +3181,6 @@ void SynEdit::recalcCharExtent()
             mCharWidth = fm.horizontalAdvance("M");
     }
     mTextHeight += mExtraLineSpacing;
-    //mCharWidth = mCharWidth * dpiFactor();
-    //mTextHeight = mTextHeight * dpiFactor();
 }
 
 QString SynEdit::expandAtWideGlyphs(const QString &S)
@@ -5807,8 +5809,26 @@ void SynEdit::updateMouseCursor(){
     }
 }
 
+void SynEdit::changeDPI(int dpi)
+{
+    if (dpi!=mDPI) {
+        mDPI=dpi;
+    }
+}
+
 void SynEdit::paintEvent(QPaintEvent *event)
 {
+    if (fontMetrics().fontDpi()!=mDPI) {
+        QFont f;
+        f.setFamily(font().family());
+        f.setPointSize(font().pointSize());
+        f.setBold(font().bold());
+        f.setItalic(font().bold());
+        f.setUnderline(font().underline());
+        f.setStrikeOut(font().strikeOut());
+        setFont(f);
+        return;
+    }
     if (mPainterLock>0)
         return;
     if (mPainting)
@@ -6262,18 +6282,6 @@ void SynEdit::dragLeaveEvent(QDragLeaveEvent *)
 //    setBlockBegin(mDragSelBeginSave);
 //    setBlockEnd(mDragSelEndSave);
     //    showCaret();
-}
-
-bool SynEdit::nativeEvent(const QByteArray &eventType, void *message, long *result)
-{
-#ifdef Q_OS_WIN
-    MSG* msg = (MSG*)message;
-    if (msg && msg->message == WM_DPICHANGED) {
-        qDebug()<<"dpi changed!";
-        synFontChanged();
-    }
-#endif
-    return QAbstractScrollArea::nativeEvent(eventType,message,result);
 }
 
 int SynEdit::maxScrollHeight() const

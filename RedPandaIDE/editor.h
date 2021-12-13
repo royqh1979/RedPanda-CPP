@@ -351,13 +351,7 @@ public:
 
 protected:
     void mouseReleaseEvent(QMouseEvent *event) override;
-
-    // QWidget interface
-protected:
     void inputMethodEvent(QInputMethodEvent *) override;
-
-    // QWidget interface
-protected:
     void closeEvent(QCloseEvent *event) override;
 };
 

@@ -1,5 +1,6 @@
 Version 0.11.1 For Dev-C++ 7 Beta
  - enhancement: Problem's test case shouldn't accept rich text inputs
+ - enhancement: recalc layout info for code editors when dpi changed
 
 Version 0.11.0 For Dev-C++ 7 Beta
  - enhancement: redesign the expression parser for code completion

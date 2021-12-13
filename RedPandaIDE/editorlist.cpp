@@ -7,6 +7,7 @@
 #include "settings.h"
 #include "project.h"
 #include "systemconsts.h"
+#include <QApplication>
 
 EditorList::EditorList(QTabWidget* leftPageWidget,
       QTabWidget* rightPageWidget,
@@ -260,6 +261,18 @@ void EditorList::selectPreviousPage()
         pageControl->setCurrentIndex(
                     (pageControl->currentIndex()+pageControl->count()-1) % pageControl->count()
                     );
+    }
+}
+
+void EditorList::notifyDPIChanged(int dpi)
+{
+    for (int i=0;i<mLeftPageWidget->count();i++) {
+        Editor* e = static_cast<Editor*>(mLeftPageWidget->widget(i));
+        e->changeDPI(dpi);
+    }
+    for (int i=0;i<mRightPageWidget->count();i++) {
+        Editor* e = static_cast<Editor*>(mRightPageWidget->widget(i));
+        e->changeDPI(dpi);
     }
 }
 
