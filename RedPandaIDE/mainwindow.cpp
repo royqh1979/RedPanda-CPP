@@ -456,13 +456,14 @@ void MainWindow::updateCompileActions()
         ui->actionRun->setEnabled(false);
         ui->actionRebuild->setEnabled(false);
         ui->actionDebug->setEnabled(false);
+        ui->btnRunAllProblemCases->setEnabled(false);
     } else {
         ui->actionCompile->setEnabled(true);
         ui->actionCompile_Run->setEnabled(true);
         ui->actionRun->setEnabled(true);
         ui->actionRebuild->setEnabled(true);
-
         ui->actionDebug->setEnabled(true);
+        ui->btnRunAllProblemCases->setEnabled(true);
     }
     if (!mDebugger->executing()) {
         disableDebugActions();
@@ -1177,18 +1178,18 @@ void MainWindow::runExecutable(const QString &exeName,const QString &filename,Ru
         }
     } else {
         if (!filename.isEmpty() && compareFileModifiedTime(filename,exeName)>=0) {
-            if (ui->actionCompile_Run->isEnabled()) {
-                if (QMessageBox::warning(this,tr("Confirm"),
-                                         tr("Source file is more recent than executable.")
-                                         +"<br /><br />"+tr("Recompile now?"),
-                        QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
-                    doCompileRun(runType);
-                    return;
-                }
-            } else {
-                QMessageBox::warning(this,"Error",
-                                       tr("Source file is more recent than executable."));
+//            if (ui->actionCompile_Run->isEnabled()) {
+            if (QMessageBox::warning(this,tr("Confirm"),
+                                     tr("Source file is more recent than executable.")
+                                     +"<br /><br />"+tr("Recompile now?"),
+                    QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
+                doCompileRun(runType);
+                return;
             }
+//            } else {
+//                QMessageBox::warning(this,"Error",
+//                                       tr("Source file is more recent than executable."));
+//            }
         }
     }
 
