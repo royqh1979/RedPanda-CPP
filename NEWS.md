@@ -1,5 +1,7 @@
 Version 0.11.2 For Dev-C++ 7 Beta
  - fix: button "run all problem cases" not disabled when compiling or debugging
+ - enhancement: set font for problem case input/output textedits
+ - enhancement: when run problem cases, updates output immediately
 
 Version 0.11.1 For Dev-C++ 7 Beta
  - enhancement: Problem's test case shouldn't accept rich text inputs

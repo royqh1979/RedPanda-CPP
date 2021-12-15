@@ -797,6 +797,15 @@ public:
         bool ignoreSpacesWhenValidatingCases() const;
         void setIgnoreSpacesWhenValidatingCases(bool newIgnoreSpacesWhenValidatingCases);
 
+        const QString &caseEditorFontName() const;
+        void setCaseEditorFontName(const QString &newCaseEditorFontName);
+
+        int caseEditorFontSize() const;
+        void setCaseEditorFontSize(int newCaseEditorFontSize);
+
+        bool caseEditorFontOnlyMonospaced() const;
+        void setCaseEditorFontOnlyMonospaced(bool newCaseEditorFontOnlyMonospaced);
+
     private:
         // general
         bool mPauseConsole;
@@ -811,6 +820,9 @@ public:
         bool mEnableCompetitiveCompanion;
         int mCompetivieCompanionPort;
         bool mIgnoreSpacesWhenValidatingCases;
+        QString mCaseEditorFontName;
+        int mCaseEditorFontSize;
+        bool mCaseEditorFontOnlyMonospaced;
 
     protected:
         void doSave() override;

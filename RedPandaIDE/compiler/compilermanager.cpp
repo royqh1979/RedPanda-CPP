@@ -245,6 +245,7 @@ void CompilerManager::runProblem(const QString &filename, const QString &argumen
     if (mRunner!=nullptr) {
         return;
     }
+
     OJProblemCasesRunner * execRunner = new OJProblemCasesRunner(filename,arguments,workDir,problemCase);
     mRunner = execRunner;
     connect(mRunner, &Runner::finished, this ,&CompilerManager::onRunnerTerminated);
@@ -268,6 +269,7 @@ void CompilerManager::runProblem(const QString &filename, const QString &argumen
     connect(mRunner, &Runner::runErrorOccurred, pMainWindow ,&MainWindow::onRunErrorOccured);
     connect(execRunner, &OJProblemCasesRunner::caseStarted, pMainWindow, &MainWindow::onOJProblemCaseStarted);
     connect(execRunner, &OJProblemCasesRunner::caseFinished, pMainWindow, &MainWindow::onOJProblemCaseFinished);
+    connect(execRunner, &OJProblemCasesRunner::newOutputLineGetted, pMainWindow, &MainWindow::onOJProblemCaseNewOutputLineGetted);
     mRunner->start();
 }
 

@@ -16,6 +16,7 @@ public:
 signals:
     void caseStarted(const QString& id, int current, int total);
     void caseFinished(const QString& id, int current, int total);
+    void newOutputLineGetted(const QString&id, const QString& newOutputLine);
 private:
     void runCase(int index, POJProblemCase problemCase);
 private:

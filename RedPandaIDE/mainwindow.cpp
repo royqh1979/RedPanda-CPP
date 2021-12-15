@@ -545,6 +545,13 @@ void MainWindow::applySettings()
     qApp->setFont(font);
     this->setFont(font);
 
+    QFont caseEditorFont(pSettings->executor().caseEditorFontName(),
+                         pSettings->executor().caseEditorFontSize());
+    font.setStyleStrategy(QFont::PreferAntialias);
+    ui->txtProblemCaseInput->setFont(caseEditorFont);
+    ui->txtProblemCaseOutput->setFont(caseEditorFont);
+    ui->txtProblemCaseExpected->setFont(caseEditorFont);
+
     mTcpServer.close();
     int idxProblem = ui->tabMessages->indexOf(ui->tabProblem);
     ui->tabMessages->setTabEnabled(idxProblem,pSettings->executor().enableProblemSet());
@@ -1193,7 +1200,6 @@ void MainWindow::runExecutable(const QString &exeName,const QString &filename,Ru
         }
     }
 
-    updateCompileActions();
     QString params;
     if (pSettings->executor().useParams()) {
         params = pSettings->executor().params();
@@ -1221,6 +1227,7 @@ void MainWindow::runExecutable(const QString &exeName,const QString &filename,Ru
             ui->tabMessages->setCurrentWidget(ui->tabProblem);
         }
     }
+    updateCompileActions();
     updateAppTitle();
 }
 
@@ -3719,6 +3726,7 @@ void MainWindow::onOJProblemCaseStarted(const QString& id,int current, int total
         POJProblemCase problemCase = mOJProblemModel.getCase(row);
         problemCase->testState = ProblemCaseTestState::Testing;
         mOJProblemModel.update(row);
+        ui->txtProblemCaseOutput->clear();
     }
 }
 
@@ -3741,7 +3749,12 @@ void MainWindow::onOJProblemCaseFinished(const QString& id, int current, int tot
     }
     ui->pbProblemCases->setMaximum(total);
     ui->pbProblemCases->setValue(current);
-//    ui->lblProblem->setText(mOJProblemModel.getProblemTitle());
+    //    ui->lblProblem->setText(mOJProblemModel.getProblemTitle());
+}
+
+void MainWindow::onOJProblemCaseNewOutputLineGetted(const QString &id, const QString &line)
+{
+    ui->txtProblemCaseOutput->append(line);
 }
 
 void MainWindow::cleanUpCPUDialog()

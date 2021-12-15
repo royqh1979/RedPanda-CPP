@@ -47,22 +47,30 @@ void OJProblemCasesRunner::runCase(int index,POJProblemCase problemCase)
     }
     env.insert("PATH",path);
     process.setProcessEnvironment(env);
+    process.setCreateProcessArgumentsModifier([this](QProcess::CreateProcessArguments * args){
+        args->flags |=  CREATE_NEW_CONSOLE;
+        args->startupInfo -> dwFlags |= STARTF_USESHOWWINDOW;
+        args->startupInfo->wShowWindow = SW_HIDE;
+    });
     process.setProcessChannelMode(QProcess::MergedChannels);
     process.connect(&process, &QProcess::errorOccurred,
                     [&](){
                         errorOccurred= true;
                     });
     problemCase->output.clear();
-    process.start();
+    process.start(QProcess::ReadWrite|QProcess::Unbuffered);
     process.waitForStarted(5000);
     if (process.state()==QProcess::Running) {
         process.write(problemCase->input.toUtf8());
         process.closeWriteChannel();
     }
     QByteArray readed;
+    QByteArray buffer;
+    QStringList outputLines;
     while (true) {
-        process.waitForFinished(1000);
-        readed += process.readAll();
+        process.waitForFinished(100);
+        readed = process.readAll();
+        buffer += readed;
         if (process.state()!=QProcess::Running) {
             break;
         }
@@ -76,8 +84,30 @@ void OJProblemCasesRunner::runCase(int index,POJProblemCase problemCase)
         }
         if (errorOccurred)
             break;
+        QList<QByteArray> lines = splitByteArrayToLines(buffer);
+        qDebug()<<"----do buffer----";
+        qDebug()<<readed;
+        qDebug()<<buffer;
+        qDebug()<<lines.count();
+        if (lines.count()>=2) {
+            for (int i=0;i<lines.count()-1;i++) {
+                QString line = QString::fromLocal8Bit(lines[i]);
+                emit newOutputLineGetted(problemCase->getId(),line);
+                outputLines.append(line);
+            }
+            buffer = lines.last();
+            while (buffer.endsWith('\0')) {
+                buffer.remove(buffer.length()-1,1);
+            }
+        }
     }
-    readed += process.readAll();
+    buffer += process.readAll();
+    QList<QByteArray> lines = splitByteArrayToLines(buffer);
+    for (int i=0;i<lines.count();i++) {
+        QString line = QString::fromLocal8Bit(lines[i]);
+        emit newOutputLineGetted(problemCase->getId(),line);
+        outputLines.append(line);
+    }
     if (errorOccurred) {
         //qDebug()<<"process error:"<<process.error();
         switch (process.error()) {
@@ -101,7 +131,7 @@ void OJProblemCasesRunner::runCase(int index,POJProblemCase problemCase)
             break;
         }
     }
-    problemCase->output = QString::fromUtf8(readed);
+    problemCase->output = linesToText(outputLines);
 }
 
 void OJProblemCasesRunner::run()

@@ -106,8 +106,25 @@ void ExecutableRunner::run()
             process.closeReadChannel(QProcess::StandardOutput);
             process.closeReadChannel(QProcess::StandardError);
             process.closeWriteChannel();
+#ifdef Q_OS_WIN
+            if (!mStartConsole) {
+                process.terminate();
+                if (process.waitForFinished(1000)) {
+                    break;
+                }
+            }
+#else
             process.terminate();
-            process.kill();
+            if (process.waitForFinished(1000)) {
+                break;
+            }
+#endif
+            for (int i=0;i<10;i++) {
+                process.kill();
+                if (process.waitForFinished(100)) {
+                    break;
+                }
+            }
             break;
         }
         if (errorOccurred)

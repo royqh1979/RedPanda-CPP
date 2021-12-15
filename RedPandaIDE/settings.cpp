@@ -2878,6 +2878,36 @@ void Settings::Executor::setIgnoreSpacesWhenValidatingCases(bool newIgnoreSpaces
     mIgnoreSpacesWhenValidatingCases = newIgnoreSpacesWhenValidatingCases;
 }
 
+bool Settings::Executor::caseEditorFontOnlyMonospaced() const
+{
+    return mCaseEditorFontOnlyMonospaced;
+}
+
+void Settings::Executor::setCaseEditorFontOnlyMonospaced(bool newCaseEditorFontOnlyMonospaced)
+{
+    mCaseEditorFontOnlyMonospaced = newCaseEditorFontOnlyMonospaced;
+}
+
+int Settings::Executor::caseEditorFontSize() const
+{
+    return mCaseEditorFontSize;
+}
+
+void Settings::Executor::setCaseEditorFontSize(int newCaseEditorFontSize)
+{
+    mCaseEditorFontSize = newCaseEditorFontSize;
+}
+
+const QString &Settings::Executor::caseEditorFontName() const
+{
+    return mCaseEditorFontName;
+}
+
+void Settings::Executor::setCaseEditorFontName(const QString &newCaseEditorFontName)
+{
+    mCaseEditorFontName = newCaseEditorFontName;
+}
+
 bool Settings::Executor::enableCompetitiveCompanion() const
 {
     return mEnableCompetitiveCompanion;
@@ -2911,6 +2941,9 @@ void Settings::Executor::doSave()
     saveValue("enable_competivie_companion", mEnableCompetitiveCompanion);
     saveValue("competitive_companion_port", mCompetivieCompanionPort);
     saveValue("ignore_spaces_when_validating_cases", mIgnoreSpacesWhenValidatingCases);
+    saveValue("case_editor_font_name",mCaseEditorFontName);
+    saveValue("case_editor_font_size",mCaseEditorFontSize);
+    saveValue("case_editor_font_only_monospaced",mCaseEditorFontOnlyMonospaced);
 }
 
 bool Settings::Executor::pauseConsole() const
@@ -2936,6 +2969,9 @@ void Settings::Executor::doLoad()
     mEnableCompetitiveCompanion = boolValue("enable_competivie_companion",true);
     mCompetivieCompanionPort = intValue("competitive_companion_port",10045);
     mIgnoreSpacesWhenValidatingCases = boolValue("ignore_spaces_when_validating_cases",false);
+    mCaseEditorFontName = stringValue("case_editor_font_name","consolas");
+    mCaseEditorFontSize = intValue("case_editor_font_size",14);
+    mCaseEditorFontOnlyMonospaced = boolValue("case_editor_font_only_monospaced",true);
 }
 
 
