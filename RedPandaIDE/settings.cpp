@@ -2232,7 +2232,15 @@ void Settings::CompilerSet::setIniOptions(const QByteArray &value)
 
 QByteArray Settings::CompilerSet::getCompilerOutput(const QString &binDir, const QString &binFile, const QStringList &arguments)
 {
-    QByteArray result = runAndGetOutput(includeTrailingPathDelimiter(binDir)+binFile, binDir, arguments);
+    QProcessEnvironment env;
+    env.insert("LANG","en");
+    QByteArray result = runAndGetOutput(
+                includeTrailingPathDelimiter(binDir)+binFile,
+                binDir,
+                arguments,
+                QByteArray(),
+                false,
+                env);
     return result.trimmed();
 }
 
@@ -2290,6 +2298,13 @@ Settings::PCompilerSet Settings::CompilerSets::addSet(const QString &folder)
     PCompilerSet p=std::make_shared<CompilerSet>(folder);
     mList.push_back(p);
     return p;
+}
+
+static void set64_32Options(Settings::PCompilerSet pSet) {
+    PCompilerOption pOption = pSet->findOption("-");
+    if (pOption) {
+        pSet->setOption(pOption,'1');
+    }
 }
 
 static void setReleaseOptions(Settings::PCompilerSet pSet) {
@@ -2370,6 +2385,27 @@ void Settings::CompilerSets::addSets(const QString &folder)
     QString baseName = baseSet->name();
     QString platformName;
     if (baseSet->target() == "x86_64") {
+        if (baseName.startsWith("TDM-GCC ")) {
+            platformName = "32-bit";
+            baseSet->setName(baseName + " " + platformName + " Release");
+            baseSet->setCompilerSetType(CompilerSetType::CST_RELEASE);
+            set64_32Options(baseSet);
+            setReleaseOptions(baseSet);
+
+            baseSet = addSet(folder);
+            baseSet->setName(baseName + " " + platformName + " Debug");
+            baseSet->setCompilerSetType(CompilerSetType::CST_DEBUG);
+            set64_32Options(baseSet);
+            setDebugOptions(baseSet);
+
+            baseSet = addSet(folder);
+            baseSet->setName(baseName + " " + platformName + " Profiling");
+            baseSet->setCompilerSetType(CompilerSetType::CST_PROFILING);
+            set64_32Options(baseSet);
+            setProfileOptions(baseSet);
+
+            baseSet = addSet(folder);
+        }
         platformName = "64-bit";
     } else {
         platformName = "32-bit";

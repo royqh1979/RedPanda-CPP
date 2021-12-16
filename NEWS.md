@@ -1,9 +1,12 @@
 Version 0.11.2 For Dev-C++ 7 Beta
  - fix: button "run all problem cases" not disabled when compiling or debugging
  - enhancement: set font for problem case input/output textedits
- - enhancement: when run problem cases, updates output immediately
+ - enhancement: when run program with problem cases, updates output immediately (note: stdout of the program running with problem cases is fully buffered,
+ so we need to fflush after each time output to stdout, or use setbuf(stdout,NULL) to turn the buffer off)
  - fix: current line of the disassembly in the cpu window not correctly setted
  - enhancement: add "step into one machine instruction" and "step over one machine instruction" in the cpu window
+ - fix: can't correctly set TDM-GCC compiler
+ - fix: auto add 32-bit compiler sets for TDM64-GCC
 
 Version 0.11.1 For Dev-C++ 7 Beta
  - enhancement: Problem's test case shouldn't accept rich text inputs

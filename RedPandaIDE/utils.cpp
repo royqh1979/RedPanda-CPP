@@ -115,14 +115,20 @@ bool isGreenEdition()
     return gIsGreenEdition;
 }
 
-QByteArray runAndGetOutput(const QString &cmd, const QString& workingDir, const QStringList& arguments, const QByteArray &inputContent, bool inheritEnvironment)
+QByteArray runAndGetOutput(const QString &cmd, const QString& workingDir, const QStringList& arguments,
+                           const QByteArray &inputContent, bool inheritEnvironment,
+                           const QProcessEnvironment& env)
 {
     QProcess process;
     QByteArray result;
-    if (inheritEnvironment) {
-        process.setProcessEnvironment(QProcessEnvironment::systemEnvironment());
+    if (env.isEmpty()) {
+        if (inheritEnvironment) {
+            process.setProcessEnvironment(QProcessEnvironment::systemEnvironment());
+        } else {
+            process.setProcessEnvironment(QProcessEnvironment());
+        }
     } else {
-        process.setProcessEnvironment(QProcessEnvironment());
+        process.setProcessEnvironment(env);
     }
     process.setWorkingDirectory(workingDir);
     process.connect(&process,&QProcess::readyReadStandardError,

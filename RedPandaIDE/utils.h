@@ -9,6 +9,7 @@
 #include <QStringList>
 #include <memory>
 #include <QThread>
+#include <QProcessEnvironment>
 #include "SimpleIni.h"
 
 using SimpleIni = CSimpleIniA;
@@ -120,7 +121,8 @@ bool isTextAllAscii(const QString& text);
 
 QByteArray runAndGetOutput(const QString& cmd, const QString& workingDir, const QStringList& arguments,
                            const QByteArray& inputContent = QByteArray(),
-                           bool inheritEnvironment = false);
+                           bool inheritEnvironment = false,
+                           const QProcessEnvironment& env = QProcessEnvironment() );
 
 void executeFile(const QString& fileName,
                  const QString& params,
