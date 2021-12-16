@@ -65,6 +65,12 @@ void CPUDialog::updateInfo()
     }
 }
 
+void CPUDialog::updateButtonStates(bool enable)
+{
+    ui->btnStepIntoInstruction->setEnabled(enable);
+    ui->btnStepOverInstruction->setEnabled(enable);
+}
+
 void CPUDialog::setDisassembly(const QString& file, const QString& funcName,const QStringList& lines)
 {
     ui->txtFunctionName->setText(QString("%1:%2").arg(file, funcName));
@@ -78,7 +84,7 @@ void CPUDialog::setDisassembly(const QString& file, const QString& funcName,cons
         ui->txtCode->lines()->add(line);
     }
     if (activeLine!=-1)
-        ui->txtCode->setCaretXYCentered(true,BufferCoord{1,activeLine});
+        ui->txtCode->setCaretXYEx(true,BufferCoord{1,activeLine+1});
 }
 
 void CPUDialog::sendSyntaxCommand()
@@ -117,3 +123,15 @@ void CPUDialog::on_chkBlendMode_stateChanged(int)
     pSettings->debugger().setBlendMode(ui->chkBlendMode->isCheckable());
     pSettings->debugger().save();
 }
+
+void CPUDialog::on_btnStepOverInstruction_clicked()
+{
+    pMainWindow->debugger()->sendCommand("-exec-next-instruction","");
+}
+
+
+void CPUDialog::on_btnStepIntoInstruction_clicked()
+{
+    pMainWindow->debugger()->sendCommand("-exec-step-instruction","");
+}
+

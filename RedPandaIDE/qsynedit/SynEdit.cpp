@@ -203,10 +203,10 @@ void SynEdit::setCaretY(int value)
 
 void SynEdit::setCaretXY(const BufferCoord &value)
 {
-    setCaretXYCentered(false,value);
+    setCaretXYEx(true,value);
 }
 
-void SynEdit::setCaretXYEx(bool CallEnsureCursorPos, BufferCoord value)
+void SynEdit::setCaretXYEx(bool CallEnsureCursorPosVisible, BufferCoord value)
 {
     bool vTriggerPaint=true; //how to test it?
 
@@ -260,7 +260,7 @@ void SynEdit::setCaretXYEx(bool CallEnsureCursorPos, BufferCoord value)
         // calls could raise an exception, and we don't want fLastCaretX to be
         // left in an undefined state if that happens.
         updateLastCaretX();
-        if (CallEnsureCursorPos)
+        if (CallEnsureCursorPosVisible)
             ensureCursorPosVisible();
         mStateFlags.setFlag(SynStateFlag::sfCaretChanged);
         mStateFlags.setFlag(SynStateFlag::sfScrollbarChanged);
@@ -279,21 +279,20 @@ void SynEdit::setCaretXYEx(bool CallEnsureCursorPos, BufferCoord value)
 
 }
 
-void SynEdit::setCaretXYCentered(bool ForceToMiddle, const BufferCoord &value)
+void SynEdit::setCaretXYCentered(const BufferCoord &value)
 {
     incPaintLock();
     auto action = finally([this] {
         decPaintLock();
     });
     mStatusChanges.setFlag(SynStatusChange::scSelection);
-    setCaretXYEx(ForceToMiddle,value);
+    setCaretXYEx(false,value);
     if (selAvail())
         invalidateSelection();
     mBlockBegin.Char = mCaretX;
     mBlockBegin.Line = mCaretY;
     mBlockEnd = mBlockBegin;
-    if (ForceToMiddle)
-        ensureCursorPosVisibleEx(true); // but here after block has been set
+    ensureCursorPosVisibleEx(true); // but here after block has been set
 }
 
 void SynEdit::uncollapseAroundLine(int line)

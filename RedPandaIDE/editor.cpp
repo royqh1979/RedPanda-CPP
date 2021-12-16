@@ -1249,7 +1249,7 @@ void Editor::copyAsHTML()
 void Editor::setCaretPosition(int line, int aChar)
 {
     this->uncollapseAroundLine(line);
-    this->setCaretXYCentered(true,BufferCoord{aChar,line});
+    this->setCaretXYCentered(BufferCoord{aChar,line});
 }
 
 void Editor::setCaretPositionAndActivate(int line, int aChar)
@@ -1257,7 +1257,7 @@ void Editor::setCaretPositionAndActivate(int line, int aChar)
     this->uncollapseAroundLine(line);
     if (!this->hasFocus())
         this->activate();
-    this->setCaretXYCentered(true,BufferCoord{aChar,line});
+    this->setCaretXYCentered(BufferCoord{aChar,line});
 }
 
 void Editor::addSyntaxIssues(int line, int startChar, int endChar, CompileIssueType errorType, const QString &hint)

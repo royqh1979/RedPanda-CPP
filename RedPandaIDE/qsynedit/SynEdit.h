@@ -213,8 +213,8 @@ public:
     void setCaretX(int value);
     void setCaretY(int value);
     void setCaretXY(const BufferCoord& value);
-    void setCaretXYEx(bool CallEnsureCursorPos, BufferCoord value);
-    void setCaretXYCentered(bool ForceToMiddle, const BufferCoord& value);
+    void setCaretXYEx(bool CallEnsureCursorPosVisible, BufferCoord value);
+    void setCaretXYCentered(const BufferCoord& value);
     void setCaretAndSelection(const BufferCoord& ptCaret,
                               const BufferCoord& ptBefore,
                               const BufferCoord& ptAfter);

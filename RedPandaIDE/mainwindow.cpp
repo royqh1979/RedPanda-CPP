@@ -3076,6 +3076,9 @@ void MainWindow::disableDebugActions()
     ui->actionContinue->setEnabled(false);
     ui->cbEvaluate->setEnabled(false);
     ui->cbMemoryAddress->setEnabled(false);
+    if (mCPUDialog) {
+        mCPUDialog->updateButtonStates(false);
+    }
 }
 
 void MainWindow::enableDebugActions()
@@ -3087,6 +3090,9 @@ void MainWindow::enableDebugActions()
     ui->actionContinue->setEnabled(!mDebugger->inferiorRunning());
     ui->cbEvaluate->setEnabled(!mDebugger->inferiorRunning());
     ui->cbMemoryAddress->setEnabled(!mDebugger->inferiorRunning());
+    if (mCPUDialog) {
+        mCPUDialog->updateButtonStates(true);
+    }
 }
 
 void MainWindow::onTodoParseStarted(const QString&)

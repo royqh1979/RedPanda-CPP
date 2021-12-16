@@ -84,10 +84,11 @@ void ExecutableRunner::run()
             args->startupInfo -> dwFlags &= ~STARTF_USESTDHANDLES;
         }
     });
-    process.connect(&process, &QProcess::errorOccurred,
-                    [&](){
-                        errorOccurred= true;
-                    });
+    process.connect(
+                &process, &QProcess::errorOccurred,
+                [&](){
+        errorOccurred= true;
+    });
 //    if (!redirectInput()) {
 //        process.closeWriteChannel();
 //    }

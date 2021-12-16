@@ -15,6 +15,7 @@ public:
     explicit CPUDialog(QWidget *parent = nullptr);
     ~CPUDialog();
     void updateInfo();
+    void updateButtonStates(bool enable);
 public slots:
     void setDisassembly(const QString& file, const QString& funcName,const QStringList& lines);
 signals:
@@ -30,6 +31,8 @@ private slots:
     void on_rdIntel_toggled(bool checked);
     void on_rdATT_toggled(bool checked);
     void on_chkBlendMode_stateChanged(int arg1);
+    void on_btnStepOverInstruction_clicked();
+    void on_btnStepIntoInstruction_clicked();
 };
 
 #endif // CPUDIALOG_H

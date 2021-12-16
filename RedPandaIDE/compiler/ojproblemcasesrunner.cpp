@@ -47,18 +47,14 @@ void OJProblemCasesRunner::runCase(int index,POJProblemCase problemCase)
     }
     env.insert("PATH",path);
     process.setProcessEnvironment(env);
-    process.setCreateProcessArgumentsModifier([this](QProcess::CreateProcessArguments * args){
-        args->flags |=  CREATE_NEW_CONSOLE;
-        args->startupInfo -> dwFlags |= STARTF_USESHOWWINDOW;
-        args->startupInfo->wShowWindow = SW_HIDE;
-    });
     process.setProcessChannelMode(QProcess::MergedChannels);
-    process.connect(&process, &QProcess::errorOccurred,
-                    [&](){
-                        errorOccurred= true;
-                    });
+    process.connect(
+                &process, &QProcess::errorOccurred,
+                [&](){
+        errorOccurred= true;
+    });
     problemCase->output.clear();
-    process.start(QProcess::ReadWrite|QProcess::Unbuffered);
+    process.start();
     process.waitForStarted(5000);
     if (process.state()==QProcess::Running) {
         process.write(problemCase->input.toUtf8());
@@ -85,10 +81,10 @@ void OJProblemCasesRunner::runCase(int index,POJProblemCase problemCase)
         if (errorOccurred)
             break;
         QList<QByteArray> lines = splitByteArrayToLines(buffer);
-        qDebug()<<"----do buffer----";
-        qDebug()<<readed;
-        qDebug()<<buffer;
-        qDebug()<<lines.count();
+//        qDebug()<<"----do buffer----";
+//        qDebug()<<readed;
+//        qDebug()<<buffer;
+//        qDebug()<<lines.count();
         if (lines.count()>=2) {
             for (int i=0;i<lines.count()-1;i++) {
                 QString line = QString::fromLocal8Bit(lines[i]);
@@ -140,10 +136,10 @@ void OJProblemCasesRunner::run()
     auto action = finally([this]{
         emit terminated();
     });
-    for (int i=0;i<mProblemCases.size();i++) {
+    for (int i=0; i < mProblemCases.size(); i++) {
         if (mStop)
             break;
-        POJProblemCase problemCase =mProblemCases[i];
+        POJProblemCase problemCase = mProblemCases[i];
         runCase(i,problemCase);
     }
 }
