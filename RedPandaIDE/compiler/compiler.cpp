@@ -529,8 +529,8 @@ void Compiler::runCommand(const QString &cmd, const QString  &arguments, const Q
     bool errorOccurred = false;
     process.setProgram(cmd);
     QString cmdDir = extractFileDir(cmd);
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
     if (!cmdDir.isEmpty()) {
-        QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
         QString path = env.value("PATH");
         if (path.isEmpty()) {
             path = cmdDir;
@@ -538,8 +538,9 @@ void Compiler::runCommand(const QString &cmd, const QString  &arguments, const Q
             path = cmdDir + PATH_SEPARATOR + path;
         }
         env.insert("PATH",path);
-        process.setProcessEnvironment(env);
     }
+    env.insert("LANG","en");
+    process.setProcessEnvironment(env);
     process.setArguments(QProcess::splitCommand(arguments));
     process.setWorkingDirectory(workingDir);
 
