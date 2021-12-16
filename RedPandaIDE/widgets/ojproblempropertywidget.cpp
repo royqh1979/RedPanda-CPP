@@ -16,7 +16,7 @@ OJProblemPropertyWidget::~OJProblemPropertyWidget()
 void OJProblemPropertyWidget::setName(const QString &name)
 {
     QFont f = ui->lbName->font();
-    f.setPointSize(f.pointSize()+2);
+    f.setPixelSize(f.pixelSize()+2);
     f.setBold(true);
     ui->lbName->setFont(f);
     ui->lbName->setText(name);

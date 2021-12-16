@@ -21,6 +21,7 @@
 #include <QMessageBox>
 #include <QDrag>
 #include <QMimeData>
+#include <QDesktopWidget>
 
 SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
 {
@@ -148,6 +149,7 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
 
     //setMouseTracking(true);
     setAcceptDrops(true);
+
 }
 
 int SynEdit::displayLineCount() const
@@ -4442,20 +4444,20 @@ void SynEdit::doRedoItem()
 void SynEdit::doZoomIn()
 {
     QFont newFont = font();
-    int size = newFont.pointSize();
+    int size = newFont.pixelSize();
     size++;
-    newFont.setPointSize(size);
+    newFont.setPixelSize(size);
     setFont(newFont);
 }
 
 void SynEdit::doZoomOut()
 {
     QFont newFont = font();
-    int size = newFont.pointSize();
+    int size = newFont.pixelSize();
     size--;
     if (size<2)
         size = 2;
-    newFont.setPointSize(size);
+    newFont.setPixelSize(size);
     setFont(newFont);
 }
 
@@ -5818,17 +5820,6 @@ void SynEdit::paintEvent(QPaintEvent *event)
 
     // Now paint everything while the caret is hidden.
     QPainter painter(viewport());
-    if (fontMetrics().fontDpi()!=painter.device()->logicalDpiX()) {
-        QFont f;
-        f.setFamily(font().family());
-        f.setPointSize(font().pointSize());
-        f.setBold(font().bold());
-        f.setItalic(font().bold());
-        f.setUnderline(font().underline());
-        f.setStrikeOut(font().strikeOut());
-        setFont(f);
-        return;
-    }
     //Get the invalidated rect.
     QRect rcClip = event->rect();
     QRect rcCaret = calculateCaretRect();

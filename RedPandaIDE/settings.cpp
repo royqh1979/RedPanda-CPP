@@ -9,6 +9,7 @@
 #include <QMessageBox>
 #include <QStandardPaths>
 #include <QScreen>
+#include <QDesktopWidget>
 
 const char ValueToChar[28] = {'0', '1', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',
                               'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
@@ -1166,7 +1167,7 @@ void Settings::Editor::doLoad()
     //Font
     //font
     mFontName = stringValue("font_name","consolas");
-    mFontSize = intValue("font_size",14);
+    mFontSize = intValue("font_size",16*qApp->desktop()->logicalDpiY()/96);
     mFontOnlyMonospaced = boolValue("font_only_monospaced",true);
 
     //gutter
@@ -1180,7 +1181,7 @@ void Settings::Editor::doLoad()
     mGutterLineNumbersStartZero = boolValue("gutter_line_numbers_start_zero",false);
     mGutterUseCustomFont = boolValue("gutter_use_custom_font",false);
     mGutterFontName = stringValue("gutter_font_name","consolas");
-    mGutterFontSize = intValue("gutter_font_size",14);
+    mGutterFontSize = intValue("gutter_font_size",16*qApp->desktop()->logicalDpiY()/96);
     mGutterFontOnlyMonospaced = boolValue("gutter_font_only_monospaced",true);
 
     //copy
@@ -2753,8 +2754,8 @@ void Settings::Environment::doLoad()
             defaultFontName = fontName;
         }
     }
-    mInterfaceFont = stringValue("interface font",defaultFontName);
-    mInterfaceFontSize = intValue("interface font size",10);
+    mInterfaceFont = stringValue("interface_font",defaultFontName);
+    mInterfaceFontSize = intValue("interface_font_size",12*qApp->desktop()->logicalDpiY()/96);
     mLanguage = stringValue("language", QLocale::system().name());
 
     mCurrentFolder = stringValue("current_folder",QDir::currentPath());
@@ -2811,8 +2812,8 @@ void Settings::Environment::doSave()
 {
     //Appearence
     saveValue("theme", mTheme);
-    saveValue("interface font", mInterfaceFont);
-    saveValue("interface font size", mInterfaceFontSize);
+    saveValue("interface_font", mInterfaceFont);
+    saveValue("interface_font_size", mInterfaceFontSize);
     saveValue("language", mLanguage);
 
     saveValue("current_folder",mCurrentFolder);
@@ -3006,7 +3007,7 @@ void Settings::Executor::doLoad()
     mCompetivieCompanionPort = intValue("competitive_companion_port",10045);
     mIgnoreSpacesWhenValidatingCases = boolValue("ignore_spaces_when_validating_cases",false);
     mCaseEditorFontName = stringValue("case_editor_font_name","consolas");
-    mCaseEditorFontSize = intValue("case_editor_font_size",14);
+    mCaseEditorFontSize = intValue("case_editor_font_size",14*qApp->desktop()->logicalDpiY()/96);
     mCaseEditorFontOnlyMonospaced = boolValue("case_editor_font_only_monospaced",true);
 }
 
@@ -3170,7 +3171,7 @@ void Settings::Debugger::doLoad()
     mShowDetailLog = boolValue("show_detail_log",false);
     mFontName = stringValue("font_name","Consolas");
     mOnlyShowMono = boolValue("only_show_mono",true);
-    mFontSize = intValue("font_size",12);
+    mFontSize = intValue("font_size",12*qApp->desktop()->logicalDpiY()/96);
     mUseIntelStyle = boolValue("use_intel_style",true);
     mBlendMode = boolValue("blend_mode",true);
     mSkipSystemLibraries = boolValue("skip_system_lib",true);
