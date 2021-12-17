@@ -4078,7 +4078,7 @@ void Editor::applySettings()
     codeFolding().fillIndents = pSettings->editor().fillIndents();
 
     QFont f=QFont(pSettings->editor().fontName());
-    f.setPixelSize(pSettings->editor().fontSize());
+    f.setPixelSize(pointToPixel(pSettings->editor().fontSize()));
     f.setStyleStrategy(QFont::PreferAntialias);
     setFont(f);
 
@@ -4089,10 +4089,10 @@ void Editor::applySettings()
     gutter().setUseFontStyle(pSettings->editor().gutterUseCustomFont());
     if (pSettings->editor().gutterUseCustomFont()) {
         f=QFont(pSettings->editor().gutterFontName());
-        f.setPixelSize(pSettings->editor().gutterFontSize());
+        f.setPixelSize(pointToPixel(pSettings->editor().gutterFontSize()));
     } else {
         f=QFont(pSettings->editor().fontName());
-        f.setPixelSize(pSettings->editor().fontSize());
+        f.setPixelSize(pointToPixel(pSettings->editor().fontSize()));
     }
     f.setStyleStrategy(QFont::PreferAntialias);
     gutter().setFont(f);

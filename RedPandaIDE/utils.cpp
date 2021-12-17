@@ -15,6 +15,7 @@
 #include <QStyleFactory>
 #include <QDateTime>
 #include <QColor>
+#include <QDesktopWidget>
 #include "parser/cppparser.h"
 #include "settings.h"
 #include "mainwindow.h"
@@ -956,4 +957,14 @@ QString localizePath(const QString &path)
     QString result = path;
     result.replace("/",QDir::separator());
     return result;
+}
+
+float pointToPixel(float point)
+{
+    return point * qApp->desktop()->logicalDpiY() / 72;
+}
+
+float pixelToPoint(float pixel)
+{
+    return pixel * 72 / qApp->desktop()->logicalDpiY();
 }

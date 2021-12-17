@@ -204,6 +204,9 @@ bool readRegistry(HKEY key,const QByteArray& subKey, const QByteArray& name, QSt
 class CppParser;
 void resetCppParser(std::shared_ptr<CppParser> parser);
 
+float pointToPixel(float point);
+float pixelToPoint(float pixel);
+
 
 /**
  * from https://github.com/Microsoft/GSL

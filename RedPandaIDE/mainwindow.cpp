@@ -540,13 +540,13 @@ void MainWindow::applySettings()
     updateEditorColorSchemes();
 
     QFont font(pSettings->environment().interfaceFont());
-    font.setPixelSize(pSettings->environment().interfaceFontSize());
+    font.setPixelSize(pointToPixel(pSettings->environment().interfaceFontSize()));
     font.setStyleStrategy(QFont::PreferAntialias);
     qApp->setFont(font);
     this->setFont(font);
 
     QFont caseEditorFont(pSettings->executor().caseEditorFontName());
-    caseEditorFont.setPixelSize(pSettings->executor().caseEditorFontSize());
+    caseEditorFont.setPixelSize(pointToPixel(pSettings->executor().caseEditorFontSize()));
     font.setStyleStrategy(QFont::PreferAntialias);
     ui->txtProblemCaseInput->setFont(caseEditorFont);
     ui->txtProblemCaseOutput->setFont(caseEditorFont);
@@ -1071,7 +1071,7 @@ void MainWindow::updateCompilerSet()
 void MainWindow::updateDebuggerSettings()
 {
     QFont font(pSettings->debugger().fontName());
-    font.setPixelSize(pSettings->debugger().fontSize());
+    font.setPixelSize(pointToPixel(pSettings->debugger().fontSize()));
     ui->debugConsole->setFont(font);
     ui->txtMemoryView->setFont(font);
     ui->txtLocals->setFont(font);
