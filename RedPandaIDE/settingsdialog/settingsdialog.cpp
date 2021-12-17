@@ -37,6 +37,7 @@
 #include <QDebug>
 #include <QMessageBox>
 #include <QModelIndex>
+#include <QDesktopWidget>
 
 SettingsDialog::SettingsDialog(QWidget *parent) :
     QDialog(parent),
@@ -51,7 +52,10 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     ui->btnApply->setEnabled(false);
 
     mAppShouldQuit = false;
-
+    QSize size;
+    size.setWidth(width()*qApp->desktop()->width()/1920);
+    size.setHeight(height()*qApp->desktop()->height()/1080);
+    setBaseSize(size);
 }
 
 SettingsDialog::~SettingsDialog()

@@ -1,3 +1,4 @@
+#include <QDesktopWidget>
 #include "cpudialog.h"
 #include "ui_cpudialog.h"
 #include "../HighlighterManager.h"
@@ -39,12 +40,10 @@ CPUDialog::CPUDialog(QWidget *parent) :
 
     ui->rdIntel->setChecked(pSettings->debugger().useIntelStyle());
     ui->chkBlendMode->setChecked(pSettings->debugger().blendMode());
-//    RadioATT.Checked := devData.UseATTSyntax;
-//    RadioIntel.Checked := not devData.UseATTSyntax;
-
-//    fRegisters := TList.Create;
-//    fAssembler := TStringList.Create;
-    //updateInfo();
+    QSize size;
+    size.setWidth(width()*qApp->desktop()->width()/1920);
+    size.setHeight(height()*qApp->desktop()->height()/1080);
+    setBaseSize(size);
 }
 
 CPUDialog::~CPUDialog()
