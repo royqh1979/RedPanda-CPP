@@ -249,7 +249,7 @@ private:
     TipType getTipType(QPoint point, BufferCoord& pos);
     void cancelHint();
     QString getFileHint(const QString& s);
-    QString getParserHint(const QString& s, int line);
+    QString getParserHint(const QStringList& expression,const QString& s, int line);
     void showDebugHint(const QString& s,int line);
     QString getErrorHint(const PSyntaxIssue& issue);
     QString getHintForFunction(const PStatement& statement, const PStatement& scope,
@@ -260,7 +260,7 @@ private:
     void popUserCodeInTabStops();
     void onExportedFormatToken(PSynHighlighter syntaxHighlighter, int Line, int column, const QString& token,
         PSynHighlighterAttribute &attr);
-    QStringList getExpressionAtPositionForCompletion(
+    QStringList getExpressionAtPosition(
             const BufferCoord& pos);
 private:
     QByteArray mEncodingOption; // the encoding type set by the user

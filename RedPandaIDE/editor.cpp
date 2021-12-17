@@ -972,6 +972,7 @@ bool Editor::event(QEvent *event)
         bool isIncludeLine = false;
         BufferCoord pBeginPos,pEndPos;
         QString s;
+        QStringList expression;
         switch (reason) {
         case TipType::Preprocessor:
             // When hovering above a preprocessor line, determine if we want to show an include or a identifier hint
@@ -985,8 +986,10 @@ bool Editor::event(QEvent *event)
                 s = getWordAtPosition(this,p, pBeginPos,pEndPos, WordPurpose::wpEvaluation); // debugging
             else if (//devEditor.ParserHints and
                      !mCompletionPopup->isVisible()
-                     && !mHeaderCompletionPopup->isVisible())
-                s = getWordAtPosition(this,p, pBeginPos,pEndPos, WordPurpose::wpInformation); // information during coding
+                     && !mHeaderCompletionPopup->isVisible()) {
+                expression = getExpressionAtPosition(p);
+                s = expression.join(""); // information during coding
+            }
             break;
         case TipType::Selection:
             s = selText(); // when a selection is available, always only use that
@@ -1028,7 +1031,7 @@ bool Editor::event(QEvent *event)
                      !mCompletionPopup->isVisible()
                      && !mHeaderCompletionPopup->isVisible()) {
                 if (pSettings->editor().enableIdentifierToolTips())
-                    hint = getParserHint(s,p.Line);
+                    hint = getParserHint(QStringList(),s,p.Line);
             }
             break;
         case TipType::Identifier:
@@ -1039,7 +1042,7 @@ bool Editor::event(QEvent *event)
                         && (pSettings->editor().enableDebugTooltips())) {
                     showDebugHint(s,p.Line);
                 } else if (pSettings->editor().enableIdentifierToolTips()) { //if devEditor.ParserHints {
-                    hint = getParserHint(s, p.Line);
+                    hint = getParserHint(expression, s, p.Line);
                 }
             }
             break;
@@ -1627,7 +1630,7 @@ QStringList Editor::getOwnerExpressionAndMemberAtPositionForCompletion(
         QString &memberOperator,
         QStringList &memberExpression)
 {
-    QStringList expression = getExpressionAtPositionForCompletion(pos);
+    QStringList expression = getExpressionAtPosition(pos);
     //find position of the last member operator
     int lastMemberOperatorPos = -1;
     int currentMatchingLevel = 0;
@@ -1675,7 +1678,7 @@ QStringList Editor::getOwnerExpressionAndMemberAtPositionForCompletion(
     return ownerExpression;
 }
 
-QStringList Editor::getExpressionAtPositionForCompletion(
+QStringList Editor::getExpressionAtPosition(
         const BufferCoord &pos)
 {
     QStringList result;
@@ -3092,11 +3095,25 @@ QString Editor::getFileHint(const QString &s)
     return "";
 }
 
-QString Editor::getParserHint(const QString &s, int line)
+QString Editor::getParserHint(const QStringList& expression,const QString &s, int line)
 {
     // This piece of code changes the parser database, possibly making hints and code completion invalid...
     QString result;
-    PStatement statement = mParser->findStatementOf(mFilename, s, line);
+    PStatement statement;
+    if (expression.count()>1) {
+        PEvalStatement evalStatement = mParser->evalExpression(
+                    mFilename,expression,
+                    mParser->findAndScanBlockAt(mFilename,line));
+        if (evalStatement) {
+            if (evalStatement->kind == EvalStatementKind::Type) {
+                statement = evalStatement->effectiveTypeStatement;
+            } else {
+                statement = evalStatement->baseStatement;
+            }
+        }
+    } else {
+        statement = mParser->findStatementOf(mFilename, s, line);
+    }
     if (!statement)
         return result;
     if (statement->kind == StatementKind::skFunction
