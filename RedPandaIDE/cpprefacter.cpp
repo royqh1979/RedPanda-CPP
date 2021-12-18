@@ -24,13 +24,12 @@ bool CppRefacter::findOccurence(Editor *editor, const BufferCoord &pos)
         editor->parser()->unFreeze();
     });
     // get full phrase (such as s.name instead of name)
-    BufferCoord pBeginPos,pEndPos;
-    QString phrase = getWordAtPosition(editor,pos,pBeginPos,pEndPos,Editor::WordPurpose::wpInformation);
+    QStringList expression = editor->getExpressionAtPosition(pos);
     // Find it's definition
     PStatement statement = editor->parser()->findStatementOf(
                 editor->filename(),
-                phrase,
-                pos.Line);
+                expression,
+                editor->parser()->findAndScanBlockAt(editor->filename(),pos.Line));
     // definition of the symbol not found
     if (!statement)
         return false;

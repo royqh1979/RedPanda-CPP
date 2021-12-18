@@ -49,6 +49,10 @@ public:
                                const QString& phrase,
                                const PStatement& currentClass,
                                bool force = false);
+
+    PStatement findStatementOf(const QString& fileName,
+                               const QStringList& expression,
+                               const PStatement& currentScope);
     /**
      * @brief evaluate the expression
      * @param fileName
@@ -85,13 +89,6 @@ public:
     QSet<QString> scannedFiles();
 
     QString prettyPrintStatement(const PStatement& statement, const QString& filename, int line = -1);
-
-    /**
-     * @brief test if the token is a member/scope operator
-     * @param token
-     * @return true if it is, false if not
-     */
-    bool isMemberOperator(QString token)  const;
 
     bool enabled() const;
     void setEnabled(bool newEnabled);
@@ -452,7 +449,6 @@ private:
     GetFileStreamCallBack mOnGetFileStream;
     QMap<QString,SkipType> mCppKeywords;
     QSet<QString> mCppTypeKeywords;
-    QSet<QString> mMemberOperators;
 };
 using PCppParser = std::shared_ptr<CppParser>;
 

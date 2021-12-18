@@ -39,11 +39,6 @@ CppParser::CppParser(QObject *parent) : QObject(parent)
     //mBlockBeginSkips;
     //mBlockEndSkips;
     //mInlineNamespaceEndSkips;
-    mMemberOperators.insert(".");
-    mMemberOperators.insert("::");
-    mMemberOperators.insert("->");
-    mMemberOperators.insert("->*");
-    mMemberOperators.insert(".*");
 }
 
 CppParser::~CppParser()
@@ -418,6 +413,38 @@ PStatement CppParser::findStatementOf(const QString &fileName, const QString &ph
 {
     PStatement statementParentType;
     return findStatementOf(fileName,phrase,currentClass,statementParentType,force);
+}
+
+PStatement CppParser::findStatementOf(const QString &fileName, const QStringList &expression, const PStatement &currentScope)
+{
+    QMutexLocker locker(&mMutex);
+    if (mParsing)
+        return PStatement();
+    QString memberOperator;
+    QStringList memberExpression;
+    QStringList ownerExpression = getOwnerExpressionAndMember(expression,memberOperator,memberExpression);
+    if (memberExpression.isEmpty()) {
+        return PStatement();
+    }
+    QString phrase = memberExpression[0];
+    if (memberOperator.isEmpty()) {
+        return findStatementStartingFrom(fileName,phrase,currentScope);
+    } else if (ownerExpression.isEmpty()) {
+        return findMemberOfStatement(phrase,PStatement());
+    } else {
+        int pos = 0;
+        PEvalStatement ownerEvalStatement = doEvalExpression(fileName,
+                                ownerExpression,
+                                pos,
+                                currentScope,
+                                PEvalStatement(),
+                                true);
+        if (!ownerEvalStatement) {
+            return PStatement();
+        }
+        return findMemberOfStatement(phrase, ownerEvalStatement->effectiveTypeStatement);
+    }
+
 }
 
 PStatement CppParser::findStatementStartingFrom(const QString &fileName, const QString &phrase, const PStatement& startScope)
@@ -4608,10 +4635,7 @@ void CppParser::updateSerialId()
     mSerialId = QString("%1 %2").arg(mParserId).arg(mSerialCount);
 }
 
-bool CppParser::isMemberOperator(QString token)  const
-{
-    return mMemberOperators.contains(token);
-}
+
 
 const StatementModel &CppParser::statementList() const
 {

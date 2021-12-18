@@ -1631,51 +1631,7 @@ QStringList Editor::getOwnerExpressionAndMemberAtPositionForCompletion(
         QStringList &memberExpression)
 {
     QStringList expression = getExpressionAtPosition(pos);
-    //find position of the last member operator
-    int lastMemberOperatorPos = -1;
-    int currentMatchingLevel = 0;
-    QString matchingSignLeft;
-    QString matchingSignRight;
-    for (int i=0;i<expression.length();i++) {
-        QString token = expression[i];
-        if (currentMatchingLevel == 0) {
-            if (mParser->isMemberOperator(token)) {
-                lastMemberOperatorPos = i;
-            } else if (token == "(") {
-                matchingSignLeft = "(";
-                matchingSignRight = ")";
-                currentMatchingLevel++;
-            } else if (token == "[") {
-                matchingSignLeft = "[";
-                matchingSignRight = "]";
-                currentMatchingLevel++;
-            } else if (token == "<") {
-                matchingSignLeft = "<";
-                matchingSignRight = ">";
-                currentMatchingLevel++;
-            }
-        } else {
-            if (token == matchingSignLeft) {
-                currentMatchingLevel++;
-            } else if (token == matchingSignRight) {
-                currentMatchingLevel--;
-            }
-        }
-    }
-
-    QStringList ownerExpression;
-    if (lastMemberOperatorPos<0) {
-        memberOperator = "";
-        memberExpression = expression;
-    } else {
-        memberOperator = expression[lastMemberOperatorPos];
-        memberExpression = expression.mid(lastMemberOperatorPos+1);
-        ownerExpression = expression.mid(0,lastMemberOperatorPos);
-    }
-    if (memberExpression.length()>1) {
-        memberExpression = memberExpression.mid(memberExpression.length()-1,1);
-    }
-    return ownerExpression;
+    return getOwnerExpressionAndMember(expression,memberOperator,memberExpression);
 }
 
 QStringList Editor::getExpressionAtPosition(
@@ -3099,21 +3055,9 @@ QString Editor::getParserHint(const QStringList& expression,const QString &s, in
 {
     // This piece of code changes the parser database, possibly making hints and code completion invalid...
     QString result;
-    PStatement statement;
-    if (expression.count()>1) {
-        PEvalStatement evalStatement = mParser->evalExpression(
-                    mFilename,expression,
-                    mParser->findAndScanBlockAt(mFilename,line));
-        if (evalStatement) {
-            if (evalStatement->kind == EvalStatementKind::Type) {
-                statement = evalStatement->effectiveTypeStatement;
-            } else {
-                statement = evalStatement->baseStatement;
-            }
-        }
-    } else {
-        statement = mParser->findStatementOf(mFilename, s, line);
-    }
+    PStatement statement = mParser->findStatementOf(
+                mFilename,expression,
+                mParser->findAndScanBlockAt(mFilename,line));
     if (!statement)
         return result;
     if (statement->kind == StatementKind::skFunction

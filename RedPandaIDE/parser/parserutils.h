@@ -225,6 +225,7 @@ extern QSet<QString> CppTypeKeywords;
 extern QSet<QString> STLPointers;
 extern QSet<QString> STLContainers;
 extern QSet<QString> STLElementMethods;
+extern QSet<QString> MemberOperators;
 
 void initParser();
 
@@ -240,5 +241,10 @@ bool isCfile(const QString& filename);
 bool isKeyword(const QString& word);
 bool isScopeTypeKind(StatementKind kind);
 MemberOperatorType getOperatorType(const QString& phrase, int index);
+QStringList getOwnerExpressionAndMember(
+        const QStringList expression,
+        QString& memberOperator,
+        QStringList& memberExpression);
+bool isMemberOperator(QString token);
 
 #endif // PARSER_UTILS_H

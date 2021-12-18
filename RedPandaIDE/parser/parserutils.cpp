@@ -15,6 +15,7 @@ QSet<QString> CKeywords;
 QSet<QString> STLPointers;
 QSet<QString> STLContainers;
 QSet<QString> STLElementMethods;
+QSet<QString> MemberOperators;
 
 Q_GLOBAL_STATIC(QSet<QString>,CppHeaderExts)
 Q_GLOBAL_STATIC(QSet<QString>,CppSourceExts)
@@ -293,6 +294,12 @@ void initParser()
     JavadocTags.append("@throws");
     JavadocTags.append("@value");
     JavadocTags.append("@version");
+
+    MemberOperators.insert(".");
+    MemberOperators.insert("::");
+    MemberOperators.insert("->");
+    MemberOperators.insert("->*");
+    MemberOperators.insert(".*");
 }
 
 QString getHeaderFilename(const QString &relativeTo, const QString &line,
@@ -519,4 +526,59 @@ void EvalStatement::assignType(const PEvalStatement &typeStatement)
     baseType = typeStatement->baseType;
     pointerLevel = typeStatement->pointerLevel;
     effectiveTypeStatement = typeStatement->effectiveTypeStatement;
+}
+
+QStringList getOwnerExpressionAndMember(const QStringList expression, QString &memberOperator, QStringList &memberExpression)
+{
+    //find position of the last member operator
+    int lastMemberOperatorPos = -1;
+    int currentMatchingLevel = 0;
+    QString matchingSignLeft;
+    QString matchingSignRight;
+    for (int i=0;i<expression.length();i++) {
+        QString token = expression[i];
+        if (currentMatchingLevel == 0) {
+            if (isMemberOperator(token)) {
+                lastMemberOperatorPos = i;
+            } else if (token == "(") {
+                matchingSignLeft = "(";
+                matchingSignRight = ")";
+                currentMatchingLevel++;
+            } else if (token == "[") {
+                matchingSignLeft = "[";
+                matchingSignRight = "]";
+                currentMatchingLevel++;
+            } else if (token == "<") {
+                matchingSignLeft = "<";
+                matchingSignRight = ">";
+                currentMatchingLevel++;
+            }
+        } else {
+            if (token == matchingSignLeft) {
+                currentMatchingLevel++;
+            } else if (token == matchingSignRight) {
+                currentMatchingLevel--;
+            }
+        }
+    }
+
+    QStringList ownerExpression;
+    if (lastMemberOperatorPos<0) {
+        memberOperator = "";
+        memberExpression = expression;
+    } else {
+        memberOperator = expression[lastMemberOperatorPos];
+        memberExpression = expression.mid(lastMemberOperatorPos+1);
+        ownerExpression = expression.mid(0,lastMemberOperatorPos);
+    }
+    if (memberExpression.length()>1) {
+        memberExpression = memberExpression.mid(memberExpression.length()-1,1);
+    }
+    return ownerExpression;
+
+}
+
+bool isMemberOperator(QString token)
+{
+    return MemberOperators.contains(token);
 }
