@@ -1644,35 +1644,38 @@ QStringList Editor::getExpressionAtPosition(
     int ch = pos.Char-1;
     int symbolMatchingLevel = 0;
     LastSymbolType lastSymbolType=LastSymbolType::None;
+    PSynHighlighter highlighter = highlighterManager.getHighlighter(mFilename);
+    if (!highlighter)
+        return result;
     while (true) {
         if (line>=lines()->count() || line<0)
             break;
         QStringList tokens;
         if (line==0) {
-            highlighter()->resetState();
+            highlighter->resetState();
         } else {
-            highlighter()->setState(lines()->ranges(line-1));
+            highlighter->setState(lines()->ranges(line-1));
         }
         QString sLine = lines()->getString(line);
-        highlighter()->setLine(sLine,line-1);
-        while (!highlighter()->eol()) {
-            int start = highlighter()->getTokenPos() + 1;
-            QString token = highlighter()->getToken();
+        highlighter->setLine(sLine,line-1);
+        while (!highlighter->eol()) {
+            int start = highlighter->getTokenPos();
+            QString token = highlighter->getToken();
             int endPos = start + token.length()-1;
             if (start>ch) {
                 break;
             }
-            PSynHighlighterAttribute attr = highlighter()->getTokenAttribute();
+            PSynHighlighterAttribute attr = highlighter->getTokenAttribute();
             if ( (line == pos.Line-1)
                  && (start<=ch) && (ch<=endPos)) {
-                if (attr==highlighter()->commentAttribute() || attr == highlighter()->stringAttribute()) {
+                if (attr==highlighter->commentAttribute() || attr == highlighter->stringAttribute()) {
                     return result;
                 }
             }
-            if (attr!=highlighter()->commentAttribute() && attr!=highlighter()->whitespaceAttribute()){
+            if (attr!=highlighter->commentAttribute() && attr!=highlighter->whitespaceAttribute()){
                 tokens.append(token);
             }
-            highlighter()->next();
+            highlighter->next();
         }
         for (int i=tokens.count()-1;i>=0;i--) {
             QString token = tokens[i];
@@ -3057,7 +3060,7 @@ QString Editor::getParserHint(const QStringList& expression,const QString &s, in
     QString result;
     PStatement statement = mParser->findStatementOf(
                 mFilename,expression,
-                mParser->findAndScanBlockAt(mFilename,line));
+                line);
     if (!statement)
         return result;
     if (statement->kind == StatementKind::skFunction

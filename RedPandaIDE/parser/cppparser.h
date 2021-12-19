@@ -53,6 +53,10 @@ public:
     PStatement findStatementOf(const QString& fileName,
                                const QStringList& expression,
                                const PStatement& currentScope);
+    PStatement findStatementOf(const QString& fileName,
+                               const QStringList& expression,
+                               int line);
+
     /**
      * @brief evaluate the expression
      * @param fileName

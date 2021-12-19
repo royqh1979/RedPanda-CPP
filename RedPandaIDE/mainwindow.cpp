@@ -5116,12 +5116,11 @@ void MainWindow::on_actionRename_Symbol_triggered()
     BufferCoord oldCaretXY = editor->caretXY();
     if (editor->inProject() && mProject) {
         mProject->cppParser()->parseFileList();
-        BufferCoord pBeginPos,pEndPos;
-        QString phrase = getWordAtPosition(editor,oldCaretXY,pBeginPos,pEndPos,Editor::WordPurpose::wpInformation);
+        QStringList expression = editor->getExpressionAtPosition(oldCaretXY);
         // Find it's definition
         PStatement oldStatement = editor->parser()->findStatementOf(
                     editor->filename(),
-                    phrase,
+                    expression,
                     oldCaretXY.Line);
         // definition of the symbol not found
         if (!oldStatement)

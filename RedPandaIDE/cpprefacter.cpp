@@ -29,7 +29,7 @@ bool CppRefacter::findOccurence(Editor *editor, const BufferCoord &pos)
     PStatement statement = editor->parser()->findStatementOf(
                 editor->filename(),
                 expression,
-                editor->parser()->findAndScanBlockAt(editor->filename(),pos.Line));
+                pos.Line);
     // definition of the symbol not found
     if (!statement)
         return false;
@@ -98,12 +98,11 @@ void CppRefacter::renameSymbol(Editor *editor, const BufferCoord &pos, const QSt
         editor->parser()->unFreeze();
     });
     // get full phrase (such as s.name instead of name)
-    BufferCoord pBeginPos,pEndPos;
-    QString phrase = getWordAtPosition(editor,pos,pBeginPos,pEndPos,Editor::WordPurpose::wpInformation);
+    QStringList expression = editor->getExpressionAtPosition(pos);
     // Find it's definition
     PStatement oldStatement = editor->parser()->findStatementOf(
                 editor->filename(),
-                phrase,
+                expression,
                 pos.Line);
     QString oldScope = fullParentName(oldStatement);
     // definition of the symbol not found
@@ -118,10 +117,11 @@ void CppRefacter::renameSymbol(Editor *editor, const BufferCoord &pos, const QSt
         return;
     }
 
-    QString newPhrase = phrase.mid(0,phrase.length()-word.length()) + newWord;
+    QStringList newExpression = expression;
+    newExpression[newExpression.count()-1]=newWord;
     PStatement newStatement = editor->parser()->findStatementOf(
                 editor->filename(),
-                newPhrase,
+                newExpression,
                 pos.Line);
     if (newStatement && fullParentName(newStatement) == oldScope) {
         QMessageBox::critical(editor,
@@ -177,7 +177,7 @@ PSearchResultTreeItem CppRefacter::findOccurenceInFile(
     parentItem->filename = filename;
     parentItem->parent = nullptr;
     QStringList buffer;
-    SynEdit editor;
+    Editor editor(nullptr);
     if (pMainWindow->editorList()->getContentFromOpenedEditor(
                 filename,buffer)){
         editor.lines()->setContents(buffer);
@@ -204,28 +204,31 @@ PSearchResultTreeItem CppRefacter::findOccurenceInFile(
         while (!editor.highlighter()->eol()) {
             int start = editor.highlighter()->getTokenPos() + 1;
             QString token = editor.highlighter()->getToken();
-            if (token == statement->command) {
-                //same name symbol , test if the same statement;
-                BufferCoord p,pBeginPos,pEndPos;
-                p.Line = posY+1;
-                p.Char = start;
-                QString phrase = getWordAtPosition(&editor, p, pBeginPos,pEndPos,
-                                                   Editor::WordPurpose::wpInformation);
-                PStatement tokenStatement = parser->findStatementOf(
-                            filename,
-                            phrase, p.Line);
-                if (tokenStatement
-                        && (tokenStatement->line == statement->line)
-                        && (tokenStatement->fileName == statement->fileName)) {
-                    PSearchResultTreeItem item = std::make_shared<SearchResultTreeItem>();
-                    item->filename = filename;
-                    item->line = p.Line;
-                    item->start = start;
-                    item->len = phrase.length();
-                    item->parent = parentItem.get();
-                    item->text = line;
-                    item->text.replace('\t',' ');
-                    parentItem->results.append(item);
+            PSynHighlighterAttribute attr = editor.highlighter()->getTokenAttribute();
+            if (!attr || attr!=editor.highlighter()->commentAttribute()) {
+                if (token == statement->command) {
+                    //same name symbol , test if the same statement;
+                    BufferCoord p;
+                    p.Line = posY+1;
+                    p.Char = start+1;
+
+                    QStringList expression = editor.getExpressionAtPosition(p);
+                    PStatement tokenStatement = parser->findStatementOf(
+                                filename,
+                                expression, p.Line);
+                    if (tokenStatement
+                            && (tokenStatement->line == statement->line)
+                            && (tokenStatement->fileName == statement->fileName)) {
+                        PSearchResultTreeItem item = std::make_shared<SearchResultTreeItem>();
+                        item->filename = filename;
+                        item->line = p.Line;
+                        item->start = start;
+                        item->len = token.length();
+                        item->parent = parentItem.get();
+                        item->text = line;
+                        item->text.replace('\t',' ');
+                        parentItem->results.append(item);
+                    }
                 }
             }
             editor.highlighter()->next();
@@ -238,7 +241,7 @@ PSearchResultTreeItem CppRefacter::findOccurenceInFile(
 void CppRefacter::renameSymbolInFile(const QString &filename, const PStatement &statement,  const QString &newWord, const PCppParser &parser)
 {
     QStringList buffer;
-    SynEdit editor;
+    Editor editor(nullptr);
     if (pMainWindow->editorList()->getContentFromOpenedEditor(
                 filename,buffer)){
         editor.lines()->setContents(buffer);
@@ -251,10 +254,6 @@ void CppRefacter::renameSymbolInFile(const QString &filename, const PStatement &
     int posY = 0;
     while (posY < editor.lines()->count()) {
         QString line = editor.lines()->getString(posY);
-        if (line.isEmpty()) {
-            posY++;
-            continue;
-        }
 
         if (posY == 0) {
             editor.highlighter()->resetState();
@@ -269,14 +268,14 @@ void CppRefacter::renameSymbolInFile(const QString &filename, const PStatement &
             QString token = editor.highlighter()->getToken();
             if (token == statement->command) {
                 //same name symbol , test if the same statement;
-                BufferCoord p,pBeginPos,pEndPos;
+                BufferCoord p;
                 p.Line = posY+1;
-                p.Char = start;
-                QString phrase = getWordAtPosition(&editor, p, pBeginPos,pEndPos,
-                                                   Editor::WordPurpose::wpInformation);
+                p.Char = start+1;
+
+                QStringList expression = editor.getExpressionAtPosition(p);
                 PStatement tokenStatement = parser->findStatementOf(
                             filename,
-                            phrase, p.Line);
+                            expression, p.Line);
                 if (tokenStatement
                         && (tokenStatement->line == statement->line)
                         && (tokenStatement->fileName == statement->fileName)) {

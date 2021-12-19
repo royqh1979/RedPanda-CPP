@@ -246,6 +246,8 @@ PStatement CppParser::findStatement(const QString &fullname)
 PStatement CppParser::findStatementOf(const QString &fileName, const QString &phrase, int line)
 {
     QMutexLocker locker(&mMutex);
+    if (mParsing)
+        return PStatement();
     return findStatementOf(fileName,phrase,findAndScanBlockAt(fileName,line));
 }
 
@@ -445,6 +447,14 @@ PStatement CppParser::findStatementOf(const QString &fileName, const QStringList
         return findMemberOfStatement(phrase, ownerEvalStatement->effectiveTypeStatement);
     }
 
+}
+
+PStatement CppParser::findStatementOf(const QString &fileName, const QStringList &expression, int line)
+{
+    QMutexLocker locker(&mMutex);
+    if (mParsing)
+        return PStatement();
+    return findStatementOf(fileName,expression,findAndScanBlockAt(fileName,line));
 }
 
 PStatement CppParser::findStatementStartingFrom(const QString &fileName, const QString &phrase, const PStatement& startScope)
