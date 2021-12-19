@@ -1,6 +1,7 @@
 Version 0.11.3 For Dev-C++ 7 Beta
  - fix: use pixel size for fonts, to fit different dpi in multiple displays
  - enhancement: use the new expression parser to parse info for tips
+ - enhancement: better highlight processing for preprocess directives 
 
 Version 0.11.2 For Dev-C++ 7 Beta
  - fix: button "run all problem cases" not disabled when compiling or debugging

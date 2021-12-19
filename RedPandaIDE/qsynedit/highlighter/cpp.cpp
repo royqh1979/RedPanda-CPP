@@ -420,28 +420,38 @@ void SynEditCppHighlighter::directiveProc()
        return;
     }
     mTokenId = TokenKind::Directive;
-    do {
-        switch(mLine[mRun].unicode()) {
-        case '/': //comment?
-            switch (mLine[mRun+1].unicode()) {
-            case '/': // is end of directive as well
-                mRange.state = RangeState::rsUnknown;
-                return;
-            case '*': // might be embeded only
-                mRange.state = RangeState::rsDirectiveComment;
-                return;
-            }
-            break;
-        case '\\': // yet another line?
-            if (mLine[mRun+1] == 0) {
-                mRun+=1;
-                mRange.state = RangeState::rsMultiLineDirective;
-                return;
-            }
-            break;
-        }
+    mRun+=1;
+    //skip spaces
+    while (mLine[mRun]!=0 && isSpaceChar(mLine[mRun])) {
         mRun+=1;
-    } while (mLine[mRun]!=0);
+    }
+
+    while (mLine[mRun]!=0 && isIdentChar(mLine[mRun])) {
+        mRun+=1;
+    }
+    mRange.state = RangeState::rsUnknown;
+//    do {
+//        switch(mLine[mRun].unicode()) {
+//        case '/': //comment?
+//            switch (mLine[mRun+1].unicode()) {
+//            case '/': // is end of directive as well
+//                mRange.state = RangeState::rsUnknown;
+//                return;
+//            case '*': // might be embeded only
+//                mRange.state = RangeState::rsDirectiveComment;
+//                return;
+//            }
+//            break;
+//        case '\\': // yet another line?
+//            if (mLine[mRun+1] == 0) {
+//                mRun+=1;
+//                mRange.state = RangeState::rsMultiLineDirective;
+//                return;
+//            }
+//            break;
+//        }
+//        mRun+=1;
+//    } while (mLine[mRun]!=0);
 }
 
 void SynEditCppHighlighter::directiveEndProc()
