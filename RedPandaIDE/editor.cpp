@@ -2637,8 +2637,10 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete)
         //word=getWordAtPosition(this,caretXY(),pBeginPos,pEndPos, WordPurpose::wpCompletion);
         QString memberOperator;
         QStringList memberExpression;
+        BufferCoord pos = caretXY();
+        pos.Char--;
         QStringList ownerExpression = getOwnerExpressionAndMemberAtPositionForCompletion(
-                    caretXY(),
+                    pos,
                     memberOperator,
                     memberExpression);
 //        qDebug()<<ownerExpression<<memberExpression;

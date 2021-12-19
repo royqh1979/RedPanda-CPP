@@ -475,7 +475,7 @@ QString Compiler::getLibraryArguments(FileType fileType)
 
     // Add global compiler linker extras
     if (compilerSet()->useCustomLinkParams() && !compilerSet()->customLinkParams().isEmpty()) {
-       result += " "+compilerSet()->customCompileParams();
+       result += " "+compilerSet()->customLinkParams();
     }
 
     if (mProject) {
