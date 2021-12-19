@@ -1,6 +1,7 @@
 Version 0.11.4 For Dev-C++ 7 Beta
  - fix: compiler set's custom link parameters  not used when compiling
  - fix: code completion doesn't work when input inside () or []
+ - fix: auto indent processing error when input '{' in the middle of if statement
 
 Version 0.11.3 For Dev-C++ 7 Beta
  - fix: use pixel size for fonts, to fit different dpi in multiple displays

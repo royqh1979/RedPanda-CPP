@@ -2721,13 +2721,14 @@ void SynEdit::doAddChar(QChar AChar)
         return;
     //DoOnPaintTransient(ttBefore);
     //mCaretX will change after setSelLength;
-    int oldCaretX=mCaretX;
-    int oldCaretY=mCaretY;
     if ((mInserting == false) && (!selAvail())) {
         setSelLength(1);
     }
 
     mUndoList->BeginBlock();
+    doSetSelText(AChar);
+    int oldCaretX=mCaretX-1;
+    int oldCaretY=mCaretY;
     // auto
     if (mOptions.testFlag(eoAutoIndent)
             && mHighlighter
@@ -2737,13 +2738,14 @@ void SynEdit::doAddChar(QChar AChar)
         //unindent if ':' at end of the line
         if (AChar == ':') {
             QString line = mLines->getString(oldCaretY-1);
-            if (line.length() < oldCaretX) {
+            if (line.length() <= oldCaretX) {
                 int indentSpaces = calcIndentSpaces(oldCaretY,line+":", true);
                 if (indentSpaces != leftSpaces(line)) {
                     QString newLine = GetLeftSpacing(indentSpaces,true) + trimLeft(line);
-                    int i = newLine.length();
                     mLines->putString(oldCaretY-1,newLine);
-                    internalSetCaretXY(BufferCoord{i+1,oldCaretY});
+                    internalSetCaretXY(BufferCoord{newLine.length()+2,oldCaretY});
+                    setBlockBegin(caretXY());
+                    setBlockEnd(caretXY());
                     mUndoList->AddChange(
                                 SynChangeReason::crDelete,
                                 BufferCoord{1, oldCaretY},
@@ -2755,7 +2757,7 @@ void SynEdit::doAddChar(QChar AChar)
                                 SynChangeReason::crInsert,
                                 BufferCoord{1, oldCaretY},
                                 BufferCoord{newLine.length()+1, oldCaretY},
-                                newLine,
+                                "",
                                 SynSelectionMode::smNormal
                                 );
                 }
@@ -2763,14 +2765,18 @@ void SynEdit::doAddChar(QChar AChar)
         } else if (AChar == '{' || AChar == '}' || AChar == '#') {
             //Reindent line when add '{' '}' and '#' at the beginning
             QString left = mLines->getString(oldCaretY-1).mid(0,oldCaretX-1);
+            qDebug()<<left<<oldCaretX;
             // and the first nonblank char is this new {
             if (left.trimmed().isEmpty()) {
                 int indentSpaces = calcIndentSpaces(oldCaretY,AChar, true);
                 if (indentSpaces != leftSpaces(left)) {
-                    QString right = mLines->getString(oldCaretY-1).mid(oldCaretX);
+                    QString right = mLines->getString(oldCaretY-1).mid(oldCaretX-1);
                     QString newLeft = GetLeftSpacing(indentSpaces,true);
                     mLines->putString(oldCaretY-1,newLeft+right);
-                    internalSetCaretXY(BufferCoord{newLeft.length()+1,oldCaretY});
+                    BufferCoord newCaretPos =  BufferCoord{newLeft.length()+2,oldCaretY};
+                    internalSetCaretXY(newCaretPos);
+                    setBlockBegin(caretXY());
+                    setBlockEnd(caretXY());
                     mUndoList->AddChange(
                                 SynChangeReason::crDelete,
                                 BufferCoord{1, oldCaretY},
@@ -2782,14 +2788,14 @@ void SynEdit::doAddChar(QChar AChar)
                                 SynChangeReason::crInsert,
                                 BufferCoord{1, oldCaretY},
                                 BufferCoord{newLeft.length()+1, oldCaretY},
-                                newLeft,
+                                "",
                                 SynSelectionMode::smNormal
                                 );
+
                 }
             }
         }
     }
-    doSetSelText(AChar);
     mUndoList->EndBlock();
 
     //DoOnPaintTransient(ttAfter);
@@ -4121,7 +4127,6 @@ void SynEdit::doUndoItem()
                         Item->changeStartPos(),
                         Item->changeEndPos());
             QString TmpStr = selText();
-            qDebug()<<TmpStr;
             setSelTextPrimitiveEx(
                         Item->changeSelMode(),
                         Item->changeStr(),
@@ -4795,12 +4800,13 @@ void SynEdit::doSetSelText(const QString &Value)
     mBlockBegin = StartOfBlock;
     mBlockEnd = EndOfBlock;
     setSelTextPrimitive(Value);
-    if (!Value.isEmpty() && (mActiveSelectionMode !=SynSelectionMode::smColumn))
+    if (!Value.isEmpty() && (mActiveSelectionMode !=SynSelectionMode::smColumn)) {
         mUndoList->AddChange(
                     SynChangeReason::crInsert,
                     StartOfBlock,
                     blockEnd(), "",
                     mActiveSelectionMode);
+    }
 }
 
 int SynEdit::searchReplace(const QString &sSearch, const QString &sReplace, SynSearchOptions sOptions, PSynSearchBase searchEngine,
