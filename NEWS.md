@@ -1,6 +1,6 @@
 Version 0.11.4 For Dev-C++ 7 Beta
  - fix: compiler set's custom link parameters  not used when compiling
- - fix: 
+ - fix: code completion doesn't work when input inside () or []
 
 Version 0.11.3 For Dev-C++ 7 Beta
  - fix: use pixel size for fonts, to fit different dpi in multiple displays
