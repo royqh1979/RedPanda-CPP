@@ -463,25 +463,6 @@
         <file>images/associations/obj.ico</file>
         <file>images/associations/rc.ico</file>
         <file>images/associations/template.ico</file>
-        <file>images/classparser/class.ico</file>
-        <file>images/classparser/define.ico</file>
-        <file>images/classparser/enum.ico</file>
-        <file>images/classparser/global.ico</file>
-        <file>images/classparser/global_method.ico</file>
-        <file>images/classparser/method_inherited.ico</file>
-        <file>images/classparser/method_inherited_protected.ico</file>
-        <file>images/classparser/method_private.ico</file>
-        <file>images/classparser/method_protected.ico</file>
-        <file>images/classparser/method_public.ico</file>
-        <file>images/classparser/namespace.ico</file>
-        <file>images/classparser/static_method.ico</file>
-        <file>images/classparser/static_var.ico</file>
-        <file>images/classparser/type.ico</file>
-        <file>images/classparser/var_inherited.ico</file>
-        <file>images/classparser/var_inherited_protected.ico</file>
-        <file>images/classparser/var_private.ico</file>
-        <file>images/classparser/var_protected.ico</file>
-        <file>images/classparser/var_public.ico</file>
         <file>images/newlook24/091-openproblemanswer.png</file>
         <file>images/newlook24/092-runallproblemcases.png</file>
         <file>images/newlook24/093-pause.png</file>
@@ -490,5 +471,24 @@
         <file>images/editor/currentline.svg</file>
         <file>images/editor/syntaxerror.svg</file>
         <file>images/editor/syntaxwarning.svg</file>
+        <file>images/classparser/class.svg</file>
+        <file>images/classparser/define.svg</file>
+        <file>images/classparser/enum.svg</file>
+        <file>images/classparser/global.svg</file>
+        <file>images/classparser/global_method.svg</file>
+        <file>images/classparser/method_inherited.svg</file>
+        <file>images/classparser/method_inherited_protected.svg</file>
+        <file>images/classparser/method_private.svg</file>
+        <file>images/classparser/method_protected.svg</file>
+        <file>images/classparser/method_public.svg</file>
+        <file>images/classparser/namespace.svg</file>
+        <file>images/classparser/static_method.svg</file>
+        <file>images/classparser/static_var.svg</file>
+        <file>images/classparser/type.svg</file>
+        <file>images/classparser/var_inherited.svg</file>
+        <file>images/classparser/var_inherited_protected.svg</file>
+        <file>images/classparser/var_private.svg</file>
+        <file>images/classparser/var_protected.svg</file>
+        <file>images/classparser/var_public.svg</file>
     </qresource>
 </RCC>

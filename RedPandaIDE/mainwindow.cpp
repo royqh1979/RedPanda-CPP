@@ -321,7 +321,7 @@ void MainWindow::updateForEncodingInfo() {
 
 void MainWindow::updateEditorSettings()
 {
-    pIconsManager->updateEditorGuttorIcons(pointToPixel(pSettings->editor().fontSize()));
+    pIconsManager->updateEditorGuttorIcons("editor",pointToPixel(pSettings->editor().fontSize()));
     mEditorList->applySettings();
 }
 
@@ -546,6 +546,7 @@ void MainWindow::applySettings()
     font.setStyleStrategy(QFont::PreferAntialias);
     qApp->setFont(font);
     this->setFont(font);
+    pIconsManager->updateParserIcons("classparser",pointToPixel(pSettings->environment().interfaceFontSize()));
 
     QFont caseEditorFont(pSettings->executor().caseEditorFontName());
     caseEditorFont.setPixelSize(pointToPixel(pSettings->executor().caseEditorFontSize()));

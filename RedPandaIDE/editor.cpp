@@ -785,14 +785,12 @@ void Editor::keyPressEvent(QKeyEvent *event)
 
 void Editor::onGutterPaint(QPainter &painter, int aLine, int X, int Y)
 {
-    // Get point where to draw marks
-    //X := (fText.Gutter.RealGutterWidth(fText.CharWidth) - fText.Gutter.RightOffset) div 2 - 3;
-    PIcon icon;
+    IconsManager::PIcon icon;
 
     if (mActiveBreakpointLine == aLine) {
-        icon = pIconsManager->activeBreakpoint();
+        icon = pIconsManager->getIcon(IconsManager::GUTTER_ACTIVEBREAKPOINT);
     } else if (hasBreakpoint(aLine)) {
-        icon = pIconsManager->breakpoint();
+        icon = pIconsManager->getIcon(IconsManager::GUTTER_BREAKPOINT);
     } else {
         PSyntaxIssueList lst = getSyntaxIssuesAtLine(aLine);
         if (lst) {
@@ -804,12 +802,12 @@ void Editor::onGutterPaint(QPainter &painter, int aLine, int X, int Y)
                 }
             }
             if (hasError) {
-                icon = pIconsManager->syntaxError();
+                icon = pIconsManager->getIcon(IconsManager::GUTTER_SYNTAX_ERROR);
             } else {
-                icon = pIconsManager->syntaxWarning();
+                icon = pIconsManager->getIcon(IconsManager::GUTTER_SYNTAX_WARNING);
             }
-        } else if (hasBookmark(aLine)) {
-            icon = pIconsManager->bookmark();
+        } else if (hasBookmark(aLine)) {            
+            icon = pIconsManager->getIcon(IconsManager::GUTTER_BOOKMARK);
         }
     }
     if (icon) {

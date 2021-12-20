@@ -5,6 +5,7 @@ Version 0.11.4 For Dev-C++ 7 Beta
  - fix: left and right gutter offset settings not  correctly saved
  - enhancement: use svg icons for editor gutter, and they can zoom with font now
  - fix: symbol completion for '<>' in the preprocessor line not work
+ - enhancement: use svg icons for class browser
 
 Version 0.11.3 For Dev-C++ 7 Beta
  - fix: use pixel size for fonts, to fit different dpi in multiple displays
