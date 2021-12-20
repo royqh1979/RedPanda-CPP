@@ -1453,21 +1453,21 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
         return 0;
     // find the first non-empty preceeding line
     int startLine = line-1;
-    QString s;
+    QString startLineText;
     while (startLine>=1) {
-        s = mLines->getString(startLine-1);
-        if (!s.startsWith('#') && !s.trimmed().isEmpty()) {
+        startLineText = mLines->getString(startLine-1);
+        if (!startLineText.startsWith('#') && !startLineText.trimmed().isEmpty()) {
             break;
         }
         startLine -- ;
     }
     int indentSpaces = 0;
     if (startLine>=1) {
-        indentSpaces = leftSpaces(s);
+        indentSpaces = leftSpaces(startLineText);
         SynRangeState rangePreceeding = mLines->ranges(startLine-1);
         mHighlighter->setState(rangePreceeding);
         if (addIndent) {
-            QString trimmedS = s.trimmed();
+//            QString trimmedS = s.trimmed();
             QString trimmedLineText = lineText.trimmed();
             mHighlighter->setLine(trimmedLineText,line-1);
             int statePrePre;
@@ -1587,7 +1587,7 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
                 }
             }
 
-            if (!dontAddIndent && !s.isEmpty()) {
+            if (!dontAddIndent && !startLineText.isEmpty()) {
                 BufferCoord coord;
                 QString token;
                 PSynHighlighterAttribute attr;
@@ -2765,7 +2765,6 @@ void SynEdit::doAddChar(QChar AChar)
         } else if (AChar == '{' || AChar == '}' || AChar == '#') {
             //Reindent line when add '{' '}' and '#' at the beginning
             QString left = mLines->getString(oldCaretY-1).mid(0,oldCaretX-1);
-            qDebug()<<left<<oldCaretX;
             // and the first nonblank char is this new {
             if (left.trimmed().isEmpty()) {
                 int indentSpaces = calcIndentSpaces(oldCaretY,AChar, true);
