@@ -12,6 +12,8 @@ class IconsManager : public QObject
 public:
     explicit IconsManager(QObject *parent = nullptr);
 
+    void updateIcons(int size);
+
     const PIcon &syntaxError() const;
 
     const PIcon &syntaxWarning() const;

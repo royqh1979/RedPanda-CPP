@@ -1059,6 +1059,8 @@ void Settings::Editor::doSave()
     //gutter
     saveValue("gutter_visible", mGutterVisible);
     saveValue("gutter_auto_size", mGutterAutoSize);
+    saveValue("gutter_left_offset",mGutterLeftOffset);
+    saveValue("gutter_right_offset",mGutterRightOffset);
     saveValue("gutter_digits_count", mGutterDigitsCount);
     saveValue("gutter_show_line_numbers",mGutterShowLineNumbers);
     saveValue("gutter_add_leading_zero",mGutterAddLeadingZero);
@@ -1173,7 +1175,7 @@ void Settings::Editor::doLoad()
     //gutter
     mGutterVisible = boolValue("gutter_visible",true);
     mGutterAutoSize = boolValue("gutter_auto_size",true);
-    mGutterLeftOffset = intValue("gutter_left_offset",28);
+    mGutterLeftOffset = intValue("gutter_left_offset",6);
     mGutterRightOffset = intValue("gutter_right_offset",24);
     mGutterDigitsCount = intValue("gutter_digits_count",1);
     mGutterShowLineNumbers = boolValue("gutter_show_line_numbers",true);

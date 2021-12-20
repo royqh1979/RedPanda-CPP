@@ -21,6 +21,7 @@
 #include "problems/problemcasevalidator.h"
 #include "widgets/ojproblempropertywidget.h"
 #include "version.h"
+#include "iconsmanager.h"
 
 #include <QCloseEvent>
 #include <QComboBox>
@@ -320,6 +321,7 @@ void MainWindow::updateForEncodingInfo() {
 
 void MainWindow::updateEditorSettings()
 {
+    pIconsManager->updateIcons(pointToPixel(pSettings->editor().fontSize()));
     mEditorList->applySettings();
 }
 

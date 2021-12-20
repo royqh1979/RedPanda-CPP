@@ -787,13 +787,12 @@ void Editor::onGutterPaint(QPainter &painter, int aLine, int X, int Y)
 {
     // Get point where to draw marks
     //X := (fText.Gutter.RealGutterWidth(fText.CharWidth) - fText.Gutter.RightOffset) div 2 - 3;
-    X = 5;
-    Y += (this->textHeight() - 16) / 2;
+    PIcon icon;
 
     if (mActiveBreakpointLine == aLine) {
-        painter.drawPixmap(X,Y,*(pIconsManager->activeBreakpoint()));
+        icon = pIconsManager->activeBreakpoint();
     } else if (hasBreakpoint(aLine)) {
-        painter.drawPixmap(X,Y,*(pIconsManager->breakpoint()));
+        icon = pIconsManager->breakpoint();
     } else {
         PSyntaxIssueList lst = getSyntaxIssuesAtLine(aLine);
         if (lst) {
@@ -805,15 +804,18 @@ void Editor::onGutterPaint(QPainter &painter, int aLine, int X, int Y)
                 }
             }
             if (hasError) {
-                painter.drawPixmap(X,Y,*(pIconsManager->syntaxError()));
+                icon = pIconsManager->syntaxError();
             } else {
-                painter.drawPixmap(X,Y,*(pIconsManager->syntaxWarning()));
+                icon = pIconsManager->syntaxWarning();
             }
-            return;
+        } else if (hasBookmark(aLine)) {
+            icon = pIconsManager->bookmark();
         }
-        if (hasBookmark(aLine)) {
-            painter.drawPixmap(X,Y,*(pIconsManager->bookmark()));
-        }
+    }
+    if (icon) {
+        X = 5;
+        Y += (this->textHeight() - icon->height()) / 2;
+        painter.drawPixmap(X,Y,*icon);
     }
 }
 
@@ -4049,7 +4051,7 @@ void Editor::applySettings()
     setFont(f);
 
     // Set gutter properties
-    gutter().setLeftOffset(pSettings->editor().gutterLeftOffset());
+    gutter().setLeftOffset(pointToPixel(pSettings->editor().fontSize()) + pSettings->editor().gutterLeftOffset());
     gutter().setRightOffset(pSettings->editor().gutterRightOffset());
     gutter().setBorderStyle(SynGutterBorderStyle::None);
     gutter().setUseFontStyle(pSettings->editor().gutterUseCustomFont());
