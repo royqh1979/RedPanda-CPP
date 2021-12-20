@@ -12,7 +12,7 @@ class IconsManager : public QObject
 public:
     explicit IconsManager(QObject *parent = nullptr);
 
-    void updateIcons(int size);
+    void updateEditorGuttorIcons(int size);
 
     const PIcon &syntaxError() const;
 
@@ -25,6 +25,8 @@ public:
     const PIcon &bookmark() const;
 
     const PIcon &folder() const;
+
+    PIcon createSVGIcon(const QString& filename, int width, int height);
 private:
     PIcon mSyntaxError;
     PIcon mSyntaxWarning;

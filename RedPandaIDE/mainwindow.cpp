@@ -321,7 +321,7 @@ void MainWindow::updateForEncodingInfo() {
 
 void MainWindow::updateEditorSettings()
 {
-    pIconsManager->updateIcons(pointToPixel(pSettings->editor().fontSize()));
+    pIconsManager->updateEditorGuttorIcons(pointToPixel(pSettings->editor().fontSize()));
     mEditorList->applySettings();
 }
 

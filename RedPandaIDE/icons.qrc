@@ -450,10 +450,6 @@
         <file>images/newlook64/087-update.png</file>
         <file>images/newlook64/088-watch.png</file>
         <file>images/newlook64/089-watch-tm.png</file>
-        <file>images/editor/breakpoint.png</file>
-        <file>images/editor/currentline.png</file>
-        <file>images/editor/syntaxerror.png</file>
-        <file>images/editor/syntaxwarning.png</file>
         <file>images/associations/c.ico</file>
         <file>images/associations/cpp.ico</file>
         <file>images/associations/dev.ico</file>
@@ -486,10 +482,13 @@
         <file>images/classparser/var_private.ico</file>
         <file>images/classparser/var_protected.ico</file>
         <file>images/classparser/var_public.ico</file>
-        <file>images/editor/bookmark.png</file>
         <file>images/newlook24/091-openproblemanswer.png</file>
         <file>images/newlook24/092-runallproblemcases.png</file>
         <file>images/newlook24/093-pause.png</file>
         <file>images/editor/breakpoint.svg</file>
+        <file>images/editor/bookmark.svg</file>
+        <file>images/editor/currentline.svg</file>
+        <file>images/editor/syntaxerror.svg</file>
+        <file>images/editor/syntaxwarning.svg</file>
     </qresource>
 </RCC>
