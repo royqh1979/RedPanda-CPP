@@ -4,6 +4,7 @@ Version 0.11.4 For Dev-C++ 7 Beta
  - fix: auto indent processing error when input '{' in the middle of if statement
  - fix: left and right gutter offset settings not  correctly saved
  - enhancement: use svg icons for editor gutter, and they can zoom with font now
+ - fix: symbol completion for '<>' in the preprocessor line not work
 
 Version 0.11.3 For Dev-C++ 7 Beta
  - fix: use pixel size for fonts, to fit different dpi in multiple displays

@@ -1916,7 +1916,7 @@ bool Editor::handleSymbolCompletion(QChar key)
             if ((tokenType == SynHighlighterTokenType::String) && (!tokenFinished)
                     && (key!='\'') && (key!='\"') && (key!='(') && (key!=')'))
                 return false;
-            if (( key=='<' || key =='>') && (tokenType != SynHighlighterTokenType::PreprocessDirective))
+            if (( key=='<' || key =='>') && (mParser && !mParser->isIncludeLine(lineText())))
                 return false;
             if ((key == '\'') && (Attr->name() == "SYNS_AttrNumber"))
                 return false;
