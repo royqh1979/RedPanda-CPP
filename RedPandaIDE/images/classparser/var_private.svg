@@ -8,7 +8,7 @@
    version="1.1"
    id="svg5"
    inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
-   sodipodi:docname="method_inherited_protected.svg"
+   sodipodi:docname="var_private.svg"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
@@ -41,7 +41,7 @@
      inkscape:groupmode="layer"
      id="layer1">
     <rect
-       style="fill:#ffaa78;fill-opacity:1;stroke:none;stroke-width:0.864658;stroke-miterlimit:4;stroke-dasharray:none"
+       style="fill:#ff7878;fill-opacity:1;stroke:none;stroke-width:0.864658;stroke-miterlimit:4;stroke-dasharray:none"
        id="rect1440"
        width="26.508604"
        height="26.308193"
@@ -52,23 +52,23 @@
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:28.2222px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
-       x="5.6899452"
-       y="24.376242"
+       x="1.117901"
+       y="21.724457"
        id="text3748"><tspan
          sodipodi:role="line"
          id="tspan3746"
          style="font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:28.2222px;font-family:sans-serif;-inkscape-font-specification:'sans-serif Italic';stroke-width:0.264583"
-         x="5.6899452"
-         y="24.376242">f</tspan></text>
+         x="1.117901"
+         y="21.724457">v</tspan></text>
     <rect
-       style="fill:#235aff;fill-opacity:1;stroke-width:1.29084"
+       style="fill:#800000;fill-opacity:1;stroke-width:1.29084"
        id="rect943"
        width="9.2650747"
        height="7.6662278"
        x="16.799305"
        y="18.204239" />
     <path
-       style="fill:none;stroke:#235aff;stroke-width:1.20024;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       style="fill:none;stroke:#800000;stroke-width:1.20024;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        d="m 18.405277,19.373425 c 0,0 -0.115033,-2.202589 0.196788,-3.095226 0.227026,-0.6499 0.576784,-1.400067 1.311921,-1.731228 0.895403,-0.403357 1.932098,-0.397331 2.762972,0 0.644664,0.308283 1.095023,0.999563 1.34576,1.668713 0.375005,1.000787 0.122965,3.203858 0.122965,3.203858"
        id="path1124"
        sodipodi:nodetypes="cssaac" />
