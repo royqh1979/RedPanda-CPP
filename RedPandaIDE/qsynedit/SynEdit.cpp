@@ -1463,6 +1463,7 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
     }
     int indentSpaces = 0;
     if (startLine>=1) {
+        //calculate the indents of last statement;
         indentSpaces = leftSpaces(startLineText);
         SynRangeState rangePreceeding = mLines->ranges(startLine-1);
         mHighlighter->setState(rangePreceeding);
@@ -1491,20 +1492,27 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
                 firstToken = mHighlighter->getToken();
                 attr = mHighlighter->getTokenAttribute();
             }
-            bool dontAddIndent = false;
+            bool indentAdded = false;
             int additionIndent = 0;
             QVector<int> matchingIndents;
             int l;
             if (attr == mHighlighter->symbolAttribute()
-                    && (firstToken == '}' || firstToken == '{')) {
-                // current line starts with '}' or '{', we should consider them to calc indents
+                    && (firstToken == '}')) {
+                // current line starts with '}', we should consider it to calc indents
                 matchingIndents = rangeAfterFirstToken.matchingIndents;
-                dontAddIndent = true;
+                indentAdded = true;
+                l = startLine;
+            } else if (attr == mHighlighter->symbolAttribute()
+                       && (firstToken == '{')
+                       && (rangePreceeding.getLastIndent()==sitStatement)) {
+                // current line starts with '{' and last statement not finished, we should consider it to calc indents
+                matchingIndents = rangeAfterFirstToken.matchingIndents;
+                indentAdded = true;
                 l = startLine;
             } else if (mHighlighter->getClass() == SynHighlighterClass::CppHighlighter
                        && trimmedLineText.startsWith('#')
                        && attr == ((SynEditCppHighlighter *)mHighlighter.get())->preprocessorAttribute()) {
-                dontAddIndent = true;
+                indentAdded = true;
                 indentSpaces=0;
                 l=0;
             } else if (mHighlighter->getClass() == SynHighlighterClass::CppHighlighter
@@ -1520,7 +1528,7 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
                 indentSpaces = leftSpaces(mLines->getString(commentStartLine-1));
                 range = mLines->ranges(commentStartLine-1);
                 matchingIndents = range.matchingIndents;
-                dontAddIndent = true;
+                indentAdded = true;
                 l = commentStartLine;
             } else if ( mHighlighter->isLastLineCommentNotFinished(statePrePre)
                         && rangePreceeding.matchingIndents.isEmpty()
@@ -1533,7 +1541,7 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
                 indentSpaces = leftSpaces(mLines->getString(commentStartLine-1));
                 range = mLines->ranges(commentStartLine-1);
                 matchingIndents = range.matchingIndents;
-                dontAddIndent = true;
+                indentAdded = true;
                 l = commentStartLine;
             } else {
                 // we just use infos till preceeding line's end to calc indents
@@ -1580,14 +1588,14 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
                     l--;
                 }
             }
-            if (!dontAddIndent) {
+            if (!indentAdded) {
                 if (rangePreceeding.firstIndentThisLine < rangePreceeding.indents.length()) {
                     indentSpaces += mTabWidth;
-                    dontAddIndent = true;
+                    indentAdded = true;
                 }
             }
 
-            if (!dontAddIndent && !startLineText.isEmpty()) {
+            if (!indentAdded && !startLineText.isEmpty()) {
                 BufferCoord coord;
                 QString token;
                 PSynHighlighterAttribute attr;
@@ -1597,7 +1605,7 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
                         && attr == mHighlighter->symbolAttribute()
                         && token == ":") {
                     indentSpaces += mTabWidth;
-                    dontAddIndent = true;
+                    indentAdded = true;
                 }
             }
             indentSpaces += additionIndent;

@@ -516,8 +516,10 @@ private:
     void setSelWord();
     void setWordBlock(BufferCoord Value);
 
-    int findCommentStartLine(int searchStartLine);
+
     int calcIndentSpaces(int line, const QString& lineText, bool addIndent);
+    int findCommentStartLine(int searchStartLine);
+    int findStatementStartLine(int searchStartLine);
 
     void processGutterClick(QMouseEvent* event);
 
