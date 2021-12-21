@@ -128,6 +128,7 @@ SOURCES += \
     widgets/headercompletionpopup.cpp \
     widgets/issuestable.cpp \
     widgets/labelwithmenu.cpp \
+    widgets/lightfusionstyle.cpp \
     widgets/macroinfomodel.cpp \
     widgets/newprojectdialog.cpp \
     widgets/ojproblempropertywidget.cpp \
@@ -254,6 +255,7 @@ HEADERS += \
     widgets/headercompletionpopup.h \
     widgets/issuestable.h \
     widgets/labelwithmenu.h \
+    widgets/lightfusionstyle.h \
     widgets/macroinfomodel.h \
     widgets/newprojectdialog.h \
     widgets/ojproblempropertywidget.h \

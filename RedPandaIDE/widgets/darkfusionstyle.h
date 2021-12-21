@@ -16,11 +16,9 @@ public:
                      const QWidget *widget) const override;
     QIcon standardIcon(StandardPixmap standardIcon, const QStyleOption *option = nullptr,
                        const QWidget *widget = nullptr) const override;
-
-    // QStyle interface
-public:
     void drawComplexControl(ComplexControl control, const QStyleOptionComplex *option,
                             QPainter *painter, const QWidget *widget) const override;
+    int pixelMetric(PixelMetric metric, const QStyleOption *option, const QWidget *widget) const override;
 };
 
 #endif // DARKFUSIONSTYLE_H

@@ -490,5 +490,7 @@
         <file>images/classparser/var_private.svg</file>
         <file>images/classparser/var_protected.svg</file>
         <file>images/classparser/var_public.svg</file>
+        <file>images/newlook/01File-01New.svg</file>
+        <file>images/newlook/01File-02Open.svg</file>
     </qresource>
 </RCC>

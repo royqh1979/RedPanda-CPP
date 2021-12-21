@@ -18,6 +18,7 @@
 #include "colorscheme.h"
 #include "thememanager.h"
 #include "widgets/darkfusionstyle.h"
+#include "widgets/lightfusionstyle.h"
 #include "problems/problemcasevalidator.h"
 #include "widgets/ojproblempropertywidget.h"
 #include "version.h"
@@ -286,6 +287,8 @@ MainWindow::MainWindow(QWidget *parent)
     updateShortcuts();
 
     updateTools();
+
+    updateEditorSettings();
 }
 
 MainWindow::~MainWindow()
@@ -533,7 +536,7 @@ void MainWindow::applySettings()
     if (appTheme->isDark())
         QApplication::setStyle(new DarkFusionStyle());
     else
-        QApplication::setStyle("fusion");
+        QApplication::setStyle(new LightFusionStyle());
     qApp->setPalette(appTheme->palette());
     //fix for qstatusbar bug
     mFileEncodingStatus->setPalette(appTheme->palette());
@@ -583,6 +586,7 @@ void MainWindow::applySettings()
             ui->tabInfos->removeTab(idxProblemSet);
     }
     updateDebuggerSettings();
+    updateActionIcons();
 }
 
 void MainWindow::applyUISettings()
@@ -1090,6 +1094,19 @@ void MainWindow::updateDebuggerSettings()
         }
     }
 
+}
+
+void MainWindow::updateActionIcons()
+{
+    int size = pointToPixel(pSettings->environment().interfaceFontSize());
+    pIconsManager->updateActionIcons("newlook", size);
+    QSize iconSize(size,size);
+    ui->toolbarMain->setIconSize(iconSize);
+    ui->toolbarCode->setIconSize(iconSize);
+    ui->toolbarCompile->setIconSize(iconSize);
+    ui->toolbarDebug->setIconSize(iconSize);
+    ui->actionNew->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_FILE_NEW))));
+    ui->actionOpen->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_FILE_OPEN))));
 }
 
 void MainWindow::checkSyntaxInBack(Editor *e)

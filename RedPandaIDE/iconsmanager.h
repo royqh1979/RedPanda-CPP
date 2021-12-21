@@ -17,28 +17,43 @@ public:
         GUTTER_BREAKPOINT,
         GUTTER_ACTIVEBREAKPOINT,
         GUTTER_BOOKMARK,
-        PARSER_TYPE, //":/icons/images/classparser/type.svg"
-        PARSER_CLASS, //":/icons/images/classparser/class.svg"
-        PARSER_NAMESPACE, //":/icons/images/classparser/namespace.svg"
-        PARSER_DEFINE, // ":/icons/images/classparser/define.svg"
-        PARSER_ENUM, // ":/icons/images/classparser/enum.svg";
-        PARSER_GLOBAL_METHOD, // ":/icons/images/classparser/global_method.svg"
-        PARSER_INHERITED_PROTECTED_METHOD, //":/icons/images/classparser/method_inherited_protected.svg"
-        PARSER_INHERITED_METHOD, // ":/icons/images/classparser/method_inherited.svg"
-        PARSER_PROTECTED_METHOD, // ":/icons/images/classparser/method_protected.svg"
-        PARSER_PUBLIC_METHOD, //":/icons/images/classparser/method_public.svg")
-        PARSER_PRIVATE_METHOD, //":/icons/images/classparser/method_private.svg"
-        PARSER_GLOBAL_VAR, // ":/icons/images/classparser/global.svg"
-        PARSER_INHERITED_PROTECTD_VAR, //":/icons/images/classparser/var_inherited_protected.svg"
-        PARSER_INHERITED_VAR, //":/icons/images/classparser/var_inherited.svg"
-        PARSER_PROTECTED_VAR, //":/icons/images/classparser/var_protected.svg"
-        PARSER_PUBLIC_VAR, //":/icons/images/classparser/var_public.svg"
-        PARSER_PRIVATE_VAR //":/icons/images/classparser/var_private.svg"
+
+        PARSER_TYPE,
+        PARSER_CLASS,
+        PARSER_NAMESPACE,
+        PARSER_DEFINE,
+        PARSER_ENUM,
+        PARSER_GLOBAL_METHOD,
+        PARSER_INHERITED_PROTECTED_METHOD,
+        PARSER_INHERITED_METHOD,
+        PARSER_PROTECTED_METHOD,
+        PARSER_PUBLIC_METHOD,
+        PARSER_PRIVATE_METHOD,
+        PARSER_GLOBAL_VAR,
+        PARSER_INHERITED_PROTECTD_VAR,
+        PARSER_INHERITED_VAR,
+        PARSER_PROTECTED_VAR,
+        PARSER_PUBLIC_VAR,
+        PARSER_PRIVATE_VAR,
+
+        ACTION_FILE_NEW,
+        ACTION_FILE_OPEN,
+        ACTION_FILE_SAVE,
+        ACTION_FILE_SAVE_AS,
+        ACTION_FILE_SAVE_ALL,
+        ACTION_FILE_CLOSE,
+        ACTION_FILE_CLOSE_ALL,
+        ACTION_FILE_PRINT,
+        ACTION_PROJECT_NEW,
+        ACTION_PROJECT_SAVE,
+        ACTION_PROJECT_CLOSE,
+        ACTION_FOLDER_OPEN
     };
     explicit IconsManager(QObject *parent = nullptr);
 
     void updateEditorGuttorIcons(const QString& iconSet, int size);
     void updateParserIcons(const QString& iconSet, int size);
+    void updateActionIcons(const QString iconSet, int size);
 
     PIcon getIcon(IconName iconName) const;
 

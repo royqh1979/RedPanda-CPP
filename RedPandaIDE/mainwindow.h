@@ -89,6 +89,7 @@ public:
     void updateEditorColorSchemes();
     void updateCompilerSet();
     void updateDebuggerSettings();
+    void updateActionIcons();
     void checkSyntaxInBack(Editor* e);
     bool compile(bool rebuild=false);
     void runExecutable(const QString& exeName, const QString& filename=QString(),RunType runType = RunType::Normal);

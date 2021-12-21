@@ -2,6 +2,7 @@
 
 #include <QPainter>
 #include <QSvgRenderer>
+#include <QDebug>
 
 IconsManager* pIconsManager;
 
@@ -16,6 +17,7 @@ IconsManager::IconsManager(QObject *parent) : QObject(parent)
 void IconsManager::updateEditorGuttorIcons(const QString& iconSet,int size)
 {
     QString iconFolder = QString(":/icons/images/%1/").arg(iconSet);
+    qDebug()<<iconFolder;
     mIcons.insert(GUTTER_BREAKPOINT, createSVGIcon(iconFolder+"breakpoint.svg",size,size));
     mIcons.insert(GUTTER_SYNTAX_ERROR, createSVGIcon(iconFolder+"syntaxerror.svg",size,size));
     mIcons.insert(GUTTER_SYNTAX_WARNING,createSVGIcon(iconFolder+"syntaxwarning.svg",size,size));
@@ -44,6 +46,13 @@ void IconsManager::updateParserIcons(const QString &iconSet, int size)
     mIcons.insert(PARSER_PUBLIC_VAR, createSVGIcon(iconFolder+"var_public.svg",size,size));
     mIcons.insert(PARSER_PRIVATE_VAR, createSVGIcon(iconFolder+"var_private.svg",size,size));
 
+}
+
+void IconsManager::updateActionIcons(const QString iconSet, int size)
+{
+    QString iconFolder = QString(":/icons/images/%1/").arg(iconSet);
+    mIcons.insert(ACTION_FILE_NEW, createSVGIcon(iconFolder+"01File-01New.svg",size,size));
+    mIcons.insert(ACTION_FILE_OPEN, createSVGIcon(iconFolder+"01File-02Open.svg",size,size));
 }
 
 IconsManager::PIcon IconsManager::getIcon(IconName iconName) const

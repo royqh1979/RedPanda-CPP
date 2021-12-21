@@ -8,6 +8,7 @@
 #include <QCoreApplication>
 #include <QPixmapCache>
 #include <QApplication>
+#include "../settings.h"
 
 #define BEGIN_STYLE_PIXMAPCACHE(a) \
     QRect rect = option->rect; \
@@ -797,6 +798,16 @@ QIcon DarkFusionStyle::standardIcon(StandardPixmap standardIcon, const QStyleOpt
 void DarkFusionStyle::drawComplexControl(ComplexControl control, const QStyleOptionComplex *option, QPainter *painter, const QWidget *widget) const
 {
     QProxyStyle::drawComplexControl(control,option,painter,widget);
+}
+
+int DarkFusionStyle::pixelMetric(PixelMetric metric, const QStyleOption *option, const QWidget *widget) const
+{
+    switch ( metric ) {
+    case QStyle::PM_SmallIconSize:
+        return pointToPixel(pSettings->environment().interfaceFontSize());
+    default:
+        return QProxyStyle::pixelMetric( metric, option, widget );
+    }
 }
 
 void DarkFusionStyle::drawControl(ControlElement element, const QStyleOption *option, QPainter *painter,
