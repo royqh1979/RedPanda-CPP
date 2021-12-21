@@ -38,6 +38,7 @@ public:
 
         ACTION_FILE_NEW,
         ACTION_FILE_OPEN,
+        ACTION_FILE_OPEN_FOLDER,
         ACTION_FILE_SAVE,
         ACTION_FILE_SAVE_AS,
         ACTION_FILE_SAVE_ALL,
@@ -47,7 +48,7 @@ public:
         ACTION_PROJECT_NEW,
         ACTION_PROJECT_SAVE,
         ACTION_PROJECT_CLOSE,
-        ACTION_FOLDER_OPEN
+
     };
     explicit IconsManager(QObject *parent = nullptr);
 

@@ -1105,8 +1105,18 @@ void MainWindow::updateActionIcons()
     ui->toolbarCode->setIconSize(iconSize);
     ui->toolbarCompile->setIconSize(iconSize);
     ui->toolbarDebug->setIconSize(iconSize);
+
     ui->actionNew->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_FILE_NEW))));
+    ui->actionNew_Project->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_PROJECT_NEW))));
     ui->actionOpen->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_FILE_OPEN))));
+    ui->actionSave->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_FILE_SAVE))));
+    ui->actionSaveAs->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_FILE_SAVE_AS))));
+    ui->actionSaveAll->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_FILE_SAVE_ALL))));
+    ui->actionClose->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_FILE_CLOSE))));
+    ui->actionClose_Project->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_PROJECT_CLOSE))));
+    ui->actionClose_All->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_FILE_CLOSE_ALL))));
+    ui->actionPrint->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_FILE_PRINT))));
+
 }
 
 void MainWindow::checkSyntaxInBack(Editor *e)

@@ -17,7 +17,6 @@ IconsManager::IconsManager(QObject *parent) : QObject(parent)
 void IconsManager::updateEditorGuttorIcons(const QString& iconSet,int size)
 {
     QString iconFolder = QString(":/icons/images/%1/").arg(iconSet);
-    qDebug()<<iconFolder;
     mIcons.insert(GUTTER_BREAKPOINT, createSVGIcon(iconFolder+"breakpoint.svg",size,size));
     mIcons.insert(GUTTER_SYNTAX_ERROR, createSVGIcon(iconFolder+"syntaxerror.svg",size,size));
     mIcons.insert(GUTTER_SYNTAX_WARNING,createSVGIcon(iconFolder+"syntaxwarning.svg",size,size));
@@ -53,6 +52,17 @@ void IconsManager::updateActionIcons(const QString iconSet, int size)
     QString iconFolder = QString(":/icons/images/%1/").arg(iconSet);
     mIcons.insert(ACTION_FILE_NEW, createSVGIcon(iconFolder+"01File-01New.svg",size,size));
     mIcons.insert(ACTION_FILE_OPEN, createSVGIcon(iconFolder+"01File-02Open.svg",size,size));
+    mIcons.insert(ACTION_FILE_OPEN_FOLDER, createSVGIcon(iconFolder+"01File-09Open_Folder.svg",size,size));
+    mIcons.insert(ACTION_FILE_SAVE, createSVGIcon(iconFolder+"01File-03Save.svg",size,size));
+    mIcons.insert(ACTION_FILE_SAVE_AS, createSVGIcon(iconFolder+"01File-04SaveAs.svg",size,size));
+    mIcons.insert(ACTION_FILE_SAVE_ALL, createSVGIcon(iconFolder+"01File-05SaveAll.svg",size,size));
+    mIcons.insert(ACTION_FILE_CLOSE, createSVGIcon(iconFolder+"01File-06Close.svg",size,size));
+    mIcons.insert(ACTION_FILE_CLOSE_ALL, createSVGIcon(iconFolder+"01File-07CloseAll.svg",size,size));
+    mIcons.insert(ACTION_FILE_PRINT, createSVGIcon(iconFolder+"01File-08Print.svg",size,size));
+    mIcons.insert(ACTION_PROJECT_NEW, createSVGIcon(iconFolder+"02Project_01New.svg",size,size));
+    mIcons.insert(ACTION_PROJECT_SAVE, createSVGIcon(iconFolder+"02Project_02Save.svg",size,size));
+    mIcons.insert(ACTION_PROJECT_CLOSE, createSVGIcon(iconFolder+"02Project_03Close.svg",size,size));
+
 }
 
 IconsManager::PIcon IconsManager::getIcon(IconName iconName) const

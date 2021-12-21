@@ -492,5 +492,15 @@
         <file>images/classparser/var_public.svg</file>
         <file>images/newlook/01File-01New.svg</file>
         <file>images/newlook/01File-02Open.svg</file>
+        <file>images/newlook/01File-03Save.svg</file>
+        <file>images/newlook/01File-04SaveAs.svg</file>
+        <file>images/newlook/01File-05SaveAll.svg</file>
+        <file>images/newlook/01File-06Close.svg</file>
+        <file>images/newlook/01File-07CloseAll.svg</file>
+        <file>images/newlook/01File-08Print.svg</file>
+        <file>images/newlook/02Project_01New.svg</file>
+        <file>images/newlook/02Project_02Save.svg</file>
+        <file>images/newlook/02Project_03Close.svg</file>
+        <file>images/newlook/01File-09Open_Folder.svg</file>
     </qresource>
 </RCC>
