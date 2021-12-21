@@ -1125,6 +1125,21 @@ void MainWindow::updateActionIcons()
     ui->actionIndent->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_EDIT_INDENT))));
     ui->actionUnIndent->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_EDIT_UNINDENT))));
 
+    ui->actionFind->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_EDIT_SEARCH))));
+    ui->actionReplace->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_EDIT_REPLACE))));
+    ui->actionFind_in_files->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_EDIT_SEARCH_IN_FILES))));
+
+    ui->actionBack->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_CODE_BACK))));
+    ui->actionForward->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_CODE_FORWARD))));
+    ui->actionAdd_bookmark->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_CODE_ADD_BOOKMARK))));
+    ui->actionRemove_Bookmark->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_CODE_REMOVE_BOOKMARK))));
+    ui->actionReformat_Code->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_CODE_REFORMAT))));
+
+    ui->actionProject_New_File->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_PROJECT_NEW_FILE))));
+    ui->actionAdd_to_project->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_PROJECT_ADD_FILE))));
+    ui->actionRemove_from_project->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_PROJECT_REMOVE_FILE))));
+    ui->actionProject_options->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_PROJECT_PROPERTIES))));
+
 }
 
 void MainWindow::checkSyntaxInBack(Editor *e)

@@ -62,6 +62,10 @@ void IconsManager::updateActionIcons(const QString iconSet, int size)
     mIcons.insert(ACTION_PROJECT_NEW, createSVGIcon(iconFolder+"02Project_01New.svg",size,size));
     mIcons.insert(ACTION_PROJECT_SAVE, createSVGIcon(iconFolder+"02Project_02Save.svg",size,size));
     mIcons.insert(ACTION_PROJECT_CLOSE, createSVGIcon(iconFolder+"02Project_03Close.svg",size,size));
+    mIcons.insert(ACTION_PROJECT_NEW_FILE, createSVGIcon(iconFolder+"02Project_04NewFile.svg",size,size));
+    mIcons.insert(ACTION_PROJECT_ADD_FILE, createSVGIcon(iconFolder+"02Project_05AddFile.svg",size,size));
+    mIcons.insert(ACTION_PROJECT_REMOVE_FILE, createSVGIcon(iconFolder+"02Project_06RemoveFile.svg",size,size));
+    mIcons.insert(ACTION_PROJECT_PROPERTIES, createSVGIcon(iconFolder+"02Project_07Properties.svg",size,size));
     mIcons.insert(ACTION_EDIT_UNDO, createSVGIcon(iconFolder+"03Edit_01Undo.svg",size,size));
     mIcons.insert(ACTION_EDIT_REDO, createSVGIcon(iconFolder+"03Edit_02Redo.svg",size,size));
     mIcons.insert(ACTION_EDIT_CUT, createSVGIcon(iconFolder+"03Edit_03Cut.svg",size,size));
@@ -69,6 +73,15 @@ void IconsManager::updateActionIcons(const QString iconSet, int size)
     mIcons.insert(ACTION_EDIT_PASTE, createSVGIcon(iconFolder+"03Edit_05Paste.svg",size,size));
     mIcons.insert(ACTION_EDIT_INDENT, createSVGIcon(iconFolder+"03Edit_06Indent.svg",size,size));
     mIcons.insert(ACTION_EDIT_UNINDENT, createSVGIcon(iconFolder+"03Edit_07Unindent.svg",size,size));
+    mIcons.insert(ACTION_EDIT_SEARCH, createSVGIcon(iconFolder+"03Edit_08Search.svg",size,size));
+    mIcons.insert(ACTION_EDIT_REPLACE, createSVGIcon(iconFolder+"03Edit_09Replace.svg",size,size));
+    mIcons.insert(ACTION_EDIT_SEARCH_IN_FILES, createSVGIcon(iconFolder+"03Edit_10SearchInFiles.svg",size,size));
+
+    mIcons.insert(ACTION_CODE_BACK, createSVGIcon(iconFolder+"04Code-01Back.svg",size,size));
+    mIcons.insert(ACTION_CODE_FORWARD, createSVGIcon(iconFolder+"04Code-02Forward.svg",size,size));
+    mIcons.insert(ACTION_CODE_ADD_BOOKMARK, createSVGIcon(iconFolder+"04Code-03AddBookmark.svg",size,size));
+    mIcons.insert(ACTION_CODE_REMOVE_BOOKMARK, createSVGIcon(iconFolder+"04Code-04RemoveBookmark.svg",size,size));
+    mIcons.insert(ACTION_CODE_REFORMAT, createSVGIcon(iconFolder+"04Code-05Reformat.svg",size,size));
 }
 
 IconsManager::PIcon IconsManager::getIcon(IconName iconName) const

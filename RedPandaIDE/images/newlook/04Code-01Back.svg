@@ -8,7 +8,7 @@
    version="1.1"
    id="svg5"
    inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
-   sodipodi:docname="002-add.svg"
+   sodipodi:docname="006-Back.svg"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
@@ -23,9 +23,9 @@
      inkscape:pagecheckerboard="0"
      inkscape:document-units="px"
      showgrid="false"
-     inkscape:zoom="5.786981"
-     inkscape:cx="-26.093053"
-     inkscape:cy="36.201951"
+     inkscape:zoom="8.184027"
+     inkscape:cx="71.236324"
+     inkscape:cy="28.775565"
      inkscape:window-width="1920"
      inkscape:window-height="1001"
      inkscape:window-x="-9"
@@ -37,25 +37,25 @@
   <defs
      id="defs2">
     <linearGradient
-       id="linearGradient3056"
+       id="linearGradient1033"
        inkscape:swatch="gradient">
       <stop
-         style="stop-color:#45c200;stop-opacity:1"
+         style="stop-color:#d3d2cf;stop-opacity:1"
          offset="0"
-         id="stop826" />
+         id="stop1029" />
       <stop
-         style="stop-color:#53e900;stop-opacity:1"
+         style="stop-color:#bebbb7;stop-opacity:1"
          offset="1"
-         id="stop828" />
+         id="stop1031" />
     </linearGradient>
     <linearGradient
-       id="linearGradient3056-2">
+       id="linearGradient3056">
       <stop
          style="stop-color:#45c200;stop-opacity:1"
          offset="0"
          id="stop3052" />
       <stop
-         style="stop-color:#5fff07;stop-opacity:1"
+         style="stop-color:#45c200;stop-opacity:0"
          offset="1"
          id="stop3054" />
     </linearGradient>
@@ -64,10 +64,19 @@
      inkscape:label="图层 1"
      inkscape:groupmode="layer"
      id="layer1">
-    <path
-       style="fill:#45c200;fill-opacity:1;stroke:#000000;stroke-width:0.79374999;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="M 0.79374999,9.7895832 V 16.66875 H 9.7895832 v 8.995833 H 17.197916 V 16.66875 h 8.466667 V 9.7895832 H 17.197916 V 0.79374999 H 9.7895832 V 9.7895832 Z"
-       id="path1359"
-       sodipodi:nodetypes="ccccccccccccc" />
+    <g
+       id="g1481"
+       style="stroke:#007a9f;stroke-width:2.6458333;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       transform="matrix(-1,0,0,1,24.824056,0)">
+      <path
+         style="fill:none;stroke:#007a9f;stroke-width:2.6458333;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         d="M 1.8750956,11.282903 H 21.434283"
+         id="path1395" />
+      <path
+         style="fill:none;stroke:#007a9f;stroke-width:2.6458333;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         d="m 13.642937,4.5907513 7.791346,6.6921517 -7.791346,6.821468"
+         id="path1397"
+         sodipodi:nodetypes="ccc" />
+    </g>
   </g>
 </svg>
