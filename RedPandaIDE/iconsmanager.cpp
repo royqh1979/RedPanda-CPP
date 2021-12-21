@@ -62,7 +62,13 @@ void IconsManager::updateActionIcons(const QString iconSet, int size)
     mIcons.insert(ACTION_PROJECT_NEW, createSVGIcon(iconFolder+"02Project_01New.svg",size,size));
     mIcons.insert(ACTION_PROJECT_SAVE, createSVGIcon(iconFolder+"02Project_02Save.svg",size,size));
     mIcons.insert(ACTION_PROJECT_CLOSE, createSVGIcon(iconFolder+"02Project_03Close.svg",size,size));
-
+    mIcons.insert(ACTION_EDIT_UNDO, createSVGIcon(iconFolder+"03Edit_01Undo.svg",size,size));
+    mIcons.insert(ACTION_EDIT_REDO, createSVGIcon(iconFolder+"03Edit_02Redo.svg",size,size));
+    mIcons.insert(ACTION_EDIT_CUT, createSVGIcon(iconFolder+"03Edit_03Cut.svg",size,size));
+    mIcons.insert(ACTION_EDIT_COPY, createSVGIcon(iconFolder+"03Edit_04Copy.svg",size,size));
+    mIcons.insert(ACTION_EDIT_PASTE, createSVGIcon(iconFolder+"03Edit_05Paste.svg",size,size));
+    mIcons.insert(ACTION_EDIT_INDENT, createSVGIcon(iconFolder+"03Edit_06Indent.svg",size,size));
+    mIcons.insert(ACTION_EDIT_UNINDENT, createSVGIcon(iconFolder+"03Edit_07Unindent.svg",size,size));
 }
 
 IconsManager::PIcon IconsManager::getIcon(IconName iconName) const

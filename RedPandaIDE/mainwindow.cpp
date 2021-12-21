@@ -1117,6 +1117,14 @@ void MainWindow::updateActionIcons()
     ui->actionClose_All->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_FILE_CLOSE_ALL))));
     ui->actionPrint->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_FILE_PRINT))));
 
+    ui->actionUndo->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_EDIT_UNDO))));
+    ui->actionRedo->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_EDIT_REDO))));
+    ui->actionCut->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_EDIT_CUT))));
+    ui->actionCopy->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_EDIT_COPY))));
+    ui->actionPaste->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_EDIT_PASTE))));
+    ui->actionIndent->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_EDIT_INDENT))));
+    ui->actionUnIndent->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_EDIT_UNINDENT))));
+
 }
 
 void MainWindow::checkSyntaxInBack(Editor *e)

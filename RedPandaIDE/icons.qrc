@@ -502,5 +502,12 @@
         <file>images/newlook/02Project_02Save.svg</file>
         <file>images/newlook/02Project_03Close.svg</file>
         <file>images/newlook/01File-09Open_Folder.svg</file>
+        <file>images/newlook/03Edit_01Undo.svg</file>
+        <file>images/newlook/03Edit_02Redo.svg</file>
+        <file>images/newlook/03Edit_03Cut.svg</file>
+        <file>images/newlook/03Edit_04Copy.svg</file>
+        <file>images/newlook/03Edit_05Paste.svg</file>
+        <file>images/newlook/03Edit_06Indent.svg</file>
+        <file>images/newlook/03Edit_07Unindent.svg</file>
     </qresource>
 </RCC>

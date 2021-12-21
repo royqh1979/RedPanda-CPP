@@ -49,6 +49,14 @@ public:
         ACTION_PROJECT_SAVE,
         ACTION_PROJECT_CLOSE,
 
+        ACTION_EDIT_UNDO,
+        ACTION_EDIT_REDO,
+        ACTION_EDIT_CUT,
+        ACTION_EDIT_COPY,
+        ACTION_EDIT_PASTE,
+        ACTION_EDIT_INDENT,
+        ACTION_EDIT_UNINDENT
+
     };
     explicit IconsManager(QObject *parent = nullptr);
 
