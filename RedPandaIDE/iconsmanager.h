@@ -6,11 +6,12 @@
 #include <QPixmap>
 #include <memory>
 
+class QToolButton;
 class IconsManager : public QObject
 {
     Q_OBJECT
 public:
-    using PIcon = std::shared_ptr<QPixmap>;
+    using PPixmap = std::shared_ptr<QPixmap>;
     enum IconName {
         GUTTER_SYNTAX_ERROR,
         GUTTER_SYNTAX_WARNING,
@@ -45,6 +46,8 @@ public:
         ACTION_MISC_FOLDER,
         ACTION_MISC_TERM,
         ACTION_MISC_CLEAN,
+        ACTION_MISC_VALIDATE,
+        ACTION_MISC_RENAME,
 
         ACTION_FILE_NEW,
         ACTION_FILE_OPEN,
@@ -124,16 +127,20 @@ public:
     void updateParserIcons(const QString& iconSet, int size);
     void updateActionIcons(const QString iconSet, int size);
 
-    PIcon getIcon(IconName iconName) const;
+    PPixmap getPixmap(IconName iconName) const;
 
-    PIcon createSVGIcon(const QString& filename, int width, int height);
+    QIcon getIcon(IconName iconName) const;
+
+    void setIcon(QToolButton* btn, IconName iconName) const;
+
+    PPixmap createSVGIcon(const QString& filename, int width, int height);
     const QSize &actionIconSize() const;
 
 signals:
     void actionIconsUpdated();
 private:
-    QMap<IconName,PIcon> mIcons;
-    PIcon mDefaultIcon;
+    QMap<IconName,PPixmap> mIconPixmaps;
+    PPixmap mDefaultIconPixmap;
     QSize mActionIconSize;
 };
 

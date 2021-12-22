@@ -12,6 +12,7 @@
 #include <QSpinBox>
 #include "../widgets/coloredit.h"
 #include "../utils.h"
+#include "../iconsmanager.h"
 
 SettingsWidget::SettingsWidget(const QString &name, const QString &group, QWidget *parent):
     QWidget(parent),
@@ -19,11 +20,13 @@ SettingsWidget::SettingsWidget(const QString &name, const QString &group, QWidge
     mName(name),
     mGroup(group)
 {
-
 }
 
 void SettingsWidget::init()
 {
+    connect(pIconsManager,&IconsManager::actionIconsUpdated,
+            this, &SettingsWidget::onUpdateIcons);
+    onUpdateIcons();
     load();
     connectInputs();
 }
@@ -68,6 +71,11 @@ void SettingsWidget::disconnectAbstractItemView(QAbstractItemView *pView)
     disconnect(pView->model(),&QAbstractItemModel::rowsRemoved,this,&SettingsWidget::setSettingsChanged);
     disconnect(pView->model(),&QAbstractItemModel::dataChanged,this,&SettingsWidget::setSettingsChanged);
     disconnect(pView->model(),&QAbstractItemModel::modelReset,this,&SettingsWidget::setSettingsChanged);
+
+}
+
+void SettingsWidget::updateIcons(const QSize &)
+{
 
 }
 
@@ -147,4 +155,9 @@ void SettingsWidget::clearSettingsChanged()
 {
     mSettingsChanged = false;
     emit settingsChanged(false);
+}
+
+void SettingsWidget::onUpdateIcons()
+{
+    updateIcons(pIconsManager->actionIconSize());
 }

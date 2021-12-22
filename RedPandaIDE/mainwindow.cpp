@@ -1118,173 +1118,162 @@ void MainWindow::updateActionIcons()
     ui->EditorTabsLeft->setIconSize(iconSize);
     ui->EditorTabsRight->setIconSize(iconSize);
 
-    ui->actionNew->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_FILE_NEW))));
-    ui->actionNew_Project->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_PROJECT_NEW))));
-    ui->actionOpen->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_FILE_OPEN))));
-    ui->actionSave->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_FILE_SAVE))));
-    ui->actionSaveAs->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_FILE_SAVE_AS))));
-    ui->actionSaveAll->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_FILE_SAVE_ALL))));
-    ui->actionClose->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_FILE_CLOSE))));
-    ui->actionClose_Project->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_PROJECT_CLOSE))));
-    ui->actionClose_All->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_FILE_CLOSE_ALL))));
-    ui->actionPrint->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_FILE_PRINT))));
+    ui->actionNew->setIcon(pIconsManager->getIcon(IconsManager::ACTION_FILE_NEW));
+    ui->actionNew_Project->setIcon(pIconsManager->getIcon(IconsManager::ACTION_PROJECT_NEW));
+    ui->actionOpen->setIcon(pIconsManager->getIcon(IconsManager::ACTION_FILE_OPEN));
+    ui->actionSave->setIcon(pIconsManager->getIcon(IconsManager::ACTION_FILE_SAVE));
+    ui->actionSaveAs->setIcon(pIconsManager->getIcon(IconsManager::ACTION_FILE_SAVE_AS));
+    ui->actionSaveAll->setIcon(pIconsManager->getIcon(IconsManager::ACTION_FILE_SAVE_ALL));
+    ui->actionClose->setIcon(pIconsManager->getIcon(IconsManager::ACTION_FILE_CLOSE));
+    ui->actionClose_Project->setIcon(pIconsManager->getIcon(IconsManager::ACTION_PROJECT_CLOSE));
+    ui->actionClose_All->setIcon(pIconsManager->getIcon(IconsManager::ACTION_FILE_CLOSE_ALL));
+    ui->actionPrint->setIcon(pIconsManager->getIcon(IconsManager::ACTION_FILE_PRINT));
 
-    ui->actionUndo->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_EDIT_UNDO))));
-    ui->actionRedo->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_EDIT_REDO))));
-    ui->actionCut->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_EDIT_CUT))));
-    ui->actionCopy->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_EDIT_COPY))));
-    ui->actionPaste->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_EDIT_PASTE))));
-    ui->actionIndent->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_EDIT_INDENT))));
-    ui->actionUnIndent->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_EDIT_UNINDENT))));
+    ui->actionUndo->setIcon(pIconsManager->getIcon(IconsManager::ACTION_EDIT_UNDO));
+    ui->actionRedo->setIcon(pIconsManager->getIcon(IconsManager::ACTION_EDIT_REDO));
+    ui->actionCut->setIcon(pIconsManager->getIcon(IconsManager::ACTION_EDIT_CUT));
+    ui->actionCopy->setIcon(pIconsManager->getIcon(IconsManager::ACTION_EDIT_COPY));
+    ui->actionPaste->setIcon(pIconsManager->getIcon(IconsManager::ACTION_EDIT_PASTE));
+    ui->actionIndent->setIcon(pIconsManager->getIcon(IconsManager::ACTION_EDIT_INDENT));
+    ui->actionUnIndent->setIcon(pIconsManager->getIcon(IconsManager::ACTION_EDIT_UNINDENT));
 
-    ui->actionFind->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_EDIT_SEARCH))));
-    ui->actionReplace->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_EDIT_REPLACE))));
-    ui->actionFind_in_files->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_EDIT_SEARCH_IN_FILES))));
+    ui->actionFind->setIcon(pIconsManager->getIcon(IconsManager::ACTION_EDIT_SEARCH));
+    ui->actionReplace->setIcon(pIconsManager->getIcon(IconsManager::ACTION_EDIT_REPLACE));
+    ui->actionFind_in_files->setIcon(pIconsManager->getIcon(IconsManager::ACTION_EDIT_SEARCH_IN_FILES));
 
-    ui->actionBack->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_CODE_BACK))));
-    ui->actionForward->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_CODE_FORWARD))));
-    ui->actionAdd_bookmark->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_CODE_ADD_BOOKMARK))));
-    ui->actionRemove_Bookmark->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_CODE_REMOVE_BOOKMARK))));
-    ui->actionReformat_Code->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_CODE_REFORMAT))));
+    ui->actionBack->setIcon(pIconsManager->getIcon(IconsManager::ACTION_CODE_BACK));
+    ui->actionForward->setIcon(pIconsManager->getIcon(IconsManager::ACTION_CODE_FORWARD));
+    ui->actionAdd_bookmark->setIcon(pIconsManager->getIcon(IconsManager::ACTION_CODE_ADD_BOOKMARK));
+    ui->actionRemove_Bookmark->setIcon(pIconsManager->getIcon(IconsManager::ACTION_CODE_REMOVE_BOOKMARK));
+    ui->actionReformat_Code->setIcon(pIconsManager->getIcon(IconsManager::ACTION_CODE_REFORMAT));
 
-    ui->actionProject_New_File->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_PROJECT_NEW_FILE))));
-    ui->actionAdd_to_project->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_PROJECT_ADD_FILE))));
-    ui->actionRemove_from_project->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_PROJECT_REMOVE_FILE))));
-    ui->actionProject_Open_Folder_In_Explorer->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_MISC_FOLDER))));
-    ui->actionProject_Open_In_Terminal->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_MISC_TERM))));
-    ui->actionMakeClean->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_MISC_CLEAN))));
-    ui->actionProject_options->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_PROJECT_PROPERTIES))));
+    ui->actionProject_New_File->setIcon(pIconsManager->getIcon(IconsManager::ACTION_PROJECT_NEW_FILE));
+    ui->actionAdd_to_project->setIcon(pIconsManager->getIcon(IconsManager::ACTION_PROJECT_ADD_FILE));
+    ui->actionRemove_from_project->setIcon(pIconsManager->getIcon(IconsManager::ACTION_PROJECT_REMOVE_FILE));
+    ui->actionProject_Open_Folder_In_Explorer->setIcon(pIconsManager->getIcon(IconsManager::ACTION_MISC_FOLDER));
+    ui->actionProject_Open_In_Terminal->setIcon(pIconsManager->getIcon(IconsManager::ACTION_MISC_TERM));
+    ui->actionMakeClean->setIcon(pIconsManager->getIcon(IconsManager::ACTION_MISC_CLEAN));
+    ui->actionProject_options->setIcon(pIconsManager->getIcon(IconsManager::ACTION_PROJECT_PROPERTIES));
 
 
-    ui->actionCompile->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_RUN_COMPILE))));
-    ui->actionCompile_Run->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_RUN_COMPILE_RUN))));
-    ui->actionRun->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_RUN_RUN))));
-    ui->actionRebuild->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_RUN_REBUILD))));
-    ui->actionRun_Parameters->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_RUN_OPTIONS))));
-    ui->actionDebug->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_RUN_DEBUG))));
-    ui->actionStep_Over->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_RUN_STEP_OVER))));
-    ui->actionStep_Into->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_RUN_STEP_INTO))));
-    ui->actionStep_Out->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_RUN_STEP_OUT))));
-    ui->actionRun_To_Cursor->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_RUN_RUN_TO_CURSOR))));
-    ui->actionContinue->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_RUN_CONTINUE))));
-    ui->actionStop_Execution->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_RUN_STOP))));
-    ui->actionAdd_Watch->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_RUN_ADD_WATCH))));
-    ui->actionRemove_Watch->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_RUN_REMOVE_WATCH))));
-    ui->actionRemove_All_Watches->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_MISC_CLEAN))));
+    ui->actionCompile->setIcon(pIconsManager->getIcon(IconsManager::ACTION_RUN_COMPILE));
+    ui->actionCompile_Run->setIcon(pIconsManager->getIcon(IconsManager::ACTION_RUN_COMPILE_RUN));
+    ui->actionRun->setIcon(pIconsManager->getIcon(IconsManager::ACTION_RUN_RUN));
+    ui->actionRebuild->setIcon(pIconsManager->getIcon(IconsManager::ACTION_RUN_REBUILD));
+    ui->actionRun_Parameters->setIcon(pIconsManager->getIcon(IconsManager::ACTION_RUN_OPTIONS));
+    ui->actionDebug->setIcon(pIconsManager->getIcon(IconsManager::ACTION_RUN_DEBUG));
+    ui->actionStep_Over->setIcon(pIconsManager->getIcon(IconsManager::ACTION_RUN_STEP_OVER));
+    ui->actionStep_Into->setIcon(pIconsManager->getIcon(IconsManager::ACTION_RUN_STEP_INTO));
+    ui->actionStep_Out->setIcon(pIconsManager->getIcon(IconsManager::ACTION_RUN_STEP_OUT));
+    ui->actionRun_To_Cursor->setIcon(pIconsManager->getIcon(IconsManager::ACTION_RUN_RUN_TO_CURSOR));
+    ui->actionContinue->setIcon(pIconsManager->getIcon(IconsManager::ACTION_RUN_CONTINUE));
+    ui->actionStop_Execution->setIcon(pIconsManager->getIcon(IconsManager::ACTION_RUN_STOP));
+    ui->actionAdd_Watch->setIcon(pIconsManager->getIcon(IconsManager::ACTION_RUN_ADD_WATCH));
+    ui->actionRemove_Watch->setIcon(pIconsManager->getIcon(IconsManager::ACTION_RUN_REMOVE_WATCH));
+    ui->actionRemove_All_Watches->setIcon(pIconsManager->getIcon(IconsManager::ACTION_MISC_CLEAN));
 
-    ui->actionOptions->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_MISC_GEAR))));
+    ui->actionOptions->setIcon(pIconsManager->getIcon(IconsManager::ACTION_MISC_GEAR));
 
-    ui->actionMaximize_Editor->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_VIEW_MAXIMUM))));
-    ui->actionNext_Editor->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_MISC_FORWARD))));
-    ui->actionPrevious_Editor->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_MISC_BACK))));
+    ui->actionMaximize_Editor->setIcon(pIconsManager->getIcon(IconsManager::ACTION_VIEW_MAXIMUM));
+    ui->actionNext_Editor->setIcon(pIconsManager->getIcon(IconsManager::ACTION_MISC_FORWARD));
+    ui->actionPrevious_Editor->setIcon(pIconsManager->getIcon(IconsManager::ACTION_MISC_BACK));
 
-    ui->actionAbout->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_HELP_ABOUT))));
+    ui->actionAbout->setIcon(pIconsManager->getIcon(IconsManager::ACTION_HELP_ABOUT));
 
     //editor context menu
-    ui->actionOpen_Containing_Folder->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_MISC_FOLDER))));
-    ui->actionOpen_Terminal->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_MISC_TERM))));
-    ui->actionFile_Properties->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_FILE_PROPERTIES))));
-    ui->actionLocate_in_Files_View->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_FILE_LOCATE))));
+    ui->actionOpen_Containing_Folder->setIcon(pIconsManager->getIcon(IconsManager::ACTION_MISC_FOLDER));
+    ui->actionOpen_Terminal->setIcon(pIconsManager->getIcon(IconsManager::ACTION_MISC_TERM));
+    ui->actionFile_Properties->setIcon(pIconsManager->getIcon(IconsManager::ACTION_FILE_PROPERTIES));
+    ui->actionLocate_in_Files_View->setIcon(pIconsManager->getIcon(IconsManager::ACTION_FILE_LOCATE));
 
     //bookmark context menu
-    mBookmark_Remove->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_CODE_REMOVE_BOOKMARK))));
-    mBookmark_RemoveAll->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_MISC_CLEAN))));
+    mBookmark_Remove->setIcon(pIconsManager->getIcon(IconsManager::ACTION_CODE_REMOVE_BOOKMARK));
+    mBookmark_RemoveAll->setIcon(pIconsManager->getIcon(IconsManager::ACTION_MISC_CLEAN));
 
     //issues context menu
-    mTableIssuesCopyAction->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_EDIT_COPY))));
-    mTableIssuesClearAction->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_MISC_CLEAN))));
+    mTableIssuesCopyAction->setIcon(pIconsManager->getIcon(IconsManager::ACTION_EDIT_COPY));
+    mTableIssuesClearAction->setIcon(pIconsManager->getIcon(IconsManager::ACTION_MISC_CLEAN));
 
     //search context menu
-    mSearchViewClearAction->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_MISC_CROSS))));
-    mSearchViewClearAllAction->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_MISC_CLEAN))));
+    mSearchViewClearAction->setIcon(pIconsManager->getIcon(IconsManager::ACTION_MISC_CROSS));
+    mSearchViewClearAllAction->setIcon(pIconsManager->getIcon(IconsManager::ACTION_MISC_CLEAN));
 
     //breakpoint context menu
     //mBreakpointViewPropertyAction
-    mBreakpointViewRemoveAllAction->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_MISC_CLEAN))));
-    mBreakpointViewRemoveAction->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_MISC_CROSS))));
+    mBreakpointViewRemoveAllAction->setIcon(pIconsManager->getIcon(IconsManager::ACTION_MISC_CLEAN));
+    mBreakpointViewRemoveAction->setIcon(pIconsManager->getIcon(IconsManager::ACTION_MISC_CROSS));
 
     //classbrowser
-    mClassBrowser_Sort_By_Name->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_EDIT_SORT_BY_NAME))));
-    mClassBrowser_Sort_By_Type->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_EDIT_SORT_BY_TYPE))));
-    mClassBrowser_Show_Inherited->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_EDIT_SHOW_INHERITED))));
+    mClassBrowser_Sort_By_Name->setIcon(pIconsManager->getIcon(IconsManager::ACTION_EDIT_SORT_BY_NAME));
+    mClassBrowser_Sort_By_Type->setIcon(pIconsManager->getIcon(IconsManager::ACTION_EDIT_SORT_BY_TYPE));
+    mClassBrowser_Show_Inherited->setIcon(pIconsManager->getIcon(IconsManager::ACTION_EDIT_SHOW_INHERITED));
 
     //debug console
-    mDebugConsole_Copy->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_EDIT_COPY))));
-    mDebugConsole_Paste->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_EDIT_PASTE))));
-    mDebugConsole_Clear->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_MISC_CLEAN))));
+    mDebugConsole_Copy->setIcon(pIconsManager->getIcon(IconsManager::ACTION_EDIT_COPY));
+    mDebugConsole_Paste->setIcon(pIconsManager->getIcon(IconsManager::ACTION_EDIT_PASTE));
+    mDebugConsole_Clear->setIcon(pIconsManager->getIcon(IconsManager::ACTION_MISC_CLEAN));
 
     //file view
-    mFilesView_Open->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_FILE_OPEN))));
-    mFilesView_OpenInTerminal->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_MISC_TERM))));
-    mFilesView_OpenInExplorer->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_MISC_FOLDER))));
+    mFilesView_Open->setIcon(pIconsManager->getIcon(IconsManager::ACTION_FILE_OPEN));
+    mFilesView_OpenInTerminal->setIcon(pIconsManager->getIcon(IconsManager::ACTION_MISC_TERM));
+    mFilesView_OpenInExplorer->setIcon(pIconsManager->getIcon(IconsManager::ACTION_MISC_FOLDER));
 
     //problem view
-    ui->btnNewProblemSet->setIconSize(iconSize);
-    ui->btnNewProblemSet->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_PROBLEM_SET))));
-    ui->btnAddProblem->setIconSize(iconSize);
-    ui->btnAddProblem->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_MISC_ADD))));
-    ui->btnRemoveProblem->setIconSize(iconSize);
-    ui->btnRemoveProblem->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_MISC_CROSS))));
-    ui->btnSaveProblemSet->setIconSize(iconSize);
-    ui->btnSaveProblemSet->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_FILE_SAVE_AS))));
-    ui->btnLoadProblemSet->setIconSize(iconSize);
-    ui->btnLoadProblemSet->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_FILE_OPEN_FOLDER))));
+    pIconsManager->setIcon(ui->btnNewProblemSet, IconsManager::ACTION_PROBLEM_SET);
+    pIconsManager->setIcon(ui->btnAddProblem, IconsManager::ACTION_MISC_ADD);
+    pIconsManager->setIcon(ui->btnRemoveProblem, IconsManager::ACTION_MISC_CROSS);
+    pIconsManager->setIcon(ui->btnSaveProblemSet, IconsManager::ACTION_FILE_SAVE_AS);
+    pIconsManager->setIcon(ui->btnLoadProblemSet, IconsManager::ACTION_FILE_OPEN_FOLDER);
 
-    ui->btnAddProblemCase->setIconSize(iconSize);
-    ui->btnAddProblemCase->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_MISC_ADD))));
-    ui->btnRemoveProblemCase->setIconSize(iconSize);
-    ui->btnRemoveProblemCase->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_MISC_REMOVE))));
-    ui->btnOpenProblemAnswer->setIconSize(iconSize);
-    ui->btnOpenProblemAnswer->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_PROBLEM_EDIT_SOURCE))));
-    ui->btnRunAllProblemCases->setIconSize(iconSize);
-    ui->btnRunAllProblemCases->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_PROBLEM_RUN_CASES))));
-    ui->btnCaseValidateOptions->setIconSize(iconSize);
-    ui->btnCaseValidateOptions->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_MISC_GEAR))));
+    pIconsManager->setIcon(ui->btnAddProblemCase, IconsManager::ACTION_MISC_ADD);
+    pIconsManager->setIcon(ui->btnRemoveProblemCase, IconsManager::ACTION_MISC_REMOVE);
+    pIconsManager->setIcon(ui->btnOpenProblemAnswer, IconsManager::ACTION_PROBLEM_EDIT_SOURCE);
+    pIconsManager->setIcon(ui->btnRunAllProblemCases, IconsManager::ACTION_PROBLEM_RUN_CASES);
+    pIconsManager->setIcon(ui->btnCaseValidateOptions, IconsManager::ACTION_MISC_GEAR);
 
-    mProblem_Properties->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_PROBLEM_PROPERTIES))));
+    mProblem_Properties->setIcon(pIconsManager->getIcon(IconsManager::ACTION_PROBLEM_PROPERTIES));
 
 
     int idx = ui->tabInfos->indexOf(ui->tabWatch);
     if (idx>=0)
-        ui->tabInfos->setTabIcon(idx,QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_RUN_ADD_WATCH))));
+        ui->tabInfos->setTabIcon(idx,pIconsManager->getIcon(IconsManager::ACTION_RUN_ADD_WATCH));
     idx = ui->tabInfos->indexOf(ui->tabProject);
     if (idx>=0)
-        ui->tabInfos->setTabIcon(idx,QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_PROJECT_NEW))));
+        ui->tabInfos->setTabIcon(idx,pIconsManager->getIcon(IconsManager::ACTION_PROJECT_NEW));
     idx = ui->tabInfos->indexOf(ui->tabFiles);
     if (idx>=0)
-        ui->tabInfos->setTabIcon(idx,QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_VIEW_FILES))));
+        ui->tabInfos->setTabIcon(idx,pIconsManager->getIcon(IconsManager::ACTION_VIEW_FILES));
     idx = ui->tabInfos->indexOf(ui->tabStructure);
     if (idx>=0)
-        ui->tabInfos->setTabIcon(idx,QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_VIEW_CLASSBROWSER))));
+        ui->tabInfos->setTabIcon(idx,pIconsManager->getIcon(IconsManager::ACTION_VIEW_CLASSBROWSER));
     idx = ui->tabInfos->indexOf(ui->tabProblemSet);
     if (idx>=0)
-        ui->tabInfos->setTabIcon(idx,QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_PROBLEM_SET))));
+        ui->tabInfos->setTabIcon(idx,pIconsManager->getIcon(IconsManager::ACTION_PROBLEM_SET));
 
     idx = ui->tabMessages->indexOf(ui->tabIssues);
     if (idx>=0)
-        ui->tabMessages->setTabIcon(idx,QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_RUN_COMPILE))));
+        ui->tabMessages->setTabIcon(idx,pIconsManager->getIcon(IconsManager::ACTION_RUN_COMPILE));
     idx = ui->tabMessages->indexOf(ui->tabDebug);
     if (idx>=0)
-        ui->tabMessages->setTabIcon(idx,QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_RUN_DEBUG))));
+        ui->tabMessages->setTabIcon(idx,pIconsManager->getIcon(IconsManager::ACTION_RUN_DEBUG));
     idx = ui->tabMessages->indexOf(ui->tabSearch);
     if (idx>=0)
-        ui->tabMessages->setTabIcon(idx,QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_EDIT_SEARCH))));
+        ui->tabMessages->setTabIcon(idx,pIconsManager->getIcon(IconsManager::ACTION_EDIT_SEARCH));
     idx = ui->tabMessages->indexOf(ui->tabCompilerOutput);
     if (idx>=0)
-        ui->tabMessages->setTabIcon(idx,QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_VIEW_COMPILELOG))));
+        ui->tabMessages->setTabIcon(idx,pIconsManager->getIcon(IconsManager::ACTION_VIEW_COMPILELOG));
     idx = ui->tabMessages->indexOf(ui->tabTODO);
     if (idx>=0)
-        ui->tabMessages->setTabIcon(idx,QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_VIEW_TODO))));
+        ui->tabMessages->setTabIcon(idx,pIconsManager->getIcon(IconsManager::ACTION_VIEW_TODO));
 
 
     idx = ui->tabMessages->indexOf(ui->tabBookmark);
     if (idx>=0)
-        ui->tabMessages->setTabIcon(idx,QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_VIEW_BOOKMARK))));
+        ui->tabMessages->setTabIcon(idx,pIconsManager->getIcon(IconsManager::ACTION_VIEW_BOOKMARK));
 
     idx = ui->tabMessages->indexOf(ui->tabProblem);
     if (idx>=0)
-        ui->tabMessages->setTabIcon(idx,QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_PROBLEM_PROBLEM))));
-
+        ui->tabMessages->setTabIcon(idx,pIconsManager->getIcon(IconsManager::ACTION_PROBLEM_PROBLEM));
 }
 
 void MainWindow::checkSyntaxInBack(Editor *e)

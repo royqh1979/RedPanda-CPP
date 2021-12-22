@@ -141,10 +141,7 @@ void CPUDialog::on_btnStepIntoInstruction_clicked()
 
 void CPUDialog::updateIcons()
 {
-    QSize size = pIconsManager->actionIconSize();
-    ui->btnStepIntoInstruction->setIconSize(size);
-    ui->btnStepIntoInstruction->setIcon(QIcon(*pIconsManager->getIcon(IconsManager::ACTION_RUN_STEP_INTO_INSTRUCTION)));
-    ui->btnStepOverInstruction->setIconSize(size);
-    ui->btnStepOverInstruction->setIcon(QIcon(*pIconsManager->getIcon(IconsManager::ACTION_RUN_STEP_OVER_INSTRUCTION)));
+    pIconsManager->setIcon(ui->btnStepIntoInstruction, IconsManager::ACTION_RUN_STEP_INTO_INSTRUCTION);
+    pIconsManager->setIcon(ui->btnStepOverInstruction, IconsManager::ACTION_RUN_STEP_OVER_INSTRUCTION);
 }
 

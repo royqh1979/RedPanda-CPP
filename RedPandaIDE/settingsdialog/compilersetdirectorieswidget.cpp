@@ -1,5 +1,6 @@
 #include "compilersetdirectorieswidget.h"
 #include "ui_compilersetdirectorieswidget.h"
+#include "../iconsmanager.h"
 
 #include <QFileDialog>
 #include <QStringListModel>
@@ -16,6 +17,8 @@ CompilerSetDirectoriesWidget::CompilerSetDirectoriesWidget(QWidget *parent) :
     connect(ui->listView->selectionModel(), &QItemSelectionModel::selectionChanged,
             this, &CompilerSetDirectoriesWidget::selectionChanged);
     ui->listView->setSelectionMode(QAbstractItemView::SingleSelection);
+    connect(pIconsManager, &IconsManager::actionIconsUpdated,
+            this, &CompilerSetDirectoriesWidget::updateIcons);
 }
 
 CompilerSetDirectoriesWidget::~CompilerSetDirectoriesWidget()
@@ -82,4 +85,11 @@ void CompilerSetDirectoriesWidget::on_btnRemoveInvalid_pressed()
         }
     }
     setDirList(lst);
+}
+
+void CompilerSetDirectoriesWidget::updateIcons()
+{
+    pIconsManager->setIcon(ui->btnAdd,IconsManager::ACTION_MISC_ADD);
+    pIconsManager->setIcon(ui->btnDelete, IconsManager::ACTION_MISC_REMOVE);
+    pIconsManager->setIcon(ui->btnRemoveInvalid, IconsManager::ACTION_MISC_VALIDATE);
 }

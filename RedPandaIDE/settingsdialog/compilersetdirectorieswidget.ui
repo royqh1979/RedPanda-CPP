@@ -56,10 +56,10 @@
       <item>
        <widget class="QToolButton" name="btnDelete">
         <property name="toolTip">
-         <string>Delete</string>
+         <string>Remove</string>
         </property>
         <property name="text">
-         <string>Delete</string>
+         <string>Remove</string>
         </property>
         <property name="icon">
          <iconset>

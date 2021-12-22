@@ -31,8 +31,11 @@
       </item>
       <item>
        <widget class="QToolButton" name="btnFindCompilers">
+        <property name="toolTip">
+         <string>Auto Find Compilers</string>
+        </property>
         <property name="text">
-         <string>...</string>
+         <string>Auto Find Compilers</string>
         </property>
         <property name="icon">
          <iconset>
@@ -42,21 +45,12 @@
        </widget>
       </item>
       <item>
-       <widget class="QToolButton" name="btnAddBlankCompilerSet">
-        <property name="text">
-         <string>...</string>
-        </property>
-        <property name="icon">
-         <iconset>
-          <normalon>:/icons/images/newlook24/050-newsrc.png</normalon>
-         </iconset>
-        </property>
-       </widget>
-      </item>
-      <item>
        <widget class="QToolButton" name="btnAddCompilerSetByFolder">
+        <property name="toolTip">
+         <string>Find Compiler in the Folder</string>
+        </property>
         <property name="text">
-         <string>...</string>
+         <string>Find Compiler in the Folder</string>
         </property>
         <property name="icon">
          <iconset>
@@ -66,9 +60,27 @@
        </widget>
       </item>
       <item>
-       <widget class="QToolButton" name="btnRenameCompilerSet">
+       <widget class="QToolButton" name="btnAddBlankCompilerSet">
+        <property name="toolTip">
+         <string>Add Blank Compiler Set</string>
+        </property>
         <property name="text">
-         <string>...</string>
+         <string>Add Blank Compiler Set</string>
+        </property>
+        <property name="icon">
+         <iconset>
+          <normalon>:/icons/images/newlook24/050-newsrc.png</normalon>
+         </iconset>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="btnRenameCompilerSet">
+        <property name="toolTip">
+         <string>Rename</string>
+        </property>
+        <property name="text">
+         <string>Rename</string>
         </property>
         <property name="icon">
          <iconset>
@@ -79,8 +91,11 @@
       </item>
       <item>
        <widget class="QToolButton" name="btnRemoveCompilerSet">
+        <property name="toolTip">
+         <string>Remove</string>
+        </property>
         <property name="text">
-         <string>...</string>
+         <string>Remove</string>
         </property>
         <property name="icon">
          <iconset>

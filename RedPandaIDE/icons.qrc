@@ -205,5 +205,7 @@
         <file>images/newlook/05Run-14StepOverInstruction.svg</file>
         <file>images/newlook/05Run-15StepIntoInstruction.svg</file>
         <file>images/dark-close.svg</file>
+        <file>images/newlook/00Misc-10Check.svg</file>
+        <file>images/newlook/00Misc-11Rename.svg</file>
     </qresource>
 </RCC>

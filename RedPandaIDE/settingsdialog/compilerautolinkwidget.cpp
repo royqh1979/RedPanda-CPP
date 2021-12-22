@@ -2,6 +2,7 @@
 #include "ui_compilerautolinkwidget.h"
 #include "../mainwindow.h"
 #include "../settings.h"
+#include "../iconsmanager.h"
 
 #include <QMessageBox>
 
@@ -208,5 +209,11 @@ void CompilerAutolinkWidget::on_btnRemove_pressed()
 {
     QModelIndex index = ui->tblAutolinks->currentIndex();
     mModel.removeRow(index.row(),index.parent());
+}
+
+void CompilerAutolinkWidget::updateIcons(const QSize &)
+{
+    pIconsManager->setIcon(ui->btnAdd, IconsManager::ACTION_MISC_ADD);
+    pIconsManager->setIcon(ui->btnRemove, IconsManager::ACTION_MISC_REMOVE);
 }
 

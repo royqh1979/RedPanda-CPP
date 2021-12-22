@@ -1869,7 +1869,7 @@ QVariant ProjectModel::data(const QModelIndex &index, int role) const
         } else {
             QIcon icon = provider.icon(QFileIconProvider::Folder);
             if (icon.isNull())
-                return *(pIconsManager->getIcon(IconsManager::ACTION_MISC_FOLDER));
+                return pIconsManager->getIcon(IconsManager::ACTION_MISC_FOLDER);
             return icon;
         }
     }

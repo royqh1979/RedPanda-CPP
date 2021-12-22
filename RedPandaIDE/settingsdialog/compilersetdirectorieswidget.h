@@ -34,6 +34,8 @@ private slots:
 
     void on_btnRemoveInvalid_pressed();
 
+    void updateIcons();
+
 private:
     Ui::CompilerSetDirectoriesWidget *ui;
     ListModel* mModel;

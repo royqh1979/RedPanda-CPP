@@ -40,8 +40,11 @@
          </property>
          <item>
           <widget class="QToolButton" name="btnAdd">
+           <property name="toolTip">
+            <string>Add</string>
+           </property>
            <property name="text">
-            <string>...</string>
+            <string>Add</string>
            </property>
            <property name="icon">
             <iconset resource="../icons.qrc">
@@ -51,8 +54,11 @@
          </item>
          <item>
           <widget class="QToolButton" name="btnRemove">
+           <property name="toolTip">
+            <string>Remove</string>
+           </property>
            <property name="text">
-            <string>...</string>
+            <string>Remove</string>
            </property>
            <property name="icon">
             <iconset resource="../icons.qrc">

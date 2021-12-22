@@ -40,6 +40,7 @@ private slots:
     void on_btnAddCompilerSetByFolder_pressed();
     void on_btnRenameCompilerSet_pressed();
     void on_btnRemoveCompilerSet_pressed();
+    void updateIcons();
 };
 
 #endif // COMPILERSETOPTIONWIDGET_H

@@ -785,12 +785,12 @@ void Editor::keyPressEvent(QKeyEvent *event)
 
 void Editor::onGutterPaint(QPainter &painter, int aLine, int X, int Y)
 {
-    IconsManager::PIcon icon;
+    IconsManager::PPixmap icon;
 
     if (mActiveBreakpointLine == aLine) {
-        icon = pIconsManager->getIcon(IconsManager::GUTTER_ACTIVEBREAKPOINT);
+        icon = pIconsManager->getPixmap(IconsManager::GUTTER_ACTIVEBREAKPOINT);
     } else if (hasBreakpoint(aLine)) {
-        icon = pIconsManager->getIcon(IconsManager::GUTTER_BREAKPOINT);
+        icon = pIconsManager->getPixmap(IconsManager::GUTTER_BREAKPOINT);
     } else {
         PSyntaxIssueList lst = getSyntaxIssuesAtLine(aLine);
         if (lst) {
@@ -802,12 +802,12 @@ void Editor::onGutterPaint(QPainter &painter, int aLine, int X, int Y)
                 }
             }
             if (hasError) {
-                icon = pIconsManager->getIcon(IconsManager::GUTTER_SYNTAX_ERROR);
+                icon = pIconsManager->getPixmap(IconsManager::GUTTER_SYNTAX_ERROR);
             } else {
-                icon = pIconsManager->getIcon(IconsManager::GUTTER_SYNTAX_WARNING);
+                icon = pIconsManager->getPixmap(IconsManager::GUTTER_SYNTAX_WARNING);
             }
         } else if (hasBookmark(aLine)) {            
-            icon = pIconsManager->getIcon(IconsManager::GUTTER_BOOKMARK);
+            icon = pIconsManager->getPixmap(IconsManager::GUTTER_BOOKMARK);
         }
     }
     if (icon) {

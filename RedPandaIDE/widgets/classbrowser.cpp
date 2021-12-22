@@ -160,57 +160,57 @@ QVariant ClassBrowserModel::data(const QModelIndex &index, int role) const
             }
             switch (kind) {
             case StatementKind::skTypedef:
-                return *(pIconsManager->getIcon(IconsManager::PARSER_TYPE));
+                return *(pIconsManager->getPixmap(IconsManager::PARSER_TYPE));
             case StatementKind::skClass:
-                return *(pIconsManager->getIcon(IconsManager::PARSER_CLASS));
+                return *(pIconsManager->getPixmap(IconsManager::PARSER_CLASS));
             case StatementKind::skNamespace:
             case StatementKind::skNamespaceAlias:
-                return *(pIconsManager->getIcon(IconsManager::PARSER_NAMESPACE));
+                return *(pIconsManager->getPixmap(IconsManager::PARSER_NAMESPACE));
             case StatementKind::skPreprocessor:
-                return *(pIconsManager->getIcon(IconsManager::PARSER_DEFINE));
+                return *(pIconsManager->getPixmap(IconsManager::PARSER_DEFINE));
             case StatementKind::skEnumClassType:
             case StatementKind::skEnumType:
             case StatementKind::skEnum:
-                return *(pIconsManager->getIcon(IconsManager::PARSER_ENUM));
+                return *(pIconsManager->getPixmap(IconsManager::PARSER_ENUM));
             case StatementKind::skFunction:
             case StatementKind::skConstructor:
             case StatementKind::skDestructor:
                 if (statement->scope == StatementScope::ssGlobal)
-                    return *(pIconsManager->getIcon(IconsManager::PARSER_GLOBAL_METHOD));
+                    return *(pIconsManager->getPixmap(IconsManager::PARSER_GLOBAL_METHOD));
                 if (statement->isInherited) {
                     if (statement->classScope == StatementClassScope::scsProtected) {
-                        return *(pIconsManager->getIcon(IconsManager::PARSER_INHERITED_PROTECTED_METHOD));
+                        return *(pIconsManager->getPixmap(IconsManager::PARSER_INHERITED_PROTECTED_METHOD));
                     } else if (statement->classScope == StatementClassScope::scsPublic) {
-                        return *(pIconsManager->getIcon(IconsManager::PARSER_INHERITED_METHOD));
+                        return *(pIconsManager->getPixmap(IconsManager::PARSER_INHERITED_METHOD));
                     }
                 } else {
                     if (statement->classScope == StatementClassScope::scsProtected) {
-                        return *(pIconsManager->getIcon(IconsManager::PARSER_PROTECTED_METHOD));
+                        return *(pIconsManager->getPixmap(IconsManager::PARSER_PROTECTED_METHOD));
                     } else if (statement->classScope == StatementClassScope::scsPublic) {
-                        return *(pIconsManager->getIcon(IconsManager::PARSER_PUBLIC_METHOD));
+                        return *(pIconsManager->getPixmap(IconsManager::PARSER_PUBLIC_METHOD));
                     } else {
-                        return *(pIconsManager->getIcon(IconsManager::PARSER_PRIVATE_METHOD));
+                        return *(pIconsManager->getPixmap(IconsManager::PARSER_PRIVATE_METHOD));
                     }
                 }
                 break;
             case StatementKind::skGlobalVariable:
-                return *(pIconsManager->getIcon(IconsManager::PARSER_GLOBAL_VAR));
+                return *(pIconsManager->getPixmap(IconsManager::PARSER_GLOBAL_VAR));
             case StatementKind::skVariable:
 //                if (statement->scope == StatementScope::ssGlobal)
 //                    return QIcon(":/icons/images/classparser/global.ico");
                 if (statement->isInherited) {
                     if (statement->classScope == StatementClassScope::scsProtected) {
-                        return *(pIconsManager->getIcon(IconsManager::PARSER_INHERITED_PROTECTD_VAR));
+                        return *(pIconsManager->getPixmap(IconsManager::PARSER_INHERITED_PROTECTD_VAR));
                     } else if (statement->classScope == StatementClassScope::scsPublic) {
-                        return *(pIconsManager->getIcon(IconsManager::PARSER_INHERITED_VAR));
+                        return *(pIconsManager->getPixmap(IconsManager::PARSER_INHERITED_VAR));
                     }
                 } else {
                     if (statement->classScope == StatementClassScope::scsProtected) {
-                        return *(pIconsManager->getIcon(IconsManager::PARSER_PROTECTED_VAR));
+                        return *(pIconsManager->getPixmap(IconsManager::PARSER_PROTECTED_VAR));
                     } else if (statement->classScope == StatementClassScope::scsPublic) {
-                        return *(pIconsManager->getIcon(IconsManager::PARSER_PUBLIC_VAR));
+                        return *(pIconsManager->getPixmap(IconsManager::PARSER_PUBLIC_VAR));
                     } else {
-                        return *(pIconsManager->getIcon(IconsManager::PARSER_PRIVATE_VAR));
+                        return *(pIconsManager->getPixmap(IconsManager::PARSER_PRIVATE_VAR));
                     }
                 }
                 break;

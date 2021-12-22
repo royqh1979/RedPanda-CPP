@@ -57,6 +57,10 @@ protected:
 private slots:
     void on_btnAdd_pressed();
     void on_btnRemove_pressed();
+
+    // SettingsWidget interface
+protected:
+    void updateIcons(const QSize &size) override;
 };
 
 #endif // COMPILERAUTOLINKWIDGET_H
