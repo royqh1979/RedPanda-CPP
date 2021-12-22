@@ -1,3 +1,7 @@
+Version 0.11.5 For Dev-C++ 7 Beta
+ - fix: step into instruction and step over instruction not correctly disabled when cpu dialog is created
+ - enhancement: icons in cpu dialog auto change size with fonts 
+
 Version 0.11.4 For Dev-C++ 7 Beta
  - fix: compiler set's custom link parameters  not used when compiling
  - fix: code completion doesn't work when input inside () or []
