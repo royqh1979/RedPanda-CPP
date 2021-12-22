@@ -33,6 +33,7 @@ private slots:
     void on_chkBlendMode_stateChanged(int arg1);
     void on_btnStepOverInstruction_clicked();
     void on_btnStepIntoInstruction_clicked();
+    void updateIcons();
 };
 
 #endif // CPUDIALOG_H

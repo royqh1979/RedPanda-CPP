@@ -126,13 +126,15 @@ public:
 
     PIcon getIcon(IconName iconName) const;
 
-    const PIcon &folder() const;
-
     PIcon createSVGIcon(const QString& filename, int width, int height);
+    const QSize &actionIconSize() const;
+
+signals:
+    void actionIconsUpdated();
 private:
     QMap<IconName,PIcon> mIcons;
     PIcon mDefaultIcon;
-    PIcon mFolder;
+    QSize mActionIconSize;
 };
 
 extern IconsManager* pIconsManager;

@@ -6,6 +6,7 @@
 #include "../debugger.h"
 #include "../settings.h"
 #include "../colorscheme.h"
+#include "../iconsmanager.h"
 
 CPUDialog::CPUDialog(QWidget *parent) :
     QDialog(parent),
@@ -44,6 +45,10 @@ CPUDialog::CPUDialog(QWidget *parent) :
     size.setWidth(width()*qApp->desktop()->width()/1920);
     size.setHeight(height()*qApp->desktop()->height()/1080);
     setBaseSize(size);
+    updateIcons();
+    connect(pIconsManager,&IconsManager::actionIconsUpdated,
+            this, &CPUDialog::updateIcons);
+    updateButtonStates(false);
 }
 
 CPUDialog::~CPUDialog()
@@ -132,5 +137,14 @@ void CPUDialog::on_btnStepOverInstruction_clicked()
 void CPUDialog::on_btnStepIntoInstruction_clicked()
 {
     pMainWindow->debugger()->sendCommand("-exec-step-instruction","");
+}
+
+void CPUDialog::updateIcons()
+{
+    QSize size = pIconsManager->actionIconSize();
+    ui->btnStepIntoInstruction->setIconSize(size);
+    ui->btnStepIntoInstruction->setIcon(QIcon(*pIconsManager->getIcon(IconsManager::ACTION_RUN_STEP_INTO_INSTRUCTION)));
+    ui->btnStepOverInstruction->setIconSize(size);
+    ui->btnStepOverInstruction->setIcon(QIcon(*pIconsManager->getIcon(IconsManager::ACTION_RUN_STEP_OVER_INSTRUCTION)));
 }
 

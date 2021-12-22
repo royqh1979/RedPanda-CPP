@@ -112,6 +112,9 @@
           </property>
           <item>
            <widget class="QToolButton" name="btnStepOverInstruction">
+            <property name="toolTip">
+             <string>Step over one machine instruction</string>
+            </property>
             <property name="text">
              <string>Step over one machine instruction</string>
             </property>
@@ -119,10 +122,16 @@
              <iconset resource="../icons.qrc">
               <normaloff>:/icons/images/newlook24/052-next.png</normaloff>:/icons/images/newlook24/052-next.png</iconset>
             </property>
+            <property name="toolButtonStyle">
+             <enum>Qt::ToolButtonIconOnly</enum>
+            </property>
            </widget>
           </item>
           <item>
            <widget class="QToolButton" name="btnStepIntoInstruction">
+            <property name="toolTip">
+             <string>Step into one machine instruction</string>
+            </property>
             <property name="text">
              <string>Step into one machine instruction</string>
             </property>

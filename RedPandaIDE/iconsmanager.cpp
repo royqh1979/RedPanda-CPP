@@ -9,9 +9,6 @@ IconsManager* pIconsManager;
 IconsManager::IconsManager(QObject *parent) : QObject(parent)
 {
     mDefaultIcon = PIcon();
-    //updateEditorGuttorIcons(24);
-    mFolder = std::make_shared<QPixmap>(":/icons/images/newlook24/090-explorer.png");
-
 }
 
 void IconsManager::updateEditorGuttorIcons(const QString& iconSet,int size)
@@ -50,6 +47,7 @@ void IconsManager::updateParserIcons(const QString &iconSet, int size)
 void IconsManager::updateActionIcons(const QString iconSet, int size)
 {
     QString iconFolder = QString(":/icons/images/%1/").arg(iconSet);
+    mActionIconSize = QSize(size,size);
     mIcons.insert(ACTION_MISC_BACK, createSVGIcon(iconFolder+"00Misc-01Back.svg",size,size));
     mIcons.insert(ACTION_MISC_FORWARD, createSVGIcon(iconFolder+"00Misc-02Forward.svg",size,size));
     mIcons.insert(ACTION_MISC_ADD, createSVGIcon(iconFolder+"00Misc-03Add.svg",size,size));
@@ -132,16 +130,13 @@ void IconsManager::updateActionIcons(const QString iconSet, int size)
     mIcons.insert(ACTION_PROBLEM_EDIT_SOURCE, createSVGIcon(iconFolder+"08Problem_04EditSource.svg",size,size));
     mIcons.insert(ACTION_PROBLEM_RUN_CASES, createSVGIcon(iconFolder+"08Problem_05RunCases.svg",size,size));
 
+    emit actionIconsUpdated();
+
 }
 
 IconsManager::PIcon IconsManager::getIcon(IconName iconName) const
 {
     return mIcons.value(iconName, mDefaultIcon);
-}
-
-const IconsManager::PIcon &IconsManager::folder() const
-{
-    return mFolder;
 }
 
 IconsManager::PIcon IconsManager::createSVGIcon(const QString &filename, int width, int height)
@@ -152,4 +147,9 @@ IconsManager::PIcon IconsManager::createSVGIcon(const QString &filename, int wid
     QPainter painter(icon.get());
     renderer.render(&painter,icon->rect());
     return icon;
+}
+
+const QSize &IconsManager::actionIconSize() const
+{
+    return mActionIconSize;
 }
