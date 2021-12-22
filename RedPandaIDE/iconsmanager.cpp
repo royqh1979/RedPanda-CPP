@@ -113,6 +113,9 @@ void IconsManager::updateActionIcons(const QString iconSet, int size)
     mIcons.insert(ACTION_RUN_STOP, createSVGIcon(iconFolder+"05Run-11Stop.svg",size,size));
     mIcons.insert(ACTION_RUN_ADD_WATCH, createSVGIcon(iconFolder+"05Run-12AddWatch.svg",size,size));
     mIcons.insert(ACTION_RUN_REMOVE_WATCH, createSVGIcon(iconFolder+"05Run-13RemoveWatch.svg",size,size));
+    mIcons.insert(ACTION_RUN_STEP_OVER_INSTRUCTION, createSVGIcon(iconFolder+"05Run-14StepOverInstruction.svg",size,size));
+    mIcons.insert(ACTION_RUN_STEP_INTO_INSTRUCTION, createSVGIcon(iconFolder+"05Run-15StepIntoInstruction.svg",size,size));
+
 
     mIcons.insert(ACTION_VIEW_MAXIMUM, createSVGIcon(iconFolder+"06View-01Maximum.svg",size,size));
     mIcons.insert(ACTION_VIEW_CLASSBROWSER, createSVGIcon(iconFolder+"06View-02ClassBrowser.svg",size,size));

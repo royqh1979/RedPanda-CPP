@@ -202,5 +202,7 @@
         <file>images/newlook/06View-04CompileLog.svg</file>
         <file>images/newlook/06View-05Bookmark.svg</file>
         <file>images/newlook/06View-06Todo.svg</file>
+        <file>images/newlook/05Run-14StepOverInstruction.svg</file>
+        <file>images/newlook/05Run-15StepIntoInstruction.svg</file>
     </qresource>
 </RCC>
