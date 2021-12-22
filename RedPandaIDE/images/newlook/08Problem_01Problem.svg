@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="100"
+   height="100"
+   viewBox="0 0 26.458333 26.458333"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
+   sodipodi:docname="06View-03Problem.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="px"
+     showgrid="false"
+     inkscape:zoom="5.26"
+     inkscape:cx="15.969582"
+     inkscape:cy="54.467681"
+     inkscape:window-width="1920"
+     inkscape:window-height="1001"
+     inkscape:window-x="-9"
+     inkscape:window-y="-9"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1"
+     units="px"
+     width="100px"
+     inkscape:snap-midpoints="false"
+     inkscape:snap-intersection-paths="false"
+     inkscape:snap-global="true"
+     inkscape:object-nodes="false"
+     inkscape:snap-others="false" />
+  <defs
+     id="defs2">
+    <linearGradient
+       id="linearGradient1033"
+       inkscape:swatch="gradient">
+      <stop
+         style="stop-color:#d3d2cf;stop-opacity:1"
+         offset="0"
+         id="stop1029" />
+      <stop
+         style="stop-color:#bebbb7;stop-opacity:1"
+         offset="1"
+         id="stop1031" />
+    </linearGradient>
+    <linearGradient
+       id="linearGradient3056">
+      <stop
+         style="stop-color:#45c200;stop-opacity:1"
+         offset="0"
+         id="stop3052" />
+      <stop
+         style="stop-color:#45c200;stop-opacity:0"
+         offset="1"
+         id="stop3054" />
+    </linearGradient>
+  </defs>
+  <g
+     inkscape:label="图层 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <path
+       style="fill:#ffffff;stroke:#404040;stroke-width:0.79375;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;fill-opacity:1"
+       d="M 10.243638,9.0341978 3.3434097,20.273867 c -0.5643003,0.91918 0.6998335,2.703182 1.7784094,2.703182 H 22.336822 c 1.105957,0 2.306221,-1.97661 1.658936,-2.873362 L 16.645912,9.0341978 16.574772,2.4897291 h -6.331137 z"
+       id="path942"
+       sodipodi:nodetypes="csssscccc" />
+    <path
+       style="fill:#adecef;fill-opacity:1;stroke:#404040;stroke-width:0.79374999;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 3.2042467,20.805576 3.5892772,-6.23656 H 20.320835 l 3.857224,6.160504 c 0.508208,0.811676 -0.786161,2.285942 -1.743807,2.283194 L 4.9043489,22.962414 C 3.9889112,22.959787 2.7476143,21.598999 3.2042467,20.805576 Z"
+       id="path2007"
+       sodipodi:nodetypes="sccssss" />
+    <circle
+       style="fill:#adecef;fill-opacity:1;stroke-width:0.529167;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;paint-order:markers stroke fill"
+       id="path3522"
+       cx="12.097394"
+       cy="11.544083"
+       r="0.82996672" />
+    <circle
+       style="fill:#adecef;fill-opacity:1;stroke-width:0.529167;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;paint-order:markers stroke fill"
+       id="path3524"
+       cx="14.612445"
+       cy="3.8983285"
+       r="0.72936469" />
+    <circle
+       style="fill:#adecef;fill-opacity:1;stroke-width:0.529167;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;paint-order:markers stroke fill"
+       id="path3526"
+       cx="11.745287"
+       cy="1.0311708"
+       r="0.77966571" />
+  </g>
+</svg>

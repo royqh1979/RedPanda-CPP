@@ -89,6 +89,9 @@ void IconsManager::updateActionIcons(const QString iconSet, int size)
     mIcons.insert(ACTION_EDIT_SEARCH, createSVGIcon(iconFolder+"03Edit_08Search.svg",size,size));
     mIcons.insert(ACTION_EDIT_REPLACE, createSVGIcon(iconFolder+"03Edit_09Replace.svg",size,size));
     mIcons.insert(ACTION_EDIT_SEARCH_IN_FILES, createSVGIcon(iconFolder+"03Edit_10SearchInFiles.svg",size,size));
+    mIcons.insert(ACTION_EDIT_SORT_BY_NAME, createSVGIcon(iconFolder+"03Edit-11SortByName.svg",size,size));
+    mIcons.insert(ACTION_EDIT_SORT_BY_TYPE, createSVGIcon(iconFolder+"03Edit-12SortByType.svg",size,size));
+    mIcons.insert(ACTION_EDIT_SHOW_INHERITED, createSVGIcon(iconFolder+"03Edit-13ShowInherited.svg",size,size));
 
     mIcons.insert(ACTION_CODE_BACK, createSVGIcon(iconFolder+"04Code-01Back.svg",size,size));
     mIcons.insert(ACTION_CODE_FORWARD, createSVGIcon(iconFolder+"04Code-02Forward.svg",size,size));
@@ -112,8 +115,19 @@ void IconsManager::updateActionIcons(const QString iconSet, int size)
     mIcons.insert(ACTION_RUN_REMOVE_WATCH, createSVGIcon(iconFolder+"05Run-13RemoveWatch.svg",size,size));
 
     mIcons.insert(ACTION_VIEW_MAXIMUM, createSVGIcon(iconFolder+"06View-01Maximum.svg",size,size));
+    mIcons.insert(ACTION_VIEW_CLASSBROWSER, createSVGIcon(iconFolder+"06View-02ClassBrowser.svg",size,size));
+    mIcons.insert(ACTION_VIEW_FILES, createSVGIcon(iconFolder+"06View-03Files.svg",size,size));
+    mIcons.insert(ACTION_VIEW_COMPILELOG, createSVGIcon(iconFolder+"06View-04CompileLog.svg",size,size));
+    mIcons.insert(ACTION_VIEW_BOOKMARK, createSVGIcon(iconFolder+"06View-05Bookmark.svg",size,size));
+    mIcons.insert(ACTION_VIEW_TODO, createSVGIcon(iconFolder+"06View-06Todo.svg",size,size));
+
     mIcons.insert(ACTION_HELP_ABOUT, createSVGIcon(iconFolder+"07Help-01About.svg",size,size));
 
+    mIcons.insert(ACTION_PROBLEM_PROBLEM, createSVGIcon(iconFolder+"08Problem_01Problem.svg",size,size));
+    mIcons.insert(ACTION_PROBLEM_SET, createSVGIcon(iconFolder+"08Problem_02ProblemSet.svg",size,size));
+    mIcons.insert(ACTION_PROBLEM_PROPERTIES, createSVGIcon(iconFolder+"08Problem_03Properties.svg",size,size));
+    mIcons.insert(ACTION_PROBLEM_EDIT_SOURCE, createSVGIcon(iconFolder+"08Problem_04EditSource.svg",size,size));
+    mIcons.insert(ACTION_PROBLEM_RUN_CASES, createSVGIcon(iconFolder+"08Problem_05RunCases.svg",size,size));
 
 }
 

@@ -1106,6 +1106,15 @@ void MainWindow::updateActionIcons()
     ui->toolbarCode->setIconSize(iconSize);
     ui->toolbarCompile->setIconSize(iconSize);
     ui->toolbarDebug->setIconSize(iconSize);
+    for (QToolButton* btn: mClassBrowserToolbar->findChildren<QToolButton *>()) {
+        btn->setIconSize(iconSize);
+    }
+    for (QToolButton* btn: mFilesViewToolbar->findChildren<QToolButton *>()) {
+        btn->setIconSize(iconSize);
+    }
+
+    ui->tabInfos->setIconSize(iconSize);
+    ui->tabMessages->setIconSize(iconSize);
 
     ui->actionNew->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_FILE_NEW))));
     ui->actionNew_Project->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_PROJECT_NEW))));
@@ -1192,8 +1201,46 @@ void MainWindow::updateActionIcons()
     mBreakpointViewRemoveAllAction->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_MISC_CLEAN))));
     mBreakpointViewRemoveAction->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_MISC_CROSS))));
 
-    ui->tabInfos->setIconSize(iconSize);
-    ui->tabMessages->setIconSize(iconSize);
+    //classbrowser
+    mClassBrowser_Sort_By_Name->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_EDIT_SORT_BY_NAME))));
+    mClassBrowser_Sort_By_Type->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_EDIT_SORT_BY_TYPE))));
+    mClassBrowser_Show_Inherited->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_EDIT_SHOW_INHERITED))));
+
+    //debug console
+    mDebugConsole_Copy->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_EDIT_COPY))));
+    mDebugConsole_Paste->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_EDIT_PASTE))));
+    mDebugConsole_Clear->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_MISC_CLEAN))));
+
+    //file view
+    mFilesView_Open->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_FILE_OPEN))));
+    mFilesView_OpenInTerminal->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_MISC_TERM))));
+    mFilesView_OpenInExplorer->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_MISC_FOLDER))));
+
+    //problem view
+    ui->btnNewProblemSet->setIconSize(iconSize);
+    ui->btnNewProblemSet->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_PROBLEM_SET))));
+    ui->btnAddProblem->setIconSize(iconSize);
+    ui->btnAddProblem->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_MISC_ADD))));
+    ui->btnRemoveProblem->setIconSize(iconSize);
+    ui->btnRemoveProblem->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_MISC_CROSS))));
+    ui->btnSaveProblemSet->setIconSize(iconSize);
+    ui->btnSaveProblemSet->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_FILE_SAVE_AS))));
+    ui->btnLoadProblemSet->setIconSize(iconSize);
+    ui->btnLoadProblemSet->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_FILE_OPEN_FOLDER))));
+
+    ui->btnAddProblemCase->setIconSize(iconSize);
+    ui->btnAddProblemCase->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_MISC_ADD))));
+    ui->btnRemoveProblemCase->setIconSize(iconSize);
+    ui->btnRemoveProblemCase->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_MISC_REMOVE))));
+    ui->btnOpenProblemAnswer->setIconSize(iconSize);
+    ui->btnOpenProblemAnswer->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_PROBLEM_EDIT_SOURCE))));
+    ui->btnRunAllProblemCases->setIconSize(iconSize);
+    ui->btnRunAllProblemCases->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_PROBLEM_RUN_CASES))));
+    ui->btnCaseValidateOptions->setIconSize(iconSize);
+    ui->btnCaseValidateOptions->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_MISC_GEAR))));
+
+    mProblem_Properties->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_PROBLEM_PROPERTIES))));
+
 
     int idx = ui->tabInfos->indexOf(ui->tabWatch);
     if (idx>=0)
@@ -1201,6 +1248,41 @@ void MainWindow::updateActionIcons()
     idx = ui->tabInfos->indexOf(ui->tabProject);
     if (idx>=0)
         ui->tabInfos->setTabIcon(idx,QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_PROJECT_NEW))));
+    idx = ui->tabInfos->indexOf(ui->tabFiles);
+    if (idx>=0)
+        ui->tabInfos->setTabIcon(idx,QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_VIEW_FILES))));
+    idx = ui->tabInfos->indexOf(ui->tabStructure);
+    if (idx>=0)
+        ui->tabInfos->setTabIcon(idx,QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_VIEW_CLASSBROWSER))));
+    idx = ui->tabInfos->indexOf(ui->tabProblemSet);
+    if (idx>=0)
+        ui->tabInfos->setTabIcon(idx,QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_PROBLEM_SET))));
+
+    idx = ui->tabMessages->indexOf(ui->tabIssues);
+    if (idx>=0)
+        ui->tabMessages->setTabIcon(idx,QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_RUN_COMPILE))));
+    idx = ui->tabMessages->indexOf(ui->tabDebug);
+    if (idx>=0)
+        ui->tabMessages->setTabIcon(idx,QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_RUN_DEBUG))));
+    idx = ui->tabMessages->indexOf(ui->tabSearch);
+    if (idx>=0)
+        ui->tabMessages->setTabIcon(idx,QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_EDIT_SEARCH))));
+    idx = ui->tabMessages->indexOf(ui->tabCompilerOutput);
+    if (idx>=0)
+        ui->tabMessages->setTabIcon(idx,QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_VIEW_COMPILELOG))));
+    idx = ui->tabMessages->indexOf(ui->tabTODO);
+    if (idx>=0)
+        ui->tabMessages->setTabIcon(idx,QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_VIEW_TODO))));
+
+
+    idx = ui->tabMessages->indexOf(ui->tabBookmark);
+    if (idx>=0)
+        ui->tabMessages->setTabIcon(idx,QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_VIEW_BOOKMARK))));
+
+    idx = ui->tabMessages->indexOf(ui->tabProblem);
+    if (idx>=0)
+        ui->tabMessages->setTabIcon(idx,QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_PROBLEM_PROBLEM))));
+
 }
 
 void MainWindow::checkSyntaxInBack(Editor *e)
@@ -2426,10 +2508,14 @@ void MainWindow::buildContextMenus()
         hlayout->setContentsMargins(2,2,2,2);
         mClassBrowserToolbar->setLayout(hlayout);
         QToolButton * toolButton;
+        int size = pointToPixel(pSettings->environment().interfaceFontSize());
+        QSize iconSize(size,size);
         toolButton = new QToolButton;
+        toolButton->setIconSize(iconSize);
         toolButton->setDefaultAction(mClassBrowser_Sort_By_Type);
         hlayout->addWidget(toolButton);
         toolButton = new QToolButton;
+        toolButton->setIconSize(iconSize);
         toolButton->setDefaultAction(mClassBrowser_Sort_By_Name);
         hlayout->addWidget(toolButton);
         QFrame * vLine = new QFrame();
@@ -2437,6 +2523,7 @@ void MainWindow::buildContextMenus()
         vLine->setFrameShadow(QFrame::Sunken);
         hlayout->addWidget(vLine);
         toolButton = new QToolButton;
+        toolButton->setIconSize(iconSize);
         toolButton->setDefaultAction(mClassBrowser_Show_Inherited);
         hlayout->addWidget(toolButton);
         hlayout->addStretch();
@@ -2515,13 +2602,15 @@ void MainWindow::buildContextMenus()
         hlayout->setContentsMargins(2,2,2,2);
         mFilesViewToolbar->setLayout(hlayout);
         QToolButton * toolButton;
+        int size = pointToPixel(pSettings->environment().interfaceFontSize());
+        QSize iconSize(size,size);
         toolButton = new QToolButton;
+        toolButton->setIconSize(iconSize);
         toolButton->setDefaultAction(ui->actionOpen_Folder);
-        toolButton->setFixedSize(32,32);
         hlayout->addWidget(toolButton);
         toolButton = new QToolButton;
+        toolButton->setIconSize(iconSize);
         toolButton->setDefaultAction(ui->actionLocate_in_Files_View);
-        toolButton->setFixedSize(32,32);
         hlayout->addWidget(toolButton);
         hlayout->addStretch();
     }

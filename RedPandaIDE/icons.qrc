@@ -189,5 +189,18 @@
         <file>images/newlook/07Help-01About.svg</file>
         <file>images/newlook/01File-10FileProperties.svg</file>
         <file>images/newlook/01File-11Locate.svg</file>
+        <file>images/newlook/03Edit-11SortByName.svg</file>
+        <file>images/newlook/03Edit-12SortByType.svg</file>
+        <file>images/newlook/03Edit-13ShowInherited.svg</file>
+        <file>images/newlook/06View-02ClassBrowser.svg</file>
+        <file>images/newlook/08Problem_01Problem.svg</file>
+        <file>images/newlook/08Problem_02ProblemSet.svg</file>
+        <file>images/newlook/08Problem_03Properties.svg</file>
+        <file>images/newlook/08Problem_04EditSource.svg</file>
+        <file>images/newlook/08Problem_05RunCases.svg</file>
+        <file>images/newlook/06View-03Files.svg</file>
+        <file>images/newlook/06View-04CompileLog.svg</file>
+        <file>images/newlook/06View-05Bookmark.svg</file>
+        <file>images/newlook/06View-06Todo.svg</file>
     </qresource>
 </RCC>
