@@ -1115,6 +1115,8 @@ void MainWindow::updateActionIcons()
 
     ui->tabInfos->setIconSize(iconSize);
     ui->tabMessages->setIconSize(iconSize);
+    ui->EditorTabsLeft->setIconSize(iconSize);
+    ui->EditorTabsRight->setIconSize(iconSize);
 
     ui->actionNew->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_FILE_NEW))));
     ui->actionNew_Project->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_PROJECT_NEW))));

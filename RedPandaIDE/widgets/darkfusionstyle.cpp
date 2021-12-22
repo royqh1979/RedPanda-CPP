@@ -8,6 +8,7 @@
 #include <QCoreApplication>
 #include <QPixmapCache>
 #include <QApplication>
+#include <QSvgRenderer>
 #include "../settings.h"
 
 #define BEGIN_STYLE_PIXMAPCACHE(a) \
@@ -756,17 +757,16 @@ void DarkFusionStyle::drawPrimitive(PrimitiveElement elem, const QStyleOption *o
 
     case PE_FrameStatusBarItem:
         break;
-//    case PE_IndicatorTabClose:
-//    {
-//        Q_D(const QFusionStyle);
-//        if (d->tabBarcloseButtonIcon.isNull())
-//            d->tabBarcloseButtonIcon = proxy()->standardIcon(SP_DialogCloseButton, option, widget);
-//        if ((option->state & State_Enabled) && (option->state & State_MouseOver))
-//            proxy()->drawPrimitive(PE_PanelButtonCommand, option, painter, widget);
-//        QPixmap pixmap = d->tabBarcloseButtonIcon.pixmap(qt_getWindow(widget), QSize(16, 16), QIcon::Normal, QIcon::On);
-//        proxy()->drawItemPixmap(painter, option->rect, Qt::AlignCenter, pixmap);
-//    }
-//        break;
+    case PE_IndicatorTabClose:
+    {
+        QIcon closeIcon = proxy()->standardIcon(SP_DialogCloseButton, option, widget);
+        if ((option->state & State_Enabled) && (option->state & State_MouseOver))
+            proxy()->drawPrimitive(PE_PanelButtonCommand, option, painter, widget);
+        int size = pointToPixel(pSettings->environment().interfaceFontSize());
+        QPixmap pixmap = closeIcon.pixmap(QSize(size, size), QIcon::Normal, QIcon::On);
+        proxy()->drawItemPixmap(painter, option->rect, Qt::AlignCenter, pixmap);
+    }
+        break;
     case PE_PanelMenu: {
         painter->save();
         const QBrush menuBackground = option->palette.base().color().darker(108);
@@ -786,8 +786,15 @@ QIcon DarkFusionStyle::standardIcon(StandardPixmap standardIcon, const QStyleOpt
     switch (standardIcon) {
     case SP_TitleBarCloseButton:
     case SP_DockWidgetCloseButton:
-    case SP_DialogCloseButton:
-        return QIcon(":/themes/dark_close.png");
+    case SP_DialogCloseButton: {
+        int size = pointToPixel(pSettings->environment().interfaceFontSize());
+        QSvgRenderer renderer(QString(":/icons/images/dark-close.svg"));
+        QPixmap pixmap(size,size);
+        pixmap.fill(Qt::transparent);
+        QPainter painter(&pixmap);
+        renderer.render(&painter,pixmap.rect());
+        return QIcon(pixmap);
+    }
     default:
         break;
     }
@@ -805,6 +812,9 @@ int DarkFusionStyle::pixelMetric(PixelMetric metric, const QStyleOption *option,
     switch ( metric ) {
     case QStyle::PM_SmallIconSize:
         return pointToPixel(pSettings->environment().interfaceFontSize());
+    case QStyle::PM_TabCloseIndicatorHeight:
+    case QStyle::PM_TabCloseIndicatorWidth:
+        return 1.2*pointToPixel(pSettings->environment().interfaceFontSize());
     default:
         return QProxyStyle::pixelMetric( metric, option, widget );
     }
