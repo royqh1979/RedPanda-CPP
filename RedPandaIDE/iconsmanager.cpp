@@ -50,6 +50,16 @@ void IconsManager::updateParserIcons(const QString &iconSet, int size)
 void IconsManager::updateActionIcons(const QString iconSet, int size)
 {
     QString iconFolder = QString(":/icons/images/%1/").arg(iconSet);
+    mIcons.insert(ACTION_MISC_BACK, createSVGIcon(iconFolder+"00Misc-01Back.svg",size,size));
+    mIcons.insert(ACTION_MISC_FORWARD, createSVGIcon(iconFolder+"00Misc-02Forward.svg",size,size));
+    mIcons.insert(ACTION_MISC_ADD, createSVGIcon(iconFolder+"00Misc-03Add.svg",size,size));
+    mIcons.insert(ACTION_MISC_REMOVE, createSVGIcon(iconFolder+"00Misc-04Remove.svg",size,size));
+    mIcons.insert(ACTION_MISC_GEAR, createSVGIcon(iconFolder+"00Misc-05Gear.svg",size,size));
+    mIcons.insert(ACTION_MISC_CROSS, createSVGIcon(iconFolder+"00Misc-06Cross.svg",size,size));
+    mIcons.insert(ACTION_MISC_FOLDER, createSVGIcon(iconFolder+"00Misc-07Folder.svg",size,size));
+    mIcons.insert(ACTION_MISC_TERM, createSVGIcon(iconFolder+"00Misc-08Term.svg",size,size));
+    mIcons.insert(ACTION_MISC_CLEAN, createSVGIcon(iconFolder+"00Misc-09Clean.svg",size,size));
+
     mIcons.insert(ACTION_FILE_NEW, createSVGIcon(iconFolder+"01File-01New.svg",size,size));
     mIcons.insert(ACTION_FILE_OPEN, createSVGIcon(iconFolder+"01File-02Open.svg",size,size));
     mIcons.insert(ACTION_FILE_OPEN_FOLDER, createSVGIcon(iconFolder+"01File-09Open_Folder.svg",size,size));
@@ -59,6 +69,9 @@ void IconsManager::updateActionIcons(const QString iconSet, int size)
     mIcons.insert(ACTION_FILE_CLOSE, createSVGIcon(iconFolder+"01File-06Close.svg",size,size));
     mIcons.insert(ACTION_FILE_CLOSE_ALL, createSVGIcon(iconFolder+"01File-07CloseAll.svg",size,size));
     mIcons.insert(ACTION_FILE_PRINT, createSVGIcon(iconFolder+"01File-08Print.svg",size,size));
+    mIcons.insert(ACTION_FILE_PROPERTIES, createSVGIcon(iconFolder+"01File-10FileProperties.svg",size,size));
+    mIcons.insert(ACTION_FILE_LOCATE, createSVGIcon(iconFolder+"01File-11Locate.svg",size,size));
+
     mIcons.insert(ACTION_PROJECT_NEW, createSVGIcon(iconFolder+"02Project_01New.svg",size,size));
     mIcons.insert(ACTION_PROJECT_SAVE, createSVGIcon(iconFolder+"02Project_02Save.svg",size,size));
     mIcons.insert(ACTION_PROJECT_CLOSE, createSVGIcon(iconFolder+"02Project_03Close.svg",size,size));
@@ -82,6 +95,26 @@ void IconsManager::updateActionIcons(const QString iconSet, int size)
     mIcons.insert(ACTION_CODE_ADD_BOOKMARK, createSVGIcon(iconFolder+"04Code-03AddBookmark.svg",size,size));
     mIcons.insert(ACTION_CODE_REMOVE_BOOKMARK, createSVGIcon(iconFolder+"04Code-04RemoveBookmark.svg",size,size));
     mIcons.insert(ACTION_CODE_REFORMAT, createSVGIcon(iconFolder+"04Code-05Reformat.svg",size,size));
+
+    mIcons.insert(ACTION_RUN_COMPILE, createSVGIcon(iconFolder+"05Run-01Compile.svg",size,size));
+    mIcons.insert(ACTION_RUN_COMPILE_RUN, createSVGIcon(iconFolder+"05Run-02CompileRun.svg",size,size));
+    mIcons.insert(ACTION_RUN_RUN, createSVGIcon(iconFolder+"05Run-03Run.svg",size,size));
+    mIcons.insert(ACTION_RUN_REBUILD, createSVGIcon(iconFolder+"05Run-04Rebuild.svg",size,size));
+    mIcons.insert(ACTION_RUN_OPTIONS, createSVGIcon(iconFolder+"05Run-05Options.svg",size,size));
+    mIcons.insert(ACTION_RUN_DEBUG, createSVGIcon(iconFolder+"05Run-06Debug.svg",size,size));
+    mIcons.insert(ACTION_RUN_STEP_OVER, createSVGIcon(iconFolder+"05Run-07StepOver.svg",size,size));
+    mIcons.insert(ACTION_RUN_STEP_INTO, createSVGIcon(iconFolder+"05Run-08StepInto.svg",size,size));
+    mIcons.insert(ACTION_RUN_STEP_OUT, createSVGIcon(iconFolder+"05Run-08StepOut.svg",size,size));
+    mIcons.insert(ACTION_RUN_RUN_TO_CURSOR, createSVGIcon(iconFolder+"05Run-09RunToCursor.svg",size,size));
+    mIcons.insert(ACTION_RUN_CONTINUE, createSVGIcon(iconFolder+"05Run-10Continue.svg",size,size));
+    mIcons.insert(ACTION_RUN_STOP, createSVGIcon(iconFolder+"05Run-11Stop.svg",size,size));
+    mIcons.insert(ACTION_RUN_ADD_WATCH, createSVGIcon(iconFolder+"05Run-12AddWatch.svg",size,size));
+    mIcons.insert(ACTION_RUN_REMOVE_WATCH, createSVGIcon(iconFolder+"05Run-13RemoveWatch.svg",size,size));
+
+    mIcons.insert(ACTION_VIEW_MAXIMUM, createSVGIcon(iconFolder+"06View-01Maximum.svg",size,size));
+    mIcons.insert(ACTION_HELP_ABOUT, createSVGIcon(iconFolder+"07Help-01About.svg",size,size));
+
+
 }
 
 IconsManager::PIcon IconsManager::getIcon(IconName iconName) const

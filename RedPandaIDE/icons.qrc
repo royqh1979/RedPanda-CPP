@@ -162,5 +162,32 @@
         <file>images/newlook/04Code-03AddBookmark.svg</file>
         <file>images/newlook/04Code-04RemoveBookmark.svg</file>
         <file>images/newlook/04Code-05Reformat.svg</file>
+        <file>images/newlook/05Run-01Compile.svg</file>
+        <file>images/newlook/05Run-02CompileRun.svg</file>
+        <file>images/newlook/05Run-03Run.svg</file>
+        <file>images/newlook/05Run-04Rebuild.svg</file>
+        <file>images/newlook/05Run-05Options.svg</file>
+        <file>images/newlook/05Run-06Debug.svg</file>
+        <file>images/newlook/05Run-07StepOver.svg</file>
+        <file>images/newlook/05Run-08StepInto.svg</file>
+        <file>images/newlook/05Run-08StepOut.svg</file>
+        <file>images/newlook/05Run-09RunToCursor.svg</file>
+        <file>images/newlook/05Run-10Continue.svg</file>
+        <file>images/newlook/05Run-11Stop.svg</file>
+        <file>images/newlook/05Run-12AddWatch.svg</file>
+        <file>images/newlook/05Run-13RemoveWatch.svg</file>
+        <file>images/newlook/00Misc-01Back.svg</file>
+        <file>images/newlook/00Misc-02Forward.svg</file>
+        <file>images/newlook/00Misc-03Add.svg</file>
+        <file>images/newlook/00Misc-04Remove.svg</file>
+        <file>images/newlook/00Misc-05Gear.svg</file>
+        <file>images/newlook/00Misc-06Cross.svg</file>
+        <file>images/newlook/00Misc-07Folder.svg</file>
+        <file>images/newlook/00Misc-08Term.svg</file>
+        <file>images/newlook/00Misc-09Clean.svg</file>
+        <file>images/newlook/06View-01Maximum.svg</file>
+        <file>images/newlook/07Help-01About.svg</file>
+        <file>images/newlook/01File-10FileProperties.svg</file>
+        <file>images/newlook/01File-11Locate.svg</file>
     </qresource>
 </RCC>

@@ -165,11 +165,11 @@ MainWindow::MainWindow(QWidget *parent)
 
     mCPUDialog = nullptr;
 
-    applySettings();
-    applyUISettings();
-    updateProjectView();
-    updateEditorActions();
-    updateCaretActions();
+//    applySettings();
+//    applyUISettings();
+//    updateProjectView();
+//    updateEditorActions();
+//    updateCaretActions();
 
 
     connect(ui->debugConsole,&QConsole::commandInput,this,&MainWindow::onDebugCommandInput);
@@ -279,15 +279,16 @@ MainWindow::MainWindow(QWidget *parent)
 
     ui->actionEGE_Manual->setVisible(pSettings->environment().language()=="zh_CN");
 
-    updateAppTitle();
     buildContextMenus();
-
+    updateAppTitle();
+    applySettings();
+    applyUISettings();
+    updateProjectView();
+    updateEditorActions();
+    updateCaretActions();
     updateEditorColorSchemes();
-
     updateShortcuts();
-
     updateTools();
-
     updateEditorSettings();
 }
 
@@ -1138,8 +1139,68 @@ void MainWindow::updateActionIcons()
     ui->actionProject_New_File->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_PROJECT_NEW_FILE))));
     ui->actionAdd_to_project->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_PROJECT_ADD_FILE))));
     ui->actionRemove_from_project->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_PROJECT_REMOVE_FILE))));
+    ui->actionProject_Open_Folder_In_Explorer->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_MISC_FOLDER))));
+    ui->actionProject_Open_In_Terminal->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_MISC_TERM))));
+    ui->actionMakeClean->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_MISC_CLEAN))));
     ui->actionProject_options->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_PROJECT_PROPERTIES))));
 
+
+    ui->actionCompile->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_RUN_COMPILE))));
+    ui->actionCompile_Run->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_RUN_COMPILE_RUN))));
+    ui->actionRun->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_RUN_RUN))));
+    ui->actionRebuild->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_RUN_REBUILD))));
+    ui->actionRun_Parameters->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_RUN_OPTIONS))));
+    ui->actionDebug->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_RUN_DEBUG))));
+    ui->actionStep_Over->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_RUN_STEP_OVER))));
+    ui->actionStep_Into->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_RUN_STEP_INTO))));
+    ui->actionStep_Out->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_RUN_STEP_OUT))));
+    ui->actionRun_To_Cursor->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_RUN_RUN_TO_CURSOR))));
+    ui->actionContinue->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_RUN_CONTINUE))));
+    ui->actionStop_Execution->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_RUN_STOP))));
+    ui->actionAdd_Watch->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_RUN_ADD_WATCH))));
+    ui->actionRemove_Watch->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_RUN_REMOVE_WATCH))));
+    ui->actionRemove_All_Watches->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_MISC_CLEAN))));
+
+    ui->actionOptions->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_MISC_GEAR))));
+
+    ui->actionMaximize_Editor->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_VIEW_MAXIMUM))));
+    ui->actionNext_Editor->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_MISC_FORWARD))));
+    ui->actionPrevious_Editor->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_MISC_BACK))));
+
+    ui->actionAbout->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_HELP_ABOUT))));
+
+    //editor context menu
+    ui->actionOpen_Containing_Folder->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_MISC_FOLDER))));
+    ui->actionOpen_Terminal->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_MISC_TERM))));
+    ui->actionFile_Properties->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_FILE_PROPERTIES))));
+    ui->actionLocate_in_Files_View->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_FILE_LOCATE))));
+
+    //bookmark context menu
+    mBookmark_Remove->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_CODE_REMOVE_BOOKMARK))));
+    mBookmark_RemoveAll->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_MISC_CLEAN))));
+
+    //issues context menu
+    mTableIssuesCopyAction->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_EDIT_COPY))));
+    mTableIssuesClearAction->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_MISC_CLEAN))));
+
+    //search context menu
+    mSearchViewClearAction->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_MISC_CROSS))));
+    mSearchViewClearAllAction->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_MISC_CLEAN))));
+
+    //breakpoint context menu
+    //mBreakpointViewPropertyAction
+    mBreakpointViewRemoveAllAction->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_MISC_CLEAN))));
+    mBreakpointViewRemoveAction->setIcon(QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_MISC_CROSS))));
+
+    ui->tabInfos->setIconSize(iconSize);
+    ui->tabMessages->setIconSize(iconSize);
+
+    int idx = ui->tabInfos->indexOf(ui->tabWatch);
+    if (idx>=0)
+        ui->tabInfos->setTabIcon(idx,QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_RUN_ADD_WATCH))));
+    idx = ui->tabInfos->indexOf(ui->tabProject);
+    if (idx>=0)
+        ui->tabInfos->setTabIcon(idx,QIcon(*(pIconsManager->getIcon(IconsManager::ACTION_PROJECT_NEW))));
 }
 
 void MainWindow::checkSyntaxInBack(Editor *e)
