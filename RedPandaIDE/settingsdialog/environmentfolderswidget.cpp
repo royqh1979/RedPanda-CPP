@@ -2,6 +2,7 @@
 #include "ui_environmentfolderswidget.h"
 #include "../settings.h"
 #include "../mainwindow.h"
+#include "../iconsmanager.h"
 
 #include <QDesktopServices>
 #include <QDir>
@@ -53,5 +54,10 @@ void EnvironmentFoldersWidget::on_btnResetDefault_clicked()
         return;
     }
     emit shouldQuitApp();
+}
+
+void EnvironmentFoldersWidget::updateIcons(const QSize &size)
+{
+    pIconsManager->setIcon(ui->btnOpenConfigFolderInBrowser,IconsManager::ACTION_FILE_OPEN_FOLDER);
 }
 

@@ -1,6 +1,7 @@
 #include "executorgeneralwidget.h"
 #include "ui_executorgeneralwidget.h"
 #include "../settings.h"
+#include "../iconsmanager.h"
 
 #include <QFileDialog>
 
@@ -48,5 +49,10 @@ void ExecutorGeneralWidget::on_btnBrowse_clicked()
     if (!filename.isEmpty() && fileExists(filename)) {
         ui->txtRedirectInputFile->setText(filename);
     }
+}
+
+void ExecutorGeneralWidget::updateIcons(const QSize &size)
+{
+    pIconsManager->setIcon(ui->btnBrowse,IconsManager::ACTION_FILE_OPEN_FOLDER);
 }
 

@@ -2,6 +2,7 @@
 #include "ui_toolsgeneralwidget.h"
 #include "../mainwindow.h"
 #include "../settings.h"
+#include "../iconsmanager.h"
 
 #include <QFileDialog>
 #include <QMessageBox>
@@ -184,6 +185,14 @@ void ToolsGeneralWidget::doSave()
     pMainWindow->toolsManager()->setTools(mToolsModel.tools());
     pMainWindow->toolsManager()->save();
     pMainWindow->updateTools();
+}
+
+void ToolsGeneralWidget::updateIcons(const QSize &)
+{
+    pIconsManager->setIcon(ui->btnAdd,IconsManager::ACTION_MISC_ADD);
+    pIconsManager->setIcon(ui->btnRemove,IconsManager::ACTION_MISC_REMOVE);
+    pIconsManager->setIcon(ui->btnBrowseProgram,IconsManager::ACTION_FILE_OPEN_FOLDER);
+    pIconsManager->setIcon(ui->btnBrowseWorkingDirectory,IconsManager::ACTION_FILE_OPEN_FOLDER);
 }
 
 

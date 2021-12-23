@@ -41,10 +41,15 @@ CPUDialog::CPUDialog(QWidget *parent) :
 
     ui->rdIntel->setChecked(pSettings->debugger().useIntelStyle());
     ui->chkBlendMode->setChecked(pSettings->debugger().blendMode());
-    QSize size;
-    size.setWidth(width()*qApp->desktop()->width()/1920);
-    size.setHeight(height()*qApp->desktop()->height()/1080);
-    setBaseSize(size);
+    resize(pSettings->ui().CPUDialogWidth(),pSettings->ui().CPUDialogHeight());
+
+    QList<int> sizes = ui->splitter->sizes();
+    int tabWidth = pSettings->ui().CPUDialogSplitterPos();
+    int totalSize = sizes[0] + sizes[1];
+    sizes[0] = tabWidth;
+    sizes[1] = std::max(1,totalSize - sizes[0]);
+    ui->splitter->setSizes(sizes);
+
     updateIcons();
     connect(pIconsManager,&IconsManager::actionIconsUpdated,
             this, &CPUDialog::updateIcons);
@@ -103,6 +108,12 @@ void CPUDialog::sendSyntaxCommand()
 
 void CPUDialog::closeEvent(QCloseEvent *event)
 {
+    pSettings->ui().setCPUDialogWidth(width());
+    pSettings->ui().setCPUDialogHeight(height());
+
+    QList<int> sizes = ui->splitter->sizes();
+    pSettings->ui().setCPUDialogSplitterPos(sizes[0]);
+
     QDialog::closeEvent(event);
     emit closed();
 }

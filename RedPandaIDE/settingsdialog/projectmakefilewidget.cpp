@@ -4,6 +4,7 @@
 #include "../mainwindow.h"
 #include "../project.h"
 #include "../widgets/custommakefileinfodialog.h"
+#include "../iconsmanager.h"
 
 #include <QFileDialog>
 
@@ -51,7 +52,14 @@ void ProjectMakefileWidget::on_btnBrowse_clicked()
 }
 
 
-void ProjectMakefileWidget::on_pushButton_clicked()
+void ProjectMakefileWidget::updateIcons(const QSize &)
+{
+    pIconsManager->setIcon(ui->btnBrowse, IconsManager::ACTION_FILE_OPEN_FOLDER);
+    pIconsManager->setIcon(ui->btnInfo, IconsManager::ACTION_MISC_HELP);
+}
+
+
+void ProjectMakefileWidget::on_btnInfo_clicked()
 {
     CustomMakefileInfoDialog dialog(this);
     dialog.exec();

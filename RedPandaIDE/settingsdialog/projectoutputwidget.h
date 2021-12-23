@@ -27,6 +27,10 @@ private slots:
     void on_btnOutputDir_triggered(QAction *arg1);
     void on_btnObjOutputDir_triggered(QAction *arg1);
     void on_btnCompileLog_triggered(QAction *arg1);
+
+    // SettingsWidget interface
+protected:
+    void updateIcons(const QSize &size) override;
 };
 
 #endif // PROJECTOUTPUTWIDGET_H

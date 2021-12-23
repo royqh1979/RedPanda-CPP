@@ -89,8 +89,11 @@
       </item>
       <item row="0" column="2">
        <widget class="QToolButton" name="btnBrowse">
+        <property name="toolTip">
+         <string>Browse</string>
+        </property>
         <property name="text">
-         <string/>
+         <string>Browse</string>
         </property>
         <property name="icon">
          <iconset resource="../icons.qrc">

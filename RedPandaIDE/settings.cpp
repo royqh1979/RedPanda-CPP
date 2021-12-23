@@ -4427,6 +4427,66 @@ void Settings::UI::setShowProblem(bool newShowProblem)
     mShowProblem = newShowProblem;
 }
 
+int Settings::UI::settingsDialogSplitterPos() const
+{
+    return mSettingsDialogSplitterPos;
+}
+
+void Settings::UI::setSettingsDialogSplitterPos(int newSettingsDialogSplitterPos)
+{
+    mSettingsDialogSplitterPos = newSettingsDialogSplitterPos;
+}
+
+int Settings::UI::settingsDialogHeight() const
+{
+    return mSettingsDialogHeight;
+}
+
+void Settings::UI::setSettingsDialogHeight(int newSettingsDialogHeight)
+{
+    mSettingsDialogHeight = newSettingsDialogHeight;
+}
+
+int Settings::UI::settingsDialogWidth() const
+{
+    return mSettingsDialogWidth;
+}
+
+void Settings::UI::setSettingsDialogWidth(int newSettingsDialogWidth)
+{
+    mSettingsDialogWidth = newSettingsDialogWidth;
+}
+
+int Settings::UI::CPUDialogSplitterPos() const
+{
+    return mCPUDialogSplitterPos;
+}
+
+void Settings::UI::setCPUDialogSplitterPos(int newCPUDialogSplitterPos)
+{
+    mCPUDialogSplitterPos = newCPUDialogSplitterPos;
+}
+
+int Settings::UI::CPUDialogHeight() const
+{
+    return mCPUDialogHeight;
+}
+
+void Settings::UI::setCPUDialogHeight(int newCPUDialogHeight)
+{
+    mCPUDialogHeight = newCPUDialogHeight;
+}
+
+int Settings::UI::CPUDialogWidth() const
+{
+    return mCPUDialogWidth;
+}
+
+void Settings::UI::setCPUDialogWidth(int newCPUDialogWidth)
+{
+    mCPUDialogWidth = newCPUDialogWidth;
+}
+
 bool Settings::UI::showBookmark() const
 {
     return mShowBookmark;
@@ -4629,6 +4689,14 @@ void Settings::UI::doSave()
     saveValue("show_todo", mShowTODO);
     saveValue("show_bookmark", mShowBookmark);
     saveValue("show_problem", mShowProblem);
+
+    //dialogs
+    saveValue("cpu_dialog_width", mCPUDialogWidth);
+    saveValue("cpu_dialog_height", mCPUDialogHeight);
+    saveValue("cpu_dialog_splitter", mCPUDialogSplitterPos);
+    saveValue("settings_dialog_width", mSettingsDialogWidth);
+    saveValue("settings_dialog_height", mSettingsDialogHeight);
+    saveValue("settings_dialog_splitter", mSettingsDialogSplitterPos);
 }
 
 void Settings::UI::doLoad()
@@ -4663,4 +4731,12 @@ void Settings::UI::doLoad()
     mShowTODO = boolValue("show_todo",true);
     mShowBookmark = boolValue("show_bookmark",true);
     mShowProblem = boolValue("show_problem",true);
+
+    //dialogs
+    mCPUDialogWidth = intValue("cpu_dialog_width",800*qApp->desktop()->width()/1920);
+    mCPUDialogHeight = intValue("cpu_dialog_height",600*qApp->desktop()->height()/1080);
+    mCPUDialogSplitterPos = intValue("cpu_dialog_splitter",500*qApp->desktop()->width()/1920);
+    mSettingsDialogWidth = intValue("settings_dialog_width",800*qApp->desktop()->width()/1920);
+    mSettingsDialogHeight = intValue("settings_dialog_height",600*qApp->desktop()->height()/1080);
+    mSettingsDialogSplitterPos = intValue("settings_dialog_splitter",300*qApp->desktop()->width()/1920);
 }

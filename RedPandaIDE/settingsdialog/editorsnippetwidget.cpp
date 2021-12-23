@@ -2,6 +2,7 @@
 #include "ui_editorsnippetwidget.h"
 #include "../mainwindow.h"
 #include "../codesnippetsmanager.h"
+#include "../iconsmanager.h"
 
 #include <QItemSelectionModel>
 
@@ -69,6 +70,12 @@ void EditorSnippetWidget::on_btnAdd_clicked()
                       -1);
     ui->tblSnippets->setCurrentIndex(mModel.lastSnippetCaption());
     ui->tblSnippets->edit(mModel.lastSnippetCaption());
+}
+
+void EditorSnippetWidget::updateIcons(const QSize &size)
+{
+    pIconsManager->setIcon(ui->btnAdd,IconsManager::ACTION_MISC_ADD);
+    pIconsManager->setIcon(ui->btnRemove,IconsManager::ACTION_MISC_REMOVE);
 }
 
 

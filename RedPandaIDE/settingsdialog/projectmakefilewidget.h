@@ -27,7 +27,10 @@ protected:
     void doSave() override;
 private slots:
     void on_btnBrowse_clicked();
-    void on_pushButton_clicked();
+    void on_btnInfo_clicked();
+
+protected:
+    void updateIcons(const QSize &size) override;
 };
 
 #endif // PROJECTMAKEFILEWIDGET_H

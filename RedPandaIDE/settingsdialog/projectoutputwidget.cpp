@@ -2,6 +2,7 @@
 #include "ui_projectoutputwidget.h"
 #include "../mainwindow.h"
 #include "../project.h"
+#include "../iconsmanager.h"
 
 #include <QFileDialog>
 
@@ -71,5 +72,12 @@ void ProjectOutputWidget::on_btnCompileLog_triggered(QAction *)
     if (!fileName.isEmpty() ) {
         ui->txtCompileLog->setText(fileName);
     }
+}
+
+void ProjectOutputWidget::updateIcons(const QSize &size)
+{
+    pIconsManager->setIcon(ui->btnCompileLog, IconsManager::ACTION_FILE_OPEN_FOLDER);
+    pIconsManager->setIcon(ui->btnObjOutputDir, IconsManager::ACTION_FILE_OPEN_FOLDER);
+    pIconsManager->setIcon(ui->btnOutputDir, IconsManager::ACTION_FILE_OPEN_FOLDER);
 }
 

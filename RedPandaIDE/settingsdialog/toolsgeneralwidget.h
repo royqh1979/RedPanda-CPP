@@ -73,6 +73,10 @@ private:
 protected:
     void doLoad() override;
     void doSave() override;
+
+    // SettingsWidget interface
+protected:
+    void updateIcons(const QSize &size) override;
 };
 
 #endif // TOOLSGENERALWIDGET_H

@@ -4,6 +4,7 @@
 #include "../mainwindow.h"
 #include "settings.h"
 #include "../systemconsts.h"
+#include "../iconsmanager.h"
 
 #include <QFileDialog>
 #include <QIcon>
@@ -137,5 +138,11 @@ void ProjectGeneralWidget::init()
     ui->cbDefaultEncoding->clear();
     ui->cbDefaultEncoding->addItems(pSystemConsts->codecNames());
     SettingsWidget::init();
+}
+
+void ProjectGeneralWidget::updateIcons(const QSize &)
+{
+    pIconsManager->setIcon(ui->btnBrowse,IconsManager::ACTION_FILE_OPEN_FOLDER);
+    pIconsManager->setIcon(ui->btnRemove, IconsManager::ACTION_MISC_CROSS);
 }
 

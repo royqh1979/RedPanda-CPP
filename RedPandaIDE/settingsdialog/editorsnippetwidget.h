@@ -29,6 +29,10 @@ protected:
 private slots:
     void on_btnRemove_clicked();
     void on_btnAdd_clicked();
+
+    // SettingsWidget interface
+protected:
+    void updateIcons(const QSize &size) override;
 };
 
 #endif // EDITORSNIPPETWIDGET_H

@@ -1,6 +1,7 @@
 Version 0.11.5 For Dev-C++ 7 Beta
  - fix: step into instruction and step over instruction not correctly disabled when cpu dialog is created
- - enhancement: icons in cpu dialog auto change size with fonts 
+ - enhancement: icons in all dialogs auto change size with fonts 
+ - enhancement: save/restore sizes of CPU dialog and settings dialog
 
 Version 0.11.4 For Dev-C++ 7 Beta
  - fix: compiler set's custom link parameters  not used when compiling

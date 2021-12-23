@@ -67,6 +67,11 @@ private:
 //    ExecutorGeneralWidget  *pExecutorGeneralWidget;
 //    DebugGeneralWidget *pDebugGeneralWidget;
 //    FormatterGeneralWidget  *pFormatterGeneralWidget;
+
+
+    // QWidget interface
+protected:
+    void closeEvent(QCloseEvent *event) override;
 };
 
 #endif // SETTINGSDIALOG_H

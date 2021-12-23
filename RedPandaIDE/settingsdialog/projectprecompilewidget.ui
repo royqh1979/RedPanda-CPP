@@ -43,6 +43,9 @@
          </item>
          <item>
           <widget class="QToolButton" name="btnBrowse">
+           <property name="toolTip">
+            <string>Browse</string>
+           </property>
            <property name="text">
             <string>Browse</string>
            </property>

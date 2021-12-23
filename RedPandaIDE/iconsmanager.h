@@ -7,6 +7,7 @@
 #include <memory>
 
 class QToolButton;
+class QPushButton;
 class IconsManager : public QObject
 {
     Q_OBJECT
@@ -48,6 +49,7 @@ public:
         ACTION_MISC_CLEAN,
         ACTION_MISC_VALIDATE,
         ACTION_MISC_RENAME,
+        ACTION_MISC_HELP,
 
         ACTION_FILE_NEW,
         ACTION_FILE_OPEN,
@@ -132,6 +134,7 @@ public:
     QIcon getIcon(IconName iconName) const;
 
     void setIcon(QToolButton* btn, IconName iconName) const;
+    void setIcon(QPushButton* btn, IconName iconName) const;
 
     PPixmap createSVGIcon(const QString& filename, int width, int height);
     const QSize &actionIconSize() const;

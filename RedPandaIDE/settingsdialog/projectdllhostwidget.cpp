@@ -2,6 +2,7 @@
 #include "ui_projectdllhostwidget.h"
 #include "../project.h"
 #include "../mainwindow.h"
+#include "../iconsmanager.h"
 
 #include <QFileDialog>
 
@@ -37,5 +38,10 @@ void ProjectDLLHostWidget::on_btnBrowse_clicked()
     if (!filename.isEmpty() && fileExists(filename)) {
         ui->txtHost->setText(filename);
     }
+}
+
+void ProjectDLLHostWidget::updateIcons(const QSize &size)
+{
+    pIconsManager->setIcon(ui->btnBrowse, IconsManager::ACTION_FILE_OPEN_FOLDER);
 }
 

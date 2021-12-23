@@ -25,6 +25,10 @@ protected:
     void doSave() override;
 private slots:
     void on_btnBrowse_clicked();
+
+    // SettingsWidget interface
+protected:
+    void updateIcons(const QSize &size) override;
 };
 
 #endif // PROJECTDLLHOSTWIDGET_H

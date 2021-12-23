@@ -2,6 +2,7 @@
 #include "ui_projectprecompilewidget.h"
 #include "../mainwindow.h"
 #include "../project.h"
+#include "../iconsmanager.h"
 
 #include <QFileDialog>
 
@@ -40,5 +41,10 @@ void ProjectPreCompileWidget::on_btnBrowse_clicked()
     if (!fileName.isEmpty() && QFileInfo(fileName).exists()) {
         ui->txtPrecompileHeader->setText(fileName);
     }
+}
+
+void ProjectPreCompileWidget::updateIcons(const QSize &size)
+{
+    pIconsManager->setIcon(ui->btnBrowse, IconsManager::ACTION_FILE_OPEN_FOLDER);
 }
 

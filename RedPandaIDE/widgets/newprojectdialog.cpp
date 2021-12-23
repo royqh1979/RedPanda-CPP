@@ -2,7 +2,7 @@
 #include "ui_newprojectdialog.h"
 #include "settings.h"
 #include "systemconsts.h"
-
+#include "../iconsmanager.h"
 #include <QDir>
 #include <QFile>
 #include <QFileDialog>
@@ -227,5 +227,10 @@ void NewProjectDialog::on_btnBrowse_clicked()
                     current && !ui->txtProjectName->text().isEmpty()
                     );
     }
+}
+
+void NewProjectDialog::updateIcons()
+{
+    pIconsManager->setIcon(ui->btnBrowse, IconsManager::ACTION_FILE_OPEN_FOLDER);
 }
 

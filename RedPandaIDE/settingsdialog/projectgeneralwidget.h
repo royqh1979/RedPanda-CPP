@@ -32,6 +32,10 @@ private slots:
     // SettingsWidget interface
 public:
     void init() override;
+
+    // SettingsWidget interface
+protected:
+    void updateIcons(const QSize &size) override;
 };
 
 #endif // PROJECTGENERALWIDGET_H

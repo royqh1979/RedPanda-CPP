@@ -5,6 +5,7 @@
 #include <QDebug>
 #include <QIcon>
 #include <QToolButton>
+#include <QPushButton>
 
 IconsManager* pIconsManager;
 
@@ -61,6 +62,7 @@ void IconsManager::updateActionIcons(const QString iconSet, int size)
     mIconPixmaps.insert(ACTION_MISC_CLEAN, createSVGIcon(iconFolder+"00Misc-09Clean.svg",size,size));
     mIconPixmaps.insert(ACTION_MISC_VALIDATE, createSVGIcon(iconFolder+"00Misc-10Check.svg",size,size));
     mIconPixmaps.insert(ACTION_MISC_RENAME, createSVGIcon(iconFolder+"00Misc-11Rename.svg",size,size));
+    mIconPixmaps.insert(ACTION_MISC_HELP, createSVGIcon(iconFolder+"00Misc-12Help.svg",size,size));
 
     mIconPixmaps.insert(ACTION_FILE_NEW, createSVGIcon(iconFolder+"01File-01New.svg",size,size));
     mIconPixmaps.insert(ACTION_FILE_OPEN, createSVGIcon(iconFolder+"01File-02Open.svg",size,size));
@@ -149,6 +151,12 @@ QIcon IconsManager::getIcon(IconName iconName) const
 }
 
 void IconsManager::setIcon(QToolButton *btn, IconName iconName) const
+{
+    btn->setIconSize(mActionIconSize);
+    btn->setIcon(getIcon(iconName));
+}
+
+void IconsManager::setIcon(QPushButton *btn, IconName iconName) const
 {
     btn->setIconSize(mActionIconSize);
     btn->setIcon(getIcon(iconName));

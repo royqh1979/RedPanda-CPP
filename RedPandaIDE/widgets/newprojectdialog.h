@@ -31,11 +31,13 @@ private slots:
 
     void on_lstTemplates_currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous);
     void on_btnBrowse_clicked();
+    void updateIcons();
 
 private:
     void addTemplate(const QString& filename);
     void readTemplateDir();
     void rebuildTabs();
+
 private:
     Ui::NewProjectDialog *ui;
     QList<PProjectTemplate> mTemplates;

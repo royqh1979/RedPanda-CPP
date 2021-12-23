@@ -52,10 +52,14 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     ui->btnApply->setEnabled(false);
 
     mAppShouldQuit = false;
-    QSize size;
-    size.setWidth(width()*qApp->desktop()->width()/1920);
-    size.setHeight(height()*qApp->desktop()->height()/1080);
-    setBaseSize(size);
+    resize(pSettings->ui().settingsDialogWidth(),pSettings->ui().settingsDialogHeight());
+
+    QList<int> sizes = ui->splitter->sizes();
+    int tabWidth = pSettings->ui().settingsDialogSplitterPos();
+    int totalSize = sizes[0] + sizes[1];
+    sizes[0] = tabWidth;
+    sizes[1] = std::max(1,totalSize - sizes[0]);
+    ui->splitter->setSizes(sizes);
 }
 
 SettingsDialog::~SettingsDialog()
@@ -336,6 +340,17 @@ void SettingsDialog::saveCurrentPageSettings(bool confirm)
         }
     }
     pWidget->save();
+}
+
+void SettingsDialog::closeEvent(QCloseEvent *event)
+{
+    pSettings->ui().setSettingsDialogWidth(width());
+    pSettings->ui().setSettingsDialogHeight(height());
+
+    QList<int> sizes = ui->splitter->sizes();
+    pSettings->ui().setSettingsDialogSplitterPos(sizes[0]);
+
+    QDialog::closeEvent(event);
 }
 
 bool SettingsDialog::appShouldQuit() const

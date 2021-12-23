@@ -272,7 +272,7 @@ void CompilerSetOptionWidget::on_btnRemoveCompilerSet_pressed()
 void CompilerSetOptionWidget::updateIcons()
 {
     pIconsManager->setIcon(ui->btnFindCompilers, IconsManager::ACTION_EDIT_SEARCH);
-    pIconsManager->setIcon(ui->btnAddCompilerSetByFolder, IconsManager::ACTION_MISC_FOLDER);
+    pIconsManager->setIcon(ui->btnAddCompilerSetByFolder, IconsManager::ACTION_FILE_OPEN_FOLDER);
     pIconsManager->setIcon(ui->btnAddBlankCompilerSet, IconsManager::ACTION_MISC_ADD);
     pIconsManager->setIcon(ui->btnRemoveCompilerSet, IconsManager::ACTION_MISC_REMOVE);
     pIconsManager->setIcon(ui->btnRenameCompilerSet, IconsManager::ACTION_MISC_RENAME);

@@ -906,6 +906,24 @@ public:
         bool showProblem() const;
         void setShowProblem(bool newShowProblem);
 
+        int CPUDialogWidth() const;
+        void setCPUDialogWidth(int newCPUDialogWidth);
+
+        int CPUDialogHeight() const;
+        void setCPUDialogHeight(int newCPUDialogHeight);
+
+        int CPUDialogSplitterPos() const;
+        void setCPUDialogSplitterPos(int newCPUDialogSplitterPos);
+
+        int settingsDialogWidth() const;
+        void setSettingsDialogWidth(int newSettingsDialogWidth);
+
+        int settingsDialogHeight() const;
+        void setSettingsDialogHeight(int newSettingsDialogHeight);
+
+        int settingsDialogSplitterPos() const;
+        void setSettingsDialogSplitterPos(int newSettingsDialogSplitterPos);
+
     private:
         QByteArray mMainWindowState;
         QByteArray mMainWindowGeometry;
@@ -937,6 +955,14 @@ public:
         bool mShowTODO;
         bool mShowBookmark;
         bool mShowProblem;
+
+        //dialogs
+        int mCPUDialogWidth;
+        int mCPUDialogHeight;
+        int mCPUDialogSplitterPos;
+        int mSettingsDialogWidth;
+        int mSettingsDialogHeight;
+        int mSettingsDialogSplitterPos;
 
     protected:
         void doSave() override;

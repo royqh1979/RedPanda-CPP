@@ -207,5 +207,6 @@
         <file>images/dark-close.svg</file>
         <file>images/newlook/00Misc-10Check.svg</file>
         <file>images/newlook/00Misc-11Rename.svg</file>
+        <file>images/newlook/00Misc-12Help.svg</file>
     </qresource>
 </RCC>

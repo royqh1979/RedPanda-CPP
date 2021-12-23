@@ -27,6 +27,10 @@ protected:
 private slots:
     void on_btnOpenConfigFolderInBrowser_clicked();
     void on_btnResetDefault_clicked();
+
+    // SettingsWidget interface
+protected:
+    void updateIcons(const QSize &size) override;
 };
 
 #endif // ENVIRONMENTFOLDERSWIDGET_H
