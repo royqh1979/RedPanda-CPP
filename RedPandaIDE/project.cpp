@@ -653,7 +653,7 @@ bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate, b
             PTemplateUnit templateUnit = aTemplate->unit(i);
             QString s;
             PProjectUnit unit;
-            if (options().useGPP) {
+            if (mOptions.useGPP) {
                 s = templateUnit->CppText;
                 unit = newUnit(mNode, templateUnit->CppName);
             } else {

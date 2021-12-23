@@ -1,3 +1,6 @@
+Version 0.12.1 For Dev-C++ 7 Beta
+ - fix: error when drag&drop in editors
+
 Version 0.12.0 For Dev-C++ 7 Beta
  - enhancement: enable run/debug/compile when console program finished but pausing.
 

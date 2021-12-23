@@ -205,6 +205,8 @@ void SynEdit::setCaretY(int value)
 
 void SynEdit::setCaretXY(const BufferCoord &value)
 {
+    setBlockBegin(value);
+    setBlockEnd(value);
     setCaretXYEx(true,value);
 }
 
@@ -6184,7 +6186,7 @@ void SynEdit::dragEnterEvent(QDragEnterEvent *event)
         mDragSelEndSave = blockEnd();
         BufferCoord coord = displayToBufferPos(pixelsToNearestRowColumn(event->pos().x(),
                                                                         event->pos().y()));
-        setCaretXY(coord);
+        internalSetCaretXY(coord);
         setBlockBegin(mDragSelBeginSave);
         setBlockEnd(mDragSelEndSave);
         showCaret();
@@ -6221,7 +6223,6 @@ void SynEdit::dropEvent(QDropEvent *event)
             //paste to new position
             setTopLine(topLine);
             setLeftChar(leftChar);
-            setCaretXY(coord);
             setSelText(event->mimeData()->text());
             //delete old
             setBlockBegin(mDragSelBeginSave);
@@ -6246,6 +6247,7 @@ void SynEdit::dropEvent(QDropEvent *event)
         }
         mUndoList->EndBlock();
     }
+
     event->acceptProposedAction();
 
 }
