@@ -25,6 +25,7 @@ private:
     // QThread interface
 protected:
     void run() override;
+
 };
 
 #endif // OJPROBLEMCASESRUNNER_H

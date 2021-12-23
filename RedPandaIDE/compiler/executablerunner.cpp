@@ -1,6 +1,5 @@
 #include "executablerunner.h"
 
-#include <QProcess>
 #include <windows.h>
 #include <QDebug>
 #include "compilermanager.h"
@@ -50,15 +49,17 @@ void ExecutableRunner::run()
 {
     emit started();
     auto action = finally([this]{
+        mProcess.reset();
+        setPausing(false);
         emit terminated();
     });
-    QProcess process;
     mStop = false;
     bool errorOccurred = false;
 
-    process.setProgram(mFilename);
-    process.setArguments(QProcess::splitCommand(mArguments));
-    process.setWorkingDirectory(mWorkDir);
+    mProcess = std::make_shared<QProcess>();
+    mProcess->setProgram(mFilename);
+    mProcess->setArguments(QProcess::splitCommand(mArguments));
+    mProcess->setWorkingDirectory(mWorkDir);
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
     QString path = env.value("PATH");
     QStringList pathAdded;
@@ -74,8 +75,8 @@ void ExecutableRunner::run()
         path = pathAdded.join(PATH_SEPARATOR);
     }
     env.insert("PATH",path);
-    process.setProcessEnvironment(env);
-    process.setCreateProcessArgumentsModifier([this](QProcess::CreateProcessArguments * args){
+    mProcess->setProcessEnvironment(env);
+    mProcess->setCreateProcessArgumentsModifier([this](QProcess::CreateProcessArguments * args){
         if (mStartConsole) {
             args->flags |=  CREATE_NEW_CONSOLE;
             args->flags &= ~CREATE_NO_WINDOW;
@@ -84,56 +85,96 @@ void ExecutableRunner::run()
             args->startupInfo -> dwFlags &= ~STARTF_USESTDHANDLES;
         }
     });
-    process.connect(
-                &process, &QProcess::errorOccurred,
-                [&](){
+    connect(
+                mProcess.get(), &QProcess::errorOccurred,
+                [&errorOccurred](){
         errorOccurred= true;
     });
 //    if (!redirectInput()) {
 //        process.closeWriteChannel();
 //    }
-    process.start();
-    process.waitForStarted(5000);
-    if (process.state()==QProcess::Running && redirectInput()) {
-        process.write(readFileToByteArray(redirectInputFilename()));
-        process.closeWriteChannel();
+    mProcess->start();
+    mProcess->waitForStarted(5000);
+    if (mProcess->state()==QProcess::Running && redirectInput()) {
+        mProcess->write(readFileToByteArray(redirectInputFilename()));
+        mProcess->closeWriteChannel();
+    }
+    HANDLE hSharedMemory=INVALID_HANDLE_VALUE;
+    int BUF_SIZE=1024;
+    char* pBuf=nullptr;
+    if (mStartConsole) {
+        hSharedMemory = CreateFileMappingA(
+                INVALID_HANDLE_VALUE,
+                NULL,
+                PAGE_READWRITE,
+                0,
+                100,
+                "RED_PANDA_IDE_CONSOLE_PAUSER20211223"
+                );
+        if (hSharedMemory != NULL)
+        {
+            pBuf = (char*) MapViewOfFile(hSharedMemory,   // handle to map object
+                                 FILE_MAP_ALL_ACCESS, // read/write permission
+                                 0,
+                                 0,
+                                 BUF_SIZE);
+            if (pBuf) {
+                pBuf[0]=0;
+            }
+        }
     }
     while (true) {
-        process.waitForFinished(1000);
-        if (process.state()!=QProcess::Running) {
+        mProcess->waitForFinished(1000);
+        if (mProcess->state()!=QProcess::Running) {
             break;
         }
         if (mStop) {
-            process.closeReadChannel(QProcess::StandardOutput);
-            process.closeReadChannel(QProcess::StandardError);
-            process.closeWriteChannel();
-#ifdef Q_OS_WIN
-            if (!mStartConsole) {
-                process.terminate();
-                if (process.waitForFinished(1000)) {
-                    break;
-                }
-            }
-#else
-            process.terminate();
-            if (process.waitForFinished(1000)) {
+            qDebug()<<"??1";
+            mProcess->closeReadChannel(QProcess::StandardOutput);
+            mProcess->closeReadChannel(QProcess::StandardError);
+            mProcess->closeWriteChannel();
+            qDebug()<<"??2";
+        #ifdef Q_OS_WIN
+            qDebug()<<"??3";
+            mProcess->terminate();
+            qDebug()<<"??4";
+            if (mProcess->waitForFinished(1000)) {
                 break;
             }
-#endif
+        #else
+            process->terminate();
+            if (process->waitForFinished(1000)) {
+                break;
+            }
+        #endif
             for (int i=0;i<10;i++) {
-                process.kill();
-                if (process.waitForFinished(100)) {
+                qDebug()<<"??5";
+                mProcess->kill();
+                qDebug()<<"??6";
+                if (mProcess->waitForFinished(500)) {
                     break;
                 }
             }
             break;
         }
+        if (mStartConsole && !mPausing && pBuf) {
+            if (strncmp(pBuf,"FINISHED",sizeof("FINISHED"))==0) {
+                setPausing(true);
+                emit pausingForFinish();
+            }
+        }
+
         if (errorOccurred)
             break;
     }
+
+    if (pBuf)
+        UnmapViewOfFile(pBuf);
+    if (hSharedMemory!=INVALID_HANDLE_VALUE)
+        CloseHandle(hSharedMemory);
     if (errorOccurred) {
         //qDebug()<<"process error:"<<process.error();
-        switch (process.error()) {
+        switch (mProcess->error()) {
         case QProcess::FailedToStart:
             emit runErrorOccurred(tr("The runner process '%1' failed to start.").arg(mFilename));
             break;
@@ -153,5 +194,40 @@ void ExecutableRunner::run()
         default:
             break;
         }
+    }
+}
+
+void ExecutableRunner::doStop()
+{
+    std::shared_ptr<QProcess> process = mProcess;
+    if (process) {
+//        qDebug()<<"??1";
+//        process->closeReadChannel(QProcess::StandardOutput);
+//        process->closeReadChannel(QProcess::StandardError);
+//        process->closeWriteChannel();
+//        qDebug()<<"??2";
+//    #ifdef Q_OS_WIN
+//        if (!mStartConsole) {
+//            qDebug()<<"??3";
+//            process->terminate();
+//            qDebug()<<"??4";
+//            if (process->waitForFinished(1000)) {
+//                return;
+//            }
+//        }
+//    #else
+//        process->terminate();
+//        if (process->waitForFinished(1000)) {
+//            break;
+//        }
+//    #endif
+//        for (int i=0;i<10;i++) {
+//            qDebug()<<"??5";
+//            process->kill();
+//            qDebug()<<"??6";
+//            if (process->waitForFinished(100)) {
+//                break;
+//            }
+//        }
     }
 }

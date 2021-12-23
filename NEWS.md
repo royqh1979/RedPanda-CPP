@@ -1,3 +1,6 @@
+Version 0.12.0 For Dev-C++ 7 Beta
+ - enhancement: enable run/debug/compile when console program finished but pausing.
+
 Version 0.11.5 For Dev-C++ 7 Beta
  - fix: step into instruction and step over instruction not correctly disabled when cpu dialog is created
  - enhancement: icons in all dialogs auto change size with fonts 

@@ -42,7 +42,7 @@ bool CompilerManager::backgroundSyntaxChecking()
 bool CompilerManager::running()
 {
     QMutexLocker locker(&mRunnerMutex);
-    return mRunner!=nullptr;
+    return (mRunner!=nullptr && !mRunner->pausing());
 }
 
 void CompilerManager::compile(const QString& filename, const QByteArray& encoding, bool rebuild, bool silent, bool onlyCheckSyntax)
@@ -199,7 +199,7 @@ void CompilerManager::checkSyntax(const QString &filename, const QString &conten
 void CompilerManager::run(const QString &filename, const QString &arguments, const QString &workDir)
 {
     QMutexLocker locker(&mRunnerMutex);
-    if (mRunner!=nullptr) {
+    if (mRunner!=nullptr && !mRunner->pausing()) {
         return;
     }
     QString redirectInputFilename;
@@ -234,7 +234,9 @@ void CompilerManager::run(const QString &filename, const QString &arguments, con
     }
     mRunner = execRunner;
     connect(mRunner, &Runner::finished, this ,&CompilerManager::onRunnerTerminated);
+    connect(mRunner, &Runner::finished, mRunner ,&Runner::deleteLater);
     connect(mRunner, &Runner::finished, pMainWindow ,&MainWindow::onRunFinished);
+    connect(mRunner, &Runner::pausingForFinish, pMainWindow ,&MainWindow::onRunPausingForFinish);
     connect(mRunner, &Runner::runErrorOccurred, pMainWindow ,&MainWindow::onRunErrorOccured);
     mRunner->start();
 }
@@ -249,6 +251,7 @@ void CompilerManager::runProblem(const QString &filename, const QString &argumen
     OJProblemCasesRunner * execRunner = new OJProblemCasesRunner(filename,arguments,workDir,problemCase);
     mRunner = execRunner;
     connect(mRunner, &Runner::finished, this ,&CompilerManager::onRunnerTerminated);
+    connect(mRunner, &Runner::finished, mRunner ,&Runner::deleteLater);
     connect(mRunner, &Runner::finished, pMainWindow ,&MainWindow::onRunProblemFinished);
     connect(mRunner, &Runner::runErrorOccurred, pMainWindow ,&MainWindow::onRunErrorOccured);
     connect(execRunner, &OJProblemCasesRunner::caseStarted, pMainWindow, &MainWindow::onOJProblemCaseStarted);
@@ -276,8 +279,22 @@ void CompilerManager::runProblem(const QString &filename, const QString &argumen
 void CompilerManager::stopRun()
 {
     QMutexLocker locker(&mRunnerMutex);
-    if (mRunner!=nullptr)
+    if (mRunner!=nullptr) {
         mRunner->stop();
+        disconnect(mRunner, &Runner::finished, this ,&CompilerManager::onRunnerTerminated);
+        mRunner=nullptr;
+    }
+}
+
+void CompilerManager::stopPausing()
+{
+    QMutexLocker locker(&mRunnerMutex);
+    if (mRunner!=nullptr && mRunner->pausing()) {
+        disconnect(mRunner, &Runner::finished, this ,&CompilerManager::onRunnerTerminated);
+        mRunner->stop();
+        disconnect(mRunner, &Runner::finished, this ,&CompilerManager::onRunnerTerminated);
+        mRunner=nullptr;
+    }
 }
 
 void CompilerManager::stopCompile()
@@ -309,9 +326,7 @@ void CompilerManager::onCompileFinished()
 void CompilerManager::onRunnerTerminated()
 {
     QMutexLocker locker(&mRunnerMutex);
-    Runner* p=mRunner;
     mRunner=nullptr;
-    p->deleteLater();
 }
 
 void CompilerManager::onCompileIssue(PCompileIssue issue)

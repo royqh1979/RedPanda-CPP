@@ -5,6 +5,7 @@
 #include "../widgets/ojproblemsetmodel.h"
 #include <QProcess>
 
+
 OJProblemCasesRunner::OJProblemCasesRunner(const QString& filename, const QString& arguments, const QString& workDir,
                                            const QVector<POJProblemCase>& problemCases, QObject *parent):
     Runner(filename,arguments,workDir,parent)

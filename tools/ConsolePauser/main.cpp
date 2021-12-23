@@ -180,6 +180,25 @@ int main(int argc, char** argv) {
 	} else {
 		FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
 	}
+	
+	HANDLE hSharedMemory=INVALID_HANDLE_VALUE;
+	int BUF_SIZE=1024;
+	char* pBuf=nullptr;
+	hSharedMemory = OpenFileMappingA(
+		FILE_MAP_ALL_ACCESS,
+		FALSE,
+		"RED_PANDA_IDE_CONSOLE_PAUSER20211223"
+		);
+	if (hSharedMemory != NULL)
+	{
+		pBuf = (char*) MapViewOfFile(hSharedMemory,   // handle to map object
+			FILE_MAP_ALL_ACCESS, // read/write permission
+			0,
+			0,
+			BUF_SIZE);
+	} else {
+		printf("can't open shared memory!");
+	}
 
 	// Save starting timestamp
 	LONGLONG starttime = GetClockTick();
@@ -190,6 +209,10 @@ int main(int argc, char** argv) {
 	// Get ending timestamp
 	LONGLONG endtime = GetClockTick();
 	double seconds = (endtime - starttime) / (double)GetClockFrequency();
+	
+	if (pBuf) {
+		strcpy(pBuf,"FINISHED");
+	}
 
 	// Done? Print return value of executed program
 	printf("\n--------------------------------");

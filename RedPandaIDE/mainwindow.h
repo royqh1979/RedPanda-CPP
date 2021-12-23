@@ -172,6 +172,7 @@ public slots:
     void onCompileErrorOccured(const QString& reason);
     void onRunErrorOccured(const QString& reason);
     void onRunFinished();
+    void onRunPausingForFinish();
     void onRunProblemFinished();
     void onOJProblemCaseStarted(const QString& id, int current, int total);
     void onOJProblemCaseFinished(const QString& id, int current, int total);

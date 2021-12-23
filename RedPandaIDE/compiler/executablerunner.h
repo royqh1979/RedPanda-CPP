@@ -2,6 +2,7 @@
 #define EXECUTABLERUNNER_H
 
 #include "runner.h"
+#include <QProcess>
 
 class ExecutableRunner : public Runner
 {
@@ -23,10 +24,15 @@ private:
     QString mRedirectInputFilename;
     bool mRedirectInput;
     bool mStartConsole;
+    std::shared_ptr<QProcess> mProcess;
 
     // QThread interface
 protected:
     void run() override;
+
+    // Runner interface
+protected:
+    void doStop() override;
 };
 
 #endif // EXECUTABLERUNNER_H

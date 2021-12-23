@@ -30,6 +30,7 @@ public:
     void runProblem(const QString& filename, const QString& arguments, const QString& workDir, POJProblemCase problemCase);
     void runProblem(const QString& filename, const QString& arguments, const QString& workDir, QVector<POJProblemCase> problemCases);
     void stopRun();
+    void stopPausing();
     void stopCompile();
     void stopCheckSyntax();
     bool canCompile(const QString& filename);

@@ -1312,6 +1312,7 @@ void MainWindow::checkSyntaxInBack(Editor *e)
 
 bool MainWindow::compile(bool rebuild)
 {
+    mCompilerManager->stopPausing();
     CompileTarget target =getCompileTarget();
     if (target == CompileTarget::Project) {
         if (mProject->modified())
@@ -1355,6 +1356,7 @@ bool MainWindow::compile(bool rebuild)
 
 void MainWindow::runExecutable(const QString &exeName,const QString &filename,RunType runType)
 {
+    mCompilerManager->stopPausing();
     // Check if it exists
     if (!fileExists(exeName)) {
         if (ui->actionCompile_Run->isEnabled()) {
@@ -1452,6 +1454,7 @@ void MainWindow::debug()
 {
     if (mCompilerManager->compiling())
         return;
+    mCompilerManager->stopPausing();
     Settings::PCompilerSet compilerSet = pSettings->compilerSets().defaultSet();
     if (!compilerSet) {
         QMessageBox::critical(pMainWindow,
@@ -3908,6 +3911,11 @@ void MainWindow::onRunFinished()
         showNormal();
     }
     updateAppTitle();
+}
+
+void MainWindow::onRunPausingForFinish()
+{
+    updateCompileActions();
 }
 
 void MainWindow::onRunProblemFinished()
