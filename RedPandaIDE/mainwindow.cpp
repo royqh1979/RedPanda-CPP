@@ -1694,6 +1694,7 @@ void MainWindow::showCPUInfoDialog()
     if (mCPUDialog==nullptr) {
         mCPUDialog = new CPUDialog(this);
         connect(mCPUDialog, &CPUDialog::closed, this, &MainWindow::cleanUpCPUDialog);
+        updateCompileActions();
     }
     mCPUDialog->show();
 }

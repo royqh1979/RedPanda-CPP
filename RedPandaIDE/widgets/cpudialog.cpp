@@ -53,7 +53,6 @@ CPUDialog::CPUDialog(QWidget *parent) :
     updateIcons();
     connect(pIconsManager,&IconsManager::actionIconsUpdated,
             this, &CPUDialog::updateIcons);
-    updateButtonStates(false);
 }
 
 CPUDialog::~CPUDialog()
