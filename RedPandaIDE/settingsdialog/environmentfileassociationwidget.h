@@ -69,5 +69,4 @@ protected:
     void doLoad() override;
     void doSave() override;
 };
-
 #endif // ENVIRONMENTFILEASSOCIATIONWIDGET_H

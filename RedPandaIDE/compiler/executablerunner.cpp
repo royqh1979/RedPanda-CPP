@@ -1,10 +1,13 @@
 #include "executablerunner.h"
 
-#include <windows.h>
 #include <QDebug>
 #include "compilermanager.h"
 #include "../settings.h"
 #include "../systemconsts.h"
+#ifdef Q_OS_WIN
+#include <windows.h>
+#endif
+
 
 ExecutableRunner::ExecutableRunner(const QString &filename, const QString &arguments, const QString &workDir
                                    ,QObject* parent):
@@ -76,6 +79,12 @@ void ExecutableRunner::run()
     }
     env.insert("PATH",path);
     mProcess->setProcessEnvironment(env);
+    connect(
+                mProcess.get(), &QProcess::errorOccurred,
+                [&errorOccurred](){
+        errorOccurred= true;
+    });
+#ifdef Q_OS_WIN
     mProcess->setCreateProcessArgumentsModifier([this](QProcess::CreateProcessArguments * args){
         if (mStartConsole) {
             args->flags |=  CREATE_NEW_CONSOLE;
@@ -85,20 +94,6 @@ void ExecutableRunner::run()
             args->startupInfo -> dwFlags &= ~STARTF_USESTDHANDLES;
         }
     });
-    connect(
-                mProcess.get(), &QProcess::errorOccurred,
-                [&errorOccurred](){
-        errorOccurred= true;
-    });
-//    if (!redirectInput()) {
-//        process.closeWriteChannel();
-//    }
-    mProcess->start();
-    mProcess->waitForStarted(5000);
-    if (mProcess->state()==QProcess::Running && redirectInput()) {
-        mProcess->write(readFileToByteArray(redirectInputFilename()));
-        mProcess->closeWriteChannel();
-    }
     HANDLE hSharedMemory=INVALID_HANDLE_VALUE;
     int BUF_SIZE=1024;
     char* pBuf=nullptr;
@@ -123,55 +118,55 @@ void ExecutableRunner::run()
             }
         }
     }
+#endif
+//    if (!redirectInput()) {
+//        process.closeWriteChannel();
+//    }
+    mProcess->start();
+    mProcess->waitForStarted(5000);
+    if (mProcess->state()==QProcess::Running && redirectInput()) {
+        mProcess->write(readFileToByteArray(redirectInputFilename()));
+        mProcess->closeWriteChannel();
+    }
+
     while (true) {
         mProcess->waitForFinished(1000);
         if (mProcess->state()!=QProcess::Running) {
             break;
         }
         if (mStop) {
-            qDebug()<<"??1";
             mProcess->closeReadChannel(QProcess::StandardOutput);
             mProcess->closeReadChannel(QProcess::StandardError);
             mProcess->closeWriteChannel();
-            qDebug()<<"??2";
-        #ifdef Q_OS_WIN
-            qDebug()<<"??3";
             mProcess->terminate();
-            qDebug()<<"??4";
             if (mProcess->waitForFinished(1000)) {
                 break;
             }
-        #else
-            process->terminate();
-            if (process->waitForFinished(1000)) {
-                break;
-            }
-        #endif
             for (int i=0;i<10;i++) {
-                qDebug()<<"??5";
                 mProcess->kill();
-                qDebug()<<"??6";
                 if (mProcess->waitForFinished(500)) {
                     break;
                 }
             }
             break;
         }
+#ifdef Q_OS_WIN
         if (mStartConsole && !mPausing && pBuf) {
             if (strncmp(pBuf,"FINISHED",sizeof("FINISHED"))==0) {
                 setPausing(true);
                 emit pausingForFinish();
             }
         }
-
+#endif
         if (errorOccurred)
             break;
     }
-
+#ifdef Q_OS_WIN
     if (pBuf)
         UnmapViewOfFile(pBuf);
     if (hSharedMemory!=INVALID_HANDLE_VALUE)
         CloseHandle(hSharedMemory);
+#endif
     if (errorOccurred) {
         //qDebug()<<"process error:"<<process.error();
         switch (mProcess->error()) {

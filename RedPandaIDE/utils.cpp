@@ -11,7 +11,9 @@
 #include <QTextCodec>
 #include <QtGlobal>
 #include <QDebug>
+#ifdef Q_OS_WIN
 #include <windows.h>
+#endif
 #include <QStyleFactory>
 #include <QDateTime>
 #include <QColor>
@@ -95,6 +97,7 @@ static bool gIsGreenEdition = true;
 static bool gIsGreenEditionInited = false;
 bool isGreenEdition()
 {
+#ifdef Q_OS_WIN
     if (!gIsGreenEditionInited) {
         QString keyString = QString("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\RedPanda-C++");
         QString value;
@@ -114,6 +117,9 @@ bool isGreenEdition()
         gIsGreenEditionInited = true;
     }
     return gIsGreenEdition;
+#else
+    return false;
+#endif
 }
 
 QByteArray runAndGetOutput(const QString &cmd, const QString& workingDir, const QStringList& arguments,
@@ -280,6 +286,7 @@ void splitStringArguments(const QString &arguments, QStringList &argumentList)
 
 bool programHasConsole(const QString &filename)
 {
+#ifdef Q_OS_WIN
     bool result = false;
     HANDLE handle = CreateFile(filename.toStdWString().c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
     if (handle != INVALID_HANDLE_VALUE) {
@@ -299,6 +306,9 @@ bool programHasConsole(const QString &filename)
     }
     CloseHandle(handle);
     return result;
+#else
+    return true;
+#endif
 }
 
 QStringList textToLines(const QString &text)
@@ -890,6 +900,8 @@ bool haveGoodContrast(const QColor& c1, const QColor &c2) {
     return std::abs(lightness1 - lightness2)>=120;
 }
 
+
+#ifdef Q_OS_WIN
 bool readRegistry(HKEY key,const QByteArray& subKey, const QByteArray& name, QString& value) {
     DWORD dataSize;
     LONG result;
@@ -914,6 +926,7 @@ bool readRegistry(HKEY key,const QByteArray& subKey, const QByteArray& name, QSt
     delete [] buffer;
     return true;
 }
+#endif
 
 QList<QByteArray> splitByteArrayToLines(const QByteArray &content)
 {

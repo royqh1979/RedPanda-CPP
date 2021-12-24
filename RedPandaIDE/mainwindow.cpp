@@ -1,4 +1,3 @@
-#include <windows.h>
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "editorlist.h"
@@ -51,6 +50,11 @@
 #include "cpprefacter.h"
 
 #include <widgets/searchdialog.h>
+
+#ifdef Q_OS_WIN
+#include <windows.h>
+#endif
+
 
 static int findTabIndex(QTabWidget* tabWidget , QWidget* w) {
     for (int i=0;i<tabWidget->count();i++) {
@@ -865,6 +869,11 @@ void MainWindow::updateShortcuts()
 QPlainTextEdit *MainWindow::txtLocals()
 {
     return ui->txtLocals;
+}
+
+QMenuBar *MainWindow::menuBar() const
+{
+    return ui->menubar;
 }
 
 void MainWindow::updateStatusbarForLineCol()
@@ -2684,10 +2693,12 @@ void MainWindow::openShell(const QString &folder, const QString &shellCommand)
     QProcess process;
     process.setWorkingDirectory(folder);
     process.setProgram(shellCommand);
+#ifdef Q_OS_WIN
     process.setCreateProcessArgumentsModifier([](QProcess::CreateProcessArguments * args){
         args->flags |= CREATE_NEW_CONSOLE;
         args->startupInfo->dwFlags &=  ~STARTF_USESTDHANDLES; //
     });
+#endif
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
     QString path = env.value("PATH");
     QStringList pathAdded;
@@ -5455,12 +5466,6 @@ void MainWindow::applyCurrentProblemCaseChanges()
         }
     }
 }
-
-Ui::MainWindow *MainWindow::mainWidget() const
-{
-    return ui;
-}
-
 
 void MainWindow::on_btnReplace_clicked()
 {

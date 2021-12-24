@@ -16,7 +16,6 @@
 #include "editormiscwidget.h"
 #include "environmentappearencewidget.h"
 #include "environmentshortcutwidget.h"
-#include "environmentfileassociationwidget.h"
 #include "environmentfolderswidget.h"
 #include "environmentperformancewidget.h"
 #include "executorgeneralwidget.h"
@@ -31,9 +30,12 @@
 #include "projectprecompilewidget.h"
 #include "projectoutputwidget.h"
 #include "projectmakefilewidget.h"
-#include "projectversioninfowidget.h"
 #include "projectdllhostwidget.h"
 #include "toolsgeneralwidget.h"
+#ifdef Q_OS_WIN
+#include "environmentfileassociationwidget.h"
+#include "projectversioninfowidget.h"
+#endif
 #include <QDebug>
 #include <QMessageBox>
 #include <QModelIndex>
@@ -113,9 +115,11 @@ PSettingsDialog SettingsDialog::optionDialog()
     widget->init();
     dialog->addWidget(widget);
 
+#ifdef Q_OS_WIN
     widget = new EnvironmentFileAssociationWidget(tr("File Association"),tr("Environment"));
     widget->init();
     dialog->addWidget(widget);
+#endif
 
     widget = new EnvironmentShortcutWidget(tr("Shortcuts"),tr("Environment"));
     widget->init();
@@ -254,9 +258,11 @@ PSettingsDialog SettingsDialog::projectOptionDialog()
     widget->init();
     dialog->addWidget(widget);
 
+#ifdef Q_OS_WIN
     widget = new ProjectVersionInfoWidget(tr("Version info"),tr("Project"));
     widget->init();
     dialog->addWidget(widget);
+#endif
 
     dialog->selectFirstWidget();
 

@@ -121,7 +121,7 @@ public:
 
     QPlainTextEdit* txtLocals();
 
-    Ui::MainWindow* mainWidget() const;
+    QMenuBar* menuBar() const;
 
     CPUDialog *cpuDialog() const;
 

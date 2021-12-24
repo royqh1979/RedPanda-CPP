@@ -226,7 +226,7 @@
   <customwidget>
    <class>SynEdit</class>
    <extends>QFrame</extends>
-   <header location="global">qsynedit/Synedit.h</header>
+   <header location="global">qsynedit/SynEdit.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

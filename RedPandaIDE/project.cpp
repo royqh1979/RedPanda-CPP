@@ -2036,8 +2036,8 @@ bool ProjectModel::canDropMimeData(const QMimeData * data, Qt::DropAction action
     QByteArray encoded = data->data(format);
     QDataStream stream(&encoded, QIODevice::ReadOnly);
     while (!stream.atEnd()) {
-        int r, c;
-        intptr_t v;
+        qint32 r, c;
+        quintptr v;
         stream >> r >> c >> v;
         FolderNode* droppedPointer= (FolderNode*)(v);
         PFolderNode droppedNode = mProject->pointerToNode(droppedPointer);
@@ -2076,8 +2076,8 @@ bool ProjectModel::dropMimeData(const QMimeData *data, Qt::DropAction action, in
     QVector<int> rows,cols;
     QVector<intptr_t> pointers;
     while (!stream.atEnd()) {
-        int r, c;
-        intptr_t v;
+        qint32 r, c;
+        quintptr v;
         stream >> r >> c >> v;
         rows.append(r);
         cols.append(c);
@@ -2124,7 +2124,7 @@ QMimeData *ProjectModel::mimeData(const QModelIndexList &indexes) const
     QModelIndexList::ConstIterator it = indexes.begin();
     QList<QUrl> urls;
     for (; it != indexes.end(); ++it) {
-        stream << (*it).row() << (*it).column() << (intptr_t)((*it).internalPointer());
+        stream << (qint32)((*it).row()) << (qint32)((*it).column()) << (quintptr)((*it).internalPointer());
         FolderNode* p = static_cast<FolderNode*>((*it).internalPointer());
         if (p && p->unitIndex>=0) {
             urls.append(QUrl::fromLocalFile(mProject->units()[p->unitIndex]->fileName()));

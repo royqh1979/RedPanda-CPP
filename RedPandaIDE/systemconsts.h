@@ -20,6 +20,7 @@
 #define GDB_PROGRAM     "gdb"
 #define GDB32_PROGRAM   "gdb32"
 #define MAKE_PROGRAM    "make"
+#define WINDRES_PROGRAM ""
 #define GPROF_PROGRAM   "gprof"
 #define CLEAN_PROGRAM   "rm -rf"
 #define CPP_PROGRAM     "cpp"

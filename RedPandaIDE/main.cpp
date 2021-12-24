@@ -17,8 +17,11 @@
 #include "platform.h"
 #include "parser/parserutils.h"
 #include "editorlist.h"
+#ifdef Q_WIN_OS
 #include <windows.h>
+#endif
 
+#ifdef Q_WIN_OS
 class WindowLogoutEventFilter : public QAbstractNativeEventFilter {
 
     // QAbstractNativeEventFilter interface
@@ -46,6 +49,7 @@ bool WindowLogoutEventFilter::nativeEventFilter(const QByteArray & /*eventType*/
     }
     return false;
 }
+#endif
 
 QString getSettingFilename(const QString& filepath = QString()) {
     QString filename;
@@ -154,8 +158,10 @@ int main(int argc, char *argv[])
             }
         }
         mainWindow.show();
+#ifdef Q_WIN_OS
         WindowLogoutEventFilter filter;
         app.installNativeEventFilter(&filter);
+#endif
         int retCode = app.exec();
         QString configDir = pSettings->dirs().config();
         // save settings

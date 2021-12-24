@@ -199,7 +199,10 @@ QString fromByteArray(const QByteArray& s);
 
 int getNewFileNumber();
 
+
+#ifdef Q_OS_WIN
 bool readRegistry(HKEY key,const QByteArray& subKey, const QByteArray& name, QString& value);
+#endif
 
 class CppParser;
 void resetCppParser(std::shared_ptr<CppParser> parser);

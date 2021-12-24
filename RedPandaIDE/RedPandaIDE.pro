@@ -54,7 +54,6 @@ SOURCES += \
     settingsdialog/editormiscwidget.cpp \
     settingsdialog/editorsnippetwidget.cpp \
     settingsdialog/editortooltipswidget.cpp \
-    settingsdialog/environmentfileassociationwidget.cpp \
     settingsdialog/environmentfolderswidget.cpp \
     settingsdialog/environmentperformancewidget.cpp \
     settingsdialog/environmentshortcutwidget.cpp \
@@ -69,7 +68,6 @@ SOURCES += \
     settingsdialog/projectmakefilewidget.cpp \
     settingsdialog/projectoutputwidget.cpp \
     settingsdialog/projectprecompilewidget.cpp \
-    settingsdialog/projectversioninfowidget.cpp \
     settingsdialog/toolsgeneralwidget.cpp \
     shortcutmanager.cpp \
     symbolusagemanager.cpp \
@@ -179,7 +177,6 @@ HEADERS += \
     settingsdialog/editormiscwidget.h \
     settingsdialog/editorsnippetwidget.h \
     settingsdialog/editortooltipswidget.h \
-    settingsdialog/environmentfileassociationwidget.h \
     settingsdialog/environmentfolderswidget.h \
     settingsdialog/environmentperformancewidget.h \
     settingsdialog/environmentshortcutwidget.h \
@@ -194,7 +191,6 @@ HEADERS += \
     settingsdialog/projectmakefilewidget.h \
     settingsdialog/projectoutputwidget.h \
     settingsdialog/projectprecompilewidget.h \
-    settingsdialog/projectversioninfowidget.h \
     settingsdialog/toolsgeneralwidget.h \
     shortcutmanager.h \
     symbolusagemanager.h \
@@ -274,7 +270,6 @@ FORMS += \
     settingsdialog/editormiscwidget.ui \
     settingsdialog/editorsnippetwidget.ui \
     settingsdialog/editortooltipswidget.ui \
-    settingsdialog/environmentfileassociationwidget.ui \
     settingsdialog/environmentfolderswidget.ui \
     settingsdialog/environmentperformancewidget.ui \
     settingsdialog/environmentshortcutwidget.ui \
@@ -289,7 +284,6 @@ FORMS += \
     settingsdialog/projectmakefilewidget.ui \
     settingsdialog/projectoutputwidget.ui \
     settingsdialog/projectprecompilewidget.ui \
-    settingsdialog/projectversioninfowidget.ui \
     settingsdialog/toolsgeneralwidget.ui \
     widgets/aboutdialog.ui \
     widgets/cpudialog.ui \
@@ -311,6 +305,18 @@ FORMS += \
     widgets/ojproblempropertywidget.ui \
     widgets/searchdialog.ui \
     widgets/signalmessagedialog.ui
+
+win32: FORMS +=  \
+	settingsdialog/projectversioninfowidget.ui \
+    settingsdialog/environmentfileassociationwidget.ui
+    
+win32: HEADERS += \
+    settingsdialog/projectversioninfowidget.h \
+    settingsdialog/environmentfileassociationwidget.h  
+      
+win32: SOURCES += \
+    settingsdialog/environmentfileassociationwidget.cpp \
+    settingsdialog/projectversioninfowidget.cpp
 
 TRANSLATIONS += \
     RedPandaIDE_zh_CN.ts

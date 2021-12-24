@@ -4,20 +4,25 @@
 #include <QMap>
 #include <QSet>
 #ifdef Q_OS_WIN
-
 #include <windows.h>
+#else
+#include <langinfo.h>
 #endif
 
 CharsetInfoManager* pCharsetInfoManager;
 
 QByteArray CharsetInfoManager::getDefaultSystemEncoding()
 {
+#ifdef Q_OS_WIN
     DWORD acp = GetACP();
     PCharsetInfo info = findCharsetByCodepage(acp);
     if (info) {
         return info->name;
     }
     return "unknown";
+#else
+    return QByteArray(nl_langinfo(CODESET));
+#endif
 }
 
 PCharsetInfo CharsetInfoManager::findCharsetByCodepage(int codepage)

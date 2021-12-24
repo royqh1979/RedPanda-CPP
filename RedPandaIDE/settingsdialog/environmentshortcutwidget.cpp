@@ -1,7 +1,7 @@
 #include "environmentshortcutwidget.h"
 #include "ui_environmentshortcutwidget.h"
 #include "../mainwindow.h"
-#include "../ui_mainwindow.h"
+#include <QMenuBar>
 
 EnvironmentShortcutWidget::EnvironmentShortcutWidget(const QString& name, const QString& group, QWidget *parent) :
     SettingsWidget(name,group,parent),
@@ -42,7 +42,7 @@ void EnvironmentShortcutModel::reload()
     beginResetModel();
     mShortcuts.clear();
     QList<QAction*> actions = pMainWindow->findChildren<QAction*>(QString(),Qt::FindDirectChildrenOnly);
-    QList<QMenu*> menus = pMainWindow->mainWidget()->menubar->findChildren<QMenu*>();
+    QList<QMenu*> menus = pMainWindow->menuBar()->findChildren<QMenu*>();
     foreach( const QMenu* menu, menus) {
         if (menu->title().isEmpty())
             continue;

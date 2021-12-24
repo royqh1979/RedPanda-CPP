@@ -2469,7 +2469,7 @@ void Settings::CompilerSets::saveSets()
     }
     mSettings->mSettings.beginGroup(SETTING_COMPILTER_SETS);
     mSettings->mSettings.setValue(SETTING_COMPILTER_SETS_DEFAULT_INDEX,mDefaultIndex);
-    mSettings->mSettings.setValue(SETTING_COMPILTER_SETS_COUNT,mList.size());
+    mSettings->mSettings.setValue(SETTING_COMPILTER_SETS_COUNT,(int)mList.size());
     mSettings->mSettings.endGroup();
 }
 
