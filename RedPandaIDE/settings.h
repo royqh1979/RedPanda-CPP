@@ -484,6 +484,9 @@ public:
         const QString &defaultOpenFolder() const;
         void setDefaultOpenFolder(const QString &newDefaultOpenFolder);
 
+        const QString &iconSet() const;
+        void setIconSet(const QString &newIconSet);
+
     private:
 
         //Appearence
@@ -492,6 +495,7 @@ public:
         int mInterfaceFontSize;
         QString mLanguage;
         QString mCurrentFolder;
+        QString mIconSet;
 
         QString mDefaultOpenFolder;
         // _Base interface

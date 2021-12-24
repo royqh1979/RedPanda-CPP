@@ -325,7 +325,7 @@ void MainWindow::updateForEncodingInfo() {
 
 void MainWindow::updateEditorSettings()
 {
-    pIconsManager->updateEditorGuttorIcons("editor",pointToPixel(pSettings->editor().fontSize()));
+    pIconsManager->updateEditorGuttorIcons(pSettings->environment().iconSet(),pointToPixel(pSettings->editor().fontSize()));
     mEditorList->applySettings();
 }
 
@@ -550,7 +550,7 @@ void MainWindow::applySettings()
     font.setStyleStrategy(QFont::PreferAntialias);
     qApp->setFont(font);
     this->setFont(font);
-    pIconsManager->updateParserIcons("classparser",pointToPixel(pSettings->environment().interfaceFontSize()));
+    pIconsManager->updateParserIcons(pSettings->environment().iconSet(),pointToPixel(pSettings->environment().interfaceFontSize()));
 
     QFont caseEditorFont(pSettings->executor().caseEditorFontName());
     caseEditorFont.setPixelSize(pointToPixel(pSettings->executor().caseEditorFontSize()));
@@ -586,6 +586,8 @@ void MainWindow::applySettings()
         if (idxProblemSet>=0)
             ui->tabInfos->removeTab(idxProblemSet);
     }
+    //icon sets for editors
+    updateEditorSettings();
     updateDebuggerSettings();
     updateActionIcons();
 }
@@ -1100,7 +1102,7 @@ void MainWindow::updateDebuggerSettings()
 void MainWindow::updateActionIcons()
 {
     int size = pointToPixel(pSettings->environment().interfaceFontSize());
-    pIconsManager->updateActionIcons("newlook", size);
+    pIconsManager->updateActionIcons(pSettings->environment().iconSet(), size);
     QSize iconSize(size,size);
     ui->toolbarMain->setIconSize(iconSize);
     ui->toolbarCode->setIconSize(iconSize);

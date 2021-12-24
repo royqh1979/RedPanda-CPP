@@ -1,3 +1,8 @@
+Version 0.12.2 For Dev-C++ 7 Beta
+ - enhancement: auto find compiler sets in the PATH 
+ - change: path for iconsets
+ - enhancement: select icon sets in options dialog ( but we  have only 1 icon set now...)
+
 Version 0.12.1 For Dev-C++ 7 Beta
  - fix: error when drag&drop in editors
 

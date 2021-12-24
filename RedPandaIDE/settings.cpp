@@ -2446,6 +2446,17 @@ void Settings::CompilerSets::findSets()
     clearSets();
     addSets(includeTrailingPathDelimiter(mSettings->dirs().app())+"MinGW32");
     addSets(includeTrailingPathDelimiter(mSettings->dirs().app())+"MinGW64");
+
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    QString path = env.value("PATH");
+    QStringList pathList = path.split(PATH_SEPARATOR);
+    foreach (const QString& s, pathList){
+        if (s.endsWith(QString(QDir::separator())+"bin")) {
+            QString temp = s.mid(0,s.length()-4);
+            qDebug()<<temp;
+            addSets(temp);
+        }
+    }
 }
 
 void Settings::CompilerSets::saveSets()
@@ -2759,6 +2770,7 @@ void Settings::Environment::doLoad()
     mInterfaceFont = stringValue("interface_font",defaultFontName);
     mInterfaceFontSize = intValue("interface_font_size",10);
     mLanguage = stringValue("language", QLocale::system().name());
+    mIconSet = stringValue("icon_set","newlook");
 
     mCurrentFolder = stringValue("current_folder",QDir::currentPath());
     if (!fileExists(mCurrentFolder)) {
@@ -2810,6 +2822,16 @@ void Settings::Environment::setDefaultOpenFolder(const QString &newDefaultOpenFo
     mDefaultOpenFolder = newDefaultOpenFolder;
 }
 
+const QString &Settings::Environment::iconSet() const
+{
+    return mIconSet;
+}
+
+void Settings::Environment::setIconSet(const QString &newIconSet)
+{
+    mIconSet = newIconSet;
+}
+
 void Settings::Environment::doSave()
 {
     //Appearence
@@ -2817,6 +2839,7 @@ void Settings::Environment::doSave()
     saveValue("interface_font", mInterfaceFont);
     saveValue("interface_font_size", mInterfaceFontSize);
     saveValue("language", mLanguage);
+    saveValue("icon_set",mIconSet);
 
     saveValue("current_folder",mCurrentFolder);
     saveValue("default_open_folder",mDefaultOpenFolder);

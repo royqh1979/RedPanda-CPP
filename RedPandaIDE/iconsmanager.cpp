@@ -16,7 +16,7 @@ IconsManager::IconsManager(QObject *parent) : QObject(parent)
 
 void IconsManager::updateEditorGuttorIcons(const QString& iconSet,int size)
 {
-    QString iconFolder = QString(":/icons/images/%1/").arg(iconSet);
+    QString iconFolder = QString(":/icons/images/%1/editor/").arg(iconSet);
     mIconPixmaps.insert(GUTTER_BREAKPOINT, createSVGIcon(iconFolder+"breakpoint.svg",size,size));
     mIconPixmaps.insert(GUTTER_SYNTAX_ERROR, createSVGIcon(iconFolder+"syntaxerror.svg",size,size));
     mIconPixmaps.insert(GUTTER_SYNTAX_WARNING,createSVGIcon(iconFolder+"syntaxwarning.svg",size,size));
@@ -26,7 +26,7 @@ void IconsManager::updateEditorGuttorIcons(const QString& iconSet,int size)
 
 void IconsManager::updateParserIcons(const QString &iconSet, int size)
 {
-    QString iconFolder = QString(":/icons/images/%1/").arg(iconSet);
+    QString iconFolder = QString(":/icons/images/%1/classparser/").arg(iconSet);
     mIconPixmaps.insert(PARSER_TYPE, createSVGIcon(iconFolder+"type.svg",size,size));
     mIconPixmaps.insert(PARSER_CLASS, createSVGIcon(iconFolder+"class.svg",size,size));
     mIconPixmaps.insert(PARSER_NAMESPACE, createSVGIcon(iconFolder+"namespace.svg",size,size));
@@ -49,7 +49,7 @@ void IconsManager::updateParserIcons(const QString &iconSet, int size)
 
 void IconsManager::updateActionIcons(const QString iconSet, int size)
 {
-    QString iconFolder = QString(":/icons/images/%1/").arg(iconSet);
+    QString iconFolder = QString(":/icons/images/%1/actions/").arg(iconSet);
     mActionIconSize = QSize(size,size);
     mIconPixmaps.insert(ACTION_MISC_BACK, createSVGIcon(iconFolder+"00Misc-01Back.svg",size,size));
     mIconPixmaps.insert(ACTION_MISC_FORWARD, createSVGIcon(iconFolder+"00Misc-02Forward.svg",size,size));
