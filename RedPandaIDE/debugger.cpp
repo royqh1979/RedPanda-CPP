@@ -85,12 +85,19 @@ bool Debugger::start(const QString& inferior)
     mWatchModel->resetAllVarInfos();
     if (pSettings->debugger().useGDBServer()) {
         mTarget = new DebugTarget(inferior,compilerSet->debugServer(),pSettings->debugger().GDBServerPort());
+        connect(mTarget, &QThread::finished,[this](){
+            if (mExecuting) {
+                stop();
+            }
+            mTarget->deleteLater();
+            mTarget = nullptr;
+        });
         mTarget->start();
         mTarget->waitStart();
     }
     mReader = new DebugReader(this);
     mReader->setDebuggerPath(debuggerPath);
-    connect(mReader, &QThread::finished,this,&Debugger::clearUpReader);
+    connect(mReader, &QThread::finished,this,&Debugger::cleanUpReader);
     connect(mReader, &DebugReader::parseFinished,this,&Debugger::syncFinishedParsing,Qt::BlockingQueuedConnection);
     connect(mReader, &DebugReader::changeDebugConsoleLastLine,this,&Debugger::onChangeDebugConsoleLastline);
     connect(mReader, &DebugReader::cmdStarted,pMainWindow, &MainWindow::disableDebugActions);
@@ -138,23 +145,21 @@ bool Debugger::start(const QString& inferior)
 }
 void Debugger::stop() {
     if (mExecuting) {
+        if (mTarget) {
+            mTarget->stopDebug();
+            mTarget = nullptr;
+        }
         mReader->stopDebug();
     }
 }
-void Debugger::clearUpReader()
+void Debugger::cleanUpReader()
 {
     if (mExecuting) {
         mExecuting = false;
 
-        if (mTarget) {
-            mTarget->deleteLater();
-            mTarget = nullptr;
-        }
         //stop debugger
         mReader->deleteLater();
         mReader=nullptr;
-
-
 
         if (pMainWindow->cpuDialog()!=nullptr) {
             pMainWindow->cpuDialog()->close();

@@ -335,7 +335,7 @@ const GDBMIResultParser::ParseObject &GDBMIResultParser::ParseValue::object() co
 
 int GDBMIResultParser::ParseValue::intValue(int defaultValue) const
 {
-    Q_ASSERT(mType == ParseValueType::Value);
+    //Q_ASSERT(mType == ParseValueType::Value);
     bool ok;
     int value = QString(mValue).toInt(&ok);
     if (ok)
@@ -346,7 +346,7 @@ int GDBMIResultParser::ParseValue::intValue(int defaultValue) const
 
 int GDBMIResultParser::ParseValue::hexValue(int defaultValue) const
 {
-    Q_ASSERT(mType == ParseValueType::Value);
+    //Q_ASSERT(mType == ParseValueType::Value);
     bool ok;
     int value = QString(mValue).toInt(&ok,16);
     if (ok)
@@ -357,7 +357,7 @@ int GDBMIResultParser::ParseValue::hexValue(int defaultValue) const
 
 QString GDBMIResultParser::ParseValue::pathValue() const
 {
-    Q_ASSERT(mType == ParseValueType::Value);
+    //Q_ASSERT(mType == ParseValueType::Value);
     return QFileInfo(QString::fromLocal8Bit(mValue)).absoluteFilePath();
 }
 

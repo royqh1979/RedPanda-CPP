@@ -252,7 +252,7 @@ private slots:
     void updateEval(const QString& value);
     void updateDisassembly(const QString& file, const QString& func,const QStringList& value);
     void onChangeDebugConsoleLastline(const QString& text);
-    void clearUpReader();
+    void cleanUpReader();
     void updateRegisterNames(const QStringList& registerNames);
     void updateRegisterValues(const QHash<int,QString>& values);
     void refreshWatchVars();
