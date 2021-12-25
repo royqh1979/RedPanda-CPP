@@ -373,7 +373,7 @@ bool isSystemHeaderFile(const QString &fileName, const QSet<QString> &includePat
 #ifdef Q_OS_WIN
     isFullName = fileName.length()>2 && fileName[1]==':';
 #else
-    isFullName = fileName.startsWith("\"");
+    isFullName = fileName.startsWith("/");
 #endif
     if (isFullName) {
         // If it's a full file name, check if its directory is an include path

@@ -1167,8 +1167,11 @@ void Settings::Editor::doLoad()
     mRightEdgeLineColor = colorValue("right_edge_line_color",QColorConstants::Svg::yellow);
 
     //Font
-    //font
+#ifdef Q_WIN_OS
     mFontName = stringValue("font_name","consolas");
+#else
+    mFontName = stringValue("font_name","Dejavu Sans Mono");
+#endif
     mFontSize = intValue("font_size",14);
     mFontOnlyMonospaced = boolValue("font_only_monospaced",true);
 
@@ -1182,7 +1185,12 @@ void Settings::Editor::doLoad()
     mGutterAddLeadingZero = boolValue("gutter_add_leading_zero",true);
     mGutterLineNumbersStartZero = boolValue("gutter_line_numbers_start_zero",false);
     mGutterUseCustomFont = boolValue("gutter_use_custom_font",false);
+
+#ifdef Q_WIN_OS
     mGutterFontName = stringValue("gutter_font_name","consolas");
+#else
+    mGutterFontName = stringValue("gutter_font_name","Dejavu Sans Mono");
+#endif
     mGutterFontSize = intValue("gutter_font_size",14);
     mGutterFontOnlyMonospaced = boolValue("gutter_font_only_monospaced",true);
 
@@ -3031,7 +3039,11 @@ void Settings::Executor::doLoad()
     mEnableCompetitiveCompanion = boolValue("enable_competivie_companion",true);
     mCompetivieCompanionPort = intValue("competitive_companion_port",10045);
     mIgnoreSpacesWhenValidatingCases = boolValue("ignore_spaces_when_validating_cases",false);
+#ifdef Q_WIN_OS
     mCaseEditorFontName = stringValue("case_editor_font_name","consolas");
+#else
+    mCaseEditorFontName = stringValue("case_editor_font_name","Dejavu Sans Mono");
+#endif
     mCaseEditorFontSize = intValue("case_editor_font_size",10);
     mCaseEditorFontOnlyMonospaced = boolValue("case_editor_font_only_monospaced",true);
 }
@@ -3194,7 +3206,11 @@ void Settings::Debugger::doLoad()
 {
     mEnableDebugConsole = boolValue("enable_debug_console",true);
     mShowDetailLog = boolValue("show_detail_log",false);
+#ifdef Q_WIN_OS
     mFontName = stringValue("font_name","Consolas");
+#else
+    mFontName = stringValue("font_name","Dejavu Sans Mono");
+#endif
     mOnlyShowMono = boolValue("only_show_mono",true);
     mFontSize = intValue("font_size",12);
     mUseIntelStyle = boolValue("use_intel_style",true);

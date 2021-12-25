@@ -1662,7 +1662,12 @@ void MainWindow::debug()
     mDebugger->sendCommand("-enable-pretty-printing","");
     mDebugger->sendCommand("-data-list-register-names","");
     mDebugger->sendCommand("-gdb-set", "width 0"); // don't wrap output, very annoying
+#ifdef Q_OS_WIN
     mDebugger->sendCommand("-gdb-set", "new-console on");
+#elif defined(Q_OS_LINUX)
+    mDebugger->sendCommand("tty", "/dev/pts/11");
+#else
+#endif
     mDebugger->sendCommand("-gdb-set", "confirm off");
     mDebugger->sendCommand("-gdb-set", "print repeats 0"); // don't repeat elements
     mDebugger->sendCommand("-gdb-set", "print elements 0"); // don't limit elements

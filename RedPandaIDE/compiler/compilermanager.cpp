@@ -211,6 +211,7 @@ void CompilerManager::run(const QString &filename, const QString &arguments, con
     }
     ExecutableRunner * execRunner;
     if (programHasConsole(filename)) {
+#ifdef Q_WIN_OS
         int consoleFlag=0;
         if (redirectInput)
             consoleFlag |= RPF_REDIRECT_INPUT;
@@ -224,6 +225,11 @@ void CompilerManager::run(const QString &filename, const QString &arguments, con
         } else {
             execRunner = new ExecutableRunner(filename,arguments,workDir);
         }
+#else
+        QString newArguments = QString(" -e \"%1\" %2")
+                .arg(localizePath(filename)).arg(arguments);
+        execRunner = new ExecutableRunner("/usr/bin/x-terminal-emulator",newArguments,workDir);
+#endif
         execRunner->setStartConsole(true);
     } else {
         execRunner = new ExecutableRunner(filename,arguments,workDir);
