@@ -1,5 +1,6 @@
 Version 0.12.3 For Dev-C++ 7 Beta
  - enhancement: basic linux compatibility
+ - enhancement: debug with gdb server
 
 Version 0.12.2 For Dev-C++ 7 Beta
  - enhancement: auto find compiler sets in the PATH 
