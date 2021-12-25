@@ -34,6 +34,11 @@ void DebugGeneralWidget::doLoad()
     ui->chkSkipCustomLib->setChecked(pSettings->debugger().skipCustomLibraries());
     ui->chkAutosaveBreakpoints->setChecked(pSettings->debugger().autosaveBreakpoints());
     ui->chkAutosaveWatches->setChecked(pSettings->debugger().autosaveWatches());
+#ifdef Q_OS_WIN
+    ui->grpUseGDBServer->setCheckable(true);
+    ui->grpUseGDBServer->setChecked(pSettings->debugger().useGDBServer());
+#endif
+    ui->spinGDBServerPort->setValue(pSettings->debugger().GDBServerPort());
 }
 
 void DebugGeneralWidget::doSave()
@@ -51,6 +56,10 @@ void DebugGeneralWidget::doSave()
     pSettings->debugger().setSkipCustomLibraries(ui->chkSkipCustomLib->isChecked());
     pSettings->debugger().setAutosaveBreakpoints(ui->chkAutosaveBreakpoints->isChecked());
     pSettings->debugger().setAutosaveWatches(ui->chkAutosaveWatches->isChecked());
+#ifdef Q_OS_WIN
+    pSettings->debugger().setUseGDBServer(ui->grpUseGDBServer->isChecked());
+#endif
+    pSettings->debugger().setGDBServerPort(ui->spinGDBServerPort->value());
     pSettings->debugger().save();
     pMainWindow->updateDebuggerSettings();
 }

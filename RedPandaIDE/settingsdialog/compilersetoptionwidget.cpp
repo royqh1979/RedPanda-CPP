@@ -110,6 +110,7 @@ static void loadCompilerSetSettings(Settings::PCompilerSet pSet, Ui::CompilerSet
     ui->txtCppCompiler->setText(pSet->cppCompiler());
     ui->txtMake->setText(pSet->make());
     ui->txtDebugger->setText(pSet->debugger());
+    ui->txtGDBServer->setText(pSet->debugServer());
     ui->txtResourceCompiler->setText(pSet->resourceCompiler());
     ui->txtProfiler->setText(pSet->profiler());
 }
@@ -185,6 +186,7 @@ void CompilerSetOptionWidget::saveCurrentCompilerSet()
     pSet->setCppCompiler(ui->txtCppCompiler->text().trimmed());
     pSet->setMake(ui->txtMake->text().trimmed());
     pSet->setDebugger(ui->txtDebugger->text().trimmed());
+    pSet->setDebugServer(ui->txtGDBServer->text().trimmed());
     pSet->setResourceCompiler(ui->txtResourceCompiler->text().trimmed());
     pSet->setProfiler(ui->txtProfiler->text().trimmed());
 
@@ -246,7 +248,9 @@ void CompilerSetOptionWidget::on_btnAddCompilerSetByFolder_pressed()
     QString folder = QFileDialog::getExistingDirectory(this, tr("Compiler Set Folder"));
     int oldSize = pSettings->compilerSets().size();
 
-    pSettings->compilerSets().addSets(folder);
+    if (!pSettings->compilerSets().addSets(folder)) {
+        pSettings->compilerSets().addSets(folder+QDir::separator()+"bin");
+    }
     doLoad();
     int newSize = pSettings->compilerSets().size();
     if (oldSize == newSize) {
@@ -277,4 +281,11 @@ void CompilerSetOptionWidget::updateIcons()
     pIconsManager->setIcon(ui->btnRemoveCompilerSet, IconsManager::ACTION_MISC_REMOVE);
     pIconsManager->setIcon(ui->btnRenameCompilerSet, IconsManager::ACTION_MISC_RENAME);
 
+    pIconsManager->setIcon(ui->btnChooseCCompiler, IconsManager::ACTION_FILE_OPEN_FOLDER);
+    pIconsManager->setIcon(ui->btnChooseCppCompiler, IconsManager::ACTION_FILE_OPEN_FOLDER);
+    pIconsManager->setIcon(ui->btnChooseGDB, IconsManager::ACTION_FILE_OPEN_FOLDER);
+    pIconsManager->setIcon(ui->btnChooseGDBServer, IconsManager::ACTION_FILE_OPEN_FOLDER);
+    pIconsManager->setIcon(ui->btnChooseMake, IconsManager::ACTION_FILE_OPEN_FOLDER);
+    pIconsManager->setIcon(ui->btnChooseProfiler, IconsManager::ACTION_FILE_OPEN_FOLDER);
+    pIconsManager->setIcon(ui->btnChooseResourceCompiler, IconsManager::ACTION_FILE_OPEN_FOLDER);
 }

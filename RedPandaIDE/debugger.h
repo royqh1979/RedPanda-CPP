@@ -180,6 +180,7 @@ private:
 
 
 class DebugReader;
+class DebugTarget;
 class Editor;
 
 using PDebugReader = std::shared_ptr<DebugReader>;
@@ -190,7 +191,7 @@ class Debugger : public QObject
 public:
     explicit Debugger(QObject *parent = nullptr);
     // Play/pause
-    bool start();
+    bool start(const QString& inferior);
     void sendCommand(const QString& command, const QString& params,
                      DebugCommandSource source = DebugCommandSource::Other);
     bool commandRunning();
@@ -264,7 +265,32 @@ private:
     WatchModel *mWatchModel;
     RegisterModel *mRegisterModel;
     DebugReader *mReader;
+    DebugTarget *mTarget;
     int mLeftPageIndexBackup;
+};
+
+class DebugTarget: public QThread {
+    Q_OBJECT
+public:
+    explicit DebugTarget(const QString& inferior,
+                         const QString& GDBServer,
+                         int port,
+                         QObject *parent = nullptr);
+    void stopDebug();
+    void waitStart();
+signals:
+    void processError(QProcess::ProcessError error);
+private:
+    QString mInferior;
+    QString mGDBServer;
+    int mPort;
+    bool mStop;
+    std::shared_ptr<QProcess> mProcess;
+    QSemaphore mStartSemaphore;
+
+    // QThread interface
+protected:
+    void run() override;
 };
 
 class DebugReader : public QThread
@@ -388,7 +414,7 @@ private:
     //fOnInvalidateAllVars: TInvalidateAllVarsEvent;
     bool mCmdRunning;
     PDebugCommand mCurrentCmd;
-    QProcess* mProcess;
+    std::shared_ptr<QProcess> mProcess;
 
     //fWatchView: TTreeView;
 

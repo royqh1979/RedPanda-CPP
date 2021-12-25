@@ -1552,7 +1552,7 @@ void MainWindow::debug()
 
 //        mDebugger->setUseUTF8(e->fileEncoding() == ENCODING_UTF8 || e->fileEncoding() == ENCODING_UTF8_BOM);
 
-        if (!mDebugger->start())
+        if (!mDebugger->start(filePath))
             return;
         filePath.replace('\\','/');
         mDebugger->sendCommand("-file-exec-and-symbols", '"' + filePath + '"');
@@ -1629,10 +1629,10 @@ void MainWindow::debug()
                 }
 
                 prepareDebugger();
-
-                if (!mDebugger->start())
+                QString filePath = debugFile.filePath().replace('\\','/');
+                if (!mDebugger->start(filePath))
                     return;
-                mDebugger->sendCommand("-file-exec-and-symbols", QString("\"%1\"").arg(debugFile.filePath().replace('\\','/')));
+                mDebugger->sendCommand("-file-exec-and-symbols", QString("\"%1\"").arg(filePath));
             }
         }
         break;
@@ -1662,42 +1662,23 @@ void MainWindow::debug()
     mDebugger->sendCommand("-enable-pretty-printing","");
     mDebugger->sendCommand("-data-list-register-names","");
     mDebugger->sendCommand("-gdb-set", "width 0"); // don't wrap output, very annoying
-#ifdef Q_OS_WIN
-    mDebugger->sendCommand("-gdb-set", "new-console on");
-#elif defined(Q_OS_LINUX)
-    mDebugger->sendCommand("tty", "/dev/pts/11");
-#else
-#endif
     mDebugger->sendCommand("-gdb-set", "confirm off");
     mDebugger->sendCommand("-gdb-set", "print repeats 0"); // don't repeat elements
     mDebugger->sendCommand("-gdb-set", "print elements 0"); // don't limit elements
     mDebugger->sendCommand("-environment-cd", excludeTrailingPathDelimiter(debugFile.path())); // restore working directory
-    if (!debugInferiorhasBreakpoint()) {
-        switch(getCompileTarget()) {
-        case CompileTarget::None:
-            return;
-        case CompileTarget::File:
-            mDebugger->sendCommand("-exec-run", "--start");
-            break;
-        case CompileTarget::Project:
-            mDebugger->sendCommand("-exec-run", "--start");
-            break;
-        default:
-            break;
-        }
+    if (pSettings->debugger().useGDBServer()) {
+        mDebugger->sendCommand("-target-select",QString("remote localhost:%1").arg(pSettings->debugger().GDBServerPort()));
+        mDebugger->sendCommand("-exec-continue","");
     } else {
-        switch(getCompileTarget()) {
-        case CompileTarget::None:
-            return;
-        case CompileTarget::File:
+#ifdef Q_OS_WIN
+        mDebugger->sendCommand("-gdb-set", "new-console on");
+#endif
+        if (!debugInferiorhasBreakpoint()) {
+            mDebugger->sendCommand("-exec-run", "--start");
+        } else {
             mDebugger->sendCommand("-exec-run","");
-            break;
-        case CompileTarget::Project:
-            mDebugger->sendCommand("-exec-run","");
-            break;
-        default:
-            break;
         }
+
     }
 }
 
@@ -3979,7 +3960,7 @@ void MainWindow::onOJProblemCaseFinished(const QString& id, int current, int tot
     //    ui->lblProblem->setText(mOJProblemModel.getProblemTitle());
 }
 
-void MainWindow::onOJProblemCaseNewOutputLineGetted(const QString &id, const QString &line)
+void MainWindow::onOJProblemCaseNewOutputLineGetted(const QString &, const QString &line)
 {
     ui->txtProblemCaseOutput->append(line);
 }

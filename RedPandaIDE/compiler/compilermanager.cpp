@@ -211,7 +211,7 @@ void CompilerManager::run(const QString &filename, const QString &arguments, con
     }
     ExecutableRunner * execRunner;
     if (programHasConsole(filename)) {
-#ifdef Q_WIN_OS
+#ifdef Q_OS_WIN
         int consoleFlag=0;
         if (redirectInput)
             consoleFlag |= RPF_REDIRECT_INPUT;

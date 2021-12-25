@@ -17,11 +17,11 @@
 #include "platform.h"
 #include "parser/parserutils.h"
 #include "editorlist.h"
-#ifdef Q_WIN_OS
+#ifdef Q_OS_WIN
 #include <windows.h>
 #endif
 
-#ifdef Q_WIN_OS
+#ifdef Q_OS_WIN
 class WindowLogoutEventFilter : public QAbstractNativeEventFilter {
 
     // QAbstractNativeEventFilter interface
@@ -158,7 +158,7 @@ int main(int argc, char *argv[])
             }
         }
         mainWindow.show();
-#ifdef Q_WIN_OS
+#ifdef Q_OS_WIN
         WindowLogoutEventFilter filter;
         app.installNativeEventFilter(&filter);
 #endif

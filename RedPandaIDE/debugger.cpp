@@ -25,6 +25,7 @@ Debugger::Debugger(QObject *parent) : QObject(parent)
     mRegisterModel = new RegisterModel(this);
     mExecuting = false;
     mReader = nullptr;
+    mTarget = nullptr;
     mCommandChanged = false;
     mLeftPageIndexBackup = -1;
 
@@ -32,7 +33,7 @@ Debugger::Debugger(QObject *parent) : QObject(parent)
             this, &Debugger::fetchVarChildren);
 }
 
-bool Debugger::start()
+bool Debugger::start(const QString& inferior)
 {
     Settings::PCompilerSet compilerSet = pSettings->compilerSets().defaultSet();
     if (!compilerSet) {
@@ -61,7 +62,32 @@ bool Debugger::start()
                               tr("Can''t find debugger in : \"%1\"").arg(debuggerPath));
         return false;
     }
+    if (pSettings->debugger().useGDBServer()) {
+        if (!isTextAllAscii(compilerSet->debugServer())) {
+            mExecuting = false;
+            QMessageBox::critical(pMainWindow,
+                                  tr("GDB Server path error"),
+                                  tr("GDB Server's path \"%1\" contains non-ascii characters.")
+                                  .arg(compilerSet->debugServer())
+                                  + "<br />"
+                                  + tr("This prevents it from executing."));
+            return false;
+        }
+        if (!fileExists(compilerSet->debugServer())) {
+            mExecuting = false;
+            QMessageBox::critical(pMainWindow,
+                                  tr("GDB Server not exists"),
+                                  tr("Can''t find gdb server in : \"%1\"").arg(compilerSet->debugServer()));
+            return false;
+        }
+
+    }
     mWatchModel->resetAllVarInfos();
+    if (pSettings->debugger().useGDBServer()) {
+        mTarget = new DebugTarget(inferior,compilerSet->debugServer(),pSettings->debugger().GDBServerPort());
+        mTarget->start();
+        mTarget->waitStart();
+    }
     mReader = new DebugReader(this);
     mReader->setDebuggerPath(debuggerPath);
     connect(mReader, &QThread::finished,this,&Debugger::clearUpReader);
@@ -120,9 +146,15 @@ void Debugger::clearUpReader()
     if (mExecuting) {
         mExecuting = false;
 
+        if (mTarget) {
+            mTarget->deleteLater();
+            mTarget = nullptr;
+        }
         //stop debugger
         mReader->deleteLater();
         mReader=nullptr;
+
+
 
         if (pMainWindow->cpuDialog()!=nullptr) {
             pMainWindow->cpuDialog()->close();
@@ -1288,7 +1320,7 @@ void DebugReader::run()
     QString arguments = "--interpret=mi --silent";
     QString workingDir = QFileInfo(mDebuggerPath).path();
 
-    mProcess = new QProcess();
+    mProcess = std::make_shared<QProcess>();
     mProcess->setProgram(cmd);
     mProcess->setArguments(QProcess::splitCommand(arguments));
     mProcess->setProcessChannelMode(QProcess::MergedChannels);
@@ -1307,7 +1339,7 @@ void DebugReader::run()
     }
     mProcess->setWorkingDirectory(workingDir);
 
-    connect(mProcess, &QProcess::errorOccurred,
+    connect(mProcess.get(), &QProcess::errorOccurred,
                     [&](){
                         errorOccurred= true;
                     });
@@ -2173,4 +2205,104 @@ void RegisterModel::clear()
     mRegisterNames.clear();
     mRegisterValues.clear();
     endResetModel();
+}
+
+DebugTarget::DebugTarget(
+        const QString &inferior,
+        const QString &GDBServer,
+        int port,
+        QObject *parent):
+    QThread(parent),
+    mInferior(inferior),
+    mGDBServer(GDBServer),
+    mPort(port),
+    mStop(false),
+    mStartSemaphore(0)
+{
+
+}
+
+void DebugTarget::stopDebug()
+{
+    mStop = true;
+}
+
+void DebugTarget::waitStart()
+{
+    mStartSemaphore.acquire(1);
+}
+
+void DebugTarget::run()
+{
+    mStop = false;
+    bool errorOccurred = false;
+
+    //find first available port
+    QString cmd;
+    QString arguments;
+#ifdef Q_OS_WIN
+    cmd= mGDBServer;
+    arguments = QString(" localhost:%1 \"%2\"").arg(mPort).arg(mInferior);
+#else
+    cmd= "/usr/bin/x-terminal-emulator";
+    arguments = QString(" -e \"%1\" localhost:%2 \"%3\"").arg(mGDBServer).arg(mPort).arg(mInferior);
+#endif
+    QString workingDir = QFileInfo(mInferior).path();
+
+    mProcess = std::make_shared<QProcess>();
+    mProcess->setProgram(cmd);
+    mProcess->setArguments(QProcess::splitCommand(arguments));
+    mProcess->setProcessChannelMode(QProcess::MergedChannels);
+    QString cmdDir = extractFileDir(cmd);
+    if (!cmdDir.isEmpty()) {
+        QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+        QString path = env.value("PATH");
+        cmdDir.replace("/",QDir::separator());
+        if (path.isEmpty()) {
+            path = cmdDir;
+        } else {
+            path = cmdDir + PATH_SEPARATOR + path;
+        }
+        env.insert("PATH",path);
+        mProcess->setProcessEnvironment(env);
+    }
+    mProcess->setWorkingDirectory(workingDir);
+
+#ifdef Q_OS_WIN
+    mProcess->setCreateProcessArgumentsModifier([this](QProcess::CreateProcessArguments * args){
+        if (programHasConsole(mInferior)) {
+            args->flags |=  CREATE_NEW_CONSOLE;
+            args->flags &= ~CREATE_NO_WINDOW;
+        }
+        args->startupInfo -> dwFlags &= ~STARTF_USESTDHANDLES;
+    });
+#endif
+
+    connect(mProcess.get(), &QProcess::errorOccurred,
+                    [&](){
+                        errorOccurred= true;
+                    });
+    mProcess->start();
+    mProcess->waitForStarted(5000);
+    mStartSemaphore.release(1);
+    while (true) {
+        mProcess->waitForFinished(1);
+        if (mProcess->state()!=QProcess::Running) {
+            break;
+        }
+        if (mStop) {
+            mProcess->closeReadChannel(QProcess::StandardOutput);
+            mProcess->closeReadChannel(QProcess::StandardError);
+            mProcess->closeWriteChannel();
+            mProcess->terminate();
+            mProcess->kill();
+            break;
+        }
+        if (errorOccurred)
+            break;
+        msleep(1);
+    }
+    if (errorOccurred) {
+        emit processError(mProcess->error());
+    }
 }

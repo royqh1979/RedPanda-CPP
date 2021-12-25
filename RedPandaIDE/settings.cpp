@@ -1167,7 +1167,7 @@ void Settings::Editor::doLoad()
     mRightEdgeLineColor = colorValue("right_edge_line_color",QColorConstants::Svg::yellow);
 
     //Font
-#ifdef Q_WIN_OS
+#ifdef Q_OS_WIN
     mFontName = stringValue("font_name","consolas");
 #else
     mFontName = stringValue("font_name","Dejavu Sans Mono");
@@ -1186,7 +1186,7 @@ void Settings::Editor::doLoad()
     mGutterLineNumbersStartZero = boolValue("gutter_line_numbers_start_zero",false);
     mGutterUseCustomFont = boolValue("gutter_use_custom_font",false);
 
-#ifdef Q_WIN_OS
+#ifdef Q_OS_WIN
     mGutterFontName = stringValue("gutter_font_name","consolas");
 #else
     mGutterFontName = stringValue("gutter_font_name","Dejavu Sans Mono");
@@ -1339,10 +1339,10 @@ Settings::CompilerSet::CompilerSet(const QString& compilerFolder):
     mStaticLink(true)
 {
     if (!compilerFolder.isEmpty()) {
-        setProperties(compilerFolder+"/bin");
+        setProperties(compilerFolder);
 
         //manually set the directories
-        setDirectories(compilerFolder+"/bin");
+        setDirectories(compilerFolder);
 
         setExecutables();
 
@@ -1915,6 +1915,7 @@ void Settings::CompilerSet::setExecutables()
     mCCompiler = findProgramInBinDirs(GCC_PROGRAM);
     mCppCompiler = findProgramInBinDirs(GPP_PROGRAM);
     mDebugger = findProgramInBinDirs(GDB_PROGRAM);
+    mDebugServer = findProgramInBinDirs(GDB_SERVER_PROGRAM);
     mMake = findProgramInBinDirs(MAKE_PROGRAM);
     mResourceCompiler = findProgramInBinDirs(WINDRES_PROGRAM);
     mProfiler = findProgramInBinDirs(GPROF_PROGRAM);
@@ -2255,6 +2256,16 @@ QByteArray Settings::CompilerSet::getCompilerOutput(const QString &binDir, const
     return result.trimmed();
 }
 
+const QString &Settings::CompilerSet::debugServer() const
+{
+    return mDebugServer;
+}
+
+void Settings::CompilerSet::setDebugServer(const QString &newDebugServer)
+{
+    mDebugServer = newDebugServer;
+}
+
 int Settings::CompilerSet::compilerSetType() const
 {
     return mCompilerSetType;
@@ -2384,12 +2395,12 @@ static void setProfileOptions(Settings::PCompilerSet pSet) {
     pSet->setStaticLink(false);
 }
 
-void Settings::CompilerSets::addSets(const QString &folder)
+bool Settings::CompilerSets::addSets(const QString &folder)
 {
     if (!directoryExists(folder))
-        return;
-    if (!fileExists(includeTrailingPathDelimiter(folder)+"bin"+QDir::separator()+GCC_PROGRAM)) {
-        return;
+        return false;
+    if (!fileExists(includeTrailingPathDelimiter(folder)+GCC_PROGRAM)) {
+        return false;
     }
     // Default, release profile
     PCompilerSet baseSet = addSet(folder);
@@ -2436,6 +2447,7 @@ void Settings::CompilerSets::addSets(const QString &folder)
     setProfileOptions(baseSet);
 
     mDefaultIndex = mList.size() - 2;
+    return true;
 }
 
 void Settings::CompilerSets::clearSets()
@@ -2452,18 +2464,14 @@ void Settings::CompilerSets::clearSets()
 void Settings::CompilerSets::findSets()
 {
     clearSets();
-    addSets(includeTrailingPathDelimiter(mSettings->dirs().app())+"MinGW32");
-    addSets(includeTrailingPathDelimiter(mSettings->dirs().app())+"MinGW64");
+    addSets(includeTrailingPathDelimiter(mSettings->dirs().app())+"MinGW32"+QDir::separator()+"bin");
+    addSets(includeTrailingPathDelimiter(mSettings->dirs().app())+"MinGW64"+QDir::separator()+"bin");
 
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
     QString path = env.value("PATH");
     QStringList pathList = path.split(PATH_SEPARATOR);
     foreach (const QString& s, pathList){
-        if (s.endsWith(QString(QDir::separator())+"bin")) {
-            QString temp = s.mid(0,s.length()-4);
-            qDebug()<<temp;
-            addSets(temp);
-        }
+        addSets(s);
     }
 }
 
@@ -2655,6 +2663,7 @@ void Settings::CompilerSets::saveSet(int index)
     savePath("ccompiler", pSet->CCompiler());
     savePath("cppcompiler", pSet->cppCompiler());
     savePath("debugger", pSet->debugger());
+    savePath("debug_server", pSet->debugServer());
     savePath("make", pSet->make());
     savePath("windres", pSet->resourceCompiler());
     savePath("profiler", pSet->profiler());
@@ -2719,6 +2728,7 @@ Settings::PCompilerSet Settings::CompilerSets::loadSet(int index)
     pSet->setCCompiler(loadPath("ccompiler"));
     pSet->setCppCompiler(loadPath("cppcompiler"));
     pSet->setDebugger(loadPath("debugger"));
+    pSet->setDebugServer(loadPath("debug_server"));
     pSet->setMake(loadPath("make"));
     pSet->setResourceCompiler(loadPath("windres"));
     pSet->setProfiler(loadPath("profiler"));
@@ -3039,7 +3049,7 @@ void Settings::Executor::doLoad()
     mEnableCompetitiveCompanion = boolValue("enable_competivie_companion",true);
     mCompetivieCompanionPort = intValue("competitive_companion_port",10045);
     mIgnoreSpacesWhenValidatingCases = boolValue("ignore_spaces_when_validating_cases",false);
-#ifdef Q_WIN_OS
+#ifdef Q_OS_WIN
     mCaseEditorFontName = stringValue("case_editor_font_name","consolas");
 #else
     mCaseEditorFontName = stringValue("case_editor_font_name","Dejavu Sans Mono");
@@ -3144,6 +3154,26 @@ void Settings::Debugger::setOpenCPUInfoWhenSignaled(bool newOpenCPUInfoWhenSigna
     mOpenCPUInfoWhenSignaled = newOpenCPUInfoWhenSignaled;
 }
 
+bool Settings::Debugger::useGDBServer() const
+{
+    return mUseGDBServer;
+}
+
+void Settings::Debugger::setUseGDBServer(bool newUseGDBServer)
+{
+    mUseGDBServer = newUseGDBServer;
+}
+
+int Settings::Debugger::GDBServerPort() const
+{
+    return mGDBServerPort;
+}
+
+void Settings::Debugger::setGDBServerPort(int newGDBServerPort)
+{
+    mGDBServerPort = newGDBServerPort;
+}
+
 bool Settings::Debugger::autosaveBreakpoints() const
 {
     return mAutosaveBreakpoints;
@@ -3199,6 +3229,8 @@ void Settings::Debugger::doSave()
     saveValue("autosave_breakpoints",mAutosaveBreakpoints);
     saveValue("autosave_watches",mAutosaveWatches);
     saveValue("open_cpu_info_when_signaled",mOpenCPUInfoWhenSignaled);
+    saveValue("use_gdb_server", mUseGDBServer);
+    saveValue("gdb_server_port",mGDBServerPort);
 
 }
 
@@ -3206,7 +3238,7 @@ void Settings::Debugger::doLoad()
 {
     mEnableDebugConsole = boolValue("enable_debug_console",true);
     mShowDetailLog = boolValue("show_detail_log",false);
-#ifdef Q_WIN_OS
+#ifdef Q_OS_WIN
     mFontName = stringValue("font_name","Consolas");
 #else
     mFontName = stringValue("font_name","Dejavu Sans Mono");
@@ -3221,6 +3253,12 @@ void Settings::Debugger::doLoad()
     mAutosaveBreakpoints = boolValue("autosave_breakpoints",true);
     mAutosaveWatches = boolValue("autosave_watches",true);
     mOpenCPUInfoWhenSignaled = boolValue("open_cpu_info_when_signaled",true);
+#ifdef Q_OS_WIN
+    mUseGDBServer = boolValue("use_gdb_server", false);
+#else
+    mUseGDBServer = boolValue("use_gdb_server", true);
+#endif
+    mGDBServerPort = intValue("gdb_server_port",41234);
 }
 
 Settings::History::History(Settings *settings):_Base(settings, SETTING_HISTORY)

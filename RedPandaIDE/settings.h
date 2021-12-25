@@ -1013,6 +1013,11 @@ public:
         bool openCPUInfoWhenSignaled() const;
         void setOpenCPUInfoWhenSignaled(bool newOpenCPUInfoWhenSignaled);
 
+        bool useGDBServer() const;
+        void setUseGDBServer(bool newUseGDBServer);
+        int GDBServerPort() const;
+        void setGDBServerPort(int newGDBServerPort);
+
     private:
         bool mEnableDebugConsole;
         bool mShowDetailLog;
@@ -1027,6 +1032,8 @@ public:
         bool mAutosaveBreakpoints;
         bool mAutosaveWatches;
         bool mOpenCPUInfoWhenSignaled;
+        bool mUseGDBServer;
+        int mGDBServerPort;
 
         // _Base interface
     protected:
@@ -1072,6 +1079,8 @@ public:
         void setProfiler(const QString& name);
         const QString& resourceCompiler() const;
         void setResourceCompiler(const QString& name);
+        const QString &debugServer() const;
+        void setDebugServer(const QString &newDebugServer);
 
         QStringList& binDirs();
         QStringList& CIncludeDirs();
@@ -1144,6 +1153,7 @@ public:
         QString mDebugger;
         QString mProfiler;
         QString mResourceCompiler;
+        QString mDebugServer;
 
         // Directories, mostly hardcoded too
         QStringList mBinDirs;
@@ -1186,7 +1196,7 @@ public:
         PCompilerSet addSet(const CompilerSet& set);
         PCompilerSet addSet(const QString& folder=QString());
 
-        void addSets(const QString& folder);
+        bool addSets(const QString& folder);
         void clearSets();
         void findSets();
         void saveSets();
