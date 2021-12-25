@@ -36,6 +36,9 @@
 #include "environmentfileassociationwidget.h"
 #include "projectversioninfowidget.h"
 #endif
+#ifdef Q_OS_LINUX
+#include "environmentprogramswidget.h"
+#endif
 #include <QDebug>
 #include <QMessageBox>
 #include <QModelIndex>
@@ -128,6 +131,12 @@ PSettingsDialog SettingsDialog::optionDialog()
     widget = new EnvironmentFoldersWidget(tr("Folders"),tr("Environment"));
     widget->init();
     dialog->addWidget(widget);
+
+#ifdef Q_OS_LINUX
+    widget = new EnvironmentProgramsWidget(tr("Terminal"),tr("Environment"));
+    widget->init();
+    dialog->addWidget(widget);
+#endif
 
     widget = new EnvironmentPerformanceWidget(tr("Performance"),tr("Environment"));
     widget->init();

@@ -2253,8 +2253,13 @@ void DebugTarget::run()
     cmd= mGDBServer;
     arguments = QString(" localhost:%1 \"%2\"").arg(mPort).arg(mInferior);
 #else
-    cmd= "/usr/bin/x-terminal-emulator";
-    arguments = QString(" -e \"%1\" localhost:%2 \"%3\"").arg(mGDBServer).arg(mPort).arg(mInferior);
+    if  (programHasConsole(mInferior)) {
+        cmd= pSettings->environment().terminalPath();
+        arguments = QString(" -e \"%1\" localhost:%2 \"%3\"").arg(mGDBServer).arg(mPort).arg(mInferior);
+    } else {
+        cmd= mGDBServer;
+        arguments = QString(" localhost:%1 \"%2\"").arg(mPort).arg(mInferior);
+    }
 #endif
     QString workingDir = QFileInfo(mInferior).path();
 

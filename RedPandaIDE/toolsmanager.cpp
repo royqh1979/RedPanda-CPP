@@ -21,7 +21,11 @@ void ToolsManager::load()
         mTools.clear();
         PToolItem item = std::make_shared<ToolItem>();
         item->title = tr("Remove Compiled");
+#ifdef Q_OS_WIN
         item->program = "del";
+#else
+        item->program = "rm";
+#endif
         item->workingDirectory = "<SOURCEPATH>";
         item->parameters = "<EXENAME>";
         item->pauseAfterExit = false;

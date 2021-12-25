@@ -2798,6 +2798,10 @@ void Settings::Environment::doLoad()
     if (!fileExists(mDefaultOpenFolder)) {
         mDefaultOpenFolder = QDir::currentPath();
     }
+
+#ifdef Q_OS_LINUX
+    mTerminalPath = stringValue("terminal_path","/usr/bin/x-terminal-emulator");
+#endif
 }
 
 int Settings::Environment::interfaceFontSize() const
@@ -2850,6 +2854,16 @@ void Settings::Environment::setIconSet(const QString &newIconSet)
     mIconSet = newIconSet;
 }
 
+QString Settings::Environment::terminalPath() const
+{
+    return mTerminalPath;
+}
+
+void Settings::Environment::setTerminalPath(const QString &terminalPath)
+{
+    mTerminalPath = terminalPath;
+}
+
 void Settings::Environment::doSave()
 {
     //Appearence
@@ -2861,6 +2875,9 @@ void Settings::Environment::doSave()
 
     saveValue("current_folder",mCurrentFolder);
     saveValue("default_open_folder",mDefaultOpenFolder);
+#ifndef Q_OS_WIN
+    saveValue("terminal_path",mTerminalPath);
+#endif
 }
 
 QString Settings::Environment::interfaceFont() const

@@ -318,6 +318,15 @@ win32: SOURCES += \
     settingsdialog/environmentfileassociationwidget.cpp \
     settingsdialog/projectversioninfowidget.cpp
 
+linux: HEADERS += \
+    settingsdialog/environmentprogramswidget.h
+
+linux: SOURCES += \
+        settingsdialog/environmentprogramswidget.cpp
+
+linux: FORMS += \
+    settingsdialog/environmentprogramswidget.ui
+
 TRANSLATIONS += \
     RedPandaIDE_zh_CN.ts
 

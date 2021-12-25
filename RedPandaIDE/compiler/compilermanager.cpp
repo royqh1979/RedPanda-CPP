@@ -228,7 +228,7 @@ void CompilerManager::run(const QString &filename, const QString &arguments, con
 #else
         QString newArguments = QString(" -e \"%1\" %2")
                 .arg(localizePath(filename)).arg(arguments);
-        execRunner = new ExecutableRunner("/usr/bin/x-terminal-emulator",newArguments,workDir);
+        execRunner = new ExecutableRunner(pSettings->environment().terminalPath(),newArguments,workDir);
 #endif
         execRunner->setStartConsole(true);
     } else {

@@ -487,6 +487,9 @@ public:
         const QString &iconSet() const;
         void setIconSet(const QString &newIconSet);
 
+        QString terminalPath() const;
+        void setTerminalPath(const QString &terminalPath);
+
     private:
 
         //Appearence
@@ -498,6 +501,7 @@ public:
         QString mIconSet;
 
         QString mDefaultOpenFolder;
+        QString mTerminalPath;
         // _Base interface
     protected:
         void doSave() override;
