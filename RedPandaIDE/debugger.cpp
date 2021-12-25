@@ -617,7 +617,7 @@ DebugReader::DebugReader(Debugger* debugger, QObject *parent) : QThread(parent),
     mStartSemaphore(0)
 {
     mDebugger = debugger;
-    mProcess = nullptr;
+    mProcess = std::make_shared<QProcess>();
     mCmdRunning = false;
 }
 
@@ -1319,13 +1319,16 @@ void DebugReader::run()
     mStop = false;
     mInferiorRunning = false;
     mProcessExited = false;
-    bool errorOccurred = false;
+    mErrorOccured = false;
     QString cmd = mDebuggerPath;
 //    QString arguments = "--annotate=2";
     QString arguments = "--interpret=mi --silent";
     QString workingDir = QFileInfo(mDebuggerPath).path();
 
     mProcess = std::make_shared<QProcess>();
+    auto action = finally([&]{
+        mProcess.reset();
+    });
     mProcess->setProgram(cmd);
     mProcess->setArguments(QProcess::splitCommand(arguments));
     mProcess->setProcessChannelMode(QProcess::MergedChannels);
@@ -1346,7 +1349,7 @@ void DebugReader::run()
 
     connect(mProcess.get(), &QProcess::errorOccurred,
                     [&](){
-                        errorOccurred= true;
+                        mErrorOccured= true;
                     });
     QByteArray buffer;
     QByteArray readed;
@@ -1367,7 +1370,7 @@ void DebugReader::run()
             mProcess->kill();
             break;
         }
-        if (errorOccurred)
+        if (mErrorOccured)
             break;
         readed = mProcess->readAll();
         buffer += readed;
@@ -1383,7 +1386,7 @@ void DebugReader::run()
             msleep(1);
         }
     }
-    if (errorOccurred) {
+    if (mErrorOccured) {
         emit processError(mProcess->error());
     }
 }
@@ -2222,9 +2225,10 @@ DebugTarget::DebugTarget(
     mGDBServer(GDBServer),
     mPort(port),
     mStop(false),
-    mStartSemaphore(0)
+    mStartSemaphore(0),
+    mErrorOccured(false)
 {
-
+    mProcess = nullptr;
 }
 
 void DebugTarget::stopDebug()
@@ -2240,7 +2244,7 @@ void DebugTarget::waitStart()
 void DebugTarget::run()
 {
     mStop = false;
-    bool errorOccurred = false;
+    mErrorOccured = false;
 
     //find first available port
     QString cmd;
@@ -2255,6 +2259,9 @@ void DebugTarget::run()
     QString workingDir = QFileInfo(mInferior).path();
 
     mProcess = std::make_shared<QProcess>();
+    auto action = finally([&]{
+        mProcess.reset();
+    });
     mProcess->setProgram(cmd);
     mProcess->setArguments(QProcess::splitCommand(arguments));
     mProcess->setProcessChannelMode(QProcess::MergedChannels);
@@ -2285,7 +2292,7 @@ void DebugTarget::run()
 
     connect(mProcess.get(), &QProcess::errorOccurred,
                     [&](){
-                        errorOccurred= true;
+                        mErrorOccured= true;
                     });
     mProcess->start();
     mProcess->waitForStarted(5000);
@@ -2303,11 +2310,11 @@ void DebugTarget::run()
             mProcess->kill();
             break;
         }
-        if (errorOccurred)
+        if (mErrorOccured)
             break;
         msleep(1);
     }
-    if (errorOccurred) {
+    if (mErrorOccured) {
         emit processError(mProcess->error());
     }
 }

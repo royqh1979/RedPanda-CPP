@@ -1668,8 +1668,8 @@ void MainWindow::debug()
     mDebugger->sendCommand("-environment-cd", excludeTrailingPathDelimiter(debugFile.path())); // restore working directory
     if (pSettings->debugger().useGDBServer()) {
         mDebugger->sendCommand("-target-select",QString("remote localhost:%1").arg(pSettings->debugger().GDBServerPort()));
-        if (debugInferiorhasBreakpoint()) {
-            mDebugger->sendCommand("-break-insert","main");
+        if (!debugInferiorhasBreakpoint()) {
+            mDebugger->sendCommand("-break-insert","-t main");
         }
         mDebugger->sendCommand("-exec-continue","");
     } else {

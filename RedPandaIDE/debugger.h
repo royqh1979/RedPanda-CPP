@@ -287,6 +287,7 @@ private:
     bool mStop;
     std::shared_ptr<QProcess> mProcess;
     QSemaphore mStartSemaphore;
+    bool mErrorOccured;
 
     // QThread interface
 protected:
@@ -410,6 +411,7 @@ private:
     QRecursiveMutex mCmdQueueMutex;
     QSemaphore mStartSemaphore;
     QQueue<PDebugCommand> mCmdQueue;
+    bool mErrorOccured;
 
     //fOnInvalidateAllVars: TInvalidateAllVarsEvent;
     bool mCmdRunning;
