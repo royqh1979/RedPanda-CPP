@@ -10,7 +10,9 @@ EditorClipboardWidget::EditorClipboardWidget(const QString& name, const QString&
 {
     ui->setupUi(this);
     ui->cbCopyWithFormatAs->addItem("None");
+#ifdef Q_OS_WIN
     ui->cbCopyWithFormatAs->addItem("HTML");
+#endif
 
     for (QString name: pColorManager->getSchemes()) {
         ui->cbHTMLColorScheme->addItem(name);

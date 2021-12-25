@@ -1198,7 +1198,11 @@ void Settings::Editor::doLoad()
     mCopySizeLimit = boolValue("copy_limit",true);
     mCopyCharLimits = intValue("copy_char_limits",100);
     mCopyLineLimits = intValue("copy_line_limits",100000);
-    mCopyWithFormatAs = intValue("copy_with_format_as",1);
+#ifdef Q_OS_WIN
+    mCopyWithFormatAs = intValue("copy_with_format_as",1); //html
+#else
+    mCopyWithFormatAs = intValue("copy_with_format_as",0); //none
+#endif
     mCopyRTFUseBackground = boolValue("copy_rtf_use_background",false);
     mCopyRTFUseEditorColor = boolValue("copy_rtf_use_editor_color_scheme",false);
     mCopyRTFColorScheme = stringValue("copy_rtf_color_scheme","Intellij Classic");
