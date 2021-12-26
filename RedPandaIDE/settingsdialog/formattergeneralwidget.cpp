@@ -306,7 +306,7 @@ void FormatterGeneralWidget::updateDemo()
     updateCodeFormatter(formatter);
 
     QByteArray newContent = runAndGetOutput("astyle.exe",
-                                            pSettings->dirs().app(),
+                                            pSettings->dirs().appDir(),
                                             formatter.getArguments(),
                                             content);
     ui->editDemo->lines()->setText(newContent);

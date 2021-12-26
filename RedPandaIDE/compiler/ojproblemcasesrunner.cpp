@@ -40,7 +40,7 @@ void OJProblemCasesRunner::runCase(int index,POJProblemCase problemCase)
             pathAdded.append(dir);
         }
     }
-    pathAdded.append(pSettings->dirs().app());
+    pathAdded.append(pSettings->dirs().appDir());
     if (!path.isEmpty()) {
         path+= PATH_SEPARATOR + pathAdded.join(PATH_SEPARATOR);
     } else {

@@ -221,8 +221,8 @@ void CompilerSetOptionWidget::on_btnFindCompilers_pressed()
     if (QMessageBox::warning(this,tr("Confirm"),
            tr("Red Panda C++ will clear current compiler list and search"
                       " for compilers in the following locations:\n '%1'\n'%2'\nAre you really want to continue?")
-                                 .arg(includeTrailingPathDelimiter(pSettings->dirs().app()) + "MinGW32")
-                                 .arg(includeTrailingPathDelimiter(pSettings->dirs().app()) + "MinGW64"),
+                                 .arg(includeTrailingPathDelimiter(pSettings->dirs().appDir()) + "MinGW32")
+                                 .arg(includeTrailingPathDelimiter(pSettings->dirs().appDir()) + "MinGW64"),
                                  QMessageBox::Ok | QMessageBox::Cancel) != QMessageBox::Ok )
         return;
     pSettings->compilerSets().clearSets();

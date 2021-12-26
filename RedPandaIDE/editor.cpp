@@ -3853,7 +3853,7 @@ void Editor::reformat()
     QByteArray content = text().toUtf8();
     QStringList args = pSettings->codeFormatter().getArguments();
     QByteArray newContent = runAndGetOutput("astyle.exe",
-                                            pSettings->dirs().app(),
+                                            pSettings->dirs().appDir(),
                                             args,
                                             content);
     int oldTopLine = topLine();

@@ -113,7 +113,7 @@ void ProjectGeneralWidget::on_btnBrowse_clicked()
 {
     QString fileName = QFileDialog::getOpenFileName(this,
                                                     tr("Select icon file"),
-                                                    pSettings->dirs().app(),
+                                                    pSettings->dirs().appDir(),
                                                     tr("Icon Files (*.ico)"));
     if (!fileName.isEmpty()) {
         mIconPath = fileName;

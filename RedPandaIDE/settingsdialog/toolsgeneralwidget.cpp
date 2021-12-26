@@ -228,7 +228,7 @@ void ToolsGeneralWidget::on_btnBrowseProgram_clicked()
     QString fileName = QFileDialog::getOpenFileName(
                 this,
                 tr("Select program"),
-                pSettings->dirs().app(),
+                pSettings->dirs().appDir(),
                 tr("Executable files (*.exe)"));
     if (!fileName.isEmpty() ) {
         ui->txtProgram->setText(fileName);

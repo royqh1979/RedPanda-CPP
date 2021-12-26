@@ -2018,7 +2018,7 @@ void MainWindow::updateTools()
                         file.close();
                         if (item->pauseAfterExit) {
                             executeFile(
-                                        includeTrailingPathDelimiter(pSettings->dirs().app())+"ConsolePauser.exe",
+                                        includeTrailingPathDelimiter(pSettings->dirs().appDir())+"ConsolePauser.exe",
                                         " 1 \""+localizePath(file.fileName())+"\" ",
                                         workDir, file.fileName());
                         } else {
@@ -2031,7 +2031,7 @@ void MainWindow::updateTools()
                 } else {
                     if (item->pauseAfterExit) {
                         executeFile(
-                                    includeTrailingPathDelimiter(pSettings->dirs().app())+"ConsolePauser.exe",
+                                    includeTrailingPathDelimiter(pSettings->dirs().appDir())+"ConsolePauser.exe",
                                     " 1 \""+program+"\" "+params,
                                     workDir, "");
                     } else {
@@ -2696,7 +2696,7 @@ void MainWindow::openShell(const QString &folder, const QString &shellCommand)
             pathAdded.append(dir);
         }
     }
-    pathAdded.append(pSettings->dirs().app());
+    pathAdded.append(pSettings->dirs().appDir());
     if (!path.isEmpty()) {
         path= pathAdded.join(PATH_SEPARATOR) + PATH_SEPARATOR + path;
     } else {
@@ -5574,7 +5574,7 @@ void MainWindow::on_actionMove_To_Other_View_triggered()
 void MainWindow::on_actionC_C_Reference_triggered()
 {
     if (pSettings->environment().language()=="zh_CN") {
-        QFileInfo fileInfo(includeTrailingPathDelimiter(pSettings->dirs().app())+"cppreference-zh.chm");
+        QFileInfo fileInfo(includeTrailingPathDelimiter(pSettings->dirs().appDir())+"cppreference-zh.chm");
         if (fileInfo.exists()) {
             QDesktopServices::openUrl(QUrl::fromLocalFile(fileInfo.absoluteFilePath()));
         } else {

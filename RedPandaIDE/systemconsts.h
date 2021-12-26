@@ -3,6 +3,10 @@
 
 #include <QStringList>
 
+#ifndef PREFIX
+#define PREFIX "/usr/local"
+#endif
+
 #define APP_SETTSINGS_FILENAME "redpandacpp.ini"
 #ifdef Q_OS_WIN
 #define GCC_PROGRAM     "gcc.exe"

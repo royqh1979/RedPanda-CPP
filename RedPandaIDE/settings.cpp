@@ -151,14 +151,26 @@ Settings::Dirs::Dirs(Settings *settings):
 {
 }
 
-QString Settings::Dirs::app() const
+QString Settings::Dirs::appDir() const
 {
     return QApplication::instance()->applicationDirPath();
 }
 
+QString Settings::Dirs::appLibDir() const
+{
+#ifdef Q_OS_WIN
+    return appDir();
+#elif defined(Q_OS_LINUX)
+    if (isGreenEdition()) {
+        return app();
+    }
+    return includeTrailingPathDelimiter(PREFIX)+"lib";
+#endif
+}
+
 QString Settings::Dirs::templateDir() const
 {
-    return includeTrailingPathDelimiter(app()) + "templates";
+    return includeTrailingPathDelimiter(appDir()) + "templates";
 }
 
 QString Settings::Dirs::projectDir() const
@@ -169,7 +181,7 @@ QString Settings::Dirs::projectDir() const
 QString Settings::Dirs::data(Settings::Dirs::DataType dataType) const
 {
     using DataType = Settings::Dirs::DataType;
-    QString dataDir = includeTrailingPathDelimiter(app())+"data";
+    QString dataDir = includeTrailingPathDelimiter(appDir())+"data";
     switch (dataType) {
     case DataType::None:
         return dataDir;
@@ -209,7 +221,7 @@ void Settings::Dirs::doLoad()
 {
     QString defaultProjectDir;
     if (isGreenEdition()) {
-        defaultProjectDir = includeTrailingPathDelimiter(app()) + "projects";
+        defaultProjectDir = includeTrailingPathDelimiter(appDir()) + "projects";
     } else {
         defaultProjectDir = includeTrailingPathDelimiter(QStandardPaths::standardLocations(QStandardPaths::DocumentsLocation)[0])
                          + "projects";
@@ -2468,8 +2480,8 @@ void Settings::CompilerSets::clearSets()
 void Settings::CompilerSets::findSets()
 {
     clearSets();
-    addSets(includeTrailingPathDelimiter(mSettings->dirs().app())+"MinGW32"+QDir::separator()+"bin");
-    addSets(includeTrailingPathDelimiter(mSettings->dirs().app())+"MinGW64"+QDir::separator()+"bin");
+    addSets(includeTrailingPathDelimiter(mSettings->dirs().appDir())+"MinGW32"+QDir::separator()+"bin");
+    addSets(includeTrailingPathDelimiter(mSettings->dirs().appDir())+"MinGW64"+QDir::separator()+"bin");
 
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
     QString path = env.value("PATH");
@@ -2551,8 +2563,8 @@ void Settings::CompilerSets::loadSets()
                    QObject::tr("Compiler set not configuared.")
                                  +"<br /><br />"
                                  +QObject::tr("Would you like Red Panda C++ to search for compilers in the following locations: <BR />'%1'<BR />'%2'? ")
-                                 .arg(includeTrailingPathDelimiter(pSettings->dirs().app()) + "MinGW32")
-                                 .arg(includeTrailingPathDelimiter(pSettings->dirs().app()) + "MinGW64"),
+                                 .arg(includeTrailingPathDelimiter(pSettings->dirs().appDir()) + "MinGW32")
+                                 .arg(includeTrailingPathDelimiter(pSettings->dirs().appDir()) + "MinGW64"),
                                  QMessageBox::Yes | QMessageBox::No) != QMessageBox::Yes) {
             return;
         }
@@ -2629,8 +2641,8 @@ Settings::PCompilerSet Settings::CompilerSets::getSet(int index)
 
 void Settings::CompilerSets::savePath(const QString& name, const QString& path) {
     QString s;
-    QString prefix1 = excludeTrailingPathDelimiter(mSettings->mDirs.app()) + "/";
-    QString prefix2 = excludeTrailingPathDelimiter(mSettings->mDirs.app()) + QDir::separator();
+    QString prefix1 = excludeTrailingPathDelimiter(mSettings->mDirs.appDir()) + "/";
+    QString prefix2 = excludeTrailingPathDelimiter(mSettings->mDirs.appDir()) + QDir::separator();
     if (path.startsWith(prefix1, PATH_SENSITIVITY)) {
         s = "%AppPath%/"+ path.mid(prefix1.length());
     } else if (path.startsWith(prefix2, PATH_SENSITIVITY)) {
@@ -2645,8 +2657,8 @@ void Settings::CompilerSets::savePathList(const QString& name, const QStringList
     QStringList sl;
     for (const QString& path: pathList) {
         QString s;
-        QString prefix1 = excludeTrailingPathDelimiter(mSettings->mDirs.app()) + "/";
-        QString prefix2 = excludeTrailingPathDelimiter(mSettings->mDirs.app()) + QDir::separator();
+        QString prefix1 = excludeTrailingPathDelimiter(mSettings->mDirs.appDir()) + "/";
+        QString prefix2 = excludeTrailingPathDelimiter(mSettings->mDirs.appDir()) + QDir::separator();
         if (path.startsWith(prefix1, PATH_SENSITIVITY)) {
             s = "%AppPath%/"+ path.mid(prefix1.length());
         } else if (path.startsWith(prefix2, PATH_SENSITIVITY)) {
@@ -2706,7 +2718,7 @@ QString Settings::CompilerSets::loadPath(const QString &name)
     QString s =  mSettings->mSettings.value(name).toString();
     QString prefix = "%AppPath%/";
     if (s.startsWith(prefix)) {
-        s = includeTrailingPathDelimiter(mSettings->mDirs.app()) + s.mid(prefix.length());
+        s = includeTrailingPathDelimiter(mSettings->mDirs.appDir()) + s.mid(prefix.length());
     }
     return QFileInfo(s).absoluteFilePath();
 }
@@ -2718,7 +2730,7 @@ void Settings::CompilerSets::loadPathList(const QString &name, QStringList& list
     QString prefix = "%AppPath%/";
     for (QString& s:sl) {
         if (s.startsWith(prefix)) {
-            s = includeTrailingPathDelimiter(mSettings->mDirs.app()) + s.mid(prefix.length());
+            s = includeTrailingPathDelimiter(mSettings->mDirs.appDir()) + s.mid(prefix.length());
         }
         list.append(QFileInfo(s).absoluteFilePath());
     }

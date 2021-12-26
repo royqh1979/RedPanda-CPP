@@ -89,7 +89,8 @@ public:
             ColorSheme
         };
         explicit Dirs(Settings * settings);
-        QString app() const;
+        QString appDir() const;
+        QString appLibDir() const;
         QString templateDir() const;
         QString projectDir() const;
         QString data(DataType dataType = DataType::None) const;

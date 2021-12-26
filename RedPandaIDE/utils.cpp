@@ -781,7 +781,7 @@ QString parseMacros(const QString &s)
     result.replace("<DEFAULT>", localizePath(QDir::currentPath()));
     result.replace("<DEVCPP>", localizePath(pSettings->dirs().executable()));
     result.replace("<DEVCPPVERSION>", DEVCPP_VERSION);
-    result.replace("<EXECPATH>", localizePath(pSettings->dirs().app()));
+    result.replace("<EXECPATH>", localizePath(pSettings->dirs().appDir()));
     QDate today = QDate::currentDate();
     QDateTime now = QDateTime::currentDateTime();
 
