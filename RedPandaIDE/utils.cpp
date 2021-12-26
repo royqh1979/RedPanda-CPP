@@ -11,9 +11,6 @@
 #include <QTextCodec>
 #include <QtGlobal>
 #include <QDebug>
-#ifdef Q_OS_WIN
-#include <windows.h>
-#endif
 #include <QStyleFactory>
 #include <QDateTime>
 #include <QColor>
@@ -26,6 +23,9 @@
 #include "project.h"
 #include "version.h"
 #include "compiler/executablerunner.h"
+#ifdef Q_OS_WIN
+#include <windows.h>
+#endif
 
 const QByteArray GuessTextEncoding(const QByteArray& text){
     bool allAscii;

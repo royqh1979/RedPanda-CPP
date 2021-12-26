@@ -110,7 +110,7 @@
    <item>
     <widget class="QTabWidget" name="settingTabs">
      <property name="currentIndex">
-      <number>3</number>
+      <number>0</number>
      </property>
      <property name="movable">
       <bool>false</bool>
