@@ -306,26 +306,30 @@ FORMS += \
     widgets/searchdialog.ui \
     widgets/signalmessagedialog.ui
 
-win32: FORMS +=  \
+win32: {
+    FORMS +=  \
 	settingsdialog/projectversioninfowidget.ui \
     settingsdialog/environmentfileassociationwidget.ui
-    
-win32: HEADERS += \
+
+    HEADERS += \
     settingsdialog/projectversioninfowidget.h \
     settingsdialog/environmentfileassociationwidget.h  
       
-win32: SOURCES += \
+    SOURCES += \
     settingsdialog/environmentfileassociationwidget.cpp \
     settingsdialog/projectversioninfowidget.cpp
+}
 
-linux: HEADERS += \
+unix {
+    HEADERS += \
     settingsdialog/environmentprogramswidget.h
 
-linux: SOURCES += \
-        settingsdialog/environmentprogramswidget.cpp
+    SOURCES += \
+    settingsdialog/environmentprogramswidget.cpp
 
-linux: FORMS += \
+    FORMS += \
     settingsdialog/environmentprogramswidget.ui
+}
 
 TRANSLATIONS += \
     RedPandaIDE_zh_CN.ts
