@@ -540,7 +540,6 @@
           <widget class="IssuesTable" name="tableIssues">
            <property name="font">
             <font>
-             <weight>50</weight>
              <bold>false</bold>
             </font>
            </property>
@@ -1398,7 +1397,7 @@
      <x>0</x>
      <y>0</y>
      <width>1114</width>
-     <height>26</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -1438,6 +1437,7 @@
     <addaction name="actionRun_Parameters"/>
     <addaction name="separator"/>
     <addaction name="actionDebug"/>
+    <addaction name="actionInterrupt"/>
     <addaction name="actionStep_Over"/>
     <addaction name="actionStep_Into"/>
     <addaction name="actionStep_Out"/>
@@ -1657,6 +1657,7 @@
     <bool>false</bool>
    </attribute>
    <addaction name="actionDebug"/>
+   <addaction name="actionInterrupt"/>
    <addaction name="actionStep_Over"/>
    <addaction name="actionStep_Into"/>
    <addaction name="actionStep_Out"/>
@@ -2665,6 +2666,15 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+Backspace</string>
+   </property>
+  </action>
+  <action name="actionInterrupt">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/images/newlook24/093-pause.png</normaloff>:/icons/images/newlook24/093-pause.png</iconset>
+   </property>
+   <property name="text">
+    <string>Interrupt</string>
    </property>
   </action>
  </widget>

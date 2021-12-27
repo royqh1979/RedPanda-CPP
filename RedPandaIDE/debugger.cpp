@@ -243,6 +243,13 @@ bool Debugger::inferiorRunning()
     return false;
 }
 
+void Debugger::interrupt()
+{
+    sendCommand("-exec-interrupt", "");
+    QTimer::singleShot(1000,this, &Debugger::interruptRefresh);
+
+}
+
 void Debugger::addBreakpoint(int line, const Editor* editor)
 {
     addBreakpoint(line,editor->filename());
@@ -401,6 +408,11 @@ void Debugger::fetchVarChildren(const QString &varName)
     }
 }
 
+void Debugger::interruptRefresh()
+{
+    sendCommand("noop","");
+}
+
 void Debugger::removeWatchVars(bool deleteparent)
 {
     if (deleteparent) {
@@ -542,7 +554,9 @@ void Debugger::syncFinishedParsing()
         return;
     }
 
-    if (mReader->signalReceived()) {
+    if (mReader->signalReceived()
+            && mReader->signalName()!="SIGINT"
+            && mReader->signalName()!="SIGTRAP") {
         SignalMessageDialog dialog(pMainWindow);
         dialog.setOpenCPUInfo(pSettings->debugger().openCPUInfoWhenSignaled());
         dialog.setMessage(
@@ -553,37 +567,7 @@ void Debugger::syncFinishedParsing()
         if (result == QDialog::Accepted && dialog.openCPUInfo()) {
             pMainWindow->showCPUInfoDialog();
         }
-
-//SignalDialog := CreateMessageDialog(fSignal, mtError, [mbOk]);
-//SignalCheck := TCheckBox.Create(SignalDialog);
-
-//// Display it on top of everything
-//SignalDialog.FormStyle := fsStayOnTop;
-
-//SignalDialog.Height := 150;
-
-//with SignalCheck do begin
-//  Parent := SignalDialog;
-//  Caption := 'Show CPU window';
-//  Top := Parent.ClientHeight - 22;
-//  Left := 8;
-//  Width := Parent.ClientWidth - 16;
-//  Checked := devData.ShowCPUSignal;
-//end;
-
-//MessageBeep(MB_ICONERROR);
-//if SignalDialog.ShowModal = ID_OK then begin
-//  devData.ShowCPUSignal := SignalCheck.Checked;
-//  if SignalCheck.Checked and not Assigned(CPUForm) then begin
-//    MainForm.ViewCPUItemClick(nil);
-//    spawnedcpuform := true;
-//  end;
-//end;
-
-//SignalDialog.Free;
-
     }
-
 
     // CPU form updates itself when spawned, don't update twice!
     if ((mReader->updateCPUInfo() && !spawnedcpuform) && (pMainWindow->cpuDialog()!=nullptr)) {

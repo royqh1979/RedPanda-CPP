@@ -1,3 +1,8 @@
+Version 0.12.4 For Dev-C++ 7 Beta
+ - change: add copyright infos to each source file
+ - fix: watch and local infos not updated when changing current frame in the call stack panel
+ - enhancement: pause the debugging program (The debugger should work under gdb server mode, which is turned off by default in windows)
+
 Version 0.12.3 For Dev-C++ 7 Beta
  - enhancement: basic linux compatibility
  - enhancement: debug with gdb server

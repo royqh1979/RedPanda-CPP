@@ -209,5 +209,6 @@
         <file>images/newlook/actions/08Problem_03Properties.svg</file>
         <file>images/newlook/actions/08Problem_04EditSource.svg</file>
         <file>images/newlook/actions/08Problem_05RunCases.svg</file>
+        <file>images/newlook/actions/05Run-16Interrupt.svg</file>
     </qresource>
 </RCC>

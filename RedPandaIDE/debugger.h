@@ -28,6 +28,7 @@
 #include <QQueue>
 #include <QSemaphore>
 #include <QThread>
+#include <QTimer>
 #include <memory>
 #include "gdbmiresultparser.h"
 
@@ -212,6 +213,7 @@ public:
                      DebugCommandSource source = DebugCommandSource::Other);
     bool commandRunning();
     bool inferiorRunning();
+    void interrupt();
 
     //breakpoints
     void addBreakpoint(int line, const Editor* editor);
@@ -273,6 +275,7 @@ private slots:
     void updateRegisterValues(const QHash<int,QString>& values);
     void refreshWatchVars();
     void fetchVarChildren(const QString& varName);
+    void interruptRefresh();
 private:
     bool mExecuting;
     bool mCommandChanged;

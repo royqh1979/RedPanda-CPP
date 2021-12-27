@@ -1189,6 +1189,7 @@ void MainWindow::updateActionIcons()
     ui->actionRebuild->setIcon(pIconsManager->getIcon(IconsManager::ACTION_RUN_REBUILD));
     ui->actionRun_Parameters->setIcon(pIconsManager->getIcon(IconsManager::ACTION_RUN_OPTIONS));
     ui->actionDebug->setIcon(pIconsManager->getIcon(IconsManager::ACTION_RUN_DEBUG));
+    ui->actionInterrupt->setIcon(pIconsManager->getIcon(IconsManager::ACTION_RUN_INTERRUPT));
     ui->actionStep_Over->setIcon(pIconsManager->getIcon(IconsManager::ACTION_RUN_STEP_OVER));
     ui->actionStep_Into->setIcon(pIconsManager->getIcon(IconsManager::ACTION_RUN_STEP_INTO));
     ui->actionStep_Out->setIcon(pIconsManager->getIcon(IconsManager::ACTION_RUN_STEP_OUT));
@@ -1675,6 +1676,7 @@ void MainWindow::debug()
     mDebugger->sendAllBreakpointsToDebugger();
 
     // Run the debugger
+    mDebugger->sendCommand("-gdb-set", "mi-async on");
     mDebugger->sendCommand("-enable-pretty-printing","");
     mDebugger->sendCommand("-data-list-register-names","");
     mDebugger->sendCommand("-gdb-set", "width 0"); // don't wrap output, very annoying
@@ -3285,6 +3287,7 @@ void MainWindow::onEditorTabContextMenu(QTabWidget* tabWidget, const QPoint &pos
 
 void MainWindow::disableDebugActions()
 {
+    ui->actionInterrupt->setEnabled(false);
     ui->actionStep_Into->setEnabled(false);
     ui->actionStep_Over->setEnabled(false);
     ui->actionStep_Out->setEnabled(false);
@@ -3299,11 +3302,13 @@ void MainWindow::disableDebugActions()
 
 void MainWindow::enableDebugActions()
 {
+    ui->actionInterrupt->setEnabled(mDebugger->inferiorRunning());
     ui->actionStep_Into->setEnabled(!mDebugger->inferiorRunning());
     ui->actionStep_Over->setEnabled(!mDebugger->inferiorRunning());
     ui->actionStep_Out->setEnabled(!mDebugger->inferiorRunning());
     ui->actionRun_To_Cursor->setEnabled(!mDebugger->inferiorRunning());
-    ui->actionContinue->setEnabled(!mDebugger->inferiorRunning());
+    if (pSettings->debugger().useGDBServer())
+        ui->actionContinue->setEnabled(!mDebugger->inferiorRunning());
     ui->cbEvaluate->setEnabled(!mDebugger->inferiorRunning());
     ui->cbMemoryAddress->setEnabled(!mDebugger->inferiorRunning());
     if (mCPUDialog) {
@@ -4805,6 +4810,12 @@ void MainWindow::on_tblStackTrace_doubleClicked(const QModelIndex &index)
         if (e) {
             e->setCaretPositionAndActivate(trace->line,1);
         }
+        mDebugger->sendCommand("-stack-select-frame", QString("%1").arg(trace->level));
+        mDebugger->sendCommand("-stack-list-variables", "--all-values");
+        mDebugger->sendCommand("-var-update", "--all-values *");
+        if (this->mCPUDialog) {
+            this->mCPUDialog->updateInfo();
+        }
     }
 }
 
@@ -6024,5 +6035,14 @@ void MainWindow::on_btnCaseValidateOptions_clicked()
                 SettingsDialog::tr("Problem Set"),
                 SettingsDialog::tr("Program Runner")
                 );
+}
+
+
+void MainWindow::on_actionInterrupt_triggered()
+{
+    if (mDebugger->executing()) {
+        //WatchView.Items.BeginUpdate();
+        mDebugger->interrupt();
+    }
 }
 

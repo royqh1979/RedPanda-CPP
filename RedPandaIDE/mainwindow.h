@@ -550,6 +550,8 @@ private slots:
 
     void on_btnCaseValidateOptions_clicked();
 
+    void on_actionInterrupt_triggered();
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;

@@ -998,7 +998,7 @@ bool Editor::event(QEvent *event)
                 s = wordAtRowCol(p);
             break;
         case TipType::Identifier:
-            if (pMainWindow->debugger()->executing())
+            if (pMainWindow->debugger()->executing() && !pMainWindow->debugger()->inferiorRunning())
                 s = getWordAtPosition(this,p, pBeginPos,pEndPos, WordPurpose::wpEvaluation); // debugging
             else if (//devEditor.ParserHints and
                      !mCompletionPopup->isVisible()
@@ -3042,10 +3042,10 @@ Editor::TipType Editor::getTipType(QPoint point, BufferCoord& pos)
                     // do not allow when dragging selection
                     if (isPointInSelection(pos))
                         return TipType::Selection;
-                } else if (attr == highlighter()->identifierAttribute())
-                    return TipType::Identifier;
-                else if (attr->name() == SYNS_AttrPreprocessor)
+                } else if (mParser && mParser->isIncludeLine(lines()->getString(pos.Line-1))) {
                     return TipType::Preprocessor;
+                }else if (attr == highlighter()->identifierAttribute())
+                    return TipType::Identifier;
             }
         }
     }
