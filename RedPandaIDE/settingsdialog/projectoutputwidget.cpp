@@ -19,6 +19,7 @@
 #include "../mainwindow.h"
 #include "../project.h"
 #include "../iconsmanager.h"
+#include "../systemconsts.h"
 
 #include <QFileDialog>
 
@@ -84,7 +85,7 @@ void ProjectOutputWidget::on_btnCompileLog_triggered(QAction *)
                 this,
                 tr("Log file"),
                 pMainWindow->project()->directory(),
-                tr("All files (*.*)"));
+                tr("All files (%1)").arg(ALL_FILE_WILDCARD));
     if (!fileName.isEmpty() ) {
         ui->txtCompileLog->setText(fileName);
     }

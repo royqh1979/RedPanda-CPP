@@ -18,6 +18,7 @@
 #include "ui_environmentprogramswidget.h"
 #include "../settings.h"
 #include "../iconsmanager.h"
+#include "../systemconsts.h"
 
 #include <QFileDialog>
 
@@ -55,7 +56,7 @@ void EnvironmentProgramsWidget::on_btnChooseTerminal_clicked()
                 this,
                 tr("Choose Terminal Program"),
                 QString(),
-                tr("All files (*.*)"));
+                tr("All files (%1)").arg(ALL_FILE_WILDCARD));
     if (!filename.isEmpty() && fileExists(filename) ) {
         ui->txtTerminal->setText(filename);
     }

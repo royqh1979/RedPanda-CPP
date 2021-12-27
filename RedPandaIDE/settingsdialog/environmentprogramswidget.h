@@ -36,9 +36,9 @@ private:
 
     // SettingsWidget interface
 protected:
-    void doLoad();
-    void doSave();
-    void updateIcons(const QSize &size);
+    void doLoad() override;
+    void doSave() override;
+    void updateIcons(const QSize &size) override;
 private slots:
     void on_btnChooseTerminal_clicked();
 };

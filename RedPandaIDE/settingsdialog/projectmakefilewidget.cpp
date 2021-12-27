@@ -21,6 +21,7 @@
 #include "../project.h"
 #include "../widgets/custommakefileinfodialog.h"
 #include "../iconsmanager.h"
+#include "../systemconsts.h"
 
 #include <QFileDialog>
 
@@ -61,7 +62,7 @@ void ProjectMakefileWidget::on_btnBrowse_clicked()
                 this,
                 tr("Custom makefile"),
                 pMainWindow->project()->directory(),
-                tr("All files (*.*)"));
+                tr("All files (%1)").arg(ALL_FILE_WILDCARD));
     if (!fileName.isEmpty() && QFileInfo(fileName).exists()) {
         ui->txtCustomMakefile->setText(fileName);
     }

@@ -2833,6 +2833,7 @@ void Settings::Environment::doLoad()
 
 #ifdef Q_OS_LINUX
     mTerminalPath = stringValue("terminal_path","/usr/bin/x-terminal-emulator");
+    mAStylePath = stringValue("asyle_path","/usr/bin/astyle");
 #endif
 }
 
@@ -2896,6 +2897,16 @@ void Settings::Environment::setTerminalPath(const QString &terminalPath)
     mTerminalPath = terminalPath;
 }
 
+QString Settings::Environment::AStylePath() const
+{
+    return mAStylePath;
+}
+
+void Settings::Environment::setAStylePath(const QString &aStylePath)
+{
+    mAStylePath = aStylePath;
+}
+
 void Settings::Environment::doSave()
 {
     //Appearence
@@ -2909,6 +2920,7 @@ void Settings::Environment::doSave()
     saveValue("default_open_folder",mDefaultOpenFolder);
 #ifndef Q_OS_WIN
     saveValue("terminal_path",mTerminalPath);
+    saveValue("asyle_path",mAStylePath);
 #endif
 }
 

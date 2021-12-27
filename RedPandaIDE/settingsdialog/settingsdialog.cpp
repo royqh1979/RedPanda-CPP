@@ -54,6 +54,7 @@
 #endif
 #ifdef Q_OS_LINUX
 #include "environmentprogramswidget.h"
+#include "formatterpathwidget.h"
 #endif
 #include <QDebug>
 #include <QMessageBox>
@@ -231,6 +232,12 @@ PSettingsDialog SettingsDialog::optionDialog()
     widget = new FormatterGeneralWidget(tr("General"),tr("Code Formatter"));
     widget->init();
     dialog->addWidget(widget);
+
+#ifdef Q_OS_LINUX
+    widget = new FormatterPathWidget(tr("Program"),tr("Code Formatter"));
+    widget->init();
+    dialog->addWidget(widget);
+#endif
 
     widget = new ToolsGeneralWidget(tr("General"),tr("Tools"));
     widget->init();

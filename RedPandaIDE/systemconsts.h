@@ -81,6 +81,7 @@
 #   define STATIC_LIB_EXT   "a"
 #   define DYNAMIC_LIB_EXT   "dll"
 #   define MAKEFILE_NAME    "makefile.win"
+#   define ALL_FILE_WILDCARD "*.*"
 #elif defined(Q_OS_LINUX)
 #   define PATH_SENSITIVITY Qt::CaseSensitive
 #   define PATH_SEPARATOR   ":"
@@ -90,6 +91,7 @@
 #   define STATIC_LIB_EXT   "a"
 #   define DYNAMIC_LIB_EXT   "d"
 #   define MAKEFILE_NAME    "makefile"
+#   define ALL_FILE_WILDCARD "*"
 #else
 #error "Only support windows and linux now!"
 #endif

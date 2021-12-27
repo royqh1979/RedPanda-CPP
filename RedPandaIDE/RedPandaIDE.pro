@@ -322,12 +322,15 @@ win32: {
 
 unix {
     HEADERS += \
+    settingsdialog/formatterpathwidget.h \
     settingsdialog/environmentprogramswidget.h
 
     SOURCES += \
+    settingsdialog/formatterpathwidget.cpp \
     settingsdialog/environmentprogramswidget.cpp
 
     FORMS += \
+    settingsdialog/formatterpathwidget.ui \
     settingsdialog/environmentprogramswidget.ui
 }
 

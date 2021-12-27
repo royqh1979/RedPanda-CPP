@@ -507,6 +507,9 @@ public:
         QString terminalPath() const;
         void setTerminalPath(const QString &terminalPath);
 
+        QString AStylePath() const;
+        void setAStylePath(const QString &aStylePath);
+
     private:
 
         //Appearence
@@ -519,6 +522,7 @@ public:
 
         QString mDefaultOpenFolder;
         QString mTerminalPath;
+        QString mAStylePath;
         // _Base interface
     protected:
         void doSave() override;

@@ -19,6 +19,7 @@
 #include "../project.h"
 #include "../mainwindow.h"
 #include "../iconsmanager.h"
+#include "../systemconsts.h"
 
 #include <QFileDialog>
 
@@ -50,7 +51,7 @@ void ProjectDLLHostWidget::on_btnBrowse_clicked()
                 this,
                 tr("Choose host application"),
                 pMainWindow->project()->directory(),
-                tr("All files (*.*)"));
+                tr("All files (%1)").arg(ALL_FILE_WILDCARD));
     if (!filename.isEmpty() && fileExists(filename)) {
         ui->txtHost->setText(filename);
     }

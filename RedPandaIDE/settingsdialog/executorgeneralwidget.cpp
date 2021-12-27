@@ -18,6 +18,7 @@
 #include "ui_executorgeneralwidget.h"
 #include "../settings.h"
 #include "../iconsmanager.h"
+#include "../systemconsts.h"
 
 #include <QFileDialog>
 
@@ -61,7 +62,7 @@ void ExecutorGeneralWidget::on_btnBrowse_clicked()
                 this,
                 tr("Choose input file"),
                 QString(),
-                tr("All files (*.*)"));
+                tr("All files (%1)").arg(ALL_FILE_WILDCARD));
     if (!filename.isEmpty() && fileExists(filename)) {
         ui->txtRedirectInputFile->setText(filename);
     }
