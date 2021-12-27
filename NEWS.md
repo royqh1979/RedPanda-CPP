@@ -1,3 +1,7 @@
+Version 0.12.5 For Dev-C++ 7 Beta
+ - fix: compile error in linux
+ - fix: can't receive gdb async output for commands
+
 Version 0.12.4 For Dev-C++ 7 Beta
  - change: add copyright infos to each source file
  - fix: watch and local infos not updated when changing current frame in the call stack panel

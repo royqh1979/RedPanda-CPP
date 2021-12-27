@@ -178,7 +178,7 @@ QString Settings::Dirs::appLibDir() const
     return appDir();
 #elif defined(Q_OS_LINUX)
     if (isGreenEdition()) {
-        return app();
+        return appDir();
     }
     return includeTrailingPathDelimiter(PREFIX)+"lib";
 #endif

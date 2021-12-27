@@ -275,7 +275,6 @@ private slots:
     void updateRegisterValues(const QHash<int,QString>& values);
     void refreshWatchVars();
     void fetchVarChildren(const QString& varName);
-    void interruptRefresh();
 private:
     bool mExecuting;
     bool mCommandChanged;
@@ -424,6 +423,8 @@ private:
     void processDebugOutput(const QByteArray& debugOutput);
     void runInferiorStoppedHook();
     QByteArray removeToken(const QByteArray& line);
+private slots:
+    void asyncUpdate();
 private:
     Debugger *mDebugger;
     QString mDebuggerPath;
@@ -431,7 +432,7 @@ private:
     QSemaphore mStartSemaphore;
     QQueue<PDebugCommand> mCmdQueue;
     bool mErrorOccured;
-
+    bool mAsyncUpdated;
     //fOnInvalidateAllVars: TInvalidateAllVarsEvent;
     bool mCmdRunning;
     PDebugCommand mCurrentCmd;

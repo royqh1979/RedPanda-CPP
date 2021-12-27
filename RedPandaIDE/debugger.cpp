@@ -246,8 +246,6 @@ bool Debugger::inferiorRunning()
 void Debugger::interrupt()
 {
     sendCommand("-exec-interrupt", "");
-    QTimer::singleShot(1000,this, &Debugger::interruptRefresh);
-
 }
 
 void Debugger::addBreakpoint(int line, const Editor* editor)
@@ -406,11 +404,6 @@ void Debugger::fetchVarChildren(const QString &varName)
     if (mExecuting) {
         sendCommand("-var-list-children",varName);
     }
-}
-
-void Debugger::interruptRefresh()
-{
-    sendCommand("noop","");
 }
 
 void Debugger::removeWatchVars(bool deleteparent)
@@ -617,6 +610,7 @@ DebugReader::DebugReader(Debugger* debugger, QObject *parent) : QThread(parent),
     mDebugger = debugger;
     mProcess = std::make_shared<QProcess>();
     mCmdRunning = false;
+    mAsyncUpdated = false;
 }
 
 void DebugReader::postCommand(const QString &Command, const QString &Params,
@@ -936,12 +930,18 @@ void DebugReader::runNextCmd()
 {
     QMutexLocker locker(&mCmdQueueMutex);
 
+    PDebugCommand lastCmd = mCurrentCmd;
     if (mCurrentCmd) {
-        mCurrentCmd.reset();
+        mCurrentCmd=nullptr;
         emit cmdFinished();
     }
-    if (mCmdQueue.isEmpty())
+    if (mCmdQueue.isEmpty()) {
+        if (pSettings->debugger().useGDBServer() && mInferiorRunning && !mAsyncUpdated) {
+            mAsyncUpdated = true;
+            QTimer::singleShot(1000,this,&DebugReader::asyncUpdate);
+        }
         return;
+    }
 
     PDebugCommand pCmd = mCmdQueue.dequeue();
     mCmdRunning = true;
@@ -1235,6 +1235,14 @@ QByteArray DebugReader::removeToken(const QByteArray &line)
     if (p<line.length())
         return line.mid(p);
     return line;
+}
+
+void DebugReader::asyncUpdate()
+{
+    QMutexLocker locker(&mCmdQueueMutex);
+    if (mCmdQueue.isEmpty())
+        postCommand("noop","",DebugCommandSource::Other);
+    mAsyncUpdated = false;
 }
 
 const QString &DebugReader::signalMeaning() const
