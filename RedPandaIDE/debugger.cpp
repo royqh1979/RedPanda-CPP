@@ -523,8 +523,6 @@ void Debugger::syncFinishedParsing()
         }
     }
 
-
-
     // show command output
     if (pSettings->debugger().enableDebugConsole() ) {
         if (pSettings->debugger().showDetailLog()) {
