@@ -7,6 +7,7 @@ Version 0.12.5 For Dev-C++ 7 Beta
  - fix: open terminal in linux
  - fix: wrong executable filename for source files in linux
  - enhancement: console pauser for linux 
+ - enhancement: redirect input to program in linux
 
 Version 0.12.4 For Dev-C++ 7 Beta
  - change: add copyright infos to each source file
