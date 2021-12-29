@@ -17,7 +17,9 @@
  */
 
 #include <string>
+#include <vector>
 using std::string;
+using std::vector;
 #include <string.h>
 #include <stdio.h>
 #include <sys/mman.h>
@@ -47,46 +49,65 @@ void PauseExit(int exitcode, bool reInp) {
     exit(exitcode);
 }
 
-string GetCommand(int argc,char** argv,bool &reInp,bool &pauseAfterExit) {
-    string result;
+vector<string> GetCommand(int argc,char** argv,bool &reInp,bool &pauseAfterExit) {
+    vector<string> result;
     int flags = atoi(argv[1]);
     reInp = flags & RPF_REDIRECT_INPUT;
     pauseAfterExit = flags & RPF_PAUSE_CONSOLE;
     for(int i = 2;i < argc;i++) {
         //result += string("\"") + string(argv[i]) + string("\"");
         std::string s(argv[i]);
+
+        if (i==2 || (reInp && i==3 ))
         if (s.length()>2 && s[0]=='\"' && s[s.length()-1]=='\"') {
             s = s.substr(1,s.length()-2);
         }
-        result += s;
-
-        // Add a space except for the last argument
-        if(i != (argc-1)) {
-            result += string(" ");
-        }
-    }
-
-    if(result.length() > MAX_COMMAND_LENGTH) {
-        printf("\n--------------------------------");
-        printf("\nError: Length of command line string is over %d characters\n",MAX_COMMAND_LENGTH);
-        PauseExit(EXIT_FAILURE,reInp);
+        result.push_back(s);
     }
 
     return result;
 }
 
-int ExecuteCommand(string& command,bool reInp) {
+int ExecuteCommand(vector<string>& command,bool reInp) {
     pid_t pid = fork();
     if (pid == 0) {
-        //child process
-        int pos = command.find_last_of('/');
-        std::string file = command;
-        if (pos>=0) {
-            file = command.substr(pos+1);
+        string path_to_command;
+        char * * argv;
+        int command_begin;
+        int command_size;
+        if (reInp) {
+            if (command.size()<2) {
+                printf("not enough arguments1!\n");
+                exit(-1);
+            }
+            freopen(command[0].c_str(),"r",stdin);
+            path_to_command = command[1];
+            command_size = command.size()+1;
+            command_begin = 1;
+        } else {
+            if (command.size()<1) {
+                printf("not enough arguments2!\n");
+                exit(-1);
+            }
+            path_to_command = command[0];
+            command_size = command.size()+1;
+            command_begin = 0;
         }
-        int result=execl(command.c_str(),file.c_str(),NULL);
+        argv = (char * *)malloc(sizeof(char *)*command_size);
+        for (int i=command_begin;i<command.size();i++) {
+            argv[i-command_begin] = (char *)command[i].c_str();
+        }
+        argv[command.size()-command_begin]=NULL;
+        //child process
+        int pos = path_to_command.find_last_of('/');
+        std::string file = path_to_command;
+        if (pos>=0) {
+            file = path_to_command.substr(pos+1);
+        }
+        argv[0]=(char *)file.c_str();
+        int result=execv(path_to_command.c_str(),argv);
         if (result) {
-            printf("Failed to start command %s %s!\n",command.c_str(), file.c_str());
+            printf("Failed to start command %s %s!\n",path_to_command.c_str(), file.c_str());
             printf("errno %d: %s\n",errno,strerror(errno));
             printf("current dir: %s",get_current_dir_name());
             exit(-1);
@@ -124,7 +145,7 @@ int main(int argc, char** argv) {
     bool reInp;
     bool pauseAfterExit;
     // Then build the to-run application command
-    string command = GetCommand(argc,argv,reInp, pauseAfterExit);
+    vector<string> command = GetCommand(argc,argv,reInp, pauseAfterExit);
     if (reInp) {
         freopen("/dev/tty","w+",stdout);
         freopen("/dev/tty","w+",stderr);

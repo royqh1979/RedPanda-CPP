@@ -244,10 +244,19 @@ void CompilerManager::run(const QString &filename, const QString &arguments, con
 #else
         QString newArguments;
         if (consoleFlag!=0) {
-            newArguments = QString(" -e \"%1\" %2 \"%3\" %4")
+            if (redirectInput) {
+                newArguments = QString(" -e \"%1\" %2 \"%3\" \"%4\" %5")
+                        .arg(includeTrailingPathDelimiter(pSettings->dirs().appDir())+"consolepauser")
+                        .arg(consoleFlag)
+                        .arg(redirectInputFilename)
+                        .arg(localizePath(filename))
+                        .arg(arguments);
+            } else {
+                newArguments = QString(" -e \"%1\" %2 \"%3\" %4")
                     .arg(includeTrailingPathDelimiter(pSettings->dirs().appDir())+"consolepauser")
                     .arg(consoleFlag)
                     .arg(localizePath(filename)).arg(arguments);
+            }
         } else {
             newArguments = QString(" -e \"%1\" %2")
                 .arg(localizePath(filename)).arg(arguments);
@@ -257,7 +266,7 @@ void CompilerManager::run(const QString &filename, const QString &arguments, con
         execRunner->setStartConsole(true);
     } else {
         execRunner = new ExecutableRunner(filename,arguments,workDir);
-    }
+    }    
     if (redirectInput) {
         execRunner->setRedirectInput(true);
         execRunner->setRedirectInputFilename(redirectInputFilename);
