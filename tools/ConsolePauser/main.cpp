@@ -1,6 +1,5 @@
 /*
- *  This file is part of Dev-C++
- *  Copyright (c) 2004 Bloodshed Software
+ *  This file is part of Red Panda Dev-C++ 7
  *  Copyright (C) 2020-2022 Roy Qu (royqh1979@gmail.com)
  *
  * This program is free software: you can redistribute it and/or modify
