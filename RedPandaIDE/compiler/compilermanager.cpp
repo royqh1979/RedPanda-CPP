@@ -276,6 +276,7 @@ void CompilerManager::run(const QString &filename, const QString &arguments, con
     connect(mRunner, &Runner::finished, mRunner ,&Runner::deleteLater);
     connect(mRunner, &Runner::finished, pMainWindow ,&MainWindow::onRunFinished);
     connect(mRunner, &Runner::pausingForFinish, pMainWindow ,&MainWindow::onRunPausingForFinish);
+    connect(mRunner, &Runner::pausingForFinish, this ,&CompilerManager::onRunnerPausing);
     connect(mRunner, &Runner::runErrorOccurred, pMainWindow ,&MainWindow::onRunErrorOccured);
     mRunner->start();
 }
@@ -325,13 +326,17 @@ void CompilerManager::stopRun()
     }
 }
 
+void CompilerManager::stopAllRunners()
+{
+    emit signalStopAllRunners();
+}
+
 void CompilerManager::stopPausing()
 {
     QMutexLocker locker(&mRunnerMutex);
     if (mRunner!=nullptr && mRunner->pausing()) {
         disconnect(mRunner, &Runner::finished, this ,&CompilerManager::onRunnerTerminated);
         mRunner->stop();
-        disconnect(mRunner, &Runner::finished, this ,&CompilerManager::onRunnerTerminated);
         mRunner=nullptr;
     }
 }
@@ -365,6 +370,16 @@ void CompilerManager::onCompileFinished()
 void CompilerManager::onRunnerTerminated()
 {
     QMutexLocker locker(&mRunnerMutex);
+    mRunner=nullptr;
+}
+
+void CompilerManager::onRunnerPausing()
+{
+    QMutexLocker locker(&mRunnerMutex);
+    disconnect(mRunner, &Runner::finished, this ,&CompilerManager::onRunnerTerminated);
+    disconnect(mRunner, &Runner::finished, pMainWindow ,&MainWindow::onRunFinished);
+    disconnect(mRunner, &Runner::runErrorOccurred, pMainWindow ,&MainWindow::onRunErrorOccured);
+    connect(this, &CompilerManager::signalStopAllRunners, mRunner, &Runner::stop);
     mRunner=nullptr;
 }
 

@@ -19,6 +19,7 @@
 
 #include "runner.h"
 #include <QProcess>
+#include <QSemaphore>
 
 class ExecutableRunner : public Runner
 {
@@ -41,6 +42,7 @@ private:
     bool mRedirectInput;
     bool mStartConsole;
     std::shared_ptr<QProcess> mProcess;
+    QSemaphore mQuitSemaphore;
 
     // QThread interface
 protected:

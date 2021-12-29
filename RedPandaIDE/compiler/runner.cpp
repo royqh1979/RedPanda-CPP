@@ -15,6 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include "runner.h"
+#include <QDebug>
 
 Runner::Runner(const QString &filename, const QString &arguments, const QString &workDir
                ,QObject *parent) : QThread(parent),
