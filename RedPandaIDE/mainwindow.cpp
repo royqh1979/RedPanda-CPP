@@ -2582,7 +2582,11 @@ void MainWindow::buildContextMenus()
         QString path = mFileSystemModel.filePath(ui->treeFiles->currentIndex());
         if (!path.isEmpty()) {
             QFileInfo fileInfo(path);
+#ifdef Q_OS_WIN
             openShell(fileInfo.path(),"cmd.exe");
+#else
+            openShell(fileInfo.path(),pSettings->environment().terminalPath());
+#endif
         }
     });
     mFilesView_OpenInExplorer = createActionFor(
@@ -2700,6 +2704,7 @@ void MainWindow::openShell(const QString &folder, const QString &shellCommand)
     QProcess process;
     process.setWorkingDirectory(folder);
     process.setProgram(shellCommand);
+    qDebug()<<shellCommand;
 #ifdef Q_OS_WIN
     process.setCreateProcessArgumentsModifier([](QProcess::CreateProcessArguments * args){
         args->flags |= CREATE_NEW_CONSOLE;
@@ -4770,7 +4775,11 @@ void MainWindow::on_actionOpen_Terminal_triggered()
     if (editor) {
         QFileInfo info(editor->filename());
         if (!info.path().isEmpty()) {
+#ifdef Q_OS_WIN
             openShell(info.path(),"cmd.exe");
+#else
+            openShell(info.path(),pSettings->environment().terminalPath());
+#endif
         }
     }
 
@@ -5075,7 +5084,11 @@ void MainWindow::on_actionProject_Open_In_Terminal_triggered()
 {
     if (!mProject)
         return;
+#ifdef Q_OS_WIN
     openShell(mProject->directory(),"cmd.exe");
+#else
+    openShell(mProject->directory(),pSettings->environment().terminalPath());
+#endif
 }
 
 const std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > &MainWindow::statementColors() const
