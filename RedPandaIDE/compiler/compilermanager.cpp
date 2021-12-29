@@ -227,12 +227,12 @@ void CompilerManager::run(const QString &filename, const QString &arguments, con
     }
     ExecutableRunner * execRunner;
     if (programHasConsole(filename)) {
-#ifdef Q_OS_WIN
         int consoleFlag=0;
         if (redirectInput)
             consoleFlag |= RPF_REDIRECT_INPUT;
         if (pSettings->executor().pauseConsole())
             consoleFlag |= RPF_PAUSE_CONSOLE;
+#ifdef Q_OS_WIN
         if (consoleFlag!=0) {
             QString newArguments = QString(" %1 \"%2\" %3")
                     .arg(consoleFlag)
@@ -242,8 +242,16 @@ void CompilerManager::run(const QString &filename, const QString &arguments, con
             execRunner = new ExecutableRunner(filename,arguments,workDir);
         }
 #else
-        QString newArguments = QString(" -e \"%1\" %2")
+        QString newArguments;
+        if (consoleFlag!=0) {
+            newArguments = QString(" -e \"%1\" %2 \"%3\" %4")
+                    .arg(includeTrailingPathDelimiter(pSettings->dirs().appDir())+"consolepauser")
+                    .arg(consoleFlag)
+                    .arg(localizePath(filename)).arg(arguments);
+        } else {
+            newArguments = QString(" -e \"%1\" %2")
                 .arg(localizePath(filename)).arg(arguments);
+        }
         execRunner = new ExecutableRunner(pSettings->environment().terminalPath(),newArguments,workDir);
 #endif
         execRunner->setStartConsole(true);

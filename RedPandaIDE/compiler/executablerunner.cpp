@@ -22,6 +22,12 @@
 #include "../systemconsts.h"
 #ifdef Q_OS_WIN
 #include <windows.h>
+#elif defined(Q_OS_LINUX)
+#include <sys/mman.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <sys/stat.h>        /* For mode constants */
+#include <fcntl.h>           /* For O_* constants */
 #endif
 
 
@@ -134,6 +140,23 @@ void ExecutableRunner::run()
             }
         }
     }
+#elif defined(Q_OS_LINUX)
+    int BUF_SIZE=1024;
+    char* pBuf=nullptr;
+    int fd_shm = shm_open("/REDPANDAIDECONSOLEPAUSER20211223",O_RDWR | O_CREAT,S_IRWXU);
+    if (fd_shm==-1) {
+        qDebug()<<QString("shm open failed %1:%2").arg(errno).arg(strerror(errno));
+    } else {
+        if (ftruncate(fd_shm,BUF_SIZE)==-1){
+            qDebug()<<QString("truncate failed %1:%2").arg(errno).arg(strerror(errno));
+        } else {
+            pBuf = (char*)mmap(NULL,BUF_SIZE,PROT_READ | PROT_WRITE, MAP_SHARED, fd_shm,0);
+            if (pBuf == MAP_FAILED) {
+                qDebug()<<QString("mmap failed %1:%2").arg(errno).arg(strerror(errno));
+                pBuf = nullptr;
+            }
+        }
+    }
 #endif
 //    if (!redirectInput()) {
 //        process.closeWriteChannel();
@@ -166,7 +189,7 @@ void ExecutableRunner::run()
             }
             break;
         }
-#ifdef Q_OS_WIN
+#if defined(Q_OS_WIN) || defined(Q_OS_LINUX)
         if (mStartConsole && !mPausing && pBuf) {
             if (strncmp(pBuf,"FINISHED",sizeof("FINISHED"))==0) {
                 setPausing(true);
@@ -182,6 +205,13 @@ void ExecutableRunner::run()
         UnmapViewOfFile(pBuf);
     if (hSharedMemory!=INVALID_HANDLE_VALUE)
         CloseHandle(hSharedMemory);
+#elif defined(Q_OS_LINUX)
+    if (pBuf) {
+        munmap(pBuf,BUF_SIZE);
+    }
+    if (fd_shm!=-1) {
+        shm_unlink("/REDPANDAIDECONSOLEPAUSER20211223");
+    }
 #endif
     if (errorOccurred) {
         //qDebug()<<"process error:"<<process.error();

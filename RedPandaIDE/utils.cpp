@@ -526,15 +526,16 @@ QString changeFileExt(const QString& filename, QString ext)
     QString suffix = fileInfo.suffix();
     QString name  = fileInfo.fileName();
     QString path;
-    if (ext.startsWith("."))
-        ext.remove(0,1);
+    if (!ext.isEmpty() && !ext.startsWith(".")) {
+        ext = "."+ext;
+    }
     if (fileInfo.path() != ".") {
         path = includeTrailingPathDelimiter(fileInfo.path());
     }
     if (suffix.isEmpty()) {
-        return path+filename+"."+ext;
+        return path+filename+ext;
     } else {
-        return path+fileInfo.completeBaseName()+"."+ext;
+        return path+fileInfo.completeBaseName()+ext;
     }
 }
 

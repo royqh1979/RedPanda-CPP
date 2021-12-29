@@ -320,7 +320,7 @@ win32: {
     settingsdialog/projectversioninfowidget.cpp
 }
 
-unix {
+unix: {
     HEADERS += \
     settingsdialog/formatterpathwidget.h \
     settingsdialog/environmentprogramswidget.h
@@ -332,6 +332,10 @@ unix {
     FORMS += \
     settingsdialog/formatterpathwidget.ui \
     settingsdialog/environmentprogramswidget.ui
+}
+linux: {
+    LIBS+= \
+    -lrt
 }
 
 TRANSLATIONS += \

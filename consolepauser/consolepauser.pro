@@ -15,6 +15,8 @@ SOURCES += \
 unix: {
 SOURCES += \
     main.unix.cpp
+    LIBS+= \
+        -lrt
 }
 
 CONFIG += lrelease
