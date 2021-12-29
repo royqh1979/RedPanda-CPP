@@ -6,7 +6,7 @@ This project is the successor of Red Panda Dev-C++ 6.
 All main features of version 6 have been ported.
 
 New Features:
-* Linux version (no official release yet)
+* Linux version
 * Problem Set (run and test program against predefined input / expected output data)
 * Competitve Companion support ( It's an chrome/firefox extension that can fetch problems from OJ websites)
 * Memory View for debugging
