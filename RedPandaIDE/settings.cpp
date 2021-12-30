@@ -177,16 +177,13 @@ QString Settings::Dirs::appLibDir() const
 #ifdef Q_OS_WIN
     return appDir();
 #elif defined(Q_OS_LINUX)
-    if (isGreenEdition()) {
-        return appDir();
-    }
-    return includeTrailingPathDelimiter(PREFIX)+"lib";
+    return QFileInfo(includeTrailingPathDelimiter(appDir())+"../lib").absolutePath();
 #endif
 }
 
 QString Settings::Dirs::templateDir() const
 {
-    return includeTrailingPathDelimiter(appDir()) + "templates";
+    return includeTrailingPathDelimiter(appLibDir()) + "templates";
 }
 
 QString Settings::Dirs::projectDir() const

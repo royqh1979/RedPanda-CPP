@@ -5,7 +5,7 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 CONFIG += c++17
 CONFIG += nokey
 
-APP_DIR = RedPandaIDE
+APP_NAME = RedPandaIDE
 
 gcc {
     QMAKE_CXXFLAGS_RELEASE += -Werror=return-type
@@ -344,8 +344,8 @@ TRANSLATIONS += \
     RedPandaIDE_zh_CN.ts
 
 # Default rules for deployment.
-qnx: target.path = /tmp/$${APP_DIR}/bin
-else: unix:!android: target.path = /opt/$${APP_DIR}/bin
+qnx: target.path = /tmp/$${APP_NAME}/bin
+else: unix:!android: target.path = /opt/$${APP_NAME}/bin
 !isEmpty(target.path): INSTALLS += target
 
 RESOURCES += \

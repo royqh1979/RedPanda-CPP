@@ -6,7 +6,9 @@ SUBDIRS += \
 
 APP_NAME = RedPandaIDE
 
-resources.path = /opt/$${APP_NAME}
-resources.files += linux/*
+linux: {
+    resources.path = /opt/$${APP_NAME}
+    resources.files += linux/*
 
-INSTALLS += resources
+    INSTALLS += resources
+}
