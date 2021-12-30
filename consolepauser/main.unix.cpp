@@ -1,5 +1,5 @@
 /*
- *  This file is part of Red Panda Dev-C++ 7
+ *  This file is part of Red Panda C++
  *  Copyright (C) 2020-2022 Roy Qu (royqh1979@gmail.com)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -135,7 +135,7 @@ int main(int argc, char** argv) {
     if(argc < 3) {
         printf("\n--------------------------------");
         printf("\nUsage: ConsolePauser.exe <0|1> <filename> <parameters>\n");
-        printf("\n 1 means the STDIN is redirected by Dev-CPP;0 means not\n");
+        printf("\n 1 means the STDIN is redirected by Red Panda C++; 0 means not\n");
         PauseExit(EXIT_SUCCESS,false);
     }
 

@@ -28,18 +28,18 @@ AboutDialog::AboutDialog(QWidget *parent) :
     ui->lblTitle->setText(ui->lblTitle->text() + tr("Version: ") + DEVCPP_VERSION);
 
 #ifdef  __GNUC__
-    ui->lblContent->setText(ui->lblContent->text()
-                            .arg(qVersion())
-                            .arg(QString("GCC %1.%2")
-                                 .arg(__GNUC__)
-                                 .arg(__GNUC_MINOR__)
-                                 ,__DATE__, __TIME__));
+    ui->lblQt->setText(ui->lblQt->text()
+            .arg(qVersion())
+            .arg(QString("GCC %1.%2")
+                 .arg(__GNUC__)
+                 .arg(__GNUC_MINOR__)));
 #else
-    ui->lblContent->setText(ui->lblContent->text()
-                            .arg(qVersion())
-                            .arg("Non-GCC Compiler"
-                                 ,__DATE__, __TIME__));
+    ui->lblQt->setText(ui->lblQt->text()
+            .arg(qVersion())
+            .arg(tr("Non-GCC Compiler"));
 #endif
+    ui->lblCompileTime->setText(ui->lblCompileTime->text()
+                                .arg(__DATE__, __TIME__));
 }
 
 AboutDialog::~AboutDialog()

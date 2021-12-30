@@ -26,7 +26,7 @@ ProjectVersionInfo::ProjectVersionInfo()
     charsetID = 0x04E4; // Windows multilingual
     companyName = "";
     fileVersion = "";
-    fileDescription = "Developed using the Red Panda Dev-C++ IDE";
+    fileDescription = "Developed using the Red Panda C++ IDE";
     internalName = "";
     legalCopyright = "";
     legalTrademarks = "";

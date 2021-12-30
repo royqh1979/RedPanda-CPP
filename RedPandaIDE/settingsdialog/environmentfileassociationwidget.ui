@@ -33,7 +33,7 @@
    <item>
     <widget class="QLabel" name="label">
      <property name="text">
-      <string>Just check or uncheck for which file types Dev-C++ wil be registered as the default application to open them ... </string>
+      <string>Just check or uncheck for which file types Red Panda C++ wil be registered as the default application to open them ... </string>
      </property>
      <property name="alignment">
       <set>Qt::AlignCenter</set>

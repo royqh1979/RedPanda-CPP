@@ -1,4 +1,4 @@
-Version 0.12.5 For Dev-C++ 7 Beta
+Red Panda C++ Version 0.12.5
  - fix: compile error in linux
  - fix: can't receive gdb async output for commands
  - fix: can't reformat code
@@ -9,6 +9,7 @@ Version 0.12.5 For Dev-C++ 7 Beta
  - enhancement: console pauser for linux 
  - enhancement: redirect input to program in linux
  - enhancement: detach pausing console window
+ - rename to Red Pand C++
 
 Version 0.12.4 For Dev-C++ 7 Beta
  - change: add copyright infos to each source file

@@ -681,7 +681,7 @@ void MainWindow::setActiveBreakpoint(QString FileName, int Line, bool setFocus)
 
 void MainWindow::updateAppTitle()
 {
-    QString appName=tr("Red Panda Dev-C++");
+    QString appName=tr("Red Panda C++");
     Editor *e = mEditorList->getEditor();
     QCoreApplication *app = QApplication::instance();
     if (e && !e->inProject()) {
@@ -4941,7 +4941,7 @@ void MainWindow::on_actionNew_Project_triggered()
                         this,
                         tr("Save new project as"),
                         location,
-                        tr("Red panda Dev-C++ project file (*.dev)"));
+                        tr("Red Panda C++ project file (*.dev)"));
             if (!saveName.isEmpty()) {
                 s = saveName;
             }

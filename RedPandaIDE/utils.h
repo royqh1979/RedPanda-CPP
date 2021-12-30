@@ -46,7 +46,7 @@ enum class FileType{
     CHeader, // c header (.h)
     CppHeader, // c++ header (.hpp)
     WindowsResourceSource, // resource source (.res)
-    Project, //Red Panda Dev-C++ Project (.dev)
+    Project, //Red Panda C++ Project (.dev)
     Other // any others
 };
 
