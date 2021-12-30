@@ -2,6 +2,7 @@ TEMPLATE = subdirs
 
 SUBDIRS += \
     RedPandaIDE \
+    astyle \
     consolepauser
 
 APP_NAME = RedPandaIDE

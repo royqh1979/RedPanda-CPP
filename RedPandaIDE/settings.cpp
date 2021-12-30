@@ -2827,10 +2827,9 @@ void Settings::Environment::doLoad()
     if (!fileExists(mDefaultOpenFolder)) {
         mDefaultOpenFolder = QDir::currentPath();
     }
-
 #ifdef Q_OS_LINUX
     mTerminalPath = stringValue("terminal_path","/usr/bin/x-terminal-emulator");
-    mAStylePath = stringValue("asyle_path","/usr/bin/astyle");
+    mAStylePath = includeTrailingPathDelimiter(pSettings->dirs().appDir())+"astyle";
 #endif
 }
 
