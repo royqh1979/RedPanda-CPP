@@ -1,0 +1,9 @@
+Package: RedPanda-IDE
+Version: 0.12.5
+Section: devel
+Priority: optional
+Architecture: amd64
+Essential: no
+Maintainer: royqh1979@gmail.com
+Description: Red Panda Dev-C++ 7. A QT-based lightweighted C/C++ editor
+Depends: gcc, g++, gdb, gdbserver
