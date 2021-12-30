@@ -1,7 +1,12 @@
 TEMPLATE = subdirs
 
 SUBDIRS += \
-#    ../QScintilla/src/qscintilla.pro \
     RedPandaIDE \
     consolepauser
 
+APP_NAME = RedPandaIDE
+
+resources.path = /opt/$${APP_NAME}
+resources.files += linux/*
+
+INSTALLS += resources
