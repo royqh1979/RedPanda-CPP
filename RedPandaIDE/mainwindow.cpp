@@ -3655,6 +3655,7 @@ void MainWindow::closeEvent(QCloseEvent *event) {
     }
 
     mTcpServer.close();
+    mCompilerManager->stopAllRunners();
     mCompilerManager->stopCompile();
     mCompilerManager->stopRun();
     if (!mShouldRemoveAllSettings)

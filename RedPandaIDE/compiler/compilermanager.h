@@ -46,6 +46,7 @@ public:
     void runProblem(const QString& filename, const QString& arguments, const QString& workDir, POJProblemCase problemCase);
     void runProblem(const QString& filename, const QString& arguments, const QString& workDir, QVector<POJProblemCase> problemCases);
     void stopRun();
+    void stopAllRunners();
     void stopPausing();
     void stopCompile();
     void stopCheckSyntax();
@@ -58,8 +59,12 @@ public:
 
     int syntaxCheckIssueCount() const;
 
+signals:
+    void signalStopAllRunners();
+
 private slots:
     void onRunnerTerminated();
+    void onRunnerPausing();
     void onCompileFinished();
     void onCompileIssue(PCompileIssue issue);
     void onSyntaxCheckFinished();

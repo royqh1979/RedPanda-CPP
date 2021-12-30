@@ -1241,7 +1241,7 @@ void DebugReader::asyncUpdate()
 {
     QMutexLocker locker(&mCmdQueueMutex);
     if (mCmdQueue.isEmpty())
-        postCommand("noop","",DebugCommandSource::Other);
+        postCommand("-var-update"," --all-values *",DebugCommandSource::Other);
     mAsyncUpdated = false;
 }
 

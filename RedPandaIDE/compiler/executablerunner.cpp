@@ -35,9 +35,9 @@ ExecutableRunner::ExecutableRunner(const QString &filename, const QString &argum
                                    ,QObject* parent):
     Runner(filename,arguments,workDir,parent),
     mRedirectInput(false),
-    mStartConsole(false)
+    mStartConsole(false),
+    mQuitSemaphore(0)
 {
-
 }
 
 bool ExecutableRunner::startConsole() const
@@ -192,6 +192,25 @@ void ExecutableRunner::run()
 #if defined(Q_OS_WIN) || defined(Q_OS_LINUX)
         if (mStartConsole && !mPausing && pBuf) {
             if (strncmp(pBuf,"FINISHED",sizeof("FINISHED"))==0) {
+#ifdef Q_OS_WIN
+                if (pBuf) {
+                    UnmapViewOfFile(pBuf);
+                    pBuf = nullptr;
+                }
+                if (hSharedMemory!=INVALID_HANDLE_VALUE) {
+                    hSharedMemory = INVALID_HANDLE_VALUE;
+                    CloseHandle(hSharedMemory);
+                }
+#elif defined(Q_OS_LINUX)
+                if (pBuf) {
+                    munmap(pBuf,BUF_SIZE);
+                    pBuf = nullptr;
+                }
+                if (fd_shm!=-1) {
+                    shm_unlink("/REDPANDAIDECONSOLEPAUSER20211223");
+                    fd_shm = -1;
+                }
+#endif
                 setPausing(true);
                 emit pausingForFinish();
             }
@@ -236,39 +255,10 @@ void ExecutableRunner::run()
             break;
         }
     }
+    mQuitSemaphore.release(1);
 }
 
 void ExecutableRunner::doStop()
 {
-    std::shared_ptr<QProcess> process = mProcess;
-    if (process) {
-//        qDebug()<<"??1";
-//        process->closeReadChannel(QProcess::StandardOutput);
-//        process->closeReadChannel(QProcess::StandardError);
-//        process->closeWriteChannel();
-//        qDebug()<<"??2";
-//    #ifdef Q_OS_WIN
-//        if (!mStartConsole) {
-//            qDebug()<<"??3";
-//            process->terminate();
-//            qDebug()<<"??4";
-//            if (process->waitForFinished(1000)) {
-//                return;
-//            }
-//        }
-//    #else
-//        process->terminate();
-//        if (process->waitForFinished(1000)) {
-//            break;
-//        }
-//    #endif
-//        for (int i=0;i<10;i++) {
-//            qDebug()<<"??5";
-//            process->kill();
-//            qDebug()<<"??6";
-//            if (process->waitForFinished(100)) {
-//                break;
-//            }
-//        }
-    }
+    mQuitSemaphore.acquire(1);
 }
