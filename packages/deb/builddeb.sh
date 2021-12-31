@@ -18,3 +18,5 @@ dpkg-deb --build /tmp/redpandaide
 
 mv $TMP_FOLDER/../redpandaide.deb redpanda-ide-${version}_amd64.deb
 
+rm -rf $TMP_FOLDER
+

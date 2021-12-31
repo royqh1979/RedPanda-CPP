@@ -5,5 +5,5 @@ Priority: optional
 Architecture: amd64
 Essential: no
 Maintainer: royqh1979@gmail.com
-Description: Red Panda Dev-C++ 7. A QT-based lightweighted C/C++ editor
-Depends: gcc, g++, gdb, gdbserver
+Description: Red Panda C++. A QT-based lightweighted C/C++ editor
+Depends: gcc, g++, gdb, gdbserver, make
