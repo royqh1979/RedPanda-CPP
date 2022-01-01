@@ -2113,6 +2113,25 @@ void MainWindow::buildContextMenus()
             }
         }
     });
+    mProblem_OpenSource=createActionFor(
+                tr("Open Source File"),
+                ui->lstProblemSet
+                );
+    connect(mProblem_OpenSource, &QAction::triggered,
+            [this]() {
+        QModelIndex idx = ui->lstProblemSet->currentIndex();
+        if (!idx.isValid())
+            return;
+        POJProblem problem=mOJProblemSetModel.problem(idx.row());
+        if (!problem)
+            return;
+        if (!problem->answerProgram.isEmpty()) {
+            Editor * editor = editorList()->getEditorByFilename(problem->answerProgram);
+            if (editor) {
+                editor->activate();
+            }
+        }
+    });
 
     //context menu signal for the Problem Set lable
     ui->lblProblemSet->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -2996,7 +3015,9 @@ void MainWindow::onLstProblemSetContextMenu(const QPoint &pos)
         });
         menuSetAnswer->addAction(action);
         menu.addMenu(menuSetAnswer);
+        mProblem_OpenSource->setEnabled(!problem->answerProgram.isEmpty());
     }
+    menu.addAction(mProblem_OpenSource);
     menu.addAction(mProblem_Properties);
     menu.exec(ui->lstProblemSet->mapToGlobal(pos));
 }

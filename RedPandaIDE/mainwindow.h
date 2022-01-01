@@ -668,6 +668,7 @@ private:
     QAction * mBookmark_Modify;
 
     //action for problem set
+    QAction * mProblem_OpenSource;
     QAction * mProblem_Properties;
 
    // QWidget interface
