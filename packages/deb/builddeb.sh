@@ -16,5 +16,7 @@ cp -r /opt/RedPandaIDE/*.desktop $TMP_FOLDER/usr/share/applications
 
 dpkg-deb --build /tmp/redpandaide
 
-mv $TMP_FOLDER/../redpandaide.deb redpana-ide-${version}_amd64.deb
+mv $TMP_FOLDER/../redpandaide.deb redpanda-ide-${version}_amd64.deb
+
+rm -rf $TMP_FOLDER
 
