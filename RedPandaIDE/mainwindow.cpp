@@ -265,6 +265,9 @@ MainWindow::MainWindow(QWidget *parent)
     connect(&mTcpServer,&QTcpServer::newConnection,
             this, &MainWindow::onNewProblemConnection);
 
+    connect(&mOJProblemModel, &OJProblemModel::dataChanged,
+            this, &MainWindow::updateProblemTitle);
+
     //files view
     ui->treeFiles->setModel(&mFileSystemModel);
     mFileSystemModel.setReadOnly(true);
@@ -2106,8 +2109,7 @@ void MainWindow::buildContextMenus()
             problem->url = dialog.url();
             problem->description = dialog.description();
             if (problem == mOJProblemModel.problem()) {
-                ui->lblProblem->setText(mOJProblemModel.getTitle());
-                ui->lblProblem->setToolTip(mOJProblemModel.getTooltip());
+                updateProblemTitle();
             }
         }
     });
@@ -3016,8 +3018,7 @@ void MainWindow::onProblemSetIndexChanged(const QModelIndex &current, const QMod
         ui->btnRemoveProblem->setEnabled(true);
         POJProblem problem = mOJProblemSetModel.problem(idx.row());
         mOJProblemModel.setProblem(problem);
-        ui->lblProblem->setText(mOJProblemModel.getTitle());
-        ui->lblProblem->setToolTip(mOJProblemModel.getTooltip());
+        updateProblemTitle();
         if (mOJProblemModel.count()>0) {
             ui->lstProblemCases->setCurrentIndex(mOJProblemModel.index(0,0));
         } else {
@@ -3062,9 +3063,7 @@ void MainWindow::onProblemNameChanged(int index)
 {
     QModelIndex idx = ui->lstProblemSet->currentIndex();
     if (idx.isValid() && index == idx.row()) {
-        POJProblem problem = mOJProblemSetModel.problem(idx.row());
-        ui->lblProblem->setText(mOJProblemModel.getTitle());
-        ui->lblProblem->setToolTip(mOJProblemModel.getTooltip());
+        updateProblemTitle();
     }
 }
 
@@ -3131,6 +3130,12 @@ void MainWindow::onNewProblemConnection()
         raise(); // for mac OS?
         activateWindow();
     }
+}
+
+void MainWindow::updateProblemTitle()
+{
+    ui->lblProblem->setText(mOJProblemModel.getTitle());
+    ui->lblProblem->setToolTip(mOJProblemModel.getTooltip());
 }
 
 void MainWindow::onEditorClosed()
@@ -3949,6 +3954,7 @@ void MainWindow::onRunPausingForFinish()
 
 void MainWindow::onRunProblemFinished()
 {
+    updateProblemTitle();
     ui->pbProblemCases->setVisible(false);
     updateCompileActions();
     updateAppTitle();
@@ -3987,7 +3993,7 @@ void MainWindow::onOJProblemCaseFinished(const QString& id, int current, int tot
     }
     ui->pbProblemCases->setMaximum(total);
     ui->pbProblemCases->setValue(current);
-    //    ui->lblProblem->setText(mOJProblemModel.getProblemTitle());
+    updateProblemTitle();
 }
 
 void MainWindow::onOJProblemCaseNewOutputLineGetted(const QString &, const QString &line)

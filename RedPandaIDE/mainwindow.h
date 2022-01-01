@@ -267,6 +267,7 @@ private slots:
     void onProblemCaseIndexChanged(const QModelIndex &current, const QModelIndex &previous);
     void onProblemNameChanged(int index);
     void onNewProblemConnection();
+    void updateProblemTitle();
     void onEditorClosed();
 
     void onShowInsertCodeSnippetMenu();

@@ -138,7 +138,10 @@ public:
         ACTION_PROBLEM_SET,
         ACTION_PROBLEM_PROPERTIES,
         ACTION_PROBLEM_EDIT_SOURCE,
-        ACTION_PROBLEM_RUN_CASES
+        ACTION_PROBLEM_RUN_CASES,
+        ACTION_PROBLEM_PASSED,
+        ACTION_PROBLEM_FALIED,
+        ACTION_PROBLEM_TESTING
     };
     explicit IconsManager(QObject *parent = nullptr);
 

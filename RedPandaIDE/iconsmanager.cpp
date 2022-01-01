@@ -92,23 +92,23 @@ void IconsManager::updateActionIcons(const QString iconSet, int size)
     mIconPixmaps.insert(ACTION_FILE_PROPERTIES, createSVGIcon(iconFolder+"01File-10FileProperties.svg",size,size));
     mIconPixmaps.insert(ACTION_FILE_LOCATE, createSVGIcon(iconFolder+"01File-11Locate.svg",size,size));
 
-    mIconPixmaps.insert(ACTION_PROJECT_NEW, createSVGIcon(iconFolder+"02Project_01New.svg",size,size));
-    mIconPixmaps.insert(ACTION_PROJECT_SAVE, createSVGIcon(iconFolder+"02Project_02Save.svg",size,size));
-    mIconPixmaps.insert(ACTION_PROJECT_CLOSE, createSVGIcon(iconFolder+"02Project_03Close.svg",size,size));
-    mIconPixmaps.insert(ACTION_PROJECT_NEW_FILE, createSVGIcon(iconFolder+"02Project_04NewFile.svg",size,size));
-    mIconPixmaps.insert(ACTION_PROJECT_ADD_FILE, createSVGIcon(iconFolder+"02Project_05AddFile.svg",size,size));
-    mIconPixmaps.insert(ACTION_PROJECT_REMOVE_FILE, createSVGIcon(iconFolder+"02Project_06RemoveFile.svg",size,size));
-    mIconPixmaps.insert(ACTION_PROJECT_PROPERTIES, createSVGIcon(iconFolder+"02Project_07Properties.svg",size,size));
-    mIconPixmaps.insert(ACTION_EDIT_UNDO, createSVGIcon(iconFolder+"03Edit_01Undo.svg",size,size));
-    mIconPixmaps.insert(ACTION_EDIT_REDO, createSVGIcon(iconFolder+"03Edit_02Redo.svg",size,size));
-    mIconPixmaps.insert(ACTION_EDIT_CUT, createSVGIcon(iconFolder+"03Edit_03Cut.svg",size,size));
-    mIconPixmaps.insert(ACTION_EDIT_COPY, createSVGIcon(iconFolder+"03Edit_04Copy.svg",size,size));
-    mIconPixmaps.insert(ACTION_EDIT_PASTE, createSVGIcon(iconFolder+"03Edit_05Paste.svg",size,size));
-    mIconPixmaps.insert(ACTION_EDIT_INDENT, createSVGIcon(iconFolder+"03Edit_06Indent.svg",size,size));
-    mIconPixmaps.insert(ACTION_EDIT_UNINDENT, createSVGIcon(iconFolder+"03Edit_07Unindent.svg",size,size));
-    mIconPixmaps.insert(ACTION_EDIT_SEARCH, createSVGIcon(iconFolder+"03Edit_08Search.svg",size,size));
-    mIconPixmaps.insert(ACTION_EDIT_REPLACE, createSVGIcon(iconFolder+"03Edit_09Replace.svg",size,size));
-    mIconPixmaps.insert(ACTION_EDIT_SEARCH_IN_FILES, createSVGIcon(iconFolder+"03Edit_10SearchInFiles.svg",size,size));
+    mIconPixmaps.insert(ACTION_PROJECT_NEW, createSVGIcon(iconFolder+"02Project-01New.svg",size,size));
+    mIconPixmaps.insert(ACTION_PROJECT_SAVE, createSVGIcon(iconFolder+"02Project-02Save.svg",size,size));
+    mIconPixmaps.insert(ACTION_PROJECT_CLOSE, createSVGIcon(iconFolder+"02Project-03Close.svg",size,size));
+    mIconPixmaps.insert(ACTION_PROJECT_NEW_FILE, createSVGIcon(iconFolder+"02Project-04NewFile.svg",size,size));
+    mIconPixmaps.insert(ACTION_PROJECT_ADD_FILE, createSVGIcon(iconFolder+"02Project-05AddFile.svg",size,size));
+    mIconPixmaps.insert(ACTION_PROJECT_REMOVE_FILE, createSVGIcon(iconFolder+"02Project-06RemoveFile.svg",size,size));
+    mIconPixmaps.insert(ACTION_PROJECT_PROPERTIES, createSVGIcon(iconFolder+"02Project-07Properties.svg",size,size));
+    mIconPixmaps.insert(ACTION_EDIT_UNDO, createSVGIcon(iconFolder+"03Edit-01Undo.svg",size,size));
+    mIconPixmaps.insert(ACTION_EDIT_REDO, createSVGIcon(iconFolder+"03Edit-02Redo.svg",size,size));
+    mIconPixmaps.insert(ACTION_EDIT_CUT, createSVGIcon(iconFolder+"03Edit-03Cut.svg",size,size));
+    mIconPixmaps.insert(ACTION_EDIT_COPY, createSVGIcon(iconFolder+"03Edit-04Copy.svg",size,size));
+    mIconPixmaps.insert(ACTION_EDIT_PASTE, createSVGIcon(iconFolder+"03Edit-05Paste.svg",size,size));
+    mIconPixmaps.insert(ACTION_EDIT_INDENT, createSVGIcon(iconFolder+"03Edit-06Indent.svg",size,size));
+    mIconPixmaps.insert(ACTION_EDIT_UNINDENT, createSVGIcon(iconFolder+"03Edit-07Unindent.svg",size,size));
+    mIconPixmaps.insert(ACTION_EDIT_SEARCH, createSVGIcon(iconFolder+"03Edit-08Search.svg",size,size));
+    mIconPixmaps.insert(ACTION_EDIT_REPLACE, createSVGIcon(iconFolder+"03Edit-09Replace.svg",size,size));
+    mIconPixmaps.insert(ACTION_EDIT_SEARCH_IN_FILES, createSVGIcon(iconFolder+"03Edit-10SearchInFiles.svg",size,size));
     mIconPixmaps.insert(ACTION_EDIT_SORT_BY_NAME, createSVGIcon(iconFolder+"03Edit-11SortByName.svg",size,size));
     mIconPixmaps.insert(ACTION_EDIT_SORT_BY_TYPE, createSVGIcon(iconFolder+"03Edit-12SortByType.svg",size,size));
     mIconPixmaps.insert(ACTION_EDIT_SHOW_INHERITED, createSVGIcon(iconFolder+"03Edit-13ShowInherited.svg",size,size));
@@ -146,11 +146,14 @@ void IconsManager::updateActionIcons(const QString iconSet, int size)
 
     mIconPixmaps.insert(ACTION_HELP_ABOUT, createSVGIcon(iconFolder+"07Help-01About.svg",size,size));
 
-    mIconPixmaps.insert(ACTION_PROBLEM_PROBLEM, createSVGIcon(iconFolder+"08Problem_01Problem.svg",size,size));
-    mIconPixmaps.insert(ACTION_PROBLEM_SET, createSVGIcon(iconFolder+"08Problem_02ProblemSet.svg",size,size));
-    mIconPixmaps.insert(ACTION_PROBLEM_PROPERTIES, createSVGIcon(iconFolder+"08Problem_03Properties.svg",size,size));
-    mIconPixmaps.insert(ACTION_PROBLEM_EDIT_SOURCE, createSVGIcon(iconFolder+"08Problem_04EditSource.svg",size,size));
-    mIconPixmaps.insert(ACTION_PROBLEM_RUN_CASES, createSVGIcon(iconFolder+"08Problem_05RunCases.svg",size,size));
+    mIconPixmaps.insert(ACTION_PROBLEM_PROBLEM, createSVGIcon(iconFolder+"08Problem-01Problem.svg",size,size));
+    mIconPixmaps.insert(ACTION_PROBLEM_SET, createSVGIcon(iconFolder+"08Problem-02ProblemSet.svg",size,size));
+    mIconPixmaps.insert(ACTION_PROBLEM_PROPERTIES, createSVGIcon(iconFolder+"08Problem-03Properties.svg",size,size));
+    mIconPixmaps.insert(ACTION_PROBLEM_EDIT_SOURCE, createSVGIcon(iconFolder+"08Problem-04EditSource.svg",size,size));
+    mIconPixmaps.insert(ACTION_PROBLEM_RUN_CASES, createSVGIcon(iconFolder+"08Problem-05RunCases.svg",size,size));
+    mIconPixmaps.insert(ACTION_PROBLEM_PASSED, createSVGIcon(iconFolder+"08Problem-06Correct.svg",size,size));
+    mIconPixmaps.insert(ACTION_PROBLEM_FALIED, createSVGIcon(iconFolder+"08Problem-07Wrong.svg",size,size));
+    mIconPixmaps.insert(ACTION_PROBLEM_TESTING, createSVGIcon(iconFolder+"08Problem-08Running.svg",size,size));
 
     emit actionIconsUpdated();
 

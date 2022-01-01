@@ -108,6 +108,11 @@
         <file>images/associations/rc.ico</file>
         <file>images/associations/template.ico</file>
         <file>images/dark-close.svg</file>
+        <file>images/newlook/editor/bookmark.svg</file>
+        <file>images/newlook/editor/breakpoint.svg</file>
+        <file>images/newlook/editor/currentline.svg</file>
+        <file>images/newlook/editor/syntaxerror.svg</file>
+        <file>images/newlook/editor/syntaxwarning.svg</file>
         <file>images/newlook/classparser/class.svg</file>
         <file>images/newlook/classparser/define.svg</file>
         <file>images/newlook/classparser/enum.svg</file>
@@ -127,11 +132,6 @@
         <file>images/newlook/classparser/var_private.svg</file>
         <file>images/newlook/classparser/var_protected.svg</file>
         <file>images/newlook/classparser/var_public.svg</file>
-        <file>images/newlook/editor/bookmark.svg</file>
-        <file>images/newlook/editor/breakpoint.svg</file>
-        <file>images/newlook/editor/currentline.svg</file>
-        <file>images/newlook/editor/syntaxerror.svg</file>
-        <file>images/newlook/editor/syntaxwarning.svg</file>
         <file>images/newlook/actions/00Misc-01Back.svg</file>
         <file>images/newlook/actions/00Misc-02Forward.svg</file>
         <file>images/newlook/actions/00Misc-03Add.svg</file>
@@ -155,23 +155,23 @@
         <file>images/newlook/actions/01File-09Open_Folder.svg</file>
         <file>images/newlook/actions/01File-10FileProperties.svg</file>
         <file>images/newlook/actions/01File-11Locate.svg</file>
-        <file>images/newlook/actions/02Project_01New.svg</file>
-        <file>images/newlook/actions/02Project_02Save.svg</file>
-        <file>images/newlook/actions/02Project_03Close.svg</file>
-        <file>images/newlook/actions/02Project_04NewFile.svg</file>
-        <file>images/newlook/actions/02Project_05AddFile.svg</file>
-        <file>images/newlook/actions/02Project_06RemoveFile.svg</file>
-        <file>images/newlook/actions/02Project_07Properties.svg</file>
-        <file>images/newlook/actions/03Edit_01Undo.svg</file>
-        <file>images/newlook/actions/03Edit_02Redo.svg</file>
-        <file>images/newlook/actions/03Edit_03Cut.svg</file>
-        <file>images/newlook/actions/03Edit_04Copy.svg</file>
-        <file>images/newlook/actions/03Edit_05Paste.svg</file>
-        <file>images/newlook/actions/03Edit_06Indent.svg</file>
-        <file>images/newlook/actions/03Edit_07Unindent.svg</file>
-        <file>images/newlook/actions/03Edit_08Search.svg</file>
-        <file>images/newlook/actions/03Edit_09Replace.svg</file>
-        <file>images/newlook/actions/03Edit_10SearchInFiles.svg</file>
+        <file>images/newlook/actions/02Project-01New.svg</file>
+        <file>images/newlook/actions/02Project-02Save.svg</file>
+        <file>images/newlook/actions/02Project-03Close.svg</file>
+        <file>images/newlook/actions/02Project-04NewFile.svg</file>
+        <file>images/newlook/actions/02Project-05AddFile.svg</file>
+        <file>images/newlook/actions/02Project-06RemoveFile.svg</file>
+        <file>images/newlook/actions/02Project-07Properties.svg</file>
+        <file>images/newlook/actions/03Edit-01Undo.svg</file>
+        <file>images/newlook/actions/03Edit-02Redo.svg</file>
+        <file>images/newlook/actions/03Edit-03Cut.svg</file>
+        <file>images/newlook/actions/03Edit-04Copy.svg</file>
+        <file>images/newlook/actions/03Edit-05Paste.svg</file>
+        <file>images/newlook/actions/03Edit-06Indent.svg</file>
+        <file>images/newlook/actions/03Edit-07Unindent.svg</file>
+        <file>images/newlook/actions/03Edit-08Search.svg</file>
+        <file>images/newlook/actions/03Edit-09Replace.svg</file>
+        <file>images/newlook/actions/03Edit-10SearchInFiles.svg</file>
         <file>images/newlook/actions/03Edit-11SortByName.svg</file>
         <file>images/newlook/actions/03Edit-12ShowInherited.svg</file>
         <file>images/newlook/actions/03Edit-12SortByType.svg</file>
@@ -197,6 +197,7 @@
         <file>images/newlook/actions/05Run-13RemoveWatch.svg</file>
         <file>images/newlook/actions/05Run-14StepOverInstruction.svg</file>
         <file>images/newlook/actions/05Run-15StepIntoInstruction.svg</file>
+        <file>images/newlook/actions/05Run-16Interrupt.svg</file>
         <file>images/newlook/actions/06View-01Maximum.svg</file>
         <file>images/newlook/actions/06View-02ClassBrowser.svg</file>
         <file>images/newlook/actions/06View-03Files.svg</file>
@@ -204,11 +205,13 @@
         <file>images/newlook/actions/06View-05Bookmark.svg</file>
         <file>images/newlook/actions/06View-06Todo.svg</file>
         <file>images/newlook/actions/07Help-01About.svg</file>
-        <file>images/newlook/actions/08Problem_01Problem.svg</file>
-        <file>images/newlook/actions/08Problem_02ProblemSet.svg</file>
-        <file>images/newlook/actions/08Problem_03Properties.svg</file>
-        <file>images/newlook/actions/08Problem_04EditSource.svg</file>
-        <file>images/newlook/actions/08Problem_05RunCases.svg</file>
-        <file>images/newlook/actions/05Run-16Interrupt.svg</file>
+        <file>images/newlook/actions/08Problem-01Problem.svg</file>
+        <file>images/newlook/actions/08Problem-02ProblemSet.svg</file>
+        <file>images/newlook/actions/08Problem-03Properties.svg</file>
+        <file>images/newlook/actions/08Problem-04EditSource.svg</file>
+        <file>images/newlook/actions/08Problem-05RunCases.svg</file>
+        <file>images/newlook/actions/08Problem-06Correct.svg</file>
+        <file>images/newlook/actions/08Problem-07Wrong.svg</file>
+        <file>images/newlook/actions/08Problem-08Running.svg</file>
     </qresource>
 </RCC>

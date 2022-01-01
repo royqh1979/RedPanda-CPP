@@ -1,5 +1,7 @@
 Red Panda C++ Version 0.12.6
  - fix: heartbeat for gdb server async command shouldn't disable actions
+ - fix: problem cases doesn't use svg icons
+ - fix: problem's title info not updated after running cases 
 
 Red Panda C++ Version 0.12.5
  - fix: compile error in linux

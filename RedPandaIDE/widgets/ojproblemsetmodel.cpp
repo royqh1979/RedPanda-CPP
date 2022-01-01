@@ -342,11 +342,11 @@ QVariant OJProblemModel::data(const QModelIndex &index, int role) const
     } else if (role == Qt::DecorationRole) {
         switch (mProblem->cases[index.row()]->testState) {
         case ProblemCaseTestState::Failed:
-            return QIcon(":/icons/images/newlook24/008-close.png");
+            return pIconsManager->getIcon(IconsManager::ACTION_PROBLEM_FALIED);
         case ProblemCaseTestState::Passed:
-            return QIcon(":/icons/images/newlook24/007-bughlp.png");
+            return pIconsManager->getIcon(IconsManager::ACTION_PROBLEM_PASSED);
         case ProblemCaseTestState::Testing:
-            return QIcon(":/icons/images/newlook24/052-next.png");
+            return pIconsManager->getIcon(IconsManager::ACTION_PROBLEM_TESTING);
         default:
             return QVariant();
         }
