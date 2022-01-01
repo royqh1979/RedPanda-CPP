@@ -1,3 +1,6 @@
+Red Panda C++ Version 0.12.6
+ - fix: heartbeat for gdb server async command shouldn't disable actions
+
 Red Panda C++ Version 0.12.5
  - fix: compile error in linux
  - fix: can't receive gdb async output for commands

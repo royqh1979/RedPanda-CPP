@@ -34,6 +34,7 @@
 
 enum class DebugCommandSource {
     Console,
+    HeartBeat,
     Other
 };
 

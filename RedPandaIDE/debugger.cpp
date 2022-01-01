@@ -930,23 +930,25 @@ void DebugReader::runNextCmd()
 {
     QMutexLocker locker(&mCmdQueueMutex);
 
-    PDebugCommand lastCmd = mCurrentCmd;
     if (mCurrentCmd) {
+        DebugCommandSource commandSource = mCurrentCmd->source;
         mCurrentCmd=nullptr;
-        emit cmdFinished();
+        if (commandSource!=DebugCommandSource::HeartBeat)
+            emit cmdFinished();
     }
     if (mCmdQueue.isEmpty()) {
         if (pSettings->debugger().useGDBServer() && mInferiorRunning && !mAsyncUpdated) {
             mAsyncUpdated = true;
-            QTimer::singleShot(1000,this,&DebugReader::asyncUpdate);
+            QTimer::singleShot(50,this,&DebugReader::asyncUpdate);
         }
         return;
     }
 
     PDebugCommand pCmd = mCmdQueue.dequeue();
     mCmdRunning = true;
-    mCurrentCmd = pCmd;    
-    emit cmdStarted();
+    mCurrentCmd = pCmd;
+    if (pCmd->source!=DebugCommandSource::HeartBeat)
+        emit cmdStarted();
 
     QByteArray s;
     QByteArray params;
@@ -1241,7 +1243,7 @@ void DebugReader::asyncUpdate()
 {
     QMutexLocker locker(&mCmdQueueMutex);
     if (mCmdQueue.isEmpty())
-        postCommand("-var-update"," --all-values *",DebugCommandSource::Other);
+        postCommand("-var-update"," --all-values *",DebugCommandSource::HeartBeat);
     mAsyncUpdated = false;
 }
 
