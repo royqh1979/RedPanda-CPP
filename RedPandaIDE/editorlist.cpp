@@ -53,6 +53,7 @@ Editor* EditorList::newEditor(const QString& filename, const QByteArray& encodin
         pMainWindow->fileSystemWatcher()->addPath(filename);
     }
     Editor * e = new Editor(parentPageControl,filename,encoding,inProject,newFile,parentPageControl);
+    connect(e, &Editor::renamed, this, &EditorList::onEditorRenamed);
     updateLayout();
     return e;
 }
@@ -98,6 +99,11 @@ void EditorList::showLayout(LayoutShowType layout)
         mLeftPageWidget->setVisible(true);
         mRightPageWidget->setVisible(true);
     }
+}
+
+void EditorList::onEditorRenamed(const QString &oldFilename, const QString &newFilename, bool firstSave)
+{
+    emit editorRenamed(oldFilename, newFilename, firstSave);
 }
 
 QTabWidget *EditorList::rightPageWidget() const

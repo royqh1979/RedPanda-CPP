@@ -23,6 +23,7 @@
 #include <QJsonObject>
 #include "../utils.h"
 #include "../iconsmanager.h"
+#include "../systemconsts.h"
 
 OJProblemSetModel::OJProblemSetModel(QObject *parent) : QAbstractListModel(parent)
 {
@@ -104,7 +105,8 @@ void OJProblemSetModel::saveToFile(const QString &fileName)
             problemObj["name"]=problem->name;
             problemObj["url"]=problem->url;
             problemObj["description"]=problem->description;
-            problemObj["answer_program"] = problem->answerProgram;
+            if (fileExists(problem->answerProgram))
+                problemObj["answer_program"] = problem->answerProgram;
             QJsonArray cases;
             foreach (const POJProblemCase& problemCase, problem->cases) {
                 QJsonObject caseObj;
@@ -167,6 +169,15 @@ void OJProblemSetModel::loadFromFile(const QString &fileName)
     } else {
         throw FileError(QObject::tr("Can't open file '%1' for read.")
                         .arg(fileName));
+    }
+}
+
+void OJProblemSetModel::updateProblemAnswerFilename(const QString &oldFilename, const QString &newFilename)
+{
+    foreach (POJProblem problem, mProblemSet.problems) {
+        if (QString::compare(problem->answerProgram,oldFilename,PATH_SENSITIVITY)==0) {
+            problem->answerProgram = newFilename;
+        }
     }
 }
 

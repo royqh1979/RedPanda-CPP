@@ -249,6 +249,7 @@ private:
     void newProjectUnitFile();
 
 private slots:
+    void onEditorRenamed(const QString& oldFilename, const QString& newFilename, bool firstSave);
     void onAutoSaveTimeout();
     void onFileChanged(const QString& path);
 

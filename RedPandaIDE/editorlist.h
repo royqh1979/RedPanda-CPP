@@ -78,13 +78,14 @@ public:
 
 signals:
     void editorClosed();
+    void editorRenamed(const QString& oldFilename, const QString& newFilename, bool firstSave);
 
 private:
     QTabWidget* getNewEditorPageControl() const;
     QTabWidget* getFocusedPageControl() const;
     void showLayout(LayoutShowType layout);
-
-
+private slots:
+    void onEditorRenamed(const QString& oldFilename, const QString& newFilename, bool firstSave);
 private:
     LayoutShowType mLayout;
     QTabWidget *mLeftPageWidget;

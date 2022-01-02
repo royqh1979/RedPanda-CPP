@@ -58,6 +58,13 @@ struct WatchVar {
     WatchVar * parent; //use raw point to prevent circular-reference
 };
 
+enum class BreakpointType {
+    Breakpoint,
+    Watchpoint,
+    ReadWatchpoint,
+    WriteWatchpoint
+};
+
 struct Breakpoint {
     int number; // breakpoint number
     QString type; // type of the breakpoint

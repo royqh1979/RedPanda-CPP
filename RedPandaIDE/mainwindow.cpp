@@ -112,6 +112,8 @@ MainWindow::MainWindow(QWidget *parent)
                                  ui->EditorTabsRight,
                                  ui->splitterEditorPanel,
                                  ui->EditorPanel);
+    connect(mEditorList, &EditorList::editorRenamed,
+            this, &MainWindow::onEditorRenamed);
     connect(mEditorList, &EditorList::editorClosed,
                this, &MainWindow::onEditorClosed);
     mProject = nullptr;
@@ -2963,8 +2965,6 @@ void MainWindow::onLstProblemSetContextMenu(const QPoint &pos)
         menuSetAnswer->setTitle(tr("Set answer to..."));
         for (int i=0;i<mEditorList->pageCount();i++) {
             Editor *e = (*mEditorList)[i];
-            if (e->isNew())
-                continue;
             QString filename = e->filename();
             QAction* action = new QAction(filename,menuSetAnswer);
             action->setCheckable(true);
@@ -3038,6 +3038,11 @@ void MainWindow::onProblemSetIndexChanged(const QModelIndex &current, const QMod
     } else {
         ui->btnRemoveProblem->setEnabled(true);
         POJProblem problem = mOJProblemSetModel.problem(idx.row());
+        if (problem && !problem->answerProgram.isEmpty()) {
+            Editor * editor =editorList()->getEditorByFilename(problem->answerProgram);
+            if (editor)
+                editor->activate();
+        }
         mOJProblemModel.setProblem(problem);
         updateProblemTitle();
         if (mOJProblemModel.count()>0) {
@@ -5318,6 +5323,13 @@ void MainWindow::newProjectUnitFile()
     //editor->setModified(true);
     editor->activate();
 }
+
+void MainWindow::onEditorRenamed(const QString &oldFilename, const QString &newFilename, bool firstSave)
+{
+    if (firstSave)
+        mOJProblemSetModel.updateProblemAnswerFilename(oldFilename, newFilename);
+}
+
 void MainWindow::on_EditorTabsLeft_currentChanged(int)
 {
     Editor * editor = mEditorList->getEditor(-1,ui->EditorTabsLeft);
@@ -6086,4 +6098,3 @@ void MainWindow::on_actionInterrupt_triggered()
         mDebugger->interrupt();
     }
 }
-

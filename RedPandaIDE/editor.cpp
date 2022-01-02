@@ -276,6 +276,8 @@ bool Editor::save(bool force, bool doReparse) {
 
 bool Editor::saveAs(const QString &name, bool fromProject){
     QString newName = name;
+    QString oldName = mFilename;
+    bool firstSave = isNew();
     if (name.isEmpty()) {
         QString selectedFileFilter;
         QString defaultExt;
@@ -376,6 +378,8 @@ bool Editor::saveAs(const QString &name, bool fromProject){
         setReadOnly(false);
         updateCaption();
     }
+
+    emit renamed(oldName, newName , firstSave);
     return true;
 }
 

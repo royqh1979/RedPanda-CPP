@@ -66,6 +66,8 @@ public:
     void removeAllProblems();
     void saveToFile(const QString& fileName);
     void loadFromFile(const QString& fileName);
+    void updateProblemAnswerFilename(const QString& oldFilename, const QString& newFilename);
+
 signals:
     void problemNameChanged(int index);
 

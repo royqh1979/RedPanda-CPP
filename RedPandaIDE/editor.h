@@ -221,7 +221,8 @@ public:
     const PCppParser &parser();
 
     void tab() override;
-
+signals:
+    void renamed(const QString& oldName, const QString& newName, bool firstSave);
 private slots:
     void onStatusChanged(SynStatusChanges changes);
     void onGutterClicked(Qt::MouseButton button, int x, int y, int line);
