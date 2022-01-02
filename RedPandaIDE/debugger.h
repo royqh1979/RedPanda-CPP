@@ -73,6 +73,7 @@ struct Breakpoint {
     QString filename;
     QString condition;
     bool enabled;
+    BreakpointType breakpointType;
 };
 
 using PBreakpoint = std::shared_ptr<Breakpoint>;

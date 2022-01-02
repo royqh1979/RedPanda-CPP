@@ -506,7 +506,7 @@
         <enum>QTabWidget::South</enum>
        </property>
        <property name="currentIndex">
-        <number>6</number>
+        <number>2</number>
        </property>
        <property name="iconSize">
         <size>
@@ -702,7 +702,7 @@
              <enum>QTabWidget::North</enum>
             </property>
             <property name="currentIndex">
-             <number>0</number>
+             <number>2</number>
             </property>
             <widget class="QWidget" name="tabDebugConsole">
              <attribute name="title">

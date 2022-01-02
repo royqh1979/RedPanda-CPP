@@ -261,6 +261,7 @@ void Debugger::addBreakpoint(int line, const QString &filename)
     bp->filename = filename;
     bp->condition = "";
     bp->enabled = true;
+    bp->breakpointType = BreakpointType::Breakpoint;
     mBreakpointModel->addBreakpoint(bp);
     if (mExecuting) {
         sendBreakpointCommand(bp);
@@ -1463,7 +1464,7 @@ QVariant BreakpointModel::headerData(int section, Qt::Orientation orientation, i
     if (orientation == Qt::Horizontal && role ==  Qt::DisplayRole) {
         switch(section) {
         case 0:
-            return tr("Filename");
+            return tr("Type");
         case 1:
             return tr("Line");
         case 2:
@@ -1533,6 +1534,7 @@ void BreakpointModel::save(const QString &filename)
             obj["line"]=breakpoint->line;
             obj["condition"]=breakpoint->condition;
             obj["enabled"]=breakpoint->enabled;
+            obj["breakpoint_type"] = static_cast<int>(breakpoint->breakpointType);
             array.append(obj);
         }
         QJsonDocument doc;
@@ -1572,6 +1574,7 @@ void BreakpointModel::load(const QString &filename)
             breakpoint->line = obj["line"].toInt();
             breakpoint->condition = obj["condition"].toString();
             breakpoint->enabled = obj["enabled"].toBool();
+            breakpoint->breakpointType = static_cast<BreakpointType>(obj["breakpoint_type"].toInt());
 
             addBreakpoint(breakpoint);
         }
