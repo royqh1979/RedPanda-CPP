@@ -3277,7 +3277,7 @@ Are you really want to continue?</source>
     <message>
         <location filename="mainwindow.ui" line="814"/>
         <source>Locals</source>
-        <translation>本地变量</translation>
+        <translation>局部变量</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="893"/>
