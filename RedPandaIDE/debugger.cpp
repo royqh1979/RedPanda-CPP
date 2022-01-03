@@ -1464,7 +1464,7 @@ QVariant BreakpointModel::headerData(int section, Qt::Orientation orientation, i
     if (orientation == Qt::Horizontal && role ==  Qt::DisplayRole) {
         switch(section) {
         case 0:
-            return tr("Type");
+            return tr("Filename");
         case 1:
             return tr("Line");
         case 2:

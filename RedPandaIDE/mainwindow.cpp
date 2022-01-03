@@ -611,6 +611,7 @@ void MainWindow::applySettings()
         if (idxProblemSet>=0)
             ui->tabInfos->removeTab(idxProblemSet);
     }
+    ui->actionInterrupt->setVisible(pSettings->debugger().useGDBServer());
     //icon sets for editors
     updateEditorSettings();
     updateDebuggerSettings();
@@ -3338,13 +3339,13 @@ void MainWindow::disableDebugActions()
 
 void MainWindow::enableDebugActions()
 {
-    ui->actionInterrupt->setEnabled(mDebugger->inferiorRunning());
+    if (pSettings->debugger().useGDBServer())
+        ui->actionInterrupt->setEnabled(mDebugger->inferiorRunning());
     ui->actionStep_Into->setEnabled(!mDebugger->inferiorRunning());
     ui->actionStep_Over->setEnabled(!mDebugger->inferiorRunning());
     ui->actionStep_Out->setEnabled(!mDebugger->inferiorRunning());
     ui->actionRun_To_Cursor->setEnabled(!mDebugger->inferiorRunning());
-    if (pSettings->debugger().useGDBServer())
-        ui->actionContinue->setEnabled(!mDebugger->inferiorRunning());
+    ui->actionContinue->setEnabled(!mDebugger->inferiorRunning());
     ui->cbEvaluate->setEnabled(!mDebugger->inferiorRunning());
     ui->cbMemoryAddress->setEnabled(!mDebugger->inferiorRunning());
     if (mCPUDialog) {

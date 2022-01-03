@@ -3,6 +3,7 @@ Red Panda C++ Version 0.12.6
  - fix: problem cases doesn't use svg icons
  - fix: problem's title info not updated after running cases 
  - enhancement: open the corresponding source file from problem's context menu
+ - fix: debugger's "continue" button not correctly disabled
 
 Red Panda C++ Version 0.12.5
  - fix: compile error in linux
