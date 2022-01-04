@@ -1030,23 +1030,23 @@ QStringList splitProcessCommand(const QString &cmd)
             case SplitProcessCommandQuoteType::Double:
                 quoteType = SplitProcessCommandQuoteType::None;
                 break;
-            case SplitProcessCommandQuoteType::Single:
-                break;
+            default:
+                current+=cmd[i];
             }
-            current+=cmd[i];
+            i++;
             break;
         case '\'':
             switch(quoteType) {
             case SplitProcessCommandQuoteType::None:
                 quoteType = SplitProcessCommandQuoteType::Single;
                 break;
-            case SplitProcessCommandQuoteType::Double:
-                break;
             case SplitProcessCommandQuoteType::Single:
                 quoteType = SplitProcessCommandQuoteType::None;
                 break;
+            default:
+                current+=cmd[i];
             }
-            current+=cmd[i];
+            i++;
             break;
         case '\\':
             current += cmd[i];
