@@ -86,13 +86,14 @@ static QString uniqueName(const QString &key, const QStyleOption *option, const 
     return tmp;
 }
 
-Q_WIDGETS_EXPORT qreal dpi(const QStyleOption *option);
+static qreal calcDpi() {
+    return desktopDpi();
+}
 
-Q_WIDGETS_EXPORT qreal dpiScaled(qreal value, qreal dpi);
+static qreal calcDpiScaled(qreal value, qreal dpi) {
+    return value*96/dpi;
+}
 
-Q_WIDGETS_EXPORT qreal dpiScaled(qreal value, const QPaintDevice *device);
-
-Q_WIDGETS_EXPORT qreal dpiScaled(qreal value, const QStyleOption *option);
 }
 
 
@@ -574,13 +575,15 @@ void DarkFusionStyle::drawPrimitive(PrimitiveElement elem, const QStyleOption *o
                 painter->drawRect(rect.adjusted(checkMarkPadding, checkMarkPadding, -checkMarkPadding, -checkMarkPadding));
 
             } else if (checkbox->state & State_On) {
-                const qreal dpi = QStyleHelper::dpi(option);
-                qreal penWidth = QStyleHelper::dpiScaled(1.5, dpi);
+
+                const qreal dpi = QStyleHelper::calcDpi();
+
+                qreal penWidth = QStyleHelper::calcDpiScaled(1.5, dpi);
                 penWidth = qMax<qreal>(penWidth, 0.13 * rect.height());
                 penWidth = qMin<qreal>(penWidth, 0.20 * rect.height());
                 QPen checkPen = QPen(checkMarkColor, penWidth);
                 checkMarkColor.setAlpha(210);
-                painter->translate(QStyleHelper::dpiScaled(-0.8, dpi), QStyleHelper::dpiScaled(0.5, dpi));
+                painter->translate(QStyleHelper::calcDpiScaled(-0.8, dpi), QStyleHelper::calcDpiScaled(0.5, dpi));
                 painter->setPen(checkPen);
                 painter->setBrush(Qt::NoBrush);
 
@@ -683,7 +686,7 @@ void DarkFusionStyle::drawPrimitive(PrimitiveElement elem, const QStyleOption *o
         if (isFlat && !isDown) {
             if (isDefault) {
                 r = option->rect.adjusted(0, 1, 0, -1);
-                painter->setPen(QPen(QColorConstants::Svg::lightgray));
+                painter->setPen(QPen(Qt::lightGray));
                 const QLine lines[4] = {
                     QLine(QPoint(r.left() + 2, r.top()),
                     QPoint(r.right() - 2, r.top())),
@@ -854,7 +857,8 @@ void DarkFusionStyle::drawControl(ControlElement element, const QStyleOption *op
             if (menuItem->menuItemType == QStyleOptionMenuItem::Separator) {
                 painter->save();
                 int w = 0;
-                const int margin = int(QStyleHelper::dpiScaled(5, option));
+                qreal dpi = QStyleHelper::calcDpi();
+                const int margin = int(QStyleHelper::calcDpiScaled(5, dpi));
                 if (!menuItem->text.isEmpty()) {
                     painter->setFont(menuItem->font);
                     proxy()->drawItemText(painter, menuItem->rect.adjusted(margin, 0, -margin, 0), Qt::AlignLeft | Qt::AlignVCenter,

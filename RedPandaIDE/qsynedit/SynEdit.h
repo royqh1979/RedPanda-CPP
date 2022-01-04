@@ -212,7 +212,7 @@ public:
     QString wordAtRowCol(const BufferCoord& XY);
 
     int charColumns(QChar ch) const;
-    double dpiFactor() const;
+
     bool isPointInSelection(const BufferCoord& Value) const;
     BufferCoord nextWordPos();
     BufferCoord nextWordPosEx(const BufferCoord& XY);

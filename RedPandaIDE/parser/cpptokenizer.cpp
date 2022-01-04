@@ -67,7 +67,7 @@ void CppTokenizer::dumpTokens(const QString &fileName)
     if (file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
         QTextStream stream(&file);
         foreach (const PToken& token,mTokenList) {
-            stream<<QString("%1,%2").arg(token->line).arg(token->text)<<Qt::endl;
+            stream<<QString("%1,%2").arg(token->line).arg(token->text)<<endl;
         }
     }
 }

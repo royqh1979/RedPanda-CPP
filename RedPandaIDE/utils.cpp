@@ -300,7 +300,7 @@ void splitStringArguments(const QString &arguments, QStringList &argumentList)
     }
 }
 
-bool programHasConsole(const QString &filename)
+bool programHasConsole(const QString & filename)
 {
 #ifdef Q_OS_WIN
     bool result = false;
@@ -582,7 +582,7 @@ void stringsToFile(const QStringList &list, const QString &fileName)
     if (file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
         QTextStream stream(&file);
         for (QString s:list) {
-            stream<<s<<Qt::endl;
+            stream<<s<<endl;
         }
     }
 }
@@ -686,7 +686,7 @@ void logToFile(const QString &s, const QString &filename, bool append)
     }
     if (file.open(mode)) {
         QTextStream ts(&file);
-        ts<<s<<Qt::endl;
+        ts<<s<<endl;
     }
 }
 
@@ -997,4 +997,76 @@ float pointToPixel(float point)
 float pixelToPoint(float pixel)
 {
     return pixel * 72 / qApp->desktop()->logicalDpiY();
+}
+
+
+QStringList splitProcessCommand(const QString &cmd)
+{
+    QStringList result;
+    SplitProcessCommandQuoteType quoteType = SplitProcessCommandQuoteType::None;
+    int i=0;
+    QString current;
+    while (i<cmd.length()) {
+        switch (cmd[i].unicode()) {
+        case ' ':
+        case '\t':
+        case '\r':
+        case '\n':
+            if (quoteType == SplitProcessCommandQuoteType::None) {
+                if (!current.isEmpty()) {
+                    result.append(current);
+                }
+                current = "";
+            } else {
+                current += cmd[i];
+            }
+            i++;
+            break;
+        case '\"':
+            switch(quoteType) {
+            case SplitProcessCommandQuoteType::None:
+                quoteType = SplitProcessCommandQuoteType::Double;
+                break;
+            case SplitProcessCommandQuoteType::Double:
+                quoteType = SplitProcessCommandQuoteType::None;
+                break;
+            case SplitProcessCommandQuoteType::Single:
+                break;
+            }
+            current+=cmd[i];
+            break;
+        case '\'':
+            switch(quoteType) {
+            case SplitProcessCommandQuoteType::None:
+                quoteType = SplitProcessCommandQuoteType::Single;
+                break;
+            case SplitProcessCommandQuoteType::Double:
+                break;
+            case SplitProcessCommandQuoteType::Single:
+                quoteType = SplitProcessCommandQuoteType::None;
+                break;
+            }
+            current+=cmd[i];
+            break;
+        case '\\':
+            current += cmd[i];
+            i++;
+            if  (i<cmd.length()) {
+                current += cmd[i];
+                i++;
+            }
+            break;
+        default:
+            current += cmd[i];
+            i++;
+        }
+    }
+    if (!current.isEmpty())
+        result.append(current);
+    return result;
+}
+
+float desktopDpi()
+{
+    return qApp->desktop()->logicalDpiY();
 }

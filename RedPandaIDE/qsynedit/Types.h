@@ -20,6 +20,7 @@
 #include <QIcon>
 #include <QList>
 #include <QFlags>
+#include <memory>
 
 enum class SynSelectionMode {smNormal, smLine, smColumn};
 

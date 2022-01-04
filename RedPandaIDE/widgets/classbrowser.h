@@ -73,7 +73,7 @@ private:
     PCppParser mParser;
     bool mUpdating;
     int mUpdateCount;
-    QRecursiveMutex mMutex;
+    QMutex mMutex;
     QString mCurrentFile;
     std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > mColors;
 

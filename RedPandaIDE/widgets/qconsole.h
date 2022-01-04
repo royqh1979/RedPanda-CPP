@@ -19,6 +19,7 @@
 
 #include <QAbstractScrollArea>
 #include <QVector>
+#include <memory>
 
 struct ConsoleLine {
     QString text;

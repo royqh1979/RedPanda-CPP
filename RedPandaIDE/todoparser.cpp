@@ -21,7 +21,8 @@
 #include "HighlighterManager.h"
 #include "qsynedit/Constants.h"
 
-TodoParser::TodoParser(QObject *parent) : QObject(parent)
+TodoParser::TodoParser(QObject *parent) : QObject(parent),
+    mMutex(QMutex::Recursive)
 {
     mThread = nullptr;
 }

@@ -20,6 +20,7 @@
 #include <QAbstractItemModel>
 #include <QDialog>
 #include <QStandardItemModel>
+#include <memory>
 
 class SettingsWidget;
 namespace Ui {

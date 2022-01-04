@@ -103,7 +103,7 @@ void ProjectGeneralWidget::doSave()
     project->options().useGPP = ui->cbDefaultCpp->isChecked();
     project->options().supportXPThemes = ui->cbSupportXPTheme->isChecked();
     if (mIconPath.isEmpty()
-            || ui->lblICon->pixmap(Qt::ReturnByValue).isNull()) {
+            || !ui->lblICon->pixmap() || ui->lblICon->pixmap()->isNull()) {
         project->options().icon = "";
     } else {
         QString iconPath = changeFileExt(project->filename(),"ico");

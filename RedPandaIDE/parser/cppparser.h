@@ -20,6 +20,7 @@
 #include <QMutex>
 #include <QObject>
 #include <QThread>
+#include <QVector>
 #include "statementmodel.h"
 #include "cpptokenizer.h"
 #include "cpppreprocessor.h"
@@ -465,7 +466,7 @@ private:
     QSet<QString> mInlineNamespaces;
     //fRemovedStatements: THashedStringList; //THashedStringList<String,PRemovedStatements>
 
-    QRecursiveMutex mMutex;
+    QMutex mMutex;
     GetFileStreamCallBack mOnGetFileStream;
     QMap<QString,SkipType> mCppKeywords;
     QSet<QString> mCppTypeKeywords;

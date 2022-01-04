@@ -557,7 +557,7 @@ void Compiler::runCommand(const QString &cmd, const QString  &arguments, const Q
     }
     env.insert("LANG","en");
     process.setProcessEnvironment(env);
-    process.setArguments(QProcess::splitCommand(arguments));
+    process.setArguments(splitProcessCommand(arguments));
     process.setWorkingDirectory(workingDir);
 
     process.connect(&process, &QProcess::errorOccurred,

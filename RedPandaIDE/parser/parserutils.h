@@ -19,6 +19,7 @@
 #include <QMap>
 #include <QObject>
 #include <QSet>
+#include <QVector>
 #include <memory>
 
 struct CodeSnippet {

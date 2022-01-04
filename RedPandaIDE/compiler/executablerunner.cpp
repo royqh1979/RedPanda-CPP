@@ -83,7 +83,7 @@ void ExecutableRunner::run()
 
     mProcess = std::make_shared<QProcess>();
     mProcess->setProgram(mFilename);
-    mProcess->setArguments(QProcess::splitCommand(mArguments));
+    mProcess->setArguments(splitProcessCommand(mArguments));
     mProcess->setWorkingDirectory(mWorkDir);
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
     QString path = env.value("PATH");

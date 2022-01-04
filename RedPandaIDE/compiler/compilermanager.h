@@ -78,9 +78,9 @@ private:
     int mSyntaxCheckIssueCount;
     Compiler* mBackgroundSyntaxChecker;
     Runner* mRunner;
-    QRecursiveMutex mCompileMutex;
-    QRecursiveMutex mBackgroundSyntaxCheckMutex;
-    QRecursiveMutex mRunnerMutex;
+    QMutex mCompileMutex;
+    QMutex mBackgroundSyntaxCheckMutex;
+    QMutex mRunnerMutex;
 };
 
 class CompileError : public BaseError {

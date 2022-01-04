@@ -25,7 +25,7 @@ ColorEdit::ColorEdit(QWidget *parent):QFrame(parent)
 {
     setFrameStyle(QFrame::Panel);
     setLineWidth(1);
-    mColor = QColorConstants::Black;
+    mColor = Qt::black;
 }
 
 QColor ColorEdit::color()

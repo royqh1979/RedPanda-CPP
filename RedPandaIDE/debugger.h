@@ -437,7 +437,7 @@ private slots:
 private:
     Debugger *mDebugger;
     QString mDebuggerPath;
-    QRecursiveMutex mCmdQueueMutex;
+    QMutex mCmdQueueMutex;
     QSemaphore mStartSemaphore;
     QQueue<PDebugCommand> mCmdQueue;
     bool mErrorOccured;

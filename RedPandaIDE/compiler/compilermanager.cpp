@@ -31,7 +31,11 @@ enum RunProgramFlag {
     RPF_REDIRECT_INPUT =    0x0002
 };
 
-CompilerManager::CompilerManager(QObject *parent) : QObject(parent)
+CompilerManager::CompilerManager(QObject *parent) : QObject(parent),
+    mCompileMutex(QMutex::Recursive),
+    mBackgroundSyntaxCheckMutex(QMutex::Recursive),
+    mRunnerMutex(QMutex::Recursive)
+
 {
     mCompiler = nullptr;
     mBackgroundSyntaxChecker = nullptr;
