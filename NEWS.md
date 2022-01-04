@@ -4,6 +4,8 @@ Red Panda C++ Version 0.12.6
  - fix: problem's title info not updated after running cases 
  - enhancement: open the corresponding source file from problem's context menu
  - fix: debugger's "continue" button not correctly disabled
+ - change: use libicu instead of ConvertUTF.c under Linux
+ - change depends to qt 5.12 instead of 5.15
 
 Red Panda C++ Version 0.12.5
  - fix: compile error in linux
