@@ -17,7 +17,6 @@ gcc {
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    ConvertUTF.c \
     HighlighterManager.cpp \
     autolinkmanager.cpp \
     caretlist.cpp \
@@ -140,7 +139,6 @@ SOURCES += \
     widgets/signalmessagedialog.cpp
 
 HEADERS += \
-    ConvertUTF.h \
     HighlighterManager.h \
     SimpleIni.h \
     autolinkmanager.h \
