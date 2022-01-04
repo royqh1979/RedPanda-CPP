@@ -117,7 +117,7 @@ private:
     QSet<QString> mAddedStatements;
     QString mMemberPhrase;
     QString mMemberOperator;
-    QRecursiveMutex mMutex;
+    QMutex mMutex;
     std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > mColors;
 
     PCppParser mParser;

@@ -1162,7 +1162,7 @@ void Settings::Editor::doLoad()
     mTabToSpaces = boolValue("tab_to_spaces",false);
     mTabWidth = intValue("tab_width",4);
     mShowIndentLines = boolValue("show_indent_lines",true);
-    mIndentLineColor = colorValue("indent_line_color",QColorConstants::Svg::silver);
+    mIndentLineColor = colorValue("indent_line_color",Qt::lightGray);
     mfillIndents = boolValue("fill_indents", false);
     // caret
     mEnhanceHomeKey = boolValue("enhance_home_key", true);
@@ -1171,7 +1171,7 @@ void Settings::Editor::doLoad()
     mCaretForInsert = static_cast<SynEditCaretType>( intValue("caret_for_insert",static_cast<int>(SynEditCaretType::ctVerticalLine)));
     mCaretForOverwrite = static_cast<SynEditCaretType>( intValue("caret_for_overwrite",static_cast<int>(SynEditCaretType::ctBlock)));
     mCaretUseTextColor = boolValue("caret_use_text_color",true);
-    mCaretColor = colorValue("caret_color",QColorConstants::Svg::yellow);
+    mCaretColor = colorValue("caret_color",Qt::yellow);
 
     //highlight
     mHighlightMathingBraces = boolValue("highlight_matching_braces",true);
@@ -1189,7 +1189,7 @@ void Settings::Editor::doLoad()
     //right edge
     mShowRightEdgeLine = boolValue("show_right_edge_line",false);
     mRightEdgeWidth = intValue("right_edge_width",80);
-    mRightEdgeLineColor = colorValue("right_edge_line_color",QColorConstants::Svg::yellow);
+    mRightEdgeLineColor = colorValue("right_edge_line_color",Qt::yellow);
 
     //Font
 #ifdef Q_OS_WIN

@@ -19,6 +19,7 @@
 #include <QLabel>
 #include <QToolButton>
 #include <QWidget>
+#include <memory>
 
 struct FunctionInfo {
     QString name;

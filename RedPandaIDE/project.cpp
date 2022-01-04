@@ -1145,7 +1145,7 @@ void Project::checkProjectFileForUpdate(SimpleIni &ini)
     if (!oldRes.isEmpty()) {
         QFile::copy(mFilename,mFilename+".bak");
         QStringList sl;
-        sl = oldRes.split(';',Qt::SkipEmptyParts);
+        sl = oldRes.split(';',QString::SkipEmptyParts);
         for (int i=0;i<sl.count();i++){
             const QString& s = sl[i];
             QByteArray groupName = toByteArray(QString("Unit%1").arg(uCount+i));
@@ -1323,7 +1323,7 @@ void Project::loadLayout()
     int topLeft = layIni.GetLongValue("Editors","Focused",1);
     //TopRight := layIni.ReadInteger('Editors', 'FocusedRight', -1);
     QString temp =layIni.GetValue("Editors","Order", "");
-    QStringList sl = temp.split(",",Qt::SkipEmptyParts);
+    QStringList sl = temp.split(",",QString::SkipEmptyParts);
 
     foreach (const QString& s,sl) {
         bool ok;
@@ -1362,12 +1362,12 @@ void Project::loadOptions(SimpleIni& ini)
         mOptions.compilerCmd = fromByteArray(ini.GetValue("Project", "Compiler", ""));
         mOptions.cppCompilerCmd = fromByteArray(ini.GetValue("Project", "CppCompiler", ""));
         mOptions.linkerCmd = fromByteArray(ini.GetValue("Project", "Linker", ""));
-        mOptions.objFiles = fromByteArray(ini.GetValue("Project", "ObjFiles", "")).split(";",Qt::SkipEmptyParts);
-        mOptions.libs = fromByteArray(ini.GetValue("Project", "Libs", "")).split(";",Qt::SkipEmptyParts);
-        mOptions.includes = fromByteArray(ini.GetValue("Project", "Includes", "")).split(";",Qt::SkipEmptyParts);
+        mOptions.objFiles = fromByteArray(ini.GetValue("Project", "ObjFiles", "")).split(";",QString::SkipEmptyParts);
+        mOptions.libs = fromByteArray(ini.GetValue("Project", "Libs", "")).split(";",QString::SkipEmptyParts);
+        mOptions.includes = fromByteArray(ini.GetValue("Project", "Includes", "")).split(";",QString::SkipEmptyParts);
         mOptions.privateResource = fromByteArray(ini.GetValue("Project", "PrivateResource", ""));
-        mOptions.resourceIncludes = fromByteArray(ini.GetValue("Project", "ResourceIncludes", "")).split(";",Qt::SkipEmptyParts);
-        mOptions.makeIncludes = fromByteArray(ini.GetValue("Project", "MakeIncludes", "")).split(";",Qt::SkipEmptyParts);
+        mOptions.resourceIncludes = fromByteArray(ini.GetValue("Project", "ResourceIncludes", "")).split(";",QString::SkipEmptyParts);
+        mOptions.makeIncludes = fromByteArray(ini.GetValue("Project", "MakeIncludes", "")).split(";",QString::SkipEmptyParts);
         mOptions.useGPP = ini.GetBoolValue("Project", "IsCpp", false);
         mOptions.exeOutput = fromByteArray(ini.GetValue("Project", "ExeOutput", ""));
         mOptions.objectOutput = fromByteArray(ini.GetValue("Project", "ObjectOutput", ""));
@@ -1381,7 +1381,7 @@ void Project::loadOptions(SimpleIni& ini)
         mOptions.usePrecompiledHeader = ini.GetBoolValue("Project", "UsePrecompiledHeader", false);
         mOptions.precompiledHeader = fromByteArray(ini.GetValue("Project", "PrecompiledHeader", ""));
         mOptions.cmdLineArgs = fromByteArray(ini.GetValue("Project", "CommandLine", ""));
-        mFolders = fromByteArray(ini.GetValue("Project", "Folders", "")).split(";",Qt::SkipEmptyParts);
+        mFolders = fromByteArray(ini.GetValue("Project", "Folders", "")).split(";",QString::SkipEmptyParts);
         mOptions.includeVersionInfo = ini.GetBoolValue("Project", "IncludeVersionInfo", false);
         mOptions.supportXPThemes = ini.GetBoolValue("Project", "SupportXPThemes", false);
         mOptions.compilerSet = ini.GetLongValue("Project", "CompilerSet", pSettings->compilerSets().defaultIndex());
@@ -1453,9 +1453,9 @@ void Project::loadOptions(SimpleIni& ini)
             mOptions.type = ProjectType::GUI;
 
         mOptions.privateResource = fromByteArray(ini.GetValue("Project", "PrivateResource", ""));
-        mOptions.resourceIncludes = fromByteArray(ini.GetValue("Project", "ResourceIncludes", "")).split(";",Qt::SkipEmptyParts);
-        mOptions.objFiles = fromByteArray(ini.GetValue("Project", "ObjFiles", "")).split(";",Qt::SkipEmptyParts);
-        mOptions.includes = fromByteArray(ini.GetValue("Project", "IncludeDirs", "")).split(";",Qt::SkipEmptyParts);
+        mOptions.resourceIncludes = fromByteArray(ini.GetValue("Project", "ResourceIncludes", "")).split(";",QString::SkipEmptyParts);
+        mOptions.objFiles = fromByteArray(ini.GetValue("Project", "ObjFiles", "")).split(";",QString::SkipEmptyParts);
+        mOptions.includes = fromByteArray(ini.GetValue("Project", "IncludeDirs", "")).split(";",QString::SkipEmptyParts);
         mOptions.compilerCmd = fromByteArray(ini.GetValue("Project", "CompilerOptions", ""));
         mOptions.useGPP = ini.GetBoolValue("Project", "Use_GPP", false);
         mOptions.exeOutput = fromByteArray(ini.GetValue("Project", "ExeOutput", ""));

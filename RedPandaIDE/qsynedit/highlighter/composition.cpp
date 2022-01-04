@@ -37,7 +37,7 @@ SynScheme::SynScheme(QObject *parent):
     mCaseSensitive(true)
 {
     mMarkerAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrMarker);
-    mMarkerAttribute->setForeground(QColorConstants::Yellow);
+    mMarkerAttribute->setForeground(Qt::yellow);
     mMarkerAttribute->setStyles(SynFontStyle::fsBold);
 }
 

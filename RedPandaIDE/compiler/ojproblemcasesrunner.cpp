@@ -46,7 +46,7 @@ void OJProblemCasesRunner::runCase(int index,POJProblemCase problemCase)
     bool errorOccurred = false;
 
     process.setProgram(mFilename);
-    process.setArguments(QProcess::splitCommand(mArguments));
+    process.setArguments(splitProcessCommand(mArguments));
     process.setWorkingDirectory(mWorkDir);
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
     QString path = env.value("PATH");

@@ -142,7 +142,7 @@ private:
     bool mAppendNewLineAtEOF;
     int mIndexOfLongestLine;
     int mUpdateCount;
-    QRecursiveMutex mMutex;
+    QMutex mMutex;
 
     int calculateLineColumns(int Index);
 };

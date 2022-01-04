@@ -162,9 +162,10 @@ void CppPreprocessor::reset()
 
 void CppPreprocessor::resetDefines()
 {
-    mDefines.clear();
+    mDefines = mHardDefines;
+//    mDefines.clear();
 
-    mDefines.insert(mHardDefines);
+//    mDefines.insert(mHardDefines);
 }
 
 void CppPreprocessor::setScanOptions(bool parseSystem, bool parseLocal)
@@ -207,7 +208,7 @@ void CppPreprocessor::dumpDefinesTo(const QString &fileName) const
             stream<<QString("%1 %2 %3 %4 %5\n")
                     .arg(define->name,define->args,define->value)
                     .arg(define->hardCoded).arg(define->formatValue)
-                 <<Qt::endl;
+                 <<endl;
         }
     }
 }
@@ -218,28 +219,28 @@ void CppPreprocessor::dumpIncludesListTo(const QString &fileName) const
     if (file.open(QIODevice::WriteOnly|QIODevice::Truncate)) {
         QTextStream stream(&file);
         for (const PFileIncludes& fileIncludes:mIncludesList) {
-            stream<<fileIncludes->baseFile<<" : "<<Qt::endl;
-            stream<<"\t**includes:**"<<Qt::endl;
+            stream<<fileIncludes->baseFile<<" : "<<endl;
+            stream<<"\t**includes:**"<<endl;
             foreach (const QString& s,fileIncludes->includeFiles.keys()) {
-                stream<<"\t--"+s<<Qt::endl;
+                stream<<"\t--"+s<<endl;
             }
-            stream<<"\t**depends on:**"<<Qt::endl;
+            stream<<"\t**depends on:**"<<endl;
             foreach (const QString& s,fileIncludes->dependingFiles) {
-                stream<<"\t^^"+s<<Qt::endl;
+                stream<<"\t^^"+s<<endl;
             }
-            stream<<"\t**depended by:**"<<Qt::endl;
+            stream<<"\t**depended by:**"<<endl;
             foreach (const QString& s,fileIncludes->dependedFiles) {
-                stream<<"\t&&"+s<<Qt::endl;
+                stream<<"\t&&"+s<<endl;
             }
-            stream<<"\t**using:**"<<Qt::endl;
+            stream<<"\t**using:**"<<endl;
             foreach (const QString& s,fileIncludes->usings) {
-                stream<<"\t++"+s<<Qt::endl;
+                stream<<"\t++"+s<<endl;
             }
-            stream<<"\t**statements:**"<<Qt::endl;
+            stream<<"\t**statements:**"<<endl;
             foreach (const PStatement& statement,fileIncludes->statements) {
                 if (statement) {
                     stream<<QString("\t**%1 , %2")
-                            .arg(statement->command,statement->fullName)<<Qt::endl;
+                            .arg(statement->command,statement->fullName)<<endl;
                 }
             }
         }
@@ -704,7 +705,9 @@ void CppPreprocessor::openInclude(const QString &fileName, QStringList bufferedT
         addDefinesInFile(fileName);
         PFileIncludes fileIncludes = getFileIncludesEntry(fileName);
         for (PParsedFile& file:mIncludes) {
-            file->fileIncludes->includeFiles.insert(fileIncludes->includeFiles);
+            file->fileIncludes->includeFiles =
+                    file->fileIncludes->includeFiles.unite(fileIncludes->includeFiles);
+            // file->fileIncludes->includeFiles.insert(fileIncludes->includeFiles);
         }
     }
     mIncludes.append(parsedFile);

@@ -22,6 +22,7 @@
 #include <QTimer>
 #include <QFileSystemModel>
 #include <QTcpServer>
+#include <QElapsedTimer>
 #include "common.h"
 #include "widgets/searchresultview.h"
 #include "widgets/classbrowser.h"

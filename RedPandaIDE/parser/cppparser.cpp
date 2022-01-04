@@ -27,7 +27,8 @@
 #include <QTime>
 
 static QAtomicInt cppParserCount(0);
-CppParser::CppParser(QObject *parent) : QObject(parent)
+CppParser::CppParser(QObject *parent) : QObject(parent),
+    mMutex(QMutex::Recursive)
 {
     mParserId = cppParserCount.fetchAndAddRelaxed(1);
     mSerialCount = 0;

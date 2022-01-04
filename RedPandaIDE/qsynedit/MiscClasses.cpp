@@ -21,9 +21,9 @@ SynGutter::SynGutter(QObject *parent):
     QObject(parent)
 {
     mFont = QFont("Courier New",10);
-    mColor= QColorConstants::Svg::lightgray;
-    mBorderColor = QColorConstants::Transparent;
-    mTextColor = QColorConstants::Svg::black;
+    mColor= Qt::lightGray;
+    mBorderColor = Qt::transparent;
+    mTextColor = Qt::black;
     mShowLineNumbers = true;
     mDigitCount = 1;
     mLeadingZeros = false;
@@ -36,8 +36,8 @@ SynGutter::SynGutter(QObject *parent):
     mBorderStyle = SynGutterBorderStyle::Middle;
     mLineNumberStart = 1;
     mGradient = false;
-    mGradientStartColor = QColorConstants::Transparent;
-    mGradientEndColor = QColorConstants::Transparent;
+    mGradientStartColor = Qt::transparent;
+    mGradientEndColor = Qt::transparent;
     mGradientSteps = 48;
 }
 

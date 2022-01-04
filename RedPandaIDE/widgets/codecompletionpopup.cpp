@@ -28,7 +28,8 @@
 #include <QApplication>
 
 CodeCompletionPopup::CodeCompletionPopup(QWidget *parent) :
-    QWidget(parent)
+    QWidget(parent),
+    mMutex(QMutex::Recursive)
 {
     setWindowFlags(Qt::Popup);
     mListView = new CodeCompletionListView(this);

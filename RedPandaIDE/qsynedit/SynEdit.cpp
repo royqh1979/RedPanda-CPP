@@ -78,9 +78,9 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
 
     mForegroundColor=palette().color(QPalette::Text);
     mBackgroundColor=palette().color(QPalette::Base);
-    mCaretColor = QColorConstants::Red;
+    mCaretColor = Qt::red;
     mCaretUseTextColor = false;
-    mActiveLineColor = QColorConstants::Svg::lightblue;
+    mActiveLineColor = Qt::blue;
     mSelectedBackground = palette().color(QPalette::Highlight);
     mSelectedForeground = palette().color(QPalette::HighlightedText);
 
@@ -117,7 +117,7 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
     //fKbdHandler := TSynEditKbdHandler.Create;
     //fMarkList.OnChange := MarkListChange;
     setDefaultKeystrokes();
-    mRightEdgeColor = QColorConstants::Svg::silver;
+    mRightEdgeColor = Qt::lightGray;
 
     /* IME input */
     mImeCount = 0;
@@ -143,7 +143,7 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
     //mScrollTimer->setInterval(100);
     connect(mScrollTimer, &QTimer::timeout,this, &SynEdit::onScrollTimeout);
 
-    mScrollHintColor = QColorConstants::Yellow;
+    mScrollHintColor = Qt::yellow;
     mScrollHintFormat = SynScrollHintFormat::shfTopLineOnly;
 
     mContentImage = std::make_shared<QImage>(clientWidth(),clientHeight(),QImage::Format_ARGB32);
@@ -1240,11 +1240,6 @@ int SynEdit::charColumns(QChar ch) const
         return 1;
     //return std::ceil((int)(fontMetrics().horizontalAdvance(ch) * dpiFactor()) / (double)mCharWidth);
     return std::ceil((int)(fontMetrics().horizontalAdvance(ch)) / (double)mCharWidth);
-}
-
-double SynEdit::dpiFactor() const
-{
-    return fontMetrics().fontDpi() / 96.0;
 }
 
 void SynEdit::showCaret()

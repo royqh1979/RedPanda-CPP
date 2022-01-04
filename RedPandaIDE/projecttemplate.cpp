@@ -113,10 +113,10 @@ void ProjectTemplate::readTemplateFile(const QString &fileName)
 
     mOptions.icon = mIni->GetValue("Project", "Icon", "");
     mOptions.type = static_cast<ProjectType>(mIni->GetLongValue("Project", "Type", 0)); // default = gui
-    mOptions.objFiles  = fromByteArray(mIni->GetValue("Project", "ObjFiles", "")).split(";",Qt::SkipEmptyParts);
-    mOptions.includes = fromByteArray(mIni->GetValue("Project", "Includes", "")).split(";",Qt::SkipEmptyParts);
-    mOptions.libs = fromByteArray(mIni->GetValue("Project", "Libs", "")).split(";",Qt::SkipEmptyParts);
-    mOptions.resourceIncludes = fromByteArray(mIni->GetValue("Project", "ResourceIncludes", "")).split(";",Qt::SkipEmptyParts);
+    mOptions.objFiles  = fromByteArray(mIni->GetValue("Project", "ObjFiles", "")).split(";",QString::SkipEmptyParts);
+    mOptions.includes = fromByteArray(mIni->GetValue("Project", "Includes", "")).split(";",QString::SkipEmptyParts);
+    mOptions.libs = fromByteArray(mIni->GetValue("Project", "Libs", "")).split(";",QString::SkipEmptyParts);
+    mOptions.resourceIncludes = fromByteArray(mIni->GetValue("Project", "ResourceIncludes", "")).split(";",QString::SkipEmptyParts);
     mOptions.compilerCmd = fromByteArray(mIni->GetValue("Project", "Compiler", ""));
     mOptions.cppCompilerCmd = fromByteArray(mIni->GetValue("Project", "CppCompiler", ""));
     mOptions.linkerCmd = fromByteArray(mIni->GetValue("Project", "Linker",""));

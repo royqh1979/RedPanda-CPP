@@ -109,11 +109,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QComboBox" name="cbCopyWithFormatAs">
-        <property name="placeholderText">
-         <string/>
-        </property>
-       </widget>
+       <widget class="QComboBox" name="cbCopyWithFormatAs" />
       </item>
       <item>
        <spacer name="horizontalSpacer_4">

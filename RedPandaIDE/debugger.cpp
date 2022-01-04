@@ -606,6 +606,7 @@ bool Debugger::executing() const
 }
 
 DebugReader::DebugReader(Debugger* debugger, QObject *parent) : QThread(parent),
+    mCmdQueueMutex(QMutex::Recursive),
     mStartSemaphore(0)
 {
     mDebugger = debugger;
@@ -1115,8 +1116,12 @@ void DebugReader::handleLocalVariables(const QList<GDBMIResultParser::ParseValue
     QStringList locals;
     foreach (const GDBMIResultParser::ParseValue& varValue, variables) {
         GDBMIResultParser::ParseObject varObject = varValue.object();
-        locals.append(QString("%1 = %2")
-                            .arg(varObject["name"].value(),varObject["value"].value()));
+        locals.append(
+                    QString("%1 = %2")
+                    .arg(
+                        QString(varObject["name"].value()),
+                        QString(varObject["value"].value())
+                ));
     }
     emit localsUpdated(locals);
 }
@@ -1339,7 +1344,7 @@ void DebugReader::run()
         mProcess.reset();
     });
     mProcess->setProgram(cmd);
-    mProcess->setArguments(QProcess::splitCommand(arguments));
+    mProcess->setArguments(splitProcessCommand(arguments));
     mProcess->setProcessChannelMode(QProcess::MergedChannels);
     QString cmdDir = extractFileDir(cmd);
     if (!cmdDir.isEmpty()) {
@@ -2279,7 +2284,7 @@ void DebugTarget::run()
         mProcess.reset();
     });
     mProcess->setProgram(cmd);
-    mProcess->setArguments(QProcess::splitCommand(arguments));
+    mProcess->setArguments(splitProcessCommand(arguments));
     mProcess->setProcessChannelMode(QProcess::MergedChannels);
     QString cmdDir = extractFileDir(cmd);
     if (!cmdDir.isEmpty()) {

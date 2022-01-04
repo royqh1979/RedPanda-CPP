@@ -20,7 +20,7 @@
 #include <QPalette>
 #include <QHash>
 #include <QColor>
-
+#include <memory>
 
 class AppTheme:public QObject {
     Q_OBJECT

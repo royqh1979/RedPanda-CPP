@@ -28,7 +28,8 @@
 
 SynEditStringList::SynEditStringList(SynEdit *pEdit, QObject *parent):
       QObject(parent),
-      mEdit(pEdit)
+      mEdit(pEdit),
+      mMutex(QMutex::Recursive)
 {
     mAppendNewLineAtEOF = true;
     mFileEndingType = FileEndingType::Windows;
@@ -364,7 +365,10 @@ void SynEditStringList::exchange(int Index1, int Index2)
         ListIndexOutOfBounds(Index2);
     }
     beginUpdate();
-    mList.swapItemsAt(Index1,Index2);
+    PSynEditStringRec temp = mList[Index1];
+    mList[Index1]=mList[Index2];
+    mList[Index2]=temp;
+    //mList.swapItemsAt(Index1,Index2);
     if (mIndexOfLongestLine == Index1) {
         mIndexOfLongestLine = Index2;
     } else if (mIndexOfLongestLine == Index2) {

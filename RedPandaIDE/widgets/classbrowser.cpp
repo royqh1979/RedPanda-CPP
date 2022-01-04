@@ -25,7 +25,8 @@
 #include "../utils.h"
 #include "../iconsmanager.h"
 
-ClassBrowserModel::ClassBrowserModel(QObject *parent):QAbstractItemModel(parent)
+ClassBrowserModel::ClassBrowserModel(QObject *parent):QAbstractItemModel(parent),
+    mMutex(QMutex::Recursive)
 {
     mRoot = new ClassBrowserNode();
     mRoot->parent = nullptr;
