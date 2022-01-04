@@ -2828,7 +2828,12 @@ void Settings::Environment::doLoad()
         mDefaultOpenFolder = QDir::currentPath();
     }
 #ifdef Q_OS_LINUX
-    mTerminalPath = stringValue("terminal_path","/usr/bin/x-terminal-emulator");
+    //use qterminal by default
+    mTerminalPath = stringValue("terminal_path","/usr/bin/qterminal");
+    if (mTerminalPath.isEmpty())
+        mTerminalPath = stringValue("terminal_path","/usr/bin/konsole");
+    if (mTerminalPath.isEmpty())
+        mTerminalPath = stringValue("terminal_path","/usr/bin/x-terminal-emulator");
     mAStylePath = includeTrailingPathDelimiter(pSettings->dirs().appDir())+"astyle";
 #endif
 }
