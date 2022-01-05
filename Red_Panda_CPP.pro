@@ -5,14 +5,26 @@ SUBDIRS += \
     astyle \
     consolepauser
 
-APP_NAME = RedPandaIDE
+APP_NAME = RedPandaCPP
 
 linux: {
-    resources.path = /opt/$${APP_NAME}
-    resources.files += linux/* 
-    resources.files += NEWS.md
-    resources.files += LICENSE
-    resources.files += README.md
 
+    isEmpty(PREFIX) {
+        PREFIX = /usr/local
+    }
+
+    resources.path = $${PREFIX}/share/$${APP_NAME}
+    resources.files += linux/templates
     INSTALLS += resources
+
+    docs.path = $${PREFIX}/share/docs/$${APP_NAME}
+    docs.files += README.md
+    docs.files += NEWS.md
+    docs.files += LICENSE
+    INSTALLS += docs
+
+    pixmaps.path = $${PREFIX}/share/pixmaps
+    pixmaps.files += linux/redpandaide.png
+
+
 }

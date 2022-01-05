@@ -3,7 +3,9 @@ QT -= gui
 CONFIG += c++11 console
 CONFIG -= app_bundle
 
-APP_NAME = RedPandaIDE
+isEmpty(APP_NAME) {
+    APP_NAME = RedPandaCPP
+}
 
 # You can make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
@@ -24,7 +26,11 @@ SOURCES += \
 CONFIG += lrelease
 CONFIG += embed_translations
 
+isEmpty(PREFIX) {
+    PREFIX = /usr/local
+}
+
 # Default rules for deployment.
-qnx: target.path = /tmp/$${APP_NAME}/bin
-else: unix:!android: target.path = /opt/$${APP_NAME}/bin
+qnx: target.path = /tmp/$${PREFIX}/libexec/$${APP_NAME}
+else: unix:!android: target.path = /usr/$${PREFIX}/libexec/$${APP_NAME}
 !isEmpty(target.path): INSTALLS += target

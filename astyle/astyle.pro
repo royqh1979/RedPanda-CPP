@@ -1,6 +1,8 @@
 QT -= gui
 
-APP_NAME = RedPandaIDE
+isEmpty(APP_NAME) {
+    APP_NAME = RedPandaCPP
+}
 
 CONFIG += c++11 console
 CONFIG -= app_bundle
@@ -17,9 +19,14 @@ SOURCES += \
     ASResource.cpp \
     astyle_main.cpp
 
+isEmpty(PREFIX) {
+    PREFIX = /usr/local
+}
+
 # Default rules for deployment.
-qnx: target.path = /tmp/$${APP_NAME}/bin
-else: unix:!android: target.path = /opt/$${APP_NAME}/bin
+qnx: target.path = $${PREFIX}/libexec/$${APP_NAME}
+else: unix:!android: target.path = $${PREFIX}/libexec/$${APP_NAME}
+
 !isEmpty(target.path): INSTALLS += target
 
 HEADERS += \
