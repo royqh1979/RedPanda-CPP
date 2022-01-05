@@ -88,6 +88,13 @@ SettingsDialog::~SettingsDialog()
 {
     for (SettingsWidget* p:mSettingWidgets) {
         p->setParent(nullptr);
+        //dirty fix for ubuntu 20.04 LTS
+#ifdef SETTINGS_DIALOG_FIX
+        if (p->group()==tr("Editor") && p->name()==tr("Color"))
+            continue;
+        if (p->group()==tr("Editor") && p->name()==tr("Snippet"))
+            continue;
+#endif
         delete p;
     }
     delete ui;

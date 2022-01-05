@@ -1,5 +1,6 @@
 Red Panda C++ Version 0.12.7
  - change: make current build system follow FHS specifications
+ - fix: crash when close settings dialog in Ubuntu 20.04 (but we'll leak memory now...)
 
 Red Panda C++ Version 0.12.6
  - fix: heartbeat for gdb server async command shouldn't disable actions

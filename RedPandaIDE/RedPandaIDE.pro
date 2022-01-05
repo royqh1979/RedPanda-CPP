@@ -17,6 +17,16 @@ DEFINES += PREFIX=\\\"$${PREFIX}\\\"
 DEFINES += APP_NAME=\\\"$${APP_NAME}\\\"
 DEFINES += REDPANDA_CPP_VERSION=\\\"beta.0.12.6\\\"
 
+linux: {
+    LINUX_DISTRO = $$system(cat /etc/issue)
+    contains(LINUX_DISTRO, .*Ubuntu.*){
+        contains(LINUX_DISTRO, .*20\.04.*) {
+            message("Found Ubuntu 20.04")
+            DEFINES += SETTINGS_DIALOG_FIX
+        }
+    }
+}
+
 gcc {
     QMAKE_CXXFLAGS_RELEASE += -Werror=return-type
     QMAKE_CXXFLAGS_DEBUG += -Werror=return-type
