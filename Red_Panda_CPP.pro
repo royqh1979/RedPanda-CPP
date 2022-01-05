@@ -13,6 +13,8 @@ linux: {
         PREFIX = /usr/local
     }
 
+    QMAKE_SUBSTITUTES += redpandaide.desktop.in
+
     resources.path = $${PREFIX}/share/$${APP_NAME}
     resources.files += linux/templates
     INSTALLS += resources
@@ -26,5 +28,9 @@ linux: {
     pixmaps.path = $${PREFIX}/share/pixmaps
     pixmaps.files += linux/redpandaide.png
     INSTALLS += pixmaps
+
+    desktop.path = $${PREFIX}/share/applications
+    desktop.files += redpandaide.desktop
+    INSTALLS += desktop
 
 }

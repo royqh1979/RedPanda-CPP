@@ -1,7 +1,7 @@
 [Desktop Entry]
 Comment=A lightweighted QT-based C/C++ IDE
 Comment[zh_CN]=基于QT的轻量级C/C++集成开发环境
-Exec=/opt/RedPandaIDE/bin/RedPandaIDE %F
+Exec=RedPandaIDE %F
 GenericName=Red Panda C++
 GenericName[zh_CN]=小熊猫C++
 MimeType=application/pdf
@@ -11,5 +11,5 @@ StartupNotify=false
 Terminal=false
 Type=Application
 Categories=Development;Qt;
-Icon=/opt/RedPandaIDE/redpandaide.png
-Path=/opt/RedPandaIDE/bin
+Icon=$${PREFIX}/share/pixmaps/redpandaide.png
+Path=$${PREFIX}/bin
