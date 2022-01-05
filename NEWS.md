@@ -1,3 +1,6 @@
+Red Panda C++ Version 0.12.7
+ - change: make current build system follow FHS specifications
+
 Red Panda C++ Version 0.12.6
  - fix: heartbeat for gdb server async command shouldn't disable actions
  - fix: problem cases doesn't use svg icons
