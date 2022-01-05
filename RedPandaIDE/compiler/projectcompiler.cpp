@@ -20,7 +20,6 @@
 #include "../systemconsts.h"
 #include "../platform.h"
 #include "../editor.h"
-#include "../version.h"
 
 #include <QDir>
 
@@ -125,7 +124,7 @@ void ProjectCompiler::newMakeFile(QFile& file)
 void ProjectCompiler::writeMakeHeader(QFile &file)
 {
     writeln(file,"# Project: " + mProject->name());
-    writeln(file,QString("# Makefile created by Red Panda C++ ") + DEVCPP_VERSION);
+    writeln(file,QString("# Makefile created by Red Panda C++ ") + REDPANDA_CPP_VERSION);
     writeln(file);
     if (mOnlyCheckSyntax) {
         writeln(file,"# This Makefile is written for syntax check!");

@@ -17,7 +17,7 @@ linux: {
     resources.files += linux/templates
     INSTALLS += resources
 
-    docs.path = $${PREFIX}/share/docs/$${APP_NAME}
+    docs.path = $${PREFIX}/share/doc/$${APP_NAME}
     docs.files += README.md
     docs.files += NEWS.md
     docs.files += LICENSE
@@ -25,6 +25,6 @@ linux: {
 
     pixmaps.path = $${PREFIX}/share/pixmaps
     pixmaps.files += linux/redpandaide.png
-
+    INSTALLS += pixmaps
 
 }

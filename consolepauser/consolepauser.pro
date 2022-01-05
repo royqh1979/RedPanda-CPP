@@ -31,6 +31,6 @@ isEmpty(PREFIX) {
 }
 
 # Default rules for deployment.
-qnx: target.path = /tmp/$${PREFIX}/libexec/$${APP_NAME}
-else: unix:!android: target.path = /usr/$${PREFIX}/libexec/$${APP_NAME}
+qnx: target.path = $${PREFIX}/libexec/$${APP_NAME}
+else: unix:!android: target.path = $${PREFIX}/libexec/$${APP_NAME}
 !isEmpty(target.path): INSTALLS += target

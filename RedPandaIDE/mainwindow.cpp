@@ -36,7 +36,6 @@
 #include "widgets/lightfusionstyle.h"
 #include "problems/problemcasevalidator.h"
 #include "widgets/ojproblempropertywidget.h"
-#include "version.h"
 #include "iconsmanager.h"
 
 #include <QCloseEvent>
@@ -698,22 +697,22 @@ void MainWindow::updateAppTitle()
           str = e->filename();
         if (mDebugger->executing()) {
             setWindowTitle(QString("%1 - [%2] - %3 %4")
-                           .arg(str,tr("Debugging"),appName,DEVCPP_VERSION));
+                           .arg(str,tr("Debugging"),appName,REDPANDA_CPP_VERSION));
             app->setApplicationName(QString("%1 - [%2] - %3")
                                     .arg(str,tr("Debugging"),appName));
         } else if (mCompilerManager->running()) {
             setWindowTitle(QString("%1 - [%2] - %3 %4")
-                           .arg(str,tr("Running"),appName,DEVCPP_VERSION));
+                           .arg(str,tr("Running"),appName,REDPANDA_CPP_VERSION));
             app->setApplicationName(QString("%1 - [%2] - %3")
                                     .arg(str,tr("Running"),appName));
         } else if (mCompilerManager->compiling()) {
             setWindowTitle(QString("%1 - [%2] - %3 %4")
-                           .arg(str,tr("Compiling"),appName,DEVCPP_VERSION));
+                           .arg(str,tr("Compiling"),appName,REDPANDA_CPP_VERSION));
             app->setApplicationName(QString("%1 - [%2] - %3")
                                     .arg(str,tr("Compiling"),appName));
         } else {
             this->setWindowTitle(QString("%1 - %2 %3")
-                                 .arg(str,appName,DEVCPP_VERSION));
+                                 .arg(str,appName,REDPANDA_CPP_VERSION));
             app->setApplicationName(QString("%1 - %2")
                                     .arg(str,appName));
         }
@@ -730,24 +729,24 @@ void MainWindow::updateAppTitle()
         if (mDebugger->executing()) {
             setWindowTitle(QString("%1 - %2 [%3] - %4 %5")
                            .arg(str,str2,
-                                tr("Debugging"),appName,DEVCPP_VERSION));
+                                tr("Debugging"),appName,REDPANDA_CPP_VERSION));
             app->setApplicationName(QString("%1 - [%2] - %3")
                                     .arg(str,tr("Debugging"),appName));
         } else if (mCompilerManager->running()) {
             setWindowTitle(QString("%1 - %2 [%3] - %4 %5")
                            .arg(str,str2,
-                                tr("Running"),appName,DEVCPP_VERSION));
+                                tr("Running"),appName,REDPANDA_CPP_VERSION));
             app->setApplicationName(QString("%1 - [%2] - %3")
                                     .arg(str,tr("Running"),appName));
         } else if (mCompilerManager->compiling()) {
             setWindowTitle(QString("%1 - %2 [%3] - %4 %5")
                            .arg(str,str2,
-                                tr("Compiling"),appName,DEVCPP_VERSION));
+                                tr("Compiling"),appName,REDPANDA_CPP_VERSION));
             app->setApplicationName(QString("%1 - [%2] - %3")
                                     .arg(str,tr("Compiling"),appName));
         } else {
             setWindowTitle(QString("%1 - %2 %3")
-                                 .arg(str,appName,DEVCPP_VERSION));
+                                 .arg(str,appName,REDPANDA_CPP_VERSION));
             app->setApplicationName(QString("%1 - %2")
                                     .arg(str,appName));
         }
@@ -759,27 +758,27 @@ void MainWindow::updateAppTitle()
             str = mProject->name();
         if (mDebugger->executing()) {
             setWindowTitle(QString("%1 - [%2] - %3 %4")
-                           .arg(str,tr("Debugging"),appName,DEVCPP_VERSION));
+                           .arg(str,tr("Debugging"),appName,REDPANDA_CPP_VERSION));
             app->setApplicationName(QString("%1 - [%2] - %3")
                                     .arg(str,tr("Debugging"),appName));
         } else if (mCompilerManager->running()) {
             setWindowTitle(QString("%1 - [%2] - %3 %4")
-                           .arg(str,tr("Running"),appName,DEVCPP_VERSION));
+                           .arg(str,tr("Running"),appName,REDPANDA_CPP_VERSION));
             app->setApplicationName(QString("%1 - [%2] - %3")
                                     .arg(str,tr("Running"),appName));
         } else if (mCompilerManager->compiling()) {
             setWindowTitle(QString("%1 - [%2] - %3 %4")
-                           .arg(str,tr("Compiling"),appName,DEVCPP_VERSION));
+                           .arg(str,tr("Compiling"),appName,REDPANDA_CPP_VERSION));
             app->setApplicationName(QString("%1 - [%2] - %3")
                                     .arg(str,tr("Compiling"),appName));
         } else {
             this->setWindowTitle(QString("%1 - %2 %3")
-                                 .arg(str,appName,DEVCPP_VERSION));
+                                 .arg(str,appName,REDPANDA_CPP_VERSION));
             app->setApplicationName(QString("%1 - %2")
                                     .arg(str,appName));
         }
     } else {
-        setWindowTitle(QString("%1 %2").arg(appName,DEVCPP_VERSION));
+        setWindowTitle(QString("%1 %2").arg(appName,REDPANDA_CPP_VERSION));
         app->setApplicationName(QString("%1").arg(appName));
     }
 }
@@ -2042,7 +2041,7 @@ void MainWindow::updateTools()
                         file.close();
                         if (item->pauseAfterExit) {
                             executeFile(
-                                        includeTrailingPathDelimiter(pSettings->dirs().appDir())+"ConsolePauser.exe",
+                                        includeTrailingPathDelimiter(pSettings->dirs().appLibexecDir())+"ConsolePauser.exe",
                                         " 1 \""+localizePath(file.fileName())+"\" ",
                                         workDir, file.fileName());
                         } else {
@@ -2055,7 +2054,7 @@ void MainWindow::updateTools()
                 } else {
                     if (item->pauseAfterExit) {
                         executeFile(
-                                    includeTrailingPathDelimiter(pSettings->dirs().appDir())+"ConsolePauser.exe",
+                                    includeTrailingPathDelimiter(pSettings->dirs().appLibexecDir())+"ConsolePauser.exe",
                                     " 1 \""+program+"\" "+params,
                                     workDir, "");
                     } else {

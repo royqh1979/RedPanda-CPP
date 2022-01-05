@@ -250,14 +250,14 @@ void CompilerManager::run(const QString &filename, const QString &arguments, con
         if (consoleFlag!=0) {
             if (redirectInput) {
                 newArguments = QString(" -e \"%1\" %2 \"%3\" \"%4\" %5")
-                        .arg(includeTrailingPathDelimiter(pSettings->dirs().appDir())+"consolepauser")
+                        .arg(includeTrailingPathDelimiter(pSettings->dirs().appLibexecDir())+"consolepauser")
                         .arg(consoleFlag)
                         .arg(redirectInputFilename)
                         .arg(localizePath(filename))
                         .arg(arguments);
             } else {
                 newArguments = QString(" -e \"%1\" %2 \"%3\" %4")
-                    .arg(includeTrailingPathDelimiter(pSettings->dirs().appDir())+"consolepauser")
+                    .arg(includeTrailingPathDelimiter(pSettings->dirs().appLibexecDir())+"consolepauser")
                     .arg(consoleFlag)
                     .arg(localizePath(filename)).arg(arguments);
             }

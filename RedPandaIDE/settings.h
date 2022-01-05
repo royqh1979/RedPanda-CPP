@@ -106,7 +106,8 @@ public:
         };
         explicit Dirs(Settings * settings);
         QString appDir() const;
-        QString appLibDir() const;
+        QString appResourceDir() const;
+        QString appLibexecDir() const;
         QString templateDir() const;
         QString projectDir() const;
         QString data(DataType dataType = DataType::None) const;

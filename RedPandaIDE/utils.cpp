@@ -37,7 +37,6 @@
 #include "editorlist.h"
 #include "editor.h"
 #include "project.h"
-#include "version.h"
 #include "compiler/executablerunner.h"
 #ifdef Q_OS_WIN
 #include <windows.h>
@@ -797,7 +796,7 @@ QString parseMacros(const QString &s)
 
     result.replace("<DEFAULT>", localizePath(QDir::currentPath()));
     result.replace("<DEVCPP>", localizePath(pSettings->dirs().executable()));
-    result.replace("<DEVCPPVERSION>", DEVCPP_VERSION);
+    result.replace("<DEVCPPVERSION>", REDPANDA_CPP_VERSION);
     result.replace("<EXECPATH>", localizePath(pSettings->dirs().appDir()));
     QDate today = QDate::currentDate();
     QDateTime now = QDateTime::currentDateTime();

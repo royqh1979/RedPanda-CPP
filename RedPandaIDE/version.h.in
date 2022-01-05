@@ -19,6 +19,7 @@
 
 #include <QObject>
 
-#define DEVCPP_VERSION "beta.0.12.6"
+#define PREFIX "$${PREFIX}"
+#define RED_PANDA_CPP_VERSION "$${PREFIX}"
 
 #endif // VERSION_H

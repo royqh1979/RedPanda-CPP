@@ -17,15 +17,13 @@
 #include "aboutdialog.h"
 #include "ui_aboutdialog.h"
 #include "../systemconsts.h"
-#include "../version.h"
-
 
 AboutDialog::AboutDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::AboutDialog)
 {
     ui->setupUi(this);
-    ui->lblTitle->setText(ui->lblTitle->text() + tr("Version: ") + DEVCPP_VERSION);
+    ui->lblTitle->setText(ui->lblTitle->text() + tr("Version: ") + REDPANDA_CPP_VERSION);
 
 #ifdef  __GNUC__
     ui->lblQt->setText(ui->lblQt->text()

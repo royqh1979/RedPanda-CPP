@@ -172,18 +172,27 @@ QString Settings::Dirs::appDir() const
     return QApplication::instance()->applicationDirPath();
 }
 
-QString Settings::Dirs::appLibDir() const
+QString Settings::Dirs::appResourceDir() const
 {
 #ifdef Q_OS_WIN
     return appDir();
 #elif defined(Q_OS_LINUX)
-    return QFileInfo(includeTrailingPathDelimiter(appDir())+"../lib").absolutePath();
+    return includeTrailingPathDelimiter(PREFIX)+"share/"+APP_NAME;
+#endif
+}
+
+QString Settings::Dirs::appLibexecDir() const
+{
+#ifdef Q_OS_WIN
+    return appDir();
+#elif defined(Q_OS_LINUX)
+    return includeTrailingPathDelimiter(PREFIX)+"libexec/"+APP_NAME;
 #endif
 }
 
 QString Settings::Dirs::templateDir() const
 {
-    return includeTrailingPathDelimiter(appLibDir()) + "templates";
+    return includeTrailingPathDelimiter(appResourceDir()) + "templates";
 }
 
 QString Settings::Dirs::projectDir() const
@@ -2834,7 +2843,7 @@ void Settings::Environment::doLoad()
         mTerminalPath = stringValue("terminal_path","/usr/bin/konsole");
     if (mTerminalPath.isEmpty())
         mTerminalPath = stringValue("terminal_path","/usr/bin/x-terminal-emulator");
-    mAStylePath = includeTrailingPathDelimiter(pSettings->dirs().appDir())+"astyle";
+    mAStylePath = includeTrailingPathDelimiter(pSettings->dirs().appLibexecDir())+"astyle";
 #endif
 }
 

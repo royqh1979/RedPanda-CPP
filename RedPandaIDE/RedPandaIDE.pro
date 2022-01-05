@@ -9,6 +9,14 @@ isEmpty(APP_NAME) {
     APP_NAME = RedPandaCPP
 }
 
+isEmpty(PREFIX) {
+    PREFIX = /usr/local
+}
+
+DEFINES += PREFIX=\\\"$${PREFIX}\\\"
+DEFINES += APP_NAME=\\\"$${APP_NAME}\\\"
+DEFINES += REDPANDA_CPP_VERSION=\\\"beta.0.12.6\\\"
+
 gcc {
     QMAKE_CXXFLAGS_RELEASE += -Werror=return-type
     QMAKE_CXXFLAGS_DEBUG += -Werror=return-type
@@ -199,7 +207,6 @@ HEADERS += \
     thememanager.h \
     todoparser.h \
     toolsmanager.h \
-    version.h \
     widgets/aboutdialog.h \
     widgets/bookmarkmodel.h \
     widgets/classbrowser.h \
@@ -342,10 +349,6 @@ linux: {
 
 TRANSLATIONS += \
     RedPandaIDE_zh_CN.ts
-
-isEmpty(PREFIX) {
-    PREFIX = /usr/local
-}
 
 # Default rules for deployment.
 qnx: target.path = $${PREFIX}/bin
