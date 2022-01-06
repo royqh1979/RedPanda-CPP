@@ -15,7 +15,7 @@ isEmpty(PREFIX) {
 
 DEFINES += PREFIX=\\\"$${PREFIX}\\\"
 DEFINES += APP_NAME=\\\"$${APP_NAME}\\\"
-DEFINES += REDPANDA_CPP_VERSION=\\\"beta.0.12.6\\\"
+DEFINES += REDPANDA_CPP_VERSION=\\\"beta.0.12.7\\\"
 
 linux: {
     LINUX_DISTRO = $$system(cat /etc/issue)

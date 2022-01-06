@@ -26,6 +26,7 @@
 #include <QStandardPaths>
 #include <QScreen>
 #include <QDesktopWidget>
+#include <QHash>
 
 const char ValueToChar[28] = {'0', '1', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',
                               'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
@@ -2408,6 +2409,11 @@ static void setDebugOptions(Settings::PCompilerSet pSet) {
         pSet->setOption(pOption,'1');
     }
 
+#ifdef Q_OS_LINUX
+    pSet->setCustomCompileParams("--sanitize=address");
+    pSet->setUseCustomCompileParams(true);
+#endif
+
 //    pOption = pSet->findOption("-static");
 //    if (pOption) {
 //        pSet->setOption(pOption,'1');
@@ -2502,14 +2508,21 @@ void Settings::CompilerSets::clearSets()
 void Settings::CompilerSets::findSets()
 {
     clearSets();
+#ifdef Q_OS_WIN
     addSets(includeTrailingPathDelimiter(mSettings->dirs().appDir())+"MinGW32"+QDir::separator()+"bin");
     addSets(includeTrailingPathDelimiter(mSettings->dirs().appDir())+"MinGW64"+QDir::separator()+"bin");
+#endif
 
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
     QString path = env.value("PATH");
     QStringList pathList = path.split(PATH_SEPARATOR);
+    QSet<QString> searched;
     foreach (const QString& s, pathList){
-        addSets(s);
+        if (searched.contains(s))
+            continue;;
+        searched.insert(s);
+        if (s!="/bin") // /bin/gcc is symbolic link to /usr/bin/gcc
+            addSets(s);
     }
 }
 
@@ -2581,12 +2594,19 @@ void Settings::CompilerSets::loadSets()
             return;
         }
     } else {
+#ifdef Q_OS_WIN
+        QString msg = QObject::tr("Compiler set not configuared.")
+                +"<br /><br />"
+                +QObject::tr("Would you like Red Panda C++ to search for compilers in the following locations: <BR />'%1'<BR />'%2'? ")
+                .arg(includeTrailingPathDelimiter(pSettings->dirs().appDir()) + "MinGW32")
+                .arg(includeTrailingPathDelimiter(pSettings->dirs().appDir()) + "MinGW64");
+#else
+        QString msg = QObject::tr("Compiler set not configuared.")
+                +"<br /><br />"
+                +QObject::tr("Would you like Red Panda C++ to search for compilers in PATH?");
+#endif
         if (QMessageBox::warning(nullptr,QObject::tr("Confirm"),
-                   QObject::tr("Compiler set not configuared.")
-                                 +"<br /><br />"
-                                 +QObject::tr("Would you like Red Panda C++ to search for compilers in the following locations: <BR />'%1'<BR />'%2'? ")
-                                 .arg(includeTrailingPathDelimiter(pSettings->dirs().appDir()) + "MinGW32")
-                                 .arg(includeTrailingPathDelimiter(pSettings->dirs().appDir()) + "MinGW64"),
+                   msg,
                                  QMessageBox::Yes | QMessageBox::No) != QMessageBox::Yes) {
             return;
         }

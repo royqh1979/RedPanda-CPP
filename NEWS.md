@@ -3,6 +3,9 @@ Red Panda C++ Version 0.12.7
  - fix: crash when close settings dialog in Ubuntu 20.04 (but we'll leak memory now...)
  - enhancement: add raylib.h to autolink
  - fix: shouldn't generate default autolink settings in linux
+ - fix: shouldn't auto add /bin/gcc to compiler sets
+ - fix: if a dir duplicates in PATH, don't add it to compiler sets repeatedly
+ - enhancement: add "--sanitize=address" to compile option in the Debug compiler set in Linux 
 
 Red Panda C++ Version 0.12.6
  - fix: heartbeat for gdb server async command shouldn't disable actions
