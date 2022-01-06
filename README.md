@@ -1,24 +1,20 @@
-# RedPanda Dev-C++ 7
-A light-weight C/C++ IDE based on Qt.
+# RedPanda C++ 
+Red Panda C++ (Old name: Red Panda Dev-C++ 7) is an fast ,lightweight, open source, and cross platform C++ IDE.
 
-This project is the successor of Red Panda Dev-C++ 6.
-
-All main features of version 6 have been ported.
-
-New Features:
-* Linux version
+New Features (Compared with Red Panda Dev-C++ 6):
+* Cross Platform (Windows/Linux)
 * Problem Set (run and test program against predefined input / expected output data)
 * Competitve Companion support ( It's an chrome/firefox extension that can fetch problems from OJ websites)
+* Find symbol occurrences
 * Memory View for debugging
 * TODO View
-* Find symbol occurrences
 
 UI Improvements:
-* Redesigned Find/Replace in Files UI
-* Redesigned bookmark UI
+* Full high-dpi support, including fonts and icons
 * Better dark theme support
 * Better editor color scheme support
-* Full high-dpi support including fonts and icons
+* Redesigned Find/Replace in Files UI
+* Redesigned bookmark UI
 
 Editing Improvements:
 * Enhanced auto indent 
@@ -28,8 +24,10 @@ Editing Improvements:
 Debuging Improvements:
 * Use gdb/mi interface
 * Enhanced watch
+* gdbserver mode
 
 Code Intellisense Improvements:
+* Better support identifiers for complex expressions
 * Support UTF-8 identifiers
 * Support C++ 14 using type alias
 * Support C-Style enum variable definitions
