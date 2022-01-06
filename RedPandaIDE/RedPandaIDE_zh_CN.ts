@@ -899,51 +899,54 @@ Copyright (c) 2020-2021 royqh1979@gmail.com</source>
         <translation>选择性能分析器</translation>
     </message>
     <message>
-        <location filename="settingsdialog/compilersetoptionwidget.cpp" line="237"/>
+        <location filename="settingsdialog/compilersetoptionwidget.cpp" line="246"/>
         <source>Confirm</source>
         <translation>确认</translation>
     </message>
     <message>
         <location filename="settingsdialog/compilersetoptionwidget.cpp" line="238"/>
-        <source>Red Panda C++ will clear current compiler list and search for compilers in the following locations:
+        <source>Red Panda C++ will clear current compiler list and search for compilers in the following locations:&lt;br /&gt; &apos;%1&apos;&lt;br /&gt; &apos;%2&apos;&lt;br /&gt;Are you really want to continue?</source>
+        <oldsource>Red Panda C++ will clear current compiler list and search for compilers in the following locations:
  &apos;%1&apos;
 &apos;%2&apos;
-Are you really want to continue?</source>
-        <translation>小熊猫C++ 将会清除现有的编译器配置列表，然后在下列文件夹中搜索编译器:
- &apos;%1&apos;
-&apos;%2&apos;
-你确定要继续吗？</translation>
+Are you really want to continue?</oldsource>
+        <translation>小熊猫C++ 将会清除现有的编译器配置列表，然后在下列文件夹中搜索编译器:&lt;br/&gt; &apos;%1&apos;&lt;br/&gt; &apos;%2&apos;&lt;br /&gt;你确定要继续吗？</translation>
     </message>
     <message>
-        <location filename="settingsdialog/compilersetoptionwidget.cpp" line="249"/>
-        <location filename="settingsdialog/compilersetoptionwidget.cpp" line="273"/>
+        <location filename="settingsdialog/compilersetoptionwidget.cpp" line="243"/>
+        <source>Red Panda C++ will clear current compiler list and search for compilers in the the PATH. &lt;br /&gt;Are you really want to continue?</source>
+        <translation>小熊猫C++ 将会清除现有的编译器配置列表，然后在PATH路径中搜索gcc编译器.&lt;br /&gt;你确定要继续吗？</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/compilersetoptionwidget.cpp" line="254"/>
+        <location filename="settingsdialog/compilersetoptionwidget.cpp" line="278"/>
         <source>Failed</source>
         <translation>失败</translation>
     </message>
     <message>
-        <location filename="settingsdialog/compilersetoptionwidget.cpp" line="249"/>
-        <location filename="settingsdialog/compilersetoptionwidget.cpp" line="273"/>
+        <location filename="settingsdialog/compilersetoptionwidget.cpp" line="254"/>
+        <location filename="settingsdialog/compilersetoptionwidget.cpp" line="278"/>
         <source>Can&apos;t find any compiler.</source>
         <translation>找不到编译器</translation>
     </message>
     <message>
-        <location filename="settingsdialog/compilersetoptionwidget.cpp" line="255"/>
-        <location filename="settingsdialog/compilersetoptionwidget.cpp" line="279"/>
+        <location filename="settingsdialog/compilersetoptionwidget.cpp" line="260"/>
+        <location filename="settingsdialog/compilersetoptionwidget.cpp" line="284"/>
         <source>Compiler Set Name</source>
         <translation>编译器配置名称</translation>
     </message>
     <message>
-        <location filename="settingsdialog/compilersetoptionwidget.cpp" line="255"/>
+        <location filename="settingsdialog/compilersetoptionwidget.cpp" line="260"/>
         <source>Name</source>
         <translation>名称</translation>
     </message>
     <message>
-        <location filename="settingsdialog/compilersetoptionwidget.cpp" line="264"/>
+        <location filename="settingsdialog/compilersetoptionwidget.cpp" line="269"/>
         <source>Compiler Set Folder</source>
         <translation>编译器所在文件夹</translation>
     </message>
     <message>
-        <location filename="settingsdialog/compilersetoptionwidget.cpp" line="279"/>
+        <location filename="settingsdialog/compilersetoptionwidget.cpp" line="284"/>
         <source>New name</source>
         <translation>新名称</translation>
     </message>
@@ -5929,180 +5932,180 @@ Are you really want to continue?</source>
         <translation>无法载入自动链接设置</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1516"/>
-        <location filename="settings.cpp" line="1535"/>
-        <location filename="settings.cpp" line="1547"/>
-        <location filename="settings.cpp" line="1559"/>
+        <location filename="settings.cpp" line="1517"/>
+        <location filename="settings.cpp" line="1536"/>
+        <location filename="settings.cpp" line="1548"/>
+        <location filename="settings.cpp" line="1560"/>
         <source>The following %1 directories don&apos;t exist:</source>
         <translation>下列%1文件夹不存在：</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1517"/>
-        <location filename="settings.cpp" line="1527"/>
+        <location filename="settings.cpp" line="1518"/>
+        <location filename="settings.cpp" line="1528"/>
         <source>binary</source>
         <translation>二进制</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1526"/>
+        <location filename="settings.cpp" line="1527"/>
         <source>No %1 directories have been specified.</source>
         <translation>未指定%1文件夹</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1536"/>
+        <location filename="settings.cpp" line="1537"/>
         <source>C include</source>
         <translation>C包含</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1548"/>
-        <location filename="settings.cpp" line="1560"/>
+        <location filename="settings.cpp" line="1549"/>
+        <location filename="settings.cpp" line="1561"/>
         <source>C++ include</source>
         <translation>C++包含</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1579"/>
-        <location filename="settings.cpp" line="1584"/>
-        <location filename="settings.cpp" line="1589"/>
-        <location filename="settings.cpp" line="1594"/>
+        <location filename="settings.cpp" line="1580"/>
+        <location filename="settings.cpp" line="1585"/>
+        <location filename="settings.cpp" line="1590"/>
+        <location filename="settings.cpp" line="1595"/>
         <source>Cannot find the %1 &quot;%2&quot;</source>
         <translation>无法找到%1程序&quot;%2&quot;</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2123"/>
+        <location filename="settings.cpp" line="2124"/>
         <source>C options</source>
         <translation>C语言选项</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2124"/>
+        <location filename="settings.cpp" line="2125"/>
         <source>Support all ANSI standard C programs (-ansi)</source>
         <translation>支持所有ANSI标准C程序(-ansi)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2125"/>
+        <location filename="settings.cpp" line="2126"/>
         <source>Do not recognize asm,inline or typeof as a keyword (-fno-asm)</source>
         <translation>不支持将asm、inline和typeof作为关键字(-fno-asm)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2126"/>
+        <location filename="settings.cpp" line="2127"/>
         <source>Imitate traditional C preprocessors (-traditional-cpp)</source>
         <translation>模仿传统C预处理器行为(-traditional-cpp)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2129"/>
+        <location filename="settings.cpp" line="2130"/>
         <source>Code Generation</source>
         <translation>代码生成</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2158"/>
+        <location filename="settings.cpp" line="2159"/>
         <source>Optimize for the following machine (-march)</source>
         <translation>生成特定机器的专用指令(-march)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2159"/>
+        <location filename="settings.cpp" line="2160"/>
         <source>Optimize less, while maintaining full compatibility (-tune)</source>
         <translation>完整兼容特定机器，较少优化(-tune)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2179"/>
+        <location filename="settings.cpp" line="2180"/>
         <source>Enable use of specific instructions (-mx)</source>
         <translation>启用特定指令集(-mx)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2190"/>
+        <location filename="settings.cpp" line="2191"/>
         <source>Optimization level (-Ox)</source>
         <translation>优化级别(-Ox)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2197"/>
+        <location filename="settings.cpp" line="2198"/>
         <source>Compile with the following pointer size (-mx)</source>
         <translation>使用下列指针大小编译(-mx)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2220"/>
+        <location filename="settings.cpp" line="2221"/>
         <source>Language standard (-std)</source>
         <translation>语言标准(-std)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2233"/>
+        <location filename="settings.cpp" line="2234"/>
         <source>Profile</source>
         <translation>性能分析</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2242"/>
+        <location filename="settings.cpp" line="2243"/>
         <source>Generate debugging information (-g3)</source>
         <translation>生成调试信息(-g3)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2601"/>
+        <location filename="settings.cpp" line="2606"/>
         <source>Would you like Red Panda C++ to search for compilers in PATH?</source>
         <translation>您同意小熊猫C++在PATH路径中寻找gcc编译器吗？</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2234"/>
+        <location filename="settings.cpp" line="2235"/>
         <source>Generate profiling info for analysis (-pg)</source>
         <translation>生成性能分析信息(-pg)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2223"/>
+        <location filename="settings.cpp" line="2224"/>
         <source>Warnings</source>
         <translation>代码警告</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2224"/>
+        <location filename="settings.cpp" line="2225"/>
         <source>Inhibit all warning messages (-w)</source>
         <translation>忽略所有警告信息(-w)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2225"/>
+        <location filename="settings.cpp" line="2226"/>
         <source>Show most warnings (-Wall)</source>
         <translation>启用常见问题警告(-Wall)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2226"/>
+        <location filename="settings.cpp" line="2227"/>
         <source>Show some more warnings (-Wextra)</source>
         <translation>启用更多问题警告(-Wextra)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2227"/>
+        <location filename="settings.cpp" line="2228"/>
         <source>Check ISO C/C++/C++0x conformance (-pedantic)</source>
         <translation>检查ISO C/C++/C++0x语法一致性(-pedantic)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2228"/>
+        <location filename="settings.cpp" line="2229"/>
         <source>Only check the code for syntax errors (-fsyntax-only)</source>
         <translation>只进行语法检查（不编译）(-fsyntax-only)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2229"/>
+        <location filename="settings.cpp" line="2230"/>
         <source>Make all warnings into errors (-Werror)</source>
         <translation>将警告作为错误处理(-Werror)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2230"/>
+        <location filename="settings.cpp" line="2231"/>
         <source>Abort compilation on first error (-Wfatal-errors)</source>
         <translation>遇到第一个错误后立即中止编译(-Wfatal-errors)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2237"/>
+        <location filename="settings.cpp" line="2238"/>
         <source>Linker</source>
         <translation>链接器</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2238"/>
+        <location filename="settings.cpp" line="2239"/>
         <source>Link an Objective C program (-lobjc)</source>
         <translation>链接Objective-C程序 (-lobjc)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2239"/>
+        <location filename="settings.cpp" line="2240"/>
         <source>Do not use standard system libraries (-nostdlib)</source>
         <translation>不使用标准库和系统启动文件(-nostdlib)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2240"/>
+        <location filename="settings.cpp" line="2241"/>
         <source>Do not create a console window (-mwindows)</source>
         <translation>不产生控制台窗口(-mwindows)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2241"/>
+        <location filename="settings.cpp" line="2242"/>
         <source>Strip executable (-s)</source>
         <translation>剥除附加信息(-s)</translation>
     </message>
@@ -6111,54 +6114,54 @@ Are you really want to continue?</source>
         <translation type="vanished">链接Ojbective C程序(-lobjc)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2245"/>
+        <location filename="settings.cpp" line="2246"/>
         <source>Output</source>
         <translation>输出</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2246"/>
+        <location filename="settings.cpp" line="2247"/>
         <source>Put comments in generated assembly code (-fverbose-asm)</source>
         <translation>在生成的汇编代码中加入注释(-fverbose-asm)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2248"/>
+        <location filename="settings.cpp" line="2249"/>
         <source>Use pipes instead of temporary files during compilation (-pipe)</source>
         <translation>编译时使用管道而不是临时文件(-pipe)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2247"/>
+        <location filename="settings.cpp" line="2248"/>
         <source>Do not assemble, compile and generate the assemble code (-S)</source>
         <translation>只生成汇编代码(-S)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2562"/>
-        <location filename="settings.cpp" line="2603"/>
+        <location filename="settings.cpp" line="2567"/>
+        <location filename="settings.cpp" line="2608"/>
         <source>Confirm</source>
         <translation>确认</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2563"/>
+        <location filename="settings.cpp" line="2568"/>
         <source>The following problems were found during validation of compiler set &quot;%1&quot;:</source>
         <translation>在验证编译器设置&quot;%1&quot;时遇到了下列问题：</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2567"/>
+        <location filename="settings.cpp" line="2572"/>
         <source>Would you like Red Panda C++ to remove them for you and add the default paths to the valid paths?</source>
         <translation>是否让小熊猫C++删除这些配置，并尝试重新建立配置？</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2569"/>
+        <location filename="settings.cpp" line="2574"/>
         <source>Leaving those directories will lead to problems during compilation.&lt;br /&gt;&lt;br /&gt;Unless you know exactly what you&apos;re doing, it is recommended that you click Yes.</source>
         <translation>如果仍然保留这些设置，可能会导致编译错误。&lt;br /&gt;&lt;br /&gt;请选择“是”，除非您清楚的知道选择“否”的后果，</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2593"/>
-        <location filename="settings.cpp" line="2599"/>
+        <location filename="settings.cpp" line="2598"/>
+        <location filename="settings.cpp" line="2604"/>
         <source>Compiler set not configuared.</source>
         <translation>未配置编译器设置。</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2595"/>
+        <location filename="settings.cpp" line="2600"/>
         <source>Would you like Red Panda C++ to search for compilers in the following locations: &lt;BR /&gt;&apos;%1&apos;&lt;BR /&gt;&apos;%2&apos;? </source>
         <translation>您需要小熊猫C++在下列位置搜索编译器吗：&lt;br /&gt;%1&lt;br /&gt;%2</translation>
     </message>
