@@ -18,7 +18,7 @@ Depends: ${shlibs:Depends},
 	 g++,
 	 make,
 	 gdb,
-	 gdb-server,
+	 gdbserver,
 	 qterminal
 Description: A lightweight but powerful C/C++ IDE
  Red Panda C++ (Old name Red Panda Dev-C++ 7) is a full featured C/C++ IDE.
