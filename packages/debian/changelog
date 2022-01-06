@@ -1,0 +1,6 @@
+redpanda-cpp (0.12.6-1) unstable; urgency=medium
+
+  * Initial release
+
+ -- Roy Qu (瞿华) <royqh1979@gmail.com>  Thu, 6 Jan 2022 14:52:00 +0800
+
