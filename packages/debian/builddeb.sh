@@ -1,5 +1,7 @@
 #!/bin/sh
 
+make distclean
+
 TMP_FOLDER=/tmp/redpandaide
 mkdir $TMP_FOLDER
 
@@ -13,7 +15,7 @@ cp NEWS.md $TMP_FOLDER
 cp redpandaide.desktop.in $TMP_FOLDER
 cp -r templates $TMP_FOLDER
 cp Red_Panda_CPP.pro $TMP_FOLDER
-cp linux $TMP_FOLDER
+cp -r linux $TMP_FOLDER
 
 cd $TMP_FOLDER
 dpkg-buildpackage -us -uc
