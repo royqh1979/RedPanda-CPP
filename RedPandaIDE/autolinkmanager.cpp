@@ -41,6 +41,7 @@ void AutolinkManager::load()
     QString filename=dir.filePath(DEV_AUTOLINK_FILE);
     QFile file(filename);
     if (!file.exists()) {
+#ifdef Q_OS_WIN
         QFile preFile(":/config/autolink.json");
         if (!preFile.open(QFile::ReadOnly)) {
             throw FileError(QObject::tr("Can't open file '%1' for read.")
@@ -54,6 +55,9 @@ void AutolinkManager::load()
         file.write(content);
         file.close();
         preFile.close();
+#else
+        return;
+#endif
     }
     if (file.open(QFile::ReadOnly)) {
         QByteArray content = file.readAll();
