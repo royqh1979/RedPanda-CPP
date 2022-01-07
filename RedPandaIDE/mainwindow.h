@@ -23,6 +23,7 @@
 #include <QFileSystemModel>
 #include <QTcpServer>
 #include <QElapsedTimer>
+#include <QSortFilterProxyModel>
 #include "common.h"
 #include "widgets/searchresultview.h"
 #include "widgets/classbrowser.h"
@@ -672,6 +673,8 @@ private:
     //action for problem set
     QAction * mProblem_OpenSource;
     QAction * mProblem_Properties;
+
+    QSortFilterProxyModel mProjectProxyModel;
 
    // QWidget interface
 protected:

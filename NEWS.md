@@ -6,6 +6,7 @@ Red Panda C++ Version 0.12.7
  - fix: shouldn't auto add /bin/gcc to compiler sets
  - fix: if a dir duplicates in PATH, don't add it to compiler sets repeatedly
  - enhancement: add "--sanitize=address" to compile option in the Debug compiler set in Linux 
+ - enhancement: auto sort files in the project view
 
 Red Panda C++ Version 0.12.6
  - fix: heartbeat for gdb server async command shouldn't disable actions

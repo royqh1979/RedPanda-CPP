@@ -85,7 +85,7 @@
             <enum>QTabWidget::West</enum>
            </property>
            <property name="currentIndex">
-            <number>4</number>
+            <number>0</number>
            </property>
            <property name="usesScrollButtons">
             <bool>true</bool>
@@ -98,7 +98,7 @@
             <attribute name="title">
              <string>Project</string>
             </attribute>
-            <layout class="QHBoxLayout" name="horizontalLayout_13">
+            <layout class="QVBoxLayout" name="verticalLayout_9">
              <property name="leftMargin">
               <number>0</number>
              </property>

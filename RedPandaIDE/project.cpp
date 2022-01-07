@@ -309,15 +309,6 @@ Editor *Project::openUnit(int index)
 
 void Project::rebuildNodes()
 {
-    // Remember if folder nodes were expanded or collapsed
-    // Create a list of expanded folder nodes
-//    QStringList  oldPaths := TStringList.Create;
-//      with MainForm.ProjectView do
-//        for idx := 0 to Items.Count - 1 do begin
-//          tempnode := Items[idx];
-//          if tempnode.Expanded and (tempnode.Data = Pointer(-1)) then // data=pointer(-1) - it's folder
-//            oldPaths.Add(GetFolderPath(tempnode));
-//        end;
 
     mModel.beginUpdate();
     // Delete everything
@@ -337,18 +328,6 @@ void Project::rebuildNodes()
         mUnits[idx]->node()->unitIndex = idx;
     }
 
-//      // expand nodes expanded before recreating the project tree
-//      fNode.Collapse(True);
-//      with MainForm.ProjectView do
-//        for idx := 0 to Items.Count - 1 do begin
-//          tempnode := Items[idx];
-//          if (tempnode.Data = Pointer(-1)) then //it's a folder
-//            if oldPaths.IndexOf(GetFolderPath(tempnode)) >= 0 then
-//              tempnode.Expand(False);
-//        end;
-//      FreeAndNil(oldPaths);
-
-//      fNode.Expand(False);
 
     mModel.endUpdate();
     emit nodesChanged();
@@ -365,6 +344,8 @@ bool Project::removeUnit(int index, bool doClose , bool removeFile)
 
     PProjectUnit unit = mUnits[index];
 
+    qDebug()<<unit->fileName();
+    qDebug()<<(qint64)unit->editor();
     // Attempt to close it
     if (doClose && (unit->editor())) {
         if (!pMainWindow->editorList()->closeEditor(unit->editor()))
@@ -1816,16 +1797,18 @@ ProjectModel::ProjectModel(Project *project, QObject *parent):
 
 void ProjectModel::beginUpdate()
 {
-    if (mUpdateCount==0)
+    if (mUpdateCount==0) {
         beginResetModel();
+    }
     mUpdateCount++;
 }
 
 void ProjectModel::endUpdate()
 {
     mUpdateCount--;
-    if (mUpdateCount==0)
+    if (mUpdateCount==0) {
         endResetModel();
+    }
 }
 
 QModelIndex ProjectModel::index(int row, int column, const QModelIndex &parent) const
