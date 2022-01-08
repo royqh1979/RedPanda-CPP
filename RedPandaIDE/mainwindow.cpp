@@ -3475,6 +3475,10 @@ void MainWindow::updateProjectView()
             mProjectProxyModel->sort(0);
             connect(mProject->model(), &ProjectModel::dataChanged,
                     this, &MainWindow::invalidateProjectProxyModel);
+            connect(mProject->model(), &ProjectModel::rowsRemoved,
+                    this, &MainWindow::invalidateProjectProxyModel);
+            connect(mProject->model(), &ProjectModel::rowsInserted,
+                    this, &MainWindow::invalidateProjectProxyModel);
             connect(mProject->model(), &QAbstractItemModel::modelReset,
                     ui->projectView,&QTreeView::expandAll);
         } else
