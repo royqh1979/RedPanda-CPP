@@ -1,7 +1,7 @@
 [Template]
 ver=2
 Name=Single Dialog Application
-Name[zh_CN]=单对话框应用程序
+Name[zh_CN]=单对话框程序
 Icon=Single Dialog Application.ico
 Description=An Appliction use a dialog as the main UI
 Description[zh_CN]=使用一个对话框作为主用户界面简单程序

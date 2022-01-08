@@ -5012,6 +5012,8 @@ void MainWindow::on_actionNew_Project_triggered()
         mProject->saveAll();
         updateProjectView();
     }
+    pSettings->ui().setNewProjectDialogWidth(dialog.width());
+    pSettings->ui().setNewProjectDialogHeight(dialog.height());
 }
 
 

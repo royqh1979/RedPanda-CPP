@@ -22,6 +22,7 @@
 #include <QDir>
 #include <QFile>
 #include <QFileDialog>
+#include <QPainter>
 #include <QPushButton>
 
 NewProjectDialog::NewProjectDialog(QWidget *parent) :
@@ -46,6 +47,7 @@ NewProjectDialog::NewProjectDialog(QWidget *parent) :
     }
     ui->txtProjectName->setText(projectName);
     ui->txtLocation->setText(location);
+    resize(pSettings->ui().newProjectDialogWidth(),pSettings->ui().newProjectDialogHeight());
 
     connect(mTemplatesTabBar,
             &QTabBar::currentChanged,
@@ -162,7 +164,7 @@ void NewProjectDialog::updateView()
         if (category == tabText) {
             QListWidgetItem * item;
             QString iconFilename = QDir(pSettings->dirs().templateDir()).absoluteFilePath(t->icon());
-            QIcon icon(iconFilename);
+            QIcon icon=QIcon(iconFilename);
             if (icon.isNull()) {
                 //todo : use an default icon
                 item = new QListWidgetItem(
@@ -173,6 +175,8 @@ void NewProjectDialog::updateView()
                         icon,
                         t->name());
             }
+            item->setSizeHint(QSize(font().pixelSize()*6,font().pixelSize()*2+64));
+            item->setTextAlignment(Qt::AlignHCenter | Qt::AlignTop);
             item->setData(Qt::ToolTipRole,t->name());
             item->setData(Qt::UserRole,i);
             ui->lstTemplates->addItem(item);

@@ -13,7 +13,7 @@ isEmpty(PREFIX) {
     PREFIX = /usr/local
 }
 
-APP_VERSION = beta.0.12.8
+APP_VERSION = beta.0.13.1
 
 DEFINES += PREFIX=\\\"$${PREFIX}\\\"
 DEFINES += APP_NAME=\\\"$${APP_NAME}\\\"

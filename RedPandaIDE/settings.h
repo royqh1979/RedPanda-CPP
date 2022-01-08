@@ -954,6 +954,12 @@ public:
         int settingsDialogSplitterPos() const;
         void setSettingsDialogSplitterPos(int newSettingsDialogSplitterPos);
 
+        int newProjectDialogWidth() const;
+        void setNewProjectDialogWidth(int newNewProjectDialogWidth);
+
+        int newProjectDialogHeight() const;
+        void setNewProjectDialogHeight(int newNewProjectDialogHeight);
+
     private:
         QByteArray mMainWindowState;
         QByteArray mMainWindowGeometry;
@@ -993,6 +999,8 @@ public:
         int mSettingsDialogWidth;
         int mSettingsDialogHeight;
         int mSettingsDialogSplitterPos;
+        int mNewProjectDialogWidth;
+        int mNewProjectDialogHeight;
 
     protected:
         void doSave() override;

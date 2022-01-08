@@ -4605,6 +4605,26 @@ void Settings::UI::setSettingsDialogSplitterPos(int newSettingsDialogSplitterPos
     mSettingsDialogSplitterPos = newSettingsDialogSplitterPos;
 }
 
+int Settings::UI::newProjectDialogWidth() const
+{
+    return mNewProjectDialogWidth;
+}
+
+void Settings::UI::setNewProjectDialogWidth(int newNewProjectDialogWidth)
+{
+    mNewProjectDialogWidth = newNewProjectDialogWidth;
+}
+
+int Settings::UI::newProjectDialogHeight() const
+{
+    return mNewProjectDialogHeight;
+}
+
+void Settings::UI::setNewProjectDialogHeight(int newNewProjectDialogHeight)
+{
+    mNewProjectDialogHeight = newNewProjectDialogHeight;
+}
+
 int Settings::UI::settingsDialogHeight() const
 {
     return mSettingsDialogHeight;
@@ -4865,6 +4885,8 @@ void Settings::UI::doSave()
     saveValue("settings_dialog_width", mSettingsDialogWidth);
     saveValue("settings_dialog_height", mSettingsDialogHeight);
     saveValue("settings_dialog_splitter", mSettingsDialogSplitterPos);
+    saveValue("new_project_dialog_width", mNewProjectDialogWidth);
+    saveValue("new_project_dialog_height", mNewProjectDialogHeight);
 }
 
 void Settings::UI::doLoad()
@@ -4901,10 +4923,13 @@ void Settings::UI::doLoad()
     mShowProblem = boolValue("show_problem",true);
 
     //dialogs
-    mCPUDialogWidth = intValue("cpu_dialog_width",800*qApp->desktop()->width()/1920);
-    mCPUDialogHeight = intValue("cpu_dialog_height",600*qApp->desktop()->height()/1080);
+    mCPUDialogWidth = intValue("cpu_dialog_width",977*qApp->desktop()->width()/1920);
+    mCPUDialogHeight = intValue("cpu_dialog_height",622*qApp->desktop()->height()/1080);
     mCPUDialogSplitterPos = intValue("cpu_dialog_splitter",500*qApp->desktop()->width()/1920);
-    mSettingsDialogWidth = intValue("settings_dialog_width",800*qApp->desktop()->width()/1920);
-    mSettingsDialogHeight = intValue("settings_dialog_height",600*qApp->desktop()->height()/1080);
+    mSettingsDialogWidth = intValue("settings_dialog_width",977*qApp->desktop()->width()/1920);
+    mSettingsDialogHeight = intValue("settings_dialog_height",622*qApp->desktop()->height()/1080);
     mSettingsDialogSplitterPos = intValue("settings_dialog_splitter",300*qApp->desktop()->width()/1920);
+
+    mNewProjectDialogWidth = intValue("new_project_dialog_width", 900*qApp->desktop()->width()/1920);
+    mNewProjectDialogHeight = intValue("new_project_dialog_height", 600*qApp->desktop()->height()/1080);
 }
