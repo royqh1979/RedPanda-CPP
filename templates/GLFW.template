@@ -2,20 +2,27 @@
 ver=2
 Name=GLFW
 Description=A simple GLFW program
+Description[zh_CN]=一个简单的GLFW程序
 Icon=GLFW.ico
 Category=Multimedia
+Category[zh_CN]=多媒体
+
 [Unit0]
 CppName=main.cpp
 Cpp=GLFW_main.cpp.txt
+
 [Unit1]
 CppName=shader.h
 Cpp=GLFW_shader.h.txt
+
 [Unit2]
 CppName=shader.frag
 Cpp=GLFW_shader.frag.txt
+
 [Unit3]
 CppName=shader.vs
 Cpp=GLFW_shader.vs.txt
+
 [Project]
 UnitCount=4
 Type=1

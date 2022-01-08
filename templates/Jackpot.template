@@ -1,9 +1,11 @@
 [Template]
-ver=1
+ver=2
 Name=Jackpot
 Icon=Games.ico
 Description=A number guessing game
+Description[zh_CN]=一个数字猜测游戏
 Category=Console
+Category[zh_CN]=控制台
 
 [Unit0]
 CName=main.c

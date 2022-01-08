@@ -1,12 +1,16 @@
 [Template]
-ver=1
+ver=2
 Name=GLUT
 Icon=CL_GLUT.ico
 Description=A simple GLUT program
+Description[zh_CN]=一个简单的GLUT程序
 Category=Multimedia
+Category[zh_CN]=多媒体
+
 [Unit0]
 CppName=main.cpp
 C=CL_GLUT_cpp.txt
+
 [Project]
 UnitCount=1
 Type=0

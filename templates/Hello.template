@@ -1,9 +1,12 @@
 [Template]
-ver=1
+ver=2
 Name=Hello World
+Name[zh_CN]=世界，你好！
 Icon=Communication.ico
 Description=A classic Hello World program
+Description[zh_CN]=一个经典的“世界，你好！”程序
 Category=Console
+Category=控制台
 
 [Unit0]
 CName=main.c

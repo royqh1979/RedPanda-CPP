@@ -1,9 +1,12 @@
 [Template]
-ver=1
+ver=2
 Name=Empty Project
+Name[zh_CN]=空项目
 Icon=Empty.ico
 Description=An empty project
+Description[zh_CN]=一个空项目
 Category=Basic
+Category[zh_CN]=基础
 
 [Unit0]
 CName=

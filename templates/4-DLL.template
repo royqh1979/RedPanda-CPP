@@ -1,9 +1,12 @@
 [Template]
-ver=1
+ver=2
 Name=DLL
+Name[zh_CN]=动态链接库
 Icon=DLL.ico
 Description=A Dynamic Link Library (DLL)
+Description[zh_CN]=动态链接库(DLL)
 Category=Basic
+Category[zh_CN]=基础
 
 [Unit0]
 CName=dllmain.c

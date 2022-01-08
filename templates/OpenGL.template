@@ -1,9 +1,11 @@
 [Template]
-ver=1
+ver=2
 Name=OpenGL
 Icon=Pizza.ico
 Description=A basic OpenGL program
+Description[zh_CN]=一个基本的OpenGL程序
 Category=Multimedia
+Category[zh_CN]=多媒体
 
 [Unit0]
 CName=main.c

@@ -1,15 +1,20 @@
 [Template]
-ver=1
+ver=2
 Name=Single Dialog Application
+Name[zh_CN]=单对话框应用程序
 Icon=Single Dialog Application.ico
 Description=An Appliction use a dialog as the main UI
+Description[zh_CN]=使用一个对话框作为主用户界面简单程序
 Category=Win32
+
 [Unit0]
 CName=main.c
 C=Single_Dialog_Application_main.c.txt
+
 [Unit1]
 CName=resource.rc
 C=Single_Dialog_Application_resource.rc.txt
+
 [Unit2]
 CName=resource.h
 C=Single_Dialog_Application_resource.h.txt

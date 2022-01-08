@@ -1,12 +1,17 @@
 [Template]
-ver=1
+ver=2
 Name=Turtle Graphics
+Name[zh_CN]=海龟作图
 Icon=CL_Turtle.ico
-Description=A simple program using Turtle Graphics (https://github.com/royqh1979/libturtle)
+Description=A simple program using Turtle Graphics
+Description[zh_CN]=简单的海龟作图程序 (https://github.com/royqh1979/libturtle)
 Category=Multimedia
+Category[zh_CN]=多媒体
+
 [Unit0]
 CppName=main.cpp
 Cpp=CL_Turtle_cpp.txt
+
 [Project]
 UnitCount=1
 Type=0

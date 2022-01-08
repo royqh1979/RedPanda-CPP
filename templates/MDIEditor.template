@@ -1,8 +1,10 @@
 [Template]
-ver=1
+ver=2
 Name=MDI Editor
+Name[zh_CN]=MDI编辑器
 Icon=Windows.ico
 Description=A Win32 MDI file editor
+Description[zh_CN]=一个Win32多文档界面(MDI)文件编辑器
 Category=Win32
 
 [Unit0]

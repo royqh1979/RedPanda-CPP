@@ -1,9 +1,11 @@
 [Template]
-ver=1
+ver=2
 Name=std::thread
 Icon=Software.ico
 Description=A C++ multithreading example
+Description[zh_CN]=一个C++多线程示例
 Category=Console
+Category[zh_CN]=控制台
 
 [Unit0]
 CName=main.c

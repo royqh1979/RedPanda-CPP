@@ -478,9 +478,10 @@ void MainWindow::updateCompileActions()
     Editor * e = mEditorList->getEditor();
     if (e) {
         FileType fileType = getFileType(e->filename());
+        qDebug()<<(int)fileType<<e->isNew();
         if (fileType == FileType::CSource
                 || fileType == FileType::CppSource || e->isNew())
-        editorCanCompile = true;
+            editorCanCompile = true;
     }
     if (mCompilerManager->compiling() || mCompilerManager->running() || mDebugger->executing()
          || (!hasProject && !editorCanCompile)   ) {
@@ -1323,7 +1324,12 @@ void MainWindow::checkSyntaxInBack(Editor *e)
 //    if not devEditor.AutoCheckSyntax then
 //      Exit;
     //not c or cpp file
-    if (!e->highlighter() || e->highlighter()->getName()!=SYN_HIGHLIGHTER_CPP)
+    FileType fileType = getFileType(e->filename());
+    if (fileType != FileType::CSource
+            && fileType != FileType::CppSource
+            && fileType != FileType::CHeader
+            && fileType != FileType::CppHeader
+            )
         return;
     if (mCompilerManager->backgroundSyntaxChecking())
         return;
