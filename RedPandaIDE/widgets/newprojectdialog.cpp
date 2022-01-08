@@ -173,6 +173,7 @@ void NewProjectDialog::updateView()
                         icon,
                         t->name());
             }
+            item->setData(Qt::ToolTipRole,t->name());
             item->setData(Qt::UserRole,i);
             ui->lstTemplates->addItem(item);
         }

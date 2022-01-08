@@ -1,9 +1,12 @@
 [Template]
 ver=1
 Name=Windows Application
+Name[zh_CN]=Windows应用程序
 Icon=Windows.ico
 Description=A standard Windows application
+Description[zh_CN]=基于Windows API开发的图形界面应用程序
 Category=Basic
+Category[zh_CN]=基础
 
 [Unit0]
 CName=main.c

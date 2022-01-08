@@ -1,9 +1,12 @@
 [Template]
 ver=1
 Name=Console Application
+Name[zh_CN]=控制台程序
 Icon=ConsoleToo.ico
 Description=A console application (MS-DOS window)
+Description[zh_CN]=控制台应用程序
 Category=Basic
+Category[zh_CN]=基础
 
 [Unit0]
 CName=main.c

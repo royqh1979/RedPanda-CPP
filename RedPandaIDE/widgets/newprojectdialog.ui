@@ -22,6 +22,12 @@
      <property name="viewMode">
       <enum>QListView::IconMode</enum>
      </property>
+     <property name="uniformItemSizes">
+      <bool>true</bool>
+     </property>
+     <property name="wordWrap">
+      <bool>false</bool>
+     </property>
      <property name="itemAlignment">
       <set>Qt::AlignCenter</set>
      </property>

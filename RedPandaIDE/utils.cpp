@@ -776,12 +776,20 @@ QString extractFileDir(const QString &fileName)
 
 QByteArray toByteArray(const QString &s)
 {
-    return s.toLocal8Bit();
+    //return s.toLocal8Bit();
+    return s.toUtf8();
 }
 
 QString fromByteArray(const QByteArray &s)
 {
-    return QString::fromLocal8Bit(s);
+    QTextCodec* codec = QTextCodec::codecForName(ENCODING_UTF8);
+    QTextCodec::ConverterState state;
+    if (!codec)
+        return QString(s);
+    QString tmp = codec->toUnicode(s,s.length(),&state);
+    if (state.invalidChars>0)
+        tmp = QString::fromLocal8Bit(s);
+    return tmp;
 }
 
 QString linesToText(const QStringList &lines)

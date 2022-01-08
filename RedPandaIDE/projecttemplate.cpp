@@ -18,6 +18,7 @@
 #include <QFile>
 #include <QMessageBox>
 #include "mainwindow.h"
+#include "settings.h"
 
 ProjectTemplate::ProjectTemplate(QObject *parent) : QObject(parent)
 {
@@ -105,11 +106,20 @@ void ProjectTemplate::readTemplateFile(const QString &fileName)
         return;
     }
 
+    QString lang = pSettings->environment().language();
     // template info
-    mDescription = fromByteArray(mIni->GetValue("Template", "Description", ""));
     mIcon = fromByteArray(mIni->GetValue("Template", "Icon", ""));
-    mCategory = fromByteArray(mIni->GetValue("Template", "Category", ""));
-    mName = fromByteArray(mIni->GetValue("Template", "Name", ""));
+    if (!lang.isEmpty()) {
+        mCategory = fromByteArray(mIni->GetValue("Template", QString("Category[%1]").arg(lang).toUtf8(), ""));
+        mName = fromByteArray(mIni->GetValue("Template", QString("Name[%1]").arg(lang).toUtf8(), ""));
+        mDescription = fromByteArray(mIni->GetValue("Template", QString("Description[%1]").arg(lang).toUtf8(), ""));
+    }
+    if (mCategory.isEmpty())
+        mCategory = fromByteArray(mIni->GetValue("Template", "Category", ""));
+    if (mName.isEmpty())
+        mName = fromByteArray(mIni->GetValue("Template", "Name", ""));
+    if (mDescription.isEmpty())
+        mDescription = fromByteArray(mIni->GetValue("Template", "Description", ""));
 
     mOptions.icon = mIni->GetValue("Project", "Icon", "");
     mOptions.type = static_cast<ProjectType>(mIni->GetLongValue("Project", "Type", 0)); // default = gui

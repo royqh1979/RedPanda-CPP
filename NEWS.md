@@ -1,3 +1,8 @@
+Red Panda C++ Version 0.13.1
+ - enhancement: suppoort localization info in project templates
+ - change: template / project files use utf-8 encoding instead of ANSI
+
+
 Red Panda C++ Version 0.12.7
  - change: make current build system follow FHS specifications
  - fix: crash when close settings dialog in Ubuntu 20.04 (but we'll leak memory now...)
