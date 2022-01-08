@@ -18,6 +18,7 @@
 #define PROJECT_H
 
 #include <QAbstractItemModel>
+#include <QSortFilterProxyModel>
 #include <memory>
 #include "projectoptions.h"
 #include "utils.h"
@@ -119,6 +120,18 @@ public:
     Qt::DropActions supportedDropActions() const override;
     bool dropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent) override;
     QMimeData *mimeData(const QModelIndexList &indexes) const override;
+    Project *project() const;
+};
+
+class ProjectModelSortFilterProxy : public QSortFilterProxyModel
+{
+    Q_OBJECT
+
+public:
+    explicit ProjectModelSortFilterProxy(QObject *parent = nullptr);
+    // QSortFilterProxyModel interface
+protected:
+    bool lessThan(const QModelIndex &source_left, const QModelIndex &source_right) const override;
 };
 
 class ProjectTemplate;

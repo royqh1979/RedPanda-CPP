@@ -1811,6 +1811,11 @@ void ProjectModel::endUpdate()
     }
 }
 
+Project *ProjectModel::project() const
+{
+    return mProject;
+}
+
 QModelIndex ProjectModel::index(int row, int column, const QModelIndex &parent) const
 {
     if (!parent.isValid()) {
@@ -1906,6 +1911,7 @@ bool ProjectModel::setData(const QModelIndex &index, const QVariant &value, int 
             if (newName.isEmpty())
                 return false;
             mProject->setName(newName);
+            emit dataChanged(index,index);
             return true;
         }
         int idx = node->unitIndex;
@@ -1973,6 +1979,7 @@ bool ProjectModel::setData(const QModelIndex &index, const QVariant &value, int 
 
             // Add new filename to file minitor
             pMainWindow->fileSystemWatcher()->addPath(newName);
+            emit dataChanged(index,index);
             return true;
         } else {
             //change folder name
@@ -1984,6 +1991,7 @@ bool ProjectModel::setData(const QModelIndex &index, const QVariant &value, int 
             node->text = newName;
             mProject->updateFolders();
             mProject->saveAll();
+            emit dataChanged(index,index);
             return true;
         }
 
@@ -2133,4 +2141,32 @@ QMimeData *ProjectModel::mimeData(const QModelIndexList &indexes) const
         data->setUrls(urls);
     data->setData(format, encoded);
     return data;
+}
+
+ProjectModelSortFilterProxy::ProjectModelSortFilterProxy(QObject *parent):
+    QSortFilterProxyModel(parent)
+{
+
+}
+
+bool ProjectModelSortFilterProxy::lessThan(const QModelIndex &source_left, const QModelIndex &source_right) const
+{
+    if (!sourceModel())
+        return false;
+    ProjectModel* projectModel = dynamic_cast<ProjectModel*>(sourceModel());
+    FolderNode* pLeft=nullptr;
+    if (source_left.isValid())
+        pLeft = static_cast<FolderNode*>(source_left.internalPointer());
+    FolderNode* pRight=nullptr;
+    if (source_right.isValid())
+        pRight = static_cast<FolderNode*>(source_right.internalPointer());
+    if (!pLeft)
+        return true;
+    if (!pRight)
+        return false;
+    if (pLeft->unitIndex<0 && pRight->unitIndex>=0)
+        return true;
+    if (pLeft->unitIndex>=0 && pRight->unitIndex<0)
+        return false;
+    return QString::compare(pLeft->text, pRight->text)<0;
 }

@@ -116,8 +116,9 @@ MainWindow::MainWindow(QWidget *parent)
     connect(mEditorList, &EditorList::editorClosed,
                this, &MainWindow::onEditorClosed);
     mProject = nullptr;
-    ui->projectView->setModel(&mProjectProxyModel);
-    mProjectProxyModel.setDynamicSortFilter(false);
+    mProjectProxyModel = new ProjectModelSortFilterProxy(this);
+    ui->projectView->setModel(mProjectProxyModel);
+    mProjectProxyModel->setDynamicSortFilter(false);
     setupActions();
     ui->EditorTabsRight->setVisible(false);
 
@@ -2396,8 +2397,9 @@ void MainWindow::buildContextMenus()
                 ui->projectView);
     connect(mProject_Rename_Unit, &QAction::triggered,
             [this](){
-        if (ui->projectView->currentIndex().isValid())
+        if (ui->projectView->currentIndex().isValid()) {
             ui->projectView->edit(ui->projectView->currentIndex());
+        }
     });
     mProject_Add_Folder = createActionFor(
                 tr("Add Folder"),
@@ -2406,7 +2408,7 @@ void MainWindow::buildContextMenus()
             [this](){
         if (!mProject)
             return;
-        QModelIndex current = mProjectProxyModel.mapToSource(ui->projectView->currentIndex());
+        QModelIndex current = mProjectProxyModel->mapToSource(ui->projectView->currentIndex());
         if (!current.isValid()) {
             return;
         }
@@ -2438,8 +2440,9 @@ void MainWindow::buildContextMenus()
                 ui->projectView);
     connect(mProject_Rename_Folder, &QAction::triggered,
             [this](){
-        if (ui->projectView->currentIndex().isValid())
+        if (ui->projectView->currentIndex().isValid()) {
             ui->projectView->edit(ui->projectView->currentIndex());
+        }
     });
     mProject_Remove_Folder = createActionFor(
                 tr("Remove Folder"),
@@ -2448,7 +2451,7 @@ void MainWindow::buildContextMenus()
             [this](){
         if (!mProject)
             return;
-        QModelIndex current = mProjectProxyModel.mapToSource(ui->projectView->currentIndex());
+        QModelIndex current = mProjectProxyModel->mapToSource(ui->projectView->currentIndex());
         if (!current.isValid()) {
             return;
         }
@@ -2840,7 +2843,7 @@ void MainWindow::onProjectViewContextMenu(const QPoint &pos)
     bool onRoot = false;
     bool folderEmpty = false;
     int unitIndex = -1;
-    QModelIndex current = mProjectProxyModel.mapToSource(ui->projectView->selectionModel()->currentIndex());
+    QModelIndex current = mProjectProxyModel->mapToSource(ui->projectView->selectionModel()->currentIndex());
     if (current.isValid() && mProject) {
         FolderNode * node = static_cast<FolderNode*>(current.internalPointer());
         PFolderNode pNode = mProject->pointerToNode(node);
@@ -3467,36 +3470,22 @@ void MainWindow::closeProject(bool refreshEditor)
 void MainWindow::updateProjectView()
 {
     if (mProject) {
-        if (mProjectProxyModel.sourceModel()!=mProject->model()) {
-            mProjectProxyModel.setSourceModel(mProject->model());
-            connect(mProject->model(),&ProjectModel::dataChanged, &mProjectProxyModel,
-                    [this]() {
-                mProjectProxyModel.invalidate();
-            });
-            connect(mProject->model(),&ProjectModel::modelReset, &mProjectProxyModel,
-                    [this]() {
-                mProjectProxyModel.invalidate();
-            });
-            connect(mProject->model(),&ProjectModel::rowsInserted, &mProjectProxyModel,
-                    [this]() {
-                mProjectProxyModel.invalidate();
-            });
-            connect(mProject->model(),&ProjectModel::rowsRemoved, &mProjectProxyModel,
-                    [this]() {
-                mProjectProxyModel.invalidate();
-            });
-            mProjectProxyModel.sort(0);
+        if (mProjectProxyModel->sourceModel()!=mProject->model()) {
+            mProjectProxyModel->setSourceModel(mProject->model());
+            mProjectProxyModel->sort(0);
+            connect(mProject->model(), &ProjectModel::dataChanged,
+                    this, &MainWindow::invalidateProjectProxyModel);
             connect(mProject->model(), &QAbstractItemModel::modelReset,
                     ui->projectView,&QTreeView::expandAll);
-        }
-        mProjectProxyModel.invalidate();
+        } else
+            mProjectProxyModel->invalidate();
         ui->projectView->expandAll();
         openCloseLeftPanel(true);
         ui->tabProject->setVisible(true);
         ui->tabInfos->setCurrentWidget(ui->tabProject);
     } else {
         // Clear project browser
-        mProjectProxyModel.setSourceModel(nullptr);
+        mProjectProxyModel->setSourceModel(nullptr);
         ui->tabProject->setVisible(false);
     }
     updateProjectActions();
@@ -4903,9 +4892,10 @@ std::shared_ptr<Project> MainWindow::project()
 
 void MainWindow::on_projectView_doubleClicked(const QModelIndex &index)
 {
-    if (!index.isValid())
+    QModelIndex sourceIndex = mProjectProxyModel->mapToSource(index);
+    if (!sourceIndex.isValid())
         return;
-    FolderNode * node = static_cast<FolderNode*>(index.internalPointer());
+    FolderNode * node = static_cast<FolderNode*>(sourceIndex.internalPointer());
     if (!node)
         return;
     if (node->unitIndex>=0) {
@@ -5055,7 +5045,7 @@ void MainWindow::on_actionAdd_to_project_triggered()
     dialog.setFileMode(QFileDialog::ExistingFiles);
     dialog.setAcceptMode(QFileDialog::AcceptOpen);
     if (dialog.exec()) {
-        QModelIndex current = mProjectProxyModel.mapToSource(ui->projectView->currentIndex());
+        QModelIndex current = mProjectProxyModel->mapToSource(ui->projectView->currentIndex());
         FolderNode * node = nullptr;
         if (current.isValid()) {
             node = static_cast<FolderNode*>(current.internalPointer());
@@ -5084,7 +5074,7 @@ void MainWindow::on_actionRemove_from_project_triggered()
     foreach (const QModelIndex& index, ui->projectView->selectionModel()->selectedIndexes()){
         if (!index.isValid())
             continue;
-        QModelIndex realIndex = mProjectProxyModel.mapToSource(index);
+        QModelIndex realIndex = mProjectProxyModel->mapToSource(index);
         FolderNode * node = static_cast<FolderNode*>(realIndex.internalPointer());
         PFolderNode folderNode =  mProject->pointerToNode(node);
         if (!folderNode)
@@ -5308,7 +5298,7 @@ void MainWindow::newProjectUnitFile()
     if (!mProject)
         return;
     int idx = -1;
-    QModelIndex current = mProjectProxyModel.mapToSource(ui->projectView->currentIndex());
+    QModelIndex current = mProjectProxyModel->mapToSource(ui->projectView->currentIndex());
     FolderNode * node = nullptr;
     if (current.isValid()) {
         node = static_cast<FolderNode*>(current.internalPointer());
@@ -5345,6 +5335,11 @@ void MainWindow::newProjectUnitFile()
     //editor->setUseCppSyntax(mProject->options().useGPP);
     //editor->setModified(true);
     editor->activate();
+}
+
+void MainWindow::invalidateProjectProxyModel()
+{
+    mProjectProxyModel->invalidate();
 }
 
 void MainWindow::onEditorRenamed(const QString &oldFilename, const QString &newFilename, bool firstSave)

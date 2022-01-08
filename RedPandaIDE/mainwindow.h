@@ -251,6 +251,7 @@ private:
     void newProjectUnitFile();
 
 private slots:
+    void invalidateProjectProxyModel();
     void onEditorRenamed(const QString& oldFilename, const QString& newFilename, bool firstSave);
     void onAutoSaveTimeout();
     void onFileChanged(const QString& path);
@@ -674,7 +675,7 @@ private:
     QAction * mProblem_OpenSource;
     QAction * mProblem_Properties;
 
-    QSortFilterProxyModel mProjectProxyModel;
+    QSortFilterProxyModel* mProjectProxyModel;
 
    // QWidget interface
 protected:
