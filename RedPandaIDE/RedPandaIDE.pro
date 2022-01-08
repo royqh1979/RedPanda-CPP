@@ -13,9 +13,11 @@ isEmpty(PREFIX) {
     PREFIX = /usr/local
 }
 
+APP_VERSION = beta.0.12.8
+
 DEFINES += PREFIX=\\\"$${PREFIX}\\\"
 DEFINES += APP_NAME=\\\"$${APP_NAME}\\\"
-DEFINES += REDPANDA_CPP_VERSION=\\\"beta.0.12.7\\\"
+DEFINES += REDPANDA_CPP_VERSION=\\\"$${APP_VERSION}\\\"
 
 linux: {
     LINUX_DISTRO = $$system(cat /etc/issue)

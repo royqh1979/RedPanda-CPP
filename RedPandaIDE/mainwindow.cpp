@@ -478,7 +478,6 @@ void MainWindow::updateCompileActions()
     Editor * e = mEditorList->getEditor();
     if (e) {
         FileType fileType = getFileType(e->filename());
-        qDebug()<<(int)fileType<<e->isNew();
         if (fileType == FileType::CSource
                 || fileType == FileType::CppSource || e->isNew())
             editorCanCompile = true;
