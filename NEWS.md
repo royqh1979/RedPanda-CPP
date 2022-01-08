@@ -3,6 +3,7 @@ Red Panda C++ Version 0.13.1
  - change: template / project files use utf-8 encoding instead of ANSI
  - fix: .rc file shouldn't be syntax checked
  - enhancement: auto save/restore size of the new project dialog
+ - fix: new project dialog's tab bar should fill all empty spaces
 
 Red Panda C++ Version 0.12.7
  - change: make current build system follow FHS specifications

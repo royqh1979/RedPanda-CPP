@@ -31,6 +31,7 @@ NewProjectDialog::NewProjectDialog(QWidget *parent) :
 {
     ui->setupUi(this);
     mTemplatesTabBar = new QTabBar(this);
+    mTemplatesTabBar->setExpanding(false);
     ui->verticalLayout->insertWidget(0,mTemplatesTabBar);
 
     readTemplateDir();
