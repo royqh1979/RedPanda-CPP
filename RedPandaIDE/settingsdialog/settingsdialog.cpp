@@ -156,6 +156,11 @@ PSettingsDialog SettingsDialog::optionDialog()
     widget->init();
     dialog->addWidget(widget);
 
+    connect((EnvironmentFoldersWidget*)widget,
+            &EnvironmentFoldersWidget::shouldQuitApp,
+            dialog.get(),
+            &SettingsDialog::closeAndQuit);
+
 #ifdef Q_OS_LINUX
     widget = new EnvironmentProgramsWidget(tr("Terminal"),tr("Environment"));
     widget->init();
@@ -165,12 +170,6 @@ PSettingsDialog SettingsDialog::optionDialog()
     widget = new EnvironmentPerformanceWidget(tr("Performance"),tr("Environment"));
     widget->init();
     dialog->addWidget(widget);
-
-    connect((EnvironmentFoldersWidget*)widget,
-            &EnvironmentFoldersWidget::shouldQuitApp,
-            dialog.get(),
-            &SettingsDialog::closeAndQuit,
-            Qt::QueuedConnection);
 
     widget = new CompilerSetOptionWidget(tr("Compiler Set"),tr("Compiler"));
     widget->init();

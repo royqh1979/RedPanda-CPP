@@ -1,3 +1,6 @@
+Red Panda C++ Version 0.13.2
+  - fix: "delete and exit" button in the environtment / page option page doesn't work correctly 
+
 Red Panda C++ Version 0.13.1
  - enhancement: suppoort localization info in project templates
  - change: template / project files use utf-8 encoding instead of ANSI
