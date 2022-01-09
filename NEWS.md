@@ -4,6 +4,8 @@ Red Panda C++ Version 0.13.1
  - fix: .rc file shouldn't be syntax checked
  - enhancement: auto save/restore size of the new project dialog
  - fix: new project dialog's tab bar should fill all empty spaces
+ - enhancement: add raylib to autolinks
+ - enhancement: distribute raylib with integrated gcc
 
 Red Panda C++ Version 0.12.7
  - change: make current build system follow FHS specifications

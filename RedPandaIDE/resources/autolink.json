@@ -29,7 +29,7 @@
     },
     {
         "header": "raylib.h",
-        "links": "-lraylib -lglfw3 -lopengl32 -lgdi32 -lopenal -lwinmm"
+        "links": "-lraylib -lopengl32 -lgdi32 -lwinmm"
     },
     {
         "header": "turtle.h",
