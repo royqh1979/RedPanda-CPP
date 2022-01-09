@@ -1,9 +1,11 @@
 [Template]
-ver=1
+ver=2
 Name=Console Application
+Name[zh_CN]=控制台程序
 Icon=console.ico
 Description=A console application
-Category=Basic
+Description[zh_CN]=一个简单的控制台程序
+Category=基础
 
 [Unit0]
 CName=main.c
