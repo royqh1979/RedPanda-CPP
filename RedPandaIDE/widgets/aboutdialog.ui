@@ -85,7 +85,7 @@
       </font>
      </property>
      <property name="text">
-      <string>Red Panda Dev-C++:</string>
+      <string>Red Panda Dev-C++ (&lt;=6.7.5):</string>
      </property>
     </widget>
    </item>

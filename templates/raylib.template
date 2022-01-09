@@ -2,7 +2,7 @@
 ver=2
 Name=raylib
 Name[zh_CN]=raylib
-Icon=CL_Turtle.ico
+Icon=raylib.ico
 Description=A simple program using raylib ( https://raylib.com )
 Description[zh_CN]=简单的raylib程序 ( https://raylib.com )
 Category=Multimedia
