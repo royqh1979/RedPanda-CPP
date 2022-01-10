@@ -1346,7 +1346,6 @@ void MainWindow::checkSyntaxInBack(Editor *e)
         mCompilerManager->checkSyntax(e->filename(),e->text(),
                                           e->fileEncoding() == ENCODING_ASCII, mProject);
     } else {
-        qDebug()<<"compile file";
         mCompilerManager->checkSyntax(e->filename(),e->text(),
                                           e->fileEncoding() == ENCODING_ASCII, nullptr);
     }
