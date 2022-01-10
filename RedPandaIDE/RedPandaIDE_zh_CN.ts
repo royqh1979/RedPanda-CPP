@@ -1205,10 +1205,10 @@ Are you really want to continue?</oldsource>
     <message>
         <location filename="editor.cpp" line="261"/>
         <location filename="editor.cpp" line="340"/>
-        <location filename="editor.cpp" line="1198"/>
-        <location filename="editor.cpp" line="1203"/>
-        <location filename="editor.cpp" line="1221"/>
-        <location filename="editor.cpp" line="1226"/>
+        <location filename="editor.cpp" line="1196"/>
+        <location filename="editor.cpp" line="1201"/>
+        <location filename="editor.cpp" line="1219"/>
+        <location filename="editor.cpp" line="1224"/>
         <source>Error</source>
         <translation>错误</translation>
     </message>
@@ -1222,65 +1222,65 @@ Are you really want to continue?</oldsource>
         <translation>另存为</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="1199"/>
+        <location filename="editor.cpp" line="1197"/>
         <source>The text to be copied exceeds count limit!</source>
         <translation>要复制的内容超过了行数限制！</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="1204"/>
+        <location filename="editor.cpp" line="1202"/>
         <source>The text to be copied exceeds character limit!</source>
         <translation>要复制的内容超过了字符数限制！</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="1222"/>
+        <location filename="editor.cpp" line="1220"/>
         <source>The text to be cut exceeds count limit!</source>
         <translation>要剪切的内容超过了行数限制！</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="1227"/>
+        <location filename="editor.cpp" line="1225"/>
         <source>The text to be cut exceeds character limit!</source>
         <translation>要剪切的内容超过了字符数限制！</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="2498"/>
+        <location filename="editor.cpp" line="2496"/>
         <source>Print Document</source>
         <translation>打印文档</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="3074"/>
-        <location filename="editor.cpp" line="3113"/>
-        <location filename="editor.cpp" line="3164"/>
+        <location filename="editor.cpp" line="3072"/>
+        <location filename="editor.cpp" line="3111"/>
+        <location filename="editor.cpp" line="3162"/>
         <source>Ctrl+click for more info</source>
         <translation>Ctrl+单击以获取更多信息</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="3551"/>
-        <location filename="editor.cpp" line="3581"/>
+        <location filename="editor.cpp" line="3549"/>
+        <location filename="editor.cpp" line="3579"/>
         <source>Symbol &apos;%1&apos; not found!</source>
         <translation>未找到符号&apos;%1&apos;!</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="3874"/>
+        <location filename="editor.cpp" line="3872"/>
         <source>astyle not found</source>
         <translation>找不到astyle程序</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="3875"/>
+        <location filename="editor.cpp" line="3873"/>
         <source>Can&apos;t find astyle in &quot;%1&quot;.</source>
         <translation>找不到astyle程序&quot;%1&quot;.</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="4020"/>
+        <location filename="editor.cpp" line="4018"/>
         <source>Break point condition</source>
         <translation>断点条件</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="4021"/>
+        <location filename="editor.cpp" line="4019"/>
         <source>Enter the condition of the breakpoint:</source>
         <translation>输入当前断点的生效条件:</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="4231"/>
+        <location filename="editor.cpp" line="4229"/>
         <source>Readonly</source>
         <translation>只读</translation>
     </message>
@@ -1436,72 +1436,77 @@ Are you really want to continue?</oldsource>
         <translation>启用代码补全</translation>
     </message>
     <message>
-        <location filename="settingsdialog/editorcodecompletionwidget.ui" line="32"/>
+        <location filename="settingsdialog/editorcodecompletionwidget.ui" line="47"/>
+        <source>Minimum id length to show completion </source>
+        <translation>显示代码补全所需的标识符最短长度</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/editorcodecompletionwidget.ui" line="80"/>
         <source>Clear all parsed symbols when editor is hidden</source>
         <translation>清除不活动编辑器中的符号表（大幅减少内存占用）</translation>
     </message>
     <message>
-        <location filename="settingsdialog/editorcodecompletionwidget.ui" line="39"/>
+        <location filename="settingsdialog/editorcodecompletionwidget.ui" line="87"/>
         <source>Show completion suggestions while typing</source>
         <translation>输入时显示补全提示</translation>
     </message>
     <message>
-        <location filename="settingsdialog/editorcodecompletionwidget.ui" line="46"/>
+        <location filename="settingsdialog/editorcodecompletionwidget.ui" line="94"/>
         <source>Engine options</source>
         <translation>引擎选项</translation>
     </message>
     <message>
-        <location filename="settingsdialog/editorcodecompletionwidget.ui" line="52"/>
+        <location filename="settingsdialog/editorcodecompletionwidget.ui" line="100"/>
         <source>Scan local header files</source>
         <translation>扫描本地头文件</translation>
     </message>
     <message>
-        <location filename="settingsdialog/editorcodecompletionwidget.ui" line="59"/>
+        <location filename="settingsdialog/editorcodecompletionwidget.ui" line="107"/>
         <source>Scan system header files</source>
         <translation>扫描系统头文件</translation>
     </message>
     <message>
-        <location filename="settingsdialog/editorcodecompletionwidget.ui" line="69"/>
+        <location filename="settingsdialog/editorcodecompletionwidget.ui" line="117"/>
         <source>Show keywords in suggestions</source>
         <translation>提示C/C++关键字</translation>
     </message>
     <message>
-        <location filename="settingsdialog/editorcodecompletionwidget.ui" line="76"/>
+        <location filename="settingsdialog/editorcodecompletionwidget.ui" line="124"/>
         <source>Show code snippets in suggestions</source>
         <translation>提示用户自定义代码段</translation>
     </message>
     <message>
-        <location filename="settingsdialog/editorcodecompletionwidget.ui" line="83"/>
+        <location filename="settingsdialog/editorcodecompletionwidget.ui" line="131"/>
         <source>Append () when complete functions</source>
         <translation>补全函数时自动添加()</translation>
     </message>
     <message>
-        <location filename="settingsdialog/editorcodecompletionwidget.ui" line="90"/>
+        <location filename="settingsdialog/editorcodecompletionwidget.ui" line="138"/>
         <source>Ignore case when search suggestions</source>
         <translation>查找提示时忽略大小写</translation>
     </message>
     <message>
-        <location filename="settingsdialog/editorcodecompletionwidget.ui" line="97"/>
+        <location filename="settingsdialog/editorcodecompletionwidget.ui" line="145"/>
         <source>Prefer local symbols</source>
         <translation>优先提示局部作用域中的符号</translation>
     </message>
     <message>
-        <location filename="settingsdialog/editorcodecompletionwidget.ui" line="119"/>
+        <location filename="settingsdialog/editorcodecompletionwidget.ui" line="167"/>
         <source>Prefer symbols mostly used</source>
         <translation>优先提示经常使用的符号</translation>
     </message>
     <message>
-        <location filename="settingsdialog/editorcodecompletionwidget.ui" line="139"/>
+        <location filename="settingsdialog/editorcodecompletionwidget.ui" line="187"/>
         <source>Clear usage data</source>
         <translation>清除使用数据</translation>
     </message>
     <message>
-        <location filename="settingsdialog/editorcodecompletionwidget.ui" line="158"/>
+        <location filename="settingsdialog/editorcodecompletionwidget.ui" line="206"/>
         <source>Completion suggestion window width:</source>
         <translation>补全提示窗口宽度：</translation>
     </message>
     <message>
-        <location filename="settingsdialog/editorcodecompletionwidget.ui" line="188"/>
+        <location filename="settingsdialog/editorcodecompletionwidget.ui" line="236"/>
         <source>Completion suggestion window height:</source>
         <translation>补全提示窗口高度：</translation>
     </message>
@@ -7289,8 +7294,8 @@ Are you really want to continue?</oldsource>
 <context>
     <name>SynEdit</name>
     <message>
-        <location filename="qsynedit/TextPainter.cpp" line="993"/>
         <location filename="qsynedit/TextPainter.cpp" line="994"/>
+        <location filename="qsynedit/TextPainter.cpp" line="995"/>
         <source>The highlighter seems to be in an infinite loop</source>
         <translation>高亮处理进入了死循环</translation>
     </message>

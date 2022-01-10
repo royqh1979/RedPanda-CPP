@@ -4,6 +4,7 @@ Red Panda C++ Version 0.13.2
   - enhancement: can add non-code file in templates
   - enhancement: if there's no selection when copy/cut, select currect line by default
   - enhancement: support ligatures in fonts like fira code ( disabled by default, can be turned on in options dialog's editor font page)
+  - enhancement: add "minimum id length required to show code completion" to the options dialog's editor code completion page
 
 Red Panda C++ Version 0.13.1
  - enhancement: suppoort localization info in project templates

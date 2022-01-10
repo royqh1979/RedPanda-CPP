@@ -576,6 +576,9 @@ public:
         bool clearWhenEditorHidden() const;
         void setClearWhenEditorHidden(bool newClearWhenEditorHidden);
 
+        int minCharRequired() const;
+        void setMinCharRequired(int newMinCharRequired);
+
     private:
         int mWidth;
         int mHeight;
@@ -590,6 +593,7 @@ public:
         bool mAppendFunc;
         bool mShowCodeIns;
         bool mClearWhenEditorHidden;
+        int mMinCharRequired;
 
         // _Base interface
     protected:

@@ -701,54 +701,52 @@ void Editor::keyPressEvent(QKeyEvent *event)
         mLastIdCharPressed++;
         if (pSettings->codeCompletion().enabled()
                 && pSettings->codeCompletion().showCompletionWhileInput() ) {
-            if (mLastIdCharPressed==1) {
-                if (mParser && mParser->isIncludeLine(lineText())) {
-                    // is a #include line
-                    setSelText(ch);
-                    showHeaderCompletion(false);
-                    handled=true;
-                    return;
-                } else {
-                    QString lastWord = getPreviousWordAtPositionForSuggestion(caretXY());
-                    if (!lastWord.isEmpty()) {
-                        if (CppTypeKeywords.contains(lastWord)) {
-                            if (lastWord == "long" ||
-                                    lastWord == "short" ||
-                                    lastWord == "signed" ||
-                                    lastWord == "unsigned"
-                                    ) {
-                                setSelText(ch);
-                                showCompletion(lastWord,false);
-                                handled=true;
-                                return;
-                            }
-                            //last word is a type keyword, this is a var or param define, and dont show suggestion
-      //                  if devEditor.UseTabnine then
-      //                    ShowTabnineCompletion;
+            if (mParser && mParser->isIncludeLine(lineText())
+                    && mLastIdCharPressed==pSettings->codeCompletion().minCharRequired()) {
+                // is a #include line
+                setSelText(ch);
+                showHeaderCompletion(false);
+                handled=true;
+                return;
+            } else if (mLastIdCharPressed==pSettings->codeCompletion().minCharRequired()){
+                QString lastWord = getPreviousWordAtPositionForSuggestion(caretXY());
+                if (!lastWord.isEmpty()) {
+                    if (CppTypeKeywords.contains(lastWord)) {
+                        if (lastWord == "long" ||
+                                lastWord == "short" ||
+                                lastWord == "signed" ||
+                                lastWord == "unsigned"
+                                ) {
+                            setSelText(ch);
+                            showCompletion(lastWord,false);
+                            handled=true;
                             return;
                         }
-                        PStatement statement = mParser->findStatementOf(
-                                    mFilename,
-                                    lastWord,
-                                    caretY());
-                        StatementKind kind = mParser->getKindOfStatement(statement);
-                        if (kind == StatementKind::skClass
-                                || kind == StatementKind::skEnumClassType
-                                || kind == StatementKind::skEnumType
-                                || kind == StatementKind::skTypedef) {
-                            //last word is a typedef/class/struct, this is a var or param define, and dont show suggestion
-      //                      if devEditor.UseTabnine then
-      //                        ShowTabnineCompletion;
-                            return;
-                        }
+                        //last word is a type keyword, this is a var or param define, and dont show suggestion
+  //                  if devEditor.UseTabnine then
+  //                    ShowTabnineCompletion;
+                        return;
                     }
-                    setSelText(ch);
-                    showCompletion("",false);
-                    handled=true;
-                    return;
+                    PStatement statement = mParser->findStatementOf(
+                                mFilename,
+                                lastWord,
+                                caretY());
+                    StatementKind kind = mParser->getKindOfStatement(statement);
+                    if (kind == StatementKind::skClass
+                            || kind == StatementKind::skEnumClassType
+                            || kind == StatementKind::skEnumType
+                            || kind == StatementKind::skTypedef) {
+                        //last word is a typedef/class/struct, this is a var or param define, and dont show suggestion
+  //                      if devEditor.UseTabnine then
+  //                        ShowTabnineCompletion;
+                        return;
+                    }
                 }
+                setSelText(ch);
+                showCompletion("",false);
+                handled=true;
+                return;
             }
-
         }
     } else {
         //preprocessor ?
@@ -1151,7 +1149,7 @@ void Editor::inputMethodEvent(QInputMethodEvent *event)
         mLastIdCharPressed+=s.length();
         if (pSettings->codeCompletion().enabled()
                 && pSettings->codeCompletion().showCompletionWhileInput() ) {
-            if (mLastIdCharPressed>=1) {
+            if (mLastIdCharPressed>=pSettings->codeCompletion().minCharRequired()) {
                 QString lastWord = getPreviousWordAtPositionForSuggestion(caretXY());
                 if (!lastWord.isEmpty()) {
                     if (CppTypeKeywords.contains(lastWord)) {

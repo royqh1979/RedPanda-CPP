@@ -3479,6 +3479,16 @@ void Settings::CodeCompletion::setClearWhenEditorHidden(bool newClearWhenEditorH
     mClearWhenEditorHidden = newClearWhenEditorHidden;
 }
 
+int Settings::CodeCompletion::minCharRequired() const
+{
+    return mMinCharRequired;
+}
+
+void Settings::CodeCompletion::setMinCharRequired(int newMinCharRequired)
+{
+    mMinCharRequired = newMinCharRequired;
+}
+
 bool Settings::CodeCompletion::appendFunc() const
 {
     return mAppendFunc;
@@ -3604,6 +3614,7 @@ void Settings::CodeCompletion::doSave()
     saveValue("append_func",mAppendFunc);
     saveValue("show_code_ins",mShowCodeIns);
     saveValue("clear_when_editor_hidden",mClearWhenEditorHidden);
+    saveValue("min_char_required",mMinCharRequired);
 }
 
 
@@ -3622,6 +3633,7 @@ void Settings::CodeCompletion::doLoad()
     mIgnoreCase = boolValue("ignore_case",true);
     mAppendFunc = boolValue("append_func",true);
     mShowCodeIns = boolValue("show_code_ins",true);
+    mMinCharRequired = intValue("min_char_required",1);
 
     bool doClear = true;
 

@@ -400,6 +400,7 @@ void SynEditTextPainter::PaintToken(const QString &Token, int TokenCols, int Col
             startPaint = false;
             for (int i=0;i<Token.length();i++) {
                 int charCols;
+                QString textToPaint = Token[i];
                 if (Token[i] == SynTabChar) {
                     charCols = edit->mTabWidth - ((ColumnsBefore+tokenColLen) % edit->mTabWidth);
                 } else {
