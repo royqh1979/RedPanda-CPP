@@ -2,6 +2,7 @@ Red Panda C++ Version 0.13.2
   - fix: "delete and exit" button in the environtment / page option page doesn't work correctly 
   - fix: crash when closing the options dialog under Ubuntu 20.04 LTS ( no memory leak now)
   - enhancement: can add non-code file in templates
+  - enhancement: if there's no selection when copy/cut, select currect line by default
 
 Red Panda C++ Version 0.13.1
  - enhancement: suppoort localization info in project templates

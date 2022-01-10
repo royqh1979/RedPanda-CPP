@@ -555,6 +555,7 @@ private:
     void doDeleteLastWord();
     void doDeleteFromBOL();
     void doDeleteLine();
+    void doSelecteLine();
     void doDuplicateLine();
     void doMoveSelUp();
     void doMoveSelDown();

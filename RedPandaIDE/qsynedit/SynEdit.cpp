@@ -2054,6 +2054,12 @@ void SynEdit::doDeleteLine()
     }
 }
 
+void SynEdit::doSelecteLine()
+{
+    setBlockBegin(BufferCoord{1,mCaretY});
+    setBlockEnd(BufferCoord{lineText().length()+1,mCaretY});
+}
+
 void SynEdit::doDuplicateLine()
 {
     if (!mReadOnly && (mLines->count() > 0)) {
@@ -2823,7 +2829,11 @@ void SynEdit::doAddChar(QChar AChar)
 
 void SynEdit::doCutToClipboard()
 {
-    if (mReadOnly || !selAvail())
+    if (mReadOnly)
+        return;
+    if (!selAvail())
+        doSelecteLine();
+    if (!selAvail())
         return;
     mUndoList->BeginBlock();
     auto action = finally([this] {
@@ -2836,7 +2846,10 @@ void SynEdit::doCutToClipboard()
 void SynEdit::doCopyToClipboard()
 {
     if (!selAvail())
+        doSelecteLine();
+    if (!selAvail()) {
         return;
+    }
     bool ChangeTrim = (mActiveSelectionMode == SynSelectionMode::smColumn) &&
             mOptions.testFlag(eoTrimTrailingSpaces);
     QString sText;
@@ -5539,12 +5552,11 @@ void SynEdit::ExecuteCommand(SynEditorCommand Command, QChar AChar, void *pData)
         }
         break;
     case SynEditorCommand::ecCut:
-        if (!mReadOnly && selAvail())
+        if (!mReadOnly)
             doCutToClipboard();
         break;
     case SynEditorCommand::ecCopy:
-        if (selAvail())
-            doCopyToClipboard();
+        doCopyToClipboard();
         break;
     case SynEditorCommand::ecPaste:
         if (!mReadOnly)
