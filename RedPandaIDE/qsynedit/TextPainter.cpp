@@ -415,7 +415,39 @@ void SynEditTextPainter::PaintToken(const QString &Token, int TokenCols, int Col
                     break;
                 //painter->drawText(nX,rcToken.bottom()-painter->fontMetrics().descent()*edit->dpiFactor() , Token[i]);
                 if (startPaint) {
-                    painter->drawText(nX,rcToken.bottom()-painter->fontMetrics().descent() , Token[i]);
+                    bool  drawed = false;
+                    if (edit->mOptions.testFlag(eoLigatureSupport) && i+1<Token.length()) {
+                        if ((Token[i]=='+' && Token[i+1]=='+')
+                               || (Token[i]=='-' && Token[i+1]=='-')
+                               || (Token[i]=='/' && Token[i+1]=='=')
+                               || (Token[i]=='&' && Token[i+1]=='&')
+                               || (Token[i]=='|' && Token[i+1]=='|')
+                               || (Token[i]=='-' && Token[i+1]=='>')
+                               || (Token[i]=='=' && Token[i+1]=='>')
+                               || (Token[i]==':' && Token[i+1]==':')
+                               || (Token[i]=='_' && Token[i+1]=='_')
+                               || (Token[i]=='=' && Token[i+1]=='=')
+                               || (Token[i]=='!' && Token[i+1]=='=')
+                                || (Token[i]=='<' && Token[i+1]=='=')
+                                || (Token[i]=='>' && Token[i+1]=='=')
+                                || (Token[i]=='>' && Token[i+1]=='>')
+                                || (Token[i]=='<' && Token[i+1]=='<')
+                                || (Token[i]=='-' && Token[i+1]=='>')
+                                || (Token[i]=='<' && Token[i+1]=='-')
+                                || (Token[i]=='/' && Token[i+1]=='*')
+                                || (Token[i]=='*' && Token[i+1]=='/')
+                                || (Token[i]=='/' && Token[i+1]=='/')
+                            ){
+                            painter->drawText(nX,rcToken.bottom()-painter->fontMetrics().descent() , Token.mid(i,2));
+                            charCols +=  edit->charColumns(Token[i+1]);
+                            i+=1;
+                            drawed = true;
+                        }
+                    }
+                    if (!drawed) {
+                        painter->drawText(nX,rcToken.bottom()-painter->fontMetrics().descent() , Token[i]);
+                        drawed = true;
+                    }
                     nX += charCols * edit->mCharWidth;
                 }
 

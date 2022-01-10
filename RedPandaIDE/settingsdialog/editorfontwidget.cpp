@@ -57,6 +57,7 @@ void EditorFontWidget::doLoad()
     ui->chkOnlyMonospacedFonts->setChecked(pSettings->editor().fontOnlyMonospaced());
     ui->cbFont->setCurrentFont(QFont(pSettings->editor().fontName()));
     ui->spinFontSize->setValue(pSettings->editor().fontSize());
+    ui->chkLigature->setChecked(pSettings->editor().enableLigaturesSupport());
 
     //gutter
     ui->chkGutterVisible->setChecked(pSettings->editor().gutterVisible());
@@ -79,6 +80,7 @@ void EditorFontWidget::doSave()
     pSettings->editor().setFontOnlyMonospaced(ui->chkOnlyMonospacedFonts->isChecked());
     pSettings->editor().setFontName(ui->cbFont->currentFont().family());
     pSettings->editor().setFontSize(ui->spinFontSize->value());
+    pSettings->editor().setEnableLigaturesSupport(ui->chkLigature->isChecked());
 
     //gutter
     pSettings->editor().setGutterVisible(ui->chkGutterVisible->isChecked());

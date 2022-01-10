@@ -578,6 +578,16 @@ void Settings::Editor::setHighlightMathingBraces(bool newHighlightMathingBraces)
     mHighlightMathingBraces = newHighlightMathingBraces;
 }
 
+bool Settings::Editor::enableLigaturesSupport() const
+{
+    return mEnableLigaturesSupport;
+}
+
+void Settings::Editor::setEnableLigaturesSupport(bool newEnableLigaturesSupport)
+{
+    mEnableLigaturesSupport = newEnableLigaturesSupport;
+}
+
 bool Settings::Editor::highlightCurrentWord() const
 {
     return mHighlightCurrentWord;
@@ -1090,6 +1100,7 @@ void Settings::Editor::doSave()
     saveValue("font_name",mFontName);
     saveValue("font_size", mFontSize);
     saveValue("font_only_monospaced",mFontOnlyMonospaced);
+    saveValue("enable_ligatures_support", mEnableLigaturesSupport);
 
     //gutter
     saveValue("gutter_visible", mGutterVisible);
@@ -1209,6 +1220,7 @@ void Settings::Editor::doLoad()
 #endif
     mFontSize = intValue("font_size",14);
     mFontOnlyMonospaced = boolValue("font_only_monospaced",true);
+    mEnableLigaturesSupport = boolValue("enable_ligatures_support", false);
 
     //gutter
     mGutterVisible = boolValue("gutter_visible",true);

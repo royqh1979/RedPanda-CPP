@@ -4055,6 +4055,8 @@ void Editor::applySettings()
     options.setFlag(eoAutoIndent,pSettings->editor().autoIndent());
     options.setFlag(eoTabsToSpaces,pSettings->editor().tabToSpaces());
 
+    options.setFlag(eoLigatureSupport, pSettings->editor().enableLigaturesSupport());
+
     options.setFlag(eoKeepCaretX,pSettings->editor().keepCaretX());
     options.setFlag(eoEnhanceHomeKey,pSettings->editor().enhanceHomeKey());
     options.setFlag(eoEnhanceEndKey,pSettings->editor().enhanceEndKey());
@@ -4116,6 +4118,7 @@ void Editor::applySettings()
     }
 
     setMouseWheelScrollSpeed(pSettings->editor().mouseWheelScrollSpeed());
+    invalidate();
 }
 
 static PSynHighlighterAttribute createRainbowAttribute(const QString& attrName, const QString& schemeName, const QString& schemeItemName) {

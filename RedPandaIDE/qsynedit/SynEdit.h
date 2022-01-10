@@ -83,7 +83,7 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(SynStateFlags)
 enum SynEditorOption {
   eoAltSetsColumnMode = 0x00000001, //Holding down the Alt Key will put the selection mode into columnar format
   eoAutoIndent =        0x00000002, //Will auto calculate the indent when input
-//  eoAddIndent =         0x00000004, //Will add one tab width of indent when typing { and :, and remove the same amount when typing }
+  eoLigatureSupport =   0x00000004, //Support ligaures in fonts like fira code
   eoDragDropEditing =   0x00000008, //Allows you to select a block of text and drag it within the document to another location
   eoDropFiles =         0x00000010, //Allows the editor accept OLE file drops
   eoEnhanceHomeKey =    0x00000020, //enhances home key positioning, similar to visual studio

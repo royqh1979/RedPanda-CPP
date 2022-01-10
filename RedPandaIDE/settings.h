@@ -363,6 +363,9 @@ public:
         bool highlightMathingBraces() const;
         void setHighlightMathingBraces(bool newHighlightMathingBraces);
 
+        bool enableLigaturesSupport() const;
+        void setEnableLigaturesSupport(bool newEnableLigaturesSupport);
+
     private:
         //General
         // indents
@@ -397,6 +400,7 @@ public:
         bool mShowRightEdgeLine;
         int mRightEdgeWidth;
         QColor mRightEdgeLineColor;
+        bool mEnableLigaturesSupport;
 
         //Font
         //font
