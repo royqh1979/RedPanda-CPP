@@ -140,7 +140,7 @@ PSettingsDialog SettingsDialog::optionDialog()
     dialog->setWindowTitle(tr("Options"));
 
     SettingsWidget* widget;
-    = new EnvironmentAppearenceWidget(tr("Appearence"),tr("Environment"));
+    widget = new EnvironmentAppearenceWidget(tr("Appearence"),tr("Environment"));
     dialog->addWidget(widget);
 
 #ifdef Q_OS_WIN
