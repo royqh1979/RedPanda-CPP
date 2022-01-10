@@ -102,6 +102,7 @@ SettingsDialog::~SettingsDialog()
 
 void SettingsDialog::addWidget(SettingsWidget *pWidget)
 {
+    pWidget->init();
     QList<QStandardItem*> items = model.findItems(pWidget->group());
     QStandardItem* pGroupItem;
     if (items.count() == 0 ) {
@@ -138,22 +139,19 @@ PSettingsDialog SettingsDialog::optionDialog()
 
     dialog->setWindowTitle(tr("Options"));
 
-    SettingsWidget* widget = new EnvironmentAppearenceWidget(tr("Appearence"),tr("Environment"));
-    widget->init();
+    SettingsWidget* widget;
+    = new EnvironmentAppearenceWidget(tr("Appearence"),tr("Environment"));
     dialog->addWidget(widget);
 
 #ifdef Q_OS_WIN
     widget = new EnvironmentFileAssociationWidget(tr("File Association"),tr("Environment"));
-    widget->init();
     dialog->addWidget(widget);
 #endif
 
     widget = new EnvironmentShortcutWidget(tr("Shortcuts"),tr("Environment"));
-    widget->init();
     dialog->addWidget(widget);
 
     widget = new EnvironmentFoldersWidget(tr("Folders"),tr("Environment"));
-    widget->init();
     dialog->addWidget(widget);
 
     connect((EnvironmentFoldersWidget*)widget,
@@ -163,90 +161,69 @@ PSettingsDialog SettingsDialog::optionDialog()
 
 #ifdef Q_OS_LINUX
     widget = new EnvironmentProgramsWidget(tr("Terminal"),tr("Environment"));
-    widget->init();
     dialog->addWidget(widget);
 #endif
 
     widget = new EnvironmentPerformanceWidget(tr("Performance"),tr("Environment"));
-    widget->init();
     dialog->addWidget(widget);
 
     widget = new CompilerSetOptionWidget(tr("Compiler Set"),tr("Compiler"));
-    widget->init();
     dialog->addWidget(widget);
 
     widget = new CompilerAutolinkWidget(tr("Auto Link"),tr("Compiler"));
-    widget->init();
     dialog->addWidget(widget);
 
     widget = new EditorGeneralWidget(tr("General"),tr("Editor"));
-    widget->init();
     dialog->addWidget(widget);
 
     widget = new EditorFontWidget(tr("Font"),tr("Editor"));
-    widget->init();
     dialog->addWidget(widget);
 
     widget = new EditorClipboardWidget(tr("Copy & Export"),tr("Editor"));
-    widget->init();
     dialog->addWidget(widget);
 
     widget = new EditorColorSchemeWidget(tr("Color"),tr("Editor"));
-    widget->init();
     dialog->addWidget(widget);
 
     widget = new EditorCodeCompletionWidget(tr("Code Completion"),tr("Editor"));
-    widget->init();
     dialog->addWidget(widget);
 
     widget = new EditorSymbolCompletionWidget(tr("Symbol Completion"),tr("Editor"));
-    widget->init();
     dialog->addWidget(widget);
 
     widget = new EditorSnippetWidget(tr("Snippet"),tr("Editor"));
-    widget->init();
     dialog->addWidget(widget);
 
     widget = new EditorSyntaxCheckWidget(tr("Auto Syntax Checking"),tr("Editor"));
-    widget->init();
     dialog->addWidget(widget);
 
     widget = new EditorTooltipsWidget(tr("Tooltips"),tr("Editor"));
-    widget->init();
     dialog->addWidget(widget);
 
     widget = new EditorAutoSaveWidget(tr("Auto save"),tr("Editor"));
-    widget->init();
     dialog->addWidget(widget);
 
     widget = new EditorMiscWidget(tr("Misc"),tr("Editor"));
-    widget->init();
     dialog->addWidget(widget);
 
     widget = new ExecutorGeneralWidget(tr("General"),tr("Program Runner"));
-    widget->init();
     dialog->addWidget(widget);
 
     widget = new ExecutorProblemSetWidget(tr("Problem Set"),tr("Program Runner"));
-    widget->init();
     dialog->addWidget(widget);
 
     widget = new DebugGeneralWidget(tr("General"),tr("Debugger"));
-    widget->init();
     dialog->addWidget(widget);
 
     widget = new FormatterGeneralWidget(tr("General"),tr("Code Formatter"));
-    widget->init();
     dialog->addWidget(widget);
 
 #ifdef Q_OS_LINUX
     widget = new FormatterPathWidget(tr("Program"),tr("Code Formatter"));
-    widget->init();
     dialog->addWidget(widget);
 #endif
 
     widget = new ToolsGeneralWidget(tr("General"),tr("Tools"));
-    widget->init();
     dialog->addWidget(widget);
 
     dialog->selectFirstWidget();
@@ -261,44 +238,34 @@ PSettingsDialog SettingsDialog::projectOptionDialog()
     dialog->setWindowTitle(tr("Project Options"));
 
     SettingsWidget* widget = new ProjectGeneralWidget(tr("General"),tr("Project"));
-    widget->init();
     dialog->addWidget(widget);
 
     widget = new ProjectFilesWidget(tr("Files"),tr("Project"));
-    widget->init();
     dialog->addWidget(widget);
 
     widget = new ProjectCompilerWidget(tr("Compiler Set"),tr("Project"));
-    widget->init();
     dialog->addWidget(widget);
 
     widget = new ProjectCompileParamatersWidget(tr("Custom Compile options"),tr("Project"));
-    widget->init();
     dialog->addWidget(widget);
 
     widget = new ProjectDirectoriesWidget(tr("Directories"),tr("Project"));
-    widget->init();
     dialog->addWidget(widget);
 
     widget = new ProjectPreCompileWidget(tr("Precompiled Header"),tr("Project"));
-    widget->init();
     dialog->addWidget(widget);
 
     widget = new ProjectMakefileWidget(tr("Makefile"),tr("Project"));
-    widget->init();
     dialog->addWidget(widget);
 
     widget = new ProjectOutputWidget(tr("Output"),tr("Project"));
-    widget->init();
     dialog->addWidget(widget);
 
     widget = new ProjectDLLHostWidget(tr("DLL host"),tr("Project"));
-    widget->init();
     dialog->addWidget(widget);
 
 #ifdef Q_OS_WIN
     widget = new ProjectVersionInfoWidget(tr("Version info"),tr("Project"));
-    widget->init();
     dialog->addWidget(widget);
 #endif
 
