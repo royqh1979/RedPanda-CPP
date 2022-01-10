@@ -26,6 +26,8 @@ struct TemplateUnit {
   QString CppName;
   QString CText;
   QString CppText;
+  QString Source;
+  QString Target;
 };
 
 using PTemplateUnit = std::shared_ptr<TemplateUnit>;

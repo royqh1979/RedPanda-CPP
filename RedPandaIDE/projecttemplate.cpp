@@ -38,6 +38,8 @@ PTemplateUnit ProjectTemplate::unit(int index)
         return PTemplateUnit();
     QString section = QString("Unit%1").arg(index);
     PTemplateUnit unit = std::make_shared<TemplateUnit>();
+    unit->Source = fromByteArray(mIni->GetValue(toByteArray(section), "Source", ""));
+    unit->Target = fromByteArray(mIni->GetValue(toByteArray(section), "Target", ""));
     unit->CText = fromByteArray(mIni->GetValue(toByteArray(section), "C", ""));
     unit->CppText = fromByteArray(mIni->GetValue(toByteArray(section), "Cpp", ""));
     if (unit->CppText.isEmpty())
@@ -59,6 +61,8 @@ void ProjectTemplate::setUnit(int index, PTemplateUnit newUnit)
     mIni->SetValue(section,"Cpp", toByteArray(newUnit->CppText));
     mIni->SetValue(section,"CName", toByteArray(newUnit->CName));
     mIni->SetValue(section,"CppName", toByteArray(newUnit->CppName));
+    mIni->SetValue(section,"Source", toByteArray(newUnit->Source));
+    mIni->SetValue(section,"Target", toByteArray(newUnit->Target));
 }
 
 int ProjectTemplate::addUnit()

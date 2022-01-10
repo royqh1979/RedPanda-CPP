@@ -5,7 +5,7 @@ Description=A simple GLFW program
 Description[zh_CN]=一个简单的GLFW程序
 Icon=GLFW.ico
 Category=Multimedia
-Category[zh_CN]=多媒体
+Category[zh_CN]=3D
 
 [Unit0]
 CppName=main.cpp

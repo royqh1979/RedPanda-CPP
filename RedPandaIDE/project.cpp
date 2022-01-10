@@ -648,38 +648,49 @@ bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate, b
         for (int i=0;i<aTemplate->unitCount();i++) {
             // Pick file contents
             PTemplateUnit templateUnit = aTemplate->unit(i);
-            QString s;
-            PProjectUnit unit;
-            if (mOptions.useGPP) {
-                s = templateUnit->CppText;
-                unit = newUnit(mNode, templateUnit->CppName);
+            if (!templateUnit->Source.isEmpty()) {
+                QString target = templateUnit->Source;
+                PProjectUnit unit;
+                if (!templateUnit->Target.isEmpty())
+                    target = templateUnit->Target;
+                QFile::copy(
+                            QDir(pSettings->dirs().templateDir()).absoluteFilePath(templateUnit->Source),
+                            includeTrailingPathDelimiter(this->directory())+target);
+                unit = newUnit(mNode, target);
             } else {
-                s = templateUnit->CText;
-                unit = newUnit(mNode,templateUnit->CName);
-            }
-
-            Editor * editor = pMainWindow->editorList()->newEditor(
-                        QDir(directory()).absoluteFilePath(unit->fileName()),
-                        unit->encoding(),
-                        true,
-                        true);
-
-            QString s2 = QDir(pSettings->dirs().templateDir()).absoluteFilePath(s);
-            if (fileExists(s2) && !s.isEmpty()) {
-                try {
-                    editor->loadFile(s2);
-                } catch(FileError& e) {
-                    QMessageBox::critical(pMainWindow,
-                                          tr("Error Load File"),
-                                          e.reason());
+                QString s;
+                PProjectUnit unit;
+                if (mOptions.useGPP) {
+                    s = templateUnit->CppText;
+                    unit = newUnit(mNode, templateUnit->CppName);
+                } else {
+                    s = templateUnit->CText;
+                    unit = newUnit(mNode,templateUnit->CName);
                 }
-            } else {
-                s.replace("#13#10","\r\n");
-                editor->insertString(s,false);
+
+                Editor * editor = pMainWindow->editorList()->newEditor(
+                            QDir(directory()).absoluteFilePath(unit->fileName()),
+                            unit->encoding(),
+                            true,
+                            true);
+
+                QString s2 = QDir(pSettings->dirs().templateDir()).absoluteFilePath(s);
+                if (fileExists(s2) && !s.isEmpty()) {
+                    try {
+                        editor->loadFile(s2);
+                    } catch(FileError& e) {
+                        QMessageBox::critical(pMainWindow,
+                                              tr("Error Load File"),
+                                              e.reason());
+                    }
+                } else {
+                    s.replace("#13#10","\r\n");
+                    editor->insertString(s,false);
+                }
+                unit->setEditor(editor);
+                editor->save(true,false);
+                editor->activate();
             }
-            unit->setEditor(editor);
-            editor->save(true,false);
-            editor->activate();
         }
     }
     return true;

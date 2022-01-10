@@ -172,6 +172,12 @@ CompileIssueType Compiler::getIssueTypeFromOutputLine(QString &line)
 
 Settings::PCompilerSet Compiler::compilerSet()
 {
+    if (mProject) {
+        int index = mProject->options().compilerSet;
+        Settings::PCompilerSet set = pSettings->compilerSets().getSet(index);
+        if (set)
+            return set;
+    }
     return pSettings->compilerSets().defaultSet();
 }
 
