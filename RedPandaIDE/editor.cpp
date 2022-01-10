@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (C) 2020-2022 Roy Qu (royqh1979@gmail.com)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -183,14 +183,14 @@ Editor::Editor(QWidget *parent, const QString& filename,
 }
 
 Editor::~Editor() {
-    pMainWindow->fileSystemWatcher()->removePath(mFilename);
-    pMainWindow->caretList().removeEditor(this);
-    pMainWindow->updateCaretActions();
-    if (mParentPageControl!=nullptr) {
+    if (mParentPageControl) {
+        pMainWindow->fileSystemWatcher()->removePath(mFilename);
+        pMainWindow->caretList().removeEditor(this);
+        pMainWindow->updateCaretActions();
         int index = mParentPageControl->indexOf(this);
         mParentPageControl->removeTab(index);
+        this->setParent(nullptr);
     }
-    this->setParent(nullptr);
 }
 
 void Editor::loadFile(QString filename) {
@@ -1522,7 +1522,7 @@ void Editor::onStatusChanged(SynStatusChanges changes)
 
     pMainWindow->updateEditorActions();
 
-    if (changes.testFlag(SynStatusChange::scCaretY)) {
+    if (changes.testFlag(SynStatusChange::scCaretY) && mParentPageControl) {
         pMainWindow->caretList().addCaret(this,caretY(),caretX());
         pMainWindow->updateCaretActions();
     }

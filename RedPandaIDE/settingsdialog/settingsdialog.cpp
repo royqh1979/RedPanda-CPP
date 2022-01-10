@@ -88,13 +88,6 @@ SettingsDialog::~SettingsDialog()
 {
     for (SettingsWidget* p:mSettingWidgets) {
         p->setParent(nullptr);
-        //dirty fix for ubuntu 20.04 LTS
-#ifdef SETTINGS_DIALOG_FIX
-        if (p->group()==tr("Editor") && p->name()==tr("Color"))
-            continue;
-        if (p->group()==tr("Editor") && p->name()==tr("Snippet"))
-            continue;
-#endif
         delete p;
     }
     delete ui;
@@ -152,12 +145,11 @@ PSettingsDialog SettingsDialog::optionDialog()
     dialog->addWidget(widget);
 
     widget = new EnvironmentFoldersWidget(tr("Folders"),tr("Environment"));
-    dialog->addWidget(widget);
-
     connect((EnvironmentFoldersWidget*)widget,
             &EnvironmentFoldersWidget::shouldQuitApp,
             dialog.get(),
             &SettingsDialog::closeAndQuit);
+    dialog->addWidget(widget);
 
 #ifdef Q_OS_LINUX
     widget = new EnvironmentProgramsWidget(tr("Terminal"),tr("Environment"));
