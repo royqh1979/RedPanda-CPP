@@ -1077,3 +1077,12 @@ float desktopDpi()
 {
     return qApp->desktop()->logicalDpiY();
 }
+
+qulonglong stringToHex(const QString &str, qulonglong defaultValue)
+{
+    bool isOk;
+    qulonglong value = str.toULongLong(&isOk,16);
+    if (isOk)
+        return value;
+    return defaultValue;
+}

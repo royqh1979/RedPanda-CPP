@@ -702,7 +702,7 @@
              <enum>QTabWidget::North</enum>
             </property>
             <property name="currentIndex">
-             <number>2</number>
+             <number>4</number>
             </property>
             <widget class="QWidget" name="tabDebugConsole">
              <attribute name="title">
@@ -850,6 +850,13 @@
                 </property>
                </widget>
               </item>
+              <item row="1" column="0" colspan="2">
+               <widget class="QTableView" name="tblMemoryView">
+                <attribute name="horizontalHeaderVisible">
+                 <bool>false</bool>
+                </attribute>
+               </widget>
+              </item>
               <item row="0" column="1">
                <widget class="QComboBox" name="cbMemoryAddress">
                 <property name="sizePolicy">
@@ -863,16 +870,6 @@
                 </property>
                 <property name="insertPolicy">
                  <enum>QComboBox::InsertAtTop</enum>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="0" colspan="2">
-               <widget class="QPlainTextEdit" name="txtMemoryView">
-                <property name="lineWrapMode">
-                 <enum>QPlainTextEdit::NoWrap</enum>
-                </property>
-                <property name="readOnly">
-                 <bool>true</bool>
                 </property>
                </widget>
               </item>

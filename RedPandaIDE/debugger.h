@@ -27,6 +27,7 @@
 #include <QQueue>
 #include <QQueue>
 #include <QSemaphore>
+#include <QSet>
 #include <QThread>
 #include <QTimer>
 #include <memory>
@@ -204,6 +205,39 @@ private:
     int mUpdateCount;
 };
 
+struct MemoryLine {
+    uintptr_t startAddress;
+    QList<unsigned char> datas;
+    QSet<int> changedDatas;
+};
+
+using PMemoryLine = std::shared_ptr<MemoryLine>;
+
+class MemoryModel: public QAbstractTableModel{
+    Q_OBJECT
+public:
+    explicit MemoryModel(int dataPerLine,QObject* parent=nullptr);
+
+    void updateMemory(const QStringList& value);
+    qulonglong startAddress() const;
+    void reset();
+    // QAbstractItemModel interface
+signals:
+    void setMemoryData(qlonglong address, unsigned char data);
+public:
+    int rowCount(const QModelIndex &parent) const override;
+    int columnCount(const QModelIndex &parent) const override;
+    QVariant data(const QModelIndex &index, int role) const override;
+    QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
+    bool setData(const QModelIndex &index, const QVariant &value, int role) override;
+    Qt::ItemFlags flags(const QModelIndex &index) const override;
+
+private:
+    int mDataPerLine;
+    QList<PMemoryLine> mLines;
+    qulonglong mStartAddress;
+};
+
 
 class DebugReader;
 class DebugTarget;
@@ -259,12 +293,15 @@ public:
 
     RegisterModel *registerModel() const;
 
+    MemoryModel *memoryModel() const;
+
 signals:
     void evalValueReady(const QString& s);
     void memoryExamineReady(const QStringList& s);
     void localsReady(const QStringList& s);
 public slots:
     void stop();
+    void refreshAll();
 
 private:
     void sendWatchCommand(PWatchVar var);
@@ -275,6 +312,7 @@ private:
 
 private slots:
     void syncFinishedParsing();
+    void setMemoryData(qulonglong address, unsigned char data);
     void updateMemory(const QStringList& value);
     void updateEval(const QString& value);
     void updateDisassembly(const QString& file, const QString& func,const QStringList& value);
@@ -291,6 +329,7 @@ private:
     BacktraceModel *mBacktraceModel;
     WatchModel *mWatchModel;
     RegisterModel *mRegisterModel;
+    MemoryModel *mMemoryModel;
     DebugReader *mReader;
     DebugTarget *mTarget;
     int mLeftPageIndexBackup;

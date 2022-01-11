@@ -135,6 +135,8 @@ MainWindow::MainWindow(QWidget *parent)
     ui->tblBreakpoints->setModel(mDebugger->breakpointModel());
     ui->tblStackTrace->setModel(mDebugger->backtraceModel());
     ui->watchView->setModel(mDebugger->watchModel());
+    ui->tblMemoryView->setModel(mDebugger->memoryModel());
+    ui->tblMemoryView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
 
     try {
         mDebugger->breakpointModel()->load(includeTrailingPathDelimiter(pSettings->dirs().config())
@@ -1116,7 +1118,8 @@ void MainWindow::updateDebuggerSettings()
     QFont font(pSettings->debugger().fontName());
     font.setPixelSize(pointToPixel(pSettings->debugger().fontSize()));
     ui->debugConsole->setFont(font);
-    ui->txtMemoryView->setFont(font);
+    ui->tblMemoryView->setFont(font);
+    //ui->txtMemoryView->setFont(font);
     ui->txtLocals->setFont(font);
 
     int idx = findTabIndex(ui->debugViews,ui->tabDebugConsole);
@@ -4421,6 +4424,7 @@ void MainWindow::onDebugEvaluateInput()
         connect(mDebugger, &Debugger::evalValueReady,
                    this, &MainWindow::onEvalValueReady);
         mDebugger->sendCommand("-data-evaluate-expression",s);
+        pMainWindow->debugger()->refreshAll();
     }
 }
 
@@ -4428,8 +4432,8 @@ void MainWindow::onDebugMemoryAddressInput()
 {
     QString s=ui->cbMemoryAddress->currentText().trimmed();
     if (!s.isEmpty()) {
-        connect(mDebugger, &Debugger::memoryExamineReady,
-                   this, &MainWindow::onMemoryExamineReady);
+//        connect(mDebugger, &Debugger::memoryExamineReady,
+//                   this, &MainWindow::onMemoryExamineReady);
         mDebugger->sendCommand("-data-read-memory",QString("%1 x 1 8 8 ").arg(s));
     }
 }
@@ -4487,14 +4491,15 @@ void MainWindow::onEvalValueReady(const QString& value)
 
 void MainWindow::onMemoryExamineReady(const QStringList& value)
 {
-    ui->txtMemoryView->clear();
-    foreach (QString s, value) {
-        s.replace("\t","  ");
-        ui->txtMemoryView->appendPlainText(s);
-    }
-    ui->txtMemoryView->moveCursor(QTextCursor::Start);
-    disconnect(mDebugger, &Debugger::memoryExamineReady,
-               this, &MainWindow::onMemoryExamineReady);
+//    ui->txtMemoryView->clear();
+//    foreach (QString s, value) {
+//        s.replace("\t","  ");
+//        ui->txtMemoryView->appendPlainText(s);
+//    }
+//    ui->txtMemoryView->moveCursor(QTextCursor::Start);
+
+//    disconnect(mDebugger, &Debugger::memoryExamineReady,
+//               this, &MainWindow::onMemoryExamineReady);
 }
 
 void MainWindow::onLocalsReady(const QStringList& value)

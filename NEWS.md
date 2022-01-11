@@ -5,6 +5,11 @@ Red Panda C++ Version 0.13.2
   - enhancement: if there's no selection when copy/cut, select currect line by default
   - enhancement: support ligatures in fonts like fira code ( disabled by default, can be turned on in options dialog's editor font page)
   - enhancement: add "minimum id length required to show code completion" to the options dialog's editor code completion page
+  - enhancement: modify values in the memory view while debugging
+  - enhancement: auto update watch, local and memory view after expression evaluated
+  - enhancement: auto update watch, local and memory view after memory modified
+
+ 
 
 Red Panda C++ Version 0.13.1
  - enhancement: suppoort localization info in project templates

@@ -39,6 +39,9 @@ Debugger::Debugger(QObject *parent) : QObject(parent)
     mBacktraceModel=new BacktraceModel(this);
     mWatchModel = new WatchModel(this);
     mRegisterModel = new RegisterModel(this);
+    mMemoryModel = new MemoryModel(8,this);
+    connect(mMemoryModel,&MemoryModel::setMemoryData,
+            this, &Debugger::setMemoryData);
     mExecuting = false;
     mReader = nullptr;
     mTarget = nullptr;
@@ -98,6 +101,7 @@ bool Debugger::start(const QString& inferior)
         }
 
     }
+    mMemoryModel->reset();
     mWatchModel->resetAllVarInfos();
     if (pSettings->debugger().useGDBServer()) {
         mTarget = new DebugTarget(inferior,compilerSet->debugServer(),pSettings->debugger().GDBServerPort());
@@ -114,6 +118,7 @@ bool Debugger::start(const QString& inferior)
     mReader = new DebugReader(this);
     mReader->setDebuggerPath(debuggerPath);
     connect(mReader, &QThread::finished,this,&Debugger::cleanUpReader);
+    connect(mReader, &QThread::finished,mMemoryModel,&MemoryModel::reset);
     connect(mReader, &DebugReader::parseFinished,this,&Debugger::syncFinishedParsing,Qt::BlockingQueuedConnection);
     connect(mReader, &DebugReader::changeDebugConsoleLastLine,this,&Debugger::onChangeDebugConsoleLastline);
     connect(mReader, &DebugReader::cmdStarted,pMainWindow, &MainWindow::disableDebugActions);
@@ -147,10 +152,9 @@ bool Debugger::start(const QString& inferior)
     connect(mReader, &DebugReader::inferiorStopped,pMainWindow,
             &MainWindow::setActiveBreakpoint);
     connect(mReader, &DebugReader::inferiorStopped,this,
-            &Debugger::refreshWatchVars);
+            &Debugger::refreshAll);
 
     mReader->registerInferiorStoppedCommand("-stack-list-frames","");
-    mReader->registerInferiorStoppedCommand("-stack-list-variables", "--all-values");
     mReader->start();
     mReader->waitStart();
 
@@ -208,6 +212,14 @@ void Debugger::updateRegisterNames(const QStringList &registerNames)
 void Debugger::updateRegisterValues(const QHash<int, QString> &values)
 {
     mRegisterModel->updateValues(values);
+}
+
+void Debugger::refreshAll()
+{
+    refreshWatchVars();
+    sendCommand("-stack-list-variables", "--all-values");
+    if (memoryModel()->startAddress()>0)
+        sendCommand("-data-read-memory",QString("%1 x 1 8 8 ").arg(memoryModel()->startAddress()));
 }
 
 RegisterModel *Debugger::registerModel() const
@@ -407,6 +419,11 @@ void Debugger::fetchVarChildren(const QString &varName)
     }
 }
 
+MemoryModel *Debugger::memoryModel() const
+{
+    return mMemoryModel;
+}
+
 void Debugger::removeWatchVars(bool deleteparent)
 {
     if (deleteparent) {
@@ -567,8 +584,15 @@ void Debugger::syncFinishedParsing()
     }
 }
 
+void Debugger::setMemoryData(qulonglong address, unsigned char data)
+{
+    sendCommand("-data-write-memory-bytes", QString("%1 \"%2\"").arg(address).arg(data,2,16,QChar('0')));
+    refreshAll();
+}
+
 void Debugger::updateMemory(const QStringList &value)
 {
+    mMemoryModel->updateMemory(value);
     emit memoryExamineReady(value);
 }
 
@@ -2338,4 +2362,133 @@ void DebugTarget::run()
     if (mErrorOccured) {
         emit processError(mProcess->error());
     }
+}
+
+MemoryModel::MemoryModel(int dataPerLine, QObject *parent):
+    QAbstractTableModel(parent),
+    mDataPerLine(dataPerLine),
+    mStartAddress(0)
+{
+}
+
+void MemoryModel::updateMemory(const QStringList &value)
+{
+    QRegExp delimiter("(\\s+)");
+    QList<PMemoryLine> newModel;
+    for (int i=0;i<value.length();i++) {
+        QString line = value[i].trimmed();
+        QStringList dataLst = line.split(delimiter,QString::SkipEmptyParts);
+        PMemoryLine memoryLine = std::make_shared<MemoryLine>();
+        memoryLine->startAddress = -1;
+        if (dataLst.length()>0) {
+            memoryLine->startAddress = stringToHex(dataLst[0],0);
+            for (int j=1;j<dataLst.length();j++) {
+                qulonglong data = stringToHex(dataLst[j],-1);
+                if (data>=0)
+                    memoryLine->datas.append((unsigned char)data);
+            }
+        }
+        newModel.append(memoryLine);
+    }
+    if (newModel.count()>0 && newModel.count()== mLines.count() &&
+            newModel[0]->startAddress == mLines[0]->startAddress) {
+        for (int i=0;i<newModel.count();i++) {
+            PMemoryLine newLine = newModel[i];
+            PMemoryLine oldLine = mLines[i];
+            for (int j=0;j<newLine->datas.count();j++) {
+                if (j>=oldLine->datas.count())
+                    break;
+                if (newLine->datas[j]!=oldLine->datas[j])
+                    newLine->changedDatas.insert(j);
+            }
+        }
+        mLines = newModel;
+        emit dataChanged(createIndex(0,0),
+                         createIndex(mLines.count()-1,mDataPerLine-1));
+    } else {
+        beginResetModel();
+        mLines = newModel;
+        endResetModel();
+    }
+    if (mLines.count()>0) {
+        mStartAddress = mLines[0]->startAddress;
+    } else {
+        mStartAddress = 0;
+    }
+ }
+
+int MemoryModel::rowCount(const QModelIndex &parent) const
+{
+    return mLines.count();
+}
+
+int MemoryModel::columnCount(const QModelIndex &parent) const
+{
+    return mDataPerLine;
+}
+
+QVariant MemoryModel::data(const QModelIndex &index, int role) const
+{
+    if (!index.isValid())
+        return QVariant();
+    if (index.row()<0 || index.row()>=mLines.count())
+        return QVariant();
+    PMemoryLine line = mLines[index.row()];
+    int col = index.column();
+    if (col<0  || col>=line->datas.count())
+        return QVariant();
+    if (role == Qt::DisplayRole)
+        return QString("%1").arg(line->datas[col],2,16,QChar('0'));
+    return QVariant();
+}
+
+QVariant MemoryModel::headerData(int section, Qt::Orientation orientation, int role) const
+{
+    if (orientation == Qt::Vertical && role ==  Qt::DisplayRole) {
+        if (section<0 || section>=mLines.count())
+            return QVariant();
+        PMemoryLine line = mLines[section];
+        return QString("0x%1").arg(line->startAddress,0,16,QChar('0'));
+    }
+    return QVariant();
+}
+
+bool MemoryModel::setData(const QModelIndex &index, const QVariant &value, int role)
+{
+    if (!index.isValid())
+        return false;
+    if (index.row()<0 || index.row()>=mLines.count())
+        return false;
+    PMemoryLine line = mLines[index.row()];
+    int col = index.column();
+    if (col<0  || col>=line->datas.count())
+        return false;
+    if (role == Qt::EditRole && mStartAddress>0) {
+        bool ok;
+        unsigned char val = ("0x"+value.toString()).toUInt(&ok,16);
+        if (!ok || val>255)
+            return false;
+        emit setMemoryData(mStartAddress+mDataPerLine*index.row()+col,val);
+        return true;
+    }
+    return false;
+}
+
+Qt::ItemFlags MemoryModel::flags(const QModelIndex &index) const
+{
+    Qt::ItemFlags flags = Qt::ItemIsEnabled | Qt::ItemIsSelectable;
+    if (mStartAddress!=0)
+        flags |= Qt::ItemIsEditable;
+    return flags;
+}
+
+qulonglong MemoryModel::startAddress() const
+{
+    return mStartAddress;
+}
+
+void MemoryModel::reset()
+{
+    mStartAddress=0;
+    mLines.clear();
 }
