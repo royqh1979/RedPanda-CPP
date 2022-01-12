@@ -107,6 +107,8 @@ bool Debugger::start(const QString& inferior)
     mWatchModel->resetAllVarInfos();
     if (pSettings->debugger().useGDBServer()) {
         mTarget = new DebugTarget(inferior,compilerSet->debugServer(),pSettings->debugger().GDBServerPort());
+        if (pSettings->executor().redirectInput())
+            mTarget->setInputFile(pSettings->executor().inputFilename());
         connect(mTarget, &QThread::finished,[this](){
             if (mExecuting) {
                 stop();
@@ -2306,6 +2308,11 @@ DebugTarget::DebugTarget(
     mProcess = nullptr;
 }
 
+void DebugTarget::setInputFile(const QString &inputFile)
+{
+    mInputFile = inputFile;
+}
+
 void DebugTarget::stopDebug()
 {
     mStop = true;
@@ -2328,13 +2335,8 @@ void DebugTarget::run()
     cmd= mGDBServer;
     arguments = QString(" localhost:%1 \"%2\"").arg(mPort).arg(mInferior);
 #else
-    if  (programHasConsole(mInferior)) {
-        cmd= pSettings->environment().terminalPath();
-        arguments = QString(" -e \"%1\" localhost:%2 \"%3\"").arg(mGDBServer).arg(mPort).arg(mInferior);
-    } else {
-        cmd= mGDBServer;
-        arguments = QString(" localhost:%1 \"%2\"").arg(mPort).arg(mInferior);
-    }
+    cmd= pSettings->environment().terminalPath();
+    arguments = QString(" -e \"%1\" localhost:%2 \"%3\"").arg(mGDBServer).arg(mPort).arg(mInferior);
 #endif
     QString workingDir = QFileInfo(mInferior).path();
 
@@ -2366,7 +2368,9 @@ void DebugTarget::run()
             args->flags |=  CREATE_NEW_CONSOLE;
             args->flags &= ~CREATE_NO_WINDOW;
         }
-        args->startupInfo -> dwFlags &= ~STARTF_USESTDHANDLES;
+        if (mInputFile.isEmpty()) {
+            args->startupInfo -> dwFlags &= ~STARTF_USESTDHANDLES;
+        }
     });
 #endif
 
@@ -2377,6 +2381,10 @@ void DebugTarget::run()
     mProcess->start();
     mProcess->waitForStarted(5000);
     mStartSemaphore.release(1);
+    if (mProcess->state()==QProcess::Running && !mInputFile.isEmpty()) {
+        mProcess->write(readFileToByteArray(mInputFile));
+        mProcess->closeWriteChannel();
+    }
     while (true) {
         mProcess->waitForFinished(1);
         if (mProcess->state()!=QProcess::Running) {

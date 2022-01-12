@@ -350,6 +350,7 @@ public:
                          const QString& GDBServer,
                          int port,
                          QObject *parent = nullptr);
+    void setInputFile(const QString& inputFile);
     void stopDebug();
     void waitStart();
 signals:
@@ -362,6 +363,7 @@ private:
     std::shared_ptr<QProcess> mProcess;
     QSemaphore mStartSemaphore;
     bool mErrorOccured;
+    QString mInputFile;
 
     // QThread interface
 protected:
