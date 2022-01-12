@@ -14,6 +14,7 @@ Red Panda C++ Version 0.13.2
   - enhancement: redirect stdio to a file while debugging ( must use gdb server mode to debug)
   - fix: parser can't correctly handle variable definitions that don't have spaces like 'int*x';
   - fix: parser can't correctly handle function parameters like 'int *x' 
+  - fix: caret dispears when at '\t' under Windows  7
 
 Red Panda C++ Version 0.13.1
  - enhancement: suppoort localization info in project templates
