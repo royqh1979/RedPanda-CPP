@@ -37,6 +37,7 @@ public:
     const TokenList& tokens();
     PToken operator[](int i);
     int tokenCount();
+    bool isIdentChar(const QChar& ch);
 private:
     void addToken(const QString& sText, int iLine);
     void advance();

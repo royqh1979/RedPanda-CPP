@@ -4329,20 +4329,40 @@ void CppParser::scanMethodArgs(const PStatement& functionStatement, const QStrin
 //          SpacePos := LastPos(' ', Copy(S, BracePos, MaxInt)) // start search at brace
 //        end else begin
 //        }
-            int spacePos = s.lastIndexOf(' '); // Cut up at last space
-            if (spacePos >= 0) {
-                args = "";
-                int bracketPos = s.indexOf('[');
-                if (bracketPos >= 0) {
-                    args = s.mid(bracketPos);
-                    s.truncate(bracketPos);
+            //skip []
+            int varEndPos = s.length()-1;
+            int bracketLevel = 0;
+            while (varEndPos>=0) {
+                switch(s[varEndPos].unicode()) {
+                case ']':
+                    bracketLevel++;
+                    break;
+                case '[':
+                    bracketLevel--;
+                    varEndPos--;
+                    break;
                 }
+                if (bracketLevel==0)
+                    break;
+                varEndPos--;
+            }
+            int varStartPos = varEndPos;
+            if (varEndPos>=0) {
+                while (varStartPos-1>=0) {
+                    if (!mTokenizer.isIdentChar(s[varStartPos-1]))
+                            break;
+                    varStartPos--;
+                }
+            }
+            if (varStartPos>=0) {
+                if (varEndPos+1<s.length())
+                    args=s.mid(varEndPos+1);
                 addStatement(
                             functionStatement,
                             mCurrentFile,
                             "", // do not override hint
-                            s.mid(0,spacePos), // 'int*'
-                            s.mid(spacePos+1), // a
+                            s.mid(0,varStartPos), // 'int*'
+                            s.mid(varStartPos,varEndPos-varStartPos+1), // a
                             args,
                             "",
                             functionStatement->definitionLine,
@@ -4351,6 +4371,14 @@ void CppParser::scanMethodArgs(const PStatement& functionStatement, const QStrin
                             StatementClassScope::scsNone,
                             true,
                             false);
+            }
+            if (varStartPos<s.length()) {
+                args = "";
+                int bracketPos = s.indexOf('[');
+                if (bracketPos >= 0) {
+                    args = s.mid(bracketPos);
+                    s.truncate(bracketPos);
+                }
             }
             paramStart = i + 1; // step over ,
         }

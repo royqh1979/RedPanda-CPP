@@ -268,8 +268,9 @@ QString CppTokenizer::getWord(bool bSkipParenthesis, bool bSkipArray, bool bSkip
     // Get next word...
     QChar* offset = mCurrent;
 
+    mCurrent++;
     // Copy the word ahead of us
-    while (isLetterChar(*mCurrent) || isDigitChar(*mCurrent))
+    while (isIdentChar(*mCurrent) || isDigitChar(*mCurrent))
         mCurrent++;
 
     QString currentWord;
@@ -582,6 +583,11 @@ void CppTokenizer::skipToNextToken()
         advance();
 }
 
+bool CppTokenizer::isIdentChar(const QChar &ch)
+{
+    return ch.isLetter();
+}
+
 void CppTokenizer::advance()
 {
     switch(mCurrent->unicode()) {
@@ -634,7 +640,7 @@ bool CppTokenizer::isLetterChar(const QChar &ch)
 {
 //    return (ch>= 'A' && ch<='Z')
 //            || (ch>='a' && ch<='z')
-    return ch.isLetter()
+    return isIdentChar(ch)
             || ch == '_'
             || ch == '*'
             || ch == '&'

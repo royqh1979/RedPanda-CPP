@@ -12,6 +12,8 @@ Red Panda C++ Version 0.13.2
   - fix: crash when refactor symbol and cursor is at the end of the identifier
   - fix: refactor symbol doesn't work for 1-length identifiers
   - enhancement: redirect stdio to a file while debugging ( must use gdb server mode to debug)
+  - fix: parser can't correctly handle variable definitions that don't have spaces like 'int*x';
+  - fix: parser can't correctly handle function parameters like 'int *x' 
 
 Red Panda C++ Version 0.13.1
  - enhancement: suppoort localization info in project templates

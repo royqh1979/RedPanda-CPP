@@ -2609,6 +2609,7 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete)
         } else if (
                    (tokenType != SynHighlighterTokenType::Symbol) &&
                    (tokenType != SynHighlighterTokenType::Space) &&
+                   (tokenType != SynHighlighterTokenType::Keyword) &&
                    (tokenType != SynHighlighterTokenType::Identifier)
                    ) {
             return;
