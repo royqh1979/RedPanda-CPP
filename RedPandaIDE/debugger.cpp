@@ -42,6 +42,8 @@ Debugger::Debugger(QObject *parent) : QObject(parent)
     mMemoryModel = new MemoryModel(8,this);
     connect(mMemoryModel,&MemoryModel::setMemoryData,
             this, &Debugger::setMemoryData);
+    connect(mWatchModel, &WatchModel::setWatchVarValue,
+            this, &Debugger::setWatchVarValue);
     mExecuting = false;
     mReader = nullptr;
     mTarget = nullptr;
@@ -587,6 +589,12 @@ void Debugger::syncFinishedParsing()
 void Debugger::setMemoryData(qulonglong address, unsigned char data)
 {
     sendCommand("-data-write-memory-bytes", QString("%1 \"%2\"").arg(address).arg(data,2,16,QChar('0')));
+    refreshAll();
+}
+
+void Debugger::setWatchVarValue(const QString &name, const QString &value)
+{
+    sendCommand("-var-assign",QString("%1 %2").arg(name,value));
     refreshAll();
 }
 
@@ -2136,6 +2144,35 @@ QModelIndex WatchModel::index(WatchVar* pVar) const {
             return QModelIndex();
         return createIndex(row,0,pVar);
     }
+}
+
+bool WatchModel::setData(const QModelIndex &index, const QVariant &value, int role)
+{
+    if (!index.isValid()) {
+        return false;
+    }
+    if (index.column()==2 && role == Qt::EditRole) {
+        WatchVar* item = static_cast<WatchVar*>(index.internalPointer());
+        emit setWatchVarValue(item->name,value.toString());
+    }
+    return false;
+
+}
+
+Qt::ItemFlags WatchModel::flags(const QModelIndex &index) const
+{
+    Qt::ItemFlags flags = Qt::ItemIsEnabled | Qt::ItemIsSelectable;
+    if (!index.isValid()) {
+        return Qt::ItemIsEnabled;
+    }
+    if (index.column() == 2) {
+        WatchVar* item = static_cast<WatchVar*>(index.internalPointer());
+        qDebug()<<item->name<<item->numChild<<item->type<<item->hasMore<<(item->numChild==0 && !item->hasMore && !item->type.isEmpty());
+        if (item->numChild==0 && !item->type.isEmpty())
+            flags |= Qt::ItemIsEditable;
+        qDebug()<<flags;
+    }
+    return flags;
 }
 
 

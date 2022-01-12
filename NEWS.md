@@ -8,6 +8,7 @@ Red Panda C++ Version 0.13.2
   - enhancement: modify values in the memory view while debugging
   - enhancement: auto update watch, local and memory view after expression evaluated
   - enhancement: auto update watch, local and memory view after memory modified
+  - enhancement: modify values in the watch view by double click
 
  
 

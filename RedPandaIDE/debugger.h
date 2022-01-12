@@ -178,6 +178,8 @@ public:
     void notifyUpdated(PWatchVar var);
     void save(const QString& filename);
     void load(const QString& filename);
+signals:
+    void setWatchVarValue(const QString& name, const QString& value);
 public  slots:
     void updateVarInfo(const QString& expression,
                     const QString& name,
@@ -203,6 +205,11 @@ private:
     QList<PWatchVar> mWatchVars;
     QHash<QString,PWatchVar> mVarIndex;
     int mUpdateCount;
+
+    // QAbstractItemModel interface
+public:
+    bool setData(const QModelIndex &index, const QVariant &value, int role) override;
+    Qt::ItemFlags flags(const QModelIndex &index) const override;
 };
 
 struct MemoryLine {
@@ -313,6 +320,7 @@ private:
 private slots:
     void syncFinishedParsing();
     void setMemoryData(qulonglong address, unsigned char data);
+    void setWatchVarValue(const QString& name, const QString& value);
     void updateMemory(const QStringList& value);
     void updateEval(const QString& value);
     void updateDisassembly(const QString& file, const QString& func,const QStringList& value);
