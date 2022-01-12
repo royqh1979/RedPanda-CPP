@@ -211,6 +211,7 @@ public:
     QString wordAtCursor();
     QString wordAtRowCol(const BufferCoord& XY);
 
+    QChar charAt(const BufferCoord& pos);
     int charColumns(QChar ch) const;
 
     bool isPointInSelection(const BufferCoord& Value) const;

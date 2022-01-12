@@ -114,16 +114,22 @@ void CppRefacter::renameSymbol(Editor *editor, const BufferCoord &pos, const QSt
         editor->parser()->unFreeze();
     });
     // get full phrase (such as s.name instead of name)
-    QStringList expression = editor->getExpressionAtPosition(pos);
+    QStringList expression;
+    QChar s=editor->charAt(pos);
+    if (!editor->isIdentChar(s)) {
+        expression = editor->getExpressionAtPosition(BufferCoord{pos.Char-1,pos.Line});
+    } else {
+        expression = editor->getExpressionAtPosition(pos);
+    }
     // Find it's definition
     PStatement oldStatement = editor->parser()->findStatementOf(
                 editor->filename(),
                 expression,
                 pos.Line);
-    QString oldScope = fullParentName(oldStatement);
     // definition of the symbol not found
     if (!oldStatement)
         return;
+    QString oldScope = fullParentName(oldStatement);
     // found but not in this file
     if (editor->filename() != oldStatement->fileName
             || editor->filename() != oldStatement->definitionFileName) {
@@ -286,7 +292,7 @@ void CppRefacter::renameSymbolInFile(const QString &filename, const PStatement &
                 //same name symbol , test if the same statement;
                 BufferCoord p;
                 p.Line = posY+1;
-                p.Char = start+1;
+                p.Char = start;
 
                 QStringList expression = editor.getExpressionAtPosition(p);
                 PStatement tokenStatement = parser->findStatementOf(

@@ -9,8 +9,8 @@ Red Panda C++ Version 0.13.2
   - enhancement: auto update watch, local and memory view after expression evaluated
   - enhancement: auto update watch, local and memory view after memory modified
   - enhancement: modify values in the watch view by double click
-
- 
+  - fix: crash when refactor symbol and cursor is at the end of the identifier
+  - fix: refactor symbol doesn't work for 1-length identifiers
 
 Red Panda C++ Version 0.13.1
  - enhancement: suppoort localization info in project templates

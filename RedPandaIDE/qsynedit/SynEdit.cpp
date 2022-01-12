@@ -1052,23 +1052,23 @@ QString SynEdit::wordAtCursor()
     return wordAtRowCol(caretXY());
 }
 
-QString SynEdit::wordAtRowCol(const BufferCoord &XY)
+QString SynEdit::wordAtRowCol(const BufferCoord &pos)
 {
-    if ((XY.Line >= 1) && (XY.Line <= mLines->count())) {
-        QString line = mLines->getString(XY.Line - 1);
-        int Len = line.length();
-        if (Len == 0)
+    if ((pos.Line >= 1) && (pos.Line <= mLines->count())) {
+        QString line = mLines->getString(pos.Line - 1);
+        int len = line.length();
+        if (len == 0)
             return "";
-        if (XY.Char<1 || XY.Char>Len)
+        if (pos.Char<1 || pos.Char>len)
             return "";
 
-        int start = XY.Char - 1;
+        int start = pos.Char - 1;
         if  ((start> 0) && !isIdentChar(line[start]))
              start--;
 
         if (isIdentChar(line[start])) {
             int stop = start;
-            while ((stop < Len) && isIdentChar(line[stop]))
+            while ((stop < len) && isIdentChar(line[stop]))
                 stop++;
             while ((start-1 >=0) && isIdentChar(line[start - 1]))
                 start--;
@@ -1077,6 +1077,20 @@ QString SynEdit::wordAtRowCol(const BufferCoord &XY)
         }
     }
     return "";
+}
+
+QChar SynEdit::charAt(const BufferCoord &pos)
+{
+    if ((pos.Line >= 1) && (pos.Line <= mLines->count())) {
+        QString line = mLines->getString(pos.Line-1);
+        int len = line.length();
+        if (len == 0)
+            return QChar(0);
+        if (pos.Char<1 || pos.Char>len)
+            return QChar(0);
+        return line[pos.Char-1];
+    }
+    return QChar(0);
 }
 
 void SynEdit::setCaretAndSelection(const BufferCoord &ptCaret, const BufferCoord &ptBefore, const BufferCoord &ptAfter)
