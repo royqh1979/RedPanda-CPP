@@ -2167,10 +2167,8 @@ Qt::ItemFlags WatchModel::flags(const QModelIndex &index) const
     }
     if (index.column() == 2) {
         WatchVar* item = static_cast<WatchVar*>(index.internalPointer());
-        qDebug()<<item->name<<item->numChild<<item->type<<item->hasMore<<(item->numChild==0 && !item->hasMore && !item->type.isEmpty());
         if (item->numChild==0 && !item->type.isEmpty())
             flags |= Qt::ItemIsEditable;
-        qDebug()<<flags;
     }
     return flags;
 }
