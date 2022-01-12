@@ -2523,7 +2523,6 @@ void Editor::print()
     doc.setDefaultFont(font());
     doc.setPlainText(lst.join(lineBreak()));
     doc.print(&printer);
-
 }
 
 void Editor::exportAsRTF(const QString &rtfFilename)
