@@ -2370,7 +2370,11 @@ void DebugTarget::run()
         }
         if (mInputFile.isEmpty()) {
             args->startupInfo -> dwFlags &= ~STARTF_USESTDHANDLES;
+        } else {
+            args->startupInfo->hStdOutput = NULL;
+            args->startupInfo->hStdError = NULL;
         }
+
     });
 #endif
 
