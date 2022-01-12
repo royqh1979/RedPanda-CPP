@@ -3040,15 +3040,12 @@ void SynEdit::ensureCursorPosVisibleEx(bool ForceToMiddle)
     }
 }
 
-void SynEdit::scrollWindow(int , int )
+void SynEdit::scrollWindow(int dx, int dy)
 {
-//    int nx = horizontalScrollBar()->value()+dx;
-//    int ny = verticalScrollBar()->value()+dy;
-//    nx = std::min(std::max(horizontalScrollBar()->minimum(),nx),horizontalScrollBar()->maximum());
-//    ny = std::min(std::max(verticalScrollBar()->minimum(),ny),verticalScrollBar()->maximum());
-//    horizontalScrollBar()->setValue(nx);
-//    verticalScrollBar()->setValue(ny);
-
+    int nx = horizontalScrollBar()->value()+dx;
+    int ny = verticalScrollBar()->value()+dy;
+    horizontalScrollBar()->setValue(nx);
+    verticalScrollBar()->setValue(ny);
 }
 
 void SynEdit::setInternalDisplayXY(const DisplayCoord &aPos)
@@ -5604,208 +5601,31 @@ void SynEdit::ExecuteCommand(SynEditorCommand Command, QChar AChar, void *pData)
     case SynEditorCommand::ecToggleComment:
         doToggleComment();
         break;
+    case SynEditorCommand::ecNormalSelect:
+        setSelectionMode(SynSelectionMode::smNormal);
+        break;
+    case SynEditorCommand::ecLineSelect:
+        setSelectionMode(SynSelectionMode::smLine);
+        break;
+    case SynEditorCommand::ecColumnSelect:
+        setSelectionMode(SynSelectionMode::smColumn);
+        break;
+    case SynEditorCommand::ecScrollLeft:
+        horizontalScrollBar()->setValue(horizontalScrollBar()->value()-mMouseWheelScrollSpeed);
+        break;
+    case SynEditorCommand::ecScrollRight:
+        horizontalScrollBar()->setValue(horizontalScrollBar()->value()+mMouseWheelScrollSpeed);
+        break;
+    case SynEditorCommand::ecScrollUp:
+        verticalScrollBar()->setValue(verticalScrollBar()->value()-mMouseWheelScrollSpeed);
+        break;
+    case SynEditorCommand::ecScrollDown:
+        verticalScrollBar()->setValue(verticalScrollBar()->value()+mMouseWheelScrollSpeed);
+        break;
     default:
         break;
     }
 
-//    procedure ForceCaretX(aCaretX: integer);
-//    var
-//      vRestoreScroll: boolean;
-//    begin
-//      vRestoreScroll := not (eoScrollPastEol in fOptions);
-//      Include(fOptions, eoScrollPastEol);
-//      try
-//        InternalCaretX := aCaretX;
-//      finally
-//        if vRestoreScroll then
-//          Exclude(fOptions, eoScrollPastEol);
-//      end;
-//    end;
-
-//  var
-//    CX: Integer;
-//    Len: Integer;
-//    Temp: string;
-//    Temp2: string;
-//    Temp3: AnsiString;
-//    helper: string;
-//    TabBuffer: string;
-//    SpaceBuffer: string;
-//    SpaceCount1: Integer;
-//    SpaceCount2: Integer;
-//    BackCounter: Integer;
-//    OrigBlockBegin: TBufferCoord;
-//    OrigBlockEnd: TBufferCoord;
-//    OrigCaret: TBufferCoord;
-//    MoveDelim: TBufferCoord;
-//    BeginIndex: integer;
-//    EndIndex: integer;
-//    StartOfBlock: TBufferCoord;
-//    CurrentBracketPos, MatchBracketPos: TBufferCoord;
-//    bChangeScroll: boolean;
-//    moveBkm: boolean;
-//    WP: TBufferCoord;
-//    Caret: TBufferCoord;
-//    CaretNew: TBufferCoord;
-//    i, j: integer;
-//  {$IFDEF SYN_MBCSSUPPORT}
-//    s: string;
-//  {$ENDIF}
-//    counter: Integer;
-//    InsDelta: integer;
-//    iUndoBegin, iUndoEnd: TBufferCoord;
-//    vCaretRow: integer;
-//    vTabTrim: integer;
-//    Attr: TSynHighlighterAttributes;
-//    StartPos: Integer;
-//    EndPos: Integer;
-//    tempStr : AnsiString;
-//    nLinesInserted: integer;
-//  begin
-//    IncPaintLock;
-//    try
-//      case Command of
-
-
-//        ecCommentInline: // toggle inline comment
-//          if not ReadOnly and SelAvail then begin
-//            Temp := SelText;
-
-//            // Check if the selection starts with /* after blanks
-//            StartPos := -1;
-//            I := 1;
-//            while I <= Length(Temp) do begin
-//              if Temp[I] in [#9, #32] then
-//                Inc(I)
-//              else if ((I + 1) <= Length(Temp)) and (Temp[i] = '/') and (Temp[i + 1] = '*') then begin
-//                StartPos := I;
-//                break;
-//              end else
-//                break;
-//            end;
-
-//            // Check if the selection ends with /* after blanks
-//            EndPos := -1;
-//            if StartPos <> -1 then begin
-//              I := Length(Temp);
-//              while I > 0 do begin
-//                if Temp[I] in [#9, #32] then
-//                  Dec(I)
-//                else if ((I - 1) > 0) and (Temp[i] = '/') and (Temp[i - 1] = '*') then begin
-//                  EndPos := I;
-//                  break;
-//                end else
-//                  break;
-//              end;
-//            end;
-
-//            // Keep selection
-//            OrigBlockBegin := BlockBegin;
-//            OrigBlockEnd := BlockEnd;
-
-//            // Toggle based on current comment status
-//            if (StartPos <> -1) and (EndPos <> -1) then begin
-//              SelText := Copy(SelText, StartPos + 2, EndPos - StartPos - 3);
-//              BlockBegin := OrigBlockBegin;
-//              BlockEnd := BufferCoord(OrigBlockEnd.Char - 4, OrigBlockEnd.Line);
-//            end else begin
-//              SelText := '/*' + SelText + '*/';
-//              BlockBegin := BufferCoord(OrigBlockBegin.Char, OrigBlockBegin.Line);
-//              BlockEnd := BufferCoord(OrigBlockEnd.Char + 4, OrigBlockEnd.Line);
-//            end;
-//          end;
-//        ecMatchBracket:
-//          FindMatchingBracket;
-
-//        ecUpperCase,
-//          ecLowerCase,
-//          ecToggleCase,
-//          ecTitleCase,
-//          ecUpperCaseBlock,
-//          ecLowerCaseBlock,
-//          ecToggleCaseBlock:
-//          if not ReadOnly then
-//            DoCaseChange(Command);
-
-//        ecGotoMarker0..ecGotoMarker9: begin
-//            if BookMarkOptions.EnableKeys then
-//              GotoBookMark(Command - ecGotoMarker0);
-//          end;
-//        ecSetMarker0..ecSetMarker9: begin
-//            if BookMarkOptions.EnableKeys then begin
-//              CX := Command - ecSetMarker0;
-//              if Assigned(Data) then
-//                Caret := TBufferCoord(Data^)
-//              else
-//                Caret := CaretXY;
-//              if assigned(fBookMarks[CX]) then begin
-//                moveBkm := (fBookMarks[CX].Line <> Caret.Line);
-//                ClearBookMark(CX);
-//                if moveBkm then
-//                  SetBookMark(CX, Caret.Char, Caret.Line);
-//              end else
-//                SetBookMark(CX, Caret.Char, Caret.Line);
-//            end; // if BookMarkOptions.EnableKeys
-//          end;
-
-//        ecScrollUp, ecScrollDown: begin
-//            vCaretRow := DisplayY;
-//            if (vCaretRow < TopLine) or (vCaretRow >= TopLine + LinesInWindow) then
-//              // If the caret is not in view then, like the Delphi editor, move
-//              // it in view and do nothing else
-//              EnsureCursorPosVisible
-//            else begin
-//              if Command = ecScrollUp then begin
-//                TopLine := TopLine - 1;
-//                if vCaretRow > TopLine + LinesInWindow - 1 then
-//                  MoveCaretVert((TopLine + LinesInWindow - 1) - vCaretRow, False);
-//              end else begin
-//                TopLine := TopLine + 1;
-//                if vCaretRow < TopLine then
-//                  MoveCaretVert(TopLine - vCaretRow, False);
-//              end;
-//              EnsureCursorPosVisible;
-//              Update;
-//            end;
-//          end;
-//        ecScrollLeft: begin
-//            LeftChar := LeftChar - 1;
-//            // todo: The following code was commented out because it is not MBCS or hard-tab safe.
-//            //if CaretX > LeftChar + CharsInWindow then
-//            //  InternalCaretX := LeftChar + CharsInWindow;
-//            Update;
-//          end;
-//        ecScrollRight: begin
-//            LeftChar := LeftChar + 1;
-//            // todo: The following code was commented out because it is not MBCS or hard-tab safe.
-//            //if CaretX < LeftChar then
-//            //  InternalCaretX := LeftChar;
-//            Update;
-//          end;
-//        ecBlockIndent:
-//          if not ReadOnly then
-//            DoBlockIndent;
-//        ecBlockUnindent:
-//          if not ReadOnly then
-//            DoBlockUnindent;
-//        ecNormalSelect:
-//          SelectionMode := smNormal;
-//        ecColumnSelect:
-//          SelectionMode := smColumn;
-//        ecLineSelect:
-//          SelectionMode := smLine;
-//        ecContextHelp: begin
-//            if Assigned(fOnContextHelp) then
-//              fOnContextHelp(self, WordAtCursor);
-//          end;
-//  {$IFDEF SYN_MBCSSUPPORT}
-//        ecImeStr: begin;
-//  {$ENDIF}
-//      end;
-//    finally
-//      DecPaintLock;
-//    end;
-//  end;
 
 }
 

@@ -15,6 +15,7 @@ Red Panda C++ Version 0.13.2
   - fix: parser can't correctly handle variable definitions that don't have spaces like 'int*x';
   - fix: parser can't correctly handle function parameters like 'int *x' 
   - fix: caret dispears when at '\t' under Windows  7
+  - enhancement: ctrl+up/down scrolls in the editor
 
 Red Panda C++ Version 0.13.1
  - enhancement: suppoort localization info in project templates
