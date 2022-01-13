@@ -975,9 +975,11 @@ void MainWindow::openFile(const QString &filename, QTabWidget* page)
     }
     try {
         pSettings->history().removeFile(filename);
-        bool inProject = (mProject && mProject->isProjectUnit(filename));
         editor = mEditorList->newEditor(filename,ENCODING_AUTO_DETECT,
-                                        inProject, false, page);
+                                    false, false, page);
+        if (mProject) {
+            mProject->associateEditor(editor);
+        }
         editor->activate();
         this->updateForEncodingInfo();
     } catch (FileError e) {
@@ -1041,13 +1043,7 @@ void MainWindow::openProject(const QString &filename, bool openFiles)
         for (int i=0;i<mProject->units().count();i++) {
             PProjectUnit unit = mProject->units()[i];
             Editor* e = mEditorList->getOpenedEditorByFilename(unit->fileName());
-            if (e) {
-                unit->setEditor(e);
-                unit->setEncoding(e->encodingOption());
-                e->setInProject(true);
-            } else {
-                unit->setEditor(nullptr);
-            }
+            mProject->associateEditorToUnit(e,unit);
         }
 
         Editor * e = mEditorList->getEditor();
@@ -2005,10 +2001,12 @@ void MainWindow::loadLastOpens()
             page = mEditorList->leftPageWidget();
         else
             page = mEditorList->rightPageWidget();
-        bool inProject = (mProject && mProject->isProjectUnit(editorFilename));
-        Editor * editor = mEditorList->newEditor(editorFilename,ENCODING_AUTO_DETECT,inProject,false,page);
+        Editor * editor = mEditorList->newEditor(editorFilename,ENCODING_AUTO_DETECT,false,false,page);
         if (!editor)
             continue;
+        if (mProject) {
+            mProject->associateEditor(editor);
+        }
         BufferCoord pos;
         pos.Char = lastOpenIni.GetLongValue(sectionName,"CursorCol", 1);
         pos.Line = lastOpenIni.GetLongValue(sectionName,"CursorRow", 1);

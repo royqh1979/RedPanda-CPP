@@ -184,7 +184,9 @@ public:
     void saveUnitAs(int i, const QString& sFileName, bool syncEditor = true); // save single [UnitX]
     void saveUnitLayout(Editor* e, int index); // save single [UnitX] cursor positions
     bool saveUnits();
-    bool isProjectUnit(const QString& filename);
+    PProjectUnit findUnitByFilename(const QString& filename);
+    void associateEditor(Editor* editor);
+    void associateEditorToUnit(Editor* editor, PProjectUnit unit);
     void setCompilerOption(const QString& optionString, char value);
     void sortUnitsByPriority();
     void sortUnitsByAlpha();

@@ -564,13 +564,34 @@ bool Project::saveUnits()
     return true;
 }
 
-bool Project::isProjectUnit(const QString &filename)
+PProjectUnit Project::findUnitByFilename(const QString &filename)
 {
-    foreach(const PProjectUnit& unit, mUnits) {
+    foreach(PProjectUnit unit, mUnits) {
         if (QString::compare(unit->fileName(),filename, PATH_SENSITIVITY)==0)
-            return true;
+            return unit;
     }
-    return false;
+    return PProjectUnit();
+}
+
+void Project::associateEditor(Editor *editor)
+{
+    if (!editor)
+        return;
+    PProjectUnit unit = findUnitByFilename(editor->filename());
+    associateEditorToUnit(editor,unit);
+}
+
+void Project::associateEditorToUnit(Editor *editor, PProjectUnit unit)
+{
+    if (!unit)
+        return;
+    if (editor) {
+        unit->setEditor(editor);
+        unit->setEncoding(editor->encodingOption());
+        editor->setInProject(true);
+    } else {
+        unit->setEditor(nullptr);
+    }
 }
 
 void Project::setCompilerOption(const QString &optionString, char value)
