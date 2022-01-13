@@ -133,6 +133,16 @@
              </widget>
             </item>
             <item>
+             <widget class="QCheckBox" name="chkWrapAround">
+              <property name="text">
+               <string>Wrap Around</string>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
              <widget class="QCheckBox" name="chkPrompt">
               <property name="text">
                <string>Prompt on replace</string>

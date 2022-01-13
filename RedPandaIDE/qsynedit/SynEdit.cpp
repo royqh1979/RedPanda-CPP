@@ -4907,6 +4907,7 @@ int SynEdit::searchReplace(const QString &sSearch, const QString &sReplace, SynS
         else
             ptCurrent = ptStart;
     }
+    BufferCoord originCaretXY=caretXY();
     // initialize the search engine
     searchEngine->setOptions(sOptions);
     searchEngine->setPattern(sSearch);
@@ -5015,6 +5016,23 @@ int SynEdit::searchReplace(const QString &sSearch, const QString &sReplace, SynS
                 ptCurrent.Line--;
             else
                 ptCurrent.Line++;
+            if (
+                    ((ptCurrent.Line < ptStart.Line) || (ptCurrent.Line > ptEnd.Line))
+                    && bFromCursor){
+                //search start from cursor, search has finished but no result founds
+                bFromCursor = false;
+                ptStart.Char = 1;
+                ptStart.Line = 1;
+                ptEnd.Line = mLines->count();
+                ptEnd.Char = mLines->getString(ptEnd.Line - 1).length();
+                if (bBackward) {
+                    ptStart = originCaretXY;
+                    ptCurrent = ptEnd;
+                } else {
+                    ptEnd= originCaretXY;
+                    ptCurrent = ptStart;
+                }
+            }
         }
     }
     return result;

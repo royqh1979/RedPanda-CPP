@@ -103,6 +103,7 @@ void SearchDialog::findInFiles(const QString &keyword, SearchFileScope scope, Sy
     ui->chkRegExp->setChecked(options.testFlag(ssoRegExp));
     ui->chkCaseSensetive->setChecked(options.testFlag(ssoMatchCase));
     ui->chkWholeWord->setChecked(options.testFlag(ssoWholeWord));
+    ui->chkWrapAround->setChecked(options.testFlag(ssoWholeWord));
 
     show();
 }
@@ -145,6 +146,7 @@ void SearchDialog::onTabChanged()
 
     // Disable prompt when doing finds
     ui->chkPrompt->setEnabled(isreplace);
+    ui->chkWrapAround->setEnabled(!isfindfiles);
 
     if (isfind || isfindfiles) {
         ui->btnExecute->setText(tr("Find"));
@@ -211,6 +213,9 @@ void SearchDialog::on_btnExecute_clicked()
     }
     if (ui->chkWholeWord->isChecked()) {
         mSearchOptions.setFlag(ssoWholeWord);
+    }
+    if (ui->chkWrapAround->isChecked()) {
+        mSearchOptions.setFlag(ssoWrapAround);
     }
 
     // Apply scope, when enabled

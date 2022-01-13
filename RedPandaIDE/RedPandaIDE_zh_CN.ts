@@ -1247,40 +1247,40 @@ Are you really want to continue?</oldsource>
         <translation>打印文档</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="3073"/>
-        <location filename="editor.cpp" line="3112"/>
-        <location filename="editor.cpp" line="3163"/>
+        <location filename="editor.cpp" line="3072"/>
+        <location filename="editor.cpp" line="3111"/>
+        <location filename="editor.cpp" line="3162"/>
         <source>Ctrl+click for more info</source>
         <translation>Ctrl+单击以获取更多信息</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="3550"/>
-        <location filename="editor.cpp" line="3580"/>
+        <location filename="editor.cpp" line="3549"/>
+        <location filename="editor.cpp" line="3579"/>
         <source>Symbol &apos;%1&apos; not found!</source>
         <translation>未找到符号&apos;%1&apos;!</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="3873"/>
+        <location filename="editor.cpp" line="3872"/>
         <source>astyle not found</source>
         <translation>找不到astyle程序</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="3874"/>
+        <location filename="editor.cpp" line="3873"/>
         <source>Can&apos;t find astyle in &quot;%1&quot;.</source>
         <translation>找不到astyle程序&quot;%1&quot;.</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="4019"/>
+        <location filename="editor.cpp" line="4018"/>
         <source>Break point condition</source>
         <translation>断点条件</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="4020"/>
+        <location filename="editor.cpp" line="4019"/>
         <source>Enter the condition of the breakpoint:</source>
         <translation>输入当前断点的生效条件:</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="4230"/>
+        <location filename="editor.cpp" line="4229"/>
         <source>Readonly</source>
         <translation>只读</translation>
     </message>
@@ -6614,88 +6614,93 @@ Are you really want to continue?</oldsource>
     </message>
     <message>
         <location filename="widgets/searchdialog.ui" line="131"/>
+        <source>Wrap Around</source>
+        <translation>循环查找</translation>
+    </message>
+    <message>
+        <location filename="widgets/searchdialog.ui" line="141"/>
         <source>Regular Expression</source>
         <translation>正则表达式</translation>
     </message>
     <message>
-        <location filename="widgets/searchdialog.ui" line="138"/>
+        <location filename="widgets/searchdialog.ui" line="148"/>
         <source>Prompt on replace</source>
         <translation>替换时提示</translation>
     </message>
     <message>
-        <location filename="widgets/searchdialog.ui" line="151"/>
+        <location filename="widgets/searchdialog.ui" line="161"/>
         <source>Scope:</source>
         <translation>范围：</translation>
     </message>
     <message>
-        <location filename="widgets/searchdialog.ui" line="157"/>
+        <location filename="widgets/searchdialog.ui" line="167"/>
         <source>Global</source>
         <translation>全局</translation>
     </message>
     <message>
-        <location filename="widgets/searchdialog.ui" line="164"/>
+        <location filename="widgets/searchdialog.ui" line="174"/>
         <source>Selection</source>
         <translation>选中文字</translation>
     </message>
     <message>
-        <location filename="widgets/searchdialog.ui" line="174"/>
+        <location filename="widgets/searchdialog.ui" line="184"/>
         <source>Origin:</source>
         <translation>起点：</translation>
     </message>
     <message>
-        <location filename="widgets/searchdialog.ui" line="180"/>
+        <location filename="widgets/searchdialog.ui" line="190"/>
         <source>From cursor</source>
         <translation>从光标处</translation>
     </message>
     <message>
-        <location filename="widgets/searchdialog.ui" line="190"/>
+        <location filename="widgets/searchdialog.ui" line="200"/>
         <source>Entire scope</source>
         <translation>整个范围</translation>
     </message>
     <message>
-        <location filename="widgets/searchdialog.ui" line="218"/>
+        <location filename="widgets/searchdialog.ui" line="228"/>
         <source>Direction:</source>
         <translation>方向</translation>
     </message>
     <message>
-        <location filename="widgets/searchdialog.ui" line="224"/>
+        <location filename="widgets/searchdialog.ui" line="234"/>
         <source>Forward</source>
         <translation>向后</translation>
     </message>
     <message>
-        <location filename="widgets/searchdialog.ui" line="234"/>
+        <location filename="widgets/searchdialog.ui" line="244"/>
         <source>Backward</source>
         <translation>向前</translation>
     </message>
     <message>
-        <location filename="widgets/searchdialog.ui" line="257"/>
+        <location filename="widgets/searchdialog.ui" line="267"/>
         <source>Where:</source>
         <translation>在哪些文件中查找：</translation>
     </message>
     <message>
-        <location filename="widgets/searchdialog.ui" line="263"/>
+        <location filename="widgets/searchdialog.ui" line="273"/>
         <source>Current File</source>
         <translation>当前文件</translation>
     </message>
     <message>
-        <location filename="widgets/searchdialog.ui" line="273"/>
+        <location filename="widgets/searchdialog.ui" line="283"/>
         <source>Files In Project</source>
         <translation>项目中的文件</translation>
     </message>
     <message>
-        <location filename="widgets/searchdialog.ui" line="280"/>
+        <location filename="widgets/searchdialog.ui" line="290"/>
         <source>Open Files</source>
         <translation>已打开的文件</translation>
     </message>
     <message>
-        <location filename="widgets/searchdialog.ui" line="347"/>
+        <location filename="widgets/searchdialog.ui" line="357"/>
         <location filename="widgets/searchdialog.cpp" line="37"/>
-        <location filename="widgets/searchdialog.cpp" line="150"/>
+        <location filename="widgets/searchdialog.cpp" line="151"/>
         <source>Find</source>
         <translation>查找</translation>
     </message>
     <message>
-        <location filename="widgets/searchdialog.ui" line="354"/>
+        <location filename="widgets/searchdialog.ui" line="364"/>
         <source>Cancel</source>
         <translation>取消</translation>
     </message>
@@ -6706,8 +6711,8 @@ Are you really want to continue?</oldsource>
     </message>
     <message>
         <location filename="widgets/searchdialog.cpp" line="39"/>
-        <location filename="widgets/searchdialog.cpp" line="152"/>
-        <location filename="widgets/searchdialog.cpp" line="259"/>
+        <location filename="widgets/searchdialog.cpp" line="153"/>
+        <location filename="widgets/searchdialog.cpp" line="263"/>
         <source>Replace</source>
         <translation>替换</translation>
     </message>
@@ -6717,7 +6722,7 @@ Are you really want to continue?</oldsource>
         <translation>在文件中替换</translation>
     </message>
     <message>
-        <location filename="widgets/searchdialog.cpp" line="260"/>
+        <location filename="widgets/searchdialog.cpp" line="264"/>
         <source>Replace this occurrence of &apos;&apos;%1&apos;&apos;?</source>
         <translation>替换这里的&quot;%1&quot;？</translation>
     </message>
