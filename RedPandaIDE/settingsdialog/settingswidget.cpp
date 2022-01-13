@@ -24,6 +24,7 @@
 #include <QListView>
 #include <QMessageBox>
 #include <QPlainTextEdit>
+#include <QListWidget>
 #include <QRadioButton>
 #include <QSpinBox>
 #include "../widgets/coloredit.h"
@@ -121,6 +122,9 @@ void SettingsWidget::connectInputs()
     for (QAbstractItemView* p: findChildren<QAbstractItemView*>()) {
         connectAbstractItemView(p);
     }
+    for (QListWidget* p:findChildren<QListWidget*>()) {
+        connect(p, QOverload<int>::of(&QListWidget::currentRowChanged) ,this, &SettingsWidget::setSettingsChanged);
+    }
     for (QGroupBox* p: findChildren<QGroupBox*>()) {
         connect(p, &QGroupBox::toggled,this, &SettingsWidget::setSettingsChanged);
     }
@@ -135,15 +139,32 @@ void SettingsWidget::disconnectInputs()
     for (QCheckBox* p:findChildren<QCheckBox*>()) {
         disconnect(p, &QCheckBox::stateChanged, this, &SettingsWidget::setSettingsChanged);
     }
+    for (QRadioButton* p:findChildren<QRadioButton*>()) {
+        disconnect(p, &QRadioButton::toggled, this, &SettingsWidget::setSettingsChanged);
+    }
     for (QPlainTextEdit* p:findChildren<QPlainTextEdit*>()) {
         disconnect(p, &QPlainTextEdit::textChanged, this, &SettingsWidget::setSettingsChanged);
     }
+    for (QSpinBox* p:findChildren<QSpinBox*>()) {
+        disconnect(p, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsWidget::setSettingsChanged);
+    }
+    for (ColorEdit* p:findChildren<ColorEdit*>()) {
+        disconnect(p, &ColorEdit::colorChanged, this, &SettingsWidget::setSettingsChanged);
+    }
+
     for (QComboBox* p: findChildren<QComboBox*>()) {
         disconnect(p, QOverload<int>::of(&QComboBox::currentIndexChanged) ,this, &SettingsWidget::setSettingsChanged);
     }
     for (QAbstractItemView* p: findChildren<QAbstractItemView*>()) {
         disconnectAbstractItemView(p);
     }
+    for (QListWidget* p:findChildren<QListWidget*>()) {
+        disconnect(p, QOverload<int>::of(&QListWidget::currentRowChanged) ,this, &SettingsWidget::setSettingsChanged);
+    }
+    for (QGroupBox* p: findChildren<QGroupBox*>()) {
+        disconnect(p, &QGroupBox::toggled,this, &SettingsWidget::setSettingsChanged);
+    }
+
 }
 
 const QString &SettingsWidget::group()

@@ -17,6 +17,10 @@ Red Panda C++ Version 0.13.2
   - fix: caret dispears when at '\t' under Windows  7
   - enhancement: ctrl+up/down scrolls in the editor
   - enhancement: add "wrap around" option to find/replace
+  - fix: project's icon setting is not correctly saved
+  - fix: project's type setting won't be saved
+  - fix: If project's compiler set is not the same with the default compiler set, auto openned project's file will use wrong compiler set to do syntax check.
+  - fix: open a project file through "File"->"Open" will not correctly connect it with the project internally
 
 Red Panda C++ Version 0.13.1
  - enhancement: suppoort localization info in project templates

@@ -42,7 +42,7 @@ ProjectGeneralWidget::~ProjectGeneralWidget()
 void ProjectGeneralWidget::refreshIcon()
 {
     QPixmap icon(mIconPath);
-    ui->lblICon->setPixmap(icon);
+    ui->lbIcon->setPixmap(icon);
 }
 
 void ProjectGeneralWidget::doLoad()
@@ -103,23 +103,25 @@ void ProjectGeneralWidget::doSave()
     project->options().useGPP = ui->cbDefaultCpp->isChecked();
     project->options().supportXPThemes = ui->cbSupportXPTheme->isChecked();
     if (mIconPath.isEmpty()
-            || !ui->lblICon->pixmap() || ui->lblICon->pixmap()->isNull()) {
+            || !ui->lbIcon->pixmap() || ui->lbIcon->pixmap()->isNull()) {
         project->options().icon = "";
     } else {
         QString iconPath = changeFileExt(project->filename(),"ico");
-        if (QFile(iconPath).exists()) {
-            if (!QFile::remove(iconPath)) {
-                QMessageBox::critical(this,
-                                      tr("Can't remove old icon file"),
-                                      tr("Can't remove old icon file '%1'")
-                                      .arg(iconPath),
-                                      QMessageBox::Ok);
+        if (iconPath!=mIconPath) {
+            if (QFile(iconPath).exists()) {
+                if (!QFile::remove(iconPath)) {
+                    QMessageBox::critical(this,
+                                          tr("Can't remove old icon file"),
+                                          tr("Can't remove old icon file '%1'")
+                                          .arg(iconPath),
+                                          QMessageBox::Ok);
+                }
             }
+            QFile::copy(mIconPath, iconPath);
+            project->options().icon = iconPath;
+            mIconPath = iconPath;
+            refreshIcon();
         }
-        QFile::copy(mIconPath, iconPath);
-        project->options().icon = iconPath;
-        mIconPath = iconPath;
-        refreshIcon();
     }
 
     project->saveOptions();
@@ -130,7 +132,7 @@ void ProjectGeneralWidget::on_btnBrowse_clicked()
     QString fileName = QFileDialog::getOpenFileName(this,
                                                     tr("Select icon file"),
                                                     pSettings->dirs().appDir(),
-                                                    tr("Icon Files (*.ico)"));
+                                                    tr("Image Files (*.ico *.png *.jpg)"));
     if (!fileName.isEmpty()) {
         mIconPath = fileName;
         QPixmap icon(mIconPath);
@@ -144,7 +146,7 @@ void ProjectGeneralWidget::on_btnBrowse_clicked()
 void ProjectGeneralWidget::on_btnRemove_clicked()
 {
     mIconPath = "";
-    ui->lblICon->setPixmap(QPixmap());
+    ui->lbIcon->setPixmap(QPixmap());
     ui->btnRemove->setEnabled(!mIconPath.isEmpty());
     setSettingsChanged();
 }

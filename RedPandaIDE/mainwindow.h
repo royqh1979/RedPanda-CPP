@@ -177,7 +177,7 @@ public:
     const PBookmarkModel &bookmarkModel() const;
 
     void openFile(const QString& filename, QTabWidget* page=nullptr);
-    void openProject(const QString& filename);
+    void openProject(const QString& filename, bool openFiles = true);
     void changeOptions(const QString& widgetName=QString(), const QString& groupName=QString());
 
     bool openningFiles() const;

@@ -564,6 +564,15 @@ bool Project::saveUnits()
     return true;
 }
 
+bool Project::isProjectUnit(const QString &filename)
+{
+    foreach(const PProjectUnit& unit, mUnits) {
+        if (QString::compare(unit->fileName(),filename, PATH_SENSITIVITY)==0)
+            return true;
+    }
+    return false;
+}
+
 void Project::setCompilerOption(const QString &optionString, char value)
 {
     if (mOptions.compilerSet<0 || mOptions.compilerSet>=pSettings->compilerSets().size()) {
@@ -1211,20 +1220,6 @@ void Project::createFolderNodes()
 
 void Project::doAutoOpen()
 {
-    //todo:
-//    case devData.AutoOpen of
-//      0: begin
-//          for i := 0 to pred(fUnits.Count) do
-//            OpenUnit(i); // Open all
-//          if fUnits.Count > 0 then
-//            fUnits[0].Editor.Activate; // Show first
-//        end;
-//      1:
-//        if fUnits.Count > 0 then
-//          OpenUnit(0).Activate; // Open and show first
-//      2:
-//        LoadLayout; // Open previous selection
-//    end;
     loadLayout();
 }
 

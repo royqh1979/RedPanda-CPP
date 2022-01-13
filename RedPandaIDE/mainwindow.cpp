@@ -975,8 +975,9 @@ void MainWindow::openFile(const QString &filename, QTabWidget* page)
     }
     try {
         pSettings->history().removeFile(filename);
+        bool inProject = (mProject && mProject->isProjectUnit(filename));
         editor = mEditorList->newEditor(filename,ENCODING_AUTO_DETECT,
-                                        false, false, page);
+                                        inProject, false, page);
         editor->activate();
         this->updateForEncodingInfo();
     } catch (FileError e) {
@@ -984,7 +985,7 @@ void MainWindow::openFile(const QString &filename, QTabWidget* page)
     }
 }
 
-void MainWindow::openProject(const QString &filename)
+void MainWindow::openProject(const QString &filename, bool openFiles)
 {
     if (!fileExists(filename)) {
         return;
@@ -1029,13 +1030,12 @@ void MainWindow::openProject(const QString &filename)
     //  if not devData.ShowLeftPages then
     //    actProjectManager.Execute;
             //checkForDllProfiling();
-        updateAppTitle();
-        updateCompilerSet();
 
         //parse the project
         //  UpdateClassBrowsing;
         scanActiveProject(true);
-        mProject->doAutoOpen();
+        if (openFiles)
+            mProject->doAutoOpen();
 
         //update editor's inproject flag
         for (int i=0;i<mProject->units().count();i++) {
@@ -1054,6 +1054,8 @@ void MainWindow::openProject(const QString &filename)
         if (e) {
             checkSyntaxInBack(e);
         }
+        updateAppTitle();
+        updateCompilerSet();
         updateClassBrowserForEditor(e);
     }
     updateForEncodingInfo();
@@ -1985,8 +1987,12 @@ void MainWindow::loadLastOpens()
                               QMessageBox::Ok);
         return;
     }
-    Editor *  focusedEditor = nullptr;
+    QString projectFilename = QString::fromLocal8Bit((lastOpenIni.GetValue("LastOpens", "Project","")));
     int count = lastOpenIni.GetLongValue("LastOpens","Count",0);
+    if (fileExists(projectFilename)) {
+        openProject(projectFilename, false);
+    }
+    Editor *  focusedEditor = nullptr;
     for (int i=0;i<count;i++) {
         QByteArray sectionName = QString("Editor_%1").arg(i).toLocal8Bit();
         QString editorFilename = QString::fromLocal8Bit(lastOpenIni.GetValue(sectionName,"FileName",""));
@@ -1999,7 +2005,8 @@ void MainWindow::loadLastOpens()
             page = mEditorList->leftPageWidget();
         else
             page = mEditorList->rightPageWidget();
-        Editor * editor = mEditorList->newEditor(editorFilename,ENCODING_AUTO_DETECT,false,false,page);
+        bool inProject = (mProject && mProject->isProjectUnit(editorFilename));
+        Editor * editor = mEditorList->newEditor(editorFilename,ENCODING_AUTO_DETECT,inProject,false,page);
         if (!editor)
             continue;
         BufferCoord pos;
@@ -2016,10 +2023,7 @@ void MainWindow::loadLastOpens()
             focusedEditor = editor;
         pSettings->history().removeFile(editorFilename);
     }
-    QString projectFilename = QString::fromLocal8Bit((lastOpenIni.GetValue("LastOpens", "Project","")));
-    if (fileExists(projectFilename)) {
-        openProject(projectFilename);
-    } else {
+    if (count>0) {
         updateEditorActions();
         updateForEncodingInfo();
     }

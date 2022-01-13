@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>685</width>
+    <width>687</width>
     <height>639</height>
    </rect>
   </property>
@@ -114,7 +114,7 @@
              </spacer>
             </item>
             <item>
-             <widget class="QLabel" name="lblICon">
+             <widget class="QLabel" name="lbIcon">
               <property name="minimumSize">
                <size>
                 <width>128</width>
