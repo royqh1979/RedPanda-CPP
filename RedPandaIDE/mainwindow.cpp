@@ -1697,7 +1697,7 @@ void MainWindow::debug()
     mDebugger->sendCommand("-gdb-set", "confirm off");
     mDebugger->sendCommand("-gdb-set", "print repeats 0"); // don't repeat elements
     mDebugger->sendCommand("-gdb-set", "print elements 0"); // don't limit elements
-    mDebugger->sendCommand("-environment-cd", excludeTrailingPathDelimiter(debugFile.path())); // restore working directory
+    mDebugger->sendCommand("-environment-cd", QString("\"%1\"").arg(excludeTrailingPathDelimiter(filePath))); // restore working directory
     if (pSettings->debugger().useGDBServer()) {
         mDebugger->sendCommand("-target-select",QString("remote localhost:%1").arg(pSettings->debugger().GDBServerPort()));
         if (!debugInferiorhasBreakpoint()) {
