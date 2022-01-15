@@ -176,6 +176,7 @@ void ProjectCompiler::writeMakeDefines(QFile &file)
 
     // Get windres file
     QString ObjResFile;
+#ifdef Q_OS_WIN
     if (!mProject->options().privateResource.isEmpty()) {
       if (!mProject->options().objectOutput.isEmpty()) {
           ObjResFile = includeTrailingPathDelimiter(mProject->options().objectOutput) +
@@ -183,6 +184,7 @@ void ProjectCompiler::writeMakeDefines(QFile &file)
       } else
           ObjResFile = changeFileExt(mProject->options().privateResource, RES_EXT);
     }
+#endif
 
     // Mention progress in the logs
     if (!ObjResFile.isEmpty()) {
@@ -204,7 +206,9 @@ void ProjectCompiler::writeMakeDefines(QFile &file)
     }
     writeln(file,"CPP      = " + extractFileName(compilerSet()->cppCompiler()));
     writeln(file,"CC       = " + extractFileName(compilerSet()->CCompiler()));
+#ifdef Q_OS_WIN
     writeln(file,"WINDRES  = " + extractFileName(compilerSet()->resourceCompiler()));
+#endif
     if (!ObjResFile.isEmpty()) {
       writeln(file,"RES      = " + genMakePath1(ObjResFile));
       writeln(file,"OBJ      = " + Objects + " $(RES)");
@@ -381,6 +385,7 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
         }
     }
 
+#ifdef Q_OS_WIN
     if (!mProject->options().privateResource.isEmpty()) {
 
         // Concatenate all resource include directories
@@ -433,6 +438,7 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
         }
         writeln(file);
     }
+#endif
 }
 
 void ProjectCompiler::writeln(QFile &file, const QString &s)
