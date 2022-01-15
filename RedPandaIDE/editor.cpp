@@ -1017,6 +1017,8 @@ bool Editor::event(QEvent *event)
             break;
         case TipType::None:
             cancelHint();
+            mCurrentWord = "";
+            mCurrentTipType = TipType::None;
             event->ignore();
             return true;
         }
