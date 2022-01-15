@@ -4,7 +4,7 @@ Name=GLUT
 Icon=CL_GLUT.ico
 Description=A simple GLUT program
 Description[zh_CN]=一个简单的GLUT程序
-Category=Multimedia
+Category=3D
 Category[zh_CN]=3D
 
 [Unit0]

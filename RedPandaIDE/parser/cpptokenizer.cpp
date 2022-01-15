@@ -585,7 +585,7 @@ void CppTokenizer::skipToNextToken()
 
 bool CppTokenizer::isIdentChar(const QChar &ch)
 {
-    return ch.isLetter();
+    return ch=='_' || ch.isLetter() ;
 }
 
 void CppTokenizer::advance()
