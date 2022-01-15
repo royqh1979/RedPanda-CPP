@@ -22,6 +22,7 @@ Red Panda C++ Version 0.13.2
   - fix: If project's compiler set is not the same with the default compiler set, auto openned project's file will use wrong compiler set to do syntax check.
   - fix: open a project file through "File"->"Open" will not correctly connect it with the project internally
   - fix: wrong project program directory parameter is sent to the debugger
+  - enhancement: better behavior of mouse tips
 
 Red Panda C++ Version 0.13.1
  - enhancement: suppoort localization info in project templates
