@@ -1,11 +1,9 @@
 ####################################################################
 # Startup
 
-!define COMPILERNAME "No.Compiler"
-!define COMPILERFOLDER ""
-!define DEVCPP_VERSION "6.7.5"
-!define FINALNAME "Dev-Cpp.${DEVCPP_VERSION}.${COMPILERNAME}.Setup.exe"
-!define DISPLAY_NAME "Red Panda Dev-C++ ${DEVCPP_VERSION}"
+!include "config.nsh"
+!define FINALNAME "RedPanda.C++.${DEVCPP_VERSION}.No.Compiler.Setup.exe"
+!define DISPLAY_NAME "Red Panda C++ ${DEVCPP_VERSION}"
 
 !include "MUI2.nsh"
 !include "lang.nsh"
@@ -20,8 +18,7 @@ OutFile "${FINALNAME}"
 Caption "${DISPLAY_NAME}"
 
 LicenseData "LICENSE"
-InstallDir $PROGRAMFILES\Dev-Cpp
-
+InstallDir $PROGRAMFILES64\RedPanda-Cpp
 ####################################################################
 # Interface Settings
 
@@ -40,8 +37,8 @@ InstType "Minimal";2
 InstType "Safe";3
 
 ## Remember the installer language
-!define MUI_LANGDLL_REGISTRY_ROOT "HKCU"
-!define MUI_LANGDLL_REGISTRY_KEY "Software\Dev-C++"
+!define MUI_LANGDLL_REGISTRY_ROOT "HKLM"
+!define MUI_LANGDLL_REGISTRY_KEY "Software\RedPanda-C++"
 !define MUI_LANGDLL_REGISTRY_VALUENAME "Installer Language"
 
 ####################################################################
@@ -51,7 +48,7 @@ InstType "Safe";3
 !define MUI_UNICON "devcpp.ico"
 !define MUI_ABORTWARNING
 !define MUI_LANGDLL_ALLLANGUAGES
-!define MUI_FINISHPAGE_RUN "$INSTDIR\devcpp.exe"
+!define MUI_FINISHPAGE_RUN "$INSTDIR\RedPandaIDE.exe"
 !define MUI_FINISHPAGE_NOREBOOTSUPPORT
 !define MUI_COMPONENTSPAGE_SMALLDESC
 
@@ -68,32 +65,6 @@ InstType "Safe";3
 
 !insertmacro MUI_LANGUAGE "English"
 !insertmacro MUI_LANGUAGE "SimpChinese"
-!insertmacro MUI_LANGUAGE "TradChinese"
-!insertmacro MUI_LANGUAGE "Bulgarian"
-!insertmacro MUI_LANGUAGE "Catalan"
-!insertmacro MUI_LANGUAGE "Croatian"
-!insertmacro MUI_LANGUAGE "Czech"
-!insertmacro MUI_LANGUAGE "Danish"
-!insertmacro MUI_LANGUAGE "Dutch"
-!insertmacro MUI_LANGUAGE "Estonian"
-!insertmacro MUI_LANGUAGE "French"
-!insertmacro MUI_LANGUAGE "German"
-!insertmacro MUI_LANGUAGE "Greek"
-!insertmacro MUI_LANGUAGE "Hungarian"
-!insertmacro MUI_LANGUAGE "Italian"
-!insertmacro MUI_LANGUAGE "Korean"
-!insertmacro MUI_LANGUAGE "Latvian"
-!insertmacro MUI_LANGUAGE "Polish"
-!insertmacro MUI_LANGUAGE "Portuguese"
-!insertmacro MUI_LANGUAGE "Romanian"
-!insertmacro MUI_LANGUAGE "Russian"
-!insertmacro MUI_LANGUAGE "Slovak"
-!insertmacro MUI_LANGUAGE "Slovenian"
-!insertmacro MUI_LANGUAGE "Spanish"
-!insertmacro MUI_LANGUAGE "Swedish"
-!insertmacro MUI_LANGUAGE "Turkish"
-!insertmacro MUI_LANGUAGE "Ukrainian"
-
 
 ####################################################################
 # Files, by option section
@@ -103,54 +74,28 @@ Section "$(SectionMainName)" SectionMain
   
   SetOutPath $INSTDIR
 
+  SetRegView 64
   ; Allways create an uninstaller
   WriteUninstaller "$INSTDIR\uninstall.exe"
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Dev-C++" "DisplayName" "Dev-C++"
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Dev-C++" "UninstallString" "$INSTDIR\uninstall.exe"
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Dev-C++" "DisplayVersion" "${DEVCPP_VERSION}"
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Dev-C++" "DisplayIcon" "$INSTDIR\devcpp.exe"
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Dev-C++" "Publisher" "Bloodshed Software"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++" "DisplayName" "Redpanda-C++"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++" "UninstallString" "$INSTDIR\uninstall.exe"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++" "DisplayVersion" "${DEVCPP_VERSION}"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++" "DisplayIcon" "$INSTDIR\RedPandaIDE.exe"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++" "Publisher" "Roy Qu(royqh1979@gmail.com)"
 
-  ; HDPI Fix
-  WriteRegStr HKCU "Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers"  "$INSTDIR\devcpp.exe" "~ HIGHDPIAWARE"
 
   ; Write required files
-  File "devcpp.exe"
-  File "packman.exe"
-  File "PackMaker.exe"
+  File "RedPandaIDE.exe"
   File "ConsolePauser.exe"
-  File "devcpp.exe.manifest"
+  File "astyle.exe"
   File "LICENSE"
-  File "NEWS.txt"
-  File "README.MD"
+  File "NEWS.md"
+  File "README.md"
   
   ; Write required paths
-  SetOutPath $INSTDIR\Lang
-  File /nonfatal /r "Lang\English.*"
   SetOutPath $INSTDIR\Templates
   File /nonfatal /r "Templates\*"
-  SetOutPath $INSTDIR\Help
-  File /nonfatal /r "Help\*"
-  SetOutPath $INSTDIR\AStyle
-  File /nonfatal /r "AStyle\*"
-  SetOutPath $INSTDIR\ResEd
-  File /nonfatal /r "ResEd\*"
-  SetOutPath $INSTDIR\Contributes
-  File /nonfatal /r "contributes\*"
-SectionEnd
 
-Section "$(SectionIconsName)" SectionIcons
-  SectionIn 1 3
-  
-  SetOutPath $INSTDIR\Icons
-  File /nonfatal /r "Icons\*.*"
-SectionEnd
-
-Section "$(SectionLangsName)" SectionLangs
-  SectionIn 1 3
-  
-  SetOutPath $INSTDIR\Lang
-  File /nonfatal /r "Lang\*"
 SectionEnd
 
 ####################################################################
@@ -162,7 +107,7 @@ Section "$(SectionAssocExtNameBegin) .dev $(SectionAssocExtNameEnd)"
   StrCpy $0 ".dev"
   Call BackupAssoc
 
-  StrCpy $0 $INSTDIR\DevCpp.exe
+  StrCpy $0 $INSTDIR\RedPandaIDE.exe
   WriteRegStr HKCR ".dev" "" "DevCpp.dev"
   WriteRegStr HKCR "DevCpp.dev" "" "Dev-C++ Project File"
   WriteRegStr HKCR "DevCpp.dev\DefaultIcon" "" '$0,3'
@@ -176,7 +121,7 @@ Section "$(SectionAssocExtNameBegin) .c $(SectionAssocExtNameEnd)"
   StrCpy $0 ".c"
   Call BackupAssoc
 
-  StrCpy $0 $INSTDIR\DevCpp.exe
+  StrCpy $0 $INSTDIR\RedPandaIDE.exe
   WriteRegStr HKCR ".c" "" "DevCpp.c"
   WriteRegStr HKCR "DevCpp.c" "" "C Source File"
   WriteRegStr HKCR "DevCpp.c\DefaultIcon" "" '$0,4'
@@ -190,7 +135,7 @@ Section "$(SectionAssocExtNameBegin) .cpp $(SectionAssocExtNameEnd)"
   StrCpy $0 ".cpp"
   Call BackupAssoc
 
-  StrCpy $0 $INSTDIR\DevCpp.exe
+  StrCpy $0 $INSTDIR\RedPandaIDE.exe
   WriteRegStr HKCR ".cpp" "" "DevCpp.cpp"
   WriteRegStr HKCR "DevCpp.cpp" "" "C++ Source File"
   WriteRegStr HKCR "DevCpp.cpp\DefaultIcon" "" '$0,5'
@@ -204,7 +149,7 @@ Section "$(SectionAssocExtNameBegin) .cxx $(SectionAssocExtNameEnd)"
   StrCpy $0 ".cxx"
   Call BackupAssoc
 
-  StrCpy $0 $INSTDIR\DevCpp.exe
+  StrCpy $0 $INSTDIR\RedPandaIDE.exe
   WriteRegStr HKCR ".cxx" "" "DevCpp.cxx"
   WriteRegStr HKCR "DevCpp.cxx" "" "C++ Source File"
   WriteRegStr HKCR "DevCpp.cxx\DefaultIcon" "" '$0,5'
@@ -218,7 +163,7 @@ Section "$(SectionAssocExtNameBegin) .cc $(SectionAssocExtNameEnd)"
   StrCpy $0 ".cc"
   Call BackupAssoc
 
-  StrCpy $0 $INSTDIR\DevCpp.exe
+  StrCpy $0 $INSTDIR\RedPandaIDE.exe
   WriteRegStr HKCR ".cc" "" "DevCpp.cc"
   WriteRegStr HKCR "DevCpp.cc" "" "C++ Source File"
   WriteRegStr HKCR "DevCpp.cc\DefaultIcon" "" '$0,5'
@@ -232,7 +177,7 @@ Section "$(SectionAssocExtNameBegin) .hxx $(SectionAssocExtNameEnd)"
   StrCpy $0 ".hxx"
   Call BackupAssoc
 
-  StrCpy $0 $INSTDIR\DevCpp.exe
+  StrCpy $0 $INSTDIR\RedPandaIDE.exe
   WriteRegStr HKCR ".hxx" "" "DevCpp.hxx"
   WriteRegStr HKCR "DevCpp.hxx" "" "C++ Header File"
   WriteRegStr HKCR "DevCpp.hxx\DefaultIcon" "" '$0,7'
@@ -246,7 +191,7 @@ Section "$(SectionAssocExtNameBegin) .h $(SectionAssocExtNameEnd)"
   StrCpy $0 ".h"
   Call BackupAssoc
 
-  StrCpy $0 $INSTDIR\DevCpp.exe
+  StrCpy $0 $INSTDIR\RedPandaIDE.exe
   WriteRegStr HKCR ".h" "" "DevCpp.h"
   WriteRegStr HKCR "DevCpp.h" "" "C Header File"
   WriteRegStr HKCR "DevCpp.h\DefaultIcon" "" '$0,6'
@@ -260,69 +205,11 @@ Section "$(SectionAssocExtNameBegin) .hpp $(SectionAssocExtNameEnd)"
   StrCpy $0 ".hpp"
   Call BackupAssoc
 
-  StrCpy $0 $INSTDIR\DevCpp.exe
+  StrCpy $0 $INSTDIR\RedPandaIDE.exe
   WriteRegStr HKCR ".hpp" "" "DevCpp.hpp"
   WriteRegStr HKCR "DevCpp.hpp" "" "C++ Header File"
   WriteRegStr HKCR "DevCpp.hpp\DefaultIcon" "" '$0,7'
   WriteRegStr HKCR "DevCpp.hpp\Shell\Open\Command" "" '$0 "%1"'
-  Call RefreshShellIcons
-SectionEnd
-
-Section "$(SectionAssocExtNameBegin) .rc $(SectionAssocExtNameEnd)"
-  SectionIn 1 3
-
-  StrCpy $0 ".rc"
-  Call BackupAssoc
-
-  StrCpy $0 $INSTDIR\DevCpp.exe
-  WriteRegStr HKCR ".rc" "" "DevCpp.rc"
-  WriteRegStr HKCR "DevCpp.rc" "" "Resource Source File"
-  WriteRegStr HKCR "DevCpp.rc\DefaultIcon" "" '$0,8'
-  WriteRegStr HKCR "DevCpp.rc\Shell\Open\Command" "" '$0 "%1"'
-  Call RefreshShellIcons
-SectionEnd
-
-Section "$(SectionAssocExtNameBegin) .devpak $(SectionAssocExtNameEnd)"
-  SectionIn 1 3
-
-  StrCpy $0 ".devpak"
-  Call BackupAssoc
-
-  StrCpy $0 $INSTDIR\DevCpp.exe
-  StrCpy $1 $INSTDIR\PackMan.exe
-  WriteRegStr HKCR ".devpak" "" "DevCpp.devpak"
-  WriteRegStr HKCR "DevCpp.devpak" "" "Dev-C++ Package File"
-  WriteRegStr HKCR "DevCpp.devpak\DefaultIcon" "" '$0,9'
-  WriteRegStr HKCR "DevCpp.devpak\Shell\Open\Command" "" '$1 "%1"'
-  Call RefreshShellIcons
-SectionEnd
-
-Section "$(SectionAssocExtNameBegin) .devpackage $(SectionAssocExtNameEnd)"
-  SectionIn 1 3
-
-  StrCpy $0 ".devpackage"
-  Call BackupAssoc
-
-  StrCpy $0 $INSTDIR\DevCpp.exe
-  StrCpy $1 $INSTDIR\PackMan.exe
-  WriteRegStr HKCR ".devpackage" "" "DevCpp.devpackage"
-  WriteRegStr HKCR "DevCpp.devpackage" "" "Dev-C++ Package File"
-  WriteRegStr HKCR "DevCpp.devpackage\DefaultIcon" "" '$0,10'
-  WriteRegStr HKCR "DevCpp.devpackage\Shell\Open\Command" "" '$1 "%1"'
-  Call RefreshShellIcons
-SectionEnd
-
-Section "$(SectionAssocExtNameBegin) .template $(SectionAssocExtNameEnd)"
-  SectionIn 1 3
-
-  StrCpy $0 ".template"
-  Call BackupAssoc
-
-  StrCpy $0 $INSTDIR\DevCpp.exe
-  WriteRegStr HKCR ".template" "" "DevCpp.template"
-  WriteRegStr HKCR "DevCpp.template" "" "Dev-C++ Template File"
-  WriteRegStr HKCR "DevCpp.template\DefaultIcon" "" '$0,1'
-  WriteRegStr HKCR "DevCpp.template\Shell\Open\Command" "" '$0 "%1"'
   Call RefreshShellIcons
 SectionEnd
 
@@ -338,10 +225,10 @@ Section "$(SectionMenuLaunchName)" SectionMenuLaunch
   ; always use all user start menu, normal users can delete these
   SetShellVarContext all 
   StrCpy $0 $SMPROGRAMS ; start menu Programs folder
-  CreateDirectory "$0\Dev-C++"
-  CreateShortCut "$0\Dev-C++\Red Panda Dev-C++.lnk" "$INSTDIR\devcpp.exe"
-  CreateShortCut "$0\Dev-C++\License.lnk" "$INSTDIR\LICENSE"
-  CreateShortCut "$0\Dev-C++\Uninstall Red Panda Dev-C++.lnk" "$INSTDIR\uninstall.exe"
+  CreateDirectory "$0\$(MessageAppName)"
+  CreateShortCut "$0\$(MessageAppName)\$(MessageAppName).lnk" "$INSTDIR\RedPandaIDE.exe"
+  CreateShortCut "$0\$(MessageAppName)\License.lnk" "$INSTDIR\LICENSE"
+  CreateShortCut "$0\$(MessageAppName)\Uninstall $(MessageAppName).lnk" "$INSTDIR\uninstall.exe"
 SectionEnd
 
 Section "$(SectionDesktopLaunchName)" SectionDesktopLaunch
@@ -349,7 +236,7 @@ Section "$(SectionDesktopLaunchName)" SectionDesktopLaunch
   
   ; always use current user desktop, normal users can't delete all users' shortcuts
   SetShellVarContext current
-  CreateShortCut "$DESKTOP\Red Panda Dev-C++.lnk" "$INSTDIR\devcpp.exe"
+  CreateShortCut "$DESKTOP\$(MessageAppName).lnk" "$INSTDIR\RedPandaIDE.exe"
 SectionEnd
 
 SubSectionEnd
@@ -357,29 +244,16 @@ SubSectionEnd
 Section "$(SectionConfigName)" SectionConfig
   SectionIn 3
 
-  RMDir /r "$APPDATA\Dev-Cpp"
+  RMDir /r "$APPDATA\RedPandaIDE"
   
-  Delete "$INSTDIR\devcpp.ini"
-  Delete "$INSTDIR\devcpp.cfg"
-  Delete "$INSTDIR\cache.ccc"
-  Delete "$INSTDIR\defaultcode.cfg"
-  Delete "$INSTDIR\devshortcuts.cfg"
-  Delete "$INSTDIR\classfolders.dcf"
-  Delete "$INSTDIR\mirrors.cfg"
-  Delete "$INSTDIR\tools.ini"
-  Delete "$INSTDIR\devcpp.ci"
 SectionEnd
 
 ####################################################################
-# TODO: Create language tables that describe installation components using LangString
 
 !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
 !insertmacro MUI_DESCRIPTION_TEXT ${SectionMain}        "$(MessageSectionMain)"
-!insertmacro MUI_DESCRIPTION_TEXT ${SectionIcons}      "$(MessageSectionIcons)"
-#!insertmacro MUI_DESCRIPTION_TEXT ${SectionMinGW}      "$(MessageSectionMinGW}"
-!insertmacro MUI_DESCRIPTION_TEXT ${SectionLangs}      "$(MessageSectionLangs)"
-!insertmacro MUI_DESCRIPTION_TEXT ${SectionAssocs}      "$(MessageSectionAssocs)"
 !insertmacro MUI_DESCRIPTION_TEXT ${SectionShortcuts}   "$(MessageSectionShortcuts)"
+!insertmacro MUI_DESCRIPTION_TEXT ${SectionAssocs}      "$(MessageSectionAssocs)"
 !insertmacro MUI_DESCRIPTION_TEXT ${SectionConfig}      "$(MessageSectionConfig)"
 !insertmacro MUI_FUNCTION_DESCRIPTION_END
 
@@ -397,10 +271,12 @@ Function .onInit
 
 FunctionEnd
 
-
 Function myGuiInit
 
   ; uninstall existing
+  SetRegView 32
+  Call UninstallExisting
+  SetRegView 64
   Call UninstallExisting
 
 FunctionEnd
@@ -410,7 +286,7 @@ Function BackupAssoc
   ;$0 is an extension - for example ".dev"
 
   ;check if backup already exists
-  ReadRegStr $1 HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Dev-C++\Backup" "$0" 
+  ReadRegStr $1 HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++\Backup" "$0" 
   ;don't backup if backup exists in registry
   StrCmp $1 "" 0 no_assoc
 
@@ -419,7 +295,7 @@ Function BackupAssoc
   StrCmp $1 "DevCpp$0" no_assoc
 
   StrCmp $1 "" no_assoc
-    WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Dev-C++\Backup" "$0" "$1"
+    WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++\Backup" "$0" "$1"
   no_assoc:
   
 FunctionEnd
@@ -433,7 +309,7 @@ Function un.RestoreAssoc
   ;$0 is an extension - for example ".dev"
 
   DeleteRegKey HKCR "$0"
-  ReadRegStr $1 HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Dev-C++\Backup" "$0"
+  ReadRegStr $1 HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++\Backup" "$0"
   StrCmp $1 "" no_backup
     WriteRegStr HKCR "$0" "" "$1"
     Call un.RefreshShellIcons
@@ -474,7 +350,6 @@ Function un.DeleteDirIfEmpty
    FindClose $R0
 FunctionEnd
 
-
 Function GetParent
  
   Exch $R0
@@ -503,7 +378,7 @@ Function GetParent
 FunctionEnd
 
 Function UninstallExisting
-    ReadRegStr $R0 HKLM  "Software\Microsoft\Windows\CurrentVersion\Uninstall\Dev-C++"  "UninstallString"
+    ReadRegStr $R0 HKLM  "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++"  "UninstallString"
 
     StrCmp $R0 "" done
 
@@ -526,6 +401,7 @@ Function UninstallExisting
 
     done:
 FunctionEnd
+
 ####################################################################
 # uninstall
 
@@ -539,15 +415,15 @@ Section "Uninstall"
 
   ; Remove start menu stuff, located in all users folder
   SetShellVarContext all 
-  Delete "$SMPROGRAMS\Dev-C++\Red Panda Dev-C++.lnk"
-  Delete "$SMPROGRAMS\Dev-C++\License.lnk"
-  Delete "$SMPROGRAMS\Dev-C++\Uninstall Red Panda Dev-C++.lnk"
-  RMDir "$SMPROGRAMS\Dev-C++"
+  Delete "$SMPROGRAMS\$(MessageAppName)\$(MessageAppName).lnk"
+  Delete "$SMPROGRAMS\$(MessageAppName)\License.lnk"
+  Delete "$SMPROGRAMS\$(MessageAppName)\Uninstall $(MessageAppName).lnk"
+  RMDir "$SMPROGRAMS\$(MessageAppName)"
   
   ; Remove desktop stuff, located in current user folder
   SetShellVarContext current
-  Delete "$QUICKLAUNCH\Red Panda Dev-C++.lnk"
-  Delete "$DESKTOP\Red Panda Dev-C++.lnk"
+  Delete "$QUICKLAUNCH\$(MessageAppName).lnk"
+  Delete "$DESKTOP\$(MessageAppName).lnk"
 
   ; Restore file associations
   StrCpy $0 ".dev"
@@ -560,14 +436,6 @@ Section "Uninstall"
   Call un.RestoreAssoc
   StrCpy $0 ".hpp"
   Call un.RestoreAssoc
-  StrCpy $0 ".rc"
-  Call un.RestoreAssoc
-  StrCpy $0 ".devpak"
-  Call un.RestoreAssoc
-  StrCpy $0 ".devpackage"
-  Call un.RestoreAssoc
-  StrCpy $0 ".template"
-  Call un.RestoreAssoc
  
   DeleteRegKey HKCR "DevCpp.dev"
   DeleteRegKey HKCR "DevCpp.c"
@@ -577,32 +445,17 @@ Section "Uninstall"
   DeleteRegKey HKCR "DevCpp.h"
   DeleteRegKey HKCR "DevCpp.hpp"
   DeleteRegKey HKCR "DevCpp.hxx"
-  DeleteRegKey HKCR "DevCpp.rc"
-  DeleteRegKey HKCR "DevCpp.devpak"
-  DeleteRegKey HKCR "DevCpp.devpackage"
-  DeleteRegKey HKCR "DevCpp.template"
 
-  Delete "$INSTDIR\Packman.map"
-  Delete "$INSTDIR\Packman.exe"
-  Delete "$INSTDIR\PackMaker.exe"
-  Delete "$INSTDIR\NEWS.txt"
-  Delete "$INSTDIR\devcpp.map"
-  Delete "$INSTDIR\devcpp.exe"
-  Delete "$INSTDIR\devcpp.exe.manifest"
-  Delete "$INSTDIR\devcppPortable.exe"
+
+  Delete "$INSTDIR\NEWS.md"
+  Delete "$INSTDIR\RedPandaIDE.exe"
   Delete "$INSTDIR\ConsolePauser.exe"
+  Delete "$INSTDIR\astyle.exe"
   Delete "$INSTDIR\LICENSE"
-  Delete "$INSTDIR\README.MD"
+  Delete "$INSTDIR\README.md"
 
   RMDir /r "$INSTDIR\Lang"
-  RMDir /r "$INSTDIR\Examples"
-  RMDir /r "$INSTDIR\Help"
-  RMDir /r "$INSTDIR\Icons"
-  RMDir /r "$INSTDIR\Packages"
   RMDir /r "$INSTDIR\Templates"
-  RMDir /r "$INSTDIR\Astyle"
-  RMDir /r "$INSTDIR\ResEd"
-  RMDir /r "$INSTDIR\Contributes"
   RMDir /r "$INSTDIR\MinGW32"
   RMDir /r "$INSTDIR\MinGW64"
 
@@ -610,24 +463,13 @@ Section "Uninstall"
   Call un.DeleteDirIfEmpty
 
   ; Remove registry keys
-  DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Dev-C++"
-  DeleteRegKey HKCU "Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers\$INSTDIR\devcpp.exe"
-  DeleteRegKey HKCU "Software\Dev-C++"
+  DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++"
+  DeleteRegKey HKCU "Software\RedPanda-C++"
 
   IfSilent +2 ; Don't ask when running in silent mode
   MessageBox MB_YESNO "$(MessageRemoveConfig)" IDNO Done
 
-  RMDir /r "$APPDATA\Dev-Cpp"
-  
-  Delete "$INSTDIR\devcpp.ini"
-  Delete "$INSTDIR\devcpp.cfg"
-  Delete "$INSTDIR\cache.ccc"
-  Delete "$INSTDIR\defaultcode.cfg"
-  Delete "$INSTDIR\devshortcuts.cfg"
-  Delete "$INSTDIR\classfolders.dcf"
-  Delete "$INSTDIR\mirrors.cfg"
-  Delete "$INSTDIR\tools.ini"
-  Delete "$INSTDIR\devcpp.ci"
+  RMDir /r "$APPDATA\RedPandaIDE"
 
 Done:
 SectionEnd
