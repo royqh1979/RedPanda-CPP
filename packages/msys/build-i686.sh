@@ -28,12 +28,13 @@ pushd .
 cd "${PACKAGE_DIR}"
 
 cp "${SOURCE_DIR}/windows/installer-scripts/lang.nsh" .
-cp "${SOURCE_DIR}/windows/installer-scripts/redpanda-nocompiler.nsi" .
+cp "${SOURCE_DIR}/windows/installer-scripts/redpanda-i686-nocompiler.nsi" .
 
-"${NSIS}" redpanda-nocompiler.nsi
+"${NSIS}" redpanda-i686-nocompiler.nsi
 rm -f lang.nsh
+rm -f config32.nsh
 rm -f config.nsh
-rm -f redpanda-nocompiler.nsi
+rm -f redpanda-i686-nocompiler.nsi
 
 SETUP_NAME=`ls *.Setup.exe`
 PORTABLE_NAME=`echo $SETUP_NAME | sed 's/Setup.exe/Portable.7z/'`
@@ -43,7 +44,7 @@ popd
 echo "Making no-compiler Portable Package..."
 7z a -mmt8 -mx9  "${PORTABLE_NAME}" "${PACKAGE_DIR}"
 
-# we need reinstall config.nsh
+# we need reinstall config32.nsh
 pushd .
 cd "${BUILD_DIR}"
 make install
@@ -60,6 +61,7 @@ cp "${SOURCE_DIR}/windows/installer-scripts/redpanda-i686.nsi" .
 
 "${NSIS}" redpanda-i686.nsi
 rm -f lang.nsh
+rm -f config32.nsh
 rm -f config.nsh
 rm -f redpanda-i686.nsi
 

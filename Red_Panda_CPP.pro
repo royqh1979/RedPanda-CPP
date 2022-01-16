@@ -40,11 +40,13 @@ linux: {
 win32: {
     !isEmpty(PREFIX) {
         target.path = $${PREFIX}
-		QMAKE_SUBSTITUTES += windows/installer-scripts/config.nsh.in
+        QMAKE_SUBSTITUTES += windows/installer-scripts/config.nsh.in
+        QMAKE_SUBSTITUTES += windows/installer-scripts/config32.nsh.in
 
         resources.path = $${PREFIX}
         resources.files += windows/templates
         resources.files += windows/installer-scripts/config.nsh
+        resources.files += windows/installer-scripts/config32.nsh
         resources.files += README.md
         resources.files += NEWS.md
         resources.files += LICENSE

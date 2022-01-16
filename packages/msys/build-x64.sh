@@ -33,6 +33,7 @@ cp "${SOURCE_DIR}/windows/installer-scripts/redpanda-nocompiler.nsi" .
 "${NSIS}" redpanda-nocompiler.nsi
 rm -f lang.nsh
 rm -f config.nsh
+rm -f config32.nsh
 rm -f redpanda-nocompiler.nsi
 
 SETUP_NAME=`ls *.Setup.exe`
@@ -61,6 +62,7 @@ cp "${SOURCE_DIR}/windows/installer-scripts/redpanda-x64.nsi" .
 "${NSIS}" redpanda-x64.nsi
 rm -f lang.nsh
 rm -f config.nsh
+rm -f config32.nsh
 rm -f redpanda-x64.nsi
 
 SETUP_NAME=`ls *.Setup.exe`
