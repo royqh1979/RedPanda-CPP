@@ -7,6 +7,8 @@ SUBDIRS += \
 
 APP_NAME = RedPandaCPP
 
+APP_VERSION = 0.14
+
 linux: {
 
     isEmpty(PREFIX) {
@@ -33,4 +35,19 @@ linux: {
     desktop.files += redpandaide.desktop
     INSTALLS += desktop
 
+}
+
+win32: {
+    !isEmpty(PREFIX) {
+        target.path = $${PREFIX}
+
+        resources.path = $${PREFIX}
+        resources.files += templates
+        resources.files += README.md
+        resources.files += NEWS.md
+        resources.files += LICENSE
+        resources.files += RedPandaIDE/images/devcpp.ico
+
+        INSTALLS += resources
+    }
 }

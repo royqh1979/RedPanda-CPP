@@ -30,6 +30,12 @@ isEmpty(PREFIX) {
     PREFIX = /usr/local
 }
 
+win32: {
+    !isEmpty(PREFIX) {
+        target.path = $${PREFIX}
+    }
+}
+
 # Default rules for deployment.
 qnx: target.path = $${PREFIX}/libexec/$${APP_NAME}
 else: unix:!android: target.path = $${PREFIX}/libexec/$${APP_NAME}

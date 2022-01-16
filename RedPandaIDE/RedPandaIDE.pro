@@ -13,8 +13,6 @@ isEmpty(PREFIX) {
     PREFIX = /usr/local
 }
 
-APP_VERSION = beta.0.13.2
-
 DEFINES += PREFIX=\\\"$${PREFIX}\\\"
 DEFINES += APP_NAME=\\\"$${APP_NAME}\\\"
 DEFINES += REDPANDA_CPP_VERSION=\\\"$${APP_VERSION}\\\"
@@ -351,6 +349,12 @@ linux: {
 
 TRANSLATIONS += \
     RedPandaIDE_zh_CN.ts
+
+win32: {
+    !isEmpty(PREFIX) {
+        target.path = $${PREFIX}
+    }
+}
 
 # Default rules for deployment.
 qnx: target.path = $${PREFIX}/bin
