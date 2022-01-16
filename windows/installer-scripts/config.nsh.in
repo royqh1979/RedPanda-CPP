@@ -1,0 +1,7 @@
+####################################################################
+# Startup
+
+!define COMPILERNAME \"MinGW-w64 X86_64 GCC 10.3\"
+!define COMPILERFOLDER \"MinGW64\"
+!define DEVCPP_VERSION \"$${APP_VERSION}\"
+

@@ -1,11 +1,9 @@
 ####################################################################
 # Startup
 
-!define COMPILERNAME "MinGW-w64 X86_64 GCC 10.3"
-!define COMPILERFOLDER "MinGW64"
-!define DEVCPP_VERSION "0.14"
-!define FINALNAME "RedPanda-Cpp.7.${DEVCPP_VERSION}.${COMPILERNAME}.Setup.exe"
-!define DISPLAY_NAME "Red Panda Dev-C++ 7 ${DEVCPP_VERSION}"
+!include "config.nsh"
+!define FINALNAME "RedPanda.C++.${DEVCPP_VERSION}.${COMPILERNAME}.Setup.exe"
+!define DISPLAY_NAME "Red Panda C++ ${DEVCPP_VERSION}"
 
 !include "MUI2.nsh"
 !include "lang.nsh"
@@ -98,8 +96,6 @@ Section "$(SectionMainName)" SectionMain
   SetOutPath $INSTDIR\Templates
   File /nonfatal /r "Templates\*"
 
-  SetOutPath $INSTDIR\Icons
-  File /nonfatal /r "Icons\*"
 SectionEnd
 
 Section "$(SectionMinGWName)" SectionMinGW
@@ -107,13 +103,6 @@ Section "$(SectionMinGWName)" SectionMinGW
   SetOutPath $INSTDIR\MinGW64
 
   File /nonfatal /r "${COMPILERFOLDER}\*"
-SectionEnd
-
-Section "$(SectionIconsName)" SectionIcons
-  SectionIn 1 3
-  
-  SetOutPath $INSTDIR\Icons
-  File /nonfatal /r "Icons\*.*"
 SectionEnd
 
 ####################################################################
@@ -271,7 +260,6 @@ SectionEnd
 !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
 !insertmacro MUI_DESCRIPTION_TEXT ${SectionMain}        "$(MessageSectionMain)"
 !insertmacro MUI_DESCRIPTION_TEXT ${SectionMinGW}      "$(MessageSectionMinGW)"
-!insertmacro MUI_DESCRIPTION_TEXT ${SectionIcons}      "$(MessageSectionIcons)"
 !insertmacro MUI_DESCRIPTION_TEXT ${SectionShortcuts}   "$(MessageSectionShortcuts)"
 !insertmacro MUI_DESCRIPTION_TEXT ${SectionAssocs}      "$(MessageSectionAssocs)"
 !insertmacro MUI_DESCRIPTION_TEXT ${SectionConfig}      "$(MessageSectionConfig)"
@@ -475,7 +463,6 @@ Section "Uninstall"
   Delete "$INSTDIR\README.md"
 
   RMDir /r "$INSTDIR\Lang"
-  RMDir /r "$INSTDIR\Icons"
   RMDir /r "$INSTDIR\Templates"
   RMDir /r "$INSTDIR\MinGW32"
   RMDir /r "$INSTDIR\MinGW64"

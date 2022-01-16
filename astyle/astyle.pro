@@ -24,7 +24,7 @@ isEmpty(PREFIX) {
 }
 
 win32: {
-    !isEmpty(BUILD_MSYS) {
+    !isEmpty(PREFIX) {
         target.path = $${PREFIX}
     }
 }
