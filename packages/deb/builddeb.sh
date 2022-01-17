@@ -1,7 +1,7 @@
 #!/bin/sh
 
 TMP_FOLDER=/tmp/redpandaide
-version=0.12.6
+version=0.13.2
 make install
 mkdir $TMP_FOLDER
 mkdir $TMP_FOLDER/DEBIAN
