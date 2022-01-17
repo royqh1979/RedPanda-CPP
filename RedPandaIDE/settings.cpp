@@ -2422,8 +2422,10 @@ static void setDebugOptions(Settings::PCompilerSet pSet) {
     }
 
 #ifdef Q_OS_LINUX
-    pSet->setCustomCompileParams("--sanitize=address");
+    pSet->setCustomCompileParams("-fsanitize=address");
     pSet->setUseCustomCompileParams(true);
+    pSet->setCustomLinkParams("-fsanitize=address");
+    pSet->setUseCustomLinkParams(true);
 #endif
 
 //    pOption = pSet->findOption("-static");

@@ -1017,6 +1017,8 @@ bool Editor::event(QEvent *event)
             break;
         case TipType::None:
             cancelHint();
+            mCurrentWord = "";
+            mCurrentTipType = TipType::None;
             event->ignore();
             return true;
         }
@@ -1079,6 +1081,9 @@ bool Editor::event(QEvent *event)
                 setCursor(Qt::PointingHandCursor);
             } else if (cursor() == Qt::PointingHandCursor) {
                 updateMouseCursor();
+            }
+            if (pMainWindow->functionTip()->isVisible()) {
+                pMainWindow->functionTip()->hide();
             }
             QToolTip::showText(mapToGlobal(helpEvent->pos()),hint);
             event->ignore();
@@ -2577,6 +2582,9 @@ void Editor::exportAsHTML(const QString &htmlFilename)
 
 void Editor::showCompletion(const QString& preWord,bool autoComplete)
 {
+    if (pMainWindow->functionTip()->isVisible()) {
+        pMainWindow->functionTip()->hide();
+    }
     if (!pSettings->codeCompletion().enabled())
         return;
     if (!mParser->enabled())
@@ -3060,8 +3068,8 @@ void Editor::cancelHint()
 
     // disable editor hint
     QToolTip::hideText();
-    mCurrentWord = "";
-    mCurrentTipType = TipType::None;
+    //mCurrentWord = "";
+    //mCurrentTipType = TipType::None;
     updateMouseCursor();
 }
 
@@ -3129,6 +3137,9 @@ void Editor::showDebugHint(const QString &s, int line)
     }
     if (pMainWindow->debugger()->commandRunning())
         return;
+    if (pMainWindow->functionTip()->isVisible()) {
+        pMainWindow->functionTip()->hide();
+    }
     connect(pMainWindow->debugger(), &Debugger::evalValueReady,
                this, &Editor::onTipEvalValueReady);
     mCurrentDebugTipWord = s;
@@ -3358,6 +3369,7 @@ void Editor::updateFunctionTip()
     pMainWindow->functionTip()->setParamIndex(
                 paramPos
                 );
+    cancelHint();
     pMainWindow->functionTip()->show();
 }
 
