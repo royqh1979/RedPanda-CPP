@@ -4636,7 +4636,13 @@ void MainWindow::on_actionReformat_Code_triggered()
 {
     Editor* e = mEditorList->getEditor();
     if (e) {
+        BufferCoord oldXY=e->caretXY();
+        int topLine = e->topLine();
+        int leftChar = e->leftChar();
         e->reformat();
+        e->setTopLine(topLine);
+        e->setLeftChar(leftChar);
+        e->setCaretXY(oldXY);
         e->activate();
     }
 }
@@ -5479,7 +5485,13 @@ void MainWindow::on_actionRename_Symbol_triggered()
     //here we must reparse the file in sync, or rename may fail
     parser->parseFile(editor->filename(), editor->inProject(), false, false);
     CppRefacter refactor;
+    BufferCoord oldXY=editor->caretXY();
+    int topLine = editor->topLine();
+    int leftChar = editor->leftChar();
     refactor.renameSymbol(editor,oldCaretXY,word,newWord);
+    editor->setTopLine(topLine);
+    editor->setLeftChar(leftChar);
+    editor->setCaretXY(oldXY);
     editor->reparse();
 
 }

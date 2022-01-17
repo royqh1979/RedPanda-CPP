@@ -1,3 +1,7 @@
+Red Panda C++ Version 0.13.3
+  - enhancement: restore editor position after rename symbol
+  - enhancement: restore editor position after reformat code
+
 Red Panda C++ Version 0.13.2
   - fix: "delete and exit" button in the environtment / folder option page doesn't work correctly 
   - fix: crash when closing the options dialog under Ubuntu 20.04 LTS ( no memory leak now)
