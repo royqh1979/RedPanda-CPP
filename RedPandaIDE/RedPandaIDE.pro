@@ -9,6 +9,10 @@ isEmpty(APP_NAME) {
     APP_NAME = RedPandaCPP
 }
 
+isEmpty(APP_VERSION) {
+    APP_VERSION=0.13.3
+}
+
 isEmpty(PREFIX) {
     PREFIX = /usr/local
 }

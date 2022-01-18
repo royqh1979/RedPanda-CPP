@@ -3190,7 +3190,7 @@ void Editor::updateFunctionTip()
         if (!isFunction)
             pMainWindow->functionTip()->hide();
     });
-    const int maxLines=20;
+    const int maxLines=10;
     BufferCoord caretPos = caretXY();
     int currentLine = caretPos.Line-1;
     int currentChar = caretPos.Char-1;
@@ -3261,7 +3261,6 @@ void Editor::updateFunctionTip()
                         parenthesisLevel--;
                     }
                 } else {
-                    qDebug()<<i<<tokens[i];
                     if (tokens[i]=="(") {
                         // found start of function
                         foundFunctionStart = true;
