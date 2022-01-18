@@ -975,10 +975,15 @@ void MainWindow::openFile(const QString &filename, QTabWidget* page)
     }
     try {
         pSettings->history().removeFile(filename);
-        editor = mEditorList->newEditor(filename,ENCODING_AUTO_DETECT,
-                                    false, false, page);
+        PProjectUnit unit;
         if (mProject) {
-            mProject->associateEditor(editor);
+            unit = mProject->findUnitByFilename(filename);
+        }
+        bool inProject = (mProject && unit);
+        editor = mEditorList->newEditor(filename,ENCODING_AUTO_DETECT,
+                                    inProject, false, page);
+        if (mProject) {
+            mProject->associateEditorToUnit(editor,unit);
         }
         editor->activate();
         this->updateForEncodingInfo();
@@ -1894,7 +1899,7 @@ void MainWindow::scanActiveProject(bool parse)
         return;
     //UpdateClassBrowsing;
     if (parse) {
-        resetCppParser(mProject->cppParser());
+        resetCppParser(mProject->cppParser(),mProject->options().compilerSet);
         mProject->resetParserProjectFiles();
         parseFileList(mProject->cppParser());
     } else {
@@ -2001,12 +2006,20 @@ void MainWindow::loadLastOpens()
             page = mEditorList->leftPageWidget();
         else
             page = mEditorList->rightPageWidget();
-        Editor * editor = mEditorList->newEditor(editorFilename,ENCODING_AUTO_DETECT,false,false,page);
+        PProjectUnit unit;
+        if (mProject) {
+            unit = mProject->findUnitByFilename(editorFilename);
+        }
+        bool inProject = (mProject && unit);
+        Editor * editor = mEditorList->newEditor(editorFilename,ENCODING_AUTO_DETECT,inProject,false,page);
+        if (mProject) {
+            mProject->associateEditorToUnit(editor,unit);
+        }
         if (!editor)
             continue;
-        if (mProject) {
-            mProject->associateEditor(editor);
-        }
+//        if (mProject) {
+//            mProject->associateEditor(editor);
+//        }
         BufferCoord pos;
         pos.Char = lastOpenIni.GetLongValue(sectionName,"CursorCol", 1);
         pos.Line = lastOpenIni.GetLongValue(sectionName,"CursorRow", 1);
@@ -2742,7 +2755,6 @@ void MainWindow::openShell(const QString &folder, const QString &shellCommand)
     QProcess process;
     process.setWorkingDirectory(folder);
     process.setProgram(shellCommand);
-    qDebug()<<shellCommand;
 #ifdef Q_OS_WIN
     process.setCreateProcessArgumentsModifier([](QProcess::CreateProcessArguments * args){
         args->flags |= CREATE_NEW_CONSOLE;

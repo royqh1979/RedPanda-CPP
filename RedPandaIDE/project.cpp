@@ -47,7 +47,6 @@ Project::Project(const QString &filename, const QString &name, QObject *parent) 
                 std::bind(
                     &EditorList::getContentFromOpenedEditor,pMainWindow->editorList(),
                     std::placeholders::_1, std::placeholders::_2));
-    resetCppParser(mParser);
     if (name == DEV_INTERNAL_OPEN) {
         open();
         mModified = false;
@@ -59,6 +58,7 @@ Project::Project(const QString &filename, const QString &name, QObject *parent) 
         ini.SaveFile(mFilename.toLocal8Bit());
         mNode = makeProjectNode();
     }
+    resetCppParser(mParser,mOptions.compilerSet);
 }
 
 Project::~Project()

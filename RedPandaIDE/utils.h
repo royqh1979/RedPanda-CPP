@@ -229,7 +229,7 @@ bool readRegistry(HKEY key,const QByteArray& subKey, const QByteArray& name, QSt
 #endif
 
 class CppParser;
-void resetCppParser(std::shared_ptr<CppParser> parser);
+void resetCppParser(std::shared_ptr<CppParser> parser, int compilerSetIndex=-1);
 
 float desktopDpi();
 float pointToPixel(float point);

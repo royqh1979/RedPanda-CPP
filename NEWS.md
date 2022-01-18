@@ -1,6 +1,8 @@
 Red Panda C++ Version 0.13.3
   - enhancement: restore editor position after rename symbol
   - enhancement: restore editor position after reformat code
+  - fix: If project's compiler set is not the same with the default compiler set, parser for the project doesn't use the project's compiler set
+  - fix: If project's compiler set is not the same with the default compiler set, auto openned project's file will use wrong compiler set to do syntax check.
 
 Red Panda C++ Version 0.13.2
   - fix: "delete and exit" button in the environtment / folder option page doesn't work correctly 
