@@ -211,15 +211,15 @@ void CodeCompletionPopup::addStatement(PStatement statement, const QString &file
 }
 
 static bool nameComparator(PStatement statement1,PStatement statement2) {
+    return statement1->command < statement2->command;
+}
+
+static bool defaultComparator(PStatement statement1,PStatement statement2) {
     if (statement1->caseMatch && !statement2->caseMatch) {
         return true;
     } else if (!statement1->caseMatch && statement2->caseMatch) {
         return false;
-    } else
-        return statement1->command < statement2->command;
-}
-
-static bool defaultComparator(PStatement statement1,PStatement statement2) {
+    }
     // Show user template first
     if (statement1->kind == StatementKind::skUserCodeSnippet) {
         if (statement2->kind != StatementKind::skUserCodeSnippet)
@@ -240,6 +240,11 @@ static bool defaultComparator(PStatement statement1,PStatement statement2) {
 }
 
 static bool sortByScopeComparator(PStatement statement1,PStatement statement2){
+    if (statement1->caseMatch && !statement2->caseMatch) {
+        return true;
+    } else if (!statement1->caseMatch && statement2->caseMatch) {
+        return false;
+    }
     // Show user template first
     if (statement1->kind == StatementKind::skUserCodeSnippet) {
         if (statement2->kind != StatementKind::skUserCodeSnippet)
@@ -273,6 +278,11 @@ static bool sortByScopeComparator(PStatement statement1,PStatement statement2){
 }
 
 static bool sortWithUsageComparator(PStatement statement1,PStatement statement2) {
+    if (statement1->caseMatch && !statement2->caseMatch) {
+        return true;
+    } else if (!statement1->caseMatch && statement2->caseMatch) {
+        return false;
+    }
     // Show user template first
     if (statement1->kind == StatementKind::skUserCodeSnippet) {
         if (statement2->kind != StatementKind::skUserCodeSnippet)
@@ -298,6 +308,11 @@ static bool sortWithUsageComparator(PStatement statement1,PStatement statement2)
 }
 
 static bool sortByScopeWithUsageComparator(PStatement statement1,PStatement statement2){
+    if (statement1->caseMatch && !statement2->caseMatch) {
+        return true;
+    } else if (!statement1->caseMatch && statement2->caseMatch) {
+        return false;
+    }
     // Show user template first
     if (statement1->kind == StatementKind::skUserCodeSnippet) {
         if (statement2->kind != StatementKind::skUserCodeSnippet)
