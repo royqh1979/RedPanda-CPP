@@ -3182,152 +3182,128 @@ void Editor::updateFunctionTip()
         pMainWindow->functionTip()->hide();
         return;
     }
-    BufferCoord caretPos = caretXY();
-    ContentsCoord curPos = fromBufferCoord(caretPos);
-    ContentsCoord cursorPos = curPos;
-    int nBraces = 0;
-    int nCommas = 0;
-    int FMaxScanLength = 500;
-    // Find out where the function ends...
-    for (int i=0;i<FMaxScanLength;i++) {
-        // Stopping characters...
-        QChar ch = *curPos;
-        if (ch == '\0' || ch == ';') {
+    if (!highlighter())
+        return;
+
+    bool isFunction = false;
+    auto action = finally([&isFunction]{
+        if (!isFunction)
             pMainWindow->functionTip()->hide();
-            return;
-        // Opening brace, increase count
-        }
-        QChar nextCh = *(curPos+1);
-        if (ch == '(') {
-            nBraces++;
-          // Ending brace, decrease count or success (found ending)!
-        } else if (ch == ')') {
-            nBraces--;
-            if (nBraces == -1)
+    });
+    const int maxLines=20;
+    BufferCoord caretPos = caretXY();
+    int currentLine = caretPos.Line-1;
+    int currentChar = caretPos.Char-1;
+    BufferCoord functionNamePos{-1,-1};
+    bool foundFunctionStart = false;
+    int parenthesisLevel = 0;
+    int braceLevel = 0;
+    int bracketLevel = 0;
+    int paramsCount = 1;
+    int currentParamPos = 1;
+    if (currentLine>=lines()->count())
+        return;
+    while (currentLine>=0) {
+        QString line = lines()->getString(currentLine);
+        if (currentLine!=caretPos.Line-1)
+            currentChar = line.length();
+        QStringList tokens;
+        QList<int> positions;
+        if (currentLine==0)
+            highlighter()->resetState();
+        else
+            highlighter()->setState(
+                            lines()->ranges(currentLine-1));
+        highlighter()->setLine(line,currentLine);
+        while(!highlighter()->eol()) {
+            int start = highlighter()->getTokenPos();
+            QString token = highlighter()->getToken();
+            PSynHighlighterAttribute attr = highlighter()->getTokenAttribute();
+            if (start>=currentChar)
                 break;
 
-          // Single line comments
-        } else if ((ch == '/') && (nextCh == '/')) {
-            // Walk up to an enter sequence
-            while (ch!='\0' && ch!='\n') {
-                curPos+=1;
-                ch = *curPos;
-            }
-
-
-            // Skip linebreak;
-            if (ch == '\n') {
-                curPos += 1;
-            }
-        } else if ((ch == '/') && (nextCh == '*')) {
-
-            // Walk up to "*/"
-            while (ch!='\0' && !(ch=='*' && nextCh=='/')) {
-                curPos += 1;
-                ch = *curPos;
-                nextCh = *(curPos+1);
-            }
-
-            // Step over
-            if (ch!='\0') {
-                curPos+=1;
-            }
-        } else
-            curPos += 1;
-    }
-
-    //qDebug()<<"first pass:"<<nBraces<<" "<<curPos.line()<<":"<<curPos.ch()<<" - '"<<*curPos<<"'";
-    // If we couldn't find the closing brace or reached the FMaxScanLength...
-    if (nBraces!=-1) {
-        pMainWindow->functionTip()->hide();
-        return;
-    }
-
-    //ContentsCoord FFunctionEnd = curPos;
-
-    int paramPos = 0;
-    bool paramPosFounded = false;
-    // We've stopped at the ending ), start walking backwards )*here* with nBraces = -1
-    for (int i=0;i<FMaxScanLength;i++) {
-        QChar ch = *curPos;
-        QChar prevCh = *(curPos-1);
-        if (prevCh == '*' && ch == '/' ) {
-            while (true) {
-                curPos -= 1;
-                ch = *(curPos);
-                prevCh = *(curPos-1);
-                if (prevCh == '\0') {
-                    pMainWindow->functionTip()->hide();
-                    return;
-                }
-                if (prevCh == '/' && ch == '*'  ) {
-                    curPos -= 1;
+            if (attr != highlighter()->commentAttribute()
+                    && attr!=highlighter()->whitespaceAttribute()) {
+                if (foundFunctionStart) {
+                    if (attr!=highlighter()->identifierAttribute())
+                        return; // not a function
+                    functionNamePos.Line = currentLine+1;
+                    functionNamePos.Char = start+1;
                     break;
                 }
+                tokens.append(token);
+                positions.append(start);
+            } else if (attr == highlighter()->commentAttribute()
+                     && currentLine == caretPos.Line-1 && start<caretPos.Char
+                     && start+token.length()>=caretPos.Char) {
+                return; // in comment, do nothing
             }
-        } else if (ch == ')') {
-            nBraces++ ;
-        } else if (ch == '(') {
-            nBraces--;
-            if (nBraces == -1) // found it!
-                break;;
-        } else if (ch == ',')  {
-            if (nBraces == 0) {
-                if (curPos <= cursorPos && !paramPosFounded) {
-                    paramPos = nCommas;
-                    paramPosFounded = true;
+            highlighter()->next();
+        }
+        if (!foundFunctionStart) {
+            for (int i=tokens.length()-1;i>=0;i--) {
+                if (braceLevel>0) {
+                    if (tokens[i]=="{") {
+                        braceLevel--;
+                    } else if (tokens[i]=="}") {
+                        braceLevel++;
+                    }
+                } else if (bracketLevel>0) {
+                    if (tokens[i]=="[") {
+                        braceLevel--;
+                    } else if (tokens[i]=="]") {
+                        braceLevel++;
+                    }
+                }else if (parenthesisLevel>0){
+                    if (tokens[i]==")") {
+                        parenthesisLevel++;
+                    } else if (tokens[i]=="(") {
+                        parenthesisLevel--;
+                    }
+                } else {
+                    qDebug()<<i<<tokens[i];
+                    if (tokens[i]=="(") {
+                        // found start of function
+                        foundFunctionStart = true;
+                        if (i>0) {
+                            functionNamePos.Line = currentLine+1;
+                            functionNamePos.Char = positions[i-1]+1;
+                        }
+                        break;
+                    } else if (tokens[i]=="[") {
+                        //we are not in a function call
+                        return;
+                    } else if (tokens[i]=="{") {
+                        //we are not in a function call
+                        return;
+                    } else if (tokens[i]==";") {
+                        //we are not in a function call
+                        return;
+                    } else if (tokens[i]==")") {
+                        parenthesisLevel++;
+                    } else if (tokens[i]=="}") {
+                        braceLevel++;
+                    } else if (tokens[i]=="}") {
+                        bracketLevel++;
+                    } else if (tokens[i]==",") {
+                            paramsCount++;
+                    }
                 }
-                nCommas++;
             }
         }
-        curPos -= 1;
-        if (curPos.atStart())
+        if (functionNamePos.Char>=0)
+            break;
+        currentLine--;
+        if (caretPos.Line-currentLine>maxLines)
             break;
     }
-    if (paramPosFounded)
-        paramPos = nCommas - paramPos;
-
-    //qDebug()<<"second pass:"<<nBraces<<","<<nCommas<<","<<paramPos<<" "<<curPos.line()<<":"<<curPos.ch()<<" - '"<<*curPos<<"'";
-    // If we couldn't find the closing brace or reached the FMaxScanLength...
-    if (nBraces!=-1) {
-        pMainWindow->functionTip()->hide();
+    isFunction = functionNamePos.Char>=0;
+    currentParamPos = paramsCount-1;
+    if (!isFunction)
         return;
-    }
-
-    //ContentsCoord FFunctionStart = curPos;
-
-    // Skip blanks
-    while (!curPos.atStart()) {
-        QChar prevCh = *(curPos-1);
-        if (prevCh == '\t' || prevCh == ' '
-                || prevCh == '\n') {
-            curPos-=1;
-        } else {
-            break;
-        }
-    }
-
-    ContentsCoord prevPos = curPos-1;
-    if (prevPos.atStart()) {
-        pMainWindow->functionTip()->hide();
-        return;
-    }
-    // Get the name of the function we're about to show
-    BufferCoord FuncStartXY = prevPos.toBufferCoord();
-    QString token;
-    PSynHighlighterAttribute HLAttr;
-    if (!getHighlighterAttriAtRowCol(FuncStartXY,token,HLAttr)) {
-       pMainWindow->functionTip()->hide();
-       return;
-    }
-    if (HLAttr != highlighter()->identifierAttribute()) {
-        pMainWindow->functionTip()->hide();
-        return;
-    }
-
     BufferCoord pWordBegin, pWordEnd;
 
-    QString s = getWordAtPosition(this, FuncStartXY, pWordBegin,pWordEnd, WordPurpose::wpInformation);
+    QString s = getWordAtPosition(this, functionNamePos, pWordBegin,pWordEnd, WordPurpose::wpInformation);
 
 //    qDebug()<<QString("find word at %1:%2 - '%3'")
 //              .arg(FuncStartXY.Line)
@@ -3342,7 +3318,7 @@ void Editor::updateFunctionTip()
         pMainWindow->functionTip()->clearTips();
         QList<PStatement> statements=mParser->getListOfFunctions(mFilename,
                                                                   s,
-                                                                  FuncStartXY.Line);
+                                                                  functionNamePos.Line);
 
         foreach (const PStatement statement, statements) {
             pMainWindow->functionTip()->addTip(
@@ -3365,9 +3341,9 @@ void Editor::updateFunctionTip()
     pMainWindow->functionTip()->move(mapToGlobal(p));
 
     pMainWindow->functionTip()->setFunctioFullName(s);
-    pMainWindow->functionTip()->guessFunction(nCommas);
+    pMainWindow->functionTip()->guessFunction(paramsCount-1);
     pMainWindow->functionTip()->setParamIndex(
-                paramPos
+                currentParamPos
                 );
     cancelHint();
     pMainWindow->functionTip()->show();
