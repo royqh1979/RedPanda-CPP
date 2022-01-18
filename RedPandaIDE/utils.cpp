@@ -600,7 +600,7 @@ void resetCppParser(std::shared_ptr<CppParser> parser, int compilerSetIndex)
     parser->setParseLocalHeaders(true);
     // Set options depending on the current compiler set
     // TODO: do this every time OnCompilerSetChanged
-    if (compilerSetIndex<-1) {
+    if (compilerSetIndex<0) {
         compilerSetIndex=pSettings->compilerSets().defaultIndex();
     }
     Settings::PCompilerSet compilerSet = pSettings->compilerSets().getSet(compilerSetIndex);
