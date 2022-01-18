@@ -335,9 +335,9 @@ static bool sortByScopeWithUsageComparator(PStatement statement1,PStatement stat
     } else if (statement2->kind == StatementKind::skKeyword) {
         return false;
         // Show stuff from local headers first
-    } else if (statement1->inSystemHeader && ! (statement2->inSystemHeader)) {
-        return true;
     } else if (!(statement1->inSystemHeader) && statement2->inSystemHeader) {
+        return true;
+    } else if (statement1->inSystemHeader && !(statement2->inSystemHeader)) {
         return false;
         // Show local statements first
     } else if (statement1->scope != StatementScope::ssGlobal
