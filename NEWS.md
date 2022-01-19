@@ -7,6 +7,7 @@ Red Panda C++ Version 0.13.3
   - fix: symbols defind locally should be sorted to the front in the code suggestion popup list
   - fix: when show function tips, can't correctly calcuate the current position in the function param list
   - fix: app will become very slow when processing very long lines.
+  - enhancement: If console pauser doesn't exist, warn and stop running programs.
 
 Red Panda C++ Version 0.13.2
   - fix: "delete and exit" button in the environtment / folder option page doesn't work correctly 

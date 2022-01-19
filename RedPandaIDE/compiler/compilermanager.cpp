@@ -248,16 +248,25 @@ void CompilerManager::run(const QString &filename, const QString &arguments, con
 #else
         QString newArguments;
         if (consoleFlag!=0) {
+            QString consolePauserPath=includeTrailingPathDelimiter(pSettings->dirs().appLibexecDir())+"consolepauser";
+            if (!fileExists(consolePauserPath)) {
+                QMessageBox::critical(pMainWindow,
+                                         tr("Can't find Console Pauser"),
+                                         tr("Console Pauser \"%1\" doesn't exists!")
+                                         .arg(consolePauserPath));
+                return;
+
+            }
             if (redirectInput) {
                 newArguments = QString(" -e \"%1\" %2 \"%3\" \"%4\" %5")
-                        .arg(includeTrailingPathDelimiter(pSettings->dirs().appLibexecDir())+"consolepauser")
+                        .arg(consolePauserPath)
                         .arg(consoleFlag)
                         .arg(redirectInputFilename)
                         .arg(localizePath(filename))
                         .arg(arguments);
             } else {
                 newArguments = QString(" -e \"%1\" %2 \"%3\" %4")
-                    .arg(includeTrailingPathDelimiter(pSettings->dirs().appLibexecDir())+"consolepauser")
+                    .arg(consolePauserPath)
                     .arg(consoleFlag)
                     .arg(localizePath(filename)).arg(arguments);
             }
