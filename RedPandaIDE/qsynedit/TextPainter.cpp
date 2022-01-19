@@ -995,7 +995,7 @@ void SynEditTextPainter::PaintLines()
                         throw BaseError(SynEdit::tr("The highlighter seems to be in an infinite loop"));
                     }
                 }
-                nTokenColumnsBefore = edit->charToColumn(sLine,edit->mHighlighter->getTokenPos()+1)-1;
+                //nTokenColumnsBefore = edit->charToColumn(sLine,edit->mHighlighter->getTokenPos()+1)-1;
                 nTokenColumnLen = edit->stringColumns(sToken, nTokenColumnsBefore);
                 if (nTokenColumnsBefore + nTokenColumnLen >= vFirstChar) {
                     if (nTokenColumnsBefore + nTokenColumnLen >= vLastChar) {
@@ -1040,11 +1040,12 @@ void SynEditTextPainter::PaintLines()
                     AddHighlightToken(sToken, nTokenColumnsBefore - (vFirstChar - FirstCol),
                       nTokenColumnLen, vLine,attr);
                 }
+                nTokenColumnsBefore+=nTokenColumnLen;
                 // Let the highlighter scan the next token.
                 edit->mHighlighter->next();
             }
             // Don't assume HL.GetTokenPos is valid after HL.GetEOL == True.
-            nTokenColumnsBefore += edit->stringColumns(sToken,nTokenColumnsBefore);
+            //nTokenColumnsBefore += edit->stringColumns(sToken,nTokenColumnsBefore);
             if (edit->mHighlighter->eol() && (nTokenColumnsBefore < vLastChar)) {
                 int lineColumns = edit->mLines->lineColumns(vLine-1);
                 // Draw text that couldn't be parsed by the highlighter, if any.
