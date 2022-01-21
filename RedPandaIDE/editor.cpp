@@ -1127,6 +1127,7 @@ void Editor::mouseReleaseEvent(QMouseEvent *event)
             QString s = lines()->getString(p.Line - 1);
             if (mParser->isIncludeLine(s)) {
                 QString filename = mParser->getHeaderFileName(mFilename,s);
+                qDebug()<<filename;
                 Editor * e = pMainWindow->editorList()->getEditorByFilename(filename);
                 if (e) {
                     e->setCaretPositionAndActivate(1,1);

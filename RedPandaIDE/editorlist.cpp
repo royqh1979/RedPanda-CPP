@@ -361,7 +361,7 @@ Editor *EditorList::getEditorByFilename(QString filename)
     //Create a new editor
     QFileInfo fileInfo(filename);
     QString fullname = fileInfo.absoluteFilePath();
-    if (fileInfo.exists())
+    if (fileInfo.exists() && fileInfo.isFile())
         return newEditor(fullname,ENCODING_AUTO_DETECT,false,false);
     return nullptr;
 }

@@ -8,6 +8,7 @@ Red Panda C++ Version 0.13.3
   - fix: when show function tips, can't correctly calcuate the current position in the function param list
   - fix: app will become very slow when processing very long lines.
   - enhancement: If console pauser doesn't exist, warn and stop running programs.
+  - fix: app crash when ctrl+click on a #include statement that point to a directory instead of header file.
 
 Red Panda C++ Version 0.13.2
   - fix: "delete and exit" button in the environtment / folder option page doesn't work correctly 
