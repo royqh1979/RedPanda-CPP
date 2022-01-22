@@ -9,6 +9,8 @@ Red Panda C++ Version 0.13.3
   - fix: app will become very slow when processing very long lines.
   - enhancement: If console pauser doesn't exist, warn and stop running programs.
   - fix: app crash when ctrl+click on a #include statement that point to a directory instead of header file.
+  - fix: ctrl+click on the enum value will jump to the wrong line in it's definition file
+  - fix: line info in the mouse tip of statement not correct
 
 Red Panda C++ Version 0.13.2
   - fix: "delete and exit" button in the environtment / folder option page doesn't work correctly 

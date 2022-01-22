@@ -3116,7 +3116,7 @@ QString Editor::getParserHint(const QStringList& expression,const QString &s, in
     } else if (statement->line>0) {
         QFileInfo fileInfo(statement->fileName);
         result = mParser->prettyPrintStatement(statement,mFilename, line) + " - "
-                + QString("%1(%2) ").arg(fileInfo.fileName()).arg(line)
+                + QString("%1(%2) ").arg(fileInfo.fileName()).arg(statement->line)
                 + tr("Ctrl+click for more info");
     } else {  // hard defines
         result = mParser->prettyPrintStatement(statement, mFilename);
@@ -3170,7 +3170,7 @@ QString Editor::getHintForFunction(const PStatement &statement, const PStatement
                 result += "<BR />";
             QFileInfo fileInfo(childStatement->fileName);
             result = mParser->prettyPrintStatement(childStatement,filename,line) + " - "
-                    + QString("%1(%2) ").arg(fileInfo.fileName()).arg(line)
+                    + QString("%1(%2) ").arg(fileInfo.fileName()).arg(childStatement->line)
                     + tr("Ctrl+click for more info");
         }
     }
