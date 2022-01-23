@@ -22,6 +22,7 @@
 #include <QMessageBox>
 #include "../utils.h"
 #include "../iconsmanager.h"
+#include "../platform.h"
 #include <QDebug>
 #include <QFileDialog>
 #include <QInputDialog>
@@ -54,6 +55,19 @@ CompilerSetOptionWidget::CompilerSetOptionWidget(const QString& name, const QStr
 CompilerSetOptionWidget::~CompilerSetOptionWidget()
 {
     delete ui;
+}
+
+void CompilerSetOptionWidget::init()
+{
+    ui->cbEncodingDetails->setVisible(false);
+    ui->cbEncoding->clear();
+    ui->cbEncoding->addItem(tr("Auto detect"),ENCODING_AUTO_DETECT);
+    ui->cbEncoding->addItem(tr("ANSI"),ENCODING_SYSTEM_DEFAULT);
+    ui->cbEncoding->addItem(tr("UTF-8"),ENCODING_UTF8);
+    foreach (const QString& langName, pCharsetInfoManager->languageNames()) {
+        ui->cbEncoding->addItem(langName,langName);
+    }
+    SettingsWidget::init();
 }
 
 void resetOptionTabs(Settings::PCompilerSet pSet,QTabWidget* pTab)

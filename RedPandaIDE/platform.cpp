@@ -68,14 +68,24 @@ QList<PCharsetInfo> CharsetInfoManager::findCharsetsByLanguageName(const QString
 {
     QList<PCharsetInfo> result;
     foreach (const PCharsetInfo& info, mCodePages) {
-        if (info->language == languageName
-                && info->enabled)
+        if (info->enabled && info->language == languageName)
             result.append(info);
     }
     std::sort(result.begin(),result.end(),[](const PCharsetInfo& info1,const PCharsetInfo& info2){
         return (info1->name < info2->name);
     });
     return result;
+}
+
+QString CharsetInfoManager::findLanguageByCharsetName(const QString &encodingName)
+{
+
+    foreach (const PCharsetInfo& info, mCodePages) {
+        if (info->enabled &&
+                QString::compare(info->name, encodingName, Qt::CaseInsensitive)==0)
+            return info->language;
+    }
+    return "Unknown";
 }
 
 CharsetInfoManager::CharsetInfoManager():QObject()

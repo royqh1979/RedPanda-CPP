@@ -108,6 +108,28 @@ void ProjectFilesWidget::disableFileOptions()
     ui->txtBuildCommand->setPlainText("");
 }
 
+void ProjectFilesWidget::loadUnitEncoding(PProjectUnit unit)
+{
+    if (unit->encoding() == ENCODING_AUTO_DETECT
+            || unit->encoding() == ENCODING_SYSTEM_DEFAULT
+            || unit->encoding() == ENCODING_UTF8) {
+        ui->cbEncoding->setCurrentText(unit->encoding());
+        ui->cbEncodingDetail->clear();
+        ui->cbEncodingDetail->setVisible(false);
+    } else {
+        QString encoding = unit->encoding();
+        QString language = pCharsetInfoManager->findLanguageByCharsetName(encoding);
+        ui->cbEncoding->setCurrentText(language);
+        ui->cbEncodingDetail->setVisible(true);
+        ui->cbEncodingDetail->clear();
+        QList<PCharsetInfo> infos = pCharsetInfoManager->findCharsetsByLanguageName(language);
+        foreach (const PCharsetInfo& info, infos) {
+            ui->cbEncodingDetail->addItem(info->name);
+        }
+        ui->cbEncodingDetail->setCurrentText(encoding);
+    }
+}
+
 void ProjectFilesWidget::on_treeProject_doubleClicked(const QModelIndex &index)
 {
     if (!index.isValid()) {
@@ -130,7 +152,7 @@ void ProjectFilesWidget::on_treeProject_doubleClicked(const QModelIndex &index)
         ui->chkOverrideBuildCommand->setChecked(unit->overrideBuildCmd());
         ui->txtBuildCommand->setPlainText(unit->buildCmd());
         ui->txtBuildCommand->setEnabled(ui->chkOverrideBuildCommand->isChecked());
-        ui->cbEncoding->setCurrentText(unit->encoding());
+        loadUnitEncoding(unit);
     } else {
         disableFileOptions();
     }
@@ -201,7 +223,7 @@ void ProjectFilesWidget::on_cbEncoding_currentTextChanged(const QString &)
         PProjectUnit unit = currentUnit();
         if(!unit)
             return;
-        unit->setEncoding(userData.toLocal8Bit());
+        unit->setEncoding(userData.toUtf8());
         ui->cbEncodingDetail->setVisible(false);
         ui->cbEncodingDetail->clear();
     } else {
@@ -241,6 +263,6 @@ void ProjectFilesWidget::on_cbEncodingDetail_currentTextChanged(const QString &)
     PProjectUnit unit = currentUnit();
     if(!unit)
         return;
-    unit->setEncoding(ui->cbEncodingDetail->currentText().toLocal8Bit());
+    unit->setEncoding(ui->cbEncodingDetail->currentText().toUtf8());
 }
 

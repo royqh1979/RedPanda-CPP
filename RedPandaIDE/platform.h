@@ -42,6 +42,7 @@ public:
     PCharsetInfo findCharsetByCodepage(int codepage);
     QStringList languageNames();
     QList<PCharsetInfo> findCharsetsByLanguageName(const QString& languageName);
+    QString findLanguageByCharsetName(const QString& encodingName);
 private:
     QList<PCharsetInfo> mCodePages;
 };

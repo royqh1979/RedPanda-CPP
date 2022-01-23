@@ -42,9 +42,12 @@ private:
 
 
     // SettingsWidget interface
+public:
+    void init() override;
 protected:
     void doLoad() override;
     void doSave() override;
+
 private:
     void reloadCurrentCompilerSet();
     void saveCurrentCompilerSet();
@@ -57,6 +60,7 @@ private slots:
     void on_btnRenameCompilerSet_pressed();
     void on_btnRemoveCompilerSet_pressed();
     void updateIcons();
+
 };
 
 #endif // COMPILERSETOPTIONWIDGET_H

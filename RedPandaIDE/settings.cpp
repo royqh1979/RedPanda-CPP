@@ -2307,6 +2307,16 @@ QByteArray Settings::CompilerSet::getCompilerOutput(const QString &binDir, const
     return result.trimmed();
 }
 
+const QString &Settings::CompilerSet::execCharser() const
+{
+    return mExecCharser;
+}
+
+void Settings::CompilerSet::setExecCharser(const QString &newExecCharser)
+{
+    mExecCharser = newExecCharser;
+}
+
 const QString &Settings::CompilerSet::debugServer() const
 {
     return mDebugServer;
@@ -2750,6 +2760,7 @@ void Settings::CompilerSets::saveSet(int index)
     mSettings->mSettings.setValue("customLinkParams", pSet->customLinkParams());
     mSettings->mSettings.setValue("AddCharset", pSet->autoAddCharsetParams());
     mSettings->mSettings.setValue("StaticLink", pSet->staticLink());
+    mSettings->mSettings.setValue("ExecCharser", pSet->execCharser());
 
     // Misc. properties
     mSettings->mSettings.setValue("DumpMachine", pSet->dumpMachine());
@@ -2815,6 +2826,7 @@ Settings::PCompilerSet Settings::CompilerSets::loadSet(int index)
     pSet->setCustomLinkParams(mSettings->mSettings.value("customLinkParams").toString());
     pSet->setAutoAddCharsetParams(mSettings->mSettings.value("AddCharset").toBool());
     pSet->setStaticLink(mSettings->mSettings.value("StaticLink").toBool());
+    pSet->setExecCharser(mSettings->mSettings.value("ExecCharser").toString());
 
     pSet->setDumpMachine(mSettings->mSettings.value("DumpMachine").toString());
     pSet->setVersion(mSettings->mSettings.value("Version").toString());

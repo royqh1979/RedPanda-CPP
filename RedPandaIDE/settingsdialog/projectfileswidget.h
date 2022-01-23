@@ -46,6 +46,7 @@ private:
     PProjectUnit currentUnit();
     void copyUnits();
     void disableFileOptions();
+    void loadUnitEncoding(PProjectUnit unit);
 private slots:
     void on_treeProject_doubleClicked(const QModelIndex &index);
     void on_spinPriority_valueChanged(int arg1);

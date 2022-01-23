@@ -1177,6 +1177,9 @@ public:
         int compilerSetType() const;
         void setCompilerSetType(int newCompilerSetType);
 
+        const QString &execCharser() const;
+        void setExecCharser(const QString &newExecCharser);
+
     private:
         // Initialization
         void setExecutables();
@@ -1222,6 +1225,7 @@ public:
         QString mCustomCompileParams;
         QString mCustomLinkParams;
         bool mAutoAddCharsetParams;
+        QString mExecCharser;
         bool mStaticLink;
 
         // Options
