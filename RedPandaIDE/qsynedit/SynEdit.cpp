@@ -474,8 +474,6 @@ BufferCoord SynEdit::getMatchingBracketEx(BufferCoord APoint)
 
     if (mLines->count()<1)
         return BufferCoord{0,0};
-    if (!mHighlighter)
-        return BufferCoord{0,0};
     // get char at caret
     PosX = std::max(APoint.Char,1);
     PosY = std::max(APoint.Line,1);
@@ -499,13 +497,12 @@ BufferCoord SynEdit::getMatchingBracketEx(BufferCoord APoint)
                             p.Char = PosX;
                             p.Line = PosY;
                             if ((Test == BracketInc) || (Test == BracketDec)) {
+                                isCommentOrStringOrChar = false;
                                 if (getHighlighterAttriAtRowCol(p, vDummy, attr))
                                     isCommentOrStringOrChar =
                                         (attr == mHighlighter->stringAttribute()) ||
                                             (attr == mHighlighter->commentAttribute()) ||
                                             (attr->name() == SYNS_AttrCharacter);
-                                else
-                                    isCommentOrStringOrChar = false;
                                 if ((Test == BracketInc) && (!isCommentOrStringOrChar))
                                     NumBrackets++;
                                 else if ((Test == BracketDec) && (!isCommentOrStringOrChar)) {
@@ -534,6 +531,7 @@ BufferCoord SynEdit::getMatchingBracketEx(BufferCoord APoint)
                             p.Char = PosX;
                             p.Line = PosY;
                             if ((Test == BracketInc) || (Test == BracketDec)) {
+                                isCommentOrStringOrChar = false;
                                 if (getHighlighterAttriAtRowCol(p, vDummy, attr))
                                     isCommentOrStringOrChar =
                                         (attr == mHighlighter->stringAttribute()) ||

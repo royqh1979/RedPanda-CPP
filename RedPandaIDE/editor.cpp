@@ -2267,6 +2267,8 @@ void Editor::initParser()
 Editor::QuoteStatus Editor::getQuoteStatus()
 {
     QuoteStatus Result = QuoteStatus::NotQuote;
+    if (!highlighter())
+        return Result;
     if ((caretY()>1) && highlighter()->isLastLineStringNotFinished(lines()->ranges(caretY() - 2).state))
         Result = QuoteStatus::DoubleQuote;
 

@@ -11,6 +11,8 @@ Red Panda C++ Version 0.13.3
   - fix: app crash when ctrl+click on a #include statement that point to a directory instead of header file.
   - fix: ctrl+click on the enum value will jump to the wrong line in it's definition file
   - fix: line info in the mouse tip of statement not correct
+  - fix: editor crash when no highlighter is assigned (the editing file is a not c/cpp source file);
+  - fix: ')' not correctly skip in the editor when no highlighter is assigned (the editing file is a not c/cpp source file);
 
 Red Panda C++ Version 0.13.2
   - fix: "delete and exit" button in the environtment / folder option page doesn't work correctly 

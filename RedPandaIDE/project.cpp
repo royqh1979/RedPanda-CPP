@@ -344,8 +344,8 @@ bool Project::removeUnit(int index, bool doClose , bool removeFile)
 
     PProjectUnit unit = mUnits[index];
 
-    qDebug()<<unit->fileName();
-    qDebug()<<(qint64)unit->editor();
+//    qDebug()<<unit->fileName();
+//    qDebug()<<(qint64)unit->editor();
     // Attempt to close it
     if (doClose && (unit->editor())) {
         if (!pMainWindow->editorList()->closeEditor(unit->editor()))
