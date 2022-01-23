@@ -765,7 +765,7 @@ void CppParser::parseFile(const QString &fileName, bool inProject, bool onlyIfNo
         }
         //we only parse CFile in the second parse
         foreach (const QString& file,files) {
-            if (isCfile(file)) {
+            if (!isHfile(file)) {
                 mFilesScannedCount++;
                 emit onProgress(file,mFilesToScanCount,mFilesScannedCount);
                 if (!mPreprocessor.scannedFiles().contains(file)) {
@@ -3196,8 +3196,8 @@ void CppParser::internalParse(const QString &fileName)
     // Perform some validation before we start
     if (!mEnabled)
         return;
-    if (!isCfile(fileName) && !isHfile(fileName))  // support only known C/C++ files
-        return;
+//    if (!isCfile(fileName) && !isHfile(fileName))  // support only known C/C++ files
+//        return;
 
     QStringList buffer;
     if (mOnGetFileStream) {

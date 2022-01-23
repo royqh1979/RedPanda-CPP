@@ -61,12 +61,14 @@ enum class SynHighlighterTokenType {
 enum class SynHighlighterClass {
     Composition,
     CppHighlighter,
-    AsmHighlighter
+    AsmHighlighter,
+    GLSLHighlighter
 };
 
 enum class SynHighlighterLanguage {
     Asssembly,
     Cpp,
+    GLSL
 };
 
 class SynHighlighterAttribute {
@@ -104,7 +106,6 @@ public:
     const QSet<QChar>& wordBreakChars() const;
 
 
-
     PSynHighlighterAttribute commentAttribute() const;
 
     PSynHighlighterAttribute identifierAttribute() const;
@@ -138,6 +139,7 @@ public:
     virtual void setState(const SynRangeState& rangeState) = 0;
     virtual void setLine(const QString& newLine, int lineNumber) = 0;
     virtual void resetState() = 0;
+    virtual QSet<QString> keywords() const;
 
     virtual QString languageName() = 0;
     virtual SynHighlighterLanguage language() = 0;

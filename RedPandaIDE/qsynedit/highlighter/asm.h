@@ -93,6 +93,10 @@ public:
     SynRangeState getRangeState() const override;
     void setState(const SynRangeState& rangeState) override;
     void resetState() override;
+
+    // SynHighlighter interface
+public:
+    QSet<QString> keywords() const override;
 };
 
 #endif // SYNEDITASMHIGHLIGHTER_H

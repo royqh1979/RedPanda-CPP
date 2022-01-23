@@ -401,3 +401,8 @@ void SynEditASMHighlighter::resetState()
 {
 
 }
+
+QSet<QString> SynEditASMHighlighter::keywords() const
+{
+    return Keywords;
+}

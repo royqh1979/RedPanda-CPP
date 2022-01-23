@@ -131,7 +131,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
     }
 
     if (pSettings->editor().readOnlySytemHeader()
-            && (mParser->isSystemHeaderFile(mFilename) || mParser->isProjectHeaderFile(mFilename))) {
+            && mParser && (mParser->isSystemHeaderFile(mFilename) || mParser->isProjectHeaderFile(mFilename))) {
         this->setModified(false);
         setReadOnly(true);
         updateCaption();
@@ -710,7 +710,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
                 return;
             } else if (mLastIdCharPressed==pSettings->codeCompletion().minCharRequired()){
                 QString lastWord = getPreviousWordAtPositionForSuggestion(caretXY());
-                if (!lastWord.isEmpty()) {
+                if (mParser && !lastWord.isEmpty()) {
                     if (CppTypeKeywords.contains(lastWord)) {
                         if (lastWord == "long" ||
                                 lastWord == "short" ||
@@ -750,7 +750,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
         }
     } else {
         //preprocessor ?
-        if ((mLastIdCharPressed=0) && (ch=='#') && lineText().isEmpty()) {
+        if (mParser && (mLastIdCharPressed=0) && (ch=='#') && lineText().isEmpty()) {
             if (pSettings->codeCompletion().enabled()
                     && pSettings->codeCompletion().showCompletionWhileInput() ) {
                 mLastIdCharPressed++;
@@ -761,7 +761,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
             }
         }
         //javadoc directive?
-        if  ((mLastIdCharPressed=0) && (ch=='#') &&
+        if  (mParser && (mLastIdCharPressed=0) && (ch=='#') &&
               lineText().trimmed().startsWith('*')) {
             if (pSettings->codeCompletion().enabled()
                     && pSettings->codeCompletion().showCompletionWhileInput() ) {
@@ -2223,34 +2223,37 @@ bool Editor::handleCodeCompletion(QChar key)
 {
     if (!mCompletionPopup->isEnabled())
         return false;
-    switch(key.unicode()) {
-    case '.':
-        setSelText(key);
-        showCompletion("",false);
-        return true;
-    case '>':
-        setSelText(key);
-        if ((caretX() > 2) && (lineText().length() >= 2) &&
-                (lineText()[caretX() - 3] == '-'))
+    if (mParser) {
+        switch(key.unicode()) {
+        case '.':
+            setSelText(key);
             showCompletion("",false);
-        return true;
-    case ':':
-        ExecuteCommand(SynEditorCommand::ecChar,':',nullptr);
-        //setSelText(key);
-        if ((caretX() > 2) && (lineText().length() >= 2) &&
-                (lineText()[caretX() - 3] == ':'))
-            showCompletion("",false);
-        return true;
-    case '/':
-    case '\\':
-        setSelText(key);
-        if (mParser->isIncludeLine(lineText())) {
-            showHeaderCompletion(false);
+            return true;
+        case '>':
+            setSelText(key);
+            if ((caretX() > 2) && (lineText().length() >= 2) &&
+                    (lineText()[caretX() - 3] == '-'))
+                showCompletion("",false);
+            return true;
+        case ':':
+            ExecuteCommand(SynEditorCommand::ecChar,':',nullptr);
+            //setSelText(key);
+            if ((caretX() > 2) && (lineText().length() >= 2) &&
+                    (lineText()[caretX() - 3] == ':'))
+                showCompletion("",false);
+            return true;
+        case '/':
+        case '\\':
+            setSelText(key);
+            if (mParser->isIncludeLine(lineText())) {
+                showHeaderCompletion(false);
+            }
+            return true;
+        default:
+            return false;
         }
-        return true;
-    default:
-        return false;
     }
+    return false;
 }
 
 void Editor::initParser()
@@ -2387,11 +2390,18 @@ Editor::QuoteStatus Editor::getQuoteStatus()
 
 void Editor::reparse()
 {
+    if (!highlighter())
+        return;
+    if (highlighter()->language() != SynHighlighterLanguage::Cpp
+             && highlighter()->language() != SynHighlighterLanguage::GLSL)
+        return;
     parseFile(mParser,mFilename,mInProject);
 }
 
 void Editor::reparseTodo()
 {
+    if (!highlighter())
+        return;
     pMainWindow->todoParser()->parseFile(mFilename);
 }
 
@@ -2590,7 +2600,10 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete)
     }
     if (!pSettings->codeCompletion().enabled())
         return;
-    if (!mParser->enabled())
+    if (!mParser || !mParser->enabled())
+        return;
+
+    if (!highlighter())
         return;
 
     if (mCompletionPopup->isVisible()) // already in search, don't do it again
@@ -2662,6 +2675,19 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete)
                 mParser->findAndScanBlockAt(mFilename, caretY())
                 );
 
+    QSet<QString> keywords;
+    if (highlighter()) {
+        if (highlighter()->language() != SynHighlighterLanguage::Cpp ) {
+            keywords = highlighter()->keywords();
+        } else if (mUseCppSyntax) {
+            foreach (const QString& keyword, CppKeywords.keys()) {
+                keywords.insert(keyword);
+            }
+        } else {
+            keywords = CKeywords;
+        }
+    }
+
     if (word.isEmpty()) {
         //word=getWordAtPosition(this,caretXY(),pBeginPos,pEndPos, WordPurpose::wpCompletion);
         QString memberOperator;
@@ -2680,14 +2706,15 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete)
                     memberOperator,
                     memberExpression,
                     mFilename,
-                    caretY());
+                    caretY(),
+                    keywords);
     } else {
         QStringList memberExpression;
         memberExpression.append(word);
         mCompletionPopup->prepareSearch(preWord,
                                         QStringList(),
                                         "",
-                                        memberExpression, mFilename, caretY());
+                                        memberExpression, mFilename, caretY(),keywords);
     }
 
     // Filter the whole statement list
@@ -3900,6 +3927,10 @@ void Editor::reformat()
 void Editor::checkSyntaxInBack()
 {
     if (readOnly())
+        return;
+    if (!highlighter())
+        return;
+    if (highlighter()->language()!=SynHighlighterLanguage::Cpp)
         return;
     if(pSettings->editor().syntaxCheck())
         pMainWindow->checkSyntaxInBack(this);

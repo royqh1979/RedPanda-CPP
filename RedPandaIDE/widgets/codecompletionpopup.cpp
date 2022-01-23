@@ -81,7 +81,8 @@ void CodeCompletionPopup::prepareSearch(
         const QString& memberOperator,
         const QStringList& memberExpression,
         const QString &filename,
-        int line)
+        int line,
+        const QSet<QString>& customKeywords)
 {
     QMutexLocker locker(&mMutex);
     if (!isEnabled())
@@ -94,7 +95,7 @@ void CodeCompletionPopup::prepareSearch(
     mMemberOperator = memberOperator;
     if (preWord.isEmpty()) {
         mIncludedFiles = mParser->getFileIncludes(filename);
-        getCompletionFor(ownerExpression,memberOperator,memberExpression, filename,line);
+        getCompletionFor(ownerExpression,memberOperator,memberExpression, filename,line, customKeywords);
     } else {
         getCompletionListForPreWord(preWord);
     }
@@ -458,10 +459,28 @@ void CodeCompletionPopup::getCompletionFor(
         const QString& memberOperator,
         const QStringList& memberExpression,
         const QString &fileName,
-        int line)
+        int line,
+        const QSet<QString>& customKeywords)
 {
-    if(!mParser)
+    if(!mParser) {
+        if (mShowKeywords) {
+            //add keywords
+            if (!customKeywords.isEmpty()) {
+                foreach (const QString& keyword,customKeywords) {
+                    addKeyword(keyword);
+                }
+            } else if (mUseCppKeyword) {
+                foreach (const QString& keyword,CppKeywords.keys()) {
+                    addKeyword(keyword);
+                }
+            } else {
+                foreach (const QString& keyword,CKeywords) {
+                    addKeyword(keyword);
+                }
+            }
+        }
         return;
+    }
     if (!mParser->enabled())
         return;
     if (memberOperator.isEmpty() && ownerExpression.isEmpty() && memberExpression.isEmpty())
@@ -514,7 +533,11 @@ void CodeCompletionPopup::getCompletionFor(
 
             if (mShowKeywords) {
                 //add keywords
-                if (mUseCppKeyword) {
+                if (!customKeywords.isEmpty()) {
+                    foreach (const QString& keyword,customKeywords) {
+                        addKeyword(keyword);
+                    }
+                } else if (mUseCppKeyword) {
                     foreach (const QString& keyword,CppKeywords.keys()) {
                         addKeyword(keyword);
                     }

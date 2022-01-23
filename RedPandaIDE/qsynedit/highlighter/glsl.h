@@ -14,12 +14,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef SYNEDITCPPHIGHLIGHTER_H
-#define SYNEDITCPPHIGHLIGHTER_H
+#ifndef SYNEDITGLSLHIGHLIGHTER_H
+#define SYNEDITGLSLHIGHLIGHTER_H
 #include "base.h"
 #include <QSet>
 
-class SynEditCppHighlighter: public SynHighlighter
+class SynEditGLSLHighlighter: public SynHighlighter
 {
     enum TokenKind {
         Asm = 1,
@@ -66,7 +66,7 @@ class SynEditCppHighlighter: public SynHighlighter
     };
 
 public:
-    explicit SynEditCppHighlighter();
+    explicit SynEditGLSLHighlighter();
 
     PSynHighlighterAttribute asmAttribute() const;
 
@@ -212,4 +212,4 @@ public:
     QSet<QString> keywords() const override;
 };
 
-#endif // SYNEDITCPPHIGHLIGHTER_H
+#endif // SYNEDITGLSLHIGHLIGHTER_H

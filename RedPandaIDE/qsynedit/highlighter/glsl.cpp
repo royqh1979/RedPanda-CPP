@@ -14,131 +14,73 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#include "cpp.h"
+#include "glsl.h"
 #include "../Constants.h"
 
 #include <QFont>
 
-static const QSet<QString> CppStatementKeyWords {
+static const QSet<QString> GLSLStatementKeyWords {
     "if",
     "for",
     "try",
     "catch",
     "else",
-    "while",
-    "do"
+    "while"
 };
 
-
-
-const QSet<QString> SynEditCppHighlighter::Keywords {
-    "and",
-    "and_eq",
-    "bitand",
-    "bitor",
-    "break",
-    "compl",
-    "constexpr",
-    "const_cast",
-    "continue",
-    "dynamic_cast",
-    "else",
-    "explicit",
-    "export",
-    "extern",
-    "false",
-    "for",
-    "mutable",
-    "noexcept",
-    "not",
-    "not_eq",
-    "nullptr",
-    "or",
-    "or_eq",
-    "register",
-    "reinterpret_cast",
-    "static_assert",
-    "static_cast",
-    "template",
-    "this",
-    "thread_local",
-    "true",
-    "typename",
-    "virtual",
-    "volatile",
-    "xor",
-    "xor_eq",
-    "delete",
-    "delete[]",
-    "goto",
-    "new",
-    "return",
-    "throw",
-    "using",
-    "case",
-    "default",
-
-    "alignas",
-    "alignof",
-    "decltype",
-    "if",
-    "sizeof",
-    "switch",
-    "typeid",
-    "while",
-
-    "asm",
-    "catch",
-    "do",
-    "namespace",
-    "try",
-
-    "atomic_cancel",
-    "atomic_commit",
-    "atomic_noexcept",
-    "concept",
-    "consteval",
-    "constinit",
-    "co_wait",
-    "co_return",
-    "co_yield",
-    "reflexpr",
-    "requires",
-
-    "auto",
-    "bool",
-    "char",
-    "char8_t",
-    "char16_t",
-    "char32_t",
-    "double",
-    "float",
-    "int",
-    "long",
-    "short",
-    "signed",
-    "unsigned",
-    "void",
-    "wchar_t",
-
-    "const",
-    "inline",
-
-    "class",
-    "enum",
-    "friend",
-    "operator",
-    "private",
-    "protected",
-    "public",
-    "static",
-    "struct",
-    "typedef",
-    "union",
-
-    "nullptr",
+const QSet<QString> SynEditGLSLHighlighter::Keywords {
+    "const", "uniform", "buffer", "shared", "attribute", "varying",
+    "coherent", "volatile", "restrict", "readonly", "writeonly",
+    "atomic_uint",
+    "layout",
+    "centroid", "flat", "smooth", "noperspective",
+    "patch", "sample",
+    "invariant", "precise",
+    "break", "continue", "do", "for", "while", "switch", "case", "default",
+    "if", "else",
+    "subroutine",
+    "in", "out", "inout",
+    "int", "void", "bool", "true", "false", "float", "double",
+    "discard", "return",
+    "vec2", "vec3", "vec4", "ivec2", "ivec3", "ivec4", "bvec2", "bvec3", "bvec4",
+    "uint", "uvec2", "uvec3", "uvec4",
+    "dvec2", "dvec3", "dvec4",
+    "mat2", "mat3", "mat4",
+    "mat2x2", "mat2x3", "mat2x4",
+    "mat3x2", "mat3x3", "mat3x4",
+    "mat4x2", "mat4x3", "mat4x4",
+    "dmat2", "dmat3", "dmat4",
+    "dmat2x2", "dmat2x3", "dmat2x4",
+    "dmat3x2", "dmat3x3", "dmat3x4",
+    "dmat4x2", "dmat4x3", "dmat4x4",
+    "lowp", "mediump", "highp", "precision",
+    "sampler1D", "sampler1DShadow", "sampler1DArray", "sampler1DArrayShadow",
+    "isampler1D", "isampler1DArray", "usampler1D", "usampler1DArray",
+    "sampler2D", "sampler2DShadow", "sampler2DArray", "sampler2DArrayShadow",
+    "isampler2D", "isampler2DArray", "usampler2D", "usampler2DArray",
+    "sampler2DRect", "sampler2DRectShadow", "isampler2DRect", "usampler2DRect",
+    "sampler2DMS", "isampler2DMS", "usampler2DMS",
+    "sampler2DMSArray", "isampler2DMSArray", "usampler2DMSArray",
+    "sampler3D", "isampler3D", "usampler3D",
+    "samplerCube", "samplerCubeShadow", "isamplerCube", "usamplerCube",
+    "samplerCubeArray", "samplerCubeArrayShadow",
+    "isamplerCubeArray", "usamplerCubeArray",
+    "samplerBuffer", "isamplerBuffer", "usamplerBuffer",
+    "image1D", "iimage1D", "uimage1D",
+    "image1DArray", "iimage1DArray", "uimage1DArray",
+    "image2D", "iimage2D", "uimage2D",
+    "image2DArray", "iimage2DArray", "uimage2DArray",
+    "image2DRect", "iimage2DRect", "uimage2DRect",
+    "image2DMS", "iimage2DMS", "uimage2DMS",
+    "image2DMSArray", "iimage2DMSArray", "uimage2DMSArray",
+    "image3D", "iimage3D", "uimage3D",
+    "imageCube", "iimageCube", "uimageCube",
+    "imageCubeArray", "iimageCubeArray", "uimageCubeArray",
+    "imageBuffer", "iimageBuffer", "uimageBuffer",
+    "struct"
 };
-SynEditCppHighlighter::SynEditCppHighlighter(): SynHighlighter()
+
+SynEditGLSLHighlighter::SynEditGLSLHighlighter(): SynHighlighter()
 {
     mAsmAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrAssembler);
     addAttribute(mAsmAttribute);
@@ -184,82 +126,82 @@ SynEditCppHighlighter::SynEditCppHighlighter(): SynHighlighter()
     resetState();
 }
 
-PSynHighlighterAttribute SynEditCppHighlighter::asmAttribute() const
+PSynHighlighterAttribute SynEditGLSLHighlighter::asmAttribute() const
 {
     return mAsmAttribute;
 }
 
-PSynHighlighterAttribute SynEditCppHighlighter::preprocessorAttribute() const
+PSynHighlighterAttribute SynEditGLSLHighlighter::preprocessorAttribute() const
 {
     return mPreprocessorAttribute;
 }
 
-PSynHighlighterAttribute SynEditCppHighlighter::invalidAttribute() const
+PSynHighlighterAttribute SynEditGLSLHighlighter::invalidAttribute() const
 {
     return mInvalidAttribute;
 }
 
-PSynHighlighterAttribute SynEditCppHighlighter::numberAttribute() const
+PSynHighlighterAttribute SynEditGLSLHighlighter::numberAttribute() const
 {
     return mNumberAttribute;
 }
 
-PSynHighlighterAttribute SynEditCppHighlighter::floatAttribute() const
+PSynHighlighterAttribute SynEditGLSLHighlighter::floatAttribute() const
 {
     return mFloatAttribute;
 }
 
-PSynHighlighterAttribute SynEditCppHighlighter::hexAttribute() const
+PSynHighlighterAttribute SynEditGLSLHighlighter::hexAttribute() const
 {
     return mHexAttribute;
 }
 
-PSynHighlighterAttribute SynEditCppHighlighter::octAttribute() const
+PSynHighlighterAttribute SynEditGLSLHighlighter::octAttribute() const
 {
     return mOctAttribute;
 }
 
-PSynHighlighterAttribute SynEditCppHighlighter::stringEscapeSequenceAttribute() const
+PSynHighlighterAttribute SynEditGLSLHighlighter::stringEscapeSequenceAttribute() const
 {
     return mStringEscapeSequenceAttribute;
 }
 
-PSynHighlighterAttribute SynEditCppHighlighter::charAttribute() const
+PSynHighlighterAttribute SynEditGLSLHighlighter::charAttribute() const
 {
     return mCharAttribute;
 }
 
-PSynHighlighterAttribute SynEditCppHighlighter::variableAttribute() const
+PSynHighlighterAttribute SynEditGLSLHighlighter::variableAttribute() const
 {
     return mVariableAttribute;
 }
 
-PSynHighlighterAttribute SynEditCppHighlighter::functionAttribute() const
+PSynHighlighterAttribute SynEditGLSLHighlighter::functionAttribute() const
 {
     return mFunctionAttribute;
 }
 
-PSynHighlighterAttribute SynEditCppHighlighter::classAttribute() const
+PSynHighlighterAttribute SynEditGLSLHighlighter::classAttribute() const
 {
     return mClassAttribute;
 }
 
-PSynHighlighterAttribute SynEditCppHighlighter::globalVarAttribute() const
+PSynHighlighterAttribute SynEditGLSLHighlighter::globalVarAttribute() const
 {
     return mGlobalVarAttribute;
 }
 
-PSynHighlighterAttribute SynEditCppHighlighter::localVarAttribute() const
+PSynHighlighterAttribute SynEditGLSLHighlighter::localVarAttribute() const
 {
     return mLocalVarAttribute;
 }
 
-SynEditCppHighlighter::ExtTokenKind SynEditCppHighlighter::getExtTokenId()
+SynEditGLSLHighlighter::ExtTokenKind SynEditGLSLHighlighter::getExtTokenId()
 {
     return mExtTokenId;
 }
 
-SynTokenKind SynEditCppHighlighter::getTokenId()
+SynTokenKind SynEditGLSLHighlighter::getTokenId()
 {
     if ((mRange.state == RangeState::rsAsm || mRange.state == RangeState::rsAsmBlock)
             && !mAsmStart && !(mTokenId == TokenKind::Comment || mTokenId == TokenKind::Space
@@ -270,7 +212,7 @@ SynTokenKind SynEditCppHighlighter::getTokenId()
     }
 }
 
-void SynEditCppHighlighter::andSymbolProc()
+void SynEditGLSLHighlighter::andSymbolProc()
 {
     mTokenId = TokenKind::Symbol;
     switch (mLine[mRun+1].unicode()) {
@@ -288,7 +230,7 @@ void SynEditCppHighlighter::andSymbolProc()
     }
 }
 
-void SynEditCppHighlighter::ansiCppProc()
+void SynEditGLSLHighlighter::ansiCppProc()
 {
     mTokenId = TokenKind::Comment;
     if (mLine[mRun]==0) {
@@ -307,7 +249,7 @@ void SynEditCppHighlighter::ansiCppProc()
     }
 }
 
-void SynEditCppHighlighter::ansiCProc()
+void SynEditGLSLHighlighter::ansiCProc()
 {
     bool finishProcess = false;
     mTokenId = TokenKind::Comment;
@@ -342,7 +284,7 @@ void SynEditCppHighlighter::ansiCProc()
     }
 }
 
-void SynEditCppHighlighter::asciiCharProc()
+void SynEditGLSLHighlighter::asciiCharProc()
 {
     mTokenId = TokenKind::Char;
     do {
@@ -358,13 +300,13 @@ void SynEditCppHighlighter::asciiCharProc()
     mRange.state = RangeState::rsUnknown;
 }
 
-void SynEditCppHighlighter::atSymbolProc()
+void SynEditGLSLHighlighter::atSymbolProc()
 {
     mTokenId = TokenKind::Unknown;
     mRun+=1;
 }
 
-void SynEditCppHighlighter::braceCloseProc()
+void SynEditGLSLHighlighter::braceCloseProc()
 {
     mRun += 1;
     mTokenId = TokenKind::Symbol;
@@ -382,7 +324,7 @@ void SynEditCppHighlighter::braceCloseProc()
     popIndents(sitBrace);
 }
 
-void SynEditCppHighlighter::braceOpenProc()
+void SynEditGLSLHighlighter::braceOpenProc()
 {
     mRun += 1;
     mTokenId = TokenKind::Symbol;
@@ -409,7 +351,7 @@ void SynEditCppHighlighter::braceOpenProc()
     }
 }
 
-void SynEditCppHighlighter::colonProc()
+void SynEditGLSLHighlighter::colonProc()
 {
     mTokenId = TokenKind::Symbol;
     if (mLine[mRun+1]==':') {
@@ -421,14 +363,14 @@ void SynEditCppHighlighter::colonProc()
     }
 }
 
-void SynEditCppHighlighter::commaProc()
+void SynEditGLSLHighlighter::commaProc()
 {
     mRun+=1;
     mTokenId = TokenKind::Symbol;
     mExtTokenId = ExtTokenKind::Comma;
 }
 
-void SynEditCppHighlighter::directiveProc()
+void SynEditGLSLHighlighter::directiveProc()
 {
     QString preContents = mLineString.left(mRun).trimmed();
     if (!preContents.isEmpty()) { // '#' is not first non-space char on the line, treat it as an invalid char
@@ -471,7 +413,7 @@ void SynEditCppHighlighter::directiveProc()
 //    } while (mLine[mRun]!=0);
 }
 
-void SynEditCppHighlighter::directiveEndProc()
+void SynEditGLSLHighlighter::directiveEndProc()
 {
     mTokenId = TokenKind::Directive;
     if (mLine[mRun] == 0) {
@@ -503,7 +445,7 @@ void SynEditCppHighlighter::directiveEndProc()
     } while (mLine[mRun]!=0);
 }
 
-void SynEditCppHighlighter::equalProc()
+void SynEditGLSLHighlighter::equalProc()
 {
     mTokenId = TokenKind::Symbol;
     if (mLine[mRun+1] == '=') {
@@ -515,7 +457,7 @@ void SynEditCppHighlighter::equalProc()
     }
 }
 
-void SynEditCppHighlighter::greaterProc()
+void SynEditGLSLHighlighter::greaterProc()
 {
     mTokenId = TokenKind::Symbol;
     switch (mLine[mRun + 1].unicode()) {
@@ -538,7 +480,7 @@ void SynEditCppHighlighter::greaterProc()
     }
 }
 
-void SynEditCppHighlighter::identProc()
+void SynEditGLSLHighlighter::identProc()
 {
     int wordEnd = mRun;
     while (isIdentChar(mLine[wordEnd])) {
@@ -548,7 +490,7 @@ void SynEditCppHighlighter::identProc()
     mRun=wordEnd;
     if (isKeyword(word)) {
         mTokenId = TokenKind::Key;
-        if (CppStatementKeyWords.contains(word)) {
+        if (GLSLStatementKeyWords.contains(word)) {
             pushIndents(sitStatement);
         }
     } else {
@@ -556,7 +498,7 @@ void SynEditCppHighlighter::identProc()
     }
 }
 
-void SynEditCppHighlighter::lowerProc()
+void SynEditGLSLHighlighter::lowerProc()
 {
     mTokenId = TokenKind::Symbol;
     switch(mLine[mRun+1].unicode()) {
@@ -579,7 +521,7 @@ void SynEditCppHighlighter::lowerProc()
     }
 }
 
-void SynEditCppHighlighter::minusProc()
+void SynEditGLSLHighlighter::minusProc()
 {
     mTokenId = TokenKind::Symbol;
     switch(mLine[mRun+1].unicode()) {
@@ -606,7 +548,7 @@ void SynEditCppHighlighter::minusProc()
     }
 }
 
-void SynEditCppHighlighter::modSymbolProc()
+void SynEditGLSLHighlighter::modSymbolProc()
 {
     mTokenId = TokenKind::Symbol;
     switch(mLine[mRun + 1].unicode()) {
@@ -620,7 +562,7 @@ void SynEditCppHighlighter::modSymbolProc()
     }
 }
 
-void SynEditCppHighlighter::notSymbolProc()
+void SynEditGLSLHighlighter::notSymbolProc()
 {
     mTokenId = TokenKind::Symbol;
     switch(mLine[mRun + 1].unicode()) {
@@ -634,7 +576,7 @@ void SynEditCppHighlighter::notSymbolProc()
     }
 }
 
-void SynEditCppHighlighter::nullProc()
+void SynEditGLSLHighlighter::nullProc()
 {
     if ((mRun-1>=0) && isSpaceChar(mLine[mRun-1]) &&
     (mRange.state == RangeState::rsCppComment
@@ -647,7 +589,7 @@ void SynEditCppHighlighter::nullProc()
         mTokenId = TokenKind::Null;
 }
 
-void SynEditCppHighlighter::numberProc()
+void SynEditGLSLHighlighter::numberProc()
 {
     int idx1; // token[1]
     idx1 = mRun;
@@ -817,7 +759,7 @@ void SynEditCppHighlighter::numberProc()
     }
 }
 
-void SynEditCppHighlighter::orSymbolProc()
+void SynEditGLSLHighlighter::orSymbolProc()
 {
     mTokenId = TokenKind::Symbol;
     switch ( mLine[mRun+1].unicode()) {
@@ -835,7 +777,7 @@ void SynEditCppHighlighter::orSymbolProc()
     }
 }
 
-void SynEditCppHighlighter::plusProc()
+void SynEditGLSLHighlighter::plusProc()
 {
     mTokenId = TokenKind::Symbol;
     switch(mLine[mRun+1].unicode()){
@@ -853,7 +795,7 @@ void SynEditCppHighlighter::plusProc()
     }
 }
 
-void SynEditCppHighlighter::pointProc()
+void SynEditGLSLHighlighter::pointProc()
 {
     mTokenId = TokenKind::Symbol;
     if (mLine[mRun+1] == '*' ) {
@@ -870,14 +812,14 @@ void SynEditCppHighlighter::pointProc()
     }
 }
 
-void SynEditCppHighlighter::questionProc()
+void SynEditGLSLHighlighter::questionProc()
 {
     mTokenId = TokenKind::Symbol;
     mExtTokenId = ExtTokenKind::Question;
     mRun+=1;
 }
 
-void SynEditCppHighlighter::rawStringProc()
+void SynEditGLSLHighlighter::rawStringProc()
 {
     bool noEscaping = false;
     if (mRange.state == RangeState::rsRawStringNotEscaping)
@@ -903,7 +845,7 @@ void SynEditCppHighlighter::rawStringProc()
     mRange.state = RangeState::rsUnknown;
 }
 
-void SynEditCppHighlighter::roundCloseProc()
+void SynEditGLSLHighlighter::roundCloseProc()
 {
     mRun += 1;
     mTokenId = TokenKind::Symbol;
@@ -912,7 +854,7 @@ void SynEditCppHighlighter::roundCloseProc()
     popIndents(sitParenthesis);
 }
 
-void SynEditCppHighlighter::roundOpenProc()
+void SynEditGLSLHighlighter::roundOpenProc()
 {
     mRun += 1;
     mTokenId = TokenKind::Symbol;
@@ -921,7 +863,7 @@ void SynEditCppHighlighter::roundOpenProc()
     pushIndents(sitParenthesis);
 }
 
-void SynEditCppHighlighter::semiColonProc()
+void SynEditGLSLHighlighter::semiColonProc()
 {
     mRun += 1;
     mTokenId = TokenKind::Symbol;
@@ -933,7 +875,7 @@ void SynEditCppHighlighter::semiColonProc()
     }
 }
 
-void SynEditCppHighlighter::slashProc()
+void SynEditGLSLHighlighter::slashProc()
 {
     switch(mLine[mRun+1].unicode()) {
     case '/': // Cpp style comment
@@ -968,7 +910,7 @@ void SynEditCppHighlighter::slashProc()
     }
 }
 
-void SynEditCppHighlighter::spaceProc()
+void SynEditGLSLHighlighter::spaceProc()
 {
     mRun += 1;
     mTokenId = TokenKind::Space;
@@ -977,7 +919,7 @@ void SynEditCppHighlighter::spaceProc()
     mRange.state = RangeState::rsUnknown;
 }
 
-void SynEditCppHighlighter::squareCloseProc()
+void SynEditGLSLHighlighter::squareCloseProc()
 {
     mRun+=1;
     mTokenId = TokenKind::Symbol;
@@ -986,7 +928,7 @@ void SynEditCppHighlighter::squareCloseProc()
     popIndents(sitBracket);
 }
 
-void SynEditCppHighlighter::squareOpenProc()
+void SynEditGLSLHighlighter::squareOpenProc()
 {
     mRun+=1;
     mTokenId = TokenKind::Symbol;
@@ -995,7 +937,7 @@ void SynEditCppHighlighter::squareOpenProc()
     pushIndents(sitBracket);
 }
 
-void SynEditCppHighlighter::starProc()
+void SynEditGLSLHighlighter::starProc()
 {
     mTokenId = TokenKind::Symbol;
     if (mLine[mRun+1] == '=') {
@@ -1007,7 +949,7 @@ void SynEditCppHighlighter::starProc()
     }
 }
 
-void SynEditCppHighlighter::stringEndProc()
+void SynEditGLSLHighlighter::stringEndProc()
 {
     mTokenId = TokenKind::String;
     if (mLine[mRun]==0) {
@@ -1059,7 +1001,7 @@ void SynEditCppHighlighter::stringEndProc()
     }
 }
 
-void SynEditCppHighlighter::stringEscapeSeqProc()
+void SynEditGLSLHighlighter::stringEscapeSeqProc()
 {
     mTokenId = TokenKind::StringEscapeSeq;
     mRun+=1;
@@ -1141,7 +1083,7 @@ void SynEditCppHighlighter::stringEscapeSeqProc()
         mRange.state = RangeState::rsString;
 }
 
-void SynEditCppHighlighter::stringProc()
+void SynEditGLSLHighlighter::stringProc()
 {
     if (mLine[mRun] == 0) {
         mRange.state = RangeState::rsUnknown;
@@ -1193,7 +1135,7 @@ void SynEditCppHighlighter::stringProc()
     mRange.state = RangeState::rsUnknown;
 }
 
-void SynEditCppHighlighter::stringStartProc()
+void SynEditGLSLHighlighter::stringStartProc()
 {
     mTokenId = TokenKind::String;
     mRun += 1;
@@ -1204,20 +1146,20 @@ void SynEditCppHighlighter::stringStartProc()
     stringProc();
 }
 
-void SynEditCppHighlighter::tildeProc()
+void SynEditGLSLHighlighter::tildeProc()
 {
     mRun+=1;
     mTokenId = TokenKind::Symbol;
     mExtTokenId = ExtTokenKind::BitComplement;
 }
 
-void SynEditCppHighlighter::unknownProc()
+void SynEditGLSLHighlighter::unknownProc()
 {
     mRun+=1;
     mTokenId = TokenKind::Unknown;
 }
 
-void SynEditCppHighlighter::xorSymbolProc()
+void SynEditGLSLHighlighter::xorSymbolProc()
 {
     mTokenId = TokenKind::Symbol;
     if (mLine[mRun+1]=='=') {
@@ -1229,7 +1171,7 @@ void SynEditCppHighlighter::xorSymbolProc()
     }
 }
 
-void SynEditCppHighlighter::processChar()
+void SynEditGLSLHighlighter::processChar()
 {
     switch(mLine[mRun].unicode()) {
     case '&':
@@ -1346,7 +1288,7 @@ void SynEditCppHighlighter::processChar()
     }
 }
 
-void SynEditCppHighlighter::popIndents(int indentType)
+void SynEditGLSLHighlighter::popIndents(int indentType)
 {
     while (!mRange.indents.isEmpty() && mRange.indents.back()!=indentType) {
         mRange.indents.pop_back();
@@ -1360,7 +1302,7 @@ void SynEditCppHighlighter::popIndents(int indentType)
     }
 }
 
-void SynEditCppHighlighter::pushIndents(int indentType)
+void SynEditGLSLHighlighter::pushIndents(int indentType)
 {
     int idx = mRange.indents.length();
     if (idx<mRange.firstIndentThisLine)
@@ -1368,7 +1310,7 @@ void SynEditCppHighlighter::pushIndents(int indentType)
     mRange.indents.push_back(indentType);
 }
 
-bool SynEditCppHighlighter::getTokenFinished() const
+bool SynEditGLSLHighlighter::getTokenFinished() const
 {
     if (mTokenId == TokenKind::Comment
             || mTokenId == TokenKind::String
@@ -1378,7 +1320,7 @@ bool SynEditCppHighlighter::getTokenFinished() const
     return true;
 }
 
-bool SynEditCppHighlighter::isLastLineCommentNotFinished(int state) const
+bool SynEditGLSLHighlighter::isLastLineCommentNotFinished(int state) const
 {
     return (state == RangeState::rsAnsiC ||
             state == RangeState::rsAnsiCAsm ||
@@ -1387,22 +1329,22 @@ bool SynEditCppHighlighter::isLastLineCommentNotFinished(int state) const
             state == RangeState::rsCppComment);
 }
 
-bool SynEditCppHighlighter::isLastLineStringNotFinished(int state) const
+bool SynEditGLSLHighlighter::isLastLineStringNotFinished(int state) const
 {
     return state == RangeState::rsMultiLineString;
 }
 
-bool SynEditCppHighlighter::eol() const
+bool SynEditGLSLHighlighter::eol() const
 {
     return mTokenId == TokenKind::Null;
 }
 
-QString SynEditCppHighlighter::getToken() const
+QString SynEditGLSLHighlighter::getToken() const
 {
     return mLineString.mid(mTokenPos,mRun-mTokenPos);
 }
 
-PSynHighlighterAttribute SynEditCppHighlighter::getTokenAttribute() const
+PSynHighlighterAttribute SynEditGLSLHighlighter::getTokenAttribute() const
 {
     switch (mTokenId) {
     case TokenKind::Asm:
@@ -1443,17 +1385,17 @@ PSynHighlighterAttribute SynEditCppHighlighter::getTokenAttribute() const
     }
 }
 
-SynTokenKind SynEditCppHighlighter::getTokenKind()
+SynTokenKind SynEditGLSLHighlighter::getTokenKind()
 {
     return mTokenId;
 }
 
-int SynEditCppHighlighter::getTokenPos()
+int SynEditGLSLHighlighter::getTokenPos()
 {
     return mTokenPos;
 }
 
-void SynEditCppHighlighter::next()
+void SynEditGLSLHighlighter::next()
 {
     mAsmStart = false;
     mTokenPos = mRun;
@@ -1511,7 +1453,7 @@ void SynEditCppHighlighter::next()
     } while (mTokenId!=TokenKind::Null && mRun<=mTokenPos);
 }
 
-void SynEditCppHighlighter::setLine(const QString &newLine, int lineNumber)
+void SynEditGLSLHighlighter::setLine(const QString &newLine, int lineNumber)
 {
     mLineString = newLine;
     mLine = mLineString.data();
@@ -1524,12 +1466,12 @@ void SynEditCppHighlighter::setLine(const QString &newLine, int lineNumber)
     next();
 }
 
-bool SynEditCppHighlighter::isKeyword(const QString &word)
+bool SynEditGLSLHighlighter::isKeyword(const QString &word)
 {
     return Keywords.contains(word);
 }
 
-SynHighlighterTokenType SynEditCppHighlighter::getTokenType()
+SynHighlighterTokenType SynEditGLSLHighlighter::getTokenType()
 {
     switch(mTokenId) {
     case TokenKind::Comment:
@@ -1581,7 +1523,7 @@ SynHighlighterTokenType SynEditCppHighlighter::getTokenType()
     }
 }
 
-void SynEditCppHighlighter::setState(const SynRangeState& rangeState)
+void SynEditGLSLHighlighter::setState(const SynRangeState& rangeState)
 {
     mRange = rangeState;
     // current line's left / right parenthesis count should be reset before parsing each line
@@ -1591,7 +1533,7 @@ void SynEditCppHighlighter::setState(const SynRangeState& rangeState)
     mRange.matchingIndents.clear();
 }
 
-void SynEditCppHighlighter::resetState()
+void SynEditGLSLHighlighter::resetState()
 {
     mRange.state = RangeState::rsUnknown;
     mRange.braceLevel = 0;
@@ -1605,37 +1547,37 @@ void SynEditCppHighlighter::resetState()
     mAsmStart = false;
 }
 
-SynHighlighterClass SynEditCppHighlighter::getClass() const
+SynHighlighterClass SynEditGLSLHighlighter::getClass() const
 {
-    return SynHighlighterClass::CppHighlighter;
+    return SynHighlighterClass::GLSLHighlighter;
 }
 
-QString SynEditCppHighlighter::getName() const
+QString SynEditGLSLHighlighter::getName() const
 {
     return SYN_HIGHLIGHTER_CPP;
 }
 
-QString SynEditCppHighlighter::languageName()
+QString SynEditGLSLHighlighter::languageName()
 {
-    return "cpp";
+    return "glsl";
 }
 
-SynHighlighterLanguage SynEditCppHighlighter::language()
+SynHighlighterLanguage SynEditGLSLHighlighter::language()
 {
-    return SynHighlighterLanguage::Cpp;
+    return SynHighlighterLanguage::GLSL;
 }
 
-SynRangeState SynEditCppHighlighter::getRangeState() const
+SynRangeState SynEditGLSLHighlighter::getRangeState() const
 {
     return mRange;
 }
 
-bool SynEditCppHighlighter::isIdentChar(const QChar &ch) const
+bool SynEditGLSLHighlighter::isIdentChar(const QChar &ch) const
 {
-    return ch=='_' || ch.isDigit() || ch.isLetter();
+    return ch=='_' || (ch>='a' && ch<='z') || (ch>='A' && ch<='Z') || (ch>='0' && ch<='9');
 }
 
-QSet<QString> SynEditCppHighlighter::keywords() const
+QSet<QString> SynEditGLSLHighlighter::keywords() const
 {
     return Keywords;
 }

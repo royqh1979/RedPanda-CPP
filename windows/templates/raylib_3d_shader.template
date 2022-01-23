@@ -9,8 +9,8 @@ Category=3D
 Category[zh_CN]=3D
 
 [Unit0]
-CPPName=main.cpp
-C=raylib_3d_shader_cpp.txt
+CPPName=main.c
+C=raylib_3d_shader_c.txt
 
 [Unit1]
 Source=raylib_base.vs
@@ -22,7 +22,7 @@ Target=fragment_shader.fs
 
 [Project]
 UnitCount=3
-Type=0
-IsCpp=1
+Type=1
+IsCpp=0
 linker=-lraylib -lopengl32 -lgdi32 -lwinmm_@@__@@_
 

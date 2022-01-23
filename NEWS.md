@@ -14,6 +14,7 @@ Red Panda C++ Version 0.13.3
   - fix: editor crash when no highlighter is assigned (the editing file is a not c/cpp source file);
   - fix: ')' not correctly skip in the editor when no highlighter is assigned (the editing file is a not c/cpp source file);
   - fix: Undo in the editor will lose line indents when no highlighter is assigned (the editing file is a not c/cpp source file);
+  - enhancement: highlighter for GLSL (OpenGL Shading Language)
 
 Red Panda C++ Version 0.13.2
   - fix: "delete and exit" button in the environtment / folder option page doesn't work correctly 

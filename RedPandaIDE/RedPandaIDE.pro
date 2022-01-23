@@ -116,6 +116,7 @@ SOURCES += \
     qsynedit/highlighter/base.cpp \
     qsynedit/highlighter/composition.cpp \
     qsynedit/highlighter/cpp.cpp \
+    qsynedit/highlighter/glsl.cpp \
     settingsdialog/compilersetdirectorieswidget.cpp \
     settingsdialog/compilersetoptionwidget.cpp \
     settings.cpp \
@@ -238,6 +239,7 @@ HEADERS += \
     qsynedit/highlighter/base.h \
     qsynedit/highlighter/composition.h \
     qsynedit/highlighter/cpp.h \
+    qsynedit/highlighter/glsl.h \
     settingsdialog/compilersetdirectorieswidget.h \
     settingsdialog/compilersetoptionwidget.h \
     settings.h \

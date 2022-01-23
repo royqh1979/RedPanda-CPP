@@ -80,6 +80,11 @@ void SynHighlighter::nextToEol()
         next();
 }
 
+QSet<QString> SynHighlighter::keywords() const
+{
+    return QSet<QString>();
+}
+
 bool SynHighlighter::isSpaceChar(const QChar &ch)
 {
     return ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n';
