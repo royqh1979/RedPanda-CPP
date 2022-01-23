@@ -13,6 +13,7 @@ Red Panda C++ Version 0.13.3
   - fix: line info in the mouse tip of statement not correct
   - fix: editor crash when no highlighter is assigned (the editing file is a not c/cpp source file);
   - fix: ')' not correctly skip in the editor when no highlighter is assigned (the editing file is a not c/cpp source file);
+  - fix: Undo in the editor will lose line indents when no highlighter is assigned (the editing file is a not c/cpp source file);
 
 Red Panda C++ Version 0.13.2
   - fix: "delete and exit" button in the environtment / folder option page doesn't work correctly 
