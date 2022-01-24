@@ -773,9 +773,8 @@ p, li { white-space: pre-wrap; }
         <translation>链接时加入下列选项</translation>
     </message>
     <message>
-        <location filename="settingsdialog/compilersetoptionwidget.ui" line="141"/>
         <source>Add Charset arguments when calling the compiler</source>
-        <translation>编译时自动加入字符编码选项</translation>
+        <translation type="vanished">编译时自动加入字符编码选项</translation>
     </message>
     <message>
         <location filename="settingsdialog/compilersetoptionwidget.ui" line="35"/>
@@ -806,6 +805,12 @@ p, li { white-space: pre-wrap; }
         <location filename="settingsdialog/compilersetoptionwidget.ui" line="98"/>
         <source>Remove</source>
         <translation>删除</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/compilersetoptionwidget.ui" line="141"/>
+        <source>Convert Executable&apos;s Charset as</source>
+        <oldsource>Convert Executable&apos;s Charset</oldsource>
+        <translation>将可执行文件中的字符串转码为</translation>
     </message>
     <message>
         <location filename="settingsdialog/compilersetoptionwidget.ui" line="157"/>
@@ -902,12 +907,12 @@ p, li { white-space: pre-wrap; }
         <translation>选择性能分析器</translation>
     </message>
     <message>
-        <location filename="settingsdialog/compilersetoptionwidget.cpp" line="285"/>
+        <location filename="settingsdialog/compilersetoptionwidget.cpp" line="283"/>
         <source>Confirm</source>
         <translation>确认</translation>
     </message>
     <message>
-        <location filename="settingsdialog/compilersetoptionwidget.cpp" line="277"/>
+        <location filename="settingsdialog/compilersetoptionwidget.cpp" line="275"/>
         <source>Red Panda C++ will clear current compiler list and search for compilers in the following locations:&lt;br /&gt; &apos;%1&apos;&lt;br /&gt; &apos;%2&apos;&lt;br /&gt;Are you really want to continue?</source>
         <oldsource>Red Panda C++ will clear current compiler list and search for compilers in the following locations:
  &apos;%1&apos;
@@ -916,50 +921,50 @@ Are you really want to continue?</oldsource>
         <translation>小熊猫C++ 将会清除现有的编译器配置列表，然后在下列文件夹中搜索编译器:&lt;br/&gt; &apos;%1&apos;&lt;br/&gt; &apos;%2&apos;&lt;br /&gt;你确定要继续吗？</translation>
     </message>
     <message>
-        <location filename="settingsdialog/compilersetoptionwidget.cpp" line="65"/>
+        <location filename="settingsdialog/compilersetoptionwidget.cpp" line="64"/>
         <source>ANSI</source>
         <translation>ANSI</translation>
     </message>
     <message>
-        <location filename="settingsdialog/compilersetoptionwidget.cpp" line="66"/>
+        <location filename="settingsdialog/compilersetoptionwidget.cpp" line="65"/>
         <source>UTF-8</source>
         <translation>UTF-8</translation>
     </message>
     <message>
-        <location filename="settingsdialog/compilersetoptionwidget.cpp" line="282"/>
+        <location filename="settingsdialog/compilersetoptionwidget.cpp" line="280"/>
         <source>Red Panda C++ will clear current compiler list and search for compilers in the the PATH. &lt;br /&gt;Are you really want to continue?</source>
         <translation>小熊猫C++ 将会清除现有的编译器配置列表，然后在PATH路径中搜索gcc编译器.&lt;br /&gt;你确定要继续吗？</translation>
     </message>
     <message>
-        <location filename="settingsdialog/compilersetoptionwidget.cpp" line="293"/>
-        <location filename="settingsdialog/compilersetoptionwidget.cpp" line="317"/>
+        <location filename="settingsdialog/compilersetoptionwidget.cpp" line="291"/>
+        <location filename="settingsdialog/compilersetoptionwidget.cpp" line="315"/>
         <source>Failed</source>
         <translation>失败</translation>
     </message>
     <message>
-        <location filename="settingsdialog/compilersetoptionwidget.cpp" line="293"/>
-        <location filename="settingsdialog/compilersetoptionwidget.cpp" line="317"/>
+        <location filename="settingsdialog/compilersetoptionwidget.cpp" line="291"/>
+        <location filename="settingsdialog/compilersetoptionwidget.cpp" line="315"/>
         <source>Can&apos;t find any compiler.</source>
         <translation>找不到编译器</translation>
     </message>
     <message>
-        <location filename="settingsdialog/compilersetoptionwidget.cpp" line="299"/>
-        <location filename="settingsdialog/compilersetoptionwidget.cpp" line="323"/>
+        <location filename="settingsdialog/compilersetoptionwidget.cpp" line="297"/>
+        <location filename="settingsdialog/compilersetoptionwidget.cpp" line="321"/>
         <source>Compiler Set Name</source>
         <translation>编译器配置名称</translation>
     </message>
     <message>
-        <location filename="settingsdialog/compilersetoptionwidget.cpp" line="299"/>
+        <location filename="settingsdialog/compilersetoptionwidget.cpp" line="297"/>
         <source>Name</source>
         <translation>名称</translation>
     </message>
     <message>
-        <location filename="settingsdialog/compilersetoptionwidget.cpp" line="308"/>
+        <location filename="settingsdialog/compilersetoptionwidget.cpp" line="306"/>
         <source>Compiler Set Folder</source>
         <translation>编译器所在文件夹</translation>
     </message>
     <message>
-        <location filename="settingsdialog/compilersetoptionwidget.cpp" line="323"/>
+        <location filename="settingsdialog/compilersetoptionwidget.cpp" line="321"/>
         <source>New name</source>
         <translation>新名称</translation>
     </message>
@@ -6028,6 +6033,26 @@ Are you really want to continue?</oldsource>
         <translation>无法找到%1程序&quot;%2&quot;</translation>
     </message>
     <message>
+        <location filename="settings.cpp" line="1594"/>
+        <source>C Compiler</source>
+        <translation>C编译器</translation>
+    </message>
+    <message>
+        <location filename="settings.cpp" line="1599"/>
+        <source>C++ Compiler</source>
+        <translation>C++编译器</translation>
+    </message>
+    <message>
+        <location filename="settings.cpp" line="1604"/>
+        <source>Maker</source>
+        <translation>构建程序(Make)</translation>
+    </message>
+    <message>
+        <location filename="settings.cpp" line="1609"/>
+        <source>Debugger</source>
+        <translation>调试器</translation>
+    </message>
+    <message>
         <location filename="settings.cpp" line="2137"/>
         <source>C options</source>
         <translation>C语言选项</translation>
@@ -6093,7 +6118,7 @@ Are you really want to continue?</oldsource>
         <translation>生成调试信息(-g3)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2631"/>
+        <location filename="settings.cpp" line="2636"/>
         <source>Would you like Red Panda C++ to search for compilers in PATH?</source>
         <translation>您同意小熊猫C++在PATH路径中寻找gcc编译器吗？</translation>
     </message>
@@ -6192,34 +6217,34 @@ Are you really want to continue?</oldsource>
         <translation>只生成汇编代码(-S)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2592"/>
-        <location filename="settings.cpp" line="2633"/>
+        <location filename="settings.cpp" line="2597"/>
+        <location filename="settings.cpp" line="2638"/>
         <source>Confirm</source>
         <translation>确认</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2593"/>
+        <location filename="settings.cpp" line="2598"/>
         <source>The following problems were found during validation of compiler set &quot;%1&quot;:</source>
         <translation>在验证编译器设置&quot;%1&quot;时遇到了下列问题：</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2597"/>
+        <location filename="settings.cpp" line="2602"/>
         <source>Would you like Red Panda C++ to remove them for you and add the default paths to the valid paths?</source>
         <translation>是否让小熊猫C++删除这些配置，并尝试重新建立配置？</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2599"/>
+        <location filename="settings.cpp" line="2604"/>
         <source>Leaving those directories will lead to problems during compilation.&lt;br /&gt;&lt;br /&gt;Unless you know exactly what you&apos;re doing, it is recommended that you click Yes.</source>
         <translation>如果仍然保留这些设置，可能会导致编译错误。&lt;br /&gt;&lt;br /&gt;请选择“是”，除非您清楚的知道选择“否”的后果，</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2623"/>
-        <location filename="settings.cpp" line="2629"/>
+        <location filename="settings.cpp" line="2628"/>
+        <location filename="settings.cpp" line="2634"/>
         <source>Compiler set not configuared.</source>
         <translation>未配置编译器设置。</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2625"/>
+        <location filename="settings.cpp" line="2630"/>
         <source>Would you like Red Panda C++ to search for compilers in the following locations: &lt;BR /&gt;&apos;%1&apos;&lt;BR /&gt;&apos;%2&apos;? </source>
         <translation>您需要小熊猫C++在下列位置搜索编译器吗：&lt;br /&gt;%1&lt;br /&gt;%2</translation>
     </message>
@@ -6244,13 +6269,13 @@ Are you really want to continue?</oldsource>
         <translation>C++包含文件</translation>
     </message>
     <message>
-        <location filename="settingsdialog/compilersetoptionwidget.cpp" line="112"/>
+        <location filename="settingsdialog/compilersetoptionwidget.cpp" line="111"/>
         <location filename="settingsdialog/projectcompilerwidget.cpp" line="80"/>
         <source>No</source>
         <translation>否</translation>
     </message>
     <message>
-        <location filename="settingsdialog/compilersetoptionwidget.cpp" line="113"/>
+        <location filename="settingsdialog/compilersetoptionwidget.cpp" line="112"/>
         <location filename="settingsdialog/projectcompilerwidget.cpp" line="81"/>
         <source>Yes</source>
         <translation>是</translation>
@@ -6753,7 +6778,7 @@ Are you really want to continue?</oldsource>
     <message>
         <location filename="widgets/searchdialog.cpp" line="39"/>
         <location filename="widgets/searchdialog.cpp" line="154"/>
-        <location filename="widgets/searchdialog.cpp" line="264"/>
+        <location filename="widgets/searchdialog.cpp" line="272"/>
         <source>Replace</source>
         <translation>替换</translation>
     </message>
@@ -6763,9 +6788,35 @@ Are you really want to continue?</oldsource>
         <translation>在文件中替换</translation>
     </message>
     <message>
-        <location filename="widgets/searchdialog.cpp" line="265"/>
+        <location filename="widgets/searchdialog.cpp" line="256"/>
+        <source>Continue Search</source>
+        <oldsource>Search Around</oldsource>
+        <translation>继续查找</translation>
+    </message>
+    <message>
+        <location filename="widgets/searchdialog.cpp" line="257"/>
+        <location filename="widgets/searchdialog.cpp" line="294"/>
+        <source>End of file has been reached. </source>
+        <oldsource>End of file has been reached.</oldsource>
+        <translation>已到达文件结尾。</translation>
+    </message>
+    <message>
+        <location filename="widgets/searchdialog.cpp" line="258"/>
+        <location filename="widgets/searchdialog.cpp" line="295"/>
+        <source>Do you want to continue from file&apos;s beginning?</source>
+        <oldsource>Do you want to start from beginning?</oldsource>
+        <translation>是否从文件开头继续？</translation>
+    </message>
+    <message>
+        <location filename="widgets/searchdialog.cpp" line="273"/>
         <source>Replace this occurrence of &apos;&apos;%1&apos;&apos;?</source>
         <translation>替换这里的&quot;%1&quot;？</translation>
+    </message>
+    <message>
+        <location filename="widgets/searchdialog.cpp" line="293"/>
+        <source>Continue Replace</source>
+        <oldsource>Replace Around</oldsource>
+        <translation>继续替换</translation>
     </message>
 </context>
 <context>
@@ -7368,7 +7419,7 @@ Are you really want to continue?</oldsource>
         <translation>无法读取文件&apos;%1&apos;!</translation>
     </message>
     <message>
-        <location filename="qsynedit/TextBuffer.cpp" line="615"/>
+        <location filename="qsynedit/TextBuffer.cpp" line="629"/>
         <source>Can&apos;t open file &apos;%1&apos; for save!</source>
         <translation>无法写入文件&apos;%2&apos;!</translation>
     </message>

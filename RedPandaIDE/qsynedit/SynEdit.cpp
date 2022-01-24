@@ -4755,7 +4755,7 @@ void SynEdit::doSetSelText(const QString &Value)
 }
 
 int SynEdit::searchReplace(const QString &sSearch, const QString &sReplace, SynSearchOptions sOptions, PSynSearchBase searchEngine,
-                    SynSearchMathedProc matchedCallback)
+                    SynSearchMathedProc matchedCallback, SynSearchConfirmAroundProc confirmAroundCallback)
 {
     if (!searchEngine)
         return 0;
@@ -4917,9 +4917,10 @@ int SynEdit::searchReplace(const QString &sSearch, const QString &sReplace, SynS
                 ptCurrent.Line--;
             else
                 ptCurrent.Line++;
-            if (
-                    ((ptCurrent.Line < ptStart.Line) || (ptCurrent.Line > ptEnd.Line))
-                    && bFromCursor){
+            if (((ptCurrent.Line < ptStart.Line) || (ptCurrent.Line > ptEnd.Line))
+                    && bFromCursor && sOptions.testFlag(ssoWrapAround)){
+                if (confirmAroundCallback && !confirmAroundCallback())
+                    break;
                 //search start from cursor, search has finished but no result founds
                 bFromCursor = false;
                 ptStart.Char = 1;

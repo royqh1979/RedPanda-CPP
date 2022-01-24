@@ -250,7 +250,15 @@ void SearchDialog::on_btnExecute_clicked()
     if (actionType == SearchAction::Find) {
         Editor *e = pMainWindow->editorList()->getEditor();
         if (e!=nullptr) {
-            findCount+=execute(e,ui->cbFind->currentText(),"");
+            findCount+=execute(e,ui->cbFind->currentText(),"",nullptr,
+                               [](){
+                                   return QMessageBox::question(pMainWindow,
+                                                         tr("Continue Search"),
+                                                         tr("End of file has been reached. ")
+                                                         +tr("Do you want to continue from file's beginning?"),
+                                                         QMessageBox::Yes|QMessageBox::No,
+                                                         QMessageBox::Yes) == QMessageBox::Yes;
+                               });
         }
     } else if (actionType == SearchAction::Replace) {
         Editor *e = pMainWindow->editorList()->getEditor();
@@ -279,6 +287,14 @@ void SearchDialog::on_btnExecute_clicked()
                 } else {
                     return SynSearchAction::ReplaceAll;
                 }
+            },
+            [](){
+                return QMessageBox::question(pMainWindow,
+                                      tr("Continue Replace"),
+                                      tr("End of file has been reached. ")
+                                      +tr("Do you want to continue from file's beginning?"),
+                                      QMessageBox::Yes|QMessageBox::No,
+                                      QMessageBox::Yes) == QMessageBox::Yes;
             });
         }
 
@@ -376,7 +392,9 @@ void SearchDialog::on_btnExecute_clicked()
     }
 }
 
-int SearchDialog::execute(SynEdit *editor, const QString &sSearch, const QString &sReplace, SynSearchMathedProc matchCallback)
+int SearchDialog::execute(SynEdit *editor, const QString &sSearch, const QString &sReplace,
+                          SynSearchMathedProc matchCallback,
+                          SynSearchConfirmAroundProc confirmAroundCallback)
 {
     if (editor==nullptr)
         return 0;
@@ -398,7 +416,7 @@ int SearchDialog::execute(SynEdit *editor, const QString &sSearch, const QString
     }
 
     return editor->searchReplace(sSearch, sReplace, mSearchOptions,
-                          mSearchEngine, matchCallback);
+                          mSearchEngine, matchCallback, confirmAroundCallback);
 }
 
 std::shared_ptr<SearchResultTreeItem> SearchDialog::batchFindInEditor(SynEdit *e, const QString& filename,const QString &keyword)

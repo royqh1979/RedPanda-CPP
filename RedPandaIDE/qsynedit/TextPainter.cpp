@@ -720,7 +720,6 @@ void SynEditTextPainter::PaintFoldAttributes()
         // Now loop through all the lines. The indices are valid for Lines.
         for (cRow = aFirstRow; cRow<=aLastRow;cRow++) {
             vLine = edit->rowToLine(cRow);
-            qDebug()<<cRow<<vLine;
             if (vLine > edit->mLines->count() && edit->mLines->count() > 0)
                 break;
             // Set vertical coord
