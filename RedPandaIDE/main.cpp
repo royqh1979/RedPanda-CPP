@@ -25,6 +25,7 @@
 #include <QMessageBox>
 #include <QStringList>
 #include <QAbstractNativeEventFilter>
+#include <QDesktopWidget>
 #include <QDir>
 #include "common.h"
 #include "colorscheme.h"
@@ -60,7 +61,8 @@ bool WindowLogoutEventFilter::nativeEventFilter(const QByteArray & /*eventType*/
         }
         break;
     case WM_DPICHANGED:
-        //todo
+        setDesktopDpi(HIWORD(pMsg->wParam));
+        pMainWindow->updateDPI();
         break;
     }
     return false;
@@ -159,6 +161,7 @@ int main(int argc, char *argv[])
         //set default open folder
         QDir::setCurrent(pSettings->environment().defaultOpenFolder());
 
+        setDesktopDpi(qApp->desktop()->logicalDpiY());
 
         MainWindow mainWindow;
         pMainWindow = &mainWindow;

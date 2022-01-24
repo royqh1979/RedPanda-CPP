@@ -24,6 +24,7 @@ Red Panda C++ Version 0.13.3
   - fix: insert code snippets will crash, if current compiler set's include dir list is not empty and lib dir list is empty
   - fix: search around option can't be disabled
   - enhancement: show a confirm dialog when search/replace around
+  - enhancement: auto zoom ui when screen's zoom factor changed (windows)
   
 Red Panda C++ Version 0.13.2
   - fix: "delete and exit" button in the environtment / folder option page doesn't work correctly 
