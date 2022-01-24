@@ -21,7 +21,7 @@ Red Panda C++ Version 0.13.3
   - fix: when open a file, all blank lines's indents are removed.
   - fix: indent lines displayed at wrong position, when there are folded lines
   - fix: if editor's active line color is disabled, caret's position may not be correct redrawn
-  - fix: crash if compiler set's include dir list is not empty and lib dir list is empry
+  - fix: insert code snippets will crash, if current compiler set's include dir list is not empty and lib dir list is empty
   
 Red Panda C++ Version 0.13.2
   - fix: "delete and exit" button in the environtment / folder option page doesn't work correctly 
