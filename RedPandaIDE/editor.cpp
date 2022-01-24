@@ -94,16 +94,16 @@ Editor::Editor(QWidget *parent, const QString& filename,
   mCurrentHighlightedWord(),
   mSaving(false)
 {
+    qDebug()<<"inited1 ";
     mCurrentLineModified = false;
     mUseCppSyntax = pSettings->editor().defaultFileCpp();
     if (mFilename.isEmpty()) {
         mFilename = tr("untitled")+QString("%1").arg(getNewFileNumber());
     }
+    qDebug()<<"inited2 ";
     QFileInfo fileInfo(mFilename);
-    if (mParentPageControl!=nullptr) {
-        mParentPageControl->addTab(this,"");
-        updateCaption();
-    }
+
+    qDebug()<<"inited3 ";
 
     PSynHighlighter highlighter;
     if (!isNew) {
@@ -116,6 +116,8 @@ Editor::Editor(QWidget *parent, const QString& filename,
             mFileEncoding = mEncodingOption;
         highlighter=highlighterManager.getCppHighlighter();
     }
+
+    qDebug()<<"----------inited";
 
     if (highlighter) {
         setHighlighter(highlighter);
@@ -134,7 +136,6 @@ Editor::Editor(QWidget *parent, const QString& filename,
             && mParser && (mParser->isSystemHeaderFile(mFilename) || mParser->isProjectHeaderFile(mFilename))) {
         this->setModified(false);
         setReadOnly(true);
-        updateCaption();
     }
 
     mCompletionPopup = pMainWindow->completionPopup();
@@ -180,6 +181,10 @@ Editor::Editor(QWidget *parent, const QString& filename,
         resetBreakpoints();
     }
     mStatementColors = pMainWindow->statementColors();
+    if (mParentPageControl!=nullptr) {
+        mParentPageControl->addTab(this,"");
+        updateCaption();
+    }
 }
 
 Editor::~Editor() {
@@ -524,12 +529,6 @@ void Editor::wheelEvent(QWheelEvent *event) {
 void Editor::focusInEvent(QFocusEvent *event)
 {
     SynEdit::focusInEvent(event);
-    if (mParser) {
-        connect(mParser.get(),
-                &CppParser::onEndParsing,
-                this,
-                &SynEdit::invalidate);
-    }
     pMainWindow->updateAppTitle();
     pMainWindow->updateEditorActions();
     pMainWindow->updateStatusbarForLineCol();
@@ -540,12 +539,6 @@ void Editor::focusInEvent(QFocusEvent *event)
 void Editor::focusOutEvent(QFocusEvent *event)
 {
     SynEdit::focusOutEvent(event);
-    if (mParser) {
-        disconnect(mParser.get(),
-                &CppParser::onEndParsing,
-                this,
-                &SynEdit::invalidate);
-    }
     //pMainWindow->updateClassBrowserForEditor(nullptr);
     pMainWindow->updateStatusbarForLineCol();
     pMainWindow->updateForStatusbarModeInfo();
@@ -1193,6 +1186,41 @@ void Editor::closeEvent(QCloseEvent *)
         mCompletionPopup->hide();
     if (pMainWindow->functionTip())
         pMainWindow->functionTip()->hide();
+}
+
+void Editor::showEvent(QShowEvent */*event*/)
+{
+    qDebug()<<"show event";
+    if (pSettings->codeCompletion().clearWhenEditorHidden()
+            && !inProject()) {
+        initParser();
+    }
+    if (mParser) {
+        connect(mParser.get(),
+                &CppParser::onEndParsing,
+                this,
+                &SynEdit::invalidate);
+    }
+    if (pSettings->codeCompletion().clearWhenEditorHidden()
+            && !inProject()) {
+        reparse();
+    }
+    reparseTodo();
+    setHideTime(QDateTime());
+}
+
+void Editor::hideEvent(QHideEvent */*event*/)
+{
+    if (mParser) {
+        disconnect(mParser.get(),
+                &CppParser::onEndParsing,
+                this,
+                &SynEdit::invalidate);
+    }
+    if (pSettings->codeCompletion().clearWhenEditorHidden()
+            && !inProject() && mParser)
+        mParser->reset();
+    setHideTime(QDateTime::currentDateTime());
 }
 
 void Editor::copyToClipboard()
@@ -2407,6 +2435,7 @@ void Editor::reparse()
     if (highlighter()->language() != SynHighlighterLanguage::Cpp
              && highlighter()->language() != SynHighlighterLanguage::GLSL)
         return;
+    qDebug()<<"reparse"<<mParser.get()<<mFilename<<mInProject;
     parseFile(mParser,mFilename,mInProject);
 }
 
@@ -3124,7 +3153,7 @@ QString Editor::getFileHint(const QString &s)
     return "";
 }
 
-QString Editor::getParserHint(const QStringList& expression,const QString &s, int line)
+QString Editor::getParserHint(const QStringList& expression,const QString &/*s*/, int line)
 {
     // This piece of code changes the parser database, possibly making hints and code completion invalid...
     QString result;

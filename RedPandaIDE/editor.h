@@ -372,6 +372,11 @@ protected:
     void mouseReleaseEvent(QMouseEvent *event) override;
     void inputMethodEvent(QInputMethodEvent *) override;
     void closeEvent(QCloseEvent *event) override;
+
+    // QWidget interface
+protected:
+    void showEvent(QShowEvent *event) override;
+    void hideEvent(QHideEvent *event) override;
 };
 
 QString getWordAtPosition(SynEdit* editor,

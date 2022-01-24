@@ -43,7 +43,7 @@ PSynHighlighter HighlighterManager::getHighlighter(const QString &filename)
                 || suffix == "CPP" || suffix =="H" || suffix == "c++"
                 || suffix == "h++") {
             return getCppHighlighter();
-        } else if (suffix == "vs" || suffix == "fs") {
+        } else if (suffix == "vs" || suffix == "fs" || suffix == "frag") {
             return getGLSLHighlighter();
         }
     }

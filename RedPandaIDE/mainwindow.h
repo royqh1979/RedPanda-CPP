@@ -243,8 +243,6 @@ private:
     void doCompileRun(RunType runType);
     void updateProblemCaseOutput(POJProblemCase problemCase);
     void applyCurrentProblemCaseChanges();
-    void updateEditorParser(QTabWidget* tabWidget);
-    void updateEditorHideTime(QTabWidget* tabWidget);
     void showHideInfosTab(QWidget *widget, bool show);
     void showHideMessagesTab(QWidget *widget, bool show);
     void prepareTabInfosData();
