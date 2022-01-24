@@ -94,17 +94,12 @@ Editor::Editor(QWidget *parent, const QString& filename,
   mCurrentHighlightedWord(),
   mSaving(false)
 {
-    qDebug()<<"inited1 ";
     mCurrentLineModified = false;
     mUseCppSyntax = pSettings->editor().defaultFileCpp();
     if (mFilename.isEmpty()) {
         mFilename = tr("untitled")+QString("%1").arg(getNewFileNumber());
     }
-    qDebug()<<"inited2 ";
     QFileInfo fileInfo(mFilename);
-
-    qDebug()<<"inited3 ";
-
     PSynHighlighter highlighter;
     if (!isNew) {
         loadFile();
@@ -116,8 +111,6 @@ Editor::Editor(QWidget *parent, const QString& filename,
             mFileEncoding = mEncodingOption;
         highlighter=highlighterManager.getCppHighlighter();
     }
-
-    qDebug()<<"----------inited";
 
     if (highlighter) {
         setHighlighter(highlighter);
@@ -1190,7 +1183,6 @@ void Editor::closeEvent(QCloseEvent *)
 
 void Editor::showEvent(QShowEvent */*event*/)
 {
-    qDebug()<<"show event";
     if (pSettings->codeCompletion().clearWhenEditorHidden()
             && !inProject()) {
         initParser();
@@ -2435,7 +2427,6 @@ void Editor::reparse()
     if (highlighter()->language() != SynHighlighterLanguage::Cpp
              && highlighter()->language() != SynHighlighterLanguage::GLSL)
         return;
-    qDebug()<<"reparse"<<mParser.get()<<mFilename<<mInProject;
     parseFile(mParser,mFilename,mInProject);
 }
 
