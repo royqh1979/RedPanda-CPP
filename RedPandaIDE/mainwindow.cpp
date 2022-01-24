@@ -691,7 +691,6 @@ void MainWindow::setActiveBreakpoint(QString FileName, int Line, bool setFocus)
 
 void MainWindow::updateDPI()
 {
-    qDebug()<<"dpi changed!"<<desktopDpi();
     applySettings();
 }
 
