@@ -266,14 +266,8 @@ void SynEdit::setCaretXYEx(bool CallEnsureCursorPosVisible, BufferCoord value)
         if (mCaretY != value.Line) {
             int oldCaretY = mCaretY;
             mCaretY = value.Line;
-            if (mActiveLineColor.isValid()) {
-                invalidateLine(mCaretY);
-                invalidateLine(oldCaretY);
-            }
-            if (mGutter.activeLineTextColor().isValid()) {
-                invalidateGutterLine(mCaretY);
-                invalidateGutterLine(oldCaretY);
-            }
+            invalidateLine(mCaretY);
+            invalidateLine(oldCaretY);
             mStatusChanges.setFlag(SynStatusChange::scCaretY);
         }
         // Call UpdateLastCaretX before DecPaintLock because the event handler it

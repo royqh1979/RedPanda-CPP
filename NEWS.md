@@ -20,6 +20,7 @@ Red Panda C++ Version 0.13.3
   - enhancement: add exec charset option to compiler set settings
   - fix: when open a file, all blank lines's indents are removed.
   - fix: indent lines displayed at wrong position, when there are folded lines
+  - fix: if editor's active line color is disabled, caret's position may not be correct redrawn
   
 Red Panda C++ Version 0.13.2
   - fix: "delete and exit" button in the environtment / folder option page doesn't work correctly 
