@@ -19,6 +19,7 @@ Red Panda C++ Version 0.13.3
   - fix: project files' charset settings doesn't work correctly
   - enhancement: add exec charset option to compiler set settings
   - fix: when open a file, all blank lines's indents are removed.
+  - fix: indent lines displayed at wrong position, when there are folded lines
   
 Red Panda C++ Version 0.13.2
   - fix: "delete and exit" button in the environtment / folder option page doesn't work correctly 
