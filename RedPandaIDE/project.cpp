@@ -1760,7 +1760,12 @@ const QByteArray &ProjectUnit::encoding() const
 
 void ProjectUnit::setEncoding(const QByteArray &newEncoding)
 {
-    mEncoding = newEncoding;
+    if (mEncoding != newEncoding) {
+        if (mEditor) {
+            mEditor->setEncodingOption(newEncoding);
+        }
+        mEncoding = newEncoding;
+    }
 }
 
 bool ProjectUnit::modified() const

@@ -980,7 +980,8 @@ void MainWindow::openFile(const QString &filename, QTabWidget* page)
             unit = mProject->findUnitByFilename(filename);
         }
         bool inProject = (mProject && unit);
-        editor = mEditorList->newEditor(filename,ENCODING_AUTO_DETECT,
+        QByteArray encoding = unit ? unit->encoding() : ENCODING_AUTO_DETECT;
+        editor = mEditorList->newEditor(filename,encoding,
                                     inProject, false, page);
         if (mProject) {
             mProject->associateEditorToUnit(editor,unit);
@@ -2011,7 +2012,8 @@ void MainWindow::loadLastOpens()
             unit = mProject->findUnitByFilename(editorFilename);
         }
         bool inProject = (mProject && unit);
-        Editor * editor = mEditorList->newEditor(editorFilename,ENCODING_AUTO_DETECT,inProject,false,page);
+        QByteArray encoding = unit ? unit->encoding() : ENCODING_AUTO_DETECT;
+        Editor * editor = mEditorList->newEditor(editorFilename, encoding, inProject,false,page);
         if (mProject) {
             mProject->associateEditorToUnit(editor,unit);
         }

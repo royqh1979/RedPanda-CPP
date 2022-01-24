@@ -16,7 +16,8 @@ Red Panda C++ Version 0.13.3
   - fix: Undo in the editor will lose line indents when no highlighter is assigned (the editing file is a not c/cpp source file);
   - enhancement: highlighter for GLSL (OpenGL Shading Language)
   - add a new template for raylib shader apps
-
+  - fix: project files' charset settings doesn't work correctly
+  
 Red Panda C++ Version 0.13.2
   - fix: "delete and exit" button in the environtment / folder option page doesn't work correctly 
   - fix: crash when closing the options dialog under Ubuntu 20.04 LTS ( no memory leak now)
