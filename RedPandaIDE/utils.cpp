@@ -825,7 +825,7 @@ QString parseMacros(const QString &s)
 
         // Only provide the first lib dir
         if (compilerSet->defaultLibDirs().count()>0)
-            result.replace("<LIB>", localizePath(compilerSet->defaultCppIncludeDirs().front()));
+            result.replace("<LIB>", localizePath(compilerSet->defaultLibDirs().front()));
         else
             result.replace("<LIB>","");
     }
