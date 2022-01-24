@@ -17,6 +17,7 @@ Red Panda C++ Version 0.13.3
   - enhancement: highlighter for GLSL (OpenGL Shading Language)
   - add a new template for raylib shader apps
   - fix: project files' charset settings doesn't work correctly
+  - enhancement: add exec charset option to compiler set settings
   
 Red Panda C++ Version 0.13.2
   - fix: "delete and exit" button in the environtment / folder option page doesn't work correctly 

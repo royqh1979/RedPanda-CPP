@@ -282,6 +282,8 @@ QString Compiler::getCharsetArgument(const QByteArray& encoding)
     if (compilerSet()->autoAddCharsetParams() && encoding != ENCODING_ASCII
             && compilerSet()->compilerType()!="Clang") {
         QString encodingName;
+        QString execEncodingName;
+        QString compilerSetExecCharset = compilerSet()->execCharset();
         QString systemEncodingName=pCharsetInfoManager->getDefaultSystemEncoding();
         if (encoding == ENCODING_SYSTEM_DEFAULT) {
             encodingName = systemEncodingName;
@@ -290,8 +292,14 @@ QString Compiler::getCharsetArgument(const QByteArray& encoding)
         } else {
             encodingName = encoding;
         }
+        if (compilerSetExecCharset == ENCODING_SYSTEM_DEFAULT
+                || compilerSetExecCharset.isEmpty()) {
+            execEncodingName = systemEncodingName;
+        } else {
+            execEncodingName = compilerSetExecCharset;
+        }
         result += QString(" -finput-charset=%1 -fexec-charset=%2")
-                .arg(encodingName,systemEncodingName);
+                .arg(encodingName, execEncodingName);
     }
     return result;
 }

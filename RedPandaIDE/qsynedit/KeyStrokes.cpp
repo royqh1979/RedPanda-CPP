@@ -217,7 +217,7 @@ void SynEditKeyStrokes::resetDefaults()
     add(SynEditorCommand::ecDeleteChar, Qt::Key_Delete, Qt::NoModifier);
     add(SynEditorCommand::ecDeleteLastChar, Qt::Key_Backspace, Qt::NoModifier);
     add(SynEditorCommand::ecDeleteLastChar, Qt::Key_Backspace, Qt::ShiftModifier);
-    add(SynEditorCommand::ecDeleteLastWord, Qt::Key_Backspace, Qt::ControlModifier);
+    add(SynEditorCommand::ecDeleteWordStart, Qt::Key_Backspace, Qt::ControlModifier);
     add(SynEditorCommand::ecUndo, Qt::Key_Backspace, Qt::AltModifier);
     add(SynEditorCommand::ecRedo, Qt::Key_Backspace, Qt::AltModifier|Qt::ShiftModifier);
     add(SynEditorCommand::ecLineBreak, Qt::Key_Return, Qt::NoModifier);

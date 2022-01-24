@@ -1387,6 +1387,7 @@ void Settings::Editor::setTabToSpaces(bool tabToSpaces)
 
 Settings::CompilerSet::CompilerSet(const QString& compilerFolder):
     mAutoAddCharsetParams(true),
+    mExecCharset(ENCODING_SYSTEM_DEFAULT),
     mStaticLink(true)
 {
     if (!compilerFolder.isEmpty()) {
@@ -2307,14 +2308,14 @@ QByteArray Settings::CompilerSet::getCompilerOutput(const QString &binDir, const
     return result.trimmed();
 }
 
-const QString &Settings::CompilerSet::execCharser() const
+const QString &Settings::CompilerSet::execCharset() const
 {
-    return mExecCharser;
+    return mExecCharset;
 }
 
-void Settings::CompilerSet::setExecCharser(const QString &newExecCharser)
+void Settings::CompilerSet::setExecCharset(const QString &newExecCharset)
 {
-    mExecCharser = newExecCharser;
+    mExecCharset = newExecCharset;
 }
 
 const QString &Settings::CompilerSet::debugServer() const
@@ -2760,7 +2761,7 @@ void Settings::CompilerSets::saveSet(int index)
     mSettings->mSettings.setValue("customLinkParams", pSet->customLinkParams());
     mSettings->mSettings.setValue("AddCharset", pSet->autoAddCharsetParams());
     mSettings->mSettings.setValue("StaticLink", pSet->staticLink());
-    mSettings->mSettings.setValue("ExecCharser", pSet->execCharser());
+    mSettings->mSettings.setValue("ExecCharset", pSet->execCharset());
 
     // Misc. properties
     mSettings->mSettings.setValue("DumpMachine", pSet->dumpMachine());
@@ -2820,13 +2821,16 @@ Settings::PCompilerSet Settings::CompilerSets::loadSet(int index)
     pSet->setIniOptions(mSettings->mSettings.value("Options").toByteArray());
 
     // Save extra 'general' options
-    pSet->setUseCustomCompileParams(mSettings->mSettings.value("useCustomCompileParams").toBool());
+    pSet->setUseCustomCompileParams(mSettings->mSettings.value("useCustomCompileParams", false).toBool());
     pSet->setCustomCompileParams(mSettings->mSettings.value("customCompileParams").toString());
-    pSet->setUseCustomLinkParams(mSettings->mSettings.value("useCustomLinkParams").toBool());
+    pSet->setUseCustomLinkParams(mSettings->mSettings.value("useCustomLinkParams", false).toBool());
     pSet->setCustomLinkParams(mSettings->mSettings.value("customLinkParams").toString());
-    pSet->setAutoAddCharsetParams(mSettings->mSettings.value("AddCharset").toBool());
-    pSet->setStaticLink(mSettings->mSettings.value("StaticLink").toBool());
-    pSet->setExecCharser(mSettings->mSettings.value("ExecCharser").toString());
+    pSet->setAutoAddCharsetParams(mSettings->mSettings.value("AddCharset", true).toBool());
+    pSet->setStaticLink(mSettings->mSettings.value("StaticLink", false).toBool());
+    pSet->setExecCharset(mSettings->mSettings.value("ExecCharset", ENCODING_SYSTEM_DEFAULT).toString());
+    if (pSet->execCharset().isEmpty()) {
+        pSet->setExecCharset(ENCODING_SYSTEM_DEFAULT);
+    }
 
     pSet->setDumpMachine(mSettings->mSettings.value("DumpMachine").toString());
     pSet->setVersion(mSettings->mSettings.value("Version").toString());

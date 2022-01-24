@@ -540,7 +540,6 @@
           <widget class="IssuesTable" name="tableIssues">
            <property name="font">
             <font>
-             <weight>50</weight>
              <bold>false</bold>
             </font>
            </property>
@@ -1395,7 +1394,7 @@
      <x>0</x>
      <y>0</y>
      <width>1114</width>
-     <height>26</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -1469,6 +1468,8 @@
     <addaction name="actionDelete_Line"/>
     <addaction name="actionDuplicate_Line"/>
     <addaction name="actionDelete_Word"/>
+    <addaction name="actionDelete_Last_Word"/>
+    <addaction name="actionDelete_to_Word_End"/>
     <addaction name="actionDelete_to_BOL"/>
     <addaction name="actionDelete_to_EOL"/>
    </widget>
@@ -2673,6 +2674,25 @@
    </property>
    <property name="text">
     <string>Interrupt</string>
+   </property>
+  </action>
+  <action name="actionDelete_Last_Word">
+   <property name="text">
+    <string>Delete To Word Begin</string>
+   </property>
+   <property name="toolTip">
+    <string>Delete To Word Begin</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+B</string>
+   </property>
+  </action>
+  <action name="actionDelete_to_Word_End">
+   <property name="text">
+    <string>Delete to Word End</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+E</string>
    </property>
   </action>
  </widget>

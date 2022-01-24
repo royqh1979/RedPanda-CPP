@@ -1631,6 +1631,16 @@ void Editor::deleteWord()
     ExecuteCommand(SynEditorCommand::ecDeleteWord,QChar(),nullptr);
 }
 
+void Editor::deleteToWordStart()
+{
+    ExecuteCommand(SynEditorCommand::ecDeleteWordStart,QChar(),nullptr);
+}
+
+void Editor::deleteToWordEnd()
+{
+    ExecuteCommand(SynEditorCommand::ecDeleteWordEnd,QChar(),nullptr);
+}
+
 void Editor::deleteLine()
 {
     ExecuteCommand(SynEditorCommand::ecDeleteLine,QChar(),nullptr);

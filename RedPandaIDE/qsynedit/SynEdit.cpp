@@ -1373,8 +1373,8 @@ BufferCoord SynEdit::wordEndEx(const BufferCoord &XY)
     // valid line?
     if ((CY >= 1) && (CY <= mLines->count())) {
         QString Line = mLines->getString(CY - 1);
-        if (CX <= Line.length() && CX-2>=0) {
-            if (isWordChar(Line[CX - 2]))
+        if (CX <= Line.length() && CX-1>=0) {
+            if (isWordChar(Line[CX - 1]))
                 CX = StrScanForNonWordChar(Line, CX);
             if (CX == 0)
                 CX = Line.length() + 1;
@@ -2022,12 +2022,27 @@ void SynEdit::doDeleteToEOL()
     deleteFromTo(caretXY(),BufferCoord{lineText().length()+1,mCaretY});
 }
 
-void SynEdit::doDeleteLastWord()
+void SynEdit::doDeleteToWordStart()
 {
     if (mReadOnly)
         return;
-    BufferCoord start = prevWordPos();
-    BufferCoord end = wordEndEx(start);
+    BufferCoord start = wordStart();
+    BufferCoord end = caretXY();
+    if (start==end) {
+        start = prevWordPos();
+    }
+    deleteFromTo(start,end);
+}
+
+void SynEdit::doDeleteToWordEnd()
+{
+    if (mReadOnly)
+        return;
+    BufferCoord start = caretXY();
+    BufferCoord end = wordEnd();
+    if (start == end) {
+        end = wordEndEx(nextWordPos());
+    }
     deleteFromTo(start,end);
 }
 
@@ -5099,8 +5114,8 @@ int SynEdit::insertTextByNormalMode(const QString &Value)
                 sLeftSide = GetLeftSpacing(calcIndentSpaces(caretY,s,true),true);
             }
             Str = sLeftSide + s;
-        }
-            Str = Value.mid(0, P - Start);
+        } else
+            Str = sLeftSide + Value.mid(0, P - Start);
         properSetLine(caretY - 1, Str);
         mLines->insertLines(caretY, CountLines(Value,P));
     } else {
@@ -5426,8 +5441,11 @@ void SynEdit::ExecuteCommand(SynEditorCommand Command, QChar AChar, void *pData)
     case SynEditorCommand::ecDeleteEOL:
         doDeleteToEOL();
         break;
-    case SynEditorCommand::ecDeleteLastWord:
-        doDeleteLastWord();
+    case SynEditorCommand::ecDeleteWordStart:
+        doDeleteToWordStart();
+        break;
+    case SynEditorCommand::ecDeleteWordEnd:
+        doDeleteToWordEnd();
         break;
     case SynEditorCommand::ecDeleteBOL:
         doDeleteFromBOL();

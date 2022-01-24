@@ -553,7 +553,8 @@ private:
     void doDeleteCurrentChar();
     void doDeleteWord();
     void doDeleteToEOL();
-    void doDeleteLastWord();
+    void doDeleteToWordStart();
+    void doDeleteToWordEnd();
     void doDeleteFromBOL();
     void doDeleteLine();
     void doSelecteLine();

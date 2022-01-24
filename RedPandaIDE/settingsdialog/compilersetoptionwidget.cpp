@@ -59,9 +59,9 @@ CompilerSetOptionWidget::~CompilerSetOptionWidget()
 
 void CompilerSetOptionWidget::init()
 {
+    ui->cbEncoding->setVisible(false);
     ui->cbEncodingDetails->setVisible(false);
     ui->cbEncoding->clear();
-    ui->cbEncoding->addItem(tr("Auto detect"),ENCODING_AUTO_DETECT);
     ui->cbEncoding->addItem(tr("ANSI"),ENCODING_SYSTEM_DEFAULT);
     ui->cbEncoding->addItem(tr("UTF-8"),ENCODING_UTF8);
     foreach (const QString& langName, pCharsetInfoManager->languageNames()) {
@@ -143,6 +143,26 @@ static void loadCompilerSetSettings(Settings::PCompilerSet pSet, Ui::CompilerSet
     ui->txtGDBServer->setText(pSet->debugServer());
     ui->txtResourceCompiler->setText(pSet->resourceCompiler());
     ui->txtProfiler->setText(pSet->profiler());
+
+    ui->cbEncoding->setVisible(pSet->autoAddCharsetParams());
+    if (pSet->execCharset() == ENCODING_AUTO_DETECT
+            || pSet->execCharset() == ENCODING_SYSTEM_DEFAULT
+            || pSet->execCharset() == ENCODING_UTF8) {
+        ui->cbEncoding->setCurrentText(pSet->execCharset());
+        ui->cbEncodingDetails->clear();
+        ui->cbEncodingDetails->setVisible(false);
+    } else {
+        QString encoding = pSet->execCharset();
+        QString language = pCharsetInfoManager->findLanguageByCharsetName(encoding);
+        ui->cbEncoding->setCurrentText(language);
+        ui->cbEncodingDetails->setVisible(true);
+        ui->cbEncodingDetails->clear();
+        QList<PCharsetInfo> infos = pCharsetInfoManager->findCharsetsByLanguageName(language);
+        foreach (const PCharsetInfo& info, infos) {
+            ui->cbEncodingDetails->addItem(info->name);
+        }
+        ui->cbEncodingDetails->setCurrentText(encoding);
+    }
 }
 
 void CompilerSetOptionWidget::doLoad()
@@ -198,7 +218,6 @@ void CompilerSetOptionWidget::reloadCurrentCompilerSet()
     mLibDirWidget->setDirList(pSet->libDirs());
     mCIncludeDirWidget->setDirList(pSet->CIncludeDirs());
     mCppIncludeDirWidget->setDirList(pSet->CppIncludeDirs());
-
 }
 
 void CompilerSetOptionWidget::saveCurrentCompilerSet()
@@ -225,6 +244,12 @@ void CompilerSetOptionWidget::saveCurrentCompilerSet()
     pSet->libDirs()=mLibDirWidget->dirList();
     pSet->CIncludeDirs()=mCIncludeDirWidget->dirList();
     pSet->CppIncludeDirs()=mCppIncludeDirWidget->dirList();
+
+    if (ui->cbEncodingDetails->isVisible()) {
+        pSet->setExecCharset(ui->cbEncodingDetails->currentText());
+    } else {
+        pSet->setExecCharset(ui->cbEncoding->currentText());
+    }
 
     //read values in the options widget
     QTabWidget* pTab = ui->optionTabs;
@@ -324,3 +349,28 @@ void CompilerSetOptionWidget::updateIcons()
     pIconsManager->setIcon(ui->btnChooseProfiler, IconsManager::ACTION_FILE_OPEN_FOLDER);
     pIconsManager->setIcon(ui->btnChooseResourceCompiler, IconsManager::ACTION_FILE_OPEN_FOLDER);
 }
+
+void CompilerSetOptionWidget::on_cbEncoding_currentTextChanged(const QString &arg1)
+{
+    QString userData = ui->cbEncoding->currentData().toString();
+    if (userData == ENCODING_AUTO_DETECT
+            || userData == ENCODING_SYSTEM_DEFAULT
+            || userData == ENCODING_UTF8) {
+        ui->cbEncodingDetails->setVisible(false);
+        ui->cbEncodingDetails->clear();
+    } else {
+        ui->cbEncodingDetails->setVisible(true);
+        ui->cbEncodingDetails->clear();
+        QList<PCharsetInfo> infos = pCharsetInfoManager->findCharsetsByLanguageName(userData);
+        foreach (const PCharsetInfo& info, infos) {
+            ui->cbEncodingDetails->addItem(info->name);
+        }
+    }
+}
+
+
+void CompilerSetOptionWidget::on_cbEncodingDetails_currentTextChanged(const QString &arg1)
+{
+
+}
+

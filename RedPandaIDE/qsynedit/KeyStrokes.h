@@ -135,8 +135,8 @@ enum class SynEditorCommand {
 
     ecDeleteLastChar  = 501,  // Delete last char (i.e. backspace key)
     ecDeleteChar      = 502,  // Delete char at cursor (i.e. delete key)
-    ecDeleteWord      = 503,  // Delete from cursor to end of word
-    ecDeleteLastWord  = 504,  // Delete from cursor to start of word
+    ecDeleteWordEnd   = 503,  // Delete from cursor to end of word
+    ecDeleteWordStart  = 504,  // Delete from cursor to start of word
     ecDeleteBOL       = 505,  // Delete from cursor to beginning of line
     ecDeleteEOL       = 506,  // Delete from cursor to end of line
     ecDeleteLine      = 507,  // Delete current line
@@ -148,6 +148,7 @@ enum class SynEditorCommand {
     ecMoveSelUp       = 513,  // Move selection up
     ecMoveSelDown     = 514,  // Move selection down
     ecImeStr          = 550,  // Insert character(s) from IME
+    ecDeleteWord     = 551,  // Delete current Word
 
     ecUndo            = 601,  // Perform undo if available
     ecRedo            = 602,  // Perform redo if available

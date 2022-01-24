@@ -205,6 +205,8 @@ public:
     bool notParsed();
     void insertLine();
     void deleteWord();
+    void deleteToWordStart();
+    void deleteToWordEnd();
     void deleteLine();
     void duplicateLine();
     void deleteToEOL();

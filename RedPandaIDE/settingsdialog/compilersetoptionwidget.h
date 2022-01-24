@@ -61,6 +61,8 @@ private slots:
     void on_btnRemoveCompilerSet_pressed();
     void updateIcons();
 
+    void on_cbEncoding_currentTextChanged(const QString &arg1);
+    void on_cbEncodingDetails_currentTextChanged(const QString &arg1);
 };
 
 #endif // COMPILERSETOPTIONWIDGET_H

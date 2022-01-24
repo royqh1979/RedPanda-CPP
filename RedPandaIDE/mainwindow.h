@@ -557,6 +557,10 @@ private slots:
 
     void on_actionInterrupt_triggered();
 
+    void on_actionDelete_Last_Word_triggered();
+
+    void on_actionDelete_to_Word_End_triggered();
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;

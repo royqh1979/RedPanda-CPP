@@ -6160,3 +6160,21 @@ void MainWindow::on_actionInterrupt_triggered()
         mDebugger->interrupt();
     }
 }
+
+void MainWindow::on_actionDelete_Last_Word_triggered()
+{
+    Editor *e=mEditorList->getEditor();
+    if (e) {
+        e->deleteToWordStart();
+    }
+}
+
+
+void MainWindow::on_actionDelete_to_Word_End_triggered()
+{
+    Editor *e=mEditorList->getEditor();
+    if (e) {
+        e->deleteToWordEnd();
+    }
+}
+
