@@ -1,6 +1,7 @@
 Red Panda C++ Version 0.13.4
   - fix: when copy comments, don't auto indent
   - enhancement: auto add a new line when press enter between '/*' and '*/'
+  - fix: code completion popup won't show  members of 'this'
 
 Red Panda C++ Version 0.13.3
   - enhancement: restore editor position after rename symbol
