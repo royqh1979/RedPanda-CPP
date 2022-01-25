@@ -513,9 +513,8 @@ bool isScopeTypeKind(StatementKind kind)
     switch(kind) {
     case StatementKind::skClass:
     case StatementKind::skNamespace:
-    case StatementKind::skFunction:
-    case StatementKind::skConstructor:
-    case StatementKind::skDestructor:
+    case StatementKind::skEnumType:
+    case StatementKind::skEnumClassType:
         return true;
     default:
         return false;

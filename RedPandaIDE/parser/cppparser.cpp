@@ -2162,7 +2162,7 @@ void CppParser::handleMethod(const QString &sType, const QString &sName, const Q
         QString parentClassName;
         if (delimPos >= 0) {
             // Provide Bar instead of Foo::Bar
-            scopelessName = sName.mid(delimPos);
+            scopelessName = sName.mid(delimPos+2);
 
             // Check what class this function belongs to
             parentClassName = sName.mid(0, delimPos);
