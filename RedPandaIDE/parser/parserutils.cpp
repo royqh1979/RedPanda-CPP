@@ -80,7 +80,7 @@ void initParser()
     CppKeywords.insert("static_assert",SkipType::skItself);
     CppKeywords.insert("static_cast",SkipType::skItself);
     CppKeywords.insert("template",SkipType::skItself);
-    CppKeywords.insert("this",SkipType::skItself);
+    //CppKeywords.insert("this",SkipType::skItself);
     CppKeywords.insert("thread_local",SkipType::skItself);
     CppKeywords.insert("true",SkipType::skItself);
     CppKeywords.insert("typename",SkipType::skItself);
