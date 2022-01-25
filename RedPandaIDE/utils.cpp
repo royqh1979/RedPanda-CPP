@@ -825,7 +825,7 @@ QString parseMacros(const QString &s)
 
         // Only provide the first lib dir
         if (compilerSet->defaultLibDirs().count()>0)
-            result.replace("<LIB>", localizePath(compilerSet->defaultCppIncludeDirs().front()));
+            result.replace("<LIB>", localizePath(compilerSet->defaultLibDirs().front()));
         else
             result.replace("<LIB>","");
     }
@@ -1001,12 +1001,12 @@ QString localizePath(const QString &path)
 
 float pointToPixel(float point)
 {
-    return point * qApp->desktop()->logicalDpiY() / 72;
+    return point * desktopDpi() / 72;
 }
 
 float pixelToPoint(float pixel)
 {
-    return pixel * 72 / qApp->desktop()->logicalDpiY();
+    return pixel * 72 / desktopDpi();
 }
 
 
@@ -1076,9 +1076,12 @@ QStringList splitProcessCommand(const QString &cmd)
     return result;
 }
 
+static float saved_desktop_dpi = -1;
 float desktopDpi()
 {
-    return qApp->desktop()->logicalDpiY();
+    if (saved_desktop_dpi<1)
+        saved_desktop_dpi = qApp->desktop()->logicalDpiY();
+    return saved_desktop_dpi;
 }
 
 qulonglong stringToHex(const QString &str, qulonglong defaultValue)
@@ -1088,4 +1091,9 @@ qulonglong stringToHex(const QString &str, qulonglong defaultValue)
     if (isOk)
         return value;
     return defaultValue;
+}
+
+void setDesktopDpi(float dpi)
+{
+    saved_desktop_dpi = dpi;
 }

@@ -689,6 +689,11 @@ void MainWindow::setActiveBreakpoint(QString FileName, int Line, bool setFocus)
     }
 }
 
+void MainWindow::updateDPI()
+{
+    applySettings();
+}
+
 void MainWindow::updateAppTitle()
 {
     QString appName=tr("Red Panda C++");
@@ -949,8 +954,6 @@ void MainWindow::openFiles(const QStringList &files)
     auto end = finally([this] {
         this->mEditorList->endUpdate();
         mOpenningFiles = false;
-        updateEditorParser(ui->EditorTabsLeft);
-        updateEditorParser(ui->EditorTabsRight);
     });
     //Check if there is a project file in the list and open it
     for (const QString& file:files) {
@@ -5217,39 +5220,6 @@ PSymbolUsageManager &MainWindow::symbolUsageManager()
     return mSymbolUsageManager;
 }
 
-void MainWindow::updateEditorParser(QTabWidget* tabWidget) {
-    if (mOpenningFiles)
-        return;
-    Editor * editor = mEditorList->getEditor(-1,tabWidget);
-    if (pSettings->codeCompletion().clearWhenEditorHidden()) {
-        for (int i=0;i<tabWidget->count();i++) {
-            Editor * e = (Editor*)(tabWidget->widget(i));
-            if (!e->inProject()) {
-                if (e!=editor && e->parser() && !e->notParsed()) {
-                    e->parser()->reset();
-                }
-            }
-        }
-    }
-    if (editor && editor->parser() && editor->notParsed()) {
-        resetCppParser(editor->parser());
-        editor->reparse();
-    }
-}
-
-void MainWindow::updateEditorHideTime(QTabWidget* tabWidget) {
-    Editor * editor = mEditorList->getEditor(-1,tabWidget);
-    for (int i=0;i<tabWidget->count();i++) {
-        Editor * e = (Editor*)(tabWidget->widget(i));
-        if (e!=editor) {
-            if (!e->hideTime().isValid())
-                e->setHideTime(QDateTime::currentDateTime());
-        } else {
-            e->setHideTime(QDateTime());
-        }
-    }
-}
-
 void MainWindow::showHideInfosTab(QWidget *widget, bool show)
 {
     int idx = findTabIndex(ui->tabInfos,widget);
@@ -5388,25 +5358,12 @@ void MainWindow::onEditorRenamed(const QString &oldFilename, const QString &newF
 
 void MainWindow::on_EditorTabsLeft_currentChanged(int)
 {
-    Editor * editor = mEditorList->getEditor(-1,ui->EditorTabsLeft);
-    if (editor) {
-        editor->reparseTodo();
-    }
-    updateEditorParser(ui->EditorTabsLeft);
-    updateEditorHideTime(ui->EditorTabsLeft);
 }
 
 
 void MainWindow::on_EditorTabsRight_currentChanged(int)
 {
-    Editor * editor = mEditorList->getEditor(-1,ui->EditorTabsRight);
-    if (editor) {
-        editor->reparseTodo();
-    }
-    updateEditorParser(ui->EditorTabsRight);
-    updateEditorHideTime(ui->EditorTabsRight);
 }
-
 
 void MainWindow::on_tableTODO_doubleClicked(const QModelIndex &index)
 {
@@ -5417,7 +5374,6 @@ void MainWindow::on_tableTODO_doubleClicked(const QModelIndex &index)
             editor->setCaretPositionAndActivate(item->lineNo,item->ch+1);
         }
     }
-
 }
 
 

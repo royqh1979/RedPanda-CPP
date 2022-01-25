@@ -32,7 +32,15 @@ AutolinkManager::AutolinkManager()
 
 PAutolink AutolinkManager::getLink(const QString &header) const
 {
-    return mLinks.value(header,PAutolink());
+    PAutolink link = mLinks.value(header,PAutolink());
+    if (link)
+        return link;
+    foreach (QString key, mLinks.keys()) {
+        if (header.endsWith("/"+key, PATH_SENSITIVITY)) {
+            return mLinks.value(key);
+        }
+    }
+    return PAutolink();
 }
 
 void AutolinkManager::load()

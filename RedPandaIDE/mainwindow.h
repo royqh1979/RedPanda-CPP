@@ -215,6 +215,7 @@ public slots:
     void onTodoParsing(const QString& filename, int lineNo, int ch, const QString& line);
     void onTodoParseFinished();
     void setActiveBreakpoint(QString FileName, int Line, bool setFocus);
+    void updateDPI();
 
 private:
     void prepareProjectForCompile();
@@ -242,8 +243,6 @@ private:
     void doCompileRun(RunType runType);
     void updateProblemCaseOutput(POJProblemCase problemCase);
     void applyCurrentProblemCaseChanges();
-    void updateEditorParser(QTabWidget* tabWidget);
-    void updateEditorHideTime(QTabWidget* tabWidget);
     void showHideInfosTab(QWidget *widget, bool show);
     void showHideMessagesTab(QWidget *widget, bool show);
     void prepareTabInfosData();

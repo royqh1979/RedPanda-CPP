@@ -59,7 +59,6 @@ CompilerSetOptionWidget::~CompilerSetOptionWidget()
 
 void CompilerSetOptionWidget::init()
 {
-    ui->cbEncoding->setVisible(false);
     ui->cbEncodingDetails->setVisible(false);
     ui->cbEncoding->clear();
     ui->cbEncoding->addItem(tr("ANSI"),ENCODING_SYSTEM_DEFAULT);
@@ -144,7 +143,6 @@ static void loadCompilerSetSettings(Settings::PCompilerSet pSet, Ui::CompilerSet
     ui->txtResourceCompiler->setText(pSet->resourceCompiler());
     ui->txtProfiler->setText(pSet->profiler());
 
-    ui->cbEncoding->setVisible(pSet->autoAddCharsetParams());
     if (pSet->execCharset() == ENCODING_AUTO_DETECT
             || pSet->execCharset() == ENCODING_SYSTEM_DEFAULT
             || pSet->execCharset() == ENCODING_UTF8) {

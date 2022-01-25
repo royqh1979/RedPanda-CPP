@@ -3,7 +3,7 @@
 
 !include "config32.nsh"
 !define COMPILERFOLDER "MinGW32"
-!define FINALNAME "RedPanda.C++.32bit.${DEVCPP_VERSION}.${COMPILERNAME}.Setup.exe"
+!define FINALNAME "RedPanda.C++.${DEVCPP_VERSION}.win32.${COMPILERNAME}.Setup.exe"
 !define DISPLAY_NAME "Red Panda C++ 32 bit ${DEVCPP_VERSION}"
 
 !include "MUI2.nsh"

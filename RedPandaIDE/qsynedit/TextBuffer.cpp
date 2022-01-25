@@ -556,18 +556,25 @@ void SynEditStringList::loadFromFile(const QString& filename, const QByteArray& 
         }
         internalClear();
         while (true) {
+            if (line.endsWith("\r\n")) {
+                line.remove(line.length()-2,2);
+            } else if (line.endsWith("\r")) {
+                line.remove(line.length()-1,1);
+            } else if (line.endsWith("\n")){
+                line.remove(line.length()-1,1);
+            }
             if (allAscii) {
                 allAscii = isTextAllAscii(line);
             }
             if (allAscii) {
-                addItem(trimRight(QString::fromLatin1(line)));
+                addItem(QString::fromLatin1(line));
             } else {
                 QString newLine = codec->toUnicode(line.constData(),line.length(),&state);
                 if (state.invalidChars>0) {
                     needReread = true;
                     break;
                 }
-                addItem(trimRight(newLine));
+                addItem(newLine);
             }
             if (file.atEnd()){
                 break;
@@ -600,7 +607,14 @@ void SynEditStringList::loadFromFile(const QString& filename, const QByteArray& 
     QString line;
     internalClear();
     while (textStream.readLineInto(&line)) {
-        addItem(trimRight(line));
+        if (line.endsWith("\r\n")) {
+            line.remove(line.length()-2,2);
+        } else if (line.endsWith("\r")) {
+            line.remove(line.length()-1,1);
+        } else if (line.endsWith("\n")){
+            line.remove(line.length()-1,1);
+        }
+        addItem(line);
     }
     emit inserted(0,mList.count());
 }

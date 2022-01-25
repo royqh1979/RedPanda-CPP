@@ -266,14 +266,8 @@ void SynEdit::setCaretXYEx(bool CallEnsureCursorPosVisible, BufferCoord value)
         if (mCaretY != value.Line) {
             int oldCaretY = mCaretY;
             mCaretY = value.Line;
-            if (mActiveLineColor.isValid()) {
-                invalidateLine(mCaretY);
-                invalidateLine(oldCaretY);
-            }
-            if (mGutter.activeLineTextColor().isValid()) {
-                invalidateGutterLine(mCaretY);
-                invalidateGutterLine(oldCaretY);
-            }
+            invalidateLine(mCaretY);
+            invalidateLine(oldCaretY);
             mStatusChanges.setFlag(SynStatusChange::scCaretY);
         }
         // Call UpdateLastCaretX before DecPaintLock because the event handler it
@@ -4761,7 +4755,7 @@ void SynEdit::doSetSelText(const QString &Value)
 }
 
 int SynEdit::searchReplace(const QString &sSearch, const QString &sReplace, SynSearchOptions sOptions, PSynSearchBase searchEngine,
-                    SynSearchMathedProc matchedCallback)
+                    SynSearchMathedProc matchedCallback, SynSearchConfirmAroundProc confirmAroundCallback)
 {
     if (!searchEngine)
         return 0;
@@ -4923,9 +4917,10 @@ int SynEdit::searchReplace(const QString &sSearch, const QString &sReplace, SynS
                 ptCurrent.Line--;
             else
                 ptCurrent.Line++;
-            if (
-                    ((ptCurrent.Line < ptStart.Line) || (ptCurrent.Line > ptEnd.Line))
-                    && bFromCursor){
+            if (((ptCurrent.Line < ptStart.Line) || (ptCurrent.Line > ptEnd.Line))
+                    && bFromCursor && sOptions.testFlag(ssoWrapAround)){
+                if (confirmAroundCallback && !confirmAroundCallback())
+                    break;
                 //search start from cursor, search has finished but no result founds
                 bFromCursor = false;
                 ptStart.Char = 1;

@@ -61,7 +61,9 @@ private slots:
    void on_btnExecute_clicked();
 private:
    int execute(SynEdit* editor, const QString& sSearch,
-               const QString& sReplace, SynSearchMathedProc matchCallback = nullptr);
+               const QString& sReplace,
+               SynSearchMathedProc matchCallback = nullptr,
+               SynSearchConfirmAroundProc confirmAroundCallback = nullptr);
    std::shared_ptr<SearchResultTreeItem> batchFindInEditor(SynEdit * editor,const QString& filename, const QString& keyword);
 private:
     Ui::SearchDialog *ui;

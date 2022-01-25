@@ -723,7 +723,7 @@ void SynEditTextPainter::PaintFoldAttributes()
             if (vLine > edit->mLines->count() && edit->mLines->count() > 0)
                 break;
             // Set vertical coord
-            Y = (vLine - edit->mTopLine) * edit->mTextHeight; // limit inside clip rect
+            Y = (cRow - edit->mTopLine) * edit->mTextHeight; // limit inside clip rect
             if (edit->mTextHeight % 2 == 1 && vLine % 2 == 0) {
                 Y++;
             }

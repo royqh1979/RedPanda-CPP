@@ -534,11 +534,10 @@ QString Compiler::parseFileIncludesForAutolink(
         PCppParser& parser)
 {
     QString result;
-    QString baseName = extractFileName(filename);
     if (parsedFiles.contains(filename))
         return result;
     parsedFiles.insert(filename);
-    PAutolink autolink = pAutolinkManager->getLink(baseName);
+    PAutolink autolink = pAutolinkManager->getLink(filename);
     if (autolink) {
         result += ' '+autolink->linkOption;
     }

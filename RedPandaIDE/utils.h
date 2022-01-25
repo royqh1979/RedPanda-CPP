@@ -232,6 +232,8 @@ class CppParser;
 void resetCppParser(std::shared_ptr<CppParser> parser, int compilerSetIndex=-1);
 
 float desktopDpi();
+void setDesktopDpi(float dpi);
+
 float pointToPixel(float point);
 float pixelToPoint(float pixel);
 

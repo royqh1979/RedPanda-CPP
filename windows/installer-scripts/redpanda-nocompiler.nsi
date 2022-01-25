@@ -2,7 +2,7 @@
 # Startup
 
 !include "config.nsh"
-!define FINALNAME "RedPanda.C++.${DEVCPP_VERSION}.No.Compiler.Setup.exe"
+!define FINALNAME "RedPanda.C++.${DEVCPP_VERSION}.win64.No.Compiler.Setup.exe"
 !define DISPLAY_NAME "Red Panda C++ ${DEVCPP_VERSION}"
 
 !include "MUI2.nsh"

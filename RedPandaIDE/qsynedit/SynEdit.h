@@ -147,6 +147,7 @@ using SynPaintProc = std::function<void(const QPaintDevice& paintDevice )>;
 //        SynFontStyles& style, QColor& foreground, QColor& background)>;
 using SynSearchMathedProc = std::function<SynSearchAction(const QString& sSearch,
     const QString& sReplace, int Line, int ch, int wordLen)>;
+using SynSearchConfirmAroundProc = std::function<bool ()>;
 
 class SynEdit;
 using PSynEdit = std::shared_ptr<SynEdit>;
@@ -244,7 +245,8 @@ public:
     void setSelText(const QString& text);
 
     int searchReplace(const QString& sSearch, const QString& sReplace, SynSearchOptions options,
-               PSynSearchBase searchEngine,  SynSearchMathedProc matchedCallback = nullptr);
+               PSynSearchBase searchEngine,  SynSearchMathedProc matchedCallback = nullptr,
+                      SynSearchConfirmAroundProc confirmAroundCallback = nullptr);
 
     int maxScrollWidth() const;
     int maxScrollHeight() const;
