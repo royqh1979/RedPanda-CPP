@@ -540,6 +540,7 @@
           <widget class="IssuesTable" name="tableIssues">
            <property name="font">
             <font>
+             <weight>50</weight>
              <bold>false</bold>
             </font>
            </property>
@@ -1394,7 +1395,7 @@
      <x>0</x>
      <y>0</y>
      <width>1114</width>
-     <height>25</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
