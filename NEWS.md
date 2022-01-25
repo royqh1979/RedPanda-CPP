@@ -4,7 +4,7 @@ Red Panda C++ Version 0.13.4
   - fix: code completion popup won't show  members of 'this'
   - fix: can't show private & protected members of 'this'
   - fix: function name like 'A::B' is not correctly parsed
-  - fix: static members are not correct showed after Classname + '::'
+  - fix: static members are not correct shown after Classname + '::'
 
 Red Panda C++ Version 0.13.3
   - enhancement: restore editor position after rename symbol
