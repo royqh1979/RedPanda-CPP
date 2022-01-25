@@ -2256,6 +2256,18 @@ void SynEdit::insertLine(bool moveCaret)
 
     mUndoList->AddChange(SynChangeReason::crLineBreak, caretXY(), caretXY(), rightLineText,
               SynSelectionMode::smNormal);
+
+    //insert new line in middle of "/*" and "*/"
+    if (!notInComment &&
+            ( leftLineText.endsWith("/*") && rightLineText.startsWith("*/")
+             )) {
+        indentSpaces = calcIndentSpaces(mCaretY+1, "" , mOptions.testFlag(eoAutoIndent)) + mTabWidth;
+        indentSpacesForRightLineText = GetLeftSpacing(indentSpaces,true);
+        mLines->insert(mCaretY, indentSpacesForRightLineText);
+        nLinesInserted++;
+        mUndoList->AddChange(SynChangeReason::crLineBreak, caretXY(), caretXY(), "",
+                SynSelectionMode::smNormal);
+    }
     //insert new line in middle of "{" and "}"
     if (notInComment &&
             ( leftLineText.endsWith('{') && rightLineText.startsWith('}')
@@ -5120,6 +5132,10 @@ int SynEdit::insertTextByNormalMode(const QString &Value)
     rescanRange(caretY);
     // step2: insert remaining lines of Value
     while (P < Value.length()) {
+        bool notInComment = !mHighlighter->isLastLineCommentNotFinished(
+                    mHighlighter->getRangeState().state)
+                && !mHighlighter->isLastLineStringNotFinished(
+                    mHighlighter->getRangeState().state);
         if (Value[P] == '\r')
             P++;
         if (Value[P] == '\n')
@@ -5129,15 +5145,19 @@ int SynEdit::insertTextByNormalMode(const QString &Value)
         Start = P;
         P = GetEOL(Value,Start);
         if (P == Start) {
-            if (P<Value.length())
-                Str = GetLeftSpacing(calcIndentSpaces(caretY,"",true),true);
-            else
-              Str = sRightSide;
+            if (P<Value.length()) {
+                if (mHighlighter && mOptions.testFlag(eoAutoIndent) && notInComment) {
+                    Str = GetLeftSpacing(calcIndentSpaces(caretY,"",true),true);
+                } else {
+                    Str = "";
+                }
+            } else
+                Str = sRightSide;
         } else {
             Str = Value.mid(Start, P-Start);
             if (P>=Value.length())
                 Str += sRightSide;
-            if (mHighlighter && mOptions.testFlag(eoAutoIndent)) {
+            if (mHighlighter && mOptions.testFlag(eoAutoIndent) && notInComment) {
                 int indentSpaces = calcIndentSpaces(caretY,Str,true);
                 Str = GetLeftSpacing(indentSpaces,true)+trimLeft(Str);
             }
