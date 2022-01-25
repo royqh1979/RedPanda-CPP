@@ -3890,6 +3890,9 @@ PEvalStatement CppParser::doEvalTerm(const QString &fileName,
                 }
             }
             pos++;
+            if (statement && statement->kind == StatementKind::skConstructor) {
+                statement = statement->parentScope.lock();
+            }
             if (statement) {
                 switch (statement->kind) {
                 case StatementKind::skNamespace:
