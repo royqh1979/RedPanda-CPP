@@ -3373,8 +3373,10 @@ void Editor::updateFunctionTip()
     bool hasPreviousWord=false;
     while (x>=0) {
         QChar ch=line[x];
-        if (ch == ' ' || ch == '\t')
+        if (ch == ' ' || ch == '\t') {
+            x--;
             continue;
+        }
         if (isIdentChar(ch)) {
             hasPreviousWord = true;
             break;
