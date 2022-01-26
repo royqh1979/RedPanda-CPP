@@ -87,6 +87,8 @@ public:
     PStatement findTypeDefinitionOf(const QString& fileName,
                                     const QString& aType,
                                     const PStatement& currentClass);
+    PStatement findTypeDef(const PStatement& statement,
+                          const QString& fileName);
     bool freeze();  // Freeze/Lock (stop reparse while searching)
     bool freeze(const QString& serialId);  // Freeze/Lock (stop reparse while searching)
     QStringList getClassesList();

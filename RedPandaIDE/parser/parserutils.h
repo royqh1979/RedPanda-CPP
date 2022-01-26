@@ -255,7 +255,7 @@ QString getSystemHeaderFilename(const QString& fileName, const QStringList& incl
 bool isSystemHeaderFile(const QString& fileName, const QSet<QString>& includePaths);
 bool isHfile(const QString& filename);
 bool isCfile(const QString& filename);
-bool isKeyword(const QString& word);
+bool isCppKeyword(const QString& word);
 bool isScopeTypeKind(StatementKind kind);
 MemberOperatorType getOperatorType(const QString& phrase, int index);
 QStringList getOwnerExpressionAndMember(

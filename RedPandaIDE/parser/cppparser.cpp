@@ -125,7 +125,11 @@ QList<PStatement> CppParser::getListOfFunctions(const QString &fileName, const Q
     PStatement statement = findStatementOf(fileName,phrase, line);
     if (!statement)
         return result;
-    PStatement parentScope = statement->parentScope.lock();
+    PStatement parentScope;
+    if (statement->kind == StatementKind::skClass) {
+        parentScope = statement;
+    } else
+        parentScope = statement->parentScope.lock();
     if (parentScope && parentScope->kind == StatementKind::skNamespace) {
         PStatementList namespaceStatementsList = findNamespace(parentScope->command);
         if (namespaceStatementsList) {
@@ -543,6 +547,15 @@ PStatement CppParser::findTypeDefinitionOf(const QString &fileName, const QStrin
 
     PStatement statement = findStatementOf(fileName,s,currentClass);
     return getTypeDef(statement,fileName,aType);
+}
+
+PStatement CppParser::findTypeDef(const PStatement &statement, const QString &fileName)
+{
+    QMutexLocker locker(&mMutex);
+
+    if (mParsing)
+        return PStatement();
+    return getTypeDef(statement, fileName, "");
 }
 
 bool CppParser::freeze()
@@ -3323,12 +3336,12 @@ QList<PStatement> CppParser::getListOfFunctions(const QString &fileName, int lin
     QList<PStatement> result;
     StatementMap children = mStatementList.childrenStatements(scopeStatement);
     for (const PStatement& child:children) {
-        if ((statement->command == child->command)
+        if (( (statement->command == child->command)
 #ifdef Q_OS_WIN
                 || (statement->command +'A' == child->command)
                 || (statement->command +'W' == child->command)
 #endif
-                ) {
+              ) ) {
             if (line < child->line && (child->fileName == fileName))
                 continue;
             result.append(child);
@@ -4473,7 +4486,7 @@ QString CppParser::removeArgNames(const QString &args)
                 if (!typeGetted) {
                     currentArg += ' ' + word;
                 } else {
-                    if (isKeyword(word)) {
+                    if (isCppKeyword(word)) {
                         currentArg += ' ' + word;
                     }
                 }
@@ -4502,10 +4515,10 @@ QString CppParser::removeArgNames(const QString &args)
             } else if (!word.trimmed().isEmpty()) {
                 if (!typeGetted) {
                     currentArg += ' ' + word;
-                    if (mCppTypeKeywords.contains(word) || !isKeyword(word))
+                    if (mCppTypeKeywords.contains(word) || !isCppKeyword(word))
                         typeGetted = true;
                 } else {
-                    if (isKeyword(word))
+                    if (isCppKeyword(word))
                         currentArg += ' ' + word;
                 }
                 word = "";
@@ -4520,7 +4533,7 @@ QString CppParser::removeArgNames(const QString &args)
     if (!typeGetted) {
         currentArg += ' ' + word;
     } else {
-        if (isKeyword(word)) {
+        if (isCppKeyword(word)) {
             currentArg += ' ' + word;
         }
     }
@@ -4650,7 +4663,7 @@ bool CppParser::isNotFuncArgs(const QString &args)
         return false;
     }
 
-    if (isKeyword(word)) {
+    if (isCppKeyword(word)) {
         return word == "true" || word == "false" || word == "nullptr";
     }
     PStatement statement =findStatementOf(mCurrentFile,word,getCurrentScope(),true);

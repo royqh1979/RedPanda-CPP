@@ -5,6 +5,8 @@ Red Panda C++ Version 0.13.4
   - fix: can't show private & protected members of 'this'
   - fix: function name like 'A::B' is not correctly parsed
   - fix: static members are not correct shown after Classname + '::'
+  - enhancement: show parameter tips for class constructors
+  - enhancement: when there are tips showing, don't show mouse tips
 
 Red Panda C++ Version 0.13.3
   - enhancement: restore editor position after rename symbol

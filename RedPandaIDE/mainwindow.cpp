@@ -5406,7 +5406,7 @@ void MainWindow::on_actionRename_Symbol_triggered()
 //        return;
 //    }
 
-    if (isKeyword(word)) {
+    if (isCppKeyword(word)) {
         return;
     }
 

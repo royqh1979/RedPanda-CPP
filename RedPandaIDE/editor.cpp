@@ -957,7 +957,9 @@ bool Editor::event(QEvent *event)
 {
     if ((event->type() == QEvent::HoverEnter || event->type() == QEvent::HoverMove)
             && pSettings->editor().enableTooltips()
-            ) {
+            && !pMainWindow->completionPopup()->isVisible()
+            && !pMainWindow->functionTip()->isVisible()
+            && !pMainWindow->headerCompletionPopup()->isVisible()) {
         QHoverEvent *helpEvent = static_cast<QHoverEvent *>(event);
         BufferCoord p;
         TipType reason = getTipType(helpEvent->pos(),p);
@@ -3365,6 +3367,39 @@ void Editor::updateFunctionTip()
     BufferCoord pWordBegin, pWordEnd;
 
     QString s = getWordAtPosition(this, functionNamePos, pWordBegin,pWordEnd, WordPurpose::wpInformation);
+
+    int x = pWordBegin.Char-1-1;
+    QString line = lines()->getString(pWordBegin.Line-1);
+    bool hasPreviousWord=false;
+    while (x>=0) {
+        QChar ch=line[x];
+        if (ch == ' ' || ch == '\t')
+            continue;
+        if (isIdentChar(ch)) {
+            hasPreviousWord = true;
+            break;
+        }
+        hasPreviousWord = false;
+        break;
+    }
+
+    if (x >= 0 && hasPreviousWord) {
+        BufferCoord pos = pWordBegin;
+        pos.Char = x+1;
+        QString previousWord = getPreviousWordAtPositionForSuggestion(pos);
+
+        PStatement statement = mParser->findStatementOf(
+                    mFilename,
+                    previousWord,
+                    pos.Line);
+        if (statement) {
+            PStatement typeStatement = mParser->findTypeDef(statement,mFilename);
+            if (typeStatement && typeStatement->kind == StatementKind::skClass) {
+                s = previousWord;
+                functionNamePos = pos;
+            }
+        }
+    }
 
 //    qDebug()<<QString("find word at %1:%2 - '%3'")
 //              .arg(FuncStartXY.Line)
