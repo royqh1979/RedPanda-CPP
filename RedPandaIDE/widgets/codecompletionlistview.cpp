@@ -19,8 +19,13 @@
 #include "../editor.h"
 #include "../editorlist.h"
 
+#include <QPainter>
+#include <QTextDocument>
+#include <qabstracttextdocumentlayout.h>
+
 CodeCompletionListView::CodeCompletionListView(QWidget *parent) : QListView(parent)
 {
+    setItemDelegate(&mDelegate);
 }
 
 void CodeCompletionListView::keyPressEvent(QKeyEvent *event)
@@ -58,3 +63,53 @@ void CodeCompletionListView::setKeypressedCallback(const KeyPressedCallback &new
     mKeypressedCallback = newKeypressedCallback;
 }
 
+
+void CodeCompletionListItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
+{
+    QVariant data = index.data();
+    if (data.canConvert<QString>()) {
+        painter->save();
+        QString richText = qvariant_cast<QString>(data);
+
+        if (option.state & QStyle::State_Selected)
+            painter->fillRect(option.rect, option.palette.highlight());
+
+        QColor color = index.data(Qt::ForegroundRole).value<QColor>();
+        if (!color.isValid()) {
+            color = option.palette.color(QPalette::Text);
+        }
+        painter->setPen(color);
+        QTextDocument doc;
+        doc.setHtml(richText);
+        doc.setDefaultFont(painter->font());
+        QTransform transform;
+        transform.translate(option.rect.left(),option.rect.top());
+        painter->setTransform(transform);
+        QRect clipRect = option.rect;
+        clipRect.moveTopLeft(QPoint(0,0));
+        painter->setClipRect(clipRect);
+        QAbstractTextDocumentLayout::PaintContext ctx;
+
+        ctx.palette.setColor(QPalette::Text, color);
+        ctx.clip = clipRect;
+        doc.documentLayout()->draw(painter,ctx);
+        painter->restore();
+    } else {
+        QStyledItemDelegate::paint(painter, option, index);
+    }
+}
+
+QSize CodeCompletionListItemDelegate::sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const
+{
+    QVariant data = index.data();
+    if (data.canConvert<QString>()) {
+        QString richText = qvariant_cast<QString>(data);
+
+        QTextDocument doc;
+        doc.setHtml(richText);
+        return QSize(doc.size().width(),doc.size().height());
+    } else {
+        return QStyledItemDelegate::sizeHint(option, index);
+    }
+
+}

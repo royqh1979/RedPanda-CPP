@@ -9,6 +9,7 @@ Red Panda C++ Version 0.13.4
   - enhancement: when there are tips showing, don't show mouse tips
   - enhancement: setting non-ascii font for editors
   - enhancement: correct handle windows dpi change event
+  - enhancement: code completion find words with char in the middle
 
 Red Panda C++ Version 0.13.3
   - enhancement: restore editor position after rename symbol

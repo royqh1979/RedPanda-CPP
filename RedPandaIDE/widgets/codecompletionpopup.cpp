@@ -216,9 +216,19 @@ static bool nameComparator(PStatement statement1,PStatement statement2) {
 }
 
 static bool defaultComparator(PStatement statement1,PStatement statement2) {
-    if (statement1->caseMatch && !statement2->caseMatch) {
+    if (statement1->firstMatchLength > statement2->firstMatchLength) {
         return true;
-    } else if (!statement1->caseMatch && statement2->caseMatch) {
+    } else if (statement1->firstMatchLength < statement2->firstMatchLength) {
+        return false;
+    }
+    if (statement1->matchPosTotal < statement2->matchPosTotal) {
+        return true;
+    } else if (statement1->matchPosTotal > statement2->matchPosTotal) {
+        return false;
+    }
+    if (statement1->caseMatched > statement2->caseMatched) {
+        return true;
+    } else if (statement1->caseMatched < statement2->caseMatched) {
         return false;
     }
     // Show user template first
@@ -241,9 +251,19 @@ static bool defaultComparator(PStatement statement1,PStatement statement2) {
 }
 
 static bool sortByScopeComparator(PStatement statement1,PStatement statement2){
-    if (statement1->caseMatch && !statement2->caseMatch) {
+    if (statement1->firstMatchLength > statement2->firstMatchLength) {
         return true;
-    } else if (!statement1->caseMatch && statement2->caseMatch) {
+    } else if (statement1->firstMatchLength < statement2->firstMatchLength) {
+        return false;
+    }
+    if (statement1->matchPosTotal < statement2->matchPosTotal) {
+        return true;
+    } else if (statement1->matchPosTotal > statement2->matchPosTotal) {
+        return false;
+    }
+    if (statement1->caseMatched > statement2->caseMatched) {
+        return true;
+    } else if (statement1->caseMatched < statement2->caseMatched) {
         return false;
     }
     // Show user template first
@@ -279,9 +299,19 @@ static bool sortByScopeComparator(PStatement statement1,PStatement statement2){
 }
 
 static bool sortWithUsageComparator(PStatement statement1,PStatement statement2) {
-    if (statement1->caseMatch && !statement2->caseMatch) {
+    if (statement1->firstMatchLength > statement2->firstMatchLength) {
         return true;
-    } else if (!statement1->caseMatch && statement2->caseMatch) {
+    } else if (statement1->firstMatchLength < statement2->firstMatchLength) {
+        return false;
+    }
+    if (statement1->matchPosTotal < statement2->matchPosTotal) {
+        return true;
+    } else if (statement1->matchPosTotal > statement2->matchPosTotal) {
+        return false;
+    }
+    if (statement1->caseMatched > statement2->caseMatched) {
+        return true;
+    } else if (statement1->caseMatched < statement2->caseMatched) {
         return false;
     }
     // Show user template first
@@ -309,9 +339,19 @@ static bool sortWithUsageComparator(PStatement statement1,PStatement statement2)
 }
 
 static bool sortByScopeWithUsageComparator(PStatement statement1,PStatement statement2){
-    if (statement1->caseMatch && !statement2->caseMatch) {
+    if (statement1->firstMatchLength > statement2->firstMatchLength) {
         return true;
-    } else if (!statement1->caseMatch && statement2->caseMatch) {
+    } else if (statement1->firstMatchLength < statement2->firstMatchLength) {
+        return false;
+    }
+    if (statement1->matchPosTotal < statement2->matchPosTotal) {
+        return true;
+    } else if (statement1->matchPosTotal > statement2->matchPosTotal) {
+        return false;
+    }
+    if (statement1->caseMatched > statement2->caseMatched) {
+        return true;
+    } else if (statement1->caseMatched < statement2->caseMatched) {
         return false;
     }
     // Show user template first
@@ -372,25 +412,66 @@ void CodeCompletionPopup::filterList(const QString &member)
 //        }
 
     mCompletionStatementList.clear();
-    if (!member.isEmpty()) { // filter
-        mCompletionStatementList.reserve(mFullCompletionStatementList.size());
-        foreach (const PStatement& statement, mFullCompletionStatementList) {
-            Qt::CaseSensitivity cs = (mIgnoreCase?
-                                          Qt::CaseInsensitive:
-                                          Qt::CaseSensitive);
-            if (statement->command.startsWith(member, cs)) {
-                if (mIgnoreCase) {
-                    statement->caseMatch =
-                            statement->command.startsWith(
-                                member,Qt::CaseSensitive);
-                } else {
-                    statement->caseMatch = true;
-                }
-                mCompletionStatementList.append(statement);
+    mCompletionStatementList.reserve(mFullCompletionStatementList.size());
+    foreach (const PStatement& statement, mFullCompletionStatementList) {
+        Qt::CaseSensitivity cs = (mIgnoreCase?
+                                      Qt::CaseInsensitive:
+                                      Qt::CaseSensitive);
+
+        int matched = 0;
+        int caseMatched = 0;
+        QString command = statement->command;
+        int pos = 0;
+        int lastPos = -10;
+        int totalPos = 0;
+        statement->matchPositions.clear();
+        foreach (const QChar& ch, member) {
+            if (mIgnoreCase)
+                pos = command.indexOf(ch,pos,Qt::CaseInsensitive);
+            else
+                pos = command.indexOf(ch,pos,Qt::CaseSensitive);
+            if (pos<0) {
+                break;
             }
+            if (pos == lastPos+1) {
+                statement->matchPositions.last()->end++;
+            } else {
+                PStatementMathPosition matchPosition=std::make_shared<StatementMatchPosition>();
+                matchPosition->start = pos;
+                matchPosition->end = pos+1;
+                statement->matchPositions.append(matchPosition);
+            }
+            if (ch==command[pos])
+                caseMatched++;
+            matched++;
+            totalPos += pos;
+            lastPos = pos;
+            pos+=1;
         }
-    } else
-        mCompletionStatementList.append(mFullCompletionStatementList);
+
+        if (mIgnoreCase && matched==member.length()) {
+            statement->caseMatched = caseMatched;
+            statement->matchPosTotal = totalPos;
+            if (member.length()>0)
+                statement->firstMatchLength = statement->matchPositions.front()->end - statement->matchPositions.front()->start;
+            else
+                statement->firstMatchLength = 0;
+            mCompletionStatementList.append(statement);
+        } else if (caseMatched == member.length()) {
+            statement->caseMatched = caseMatched;
+            statement->matchPosTotal = totalPos;
+            if (member.length()>0)
+                statement->firstMatchLength = statement->matchPositions.front()->end - statement->matchPositions.front()->start;
+            else
+                statement->firstMatchLength = 0;
+            mCompletionStatementList.append(statement);
+        } else {
+            statement->matchPositions.clear();
+            statement->caseMatched = 0;
+            statement->matchPosTotal = 0;
+            statement->firstMatchLength = 0;
+        }
+    }
     if (mRecordUsage) {
         int topCount = 0;
         int secondCount = 0;
@@ -959,7 +1040,12 @@ QVariant CodeCompletionListModel::data(const QModelIndex &index, int role) const
     switch(role) {
     case Qt::DisplayRole: {
         PStatement statement = mStatements->at(index.row());
-        return statement->command;
+        QString text = statement->command;
+        for (int i = statement->matchPositions.size()-1;i>=0;i--) {
+            text.insert(statement->matchPositions[i]->end,"</b></u>");
+            text.insert(statement->matchPositions[i]->start,"<u><b>");
+        }
+        return text;
         }
     case Qt::ForegroundRole: {
         PStatement statement = mStatements->at(index.row());

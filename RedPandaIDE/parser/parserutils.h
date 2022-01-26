@@ -125,6 +125,14 @@ enum class EvalStatementKind {
 
 using PRemovedStatement = std::shared_ptr<RemovedStatement>;
 
+struct StatementMatchPosition{
+    int start;
+    int end;
+};
+
+using PStatementMathPosition = std::shared_ptr<StatementMatchPosition>;
+
+
 struct Statement;
 using PStatement = std::shared_ptr<Statement>;
 using StatementList = QList<PStatement>;
@@ -157,10 +165,14 @@ struct Statement {
     bool isInherited; // inherted member;
     QString fullName; // fullname(including class and namespace), ClassA::foo
     QSet<QString> usingList; // using namespaces
-    int usageCount; //Usage Count, used by TCodeCompletion
-    int freqTop; // Usage Count Rank, used by TCodeCompletion
-    bool caseMatch; // if match with case, used by TCodeCompletion
     QString noNameArgs;// Args without name
+    // fields for code completion
+    int usageCount; //Usage Count
+    int freqTop; // Usage Count Rank
+    int matchPosTotal; // total of matched positions
+    int firstMatchLength; // length of first match;
+    int caseMatched; // if match with case
+    QList<PStatementMathPosition> matchPositions;
 };
 
 struct EvalStatement;

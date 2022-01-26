@@ -2693,7 +2693,6 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete)
 //    fCompletionBox.ShowCount := devCodeCompletion.MaxCount;
     //Set Font size;
     mCompletionPopup->setFont(font());
-
     // Redirect key presses to completion box if applicable
     //todo:
     mCompletionPopup->setKeypressedCallback([this](QKeyEvent *event)->bool{
