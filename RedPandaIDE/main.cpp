@@ -175,6 +175,8 @@ int main(int argc, char *argv[])
                 pMainWindow->newEditor();
             }
         }
+        if (mainWindow.screen())
+            setScreenDPI(mainWindow.screen()->logicalDotsPerInch());
         mainWindow.show();
 #ifdef Q_OS_WIN
         WindowLogoutEventFilter filter;
