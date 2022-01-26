@@ -49,7 +49,8 @@ private:
     void setDrawingColors(bool Selected);
     int ColumnToXValue(int Col);
     void PaintToken(const QString& Token, int TokenLen, int ColumnsBefore,
-                    int First, int Last, bool isSelection);
+                    int First, int Last, bool isSelection, const QFont& font,
+                    const QFont& fontForNonAscii);
     void PaintEditAreas(const SynEditingAreaList& areaList);
     void PaintHighlightToken(bool bFillToEOL);
     bool TokenIsSpaces(bool& bSpacesTest, const QString& Token, bool& bIsSpaces);

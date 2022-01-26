@@ -619,6 +619,7 @@ private:
     int mCharsInWindow;
     int mCharWidth;
     QFont mFontDummy;
+    QFont mFontForNonAscii;
     SynFontSmoothMethod mFontSmoothing;
     bool mMouseMoved;
     /* IME input */
@@ -756,6 +757,9 @@ public:
 QVariant inputMethodQuery(Qt::InputMethodQuery property) const override;
 
 // QWidget interface
+const QFont &fontForNonAscii() const;
+void setFontForNonAscii(const QFont &newFontForNonAscii);
+
 protected:
 void dragEnterEvent(QDragEnterEvent *event) override;
 void dropEvent(QDropEvent *event) override;

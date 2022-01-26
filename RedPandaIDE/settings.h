@@ -366,6 +366,9 @@ public:
         bool enableLigaturesSupport() const;
         void setEnableLigaturesSupport(bool newEnableLigaturesSupport);
 
+        const QString &nonAsciiFontName() const;
+        void setNonAsciiFontName(const QString &newNonAsciiFontName);
+
     private:
         //General
         // indents
@@ -405,6 +408,7 @@ public:
         //Font
         //font
         QString mFontName;
+        QString mNonAsciiFontName;
         int mFontSize;
         bool mFontOnlyMonospaced;
 

@@ -4170,6 +4170,10 @@ void Editor::applySettings()
     f.setPixelSize(pointToPixel(pSettings->editor().fontSize()));
     f.setStyleStrategy(QFont::PreferAntialias);
     setFont(f);
+    QFont f2=QFont(pSettings->editor().nonAsciiFontName());
+    f2.setPixelSize(pointToPixel(pSettings->editor().fontSize()));
+    f2.setStyleStrategy(QFont::PreferAntialias);
+    setFontForNonAscii(f2);
 
     // Set gutter properties
     gutter().setLeftOffset(pointToPixel(pSettings->editor().fontSize()) + pSettings->editor().gutterLeftOffset());

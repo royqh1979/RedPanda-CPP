@@ -56,6 +56,7 @@ void EditorFontWidget::doLoad()
     //font
     ui->chkOnlyMonospacedFonts->setChecked(pSettings->editor().fontOnlyMonospaced());
     ui->cbFont->setCurrentFont(QFont(pSettings->editor().fontName()));
+    ui->cbNonAsciiFont->setCurrentFont(QFont(pSettings->editor().nonAsciiFontName()));
     ui->spinFontSize->setValue(pSettings->editor().fontSize());
     ui->chkLigature->setChecked(pSettings->editor().enableLigaturesSupport());
 
@@ -79,6 +80,7 @@ void EditorFontWidget::doSave()
     //font
     pSettings->editor().setFontOnlyMonospaced(ui->chkOnlyMonospacedFonts->isChecked());
     pSettings->editor().setFontName(ui->cbFont->currentFont().family());
+    pSettings->editor().setNonAsciiFontName(ui->cbNonAsciiFont->currentFont().family());
     pSettings->editor().setFontSize(ui->spinFontSize->value());
     pSettings->editor().setEnableLigaturesSupport(ui->chkLigature->isChecked());
 

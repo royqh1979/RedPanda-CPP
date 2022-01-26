@@ -69,6 +69,8 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
     mFontDummy.setStyleStrategy(QFont::PreferAntialias);
     setFont(mFontDummy);
 
+    setFontForNonAscii(mFontDummy);
+
     mUndoList = std::make_shared<SynEditUndoList>();
     mUndoList->connect(mUndoList.get(), &SynEditUndoList::addedUndo, this, &SynEdit::onUndoAdded);
     mOrigUndoList = mUndoList;
@@ -3103,14 +3105,21 @@ void SynEdit::recalcCharExtent()
     mTextHeight  = 0;
     mCharWidth = 0;
     QFontMetrics fm(font());
-    mTextHeight = fm.lineSpacing();
+    QFontMetrics fm2(font());
+    mTextHeight = std::max(fm.lineSpacing(),fm2.lineSpacing());
     mCharWidth = fm.horizontalAdvance("M");
+
     if (hasStyles[0]) { // has bold font
         QFont f = font();
         f.setBold(true);
         QFontMetrics fm(f);
+        QFont f2 = font();
+        f2.setBold(true);
+        QFontMetrics fm2(f);
         if (fm.lineSpacing()>mTextHeight)
             mTextHeight=fm.lineSpacing();
+        if (fm2.lineSpacing()>mTextHeight)
+            mTextHeight=fm2.lineSpacing();
         if (fm.horizontalAdvance("M")>mCharWidth)
             mCharWidth = fm.horizontalAdvance("M");
     }
@@ -3118,8 +3127,13 @@ void SynEdit::recalcCharExtent()
         QFont f = font();
         f.setItalic(true);
         QFontMetrics fm(f);
+        QFont f2 = font();
+        f2.setItalic(true);
+        QFontMetrics fm2(f);
         if (fm.lineSpacing()>mTextHeight)
             mTextHeight=fm.lineSpacing();
+        if (fm2.lineSpacing()>mTextHeight)
+            mTextHeight=fm2.lineSpacing();
         if (fm.horizontalAdvance("M")>mCharWidth)
             mCharWidth = fm.horizontalAdvance("M");
     }
@@ -3127,8 +3141,13 @@ void SynEdit::recalcCharExtent()
         QFont f = font();
         f.setStrikeOut(true);
         QFontMetrics fm(f);
+        QFont f2 = font();
+        f2.setStrikeOut(true);
+        QFontMetrics fm2(f);
         if (fm.lineSpacing()>mTextHeight)
             mTextHeight=fm.lineSpacing();
+        if (fm2.lineSpacing()>mTextHeight)
+            mTextHeight=fm2.lineSpacing();
         if (fm.horizontalAdvance("M")>mCharWidth)
             mCharWidth = fm.horizontalAdvance("M");
     }
@@ -3136,8 +3155,13 @@ void SynEdit::recalcCharExtent()
         QFont f = font();
         f.setUnderline(true);
         QFontMetrics fm(f);
+        QFont f2 = font();
+        f2.setUnderline(true);
+        QFontMetrics fm2(f);
         if (fm.lineSpacing()>mTextHeight)
             mTextHeight=fm.lineSpacing();
+        if (fm2.lineSpacing()>mTextHeight)
+            mTextHeight=fm2.lineSpacing();
         if (fm.horizontalAdvance("M")>mCharWidth)
             mCharWidth = fm.horizontalAdvance("M");
     }
@@ -3734,6 +3758,17 @@ void SynEdit::onScrolled(int)
     mLeftChar = horizontalScrollBar()->value();
     mTopLine = verticalScrollBar()->value();
     invalidate();
+}
+
+const QFont &SynEdit::fontForNonAscii() const
+{
+    return mFontForNonAscii;
+}
+
+void SynEdit::setFontForNonAscii(const QFont &newFontForNonAscii)
+{
+    mFontForNonAscii = newFontForNonAscii;
+    mFontForNonAscii.setStyleStrategy(QFont::PreferAntialias);
 }
 
 const QColor &SynEdit::backgroundColor() const

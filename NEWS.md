@@ -7,6 +7,7 @@ Red Panda C++ Version 0.13.4
   - fix: static members are not correct shown after Classname + '::'
   - enhancement: show parameter tips for class constructors
   - enhancement: when there are tips showing, don't show mouse tips
+  - enhancement: setting non-ascii font for editors
 
 Red Panda C++ Version 0.13.3
   - enhancement: restore editor position after rename symbol

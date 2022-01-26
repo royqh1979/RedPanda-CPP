@@ -588,6 +588,16 @@ void Settings::Editor::setEnableLigaturesSupport(bool newEnableLigaturesSupport)
     mEnableLigaturesSupport = newEnableLigaturesSupport;
 }
 
+const QString &Settings::Editor::nonAsciiFontName() const
+{
+    return mNonAsciiFontName;
+}
+
+void Settings::Editor::setNonAsciiFontName(const QString &newNonAsciiFontName)
+{
+    mNonAsciiFontName = newNonAsciiFontName;
+}
+
 bool Settings::Editor::highlightCurrentWord() const
 {
     return mHighlightCurrentWord;
@@ -1097,9 +1107,10 @@ void Settings::Editor::doSave()
 
     //Font
     //font
-    saveValue("font_name",mFontName);
+    saveValue("font_name", mFontName);
+    saveValue("non_ascii_font_name", mNonAsciiFontName);
     saveValue("font_size", mFontSize);
-    saveValue("font_only_monospaced",mFontOnlyMonospaced);
+    saveValue("font_only_monospaced", mFontOnlyMonospaced);
     saveValue("enable_ligatures_support", mEnableLigaturesSupport);
 
     //gutter
@@ -1215,8 +1226,10 @@ void Settings::Editor::doLoad()
     //Font
 #ifdef Q_OS_WIN
     mFontName = stringValue("font_name","consolas");
+    mNonAsciiFontName = stringValue("non_ascii_font_name","consolas");
 #else
     mFontName = stringValue("font_name","Dejavu Sans Mono");
+    mNonAsciiFontName = stringValue("non_ascii_font_name","Dejavu Sans Mono");
 #endif
     mFontSize = intValue("font_size",14);
     mFontOnlyMonospaced = boolValue("font_only_monospaced",true);

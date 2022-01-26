@@ -381,7 +381,9 @@ int SynEditTextPainter::ColumnToXValue(int Col)
     return edit->textOffset() + (Col - 1) * edit->mCharWidth;
 }
 
-void SynEditTextPainter::PaintToken(const QString &Token, int TokenCols, int ColumnsBefore, int First, int Last, bool)
+void SynEditTextPainter::PaintToken(const QString &Token, int TokenCols, int ColumnsBefore,
+                                    int First, int Last, bool /*isSelection*/, const QFont& font,
+                                    const QFont& fontForNonAscii)
 {
     bool startPaint;
     int nX;
@@ -446,7 +448,13 @@ void SynEditTextPainter::PaintToken(const QString &Token, int TokenCols, int Col
                         }
                     }
                     if (!drawed) {
-                        painter->drawText(nX,rcToken.bottom()-painter->fontMetrics().descent() , Token[i]);
+                        if (Token[i].unicode()<=255)
+                            painter->drawText(nX,rcToken.bottom()-painter->fontMetrics().descent() , Token[i]);
+                        else {
+                            painter->setFont(fontForNonAscii);
+                            painter->drawText(nX,rcToken.bottom()-painter->fontMetrics().descent() , Token[i]);
+                            painter->setFont(font);
+                        }
                         drawed = true;
                     }
                     nX += charCols * edit->mCharWidth;
@@ -552,30 +560,36 @@ void SynEditTextPainter::PaintHighlightToken(bool bFillToEOL)
         font.setStrikeOut(TokenAccu.Style & SynFontStyle::fsStrikeOut);
         font.setUnderline(TokenAccu.Style & SynFontStyle::fsUnderline);
         painter->setFont(font);
+        QFont nonAsciiFont = edit->fontForNonAscii();
+        nonAsciiFont.setBold(TokenAccu.Style & SynFontStyle::fsBold);
+        nonAsciiFont.setItalic(TokenAccu.Style & SynFontStyle::fsItalic);
+        nonAsciiFont.setStrikeOut(TokenAccu.Style & SynFontStyle::fsStrikeOut);
+        nonAsciiFont.setUnderline(TokenAccu.Style & SynFontStyle::fsUnderline);
+
         // Paint the chars
         if (bComplexToken) {
             // first unselected part of the token
             if (bU1) {
                 setDrawingColors(false);
                 rcToken.setRight(ColumnToXValue(nLineSelStart));
-                PaintToken(TokenAccu.s,TokenAccu.Columns,TokenAccu.ColumnsBefore,nC1,nLineSelStart,false);
+                PaintToken(TokenAccu.s,TokenAccu.Columns,TokenAccu.ColumnsBefore,nC1,nLineSelStart,false,font,nonAsciiFont);
             }
             // selected part of the token
             setDrawingColors(true);
             nC1Sel = std::max(nLineSelStart, nC1);
             nC2Sel = std::min(nLineSelEnd, nC2);
             rcToken.setRight(ColumnToXValue(nC2Sel));
-            PaintToken(TokenAccu.s, TokenAccu.Columns, TokenAccu.ColumnsBefore, nC1Sel, nC2Sel,true);
+            PaintToken(TokenAccu.s, TokenAccu.Columns, TokenAccu.ColumnsBefore, nC1Sel, nC2Sel,true,font,nonAsciiFont);
             // second unselected part of the token
             if (bU2) {
                 setDrawingColors(false);
                 rcToken.setRight(ColumnToXValue(nC2));
-                PaintToken(TokenAccu.s, TokenAccu.Columns, TokenAccu.ColumnsBefore,nLineSelEnd, nC2,false);
+                PaintToken(TokenAccu.s, TokenAccu.Columns, TokenAccu.ColumnsBefore,nLineSelEnd, nC2,false,font,nonAsciiFont);
             }
         } else {
             setDrawingColors(bSel);
             rcToken.setRight(ColumnToXValue(nC2));
-            PaintToken(TokenAccu.s, TokenAccu.Columns, TokenAccu.ColumnsBefore, nC1, nC2,bSel);
+            PaintToken(TokenAccu.s, TokenAccu.Columns, TokenAccu.ColumnsBefore, nC1, nC2,bSel,font,nonAsciiFont);
         }
     }
 
@@ -941,17 +955,17 @@ void SynEditTextPainter::PaintLines()
                   setDrawingColors(true);
                   rcToken.setLeft(std::max(rcLine.left(), ColumnToXValue(nLineSelStart)));
                   rcToken.setRight(std::min(rcLine.right(), ColumnToXValue(nLineSelEnd)));
-                  PaintToken(sToken, nTokenColumnLen, 0, nLineSelStart, nLineSelEnd,false);
+                  PaintToken(sToken, nTokenColumnLen, 0, nLineSelStart, nLineSelEnd,false,edit->font(),edit->fontForNonAscii());
                   setDrawingColors(false);
                   rcToken.setLeft(std::max(rcLine.left(), ColumnToXValue(FirstCol)));
                   rcToken.setRight(std::min(rcLine.right(), ColumnToXValue(nLineSelStart)));
-                  PaintToken(sToken, nTokenColumnLen, 0, FirstCol, nLineSelStart,false);
+                  PaintToken(sToken, nTokenColumnLen, 0, FirstCol, nLineSelStart,false,edit->font(),edit->fontForNonAscii());
                   rcToken.setLeft(std::max(rcLine.left(), ColumnToXValue(nLineSelEnd)));
                   rcToken.setRight(std::min(rcLine.right(), ColumnToXValue(LastCol)));
-                  PaintToken(sToken, nTokenColumnLen, 0, nLineSelEnd, LastCol,true);
+                  PaintToken(sToken, nTokenColumnLen, 0, nLineSelEnd, LastCol,true,edit->font(),edit->fontForNonAscii());
               } else {
                   setDrawingColors(bLineSelected);
-                  PaintToken(sToken, nTokenColumnLen, 0, FirstCol, LastCol,bLineSelected);
+                  PaintToken(sToken, nTokenColumnLen, 0, FirstCol, LastCol,bLineSelected,edit->font(),edit->fontForNonAscii());
               }
               //Paint editingAreaBorders
               if (bCurrentLine && edit->mInputPreeditString.length()>0) {
