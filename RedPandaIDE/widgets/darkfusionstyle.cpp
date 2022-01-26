@@ -87,7 +87,7 @@ static QString uniqueName(const QString &key, const QStyleOption *option, const 
 }
 
 static qreal calcDpi() {
-    return desktopDpi();
+    return screenDPI();
 }
 
 static qreal calcDpiScaled(qreal value, qreal dpi) {

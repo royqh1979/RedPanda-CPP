@@ -51,6 +51,7 @@
 #include <QLineEdit>
 #include <QMessageBox>
 #include <QMimeData>
+#include <QScreen>
 #include <QTcpSocket>
 #include <QTemporaryFile>
 #include <QTextBlock>
@@ -310,7 +311,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     buildContextMenus();
     updateAppTitle();
-    applySettings();
+    //applySettings();
     applyUISettings();
     updateProjectView();
     updateEditorActions();
@@ -560,7 +561,8 @@ void MainWindow::updateEditorColorSchemes()
 
 void MainWindow::applySettings()
 {
-    //changeTheme(pSettings->environment().theme());
+    qDebug()<<"--- apply settings -- ";
+    qDebug()<<screen()<<screen()->logicalDotsPerInch();
     ThemeManager themeManager;
     PAppTheme appTheme = themeManager.theme(pSettings->environment().theme());
     if (appTheme->isDark())
@@ -574,11 +576,15 @@ void MainWindow::applySettings()
     mFileInfoStatus->setPalette(appTheme->palette());
     updateEditorColorSchemes();
 
+    qDebug()<<pointToPixel(pSettings->environment().interfaceFontSize());
     QFont font(pSettings->environment().interfaceFont());
     font.setPixelSize(pointToPixel(pSettings->environment().interfaceFontSize()));
     font.setStyleStrategy(QFont::PreferAntialias);
     qApp->setFont(font);
     this->setFont(font);
+    for (QWidget* p:findChildren<QWidget*>()) {
+        p->setFont(font);
+    }
     pIconsManager->updateParserIcons(pSettings->environment().iconSet(),pointToPixel(pSettings->environment().interfaceFontSize()));
 
     QFont caseEditorFont(pSettings->executor().caseEditorFontName());
@@ -620,6 +626,7 @@ void MainWindow::applySettings()
     updateEditorSettings();
     updateDebuggerSettings();
     updateActionIcons();
+    qDebug()<<"*** app setting ****";
 }
 
 void MainWindow::applyUISettings()
@@ -691,6 +698,7 @@ void MainWindow::setActiveBreakpoint(QString FileName, int Line, bool setFocus)
 
 void MainWindow::updateDPI()
 {
+    qDebug()<<"dpi changed";
     applySettings();
 }
 
@@ -3739,6 +3747,8 @@ void MainWindow::closeEvent(QCloseEvent *event) {
 
 void MainWindow::showEvent(QShowEvent *)
 {
+    setScreenDPI(screen()->logicalDotsPerInch());
+    applySettings();
     const Settings::UI& settings = pSettings->ui();
     ui->tabMessages->setCurrentIndex(settings.bottomPanelIndex());
     if (settings.bottomPanelOpenned()) {

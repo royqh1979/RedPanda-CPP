@@ -30,7 +30,8 @@
 #include <QStyleFactory>
 #include <QDateTime>
 #include <QColor>
-#include <QDesktopWidget>
+#include <QWindow>
+#include <QScreen>
 #include "parser/cppparser.h"
 #include "settings.h"
 #include "mainwindow.h"
@@ -1001,12 +1002,12 @@ QString localizePath(const QString &path)
 
 float pointToPixel(float point)
 {
-    return point * desktopDpi() / 72;
+    return point * screenDPI() / 72;
 }
 
 float pixelToPoint(float pixel)
 {
-    return pixel * 72 / desktopDpi();
+    return pixel * 72 / screenDPI();
 }
 
 
@@ -1076,12 +1077,14 @@ QStringList splitProcessCommand(const QString &cmd)
     return result;
 }
 
-static float saved_desktop_dpi = -1;
-float desktopDpi()
+static int defaultScreenDPI = -1;
+
+int screenDPI()
 {
-    if (saved_desktop_dpi<1)
-        saved_desktop_dpi = qApp->desktop()->logicalDpiY();
-    return saved_desktop_dpi;
+    if (defaultScreenDPI<1) {
+        defaultScreenDPI = qApp->primaryScreen()->logicalDotsPerInch();
+    }
+    return defaultScreenDPI;
 }
 
 qulonglong stringToHex(const QString &str, qulonglong defaultValue)
@@ -1093,7 +1096,7 @@ qulonglong stringToHex(const QString &str, qulonglong defaultValue)
     return defaultValue;
 }
 
-void setDesktopDpi(float dpi)
+void setScreenDPI(int dpi)
 {
-    saved_desktop_dpi = dpi;
+    defaultScreenDPI = dpi;
 }

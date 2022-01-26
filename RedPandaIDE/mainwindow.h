@@ -685,6 +685,7 @@ protected:
     void closeEvent(QCloseEvent *event) override;
     void showEvent(QShowEvent* event) override;
     void hideEvent(QHideEvent *event) override;
+
 };
 
 extern MainWindow* pMainWindow;

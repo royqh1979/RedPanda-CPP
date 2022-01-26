@@ -8,6 +8,7 @@ Red Panda C++ Version 0.13.4
   - enhancement: show parameter tips for class constructors
   - enhancement: when there are tips showing, don't show mouse tips
   - enhancement: setting non-ascii font for editors
+  - enhancement: correct handle windows dpi change event
 
 Red Panda C++ Version 0.13.3
   - enhancement: restore editor position after rename symbol
