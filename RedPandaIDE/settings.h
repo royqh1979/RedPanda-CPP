@@ -980,6 +980,9 @@ public:
         int newClassDialogWidth() const;
         void setNewClassDialogWidth(int newNewClassDialogWidth);
 
+        int newClassDialogHeight() const;
+        void setNewClassDialogHeight(int newNewClassDialogHeight);
+
     private:
         QByteArray mMainWindowState;
         QByteArray mMainWindowGeometry;

@@ -243,7 +243,6 @@ struct FileIncludes {
     QSet<QString> dependedFiles; // the files depends on me
 };
 using PFileIncludes = std::shared_ptr<FileIncludes>;
-using ColorCallback = std::function<QColor (PStatement)>;
 
 extern QStringList CppDirectives;
 extern QStringList JavadocTags;
@@ -274,5 +273,6 @@ QStringList getOwnerExpressionAndMember(
         QString& memberOperator,
         QStringList& memberExpression);
 bool isMemberOperator(QString token);
+StatementKind getKindOfStatement(const PStatement& statement);
 
 #endif // PARSER_UTILS_H

@@ -29,13 +29,36 @@ public:
     explicit CodeCompletionListModel(const StatementList* statements,QObject *parent = nullptr);
     int rowCount(const QModelIndex &parent) const override;
     QVariant data(const QModelIndex &index, int role) const override;
+    PStatement statement(const QModelIndex &index) const;
+    QPixmap statementIcon(const QModelIndex &index) const;
     void notifyUpdated();
-    const ColorCallback &colorCallback() const;
-    void setColorCallback(const ColorCallback &newColorCallback);
 
 private:
     const StatementList* mStatements;
-    ColorCallback mColorCallback;
+};
+
+class CodeCompletionListItemDelegate: public QStyledItemDelegate {
+    Q_OBJECT
+public:
+    CodeCompletionListItemDelegate(CodeCompletionListModel *model=nullptr, QWidget *parent = nullptr);
+
+
+    // QAbstractItemDelegate interface
+public:
+    void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const override;
+    CodeCompletionListModel *model() const;
+    void setModel(CodeCompletionListModel *newModel);
+
+    const QColor &normalColor() const;
+    void setNormalColor(const QColor &newNormalColor);
+
+    const QColor &matchedColor() const;
+    void setMatchedColor(const QColor &newMatchedColor);
+
+private:
+    CodeCompletionListModel *mModel;
+    QColor mNormalColor;
+    QColor mMatchedColor;
 };
 
 class CodeCompletionPopup : public QWidget
@@ -121,6 +144,7 @@ private:
     QString mMemberOperator;
     QMutex mMutex;
     std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > mColors;
+    CodeCompletionListItemDelegate* mDelegate;
 
     PCppParser mParser;
     PStatement mCurrentStatement;

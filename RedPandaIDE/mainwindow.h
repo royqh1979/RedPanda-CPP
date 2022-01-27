@@ -203,7 +203,6 @@ public slots:
     void onStartParsing();
     void onEndParsing(int total, int updateView);
     void onEvalValueReady(const QString& value);
-    void onMemoryExamineReady(const QStringList& value);
     void onLocalsReady(const QStringList& value);
     void onEditorContextMenu(const QPoint& pos);
     void onEditorRightTabContextMenu(const QPoint& pos);

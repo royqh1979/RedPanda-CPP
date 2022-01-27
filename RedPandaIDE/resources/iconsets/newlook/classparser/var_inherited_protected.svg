@@ -49,17 +49,10 @@
        y="0.091440894"
        rx="7.9375"
        ry="7.9375" />
-    <text
-       xml:space="preserve"
+    <path
+       id="text3748"
        style="font-style:normal;font-weight:normal;font-size:28.2222px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
-       x="1.3922237"
-       y="21.678736"
-       id="text3748"><tspan
-         sodipodi:role="line"
-         id="tspan3746"
-         style="font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:28.2222px;font-family:sans-serif;-inkscape-font-specification:'sans-serif Italic';stroke-width:0.264583"
-         x="1.3922237"
-         y="21.678736">v</tspan></text>
+       d="m 3.3242188,6.375 c 0.9014076,5.278043 1.8050986,10.555699 2.7050781,15.833984 1.1054687,0 2.2109375,0 3.3164062,0 C 12.830365,16.724378 16.3168,11.240898 19.800781,5.7558594 c -1.369791,0 -2.739583,0 -4.109375,0 C 13.370401,9.5173981 11.052305,13.280736 8.7324219,17.042969 8.1349928,13.280667 7.5410212,9.5178114 6.9414062,5.7558594 c -1.2408854,0 -2.4817708,0 -3.7226562,0 C 3.253906,5.9622396 3.289062,6.1686198 3.3242188,6.375 Z" />
     <rect
        style="fill:#235aff;fill-opacity:1;stroke-width:1.29084"
        id="rect943"

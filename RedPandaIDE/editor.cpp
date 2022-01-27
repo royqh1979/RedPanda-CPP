@@ -719,7 +719,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
                                 mFilename,
                                 lastWord,
                                 caretY());
-                    StatementKind kind = mParser->getKindOfStatement(statement);
+                    StatementKind kind = getKindOfStatement(statement);
                     if (kind == StatementKind::skClass
                             || kind == StatementKind::skEnumClassType
                             || kind == StatementKind::skEnumType
@@ -889,7 +889,7 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
 //        qDebug()<<s;
         PStatement statement = mParser->findStatementOf(mFilename,
           s , p.Line);
-        StatementKind kind = mParser->getKindOfStatement(statement);
+        StatementKind kind = getKindOfStatement(statement);
         if (kind == StatementKind::skUnknown) {
             if ((pEndPos.Line>=1)
               && (pEndPos.Char>=0)
@@ -1155,7 +1155,7 @@ void Editor::inputMethodEvent(QInputMethodEvent *event)
                                 mFilename,
                                 lastWord,
                                 caretY());
-                    StatementKind kind = mParser->getKindOfStatement(statement);
+                    StatementKind kind = getKindOfStatement(statement);
                     if (kind == StatementKind::skClass
                             || kind == StatementKind::skEnumClassType
                             || kind == StatementKind::skEnumType
@@ -3504,7 +3504,7 @@ void Editor::onExportedFormatToken(PSynHighlighter syntaxHighlighter, int Line, 
 //        qDebug()<<s;
         PStatement statement = mParser->findStatementOf(mFilename,
           s , p.Line);
-        StatementKind kind = mParser->getKindOfStatement(statement);
+        StatementKind kind = getKindOfStatement(statement);
         if (kind == StatementKind::skUnknown) {
             if ((pEndPos.Line>=1)
               && (pEndPos.Char>=0)

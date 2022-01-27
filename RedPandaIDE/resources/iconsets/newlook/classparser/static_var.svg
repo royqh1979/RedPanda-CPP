@@ -8,7 +8,7 @@
    version="1.1"
    id="svg5"
    inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
-   sodipodi:docname="static_method - 副本.svg"
+   sodipodi:docname="static_var.svg"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
@@ -49,16 +49,9 @@
        y="0.091440894"
        rx="7.9375"
        ry="7.9375" />
-    <text
-       xml:space="preserve"
+    <path
+       id="text3748"
        style="font-style:normal;font-weight:normal;font-size:28.2222px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
-       x="3.6208744"
-       y="21.337294"
-       id="text3748"><tspan
-         sodipodi:role="line"
-         id="tspan3746"
-         style="font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:28.2222px;font-family:sans-serif;-inkscape-font-specification:'sans-serif Italic';stroke-width:0.264583"
-         x="3.6208744"
-         y="21.337294">v</tspan></text>
+       d="m 5.5527344,6.0351562 c 0.9014045,5.2773928 1.8051173,10.5543928 2.7050781,15.8320318 1.1054687,-10e-7 2.2109375,0 3.3164065,0 3.484619,-5.483983 6.971193,-10.966724 10.455078,-16.4511724 -1.369792,0 -2.739583,0 -4.109375,0 C 15.598956,9.1769278 13.280814,12.939586 10.960938,16.701172 10.363512,12.93952 9.7695125,9.1773205 9.1699219,5.4160156 c -1.2408854,0 -2.4817709,0 -3.7226563,0 0.035156,0.2063802 0.070312,0.4127604 0.1054688,0.6191406 z" />
   </g>
 </svg>

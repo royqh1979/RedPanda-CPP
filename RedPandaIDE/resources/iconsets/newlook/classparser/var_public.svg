@@ -8,7 +8,7 @@
    version="1.1"
    id="svg5"
    inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
-   sodipodi:docname="var_inherited.svg"
+   sodipodi:docname="var_public.svg"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
@@ -49,17 +49,10 @@
        y="0.091440894"
        rx="7.9375"
        ry="7.9375" />
-    <text
-       xml:space="preserve"
+    <path
+       id="text3748"
        style="font-style:normal;font-weight:normal;font-size:28.2222px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
-       x="2.5352347"
-       y="21.495853"
-       id="text3748"><tspan
-         sodipodi:role="line"
-         id="tspan3746"
-         style="font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:28.2222px;font-family:sans-serif;-inkscape-font-specification:'sans-serif Italic';stroke-width:0.264583"
-         x="2.5352347"
-         y="21.495853">v</tspan></text>
+       d="m 4.4667969,6.1933594 c 0.9020375,5.2773956 1.8065276,10.5543746 2.7070312,15.8320316 1.1048177,0 2.2096354,0 3.3144529,0 3.484619,-5.483983 6.971194,-10.966723 10.455078,-16.4511722 -1.369791,0 -2.739583,0 -4.109375,0 C 14.513019,9.335131 12.194877,13.097789 9.875,16.859375 9.2782002,13.097728 8.6850334,9.3354988 8.0859375,5.5742188 c -1.2415365,-10e-8 -2.4830729,0 -3.7246094,0 0.035156,0.2063802 0.070312,0.4127604 0.1054688,0.6191406 z" />
     <rect
        style="fill:#2e5c00;fill-opacity:1;stroke-width:1.29084"
        id="rect943"

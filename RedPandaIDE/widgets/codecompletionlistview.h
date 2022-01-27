@@ -24,16 +24,6 @@
 using KeyPressedCallback = std::function<bool (QKeyEvent *)>;
 using InputMethodCallback = std::function<bool (QInputMethodEvent*)>;
 
-class CodeCompletionListItemDelegate: public QStyledItemDelegate {
-    Q_OBJECT
-public:
-
-    // QAbstractItemDelegate interface
-public:
-    void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const override;
-    QSize sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const override;
-};
-
 class CodeCompletionListView: public QListView {
     Q_OBJECT
 public:
@@ -50,7 +40,6 @@ protected:
     void keyPressEvent(QKeyEvent *event) override;
 private:
     KeyPressedCallback mKeypressedCallback;
-    CodeCompletionListItemDelegate mDelegate;
 
     // QWidget interface
 protected:

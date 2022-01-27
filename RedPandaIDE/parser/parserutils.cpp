@@ -597,3 +597,20 @@ bool isMemberOperator(QString token)
 {
     return MemberOperators.contains(token);
 }
+
+
+StatementKind getKindOfStatement(const PStatement& statement)
+{
+    if (!statement)
+        return StatementKind::skUnknown;
+    if (statement->kind == StatementKind::skVariable) {
+        if (!statement->parentScope.lock()) {
+            return StatementKind::skGlobalVariable;
+        }  else if (statement->scope == StatementScope::ssLocal) {
+            return StatementKind::skLocalVariable;
+        } else {
+            return StatementKind::skVariable;
+        }
+    }
+    return statement->kind;
+}

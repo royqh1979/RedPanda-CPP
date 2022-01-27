@@ -210,6 +210,8 @@ QString Settings::Dirs::data(Settings::Dirs::DataType dataType) const
         return dataDir;
     case DataType::ColorSheme:
         return ":/colorschemes/colorschemes";
+    case DataType::IconSet:
+        return ":/resources/iconsets";
     }
     return "";
 }
@@ -4708,6 +4710,16 @@ int Settings::UI::newClassDialogWidth() const
 void Settings::UI::setNewClassDialogWidth(int newNewClassDialogWidth)
 {
     mNewClassDialogWidth = newNewClassDialogWidth;
+}
+
+int Settings::UI::newClassDialogHeight() const
+{
+    return mNewClassDialogHeight;
+}
+
+void Settings::UI::setNewClassDialogHeight(int newNewClassDialogHeight)
+{
+    mNewClassDialogHeight = newNewClassDialogHeight;
 }
 
 int Settings::UI::settingsDialogHeight() const

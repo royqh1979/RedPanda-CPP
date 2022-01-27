@@ -4,6 +4,7 @@ Red Panda C++ Version 0.14.0
   - enhancement: new class ( to project) wizard
   - enhancement: greatly speed up code completion 
   - fix: code folding calcuation not correct when some codes are folded and editing after them
+  - enhancement: code completion ui redesigned
 
 Red Panda C++ Version 0.13.4
   - fix: when copy comments, don't auto indent

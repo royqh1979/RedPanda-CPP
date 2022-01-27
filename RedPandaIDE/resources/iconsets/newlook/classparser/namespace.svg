@@ -49,16 +49,9 @@
        y="0.091440894"
        rx="7.9375"
        ry="7.9375" />
-    <text
-       xml:space="preserve"
-       style="font-style:normal;font-weight:normal;font-size:28.2222px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
-       x="2.3277049"
-       y="23.341707"
-       id="text3748"><tspan
-         sodipodi:role="line"
-         id="tspan3746"
-         style="font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:28.2222px;font-family:sans-serif;-inkscape-font-specification:'sans-serif Italic';stroke-width:0.264583"
-         x="2.3277049"
-         y="23.341707">N</tspan></text>
+    <path
+       id="text3748"
+       style="font-style:normal;font-weight:normal;font-size:28.2222px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.25157"
+       d="M 7.7039971,2.703125 C 6.2300354,9.7590719 4.7574236,16.815364 3.2826126,23.871094 c 1.1035804,0 2.2071609,0 3.3107412,0 1.175129,-5.613545 2.346991,-11.227929 3.5208632,-16.8417971 1.550528,5.6140571 3.104014,11.2271191 4.652694,16.8417971 1.224828,0 2.449655,0 3.674482,0 1.504436,-7.192246 3.003982,-14.385747 4.507905,-21.5781252 -1.103581,-1e-7 -2.207161,0 -3.310741,0 C 18.574658,7.3746099 17.514049,12.457096 16.451416,17.539062 15.045752,12.45708 13.641248,7.3747044 12.234857,2.2929688 c -1.481447,-1e-7 -2.9628928,0 -4.4443392,0 -0.02884,0.1367187 -0.05768,0.2734375 -0.086521,0.4101562 z" />
   </g>
 </svg>

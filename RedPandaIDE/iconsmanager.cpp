@@ -67,6 +67,8 @@ void IconsManager::updateParserIcons(const QString &iconSet, int size)
     mIconPixmaps.insert(PARSER_PROTECTED_VAR, createSVGIcon(iconFolder+"var_protected.svg",size,size));
     mIconPixmaps.insert(PARSER_PUBLIC_VAR, createSVGIcon(iconFolder+"var_public.svg",size,size));
     mIconPixmaps.insert(PARSER_PRIVATE_VAR, createSVGIcon(iconFolder+"var_private.svg",size,size));
+    mIconPixmaps.insert(PARSER_KEYWORD, createSVGIcon(iconFolder+"keyword.svg",size,size));
+    mIconPixmaps.insert(PARSER_CODE_SNIPPET, createSVGIcon(iconFolder+"code_snippet.svg",size,size));
 
 }
 
@@ -220,4 +222,75 @@ void IconsManager::prepareCustomIconSet(const QString &customIconSet)
     if (QFile(customIconSet).exists())
         return;
     copyFolder(":/resources/iconsets",customIconSet);
+}
+
+QPixmap IconsManager::getPixmapForStatement(PStatement statement)
+{
+    if (!statement)
+        return QPixmap();
+    StatementKind kind = getKindOfStatement(statement);
+    switch (kind) {
+    case StatementKind::skTypedef:
+        return *(pIconsManager->getPixmap(IconsManager::PARSER_TYPE));
+    case StatementKind::skClass:
+        return *(pIconsManager->getPixmap(IconsManager::PARSER_CLASS));
+    case StatementKind::skNamespace:
+    case StatementKind::skNamespaceAlias:
+        return *(pIconsManager->getPixmap(IconsManager::PARSER_NAMESPACE));
+    case StatementKind::skPreprocessor:
+        return *(pIconsManager->getPixmap(IconsManager::PARSER_DEFINE));
+    case StatementKind::skEnumClassType:
+    case StatementKind::skEnumType:
+    case StatementKind::skEnum:
+        return *(pIconsManager->getPixmap(IconsManager::PARSER_ENUM));
+    case StatementKind::skFunction:
+    case StatementKind::skConstructor:
+    case StatementKind::skDestructor:
+        if (statement->scope == StatementScope::ssGlobal)
+            return *(pIconsManager->getPixmap(IconsManager::PARSER_GLOBAL_METHOD));
+        if (statement->isInherited) {
+            if (statement->classScope == StatementClassScope::scsProtected) {
+                return *(pIconsManager->getPixmap(IconsManager::PARSER_INHERITED_PROTECTED_METHOD));
+            } else if (statement->classScope == StatementClassScope::scsPublic) {
+                return *(pIconsManager->getPixmap(IconsManager::PARSER_INHERITED_METHOD));
+            }
+        } else {
+            if (statement->classScope == StatementClassScope::scsProtected) {
+                return *(pIconsManager->getPixmap(IconsManager::PARSER_PROTECTED_METHOD));
+            } else if (statement->classScope == StatementClassScope::scsPublic) {
+                return *(pIconsManager->getPixmap(IconsManager::PARSER_PUBLIC_METHOD));
+            } else {
+                return *(pIconsManager->getPixmap(IconsManager::PARSER_PRIVATE_METHOD));
+            }
+        }
+        break;
+    case StatementKind::skGlobalVariable:
+        return *(pIconsManager->getPixmap(IconsManager::PARSER_GLOBAL_VAR));
+    case StatementKind::skVariable:
+//                if (statement->scope == StatementScope::ssGlobal)
+//                    return QIcon(":/icons/images/classparser/global.ico");
+        if (statement->isInherited) {
+            if (statement->classScope == StatementClassScope::scsProtected) {
+                return *(pIconsManager->getPixmap(IconsManager::PARSER_INHERITED_PROTECTD_VAR));
+            } else if (statement->classScope == StatementClassScope::scsPublic) {
+                return *(pIconsManager->getPixmap(IconsManager::PARSER_INHERITED_VAR));
+            }
+        } else {
+            if (statement->classScope == StatementClassScope::scsProtected) {
+                return *(pIconsManager->getPixmap(IconsManager::PARSER_PROTECTED_VAR));
+            } else if (statement->classScope == StatementClassScope::scsPublic) {
+                return *(pIconsManager->getPixmap(IconsManager::PARSER_PUBLIC_VAR));
+            } else {
+                return *(pIconsManager->getPixmap(IconsManager::PARSER_PRIVATE_VAR));
+            }
+        }
+        break;
+    case StatementKind::skKeyword:
+        return *(pIconsManager->getPixmap(IconsManager::PARSER_KEYWORD));
+    case StatementKind::skUserCodeSnippet:
+        return *(pIconsManager->getPixmap(IconsManager::PARSER_CODE_SNIPPET));
+    default:
+        break;
+    }
+    return QPixmap();
 }

@@ -4523,19 +4523,6 @@ void MainWindow::onEvalValueReady(const QString& value)
                this, &MainWindow::onEvalValueReady);
 }
 
-void MainWindow::onMemoryExamineReady(const QStringList& value)
-{
-//    ui->txtMemoryView->clear();
-//    foreach (QString s, value) {
-//        s.replace("\t","  ");
-//        ui->txtMemoryView->appendPlainText(s);
-//    }
-//    ui->txtMemoryView->moveCursor(QTextCursor::Start);
-
-//    disconnect(mDebugger, &Debugger::memoryExamineReady,
-//               this, &MainWindow::onMemoryExamineReady);
-}
-
 void MainWindow::onLocalsReady(const QStringList& value)
 {
     ui->txtLocals->clear();
@@ -6157,7 +6144,6 @@ void MainWindow::on_actionNew_Class_triggered()
     NewClassDialog dialog;
     dialog.setPath(mProject->folder());
     if (dialog.exec()==QDialog::Accepted) {
-        qDebug()<<"Let's create class";
         QDir dir(dialog.path());
         if (dialog.className().isEmpty()
                 || dialog.sourceName().isEmpty()
@@ -6186,7 +6172,7 @@ void MainWindow::on_actionNew_Class_triggered()
         QString headerFilename = includeTrailingPathDelimiter(dialog.path())+dialog.headerName();
         stringsToFile(header, headerFilename);
         QStringList source;
-        source.append(QString("#include \"%1\";").arg(dialog.headerName()));
+        source.append(QString("#include \"%1\"").arg(dialog.headerName()));
         source.append("");
         source.append("");
         QString sourceFilename = includeTrailingPathDelimiter(dialog.path())+dialog.sourceName();

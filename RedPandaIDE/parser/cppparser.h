@@ -97,7 +97,7 @@ public:
     QSet<QString> getFileUsings(const QString& filename);
 
     QString getHeaderFileName(const QString& relativeTo, const QString& line);// both
-    StatementKind getKindOfStatement(const PStatement& statement);
+
     void invalidateFile(const QString& fileName);
     bool isIncludeLine(const QString &line);
     bool isProjectHeaderFile(const QString& fileName);

@@ -21,11 +21,13 @@
 #include "../editorlist.h"
 #include "../symbolusagemanager.h"
 #include "../colorscheme.h"
+#include "../iconsmanager.h"
 
 #include <QKeyEvent>
 #include <QVBoxLayout>
 #include <QDebug>
 #include <QApplication>
+#include <QPainter>
 
 CodeCompletionPopup::CodeCompletionPopup(QWidget *parent) :
     QWidget(parent),
@@ -34,20 +36,9 @@ CodeCompletionPopup::CodeCompletionPopup(QWidget *parent) :
     setWindowFlags(Qt::Popup);
     mListView = new CodeCompletionListView(this);
     mModel=new CodeCompletionListModel(&mCompletionStatementList);
-    mModel->setColorCallback([this](PStatement statement)->QColor{
-        StatementKind kind;
-        if (mParser) {
-            kind = mParser->getKindOfStatement(statement);
-        } else {
-            kind = statement->kind;
-        }
-        PColorSchemeItem item = mColors->value(kind,PColorSchemeItem());
-        if (item) {
-            return item->foreground();
-        }
-        return palette().color(QPalette::Text);
-    });
+    mDelegate = new CodeCompletionListItemDelegate(mModel,this);
     mListView->setModel(mModel);
+    mListView->setItemDelegate(mDelegate);
     setLayout(new QVBoxLayout());
     layout()->addWidget(mListView);
     layout()->setMargin(0);
@@ -130,6 +121,16 @@ bool CodeCompletionPopup::search(const QString &memberPhrase, bool autoHideOnSin
     setCursor(oldCursor);
 
     if (!mCompletionStatementList.isEmpty()) {
+        PColorSchemeItem item = mColors->value(StatementKind::skUnknown,PColorSchemeItem());
+        if (item)
+            mDelegate->setNormalColor(item->foreground());
+        else
+            mDelegate->setNormalColor(palette().color(QPalette::Text));
+        item = mColors->value(StatementKind::skLocalVariable,PColorSchemeItem());
+        if (item)
+            mDelegate->setMatchedColor(item->foreground());
+        else
+            mDelegate->setMatchedColor(palette().color(QPalette::HighlightedText));
         mListView->setCurrentIndex(mModel->index(0,0));
         // if only one suggestion, and is exactly the symbol to search, hide the frame (the search is over)
         // if only one suggestion and auto hide , don't show the frame
@@ -966,21 +967,32 @@ QVariant CodeCompletionListModel::data(const QModelIndex &index, int role) const
     switch(role) {
     case Qt::DisplayRole: {
         PStatement statement = mStatements->at(index.row());
-        QString text = statement->command;
-        for (int i = statement->matchPositions.size()-1;i>=0;i--) {
-            text.insert(statement->matchPositions[i]->end,"</b></u>");
-            text.insert(statement->matchPositions[i]->start,"<u><b>");
+        return statement->command;
         }
-        return text;
-        }
-    case Qt::ForegroundRole: {
+    case Qt::DecorationRole:
         PStatement statement = mStatements->at(index.row());
-        if (mColorCallback)
-            return mColorCallback(statement);
-        return qApp->palette().color(QPalette::Text);
-    }
+        return pIconsManager->getPixmapForStatement(statement);
     }
     return QVariant();
+}
+
+PStatement CodeCompletionListModel::statement(const QModelIndex &index) const
+{
+    if (!index.isValid())
+        return PStatement();
+    if (index.row()>=mStatements->count())
+        return PStatement();
+    return mStatements->at(index.row());
+}
+
+QPixmap CodeCompletionListModel::statementIcon(const QModelIndex &index) const
+{
+    if (!index.isValid())
+        return QPixmap();
+    if (index.row()>=mStatements->count())
+        return QPixmap();
+    PStatement statement = mStatements->at(index.row());
+    return pIconsManager->getPixmapForStatement(statement);
 }
 
 void CodeCompletionListModel::notifyUpdated()
@@ -989,12 +1001,80 @@ void CodeCompletionListModel::notifyUpdated()
     endResetModel();
 }
 
-const ColorCallback &CodeCompletionListModel::colorCallback() const
+void CodeCompletionListItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
-    return mColorCallback;
+    PStatement statement;
+    if (mModel && (statement = mModel->statement(index)) ) {
+        painter->save();
+        if (option.state & QStyle::State_Selected)
+            painter->fillRect(option.rect, option.palette.highlight());
+        QPixmap icon = mModel->statementIcon(index);
+        int x=option.rect.left();
+        if (!icon.isNull()) {
+            painter->drawPixmap(x,option.rect.top()+(option.rect.height()-icon.height())/2,icon);
+            x+=icon.width();
+        }
+        QString text = statement->command;
+        int pos=0;
+        int y=option.rect.bottom()-painter->fontMetrics().descent();
+        foreach (const PStatementMathPosition& matchPosition, statement->matchPositions) {
+            if (pos<matchPosition->start) {
+                QString t = text.mid(pos,matchPosition->start-pos);
+                painter->setPen(mNormalColor);
+                painter->drawText(x,y,t);
+                x+=painter->fontMetrics().horizontalAdvance(t);
+            }
+            QString t = text.mid(matchPosition->start, matchPosition->end-matchPosition->start);
+            painter->setPen(mMatchedColor);
+            painter->drawText(x,y,t);
+            x+=painter->fontMetrics().horizontalAdvance(t);
+            pos=matchPosition->end;
+        }
+        if (pos<text.length()) {
+            QString t = text.mid(pos,text.length()-pos);
+            painter->setPen(mNormalColor);
+            painter->drawText(x,y,t);
+            x+=painter->fontMetrics().horizontalAdvance(t);
+        }
+        painter->restore();
+    } else {
+        QStyledItemDelegate::paint(painter, option, index);
+    }
 }
 
-void CodeCompletionListModel::setColorCallback(const ColorCallback &newColorCallback)
+CodeCompletionListModel *CodeCompletionListItemDelegate::model() const
 {
-    mColorCallback = newColorCallback;
+    return mModel;
+}
+
+void CodeCompletionListItemDelegate::setModel(CodeCompletionListModel *newModel)
+{
+    mModel = newModel;
+}
+
+const QColor &CodeCompletionListItemDelegate::normalColor() const
+{
+    return mNormalColor;
+}
+
+void CodeCompletionListItemDelegate::setNormalColor(const QColor &newNormalColor)
+{
+    mNormalColor = newNormalColor;
+}
+
+const QColor &CodeCompletionListItemDelegate::matchedColor() const
+{
+    return mMatchedColor;
+}
+
+void CodeCompletionListItemDelegate::setMatchedColor(const QColor &newMatchedColor)
+{
+    mMatchedColor = newMatchedColor;
+}
+
+CodeCompletionListItemDelegate::CodeCompletionListItemDelegate(CodeCompletionListModel *model, QWidget *parent) : QStyledItemDelegate(parent),
+    mModel(model)
+{
+    mNormalColor = qApp->palette().color(QPalette::Text);
+    mMatchedColor = qApp->palette().color(QPalette::BrightText);
 }

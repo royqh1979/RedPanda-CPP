@@ -41,7 +41,7 @@
      inkscape:groupmode="layer"
      id="layer1">
     <rect
-       style="fill:#cd9a00;fill-opacity:1;stroke:none;stroke-width:0.864658;stroke-miterlimit:4;stroke-dasharray:none"
+       style="fill:#deaa88;fill-opacity:1;stroke:none;stroke-width:0.864658;stroke-miterlimit:4;stroke-dasharray:none"
        id="rect1440"
        width="26.508671"
        height="26.308193"
@@ -49,16 +49,9 @@
        y="0.091440894"
        rx="7.9375"
        ry="7.9375" />
-    <text
-       xml:space="preserve"
+    <path
+       id="text3748"
        style="font-style:normal;font-weight:normal;font-size:28.2222px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
-       x="2.7156558"
-       y="23.729656"
-       id="text3748"><tspan
-         sodipodi:role="line"
-         id="tspan3746"
-         style="font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:28.2222px;font-family:sans-serif;-inkscape-font-specification:'sans-serif Italic';stroke-width:0.264583"
-         x="2.7156558"
-         y="23.729656">T</tspan></text>
+       d="m 5.1484375,3.0957031 c -0.223341,0.9908778 -0.44429,1.9822963 -0.6699219,2.9726563 2.4381511,0 4.8763021,0 7.3144534,0 -1.401226,6.0637596 -2.8009665,12.1278626 -4.2031252,18.1914066 1.2805989,0 2.5611982,0 3.8417972,0 1.402859,-6.06338 2.80178,-12.127675 4.203125,-18.1914066 2.440104,0 4.880208,0 7.320312,0 0.251685,-1.129402 0.505669,-2.258298 0.761719,-3.3867188 -6.158854,0 -12.317708,0 -18.4765626,0 -0.030599,0.1380209 -0.061198,0.2760417 -0.091797,0.4140625 z" />
   </g>
 </svg>

@@ -215,5 +215,7 @@
         <file>resources/iconsets/newlook/actions/08Problem-06Correct.svg</file>
         <file>resources/iconsets/newlook/actions/08Problem-07Wrong.svg</file>
         <file>resources/iconsets/newlook/actions/08Problem-08Running.svg</file>
+        <file>resources/iconsets/newlook/classparser/code_snippet.svg</file>
+        <file>resources/iconsets/newlook/classparser/keyword.svg</file>
     </qresource>
 </RCC>

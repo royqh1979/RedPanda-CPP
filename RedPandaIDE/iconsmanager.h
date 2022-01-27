@@ -21,6 +21,7 @@
 #include <QObject>
 #include <QPixmap>
 #include <memory>
+#include "parser/parserutils.h"
 
 class QToolButton;
 class QPushButton;
@@ -53,6 +54,8 @@ public:
         PARSER_PROTECTED_VAR,
         PARSER_PUBLIC_VAR,
         PARSER_PRIVATE_VAR,
+        PARSER_KEYWORD,
+        PARSER_CODE_SNIPPET,
 
         ACTION_MISC_BACK,
         ACTION_MISC_FORWARD,
@@ -164,6 +167,8 @@ public:
     void setIconSetPathTemplate(const QString &newIconSetPathTemplate);
 
     void prepareCustomIconSet(const QString &customIconSet);
+
+    QPixmap getPixmapForStatement(PStatement statement);
 
 signals:
     void actionIconsUpdated();
