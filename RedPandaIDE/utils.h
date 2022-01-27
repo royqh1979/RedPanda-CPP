@@ -236,6 +236,8 @@ void setScreenDPI(int dpi);
 float pointToPixel(float point);
 float pixelToPoint(float pixel);
 
+void copyFolder(const QString &fromDir, const QString& toDir);
+
 
 /**
  * from https://github.com/Microsoft/GSL

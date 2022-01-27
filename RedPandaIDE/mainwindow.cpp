@@ -582,6 +582,14 @@ void MainWindow::applySettings()
     for (QWidget* p:findChildren<QWidget*>()) {
         p->setFont(font);
     }
+    if (pSettings->environment().useCustomIconSet()) {
+        QString customIconSetPath = pSettings->dirs().config(Settings::Dirs::DataType::IconSet);
+        pIconsManager->prepareCustomIconSet(customIconSetPath);
+        pIconsManager->setIconSetPathTemplate(
+                    includeTrailingPathDelimiter(customIconSetPath)
+                    +"%1/%2/"
+                    );
+    }
     pIconsManager->updateParserIcons(pSettings->environment().iconSet(),pointToPixel(pSettings->environment().interfaceFontSize()));
 
     QFont caseEditorFont(pSettings->executor().caseEditorFontName());

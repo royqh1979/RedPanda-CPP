@@ -1100,3 +1100,38 @@ void setScreenDPI(int dpi)
 {
     defaultScreenDPI = dpi;
 }
+
+void copyFolder(const QString &fromDir, const QString &toDir)
+{
+    QDirIterator it(fromDir);
+    QDir dir(fromDir);
+    QDir targetDir(toDir);
+    const int absSourcePathLength = dir.absolutePath().length();
+
+
+    if (targetDir.exists())
+        return;
+    targetDir.mkpath(targetDir.absolutePath());
+
+    qDebug()<<"copy folder";
+    while (it.hasNext()){
+        it.next();
+        const auto fileInfo = it.fileInfo();
+        if(!fileInfo.isHidden()) { //filters dot and dotdot
+            const QString subPathStructure = fileInfo.absoluteFilePath().mid(absSourcePathLength);
+            const QString constructedAbsolutePath = targetDir.absolutePath() + subPathStructure;
+            qDebug()<<fileInfo.absoluteFilePath()<<constructedAbsolutePath;
+            if(fileInfo.isDir()){
+                //Create directory in target folder
+                dir.mkpath(constructedAbsolutePath);
+                copyFolder(fileInfo.absoluteFilePath(), constructedAbsolutePath);
+            } else if(fileInfo.isFile()) {
+                //Copy File to target directory
+
+                //Remove file at target location, if it exists, or QFile::copy will fail
+                QFile::remove(constructedAbsolutePath);
+                QFile::copy(fileInfo.absoluteFilePath(), constructedAbsolutePath);
+            }
+        }
+    }
+}

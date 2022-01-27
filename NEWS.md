@@ -10,6 +10,7 @@ Red Panda C++ Version 0.13.4
   - enhancement: setting non-ascii font for editors
   - enhancement: correct handle windows dpi change event
   - enhancement: code completion find words with char in the middle
+  - enhancement: custom icon set ( in the configuration folder)
 
 Red Panda C++ Version 0.13.3
   - enhancement: restore editor position after rename symbol

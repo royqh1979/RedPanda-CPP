@@ -159,12 +159,19 @@ public:
     PPixmap createSVGIcon(const QString& filename, int width, int height);
     const QSize &actionIconSize() const;
 
+
+    const QString &iconSetPathTemplate() const;
+    void setIconSetPathTemplate(const QString &newIconSetPathTemplate);
+
+    void prepareCustomIconSet(const QString &customIconSet);
+
 signals:
     void actionIconsUpdated();
 private:
     QMap<IconName,PPixmap> mIconPixmaps;
     PPixmap mDefaultIconPixmap;
     QSize mActionIconSize;
+    QString mIconSetPathTemplate;
 };
 
 extern IconsManager* pIconsManager;

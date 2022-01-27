@@ -102,7 +102,8 @@ public:
     public:
         enum class DataType {
             None,
-            ColorSheme
+            ColorSheme,
+            IconSet
         };
         explicit Dirs(Settings * settings);
         QString appDir() const;
@@ -519,6 +520,9 @@ public:
         QString AStylePath() const;
         void setAStylePath(const QString &aStylePath);
 
+        bool useCustomIconSet() const;
+        void setUseCustomIconSet(bool newUseCustomIconSet);
+
     private:
 
         //Appearence
@@ -528,6 +532,7 @@ public:
         QString mLanguage;
         QString mCurrentFolder;
         QString mIconSet;
+        bool mUseCustomIconSet;
 
         QString mDefaultOpenFolder;
         QString mTerminalPath;

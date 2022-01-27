@@ -224,6 +224,8 @@ QString Settings::Dirs::config(Settings::Dirs::DataType dataType) const
         return configDir;
     case DataType::ColorSheme:
         return includeTrailingPathDelimiter(configDir)+"scheme";
+    case DataType::IconSet:
+        return includeTrailingPathDelimiter(configDir)+"iconsets";
     }
     return "";
 }
@@ -2895,6 +2897,8 @@ void Settings::Environment::doLoad()
     mInterfaceFontSize = intValue("interface_font_size",10);
     mLanguage = stringValue("language", QLocale::system().name());
     mIconSet = stringValue("icon_set","newlook");
+    mUseCustomIconSet = boolValue("use_custom_icon_set", false);
+
 
     mCurrentFolder = stringValue("current_folder",QDir::currentPath());
     if (!fileExists(mCurrentFolder)) {
@@ -2985,6 +2989,16 @@ void Settings::Environment::setAStylePath(const QString &aStylePath)
     mAStylePath = aStylePath;
 }
 
+bool Settings::Environment::useCustomIconSet() const
+{
+    return mUseCustomIconSet;
+}
+
+void Settings::Environment::setUseCustomIconSet(bool newUseCustomIconSet)
+{
+    mUseCustomIconSet = newUseCustomIconSet;
+}
+
 void Settings::Environment::doSave()
 {
     //Appearence
@@ -2993,6 +3007,7 @@ void Settings::Environment::doSave()
     saveValue("interface_font_size", mInterfaceFontSize);
     saveValue("language", mLanguage);
     saveValue("icon_set",mIconSet);
+    saveValue("use_custom_icon_set", mUseCustomIconSet);
 
     saveValue("current_folder",mCurrentFolder);
     saveValue("default_open_folder",mDefaultOpenFolder);

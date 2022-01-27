@@ -22,6 +22,9 @@
 #include <QIcon>
 #include <QToolButton>
 #include <QPushButton>
+#include <QFile>
+#include <QDir>
+#include "utils.h"
 
 IconsManager* pIconsManager;
 
@@ -32,7 +35,9 @@ IconsManager::IconsManager(QObject *parent) : QObject(parent)
 
 void IconsManager::updateEditorGuttorIcons(const QString& iconSet,int size)
 {
-    QString iconFolder = QString(":/icons/images/%1/editor/").arg(iconSet);
+    QString iconFolder = QString(":/resources/iconsets/%1/editor/").arg(iconSet);
+    if (!mIconSetPathTemplate.isEmpty())
+        iconFolder = mIconSetPathTemplate.arg(iconSet,"editor");
     mIconPixmaps.insert(GUTTER_BREAKPOINT, createSVGIcon(iconFolder+"breakpoint.svg",size,size));
     mIconPixmaps.insert(GUTTER_SYNTAX_ERROR, createSVGIcon(iconFolder+"syntaxerror.svg",size,size));
     mIconPixmaps.insert(GUTTER_SYNTAX_WARNING,createSVGIcon(iconFolder+"syntaxwarning.svg",size,size));
@@ -42,7 +47,9 @@ void IconsManager::updateEditorGuttorIcons(const QString& iconSet,int size)
 
 void IconsManager::updateParserIcons(const QString &iconSet, int size)
 {
-    QString iconFolder = QString(":/icons/images/%1/classparser/").arg(iconSet);
+    QString iconFolder = QString(":/resources/iconsets/%1/classparser/").arg(iconSet);
+    if (!mIconSetPathTemplate.isEmpty())
+        iconFolder = mIconSetPathTemplate.arg(iconSet,"classparser");
     mIconPixmaps.insert(PARSER_TYPE, createSVGIcon(iconFolder+"type.svg",size,size));
     mIconPixmaps.insert(PARSER_CLASS, createSVGIcon(iconFolder+"class.svg",size,size));
     mIconPixmaps.insert(PARSER_NAMESPACE, createSVGIcon(iconFolder+"namespace.svg",size,size));
@@ -65,7 +72,9 @@ void IconsManager::updateParserIcons(const QString &iconSet, int size)
 
 void IconsManager::updateActionIcons(const QString iconSet, int size)
 {
-    QString iconFolder = QString(":/icons/images/%1/actions/").arg(iconSet);
+    QString iconFolder = QString(":/resources/iconsets/%1/actions/").arg(iconSet);
+    if (!mIconSetPathTemplate.isEmpty())
+        iconFolder = mIconSetPathTemplate.arg(iconSet,"actions");
     mActionIconSize = QSize(size,size);
     mIconPixmaps.insert(ACTION_MISC_BACK, createSVGIcon(iconFolder+"00Misc-01Back.svg",size,size));
     mIconPixmaps.insert(ACTION_MISC_FORWARD, createSVGIcon(iconFolder+"00Misc-02Forward.svg",size,size));
@@ -194,4 +203,21 @@ IconsManager::PPixmap IconsManager::createSVGIcon(const QString &filename, int w
 const QSize &IconsManager::actionIconSize() const
 {
     return mActionIconSize;
+}
+
+const QString &IconsManager::iconSetPathTemplate() const
+{
+    return mIconSetPathTemplate;
+}
+
+void IconsManager::setIconSetPathTemplate(const QString &newIconSetPathTemplate)
+{
+    mIconSetPathTemplate = newIconSetPathTemplate;
+}
+
+void IconsManager::prepareCustomIconSet(const QString &customIconSet)
+{
+    if (QFile(customIconSet).exists())
+        return;
+    copyFolder(":/resources/iconsets",customIconSet);
 }
