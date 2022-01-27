@@ -40,11 +40,11 @@ EnvironmentFoldersWidget::~EnvironmentFoldersWidget()
 void EnvironmentFoldersWidget::doLoad()
 {
     ui->txtConfigFolder->setText(pSettings->dirs().config());
+    ui->txtIconSetFolder->setText(pSettings->dirs().config(Settings::Dirs::DataType::IconSet));
 }
 
 void EnvironmentFoldersWidget::doSave()
 {
-
 }
 
 void EnvironmentFoldersWidget::on_btnOpenConfigFolderInBrowser_clicked()
@@ -75,5 +75,15 @@ void EnvironmentFoldersWidget::on_btnResetDefault_clicked()
 void EnvironmentFoldersWidget::updateIcons(const QSize &size)
 {
     pIconsManager->setIcon(ui->btnOpenConfigFolderInBrowser,IconsManager::ACTION_FILE_OPEN_FOLDER);
+    pIconsManager->setIcon(ui->btnOpenIconSetFolderInFileBrowser,IconsManager::ACTION_FILE_OPEN_FOLDER);
+}
+
+
+void EnvironmentFoldersWidget::on_btnOpenIconSetFolderInFileBrowser_clicked()
+{
+    QDesktopServices::openUrl(
+                QUrl("file:///"+
+                     includeTrailingPathDelimiter(pSettings->dirs().config(Settings::Dirs::DataType::IconSet)),QUrl::TolerantMode));
+
 }
 

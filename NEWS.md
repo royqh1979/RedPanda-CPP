@@ -1,5 +1,6 @@
 Red Panda C++ Version 0.14.0
   - enhancement: custom icon set ( in the configuration folder)
+  - enhancement: show custom icon set folder in options -> enviroment -> folders 
 
 Red Panda C++ Version 0.13.4
   - fix: when copy comments, don't auto indent

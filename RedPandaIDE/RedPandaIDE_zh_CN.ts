@@ -2060,19 +2060,26 @@ Are you really want to continue?</oldsource>
         <translation>表单</translation>
     </message>
     <message>
-        <location filename="settingsdialog/environmentfolderswidget.ui" line="27"/>
+        <location filename="settingsdialog/environmentfolderswidget.ui" line="66"/>
         <source>Configuration folder:</source>
         <oldsource>Confirugration folder:</oldsource>
         <translation>配置文件夹：</translation>
     </message>
     <message>
-        <location filename="settingsdialog/environmentfolderswidget.ui" line="63"/>
-        <location filename="settingsdialog/environmentfolderswidget.ui" line="66"/>
+        <location filename="settingsdialog/environmentfolderswidget.ui" line="73"/>
+        <location filename="settingsdialog/environmentfolderswidget.ui" line="76"/>
+        <location filename="settingsdialog/environmentfolderswidget.ui" line="101"/>
+        <location filename="settingsdialog/environmentfolderswidget.ui" line="104"/>
         <source>Open in browser</source>
         <translation>在文件浏览器中打开</translation>
     </message>
     <message>
-        <location filename="settingsdialog/environmentfolderswidget.ui" line="77"/>
+        <location filename="settingsdialog/environmentfolderswidget.ui" line="87"/>
+        <source>Custom icon sets folder:</source>
+        <translation>自定义图标集文件夹:</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/environmentfolderswidget.ui" line="56"/>
         <source>Remove all custom settings and exit</source>
         <translation>删除所有的自定义设置并退出程序</translation>
     </message>
