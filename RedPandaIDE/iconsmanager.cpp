@@ -69,6 +69,7 @@ void IconsManager::updateParserIcons(const QString &iconSet, int size)
     mIconPixmaps.insert(PARSER_PRIVATE_VAR, createSVGIcon(iconFolder+"var_private.svg",size,size));
     mIconPixmaps.insert(PARSER_KEYWORD, createSVGIcon(iconFolder+"keyword.svg",size,size));
     mIconPixmaps.insert(PARSER_CODE_SNIPPET, createSVGIcon(iconFolder+"code_snippet.svg",size,size));
+    mIconPixmaps.insert(PARSER_LOCAL_VAR, createSVGIcon(iconFolder+"var.svg",size,size));
 
 }
 
@@ -266,6 +267,8 @@ QPixmap IconsManager::getPixmapForStatement(PStatement statement)
         break;
     case StatementKind::skGlobalVariable:
         return *(pIconsManager->getPixmap(IconsManager::PARSER_GLOBAL_VAR));
+    case StatementKind::skLocalVariable:
+        return *(pIconsManager->getPixmap(IconsManager::PARSER_LOCAL_VAR));
     case StatementKind::skVariable:
 //                if (statement->scope == StatementScope::ssGlobal)
 //                    return QIcon(":/icons/images/classparser/global.ico");

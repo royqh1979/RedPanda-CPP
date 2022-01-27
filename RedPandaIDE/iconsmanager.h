@@ -56,6 +56,7 @@ public:
         PARSER_PRIVATE_VAR,
         PARSER_KEYWORD,
         PARSER_CODE_SNIPPET,
+        PARSER_LOCAL_VAR,
 
         ACTION_MISC_BACK,
         ACTION_MISC_FORWARD,
