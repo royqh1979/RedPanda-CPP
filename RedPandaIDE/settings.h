@@ -977,6 +977,9 @@ public:
         int newProjectDialogHeight() const;
         void setNewProjectDialogHeight(int newNewProjectDialogHeight);
 
+        int newClassDialogWidth() const;
+        void setNewClassDialogWidth(int newNewClassDialogWidth);
+
     private:
         QByteArray mMainWindowState;
         QByteArray mMainWindowGeometry;
@@ -1018,6 +1021,8 @@ public:
         int mSettingsDialogSplitterPos;
         int mNewProjectDialogWidth;
         int mNewProjectDialogHeight;
+        int mNewClassDialogWidth;
+        int mNewClassDialogHeight;
 
     protected:
         void doSave() override;

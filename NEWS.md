@@ -1,7 +1,7 @@
 Red Panda C++ Version 0.14.0
   - enhancement: custom icon set ( in the configuration folder)
   - enhancement: show custom icon set folder in options -> enviroment -> folders 
-  - enhancement: add class ( to project) wizard
+  - enhancement: new class ( to project) wizard
   - enhancement: greatly speed up code completion 
   - fix: code folding calcuation not correct when some codes are folded and editing after them
 

@@ -1,7 +1,7 @@
 #include "newclassdialog.h"
 #include "ui_newclassdialog.h"
 #include "../iconsmanager.h"
-
+#include "../settings.h"
 #include <QFileDialog>
 
 NewClassDialog::NewClassDialog(QWidget *parent) :
@@ -9,6 +9,7 @@ NewClassDialog::NewClassDialog(QWidget *parent) :
     ui(new Ui::NewClassDialog)
 {
     ui->setupUi(this);
+    resize(pSettings->ui().newClassDialogWidth(),pSettings->ui().newClassDialogHeight());
     updateIcons();
 }
 
@@ -72,7 +73,7 @@ void NewClassDialog::on_btnBrowsePath_clicked()
 {
     QString fileName = QFileDialog::getExistingDirectory(
                 this,
-                tr("Location"),
+                tr("Path"),
                 ui->txtPath->text());
     ui->txtPath->setText(fileName);
 }

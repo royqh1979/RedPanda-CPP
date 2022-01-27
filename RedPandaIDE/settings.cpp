@@ -4700,6 +4700,16 @@ void Settings::UI::setNewProjectDialogHeight(int newNewProjectDialogHeight)
     mNewProjectDialogHeight = newNewProjectDialogHeight;
 }
 
+int Settings::UI::newClassDialogWidth() const
+{
+    return mNewClassDialogWidth;
+}
+
+void Settings::UI::setNewClassDialogWidth(int newNewClassDialogWidth)
+{
+    mNewClassDialogWidth = newNewClassDialogWidth;
+}
+
 int Settings::UI::settingsDialogHeight() const
 {
     return mSettingsDialogHeight;
@@ -4962,6 +4972,8 @@ void Settings::UI::doSave()
     saveValue("settings_dialog_splitter", mSettingsDialogSplitterPos);
     saveValue("new_project_dialog_width", mNewProjectDialogWidth);
     saveValue("new_project_dialog_height", mNewProjectDialogHeight);
+    saveValue("new_class_dialog_width", mNewClassDialogWidth);
+    saveValue("new_class_dialog_height", mNewClassDialogHeight);
 }
 
 void Settings::UI::doLoad()
@@ -5007,4 +5019,6 @@ void Settings::UI::doLoad()
 
     mNewProjectDialogWidth = intValue("new_project_dialog_width", 900*qApp->desktop()->width()/1920);
     mNewProjectDialogHeight = intValue("new_project_dialog_height", 600*qApp->desktop()->height()/1080);
+    mNewClassDialogWidth = intValue("new_class_dialog_width", 642*qApp->desktop()->width()/1920);
+    mNewClassDialogHeight = intValue("new_class_dialog_height", 300*qApp->desktop()->height()/1080);
 }

@@ -471,7 +471,7 @@ void MainWindow::updateProjectActions()
     ui->actionMakeClean->setEnabled(hasProject);
     ui->actionProject_options->setEnabled(hasProject);
     ui->actionClose_Project->setEnabled(hasProject);
-    ui->actionAdd_Class->setEnabled(hasProject);
+    ui->actionNew_Class->setEnabled(hasProject);
     ui->actionProject_Open_Folder_In_Explorer->setEnabled(hasProject);
     ui->actionProject_Open_In_Terminal->setEnabled(hasProject);
     updateCompileActions();
@@ -6150,7 +6150,7 @@ void MainWindow::on_actionDelete_to_Word_End_triggered()
 }
 
 
-void MainWindow::on_actionAdd_Class_triggered()
+void MainWindow::on_actionNew_Class_triggered()
 {
     if (!mProject)
         return;
@@ -6201,5 +6201,7 @@ void MainWindow::on_actionAdd_Class_triggered()
         parseFileList(mProject->cppParser());
         updateProjectView();
     }
+    pSettings->ui().setNewClassDialogWidth(dialog.width());
+    pSettings->ui().setNewClassDialogHeight(dialog.height());
 }
 

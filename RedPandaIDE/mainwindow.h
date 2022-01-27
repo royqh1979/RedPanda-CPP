@@ -560,7 +560,7 @@ private slots:
 
     void on_actionDelete_to_Word_End_triggered();
 
-    void on_actionAdd_Class_triggered();
+    void on_actionNew_Class_triggered();
 
 private:
     Ui::MainWindow *ui;

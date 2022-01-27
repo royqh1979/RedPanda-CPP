@@ -1493,7 +1493,7 @@
     <addaction name="actionBack"/>
     <addaction name="actionForward"/>
     <addaction name="separator"/>
-    <addaction name="actionAdd_Class"/>
+    <addaction name="actionNew_Class"/>
     <addaction name="separator"/>
     <addaction name="actionAdd_bookmark"/>
     <addaction name="actionRemove_Bookmark"/>
@@ -2697,9 +2697,9 @@
     <string>Ctrl+Shift+E</string>
    </property>
   </action>
-  <action name="actionAdd_Class">
+  <action name="actionNew_Class">
    <property name="text">
-    <string>Add Class...</string>
+    <string>New Class...</string>
    </property>
   </action>
  </widget>
