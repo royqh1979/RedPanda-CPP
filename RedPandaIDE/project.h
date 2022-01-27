@@ -152,6 +152,7 @@ public:
     PProjectUnit addUnit(const QString& inFileName,
                 PFolderNode parentNode,
                 bool rebuild);
+    QString folder();
     void buildPrivateResource(bool forceSave=false);
     void checkProjectFileForUpdate(SimpleIni& ini);
     void closeUnit(int index);
@@ -205,8 +206,7 @@ public:
     const QString &name() const;
     void setName(const QString &newName);
 
-    const PFolderNode &node() const;
-    void setNode(const PFolderNode &newNode);
+    const PFolderNode &rootNode() const;
 
     ProjectOptions &options();
 

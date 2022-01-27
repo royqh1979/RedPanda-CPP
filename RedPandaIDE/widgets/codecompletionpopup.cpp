@@ -216,21 +216,12 @@ static bool nameComparator(PStatement statement1,PStatement statement2) {
 }
 
 static bool defaultComparator(PStatement statement1,PStatement statement2) {
-    if (statement1->firstMatchLength > statement2->firstMatchLength) {
-        return true;
-    } else if (statement1->firstMatchLength < statement2->firstMatchLength) {
-        return false;
-    }
-    if (statement1->matchPosTotal < statement2->matchPosTotal) {
-        return true;
-    } else if (statement1->matchPosTotal > statement2->matchPosTotal) {
-        return false;
-    }
-    if (statement1->caseMatched > statement2->caseMatched) {
-        return true;
-    } else if (statement1->caseMatched < statement2->caseMatched) {
-        return false;
-    }
+    if (statement1->firstMatchLength != statement2->firstMatchLength)
+        return statement1->firstMatchLength > statement2->firstMatchLength;
+    if (statement1->matchPosTotal != statement2->matchPosTotal)
+        return statement1->matchPosTotal < statement2->matchPosTotal;
+    if (statement1->caseMatched != statement2->caseMatched)
+        return statement1->caseMatched > statement2->caseMatched;
     // Show user template first
     if (statement1->kind == StatementKind::skUserCodeSnippet) {
         if (statement2->kind != StatementKind::skUserCodeSnippet)
@@ -251,21 +242,12 @@ static bool defaultComparator(PStatement statement1,PStatement statement2) {
 }
 
 static bool sortByScopeComparator(PStatement statement1,PStatement statement2){
-    if (statement1->firstMatchLength > statement2->firstMatchLength) {
-        return true;
-    } else if (statement1->firstMatchLength < statement2->firstMatchLength) {
-        return false;
-    }
-    if (statement1->matchPosTotal < statement2->matchPosTotal) {
-        return true;
-    } else if (statement1->matchPosTotal > statement2->matchPosTotal) {
-        return false;
-    }
-    if (statement1->caseMatched > statement2->caseMatched) {
-        return true;
-    } else if (statement1->caseMatched < statement2->caseMatched) {
-        return false;
-    }
+    if (statement1->firstMatchLength != statement2->firstMatchLength)
+        return statement1->firstMatchLength > statement2->firstMatchLength;
+    if (statement1->matchPosTotal != statement2->matchPosTotal)
+        return statement1->matchPosTotal < statement2->matchPosTotal;
+    if (statement1->caseMatched != statement2->caseMatched)
+        return statement1->caseMatched > statement2->caseMatched;
     // Show user template first
     if (statement1->kind == StatementKind::skUserCodeSnippet) {
         if (statement2->kind != StatementKind::skUserCodeSnippet)
@@ -282,13 +264,12 @@ static bool sortByScopeComparator(PStatement statement1,PStatement statement2){
             return statement1->command < statement2->command;
     } else if (statement2->kind == StatementKind::skKeyword) {
         return false;
-        // Show stuff from local headers first
-    } else if (!(statement1->inSystemHeader) && statement2->inSystemHeader) {
-        return true;
-    } else if (statement1->inSystemHeader && !(statement2->inSystemHeader)) {
-        return false;
+    }
+    // Show stuff from local headers first
+    if (statement1->inSystemHeader != statement2->inSystemHeader)
+        return !(statement1->inSystemHeader);
         // Show local statements first
-    } else if (statement1->scope != StatementScope::ssGlobal
+    if (statement1->scope != StatementScope::ssGlobal
                && statement2->scope == StatementScope::ssGlobal ) {
         return true;
     } else if (statement1->scope == StatementScope::ssGlobal
@@ -299,21 +280,12 @@ static bool sortByScopeComparator(PStatement statement1,PStatement statement2){
 }
 
 static bool sortWithUsageComparator(PStatement statement1,PStatement statement2) {
-    if (statement1->firstMatchLength > statement2->firstMatchLength) {
-        return true;
-    } else if (statement1->firstMatchLength < statement2->firstMatchLength) {
-        return false;
-    }
-    if (statement1->matchPosTotal < statement2->matchPosTotal) {
-        return true;
-    } else if (statement1->matchPosTotal > statement2->matchPosTotal) {
-        return false;
-    }
-    if (statement1->caseMatched > statement2->caseMatched) {
-        return true;
-    } else if (statement1->caseMatched < statement2->caseMatched) {
-        return false;
-    }
+    if (statement1->firstMatchLength != statement2->firstMatchLength)
+        return statement1->firstMatchLength > statement2->firstMatchLength;
+    if (statement1->matchPosTotal != statement2->matchPosTotal)
+        return statement1->matchPosTotal < statement2->matchPosTotal;
+    if (statement1->caseMatched != statement2->caseMatched)
+        return statement1->caseMatched > statement2->caseMatched;
     // Show user template first
     if (statement1->kind == StatementKind::skUserCodeSnippet) {
         if (statement2->kind != StatementKind::skUserCodeSnippet)
@@ -323,12 +295,11 @@ static bool sortWithUsageComparator(PStatement statement1,PStatement statement2)
     } else if (statement2->kind == StatementKind::skUserCodeSnippet) {
         return false;
         //show most freq first
-    } else if (statement1->freqTop > statement2->freqTop) {
-        return true;
-    } else if (statement1->freqTop < statement2->freqTop) {
-        return false;
-        // show keywords first
-    } else if ((statement1->kind != StatementKind::skKeyword)
+    }
+    if (statement1->usageCount != statement2->usageCount)
+        return statement1->usageCount > statement2->usageCount;
+
+    if ((statement1->kind != StatementKind::skKeyword)
                && (statement2->kind == StatementKind::skKeyword)) {
         return true;
     } else if ((statement1->kind == StatementKind::skKeyword)
@@ -339,21 +310,12 @@ static bool sortWithUsageComparator(PStatement statement1,PStatement statement2)
 }
 
 static bool sortByScopeWithUsageComparator(PStatement statement1,PStatement statement2){
-    if (statement1->firstMatchLength > statement2->firstMatchLength) {
-        return true;
-    } else if (statement1->firstMatchLength < statement2->firstMatchLength) {
-        return false;
-    }
-    if (statement1->matchPosTotal < statement2->matchPosTotal) {
-        return true;
-    } else if (statement1->matchPosTotal > statement2->matchPosTotal) {
-        return false;
-    }
-    if (statement1->caseMatched > statement2->caseMatched) {
-        return true;
-    } else if (statement1->caseMatched < statement2->caseMatched) {
-        return false;
-    }
+    if (statement1->firstMatchLength != statement2->firstMatchLength)
+        return statement1->firstMatchLength > statement2->firstMatchLength;
+    if (statement1->matchPosTotal != statement2->matchPosTotal)
+        return statement1->matchPosTotal < statement2->matchPosTotal;
+    if (statement1->caseMatched != statement2->caseMatched)
+        return statement1->caseMatched > statement2->caseMatched;
     // Show user template first
     if (statement1->kind == StatementKind::skUserCodeSnippet) {
         if (statement2->kind != StatementKind::skUserCodeSnippet)
@@ -363,25 +325,23 @@ static bool sortByScopeWithUsageComparator(PStatement statement1,PStatement stat
     } else if (statement2->kind == StatementKind::skUserCodeSnippet) {
         return false;
         //show most freq first
-    } else if (statement1->freqTop > statement2->freqTop) {
-        return true;
-    } else if (statement1->freqTop < statement2->freqTop) {
-        return false;
-        // show keywords first
-    } else if (statement1->kind == StatementKind::skKeyword) {
+    }
+    if (statement1->usageCount != statement2->usageCount)
+        return statement1->usageCount > statement2->usageCount;
+
+    if (statement1->kind == StatementKind::skKeyword) {
         if (statement2->kind != StatementKind::skKeyword)
             return true;
         else
             return statement1->command < statement2->command;
     } else if (statement2->kind == StatementKind::skKeyword) {
         return false;
-        // Show stuff from local headers first
-    } else if (!(statement1->inSystemHeader) && statement2->inSystemHeader) {
-        return true;
-    } else if (statement1->inSystemHeader && !(statement2->inSystemHeader)) {
-        return false;
+    }
+    // Show stuff from local headers first
+    if (statement1->inSystemHeader != statement2->inSystemHeader)
+        return !(statement1->inSystemHeader);
         // Show local statements first
-    } else if (statement1->scope != StatementScope::ssGlobal
+    if (statement1->scope != StatementScope::ssGlobal
                && statement2->scope == StatementScope::ssGlobal ) {
         return true;
     } else if (statement1->scope == StatementScope::ssGlobal
@@ -414,9 +374,6 @@ void CodeCompletionPopup::filterList(const QString &member)
     mCompletionStatementList.clear();
     mCompletionStatementList.reserve(mFullCompletionStatementList.size());
     foreach (const PStatement& statement, mFullCompletionStatementList) {
-        Qt::CaseSensitivity cs = (mIgnoreCase?
-                                      Qt::CaseInsensitive:
-                                      Qt::CaseSensitive);
 
         int matched = 0;
         int caseMatched = 0;
@@ -473,9 +430,6 @@ void CodeCompletionPopup::filterList(const QString &member)
         }
     }
     if (mRecordUsage) {
-        int topCount = 0;
-        int secondCount = 0;
-        int thirdCount = 0;
         int usageCount;
         foreach (const PStatement& statement,mCompletionStatementList) {
             if (statement->usageCount == -1) {
@@ -486,32 +440,6 @@ void CodeCompletionPopup::filterList(const QString &member)
                     usageCount = 0;
                 }
                 statement->usageCount = usageCount;
-            } else
-                usageCount = statement->usageCount;
-            if (usageCount>topCount) {
-                thirdCount = secondCount;
-                secondCount = topCount;
-                topCount = usageCount;
-            } else if (usageCount == topCount) {
-                continue;
-            } else if (usageCount > secondCount) {
-                thirdCount = secondCount;
-                secondCount = usageCount;
-            } else if (usageCount == secondCount) {
-                continue;
-            } else if (usageCount>thirdCount) {
-                thirdCount = usageCount;
-            }
-        }
-        foreach (const PStatement& statement, mCompletionStatementList) {
-            if (statement->usageCount == 0) {
-                statement->freqTop = 0;
-            } else if  (statement->usageCount == topCount) {
-                statement->freqTop = 30;
-            } else if  (statement->usageCount == secondCount) {
-                statement->freqTop = 20;
-            } else if  (statement->usageCount == thirdCount) {
-                statement->freqTop = 10;
             }
         }
         if (mSortByScope) {
@@ -606,7 +534,6 @@ void CodeCompletionPopup::getCompletionFor(
                         statement->kind = StatementKind::skUserCodeSnippet;
                         statement->fullName = codeIn->prefix;
                         statement->usageCount = 0;
-                        statement->freqTop = 0;
                         mFullCompletionStatementList.append(statement);
                     }
                 }
@@ -852,7 +779,6 @@ void CodeCompletionPopup::addKeyword(const QString &keyword)
     statement->kind = StatementKind::skKeyword;
     statement->fullName = keyword;
     statement->usageCount = 0;
-    statement->freqTop = 0;
     mFullCompletionStatementList.append(statement);
 }
 

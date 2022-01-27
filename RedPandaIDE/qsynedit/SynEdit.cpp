@@ -3358,15 +3358,17 @@ void SynEdit::rescanForFoldRanges()
 
         // Combine new with old folds, preserve parent order
         for (int i = 0; i< TemporaryAllFoldRanges->count();i++) {
-            for (int j = 0; j< mAllFoldRanges.count() - 1;j++) {
+            int j=0;
+            while (j < mAllFoldRanges.count()) {
                 if (TemporaryAllFoldRanges->range(i)->fromLine < mAllFoldRanges[j]->fromLine) {
                     mAllFoldRanges.insert(j, TemporaryAllFoldRanges->range(i));
                     break;
                 }
-                // If we can't prepend #i anywhere, just dump it at the end
-                if (j == mAllFoldRanges.count() - 1)
-                    mAllFoldRanges.add(TemporaryAllFoldRanges->range(i));
+                j++;
             }
+            // If we can't prepend #i anywhere, just dump it at the end
+            if (j >= mAllFoldRanges.count())
+                mAllFoldRanges.add(TemporaryAllFoldRanges->range(i));
         }
 
     } else {

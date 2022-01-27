@@ -880,6 +880,11 @@ PProjectUnit Project::addUnit(const QString &inFileName, PFolderNode parentNode,
     return newUnit;
 }
 
+QString Project::folder()
+{
+    return extractFileDir(filename());
+}
+
 void Project::buildPrivateResource(bool forceSave)
 {
     int comp = 0;
@@ -1601,14 +1606,9 @@ ProjectModel *Project::model()
     return &mModel;
 }
 
-const PFolderNode &Project::node() const
+const PFolderNode &Project::rootNode() const
 {
     return mNode;
-}
-
-void Project::setNode(const PFolderNode &newNode)
-{
-    mNode = newNode;
 }
 
 const QString &Project::name() const
@@ -1851,7 +1851,7 @@ Project *ProjectModel::project() const
 QModelIndex ProjectModel::index(int row, int column, const QModelIndex &parent) const
 {
     if (!parent.isValid()) {
-        return createIndex(row,column,mProject->node().get());
+        return createIndex(row,column,mProject->rootNode().get());
     }
     FolderNode* parentNode = static_cast<FolderNode*>(parent.internalPointer());
     if (!parentNode) {
@@ -1880,7 +1880,7 @@ int ProjectModel::rowCount(const QModelIndex &parent) const
     if (p) {
         return p->children.count();
     } else {
-        return mProject->node()->children.count();
+        return mProject->rootNode()->children.count();
     }
 }
 
@@ -1919,7 +1919,7 @@ Qt::ItemFlags ProjectModel::flags(const QModelIndex &index) const
     FolderNode* p = static_cast<FolderNode*>(index.internalPointer());
     if (!p)
         return Qt::NoItemFlags;
-    if (p==mProject->node().get())
+    if (p==mProject->rootNode().get())
         return Qt::ItemIsEnabled | Qt::ItemIsDropEnabled | Qt::ItemIsEditable;
     Qt::ItemFlags flags = Qt::ItemIsEnabled | Qt::ItemIsEditable | Qt::ItemIsSelectable | Qt::ItemIsDragEnabled;
     if (p->unitIndex<0) {
@@ -1938,7 +1938,7 @@ bool ProjectModel::setData(const QModelIndex &index, const QVariant &value, int 
     if (!node)
         return false;
     if (role == Qt::EditRole) {
-        if (node == mProject->node()) {
+        if (node == mProject->rootNode()) {
             QString newName = value.toString().trimmed();
             if (newName.isEmpty())
                 return false;

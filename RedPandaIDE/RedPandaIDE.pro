@@ -144,6 +144,7 @@ SOURCES += \
     widgets/labelwithmenu.cpp \
     widgets/lightfusionstyle.cpp \
     widgets/macroinfomodel.cpp \
+    widgets/newclassdialog.cpp \
     widgets/newprojectdialog.cpp \
     widgets/ojproblempropertywidget.cpp \
     widgets/ojproblemsetmodel.cpp \
@@ -268,6 +269,7 @@ HEADERS += \
     widgets/labelwithmenu.h \
     widgets/lightfusionstyle.h \
     widgets/macroinfomodel.h \
+    widgets/newclassdialog.h \
     widgets/newprojectdialog.h \
     widgets/ojproblempropertywidget.h \
     widgets/ojproblemsetmodel.h \
@@ -316,6 +318,7 @@ FORMS += \
     settingsdialog/settingsdialog.ui \
     widgets/custommakefileinfodialog.ui \
     widgets/filepropertiesdialog.ui \
+    widgets/newclassdialog.ui \
     widgets/newprojectdialog.ui \
     widgets/ojproblempropertywidget.ui \
     widgets/searchdialog.ui \

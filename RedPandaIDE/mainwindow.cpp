@@ -37,6 +37,7 @@
 #include "problems/problemcasevalidator.h"
 #include "widgets/ojproblempropertywidget.h"
 #include "iconsmanager.h"
+#include "widgets/newclassdialog.h"
 
 #include <QCloseEvent>
 #include <QComboBox>
@@ -284,6 +285,7 @@ MainWindow::MainWindow(QWidget *parent)
     }
 
     //class browser
+    ui->classBrowser->setUniformRowHeights(true);
     ui->classBrowser->setModel(&mClassBrowserModel);
 
     connect(&mFileSystemWatcher,&QFileSystemWatcher::fileChanged,
@@ -469,6 +471,7 @@ void MainWindow::updateProjectActions()
     ui->actionMakeClean->setEnabled(hasProject);
     ui->actionProject_options->setEnabled(hasProject);
     ui->actionClose_Project->setEnabled(hasProject);
+    ui->actionAdd_Class->setEnabled(hasProject);
     ui->actionProject_Open_Folder_In_Explorer->setEnabled(hasProject);
     ui->actionProject_Open_In_Terminal->setEnabled(hasProject);
     updateCompileActions();
@@ -2454,7 +2457,7 @@ void MainWindow::buildContextMenus()
         FolderNode * node = static_cast<FolderNode*>(current.internalPointer());
         PFolderNode folderNode =  mProject->pointerToNode(node);
         if (!folderNode)
-            folderNode = mProject->node();
+            folderNode = mProject->rootNode();
         if (folderNode->unitIndex>=0)
             return;
         QString s=tr("New folder");
@@ -6143,6 +6146,60 @@ void MainWindow::on_actionDelete_to_Word_End_triggered()
     Editor *e=mEditorList->getEditor();
     if (e) {
         e->deleteToWordEnd();
+    }
+}
+
+
+void MainWindow::on_actionAdd_Class_triggered()
+{
+    if (!mProject)
+        return;
+    NewClassDialog dialog;
+    dialog.setPath(mProject->folder());
+    if (dialog.exec()==QDialog::Accepted) {
+        qDebug()<<"Let's create class";
+        QDir dir(dialog.path());
+        if (dialog.className().isEmpty()
+                || dialog.sourceName().isEmpty()
+                || dialog.headerName().isEmpty()
+                || !dir.exists())
+            return;
+        QString header_macro = dialog.className().toUpper()+"_H";
+        QStringList header;
+        QString indents;
+        if (pSettings->editor().tabToSpaces()) {
+            indents = QString(pSettings->editor().tabWidth(),' ');
+        } else {
+            indents = "\t";
+        }
+        header.append(QString("#ifndef %1").arg(header_macro));
+        header.append(QString("#define %1").arg(header_macro));
+        header.append("");
+        header.append(QString("class %1 {").arg(dialog.className()));
+        header.append("public:");
+        header.append("");
+        header.append("private:");
+        header.append("");
+        header.append("};");
+        header.append("");
+        header.append("#endif");
+        QString headerFilename = includeTrailingPathDelimiter(dialog.path())+dialog.headerName();
+        stringsToFile(header, headerFilename);
+        QStringList source;
+        source.append(QString("#include \"%1\";").arg(dialog.headerName()));
+        source.append("");
+        source.append("");
+        QString sourceFilename = includeTrailingPathDelimiter(dialog.path())+dialog.sourceName();
+        stringsToFile(source, sourceFilename);
+
+        mProject->addUnit(headerFilename,mProject->rootNode(),false);
+        mProject->cppParser()->addFileToScan(headerFilename);
+        mProject->addUnit(sourceFilename,mProject->rootNode(),false);
+        mProject->cppParser()->addFileToScan(sourceFilename);
+        mProject->rebuildNodes();
+        mProject->saveUnits();
+        parseFileList(mProject->cppParser());
+        updateProjectView();
     }
 }
 

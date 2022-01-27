@@ -168,7 +168,6 @@ struct Statement {
     QString noNameArgs;// Args without name
     // fields for code completion
     int usageCount; //Usage Count
-    int freqTop; // Usage Count Rank
     int matchPosTotal; // total of matched positions
     int firstMatchLength; // length of first match;
     int caseMatched; // if match with case

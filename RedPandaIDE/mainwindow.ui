@@ -85,7 +85,7 @@
             <enum>QTabWidget::West</enum>
            </property>
            <property name="currentIndex">
-            <number>1</number>
+            <number>2</number>
            </property>
            <property name="usesScrollButtons">
             <bool>true</bool>
@@ -506,7 +506,7 @@
         <enum>QTabWidget::South</enum>
        </property>
        <property name="currentIndex">
-        <number>2</number>
+        <number>5</number>
        </property>
        <property name="iconSize">
         <size>
@@ -1493,6 +1493,7 @@
     <addaction name="actionBack"/>
     <addaction name="actionForward"/>
     <addaction name="separator"/>
+    <addaction name="actionAdd_Class"/>
     <addaction name="separator"/>
     <addaction name="actionAdd_bookmark"/>
     <addaction name="actionRemove_Bookmark"/>
@@ -2694,6 +2695,11 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+Shift+E</string>
+   </property>
+  </action>
+  <action name="actionAdd_Class">
+   <property name="text">
+    <string>Add Class...</string>
    </property>
   </action>
  </widget>

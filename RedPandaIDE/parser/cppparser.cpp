@@ -1192,7 +1192,6 @@ PStatement CppParser::addStatement(const PStatement& parent,
     else
         result->fullName =  getFullStatementName(newCommand, parent);
     result->usageCount = -1;
-    result->freqTop = 0;
     mStatementList.add(result);
     if (result->kind == StatementKind::skNamespace) {
         PStatementList namespaceList = mNamespaces.value(result->fullName,PStatementList());
