@@ -1131,6 +1131,13 @@ void copyFolder(const QString &fromDir, const QString &toDir)
                 //Remove file at target location, if it exists, or QFile::copy will fail
                 QFile::remove(constructedAbsolutePath);
                 QFile::copy(fileInfo.absoluteFilePath(), constructedAbsolutePath);
+                QFile newFile(constructedAbsolutePath);
+                QFile::Permissions permissions = newFile.permissions();
+                permissions |= (QFile::Permission::WriteOwner
+                                | QFile::Permission::WriteUser
+                                | QFile::Permission::WriteGroup
+                                | QFile::Permission::WriteOther);
+                newFile.setPermissions(permissions);
             }
         }
     }
