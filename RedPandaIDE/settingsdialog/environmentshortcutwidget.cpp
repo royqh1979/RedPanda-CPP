@@ -57,12 +57,22 @@ void EnvironmentShortcutModel::reload()
 {
     beginResetModel();
     mShortcuts.clear();
-    QList<QAction*> actions = pMainWindow->findChildren<QAction*>(QString(),Qt::FindDirectChildrenOnly);
+    QList<QAction*> actions = pMainWindow->findChildren<QAction*>(QString(), Qt::FindDirectChildrenOnly);
     QList<QMenu*> menus = pMainWindow->menuBar()->findChildren<QMenu*>();
     foreach( const QMenu* menu, menus) {
         if (menu->title().isEmpty())
             continue;
         loadShortCutsOfMenu(menu, actions);
+    }
+    foreach (QAction* action,actions) {
+        if (!action->text().isEmpty()) {
+            PEnvironmentShortcut item = std::make_shared<EnvironmentShortcut>();
+            item->name = action->objectName();
+            item->fullPath = QString("%1 : %2").arg(tr("action"),action->text());
+            item->action = action;
+            item->shortcut = action->shortcut().toString().trimmed();
+            mShortcuts.append(item);
+        }
     }
     endResetModel();
 }

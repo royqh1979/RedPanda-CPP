@@ -97,6 +97,7 @@ MainWindow::MainWindow(QWidget *parent)
       mSystemTurnedOff(false)
 {
     ui->setupUi(this);
+    addActions( this->findChildren<QAction *>(QString(), Qt::FindChildrenRecursively));
     // status bar
     mFileInfoStatus=new QLabel();
     mFileEncodingStatus = new LabelWithMenu();
@@ -166,6 +167,7 @@ MainWindow::MainWindow(QWidget *parent)
     mMenuNew->addAction(ui->actionNew);
     mMenuNew->addAction(ui->actionNew_Project);
     ui->menuFile->insertMenu(ui->actionOpen,mMenuNew);
+
 
     mMenuExport = new QMenu(tr("Export"));
     mMenuExport->addAction(ui->actionExport_As_RTF);
@@ -5664,6 +5666,7 @@ void MainWindow::on_actionExport_As_HTML_triggered()
 
 void MainWindow::on_actionMove_To_Other_View_triggered()
 {
+    qDebug()<<"test";
     Editor * editor = mEditorList->getEditor();
     if (editor) {
         mEditorList->swapEditor(editor);
