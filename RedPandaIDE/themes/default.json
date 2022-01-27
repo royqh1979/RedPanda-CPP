@@ -3,5 +3,7 @@
         "isDark":false,
         "default scheme": "Intellij Classic",
 	"palette": {
+		"PaletteHighlight":"#ffdddddd",
+		"PaletteHighlightedText":"#ff000000"
 	}
 }

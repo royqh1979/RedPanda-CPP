@@ -126,7 +126,7 @@ bool CodeCompletionPopup::search(const QString &memberPhrase, bool autoHideOnSin
             mDelegate->setNormalColor(item->foreground());
         else
             mDelegate->setNormalColor(palette().color(QPalette::Text));
-        item = mColors->value(StatementKind::skLocalVariable,PColorSchemeItem());
+        item = mColors->value(StatementKind::skKeyword,PColorSchemeItem());
         if (item)
             mDelegate->setMatchedColor(item->foreground());
         else
@@ -1006,13 +1006,16 @@ void CodeCompletionListItemDelegate::paint(QPainter *painter, const QStyleOption
     PStatement statement;
     if (mModel && (statement = mModel->statement(index)) ) {
         painter->save();
-        if (option.state & QStyle::State_Selected)
+        QColor normalColor = mNormalColor;
+        if (option.state & QStyle::State_Selected) {
             painter->fillRect(option.rect, option.palette.highlight());
+            normalColor = option.palette.color(QPalette::HighlightedText);
+        }
         QPixmap icon = mModel->statementIcon(index);
         int x=option.rect.left();
         if (!icon.isNull()) {
-            painter->drawPixmap(x,option.rect.top()+(option.rect.height()-icon.height())/2,icon);
-            x+=icon.width();
+            painter->drawPixmap(x+(option.rect.height()-icon.width())/2,option.rect.top()+(option.rect.height()-icon.height())/2,icon);
+            x+=option.rect.height();
         }
         QString text = statement->command;
         int pos=0;
@@ -1020,7 +1023,7 @@ void CodeCompletionListItemDelegate::paint(QPainter *painter, const QStyleOption
         foreach (const PStatementMathPosition& matchPosition, statement->matchPositions) {
             if (pos<matchPosition->start) {
                 QString t = text.mid(pos,matchPosition->start-pos);
-                painter->setPen(mNormalColor);
+                painter->setPen(normalColor);
                 painter->drawText(x,y,t);
                 x+=painter->fontMetrics().horizontalAdvance(t);
             }
@@ -1032,7 +1035,7 @@ void CodeCompletionListItemDelegate::paint(QPainter *painter, const QStyleOption
         }
         if (pos<text.length()) {
             QString t = text.mid(pos,text.length()-pos);
-            painter->setPen(mNormalColor);
+            painter->setPen(normalColor);
             painter->drawText(x,y,t);
             x+=painter->fontMetrics().horizontalAdvance(t);
         }
