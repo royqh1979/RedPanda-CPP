@@ -506,7 +506,7 @@
         <enum>QTabWidget::South</enum>
        </property>
        <property name="currentIndex">
-        <number>5</number>
+        <number>6</number>
        </property>
        <property name="iconSize">
         <size>
@@ -1348,33 +1348,24 @@
                </property>
               </widget>
              </item>
-             <item row="1" column="0">
-              <widget class="QTextEdit" name="txtProblemCaseInput">
+             <item row="1" column="1">
+              <widget class="QPlainTextEdit" name="txtProblemCaseOutput">
                <property name="lineWrapMode">
-                <enum>QTextEdit::NoWrap</enum>
-               </property>
-               <property name="acceptRichText">
-                <bool>false</bool>
+                <enum>QPlainTextEdit::NoWrap</enum>
                </property>
               </widget>
              </item>
-             <item row="1" column="1">
-              <widget class="QTextEdit" name="txtProblemCaseOutput">
+             <item row="1" column="0">
+              <widget class="QPlainTextEdit" name="txtProblemCaseInput">
                <property name="lineWrapMode">
-                <enum>QTextEdit::NoWrap</enum>
-               </property>
-               <property name="readOnly">
-                <bool>true</bool>
+                <enum>QPlainTextEdit::NoWrap</enum>
                </property>
               </widget>
              </item>
              <item row="1" column="2">
-              <widget class="QTextEdit" name="txtProblemCaseExpected">
+              <widget class="QPlainTextEdit" name="txtProblemCaseExpected">
                <property name="lineWrapMode">
-                <enum>QTextEdit::NoWrap</enum>
-               </property>
-               <property name="acceptRichText">
-                <bool>false</bool>
+                <enum>QPlainTextEdit::NoWrap</enum>
                </property>
               </widget>
              </item>

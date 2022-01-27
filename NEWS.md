@@ -6,6 +6,7 @@ Red Panda C++ Version 0.14.0
   - fix: code folding calcuation not correct when some codes are folded and editing after them
   - enhancement: code completion ui redesigned
   - fix: mainwindow action's short cut doesn't work,  if the action is not in menu or toolbar
+  - fix: when run all cases for a problem, processing of output is slow
 
 Red Panda C++ Version 0.13.4
   - fix: when copy comments, don't auto indent

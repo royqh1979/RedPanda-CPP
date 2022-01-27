@@ -79,10 +79,10 @@ void OJProblemCasesRunner::runCase(int index,POJProblemCase problemCase)
     }
     QByteArray readed;
     QByteArray buffer;
-    QStringList outputLines;
+    QByteArray output;
     while (true) {
         process.waitForFinished(100);
-        readed = process.readAll();
+        readed = process.read(5001);
         buffer += readed;
         if (process.state()!=QProcess::Running) {
             break;
@@ -97,30 +97,15 @@ void OJProblemCasesRunner::runCase(int index,POJProblemCase problemCase)
         }
         if (errorOccurred)
             break;
-        QList<QByteArray> lines = splitByteArrayToLines(buffer);
-//        qDebug()<<"----do buffer----";
-//        qDebug()<<readed;
-//        qDebug()<<buffer;
-//        qDebug()<<lines.count();
-        if (lines.count()>=2) {
-            for (int i=0;i<lines.count()-1;i++) {
-                QString line = QString::fromLocal8Bit(lines[i]);
-                emit newOutputLineGetted(problemCase->getId(),line);
-                outputLines.append(line);
-            }
-            buffer = lines.last();
-            while (buffer.endsWith('\0')) {
-                buffer.remove(buffer.length()-1,1);
-            }
+        if (buffer.length()>5000) {
+            emit newOutputGetted(problemCase->getId(),QString::fromLocal8Bit(buffer));
+            output.append(buffer);
+            buffer.clear();
         }
     }
-    buffer += process.readAll();
-    QList<QByteArray> lines = splitByteArrayToLines(buffer);
-    for (int i=0;i<lines.count();i++) {
-        QString line = QString::fromLocal8Bit(lines[i]);
-        emit newOutputLineGetted(problemCase->getId(),line);
-        outputLines.append(line);
-    }
+    if (process.state() == QProcess::ProcessState::NotRunning)
+        buffer += process.readAll();
+    output.append(buffer);
     if (errorOccurred) {
         //qDebug()<<"process error:"<<process.error();
         switch (process.error()) {
@@ -144,7 +129,7 @@ void OJProblemCasesRunner::runCase(int index,POJProblemCase problemCase)
             break;
         }
     }
-    problemCase->output = linesToText(outputLines);
+    problemCase->output = QString::fromLocal8Bit(output);
 }
 
 void OJProblemCasesRunner::run()

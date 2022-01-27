@@ -3117,9 +3117,9 @@ void MainWindow::onProblemCaseIndexChanged(const QModelIndex &current, const QMo
         POJProblemCase problemCase = mOJProblemModel.getCase(idx.row());
         if (problemCase) {
             ui->btnRemoveProblemCase->setEnabled(true);
-            ui->txtProblemCaseInput->setText(problemCase->input);
+            ui->txtProblemCaseInput->setPlainText(problemCase->input);
             ui->txtProblemCaseInput->setReadOnly(false);
-            ui->txtProblemCaseExpected->setText(problemCase->expected);
+            ui->txtProblemCaseExpected->setPlainText(problemCase->expected);
             ui->txtProblemCaseExpected->setReadOnly(false);
             updateProblemCaseOutput(problemCase);
             return;
@@ -4081,9 +4081,9 @@ void MainWindow::onOJProblemCaseFinished(const QString& id, int current, int tot
     updateProblemTitle();
 }
 
-void MainWindow::onOJProblemCaseNewOutputLineGetted(const QString &, const QString &line)
+void MainWindow::onOJProblemCaseNewOutputGetted(const QString &, const QString &line)
 {
-    ui->txtProblemCaseOutput->append(line);
+    ui->txtProblemCaseOutput->appendPlainText(line);
 }
 
 void MainWindow::cleanUpCPUDialog()
@@ -5519,7 +5519,7 @@ void MainWindow::doCompileRun(RunType runType)
 void MainWindow::updateProblemCaseOutput(POJProblemCase problemCase)
 {
     ui->txtProblemCaseOutput->clear();
-    ui->txtProblemCaseOutput->setText(problemCase->output);
+    ui->txtProblemCaseOutput->setPlainText(problemCase->output);
     if (problemCase->testState == ProblemCaseTestState::Failed) {
         QStringList output = textToLines(problemCase->output);
         QStringList expected = textToLines(problemCase->expected);
@@ -5666,7 +5666,6 @@ void MainWindow::on_actionExport_As_HTML_triggered()
 
 void MainWindow::on_actionMove_To_Other_View_triggered()
 {
-    qDebug()<<"test";
     Editor * editor = mEditorList->getEditor();
     if (editor) {
         mEditorList->swapEditor(editor);

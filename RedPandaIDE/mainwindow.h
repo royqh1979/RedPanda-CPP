@@ -194,7 +194,7 @@ public slots:
     void onRunProblemFinished();
     void onOJProblemCaseStarted(const QString& id, int current, int total);
     void onOJProblemCaseFinished(const QString& id, int current, int total);
-    void onOJProblemCaseNewOutputLineGetted(const QString& id, const QString& line);
+    void onOJProblemCaseNewOutputGetted(const QString& id, const QString& line);
     void cleanUpCPUDialog();
     void onDebugCommandInput(const QString& command);
     void onDebugEvaluateInput();

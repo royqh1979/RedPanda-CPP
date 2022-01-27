@@ -325,7 +325,7 @@ void CompilerManager::runProblem(const QString &filename, const QString &argumen
     connect(mRunner, &Runner::runErrorOccurred, pMainWindow ,&MainWindow::onRunErrorOccured);
     connect(execRunner, &OJProblemCasesRunner::caseStarted, pMainWindow, &MainWindow::onOJProblemCaseStarted);
     connect(execRunner, &OJProblemCasesRunner::caseFinished, pMainWindow, &MainWindow::onOJProblemCaseFinished);
-    connect(execRunner, &OJProblemCasesRunner::newOutputLineGetted, pMainWindow, &MainWindow::onOJProblemCaseNewOutputLineGetted);
+    connect(execRunner, &OJProblemCasesRunner::newOutputGetted, pMainWindow, &MainWindow::onOJProblemCaseNewOutputGetted);
     mRunner->start();
 }
 
