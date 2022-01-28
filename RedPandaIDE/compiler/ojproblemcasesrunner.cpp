@@ -27,6 +27,9 @@ OJProblemCasesRunner::OJProblemCasesRunner(const QString& filename, const QStrin
     Runner(filename,arguments,workDir,parent)
 {
     mProblemCases = problemCases;
+    mBufferSize = 8192;
+    mOutputRefreshTime = 1000;
+    setWaitForFinishTime(100);
 }
 
 OJProblemCasesRunner::OJProblemCasesRunner(const QString& filename, const QString& arguments, const QString& workDir,
@@ -34,6 +37,9 @@ OJProblemCasesRunner::OJProblemCasesRunner(const QString& filename, const QStrin
     Runner(filename,arguments,workDir,parent)
 {
     mProblemCases.append(problemCase);
+    mBufferSize = 8192;
+    mOutputRefreshTime = 1000;
+    setWaitForFinishTime(100);
 }
 
 void OJProblemCasesRunner::runCase(int index,POJProblemCase problemCase)
@@ -80,9 +86,10 @@ void OJProblemCasesRunner::runCase(int index,POJProblemCase problemCase)
     QByteArray readed;
     QByteArray buffer;
     QByteArray output;
+    int noOutputTime = 0;
     while (true) {
-        process.waitForFinished(100);
-        readed = process.read(5001);
+        process.waitForFinished(mWaitForFinishTime);
+        readed = process.read(mBufferSize);
         buffer += readed;
         if (process.state()!=QProcess::Running) {
             break;
@@ -97,10 +104,15 @@ void OJProblemCasesRunner::runCase(int index,POJProblemCase problemCase)
         }
         if (errorOccurred)
             break;
-        if (buffer.length()>5000) {
-            emit newOutputGetted(problemCase->getId(),QString::fromLocal8Bit(buffer));
-            output.append(buffer);
-            buffer.clear();
+        if (buffer.length()>=mBufferSize || noOutputTime > mOutputRefreshTime) {
+            if (!buffer.isEmpty()) {
+                emit newOutputGetted(problemCase->getId(),QString::fromLocal8Bit(buffer));
+                output.append(buffer);
+                buffer.clear();
+            }
+            noOutputTime = 0;
+        } else {
+            noOutputTime += mWaitForFinishTime;
         }
     }
     if (process.state() == QProcess::ProcessState::NotRunning)
@@ -144,6 +156,36 @@ void OJProblemCasesRunner::run()
         POJProblemCase problemCase = mProblemCases[i];
         runCase(i,problemCase);
     }
+}
+
+int OJProblemCasesRunner::waitForFinishTime() const
+{
+    return mWaitForFinishTime;
+}
+
+void OJProblemCasesRunner::setWaitForFinishTime(int newWaitForFinishTime)
+{
+    mWaitForFinishTime = newWaitForFinishTime;
+}
+
+int OJProblemCasesRunner::outputRefreshTime() const
+{
+    return mOutputRefreshTime;
+}
+
+void OJProblemCasesRunner::setOutputRefreshTime(int newOutputRefreshTime)
+{
+    mOutputRefreshTime = newOutputRefreshTime;
+}
+
+int OJProblemCasesRunner::bufferSize() const
+{
+    return mBufferSize;
+}
+
+void OJProblemCasesRunner::setBufferSize(int newBufferSize)
+{
+    mBufferSize = newBufferSize;
 }
 
 

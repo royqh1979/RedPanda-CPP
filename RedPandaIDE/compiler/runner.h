@@ -27,6 +27,9 @@ public:
 
     bool pausing() const;
 
+    // time (in milliseconds) waiting for process finished in each processing loop
+    int waitForFinishTime() const;
+    void setWaitForFinishTime(int newWaitForFinishTime);
 
 signals:
     void started();
@@ -45,6 +48,7 @@ protected:
     QString mFilename;
     QString mArguments;
     QString mWorkDir;
+    int mWaitForFinishTime;
 };
 
 #endif // RUNNER_H

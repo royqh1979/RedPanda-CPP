@@ -38,6 +38,7 @@ ExecutableRunner::ExecutableRunner(const QString &filename, const QString &argum
     mStartConsole(false),
     mQuitSemaphore(0)
 {
+    setWaitForFinishTime(1000);
 }
 
 bool ExecutableRunner::startConsole() const
@@ -170,7 +171,7 @@ void ExecutableRunner::run()
     }
 
     while (true) {
-        mProcess->waitForFinished(1000);
+        mProcess->waitForFinished(mWaitForFinishTime);
         if (mProcess->state()!=QProcess::Running) {
             break;
         }

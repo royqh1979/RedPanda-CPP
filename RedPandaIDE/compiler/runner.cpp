@@ -23,7 +23,8 @@ Runner::Runner(const QString &filename, const QString &arguments, const QString 
     mStop(false),
     mFilename(filename),
     mArguments(arguments),
-    mWorkDir(workDir)
+    mWorkDir(workDir),
+    mWaitForFinishTime(1000)
 {
 
 }
@@ -47,5 +48,15 @@ bool Runner::pausing() const
 void Runner::setPausing(bool newCanFinish)
 {
     mPausing = newCanFinish;
+}
+
+int Runner::waitForFinishTime() const
+{
+    return mWaitForFinishTime;
+}
+
+void Runner::setWaitForFinishTime(int newWaitForFinishTime)
+{
+    mWaitForFinishTime = newWaitForFinishTime;
 }
 

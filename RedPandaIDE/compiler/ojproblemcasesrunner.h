@@ -29,6 +29,17 @@ public:
                                   const QVector<POJProblemCase>& problemCases, QObject *parent = nullptr);
     explicit OJProblemCasesRunner(const QString& filename, const QString& arguments, const QString& workDir,
                                   POJProblemCase problemCase, QObject *parent = nullptr);
+    //max size of output buffer
+    int bufferSize() const;
+    void setBufferSize(int newBufferSize);
+
+    //max time (in milliseconds) waiting to flush output buffer
+    int outputRefreshTime() const;
+    void setOutputRefreshTime(int newOutputRefreshTime);
+
+    int waitForFinishTime() const;
+    void setWaitForFinishTime(int newWaitForFinishTime);
+
 signals:
     void caseStarted(const QString& id, int current, int total);
     void caseFinished(const QString& id, int current, int total);
@@ -41,7 +52,9 @@ private:
     // QThread interface
 protected:
     void run() override;
-
+private:
+    int mBufferSize;
+    int mOutputRefreshTime;
 };
 
 #endif // OJPROBLEMCASESRUNNER_H
