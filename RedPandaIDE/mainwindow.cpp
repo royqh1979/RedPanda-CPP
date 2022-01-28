@@ -599,12 +599,9 @@ void MainWindow::applySettings()
         p->setFont(font);
     }
     if (pSettings->environment().useCustomIconSet()) {
-        QString customIconSetPath = pSettings->dirs().config(Settings::Dirs::DataType::IconSet);
-        pIconsManager->prepareCustomIconSet(customIconSetPath);
-        pIconsManager->setIconSetPathTemplate(
-                    includeTrailingPathDelimiter(customIconSetPath)
-                    +"%1/%2/"
-                    );
+        QString customIconSetFolder = pSettings->dirs().config(Settings::Dirs::DataType::IconSet);
+        pIconsManager->prepareCustomIconSet(customIconSetFolder);
+        pIconsManager->setIconSetsFolder(customIconSetFolder);
     }
     pIconsManager->updateParserIcons(pSettings->environment().iconSet(),pointToPixel(pSettings->environment().interfaceFontSize()));
 

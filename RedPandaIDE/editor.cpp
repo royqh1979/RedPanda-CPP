@@ -3313,9 +3313,9 @@ void Editor::updateFunctionTip()
                     }
                 } else if (bracketLevel>0) {
                     if (tokens[i]=="[") {
-                        braceLevel--;
+                        bracketLevel--;
                     } else if (tokens[i]=="]") {
-                        braceLevel++;
+                        bracketLevel++;
                     }
                 }else if (parenthesisLevel>0){
                     if (tokens[i]==")") {
@@ -3345,10 +3345,10 @@ void Editor::updateFunctionTip()
                         parenthesisLevel++;
                     } else if (tokens[i]=="}") {
                         braceLevel++;
-                    } else if (tokens[i]=="}") {
+                    } else if (tokens[i]=="]") {
                         bracketLevel++;
                     } else if (tokens[i]==",") {
-                            paramsCount++;
+                        paramsCount++;
                     }
                 }
             }

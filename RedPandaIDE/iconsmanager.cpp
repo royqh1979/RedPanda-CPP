@@ -25,19 +25,19 @@
 #include <QFile>
 #include <QDir>
 #include "utils.h"
+#include "settings.h"
 
 IconsManager* pIconsManager;
 
 IconsManager::IconsManager(QObject *parent) : QObject(parent)
 {
     mDefaultIconPixmap = std::make_shared<QPixmap>();
+    mIconSetTemplate = "%1/%2/%3/";
 }
 
 void IconsManager::updateEditorGuttorIcons(const QString& iconSet,int size)
 {
-    QString iconFolder = QString(":/resources/iconsets/%1/editor/").arg(iconSet);
-    if (!mIconSetPathTemplate.isEmpty())
-        iconFolder = mIconSetPathTemplate.arg(iconSet,"editor");
+    QString iconFolder = mIconSetTemplate.arg( iconSetsFolder(),iconSet,"editor");
     mIconPixmaps.insert(GUTTER_BREAKPOINT, createSVGIcon(iconFolder+"breakpoint.svg",size,size));
     mIconPixmaps.insert(GUTTER_SYNTAX_ERROR, createSVGIcon(iconFolder+"syntaxerror.svg",size,size));
     mIconPixmaps.insert(GUTTER_SYNTAX_WARNING,createSVGIcon(iconFolder+"syntaxwarning.svg",size,size));
@@ -47,9 +47,7 @@ void IconsManager::updateEditorGuttorIcons(const QString& iconSet,int size)
 
 void IconsManager::updateParserIcons(const QString &iconSet, int size)
 {
-    QString iconFolder = QString(":/resources/iconsets/%1/classparser/").arg(iconSet);
-    if (!mIconSetPathTemplate.isEmpty())
-        iconFolder = mIconSetPathTemplate.arg(iconSet,"classparser");
+    QString iconFolder = mIconSetTemplate.arg( iconSetsFolder(),iconSet,"classparser");
     mIconPixmaps.insert(PARSER_TYPE, createSVGIcon(iconFolder+"type.svg",size,size));
     mIconPixmaps.insert(PARSER_CLASS, createSVGIcon(iconFolder+"class.svg",size,size));
     mIconPixmaps.insert(PARSER_NAMESPACE, createSVGIcon(iconFolder+"namespace.svg",size,size));
@@ -73,11 +71,9 @@ void IconsManager::updateParserIcons(const QString &iconSet, int size)
 
 }
 
-void IconsManager::updateActionIcons(const QString iconSet, int size)
+void IconsManager::updateActionIcons(const QString& iconSet, int size)
 {
-    QString iconFolder = QString(":/resources/iconsets/%1/actions/").arg(iconSet);
-    if (!mIconSetPathTemplate.isEmpty())
-        iconFolder = mIconSetPathTemplate.arg(iconSet,"actions");
+    QString iconFolder = mIconSetTemplate.arg( iconSetsFolder(),iconSet,"actions");
     mActionIconSize = QSize(size,size);
     mIconPixmaps.insert(ACTION_MISC_BACK, createSVGIcon(iconFolder+"00Misc-01Back.svg",size,size));
     mIconPixmaps.insert(ACTION_MISC_FORWARD, createSVGIcon(iconFolder+"00Misc-02Forward.svg",size,size));
@@ -208,21 +204,11 @@ const QSize &IconsManager::actionIconSize() const
     return mActionIconSize;
 }
 
-const QString &IconsManager::iconSetPathTemplate() const
-{
-    return mIconSetPathTemplate;
-}
-
-void IconsManager::setIconSetPathTemplate(const QString &newIconSetPathTemplate)
-{
-    mIconSetPathTemplate = newIconSetPathTemplate;
-}
-
 void IconsManager::prepareCustomIconSet(const QString &customIconSet)
 {
     if (QFile(customIconSet).exists())
         return;
-    copyFolder(":/resources/iconsets",customIconSet);
+    copyFolder(pSettings->dirs().data(Settings::Dirs::DataType::IconSet),customIconSet);
 }
 
 QPixmap IconsManager::getPixmapForStatement(PStatement statement)
@@ -270,8 +256,6 @@ QPixmap IconsManager::getPixmapForStatement(PStatement statement)
     case StatementKind::skLocalVariable:
         return *(pIconsManager->getPixmap(IconsManager::PARSER_LOCAL_VAR));
     case StatementKind::skVariable:
-//                if (statement->scope == StatementScope::ssGlobal)
-//                    return QIcon(":/icons/images/classparser/global.ico");
         if (statement->isInherited) {
             if (statement->classScope == StatementClassScope::scsProtected) {
                 return *(pIconsManager->getPixmap(IconsManager::PARSER_INHERITED_PROTECTD_VAR));
@@ -296,4 +280,16 @@ QPixmap IconsManager::getPixmapForStatement(PStatement statement)
         break;
     }
     return QPixmap();
+}
+
+const QString IconsManager::iconSetsFolder() const
+{
+    if (mIconSetsFolder.isEmpty())
+        return pSettings->dirs().data(Settings::Dirs::DataType::IconSet);
+    return mIconSetsFolder;
+}
+
+void IconsManager::setIconSetsFolder(const QString &newIconSetsFolder)
+{
+    mIconSetsFolder = newIconSetsFolder;
 }

@@ -151,7 +151,7 @@ public:
 
     void updateEditorGuttorIcons(const QString& iconSet, int size);
     void updateParserIcons(const QString& iconSet, int size);
-    void updateActionIcons(const QString iconSet, int size);
+    void updateActionIcons(const QString& iconSet, int size);
 
     PPixmap getPixmap(IconName iconName) const;
 
@@ -163,13 +163,12 @@ public:
     PPixmap createSVGIcon(const QString& filename, int width, int height);
     const QSize &actionIconSize() const;
 
-
-    const QString &iconSetPathTemplate() const;
-    void setIconSetPathTemplate(const QString &newIconSetPathTemplate);
-
     void prepareCustomIconSet(const QString &customIconSet);
 
     QPixmap getPixmapForStatement(PStatement statement);
+
+    const QString iconSetsFolder() const;
+    void setIconSetsFolder(const QString &newIconSetsFolder);
 
 signals:
     void actionIconsUpdated();
@@ -177,7 +176,8 @@ private:
     QMap<IconName,PPixmap> mIconPixmaps;
     PPixmap mDefaultIconPixmap;
     QSize mActionIconSize;
-    QString mIconSetPathTemplate;
+    QString mIconSetTemplate;
+    QString mIconSetsFolder;
 };
 
 extern IconsManager* pIconsManager;
