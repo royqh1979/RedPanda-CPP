@@ -4,7 +4,6 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 CONFIG += c++17
 CONFIG += nokey
-CONFIG += lrelease embed_translations
 
 isEmpty(APP_NAME) {
     APP_NAME = RedPandaCPP
@@ -360,6 +359,8 @@ linux: {
 TRANSLATIONS += \
     RedPandaIDE_zh_CN.ts
 
+#CONFIG += lrelease embed_translations
+
 win32: {
     !isEmpty(PREFIX) {
         target.path = $${PREFIX}
@@ -380,3 +381,30 @@ RESOURCES += \
     translations.qrc
 
 RC_ICONS = images/devcpp.ico images/associations/c.ico images/associations/cpp.ico images/associations/h.ico images/associations/hpp.ico images/associations/dev.ico
+
+
+# fixed lrelease.prf
+qtPrepareTool(QMAKE_LRELEASE, lrelease)
+
+isEmpty(LRELEASE_DIR): LRELEASE_DIR = .qm
+isEmpty(QM_FILES_RESOURCE_PREFIX): QM_FILES_RESOURCE_PREFIX = i18n
+
+lrelease.name = lrelease
+lrelease.input = TRANSLATIONS EXTRA_TRANSLATIONS
+lrelease.output = $$LRELEASE_DIR/${QMAKE_FILE_IN_BASE}.qm
+lrelease.commands = $$QMAKE_LRELEASE ${QMAKE_FILE_IN} $$QMAKE_LRELEASE_FLAGS -qm ${QMAKE_FILE_OUT}
+silent: lrelease.commands = @echo lrelease ${QMAKE_FILE_IN} && $$lrelease.commands
+lrelease.CONFIG = no_link target_predeps
+QMAKE_EXTRA_COMPILERS += lrelease
+
+all_translations = $$TRANSLATIONS $$EXTRA_TRANSLATIONS
+for (translation, all_translations) {
+    # mirrors $$LRELEASE_DIR/${QMAKE_FILE_IN_BASE}.qm above
+    translation = $$basename(translation)
+    QM_FILES += $$OUT_PWD/$$LRELEASE_DIR/$$replace(translation, \\..*$, .qm)
+}
+
+qmake_qm_files.files = $$QM_FILES
+qmake_qm_files.base = $$OUT_PWD/$$LRELEASE_DIR
+qmake_qm_files.prefix = $$QM_FILES_RESOURCE_PREFIX
+RESOURCES += qmake_qm_files
