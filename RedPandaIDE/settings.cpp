@@ -2896,7 +2896,7 @@ void Settings::Environment::doLoad()
         }
     }
     mInterfaceFont = stringValue("interface_font",defaultFontName);
-    mInterfaceFontSize = intValue("interface_font_size",10);
+    mInterfaceFontSize = intValue("interface_font_size",12);
     mLanguage = stringValue("language", QLocale::system().name());
     mIconSet = stringValue("icon_set","newlook");
     mUseCustomIconSet = boolValue("use_custom_icon_set", false);
@@ -3210,7 +3210,7 @@ void Settings::Executor::doLoad()
 #else
     mCaseEditorFontName = stringValue("case_editor_font_name","Dejavu Sans Mono");
 #endif
-    mCaseEditorFontSize = intValue("case_editor_font_size",10);
+    mCaseEditorFontSize = intValue("case_editor_font_size",12);
     mCaseEditorFontOnlyMonospaced = boolValue("case_editor_font_only_monospaced",true);
 }
 

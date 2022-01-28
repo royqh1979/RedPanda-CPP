@@ -206,6 +206,9 @@
              </property>
              <item>
               <widget class="QTreeView" name="classBrowser">
+               <property name="horizontalScrollBarPolicy">
+                <enum>Qt::ScrollBarAlwaysOn</enum>
+               </property>
                <property name="rootIsDecorated">
                 <bool>true</bool>
                </property>
