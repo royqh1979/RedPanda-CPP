@@ -175,8 +175,12 @@ int main(int argc, char *argv[])
                 pMainWindow->newEditor();
             }
         }
+#if QT_VERSION_MAJOR==5 && QT_VERSION_MINOR < 15
+        setScreenDPI(qApp->primaryScreen()->logicalDotsPerInch());
+#else
         if (mainWindow.screen())
             setScreenDPI(mainWindow.screen()->logicalDotsPerInch());
+#endif
         mainWindow.show();
 #ifdef Q_OS_WIN
         WindowLogoutEventFilter filter;
