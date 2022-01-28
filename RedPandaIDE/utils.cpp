@@ -1120,7 +1120,6 @@ void copyFolder(const QString &fromDir, const QString &toDir)
         if(!fileInfo.isHidden()) { //filters dot and dotdot
             const QString subPathStructure = fileInfo.absoluteFilePath().mid(absSourcePathLength);
             const QString constructedAbsolutePath = targetDir.absolutePath() + subPathStructure;
-            qDebug()<<fileInfo.absoluteFilePath()<<constructedAbsolutePath;
             if(fileInfo.isDir()){
                 //Create directory in target folder
                 dir.mkpath(constructedAbsolutePath);

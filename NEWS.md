@@ -1,3 +1,6 @@
+Red Panda C++ Version 0.14.1
+  - enhancement: custom theme
+
 Red Panda C++ Version 0.14.0
   - enhancement: custom icon set ( in the configuration folder)
   - enhancement: show custom icon set folder in options -> enviroment -> folders 

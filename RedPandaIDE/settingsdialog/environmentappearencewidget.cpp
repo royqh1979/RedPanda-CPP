@@ -53,6 +53,7 @@ void EnvironmentAppearenceWidget::doLoad()
     ui->spinFontSize->setValue(pSettings->environment().interfaceFontSize());
     ui->cbIconSet->setCurrentText(pSettings->environment().iconSet());
     ui->chkUseCustomIconSet->setChecked(pSettings->environment().useCustomIconSet());
+    ui->chkUseCustomTheme->setChecked(pSettings->environment().useCustomTheme());
 
     for (int i=0;i<ui->cbLanguage->count();i++) {
         if (ui->cbLanguage->itemData(i) == pSettings->environment().language()) {
@@ -78,6 +79,7 @@ void EnvironmentAppearenceWidget::doSave()
     pSettings->environment().setLanguage(ui->cbLanguage->currentData().toString());
     pSettings->environment().setIconSet(ui->cbIconSet->currentText());
     pSettings->environment().setUseCustomIconSet(ui->chkUseCustomIconSet->isChecked());
+    pSettings->environment().setUseCustomTheme(ui->chkUseCustomTheme->isChecked());
 
     pSettings->editor().save();
     pSettings->environment().save();

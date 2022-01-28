@@ -102,6 +102,12 @@ class ThemeManager : public QObject
 public:
     explicit ThemeManager(QObject *parent = nullptr);
     PAppTheme theme(const QString& themeName);
+    bool useCustomTheme() const;
+    void setUseCustomTheme(bool newUseCustomTheme);
+    void prepareCustomeTheme();
+
+private:
+    bool mUseCustomTheme;
 };
 
 #endif // THEMEMANAGER_H

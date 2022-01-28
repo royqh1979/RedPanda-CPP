@@ -567,16 +567,27 @@ void MainWindow::updateEditorColorSchemes()
 void MainWindow::applySettings()
 {
     ThemeManager themeManager;
-    PAppTheme appTheme = themeManager.theme(pSettings->environment().theme());
-    if (appTheme->isDark())
-        QApplication::setStyle(new DarkFusionStyle());
-    else
-        QApplication::setStyle(new LightFusionStyle());
-    qApp->setPalette(appTheme->palette());
-    //fix for qstatusbar bug
-    mFileEncodingStatus->setPalette(appTheme->palette());
-    mFileModeStatus->setPalette(appTheme->palette());
-    mFileInfoStatus->setPalette(appTheme->palette());
+    if (pSettings->environment().useCustomTheme()) {
+        themeManager.prepareCustomeTheme();
+    }
+    themeManager.setUseCustomTheme(pSettings->environment().useCustomTheme());
+    try {
+        PAppTheme appTheme = themeManager.theme(pSettings->environment().theme());
+        if (appTheme->isDark())
+            QApplication::setStyle(new DarkFusionStyle());
+        else
+            QApplication::setStyle(new LightFusionStyle());
+        qApp->setPalette(appTheme->palette());
+        //fix for qstatusbar bug
+        mFileEncodingStatus->setPalette(appTheme->palette());
+        mFileModeStatus->setPalette(appTheme->palette());
+        mFileInfoStatus->setPalette(appTheme->palette());
+    } catch (FileError e) {
+        QMessageBox::critical(this,
+                              tr("Load Theme Error"),
+                              e.reason());
+    }
+
     updateEditorColorSchemes();
 
     QFont font(pSettings->environment().interfaceFont());
@@ -1182,6 +1193,7 @@ void MainWindow::updateActionIcons()
     ui->actionNew->setIcon(pIconsManager->getIcon(IconsManager::ACTION_FILE_NEW));
     ui->actionNew_Project->setIcon(pIconsManager->getIcon(IconsManager::ACTION_PROJECT_NEW));
     ui->actionOpen->setIcon(pIconsManager->getIcon(IconsManager::ACTION_FILE_OPEN));
+    ui->actionOpen_Folder->setIcon(pIconsManager->getIcon(IconsManager::ACTION_FILE_OPEN_FOLDER));
     ui->actionSave->setIcon(pIconsManager->getIcon(IconsManager::ACTION_FILE_SAVE));
     ui->actionSaveAs->setIcon(pIconsManager->getIcon(IconsManager::ACTION_FILE_SAVE_AS));
     ui->actionSaveAll->setIcon(pIconsManager->getIcon(IconsManager::ACTION_FILE_SAVE_ALL));
