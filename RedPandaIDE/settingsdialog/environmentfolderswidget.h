@@ -47,6 +47,8 @@ private slots:
     // SettingsWidget interface
     void on_btnOpenIconSetFolderInFileBrowser_clicked();
 
+    void on_btnOpenThemeFolderInFileBrowser_clicked();
+
 protected:
     void updateIcons(const QSize &size) override;
 };

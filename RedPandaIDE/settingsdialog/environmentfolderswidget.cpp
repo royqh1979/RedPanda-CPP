@@ -40,7 +40,16 @@ EnvironmentFoldersWidget::~EnvironmentFoldersWidget()
 void EnvironmentFoldersWidget::doLoad()
 {
     ui->txtConfigFolder->setText(pSettings->dirs().config());
-    ui->txtIconSetFolder->setText(pSettings->dirs().config(Settings::Dirs::DataType::IconSet));
+    ui->txtIconSetFolder->setEnabled(pSettings->environment().useCustomIconSet());
+    ui->btnOpenIconSetFolderInFileBrowser->setEnabled(pSettings->environment().useCustomIconSet());
+    if (pSettings->environment().useCustomIconSet()) {
+        ui->txtIconSetFolder->setText(pSettings->dirs().config(Settings::Dirs::DataType::IconSet));
+    }
+    ui->txtThemeFolder->setEnabled(pSettings->environment().useCustomTheme());
+    ui->btnOpenThemeFolderInFileBrowser->setEnabled(pSettings->environment().useCustomTheme());
+    if (pSettings->environment().useCustomTheme()) {
+        ui->txtThemeFolder->setText(pSettings->dirs().config(Settings::Dirs::DataType::Theme));
+    }
 }
 
 void EnvironmentFoldersWidget::doSave()
@@ -75,6 +84,7 @@ void EnvironmentFoldersWidget::on_btnResetDefault_clicked()
 void EnvironmentFoldersWidget::updateIcons(const QSize &size)
 {
     pIconsManager->setIcon(ui->btnOpenConfigFolderInBrowser,IconsManager::ACTION_FILE_OPEN_FOLDER);
+    pIconsManager->setIcon(ui->btnOpenThemeFolderInFileBrowser,IconsManager::ACTION_FILE_OPEN_FOLDER);
     pIconsManager->setIcon(ui->btnOpenIconSetFolderInFileBrowser,IconsManager::ACTION_FILE_OPEN_FOLDER);
 }
 
@@ -84,6 +94,15 @@ void EnvironmentFoldersWidget::on_btnOpenIconSetFolderInFileBrowser_clicked()
     QDesktopServices::openUrl(
                 QUrl("file:///"+
                      includeTrailingPathDelimiter(pSettings->dirs().config(Settings::Dirs::DataType::IconSet)),QUrl::TolerantMode));
+
+}
+
+
+void EnvironmentFoldersWidget::on_btnOpenThemeFolderInFileBrowser_clicked()
+{
+    QDesktopServices::openUrl(
+                QUrl("file:///"+
+                     includeTrailingPathDelimiter(pSettings->dirs().config(Settings::Dirs::DataType::Theme)),QUrl::TolerantMode));
 
 }
 
