@@ -1113,7 +1113,6 @@ void copyFolder(const QString &fromDir, const QString &toDir)
         return;
     targetDir.mkpath(targetDir.absolutePath());
 
-    qDebug()<<"copy folder";
     while (it.hasNext()){
         it.next();
         const auto fileInfo = it.fileInfo();

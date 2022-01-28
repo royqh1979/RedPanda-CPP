@@ -28,17 +28,6 @@ EnvironmentAppearenceWidget::EnvironmentAppearenceWidget(const QString& name, co
     ui(new Ui::EnvironmentAppearenceWidget)
 {
     ui->setupUi(this);
-    ui->cbTheme->addItem("default");
-    ui->cbTheme->addItem("dark");
-//    ui->cbTheme->addItem("dracula");
-//    ui->cbTheme->addItem("light");
-//    QStyleFactory factory;
-//    for (QString name:factory.keys()) {
-//        ui->cbTheme->addItem(name);
-//    }
-    ui->cbLanguage->addItem(tr("English"),"en");
-    ui->cbLanguage->addItem(tr("Simplified Chinese"),"zh_CN");
-    ui->cbIconSet->addItem("newlook");
 }
 
 EnvironmentAppearenceWidget::~EnvironmentAppearenceWidget()
@@ -48,7 +37,12 @@ EnvironmentAppearenceWidget::~EnvironmentAppearenceWidget()
 
 void EnvironmentAppearenceWidget::doLoad()
 {
-    ui->cbTheme->setCurrentText(pSettings->environment().theme());
+    for (int i=0; i<ui->cbTheme->count();i++) {
+        if (ui->cbTheme->itemData(i) == pSettings->environment().theme()) {
+            ui->cbTheme->setCurrentIndex(i);
+            break;
+        }
+    }
     ui->cbFont->setCurrentFont(QFont(pSettings->environment().interfaceFont()));
     ui->spinFontSize->setValue(pSettings->environment().interfaceFontSize());
     ui->cbIconSet->setCurrentText(pSettings->environment().iconSet());
@@ -65,15 +59,15 @@ void EnvironmentAppearenceWidget::doLoad()
 
 void EnvironmentAppearenceWidget::doSave()
 {
-    if (pSettings->environment().theme()!=ui->cbTheme->currentText()) {
+    if (pSettings->environment().theme()!=ui->cbTheme->currentData().toString()) {
         ThemeManager themeManager;
-        PAppTheme appTheme = themeManager.theme(ui->cbTheme->currentText());
+        PAppTheme appTheme = themeManager.theme(ui->cbTheme->currentData().toString());
         if (appTheme && !appTheme->defaultColorScheme().isEmpty()) {
             pSettings->editor().setColorScheme(appTheme->defaultColorScheme());
             pMainWindow->updateEditorColorSchemes();
         }
     }
-    pSettings->environment().setTheme(ui->cbTheme->currentText());
+    pSettings->environment().setTheme(ui->cbTheme->currentData().toString());
     pSettings->environment().setInterfaceFont(ui->cbFont->currentFont().family());
     pSettings->environment().setInterfaceFontSize(ui->spinFontSize->value());
     pSettings->environment().setLanguage(ui->cbLanguage->currentData().toString());
@@ -84,4 +78,17 @@ void EnvironmentAppearenceWidget::doSave()
     pSettings->editor().save();
     pSettings->environment().save();
     pMainWindow->applySettings();
+}
+
+void EnvironmentAppearenceWidget::init()
+{
+    ThemeManager themeManager;
+    QList<PAppTheme> appThemes = themeManager.getThemes();
+    foreach(const PAppTheme& appTheme, appThemes) {
+        ui->cbTheme->addItem(appTheme->displayName(),appTheme->name());
+    }
+    ui->cbLanguage->addItem(tr("English"),"en");
+    ui->cbLanguage->addItem(tr("Simplified Chinese"),"zh_CN");
+    ui->cbIconSet->addItem("newlook");
+    SettingsWidget::init();
 }

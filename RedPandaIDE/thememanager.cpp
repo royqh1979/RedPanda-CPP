@@ -16,6 +16,7 @@
  */
 #include "thememanager.h"
 #include <QApplication>
+#include <QDirIterator>
 #include <QFile>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -24,6 +25,7 @@
 #include <QMetaObject>
 #include "utils.h"
 #include "settings.h"
+#include "systemconsts.h"
 
 ThemeManager::ThemeManager(QObject *parent) : QObject(parent),
     mUseCustomTheme(false)
@@ -33,14 +35,16 @@ ThemeManager::ThemeManager(QObject *parent) : QObject(parent),
 
 PAppTheme ThemeManager::theme(const QString &themeName)
 {
-   PAppTheme appTheme = std::make_shared<AppTheme>();
-   QString themeDir;
-   if (mUseCustomTheme)
-       themeDir = pSettings->dirs().config(Settings::Dirs::DataType::Theme);
-   else
-       themeDir = pSettings->dirs().data(Settings::Dirs::DataType::Theme);
-   appTheme->load(QString("%1/%2.json").arg(themeDir, themeName));
-   return appTheme;
+    if (mUseCustomTheme)
+        prepareCustomeTheme();
+    PAppTheme appTheme = std::make_shared<AppTheme>();
+    QString themeDir;
+    if (mUseCustomTheme)
+        themeDir = pSettings->dirs().config(Settings::Dirs::DataType::Theme);
+    else
+        themeDir = pSettings->dirs().data(Settings::Dirs::DataType::Theme);
+    appTheme->load(QString("%1/%2.json").arg(themeDir, themeName));
+    return appTheme;
 }
 
 bool ThemeManager::useCustomTheme() const
@@ -59,6 +63,34 @@ void ThemeManager::prepareCustomeTheme()
     if (QFile(pSettings->dirs().config(Settings::Dirs::DataType::Theme)).exists())
         return;
     copyFolder(pSettings->dirs().data(Settings::Dirs::DataType::Theme),pSettings->dirs().config(Settings::Dirs::DataType::Theme));
+}
+
+QList<PAppTheme> ThemeManager::getThemes()
+{
+    if (mUseCustomTheme)
+        prepareCustomeTheme();
+
+    QList<PAppTheme> result;
+    QString themeDir;
+    if (mUseCustomTheme)
+        themeDir = pSettings->dirs().config(Settings::Dirs::DataType::Theme);
+    else
+        themeDir = pSettings->dirs().data(Settings::Dirs::DataType::Theme);
+    QDirIterator it(themeDir);
+    while (it.hasNext()) {
+        it.next();
+        QFileInfo fileInfo = it.fileInfo();
+        if (fileInfo.suffix().compare("json", PATH_SENSITIVITY)==0) {
+            try {
+                PAppTheme appTheme = std::make_shared<AppTheme>();
+                appTheme->load(fileInfo.absoluteFilePath());
+                result.append(appTheme);
+            } catch(FileError e) {
+                //just skip it
+            }
+        }
+    }
+    return result;
 }
 
 AppTheme::AppTheme(QObject *parent):QObject(parent)
@@ -156,7 +188,12 @@ void AppTheme::load(const QString &filename)
                             .arg(error.errorString()));
         }
         QJsonObject obj=doc.object();
-        mName = obj["name"].toString();
+        QFileInfo fileInfo(filename);
+        mName = fileInfo.baseName();
+        mDisplayName = obj["name"].toString();
+        QString localeName = obj["name_"+pSettings->environment().language()].toString();
+        if (!localeName.isEmpty())
+            mDisplayName = localeName;
         mIsDark = obj["isDark"].toBool(false);
         mDefaultColorScheme = obj["default scheme"].toString();
         QJsonObject colors = obj["palette"].toObject();
@@ -198,6 +235,16 @@ QPalette AppTheme::initialPalette()
 {
     static QPalette palette = copyPalette(QApplication::palette());
     return palette;
+}
+
+const QString &AppTheme::name() const
+{
+    return mName;
+}
+
+const QString &AppTheme::displayName() const
+{
+    return mDisplayName;
 }
 
 const QString &AppTheme::defaultColorScheme() const

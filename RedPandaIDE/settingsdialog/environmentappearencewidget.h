@@ -39,6 +39,10 @@ private:
 protected:
     void doLoad() override;
     void doSave() override;
+
+    // SettingsWidget interface
+public:
+    void init() override;
 };
 
 #endif // ENVIRONMENTAPPEARENCEWIDGET_H

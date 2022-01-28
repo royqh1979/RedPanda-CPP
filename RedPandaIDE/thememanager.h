@@ -85,11 +85,16 @@ public:
     const QString &defaultColorScheme() const;
     void setDefaultColorScheme(const QString &newDefaultColorScheme);
 
+    const QString &displayName() const;
+
+    const QString &name() const;
+
 private:
     static QPalette initialPalette();
 private:
     QHash<int,QColor> mColors;
     QString mName;
+    QString mDisplayName;
     bool mIsDark;
     QString mDefaultColorScheme;
 };
@@ -105,6 +110,7 @@ public:
     bool useCustomTheme() const;
     void setUseCustomTheme(bool newUseCustomTheme);
     void prepareCustomeTheme();
+    QList<PAppTheme> getThemes();
 
 private:
     bool mUseCustomTheme;
