@@ -208,10 +208,12 @@ QString Settings::Dirs::data(Settings::Dirs::DataType dataType) const
     switch (dataType) {
     case DataType::None:
         return dataDir;
-    case DataType::ColorSheme:
+    case DataType::ColorScheme:
         return ":/colorschemes/colorschemes";
     case DataType::IconSet:
         return ":/resources/iconsets";
+    case DataType::Theme:
+        return ":/themes";
     }
     return "";
 }
@@ -224,10 +226,12 @@ QString Settings::Dirs::config(Settings::Dirs::DataType dataType) const
     switch (dataType) {
     case DataType::None:
         return configDir;
-    case DataType::ColorSheme:
+    case DataType::ColorScheme:
         return includeTrailingPathDelimiter(configDir)+"scheme";
     case DataType::IconSet:
         return includeTrailingPathDelimiter(configDir)+"iconsets";
+    case DataType::Theme:
+        return includeTrailingPathDelimiter(configDir)+"themes";
     }
     return "";
 }
@@ -2900,6 +2904,7 @@ void Settings::Environment::doLoad()
     mLanguage = stringValue("language", QLocale::system().name());
     mIconSet = stringValue("icon_set","newlook");
     mUseCustomIconSet = boolValue("use_custom_icon_set", false);
+    mUseCustomTheme = boolValue("use_custom_theme", false);
 
 
     mCurrentFolder = stringValue("current_folder",QDir::currentPath());
@@ -3001,6 +3006,16 @@ void Settings::Environment::setUseCustomIconSet(bool newUseCustomIconSet)
     mUseCustomIconSet = newUseCustomIconSet;
 }
 
+bool Settings::Environment::useCustomTheme() const
+{
+    return mUseCustomTheme;
+}
+
+void Settings::Environment::setUseCustomTheme(bool newUseCustomTheme)
+{
+    mUseCustomTheme = newUseCustomTheme;
+}
+
 void Settings::Environment::doSave()
 {
     //Appearence
@@ -3010,6 +3025,7 @@ void Settings::Environment::doSave()
     saveValue("language", mLanguage);
     saveValue("icon_set",mIconSet);
     saveValue("use_custom_icon_set", mUseCustomIconSet);
+    saveValue("use_custom_theme", mUseCustomTheme);
 
     saveValue("current_folder",mCurrentFolder);
     saveValue("default_open_folder",mDefaultOpenFolder);

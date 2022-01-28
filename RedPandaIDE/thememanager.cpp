@@ -23,8 +23,10 @@
 #include <QMetaEnum>
 #include <QMetaObject>
 #include "utils.h"
+#include "settings.h"
 
-ThemeManager::ThemeManager(QObject *parent) : QObject(parent)
+ThemeManager::ThemeManager(QObject *parent) : QObject(parent),
+    mUseCustomTheme(false)
 {
 
 }
@@ -32,8 +34,31 @@ ThemeManager::ThemeManager(QObject *parent) : QObject(parent)
 PAppTheme ThemeManager::theme(const QString &themeName)
 {
    PAppTheme appTheme = std::make_shared<AppTheme>();
-   appTheme->load(QString(":/themes/%1.json").arg(themeName));
+   QString themeDir;
+   if (mUseCustomTheme)
+       themeDir = pSettings->dirs().config(Settings::Dirs::DataType::Theme);
+   else
+       themeDir = pSettings->dirs().data(Settings::Dirs::DataType::Theme);
+   appTheme->load(QString("%1/%2.json").arg(themeDir, themeName));
    return appTheme;
+}
+
+bool ThemeManager::useCustomTheme() const
+{
+    return mUseCustomTheme;
+}
+
+void ThemeManager::setUseCustomTheme(bool newUseCustomTheme)
+{
+    mUseCustomTheme = newUseCustomTheme;
+}
+
+void ThemeManager::prepareCustomeTheme()
+{
+
+    if (QFile(pSettings->dirs().config(Settings::Dirs::DataType::Theme)).exists())
+        return;
+    copyFolder(pSettings->dirs().data(Settings::Dirs::DataType::Theme),pSettings->dirs().config(Settings::Dirs::DataType::Theme));
 }
 
 AppTheme::AppTheme(QObject *parent):QObject(parent)
@@ -116,8 +141,10 @@ QPalette AppTheme::palette() const
 void AppTheme::load(const QString &filename)
 {
     QFile file(filename);
-    if (!file.exists())
-        return;
+    if (!file.exists()) {
+        throw FileError(tr("Theme file '%1' doesn't exist!")
+                        .arg(filename));
+    }
     if (file.open(QFile::ReadOnly)) {
         QByteArray content = file.readAll();
         QJsonParseError error;
@@ -144,7 +171,7 @@ void AppTheme::load(const QString &filename)
         }
 
     } else {
-        throw FileError(tr("Can't open file '%1' for read.")
+        throw FileError(tr("Can't open the theme file '%1' for read.")
                         .arg(filename));
     }
 }
