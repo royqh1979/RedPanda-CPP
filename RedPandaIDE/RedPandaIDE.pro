@@ -4,6 +4,7 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 CONFIG += c++17
 CONFIG += nokey
+CONFIG += lrelease embed_translations
 
 isEmpty(APP_NAME) {
     APP_NAME = RedPandaCPP

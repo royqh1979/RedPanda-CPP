@@ -121,7 +121,7 @@ int main(int argc, char *argv[])
         languageSetting.beginGroup(SETTING_ENVIRONMENT);
         QString language = languageSetting.value("language",QLocale::system().name()).toString();
 
-        if (trans.load("RedPandaIDE_"+language,":/translations")) {
+        if (trans.load("RedPandaIDE_"+language,":/i18n/")) {
             app.installTranslator(&trans);
         }
         if (transQt.load("qt_"+language,":/translations")) {
