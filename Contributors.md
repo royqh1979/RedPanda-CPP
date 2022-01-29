@@ -1,2 +1,3 @@
 ## Contributor of Icons
-@beanflame
+beanflame@github
+XiaoLoong@github
