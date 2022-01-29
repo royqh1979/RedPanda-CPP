@@ -374,9 +374,7 @@ else: unix:!android: target.path = $${PREFIX}/bin
 
 RESOURCES += \
     codes.qrc \
-    colorschemes.qrc \
     defaultconfigs.qrc \
-    themes.qrc \
     icons.qrc \
     translations.qrc
 
@@ -408,3 +406,15 @@ qmake_qm_files.files = $$QM_FILES
 qmake_qm_files.base = $$OUT_PWD/$$LRELEASE_DIR
 qmake_qm_files.prefix = $$QM_FILES_RESOURCE_PREFIX
 RESOURCES += qmake_qm_files
+
+iconsets_files.files += $$files(resources/iconsets/*.svg, true)
+iconsets_files.files += $$files(resources/iconsets/*.json, true)
+RESOURCES += iconsets_files
+
+theme_files.files += $$files(themes/*.json, false)
+theme_files.files += $$files(themes/*.png, false)
+RESOURCES += theme_files
+
+colorscheme_files.files += $$files(colorschemes/*.scheme, false)
+colorscheme_files.prefix = /colorschemes
+RESOURCES += colorscheme_files
