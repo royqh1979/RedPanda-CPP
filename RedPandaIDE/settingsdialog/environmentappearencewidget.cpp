@@ -22,6 +22,7 @@
 #include "../settings.h"
 #include "../mainwindow.h"
 #include "../thememanager.h"
+#include "../iconsmanager.h"
 
 EnvironmentAppearenceWidget::EnvironmentAppearenceWidget(const QString& name, const QString& group, QWidget *parent) :
     SettingsWidget(name,group,parent),
@@ -45,7 +46,12 @@ void EnvironmentAppearenceWidget::doLoad()
     }
     ui->cbFont->setCurrentFont(QFont(pSettings->environment().interfaceFont()));
     ui->spinFontSize->setValue(pSettings->environment().interfaceFontSize());
-    ui->cbIconSet->setCurrentText(pSettings->environment().iconSet());
+    for (int i=0; i<ui->cbIconSet->count();i++) {
+        if (ui->cbIconSet->itemData(i) == pSettings->environment().iconSet()) {
+            ui->cbIconSet->setCurrentIndex(i);
+            break;
+        }
+    }
     ui->chkUseCustomIconSet->setChecked(pSettings->environment().useCustomIconSet());
     ui->chkUseCustomTheme->setChecked(pSettings->environment().useCustomTheme());
 
@@ -71,7 +77,7 @@ void EnvironmentAppearenceWidget::doSave()
     pSettings->environment().setInterfaceFont(ui->cbFont->currentFont().family());
     pSettings->environment().setInterfaceFontSize(ui->spinFontSize->value());
     pSettings->environment().setLanguage(ui->cbLanguage->currentData().toString());
-    pSettings->environment().setIconSet(ui->cbIconSet->currentText());
+    pSettings->environment().setIconSet(ui->cbIconSet->currentData().toString());
     pSettings->environment().setUseCustomIconSet(ui->chkUseCustomIconSet->isChecked());
     pSettings->environment().setUseCustomTheme(ui->chkUseCustomTheme->isChecked());
 
@@ -89,6 +95,9 @@ void EnvironmentAppearenceWidget::init()
     }
     ui->cbLanguage->addItem(tr("English"),"en");
     ui->cbLanguage->addItem(tr("Simplified Chinese"),"zh_CN");
-    ui->cbIconSet->addItem("newlook");
+    QList<PIconSet> iconSets = pIconsManager->listIconSets();
+    foreach(const PIconSet& iconSet, iconSets) {
+        ui->cbIconSet->addItem(iconSet->displayName,iconSet->name);
+    }
     SettingsWidget::init();
 }

@@ -23,6 +23,13 @@
 #include <memory>
 #include "parser/parserutils.h"
 
+struct IconSet {
+    QString name;
+    QString displayName;
+};
+
+using PIconSet = std::shared_ptr<IconSet>;
+
 class QToolButton;
 class QPushButton;
 class IconsManager : public QObject
@@ -169,6 +176,8 @@ public:
 
     const QString iconSetsFolder() const;
     void setIconSetsFolder(const QString &newIconSetsFolder);
+
+    QList<PIconSet> listIconSets();
 
 signals:
     void actionIconsUpdated();

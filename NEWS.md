@@ -3,6 +3,8 @@ Red Panda C++ Version 0.14.1
   - fix: failed to show function tip, when there are parameters having '[' and ']'
   - enhancement: display localized theme name in the option dialog
   - enhancement: show custom theme folder in options dialog -> enviroment -> folders
+  - enhancement: display localzed icon set name in the option dialog
+  - enhancement: new sky blue icon set, contributed by Alan-CRL
 
 Red Panda C++ Version 0.14.0
   - enhancement: custom icon set ( in the configuration folder)

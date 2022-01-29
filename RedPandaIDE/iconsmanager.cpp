@@ -24,6 +24,9 @@
 #include <QPushButton>
 #include <QFile>
 #include <QDir>
+#include <QDirIterator>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include "utils.h"
 #include "settings.h"
 
@@ -292,4 +295,34 @@ const QString IconsManager::iconSetsFolder() const
 void IconsManager::setIconSetsFolder(const QString &newIconSetsFolder)
 {
     mIconSetsFolder = newIconSetsFolder;
+}
+
+QList<PIconSet> IconsManager::listIconSets()
+{
+    QDirIterator dirIter(iconSetsFolder());
+    QList<PIconSet> result;
+    while(dirIter.hasNext()) {
+        dirIter.next();
+        QFileInfo fileInfo = dirIter.fileInfo();
+        if (!fileInfo.isHidden() && fileInfo.isDir()) {
+            PIconSet pSet = std::make_shared<IconSet>();
+            pSet->name = fileInfo.baseName();
+            pSet->displayName = pSet->name;
+            QFile infoFile(includeTrailingPathDelimiter(fileInfo.absoluteFilePath())+"info.json");
+            if (infoFile.exists() && infoFile.open(QFile::ReadOnly)) {
+                QByteArray content = infoFile.readAll();
+                QJsonParseError error;
+                QJsonDocument doc(QJsonDocument::fromJson(content,&error));
+                if (error.error  == QJsonParseError::NoError) {
+                    QJsonObject obj=doc.object();
+                    pSet->displayName = obj["name"].toString();
+                    QString localeName = obj["name_"+pSettings->environment().language()].toString();
+                    if (!localeName.isEmpty())
+                        pSet->displayName = localeName;
+                }
+            }
+            result.append(pSet);
+        }
+    }
+    return result;
 }
