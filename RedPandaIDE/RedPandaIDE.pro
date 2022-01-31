@@ -145,6 +145,7 @@ SOURCES += \
     widgets/lightfusionstyle.cpp \
     widgets/macroinfomodel.cpp \
     widgets/newclassdialog.cpp \
+    widgets/newheaderdialog.cpp \
     widgets/newprojectdialog.cpp \
     widgets/ojproblempropertywidget.cpp \
     widgets/ojproblemsetmodel.cpp \
@@ -270,6 +271,7 @@ HEADERS += \
     widgets/lightfusionstyle.h \
     widgets/macroinfomodel.h \
     widgets/newclassdialog.h \
+    widgets/newheaderdialog.h \
     widgets/newprojectdialog.h \
     widgets/ojproblempropertywidget.h \
     widgets/ojproblemsetmodel.h \
@@ -319,6 +321,7 @@ FORMS += \
     widgets/custommakefileinfodialog.ui \
     widgets/filepropertiesdialog.ui \
     widgets/newclassdialog.ui \
+    widgets/newheaderdialog.ui \
     widgets/newprojectdialog.ui \
     widgets/ojproblempropertywidget.ui \
     widgets/searchdialog.ui \
@@ -405,16 +408,17 @@ for (translation, all_translations) {
 qmake_qm_files.files = $$QM_FILES
 qmake_qm_files.base = $$OUT_PWD/$$LRELEASE_DIR
 qmake_qm_files.prefix = $$QM_FILES_RESOURCE_PREFIX
-RESOURCES += qmake_qm_files
 
 iconsets_files.files += $$files(resources/iconsets/*.svg, true)
 iconsets_files.files += $$files(resources/iconsets/*.json, true)
-RESOURCES += iconsets_files
 
 theme_files.files += $$files(themes/*.json, false)
 theme_files.files += $$files(themes/*.png, false)
-RESOURCES += theme_files
 
 colorscheme_files.files += $$files(colorschemes/*.scheme, false)
 colorscheme_files.prefix = /colorschemes
+
+RESOURCES += qmake_qm_files
+RESOURCES += iconsets_files
+RESOURCES += theme_files
 RESOURCES += colorscheme_files
