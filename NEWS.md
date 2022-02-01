@@ -7,6 +7,8 @@ Red Panda C++ Version 0.14.1
   - enhancement: new sky blue icon set, contributed by Alan-CRL
   - enhancement: show caret at once, when edition finished
   - enhancement: new header dialog for project
+  - enhancement: new contrast icon set, contributed by Alan-CRL
+  - enhancement: new contrast theme, contributed by Alan-CRL
 
 Red Panda C++ Version 0.14.0
   - enhancement: custom icon set ( in the configuration folder)
