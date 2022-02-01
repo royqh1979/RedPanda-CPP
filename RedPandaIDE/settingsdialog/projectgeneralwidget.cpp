@@ -81,7 +81,7 @@ void ProjectGeneralWidget::doLoad()
 
     ui->lstType->setCurrentRow( static_cast<int>(project->options().type));
 
-    ui->cbDefaultCpp->setChecked(project->options().useGPP);
+    ui->cbDefaultCpp->setChecked(project->options().isCpp);
     ui->cbSupportXPTheme->setChecked(project->options().supportXPThemes);
     mIconPath = project->options().icon;
     QPixmap icon(mIconPath);
@@ -100,7 +100,7 @@ void ProjectGeneralWidget::doSave()
     int row = std::max(0,ui->lstType->currentRow());
     project->options().type = static_cast<ProjectType>(row);
 
-    project->options().useGPP = ui->cbDefaultCpp->isChecked();
+    project->options().isCpp = ui->cbDefaultCpp->isChecked();
     project->options().supportXPThemes = ui->cbSupportXPTheme->isChecked();
     if (mIconPath.isEmpty()
             || !ui->lbIcon->pixmap() || ui->lbIcon->pixmap()->isNull()) {

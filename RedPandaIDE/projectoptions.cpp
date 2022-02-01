@@ -41,7 +41,7 @@ ProjectOptions::ProjectOptions()
 {
     type = ProjectType::GUI;
     version = 2;
-    useGPP = false;
+    isCpp = false;
     logOutputEnabled = false;
     useCustomMakefile = false;
     usePrecompiledHeader = false;

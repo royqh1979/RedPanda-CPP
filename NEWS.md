@@ -6,6 +6,7 @@ Red Panda C++ Version 0.14.1
   - enhancement: display localzed icon set name in the option dialog
   - enhancement: new sky blue icon set, contributed by Alan-CRL
   - enhancement: show caret at once, when edition finished
+  - enhancement: new header dialog for project
 
 Red Panda C++ Version 0.14.0
   - enhancement: custom icon set ( in the configuration folder)

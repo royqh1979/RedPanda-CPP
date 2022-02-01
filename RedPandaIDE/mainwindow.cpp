@@ -38,6 +38,7 @@
 #include "widgets/ojproblempropertywidget.h"
 #include "iconsmanager.h"
 #include "widgets/newclassdialog.h"
+#include "widgets/newheaderdialog.h"
 
 #include <QCloseEvent>
 #include <QComboBox>
@@ -166,6 +167,10 @@ MainWindow::MainWindow(QWidget *parent)
     mMenuNew->setTitle(tr("New"));
     mMenuNew->addAction(ui->actionNew);
     mMenuNew->addAction(ui->actionNew_Project);
+    mMenuNew->addSeparator();
+    mMenuNew->addAction(ui->actionNew_Class);
+    mMenuNew->addAction(ui->actionNew_Header);
+
     ui->menuFile->insertMenu(ui->actionOpen,mMenuNew);
 
 
@@ -474,6 +479,7 @@ void MainWindow::updateProjectActions()
     ui->actionProject_options->setEnabled(hasProject);
     ui->actionClose_Project->setEnabled(hasProject);
     ui->actionNew_Class->setEnabled(hasProject);
+    ui->actionNew_Header->setEnabled(hasProject);
     ui->actionProject_Open_Folder_In_Explorer->setEnabled(hasProject);
     ui->actionProject_Open_In_Terminal->setEnabled(hasProject);
     updateCompileActions();
@@ -1010,9 +1016,9 @@ void MainWindow::openFile(const QString &filename, QTabWidget* page)
         QByteArray encoding = unit ? unit->encoding() : ENCODING_AUTO_DETECT;
         editor = mEditorList->newEditor(filename,encoding,
                                     inProject, false, page);
-        if (mProject) {
-            mProject->associateEditorToUnit(editor,unit);
-        }
+//        if (mProject) {
+//            mProject->associateEditorToUnit(editor,unit);
+//        }
         editor->activate();
         this->updateForEncodingInfo();
     } catch (FileError e) {
@@ -2042,14 +2048,11 @@ void MainWindow::loadLastOpens()
         bool inProject = (mProject && unit);
         QByteArray encoding = unit ? unit->encoding() : ENCODING_AUTO_DETECT;
         Editor * editor = mEditorList->newEditor(editorFilename, encoding, inProject,false,page);
-        if (mProject) {
-            mProject->associateEditorToUnit(editor,unit);
-        }
+//        if (mProject) {
+//            mProject->associateEditorToUnit(editor,unit);
+//        }
         if (!editor)
             continue;
-//        if (mProject) {
-//            mProject->associateEditor(editor);
-//        }
         BufferCoord pos;
         pos.Char = lastOpenIni.GetLongValue(sectionName,"CursorCol", 1);
         pos.Line = lastOpenIni.GetLongValue(sectionName,"CursorRow", 1);
@@ -2915,6 +2918,8 @@ void MainWindow::onProjectViewContextMenu(const QPoint &pos)
     QMenu menu(this);
     updateProjectActions();
     menu.addAction(ui->actionProject_New_File);
+    menu.addAction(ui->actionNew_Class);
+    menu.addAction(ui->actionNew_Header);
     menu.addAction(ui->actionAdd_to_project);
     if (!onFolder) {
         menu.addAction(ui->actionRemove_from_project);
@@ -5327,7 +5332,7 @@ void MainWindow::newProjectUnitFile()
     QString newFileName;
     do {
         newFileName = tr("untitled")+QString("%1").arg(getNewFileNumber());
-        if (mProject->options().useGPP) {
+        if (mProject->options().isCpp) {
             newFileName+=".cpp";
         } else {
             newFileName+=".c";
@@ -6148,6 +6153,55 @@ void MainWindow::on_actionDelete_to_Word_End_triggered()
 }
 
 
+void MainWindow::on_actionNew_Header_triggered()
+{
+    if (!mProject)
+        return;
+    NewHeaderDialog dialog;
+    dialog.setPath(mProject->folder());
+    if (dialog.exec()==QDialog::Accepted) {
+        QDir dir(dialog.path());
+        if (dialog.headerName().isEmpty()
+                || !dir.exists())
+            return;
+        QString headerFilename = includeTrailingPathDelimiter(dialog.path())+dialog.headerName();
+        if (fileExists(headerFilename)){
+            QMessageBox::critical(this,
+                                  tr("Header Exists"),
+                                  tr("Header file \"%1\" already exists!").arg(headerFilename));
+            return;
+        }
+        QString header_macro = QFileInfo(dialog.headerName()).baseName().toUpper()+"_H";
+        QStringList header;
+        QString indents;
+        if (pSettings->editor().tabToSpaces()) {
+            indents = QString(pSettings->editor().tabWidth(),' ');
+        } else {
+            indents = "\t";
+        }
+        header.append(QString("#ifndef %1").arg(header_macro));
+        header.append(QString("#define %1").arg(header_macro));
+        header.append("");
+        header.append("#endif");
+        stringsToFile(header, headerFilename);
+
+        mProject->addUnit(headerFilename,mProject->rootNode(),false);
+        mProject->cppParser()->addFileToScan(headerFilename);
+        mProject->rebuildNodes();
+        mProject->saveUnits();
+        parseFileList(mProject->cppParser());
+        updateProjectView();
+
+        Editor * editor = mEditorList->getEditorByFilename(headerFilename);
+        if (editor){
+            editor->activate();
+        }
+    }
+    pSettings->ui().setNewClassDialogWidth(dialog.width());
+    pSettings->ui().setNewClassDialogHeight(dialog.height());
+}
+
+
 void MainWindow::on_actionNew_Class_triggered()
 {
     if (!mProject)
@@ -6161,6 +6215,20 @@ void MainWindow::on_actionNew_Class_triggered()
                 || dialog.headerName().isEmpty()
                 || !dir.exists())
             return;
+        QString headerFilename = includeTrailingPathDelimiter(dialog.path())+dialog.headerName();
+        QString sourceFilename = includeTrailingPathDelimiter(dialog.path())+dialog.sourceName();
+        if (fileExists(headerFilename)){
+            QMessageBox::critical(this,
+                                  tr("Header Exists"),
+                                  tr("Header file \"%1\" already exists!").arg(headerFilename));
+            return;
+        }
+        if (fileExists(sourceFilename)){
+            QMessageBox::critical(this,
+                                  tr("Source Exists"),
+                                  tr("Source file \"%1\" already exists!").arg(sourceFilename));
+            return;
+        }
         QString header_macro = dialog.className().toUpper()+"_H";
         QStringList header;
         QString indents;
@@ -6180,13 +6248,11 @@ void MainWindow::on_actionNew_Class_triggered()
         header.append("};");
         header.append("");
         header.append("#endif");
-        QString headerFilename = includeTrailingPathDelimiter(dialog.path())+dialog.headerName();
         stringsToFile(header, headerFilename);
         QStringList source;
         source.append(QString("#include \"%1\"").arg(dialog.headerName()));
         source.append("");
         source.append("");
-        QString sourceFilename = includeTrailingPathDelimiter(dialog.path())+dialog.sourceName();
         stringsToFile(source, sourceFilename);
 
         mProject->addUnit(headerFilename,mProject->rootNode(),false);
@@ -6197,8 +6263,14 @@ void MainWindow::on_actionNew_Class_triggered()
         mProject->saveUnits();
         parseFileList(mProject->cppParser());
         updateProjectView();
+
+        Editor * editor = mEditorList->getEditorByFilename(headerFilename);
+        if (editor){
+            editor->activate();
+        }
+        editor = mEditorList->getEditorByFilename(sourceFilename);
     }
-    pSettings->ui().setNewClassDialogWidth(dialog.width());
-    pSettings->ui().setNewClassDialogHeight(dialog.height());
+    pSettings->ui().setNewHeaderDialogWidth(dialog.width());
+    pSettings->ui().setNewHeaderDialogHeight(dialog.height());
 }
 

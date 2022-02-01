@@ -54,7 +54,7 @@ void ProjectCompiler::createStandardMakeFile()
     newMakeFile(file);
     file.write("$(BIN): $(OBJ)\n");
     if (!mOnlyCheckSyntax) {
-        if (mProject->options().useGPP) {
+        if (mProject->options().isCpp) {
             writeln(file,"\t$(CPP) $(LINKOBJ) -o $(BIN) $(LIBS)");
         } else
             writeln(file,"\t$(CC) $(LINKOBJ) -o $(BIN) $(LIBS)");
@@ -80,7 +80,7 @@ void ProjectCompiler::createDynamicMakeFile()
     newMakeFile(file);
     writeln(file,"$(BIN): $(LINKOBJ)");
     if (!mOnlyCheckSyntax) {
-        if (mProject->options().useGPP) {
+        if (mProject->options().isCpp) {
           file.write("\t$(CPP) -mdll $(LINKOBJ) -o $(BIN) $(LIBS) -Wl,--output-def,$(DEF),--out-implib,$(STATIC)");
         } else {
           file.write("\t$(CC) -mdll $(LINKOBJ) -o $(BIN) $(LIBS) -Wl,--output-def,$(DEF),--out-implib,$(STATIC)");

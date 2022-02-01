@@ -55,6 +55,13 @@ Editor* EditorList::newEditor(const QString& filename, const QByteArray& encodin
     Editor * e = new Editor(parentPageControl,filename,encoding,inProject,newFile,parentPageControl);
     connect(e, &Editor::renamed, this, &EditorList::onEditorRenamed);
     updateLayout();
+    if (pMainWindow->project()){
+        PProjectUnit unit = pMainWindow->project()->findUnitByFilename(filename);
+        if (unit) {
+            pMainWindow->project()->associateEditorToUnit(e,unit);
+            e->setInProject(true);
+        }
+    }
     return e;
 }
 

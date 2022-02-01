@@ -208,7 +208,7 @@ void NewProjectDialog::on_lstTemplates_currentItemChanged(QListWidgetItem *curre
         int index = current->data(Qt::UserRole).toInt();
         PProjectTemplate t = mTemplates[index];
         ui->lblDescription->setText(t->description());
-        if (t->options().useGPP) {
+        if (t->options().isCpp) {
             ui->rdCProject->setEnabled(false);
             ui->rdCppProject->setChecked(true);
         } else {

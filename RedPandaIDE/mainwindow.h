@@ -561,6 +561,8 @@ private slots:
 
     void on_actionNew_Class_triggered();
 
+    void on_actionNew_Header_triggered();
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;

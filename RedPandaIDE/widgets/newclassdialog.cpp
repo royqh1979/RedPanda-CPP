@@ -11,6 +11,7 @@ NewClassDialog::NewClassDialog(QWidget *parent) :
     ui->setupUi(this);
     resize(pSettings->ui().newClassDialogWidth(),pSettings->ui().newClassDialogHeight());
     updateIcons();
+    ui->txtClassName->setFocus();
 }
 
 NewClassDialog::~NewClassDialog()

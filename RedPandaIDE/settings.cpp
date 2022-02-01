@@ -4738,6 +4738,26 @@ void Settings::UI::setNewClassDialogHeight(int newNewClassDialogHeight)
     mNewClassDialogHeight = newNewClassDialogHeight;
 }
 
+int  Settings::UI::newHeaderDialogHeight() const
+{
+    return mNewHeaderDialogHeight;
+}
+
+void  Settings::UI::setNewHeaderDialogHeight(int newNewFileDialogHeight)
+{
+    mNewHeaderDialogHeight = newNewFileDialogHeight;
+}
+
+int  Settings::UI::newHeaderDialogWidth() const
+{
+    return mNewHeaderDialogWidth;
+}
+
+void  Settings::UI::setNewHeaderDialogWidth(int newNewFileDialogWidth)
+{
+    mNewHeaderDialogWidth = newNewFileDialogWidth;
+}
+
 int Settings::UI::settingsDialogHeight() const
 {
     return mSettingsDialogHeight;
@@ -5002,6 +5022,8 @@ void Settings::UI::doSave()
     saveValue("new_project_dialog_height", mNewProjectDialogHeight);
     saveValue("new_class_dialog_width", mNewClassDialogWidth);
     saveValue("new_class_dialog_height", mNewClassDialogHeight);
+    saveValue("new_header_dialog_width", mNewHeaderDialogWidth);
+    saveValue("new_header_dialog_height", mNewHeaderDialogHeight);
 }
 
 void Settings::UI::doLoad()
@@ -5049,4 +5071,6 @@ void Settings::UI::doLoad()
     mNewProjectDialogHeight = intValue("new_project_dialog_height", 600*qApp->desktop()->height()/1080);
     mNewClassDialogWidth = intValue("new_class_dialog_width", 642*qApp->desktop()->width()/1920);
     mNewClassDialogHeight = intValue("new_class_dialog_height", 300*qApp->desktop()->height()/1080);
+    mNewHeaderDialogWidth = intValue("new_header_dialog_width", 642*qApp->desktop()->width()/1920);
+    mNewHeaderDialogHeight = intValue("new_header_dialog_height", 300*qApp->desktop()->height()/1080);
 }

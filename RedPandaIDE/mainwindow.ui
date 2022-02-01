@@ -543,7 +543,6 @@
           <widget class="IssuesTable" name="tableIssues">
            <property name="font">
             <font>
-             <weight>50</weight>
              <bold>false</bold>
             </font>
            </property>
@@ -1389,7 +1388,7 @@
      <x>0</x>
      <y>0</y>
      <width>1114</width>
-     <height>26</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -1487,8 +1486,6 @@
     <addaction name="actionBack"/>
     <addaction name="actionForward"/>
     <addaction name="separator"/>
-    <addaction name="actionNew_Class"/>
-    <addaction name="separator"/>
     <addaction name="actionAdd_bookmark"/>
     <addaction name="actionRemove_Bookmark"/>
     <addaction name="actionModify_Bookmark_Description"/>
@@ -1510,6 +1507,8 @@
      <string>Project</string>
     </property>
     <addaction name="actionProject_New_File"/>
+    <addaction name="actionNew_Class"/>
+    <addaction name="actionNew_Header"/>
     <addaction name="actionAdd_to_project"/>
     <addaction name="actionRemove_from_project"/>
     <addaction name="separator"/>
@@ -2700,6 +2699,14 @@
   <action name="actionNew_Class">
    <property name="text">
     <string>New Class...</string>
+   </property>
+  </action>
+  <action name="actionNew_Header">
+   <property name="text">
+    <string>New Header...</string>
+   </property>
+   <property name="toolTip">
+    <string>New Header...</string>
    </property>
   </action>
  </widget>

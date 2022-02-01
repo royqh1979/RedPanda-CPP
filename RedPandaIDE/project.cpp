@@ -164,7 +164,7 @@ void Project::open()
             newUnit->setFolder(fromByteArray(ini.GetValue(groupName,"Folder","")));
             newUnit->setCompile(ini.GetBoolValue(groupName,"Compile", true));
             newUnit->setCompileCpp(
-                        ini.GetBoolValue(groupName,"CompileCpp",mOptions.useGPP));
+                        ini.GetBoolValue(groupName,"CompileCpp",mOptions.isCpp));
 
             newUnit->setLink(ini.GetBoolValue(groupName,"Link", true));
             newUnit->setPriority(ini.GetLongValue(groupName,"Priority", 1000));
@@ -268,7 +268,7 @@ PProjectUnit Project::newUnit(PFolderNode parentNode, const QString& customFileN
     newUnit->node()->unitIndex = count;
     //parentNode.Expand(True);
     newUnit->setCompile(true);
-    newUnit->setCompileCpp(mOptions.useGPP);
+    newUnit->setCompileCpp(mOptions.isCpp);
     newUnit->setLink(true);
     newUnit->setPriority(1000);
     newUnit->setOverrideBuildCmd(false);
@@ -348,6 +348,7 @@ bool Project::removeUnit(int index, bool doClose , bool removeFile)
 //    qDebug()<<(qint64)unit->editor();
     // Attempt to close it
     if (doClose && (unit->editor())) {
+        unit->editor()->setInProject(false);
         if (!pMainWindow->editorList()->closeEditor(unit->editor()))
             return false;
     }
@@ -658,7 +659,7 @@ bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate, b
     }
     mOptions = aTemplate->options();
     mOptions.compilerSet = pSettings->compilerSets().defaultIndex();
-    mOptions.useGPP = useCpp;
+    mOptions.isCpp = useCpp;
     updateCompilerSetType();
     mOptions.icon = aTemplate->icon();
 
@@ -690,7 +691,7 @@ bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate, b
             } else {
                 QString s;
                 PProjectUnit unit;
-                if (mOptions.useGPP) {
+                if (mOptions.isCpp) {
                     s = templateUnit->CppText;
                     unit = newUnit(mNode, templateUnit->CppName);
                 } else {
@@ -743,7 +744,7 @@ void Project::saveOptions()
     ini.SetValue("Project","Compiler", toByteArray(mOptions.compilerCmd));
     ini.SetValue("Project","CppCompiler", toByteArray(mOptions.cppCompilerCmd));
     ini.SetValue("Project","Linker", toByteArray(mOptions.linkerCmd));
-    ini.SetLongValue("Project","IsCpp", mOptions.useGPP);
+    ini.SetLongValue("Project","IsCpp", mOptions.isCpp);
     ini.SetValue("Project","Icon", toByteArray(extractRelativePath(directory(), mOptions.icon)));
     ini.SetValue("Project","ExeOutput", toByteArray(mOptions.exeOutput));
     ini.SetValue("Project","ObjectOutput", toByteArray(mOptions.objectOutput));
@@ -848,7 +849,7 @@ PProjectUnit Project::addUnit(const QString &inFileName, PFolderNode parentNode,
     switch(getFileType(inFileName)) {
     case FileType::CSource:
         newUnit->setCompile(true);
-        newUnit->setCompileCpp(mOptions.useGPP);
+        newUnit->setCompileCpp(mOptions.isCpp);
         newUnit->setLink(true);
         break;
     case FileType::CppSource:
@@ -858,7 +859,7 @@ PProjectUnit Project::addUnit(const QString &inFileName, PFolderNode parentNode,
         break;
     case FileType::WindowsResourceSource:
         newUnit->setCompile(true);
-        newUnit->setCompileCpp(mOptions.useGPP);
+        newUnit->setCompileCpp(mOptions.isCpp);
         newUnit->setLink(false);
         break;
     default:
@@ -1212,6 +1213,7 @@ void Project::closeUnit(int index)
     PProjectUnit unit = mUnits[index];
     if (unit->editor()) {
         saveUnitLayout(unit->editor(),index);
+        unit->editor()->setInProject(false);
         pMainWindow->editorList()->forceCloseEditor(unit->editor());
         unit->setEditor(nullptr);
     }
@@ -1381,7 +1383,7 @@ void Project::loadOptions(SimpleIni& ini)
         mOptions.privateResource = fromByteArray(ini.GetValue("Project", "PrivateResource", ""));
         mOptions.resourceIncludes = fromByteArray(ini.GetValue("Project", "ResourceIncludes", "")).split(";",QString::SkipEmptyParts);
         mOptions.makeIncludes = fromByteArray(ini.GetValue("Project", "MakeIncludes", "")).split(";",QString::SkipEmptyParts);
-        mOptions.useGPP = ini.GetBoolValue("Project", "IsCpp", false);
+        mOptions.isCpp = ini.GetBoolValue("Project", "IsCpp", false);
         mOptions.exeOutput = fromByteArray(ini.GetValue("Project", "ExeOutput", ""));
         mOptions.objectOutput = fromByteArray(ini.GetValue("Project", "ObjectOutput", ""));
         mOptions.logOutput = fromByteArray(ini.GetValue("Project", "LogOutput", ""));
@@ -1470,7 +1472,7 @@ void Project::loadOptions(SimpleIni& ini)
         mOptions.objFiles = fromByteArray(ini.GetValue("Project", "ObjFiles", "")).split(";",QString::SkipEmptyParts);
         mOptions.includes = fromByteArray(ini.GetValue("Project", "IncludeDirs", "")).split(";",QString::SkipEmptyParts);
         mOptions.compilerCmd = fromByteArray(ini.GetValue("Project", "CompilerOptions", ""));
-        mOptions.useGPP = ini.GetBoolValue("Project", "Use_GPP", false);
+        mOptions.isCpp = ini.GetBoolValue("Project", "Use_GPP", false);
         mOptions.exeOutput = fromByteArray(ini.GetValue("Project", "ExeOutput", ""));
         mOptions.objectOutput = fromByteArray(ini.GetValue("Project", "ObjectOutput", ""));
         mOptions.overrideOutput = ini.GetBoolValue("Project", "OverrideOutput", false);

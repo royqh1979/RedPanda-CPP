@@ -988,6 +988,12 @@ public:
         int newClassDialogHeight() const;
         void setNewClassDialogHeight(int newNewClassDialogHeight);
 
+        int newHeaderDialogWidth() const;
+        void setNewHeaderDialogWidth(int newNewFileDialogWidth);
+
+        int newHeaderDialogHeight() const;
+        void setNewHeaderDialogHeight(int newNewFileDialogHeight);
+
     private:
         QByteArray mMainWindowState;
         QByteArray mMainWindowGeometry;
@@ -1031,6 +1037,8 @@ public:
         int mNewProjectDialogHeight;
         int mNewClassDialogWidth;
         int mNewClassDialogHeight;
+        int mNewHeaderDialogWidth;
+        int mNewHeaderDialogHeight;
 
     protected:
         void doSave() override;

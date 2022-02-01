@@ -60,7 +60,7 @@ struct ProjectOptions{
     QString privateResource;
     QStringList resourceIncludes;
     QStringList makeIncludes;
-    bool useGPP;
+    bool isCpp;
     QString icon;
     QString exeOutput;
     QString objectOutput;
