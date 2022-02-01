@@ -9,6 +9,8 @@ Red Panda C++ Version 0.14.1
   - enhancement: new header dialog for project
   - enhancement: new contrast icon set, contributed by Alan-CRL
   - enhancement: new contrast theme, contributed by Alan-CRL
+  - enhancement: theme now have default icon set
+  - fix: wrong icons for file associations
 
 Red Panda C++ Version 0.14.0
   - enhancement: custom icon set ( in the configuration folder)

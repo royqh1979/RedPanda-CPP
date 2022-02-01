@@ -43,6 +43,8 @@ protected:
     // SettingsWidget interface
 public:
     void init() override;
+private slots:
+    void on_cbTheme_currentIndexChanged(int index);
 };
 
 #endif // ENVIRONMENTAPPEARENCEWIDGET_H

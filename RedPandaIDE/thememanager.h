@@ -89,6 +89,9 @@ public:
 
     const QString &name() const;
 
+    const QString &defaultIconSet() const;
+    void setDefaultIconSet(const QString &newDefaultIconSet);
+
 private:
     static QPalette initialPalette();
 private:
@@ -97,6 +100,7 @@ private:
     QString mDisplayName;
     bool mIsDark;
     QString mDefaultColorScheme;
+    QString mDefaultIconSet;
 };
 
 using PAppTheme = std::shared_ptr<AppTheme>;

@@ -101,3 +101,18 @@ void EnvironmentAppearenceWidget::init()
     }
     SettingsWidget::init();
 }
+
+void EnvironmentAppearenceWidget::on_cbTheme_currentIndexChanged(int /* index */)
+{
+    ThemeManager themeManager;
+    PAppTheme appTheme = themeManager.theme(ui->cbTheme->currentData().toString());
+    if (appTheme && !appTheme->defaultIconSet().isEmpty()) {
+        for (int i=0; i<ui->cbIconSet->count();i++) {
+            if (ui->cbIconSet->itemData(i) == appTheme->defaultIconSet()) {
+                ui->cbIconSet->setCurrentIndex(i);
+                break;
+            }
+        }
+    }
+}
+

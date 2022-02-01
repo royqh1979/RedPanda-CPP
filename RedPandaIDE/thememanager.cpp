@@ -196,6 +196,7 @@ void AppTheme::load(const QString &filename)
             mDisplayName = localeName;
         mIsDark = obj["isDark"].toBool(false);
         mDefaultColorScheme = obj["default scheme"].toString();
+        mDefaultIconSet = obj["default iconset"].toString();
         QJsonObject colors = obj["palette"].toObject();
         const QMetaObject &m = *metaObject();
         QMetaEnum e = m.enumerator(m.indexOfEnumerator("ColorRole"));
@@ -235,6 +236,16 @@ QPalette AppTheme::initialPalette()
 {
     static QPalette palette = copyPalette(QApplication::palette());
     return palette;
+}
+
+const QString &AppTheme::defaultIconSet() const
+{
+    return mDefaultIconSet;
+}
+
+void AppTheme::setDefaultIconSet(const QString &newDefaultIconSet)
+{
+    mDefaultIconSet = newDefaultIconSet;
 }
 
 const QString &AppTheme::name() const

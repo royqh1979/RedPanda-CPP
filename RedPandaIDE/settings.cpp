@@ -2902,7 +2902,7 @@ void Settings::Environment::doLoad()
     mInterfaceFont = stringValue("interface_font",defaultFontName);
     mInterfaceFontSize = intValue("interface_font_size",12);
     mLanguage = stringValue("language", QLocale::system().name());
-    mIconSet = stringValue("icon_set","newlook");
+    mIconSet = stringValue("icon_set","contrast");
     mUseCustomIconSet = boolValue("use_custom_icon_set", false);
     mUseCustomTheme = boolValue("use_custom_theme", false);
 

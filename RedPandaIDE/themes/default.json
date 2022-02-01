@@ -3,6 +3,7 @@
         "name_zh_CN":"浅色主题",
         "isDark":false,
         "default scheme": "Intellij Classic",
+        "default iconset": "newlook",	
 	"palette": {
 		"PaletteHighlight":"#ffdddddd",
 		"PaletteHighlightedText":"#ff000000"
