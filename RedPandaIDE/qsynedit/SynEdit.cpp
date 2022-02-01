@@ -5376,9 +5376,12 @@ void SynEdit::onCommandProcessed(SynEditorCommand , QChar , void *)
 
 void SynEdit::ExecuteCommand(SynEditorCommand Command, QChar AChar, void *pData)
 {
+    hideCaret();
     incPaintLock();
+
     auto action=finally([this] {
         decPaintLock();
+        showCaret();
     });
     switch(Command) {
     //horizontal caret movement or selection
