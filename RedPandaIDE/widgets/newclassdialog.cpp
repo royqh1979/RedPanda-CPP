@@ -8,6 +8,7 @@ NewClassDialog::NewClassDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::NewClassDialog)
 {
+    setWindowFlag(Qt::WindowContextHelpButtonHint,false);
     ui->setupUi(this);
     resize(pSettings->ui().newClassDialogWidth(),pSettings->ui().newClassDialogHeight());
     updateIcons();

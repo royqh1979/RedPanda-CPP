@@ -32,6 +32,7 @@ SearchDialog::SearchDialog(QWidget *parent) :
     ui(new Ui::SearchDialog),
     mSearchEngine()
 {
+    setWindowFlag(Qt::WindowContextHelpButtonHint,false);
     ui->setupUi(this);
     mTabBar = new QTabBar();
     mTabBar->addTab(tr("Find"));

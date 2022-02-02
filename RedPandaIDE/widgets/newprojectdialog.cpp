@@ -29,6 +29,7 @@ NewProjectDialog::NewProjectDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::NewProjectDialog)
 {
+    setWindowFlag(Qt::WindowContextHelpButtonHint,false);
     ui->setupUi(this);
     mTemplatesTabBar = new QTabBar(this);
     mTemplatesTabBar->setExpanding(false);

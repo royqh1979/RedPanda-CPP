@@ -29,6 +29,7 @@ CPUDialog::CPUDialog(QWidget *parent) :
     ui(new Ui::CPUDialog)
 {
     setWindowFlags(windowFlags() | Qt::WindowMinimizeButtonHint | Qt::WindowMaximizeButtonHint);
+    setWindowFlag(Qt::WindowContextHelpButtonHint,false);
     ui->setupUi(this);
     ui->txtCode->setHighlighter(highlighterManager.getCppHighlighter());
     ui->txtCode->setReadOnly(true);

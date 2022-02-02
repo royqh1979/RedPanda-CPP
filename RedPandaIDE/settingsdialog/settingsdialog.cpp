@@ -65,6 +65,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::SettingsDialog)
 {
+    setWindowFlag(Qt::WindowContextHelpButtonHint,false);
     ui->setupUi(this);
 
     ui->widgetsView->setModel(&model);
