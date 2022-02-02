@@ -70,6 +70,7 @@ void EnvironmentAppearenceWidget::doSave()
         PAppTheme appTheme = themeManager.theme(ui->cbTheme->currentData().toString());
         if (appTheme && !appTheme->defaultColorScheme().isEmpty()) {
             pSettings->editor().setColorScheme(appTheme->defaultColorScheme());
+            pSettings->editor().save();
             pMainWindow->updateEditorColorSchemes();
         }
     }
@@ -81,7 +82,7 @@ void EnvironmentAppearenceWidget::doSave()
     pSettings->environment().setUseCustomIconSet(ui->chkUseCustomIconSet->isChecked());
     pSettings->environment().setUseCustomTheme(ui->chkUseCustomTheme->isChecked());
 
-    pSettings->editor().save();
+
     pSettings->environment().save();
     pMainWindow->applySettings();
 }

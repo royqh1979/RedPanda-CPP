@@ -11,6 +11,7 @@ Red Panda C++ Version 0.14.1
   - enhancement: new contrast theme, contributed by Alan-CRL
   - enhancement: theme now have default icon set
   - fix: wrong icons for file associations
+  - fix: editor's font size set by ctrl+mouse wheel will be reset by open the option dialog
 
 Red Panda C++ Version 0.14.0
   - enhancement: custom icon set ( in the configuration folder)

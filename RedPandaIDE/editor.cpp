@@ -505,12 +505,14 @@ void Editor::wheelEvent(QWheelEvent *event) {
         if (event->angleDelta().y()>0) {
             size = std::min(99,size+1);
             pSettings->editor().setFontSize(size);
+            pSettings->editor().save();
             pMainWindow->updateEditorSettings();
             event->accept();
             return;
         } else if  (event->angleDelta().y()<0) {
             size = std::max(2,size-1);
             pSettings->editor().setFontSize(size);
+            pSettings->editor().save();
             pMainWindow->updateEditorSettings();
             event->accept();
             return;
