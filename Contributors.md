@@ -5,7 +5,7 @@
 
 ### devcpp.svg
 
-author: beanflame@github
+author: RigoLigo@QQ
 
 ### Icon set Blue Sky
 
