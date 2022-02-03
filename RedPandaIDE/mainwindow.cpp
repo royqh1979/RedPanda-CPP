@@ -1409,10 +1409,10 @@ bool MainWindow::compile(bool rebuild)
         if (mCompileSuccessionTask) {
             mCompileSuccessionTask->filename = mProject->executable();
         }
-        updateCompileActions();
         openCloseBottomPanel(true);
         ui->tabMessages->setCurrentWidget(ui->tabCompilerOutput);
         mCompilerManager->compileProject(mProject,rebuild);
+        updateCompileActions();
         updateAppTitle();
     } else {
         Editor * editor = mEditorList->getEditor();
@@ -1425,10 +1425,10 @@ bool MainWindow::compile(bool rebuild)
             if (mCompileSuccessionTask) {
                 mCompileSuccessionTask->filename = getCompiledExecutableName(editor->filename());
             }
-            updateCompileActions();
             openCloseBottomPanel(true);
             ui->tabMessages->setCurrentWidget(ui->tabCompilerOutput);
             mCompilerManager->compile(editor->filename(),editor->fileEncoding(),rebuild);
+            updateCompileActions();
             updateAppTitle();
             return true;
         }
