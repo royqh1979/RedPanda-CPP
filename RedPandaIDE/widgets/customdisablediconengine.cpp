@@ -20,7 +20,10 @@ void CustomDisabledIconEngine::paint(QPainter *painter, const QRect &rect, QIcon
 
 QIconEngine *CustomDisabledIconEngine::clone() const
 {
-    return new CustomDisabledIconEngine();
+    CustomDisabledIconEngine* eng = new CustomDisabledIconEngine();
+    eng->mPixmap = mPixmap;
+    eng->mDisabledPixmap = mDisabledPixmap;
+    return eng;
 }
 
 QPixmap CustomDisabledIconEngine::pixmap(const QSize &size, QIcon::Mode mode, QIcon::State state)
