@@ -134,6 +134,7 @@ SOURCES += \
     utils.cpp \
     widgets/coloredit.cpp \
     widgets/consolewidget.cpp \
+    widgets/customdisablediconengine.cpp \
     widgets/custommakefileinfodialog.cpp \
     widgets/darkfusionstyle.cpp \
     widgets/editorstabwidget.cpp \
@@ -260,6 +261,7 @@ HEADERS += \
     common.h \
     widgets/coloredit.h \
     widgets/consolewidget.h \
+    widgets/customdisablediconengine.h \
     widgets/custommakefileinfodialog.h \
     widgets/darkfusionstyle.h \
     widgets/editorstabwidget.h \

@@ -29,6 +29,7 @@
 #include <QJsonObject>
 #include "utils.h"
 #include "settings.h"
+#include "widgets/customdisablediconengine.h"
 
 IconsManager* pIconsManager;
 
@@ -36,11 +37,13 @@ IconsManager::IconsManager(QObject *parent) : QObject(parent)
 {
     mDefaultIconPixmap = std::make_shared<QPixmap>();
     mIconSetTemplate = "%1/%2/%3/";
+    mMakeDisabledIconDarker = false;
 }
 
 void IconsManager::updateEditorGuttorIcons(const QString& iconSet,int size)
 {
     QString iconFolder = mIconSetTemplate.arg( iconSetsFolder(),iconSet,"editor");
+    updateMakeDisabledIconDarker(iconSet);
     mIconPixmaps.insert(GUTTER_BREAKPOINT, createSVGIcon(iconFolder+"breakpoint.svg",size,size));
     mIconPixmaps.insert(GUTTER_SYNTAX_ERROR, createSVGIcon(iconFolder+"syntaxerror.svg",size,size));
     mIconPixmaps.insert(GUTTER_SYNTAX_WARNING,createSVGIcon(iconFolder+"syntaxwarning.svg",size,size));
@@ -51,6 +54,7 @@ void IconsManager::updateEditorGuttorIcons(const QString& iconSet,int size)
 void IconsManager::updateParserIcons(const QString &iconSet, int size)
 {
     QString iconFolder = mIconSetTemplate.arg( iconSetsFolder(),iconSet,"classparser");
+    updateMakeDisabledIconDarker(iconSet);
     mIconPixmaps.insert(PARSER_TYPE, createSVGIcon(iconFolder+"type.svg",size,size));
     mIconPixmaps.insert(PARSER_CLASS, createSVGIcon(iconFolder+"class.svg",size,size));
     mIconPixmaps.insert(PARSER_NAMESPACE, createSVGIcon(iconFolder+"namespace.svg",size,size));
@@ -77,6 +81,7 @@ void IconsManager::updateParserIcons(const QString &iconSet, int size)
 void IconsManager::updateActionIcons(const QString& iconSet, int size)
 {
     QString iconFolder = mIconSetTemplate.arg( iconSetsFolder(),iconSet,"actions");
+    updateMakeDisabledIconDarker(iconSet);
     mActionIconSize = QSize(size,size);
     mIconPixmaps.insert(ACTION_MISC_BACK, createSVGIcon(iconFolder+"00Misc-01Back.svg",size,size));
     mIconPixmaps.insert(ACTION_MISC_FORWARD, createSVGIcon(iconFolder+"00Misc-02Forward.svg",size,size));
@@ -177,7 +182,12 @@ IconsManager::PPixmap IconsManager::getPixmap(IconName iconName) const
 
 QIcon IconsManager::getIcon(IconName iconName) const
 {
-    return QIcon(*getPixmap(iconName));
+    if (mMakeDisabledIconDarker) {
+        QIcon icon(new CustomDisabledIconEngine());
+        icon.addPixmap(*getPixmap(iconName));
+        return icon;
+    } else
+        return QIcon(*getPixmap(iconName));
 }
 
 void IconsManager::setIcon(QToolButton *btn, IconName iconName) const
@@ -325,4 +335,9 @@ QList<PIconSet> IconsManager::listIconSets()
         }
     }
     return result;
+}
+
+void IconsManager::updateMakeDisabledIconDarker(const QString& iconset )
+{
+    mMakeDisabledIconDarker = (iconset == "contrast");
 }

@@ -178,7 +178,8 @@ public:
     void setIconSetsFolder(const QString &newIconSetsFolder);
 
     QList<PIconSet> listIconSets();
-
+private:
+    void updateMakeDisabledIconDarker(const QString& iconset);
 signals:
     void actionIconsUpdated();
 private:
@@ -187,6 +188,7 @@ private:
     QSize mActionIconSize;
     QString mIconSetTemplate;
     QString mIconSetsFolder;
+    bool mMakeDisabledIconDarker;
 };
 
 extern IconsManager* pIconsManager;
