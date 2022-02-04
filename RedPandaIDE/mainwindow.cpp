@@ -4070,11 +4070,10 @@ void MainWindow::onOJProblemCaseStarted(const QString& id,int current, int total
         problemCase->testState = ProblemCaseTestState::Testing;
         mOJProblemModel.update(row);
         QModelIndex idx = ui->lstProblemCases->currentIndex();
-        if (idx.isValid()) {
-            if (row == idx.row()) {
-                ui->txtProblemCaseOutput->clear();
-            }
+        if (!idx.isValid() || row != idx.row()) {
+            ui->lstProblemCases->setCurrentIndex(mOJProblemModel.index(row,0));
         }
+        ui->txtProblemCaseOutput->clear();
     }
 }
 

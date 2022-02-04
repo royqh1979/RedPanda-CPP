@@ -117,6 +117,7 @@ void OJProblemCasesRunner::runCase(int index,POJProblemCase problemCase)
     }
     if (process.state() == QProcess::ProcessState::NotRunning)
         buffer += process.readAll();
+    emit newOutputGetted(problemCase->getId(),QString::fromLocal8Bit(buffer));
     output.append(buffer);
     if (errorOccurred) {
         //qDebug()<<"process error:"<<process.error();

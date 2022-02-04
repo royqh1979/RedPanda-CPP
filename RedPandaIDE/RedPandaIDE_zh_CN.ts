@@ -3494,7 +3494,7 @@ Are you really want to continue?</oldsource>
     <message>
         <location filename="mainwindow.ui" line="1546"/>
         <source>Tool Panels</source>
-        <translation>工具视图</translation>
+        <translation>工具面板</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="1771"/>
@@ -4209,7 +4209,7 @@ Are you really want to continue?</oldsource>
     <message>
         <location filename="mainwindow.ui" line="2525"/>
         <source>Show Tool Panels</source>
-        <translation>显示全部工具视图</translation>
+        <translation>显示全部工具面板</translation>
     </message>
     <message>
         <source>Tool Window Bars</source>
