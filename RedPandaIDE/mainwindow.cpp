@@ -4069,7 +4069,12 @@ void MainWindow::onOJProblemCaseStarted(const QString& id,int current, int total
         POJProblemCase problemCase = mOJProblemModel.getCase(row);
         problemCase->testState = ProblemCaseTestState::Testing;
         mOJProblemModel.update(row);
-        ui->txtProblemCaseOutput->clear();
+        QModelIndex idx = ui->lstProblemCases->currentIndex();
+        if (idx.isValid()) {
+            if (row == idx.row()) {
+                ui->txtProblemCaseOutput->clear();
+            }
+        }
     }
 }
 
@@ -4084,18 +4089,17 @@ void MainWindow::onOJProblemCaseFinished(const QString& id, int current, int tot
                     ProblemCaseTestState::Failed;
         mOJProblemModel.update(row);
         QModelIndex idx = ui->lstProblemCases->currentIndex();
-        if (idx.isValid()) {
-            if (row == idx.row()) {
-                updateProblemCaseOutput(problemCase);
-            }
+        if (!idx.isValid() || row != idx.row()) {
+            ui->lstProblemCases->setCurrentIndex(mOJProblemModel.index(row,0));
         }
+        updateProblemCaseOutput(problemCase);
     }
     ui->pbProblemCases->setMaximum(total);
     ui->pbProblemCases->setValue(current);
     updateProblemTitle();
 }
 
-void MainWindow::onOJProblemCaseNewOutputGetted(const QString &, const QString &line)
+void MainWindow::onOJProblemCaseNewOutputGetted(const QString &id, const QString &line)
 {
     ui->txtProblemCaseOutput->appendPlainText(line);
 }
@@ -5869,6 +5873,10 @@ void MainWindow::on_btnSaveProblemSet_clicked()
                 QDir().absolutePath(),
                 tr("Problem Set Files (*.pbs)"));
     if (!fileName.isEmpty()) {
+        QFileInfo fileInfo(fileName);
+        if (fileInfo.suffix().isEmpty()) {
+            fileName.append(".pbs");
+        }
         QDir::setCurrent(extractFileDir(fileName));
         try {
             applyCurrentProblemCaseChanges();

@@ -14,6 +14,7 @@ Red Panda C++ Version 0.14.1
   - fix: editor's font size set by ctrl+mouse wheel will be reset by open the option dialog
   - fix: actions not correctly disabled when compile
   - fix: can't differentiate disabled and enabled buttons, when using contrast icon set
+  - fix: when running problem cases, the output textbox might be wrongly cleared.
 
 Red Panda C++ Version 0.14.0
   - enhancement: custom icon set ( in the configuration folder)
