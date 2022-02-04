@@ -32,6 +32,10 @@
         "links": "-lraylib -lopengl32 -lgdi32 -lwinmm"
     },
     {
+        "header": "winsock2.h",
+        "links": "-lws2_32"
+    },
+    {
         "header": "turtle.h",
         "links": "-lturtle"
     }
