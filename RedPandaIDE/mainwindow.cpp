@@ -3135,6 +3135,8 @@ void MainWindow::onProblemCaseIndexChanged(const QModelIndex &current, const QMo
             ui->txtProblemCaseInput->setReadOnly(false);
             ui->txtProblemCaseExpected->setPlainText(problemCase->expected);
             ui->txtProblemCaseExpected->setReadOnly(false);
+            ui->txtProblemCaseOutput->clear();
+            ui->txtProblemCaseOutput->setPlainText(problemCase->output);
             updateProblemCaseOutput(problemCase);
             return;
         }
@@ -4087,10 +4089,6 @@ void MainWindow::onOJProblemCaseFinished(const QString& id, int current, int tot
                     ProblemCaseTestState::Passed:
                     ProblemCaseTestState::Failed;
         mOJProblemModel.update(row);
-        QModelIndex idx = ui->lstProblemCases->currentIndex();
-        if (!idx.isValid() || row != idx.row()) {
-            ui->lstProblemCases->setCurrentIndex(mOJProblemModel.index(row,0));
-        }
         updateProblemCaseOutput(problemCase);
     }
     ui->pbProblemCases->setMaximum(total);
@@ -5535,8 +5533,6 @@ void MainWindow::doCompileRun(RunType runType)
 
 void MainWindow::updateProblemCaseOutput(POJProblemCase problemCase)
 {
-    ui->txtProblemCaseOutput->clear();
-    ui->txtProblemCaseOutput->setPlainText(problemCase->output);
     if (problemCase->testState == ProblemCaseTestState::Failed) {
         QStringList output = textToLines(problemCase->output);
         QStringList expected = textToLines(problemCase->expected);
