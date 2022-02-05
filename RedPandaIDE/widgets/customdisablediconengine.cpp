@@ -12,10 +12,24 @@ CustomDisabledIconEngine::CustomDisabledIconEngine()
 
 void CustomDisabledIconEngine::paint(QPainter *painter, const QRect &rect, QIcon::Mode mode, QIcon::State state)
 {
-//    if (mode == QIcon::Active && state == QIcon::On)
-//        painter->drawPixmap(rect,mPixmap);
-//    else
-//        painter->drawPixmap(rect,mDisabledPixmap);
+    painter->save();
+    painter->setClipRect(rect);
+    QRect newRect = rect;
+    QPixmap pixmap;
+    if (mode == QIcon::Mode::Disabled)
+        pixmap = mDisabledPixmap;
+    else
+        pixmap = mPixmap;
+    if (pixmap.size().width() < rect.width()) {
+        newRect.setLeft( rect.left()+(rect.width() - pixmap.size().width())/2);
+        newRect.setWidth(pixmap.size().width());
+    }
+    if (pixmap.size().height() < rect.height()) {
+        newRect.setTop( rect.top()+(rect.height() - pixmap.size().height())/2);
+        newRect.setHeight(pixmap.size().height());
+    }
+    painter->drawPixmap(newRect,pixmap);
+    painter->restore();
 }
 
 QIconEngine *CustomDisabledIconEngine::clone() const
