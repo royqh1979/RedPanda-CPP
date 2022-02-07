@@ -2468,8 +2468,8 @@ void MainWindow::buildContextMenus()
         if (!current.isValid()) {
             return;
         }
-        ProjectLegacyModelNode * node = static_cast<ProjectLegacyModelNode*>(current.internalPointer());
-        PProjectLegacyModelNode folderNode =  mProject->pointerToNode(node);
+        ProjectModelNode * node = static_cast<ProjectModelNode*>(current.internalPointer());
+        PProjectModelNode folderNode =  mProject->pointerToNode(node);
         if (!folderNode)
             folderNode = mProject->rootNode();
         if (folderNode->unitIndex>=0)
@@ -2511,8 +2511,8 @@ void MainWindow::buildContextMenus()
         if (!current.isValid()) {
             return;
         }
-        ProjectLegacyModelNode * node = static_cast<ProjectLegacyModelNode*>(current.internalPointer());
-        PProjectLegacyModelNode folderNode =  mProject->pointerToNode(node);
+        ProjectModelNode * node = static_cast<ProjectModelNode*>(current.internalPointer());
+        PProjectModelNode folderNode =  mProject->pointerToNode(node);
         if (!folderNode)
             return;
         if (folderNode->unitIndex>=0)
@@ -2900,8 +2900,8 @@ void MainWindow::onProjectViewContextMenu(const QPoint &pos)
     int unitIndex = -1;
     QModelIndex current = mProjectProxyModel->mapToSource(ui->projectView->selectionModel()->currentIndex());
     if (current.isValid() && mProject) {
-        ProjectLegacyModelNode * node = static_cast<ProjectLegacyModelNode*>(current.internalPointer());
-        PProjectLegacyModelNode pNode = mProject->pointerToNode(node);
+        ProjectModelNode * node = static_cast<ProjectModelNode*>(current.internalPointer());
+        PProjectModelNode pNode = mProject->pointerToNode(node);
         if (pNode) {
             unitIndex = pNode->unitIndex;
             onFolder = (unitIndex<0);
@@ -3532,11 +3532,11 @@ void MainWindow::updateProjectView()
         if (mProjectProxyModel->sourceModel()!=mProject->model()) {
             mProjectProxyModel->setSourceModel(mProject->model());
             mProjectProxyModel->sort(0);
-            connect(mProject->model(), &ProjectLegacyModel::dataChanged,
+            connect(mProject->model(), &ProjectModel::dataChanged,
                     this, &MainWindow::invalidateProjectProxyModel);
-            connect(mProject->model(), &ProjectLegacyModel::rowsRemoved,
+            connect(mProject->model(), &ProjectModel::rowsRemoved,
                     this, &MainWindow::invalidateProjectProxyModel);
-            connect(mProject->model(), &ProjectLegacyModel::rowsInserted,
+            connect(mProject->model(), &ProjectModel::rowsInserted,
                     this, &MainWindow::invalidateProjectProxyModel);
             connect(mProject->model(), &QAbstractItemModel::modelReset,
                     ui->projectView,&QTreeView::expandAll);
@@ -4096,7 +4096,7 @@ void MainWindow::onOJProblemCaseFinished(const QString& id, int current, int tot
     updateProblemTitle();
 }
 
-void MainWindow::onOJProblemCaseNewOutputGetted(const QString &id, const QString &line)
+void MainWindow::onOJProblemCaseNewOutputGetted(const QString &/* id */, const QString &line)
 {
     ui->txtProblemCaseOutput->appendPlainText(line);
 }
@@ -4953,7 +4953,7 @@ void MainWindow::on_projectView_doubleClicked(const QModelIndex &index)
     QModelIndex sourceIndex = mProjectProxyModel->mapToSource(index);
     if (!sourceIndex.isValid())
         return;
-    ProjectLegacyModelNode * node = static_cast<ProjectLegacyModelNode*>(sourceIndex.internalPointer());
+    ProjectModelNode * node = static_cast<ProjectModelNode*>(sourceIndex.internalPointer());
     if (!node)
         return;
     if (node->unitIndex>=0) {
@@ -5106,11 +5106,11 @@ void MainWindow::on_actionAdd_to_project_triggered()
     dialog.setAcceptMode(QFileDialog::AcceptOpen);
     if (dialog.exec()) {
         QModelIndex current = mProjectProxyModel->mapToSource(ui->projectView->currentIndex());
-        ProjectLegacyModelNode * node = nullptr;
+        ProjectModelNode * node = nullptr;
         if (current.isValid()) {
-            node = static_cast<ProjectLegacyModelNode*>(current.internalPointer());
+            node = static_cast<ProjectModelNode*>(current.internalPointer());
         }
-        PProjectLegacyModelNode folderNode =  mProject->pointerToNode(node);
+        PProjectModelNode folderNode =  mProject->pointerToNode(node);
         foreach (const QString& filename, dialog.selectedFiles()) {
             mProject->addUnit(filename,folderNode,false);
             mProject->cppParser()->addFileToScan(filename);
@@ -5135,8 +5135,8 @@ void MainWindow::on_actionRemove_from_project_triggered()
         if (!index.isValid())
             continue;
         QModelIndex realIndex = mProjectProxyModel->mapToSource(index);
-        ProjectLegacyModelNode * node = static_cast<ProjectLegacyModelNode*>(realIndex.internalPointer());
-        PProjectLegacyModelNode folderNode =  mProject->pointerToNode(node);
+        ProjectModelNode * node = static_cast<ProjectModelNode*>(realIndex.internalPointer());
+        PProjectModelNode folderNode =  mProject->pointerToNode(node);
         if (!folderNode)
             continue;
         selected.insert(folderNode->unitIndex);
@@ -5326,9 +5326,9 @@ void MainWindow::newProjectUnitFile()
         return;
     int idx = -1;
     QModelIndex current = mProjectProxyModel->mapToSource(ui->projectView->currentIndex());
-    ProjectLegacyModelNode * node = nullptr;
+    ProjectModelNode * node = nullptr;
     if (current.isValid()) {
-        node = static_cast<ProjectLegacyModelNode*>(current.internalPointer());
+        node = static_cast<ProjectModelNode*>(current.internalPointer());
     }
     QString newFileName;
     do {
