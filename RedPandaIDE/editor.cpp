@@ -3933,7 +3933,7 @@ QString Editor::getPreviousWordAtPositionForSuggestion(const BufferCoord &p)
             return "";
 
         wordBegin = wordEnd;
-        while ((wordBegin >= 0) && isIdentChar(s[wordBegin])) {
+        while ((wordBegin >= 0) && (isIdentChar(s[wordBegin]) || s[wordBegin]==':') ) {
             wordBegin--;
         }
         wordBegin++;

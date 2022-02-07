@@ -1549,7 +1549,7 @@ bool CppParser::checkForStructs()
     int keyLen = calcKeyLenForStruct(word);
     if (keyLen<0)
         return false;
-    bool result = (word.length() == keyLen) || isSpaceChar(word[keyLen] == ' ')
+    bool result = (word.length() == keyLen) || isSpaceChar(word[keyLen])
             || (word[keyLen] == '[');
 
     if (result) {

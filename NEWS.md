@@ -15,6 +15,8 @@ Red Panda C++ Version 0.14.1
   - fix: actions not correctly disabled when compile
   - fix: can't differentiate disabled and enabled buttons, when using contrast icon set
   - fix: when running problem cases, the output textbox might be wrongly cleared.
+  - fix: typo error in the parser
+  - fix: typing after symbols like 'std::string' shouldn't show code completion suggestions
 
 Red Panda C++ Version 0.14.0
   - enhancement: custom icon set ( in the configuration folder)
