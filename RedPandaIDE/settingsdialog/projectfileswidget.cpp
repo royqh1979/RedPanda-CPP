@@ -68,7 +68,7 @@ PProjectUnit ProjectFilesWidget::currentUnit()
     QModelIndex index = ui->treeProject->currentIndex();
     if (!index.isValid())
         return PProjectUnit();
-    FolderNode* node = static_cast<FolderNode*>(index.internalPointer());
+    ProjectLegacyModelNode* node = static_cast<ProjectLegacyModelNode*>(index.internalPointer());
     if (!node)
         return PProjectUnit();
     int i = node->unitIndex;
@@ -136,7 +136,7 @@ void ProjectFilesWidget::on_treeProject_doubleClicked(const QModelIndex &index)
         disableFileOptions();
         return ;
     }
-    FolderNode* node = static_cast<FolderNode*>(index.internalPointer());
+    ProjectLegacyModelNode* node = static_cast<ProjectLegacyModelNode*>(index.internalPointer());
     if (!node) {
         disableFileOptions();
         return;

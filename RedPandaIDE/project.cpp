@@ -1603,7 +1603,7 @@ ProjectOptions &Project::options()
     return mOptions;
 }
 
-ProjectModel *Project::model()
+ProjectLegacyModel *Project::legacyModel()
 {
     return &mModel;
 }
@@ -1822,14 +1822,14 @@ void ProjectUnit::setNode(const PFolderNode &newNode)
     mNode = newNode;
 }
 
-ProjectModel::ProjectModel(Project *project, QObject *parent):
+ProjectLegacyModel::ProjectLegacyModel(Project *project, QObject *parent):
     QAbstractItemModel(parent),
     mProject(project)
 {
     mUpdateCount = 0;
 }
 
-void ProjectModel::beginUpdate()
+void ProjectLegacyModel::beginUpdate()
 {
     if (mUpdateCount==0) {
         beginResetModel();
@@ -1837,7 +1837,7 @@ void ProjectModel::beginUpdate()
     mUpdateCount++;
 }
 
-void ProjectModel::endUpdate()
+void ProjectLegacyModel::endUpdate()
 {
     mUpdateCount--;
     if (mUpdateCount==0) {
@@ -1845,12 +1845,12 @@ void ProjectModel::endUpdate()
     }
 }
 
-Project *ProjectModel::project() const
+Project *ProjectLegacyModel::project() const
 {
     return mProject;
 }
 
-QModelIndex ProjectModel::index(int row, int column, const QModelIndex &parent) const
+QModelIndex ProjectLegacyModel::index(int row, int column, const QModelIndex &parent) const
 {
     if (!parent.isValid()) {
         return createIndex(row,column,mProject->rootNode().get());
@@ -1864,7 +1864,7 @@ QModelIndex ProjectModel::index(int row, int column, const QModelIndex &parent) 
     return createIndex(row,column,parentNode->children[row].get());
 }
 
-QModelIndex ProjectModel::parent(const QModelIndex &child) const
+QModelIndex ProjectLegacyModel::parent(const QModelIndex &child) const
 {
     if (!child.isValid())
         return QModelIndex();
@@ -1874,7 +1874,7 @@ QModelIndex ProjectModel::parent(const QModelIndex &child) const
     return getParentIndex(node);
 }
 
-int ProjectModel::rowCount(const QModelIndex &parent) const
+int ProjectLegacyModel::rowCount(const QModelIndex &parent) const
 {
     if (!parent.isValid())
         return 1;
@@ -1886,12 +1886,12 @@ int ProjectModel::rowCount(const QModelIndex &parent) const
     }
 }
 
-int ProjectModel::columnCount(const QModelIndex &) const
+int ProjectLegacyModel::columnCount(const QModelIndex &) const
 {
     return 1;
 }
 
-QVariant ProjectModel::data(const QModelIndex &index, int role) const
+QVariant ProjectLegacyModel::data(const QModelIndex &index, int role) const
 {
     if (!index.isValid())
         return QVariant();
@@ -1914,7 +1914,7 @@ QVariant ProjectModel::data(const QModelIndex &index, int role) const
     return QVariant();
 }
 
-Qt::ItemFlags ProjectModel::flags(const QModelIndex &index) const
+Qt::ItemFlags ProjectLegacyModel::flags(const QModelIndex &index) const
 {
     if (!index.isValid())
         return Qt::NoItemFlags;
@@ -1931,7 +1931,7 @@ Qt::ItemFlags ProjectModel::flags(const QModelIndex &index) const
     return flags;
 }
 
-bool ProjectModel::setData(const QModelIndex &index, const QVariant &value, int role)
+bool ProjectLegacyModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
     if (!index.isValid())
         return false;
@@ -2033,7 +2033,7 @@ bool ProjectModel::setData(const QModelIndex &index, const QVariant &value, int 
     return false;
 }
 
-QModelIndex ProjectModel::getParentIndex(FolderNode * node) const
+QModelIndex ProjectLegacyModel::getParentIndex(FolderNode * node) const
 {
     PFolderNode parent = node->parent.lock();
     if (!parent) // root node
@@ -2049,7 +2049,7 @@ QModelIndex ProjectModel::getParentIndex(FolderNode * node) const
     return createIndex(row,0,parent.get());
 }
 
-bool ProjectModel::canDropMimeData(const QMimeData * data, Qt::DropAction action, int /*row*/, int /*column*/, const QModelIndex &parent) const
+bool ProjectLegacyModel::canDropMimeData(const QMimeData * data, Qt::DropAction action, int /*row*/, int /*column*/, const QModelIndex &parent) const
 {
 
     if (!data || action != Qt::MoveAction)
@@ -2089,12 +2089,12 @@ bool ProjectModel::canDropMimeData(const QMimeData * data, Qt::DropAction action
     return true;
 }
 
-Qt::DropActions ProjectModel::supportedDropActions() const
+Qt::DropActions ProjectLegacyModel::supportedDropActions() const
 {
     return Qt::MoveAction;
 }
 
-bool ProjectModel::dropMimeData(const QMimeData *data, Qt::DropAction action, int /*row*/, int /*column*/, const QModelIndex &parent)
+bool ProjectLegacyModel::dropMimeData(const QMimeData *data, Qt::DropAction action, int /*row*/, int /*column*/, const QModelIndex &parent)
 {
     // check if the action is supported
     if (!data || action != Qt::MoveAction)
@@ -2151,7 +2151,7 @@ bool ProjectModel::dropMimeData(const QMimeData *data, Qt::DropAction action, in
     return false;
 }
 
-QMimeData *ProjectModel::mimeData(const QModelIndexList &indexes) const
+QMimeData *ProjectLegacyModel::mimeData(const QModelIndexList &indexes) const
 {
     if (indexes.count() <= 0)
         return nullptr;
@@ -2187,7 +2187,7 @@ bool ProjectModelSortFilterProxy::lessThan(const QModelIndex &source_left, const
 {
     if (!sourceModel())
         return false;
-    ProjectModel* projectModel = dynamic_cast<ProjectModel*>(sourceModel());
+    ProjectLegacyModel* projectModel = dynamic_cast<ProjectLegacyModel*>(sourceModel());
     FolderNode* pLeft=nullptr;
     if (source_left.isValid())
         pLeft = static_cast<FolderNode*>(source_left.internalPointer());
@@ -2203,4 +2203,15 @@ bool ProjectModelSortFilterProxy::lessThan(const QModelIndex &source_left, const
     if (pLeft->unitIndex>=0 && pRight->unitIndex<0)
         return false;
     return QString::compare(pLeft->text, pRight->text)<0;
+}
+
+ProjectModel::ProjectModel(Project *project, QObject *parent):QAbstractItemModel(parent),
+    mProject(project)
+{
+
+}
+
+Project *ProjectModel::project() const
+{
+    return mProject;
 }

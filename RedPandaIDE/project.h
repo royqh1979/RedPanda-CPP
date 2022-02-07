@@ -27,13 +27,13 @@ class Project;
 class Editor;
 class CppParser;
 
-struct FolderNode;
-using PFolderNode = std::shared_ptr<FolderNode>;
-struct FolderNode {
+struct ProjectLegacyModelNode;
+using PProjectLegacyModelNode = std::shared_ptr<ProjectLegacyModelNode>;
+struct ProjectLegacyModelNode {
     QString text;
-    std::weak_ptr<FolderNode> parent;
+    std::weak_ptr<ProjectLegacyModelNode> parent;
     int unitIndex;
-    QList<PFolderNode>  children;
+    QList<PProjectLegacyModelNode>  children;
     int level;
 };
 
@@ -69,8 +69,8 @@ public:
     void setModified(bool value);
     bool save();
 
-    PFolderNode &node();
-    void setNode(const PFolderNode &newNode);
+    PProjectLegacyModelNode &node();
+    void setNode(const PProjectLegacyModelNode &newNode);
 
 private:
     Project* mParent;
@@ -85,17 +85,25 @@ private:
     bool mLink;
     int mPriority;
     QByteArray mEncoding;
-    PFolderNode mNode;
+    PProjectLegacyModelNode mNode;
 };
 
 using PProjectUnit = std::shared_ptr<ProjectUnit>;
 
-
-
-class ProjectModel : public QAbstractItemModel {
+class ProjectModel: public QAbstractItemModel {
     Q_OBJECT
 public:
-    explicit ProjectModel(Project* project, QObject* parent=nullptr);
+    explicit ProjectModel(Project* project, QObject* parent = nullptr);
+    Project *project() const;
+
+private:
+    Project* mProject;
+};
+
+class ProjectLegacyModel : public QAbstractItemModel {
+    Q_OBJECT
+public:
+    explicit ProjectLegacyModel(Project* project, QObject* parent=nullptr);
     void beginUpdate();
     void endUpdate();
 private:
@@ -113,7 +121,7 @@ public:
     bool setData(const QModelIndex &index, const QVariant &value, int role) override;
 
 private:
-    QModelIndex getParentIndex(FolderNode * node) const;
+    QModelIndex getParentIndex(ProjectLegacyModelNode * node) const;
     // QAbstractItemModel interface
 public:
     bool canDropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent) const override;
@@ -150,7 +158,7 @@ public:
 
     void addFolder(const QString& s);
     PProjectUnit addUnit(const QString& inFileName,
-                PFolderNode parentNode,
+                PProjectLegacyModelNode parentNode,
                 bool rebuild);
     QString folder();
     void buildPrivateResource(bool forceSave=false);
@@ -159,9 +167,9 @@ public:
     void createFolderNodes();
     void doAutoOpen();
     bool fileAlreadyExists(const QString& s);
-    PFolderNode folderNodeFromName(const QString& name);
+    PProjectLegacyModelNode folderNodeFromName(const QString& name);
     char getCompilerOption(const QString& optionString);
-    QString getFolderPath(PFolderNode node);
+    QString getFolderPath(PProjectLegacyModelNode node);
     int getUnitFromString(const QString& s);
     void incrementBuildNumber();
     int indexInUnits(const QString& fileName) const;
@@ -170,14 +178,14 @@ public:
     void loadLayout(); // load all [UnitX]
     void loadOptions(SimpleIni& ini);
     void loadUnitLayout(Editor *e, int index); // load single [UnitX] cursor positions
-    PFolderNode makeNewFileNode(const QString& s, bool isFolder, PFolderNode newParent);
-    PFolderNode makeProjectNode();
-    PProjectUnit  newUnit(PFolderNode parentNode,
+    PProjectLegacyModelNode makeNewFileNode(const QString& s, bool isFolder, PProjectLegacyModelNode newParent);
+    PProjectLegacyModelNode makeProjectNode();
+    PProjectUnit  newUnit(PProjectLegacyModelNode parentNode,
                  const QString& customFileName="");
     Editor* openUnit(int index);
     void rebuildNodes();
     bool removeUnit(int index, bool doClose, bool removeFile = false);
-    bool removeFolder(PFolderNode node);
+    bool removeFolder(PProjectLegacyModelNode node);
     void resetParserProjectFiles();
     void saveAll(); // save [Project] and  all [UnitX]
     void saveLayout(); // save all [UnitX]
@@ -193,7 +201,7 @@ public:
     void sortUnitsByAlpha();
     void updateFolders();
     void updateNodeIndexes();
-    PFolderNode pointerToNode(FolderNode * p, PFolderNode parent=PFolderNode());
+    PProjectLegacyModelNode pointerToNode(ProjectLegacyModelNode * p, PProjectLegacyModelNode parent=PProjectLegacyModelNode());
     void setCompilerSet(int compilerSetIndex);
 
     //void showOptions();
@@ -206,11 +214,11 @@ public:
     const QString &name() const;
     void setName(const QString &newName);
 
-    const PFolderNode &rootNode() const;
+    const PProjectLegacyModelNode &rootNode() const;
 
     ProjectOptions &options();
 
-    ProjectModel* model() ;
+    ProjectLegacyModel* legacyModel() ;
 
     const QList<PProjectUnit> &units() const;
 
@@ -219,8 +227,8 @@ signals:
     void modifyChanged(bool value);
 private:
     void open();
-    void removeFolderRecurse(PFolderNode node);
-    void updateFolderNode(PFolderNode node);
+    void removeFolderRecurse(PProjectLegacyModelNode node);
+    void updateFolderNode(PProjectLegacyModelNode node);
     void updateCompilerSetType();
 
 private:
@@ -231,9 +239,9 @@ private:
     bool mModified;
     QStringList mFolders;
     std::shared_ptr<CppParser> mParser;
-    QList<PFolderNode> mFolderNodes;
-    PFolderNode mNode;
-    ProjectModel mModel;
+    QList<PProjectLegacyModelNode> mFolderNodes;
+    PProjectLegacyModelNode mNode;
+    ProjectLegacyModel mModel;
 };
 
 #endif // PROJECT_H
