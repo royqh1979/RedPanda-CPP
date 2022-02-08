@@ -48,6 +48,7 @@
 #include "projectmakefilewidget.h"
 #include "projectdllhostwidget.h"
 #include "toolsgeneralwidget.h"
+#include "toolsgitwidget.h"
 #ifdef Q_OS_WIN
 #include "environmentfileassociationwidget.h"
 #include "projectversioninfowidget.h"
@@ -218,6 +219,10 @@ PSettingsDialog SettingsDialog::optionDialog()
 
     widget = new ToolsGeneralWidget(tr("General"),tr("Tools"));
     dialog->addWidget(widget);
+
+    widget = new ToolsGitWidget(tr("Git"),tr("Tools"));
+    dialog->addWidget(widget);
+
 
     dialog->selectFirstWidget();
 

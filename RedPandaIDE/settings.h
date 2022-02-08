@@ -36,6 +36,7 @@
 #define SETTING_DEBUGGER "Debugger"
 #define SETTING_HISTORY "History"
 #define SETTING_UI "UI"
+#define SETTING_VCS "VCS"
 #define SETTING_CODE_COMPLETION "CodeCompletion"
 #define SETTING_CODE_FORMATTER "CodeFormatter"
 #define SETTING_COMPILTER_SETS "CompilerSets"
@@ -881,6 +882,18 @@ public:
         void doLoad() override;
     };
 
+    class VCS: public _Base {
+    public:
+        explicit VCS(Settings *settings);
+        const QString &gitPath() const;
+        void setGitPath(const QString &newGitPath);
+    private:
+        QString mGitPath;
+    protected:
+        void doSave() override;
+        void doLoad() override;
+    };
+
     class UI: public _Base {
     public:
         explicit UI(Settings *settings);
@@ -1325,6 +1338,7 @@ public:
     CodeCompletion &codeCompletion();
     CodeFormatter &codeFormatter();
     UI &ui();
+    VCS &vcs();
     QString filename() const;
 
 private:
@@ -1340,6 +1354,7 @@ private:
     CodeFormatter mCodeFormatter;
     History mHistory;
     UI mUI;
+    VCS mVCS;
 };
 
 

@@ -84,11 +84,13 @@ SOURCES += \
     settingsdialog/projectoutputwidget.cpp \
     settingsdialog/projectprecompilewidget.cpp \
     settingsdialog/toolsgeneralwidget.cpp \
+    settingsdialog/toolsgitwidget.cpp \
     shortcutmanager.cpp \
     symbolusagemanager.cpp \
     thememanager.cpp \
     todoparser.cpp \
     toolsmanager.cpp \
+    vcs/gitmanager.cpp \
     widgets/aboutdialog.cpp \
     widgets/bookmarkmodel.cpp \
     widgets/classbrowser.cpp \
@@ -210,11 +212,13 @@ HEADERS += \
     settingsdialog/projectoutputwidget.h \
     settingsdialog/projectprecompilewidget.h \
     settingsdialog/toolsgeneralwidget.h \
+    settingsdialog/toolsgitwidget.h \
     shortcutmanager.h \
     symbolusagemanager.h \
     thememanager.h \
     todoparser.h \
     toolsmanager.h \
+    vcs/gitmanager.h \
     widgets/aboutdialog.h \
     widgets/bookmarkmodel.h \
     widgets/classbrowser.h \
@@ -306,6 +310,7 @@ FORMS += \
     settingsdialog/projectoutputwidget.ui \
     settingsdialog/projectprecompilewidget.ui \
     settingsdialog/toolsgeneralwidget.ui \
+    settingsdialog/toolsgitwidget.ui \
     widgets/aboutdialog.ui \
     widgets/cpudialog.ui \
     mainwindow.ui \
@@ -420,7 +425,7 @@ theme_files.files += $$files(themes/*.png, false)
 colorscheme_files.files += $$files(colorschemes/*.scheme, false)
 colorscheme_files.prefix = /colorschemes
 
-RESOURCES += qmake_qm_files
-RESOURCES += iconsets_files
-RESOURCES += theme_files
-RESOURCES += colorscheme_files
+#RESOURCES += qmake_qm_files
+#RESOURCES += iconsets_files
+#RESOURCES += theme_files
+#RESOURCES += colorscheme_files
