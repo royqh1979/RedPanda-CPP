@@ -2520,6 +2520,20 @@ void MainWindow::buildContextMenus()
         mProject->removeFolder(folderNode);
         mProject->saveOptions();
     });
+    mProject_SwitchFileSystemViewMode = createActionFor(
+                tr("Switch to normal view"),
+                ui->projectView);
+    connect(mProject_SwitchFileSystemViewMode, &QAction::triggered,
+            [this](){
+        mProject->setModelType(ProjectModelType::FileSystem);
+    });
+    mProject_SwitchCustomViewMode = createActionFor(
+                tr("Switch to custom view"),
+                ui->projectView);
+    connect(mProject_SwitchCustomViewMode, &QAction::triggered,
+            [this](){
+        mProject->setModelType(ProjectModelType::Custom);
+    });
 
     //context menu signal for class browser
     ui->tabStructure->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -2928,7 +2942,7 @@ void MainWindow::onProjectViewContextMenu(const QPoint &pos)
         menu.addAction(mProject_Rename_Unit);
     }
     menu.addSeparator();
-    if (onFolder) {
+    if (onFolder && mProject->modelType()==ProjectModelType::Custom) {
         menu.addAction(mProject_Add_Folder);
         if (!onRoot) {
             menu.addAction(mProject_Rename_Folder);
@@ -2941,6 +2955,11 @@ void MainWindow::onProjectViewContextMenu(const QPoint &pos)
     menu.addAction(ui->actionProject_Open_Folder_In_Explorer);
     menu.addAction(ui->actionProject_Open_In_Terminal);
     menu.addSeparator();
+    if (mProject->modelType() == ProjectModelType::Custom) {
+        menu.addAction(mProject_SwitchFileSystemViewMode);
+    } else {
+        menu.addAction(mProject_SwitchCustomViewMode);
+    }
     menu.addAction(ui->actionProject_options);
 
     menu.exec(ui->projectView->mapToGlobal(pos));

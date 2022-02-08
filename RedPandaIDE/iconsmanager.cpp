@@ -314,7 +314,7 @@ QList<PIconSet> IconsManager::listIconSets()
     while(dirIter.hasNext()) {
         dirIter.next();
         QFileInfo fileInfo = dirIter.fileInfo();
-        if (!fileInfo.isHidden() && fileInfo.isDir()) {
+        if (!fileInfo.isHidden() && !fileInfo.fileName().startsWith('.') && fileInfo.isDir()) {
             PIconSet pSet = std::make_shared<IconSet>();
             pSet->name = fileInfo.baseName();
             pSet->displayName = pSet->name;

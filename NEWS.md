@@ -1,3 +1,6 @@
+Red Panda C++ Version 0.14.2
+  - enhancement: file system view mode for project
+
 Red Panda C++ Version 0.14.1
   - enhancement: custom theme
   - fix: failed to show function tip, when there are parameters having '[' and ']'

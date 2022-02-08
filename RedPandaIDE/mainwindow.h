@@ -650,6 +650,8 @@ private:
     QAction * mProject_Rename_Unit;
     QAction * mProject_Rename_Folder;
     QAction * mProject_Remove_Folder;
+    QAction * mProject_SwitchFileSystemViewMode;
+    QAction * mProject_SwitchCustomViewMode;
 
     //actions for class browser
     QAction * mClassBrowser_Sort_By_Type;

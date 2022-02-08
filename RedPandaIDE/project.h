@@ -33,6 +33,7 @@ struct ProjectModelNode {
     QString text;
     std::weak_ptr<ProjectModelNode> parent;
     int unitIndex;
+    int priority;
     QList<PProjectModelNode>  children;
     int level;
 };
@@ -132,6 +133,13 @@ protected:
     bool lessThan(const QModelIndex &source_left, const QModelIndex &source_right) const override;
 };
 
+enum ProjectSpecialFolderNode {
+    HEADERS,
+    SOURCES,
+    OTHERS,
+    NonSpecial
+};
+
 class ProjectTemplate;
 class Project : public QObject
 {
@@ -152,27 +160,19 @@ public:
                 bool rebuild);
     QString folder();
     void buildPrivateResource(bool forceSave=false);
-    void checkProjectFileForUpdate(SimpleIni& ini);
     void closeUnit(int index);
-    void createFolderNodes();
     void doAutoOpen();
     bool fileAlreadyExists(const QString& s);
-    PProjectModelNode folderNodeFromName(const QString& name);
     char getCompilerOption(const QString& optionString);
     QString getFolderPath(PProjectModelNode node);
     int getUnitFromString(const QString& s);
     void incrementBuildNumber();
     int indexInUnits(const QString& fileName) const;
     int indexInUnits(const Editor* editor) const;
-    QString listUnitStr(const QChar& separator);
-    void loadLayout(); // load all [UnitX]
-    void loadOptions(SimpleIni& ini);
-    void loadUnitLayout(Editor *e, int index); // load single [UnitX] cursor positions
-    PProjectModelNode makeNewFileNode(const QString& s, bool isFolder, PProjectModelNode newParent);
-    PProjectModelNode makeProjectNode();
     PProjectUnit  newUnit(PProjectModelNode parentNode,
                  const QString& customFileName="");
     Editor* openUnit(int index);
+    PProjectModelNode pointerToNode(ProjectModelNode * p, PProjectModelNode parent=PProjectModelNode());
     void rebuildNodes();
     bool removeUnit(int index, bool doClose, bool removeFile = false);
     bool removeFolder(PProjectModelNode node);
@@ -181,17 +181,13 @@ public:
     void saveLayout(); // save all [UnitX]
     void saveOptions();
     void saveUnitAs(int i, const QString& sFileName, bool syncEditor = true); // save single [UnitX]
-    void saveUnitLayout(Editor* e, int index); // save single [UnitX] cursor positions
     bool saveUnits();
     PProjectUnit findUnitByFilename(const QString& filename);
     void associateEditor(Editor* editor);
     void associateEditorToUnit(Editor* editor, PProjectUnit unit);
     void setCompilerOption(const QString& optionString, char value);
-    void sortUnitsByPriority();
-    void sortUnitsByAlpha();
     void updateFolders();
     void updateNodeIndexes();
-    PProjectModelNode pointerToNode(ProjectModelNode * p, PProjectModelNode parent=PProjectModelNode());
     void setCompilerSet(int compilerSetIndex);
 
     //void showOptions();
@@ -212,12 +208,29 @@ public:
 
     const QList<PProjectUnit> &units() const;
 
+    ProjectModelType modelType() const;
+    void setModelType(ProjectModelType type);
+
 signals:
     void nodesChanged();
     void modifyChanged(bool value);
 private:
+    void checkProjectFileForUpdate(SimpleIni& ini);
+    void createFolderNodes();
+    void createFileSystemFolderNodes();
+    void createFileSystemFolderNode(ProjectSpecialFolderNode folderType, const QString& folderName, PProjectModelNode parent);
+    PProjectModelNode getParentFolderNode(const QString& filename);
+    PProjectModelNode findFolderNode(const QString& folderPath, ProjectSpecialFolderNode nodeType);
+    PProjectModelNode folderNodeFromName(const QString& name);
+    void loadOptions(SimpleIni& ini);
+    void loadLayout(); // load all [UnitX]
+    void loadUnitLayout(Editor *e, int index); // load single [UnitX] cursor positions
+
+    PProjectModelNode makeNewFileNode(const QString& s, bool isFolder, PProjectModelNode newParent);
+    PProjectModelNode makeProjectNode();
     void open();
     void removeFolderRecurse(PProjectModelNode node);
+    void saveUnitLayout(Editor* e, int index); // save single [UnitX] cursor positions
     void updateFolderNode(PProjectModelNode node);
     void updateCompilerSetType();
 
@@ -230,7 +243,9 @@ private:
     QStringList mFolders;
     std::shared_ptr<CppParser> mParser;
     QList<PProjectModelNode> mFolderNodes;
-    PProjectModelNode mNode;
+    PProjectModelNode mRootNode;
+    QHash<ProjectSpecialFolderNode, PProjectModelNode> mSpecialNodes;
+    QHash<QString, PProjectModelNode> mFileSystemFolderNodes;
     ProjectModel mModel;
 };
 

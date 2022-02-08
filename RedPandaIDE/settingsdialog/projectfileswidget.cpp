@@ -56,7 +56,6 @@ void ProjectFilesWidget::doSave()
         unit->setBuildCmd(unitCopy->buildCmd());
         unit->setEncoding(unitCopy->encoding());
     }
-    pMainWindow->project()->sortUnitsByPriority();
     pMainWindow->project()->saveUnits();
     copyUnits();
     ui->treeProject->expandAll();
