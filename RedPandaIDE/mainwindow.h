@@ -274,6 +274,9 @@ private slots:
 
     void onShowInsertCodeSnippetMenu();
 
+    void onFilesViewCreateFolder();
+    void onFilesViewRemoveFile();
+
     void on_actionNew_triggered();
 
     void on_EditorTabsLeft_tabCloseRequested(int index);
@@ -667,6 +670,8 @@ private:
     QAction * mFilesView_OpenInTerminal;
     QAction * mFilesView_OpenInExplorer;
     QWidget * mFilesViewToolbar;
+    QAction * mFilesView_CreateFolder;
+    QAction * mFilesView_RemoveFile;
 
     //action for debug console
     QAction * mDebugConsole_ShowDetailLog;

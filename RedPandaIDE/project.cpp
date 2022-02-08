@@ -311,7 +311,6 @@ Editor *Project::openUnit(int index)
 
 void Project::rebuildNodes()
 {
-    qDebug()<<(int)mOptions.modelType;
     mModel.beginUpdate();
     // Delete everything
     mRootNode->children.clear();

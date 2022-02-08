@@ -1,5 +1,6 @@
 Red Panda C++ Version 0.14.2
   - enhancement: file system view mode for project
+  - enhancement: remove / rename / create new folder in the files view
 
 Red Panda C++ Version 0.14.1
   - enhancement: custom theme

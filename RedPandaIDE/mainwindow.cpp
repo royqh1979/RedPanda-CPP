@@ -285,7 +285,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     //files view
     ui->treeFiles->setModel(&mFileSystemModel);
-    mFileSystemModel.setReadOnly(true);
+    mFileSystemModel.setReadOnly(false);
     setFilesViewRoot(pSettings->environment().currentFolder());
     for (int i=1;i<mFileSystemModel.columnCount();i++) {
         ui->treeFiles->hideColumn(i);
@@ -2649,6 +2649,18 @@ void MainWindow::buildContextMenus()
     ui->treeFiles->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->treeFiles,&QWidget::customContextMenuRequested,
              this, &MainWindow::onFilesViewContextMenu);
+
+    mFilesView_CreateFolder = createActionFor(
+                tr("New Folder"),
+                ui->treeFiles);
+    connect(mFilesView_CreateFolder, &QAction::triggered,
+            this, &MainWindow::onFilesViewCreateFolder);
+    mFilesView_RemoveFile = createActionFor(
+                tr("Delete"),
+                ui->treeFiles);
+    mFilesView_RemoveFile->setShortcut(Qt::Key_Delete);
+    connect(mFilesView_RemoveFile, &QAction::triggered,
+            this, &MainWindow::onFilesViewRemoveFile);
     mFilesView_Open = createActionFor(
                 tr("Open in Editor"),
                 ui->treeFiles);
@@ -3019,6 +3031,8 @@ void MainWindow::onFilesViewContextMenu(const QPoint &pos)
     QMenu menu(this);
     menu.addAction(ui->actionOpen_Folder);
     menu.addSeparator();
+    menu.addAction(mFilesView_CreateFolder);
+    menu.addSeparator();
     menu.addAction(mFilesView_Open);
     menu.addAction(mFilesView_OpenWithExternal);
     menu.addSeparator();
@@ -3293,6 +3307,51 @@ void MainWindow::onShowInsertCodeSnippetMenu()
             break;
     }
 
+}
+
+void MainWindow::onFilesViewCreateFolder()
+{
+    QModelIndex index = ui->treeFiles->currentIndex();
+    QDir dir;
+    if (index.isValid()) {
+        if (mFileSystemModel.isDir(index))
+            dir = QDir(mFileSystemModel.fileInfo(index).absoluteFilePath());
+        else
+            dir = mFileSystemModel.fileInfo(index).absoluteDir();
+    } else {
+        dir = mFileSystemModel.rootDirectory();
+    }
+    QString folderName = tr("New Folder");
+    int count = 0;
+    while (dir.exists(folderName)) {
+        count++;
+        folderName = tr("New Folder").arg(count);
+    }
+    mFileSystemModel.mkdir(index,folderName);
+}
+
+void MainWindow::onFilesViewRemoveFile()
+{
+    QModelIndex index = ui->treeFiles->currentIndex();
+    if (!index.isValid())
+        return;
+    if (QMessageBox::question(ui->treeFiles,tr("Delete")
+                              ,tr("Do you really want to delete %1?").arg(mFileSystemModel.fileName(index)),
+            QMessageBox::Yes | QMessageBox::No, QMessageBox::No)!=QMessageBox::Yes)
+        return;
+    if (mFileSystemModel.isDir(index)) {
+        QDir dir(mFileSystemModel.fileInfo(index).absoluteFilePath());
+        if (!dir.isEmpty() &&
+                QMessageBox::question(ui->treeFiles
+                                      ,tr("Delete")
+                                      ,tr("Folder %1 is not empty.").arg(mFileSystemModel.fileName(index))
+                                      + tr("Do you really want to delete it?"),
+                            QMessageBox::Yes | QMessageBox::No, QMessageBox::No)!=QMessageBox::Yes)
+            return;
+        dir.removeRecursively();
+    } else {
+        QFile::remove(mFileSystemModel.filePath(index));
+    }
 }
 
 void MainWindow::onEditorContextMenu(const QPoint& pos)
