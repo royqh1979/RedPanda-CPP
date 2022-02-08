@@ -2660,7 +2660,7 @@ void MainWindow::buildContextMenus()
                 ui->treeFiles);
     mFilesView_RemoveFile->setShortcut(Qt::Key_Delete);
     connect(mFilesView_RemoveFile, &QAction::triggered,
-            this, &MainWindow::onFilesViewRemoveFile);
+            this, &MainWindow::onFilesViewRemoveFiles);
     mFilesView_Open = createActionFor(
                 tr("Open in Editor"),
                 ui->treeFiles);
@@ -3330,27 +3330,24 @@ void MainWindow::onFilesViewCreateFolder()
     mFileSystemModel.mkdir(index,folderName);
 }
 
-void MainWindow::onFilesViewRemoveFile()
+void MainWindow::onFilesViewRemoveFiles()
 {
-    QModelIndex index = ui->treeFiles->currentIndex();
-    if (!index.isValid())
-        return;
-    if (QMessageBox::question(ui->treeFiles,tr("Delete")
-                              ,tr("Do you really want to delete %1?").arg(mFileSystemModel.fileName(index)),
-            QMessageBox::Yes | QMessageBox::No, QMessageBox::No)!=QMessageBox::Yes)
-        return;
-    if (mFileSystemModel.isDir(index)) {
-        QDir dir(mFileSystemModel.fileInfo(index).absoluteFilePath());
-        if (!dir.isEmpty() &&
-                QMessageBox::question(ui->treeFiles
-                                      ,tr("Delete")
-                                      ,tr("Folder %1 is not empty.").arg(mFileSystemModel.fileName(index))
-                                      + tr("Do you really want to delete it?"),
-                            QMessageBox::Yes | QMessageBox::No, QMessageBox::No)!=QMessageBox::Yes)
+    QModelIndexList indexList = ui->treeFiles->selectionModel()->selectedRows();
+    if (indexList.isEmpty()) {
+        QModelIndex index = ui->treeFiles->currentIndex();
+        if (QMessageBox::question(ui->treeFiles,tr("Delete")
+                                  ,tr("Do you really want to delete %1?").arg(mFileSystemModel.fileName(index)),
+                QMessageBox::Yes | QMessageBox::No, QMessageBox::No)!=QMessageBox::Yes)
             return;
-        dir.removeRecursively();
+        doFilesViewRemoveFile(index);
     } else {
-        QFile::remove(mFileSystemModel.filePath(index));
+        if (QMessageBox::question(ui->treeFiles,tr("Delete")
+                                  ,tr("Do you really want to delete %1 files?").arg(indexList.count()),
+                QMessageBox::Yes | QMessageBox::No, QMessageBox::No)!=QMessageBox::Yes)
+            return;
+        foreach (const QModelIndex& index, indexList) {
+            doFilesViewRemoveFile(index);
+        }
     }
 }
 
@@ -5440,6 +5437,25 @@ void MainWindow::newProjectUnitFile()
     //editor->setUseCppSyntax(mProject->options().useGPP);
     //editor->setModified(true);
     editor->activate();
+}
+
+void MainWindow::doFilesViewRemoveFile(const QModelIndex &index)
+{
+    if (!index.isValid())
+        return;
+    if (mFileSystemModel.isDir(index)) {
+        QDir dir(mFileSystemModel.fileInfo(index).absoluteFilePath());
+        if (!dir.isEmpty() &&
+                QMessageBox::question(ui->treeFiles
+                                      ,tr("Delete")
+                                      ,tr("Folder %1 is not empty.").arg(mFileSystemModel.fileName(index))
+                                      + tr("Do you really want to delete it?"),
+                            QMessageBox::Yes | QMessageBox::No, QMessageBox::No)!=QMessageBox::Yes)
+            return;
+        dir.removeRecursively();
+    } else {
+        QFile::remove(mFileSystemModel.filePath(index));
+    }
 }
 
 void MainWindow::invalidateProjectProxyModel()

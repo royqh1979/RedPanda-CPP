@@ -248,6 +248,8 @@ private:
     void prepareTabMessagesData();
     void newProjectUnitFile();
 
+    void doFilesViewRemoveFile(const QModelIndex& index);
+
 private slots:
     void invalidateProjectProxyModel();
     void onEditorRenamed(const QString& oldFilename, const QString& newFilename, bool firstSave);
@@ -275,7 +277,7 @@ private slots:
     void onShowInsertCodeSnippetMenu();
 
     void onFilesViewCreateFolder();
-    void onFilesViewRemoveFile();
+    void onFilesViewRemoveFiles();
 
     void on_actionNew_triggered();
 
