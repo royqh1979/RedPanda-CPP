@@ -1,6 +1,7 @@
 Red Panda C++ Version 0.14.2
   - enhancement: file system view mode for project
   - enhancement: remove / rename / create new folder in the files view
+  - fix: crash when there are catch blocks in the upper most scope
 
 Red Panda C++ Version 0.14.1
   - enhancement: custom theme

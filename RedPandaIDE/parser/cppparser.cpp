@@ -1248,12 +1248,12 @@ bool CppParser::isCurrentScope(const QString &command)
     return (statement->command == s);
 }
 
-void CppParser::addSoloScopeLevel(PStatement& statement, int line)
+void CppParser::addSoloScopeLevel(PStatement& statement, int line, bool shouldResetBlock)
 {
     // Add class list
 
     PStatement parentScope;
-    if (statement && (statement->kind == StatementKind::skBlock)) {
+    if (shouldResetBlock && statement && (statement->kind == StatementKind::skBlock)) {
         parentScope = statement->parentScope.lock();
         while (parentScope && (parentScope->kind == StatementKind::skBlock)) {
             parentScope = parentScope->parentScope.lock();
@@ -1852,7 +1852,7 @@ void CppParser::handleCatchBlock()
       mClassScope,
       true,
       false);
-    addSoloScopeLevel(block,startLine);
+    addSoloScopeLevel(block,startLine,false);
     if (!mTokenizer[mIndex]->text.contains("..."))
         scanMethodArgs(block,mTokenizer[mIndex]->text);
 }
