@@ -49,7 +49,6 @@ private:
 private:
     QString mGitPath;
     bool mGitPathValid;
-
 };
 
 #endif // GITMANAGER_H

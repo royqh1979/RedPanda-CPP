@@ -425,7 +425,7 @@ theme_files.files += $$files(themes/*.png, false)
 colorscheme_files.files += $$files(colorschemes/*.scheme, false)
 colorscheme_files.prefix = /colorschemes
 
-#RESOURCES += qmake_qm_files
-#RESOURCES += iconsets_files
-#RESOURCES += theme_files
-#RESOURCES += colorscheme_files
+RESOURCES += qmake_qm_files
+RESOURCES += iconsets_files
+RESOURCES += theme_files
+RESOURCES += colorscheme_files
