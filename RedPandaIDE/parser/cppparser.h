@@ -178,7 +178,7 @@ private:
             bool isStatic);
     void setInheritance(int index, const PStatement& classStatement, bool isStruct);
     bool isCurrentScope(const QString& command);
-    void addSoloScopeLevel(PStatement& statement, int line); // adds new solo level
+    void addSoloScopeLevel(PStatement& statement, int line, bool shouldResetBlock = true); // adds new solo level
     void removeScopeLevel(int line); // removes level
     int skipBraces(int startAt);
     int skipBracket(int startAt);
