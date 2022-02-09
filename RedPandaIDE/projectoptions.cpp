@@ -52,4 +52,5 @@ ProjectOptions::ProjectOptions()
     compilerSetType = 0;
     staticLink = true;
     addCharset = true;
+    modelType = ProjectModelType::FileSystem;
 }

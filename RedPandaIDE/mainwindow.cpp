@@ -285,7 +285,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     //files view
     ui->treeFiles->setModel(&mFileSystemModel);
-    mFileSystemModel.setReadOnly(true);
+    mFileSystemModel.setReadOnly(false);
     setFilesViewRoot(pSettings->environment().currentFolder());
     for (int i=1;i<mFileSystemModel.columnCount();i++) {
         ui->treeFiles->hideColumn(i);
@@ -2468,8 +2468,8 @@ void MainWindow::buildContextMenus()
         if (!current.isValid()) {
             return;
         }
-        FolderNode * node = static_cast<FolderNode*>(current.internalPointer());
-        PFolderNode folderNode =  mProject->pointerToNode(node);
+        ProjectModelNode * node = static_cast<ProjectModelNode*>(current.internalPointer());
+        PProjectModelNode folderNode =  mProject->pointerToNode(node);
         if (!folderNode)
             folderNode = mProject->rootNode();
         if (folderNode->unitIndex>=0)
@@ -2511,14 +2511,28 @@ void MainWindow::buildContextMenus()
         if (!current.isValid()) {
             return;
         }
-        FolderNode * node = static_cast<FolderNode*>(current.internalPointer());
-        PFolderNode folderNode =  mProject->pointerToNode(node);
+        ProjectModelNode * node = static_cast<ProjectModelNode*>(current.internalPointer());
+        PProjectModelNode folderNode =  mProject->pointerToNode(node);
         if (!folderNode)
             return;
         if (folderNode->unitIndex>=0)
             return;
         mProject->removeFolder(folderNode);
         mProject->saveOptions();
+    });
+    mProject_SwitchFileSystemViewMode = createActionFor(
+                tr("Switch to normal view"),
+                ui->projectView);
+    connect(mProject_SwitchFileSystemViewMode, &QAction::triggered,
+            [this](){
+        mProject->setModelType(ProjectModelType::FileSystem);
+    });
+    mProject_SwitchCustomViewMode = createActionFor(
+                tr("Switch to custom view"),
+                ui->projectView);
+    connect(mProject_SwitchCustomViewMode, &QAction::triggered,
+            [this](){
+        mProject->setModelType(ProjectModelType::Custom);
     });
 
     //context menu signal for class browser
@@ -2635,6 +2649,18 @@ void MainWindow::buildContextMenus()
     ui->treeFiles->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->treeFiles,&QWidget::customContextMenuRequested,
              this, &MainWindow::onFilesViewContextMenu);
+
+    mFilesView_CreateFolder = createActionFor(
+                tr("New Folder"),
+                ui->treeFiles);
+    connect(mFilesView_CreateFolder, &QAction::triggered,
+            this, &MainWindow::onFilesViewCreateFolder);
+    mFilesView_RemoveFile = createActionFor(
+                tr("Delete"),
+                ui->treeFiles);
+    mFilesView_RemoveFile->setShortcut(Qt::Key_Delete);
+    connect(mFilesView_RemoveFile, &QAction::triggered,
+            this, &MainWindow::onFilesViewRemoveFiles);
     mFilesView_Open = createActionFor(
                 tr("Open in Editor"),
                 ui->treeFiles);
@@ -2900,8 +2926,8 @@ void MainWindow::onProjectViewContextMenu(const QPoint &pos)
     int unitIndex = -1;
     QModelIndex current = mProjectProxyModel->mapToSource(ui->projectView->selectionModel()->currentIndex());
     if (current.isValid() && mProject) {
-        FolderNode * node = static_cast<FolderNode*>(current.internalPointer());
-        PFolderNode pNode = mProject->pointerToNode(node);
+        ProjectModelNode * node = static_cast<ProjectModelNode*>(current.internalPointer());
+        PProjectModelNode pNode = mProject->pointerToNode(node);
         if (pNode) {
             unitIndex = pNode->unitIndex;
             onFolder = (unitIndex<0);
@@ -2928,7 +2954,7 @@ void MainWindow::onProjectViewContextMenu(const QPoint &pos)
         menu.addAction(mProject_Rename_Unit);
     }
     menu.addSeparator();
-    if (onFolder) {
+    if (onFolder && mProject->modelType()==ProjectModelType::Custom) {
         menu.addAction(mProject_Add_Folder);
         if (!onRoot) {
             menu.addAction(mProject_Rename_Folder);
@@ -2941,6 +2967,11 @@ void MainWindow::onProjectViewContextMenu(const QPoint &pos)
     menu.addAction(ui->actionProject_Open_Folder_In_Explorer);
     menu.addAction(ui->actionProject_Open_In_Terminal);
     menu.addSeparator();
+    if (mProject->modelType() == ProjectModelType::Custom) {
+        menu.addAction(mProject_SwitchFileSystemViewMode);
+    } else {
+        menu.addAction(mProject_SwitchCustomViewMode);
+    }
     menu.addAction(ui->actionProject_options);
 
     menu.exec(ui->projectView->mapToGlobal(pos));
@@ -2999,6 +3030,8 @@ void MainWindow::onFilesViewContextMenu(const QPoint &pos)
 
     QMenu menu(this);
     menu.addAction(ui->actionOpen_Folder);
+    menu.addSeparator();
+    menu.addAction(mFilesView_CreateFolder);
     menu.addSeparator();
     menu.addAction(mFilesView_Open);
     menu.addAction(mFilesView_OpenWithExternal);
@@ -3274,6 +3307,48 @@ void MainWindow::onShowInsertCodeSnippetMenu()
             break;
     }
 
+}
+
+void MainWindow::onFilesViewCreateFolder()
+{
+    QModelIndex index = ui->treeFiles->currentIndex();
+    QDir dir;
+    if (index.isValid()) {
+        if (mFileSystemModel.isDir(index))
+            dir = QDir(mFileSystemModel.fileInfo(index).absoluteFilePath());
+        else
+            dir = mFileSystemModel.fileInfo(index).absoluteDir();
+    } else {
+        dir = mFileSystemModel.rootDirectory();
+    }
+    QString folderName = tr("New Folder");
+    int count = 0;
+    while (dir.exists(folderName)) {
+        count++;
+        folderName = tr("New Folder").arg(count);
+    }
+    mFileSystemModel.mkdir(index,folderName);
+}
+
+void MainWindow::onFilesViewRemoveFiles()
+{
+    QModelIndexList indexList = ui->treeFiles->selectionModel()->selectedRows();
+    if (indexList.isEmpty()) {
+        QModelIndex index = ui->treeFiles->currentIndex();
+        if (QMessageBox::question(ui->treeFiles,tr("Delete")
+                                  ,tr("Do you really want to delete %1?").arg(mFileSystemModel.fileName(index)),
+                QMessageBox::Yes | QMessageBox::No, QMessageBox::No)!=QMessageBox::Yes)
+            return;
+        doFilesViewRemoveFile(index);
+    } else {
+        if (QMessageBox::question(ui->treeFiles,tr("Delete")
+                                  ,tr("Do you really want to delete %1 files?").arg(indexList.count()),
+                QMessageBox::Yes | QMessageBox::No, QMessageBox::No)!=QMessageBox::Yes)
+            return;
+        foreach (const QModelIndex& index, indexList) {
+            doFilesViewRemoveFile(index);
+        }
+    }
 }
 
 void MainWindow::onEditorContextMenu(const QPoint& pos)
@@ -4096,7 +4171,7 @@ void MainWindow::onOJProblemCaseFinished(const QString& id, int current, int tot
     updateProblemTitle();
 }
 
-void MainWindow::onOJProblemCaseNewOutputGetted(const QString &id, const QString &line)
+void MainWindow::onOJProblemCaseNewOutputGetted(const QString &/* id */, const QString &line)
 {
     ui->txtProblemCaseOutput->appendPlainText(line);
 }
@@ -4953,7 +5028,7 @@ void MainWindow::on_projectView_doubleClicked(const QModelIndex &index)
     QModelIndex sourceIndex = mProjectProxyModel->mapToSource(index);
     if (!sourceIndex.isValid())
         return;
-    FolderNode * node = static_cast<FolderNode*>(sourceIndex.internalPointer());
+    ProjectModelNode * node = static_cast<ProjectModelNode*>(sourceIndex.internalPointer());
     if (!node)
         return;
     if (node->unitIndex>=0) {
@@ -5106,11 +5181,11 @@ void MainWindow::on_actionAdd_to_project_triggered()
     dialog.setAcceptMode(QFileDialog::AcceptOpen);
     if (dialog.exec()) {
         QModelIndex current = mProjectProxyModel->mapToSource(ui->projectView->currentIndex());
-        FolderNode * node = nullptr;
+        ProjectModelNode * node = nullptr;
         if (current.isValid()) {
-            node = static_cast<FolderNode*>(current.internalPointer());
+            node = static_cast<ProjectModelNode*>(current.internalPointer());
         }
-        PFolderNode folderNode =  mProject->pointerToNode(node);
+        PProjectModelNode folderNode =  mProject->pointerToNode(node);
         foreach (const QString& filename, dialog.selectedFiles()) {
             mProject->addUnit(filename,folderNode,false);
             mProject->cppParser()->addFileToScan(filename);
@@ -5135,8 +5210,8 @@ void MainWindow::on_actionRemove_from_project_triggered()
         if (!index.isValid())
             continue;
         QModelIndex realIndex = mProjectProxyModel->mapToSource(index);
-        FolderNode * node = static_cast<FolderNode*>(realIndex.internalPointer());
-        PFolderNode folderNode =  mProject->pointerToNode(node);
+        ProjectModelNode * node = static_cast<ProjectModelNode*>(realIndex.internalPointer());
+        PProjectModelNode folderNode =  mProject->pointerToNode(node);
         if (!folderNode)
             continue;
         selected.insert(folderNode->unitIndex);
@@ -5326,9 +5401,9 @@ void MainWindow::newProjectUnitFile()
         return;
     int idx = -1;
     QModelIndex current = mProjectProxyModel->mapToSource(ui->projectView->currentIndex());
-    FolderNode * node = nullptr;
+    ProjectModelNode * node = nullptr;
     if (current.isValid()) {
-        node = static_cast<FolderNode*>(current.internalPointer());
+        node = static_cast<ProjectModelNode*>(current.internalPointer());
     }
     QString newFileName;
     do {
@@ -5362,6 +5437,25 @@ void MainWindow::newProjectUnitFile()
     //editor->setUseCppSyntax(mProject->options().useGPP);
     //editor->setModified(true);
     editor->activate();
+}
+
+void MainWindow::doFilesViewRemoveFile(const QModelIndex &index)
+{
+    if (!index.isValid())
+        return;
+    if (mFileSystemModel.isDir(index)) {
+        QDir dir(mFileSystemModel.fileInfo(index).absoluteFilePath());
+        if (!dir.isEmpty() &&
+                QMessageBox::question(ui->treeFiles
+                                      ,tr("Delete")
+                                      ,tr("Folder %1 is not empty.").arg(mFileSystemModel.fileName(index))
+                                      + tr("Do you really want to delete it?"),
+                            QMessageBox::Yes | QMessageBox::No, QMessageBox::No)!=QMessageBox::Yes)
+            return;
+        dir.removeRecursively();
+    } else {
+        QFile::remove(mFileSystemModel.filePath(index));
+    }
 }
 
 void MainWindow::invalidateProjectProxyModel()

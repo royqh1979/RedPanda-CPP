@@ -248,6 +248,8 @@ private:
     void prepareTabMessagesData();
     void newProjectUnitFile();
 
+    void doFilesViewRemoveFile(const QModelIndex& index);
+
 private slots:
     void invalidateProjectProxyModel();
     void onEditorRenamed(const QString& oldFilename, const QString& newFilename, bool firstSave);
@@ -273,6 +275,9 @@ private slots:
     void onEditorClosed();
 
     void onShowInsertCodeSnippetMenu();
+
+    void onFilesViewCreateFolder();
+    void onFilesViewRemoveFiles();
 
     void on_actionNew_triggered();
 
@@ -650,6 +655,8 @@ private:
     QAction * mProject_Rename_Unit;
     QAction * mProject_Rename_Folder;
     QAction * mProject_Remove_Folder;
+    QAction * mProject_SwitchFileSystemViewMode;
+    QAction * mProject_SwitchCustomViewMode;
 
     //actions for class browser
     QAction * mClassBrowser_Sort_By_Type;
@@ -665,6 +672,8 @@ private:
     QAction * mFilesView_OpenInTerminal;
     QAction * mFilesView_OpenInExplorer;
     QWidget * mFilesViewToolbar;
+    QAction * mFilesView_CreateFolder;
+    QAction * mFilesView_RemoveFile;
 
     //action for debug console
     QAction * mDebugConsole_ShowDetailLog;

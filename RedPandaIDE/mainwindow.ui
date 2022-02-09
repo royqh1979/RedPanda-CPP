@@ -85,7 +85,7 @@
             <enum>QTabWidget::West</enum>
            </property>
            <property name="currentIndex">
-            <number>2</number>
+            <number>3</number>
            </property>
            <property name="usesScrollButtons">
             <bool>true</bool>
@@ -258,8 +258,17 @@
                <property name="editTriggers">
                 <set>QAbstractItemView::EditKeyPressed|QAbstractItemView::SelectedClicked</set>
                </property>
+               <property name="dragEnabled">
+                <bool>true</bool>
+               </property>
                <property name="dragDropMode">
-                <enum>QAbstractItemView::DragOnly</enum>
+                <enum>QAbstractItemView::DragDrop</enum>
+               </property>
+               <property name="defaultDropAction">
+                <enum>Qt::CopyAction</enum>
+               </property>
+               <property name="selectionMode">
+                <enum>QAbstractItemView::ExtendedSelection</enum>
                </property>
               </widget>
              </item>

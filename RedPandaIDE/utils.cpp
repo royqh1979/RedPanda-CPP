@@ -1116,7 +1116,7 @@ void copyFolder(const QString &fromDir, const QString &toDir)
     while (it.hasNext()){
         it.next();
         const auto fileInfo = it.fileInfo();
-        if(!fileInfo.isHidden()) { //filters dot and dotdot
+        if(!fileInfo.isHidden() && !fileInfo.fileName().startsWith('.')) { //filters dot and dotdot
             const QString subPathStructure = fileInfo.absoluteFilePath().mid(absSourcePathLength);
             const QString constructedAbsolutePath = targetDir.absolutePath() + subPathStructure;
             if(fileInfo.isDir()){

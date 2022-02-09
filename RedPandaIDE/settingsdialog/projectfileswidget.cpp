@@ -56,7 +56,6 @@ void ProjectFilesWidget::doSave()
         unit->setBuildCmd(unitCopy->buildCmd());
         unit->setEncoding(unitCopy->encoding());
     }
-    pMainWindow->project()->sortUnitsByPriority();
     pMainWindow->project()->saveUnits();
     copyUnits();
     ui->treeProject->expandAll();
@@ -68,7 +67,7 @@ PProjectUnit ProjectFilesWidget::currentUnit()
     QModelIndex index = ui->treeProject->currentIndex();
     if (!index.isValid())
         return PProjectUnit();
-    FolderNode* node = static_cast<FolderNode*>(index.internalPointer());
+    ProjectModelNode* node = static_cast<ProjectModelNode*>(index.internalPointer());
     if (!node)
         return PProjectUnit();
     int i = node->unitIndex;
@@ -136,7 +135,7 @@ void ProjectFilesWidget::on_treeProject_doubleClicked(const QModelIndex &index)
         disableFileOptions();
         return ;
     }
-    FolderNode* node = static_cast<FolderNode*>(index.internalPointer());
+    ProjectModelNode* node = static_cast<ProjectModelNode*>(index.internalPointer());
     if (!node) {
         disableFileOptions();
         return;

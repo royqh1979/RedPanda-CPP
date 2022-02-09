@@ -19,6 +19,11 @@
 
 #include <QWidget>
 
+enum class ProjectModelType {
+    FileSystem,
+    Custom
+};
+
 enum class ProjectType {
     GUI=0,
     Console=1,
@@ -83,5 +88,6 @@ struct ProjectOptions{
     bool staticLink;
     bool addCharset;
     QString encoding;
+    ProjectModelType modelType;
 };
 #endif // PROJECTOPTIONS_H
