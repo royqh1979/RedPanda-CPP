@@ -95,25 +95,25 @@ void GitManager::revert(const QString &folder)
     runGit(folder,args);
 }
 
-void GitManager::reset(const QString &folder, const QString &commit, ResetStrategy strategy)
+void GitManager::reset(const QString &folder, const QString &commit, GitResetStrategy strategy)
 {
     //todo reset type
     QStringList args;
     args.append("reset");
     switch(strategy) {
-    case ResetStrategy::Soft:
+    case GitResetStrategy::Soft:
         args.append("--soft");
         break;
-    case ResetStrategy::Hard:
+    case GitResetStrategy::Hard:
         args.append("--hard");
         break;
-    case ResetStrategy::Mixed:
+    case GitResetStrategy::Mixed:
         args.append("--mixed");
         break;
-    case ResetStrategy::Merge:
+    case GitResetStrategy::Merge:
         args.append("--merge");
         break;
-    case ResetStrategy::Keep:
+    case GitResetStrategy::Keep:
         args.append("--keep");
         break;
     }

@@ -677,8 +677,8 @@ void MainWindow::applyUISettings()
 
     ui->actionIssues->setChecked(settings.showIssues());
     showHideMessagesTab(ui->tabIssues,settings.showIssues());
-    ui->actionCompile_Log->setChecked(settings.showCompileLog());
-    showHideMessagesTab(ui->tabCompilerOutput,settings.showCompileLog());
+    ui->actionTools_Output->setChecked(settings.showCompileLog());
+    showHideMessagesTab(ui->tabToolsOutput,settings.showCompileLog());
     ui->actionDebug_Window->setChecked(settings.showDebug());
     showHideMessagesTab(ui->tabDebug,settings.showDebug());
     ui->actionSearch->setChecked(settings.showSearch());
@@ -1280,6 +1280,8 @@ void MainWindow::updateActionIcons()
     mBreakpointViewRemoveAllAction->setIcon(pIconsManager->getIcon(IconsManager::ACTION_MISC_CLEAN));
     mBreakpointViewRemoveAction->setIcon(pIconsManager->getIcon(IconsManager::ACTION_MISC_CROSS));
 
+    //Tools Output
+
     //classbrowser
     mClassBrowser_Sort_By_Name->setIcon(pIconsManager->getIcon(IconsManager::ACTION_EDIT_SORT_BY_NAME));
     mClassBrowser_Sort_By_Type->setIcon(pIconsManager->getIcon(IconsManager::ACTION_EDIT_SORT_BY_TYPE));
@@ -1336,14 +1338,12 @@ void MainWindow::updateActionIcons()
     idx = ui->tabMessages->indexOf(ui->tabSearch);
     if (idx>=0)
         ui->tabMessages->setTabIcon(idx,pIconsManager->getIcon(IconsManager::ACTION_EDIT_SEARCH));
-    idx = ui->tabMessages->indexOf(ui->tabCompilerOutput);
+    idx = ui->tabMessages->indexOf(ui->tabToolsOutput);
     if (idx>=0)
         ui->tabMessages->setTabIcon(idx,pIconsManager->getIcon(IconsManager::ACTION_VIEW_COMPILELOG));
     idx = ui->tabMessages->indexOf(ui->tabTODO);
     if (idx>=0)
         ui->tabMessages->setTabIcon(idx,pIconsManager->getIcon(IconsManager::ACTION_VIEW_TODO));
-
-
     idx = ui->tabMessages->indexOf(ui->tabBookmark);
     if (idx>=0)
         ui->tabMessages->setTabIcon(idx,pIconsManager->getIcon(IconsManager::ACTION_VIEW_BOOKMARK));
@@ -1410,7 +1410,7 @@ bool MainWindow::compile(bool rebuild)
             mCompileSuccessionTask->filename = mProject->executable();
         }
         openCloseBottomPanel(true);
-        ui->tabMessages->setCurrentWidget(ui->tabCompilerOutput);
+        ui->tabMessages->setCurrentWidget(ui->tabToolsOutput);
         mCompilerManager->compileProject(mProject,rebuild);
         updateCompileActions();
         updateAppTitle();
@@ -1426,7 +1426,7 @@ bool MainWindow::compile(bool rebuild)
                 mCompileSuccessionTask->filename = getCompiledExecutableName(editor->filename());
             }
             openCloseBottomPanel(true);
-            ui->tabMessages->setCurrentWidget(ui->tabCompilerOutput);
+            ui->tabMessages->setCurrentWidget(ui->tabToolsOutput);
             mCompilerManager->compile(editor->filename(),editor->fileEncoding(),rebuild);
             updateCompileActions();
             updateAppTitle();
@@ -2742,6 +2742,26 @@ void MainWindow::buildContextMenus()
         hlayout->addStretch();
     }
 
+    //context menu signal for class browser
+    ui->txtToolsOutput->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui->txtToolsOutput,&QWidget::customContextMenuRequested,
+             this, &MainWindow::onToolsOutputContextMenu);
+    mToolsOutput_Clear = createActionFor(
+                tr("Clear"),
+                ui->txtToolsOutput);
+    connect(mToolsOutput_Clear, &QAction::triggered,
+            this, &MainWindow::onToolsOutputClear);
+    mToolsOutput_Copy = createActionFor(
+                tr("Copy"),
+                ui->txtToolsOutput);
+    mToolsOutput_Copy->setShortcut(QKeySequence("Ctrl+C"));
+    connect(mToolsOutput_Copy, &QAction::triggered,
+            this, &MainWindow::onToolsOutputCopy);
+    mToolsOutput_SelectAll = createActionFor(
+                tr("Select All"),
+                ui->txtToolsOutput);
+    connect(mToolsOutput_SelectAll, &QAction::triggered,
+            this, &MainWindow::onToolsOutputSelectAll);
 }
 
 void MainWindow::buildEncodingMenu()
@@ -3117,6 +3137,16 @@ void MainWindow::onLstProblemSetContextMenu(const QPoint &pos)
     menu.exec(ui->lstProblemSet->mapToGlobal(pos));
 }
 
+void MainWindow::onToolsOutputContextMenu(const QPoint &pos)
+{
+    QMenu menu(this);
+    menu.addAction(mToolsOutput_Copy);
+    menu.addAction(mToolsOutput_SelectAll);
+    menu.addSeparator();
+    menu.addAction(mToolsOutput_Clear);
+    menu.exec(ui->txtToolsOutput->mapToGlobal(pos));
+}
+
 void MainWindow::onProblemSetIndexChanged(const QModelIndex &current, const QModelIndex &/* previous */)
 {
     QModelIndex idx = current;
@@ -3267,6 +3297,21 @@ void MainWindow::onEditorClosed()
         return;
     updateEditorActions();
     updateAppTitle();
+}
+
+void MainWindow::onToolsOutputClear()
+{
+    ui->txtToolsOutput->clear();
+}
+
+void MainWindow::onToolsOutputCopy()
+{
+    ui->txtToolsOutput->copy();
+}
+
+void MainWindow::onToolsOutputSelectAll()
+{
+    ui->txtToolsOutput->selectAll();
 }
 
 void MainWindow::onShowInsertCodeSnippetMenu()
@@ -3962,12 +4007,12 @@ void MainWindow::onCompilerSetChanged(int index)
     pSettings->compilerSets().saveDefaultIndex();
 }
 
-void MainWindow::onCompileLog(const QString& msg)
+void MainWindow::logToolsOutput(const QString& msg)
 {
-    ui->txtCompilerOutput->appendPlainText(msg);
-    ui->txtCompilerOutput->moveCursor(QTextCursor::End);
-    ui->txtCompilerOutput->moveCursor(QTextCursor::StartOfLine);
-    ui->txtCompilerOutput->ensureCursorVisible();
+    ui->txtToolsOutput->appendPlainText(msg);
+    ui->txtToolsOutput->moveCursor(QTextCursor::End);
+    ui->txtToolsOutput->moveCursor(QTextCursor::StartOfLine);
+    ui->txtToolsOutput->ensureCursorVisible();
 }
 
 void MainWindow::onCompileIssue(PCompileIssue issue)
@@ -3993,9 +4038,14 @@ void MainWindow::onCompileIssue(PCompileIssue issue)
     }
 }
 
+void MainWindow::clearToolsOutput()
+{
+    ui->txtToolsOutput->clear();
+}
+
 void MainWindow::onCompileStarted()
 {
-    ui->txtCompilerOutput->clear();
+    //do nothing
 }
 
 void MainWindow::onCompileFinished(bool isCheckSyntax)
@@ -6124,17 +6174,17 @@ void MainWindow::on_actionIssues_triggered()
 }
 
 
-void MainWindow::on_actionCompile_Log_triggered()
+void MainWindow::on_actionTools_Output_triggered()
 {
-    bool state = ui->actionCompile_Log->isChecked();
-    ui->actionCompile_Log->setChecked(state);
-    showHideMessagesTab(ui->tabCompilerOutput,state);
+    bool state = ui->actionTools_Output->isChecked();
+    ui->actionTools_Output->setChecked(state);
+    showHideMessagesTab(ui->tabToolsOutput,state);
 }
 
 
 void MainWindow::on_actionDebug_Window_triggered()
 {
-    bool state = ui->actionCompile_Log->isChecked();
+    bool state = ui->actionDebug_Window->isChecked();
     ui->actionDebug_Window->setChecked(state);
     showHideMessagesTab(ui->tabDebug, state);
 }

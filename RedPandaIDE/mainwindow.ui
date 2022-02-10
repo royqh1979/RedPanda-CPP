@@ -518,7 +518,7 @@
         <enum>QTabWidget::South</enum>
        </property>
        <property name="currentIndex">
-        <number>6</number>
+        <number>1</number>
        </property>
        <property name="iconSize">
         <size>
@@ -552,7 +552,6 @@
           <widget class="IssuesTable" name="tableIssues">
            <property name="font">
             <font>
-             <weight>50</weight>
              <bold>false</bold>
             </font>
            </property>
@@ -581,14 +580,14 @@
          </item>
         </layout>
        </widget>
-       <widget class="QWidget" name="tabCompilerOutput">
+       <widget class="QWidget" name="tabToolsOutput">
         <attribute name="icon">
          <iconset>
           <normalon>:/icons/images/newlook24/015-compres.png</normalon>
          </iconset>
         </attribute>
         <attribute name="title">
-         <string>Compile Log</string>
+         <string>Tools Output</string>
         </attribute>
         <layout class="QHBoxLayout" name="horizontalLayout_2">
          <property name="leftMargin">
@@ -604,7 +603,7 @@
           <number>5</number>
          </property>
          <item>
-          <widget class="QPlainTextEdit" name="txtCompilerOutput">
+          <widget class="QPlainTextEdit" name="txtToolsOutput">
            <property name="undoRedoEnabled">
             <bool>false</bool>
            </property>
@@ -1398,7 +1397,7 @@
      <x>0</x>
      <y>0</y>
      <width>1114</width>
-     <height>26</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -1561,7 +1560,7 @@
      <addaction name="actionProblem_Set"/>
      <addaction name="separator"/>
      <addaction name="actionIssues"/>
-     <addaction name="actionCompile_Log"/>
+     <addaction name="actionTools_Output"/>
      <addaction name="actionDebug_Window"/>
      <addaction name="actionSearch"/>
      <addaction name="actionTODO"/>
@@ -1572,6 +1571,16 @@
     <addaction name="menuTool_Windows"/>
     <addaction name="actionStatus_Bar"/>
    </widget>
+   <widget class="QMenu" name="menuGit">
+    <property name="title">
+     <string>Git</string>
+    </property>
+    <addaction name="actionGit_Create_Repository"/>
+    <addaction name="separator"/>
+    <addaction name="actionGit_Commit"/>
+    <addaction name="actionGit_Revert"/>
+    <addaction name="actionGit_Reset"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
    <addaction name="menuView"/>
@@ -1580,6 +1589,7 @@
    <addaction name="menuRefactor"/>
    <addaction name="menuProject"/>
    <addaction name="menuExecute"/>
+   <addaction name="menuGit"/>
    <addaction name="menuTools"/>
    <addaction name="menuWindow"/>
    <addaction name="menuHelp"/>
@@ -2590,12 +2600,12 @@
     <string>Issues</string>
    </property>
   </action>
-  <action name="actionCompile_Log">
+  <action name="actionTools_Output">
    <property name="checkable">
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Compile Log</string>
+    <string>Tools Output</string>
    </property>
   </action>
   <action name="actionDebug_Window">
@@ -2717,6 +2727,26 @@
    </property>
    <property name="toolTip">
     <string>New Header...</string>
+   </property>
+  </action>
+  <action name="actionGit_Create_Repository">
+   <property name="text">
+    <string>Create Repository</string>
+   </property>
+  </action>
+  <action name="actionGit_Commit">
+   <property name="text">
+    <string>Commit</string>
+   </property>
+  </action>
+  <action name="actionGit_Revert">
+   <property name="text">
+    <string>Revert</string>
+   </property>
+  </action>
+  <action name="actionGit_Reset">
+   <property name="text">
+    <string>Reset</string>
    </property>
   </action>
  </widget>

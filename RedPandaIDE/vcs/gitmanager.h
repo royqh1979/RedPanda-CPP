@@ -3,25 +3,17 @@
 
 #include <QObject>
 #include "utils.h"
+#include "gitrepository.h"
 
 class GitError: public BaseError {
 public:
     explicit GitError(const QString& reason);
 };
 
-
-
 class GitManager : public QObject
 {
     Q_OBJECT
 public:
-    enum class ResetStrategy {
-        Soft,
-        Hard,
-        Merge,
-        Mixed,
-        Keep
-    };
 
     explicit GitManager(QObject *parent = nullptr);
 
@@ -38,7 +30,7 @@ public:
     void clone(const QString& folder, const QString& url);
     void commit(const QString& folder, const QString& message);
     void revert(const QString& folder);
-    void reset(const QString& folder, const QString& commit, ResetStrategy strategy);
+    void reset(const QString& folder, const QString& commit, GitResetStrategy strategy);
 
 signals:
     void gitCmdRunning(const QString& gitCmd);

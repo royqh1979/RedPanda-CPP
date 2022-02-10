@@ -91,6 +91,7 @@ SOURCES += \
     todoparser.cpp \
     toolsmanager.cpp \
     vcs/gitmanager.cpp \
+    vcs/gitrepository.cpp \
     widgets/aboutdialog.cpp \
     widgets/bookmarkmodel.cpp \
     widgets/classbrowser.cpp \
@@ -219,6 +220,7 @@ HEADERS += \
     todoparser.h \
     toolsmanager.h \
     vcs/gitmanager.h \
+    vcs/gitrepository.h \
     widgets/aboutdialog.h \
     widgets/bookmarkmodel.h \
     widgets/classbrowser.h \
