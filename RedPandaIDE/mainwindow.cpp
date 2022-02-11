@@ -293,6 +293,8 @@ MainWindow::MainWindow(QWidget *parent)
     }
     connect(ui->cbFilesPath->lineEdit(),&QLineEdit::returnPressed,
             this,&MainWindow::onFilesViewPathChanged);
+    connect(ui->cbFilesPath, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &MainWindow::onFilesViewPathChanged);
 
     //class browser
     ui->classBrowser->setUniformRowHeights(true);
@@ -3661,11 +3663,13 @@ void MainWindow::onFilesViewPathChanged()
 {
     QString filesPath = ui->cbFilesPath->currentText();
     QFileInfo fileInfo(filesPath);
+    ui->cbFilesPath->blockSignals(true);
     if (fileInfo.exists() && fileInfo.isDir()) {
         setFilesViewRoot(filesPath);
     } else {
         ui->cbFilesPath->setCurrentText(pSettings->environment().currentFolder());
     }
+    ui->cbFilesPath->blockSignals(false);
 }
 
 const std::shared_ptr<HeaderCompletionPopup> &MainWindow::headerCompletionPopup() const
