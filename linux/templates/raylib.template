@@ -1,0 +1,28 @@
+[Template]
+ver=2
+Name=raylib
+Name[zh_CN]=raylib
+Icon=raylib.ico
+Description=A simple program using raylib ( https://raylib.com )
+Description[zh_CN]=简单的raylib绘图程序 ( https://raylib.com )
+Category=Multimedia
+Category[zh_CN]=多媒体
+
+[Unit0]
+CName=main.c
+C=raylib_c.txt
+
+[Unit1]
+Source=raylib_boom.wav
+Target=boom.wav
+
+[Unit2]
+Source=raylib_explosion.png
+Target=explosion.png
+
+[Project]
+UnitCount=3
+Type=1
+IsCpp=0
+linker=-lraylib -lopengl32 -lgdi32 -lwinmm_@@__@@_
+

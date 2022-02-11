@@ -1,11 +1,17 @@
+  - change: rename "compile log" panel to "tools output"
+  - fix: debug panel can't be correctly show/hide
+  - enhancement: redesign tools output's context menu, add "clear" menu item
+
+Red Panda C++ Version 0.14.3
+  - fix: wrong code completion font size, when screen dpi changed
+  - enhancement: replace Files View Panel's path lineedit control with combo box
+
 Red Panda C++ Version 0.14.2
   - enhancement: file system view mode for project
   - enhancement: remove / rename / create new folder in the files view
   - fix: crash when there are catch blocks in the upper most scope
   - fix: can't read project templates when path has non-ascii chars
-  - change: rename "compile log" panel to "tools output"
-  - fix: debug panel can't be correctly show/hide
-  - enhancement: redesign tools output's context menu, add "clear" menu item
+  - fix: huge build size for c++ files
 
 Red Panda C++ Version 0.14.1
   - enhancement: custom theme

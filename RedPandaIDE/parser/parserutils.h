@@ -169,6 +169,7 @@ struct Statement {
     // fields for code completion
     int usageCount; //Usage Count
     int matchPosTotal; // total of matched positions
+    int matchPosSpan; // distance between the first match pos and the last match pos;
     int firstMatchLength; // length of first match;
     int caseMatched; // if match with case
     QList<PStatementMathPosition> matchPositions;

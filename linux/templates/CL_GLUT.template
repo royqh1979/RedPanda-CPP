@@ -23,7 +23,7 @@ C=CL_GLUT_glmatrix.c.txt
 UnitCount=3
 Type=0
 IsCpp=0
-linker=-lm -lfreeglut.dll -lopengl32 -lwinmm -lgdi32_@@__@@_
+linker=-lm -lfreeglut -lopengl32 -lwinmm -lgdi32_@@__@@_
 
 
 

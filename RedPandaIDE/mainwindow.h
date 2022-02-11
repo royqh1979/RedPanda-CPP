@@ -256,6 +256,7 @@ private slots:
     void onEditorRenamed(const QString& oldFilename, const QString& newFilename, bool firstSave);
     void onAutoSaveTimeout();
     void onFileChanged(const QString& path);
+    void onFilesViewPathChanged();
 
     void onWatchViewContextMenu(const QPoint& pos);
     void onBookmarkContextMenu(const QPoint& pos);
@@ -677,7 +678,6 @@ private:
     QAction * mFilesView_OpenWithExternal;
     QAction * mFilesView_OpenInTerminal;
     QAction * mFilesView_OpenInExplorer;
-    QWidget * mFilesViewToolbar;
     QAction * mFilesView_CreateFolder;
     QAction * mFilesView_RemoveFile;
 
