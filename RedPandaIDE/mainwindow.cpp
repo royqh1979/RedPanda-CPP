@@ -5889,7 +5889,9 @@ void MainWindow::on_actionLocate_in_Files_View_triggered()
         QString fileDir = extractFileDir(editor->filename());
         if (!fileDir.isEmpty()) {
             setFilesViewRoot(fileDir);
-            ui->treeFiles->setCurrentIndex(mFileSystemModel.index(editor->filename()));
+            QModelIndex index = mFileSystemModel.index(editor->filename());
+            ui->treeFiles->setCurrentIndex(index);
+            ui->treeFiles->scrollTo(index, QAbstractItemView::PositionAtCenter);
             ui->tabInfos->setCurrentWidget(ui->tabFiles);
             openCloseLeftPanel(true);
         }
