@@ -2,6 +2,7 @@ Red Panda C++ Version 0.14.2
   - enhancement: file system view mode for project
   - enhancement: remove / rename / create new folder in the files view
   - fix: crash when there are catch blocks in the upper most scope
+  - fix: can't read project templates when path has non-ascii chars
   - change: rename "compile log" panel to "tools output"
   - fix: debug panel can't be correctly show/hide
   - enhancement: redesign tools output's context menu, add "clear" menu item
