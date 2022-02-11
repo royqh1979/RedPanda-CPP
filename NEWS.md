@@ -3,6 +3,7 @@ Red Panda C++ Version 0.14.2
   - enhancement: remove / rename / create new folder in the files view
   - fix: crash when there are catch blocks in the upper most scope
   - fix: can't read project templates when path has non-ascii chars
+  - fix: huge build size for c++ files
 
 Red Panda C++ Version 0.14.1
   - enhancement: custom theme

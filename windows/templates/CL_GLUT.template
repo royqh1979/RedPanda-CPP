@@ -8,14 +8,22 @@ Category=3D
 Category[zh_CN]=3D
 
 [Unit0]
-CppName=main.cpp
-C=CL_GLUT_cpp.txt
+CName=main.c
+C=CL_GLUT_shapes.c.txt
+
+[Unit1]
+CName=glmatrix.h
+C=CL_GLUT_glmatrix.h.txt
+
+[Unit2]
+CName=glmatrix.c
+C=CL_GLUT_glmatrix.c.txt
 
 [Project]
-UnitCount=1
+UnitCount=3
 Type=0
-IsCpp=1
-linker=-lm -lfreeglut_static -lopengl32 -lwinmm -lgdi32_@@__@@_
+IsCpp=0
+linker=-lm -lfreeglut.dll -lopengl32 -lwinmm -lgdi32_@@__@@_
 
 
 

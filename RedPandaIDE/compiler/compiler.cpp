@@ -569,6 +569,9 @@ void Compiler::runCommand(const QString &cmd, const QString  &arguments, const Q
         env.insert("PATH",path);
     }
     env.insert("LANG","en");
+    env.insert("LDFLAGS","-Wl,--stack,12582912");
+    env.insert("CFLAGS","");
+    env.insert("CXXFLAGS","");
     process.setProcessEnvironment(env);
     process.setArguments(splitProcessCommand(arguments));
     process.setWorkingDirectory(workingDir);
