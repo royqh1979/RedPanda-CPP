@@ -65,6 +65,8 @@ public:
         PARSER_CODE_SNIPPET,
         PARSER_LOCAL_VAR,
 
+        FILESYSTEM_GIT,
+
         ACTION_MISC_BACK,
         ACTION_MISC_FORWARD,
         ACTION_MISC_ADD,
@@ -159,6 +161,7 @@ public:
     void updateEditorGuttorIcons(const QString& iconSet, int size);
     void updateParserIcons(const QString& iconSet, int size);
     void updateActionIcons(const QString& iconSet, int size);
+    void updateFileSystemIcons(const QString& iconSet, int size);
 
     PPixmap getPixmap(IconName iconName) const;
 

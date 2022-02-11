@@ -175,6 +175,13 @@ void IconsManager::updateActionIcons(const QString& iconSet, int size)
 
 }
 
+void IconsManager::updateFileSystemIcons(const QString &iconSet, int size)
+{
+    QString iconFolder = mIconSetTemplate.arg( iconSetsFolder(),iconSet,"filesystem");
+    updateMakeDisabledIconDarker(iconSet);
+    mIconPixmaps.insert(FILESYSTEM_GIT, createSVGIcon(iconFolder+"git.svg",size,size));
+}
+
 IconsManager::PPixmap IconsManager::getPixmap(IconName iconName) const
 {
     return mIconPixmaps.value(iconName, mDefaultIconPixmap);

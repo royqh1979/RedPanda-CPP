@@ -655,6 +655,13 @@ void MainWindow::applySettings()
     updateEditorSettings();
     updateDebuggerSettings();
     updateActionIcons();
+
+    //icon sets for files view
+    pIconsManager->updateFileSystemIcons(pSettings->environment().iconSet(),pointToPixel(pSettings->environment().interfaceFontSize()));
+//    for (int i=0;i<ui->cbFilesPath->count();i++) {
+//        ui->cbFilesPath->setItemIcon(i,pIconsManager->getIcon(IconsManager::FILESYSTEM_GIT));
+//    }
+
 }
 
 void MainWindow::applyUISettings()
