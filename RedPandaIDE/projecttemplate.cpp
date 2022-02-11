@@ -84,7 +84,7 @@ void ProjectTemplate::readTemplateFile(const QString &fileName)
     if (QFile(fileName).exists()) {
         mFileName = fileName;
         mIni = std::make_shared<SimpleIni>();
-        if (mIni->LoadFile(toByteArray(mFileName)) != SI_OK) {
+        if (mIni->LoadFile(mFileName.toLocal8Bit()) != SI_OK) {
             QMessageBox::critical(pMainWindow,
                                   tr("Read failed."),
                                   tr("Can't read template file '%1'.").arg(fileName),
