@@ -217,6 +217,8 @@ static bool nameComparator(PStatement statement1,PStatement statement2) {
 }
 
 static bool defaultComparator(PStatement statement1,PStatement statement2) {
+    if (statement1->matchPosSpan!=statement2->matchPosSpan)
+        return statement1->matchPosSpan < statement2->matchPosSpan;
     if (statement1->firstMatchLength != statement2->firstMatchLength)
         return statement1->firstMatchLength > statement2->firstMatchLength;
     if (statement1->matchPosTotal != statement2->matchPosTotal)
@@ -243,6 +245,8 @@ static bool defaultComparator(PStatement statement1,PStatement statement2) {
 }
 
 static bool sortByScopeComparator(PStatement statement1,PStatement statement2){
+    if (statement1->matchPosSpan!=statement2->matchPosSpan)
+        return statement1->matchPosSpan < statement2->matchPosSpan;
     if (statement1->firstMatchLength != statement2->firstMatchLength)
         return statement1->firstMatchLength > statement2->firstMatchLength;
     if (statement1->matchPosTotal != statement2->matchPosTotal)
@@ -281,6 +285,8 @@ static bool sortByScopeComparator(PStatement statement1,PStatement statement2){
 }
 
 static bool sortWithUsageComparator(PStatement statement1,PStatement statement2) {
+    if (statement1->matchPosSpan!=statement2->matchPosSpan)
+        return statement1->matchPosSpan < statement2->matchPosSpan;
     if (statement1->firstMatchLength != statement2->firstMatchLength)
         return statement1->firstMatchLength > statement2->firstMatchLength;
     if (statement1->matchPosTotal != statement2->matchPosTotal)
@@ -311,6 +317,8 @@ static bool sortWithUsageComparator(PStatement statement1,PStatement statement2)
 }
 
 static bool sortByScopeWithUsageComparator(PStatement statement1,PStatement statement2){
+    if (statement1->matchPosSpan!=statement2->matchPosSpan)
+        return statement1->matchPosSpan < statement2->matchPosSpan;
     if (statement1->firstMatchLength != statement2->firstMatchLength)
         return statement1->firstMatchLength > statement2->firstMatchLength;
     if (statement1->matchPosTotal != statement2->matchPosTotal)
@@ -410,17 +418,19 @@ void CodeCompletionPopup::filterList(const QString &member)
         if (mIgnoreCase && matched==member.length()) {
             statement->caseMatched = caseMatched;
             statement->matchPosTotal = totalPos;
-            if (member.length()>0)
+            if (member.length()>0) {
                 statement->firstMatchLength = statement->matchPositions.front()->end - statement->matchPositions.front()->start;
-            else
+                statement->matchPosSpan = statement->matchPositions.last()->end - statement->matchPositions.front()->start;
+            } else
                 statement->firstMatchLength = 0;
             mCompletionStatementList.append(statement);
         } else if (caseMatched == member.length()) {
             statement->caseMatched = caseMatched;
             statement->matchPosTotal = totalPos;
-            if (member.length()>0)
+            if (member.length()>0) {
                 statement->firstMatchLength = statement->matchPositions.front()->end - statement->matchPositions.front()->start;
-            else
+                statement->matchPosSpan = statement->matchPositions.last()->end - statement->matchPositions.front()->start;
+            } else
                 statement->firstMatchLength = 0;
             mCompletionStatementList.append(statement);
         } else {
@@ -428,6 +438,7 @@ void CodeCompletionPopup::filterList(const QString &member)
             statement->caseMatched = 0;
             statement->matchPosTotal = 0;
             statement->firstMatchLength = 0;
+            statement->matchPosSpan = 0;
         }
     }
     if (mRecordUsage) {
@@ -943,7 +954,8 @@ bool CodeCompletionPopup::event(QEvent *event)
 {
     bool result = QWidget::event(event);
     if (event->type() == QEvent::FontChange) {
-          mListView->setFont(font());
+        mListView->setFont(font());
+        mDelegate->setFont(font());
     }
     return result;
 }
@@ -1009,6 +1021,7 @@ void CodeCompletionListItemDelegate::paint(QPainter *painter, const QStyleOption
     PStatement statement;
     if (mModel && (statement = mModel->statement(index)) ) {
         painter->save();
+        painter->setFont(font());
         QColor normalColor = mNormalColor;
         if (option.state & QStyle::State_Selected) {
             painter->fillRect(option.rect, option.palette.highlight());
@@ -1076,6 +1089,16 @@ const QColor &CodeCompletionListItemDelegate::matchedColor() const
 void CodeCompletionListItemDelegate::setMatchedColor(const QColor &newMatchedColor)
 {
     mMatchedColor = newMatchedColor;
+}
+
+const QFont &CodeCompletionListItemDelegate::font() const
+{
+    return mFont;
+}
+
+void CodeCompletionListItemDelegate::setFont(const QFont &newFont)
+{
+    mFont = newFont;
 }
 
 CodeCompletionListItemDelegate::CodeCompletionListItemDelegate(CodeCompletionListModel *model, QWidget *parent) : QStyledItemDelegate(parent),

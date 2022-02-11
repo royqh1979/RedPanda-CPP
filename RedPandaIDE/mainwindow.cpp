@@ -58,6 +58,7 @@
 #include <QTemporaryFile>
 #include <QTextBlock>
 #include <QTranslator>
+#include <QFileIconProvider>
 
 #include "settingsdialog/settingsdialog.h"
 #include "compiler/compilermanager.h"
@@ -290,6 +291,8 @@ MainWindow::MainWindow(QWidget *parent)
     for (int i=1;i<mFileSystemModel.columnCount();i++) {
         ui->treeFiles->hideColumn(i);
     }
+    connect(ui->cbFilesPath->lineEdit(),&QLineEdit::returnPressed,
+            this,&MainWindow::onFilesViewPathChanged);
 
     //class browser
     ui->classBrowser->setUniformRowHeights(true);
@@ -1184,7 +1187,7 @@ void MainWindow::updateActionIcons()
     for (QToolButton* btn: mClassBrowserToolbar->findChildren<QToolButton *>()) {
         btn->setIconSize(iconSize);
     }
-    for (QToolButton* btn: mFilesViewToolbar->findChildren<QToolButton *>()) {
+    for (QToolButton* btn: ui->panelFiles->findChildren<QToolButton *>()) {
         btn->setIconSize(iconSize);
     }
 
@@ -2721,13 +2724,8 @@ void MainWindow::buildContextMenus()
     });
 
     //toolbar for files view
-    mFilesViewToolbar = new QWidget();
     {
-        QVBoxLayout* layout = dynamic_cast<QVBoxLayout*>( ui->tabFiles->layout());
-        layout->insertWidget(0,mFilesViewToolbar);
-        QHBoxLayout* hlayout =  new QHBoxLayout();
-        hlayout->setContentsMargins(2,2,2,2);
-        mFilesViewToolbar->setLayout(hlayout);
+        QHBoxLayout* hlayout =  dynamic_cast<QHBoxLayout*>( ui->panelFiles->layout());
         QToolButton * toolButton;
         int size = pointToPixel(pSettings->environment().interfaceFontSize());
         QSize iconSize(size,size);
@@ -2739,7 +2737,6 @@ void MainWindow::buildContextMenus()
         toolButton->setIconSize(iconSize);
         toolButton->setDefaultAction(ui->actionLocate_in_Files_View);
         hlayout->addWidget(toolButton);
-        hlayout->addStretch();
     }
 
 }
@@ -3657,6 +3654,17 @@ void MainWindow::onFileChanged(const QString &path)
             }
             mFileSystemWatcher.removePath(e->filename());
         }
+    }
+}
+
+void MainWindow::onFilesViewPathChanged()
+{
+    QString filesPath = ui->cbFilesPath->currentText();
+    QFileInfo fileInfo(filesPath);
+    if (fileInfo.exists() && fileInfo.isDir()) {
+        setFilesViewRoot(filesPath);
+    } else {
+        ui->cbFilesPath->setCurrentText(pSettings->environment().currentFolder());
     }
 }
 
@@ -5596,8 +5604,15 @@ void MainWindow::setFilesViewRoot(const QString &path)
     mFileSystemModel.setRootPath(path);
     ui->treeFiles->setRootIndex(mFileSystemModel.index(path));
     pSettings->environment().setCurrentFolder(path);
-    ui->txtFilesPath->setText(path);
-    ui->txtFilesPath->setCursorPosition(1);
+    int pos = ui->cbFilesPath->findText(path);
+    if (pos<0) {
+        ui->cbFilesPath->addItem(mFileSystemModel.iconProvider()->icon(QFileIconProvider::Folder),path);
+        pos =  ui->cbFilesPath->findText(path);
+    } else if (ui->cbFilesPath->itemIcon(pos).isNull()) {
+        ui->cbFilesPath->setItemIcon(pos,mFileSystemModel.iconProvider()->icon(QFileIconProvider::Folder));
+    }
+    ui->cbFilesPath->setCurrentIndex(pos);
+    ui->cbFilesPath->lineEdit()->setCursorPosition(1);
 }
 
 void MainWindow::clearIssues()

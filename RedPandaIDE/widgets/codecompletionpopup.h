@@ -55,10 +55,14 @@ public:
     const QColor &matchedColor() const;
     void setMatchedColor(const QColor &newMatchedColor);
 
+    const QFont &font() const;
+    void setFont(const QFont &newFont);
+
 private:
     CodeCompletionListModel *mModel;
     QColor mNormalColor;
     QColor mMatchedColor;
+    QFont mFont;
 };
 
 class CodeCompletionPopup : public QWidget
