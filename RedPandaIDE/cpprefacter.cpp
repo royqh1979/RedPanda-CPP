@@ -178,7 +178,7 @@ void CppRefacter::doFindOccurenceInProject(PStatement statement, std::shared_ptr
                 SearchFileScope::wholeProject
                 );
     foreach (const PProjectUnit& unit, project->units()) {
-        if (isCfile(unit->fileName()) || isHfile(unit->fileName())) {
+        if (isCFile(unit->fileName()) || isHFile(unit->fileName())) {
             PSearchResultTreeItem item = findOccurenceInFile(
                         unit->fileName(),
                         statement,

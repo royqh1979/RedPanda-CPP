@@ -1,6 +1,7 @@
 Red Panda C++ Version 0.14.3
   - fix: wrong code completion font size, when screen dpi changed
   - enhancement: replace Files View Panel's path lineedit control with combo box
+  - enhancement: custome icons for project view
 
 Red Panda C++ Version 0.14.2
   - enhancement: file system view mode for project

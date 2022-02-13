@@ -180,6 +180,14 @@ void IconsManager::updateFileSystemIcons(const QString &iconSet, int size)
     QString iconFolder = mIconSetTemplate.arg( iconSetsFolder(),iconSet,"filesystem");
     updateMakeDisabledIconDarker(iconSet);
     mIconPixmaps.insert(FILESYSTEM_GIT, createSVGIcon(iconFolder+"git.svg",size,size));
+    mIconPixmaps.insert(FILESYSTEM_FOLDER, createSVGIcon(iconFolder+"folder.svg",size,size));
+    mIconPixmaps.insert(FILESYSTEM_FILE, createSVGIcon(iconFolder+"file.svg",size,size));
+    mIconPixmaps.insert(FILESYSTEM_CFILE, createSVGIcon(iconFolder+"cfile.svg",size,size));
+    mIconPixmaps.insert(FILESYSTEM_HFILE, createSVGIcon(iconFolder+"hfile.svg",size,size));
+    mIconPixmaps.insert(FILESYSTEM_CPPFILE, createSVGIcon(iconFolder+"cppfile.svg",size,size));
+    mIconPixmaps.insert(FILESYSTEM_CPPFILE, createSVGIcon(iconFolder+"cppfile.svg",size,size));
+    mIconPixmaps.insert(FILESYSTEM_HEADERS_FOLDER, createSVGIcon(iconFolder+"headerfolder.svg",size,size));
+    mIconPixmaps.insert(FILESYSTEM_SOURCES_FOLDER, createSVGIcon(iconFolder+"sourcefolder.svg",size,size));
 }
 
 IconsManager::PPixmap IconsManager::getPixmap(IconName iconName) const
@@ -187,14 +195,17 @@ IconsManager::PPixmap IconsManager::getPixmap(IconName iconName) const
     return mIconPixmaps.value(iconName, mDefaultIconPixmap);
 }
 
-QIcon IconsManager::getIcon(IconName iconName) const
+QIcon IconsManager:: getIcon(IconName iconName) const
 {
+    PPixmap pixmap = getPixmap(iconName);
+    if (pixmap == mDefaultIconPixmap)
+        return QIcon();
     if (mMakeDisabledIconDarker) {
         QIcon icon(new CustomDisabledIconEngine());
-        icon.addPixmap(*getPixmap(iconName));
+        icon.addPixmap(*pixmap);
         return icon;
     } else
-        return QIcon(*getPixmap(iconName));
+        return QIcon(*pixmap);
 }
 
 void IconsManager::setIcon(QToolButton *btn, IconName iconName) const
@@ -212,6 +223,8 @@ void IconsManager::setIcon(QPushButton *btn, IconName iconName) const
 IconsManager::PPixmap IconsManager::createSVGIcon(const QString &filename, int width, int height)
 {
     QSvgRenderer renderer(filename);
+    if (!renderer.isValid())
+        return mDefaultIconPixmap;
     PPixmap icon = std::make_shared<QPixmap>(width,height);
     icon->fill(Qt::transparent);
     QPainter painter(icon.get());

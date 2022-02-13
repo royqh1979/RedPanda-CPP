@@ -264,8 +264,9 @@ QString getLocalHeaderFilename(const QString& relativeTo, const QString& fileNam
 
 QString getSystemHeaderFilename(const QString& fileName, const QStringList& includePaths);
 bool isSystemHeaderFile(const QString& fileName, const QSet<QString>& includePaths);
-bool isHfile(const QString& filename);
-bool isCfile(const QString& filename);
+bool isHFile(const QString& filename);
+bool isCFile(const QString& filename);
+bool isCppFile(const QString& filename);
 bool isCppKeyword(const QString& word);
 bool isScopeTypeKind(StatementKind kind);
 MemberOperatorType getOperatorType(const QString& phrase, int index);

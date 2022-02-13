@@ -10,7 +10,7 @@ isEmpty(APP_NAME) {
 }
 
 isEmpty(APP_VERSION) {
-    APP_VERSION=0.14.2
+    APP_VERSION=0.14.3
 }
 
 isEmpty(PREFIX) {
@@ -40,6 +40,7 @@ SOURCES += \
     compiler/ojproblemcasesrunner.cpp \
     compiler/projectcompiler.cpp \
     compiler/runner.cpp \
+    customfileiconprovider.cpp \
     gdbmiresultparser.cpp \
     platform.cpp \
     compiler/compiler.cpp \
@@ -173,6 +174,7 @@ HEADERS += \
     compiler/runner.h \
     compiler/stdincompiler.h \
     cpprefacter.h \
+    customfileiconprovider.h \
     gdbmiresultparser.h \
     parser/cppparser.h \
     parser/cpppreprocessor.h \

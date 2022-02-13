@@ -752,7 +752,7 @@ void CppParser::parseFile(const QString &fileName, bool inProject, bool onlyIfNo
 
         // parse header files in the first parse
         foreach (const QString& file,files) {
-            if (isHfile(file)) {
+            if (isHFile(file)) {
                 mFilesScannedCount++;
                 emit onProgress(file,mFilesToScanCount,mFilesScannedCount);
                 if (!mPreprocessor.scannedFiles().contains(file)) {
@@ -762,7 +762,7 @@ void CppParser::parseFile(const QString &fileName, bool inProject, bool onlyIfNo
         }
         //we only parse CFile in the second parse
         foreach (const QString& file,files) {
-            if (!isHfile(file)) {
+            if (!isHFile(file)) {
                 mFilesScannedCount++;
                 emit onProgress(file,mFilesToScanCount,mFilesScannedCount);
                 if (!mPreprocessor.scannedFiles().contains(file)) {
@@ -800,7 +800,7 @@ void CppParser::parseFileList(bool updateView)
         mFilesToScanCount = mFilesToScan.count();
         // parse header files in the first parse
         foreach (const QString& file, mFilesToScan) {
-            if (isHfile(file)) {
+            if (isHFile(file)) {
                 mFilesScannedCount++;
                 emit onProgress(mCurrentFile,mFilesToScanCount,mFilesScannedCount);
                 if (!mPreprocessor.scannedFiles().contains(file)) {
@@ -810,7 +810,7 @@ void CppParser::parseFileList(bool updateView)
         }
         //we only parse CFile in the second parse
         foreach (const QString& file,mFilesToScan) {
-            if (isCfile(file)) {
+            if (isCFile(file)) {
                 mFilesScannedCount++;
                 emit onProgress(mCurrentFile,mFilesToScanCount,mFilesScannedCount);
                 if (!mPreprocessor.scannedFiles().contains(file)) {
@@ -2496,7 +2496,7 @@ void CppParser::handlePreprocessor()
         if (delimPos>=0) {
             mCurrentFile = s.mid(0,delimPos);
             mIsSystemHeader = isSystemHeaderFile(mCurrentFile) || isProjectHeaderFile(mCurrentFile);
-            mIsProjectFile = mProjectFiles.contains(mCurrentFile);             mIsHeader = isHfile(mCurrentFile);
+            mIsProjectFile = mProjectFiles.contains(mCurrentFile);             mIsHeader = isHFile(mCurrentFile);
 
             // Mention progress to user if we enter a NEW file
             bool ok;
