@@ -101,15 +101,19 @@ private:
 
 using PProjectUnit = std::shared_ptr<ProjectUnit>;
 
+class GitManager;
 class ProjectModel : public QAbstractItemModel {
     Q_OBJECT
 public:
     explicit ProjectModel(Project* project, QObject* parent=nullptr);
+    ~ProjectModel();
     void beginUpdate();
     void endUpdate();
 private:
     Project* mProject;
+    GitManager *mVCSManager;
     int mUpdateCount;
+
 
     // QAbstractItemModel interface
 public:
@@ -142,7 +146,6 @@ public:
 protected:
     bool lessThan(const QModelIndex &source_left, const QModelIndex &source_right) const override;
 };
-
 
 class ProjectTemplate;
 class Project : public QObject

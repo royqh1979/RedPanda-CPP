@@ -19,9 +19,9 @@ void GitRepository::createRepository()
     mManager->createRepository(mFolder);
 }
 
-bool GitRepository::hasRepository()
+bool GitRepository::hasRepository(QString& currentBranch)
 {
-    return mManager->hasRepository(mFolder);
+    return mManager->hasRepository(mFolder, currentBranch);
 }
 
 void GitRepository::add(const QString &path)
@@ -81,4 +81,9 @@ void GitRepository::setManager(GitManager *newManager)
 {
     Q_ASSERT(newManager!=nullptr);
     mManager = newManager;
+}
+
+void GitRepository::setFolder(const QString &newFolder)
+{
+    mFolder = newFolder;
 }

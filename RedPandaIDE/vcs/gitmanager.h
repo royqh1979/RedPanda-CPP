@@ -2,6 +2,7 @@
 #define GITMANAGER_H
 
 #include <QObject>
+#include <QFileInfo>
 #include "utils.h"
 #include "gitrepository.h"
 
@@ -17,9 +18,12 @@ public:
 
     explicit GitManager(QObject *parent = nullptr);
 
-    bool gitPathValid() const;
     void createRepository(const QString& folder);
-    bool hasRepository(const QString& folder);
+    bool hasRepository(const QString& folder, QString& currentBranch);
+
+    bool isFileInRepository(const QFileInfo& fileInfo);
+    bool isFileInStaged(const QFileInfo& fileInfo);
+    bool isFileChanged(const QFileInfo& fileInfo);
 
     void add(const QString& folder, const QString& path);
     void remove(const QString& folder, const QString& path);
@@ -36,11 +40,8 @@ signals:
     void gitCmdRunning(const QString& gitCmd);
     void gitCmdFinished(const QString& message);
 private:
-    void validate();
     QString runGit(const QString& workingFolder, const QStringList& args);
 private:
-    QString mGitPath;
-    bool mGitPathValid;
 };
 
 #endif // GITMANAGER_H

@@ -28,6 +28,7 @@ void ToolsGitWidget::doLoad()
 void ToolsGitWidget::doSave()
 {
     pSettings->vcs().setGitPath(ui->txtGitPath->text());
+    pSettings->vcs().save();
 }
 
 void ToolsGitWidget::updateIcons(const QSize &size)

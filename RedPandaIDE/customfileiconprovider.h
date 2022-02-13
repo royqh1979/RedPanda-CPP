@@ -3,11 +3,14 @@
 
 #include <QFileIconProvider>
 
+class GitManager;
 class CustomFileIconProvider : public QFileIconProvider
 {
 public:
     CustomFileIconProvider();
-
+    ~CustomFileIconProvider();
+private:
+    GitManager* mVCSManager;
     // QFileIconProvider interface
 public:
     QIcon icon(IconType type) const override;

@@ -22,7 +22,7 @@ public:
     const QString &folder() const;
 
     void createRepository();
-    bool hasRepository();
+    bool hasRepository(QString& currentBranch);
 
     void add(const QString& path);
     void remove(const QString& path);
@@ -37,6 +37,8 @@ public:
 
     GitManager *manager() const;
     void setManager(GitManager *newManager);
+
+    void setFolder(const QString &newFolder);
 
 signals:
 private:

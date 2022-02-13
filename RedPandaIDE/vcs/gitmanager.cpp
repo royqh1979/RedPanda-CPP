@@ -1,34 +1,74 @@
 #include "gitmanager.h"
 #include "../utils.h"
+#include "../settings.h"
 
 #include <QFileInfo>
 
-GitManager::GitManager(QObject *parent) : QObject(parent),
-    mGitPathValid(false)
+GitManager::GitManager(QObject *parent) : QObject(parent)
 {
-}
-
-bool GitManager::gitPathValid() const
-{
-    return mGitPathValid;
 }
 
 void GitManager::createRepository(const QString &folder)
 {
-    if (hasRepository(folder))
+    QString currentBranch;
+    if (hasRepository(folder,currentBranch))
         throw GitError(tr("Folder \"%1\" already has a repository!"));
     QStringList args;
     args.append("init");
     runGit(folder,args);
 }
 
-bool GitManager::hasRepository(const QString &folder)
+bool GitManager::hasRepository(const QString &folder, QString& currentBranch)
 {
 
     QStringList args;
     args.append("status");
+    args.append("-b");
+    args.append("-u");
+    args.append("no");
+    args.append("--ignored=no");
     QString output = runGit(folder,args);
-    return !output.startsWith("fatal:");
+    bool result = output.startsWith("On branch");
+    if (result) {
+        int pos = QString("On branch").length();
+        while (pos<output.length() && output[pos].isSpace())
+            pos++;
+        int endPos = pos;
+        while (endPos<output.length() && !output[endPos].isSpace())
+            endPos++;
+        currentBranch = output.mid(pos,endPos-pos);
+    }
+    return result;
+}
+
+bool GitManager::isFileInRepository(const QFileInfo& fileInfo)
+{
+    QStringList args;
+    args.append("ls-files");
+    args.append(fileInfo.fileName());
+    QString output = runGit(fileInfo.absolutePath(),args);
+    return output.trimmed() == fileInfo.fileName();
+}
+
+bool GitManager::isFileInStaged(const QFileInfo &fileInfo)
+{
+    QStringList args;
+    args.append("diff");
+    args.append("--staged");
+    args.append("--name-only");
+    args.append(fileInfo.fileName());
+    QString output = runGit(fileInfo.absolutePath(),args);
+    return output.trimmed() == fileInfo.fileName();
+}
+
+bool GitManager::isFileChanged(const QFileInfo &fileInfo)
+{
+    QStringList args;
+    args.append("diff");
+    args.append("--name-only");
+    args.append(fileInfo.fileName());
+    QString output = runGit(fileInfo.absolutePath(),args);
+    return output.trimmed() == fileInfo.fileName();
 }
 
 void GitManager::add(const QString &folder, const QString &path)
@@ -121,30 +161,22 @@ void GitManager::reset(const QString &folder, const QString &commit, GitResetStr
     runGit(folder,args);
 }
 
-void GitManager::validate()
-{
-    QStringList args;
-    args.append("--version");
-    QString output = runGit("",args);
-    mGitPathValid = output.startsWith("git version");
-}
-
 QString GitManager::runGit(const QString& workingFolder, const QStringList &args)
 {
-    QFileInfo fileInfo(mGitPath);
+    QFileInfo fileInfo(pSettings->vcs().gitPath());
     if (!fileInfo.exists())
-        throw GitError("fatal: git doesn't exist");
+        return "fatal: git doesn't exist";
     emit gitCmdRunning(QString("Running in \"%1\": \n \"%2\" \"%3\"")
                        .arg(workingFolder,
-                            mGitPath,
+                            pSettings->vcs().gitPath(),
                             args.join("\" \"")));
     QString output = runAndGetOutput(
                 fileInfo.absoluteFilePath(),
                 workingFolder,
                 args);
     emit gitCmdFinished(output);
-    if (output.startsWith("fatal:"))
-        throw GitError(output);
+//    if (output.startsWith("fatal:"))
+//        throw GitError(output);
     return output;
 }
 

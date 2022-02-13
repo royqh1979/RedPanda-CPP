@@ -1,9 +1,15 @@
 #include "customfileiconprovider.h"
 #include "iconsmanager.h"
+#include "vcs/gitmanager.h"
 
 CustomFileIconProvider::CustomFileIconProvider()
 {
+    mVCSManager = new GitManager();
+}
 
+CustomFileIconProvider::~CustomFileIconProvider()
+{
+    delete mVCSManager;
 }
 
 QIcon CustomFileIconProvider::icon(IconType type) const
@@ -20,14 +26,56 @@ QIcon CustomFileIconProvider::icon(IconType type) const
 QIcon CustomFileIconProvider::icon(const QFileInfo &info) const
 {
     QIcon icon;
-    if (isHFile(info.fileName()))
-        icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_HFILE);
-    else if (isCppFile(info.fileName())) {
-        icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_CPPFILE);
+    if (info.isDir()) {
+        if (mVCSManager && mVCSManager->isFileInRepository(info)) {
+            if (mVCSManager->isFileInStaged(info))
+                icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_FOLDER_VCS_STAGED);
+            else if (mVCSManager->isFileChanged(info))
+                icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_FOLDER_VCS_CHANGED);
+            else
+                icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_FOLDER_VCS_NOCHANGE);
+        } else
+            icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_FOLDER);
+    } if (isHFile(info.fileName())) {
+        if (mVCSManager && mVCSManager->isFileInRepository(info)) {
+            if (mVCSManager->isFileInStaged(info))
+                icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_HFILE_VCS_STAGED);
+            else if (mVCSManager->isFileChanged(info))
+                icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_HFILE_VCS_CHANGED);
+            else
+                icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_HFILE_VCS_NOCHANGE);
+        } else
+            icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_HFILE);
+    } else if (isCppFile(info.fileName())) {
+        if (mVCSManager && mVCSManager->isFileInRepository(info)) {
+            if (mVCSManager->isFileInStaged(info))
+                icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_CPPFILE_VCS_STAGED);
+            else if (mVCSManager->isFileChanged(info))
+                icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_CPPFILE_VCS_CHANGED);
+            else
+                icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_CPPFILE_VCS_NOCHANGE);
+        } else
+            icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_CPPFILE);
     } else if (isCFile(info.fileName())) {
-        icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_CFILE);
+        if (mVCSManager && mVCSManager->isFileInRepository(info)) {
+            if (mVCSManager->isFileInStaged(info))
+                icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_CFILE_VCS_STAGED);
+            else if (mVCSManager->isFileChanged(info))
+                icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_CFILE_VCS_CHANGED);
+            else
+                icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_CFILE_VCS_NOCHANGE);
+        } else
+            icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_CFILE);
     } else if (info.suffix()=="dev") {
-        icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_PROJECTFILE);
+        if (mVCSManager && mVCSManager->isFileInRepository(info)) {
+            if (mVCSManager->isFileInStaged(info))
+                icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_PROJECTFILE_VCS_STAGED);
+            else if (mVCSManager->isFileChanged(info))
+                icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_PROJECTFILE_VCS_CHANGED);
+            else
+                icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_PROJECTFILE_VCS_NOCHANGE);
+        } else
+            icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_PROJECTFILE);
     }
     if (!icon.isNull())
         return icon;

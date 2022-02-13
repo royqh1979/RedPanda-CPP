@@ -36,6 +36,7 @@
 #include "customfileiconprovider.h"
 #include <QMimeData>
 #include "settings.h"
+#include "vcs/gitmanager.h"
 
 Project::Project(const QString &filename, const QString &name, QObject *parent) :
     QObject(parent),
@@ -1909,6 +1910,12 @@ ProjectModel::ProjectModel(Project *project, QObject *parent):
     mProject(project)
 {
     mUpdateCount = 0;
+    mVCSManager = new GitManager();
+}
+
+ProjectModel::~ProjectModel()
+{
+    delete mVCSManager;
 }
 
 void ProjectModel::beginUpdate()
@@ -1980,7 +1987,14 @@ QVariant ProjectModel::data(const QModelIndex &index, int role) const
     ProjectModelNode* p = static_cast<ProjectModelNode*>(index.internalPointer());
     if (!p)
         return QVariant();
-    if (role == Qt::DisplayRole || role==Qt::EditRole) {
+    if (role == Qt::DisplayRole) {
+        if (p == mProject->rootNode().get()) {
+            QString branch;
+            if (mVCSManager->hasRepository(mProject->folder(),branch))
+                return QString("%1 [%2]").arg(p->text,branch);
+        }
+        return p->text;
+    } else if (role==Qt::EditRole) {
         return p->text;
     } else if (role == Qt::DecorationRole) {
         CustomFileIconProvider provider;
@@ -1988,15 +2002,21 @@ QVariant ProjectModel::data(const QModelIndex &index, int role) const
         if (p->unitIndex>=0) {
             icon = provider.icon(mProject->units()[p->unitIndex]->fileName());
         } else {
-            switch(p->folderNodeType) {
-            case ProjectSpecialFolderNode::HEADERS:
-                icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_HEADERS_FOLDER);
-                break;
-            case ProjectSpecialFolderNode::SOURCES:
-                icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_SOURCES_FOLDER);
-                break;
-            default:
-                icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_FOLDER);
+            if (p == mProject->rootNode().get()) {
+                QString branch;
+                if (mVCSManager->hasRepository(mProject->folder(),branch))
+                    icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_GIT);
+            } else {
+                switch(p->folderNodeType) {
+                case ProjectSpecialFolderNode::HEADERS:
+                    icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_HEADERS_FOLDER);
+                    break;
+                case ProjectSpecialFolderNode::SOURCES:
+                    icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_SOURCES_FOLDER);
+                    break;
+                default:
+                    icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_FOLDER);
+                }
             }
             if (icon.isNull())
                 icon = provider.icon(QFileIconProvider::Folder);
