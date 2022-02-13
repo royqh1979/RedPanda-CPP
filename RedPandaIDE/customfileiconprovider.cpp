@@ -26,6 +26,8 @@ QIcon CustomFileIconProvider::icon(const QFileInfo &info) const
         icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_CPPFILE);
     } else if (isCFile(info.fileName())) {
         icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_CFILE);
+    } else if (info.suffix()=="dev") {
+        icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_PROJECTFILE);
     }
     if (!icon.isNull())
         return icon;

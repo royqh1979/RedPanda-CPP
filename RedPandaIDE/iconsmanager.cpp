@@ -185,7 +185,7 @@ void IconsManager::updateFileSystemIcons(const QString &iconSet, int size)
     mIconPixmaps.insert(FILESYSTEM_CFILE, createSVGIcon(iconFolder+"cfile.svg",size,size));
     mIconPixmaps.insert(FILESYSTEM_HFILE, createSVGIcon(iconFolder+"hfile.svg",size,size));
     mIconPixmaps.insert(FILESYSTEM_CPPFILE, createSVGIcon(iconFolder+"cppfile.svg",size,size));
-    mIconPixmaps.insert(FILESYSTEM_CPPFILE, createSVGIcon(iconFolder+"cppfile.svg",size,size));
+    mIconPixmaps.insert(FILESYSTEM_PROJECTFILE, createSVGIcon(iconFolder+"projectfile.svg",size,size));
     mIconPixmaps.insert(FILESYSTEM_HEADERS_FOLDER, createSVGIcon(iconFolder+"headerfolder.svg",size,size));
     mIconPixmaps.insert(FILESYSTEM_SOURCES_FOLDER, createSVGIcon(iconFolder+"sourcefolder.svg",size,size));
 }
