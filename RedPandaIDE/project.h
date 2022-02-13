@@ -27,6 +27,15 @@ class Project;
 class Editor;
 class CppParser;
 
+
+enum ProjectSpecialFolderNode {
+    HEADERS,
+    SOURCES,
+    OTHERS,
+    NonSpecial,
+    NotFolder
+};
+
 struct ProjectModelNode;
 using PProjectModelNode = std::shared_ptr<ProjectModelNode>;
 struct ProjectModelNode {
@@ -35,6 +44,7 @@ struct ProjectModelNode {
     int unitIndex;
     int priority;
     QList<PProjectModelNode>  children;
+    ProjectSpecialFolderNode folderNodeType;
     int level;
 };
 
@@ -133,12 +143,6 @@ protected:
     bool lessThan(const QModelIndex &source_left, const QModelIndex &source_right) const override;
 };
 
-enum ProjectSpecialFolderNode {
-    HEADERS,
-    SOURCES,
-    OTHERS,
-    NonSpecial
-};
 
 class ProjectTemplate;
 class Project : public QObject

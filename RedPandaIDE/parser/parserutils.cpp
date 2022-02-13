@@ -418,7 +418,7 @@ bool isCppKeyword(const QString &word)
     return CppKeywords.contains(word);
 }
 
-bool isHfile(const QString& filename)
+bool isHFile(const QString& filename)
 {
     if (filename.isEmpty())
         return false;
@@ -428,7 +428,7 @@ bool isHfile(const QString& filename)
 
 }
 
-bool isCfile(const QString& filename)
+bool isCFile(const QString& filename)
 {
     if (filename.isEmpty())
         return false;
@@ -613,4 +613,11 @@ StatementKind getKindOfStatement(const PStatement& statement)
         }
     }
     return statement->kind;
+}
+
+bool isCppFile(const QString &filename)
+{
+    if (isCFile(filename) && !filename.endsWith(".c"))
+        return true;
+    return false;
 }

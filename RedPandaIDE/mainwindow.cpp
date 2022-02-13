@@ -287,6 +287,7 @@ MainWindow::MainWindow(QWidget *parent)
     //files view
     ui->treeFiles->setModel(&mFileSystemModel);
     mFileSystemModel.setReadOnly(false);
+    mFileSystemModel.setIconProvider(&mFileIconProvider);
     setFilesViewRoot(pSettings->environment().currentFolder());
     for (int i=1;i<mFileSystemModel.columnCount();i++) {
         ui->treeFiles->hideColumn(i);

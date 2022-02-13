@@ -38,6 +38,7 @@
 #include "widgets/labelwithmenu.h"
 #include "widgets/bookmarkmodel.h"
 #include "widgets/ojproblemsetmodel.h"
+#include "customfileiconprovider.h"
 
 
 QT_BEGIN_NAMESPACE
@@ -615,6 +616,7 @@ private:
     PTodoParser mTodoParser;
     PToolsManager mToolsManager;
     QFileSystemModel mFileSystemModel;
+    CustomFileIconProvider mFileIconProvider;
     OJProblemSetModel mOJProblemSetModel;
     OJProblemModel mOJProblemModel;
     int mOJProblemSetNameCounter;

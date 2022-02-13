@@ -1244,7 +1244,7 @@ BufferCoord SynEdit::getPreviousLeftBrace(int x, int y)
 
 int SynEdit::charColumns(QChar ch) const
 {
-    if (ch == ' ' || ch == '\t')
+    if (ch.unicode()<=32)
         return 1;
     //return std::ceil((int)(fontMetrics().horizontalAdvance(ch) * dpiFactor()) / (double)mCharWidth);
     return std::ceil((int)(fontMetrics().horizontalAdvance(ch)) / (double)mCharWidth);

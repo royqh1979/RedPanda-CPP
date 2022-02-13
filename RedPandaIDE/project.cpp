@@ -33,7 +33,7 @@
 #include <QMessageBox>
 #include <QTextCodec>
 #include <QMessageBox>
-#include <QFileIconProvider>
+#include "customfileiconprovider.h"
 #include <QMimeData>
 #include "settings.h"
 
@@ -222,6 +222,9 @@ PProjectModelNode Project::makeNewFileNode(const QString &s, bool isFolder, PPro
     if (isFolder) {
         node->unitIndex = -1;
         node->priority = 0;
+        node->folderNodeType = ProjectSpecialFolderNode::NonSpecial;
+    } else {
+        node->folderNodeType = ProjectSpecialFolderNode::NotFolder;
     }
     return node;
 }
@@ -232,6 +235,7 @@ PProjectModelNode Project::makeProjectNode()
     node->text = mName;
     node->level = 0;
     node->unitIndex = -1;
+    node->folderNodeType = ProjectSpecialFolderNode::NonSpecial;
     return node;
 }
 
@@ -1276,20 +1280,23 @@ void Project::createFolderNodes()
 void Project::createFileSystemFolderNodes()
 {
     PProjectModelNode node = makeNewFileNode(tr("Headers"),true,mRootNode);
-    createFileSystemFolderNode(ProjectSpecialFolderNode::HEADERS,folder(),node);
+    node->folderNodeType = ProjectSpecialFolderNode::HEADERS;
     node->priority = 1000;
+    createFileSystemFolderNode(ProjectSpecialFolderNode::HEADERS,folder(),node);
     mFolderNodes.append(node);
     mSpecialNodes.insert(ProjectSpecialFolderNode::HEADERS,node);
 
     node = makeNewFileNode(tr("Sources"),true,mRootNode);
-    createFileSystemFolderNode(ProjectSpecialFolderNode::SOURCES,folder(),node);
+    node->folderNodeType = ProjectSpecialFolderNode::SOURCES;
     node->priority = 900;
+    createFileSystemFolderNode(ProjectSpecialFolderNode::SOURCES,folder(),node);
     mFolderNodes.append(node);
     mSpecialNodes.insert(ProjectSpecialFolderNode::SOURCES,node);
 
     node = makeNewFileNode(tr("Others"),true,mRootNode);
-    createFileSystemFolderNode(ProjectSpecialFolderNode::OTHERS,folder(),node);
+    node->folderNodeType = ProjectSpecialFolderNode::OTHERS;
     node->priority = 800;
+    createFileSystemFolderNode(ProjectSpecialFolderNode::OTHERS,folder(),node);
     mFolderNodes.append(node);
     mSpecialNodes.insert(ProjectSpecialFolderNode::OTHERS,node);
 }
@@ -1387,9 +1394,9 @@ PProjectModelNode Project::getParentFolderNode(const QString &filename)
 {
     QFileInfo fileInfo(filename);
     ProjectSpecialFolderNode folderNodeType;
-    if (isHfile(fileInfo.fileName())) {
+    if (isHFile(fileInfo.fileName())) {
         folderNodeType = ProjectSpecialFolderNode::HEADERS;
-    } else if (isCfile(fileInfo.fileName())) {
+    } else if (isCFile(fileInfo.fileName())) {
         folderNodeType = ProjectSpecialFolderNode::SOURCES;
     } else {
         folderNodeType = ProjectSpecialFolderNode::OTHERS;
@@ -1976,15 +1983,25 @@ QVariant ProjectModel::data(const QModelIndex &index, int role) const
     if (role == Qt::DisplayRole || role==Qt::EditRole) {
         return p->text;
     } else if (role == Qt::DecorationRole) {
-        QFileIconProvider provider;
+        CustomFileIconProvider provider;
+        QIcon icon;
         if (p->unitIndex>=0) {
-            return provider.icon(mProject->units()[p->unitIndex]->fileName());
+            icon = provider.icon(mProject->units()[p->unitIndex]->fileName());
         } else {
-            QIcon icon = provider.icon(QFileIconProvider::Folder);
+            switch(p->folderNodeType) {
+            case ProjectSpecialFolderNode::HEADERS:
+                icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_HEADERS_FOLDER);
+                break;
+            case ProjectSpecialFolderNode::SOURCES:
+                icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_SOURCES_FOLDER);
+                break;
+            default:
+                icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_FOLDER);
+            }
             if (icon.isNull())
-                return pIconsManager->getIcon(IconsManager::ACTION_MISC_FOLDER);
-            return icon;
+                icon = provider.icon(QFileIconProvider::Folder);
         }
+        return icon;
     }
     return QVariant();
 }
