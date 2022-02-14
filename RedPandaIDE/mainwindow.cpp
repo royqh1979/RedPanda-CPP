@@ -39,6 +39,7 @@
 #include "iconsmanager.h"
 #include "widgets/newclassdialog.h"
 #include "widgets/newheaderdialog.h"
+#include "vcs/gitmanager.h"
 
 #include <QCloseEvent>
 #include <QComboBox>
@@ -287,7 +288,7 @@ MainWindow::MainWindow(QWidget *parent)
     //files view
     ui->treeFiles->setModel(&mFileSystemModel);
     mFileSystemModel.setReadOnly(false);
-    mFileSystemModel.setIconProvider(&mFileIconProvider);
+    mFileSystemModel.setIconProvider(&mFileSystemModelIconProvider);
     setFilesViewRoot(pSettings->environment().currentFolder());
     for (int i=1;i<mFileSystemModel.columnCount();i++) {
         ui->treeFiles->hideColumn(i);
@@ -324,6 +325,9 @@ MainWindow::MainWindow(QWidget *parent)
 
     ui->actionEGE_Manual->setVisible(pSettings->environment().language()=="zh_CN");
 
+    //git menu
+    connect(ui->menuGit, &QMenu::aboutToShow,
+            this, &MainWindow::updateVCSActions);
     buildContextMenus();
     updateAppTitle();
     //applySettings();
@@ -425,7 +429,8 @@ void MainWindow::updateEditorActions()
         ui->actionAuto_Detect->setEnabled(true);
         ui->actionEncode_in_ANSI->setEnabled(true);
         ui->actionEncode_in_UTF_8->setEnabled(true);
-        ui->actionConvert_to_ANSI->setEnabled(e->encodingOption()!=ENCODING_SYSTEM_DEFAULT && e->fileEncoding()!=ENCODING_SYSTEM_DEFAULT);
+        ui->actionConvert_to_ANSI->setEnabled(e->encodingOption()!=ENCODING_SYSTEM_DEFAULT
+                && e->fileEncoding()!=ENCODING_SYSTEM_DEFAULT);
         ui->actionConvert_to_UTF_8->setEnabled(e->encodingOption()!=ENCODING_UTF8 && e->fileEncoding()!=ENCODING_UTF8);
 
         ui->actionCopy->setEnabled(e->selAvail());
@@ -662,6 +667,8 @@ void MainWindow::applySettings()
 //    for (int i=0;i<ui->cbFilesPath->count();i++) {
 //        ui->cbFilesPath->setItemIcon(i,pIconsManager->getIcon(IconsManager::FILESYSTEM_GIT));
 //    }
+
+    ui->menuGit->menuAction()->setVisible(pSettings->vcs().gitOk());
 
 }
 
@@ -2968,7 +2975,12 @@ void MainWindow::onProjectViewContextMenu(const QPoint &pos)
             onRoot = true;
         }
     }
+    GitManager vcsManager;
+    QString branch;
+    bool hasRepository = vcsManager.hasRepository(mProject->folder(),branch);
+
     QMenu menu(this);
+    QMenu vcsMenu(this);
     updateProjectActions();
     menu.addAction(ui->actionProject_New_File);
     menu.addAction(ui->actionNew_Class);
@@ -2981,6 +2993,15 @@ void MainWindow::onProjectViewContextMenu(const QPoint &pos)
         menu.addAction(mProject_Rename_Unit);
     }
     menu.addSeparator();
+    if (pSettings->vcs().gitOk()) {
+        if (hasRepository) {
+            menu.addMenu(&vcsMenu);
+        } else {
+            ui->actionGit_Create_Repository->setEnabled(true);
+            menu.addAction(ui->actionGit_Create_Repository);
+        }
+        menu.addSeparator();
+    }
     if (onFolder && mProject->modelType()==ProjectModelType::Custom) {
         menu.addAction(mProject_Add_Folder);
         if (!onRoot) {
@@ -3001,6 +3022,18 @@ void MainWindow::onProjectViewContextMenu(const QPoint &pos)
     }
     menu.addAction(ui->actionProject_options);
 
+    if (pSettings->vcs().gitOk() && hasRepository) {
+        vcsMenu.setTitle(tr("VCS"));
+        if (ui->projectView->selectionModel()->hasSelection())
+            vcsMenu.addAction(ui->actionGit_Add_Files);
+        vcsMenu.addAction(ui->actionGit_Commit);
+        vcsMenu.addAction(ui->actionGit_Reset);
+        vcsMenu.addAction(ui->actionGit_Revert);
+
+        ui->actionGit_Commit->setEnabled(true);
+        ui->actionGit_Reset->setEnabled(true);
+        ui->actionGit_Revert->setEnabled(true);
+    }
     menu.exec(ui->projectView->mapToGlobal(pos));
 }
 
@@ -3054,12 +3087,24 @@ void MainWindow::onFileEncodingContextMenu(const QPoint &pos)
 
 void MainWindow::onFilesViewContextMenu(const QPoint &pos)
 {
-
+    GitManager vcsManager;
+    QString branch;
+    bool hasRepository = vcsManager.hasRepository(pSettings->environment().currentFolder(),branch);
     QMenu menu(this);
+    QMenu vcsMenu(this);
     menu.addAction(ui->actionOpen_Folder);
     menu.addSeparator();
     menu.addAction(mFilesView_CreateFolder);
     menu.addSeparator();
+    if (pSettings->vcs().gitOk()) {
+        if (hasRepository) {
+            menu.addMenu(&vcsMenu);
+        } else {
+            ui->actionGit_Create_Repository->setEnabled(true);
+            menu.addAction(ui->actionGit_Create_Repository);
+        }
+        menu.addSeparator();
+    }
     menu.addAction(mFilesView_Open);
     menu.addAction(mFilesView_OpenWithExternal);
     menu.addSeparator();
@@ -3071,6 +3116,19 @@ void MainWindow::onFilesViewContextMenu(const QPoint &pos)
     mFilesView_OpenWithExternal->setEnabled(info.isFile());
     mFilesView_OpenInTerminal->setEnabled(!path.isEmpty());
     mFilesView_OpenInExplorer->setEnabled(!path.isEmpty());
+
+    if (pSettings->vcs().gitOk() && hasRepository) {
+        vcsMenu.setTitle(tr("VCS"));
+        if (ui->treeFiles->selectionModel()->hasSelection())
+            vcsMenu.addAction(ui->actionGit_Add_Files);
+        vcsMenu.addAction(ui->actionGit_Commit);
+        vcsMenu.addAction(ui->actionGit_Reset);
+        vcsMenu.addAction(ui->actionGit_Revert);
+
+        ui->actionGit_Commit->setEnabled(true);
+        ui->actionGit_Reset->setEnabled(true);
+        ui->actionGit_Revert->setEnabled(true);
+    }
     menu.exec(ui->treeFiles->mapToGlobal(pos));
 }
 
@@ -5501,6 +5559,7 @@ void MainWindow::newProjectUnitFile()
     PProjectUnit newUnit = mProject->newUnit(
                 mProject->pointerToNode(node),newFileName);
     idx = mProject->units().count()-1;
+    mProject->rebuildNodes();
     mProject->saveUnits();
     updateProjectView();
     Editor * editor = mProject->openUnit(idx);
@@ -5526,6 +5585,27 @@ void MainWindow::doFilesViewRemoveFile(const QModelIndex &index)
     } else {
         QFile::remove(mFileSystemModel.filePath(index));
     }
+}
+
+void MainWindow::updateVCSActions()
+{
+    bool hasRepository = false;
+    bool shouldEnable = false;
+    if (ui->projectView->isVisible()) {
+        GitManager vcsManager;
+        QString branch;
+        hasRepository = vcsManager.hasRepository(mProject->folder(),branch);
+        shouldEnable = true;
+    } else if (ui->treeFiles->isVisible()) {
+        GitManager vcsManager;
+        QString branch;
+        hasRepository = vcsManager.hasRepository(pSettings->environment().currentFolder(),branch);
+        shouldEnable = true;
+    }
+    ui->actionGit_Create_Repository->setEnabled(!hasRepository && shouldEnable);
+    ui->actionGit_Commit->setEnabled(hasRepository && shouldEnable);
+    ui->actionGit_Reset->setEnabled(hasRepository && shouldEnable);
+    ui->actionGit_Revert->setEnabled(hasRepository && shouldEnable);
 }
 
 void MainWindow::invalidateProjectProxyModel()
@@ -5663,6 +5743,7 @@ void MainWindow::showSearchReplacePanel(bool show)
 
 void MainWindow::setFilesViewRoot(const QString &path)
 {
+    mFileSystemModelIconProvider.setRootFolder(path);
     mFileSystemModel.setRootPath(path);
     ui->treeFiles->setRootIndex(mFileSystemModel.index(path));
     pSettings->environment().setCurrentFolder(path);
@@ -6448,5 +6529,60 @@ void MainWindow::on_actionNew_Class_triggered()
     }
     pSettings->ui().setNewHeaderDialogWidth(dialog.width());
     pSettings->ui().setNewHeaderDialogHeight(dialog.height());
+}
+
+
+void MainWindow::on_actionGit_Create_Repository_triggered()
+{
+    if (ui->treeFiles->isVisible()) {
+        GitManager vcsManager;
+        vcsManager.createRepository(pSettings->environment().currentFolder());
+        int pos = ui->cbFilesPath->findText(pSettings->environment().currentFolder());
+        if (pos>=0) {
+            ui->cbFilesPath->setItemIcon(pos, pIconsManager->getIcon(IconsManager::FILESYSTEM_GIT));
+        }
+    } else if (ui->projectView->isVisible()) {
+        GitManager vcsManager;
+        vcsManager.createRepository(mProject->folder());
+        mProject->model()->beginUpdate();
+        mProject->model()->endUpdate();
+    }
+}
+
+
+void MainWindow::on_actionGit_Add_Files_triggered()
+{
+    if (ui->treeFiles->isVisible()) {
+        GitManager vcsManager;
+        QModelIndexList indices = ui->treeFiles->selectionModel()->selectedRows();
+        foreach (const QModelIndex index,indices) {
+            QFileInfo info = mFileSystemModel.fileInfo(index);
+            vcsManager.add(info.absolutePath(),info.fileName());
+        }
+        //update icons in files view
+        mFileSystemModelIconProvider.update();
+        mFileSystemModel.setIconProvider(&mFileSystemModelIconProvider);
+    } else if (ui->projectView->isVisible()) {
+        GitManager vcsManager;
+        QModelIndexList indices = ui->projectView->selectionModel()->selectedRows();
+        foreach (const QModelIndex index,indices) {
+            QModelIndex realIndex = mProjectProxyModel->mapToSource(index);
+            ProjectModelNode * node = static_cast<ProjectModelNode*>(realIndex.internalPointer());
+            PProjectModelNode folderNode =  mProject->pointerToNode(node);
+            if (!folderNode)
+                continue;
+            if (folderNode->unitIndex>=0) {
+                PProjectUnit unit = mProject->units()[folderNode->unitIndex];
+                QFileInfo info(unit->fileName());
+                vcsManager.add(info.absolutePath(),info.fileName());
+            }
+        }
+        //update icons in project view
+        mProject->model()->beginUpdate();
+        mProject->model()->endUpdate();
+        //update icons in files view too
+        mFileSystemModelIconProvider.update();
+        mFileSystemModel.setIconProvider(&mFileSystemModelIconProvider);
+    }
 }
 

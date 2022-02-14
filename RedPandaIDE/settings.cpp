@@ -5083,9 +5083,9 @@ void Settings::UI::doLoad()
     mNewHeaderDialogHeight = intValue("new_header_dialog_height", 300*qApp->desktop()->height()/1080);
 }
 
-Settings::VCS::VCS(Settings *settings):_Base(settings,SETTING_VCS)
+Settings::VCS::VCS(Settings *settings):_Base(settings,SETTING_VCS),
+    mGitOk(false)
 {
-
 }
 
 void Settings::VCS::doSave()
@@ -5095,7 +5095,7 @@ void Settings::VCS::doSave()
 
 void Settings::VCS::doLoad()
 {
-    mGitPath = stringValue("git_path", "");
+    setGitPath(stringValue("git_path", ""));
 }
 
 const QString &Settings::VCS::gitPath() const
@@ -5105,5 +5105,54 @@ const QString &Settings::VCS::gitPath() const
 
 void Settings::VCS::setGitPath(const QString &newGitPath)
 {
-    mGitPath = newGitPath;
+    if (mGitPath!=newGitPath) {
+        mGitPath = newGitPath;
+        validateGit();
+    }
+}
+
+void Settings::VCS::validateGit()
+{
+    mGitOk = false;
+    QFileInfo fileInfo(mGitPath);
+    if (!fileInfo.exists()) {
+        return;
+    }
+    QStringList args;
+    args.append("--version");
+    QString output = runAndGetOutput(
+                fileInfo.fileName(),
+                fileInfo.absolutePath(),
+                args);
+    mGitOk = output.startsWith("git version");
+}
+
+bool Settings::VCS::gitOk() const
+{
+    return mGitOk;
+}
+
+void Settings::VCS::detectGitInPath()
+{
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    QString path = env.value("PATH");
+    QStringList pathList = path.split(PATH_SEPARATOR);
+    QSet<QString> searched;
+    foreach (const QString& s, pathList){
+        if (searched.contains(s))
+            continue;;
+        searched.insert(s);
+        QDir dir(s);
+        if (dir.exists(GIT_PROGRAM)) {
+            QString oldPath = mGitPath;
+            setGitPath(dir.filePath(GIT_PROGRAM));
+            if (mGitOk) {
+                doSave();
+                return;
+            } else {
+                mGitPath = oldPath;
+            }
+        }
+
+    }
 }

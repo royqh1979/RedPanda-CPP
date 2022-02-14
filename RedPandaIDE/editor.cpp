@@ -68,7 +68,7 @@ const char* SaveException::what() const noexcept {
 }
 
 Editor::Editor(QWidget *parent):
-    Editor(parent,QObject::tr("untitled"),ENCODING_SYSTEM_DEFAULT,false,true,nullptr)
+    Editor(parent,QObject::tr("untitled"),ENCODING_AUTO_DETECT,false,true,nullptr)
 {
 }
 

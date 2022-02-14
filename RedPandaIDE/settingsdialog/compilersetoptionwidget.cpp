@@ -246,7 +246,7 @@ void CompilerSetOptionWidget::saveCurrentCompilerSet()
     if (ui->cbEncodingDetails->isVisible()) {
         pSet->setExecCharset(ui->cbEncodingDetails->currentText());
     } else {
-        pSet->setExecCharset(ui->cbEncoding->currentText());
+        pSet->setExecCharset(ui->cbEncoding->currentData().toString());
     }
 
     //read values in the options widget

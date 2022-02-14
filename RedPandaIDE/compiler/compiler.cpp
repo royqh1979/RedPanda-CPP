@@ -292,8 +292,7 @@ QString Compiler::getCharsetArgument(const QByteArray& encoding)
         } else {
             encodingName = encoding;
         }
-        if (compilerSetExecCharset == ENCODING_SYSTEM_DEFAULT
-                || compilerSetExecCharset.isEmpty()) {
+        if (compilerSetExecCharset == ENCODING_SYSTEM_DEFAULT || compilerSetExecCharset.isEmpty()) {
             execEncodingName = systemEncodingName;
         } else {
             execEncodingName = compilerSetExecCharset;

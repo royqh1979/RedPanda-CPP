@@ -4,6 +4,7 @@
 #include "../settings.h"
 #include "../systemconsts.h"
 #include "../utils.h"
+#include "../mainwindow.h"
 
 #include <QFileDialog>
 
@@ -29,6 +30,7 @@ void ToolsGitWidget::doSave()
 {
     pSettings->vcs().setGitPath(ui->txtGitPath->text());
     pSettings->vcs().save();
+    pMainWindow->applySettings();
 }
 
 void ToolsGitWidget::updateIcons(const QSize &size)

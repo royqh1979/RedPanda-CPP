@@ -15,11 +15,6 @@ public:
     // QAbstractItemModel interface
 public:
     QVariant data(const QModelIndex &index, int role) const override;
-private slots:
-    void onRootPathChanged(const QString& folder);
-private:
-    GitRepository *mGitRepository;
-    GitManager *mGitManager;
 };
 
 #endif // CUSTOMFILESYSTEMMODEL_H

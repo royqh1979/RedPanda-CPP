@@ -1910,12 +1910,14 @@ ProjectModel::ProjectModel(Project *project, QObject *parent):
     mProject(project)
 {
     mUpdateCount = 0;
-    mVCSManager = new GitManager();
+    mVCSRepository = new GitRepository("");
+    mIconProvider = new CustomFileIconProvider();
 }
 
 ProjectModel::~ProjectModel()
 {
-    delete mVCSManager;
+    delete mVCSRepository;
+    delete mIconProvider;
 }
 
 void ProjectModel::beginUpdate()
@@ -1930,6 +1932,8 @@ void ProjectModel::endUpdate()
 {
     mUpdateCount--;
     if (mUpdateCount==0) {
+        mVCSRepository->setFolder(mProject->folder());
+        mIconProvider->setRootFolder(mProject->folder());
         endResetModel();
     }
 }
@@ -1990,21 +1994,20 @@ QVariant ProjectModel::data(const QModelIndex &index, int role) const
     if (role == Qt::DisplayRole) {
         if (p == mProject->rootNode().get()) {
             QString branch;
-            if (mVCSManager->hasRepository(mProject->folder(),branch))
+            if (mVCSRepository->hasRepository(branch))
                 return QString("%1 [%2]").arg(p->text,branch);
         }
         return p->text;
     } else if (role==Qt::EditRole) {
         return p->text;
     } else if (role == Qt::DecorationRole) {
-        CustomFileIconProvider provider;
         QIcon icon;
         if (p->unitIndex>=0) {
-            icon = provider.icon(mProject->units()[p->unitIndex]->fileName());
+            icon = mIconProvider->icon(mProject->units()[p->unitIndex]->fileName());
         } else {
             if (p == mProject->rootNode().get()) {
                 QString branch;
-                if (mVCSManager->hasRepository(mProject->folder(),branch))
+                if (mVCSRepository->hasRepository(branch))
                     icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_GIT);
             } else {
                 switch(p->folderNodeType) {
@@ -2019,7 +2022,7 @@ QVariant ProjectModel::data(const QModelIndex &index, int role) const
                 }
             }
             if (icon.isNull())
-                icon = provider.icon(QFileIconProvider::Folder);
+                icon = mIconProvider->icon(QFileIconProvider::Folder);
         }
         return icon;
     }

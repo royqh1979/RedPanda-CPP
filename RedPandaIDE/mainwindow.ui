@@ -229,7 +229,7 @@
             </attribute>
             <layout class="QVBoxLayout" name="verticalLayout_3">
              <property name="spacing">
-              <number>0</number>
+              <number>2</number>
              </property>
              <property name="leftMargin">
               <number>0</number>
@@ -2772,6 +2772,11 @@
   <action name="actionGit_Reset">
    <property name="text">
     <string>Reset</string>
+   </property>
+  </action>
+  <action name="actionGit_Add_Files">
+   <property name="text">
+    <string>Add Files</string>
    </property>
   </action>
  </widget>

@@ -1,12 +1,17 @@
 #include "gitrepository.h"
 #include "gitmanager.h"
 
-GitRepository::GitRepository(const QString& folder, GitManager *manager, QObject *parent)
+GitRepository::GitRepository(const QString& folder, QObject *parent)
     : QObject{parent},
-      mFolder(folder),
-      mManager(manager)
+      mInRepository(false)
 {
-    Q_ASSERT(manager!=nullptr);
+    mManager = new GitManager();
+    setFolder(folder);
+}
+
+GitRepository::~GitRepository()
+{
+    delete mManager;
 }
 
 const QString &GitRepository::folder() const
@@ -21,7 +26,8 @@ void GitRepository::createRepository()
 
 bool GitRepository::hasRepository(QString& currentBranch)
 {
-    return mManager->hasRepository(mFolder, currentBranch);
+    currentBranch = mBranch;
+    return  mInRepository;
 }
 
 void GitRepository::add(const QString &path)
@@ -44,12 +50,11 @@ void GitRepository::restore(const QString &path)
     mManager->restore(mFolder, path);
 }
 
-QStringList GitRepository::listFiles(bool refresh)
+QSet<QString> GitRepository::listFiles(bool refresh)
 {
-    if (refresh || mFiles.isEmpty()) {
-        mFiles = mManager->listFiles(mFolder);
-    }
-    return mFiles;
+    if (refresh)
+        update();
+    return mFilesInRepositories;
 }
 
 void GitRepository::clone(const QString &url)
@@ -72,18 +77,33 @@ void GitRepository::reset(const QString &commit, GitResetStrategy strategy)
     mManager->reset(mFolder,commit,strategy);
 }
 
-GitManager *GitRepository::manager() const
-{
-    return mManager;
-}
-
-void GitRepository::setManager(GitManager *newManager)
-{
-    Q_ASSERT(newManager!=nullptr);
-    mManager = newManager;
-}
-
 void GitRepository::setFolder(const QString &newFolder)
 {
     mFolder = newFolder;
+    update();
 }
+
+void GitRepository::update()
+{
+    if (!mManager->isValid()) {
+        mInRepository = false;
+        mBranch = "";
+        mFilesInRepositories.clear();
+        mChangedFiles.clear();
+        mStagedFiles.clear();
+    } else {
+        mInRepository = mManager->hasRepository(mFolder,mBranch);
+        convertFilesListToSet(mManager->listFiles(mFolder),mFilesInRepositories);
+        convertFilesListToSet(mManager->listChangedFiles(mFolder),mChangedFiles);
+        convertFilesListToSet(mManager->listStagedFiles(mFolder),mStagedFiles);
+    }
+}
+
+void GitRepository::convertFilesListToSet(const QStringList &filesList, QSet<QString> &set)
+{
+    set.clear();
+    foreach (const QString& s, filesList) {
+        set.insert(includeTrailingPathDelimiter(mFolder)+s);
+    }
+}
+

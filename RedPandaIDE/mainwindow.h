@@ -38,6 +38,7 @@
 #include "widgets/labelwithmenu.h"
 #include "widgets/bookmarkmodel.h"
 #include "widgets/ojproblemsetmodel.h"
+#include "widgets/customfilesystemmodel.h"
 #include "customfileiconprovider.h"
 
 
@@ -253,6 +254,7 @@ private:
     void doFilesViewRemoveFile(const QModelIndex& index);
 
 private slots:
+    void updateVCSActions();
     void invalidateProjectProxyModel();
     void onEditorRenamed(const QString& oldFilename, const QString& newFilename, bool firstSave);
     void onAutoSaveTimeout();
@@ -576,6 +578,10 @@ private slots:
 
     void on_actionNew_Header_triggered();
 
+    void on_actionGit_Create_Repository_triggered();
+
+    void on_actionGit_Add_Files_triggered();
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;
@@ -615,8 +621,8 @@ private:
     PCodeSnippetManager mCodeSnippetManager;
     PTodoParser mTodoParser;
     PToolsManager mToolsManager;
-    QFileSystemModel mFileSystemModel;
-    CustomFileIconProvider mFileIconProvider;
+    CustomFileSystemModel mFileSystemModel;
+    CustomFileIconProvider mFileSystemModelIconProvider;
     OJProblemSetModel mOJProblemSetModel;
     OJProblemModel mOJProblemModel;
     int mOJProblemSetNameCounter;

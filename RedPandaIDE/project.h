@@ -101,7 +101,8 @@ private:
 
 using PProjectUnit = std::shared_ptr<ProjectUnit>;
 
-class GitManager;
+class GitRepository;
+class CustomFileIconProvider;
 class ProjectModel : public QAbstractItemModel {
     Q_OBJECT
 public:
@@ -111,8 +112,9 @@ public:
     void endUpdate();
 private:
     Project* mProject;
-    GitManager *mVCSManager;
+    GitRepository *mVCSRepository;
     int mUpdateCount;
+    CustomFileIconProvider* mIconProvider;
 
 
     // QAbstractItemModel interface

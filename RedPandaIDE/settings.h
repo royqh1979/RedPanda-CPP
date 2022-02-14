@@ -887,8 +887,13 @@ public:
         explicit VCS(Settings *settings);
         const QString &gitPath() const;
         void setGitPath(const QString &newGitPath);
+        bool gitOk() const;
+        void detectGitInPath();
+    private:
+        void validateGit();
     private:
         QString mGitPath;
+        bool mGitOk;
     protected:
         void doSave() override;
         void doLoad() override;
