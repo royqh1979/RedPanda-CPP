@@ -5155,7 +5155,7 @@ void Settings::VCS::detectGitInPath()
             QString oldPath = mGitPath;
             setGitPath(dir.filePath(GIT_PROGRAM));
             if (mGitOk) {
-                doSave();
+                save();
                 return;
             } else {
                 mGitPath = oldPath;
