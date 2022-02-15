@@ -218,6 +218,7 @@ public slots:
     void onTodoParseFinished();
     void setActiveBreakpoint(QString FileName, int Line, bool setFocus);
     void updateDPI();
+    void onFileSaved(const QString& path, bool inProject);
 
 private:
     void prepareProjectForCompile();
@@ -260,7 +261,6 @@ private slots:
     void onAutoSaveTimeout();
     void onFileChanged(const QString& path);
     void onFilesViewPathChanged();
-
     void onWatchViewContextMenu(const QPoint& pos);
     void onBookmarkContextMenu(const QPoint& pos);
     void onTableIssuesContextMenu(const QPoint& pos);
@@ -581,6 +581,8 @@ private slots:
     void on_actionGit_Create_Repository_triggered();
 
     void on_actionGit_Add_Files_triggered();
+
+    void on_actionGit_Commit_triggered();
 
 private:
     Ui::MainWindow *ui;

@@ -62,6 +62,8 @@ Editor* EditorList::newEditor(const QString& filename, const QByteArray& encodin
             e->setInProject(true);
         }
     }
+    connect(e,&Editor::fileSaved,
+            pMainWindow, &MainWindow::onFileSaved);
     return e;
 }
 

@@ -22,6 +22,8 @@ public:
     void createRepository(const QString& folder);
     bool hasRepository(const QString& folder, QString& currentBranch);
 
+    QString rootFolder(const QString& folder);
+
     bool isFileInRepository(const QFileInfo& fileInfo);
     bool isFileStaged(const QFileInfo& fileInfo);
     bool isFileChanged(const QFileInfo& fileInfo);

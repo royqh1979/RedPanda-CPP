@@ -53,7 +53,7 @@ public:
     QSet<QString> listFiles(bool refresh);
 
     void clone(const QString& url);
-    void commit(const QString& message);
+    void commit(const QString& message, bool autoAdd=true);
     void revert();
     void reset(const QString& commit, GitResetStrategy strategy);
 
@@ -61,8 +61,11 @@ public:
     void setFolder(const QString &newFolder);
     void update();
 
+    const QString &realFolder() const;
+
 signals:
 private:
+    QString mRealFolder;
     QString mFolder;
     bool mInRepository;
     QString mBranch;

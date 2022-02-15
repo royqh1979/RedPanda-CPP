@@ -52,6 +52,14 @@ bool GitManager::hasRepository(const QString &folder, QString& currentBranch)
     return result;
 }
 
+QString GitManager::rootFolder(const QString &folder)
+{
+    QStringList args;
+    args.append("rev-parse");
+    args.append("--show-toplevel");
+    return runGit(folder,args).trimmed();
+}
+
 bool GitManager::isFileInRepository(const QFileInfo& fileInfo)
 {
     QStringList args;

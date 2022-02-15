@@ -16,12 +16,12 @@ GitRepository::~GitRepository()
 
 const QString &GitRepository::folder() const
 {
-    return mFolder;
+    return mRealFolder;
 }
 
 void GitRepository::createRepository()
 {
-    mManager->createRepository(mFolder);
+    mManager->createRepository(mRealFolder);
 }
 
 bool GitRepository::hasRepository(QString& currentBranch)
@@ -62,24 +62,32 @@ void GitRepository::clone(const QString &url)
     mManager->clone(mFolder,url);
 }
 
-void GitRepository::commit(const QString &message)
+void GitRepository::commit(const QString &message, bool autoAdd)
 {
-    mManager->commit(mFolder, message);
+    if (autoAdd) {
+        convertFilesListToSet(mManager->listChangedFiles(mRealFolder),mChangedFiles);
+        foreach(const QString& s, mChangedFiles) {
+            QFileInfo info(s);
+            mManager->add(info.absolutePath(),info.fileName());
+        }
+    }
+    mManager->commit(mRealFolder, message);
 }
 
 void GitRepository::revert()
 {
-    mManager->revert(mFolder);
+    mManager->revert(mRealFolder);
 }
 
 void GitRepository::reset(const QString &commit, GitResetStrategy strategy)
 {
-    mManager->reset(mFolder,commit,strategy);
+    mManager->reset(mRealFolder,commit,strategy);
 }
 
 void GitRepository::setFolder(const QString &newFolder)
 {
     mFolder = newFolder;
+    mRealFolder = mManager->rootFolder(mFolder);
     update();
 }
 
@@ -92,18 +100,23 @@ void GitRepository::update()
         mChangedFiles.clear();
         mStagedFiles.clear();
     } else {
-        mInRepository = mManager->hasRepository(mFolder,mBranch);
-        convertFilesListToSet(mManager->listFiles(mFolder),mFilesInRepositories);
-        convertFilesListToSet(mManager->listChangedFiles(mFolder),mChangedFiles);
-        convertFilesListToSet(mManager->listStagedFiles(mFolder),mStagedFiles);
+        mInRepository = mManager->hasRepository(mRealFolder,mBranch);
+        convertFilesListToSet(mManager->listFiles(mRealFolder),mFilesInRepositories);
+        convertFilesListToSet(mManager->listChangedFiles(mRealFolder),mChangedFiles);
+        convertFilesListToSet(mManager->listStagedFiles(mRealFolder),mStagedFiles);
     }
+}
+
+const QString &GitRepository::realFolder() const
+{
+    return mRealFolder;
 }
 
 void GitRepository::convertFilesListToSet(const QStringList &filesList, QSet<QString> &set)
 {
     set.clear();
     foreach (const QString& s, filesList) {
-        set.insert(includeTrailingPathDelimiter(mFolder)+s);
+        set.insert(includeTrailingPathDelimiter(mRealFolder)+s);
     }
 }
 

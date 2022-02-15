@@ -40,6 +40,7 @@
 #include "widgets/newclassdialog.h"
 #include "widgets/newheaderdialog.h"
 #include "vcs/gitmanager.h"
+#include "vcs/gitrepository.h"
 
 #include <QCloseEvent>
 #include <QComboBox>
@@ -742,6 +743,22 @@ void MainWindow::setActiveBreakpoint(QString FileName, int Line, bool setFocus)
 void MainWindow::updateDPI()
 {
     applySettings();
+}
+
+void MainWindow::onFileSaved(const QString &path, bool inProject)
+{
+    qDebug()<<path<<inProject<<mFileSystemModel.rootPath();
+    if (inProject && mProject) {
+        mProject->model()->beginUpdate();
+        mProject->model()->endUpdate();
+    }
+    QModelIndex index =  mFileSystemModel.index(path);
+    if (index.isValid()) {
+        mFileSystemModelIconProvider.update();
+        mFileSystemModel.setIconProvider(&mFileSystemModelIconProvider);
+        ui->treeFiles->update(index);
+    }
+    pMainWindow->updateForEncodingInfo();
 }
 
 void MainWindow::updateAppTitle()
@@ -5591,7 +5608,7 @@ void MainWindow::updateVCSActions()
 {
     bool hasRepository = false;
     bool shouldEnable = false;
-    if (ui->projectView->isVisible()) {
+    if (ui->projectView->isVisible() && mProject) {
         GitManager vcsManager;
         QString branch;
         hasRepository = vcsManager.hasRepository(mProject->folder(),branch);
@@ -5747,6 +5764,7 @@ void MainWindow::setFilesViewRoot(const QString &path)
     mFileSystemModel.setRootPath(path);
     ui->treeFiles->setRootIndex(mFileSystemModel.index(path));
     pSettings->environment().setCurrentFolder(path);
+    QDir::setCurrent(path);
     int pos = ui->cbFilesPath->findText(path);
     if (pos<0) {
         ui->cbFilesPath->addItem(mFileSystemModel.iconProvider()->icon(QFileIconProvider::Folder),path);
@@ -6541,9 +6559,11 @@ void MainWindow::on_actionGit_Create_Repository_triggered()
         if (pos>=0) {
             ui->cbFilesPath->setItemIcon(pos, pIconsManager->getIcon(IconsManager::FILESYSTEM_GIT));
         }
-    } else if (ui->projectView->isVisible()) {
+    } else if (ui->projectView->isVisible() && mProject) {
         GitManager vcsManager;
         vcsManager.createRepository(mProject->folder());
+    }
+    if (mProject) {
         mProject->model()->beginUpdate();
         mProject->model()->endUpdate();
     }
@@ -6562,7 +6582,7 @@ void MainWindow::on_actionGit_Add_Files_triggered()
         //update icons in files view
         mFileSystemModelIconProvider.update();
         mFileSystemModel.setIconProvider(&mFileSystemModelIconProvider);
-    } else if (ui->projectView->isVisible()) {
+    } else if (ui->projectView->isVisible() && mProject) {
         GitManager vcsManager;
         QModelIndexList indices = ui->projectView->selectionModel()->selectedRows();
         foreach (const QModelIndex index,indices) {
@@ -6577,12 +6597,41 @@ void MainWindow::on_actionGit_Add_Files_triggered()
                 vcsManager.add(info.absolutePath(),info.fileName());
             }
         }
-        //update icons in project view
+    }
+    //update icons in project view
+    if (mProject) {
         mProject->model()->beginUpdate();
         mProject->model()->endUpdate();
-        //update icons in files view too
-        mFileSystemModelIconProvider.update();
-        mFileSystemModel.setIconProvider(&mFileSystemModelIconProvider);
     }
+    //update icons in files view too
+    mFileSystemModelIconProvider.update();
+    mFileSystemModel.setIconProvider(&mFileSystemModelIconProvider);
+}
+
+
+void MainWindow::on_actionGit_Commit_triggered()
+{
+    QString folder;
+    if (ui->treeFiles->isVisible()) {
+        folder = pSettings->environment().currentFolder();
+    } else if (ui->projectView->isVisible() && mProject) {
+        folder = mProject->folder();
+    }
+    if (folder.isEmpty())
+        return;
+    QString message = QInputDialog::getText(this,tr("Commit Message"),"Commit Message:");
+    if (message.isEmpty())
+        return;
+    GitRepository repository(folder);
+    repository.commit(message,true);
+
+    //update project view
+    if (mProject) {
+        mProject->model()->beginUpdate();
+        mProject->model()->endUpdate();
+    }
+    //update files view
+    mFileSystemModelIconProvider.update();
+    mFileSystemModel.setIconProvider(&mFileSystemModelIconProvider);
 }
 

@@ -225,6 +225,7 @@ public:
     void tab() override;
 signals:
     void renamed(const QString& oldName, const QString& newName, bool firstSave);
+    void fileSaved(const QString& filename, bool inProject);
 private slots:
     void onStatusChanged(SynStatusChanges changes);
     void onGutterClicked(Qt::MouseButton button, int x, int y, int line);
