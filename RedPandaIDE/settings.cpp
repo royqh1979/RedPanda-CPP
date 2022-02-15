@@ -2643,7 +2643,6 @@ void Settings::CompilerSets::loadSets()
                 return;
             }
             findSets();
-            saveSets();
             if ( mList.size() <= mDefaultIndex)
                 mDefaultIndex =  mList.size()-1;
             pCurrentSet = defaultSet();
@@ -2653,7 +2652,7 @@ void Settings::CompilerSets::loadSets()
                 saveSets();
                 return;
             }
-            saveSet(mDefaultIndex);
+            saveSets();
             if (pCurrentSet->binDirs().count()>0) {
                 pCurrentSet->setProperties(pCurrentSet->binDirs()[0]);
             }
@@ -2707,12 +2706,10 @@ void Settings::CompilerSets::deleteSet(int index)
         mSettings->mSettings.endGroup();
     }
     mList.erase(std::begin(mList)+index);
-    for (size_t i=index;i<mList.size();i++) {
-        saveSet(i);
-    }
     if (mDefaultIndex>=mList.size()) {
         mDefaultIndex = mList.size()-1;
     }
+    saveSets();
 }
 
 Settings::CompilerSetList &Settings::CompilerSets::list()
