@@ -38,6 +38,7 @@
 #include "widgets/labelwithmenu.h"
 #include "widgets/bookmarkmodel.h"
 #include "widgets/ojproblemsetmodel.h"
+#include "widgets/customfilesystemmodel.h"
 #include "customfileiconprovider.h"
 
 
@@ -184,8 +185,9 @@ public:
     bool openningFiles() const;
 
 public slots:
-    void onCompileLog(const QString& msg);
+    void logToolsOutput(const QString& msg);
     void onCompileIssue(PCompileIssue issue);
+    void clearToolsOutput();
     void onCompileStarted();
     void onCompileFinished(bool isCheckSyntax);
     void onCompileErrorOccured(const QString& reason);
@@ -216,6 +218,7 @@ public slots:
     void onTodoParseFinished();
     void setActiveBreakpoint(QString FileName, int Line, bool setFocus);
     void updateDPI();
+    void onFileSaved(const QString& path, bool inProject);
 
 private:
     void prepareProjectForCompile();
@@ -252,12 +255,12 @@ private:
     void doFilesViewRemoveFile(const QModelIndex& index);
 
 private slots:
+    void updateVCSActions();
     void invalidateProjectProxyModel();
     void onEditorRenamed(const QString& oldFilename, const QString& newFilename, bool firstSave);
     void onAutoSaveTimeout();
     void onFileChanged(const QString& path);
     void onFilesViewPathChanged();
-
     void onWatchViewContextMenu(const QPoint& pos);
     void onBookmarkContextMenu(const QPoint& pos);
     void onTableIssuesContextMenu(const QPoint& pos);
@@ -269,12 +272,17 @@ private slots:
     void onFileEncodingContextMenu(const QPoint& pos);
     void onFilesViewContextMenu(const QPoint& pos);
     void onLstProblemSetContextMenu(const QPoint& pos);
+    void onToolsOutputContextMenu(const QPoint&pos);
+
     void onProblemSetIndexChanged(const QModelIndex &current, const QModelIndex &previous);
     void onProblemCaseIndexChanged(const QModelIndex &current, const QModelIndex &previous);
     void onProblemNameChanged(int index);
     void onNewProblemConnection();
     void updateProblemTitle();
     void onEditorClosed();
+    void onToolsOutputClear();
+    void onToolsOutputCopy();
+    void onToolsOutputSelectAll();
 
     void onShowInsertCodeSnippetMenu();
 
@@ -536,7 +544,7 @@ private slots:
 
     void on_actionIssues_triggered();
 
-    void on_actionCompile_Log_triggered();
+    void on_actionTools_Output_triggered();
 
     void on_actionDebug_Window_triggered();
 
@@ -569,6 +577,12 @@ private slots:
     void on_actionNew_Class_triggered();
 
     void on_actionNew_Header_triggered();
+
+    void on_actionGit_Create_Repository_triggered();
+
+    void on_actionGit_Add_Files_triggered();
+
+    void on_actionGit_Commit_triggered();
 
 private:
     Ui::MainWindow *ui;
@@ -609,8 +623,8 @@ private:
     PCodeSnippetManager mCodeSnippetManager;
     PTodoParser mTodoParser;
     PToolsManager mToolsManager;
-    QFileSystemModel mFileSystemModel;
-    CustomFileIconProvider mFileIconProvider;
+    CustomFileSystemModel mFileSystemModel;
+    CustomFileIconProvider mFileSystemModelIconProvider;
     OJProblemSetModel mOJProblemSetModel;
     OJProblemModel mOJProblemModel;
     int mOJProblemSetNameCounter;
@@ -691,6 +705,11 @@ private:
     //action for problem set
     QAction * mProblem_OpenSource;
     QAction * mProblem_Properties;
+
+    //action for tools output
+    QAction * mToolsOutput_Clear;
+    QAction * mToolsOutput_SelectAll;
+    QAction * mToolsOutput_Copy;
 
     QSortFilterProxyModel* mProjectProxyModel;
 

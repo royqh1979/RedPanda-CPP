@@ -31,6 +31,7 @@
 #define GPROF_PROGRAM   "gprof.exe"
 #define CLEAN_PROGRAM   "del /q /f"
 #define CPP_PROGRAM     "cpp.exe"
+#define GIT_PROGRAM     "git.exe"
 #elif defined(Q_OS_LINUX)
 #define GCC_PROGRAM     "gcc"
 #define GPP_PROGRAM     "g++"
@@ -42,6 +43,7 @@
 #define GPROF_PROGRAM   "gprof"
 #define CLEAN_PROGRAM   "rm -rf"
 #define CPP_PROGRAM     "cpp"
+#define GIT_PROGRAM     "git"
 #else
 #error "Only support windows and linux now!"
 #endif

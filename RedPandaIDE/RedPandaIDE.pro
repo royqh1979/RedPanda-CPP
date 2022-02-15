@@ -85,11 +85,14 @@ SOURCES += \
     settingsdialog/projectoutputwidget.cpp \
     settingsdialog/projectprecompilewidget.cpp \
     settingsdialog/toolsgeneralwidget.cpp \
+    settingsdialog/toolsgitwidget.cpp \
     shortcutmanager.cpp \
     symbolusagemanager.cpp \
     thememanager.cpp \
     todoparser.cpp \
     toolsmanager.cpp \
+    vcs/gitmanager.cpp \
+    vcs/gitrepository.cpp \
     widgets/aboutdialog.cpp \
     widgets/bookmarkmodel.cpp \
     widgets/classbrowser.cpp \
@@ -136,6 +139,7 @@ SOURCES += \
     widgets/coloredit.cpp \
     widgets/consolewidget.cpp \
     widgets/customdisablediconengine.cpp \
+    widgets/customfilesystemmodel.cpp \
     widgets/custommakefileinfodialog.cpp \
     widgets/darkfusionstyle.cpp \
     widgets/editorstabwidget.cpp \
@@ -212,11 +216,14 @@ HEADERS += \
     settingsdialog/projectoutputwidget.h \
     settingsdialog/projectprecompilewidget.h \
     settingsdialog/toolsgeneralwidget.h \
+    settingsdialog/toolsgitwidget.h \
     shortcutmanager.h \
     symbolusagemanager.h \
     thememanager.h \
     todoparser.h \
     toolsmanager.h \
+    vcs/gitmanager.h \
+    vcs/gitrepository.h \
     widgets/aboutdialog.h \
     widgets/bookmarkmodel.h \
     widgets/classbrowser.h \
@@ -264,6 +271,7 @@ HEADERS += \
     widgets/coloredit.h \
     widgets/consolewidget.h \
     widgets/customdisablediconengine.h \
+    widgets/customfilesystemmodel.h \
     widgets/custommakefileinfodialog.h \
     widgets/darkfusionstyle.h \
     widgets/editorstabwidget.h \
@@ -308,6 +316,7 @@ FORMS += \
     settingsdialog/projectoutputwidget.ui \
     settingsdialog/projectprecompilewidget.ui \
     settingsdialog/toolsgeneralwidget.ui \
+    settingsdialog/toolsgitwidget.ui \
     widgets/aboutdialog.ui \
     widgets/cpudialog.ui \
     mainwindow.ui \

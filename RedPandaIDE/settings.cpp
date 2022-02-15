@@ -46,7 +46,8 @@ Settings::Settings(const QString &filename):
     mCodeCompletion(this),
     mCodeFormatter(this),
     mHistory(this),
-    mUI(this)
+    mUI(this),
+    mVCS(this)
 {
     load();
 }
@@ -106,6 +107,8 @@ void Settings::load()
     mCodeFormatter.load();
     mUI.load();
     mDirs.load();
+    mVCS.load();
+
 }
 
 Settings::Dirs &Settings::dirs()
@@ -151,6 +154,11 @@ Settings::CodeFormatter &Settings::codeFormatter()
 Settings::UI &Settings::ui()
 {
     return mUI;
+}
+
+Settings::VCS &Settings::vcs()
+{
+    return mVCS;
 }
 
 Settings::History& Settings::history()
@@ -5081,4 +5089,78 @@ void Settings::UI::doLoad()
     mNewClassDialogHeight = intValue("new_class_dialog_height", 300*qApp->desktop()->height()/1080);
     mNewHeaderDialogWidth = intValue("new_header_dialog_width", 642*qApp->desktop()->width()/1920);
     mNewHeaderDialogHeight = intValue("new_header_dialog_height", 300*qApp->desktop()->height()/1080);
+}
+
+Settings::VCS::VCS(Settings *settings):_Base(settings,SETTING_VCS),
+    mGitOk(false)
+{
+}
+
+void Settings::VCS::doSave()
+{
+    saveValue("git_path",mGitPath);
+}
+
+void Settings::VCS::doLoad()
+{
+    setGitPath(stringValue("git_path", ""));
+}
+
+const QString &Settings::VCS::gitPath() const
+{
+    return mGitPath;
+}
+
+void Settings::VCS::setGitPath(const QString &newGitPath)
+{
+    if (mGitPath!=newGitPath) {
+        mGitPath = newGitPath;
+        validateGit();
+    }
+}
+
+void Settings::VCS::validateGit()
+{
+    mGitOk = false;
+    QFileInfo fileInfo(mGitPath);
+    if (!fileInfo.exists()) {
+        return;
+    }
+    QStringList args;
+    args.append("--version");
+    QString output = runAndGetOutput(
+                fileInfo.fileName(),
+                fileInfo.absolutePath(),
+                args);
+    mGitOk = output.startsWith("git version");
+}
+
+bool Settings::VCS::gitOk() const
+{
+    return mGitOk;
+}
+
+void Settings::VCS::detectGitInPath()
+{
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    QString path = env.value("PATH");
+    QStringList pathList = path.split(PATH_SEPARATOR);
+    QSet<QString> searched;
+    foreach (const QString& s, pathList){
+        if (searched.contains(s))
+            continue;;
+        searched.insert(s);
+        QDir dir(s);
+        if (dir.exists(GIT_PROGRAM)) {
+            QString oldPath = mGitPath;
+            setGitPath(dir.filePath(GIT_PROGRAM));
+            if (mGitOk) {
+                doSave();
+                return;
+            } else {
+                mGitPath = oldPath;
+            }
+        }
+
+    }
 }

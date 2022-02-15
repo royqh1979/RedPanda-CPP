@@ -1,7 +1,15 @@
+  - change: rename "compile log" panel to "tools output"
+  - fix: debug panel can't be correctly show/hide
+  - enhancement: redesign tools output's context menu, add "clear" menu item
+  - enhancement: tools -> git  in the options dialog
+  - enhancement: auto detect git in PATH
+  - enhancement: basic git commands
+
 Red Panda C++ Version 0.14.3
   - fix: wrong code completion font size, when screen dpi changed
   - enhancement: replace Files View Panel's path lineedit control with combo box
   - enhancement: custome icons for project view
+  - fix: convert to encoding setting in compiler set option not correctly handled
 
 Red Panda C++ Version 0.14.2
   - enhancement: file system view mode for project

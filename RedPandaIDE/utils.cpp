@@ -1140,3 +1140,5 @@ void copyFolder(const QString &fromDir, const QString &toDir)
         }
     }
 }
+
+
