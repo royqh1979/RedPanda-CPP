@@ -2555,25 +2555,33 @@ void Settings::CompilerSets::findSets()
 {
     clearSets();
     QSet<QString> searched;
-#ifdef Q_OS_WIN
-    addSets(includeTrailingPathDelimiter(mSettings->dirs().appDir())+"MinGW32"+QDir::separator()+"bin");
-    addSets(includeTrailingPathDelimiter(mSettings->dirs().appDir())+"MinGW64"+QDir::separator()+"bin");
-    searched.insert(includeTrailingPathDelimiter(mSettings->dirs().appDir())+"MinGW32"+QDir::separator()+"bin");
-    searched.insert(includeTrailingPathDelimiter(mSettings->dirs().appDir())+"MinGW64"+QDir::separator()+"bin");
-#endif
-
 
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
     QString path = env.value("PATH");
     QStringList pathList = path.split(PATH_SEPARATOR);
-    foreach (const QString& s, pathList){
-        if (searched.contains(s))
-            continue;;
-        searched.insert(s);
-        if (s!="/bin") { // /bin/gcc is symbolic link to /usr/bin/gcc
-            addSets(s);
+    QString folder;
+    for (int i=pathList.count()-1;i>=0;i--) {
+        folder = pathList[i];
+        if (searched.contains(folder))
+            continue;
+        searched.insert(folder);
+        if (folder!="/bin") { // /bin/gcc is symbolic link to /usr/bin/gcc
+            addSets(folder);
         }
     }
+
+#ifdef Q_OS_WIN
+    folder = includeTrailingPathDelimiter(mSettings->dirs().appDir())+"MinGW32"+QDir::separator()+"bin";
+    if (!searched.contains(folder)) {
+        addSets(folder);
+        searched.insert(folder);
+    }
+    folder = includeTrailingPathDelimiter(mSettings->dirs().appDir())+"MinGW64"+QDir::separator()+"bin";
+    if (!searched.contains(folder)) {
+        addSets(folder);
+        searched.insert(folder);
+    }
+#endif
 
 }
 
