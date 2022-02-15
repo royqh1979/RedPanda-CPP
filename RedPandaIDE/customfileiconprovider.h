@@ -17,6 +17,7 @@ private:
 public:
     QIcon icon(IconType type) const override;
     QIcon icon(const QFileInfo &info) const override;
+    GitRepository *VCSRepository() const;
 };
 
 #endif // CUSTOMFILEICONPROVIDER_H

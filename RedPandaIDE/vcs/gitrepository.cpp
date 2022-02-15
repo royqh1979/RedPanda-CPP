@@ -62,16 +62,9 @@ void GitRepository::clone(const QString &url)
     mManager->clone(mFolder,url);
 }
 
-void GitRepository::commit(const QString &message, bool autoAdd)
+void GitRepository::commit(const QString &message, bool autoStage)
 {
-    if (autoAdd) {
-        convertFilesListToSet(mManager->listChangedFiles(mRealFolder),mChangedFiles);
-        foreach(const QString& s, mChangedFiles) {
-            QFileInfo info(s);
-            mManager->add(info.absolutePath(),info.fileName());
-        }
-    }
-    mManager->commit(mRealFolder, message);
+    mManager->commit(mRealFolder, message, autoStage);
 }
 
 void GitRepository::revert()

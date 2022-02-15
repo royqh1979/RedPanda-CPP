@@ -85,7 +85,7 @@
             <enum>QTabWidget::West</enum>
            </property>
            <property name="currentIndex">
-            <number>3</number>
+            <number>0</number>
            </property>
            <property name="usesScrollButtons">
             <bool>true</bool>
@@ -126,7 +126,7 @@
                 <enum>Qt::MoveAction</enum>
                </property>
                <property name="selectionMode">
-                <enum>QAbstractItemView::SingleSelection</enum>
+                <enum>QAbstractItemView::ExtendedSelection</enum>
                </property>
                <property name="selectionBehavior">
                 <enum>QAbstractItemView::SelectRows</enum>
@@ -1603,8 +1603,7 @@
     <addaction name="actionGit_Create_Repository"/>
     <addaction name="separator"/>
     <addaction name="actionGit_Commit"/>
-    <addaction name="actionGit_Revert"/>
-    <addaction name="actionGit_Reset"/>
+    <addaction name="actionGit_Restore"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -2756,7 +2755,7 @@
   </action>
   <action name="actionGit_Create_Repository">
    <property name="text">
-    <string>Create Repository</string>
+    <string>Create Git Repository</string>
    </property>
   </action>
   <action name="actionGit_Commit">
@@ -2777,6 +2776,11 @@
   <action name="actionGit_Add_Files">
    <property name="text">
     <string>Add Files</string>
+   </property>
+  </action>
+  <action name="actionGit_Restore">
+   <property name="text">
+    <string>Restore</string>
    </property>
   </action>
  </widget>

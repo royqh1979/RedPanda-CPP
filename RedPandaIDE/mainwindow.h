@@ -584,6 +584,8 @@ private slots:
 
     void on_actionGit_Commit_triggered();
 
+    void on_actionGit_Restore_triggered();
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;

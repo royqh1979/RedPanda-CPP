@@ -93,6 +93,7 @@ SOURCES += \
     toolsmanager.cpp \
     vcs/gitmanager.cpp \
     vcs/gitrepository.cpp \
+    vcs/gitutils.cpp \
     widgets/aboutdialog.cpp \
     widgets/bookmarkmodel.cpp \
     widgets/classbrowser.cpp \
@@ -224,6 +225,7 @@ HEADERS += \
     toolsmanager.h \
     vcs/gitmanager.h \
     vcs/gitrepository.h \
+    vcs/gitutils.h \
     widgets/aboutdialog.h \
     widgets/bookmarkmodel.h \
     widgets/classbrowser.h \

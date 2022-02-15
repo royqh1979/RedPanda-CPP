@@ -5,14 +5,7 @@
 #include <QObject>
 #include <QSet>
 #include <memory>
-
-enum class GitResetStrategy {
-    Soft,
-    Hard,
-    Merge,
-    Mixed,
-    Keep
-};
+#include "gitutils.h"
 
 class GitManager;
 class GitRepository : public QObject
@@ -53,7 +46,7 @@ public:
     QSet<QString> listFiles(bool refresh);
 
     void clone(const QString& url);
-    void commit(const QString& message, bool autoAdd=true);
+    void commit(const QString& message, bool autoStage=true);
     void revert();
     void reset(const QString& commit, GitResetStrategy strategy);
 

@@ -22,6 +22,11 @@ void CustomFileIconProvider::update()
     mVCSRepository->update();
 }
 
+GitRepository *CustomFileIconProvider::VCSRepository() const
+{
+    return mVCSRepository;
+}
+
 QIcon CustomFileIconProvider::icon(IconType type) const
 {
     if (type == IconType::Folder) {
@@ -86,6 +91,15 @@ QIcon CustomFileIconProvider::icon(const QFileInfo &info) const
                 icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_PROJECTFILE_VCS_NOCHANGE);
         } else
             icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_PROJECTFILE);
+    } else {
+        if (mVCSRepository->isFileInRepository(info)) {
+            if (mVCSRepository->isFileStaged(info))
+                icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_FILE_VCS_STAGED);
+            else if (mVCSRepository->isFileChanged(info))
+                icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_FILE_VCS_CHANGED);
+            else
+                icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_FILE_VCS_NOCHANGE);
+        } //use default system icon
     }
     if (!icon.isNull())
         return icon;

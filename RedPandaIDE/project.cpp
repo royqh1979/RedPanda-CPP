@@ -36,7 +36,7 @@
 #include "customfileiconprovider.h"
 #include <QMimeData>
 #include "settings.h"
-#include "vcs/gitmanager.h"
+#include "vcs/gitrepository.h"
 
 Project::Project(const QString &filename, const QString &name, QObject *parent) :
     QObject(parent),
@@ -904,10 +904,6 @@ PProjectUnit Project::addUnit(const QString &inFileName, PProjectModelNode paren
     newUnit->setOverrideBuildCmd(false);
     newUnit->setBuildCmd("");
     if (rebuild) {
-        mModel.beginUpdate();
-        auto action = finally([this]{
-            mModel.endUpdate();
-        });
         rebuildNodes();
     }
     setModified(true);
@@ -1910,13 +1906,11 @@ ProjectModel::ProjectModel(Project *project, QObject *parent):
     mProject(project)
 {
     mUpdateCount = 0;
-    mVCSRepository = new GitRepository("");
     mIconProvider = new CustomFileIconProvider();
 }
 
 ProjectModel::~ProjectModel()
 {
-    delete mVCSRepository;
     delete mIconProvider;
 }
 
@@ -1932,10 +1926,14 @@ void ProjectModel::endUpdate()
 {
     mUpdateCount--;
     if (mUpdateCount==0) {
-        mVCSRepository->setFolder(mProject->folder());
         mIconProvider->setRootFolder(mProject->folder());
         endResetModel();
     }
+}
+
+CustomFileIconProvider *ProjectModel::iconProvider() const
+{
+    return mIconProvider;
 }
 
 Project *ProjectModel::project() const
@@ -1994,7 +1992,7 @@ QVariant ProjectModel::data(const QModelIndex &index, int role) const
     if (role == Qt::DisplayRole) {
         if (p == mProject->rootNode().get()) {
             QString branch;
-            if (mVCSRepository->hasRepository(branch))
+            if (mIconProvider->VCSRepository()->hasRepository(branch))
                 return QString("%1 [%2]").arg(p->text,branch);
         }
         return p->text;
@@ -2007,7 +2005,7 @@ QVariant ProjectModel::data(const QModelIndex &index, int role) const
         } else {
             if (p == mProject->rootNode().get()) {
                 QString branch;
-                if (mVCSRepository->hasRepository(branch))
+                if (mIconProvider->VCSRepository()->hasRepository(branch))
                     icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_GIT);
             } else {
                 switch(p->folderNodeType) {

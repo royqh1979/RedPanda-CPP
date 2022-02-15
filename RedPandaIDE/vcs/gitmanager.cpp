@@ -119,7 +119,10 @@ void GitManager::restore(const QString &folder, const QString &path)
 {
     QStringList args;
     args.append("restore");
-    args.append(path);
+    if (path.isEmpty())
+        args.append(".");
+    else
+        args.append(path);
     runGit(folder,args);
 }
 
@@ -155,10 +158,12 @@ void GitManager::clone(const QString &folder, const QString &url)
     runGit(folder,args);
 }
 
-void GitManager::commit(const QString &folder, const QString &message)
+void GitManager::commit(const QString &folder, const QString &message, bool autoStage)
 {
     QStringList args;
     args.append("commit");
+    if (autoStage)
+        args.append("-a");
     args.append("-m");
     args.append(message);
     runGit(folder,args);

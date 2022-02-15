@@ -112,7 +112,6 @@ public:
     void endUpdate();
 private:
     Project* mProject;
-    GitRepository *mVCSRepository;
     int mUpdateCount;
     CustomFileIconProvider* mIconProvider;
 
@@ -136,6 +135,7 @@ public:
     bool dropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent) override;
     QMimeData *mimeData(const QModelIndexList &indexes) const override;
     Project *project() const;
+    CustomFileIconProvider *iconProvider() const;
 };
 
 class ProjectModelSortFilterProxy : public QSortFilterProxyModel

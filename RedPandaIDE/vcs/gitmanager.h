@@ -5,7 +5,7 @@
 #include <QFileInfo>
 #include <QSet>
 #include "utils.h"
-#include "gitrepository.h"
+#include "gitutils.h"
 
 class GitError: public BaseError {
 public:
@@ -32,12 +32,13 @@ public:
     void remove(const QString& folder, const QString& path);
     void rename(const QString& folder, const QString& oldName, const QString& newName);
     void restore(const QString& folder, const QString& path);
+
     QStringList listFiles(const QString& folder);
     QStringList listStagedFiles(const QString& folder);
     QStringList listChangedFiles(const QString& folder);
 
     void clone(const QString& folder, const QString& url);
-    void commit(const QString& folder, const QString& message);
+    void commit(const QString& folder, const QString& message, bool autoStage);
     void revert(const QString& folder);
     void reset(const QString& folder, const QString& commit, GitResetStrategy strategy);
 
