@@ -586,6 +586,8 @@ private slots:
 
     void on_actionGit_Restore_triggered();
 
+    void on_actionWebsite_triggered();
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;

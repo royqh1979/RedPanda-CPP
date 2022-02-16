@@ -28,7 +28,6 @@
     <widget class="QLabel" name="lblQt">
      <property name="font">
       <font>
-       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -41,7 +40,6 @@
     <widget class="QLabel" name="lblCompileTime">
      <property name="font">
       <font>
-       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -54,7 +52,6 @@
     <widget class="QLabel" name="label">
      <property name="font">
       <font>
-       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -64,15 +61,17 @@
     </widget>
    </item>
    <item>
-    <widget class="QLabel" name="label_2">
+    <widget class="QLabel" name="lblHomepage">
      <property name="font">
       <font>
-       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
      <property name="text">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Homepage: &lt;a href=&quot;Homepage: https://sourceforge.net/projects/dev-cpp-2020/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;https://sourceforge.net/projects/dev-cpp-2020/&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Homepage: &lt;a href=&quot;Homepage: https://sourceforge.net/projects/dev-cpp-2020/&quot;&gt;https://sourceforge.net/projects/dev-cpp-2020/&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+     <property name="openExternalLinks">
+      <bool>true</bool>
      </property>
     </widget>
    </item>

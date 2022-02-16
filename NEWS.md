@@ -13,6 +13,8 @@ Red Panda C++ Version 0.14.3
   - enhancement: git - commit
   - enhancement: git - restore
   - fix: compiler set index not correctly saved, when remove compiler sets in options dialog
+  - enhancement: when add files to project, auto add it to git (if the project has a git repository)
+  
 
 Red Panda C++ Version 0.14.2
   - enhancement: file system view mode for project
