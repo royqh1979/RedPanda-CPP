@@ -6614,6 +6614,9 @@ void MainWindow::on_actionGit_Create_Repository_triggered()
         GitManager vcsManager;
         vcsManager.createRepository(mProject->folder());
         vcsManager.add(mProject->folder(), extractFileName(mProject->filename()));
+        foreach (PProjectUnit pUnit, mProject->units()) {
+            vcsManager.add(mProject->folder(),extractRelativePath(mProject->folder(),pUnit->fileName()));
+        }
         //update project view
         mProject->addUnit(includeTrailingPathDelimiter(mProject->folder())+".gitignore", mProject->rootNode(), true);
         mProject->saveAll();
