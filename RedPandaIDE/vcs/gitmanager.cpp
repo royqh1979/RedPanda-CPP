@@ -218,11 +218,14 @@ QString GitManager::runGit(const QString& workingFolder, const QStringList &args
                        .arg(workingFolder,
                             pSettings->vcs().gitPath(),
                             args.join("\" \"")));
+//    qDebug()<<"---------";
+//    qDebug()<<args;
     QString output = runAndGetOutput(
                 fileInfo.absoluteFilePath(),
                 workingFolder,
                 args);
     output = escapeUTF8String(output.toUtf8());
+//    qDebug()<<output;
     emit gitCmdFinished(output);
 //    if (output.startsWith("fatal:"))
 //        throw GitError(output);

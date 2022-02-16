@@ -576,7 +576,6 @@
           <widget class="IssuesTable" name="tableIssues">
            <property name="font">
             <font>
-             <weight>50</weight>
              <bold>false</bold>
             </font>
            </property>
@@ -1422,7 +1421,7 @@
      <x>0</x>
      <y>0</y>
      <width>1114</width>
-     <height>26</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -1559,6 +1558,7 @@
     <property name="title">
      <string>Help</string>
     </property>
+    <addaction name="actionWebsite"/>
     <addaction name="actionC_Reference"/>
     <addaction name="actionC_C_Reference"/>
     <addaction name="actionEGE_Manual"/>
@@ -2781,6 +2781,11 @@
   <action name="actionGit_Restore">
    <property name="text">
     <string>Restore</string>
+   </property>
+  </action>
+  <action name="actionWebsite">
+   <property name="text">
+    <string>Website</string>
    </property>
   </action>
  </widget>

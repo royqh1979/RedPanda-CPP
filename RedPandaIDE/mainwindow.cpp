@@ -748,12 +748,20 @@ void MainWindow::updateDPI()
 void MainWindow::onFileSaved(const QString &path, bool inProject)
 {
     if (pSettings->vcs().gitOk()) {
-        if (inProject && mProject) {
+        QString branch;
+        if (inProject && mProject && mProject->model()->iconProvider()->VCSRepository()->hasRepository(branch)) {
             mProject->model()->beginUpdate();
             mProject->model()->endUpdate();
         }
         QModelIndex index =  mFileSystemModel.index(path);
         if (index.isValid()) {
+            if (!inProject) {
+                if ( (isCFile(path) || isHFile(path))
+                        &&  !mFileSystemModelIconProvider.VCSRepository()->isFileInRepository(path)) {
+
+                    mFileSystemModelIconProvider.VCSRepository()->add(extractRelativePath(mFileSystemModelIconProvider.VCSRepository()->folder(),path));
+                }
+            }
             mFileSystemModelIconProvider.update();
             mFileSystemModel.setIconProvider(&mFileSystemModelIconProvider);
             ui->treeFiles->update(index);
@@ -5375,6 +5383,12 @@ void MainWindow::on_actionAdd_to_project_triggered()
         foreach (const QString& filename, dialog.selectedFiles()) {
             mProject->addUnit(filename,folderNode,false);
             mProject->cppParser()->addFileToScan(filename);
+            QString branch;
+            if (pSettings->vcs().gitOk() && mProject->model()->iconProvider()->VCSRepository()->hasRepository(branch)) {
+                mProject->model()->iconProvider()->VCSRepository()->add(
+                            extractRelativePath(mProject->folder(),filename)
+                            );
+            }
         }
         mProject->rebuildNodes();
         mProject->saveUnits();
@@ -5616,14 +5630,21 @@ void MainWindow::newProjectUnitFile()
     }
     PProjectUnit newUnit = mProject->newUnit(
                 mProject->pointerToNode(node),newFileName);
-    idx = mProject->units().count()-1;
     mProject->rebuildNodes();
-    mProject->saveUnits();
-    updateProjectView();
+    mProject->saveAll();
+        updateProjectView();
+    idx = mProject->units().count()-1;
     Editor * editor = mProject->openUnit(idx);
     //editor->setUseCppSyntax(mProject->options().useGPP);
     //editor->setModified(true);
     editor->activate();
+    QString branch;
+    if (pSettings->vcs().gitOk() && mProject->model()->iconProvider()->VCSRepository()->hasRepository(branch)) {
+        mProject->model()->iconProvider()->VCSRepository()->add(newFileName);
+        mProject->model()->beginUpdate();
+        mProject->model()->endUpdate();
+    }
+    updateProjectView();
 }
 
 void MainWindow::doFilesViewRemoveFile(const QModelIndex &index)
@@ -5802,6 +5823,7 @@ void MainWindow::showSearchReplacePanel(bool show)
 void MainWindow::setFilesViewRoot(const QString &path)
 {
     mFileSystemModelIconProvider.setRootFolder(path);
+    mFileSystemModel.setIconProvider(&mFileSystemModelIconProvider);
     mFileSystemModel.setRootPath(path);
     ui->treeFiles->setRootIndex(mFileSystemModel.index(path));
     pSettings->environment().setCurrentFolder(path);
@@ -6004,7 +6026,8 @@ void MainWindow::on_actionC_C_Reference_triggered()
         if (fileInfo.exists()) {
             QDesktopServices::openUrl(QUrl::fromLocalFile(fileInfo.absoluteFilePath()));
         } else {
-            QDesktopServices::openUrl(QUrl("https://zh.cppreference.com/w/cpp"));
+
+            QDesktopServices::openUrl(QUrl("https://qingcms.gitee.io/cppreference/20210212/zh/cpp.html"));
         }
     } else {
         QDesktopServices::openUrl(QUrl("https://en.cppreference.com/w/cpp"));
@@ -6244,7 +6267,7 @@ void MainWindow::on_btnRunAllProblemCases_clicked()
 void MainWindow::on_actionC_Reference_triggered()
 {
     if (pSettings->environment().language()=="zh_CN") {
-        QDesktopServices::openUrl(QUrl("https://zh.cppreference.com/w/c"));
+        QDesktopServices::openUrl(QUrl("https://qingcms.gitee.io/cppreference/20210212/zh/c.html"));
     } else {
         QDesktopServices::openUrl(QUrl("https://en.cppreference.com/w/c"));
     }
@@ -6614,6 +6637,7 @@ void MainWindow::on_actionGit_Create_Repository_triggered()
         GitManager vcsManager;
         vcsManager.createRepository(mProject->folder());
         vcsManager.add(mProject->folder(), extractFileName(mProject->filename()));
+        vcsManager.add(mProject->folder(), extractFileName(mProject->options().icon));
         //update project view
         mProject->addUnit(includeTrailingPathDelimiter(mProject->folder())+".gitignore", mProject->rootNode(), true);
         mProject->saveAll();
@@ -6724,5 +6748,15 @@ void MainWindow::on_actionGit_Restore_triggered()
     //update files view
     mFileSystemModelIconProvider.update();
     mFileSystemModel.setIconProvider(&mFileSystemModelIconProvider);
+}
+
+
+void MainWindow::on_actionWebsite_triggered()
+{
+    if (pSettings->environment().language()=="zh_CN") {
+        QDesktopServices::openUrl(QUrl("https://royqh1979.gitee.io/redpandacpp/"));
+    } else {
+        QDesktopServices::openUrl(QUrl("https://sourceforge.net/projects/redpanda-cpp/"));
+    }
 }
 

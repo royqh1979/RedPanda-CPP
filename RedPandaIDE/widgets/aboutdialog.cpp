@@ -18,6 +18,7 @@
 #include "ui_aboutdialog.h"
 #include "../systemconsts.h"
 #include "../utils.h"
+#include "../settings.h"
 #include <QDebug>
 
 AboutDialog::AboutDialog(QWidget *parent) :
@@ -41,6 +42,12 @@ AboutDialog::AboutDialog(QWidget *parent) :
 #endif
     ui->lblCompileTime->setText(ui->lblCompileTime->text()
                                 .arg(__DATE__, __TIME__));
+
+    QString website="https://sourceforge.net/projects/redpanda-cpp/";
+    if (pSettings->environment().language()=="zh_CN") {
+        website = "https://royqh1979.gitee.io/redpandacpp/";
+    }
+    ui->lblHomepage->setText(tr("Website: <a href=\"%1\">%1</a>").arg(website));
 }
 
 AboutDialog::~AboutDialog()
