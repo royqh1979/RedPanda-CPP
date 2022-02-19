@@ -588,6 +588,8 @@ private slots:
 
     void on_actionWebsite_triggered();
 
+    void on_actionGit_Branch_triggered();
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;

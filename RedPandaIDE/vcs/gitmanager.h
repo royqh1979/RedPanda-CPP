@@ -36,6 +36,9 @@ public:
     QStringList listFiles(const QString& folder);
     QStringList listStagedFiles(const QString& folder);
     QStringList listChangedFiles(const QString& folder);
+    QStringList listBranches(const QString& folder, int& current);
+    bool switchToBranch(const QString& folder, const QString& branch, bool create,
+                        bool force, bool merge, bool track, bool noTrack, bool forceCreation );
 
     void clone(const QString& folder, const QString& url);
     void commit(const QString& folder, const QString& message, bool autoStage);

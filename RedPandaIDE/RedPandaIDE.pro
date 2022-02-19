@@ -91,6 +91,7 @@ SOURCES += \
     thememanager.cpp \
     todoparser.cpp \
     toolsmanager.cpp \
+    vcs/gitbranchdialog.cpp \
     vcs/gitmanager.cpp \
     vcs/gitrepository.cpp \
     vcs/gitutils.cpp \
@@ -223,6 +224,7 @@ HEADERS += \
     thememanager.h \
     todoparser.h \
     toolsmanager.h \
+    vcs/gitbranchdialog.h \
     vcs/gitmanager.h \
     vcs/gitrepository.h \
     vcs/gitutils.h \
@@ -319,6 +321,7 @@ FORMS += \
     settingsdialog/projectprecompilewidget.ui \
     settingsdialog/toolsgeneralwidget.ui \
     settingsdialog/toolsgitwidget.ui \
+    vcs/gitbranchdialog.ui \
     widgets/aboutdialog.ui \
     widgets/cpudialog.ui \
     mainwindow.ui \

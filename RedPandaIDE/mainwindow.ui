@@ -542,7 +542,7 @@
         <enum>QTabWidget::South</enum>
        </property>
        <property name="currentIndex">
-        <number>1</number>
+        <number>2</number>
        </property>
        <property name="iconSize">
         <size>
@@ -576,6 +576,7 @@
           <widget class="IssuesTable" name="tableIssues">
            <property name="font">
             <font>
+             <weight>50</weight>
              <bold>false</bold>
             </font>
            </property>
@@ -1421,7 +1422,7 @@
      <x>0</x>
      <y>0</y>
      <width>1114</width>
-     <height>25</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -1602,6 +1603,7 @@
     </property>
     <addaction name="actionGit_Create_Repository"/>
     <addaction name="separator"/>
+    <addaction name="actionGit_Branch"/>
     <addaction name="actionGit_Commit"/>
     <addaction name="actionGit_Restore"/>
    </widget>
@@ -2786,6 +2788,11 @@
   <action name="actionWebsite">
    <property name="text">
     <string>Website</string>
+   </property>
+  </action>
+  <action name="actionGit_Branch">
+   <property name="text">
+    <string>Branch/Switch</string>
    </property>
   </action>
  </widget>

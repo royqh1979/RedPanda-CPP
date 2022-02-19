@@ -41,6 +41,7 @@
 #include "widgets/newheaderdialog.h"
 #include "vcs/gitmanager.h"
 #include "vcs/gitrepository.h"
+#include "vcs/gitbranchdialog.h"
 
 #include <QCloseEvent>
 #include <QComboBox>
@@ -3075,10 +3076,12 @@ void MainWindow::onProjectViewContextMenu(const QPoint &pos)
             if (shouldAdd)
                 vcsMenu.addAction(ui->actionGit_Add_Files);
         }
+        vcsMenu.addAction(ui->actionGit_Branch);
         vcsMenu.addAction(ui->actionGit_Commit);
         vcsMenu.addAction(ui->actionGit_Restore);
 
         ui->actionGit_Commit->setEnabled(true);
+        ui->actionGit_Branch->setEnabled(true);
         ui->actionGit_Restore->setEnabled(true);
 
 //        vcsMenu.addAction(ui->actionGit_Reset);
@@ -3184,10 +3187,12 @@ void MainWindow::onFilesViewContextMenu(const QPoint &pos)
             if (shouldAdd)
                 vcsMenu.addAction(ui->actionGit_Add_Files);
         }
+        vcsMenu.addAction(ui->actionGit_Branch);
         vcsMenu.addAction(ui->actionGit_Commit);
         vcsMenu.addAction(ui->actionGit_Restore);
 
         ui->actionGit_Commit->setEnabled(true);
+        ui->actionGit_Branch->setEnabled(true);
         ui->actionGit_Restore->setEnabled(true);
 
 //        vcsMenu.addAction(ui->actionGit_Reset);
@@ -5683,7 +5688,9 @@ void MainWindow::updateVCSActions()
     }
     ui->actionGit_Create_Repository->setEnabled(!hasRepository && shouldEnable);
     ui->actionGit_Commit->setEnabled(hasRepository && shouldEnable);
+    ui->actionGit_Branch->setEnabled(hasRepository && shouldEnable);
     ui->actionGit_Reset->setEnabled(hasRepository && shouldEnable);
+    ui->actionGit_Restore->setEnabled(hasRepository && shouldEnable);
     ui->actionGit_Revert->setEnabled(hasRepository && shouldEnable);
 }
 
@@ -6760,6 +6767,29 @@ void MainWindow::on_actionWebsite_triggered()
         QDesktopServices::openUrl(QUrl("https://royqh1979.gitee.io/redpandacpp/"));
     } else {
         QDesktopServices::openUrl(QUrl("https://sourceforge.net/projects/redpanda-cpp/"));
+    }
+}
+
+
+void MainWindow::on_actionGit_Branch_triggered()
+{
+    QString folder;
+    if (ui->treeFiles->isVisible()) {
+        folder = pSettings->environment().currentFolder();
+    } else if (ui->projectView->isVisible() && mProject) {
+        folder = mProject->folder();
+    }
+    if (folder.isEmpty())
+        return;
+    GitBranchDialog dialog(folder);
+    if (dialog.exec()==QDialog::Accepted) {
+        //update project view
+        if (mProject) {
+            mProject->model()->beginUpdate();
+            mProject->model()->endUpdate();
+        }
+        //update files view
+        setFilesViewRoot(pSettings->environment().currentFolder());
     }
 }
 

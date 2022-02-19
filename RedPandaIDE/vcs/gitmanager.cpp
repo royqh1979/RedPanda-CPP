@@ -150,6 +150,47 @@ QStringList GitManager::listChangedFiles(const QString &folder)
     return textToLines(runGit(folder,args));
 }
 
+QStringList GitManager::listBranches(const QString &folder, int &current)
+{
+    QStringList args;
+    args.append("branch");
+    args.append("-a");
+    args.append("-l");
+    QStringList temp = textToLines(runGit(folder,args));
+    current = -1;
+    for (int i=0;i<temp.length();i++) {
+        QString s = temp[i];
+        if (s.startsWith('*')) {
+            current = i;
+            temp[i] = s.mid(1).trimmed();
+        } else if (s.startsWith('+')) {
+            temp[i] = s.mid(1).trimmed();
+        }
+    }
+    return temp;
+}
+
+bool GitManager::switchToBranch(const QString &folder, const QString &branch, bool create, bool force, bool merge, bool track, bool noTrack, bool forceCreation)
+{
+    QStringList args;
+    args.append("switch");
+    if (forceCreation)
+        args.append("-C");
+    else if (create)
+        args.append("-c");
+    if (merge)
+        args.append("-m");
+    if (force)
+        args.append("-f");
+    if (track)
+        args.append("--track");
+    else if (noTrack)
+        args.append("--no-track");
+    args.append(branch);
+    QString output = runGit(folder,args);
+    return !output.startsWith("error") && !output.startsWith("fatal");
+}
+
 void GitManager::clone(const QString &folder, const QString &url)
 {
     QStringList args;
