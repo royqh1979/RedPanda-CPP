@@ -4375,7 +4375,7 @@ Are you really want to continue?</oldsource>
     <message>
         <location filename="mainwindow.ui" line="2795"/>
         <source>Branch/Switch</source>
-        <translation>分支切换</translation>
+        <translation type="unfinished">分支切换（Switch）</translation>
     </message>
     <message>
         <source>Tool Window Bars</source>
