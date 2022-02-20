@@ -38,7 +38,15 @@ public:
     QStringList listChangedFiles(const QString& folder);
     QStringList listBranches(const QString& folder, int& current);
     bool switchToBranch(const QString& folder, const QString& branch, bool create,
-                        bool force, bool merge, bool track, bool noTrack, bool forceCreation );
+                        bool force, bool merge, bool track, bool noTrack, bool forceCreation,
+                        QString& output);
+    bool merge(const QString& folder, const QString& commit, bool squash, bool fastForwardOnly,
+               bool noFastForward, bool noCommit,
+               QString& output,
+               const QString& commitMessage=QString()
+               );
+    bool continueMerge(const QString& folder);
+    void abortMerge(const QString& folder);
 
     void clone(const QString& folder, const QString& url);
     void commit(const QString& folder, const QString& message, bool autoStage);

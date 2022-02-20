@@ -93,6 +93,7 @@ SOURCES += \
     toolsmanager.cpp \
     vcs/gitbranchdialog.cpp \
     vcs/gitmanager.cpp \
+    vcs/gitmergedialog.cpp \
     vcs/gitrepository.cpp \
     vcs/gitutils.cpp \
     widgets/aboutdialog.cpp \
@@ -226,6 +227,7 @@ HEADERS += \
     toolsmanager.h \
     vcs/gitbranchdialog.h \
     vcs/gitmanager.h \
+    vcs/gitmergedialog.h \
     vcs/gitrepository.h \
     vcs/gitutils.h \
     widgets/aboutdialog.h \
@@ -322,6 +324,7 @@ FORMS += \
     settingsdialog/toolsgeneralwidget.ui \
     settingsdialog/toolsgitwidget.ui \
     vcs/gitbranchdialog.ui \
+    vcs/gitmergedialog.ui \
     widgets/aboutdialog.ui \
     widgets/cpudialog.ui \
     mainwindow.ui \
