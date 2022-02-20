@@ -61,10 +61,15 @@ bool WindowLogoutEventFilter::nativeEventFilter(const QByteArray & /*eventType*/
             return true;
         }
         break;
-    case WM_DPICHANGED:
+    case WM_DPICHANGED:{
+        int oldDPI = screenDPI();
+        QEvent * dpiEvent = new QEvent(DPI_CHANGED_EVENT);
+        qApp->postEvent(pMainWindow,dpiEvent);
         setScreenDPI(HIWORD(pMsg->wParam));
-        pMainWindow->updateDPI();
+        int newDPI = screenDPI();
+        pMainWindow->updateDPI(oldDPI,newDPI);
         break;
+        }
     }
     return false;
 }

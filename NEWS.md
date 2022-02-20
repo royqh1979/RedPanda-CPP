@@ -19,6 +19,7 @@ Red Panda C++ Version 0.14.3
   - enhancement: when add files to project, auto add it to git (if the project has a git repository)
   - enhancement: when save a file, and it's under files view's current folder,  auto add it to git (if it has a git repository)
   - enhancement: new file icons for high contrast icon set
+  - fix: left and bottom panel size not correct when DPI changed
   
 
 Red Panda C++ Version 0.14.2

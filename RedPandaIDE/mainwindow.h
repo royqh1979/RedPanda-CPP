@@ -68,6 +68,8 @@ class SearchDialog;
 class Project;
 class ColorSchemeItem;
 
+#define DPI_CHANGED_EVENT ((QEvent::Type)(QEvent::User+1))
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -217,7 +219,7 @@ public slots:
     void onTodoParsing(const QString& filename, int lineNo, int ch, const QString& line);
     void onTodoParseFinished();
     void setActiveBreakpoint(QString FileName, int Line, bool setFocus);
-    void updateDPI();
+    void updateDPI(int oldDPI, int newDPI);
     void onFileSaved(const QString& path, bool inProject);
 
 private:
@@ -727,6 +729,10 @@ protected:
     void showEvent(QShowEvent* event) override;
     void hideEvent(QHideEvent *event) override;
 
+
+    // QObject interface
+public:
+    bool event(QEvent *event) override;
 };
 
 extern MainWindow* pMainWindow;

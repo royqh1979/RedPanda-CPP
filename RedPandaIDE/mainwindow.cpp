@@ -742,9 +742,13 @@ void MainWindow::setActiveBreakpoint(QString FileName, int Line, bool setFocus)
     }
 }
 
-void MainWindow::updateDPI()
+void MainWindow::updateDPI(int oldDPI, int newDPI)
 {
     applySettings();
+    if (oldDPI<1)
+        oldDPI = 1;
+    mBottomPanelHeight = mBottomPanelHeight * newDPI / oldDPI ;
+    mLeftPanelWidth = mLeftPanelWidth * newDPI / oldDPI ;
 }
 
 void MainWindow::onFileSaved(const QString &path, bool inProject)
@@ -1837,6 +1841,8 @@ void MainWindow::openCloseBottomPanel(bool open)
         QList<int> sizes = ui->splitterMessages->sizes();
         int tabHeight = ui->tabMessages->tabBar()->height();
         ui->tabMessages->setMinimumHeight(tabHeight+5);
+        if ( mBottomPanelHeight < ui->tabMessages->tabBar()->height() + 5)
+            mBottomPanelHeight = ui->tabMessages->tabBar()->height() + 5;
         int totalSize = sizes[0] + sizes[1];
         sizes[1] = mBottomPanelHeight;
         sizes[0] = std::max(1,totalSize - sizes[1]);
@@ -1853,7 +1859,7 @@ void MainWindow::openCloseBottomPanel(bool open)
     }
     mBottomPanelOpenned = open;
     QSplitterHandle* handle = ui->splitterMessages->handle(1);
-    handle->setEnabled(open);
+    handle->setEnabled(mBottomPanelOpenned);
 }
 
 void MainWindow::openCloseLeftPanel(bool open)
@@ -1865,10 +1871,12 @@ void MainWindow::openCloseLeftPanel(bool open)
         mOpenClosingLeftPanel = false;
     });
     // Switch between open and close
-    if (open) {
+    if (open ) {
         QList<int> sizes = ui->splitterInfos->sizes();
         int tabWidth = ui->tabInfos->tabBar()->width();
         ui->tabInfos->setMinimumWidth(tabWidth+5);
+        if (mLeftPanelWidth < ui->tabInfos->tabBar()->width() + 5)
+            mLeftPanelWidth = ui->tabInfos->tabBar()->width() + 5;
         int totalSize = sizes[0] + sizes[1];
         sizes[0] = mLeftPanelWidth;
         sizes[1] = std::max(1,totalSize - sizes[0]);
@@ -1885,7 +1893,7 @@ void MainWindow::openCloseLeftPanel(bool open)
     }
     mLeftPanelOpenned = open;
     QSplitterHandle* handle = ui->splitterInfos->handle(1);
-    handle->setEnabled(open);
+    handle->setEnabled(mLeftPanelOpenned);
 }
 
 void MainWindow::prepareDebugger()
@@ -4078,6 +4086,21 @@ void MainWindow::hideEvent(QHideEvent *)
     settings.setLeftPanelIndex(ui->tabInfos->currentIndex());
     settings.setLeftPanelOpenned(mLeftPanelOpenned);
     settings.setLeftPanelWidth(mLeftPanelWidth);
+}
+
+bool MainWindow::event(QEvent *event)
+{
+    if (event->type()==DPI_CHANGED_EVENT) {
+        int saveHeight = mBottomPanelHeight ;
+        int saveWidth = mLeftPanelWidth;
+        openCloseBottomPanel(mBottomPanelOpenned);
+        openCloseLeftPanel(mLeftPanelOpenned);
+        mBottomPanelHeight = saveHeight;
+        mLeftPanelWidth = saveWidth;
+        event->accept();
+        return true;
+    }
+    return QMainWindow::event(event);
 }
 
 //void MainWindow::dragEnterEvent(QDragEnterEvent *event)
