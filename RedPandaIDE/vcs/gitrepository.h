@@ -32,11 +32,17 @@ public:
     bool isFileStaged(const QString& filePath) {
         return mStagedFiles.contains(filePath);
     }
+    bool hasStagedFiles() {
+        return !mStagedFiles.isEmpty();
+    }
     bool isFileChanged(const QFileInfo& fileInfo) {
         return isFileChanged(fileInfo.absoluteFilePath());
     }
     bool isFileChanged(const QString& filePath) {
         return mChangedFiles.contains(filePath);
+    }
+    bool hasChangedFiles() {
+        return !mChangedFiles.isEmpty();
     }
 
     void add(const QString& path);

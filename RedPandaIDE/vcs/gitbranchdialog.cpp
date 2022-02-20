@@ -1,6 +1,7 @@
 #include "gitbranchdialog.h"
 #include "ui_gitbranchdialog.h"
 #include "gitmanager.h"
+#include "../widgets/infomessagebox.h"
 
 GitBranchDialog::GitBranchDialog(const QString& folder, QWidget *parent) :
     QDialog(parent),
@@ -47,6 +48,7 @@ void GitBranchDialog::on_btnOk_clicked()
     else
         text = ui->lstBranches->currentText();
     bool result = false;
+    QString output;
     if (!text.isEmpty()) {
         result = mManager->switchToBranch(
                     mFolder,
@@ -56,12 +58,17 @@ void GitBranchDialog::on_btnOk_clicked()
                     ui->chkMerge->isChecked(),
                     ui->rbForceTrack->isChecked(),
                     ui->rbForceNoTrack->isChecked(),
-                    ui->chkForceCreation->isChecked());
+                    ui->chkForceCreation->isChecked(),
+                    output);
     }
-    if (result)
+    if (result) {
         accept();
-    else
+    } else if (!output.isEmpty()) {
+        InfoMessageBox box;
+        box.setMessage(output);
+        box.exec();
         reject();
+    }
 }
 
 

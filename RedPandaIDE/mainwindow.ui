@@ -1604,6 +1604,8 @@
     <addaction name="actionGit_Create_Repository"/>
     <addaction name="separator"/>
     <addaction name="actionGit_Branch"/>
+    <addaction name="actionGit_Merge"/>
+    <addaction name="separator"/>
     <addaction name="actionGit_Commit"/>
     <addaction name="actionGit_Restore"/>
    </widget>
@@ -2793,6 +2795,11 @@
   <action name="actionGit_Branch">
    <property name="text">
     <string>Branch/Switch</string>
+   </property>
+  </action>
+  <action name="actionGit_Merge">
+   <property name="text">
+    <string>Merge</string>
    </property>
   </action>
  </widget>

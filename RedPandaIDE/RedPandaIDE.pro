@@ -149,6 +149,7 @@ SOURCES += \
     widgets/filepropertiesdialog.cpp \
     widgets/functiontooltipwidget.cpp \
     widgets/headercompletionpopup.cpp \
+    widgets/infomessagebox.cpp \
     widgets/issuestable.cpp \
     widgets/labelwithmenu.cpp \
     widgets/lightfusionstyle.cpp \
@@ -284,6 +285,7 @@ HEADERS += \
     widgets/filepropertiesdialog.h \
     widgets/functiontooltipwidget.h \
     widgets/headercompletionpopup.h \
+    widgets/infomessagebox.h \
     widgets/issuestable.h \
     widgets/labelwithmenu.h \
     widgets/lightfusionstyle.h \
@@ -341,6 +343,7 @@ FORMS += \
     settingsdialog/settingsdialog.ui \
     widgets/custommakefileinfodialog.ui \
     widgets/filepropertiesdialog.ui \
+    widgets/infomessagebox.ui \
     widgets/newclassdialog.ui \
     widgets/newheaderdialog.ui \
     widgets/newprojectdialog.ui \

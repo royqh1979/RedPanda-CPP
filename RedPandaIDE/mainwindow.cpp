@@ -42,6 +42,7 @@
 #include "vcs/gitmanager.h"
 #include "vcs/gitrepository.h"
 #include "vcs/gitbranchdialog.h"
+#include "vcs/gitmergedialog.h"
 
 #include <QCloseEvent>
 #include <QComboBox>
@@ -3077,10 +3078,14 @@ void MainWindow::onProjectViewContextMenu(const QPoint &pos)
                 vcsMenu.addAction(ui->actionGit_Add_Files);
         }
         vcsMenu.addAction(ui->actionGit_Branch);
+        vcsMenu.addAction(ui->actionGit_Merge);
         vcsMenu.addAction(ui->actionGit_Commit);
         vcsMenu.addAction(ui->actionGit_Restore);
 
-        ui->actionGit_Commit->setEnabled(true);
+        bool canBranch = !mProject->model()->iconProvider()->VCSRepository()->hasChangedFiles()
+                && !mProject->model()->iconProvider()->VCSRepository()->hasChangedFiles();
+        ui->actionGit_Merge->setEnabled(canBranch);
+        ui->actionGit_Commit->setEnabled(canBranch);
         ui->actionGit_Branch->setEnabled(true);
         ui->actionGit_Restore->setEnabled(true);
 
@@ -3188,11 +3193,15 @@ void MainWindow::onFilesViewContextMenu(const QPoint &pos)
                 vcsMenu.addAction(ui->actionGit_Add_Files);
         }
         vcsMenu.addAction(ui->actionGit_Branch);
+        vcsMenu.addAction(ui->actionGit_Merge);
         vcsMenu.addAction(ui->actionGit_Commit);
         vcsMenu.addAction(ui->actionGit_Restore);
 
+        bool canBranch = !mFileSystemModelIconProvider.VCSRepository()->hasChangedFiles()
+                && !mFileSystemModelIconProvider.VCSRepository()->hasChangedFiles();
+        ui->actionGit_Branch->setEnabled(canBranch);
+        ui->actionGit_Merge->setEnabled(canBranch);
         ui->actionGit_Commit->setEnabled(true);
-        ui->actionGit_Branch->setEnabled(true);
         ui->actionGit_Restore->setEnabled(true);
 
 //        vcsMenu.addAction(ui->actionGit_Reset);
@@ -5675,20 +5684,26 @@ void MainWindow::updateVCSActions()
 {
     bool hasRepository = false;
     bool shouldEnable = false;
+    bool canBranch = false;
     if (ui->projectView->isVisible() && mProject) {
         GitManager vcsManager;
         QString branch;
         hasRepository = vcsManager.hasRepository(mProject->folder(),branch);
         shouldEnable = true;
+        canBranch = !mProject->model()->iconProvider()->VCSRepository()->hasChangedFiles()
+                && !mProject->model()->iconProvider()->VCSRepository()->hasChangedFiles();
     } else if (ui->treeFiles->isVisible()) {
         GitManager vcsManager;
         QString branch;
         hasRepository = vcsManager.hasRepository(pSettings->environment().currentFolder(),branch);
         shouldEnable = true;
+        canBranch =!mFileSystemModelIconProvider.VCSRepository()->hasChangedFiles()
+                && !mFileSystemModelIconProvider.VCSRepository()->hasChangedFiles();
     }
     ui->actionGit_Create_Repository->setEnabled(!hasRepository && shouldEnable);
     ui->actionGit_Commit->setEnabled(hasRepository && shouldEnable);
-    ui->actionGit_Branch->setEnabled(hasRepository && shouldEnable);
+    ui->actionGit_Branch->setEnabled(hasRepository && shouldEnable && canBranch);
+    ui->actionGit_Merge->setEnabled(hasRepository && shouldEnable && canBranch);
     ui->actionGit_Reset->setEnabled(hasRepository && shouldEnable);
     ui->actionGit_Restore->setEnabled(hasRepository && shouldEnable);
     ui->actionGit_Revert->setEnabled(hasRepository && shouldEnable);
@@ -6782,6 +6797,29 @@ void MainWindow::on_actionGit_Branch_triggered()
     if (folder.isEmpty())
         return;
     GitBranchDialog dialog(folder);
+    if (dialog.exec()==QDialog::Accepted) {
+        //update project view
+        if (mProject) {
+            mProject->model()->beginUpdate();
+            mProject->model()->endUpdate();
+        }
+        //update files view
+        setFilesViewRoot(pSettings->environment().currentFolder());
+    }
+}
+
+
+void MainWindow::on_actionGit_Merge_triggered()
+{
+    QString folder;
+    if (ui->treeFiles->isVisible()) {
+        folder = pSettings->environment().currentFolder();
+    } else if (ui->projectView->isVisible() && mProject) {
+        folder = mProject->folder();
+    }
+    if (folder.isEmpty())
+        return;
+    GitMergeDialog dialog(folder);
     if (dialog.exec()==QDialog::Accepted) {
         //update project view
         if (mProject) {
