@@ -43,7 +43,9 @@ QIcon CustomFileIconProvider::icon(const QFileInfo &info) const
     QIcon icon;
     if (info.isDir()) {
         if (mVCSRepository->isFileInRepository(info)) {
-            if (mVCSRepository->isFileStaged(info))
+            if (mVCSRepository->isFileConflicting(info))
+                icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_FOLDER_VCS_CONFLICT);
+            else if (mVCSRepository->isFileStaged(info))
                 icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_FOLDER_VCS_STAGED);
             else if (mVCSRepository->isFileChanged(info))
                 icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_FOLDER_VCS_CHANGED);
@@ -53,7 +55,9 @@ QIcon CustomFileIconProvider::icon(const QFileInfo &info) const
             icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_FOLDER);
     } else if (isHFile(info.fileName())) {
         if (mVCSRepository->isFileInRepository(info)) {
-            if (mVCSRepository->isFileStaged(info))
+            if (mVCSRepository->isFileConflicting(info))
+                icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_HFILE_VCS_CONFLICT);
+            else if (mVCSRepository->isFileStaged(info))
                 icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_HFILE_VCS_STAGED);
             else if (mVCSRepository->isFileChanged(info))
                 icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_HFILE_VCS_CHANGED);
@@ -63,7 +67,9 @@ QIcon CustomFileIconProvider::icon(const QFileInfo &info) const
             icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_HFILE);
     } else if (isCppFile(info.fileName())) {
         if (mVCSRepository->isFileInRepository(info)) {
-            if (mVCSRepository->isFileStaged(info))
+            if (mVCSRepository->isFileConflicting(info))
+                icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_CPPFILE_VCS_CONFLICT);
+            else if (mVCSRepository->isFileStaged(info))
                 icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_CPPFILE_VCS_STAGED);
             else if (mVCSRepository->isFileChanged(info))
                 icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_CPPFILE_VCS_CHANGED);
@@ -73,7 +79,9 @@ QIcon CustomFileIconProvider::icon(const QFileInfo &info) const
             icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_CPPFILE);
     } else if (isCFile(info.fileName())) {
         if (mVCSRepository->isFileInRepository(info)) {
-            if (mVCSRepository->isFileStaged(info))
+            if (mVCSRepository->isFileConflicting(info))
+                icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_CFILE_VCS_CONFLICT);
+            else if (mVCSRepository->isFileStaged(info))
                 icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_CFILE_VCS_STAGED);
             else if (mVCSRepository->isFileChanged(info))
                 icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_CFILE_VCS_CHANGED);
@@ -83,7 +91,9 @@ QIcon CustomFileIconProvider::icon(const QFileInfo &info) const
             icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_CFILE);
     } else if (info.suffix()=="dev") {
         if (mVCSRepository->isFileInRepository(info)) {
-            if (mVCSRepository->isFileStaged(info))
+            if (mVCSRepository->isFileConflicting(info))
+                icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_PROJECTFILE_VCS_CONFLICT);
+            else if (mVCSRepository->isFileStaged(info))
                 icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_PROJECTFILE_VCS_STAGED);
             else if (mVCSRepository->isFileChanged(info))
                 icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_PROJECTFILE_VCS_CHANGED);
@@ -93,7 +103,9 @@ QIcon CustomFileIconProvider::icon(const QFileInfo &info) const
             icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_PROJECTFILE);
     } else {
         if (mVCSRepository->isFileInRepository(info)) {
-            if (mVCSRepository->isFileStaged(info))
+            if (mVCSRepository->isFileConflicting(info))
+                icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_FILE_VCS_CONFLICT);
+            else if (mVCSRepository->isFileStaged(info))
                 icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_FILE_VCS_STAGED);
             else if (mVCSRepository->isFileChanged(info))
                 icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_FILE_VCS_CHANGED);

@@ -44,6 +44,15 @@ public:
     bool hasChangedFiles() {
         return !mChangedFiles.isEmpty();
     }
+    bool isFileConflicting(const QFileInfo& fileInfo) {
+        return isFileConflicting(fileInfo.absoluteFilePath());
+    }
+    bool isFileConflicting(const QString& filePath) {
+        return mConflicts.contains(filePath);
+    }
+    bool hasConflicts(){
+        return !mConflicts.isEmpty();
+    }
 
     void add(const QString& path);
     void remove(const QString& path);
@@ -72,6 +81,7 @@ private:
     QSet<QString> mFilesInRepositories;
     QSet<QString> mChangedFiles;
     QSet<QString> mStagedFiles;
+    QSet<QString> mConflicts;
 private:
     void convertFilesListToSet(const QStringList& filesList,QSet<QString>& set);
 };

@@ -56,6 +56,9 @@ void GitMergeDialog::on_btnOk_clicked()
                     output,
                     ui->txtMergeMessage->toPlainText()
                         )) {
+        InfoMessageBox box;
+        box.setMessage(output);
+        box.exec();
         accept();
     } else {
         InfoMessageBox box;

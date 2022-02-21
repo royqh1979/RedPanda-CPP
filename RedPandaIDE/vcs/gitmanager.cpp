@@ -150,6 +150,15 @@ QStringList GitManager::listChangedFiles(const QString &folder)
     return textToLines(runGit(folder,args));
 }
 
+QStringList GitManager::listConflicts(const QString &folder)
+{
+    QStringList args;
+    args.append("diff");
+    args.append("--name-only");
+    args.append("--diff-filter=U");
+    return textToLines(runGit(folder,args));
+}
+
 QStringList GitManager::listBranches(const QString &folder, int &current)
 {
     QStringList args;
@@ -165,6 +174,8 @@ QStringList GitManager::listBranches(const QString &folder, int &current)
             temp[i] = s.mid(1).trimmed();
         } else if (s.startsWith('+')) {
             temp[i] = s.mid(1).trimmed();
+        } else {
+            temp[i] = s.trimmed();
         }
     }
     return temp;

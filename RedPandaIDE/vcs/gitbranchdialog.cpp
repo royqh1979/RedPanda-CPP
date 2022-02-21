@@ -41,18 +41,17 @@ void GitBranchDialog::on_btnCancel_clicked()
 
 void GitBranchDialog::on_btnOk_clicked()
 {
-    QString branch = ui->lstBranches->currentText();
-    QString text;
+    QString branch;
     if (ui->chkCreate->isChecked())
-        text = ui->txtNewBranch->text();
+        branch = ui->txtNewBranch->text();
     else
-        text = ui->lstBranches->currentText();
+        branch = ui->lstBranches->currentText();
     bool result = false;
     QString output;
-    if (!text.isEmpty()) {
+    if (!branch.isEmpty()) {
         result = mManager->switchToBranch(
                     mFolder,
-                    ui->txtNewBranch->text(),
+                    branch,
                     ui->chkCreate->isChecked(),
                     ui->chkForce->isChecked(),
                     ui->chkMerge->isChecked(),

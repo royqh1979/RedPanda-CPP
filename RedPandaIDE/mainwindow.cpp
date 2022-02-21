@@ -43,6 +43,7 @@
 #include "vcs/gitrepository.h"
 #include "vcs/gitbranchdialog.h"
 #include "vcs/gitmergedialog.h"
+#include "widgets/infomessagebox.h"
 
 #include <QCloseEvent>
 #include <QComboBox>
@@ -3061,6 +3062,7 @@ void MainWindow::onProjectViewContextMenu(const QPoint &pos)
     menu.addAction(ui->actionProject_options);
 
     if (pSettings->vcs().gitOk() && hasRepository) {
+        mProject->model()->iconProvider()->update();
         vcsMenu.setTitle(tr("Version Control"));
         if (ui->projectView->selectionModel()->hasSelection()) {
             bool shouldAdd = true;
@@ -3078,7 +3080,11 @@ void MainWindow::onProjectViewContextMenu(const QPoint &pos)
                 PProjectUnit pUnit=mProject->units()[node->unitIndex];
                 if (mProject->model()->iconProvider()->VCSRepository()->isFileInRepository(
                             pUnit->fileName()
-                            )) {
+                            )
+                        &&
+                        !mProject->model()->iconProvider()->VCSRepository()->isFileConflicting(
+                                                    pUnit->fileName()
+                                                    )) {
                     shouldAdd=false;
                     break;
                 }
@@ -3187,13 +3193,18 @@ void MainWindow::onFilesViewContextMenu(const QPoint &pos)
     mFilesView_OpenInExplorer->setEnabled(!path.isEmpty());
 
     if (pSettings->vcs().gitOk() && hasRepository) {
+        mFileSystemModelIconProvider.update();
         vcsMenu.setTitle(tr("Version Control"));
         if (ui->treeFiles->selectionModel()->hasSelection()) {
             bool shouldAdd = true;
             foreach (const QModelIndex& index, ui->treeFiles->selectionModel()->selectedRows()) {
                 if (mFileSystemModelIconProvider.VCSRepository()->isFileInRepository(
                             mFileSystemModel.fileInfo(index)
-                            )) {
+                            ) &&
+                        ! mFileSystemModelIconProvider.VCSRepository()->isFileConflicting(
+                            mFileSystemModel.fileInfo(index)
+                            )
+                        ) {
                     shouldAdd=false;
                     break;
                 }
@@ -5710,16 +5721,16 @@ void MainWindow::updateVCSActions()
     bool shouldEnable = false;
     bool canBranch = false;
     if (ui->projectView->isVisible() && mProject) {
-        GitManager vcsManager;
+        mProject->model()->iconProvider()->update();
         QString branch;
-        hasRepository = vcsManager.hasRepository(mProject->folder(),branch);
+        hasRepository = mProject->model()->iconProvider()->VCSRepository()->hasRepository(branch);
         shouldEnable = true;
         canBranch = !mProject->model()->iconProvider()->VCSRepository()->hasChangedFiles()
                 && !mProject->model()->iconProvider()->VCSRepository()->hasStagedFiles();
     } else if (ui->treeFiles->isVisible()) {
-        GitManager vcsManager;
+        mFileSystemModelIconProvider.update();
         QString branch;
-        hasRepository = vcsManager.hasRepository(pSettings->environment().currentFolder(),branch);
+        hasRepository = mFileSystemModelIconProvider.VCSRepository()->hasRepository(branch);
         shouldEnable = true;
         canBranch =!mFileSystemModelIconProvider.VCSRepository()->hasChangedFiles()
                 && !mFileSystemModelIconProvider.VCSRepository()->hasStagedFiles();
@@ -6754,6 +6765,18 @@ void MainWindow::on_actionGit_Commit_triggered()
     }
     if (folder.isEmpty())
         return;
+
+    GitManager vcsManager;
+    QStringList conflicts = vcsManager.listConflicts(folder);
+    if (!conflicts.isEmpty()) {
+        InfoMessageBox infoBox;
+        infoBox.setMessage(
+                    tr("Can't commit!") + "<br />"
+                    +tr("The following files are in conflicting:")+"<br />"
+                           + linesToText(conflicts));
+        infoBox.exec();
+        return;
+    }
     QString message = QInputDialog::getText(this,tr("Commit Message"),"Commit Message:");
     if (message.isEmpty()) {
         QMessageBox::critical(this,
@@ -6762,7 +6785,6 @@ void MainWindow::on_actionGit_Commit_triggered()
                               );
         return;
     }
-    GitManager vcsManager;
     vcsManager.commit(folder,message,true);
 
     //update project view

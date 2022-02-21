@@ -92,11 +92,13 @@ void GitRepository::update()
         mFilesInRepositories.clear();
         mChangedFiles.clear();
         mStagedFiles.clear();
+        mConflicts.clear();
     } else {
         mInRepository = mManager->hasRepository(mRealFolder,mBranch);
         convertFilesListToSet(mManager->listFiles(mRealFolder),mFilesInRepositories);
         convertFilesListToSet(mManager->listChangedFiles(mRealFolder),mChangedFiles);
         convertFilesListToSet(mManager->listStagedFiles(mRealFolder),mStagedFiles);
+        convertFilesListToSet(mManager->listConflicts(mRealFolder),mConflicts);
 //        qDebug()<<"update"<<mRealFolder<<mBranch;
 //        qDebug()<<mFilesInRepositories;
 //        qDebug()<<mChangedFiles;
