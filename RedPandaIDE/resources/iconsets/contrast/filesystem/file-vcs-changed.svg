@@ -24,7 +24,7 @@
      inkscape:pagecheckerboard="false"
      showgrid="false"
      inkscape:zoom="11.6"
-     inkscape:cx="29.310345"
+     inkscape:cx="29.396552"
      inkscape:cy="22.887931"
      inkscape:window-width="1920"
      inkscape:window-height="1001"
@@ -64,26 +64,23 @@
        style="stroke-width:1.37143"
        x="15.724138"
        y="20.571428">!</tspan></text>
-  <g
-     id="g831">
-    <text
-       xml:space="preserve"
-       style="font-size:20.813px;line-height:1.25;font-family:sans-serif;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.650406"
-       x="5.3978534"
-       y="45.614185"
-       id="text7085"
-       transform="scale(1.0690363,0.93542194)"><tspan
-         sodipodi:role="line"
-         id="tspan7083"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:'Fira Code';-inkscape-font-specification:'Fira Code Bold';fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.650406;stroke-opacity:1"
-         x="5.3978534"
-         y="45.614185">!</tspan></text>
-    <ellipse
-       style="fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:2.46857;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       id="path17711"
-       cx="12.650248"
-       cy="35.586208"
-       rx="10.758621"
-       ry="10.604926" />
-  </g>
+  <text
+     xml:space="preserve"
+     style="font-size:20.813px;line-height:1.25;font-family:sans-serif;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.650406"
+     x="8.1626472"
+     y="45.614185"
+     id="text7085"
+     transform="scale(1.0690363,0.93542194)"><tspan
+       sodipodi:role="line"
+       id="tspan7083"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:'Fira Code';-inkscape-font-specification:'Fira Code Bold';fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.650406;stroke-opacity:1"
+       x="8.1626472"
+       y="45.614185">!</tspan></text>
+  <ellipse
+     style="fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:2.46857;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     id="path17711"
+     cx="12.650248"
+     cy="35.586208"
+     rx="10.758621"
+     ry="10.604926" />
 </svg>

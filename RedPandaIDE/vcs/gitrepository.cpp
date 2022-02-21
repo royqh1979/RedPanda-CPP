@@ -97,6 +97,10 @@ void GitRepository::update()
         convertFilesListToSet(mManager->listFiles(mRealFolder),mFilesInRepositories);
         convertFilesListToSet(mManager->listChangedFiles(mRealFolder),mChangedFiles);
         convertFilesListToSet(mManager->listStagedFiles(mRealFolder),mStagedFiles);
+//        qDebug()<<"update"<<mRealFolder<<mBranch;
+//        qDebug()<<mFilesInRepositories;
+//        qDebug()<<mChangedFiles;
+//        qDebug()<<mStagedFiles;
     }
 }
 

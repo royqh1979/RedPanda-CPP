@@ -667,6 +667,7 @@ void MainWindow::applySettings()
 
     //icon sets for files view
     pIconsManager->updateFileSystemIcons(pSettings->environment().iconSet(),pointToPixel(pSettings->environment().interfaceFontSize()));
+    setFilesViewRoot(mFileSystemModel.rootPath());
 //    for (int i=0;i<ui->cbFilesPath->count();i++) {
 //        ui->cbFilesPath->setItemIcon(i,pIconsManager->getIcon(IconsManager::FILESYSTEM_GIT));
 //    }
@@ -764,10 +765,10 @@ void MainWindow::onFileSaved(const QString &path, bool inProject)
             if (!inProject) {
                 if ( (isCFile(path) || isHFile(path))
                         &&  !mFileSystemModelIconProvider.VCSRepository()->isFileInRepository(path)) {
-
                     mFileSystemModelIconProvider.VCSRepository()->add(extractRelativePath(mFileSystemModelIconProvider.VCSRepository()->folder(),path));
                 }
             }
+//            qDebug()<<"update icon provider";
             mFileSystemModelIconProvider.update();
             mFileSystemModel.setIconProvider(&mFileSystemModelIconProvider);
             ui->treeFiles->update(index);
@@ -3091,7 +3092,7 @@ void MainWindow::onProjectViewContextMenu(const QPoint &pos)
         vcsMenu.addAction(ui->actionGit_Restore);
 
         bool canBranch = !mProject->model()->iconProvider()->VCSRepository()->hasChangedFiles()
-                && !mProject->model()->iconProvider()->VCSRepository()->hasChangedFiles();
+                && !mProject->model()->iconProvider()->VCSRepository()->hasStagedFiles();
         ui->actionGit_Merge->setEnabled(canBranch);
         ui->actionGit_Commit->setEnabled(canBranch);
         ui->actionGit_Branch->setEnabled(true);
@@ -3206,7 +3207,7 @@ void MainWindow::onFilesViewContextMenu(const QPoint &pos)
         vcsMenu.addAction(ui->actionGit_Restore);
 
         bool canBranch = !mFileSystemModelIconProvider.VCSRepository()->hasChangedFiles()
-                && !mFileSystemModelIconProvider.VCSRepository()->hasChangedFiles();
+                && !mFileSystemModelIconProvider.VCSRepository()->hasStagedFiles();
         ui->actionGit_Branch->setEnabled(canBranch);
         ui->actionGit_Merge->setEnabled(canBranch);
         ui->actionGit_Commit->setEnabled(true);
@@ -5714,14 +5715,14 @@ void MainWindow::updateVCSActions()
         hasRepository = vcsManager.hasRepository(mProject->folder(),branch);
         shouldEnable = true;
         canBranch = !mProject->model()->iconProvider()->VCSRepository()->hasChangedFiles()
-                && !mProject->model()->iconProvider()->VCSRepository()->hasChangedFiles();
+                && !mProject->model()->iconProvider()->VCSRepository()->hasStagedFiles();
     } else if (ui->treeFiles->isVisible()) {
         GitManager vcsManager;
         QString branch;
         hasRepository = vcsManager.hasRepository(pSettings->environment().currentFolder(),branch);
         shouldEnable = true;
         canBranch =!mFileSystemModelIconProvider.VCSRepository()->hasChangedFiles()
-                && !mFileSystemModelIconProvider.VCSRepository()->hasChangedFiles();
+                && !mFileSystemModelIconProvider.VCSRepository()->hasStagedFiles();
     }
     ui->actionGit_Create_Repository->setEnabled(!hasRepository && shouldEnable);
     ui->actionGit_Commit->setEnabled(hasRepository && shouldEnable);

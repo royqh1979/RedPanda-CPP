@@ -40,27 +40,23 @@
      stroke-linejoin="round"
      id="path2"
      sodipodi:nodetypes="cssccssssc" />
-  <g
-     id="g831"
-     transform="translate(-0.23645471,-1.4187207)">
-    <text
-       xml:space="preserve"
-       style="font-size:20.813px;line-height:1.25;font-family:sans-serif;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.650406"
-       x="5.3978534"
-       y="45.614185"
-       id="text7085"
-       transform="scale(1.0690363,0.93542194)"><tspan
-         sodipodi:role="line"
-         id="tspan7083"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:'Fira Code';-inkscape-font-specification:'Fira Code Bold';fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.650406;stroke-opacity:1"
-         x="5.3978534"
-         y="45.614185">!</tspan></text>
-    <ellipse
-       style="fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:2.46857;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       id="path17711"
-       cx="12.650248"
-       cy="35.586208"
-       rx="10.758621"
-       ry="10.604926" />
-  </g>
+  <text
+     xml:space="preserve"
+     style="font-size:20.813px;line-height:1.25;font-family:sans-serif;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.650406"
+     x="7.9414625"
+     y="44.603077"
+     id="text7085"
+     transform="scale(1.0690363,0.93542194)"><tspan
+       sodipodi:role="line"
+       id="tspan7083"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:'Fira Code';-inkscape-font-specification:'Fira Code Bold';fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.650406;stroke-opacity:1"
+       x="7.9414625"
+       y="44.603077">!</tspan></text>
+  <ellipse
+     style="fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:2.46857;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     id="path17711"
+     cx="12.413793"
+     cy="34.167488"
+     rx="10.758621"
+     ry="10.604926" />
 </svg>
