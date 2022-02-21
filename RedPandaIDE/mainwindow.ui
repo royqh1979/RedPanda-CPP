@@ -542,7 +542,7 @@
         <enum>QTabWidget::South</enum>
        </property>
        <property name="currentIndex">
-        <number>2</number>
+        <number>6</number>
        </property>
        <property name="iconSize">
         <size>
@@ -1603,6 +1603,7 @@
     </property>
     <addaction name="actionGit_Create_Repository"/>
     <addaction name="separator"/>
+    <addaction name="actionGit_Log"/>
     <addaction name="actionGit_Branch"/>
     <addaction name="actionGit_Merge"/>
     <addaction name="separator"/>
@@ -2800,6 +2801,14 @@
   <action name="actionGit_Merge">
    <property name="text">
     <string>Merge</string>
+   </property>
+  </action>
+  <action name="actionGit_Log">
+   <property name="text">
+    <string>Show Log</string>
+   </property>
+   <property name="toolTip">
+    <string>Show Log</string>
    </property>
   </action>
  </widget>

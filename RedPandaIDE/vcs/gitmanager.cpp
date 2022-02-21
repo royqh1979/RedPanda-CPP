@@ -126,6 +126,65 @@ void GitManager::restore(const QString &folder, const QString &path)
     runGit(folder,args);
 }
 
+int GitManager::logCounts(const QString &folder, const QString &branch)
+{
+    QStringList args;
+    args.append("rev-list");
+    args.append("--count");
+    if (branch.isEmpty())
+        args.append("HEAD");
+    else
+        args.append(branch);
+    QString s = runGit(folder,args).trimmed();
+    bool ok;
+    int result = s.toInt(&ok);
+    if (!ok)
+        result = 0;
+    return result;
+}
+
+QList<PGitCommitInfo> GitManager::log(const QString &folder, int start, int count, const QString &branch)
+{
+    QStringList args;
+    args.append("log");
+    args.append("--skip");
+    args.append(QString("%1").arg(start-1));
+    args.append("-n");
+    args.append(QString("%1").arg(count));
+    args.append("--format=medium");
+    args.append("--date=iso-strict");
+    if (branch.isEmpty())
+        args.append("HEAD");
+    else
+        args.append(branch);
+    QString output = runGit(folder,args);
+    QStringList lines = textToLines(output);
+    QList<PGitCommitInfo> result;
+    int pos = 0;
+    PGitCommitInfo commitInfo;
+    while (pos<lines.length()) {
+        if (lines[pos].startsWith("commit ")) {
+            commitInfo = std::make_shared<GitCommitInfo>();
+            commitInfo->commitHash=lines[pos].mid(QString("commit ").length()).trimmed();
+            result.append(commitInfo);
+        } else if(!commitInfo) {
+            break;
+        } else if (lines[pos].startsWith("Author:")) {
+            commitInfo->author=lines[pos].mid(QString("Author:").length()).trimmed();
+        } else if (lines[pos].startsWith("Date:")) {
+            commitInfo->authorDate=QDateTime::fromString(lines[pos].mid(QString("Date:").length()).trimmed(),Qt::ISODate);
+        } else if (!lines[pos].trimmed().isEmpty()) {
+            if (commitInfo->title.isEmpty()) {
+                commitInfo->title = lines[pos].trimmed();
+            } else {
+                commitInfo->fullCommitMessage.append(lines[pos].trimmed()+"\n");
+            }
+        }
+        pos++;
+    }
+    return result;
+}
+
 QStringList GitManager::listFiles(const QString &folder)
 {
     QStringList args;

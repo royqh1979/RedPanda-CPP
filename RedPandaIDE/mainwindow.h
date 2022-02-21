@@ -594,6 +594,8 @@ private slots:
 
     void on_actionGit_Merge_triggered();
 
+    void on_actionGit_Log_triggered();
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;

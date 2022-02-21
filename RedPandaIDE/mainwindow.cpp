@@ -43,6 +43,7 @@
 #include "vcs/gitrepository.h"
 #include "vcs/gitbranchdialog.h"
 #include "vcs/gitmergedialog.h"
+#include "vcs/gitlogdialog.h"
 #include "widgets/infomessagebox.h"
 
 #include <QCloseEvent>
@@ -3092,6 +3093,7 @@ void MainWindow::onProjectViewContextMenu(const QPoint &pos)
             if (shouldAdd)
                 vcsMenu.addAction(ui->actionGit_Add_Files);
         }
+        vcsMenu.addAction(ui->actionGit_Log);
         vcsMenu.addAction(ui->actionGit_Branch);
         vcsMenu.addAction(ui->actionGit_Merge);
         vcsMenu.addAction(ui->actionGit_Commit);
@@ -3099,9 +3101,10 @@ void MainWindow::onProjectViewContextMenu(const QPoint &pos)
 
         bool canBranch = !mProject->model()->iconProvider()->VCSRepository()->hasChangedFiles()
                 && !mProject->model()->iconProvider()->VCSRepository()->hasStagedFiles();
+        ui->actionGit_Branch->setEnabled(canBranch);
         ui->actionGit_Merge->setEnabled(canBranch);
-        ui->actionGit_Commit->setEnabled(canBranch);
-        ui->actionGit_Branch->setEnabled(true);
+        ui->actionGit_Commit->setEnabled(true);
+        ui->actionGit_Log->setEnabled(true);
         ui->actionGit_Restore->setEnabled(true);
 
 //        vcsMenu.addAction(ui->actionGit_Reset);
@@ -3212,6 +3215,7 @@ void MainWindow::onFilesViewContextMenu(const QPoint &pos)
             if (shouldAdd)
                 vcsMenu.addAction(ui->actionGit_Add_Files);
         }
+        vcsMenu.addAction(ui->actionGit_Log);
         vcsMenu.addAction(ui->actionGit_Branch);
         vcsMenu.addAction(ui->actionGit_Merge);
         vcsMenu.addAction(ui->actionGit_Commit);
@@ -3221,6 +3225,7 @@ void MainWindow::onFilesViewContextMenu(const QPoint &pos)
                 && !mFileSystemModelIconProvider.VCSRepository()->hasStagedFiles();
         ui->actionGit_Branch->setEnabled(canBranch);
         ui->actionGit_Merge->setEnabled(canBranch);
+        ui->actionGit_Log->setEnabled(true);
         ui->actionGit_Commit->setEnabled(true);
         ui->actionGit_Restore->setEnabled(true);
 
@@ -5736,6 +5741,7 @@ void MainWindow::updateVCSActions()
                 && !mFileSystemModelIconProvider.VCSRepository()->hasStagedFiles();
     }
     ui->actionGit_Create_Repository->setEnabled(!hasRepository && shouldEnable);
+    ui->actionGit_Log->setEnabled(hasRepository && shouldEnable);
     ui->actionGit_Commit->setEnabled(hasRepository && shouldEnable);
     ui->actionGit_Branch->setEnabled(hasRepository && shouldEnable && canBranch);
     ui->actionGit_Merge->setEnabled(hasRepository && shouldEnable && canBranch);
@@ -6875,5 +6881,29 @@ void MainWindow::on_actionGit_Merge_triggered()
         //update files view
         setFilesViewRoot(pSettings->environment().currentFolder());
     }
+}
+
+
+void MainWindow::on_actionGit_Log_triggered()
+{
+    QString folder;
+    if (ui->treeFiles->isVisible()) {
+        folder = pSettings->environment().currentFolder();
+    } else if (ui->projectView->isVisible() && mProject) {
+        folder = mProject->folder();
+    }
+    if (folder.isEmpty())
+        return;
+    GitLogDialog dialog(folder);
+    if (dialog.exec()==QDialog::Accepted) {
+        //update project view
+        if (mProject) {
+            mProject->model()->beginUpdate();
+            mProject->model()->endUpdate();
+        }
+        //update files view
+        setFilesViewRoot(pSettings->environment().currentFolder());
+    }
+    return ;
 }
 

@@ -33,6 +33,9 @@ public:
     void rename(const QString& folder, const QString& oldName, const QString& newName);
     void restore(const QString& folder, const QString& path);
 
+    int logCounts(const QString& folder, const QString& branch=QString());
+    QList<PGitCommitInfo> log(const QString& folder, int start, int count, const QString& branch=QString());
+
     QStringList listFiles(const QString& folder);
     QStringList listStagedFiles(const QString& folder);
     QStringList listChangedFiles(const QString& folder);

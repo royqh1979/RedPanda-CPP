@@ -10,7 +10,7 @@ isEmpty(APP_NAME) {
 }
 
 isEmpty(APP_VERSION) {
-    APP_VERSION=0.14.3
+    APP_VERSION=0.14.4
 }
 
 isEmpty(PREFIX) {
@@ -92,6 +92,7 @@ SOURCES += \
     todoparser.cpp \
     toolsmanager.cpp \
     vcs/gitbranchdialog.cpp \
+    vcs/gitlogdialog.cpp \
     vcs/gitmanager.cpp \
     vcs/gitmergedialog.cpp \
     vcs/gitrepository.cpp \
@@ -227,6 +228,7 @@ HEADERS += \
     todoparser.h \
     toolsmanager.h \
     vcs/gitbranchdialog.h \
+    vcs/gitlogdialog.h \
     vcs/gitmanager.h \
     vcs/gitmergedialog.h \
     vcs/gitrepository.h \
@@ -326,6 +328,7 @@ FORMS += \
     settingsdialog/toolsgeneralwidget.ui \
     settingsdialog/toolsgitwidget.ui \
     vcs/gitbranchdialog.ui \
+    vcs/gitlogdialog.ui \
     vcs/gitmergedialog.ui \
     widgets/aboutdialog.ui \
     widgets/cpudialog.ui \

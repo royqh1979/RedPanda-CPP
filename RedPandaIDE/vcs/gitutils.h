@@ -1,6 +1,11 @@
 #ifndef GITUTILS_H
 #define GITUTILS_H
 
+#include <QDateTime>
+#include <QString>
+#include <memory>
+
+
 enum class GitResetStrategy {
     Soft,
     Hard,
@@ -29,5 +34,15 @@ enum class GitMergeStrategyOption {
     Rename_Threshold,
     Subtree
 };
+
+struct GitCommitInfo {
+    QString commitHash;
+    QString author;
+    QDateTime authorDate;
+    QString title;
+    QString fullCommitMessage;
+};
+
+using PGitCommitInfo = std::shared_ptr<GitCommitInfo>;
 
 #endif // GITUTILS_H
