@@ -6777,7 +6777,7 @@ void MainWindow::on_actionGit_Commit_triggered()
         infoBox.exec();
         return;
     }
-    QString message = QInputDialog::getText(this,tr("Commit Message"),"Commit Message:");
+    QString message = QInputDialog::getText(this,tr("Commit Message"),tr("Commit Message:"));
     if (message.isEmpty()) {
         QMessageBox::critical(this,
                               tr("Commit Failed"),
