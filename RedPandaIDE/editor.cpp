@@ -2934,11 +2934,11 @@ void Editor::headerCompletionInsert()
     int posEnd = p.Char-1;
     QString sLine = lineText();
     while ((posBegin>0) &&
-           (isIdentChar(sLine[posBegin-1]) || (sLine[posBegin-1]=='.')))
+           (isIdentChar(sLine[posBegin-1]) || (sLine[posBegin-1]=='.') || (sLine[posBegin-1]=='+')))
         posBegin--;
 
     while ((posEnd < sLine.length())
-           && (isIdentChar(sLine[posEnd]) || (sLine[posEnd]=='.')))
+           && (isIdentChar(sLine[posEnd]) || (sLine[posEnd]=='.') || (sLine[posBegin-1]=='+')))
         posEnd++;
     p.Char = posBegin+1;
     setBlockBegin(p);
