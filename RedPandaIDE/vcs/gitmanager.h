@@ -56,7 +56,7 @@ public:
     void clone(const QString& folder, const QString& url);
     void commit(const QString& folder, const QString& message, bool autoStage);
     void revert(const QString& folder);
-    void reset(const QString& folder, const QString& commit, GitResetStrategy strategy);
+    bool reset(const QString& folder, const QString& commit, GitResetStrategy strategy, QString& output);
 
     bool isValid();
 

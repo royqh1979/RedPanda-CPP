@@ -63,7 +63,6 @@ public:
     void clone(const QString& url);
     void commit(const QString& message, bool autoStage=true);
     void revert();
-    void reset(const QString& commit, GitResetStrategy strategy);
 
 
     void setFolder(const QString &newFolder);

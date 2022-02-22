@@ -18,6 +18,12 @@ InfoMessageBox::~InfoMessageBox()
     delete ui;
 }
 
+void InfoMessageBox::showMessage(const QString message)
+{
+    setMessage(message);
+    exec();
+}
+
 void InfoMessageBox::on_btnOk_clicked()
 {
     accept();

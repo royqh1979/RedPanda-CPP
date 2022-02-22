@@ -1,6 +1,7 @@
 #include "gitlogdialog.h"
 #include "ui_gitlogdialog.h"
 #include "gitmanager.h"
+#include "gitresetdialog.h"
 
 #include <QMenu>
 
@@ -77,6 +78,20 @@ QVariant GitLogModel::headerData(int section, Qt::Orientation orientation, int r
     return QVariant();
 }
 
+PGitCommitInfo GitLogModel::commitInfo(const QModelIndex &index)
+{
+    if (!index.isValid())
+        return PGitCommitInfo();
+    int row = index.row();
+    GitManager manager;
+    QList<PGitCommitInfo> listCommitInfos =
+            manager.log(mFolder,row,1);
+    if (listCommitInfos.isEmpty()) {
+        return PGitCommitInfo();
+    }
+    return listCommitInfos[0];
+}
+
 const QString &GitLogModel::folder() const
 {
     return mFolder;
@@ -94,14 +109,26 @@ void GitLogDialog::onLogsContextMenu(const QPoint &pos)
     GitManager manager;
     if (!manager.hasRepository(mModel.folder(), branch))
         return;
-    menu.addAction(ui->actionRevert);
+//    menu.addAction(ui->actionRevert);
     menu.addAction(ui->actionReset);
-    menu.addAction(ui->actionBranch);
-    menu.addAction(ui->actionTag);
+//    menu.addAction(ui->actionBranch);
+//    menu.addAction(ui->actionTag);
     ui->actionReset->setText(tr("Reset \"%1\" to this...").arg(branch));
     ui->actionRevert->setText(tr("Revert \"%1\" to this...").arg(branch));
     ui->actionBranch->setText(tr("Create Branch at this version..."));
     ui->actionTag->setText(tr("Create Tag at this version..."));
     menu.exec(ui->tblLogs->mapToGlobal(pos));
+}
+
+
+void GitLogDialog::on_actionReset_triggered()
+{
+    QModelIndex index = ui->tblLogs->currentIndex();
+    if (!index.isValid())
+        return;
+    PGitCommitInfo commitInfo = mModel.commitInfo(index);
+    GitResetDialog resetDialog(mModel.folder());
+    if (resetDialog.resetToCommit(commitInfo->commitHash)==QDialog::Accepted)
+        accept();
 }
 

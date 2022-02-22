@@ -148,7 +148,7 @@ QList<PGitCommitInfo> GitManager::log(const QString &folder, int start, int coun
     QStringList args;
     args.append("log");
     args.append("--skip");
-    args.append(QString("%1").arg(start-1));
+    args.append(QString("%1").arg(start));
     args.append("-n");
     args.append(QString("%1").arg(count));
     args.append("--format=medium");
@@ -332,7 +332,9 @@ void GitManager::revert(const QString &folder)
     runGit(folder,args);
 }
 
-void GitManager::reset(const QString &folder, const QString &commit, GitResetStrategy strategy)
+bool GitManager::reset(const QString &folder, const QString &commit,
+                       GitResetStrategy strategy,
+                       QString& ouput)
 {
     //todo reset type
     QStringList args;
@@ -355,7 +357,8 @@ void GitManager::reset(const QString &folder, const QString &commit, GitResetStr
         break;
     }
     args.append(commit);
-    runGit(folder,args);
+    QString output = runGit(folder,args);
+    return !output.startsWith("error") && !output.startsWith("fatal");
 }
 
 bool GitManager::isValid()

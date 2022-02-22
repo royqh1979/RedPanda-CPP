@@ -72,11 +72,6 @@ void GitRepository::revert()
     mManager->revert(mRealFolder);
 }
 
-void GitRepository::reset(const QString &commit, GitResetStrategy strategy)
-{
-    mManager->reset(mRealFolder,commit,strategy);
-}
-
 void GitRepository::setFolder(const QString &newFolder)
 {
     mFolder = newFolder;

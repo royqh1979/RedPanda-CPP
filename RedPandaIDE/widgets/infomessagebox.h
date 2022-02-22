@@ -15,6 +15,7 @@ public:
     explicit InfoMessageBox(QWidget *parent = nullptr);
     void setMessage(const QString message);
     ~InfoMessageBox();
+    void showMessage(const QString message);
 
 private slots:
     void on_btnOk_clicked();

@@ -6896,6 +6896,7 @@ void MainWindow::on_actionGit_Log_triggered()
         return;
     GitLogDialog dialog(folder);
     if (dialog.exec()==QDialog::Accepted) {
+        qDebug()<<"yes";
         //update project view
         if (mProject) {
             mProject->model()->beginUpdate();

@@ -20,12 +20,12 @@ public:
     int columnCount(const QModelIndex &parent) const override;
     QVariant data(const QModelIndex &index, int role) const override;
     QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
+    PGitCommitInfo commitInfo(const QModelIndex &index);
     const QString &folder() const;
 
 private:
     QString mFolder;
     int mCount;
-    QMap<int,PGitCommitInfo> mGitCommitInfos;
 };
 
 class GitLogDialog : public QDialog
@@ -39,6 +39,8 @@ public:
 private slots:
     void on_btnClose_clicked();
     void onLogsContextMenu(const QPoint &pos);
+
+    void on_actionReset_triggered();
 
 private:
     Ui::GitLogDialog *ui;
