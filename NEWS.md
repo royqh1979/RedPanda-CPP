@@ -1,5 +1,7 @@
 Red Panda C++ Version 0.14.4
   - enhancement: git - log
+  - fix: error in templates
+  - enhancement: git - reset
 
 Red Panda C++ Version 0.14.3
   - fix: wrong code completion font size, when screen dpi changed

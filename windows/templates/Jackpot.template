@@ -15,5 +15,6 @@ Cpp=Jackpot_cpp.txt
 
 [Project]
 UnitCount=1
+IsCpp=1
 Type=1
 Icon=Games.ico

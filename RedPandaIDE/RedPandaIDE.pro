@@ -96,6 +96,7 @@ SOURCES += \
     vcs/gitmanager.cpp \
     vcs/gitmergedialog.cpp \
     vcs/gitrepository.cpp \
+    vcs/gitresetdialog.cpp \
     vcs/gitutils.cpp \
     widgets/aboutdialog.cpp \
     widgets/bookmarkmodel.cpp \
@@ -232,6 +233,7 @@ HEADERS += \
     vcs/gitmanager.h \
     vcs/gitmergedialog.h \
     vcs/gitrepository.h \
+    vcs/gitresetdialog.h \
     vcs/gitutils.h \
     widgets/aboutdialog.h \
     widgets/bookmarkmodel.h \
@@ -330,6 +332,7 @@ FORMS += \
     vcs/gitbranchdialog.ui \
     vcs/gitlogdialog.ui \
     vcs/gitmergedialog.ui \
+    vcs/gitresetdialog.ui \
     widgets/aboutdialog.ui \
     widgets/cpudialog.ui \
     mainwindow.ui \
