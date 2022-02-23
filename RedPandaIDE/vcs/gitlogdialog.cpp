@@ -5,6 +5,10 @@
 
 #include <QMenu>
 
+//this is not thread safe, but it's the only solution i can find
+static GitLogModel::CommitInfoCacheManager GitLogModel_CacheManager;
+
+
 GitLogDialog::GitLogDialog(const QString& folder, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::GitLogDialog),
@@ -27,6 +31,13 @@ GitLogModel::GitLogModel(const QString &folder, QObject *parent):
 {
     GitManager manager;
     mCount = manager.logCounts(folder);
+    PCommitInfoCache infoCache = std::make_shared<CommitInfoCache>();
+    GitLogModel_CacheManager.insert(this,infoCache);
+}
+
+GitLogModel::~GitLogModel()
+{
+    GitLogModel_CacheManager.remove(this);
 }
 
 int GitLogModel::rowCount(const QModelIndex &parent) const
@@ -44,20 +55,15 @@ QVariant GitLogModel::data(const QModelIndex &index, int role) const
     if (!index.isValid())
         return QVariant();
     if (role == Qt::DisplayRole) {
-        int row = index.row();
-        GitManager manager;
-        QList<PGitCommitInfo> listCommitInfos =
-                manager.log(mFolder,row,1);
-        if (listCommitInfos.isEmpty()) {
-            return QVariant();
-        }
+        PGitCommitInfo info = commitInfo(index);
+
         switch(index.column()) {
         case 0:
-            return listCommitInfos[0]->authorDate;
+            return info->authorDate;
         case 1:
-            return listCommitInfos[0]->author;
+            return info->author;
         case 2:
-            return listCommitInfos[0]->title;
+            return info->title;
         }
     }
     return QVariant();
@@ -78,18 +84,28 @@ QVariant GitLogModel::headerData(int section, Qt::Orientation orientation, int r
     return QVariant();
 }
 
-PGitCommitInfo GitLogModel::commitInfo(const QModelIndex &index)
+PGitCommitInfo GitLogModel::commitInfo(const QModelIndex &index) const
 {
     if (!index.isValid())
         return PGitCommitInfo();
     int row = index.row();
-    GitManager manager;
-    QList<PGitCommitInfo> listCommitInfos =
-            manager.log(mFolder,row,1);
-    if (listCommitInfos.isEmpty()) {
-        return PGitCommitInfo();
-    }
-    return listCommitInfos[0];
+    PCommitInfoCache infoCache = GitLogModel_CacheManager.value(this);
+    PGitCommitInfo commitInfo;
+    if (!infoCache->contains(row)) {
+        GitManager manager;
+        QList<PGitCommitInfo> listCommitInfos =
+                manager.log(mFolder,row,50);
+        if (listCommitInfos.isEmpty()) {
+            return PGitCommitInfo();
+        }
+        for (int i=0;i<listCommitInfos.count();i++) {
+            infoCache->insert(row+i,listCommitInfos[i]);
+        }
+        commitInfo = listCommitInfos[0];
+    } else
+        commitInfo = (*infoCache)[row];
+
+    return commitInfo;
 }
 
 const QString &GitLogModel::folder() const
