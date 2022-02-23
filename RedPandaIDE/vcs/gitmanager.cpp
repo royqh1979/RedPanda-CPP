@@ -218,6 +218,69 @@ QStringList GitManager::listConflicts(const QString &folder)
     return textToLines(runGit(folder,args));
 }
 
+QStringList GitManager::listRemotes(const QString &folder)
+{
+    QStringList args;
+    args.append("remote");
+    return textToLines(runGit(folder,args));
+}
+
+bool GitManager::removeRemote(const QString &folder, const QString &remoteName, QString& output)
+{
+    QStringList args;
+    args.append("remote");
+    args.append("remove");
+    args.append(remoteName);
+
+    output = runGit(folder,args);
+    return !output.startsWith("error") && !output.startsWith("fatal");
+}
+
+bool GitManager::renameRemote(const QString &folder, const QString &oldName, const QString &newName, QString &output)
+{
+    QStringList args;
+    args.append("remote");
+    args.append("rename");
+    args.append(oldName);
+    args.append(newName);
+
+    output = runGit(folder,args);
+    return !output.startsWith("error") && !output.startsWith("fatal");
+}
+
+bool GitManager::addRemote(const QString &folder, const QString &name, const QString &url, QString &output)
+{
+    QStringList args;
+    args.append("remote");
+    args.append("add");
+    args.append(name);
+    args.append(url);
+
+    output = runGit(folder,args);
+    return !output.startsWith("error") && !output.startsWith("fatal");
+}
+
+bool GitManager::setRemoteURL(const QString &folder, const QString &name, const QString &newURL, QString &output)
+{
+    QStringList args;
+    args.append("remote");
+    args.append("set-url");
+    args.append(name);
+    args.append(newURL);
+
+    output = runGit(folder,args);
+    return !output.startsWith("error") && !output.startsWith("fatal");
+}
+
+QString GitManager::getRemoteURL(const QString &folder, const QString &name)
+{
+    QStringList args;
+    args.append("remote");
+    args.append("get-url");
+    args.append(name);
+    return runGit(folder,args);
+}
+
 QStringList GitManager::listBranches(const QString &folder, int &current)
 {
     QStringList args;

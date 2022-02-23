@@ -40,6 +40,16 @@ public:
     QStringList listStagedFiles(const QString& folder);
     QStringList listChangedFiles(const QString& folder);
     QStringList listConflicts(const QString& folder);
+    QStringList listRemotes(const QString& folder);
+
+    bool removeRemote(const QString& folder, const QString& remoteName, QString& output);
+    bool renameRemote(const QString& folder, const QString& oldName,
+                      const QString& newName, QString& output);
+    bool addRemote(const QString& folder, const QString& name,
+                   const QString& url, QString& output);
+    bool setRemoteURL(const QString& folder, const QString& name,
+                      const QString& newURL, QString& output);
+    QString getRemoteURL(const QString& folder, const QString& name);
 
     QStringList listBranches(const QString& folder, int& current);
     bool switchToBranch(const QString& folder, const QString& branch, bool create,

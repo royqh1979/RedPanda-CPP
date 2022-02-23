@@ -92,9 +92,13 @@ SOURCES += \
     todoparser.cpp \
     toolsmanager.cpp \
     vcs/gitbranchdialog.cpp \
+    vcs/gitfetchdialog.cpp \
     vcs/gitlogdialog.cpp \
     vcs/gitmanager.cpp \
     vcs/gitmergedialog.cpp \
+    vcs/gitpulldialog.cpp \
+    vcs/gitpushdialog.cpp \
+    vcs/gitremotedialog.cpp \
     vcs/gitrepository.cpp \
     vcs/gitresetdialog.cpp \
     vcs/gitutils.cpp \
@@ -229,9 +233,13 @@ HEADERS += \
     todoparser.h \
     toolsmanager.h \
     vcs/gitbranchdialog.h \
+    vcs/gitfetchdialog.h \
     vcs/gitlogdialog.h \
     vcs/gitmanager.h \
     vcs/gitmergedialog.h \
+    vcs/gitpulldialog.h \
+    vcs/gitpushdialog.h \
+    vcs/gitremotedialog.h \
     vcs/gitrepository.h \
     vcs/gitresetdialog.h \
     vcs/gitutils.h \
@@ -330,8 +338,12 @@ FORMS += \
     settingsdialog/toolsgeneralwidget.ui \
     settingsdialog/toolsgitwidget.ui \
     vcs/gitbranchdialog.ui \
+    vcs/gitfetchdialog.ui \
     vcs/gitlogdialog.ui \
     vcs/gitmergedialog.ui \
+    vcs/gitpulldialog.ui \
+    vcs/gitpushdialog.ui \
+    vcs/gitremotedialog.ui \
     vcs/gitresetdialog.ui \
     widgets/aboutdialog.ui \
     widgets/cpudialog.ui \
