@@ -49,7 +49,7 @@ Settings::Settings(const QString &filename):
     mUI(this),
     mVCS(this)
 {
-    load();
+    //load();
 }
 
 Settings::~Settings()
@@ -3451,14 +3451,24 @@ Settings::History::History(Settings *settings):_Base(settings, SETTING_HISTORY)
 
 }
 
-const QStringList &Settings::History::openedFiles() const
+const QStringList &Settings::History::opennedFiles() const
 {
     return mOpenedFiles;
 }
 
-const QStringList &Settings::History::openedProjects() const
+const QStringList &Settings::History::opennedProjects() const
 {
     return mOpenedProjects;
+}
+
+void Settings::History::clearOpennedFiles()
+{
+    mOpenedFiles.clear();
+}
+
+void Settings::History::clearOpennedProjects()
+{
+    mOpenedProjects.clear();
 }
 
 bool Settings::History::addToOpenedFiles(const QString &filename)

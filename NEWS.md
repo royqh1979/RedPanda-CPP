@@ -3,6 +3,9 @@ Red Panda C++ Version 0.14.4
   - fix: error in templates
   - enhancement: git - reset
   - fix: header completion error when header name contains '+'
+  - enhancement: clear history in file -> recent menu
+  - enhancement: close project in project view's context menu
+  - enhancement: auto find compiler sets when run for the first time
 
 Red Panda C++ Version 0.14.3
   - fix: wrong code completion font size, when screen dpi changed

@@ -803,8 +803,10 @@ public:
     public:
         explicit History(Settings *settings);
 
-        const QStringList& openedFiles() const;
-        const QStringList& openedProjects() const;
+        const QStringList& opennedFiles() const;
+        const QStringList& opennedProjects() const;
+        void clearOpennedFiles();
+        void clearOpennedProjects();
         bool addToOpenedFiles(const QString& filename);
         void removeFile(const QString& filename);
         bool addToOpenedProjects(const QString& filename);

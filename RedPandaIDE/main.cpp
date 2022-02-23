@@ -75,7 +75,7 @@ bool WindowLogoutEventFilter::nativeEventFilter(const QByteArray & /*eventType*/
 }
 #endif
 
-QString getSettingFilename(const QString& filepath = QString()) {
+QString getSettingFilename(const QString& filepath, bool& firstRun) {
     QString filename;
     if (filepath.isEmpty()) {
         if (isGreenEdition()) {
@@ -90,6 +90,7 @@ QString getSettingFilename(const QString& filepath = QString()) {
     }
 
     QFileInfo fileInfo(filename);
+    firstRun = !fileInfo.exists();
     QDir dir(fileInfo.absoluteDir());
     if (!dir.exists()) {
         if (!dir.mkpath(dir.absolutePath())) {
@@ -115,12 +116,14 @@ int main(int argc, char *argv[])
 
     //Translation must be loaded first
     QTranslator trans,transQt;
-    QString settingFilename = getSettingFilename();
+    bool firstRun;
+    QString settingFilename = getSettingFilename(QString(), firstRun);
     if (!isGreenEdition()) {
         QDir::setCurrent(QStandardPaths::standardLocations(QStandardPaths::DocumentsLocation)[0]);
     }
     if (settingFilename.isEmpty())
         return -1;
+
     {
         QSettings languageSetting(settingFilename,QSettings::IniFormat);
         languageSetting.beginGroup(SETTING_ENVIRONMENT);
@@ -149,6 +152,11 @@ int main(int argc, char *argv[])
         auto charsetInfoManager = std::unique_ptr<CharsetInfoManager>(pCharsetInfoManager);
         //load settings
         pSettings = new Settings(settingFilename);
+        if (firstRun) {
+            pSettings->compilerSets().findSets();
+            pSettings->compilerSets().saveSets();
+        }
+        pSettings->load();
         auto settings = std::unique_ptr<Settings>(pSettings);
 
         //Color scheme settings must be loaded after translation

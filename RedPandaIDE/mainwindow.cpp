@@ -905,30 +905,42 @@ void MainWindow::rebuildOpenedFileHisotryMenu()
 {
     mMenuRecentFiles->clear();
     mMenuRecentProjects->clear();
-    if (pSettings->history().openedFiles().size()==0) {
+    if (pSettings->history().opennedFiles().size()==0) {
         mMenuRecentFiles->setEnabled(false);
     } else {
         mMenuRecentFiles->setEnabled(true);
-        for (const QString& filename: pSettings->history().openedFiles()) {
+        for (const QString& filename: pSettings->history().opennedFiles()) {
             QAction* action = new QAction(filename,mMenuRecentFiles);
             connect(action, &QAction::triggered, [&filename,this](bool){
                 openFile(filename);
             });
             mMenuRecentFiles->addAction(action);
         }
+        mMenuRecentFiles->addSeparator();
+        QAction *action = new QAction(tr("Clear History"),mMenuRecentFiles);
+        connect(action, &QAction::triggered, [](bool){
+            pSettings->history().clearOpennedFiles();
+        });
+        mMenuRecentFiles->addAction(action);
     }
 
-    if (pSettings->history().openedProjects().size()==0) {
+    if (pSettings->history().opennedProjects().size()==0) {
         mMenuRecentProjects->setEnabled(false);
     } else {
         mMenuRecentProjects->setEnabled(true);
-        for (const QString& filename: pSettings->history().openedProjects()) {
+        for (const QString& filename: pSettings->history().opennedProjects()) {
             QAction* action = new QAction(filename,mMenuRecentProjects);
             connect(action, &QAction::triggered, [&filename,this](bool){
                 this->openProject(filename);
             });
             mMenuRecentProjects->addAction(action);
         }
+        mMenuRecentProjects->addSeparator();
+        QAction *action = new QAction(tr("Clear History"),mMenuRecentProjects);
+        connect(action, &QAction::triggered, [](bool){
+            pSettings->history().clearOpennedProjects();
+        });
+        mMenuRecentProjects->addAction(action);
     }
 
 }
@@ -3061,6 +3073,8 @@ void MainWindow::onProjectViewContextMenu(const QPoint &pos)
         menu.addAction(mProject_SwitchCustomViewMode);
     }
     menu.addAction(ui->actionProject_options);
+    menu.addSeparator();
+    menu.addAction(ui->actionClose_Project);
 
     if (pSettings->vcs().gitOk() && hasRepository) {
         mProject->model()->iconProvider()->update();
