@@ -35,6 +35,8 @@
 #include "platform.h"
 #include "parser/parserutils.h"
 #include "editorlist.h"
+#include "widgets/choosethemedialog.h"
+#include "thememanager.h"
 #ifdef Q_OS_WIN
 #include <windows.h>
 #endif
@@ -109,6 +111,21 @@ QString getSettingFilename(const QString& filepath, bool& firstRun) {
     return filename;
 }
 
+void setTheme(const QString& theme) {
+    pSettings->environment().setTheme(theme);
+    ThemeManager themeManager;
+    PAppTheme appTheme = themeManager.theme(theme);
+    if (appTheme && !appTheme->defaultColorScheme().isEmpty()) {
+        pSettings->editor().setColorScheme(appTheme->defaultColorScheme());
+        pSettings->editor().save();
+    }
+    if (appTheme && !appTheme->defaultIconSet().isEmpty()) {
+        pSettings->environment().setIconSet(appTheme->defaultIconSet());
+    }
+    pSettings->environment().save();
+
+}
+
 int main(int argc, char *argv[])
 {
     //QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
@@ -157,6 +174,18 @@ int main(int argc, char *argv[])
             pSettings->compilerSets().saveSets();
         }
         pSettings->load();
+        if (firstRun) {
+            //set theme
+            ChooseThemeDialog themeDialog;
+            themeDialog.exec();
+            switch (themeDialog.theme()) {
+            case ChooseThemeDialog::Theme::Dark:
+                setTheme("dark");
+                break;
+            default:
+                setTheme("default");
+            }
+        }
         auto settings = std::unique_ptr<Settings>(pSettings);
 
         //Color scheme settings must be loaded after translation

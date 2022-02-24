@@ -8,6 +8,7 @@ Red Panda C++ Version 0.14.4
   - enhancement: auto find compiler sets when run for the first time
   - enhancement: git - remotes
   - enhancement: rename "open folder" to "choose working folder"
+  - enhancement: let user choose app theme when first run
 
 Red Panda C++ Version 0.14.3
   - fix: wrong code completion font size, when screen dpi changed

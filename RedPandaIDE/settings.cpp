@@ -5058,7 +5058,7 @@ void Settings::UI::doLoad()
     mBottomPanelIndex = intValue("bottom_panel_index",0);
     mLeftPanelOpenned = boolValue("left_panel_openned",true);
     mLeftPanelWidth = intValue("left_panel_width",250);
-    mLeftPanelIndex = intValue("left_panel_index",2);
+    mLeftPanelIndex = intValue("left_panel_index",0);
     mClassBrowserSortAlpha = boolValue("class_browser_sort_alphabetically",true);
     mClassBrowserSortType = boolValue("class_browser_sort_by_type",true);
     mClassBrowserShowInherited = boolValue("class_browser_show_inherited",true);

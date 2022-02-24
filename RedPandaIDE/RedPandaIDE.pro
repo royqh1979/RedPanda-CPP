@@ -104,6 +104,7 @@ SOURCES += \
     vcs/gitutils.cpp \
     widgets/aboutdialog.cpp \
     widgets/bookmarkmodel.cpp \
+    widgets/choosethemedialog.cpp \
     widgets/classbrowser.cpp \
     widgets/codecompletionlistview.cpp \
     widgets/codecompletionpopup.cpp \
@@ -245,6 +246,7 @@ HEADERS += \
     vcs/gitutils.h \
     widgets/aboutdialog.h \
     widgets/bookmarkmodel.h \
+    widgets/choosethemedialog.h \
     widgets/classbrowser.h \
     widgets/codecompletionlistview.h \
     widgets/codecompletionpopup.h \
@@ -346,6 +348,7 @@ FORMS += \
     vcs/gitremotedialog.ui \
     vcs/gitresetdialog.ui \
     widgets/aboutdialog.ui \
+    widgets/choosethemedialog.ui \
     widgets/cpudialog.ui \
     mainwindow.ui \
     settingsdialog/compilersetdirectorieswidget.ui \
