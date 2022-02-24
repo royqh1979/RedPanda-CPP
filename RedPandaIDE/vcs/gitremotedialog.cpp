@@ -11,7 +11,8 @@ GitRemoteDialog::GitRemoteDialog(const QString& folder, QWidget *parent) :
 {
     ui->setupUi(this);
     GitManager manager;
-    ui->lstRemotes->addItems(manager.listRemotes(folder));
+    mRemotes = manager.listRemotes(folder);
+    ui->lstRemotes->addItems(mRemotes);
     connect(pIconsManager, &IconsManager::actionIconsUpdated,
             this, &GitRemoteDialog::updateIcons);
     ui->btnRemove->setEnabled(false);
@@ -50,6 +51,30 @@ void GitRemoteDialog::onRemotesSelectionChanged()
     }
 }
 
+void GitRemoteDialog::checkDetails()
+{
+    if (ui->txtURL->text().isEmpty()) {
+        ui->btnProcess->setEnabled(false);
+        return;
+    }
+
+    if (ui->txtName->text().isEmpty()) {
+        ui->btnProcess->setEnabled(false);
+        return;
+    }
+
+    if (ui->btnProcess->text() == tr("Add")) {
+        ui->btnProcess->setEnabled(!mRemotes.contains(ui->txtName->text()));
+    } else {
+        if (ui->lstRemotes->selectedItems().count()>0) {
+            QString remoteName = ui->lstRemotes->selectedItems()[0]->text();
+            ui->btnProcess->setEnabled(ui->txtName->text()==remoteName
+                                       || !mRemotes.contains(ui->txtName->text()) );
+        } else
+            ui->btnProcess->setEnabled(false);
+    }
+}
+
 void GitRemoteDialog::on_btnAdd_clicked()
 {
     ui->grpDetail->setEnabled(true);
@@ -76,11 +101,66 @@ void GitRemoteDialog::on_btnRemove_clicked()
 
 void GitRemoteDialog::refresh()
 {
+    ui->txtName->setText("");
+    ui->txtURL->setText("");
     ui->lstRemotes->clear();
     GitManager manager;
-    ui->lstRemotes->addItems(manager.listRemotes(mFolder));
+    mRemotes = manager.listRemotes(mFolder);
+    ui->lstRemotes->addItems(mRemotes);
     ui->btnRemove->setEnabled(false);
     ui->pnlProcess->setVisible(false);
     ui->grpDetail->setEnabled(false);
+}
+
+
+void GitRemoteDialog::on_btnProcess_clicked()
+{
+    if (ui->btnProcess->text() == tr("Add")) {
+        // add remote
+        QString remoteName = ui->txtName->text();
+        QString remoteURL = ui->txtURL->text();
+        GitManager manager;
+        QString output;
+        if (!manager.addRemote(mFolder, remoteName, remoteURL, output)) {
+            InfoMessageBox infoBox;
+            infoBox.showMessage(output);
+        } else {
+            refresh();
+        }
+    } else {
+        // update remote
+        if (ui->lstRemotes->selectedItems().count()<=0)
+            return;
+        QString oldName = ui->lstRemotes->selectedItems()[0]->text();
+        QString newName = ui->txtName->text();
+        QString url = ui->txtURL->text();
+        GitManager manager;
+        QString output;
+        if (!manager.setRemoteURL(mFolder,oldName,url,output)) {
+            InfoMessageBox infoBox;
+            infoBox.showMessage(output);
+            return;
+        }
+        if (oldName != newName) {
+            if (!manager.setRemoteURL(mFolder,oldName,url,output)) {
+                InfoMessageBox infoBox;
+                infoBox.showMessage(output);
+                return;
+            }
+        }
+        refresh();
+    }
+}
+
+
+void GitRemoteDialog::on_txtName_textChanged(const QString &/*arg1*/)
+{
+    checkDetails();
+}
+
+
+void GitRemoteDialog::on_txtURL_textChanged(const QString & /*arg1*/)
+{
+    checkDetails();
 }
 

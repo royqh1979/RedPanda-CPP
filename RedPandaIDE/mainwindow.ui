@@ -1422,7 +1422,7 @@
      <x>0</x>
      <y>0</y>
      <width>1114</width>
-     <height>26</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -1602,6 +1602,8 @@
      <string>Git</string>
     </property>
     <addaction name="actionGit_Create_Repository"/>
+    <addaction name="separator"/>
+    <addaction name="actionGit_Remotes"/>
     <addaction name="separator"/>
     <addaction name="actionGit_Log"/>
     <addaction name="actionGit_Branch"/>
@@ -2809,6 +2811,11 @@
    </property>
    <property name="toolTip">
     <string>Show Log</string>
+   </property>
+  </action>
+  <action name="actionGit_Remotes">
+   <property name="text">
+    <string>Remotes...</string>
    </property>
   </action>
  </widget>

@@ -44,6 +44,7 @@
 #include "vcs/gitbranchdialog.h"
 #include "vcs/gitmergedialog.h"
 #include "vcs/gitlogdialog.h"
+#include "vcs/gitremotedialog.h"
 #include "widgets/infomessagebox.h"
 
 #include <QCloseEvent>
@@ -3107,6 +3108,7 @@ void MainWindow::onProjectViewContextMenu(const QPoint &pos)
             if (shouldAdd)
                 vcsMenu.addAction(ui->actionGit_Add_Files);
         }
+        vcsMenu.addAction(ui->actionGit_Remotes);
         vcsMenu.addAction(ui->actionGit_Log);
         vcsMenu.addAction(ui->actionGit_Branch);
         vcsMenu.addAction(ui->actionGit_Merge);
@@ -3118,6 +3120,7 @@ void MainWindow::onProjectViewContextMenu(const QPoint &pos)
         ui->actionGit_Branch->setEnabled(canBranch);
         ui->actionGit_Merge->setEnabled(canBranch);
         ui->actionGit_Commit->setEnabled(true);
+        ui->actionGit_Remotes->setEnabled(true);
         ui->actionGit_Log->setEnabled(true);
         ui->actionGit_Restore->setEnabled(true);
 
@@ -3229,6 +3232,7 @@ void MainWindow::onFilesViewContextMenu(const QPoint &pos)
             if (shouldAdd)
                 vcsMenu.addAction(ui->actionGit_Add_Files);
         }
+        vcsMenu.addAction(ui->actionGit_Remotes);
         vcsMenu.addAction(ui->actionGit_Log);
         vcsMenu.addAction(ui->actionGit_Branch);
         vcsMenu.addAction(ui->actionGit_Merge);
@@ -3240,6 +3244,7 @@ void MainWindow::onFilesViewContextMenu(const QPoint &pos)
         ui->actionGit_Branch->setEnabled(canBranch);
         ui->actionGit_Merge->setEnabled(canBranch);
         ui->actionGit_Log->setEnabled(true);
+        ui->actionGit_Remotes->setEnabled(true);
         ui->actionGit_Commit->setEnabled(true);
         ui->actionGit_Restore->setEnabled(true);
 
@@ -5754,6 +5759,7 @@ void MainWindow::updateVCSActions()
         canBranch =!mFileSystemModelIconProvider.VCSRepository()->hasChangedFiles()
                 && !mFileSystemModelIconProvider.VCSRepository()->hasStagedFiles();
     }
+    ui->actionGit_Remotes->setEnabled(hasRepository && shouldEnable);
     ui->actionGit_Create_Repository->setEnabled(!hasRepository && shouldEnable);
     ui->actionGit_Log->setEnabled(hasRepository && shouldEnable);
     ui->actionGit_Commit->setEnabled(hasRepository && shouldEnable);
@@ -6920,5 +6926,20 @@ void MainWindow::on_actionGit_Log_triggered()
         setFilesViewRoot(pSettings->environment().currentFolder());
     }
     return ;
+}
+
+
+void MainWindow::on_actionGit_Remotes_triggered()
+{
+    QString folder;
+    if (ui->treeFiles->isVisible()) {
+        folder = pSettings->environment().currentFolder();
+    } else if (ui->projectView->isVisible() && mProject) {
+        folder = mProject->folder();
+    }
+    if (folder.isEmpty())
+        return;
+    GitRemoteDialog dialog(folder);
+    dialog.exec();
 }
 

@@ -278,7 +278,7 @@ QString GitManager::getRemoteURL(const QString &folder, const QString &name)
     args.append("remote");
     args.append("get-url");
     args.append(name);
-    return runGit(folder,args);
+    return runGit(folder,args).trimmed();
 }
 
 QStringList GitManager::listBranches(const QString &folder, int &current)

@@ -18,13 +18,22 @@ public:
 private slots:
     void updateIcons();
     void onRemotesSelectionChanged();
+    void checkDetails();
+    void refresh();
     void on_btnAdd_clicked();
 
     void on_btnRemove_clicked();
-    void refresh();
+    void on_btnProcess_clicked();
+
+    void on_txtName_textChanged(const QString &arg1);
+
+    void on_txtURL_textChanged(const QString &arg1);
+
+
 private:
     Ui::GitRemoteDialog *ui;
     QString mFolder;
+    QStringList mRemotes;
 };
 
 #endif // GITREMOTEDIALOG_H
