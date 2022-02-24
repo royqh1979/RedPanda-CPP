@@ -1,0 +1,6 @@
+/* THIS FILE WILL BE OVERWRITTEN BY Red Panda C++ */
+/* DO NOT EDIT! */
+
+#include "resource.rc"
+
+A ICON "redpanda-git-askpass.ico"

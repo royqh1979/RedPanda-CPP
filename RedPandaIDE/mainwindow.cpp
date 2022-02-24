@@ -6943,3 +6943,92 @@ void MainWindow::on_actionGit_Remotes_triggered()
     dialog.exec();
 }
 
+
+void MainWindow::on_actionGit_Fetch_triggered()
+{
+    QString folder;
+    if (ui->treeFiles->isVisible()) {
+        folder = pSettings->environment().currentFolder();
+    } else if (ui->projectView->isVisible() && mProject) {
+        folder = mProject->folder();
+    }
+    if (folder.isEmpty())
+        return;
+    GitManager manager;
+    QString output;
+    if (!manager.fetch(folder,output)) {
+        InfoMessageBox infoBox;
+        infoBox.showMessage(output);
+    }
+}
+
+
+void MainWindow::on_actionGit_Pull_triggered()
+{
+    QString folder;
+    if (ui->treeFiles->isVisible()) {
+        folder = pSettings->environment().currentFolder();
+    } else if (ui->projectView->isVisible() && mProject) {
+        folder = mProject->folder();
+    }
+    if (folder.isEmpty())
+        return;
+    GitManager manager;
+    QString branch;
+    if (!manager.hasRepository(folder,branch))
+        return;
+    QString remote = manager.getBranchRemote(folder,branch);
+    QString output;
+    if (remote.isEmpty()) {
+        GitRemoteDialog dialog(folder);
+        QString remote = dialog.chooseRemote();
+        if (remote.trimmed().isEmpty())
+            return;
+        if (!manager.setBranchUpstream(folder,branch,remote,output)) {
+            InfoMessageBox infoBox;
+            infoBox.showMessage(output);
+            return;
+        }
+    }
+    manager.pull(folder,output);
+    if (!output.isEmpty()) {
+        InfoMessageBox infoBox;
+        infoBox.showMessage(output);
+    }
+}
+
+
+void MainWindow::on_actionGit_Push_triggered()
+{
+    QString folder;
+    if (ui->treeFiles->isVisible()) {
+        folder = pSettings->environment().currentFolder();
+    } else if (ui->projectView->isVisible() && mProject) {
+        folder = mProject->folder();
+    }
+    if (folder.isEmpty())
+        return;
+    GitManager manager;
+    QString branch;
+    if (!manager.hasRepository(folder,branch))
+        return;
+    QString remote = manager.getBranchRemote(folder,branch);
+    QString output;
+    if (remote.isEmpty()) {
+        GitRemoteDialog dialog(folder);
+        QString remote = dialog.chooseRemote();
+        if (remote.trimmed().isEmpty())
+            return;
+        manager.push(folder,remote,branch,output);
+        if (!output.isEmpty()) {
+            InfoMessageBox infoBox;
+            infoBox.showMessage(output);
+        }
+    } else {
+        if (!output.isEmpty()) {
+            InfoMessageBox infoBox;
+            infoBox.showMessage(output);
+        }
+    }
+}
+

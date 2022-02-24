@@ -1603,6 +1603,9 @@
     </property>
     <addaction name="actionGit_Create_Repository"/>
     <addaction name="separator"/>
+    <addaction name="actionGit_Pull"/>
+    <addaction name="actionGit_Push"/>
+    <addaction name="actionGit_Fetch"/>
     <addaction name="actionGit_Remotes"/>
     <addaction name="separator"/>
     <addaction name="actionGit_Log"/>
@@ -2819,6 +2822,21 @@
   <action name="actionGit_Remotes">
    <property name="text">
     <string>Remotes...</string>
+   </property>
+  </action>
+  <action name="actionGit_Fetch">
+   <property name="text">
+    <string>Fetch</string>
+   </property>
+  </action>
+  <action name="actionGit_Pull">
+   <property name="text">
+    <string>Pull</string>
+   </property>
+  </action>
+  <action name="actionGit_Push">
+   <property name="text">
+    <string>Push</string>
    </property>
   </action>
  </widget>

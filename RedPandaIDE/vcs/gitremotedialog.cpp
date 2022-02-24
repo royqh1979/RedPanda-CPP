@@ -7,7 +7,8 @@
 GitRemoteDialog::GitRemoteDialog(const QString& folder, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::GitRemoteDialog),
-    mFolder(folder)
+    mFolder(folder),
+    mChooseMode(false)
 {
     ui->setupUi(this);
     GitManager manager;
@@ -27,6 +28,18 @@ GitRemoteDialog::GitRemoteDialog(const QString& folder, QWidget *parent) :
 GitRemoteDialog::~GitRemoteDialog()
 {
     delete ui;
+}
+
+QString GitRemoteDialog::chooseRemote()
+{
+    mChooseMode = true;
+    ui->btnClose->setText(tr("Ok"));
+
+    if (exec()==QDialog::Accepted) {
+        if (ui->lstRemotes->selectedItems().count()>0)
+            return ui->lstRemotes->selectedItems()[0]->text();
+    }
+    return "";
 }
 
 void GitRemoteDialog::updateIcons()
@@ -81,8 +94,12 @@ void GitRemoteDialog::on_btnAdd_clicked()
     ui->pnlProcess->setVisible(true);
     ui->btnProcess->setText(tr("Add"));
     ui->btnRemove->setEnabled(false);
+    if (ui->lstRemotes->count()==0) {
+        ui->txtName->setText("origin");
+        ui->txtURL->setFocus();
+    } else
+        ui->txtName->setFocus();
 }
-
 
 void GitRemoteDialog::on_btnRemove_clicked()
 {
@@ -162,5 +179,11 @@ void GitRemoteDialog::on_txtName_textChanged(const QString &/*arg1*/)
 void GitRemoteDialog::on_txtURL_textChanged(const QString & /*arg1*/)
 {
     checkDetails();
+}
+
+
+void GitRemoteDialog::on_btnClose_clicked()
+{
+    accept();
 }
 

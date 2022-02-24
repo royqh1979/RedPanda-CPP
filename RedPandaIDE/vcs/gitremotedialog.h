@@ -14,6 +14,7 @@ class GitRemoteDialog : public QDialog
 public:
     explicit GitRemoteDialog(const QString& folder, QWidget *parent = nullptr);
     ~GitRemoteDialog();
+    QString chooseRemote();
 
 private slots:
     void updateIcons();
@@ -30,10 +31,13 @@ private slots:
     void on_txtURL_textChanged(const QString &arg1);
 
 
+    void on_btnClose_clicked();
+
 private:
     Ui::GitRemoteDialog *ui;
     QString mFolder;
     QStringList mRemotes;
+    bool mChooseMode;
 };
 
 #endif // GITREMOTEDIALOG_H

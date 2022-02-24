@@ -284,6 +284,73 @@ QString GitManager::getRemoteURL(const QString &folder, const QString &name)
     return runGit(folder,args).trimmed();
 }
 
+QString GitManager::getBranchRemote(const QString &folder, const QString &branch)
+{
+    QStringList args;
+    args.append("config");
+    args.append("--get");
+    args.append(QString("branch.%1.remote").arg(branch));
+    return runGit(folder,args).trimmed();
+}
+
+QString GitManager::getBranchMerge(const QString &folder, const QString &branch)
+{
+    QStringList args;
+    args.append("config");
+    args.append("--get");
+    args.append(QString("branch.%1.merge").arg(branch));
+    return runGit(folder,args).trimmed();
+}
+
+bool GitManager::setBranchUpstream(
+        const QString &folder,
+        const QString &branch,
+        const QString &remoteName,
+        QString& output)
+{
+    QStringList args;
+    args.append("branch");
+    args.append(QString("--set-upstream-to=%1/%2").arg(remoteName,branch));
+    args.append(branch);
+    output = runGit(folder,args).trimmed();
+    return !output.startsWith("error") && !output.startsWith("fatal");
+}
+
+bool GitManager::fetch(const QString &folder, QString &output)
+{
+    QStringList args;
+    args.append("fetch");
+    output = runGit(folder,args).trimmed();
+    return !output.startsWith("error") && !output.startsWith("fatal");
+}
+
+bool GitManager::pull(const QString &folder, QString &output)
+{
+    QStringList args;
+    args.append("pull");
+    output = runGit(folder,args).trimmed();
+    return !output.startsWith("error") && !output.startsWith("fatal");
+}
+
+bool GitManager::push(const QString &folder, QString &output)
+{
+    QStringList args;
+    args.append("push");
+    output = runGit(folder,args).trimmed();
+    return !output.startsWith("error") && !output.startsWith("fatal");
+}
+
+bool GitManager::push(const QString &folder, const QString &remoteName, const QString &branch, QString &output)
+{
+    QStringList args;
+    args.append("push");
+    args.append("--set-upstream");
+    args.append(remoteName);
+    args.append(branch);
+    output = runGit(folder,args).trimmed();
+    return !output.startsWith("error") && !output.startsWith("fatal");
+}
+
 QStringList GitManager::listBranches(const QString &folder, int &current)
 {
     QStringList args;

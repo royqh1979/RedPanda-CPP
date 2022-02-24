@@ -598,6 +598,12 @@ private slots:
 
     void on_actionGit_Remotes_triggered();
 
+    void on_actionGit_Fetch_triggered();
+
+    void on_actionGit_Pull_triggered();
+
+    void on_actionGit_Push_triggered();
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;

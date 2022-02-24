@@ -50,6 +50,21 @@ public:
     bool setRemoteURL(const QString& folder, const QString& name,
                       const QString& newURL, QString& output);
     QString getRemoteURL(const QString& folder, const QString& name);
+    QString getBranchRemote(const QString& folder, const QString& branch);
+    QString getBranchMerge(const QString& folder, const QString& branch);
+    bool setBranchUpstream(const QString& folder,
+                           const QString& branch,
+                           const QString& remoteName,
+                           QString &output);
+
+    bool fetch(const QString& folder, QString& output);
+    bool pull(const QString& folder, QString& output);
+    bool push(const QString& folder, QString& output);
+    bool push(const QString& folder,
+              const QString& remoteName,
+              const QString& branch,
+              QString& output);
+
 
     QStringList listBranches(const QString& folder, int& current);
     bool switchToBranch(const QString& folder, const QString& branch, bool create,

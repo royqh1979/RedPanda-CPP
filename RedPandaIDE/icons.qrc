@@ -111,8 +111,6 @@
     </qresource>
     <qresource prefix="/demos">
         <file alias="dark.png">images/demos/dark.png</file>
-        <file alias="dark-zh_CN.png">images/demos/dark-zh_CN.png</file>
         <file alias="light.png">images/demos/light.png</file>
-        <file alias="light-zh_CN.png">images/demos/light-zh_CN.png</file>
     </qresource>
 </RCC>
