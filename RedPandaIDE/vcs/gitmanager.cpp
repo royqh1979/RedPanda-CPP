@@ -22,7 +22,10 @@ void GitManager::createRepository(const QString &folder)
     contents.append(".git");
     contents.append("*.o");
     contents.append("*.exe");
+    contents.append("*.layout");
+#ifdef Q_OS_LINUX
     contents.append("*.");
+#endif
 
     QDir dir(folder);
     stringsToFile(contents,dir.filePath(".gitignore"));

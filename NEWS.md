@@ -6,6 +6,8 @@ Red Panda C++ Version 0.14.4
   - enhancement: clear history in file -> recent menu
   - enhancement: close project in project view's context menu
   - enhancement: auto find compiler sets when run for the first time
+  - enhancement: git - remotes
+  - enhancement: rename "open folder" to "choose working folder"
 
 Red Panda C++ Version 0.14.3
   - fix: wrong code completion font size, when screen dpi changed

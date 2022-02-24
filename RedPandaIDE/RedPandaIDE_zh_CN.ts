@@ -4826,7 +4826,6 @@ Are you really want to continue?</oldsource>
     </message>
     <message>
         <location filename="mainwindow.ui" line="2553"/>
-        <location filename="mainwindow.cpp" line="6222"/>
         <source>Open Folder</source>
         <translation>打开文件夹</translation>
     </message>
@@ -5439,6 +5438,11 @@ Are you really want to continue?</oldsource>
         <location filename="mainwindow.cpp" line="5733"/>
         <source>Do you really want to delete it?</source>
         <translation>你真的要删除它吗？</translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="6222"/>
+        <source>Choose Working Folder</source>
+        <translation type="unfinished">选择工作文件夹</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="6592"/>

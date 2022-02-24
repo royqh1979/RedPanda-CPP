@@ -90,6 +90,85 @@
            <property name="usesScrollButtons">
             <bool>true</bool>
            </property>
+           <widget class="QWidget" name="tabFiles">
+            <attribute name="icon">
+             <iconset resource="icons.qrc">
+              <normaloff>:/icons/images/newlook24/018-copy.png</normaloff>:/icons/images/newlook24/018-copy.png</iconset>
+            </attribute>
+            <attribute name="title">
+             <string>Files</string>
+            </attribute>
+            <layout class="QVBoxLayout" name="verticalLayout_3">
+             <property name="spacing">
+              <number>2</number>
+             </property>
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <widget class="QWidget" name="panelFiles" native="true">
+               <layout class="QHBoxLayout" name="horizontalLayout_13">
+                <property name="spacing">
+                 <number>2</number>
+                </property>
+                <property name="leftMargin">
+                 <number>0</number>
+                </property>
+                <property name="topMargin">
+                 <number>0</number>
+                </property>
+                <property name="rightMargin">
+                 <number>2</number>
+                </property>
+                <property name="bottomMargin">
+                 <number>0</number>
+                </property>
+                <item>
+                 <widget class="QComboBox" name="cbFilesPath">
+                  <property name="editable">
+                   <bool>true</bool>
+                  </property>
+                  <property name="insertPolicy">
+                   <enum>QComboBox::InsertAtTop</enum>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </item>
+             <item>
+              <widget class="QTreeView" name="treeFiles">
+               <property name="editTriggers">
+                <set>QAbstractItemView::EditKeyPressed|QAbstractItemView::SelectedClicked</set>
+               </property>
+               <property name="dragEnabled">
+                <bool>true</bool>
+               </property>
+               <property name="dragDropMode">
+                <enum>QAbstractItemView::DragDrop</enum>
+               </property>
+               <property name="defaultDropAction">
+                <enum>Qt::CopyAction</enum>
+               </property>
+               <property name="selectionMode">
+                <enum>QAbstractItemView::ExtendedSelection</enum>
+               </property>
+               <attribute name="headerVisible">
+                <bool>false</bool>
+               </attribute>
+              </widget>
+             </item>
+            </layout>
+           </widget>
            <widget class="QWidget" name="tabProject">
             <attribute name="icon">
              <iconset resource="icons.qrc">
@@ -211,85 +290,6 @@
                </property>
                <property name="rootIsDecorated">
                 <bool>true</bool>
-               </property>
-               <attribute name="headerVisible">
-                <bool>false</bool>
-               </attribute>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-           <widget class="QWidget" name="tabFiles">
-            <attribute name="icon">
-             <iconset resource="icons.qrc">
-              <normaloff>:/icons/images/newlook24/018-copy.png</normaloff>:/icons/images/newlook24/018-copy.png</iconset>
-            </attribute>
-            <attribute name="title">
-             <string>Files</string>
-            </attribute>
-            <layout class="QVBoxLayout" name="verticalLayout_3">
-             <property name="spacing">
-              <number>2</number>
-             </property>
-             <property name="leftMargin">
-              <number>0</number>
-             </property>
-             <property name="topMargin">
-              <number>0</number>
-             </property>
-             <property name="rightMargin">
-              <number>0</number>
-             </property>
-             <property name="bottomMargin">
-              <number>0</number>
-             </property>
-             <item>
-              <widget class="QWidget" name="panelFiles" native="true">
-               <layout class="QHBoxLayout" name="horizontalLayout_13">
-                <property name="spacing">
-                 <number>2</number>
-                </property>
-                <property name="leftMargin">
-                 <number>0</number>
-                </property>
-                <property name="topMargin">
-                 <number>0</number>
-                </property>
-                <property name="rightMargin">
-                 <number>2</number>
-                </property>
-                <property name="bottomMargin">
-                 <number>0</number>
-                </property>
-                <item>
-                 <widget class="QComboBox" name="cbFilesPath">
-                  <property name="editable">
-                   <bool>true</bool>
-                  </property>
-                  <property name="insertPolicy">
-                   <enum>QComboBox::InsertAtTop</enum>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </widget>
-             </item>
-             <item>
-              <widget class="QTreeView" name="treeFiles">
-               <property name="editTriggers">
-                <set>QAbstractItemView::EditKeyPressed|QAbstractItemView::SelectedClicked</set>
-               </property>
-               <property name="dragEnabled">
-                <bool>true</bool>
-               </property>
-               <property name="dragDropMode">
-                <enum>QAbstractItemView::DragDrop</enum>
-               </property>
-               <property name="defaultDropAction">
-                <enum>Qt::CopyAction</enum>
-               </property>
-               <property name="selectionMode">
-                <enum>QAbstractItemView::ExtendedSelection</enum>
                </property>
                <attribute name="headerVisible">
                 <bool>false</bool>
@@ -2550,7 +2550,10 @@
      <normaloff>:/icons/images/newlook24/053-open.png</normaloff>:/icons/images/newlook24/053-open.png</iconset>
    </property>
    <property name="text">
-    <string>Open Folder</string>
+    <string>Choose Working Folder</string>
+   </property>
+   <property name="toolTip">
+    <string>Choose Working Folder</string>
    </property>
   </action>
   <action name="actionRun_Parameters">

@@ -6219,7 +6219,7 @@ void MainWindow::on_treeFiles_doubleClicked(const QModelIndex &index)
 
 void MainWindow::on_actionOpen_Folder_triggered()
 {
-    QString folder = QFileDialog::getExistingDirectory(this,tr("Open Folder"),
+    QString folder = QFileDialog::getExistingDirectory(this,tr("Choose Working Folder"),
                                                        pSettings->environment().currentFolder());
     if (!folder.isEmpty()) {
         setFilesViewRoot(folder);
