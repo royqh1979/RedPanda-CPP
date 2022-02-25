@@ -1,6 +1,8 @@
 #include "gitrepository.h"
 #include "gitmanager.h"
 
+#include <QDir>
+
 GitRepository::GitRepository(const QString& folder, QObject *parent)
     : QObject{parent},
       mInRepository(false)
@@ -109,8 +111,9 @@ const QString &GitRepository::realFolder() const
 void GitRepository::convertFilesListToSet(const QStringList &filesList, QSet<QString> &set)
 {
     set.clear();
+    QDir dir(mRealFolder);
     foreach (const QString& s, filesList) {
-        set.insert(includeTrailingPathDelimiter(mRealFolder)+s);
+        set.insert(dir.absoluteFilePath(s));
     }
 }
 
