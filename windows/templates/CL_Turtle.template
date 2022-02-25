@@ -16,5 +16,5 @@ Cpp=CL_Turtle_cpp.txt
 UnitCount=1
 Type=0
 IsCpp=1
-linker=-lturtle -lgraphics -luuid -lmsimg32 -lgdi32 -limm32 -lole32 -loleaut32 -lwinmm -lgdiplus_@@__@@_
+linker=-lturtle -lgraphics -luuid -lmsimg32 -lgdi32 -limm32 -lole32 -loleaut32 -lwinmm -lgdiplus
 
