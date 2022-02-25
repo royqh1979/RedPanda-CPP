@@ -5,6 +5,11 @@ SUBDIRS += \
     astyle \
     consolepauser
 
+win32: {
+SUBDIRS += \
+    redpanda-win-git-askpass
+}
+
 APP_NAME = RedPandaCPP
 
 APP_VERSION = 0.14.4
