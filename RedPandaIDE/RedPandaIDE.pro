@@ -101,6 +101,7 @@ SOURCES += \
     vcs/gitremotedialog.cpp \
     vcs/gitrepository.cpp \
     vcs/gitresetdialog.cpp \
+    vcs/gituserconfigdialog.cpp \
     vcs/gitutils.cpp \
     widgets/aboutdialog.cpp \
     widgets/bookmarkmodel.cpp \
@@ -243,6 +244,7 @@ HEADERS += \
     vcs/gitremotedialog.h \
     vcs/gitrepository.h \
     vcs/gitresetdialog.h \
+    vcs/gituserconfigdialog.h \
     vcs/gitutils.h \
     widgets/aboutdialog.h \
     widgets/bookmarkmodel.h \
@@ -347,6 +349,7 @@ FORMS += \
     vcs/gitpushdialog.ui \
     vcs/gitremotedialog.ui \
     vcs/gitresetdialog.ui \
+    vcs/gituserconfigdialog.ui \
     widgets/aboutdialog.ui \
     widgets/choosethemedialog.ui \
     widgets/cpudialog.ui \

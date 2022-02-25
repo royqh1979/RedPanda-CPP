@@ -28,10 +28,10 @@ public:
     bool isFileStaged(const QFileInfo& fileInfo);
     bool isFileChanged(const QFileInfo& fileInfo);
 
-    void add(const QString& folder, const QString& path);
-    void remove(const QString& folder, const QString& path);
-    void rename(const QString& folder, const QString& oldName, const QString& newName);
-    void restore(const QString& folder, const QString& path);
+    bool add(const QString& folder, const QString& path, QString& output);
+    bool remove(const QString& folder, const QString& path, QString& output);
+    bool rename(const QString& folder, const QString& oldName, const QString& newName, QString& output);
+    bool restore(const QString& folder, const QString& path, QString& output);
 
     int logCounts(const QString& folder, const QString& branch=QString());
     QList<PGitCommitInfo> log(const QString& folder, int start, int count, const QString& branch=QString());
@@ -65,6 +65,15 @@ public:
               const QString& branch,
               QString& output);
 
+    bool removeConfig(const QString& folder, const QString &name, QString& output);
+    bool setConfig(const QString& folder, const QString &name, const QString &value, QString& output);
+    bool setUserName(const QString& folder, const QString& userName, QString& output);
+    bool setUserEmail(const QString& folder, const QString& userEmail, QString& output);
+
+    QString getConfig(const QString& folder, const QString& name);
+    QString getUserName(const QString& folder);
+    QString getUserEmail(const QString& folder);
+
 
     QStringList listBranches(const QString& folder, int& current);
     bool switchToBranch(const QString& folder, const QString& branch, bool create,
@@ -78,9 +87,10 @@ public:
     bool continueMerge(const QString& folder);
     void abortMerge(const QString& folder);
 
-    void clone(const QString& folder, const QString& url);
-    void commit(const QString& folder, const QString& message, bool autoStage);
-    void revert(const QString& folder);
+    bool isSuccess(const QString& output);
+    bool clone(const QString& folder, const QString& url, QString& output);
+    bool commit(const QString& folder, const QString& message, bool autoStage, QString& output);
+    bool revert(const QString& folder, QString& output);
     bool reset(const QString& folder, const QString& commit, GitResetStrategy strategy, QString& output);
 
     bool isValid();

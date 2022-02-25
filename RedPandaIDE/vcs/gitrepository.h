@@ -54,15 +54,15 @@ public:
         return !mConflicts.isEmpty();
     }
 
-    void add(const QString& path);
-    void remove(const QString& path);
-    void rename(const QString& oldName, const QString& newName);
-    void restore(const QString& path);
+    bool add(const QString& path, QString& output);
+    bool remove(const QString& path, QString& output);
+    bool rename(const QString& oldName, const QString& newName, QString& output);
+    bool restore(const QString& path, QString& output);
     QSet<QString> listFiles(bool refresh);
 
-    void clone(const QString& url);
-    void commit(const QString& message, bool autoStage=true);
-    void revert();
+    bool clone(const QString& url, QString& output);
+    bool commit(const QString& message, QString& output, bool autoStage=true);
+    bool revert(QString& output);
 
 
     void setFolder(const QString &newFolder);

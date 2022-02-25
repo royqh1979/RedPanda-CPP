@@ -30,24 +30,24 @@ bool GitRepository::hasRepository(QString& currentBranch)
     return  mInRepository;
 }
 
-void GitRepository::add(const QString &path)
+bool GitRepository::add(const QString &path, QString& output)
 {
-    mManager->add(mFolder,path);
+    return mManager->add(mFolder,path, output);
 }
 
-void GitRepository::remove(const QString &path)
+bool GitRepository::remove(const QString &path, QString& output)
 {
-    mManager->remove(mFolder,path);
+    return mManager->remove(mFolder,path, output);
 }
 
-void GitRepository::rename(const QString &oldName, const QString &newName)
+bool GitRepository::rename(const QString &oldName, const QString &newName, QString& output)
 {
-    mManager->rename(mFolder, oldName, newName);
+    return mManager->rename(mFolder, oldName, newName,output);
 }
 
-void GitRepository::restore(const QString &path)
+bool GitRepository::restore(const QString &path, QString& output)
 {
-    mManager->restore(mFolder, path);
+    return mManager->restore(mFolder, path, output);
 }
 
 QSet<QString> GitRepository::listFiles(bool refresh)
@@ -57,19 +57,19 @@ QSet<QString> GitRepository::listFiles(bool refresh)
     return mFilesInRepositories;
 }
 
-void GitRepository::clone(const QString &url)
+bool GitRepository::clone(const QString &url, QString& output)
 {
-    mManager->clone(mFolder,url);
+    return mManager->clone(mFolder,url, output);
 }
 
-void GitRepository::commit(const QString &message, bool autoStage)
+bool GitRepository::commit(const QString &message, QString& output, bool autoStage)
 {
-    mManager->commit(mRealFolder, message, autoStage);
+    return mManager->commit(mRealFolder, message, autoStage, output);
 }
 
-void GitRepository::revert()
+bool GitRepository::revert(QString& output)
 {
-    mManager->revert(mRealFolder);
+    return mManager->revert(mRealFolder, output);
 }
 
 void GitRepository::setFolder(const QString &newFolder)

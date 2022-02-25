@@ -45,6 +45,7 @@
 #include "vcs/gitmergedialog.h"
 #include "vcs/gitlogdialog.h"
 #include "vcs/gitremotedialog.h"
+#include "vcs/gituserconfigdialog.h"
 #include "widgets/infomessagebox.h"
 
 #include <QCloseEvent>
@@ -768,7 +769,8 @@ void MainWindow::onFileSaved(const QString &path, bool inProject)
             if (!inProject) {
                 if ( (isCFile(path) || isHFile(path))
                         &&  !mFileSystemModelIconProvider.VCSRepository()->isFileInRepository(path)) {
-                    mFileSystemModelIconProvider.VCSRepository()->add(extractRelativePath(mFileSystemModelIconProvider.VCSRepository()->folder(),path));
+                    QString output;
+                    mFileSystemModelIconProvider.VCSRepository()->add(extractRelativePath(mFileSystemModelIconProvider.VCSRepository()->folder(),path),output);
                 }
             }
 //            qDebug()<<"update icon provider";
@@ -5458,8 +5460,10 @@ void MainWindow::on_actionAdd_to_project_triggered()
             mProject->cppParser()->addFileToScan(filename);
             QString branch;
             if (pSettings->vcs().gitOk() && mProject->model()->iconProvider()->VCSRepository()->hasRepository(branch)) {
+                QString output;
                 mProject->model()->iconProvider()->VCSRepository()->add(
-                            extractRelativePath(mProject->folder(),filename)
+                            extractRelativePath(mProject->folder(),filename),
+                            output
                             );
             }
         }
@@ -5713,7 +5717,8 @@ void MainWindow::newProjectUnitFile()
     editor->activate();
     QString branch;
     if (pSettings->vcs().gitOk() && mProject->model()->iconProvider()->VCSRepository()->hasRepository(branch)) {
-        mProject->model()->iconProvider()->VCSRepository()->add(newFileName);
+        QString output;
+        mProject->model()->iconProvider()->VCSRepository()->add(newFileName,output);
         mProject->model()->beginUpdate();
         mProject->model()->endUpdate();
     }
@@ -6719,10 +6724,11 @@ void MainWindow::on_actionGit_Create_Repository_triggered()
     } else if (ui->projectView->isVisible() && mProject) {
         GitManager vcsManager;
         vcsManager.createRepository(mProject->folder());
-        vcsManager.add(mProject->folder(), extractFileName(mProject->filename()));
-        vcsManager.add(mProject->folder(), extractFileName(mProject->options().icon));
+        QString output;
+        vcsManager.add(mProject->folder(), extractFileName(mProject->filename()), output);
+        vcsManager.add(mProject->folder(), extractFileName(mProject->options().icon), output);
         foreach (PProjectUnit pUnit, mProject->units()) {
-            vcsManager.add(mProject->folder(),extractRelativePath(mProject->folder(),pUnit->fileName()));
+            vcsManager.add(mProject->folder(),extractRelativePath(mProject->folder(),pUnit->fileName()),output);
         }
         //update project view
         mProject->addUnit(includeTrailingPathDelimiter(mProject->folder())+".gitignore", mProject->rootNode(), true);
@@ -6747,9 +6753,10 @@ void MainWindow::on_actionGit_Add_Files_triggered()
     if (ui->treeFiles->isVisible()) {
         GitManager vcsManager;
         QModelIndexList indices = ui->treeFiles->selectionModel()->selectedRows();
+        QString output;
         foreach (const QModelIndex index,indices) {
             QFileInfo info = mFileSystemModel.fileInfo(index);
-            vcsManager.add(info.absolutePath(),info.fileName());
+            vcsManager.add(info.absolutePath(),info.fileName(),output);
         }
         //update icons in files view
         mFileSystemModelIconProvider.update();
@@ -6766,7 +6773,8 @@ void MainWindow::on_actionGit_Add_Files_triggered()
             if (folderNode->unitIndex>=0) {
                 PProjectUnit unit = mProject->units()[folderNode->unitIndex];
                 QFileInfo info(unit->fileName());
-                vcsManager.add(info.absolutePath(),info.fileName());
+                QString output;
+                vcsManager.add(info.absolutePath(),info.fileName(),output);
             }
         }
     }
@@ -6811,16 +6819,32 @@ void MainWindow::on_actionGit_Commit_triggered()
                               );
         return;
     }
-    vcsManager.commit(folder,message,true);
-
-    //update project view
-    if (mProject) {
-        mProject->model()->beginUpdate();
-        mProject->model()->endUpdate();
+    QString output;
+    QString userName = vcsManager.getUserName(folder);
+    QString userEmail = vcsManager.getUserEmail(folder);
+    if (userName.isEmpty() || userEmail.isEmpty()) {
+        GitUserConfigDialog dialog(folder);
+        if (dialog.exec()!=QDialog::Accepted) {
+            QMessageBox::critical(this,
+                                  tr("Can't Commit"),
+                                  tr("Git needs user info to commit."));
+            return;
+        }
     }
-    //update files view
-    mFileSystemModelIconProvider.update();
-    mFileSystemModel.setIconProvider(&mFileSystemModelIconProvider);
+    if (vcsManager.commit(folder,message,true,output)) {
+        //update project view
+        if (mProject) {
+            mProject->model()->beginUpdate();
+            mProject->model()->endUpdate();
+        }
+        //update files view
+        mFileSystemModelIconProvider.update();
+        mFileSystemModel.setIconProvider(&mFileSystemModelIconProvider);
+    }
+    if (!output.isEmpty()) {
+        InfoMessageBox infoBox;
+        infoBox.showMessage(output);
+    }
 }
 
 
@@ -6835,16 +6859,22 @@ void MainWindow::on_actionGit_Restore_triggered()
     if (folder.isEmpty())
         return;
     GitManager vcsManager;
-    vcsManager.restore(folder,"");
+    QString output;
+    if (vcsManager.restore(folder,"",output)) {
 
-    //update project view
-    if (mProject) {
-        mProject->model()->beginUpdate();
-        mProject->model()->endUpdate();
+        //update project view
+        if (mProject) {
+            mProject->model()->beginUpdate();
+            mProject->model()->endUpdate();
+        }
+        //update files view
+        mFileSystemModelIconProvider.update();
+        mFileSystemModel.setIconProvider(&mFileSystemModelIconProvider);
     }
-    //update files view
-    mFileSystemModelIconProvider.update();
-    mFileSystemModel.setIconProvider(&mFileSystemModelIconProvider);
+    if (!output.isEmpty()) {
+        InfoMessageBox infoBox;
+        infoBox.showMessage(output);
+    }
 }
 
 

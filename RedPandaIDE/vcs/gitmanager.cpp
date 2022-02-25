@@ -29,7 +29,8 @@ void GitManager::createRepository(const QString &folder)
 
     QDir dir(folder);
     stringsToFile(contents,dir.filePath(".gitignore"));
-    add(folder,".gitignore");
+    QString output;
+    add(folder,".gitignore",output);
 }
 
 bool GitManager::hasRepository(const QString &folder, QString& currentBranch)
@@ -93,32 +94,36 @@ bool GitManager::isFileChanged(const QFileInfo &fileInfo)
     return output.trimmed() == fileInfo.fileName();
 }
 
-void GitManager::add(const QString &folder, const QString &path)
+bool GitManager::add(const QString &folder, const QString &path, QString& output)
 {
     QStringList args;
     args.append("add");
     args.append(path);
-    runGit(folder,args);
+    output = runGit(folder,args);
+    return isSuccess(output);
 }
 
-void GitManager::remove(const QString &folder, const QString &path)
+bool GitManager::remove(const QString &folder, const QString &path, QString& output)
 {
     QStringList args;
     args.append("rm");
     args.append(path);
-    runGit(folder,args);
+    output = runGit(folder,args);
+    return isSuccess(output);
 }
 
-void GitManager::rename(const QString &folder, const QString &oldName, const QString &newName)
+bool GitManager::rename(const QString &folder, const QString &oldName,
+                        const QString &newName, QString& output)
 {
     QStringList args;
     args.append("mv");
     args.append(oldName);
     args.append(newName);
-    runGit(folder,args);
+    output = runGit(folder,args);
+    return isSuccess(output);
 }
 
-void GitManager::restore(const QString &folder, const QString &path)
+bool GitManager::restore(const QString &folder, const QString &path, QString& output)
 {
     QStringList args;
     args.append("restore");
@@ -126,7 +131,8 @@ void GitManager::restore(const QString &folder, const QString &path)
         args.append(".");
     else
         args.append(path);
-    runGit(folder,args);
+    output = runGit(folder,args);
+    return isSuccess(output);
 }
 
 int GitManager::logCounts(const QString &folder, const QString &branch)
@@ -236,7 +242,7 @@ bool GitManager::removeRemote(const QString &folder, const QString &remoteName, 
     args.append(remoteName);
 
     output = runGit(folder,args);
-    return !output.startsWith("error") && !output.startsWith("fatal");
+    return isSuccess(output);
 }
 
 bool GitManager::renameRemote(const QString &folder, const QString &oldName, const QString &newName, QString &output)
@@ -248,7 +254,7 @@ bool GitManager::renameRemote(const QString &folder, const QString &oldName, con
     args.append(newName);
 
     output = runGit(folder,args);
-    return !output.startsWith("error") && !output.startsWith("fatal");
+    return isSuccess(output);
 }
 
 bool GitManager::addRemote(const QString &folder, const QString &name, const QString &url, QString &output)
@@ -260,7 +266,7 @@ bool GitManager::addRemote(const QString &folder, const QString &name, const QSt
     args.append(url);
 
     output = runGit(folder,args);
-    return !output.startsWith("error") && !output.startsWith("fatal");
+    return isSuccess(output);
 }
 
 bool GitManager::setRemoteURL(const QString &folder, const QString &name, const QString &newURL, QString &output)
@@ -272,7 +278,7 @@ bool GitManager::setRemoteURL(const QString &folder, const QString &name, const 
     args.append(newURL);
 
     output = runGit(folder,args);
-    return !output.startsWith("error") && !output.startsWith("fatal");
+    return isSuccess(output);
 }
 
 QString GitManager::getRemoteURL(const QString &folder, const QString &name)
@@ -313,7 +319,7 @@ bool GitManager::setBranchUpstream(
     args.append(QString("--set-upstream-to=%1/%2").arg(remoteName,branch));
     args.append(branch);
     output = runGit(folder,args).trimmed();
-    return !output.startsWith("error") && !output.startsWith("fatal");
+    return isSuccess(output);
 }
 
 bool GitManager::fetch(const QString &folder, QString &output)
@@ -321,7 +327,7 @@ bool GitManager::fetch(const QString &folder, QString &output)
     QStringList args;
     args.append("fetch");
     output = runGit(folder,args).trimmed();
-    return !output.startsWith("error") && !output.startsWith("fatal");
+    return isSuccess(output);
 }
 
 bool GitManager::pull(const QString &folder, QString &output)
@@ -329,7 +335,7 @@ bool GitManager::pull(const QString &folder, QString &output)
     QStringList args;
     args.append("pull");
     output = runGit(folder,args).trimmed();
-    return !output.startsWith("error") && !output.startsWith("fatal");
+    return isSuccess(output);
 }
 
 bool GitManager::push(const QString &folder, QString &output)
@@ -337,7 +343,7 @@ bool GitManager::push(const QString &folder, QString &output)
     QStringList args;
     args.append("push");
     output = runGit(folder,args).trimmed();
-    return !output.startsWith("error") && !output.startsWith("fatal");
+    return isSuccess(output);
 }
 
 bool GitManager::push(const QString &folder, const QString &remoteName, const QString &branch, QString &output)
@@ -348,7 +354,58 @@ bool GitManager::push(const QString &folder, const QString &remoteName, const QS
     args.append(remoteName);
     args.append(branch);
     output = runGit(folder,args).trimmed();
-    return !output.startsWith("error") && !output.startsWith("fatal");
+    return isSuccess(output);
+}
+
+bool GitManager::removeConfig(const QString &folder, const QString &name, QString &output)
+{
+    QStringList args;
+    args.append("config");
+    args.append("--unset-all");
+    args.append(name);
+    output = runGit(folder,args);
+    return isSuccess(output);
+}
+
+bool GitManager::setConfig(const QString &folder, const QString &name, const QString &value, QString &output)
+{
+    removeConfig(folder,name,output);
+    QStringList args;
+    args.append("config");
+    args.append("--add");
+    args.append(name);
+    args.append(value);
+    output = runGit(folder,args);
+    return isSuccess(output);
+}
+
+bool GitManager::setUserName(const QString &folder, const QString &userName, QString &output)
+{
+    return setConfig(folder,"user.name",userName,output);
+}
+
+bool GitManager::setUserEmail(const QString &folder, const QString &userEmail, QString &output)
+{
+    return setConfig(folder,"user.email",userEmail,output);
+}
+
+QString GitManager::getConfig(const QString& folder, const QString &name)
+{
+    QStringList args;
+    args.append("config");
+    args.append("--get");
+    args.append(name);
+    return runGit(folder,args).trimmed();
+}
+
+QString GitManager::getUserName(const QString& folder)
+{
+    return getConfig(folder, "user.name");
+}
+
+QString GitManager::getUserEmail(const QString& folder)
+{
+    return getConfig(folder, "user.email");
 }
 
 QStringList GitManager::listBranches(const QString &folder, int &current)
@@ -393,7 +450,7 @@ bool GitManager::switchToBranch(const QString &folder, const QString &branch,
         args.append("--no-track");
     args.append(branch);
     output = runGit(folder,args);
-    return !output.startsWith("error") && !output.startsWith("fatal");
+    return isSuccess(output);
 }
 
 bool GitManager::merge(const QString &folder, const QString &commit, bool squash,
@@ -418,7 +475,7 @@ bool GitManager::merge(const QString &folder, const QString &commit, bool squash
     }
     args.append(commit);
     output = runGit(folder,args);
-    return !output.startsWith("error") && !output.startsWith("fatal");
+    return isSuccess(output);
 }
 
 bool GitManager::continueMerge(const QString &folder)
@@ -427,7 +484,7 @@ bool GitManager::continueMerge(const QString &folder)
     args.append("merge");
     args.append("--continue");
     QString output = runGit(folder,args);
-    return !output.startsWith("error") && !output.startsWith("fatal");
+    return isSuccess(output);
 
 }
 
@@ -439,15 +496,30 @@ void GitManager::abortMerge(const QString &folder)
     runGit(folder,args);
 }
 
-void GitManager::clone(const QString &folder, const QString &url)
+bool GitManager::isSuccess(const QString &output)
+{
+    QStringList lst = textToLines(output);
+    if (!lst.isEmpty()) {
+        foreach (const QString& s, lst) {
+            QString last= s.trimmed();
+            if (last.startsWith("error:") || last.startsWith("fatal:"))
+                return false;
+        }
+        return true;
+    }
+    return true;
+}
+
+bool GitManager::clone(const QString &folder, const QString &url, QString& output)
 {
     QStringList args;
     args.append("clone");
     args.append(url);
-    runGit(folder,args);
+    output = runGit(folder,args);
+    return isSuccess(output);
 }
 
-void GitManager::commit(const QString &folder, const QString &message, bool autoStage)
+bool GitManager::commit(const QString &folder, const QString &message, bool autoStage, QString& output)
 {
     QStringList args;
     args.append("commit");
@@ -455,19 +527,21 @@ void GitManager::commit(const QString &folder, const QString &message, bool auto
         args.append("-a");
     args.append("-m");
     args.append(message);
-    runGit(folder,args);
+    output = runGit(folder,args);
+    return isSuccess(output);
 }
 
-void GitManager::revert(const QString &folder)
+bool GitManager::revert(const QString &folder, QString& output)
 {
     QStringList args;
     args.append("revert");
-    runGit(folder,args);
+    output = runGit(folder,args);
+    return isSuccess(output);
 }
 
 bool GitManager::reset(const QString &folder, const QString &commit,
                        GitResetStrategy strategy,
-                       QString& ouput)
+                       QString& output)
 {
     //todo reset type
     QStringList args;
@@ -490,8 +564,8 @@ bool GitManager::reset(const QString &folder, const QString &commit,
         break;
     }
     args.append(commit);
-    QString output = runGit(folder,args);
-    return !output.startsWith("error") && !output.startsWith("fatal");
+    output = runGit(folder,args);
+    return isSuccess(output);
 }
 
 bool GitManager::isValid()
@@ -512,10 +586,16 @@ QString GitManager::runGit(const QString& workingFolder, const QStringList &args
                             args.join("\" \"")));
 //    qDebug()<<"---------";
 //    qDebug()<<args;
+    QProcessEnvironment env;
+    env.insert("PATH",pSettings->dirs().appDir());
+    env.insert("GIT_ASKPASS",includeTrailingPathDelimiter(pSettings->dirs().appDir())+"redpanda-win-git-askpass.exe");
     QString output = runAndGetOutput(
                 fileInfo.absoluteFilePath(),
                 workingFolder,
-                args);
+                args,
+                "",
+                false,
+                env);
     output = escapeUTF8String(output.toUtf8());
 //    qDebug()<<output;
     emit gitCmdFinished(output);
