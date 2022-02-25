@@ -5,9 +5,9 @@
 
 HINSTANCE hInst;
 
-LRESULT MainDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam);
+LRESULT CALLBACK MainDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam);
 
-LRESULT TxtPasswordWndProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam);
+LRESULT CALLBACK TxtPasswordWndProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam);
 
 WNDPROC lpfnTxtPasswordWndProc=NULL;
 HWND hMainDlg = NULL;
@@ -51,7 +51,7 @@ LRESULT CALLBACK TxtPasswordWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
     return CallWindowProc(lpfnTxtPasswordWndProc, hwnd, msg, wParam, lParam);
 }
 
-LRESULT MainDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
+LRESULT CALLBACK MainDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
     switch (message) {
     case WM_INITDIALOG :
         return TRUE ;
@@ -63,12 +63,6 @@ LRESULT MainDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
             return TRUE ;
         }
         break ;
-    case WM_KEYUP:
-        printf("%d\n",wParam);
-        if (wParam == VK_RETURN) {
-            DestroyWindow(hDlg);
-        }
-        break;
     case WM_CLOSE:
         DestroyWindow(hDlg);
         return TRUE;
@@ -76,5 +70,5 @@ LRESULT MainDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
         PostQuitMessage(0);
         return TRUE;
     };
-    return FALSE;//返回FALSE给缺省对话框函数DefDlgProc(),表示没有处理本消息
+    return FALSE;
 }
