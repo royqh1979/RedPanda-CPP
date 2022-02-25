@@ -10,3 +10,13 @@ SOURCES += \
 RC_FILE += \
     redpanda-git-askpass_private.rc
     resource.rc
+
+isEmpty(PREFIX) {
+    PREFIX = /usr/local
+}
+
+win32: {
+    !isEmpty(PREFIX) {
+        target.path = $${PREFIX}
+    }
+}
