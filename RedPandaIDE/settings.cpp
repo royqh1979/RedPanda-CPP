@@ -2259,7 +2259,7 @@ void Settings::CompilerSet::setOptions()
     sl.append("GNU C++11=gnu++11");
     sl.append("GNU C++14=gnu++14");
     sl.append("GNU C++17=gnu++17");
-    sl.append("GNU C++20=gnu++20");
+    sl.append("GNU C++20=gnu++2a");
     addOption(QObject::tr("Language standard (-std)"), groupName, true, true, false, 0, "-std=", sl);
 
     // Warnings

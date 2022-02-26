@@ -1,3 +1,7 @@
+Red Panda C++ Version 0.14.5
+  - fix: the "gnu c++ 20" option in compiler set options is wrong
+
+
 Red Panda C++ Version 0.14.4
   - enhancement: git - log
   - fix: error in templates
