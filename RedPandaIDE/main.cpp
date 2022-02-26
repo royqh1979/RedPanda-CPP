@@ -185,6 +185,8 @@ int main(int argc, char *argv[])
             default:
                 setTheme("default");
             }
+            //auto detect git in path
+            pSettings->vcs().detectGitInPath();
         }
         auto settings = std::unique_ptr<Settings>(pSettings);
 
@@ -203,11 +205,6 @@ int main(int argc, char *argv[])
 
         //set default open folder
         QDir::setCurrent(pSettings->environment().defaultOpenFolder());
-
-        //auto detect git in path
-        if (!pSettings->vcs().gitOk()) {
-            pSettings->vcs().detectGitInPath();
-        }
 
         MainWindow mainWindow;
         pMainWindow = &mainWindow;
