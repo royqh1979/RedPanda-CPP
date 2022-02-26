@@ -11,7 +11,7 @@ int main(int argc, char *argv[])
         Dialog w;
         if (w.showPrompt(argv[1])==QDialog::Accepted) {
             char* input = w.getInput().toLocal8Bit().data();
-            printf(input);
+            printf("%s",input);
         }
     }
     return 0;

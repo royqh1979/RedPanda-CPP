@@ -587,11 +587,14 @@ QString GitManager::runGit(const QString& workingFolder, const QStringList &args
 //    qDebug()<<"---------";
 //    qDebug()<<args;
     QProcessEnvironment env;
-    env.insert("PATH",pSettings->dirs().appDir());
 #ifdef Q_OS_WIN
+    env.insert("PATH",pSettings->dirs().appDir());
     env.insert("GIT_ASKPASS",includeTrailingPathDelimiter(pSettings->dirs().appDir())+"redpanda-win-git-askpass.exe");
-#else
-    env.insert("GIT_ASKPASS",includeTrailingPathDelimiter(pSettings->dirs().appDir())+"redpanda-git-askpass.exe");
+#elif defined(Q_OS_LINUX)
+    env.insert(QProcessEnvironment::systemEnvironment());
+    env.insert("LANG","en");
+    env.insert("LANGUAGE","en");
+    env.insert("GIT_ASKPASS",includeTrailingPathDelimiter(pSettings->dirs().appLibexecDir())+"redpanda-git-askpass");
 #endif
     QString output = runAndGetOutput(
                 fileInfo.absoluteFilePath(),
