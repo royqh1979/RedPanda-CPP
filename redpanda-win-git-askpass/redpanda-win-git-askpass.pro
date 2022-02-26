@@ -4,6 +4,10 @@ CONFIG -= app_bundle
 CONFIG -= qt
 DEFINES -= UNICODE
 
+isEmpty(APP_NAME) {
+    APP_NAME = RedPandaCPP
+}
+
 SOURCES += \
         main.c
 

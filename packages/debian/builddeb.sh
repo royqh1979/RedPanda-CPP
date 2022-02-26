@@ -7,9 +7,9 @@ test -n $TMP_FOLDER | rm -rf $TMP_FOLDER
 test -z $TMP_FOLDER | mkdir $TMP_FOLDER
 
 
-
 cp -r packages/debian $TMP_FOLDER 
 cp -r astyle $TMP_FOLDER 
+cp -r redpanda-git-askpass $TMP_FOLDER 
 cp -r consolepauser $TMP_FOLDER
 cp -r RedPandaIDE $TMP_FOLDER
 cp README.md $TMP_FOLDER

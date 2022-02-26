@@ -10,6 +10,11 @@ SUBDIRS += \
     redpanda-win-git-askpass
 }
 
+linux: {
+SUBDIRS += \
+    redpanda-git-askpass
+}
+
 APP_NAME = RedPandaCPP
 
 APP_VERSION = 0.14.4
