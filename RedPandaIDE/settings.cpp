@@ -2937,6 +2937,8 @@ void Settings::Environment::doLoad()
         mTerminalPath = stringValue("terminal_path","/usr/bin/x-terminal-emulator");
     mAStylePath = includeTrailingPathDelimiter(pSettings->dirs().appLibexecDir())+"astyle";
 #endif
+    mHideNonSupportFilesInFileView=boolValue("hide_non_support_files_file_view",true);
+    mOpenFilesInSingleInstance = boolValue("open_files_in_single_instance",false);
 }
 
 int Settings::Environment::interfaceFontSize() const
@@ -3029,6 +3031,26 @@ void Settings::Environment::setUseCustomTheme(bool newUseCustomTheme)
     mUseCustomTheme = newUseCustomTheme;
 }
 
+bool Settings::Environment::hideNonSupportFilesInFileView() const
+{
+    return mHideNonSupportFilesInFileView;
+}
+
+void Settings::Environment::setHideNonSupportFilesInFileView(bool newHideNonSupportFilesInFileView)
+{
+    mHideNonSupportFilesInFileView = newHideNonSupportFilesInFileView;
+}
+
+bool Settings::Environment::openFilesInSingleInstance() const
+{
+    return mOpenFilesInSingleInstance;
+}
+
+void Settings::Environment::setOpenFilesInSingleInstance(bool newOpenFilesInSingleInstance)
+{
+    mOpenFilesInSingleInstance = newOpenFilesInSingleInstance;
+}
+
 void Settings::Environment::doSave()
 {
     //Appearence
@@ -3046,6 +3068,9 @@ void Settings::Environment::doSave()
     saveValue("terminal_path",mTerminalPath);
     saveValue("asyle_path",mAStylePath);
 #endif
+
+    saveValue("hide_non_support_files_file_view",mHideNonSupportFilesInFileView);
+    saveValue("open_files_in_single_instance",mOpenFilesInSingleInstance);
 }
 
 QString Settings::Environment::interfaceFont() const

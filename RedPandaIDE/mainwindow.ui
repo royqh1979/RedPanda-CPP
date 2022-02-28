@@ -1422,7 +1422,7 @@
      <x>0</x>
      <y>0</y>
      <width>1114</width>
-     <height>25</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -2837,6 +2837,18 @@
   <action name="actionGit_Push">
    <property name="text">
     <string>Push</string>
+   </property>
+  </action>
+  <action name="actionFilesView_Hide_Non_Support_Files">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/images/newlook24/037-filter.png</normaloff>:/icons/images/newlook24/037-filter.png</iconset>
+   </property>
+   <property name="text">
+    <string>Hide Non Support Files</string>
    </property>
   </action>
  </widget>

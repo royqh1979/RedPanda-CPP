@@ -17,7 +17,7 @@ SUBDIRS += \
 
 APP_NAME = RedPandaCPP
 
-APP_VERSION = 0.14.4
+APP_VERSION = 0.14.5
 
 linux: {
 

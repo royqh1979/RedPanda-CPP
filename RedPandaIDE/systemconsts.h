@@ -109,10 +109,13 @@ public:
 
     const QStringList &codecNames() const;
 
+    const QStringList &defaultFileNameFilters() const;
+
 private:
     void addFileFilter(QStringList& filters, const QString& name, const QString& fileExtensions);
     QStringList mDefaultFileFilters;
     QStringList mIconFileFilters;
+    QStringList mDefaultFileNameFilters;
     QStringList mCodecNames;
 };
 

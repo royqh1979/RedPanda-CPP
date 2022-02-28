@@ -604,6 +604,8 @@ private slots:
 
     void on_actionGit_Push_triggered();
 
+    void on_actionFilesView_Hide_Non_Support_Files_toggled(bool arg1);
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;

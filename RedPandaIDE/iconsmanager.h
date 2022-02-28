@@ -112,6 +112,7 @@ public:
         ACTION_MISC_VALIDATE,
         ACTION_MISC_RENAME,
         ACTION_MISC_HELP,
+        ACTION_MISC_FILTER,
 
         ACTION_FILE_NEW,
         ACTION_FILE_OPEN,

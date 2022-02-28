@@ -7,13 +7,36 @@
     <x>0</x>
     <y>0</y>
     <width>708</width>
-    <height>350</height>
+    <height>459</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QGroupBox" name="groupBox_2">
+     <property name="title">
+      <string>Open Each File In</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_2">
+      <item>
+       <widget class="QRadioButton" name="rbOpenInMultiApplication">
+        <property name="text">
+         <string>Independant Red Panda C++ applications</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="rbOpenInSingleApplication">
+        <property name="text">
+         <string>The same Red Panda C++ application</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
    <item>
     <widget class="QGroupBox" name="groupBox">
      <property name="title">

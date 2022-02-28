@@ -38,9 +38,14 @@
 #include "widgets/choosethemedialog.h"
 #include "thememanager.h"
 #ifdef Q_OS_WIN
+#include <QTemporaryFile>
 #include <windows.h>
+#include <psapi.h>
+#include <QSharedMemory>
+#include <QBuffer>
 #endif
 
+QString getSettingFilename(const QString& filepath, bool& firstRun);
 #ifdef Q_OS_WIN
 class WindowLogoutEventFilter : public QAbstractNativeEventFilter {
 
@@ -48,6 +53,61 @@ class WindowLogoutEventFilter : public QAbstractNativeEventFilter {
 public:
     bool nativeEventFilter(const QByteArray &eventType, void *message, long *result) override;
 };
+#define WM_USER_OPEN_FILE (WM_USER+1)
+HWND prevAppInstance = NULL;
+BOOL CALLBACK GetPreviousInstanceCallback(HWND hwnd, LPARAM param){
+    BOOL result = TRUE;
+    WCHAR buffer[4098];
+    HINSTANCE hWindowModule = (HINSTANCE)GetWindowLongPtr(hwnd,GWLP_HINSTANCE);
+
+    if (hWindowModule==0)
+        return result;
+
+    DWORD processID;
+
+    // Get the ID of the process that created this window
+    GetWindowThreadProcessId(hwnd,&processID);
+    if (processID==0)
+        return result;
+
+    // Get the process associated with the ID
+    HANDLE hWindowProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, processID);
+    if (hWindowProcess == 0)
+        return result;
+
+    // Get its module filename
+    if (GetModuleFileNameExW(hWindowProcess, hWindowModule, buffer, sizeof(buffer)) == 0)
+        return TRUE;
+
+    CloseHandle(hWindowProcess); // not needed anymore
+    WCHAR * compareFilename=(WCHAR*)param;
+    QString s1=QString::fromWCharArray(compareFilename);
+    QString s2=QString::fromWCharArray(buffer);
+
+    //Is from the "same" application?
+    if (QString::compare(s1,s2,PATH_SENSITIVITY)==0) {
+        //found, stop EnumWindows loop
+        prevAppInstance = hwnd;
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+HWND getPreviousInstance() {
+    WCHAR buffer[4098];
+    //ShowMessage('ERROR_ALREADY_EXISTS');
+    // Store our own module filename
+    if (GetModuleFileNameW(GetModuleHandle(NULL), buffer, sizeof(buffer)) == 0)
+        return NULL;
+
+    // If that's the case, walk all top level windows and find the previous instance
+    // At this point, the program that created the mutex might not have created its MainForm yet
+    if (EnumWindows(GetPreviousInstanceCallback, LPARAM(buffer))==0) {
+        return prevAppInstance;
+    } else
+        return NULL;
+}
 
 bool WindowLogoutEventFilter::nativeEventFilter(const QByteArray & /*eventType*/, void *message, long *result){
     MSG * pMsg = static_cast<MSG *>(message);
@@ -71,6 +131,46 @@ bool WindowLogoutEventFilter::nativeEventFilter(const QByteArray & /*eventType*/
         int newDPI = screenDPI();
         pMainWindow->updateDPI(oldDPI,newDPI);
         break;
+        }
+    case WM_USER_OPEN_FILE: {
+        QSharedMemory sharedMemory("RedPandaCpp/openfiles");
+        if (sharedMemory.attach()) {
+            QBuffer buffer;
+            QDataStream in(&buffer);
+            QStringList files;
+            sharedMemory.lock();
+            buffer.setData((char*)sharedMemory.constData(), sharedMemory.size());
+            buffer.open(QBuffer::ReadOnly);
+            in >> files;
+            sharedMemory.unlock();
+            pMainWindow->openFiles(files);
+            sharedMemory.detach();
+        }
+        return true;
+    }
+    }
+    return false;
+}
+
+bool sendFilesToInstance() {
+    HWND prevInstance = getPreviousInstance();
+    if (prevInstance != NULL) {
+        QSharedMemory sharedMemory("RedPandaCpp/openfiles");
+        QBuffer buffer;
+        buffer.open(QBuffer::ReadWrite);
+        QDataStream out(&buffer);
+        QStringList filesToOpen = qApp->arguments();
+        filesToOpen.pop_front();
+        out<<filesToOpen;
+        int size = buffer.size();
+        if (sharedMemory.create(size)) {
+            sharedMemory.lock();
+            char *to = (char*)sharedMemory.data();
+            const char *from = buffer.data().data();
+            memcpy(to, from, qMin(sharedMemory.size(), size));
+            sharedMemory.unlock();
+            SendMessage(prevInstance,WM_USER_OPEN_FILE,0,0);
+            return true;
         }
     }
     return false;
@@ -130,6 +230,35 @@ int main(int argc, char *argv[])
 {
     //QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     QApplication app(argc, argv);
+    QFile tempFile(QDir::tempPath()+QDir::separator()+"RedPandaDevCppStartUp.lock");
+
+    {
+        bool firstRun;
+        QString settingFilename = getSettingFilename(QString(), firstRun);
+        bool openInSingleInstance = false;
+        if (!settingFilename.isEmpty() && !firstRun) {
+            Settings settings(settingFilename);
+            settings.load();
+            openInSingleInstance = settings.environment().openFilesInSingleInstance();
+        } else if (!settingFilename.isEmpty() && firstRun)
+            openInSingleInstance = false;
+        if (openInSingleInstance) {
+            while (true) {
+                if (tempFile.open(QFile::NewOnly))
+                    break;
+                QThread::msleep(100);
+            }
+
+            if (app.arguments().length()>=2) {
+#ifdef Q_OS_WIN
+                if (sendFilesToInstance()) {
+                    tempFile.remove();
+                    return 0;
+                }
+#endif
+            }
+        }
+    }
 
     //Translation must be loaded first
     QTranslator trans,transQt;
@@ -138,8 +267,10 @@ int main(int argc, char *argv[])
     if (!isGreenEdition()) {
         QDir::setCurrent(QStandardPaths::standardLocations(QStandardPaths::DocumentsLocation)[0]);
     }
-    if (settingFilename.isEmpty())
+    if (settingFilename.isEmpty()) {
+        tempFile.remove();
         return -1;
+    }
 
     {
         QSettings languageSetting(settingFilename,QSettings::IniFormat);
@@ -230,6 +361,7 @@ int main(int argc, char *argv[])
         WindowLogoutEventFilter filter;
         app.installNativeEventFilter(&filter);
 #endif
+        tempFile.remove();
         int retCode = app.exec();
         QString configDir = pSettings->dirs().config();
         // save settings
@@ -242,6 +374,7 @@ int main(int argc, char *argv[])
         }
         return retCode;
     }  catch (BaseError e) {
+        tempFile.remove();
         QMessageBox::critical(nullptr,QApplication::tr("Error"),e.reason());
         return -1;
     }

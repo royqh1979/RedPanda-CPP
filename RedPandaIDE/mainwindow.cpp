@@ -296,6 +296,9 @@ MainWindow::MainWindow(QWidget *parent)
     ui->treeFiles->setModel(&mFileSystemModel);
     mFileSystemModel.setReadOnly(false);
     mFileSystemModel.setIconProvider(&mFileSystemModelIconProvider);
+
+    mFileSystemModel.setNameFilters(pSystemConsts->defaultFileNameFilters());
+    mFileSystemModel.setNameFilterDisables(false);
     setFilesViewRoot(pSettings->environment().currentFolder());
     for (int i=1;i<mFileSystemModel.columnCount();i++) {
         ui->treeFiles->hideColumn(i);
@@ -1366,6 +1369,7 @@ void MainWindow::updateActionIcons()
     mFilesView_Open->setIcon(pIconsManager->getIcon(IconsManager::ACTION_FILE_OPEN));
     mFilesView_OpenInTerminal->setIcon(pIconsManager->getIcon(IconsManager::ACTION_MISC_TERM));
     mFilesView_OpenInExplorer->setIcon(pIconsManager->getIcon(IconsManager::ACTION_MISC_FOLDER));
+    ui->actionFilesView_Hide_Non_Support_Files->setIcon(pIconsManager->getIcon(IconsManager::ACTION_MISC_FILTER));
 
     //problem view
     pIconsManager->setIcon(ui->btnNewProblemSet, IconsManager::ACTION_PROBLEM_SET);
@@ -2796,7 +2800,7 @@ void MainWindow::buildContextMenus()
 
     //toolbar for files view
     {
-        QHBoxLayout* hlayout =  dynamic_cast<QHBoxLayout*>( ui->panelFiles->layout());
+        QHBoxLayout* hlayout =  dynamic_cast<QHBoxLayout*>(ui->panelFiles->layout());
         QToolButton * toolButton;
         int size = pointToPixel(pSettings->environment().interfaceFontSize());
         QSize iconSize(size,size);
@@ -2807,6 +2811,15 @@ void MainWindow::buildContextMenus()
         toolButton = new QToolButton;
         toolButton->setIconSize(iconSize);
         toolButton->setDefaultAction(ui->actionLocate_in_Files_View);
+        hlayout->addWidget(toolButton);
+        QFrame * vLine = new QFrame();
+        vLine->setFrameShape(QFrame::VLine);
+        vLine->setFrameShadow(QFrame::Sunken);
+        hlayout->addWidget(vLine);
+        toolButton = new QToolButton;
+        toolButton->setIconSize(iconSize);
+        toolButton->setDefaultAction(ui->actionFilesView_Hide_Non_Support_Files);
+        ui->actionFilesView_Hide_Non_Support_Files->setChecked(pSettings->environment().hideNonSupportFilesInFileView());
         hlayout->addWidget(toolButton);
     }
 
@@ -3207,6 +3220,8 @@ void MainWindow::onFilesViewContextMenu(const QPoint &pos)
     menu.addSeparator();
     menu.addAction(mFilesView_OpenInTerminal);
     menu.addAction(mFilesView_OpenInExplorer);
+    menu.addSeparator();
+    menu.addAction(ui->actionFilesView_Hide_Non_Support_Files);
     QString path = mFileSystemModel.filePath(ui->treeFiles->currentIndex());
     QFileInfo info(path);
     mFilesView_Open->setEnabled(info.isFile());
@@ -7059,6 +7074,17 @@ void MainWindow::on_actionGit_Push_triggered()
             InfoMessageBox infoBox;
             infoBox.showMessage(output);
         }
+    }
+}
+
+
+void MainWindow::on_actionFilesView_Hide_Non_Support_Files_toggled(bool /* arg1 */)
+{
+    mFileSystemModel.setNameFilterDisables(!ui->actionFilesView_Hide_Non_Support_Files->isChecked());
+    if (pSettings->environment().hideNonSupportFilesInFileView()
+            != ui->actionFilesView_Hide_Non_Support_Files->isChecked()) {
+        pSettings->environment().setHideNonSupportFilesInFileView(ui->actionFilesView_Hide_Non_Support_Files->isChecked());
+        pSettings->environment().save();
     }
 }
 

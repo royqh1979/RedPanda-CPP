@@ -95,6 +95,7 @@ void IconsManager::updateActionIcons(const QString& iconSet, int size)
     mIconPixmaps.insert(ACTION_MISC_VALIDATE, createSVGIcon(iconFolder+"00Misc-10Check.svg",size,size));
     mIconPixmaps.insert(ACTION_MISC_RENAME, createSVGIcon(iconFolder+"00Misc-11Rename.svg",size,size));
     mIconPixmaps.insert(ACTION_MISC_HELP, createSVGIcon(iconFolder+"00Misc-12Help.svg",size,size));
+    mIconPixmaps.insert(ACTION_MISC_FILTER, createSVGIcon(iconFolder+"00Misc-13Filter.svg",size,size));
 
     mIconPixmaps.insert(ACTION_FILE_NEW, createSVGIcon(iconFolder+"01File-01New.svg",size,size));
     mIconPixmaps.insert(ACTION_FILE_OPEN, createSVGIcon(iconFolder+"01File-02Open.svg",size,size));

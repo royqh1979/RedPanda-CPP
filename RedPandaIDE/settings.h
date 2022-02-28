@@ -528,6 +528,12 @@ public:
         bool useCustomTheme() const;
         void setUseCustomTheme(bool newUseCustomTheme);
 
+        bool hideNonSupportFilesInFileView() const;
+        void setHideNonSupportFilesInFileView(bool newHideNonSupportFilesInFileView);
+
+        bool openFilesInSingleInstance() const;
+        void setOpenFilesInSingleInstance(bool newOpenFilesInSingleInstance);
+
     private:
 
         //Appearence
@@ -543,6 +549,8 @@ public:
         QString mDefaultOpenFolder;
         QString mTerminalPath;
         QString mAStylePath;
+        bool mHideNonSupportFilesInFileView;
+        bool mOpenFilesInSingleInstance;
         // _Base interface
     protected:
         void doSave() override;

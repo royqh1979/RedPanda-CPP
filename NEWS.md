@@ -1,5 +1,7 @@
 Red Panda C++ Version 0.14.5
   - fix: the "gnu c++ 20" option in compiler set options is wrong
+  - enhancement: option "open files in the same red panda C++ instance", in options->environment->file associations
+  - enhancement: hide unsupported files in files view
 
 
 Red Panda C++ Version 0.14.4

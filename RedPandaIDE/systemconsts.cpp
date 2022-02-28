@@ -59,6 +59,22 @@ SystemConsts::SystemConsts(): mDefaultFileFilters()
     }
     std::sort(codecNames.begin(),codecNames.end());
     mCodecNames.append(codecNames);
+
+    mDefaultFileNameFilters.append("*.c");
+    mDefaultFileNameFilters.append("*.cpp");
+    mDefaultFileNameFilters.append("*.cc");
+    mDefaultFileNameFilters.append("*.C");
+    mDefaultFileNameFilters.append("*.cxx");
+    mDefaultFileNameFilters.append("*.cxx");
+    mDefaultFileNameFilters.append("*.h");
+    mDefaultFileNameFilters.append("*.hpp");
+    mDefaultFileNameFilters.append("*.hxx");
+    mDefaultFileNameFilters.append(".gitignore");
+    mDefaultFileNameFilters.append("*.vs");
+    mDefaultFileNameFilters.append("*.fs");
+    mDefaultFileNameFilters.append("*.txt");
+    mDefaultFileNameFilters.append("*.md");
+    mDefaultFileNameFilters.append("*.dev");
 }
 
 const QStringList &SystemConsts::defaultFileFilters() const noexcept
@@ -89,6 +105,11 @@ void SystemConsts::addDefaultFileFilter(const QString &name, const QString &file
 void SystemConsts::addFileFilter(QStringList& filters, const QString &name, const QString &fileExtensions)
 {
     filters.append(name+ " (" + fileExtensions+")");
+}
+
+const QStringList &SystemConsts::defaultFileNameFilters() const
+{
+    return mDefaultFileNameFilters;
 }
 
 const QStringList &SystemConsts::codecNames() const

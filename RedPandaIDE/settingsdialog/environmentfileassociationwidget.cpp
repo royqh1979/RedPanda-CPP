@@ -49,6 +49,10 @@ EnvironmentFileAssociationWidget::~EnvironmentFileAssociationWidget()
 
 void EnvironmentFileAssociationWidget::doLoad()
 {
+    if (pSettings->environment().openFilesInSingleInstance())
+        ui->rbOpenInSingleApplication->setChecked(true);
+    else
+        ui->rbOpenInMultiApplication->setChecked(true);
     mModel.updateAssociationStates();
 }
 
@@ -56,6 +60,8 @@ void EnvironmentFileAssociationWidget::doSave()
 {
     mModel.saveAssociations();
     mModel.updateAssociationStates();
+    pSettings->environment().setOpenFilesInSingleInstance(ui->rbOpenInSingleApplication->isChecked());
+    pSettings->environment().save();
 }
 
 FileAssociationModel::FileAssociationModel(QObject *parent) : QAbstractListModel(parent)
