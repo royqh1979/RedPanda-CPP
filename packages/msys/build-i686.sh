@@ -10,6 +10,7 @@ SOURCE_DIR=`pwd`
 MINGW="/e/Workspaces/contributes/MinGW/MinGW32"
 MINGW_NAME="MinGW32"
 
+rm -rf  "${BUILD_DIR}"
 test -z "${BUILD_DIR}" | mkdir "${BUILD_DIR}"
 rm -rf  "${PACKAGE_DIR}"
 mkdir "${PACKAGE_DIR}"
