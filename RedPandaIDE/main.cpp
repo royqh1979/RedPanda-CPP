@@ -37,12 +37,16 @@
 #include "editorlist.h"
 #include "widgets/choosethemedialog.h"
 #include "thememanager.h"
+
 #ifdef Q_OS_WIN
 #include <QTemporaryFile>
 #include <windows.h>
 #include <psapi.h>
 #include <QSharedMemory>
 #include <QBuffer>
+#include <winuser.h>
+
+#include "widgets/cpudialog.h"
 #endif
 
 QString getSettingFilename(const QString& filepath, bool& firstRun);
@@ -124,12 +128,18 @@ bool WindowLogoutEventFilter::nativeEventFilter(const QByteArray & /*eventType*/
         }
         break;
     case WM_DPICHANGED:{
-        int oldDPI = screenDPI();
-        QEvent * dpiEvent = new QEvent(DPI_CHANGED_EVENT);
-        qApp->postEvent(pMainWindow,dpiEvent);
-        setScreenDPI(HIWORD(pMsg->wParam));
-        int newDPI = screenDPI();
-        pMainWindow->updateDPI(oldDPI,newDPI);
+        if (pMsg->hwnd == (HWND)pMainWindow->winId()) {
+            int oldDPI = screenDPI();
+            QEvent * dpiEvent = new QEvent(DPI_CHANGED_EVENT);
+            qApp->postEvent(pMainWindow,dpiEvent);
+            setScreenDPI(HIWORD(pMsg->wParam));
+            int newDPI = screenDPI();
+            pMainWindow->updateDPI(oldDPI,newDPI);
+        } else if (pMainWindow->cpuDialog() &&
+                   (HWND)pMainWindow->cpuDialog()->winId() == pMsg->hwnd) {
+            int newDPI = HIWORD(pMsg->wParam);
+            pMainWindow->cpuDialog()->updateDPI(newDPI);
+        }
         break;
         }
     case WM_USER_OPEN_FILE: {
@@ -243,13 +253,17 @@ int main(int argc, char *argv[])
         } else if (!settingFilename.isEmpty() && firstRun)
             openInSingleInstance = false;
         if (openInSingleInstance) {
+            int openCount = 0;
             while (true) {
                 if (tempFile.open(QFile::NewOnly))
                     break;
                 QThread::msleep(100);
+                openCount++;
+                if (openCount>100)
+                    break;
             }
 
-            if (app.arguments().length()>=2) {
+            if (app.arguments().length()>=2 && openCount<100) {
 #ifdef Q_OS_WIN
                 if (sendFilesToInstance()) {
                     tempFile.remove();

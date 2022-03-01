@@ -5,6 +5,9 @@ Red Panda C++ Version 0.14.5
   - fix: can't correctly set break conditions
   - fix: crash when copy to non-c files
   - fix: fonts in cpu window is not correctly set, when dpi changed
+  - enhancement: enable group undo
+  - enhancement: add option "hide symbols start with underscore" and "hide synbols start with two underscore"
+  - fix: can't rename project files that not openned in editor
 
 
 Red Panda C++ Version 0.14.4

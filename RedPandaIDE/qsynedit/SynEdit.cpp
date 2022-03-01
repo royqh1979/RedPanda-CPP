@@ -2681,78 +2681,81 @@ void SynEdit::doAddChar(QChar AChar)
         setSelLength(1);
     }
 
-    mUndoList->BeginBlock();
-    doSetSelText(AChar);
-    int oldCaretX=mCaretX-1;
-    int oldCaretY=mCaretY;
-    // auto
-    if (mOptions.testFlag(eoAutoIndent)
-            && mHighlighter
-            && mHighlighter->getClass()==SynHighlighterClass::CppHighlighter
-            && (oldCaretY<=mLines->count()) ) {
+    if (isIdentChar(AChar)) {
+        doSetSelText(AChar);
+    } else {
+        mUndoList->BeginBlock();
+        doSetSelText(AChar);
+        int oldCaretX=mCaretX-1;
+        int oldCaretY=mCaretY;
+        // auto
+        if (mOptions.testFlag(eoAutoIndent)
+                && mHighlighter
+                && mHighlighter->getClass()==SynHighlighterClass::CppHighlighter
+                && (oldCaretY<=mLines->count()) ) {
 
-        //unindent if ':' at end of the line
-        if (AChar == ':') {
-            QString line = mLines->getString(oldCaretY-1);
-            if (line.length() <= oldCaretX) {
-                int indentSpaces = calcIndentSpaces(oldCaretY,line+":", true);
-                if (indentSpaces != leftSpaces(line)) {
-                    QString newLine = GetLeftSpacing(indentSpaces,true) + trimLeft(line);
-                    mLines->putString(oldCaretY-1,newLine);
-                    internalSetCaretXY(BufferCoord{newLine.length()+2,oldCaretY});
-                    setBlockBegin(caretXY());
-                    setBlockEnd(caretXY());
-                    mUndoList->AddChange(
-                                SynChangeReason::crDelete,
-                                BufferCoord{1, oldCaretY},
-                                BufferCoord{line.length()+1, oldCaretY},
-                                line,
-                                SynSelectionMode::smNormal
-                                );
-                    mUndoList->AddChange(
-                                SynChangeReason::crInsert,
-                                BufferCoord{1, oldCaretY},
-                                BufferCoord{newLine.length()+1, oldCaretY},
-                                "",
-                                SynSelectionMode::smNormal
-                                );
+            //unindent if ':' at end of the line
+            if (AChar == ':') {
+                QString line = mLines->getString(oldCaretY-1);
+                if (line.length() <= oldCaretX) {
+                    int indentSpaces = calcIndentSpaces(oldCaretY,line+":", true);
+                    if (indentSpaces != leftSpaces(line)) {
+                        QString newLine = GetLeftSpacing(indentSpaces,true) + trimLeft(line);
+                        mLines->putString(oldCaretY-1,newLine);
+                        internalSetCaretXY(BufferCoord{newLine.length()+2,oldCaretY});
+                        setBlockBegin(caretXY());
+                        setBlockEnd(caretXY());
+                        mUndoList->AddChange(
+                                    SynChangeReason::crDelete,
+                                    BufferCoord{1, oldCaretY},
+                                    BufferCoord{line.length()+1, oldCaretY},
+                                    line,
+                                    SynSelectionMode::smNormal
+                                    );
+                        mUndoList->AddChange(
+                                    SynChangeReason::crInsert,
+                                    BufferCoord{1, oldCaretY},
+                                    BufferCoord{newLine.length()+1, oldCaretY},
+                                    "",
+                                    SynSelectionMode::smNormal
+                                    );
+                    }
                 }
-            }
-        } else if (AChar == '{' || AChar == '}' || AChar == '#') {
-            //Reindent line when add '{' '}' and '#' at the beginning
-            QString left = mLines->getString(oldCaretY-1).mid(0,oldCaretX-1);
-            // and the first nonblank char is this new {
-            if (left.trimmed().isEmpty()) {
-                int indentSpaces = calcIndentSpaces(oldCaretY,AChar, true);
-                if (indentSpaces != leftSpaces(left)) {
-                    QString right = mLines->getString(oldCaretY-1).mid(oldCaretX-1);
-                    QString newLeft = GetLeftSpacing(indentSpaces,true);
-                    mLines->putString(oldCaretY-1,newLeft+right);
-                    BufferCoord newCaretPos =  BufferCoord{newLeft.length()+2,oldCaretY};
-                    internalSetCaretXY(newCaretPos);
-                    setBlockBegin(caretXY());
-                    setBlockEnd(caretXY());
-                    mUndoList->AddChange(
-                                SynChangeReason::crDelete,
-                                BufferCoord{1, oldCaretY},
-                                BufferCoord{left.length()+1, oldCaretY},
-                                left,
-                                SynSelectionMode::smNormal
-                                );
-                    mUndoList->AddChange(
-                                SynChangeReason::crInsert,
-                                BufferCoord{1, oldCaretY},
-                                BufferCoord{newLeft.length()+1, oldCaretY},
-                                "",
-                                SynSelectionMode::smNormal
-                                );
+            } else if (AChar == '{' || AChar == '}' || AChar == '#') {
+                //Reindent line when add '{' '}' and '#' at the beginning
+                QString left = mLines->getString(oldCaretY-1).mid(0,oldCaretX-1);
+                // and the first nonblank char is this new {
+                if (left.trimmed().isEmpty()) {
+                    int indentSpaces = calcIndentSpaces(oldCaretY,AChar, true);
+                    if (indentSpaces != leftSpaces(left)) {
+                        QString right = mLines->getString(oldCaretY-1).mid(oldCaretX-1);
+                        QString newLeft = GetLeftSpacing(indentSpaces,true);
+                        mLines->putString(oldCaretY-1,newLeft+right);
+                        BufferCoord newCaretPos =  BufferCoord{newLeft.length()+2,oldCaretY};
+                        internalSetCaretXY(newCaretPos);
+                        setBlockBegin(caretXY());
+                        setBlockEnd(caretXY());
+                        mUndoList->AddChange(
+                                    SynChangeReason::crDelete,
+                                    BufferCoord{1, oldCaretY},
+                                    BufferCoord{left.length()+1, oldCaretY},
+                                    left,
+                                    SynSelectionMode::smNormal
+                                    );
+                        mUndoList->AddChange(
+                                    SynChangeReason::crInsert,
+                                    BufferCoord{1, oldCaretY},
+                                    BufferCoord{newLeft.length()+1, oldCaretY},
+                                    "",
+                                    SynSelectionMode::smNormal
+                                    );
 
+                    }
                 }
             }
         }
+        mUndoList->EndBlock();
     }
-    mUndoList->EndBlock();
-
     //DoOnPaintTransient(ttAfter);
 }
 
@@ -4779,11 +4782,13 @@ void SynEdit::setSelTextPrimitiveEx(SynSelectionMode PasteMode, const QString &V
 
 void SynEdit::doSetSelText(const QString &Value)
 {
-    mUndoList->BeginBlock();
-    auto action = finally([this]{
-        mUndoList->EndBlock();
+    bool blockBeginned = false;
+    auto action = finally([this, &blockBeginned]{
+        if (blockBeginned)
+            mUndoList->EndBlock();
     });
     if (selAvail()) {
+      mUndoList->BeginBlock();
       mUndoList->AddChange(
                   SynChangeReason::crDelete, mBlockBegin, mBlockEnd,
                   selText(), mActiveSelectionMode);

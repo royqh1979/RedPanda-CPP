@@ -2684,6 +2684,8 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete)
     mCompletionPopup->setSortByScope(pSettings->codeCompletion().sortByScope());
     mCompletionPopup->setShowKeywords(pSettings->codeCompletion().showKeywords());
     mCompletionPopup->setShowCodeSnippets(pSettings->codeCompletion().showCodeIns());
+    mCompletionPopup->setHideSymbolsStartWithUnderline(pSettings->codeCompletion().hideSymbolsStartsWithUnderLine());
+    mCompletionPopup->setHideSymbolsStartWithTwoUnderline(pSettings->codeCompletion().hideSymbolsStartsWithTwoUnderLine());
     if (pSettings->codeCompletion().showCodeIns()) {
         mCompletionPopup->setCodeSnippets(pMainWindow->codeSnippetManager()->snippets());
     }
@@ -4138,7 +4140,7 @@ void Editor::applySettings()
 {
     SynEditorOptions options = eoAltSetsColumnMode |
             eoDragDropEditing | eoDropFiles |  eoKeepCaretX | eoTabsToSpaces |
-            eoRightMouseMovesCursor | eoScrollByOneLess | eoTabIndent | eoHideShowScrollbars;
+            eoRightMouseMovesCursor | eoScrollByOneLess | eoTabIndent | eoHideShowScrollbars | eoGroupUndo;
 
     //options
     options.setFlag(eoAutoIndent,pSettings->editor().autoIndent());

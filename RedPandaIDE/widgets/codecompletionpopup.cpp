@@ -53,6 +53,9 @@ CodeCompletionPopup::CodeCompletionPopup(QWidget *parent) :
     mShowCodeSnippets = true;
 
     mIgnoreCase = false;
+
+    mHideSymbolsStartWithTwoUnderline = false;
+    mHideSymbolsStartWithUnderline = false;
 }
 
 CodeCompletionPopup::~CodeCompletionPopup()
@@ -382,6 +385,9 @@ void CodeCompletionPopup::filterList(const QString &member)
 
     mCompletionStatementList.clear();
     mCompletionStatementList.reserve(mFullCompletionStatementList.size());
+    bool hideSymbolsTwoUnderline = mHideSymbolsStartWithTwoUnderline && !member.startsWith("__") ;
+    bool hideSymbolsUnderline = mHideSymbolsStartWithUnderline && !member.startsWith("_") ;
+    int len = member.length();
     foreach (const PStatement& statement, mFullCompletionStatementList) {
 
         int matched = 0;
@@ -391,31 +397,37 @@ void CodeCompletionPopup::filterList(const QString &member)
         int lastPos = -10;
         int totalPos = 0;
         statement->matchPositions.clear();
-        foreach (const QChar& ch, member) {
-            if (mIgnoreCase)
-                pos = command.indexOf(ch,pos,Qt::CaseInsensitive);
-            else
-                pos = command.indexOf(ch,pos,Qt::CaseSensitive);
-            if (pos<0) {
-                break;
+        if (hideSymbolsTwoUnderline && statement->command.startsWith("__")) {
+
+        } else if (hideSymbolsUnderline && statement->command.startsWith("_")) {
+
+        } else {
+            foreach (const QChar& ch, member) {
+                if (mIgnoreCase)
+                    pos = command.indexOf(ch,pos,Qt::CaseInsensitive);
+                else
+                    pos = command.indexOf(ch,pos,Qt::CaseSensitive);
+                if (pos<0) {
+                    break;
+                }
+                if (pos == lastPos+1) {
+                    statement->matchPositions.last()->end++;
+                } else {
+                    PStatementMathPosition matchPosition=std::make_shared<StatementMatchPosition>();
+                    matchPosition->start = pos;
+                    matchPosition->end = pos+1;
+                    statement->matchPositions.append(matchPosition);
+                }
+                if (ch==command[pos])
+                    caseMatched++;
+                matched++;
+                totalPos += pos;
+                lastPos = pos;
+                pos+=1;
             }
-            if (pos == lastPos+1) {
-                statement->matchPositions.last()->end++;
-            } else {
-                PStatementMathPosition matchPosition=std::make_shared<StatementMatchPosition>();
-                matchPosition->start = pos;
-                matchPosition->end = pos+1;
-                statement->matchPositions.append(matchPosition);
-            }
-            if (ch==command[pos])
-                caseMatched++;
-            matched++;
-            totalPos += pos;
-            lastPos = pos;
-            pos+=1;
         }
 
-        if (mIgnoreCase && matched==member.length()) {
+        if (mIgnoreCase && matched== len) {
             statement->caseMatched = caseMatched;
             statement->matchPosTotal = totalPos;
             if (member.length()>0) {
@@ -424,7 +436,7 @@ void CodeCompletionPopup::filterList(const QString &member)
             } else
                 statement->firstMatchLength = 0;
             mCompletionStatementList.append(statement);
-        } else if (caseMatched == member.length()) {
+        } else if (caseMatched == len) {
             statement->caseMatched = caseMatched;
             statement->matchPosTotal = totalPos;
             if (member.length()>0) {
@@ -797,6 +809,26 @@ void CodeCompletionPopup::addKeyword(const QString &keyword)
 bool CodeCompletionPopup::isIncluded(const QString &fileName)
 {
     return mIncludedFiles.contains(fileName);
+}
+
+void CodeCompletionPopup::setHideSymbolsStartWithTwoUnderline(bool newHideSymbolsStartWithTwoUnderline)
+{
+    mHideSymbolsStartWithTwoUnderline = newHideSymbolsStartWithTwoUnderline;
+}
+
+bool CodeCompletionPopup::hideSymbolsStartWithTwoUnderline() const
+{
+    return mHideSymbolsStartWithTwoUnderline;
+}
+
+bool CodeCompletionPopup::hideSymbolsStartWithUnderline() const
+{
+    return mHideSymbolsStartWithUnderline;
+}
+
+void CodeCompletionPopup::setHideSymbolsStartWithUnderline(bool newHideSymbolsStartWithUnderline)
+{
+    mHideSymbolsStartWithUnderline = newHideSymbolsStartWithUnderline;
 }
 
 const QString &CodeCompletionPopup::memberOperator() const

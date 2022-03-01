@@ -51,6 +51,8 @@ void EditorCodeCompletionWidget::doLoad()
     ui->chkAppendFunc->setChecked(pSettings->codeCompletion().appendFunc());
     ui->chkShowCodeIns->setChecked(pSettings->codeCompletion().showCodeIns());
     ui->chkClearWhenEditorHidden->setChecked(pSettings->codeCompletion().clearWhenEditorHidden());
+    ui->chkHideSymbolsStartWithTwoUnderline->setChecked(pSettings->codeCompletion().hideSymbolsStartsWithTwoUnderLine());
+    ui->chkHideSymbolsStartWithUnderline->setChecked(pSettings->codeCompletion().hideSymbolsStartsWithUnderLine());
 
     ui->spinMinCharRequired->setValue(pSettings->codeCompletion().minCharRequired());
 }
@@ -76,6 +78,9 @@ void EditorCodeCompletionWidget::doSave()
     pSettings->codeCompletion().setMinCharRequired(ui->spinMinCharRequired->value());
 
     pSettings->codeCompletion().setClearWhenEditorHidden(ui->chkClearWhenEditorHidden->isChecked());
+
+    pSettings->codeCompletion().setHideSymbolsStartsWithTwoUnderLine(ui->chkHideSymbolsStartWithTwoUnderline->isChecked());
+    pSettings->codeCompletion().setHideSymbolsStartsWithUnderLine(ui->chkHideSymbolsStartWithUnderline->isChecked());
 
     pSettings->codeCompletion().save();
 }

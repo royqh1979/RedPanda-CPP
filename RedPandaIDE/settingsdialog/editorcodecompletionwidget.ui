@@ -147,6 +147,20 @@
        </widget>
       </item>
       <item>
+       <widget class="QCheckBox" name="chkHideSymbolsStartWithUnderline">
+        <property name="text">
+         <string>Hide symbols start with underscore</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="chkHideSymbolsStartWithTwoUnderline">
+        <property name="text">
+         <string>Hide symbols start with two underscores</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QWidget" name="widget" native="true">
         <layout class="QHBoxLayout" name="horizontalLayout">
          <property name="leftMargin">
@@ -195,10 +209,16 @@
        <widget class="QWidget" name="widget_2" native="true">
         <layout class="QGridLayout" name="gridLayout">
          <property name="leftMargin">
-          <number>11</number>
+          <number>0</number>
          </property>
          <property name="topMargin">
-          <number>11</number>
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
          </property>
          <item row="0" column="0">
           <widget class="QLabel" name="label">

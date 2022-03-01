@@ -1142,3 +1142,8 @@ void copyFolder(const QString &fromDir, const QString &toDir)
 }
 
 
+
+float pointToPixel(float point, float dpi)
+{
+     return point * dpi / 72;
+}

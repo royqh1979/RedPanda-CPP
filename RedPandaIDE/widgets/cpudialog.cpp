@@ -54,8 +54,7 @@ CPUDialog::CPUDialog(QWidget *parent) :
         ui->txtCode->setForegroundColor(palette().color(QPalette::Text));
         ui->txtCode->setBackgroundColor(palette().color(QPalette::Base));
     }
-
-    resetEditorFont();
+    resetEditorFont(screenDPI());
     ui->lstRegister->setModel(pMainWindow->debugger()->registerModel());
 
     ui->rdIntel->setChecked(pSettings->debugger().useIntelStyle());
@@ -98,6 +97,19 @@ void CPUDialog::updateButtonStates(bool enable)
     ui->btnStepOverInstruction->setEnabled(enable);
 }
 
+void CPUDialog::updateDPI(float dpi)
+{
+    QFont font(pSettings->environment().interfaceFont());
+    font.setPixelSize(pointToPixel(pSettings->environment().interfaceFontSize(),dpi));
+    font.setStyleStrategy(QFont::PreferAntialias);
+    setFont(font);
+    for (QWidget* p:findChildren<QWidget*>()) {
+        if (p!=ui->txtCode)
+            p->setFont(font);
+    }
+    resetEditorFont(dpi);
+}
+
 void CPUDialog::setDisassembly(const QString& file, const QString& funcName,const QStringList& lines)
 {
     ui->txtFunctionName->setText(QString("%1:%2").arg(file, funcName));
@@ -114,14 +126,14 @@ void CPUDialog::setDisassembly(const QString& file, const QString& funcName,cons
         ui->txtCode->setCaretXYEx(true,BufferCoord{1,activeLine+1});
 }
 
-void CPUDialog::resetEditorFont()
+void CPUDialog::resetEditorFont(float dpi)
 {
     QFont f=QFont(pSettings->editor().fontName());
-    f.setPixelSize(pointToPixel(pSettings->editor().fontSize()));
+    f.setPixelSize(pointToPixel(pSettings->editor().fontSize(),dpi));
     f.setStyleStrategy(QFont::PreferAntialias);
     ui->txtCode->setFont(f);
     QFont f2=QFont(pSettings->editor().nonAsciiFontName());
-    f2.setPixelSize(pointToPixel(pSettings->editor().fontSize()));
+    f2.setPixelSize(pointToPixel(pSettings->editor().fontSize(),dpi));
     f2.setStyleStrategy(QFont::PreferAntialias);
     ui->txtCode->setFontForNonAscii(f2);
 }

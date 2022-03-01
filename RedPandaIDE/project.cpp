@@ -2115,24 +2115,23 @@ bool ProjectModel::setData(const QModelIndex &index, const QVariant &value, int 
             }
             // Target filename does not exist anymore. Do a rename
             // change name in project file first (no actual file renaming on disk)
-            mProject->saveUnitAs(idx,newName);
-
+            //save old file, if it is openned;
             // remove old file from monitor list
             pMainWindow->fileSystemWatcher()->removePath(oldName);
 
-            // Finally, we can rename without issues
-            if (!QFile::remove(oldName)){
+            if (!QFile::rename(oldName,newName)) {
                 QMessageBox::critical(pMainWindow,
-                                      tr("Remove failed"),
-                                      tr("Failed to remove file '%1'")
-                                      .arg(oldName),
+                                      tr("Rename failed"),
+                                      tr("Failed to rename file '%1' to '%2'")
+                                      .arg(oldName,newName),
                                       QMessageBox::Ok);
-                mProject->saveUnitAs(idx,oldName);
                 return false;
             }
+            mProject->saveUnitAs(idx,newName);
 
             // Add new filename to file minitor
             pMainWindow->fileSystemWatcher()->addPath(newName);
+
             //suffix changed
             if (mProject && mProject->modelType() == ProjectModelType::FileSystem
                     && QFileInfo(oldName).suffix()!=QFileInfo(newName).suffix()) {

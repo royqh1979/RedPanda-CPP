@@ -602,6 +602,12 @@ public:
         int minCharRequired() const;
         void setMinCharRequired(int newMinCharRequired);
 
+        bool hideSymbolsStartsWithUnderLine() const;
+        void setHideSymbolsStartsWithUnderLine(bool newHideSymbolsStartsWithOneUnderLine);
+
+        bool hideSymbolsStartsWithTwoUnderLine() const;
+        void setHideSymbolsStartsWithTwoUnderLine(bool newHideSymbolsStartsWithTwoUnderLine);
+
     private:
         int mWidth;
         int mHeight;
@@ -617,6 +623,8 @@ public:
         bool mShowCodeIns;
         bool mClearWhenEditorHidden;
         int mMinCharRequired;
+        bool mHideSymbolsStartsWithTwoUnderLine;
+        bool mHideSymbolsStartsWithUnderLine;
 
         // _Base interface
     protected:

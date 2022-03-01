@@ -3606,6 +3606,26 @@ void Settings::CodeCompletion::setMinCharRequired(int newMinCharRequired)
     mMinCharRequired = newMinCharRequired;
 }
 
+bool Settings::CodeCompletion::hideSymbolsStartsWithTwoUnderLine() const
+{
+    return mHideSymbolsStartsWithTwoUnderLine;
+}
+
+void Settings::CodeCompletion::setHideSymbolsStartsWithTwoUnderLine(bool newHideSymbolsStartsWithTwoUnderLine)
+{
+    mHideSymbolsStartsWithTwoUnderLine = newHideSymbolsStartsWithTwoUnderLine;
+}
+
+bool Settings::CodeCompletion::hideSymbolsStartsWithUnderLine() const
+{
+    return mHideSymbolsStartsWithUnderLine;
+}
+
+void Settings::CodeCompletion::setHideSymbolsStartsWithUnderLine(bool newHideSymbolsStartsWithOneUnderLine)
+{
+    mHideSymbolsStartsWithUnderLine = newHideSymbolsStartsWithOneUnderLine;
+}
+
 bool Settings::CodeCompletion::appendFunc() const
 {
     return mAppendFunc;
@@ -3732,6 +3752,8 @@ void Settings::CodeCompletion::doSave()
     saveValue("show_code_ins",mShowCodeIns);
     saveValue("clear_when_editor_hidden",mClearWhenEditorHidden);
     saveValue("min_char_required",mMinCharRequired);
+    saveValue("hide_symbols_start_with_two_underline", mHideSymbolsStartsWithTwoUnderLine);
+    saveValue("hide_symbols_start_with_underline", mHideSymbolsStartsWithUnderLine);
 }
 
 
@@ -3751,6 +3773,8 @@ void Settings::CodeCompletion::doLoad()
     mAppendFunc = boolValue("append_func",true);
     mShowCodeIns = boolValue("show_code_ins",true);
     mMinCharRequired = intValue("min_char_required",1);
+    mHideSymbolsStartsWithTwoUnderLine = boolValue("hide_symbols_start_with_two_underline", true);
+    mHideSymbolsStartsWithUnderLine = boolValue("hide_symbols_start_with_underline", false);
 
     bool doClear = true;
 

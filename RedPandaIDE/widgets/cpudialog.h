@@ -33,8 +33,9 @@ public:
     void updateInfo();
     void updateButtonStates(bool enable);
 public slots:
+    void updateDPI(float dpi);
     void setDisassembly(const QString& file, const QString& funcName,const QStringList& lines);
-    void resetEditorFont();
+    void resetEditorFont(float dpi);
 signals:
     void closed();
 private:

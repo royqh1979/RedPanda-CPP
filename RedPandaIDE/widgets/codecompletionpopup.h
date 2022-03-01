@@ -112,6 +112,11 @@ public:
     bool useCppKeyword() const;
     void setUseCppKeyword(bool newUseCppKeyword);
 
+    bool hideSymbolsStartWithUnderline() const;
+    void setHideSymbolsStartWithUnderline(bool newHideSymbolsStartWithUnderline);
+    bool hideSymbolsStartWithTwoUnderline() const;
+    void setHideSymbolsStartWithTwoUnderline(bool newHideSymbolsStartWithTwoUnderline);
+
     const PStatement &currentStatement() const;
     void setCurrentStatement(const PStatement &newCurrentStatement);
     const std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > >& colors() const;
@@ -160,6 +165,8 @@ private:
     bool mIgnoreCase;
     bool mSortByScope;
     bool mUseCppKeyword;
+    bool mHideSymbolsStartWithUnderline;
+    bool mHideSymbolsStartWithTwoUnderline;
 
     // QWidget interface
 protected:
@@ -170,6 +177,7 @@ protected:
 public:
     bool event(QEvent *event) override;
     const QString &memberOperator() const;
+
 };
 
 #endif // CODECOMPLETIONPOPUP_H

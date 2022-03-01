@@ -234,6 +234,7 @@ void resetCppParser(std::shared_ptr<CppParser> parser, int compilerSetIndex=-1);
 int screenDPI();
 void setScreenDPI(int dpi);
 float pointToPixel(float point);
+float pointToPixel(float point, float dpi);
 float pixelToPoint(float pixel);
 
 void copyFolder(const QString &fromDir, const QString& toDir);

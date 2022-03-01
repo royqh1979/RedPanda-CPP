@@ -625,9 +625,6 @@ void MainWindow::applySettings()
     for (QWidget* p:findChildren<QWidget*>()) {
         p->setFont(font);
     }
-    if (mCPUDialog!=nullptr) {
-        mCPUDialog->resetEditorFont();
-    }
     if (pSettings->environment().useCustomIconSet()) {
         QString customIconSetFolder = pSettings->dirs().config(Settings::Dirs::DataType::IconSet);
         pIconsManager->prepareCustomIconSet(customIconSetFolder);
@@ -1844,7 +1841,7 @@ void MainWindow::showSearchPanel(bool showReplace)
 void MainWindow::showCPUInfoDialog()
 {
     if (mCPUDialog==nullptr) {
-        mCPUDialog = new CPUDialog(this);
+        mCPUDialog = new CPUDialog();
         connect(mCPUDialog, &CPUDialog::closed, this, &MainWindow::cleanUpCPUDialog);
         updateCompileActions();
     }
@@ -4107,6 +4104,9 @@ void MainWindow::closeEvent(QCloseEvent *event) {
     mCompilerManager->stopRun();
     if (!mShouldRemoveAllSettings)
         mSymbolUsageManager->save();
+
+    if (mCPUDialog!=nullptr)
+        cleanUpCPUDialog();
     event->accept();
     return;
 }
@@ -4465,6 +4465,8 @@ void MainWindow::onOJProblemCaseNewOutputGetted(const QString &/* id */, const Q
 
 void MainWindow::cleanUpCPUDialog()
 {
+    disconnect(mCPUDialog,&CPUDialog::closed,
+               this,&MainWindow::cleanUpCPUDialog);
     CPUDialog* ptr=mCPUDialog;
     mCPUDialog=nullptr;
     ptr->deleteLater();
