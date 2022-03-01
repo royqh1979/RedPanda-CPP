@@ -350,10 +350,10 @@ void Debugger::setBreakPointCondition(int index, const QString &condition)
     PBreakpoint breakpoint=mBreakpointModel->setBreakPointCondition(index,condition);
     if (condition.isEmpty()) {
         sendCommand("-break-condition",
-                    QString("%1").arg(breakpoint->line));
+                    QString("%1").arg(breakpoint->number));
     } else {
         sendCommand("-break-condition",
-                    QString("%1 %2").arg(breakpoint->line).arg(condition));
+                    QString("%1 %2").arg(breakpoint->number).arg(condition));
     }
 }
 
