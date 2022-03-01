@@ -5169,10 +5169,13 @@ int SynEdit::insertTextByNormalMode(const QString &Value)
     rescanRange(caretY);
     // step2: insert remaining lines of Value
     while (P < Value.length()) {
-        bool notInComment = !mHighlighter->isLastLineCommentNotFinished(
+        bool notInComment = true;
+        if (mHighlighter) {
+            notInComment = !mHighlighter->isLastLineCommentNotFinished(
                     mHighlighter->getRangeState().state)
                 && !mHighlighter->isLastLineStringNotFinished(
                     mHighlighter->getRangeState().state);
+        }
         if (Value[P] == '\r')
             P++;
         if (Value[P] == '\n')

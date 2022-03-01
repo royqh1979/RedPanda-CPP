@@ -54,6 +54,8 @@ CPUDialog::CPUDialog(QWidget *parent) :
         ui->txtCode->setForegroundColor(palette().color(QPalette::Text));
         ui->txtCode->setBackgroundColor(palette().color(QPalette::Base));
     }
+
+    resetEditorFont();
     ui->lstRegister->setModel(pMainWindow->debugger()->registerModel());
 
     ui->rdIntel->setChecked(pSettings->debugger().useIntelStyle());
@@ -110,6 +112,18 @@ void CPUDialog::setDisassembly(const QString& file, const QString& funcName,cons
     }
     if (activeLine!=-1)
         ui->txtCode->setCaretXYEx(true,BufferCoord{1,activeLine+1});
+}
+
+void CPUDialog::resetEditorFont()
+{
+    QFont f=QFont(pSettings->editor().fontName());
+    f.setPixelSize(pointToPixel(pSettings->editor().fontSize()));
+    f.setStyleStrategy(QFont::PreferAntialias);
+    ui->txtCode->setFont(f);
+    QFont f2=QFont(pSettings->editor().nonAsciiFontName());
+    f2.setPixelSize(pointToPixel(pSettings->editor().fontSize()));
+    f2.setStyleStrategy(QFont::PreferAntialias);
+    ui->txtCode->setFontForNonAscii(f2);
 }
 
 void CPUDialog::sendSyntaxCommand()

@@ -625,6 +625,9 @@ void MainWindow::applySettings()
     for (QWidget* p:findChildren<QWidget*>()) {
         p->setFont(font);
     }
+    if (mCPUDialog!=nullptr) {
+        mCPUDialog->resetEditorFont();
+    }
     if (pSettings->environment().useCustomIconSet()) {
         QString customIconSetFolder = pSettings->dirs().config(Settings::Dirs::DataType::IconSet);
         pIconsManager->prepareCustomIconSet(customIconSetFolder);

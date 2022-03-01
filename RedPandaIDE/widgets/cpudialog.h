@@ -34,6 +34,7 @@ public:
     void updateButtonStates(bool enable);
 public slots:
     void setDisassembly(const QString& file, const QString& funcName,const QStringList& lines);
+    void resetEditorFont();
 signals:
     void closed();
 private:

@@ -3,6 +3,8 @@ Red Panda C++ Version 0.14.5
   - enhancement: option "open files in the same red panda C++ instance", in options->environment->file associations
   - enhancement: hide unsupported files in files view
   - fix: can't correctly set break conditions
+  - fix: crash when copy to non-c files
+  - fix: fonts in cpu window is not correctly set, when dpi changed
 
 
 Red Panda C++ Version 0.14.4
