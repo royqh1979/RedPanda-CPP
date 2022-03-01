@@ -2683,7 +2683,19 @@ void SynEdit::doAddChar(QChar AChar)
 
     if (isIdentChar(AChar)) {
         doSetSelText(AChar);
-    } else {
+    } else if (AChar.isSpace()) {
+        // break group undo chain
+        mUndoList->AddChange(SynChangeReason::crNothing,
+                             BufferCoord{0, 0},
+                             BufferCoord{0, 0},
+                             "", SynSelectionMode::smNormal);
+        doSetSelText(AChar);
+        // break group undo chain
+        mUndoList->AddChange(SynChangeReason::crNothing,
+                             BufferCoord{0, 0},
+                             BufferCoord{0, 0},
+                             "", SynSelectionMode::smNormal);
+    }else {
         mUndoList->BeginBlock();
         doSetSelText(AChar);
         int oldCaretX=mCaretX-1;
@@ -4040,11 +4052,16 @@ void SynEdit::doUndo()
         int OldChangeNumber = Item->changeNumber();
         int SaveChangeNumber = mRedoList->blockChangeNumber();
         mRedoList->setBlockChangeNumber(Item->changeNumber());
-
         {
             auto action = finally([&,this] {
                mRedoList->setBlockChangeNumber(SaveChangeNumber);
             });
+            //skip group chain breakers
+            if (mUndoList->LastChangeReason()==SynChangeReason::crNothing) {
+                while (!mUndoList->isEmpty() && mUndoList->LastChangeReason()==SynChangeReason::crNothing) {
+                    doUndoItem();
+                }
+            }
             do {
                 doUndoItem();
                 Item = mUndoList->PeekItem();

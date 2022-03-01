@@ -845,6 +845,11 @@ SynChangeReason SynEditUndoList::LastChangeReason()
         return mItems.last()->changeReason();
 }
 
+bool SynEditUndoList::isEmpty()
+{
+    return mItems.count()==0;
+}
+
 void SynEditUndoList::Lock()
 {
     mLockCount++;

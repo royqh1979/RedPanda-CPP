@@ -8,6 +8,7 @@ Red Panda C++ Version 0.14.5
   - enhancement: enable group undo
   - enhancement: add option "hide symbols start with underscore" and "hide synbols start with two underscore"
   - fix: can't rename project files that not openned in editor
+  - enhancement: group undo will stop at spaces
 
 
 Red Panda C++ Version 0.14.4

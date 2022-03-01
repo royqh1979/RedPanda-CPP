@@ -202,6 +202,7 @@ public:
     void DeleteItem(int index);
     void EndBlock();
     SynChangeReason LastChangeReason();
+    bool isEmpty();
     void Lock();
     PSynEditUndoItem PeekItem();
     PSynEditUndoItem PopItem();
