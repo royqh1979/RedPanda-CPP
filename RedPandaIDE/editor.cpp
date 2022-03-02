@@ -640,6 +640,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
         mLastIdCharPressed = 0;
         if (mTabStopBegin>=0) {
             mTabStopBegin = -1;
+            setBlockEnd(caretXY());
             invalidateLine(caretY());
             clearUserCodeInTabStops();
         }
@@ -4026,6 +4027,7 @@ void Editor::tab()
     } else {
         if (mTabStopBegin >= 0) {
             mTabStopBegin = -1;
+            setCaretXY(blockEnd());
             invalidateLine(caretY());
             return;
         }

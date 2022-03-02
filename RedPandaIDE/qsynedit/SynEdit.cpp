@@ -2246,11 +2246,12 @@ void SynEdit::insertLine(bool moveCaret)
                 && !mHighlighter->isLastLineStringNotFinished(
                     mHighlighter->getRangeState().state);
     }
-    int indentSpaces = calcIndentSpaces(mCaretY+1,
-                                        rightLineText,mOptions.testFlag(eoAutoIndent)
-                                        && notInComment);
+    int indentSpaces = 0;
     if (mOptions.testFlag(eoAutoIndent)) {
         rightLineText=trimLeft(rightLineText);
+        indentSpaces = calcIndentSpaces(mCaretY+1,
+                                        rightLineText,mOptions.testFlag(eoAutoIndent)
+                                            && notInComment);
     }
     QString indentSpacesForRightLineText = GetLeftSpacing(indentSpaces,true);
     mLines->insert(mCaretY, indentSpacesForRightLineText+rightLineText);
@@ -2259,28 +2260,30 @@ void SynEdit::insertLine(bool moveCaret)
     mUndoList->AddChange(SynChangeReason::crLineBreak, caretXY(), caretXY(), rightLineText,
               SynSelectionMode::smNormal);
 
-    //insert new line in middle of "/*" and "*/"
-    if (!notInComment &&
-            ( leftLineText.endsWith("/*") && rightLineText.startsWith("*/")
-             )) {
-        indentSpaces = calcIndentSpaces(mCaretY+1, "" , mOptions.testFlag(eoAutoIndent)) + mTabWidth;
-        indentSpacesForRightLineText = GetLeftSpacing(indentSpaces,true);
-        mLines->insert(mCaretY, indentSpacesForRightLineText);
-        nLinesInserted++;
-        mUndoList->AddChange(SynChangeReason::crLineBreak, caretXY(), caretXY(), "",
-                SynSelectionMode::smNormal);
-    }
-    //insert new line in middle of "{" and "}"
-    if (notInComment &&
-            ( leftLineText.endsWith('{') && rightLineText.startsWith('}')
-             )) {
-        indentSpaces = calcIndentSpaces(mCaretY+1, "" , mOptions.testFlag(eoAutoIndent)
-                                                               && notInComment);
-        indentSpacesForRightLineText = GetLeftSpacing(indentSpaces,true);
-        mLines->insert(mCaretY, indentSpacesForRightLineText);
-        nLinesInserted++;
-        mUndoList->AddChange(SynChangeReason::crLineBreak, caretXY(), caretXY(), "",
-                SynSelectionMode::smNormal);
+    if (!mUndoing) {
+        //insert new line in middle of "/*" and "*/"
+        if (!notInComment &&
+                ( leftLineText.endsWith("/*") && rightLineText.startsWith("*/")
+                 )) {
+            indentSpaces = calcIndentSpaces(mCaretY+1, "" , mOptions.testFlag(eoAutoIndent)) + mTabWidth;
+            indentSpacesForRightLineText = GetLeftSpacing(indentSpaces,true);
+            mLines->insert(mCaretY, indentSpacesForRightLineText);
+            nLinesInserted++;
+            mUndoList->AddChange(SynChangeReason::crLineBreak, caretXY(), caretXY(), "",
+                    SynSelectionMode::smNormal);
+        }
+        //insert new line in middle of "{" and "}"
+        if (notInComment &&
+                ( leftLineText.endsWith('{') && rightLineText.startsWith('}')
+                 )) {
+            indentSpaces = calcIndentSpaces(mCaretY+1, "" , mOptions.testFlag(eoAutoIndent)
+                                                                   && notInComment);
+            indentSpacesForRightLineText = GetLeftSpacing(indentSpaces,true);
+            mLines->insert(mCaretY, indentSpacesForRightLineText);
+            nLinesInserted++;
+            mUndoList->AddChange(SynChangeReason::crLineBreak, caretXY(), caretXY(), "",
+                    SynSelectionMode::smNormal);
+        }
     }
     if (moveCaret)
         internalSetCaretXY(BufferCoord{indentSpacesForRightLineText.length()+1,mCaretY + 1});
@@ -4255,6 +4258,12 @@ void SynEdit::doUndoItem()
                         Item->changeStr(),
                         Item->changeSelMode());
             break;
+        case SynChangeReason::crNothing:
+            mRedoList->AddChange(SynChangeReason::crNothing,
+                                 BufferCoord{0, 0},
+                                 BufferCoord{0, 0},
+                                 "", SynSelectionMode::smNormal);
+            break;
         default:
             break;
         }
@@ -4282,6 +4291,12 @@ void SynEdit::doRedo()
         auto action = finally([&,this]{
             mUndoList->setBlockChangeNumber(SaveChangeNumber);
         });
+        //skip group chain breakers
+        if (mRedoList->LastChangeReason()==SynChangeReason::crNothing) {
+            while (!mRedoList->isEmpty() && mRedoList->LastChangeReason()==SynChangeReason::crNothing) {
+                doRedoItem();
+            }
+        }
         bool FKeepGoing;
         do {
           doRedoItem();
@@ -4335,6 +4350,7 @@ void SynEdit::doRedo()
 
 void SynEdit::doRedoItem()
 {
+    mUndoing = true;
     bool ChangeScrollPastEol = ! mOptions.testFlag(eoScrollPastEol);
     PSynEditUndoItem Item = mRedoList->PopItem();
     if (Item) {
@@ -4343,6 +4359,7 @@ void SynEdit::doRedoItem()
         mOptions.setFlag(eoScrollPastEol);
         mUndoList->setInsideRedo(true);
         auto action = finally([&,this]{
+            mUndoing = false;
             mUndoList->setInsideRedo(false);
             if (ChangeScrollPastEol)
                 mOptions.setFlag(eoScrollPastEol,false);
@@ -4806,6 +4823,7 @@ void SynEdit::doSetSelText(const QString &Value)
     });
     if (selAvail()) {
       mUndoList->BeginBlock();
+      blockBeginned = true;
       mUndoList->AddChange(
                   SynChangeReason::crDelete, mBlockBegin, mBlockEnd,
                   selText(), mActiveSelectionMode);
@@ -5174,7 +5192,7 @@ int SynEdit::insertTextByNormalMode(const QString &Value)
     Start = 0;
     P = GetEOL(Value,Start);
     if (P<Value.length()) {
-        if (mHighlighter) {
+        if (mHighlighter && mOptions.testFlag(eoAutoIndent)) {
             QString s = trimLeft(Value.mid(0, P - Start));
             if (sLeftSide.isEmpty()) {
                 sLeftSide = GetLeftSpacing(calcIndentSpaces(caretY,s,true),true);
