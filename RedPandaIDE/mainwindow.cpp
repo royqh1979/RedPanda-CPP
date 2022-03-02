@@ -752,7 +752,7 @@ void MainWindow::setActiveBreakpoint(QString FileName, int Line, bool setFocus)
 
 void MainWindow::updateDPI(int oldDPI, int newDPI)
 {
-    applySettings();
+    //applySettings();
     if (oldDPI<1)
         oldDPI = 1;
     mBottomPanelHeight = mBottomPanelHeight * newDPI / oldDPI ;
@@ -4147,6 +4147,7 @@ void MainWindow::hideEvent(QHideEvent *)
 bool MainWindow::event(QEvent *event)
 {
     if (event->type()==DPI_CHANGED_EVENT) {
+        applySettings();
         int saveHeight = mBottomPanelHeight ;
         int saveWidth = mLeftPanelWidth;
         openCloseBottomPanel(mBottomPanelOpenned);
