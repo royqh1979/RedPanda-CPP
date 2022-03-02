@@ -374,6 +374,8 @@ void SynEditCppHighlighter::braceCloseProc()
     }
 
     mRange.braceLevel -= 1;
+    if (mRange.braceLevel<0)
+        mRange.braceLevel = 0;
     if (mRange.leftBraces>0) {
         mRange.leftBraces--;
     } else {
@@ -909,6 +911,8 @@ void SynEditCppHighlighter::roundCloseProc()
     mTokenId = TokenKind::Symbol;
     mExtTokenId = ExtTokenKind::RoundClose;
     mRange.parenthesisLevel--;
+    if (mRange.parenthesisLevel<0)
+        mRange.parenthesisLevel=0;
     popIndents(sitParenthesis);
 }
 
@@ -983,6 +987,8 @@ void SynEditCppHighlighter::squareCloseProc()
     mTokenId = TokenKind::Symbol;
     mExtTokenId = ExtTokenKind::SquareClose;
     mRange.bracketLevel--;
+    if (mRange.bracketLevel<0)
+        mRange.bracketLevel=0;
     popIndents(sitBracket);
 }
 

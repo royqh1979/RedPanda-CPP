@@ -2077,14 +2077,25 @@ bool Editor::handleParentheseSkip()
       }
       if (status != QuoteStatus::NotQuote)
           return false;
-      BufferCoord pos = getMatchingBracket();
-      if (pos.Line != 0) {
+
+      if (!highlighter())
+          return false;
+      if (lines()->count()==0)
+          return false;
+      SynRangeState lastLineState = lines()->ranges(lines()->count()-1);
+      if (lastLineState.parenthesisLevel==0) {
           setCaretXY( BufferCoord{caretX() + 1, caretY()}); // skip over
           return true;
       }
+      return false;
+//      BufferCoord pos = getMatchingBracket();
+//      if (pos.Line != 0) {
+//          setCaretXY( BufferCoord{caretX() + 1, caretY()}); // skip over
+//          return true;
+//      }
 //      if FunctionTipAllowed then
       //        fFunctionTip.Activated := false;
-      return false;
+//      return false;
 }
 
 bool Editor::handleBracketCompletion()
@@ -2105,11 +2116,20 @@ bool Editor::handleBracketSkip()
 {
     if (getCurrentChar() != ']')
         return false;
-    BufferCoord pos = getMatchingBracket();
-    if (pos.Line != 0) {
+    if (!highlighter())
+        return false;
+    if (lines()->count()==0)
+        return false;
+    SynRangeState lastLineState = lines()->ranges(lines()->count()-1);
+    if (lastLineState.bracketLevel==0) {
         setCaretXY( BufferCoord{caretX() + 1, caretY()}); // skip over
         return true;
     }
+//    BufferCoord pos = getMatchingBracket();
+//    if (pos.Line != 0) {
+//        setCaretXY( BufferCoord{caretX() + 1, caretY()}); // skip over
+//        return true;
+//    }
     return false;
 }
 
@@ -2161,15 +2181,27 @@ bool Editor::handleBraceSkip()
 {
     if (getCurrentChar() != '}')
         return false;
-    BufferCoord pos = getMatchingBracket();
-    if (pos.Line != 0) {
+    if (!highlighter())
+        return false;
+    if (lines()->count()==0)
+        return false;
+    SynRangeState lastLineState = lines()->ranges(lines()->count()-1);
+    if (lastLineState.braceLevel==0) {
         bool oldInsertMode = insertMode();
         setInsertMode(false); //set mode to overwrite
         commandProcessor(SynEditorCommand::ecChar,'}');
         setInsertMode(oldInsertMode);
-//        setCaretXY( BufferCoord{caretX() + 1, caretY()}); // skip over
         return true;
     }
+//    BufferCoord pos = getMatchingBracket();
+//    if (pos.Line != 0) {
+//        bool oldInsertMode = insertMode();
+//        setInsertMode(false); //set mode to overwrite
+//        commandProcessor(SynEditorCommand::ecChar,'}');
+//        setInsertMode(oldInsertMode);
+////        setCaretXY( BufferCoord{caretX() + 1, caretY()}); // skip over
+//        return true;
+//    }
     return false;
 }
 
