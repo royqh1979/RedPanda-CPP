@@ -15,7 +15,8 @@ Red Panda C++ Version 0.14.5
   - enhancement: use the expression evaluation logic to handle "goto declaration"/"goto definition" 
   - enhancement: reduce startup time by about 1 second.
   - enhancement: add option "mouse selection/drag scroll speed" in the options dialog's "Editor" / "general" tab.
-  - fix: scroll speed of mouse selection/drag is too fast
+  - fix: the scroll speed of mouse selection/drag is too fast.
+  - fix: the scroll behavior of mouse dragging on the editor's edge is not correct
 
 Red Panda C++ Version 0.14.4
   - enhancement: git - log

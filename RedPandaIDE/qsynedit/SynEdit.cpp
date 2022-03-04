@@ -2514,9 +2514,9 @@ void SynEdit::computeScroll(int X, int Y, bool isDragging)
     else
         mScrollDeltaX = 0;
 
-    if (isDragging && (X<0 || X>clientRect().width())) {
-        mScrollDeltaX = 0;
-    }
+//    if (isDragging && (X<0 || X>clientRect().width())) {
+//        mScrollDeltaX = 0;
+//    }
 
     if (Y < iScrollBounds.top())
         mScrollDeltaY = (Y - iScrollBounds.top()) / mTextHeight - 1;
@@ -2525,9 +2525,9 @@ void SynEdit::computeScroll(int X, int Y, bool isDragging)
     else
         mScrollDeltaY = 0;
 
-    if (isDragging && (Y<0 || Y>clientRect().height())) {
-        mScrollDeltaY = 0;
-    }
+//    if (isDragging && (Y<0 || Y>clientRect().height())) {
+//        mScrollDeltaY = 0;
+//    }
 
 //    if (mScrollDeltaX!=0 || mScrollDeltaY!=0) {
     if (isDragging) {
