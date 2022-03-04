@@ -400,7 +400,6 @@ void SynEditTextPainter::PaintToken(const QString &Token, int TokenCols, int Col
         } else {
             int tokenColLen=0;
             startPaint = false;
-            bool isAscii = true;
             for (int i=0;i<Token.length();i++) {
                 int charCols=0;
                 QString textToPaint = Token[i];
@@ -419,24 +418,24 @@ void SynEditTextPainter::PaintToken(const QString &Token, int TokenCols, int Col
                     break;
                 //painter->drawText(nX,rcToken.bottom()-painter->fontMetrics().descent()*edit->dpiFactor() , Token[i]);
                 if (startPaint) {
-                    if (Token[i].unicode()<255)
-                        isAscii=true;
                     bool  drawed = false;
                     if (painter->fontInfo().fixedPitch()
                              && edit->mOptions.testFlag(eoLigatureSupport)
-                             && isAscii) {
+                             && !Token[i].isSpace()
+                             && (Token[i].unicode()<=0xFF)) {
                         while(i+1<Token.length()) {
-                            if (Token[i+1].unicode()>=255)
+                            if (Token[i+1].unicode()>0xFF || Token[i+1].isSpace())
                                 break;
                             i+=1;
                             charCols +=  edit->charColumns(Token[i]);
                             textToPaint+=Token[i];
                         }
                         painter->drawText(nX,rcToken.bottom()-painter->fontMetrics().descent() , textToPaint);
+                        qDebug()<<textToPaint;
                         drawed = true;
                     }
                     if (!drawed) {
-                        if (Token[i].unicode()<=255)
+                        if (Token[i].unicode()<=0xFF)
                             painter->drawText(nX,rcToken.bottom()-painter->fontMetrics().descent() , Token[i]);
                         else {
                             painter->setFont(fontForNonAscii);

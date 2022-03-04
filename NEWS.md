@@ -10,7 +10,9 @@ Red Panda C++ Version 0.14.5
   - fix: can't rename project files that not openned in editor
   - enhancement: group undo will stop at spaces
   - fix: menu font size is wrong when dpi changed
-  - enhancement: better processing of  symbol completion
+  - enhancement: better processing of symbol completion
+  - enhancement: better support of ligatures
+  - enhancement: use the expression evaluation logic to handle "goto declaration"/"goto definition" 
 
 Red Panda C++ Version 0.14.4
   - enhancement: git - log

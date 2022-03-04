@@ -1120,7 +1120,6 @@ void Editor::mouseReleaseEvent(QMouseEvent *event)
             QString s = lines()->getString(p.Line - 1);
             if (mParser->isIncludeLine(s)) {
                 QString filename = mParser->getHeaderFileName(mFilename,s);
-                qDebug()<<filename;
                 Editor * e = pMainWindow->editorList()->getEditorByFilename(filename);
                 if (e) {
                     e->setCaretPositionAndActivate(1,1);
@@ -3658,17 +3657,25 @@ void Editor::setInProject(bool newInProject)
 
 void Editor::gotoDeclaration(const BufferCoord &pos)
 {
-    // Exit early, don't bother creating a stream (which is slow)
-    BufferCoord pBeginPos, pEndPos;
-    QString phrase = getWordAtPosition(this,pos,pBeginPos,pEndPos, WordPurpose::wpInformation);
-    if (phrase.isEmpty())
+    if (!parser())
         return;
+    // Exit early, don't bother creating a stream (which is slow)
+    QStringList expression = getExpressionAtPosition(pos);
 
-    PStatement statement = mParser->findStatementOf(
-                mFilename,phrase,pos.Line);
+    // Find it's definition
+    PStatement statement = parser()->findStatementOf(
+                filename(),
+                expression,
+                pos.Line);
+//    QString phrase = getWordAtPosition(this,pos,pBeginPos,pEndPos, WordPurpose::wpInformation);
+//    if (phrase.isEmpty())
+//        return;
+
+//    PStatement statement = mParser->findStatementOf(
+//                mFilename,phrase,pos.Line);
 
     if (!statement) {
-        pMainWindow->updateStatusbarMessage(tr("Symbol '%1' not found!").arg(phrase));
+//        pMainWindow->updateStatusbarMessage(tr("Symbol '%1' not found!").arg(phrase));
         return;
     }
     QString filename;
@@ -3688,17 +3695,16 @@ void Editor::gotoDeclaration(const BufferCoord &pos)
 
 void Editor::gotoDefinition(const BufferCoord &pos)
 {
-    // Exit early, don't bother creating a stream (which is slow)
-    BufferCoord pBeginPos, pEndPos;
-    QString phrase = getWordAtPosition(this,pos,pBeginPos,pEndPos, WordPurpose::wpInformation);
-    if (phrase.isEmpty())
-        return;
+    QStringList expression = getExpressionAtPosition(pos);
 
-    PStatement statement = mParser->findStatementOf(
-                mFilename,phrase,pos.Line);
+    // Find it's definition
+    PStatement statement = parser()->findStatementOf(
+                filename(),
+                expression,
+                pos.Line);
 
     if (!statement) {
-        pMainWindow->updateStatusbarMessage(tr("Symbol '%1' not found!").arg(phrase));
+        // pMainWindow->updateStatusbarMessage(tr("Symbol '%1' not found!").arg(phrase));
         return;
     }
     QString filename;
