@@ -723,6 +723,7 @@ private:
     QString mInputPreeditString;
 
     int mMouseWheelScrollSpeed;
+    int mMouseSelectionScrollSpeed;
 
     BufferCoord mDragCaretSave;
     BufferCoord mDragSelBeginSave;
@@ -759,6 +760,9 @@ QVariant inputMethodQuery(Qt::InputMethodQuery property) const override;
 // QWidget interface
 const QFont &fontForNonAscii() const;
 void setFontForNonAscii(const QFont &newFontForNonAscii);
+
+int mouseSelectionScrollSpeed() const;
+void setMouseSelectionScrollSpeed(int newMouseSelectionScrollSpeed);
 
 protected:
 void dragEnterEvent(QDragEnterEvent *event) override;

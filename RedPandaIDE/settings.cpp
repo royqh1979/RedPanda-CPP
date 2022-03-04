@@ -614,6 +614,16 @@ void Settings::Editor::setNonAsciiFontName(const QString &newNonAsciiFontName)
     mNonAsciiFontName = newNonAsciiFontName;
 }
 
+int Settings::Editor::mouseSelectionScrollSpeed() const
+{
+    return mMouseSelectionScrollSpeed;
+}
+
+void Settings::Editor::setMouseSelectionScrollSpeed(int newMouseSelectionScrollSpeed)
+{
+    mMouseSelectionScrollSpeed = newMouseSelectionScrollSpeed;
+}
+
 bool Settings::Editor::highlightCurrentWord() const
 {
     return mHighlightCurrentWord;
@@ -1115,6 +1125,7 @@ void Settings::Editor::doSave()
     saveValue("scroll_by_one_less", mScrollByOneLess);
     saveValue("half_page_scroll", mHalfPageScroll);
     saveValue("mouse_wheel_scroll_speed", mMouseWheelScrollSpeed);
+    saveValue("mouse_selection_scroll_speed",mMouseSelectionScrollSpeed);
 
     //right edge
     saveValue("show_right_edge_line",mShowRightEdgeLine);
@@ -1232,6 +1243,7 @@ void Settings::Editor::doLoad()
     mScrollByOneLess = boolValue("scroll_by_one_less", false);
     mHalfPageScroll = boolValue("half_page_scroll",false);
     mMouseWheelScrollSpeed = intValue("mouse_wheel_scroll_speed", 3);
+    mMouseSelectionScrollSpeed = intValue("mouse_selection_scroll_speed",1);
 
 
     //right edge

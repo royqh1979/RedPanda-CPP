@@ -372,6 +372,9 @@ public:
         const QString &nonAsciiFontName() const;
         void setNonAsciiFontName(const QString &newNonAsciiFontName);
 
+        int mouseSelectionScrollSpeed() const;
+        void setMouseSelectionScrollSpeed(int newMouseSelectionScrollSpeed);
+
     private:
         //General
         // indents
@@ -401,6 +404,7 @@ public:
         bool mScrollByOneLess;
         bool mHalfPageScroll;
         int mMouseWheelScrollSpeed;
+        int mMouseSelectionScrollSpeed;
 
         //right margin
         bool mShowRightEdgeLine;

@@ -13,6 +13,9 @@ Red Panda C++ Version 0.14.5
   - enhancement: better processing of symbol completion
   - enhancement: better support of ligatures
   - enhancement: use the expression evaluation logic to handle "goto declaration"/"goto definition" 
+  - enhancement: reduce startup time by about 1 second.
+  - enhancement: add option "mouse selection/drag scroll speed" in the options dialog's "Editor" / "general" tab.
+  - fix: scroll speed of mouse selection/drag is too fast
 
 Red Panda C++ Version 0.14.4
   - enhancement: git - log

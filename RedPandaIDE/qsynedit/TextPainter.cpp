@@ -431,7 +431,6 @@ void SynEditTextPainter::PaintToken(const QString &Token, int TokenCols, int Col
                             textToPaint+=Token[i];
                         }
                         painter->drawText(nX,rcToken.bottom()-painter->fontMetrics().descent() , textToPaint);
-                        qDebug()<<textToPaint;
                         drawed = true;
                     }
                     if (!drawed) {

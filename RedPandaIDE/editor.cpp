@@ -4253,6 +4253,7 @@ void Editor::applySettings()
     }
 
     setMouseWheelScrollSpeed(pSettings->editor().mouseWheelScrollSpeed());
+    setMouseSelectionScrollSpeed(pSettings->editor().mouseSelectionScrollSpeed());
     invalidate();
 }
 

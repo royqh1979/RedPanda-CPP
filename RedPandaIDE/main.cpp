@@ -255,9 +255,9 @@ int main(int argc, char *argv[])
         QString settingFilename = getSettingFilename(QString(), firstRun);
         bool openInSingleInstance = false;
         if (!settingFilename.isEmpty() && !firstRun) {
-            Settings settings(settingFilename);
-            settings.load();
-            openInSingleInstance = settings.environment().openFilesInSingleInstance();
+            QSettings envSetting(settingFilename,QSettings::IniFormat);
+            envSetting.beginGroup(SETTING_ENVIRONMENT);
+            openInSingleInstance = envSetting.value("open_files_in_single_instance",false).toBool();
         } else if (!settingFilename.isEmpty() && firstRun)
             openInSingleInstance = false;
         if (openInSingleInstance) {
@@ -281,7 +281,6 @@ int main(int argc, char *argv[])
             }
         }
     }
-
     //Translation must be loaded first
     QTranslator trans,transQt;
     bool firstRun;
@@ -293,7 +292,6 @@ int main(int argc, char *argv[])
         tempFile.remove();
         return -1;
     }
-
     {
         QSettings languageSetting(settingFilename,QSettings::IniFormat);
         languageSetting.beginGroup(SETTING_ENVIRONMENT);
@@ -306,7 +304,6 @@ int main(int argc, char *argv[])
             app.installTranslator(&transQt);
         }
     }
-
     qRegisterMetaType<PCompileIssue>("PCompileIssue");
     qRegisterMetaType<PCompileIssue>("PCompileIssue&");
     qRegisterMetaType<QVector<int>>("QVector<int>");
@@ -342,7 +339,6 @@ int main(int argc, char *argv[])
             pSettings->vcs().detectGitInPath();
         }
         auto settings = std::unique_ptr<Settings>(pSettings);
-
         //Color scheme settings must be loaded after translation
         pColorManager = new ColorManager();
         pIconsManager = new IconsManager();
