@@ -400,8 +400,9 @@ void SynEditTextPainter::PaintToken(const QString &Token, int TokenCols, int Col
         } else {
             int tokenColLen=0;
             startPaint = false;
+            bool isAscii = true;
             for (int i=0;i<Token.length();i++) {
-                int charCols;
+                int charCols=0;
                 QString textToPaint = Token[i];
                 if (Token[i] == SynTabChar) {
                     charCols = edit->mTabWidth - ((ColumnsBefore+tokenColLen) % edit->mTabWidth);
@@ -418,34 +419,21 @@ void SynEditTextPainter::PaintToken(const QString &Token, int TokenCols, int Col
                     break;
                 //painter->drawText(nX,rcToken.bottom()-painter->fontMetrics().descent()*edit->dpiFactor() , Token[i]);
                 if (startPaint) {
+                    if (Token[i].unicode()<255)
+                        isAscii=true;
                     bool  drawed = false;
-                    if (edit->mOptions.testFlag(eoLigatureSupport) && i+1<Token.length()) {
-                        if ((Token[i]=='+' && Token[i+1]=='+')
-                               || (Token[i]=='-' && Token[i+1]=='-')
-                               || (Token[i]=='/' && Token[i+1]=='=')
-                               || (Token[i]=='&' && Token[i+1]=='&')
-                               || (Token[i]=='|' && Token[i+1]=='|')
-                               || (Token[i]=='-' && Token[i+1]=='>')
-                               || (Token[i]=='=' && Token[i+1]=='>')
-                               || (Token[i]==':' && Token[i+1]==':')
-                               || (Token[i]=='_' && Token[i+1]=='_')
-                               || (Token[i]=='=' && Token[i+1]=='=')
-                               || (Token[i]=='!' && Token[i+1]=='=')
-                                || (Token[i]=='<' && Token[i+1]=='=')
-                                || (Token[i]=='>' && Token[i+1]=='=')
-                                || (Token[i]=='>' && Token[i+1]=='>')
-                                || (Token[i]=='<' && Token[i+1]=='<')
-                                || (Token[i]=='-' && Token[i+1]=='>')
-                                || (Token[i]=='<' && Token[i+1]=='-')
-                                || (Token[i]=='/' && Token[i+1]=='*')
-                                || (Token[i]=='*' && Token[i+1]=='/')
-                                || (Token[i]=='/' && Token[i+1]=='/')
-                            ){
-                            painter->drawText(nX,rcToken.bottom()-painter->fontMetrics().descent() , Token.mid(i,2));
-                            charCols +=  edit->charColumns(Token[i+1]);
+                    if (painter->fontInfo().fixedPitch()
+                             && edit->mOptions.testFlag(eoLigatureSupport)
+                             && isAscii) {
+                        while(i+1<Token.length()) {
+                            if (Token[i+1].unicode()>=255)
+                                break;
                             i+=1;
-                            drawed = true;
+                            charCols +=  edit->charColumns(Token[i]);
+                            textToPaint+=Token[i];
                         }
+                        painter->drawText(nX,rcToken.bottom()-painter->fontMetrics().descent() , textToPaint);
+                        drawed = true;
                     }
                     if (!drawed) {
                         if (Token[i].unicode()<=255)
