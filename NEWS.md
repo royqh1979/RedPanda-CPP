@@ -17,6 +17,7 @@ Red Panda C++ Version 0.14.5
   - enhancement: add option "mouse selection/drag scroll speed" in the options dialog's "Editor" / "general" tab.
   - fix: the scroll speed of mouse selection/drag is too fast.
   - fix: the scroll behavior of mouse dragging on the editor's edge is not correct
+  - fix: calculation of caret position is not in consistence.
 
 Red Panda C++ Version 0.14.4
   - enhancement: git - log

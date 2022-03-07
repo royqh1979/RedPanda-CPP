@@ -672,22 +672,6 @@ void SynEdit::invalidateGutterLines(int FirstLine, int LastLine)
  * @param aY
  * @return
  */
-DisplayCoord SynEdit::pixelsToNearestRowColumn(int aX, int aY) const
-{
-    // Result is in display coordinates
-    float f;
-    f = (aX - mGutterWidth - 2.0) / mCharWidth;
-    // don't return a partially visible last line
-    if (aY >= mLinesInWindow * mTextHeight) {
-        aY = mLinesInWindow * mTextHeight - 1;
-    }
-    if (aY < 0)
-        aY = 0;
-    return {
-      std::max(1, (int)(leftChar() + round(f))),
-      std::max(1, mTopLine + (aY / mTextHeight))
-    };
-}
 
 DisplayCoord SynEdit::pixelsToRowColumn(int aX, int aY) const
 {
@@ -1838,7 +1822,7 @@ void SynEdit::doMouseScroll(bool isDragging)
         } else
             setBlockEnd(caretXY());
     }
-    computeScroll(iMousePos.x(), iMousePos.y(),isDragging);
+    computeScroll(isDragging);
 }
 
 void SynEdit::doDeleteLastChar()
@@ -2482,15 +2466,25 @@ void SynEdit::clearAreaList(SynEditingAreaList areaList)
     areaList.clear();
 }
 
-void SynEdit::computeCaret(int X, int Y)
+void SynEdit::computeCaret()
 {
-    DisplayCoord vCaretNearestPos = pixelsToNearestRowColumn(X, Y);
+    QPoint iMousePos = QCursor::pos();
+    iMousePos = mapFromGlobal(iMousePos);
+    int X=iMousePos.x();
+    int Y=iMousePos.y();
+
+    DisplayCoord vCaretNearestPos = pixelsToRowColumn(X, Y);
     vCaretNearestPos.Row = minMax(vCaretNearestPos.Row, 1, displayLineCount());
     setInternalDisplayXY(vCaretNearestPos);
 }
 
-void SynEdit::computeScroll(int X, int Y, bool isDragging)
+void SynEdit::computeScroll(bool isDragging)
 {
+    QPoint iMousePos = QCursor::pos();
+    iMousePos = mapFromGlobal(iMousePos);
+    int X=iMousePos.x();
+    int Y=iMousePos.y();
+
     Qt::MouseButtons buttons = qApp->mouseButtons();
     if (!buttons.testFlag(Qt::LeftButton))
         return;
@@ -2528,6 +2522,7 @@ void SynEdit::computeScroll(int X, int Y, bool isDragging)
 //    if (isDragging && (Y<0 || Y>clientRect().height())) {
 //        mScrollDeltaY = 0;
 //    }
+
 
 //    if (mScrollDeltaX!=0 || mScrollDeltaY!=0) {
     if (isDragging) {
@@ -5882,7 +5877,7 @@ void SynEdit::mousePressEvent(QMouseEvent *event)
                   || ! selAvail())) {
             invalidateSelection();
             mBlockEnd=mBlockBegin;
-            computeCaret(X,Y);
+            computeCaret();
         }else {
             return;
         }
@@ -5892,7 +5887,7 @@ void SynEdit::mousePressEvent(QMouseEvent *event)
             bWasSel = true;
             mMouseDownPos = event->pos();
         }
-        computeCaret(X,Y);
+        computeCaret();
         //I couldn't track down why, but sometimes (and definitely not all the time)
         //the block positioning is lost.  This makes sure that the block is
         //maintained in case they started a drag operation on the block
@@ -5922,7 +5917,7 @@ void SynEdit::mousePressEvent(QMouseEvent *event)
                 //Selection mode must be set before calling SetBlockBegin
                 setBlockBegin(caretXY());
             }
-            computeScroll(X,Y,false);
+            computeScroll(false);
         }
     }
 }
@@ -5944,7 +5939,7 @@ void SynEdit::mouseReleaseEvent(QMouseEvent *event)
 
     if (mStateFlags.testFlag(SynStateFlag::sfWaitForDragging) &&
             !mStateFlags.testFlag(SynStateFlag::sfDblClicked)) {
-        computeCaret(X, Y);
+        computeCaret();
         if (! (event->modifiers() & Qt::ShiftModifier))
             setBlockBegin(caretXY());
         setBlockEnd(caretXY());
@@ -5958,8 +5953,8 @@ void SynEdit::mouseMoveEvent(QMouseEvent *event)
     QAbstractScrollArea::mouseMoveEvent(event);
     mMouseMoved = true;
     Qt::MouseButtons buttons = event->buttons();
-    int X=event->pos().x();
-    int Y=event->pos().y();
+//    int X=event->pos().x();
+//    int Y=event->pos().y();
     if ((mStateFlags.testFlag(SynStateFlag::sfWaitForDragging))) {
         if ( ( event->pos() - mMouseDownPos).manhattanLength()>=QApplication::startDragDistance()) {
             mStateFlags.setFlag(SynStateFlag::sfWaitForDragging,false);
@@ -5976,14 +5971,14 @@ void SynEdit::mouseMoveEvent(QMouseEvent *event)
     } else if ((buttons == Qt::LeftButton)) {
         // should we begin scrolling?
         //computeScroll(X, Y,false);
-        DisplayCoord P = pixelsToNearestRowColumn(X, Y);
-        P.Row = minMax(P.Row, 1, displayLineCount());
-        if (mScrollDeltaX != 0)
-            P.Column = displayX();
-        if (mScrollDeltaY != 0)
-            P.Row = displayY();
-        internalSetCaretXY(displayToBufferPos(P));
-        setBlockEnd(caretXY());
+//        DisplayCoord P = pixelsToNearestRowColumn(X, Y);
+//        P.Row = minMax(P.Row, 1, displayLineCount());
+//        if (mScrollDeltaX != 0)
+//            P.Column = displayX();
+//        if (mScrollDeltaY != 0)
+//            P.Row = displayY();
+//        internalSetCaretXY(displayToBufferPos(P));
+//        setBlockEnd(caretXY());
     } else if (buttons == Qt::NoButton) {
         updateMouseCursor();
     }
@@ -6081,14 +6076,13 @@ void SynEdit::dragEnterEvent(QDragEnterEvent *event)
         mDragCaretSave = caretXY();
         mDragSelBeginSave = blockBegin();
         mDragSelEndSave = blockEnd();
-        BufferCoord coord = displayToBufferPos(pixelsToNearestRowColumn(event->pos().x(),
+        BufferCoord coord = displayToBufferPos(pixelsToRowColumn(event->pos().x(),
                                                                         event->pos().y()));
         internalSetCaretXY(coord);
         setBlockBegin(mDragSelBeginSave);
         setBlockEnd(mDragSelEndSave);
         showCaret();
-        computeScroll(event->pos().x(),
-                      event->pos().y(),true);
+        computeScroll(true);
     }
 }
 
@@ -6096,7 +6090,7 @@ void SynEdit::dropEvent(QDropEvent *event)
 {
     //mScrollTimer->stop();
 
-    BufferCoord coord = displayToBufferPos(pixelsToNearestRowColumn(event->pos().x(),
+    BufferCoord coord = displayToBufferPos(pixelsToRowColumn(event->pos().x(),
                                                                     event->pos().y()));
     setCaretXY(coord);
     if (coord>=mDragSelBeginSave && coord<=mDragSelEndSave) {
@@ -6162,8 +6156,11 @@ void SynEdit::dragMoveEvent(QDragMoveEvent *event)
 //    computeScroll(event->pos().x(),
 //                  event->pos().y(),true);
 
-    BufferCoord coord = displayToBufferPos(pixelsToNearestRowColumn(event->pos().x(),
-                                                                    event->pos().y()));
+    QPoint iMousePos = QCursor::pos();
+    iMousePos = mapFromGlobal(iMousePos);
+    int X=iMousePos.x();
+    int Y=iMousePos.y();
+    BufferCoord coord = displayToBufferPos(pixelsToRowColumn(X,Y));
     internalSetCaretXY(coord);
     setBlockBegin(mDragSelBeginSave);
     setBlockEnd(mDragSelEndSave);

@@ -177,7 +177,6 @@ public:
     void invalidateGutter();
     void invalidateGutterLine(int aLine);
     void invalidateGutterLines(int FirstLine, int LastLine);
-    DisplayCoord pixelsToNearestRowColumn(int aX, int aY) const;
     DisplayCoord pixelsToRowColumn(int aX, int aY) const;
     QPoint rowColumnToPixels(const DisplayCoord& coord) const;
     DisplayCoord bufferToDisplayPos(const BufferCoord& p) const;
@@ -451,8 +450,8 @@ protected:
 
 private:
     void clearAreaList(SynEditingAreaList areaList);
-    void computeCaret(int X, int Y);
-    void computeScroll(int X, int Y, bool isDragging);
+    void computeCaret();
+    void computeScroll(bool isDragging);
 
     void incPaintLock();
     void decPaintLock();
