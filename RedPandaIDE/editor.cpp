@@ -2053,10 +2053,12 @@ bool Editor::handleParentheseCompletion()
     QuoteStatus status = getQuoteStatus();
     if (status == QuoteStatus::RawString || status == QuoteStatus::NotQuote) {
         beginUpdate();
+        beginUndoBlock();
         commandProcessor(SynEditorCommand::ecChar,'(');
         BufferCoord oldCaret = caretXY();
         commandProcessor(SynEditorCommand::ecChar,')');
         setCaretXY(oldCaret);
+        endUndoBlock();
         endUpdate();
         return true;
     }
@@ -2102,10 +2104,12 @@ bool Editor::handleBracketCompletion()
 //    QuoteStatus status = getQuoteStatus();
 //    if (status == QuoteStatus::RawString || status == QuoteStatus::NotQuote) {
     beginUpdate();
+    beginUndoBlock();
     commandProcessor(SynEditorCommand::ecChar,'[');
     BufferCoord oldCaret = caretXY();
     commandProcessor(SynEditorCommand::ecChar,']');
     setCaretXY(oldCaret);
+    endUndoBlock();
     endUpdate();
     return true;
         //    }
@@ -2136,11 +2140,13 @@ bool Editor::handleMultilineCommentCompletion()
 {
     if ((caretX()-2 < lineText().length()) && (lineText()[caretX() - 2] == '/')) {
         beginUpdate();
+        beginUndoBlock();
         commandProcessor(SynEditorCommand::ecChar,'*');
         BufferCoord oldCaret = caretXY();
         commandProcessor(SynEditorCommand::ecChar,'*');
         commandProcessor(SynEditorCommand::ecChar,'/');
         setCaretXY(oldCaret);
+        endUndoBlock();
         endUpdate();
         return true;
     }
@@ -2156,6 +2162,7 @@ bool Editor::handleBraceCompletion()
         i--;
     }
     beginUpdate();
+    beginUndoBlock();
     commandProcessor(SynEditorCommand::ecChar,'{');
     BufferCoord oldCaret = caretXY();
     commandProcessor(SynEditorCommand::ecChar,'}');
@@ -2172,6 +2179,7 @@ bool Editor::handleBraceCompletion()
         commandProcessor(SynEditorCommand::ecChar,';');
     }
     setCaretXY(oldCaret);
+    endUndoBlock();
     endUpdate();
     return true;
 }
@@ -2218,10 +2226,12 @@ bool Editor::handleSingleQuoteCompletion()
             if (ch == 0 || highlighter()->isWordBreakChar(ch) || highlighter()->isSpaceChar(ch)) {
                 // insert ''
                 beginUpdate();
+                beginUndoBlock();
                 commandProcessor(SynEditorCommand::ecChar,'\'');
                 BufferCoord oldCaret = caretXY();
                 commandProcessor(SynEditorCommand::ecChar,'\'');
                 setCaretXY(oldCaret);
+                endUndoBlock();
                 endUpdate();
                 return true;
             }
@@ -2244,10 +2254,12 @@ bool Editor::handleDoubleQuoteCompletion()
             if ((ch == 0) || highlighter()->isWordBreakChar(ch) || highlighter()->isSpaceChar(ch)) {
                 // insert ""
                 beginUpdate();
+                beginUndoBlock();
                 commandProcessor(SynEditorCommand::ecChar,'"');
                 BufferCoord oldCaret = caretXY();
                 commandProcessor(SynEditorCommand::ecChar,'"');
                 setCaretXY(oldCaret);
+                endUndoBlock();
                 endUpdate();
                 return true;
             }
@@ -2264,11 +2276,13 @@ bool Editor::handleGlobalIncludeCompletion()
     if (!s.startsWith("include"))  //it's not #include
         return false;
     beginUpdate();
+    beginUndoBlock();
     commandProcessor(SynEditorCommand::ecChar,'<');
     BufferCoord oldCaret = caretXY();
     commandProcessor(SynEditorCommand::ecChar,'>');
     setCaretXY(oldCaret);
     endUpdate();
+    endUndoBlock();
     return true;
 }
 

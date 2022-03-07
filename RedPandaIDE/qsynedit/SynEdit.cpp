@@ -441,6 +441,16 @@ bool SynEdit::getHighlighterAttriAtRowColEx(const BufferCoord &XY, QString &Toke
     return false;
 }
 
+void SynEdit::beginUndoBlock()
+{
+    mUndoList->BeginBlock();
+}
+
+void SynEdit::endUndoBlock()
+{
+    mUndoList->EndBlock();
+}
+
 void SynEdit::beginUpdate()
 {
     incPaintLock();

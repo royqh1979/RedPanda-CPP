@@ -259,6 +259,9 @@ public:
       SynHighlighterTokenType& TokenType, SynTokenKind &TokenKind, int &Start,
       PSynHighlighterAttribute& Attri);
 
+    void beginUndoBlock();
+    void endUndoBlock();
+
     //Commands
     virtual void cutToClipboard() { commandProcessor(SynEditorCommand::ecCut);}
     virtual void copyToClipboard() { commandProcessor(SynEditorCommand::ecCopy);}
