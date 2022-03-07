@@ -19,6 +19,7 @@ Red Panda C++ Version 0.14.5
   - fix: the scroll behavior of mouse dragging on the editor's edge is not correct
   - fix: calculation of caret position is not in consistence.
   - fix: undo one symbol completion as a whole operation
+  - fix: crash when open a project that contains custom folder
 
 Red Panda C++ Version 0.14.4
   - enhancement: git - log

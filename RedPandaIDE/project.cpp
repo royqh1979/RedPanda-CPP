@@ -1308,8 +1308,8 @@ void Project::createFileSystemFolderNode(ProjectSpecialFolderNode folderType, co
             continue;
         if (fileInfo.isDir()) {
             PProjectModelNode node = makeNewFileNode(fileInfo.fileName(),true,parent);
-            mFileSystemFolderNodes.insert(QString("%1/%2").arg((int)folderType).arg(fileInfo.absolutePath()),node);
-            createFileSystemFolderNode(folderType,fileInfo.path(), node);
+            mFileSystemFolderNodes.insert(QString("%1/%2").arg((int)folderType).arg(fileInfo.absoluteFilePath()),node);
+            createFileSystemFolderNode(folderType,fileInfo.absoluteFilePath(), node);
         }
     }
 }
