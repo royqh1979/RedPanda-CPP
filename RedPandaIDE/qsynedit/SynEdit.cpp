@@ -686,7 +686,7 @@ void SynEdit::invalidateGutterLines(int FirstLine, int LastLine)
 DisplayCoord SynEdit::pixelsToRowColumn(int aX, int aY) const
 {
     return {
-        std::max(1, mLeftChar + ((aX - mGutterWidth - 2) / mCharWidth)),
+        std::max(1, (int)(mLeftChar + round((aX - mGutterWidth - 2.0) / mCharWidth))),
         std::max(1, mTopLine + (aY / mTextHeight))
     };
 }

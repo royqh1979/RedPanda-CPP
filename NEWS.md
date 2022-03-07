@@ -20,6 +20,7 @@ Red Panda C++ Version 0.14.5
   - fix: calculation of caret position is not in consistence.
   - fix: undo one symbol completion as a whole operation
   - fix: crash when open a project that contains custom folder
+  - enhancement: symbol completion when editor has selection 
 
 Red Panda C++ Version 0.14.4
   - enhancement: git - log

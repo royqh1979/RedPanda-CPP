@@ -1947,7 +1947,7 @@ QChar Editor::getCurrentChar()
 
 bool Editor::handleSymbolCompletion(QChar key)
 {
-    if (!pSettings->editor().completeSymbols() || selAvail())
+    if (!pSettings->editor().completeSymbols())
         return false;
     if (!insertMode())
         return false;
@@ -1994,6 +1994,8 @@ bool Editor::handleSymbolCompletion(QChar key)
         }
         return false;
     case ')':
+        if (selAvail())
+            return false;
         if (pSettings->editor().completeParenthese() && pSettings->editor().overwriteSymbols()) {
             return handleParentheseSkip();
         }
@@ -2004,22 +2006,26 @@ bool Editor::handleSymbolCompletion(QChar key)
           }
           return false;
     case ']':
-          if (pSettings->editor().completeBracket() && pSettings->editor().overwriteSymbols()) {
-              return handleBracketSkip();
-          }
-          return false;
+        if (selAvail())
+            return false;
+        if (pSettings->editor().completeBracket() && pSettings->editor().overwriteSymbols()) {
+            return handleBracketSkip();
+        }
+        return false;
     case '*':
-          status = getQuoteStatus();
-          if (pSettings->editor().completeComment() && (status == QuoteStatus::NotQuote)) {
-              return handleMultilineCommentCompletion();
-          }
-          return false;
+        status = getQuoteStatus();
+        if (pSettings->editor().completeComment() && (status == QuoteStatus::NotQuote)) {
+            return handleMultilineCommentCompletion();
+        }
+        return false;
     case '{':
-          if (pSettings->editor().completeBrace()) {
-              return handleBraceCompletion();
-          }
-          return false;
+        if (pSettings->editor().completeBrace()) {
+            return handleBraceCompletion();
+        }
+        return false;
     case '}':
+        if (selAvail())
+            return false;
         if (pSettings->editor().completeBrace() && pSettings->editor().overwriteSymbols()) {
             return handleBraceSkip();
         }
@@ -2035,11 +2041,15 @@ bool Editor::handleSymbolCompletion(QChar key)
         }
         return false;
     case '<':
+        if (selAvail())
+            return false;
         if (pSettings->editor().completeGlobalInclude()) { // #include <>
             return handleGlobalIncludeCompletion();
         }
         return false;
     case '>':
+        if (selAvail())
+            return false;
         if (pSettings->editor().completeGlobalInclude() && pSettings->editor().overwriteSymbols()) { // #include <>
             return handleGlobalIncludeSkip();
         }
@@ -2052,14 +2062,25 @@ bool Editor::handleParentheseCompletion()
 {
     QuoteStatus status = getQuoteStatus();
     if (status == QuoteStatus::RawString || status == QuoteStatus::NotQuote) {
-        beginUpdate();
-        beginUndoBlock();
-        commandProcessor(SynEditorCommand::ecChar,'(');
-        BufferCoord oldCaret = caretXY();
-        commandProcessor(SynEditorCommand::ecChar,')');
-        setCaretXY(oldCaret);
-        endUndoBlock();
-        endUpdate();
+        if (selAvail() && status == QuoteStatus::NotQuote) {
+            QString text=selText();
+            beginUpdate();
+            beginUndoBlock();
+            commandProcessor(SynEditorCommand::ecChar,'(');
+            setSelText(text);
+            commandProcessor(SynEditorCommand::ecChar,')');
+            endUndoBlock();
+            endUpdate();
+        } else {
+            beginUpdate();
+            beginUndoBlock();
+            commandProcessor(SynEditorCommand::ecChar,'(');
+            BufferCoord oldCaret = caretXY();
+            commandProcessor(SynEditorCommand::ecChar,')');
+            setCaretXY(oldCaret);
+            endUndoBlock();
+            endUpdate();
+        }
         return true;
     }
 //    if (status == QuoteStatus::NotQuote) && FunctionTipAllowed then
@@ -2103,14 +2124,26 @@ bool Editor::handleBracketCompletion()
 {
 //    QuoteStatus status = getQuoteStatus();
 //    if (status == QuoteStatus::RawString || status == QuoteStatus::NotQuote) {
-    beginUpdate();
-    beginUndoBlock();
-    commandProcessor(SynEditorCommand::ecChar,'[');
-    BufferCoord oldCaret = caretXY();
-    commandProcessor(SynEditorCommand::ecChar,']');
-    setCaretXY(oldCaret);
-    endUndoBlock();
-    endUpdate();
+    QuoteStatus status = getQuoteStatus();
+    if (selAvail() && status == QuoteStatus::NotQuote) {
+        QString text=selText();
+        beginUpdate();
+        beginUndoBlock();
+        commandProcessor(SynEditorCommand::ecChar,'[');
+        setSelText(text);
+        commandProcessor(SynEditorCommand::ecChar,']');
+        endUndoBlock();
+        endUpdate();
+    } else {
+        beginUpdate();
+        beginUndoBlock();
+        commandProcessor(SynEditorCommand::ecChar,'[');
+        BufferCoord oldCaret = caretXY();
+        commandProcessor(SynEditorCommand::ecChar,']');
+        setCaretXY(oldCaret);
+        endUndoBlock();
+        endUpdate();
+    }
     return true;
         //    }
 }
@@ -2139,13 +2172,19 @@ bool Editor::handleBracketSkip()
 bool Editor::handleMultilineCommentCompletion()
 {
     if ((caretX()-2 < lineText().length()) && (lineText()[caretX() - 2] == '/')) {
+        QString text=selText();
         beginUpdate();
         beginUndoBlock();
         commandProcessor(SynEditorCommand::ecChar,'*');
-        BufferCoord oldCaret = caretXY();
+        BufferCoord oldCaret;
+        if (text.isEmpty())
+            oldCaret = caretXY();
+        else
+            setSelText(text);
         commandProcessor(SynEditorCommand::ecChar,'*');
         commandProcessor(SynEditorCommand::ecChar,'/');
-        setCaretXY(oldCaret);
+        if (text.isEmpty())
+            setCaretXY(oldCaret);
         endUndoBlock();
         endUpdate();
         return true;
@@ -2161,10 +2200,18 @@ bool Editor::handleBraceCompletion()
         s=lines()->getString(i);
         i--;
     }
+    QString text=selText();
     beginUpdate();
     beginUndoBlock();
     commandProcessor(SynEditorCommand::ecChar,'{');
-    BufferCoord oldCaret = caretXY();
+    BufferCoord oldCaret;
+    if (text.isEmpty()) {
+        oldCaret = caretXY();
+    } else {
+        commandProcessor(SynEditorCommand::ecInsertLine);
+        setSelText(text);
+        commandProcessor(SynEditorCommand::ecInsertLine);
+    }
     commandProcessor(SynEditorCommand::ecChar,'}');
     if (
         ( (s.startsWith("struct")
@@ -2178,7 +2225,8 @@ bool Editor::handleBraceCompletion()
         ) || s.endsWith('=')) {
         commandProcessor(SynEditorCommand::ecChar,';');
     }
-    setCaretXY(oldCaret);
+    if (text.isEmpty())
+        setCaretXY(oldCaret);
     endUndoBlock();
     endUpdate();
     return true;
@@ -2217,12 +2265,23 @@ bool Editor::handleSingleQuoteCompletion()
     QuoteStatus status = getQuoteStatus();
     QChar ch = getCurrentChar();
     if (ch == '\'') {
-        if (status == QuoteStatus::SingleQuote) {
+        if (status == QuoteStatus::SingleQuote && !selAvail()) {
             setCaretXY( BufferCoord{caretX() + 1, caretY()}); // skip over
             return true;
         }
     } else {
         if (status == QuoteStatus::NotQuote) {
+            if (selAvail()) {
+                QString text=selText();
+                beginUpdate();
+                beginUndoBlock();
+                commandProcessor(SynEditorCommand::ecChar,'\'');
+                setSelText(text);
+                commandProcessor(SynEditorCommand::ecChar,'\'');
+                endUndoBlock();
+                endUpdate();
+                return true;
+            }
             if (ch == 0 || highlighter()->isWordBreakChar(ch) || highlighter()->isSpaceChar(ch)) {
                 // insert ''
                 beginUpdate();
@@ -2245,12 +2304,24 @@ bool Editor::handleDoubleQuoteCompletion()
     QuoteStatus status = getQuoteStatus();
     QChar ch = getCurrentChar();
     if (ch == '"') {
-        if (status == QuoteStatus::DoubleQuote || status == QuoteStatus::RawString) {
+        if ((status == QuoteStatus::DoubleQuote || status == QuoteStatus::RawString)
+            && !selAvail()) {
             setCaretXY( BufferCoord{caretX() + 1, caretY()}); // skip over
             return true;
         }
     } else {
         if (status == QuoteStatus::NotQuote) {
+            if (selAvail()) {
+                QString text=selText();
+                beginUpdate();
+                beginUndoBlock();
+                commandProcessor(SynEditorCommand::ecChar,'"');
+                setSelText(text);
+                commandProcessor(SynEditorCommand::ecChar,'"');
+                endUndoBlock();
+                endUpdate();
+                return true;
+            }
             if ((ch == 0) || highlighter()->isWordBreakChar(ch) || highlighter()->isSpaceChar(ch)) {
                 // insert ""
                 beginUpdate();
