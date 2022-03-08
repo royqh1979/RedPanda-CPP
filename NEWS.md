@@ -22,6 +22,8 @@ Red Panda C++ Version 0.14.5
   - fix: crash when open a project that contains custom folder
   - enhancement: symbol completion when editor has selection 
   - fix: save project's layout shouldn't modify the project file
+  - enhancement: use expression processing in syntax highlighting for identifiers
+  - fix: if a function's declaration can't be found, it will be wrongly highlighted as variable
 
 Red Panda C++ Version 0.14.4
   - enhancement: git - log

@@ -887,17 +887,24 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
 
     if (mParser && highlighter() && (attr == highlighter()->identifierAttribute())) {
         BufferCoord p{aChar,line};
-        BufferCoord pBeginPos,pEndPos;
-        QString s= getWordAtPosition(this,p, pBeginPos,pEndPos, WordPurpose::wpInformation);
+//        BufferCoord pBeginPos,pEndPos;
+//        QString s= getWordAtPosition(this,p, pBeginPos,pEndPos, WordPurpose::wpInformation);
 //        qDebug()<<s;
-        PStatement statement = mParser->findStatementOf(mFilename,
-          s , p.Line);
+//        PStatement statement = mParser->findStatementOf(mFilename,
+//          s , p.Line);
+        QStringList expression = getExpressionAtPosition(p);
+        PStatement statement = parser()->findStatementOf(
+                    filename(),
+                    expression,
+                    p.Line);
         StatementKind kind = getKindOfStatement(statement);
         if (kind == StatementKind::skUnknown) {
+            BufferCoord pBeginPos,pEndPos;
+            QString s= getWordAtPosition(this,p, pBeginPos,pEndPos, WordPurpose::wpInformation);
             if ((pEndPos.Line>=1)
               && (pEndPos.Char>=0)
-              && (pEndPos.Char < lines()->getString(pEndPos.Line-1).length())
-              && (lines()->getString(pEndPos.Line-1)[pEndPos.Char] == '(')) {
+              && (pEndPos.Char+1 < lines()->getString(pEndPos.Line-1).length())
+              && (lines()->getString(pEndPos.Line-1)[pEndPos.Char+1] == '(')) {
                 kind = StatementKind::skFunction;
             } else {
                 kind = StatementKind::skVariable;

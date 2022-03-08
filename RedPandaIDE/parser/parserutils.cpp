@@ -26,6 +26,7 @@
 QStringList CppDirectives;
 QStringList JavadocTags;
 QMap<QString,SkipType> CppKeywords;
+QSet<QString> CppControlKeyWords;
 QSet<QString> CppTypeKeywords;
 QSet<QString> CKeywords;
 QSet<QString> STLPointers;
@@ -238,6 +239,10 @@ void initParser()
     CKeywords.insert("void");
     CKeywords.insert("volatile");
     CKeywords.insert("while");
+
+    CppControlKeyWords.insert("for");
+    CppControlKeyWords.insert("if");
+    CppControlKeyWords.insert("catch");
 
     //STL Containers
     STLContainers.insert("std::array");
@@ -620,4 +625,9 @@ bool isCppFile(const QString &filename)
     if (isCFile(filename) && !filename.endsWith(".c"))
         return true;
     return false;
+}
+
+bool isCppControlKeyword(const QString &word)
+{
+    return CppControlKeyWords.contains(word);
 }

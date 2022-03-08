@@ -248,6 +248,7 @@ using PFileIncludes = std::shared_ptr<FileIncludes>;
 extern QStringList CppDirectives;
 extern QStringList JavadocTags;
 extern QMap<QString,SkipType> CppKeywords;
+extern QSet<QString> CppControlKeyWords;
 extern QSet<QString> CKeywords;
 extern QSet<QString> CppTypeKeywords;
 extern QSet<QString> STLPointers;
@@ -268,6 +269,7 @@ bool isHFile(const QString& filename);
 bool isCFile(const QString& filename);
 bool isCppFile(const QString& filename);
 bool isCppKeyword(const QString& word);
+bool isCppControlKeyword(const QString& word);
 bool isScopeTypeKind(StatementKind kind);
 MemberOperatorType getOperatorType(const QString& phrase, int index);
 QStringList getOwnerExpressionAndMember(
