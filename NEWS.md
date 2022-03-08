@@ -21,6 +21,7 @@ Red Panda C++ Version 0.14.5
   - fix: undo one symbol completion as a whole operation
   - fix: crash when open a project that contains custom folder
   - enhancement: symbol completion when editor has selection 
+  - fix: save project's layout shouldn't modify the project file
 
 Red Panda C++ Version 0.14.4
   - enhancement: git - log

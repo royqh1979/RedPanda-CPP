@@ -474,16 +474,16 @@ void Project::saveLayout()
             layIni.SetLongValue(groupName,"LeftChar", editor->leftChar());
         }
         // remove old data from project file
-        SimpleIni ini;
-        ini.LoadFile(filename().toLocal8Bit());
-        groupName = toByteArray(QString("Unit%1").arg(i+1));
-        ini.Delete(groupName,"Open");
-        ini.Delete(groupName,"Top");
-        ini.Delete(groupName,"CursorCol");
-        ini.Delete(groupName,"CursorRow");
-        ini.Delete(groupName,"TopLine");
-        ini.Delete(groupName,"LeftChar");
-        ini.SaveFile(filename().toLocal8Bit());
+//        SimpleIni ini;
+//        ini.LoadFile(filename().toLocal8Bit());
+//        groupName = toByteArray(QString("Unit%1").arg(i+1));
+//        ini.Delete(groupName,"Open");
+//        ini.Delete(groupName,"Top");
+//        ini.Delete(groupName,"CursorCol");
+//        ini.Delete(groupName,"CursorRow");
+//        ini.Delete(groupName,"TopLine");
+//        ini.Delete(groupName,"LeftChar");
+//        ini.SaveFile(filename().toLocal8Bit());
     }
     layIni.SaveFile(changeFileExt(filename(), "layout").toLocal8Bit());
 }
