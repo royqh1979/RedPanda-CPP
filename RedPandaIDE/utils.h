@@ -174,6 +174,12 @@ QList<QByteArray> splitByteArrayToLines(const QByteArray& content);
 
 QString parseMacros(const QString& s);
 
+/**
+ * @brief readFileToLines
+ * @param fileName
+ * @param codec
+ * @return
+ */
 QStringList readFileToLines(const QString& fileName, QTextCodec* codec);
 QStringList readFileToLines(const QString& fileName);
 QByteArray readFileToByteArray(const QString& fileName);

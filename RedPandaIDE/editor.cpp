@@ -2606,12 +2606,12 @@ void Editor::insertCodeSnippet(const QString &code)
     });
     QStringList sl = textToLines(parseMacros(code));
     int lastI=0;
-    int spaceCount = GetLeftSpacing(
-                leftSpaces(lineText()),true).length();
+//    int spaceCount = GetLeftSpacing(
+//                leftSpaces(lineText()),true).length();
     QStringList newSl;
     for (int i=0;i<sl.count();i++) {
         int lastPos = 0;
-        QString s = sl[i].trimmed();
+        QString s = sl[i];
         if (i>0)
             lastPos = countLeadingWhitespaceChars(s);
         while (true) {
