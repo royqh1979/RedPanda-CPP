@@ -122,10 +122,6 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
     setDefaultKeystrokes();
     mRightEdgeColor = Qt::lightGray;
 
-    /* IME input */
-    mImeCount = 0;
-    mMBCSStepAside = false;
-    /* end of IME input */
     mWantReturns = true;
     mWantTabs = false;
     mTabWidth = 4;
@@ -1093,6 +1089,11 @@ void SynEdit::setCaretAndSelection(const BufferCoord &ptCaret, const BufferCoord
     internalSetCaretXY(ptCaret);
     setBlockBegin(ptBefore);
     setBlockEnd(ptAfter);
+}
+
+bool SynEdit::inputMethodOn()
+{
+    return !mInputPreeditString.isEmpty();
 }
 
 void SynEdit::collapseAll()
@@ -2940,7 +2941,6 @@ void SynEdit::doOnPaintTransient(SynTransientType TransientType)
 
 void SynEdit::updateLastCaretX()
 {
-    mMBCSStepAside = false;
     mLastCaretColumn = displayX();
 }
 
@@ -4712,17 +4712,15 @@ void SynEdit::moveCaretVert(int DY, bool isSelection)
     }
     BufferCoord vDstLineChar = displayToBufferPos(ptDst);
     int SaveLastCaretX = mLastCaretColumn;
-    bool NewStepAside = mMBCSStepAside;
 
     // set caret and block begin / end
     incPaintLock();
     moveCaretAndSelection(mBlockBegin, vDstLineChar, isSelection);
     decPaintLock();
 
-    // Set fMBCSStepAside and restore fLastCaretX after moving caret, since
+    // Restore fLastCaretX after moving caret, since
     // UpdateLastCaretX, called by SetCaretXYEx, changes them. This is the one
     // case where we don't want that.
-    mMBCSStepAside = NewStepAside;
     mLastCaretColumn = SaveLastCaretX;
 }
 

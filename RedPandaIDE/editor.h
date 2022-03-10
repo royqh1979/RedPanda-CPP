@@ -232,6 +232,7 @@ private slots:
     void onTipEvalValueReady(const QString& value);
     void onLinesDeleted(int first,int count);
     void onLinesInserted(int first,int count);
+    void onFunctionTipsTimer();
 
 private:
     bool isBraceChar(QChar ch);
@@ -277,7 +278,7 @@ private:
     QString getHintForFunction(const PStatement& statement, const PStatement& scope,
                                const QString& filename, int line);
 
-    void updateFunctionTip();
+    void updateFunctionTip(bool showTip);
     void clearUserCodeInTabStops();
     void popUserCodeInTabStops();
     void onExportedFormatToken(PSynHighlighter syntaxHighlighter, int Line, int column, const QString& token,
@@ -329,6 +330,7 @@ private:
     BufferCoord mHighlightCharPos1;
     BufferCoord mHighlightCharPos2;
     std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > mStatementColors;
+    QTimer mFunctionTipTimer;
 
     // QWidget interface
 protected:

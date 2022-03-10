@@ -24,6 +24,8 @@ Red Panda C++ Version 0.14.5
   - fix: save project's layout shouldn't modify the project file
   - enhancement: use expression processing in syntax highlighting for identifiers
   - fix: if a function's declaration can't be found, it will be wrongly highlighted as variable
+  - change: "locate in files view" won't change the working folder, if current file is in subfolders of the working folder
+  - enhancement: hide function tips, when input method is visible
 
 Red Panda C++ Version 0.14.4
   - enhancement: git - log

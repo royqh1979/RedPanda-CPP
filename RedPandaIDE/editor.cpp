@@ -178,6 +178,8 @@ Editor::Editor(QWidget *parent, const QString& filename,
         mParentPageControl->addTab(this,"");
         updateCaption();
     }
+    connect(&mFunctionTipTimer, &QTimer::timeout,
+            this, &Editor::onFunctionTipsTimer);
 }
 
 Editor::~Editor() {
@@ -1548,7 +1550,10 @@ void Editor::onStatusChanged(SynStatusChanges changes)
 
         // Update the function tip
         if (pSettings->editor().showFunctionTips()) {
-            updateFunctionTip();
+            updateFunctionTip(false);
+            mFunctionTipTimer.stop();
+            mFunctionTipTimer.start(500);
+//          updateFunctionTip();
         }
     }
 
@@ -1610,6 +1615,12 @@ void Editor::onLinesInserted(int first, int count)
     if (!pSettings->editor().syntaxCheckWhenLineChanged()) {
         //todo: update syntax issues
     }
+}
+
+void Editor::onFunctionTipsTimer()
+{
+    mFunctionTipTimer.stop();
+    updateFunctionTip(true);
 }
 
 bool Editor::isBraceChar(QChar ch)
@@ -3367,9 +3378,13 @@ QString Editor::getHintForFunction(const PStatement &statement, const PStatement
     return result;
 }
 
-void Editor::updateFunctionTip()
+void Editor::updateFunctionTip(bool showTip)
 {
     if (pMainWindow->completionPopup()->isVisible()) {
+        pMainWindow->functionTip()->hide();
+        return;
+    }
+    if (inputMethodOn()) {
         pMainWindow->functionTip()->hide();
         return;
     }
@@ -3571,7 +3586,8 @@ void Editor::updateFunctionTip()
                 currentParamPos
                 );
     cancelHint();
-    pMainWindow->functionTip()->show();
+    if (showTip)
+        pMainWindow->functionTip()->show();
 }
 
 void Editor::clearUserCodeInTabStops()

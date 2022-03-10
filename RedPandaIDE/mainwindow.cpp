@@ -6216,15 +6216,19 @@ void MainWindow::on_actionLocate_in_Files_View_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor) {
-        QString fileDir = extractFileDir(editor->filename());
-        if (!fileDir.isEmpty()) {
-            setFilesViewRoot(fileDir);
-            QModelIndex index = mFileSystemModel.index(editor->filename());
-            ui->treeFiles->setCurrentIndex(index);
-            ui->treeFiles->scrollTo(index, QAbstractItemView::PositionAtCenter);
-            ui->tabInfos->setCurrentWidget(ui->tabFiles);
-            openCloseLeftPanel(true);
+        QModelIndex index = mFileSystemModel.index(editor->filename());
+        if (!index.isValid()) {
+            QString fileDir = extractFileDir(editor->filename());
+            if (!fileDir.isEmpty())
+                setFilesViewRoot(fileDir);
+            else
+                return;
+            index = mFileSystemModel.index(editor->filename());
         }
+        ui->treeFiles->setCurrentIndex(index);
+        ui->treeFiles->scrollTo(index, QAbstractItemView::PositionAtCenter);
+        ui->tabInfos->setCurrentWidget(ui->tabFiles);
+        openCloseLeftPanel(true);
     }
 }
 

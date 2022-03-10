@@ -236,6 +236,8 @@ public:
                               const BufferCoord& ptBefore,
                               const BufferCoord& ptAfter);
 
+    bool inputMethodOn();
+
     void collapseAll();
     void unCollpaseAll();
     void uncollapseAroundLine(int line);
@@ -624,10 +626,7 @@ private:
     QFont mFontForNonAscii;
     SynFontSmoothMethod mFontSmoothing;
     bool mMouseMoved;
-    /* IME input */
-    int mImeCount;
-    bool mMBCSStepAside;
-    /* end of IME input */
+
     bool mInserting;
     bool mPainting;
     PSynEditStringList mLines;
