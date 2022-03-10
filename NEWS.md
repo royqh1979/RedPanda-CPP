@@ -1,5 +1,7 @@
 Red Panda C++ Version 1.0.0
   - fix: calculation for code snippets's tab stop positions is not correct
+  - fix: Refresh files view shouldn'tchange open/save dialog's default folder
+  - enhancement: "locate in files view" will request user's confirmation when change the working folder
 
 Red Panda C++ Version 0.14.5
   - fix: the "gnu c++ 20" option in compiler set options is wrong

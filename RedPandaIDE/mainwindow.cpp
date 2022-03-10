@@ -5929,14 +5929,15 @@ void MainWindow::showSearchReplacePanel(bool show)
     mSearchResultTreeModel->setSelectable(show);
 }
 
-void MainWindow::setFilesViewRoot(const QString &path)
+void MainWindow::setFilesViewRoot(const QString &path, bool setOpenFolder)
 {
     mFileSystemModelIconProvider.setRootFolder(path);
     mFileSystemModel.setIconProvider(&mFileSystemModelIconProvider);
     mFileSystemModel.setRootPath(path);
     ui->treeFiles->setRootIndex(mFileSystemModel.index(path));
     pSettings->environment().setCurrentFolder(path);
-    QDir::setCurrent(path);
+    if (setOpenFolder)
+        QDir::setCurrent(path);
     int pos = ui->cbFilesPath->findText(path);
     if (pos<0) {
         ui->cbFilesPath->addItem(mFileSystemModel.iconProvider()->icon(QFileIconProvider::Folder),path);
@@ -6216,15 +6217,30 @@ void MainWindow::on_actionLocate_in_Files_View_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor) {
-        QModelIndex index = mFileSystemModel.index(editor->filename());
-        if (!index.isValid()) {
+        QFileInfo fileInfo(editor->filename());
+        if (!fileInfo.absoluteFilePath().startsWith(
+                    mFileSystemModel.rootDirectory().absolutePath()+"/",
+                    PATH_SENSITIVITY
+                    )) {
             QString fileDir = extractFileDir(editor->filename());
+            if (QMessageBox::question(this,
+                                      tr("Change working folder"),
+                                      tr("File '%1' is not in the current working folder.")
+                                      .arg(extractFileName(editor->filename()))
+                                      +"<br />"
+                                      +tr("Do you want to change working folder to '%1'?")
+                                      .arg(fileDir),
+                                      QMessageBox::Yes | QMessageBox::No,
+                                      QMessageBox::Yes
+                                      )!=QMessageBox::Yes) {
+                return;
+            }
             if (!fileDir.isEmpty())
-                setFilesViewRoot(fileDir);
+                setFilesViewRoot(fileDir,true);
             else
                 return;
-            index = mFileSystemModel.index(editor->filename());
         }
+        QModelIndex index = mFileSystemModel.index(editor->filename());
         ui->treeFiles->setCurrentIndex(index);
         ui->treeFiles->scrollTo(index, QAbstractItemView::PositionAtCenter);
         ui->tabInfos->setCurrentWidget(ui->tabFiles);
@@ -6252,7 +6268,7 @@ void MainWindow::on_actionOpen_Folder_triggered()
     QString folder = QFileDialog::getExistingDirectory(this,tr("Choose Working Folder"),
                                                        pSettings->environment().currentFolder());
     if (!folder.isEmpty()) {
-        setFilesViewRoot(folder);
+        setFilesViewRoot(folder,true);
     }
 }
 

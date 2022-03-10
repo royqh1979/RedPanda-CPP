@@ -243,7 +243,7 @@ private:
     void scanActiveProject(bool parse=false);
     void includeOrSkipDirs(const QStringList& dirs, bool skip);
     void showSearchReplacePanel(bool show);
-    void setFilesViewRoot(const QString& path);
+    void setFilesViewRoot(const QString& path, bool setOpenFolder=false);
     void clearIssues();
     void doCompileRun(RunType runType);
     void updateProblemCaseOutput(POJProblemCase problemCase);

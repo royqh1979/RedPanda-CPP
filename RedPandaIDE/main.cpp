@@ -352,9 +352,6 @@ int main(int argc, char *argv[])
                                   QMessageBox::Ok);
         }
 
-        //set default open folder
-        QDir::setCurrent(pSettings->environment().defaultOpenFolder());
-
         MainWindow mainWindow;
         pMainWindow = &mainWindow;
         if (app.arguments().count()>1) {
@@ -375,6 +372,10 @@ int main(int argc, char *argv[])
             setScreenDPI(mainWindow.screen()->logicalDotsPerInch());
 #endif
         mainWindow.show();
+
+        //reset default open folder
+        QDir::setCurrent(pSettings->environment().defaultOpenFolder());
+
 #ifdef Q_OS_WIN
         WindowLogoutEventFilter filter;
         app.installNativeEventFilter(&filter);
