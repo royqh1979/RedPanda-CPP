@@ -1147,3 +1147,14 @@ float pointToPixel(float point, float dpi)
 {
      return point * dpi / 72;
 }
+
+int countLeadingWhitespaceChars(const QString &line)
+{
+    int n=0;
+    while (n<line.length()) {
+        if (line[n].unicode()>32)
+            break;
+        n++;
+    }
+    return n;
+}

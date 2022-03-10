@@ -180,6 +180,7 @@ QByteArray readFileToByteArray(const QString& fileName);
 void readFileToLines(const QString& fileName, QTextCodec* codec, LineProcessFunc lineFunc);
 void stringsToFile(const QStringList& list, const QString& fileName);
 void stringToFile(const QString& str, const QString& fileName);
+int countLeadingWhitespaceChars(const QString& line);
 
 void decodeKey(int combinedKey, int& key, Qt::KeyboardModifiers& modifiers);
 void inflateRect(QRect& rect, int delta);
