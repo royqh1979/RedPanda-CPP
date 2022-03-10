@@ -13,6 +13,9 @@ isEmpty(APP_VERSION) {
     APP_VERSION=1.0.0
 }
 
+win32: VERSION = $${APP_VERSION}.0
+else: VERSION = $${APP_VERSION}
+
 isEmpty(PREFIX) {
     PREFIX = /usr/local
 }
@@ -430,7 +433,6 @@ RESOURCES += \
     translations.qrc
 
 RC_ICONS = images/devcpp.ico images/associations/c.ico images/associations/cpp.ico images/associations/dev.ico images/associations/c.ico images/associations/cpp.ico images/associations/h.ico images/associations/hpp.ico
-
 
 # fixed lrelease.prf
 qtPrepareTool(QMAKE_LRELEASE, lrelease)
