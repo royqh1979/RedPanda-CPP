@@ -1,3 +1,6 @@
+Red Panda C++ Version 1.0.0
+  - fix: calculation for code snippets's tab stop positions is not correct
+
 Red Panda C++ Version 0.14.5
   - fix: the "gnu c++ 20" option in compiler set options is wrong
   - enhancement: option "open files in the same red panda C++ instance", in options->environment->file associations

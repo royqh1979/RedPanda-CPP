@@ -2611,9 +2611,9 @@ void Editor::insertCodeSnippet(const QString &code)
     QStringList newSl;
     for (int i=0;i<sl.count();i++) {
         int lastPos = 0;
-        QString s = sl[i];
-        if (i>0)
-            lastPos = -spaceCount;
+        QString s = sl[i].trimmed();
+//        if (i>0)
+//            lastPos = -spaceCount;
         while (true) {
             int insertPos = s.indexOf(USER_CODE_IN_INSERT_POS);
             if (insertPos < 0) // no %INSERT% macro in this line now
@@ -2629,8 +2629,8 @@ void Editor::insertCodeSnippet(const QString &code)
             mUserCodeInTabStops.append(p);
         }
         lastPos = 0;
-        if (i>0)
-            lastPos = -spaceCount;
+//        if (i>0)
+//            lastPos = -spaceCount;
         while (true) {
             int insertPos = s.indexOf(USER_CODE_IN_REPL_POS_BEGIN);
             if (insertPos < 0) // no %INSERT% macro in this line now
@@ -3608,11 +3608,19 @@ void Editor::popUserCodeInTabStops()
         PTabStop p = mUserCodeInTabStops.front();
         // Update the cursor
         if (p->y ==0) {
-          tabStopBegin = mTabStopEnd + p->x;
-          tabStopEnd = mTabStopEnd + p->endX;
+            tabStopBegin = mTabStopEnd + p->x;
+            tabStopEnd = mTabStopEnd + p->endX;
         } else {
-          tabStopBegin = p->x+1;
-          tabStopEnd = p->endX+1;
+            QString line = lines()->getString(caretY()-1+p->y);
+            int n=0;
+            while (n<line.length()) {
+                if (line[n].unicode()>32)
+                    break;
+                n++;
+            }
+//            qDebug()<<line<<n<<p->x;
+            tabStopBegin = n+p->x+1;
+            tabStopEnd = n+p->endX+1;
         }
         mTabStopY = caretY() + p->y;
         newCursorPos.Line = mTabStopY;
