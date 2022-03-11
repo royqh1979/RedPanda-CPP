@@ -460,14 +460,22 @@ void SearchResultTreeViewDelegate::paint(QPainter *painter, const QStyleOptionVi
          x+=metrics.horizontalAdvance(text);
          QFont font = option.font;
          font.setBold(true);
-         font.setItalic(true);
-         QFont oldFont = painter->font();
-         painter->setFont(font);
          text=item->text.mid(item->start-1,item->len);
+         int width = metrics.horizontalAdvance(text);
+         QFont oldFont = painter->font();
+         QPen oldPen = painter->pen();
+         painter->setPen(qApp->palette().color(QPalette::ColorRole::HighlightedText));
+         painter->setFont(font);
+         QRect rect = textRect;
+         rect.setLeft(x);
+         rect.setWidth(width);
+         painter->fillRect(rect,qApp->palette().color(QPalette::ColorRole::Highlight));
          painter->drawText(x,y,text);
          metrics = QFontMetrics(font);
-         x+=metrics.horizontalAdvance(text);
+         x+=width;
          painter->setFont(oldFont);
+         painter->setPen(oldPen);
+
          text = item->text.mid(item->start-1+item->len);
          painter->drawText(x,y,text);
      }
