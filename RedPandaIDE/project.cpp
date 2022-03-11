@@ -631,7 +631,7 @@ void Project::setCompilerOption(const QString &optionString, char value)
     if (mOptions.compilerSet<0 || mOptions.compilerSet>=pSettings->compilerSets().size()) {
         return;
     }
-    std::shared_ptr<Settings::CompilerSet> compilerSet = pSettings->compilerSets().list()[mOptions.compilerSet];
+    std::shared_ptr<Settings::CompilerSet> compilerSet = pSettings->compilerSets().getSet(mOptions.compilerSet);
     int optionIndex = compilerSet->findOptionIndex(optionString);
     // Does the option exist?
     if (optionIndex>=0){

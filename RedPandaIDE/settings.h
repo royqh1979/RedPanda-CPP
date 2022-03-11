@@ -1210,7 +1210,7 @@ public:
         void setType(const QString& value);
         const QString& name() const;
         void setName(const QString& value);
-        const QStringList& defines() const;
+        const QStringList& defines();
         const QString& target() const;
         void setTarget(const QString& value);
 
@@ -1261,6 +1261,7 @@ public:
         QByteArray getCompilerOutput(const QString& binDir, const QString& binFile,
                                      const QStringList& arguments);
     private:
+        bool mFullLoaded;
         // Executables, most are hardcoded
         QString mCCompiler;
         QString mCppCompiler;
@@ -1320,8 +1321,6 @@ public:
         void saveDefaultIndex();
         void deleteSet(int index);
         void saveSet(int index);
-        //properties
-        CompilerSetList& list();
         int size() const;
         int defaultIndex() const;
         void setDefaultIndex(int value);

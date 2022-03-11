@@ -249,7 +249,6 @@ int main(int argc, char *argv[])
 
     QApplication app(argc, argv);
     QFile tempFile(QDir::tempPath()+QDir::separator()+"RedPandaDevCppStartUp.lock");
-
     {
         bool firstRun;
         QString settingFilename = getSettingFilename(QString(), firstRun);
@@ -354,6 +353,13 @@ int main(int argc, char *argv[])
 
         MainWindow mainWindow;
         pMainWindow = &mainWindow;
+#if QT_VERSION_MAJOR==5 && QT_VERSION_MINOR < 15
+        setScreenDPI(qApp->primaryScreen()->logicalDotsPerInch());
+#else
+        if (mainWindow.screen())
+            setScreenDPI(mainWindow.screen()->logicalDotsPerInch());
+#endif
+        mainWindow.show();
         if (app.arguments().count()>1) {
             QStringList filesToOpen = app.arguments();
             filesToOpen.pop_front();
@@ -365,22 +371,20 @@ int main(int argc, char *argv[])
                 pMainWindow->newEditor();
             }
         }
-#if QT_VERSION_MAJOR==5 && QT_VERSION_MINOR < 15
-        setScreenDPI(qApp->primaryScreen()->logicalDotsPerInch());
-#else
-        if (mainWindow.screen())
-            setScreenDPI(mainWindow.screen()->logicalDotsPerInch());
-#endif
-        mainWindow.show();
 
         //reset default open folder
         QDir::setCurrent(pSettings->environment().defaultOpenFolder());
+
+        pMainWindow->setFilesViewRoot(pSettings->environment().currentFolder());
 
 #ifdef Q_OS_WIN
         WindowLogoutEventFilter filter;
         app.installNativeEventFilter(&filter);
 #endif
-        tempFile.remove();
+        if (tempFile.isOpen()) {
+            tempFile.close();
+            tempFile.remove();
+        }
         int retCode = app.exec();
         QString configDir = pSettings->dirs().config();
         // save settings

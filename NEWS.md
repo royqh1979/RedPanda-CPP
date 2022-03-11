@@ -4,6 +4,7 @@ Red Panda C++ Version 1.0.0
   - enhancement: "locate in files view" will request user's confirmation when change the working folder
   - enhancement: adjust tab order in the find dialog
   - enhancement: highlight hits in the find panel's result list
+  - enhancement: optimize startup time
 
 Red Panda C++ Version 0.14.5
   - fix: the "gnu c++ 20" option in compiler set options is wrong

@@ -60,6 +60,7 @@ void SearchDialog::find(const QString &text)
         mTabBar->setCurrentIndex(0);
     }
     ui->cbFind->setCurrentText(text);
+    ui->cbFind->setFocus();
     show();
 }
 
@@ -81,6 +82,7 @@ void SearchDialog::findInFiles(const QString &text)
 {
     mTabBar->setCurrentIndex(2);
     ui->cbFind->setCurrentText(text);
+    ui->cbFind->setFocus();
     show();
 }
 
@@ -89,6 +91,8 @@ void SearchDialog::findInFiles(const QString &keyword, SearchFileScope scope, Sy
     mTabBar->setCurrentIndex(1);
 
     ui->cbFind->setCurrentText(keyword);
+    ui->cbFind->setFocus();
+
     switch(scope) {
     case SearchFileScope::currentFile:
         ui->rbCurrentFile->setChecked(true);
@@ -114,6 +118,7 @@ void SearchDialog::replace(const QString &sFind, const QString &sReplace)
     mTabBar->setCurrentIndex(1);
     ui->cbFind->setCurrentText(sFind);
     ui->cbReplace->setCurrentText(sReplace);
+    ui->cbFind->setFocus();
     show();
 }
 

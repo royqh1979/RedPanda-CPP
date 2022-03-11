@@ -167,7 +167,7 @@ void CompilerSetOptionWidget::doLoad()
 {
     disconnectInputs();
     ui->cbCompilerSet->clear();
-    if (pSettings->compilerSets().list().size()<=0) {
+    if (pSettings->compilerSets().size()<=0) {
         ui->btnRenameCompilerSet->setEnabled(false);
         ui->btnRemoveCompilerSet->setEnabled(false);
         return;
@@ -176,8 +176,8 @@ void CompilerSetOptionWidget::doLoad()
         ui->btnRemoveCompilerSet->setEnabled(true);
     }
     int index=pSettings->compilerSets().defaultIndex();
-    for (int i=0;i<pSettings->compilerSets().list().size();i++) {
-        ui->cbCompilerSet->addItem(pSettings->compilerSets().list()[i]->name());
+    for (int i=0;i<pSettings->compilerSets().size();i++) {
+        ui->cbCompilerSet->addItem(pSettings->compilerSets().getSet(i)->name());
     }
     if (index < 0 || index>=ui->cbCompilerSet->count()) {
         index = 0;
@@ -189,7 +189,7 @@ void CompilerSetOptionWidget::doLoad()
 
 void CompilerSetOptionWidget::doSave()
 {
-    if (pSettings->compilerSets().list().size()>0) {
+    if (pSettings->compilerSets().size()>0) {
         saveCurrentCompilerSet();
     }
     pSettings->compilerSets().saveSets();
@@ -296,7 +296,7 @@ void CompilerSetOptionWidget::on_btnAddBlankCompilerSet_pressed()
 {
     QString name = QInputDialog::getText(this,tr("Compiler Set Name"),tr("Name"));
     pSettings->compilerSets().addSet();
-    pSettings->compilerSets().setDefaultIndex(pSettings->compilerSets().list().size()-1);
+    pSettings->compilerSets().setDefaultIndex(pSettings->compilerSets().size()-1);
     pSettings->compilerSets().defaultSet()->setName(name);
     doLoad();
 }

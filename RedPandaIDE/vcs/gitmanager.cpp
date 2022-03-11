@@ -35,7 +35,8 @@ void GitManager::createRepository(const QString &folder)
 
 bool GitManager::hasRepository(const QString &folder, QString& currentBranch)
 {
-
+    if (folder.isEmpty())
+        return false;
     QStringList args;
     args.append("status");
     args.append("-b");

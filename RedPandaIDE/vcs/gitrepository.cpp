@@ -77,13 +77,16 @@ bool GitRepository::revert(QString& output)
 void GitRepository::setFolder(const QString &newFolder)
 {
     mFolder = newFolder;
-    mRealFolder = mManager->rootFolder(mFolder);
+    if (!newFolder.isEmpty())
+        mRealFolder = mManager->rootFolder(mFolder);
+    else
+        mRealFolder = newFolder;
     update();
 }
 
 void GitRepository::update()
 {
-    if (!mManager->isValid()) {
+    if (!mManager->isValid() || mFolder.isEmpty()) {
         mInRepository = false;
         mBranch = "";
         mFilesInRepositories.clear();

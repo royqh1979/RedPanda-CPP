@@ -299,7 +299,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     mFileSystemModel.setNameFilters(pSystemConsts->defaultFileNameFilters());
     mFileSystemModel.setNameFilterDisables(false);
-    setFilesViewRoot(pSettings->environment().currentFolder());
+    //setFilesViewRoot(pSettings->environment().currentFolder());
     for (int i=1;i<mFileSystemModel.columnCount();i++) {
         ui->treeFiles->hideColumn(i);
     }
@@ -674,7 +674,8 @@ void MainWindow::applySettings()
 
     //icon sets for files view
     pIconsManager->updateFileSystemIcons(pSettings->environment().iconSet(),pointToPixel(pSettings->environment().interfaceFontSize()));
-    setFilesViewRoot(mFileSystemModel.rootPath());
+    if (!mFileSystemModel.rootPath().isEmpty() && mFileSystemModel.rootPath()!=".")
+        setFilesViewRoot(pSettings->environment().currentFolder());
 //    for (int i=0;i<ui->cbFilesPath->count();i++) {
 //        ui->cbFilesPath->setItemIcon(i,pIconsManager->getIcon(IconsManager::FILESYSTEM_GIT));
 //    }
@@ -1205,8 +1206,8 @@ void MainWindow::updateCompilerSet()
 {
     mCompilerSet->blockSignals(true);
     mCompilerSet->clear();
-    for (size_t i=0;i<pSettings->compilerSets().list().size();i++) {
-        mCompilerSet->addItem(pSettings->compilerSets().list()[i]->name());
+    for (size_t i=0;i<pSettings->compilerSets().size();i++) {
+        mCompilerSet->addItem(pSettings->compilerSets().getSet(i)->name());
     }
     int index=pSettings->compilerSets().defaultIndex();
     if (mProject) {

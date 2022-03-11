@@ -1442,6 +1442,10 @@ Settings::CompilerSet::CompilerSet(const QString& compilerFolder):
         setUserInput();
 
         setDefines();
+
+        mFullLoaded = true;
+    } else {
+        mFullLoaded = false;
     }
     setOptions();
 }
@@ -1468,7 +1472,8 @@ Settings::CompilerSet::CompilerSet(const Settings::CompilerSet &set):
     mUseCustomLinkParams(set.mUseCustomLinkParams),
     mCustomCompileParams(set.mCustomCompileParams),
     mCustomLinkParams(set.mCustomLinkParams),
-    mAutoAddCharsetParams(set.mAutoAddCharsetParams)
+    mAutoAddCharsetParams(set.mAutoAddCharsetParams),
+    mFullLoaded(set.mFullLoaded)
 {
     // Executables, most are hardcoded
     for (PCompilerOption pOption:set.mOptions) {
@@ -1738,16 +1743,31 @@ QStringList &Settings::CompilerSet::libDirs()
 
 QStringList &Settings::CompilerSet::defaultCIncludeDirs()
 {
+    if (!mFullLoaded && !binDirs().isEmpty()) {
+        mFullLoaded=true;
+        setDirectories(binDirs()[0]);
+        setDefines();
+    }
     return mDefaultCIncludeDirs;
 }
 
 QStringList &Settings::CompilerSet::defaultCppIncludeDirs()
 {
+    if (!mFullLoaded && !binDirs().isEmpty()) {
+        mFullLoaded=true;
+        setDirectories(binDirs()[0]);
+        setDefines();
+    }
     return mDefaultCppIncludeDirs;
 }
 
 QStringList &Settings::CompilerSet::defaultLibDirs()
 {
+    if (!mFullLoaded && !binDirs().isEmpty()) {
+        mFullLoaded=true;
+        setDirectories(binDirs()[0]);
+        setDefines();
+    }
     return mLibDirs;
 }
 
@@ -1791,8 +1811,13 @@ void Settings::CompilerSet::setName(const QString &value)
     mName = value;
 }
 
-const QStringList& Settings::CompilerSet::defines() const
+const QStringList& Settings::CompilerSet::defines()
 {
+    if (!mFullLoaded && !binDirs().isEmpty()) {
+        mFullLoaded=true;
+        setDirectories(binDirs()[0]);
+        setDefines();
+    }
     return mDefines;
 }
 
@@ -2724,11 +2749,6 @@ void Settings::CompilerSets::deleteSet(int index)
     saveSets();
 }
 
-Settings::CompilerSetList &Settings::CompilerSets::list()
-{
-    return mList;
-}
-
 int Settings::CompilerSets::size() const
 {
     return mList.size();
@@ -2901,8 +2921,9 @@ Settings::PCompilerSet Settings::CompilerSets::loadSet(int index)
 
     if (pSet->binDirs().isEmpty())
         return PCompilerSet();
-    pSet->setDirectories(pSet->binDirs()[0]);
-    pSet->setDefines();
+
+    //pSet->setDirectories(pSet->binDirs()[0]);
+    //pSet->setDefines();
     return pSet;
 }
 
