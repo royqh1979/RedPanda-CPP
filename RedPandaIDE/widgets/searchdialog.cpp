@@ -36,8 +36,8 @@ SearchDialog::SearchDialog(QWidget *parent) :
     ui->setupUi(this);
     mTabBar = new QTabBar();
     mTabBar->addTab(tr("Find"));
-    mTabBar->addTab(tr("Find in files"));
     mTabBar->addTab(tr("Replace"));
+    mTabBar->addTab(tr("Find in files"));
     mTabBar->addTab(tr("Replace in files"));
     mTabBar->setExpanding(false);
     ui->dialogLayout->insertWidget(0,mTabBar);
@@ -79,7 +79,7 @@ void SearchDialog::findNext()
 
 void SearchDialog::findInFiles(const QString &text)
 {
-    mTabBar->setCurrentIndex(1);
+    mTabBar->setCurrentIndex(2);
     ui->cbFind->setCurrentText(text);
     show();
 }
@@ -111,7 +111,7 @@ void SearchDialog::findInFiles(const QString &keyword, SearchFileScope scope, Sy
 
 void SearchDialog::replace(const QString &sFind, const QString &sReplace)
 {
-    mTabBar->setCurrentIndex(2);
+    mTabBar->setCurrentIndex(1);
     ui->cbFind->setCurrentText(sFind);
     ui->cbReplace->setCurrentText(sReplace);
     show();
@@ -120,8 +120,8 @@ void SearchDialog::replace(const QString &sFind, const QString &sReplace)
 void SearchDialog::onTabChanged()
 {
     bool isfind = (mTabBar->currentIndex() == 0);
-    bool isfindfiles = (mTabBar->currentIndex() == 1 || mTabBar->currentIndex() == 3 );
-    bool isreplace = (mTabBar->currentIndex() == 2);
+    bool isfindfiles = (mTabBar->currentIndex() == 2 || mTabBar->currentIndex() == 3 );
+    bool isreplace = (mTabBar->currentIndex() == 1);
 
     ui->lblReplace->setVisible(isreplace);
     ui->cbReplace->setVisible(isreplace);
@@ -147,7 +147,9 @@ void SearchDialog::onTabChanged()
 
     // Disable prompt when doing finds
     ui->chkPrompt->setEnabled(isreplace);
+    ui->chkPrompt->setVisible(isreplace);
     ui->chkWrapAround->setEnabled(!isfindfiles);
+    ui->chkWrapAround->setVisible(!isfindfiles);
 
     if (isfind || isfindfiles) {
         ui->btnExecute->setText(tr("Find"));
@@ -191,10 +193,10 @@ void SearchDialog::on_btnExecute_clicked()
         actionType = SearchAction::Find;
         break;
     case 1:
-        actionType = SearchAction::FindFiles;
+        actionType = SearchAction::Replace;
         break;
     case 2:
-        actionType = SearchAction::Replace;
+        actionType = SearchAction::FindFiles;
         break;
     case 3:
         actionType = SearchAction::ReplaceFiles;
