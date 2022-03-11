@@ -311,7 +311,6 @@ bool SearchResultTreeModel::setData(const QModelIndex &index, const QVariant &va
     if (!item)
         return false;
     if (role == Qt::CheckStateRole && mSelectable) {
-
         PSearchResults results = mSearchResultModel->currentResults();
 
          if (!results || !index.isValid() ) {

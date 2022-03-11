@@ -6035,6 +6035,8 @@ void MainWindow::on_btnReplace_clicked()
         contents = editor->contents();
         for (int i=file->results.count()-1;i>=0;i--) {
             const PSearchResultTreeItem& item = file->results[i];
+            if (!item->selected)
+                continue;
             QString line = contents[item->line-1];
             if (line.mid(item->start-1,results->keyword.length())!=results->keyword) {
                 QMessageBox::critical(editor,

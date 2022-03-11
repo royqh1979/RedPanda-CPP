@@ -5,6 +5,7 @@ Red Panda C++ Version 1.0.0
   - enhancement: adjust tab order in the find dialog
   - enhancement: highlight hits in the find panel's result list
   - enhancement: optimize startup time
+  - fix: batch replace in file doesn't respect item check states in the find panel
 
 Red Panda C++ Version 0.14.5
   - fix: the "gnu c++ 20" option in compiler set options is wrong
