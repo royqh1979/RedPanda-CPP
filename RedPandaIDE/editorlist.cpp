@@ -371,7 +371,7 @@ Editor *EditorList::getEditorByFilename(QString filename)
     QFileInfo fileInfo(filename);
     QString fullname = fileInfo.absoluteFilePath();
     if (fileInfo.exists() && fileInfo.isFile())
-        return newEditor(fullname,ENCODING_AUTO_DETECT,false,false);
+        return newEditor(fullname,pSettings->editor().autoDetectFileEncoding()?ENCODING_AUTO_DETECT:pSettings->editor().defaultEncoding(),false,false);
     return nullptr;
 }
 

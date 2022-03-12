@@ -112,7 +112,8 @@ void ProjectFilesWidget::loadUnitEncoding(PProjectUnit unit)
     if (unit->encoding() == ENCODING_AUTO_DETECT
             || unit->encoding() == ENCODING_SYSTEM_DEFAULT
             || unit->encoding() == ENCODING_UTF8) {
-        ui->cbEncoding->setCurrentText(unit->encoding());
+        int index =ui->cbEncoding->findData(unit->encoding());
+        ui->cbEncoding->setCurrentIndex(index);
         ui->cbEncodingDetail->clear();
         ui->cbEncodingDetail->setVisible(false);
     } else {

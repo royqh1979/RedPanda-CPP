@@ -25,10 +25,12 @@ struct CharsetInfo{
     int codepage;
     QByteArray name;
     QString language;
+    QString localeName;
     bool enabled;
     explicit CharsetInfo(int codepage,
                          const QByteArray& name,
                          const QString& language,
+                         const QString& locale,
                          bool enabled);
 };
 
@@ -37,14 +39,18 @@ using PCharsetInfo = std::shared_ptr<CharsetInfo>;
 class CharsetInfoManager: public QObject {
     Q_OBJECT
 public:
-    explicit CharsetInfoManager();
+    explicit CharsetInfoManager(const QString& localeName);
     QByteArray getDefaultSystemEncoding();
     PCharsetInfo findCharsetByCodepage(int codepage);
     QStringList languageNames();
     QList<PCharsetInfo> findCharsetsByLanguageName(const QString& languageName);
+    QList<PCharsetInfo> findCharsetByLocale(const QString& localeName);
     QString findLanguageByCharsetName(const QString& encodingName);
+    const QString &localeName() const;
+
 private:
     QList<PCharsetInfo> mCodePages;
+    QString mLocaleName;
 };
 
 using PCharsetInfoManager = std::shared_ptr<CharsetInfo>;

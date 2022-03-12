@@ -105,10 +105,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
         loadFile();
         highlighter = highlighterManager.getHighlighter(mFilename);
     } else {
-        if (mEncodingOption == ENCODING_AUTO_DETECT)
-            mFileEncoding = ENCODING_ASCII;
-        else
-            mFileEncoding = mEncodingOption;
+        mFileEncoding = ENCODING_ASCII;
         highlighter=highlighterManager.getCppHighlighter();
     }
 
@@ -226,7 +223,7 @@ void Editor::loadFile(QString filename) {
 void Editor::saveFile(QString filename) {
     QFile file(filename);
     this->lines()->saveToFile(file,mEncodingOption,
-                              pSettings->editor().useUTF8ByDefault()? ENCODING_UTF8 : QTextCodec::codecForLocale()->name(),
+                              pSettings->editor().defaultEncoding(),
                               mFileEncoding);
     emit fileSaved(filename, mInProject);
 }
@@ -528,6 +525,7 @@ void Editor::focusInEvent(QFocusEvent *event)
     SynEdit::focusInEvent(event);
     pMainWindow->updateAppTitle();
     pMainWindow->updateEditorActions();
+    pMainWindow->updateForEncodingInfo();
     pMainWindow->updateStatusbarForLineCol();
     pMainWindow->updateForStatusbarModeInfo();
     pMainWindow->updateClassBrowserForEditor(this);
@@ -537,6 +535,7 @@ void Editor::focusOutEvent(QFocusEvent *event)
 {
     SynEdit::focusOutEvent(event);
     //pMainWindow->updateClassBrowserForEditor(nullptr);
+    pMainWindow->updateForEncodingInfo();
     pMainWindow->updateStatusbarForLineCol();
     pMainWindow->updateForStatusbarModeInfo();
     pMainWindow->functionTip()->hide();
@@ -1192,6 +1191,9 @@ void Editor::closeEvent(QCloseEvent *)
         mCompletionPopup->hide();
     if (pMainWindow->functionTip())
         pMainWindow->functionTip()->hide();
+    pMainWindow->updateForEncodingInfo(true);
+    pMainWindow->updateStatusbarForLineCol(true);
+    pMainWindow->updateForStatusbarModeInfo(true);
 }
 
 void Editor::showEvent(QShowEvent */*event*/)

@@ -6,6 +6,10 @@ Red Panda C++ Version 1.0.0
   - enhancement: highlight hits in the find panel's result list
   - enhancement: optimize startup time
   - fix: batch replace in file doesn't respect item check states in the find panel
+  - enhancement: option for default file encoding in "option" dialog's "editor"->"misc" tab
+  - enhancement: auto detect "gbk" encoding when running in zh_CN locale under Linux
+  - enhancement: disable encoding submenu when editor closed
+  - enhancement: clear infos in the status bar when editor closed
 
 Red Panda C++ Version 0.14.5
   - fix: the "gnu c++ 20" option in compiler set options is wrong

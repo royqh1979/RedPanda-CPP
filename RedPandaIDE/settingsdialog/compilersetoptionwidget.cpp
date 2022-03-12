@@ -146,7 +146,8 @@ static void loadCompilerSetSettings(Settings::PCompilerSet pSet, Ui::CompilerSet
     if (pSet->execCharset() == ENCODING_AUTO_DETECT
             || pSet->execCharset() == ENCODING_SYSTEM_DEFAULT
             || pSet->execCharset() == ENCODING_UTF8) {
-        ui->cbEncoding->setCurrentText(pSet->execCharset());
+        int index =ui->cbEncoding->findData(pSet->execCharset());
+        ui->cbEncoding->setCurrentIndex(index);
         ui->cbEncodingDetails->clear();
         ui->cbEncodingDetails->setVisible(false);
     } else {

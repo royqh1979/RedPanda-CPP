@@ -319,7 +319,7 @@ void CppRefacter::renameSymbolInFile(const QString &filename, const PStatement &
         QByteArray realEncoding;
         QFile file(filename);
         editor.lines()->saveToFile(file,ENCODING_AUTO_DETECT,
-                                   pSettings->editor().useUTF8ByDefault()? ENCODING_UTF8 : QTextCodec::codecForLocale()->name(),
+                                   pSettings->editor().defaultEncoding(),
                                    realEncoding);
     }
 }

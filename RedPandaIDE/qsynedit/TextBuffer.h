@@ -131,6 +131,8 @@ protected:
     void addItem(const QString& s);
     void putTextStr(const QString& text);
     void internalClear();
+private:
+    bool tryLoadFileByEncoding(QByteArray encodingName, QFile& file);
 
 private:
     SynEditStringRecList mList;

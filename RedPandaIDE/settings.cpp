@@ -574,16 +574,6 @@ void Settings::Editor::setMouseWheelScrollSpeed(int newMouseWheelScrollSpeed)
     mMouseWheelScrollSpeed = newMouseWheelScrollSpeed;
 }
 
-bool Settings::Editor::useUTF8ByDefault() const
-{
-    return mUseUTF8ByDefault;
-}
-
-void Settings::Editor::setUseUTF8ByDefault(bool newUseUTF8ByDefault)
-{
-    mUseUTF8ByDefault = newUseUTF8ByDefault;
-}
-
 bool Settings::Editor::highlightMathingBraces() const
 {
     return mHighlightMathingBraces;
@@ -622,6 +612,16 @@ int Settings::Editor::mouseSelectionScrollSpeed() const
 void Settings::Editor::setMouseSelectionScrollSpeed(int newMouseSelectionScrollSpeed)
 {
     mMouseSelectionScrollSpeed = newMouseSelectionScrollSpeed;
+}
+
+bool Settings::Editor::autoDetectFileEncoding() const
+{
+    return mAutoDetectFileEncoding;
+}
+
+void Settings::Editor::setAutoDetectFileEncoding(bool newAutoDetectFileEncoding)
+{
+    mAutoDetectFileEncoding = newAutoDetectFileEncoding;
 }
 
 bool Settings::Editor::highlightCurrentWord() const
@@ -1201,8 +1201,7 @@ void Settings::Editor::doSave()
     saveValue("readonly_system_header",mReadOnlySytemHeader);
     saveValue("auto_load_last_files",mAutoLoadLastFiles);
     saveValue("default_file_cpp",mDefaultFileCpp);
-    saveValue("use_utf8_by_default",mUseUTF8ByDefault);
-
+    saveValue("auto_detect_file_encoding",mAutoDetectFileEncoding);
 
     //tooltips
     saveValue("enable_tooltips",mEnableTooltips);
@@ -1331,11 +1330,15 @@ void Settings::Editor::doLoad()
     mEnableAutolink = boolValue("enable_autolink",true);
 
     //misc
-    mDefaultEncoding = value("default_encoding", ENCODING_SYSTEM_DEFAULT).toByteArray();
     mReadOnlySytemHeader = boolValue("readonly_system_header",true);
     mAutoLoadLastFiles = boolValue("auto_load_last_files",true);
     mDefaultFileCpp = boolValue("default_file_cpp",true);
-    mUseUTF8ByDefault = boolValue("use_utf8_by_default",false);
+    bool useUTF8ByDefault = boolValue("use_utf8_by_default",false);
+    if (useUTF8ByDefault)
+        mDefaultEncoding = ENCODING_UTF8;
+    else
+        mDefaultEncoding = value("default_encoding", ENCODING_SYSTEM_DEFAULT).toByteArray();
+    mAutoDetectFileEncoding = boolValue("auto_detect_file_encoding",true);
 
     //tooltips
     mEnableTooltips = boolValue("enable_tooltips",true);

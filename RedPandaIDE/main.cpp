@@ -291,10 +291,11 @@ int main(int argc, char *argv[])
         tempFile.remove();
         return -1;
     }
+    QString language;
     {
         QSettings languageSetting(settingFilename,QSettings::IniFormat);
         languageSetting.beginGroup(SETTING_ENVIRONMENT);
-        QString language = languageSetting.value("language",QLocale::system().name()).toString();
+        language = languageSetting.value("language",QLocale::system().name()).toString();
 
         if (trans.load("RedPandaIDE_"+language,":/i18n/")) {
             app.installTranslator(&trans);
@@ -314,7 +315,7 @@ int main(int argc, char *argv[])
 
         SystemConsts systemConsts;
         pSystemConsts = &systemConsts;
-        pCharsetInfoManager = new CharsetInfoManager();
+        pCharsetInfoManager = new CharsetInfoManager(language);
         auto charsetInfoManager = std::unique_ptr<CharsetInfoManager>(pCharsetInfoManager);
         //load settings
         pSettings = new Settings(settingFilename);

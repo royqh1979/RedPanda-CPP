@@ -39,6 +39,12 @@ private:
 protected:
     void doLoad() override;
     void doSave() override;
+
+    // SettingsWidget interface
+public:
+    void init() override;
+private slots:
+    void on_cbEncoding_currentTextChanged(const QString &arg1);
 };
 
 #endif // EDITORMISCWIDGET_H

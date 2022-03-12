@@ -357,9 +357,9 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::updateForEncodingInfo() {
+void MainWindow::updateForEncodingInfo(bool clear) {
     Editor * editor = mEditorList->getEditor();
-    if (editor!=NULL) {
+    if (!clear && editor!=NULL) {
         if (editor->encodingOption() != editor->fileEncoding()) {
             mFileEncodingStatus->setText(
                         QString("%1(%2)")
@@ -395,6 +395,7 @@ void MainWindow::updateEditorActions()
         ui->actionAuto_Detect->setEnabled(false);
         ui->actionEncode_in_ANSI->setEnabled(false);
         ui->actionEncode_in_UTF_8->setEnabled(false);
+        mMenuEncoding->setEnabled(false);
         ui->actionConvert_to_ANSI->setEnabled(false);
         ui->actionConvert_to_UTF_8->setEnabled(false);
         ui->actionCopy->setEnabled(false);
@@ -439,6 +440,7 @@ void MainWindow::updateEditorActions()
         ui->actionAuto_Detect->setEnabled(true);
         ui->actionEncode_in_ANSI->setEnabled(true);
         ui->actionEncode_in_UTF_8->setEnabled(true);
+        mMenuEncoding->setEnabled(true);
         ui->actionConvert_to_ANSI->setEnabled(e->encodingOption()!=ENCODING_SYSTEM_DEFAULT
                 && e->fileEncoding()!=ENCODING_SYSTEM_DEFAULT);
         ui->actionConvert_to_UTF_8->setEnabled(e->encodingOption()!=ENCODING_UTF8 && e->fileEncoding()!=ENCODING_UTF8);
@@ -1011,10 +1013,10 @@ QMenuBar *MainWindow::menuBar() const
     return ui->menubar;
 }
 
-void MainWindow::updateStatusbarForLineCol()
+void MainWindow::updateStatusbarForLineCol(bool clear)
 {
     Editor* e = mEditorList->getEditor();
-    if (e!=nullptr) {
+    if (!clear && e!=nullptr) {
         int col = e->charToColumn(e->caretY(),e->caretX());
         QString msg = tr("Line:%1 Col:%2 Selected:%3 Lines:%4 Length:%5")
                 .arg(e->caretY())
@@ -1028,10 +1030,10 @@ void MainWindow::updateStatusbarForLineCol()
     }
 }
 
-void MainWindow::updateForStatusbarModeInfo()
+void MainWindow::updateForStatusbarModeInfo(bool clear)
 {
     Editor* e = mEditorList->getEditor();
-    if (e!=nullptr) {
+    if (!clear && e!=nullptr) {
         QString msg;
         if (e->readOnly()) {
             msg = tr("Read Only");
@@ -1087,7 +1089,8 @@ void MainWindow::openFile(const QString &filename, QTabWidget* page)
             unit = mProject->findUnitByFilename(filename);
         }
         bool inProject = (mProject && unit);
-        QByteArray encoding = unit ? unit->encoding() : ENCODING_AUTO_DETECT;
+        QByteArray encoding = unit ? unit->encoding() :
+                                     (pSettings->editor().autoDetectFileEncoding()? ENCODING_AUTO_DETECT : pSettings->editor().defaultEncoding());
         editor = mEditorList->newEditor(filename,encoding,
                                     inProject, false, page);
 //        if (mProject) {
@@ -2125,7 +2128,8 @@ void MainWindow::loadLastOpens()
             unit = mProject->findUnitByFilename(editorFilename);
         }
         bool inProject = (mProject && unit);
-        QByteArray encoding = unit ? unit->encoding() : ENCODING_AUTO_DETECT;
+        QByteArray encoding = unit ? unit->encoding() :
+                                     (pSettings->editor().autoDetectFileEncoding()? ENCODING_AUTO_DETECT : pSettings->editor().defaultEncoding());
         Editor * editor = mEditorList->newEditor(editorFilename, encoding, inProject,false,page);
 //        if (mProject) {
 //            mProject->associateEditorToUnit(editor,unit);
@@ -2213,7 +2217,7 @@ void MainWindow::newEditor()
 {
     try {
         Editor * editor=mEditorList->newEditor("",
-                                               pSettings->editor().useUTF8ByDefault()?ENCODING_UTF8:ENCODING_AUTO_DETECT,
+                                               pSettings->editor().defaultEncoding(),
                                                false,true);
         editor->activate();
         updateForEncodingInfo();

@@ -517,6 +517,34 @@ void SynEditStringList::insertText(int Index, const QString &NewText)
     insertStrings(Index,lines);
 }
 
+bool SynEditStringList::tryLoadFileByEncoding(QByteArray encodingName, QFile& file) {
+    QTextCodec* codec = QTextCodec::codecForName(encodingName);
+    if (!codec)
+        return false;
+    file.reset();
+    internalClear();
+    QTextCodec::ConverterState state;
+    while (true) {
+        if (file.atEnd()){
+            break;
+        }
+        QByteArray line = file.readLine();
+        if (line.endsWith("\r\n")) {
+            line.remove(line.length()-2,2);
+        } else if (line.endsWith("\r")) {
+            line.remove(line.length()-1,1);
+        } else if (line.endsWith("\n")){
+            line.remove(line.length()-1,1);
+        }
+        QString newLine = codec->toUnicode(line.constData(),line.length(),&state);
+        if (state.invalidChars>0) {
+            return false;
+            break;
+        }
+        addItem(newLine);
+    }
+    return true;
+}
 void SynEditStringList::loadFromFile(const QString& filename, const QByteArray& encoding, QByteArray& realEncoding)
 {
     QMutexLocker locker(&mMutex);
@@ -587,7 +615,30 @@ void SynEditStringList::loadFromFile(const QString& filename, const QByteArray& 
                 realEncoding = ENCODING_ASCII;
             return;
         }
-        realEncoding = ENCODING_SYSTEM_DEFAULT;
+        realEncoding = pCharsetInfoManager->getDefaultSystemEncoding();
+        QList<PCharsetInfo> charsets = pCharsetInfoManager->findCharsetByLocale(pCharsetInfoManager->localeName());
+        if (!charsets.isEmpty()) {
+            if (tryLoadFileByEncoding(realEncoding,file)) {
+                emit inserted(0,mList.count());
+                return;
+            }
+
+            QSet<QByteArray> encodingSet;
+            for (int i=0;i<charsets.size();i++) {
+                encodingSet.insert(charsets[i]->name);
+            }
+            encodingSet.remove(realEncoding);
+            foreach (const QByteArray& encodingName,encodingSet) {
+                if (encodingName == ENCODING_UTF8)
+                    continue;
+                if (tryLoadFileByEncoding(encodingName,file)) {
+                    qDebug()<<encodingName;
+                    realEncoding = encodingName;
+                    emit inserted(0,mList.count());
+                    return;
+                }
+            }
+        }
     } else {
         realEncoding = encoding;
     }

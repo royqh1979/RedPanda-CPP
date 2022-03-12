@@ -100,9 +100,9 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
-    void updateForEncodingInfo();
-    void updateStatusbarForLineCol();
-    void updateForStatusbarModeInfo();
+    void updateForEncodingInfo(bool clear=false);
+    void updateStatusbarForLineCol(bool clear=false);
+    void updateForStatusbarModeInfo(bool clear=false);
     void updateStatusbarMessage(const QString& s);
     void updateEditorSettings();
     void updateEditorActions();

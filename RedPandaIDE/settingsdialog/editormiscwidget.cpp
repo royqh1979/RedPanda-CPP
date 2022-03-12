@@ -17,6 +17,7 @@
 #include "editormiscwidget.h"
 #include "ui_editormiscwidget.h"
 #include "../settings.h"
+#include "../platform.h"
 
 EditorMiscWidget::EditorMiscWidget(const QString& name, const QString& group,
                                    QWidget *parent) :
@@ -40,7 +41,27 @@ void EditorMiscWidget::doLoad()
     } else {
         ui->rbCFile->setChecked(true);
     }
-    ui->chkUseUTF8ByDefault->setChecked(pSettings->editor().useUTF8ByDefault());
+    ui->chkAutoDetectFileEncoding->setChecked(pSettings->editor().autoDetectFileEncoding());
+
+    QByteArray defaultEncoding = pSettings->editor().defaultEncoding();
+    if (defaultEncoding == ENCODING_AUTO_DETECT
+            || defaultEncoding == ENCODING_SYSTEM_DEFAULT
+            || defaultEncoding == ENCODING_UTF8) {
+        int index =ui->cbEncoding->findData(defaultEncoding);
+        ui->cbEncoding->setCurrentIndex(index);
+        ui->cbEncodingDetail->clear();
+        ui->cbEncodingDetail->setVisible(false);
+    } else {
+        QString language = pCharsetInfoManager->findLanguageByCharsetName(defaultEncoding);
+        ui->cbEncoding->setCurrentText(language);
+        ui->cbEncodingDetail->setVisible(true);
+        ui->cbEncodingDetail->clear();
+        QList<PCharsetInfo> infos = pCharsetInfoManager->findCharsetsByLanguageName(language);
+        foreach (const PCharsetInfo& info, infos) {
+            ui->cbEncodingDetail->addItem(info->name);
+        }
+        ui->cbEncodingDetail->setCurrentText(defaultEncoding);
+    }
 }
 
 void EditorMiscWidget::doSave()
@@ -48,6 +69,43 @@ void EditorMiscWidget::doSave()
     pSettings->editor().setReadOnlySytemHeader(ui->chkReadonlySystemHeaders->isChecked());
     pSettings->editor().setAutoLoadLastFiles(ui->chkLoadLastFiles->isChecked());
     pSettings->editor().setDefaultFileCpp(ui->rbCppFile->isChecked());
-    pSettings->editor().setUseUTF8ByDefault(ui->chkUseUTF8ByDefault->isChecked());
+    pSettings->editor().setAutoDetectFileEncoding(ui->chkAutoDetectFileEncoding->isChecked());
+
+    if (ui->cbEncodingDetail->isVisible()) {
+        pSettings->editor().setDefaultEncoding(ui->cbEncodingDetail->currentData().toByteArray());
+    } else {
+        pSettings->editor().setDefaultEncoding(ui->cbEncoding->currentData().toByteArray());
+    }
     pSettings->editor().save();
 }
+
+void EditorMiscWidget::init()
+{
+    ui->cbEncodingDetail->setVisible(false);
+    ui->cbEncoding->clear();
+    ui->cbEncoding->addItem(tr("ANSI"),ENCODING_SYSTEM_DEFAULT);
+    ui->cbEncoding->addItem(tr("UTF-8"),ENCODING_UTF8);
+    foreach (const QString& langName, pCharsetInfoManager->languageNames()) {
+        ui->cbEncoding->addItem(langName,langName);
+    }
+    SettingsWidget::init();
+}
+
+void EditorMiscWidget::on_cbEncoding_currentTextChanged(const QString &/*arg1*/)
+{
+    QString userData = ui->cbEncoding->currentData().toString();
+    if (userData == ENCODING_AUTO_DETECT
+            || userData == ENCODING_SYSTEM_DEFAULT
+            || userData == ENCODING_UTF8) {
+        ui->cbEncodingDetail->setVisible(false);
+        ui->cbEncodingDetail->clear();
+    } else {
+        ui->cbEncodingDetail->setVisible(true);
+        ui->cbEncodingDetail->clear();
+        QList<PCharsetInfo> infos = pCharsetInfoManager->findCharsetsByLanguageName(userData);
+        foreach (const PCharsetInfo& info, infos) {
+            ui->cbEncodingDetail->addItem(info->name);
+        }
+    }
+}
+

@@ -357,9 +357,6 @@ public:
         int mouseWheelScrollSpeed() const;
         void setMouseWheelScrollSpeed(int newMouseWheelScrollSpeed);
 
-        bool useUTF8ByDefault() const;
-        void setUseUTF8ByDefault(bool newUseUTF8ByDefault);
-
         bool highlightCurrentWord() const;
         void setHighlightCurrentWord(bool newHighlightCurrentWord);
 
@@ -374,6 +371,9 @@ public:
 
         int mouseSelectionScrollSpeed() const;
         void setMouseSelectionScrollSpeed(int newMouseSelectionScrollSpeed);
+
+        bool autoDetectFileEncoding() const;
+        void setAutoDetectFileEncoding(bool newAutoDetectFileEncoding);
 
     private:
         //General
@@ -477,10 +477,10 @@ public:
 
         //Misc
         QByteArray mDefaultEncoding;
+        bool mAutoDetectFileEncoding;
         bool mReadOnlySytemHeader;
         bool mAutoLoadLastFiles;
         bool mDefaultFileCpp;
-        bool mUseUTF8ByDefault;
 
         //hints tooltip
         bool mEnableTooltips;
