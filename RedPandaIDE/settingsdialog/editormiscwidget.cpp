@@ -72,7 +72,7 @@ void EditorMiscWidget::doSave()
     pSettings->editor().setAutoDetectFileEncoding(ui->chkAutoDetectFileEncoding->isChecked());
 
     if (ui->cbEncodingDetail->isVisible()) {
-        pSettings->editor().setDefaultEncoding(ui->cbEncodingDetail->currentData().toByteArray());
+        pSettings->editor().setDefaultEncoding(ui->cbEncodingDetail->currentText().toLocal8Bit());
     } else {
         pSettings->editor().setDefaultEncoding(ui->cbEncoding->currentData().toByteArray());
     }

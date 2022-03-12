@@ -886,7 +886,9 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
     if (token.isEmpty())
         return;
 
-    if (mParser && highlighter() && (attr == highlighter()->identifierAttribute())) {
+    if (mParser && highlighter() && (attr == highlighter()->identifierAttribute())
+            && !mParser->isIncludeLine(lines()->getString(line-1)) ) {
+
         BufferCoord p{aChar,line};
 //        BufferCoord pBeginPos,pEndPos;
 //        QString s= getWordAtPosition(this,p, pBeginPos,pEndPos, WordPurpose::wpInformation);
