@@ -276,6 +276,7 @@ public:
     virtual void tab() { commandProcessor(SynEditorCommand::ecTab);}
     virtual void shifttab() { commandProcessor(SynEditorCommand::ecShiftTab);}
     virtual void toggleComment() { commandProcessor(SynEditorCommand::ecToggleComment);}
+    virtual void toggleBlockComment() { commandProcessor(SynEditorCommand::ecToggleBlockComment);}
 
     virtual void beginUpdate();
     virtual void endUpdate();
@@ -589,6 +590,7 @@ private:
     void doComment();
     void doUncomment();
     void doToggleComment();
+    void doToggleBlockComment();
     void doMouseScroll(bool isDragging);
 
 
@@ -729,7 +731,7 @@ private:
     BufferCoord mDragCaretSave;
     BufferCoord mDragSelBeginSave;
     BufferCoord mDragSelEndSave;
-    bool mDragging;
+    bool mDropped;
 
 friend class SynEditTextPainter;
 

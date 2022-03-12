@@ -607,6 +607,8 @@ private slots:
 
     void on_actionFilesView_Hide_Non_Support_Files_toggled(bool arg1);
 
+    void on_actionToggle_Block_Comment_triggered();
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;

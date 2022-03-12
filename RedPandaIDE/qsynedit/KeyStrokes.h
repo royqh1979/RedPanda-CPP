@@ -162,7 +162,7 @@ enum class SynEditorCommand {
     ecComment         = 614,
     ecUncomment       = 615,
     ecToggleComment   = 616,
-    ecCommentInline   = 617,
+    ecToggleBlockComment   = 617,
 
     ecUpperCase       = 620, // apply to the current or previous word
     ecLowerCase       = 621,

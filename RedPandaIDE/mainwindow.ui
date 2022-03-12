@@ -1489,6 +1489,7 @@
     <addaction name="actionUnIndent"/>
     <addaction name="separator"/>
     <addaction name="actionToggleComment"/>
+    <addaction name="actionToggle_Block_Comment"/>
     <addaction name="separator"/>
     <addaction name="actionFoldAll"/>
     <addaction name="actionUnfoldAll"/>
@@ -2849,6 +2850,14 @@
    </property>
    <property name="text">
     <string>Hide Non Support Files</string>
+   </property>
+  </action>
+  <action name="actionToggle_Block_Comment">
+   <property name="text">
+    <string>Toggle Block Comment</string>
+   </property>
+   <property name="shortcut">
+    <string>Alt+Shift+A</string>
    </property>
   </action>
  </widget>

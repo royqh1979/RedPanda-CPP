@@ -10,6 +10,7 @@ Red Panda C++ Version 1.0.0
   - enhancement: auto detect "gbk" encoding when running in zh_CN locale under Linux
   - enhancement: disable encoding submenu when editor closed
   - enhancement: clear infos in the status bar when editor closed
+  - fix: wrong selection when drag & dropped in editor
 
 Red Panda C++ Version 0.14.5
   - fix: the "gnu c++ 20" option in compiler set options is wrong

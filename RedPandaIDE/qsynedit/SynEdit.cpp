@@ -39,7 +39,8 @@
 #include <QMimeData>
 #include <QDesktopWidget>
 
-SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent)
+SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent),
+    mDropped(false)
 {
     mLastKey = 0;
     mLastKeyModifiers = Qt::NoModifier;
@@ -1789,8 +1790,38 @@ void SynEdit::doToggleComment()
         doComment();
 }
 
+void SynEdit::doToggleBlockComment()
+{
+    QString s;
+    if (mReadOnly)
+        return;
+    doOnPaintTransient(SynTransientType::ttBefore);
+
+    QString text=selText().trimmed();
+    if (text.length()>4 && text.startsWith("/*") && text.endsWith("*/")) {
+        QString newText=selText();
+        int pos = newText.indexOf("/*");
+        if (pos>=0) {
+            newText.remove(pos,2);
+        }
+        pos = newText.lastIndexOf("*/");
+        if (pos>=0) {
+            newText.remove(pos,2);
+        }
+        setSelText(newText);
+    } else {
+        QString newText="/*"+selText()+"*/";
+        setSelText(newText);
+    }
+
+}
+
 void SynEdit::doMouseScroll(bool isDragging)
 {
+    if (mDropped) {
+        mDropped=false;
+        return;
+    }
     QPoint iMousePos;
     DisplayCoord C;
     int X, Y;
@@ -5643,6 +5674,9 @@ void SynEdit::ExecuteCommand(SynEditorCommand Command, QChar AChar, void *pData)
     case SynEditorCommand::ecToggleComment:
         doToggleComment();
         break;
+    case SynEditorCommand::ecToggleBlockComment:
+        doToggleBlockComment();
+        break;
     case SynEditorCommand::ecNormalSelect:
         setSelectionMode(SynSelectionMode::smNormal);
         break;
@@ -6148,9 +6182,8 @@ void SynEdit::dropEvent(QDropEvent *event)
         }
         mUndoList->EndBlock();
     }
-
     event->acceptProposedAction();
-
+    mDropped = true;
 }
 
 void SynEdit::dragMoveEvent(QDragMoveEvent *event)
