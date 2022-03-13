@@ -609,6 +609,8 @@ private slots:
 
     void on_actionToggle_Block_Comment_triggered();
 
+    void on_actionMatch_Bracket_triggered();
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;

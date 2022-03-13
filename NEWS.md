@@ -14,6 +14,7 @@ Red Panda C++ Version 1.0.0
   - enhancement: toggle block comment
   - fix: syntax color of #include header filenames not correct
   - enhancement: disable "code completion" will disable enhanced syntax highlight
+  - enhancement: match bracket
 
 Red Panda C++ Version 0.14.5
   - fix: the "gnu c++ 20" option in compiler set options is wrong

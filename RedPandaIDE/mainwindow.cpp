@@ -7130,3 +7130,12 @@ void MainWindow::on_actionToggle_Block_Comment_triggered()
     }
 }
 
+
+void MainWindow::on_actionMatch_Bracket_triggered()
+{
+    Editor * editor = mEditorList->getEditor();
+    if (editor != NULL ) {
+        editor->matchBracket();
+    }
+}
+

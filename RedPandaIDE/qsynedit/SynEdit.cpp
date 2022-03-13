@@ -5699,6 +5699,11 @@ void SynEdit::ExecuteCommand(SynEditorCommand Command, QChar AChar, void *pData)
         verticalScrollBar()->setValue(verticalScrollBar()->value()+mMouseWheelScrollSpeed);
         break;
     case SynEditorCommand::ecMatchBracket:
+        {
+        BufferCoord coord = getMatchingBracket();
+        if (coord.Char!=0 && coord.Line!=0)
+            internalSetCaretXY(coord);
+        }
         break;
     default:
         break;
