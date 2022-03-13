@@ -886,7 +886,7 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
     if (token.isEmpty())
         return;
 
-    if (mParser && highlighter() && (attr == highlighter()->identifierAttribute())
+    if (mParser && mParser->enabled() && highlighter() && (attr == highlighter()->identifierAttribute())
             && !mParser->isIncludeLine(lines()->getString(line-1)) ) {
 
         BufferCoord p{aChar,line};
@@ -2439,7 +2439,9 @@ void Editor::initParser()
                     &EditorList::getContentFromOpenedEditor,pMainWindow->editorList(),
                     std::placeholders::_1, std::placeholders::_2));
     resetCppParser(mParser);
-    mParser->setEnabled((highlighter() && highlighter()->getClass() == SynHighlighterClass::CppHighlighter));
+    mParser->setEnabled(
+                pSettings->codeCompletion().enabled() &&
+                (highlighter() && highlighter()->getClass() == SynHighlighterClass::CppHighlighter));
 }
 
 Editor::QuoteStatus Editor::getQuoteStatus()
@@ -2570,6 +2572,8 @@ void Editor::reparse()
     if (highlighter()->language() != SynHighlighterLanguage::Cpp
              && highlighter()->language() != SynHighlighterLanguage::GLSL)
         return;
+    if (mParser)
+        mParser->setEnabled(pSettings->codeCompletion().enabled());
     parseFile(mParser,mFilename,mInProject);
 }
 

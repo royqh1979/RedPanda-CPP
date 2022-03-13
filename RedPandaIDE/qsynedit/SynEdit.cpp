@@ -5698,6 +5698,8 @@ void SynEdit::ExecuteCommand(SynEditorCommand Command, QChar AChar, void *pData)
     case SynEditorCommand::ecScrollDown:
         verticalScrollBar()->setValue(verticalScrollBar()->value()+mMouseWheelScrollSpeed);
         break;
+    case SynEditorCommand::ecMatchBracket:
+        break;
     default:
         break;
     }
