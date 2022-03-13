@@ -15,6 +15,7 @@ Red Panda C++ Version 1.0.0
   - fix: syntax color of #include header filenames not correct
   - enhancement: disable "code completion" will disable enhanced syntax highlight
   - enhancement: match bracket
+  - enhancement: **Linux** convert to "gbk"/"gb18030" encodings when run under "zh_CN" locale
 
 Red Panda C++ Version 0.14.5
   - fix: the "gnu c++ 20" option in compiler set options is wrong
