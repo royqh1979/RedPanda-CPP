@@ -2834,9 +2834,6 @@ void SynEdit::doCutToClipboard()
                     activeSelectionMode());
         doSelecteLine();
     }
-    auto action = finally([this] {
-        mUndoList->EndBlock();
-    });
     internalDoCopyToClipboard(selText());
     doSetSelText("");
     mUndoList->AddChange(
@@ -2845,6 +2842,7 @@ void SynEdit::doCutToClipboard()
                 BufferCoord{0,0},
                 "",
                 SynSelectionMode::smNormal);
+    mUndoList->EndBlock();
 }
 
 void SynEdit::doCopyToClipboard()
