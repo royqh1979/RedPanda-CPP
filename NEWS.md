@@ -13,6 +13,7 @@ Red Panda C++ Version 1.0.0
   - fix: wrong selection when drag & dropped in editor
   - enhancement: toggle block comment
   - fix: syntax color of #include header filenames not correct
+  - fix: when no selection, copy/cut should auto select whole line with the line break
 
 Red Panda C++ Version 0.14.5
   - fix: the "gnu c++ 20" option in compiler set options is wrong

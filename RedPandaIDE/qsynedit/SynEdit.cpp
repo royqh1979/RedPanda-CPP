@@ -2108,7 +2108,10 @@ void SynEdit::doDeleteLine()
 void SynEdit::doSelecteLine()
 {
     setBlockBegin(BufferCoord{1,mCaretY});
-    setBlockEnd(BufferCoord{lineText().length()+1,mCaretY});
+    if (mCaretY==mLines->count())
+        setBlockEnd(BufferCoord{lineText().length()+1,mCaretY});
+    else
+        setBlockEnd(BufferCoord{1,mCaretY+1});
 }
 
 void SynEdit::doDuplicateLine()
@@ -2817,8 +2820,6 @@ void SynEdit::doCutToClipboard()
         return;
     if (!selAvail())
         doSelecteLine();
-    if (!selAvail())
-        return;
     mUndoList->BeginBlock();
     auto action = finally([this] {
         mUndoList->EndBlock();
@@ -2829,11 +2830,9 @@ void SynEdit::doCutToClipboard()
 
 void SynEdit::doCopyToClipboard()
 {
-    if (!selAvail())
+    bool selected=selAvail();
+    if (!selected)
         doSelecteLine();
-    if (!selAvail()) {
-        return;
-    }
     bool ChangeTrim = (mActiveSelectionMode == SynSelectionMode::smColumn) &&
             mOptions.testFlag(eoTrimTrailingSpaces);
     QString sText;
@@ -2847,6 +2846,10 @@ void SynEdit::doCopyToClipboard()
         sText = selText();
     }
     internalDoCopyToClipboard(sText);
+    if (!selected) {
+        setBlockBegin(caretXY());
+        setBlockEnd(caretXY());
+    }
 }
 
 void SynEdit::internalDoCopyToClipboard(const QString &s)
