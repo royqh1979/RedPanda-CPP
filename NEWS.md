@@ -14,6 +14,8 @@ Red Panda C++ Version 1.0.0
   - enhancement: toggle block comment
   - fix: syntax color of #include header filenames not correct
   - fix: when no selection, copy/cut should auto select whole line with the line break
+  - fix: redo cut with no selection while make whole line selected
+  - fix: correctly reset caret when redo cut with no selection
 
 Red Panda C++ Version 0.14.5
   - fix: the "gnu c++ 20" option in compiler set options is wrong

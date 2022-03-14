@@ -2818,14 +2818,33 @@ void SynEdit::doCutToClipboard()
 {
     if (mReadOnly)
         return;
-    if (!selAvail())
-        doSelecteLine();
     mUndoList->BeginBlock();
+    if (!selAvail()) {
+        mUndoList->AddChange(
+                    SynChangeReason::crSelection,
+                    caretXY(),
+                    caretXY(),
+                    "",
+                    SynSelectionMode::smNormal);
+        mUndoList->AddChange(
+                    SynChangeReason::crCaret,
+                    caretXY(),
+                    caretXY(),
+                    "",
+                    activeSelectionMode());
+        doSelecteLine();
+    }
     auto action = finally([this] {
         mUndoList->EndBlock();
     });
     internalDoCopyToClipboard(selText());
     doSetSelText("");
+    mUndoList->AddChange(
+                SynChangeReason::crNothing,
+                BufferCoord{0,0},
+                BufferCoord{0,0},
+                "",
+                SynSelectionMode::smNormal);
 }
 
 void SynEdit::doCopyToClipboard()
