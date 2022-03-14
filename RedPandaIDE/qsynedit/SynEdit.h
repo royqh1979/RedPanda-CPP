@@ -277,6 +277,7 @@ public:
     virtual void shifttab() { commandProcessor(SynEditorCommand::ecShiftTab);}
     virtual void toggleComment() { commandProcessor(SynEditorCommand::ecToggleComment);}
     virtual void toggleBlockComment() { commandProcessor(SynEditorCommand::ecToggleBlockComment);}
+    virtual void matchBracket() { commandProcessor(SynEditorCommand::ecMatchBracket);}
 
     virtual void beginUpdate();
     virtual void endUpdate();

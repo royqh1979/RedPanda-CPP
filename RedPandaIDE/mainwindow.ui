@@ -1422,7 +1422,7 @@
      <x>0</x>
      <y>0</y>
      <width>1114</width>
-     <height>26</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -1520,6 +1520,8 @@
     <addaction name="separator"/>
     <addaction name="actionBack"/>
     <addaction name="actionForward"/>
+    <addaction name="separator"/>
+    <addaction name="actionMatch_Bracket"/>
     <addaction name="separator"/>
     <addaction name="actionAdd_bookmark"/>
     <addaction name="actionRemove_Bookmark"/>
@@ -2858,6 +2860,14 @@
    </property>
    <property name="shortcut">
     <string>Alt+Shift+A</string>
+   </property>
+  </action>
+  <action name="actionMatch_Bracket">
+   <property name="text">
+    <string>Match Bracket</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+]</string>
    </property>
   </action>
  </widget>

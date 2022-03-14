@@ -13,6 +13,9 @@ Red Panda C++ Version 1.0.0
   - fix: wrong selection when drag & dropped in editor
   - enhancement: toggle block comment
   - fix: syntax color of #include header filenames not correct
+  - enhancement: disable "code completion" will disable enhanced syntax highlight
+  - enhancement: match bracket
+  - enhancement: **Linux** convert to "gbk"/"gb18030" encodings when run under "zh_CN" locale
   - fix: when no selection, copy/cut should auto select whole line with the line break
   - fix: redo cut with no selection while make whole line selected
   - fix: correctly reset caret when redo cut with no selection

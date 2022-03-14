@@ -2897,6 +2897,26 @@ void MainWindow::buildEncodingMenu()
     mMenuEncoding->addAction(ui->actionConvert_to_ANSI);
     mMenuEncoding->addAction(ui->actionConvert_to_UTF_8);
 
+    QList<PCharsetInfo> charsetsForLocale = pCharsetInfoManager->findCharsetByLocale(pCharsetInfoManager->localeName());
+
+    foreach(const PCharsetInfo& charset, charsetsForLocale) {
+        QAction * action = new QAction(
+                    tr("Convert to %1").arg(QString(charset->name)));
+        connect(action, &QAction::triggered,
+                [charset,this](){
+            Editor * editor = mEditorList->getEditor();
+            if (editor == nullptr)
+                return;
+            if (QMessageBox::warning(this,tr("Confirm Convertion"),
+                           tr("The editing file will be saved using %1 encoding. <br />This operation can't be reverted. <br />Are you sure to continue?")
+                           .arg(QString(charset->name)),
+                           QMessageBox::Yes, QMessageBox::No)!=QMessageBox::Yes)
+                return;
+            editor->convertToEncoding(charset->name);
+        });
+        mMenuEncoding->addAction(action);
+    }
+
     ui->menuEdit->insertMenu(ui->actionFoldAll,mMenuEncoding);
     ui->menuEdit->insertSeparator(ui->actionFoldAll);
     ui->actionAuto_Detect->setCheckable(true);
@@ -7127,6 +7147,15 @@ void MainWindow::on_actionToggle_Block_Comment_triggered()
     Editor * editor = mEditorList->getEditor();
     if (editor != NULL ) {
         editor->toggleBlockComment();
+    }
+}
+
+
+void MainWindow::on_actionMatch_Bracket_triggered()
+{
+    Editor * editor = mEditorList->getEditor();
+    if (editor != NULL ) {
+        editor->matchBracket();
     }
 }
 
