@@ -3022,6 +3022,11 @@ void Editor::completionInsert(bool appendFunc)
 
     // if we are inserting a function,
     if (appendFunc) {
+        if (statement->kind == StatementKind::skAlias) {
+            PStatement newStatement = mParser->findAliasedStatement(statement);
+            if (newStatement)
+                statement = newStatement;
+        }
         if (statement->kind == StatementKind::skFunction
                 || statement->kind == StatementKind::skConstructor
                 || statement->kind == StatementKind::skDestructor

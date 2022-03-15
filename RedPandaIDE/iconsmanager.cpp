@@ -334,6 +334,8 @@ QPixmap IconsManager::getPixmapForStatement(PStatement statement)
         return *(pIconsManager->getPixmap(IconsManager::PARSER_KEYWORD));
     case StatementKind::skUserCodeSnippet:
         return *(pIconsManager->getPixmap(IconsManager::PARSER_CODE_SNIPPET));
+    case StatementKind::skAlias:
+        return *(pIconsManager->getPixmap(IconsManager::PARSER_TYPE));
     default:
         break;
     }

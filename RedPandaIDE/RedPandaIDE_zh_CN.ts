@@ -1271,11 +1271,11 @@ Are you really want to continue?</oldsource>
     </message>
     <message>
         <location filename="editor.cpp" line="258"/>
-        <location filename="editor.cpp" line="337"/>
-        <location filename="editor.cpp" line="1241"/>
-        <location filename="editor.cpp" line="1246"/>
-        <location filename="editor.cpp" line="1264"/>
-        <location filename="editor.cpp" line="1269"/>
+        <location filename="editor.cpp" line="338"/>
+        <location filename="editor.cpp" line="1245"/>
+        <location filename="editor.cpp" line="1250"/>
+        <location filename="editor.cpp" line="1268"/>
+        <location filename="editor.cpp" line="1273"/>
         <source>Error</source>
         <translation>错误</translation>
     </message>
@@ -1289,34 +1289,34 @@ Are you really want to continue?</oldsource>
         <translation>另存为</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="1242"/>
+        <location filename="editor.cpp" line="1246"/>
         <source>The text to be copied exceeds count limit!</source>
         <translation>要复制的内容超过了行数限制！</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="1247"/>
+        <location filename="editor.cpp" line="1251"/>
         <source>The text to be copied exceeds character limit!</source>
         <translation>要复制的内容超过了字符数限制！</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="1265"/>
+        <location filename="editor.cpp" line="1269"/>
         <source>The text to be cut exceeds count limit!</source>
         <translation>要剪切的内容超过了行数限制！</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="1270"/>
+        <location filename="editor.cpp" line="1274"/>
         <source>The text to be cut exceeds character limit!</source>
         <translation>要剪切的内容超过了字符数限制！</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="2693"/>
+        <location filename="editor.cpp" line="2697"/>
         <source>Print Document</source>
         <translation>打印文档</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="3290"/>
-        <location filename="editor.cpp" line="3329"/>
-        <location filename="editor.cpp" line="3383"/>
+        <location filename="editor.cpp" line="3302"/>
+        <location filename="editor.cpp" line="3341"/>
+        <location filename="editor.cpp" line="3395"/>
         <source>Ctrl+click for more info</source>
         <translation>Ctrl+单击以获取更多信息</translation>
     </message>
@@ -1325,27 +1325,27 @@ Are you really want to continue?</oldsource>
         <translation type="vanished">未找到符号&apos;%1&apos;!</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="4118"/>
+        <location filename="editor.cpp" line="4130"/>
         <source>astyle not found</source>
         <translation>找不到astyle程序</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="4119"/>
+        <location filename="editor.cpp" line="4131"/>
         <source>Can&apos;t find astyle in &quot;%1&quot;.</source>
         <translation>找不到astyle程序&quot;%1&quot;.</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="4269"/>
+        <location filename="editor.cpp" line="4281"/>
         <source>Break point condition</source>
         <translation>断点条件</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="4270"/>
+        <location filename="editor.cpp" line="4282"/>
         <source>Enter the condition of the breakpoint:</source>
         <translation>输入当前断点的生效条件:</translation>
     </message>
     <message>
-        <location filename="editor.cpp" line="4485"/>
+        <location filename="editor.cpp" line="4497"/>
         <source>Readonly</source>
         <translation>只读</translation>
     </message>
@@ -5473,7 +5473,7 @@ Are you really want to continue?</oldsource>
     <message>
         <location filename="mainwindow.cpp" line="3612"/>
         <source>New Folder %1</source>
-        <translation type="unfinished">新建文件夹%1</translation>
+        <translation>新建文件夹%1</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="3623"/>
@@ -6071,8 +6071,8 @@ Are you really want to continue?</oldsource>
         <translation>项目%1</translation>
     </message>
     <message>
-        <location filename="widgets/newprojectdialog.cpp" line="143"/>
-        <location filename="widgets/newprojectdialog.cpp" line="164"/>
+        <location filename="widgets/newprojectdialog.cpp" line="145"/>
+        <location filename="widgets/newprojectdialog.cpp" line="166"/>
         <source>Default</source>
         <translation>缺省</translation>
     </message>
@@ -6767,32 +6767,40 @@ Are you really want to continue?</oldsource>
 <context>
     <name>ProjectTemplate</name>
     <message>
-        <location filename="projecttemplate.cpp" line="89"/>
+        <location filename="projecttemplate.cpp" line="91"/>
         <source>Read failed.</source>
         <translation>读取失败.</translation>
     </message>
     <message>
-        <location filename="projecttemplate.cpp" line="90"/>
+        <location filename="projecttemplate.cpp" line="92"/>
         <source>Can&apos;t read template file &apos;%1&apos;.</source>
         <translation>无法读取模板文件&apos;%1&apos;.</translation>
     </message>
     <message>
-        <location filename="projecttemplate.cpp" line="96"/>
+        <location filename="projecttemplate.cpp" line="98"/>
+        <source>Can&apos;t Open Template</source>
+        <translation>无法打开模板</translation>
+    </message>
+    <message>
+        <location filename="projecttemplate.cpp" line="99"/>
+        <source>Can&apos;t open template file &apos;%1&apos; for read.</source>
+        <translation>无法读取模板文件&quot;%1&quot;</translation>
+    </message>
+    <message>
         <source>Template not exist</source>
-        <translation>模板不存在</translation>
+        <translation type="vanished">模板不存在</translation>
     </message>
     <message>
-        <location filename="projecttemplate.cpp" line="97"/>
         <source>Template file &apos;%1&apos; doesn&apos;t exist.</source>
-        <translation>模板文件&apos;%1&apos;不存在.</translation>
+        <translation type="vanished">模板文件&apos;%1&apos;不存在.</translation>
     </message>
     <message>
-        <location filename="projecttemplate.cpp" line="105"/>
+        <location filename="projecttemplate.cpp" line="107"/>
         <source>Old version template</source>
         <translation>旧版本模板</translation>
     </message>
     <message>
-        <location filename="projecttemplate.cpp" line="106"/>
+        <location filename="projecttemplate.cpp" line="108"/>
         <source>Template file &apos;%1&apos; has version &apos;%2&apos;, which is unsupported.</source>
         <translation>已不再支持模板文件&apos;%1&apos;的版本(%2)。</translation>
     </message>
@@ -7569,12 +7577,12 @@ Are you really want to continue?</oldsource>
         <translation>无标题</translation>
     </message>
     <message>
-        <location filename="parser/cppparser.cpp" line="980"/>
+        <location filename="parser/cppparser.cpp" line="991"/>
         <source>constructor</source>
         <translation>构造函数</translation>
     </message>
     <message>
-        <location filename="parser/cppparser.cpp" line="987"/>
+        <location filename="parser/cppparser.cpp" line="998"/>
         <source>destructor</source>
         <translation>析构函数</translation>
     </message>

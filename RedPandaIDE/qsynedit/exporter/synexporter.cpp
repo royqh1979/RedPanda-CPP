@@ -132,7 +132,7 @@ void SynExporter::SaveToFile(const QString &AFileName)
     if (file.open(QIODevice::WriteOnly)) {
         SaveToStream(file);
     } else {
-        throw FileError(QObject::tr("Can't open file '%1' to write!"));
+        throw FileError(QObject::tr("Can't open file '%1' to write!").arg(AFileName));
     }
 }
 

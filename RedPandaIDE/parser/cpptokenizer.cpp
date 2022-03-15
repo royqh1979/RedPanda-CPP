@@ -193,11 +193,24 @@ QString CppTokenizer::getNextToken(bool /* bSkipParenthesis */, bool bSkipArray,
             case '/':
                 advance();
                 break;
+            case ':':
+                if (*(mCurrent + 1) == ':') {
+                    countLines();
+                    mCurrent+=2;
+                    // Append next token to this one
+                    result = "::"+getWord(true, bSkipArray, bSkipBlock);
+                    done = true;
+                } else {
+                    countLines();
+                    result = *mCurrent;
+                    advance();
+                    done = true;
+                }
+                break;
             case '{':
             case '}':
             case ';':
-            case ',':
-            case ':':  //just return the brace or the ';'
+            case ',':   //just return the brace or the ';'
                 countLines();
                 result = *mCurrent;
                 advance();
@@ -333,11 +346,13 @@ QString CppTokenizer::getWord(bool bSkipParenthesis, bool bSkipArray, bool bSkip
             result+=QString(mCurrent,2);
             mCurrent+=2;
         } else if ((*mCurrent == ':') && (*(mCurrent + 1) == ':')) {
-            result+=QString(mCurrent,2);
-            mCurrent+=2;
-            // Append next token to this one
-            QString s = getWord(bSkipParenthesis, bSkipArray, bSkipBlock);
-            result += s;
+            if (result != "using") {
+                result+=QString(mCurrent,2);
+                mCurrent+=2;
+                // Append next token to this one
+                QString s = getWord(bSkipParenthesis, bSkipArray, bSkipBlock);
+                result += s;
+            }
         }
     }
     return result;

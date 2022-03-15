@@ -156,7 +156,7 @@ QString SynRTFExporter::GetHeader()
     Result = Result + "{\\title " + mTitle + "}}" + lineBreak();
 //    if (mUseBackground)
 //        Result = Result + { TODO } #13#10;
-    Result = Result + QString("\\deflang1033\\pard\\plain\\f0\\fs%1 ").arg(2 * mFont.pointSize());
+    Result = Result + QString("\\deflang1033\\pard\\plain\\f0\\fs%1 ").arg((int)(2 * pixelToPoint(mFont.pixelSize())));
     if (mUseBackground)
         Result = Result + QString("\\chshdng0\\chcbpat%1\\cb%2\\highlight%3 ")
                 .arg(GetColorIndex(mLastBG))

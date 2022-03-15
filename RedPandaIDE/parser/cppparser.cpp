@@ -478,6 +478,17 @@ PStatement CppParser::findStatementOf(const QString &fileName, const QStringList
     return findStatementOf(fileName,expression,findAndScanBlockAt(fileName,line));
 }
 
+PStatement CppParser::findAliasedStatement(const PStatement &statement)
+{
+    QMutexLocker locker(&mMutex);
+    if (mParsing)
+        return PStatement();
+    if (!statement)
+        return PStatement();
+    return  findTypeDefinitionOf(statement->fileName,statement->type, statement->parentScope.lock());
+
+}
+
 PStatement CppParser::findStatementStartingFrom(const QString &fileName, const QString &phrase, const PStatement& startScope)
 {
     PStatement scopeStatement = startScope;
@@ -1802,7 +1813,8 @@ PStatement CppParser::getTypeDef(const PStatement& statement,
             || statement->kind == StatementKind::skEnumType
             || statement->kind == StatementKind::skEnumClassType) {
         return statement;
-    } else if (statement->kind == StatementKind::skTypedef) {
+    } else if (statement->kind == StatementKind::skTypedef
+               || statement->kind == StatementKind::skAlias) {
         if (statement->type == aType) // prevent infinite loop
             return statement;
         PStatement result = findTypeDefinitionOf(fileName,statement->type, statement->parentScope.lock());
@@ -3218,9 +3230,9 @@ void CppParser::internalParse(const QString &fileName)
         //reduce memory usage
         mPreprocessor.clearResult();
 #ifdef QT_DEBUG
-//        StringsToFile(mPreprocessor.result(),"f:\\preprocess.txt");
-//        mPreprocessor.dumpDefinesTo("f:\\defines.txt");
-//        mPreprocessor.dumpIncludesListTo("f:\\includes.txt");
+//        StringsToFile(mPreprocessor.result(),"z:\\preprocess.txt");
+//        mPreprocessor.dumpDefinesTo("z:\\defines.txt");
+//        mPreprocessor.dumpIncludesListTo("z:\\includes.txt");
 #endif
 
         // Tokenize the preprocessed buffer file
@@ -3239,9 +3251,9 @@ void CppParser::internalParse(const QString &fileName)
         //reduce memory usage
         internalClear();
 #ifdef QT_DEBUG
-//        mTokenizer.dumpTokens("f:\\tokens.txt");
-//        mStatementList.dump("f:\\stats.txt");
-//        mStatementList.dumpAll("f:\\all-stats.txt");
+//        mTokenizer.dumpTokens("z:\\tokens.txt");
+//        mStatementList.dump("z:\\stats.txt");
+//        mStatementList.dumpAll("z:\\all-stats.txt");
 #endif
         //reduce memory usage
         mTokenizer.reset();

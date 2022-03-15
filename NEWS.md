@@ -24,7 +24,10 @@ Red Panda C++ Version 1.0.0
   - fix: error when delete contents in column mode on lines that has wide-chars
   - fix: error when create folder in files view
   - fix: "ok" button should be disabled when no template selected in new project dialog
+  - fix: saveas an openned project file shouldn't be treated as rename
   - enhancement: auto add parentheis when complete function like MARCOs
+  - fix: wrong font size of exported RTF file 
+  - fix: correct tokenize statements like "using ::memcpy";
 
 Red Panda C++ Version 0.14.5
   - fix: the "gnu c++ 20" option in compiler set options is wrong

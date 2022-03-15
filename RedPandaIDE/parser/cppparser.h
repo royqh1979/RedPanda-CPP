@@ -73,6 +73,7 @@ public:
     PStatement findStatementOf(const QString& fileName,
                                const QStringList& expression,
                                int line);
+    PStatement findAliasedStatement(const PStatement& statement);
 
     /**
      * @brief evaluate the expression
