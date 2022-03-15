@@ -55,3 +55,13 @@ void EditorsTabWidget::dragEnterEvent(QDragEnterEvent *event)
         event->acceptProposedAction();
     }
 }
+
+void EditorsTabWidget::mousePressEvent(QMouseEvent *event)
+{
+    if (event->buttons() == Qt::MiddleButton) {
+        int idx = this->tabBar()->tabAt(event->pos());
+        if (idx>=0)
+            emit middleButtonClicked(idx);
+    }
+    QTabWidget::mousePressEvent(event);
+}

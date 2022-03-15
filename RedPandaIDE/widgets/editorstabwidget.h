@@ -28,10 +28,16 @@ class EditorsTabWidget : public QTabWidget
 public:
     explicit EditorsTabWidget(QWidget* parent=nullptr);
 
+signals:
+    void middleButtonClicked(int index);
     // QWidget interface
 protected:
     void dropEvent(QDropEvent *event) override;
     void dragEnterEvent(QDragEnterEvent *event) override;
+
+    // QWidget interface
+protected:
+    void mousePressEvent(QMouseEvent *event) override;
 };
 
 #endif // EDITORSTABWIDGET_H

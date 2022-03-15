@@ -19,6 +19,7 @@ Red Panda C++ Version 1.0.0
   - fix: when no selection, copy/cut should auto select whole line with the line break
   - fix: redo cut with no selection while make whole line selected
   - fix: correctly reset caret when redo cut with no selection
+  - enhancement: close editor when middle button clicked on it's title tab
 
 Red Panda C++ Version 0.14.5
   - fix: the "gnu c++ 20" option in compiler set options is wrong

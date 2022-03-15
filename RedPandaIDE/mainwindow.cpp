@@ -335,6 +335,12 @@ MainWindow::MainWindow(QWidget *parent)
 
     ui->actionEGE_Manual->setVisible(pSettings->environment().language()=="zh_CN");
 
+    connect(ui->EditorTabsLeft, &EditorsTabWidget::middleButtonClicked,
+            this, &MainWindow::on_EditorTabsLeft_tabCloseRequested);
+
+    connect(ui->EditorTabsRight, &EditorsTabWidget::middleButtonClicked,
+            this, &MainWindow::on_EditorTabsRight_tabCloseRequested);
+
     //git menu
     connect(ui->menuGit, &QMenu::aboutToShow,
             this, &MainWindow::updateVCSActions);
