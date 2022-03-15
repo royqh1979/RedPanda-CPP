@@ -60,6 +60,7 @@ NewProjectDialog::NewProjectDialog(QWidget *parent) :
             &QLineEdit::textChanged,
             this,
             &NewProjectDialog::updateProjectLocation);
+    ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(false);
 }
 
 NewProjectDialog::~NewProjectDialog()
@@ -117,6 +118,7 @@ void NewProjectDialog::addTemplate(const QString &filename)
 
 void NewProjectDialog::readTemplateDir()
 {
+    addTemplate(":/templates/empty.template");
     QString templateExt(".");
     templateExt += TEMPLATE_EXT;
     QDir dir(pSettings->dirs().templateDir());
@@ -165,7 +167,7 @@ void NewProjectDialog::updateView()
         QString tabText = mTemplatesTabBar->tabText(index);
         if (category == tabText) {
             QListWidgetItem * item;
-            QString iconFilename = QDir(pSettings->dirs().templateDir()).absoluteFilePath(t->icon());
+            QString iconFilename = QFileInfo(t->fileName()).absoluteDir().absoluteFilePath(t->icon());
             QIcon icon=QIcon(iconFilename);
             if (icon.isNull()) {
                 //todo : use an default icon
@@ -255,5 +257,17 @@ void NewProjectDialog::on_btnBrowse_clicked()
 void NewProjectDialog::updateIcons()
 {
     pIconsManager->setIcon(ui->btnBrowse, IconsManager::ACTION_FILE_OPEN_FOLDER);
+}
+
+
+void NewProjectDialog::on_btnOk_clicked()
+{
+    accept();
+}
+
+
+void NewProjectDialog::on_btnCancel_clicked()
+{
+    reject();
 }
 

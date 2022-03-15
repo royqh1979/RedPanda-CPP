@@ -319,7 +319,8 @@ bool Editor::saveAs(const QString &name, bool fromProject){
     if (mInProject && pMainWindow->project() && !fromProject) {
         int unitIndex = pMainWindow->project()->indexInUnits(mFilename);
         if (unitIndex>=0) {
-            pMainWindow->project()->saveUnitAs(unitIndex,newName,false);
+            pMainWindow->project()->units()[unitIndex]->setEditor(nullptr);
+            mInProject = false;
         }
     }
 
@@ -337,6 +338,9 @@ bool Editor::saveAs(const QString &name, bool fromProject){
         QMessageBox::critical(pMainWindow,tr("Error"),
                                  exception.reason());
         return false;
+    }
+    if (pMainWindow->project() && !fromProject) {
+        pMainWindow->project()->associateEditor(this);
     }
     pMainWindow->fileSystemWatcher()->addPath(mFilename);
     switch(getFileType(mFilename)) {
@@ -3020,7 +3024,10 @@ void Editor::completionInsert(bool appendFunc)
     if (appendFunc) {
         if (statement->kind == StatementKind::skFunction
                 || statement->kind == StatementKind::skConstructor
-                || statement->kind == StatementKind::skDestructor) {
+                || statement->kind == StatementKind::skDestructor
+                ||
+                (statement->kind == StatementKind::skPreprocessor
+                  && !statement->args.isEmpty())) {
             if ((p.Char >= lineText().length()) // it's the last char on line
                     || (lineText().at(p.Char-1) != '(')) {  // it don't have '(' after it
                 if (statement->fullName!="std::endl")

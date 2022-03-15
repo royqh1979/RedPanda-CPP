@@ -696,7 +696,7 @@ bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate, b
 
     // Copy icon to project directory
     if (!mOptions.icon.isEmpty()) {
-        QString originIcon = QDir(pSettings->dirs().templateDir()).absoluteFilePath(mOptions.icon);
+        QString originIcon = QFileInfo(aTemplate->fileName()).absoluteDir().absoluteFilePath(mOptions.icon);
         if (fileExists(originIcon)) {
             QString destIcon = changeFileExt(mFilename,ICON_EXT);
             QFile::copy(originIcon,destIcon);

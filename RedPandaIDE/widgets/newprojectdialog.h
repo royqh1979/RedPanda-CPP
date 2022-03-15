@@ -49,6 +49,10 @@ private slots:
     void on_btnBrowse_clicked();
     void updateIcons();
 
+    void on_btnOk_clicked();
+
+    void on_btnCancel_clicked();
+
 private:
     void addTemplate(const QString& filename);
     void readTemplateDir();

@@ -81,10 +81,12 @@ void ProjectTemplate::readTemplateFile(const QString &fileName)
 {
     if (mIni)
         mIni=nullptr;
-    if (QFile(fileName).exists()) {
+    QFile file(fileName);
+    if (file.open(QFile::ReadOnly)) {
         mFileName = fileName;
         mIni = std::make_shared<SimpleIni>();
-        if (mIni->LoadFile(mFileName.toLocal8Bit()) != SI_OK) {
+        QByteArray data = file.readAll();
+        if (mIni->LoadData(data.toStdString()) != SI_OK) {
             QMessageBox::critical(pMainWindow,
                                   tr("Read failed."),
                                   tr("Can't read template file '%1'.").arg(fileName),
@@ -93,8 +95,8 @@ void ProjectTemplate::readTemplateFile(const QString &fileName)
         }
     } else {
         QMessageBox::critical(pMainWindow,
-                              tr("Template not exist"),
-                              tr("Template file '%1' doesn't exist.").arg(fileName),
+                              tr("Can't Open Template"),
+                              tr("Can't open template file '%1' for read.").arg(fileName),
                               QMessageBox::Ok);
         return;
     }

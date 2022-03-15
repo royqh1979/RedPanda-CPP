@@ -430,6 +430,7 @@ RESOURCES += \
     codes.qrc \
     defaultconfigs.qrc \
     icons.qrc \
+    projecttemplates.qrc \
     translations.qrc
 
 RC_ICONS = images/devcpp.ico images/associations/c.ico images/associations/cpp.ico images/associations/dev.ico images/associations/c.ico images/associations/cpp.ico images/associations/h.ico images/associations/hpp.ico

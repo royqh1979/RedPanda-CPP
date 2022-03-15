@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/templates">
+        <file alias="empty.template">resources/templates/empty.template</file>
+        <file alias="empty.ico">resources/templates/empty.ico</file>
+    </qresource>
+</RCC>
