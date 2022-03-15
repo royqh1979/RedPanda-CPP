@@ -213,7 +213,7 @@ QString SynHTMLExporter::GetHeader()
         Result += "<!--StartFragment-->";
     }
     Result += QString("<span style=\"font: %1pt %2;\">")
-            .arg(mFont.pointSize())
+            .arg(pixelToPoint(mFont.pixelSize()))
             .arg(mFont.family());
 
     return Result;

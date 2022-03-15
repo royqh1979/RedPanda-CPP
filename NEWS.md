@@ -28,6 +28,7 @@ Red Panda C++ Version 1.0.0
   - enhancement: auto add parentheis when complete function like MARCOs
   - fix: wrong font size of exported RTF file 
   - fix: correct tokenize statements like "using ::memcpy";
+  - fix: wrong font size of exported HTML file 
 
 Red Panda C++ Version 0.14.5
   - fix: the "gnu c++ 20" option in compiler set options is wrong
