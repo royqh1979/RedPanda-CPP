@@ -3595,11 +3595,13 @@ void MainWindow::onFilesViewCreateFolder()
 {
     QModelIndex index = ui->treeFiles->currentIndex();
     QDir dir;
-    if (index.isValid()) {
+    if (index.isValid()
+            && ui->treeFiles->selectionModel()->isSelected(index)) {
         if (mFileSystemModel.isDir(index))
             dir = QDir(mFileSystemModel.fileInfo(index).absoluteFilePath());
         else
             dir = mFileSystemModel.fileInfo(index).absoluteDir();
+        ui->treeFiles->expand(index);
     } else {
         dir = mFileSystemModel.rootDirectory();
     }
@@ -3607,9 +3609,9 @@ void MainWindow::onFilesViewCreateFolder()
     int count = 0;
     while (dir.exists(folderName)) {
         count++;
-        folderName = tr("New Folder").arg(count);
+        folderName = tr("New Folder %1").arg(count);
     }
-    mFileSystemModel.mkdir(index,folderName);
+    dir.mkdir(dir.filePath(folderName));
 }
 
 void MainWindow::onFilesViewRemoveFiles()

@@ -5324,65 +5324,65 @@ int SynEdit::insertTextByNormalMode(const QString &Value)
     return Result;
 }
 
-int SynEdit::insertTextByColumnMode(const QString &Value, bool AddToUndoList)
+int SynEdit::insertTextByColumnMode(const QString &value, bool addToUndoList)
 {
-    QString Str;
-    QString TempString;
-    int Start;
-    int P;
-    int Len;
-    int InsertCol;
-    BufferCoord  LineBreakPos;
-    int Result = 0;
+    QString str;
+    QString tempString;
+    int start;
+    int p;
+    int len;
+    int insertCol;
+    BufferCoord  lineBreakPos;
+    int result = 0;
     // Insert string at current position
-    InsertCol = charToColumn(mCaretY,mCaretX);
-    Start = 0;
+    insertCol = charToColumn(mCaretY,mCaretX);
+    start = 0;
     do {
-        P = GetEOL(Value,Start);
-        if (P != Start) {
-            Str = Value.mid(Start,P-Start);
+        p = GetEOL(value,start);
+        if (p != start) {
+            str = value.mid(start,p-start);
 //          Move(Start^, Str[1], P - Start);
             if (mCaretY > mLines->count()) {
-                Result++;
-                TempString = QString(InsertCol - 1,' ') + Str;
+                result++;
+                tempString = QString(insertCol - 1,' ') + str;
                 mLines->add("");
-                if (AddToUndoList) {
-                    LineBreakPos.Line = mCaretY - 1;
-                    LineBreakPos.Char = mLines->getString(mCaretY - 2).length() + 1;
+                if (addToUndoList) {
+                    lineBreakPos.Line = mCaretY - 1;
+                    lineBreakPos.Char = mLines->getString(mCaretY - 2).length() + 1;
                     mUndoList->AddChange(SynChangeReason::crLineBreak,
-                                     LineBreakPos,
-                                     LineBreakPos,
+                                     lineBreakPos,
+                                     lineBreakPos,
                                      "", SynSelectionMode::smNormal);
                 }
             } else {
-                TempString = mLines->getString(mCaretY - 1);
-                Len = stringColumns(TempString,0);
-                if (Len < InsertCol) {
-                    TempString = TempString + QString(InsertCol - Len - 1,' ') + Str;
+                tempString = mLines->getString(mCaretY - 1);
+                len = stringColumns(tempString,0);
+                if (len < insertCol) {
+                    tempString = tempString + QString(insertCol - len - 1,' ') + str;
                 } else {
-                    int insertPos = charToColumn(TempString,InsertCol);
-                    TempString.insert(insertPos-1,Str);
+                    int insertPos = columnToChar(mCaretY,insertCol);
+                    tempString.insert(insertPos-1,str);
                 }
             }
-            properSetLine(mCaretY - 1, TempString);
+            properSetLine(mCaretY - 1, tempString);
             // Add undo change here from PasteFromClipboard
-            if (AddToUndoList) {
+            if (addToUndoList) {
                 mUndoList->AddChange(SynChangeReason::crPaste, BufferCoord{mCaretX, mCaretY},
-                    BufferCoord{mCaretX + (P - Start), mCaretY}, "", mActiveSelectionMode);
+                    BufferCoord{mCaretX + (p - start), mCaretY}, "", mActiveSelectionMode);
             }
         }
-        if (P<Value.length() && ((Value[P]=='\r') || (Value[P]=='\n'))) {
-            P++;
-            if (P<Value.length() && Value[P]=='\n')
-                P++;
+        if (p<value.length() && ((value[p]=='\r') || (value[p]=='\n'))) {
+            p++;
+            if (p<value.length() && value[p]=='\n')
+                p++;
             mCaretY++;
             mStatusChanges.setFlag(SynStatusChange::scCaretY);
         }
-        Start = P;
-    } while (P<Value.length());
-    mCaretX+=Str.length();
+        start = p;
+    } while (p<value.length());
+    mCaretX+=str.length();
     mStatusChanges.setFlag(SynStatusChange::scCaretX);
-    return Result;
+    return result;
 }
 
 int SynEdit::insertTextByLineMode(const QString &Value)
