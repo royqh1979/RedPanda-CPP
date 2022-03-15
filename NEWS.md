@@ -20,6 +20,7 @@ Red Panda C++ Version 1.0.0
   - fix: redo cut with no selection while make whole line selected
   - fix: correctly reset caret when redo cut with no selection
   - enhancement: close editor when middle button clicked on it's title tab
+  - fix: error when insert text in column mode 
 
 Red Panda C++ Version 0.14.5
   - fix: the "gnu c++ 20" option in compiler set options is wrong

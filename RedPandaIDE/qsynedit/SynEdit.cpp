@@ -2836,13 +2836,13 @@ void SynEdit::doCutToClipboard()
     }
     internalDoCopyToClipboard(selText());
     doSetSelText("");
+    mUndoList->EndBlock();
     mUndoList->AddChange(
                 SynChangeReason::crNothing,
                 BufferCoord{0,0},
                 BufferCoord{0,0},
                 "",
                 SynSelectionMode::smNormal);
-    mUndoList->EndBlock();
 }
 
 void SynEdit::doCopyToClipboard()
@@ -5340,7 +5340,7 @@ int SynEdit::insertTextByColumnMode(const QString &Value, bool AddToUndoList)
     do {
         P = GetEOL(Value,Start);
         if (P != Start) {
-            Str = Value.mid(0,P-Start);
+            Str = Value.mid(Start,P-Start);
 //          Move(Start^, Str[1], P - Start);
             if (mCaretY > mLines->count()) {
                 Result++;
