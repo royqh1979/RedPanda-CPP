@@ -156,7 +156,7 @@ void ExecutableRunner::run()
 #elif defined(Q_OS_LINUX)
     int BUF_SIZE=1024;
     char* pBuf=nullptr;
-    int fd_shm = shm_open("/REDPANDAIDECONSOLEPAUSER20211223",O_RDWR | O_CREAT,S_IRWXU);
+    int fd_shm = shm_open(mShareMemoryId.toLocal8Bit().data(),O_RDWR | O_CREAT,S_IRWXU);
     if (fd_shm==-1) {
         qDebug()<<QString("shm open failed %1:%2").arg(errno).arg(strerror(errno));
     } else {
@@ -220,7 +220,7 @@ void ExecutableRunner::run()
                     pBuf = nullptr;
                 }
                 if (fd_shm!=-1) {
-                    shm_unlink("/REDPANDAIDECONSOLEPAUSER20211223");
+                    shm_unlink(mShareMemoryId.toLocal8Bit().data());
                     fd_shm = -1;
                 }
 #endif
@@ -242,7 +242,7 @@ void ExecutableRunner::run()
         munmap(pBuf,BUF_SIZE);
     }
     if (fd_shm!=-1) {
-        shm_unlink("/REDPANDAIDECONSOLEPAUSER20211223");
+        shm_unlink(mShareMemoryId.toLocal8Bit().data());
     }
 #endif
     if (errorOccurred) {

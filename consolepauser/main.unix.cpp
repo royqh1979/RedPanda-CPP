@@ -54,11 +54,11 @@ vector<string> GetCommand(int argc,char** argv,bool &reInp,bool &pauseAfterExit)
     int flags = atoi(argv[1]);
     reInp = flags & RPF_REDIRECT_INPUT;
     pauseAfterExit = flags & RPF_PAUSE_CONSOLE;
-    for(int i = 2;i < argc;i++) {
+    for(int i = 3;i < argc;i++) {
         //result += string("\"") + string(argv[i]) + string("\"");
         std::string s(argv[i]);
 
-        if (i==2 || (reInp && i==3 ))
+        if (i==3 || (reInp && i==4 ))
         if (s.length()>2 && s[0]=='\"' && s[s.length()-1]=='\"') {
             s = s.substr(1,s.length()-2);
         }
@@ -130,17 +130,18 @@ int ExecuteCommand(vector<string>& command,bool reInp) {
 }
 
 int main(int argc, char** argv) {
-
+    char* sharedMemoryId;
     // First make sure we aren't going to read nonexistent arrays
-    if(argc < 3) {
+    if(argc < 4) {
         printf("\n--------------------------------");
-        printf("\nUsage: ConsolePauser.exe <0|1> <filename> <parameters>\n");
+        printf("\nUsage: ConsolePauser.exe <0|1> <shared_memory_id> <filename> <parameters>\n");
         printf("\n 1 means the STDIN is redirected by Red Panda C++; 0 means not\n");
         PauseExit(EXIT_SUCCESS,false);
     }
 
     // Make us look like the paused program
-    //SetConsoleTitleA(argv[2]);
+    //SetConsoleTitleA(argv[3]);
+    sharedMemoryId = argv[2];
 
     bool reInp;
     bool pauseAfterExit;
@@ -155,18 +156,18 @@ int main(int argc, char** argv) {
 
     int BUF_SIZE=1024;
     char* pBuf=nullptr;
-    int fd_shm = shm_open("/REDPANDAIDECONSOLEPAUSER20211223",O_RDWR,S_IRWXU);
+    int fd_shm = shm_open(sharedMemoryId,O_RDWR,S_IRWXU);
     if (fd_shm==-1) {
         //todo: handle error
-        printf("shm open failed %d:%s",errno,strerror(errno));
+        printf("shm open failed %d:%s\n",errno,strerror(errno));
     } else {
         if (ftruncate(fd_shm,BUF_SIZE)==-1){
-            printf("ftruncate failed %d:%s",errno,strerror(errno));
+            printf("ftruncate failed %d:%s\n",errno,strerror(errno));
             //todo: set size error
         } else {
             pBuf = (char*)mmap(NULL,BUF_SIZE,PROT_READ | PROT_WRITE, MAP_SHARED, fd_shm,0);
             if (pBuf == MAP_FAILED) {
-                printf("mmap failed %d:%s",errno,strerror(errno));
+                printf("mmap failed %d:%s\n",errno,strerror(errno));
                 pBuf = nullptr;
             }
         }
@@ -189,7 +190,7 @@ int main(int argc, char** argv) {
         munmap(pBuf,BUF_SIZE);
     }
     if (fd_shm!=-1) {
-        shm_unlink("/REDPANDAIDECONSOLEPAUSER20211223");
+        shm_unlink(sharedMemoryId);
     }
 
     // Done? Print return value of executed program

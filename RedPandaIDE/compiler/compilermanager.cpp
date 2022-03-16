@@ -250,8 +250,8 @@ void CompilerManager::run(const QString &filename, const QString &arguments, con
         }
 #else
         QString newArguments;
+        QString sharedMemoryId = "/r"+QUuid::createUuid().toString(QUuid::StringFormat::Id128);
         if (consoleFlag!=0) {
-            QString sharedMemoryId = QUuid::createUuid().toString();
             QString consolePauserPath=includeTrailingPathDelimiter(pSettings->dirs().appLibexecDir())+"consolepauser";
             if (!fileExists(consolePauserPath)) {
                 QMessageBox::critical(pMainWindow,
@@ -280,6 +280,7 @@ void CompilerManager::run(const QString &filename, const QString &arguments, con
                 .arg(localizePath(filename)).arg(arguments);
         }
         execRunner = new ExecutableRunner(pSettings->environment().terminalPath(),newArguments,workDir);
+        execRunner->setShareMemoryId(sharedMemoryId);
 #endif
         execRunner->setStartConsole(true);
     } else {
