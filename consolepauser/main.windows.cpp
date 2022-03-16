@@ -92,7 +92,7 @@ string GetCommand(int argc,char** argv,bool &reInp,bool &pauseAfterExit) {
     int flags = atoi(argv[1]);
     reInp = flags & RPF_REDIRECT_INPUT;
     pauseAfterExit = flags & RPF_PAUSE_CONSOLE;
-    for(int i = 2;i < argc;i++) {
+    for(int i = 3;i < argc;i++) {
         // Quote the argument in case the path name contains spaces
         result += string("\"") + string(argv[i]) + string("\"");
 
@@ -144,16 +144,19 @@ DWORD ExecuteCommand(string& command,bool reInp) {
 
 int main(int argc, char** argv) {
 
+    const char *sharedMemoryId;
     // First make sure we aren't going to read nonexistent arrays
-    if(argc < 3) {
+    if(argc < 4) {
         printf("\n--------------------------------");
-        printf("\nUsage: ConsolePauser.exe <0|1> <filename> <parameters>\n");
+        printf("\nUsage: ConsolePauser.exe <0|1> <shared_memory_id> <filename> <parameters>\n");
         printf("\n 1 means the STDIN is redirected by Red Panda C++; 0 means not\n");
         PauseExit(EXIT_SUCCESS,false);
     }
 
     // Make us look like the paused program
-    SetConsoleTitleA(argv[2]);
+    SetConsoleTitleA(argv[3]);
+
+    sharedMemoryId = argv[2];
 
     SECURITY_ATTRIBUTES sa;
     sa.nLength = sizeof(sa);
@@ -202,7 +205,7 @@ int main(int argc, char** argv) {
     hSharedMemory = OpenFileMappingA(
         FILE_MAP_ALL_ACCESS,
         FALSE,
-        "RED_PANDA_IDE_CONSOLE_PAUSER20211223"
+        sharedMemoryId
         );
     if (hSharedMemory != NULL)
     {
@@ -227,6 +230,10 @@ int main(int argc, char** argv) {
 
     if (pBuf) {
         strcpy(pBuf,"FINISHED");
+        UnmapViewOfFile(pBuf);
+    }
+    if (hSharedMemory != NULL && hSharedMemory!=INVALID_HANDLE_VALUE) {
+        CloseHandle(hSharedMemory);
     }
 
     // Done? Print return value of executed program

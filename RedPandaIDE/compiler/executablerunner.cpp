@@ -21,6 +21,7 @@
 #include "../settings.h"
 #include "../systemconsts.h"
 #ifdef Q_OS_WIN
+#include <QUuid>
 #include <windows.h>
 #elif defined(Q_OS_LINUX)
 #include <sys/mman.h>
@@ -49,6 +50,16 @@ bool ExecutableRunner::startConsole() const
 void ExecutableRunner::setStartConsole(bool newStartConsole)
 {
     mStartConsole = newStartConsole;
+}
+
+const QString &ExecutableRunner::shareMemoryId() const
+{
+    return mShareMemoryId;
+}
+
+void ExecutableRunner::setShareMemoryId(const QString &newShareMemoryId)
+{
+    mShareMemoryId = newShareMemoryId;
 }
 
 bool ExecutableRunner::redirectInput() const
@@ -128,7 +139,7 @@ void ExecutableRunner::run()
                 PAGE_READWRITE,
                 0,
                 100,
-                "RED_PANDA_IDE_CONSOLE_PAUSER20211223"
+                mShareMemoryId.toLocal8Bit().data()
                 );
         if (hSharedMemory != NULL)
         {
@@ -199,7 +210,7 @@ void ExecutableRunner::run()
                     UnmapViewOfFile(pBuf);
                     pBuf = nullptr;
                 }
-                if (hSharedMemory!=INVALID_HANDLE_VALUE) {
+                if (hSharedMemory!=INVALID_HANDLE_VALUE && hSharedMemory!=NULL) {
                     hSharedMemory = INVALID_HANDLE_VALUE;
                     CloseHandle(hSharedMemory);
                 }
@@ -224,7 +235,7 @@ void ExecutableRunner::run()
 #ifdef Q_OS_WIN
     if (pBuf)
         UnmapViewOfFile(pBuf);
-    if (hSharedMemory!=INVALID_HANDLE_VALUE)
+    if (hSharedMemory!=INVALID_HANDLE_VALUE && hSharedMemory!=NULL)
         CloseHandle(hSharedMemory);
 #elif defined(Q_OS_LINUX)
     if (pBuf) {

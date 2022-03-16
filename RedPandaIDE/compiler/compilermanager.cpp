@@ -23,6 +23,7 @@
 #include "utils.h"
 #include "../settings.h"
 #include <QMessageBox>
+#include <QUuid>
 #include "projectcompiler.h"
 #include "../platform.h"
 
@@ -238,16 +239,19 @@ void CompilerManager::run(const QString &filename, const QString &arguments, con
             consoleFlag |= RPF_PAUSE_CONSOLE;
 #ifdef Q_OS_WIN
         if (consoleFlag!=0) {
-            QString newArguments = QString(" %1 \"%2\" %3")
+            QString sharedMemoryId = QUuid::createUuid().toString();
+            QString newArguments = QString(" %1 %2 \"%3\" %4")
                     .arg(consoleFlag)
-                    .arg(localizePath(filename)).arg(arguments);
+                    .arg(sharedMemoryId,localizePath(filename)).arg(arguments);
             execRunner = new ExecutableRunner(includeTrailingPathDelimiter(pSettings->dirs().appDir())+"ConsolePauser.exe",newArguments,workDir);
+            execRunner->setShareMemoryId(sharedMemoryId);
         } else {
             execRunner = new ExecutableRunner(filename,arguments,workDir);
         }
 #else
         QString newArguments;
         if (consoleFlag!=0) {
+            QString sharedMemoryId = QUuid::createUuid().toString();
             QString consolePauserPath=includeTrailingPathDelimiter(pSettings->dirs().appLibexecDir())+"consolepauser";
             if (!fileExists(consolePauserPath)) {
                 QMessageBox::critical(pMainWindow,
@@ -258,17 +262,18 @@ void CompilerManager::run(const QString &filename, const QString &arguments, con
 
             }
             if (redirectInput) {
-                newArguments = QString(" -e \"%1\" %2 \"%3\" \"%4\" %5")
+                newArguments = QString(" -e \"%1\" %2 %3 \"%4\" \"%5\" %6")
                         .arg(consolePauserPath)
                         .arg(consoleFlag)
+                        .arg(sharedMemoryId)
                         .arg(redirectInputFilename)
                         .arg(localizePath(filename))
                         .arg(arguments);
             } else {
-                newArguments = QString(" -e \"%1\" %2 \"%3\" %4")
+                newArguments = QString(" -e \"%1\" %2 %3 \"%4\" %5")
                     .arg(consolePauserPath)
                     .arg(consoleFlag)
-                    .arg(localizePath(filename)).arg(arguments);
+                    .arg(sharedMemoryId,localizePath(filename)).arg(arguments);
             }
         } else {
             newArguments = QString(" -e \"%1\" %2")

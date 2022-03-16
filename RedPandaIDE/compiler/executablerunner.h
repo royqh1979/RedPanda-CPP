@@ -37,8 +37,13 @@ public:
     bool startConsole() const;
     void setStartConsole(bool newStartConsole);
 
+    const QString &shareMemoryId() const;
+
+    void setShareMemoryId(const QString &newShareMemoryId);
+
 private:
     QString mRedirectInputFilename;
+    QString mShareMemoryId;
     bool mRedirectInput;
     bool mStartConsole;
     std::shared_ptr<QProcess> mProcess;
