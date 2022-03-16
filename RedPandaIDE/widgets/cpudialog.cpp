@@ -162,14 +162,14 @@ void CPUDialog::closeEvent(QCloseEvent *event)
 
 void CPUDialog::on_rdIntel_toggled(bool)
 {
-    sendSyntaxCommand();
+    updateInfo();
     pSettings->debugger().setUseIntelStyle(ui->rdIntel->isChecked());
     pSettings->debugger().save();
 }
 
 void CPUDialog::on_rdATT_toggled(bool)
 {
-    sendSyntaxCommand();
+    updateInfo();
     pSettings->debugger().setUseIntelStyle(ui->rdIntel->isChecked());
     pSettings->debugger().save();
 }
