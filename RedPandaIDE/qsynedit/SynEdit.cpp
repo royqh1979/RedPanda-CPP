@@ -5628,10 +5628,22 @@ void SynEdit::ExecuteCommand(SynEditorCommand Command, QChar AChar, void *pData)
         clearAll();
         break;
     case SynEditorCommand::ecInsertLine:
-        insertLine(Command == SynEditorCommand::ecInsertLine);
+        insertLine(false);
         break;
     case SynEditorCommand::ecLineBreak:
-        insertLine(Command == SynEditorCommand::ecLineBreak);
+        insertLine(true);
+        break;
+    case SynEditorCommand::ecLineBreakAtEnd:
+        mUndoList->BeginBlock();
+        mUndoList->AddChange(
+                    SynChangeReason::crCaret,
+                    caretXY(),
+                    caretXY(),
+                    "",
+                    activeSelectionMode());
+        moveCaretToLineEnd(false);
+        insertLine(true);
+        mUndoList->EndBlock();
         break;
     case SynEditorCommand::ecTab:
         doTabKey();

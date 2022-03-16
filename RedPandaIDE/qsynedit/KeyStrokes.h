@@ -178,8 +178,11 @@ enum class SynEditorCommand {
 
     ecUserFirst       = 1001, // Start of user-defined commands
 
-    ecAutoCompletion  = 650,
-
+    ecAutoCompletion    = 650,
+    ecLineBreakAtBegin  = 651, //add a line break at the begin of the line
+    ecLineBreakAtEnd    = 652,
+    ecInsertLineAtBegin = 653,
+    ecInsertLineAtEnd   = 654,
 
     //### Code Folding ###
     ecCollapse = ecUserFirst + 100,

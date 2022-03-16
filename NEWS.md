@@ -32,6 +32,7 @@ Red Panda C++ Version 1.0.0
   - fix: parse error in avxintrin.h 
   - fix: switch disassembly mode doesn't update contents
   - fix: if there is a Red Panda C++ process running program, other Red Panda C++ processes can't run program correctly.
+  - enhancement: ctrl+enter insert a new line at the end of current line
 
 Red Panda C++ Version 0.14.5
   - fix: the "gnu c++ 20" option in compiler set options is wrong
