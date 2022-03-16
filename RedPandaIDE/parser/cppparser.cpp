@@ -335,10 +335,8 @@ PStatement CppParser::findStatementOf(const QString &fileName,
     }
 
     //using alias like 'using std::vector;'
-    if ((statement->kind ==  StatementKind::skAlias) &&
-            (phrase!=statement->type)) {
-        statement = findStatementOf(fileName, statement->type,
-                                    currentScope, parentScopeType, force);
+    if (statement->kind == StatementKind::skAlias) {
+        statement = findAliasedStatement(statement);
         if (!statement)
             return PStatement();
     }
@@ -1828,11 +1826,15 @@ PStatement CppParser::getTypeDef(const PStatement& statement,
             || statement->kind == StatementKind::skEnumType
             || statement->kind == StatementKind::skEnumClassType) {
         return statement;
-    } else if (statement->kind == StatementKind::skTypedef
-               || statement->kind == StatementKind::skAlias) {
+    } else if (statement->kind == StatementKind::skTypedef) {
         if (statement->type == aType) // prevent infinite loop
             return statement;
         PStatement result = findTypeDefinitionOf(fileName,statement->type, statement->parentScope.lock());
+        if (!result) // found end of typedef trail, return result
+            return statement;
+        return result;
+    } else if (statement->kind == StatementKind::skAlias) {
+        PStatement result = findAliasedStatement(statement);
         if (!result) // found end of typedef trail, return result
             return statement;
         return result;
@@ -3266,9 +3268,9 @@ void CppParser::internalParse(const QString &fileName)
         //reduce memory usage
         internalClear();
 #ifdef QT_DEBUG
-       mTokenizer.dumpTokens("r:\\tokens.txt");
-        mStatementList.dump("r:\\stats.txt");
-        mStatementList.dumpAll("r:\\all-stats.txt");
+//       mTokenizer.dumpTokens("r:\\tokens.txt");
+//        mStatementList.dump("r:\\stats.txt");
+//        mStatementList.dumpAll("r:\\all-stats.txt");
 #endif
         //reduce memory usage
         mTokenizer.reset();
@@ -3946,9 +3948,7 @@ PEvalStatement CppParser::doEvalTerm(const QString &fileName,
                     result = doCreateEvalNamespace(statement);
                     break;
                 case StatementKind::skAlias: {
-                    PStatement parentScopeType;
-                    statement = findStatementOf(fileName, statement->type,
-                                                    scope, parentScopeType, true);
+                    statement = findAliasedStatement(statement);
                     if (statement)
                         result = doCreateEvalNamespace(statement);
                 }
