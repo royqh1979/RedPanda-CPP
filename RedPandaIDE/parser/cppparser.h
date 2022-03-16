@@ -213,6 +213,8 @@ private:
     PStatement findMemberOfStatement(
             const QString& phrase,
             const PStatement& scopeStatement);
+    QList<PStatement> findMembersOfStatement(const QString& phrase,
+                                             const PStatement& scopeStatement);
     PStatement findStatementInScope(
             const QString& name,
             const QString& noNameArgs,

@@ -485,8 +485,23 @@ PStatement CppParser::findAliasedStatement(const PStatement &statement)
         return PStatement();
     if (!statement)
         return PStatement();
-    return  findTypeDefinitionOf(statement->fileName,statement->type, statement->parentScope.lock());
-
+    QString alias = statement->type;
+    int pos = statement->type.lastIndexOf("::");
+    if (pos<0)
+        return PStatement();
+    QString nsName=statement->type.mid(0,pos);
+    QString name = statement->type.mid(pos+2);
+    PStatementList namespaceStatements = findNamespace(nsName);
+    if (!namespaceStatements)
+        return PStatement();
+    foreach (const PStatement& namespaceStatement, *namespaceStatements) {
+        QList<PStatement> resultList = findMembersOfStatement(name,namespaceStatement);
+        foreach(const PStatement& resultStatement,resultList) {
+            if (resultStatement->kind != StatementKind::skAlias)
+                return resultStatement;
+        }
+    }
+    return PStatement();
 }
 
 PStatement CppParser::findStatementStartingFrom(const QString &fileName, const QString &phrase, const PStatement& startScope)
@@ -2485,16 +2500,16 @@ void CppParser::handleOtherTypedefs()
                 newType += mTokenizer[mIndex]->text + ' ';
                 mIndex++;
             }
+            if (mIndex < mTokenizer.tokenCount() && mTokenizer[mIndex]->text[0] == ',' )
+                mIndex++;
             if ((mIndex>= mTokenizer.tokenCount()) || (mTokenizer[mIndex]->text[0] == ';'))
                 break;
-            else if (mTokenizer[mIndex]->text.front() == ',')
-                mIndex++;
             if (mIndex+1 >= mTokenizer.tokenCount())
                 break;
         }
     }
 
-    // Step over semicolon (saves one HandleStatement loop)
+    // Step over semicolon (saves one HandleStatement loop)    
     mIndex++;
 }
 
@@ -3230,7 +3245,7 @@ void CppParser::internalParse(const QString &fileName)
         //reduce memory usage
         mPreprocessor.clearResult();
 #ifdef QT_DEBUG
-//        StringsToFile(mPreprocessor.result(),"z:\\preprocess.txt");
+//        stringsToFile(mPreprocessor.result(),"r:\\preprocess.txt");
 //        mPreprocessor.dumpDefinesTo("z:\\defines.txt");
 //        mPreprocessor.dumpIncludesListTo("z:\\includes.txt");
 #endif
@@ -3251,9 +3266,9 @@ void CppParser::internalParse(const QString &fileName)
         //reduce memory usage
         internalClear();
 #ifdef QT_DEBUG
-//        mTokenizer.dumpTokens("z:\\tokens.txt");
-//        mStatementList.dump("z:\\stats.txt");
-//        mStatementList.dumpAll("z:\\all-stats.txt");
+       mTokenizer.dumpTokens("r:\\tokens.txt");
+        mStatementList.dump("r:\\stats.txt");
+        mStatementList.dumpAll("r:\\all-stats.txt");
 #endif
         //reduce memory usage
         mTokenizer.reset();
@@ -3368,6 +3383,30 @@ PStatement CppParser::findMemberOfStatement(const QString &phrase,
         s.truncate(p);
 
     return statementMap.value(s,PStatement());
+}
+
+QList<PStatement> CppParser::findMembersOfStatement(const QString &phrase, const PStatement &scopeStatement)
+{
+    const StatementMap& statementMap =mStatementList.childrenStatements(scopeStatement);
+    if (statementMap.isEmpty())
+        return QList<PStatement>();
+
+    QString s = phrase;
+    //remove []
+    int p = phrase.indexOf('[');
+    if (p>=0)
+        s.truncate(p);
+    //remove ()
+    p = phrase.indexOf('(');
+    if (p>=0)
+        s.truncate(p);
+
+    //remove <>
+    p =s.indexOf('<');
+    if (p>=0)
+        s.truncate(p);
+
+    return statementMap.values(s);
 }
 
 PStatement CppParser::findStatementInScope(const QString &name, const QString &noNameArgs,
