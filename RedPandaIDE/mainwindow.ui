@@ -1422,7 +1422,7 @@
      <x>0</x>
      <y>0</y>
      <width>1114</width>
-     <height>25</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -2402,7 +2402,10 @@
      <normaloff>:/icons/images/newlook24/050-newsrc.png</normaloff>:/icons/images/newlook24/050-newsrc.png</iconset>
    </property>
    <property name="text">
-    <string>New File</string>
+    <string>New Project File</string>
+   </property>
+   <property name="toolTip">
+    <string>New Project File</string>
    </property>
   </action>
   <action name="actionAdd_to_project">
