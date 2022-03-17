@@ -267,8 +267,8 @@ void SynEditKeyStrokes::resetDefaults()
 //    add(SynEditorCommand::ecSetMarker7, Qt::Key_7, Qt::ControlModifier | Qt::ShiftModifier);
 //    add(SynEditorCommand::ecSetMarker8, Qt::Key_8, Qt::ControlModifier | Qt::ShiftModifier);
 //    add(SynEditorCommand::ecSetMarker9, Qt::Key_9, Qt::ControlModifier | Qt::ShiftModifier);
-    add(SynEditorCommand::ecNormalSelect, Qt::Key_N, Qt::ControlModifier | Qt::ShiftModifier);
-    add(SynEditorCommand::ecColumnSelect, Qt::Key_C, Qt::ControlModifier | Qt::ShiftModifier);
-    add(SynEditorCommand::ecLineSelect, Qt::Key_L, Qt::ControlModifier | Qt::ShiftModifier);
+//    add(SynEditorCommand::ecNormalSelect, Qt::Key_N, Qt::ControlModifier | Qt::ShiftModifier);
+//    add(SynEditorCommand::ecColumnSelect, Qt::Key_C, Qt::ControlModifier | Qt::ShiftModifier);
+//    add(SynEditorCommand::ecLineSelect, Qt::Key_L, Qt::ControlModifier | Qt::ShiftModifier);
 //    add(SynEditorCommand::ecMatchBracket, Qt::Key_B, Qt::ControlModifier | Qt::ShiftModifier);
 }

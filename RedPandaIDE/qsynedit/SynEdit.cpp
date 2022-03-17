@@ -4190,7 +4190,7 @@ void SynEdit::doUndoItem()
                         Item->changeReason(),
                         caretXY(),
                         caretXY(), "",
-                        mActiveSelectionMode);
+                        Item->changeSelMode());
             internalSetCaretXY(Item->changeStartPos());
             break;
         case SynChangeReason::crSelection:
@@ -4199,7 +4199,7 @@ void SynEdit::doUndoItem()
                         blockBegin(),
                         blockEnd(),
                         "",
-                        mActiveSelectionMode);
+                        Item->changeSelMode());
             setCaretAndSelection(caretXY(), Item->changeStartPos(), Item->changeEndPos());
             break;
         case SynChangeReason::crInsert:
@@ -5713,6 +5713,7 @@ void SynEdit::ExecuteCommand(SynEditorCommand Command, QChar AChar, void *pData)
         setSelectionMode(SynSelectionMode::smNormal);
         break;
     case SynEditorCommand::ecLineSelect:
+        qDebug()<<"????";
         setSelectionMode(SynSelectionMode::smLine);
         break;
     case SynEditorCommand::ecColumnSelect:
