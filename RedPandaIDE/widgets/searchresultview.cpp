@@ -460,6 +460,7 @@ void SearchResultTreeViewDelegate::paint(QPainter *painter, const QStyleOptionVi
          QFont font = option.font;
          font.setBold(true);
          text=item->text.mid(item->start-1,item->len);
+         metrics = QFontMetrics(font);
          int width = metrics.horizontalAdvance(text);
          QFont oldFont = painter->font();
          QPen oldPen = painter->pen();

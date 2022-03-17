@@ -34,6 +34,7 @@ Red Panda C++ Version 1.0.0
   - fix: if there is a Red Panda C++ process running program, other Red Panda C++ processes can't run program correctly.
   - enhancement: ctrl+enter insert a new line at the end of current line
   - enhancement: create file in files view
+  - fix: hits in the search view not correctly displayed (overlapped with others)
 
 Red Panda C++ Version 0.14.5
   - fix: the "gnu c++ 20" option in compiler set options is wrong
