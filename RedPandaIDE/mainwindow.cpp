@@ -2744,6 +2744,13 @@ void MainWindow::buildContextMenus()
                 ui->treeFiles);
     connect(mFilesView_CreateFolder, &QAction::triggered,
             this, &MainWindow::onFilesViewCreateFolder);
+
+    mFilesView_CreateFile = createActionFor(
+                tr("New File"),
+                ui->treeFiles);
+    connect(mFilesView_CreateFile, &QAction::triggered,
+            this, &MainWindow::onFilesViewCreateFile);
+
     mFilesView_RemoveFile = createActionFor(
                 tr("Delete"),
                 ui->treeFiles);
@@ -3236,6 +3243,7 @@ void MainWindow::onFilesViewContextMenu(const QPoint &pos)
     menu.addAction(ui->actionOpen_Folder);
     menu.addSeparator();
     menu.addAction(mFilesView_CreateFolder);
+    menu.addAction(mFilesView_CreateFile);
     menu.addSeparator();
     if (pSettings->vcs().gitOk()) {
         if (hasRepository) {
@@ -3613,6 +3621,38 @@ void MainWindow::onFilesViewCreateFolder()
     }
     dir.mkdir(dir.filePath(folderName));
 }
+
+void MainWindow::onFilesViewCreateFile()
+{
+    QModelIndex index = ui->treeFiles->currentIndex();
+    QDir dir;
+    if (index.isValid()
+            && ui->treeFiles->selectionModel()->isSelected(index)) {
+        if (mFileSystemModel.isDir(index))
+            dir = QDir(mFileSystemModel.fileInfo(index).absoluteFilePath());
+        else
+            dir = mFileSystemModel.fileInfo(index).absoluteDir();
+        ui->treeFiles->expand(index);
+    } else {
+        dir = mFileSystemModel.rootDirectory();
+    }
+    QString suffix;
+    if (pSettings->editor().defaultFileCpp())
+        suffix=".cpp";
+    else
+        suffix=".c";
+    QString fileName = tr("Untitled")+suffix;
+    int count = 0;
+    while (dir.exists(fileName)) {
+        count++;
+        fileName = tr("Untitled %1").arg(count)+suffix;
+    }
+    QFile file(dir.filePath(fileName));
+    file.open(QFile::NewOnly);
+    QModelIndex newIndex = mFileSystemModel.index(fileName);
+    ui->treeFiles->selectionModel()->select(newIndex, QItemSelectionModel::SelectionFlag::Rows);
+}
+
 
 void MainWindow::onFilesViewRemoveFiles()
 {

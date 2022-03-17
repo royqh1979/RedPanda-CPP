@@ -290,6 +290,7 @@ private slots:
     void onShowInsertCodeSnippetMenu();
 
     void onFilesViewCreateFolder();
+    void onFilesViewCreateFile();
     void onFilesViewRemoveFiles();
 
     void on_actionNew_triggered();
@@ -716,6 +717,7 @@ private:
     QAction * mFilesView_OpenInTerminal;
     QAction * mFilesView_OpenInExplorer;
     QAction * mFilesView_CreateFolder;
+    QAction * mFilesView_CreateFile;
     QAction * mFilesView_RemoveFile;
 
     //action for debug console
