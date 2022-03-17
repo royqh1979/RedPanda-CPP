@@ -3650,7 +3650,7 @@ void MainWindow::onFilesViewCreateFile()
     QFile file(dir.filePath(fileName));
     file.open(QFile::NewOnly);
     QModelIndex newIndex = mFileSystemModel.index(fileName);
-    ui->treeFiles->selectionModel()->select(newIndex, QItemSelectionModel::SelectionFlag::Rows);
+    ui->treeFiles->setCurrentIndex(newIndex);
 }
 
 
