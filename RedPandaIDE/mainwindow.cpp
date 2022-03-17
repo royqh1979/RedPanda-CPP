@@ -5914,7 +5914,8 @@ void MainWindow::on_actionRename_Symbol_triggered()
     if (!editor)
         return;
     editor->beginUpdate();
-//    mClassBrowserModel.beginUpdate();
+    BufferCoord oldCaretXY = editor->caretXY();
+    //    mClassBrowserModel.beginUpdate();
     QCursor oldCursor = editor->cursor();
     editor->setCursor(Qt::CursorShape::WaitCursor);
     auto action = finally([oldCursor,editor]{
@@ -5934,10 +5935,19 @@ void MainWindow::on_actionRename_Symbol_triggered()
         return;
     }
 
-    BufferCoord oldCaretXY = editor->caretXY();
     if (editor->inProject() && mProject) {
-        mProject->cppParser()->parseFileList();
+        for (int i=0;i<mEditorList->pageCount();i++) {
+            Editor * e=(*mEditorList)[i];
+            if (e->modified())  {
+                mProject->cppParser()->parseFile(editor->filename(), editor->inProject(), false, false);
+            }
+        }
         QStringList expression = editor->getExpressionAtPosition(oldCaretXY);
+        if (expression.isEmpty() && oldCaretXY.Char>1) {
+            BufferCoord coord=oldCaretXY;
+            coord.Char--;
+            expression = editor->getExpressionAtPosition(coord);
+        }
         // Find it's definition
         PStatement oldStatement = editor->parser()->findStatementOf(
                     editor->filename(),
@@ -5975,9 +5985,11 @@ void MainWindow::on_actionRename_Symbol_triggered()
     if (word == newWord)
         return;
 
-    PCppParser parser = editor->parser();
-    //here we must reparse the file in sync, or rename may fail
-    parser->parseFile(editor->filename(), editor->inProject(), false, false);
+    if (!editor->inProject() && editor->modified() ) {
+        PCppParser parser = editor->parser();
+        //here we must reparse the file in sync, or rename may fail
+        parser->parseFile(editor->filename(), editor->inProject(), false, false);
+    }
     CppRefacter refactor;
     BufferCoord oldXY=editor->caretXY();
     int topLine = editor->topLine();
