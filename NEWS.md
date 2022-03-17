@@ -35,6 +35,7 @@ Red Panda C++ Version 1.0.0
   - enhancement: ctrl+enter insert a new line at the end of current line
   - enhancement: create file in files view
   - fix: hits in the search view not correctly displayed (overlapped with others)
+  - enhancement: auto convert project icon to ico format
 
 Red Panda C++ Version 0.14.5
   - fix: the "gnu c++ 20" option in compiler set options is wrong

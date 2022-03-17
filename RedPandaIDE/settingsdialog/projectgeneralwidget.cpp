@@ -24,6 +24,8 @@
 
 #include <QFileDialog>
 #include <QIcon>
+#include <QImageWriter>
+#include <QImageWriter>
 #include <QMessageBox>
 #include <QTextCodec>
 
@@ -117,7 +119,10 @@ void ProjectGeneralWidget::doSave()
                                           QMessageBox::Ok);
                 }
             }
-            QFile::copy(mIconPath, iconPath);
+            if (QImageWriter::supportedImageFormats().contains("ico")) {
+                ui->lbIcon->pixmap()->save(iconPath,"ico");
+            } else
+                QFile::copy(mIconPath, iconPath);
             project->options().icon = iconPath;
             mIconPath = iconPath;
             refreshIcon();
