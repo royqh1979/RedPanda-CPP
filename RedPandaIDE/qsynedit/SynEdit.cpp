@@ -5713,7 +5713,6 @@ void SynEdit::ExecuteCommand(SynEditorCommand Command, QChar AChar, void *pData)
         setSelectionMode(SynSelectionMode::smNormal);
         break;
     case SynEditorCommand::ecLineSelect:
-        qDebug()<<"????";
         setSelectionMode(SynSelectionMode::smLine);
         break;
     case SynEditorCommand::ecColumnSelect:

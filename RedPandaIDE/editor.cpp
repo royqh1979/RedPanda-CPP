@@ -3798,7 +3798,6 @@ void Editor::setInProject(bool newInProject)
 
 void Editor::gotoDeclaration(const BufferCoord &pos)
 {
-    qDebug()<<"???";
     if (!parser())
         return;
     // Exit early, don't bother creating a stream (which is slow)
