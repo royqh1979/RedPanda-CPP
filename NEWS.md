@@ -1,3 +1,6 @@
+Red Panda C++ Version 1.0.1
+  - fix: only convert project icon file when it's filename doesn't end with ".ico"
+
 Red Panda C++ Version 1.0.0
   - fix: calculation for code snippets's tab stop positions is not correct
   - fix: Refresh files view shouldn'tchange open/save dialog's default folder

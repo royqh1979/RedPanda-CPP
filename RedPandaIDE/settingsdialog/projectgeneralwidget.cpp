@@ -119,7 +119,7 @@ void ProjectGeneralWidget::doSave()
                                           QMessageBox::Ok);
                 }
             }
-            if (QImageWriter::supportedImageFormats().contains("ico")) {
+            if (!mIconPath.endsWith(".ico",PATH_SENSITIVITY) && QImageWriter::supportedImageFormats().contains("ico")) {
                 ui->lbIcon->pixmap()->save(iconPath,"ico");
             } else
                 QFile::copy(mIconPath, iconPath);
