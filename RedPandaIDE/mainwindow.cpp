@@ -5266,19 +5266,16 @@ void MainWindow::on_actionBreakpoint_property_triggered()
 void MainWindow::on_actionGoto_Declaration_triggered()
 {
     Editor * editor = mEditorList->getEditor();
-    BufferCoord pos;
-    if (editor && editor->pointToCharLine(mEditorContextMenuPos,pos)) {
-        editor->gotoDeclaration(pos);
+    if (editor) {
+        editor->gotoDeclaration(editor->caretXY());
     }
 }
-
 
 void MainWindow::on_actionGoto_Definition_triggered()
 {
     Editor * editor = mEditorList->getEditor();
-    BufferCoord pos;
-    if (editor && editor->pointToCharLine(mEditorContextMenuPos,pos)) {
-        editor->gotoDefinition(pos);
+    if (editor) {
+        editor->gotoDefinition(editor->caretXY());
     }
 }
 

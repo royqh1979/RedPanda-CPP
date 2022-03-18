@@ -300,6 +300,8 @@ public:
 
     void updateMouseCursor();
 
+    bool isCaretVisible();
+
     // setter && getters
     int topLine() const;
     void setTopLine(int value);

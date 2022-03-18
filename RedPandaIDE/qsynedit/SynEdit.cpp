@@ -5795,6 +5795,19 @@ void SynEdit::updateMouseCursor(){
     }
 }
 
+bool SynEdit::isCaretVisible()
+{
+    if (mCaretY < mTopLine)
+        return false;
+    if (mCaretY >= mTopLine + mLinesInWindow )
+        return false;
+    if (mCaretX < mLeftChar)
+        return false;
+    if (mCaretX >= mLeftChar + mCharsInWindow)
+        return false;
+    return true;
+}
+
 void SynEdit::paintEvent(QPaintEvent *event)
 {
     if (mPainterLock>0)

@@ -44,6 +44,7 @@
 #include <QPrintDialog>
 #include <QTextDocument>
 #include <QTextCodec>
+#include <QScrollBar>
 #include "iconsmanager.h"
 #include "debugger.h"
 #include "editorlist.h"
@@ -177,6 +178,11 @@ Editor::Editor(QWidget *parent, const QString& filename,
     }
     connect(&mFunctionTipTimer, &QTimer::timeout,
             this, &Editor::onFunctionTipsTimer);
+
+    connect(horizontalScrollBar(), &QScrollBar::valueChanged,
+            this, &Editor::onScrollBarValueChanged);
+    connect(verticalScrollBar(), &QScrollBar::valueChanged,
+            this, &Editor::onScrollBarValueChanged);
 }
 
 Editor::~Editor() {
@@ -1561,7 +1567,7 @@ void Editor::onStatusChanged(SynStatusChanges changes)
             updateFunctionTip(false);
             mFunctionTipTimer.stop();
             mFunctionTipTimer.start(500);
-//          updateFunctionTip();
+//              updateFunctionTip();
         }
     }
 
@@ -3723,6 +3729,11 @@ void Editor::onExportedFormatToken(PSynHighlighter syntaxHighlighter, int Line, 
     }
 }
 
+void Editor::onScrollBarValueChanged()
+{
+    pMainWindow->functionTip()->hide();
+}
+
 bool Editor::canAutoSave() const
 {
     return mCanAutoSave;
@@ -3787,10 +3798,13 @@ void Editor::setInProject(bool newInProject)
 
 void Editor::gotoDeclaration(const BufferCoord &pos)
 {
+    qDebug()<<"???";
     if (!parser())
         return;
     // Exit early, don't bother creating a stream (which is slow)
     QStringList expression = getExpressionAtPosition(pos);
+
+    qDebug()<<expression;
 
     // Find it's definition
     PStatement statement = parser()->findStatementOf(

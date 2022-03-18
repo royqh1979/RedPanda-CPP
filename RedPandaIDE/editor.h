@@ -283,6 +283,7 @@ private:
     void popUserCodeInTabStops();
     void onExportedFormatToken(PSynHighlighter syntaxHighlighter, int Line, int column, const QString& token,
         PSynHighlighterAttribute &attr);
+    void onScrollBarValueChanged();
 private:
     QByteArray mEncodingOption; // the encoding type set by the user
     QByteArray mFileEncoding; // the real encoding of the file (auto detected)
