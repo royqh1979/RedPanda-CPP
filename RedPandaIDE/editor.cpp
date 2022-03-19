@@ -3803,8 +3803,6 @@ void Editor::gotoDeclaration(const BufferCoord &pos)
     // Exit early, don't bother creating a stream (which is slow)
     QStringList expression = getExpressionAtPosition(pos);
 
-    qDebug()<<expression;
-
     // Find it's definition
     PStatement statement = parser()->findStatementOf(
                 filename(),

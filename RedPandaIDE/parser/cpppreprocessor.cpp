@@ -428,10 +428,9 @@ void CppPreprocessor::handleInclude(const QString &line, bool fromNext)
     if (fileName.isEmpty())
         return;
 
-    //mCurrentIncludes->includeFiles.insert(fileName,true);
-    // And open a new entry
+    PFileIncludes oldCurrentIncludes = mCurrentIncludes;
     openInclude(fileName);
-    mCurrentIncludes->includeFiles.insert(fileName,true);
+    oldCurrentIncludes->includeFiles.insert(fileName,true);
 }
 
 void CppPreprocessor::handlePreprocessor(const QString &value)
@@ -705,8 +704,11 @@ void CppPreprocessor::openInclude(const QString &fileName, QStringList bufferedT
         addDefinesInFile(fileName);
         PFileIncludes fileIncludes = getFileIncludesEntry(fileName);
         for (PParsedFile& file:mIncludes) {
-            file->fileIncludes->includeFiles =
-                    file->fileIncludes->includeFiles.unite(fileIncludes->includeFiles);
+            foreach (const QString& incFile,fileIncludes->includeFiles.keys()) {
+                file->fileIncludes->includeFiles.insert(incFile,false);
+            }
+//            file->fileIncludes->includeFiles =
+//                    file->fileIncludes->includeFiles.unite(fileIncludes->includeFiles);
             // file->fileIncludes->includeFiles.insert(fileIncludes->includeFiles);
         }
     }
