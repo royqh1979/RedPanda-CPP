@@ -2324,10 +2324,16 @@
    <property name="text">
     <string>Goto Declaration</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+G</string>
+   </property>
   </action>
   <action name="actionGoto_Definition">
    <property name="text">
     <string>Goto Definition</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+G</string>
    </property>
   </action>
   <action name="actionFind_references">

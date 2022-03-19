@@ -1145,7 +1145,7 @@ void Editor::mouseReleaseEvent(QMouseEvent *event)
                     return;
                 }
             } else {
-                gotoDeclaration(p);
+                gotoDefinition(p);
                 return;
             }
         }
@@ -3849,8 +3849,13 @@ void Editor::gotoDefinition(const BufferCoord &pos)
     }
     QString filename;
     int line;
-    filename = statement->definitionFileName;
-    line = statement->definitionLine;
+    if (statement->definitionFileName == mFilename && statement->definitionLine == pos.Line) {
+            filename = statement->fileName;
+            line = statement->line;
+    } else {
+        filename = statement->definitionFileName;
+        line = statement->definitionLine;
+    }
     Editor* e = pMainWindow->editorList()->getEditorByFilename(filename);
     if (e) {
         e->setCaretPositionAndActivate(line,1);
