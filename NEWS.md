@@ -2,6 +2,7 @@ Red Panda C++ Version 1.0.1
   - fix: only convert project icon file when it's filename doesn't end with ".ico"
   - fix: hide function tip when scroll
   - fix: short cut for goto definition/declaration doesn't work
+  - enhancement: press alt to switch to column selection mode while selection by mouse dragging in editor
 
 Red Panda C++ Version 1.0.0
   - fix: calculation for code snippets's tab stop positions is not correct

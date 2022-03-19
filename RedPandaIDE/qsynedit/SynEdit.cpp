@@ -6063,6 +6063,10 @@ void SynEdit::mouseMoveEvent(QMouseEvent *event)
             //BeginDrag(false);
         }
     } else if ((buttons == Qt::LeftButton)) {
+        if (event->modifiers() == Qt::AltModifier)
+            setSelectionMode(SynSelectionMode::smColumn);
+        else
+            setSelectionMode(SynSelectionMode::smNormal);
         // should we begin scrolling?
         //computeScroll(X, Y,false);
 //        DisplayCoord P = pixelsToNearestRowColumn(X, Y);
