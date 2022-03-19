@@ -495,8 +495,7 @@ void Editor::undoSymbolCompletion(int pos)
     if ((DeletedChar == '\'') && (tokenType == SynHighlighterTokenType::Number))
         return;
     if ((DeletedChar == '<') &&
-            ((tokenType != SynHighlighterTokenType::PreprocessDirective)
-             || !lineText().startsWith("#include")))
+            !(mParser && mParser->isIncludeLine(lineText())))
         return;
     if ( (pSettings->editor().completeBracket() && (DeletedChar == '[') && (NextChar == ']')) ||
          (pSettings->editor().completeParenthese() && (DeletedChar == '(') && (NextChar == ')')) ||
