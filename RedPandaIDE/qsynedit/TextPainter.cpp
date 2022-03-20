@@ -154,17 +154,17 @@ void SynEditTextPainter::paintGutter(const QRect& clip)
 
     // Draw the folding lines and squares
     if (edit->mUseCodeFolding) {
-      for (cRow = aFirstRow; cRow<=aLastRow; cRow++) {
+      for (cRow = aLastRow; cRow>=aFirstRow; cRow--) {
         vLine = edit->rowToLine(cRow);
         if ((vLine > edit->mLines->count()) && (edit->mLines->count() != 0))
-            break;
+            continue;
 
         // Form a rectangle for the square the user can click on
-        //rcFold.Left := Gutter.RealGutterWidth(CharWidth) - Gutter.RightOffset;
         rcFold.setLeft(edit->mGutterWidth - edit->mGutter.rightOffset());
-        rcFold.setRight(rcFold.left() + edit->mGutter.rightOffset() - 4);
         rcFold.setTop((cRow - edit->mTopLine) * edit->mTextHeight);
+        rcFold.setRight(rcFold.left() + edit->mGutter.rightOffset() - 4);
         rcFold.setBottom(rcFold.top() + edit->mTextHeight);
+
 
         painter->setPen(edit->mCodeFolding.folderBarLinesColor);
 
@@ -213,69 +213,16 @@ void SynEditTextPainter::paintGutter(const QRect& clip)
             if (FoldRange->collapsed) {
                 x = rcFold.left() + (rcFold.width() / 2);
                 painter->drawLine(x, rcFold.top() + 2,
-                                  x, rcFold.bottom() + 2);
+                                  x, rcFold.bottom() - 2);
             }
         }
       }
     }
 
-//    // the gutter separator if visible
-//    if (edit->mGutter.borderStyle <> gbsNone) and (AClip.Right >= fGutterWidth - 2) then
-//      with Canvas do begin
-//        Pen.Color := fGutter.BorderColor;
-//        Pen.Width := 1;
-//        with AClip do begin
-//          if fGutter.BorderStyle = gbsMiddle then begin
-//            MoveTo(fGutterWidth - 2, Top);
-//            LineTo(fGutterWidth - 2, Bottom);
-//            Pen.Color := fGutter.Color;
-//          end;
-//          MoveTo(fGutterWidth - 1, Top);
-//          LineTo(fGutterWidth - 1, Bottom);
-//        end;
-//      end;
-
-//    // now the gutter marks
-//    if BookMarkOptions.GlyphsVisible and (Marks.Count > 0) and (aLastRow >= aFirstRow) then begin
-//      aGutterOffs := AllocMem((aLastRow - aFirstRow + 1) * SizeOf(integer));
-//      vFirstLine := RowToLine(aFirstRow);
-//      vLastLine := RowToLine(aLastRow);
-//      try
-//        // Instead of making a two pass loop we look while drawing the bookmarks
-//        // whether there is any other mark to be drawn
-//        bHasOtherMarks := FALSE;
-//        for cMark := 0 to Marks.Count - 1 do
-//          with Marks[cMark] do
-//            if Visible and (Line >= vFirstLine) and (Line <= vLastLine) then begin
-//              if IsBookmark <> BookMarkOptions.DrawBookmarksFirst then
-//                bHasOtherMarks := TRUE
-//              else begin
-//                vMarkRow := LineToRow(Line);
-//                if vMarkRow >= aFirstRow then
-//                  DrawMark(Marks[cMark], aGutterOffs[vMarkRow - aFirstRow], vMarkRow);
-//              end
-//            end;
-//        if bHasOtherMarks then
-//          for cMark := 0 to Marks.Count - 1 do
-//            with Marks[cMark] do begin
-//              if Visible and (IsBookmark <> BookMarkOptions.DrawBookmarksFirst)
-//                and (Line >= vFirstLine) and (Line <= vLastLine) then begin
-//                vMarkRow := LineToRow(Line);
-//                if vMarkRow >= aFirstRow then
-//                  DrawMark(Marks[cMark], aGutterOffs[vMarkRow - aFirstRow], vMarkRow);
-//              end;
-//            end;
-//        if Assigned(OnGutterPaint) then
-//          for cRow := aFirstRow to aLastRow do begin
-//            OnGutterPaint(Self, cRow, aGutterOffs[cRow - aFirstRow],
-//              (vGutterRow - TopLine) * LineHeight);
-//          end;
-//      finally
-//        FreeMem(aGutterOffs);
-//      end;
-//    end;
     for (cRow = aFirstRow; cRow <=aLastRow; cRow++) {
         vLine = edit->rowToLine(cRow);
+        if ((vLine > edit->mLines->count()) && (edit->mLines->count() != 0))
+            break;
         edit->onGutterPaint(*painter,vLine, 0, (cRow - edit->mTopLine) * edit->mTextHeight);
     }
 }
