@@ -18,6 +18,7 @@
 #include "ui_editormiscwidget.h"
 #include "../settings.h"
 #include "../platform.h"
+#include "../mainwindow.h"
 
 EditorMiscWidget::EditorMiscWidget(const QString& name, const QString& group,
                                    QWidget *parent) :
@@ -62,6 +63,7 @@ void EditorMiscWidget::doLoad()
         }
         ui->cbEncodingDetail->setCurrentText(defaultEncoding);
     }
+    ui->spinMaxUndo->setValue(pSettings->editor().undoLimit());
 }
 
 void EditorMiscWidget::doSave()
@@ -76,7 +78,9 @@ void EditorMiscWidget::doSave()
     } else {
         pSettings->editor().setDefaultEncoding(ui->cbEncoding->currentData().toByteArray());
     }
+    pSettings->editor().setUndoLimit(ui->spinMaxUndo->value());
     pSettings->editor().save();
+    pMainWindow->updateEditorSettings();
 }
 
 void EditorMiscWidget::init()

@@ -323,6 +323,8 @@ public:
 
     int charWidth() const;
 
+    void setUndoLimit(int size);
+
     int gutterWidth() const;
     void setGutterWidth(int value);
 

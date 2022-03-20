@@ -930,7 +930,7 @@ void SynEditUndoList::PushItem(PSynEditUndoItem Item)
     if (!Item)
         return;
     mItems.append(Item);
-    EnsureMaxEntries();
+    ensureMaxEntries();
     if (Item->changeReason()!= SynChangeReason::crGroupBreak)
         emit addedUndo();
 }
@@ -958,7 +958,10 @@ int SynEditUndoList::maxUndoActions() const
 
 void SynEditUndoList::setMaxUndoActions(int maxUndoActions)
 {
-    mMaxUndoActions = maxUndoActions;
+    if (maxUndoActions!=mMaxUndoActions) {
+        mMaxUndoActions = maxUndoActions;
+        ensureMaxEntries();
+    }
 }
 
 bool SynEditUndoList::initialState()
@@ -1032,12 +1035,16 @@ bool SynEditUndoList::fullUndoImposible() const
     return mFullUndoImposible;
 }
 
-void SynEditUndoList::EnsureMaxEntries()
+void SynEditUndoList::ensureMaxEntries()
 {
+    qDebug()<<mItems.count()<<mMaxUndoActions;
     if (mItems.count() > mMaxUndoActions){
         mFullUndoImposible = true;
         while (mItems.count() > mMaxUndoActions) {
-            mItems.removeFirst();
+            //remove all undo item in block
+            int changeNumber = mItems.front()->changeNumber();
+            while (mItems.count()>0 && mItems.front()->changeNumber() == changeNumber)
+                mItems.removeFirst();
       }
     }
 }

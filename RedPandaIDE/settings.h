@@ -375,6 +375,9 @@ public:
         bool autoDetectFileEncoding() const;
         void setAutoDetectFileEncoding(bool newAutoDetectFileEncoding);
 
+        int undoLimit() const;
+        void setUndoLimit(int newUndoLimit);
+
     private:
         //General
         // indents
@@ -481,6 +484,8 @@ public:
         bool mReadOnlySytemHeader;
         bool mAutoLoadLastFiles;
         bool mDefaultFileCpp;
+        int mUndoLimit;
+
 
         //hints tooltip
         bool mEnableTooltips;

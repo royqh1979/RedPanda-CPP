@@ -234,7 +234,7 @@ public:
 signals:
     void addedUndo();
 protected:
-    void EnsureMaxEntries();
+    void ensureMaxEntries();
 protected:
     int mBlockChangeNumber;
     int mBlockCount;

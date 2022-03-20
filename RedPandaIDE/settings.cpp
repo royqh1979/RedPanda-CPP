@@ -624,6 +624,16 @@ void Settings::Editor::setAutoDetectFileEncoding(bool newAutoDetectFileEncoding)
     mAutoDetectFileEncoding = newAutoDetectFileEncoding;
 }
 
+int Settings::Editor::undoLimit() const
+{
+    return mUndoLimit;
+}
+
+void Settings::Editor::setUndoLimit(int newUndoLimit)
+{
+    mUndoLimit = newUndoLimit;
+}
+
 bool Settings::Editor::highlightCurrentWord() const
 {
     return mHighlightCurrentWord;
@@ -1202,6 +1212,7 @@ void Settings::Editor::doSave()
     saveValue("auto_load_last_files",mAutoLoadLastFiles);
     saveValue("default_file_cpp",mDefaultFileCpp);
     saveValue("auto_detect_file_encoding",mAutoDetectFileEncoding);
+    saveValue("undo_limit",mUndoLimit);
 
     //tooltips
     saveValue("enable_tooltips",mEnableTooltips);
@@ -1339,6 +1350,8 @@ void Settings::Editor::doLoad()
     else
         mDefaultEncoding = value("default_encoding", ENCODING_SYSTEM_DEFAULT).toByteArray();
     mAutoDetectFileEncoding = boolValue("auto_detect_file_encoding",true);
+    mUndoLimit = intValue("undo_limit",1000);
+
 
     //tooltips
     mEnableTooltips = boolValue("enable_tooltips",true);

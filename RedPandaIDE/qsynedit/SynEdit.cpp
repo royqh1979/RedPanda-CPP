@@ -6320,6 +6320,13 @@ int SynEdit::charWidth() const
     return mCharWidth;
 }
 
+void SynEdit::setUndoLimit(int size)
+{
+    mUndoList->setMaxUndoActions(size);
+
+    mRedoList->setMaxUndoActions(size);
+}
+
 int SynEdit::charsInWindow() const
 {
     return mCharsInWindow;

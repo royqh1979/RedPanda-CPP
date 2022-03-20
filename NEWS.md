@@ -7,6 +7,8 @@ Red Panda C++ Version 1.0.1
   - fix: corresponding '>' not correctly removed when deleting '<' in #include line 
   - enhancement: shortcut for goto definition/declaration
   - change: ctrl+click symbol will goto definition, instead of got declaration
+  - fix: when size of undo items is greater than the limit, old items should be poped in group
+  - enhancement: max undo size in option dialog's editor->misc tab
 
 Red Panda C++ Version 1.0.0
   - fix: calculation for code snippets's tab stop positions is not correct

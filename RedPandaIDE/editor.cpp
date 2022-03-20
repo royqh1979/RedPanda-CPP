@@ -4397,6 +4397,8 @@ void Editor::applySettings()
         setRightEdge(0);
     }
 
+    this->setUndoLimit(pSettings->editor().undoLimit());
+
     setMouseWheelScrollSpeed(pSettings->editor().mouseWheelScrollSpeed());
     setMouseSelectionScrollSpeed(pSettings->editor().mouseSelectionScrollSpeed());
     invalidate();
