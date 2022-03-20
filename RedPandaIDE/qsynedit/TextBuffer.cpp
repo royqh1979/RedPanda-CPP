@@ -1037,7 +1037,6 @@ bool SynEditUndoList::fullUndoImposible() const
 
 void SynEditUndoList::ensureMaxEntries()
 {
-    qDebug()<<mItems.count()<<mMaxUndoActions;
     if (mItems.count() > mMaxUndoActions){
         mFullUndoImposible = true;
         while (mItems.count() > mMaxUndoActions) {
