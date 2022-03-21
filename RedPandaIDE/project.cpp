@@ -16,7 +16,6 @@
  */
 #include "project.h"
 #include "editor.h"
-#include "mainwindow.h"
 #include "utils.h"
 #include "systemconsts.h"
 #include "editorlist.h"
@@ -27,26 +26,33 @@
 #include "systemconsts.h"
 #include "iconsmanager.h"
 
+#include <QFileSystemWatcher>
 #include <QDir>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QMessageBox>
 #include <QTextCodec>
 #include <QMessageBox>
+#include <QDirIterator>
 #include "customfileiconprovider.h"
 #include <QMimeData>
 #include "settings.h"
 #include "vcs/gitrepository.h"
 
-Project::Project(const QString &filename, const QString &name, QObject *parent) :
+Project::Project(const QString &filename, const QString &name,
+                 EditorList* editorList,
+                 QFileSystemWatcher* fileSystemWatcher,
+                 QObject *parent) :
     QObject(parent),
-    mModel(this)
+    mModel(this),
+    mEditorList(editorList),
+    mFileSystemWatcher(fileSystemWatcher)
 {
     mFilename = QFileInfo(filename).absoluteFilePath();
     mParser = std::make_shared<CppParser>();
     mParser->setOnGetFileStream(
                 std::bind(
-                    &EditorList::getContentFromOpenedEditor,pMainWindow->editorList(),
+                    &EditorList::getContentFromOpenedEditor,mEditorList,
                     std::placeholders::_1, std::placeholders::_2));
     if (name == DEV_INTERNAL_OPEN) {
         open();
@@ -64,14 +70,14 @@ Project::Project(const QString &filename, const QString &name, QObject *parent) 
 
 Project::~Project()
 {
-    pMainWindow->editorList()->beginUpdate();
+    mEditorList->beginUpdate();
     foreach (const PProjectUnit& unit, mUnits) {
-        if (unit->editor()) {
-            pMainWindow->editorList()->forceCloseEditor(unit->editor());
-            unit->setEditor(nullptr);
+        Editor * editor = unitEditor(unit);
+        if (editor) {
+            mEditorList->forceCloseEditor(editor);
         }
     }
-    pMainWindow->editorList()->endUpdate();
+    mEditorList->endUpdate();
 }
 
 QString Project::directory() const
@@ -155,7 +161,7 @@ void Project::open()
                     dir.absoluteFilePath(
                         fromByteArray(ini.GetValue(groupName,"FileName",""))));
         if (!QFileInfo(newUnit->fileName()).exists()) {
-            QMessageBox::critical(pMainWindow,
+            QMessageBox::critical(nullptr,
                                   tr("File Not Found"),
                                   tr("Project file '%1' can't be found!")
                                   .arg(newUnit->fileName()),
@@ -179,7 +185,6 @@ void Project::open()
             if (QTextCodec::codecForName(newUnit->encoding())==nullptr) {
                 newUnit->setEncoding(ENCODING_AUTO_DETECT);
             }
-            newUnit->setEditor(nullptr);
             newUnit->setNew(false);
             newUnit->setParent(this);
             newUnit->setNode(makeNewFileNode(extractFileName(newUnit->fileName()), false, folderNodeFromName(newUnit->folder())));
@@ -268,7 +273,6 @@ PProjectUnit Project::newUnit(PProjectModelNode parentNode, const QString& custo
     // Set all properties
     newUnit->setFileName(s);
     newUnit->setNew(true);
-    newUnit->setEditor(nullptr);
     newUnit->setFolder(getFolderPath(parentNode));
     newUnit->setNode(makeNewFileNode(extractFileName(newUnit->fileName()),
                                      false, parentNode));
@@ -293,9 +297,8 @@ Editor *Project::openUnit(int index)
     PProjectUnit unit = mUnits[index];
 
     if (!unit->fileName().isEmpty()) {
-        QDir dir(directory());
-        QString fullPath = dir.absoluteFilePath(unit->fileName());
-        Editor * editor = pMainWindow->editorList()->getOpenedEditorByFilename(fullPath);
+        QString fullPath = unitFullPath(unit);
+        Editor * editor = mEditorList->getOpenedEditorByFilename(fullPath);
         if (editor) {//already opened in the editors
             editor->setInProject(true);
             editor->activate();
@@ -303,15 +306,36 @@ Editor *Project::openUnit(int index)
         }
         QByteArray encoding;
         encoding = unit->encoding();
-        editor = pMainWindow->editorList()->newEditor(fullPath, encoding, true, unit->isNew());
+        editor = mEditorList->newEditor(fullPath, encoding, true, unit->isNew());
         editor->setInProject(true);
-        unit->setEditor(editor);
         //unit->setEncoding(encoding);
         editor->activate();
         loadUnitLayout(editor,index);
         return editor;
     }
     return nullptr;
+}
+
+QString Project::unitFullPath(const PProjectUnit &unit) const
+{
+    QDir dir(directory());
+    return dir.absoluteFilePath(unit->fileName());
+}
+
+QString Project::unitFullPath(const ProjectUnit *unit) const
+{
+    QDir dir(directory());
+    return dir.absoluteFilePath(unit->fileName());
+}
+
+Editor *Project::unitEditor(const PProjectUnit &unit) const
+{
+    return mEditorList->getOpenedEditorByFilename(unitFullPath(unit));
+}
+
+Editor *Project::unitEditor(const ProjectUnit *unit) const
+{
+    return mEditorList->getOpenedEditorByFilename(unitFullPath(unit));
 }
 
 void Project::rebuildNodes()
@@ -378,10 +402,12 @@ bool Project::removeUnit(int index, bool doClose , bool removeFile)
 //    qDebug()<<unit->fileName();
 //    qDebug()<<(qint64)unit->editor();
     // Attempt to close it
-    if (doClose && (unit->editor())) {
-        unit->editor()->setInProject(false);
-        if (!pMainWindow->editorList()->closeEditor(unit->editor()))
-            return false;
+    if (doClose) {
+        Editor* editor = unitEditor(unit);
+        if (editor) {
+            editor->setInProject(false);
+            mEditorList->closeEditor(editor);
+        }
     }
 
     if (removeFile) {
@@ -450,8 +476,8 @@ void Project::saveLayout()
     SimpleIni layIni;
     QStringList sl;
     // Write list of open project files
-    for (int i=0;i<pMainWindow->editorList()->pageCount();i++) {
-        Editor* e= (*(pMainWindow->editorList()))[i];
+    for (int i=0;i<mEditorList->pageCount();i++) {
+        Editor* e= (*mEditorList)[i];
         if (e && e->inProject())
             sl.append(QString("%1").arg(indexInUnits(e)));
     }
@@ -459,14 +485,14 @@ void Project::saveLayout()
 
     Editor *e, *e2;
     // Remember what files were visible
-    pMainWindow->editorList()->getVisibleEditors(e, e2);
+    mEditorList->getVisibleEditors(e, e2);
     if (e)
         layIni.SetLongValue("Editors","Focused", indexInUnits(e));
     // save editor info
     for (int i=0;i<mUnits.count();i++) {
         QByteArray groupName = QString("Editor_%1").arg(i).toUtf8();
         PProjectUnit unit = mUnits[i];
-        Editor* editor = unit->editor();
+        Editor* editor = unitEditor(unit);
         if (editor) {
             layIni.SetLongValue(groupName,"CursorCol", editor->caretX());
             layIni.SetLongValue(groupName,"CursorRow", editor->caretY());
@@ -496,9 +522,10 @@ void Project::saveUnitAs(int i, const QString &sFileName, bool syncEditor)
     if (fileExists(unit->fileName())) {
         unit->setNew(false);
     }
-    if (unit->editor() && syncEditor) {
+    Editor * editor=unitEditor(unit);
+    if (editor && syncEditor) {
         //prevent recurse
-        unit->editor()->saveAs(sFileName,true);
+        editor->saveAs(sFileName,true);
     }
     unit->setNew(false);
     unit->setFileName(sFileName);
@@ -548,7 +575,7 @@ bool Project::saveUnits()
         if (unit->modified() && fileExists(unit->fileName())
             && isReadOnly(unit->fileName())) {
             // file is read-only
-            QMessageBox::critical(pMainWindow,
+            QMessageBox::critical(nullptr,
                                   tr("Can't save file"),
                                   tr("Can't save file '%1'").arg(unit->fileName()),
                                   QMessageBox::Ok
@@ -618,11 +645,10 @@ void Project::associateEditorToUnit(Editor *editor, PProjectUnit unit)
     if (!unit)
         return;
     if (editor) {
-        unit->setEditor(editor);
         unit->setEncoding(editor->encodingOption());
         editor->setInProject(true);
     } else {
-        unit->setEditor(nullptr);
+        editor->setInProject(false);
     }
 }
 
@@ -730,8 +756,8 @@ bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate, b
                     unit = newUnit(mRootNode,templateUnit->CName);
                 }
 
-                Editor * editor = pMainWindow->editorList()->newEditor(
-                            QDir(directory()).absoluteFilePath(unit->fileName()),
+                Editor * editor = mEditorList->newEditor(
+                            unitFullPath(unit),
                             unit->encoding(),
                             true,
                             true);
@@ -741,7 +767,7 @@ bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate, b
                     try {
                         editor->loadFile(s2);
                     } catch(FileError& e) {
-                        QMessageBox::critical(pMainWindow,
+                        QMessageBox::critical(nullptr,
                                               tr("Error Load File"),
                                               e.reason());
                     }
@@ -749,7 +775,6 @@ bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate, b
                     s.replace("#13#10","\r\n");
                     editor->insertString(s,false);
                 }
-                unit->setEditor(editor);
                 editor->save(true,false);
                 editor->activate();
             }
@@ -853,7 +878,7 @@ PProjectUnit Project::addUnit(const QString &inFileName, PProjectModelNode paren
     PProjectUnit newUnit;
     // Don't add if it already exists
     if (fileAlreadyExists(inFileName)) {
-        QMessageBox::critical(pMainWindow,
+        QMessageBox::critical(nullptr,
                                  tr("File Exists"),
                                  tr("File '%1' is already in the project"),
                               QMessageBox::Ok);
@@ -864,13 +889,11 @@ PProjectUnit Project::addUnit(const QString &inFileName, PProjectModelNode paren
     // Set all properties
     newUnit->setFileName(QDir(directory()).filePath(inFileName));
     newUnit->setNew(false);
-    Editor * e= pMainWindow->editorList()->getOpenedEditorByFilename(newUnit->fileName());
+    Editor * e= unitEditor(newUnit);
     if (e) {
-        newUnit->setEditor(e);
         newUnit->setEncoding(e->encodingOption());
         e->setInProject(true);
     } else {
-        newUnit->setEditor(nullptr);
         newUnit->setEncoding(ENCODING_AUTO_DETECT);
     }
     newUnit->setFolder(getFolderPath(parentNode));
@@ -1228,7 +1251,7 @@ void Project::checkProjectFileForUpdate(SimpleIni &ini)
 
     if (cnvt)
         QMessageBox::information(
-                    pMainWindow,
+                    nullptr,
                     tr("Project Updated"),
                     tr("Your project was succesfully updated to a newer file format!")
                     +"<br />"
@@ -1240,11 +1263,11 @@ void Project::checkProjectFileForUpdate(SimpleIni &ini)
 void Project::closeUnit(int index)
 {
     PProjectUnit unit = mUnits[index];
-    if (unit->editor()) {
-        saveUnitLayout(unit->editor(),index);
-        unit->editor()->setInProject(false);
-        pMainWindow->editorList()->forceCloseEditor(unit->editor());
-        unit->setEditor(nullptr);
+    Editor * editor =unitEditor(unit);
+    if (editor) {
+        saveUnitLayout(editor,index);
+        editor->setInProject(false);
+        mEditorList->forceCloseEditor(editor);
     }
 }
 
@@ -1432,8 +1455,9 @@ void Project::loadLayout()
             openUnit(currIdx);
         }
     }
-    if (topLeft>=0 && topLeft<mUnits.count() && mUnits[topLeft]->editor()) {
-        mUnits[topLeft]->editor()->activate();
+    if (topLeft>=0 && topLeft<mUnits.count()) {
+        Editor * editor = unitEditor(mUnits[topLeft]);
+        editor->activate();
     }
 }
 
@@ -1450,7 +1474,7 @@ void Project::loadOptions(SimpleIni& ini)
     if (mOptions.version > 0) { // ver > 0 is at least a v5 project
         if (mOptions.version < 2) {
             mOptions.version = 2;
-            QMessageBox::information(pMainWindow,
+            QMessageBox::information(nullptr,
                                      tr("Settings need update"),
                                      tr("The compiler settings format of Red Panda C++ has changed.")
                                      +"<BR /><BR />"
@@ -1490,7 +1514,7 @@ void Project::loadOptions(SimpleIni& ini)
         if (mOptions.compilerSet >= pSettings->compilerSets().size()
                 || mOptions.compilerSet < 0) { // TODO: change from indices to names
             QMessageBox::critical(
-                        pMainWindow,
+                        nullptr,
                         tr("Compiler not found"),
                         tr("The compiler set you have selected for this project, no longer exists.")
                         +"<BR />"
@@ -1655,6 +1679,16 @@ void Project::updateCompilerSetType()
     }
 }
 
+QFileSystemWatcher *Project::fileSystemWatcher() const
+{
+    return mFileSystemWatcher;
+}
+
+EditorList *Project::editorList() const
+{
+    return mEditorList;
+}
+
 const QList<PProjectUnit> &Project::units() const
 {
     return mUnits;
@@ -1709,7 +1743,6 @@ const QString &Project::filename() const
 
 ProjectUnit::ProjectUnit(Project* parent)
 {
-    mEditor = nullptr;
     mNode = nullptr;
     mParent = parent;
 }
@@ -1722,16 +1755,6 @@ Project *ProjectUnit::parent() const
 void ProjectUnit::setParent(Project* newParent)
 {
     mParent = newParent;
-}
-
-Editor *ProjectUnit::editor() const
-{
-    return mEditor;
-}
-
-void ProjectUnit::setEditor(Editor *newEditor)
-{
-    mEditor = newEditor;
 }
 
 const QString &ProjectUnit::fileName() const
@@ -1842,8 +1865,9 @@ const QByteArray &ProjectUnit::encoding() const
 void ProjectUnit::setEncoding(const QByteArray &newEncoding)
 {
     if (mEncoding != newEncoding) {
-        if (mEditor) {
-            mEditor->setEncodingOption(newEncoding);
+        Editor * editor=mParent->unitEditor(this);
+        if (editor) {
+            editor->setEncodingOption(newEncoding);
         }
         mEncoding = newEncoding;
     }
@@ -1851,8 +1875,9 @@ void ProjectUnit::setEncoding(const QByteArray &newEncoding)
 
 bool ProjectUnit::modified() const
 {
-    if (mEditor) {
-        return mEditor->modified();
+    Editor * editor=mParent->unitEditor(this);
+    if (editor) {
+        return editor->modified();
     } else {
         return false;
     }
@@ -1860,9 +1885,10 @@ bool ProjectUnit::modified() const
 
 void ProjectUnit::setModified(bool value)
 {
+    Editor * editor=mParent->unitEditor(this);
     // Mark the change in the coupled editor
-    if (mEditor) {
-        return mEditor->setModified(value);
+    if (editor) {
+        return editor->setModified(value);
     }
 
     // If modified is set to true, mark project as modified too
@@ -1873,17 +1899,18 @@ void ProjectUnit::setModified(bool value)
 
 bool ProjectUnit::save()
 {
-    bool previous=pMainWindow->fileSystemWatcher()->blockSignals(true);
-    auto action = finally([&previous](){
-        pMainWindow->fileSystemWatcher()->blockSignals(previous);
+    bool previous=mParent->fileSystemWatcher()->blockSignals(true);
+    auto action = finally([&previous,this](){
+        mParent->fileSystemWatcher()->blockSignals(previous);
     });
     bool result=true;
-    if (!mEditor && !fileExists(mFileName)) {
+    Editor * editor=mParent->unitEditor(this);
+    if (!editor && !fileExists(mFileName)) {
         // file is neither open, nor saved
         QStringList temp;
         stringsToFile(temp,mFileName);
-    } else if (mEditor && mEditor->modified()) {
-        result = mEditor->save();
+    } else if (editor && editor->modified()) {
+        result = editor->save();
     }
     if (mNode) {
         mNode->text = extractFileName(mFileName);
@@ -2083,16 +2110,16 @@ bool ProjectModel::setData(const QModelIndex &index, const QVariant &value, int 
             // Only continue if the user says so...
             if (fileExists(newName) && newName.compare(oldName, PATH_SENSITIVITY)!=0) {
                 // don't remove when changing case for example
-                if (QMessageBox::question(pMainWindow,
+                if (QMessageBox::question(nullptr,
                                           tr("File exists"),
                                           tr("File '%1' already exists. Delete it now?")
                                           .arg(newName),
                                           QMessageBox::Yes | QMessageBox::No,
                                           QMessageBox::No) == QMessageBox::Yes) {
                     // Close the target file...
-                    Editor * e= pMainWindow->editorList()->getOpenedEditorByFilename(newName);
+                    Editor * e=mProject->editorList()->getOpenedEditorByFilename(newName);
                     if (e)
-                        pMainWindow->editorList()->closeEditor(e);
+                        mProject->editorList()->closeEditor(e);
 
                     // Remove it from the current project...
                     int projindex = mProject->indexInUnits(newName);
@@ -2102,7 +2129,7 @@ bool ProjectModel::setData(const QModelIndex &index, const QVariant &value, int 
 
                     // All references to the file are removed. Delete the file from disk
                     if (!QFile::remove(newName)) {
-                        QMessageBox::critical(pMainWindow,
+                        QMessageBox::critical(nullptr,
                                               tr("Remove failed"),
                                               tr("Failed to remove file '%1'")
                                               .arg(newName),
@@ -2117,10 +2144,10 @@ bool ProjectModel::setData(const QModelIndex &index, const QVariant &value, int 
             // change name in project file first (no actual file renaming on disk)
             //save old file, if it is openned;
             // remove old file from monitor list
-            pMainWindow->fileSystemWatcher()->removePath(oldName);
+            mProject->fileSystemWatcher()->removePath(oldName);
 
             if (!QFile::rename(oldName,newName)) {
-                QMessageBox::critical(pMainWindow,
+                QMessageBox::critical(nullptr,
                                       tr("Rename failed"),
                                       tr("Failed to rename file '%1' to '%2'")
                                       .arg(oldName,newName),
@@ -2130,7 +2157,7 @@ bool ProjectModel::setData(const QModelIndex &index, const QVariant &value, int 
             mProject->saveUnitAs(idx,newName);
 
             // Add new filename to file minitor
-            pMainWindow->fileSystemWatcher()->addPath(newName);
+            mProject->fileSystemWatcher()->addPath(newName);
 
             //suffix changed
             if (mProject && mProject->modelType() == ProjectModelType::FileSystem

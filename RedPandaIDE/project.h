@@ -26,6 +26,8 @@
 class Project;
 class Editor;
 class CppParser;
+class EditorList;
+class QFileSystemWatcher;
 
 
 enum ProjectSpecialFolderNode {
@@ -54,8 +56,6 @@ public:
     explicit ProjectUnit(Project* parent);
     Project* parent() const;
     void setParent(Project* newParent);
-    Editor *editor() const;
-    void setEditor(Editor *newEditor);
     const QString &fileName() const;
     void setFileName(QString newFileName);
     bool isNew() const;
@@ -85,7 +85,6 @@ public:
 
 private:
     Project* mParent;
-    Editor* mEditor;
     QString mFileName;
     bool mNew;
     QString mFolder;
@@ -154,7 +153,10 @@ class Project : public QObject
 {
     Q_OBJECT
 public:
-    explicit Project(const QString& filename, const QString& name,QObject *parent = nullptr);
+    explicit Project(const QString& filename, const QString& name,
+                     EditorList* editorList,
+                     QFileSystemWatcher* fileSystemWatcher,
+                     QObject *parent = nullptr);
     ~Project();
     QString directory() const;
     QString executable() const;
@@ -181,6 +183,15 @@ public:
     PProjectUnit  newUnit(PProjectModelNode parentNode,
                  const QString& customFileName="");
     Editor* openUnit(int index);
+    QString unitFullPath(const PProjectUnit& unit) const;
+    QString unitFullPath(const ProjectUnit* unit) const;
+    Editor* unitEditor(const PProjectUnit& unit) const;
+    Editor* unitEditor(const ProjectUnit* unit) const;
+    Editor* unitEditor(int index) const {
+        if (index<0 || index>=mUnits.count())
+            return nullptr;
+        return unitEditor(mUnits[index]);
+    }
     PProjectModelNode pointerToNode(ProjectModelNode * p, PProjectModelNode parent=PProjectModelNode());
     void rebuildNodes();
     bool removeUnit(int index, bool doClose, bool removeFile = false);
@@ -220,6 +231,10 @@ public:
     ProjectModelType modelType() const;
     void setModelType(ProjectModelType type);
 
+    EditorList *editorList() const;
+
+    QFileSystemWatcher *fileSystemWatcher() const;
+
 signals:
     void nodesChanged();
     void modifyChanged(bool value);
@@ -256,6 +271,8 @@ private:
     QHash<ProjectSpecialFolderNode, PProjectModelNode> mSpecialNodes;
     QHash<QString, PProjectModelNode> mFileSystemFolderNodes;
     ProjectModel mModel;
+    EditorList *mEditorList;
+    QFileSystemWatcher* mFileSystemWatcher;
 };
 
 #endif // PROJECT_H

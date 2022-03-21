@@ -362,7 +362,7 @@ void SearchDialog::on_btnExecute_clicked()
                         SearchFileScope::wholeProject
                         );
             for (int i=0;i<pMainWindow->project()->units().count();i++) {
-                Editor * e = pMainWindow->project()->units()[i]->editor();
+                Editor * e = pMainWindow->project()->unitEditor(i);
                 QString curFilename =  pMainWindow->project()->units()[i]->fileName();
                 if (e) {
                     fileSearched++;

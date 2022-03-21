@@ -1146,7 +1146,9 @@ void MainWindow::openProject(const QString &filename, bool openFiles)
         auto action = finally([this]{
             mClassBrowserModel.endUpdate();
         });
-        mProject = std::make_shared<Project>(filename,DEV_INTERNAL_OPEN);
+        mProject = std::make_shared<Project>(filename,DEV_INTERNAL_OPEN,
+                                             mEditorList,
+                                             &mFileSystemWatcher);
         updateProjectView();
         pSettings->history().removeProject(filename);
 
@@ -5485,7 +5487,9 @@ void MainWindow::on_actionNew_Project_triggered()
         }
 
         // Create an empty project
-        mProject = std::make_shared<Project>(s,dialog.getProjectName());
+        mProject = std::make_shared<Project>(s,dialog.getProjectName(),
+                                             mEditorList,
+                                             &mFileSystemWatcher);
         if (!mProject->assignTemplate(dialog.getTemplate(),dialog.isCppProject())) {
             mProject = nullptr;
             QMessageBox::critical(this,

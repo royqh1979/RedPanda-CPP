@@ -321,11 +321,15 @@ bool Editor::saveAs(const QString &name, bool fromProject){
         QDir::setCurrent(extractFileDir(newName));
     }
 
+    if (pMainWindow->editorList()->getOpenedEditorByFilename(newName)) {
+        QMessageBox::critical(pMainWindow,tr("Error"),
+                              tr("File %1 already openned!").arg(newName));
+        return false;
+    }
     // Update project information
     if (mInProject && pMainWindow->project() && !fromProject) {
-        int unitIndex = pMainWindow->project()->indexInUnits(mFilename);
-        if (unitIndex>=0) {
-            pMainWindow->project()->units()[unitIndex]->setEditor(nullptr);
+        int unitIndex = pMainWindow->project()->indexInUnits(newName);
+        if (unitIndex<0) {
             mInProject = false;
         }
     }
