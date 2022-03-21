@@ -153,6 +153,9 @@ bool WindowLogoutEventFilter::nativeEventFilter(const QByteArray & /*eventType*/
             buffer.open(QBuffer::ReadOnly);
             in >> files;
             sharedMemory.unlock();
+            if (pMainWindow->isMinimized()) {
+                pMainWindow->showNormal();
+            }
             pMainWindow->openFiles(files);
             sharedMemory.detach();
         }

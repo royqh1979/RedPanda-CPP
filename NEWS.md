@@ -11,6 +11,7 @@ Red Panda C++ Version 1.0.1
   - enhancement: max undo size in option dialog's editor->misc tab
   - fix: when editor font is too small, fold signs on the gutter are not correctly displayed
   - fix: expand fold signs on the gutter are not correct
+  - enhancement: auto restore mainwindow when open files in one instance
 
 Red Panda C++ Version 1.0.0
   - fix: calculation for code snippets's tab stop positions is not correct
