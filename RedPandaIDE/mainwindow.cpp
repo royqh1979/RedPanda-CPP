@@ -648,10 +648,6 @@ void MainWindow::applySettings()
     ui->txtProblemCaseExpected->setFont(caseEditorFont);
 
     mTcpServer.close();
-    int idxProblem = ui->tabMessages->indexOf(ui->tabProblem);
-    ui->tabMessages->setTabEnabled(idxProblem,pSettings->executor().enableProblemSet());
-    int idxProblemSet = ui->tabInfos->indexOf(ui->tabProblemSet);
-    ui->tabInfos->setTabEnabled(idxProblemSet,pSettings->executor().enableProblemSet());
     if (pSettings->executor().enableProblemSet()) {
         if (pSettings->executor().enableCompetitiveCompanion()) {
             if (!mTcpServer.listen(QHostAddress::LocalHost,pSettings->executor().competivieCompanionPort())) {
@@ -664,16 +660,13 @@ void MainWindow::applySettings()
 //                                      +tr("Or You can choose a different port number and try again."));
             }
         }
-        if (idxProblem<0)
-            ui->tabMessages->addTab(ui->tabProblem,tr("Problem"));
-        if (idxProblemSet<0)
-            ui->tabInfos->addTab(ui->tabProblemSet, tr("Problem Set"));
-    } else {
-        if (idxProblem>=0)
-            ui->tabMessages->removeTab(idxProblem);
-        if (idxProblemSet>=0)
-            ui->tabInfos->removeTab(idxProblemSet);
     }
+
+    showHideInfosTab(ui->tabProblemSet,pSettings->ui().showProblemSet()
+                     && pSettings->executor().enableProblemSet());
+    showHideMessagesTab(ui->tabProblem, pSettings->ui().showProblem()
+                        && pSettings->executor().enableProblemSet());
+
     ui->actionInterrupt->setVisible(pSettings->debugger().useGDBServer());
     //icon sets for editors
     updateEditorSettings();
