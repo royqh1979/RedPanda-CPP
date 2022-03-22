@@ -144,7 +144,6 @@ struct Statement {
     QString type; // type "int"
     QString command; // identifier/name of statement "foo"
     QString args; // args "(int a,float b)"
-    QStringList argList; //not used yet
     QString value; // Used for macro defines/typedef, "100" in "#defin COUNT 100"
     StatementKind kind; // kind of statement class/variable/function/etc
     QList<std::weak_ptr<Statement>> inheritanceList; // list of statements this one inherits from, can be nil
