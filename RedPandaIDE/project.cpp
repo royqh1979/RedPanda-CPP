@@ -642,13 +642,14 @@ void Project::associateEditor(Editor *editor)
 
 void Project::associateEditorToUnit(Editor *editor, PProjectUnit unit)
 {
-    if (!unit)
+    if (!unit) {
+        if (editor)
+            editor->setInProject(false);
         return;
+    }
     if (editor) {
         unit->setEncoding(editor->encodingOption());
         editor->setInProject(true);
-    } else {
-        editor->setInProject(false);
     }
 }
 
