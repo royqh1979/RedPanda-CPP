@@ -699,6 +699,8 @@ QString CppParser::getHeaderFileName(const QString &relativeTo, const QString &l
 
 void CppParser::invalidateFile(const QString &fileName)
 {
+    if (!mEnabled)
+        return;
     {
         QMutexLocker locker(&mMutex);
         if (mParsing || mLockCount>0)
@@ -4806,7 +4808,12 @@ bool CppParser::enabled() const
 
 void CppParser::setEnabled(bool newEnabled)
 {
-    mEnabled = newEnabled;
+    if (mEnabled!=newEnabled) {
+        mEnabled = newEnabled;
+        if (!mEnabled) {
+            this->reset();
+        }
+    }
 }
 
 CppFileParserThread::CppFileParserThread(

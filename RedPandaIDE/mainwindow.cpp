@@ -1176,7 +1176,6 @@ void MainWindow::openProject(const QString &filename, bool openFiles)
 
 void MainWindow::changeOptions(const QString &widgetName, const QString &groupName)
 {
-    bool oldCodeCompletion = pSettings->codeCompletion().enabled();
     PSettingsDialog settingsDialog = SettingsDialog::optionDialog();
     if (!groupName.isEmpty()) {
         settingsDialog->setCurrentWidget(widgetName, groupName);
@@ -1188,16 +1187,13 @@ void MainWindow::changeOptions(const QString &widgetName, const QString &groupNa
         return;
     }
 
-    bool newCodeCompletion = pSettings->codeCompletion().enabled();
-    if (!oldCodeCompletion && newCodeCompletion) {
-        Editor *e = mEditorList->getEditor();
-        if (mProject && !e) {
-            scanActiveProject(true);
-        } else if (mProject && e && e->inProject()) {
-            scanActiveProject(true);
-        } else if (e) {
-            e->reparse();
-        }
+    Editor *e = mEditorList->getEditor();
+    if (mProject && !e) {
+        scanActiveProject(true);
+    } else if (mProject && e && e->inProject()) {
+        scanActiveProject(true);
+    } else if (e) {
+        e->reparse();
     }
 
 }
@@ -2015,6 +2011,8 @@ void MainWindow::scanActiveProject(bool parse)
 {
     if (!mProject)
         return;
+    mProject->cppParser()->setEnabled(pSettings->codeCompletion().enabled());
+
     //UpdateClassBrowsing;
     if (parse) {
         resetCppParser(mProject->cppParser(),mProject->options().compilerSet);
