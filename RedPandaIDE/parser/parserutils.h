@@ -209,12 +209,6 @@ struct UsingNamespace {
 };
 using PUsingNamespace = std::shared_ptr<UsingNamespace>;
 
-struct IncompleteClass {
-    PStatement statement;
-    int count;
-};
-using PIncompleteClass = std::shared_ptr<IncompleteClass>;
-
 struct CppScope {
     int startLine;
     PStatement statement;

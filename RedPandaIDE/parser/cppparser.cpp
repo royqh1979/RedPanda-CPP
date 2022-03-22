@@ -796,6 +796,7 @@ void CppParser::parseFile(const QString &fileName, bool inProject, bool onlyIfNo
                 }
             }
         }
+        qDebug()<<mPreprocessor.includesList().size();
     }
 }
 
