@@ -75,29 +75,54 @@ public:
     void addProjectIncludePath(const QString& fileName);
     void clearIncludePaths();
     void clearProjectIncludePaths();
-    QStringList result() const;
 
-    QHash<QString, PFileIncludes> &includesList();
+    const QStringList &result() const {
+        return mResult;
+    }
 
-    QSet<QString> &scannedFiles();
+    QHash<QString, PFileIncludes> &includesList() {
+        return mIncludesList;
+    }
 
-    const QSet<QString> &includePaths();
+    QSet<QString> &scannedFiles() {
+        return mScannedFiles;
+    }
 
-    const QSet<QString> &projectIncludePaths();
+    const QSet<QString> &includePaths() {
+        return mIncludePaths;
+    }
 
-    const DefineMap &hardDefines() const;
+    const QSet<QString> &projectIncludePaths() {
+        return mProjectIncludePaths;
+    }
 
-    const QList<QString> &includePathList() const;
+    const DefineMap &hardDefines() const {
+        return mHardDefines;
+    }
 
-    const QList<QString> &projectIncludePathList() const;
+    const QList<QString> &includePathList() const {
+        return mIncludePathList;
+    }
+
+    const QList<QString> &projectIncludePathList() const {
+        return mProjectIncludePathList;
+    }
 private:
     void preprocessBuffer();
     void skipToEndOfPreprocessor();
     void skipToPreprocessor();
     QString getNextPreprocessor();
-    void simplify(QString& output);
+    void simplify(QString& output) {
+        // Remove #
+        output = output.mid(1).trimmed();
+    }
     void handleBranch(const QString& line);
-    void handleDefine(const QString& line);
+    void handleDefine(const QString& line) {
+        if (getCurrentBranch()) {
+            addDefineByLine(line, false);
+            mResult[mPreProcIndex] = '#' + line; // add define to result file so the parser can handle it
+        }
+    }
     void handleInclude(const QString& line, bool fromNext=false);
     void handlePreprocessor(const QString& value);
     void handleUndefine(const QString& line);
@@ -105,24 +130,44 @@ private:
     void expandMacro(const QString& line, QString& newLine, QString& word, int& i, int depth);
     QString removeGCCAttributes(const QString& line);
     void removeGCCAttribute(const QString&line, QString& newLine, int &i, const QString& word);
-    PDefine getDefine(const QString& name);
+    PDefine getDefine(const QString& name) {
+        return mDefines.value(name,PDefine());
+    }
     // current file stuff
-    PParsedFile getInclude(int index);
+    PParsedFile getInclude(int index) {
+        return mIncludes[index];
+    }
     void openInclude(const QString& fileName, QStringList bufferedText=QStringList());
     void closeInclude();
 
     // branch stuff
-    bool getCurrentBranch();
-    void setCurrentBranch(bool value);
-    void removeCurrentBranch();
+    bool getCurrentBranch() const{
+        if (!mBranchResults.isEmpty())
+            return mBranchResults.last();
+        else
+            return true;
+    }
+    void setCurrentBranch(bool value) {
+        mBranchResults.append(value);
+    }
+    void removeCurrentBranch() {
+        if (mBranchResults.size()>0)
+            mBranchResults.pop_back();
+    }
     // include stuff
-    PFileIncludes getFileIncludesEntry(const QString& FileName);
+    PFileIncludes getFileIncludesEntry(const QString& fileName) {
+        return mIncludesList.value(fileName,PFileIncludes());
+    }
     void addDefinesInFile(const QString& fileName);
-    void resetDefines();
+    void resetDefines() {
+        mDefines = mHardDefines;
+    }
     void addDefineByParts(const QString& name, const QString& args,
                           const QString& value, bool hardCoded);
     void addDefineByLine(const QString& line, bool hardCoded);
-    PDefine getHardDefine(const QString& name);
+    PDefine getHardDefine(const QString& name) {
+        return mHardDefines.value(name,PDefine());
+    }
     void invalidDefinesInFile(const QString& fileName);
 
     void parseArgs(PDefine define);
@@ -132,42 +177,99 @@ private:
     /*
      * '_','a'..'z','A'..'Z','0'..'9'
      */
-    bool isWordChar(const QChar& ch);
+    bool isWordChar(const QChar& ch) const{
+        return (ch=='_' || (ch>='0' && ch<='9')
+                || ch.isLetter()
+                );
+    }
     /*
      * 'A'..'Z', '0'..'9', 'a'..'z', '_', '*', '&', '~'
      */
-    bool isIdentChar(const QChar& ch);
+    bool isIdentChar(const QChar& ch) const {
+        return (ch=='_' || ch == '*' || ch == '&' || ch == '~' ||
+                ch.isLetter()
+                || (ch>='0' && ch<='9'));
+    }
     /*
      * '\r','\n'
      */
-    bool isLineChar(const QChar& ch);
+    bool isLineChar(const QChar& ch) const {
+        return ch=='\r' || ch == '\n';
+    }
     /*
      *  '\t' ' '
      */
-    bool isSpaceChar(const QChar& ch);
+    bool isSpaceChar(const QChar& ch) const {
+        return ch == ' ' || ch == '\t';
+    }
     /*
      * '+', '-', '*', '/', '!', '=', '<', '>', '&', '|', '^'
      */
-    bool isOperatorChar(const QChar& ch);
+    bool isOperatorChar(const QChar& ch) const {
+        switch(ch.unicode()) {
+        case '+':
+        case '-':
+        case '*':
+        case '/':
+        case '!':
+        case '=':
+        case '<':
+        case '>':
+        case '&':
+        case '|':
+        case '^':
+            return true;
+        default:
+            return false;
+        }
+    }
 
     /*
      * 'A'..'Z', 'a'..'z', '_'
      */
-    bool isMacroIdentChar(const QChar& ch);
+    bool isMacroIdentChar(const QChar& ch) const {
+        return ch.isLetter()
+                || ch == '_';
+    }
 
     /*
      * '0'..'9'
      */
-    bool isDigit(const QChar& ch);
+    bool isDigit(const QChar& ch) const {
+        return (ch>='0' && ch<='9');
+    }
 
     /*
      * '0'..'9','x',X','a'..'f','A'..'F','u','U','l','L'
      */
-    bool isNumberChar(const QChar& ch);
+    bool isNumberChar(const QChar& ch) const {
+        if (ch>='0' && ch<='9')
+            return true;
+        if (ch>='a' && ch<='f')
+            return true;
+        if (ch>='A' && ch<='F')
+            return true;
+        switch(ch.unicode()) {
+        case 'x':
+        case 'X':
+        case 'u':
+        case 'U':
+        case 'l':
+        case 'L':
+            return true;
+        default:
+            return false;
+        }
+    }
 
-    QString lineBreak();
+    QString lineBreak() const{
+        return "\n";
+    }
 
-    bool evaluateIf(const QString& line);
+    bool evaluateIf(const QString& line) {
+        QString newLine = expandDefines(line); // replace FOO by numerical value of FOO
+        return  evaluateExpression(newLine);
+    }
     QString expandDefines(QString line);
     bool skipBraces(const QString&line, int& index, int step = 1);
     QString expandFunction(PDefine define,QString args);

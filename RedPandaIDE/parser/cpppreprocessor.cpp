@@ -138,16 +138,6 @@ void CppPreprocessor::addDefineByLine(const QString &line, bool hardCoded)
     addDefineByParts(name, args, value, hardCoded);
 }
 
-PDefine CppPreprocessor::getDefine(const QString &name)
-{
-    return mDefines.value(name,PDefine());
-}
-
-PDefine CppPreprocessor::getHardDefine(const QString &name)
-{
-    return mHardDefines.value(name,PDefine());
-}
-
 void CppPreprocessor::reset()
 {
     mResult.clear();
@@ -158,14 +148,6 @@ void CppPreprocessor::reset()
     mCurrentIncludes.reset();
     mProcessed.clear();
     resetDefines(); // do not throw away hardcoded
-}
-
-void CppPreprocessor::resetDefines()
-{
-    mDefines = mHardDefines;
-//    mDefines.clear();
-
-//    mDefines.insert(mHardDefines);
 }
 
 void CppPreprocessor::setScanOptions(bool parseSystem, bool parseLocal)
@@ -302,22 +284,9 @@ QString CppPreprocessor::getNextPreprocessor()
     return result;
 }
 
-void CppPreprocessor::simplify(QString &output)
-{
-    // Remove #
-    output = output.mid(1).trimmed();
-}
-
 void CppPreprocessor::handleBranch(const QString &line)
 {
     if (line.startsWith("ifdef")) {
-//        // if a branch that is not at our level is false, current branch is false too;
-//        for (int i=0;i<=mBranchResults.count()-2;i++) {
-//            if (!mBranchResults[i]) {
-//                setCurrentBranch(false);
-//                return;
-//            }
-//        }
         if (!getCurrentBranch()) {
             setCurrentBranch(false);
         } else {
@@ -327,13 +296,6 @@ void CppPreprocessor::handleBranch(const QString &line)
 
         }
     } else if (line.startsWith("ifndef")) {
-//        // if a branch that is not at our level is false, current branch is false too;
-//        for (int i=0;i<=mBranchResults.count()-2;i++) {
-//            if (!mBranchResults[i]) {
-//                setCurrentBranch(false);
-//                return;
-//            }
-//        }
         if (!getCurrentBranch()) {
             setCurrentBranch(false);
         } else {
@@ -342,13 +304,6 @@ void CppPreprocessor::handleBranch(const QString &line)
             setCurrentBranch( getDefine(name)==nullptr );
         }
     } else if (line.startsWith("if")) {
-        //        // if a branch that is not at our level is false, current branch is false too;
-        //        for (int i=0;i<=mBranchResults.count()-2;i++) {
-        //            if (!mBranchResults[i]) {
-        //                setCurrentBranch(false);
-        //                return;
-        //            }
-        //        }
         if (!getCurrentBranch()) {// we are already inside an if that is NOT being taken
             setCurrentBranch(false);// so don't take this one either
         } else {
@@ -375,14 +330,6 @@ void CppPreprocessor::handleBranch(const QString &line)
         }
     } else if (line.startsWith("endif")) {
         removeCurrentBranch();
-    }
-}
-
-void CppPreprocessor::handleDefine(const QString &line)
-{
-    if (getCurrentBranch()) {
-        addDefineByLine(line, false);
-        mResult[mPreProcIndex] = '#' + line; // add define to result file so the parser can handle it
     }
 }
 
@@ -620,11 +567,6 @@ void CppPreprocessor::removeGCCAttribute(const QString &line, QString &newLine, 
     }
 }
 
-PParsedFile CppPreprocessor::getInclude(int index)
-{
-    return mIncludes[index];
-}
-
 void CppPreprocessor::openInclude(const QString &fileName, QStringList bufferedText)
 {
     if (mIncludes.size()>0) {
@@ -762,35 +704,6 @@ void CppPreprocessor::closeInclude()
     mResult.append(
                 QString("#include %1:%2").arg(parsedFile->fileName)
                 .arg(parsedFile->index+1));
-}
-
-bool CppPreprocessor::getCurrentBranch()
-{
-    if (!mBranchResults.isEmpty())
-        return mBranchResults.last();
-    else
-        return true;
-}
-
-void CppPreprocessor::setCurrentBranch(bool value)
-{
-    mBranchResults.append(value);
-}
-
-void CppPreprocessor::removeCurrentBranch()
-{
-    if (mBranchResults.size()>0)
-        mBranchResults.pop_back();
-}
-
-QStringList CppPreprocessor::result() const
-{
-    return mResult;
-}
-
-PFileIncludes CppPreprocessor::getFileIncludesEntry(const QString &fileName)
-{
-    return mIncludesList.value(fileName,PFileIncludes());
 }
 
 void CppPreprocessor::addDefinesInFile(const QString &fileName)
@@ -1102,103 +1015,6 @@ void CppPreprocessor::skipToPreprocessor()
             mResult.append("");
         mIndex++;
     }
-}
-
-bool CppPreprocessor::isWordChar(const QChar &ch)
-{
-    if (ch=='_'
-            // || (ch>='a' && ch<='z') || (ch>='A' && ch<='Z')
-            || ch.isLetter()
-            || (ch>='0' && ch<='9')) {
-        return true;
-    }
-    return false;
-}
-
-bool CppPreprocessor::isIdentChar(const QChar &ch)
-{
-    if (ch=='_' || ch == '*' || ch == '&' || ch == '~' ||
-            ch.isLetter()
-            //(ch>='a' && ch<='z') || (ch>='A' && ch<='Z')
-            || (ch>='0' && ch<='9')) {
-        return true;
-    }
-    return false;
-}
-
-bool CppPreprocessor::isLineChar(const QChar &ch)
-{
-    return ch=='\r' || ch == '\n';
-}
-
-bool CppPreprocessor::isSpaceChar(const QChar &ch)
-{
-    return ch == ' ' || ch == '\t';
-}
-
-bool CppPreprocessor::isOperatorChar(const QChar &ch)
-{
-
-    switch(ch.unicode()) {
-    case '+':
-    case '-':
-    case '*':
-    case '/':
-    case '!':
-    case '=':
-    case '<':
-    case '>':
-    case '&':
-    case '|':
-    case '^':
-        return true;
-    default:
-        return false;
-    }
-}
-
-bool CppPreprocessor::isMacroIdentChar(const QChar &ch)
-{
-    //return (ch>='A' && ch<='Z') || (ch>='a' && ch<='z')
-    return ch.isLetter()
-            || ch == '_';
-}
-
-bool CppPreprocessor::isDigit(const QChar &ch)
-{
-    return (ch>='0' && ch<='9');
-}
-
-bool CppPreprocessor::isNumberChar(const QChar &ch)
-{
-    if (ch>='0' && ch<='9')
-        return true;
-    if (ch>='a' && ch<='f')
-        return true;
-    if (ch>='A' && ch<='F')
-        return true;
-    switch(ch.unicode()) {
-    case 'x':
-    case 'X':
-    case 'u':
-    case 'U':
-    case 'l':
-    case 'L':
-        return true;
-    default:
-        return false;
-    }
-}
-
-QString CppPreprocessor::lineBreak()
-{
-    return "\n";
-}
-
-bool CppPreprocessor::evaluateIf(const QString &line)
-{
-    QString newLine = expandDefines(line); // replace FOO by numerical value of FOO
-    return  evaluateExpression(newLine);
 }
 
 QString CppPreprocessor::expandDefines(QString line)
@@ -1784,39 +1600,3 @@ int CppPreprocessor::evaluateExpression(QString line)
         return -1;
     return result;
 }
-
-const QList<QString> &CppPreprocessor::projectIncludePathList() const
-{
-    return mProjectIncludePathList;
-}
-
-const QList<QString> &CppPreprocessor::includePathList() const
-{
-    return mIncludePathList;
-}
-
-const DefineMap &CppPreprocessor::hardDefines() const
-{
-    return mHardDefines;
-}
-
-const QSet<QString> &CppPreprocessor::projectIncludePaths()
-{
-    return mProjectIncludePaths;
-}
-
-const QSet<QString> &CppPreprocessor::includePaths()
-{
-    return mIncludePaths;
-}
-
-QSet<QString> &CppPreprocessor::scannedFiles()
-{
-    return mScannedFiles;
-}
-
-QHash<QString, PFileIncludes> &CppPreprocessor::includesList()
-{
-    return mIncludesList;
-}
-
