@@ -151,7 +151,6 @@ struct Statement {
     StatementClassScope classScope; // protected/private/public
     bool hasDefinition; // definiton line/filename is valid
     int line; // declaration
-    int endLine;
     int definitionLine; // definition
     int definitionEndLine;
     QString fileName; // declaration
@@ -203,7 +202,6 @@ struct UsingNamespace {
     QStringList namespaces; // List['std','foo'] for using namespace std::foo;
     QString filename;
     int line;
-    int endLine;
     bool fromHeader;
 };
 using PUsingNamespace = std::shared_ptr<UsingNamespace>;

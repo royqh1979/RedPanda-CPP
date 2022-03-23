@@ -145,6 +145,28 @@ QList<PStatement> CppParser::getListOfFunctions(const QString &fileName, const Q
     return result;
 }
 
+PStatement CppParser::findAndScanBlockAt(const QString &filename, int line)
+{
+    QMutexLocker locker(&mMutex);
+    if (mParsing) {
+        return PStatement();
+    }
+    PFileIncludes fileIncludes = mPreprocessor.includesList().value(filename);
+    if (!fileIncludes)
+        return PStatement();
+
+    PStatement statement = fileIncludes->scopes.findScopeAtLine(line);
+    return statement;
+}
+
+PFileIncludes CppParser::findFileIncludes(const QString &filename, bool deleteIt)
+{
+    QMutexLocker locker(&mMutex);
+    PFileIncludes fileIncludes = mPreprocessor.includesList().value(filename,PFileIncludes());
+    if (deleteIt && fileIncludes)
+        mPreprocessor.includesList().remove(filename);
+    return fileIncludes;
+}
 QString CppParser::findFirstTemplateParamOf(const QString &fileName, const QString &phrase, const PStatement& currentScope)
 {
     QMutexLocker locker(&mMutex);
@@ -3380,6 +3402,16 @@ PStatement CppParser::findStatementInScope(const QString &name, const QString &n
     return PStatement();
 }
 
+PStatement CppParser::findStatementInScope(const QString &name, const PStatement &scope)
+{
+    if (!scope)
+        return findMemberOfStatement(name,scope);
+    if (scope->kind == StatementKind::skNamespace) {
+        return findStatementInNamespace(name, scope->fullName);
+    } else {
+        return findMemberOfStatement(name,scope);
+    }
+}
 
 PStatement CppParser::findStatementInNamespace(const QString &name, const QString &namespaceName)
 {

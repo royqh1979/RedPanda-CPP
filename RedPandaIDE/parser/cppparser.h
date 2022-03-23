@@ -44,25 +44,8 @@ public:
     QList<PStatement> getListOfFunctions(const QString& fileName,
                              const QString& phrase,
                              int line);
-    PStatement findAndScanBlockAt(const QString& filename, int line) {
-        QMutexLocker locker(&mMutex);
-        if (mParsing) {
-            return PStatement();
-        }
-        PFileIncludes fileIncludes = mPreprocessor.includesList().value(filename);
-        if (!fileIncludes)
-            return PStatement();
-
-        PStatement statement = fileIncludes->scopes.findScopeAtLine(line);
-        return statement;
-    }
-    PFileIncludes findFileIncludes(const QString &filename, bool deleteIt = false) {
-        QMutexLocker locker(&mMutex);
-        PFileIncludes fileIncludes = mPreprocessor.includesList().value(filename,PFileIncludes());
-        if (deleteIt && fileIncludes)
-            mPreprocessor.includesList().remove(filename);
-        return fileIncludes;
-    }
+    PStatement findAndScanBlockAt(const QString& filename, int line);
+    PFileIncludes findFileIncludes(const QString &filename, bool deleteIt = false);
     QString findFirstTemplateParamOf(const QString& fileName,
                                      const QString& phrase,
                                      const PStatement& currentScope);
@@ -237,15 +220,7 @@ private:
             const PStatement& scope);
     PStatement findStatementInScope(
             const QString& name,
-            const PStatement& scope) {
-        if (!scope)
-            return findMemberOfStatement(name,scope);
-        if (scope->kind == StatementKind::skNamespace) {
-            return findStatementInNamespace(name, scope->fullName);
-        } else {
-            return findMemberOfStatement(name,scope);
-        }
-    }
+            const PStatement& scope);
     PStatement findStatementInNamespace(
             const QString& name,
             const QString& namespaceName);
@@ -254,7 +229,6 @@ private:
     PStatement findStatementStartingFrom(const QString& fileName,
                                          const QString& phrase,
                                          const PStatement& startScope);
-
 
     /**
      * @brief evaluate the expression (starting from pos) in the scope
