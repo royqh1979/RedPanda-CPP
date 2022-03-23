@@ -105,8 +105,7 @@ void StatementModel::dumpAll(const QString &logFile)
              .arg(statement->fileName)
              .arg(statement->line)
              .arg(statement->definitionFileName)
-             .arg(statement->definitionLine)
-             .arg(statement->definitionEndLine)<<endl;
+             .arg(statement->definitionLine)<<endl;
         }
     }
 }
@@ -144,8 +143,7 @@ void StatementModel::dumpStatementMap(StatementMap &map, QTextStream &out, int l
          .arg(statement->fileName)
          .arg(statement->line)
          .arg(statement->definitionFileName)
-         .arg(statement->definitionLine)
-         .arg(statement->definitionEndLine)<<endl;
+         .arg(statement->definitionLine);
         if (statement->children.isEmpty())
             continue;
         out<<indent<<statement->command<<" {"<<endl;

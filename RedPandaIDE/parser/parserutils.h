@@ -140,7 +140,6 @@ using PStatementList = std::shared_ptr<StatementList>;
 using StatementMap = QMultiMap<QString, PStatement>;
 struct Statement {
     std::weak_ptr<Statement> parentScope; // parent class/struct/namespace scope, don't use auto pointer to prevent circular reference
-    QString hintText; // text to force display when using PrettyPrintStatement
     QString type; // type "int"
     QString command; // identifier/name of statement "foo"
     QString args; // args "(int a,float b)"
@@ -152,7 +151,6 @@ struct Statement {
     bool hasDefinition; // definiton line/filename is valid
     int line; // declaration
     int definitionLine; // definition
-    int definitionEndLine;
     QString fileName; // declaration
     QString definitionFileName; // definition
     bool inProject; // statement in project
