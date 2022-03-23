@@ -44,8 +44,25 @@ public:
     QList<PStatement> getListOfFunctions(const QString& fileName,
                              const QString& phrase,
                              int line);
-    PStatement findAndScanBlockAt(const QString& filename, int line);
-    PFileIncludes findFileIncludes(const QString &filename, bool deleteIt = false);
+    PStatement findAndScanBlockAt(const QString& filename, int line) {
+        QMutexLocker locker(&mMutex);
+        if (mParsing) {
+            return PStatement();
+        }
+        PFileIncludes fileIncludes = mPreprocessor.includesList().value(filename);
+        if (!fileIncludes)
+            return PStatement();
+
+        PStatement statement = fileIncludes->scopes.findScopeAtLine(line);
+        return statement;
+    }
+    PFileIncludes findFileIncludes(const QString &filename, bool deleteIt = false) {
+        QMutexLocker locker(&mMutex);
+        PFileIncludes fileIncludes = mPreprocessor.includesList().value(filename,PFileIncludes());
+        if (deleteIt && fileIncludes)
+            mPreprocessor.includesList().remove(filename);
+        return fileIncludes;
+    }
     QString findFirstTemplateParamOf(const QString& fileName,
                                      const QString& phrase,
                                      const PStatement& currentScope);
@@ -152,7 +169,6 @@ private:
             // support for multiple parents (only typedef struct/union use multiple parents)
             const PStatement& parent,
             const QString& fileName,
-            const QString& hintText,
             const QString& aType, // "Type" is already in use
             const QString& command,
             const QString& args,
@@ -166,7 +182,6 @@ private:
     PStatement addStatement(
             const PStatement& parent,
             const QString &fileName,
-            const QString &hintText,
             const QString &aType, // "Type" is already in use
             const QString &command,
             const QString &args,
@@ -222,7 +237,15 @@ private:
             const PStatement& scope);
     PStatement findStatementInScope(
             const QString& name,
-            const PStatement& scope);
+            const PStatement& scope) {
+        if (!scope)
+            return findMemberOfStatement(name,scope);
+        if (scope->kind == StatementKind::skNamespace) {
+            return findStatementInNamespace(name, scope->fullName);
+        } else {
+            return findMemberOfStatement(name,scope);
+        }
+    }
     PStatement findStatementInNamespace(
             const QString& name,
             const QString& namespaceName);
@@ -302,11 +325,35 @@ private:
     PEvalStatement doCreateEvalFunction(const QString& fileName, PStatement funcStatement);
     PEvalStatement doCreateEvalLiteral(const QString& type);
     void  doSkipInExpression(const QStringList& expression, int&pos, const QString& startSymbol, const QString& endSymbol);
-    bool isIdentifier(const QString& token) const;
-    bool isIntegerLiteral(const QString& token) const;
-    bool isFloatLiteral(const QString& token) const;
-    bool isStringLiteral(const QString& token) const;
-    bool isCharLiteral(const QString& token) const;
+
+    bool isIdentifier(const QString& token) const {
+        return (!token.isEmpty() && isLetterChar(token.front())
+                && !token.contains('\"'));
+    }
+
+    bool isIntegerLiteral(const QString& token) const {
+        if (token.isEmpty())
+            return false;
+        QChar ch = token.front();
+        return (ch>='0' && ch<='9' && !token.contains(".") && !token.contains("e"));
+    }
+    bool isFloatLiteral(const QString& token) const {
+        if (token.isEmpty())
+            return false;
+        QChar ch = token.front();
+        return (ch>='0' && ch<='9' && (token.contains(".") || token.contains("e")));
+    }
+    bool isStringLiteral(const QString& token) const {
+        if (token.isEmpty())
+            return false;
+        return (!token.startsWith('\'') && token.contains('"'));
+    }
+
+    bool isCharLiteral(const QString& token) const{
+        if (token.isEmpty())
+            return false;
+        return (token.startsWith('\''));
+    }
     PStatement doParseEvalTypeInfo(
             const QString& fileName,
             const PStatement& scope,
@@ -388,27 +435,82 @@ private:
 
     QString removeArgNames(const QString& args);
 
-    bool isSpaceChar(const QChar& ch) const;
+    bool isSpaceChar(const QChar& ch) const {
+        return ch==' ' || ch =='\t';
+    }
 
-    bool isWordChar(const QChar& ch) const;
+    bool isWordChar(const QChar& ch) const {
+        return ch.isLetter()
+                || ch == '_'
+                || ch == '*'
+                || ch == '&';
+    }
 
-    bool isLetterChar(const QChar& ch) const;
+    bool isLetterChar(const QChar& ch) const {
+        return ch.isLetter()
+                || ch == '_';
+    }
 
-    bool isDigitChar(const QChar& ch) const;
+    bool isDigitChar(const QChar& ch) const {
+        return (ch>='0' && ch<='9');
+    }
 
     /*'(', ';', ':', '{', '}', '#' */
-    bool isSeperator(const QChar& ch) const;
+    bool isSeperator(const QChar& ch) const {
+        switch(ch.unicode()){
+        case '(':
+        case ';':
+        case ':':
+        case '{':
+        case '}':
+        case '#':
+            return true;
+        default:
+            return false;
+        }
+    }
 
     /*';', '{', '}'*/
-    bool isblockChar(const QChar& ch) const;
+    bool isblockChar(const QChar& ch) const {
+        switch(ch.unicode()){
+        case ';':
+        case '{':
+        case '}':
+            return true;
+        default:
+            return false;
+        }
+    }
 
     /* '#', ',', ';', ':', '{', '}', '!', '/', '+', '-', '<', '>' */
-    bool isInvalidVarPrefixChar(const QChar& ch) const;
+    bool isInvalidVarPrefixChar(const QChar& ch) const {
+        switch (ch.unicode()) {
+        case '#':
+        case ',':
+        case ';':
+        case ':':
+        case '{':
+        case '}':
+        case '!':
+        case '/':
+        case '+':
+        case '-':
+        case '<':
+        case '>':
+            return true;
+        default:
+            return false;
+        }
+    }
 
     /*'{', '}' */
-    bool isBraceChar(const QChar& ch) const;
+    bool isBraceChar(const QChar& ch) const {
+        return ch == '{' || ch =='}';
+    }
 
-    bool isLineChar(const QChar& ch) const;
+    bool isLineChar(const QChar& ch) const {
+        return ch=='\n' || ch=='\r';
+    }
 
     bool isNotFuncArgs(const QString& args);
 

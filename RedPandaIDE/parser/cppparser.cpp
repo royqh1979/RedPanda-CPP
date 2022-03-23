@@ -145,29 +145,6 @@ QList<PStatement> CppParser::getListOfFunctions(const QString &fileName, const Q
     return result;
 }
 
-PStatement CppParser::findAndScanBlockAt(const QString &filename, int line)
-{
-    QMutexLocker locker(&mMutex);
-    if (mParsing) {
-        return PStatement();
-    }
-    PFileIncludes fileIncludes = mPreprocessor.includesList().value(filename);
-    if (!fileIncludes)
-        return PStatement();
-
-    PStatement statement = fileIncludes->scopes.findScopeAtLine(line);
-    return statement;
-}
-
-PFileIncludes CppParser::findFileIncludes(const QString &filename, bool deleteIt)
-{
-    QMutexLocker locker(&mMutex);
-    PFileIncludes fileIncludes = mPreprocessor.includesList().value(filename,PFileIncludes());
-    if (deleteIt && fileIncludes)
-        mPreprocessor.includesList().remove(filename);
-    return fileIncludes;
-}
-
 QString CppParser::findFirstTemplateParamOf(const QString &fileName, const QString &phrase, const PStatement& currentScope)
 {
     QMutexLocker locker(&mMutex);
@@ -862,17 +839,9 @@ void CppParser::parseHardDefines()
             mIsSystemHeader=oldIsSystemHeader;
         });
         for (const PDefine& define:mPreprocessor.hardDefines()) {
-            QString hintText = "#define";
-            if (define->name != "")
-                hintText += ' ' + define->name;
-            if (define->args != "")
-                hintText += ' ' + define->args;
-            if (define->value != "")
-                hintText += ' ' + define->value;
             addStatement(
               PStatement(), // defines don't belong to any scope
               "",
-              hintText, // override hint
               "", // define has no type
               define->name,
               define->value,
@@ -973,51 +942,73 @@ QString CppParser::getScopePrefix(const PStatement& statement){
 QString CppParser::prettyPrintStatement(const PStatement& statement, const QString& filename, int line)
 {
     QString result;
-    if (!statement->hintText.isEmpty()) {
-      if (statement->kind != StatementKind::skPreprocessor)
-          result = statement->hintText;
-      else if (statement->command == "__FILE__")
-          result = '"'+filename+'"';
-      else if (statement->command == "__LINE__")
-          result = QString("\"%1\"").arg(line);
-      else if (statement->command == "__DATE__")
-          result = QString("\"%1\"").arg(QDate::currentDate().toString(Qt::ISODate));
-      else if (statement->command == "__TIME__")
-          result = QString("\"%1\"").arg(QTime::currentTime().toString(Qt::ISODate));
-      else
-          result = statement->hintText;
-    } else {
-        switch(statement->kind) {
-        case StatementKind::skFunction:
-        case StatementKind::skVariable:
-        case StatementKind::skParameter:
-        case StatementKind::skClass:
-            if (statement->scope!= StatementScope::ssLocal)
-                result = getScopePrefix(statement)+ ' '; // public
-            result += statement->type + ' '; // void
-            result += statement->fullName; // A::B::C::Bar
-            result += statement->args; // (int a)
-            break;
-        case StatementKind::skNamespace:
-            result = statement->fullName; // Bar
-            break;
-        case StatementKind::skConstructor:
-            result = getScopePrefix(statement); // public
-            result += QObject::tr("constructor") + ' '; // constructor
-            result += statement->type + ' '; // void
-            result += statement->fullName; // A::B::C::Bar
-            result += statement->args; // (int a)
-            break;
-        case StatementKind::skDestructor:
-            result = getScopePrefix(statement); // public
-            result += QObject::tr("destructor") + ' '; // constructor
-            result += statement->type + ' '; // void
-            result += statement->fullName; // A::B::C::Bar
-            result += statement->args; // (int a)
-            break;
-        default:
-            break;
+    switch(statement->kind) {
+    case StatementKind::skPreprocessor:
+        if (statement->command == "__FILE__")
+            result = '"'+filename+'"';
+        else if (statement->command == "__LINE__")
+            result = QString("\"%1\"").arg(line);
+        else if (statement->command == "__DATE__")
+            result = QString("\"%1\"").arg(QDate::currentDate().toString(Qt::ISODate));
+        else if (statement->command == "__TIME__")
+            result = QString("\"%1\"").arg(QTime::currentTime().toString(Qt::ISODate));
+        else {
+            QString hintText = "#define";
+            if (statement->command != "")
+                hintText += ' ' + statement->command;
+            if (statement->args != "")
+                hintText += ' ' + statement->args;
+            if (statement->value != "")
+                hintText += ' ' + statement->value;
+            result = hintText;
         }
+        break;
+    case StatementKind::skEnumClassType:
+        result = "enum class "+statement->command;
+        break;
+    case StatementKind::skEnumType:
+        result = "enum "+statement->command;
+        break;
+    case StatementKind::skEnum:
+        result = statement->type + "::" + statement->command;
+        break;
+    case StatementKind::skTypedef:
+        result = "typedef "+statement->type+" "+statement->command;
+        if (!statement->args.isEmpty())
+            result += " "+statement->args;
+        break;
+    case StatementKind::skAlias:
+        result = "using "+statement->type;
+        break;
+    case StatementKind::skFunction:
+    case StatementKind::skVariable:
+    case StatementKind::skParameter:
+    case StatementKind::skClass:
+        if (statement->scope!= StatementScope::ssLocal)
+            result = getScopePrefix(statement)+ ' '; // public
+        result += statement->type + ' '; // void
+        result += statement->fullName; // A::B::C::Bar
+        result += statement->args; // (int a)
+        break;
+    case StatementKind::skNamespace:
+        result = statement->fullName; // Bar
+        break;
+    case StatementKind::skConstructor:
+        result = getScopePrefix(statement); // public
+        result += QObject::tr("constructor") + ' '; // constructor
+        result += statement->type + ' '; // void
+        result += statement->fullName; // A::B::C::Bar
+        result += statement->args; // (int a)
+        break;
+    case StatementKind::skDestructor:
+        result = getScopePrefix(statement); // public
+        result += QObject::tr("destructor") + ' '; // constructor
+        result += statement->type + ' '; // void
+        result += statement->fullName; // A::B::C::Bar
+        result += statement->args; // (int a)
+        break;
+    default:
+        break;
     }
     return result;
 }
@@ -1081,7 +1072,6 @@ PStatement CppParser::addInheritedStatement(const PStatement& derived, const PSt
     PStatement statement = addStatement(
       derived,
       inherit->fileName,
-      inherit->hintText,
       inherit->type, // "Type" is already in use
       inherit->command,
       inherit->args,
@@ -1098,7 +1088,7 @@ PStatement CppParser::addInheritedStatement(const PStatement& derived, const PSt
 }
 
 PStatement CppParser::addChildStatement(const PStatement& parent, const QString &fileName,
-                                        const QString &hintText, const QString &aType,
+                                        const QString &aType,
                                         const QString &command, const QString &args,
                                         const QString &value, int line, StatementKind kind,
                                         const StatementScope& scope, const StatementClassScope& classScope,
@@ -1107,7 +1097,6 @@ PStatement CppParser::addChildStatement(const PStatement& parent, const QString 
     return addStatement(
                 parent,
                 fileName,
-                hintText,
                 aType,
                 command,
                 args,
@@ -1122,7 +1111,6 @@ PStatement CppParser::addChildStatement(const PStatement& parent, const QString 
 
 PStatement CppParser::addStatement(const PStatement& parent,
                                    const QString &fileName,
-                                   const QString &hintText,
                                    const QString &aType,
                                    const QString &command,
                                    const QString &args,
@@ -1168,7 +1156,6 @@ PStatement CppParser::addStatement(const PStatement& parent,
     }
     PStatement result = std::make_shared<Statement>();
     result->parentScope = parent;
-    result->hintText = hintText;
     result->type = newType;
     if (!newCommand.isEmpty())
         result->command = newCommand;
@@ -1872,7 +1859,6 @@ void CppParser::handleCatchBlock()
     PStatement block = addStatement(
       getCurrentScope(),
       mCurrentFile,
-      "", // override hint
       "",
       "",
       "",
@@ -1939,7 +1925,6 @@ void CppParser::handleEnum()
             enumStatement=addStatement(
                         getCurrentScope(),
                         mCurrentFile,
-                        "enum class "+enumName,
                         "enum class",
                         enumName,
                         "",
@@ -1954,7 +1939,6 @@ void CppParser::handleEnum()
             enumStatement=addStatement(
                         getCurrentScope(),
                         mCurrentFile,
-                        "enum "+enumName,
                         "enum",
                         enumName,
                         "",
@@ -1996,7 +1980,6 @@ void CppParser::handleEnum()
                         addStatement(
                           enumStatement,
                           mCurrentFile,
-                          lastType + "::" + mTokenizer[mIndex]->text, // override hint
                           lastType,
                           cmd,
                           args,
@@ -2013,7 +1996,6 @@ void CppParser::handleEnum()
                         addStatement(
                           enumStatement,
                           mCurrentFile,
-                          lastType + "::" + mTokenizer[mIndex]->text, // override hint
                           lastType,
                           cmd,
                           args,
@@ -2028,7 +2010,6 @@ void CppParser::handleEnum()
                     addStatement(
                       getCurrentScope(),
                       mCurrentFile,
-                      lastType + "::" + mTokenizer[mIndex]->text, // override hint
                       lastType,
                       cmd,
                       args,
@@ -2080,7 +2061,6 @@ void CppParser::handleForBlock()
     PStatement block = addStatement(
                 getCurrentScope(),
                 mCurrentFile,
-                "", // override hint
                 "",
                 "",
                 "",
@@ -2212,7 +2192,6 @@ void CppParser::handleMethod(const QString &sType, const QString &sName, const Q
             functionStatement=addStatement(
                         functionClass,
                         mCurrentFile,
-                        "", // do not override hint
                         sType,
                         scopelessName,
                         sArgs,
@@ -2232,7 +2211,6 @@ void CppParser::handleMethod(const QString &sType, const QString &sName, const Q
                 addStatement(
                             functionStatement,
                             mCurrentFile,
-                            "", // do not override hint
                             functionClass->command,
                             "this",
                             "",
@@ -2248,7 +2226,6 @@ void CppParser::handleMethod(const QString &sType, const QString &sName, const Q
             addStatement(
                         functionStatement,
                         mCurrentFile,
-                        "", //dont override hint
                         "static const char ",
                         "__func__",
                         "[]",
@@ -2263,7 +2240,6 @@ void CppParser::handleMethod(const QString &sType, const QString &sName, const Q
             functionStatement = addStatement(
                         functionClass,
                         mCurrentFile,
-                        "", // do not override hint
                         sType,
                         scopelessName,
                         sArgs,
@@ -2334,7 +2310,6 @@ void CppParser::handleNamespace()
         addStatement(
             getCurrentScope(),
             mCurrentFile,
-            "", // do not override hint
             aliasName, // name of the alias namespace
             command, // command
             "", // args
@@ -2364,7 +2339,6 @@ void CppParser::handleNamespace()
         PStatement namespaceStatement = addStatement(
             getCurrentScope(),
             mCurrentFile,
-            "", // do not override hint
             "", // type
             command, // command
             "", // args
@@ -2412,7 +2386,6 @@ void CppParser::handleOtherTypedefs()
         addStatement(
                     getCurrentScope(),
                     mCurrentFile,
-                    "typedef " + newType, // override hint
                     "",
                     newType,
                     "",
@@ -2464,8 +2437,6 @@ void CppParser::handleOtherTypedefs()
                 addStatement(
                         getCurrentScope(),
                         mCurrentFile,
-                        "typedef " + oldType + " " + mTokenizer[mIndex]->text + " " +
-                                mTokenizer[mIndex + 1]->text, // do not override hint
                         oldType,
                         newType,
                         mTokenizer[mIndex + 1]->text,
@@ -2487,7 +2458,6 @@ void CppParser::handleOtherTypedefs()
                 addStatement(
                             getCurrentScope(),
                             mCurrentFile,
-                            "typedef " + oldType + " " + newType, // override hint
                             oldType,
                             newType,
                             "",
@@ -2547,19 +2517,9 @@ void CppParser::handlePreprocessor()
       QString name,args,value;
       mPreprocessor.getDefineParts(s,name,args,value);
 
-      // Generate custom hint
-      QString hintText = "#define";
-      if (!name.isEmpty())
-          hintText += ' ' + name;
-      if (!args.isEmpty())
-          hintText += ' ' + args;
-      if (!value.isEmpty())
-          hintText += ' ' + value;
-
       addStatement(
         nullptr, // defines don't belong to any scope
         mCurrentFile,
-        hintText, // override hint
         "", // define has no type
         name,
         args,
@@ -2621,7 +2581,6 @@ bool CppParser::handleStatement()
         PStatement block = addStatement(
             getCurrentScope(),
             mCurrentFile,
-            "", // override hint
             "",
             "",
             "",
@@ -2722,7 +2681,6 @@ void CppParser::handleStructs(bool isTypedef)
                     addStatement(
                                 getCurrentScope(),
                                 mCurrentFile,
-                                "typedef " + prefix + " " + oldType + ' ' + newType, // override hint
                                 oldType,
                                 newType,
                                 "",
@@ -2769,7 +2727,6 @@ void CppParser::handleStructs(bool isTypedef)
                         firstSynonym = addStatement(
                                     getCurrentScope(),
                                     mCurrentFile,
-                                    "", // do not override hint
                                     prefix, // type
                                     command, // command
                                     "", // args
@@ -2792,7 +2749,6 @@ void CppParser::handleStructs(bool isTypedef)
                         firstSynonym = addStatement(
                                     getCurrentScope(),
                                     mCurrentFile,
-                                    "", // do not override hint
                                     prefix, // type
                                     command, // command
                                     "", // args
@@ -2875,7 +2831,6 @@ void CppParser::handleStructs(bool isTypedef)
                                 firstSynonym = addStatement(
                                             getCurrentScope(),
                                             mCurrentFile,
-                                            "", // do not override hint
                                             prefix,
                                             "__"+command,
                                             "",
@@ -2892,7 +2847,6 @@ void CppParser::handleStructs(bool isTypedef)
                                 addStatement(
                                   getCurrentScope(),
                                   mCurrentFile,
-                                  "typedef " + firstSynonym->command + ' ' + command, // override hint
                                   firstSynonym->command,
                                   command,
                                   "",
@@ -2908,7 +2862,6 @@ void CppParser::handleStructs(bool isTypedef)
                                 addStatement(
                                   getCurrentScope(),
                                   mCurrentFile,
-                                  "", // do not override hint
                                   firstSynonym->command,
                                   command,
                                   args,
@@ -2939,7 +2892,6 @@ void CppParser::handleStructs(bool isTypedef)
             firstSynonym=addStatement(
                       getCurrentScope(),
                       mCurrentFile,
-                      "", // override hint
                       "",
                       "",
                       "",
@@ -2986,7 +2938,6 @@ void CppParser::handleUsing()
         addStatement(
                     getCurrentScope(),
                     mCurrentFile,
-                    "using "+fullName+" = " + aliasName, //hint text
                     aliasName, // name of the alias (type)
                     fullName, // command
                     "", // args
@@ -3011,7 +2962,6 @@ void CppParser::handleUsing()
             addStatement(
                         getCurrentScope(),
                         mCurrentFile,
-                        "using "+fullName, //hint text
                         fullName, // name of the alias (type)
                         usingName, // command
                         "", // args
@@ -3177,7 +3127,6 @@ void CppParser::handleVar()
                     addChildStatement(
                       getCurrentScope(),
                       mCurrentFile,
-                      "", // do not override hint
                       lastType,
                       cmd,
                       args,
@@ -3431,16 +3380,6 @@ PStatement CppParser::findStatementInScope(const QString &name, const QString &n
     return PStatement();
 }
 
-PStatement CppParser::findStatementInScope(const QString &name, const PStatement& scope)
-{
-    if (!scope)
-        return findMemberOfStatement(name,scope);
-    if (scope->kind == StatementKind::skNamespace) {
-        return findStatementInNamespace(name, scope->fullName);
-    } else {
-        return findMemberOfStatement(name,scope);
-    }
-}
 
 PStatement CppParser::findStatementInNamespace(const QString &name, const QString &namespaceName)
 {
@@ -4130,42 +4069,6 @@ void CppParser::doSkipInExpression(const QStringList &expression, int &pos, cons
     }
 }
 
-bool CppParser::isIdentifier(const QString &token) const
-{
-    return (!token.isEmpty() && isLetterChar(token.front())
-            && !token.contains('\"'));
-}
-
-bool CppParser::isIntegerLiteral(const QString &token) const
-{
-    if (token.isEmpty())
-        return false;
-    QChar ch = token.front();
-    return (ch>='0' && ch<='9' && !token.contains(".") && !token.contains("e"));
-}
-
-bool CppParser::isFloatLiteral(const QString &token) const
-{
-    if (token.isEmpty())
-        return false;
-    QChar ch = token.front();
-    return (ch>='0' && ch<='9' && (token.contains(".") || token.contains("e")));
-}
-
-bool CppParser::isStringLiteral(const QString &token) const
-{
-    if (token.isEmpty())
-        return false;
-    return (!token.startsWith('\'') && token.contains('"'));
-}
-
-bool CppParser::isCharLiteral(const QString &token) const
-{
-    if (token.isEmpty())
-        return false;
-    return (token.startsWith('\''));
-}
-
 PStatement CppParser::doParseEvalTypeInfo(
         const QString &fileName,
         const PStatement &scope,
@@ -4409,7 +4312,6 @@ void CppParser::scanMethodArgs(const PStatement& functionStatement, const QStrin
                 addStatement(
                             functionStatement,
                             mCurrentFile,
-                            "", // do not override hint
                             s.mid(0,varStartPos), // 'int*'
                             s.mid(varStartPos,varEndPos-varStartPos+1), // a
                             args,
@@ -4575,91 +4477,6 @@ QString CppParser::removeArgNames(const QString &args)
     }
     result += currentArg.trimmed();
     return result;
-}
-
-bool CppParser::isSpaceChar(const QChar &ch) const
-{
-    return ch==' ' || ch =='\t';
-}
-
-bool CppParser::isWordChar(const QChar &ch) const
-{
-//    return (ch>= 'A' && ch<='Z')
-//            || (ch>='a' && ch<='z')
-    return ch.isLetter()
-            || ch == '_'
-            || ch == '*'
-            || ch == '&';
-}
-
-bool CppParser::isLetterChar(const QChar &ch) const
-{
-//    return (ch>= 'A' && ch<='Z')
-//            || (ch>='a' && ch<='z')
-    return ch.isLetter()
-            || ch == '_';
-}
-
-bool CppParser::isDigitChar(const QChar &ch) const
-{
-    return (ch>='0' && ch<='9');
-}
-
-bool CppParser::isSeperator(const QChar &ch) const  {
-    switch(ch.unicode()){
-    case '(':
-    case ';':
-    case ':':
-    case '{':
-    case '}':
-    case '#':
-        return true;
-    default:
-        return false;
-    }
-}
-
-bool CppParser::isblockChar(const QChar &ch) const
-{
-    switch(ch.unicode()){
-    case ';':
-    case '{':
-    case '}':
-        return true;
-    default:
-        return false;
-    }
-}
-
-bool CppParser::isInvalidVarPrefixChar(const QChar &ch) const
-{
-    switch (ch.unicode()) {
-    case '#':
-    case ',':
-    case ';':
-    case ':':
-    case '{':
-    case '}':
-    case '!':
-    case '/':
-    case '+':
-    case '-':
-    case '<':
-    case '>':
-        return true;
-    default:
-        return false;
-    }
-}
-
-bool CppParser::isBraceChar(const QChar &ch) const
-{
-    return ch == '{' || ch =='}';
-}
-
-bool CppParser::isLineChar(const QChar &ch) const
-{
-    return ch=='\n' || ch=='\r';
 }
 
 bool CppParser::isNotFuncArgs(const QString &args)
