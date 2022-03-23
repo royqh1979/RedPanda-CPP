@@ -14,6 +14,7 @@ Red Panda C++ Version 1.0.1
   - enhancement: auto restore mainwindow when open files in one instance
   - fix: the problem & problem set panel can't be correctly , if problem set is enabled
   - fix: disable code completion doesn't correctly disable project parser
+  - enhancement: slightly reduce memory usage for code parser
 
 Red Panda C++ Version 1.0.0
   - fix: calculation for code snippets's tab stop positions is not correct
