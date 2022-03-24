@@ -44,6 +44,10 @@ private:
     // QWidget interface
 protected:
     void focusInEvent(QFocusEvent *event) override;
+
+    // QWidget interface
+protected:
+    void mouseDoubleClickEvent(QMouseEvent *event) override;
 };
 
 

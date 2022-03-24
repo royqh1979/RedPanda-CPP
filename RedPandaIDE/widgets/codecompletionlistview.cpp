@@ -33,6 +33,7 @@ void CodeCompletionListView::keyPressEvent(QKeyEvent *event)
             || event->key() == Qt::Key_PageUp
             || event->key() == Qt::Key_Home
             || event->key() == Qt::Key_End
+            || event->key() == Qt::Key_CapsLock
             ) {
         QListView::keyPressEvent(event);
         return;
@@ -48,6 +49,13 @@ void CodeCompletionListView::focusInEvent(QFocusEvent *)
     if (editor) {
         editor->showCaret();
     }
+}
+
+void CodeCompletionListView::mouseDoubleClickEvent(QMouseEvent *event)
+{
+    QKeyEvent keyEvent(QKeyEvent::Type::KeyPress,Qt::Key_Tab,Qt::KeyboardModifier::NoModifier,
+                    "\t");
+    keyPressEvent(&keyEvent);
 }
 
 const KeyPressedCallback &CodeCompletionListView::keypressedCallback() const

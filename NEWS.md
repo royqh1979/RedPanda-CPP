@@ -15,6 +15,8 @@ Red Panda C++ Version 1.0.1
   - fix: the problem & problem set panel can't be correctly , if problem set is enabled
   - fix: disable code completion doesn't correctly disable project parser
   - enhancement: slightly reduce memory usage for code parser
+  - enhancement: switch capslock won't cancel code completion
+  - enhancement: double click on item in code completion list will use it to complete
 
 Red Panda C++ Version 1.0.0
   - fix: calculation for code snippets's tab stop positions is not correct
