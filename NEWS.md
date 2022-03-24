@@ -17,6 +17,7 @@ Red Panda C++ Version 1.0.1
   - enhancement: slightly reduce memory usage for code parser
   - enhancement: switch capslock won't cancel code completion
   - enhancement: double click on item in code completion list will use it to complete
+  - fix: goto declaration by ctrl+click will incorrectly select contents
 
 Red Panda C++ Version 1.0.0
   - fix: calculation for code snippets's tab stop positions is not correct

@@ -1824,6 +1824,9 @@ void SynEdit::doMouseScroll(bool isDragging)
         mDropped=false;
         return;
     }
+    Qt::MouseButtons buttons = qApp->mouseButtons();
+    if (!buttons.testFlag(Qt::LeftButton))
+        return;
     QPoint iMousePos;
     DisplayCoord C;
     int X, Y;
@@ -2532,9 +2535,6 @@ void SynEdit::computeScroll(bool isDragging)
     int X=iMousePos.x();
     int Y=iMousePos.y();
 
-    Qt::MouseButtons buttons = qApp->mouseButtons();
-    if (!buttons.testFlag(Qt::LeftButton))
-        return;
     QRect iScrollBounds; // relative to the client area
     int dispX=2,dispY = 2;
 //    if (isDragging) {
