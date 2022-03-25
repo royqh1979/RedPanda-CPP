@@ -1058,12 +1058,6 @@ void SynEditTextPainter::PaintLines()
             PaintEditAreas(areaList);
         }
 
-        if (nLineSelStart!=0 && nLineSelEnd!=0
-                 && nLineSelStart == nLineSelEnd) {
-            painter->setPen(edit->selectedBackground());
-            int x =ColumnToXValue(nLineSelStart);
-            painter->drawLine(x,rcLine.top(),x,rcLine.bottom()+1);
-        }
         // Now paint the right edge if necessary. We do it line by line to reduce
         // the flicker. Should not cost very much anyway, compared to the many
         // calls to ExtTextOut.

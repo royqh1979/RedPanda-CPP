@@ -1039,7 +1039,8 @@ bool SynEdit::selAvail() const
 
 bool SynEdit::colSelAvail() const
 {
-    return (mActiveSelectionMode == SynSelectionMode::smColumn && mBlockBegin.Line!=mBlockEnd.Line);
+    return (mActiveSelectionMode == SynSelectionMode::smColumn
+            && (mBlockBegin.Line!=mBlockEnd.Line || mBlockBegin.Char!=mBlockEnd.Char));
 }
 
 QString SynEdit::wordAtCursor()
@@ -1891,6 +1892,20 @@ void SynEdit::doDeleteLastChar()
         doOnPaintTransientEx(SynTransientType::ttAfter, true);
     });
 
+    if (mActiveSelectionMode==SynSelectionMode::smColumn) {
+        BufferCoord start=blockBegin();
+        BufferCoord end=blockEnd();
+        if (!selAvail()) {
+            start.Char--;
+            setBlockBegin(start);
+            setBlockEnd(end);
+        }
+        setSelectedTextEmpty();
+        end.Char = start.Char;
+        setBlockBegin(start);
+        setBlockEnd(end);
+        return;
+    }
     if (selAvail()) {
         setSelectedTextEmpty();
         return;
@@ -2005,38 +2020,53 @@ void SynEdit::doDeleteCurrentChar()
     BufferCoord Caret;
     if (!mReadOnly) {
         doOnPaintTransient(SynTransientType::ttBefore);
-        if (selAvail())
-            setSelectedTextEmpty();
-        else {
-            // Call UpdateLastCaretX. Even though the caret doesn't move, the
-            // current caret position should "stick" whenever text is modified.
-            updateLastCaretX();
-            QString Temp = lineText();
-            int Len = Temp.length();
-            if (mCaretX <= Len) {
-                // delete char
-                helper = Temp.mid(mCaretX-1, 1);
-                Caret.Char = mCaretX + 1;
-                Caret.Line = mCaretY;
-                Temp.remove(mCaretX-1, 1);
-                properSetLine(mCaretY - 1, Temp);
-            } else {
-                // join line with the line after
-                if (mCaretY < mLines->count()) {
-                      properSetLine(mCaretY - 1, Temp + mLines->getString(mCaretY));
-                      Caret.Char = 1;
-                      Caret.Line = mCaretY + 1;
-                      helper = lineBreak();
-                      mLines->deleteAt(mCaretY);
-                      if (mCaretX==1)
-                          doLinesDeleted(mCaretY, 1);
-                      else
-                          doLinesDeleted(mCaretY + 1, 1);
-                }
+
+        if (mActiveSelectionMode==SynSelectionMode::smColumn) {
+            BufferCoord start=blockBegin();
+            BufferCoord end=blockEnd();
+            if (!selAvail()) {
+                end.Char++;
+                setBlockBegin(start);
+                setBlockEnd(end);
             }
-            if ((Caret.Char != mCaretX) || (Caret.Line != mCaretY)) {
-                mUndoList->AddChange(SynChangeReason::crSilentDeleteAfterCursor, caretXY(), Caret,
-                      helper, SynSelectionMode::smNormal);
+            setSelectedTextEmpty();
+            end.Char = start.Char;
+            setBlockBegin(start);
+            setBlockEnd(end);
+        } else {
+            if (selAvail())
+                setSelectedTextEmpty();
+            else {
+                // Call UpdateLastCaretX. Even though the caret doesn't move, the
+                // current caret position should "stick" whenever text is modified.
+                updateLastCaretX();
+                QString Temp = lineText();
+                int Len = Temp.length();
+                if (mCaretX <= Len) {
+                    // delete char
+                    helper = Temp.mid(mCaretX-1, 1);
+                    Caret.Char = mCaretX + 1;
+                    Caret.Line = mCaretY;
+                    Temp.remove(mCaretX-1, 1);
+                    properSetLine(mCaretY - 1, Temp);
+                } else {
+                    // join line with the line after
+                    if (mCaretY < mLines->count()) {
+                          properSetLine(mCaretY - 1, Temp + mLines->getString(mCaretY));
+                          Caret.Char = 1;
+                          Caret.Line = mCaretY + 1;
+                          helper = lineBreak();
+                          mLines->deleteAt(mCaretY);
+                          if (mCaretX==1)
+                              doLinesDeleted(mCaretY, 1);
+                          else
+                              doLinesDeleted(mCaretY + 1, 1);
+                    }
+                }
+                if ((Caret.Char != mCaretX) || (Caret.Line != mCaretY)) {
+                    mUndoList->AddChange(SynChangeReason::crSilentDeleteAfterCursor, caretXY(), Caret,
+                          helper, SynSelectionMode::smNormal);
+                }
             }
         }
         doOnPaintTransient(SynTransientType::ttAfter);
@@ -2499,13 +2529,23 @@ QRect SynEdit::calculateCaretRect() const
                 + lineText().mid(mCaretX-1);
         coord.Column = charToColumn(sLine,mCaretX+mInputPreeditString.length());
     }
+    if (mActiveSelectionMode == SynSelectionMode::smColumn) {
+        coord.Row = lineToRow(blockBegin().Line);
+    }
     QPoint caretPos = rowColumnToPixels(coord);
     int caretWidth=mCharWidth;
     if (mCaretY <= mLines->count() && mCaretX <= mLines->getString(mCaretY-1).length()) {
         caretWidth = charColumns(mLines->getString(mCaretY-1)[mCaretX-1])*mCharWidth;
     }
-    return QRect(caretPos.x(),caretPos.y(),caretWidth,
-                 mTextHeight);
+    if (mActiveSelectionMode == SynSelectionMode::smColumn) {
+        return QRect(caretPos.x(),caretPos.y(),caretWidth,
+                     mTextHeight*(lineToRow(blockEnd().Line)-
+                                  lineToRow(blockBegin().Line)+1));
+
+    } else {
+        return QRect(caretPos.x(),caretPos.y(),caretWidth,
+                     mTextHeight);
+    }
 }
 
 QRect SynEdit::calculateInputCaretRect() const
@@ -2732,9 +2772,19 @@ void SynEdit::doAddChar(QChar AChar)
     //DoOnPaintTransient(ttBefore);
     //mCaretX will change after setSelLength;
     if ((mInserting == false) && (!selAvail())) {
-        setSelLength(1);
+        if (colSelAvail()) {
+            BufferCoord start=blockBegin();
+            BufferCoord end=blockEnd();
+            end.Char++;
+            setBlockBegin(start);
+            setBlockEnd(end);
+        } else
+            setSelLength(1);
     }
 
+    bool addInColumnMode = (mActiveSelectionMode == SynSelectionMode::smColumn);
+    BufferCoord oldBlockBegin = blockBegin();
+    BufferCoord oldBlockEnd = blockEnd();
     if (isIdentChar(AChar)) {
         doSetSelText(AChar);
     } else if (AChar.isSpace()) {
@@ -2755,7 +2805,8 @@ void SynEdit::doAddChar(QChar AChar)
         int oldCaretX=mCaretX-1;
         int oldCaretY=mCaretY;
         // auto
-        if (mOptions.testFlag(eoAutoIndent)
+        if (mActiveSelectionMode==SynSelectionMode::smNormal
+                && mOptions.testFlag(eoAutoIndent)
                 && mHighlighter
                 && mHighlighter->getClass()==SynHighlighterClass::CppHighlighter
                 && (oldCaretY<=mLines->count()) ) {
@@ -2821,6 +2872,13 @@ void SynEdit::doAddChar(QChar AChar)
             }
         }
         mUndoList->EndBlock();
+    }
+    if (addInColumnMode) {
+        oldBlockBegin.Char = mCaretX;
+        oldBlockEnd.Char = mCaretX;
+        setBlockBegin(oldBlockBegin);
+        setBlockEnd(oldBlockEnd);
+        setActiveSelectionMode(SynSelectionMode::smColumn);
     }
     //DoOnPaintTransient(ttAfter);
 }
@@ -3755,7 +3813,7 @@ void SynEdit::paintCaret(QPainter &painter, const QRect rcClip)
     switch(ct) {
     case SynEditCaretType::ctVerticalLine: {
         QRect caretRC;
-        int size = std::max(1,(rcClip.bottom()-rcClip.top())/15);
+        int size = std::max(1, mTextHeight/15);
         caretRC.setLeft(rcClip.left()+1);
         caretRC.setTop(rcClip.top());
         caretRC.setBottom(rcClip.bottom());
@@ -3765,7 +3823,7 @@ void SynEdit::paintCaret(QPainter &painter, const QRect rcClip)
     }
     case SynEditCaretType::ctHorizontalLine: {
         QRect caretRC;
-        int size = std::max(1,(rcClip.bottom()-rcClip.top())/15);
+        int size = std::max(1,mTextHeight/15);
         caretRC.setLeft(rcClip.left());
         caretRC.setTop(rcClip.bottom()-1+size);
         caretRC.setBottom(rcClip.bottom()-1);
@@ -4096,12 +4154,29 @@ void SynEdit::setOptions(const SynEditorOptions &Value)
 void SynEdit::doAddStr(const QString &s)
 {
     if (!selAvail() && !mInserting) {
-        BufferCoord BB = caretXY();
-        BufferCoord BE = BB;
-        BE.Char = BB.Char + s.length();
-        setCaretAndSelection(caretXY(),BB,BE);
+        if (colSelAvail()) {
+            BufferCoord start=blockBegin();
+            BufferCoord end=blockEnd();
+            end.Char+=s.length();
+            setCaretAndSelection(caretXY(),start,end);
+        } else {
+            BufferCoord BB = caretXY();
+            BufferCoord BE = BB;
+            BE.Char = BB.Char + s.length();
+            setCaretAndSelection(caretXY(),BB,BE);
+        }
     }
+    bool addInColumnMode = (mActiveSelectionMode == SynSelectionMode::smColumn);
+    BufferCoord oldBlockBegin = blockBegin();
+    BufferCoord oldBlockEnd = blockEnd();
     doSetSelText(s);
+    if (addInColumnMode) {
+        oldBlockBegin.Char = mCaretX;
+        oldBlockEnd.Char = mCaretX;
+        setBlockBegin(oldBlockBegin);
+        setBlockEnd(oldBlockEnd);
+        setActiveSelectionMode(SynSelectionMode::smColumn);
+    }
 }
 
 void SynEdit::doUndo()
@@ -4897,6 +4972,11 @@ void SynEdit::setSelTextPrimitiveEx(SynSelectionMode PasteMode, const QString &V
     BufferCoord BE = blockEnd();
     if (selAvail()) {
         deleteSelection(BB,BE);
+        if (mActiveSelectionMode == SynSelectionMode::smColumn) {
+            BE.Char = BB.Char;
+            mBlockBegin = BB;
+            mBlockEnd = BE;
+        }
         internalSetCaretXY(BB);
     }
     if (!Value.isEmpty()) {
@@ -5362,8 +5442,11 @@ int SynEdit::insertTextByColumnMode(const QString &value, bool addToUndoList)
     int insertCol;
     BufferCoord  lineBreakPos;
     int result = 0;
-    // Insert string at current position
-    insertCol = charToColumn(mCaretY,mCaretX);
+    BufferCoord insertPos = blockBegin();
+    BufferCoord endPos = blockEnd();
+    // Insert string at begin of the selection
+    insertCol = charToColumn(insertPos.Line,insertPos.Char);
+    mCaretY=insertPos.Line;
     start = 0;
     do {
         p = GetEOL(value,start);
@@ -5406,7 +5489,17 @@ int SynEdit::insertTextByColumnMode(const QString &value, bool addToUndoList)
             mCaretY++;
             mStatusChanges.setFlag(SynStatusChange::scCaretY);
         }
-        start = p;
+        //if we only have one inline to insert, repeat it
+        if (start == 0 && p>=value.length() && p!=start) {
+            p=0;
+            if (mCaretY < endPos.Line) {
+                mCaretY++;
+                mStatusChanges.setFlag(SynStatusChange::scCaretY);
+            } else
+                break;
+        } else {
+            start = p;
+        }
     } while (p<value.length());
     mCaretX+=str.length();
     mStatusChanges.setFlag(SynStatusChange::scCaretX);
@@ -5962,15 +6055,22 @@ void SynEdit::focusOutEvent(QFocusEvent *)
 
 void SynEdit::keyPressEvent(QKeyEvent *event)
 {
-    SynEditorCommand cmd=TranslateKeyCode(event->key(),event->modifiers());
-    if (cmd!=SynEditorCommand::ecNone) {
-        commandProcessor(cmd,QChar(),nullptr);
+    if (event->key() == Qt::Key_Escape && mActiveSelectionMode != mSelectionMode) {
+        setActiveSelectionMode(selectionMode());
+        setBlockBegin(caretXY());
+        setBlockEnd(caretXY());
         event->accept();
-    } else if (!event->text().isEmpty()) {
-        QChar c = event->text().at(0);
-        if (c=='\t' || c.isPrint()) {
-            commandProcessor(SynEditorCommand::ecChar,c,nullptr);
+    } else {
+        SynEditorCommand cmd=TranslateKeyCode(event->key(),event->modifiers());
+        if (cmd!=SynEditorCommand::ecNone) {
+            commandProcessor(cmd,QChar(),nullptr);
             event->accept();
+        } else if (!event->text().isEmpty()) {
+            QChar c = event->text().at(0);
+            if (c=='\t' || c.isPrint()) {
+                commandProcessor(SynEditorCommand::ecChar,c,nullptr);
+                event->accept();
+            }
         }
     }
     if (!event->isAccepted()) {

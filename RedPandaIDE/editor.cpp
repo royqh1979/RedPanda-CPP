@@ -1515,7 +1515,7 @@ void Editor::onStatusChanged(SynStatusChanges changes)
                     clearUserCodeInTabStops();
                 }
             }
-        } else if (!selAvail() && highlighter() && pSettings->editor().highlightMathingBraces()){
+        } else if (!selAvail() &&!colSelAvail() && highlighter() && pSettings->editor().highlightMathingBraces()){
             invalidateLine(mHighlightCharPos1.Line);
             invalidateLine(mHighlightCharPos2.Line);
             mHighlightCharPos1 = BufferCoord{0,0};

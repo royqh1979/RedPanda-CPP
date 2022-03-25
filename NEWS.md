@@ -18,9 +18,9 @@ Red Panda C++ Version 1.0.1
   - enhancement: switch capslock won't cancel code completion
   - enhancement: double click on item in code completion list will use it to complete
   - fix: goto declaration by ctrl+click will incorrectly select contents
-  - enhancement: alt+shift+arrow do column selection
   - fix: input may cause error, if selection in column mode and begin/end at the same column
-  - enhancement: draw selection line if selection in column mode and begin/end at the same column
+  - enhancement: draw cursor for column mode
+  - enahcnement: edit/delete in multiline ( column mode), press ese to exit
 
 Red Panda C++ Version 1.0.0
   - fix: calculation for code snippets's tab stop positions is not correct
