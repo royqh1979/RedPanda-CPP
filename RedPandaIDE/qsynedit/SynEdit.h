@@ -208,6 +208,7 @@ public:
     void lockPainter();
     void unlockPainter();
     bool selAvail() const;
+    bool colSelAvail() const;
     QString wordAtCursor();
     QString wordAtRowCol(const BufferCoord& XY);
 

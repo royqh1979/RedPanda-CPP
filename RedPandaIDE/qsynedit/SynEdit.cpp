@@ -1037,6 +1037,11 @@ bool SynEdit::selAvail() const
             ((mBlockBegin.Line != mBlockEnd.Line) && (mActiveSelectionMode != SynSelectionMode::smColumn));
 }
 
+bool SynEdit::colSelAvail() const
+{
+    return (mActiveSelectionMode == SynSelectionMode::smColumn && mBlockBegin.Line!=mBlockEnd.Line);
+}
+
 QString SynEdit::wordAtCursor()
 {
     return wordAtRowCol(caretXY());
@@ -2917,7 +2922,7 @@ void SynEdit::doPasteFromClipboard()
                         blockEnd(),
                         selText(),
                         mActiveSelectionMode);
-        } else
+        } else if (!colSelAvail())
             setActiveSelectionMode(selectionMode());
         BufferCoord vStartOfBlock = blockBegin();
         BufferCoord vEndOfBlock = blockEnd();
@@ -4786,7 +4791,7 @@ void SynEdit::moveCaretVert(int DY, bool isSelection)
         if (qApp->keyboardModifiers().testFlag(Qt::AltModifier))
             setActiveSelectionMode(SynSelectionMode::smColumn);
         else
-            setSelectionMode(selectionMode());
+            setActiveSelectionMode(selectionMode());
     }
     moveCaretAndSelection(mBlockBegin, vDstLineChar, isSelection);
     decPaintLock();
@@ -4914,7 +4919,7 @@ void SynEdit::doSetSelText(const QString &Value)
       mUndoList->AddChange(
                   SynChangeReason::crDelete, mBlockBegin, mBlockEnd,
                   selText(), mActiveSelectionMode);
-    } else
+    } else if (!colSelAvail())
         setActiveSelectionMode(selectionMode());
     BufferCoord StartOfBlock = blockBegin();
     BufferCoord EndOfBlock = blockEnd();

@@ -701,6 +701,9 @@ void Editor::keyPressEvent(QKeyEvent *event)
     if (t.isEmpty())
         return;
 
+    if (activeSelectionMode()==SynSelectionMode::smColumn)
+        return;
+
     QChar ch = t[0];
     if (isIdentChar(ch)) {
         mLastIdCharPressed++;
