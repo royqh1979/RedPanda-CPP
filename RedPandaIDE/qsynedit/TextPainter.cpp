@@ -252,7 +252,7 @@ void SynEditTextPainter::ComputeSelectionInfo()
             vEnd = edit->mBlockBegin;
             vStart = edit->mBlockEnd;
         } else if (edit->mBlockBegin.Char != edit->mBlockEnd.Char) {
-            // No selection at all, or it is only on this line.
+            // it is only on this line.
             vStart.Line = edit->mBlockBegin.Line;
             vEnd.Line = vStart.Line;
             if (edit->mBlockBegin.Char < edit->mBlockEnd.Char) {
@@ -1058,6 +1058,12 @@ void SynEditTextPainter::PaintLines()
             PaintEditAreas(areaList);
         }
 
+        if (nLineSelStart!=0 && nLineSelEnd!=0
+                 && nLineSelStart == nLineSelEnd) {
+            painter->setPen(edit->selectedBackground());
+            int x =ColumnToXValue(nLineSelStart);
+            painter->drawLine(x,rcLine.top(),x,rcLine.bottom()+1);
+        }
         // Now paint the right edge if necessary. We do it line by line to reduce
         // the flicker. Should not cost very much anyway, compared to the many
         // calls to ExtTextOut.

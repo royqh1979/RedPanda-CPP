@@ -87,10 +87,10 @@ enum class SynEditorCommand {
     ecSelEditorEnd = ecEditorEnd + ecSelection,
     ecSelGotoXY       = ecGotoXY + ecSelection,  // Data = PPoint
 
-    ecSelWord         = 198,
-    ecSelectAll       = 199,  // Select entire contents of editor, cursor to end
 
     ecCopy            = 201,  // Copy selection to clipboard
+    ecSelWord         = 202,
+    ecSelectAll       = 203,  // Select entire contents of editor, cursor to end
 
     ecScrollUp        = 211,  // Scroll up one line leaving cursor position unchanged.
     ecScrollDown      = 212,  // Scroll down one line leaving cursor position unchanged.
@@ -176,13 +176,15 @@ enum class SynEditorCommand {
     ecZoomOut         = 631,  //Increase Font Size
     ecZoomIn          = 632,  //Decrease Font Size
 
-    ecUserFirst       = 1001, // Start of user-defined commands
-
     ecAutoCompletion    = 650,
     ecLineBreakAtBegin  = 651, //add a line break at the begin of the line
     ecLineBreakAtEnd    = 652,
     ecInsertLineAtBegin = 653,
     ecInsertLineAtEnd   = 654,
+
+    ecUserFirst       = 1001, // Start of user-defined commands
+
+
 
     //### Code Folding ###
     ecCollapse = ecUserFirst + 100,

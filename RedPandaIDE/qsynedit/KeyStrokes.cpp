@@ -181,19 +181,23 @@ void SynEditKeyStrokes::resetDefaults()
     clear();
     add(SynEditorCommand::ecUp, Qt::Key_Up, Qt::NoModifier);
     add(SynEditorCommand::ecSelUp, Qt::Key_Up, Qt::ShiftModifier);
+    add(SynEditorCommand::ecSelUp, Qt::Key_Up, Qt::ShiftModifier | Qt::AltModifier);
     add(SynEditorCommand::ecScrollUp, Qt::Key_Up, Qt::ControlModifier);
     add(SynEditorCommand::ecDown, Qt::Key_Down, Qt::NoModifier);
     add(SynEditorCommand::ecSelDown, Qt::Key_Down, Qt::ShiftModifier);
+    add(SynEditorCommand::ecSelDown, Qt::Key_Down, Qt::ShiftModifier | Qt::AltModifier);
     add(SynEditorCommand::ecScrollDown, Qt::Key_Down, Qt::ControlModifier);
     add(SynEditorCommand::ecLeft, Qt::Key_Left, Qt::NoModifier);
     add(SynEditorCommand::ecSelLeft, Qt::Key_Left, Qt::ShiftModifier);
+    add(SynEditorCommand::ecSelLeft, Qt::Key_Left, Qt::ShiftModifier | Qt::AltModifier);
     add(SynEditorCommand::ecWordLeft, Qt::Key_Left, Qt::ControlModifier);
     add(SynEditorCommand::ecSelWordLeft, Qt::Key_Left, Qt::ShiftModifier|Qt::ControlModifier);
     add(SynEditorCommand::ecRight, Qt::Key_Right, Qt::NoModifier);
-
     add(SynEditorCommand::ecSelRight, Qt::Key_Right, Qt::ShiftModifier);
+    add(SynEditorCommand::ecSelRight, Qt::Key_Right, Qt::ShiftModifier | Qt::AltModifier);
     add(SynEditorCommand::ecWordRight, Qt::Key_Right, Qt::ControlModifier);
     add(SynEditorCommand::ecSelWordRight, Qt::Key_Right, Qt::ShiftModifier|Qt::ControlModifier);
+
     add(SynEditorCommand::ecPageDown, Qt::Key_PageDown, Qt::NoModifier);
     add(SynEditorCommand::ecSelPageDown, Qt::Key_PageDown, Qt::ShiftModifier);
     add(SynEditorCommand::ecPageBottom, Qt::Key_PageDown, Qt::ControlModifier);

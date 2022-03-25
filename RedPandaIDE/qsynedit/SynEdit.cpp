@@ -235,18 +235,20 @@ void SynEdit::setCaretXYEx(bool CallEnsureCursorPosVisible, BufferCoord value)
     int nMaxX;
     if (value.Line > mLines->count())
         value.Line = mLines->count();
-    if (value.Line < 1) {
-        // this is just to make sure if Lines stringlist should be empty
-        value.Line = 1;
-        if (!mOptions.testFlag(SynEditorOption::eoScrollPastEol)) {
-            nMaxX = 1;
+    if (mActiveSelectionMode!=SynSelectionMode::smColumn) {
+        if (value.Line < 1) {
+            // this is just to make sure if Lines stringlist should be empty
+            value.Line = 1;
+            if (!mOptions.testFlag(SynEditorOption::eoScrollPastEol)) {
+                nMaxX = 1;
+            } else {
+                nMaxX = mLines->getString(value.Line-1).length()+1;
+            }
         } else {
             nMaxX = mLines->getString(value.Line-1).length()+1;
         }
-    } else {
-        nMaxX = mLines->getString(value.Line-1).length()+1;
+        value.Char = std::min(value.Char,nMaxX);
     }
-    value.Char = std::min(value.Char,nMaxX);
     value.Char = std::max(value.Char,1);
 //    if ((value.Char > nMaxX) && (! (mOptions.testFlag(SynEditorOption::eoScrollPastEol)) ) )
 //        value.Char = nMaxX;
@@ -1824,6 +1826,8 @@ void SynEdit::doMouseScroll(bool isDragging)
         mDropped=false;
         return;
     }
+    if (!hasFocus())
+        return;
     Qt::MouseButtons buttons = qApp->mouseButtons();
     if (!buttons.testFlag(Qt::LeftButton))
         return;
@@ -4742,7 +4746,16 @@ void SynEdit::moveCaretHorz(int DX, bool isSelection)
           ptDst.Char = std::min(ptDst.Char, nLineLen + 1);
     }
     // set caret and block begin / end
+    incPaintLock();
+    if (mOptions.testFlag(eoAltSetsColumnMode) &&
+                         (mActiveSelectionMode != SynSelectionMode::smLine)) {
+        if (qApp->keyboardModifiers().testFlag(Qt::AltModifier)) {
+            setActiveSelectionMode(SynSelectionMode::smColumn);
+        } else
+            setActiveSelectionMode(selectionMode());
+    }
     moveCaretAndSelection(mBlockBegin, ptDst, isSelection);
+    decPaintLock();
 }
 
 void SynEdit::moveCaretVert(int DY, bool isSelection)
@@ -4768,6 +4781,13 @@ void SynEdit::moveCaretVert(int DY, bool isSelection)
 
     // set caret and block begin / end
     incPaintLock();
+    if (mOptions.testFlag(eoAltSetsColumnMode) &&
+                         (mActiveSelectionMode != SynSelectionMode::smLine)) {
+        if (qApp->keyboardModifiers().testFlag(Qt::AltModifier))
+            setActiveSelectionMode(SynSelectionMode::smColumn);
+        else
+            setSelectionMode(selectionMode());
+    }
     moveCaretAndSelection(mBlockBegin, vDstLineChar, isSelection);
     decPaintLock();
 
@@ -4784,11 +4804,12 @@ void SynEdit::moveCaretAndSelection(const BufferCoord &ptBefore, const BufferCoo
 
     incPaintLock();
     if (isSelection) {
-      if (!selAvail())
-        setBlockBegin(ptBefore);
-      setBlockEnd(ptAfter);
+
+        if (!selAvail())
+          setBlockBegin(ptBefore);
+        setBlockEnd(ptAfter);
     } else
-      setBlockBegin(ptAfter);
+        setBlockBegin(ptAfter);
     internalSetCaretXY(ptAfter);
     decPaintLock();
 }
@@ -6007,9 +6028,9 @@ void SynEdit::mousePressEvent(QMouseEvent *event)
             } else if (mOptions.testFlag(eoAltSetsColumnMode) &&
                      (mActiveSelectionMode != SynSelectionMode::smLine)) {
                 if (event->modifiers() == Qt::AltModifier)
-                    setSelectionMode(SynSelectionMode::smColumn);
+                    setActiveSelectionMode(SynSelectionMode::smColumn);
                 else
-                    setSelectionMode(SynSelectionMode::smNormal);
+                    setActiveSelectionMode(selectionMode());
                 //Selection mode must be set before calling SetBlockBegin
                 setBlockBegin(caretXY());
             }
@@ -6065,10 +6086,13 @@ void SynEdit::mouseMoveEvent(QMouseEvent *event)
             //BeginDrag(false);
         }
     } else if ((buttons == Qt::LeftButton)) {
-        if (event->modifiers() == Qt::AltModifier)
-            setSelectionMode(SynSelectionMode::smColumn);
-        else
-            setSelectionMode(SynSelectionMode::smNormal);
+        if (mOptions.testFlag(eoAltSetsColumnMode) &&
+                (mActiveSelectionMode != SynSelectionMode::smLine)) {
+                if (event->modifiers() == Qt::AltModifier)
+                    setActiveSelectionMode(SynSelectionMode::smColumn);
+                else
+                    setActiveSelectionMode(selectionMode());
+        }
         // should we begin scrolling?
         //computeScroll(X, Y,false);
 //        DisplayCoord P = pixelsToNearestRowColumn(X, Y);
@@ -6460,7 +6484,7 @@ BufferCoord SynEdit::blockEnd() const
 
 void SynEdit::setBlockEnd(BufferCoord Value)
 {
-    setActiveSelectionMode(mSelectionMode);
+    //setActiveSelectionMode(mSelectionMode);
     if (!mOptions.testFlag(eoNoSelection)) {
         Value.Line = minMax(Value.Line, 1, mLines->count());
         Value.Char = minMax(Value.Char, 1, mLines->lengthOfLongestLine()+1);
@@ -6555,7 +6579,7 @@ void SynEdit::setBlockBegin(BufferCoord value)
 {
     int nInval1, nInval2;
     bool SelChanged;
-    setActiveSelectionMode(mSelectionMode);
+    //setActiveSelectionMode(mSelectionMode);
     value.Char = minMax(value.Char, 1, mLines->lengthOfLongestLine()+1);
     value.Line = minMax(value.Line, 1, mLines->count());
     if (mActiveSelectionMode == SynSelectionMode::smNormal) {
