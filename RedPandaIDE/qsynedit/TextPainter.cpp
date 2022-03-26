@@ -124,12 +124,20 @@ void SynEditTextPainter::paintGutter(const QRect& clip)
             textColor = edit->mForegroundColor;
         }
         // draw each line if it is not hidden by a fold
+        BufferCoord selectionStart = edit->blockBegin();
+        BufferCoord selectionEnd = edit->blockEnd();
         for (int cRow = aFirstRow; cRow <= aLastRow; cRow++) {
             vLine = edit->rowToLine(cRow);
             if ((vLine > edit->mLines->count()) && (edit->mLines->count() > 0 ))
                 break;
-            if (edit->mCaretY==vLine && edit->mGutter.activeLineTextColor().isValid()) {
-                painter->setPen(edit->mGutter.activeLineTextColor());
+            if (edit->mGutter.activeLineTextColor().isValid()) {
+                if (
+                        (edit->mCaretY==vLine)     ||
+                        (edit->mActiveSelectionMode == SynSelectionMode::smColumn && vLine >= selectionStart.Line && vLine <= selectionEnd.Line)
+                        )
+                    painter->setPen(edit->mGutter.activeLineTextColor());
+                else
+                    painter->setPen(textColor);
             } else {
                 painter->setPen(textColor);
             }
@@ -803,6 +811,8 @@ void SynEditTextPainter::PaintLines()
     TokenAccu.Columns = 0;
     TokenAccu.ColumnsBefore = 0;
     // Now loop through all the lines. The indices are valid for Lines.
+    BufferCoord selectionBegin = edit->blockBegin();
+    BufferCoord selectionEnd= edit->blockEnd();
     for (cRow = aFirstRow; cRow<=aLastRow; cRow++) {
         vLine = edit->rowToLine(cRow);
         if (vLine > edit->mLines->count() && edit->mLines->count() != 0)
@@ -811,7 +821,11 @@ void SynEditTextPainter::PaintLines()
         // Get the line.
         sLine = edit->mLines->getString(vLine - 1);
         // determine whether will be painted with ActiveLineColor
-        bCurrentLine = (edit->mCaretY == vLine);
+        if (edit->mActiveSelectionMode == SynSelectionMode::smColumn) {
+            bCurrentLine = (vLine >= selectionBegin.Line && vLine <= selectionEnd.Line);
+        } else {
+            bCurrentLine = (edit->mCaretY == vLine);
+        }
         if (bCurrentLine && !edit->mInputPreeditString.isEmpty()) {
             sLine = sLine.left(edit->mCaretX-1) + edit->mInputPreeditString
                     + sLine.mid(edit->mCaretX-1);

@@ -1,6 +1,9 @@
 Red Panda C++ Version 1.0.2
   - enhancement: press tab in column mode won't exit column mode
   - enhancement: refine behavior of undo input space char
+  - enhancement: better display when input with IM under column mode
+  - enhancement: better display current lines under column mode
+  - change: test to use utf-8 as the default encoding (prepare to use libclang to implement parser)
 
 Red Panda C++ Version 1.0.1
   - fix: only convert project icon file when it's filename doesn't end with ".ico"

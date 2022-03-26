@@ -6211,7 +6211,12 @@ void SynEdit::inputMethodEvent(QInputMethodEvent *event)
     QString oldString = mInputPreeditString;
     mInputPreeditString = event->preeditString();
     if (oldString!=mInputPreeditString) {
-        invalidateLine(mCaretY);
+        if (mActiveSelectionMode==SynSelectionMode::smColumn) {
+            BufferCoord selBegin = blockBegin();
+            BufferCoord selEnd = blockEnd();
+            invalidateLines(selBegin.Line,selEnd.Line);
+        } else
+            invalidateLine(mCaretY);
     }
     QString s = event->commitString();
     if (!s.isEmpty()) {
