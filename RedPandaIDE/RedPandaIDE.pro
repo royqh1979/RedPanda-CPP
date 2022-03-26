@@ -10,7 +10,7 @@ isEmpty(APP_NAME) {
 }
 
 isEmpty(APP_VERSION) {
-    APP_VERSION=1.0.1
+    APP_VERSION=1.0.2
 }
 
 win32: VERSION = $${APP_VERSION}.0

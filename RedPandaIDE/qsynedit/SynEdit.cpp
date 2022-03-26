@@ -2372,6 +2372,10 @@ void SynEdit::insertLine(bool moveCaret)
 
 void SynEdit::doTabKey()
 {
+    if (mActiveSelectionMode == SynSelectionMode::smColumn) {
+        doAddChar('\t');
+        return;
+    }
     // Provide Visual Studio like block indenting
     if (mOptions.testFlag(eoTabIndent) && canDoBlockIndent()) {
         doBlockIndent();
@@ -2767,7 +2771,7 @@ void SynEdit::doAddChar(QChar AChar)
 {
     if (mReadOnly)
         return;
-    if (!AChar.isPrint())
+    if (!AChar.isPrint() && AChar!='\t')
         return;
     //DoOnPaintTransient(ttBefore);
     //mCaretX will change after setSelLength;
