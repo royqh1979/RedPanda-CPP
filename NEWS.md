@@ -1,5 +1,6 @@
 Red Panda C++ Version 1.0.2
   - enhancement: press tab in column mode won't exit column mode
+  - enhancement: refine behavior of undo input space char
 
 Red Panda C++ Version 1.0.1
   - fix: only convert project icon file when it's filename doesn't end with ".ico"

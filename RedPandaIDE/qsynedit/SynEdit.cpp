@@ -2786,23 +2786,21 @@ void SynEdit::doAddChar(QChar AChar)
             setSelLength(1);
     }
 
-    bool addInColumnMode = (mActiveSelectionMode == SynSelectionMode::smColumn);
-    BufferCoord oldBlockBegin = blockBegin();
-    BufferCoord oldBlockEnd = blockEnd();
     if (isIdentChar(AChar)) {
         doSetSelText(AChar);
     } else if (AChar.isSpace()) {
         // break group undo chain
         mUndoList->AddChange(SynChangeReason::crNothing,
-                             BufferCoord{0, 0},
-                             BufferCoord{0, 0},
-                             "", SynSelectionMode::smNormal);
+                                 BufferCoord{0, 0},
+                                 BufferCoord{0, 0},
+                                 "", SynSelectionMode::smNormal);
         doSetSelText(AChar);
         // break group undo chain
-        mUndoList->AddChange(SynChangeReason::crNothing,
-                             BufferCoord{0, 0},
-                             BufferCoord{0, 0},
-                             "", SynSelectionMode::smNormal);
+//        if (mActiveSelectionMode!=SynSelectionMode::smColumn)
+//            mUndoList->AddChange(SynChangeReason::crNothing,
+//                                 BufferCoord{0, 0},
+//                                 BufferCoord{0, 0},
+//                                 "", SynSelectionMode::smNormal);
     }else {
         mUndoList->BeginBlock();
         doSetSelText(AChar);
@@ -2876,13 +2874,6 @@ void SynEdit::doAddChar(QChar AChar)
             }
         }
         mUndoList->EndBlock();
-    }
-    if (addInColumnMode) {
-        oldBlockBegin.Char = mCaretX;
-        oldBlockEnd.Char = mCaretX;
-        setBlockBegin(oldBlockBegin);
-        setBlockEnd(oldBlockEnd);
-        setActiveSelectionMode(SynSelectionMode::smColumn);
     }
     //DoOnPaintTransient(ttAfter);
 }
@@ -4170,17 +4161,7 @@ void SynEdit::doAddStr(const QString &s)
             setCaretAndSelection(caretXY(),BB,BE);
         }
     }
-    bool addInColumnMode = (mActiveSelectionMode == SynSelectionMode::smColumn);
-    BufferCoord oldBlockBegin = blockBegin();
-    BufferCoord oldBlockEnd = blockEnd();
     doSetSelText(s);
-    if (addInColumnMode) {
-        oldBlockBegin.Char = mCaretX;
-        oldBlockEnd.Char = mCaretX;
-        setBlockBegin(oldBlockBegin);
-        setBlockEnd(oldBlockEnd);
-        setActiveSelectionMode(SynSelectionMode::smColumn);
-    }
 }
 
 void SynEdit::doUndo()
@@ -4199,13 +4180,6 @@ void SynEdit::doUndo()
         mRedoList->AddGroupBreak();
     }
 
-    SynChangeReason  FLastChange = mUndoList->LastChangeReason();
-    bool FAutoComplete = (FLastChange == SynChangeReason::crAutoCompleteEnd);
-    bool FPasteAction = (FLastChange == SynChangeReason::crPasteEnd);
-    bool FSpecial1 = (FLastChange == SynChangeReason::crSpecial1End);
-    bool FSpecial2 = (FLastChange == SynChangeReason::crSpecial2End);
-    bool FKeepGoing;
-
     PSynEditUndoItem Item = mUndoList->PeekItem();
     if (Item) {
         int OldChangeNumber = Item->changeNumber();
@@ -4221,6 +4195,12 @@ void SynEdit::doUndo()
                     doUndoItem();
                 }
             }
+            SynChangeReason  FLastChange = mUndoList->LastChangeReason();
+            bool FAutoComplete = (FLastChange == SynChangeReason::crAutoCompleteEnd);
+            bool FPasteAction = (FLastChange == SynChangeReason::crPasteEnd);
+            bool FSpecial1 = (FLastChange == SynChangeReason::crSpecial1End);
+            bool FSpecial2 = (FLastChange == SynChangeReason::crSpecial2End);
+            bool FKeepGoing;
             do {
                 doUndoItem();
                 Item = mUndoList->PeekItem();
@@ -4431,12 +4411,6 @@ void SynEdit::doRedo()
     if (mReadOnly)
         return;
 
-    SynChangeReason FLastChange = mRedoList->LastChangeReason();
-    bool FAutoComplete = (FLastChange == SynChangeReason::crAutoCompleteBegin);
-    bool FPasteAction = (FLastChange == SynChangeReason::crPasteBegin);
-    bool FSpecial1 = (FLastChange == SynChangeReason::crSpecial1Begin);
-    bool FSpecial2 = (FLastChange == SynChangeReason::crSpecial2Begin);
-
     PSynEditUndoItem Item = mRedoList->PeekItem();
     if (!Item)
         return;
@@ -4453,6 +4427,11 @@ void SynEdit::doRedo()
                 doRedoItem();
             }
         }
+        SynChangeReason FLastChange = mRedoList->LastChangeReason();
+        bool FAutoComplete = (FLastChange == SynChangeReason::crAutoCompleteBegin);
+        bool FPasteAction = (FLastChange == SynChangeReason::crPasteBegin);
+        bool FSpecial1 = (FLastChange == SynChangeReason::crSpecial1Begin);
+        bool FSpecial2 = (FLastChange == SynChangeReason::crSpecial2Begin);
         bool FKeepGoing;
         do {
           doRedoItem();
@@ -4976,11 +4955,6 @@ void SynEdit::setSelTextPrimitiveEx(SynSelectionMode PasteMode, const QString &V
     BufferCoord BE = blockEnd();
     if (selAvail()) {
         deleteSelection(BB,BE);
-        if (mActiveSelectionMode == SynSelectionMode::smColumn) {
-            BE.Char = BB.Char;
-            mBlockBegin = BB;
-            mBlockEnd = BE;
-        }
         internalSetCaretXY(BB);
     }
     if (!Value.isEmpty()) {
@@ -6478,9 +6452,18 @@ void SynEdit::onLinesChanged()
     mStateFlags.setFlag(SynStateFlag::sfLinesChanging, false);
 
     updateScrollbars();
-    vOldMode = mActiveSelectionMode;
-    setBlockBegin(caretXY());
-    mActiveSelectionMode = vOldMode;
+    if (mActiveSelectionMode == SynSelectionMode::smColumn) {
+        BufferCoord oldBlockStart = blockBegin();
+        BufferCoord oldBlockEnd = blockEnd();
+        oldBlockStart.Char = mCaretX;
+        oldBlockEnd.Char = mCaretX;
+        setBlockBegin(oldBlockStart);
+        setBlockEnd(oldBlockEnd);
+    } else {
+        vOldMode = mActiveSelectionMode;
+        setBlockBegin(caretXY());
+        mActiveSelectionMode = vOldMode;
+    }
     if (mInvalidateRect.width()==0)
         invalidate();
     else
