@@ -3334,7 +3334,7 @@ void Settings::Executor::doLoad()
     mCaseEditorFontName = stringValue("case_editor_font_name","Dejavu Sans Mono");
 #endif
     mCaseEditorFontSize = intValue("case_editor_font_size",12);
-    mCaseEditorFontOnlyMonospaced = boolValue("case_editor_font_only_monospaced",true);
+    mCaseEditorFontOnlyMonospaced = boolValue("case_editor_font_only_monospaced",false);
     mCaseTimeout = intValue("case_timeout", 1);
     mEnableCaseTimeout = boolValue("enable_case_timeout", true);
 }

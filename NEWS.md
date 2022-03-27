@@ -5,7 +5,7 @@ Red Panda C++ Version 1.0.2
   - enhancement: better display current lines under column mode
   - change: test to use utf-8 as the default encoding (prepare to use libclang to implement parser)
   - fix: auto syntax check use wrong charset, if a file in editing is not encoded with ANSI encoding
-  - enhancement: timeout for problem case test in
+  - enhancement: timeout for problem case test
   - enhancement: slightly reduce start up time
 
 Red Panda C++ Version 1.0.1
