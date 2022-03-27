@@ -231,7 +231,6 @@ private:
     void updateProjectView();
     CompileTarget getCompileTarget();
     bool debugInferiorhasBreakpoint();
-    void setupActions();
     void openCloseBottomPanel(bool open);
     void openCloseLeftPanel(bool open);
     void prepareDebugger();
@@ -293,6 +292,40 @@ private slots:
     void onFilesViewCreateFolder();
     void onFilesViewCreateFile();
     void onFilesViewRemoveFiles();
+    void onProblemProperties();
+    void onProblemOpenSource();
+    void onLableProblemSetContextMenuRequested();
+    void onBookmarkRemove();
+    void onBookmarkRemoveAll();
+    void onBookmarkModify();
+    void onDebugConsoleShowDetailLog();
+    void onDebugConsolePaste();
+    void onDebugConsoleSelectAll();
+    void onDebugConsoleCopy();
+    void onDebugConsoleClear();
+    void onFilesViewOpenInExplorer();
+    void onFilesViewOpenInTerminal();
+    void onFilesViewOpenWithExternal();
+    void onFilesViewOpen();
+    void onClassBrowserGotoDeclaration();
+    void onClassBrowserGotoDefinition();
+    void onClassBrowserShowInherited();
+    void onClassBrowserSortByType();
+    void onClassBrowserSortByName();
+    void onProjectSwitchCustomViewMode();
+    void onProjectSwitchFileSystemViewMode();
+    void onProjectRemoveFolder();
+    void onProjectRenameFolder();
+    void onProjectAddFolder();
+    void onProjectRenameUnit();
+    void onBreakpointRemove();
+    void onBreakpointViewRemoveAll();
+    void onBreakpointViewProperty();
+    void onSearchViewClearAll();
+    void onSearchViewClear();
+    void onTableIssuesClear();
+    void onTableIssuesCopyAll();
+    void onTableIssuesCopy();
 
     void on_actionNew_triggered();
 

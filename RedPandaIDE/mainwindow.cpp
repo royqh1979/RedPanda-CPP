@@ -67,6 +67,7 @@
 #include <QTextBlock>
 #include <QTranslator>
 #include <QFileIconProvider>
+#include <MainWindow.h>
 
 #include "settingsdialog/settingsdialog.h"
 #include "compiler/compilermanager.h"
@@ -132,7 +133,6 @@ MainWindow::MainWindow(QWidget *parent)
     mProjectProxyModel = new ProjectModelSortFilterProxy(this);
     ui->projectView->setModel(mProjectProxyModel);
     mProjectProxyModel->setDynamicSortFilter(false);
-    setupActions();
     ui->EditorTabsRight->setVisible(false);
 
     mCompilerSet = new QComboBox();
@@ -214,7 +214,6 @@ MainWindow::MainWindow(QWidget *parent)
 //    updateProjectView();
 //    updateEditorActions();
 //    updateCaretActions();
-
 
     connect(ui->debugConsole,&QConsole::commandInput,this,&MainWindow::onDebugCommandInput);
     connect(ui->cbEvaluate->lineEdit(), &QLineEdit::returnPressed,
@@ -1195,10 +1194,6 @@ void MainWindow::changeOptions(const QString &widgetName, const QString &groupNa
     } else if (e) {
         e->reparse();
     }
-
-}
-
-void MainWindow::setupActions() {
 
 }
 
@@ -2234,62 +2229,19 @@ void MainWindow::buildContextMenus()
                 tr("Properties..."),
                 ui->lstProblemSet
                 );
-    connect(mProblem_Properties, &QAction::triggered,
-            [this]() {
-        QModelIndex idx = ui->lstProblemSet->currentIndex();
-        if (!idx.isValid())
-            return;
-        POJProblem problem=mOJProblemSetModel.problem(idx.row());
-        if (!problem)
-            return;
-        OJProblemPropertyWidget dialog;
-        dialog.setName(problem->name);
-        dialog.setUrl(problem->url);
-        dialog.setDescription(problem->description);
-        if (dialog.exec() == QDialog::Accepted) {
-            problem->url = dialog.url();
-            problem->description = dialog.description();
-            if (problem == mOJProblemModel.problem()) {
-                updateProblemTitle();
-            }
-        }
-    });
+    connect(mProblem_Properties, &QAction::triggered, this,
+            &MainWindow::onProblemProperties);
     mProblem_OpenSource=createActionFor(
                 tr("Open Source File"),
                 ui->lstProblemSet
                 );
-    connect(mProblem_OpenSource, &QAction::triggered,
-            [this]() {
-        QModelIndex idx = ui->lstProblemSet->currentIndex();
-        if (!idx.isValid())
-            return;
-        POJProblem problem=mOJProblemSetModel.problem(idx.row());
-        if (!problem)
-            return;
-        if (!problem->answerProgram.isEmpty()) {
-            Editor * editor = editorList()->getEditorByFilename(problem->answerProgram);
-            if (editor) {
-                editor->activate();
-            }
-        }
-    });
+    connect(mProblem_OpenSource, &QAction::triggered, this,
+            &MainWindow::onProblemOpenSource);
 
     //context menu signal for the Problem Set lable
     ui->lblProblemSet->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->lblProblemSet, &QWidget::customContextMenuRequested,
-            [this] {
-        QString newName = QInputDialog::getText(
-                    ui->lblProblemSet,
-                    tr("Set Problem Set Name"),
-                    tr("Problem Set Name:"),
-                    QLineEdit::Normal,
-                    ui->lblProblemSet->text());
-        newName = newName.trimmed();
-        if (!newName.isEmpty()){
-            mOJProblemSetModel.rename(newName);
-            ui->lblProblemSet->setText(mOJProblemSetModel.name());
-        }
-    });
+            this, &MainWindow::onLableProblemSetContextMenuRequested);
 
     //context menu signal for the watch view
     ui->watchView->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -2304,48 +2256,18 @@ void MainWindow::buildContextMenus()
                 tr("Remove"),
                 ui->tableBookmark);
     connect(mBookmark_Remove, &QAction::triggered,
-            [this]() {
-        QModelIndex index = ui->tableBookmark->currentIndex();
-        if (index.isValid()) {
-            PBookmark bookmark = mBookmarkModel->bookmark(index.row());
-            if (bookmark) {
-                Editor * editor = mEditorList->getOpenedEditorByFilename(bookmark->filename);
-                if (editor) {
-                    editor->removeBookmark(bookmark->line);
-                } else {
-                    mBookmarkModel->removeBookmarkAt(index.row());
-                }
-            }
-        }
-    });
+            this, &MainWindow::onBookmarkRemove);
+
     mBookmark_RemoveAll=createActionFor(
                 tr("Remove All Bookmarks"),
                 ui->tableBookmark);
     connect(mBookmark_RemoveAll, &QAction::triggered,
-            [this]() {
-        mBookmarkModel->clear();
-        for (int i=0;i<mEditorList->pageCount();i++) {
-            Editor * editor = (*mEditorList)[i];
-            editor->clearBookmarks();
-        }
-    });
+            this, &MainWindow::onBookmarkRemoveAll);
     mBookmark_Modify=createActionFor(
                 tr("Modify Description"),
                 ui->tableBookmark);
     connect(mBookmark_Modify, &QAction::triggered,
-            [this]() {
-        QModelIndex index = ui->tableBookmark->currentIndex();
-        if (index.isValid()) {
-            PBookmark bookmark = mBookmarkModel->bookmark(index.row());
-            if (bookmark) {
-                QString desc = QInputDialog::getText(ui->tableBookmark,tr("Bookmark Description"),
-                                                 tr("Description:"),QLineEdit::Normal,
-                                                 bookmark->description);
-                desc = desc.trimmed();
-                mBookmarkModel->updateDescription(bookmark->filename,bookmark->line,desc);
-            }
-        }
-    });
+            this, &MainWindow::onBookmarkModify);
 
     //context menu signal for the watch view
     ui->debugConsole->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -2356,40 +2278,29 @@ void MainWindow::buildContextMenus()
                 ui->debugConsole);
     mDebugConsole_ShowDetailLog->setCheckable(true);
     connect(mDebugConsole_ShowDetailLog, &QAction::toggled,
-            [this]() {
-        pSettings->debugger().setShowDetailLog(mDebugConsole_ShowDetailLog->isChecked());
-        pSettings->debugger().save();
-    });
+            this, &MainWindow::onDebugConsoleShowDetailLog);
     mDebugConsole_Copy=createActionFor(
                 tr("Copy"),
                 ui->debugConsole,
                 QKeySequence("Ctrl+C"));
     connect(mDebugConsole_Copy, &QAction::triggered,
-            [this]() {
-        ui->debugConsole->copy();
-    });
+            this, &MainWindow::onDebugConsoleCopy);
     mDebugConsole_Paste=createActionFor(
                 tr("Paste"),
                 ui->debugConsole,
                 QKeySequence("Ctrl+V"));
     connect(mDebugConsole_Paste, &QAction::triggered,
-            [this]() {
-        ui->debugConsole->paste();
-    });
+            this, &MainWindow::onDebugConsolePaste);
     mDebugConsole_SelectAll=createActionFor(
                 tr("Select All"),
                 ui->debugConsole);
     connect(mDebugConsole_SelectAll, &QAction::triggered,
-            [this]() {
-        ui->debugConsole->selectAll();
-    });
+            this, &MainWindow::onDebugConsoleSelectAll);
     mDebugConsole_Clear=createActionFor(
                 tr("Clear"),
                 ui->debugConsole);
     connect(mDebugConsole_Clear, &QAction::triggered,
-            [this]() {
-        ui->debugConsole->clear();
-    });
+            this, &MainWindow::onDebugConsoleClear);
 
     //context menu signal for Editor's tabbar
     ui->EditorTabsLeft->tabBar()->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -2415,34 +2326,20 @@ void MainWindow::buildContextMenus()
                 ui->tableIssues,
                 QKeySequence("Ctrl+C"));
     connect(mTableIssuesCopyAction,&QAction::triggered,
-            [this](){
-        QModelIndex index = ui->tableIssues->selectionModel()->currentIndex();
-        PCompileIssue issue = ui->tableIssues->issue(index);
-        if (issue) {
-            QClipboard* clipboard = QApplication::clipboard();
-            clipboard->setText(issue->description);
-        }
-    });
+            this, &MainWindow::onTableIssuesCopy);
+
     mTableIssuesCopyAllAction = createActionFor(
                 tr("Copy all"),
                 ui->tableIssues,
                 QKeySequence("Ctrl+Shift+C"));
     connect(mTableIssuesCopyAllAction,&QAction::triggered,
-            [this](){
-        QClipboard* clipboard=QGuiApplication::clipboard();
-        QMimeData * mimeData = new QMimeData();
-        mimeData->setText(ui->tableIssues->toTxt());
-        mimeData->setHtml(ui->tableIssues->toHtml());
-        clipboard->clear();
-        clipboard->setMimeData(mimeData);
-    });
+            this, &MainWindow::onTableIssuesCopyAll);
+
     mTableIssuesClearAction = createActionFor(
                 tr("Clear"),
                 ui->tableIssues);
     connect(mTableIssuesClearAction,&QAction::triggered,
-            [this](){
-        clearIssues();
-    });
+            this, &MainWindow::onTableIssuesClear);
 
     //context menu signal for search view
     ui->searchHistoryPanel->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -2452,19 +2349,12 @@ void MainWindow::buildContextMenus()
                 tr("Remove this search"),
                 ui->searchHistoryPanel);
     connect(mSearchViewClearAction, &QAction::triggered,
-            [this](){
-       int index = ui->cbSearchHistory->currentIndex();
-       if (index>=0) {
-           mSearchResultModel.removeSearchResults(index);
-       }
-    });
+            this, &MainWindow::onSearchViewClear);
     mSearchViewClearAllAction = createActionFor(
                 tr("Clear all searches"),
                 ui->searchHistoryPanel);
     connect(mSearchViewClearAllAction,&QAction::triggered,
-            [this]() {
-       mSearchResultModel.clear();
-    });
+            this, &MainWindow::onSearchViewClearAll);
 
     //context menu signal for breakpoints view
     ui->tblBreakpoints->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -2474,55 +2364,18 @@ void MainWindow::buildContextMenus()
                 tr("Breakpoint condition..."),
                 ui->tblBreakpoints);
     connect(mBreakpointViewPropertyAction,&QAction::triggered,
-            [this](){
-        int index =ui->tblBreakpoints->selectionModel()->currentIndex().row();
+            this, &MainWindow::onBreakpointViewProperty);
 
-        PBreakpoint breakpoint = debugger()->breakpointModel()->breakpoint(
-                    index
-                    );
-        if (breakpoint) {
-            bool isOk;
-            QString s=QInputDialog::getText(this,
-                                      tr("Break point condition"),
-                                      tr("Enter the condition of the breakpoint:"),
-                                    QLineEdit::Normal,
-                                    breakpoint->condition,&isOk);
-            if (isOk) {
-                pMainWindow->debugger()->setBreakPointCondition(index,s);
-            }
-        }
-    });
     mBreakpointViewRemoveAllAction = createActionFor(
                 tr("Remove All Breakpoints"),
                 ui->tblBreakpoints);
     connect(mBreakpointViewRemoveAllAction,&QAction::triggered,
-            [this](){
-        pMainWindow->debugger()->deleteBreakpoints();
-        for (int i=0;i<mEditorList->pageCount();i++) {
-            Editor * e = (*(mEditorList))[i];
-            if (e) {
-                e->resetBreakpoints();
-            }
-        }
-    });
+            this, &MainWindow::onBreakpointViewRemoveAll);
     mBreakpointViewRemoveAction = createActionFor(
                 tr("Remove Breakpoint"),
                 ui->tblBreakpoints);
     connect(mBreakpointViewRemoveAction,&QAction::triggered,
-            [this](){
-        int index =ui->tblBreakpoints->selectionModel()->currentIndex().row();
-
-        PBreakpoint breakpoint = debugger()->breakpointModel()->breakpoint(index);
-        if (breakpoint) {
-            Editor * e = mEditorList->getOpenedEditorByFilename(breakpoint->filename);
-            if (e) {
-                if (e->hasBreakpoint(breakpoint->line))
-                    e->toggleBreakpoint(breakpoint->line);
-            } else {
-                debugger()->breakpointModel()->removeBreakpoint(index);
-            }
-        }
-    });
+            this, &MainWindow::onBreakpointRemove);
 
     //context menu signal for project view
     ui->projectView->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -2532,88 +2385,35 @@ void MainWindow::buildContextMenus()
                 tr("Rename File"),
                 ui->projectView);
     connect(mProject_Rename_Unit, &QAction::triggered,
-            [this](){
-        if (ui->projectView->currentIndex().isValid()) {
-            ui->projectView->edit(ui->projectView->currentIndex());
-        }
-    });
+            this, &MainWindow::onProjectRenameUnit);
     mProject_Add_Folder = createActionFor(
                 tr("Add Folder"),
                 ui->projectView);
     connect(mProject_Add_Folder, &QAction::triggered,
-            [this](){
-        if (!mProject)
-            return;
-        QModelIndex current = mProjectProxyModel->mapToSource(ui->projectView->currentIndex());
-        if (!current.isValid()) {
-            return;
-        }
-        ProjectModelNode * node = static_cast<ProjectModelNode*>(current.internalPointer());
-        PProjectModelNode folderNode =  mProject->pointerToNode(node);
-        if (!folderNode)
-            folderNode = mProject->rootNode();
-        if (folderNode->unitIndex>=0)
-            return;
-        QString s=tr("New folder");
-        bool ok;
-        s = QInputDialog::getText(ui->projectView,
-                              tr("Add Folder"),
-                              tr("Folder name:"),
-                              QLineEdit::Normal, s,
-                              &ok).trimmed();
-        if (ok && !s.isEmpty()) {
-            QString path = mProject->getFolderPath(folderNode);
-            if (path.isEmpty()) {
-                mProject->addFolder(s);
-            } else {
-                mProject->addFolder(path + '/' +s);
-            }
-            mProject->saveOptions();
-        }
-    });
+            this, &MainWindow::onProjectAddFolder);
+
     mProject_Rename_Folder = createActionFor(
                 tr("Rename Folder"),
                 ui->projectView);
     connect(mProject_Rename_Folder, &QAction::triggered,
-            [this](){
-        if (ui->projectView->currentIndex().isValid()) {
-            ui->projectView->edit(ui->projectView->currentIndex());
-        }
-    });
+            this, &MainWindow::onProjectRenameFolder);
+
     mProject_Remove_Folder = createActionFor(
                 tr("Remove Folder"),
                 ui->projectView);
     connect(mProject_Remove_Folder, &QAction::triggered,
-            [this](){
-        if (!mProject)
-            return;
-        QModelIndex current = mProjectProxyModel->mapToSource(ui->projectView->currentIndex());
-        if (!current.isValid()) {
-            return;
-        }
-        ProjectModelNode * node = static_cast<ProjectModelNode*>(current.internalPointer());
-        PProjectModelNode folderNode =  mProject->pointerToNode(node);
-        if (!folderNode)
-            return;
-        if (folderNode->unitIndex>=0)
-            return;
-        mProject->removeFolder(folderNode);
-        mProject->saveOptions();
-    });
+            this, &MainWindow::onProjectRemoveFolder);
     mProject_SwitchFileSystemViewMode = createActionFor(
                 tr("Switch to normal view"),
                 ui->projectView);
     connect(mProject_SwitchFileSystemViewMode, &QAction::triggered,
-            [this](){
-        mProject->setModelType(ProjectModelType::FileSystem);
-    });
+            this, &MainWindow::onProjectSwitchFileSystemViewMode);
+
     mProject_SwitchCustomViewMode = createActionFor(
                 tr("Switch to custom view"),
                 ui->projectView);
     connect(mProject_SwitchCustomViewMode, &QAction::triggered,
-            [this](){
-        mProject->setModelType(ProjectModelType::Custom);
-    });
+            this, &MainWindow::onProjectSwitchCustomViewMode);
 
     //context menu signal for class browser
     ui->tabStructure->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -2645,50 +2445,17 @@ void MainWindow::buildContextMenus()
     mClassBrowser_Sort_By_Type->setChecked(pSettings->ui().classBrowserSortType());
     mClassBrowser_Show_Inherited->setChecked(pSettings->ui().classBrowserShowInherited());
     connect(mClassBrowser_Sort_By_Name, &QAction::toggled,
-            [this](){
-        pSettings->ui().setClassBrowserSortAlpha(mClassBrowser_Sort_By_Name->isChecked());
-        pSettings->ui().save();
-        mClassBrowserModel.fillStatements();
-    });
+            this, &MainWindow::onClassBrowserSortByName);
     connect(mClassBrowser_Sort_By_Type, &QAction::toggled,
-            [this](){
-        pSettings->ui().setClassBrowserSortType(mClassBrowser_Sort_By_Type->isChecked());
-        pSettings->ui().save();
-        mClassBrowserModel.fillStatements();
-    });
+            this, &MainWindow::onClassBrowserSortByType);
     connect(mClassBrowser_Show_Inherited, &QAction::toggled,
-            [this](){
-        pSettings->ui().setClassBrowserShowInherited(mClassBrowser_Show_Inherited->isChecked());
-        pSettings->ui().save();
-        mClassBrowserModel.fillStatements();
-    });
+            this, &MainWindow::onClassBrowserShowInherited);
 
     connect(mClassBrowser_goto_definition,&QAction::triggered,
-            [this](){
-        QModelIndex index = ui->classBrowser->currentIndex();
-        if (!index.isValid())
-            return ;
-        ClassBrowserNode * node = static_cast<ClassBrowserNode*>(index.internalPointer());
-        if (!node)
-            return ;
-        PStatement statement = node->statement;
-        if (!statement) {
-            return;
-        }
-        QString filename;
-        int line;
-        filename = statement->definitionFileName;
-        line = statement->definitionLine;
-        Editor* e = pMainWindow->editorList()->getEditorByFilename(filename);
-        if (e) {
-            e->setCaretPositionAndActivate(line,1);
-        }
-    });
+            this, &MainWindow::onClassBrowserGotoDefinition);
 
     connect(mClassBrowser_goto_declaration,&QAction::triggered,
-            [this](){
-        on_classBrowser_doubleClicked(ui->classBrowser->currentIndex());
-    });
+            this, &MainWindow::onClassBrowserGotoDeclaration);
 
     //toolbar for class browser
     mClassBrowserToolbar = new QWidget();
@@ -2752,60 +2519,25 @@ void MainWindow::buildContextMenus()
                 tr("Open in Editor"),
                 ui->treeFiles);
     connect(mFilesView_Open, &QAction::triggered,
-            [this]() {
-        QString path = mFileSystemModel.filePath(ui->treeFiles->currentIndex());
-        if (!path.isEmpty() && QFileInfo(path).isFile()) {
-            Editor *editor=mEditorList->getEditorByFilename(path);
-            if (editor)
-                editor->activate();
-        }
-    });
+            this, &MainWindow::onFilesViewOpen);
+
     mFilesView_OpenWithExternal = createActionFor(
                 tr("Open in External Program"),
                 ui->treeFiles);
     connect(mFilesView_OpenWithExternal, &QAction::triggered,
-            [this]() {
-        QString path = mFileSystemModel.filePath(ui->treeFiles->currentIndex());
-        if (!path.isEmpty() && QFileInfo(path).isFile()) {
-            QDesktopServices::openUrl(QUrl::fromLocalFile(path));
-        }
-    });
+            this, &MainWindow::onFilesViewOpenWithExternal);
     mFilesView_OpenInTerminal = createActionFor(
                 tr("Open in Terminal"),
                 ui->treeFiles);
     mFilesView_OpenInTerminal->setIcon(ui->actionOpen_Terminal->icon());
     connect(mFilesView_OpenInTerminal, &QAction::triggered,
-            [this]() {
-        QString path = mFileSystemModel.filePath(ui->treeFiles->currentIndex());
-        if (!path.isEmpty()) {
-            QFileInfo fileInfo(path);
-#ifdef Q_OS_WIN
-            openShell(fileInfo.path(),"cmd.exe");
-#else
-            openShell(fileInfo.path(),pSettings->environment().terminalPath());
-#endif
-        }
-    });
+            this, &MainWindow::onFilesViewOpenInTerminal);
     mFilesView_OpenInExplorer = createActionFor(
                 tr("Open in Windows Explorer"),
                 ui->treeFiles);
     mFilesView_OpenInExplorer->setIcon(ui->actionOpen_Containing_Folder->icon());
     connect(mFilesView_OpenInExplorer, &QAction::triggered,
-            [this]() {
-        QString path = mFileSystemModel.filePath(ui->treeFiles->currentIndex());
-        if (!path.isEmpty()) {
-            QFileInfo info(path);
-            if (info.isFile()){
-                QDesktopServices::openUrl(
-                            QUrl("file:///"+
-                                 includeTrailingPathDelimiter(info.path()),QUrl::TolerantMode));
-            } else if (info.isDir()){
-                QDesktopServices::openUrl(
-                            QUrl("file:///"+
-                                 includeTrailingPathDelimiter(path),QUrl::TolerantMode));
-            }
-        }
-    });
+            this, &MainWindow::onFilesViewOpenInExplorer);
 
     //toolbar for files view
     {
@@ -3663,6 +3395,380 @@ void MainWindow::onFilesViewRemoveFiles()
         foreach (const QModelIndex& index, indexList) {
             doFilesViewRemoveFile(index);
         }
+    }
+}
+
+void MainWindow::onProblemProperties()
+{
+    QModelIndex idx = ui->lstProblemSet->currentIndex();
+    if (!idx.isValid())
+        return;
+    POJProblem problem=mOJProblemSetModel.problem(idx.row());
+    if (!problem)
+        return;
+    OJProblemPropertyWidget dialog;
+    dialog.setName(problem->name);
+    dialog.setUrl(problem->url);
+    dialog.setDescription(problem->description);
+    if (dialog.exec() == QDialog::Accepted) {
+        problem->url = dialog.url();
+        problem->description = dialog.description();
+        if (problem == mOJProblemModel.problem()) {
+            updateProblemTitle();
+        }
+    }
+}
+
+void MainWindow::onProblemOpenSource()
+{
+    QModelIndex idx = ui->lstProblemSet->currentIndex();
+    if (!idx.isValid())
+        return;
+    POJProblem problem=mOJProblemSetModel.problem(idx.row());
+    if (!problem)
+        return;
+    if (!problem->answerProgram.isEmpty()) {
+        Editor * editor = editorList()->getEditorByFilename(problem->answerProgram);
+        if (editor) {
+            editor->activate();
+        }
+    }
+}
+
+void MainWindow::onLableProblemSetContextMenuRequested()
+{
+    QString newName = QInputDialog::getText(
+                ui->lblProblemSet,
+                tr("Set Problem Set Name"),
+                tr("Problem Set Name:"),
+                QLineEdit::Normal,
+                ui->lblProblemSet->text());
+    newName = newName.trimmed();
+    if (!newName.isEmpty()){
+        mOJProblemSetModel.rename(newName);
+        ui->lblProblemSet->setText(mOJProblemSetModel.name());
+    }
+}
+
+void MainWindow::onBookmarkRemove()
+{
+    QModelIndex index = ui->tableBookmark->currentIndex();
+    if (index.isValid()) {
+        PBookmark bookmark = mBookmarkModel->bookmark(index.row());
+        if (bookmark) {
+            Editor * editor = mEditorList->getOpenedEditorByFilename(bookmark->filename);
+            if (editor) {
+                editor->removeBookmark(bookmark->line);
+            } else {
+                mBookmarkModel->removeBookmarkAt(index.row());
+            }
+        }
+    }
+}
+
+void MainWindow::onBookmarkRemoveAll()
+{
+    mBookmarkModel->clear();
+    for (int i=0;i<mEditorList->pageCount();i++) {
+        Editor * editor = (*mEditorList)[i];
+        editor->clearBookmarks();
+    }
+}
+
+void MainWindow::onBookmarkModify()
+{
+    QModelIndex index = ui->tableBookmark->currentIndex();
+    if (index.isValid()) {
+        PBookmark bookmark = mBookmarkModel->bookmark(index.row());
+        if (bookmark) {
+            QString desc = QInputDialog::getText(ui->tableBookmark,tr("Bookmark Description"),
+                                             tr("Description:"),QLineEdit::Normal,
+                                             bookmark->description);
+            desc = desc.trimmed();
+            mBookmarkModel->updateDescription(bookmark->filename,bookmark->line,desc);
+        }
+    }
+}
+
+void MainWindow::onDebugConsoleShowDetailLog()
+{
+    pSettings->debugger().setShowDetailLog(mDebugConsole_ShowDetailLog->isChecked());
+    pSettings->debugger().save();
+}
+
+void MainWindow::onDebugConsolePaste()
+{
+    ui->debugConsole->paste();
+}
+
+void MainWindow::onDebugConsoleSelectAll()
+{
+    ui->debugConsole->selectAll();
+}
+
+void MainWindow::onDebugConsoleCopy()
+{
+    ui->debugConsole->copy();
+}
+
+void MainWindow::onDebugConsoleClear()
+{
+    ui->debugConsole->clear();
+}
+
+void MainWindow::onFilesViewOpenInExplorer()
+{
+    QString path = mFileSystemModel.filePath(ui->treeFiles->currentIndex());
+    if (!path.isEmpty()) {
+        QFileInfo info(path);
+        if (info.isFile()){
+            QDesktopServices::openUrl(
+                        QUrl("file:///"+
+                             includeTrailingPathDelimiter(info.path()),QUrl::TolerantMode));
+        } else if (info.isDir()){
+            QDesktopServices::openUrl(
+                        QUrl("file:///"+
+                             includeTrailingPathDelimiter(path),QUrl::TolerantMode));
+        }
+    }
+}
+
+void MainWindow::onFilesViewOpenInTerminal()
+{
+    QString path = mFileSystemModel.filePath(ui->treeFiles->currentIndex());
+    if (!path.isEmpty()) {
+        QFileInfo fileInfo(path);
+#ifdef Q_OS_WIN
+        openShell(fileInfo.path(),"cmd.exe");
+#else
+        openShell(fileInfo.path(),pSettings->environment().terminalPath());
+#endif
+    }
+}
+
+void MainWindow::onFilesViewOpenWithExternal()
+{
+    QString path = mFileSystemModel.filePath(ui->treeFiles->currentIndex());
+    if (!path.isEmpty() && QFileInfo(path).isFile()) {
+        QDesktopServices::openUrl(QUrl::fromLocalFile(path));
+    }
+}
+
+void MainWindow::onFilesViewOpen()
+{
+    QString path = mFileSystemModel.filePath(ui->treeFiles->currentIndex());
+    if (!path.isEmpty() && QFileInfo(path).isFile()) {
+        Editor *editor=mEditorList->getEditorByFilename(path);
+        if (editor)
+            editor->activate();
+    }
+}
+
+void MainWindow::onClassBrowserGotoDeclaration()
+{
+    on_classBrowser_doubleClicked(ui->classBrowser->currentIndex());
+}
+
+void MainWindow::onClassBrowserGotoDefinition()
+{
+    QModelIndex index = ui->classBrowser->currentIndex();
+    if (!index.isValid())
+        return ;
+    ClassBrowserNode * node = static_cast<ClassBrowserNode*>(index.internalPointer());
+    if (!node)
+        return ;
+    PStatement statement = node->statement;
+    if (!statement) {
+        return;
+    }
+    QString filename;
+    int line;
+    filename = statement->definitionFileName;
+    line = statement->definitionLine;
+    Editor* e = pMainWindow->editorList()->getEditorByFilename(filename);
+    if (e) {
+        e->setCaretPositionAndActivate(line,1);
+    }
+}
+
+void MainWindow::onClassBrowserShowInherited()
+{
+    pSettings->ui().setClassBrowserShowInherited(mClassBrowser_Show_Inherited->isChecked());
+    pSettings->ui().save();
+    mClassBrowserModel.fillStatements();
+}
+
+void MainWindow::onClassBrowserSortByType()
+{
+    pSettings->ui().setClassBrowserSortType(mClassBrowser_Sort_By_Type->isChecked());
+    pSettings->ui().save();
+    mClassBrowserModel.fillStatements();
+}
+
+void MainWindow::onClassBrowserSortByName()
+{
+    pSettings->ui().setClassBrowserSortAlpha(mClassBrowser_Sort_By_Name->isChecked());
+    pSettings->ui().save();
+    mClassBrowserModel.fillStatements();
+}
+
+void MainWindow::onProjectSwitchCustomViewMode()
+{
+    mProject->setModelType(ProjectModelType::Custom);
+}
+
+void MainWindow::onProjectSwitchFileSystemViewMode()
+{
+    mProject->setModelType(ProjectModelType::FileSystem);
+}
+
+void MainWindow::onProjectRemoveFolder()
+{
+    if (!mProject)
+        return;
+    QModelIndex current = mProjectProxyModel->mapToSource(ui->projectView->currentIndex());
+    if (!current.isValid()) {
+        return;
+    }
+    ProjectModelNode * node = static_cast<ProjectModelNode*>(current.internalPointer());
+    PProjectModelNode folderNode =  mProject->pointerToNode(node);
+    if (!folderNode)
+        return;
+    if (folderNode->unitIndex>=0)
+        return;
+    mProject->removeFolder(folderNode);
+    mProject->saveOptions();
+
+}
+
+void MainWindow::onProjectRenameFolder()
+{
+    if (ui->projectView->currentIndex().isValid()) {
+        ui->projectView->edit(ui->projectView->currentIndex());
+    }
+}
+
+void MainWindow::onProjectAddFolder()
+{
+    if (!mProject)
+        return;
+    QModelIndex current = mProjectProxyModel->mapToSource(ui->projectView->currentIndex());
+    if (!current.isValid()) {
+        return;
+    }
+    ProjectModelNode * node = static_cast<ProjectModelNode*>(current.internalPointer());
+    PProjectModelNode folderNode =  mProject->pointerToNode(node);
+    if (!folderNode)
+        folderNode = mProject->rootNode();
+    if (folderNode->unitIndex>=0)
+        return;
+    QString s=tr("New folder");
+    bool ok;
+    s = QInputDialog::getText(ui->projectView,
+                          tr("Add Folder"),
+                          tr("Folder name:"),
+                          QLineEdit::Normal, s,
+                          &ok).trimmed();
+    if (ok && !s.isEmpty()) {
+        QString path = mProject->getFolderPath(folderNode);
+        if (path.isEmpty()) {
+            mProject->addFolder(s);
+        } else {
+            mProject->addFolder(path + '/' +s);
+        }
+        mProject->saveOptions();
+    }
+}
+
+void MainWindow::onProjectRenameUnit()
+{
+    if (ui->projectView->currentIndex().isValid()) {
+        ui->projectView->edit(ui->projectView->currentIndex());
+    }
+}
+
+void MainWindow::onBreakpointRemove()
+{
+    int index =ui->tblBreakpoints->selectionModel()->currentIndex().row();
+
+    PBreakpoint breakpoint = debugger()->breakpointModel()->breakpoint(index);
+    if (breakpoint) {
+        Editor * e = mEditorList->getOpenedEditorByFilename(breakpoint->filename);
+        if (e) {
+            if (e->hasBreakpoint(breakpoint->line))
+                e->toggleBreakpoint(breakpoint->line);
+        } else {
+            debugger()->breakpointModel()->removeBreakpoint(index);
+        }
+    }
+}
+
+void MainWindow::onBreakpointViewRemoveAll()
+{
+    pMainWindow->debugger()->deleteBreakpoints();
+    for (int i=0;i<mEditorList->pageCount();i++) {
+        Editor * e = (*(mEditorList))[i];
+        if (e) {
+            e->resetBreakpoints();
+        }
+    }
+}
+
+void MainWindow::onBreakpointViewProperty()
+{
+    int index =ui->tblBreakpoints->selectionModel()->currentIndex().row();
+
+    PBreakpoint breakpoint = debugger()->breakpointModel()->breakpoint(
+                index
+                );
+    if (breakpoint) {
+        bool isOk;
+        QString s=QInputDialog::getText(this,
+                                  tr("Break point condition"),
+                                  tr("Enter the condition of the breakpoint:"),
+                                QLineEdit::Normal,
+                                breakpoint->condition,&isOk);
+        if (isOk) {
+            pMainWindow->debugger()->setBreakPointCondition(index,s);
+        }
+    }
+}
+
+void MainWindow::onSearchViewClearAll()
+{
+    mSearchResultModel.clear();
+}
+
+void MainWindow::onSearchViewClear()
+{
+    int index = ui->cbSearchHistory->currentIndex();
+    if (index>=0) {
+        mSearchResultModel.removeSearchResults(index);
+    }
+}
+
+void MainWindow::onTableIssuesClear()
+{
+    clearIssues();
+}
+
+void MainWindow::onTableIssuesCopyAll()
+{
+    QClipboard* clipboard=QGuiApplication::clipboard();
+    QMimeData * mimeData = new QMimeData();
+    mimeData->setText(ui->tableIssues->toTxt());
+    mimeData->setHtml(ui->tableIssues->toHtml());
+    clipboard->clear();
+    clipboard->setMimeData(mimeData);
+}
+
+void MainWindow::onTableIssuesCopy()
+{
+    QModelIndex index = ui->tableIssues->selectionModel()->currentIndex();
+    PCompileIssue issue = ui->tableIssues->issue(index);
+    if (issue) {
+        QClipboard* clipboard = QApplication::clipboard();
+        clipboard->setText(issue->description);
     }
 }
 

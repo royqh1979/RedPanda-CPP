@@ -6,6 +6,7 @@ Red Panda C++ Version 1.0.2
   - change: test to use utf-8 as the default encoding (prepare to use libclang to implement parser)
   - fix: auto syntax check use wrong charset, if a file in editing is not encoded with ANSI encoding
   - enhancement: timeout for problem case test in
+  - enhancement: slightly reduce start up time
 
 Red Panda C++ Version 1.0.1
   - fix: only convert project icon file when it's filename doesn't end with ".ico"

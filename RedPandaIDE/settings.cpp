@@ -96,7 +96,6 @@ QVariant Settings::value(const QString &key, const QVariant &defaultValue)
 
 void Settings::load()
 {
-
     mCompilerSets.loadSets();
     mEnvironment.load();
     mEditor.load();
@@ -108,7 +107,6 @@ void Settings::load()
     mUI.load();
     mDirs.load();
     mVCS.load();
-
 }
 
 Settings::Dirs &Settings::dirs()
@@ -2953,7 +2951,8 @@ void Settings::Environment::doLoad()
     //Appearence
     mTheme = stringValue("theme","dark");
     QString defaultFontName = "Segoe UI";
-    if (QLocale::system().name() == "zh_CN") {
+    QString defaultLocaleName = QLocale::system().name();
+    if (defaultLocaleName == "zh_CN") {
         QString fontName;
         fontName = "Microsoft Yahei";
         QFont font(fontName);
@@ -2963,11 +2962,10 @@ void Settings::Environment::doLoad()
     }
     mInterfaceFont = stringValue("interface_font",defaultFontName);
     mInterfaceFontSize = intValue("interface_font_size",12);
-    mLanguage = stringValue("language", QLocale::system().name());
+    mLanguage = stringValue("language", defaultLocaleName);
     mIconSet = stringValue("icon_set","contrast");
     mUseCustomIconSet = boolValue("use_custom_icon_set", false);
     mUseCustomTheme = boolValue("use_custom_theme", false);
-
 
     mCurrentFolder = stringValue("current_folder",QDir::currentPath());
     if (!fileExists(mCurrentFolder)) {
@@ -5255,13 +5253,14 @@ void Settings::VCS::validateGit()
     if (!fileInfo.exists()) {
         return;
     }
-    QStringList args;
-    args.append("--version");
-    QString output = runAndGetOutput(
-                fileInfo.fileName(),
-                fileInfo.absolutePath(),
-                args);
-    mGitOk = output.startsWith("git version");
+    mGitOk=true;
+//    QStringList args;
+//    args.append("--version");
+//    QString output = runAndGetOutput(
+//                fileInfo.fileName(),
+//                fileInfo.absolutePath(),
+//                args);
+//    mGitOk = output.startsWith("git version");
 }
 
 bool Settings::VCS::gitOk() const
@@ -5283,6 +5282,7 @@ void Settings::VCS::detectGitInPath()
         if (dir.exists(GIT_PROGRAM)) {
             QString oldPath = mGitPath;
             setGitPath(dir.filePath(GIT_PROGRAM));
+            validateGit();
             if (mGitOk) {
                 save();
                 return;
