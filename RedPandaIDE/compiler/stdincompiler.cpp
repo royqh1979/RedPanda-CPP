@@ -20,10 +20,10 @@
 #include <QFileInfo>
 #include "../platform.h"
 
-StdinCompiler::StdinCompiler(const QString &filename, const QString& content,bool isAscii, bool silent, bool onlyCheckSyntax):
+StdinCompiler::StdinCompiler(const QString &filename,const QByteArray& encoding, const QString& content,bool silent, bool onlyCheckSyntax):
     Compiler(filename,silent,onlyCheckSyntax),
     mContent(content),
-    mIsAscii(isAscii)
+    mEncoding(encoding)
 {
 
 }
@@ -39,8 +39,8 @@ bool StdinCompiler::prepareForCompile()
     if (fileType == FileType::Other)
         fileType = FileType::CppSource;
     QString strFileType;
-    if (!mIsAscii)
-        mArguments += getCharsetArgument(pCharsetInfoManager->getDefaultSystemEncoding());
+    if (mEncoding!=ENCODING_ASCII  && (!mOnlyCheckSyntax || mEncoding != ENCODING_UTF8 ))
+        mArguments += getCharsetArgument(mEncoding);
     switch(fileType) {
     case FileType::CSource:
         mArguments += " -x c - ";

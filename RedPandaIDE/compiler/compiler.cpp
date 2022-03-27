@@ -297,8 +297,9 @@ QString Compiler::getCharsetArgument(const QByteArray& encoding)
         } else {
             execEncodingName = compilerSetExecCharset;
         }
-        result += QString(" -finput-charset=%1 -fexec-charset=%2")
-                .arg(encodingName, execEncodingName);
+        if (encodingName!=execEncodingName)
+            result += QString(" -finput-charset=%1 -fexec-charset=%2")
+                    .arg(encodingName, execEncodingName);
     }
     return result;
 }

@@ -41,6 +41,8 @@ void ExecutorProblemSetWidget::doLoad()
     ui->cbFont->setCurrentFont(QFont(pSettings->executor().caseEditorFontName()));
     ui->spinFontSize->setValue(pSettings->executor().caseEditorFontSize());
     ui->chkOnlyMonospaced->setChecked(pSettings->executor().caseEditorFontOnlyMonospaced());
+    ui->grpEnableTimeout->setEnabled(pSettings->executor().enableCaseTimeout());
+    ui->spinCaseTimeout->setValue(pSettings->executor().caseTimeout());
 }
 
 void ExecutorProblemSetWidget::doSave()
@@ -52,6 +54,8 @@ void ExecutorProblemSetWidget::doSave()
     pSettings->executor().setCaseEditorFontName(ui->cbFont->currentFont().family());
     pSettings->executor().setCaseEditorFontOnlyMonospaced(ui->chkOnlyMonospaced->isChecked());
     pSettings->executor().setCaseEditorFontSize(ui->spinFontSize->value());
+    pSettings->executor().setEnableCaseTimeout(ui->grpEnableTimeout->isEnabled());
+    pSettings->executor().setCaseTimeout(ui->spinCaseTimeout->value());
     pSettings->executor().save();
     pMainWindow->applySettings();
 }

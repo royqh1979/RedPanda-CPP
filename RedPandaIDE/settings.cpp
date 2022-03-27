@@ -3227,6 +3227,26 @@ void Settings::Executor::setCaseEditorFontOnlyMonospaced(bool newCaseEditorFontO
     mCaseEditorFontOnlyMonospaced = newCaseEditorFontOnlyMonospaced;
 }
 
+int Settings::Executor::caseTimeout() const
+{
+    return mCaseTimeout;
+}
+
+void Settings::Executor::setCaseTimeout(int newCaseTimeout)
+{
+    mCaseTimeout = newCaseTimeout;
+}
+
+bool Settings::Executor::enableCaseTimeout() const
+{
+    return mEnableCaseTimeout;
+}
+
+void Settings::Executor::setEnableCaseTimeout(bool newEnableCaseTimeout)
+{
+    mEnableCaseTimeout = newEnableCaseTimeout;
+}
+
 int Settings::Executor::caseEditorFontSize() const
 {
     return mCaseEditorFontSize;
@@ -3283,6 +3303,8 @@ void Settings::Executor::doSave()
     saveValue("case_editor_font_name",mCaseEditorFontName);
     saveValue("case_editor_font_size",mCaseEditorFontSize);
     saveValue("case_editor_font_only_monospaced",mCaseEditorFontOnlyMonospaced);
+    saveValue("case_timeout", mCaseTimeout);
+    saveValue("enable_case_timeout", mEnableCaseTimeout);
 }
 
 bool Settings::Executor::pauseConsole() const
@@ -3315,6 +3337,8 @@ void Settings::Executor::doLoad()
 #endif
     mCaseEditorFontSize = intValue("case_editor_font_size",12);
     mCaseEditorFontOnlyMonospaced = boolValue("case_editor_font_only_monospaced",true);
+    mCaseTimeout = intValue("case_timeout", 1);
+    mEnableCaseTimeout = boolValue("enable_case_timeout", true);
 }
 
 

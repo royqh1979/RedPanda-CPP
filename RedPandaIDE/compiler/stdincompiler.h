@@ -24,15 +24,14 @@ class StdinCompiler : public Compiler
     Q_OBJECT
 
 public:
-    explicit StdinCompiler(const QString& filename, const QString& content, bool isAscii, bool silent,bool onlyCheckSyntax);
+    explicit StdinCompiler(const QString& filename, const QByteArray& encoding, const QString& content, bool silent,bool onlyCheckSyntax);
 
-    // Compiler interface
 protected:
     bool prepareForCompile() override;
 
 private:
     QString mContent;
-    bool mIsAscii;
+    QByteArray mEncoding;
 
     // Compiler interface
 protected:
@@ -41,6 +40,7 @@ protected:
     // Compiler interface
 protected:
     bool prepareForRebuild() override;
+
 };
 
 #endif // STDINCOMPILER_H

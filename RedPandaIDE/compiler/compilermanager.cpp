@@ -188,7 +188,7 @@ void CompilerManager::buildProjectMakefile(std::shared_ptr<Project> project)
 
 }
 
-void CompilerManager::checkSyntax(const QString &filename, const QString &content, bool isAscii, std::shared_ptr<Project> project)
+void CompilerManager::checkSyntax(const QString &filename, const QByteArray& encoding, const QString &content, std::shared_ptr<Project> project)
 {
     if (!pSettings->compilerSets().defaultSet()) {
         QMessageBox::critical(pMainWindow,
@@ -204,7 +204,8 @@ void CompilerManager::checkSyntax(const QString &filename, const QString &conten
 
         mSyntaxCheckErrorCount = 0;
         mSyntaxCheckIssueCount = 0;
-        mBackgroundSyntaxChecker = new StdinCompiler(filename,content,isAscii,true,true);
+        StdinCompiler *pStdinCompiler = new StdinCompiler(filename,encoding, content,true,true);
+        mBackgroundSyntaxChecker = pStdinCompiler;
         mBackgroundSyntaxChecker->setProject(project);
         connect(mBackgroundSyntaxChecker, &Compiler::finished, mBackgroundSyntaxChecker, &QThread::deleteLater);
         connect(mBackgroundSyntaxChecker, &Compiler::compileIssue, this, &CompilerManager::onSyntaxCheckIssue);
@@ -326,12 +327,15 @@ void CompilerManager::runProblem(const QString &filename, const QString &argumen
     }
     OJProblemCasesRunner * execRunner = new OJProblemCasesRunner(filename,arguments,workDir,problemCases);
     mRunner = execRunner;
+    if (pSettings->executor().enableCaseTimeout())
+        execRunner->setExecTimeout(pSettings->executor().caseTimeout()*1000);
     connect(mRunner, &Runner::finished, this ,&CompilerManager::onRunnerTerminated);
     connect(mRunner, &Runner::finished, pMainWindow ,&MainWindow::onRunProblemFinished);
     connect(mRunner, &Runner::runErrorOccurred, pMainWindow ,&MainWindow::onRunErrorOccured);
     connect(execRunner, &OJProblemCasesRunner::caseStarted, pMainWindow, &MainWindow::onOJProblemCaseStarted);
     connect(execRunner, &OJProblemCasesRunner::caseFinished, pMainWindow, &MainWindow::onOJProblemCaseFinished);
     connect(execRunner, &OJProblemCasesRunner::newOutputGetted, pMainWindow, &MainWindow::onOJProblemCaseNewOutputGetted);
+    connect(execRunner, &OJProblemCasesRunner::resetOutput, pMainWindow, &MainWindow::onOJProblemCaseResetOutput);
     mRunner->start();
 }
 

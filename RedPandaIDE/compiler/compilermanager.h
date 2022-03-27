@@ -41,7 +41,7 @@ public:
     void compileProject(std::shared_ptr<Project> project, bool rebuild, bool silent=false,bool onlyCheckSyntax=false);
     void cleanProject(std::shared_ptr<Project> project);
     void buildProjectMakefile(std::shared_ptr<Project> project);
-    void checkSyntax(const QString&filename, const QString& content, bool isAscii, std::shared_ptr<Project> project);
+    void checkSyntax(const QString&filename, const QByteArray& encoding, const QString& content, std::shared_ptr<Project> project);
     void run(const QString& filename, const QString& arguments, const QString& workDir);
     void runProblem(const QString& filename, const QString& arguments, const QString& workDir, POJProblemCase problemCase);
     void runProblem(const QString& filename, const QString& arguments, const QString& workDir, QVector<POJProblemCase> problemCases);

@@ -886,6 +886,12 @@ public:
         bool caseEditorFontOnlyMonospaced() const;
         void setCaseEditorFontOnlyMonospaced(bool newCaseEditorFontOnlyMonospaced);
 
+        bool enableCaseTimeout() const;
+        void setEnableCaseTimeout(bool newEnableCaseTimeout);
+
+        int caseTimeout() const;
+        void setCaseTimeout(int newCaseTimeout);
+
     private:
         // general
         bool mPauseConsole;
@@ -903,6 +909,8 @@ public:
         QString mCaseEditorFontName;
         int mCaseEditorFontSize;
         bool mCaseEditorFontOnlyMonospaced;
+        bool mEnableCaseTimeout;
+        int mCaseTimeout;
 
     protected:
         void doSave() override;

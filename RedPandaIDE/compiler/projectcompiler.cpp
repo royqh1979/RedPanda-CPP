@@ -357,15 +357,17 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
                 QByteArray defaultSystemEncoding = pCharsetInfoManager->getDefaultSystemEncoding();
                 if (unit->encoding() == ENCODING_AUTO_DETECT) {
                     Editor* editor = mProject->unitEditor(unit);
-                    if (editor && editor->fileEncoding()!=ENCODING_ASCII)
+                    if (editor && editor->fileEncoding()!=ENCODING_ASCII
+                            && editor->fileEncoding()!=defaultSystemEncoding)
                         encodingStr = QString(" -finput-charset=%1 -fexec-charset=%2")
                                 .arg(QString(editor->fileEncoding()),
                                      QString(defaultSystemEncoding));
                 } else if (unit->encoding()==ENCODING_SYSTEM_DEFAULT) {
-                    encodingStr = QString(" -finput-charset=%1 -fexec-charset=%2")
-                          .arg(QString(defaultSystemEncoding),
-                               QString(defaultSystemEncoding));
-                } else if (unit->encoding()!=ENCODING_ASCII && !unit->encoding().isEmpty()) {
+//                    encodingStr = QString(" -finput-charset=%1 -fexec-charset=%2")
+//                          .arg(QString(defaultSystemEncoding),
+//                               QString(defaultSystemEncoding));
+                } else if (unit->encoding()!=ENCODING_ASCII && !unit->encoding().isEmpty()
+                           && unit->encoding()!=defaultSystemEncoding) {
                     encodingStr = QString(" -finput-charset=%1 -fexec-charset=%2")
                           .arg(QString(unit->encoding()),
                                QString(defaultSystemEncoding));

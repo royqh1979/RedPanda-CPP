@@ -24,7 +24,9 @@
 
 OJProblemCasesRunner::OJProblemCasesRunner(const QString& filename, const QString& arguments, const QString& workDir,
                                            const QVector<POJProblemCase>& problemCases, QObject *parent):
-    Runner(filename,arguments,workDir,parent)
+    Runner(filename,arguments,workDir,parent),
+    mExecTimeout(-1),
+    mExecTimeouted(false)
 {
     mProblemCases = problemCases;
     mBufferSize = 8192;
@@ -34,7 +36,9 @@ OJProblemCasesRunner::OJProblemCasesRunner(const QString& filename, const QStrin
 
 OJProblemCasesRunner::OJProblemCasesRunner(const QString& filename, const QString& arguments, const QString& workDir,
                                            POJProblemCase problemCase, QObject *parent):
-    Runner(filename,arguments,workDir,parent)
+    Runner(filename,arguments,workDir,parent),
+    mExecTimeout(-1),
+    mExecTimeouted(false)
 {
     mProblemCases.append(problemCase);
     mBufferSize = 8192;
@@ -87,6 +91,8 @@ void OJProblemCasesRunner::runCase(int index,POJProblemCase problemCase)
     QByteArray buffer;
     QByteArray output;
     int noOutputTime = 0;
+    QElapsedTimer elapsedTimer;
+    elapsedTimer.start();
     while (true) {
         process.waitForFinished(mWaitForFinishTime);
         readed = process.read(mBufferSize);
@@ -94,7 +100,13 @@ void OJProblemCasesRunner::runCase(int index,POJProblemCase problemCase)
         if (process.state()!=QProcess::Running) {
             break;
         }
-        if (mStop) {            
+        if (mExecTimeout>0) {
+            int msec = elapsedTimer.elapsed();
+            if (msec>mExecTimeout) {
+                mExecTimeouted=true;
+            }
+        }
+        if (mStop || mExecTimeouted) {
             process.closeReadChannel(QProcess::StandardOutput);
             process.closeReadChannel(QProcess::StandardError);
             process.closeWriteChannel();
@@ -115,34 +127,39 @@ void OJProblemCasesRunner::runCase(int index,POJProblemCase problemCase)
             noOutputTime += mWaitForFinishTime;
         }
     }
-    if (process.state() == QProcess::ProcessState::NotRunning)
-        buffer += process.readAll();
-    emit newOutputGetted(problemCase->getId(),QString::fromLocal8Bit(buffer));
-    output.append(buffer);
-    if (errorOccurred) {
-        //qDebug()<<"process error:"<<process.error();
-        switch (process.error()) {
-        case QProcess::FailedToStart:
-            emit runErrorOccurred(tr("The runner process '%1' failed to start.").arg(mFilename));
-            break;
-//        case QProcess::Crashed:
-//            if (!mStop)
-//                emit runErrorOccurred(tr("The runner process crashed after starting successfully."));
-//            break;
-        case QProcess::Timedout:
-            emit runErrorOccurred(tr("The last waitFor...() function timed out."));
-            break;
-        case QProcess::WriteError:
-            emit runErrorOccurred(tr("An error occurred when attempting to write to the runner process."));
-            break;
-        case QProcess::ReadError:
-            emit runErrorOccurred(tr("An error occurred when attempting to read from the runner process."));
-            break;
-        default:
-            break;
+    if (mExecTimeouted) {
+        problemCase->output = tr("Case Timeout");
+        emit resetOutput(problemCase->getId(), problemCase->output);
+    } else {
+        if (process.state() == QProcess::ProcessState::NotRunning)
+            buffer += process.readAll();
+        emit newOutputGetted(problemCase->getId(),QString::fromLocal8Bit(buffer));
+        output.append(buffer);
+        if (errorOccurred) {
+            //qDebug()<<"process error:"<<process.error();
+            switch (process.error()) {
+            case QProcess::FailedToStart:
+                emit runErrorOccurred(tr("The runner process '%1' failed to start.").arg(mFilename));
+                break;
+    //        case QProcess::Crashed:
+    //            if (!mStop)
+    //                emit runErrorOccurred(tr("The runner process crashed after starting successfully."));
+    //            break;
+            case QProcess::Timedout:
+                emit runErrorOccurred(tr("The last waitFor...() function timed out."));
+                break;
+            case QProcess::WriteError:
+                emit runErrorOccurred(tr("An error occurred when attempting to write to the runner process."));
+                break;
+            case QProcess::ReadError:
+                emit runErrorOccurred(tr("An error occurred when attempting to read from the runner process."));
+                break;
+            default:
+                break;
+            }
         }
+        problemCase->output = QString::fromLocal8Bit(output);
     }
-    problemCase->output = QString::fromLocal8Bit(output);
 }
 
 void OJProblemCasesRunner::run()
@@ -157,6 +174,21 @@ void OJProblemCasesRunner::run()
         POJProblemCase problemCase = mProblemCases[i];
         runCase(i,problemCase);
     }
+}
+
+bool OJProblemCasesRunner::execTimeouted() const
+{
+    return mExecTimeouted;
+}
+
+int OJProblemCasesRunner::execTimeout() const
+{
+    return mExecTimeout;
+}
+
+void OJProblemCasesRunner::setExecTimeout(int newExecTimeout)
+{
+    mExecTimeout = newExecTimeout;
 }
 
 int OJProblemCasesRunner::waitForFinishTime() const

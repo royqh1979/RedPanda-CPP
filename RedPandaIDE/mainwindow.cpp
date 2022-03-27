@@ -1459,11 +1459,9 @@ void MainWindow::checkSyntaxInBack(Editor *e)
     clearIssues();
     CompileTarget target =getCompileTarget();
     if (target ==CompileTarget::Project) {
-        mCompilerManager->checkSyntax(e->filename(),e->text(),
-                                          e->fileEncoding() == ENCODING_ASCII, mProject);
+        mCompilerManager->checkSyntax(e->filename(), e->fileEncoding(), e->text(), mProject);
     } else {
-        mCompilerManager->checkSyntax(e->filename(),e->text(),
-                                          e->fileEncoding() == ENCODING_ASCII, nullptr);
+        mCompilerManager->checkSyntax(e->filename(),e->fileEncoding(),e->text(), nullptr);
     }
 }
 
@@ -4528,6 +4526,11 @@ void MainWindow::onOJProblemCaseFinished(const QString& id, int current, int tot
 void MainWindow::onOJProblemCaseNewOutputGetted(const QString &/* id */, const QString &line)
 {
     ui->txtProblemCaseOutput->appendPlainText(line);
+}
+
+void MainWindow::onOJProblemCaseResetOutput(const QString &id, const QString &line)
+{
+    ui->txtProblemCaseOutput->setPlainText(line);
 }
 
 void MainWindow::cleanUpCPUDialog()

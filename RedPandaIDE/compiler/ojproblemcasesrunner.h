@@ -40,10 +40,16 @@ public:
     int waitForFinishTime() const;
     void setWaitForFinishTime(int newWaitForFinishTime);
 
+    int execTimeout() const;
+    void setExecTimeout(int newExecTimeout);
+
+    bool execTimeouted() const;
+
 signals:
-    void caseStarted(const QString& id, int current, int total);
-    void caseFinished(const QString& id, int current, int total);
-    void newOutputGetted(const QString&id, const QString& newOutputLine);
+    void caseStarted(const QString &caseId, int current, int total);
+    void caseFinished(const QString &caseId, int current, int total);
+    void newOutputGetted(const QString &caseId, const QString &newOutputLine);
+    void resetOutput(const QString &caseId, const QString &newOutputLine);
 private:
     void runCase(int index, POJProblemCase problemCase);
 private:
@@ -55,6 +61,8 @@ protected:
 private:
     int mBufferSize;
     int mOutputRefreshTime;
+    int mExecTimeout;
+    bool mExecTimeouted;
 };
 
 #endif // OJPROBLEMCASESRUNNER_H

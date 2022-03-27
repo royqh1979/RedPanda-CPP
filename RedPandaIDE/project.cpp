@@ -892,10 +892,10 @@ PProjectUnit Project::addUnit(const QString &inFileName, PProjectModelNode paren
     newUnit->setNew(false);
     Editor * e= unitEditor(newUnit);
     if (e) {
-        newUnit->setEncoding(e->encodingOption());
+        newUnit->setEncoding(e->fileEncoding());
         e->setInProject(true);
     } else {
-        newUnit->setEncoding(ENCODING_AUTO_DETECT);
+        newUnit->setEncoding(pSettings->editor().defaultEncoding());
     }
     newUnit->setFolder(getFolderPath(parentNode));
     newUnit->setNode(makeNewFileNode(extractFileName(newUnit->fileName()), false, parentNode));
