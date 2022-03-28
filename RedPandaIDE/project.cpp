@@ -160,37 +160,37 @@ void Project::open()
         newUnit->setFileName(
                     dir.absoluteFilePath(
                         fromByteArray(ini.GetValue(groupName,"FileName",""))));
-        if (!QFileInfo(newUnit->fileName()).exists()) {
-            QMessageBox::critical(nullptr,
-                                  tr("File Not Found"),
-                                  tr("Project file '%1' can't be found!")
-                                  .arg(newUnit->fileName()),
-                                  QMessageBox::Ok);
-            newUnit->setModified(true);
-        } else {
-            newUnit->setFolder(fromByteArray(ini.GetValue(groupName,"Folder","")));
-            newUnit->setCompile(ini.GetBoolValue(groupName,"Compile", true));
-            newUnit->setCompileCpp(
-                        ini.GetBoolValue(groupName,"CompileCpp",mOptions.isCpp));
+//        if (!QFileInfo(newUnit->fileName()).exists()) {
+//            QMessageBox::critical(nullptr,
+//                                  tr("File Not Found"),
+//                                  tr("Project file '%1' can't be found!")
+//                                  .arg(newUnit->fileName()),
+//                                  QMessageBox::Ok);
+//            newUnit->setModified(true);
+//        } else {
+        newUnit->setFileMissing(!QFileInfo(newUnit->fileName()).exists());
+        newUnit->setFolder(fromByteArray(ini.GetValue(groupName,"Folder","")));
+        newUnit->setCompile(ini.GetBoolValue(groupName,"Compile", true));
+        newUnit->setCompileCpp(
+                    ini.GetBoolValue(groupName,"CompileCpp",mOptions.isCpp));
 
-            newUnit->setLink(ini.GetBoolValue(groupName,"Link", true));
-            newUnit->setPriority(ini.GetLongValue(groupName,"Priority", 1000));
-            newUnit->setOverrideBuildCmd(ini.GetBoolValue(groupName,"OverrideBuildCmd", false));
-            newUnit->setBuildCmd(fromByteArray(ini.GetValue(groupName,"BuildCmd", "")));
-            QByteArray defaultEncoding = toByteArray(mOptions.encoding);
-            if (ini.GetBoolValue(groupName,"DetectEncoding",true)){
-                defaultEncoding = ENCODING_AUTO_DETECT;
-            }
-            newUnit->setEncoding(ini.GetValue(groupName, "FileEncoding",defaultEncoding));
-            if (QTextCodec::codecForName(newUnit->encoding())==nullptr) {
-                newUnit->setEncoding(ENCODING_AUTO_DETECT);
-            }
-            newUnit->setNew(false);
-            newUnit->setParent(this);
-            newUnit->setNode(makeNewFileNode(extractFileName(newUnit->fileName()), false, folderNodeFromName(newUnit->folder())));
-            newUnit->node()->unitIndex = mUnits.count();
-            mUnits.append(newUnit);
+        newUnit->setLink(ini.GetBoolValue(groupName,"Link", true));
+        newUnit->setPriority(ini.GetLongValue(groupName,"Priority", 1000));
+        newUnit->setOverrideBuildCmd(ini.GetBoolValue(groupName,"OverrideBuildCmd", false));
+        newUnit->setBuildCmd(fromByteArray(ini.GetValue(groupName,"BuildCmd", "")));
+        QByteArray defaultEncoding = toByteArray(mOptions.encoding);
+        if (ini.GetBoolValue(groupName,"DetectEncoding",true)){
+            defaultEncoding = ENCODING_AUTO_DETECT;
         }
+        newUnit->setEncoding(ini.GetValue(groupName, "FileEncoding",defaultEncoding));
+        if (QTextCodec::codecForName(newUnit->encoding())==nullptr) {
+            newUnit->setEncoding(ENCODING_AUTO_DETECT);
+        }
+        newUnit->setNew(false);
+        newUnit->setParent(this);
+        newUnit->setNode(makeNewFileNode(extractFileName(newUnit->fileName()), false, folderNodeFromName(newUnit->folder())));
+        newUnit->node()->unitIndex = mUnits.count();
+        mUnits.append(newUnit);
     }
     rebuildNodes();
 }
@@ -296,9 +296,8 @@ Editor *Project::openUnit(int index)
 
     PProjectUnit unit = mUnits[index];
 
-    if (!unit->fileName().isEmpty()) {
-        QString fullPath = unitFullPath(unit);
-        Editor * editor = mEditorList->getOpenedEditorByFilename(fullPath);
+    if (!unit->fileName().isEmpty() && fileExists(unit->fileName())) {
+        Editor * editor = mEditorList->getOpenedEditorByFilename(unit->fileName());
         if (editor) {//already opened in the editors
             editor->setInProject(true);
             editor->activate();
@@ -306,36 +305,26 @@ Editor *Project::openUnit(int index)
         }
         QByteArray encoding;
         encoding = unit->encoding();
-        editor = mEditorList->newEditor(fullPath, encoding, true, unit->isNew());
-        editor->setInProject(true);
-        //unit->setEncoding(encoding);
-        editor->activate();
-        loadUnitLayout(editor,index);
-        return editor;
+        editor = mEditorList->newEditor(unit->fileName(), encoding, true, unit->isNew());
+        if (editor) {
+            editor->setInProject(true);
+            //unit->setEncoding(encoding);
+            editor->activate();
+            loadUnitLayout(editor,index);
+            return editor;
+        }
     }
     return nullptr;
 }
 
-QString Project::unitFullPath(const PProjectUnit &unit) const
-{
-    QDir dir(directory());
-    return dir.absoluteFilePath(unit->fileName());
-}
-
-QString Project::unitFullPath(const ProjectUnit *unit) const
-{
-    QDir dir(directory());
-    return dir.absoluteFilePath(unit->fileName());
-}
-
 Editor *Project::unitEditor(const PProjectUnit &unit) const
 {
-    return mEditorList->getOpenedEditorByFilename(unitFullPath(unit));
+    return mEditorList->getOpenedEditorByFilename(unit->fileName());
 }
 
 Editor *Project::unitEditor(const ProjectUnit *unit) const
 {
-    return mEditorList->getOpenedEditorByFilename(unitFullPath(unit));
+    return mEditorList->getOpenedEditorByFilename(unit->fileName());
 }
 
 void Project::rebuildNodes()
@@ -570,21 +559,23 @@ bool Project::saveUnits()
         return false;
     for (int idx = 0; idx < mUnits.count(); idx++) {
         PProjectUnit unit = mUnits[idx];
-        bool rd_only = false;
         QByteArray groupName = toByteArray(QString("Unit%1").arg(count+1));
-        if (unit->modified() && fileExists(unit->fileName())
-            && isReadOnly(unit->fileName())) {
-            // file is read-only
-            QMessageBox::critical(nullptr,
-                                  tr("Can't save file"),
-                                  tr("Can't save file '%1'").arg(unit->fileName()),
-                                  QMessageBox::Ok
-                                  );
-            rd_only = true;
-        }
-        if (!rd_only) {
-            if (!unit->save() && unit->isNew())
-                return false;
+        if (!unit->FileMissing()) {
+            bool rd_only = false;
+            if (unit->modified() && fileExists(unit->fileName())
+                && isReadOnly(unit->fileName())) {
+                // file is read-only
+                QMessageBox::critical(nullptr,
+                                      tr("Can't save file"),
+                                      tr("Can't save file '%1'").arg(unit->fileName()),
+                                      QMessageBox::Ok
+                                      );
+                rd_only = true;
+            }
+            if (!rd_only) {
+                if (!unit->save() && unit->isNew())
+                    return false;
+            }
         }
 
         // saved new file or an existing file add to project file
@@ -758,7 +749,7 @@ bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate, b
                 }
 
                 Editor * editor = mEditorList->newEditor(
-                            unitFullPath(unit),
+                            unit->fileName(),
                             unit->encoding(),
                             true,
                             true);
@@ -1458,7 +1449,8 @@ void Project::loadLayout()
     }
     if (topLeft>=0 && topLeft<mUnits.count()) {
         Editor * editor = unitEditor(mUnits[topLeft]);
-        editor->activate();
+        if (editor)
+            editor->activate();
     }
 }
 
@@ -1746,6 +1738,7 @@ ProjectUnit::ProjectUnit(Project* parent)
 {
     mNode = nullptr;
     mParent = parent;
+    mFileMissing = false;
 }
 
 Project *ProjectUnit::parent() const
@@ -1927,6 +1920,16 @@ PProjectModelNode &ProjectUnit::node()
 void ProjectUnit::setNode(const PProjectModelNode &newNode)
 {
     mNode = newNode;
+}
+
+bool ProjectUnit::FileMissing() const
+{
+    return mFileMissing;
+}
+
+void ProjectUnit::setFileMissing(bool newDontSave)
+{
+    mFileMissing = newDontSave;
 }
 
 ProjectModel::ProjectModel(Project *project, QObject *parent):

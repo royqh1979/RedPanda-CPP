@@ -53,7 +53,9 @@ QIcon CustomFileIconProvider::icon(const QFileInfo &info) const
                 icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_FOLDER_VCS_NOCHANGE);
         } else
             icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_FOLDER);
-    } else if (isHFile(info.fileName())) {
+    } else if (!info.exists()) {
+        icon = pIconsManager->getIcon(IconsManager::ACTION_MISC_CROSS);
+    } else  if (isHFile(info.fileName())) {
         if (mVCSRepository->isFileInRepository(info)) {
             if (mVCSRepository->isFileConflicting(info))
                 icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_HFILE_VCS_CONFLICT);

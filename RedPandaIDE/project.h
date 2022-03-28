@@ -83,6 +83,9 @@ public:
     PProjectModelNode &node();
     void setNode(const PProjectModelNode &newNode);
 
+    bool FileMissing() const;
+    void setFileMissing(bool newDontSave);
+
 private:
     Project* mParent;
     QString mFileName;
@@ -96,6 +99,7 @@ private:
     int mPriority;
     QByteArray mEncoding;
     PProjectModelNode mNode;
+    bool mFileMissing;
 };
 
 using PProjectUnit = std::shared_ptr<ProjectUnit>;
@@ -183,8 +187,6 @@ public:
     PProjectUnit  newUnit(PProjectModelNode parentNode,
                  const QString& customFileName="");
     Editor* openUnit(int index);
-    QString unitFullPath(const PProjectUnit& unit) const;
-    QString unitFullPath(const ProjectUnit* unit) const;
     Editor* unitEditor(const PProjectUnit& unit) const;
     Editor* unitEditor(const ProjectUnit* unit) const;
     Editor* unitEditor(int index) const {
