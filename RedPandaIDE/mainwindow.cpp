@@ -69,6 +69,7 @@
 #include <QFileIconProvider>
 #include "MainWindow.h"
 #include <QScrollBar>
+#include <QTextDocumentFragment>
 
 #include "settingsdialog/settingsdialog.h"
 #include "compiler/compilermanager.h"
@@ -646,8 +647,11 @@ void MainWindow::applySettings()
     caseEditorFont.setPixelSize(pointToPixel(pSettings->executor().caseEditorFontSize()));
     font.setStyleStrategy(QFont::PreferAntialias);
     ui->txtProblemCaseInput->setFont(caseEditorFont);
+    ui->lblProblemCaseInput->setFont(caseEditorFont);
     ui->txtProblemCaseOutput->setFont(caseEditorFont);
+    ui->lblProblemCaseOutput->setFont(caseEditorFont);
     ui->txtProblemCaseExpected->setFont(caseEditorFont);
+    ui->lblProblemCaseExpected->setFont(caseEditorFont);
 
     mTcpServer.close();
     if (pSettings->executor().enableProblemSet()) {
@@ -3170,25 +3174,23 @@ void MainWindow::onProblemCaseIndexChanged(const QModelIndex &current, const QMo
         POJProblemCase problemCase = mOJProblemModel.getCase(idx.row());
         if (problemCase) {
             ui->btnProblemCaseInputFileName->setEnabled(false);
-            ui->txtProblemCaseInputFileName->setEnabled(false);
             ui->btnRemoveProblemCase->setEnabled(true);
             ui->btnProblemCaseInputFileName->setEnabled(true);
             fillProblemCaseInputAndExpected(problemCase);
             ui->txtProblemCaseOutput->clear();
             ui->txtProblemCaseOutput->setPlainText(problemCase->output);
             updateProblemCaseOutput(problemCase);
+
             return;
         }
     }
     ui->btnProblemCaseClearInputFileName->setVisible(false);
     ui->btnProblemCaseInputFileName->setEnabled(false);
-    ui->txtProblemCaseInputFileName->setEnabled(false);
     ui->txtProblemCaseInputFileName->clear();
     ui->txtProblemCaseInputFileName->setToolTip("");
 
     ui->btnProblemCaseClearExpectedOutputFileName->setVisible(false);
     ui->btnProblemCaseExpectedOutputFileName->setEnabled(false);
-    ui->txtProblemCaseExpectedOutputFileName->setEnabled(false);
     ui->txtProblemCaseExpectedOutputFileName->clear();
     ui->txtProblemCaseExpectedOutputFileName->setToolTip("");
 
@@ -3200,6 +3202,10 @@ void MainWindow::onProblemCaseIndexChanged(const QModelIndex &current, const QMo
     ui->txtProblemCaseExpected->clear();
     ui->txtProblemCaseExpected->setReadOnly(true);
     ui->txtProblemCaseOutput->clear();
+
+    ui->lblProblemCaseExpected->clear();
+    ui->lblProblemCaseOutput->clear();
+    ui->lblProblemCaseInput->clear();
 }
 
 void MainWindow::onProblemNameChanged(int index)
@@ -6217,31 +6223,33 @@ void MainWindow::doCompileRun(RunType runType)
 void MainWindow::updateProblemCaseOutput(POJProblemCase problemCase)
 {
     if (problemCase->testState == ProblemCaseTestState::Failed) {
-        QStringList output = textToLines(problemCase->output);
-        QStringList expected;
-        if (fileExists(problemCase->expectedOutputFileName))
-            expected = readFileToLines(problemCase->expectedOutputFileName);
-        else
-            expected = textToLines(problemCase->expected);
-        for (int i=0;i<output.count();i++) {
-            if (i>=expected.count() || output[i]!=expected[i]) {
-                QTextBlock block = ui->txtProblemCaseOutput->document()->findBlockByLineNumber(i);
-                QTextCursor cur(block);
-                cur.select(QTextCursor::LineUnderCursor);
-                QTextCharFormat format = cur.charFormat();
-                format.setUnderlineColor(mErrorColor);
-                format.setUnderlineStyle(QTextCharFormat::WaveUnderline);
-                cur.setCharFormat(format);
-            }
+        int diffLine;
+        if (problemCase->outputLineCounts > problemCase->expectedLineCounts) {
+            diffLine = problemCase->expectedLineCounts;
+        } else if (problemCase->outputLineCounts < problemCase->expectedLineCounts) {
+            diffLine = problemCase->outputLineCounts;
+        } else {
+            diffLine = problemCase->firstDiffLine;
         }
-        if (output.count()<expected.count()) {
-            QTextBlock block = ui->txtProblemCaseOutput->document()->findBlockByLineNumber(output.count()-1);
+        if (diffLine < problemCase->outputLineCounts) {
+            QTextBlock block = ui->txtProblemCaseOutput->document()->findBlockByLineNumber(diffLine);
+            if (!block.isValid())
+                return;
             QTextCursor cur(block);
-            cur.select(QTextCursor::LineUnderCursor);
+            if (cur.isNull())
+                return;
+            cur = QTextCursor(block);
+            QTextCharFormat oldFormat = cur.charFormat();
             QTextCharFormat format = cur.charFormat();
+            cur.select(QTextCursor::LineUnderCursor);
             format.setUnderlineColor(mErrorColor);
             format.setUnderlineStyle(QTextCharFormat::WaveUnderline);
             cur.setCharFormat(format);
+            cur.clearSelection();
+            cur.setCharFormat(oldFormat);
+            ui->txtProblemCaseOutput->setTextCursor(cur);
+        } else if (diffLine < problemCase->expectedLineCounts) {
+            ui->txtProblemCaseOutput->moveCursor(QTextCursor::MoveOperation::End);
         }
     }
 }
@@ -7446,7 +7454,28 @@ void MainWindow::on_txtProblemCaseOutput_cursorPositionChanged()
 {
     QTextCursor cursor = ui->txtProblemCaseOutput->textCursor();
     int val = ui->txtProblemCaseOutput->verticalScrollBar()->value();
+    int line = cursor.block().firstLineNumber();
+    ui->lblProblemCaseOutput->setText(tr("Line %1").arg(cursor.block().firstLineNumber()+1));
+
+    QTextBlock block = ui->txtProblemCaseExpected->document()->findBlockByLineNumber(line);
+    if (!block.isValid())
+        return;
+    cursor = QTextCursor(block);
     ui->txtProblemCaseExpected->setTextCursor(cursor);
     ui->txtProblemCaseExpected->verticalScrollBar()->setValue(val);
+}
+
+
+void MainWindow::on_txtProblemCaseExpected_cursorPositionChanged()
+{
+    QTextCursor cursor = ui->txtProblemCaseExpected->textCursor();
+    ui->lblProblemCaseExpected->setText(tr("Line %1").arg(cursor.block().firstLineNumber()+1));
+}
+
+
+void MainWindow::on_txtProblemCaseInput_cursorPositionChanged()
+{
+    QTextCursor cursor = ui->txtProblemCaseInput->textCursor();
+    ui->lblProblemCaseInput->setText(tr("Line %1").arg(cursor.block().firstLineNumber()+1));
 }
 

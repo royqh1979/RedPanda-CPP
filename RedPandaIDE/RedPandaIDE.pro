@@ -170,6 +170,7 @@ SOURCES += \
     widgets/issuestable.cpp \
     widgets/labelwithmenu.cpp \
     widgets/lightfusionstyle.cpp \
+    widgets/linenumbertexteditor.cpp \
     widgets/macroinfomodel.cpp \
     widgets/newclassdialog.cpp \
     widgets/newheaderdialog.cpp \
@@ -314,6 +315,7 @@ HEADERS += \
     widgets/issuestable.h \
     widgets/labelwithmenu.h \
     widgets/lightfusionstyle.h \
+    widgets/linenumbertexteditor.h \
     widgets/macroinfomodel.h \
     widgets/newclassdialog.h \
     widgets/newheaderdialog.h \

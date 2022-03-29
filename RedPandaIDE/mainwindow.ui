@@ -1373,19 +1373,12 @@
               <number>0</number>
              </property>
              <item row="2" column="1">
-              <widget class="QPlainTextEdit" name="txtProblemCaseOutput">
+              <widget class="LineNumberTextEditor" name="txtProblemCaseOutput">
                <property name="lineWrapMode">
                 <enum>QPlainTextEdit::NoWrap</enum>
                </property>
                <property name="readOnly">
                 <bool>true</bool>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="2">
-              <widget class="QPlainTextEdit" name="txtProblemCaseExpected">
-               <property name="lineWrapMode">
-                <enum>QPlainTextEdit::NoWrap</enum>
                </property>
               </widget>
              </item>
@@ -1406,6 +1399,9 @@
                 </property>
                 <item row="0" column="1">
                  <widget class="QLineEdit" name="txtProblemCaseInputFileName">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
                   <property name="readOnly">
                    <bool>true</bool>
                   </property>
@@ -1453,13 +1449,6 @@
                </property>
               </widget>
              </item>
-             <item row="2" column="0">
-              <widget class="QPlainTextEdit" name="txtProblemCaseInput">
-               <property name="lineWrapMode">
-                <enum>QPlainTextEdit::NoWrap</enum>
-               </property>
-              </widget>
-             </item>
              <item row="0" column="2">
               <widget class="QWidget" name="widget_8" native="true">
                <layout class="QHBoxLayout" name="horizontalLayout_18">
@@ -1484,6 +1473,9 @@
                 </item>
                 <item>
                  <widget class="QLineEdit" name="txtProblemCaseExpectedOutputFileName">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
                   <property name="readOnly">
                    <bool>true</bool>
                   </property>
@@ -1515,6 +1507,41 @@
                  </widget>
                 </item>
                </layout>
+              </widget>
+             </item>
+             <item row="2" column="2">
+              <widget class="LineNumberTextEditor" name="txtProblemCaseExpected">
+               <property name="lineWrapMode">
+                <enum>QPlainTextEdit::NoWrap</enum>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="LineNumberTextEditor" name="txtProblemCaseInput">
+               <property name="lineWrapMode">
+                <enum>QPlainTextEdit::NoWrap</enum>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="2">
+              <widget class="QLabel" name="lblProblemCaseExpected">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="1">
+              <widget class="QLabel" name="lblProblemCaseOutput">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="0">
+              <widget class="QLabel" name="lblProblemCaseInput">
+               <property name="text">
+                <string/>
+               </property>
               </widget>
              </item>
             </layout>
@@ -3009,6 +3036,11 @@
    <extends>QTabWidget</extends>
    <header location="global">widgets/editorstabwidget.h</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>LineNumberTextEditor</class>
+   <extends>QPlainTextEdit</extends>
+   <header location="global">widgets/linenumbertexteditor.h</header>
   </customwidget>
  </customwidgets>
  <resources>

@@ -657,6 +657,10 @@ private slots:
 
     void on_txtProblemCaseOutput_cursorPositionChanged();
 
+    void on_txtProblemCaseExpected_cursorPositionChanged();
+
+    void on_txtProblemCaseInput_cursorPositionChanged();
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;

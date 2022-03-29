@@ -27,16 +27,26 @@ bool ProblemCaseValidator::validate(POJProblemCase problemCase, bool ignoreSpace
     if (!problemCase)
         return false;
     QStringList output = textToLines(problemCase->output);
-    QStringList expected = textToLines(problemCase->expected);
+    QStringList expected;
+    if (fileExists(problemCase->expectedOutputFileName))
+        expected = readFileToLines(problemCase->expectedOutputFileName);
+    else
+        expected = textToLines(problemCase->expected);
+    problemCase->outputLineCounts = output.count();
+    problemCase->expectedLineCounts = expected.count();
     if (output.count()!=expected.count())
         return false;
     for (int i=0;i<output.count();i++) {
         if (ignoreSpaces) {
-            if (!equalIgnoringSpaces(output[i],expected[i]))
+            if (!equalIgnoringSpaces(output[i],expected[i])) {
+                problemCase->firstDiffLine = i;
                 return false;
+            }
         } else {
-            if (output[i]!=expected[i])
+            if (output[i]!=expected[i]) {
+                problemCase->firstDiffLine = i;
                 return false;
+            }
         }
     }
     return true;

@@ -36,6 +36,9 @@ struct OJProblemCase {
     ProblemCaseTestState testState; // no persistence
     QString output; // no persistence
     int runningTime;
+    int firstDiffLine;
+    int outputLineCounts;
+    int expectedLineCounts;
     OJProblemCase();
 
 public:

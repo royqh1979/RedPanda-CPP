@@ -11,6 +11,7 @@ Red Panda C++ Version 1.0.2
   - enhancement: display problem case running time 
   - enhancement: set problem case input/expected output file
   - enhancement: auto position cursor in expected with output's cursor
+  - enhancement: only tag the first inconstantency when running problem case, to greatly reduce compare & display time
 
 Red Panda C++ Version 1.0.1
   - fix: only convert project icon file when it's filename doesn't end with ".ico"
