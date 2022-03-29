@@ -112,6 +112,17 @@ void OJProblemSetModel::saveToFile(const QString &fileName)
                 QJsonObject caseObj;
                 caseObj["name"]=problemCase->name;
                 caseObj["input"]=problemCase->input;
+                QString path = problemCase->inputFileName;
+                QString prefix = includeTrailingPathDelimiter(extractFileDir(fileName));
+                if (path.startsWith(prefix, PATH_SENSITIVITY)) {
+                    path = "%ProblemSetPath%/"+ path.mid(prefix.length());
+                }
+                caseObj["input_filename"]=path;
+                path = problemCase->expectedOutputFileName;
+                if (path.startsWith(prefix, PATH_SENSITIVITY)) {
+                    path = "%ProblemSetPath%/"+ path.mid(prefix.length());
+                }
+                caseObj["expected_output_filename"]=path;
                 caseObj["expected"]=problemCase->expected;
                 cases.append(caseObj);
             }
@@ -160,6 +171,18 @@ void OJProblemSetModel::loadFromFile(const QString &fileName)
                 problemCase->name = caseObj["name"].toString();
                 problemCase->input = caseObj["input"].toString();
                 problemCase->expected = caseObj["expected"].toString();
+                QString path = caseObj["input_filename"].toString();
+                if (path.startsWith("%ProblemSetPath%/")) {
+                    path = includeTrailingPathDelimiter(extractFileDir(fileName))+
+                            path.mid(QLatin1String("%ProblemSetPath%/").size());
+                }
+                problemCase->inputFileName=path;
+                path = caseObj["expected_output_filename"].toString();
+                if (path.startsWith("%ProblemSetPath%/")) {
+                    path = includeTrailingPathDelimiter(extractFileDir(fileName))+
+                            path.mid(QLatin1String("%ProblemSetPath%/").size());
+                }
+                problemCase->expectedOutputFileName=path;
                 problemCase->testState = ProblemCaseTestState::NotTested;
                 problem->cases.append(problemCase);
             }
@@ -216,7 +239,7 @@ Qt::ItemFlags OJProblemSetModel::flags(const QModelIndex &) const
     return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable;
 }
 
-OJProblemModel::OJProblemModel(QObject *parent): QAbstractListModel(parent)
+OJProblemModel::OJProblemModel(QObject *parent): QAbstractTableModel(parent)
 {
 
 }
@@ -348,20 +371,36 @@ QVariant OJProblemModel::data(const QModelIndex &index, int role) const
         return QVariant();
     if (mProblem==nullptr)
         return QVariant();
-    if (role == Qt::DisplayRole || role == Qt::EditRole) {
-        return mProblem->cases[index.row()]->name;
-    } else if (role == Qt::DecorationRole) {
-        switch (mProblem->cases[index.row()]->testState) {
-        case ProblemCaseTestState::Failed:
-            return pIconsManager->getIcon(IconsManager::ACTION_PROBLEM_FALIED);
-        case ProblemCaseTestState::Passed:
-            return pIconsManager->getIcon(IconsManager::ACTION_PROBLEM_PASSED);
-        case ProblemCaseTestState::Testing:
-            return pIconsManager->getIcon(IconsManager::ACTION_PROBLEM_TESTING);
-        default:
-            return QVariant();
+    switch (index.column()) {
+    case 0:
+        if (role == Qt::DisplayRole || role == Qt::EditRole) {
+            POJProblemCase problemCase = mProblem->cases[index.row()];
+            return problemCase->name;
+        } else if (role == Qt::DecorationRole) {
+            switch (mProblem->cases[index.row()]->testState) {
+            case ProblemCaseTestState::Failed:
+                return pIconsManager->getIcon(IconsManager::ACTION_PROBLEM_FALIED);
+            case ProblemCaseTestState::Passed:
+                return pIconsManager->getIcon(IconsManager::ACTION_PROBLEM_PASSED);
+            case ProblemCaseTestState::Testing:
+                return pIconsManager->getIcon(IconsManager::ACTION_PROBLEM_TESTING);
+            default:
+                return QVariant();
+            }
         }
+        break;
+    case 1:
+        if (role == Qt::DisplayRole) {
+             POJProblemCase problemCase = mProblem->cases[index.row()];
+             if (problemCase->testState == ProblemCaseTestState::Passed
+                     || problemCase->testState == ProblemCaseTestState::Failed)
+                 return problemCase->runningTime/1000.0;
+             else
+                 return "";
+        }
+        break;
     }
+
     return QVariant();
 }
 
@@ -369,9 +408,11 @@ bool OJProblemModel::setData(const QModelIndex &index, const QVariant &value, in
 {
     if (!index.isValid())
         return false;
+    if (index.column()!=0)
+        return false;
     if (mProblem==nullptr)
         return false;
-    if (role == Qt::DisplayRole || role == Qt::EditRole) {
+    if (role == Qt::EditRole ) {
         QString s = value.toString();
         if (!s.isEmpty()) {
             mProblem->cases[index.row()]->name = s;
@@ -381,7 +422,28 @@ bool OJProblemModel::setData(const QModelIndex &index, const QVariant &value, in
     return false;
 }
 
-Qt::ItemFlags OJProblemModel::flags(const QModelIndex &) const
+Qt::ItemFlags OJProblemModel::flags(const QModelIndex &idx) const
 {
-    return Qt::ItemIsEnabled | Qt::ItemIsEditable | Qt::ItemIsSelectable;
+    Qt::ItemFlags flags=Qt::ItemIsEnabled | Qt::ItemIsSelectable;
+    if (idx.column()==0)
+        flags |= Qt::ItemIsEditable ;
+    return flags;
+}
+
+int OJProblemModel::columnCount(const QModelIndex &parent) const
+{
+    return 2;
+}
+
+QVariant OJProblemModel::headerData(int section, Qt::Orientation orientation, int role) const
+{
+    if (orientation == Qt::Horizontal && role == Qt::DisplayRole) {
+        switch (section) {
+        case 0:
+            return tr("Name");
+        case 1:
+            return tr("Time(sec)");
+        }
+    }
+    return QVariant();
 }

@@ -54,7 +54,11 @@ void OJProblemCasesRunner::runCase(int index,POJProblemCase problemCase)
     });
     QProcess process;
     bool errorOccurred = false;
-
+    QByteArray readed;
+    QByteArray buffer;
+    QByteArray output;
+    int noOutputTime = 0;
+    QElapsedTimer elapsedTimer;
     process.setProgram(mFilename);
     process.setArguments(splitProcessCommand(mArguments));
     process.setWorkingDirectory(mWorkDir);
@@ -84,14 +88,13 @@ void OJProblemCasesRunner::runCase(int index,POJProblemCase problemCase)
     process.start();
     process.waitForStarted(5000);
     if (process.state()==QProcess::Running) {
-        process.write(problemCase->input.toUtf8());
+        if (fileExists(problemCase->inputFileName))
+            process.write(readFileToByteArray(problemCase->inputFileName));
+        else
+            process.write(problemCase->input.toUtf8());
         process.closeWriteChannel();
     }
-    QByteArray readed;
-    QByteArray buffer;
-    QByteArray output;
-    int noOutputTime = 0;
-    QElapsedTimer elapsedTimer;
+
     elapsedTimer.start();
     while (true) {
         process.waitForFinished(mWaitForFinishTime);
@@ -127,6 +130,7 @@ void OJProblemCasesRunner::runCase(int index,POJProblemCase problemCase)
             noOutputTime += mWaitForFinishTime;
         }
     }
+    problemCase->runningTime=elapsedTimer.elapsed();
     if (mExecTimeouted) {
         problemCase->output = tr("Case Timeout");
         emit resetOutput(problemCase->getId(), problemCase->output);

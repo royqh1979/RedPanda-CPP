@@ -17,11 +17,11 @@
 #ifndef OJPROBLEMSETMODEL_H
 #define OJPROBLEMSETMODEL_H
 
-#include <QAbstractListModel>
+#include <QAbstractTableModel>
 #include <memory>
 #include "../problems/ojproblemset.h"
 
-class OJProblemModel: public QAbstractListModel {
+class OJProblemModel: public QAbstractTableModel {
     Q_OBJECT
 public:
     explicit OJProblemModel(QObject *parent = nullptr);
@@ -47,6 +47,11 @@ public:
     QVariant data(const QModelIndex &index, int role) const override;
     bool setData(const QModelIndex &index, const QVariant &value, int role) override;
     Qt::ItemFlags flags(const QModelIndex &index) const override;
+
+    // QAbstractItemModel interface
+public:
+    int columnCount(const QModelIndex &parent) const override;
+    QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
 };
 
 class OJProblemSetModel : public QAbstractListModel

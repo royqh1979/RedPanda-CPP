@@ -31,8 +31,11 @@ struct OJProblemCase {
     QString name;
     QString input;
     QString expected;
+    QString inputFileName;
+    QString expectedOutputFileName;
     ProblemCaseTestState testState; // no persistence
     QString output; // no persistence
+    int runningTime;
     OJProblemCase();
 
 public:

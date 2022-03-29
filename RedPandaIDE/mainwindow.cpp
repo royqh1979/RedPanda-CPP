@@ -67,7 +67,8 @@
 #include <QTextBlock>
 #include <QTranslator>
 #include <QFileIconProvider>
-#include <MainWindow.h>
+#include "MainWindow.h"
+#include <QScrollBar>
 
 #include "settingsdialog/settingsdialog.h"
 #include "compiler/compilermanager.h"
@@ -277,11 +278,11 @@ MainWindow::MainWindow(QWidget *parent)
     mOJProblemSetNameCounter=1;
     mOJProblemSetModel.rename(tr("Problem Set %1").arg(mOJProblemSetNameCounter));
     ui->lstProblemSet->setModel(&mOJProblemSetModel);
-    ui->lstProblemCases->setModel(&mOJProblemModel);
+    ui->tblProblemCases->setModel(&mOJProblemModel);
     connect(ui->lstProblemSet->selectionModel(),
             &QItemSelectionModel::currentRowChanged,
             this, &MainWindow::onProblemSetIndexChanged);
-    connect(ui->lstProblemCases->selectionModel(),
+    connect(ui->tblProblemCases->selectionModel(),
             &QItemSelectionModel::currentRowChanged,
             this, &MainWindow::onProblemCaseIndexChanged);
     connect(&mOJProblemSetModel, &OJProblemSetModel::problemNameChanged,
@@ -1382,6 +1383,11 @@ void MainWindow::updateActionIcons()
     pIconsManager->setIcon(ui->btnRunAllProblemCases, IconsManager::ACTION_PROBLEM_RUN_CASES);
     pIconsManager->setIcon(ui->btnCaseValidateOptions, IconsManager::ACTION_MISC_GEAR);
 
+    pIconsManager->setIcon(ui->btnProblemCaseClearInputFileName, IconsManager::ACTION_MISC_CLEAN);
+    pIconsManager->setIcon(ui->btnProblemCaseInputFileName, IconsManager::ACTION_MISC_FOLDER);
+    pIconsManager->setIcon(ui->btnProblemCaseClearExpectedOutputFileName, IconsManager::ACTION_MISC_CLEAN);
+    pIconsManager->setIcon(ui->btnProblemCaseExpectedOutputFileName, IconsManager::ACTION_MISC_FOLDER);
+
     mProblem_Properties->setIcon(pIconsManager->getIcon(IconsManager::ACTION_PROBLEM_PROPERTIES));
 
 
@@ -1559,7 +1565,7 @@ void MainWindow::runExecutable(const QString &exeName,const QString &filename,Ru
             ui->tabMessages->setCurrentWidget(ui->tabProblem);
         }
     } else if (runType == RunType::CurrentProblemCase) {
-        QModelIndex index = ui->lstProblemCases->currentIndex();
+        QModelIndex index = ui->tblProblemCases->currentIndex();
         if (index.isValid()) {
             POJProblemCase problemCase =mOJProblemModel.getCase(index.row());
             mCompilerManager->runProblem(exeName,params,QFileInfo(exeName).absolutePath(),
@@ -3141,7 +3147,7 @@ void MainWindow::onProblemSetIndexChanged(const QModelIndex &current, const QMod
         mOJProblemModel.setProblem(problem);
         updateProblemTitle();
         if (mOJProblemModel.count()>0) {
-            ui->lstProblemCases->setCurrentIndex(mOJProblemModel.index(0,0));
+            ui->tblProblemCases->setCurrentIndex(mOJProblemModel.index(0,0));
         } else {
             onProblemCaseIndexChanged(QModelIndex(),QModelIndex());
         }
@@ -3163,18 +3169,32 @@ void MainWindow::onProblemCaseIndexChanged(const QModelIndex &current, const QMo
     if (idx.isValid()) {
         POJProblemCase problemCase = mOJProblemModel.getCase(idx.row());
         if (problemCase) {
+            ui->btnProblemCaseInputFileName->setEnabled(false);
+            ui->txtProblemCaseInputFileName->setEnabled(false);
             ui->btnRemoveProblemCase->setEnabled(true);
-            ui->txtProblemCaseInput->setPlainText(problemCase->input);
-            ui->txtProblemCaseInput->setReadOnly(false);
-            ui->txtProblemCaseExpected->setPlainText(problemCase->expected);
-            ui->txtProblemCaseExpected->setReadOnly(false);
+            ui->btnProblemCaseInputFileName->setEnabled(true);
+            fillProblemCaseInputAndExpected(problemCase);
             ui->txtProblemCaseOutput->clear();
             ui->txtProblemCaseOutput->setPlainText(problemCase->output);
             updateProblemCaseOutput(problemCase);
             return;
         }
     }
+    ui->btnProblemCaseClearInputFileName->setVisible(false);
+    ui->btnProblemCaseInputFileName->setEnabled(false);
+    ui->txtProblemCaseInputFileName->setEnabled(false);
+    ui->txtProblemCaseInputFileName->clear();
+    ui->txtProblemCaseInputFileName->setToolTip("");
+
+    ui->btnProblemCaseClearExpectedOutputFileName->setVisible(false);
+    ui->btnProblemCaseExpectedOutputFileName->setEnabled(false);
+    ui->txtProblemCaseExpectedOutputFileName->setEnabled(false);
+    ui->txtProblemCaseExpectedOutputFileName->clear();
+    ui->txtProblemCaseExpectedOutputFileName->setToolTip("");
+
     ui->btnRemoveProblemCase->setEnabled(false);
+    ui->txtProblemCaseInputFileName->clear();
+    ui->btnProblemCaseInputFileName->setEnabled(false);
     ui->txtProblemCaseInput->clear();
     ui->txtProblemCaseInput->setReadOnly(true);
     ui->txtProblemCaseExpected->clear();
@@ -4606,9 +4626,9 @@ void MainWindow::onOJProblemCaseStarted(const QString& id,int current, int total
         POJProblemCase problemCase = mOJProblemModel.getCase(row);
         problemCase->testState = ProblemCaseTestState::Testing;
         mOJProblemModel.update(row);
-        QModelIndex idx = ui->lstProblemCases->currentIndex();
+        QModelIndex idx = ui->tblProblemCases->currentIndex();
         if (!idx.isValid() || row != idx.row()) {
-            ui->lstProblemCases->setCurrentIndex(mOJProblemModel.index(row,0));
+            ui->tblProblemCases->setCurrentIndex(mOJProblemModel.index(row,0));
         }
         ui->txtProblemCaseOutput->clear();
     }
@@ -5922,6 +5942,38 @@ void MainWindow::newProjectUnitFile()
     updateProjectView();
 }
 
+void MainWindow::fillProblemCaseInputAndExpected(const POJProblemCase &problemCase)
+{
+    ui->btnProblemCaseInputFileName->setEnabled(true);
+    if (fileExists(problemCase->inputFileName)) {
+        ui->txtProblemCaseInput->setReadOnly(true);
+        ui->txtProblemCaseInput->setPlainText(readFileToByteArray(problemCase->inputFileName));
+        ui->btnProblemCaseClearInputFileName->setVisible(true);
+        ui->txtProblemCaseInputFileName->setText(extractFileName(problemCase->inputFileName));
+        ui->txtProblemCaseInputFileName->setToolTip(problemCase->inputFileName);
+    } else {
+        ui->txtProblemCaseInput->setReadOnly(false);
+        ui->txtProblemCaseInput->setPlainText(problemCase->input);
+        ui->btnProblemCaseClearInputFileName->setVisible(false);
+        ui->txtProblemCaseInputFileName->clear();
+        ui->txtProblemCaseInputFileName->setToolTip("");
+    }
+    ui->btnProblemCaseExpectedOutputFileName->setEnabled(true);
+    if (fileExists(problemCase->expectedOutputFileName)) {
+        ui->txtProblemCaseExpected->setReadOnly(true);
+        ui->txtProblemCaseExpected->setPlainText(readFileToByteArray(problemCase->expectedOutputFileName));
+        ui->btnProblemCaseClearExpectedOutputFileName->setVisible(true);
+        ui->txtProblemCaseExpectedOutputFileName->setText(extractFileName(problemCase->expectedOutputFileName));
+        ui->txtProblemCaseExpectedOutputFileName->setToolTip(problemCase->inputFileName);
+    } else {
+        ui->txtProblemCaseExpected->setReadOnly(false);
+        ui->txtProblemCaseExpected->setPlainText(problemCase->expected);
+        ui->btnProblemCaseClearExpectedOutputFileName->setVisible(false);
+        ui->txtProblemCaseExpectedOutputFileName->clear();
+        ui->txtProblemCaseExpectedOutputFileName->setToolTip("");
+    }
+}
+
 void MainWindow::doFilesViewRemoveFile(const QModelIndex &index)
 {
     if (!index.isValid())
@@ -6166,7 +6218,11 @@ void MainWindow::updateProblemCaseOutput(POJProblemCase problemCase)
 {
     if (problemCase->testState == ProblemCaseTestState::Failed) {
         QStringList output = textToLines(problemCase->output);
-        QStringList expected = textToLines(problemCase->expected);
+        QStringList expected;
+        if (fileExists(problemCase->expectedOutputFileName))
+            expected = readFileToLines(problemCase->expectedOutputFileName);
+        else
+            expected = textToLines(problemCase->expected);
         for (int i=0;i<output.count();i++) {
             if (i>=expected.count() || output[i]!=expected[i]) {
                 QTextBlock block = ui->txtProblemCaseOutput->document()->findBlockByLineNumber(i);
@@ -6192,11 +6248,12 @@ void MainWindow::updateProblemCaseOutput(POJProblemCase problemCase)
 
 void MainWindow::applyCurrentProblemCaseChanges()
 {
-    QModelIndex idx = ui->lstProblemCases->currentIndex();
+    QModelIndex idx = ui->tblProblemCases->currentIndex();
     if (idx.isValid()) {
         POJProblemCase problemCase = mOJProblemModel.getCase(idx.row());
         if (problemCase) {
-            problemCase->input = ui->txtProblemCaseInput->toPlainText();
+            if (!fileExists(problemCase->inputFileName))
+                problemCase->input = ui->txtProblemCaseInput->toPlainText();
             problemCase->expected = ui->txtProblemCaseExpected->toPlainText();
         }
     }
@@ -6495,7 +6552,7 @@ void MainWindow::on_btnAddProblem_clicked()
     int startCount = mOJProblemSetModel.count();
     QString name;
     while (true) {
-        name = tr("Problem %1").arg(startCount);
+        name = tr("Problem %1").arg(startCount+1);
         if (!mOJProblemSetModel.problemNameUsed(name))
             break;
     }
@@ -6565,7 +6622,7 @@ void MainWindow::on_btnAddProblemCase_clicked()
     int startCount = mOJProblemModel.count();
     QString name;
     while (true) {
-        name = tr("Problem Case %1").arg(startCount);
+        name = tr("Problem Case %1").arg(startCount+1);
         if (!mOJProblemSetModel.problemNameUsed(name))
             break;
     }
@@ -6573,7 +6630,7 @@ void MainWindow::on_btnAddProblemCase_clicked()
     problemCase->name = name;
     problemCase->testState = ProblemCaseTestState::NotTested;
     mOJProblemModel.addCase(problemCase);
-    ui->lstProblemCases->setCurrentIndex(mOJProblemModel.index(mOJProblemModel.count()-1));
+    ui->tblProblemCases->setCurrentIndex(mOJProblemModel.index(mOJProblemModel.count()-1,0));
 }
 
 void MainWindow::on_btnRunAllProblemCases_clicked()
@@ -6595,7 +6652,7 @@ void MainWindow::on_actionC_Reference_triggered()
 
 void MainWindow::on_btnRemoveProblemCase_clicked()
 {
-    QModelIndex idx = ui->lstProblemCases->currentIndex();
+    QModelIndex idx = ui->tblProblemCases->currentIndex();
     if (idx.isValid()) {
         mOJProblemModel.removeCase(idx.row());
     }
@@ -7320,5 +7377,76 @@ void MainWindow::on_actionMatch_Bracket_triggered()
     if (editor != NULL ) {
         editor->matchBracket();
     }
+}
+
+
+void MainWindow::on_btnProblemCaseInputFileName_clicked()
+{
+    QString fileName = QFileDialog::getOpenFileName(
+                this,
+                tr("Choose Input Data File"),
+                QString(),
+                tr("All files (*.*)"));
+    if (!fileName.isEmpty()) {
+        QModelIndex idx = ui->tblProblemCases->currentIndex();
+        POJProblemCase problemCase = mOJProblemModel.getCase(idx.row());
+        if (!problemCase)
+            return;
+        if (problemCase->inputFileName == fileName)
+            return;
+        problemCase->inputFileName = fileName;
+        fillProblemCaseInputAndExpected(problemCase);
+    }
+}
+
+
+void MainWindow::on_btnProblemCaseClearExpectedOutputFileName_clicked()
+{
+    QModelIndex idx = ui->tblProblemCases->currentIndex();
+    POJProblemCase problemCase = mOJProblemModel.getCase(idx.row());
+    if (!problemCase)
+        return;
+    problemCase->expectedOutputFileName = "";
+    fillProblemCaseInputAndExpected(problemCase);
+}
+
+
+void MainWindow::on_btnProblemCaseClearInputFileName_clicked()
+{
+    QModelIndex idx = ui->tblProblemCases->currentIndex();
+    POJProblemCase problemCase = mOJProblemModel.getCase(idx.row());
+    if (!problemCase)
+        return;
+    problemCase->inputFileName = "";
+    fillProblemCaseInputAndExpected(problemCase);
+}
+
+
+void MainWindow::on_btnProblemCaseExpectedOutputFileName_clicked()
+{
+    QString fileName = QFileDialog::getOpenFileName(
+                this,
+                tr("Choose Expected Output Data File"),
+                QString(),
+                tr("All files (*.*)"));
+    if (!fileName.isEmpty()) {
+        QModelIndex idx = ui->tblProblemCases->currentIndex();
+        POJProblemCase problemCase = mOJProblemModel.getCase(idx.row());
+        if (!problemCase)
+            return;
+        if (problemCase->expectedOutputFileName == fileName)
+            return;
+        problemCase->expectedOutputFileName = fileName;
+        fillProblemCaseInputAndExpected(problemCase);
+    }
+}
+
+
+void MainWindow::on_txtProblemCaseOutput_cursorPositionChanged()
+{
+    QTextCursor cursor = ui->txtProblemCaseOutput->textCursor();
+    int val = ui->txtProblemCaseOutput->verticalScrollBar()->value();
+    ui->txtProblemCaseExpected->setTextCursor(cursor);
+    ui->txtProblemCaseExpected->verticalScrollBar()->setValue(val);
 }
 

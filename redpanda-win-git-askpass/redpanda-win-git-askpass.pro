@@ -1,14 +1,18 @@
-win32-msvc{
-    CONFIG += c++11
-    CONFIG -= app_bundle
-    DEFINES -= UNICODE
-} else {
-    TEMPLATE = app
+#win32-msvc{
+#    CONFIG += c++11
+#    CONFIG -= app_bundle
+#} else {
+#    TEMPLATE = app
 
-    CONFIG += windows
-    CONFIG -= app_bundle
-    CONFIG -= qt
-}
+#    CONFIG += windows
+#    CONFIG -= app_bundle
+#    CONFIG -= qt
+#}
+CONFIG += c++11
+CONFIG -= app_bundle
+
+DEFINES -= UNICODE
+
 isEmpty(APP_NAME) {
     APP_NAME = RedPandaCPP
 }

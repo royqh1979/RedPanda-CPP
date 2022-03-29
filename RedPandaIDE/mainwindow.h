@@ -254,6 +254,7 @@ private:
     void prepareTabInfosData();
     void prepareTabMessagesData();
     void newProjectUnitFile();
+    void fillProblemCaseInputAndExpected(const POJProblemCase &problemCase);
 
     void doFilesViewRemoveFile(const QModelIndex& index);
 
@@ -645,6 +646,16 @@ private slots:
     void on_actionToggle_Block_Comment_triggered();
 
     void on_actionMatch_Bracket_triggered();
+
+    void on_btnProblemCaseInputFileName_clicked();
+
+    void on_btnProblemCaseClearExpectedOutputFileName_clicked();
+
+    void on_btnProblemCaseClearInputFileName_clicked();
+
+    void on_btnProblemCaseExpectedOutputFileName_clicked();
+
+    void on_txtProblemCaseOutput_cursorPositionChanged();
 
 private:
     Ui::MainWindow *ui;

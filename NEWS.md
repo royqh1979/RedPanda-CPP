@@ -8,6 +8,9 @@ Red Panda C++ Version 1.0.2
   - enhancement: timeout for problem case test
   - enhancement: slightly reduce start up time
   - enhancement: use icon to indicate missing project files in the project view
+  - enhancement: display problem case running time 
+  - enhancement: set problem case input/expected output file
+  - enhancement: auto position cursor in expected with output's cursor
 
 Red Panda C++ Version 1.0.1
   - fix: only convert project icon file when it's filename doesn't end with ".ico"

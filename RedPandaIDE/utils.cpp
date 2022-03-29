@@ -556,6 +556,13 @@ QStringList readFileToLines(const QString &fileName)
                 ok=false;
                 break;
             }
+            if (s.endsWith("\r\n")) {
+                s.remove(s.length()-2,2);
+            } else if (s.endsWith("\r")) {
+                s.remove(s.length()-1,1);
+            } else if (s.endsWith("\n")){
+                s.remove(s.length()-1,1);
+            }
             result.append(s);
         }
         if (!ok) {
@@ -568,6 +575,13 @@ QStringList readFileToLines(const QString &fileName)
                 if (state.invalidChars>0) {
                     result.clear();
                     break;
+                }
+                if (s.endsWith("\r\n")) {
+                    s.remove(s.length()-2,2);
+                } else if (s.endsWith("\r")) {
+                    s.remove(s.length()-1,1);
+                } else if (s.endsWith("\n")){
+                    s.remove(s.length()-1,1);
                 }
                 result.append(s);
             }

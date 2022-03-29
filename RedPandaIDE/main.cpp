@@ -249,7 +249,6 @@ int main(int argc, char *argv[])
 //    qputenv("QT_DEVICE_PIXEL_RATIO ","auto");
 //    qputenv("QT_AUTO_SCREEN_SCALE_FACTOR","false");
 //#endif
-
     QApplication app(argc, argv);
     QFile tempFile(QDir::tempPath()+QDir::separator()+"RedPandaDevCppStartUp.lock");
     {
@@ -389,6 +388,7 @@ int main(int argc, char *argv[])
             tempFile.close();
             tempFile.remove();
         }
+
         int retCode = app.exec();
         QString configDir = pSettings->dirs().config();
         // save settings
