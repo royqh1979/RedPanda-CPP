@@ -13,6 +13,8 @@ isEmpty(APP_VERSION) {
     APP_VERSION=1.0.2
 }
 
+
+
 win32: VERSION = $${APP_VERSION}.0
 else: VERSION = $${APP_VERSION}
 
@@ -27,6 +29,10 @@ DEFINES += REDPANDA_CPP_VERSION=\\\"$${APP_VERSION}\\\"
 gcc {
     QMAKE_CXXFLAGS_RELEASE += -Werror=return-type
     QMAKE_CXXFLAGS_DEBUG += -Werror=return-type
+}
+
+msvc {
+DEFINES += NOMINMAX
 }
 
 # You can make your code fail to compile if it uses deprecated APIs.

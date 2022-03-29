@@ -38,7 +38,7 @@ AboutDialog::AboutDialog(QWidget *parent) :
 #else
     ui->lblQt->setText(ui->lblQt->text()
             .arg(qVersion())
-            .arg(tr("Non-GCC Compiler"));
+            .arg(tr("Non-GCC Compiler")));
 #endif
     ui->lblCompileTime->setText(ui->lblCompileTime->text()
                                 .arg(__DATE__, __TIME__));

@@ -25,7 +25,7 @@
 class Runner;
 class Compiler;
 class Project;
-class OJProblemCase;
+struct OJProblemCase;
 using POJProblemCase = std::shared_ptr<OJProblemCase>;
 class CompilerManager : public QObject
 {

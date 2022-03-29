@@ -460,7 +460,7 @@ ChineseSimplified::ChineseSimplified()	// 中文（简体）
 	addPair("Invalid default options:", L"默认选项无效:");
 	addPair("Invalid project options:", L"项目选项无效:");
 	addPair("Invalid command line options:", L"无效的命令行选项:");
-	addPair("For help on options type 'astyle -h'", L"输入 'astyle -h' 以获得有关命令行的帮助");
+    addPair("For help on options type 'astyle -h'", L"输入 'astyle -h' 以获得有关命令行的帮助" );
 	addPair("Cannot open default option file", L"无法打开默认选项文件");
 	addPair("Cannot open project option file", L"无法打开项目选项文件");
 	addPair("Cannot open directory", L"无法打开目录");

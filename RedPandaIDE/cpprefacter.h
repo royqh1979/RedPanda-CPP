@@ -23,7 +23,7 @@
 #include "parser/cppparser.h"
 
 class Editor;
-class BufferCoord;
+struct BufferCoord;
 class Project;
 class CppRefacter : public QObject
 {

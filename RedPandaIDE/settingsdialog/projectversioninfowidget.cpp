@@ -16,7 +16,7 @@
  */
 #include "projectversioninfowidget.h"
 #include "ui_projectversioninfowidget.h"
-#include <winnls.h>
+#include <windows.h>
 #include "../mainwindow.h"
 #include "../project.h"
 

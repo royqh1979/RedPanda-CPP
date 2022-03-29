@@ -29,6 +29,11 @@ win32: {
     }
 }
 
+win32-msvc {
+QMAKE_CFLAGS += /source-charset:utf-8
+QMAKE_CXXFLAGS += /source-charset:utf-8
+}
+
 # Default rules for deployment.
 qnx: target.path = $${PREFIX}/libexec/$${APP_NAME}
 else: unix:!android: target.path = $${PREFIX}/libexec/$${APP_NAME}

@@ -149,7 +149,9 @@ MainWindow::MainWindow(QWidget *parent)
     ui->tblStackTrace->setModel(mDebugger->backtraceModel());
     ui->watchView->setModel(mDebugger->watchModel());
     ui->tblMemoryView->setModel(mDebugger->memoryModel());
+
     ui->tblMemoryView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+
 
     try {
         mDebugger->breakpointModel()->load(includeTrailingPathDelimiter(pSettings->dirs().config())

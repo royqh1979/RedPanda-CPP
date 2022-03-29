@@ -22,6 +22,9 @@ using std::string;
 #include <windows.h>
 #include <conio.h>
 
+#ifndef WINBOOL
+#define WINBOOL BOOL
+#endif
 #define MAX_COMMAND_LENGTH 32768
 #define MAX_ERROR_LENGTH 2048
 
