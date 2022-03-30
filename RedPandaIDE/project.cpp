@@ -698,6 +698,7 @@ void Project::setCompilerSet(int compilerSetIndex)
     if (mOptions.compilerSet != compilerSetIndex) {
         mOptions.compilerSet = compilerSetIndex;
         updateCompilerSetType();
+        setModified(true);
     }
 }
 
