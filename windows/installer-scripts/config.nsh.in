@@ -1,6 +1,6 @@
 ####################################################################
 # Startup
 
-!define COMPILERNAME \"MinGW-w64 X86_64 GCC 10.3\"
+!define COMPILERNAME \"MinGW-w64 X86_64 GCC 11.2\"
 !define DEVCPP_VERSION \"$${APP_VERSION}\"
 

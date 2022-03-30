@@ -4129,6 +4129,7 @@ void MainWindow::onFileChanged(const QString &path)
                 }
             }
         } else {
+            mFileSystemWatcher.removePath(path);
             if (QMessageBox::question(this,tr("File Changed"),
                                       tr("File '%1' was removed.").arg(path)+"<BR /><BR />" + tr("Keep it open?"),
                                       QMessageBox::Yes|QMessageBox::No,
@@ -4138,7 +4139,6 @@ void MainWindow::onFileChanged(const QString &path)
                 e->setModified(true);
                 e->updateCaption();
             }
-            mFileSystemWatcher.removePath(e->filename());
         }
     }
 }
@@ -6507,8 +6507,10 @@ void MainWindow::on_actionLocate_in_Files_View_triggered()
     Editor * editor = mEditorList->getEditor();
     if (editor) {
         QFileInfo fileInfo(editor->filename());
+        qDebug()<<fileInfo.absoluteFilePath();
+        qDebug()<<includeTrailingPathDelimiter(mFileSystemModel.rootDirectory().absolutePath());
         if (!fileInfo.absoluteFilePath().startsWith(
-                    mFileSystemModel.rootDirectory().absolutePath()+"/",
+                    includeTrailingPathDelimiter(mFileSystemModel.rootDirectory().absolutePath()),
                     PATH_SENSITIVITY
                     )) {
             QString fileDir = extractFileDir(editor->filename());
