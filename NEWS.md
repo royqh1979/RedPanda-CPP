@@ -17,6 +17,7 @@ Red Panda C++ Version 1.0.2
   - enhancement: context menu for problem cases table 
   - fix: error in auto generate makefile under linux
   - fix: when open a project, and it's missing compiler set getten reset, it's modification flag is not correctly set.
+  - fix: vector vars can't be expanded in the watch panel
 
 Red Panda C++ Version 1.0.1
   - fix: only convert project icon file when it's filename doesn't end with ".ico"
