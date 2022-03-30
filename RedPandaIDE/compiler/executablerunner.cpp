@@ -178,18 +178,14 @@ void ExecutableRunner::run()
     mProcess->waitForStarted(5000);
     if (mProcess->state()==QProcess::Running && redirectInput()) {
         mProcess->write(readFileToByteArray(redirectInputFilename()));
-        mProcess->closeWriteChannel();
     }
-
+    bool writeChannelClosed = false;
     while (true) {
         mProcess->waitForFinished(mWaitForFinishTime);
         if (mProcess->state()!=QProcess::Running) {
             break;
         }
         if (mStop) {
-            mProcess->closeReadChannel(QProcess::StandardOutput);
-            mProcess->closeReadChannel(QProcess::StandardError);
-            mProcess->closeWriteChannel();
             mProcess->terminate();
             if (mProcess->waitForFinished(1000)) {
                 break;
@@ -201,6 +197,10 @@ void ExecutableRunner::run()
                 }
             }
             break;
+        }
+        if (mProcess->bytesToWrite()==0 && redirectInput() && !writeChannelClosed) {
+            writeChannelClosed=true;
+            mProcess->closeWriteChannel();
         }
 #if defined(Q_OS_WIN) || defined(Q_OS_LINUX)
         if (mStartConsole && !mPausing && pBuf) {

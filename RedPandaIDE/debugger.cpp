@@ -151,6 +151,8 @@ bool Debugger::start(const QString& inferior)
             &WatchModel::addVarChild);
     connect(mReader, &DebugReader::varValueUpdated,mWatchModel,
             &WatchModel::updateVarValue);
+    connect(mReader, &DebugReader::varsValueUpdated,mWatchModel,
+            &WatchModel::updateAllHasMoreVars);
     connect(mReader, &DebugReader::inferiorContinued,pMainWindow,
             &MainWindow::removeActiveBreakpoints);
     connect(mReader, &DebugReader::inferiorStopped,pMainWindow,
@@ -1262,6 +1264,8 @@ void DebugReader::handleUpdateVarValue(const QList<GDBMIResultParser::ParseValue
         emit varValueUpdated(name,val,inScope,typeChanged,newType,newNumChildren,
                              hasMore);
     }
+    //todo: -var-list-children will freeze if the var is not correctly initialized
+    //emit varsValueUpdated();
 }
 
 QByteArray DebugReader::removeToken(const QByteArray &line)
@@ -2006,6 +2010,16 @@ void WatchModel::updateVarValue(const QString &name, const QString &val, const Q
         fetchMore(idx);
     }
     emit dataChanged(idx,createIndex(idx.row(),2,var.get()));
+}
+
+void WatchModel::updateAllHasMoreVars()
+{
+    foreach (const PWatchVar& var, mVarIndex.values()) {
+        if (var->hasMore) {
+            QModelIndex idx = index(var);
+            fetchMore(idx);
+        }
+    }
 }
 
 void WatchModel::clearAllVarInfos()

@@ -13,6 +13,8 @@ Red Panda C++ Version 1.0.2
   - enhancement: auto position cursor in expected with output's cursor
   - enhancement: display line number in problem case's input/output/expected input controls
   - enhancement: only tag the first inconstantency when running problem case, to greatly reduce compare & display time
+  - fix: can't stop a freeze program that has stdin redirected.
+  - enhancement: context menu for problem cases table 
 
 Red Panda C++ Version 1.0.1
   - fix: only convert project icon file when it's filename doesn't end with ".ico"

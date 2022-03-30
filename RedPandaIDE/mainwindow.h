@@ -276,11 +276,13 @@ private slots:
     void onFileEncodingContextMenu(const QPoint& pos);
     void onFilesViewContextMenu(const QPoint& pos);
     void onLstProblemSetContextMenu(const QPoint& pos);
+    void onTableProblemCasesContextMenu(const QPoint& pos);
     void onToolsOutputContextMenu(const QPoint&pos);
 
     void onProblemSetIndexChanged(const QModelIndex &current, const QModelIndex &previous);
     void onProblemCaseIndexChanged(const QModelIndex &current, const QModelIndex &previous);
     void onProblemNameChanged(int index);
+    void onRroblemRunCurrentCase();
     void onNewProblemConnection();
     void updateProblemTitle();
     void onEditorClosed();
@@ -783,6 +785,10 @@ private:
     //action for problem set
     QAction * mProblem_OpenSource;
     QAction * mProblem_Properties;
+
+    //action for problem
+    QAction * mProblem_RunCurrentCase;
+    QAction * mProblem_RunAllCases;
 
     //action for tools output
     QAction * mToolsOutput_Clear;

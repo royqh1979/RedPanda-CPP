@@ -43,8 +43,6 @@ public:
     int execTimeout() const;
     void setExecTimeout(int newExecTimeout);
 
-    bool execTimeouted() const;
-
 signals:
     void caseStarted(const QString &caseId, int current, int total);
     void caseFinished(const QString &caseId, int current, int total);
@@ -62,7 +60,6 @@ private:
     int mBufferSize;
     int mOutputRefreshTime;
     int mExecTimeout;
-    bool mExecTimeouted;
 };
 
 #endif // OJPROBLEMCASESRUNNER_H

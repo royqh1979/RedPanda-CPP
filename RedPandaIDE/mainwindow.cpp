@@ -2250,6 +2250,23 @@ void MainWindow::buildContextMenus()
     connect(mProblem_OpenSource, &QAction::triggered, this,
             &MainWindow::onProblemOpenSource);
 
+    //context menu signal for the problem list view
+    ui->tblProblemCases->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui->tblProblemCases, &QWidget::customContextMenuRequested,
+            this, &MainWindow::onTableProblemCasesContextMenu);
+    mProblem_RunAllCases = createActionFor(
+                tr("Run All Cases"),
+                ui->tblProblemCases
+                );
+    connect(mProblem_RunAllCases, &QAction::triggered, this,
+            &MainWindow::on_btnRunAllProblemCases_clicked);
+    mProblem_RunCurrentCase = createActionFor(
+                tr("Run Current Case"),
+                ui->tblProblemCases
+                );
+    connect(mProblem_RunCurrentCase, &QAction::triggered, this,
+            &MainWindow::onProblemRunCurrentCase);
+
     //context menu signal for the Problem Set lable
     ui->lblProblemSet->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->lblProblemSet, &QWidget::customContextMenuRequested,
@@ -3117,6 +3134,17 @@ void MainWindow::onLstProblemSetContextMenu(const QPoint &pos)
     menu.exec(ui->lstProblemSet->mapToGlobal(pos));
 }
 
+void MainWindow::onTableProblemCasesContextMenu(const QPoint &pos)
+{
+    QMenu menu(this);
+    QModelIndex idx = ui->tblProblemCases->currentIndex();
+    menu.addAction(mProblem_RunAllCases);
+    menu.addAction(mProblem_RunCurrentCase);
+    mProblem_RunAllCases->setEnabled(mOJProblemModel.count()>0);
+    mProblem_RunCurrentCase->setEnabled(idx.isValid());
+    menu.exec(ui->tblProblemCases->mapToGlobal(pos));
+}
+
 void MainWindow::onToolsOutputContextMenu(const QPoint &pos)
 {
     QMenu menu(this);
@@ -3214,6 +3242,12 @@ void MainWindow::onProblemNameChanged(int index)
     if (idx.isValid() && index == idx.row()) {
         updateProblemTitle();
     }
+}
+
+void MainWindow::onProblemRunCurrentCase()
+{
+    applyCurrentProblemCaseChanges();
+    runExecutable(RunType::CurrentProblemCase);
 }
 
 void MainWindow::onNewProblemConnection()
@@ -7403,6 +7437,13 @@ void MainWindow::on_btnProblemCaseInputFileName_clicked()
         if (problemCase->inputFileName == fileName)
             return;
         problemCase->inputFileName = fileName;
+        if (problemCase->expectedOutputFileName.isEmpty()
+                && problemCase->expected.isEmpty()
+                && QFileInfo(fileName).suffix()=="in") {
+            QString expectedFileName = fileName.mid(0,fileName.length()-2)+"out";
+            if (fileExists(expectedFileName))
+                problemCase->expectedOutputFileName = expectedFileName;
+        }
         fillProblemCaseInputAndExpected(problemCase);
     }
 }

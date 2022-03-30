@@ -196,6 +196,7 @@ public  slots:
                          const QString& inScope, bool typeChanged,
                          const QString& newType, int newNumChildren,
                          bool hasMore);
+    void updateAllHasMoreVars();
 signals:
     void fetchChildren(const QString& name);
 private:
@@ -456,6 +457,7 @@ signals:
                          const QString& inScope, bool typeChanged,
                          const QString& newType, int newNumChildren,
                          bool hasMore);
+    void varsValueUpdated();
 private:
     void clearCmdQueue();
 

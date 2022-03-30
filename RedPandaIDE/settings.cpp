@@ -3335,7 +3335,7 @@ void Settings::Executor::doLoad()
 #endif
     mCaseEditorFontSize = intValue("case_editor_font_size",12);
     mCaseEditorFontOnlyMonospaced = boolValue("case_editor_font_only_monospaced",true);
-    mCaseTimeout = intValue("case_timeout", 3);
+    mCaseTimeout = intValue("case_timeout", 2);
     mEnableCaseTimeout = boolValue("enable_case_timeout", true);
 }
 

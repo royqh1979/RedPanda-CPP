@@ -25,8 +25,7 @@
 OJProblemCasesRunner::OJProblemCasesRunner(const QString& filename, const QString& arguments, const QString& workDir,
                                            const QVector<POJProblemCase>& problemCases, QObject *parent):
     Runner(filename,arguments,workDir,parent),
-    mExecTimeout(-1),
-    mExecTimeouted(false)
+    mExecTimeout(-1)
 {
     mProblemCases = problemCases;
     mBufferSize = 8192;
@@ -37,8 +36,7 @@ OJProblemCasesRunner::OJProblemCasesRunner(const QString& filename, const QStrin
 OJProblemCasesRunner::OJProblemCasesRunner(const QString& filename, const QString& arguments, const QString& workDir,
                                            POJProblemCase problemCase, QObject *parent):
     Runner(filename,arguments,workDir,parent),
-    mExecTimeout(-1),
-    mExecTimeouted(false)
+    mExecTimeout(-1)
 {
     mProblemCases.append(problemCase);
     mBufferSize = 8192;
@@ -59,12 +57,14 @@ void OJProblemCasesRunner::runCase(int index,POJProblemCase problemCase)
     QByteArray output;
     int noOutputTime = 0;
     QElapsedTimer elapsedTimer;
+    bool execTimeouted = false;
     process.setProgram(mFilename);
     process.setArguments(splitProcessCommand(mArguments));
     process.setWorkingDirectory(mWorkDir);
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
     QString path = env.value("PATH");
     QStringList pathAdded;
+    bool writeChannelClosed = false;
     if (pSettings->compilerSets().defaultSet()) {
         foreach(const QString& dir, pSettings->compilerSets().defaultSet()->binDirs()) {
             pathAdded.append(dir);
@@ -92,33 +92,33 @@ void OJProblemCasesRunner::runCase(int index,POJProblemCase problemCase)
             process.write(readFileToByteArray(problemCase->inputFileName));
         else
             process.write(problemCase->input.toUtf8());
-        process.closeWriteChannel();
     }
 
     elapsedTimer.start();
     while (true) {
         process.waitForFinished(mWaitForFinishTime);
-        readed = process.read(mBufferSize);
-        buffer += readed;
         if (process.state()!=QProcess::Running) {
             break;
         }
         if (mExecTimeout>0) {
             int msec = elapsedTimer.elapsed();
             if (msec>mExecTimeout) {
-                mExecTimeouted=true;
+                execTimeouted=true;
             }
         }
-        if (mStop || mExecTimeouted) {
-            process.closeReadChannel(QProcess::StandardOutput);
-            process.closeReadChannel(QProcess::StandardError);
-            process.closeWriteChannel();
+        if (mStop || execTimeouted) {
             process.terminate();
             process.kill();
             break;
         }
         if (errorOccurred)
             break;
+        if (process.bytesToWrite()==0 && !writeChannelClosed) {
+            writeChannelClosed = true;
+            process.closeWriteChannel();
+        }
+        readed = process.read(mBufferSize);
+        buffer += readed;
         if (buffer.length()>=mBufferSize || noOutputTime > mOutputRefreshTime) {
             if (!buffer.isEmpty()) {
                 emit newOutputGetted(problemCase->getId(),QString::fromLocal8Bit(buffer));
@@ -131,7 +131,7 @@ void OJProblemCasesRunner::runCase(int index,POJProblemCase problemCase)
         }
     }
     problemCase->runningTime=elapsedTimer.elapsed();
-    if (mExecTimeouted) {
+    if (execTimeouted) {
         problemCase->output = tr("Case Timeout");
         emit resetOutput(problemCase->getId(), problemCase->output);
     } else {
@@ -139,6 +139,7 @@ void OJProblemCasesRunner::runCase(int index,POJProblemCase problemCase)
             buffer += process.readAll();
         emit newOutputGetted(problemCase->getId(),QString::fromLocal8Bit(buffer));
         output.append(buffer);
+        problemCase->output = QString::fromLocal8Bit(output);
         if (errorOccurred) {
             //qDebug()<<"process error:"<<process.error();
             switch (process.error()) {
@@ -162,7 +163,6 @@ void OJProblemCasesRunner::runCase(int index,POJProblemCase problemCase)
                 break;
             }
         }
-        problemCase->output = QString::fromLocal8Bit(output);
     }
 }
 
@@ -178,11 +178,6 @@ void OJProblemCasesRunner::run()
         POJProblemCase problemCase = mProblemCases[i];
         runCase(i,problemCase);
     }
-}
-
-bool OJProblemCasesRunner::execTimeouted() const
-{
-    return mExecTimeouted;
 }
 
 int OJProblemCasesRunner::execTimeout() const
