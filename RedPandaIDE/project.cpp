@@ -55,8 +55,8 @@ Project::Project(const QString &filename, const QString &name,
                     &EditorList::getContentFromOpenedEditor,mEditorList,
                     std::placeholders::_1, std::placeholders::_2));
     if (name == DEV_INTERNAL_OPEN) {
-        open();
         mModified = false;
+        open();
     } else {
         mName = name;
         SimpleIni ini;
@@ -1515,18 +1515,7 @@ void Project::loadOptions(SimpleIni& ini)
                         +tr("It will be substituted by the global compiler set."),
                         QMessageBox::Ok
                                   );
-            mOptions.compilerSet = pSettings->compilerSets().defaultIndex();
-            int compilerSetType = ini.GetLongValue("Project","CompilerSetType",-1);
-            if (compilerSetType>=0) {
-                for (int i=0;i<pSettings->compilerSets().size();i++) {
-                    Settings::PCompilerSet pSet = pSettings->compilerSets().getSet(i);
-                    if (pSet && pSet->compilerSetType() == compilerSetType) {
-                        mOptions.compilerSet = i;
-                        break;
-                    }
-                }
-            }
-            setModified(true);
+            setCompilerSet(pSettings->compilerSets().defaultIndex());
         }
         mOptions.compilerOptions = ini.GetValue("Project", "CompilerSettings", "");
         mOptions.staticLink = ini.GetBoolValue("Project", "StaticLink", true);

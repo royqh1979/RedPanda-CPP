@@ -2231,7 +2231,7 @@ bool WatchModel::hasChildren(const QModelIndex &parent) const
         return true;
     }
     WatchVar* item = static_cast<WatchVar*>(parent.internalPointer());
-    return item->numChild>0;
+    return item->numChild>0 || item->hasMore;
 }
 
 RegisterModel::RegisterModel(QObject *parent):QAbstractTableModel(parent)
