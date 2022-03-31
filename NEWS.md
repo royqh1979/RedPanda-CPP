@@ -20,6 +20,8 @@ Red Panda C++ Version 1.0.2
   - fix: vector vars can't be expanded in the watch panel
   - change: use qt's mingw 8.1 (32bit) and 11.2 (64bit) in distributions, to provide better compatibility with simplified chinese windows.
   - fix: crash when rename an openned file, and choose "no" when ask if keep the editor open
+  - change: only auto complete symbol '(' when at line end, or there are spaces or right ')' '}' ']'after it
+  - fix: mouse drag may fail when start drag at the right half of the selection's last character
 
 Red Panda C++ Version 1.0.1
   - fix: only convert project icon file when it's filename doesn't end with ".ico"

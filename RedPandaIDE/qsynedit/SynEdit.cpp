@@ -608,7 +608,7 @@ bool SynEdit::pointToCharLine(const QPoint &point, BufferCoord &coord)
         return false;
     }
 
-    coord = displayToBufferPos(pixelsToRowColumn(point.x(),point.y()));
+    coord = displayToBufferPos(pixelsToNearestRowColumn(point.x(),point.y()));
     return true;
 }
 
@@ -622,7 +622,7 @@ bool SynEdit::pointToLine(const QPoint &point, int &line)
         return false;
     }
 
-    BufferCoord coord = displayToBufferPos(pixelsToRowColumn(point.x(),point.y()));
+    BufferCoord coord = displayToBufferPos(pixelsToNearestRowColumn(point.x(),point.y()));
     line = coord.Line;
     return true;
 }
@@ -684,12 +684,21 @@ void SynEdit::invalidateGutterLines(int FirstLine, int LastLine)
  * @return
  */
 
-DisplayCoord SynEdit::pixelsToRowColumn(int aX, int aY) const
+DisplayCoord SynEdit::pixelsToNearestRowColumn(int aX, int aY) const
 {
     return {
         std::max(1, (int)(mLeftChar + round((aX - mGutterWidth - 2.0) / mCharWidth))),
         std::max(1, mTopLine + (aY / mTextHeight))
     };
+}
+
+DisplayCoord SynEdit::pixelsToRowColumn(int aX, int aY) const
+{
+    return {
+        std::max(1, (int)(mLeftChar + (aX - mGutterWidth - 2.0) / mCharWidth)),
+        std::max(1, mTopLine + (aY / mTextHeight))
+    };
+
 }
 
 QPoint SynEdit::rowColumnToPixels(const DisplayCoord &coord) const
@@ -1125,7 +1134,7 @@ void SynEdit::processGutterClick(QMouseEvent *event)
 {
     int X = event->pos().x();
     int Y = event->pos().y();
-    DisplayCoord RowColumn = pixelsToRowColumn(X, Y);
+    DisplayCoord RowColumn = pixelsToNearestRowColumn(X, Y);
     int Line = rowToLine(RowColumn.Row);
 
     // Check if we clicked on a folding thing
@@ -1843,7 +1852,7 @@ void SynEdit::doMouseScroll(bool isDragging)
 
     iMousePos = QCursor::pos();
     iMousePos = mapFromGlobal(iMousePos);
-    C = pixelsToRowColumn(iMousePos.x(), iMousePos.y());
+    C = pixelsToNearestRowColumn(iMousePos.x(), iMousePos.y());
     C.Row = minMax(C.Row, 1, displayLineCount());
     if (mScrollDeltaX != 0) {
         setLeftChar(leftChar() + mScrollDeltaX * mMouseSelectionScrollSpeed);
@@ -2576,7 +2585,7 @@ void SynEdit::computeCaret()
     int X=iMousePos.x();
     int Y=iMousePos.y();
 
-    DisplayCoord vCaretNearestPos = pixelsToRowColumn(X, Y);
+    DisplayCoord vCaretNearestPos = pixelsToNearestRowColumn(X, Y);
     vCaretNearestPos.Row = minMax(vCaretNearestPos.Row, 1, displayLineCount());
     setInternalDisplayXY(vCaretNearestPos);
 }
@@ -6288,7 +6297,7 @@ void SynEdit::dragEnterEvent(QDragEnterEvent *event)
         mDragCaretSave = caretXY();
         mDragSelBeginSave = blockBegin();
         mDragSelEndSave = blockEnd();
-        BufferCoord coord = displayToBufferPos(pixelsToRowColumn(event->pos().x(),
+        BufferCoord coord = displayToBufferPos(pixelsToNearestRowColumn(event->pos().x(),
                                                                         event->pos().y()));
         internalSetCaretXY(coord);
         setBlockBegin(mDragSelBeginSave);
@@ -6302,7 +6311,7 @@ void SynEdit::dropEvent(QDropEvent *event)
 {
     //mScrollTimer->stop();
 
-    BufferCoord coord = displayToBufferPos(pixelsToRowColumn(event->pos().x(),
+    BufferCoord coord = displayToBufferPos(pixelsToNearestRowColumn(event->pos().x(),
                                                                     event->pos().y()));
     setCaretXY(coord);
     if (coord>=mDragSelBeginSave && coord<=mDragSelEndSave) {
@@ -6371,7 +6380,7 @@ void SynEdit::dragMoveEvent(QDragMoveEvent *event)
     iMousePos = mapFromGlobal(iMousePos);
     int X=iMousePos.x();
     int Y=iMousePos.y();
-    BufferCoord coord = displayToBufferPos(pixelsToRowColumn(X,Y));
+    BufferCoord coord = displayToBufferPos(pixelsToNearestRowColumn(X,Y));
     internalSetCaretXY(coord);
     setBlockBegin(mDragSelBeginSave);
     setBlockEnd(mDragSelEndSave);

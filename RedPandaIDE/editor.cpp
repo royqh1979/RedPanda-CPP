@@ -554,6 +554,10 @@ void Editor::focusOutEvent(QFocusEvent *event)
     pMainWindow->functionTip()->hide();
 }
 
+static bool isSpaceOrRightParenthesis(const QChar& ch) {
+    return ch.isSpace() || ch==')' || ch=="]" || ch=="}";
+}
+
 void Editor::keyPressEvent(QKeyEvent *event)
 {
     bool handled = false;
@@ -784,7 +788,6 @@ void Editor::keyPressEvent(QKeyEvent *event)
         switch (ch.unicode()) {
         case '"':
         case '\'':
-        case '(':
         case ')':
         case '{':
         case '}':
@@ -793,6 +796,13 @@ void Editor::keyPressEvent(QKeyEvent *event)
         case '<':
         case '*':
             handled = handleSymbolCompletion(ch);
+            return;
+        case '(':
+            if (caretX()-1>=lineText().length()
+                    || caretX()<=0
+                    || isSpaceOrRightParenthesis(lineText().at(caretX()-1))) {
+                handled = handleSymbolCompletion(ch);
+            }
             return;
         case '>':
             if ((caretX() <= 1) || lineText().isEmpty()

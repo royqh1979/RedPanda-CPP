@@ -177,6 +177,7 @@ public:
     void invalidateGutter();
     void invalidateGutterLine(int aLine);
     void invalidateGutterLines(int FirstLine, int LastLine);
+    DisplayCoord pixelsToNearestRowColumn(int aX, int aY) const;
     DisplayCoord pixelsToRowColumn(int aX, int aY) const;
     QPoint rowColumnToPixels(const DisplayCoord& coord) const;
     DisplayCoord bufferToDisplayPos(const BufferCoord& p) const;
