@@ -92,10 +92,15 @@ void OJProblemCasesRunner::runCase(int index,POJProblemCase problemCase)
             process.write(readFileToByteArray(problemCase->inputFileName));
         else
             process.write(problemCase->input.toUtf8());
+        process.waitForFinished(0);
     }
 
     elapsedTimer.start();
     while (true) {
+        if (process.bytesToWrite()==0 && !writeChannelClosed) {
+            writeChannelClosed = true;
+            process.closeWriteChannel();
+        }
         process.waitForFinished(mWaitForFinishTime);
         if (process.state()!=QProcess::Running) {
             break;
@@ -113,10 +118,6 @@ void OJProblemCasesRunner::runCase(int index,POJProblemCase problemCase)
         }
         if (errorOccurred)
             break;
-        if (process.bytesToWrite()==0 && !writeChannelClosed) {
-            writeChannelClosed = true;
-            process.closeWriteChannel();
-        }
         readed = process.read(mBufferSize);
         buffer += readed;
         if (buffer.length()>=mBufferSize || noOutputTime > mOutputRefreshTime) {

@@ -18,10 +18,11 @@
 #include "compilermanager.h"
 #include <QFile>
 #include <QFileInfo>
+#include <QTextCodec>
 #include "../platform.h"
 
 StdinCompiler::StdinCompiler(const QString &filename,const QByteArray& encoding, const QString& content,bool silent, bool onlyCheckSyntax):
-    Compiler(filename,silent,onlyCheckSyntax),
+    Compiler(filename,silent, onlyCheckSyntax),
     mContent(content),
     mEncoding(encoding)
 {
@@ -39,8 +40,9 @@ bool StdinCompiler::prepareForCompile()
     if (fileType == FileType::Other)
         fileType = FileType::CppSource;
     QString strFileType;
-    if (mEncoding!=ENCODING_ASCII  && (!mOnlyCheckSyntax || mEncoding != ENCODING_UTF8 ))
-        mArguments += getCharsetArgument(mEncoding);
+    if (mEncoding!=ENCODING_ASCII) {
+        mArguments += getCharsetArgument(mEncoding, mOnlyCheckSyntax);
+    }
     switch(fileType) {
     case FileType::CSource:
         mArguments += " -x c - ";
@@ -78,9 +80,17 @@ bool StdinCompiler::prepareForCompile()
     return true;
 }
 
-QString StdinCompiler::pipedText()
+QByteArray StdinCompiler::pipedText()
 {
-    return mContent;
+    if (mEncoding == ENCODING_ASCII)
+        return mContent.toLatin1();
+
+    QTextCodec* codec = QTextCodec::codecForName(mEncoding);
+    if (codec) {
+        return codec->fromUnicode(mContent);
+    } else {
+        return mContent.toLocal8Bit();
+    }
 }
 
 bool StdinCompiler::prepareForRebuild()

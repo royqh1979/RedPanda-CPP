@@ -54,7 +54,7 @@ bool FileCompiler::prepareForCompile()
         }
     }
 
-    mArguments += getCharsetArgument(mEncoding);
+    mArguments += getCharsetArgument(mEncoding, mOnlyCheckSyntax);
     QString strFileType;
     switch(fileType) {
     case FileType::CSource:
@@ -88,11 +88,6 @@ bool FileCompiler::prepareForCompile()
     log(tr("Command: %1 %2").arg(extractFileName(mCompiler)).arg(mArguments));
     mDirectory = extractFileDir(mFilename);
     return true;
-}
-
-QString FileCompiler::pipedText()
-{
-    return QString();
 }
 
 bool FileCompiler::prepareForRebuild()

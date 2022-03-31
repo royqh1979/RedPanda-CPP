@@ -461,11 +461,6 @@ void ProjectCompiler::setOnlyClean(bool newOnlyClean)
     mOnlyClean = newOnlyClean;
 }
 
-QString ProjectCompiler::pipedText()
-{
-    return QString();
-}
-
 bool ProjectCompiler::prepareForRebuild()
 {
     //we use make argument to clean

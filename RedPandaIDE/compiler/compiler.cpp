@@ -181,6 +181,11 @@ Settings::PCompilerSet Compiler::compilerSet()
     return pSettings->compilerSets().defaultSet();
 }
 
+QByteArray Compiler::pipedText()
+{
+    return QByteArray();
+}
+
 void Compiler::processOutput(QString &line)
 {
     if (line == COMPILE_PROCESS_END) {
@@ -276,7 +281,7 @@ void Compiler::stopCompile()
     mStop = true;
 }
 
-QString Compiler::getCharsetArgument(const QByteArray& encoding)
+QString Compiler::getCharsetArgument(const QByteArray& encoding, bool checkSyntax)
 {
     QString result;
     if (compilerSet()->autoAddCharsetParams() && encoding != ENCODING_ASCII
@@ -297,9 +302,13 @@ QString Compiler::getCharsetArgument(const QByteArray& encoding)
         } else {
             execEncodingName = compilerSetExecCharset;
         }
-        if (encodingName!=execEncodingName)
+        if (checkSyntax) {
+            result += QString(" -finput-charset=%1")
+                    .arg(encodingName);
+        } else if (encodingName!=execEncodingName) {
             result += QString(" -finput-charset=%1 -fexec-charset=%2")
                     .arg(encodingName, execEncodingName);
+        }
     }
     return result;
 }
@@ -551,7 +560,7 @@ QString Compiler::parseFileIncludesForAutolink(
     return result;
 }
 
-void Compiler::runCommand(const QString &cmd, const QString  &arguments, const QString &workingDir, const QString& inputText)
+void Compiler::runCommand(const QString &cmd, const QString  &arguments, const QString &workingDir, const QByteArray& inputText)
 {
     QProcess process;
     mStop = false;
@@ -591,11 +600,17 @@ void Compiler::runCommand(const QString &cmd, const QString  &arguments, const Q
     });
     process.start();
     process.waitForStarted(5000);
-    if (!inputText.isEmpty())
-        process.write(inputText.toLocal8Bit());
-    process.closeWriteChannel();
+    if (!inputText.isEmpty()) {
+        process.write(inputText);
+        process.waitForFinished(0);
+    }
+    bool writeChannelClosed = false;
     while (true) {
-        process.waitForFinished(1000);
+        if (process.bytesToWrite()==0 && !writeChannelClosed ) {
+            writeChannelClosed=true;
+            process.closeWriteChannel();
+        }
+        process.waitForFinished(100);
         if (process.state()!=QProcess::Running) {
             break;
         }

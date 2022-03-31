@@ -1415,9 +1415,6 @@ void DebugReader::run()
             break;
         }
         if (mStop) {
-            mProcess->closeReadChannel(QProcess::StandardOutput);
-            mProcess->closeReadChannel(QProcess::StandardError);
-            mProcess->closeWriteChannel();
             mProcess->terminate();
             mProcess->kill();
             break;
@@ -2401,17 +2398,19 @@ void DebugTarget::run()
     mStartSemaphore.release(1);
     if (mProcess->state()==QProcess::Running && !mInputFile.isEmpty()) {
         mProcess->write(readFileToByteArray(mInputFile));
-        mProcess->closeWriteChannel();
+        mProcess->waitForFinished(0);
     }
+    bool writeChannelClosed = false;
     while (true) {
+        if (mProcess->bytesToWrite()==0 && !writeChannelClosed) {
+            writeChannelClosed = true;
+            mProcess->closeWriteChannel();
+        }
         mProcess->waitForFinished(1);
         if (mProcess->state()!=QProcess::Running) {
             break;
         }
         if (mStop) {
-            mProcess->closeReadChannel(QProcess::StandardOutput);
-            mProcess->closeReadChannel(QProcess::StandardError);
-            mProcess->closeWriteChannel();
             mProcess->terminate();
             mProcess->kill();
             break;

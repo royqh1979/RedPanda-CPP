@@ -24,7 +24,7 @@ Runner::Runner(const QString &filename, const QString &arguments, const QString 
     mFilename(filename),
     mArguments(arguments),
     mWorkDir(workDir),
-    mWaitForFinishTime(1000)
+    mWaitForFinishTime(100)
 {
 
 }

@@ -35,7 +35,7 @@ private:
 
     // Compiler interface
 protected:
-    QString pipedText() override;
+    QByteArray pipedText() override;
 
     // Compiler interface
 protected:

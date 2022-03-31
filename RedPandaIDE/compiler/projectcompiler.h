@@ -48,7 +48,6 @@ private:
     bool mOnlyClean;
 protected:
     bool prepareForCompile() override;
-    QString pipedText() override;
     bool prepareForRebuild() override;
 };
 

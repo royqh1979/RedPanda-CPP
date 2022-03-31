@@ -34,10 +34,6 @@ private:
 
     // Compiler interface
 protected:
-    QString pipedText() override;
-
-    // Compiler interface
-protected:
     bool prepareForRebuild() override;
 };
 

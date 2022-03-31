@@ -62,9 +62,9 @@ protected:
 protected:
     virtual Settings::PCompilerSet compilerSet();
     virtual bool prepareForCompile() = 0;
-    virtual QString pipedText() = 0;
+    virtual QByteArray pipedText();
     virtual bool prepareForRebuild() = 0;
-    virtual QString getCharsetArgument(const QByteArray& encoding);
+    virtual QString getCharsetArgument(const QByteArray& encoding,bool onlyCheckSyntax);
     virtual QString getCCompileArguments(bool checkSyntax);
     virtual QString getCppCompileArguments(bool checkSyntax);
     virtual QString getCIncludeArguments();
@@ -77,7 +77,7 @@ protected:
             PCppParser& parser);
     void log(const QString& msg);
     void error(const QString& msg);
-    void runCommand(const QString& cmd, const QString& arguments, const QString& workingDir, const QString& inputText=QString());
+    void runCommand(const QString& cmd, const QString& arguments, const QString& workingDir, const QByteArray& inputText=QByteArray());
 
 protected:
     bool mSilent;
