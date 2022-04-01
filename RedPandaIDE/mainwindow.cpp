@@ -7523,3 +7523,20 @@ void MainWindow::on_txtProblemCaseInput_cursorPositionChanged()
     ui->lblProblemCaseInput->setText(tr("Line %1").arg(cursor.block().firstLineNumber()+1));
 }
 
+
+void MainWindow::on_actionMove_Selection_Up_triggered()
+{
+    Editor * editor = mEditorList->getEditor();
+    if (editor != NULL ) {
+        editor->moveSelUp();
+    }
+}
+
+
+void MainWindow::on_actionMove_Selection_Down_triggered()
+{
+    Editor * editor = mEditorList->getEditor();
+    if (editor != NULL ) {
+        editor->moveSelDown();
+    }
+}

@@ -1633,6 +1633,8 @@
     <addaction name="actionFoldAll"/>
     <addaction name="actionUnfoldAll"/>
     <addaction name="separator"/>
+    <addaction name="actionMove_Selection_Up"/>
+    <addaction name="actionMove_Selection_Down"/>
     <addaction name="actionDelete_Line"/>
     <addaction name="actionDuplicate_Line"/>
     <addaction name="actionDelete_Word"/>
@@ -3016,6 +3018,22 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+]</string>
+   </property>
+  </action>
+  <action name="actionMove_Selection_Up">
+   <property name="text">
+    <string>Move Selection Up</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+Up</string>
+   </property>
+  </action>
+  <action name="actionMove_Selection_Down">
+   <property name="text">
+    <string>Move Selection Down</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+Down</string>
    </property>
   </action>
  </widget>

@@ -2,6 +2,7 @@ Red Panda C++ Version 1.0.3
   - fix: when oj problem grabbed by competitive companion received,
     the app is restored to normal state, no matter it's current state.
   - enhancement: input shortcut in the option dialog's general -> shortcut page by pressing keys.
+  - enhancement: shift+ctrl+down/up to move currenlt selection lines up / down
 
 Red Panda C++ Version 1.0.2
   - enhancement: press tab in column mode won't exit column mode

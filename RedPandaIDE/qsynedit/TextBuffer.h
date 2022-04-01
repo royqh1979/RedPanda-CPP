@@ -163,7 +163,9 @@ enum class SynChangeReason {crInsert, crPaste, crDragDropInsert,
   crSelection, //restore Selection
   crNothing,
   crGroupBreak,
-  crDeleteAll
+  crDeleteAll,
+  crMoveSelectionUp,
+  crMoveSelectionDown
   };
 class SynEditUndoItem {
 private:

@@ -2180,97 +2180,87 @@ void SynEdit::doDuplicateLine()
     }
 }
 
-void SynEdit::doMoveSelUp()
+void SynEdit::doMoveSelUp(bool addUndo)
 {
     if (!mReadOnly && (mLines->count() > 0) && (blockBegin().Line > 1)) {
         doOnPaintTransient(SynTransientType::ttBefore);
 
         // Backup caret and selection
-        BufferCoord OrigBlockBegin = blockBegin();
-        BufferCoord OrigBlockEnd = blockEnd();
+        BufferCoord origBlockBegin = blockBegin();
+        BufferCoord origBlockEnd = blockEnd();
 
-        // Delete line above selection
-        QString s = mLines->getString(OrigBlockBegin.Line - 2); // before start, 0 based
-        mLines->deleteAt(OrigBlockBegin.Line - 2); // before start, 0 based
-        doLinesDeleted(OrigBlockBegin.Line - 1, 1); // before start, 1 based
-
-        // Insert line below selection
-        mLines->insert(OrigBlockEnd.Line - 1, s);
-        doLinesInserted(OrigBlockEnd.Line, 1);
-
-        // Restore caret and selection
-        setCaretAndSelection(
-                  BufferCoord{mCaretX, mCaretY - 1},
-                  BufferCoord{1, OrigBlockBegin.Line - 1},
-                  BufferCoord{mLines->getString(OrigBlockEnd.Line - 2).length() + 1, OrigBlockEnd.Line - 1}
-        );
-        // Retrieve end of line we moved up
-        BufferCoord MoveDelim = BufferCoord{mLines->getString(OrigBlockEnd.Line - 1).length() + 1, OrigBlockEnd.Line};
-        // Support undo, implement as drag and drop
-        {
+        if (addUndo) {
             mUndoList->BeginBlock();
-            auto action = finally([this]{
-                mUndoList->EndBlock();
-            });
-            mUndoList->AddChange(SynChangeReason::crSelection, // backup original selection
-                    OrigBlockBegin,
-                    OrigBlockEnd,
+            mUndoList->AddChange(SynChangeReason::crCaret, // backup original selection
+                    caretXY(),
+                    caretXY(),
                     "",
                     SynSelectionMode::smNormal);
-            mUndoList->AddChange(SynChangeReason::crDragDropInsert,
-                    mBlockBegin, // modified
-                    MoveDelim, // put at end of line me moved up
-                    s + lineBreak() + selText(),
+            mUndoList->AddChange(SynChangeReason::crMoveSelectionUp, // backup original selection
+                    origBlockBegin,
+                    origBlockEnd,
+                    "",
                     SynSelectionMode::smNormal);
+            mUndoList->EndBlock();
         }
+        // Delete line above selection
+        QString s = mLines->getString(origBlockBegin.Line - 2); // before start, 0 based
+        mLines->deleteAt(origBlockBegin.Line - 2); // before start, 0 based
+        doLinesDeleted(origBlockBegin.Line - 1, 1); // before start, 1 based
+
+        // Insert line below selection
+        mLines->insert(origBlockEnd.Line - 1, s);
+        doLinesInserted(origBlockEnd.Line, 1);
+        // Restore caret and selection
+        setCaretAndSelection(
+                  BufferCoord{mCaretX, origBlockBegin.Line - 1},
+                  BufferCoord{origBlockBegin.Char, origBlockBegin.Line - 1},
+                  BufferCoord{origBlockEnd.Char, origBlockEnd.Line - 1}
+        );
+
         doOnPaintTransient(SynTransientType::ttAfter);
     }
 }
 
-void SynEdit::doMoveSelDown()
+void SynEdit::doMoveSelDown(bool addUndo)
 {
     if (!mReadOnly && (mLines->count() > 0) && (blockEnd().Line < mLines->count())) {
         doOnPaintTransient(SynTransientType::ttBefore);
         // Backup caret and selection
-        BufferCoord OrigBlockBegin = blockBegin();
-        BufferCoord OrigBlockEnd = blockEnd();
+        BufferCoord origBlockBegin = blockBegin();
+        BufferCoord origBlockEnd = blockEnd();
+        if (addUndo) {
+            mUndoList->BeginBlock();
+            mUndoList->AddChange(SynChangeReason::crCaret, // backup original selection
+                    caretXY(),
+                    caretXY(),
+                    "",
+                    SynSelectionMode::smNormal);
+            mUndoList->AddChange(SynChangeReason::crMoveSelectionDown, // backup original selection
+                    origBlockBegin,
+                    origBlockEnd,
+                    "",
+                    SynSelectionMode::smNormal);
+            mUndoList->EndBlock();
+        }
 
         // Delete line below selection
-        QString s = mLines->getString(OrigBlockEnd.Line); // after end, 0 based
-        mLines->deleteAt(OrigBlockEnd.Line); // after end, 0 based
-        doLinesDeleted(OrigBlockEnd.Line, 1); // before start, 1 based
+        QString s = mLines->getString(origBlockEnd.Line); // after end, 0 based
+        mLines->deleteAt(origBlockEnd.Line); // after end, 0 based
+        doLinesDeleted(origBlockEnd.Line, 1); // before start, 1 based
 
         // Insert line above selection
-        mLines->insert(OrigBlockBegin.Line - 1, s);
-        doLinesInserted(OrigBlockBegin.Line, 1);
+        mLines->insert(origBlockBegin.Line - 1, s);
+        doLinesInserted(origBlockBegin.Line, 1);
 
         // Restore caret and selection
         setCaretAndSelection(
-                  BufferCoord{mCaretX, mCaretY + 1},
-                  BufferCoord{1, OrigBlockBegin.Line + 1},
-                  BufferCoord{mLines->getString(OrigBlockEnd.Line).length() + 1, OrigBlockEnd.Line + 1}
+                  BufferCoord{mCaretX, origBlockEnd.Line + 1},
+                  BufferCoord{origBlockBegin.Char, origBlockBegin.Line + 1},
+                  BufferCoord{origBlockEnd.Char, origBlockEnd.Line + 1}
                     );
 
         // Retrieve start of line we moved down
-        BufferCoord MoveDelim = BufferCoord{1, OrigBlockBegin.Line};
-
-        // Support undo, implement as drag and drop
-        {
-            mUndoList->BeginBlock();
-            auto action = finally([this] {
-                mUndoList->EndBlock();
-            });
-            mUndoList->AddChange(SynChangeReason::crSelection,
-                    OrigBlockBegin,
-                    OrigBlockEnd,
-                    "",
-                    SynSelectionMode::smNormal);
-            mUndoList->AddChange(SynChangeReason::crDragDropInsert,
-                    MoveDelim, // put at start of line me moved down
-                    mBlockEnd, // modified
-                    selText() + lineBreak() + s,
-                    SynSelectionMode::smNormal);
-        }
         doOnPaintTransient(SynTransientType::ttAfter);
     }
 }
@@ -4302,6 +4292,28 @@ void SynEdit::doUndoItem()
             internalSetCaretXY(Item->changeStartPos());
             break;
         }
+        case SynChangeReason::crMoveSelectionUp:
+            setBlockBegin(BufferCoord{Item->changeStartPos().Char, Item->changeStartPos().Line-1});
+            setBlockEnd(BufferCoord{Item->changeEndPos().Char, Item->changeEndPos().Line-1});
+            doMoveSelDown(false);
+            mRedoList->AddChange(
+                        Item->changeReason(),
+                        Item->changeStartPos(),
+                        Item->changeEndPos(),
+                        Item->changeStr(),
+                        Item->changeSelMode());
+            break;
+        case SynChangeReason::crMoveSelectionDown:
+            setBlockBegin(BufferCoord{Item->changeStartPos().Char, Item->changeStartPos().Line+1});
+            setBlockEnd(BufferCoord{Item->changeEndPos().Char, Item->changeEndPos().Line+1});
+            doMoveSelUp(false);
+            mRedoList->AddChange(
+                        Item->changeReason(),
+                        Item->changeStartPos(),
+                        Item->changeEndPos(),
+                        Item->changeStr(),
+                        Item->changeSelMode());
+            break;
         case SynChangeReason::crDeleteAfterCursor:
         case SynChangeReason::crDelete:
         case SynChangeReason::crSilentDelete:
@@ -4530,6 +4542,28 @@ void SynEdit::doRedoItem()
                         caretXY(),
                         Item->changeStartPos(),
                         Item->changeEndPos());
+            break;
+        case SynChangeReason::crMoveSelectionUp:
+            setBlockBegin(BufferCoord{Item->changeStartPos().Char, Item->changeStartPos().Line});
+            setBlockEnd(BufferCoord{Item->changeEndPos().Char, Item->changeEndPos().Line});
+            doMoveSelUp(false);
+            mUndoList->AddChange(
+                        Item->changeReason(),
+                        Item->changeStartPos(),
+                        Item->changeEndPos(),
+                        Item->changeStr(),
+                        Item->changeSelMode());
+            break;
+        case SynChangeReason::crMoveSelectionDown:
+            setBlockBegin(BufferCoord{Item->changeStartPos().Char, Item->changeStartPos().Line});
+            setBlockEnd(BufferCoord{Item->changeEndPos().Char, Item->changeEndPos().Line});
+            doMoveSelDown(false);
+            mUndoList->AddChange(
+                        Item->changeReason(),
+                        Item->changeStartPos(),
+                        Item->changeEndPos(),
+                        Item->changeStr(),
+                        Item->changeSelMode());
             break;
         case SynChangeReason::crInsert:
         case SynChangeReason::crPaste:
@@ -6135,7 +6169,7 @@ void SynEdit::mouseReleaseEvent(QMouseEvent *event)
 {
     QAbstractScrollArea::mouseReleaseEvent(event);
     int X=event->pos().x();
-    int Y=event->pos().y();
+    /* int Y=event->pos().y(); */
 
     if (!mMouseMoved && (X < mGutterWidth + 2)) {
         processGutterClick(event);

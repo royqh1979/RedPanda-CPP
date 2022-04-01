@@ -663,6 +663,10 @@ private slots:
 
     void on_txtProblemCaseInput_cursorPositionChanged();
 
+    void on_actionMove_Selection_Up_triggered();
+
+    void on_actionMove_Selection_Down_triggered();
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;

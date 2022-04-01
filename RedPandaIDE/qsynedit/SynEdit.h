@@ -280,6 +280,8 @@ public:
     virtual void toggleComment() { commandProcessor(SynEditorCommand::ecToggleComment);}
     virtual void toggleBlockComment() { commandProcessor(SynEditorCommand::ecToggleBlockComment);}
     virtual void matchBracket() { commandProcessor(SynEditorCommand::ecMatchBracket);}
+    virtual void moveSelUp(){ commandProcessor(SynEditorCommand::ecMoveSelUp);}
+    virtual void moveSelDown(){ commandProcessor(SynEditorCommand::ecMoveSelDown);}
 
     virtual void beginUpdate();
     virtual void endUpdate();
@@ -573,8 +575,8 @@ private:
     void doDeleteLine();
     void doSelecteLine();
     void doDuplicateLine();
-    void doMoveSelUp();
-    void doMoveSelDown();
+    void doMoveSelUp(bool addUndo=true);
+    void doMoveSelDown(bool addUndo=true);
     void clearAll();
     void insertLine(bool moveCaret);
     void doTabKey();
