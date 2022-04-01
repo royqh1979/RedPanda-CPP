@@ -10,7 +10,7 @@ isEmpty(APP_NAME) {
 }
 
 isEmpty(APP_VERSION) {
-    APP_VERSION=1.0.2
+    APP_VERSION=1.0.3
 }
 
 
@@ -181,6 +181,7 @@ SOURCES += \
     widgets/qpatchedcombobox.cpp \
     widgets/searchdialog.cpp \
     widgets/searchresultview.cpp \
+    widgets/shortcutinputedit.cpp \
     widgets/signalmessagedialog.cpp
 
 HEADERS += \
@@ -326,6 +327,7 @@ HEADERS += \
     widgets/qpatchedcombobox.h \
     widgets/searchdialog.h \
     widgets/searchresultview.h \
+    widgets/shortcutinputedit.h \
     widgets/signalmessagedialog.h
 
 FORMS += \

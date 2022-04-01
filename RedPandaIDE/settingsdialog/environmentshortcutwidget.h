@@ -18,6 +18,7 @@
 #define ENVIRONMENTSHORTCUTWIDGET_H
 
 #include <QAbstractTableModel>
+#include <QStyledItemDelegate>
 #include <QWidget>
 #include "settingswidget.h"
 #include "../shortcutmanager.h"
@@ -49,6 +50,18 @@ private:
     void loadShortCutsOfMenu(const QMenu * menu, QList<QAction*>& globalActions);
 private:
     QList<PEnvironmentShortcut> mShortcuts;
+
+};
+
+class EnvironmentShortcutDelegate: public QStyledItemDelegate {
+    Q_OBJECT
+public:
+    explicit EnvironmentShortcutDelegate(QObject *parent = nullptr);
+
+public:
+    QWidget *createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const override;
+protected slots:
+    void onEditingFinished(QWidget* editor);
 };
 
 class EnvironmentShortcutWidget : public SettingsWidget
@@ -68,6 +81,7 @@ protected:
     void doSave() override;
 private:
     EnvironmentShortcutModel mModel;
+    EnvironmentShortcutDelegate* mDelegate;
 };
 
 #endif // ENVIRONMENTSHORTCUTWIDGET_H

@@ -3309,7 +3309,8 @@ void MainWindow::onNewProblemConnection()
         ui->lstProblemSet->setCurrentIndex(mOJProblemSetModel.index(
                                                mOJProblemSetModel.count()-1
                                                ,0));
-        showNormal();
+        if (isMinimized())
+            showNormal();
         raise(); // for mac OS?
         activateWindow();
     }

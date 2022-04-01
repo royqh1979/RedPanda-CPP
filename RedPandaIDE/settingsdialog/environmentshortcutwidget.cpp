@@ -17,6 +17,7 @@
 #include "environmentshortcutwidget.h"
 #include "ui_environmentshortcutwidget.h"
 #include "../mainwindow.h"
+#include "../widgets/shortcutinputedit.h"
 #include <QMenuBar>
 
 EnvironmentShortcutWidget::EnvironmentShortcutWidget(const QString& name, const QString& group, QWidget *parent) :
@@ -24,9 +25,12 @@ EnvironmentShortcutWidget::EnvironmentShortcutWidget(const QString& name, const 
     ui(new Ui::EnvironmentShortcutWidget)
 {
     ui->setupUi(this);
+    mDelegate =new EnvironmentShortcutDelegate(this);
     ui->tblShortcut->setModel(&mModel);
+    ui->tblShortcut->setItemDelegate(mDelegate);
     connect(&mModel, &EnvironmentShortcutModel::shortcutChanged,
             this, &SettingsWidget::setSettingsChanged);
+    mDelegate =new EnvironmentShortcutDelegate(this);
 }
 
 EnvironmentShortcutWidget::~EnvironmentShortcutWidget()
@@ -92,7 +96,7 @@ QVariant EnvironmentShortcutModel::data(const QModelIndex &index, int role) cons
     if (!index.isValid()) {
         return QVariant();
     }
-    if (role==Qt::DisplayRole || role == Qt::EditRole) {
+    if (role==Qt::DisplayRole || role == Qt::EditRole || role == Qt::ToolTipRole) {
         PEnvironmentShortcut item = mShortcuts[index.row()];
         switch( index.column()) {
         case 0:
@@ -172,4 +176,26 @@ void EnvironmentShortcutModel::loadShortCutsOfMenu(const QMenu *menu, QList<QAct
         }
         globalActions.removeAll(action);
     }
+}
+
+EnvironmentShortcutDelegate::EnvironmentShortcutDelegate(
+        QObject *parent) : QStyledItemDelegate(parent)
+{
+}
+
+QWidget *EnvironmentShortcutDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const
+{
+    if (index.isValid() && index.column()==1) {
+        ShortcutInputEdit *editor=new ShortcutInputEdit(dynamic_cast<QWidget*>(parent));
+        connect(editor,&ShortcutInputEdit::inputFinished,
+                this, &EnvironmentShortcutDelegate::onEditingFinished);
+        return editor;
+    }
+    return QStyledItemDelegate::createEditor(parent,option,index);
+}
+
+void EnvironmentShortcutDelegate::onEditingFinished(QWidget* editor)
+{
+    emit commitData(editor);
+    emit closeEditor(editor, QAbstractItemDelegate::SubmitModelCache);
 }
