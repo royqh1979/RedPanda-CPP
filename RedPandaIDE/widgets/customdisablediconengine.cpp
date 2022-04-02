@@ -76,6 +76,6 @@ void CustomDisabledIconEngine::setPixmap(const QPixmap &pixmap)
             }
         }
         mDisabledPixmap = QPixmap::fromImage(image);
-
+        mDisabledPixmap.setDevicePixelRatio(mPixmap.devicePixelRatioF());
     }
 }

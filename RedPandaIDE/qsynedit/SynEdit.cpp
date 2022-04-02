@@ -5978,7 +5978,6 @@ void SynEdit::paintEvent(QPaintEvent *event)
         cacheRC.setTop(rcClip.top()*dpr);
         cacheRC.setWidth(rcClip.width()*dpr);
         cacheRC.setHeight(rcClip.height()*dpr);
-        qDebug()<<rcClip<<rcCaret<<cacheRC;
         painter.drawImage(rcCaret,*mContentImage,cacheRC);
     } else {
         QRect rcDraw;

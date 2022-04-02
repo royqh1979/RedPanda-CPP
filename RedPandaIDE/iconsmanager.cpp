@@ -30,6 +30,7 @@
 #include "utils.h"
 #include "settings.h"
 #include "widgets/customdisablediconengine.h"
+#include <QApplication>
 
 IconsManager* pIconsManager;
 
@@ -250,10 +251,12 @@ IconsManager::PPixmap IconsManager::createSVGIcon(const QString &filename, int w
     QSvgRenderer renderer(filename);
     if (!renderer.isValid())
         return mDefaultIconPixmap;
-    PPixmap icon = std::make_shared<QPixmap>(width,height);
+    qreal dpr=qApp->devicePixelRatio();
+    PPixmap icon = std::make_shared<QPixmap>(width*dpr,height*dpr);
     icon->fill(Qt::transparent);
     QPainter painter(icon.get());
     renderer.render(&painter,icon->rect());
+    icon->setDevicePixelRatio(dpr);
     return icon;
 }
 
