@@ -146,7 +146,9 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     mScrollHintColor = Qt::yellow;
     mScrollHintFormat = SynScrollHintFormat::shfTopLineOnly;
 
-    mContentImage = std::make_shared<QImage>(clientWidth(),clientHeight(),QImage::Format_ARGB32);
+    qreal dpr=devicePixelRatioF();
+    mContentImage = std::make_shared<QImage>(clientWidth()*dpr,clientHeight()*dpr,QImage::Format_ARGB32);
+    mContentImage->setDevicePixelRatio(dpr);
 
     mUseCodeFolding = true;
     m_blinkTimerId = 0;
@@ -5970,7 +5972,14 @@ void SynEdit::paintEvent(QPaintEvent *event)
         // only update caret
         // calculate the needed invalid area for caret
         //qDebug()<<"update caret"<<rcCaret;
-        painter.drawImage(rcCaret,*mContentImage,rcCaret);
+        QRectF cacheRC;
+        qreal dpr = mContentImage->devicePixelRatioF();
+        cacheRC.setLeft(rcClip.left()*dpr);
+        cacheRC.setTop(rcClip.top()*dpr);
+        cacheRC.setWidth(rcClip.width()*dpr);
+        cacheRC.setHeight(rcClip.height()*dpr);
+        qDebug()<<rcClip<<rcCaret<<cacheRC;
+        painter.drawImage(rcCaret,*mContentImage,cacheRC);
     } else {
         QRect rcDraw;
         int nL1, nL2, nC1, nC2;
@@ -6009,7 +6018,13 @@ void SynEdit::paintEvent(QPaintEvent *event)
         // If there is a custom paint handler call it.
         onPaint(painter);
         doOnPaintTransient(SynTransientType::ttAfter);
-        painter.drawImage(rcClip,*mContentImage,rcClip);
+        QRectF cacheRC;
+        qreal dpr = mContentImage->devicePixelRatioF();
+        cacheRC.setLeft(rcClip.left()*dpr);
+        cacheRC.setTop(rcClip.top()*dpr);
+        cacheRC.setWidth(rcClip.width()*dpr);
+        cacheRC.setHeight(rcClip.height()*dpr);
+        painter.drawImage(rcClip,*mContentImage,cacheRC);
     }
     paintCaret(painter, rcCaret);
 }
@@ -6017,8 +6032,10 @@ void SynEdit::paintEvent(QPaintEvent *event)
 void SynEdit::resizeEvent(QResizeEvent *)
 {
     //resize the cache image
-    std::shared_ptr<QImage> image = std::make_shared<QImage>(clientWidth(),clientHeight(),
+    qreal dpr = devicePixelRatioF();
+    std::shared_ptr<QImage> image = std::make_shared<QImage>(clientWidth()*dpr,clientHeight()*dpr,
                                                             QImage::Format_ARGB32);
+    image->setDevicePixelRatio(dpr);
     QRect newRect = image->rect().intersected(mContentImage->rect());
 
     QPainter painter(image.get());
