@@ -2001,31 +2001,33 @@ bool Editor::handleSymbolCompletion(QChar key)
         return false;
 
     //todo: better methods to detect current caret type
-    if (caretX() <= 1) {
-        if (caretY()>1) {
-            if (highlighter()->isLastLineCommentNotFinished(lines()->ranges(caretY() - 2).state))
-                return false;
-            if (highlighter()->isLastLineStringNotFinished(lines()->ranges(caretY() - 2).state)
-                    && (key!='\"') && (key!='\''))
-                return false;
-        }
-    } else {
-        BufferCoord  HighlightPos = BufferCoord{caretX()-1, caretY()};
-        // Check if that line is highlighted as  comment
-        PSynHighlighterAttribute Attr;
-        QString Token;
-        bool tokenFinished;
-        SynHighlighterTokenType tokenType;
-        if (getHighlighterAttriAtRowCol(HighlightPos, Token, tokenFinished, tokenType,Attr)) {
-            if ((tokenType == SynHighlighterTokenType::Comment) && (!tokenFinished))
-                return false;
-            if ((tokenType == SynHighlighterTokenType::String) && (!tokenFinished)
-                    && (key!='\'') && (key!='\"') && (key!='(') && (key!=')'))
-                return false;
-            if (( key=='<' || key =='>') && (mParser && !mParser->isIncludeLine(lineText())))
-                return false;
-            if ((key == '\'') && (Attr->name() == "SYNS_AttrNumber"))
-                return false;
+    if (highlighter()) {
+        if (caretX() <= 1) {
+            if (caretY()>1) {
+                if (highlighter()->isLastLineCommentNotFinished(lines()->ranges(caretY() - 2).state))
+                    return false;
+                if (highlighter()->isLastLineStringNotFinished(lines()->ranges(caretY() - 2).state)
+                        && (key!='\"') && (key!='\''))
+                    return false;
+            }
+        } else {
+            BufferCoord  HighlightPos = BufferCoord{caretX()-1, caretY()};
+            // Check if that line is highlighted as  comment
+            PSynHighlighterAttribute Attr;
+            QString Token;
+            bool tokenFinished;
+            SynHighlighterTokenType tokenType;
+            if (getHighlighterAttriAtRowCol(HighlightPos, Token, tokenFinished, tokenType,Attr)) {
+                if ((tokenType == SynHighlighterTokenType::Comment) && (!tokenFinished))
+                    return false;
+                if ((tokenType == SynHighlighterTokenType::String) && (!tokenFinished)
+                        && (key!='\'') && (key!='\"') && (key!='(') && (key!=')'))
+                    return false;
+                if (( key=='<' || key =='>') && (mParser && !mParser->isIncludeLine(lineText())))
+                    return false;
+                if ((key == '\'') && (Attr->name() == "SYNS_AttrNumber"))
+                    return false;
+            }
         }
     }
 

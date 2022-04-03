@@ -5,6 +5,7 @@ Red Panda C++ Version 1.0.3
   - enhancement: shift+ctrl+down/up to move currenlt selection lines up / down
   - fix: can't compile under linux
   - enhancement: support Devcie Pixel Ratio ( for linux )
+  - fix: crash when editing txt file and input symbol at the beginning of a line
 
 Red Panda C++ Version 1.0.2
   - enhancement: press tab in column mode won't exit column mode
