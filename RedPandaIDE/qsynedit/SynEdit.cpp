@@ -6120,15 +6120,12 @@ void SynEdit::mousePressEvent(QMouseEvent *event)
     bool bWasSel = false;
     bool bStartDrag = false;
     mMouseMoved = false;
-//    BufferCoord TmpBegin = mBlockBegin;
-//    BufferCoord TmpEnd = mBlockEnd;
     Qt::MouseButton button = event->button();
     int X=event->pos().x();
     int Y=event->pos().y();
 
     QAbstractScrollArea::mousePressEvent(event);
 
-    //fKbdHandler.ExecuteMouseDown(Self, Button, Shift, X, Y);
 
     if (button == Qt::RightButton) {
         if (mOptions.testFlag(eoRightMouseMovesCursor) &&
@@ -6147,14 +6144,6 @@ void SynEdit::mousePressEvent(QMouseEvent *event)
             mMouseDownPos = event->pos();
         }
         computeCaret();
-        //I couldn't track down why, but sometimes (and definitely not all the time)
-        //the block positioning is lost.  This makes sure that the block is
-        //maintained in case they started a drag operation on the block
-//        setBlockBegin(TmpBegin);
-//        setBlockEnd(TmpEnd);
-
-        //setMouseTracking(true);
-        //if mousedown occurred in selected block begin drag operation
         mStateFlags.setFlag(SynStateFlag::sfWaitForDragging,false);
         if (bWasSel && mOptions.testFlag(eoDragDropEditing) && (X >= mGutterWidth + 2)
                 && (mSelectionMode == SynSelectionMode::smNormal) && isPointInSelection(displayToBufferPos(pixelsToRowColumn(X, Y))) ) {
@@ -6191,10 +6180,6 @@ void SynEdit::mouseReleaseEvent(QMouseEvent *event)
         processGutterClick(event);
     }
 
-    //mScrollTimer->stop();
-//    if ((button = ) and (Shift = [ssRight]) and Assigned(PopupMenu) then
-//      exit;
-    //setMouseTracking(false);
 
     if (mStateFlags.testFlag(SynStateFlag::sfWaitForDragging) &&
             !mStateFlags.testFlag(SynStateFlag::sfDblClicked)) {
@@ -6212,8 +6197,6 @@ void SynEdit::mouseMoveEvent(QMouseEvent *event)
     QAbstractScrollArea::mouseMoveEvent(event);
     mMouseMoved = true;
     Qt::MouseButtons buttons = event->buttons();
-//    int X=event->pos().x();
-//    int Y=event->pos().y();
     if ((mStateFlags.testFlag(SynStateFlag::sfWaitForDragging))) {
         if ( ( event->pos() - mMouseDownPos).manhattanLength()>=QApplication::startDragDistance()) {
             mStateFlags.setFlag(SynStateFlag::sfWaitForDragging,false);
@@ -6224,8 +6207,6 @@ void SynEdit::mouseMoveEvent(QMouseEvent *event)
             drag->setMimeData(mimeData);
 
             drag->exec(Qt::CopyAction | Qt::MoveAction);
-            //drag->setPixmap(iconPixmap);
-            //BeginDrag(false);
         }
     } else if ((buttons == Qt::LeftButton)) {
         if (mOptions.testFlag(eoAltSetsColumnMode) &&
@@ -6235,16 +6216,6 @@ void SynEdit::mouseMoveEvent(QMouseEvent *event)
                 else
                     setActiveSelectionMode(selectionMode());
         }
-        // should we begin scrolling?
-        //computeScroll(X, Y,false);
-//        DisplayCoord P = pixelsToNearestRowColumn(X, Y);
-//        P.Row = minMax(P.Row, 1, displayLineCount());
-//        if (mScrollDeltaX != 0)
-//            P.Column = displayX();
-//        if (mScrollDeltaY != 0)
-//            P.Row = displayY();
-//        internalSetCaretXY(displayToBufferPos(P));
-//        setBlockEnd(caretXY());
     } else if (buttons == Qt::NoButton) {
         updateMouseCursor();
     }
@@ -6255,10 +6226,8 @@ void SynEdit::mouseDoubleClickEvent(QMouseEvent *event)
     QAbstractScrollArea::mouseDoubleClickEvent(event);
     QPoint ptMouse = event->pos();
     if (ptMouse.x() >= mGutterWidth + 2) {
-      if (!mOptions.testFlag(eoNoSelection))
           setWordBlock(caretXY());
-      mStateFlags.setFlag(SynStateFlag::sfDblClicked);
-      //MouseCapture := FALSE;
+          mStateFlags.setFlag(SynStateFlag::sfDblClicked);
     }
 }
 
@@ -6641,29 +6610,27 @@ BufferCoord SynEdit::blockEnd() const
 void SynEdit::setBlockEnd(BufferCoord Value)
 {
     //setActiveSelectionMode(mSelectionMode);
-    if (!mOptions.testFlag(eoNoSelection)) {
-        Value.Line = minMax(Value.Line, 1, mLines->count());
-        Value.Char = minMax(Value.Char, 1, mLines->lengthOfLongestLine()+1);
-        if (mActiveSelectionMode == SynSelectionMode::smNormal) {
-          if (Value.Line >= 1 && Value.Line <= mLines->count())
-              Value.Char = std::min(Value.Char, mLines->getString(Value.Line - 1).length() + 1);
-          else
-              Value.Char = 1;
+    Value.Line = minMax(Value.Line, 1, mLines->count());
+    Value.Char = minMax(Value.Char, 1, mLines->lengthOfLongestLine()+1);
+    if (mActiveSelectionMode == SynSelectionMode::smNormal) {
+      if (Value.Line >= 1 && Value.Line <= mLines->count())
+          Value.Char = std::min(Value.Char, mLines->getString(Value.Line - 1).length() + 1);
+      else
+          Value.Char = 1;
+    }
+    if (Value.Char != mBlockEnd.Char || Value.Line != mBlockEnd.Line) {
+        if (mActiveSelectionMode == SynSelectionMode::smColumn && Value.Char != mBlockEnd.Char) {
+            invalidateLines(
+                        std::min(mBlockBegin.Line, std::min(mBlockEnd.Line, Value.Line)),
+                        std::max(mBlockBegin.Line, std::max(mBlockEnd.Line, Value.Line)));
+            mBlockEnd = Value;
+        } else {
+            int nLine = mBlockEnd.Line;
+            mBlockEnd = Value;
+            if (mActiveSelectionMode != SynSelectionMode::smColumn || mBlockBegin.Char != mBlockEnd.Char)
+                invalidateLines(nLine, mBlockEnd.Line);
         }
-        if (Value.Char != mBlockEnd.Char || Value.Line != mBlockEnd.Line) {
-            if (mActiveSelectionMode == SynSelectionMode::smColumn && Value.Char != mBlockEnd.Char) {
-                invalidateLines(
-                            std::min(mBlockBegin.Line, std::min(mBlockEnd.Line, Value.Line)),
-                            std::max(mBlockBegin.Line, std::max(mBlockEnd.Line, Value.Line)));
-                mBlockEnd = Value;
-            } else {
-                int nLine = mBlockEnd.Line;
-                mBlockEnd = Value;
-                if (mActiveSelectionMode != SynSelectionMode::smColumn || mBlockBegin.Char != mBlockEnd.Char)
-                    invalidateLines(nLine, mBlockEnd.Line);
-            }
-            setStatusChanged(SynStatusChange::scSelection);
-        }
+        setStatusChanged(SynStatusChange::scSelection);
     }
 }
 

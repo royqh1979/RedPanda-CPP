@@ -103,7 +103,7 @@ enum SynEditorOption {
   eoShowRainbowColor =  0x00080000,
   eoTrimTrailingSpaces =0x00100000, //Spaces at the end of lines will be trimmed and not saved
   eoSelectWordByDblClick=0x00200000,
-  eoNoSelection =       0x00400000, //Disables selecting text
+//  eoNoSelection =       0x00400000, //Disables selecting text
     //eoAutoSizeMaxScrollWidth = 0x00000008, //Automatically resizes the MaxScrollWidth property when inserting text
     //eoDisableScrollArrows = 0x00000010 , //Disables the scroll bar arrow buttons when you can't scroll in that direction any more
     //  eoScrollHintFollows = 0x00020000, //The scroll hint follows the mouse when scrolling vertically

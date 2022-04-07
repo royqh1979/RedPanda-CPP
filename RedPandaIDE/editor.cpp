@@ -995,6 +995,7 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
 bool Editor::event(QEvent *event)
 {
     if ((event->type() == QEvent::HoverEnter || event->type() == QEvent::HoverMove)
+            && qApp->mouseButtons() == Qt::NoButton
             && pSettings->editor().enableTooltips()
             && !pMainWindow->completionPopup()->isVisible()
             && !pMainWindow->functionTip()->isVisible()

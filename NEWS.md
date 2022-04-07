@@ -7,6 +7,7 @@ Red Panda C++ Version 1.0.3
   - enhancement: support Devcie Pixel Ratio ( for linux )
   - fix: crash when editing txt file and input symbol at the beginning of a line
   - fix: ctrl+shift+end doesn't select
+  - fix: don't show tips in the editor, when selecting by mouse
 
 Red Panda C++ Version 1.0.2
   - enhancement: press tab in column mode won't exit column mode
