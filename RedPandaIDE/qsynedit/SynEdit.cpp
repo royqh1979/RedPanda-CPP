@@ -5705,7 +5705,7 @@ void SynEdit::ExecuteCommand(SynEditorCommand Command, QChar AChar, void *pData)
     case SynEditorCommand::ecSelEditorEnd:
         if (!mLines->empty()) {
             moveCaretVert(mLines->count()-mCaretY, Command == SynEditorCommand::ecSelEditorEnd);
-            moveCaretToLineEnd(Command == SynEditorCommand::ecSelEditorStart);
+            moveCaretToLineEnd(Command == SynEditorCommand::ecSelEditorEnd);
         }
         break;
     // goto special line / column position
