@@ -4594,7 +4594,6 @@ void MainWindow::onCompileFinished(bool isCheckSyntax)
                 PCompileIssue issue = ui->tableIssues->issue(i);
                 if (issue->type == CompileIssueType::Error) {
                     ui->tableIssues->selectRow(i);
-                    ui->tabIssues->setFocus();
                     hasError = true;
                     break;
                 }
@@ -4605,7 +4604,6 @@ void MainWindow::onCompileFinished(bool isCheckSyntax)
                     PCompileIssue issue = ui->tableIssues->issue(i);
                     if (issue->type == CompileIssueType::Warning) {
                         ui->tableIssues->selectRow(i);
-                        ui->tabIssues->setFocus();
                         break;
                     }
                 }
