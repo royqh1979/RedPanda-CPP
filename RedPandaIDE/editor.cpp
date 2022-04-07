@@ -1115,7 +1115,7 @@ bool Editor::event(QEvent *event)
             if (pMainWindow->functionTip()->isVisible()) {
                 pMainWindow->functionTip()->hide();
             }
-            QToolTip::showText(mapToGlobal(helpEvent->pos()),hint);
+            QToolTip::showText(mapToGlobal(helpEvent->pos()),hint,this);
             event->ignore();
         } else {
             updateMouseCursor();
@@ -1618,7 +1618,7 @@ void Editor::onTipEvalValueReady(const QString& value)
         } else {
             newValue = value;
         }
-        QToolTip::showText(QCursor::pos(), mCurrentDebugTipWord + " = " + newValue);
+        QToolTip::showText(QCursor::pos(), mCurrentDebugTipWord + " = " + newValue, this);
     }
     disconnect(pMainWindow->debugger(), &Debugger::evalValueReady,
                this, &Editor::onTipEvalValueReady);
@@ -1753,7 +1753,11 @@ QStringList Editor::getExpressionAtPosition(
     int ch = pos.Char-1;
     int symbolMatchingLevel = 0;
     LastSymbolType lastSymbolType=LastSymbolType::None;
-    PSynHighlighter highlighter = highlighterManager.getHighlighter(mFilename);
+    PSynHighlighter highlighter;
+    if (isNew())
+        highlighter = highlighterManager.getCppHighlighter();
+    else
+        highlighter = highlighterManager.getHighlighter(mFilename);
     if (!highlighter)
         return result;
     while (true) {

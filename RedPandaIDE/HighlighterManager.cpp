@@ -32,20 +32,16 @@ HighlighterManager::HighlighterManager()
 
 PSynHighlighter HighlighterManager::getHighlighter(const QString &filename)
 {
-    if (filename.isEmpty() || filename.startsWith(QObject::tr("untitled"))) {
+    QFileInfo info(filename);
+    QString suffix = info.suffix();
+    if (suffix.isEmpty() || suffix == "c" || suffix == "cpp" || suffix == "cxx"
+            || suffix == "cc" || suffix == "h" || suffix == "hpp"
+            || suffix == "hxx" || suffix == "hh" || suffix == "C"
+            || suffix == "CPP" || suffix =="H" || suffix == "c++"
+            || suffix == "h++") {
         return getCppHighlighter();
-    } else {
-        QFileInfo info(filename);
-        QString suffix = info.suffix();
-        if (suffix.isEmpty() || suffix == "c" || suffix == "cpp" || suffix == "cxx"
-                || suffix == "cc" || suffix == "h" || suffix == "hpp"
-                || suffix == "hxx" || suffix == "hh" || suffix == "C"
-                || suffix == "CPP" || suffix =="H" || suffix == "c++"
-                || suffix == "h++") {
-            return getCppHighlighter();
-        } else if (suffix == "vs" || suffix == "fs" || suffix == "frag") {
-            return getGLSLHighlighter();
-        }
+    } else if (suffix == "vs" || suffix == "fs" || suffix == "frag") {
+        return getGLSLHighlighter();
     }
     return PSynHighlighter();
 }

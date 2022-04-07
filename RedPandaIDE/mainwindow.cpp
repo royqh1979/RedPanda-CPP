@@ -1446,13 +1446,15 @@ void MainWindow::checkSyntaxInBack(Editor *e)
 //    if not devEditor.AutoCheckSyntax then
 //      Exit;
     //not c or cpp file
-    FileType fileType = getFileType(e->filename());
-    if (fileType != FileType::CSource
-            && fileType != FileType::CppSource
-            && fileType != FileType::CHeader
-            && fileType != FileType::CppHeader
-            )
-        return;
+    if (!e->isNew()) {
+        FileType fileType = getFileType(e->filename());
+        if (fileType != FileType::CSource
+                && fileType != FileType::CppSource
+                && fileType != FileType::CHeader
+                && fileType != FileType::CppHeader
+                )
+            return;
+    }
     if (mCompilerManager->backgroundSyntaxChecking())
         return;
     if (mCompilerManager->compiling())
@@ -4546,21 +4548,17 @@ void MainWindow::onCompileFinished(bool isCheckSyntax)
         }
     }
 
-    // Close it if there's nothing to show
     if (isCheckSyntax) {
       // check syntax in back, don't change message panel
-    } else if (
-        (ui->tableIssues->count() == 0)
-               ) {
-        openCloseBottomPanel(false);
-        // Or open it if there is anything to show
+    } else if (ui->tableIssues->count() == 0) {
+        // Close it if there's nothing to show
+        if (ui->tabMessages->currentIndex() == i)
+            openCloseBottomPanel(false);
     } else {
-        if (ui->tableIssues->count() > 0) {
-            if (ui->tabMessages->currentIndex() != i) {
-                ui->tabMessages->setCurrentIndex(i);
-            }
-            openCloseBottomPanel(true);
+        if (ui->tabMessages->currentIndex() != i) {
+            ui->tabMessages->setCurrentIndex(i);
         }
+        openCloseBottomPanel(true);
     }
 
     Editor * e = mEditorList->getEditor();
@@ -4590,28 +4588,26 @@ void MainWindow::onCompileFinished(bool isCheckSyntax)
             mCompileSuccessionTask.reset();
             // Jump to problem location, sorted by significance
         } else if ((mCompilerManager->compileIssueCount() > 0) && (!mCheckSyntaxInBack)) {
+            bool hasError = false;
             // First try to find errors
             for (int i=0;i<ui->tableIssues->count();i++) {
                 PCompileIssue issue = ui->tableIssues->issue(i);
                 if (issue->type == CompileIssueType::Error) {
-                    if (e && e->filename() != issue->filename)
-                        continue;
                     ui->tableIssues->selectRow(i);
-                    QModelIndex index =ui->tableIssues->model()->index(i,0);
-                    emit ui->tableIssues->doubleClicked(index);
+                    ui->tabIssues->setFocus();
+                    hasError = true;
                     break;
                 }
             }
-
-            // Then try to find warnings
-            for (int i=0;i<ui->tableIssues->count();i++) {
-                PCompileIssue issue = ui->tableIssues->issue(i);
-                if (issue->type == CompileIssueType::Warning) {
-                    if (e && e->filename() != issue->filename)
-                        continue;
-                    ui->tableIssues->selectRow(i);
-                    QModelIndex index =ui->tableIssues->model()->index(i,0);
-                    emit ui->tableIssues->doubleClicked(index);
+            if (!hasError) {
+                // Then try to find warnings
+                for (int i=0;i<ui->tableIssues->count();i++) {
+                    PCompileIssue issue = ui->tableIssues->issue(i);
+                    if (issue->type == CompileIssueType::Warning) {
+                        ui->tableIssues->selectRow(i);
+                        ui->tabIssues->setFocus();
+                        break;
+                    }
                 }
             }
         }

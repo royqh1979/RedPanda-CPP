@@ -8,6 +8,8 @@ Red Panda C++ Version 1.0.3
   - fix: crash when editing txt file and input symbol at the beginning of a line
   - fix: ctrl+shift+end doesn't select
   - fix: don't show tips in the editor, when selecting by mouse
+  - fix: auto syntax check doesn't work for new files
+  - change: don't auto jump to the first syntax error location when compile
 
 Red Panda C++ Version 1.0.2
   - enhancement: press tab in column mode won't exit column mode
