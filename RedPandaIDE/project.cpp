@@ -370,6 +370,7 @@ void Project::rebuildNodes()
             mUnits[idx]->node()->unitIndex = idx;
             mUnits[idx]->node()->priority = mUnits[idx]->priority();
         }
+
         break;
     }
 
@@ -1290,31 +1291,58 @@ void Project::createFolderNodes()
     }
 }
 
+static void addFolderRecursively(QSet<QString>& folders, QString folder) {
+    if (folder.isEmpty())
+        return;
+    folders.insert(excludeTrailingPathDelimiter(folder));
+    QString parentFolder = QFileInfo(folder).absolutePath();
+    if (parentFolder==folder)
+        return;
+    addFolderRecursively(folders, parentFolder);
+}
+
 void Project::createFileSystemFolderNodes()
 {
+    QSet<QString> headerFolders;
+    QSet<QString> sourceFolders;
+    QSet<QString> otherFolders;
+    for (int idx=0;idx<mUnits.count();idx++) {
+        QFileInfo fileInfo(mUnits[idx]->fileName());
+        if (isHFile(fileInfo.fileName())) {
+            addFolderRecursively(headerFolders,fileInfo.absolutePath());
+        } else if (isCFile(fileInfo.fileName())) {
+            addFolderRecursively(sourceFolders,fileInfo.absolutePath());
+        } else {
+            addFolderRecursively(otherFolders,fileInfo.absolutePath());
+        }
+    }
     PProjectModelNode node = makeNewFileNode(tr("Headers"),true,mRootNode);
     node->folderNodeType = ProjectSpecialFolderNode::HEADERS;
     node->priority = 1000;
-    createFileSystemFolderNode(ProjectSpecialFolderNode::HEADERS,folder(),node);
+    createFileSystemFolderNode(ProjectSpecialFolderNode::HEADERS,folder(),node, headerFolders);
     mFolderNodes.append(node);
     mSpecialNodes.insert(ProjectSpecialFolderNode::HEADERS,node);
 
     node = makeNewFileNode(tr("Sources"),true,mRootNode);
     node->folderNodeType = ProjectSpecialFolderNode::SOURCES;
     node->priority = 900;
-    createFileSystemFolderNode(ProjectSpecialFolderNode::SOURCES,folder(),node);
+    createFileSystemFolderNode(ProjectSpecialFolderNode::SOURCES,folder(),node, sourceFolders);
     mFolderNodes.append(node);
     mSpecialNodes.insert(ProjectSpecialFolderNode::SOURCES,node);
 
     node = makeNewFileNode(tr("Others"),true,mRootNode);
     node->folderNodeType = ProjectSpecialFolderNode::OTHERS;
     node->priority = 800;
-    createFileSystemFolderNode(ProjectSpecialFolderNode::OTHERS,folder(),node);
+    createFileSystemFolderNode(ProjectSpecialFolderNode::OTHERS,folder(),node, otherFolders);
     mFolderNodes.append(node);
     mSpecialNodes.insert(ProjectSpecialFolderNode::OTHERS,node);
 }
 
-void Project::createFileSystemFolderNode(ProjectSpecialFolderNode folderType, const QString &folderName, PProjectModelNode parent)
+void Project::createFileSystemFolderNode(
+        ProjectSpecialFolderNode folderType,
+        const QString &folderName,
+        PProjectModelNode parent,
+        const QSet<QString>& validFolders)
 {
     QDirIterator iter(folderName);
     while (iter.hasNext()) {
@@ -1322,10 +1350,10 @@ void Project::createFileSystemFolderNode(ProjectSpecialFolderNode folderType, co
         QFileInfo fileInfo = iter.fileInfo();
         if (fileInfo.isHidden() || fileInfo.fileName().startsWith('.'))
             continue;
-        if (fileInfo.isDir()) {
+        if (fileInfo.isDir() && validFolders.contains(fileInfo.absoluteFilePath())) {
             PProjectModelNode node = makeNewFileNode(fileInfo.fileName(),true,parent);
             mFileSystemFolderNodes.insert(QString("%1/%2").arg((int)folderType).arg(fileInfo.absoluteFilePath()),node);
-            createFileSystemFolderNode(folderType,fileInfo.absoluteFilePath(), node);
+            createFileSystemFolderNode(folderType,fileInfo.absoluteFilePath(), node, validFolders);
         }
     }
 }

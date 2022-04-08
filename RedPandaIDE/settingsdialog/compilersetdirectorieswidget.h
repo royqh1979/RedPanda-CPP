@@ -50,7 +50,7 @@ private slots:
 
     void on_btnRemoveInvalid_pressed();
 
-    void updateIcons();
+    void onUpdateIcons();
 
 private:
     Ui::CompilerSetDirectoriesWidget *ui;

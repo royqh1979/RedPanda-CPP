@@ -79,7 +79,8 @@
 #include <QTextCodec>
 #include "cpprefacter.h"
 
-#include <widgets/searchdialog.h>
+#include "widgets/newprojectunitdialog.h"
+#include "widgets/searchdialog.h"
 
 #ifdef Q_OS_WIN
 #include <windows.h>
@@ -5934,31 +5935,59 @@ void MainWindow::newProjectUnitFile()
     if (current.isValid()) {
         node = static_cast<ProjectModelNode*>(current.internalPointer());
     }
-    QString newFileName;
-    do {
-        newFileName = tr("untitled")+QString("%1").arg(getNewFileNumber());
-        if (mProject->options().isCpp) {
-            newFileName+=".cpp";
-        } else {
-            newFileName+=".c";
-        }
-    } while (fileExists(QDir(mProject->directory()).absoluteFilePath(newFileName)));
+    PProjectModelNode pNode = mProject->pointerToNode(node);
 
-    newFileName = QInputDialog::getText(
-                this,
-                tr("New Project File Name"),
-                tr("File Name:"),
-                QLineEdit::Normal,
-                newFileName);
-    if (newFileName.isEmpty())
-        return;
-    if (fileExists(QDir(mProject->directory()).absoluteFilePath(newFileName))) {
-        QMessageBox::critical(this,tr("File Already Exists!"),
-                              tr("File '%1' already exists!").arg(newFileName));
-        return;
+    while (pNode && pNode->unitIndex>0) {
+        pNode = pNode->parent.lock();
     }
-    PProjectUnit newUnit = mProject->newUnit(
-                mProject->pointerToNode(node),newFileName);
+
+    if (!pNode) {
+        pNode = mProject->rootNode();
+    }
+
+    QString newFileName;
+    PProjectUnit newUnit;
+    if (mProject->modelType() == ProjectModelType::FileSystem) {
+        NewProjectUnitDialog newProjectUnitDialog;
+        QString folder = mProject->fileSystemNodeFolderPath(pNode);
+        newProjectUnitDialog.setFolder(folder);
+        switch (pNode->folderNodeType) {
+        case ProjectSpecialFolderNode::HEADERS:
+            newProjectUnitDialog.setSuffix("h");
+            break;
+        case ProjectSpecialFolderNode::SOURCES:
+            if (mProject->options().isCpp)
+                newProjectUnitDialog.setSuffix("cpp");
+            else
+                newProjectUnitDialog.setSuffix("c");
+            break;
+        default:
+            newProjectUnitDialog.setSuffix("");
+        }
+        if (newProjectUnitDialog.exec()!=QDialog::Accepted) {
+            return;
+        }
+        newFileName=newProjectUnitDialog.filename();
+        if (newFileName.isEmpty())
+            return;
+    } else {
+        newFileName = QInputDialog::getText(
+                    this,
+                    tr("New Project File Name"),
+                    tr("File Name:"),
+                    QLineEdit::Normal,
+                    newFileName);
+        if (newFileName.isEmpty())
+            return;
+        if (fileExists(QDir(mProject->directory()).absoluteFilePath(newFileName))) {
+            QMessageBox::critical(this,tr("File Already Exists!"),
+                                  tr("File '%1' already exists!").arg(newFileName));
+            return;
+        }
+    }
+    newUnit = mProject->newUnit(
+                    pNode,newFileName);
+
     mProject->rebuildNodes();
     mProject->saveAll();
         updateProjectView();

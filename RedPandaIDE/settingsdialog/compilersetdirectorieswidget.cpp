@@ -33,8 +33,9 @@ CompilerSetDirectoriesWidget::CompilerSetDirectoriesWidget(QWidget *parent) :
     connect(ui->listView->selectionModel(), &QItemSelectionModel::selectionChanged,
             this, &CompilerSetDirectoriesWidget::selectionChanged);
     ui->listView->setSelectionMode(QAbstractItemView::SingleSelection);
+    onUpdateIcons();
     connect(pIconsManager, &IconsManager::actionIconsUpdated,
-            this, &CompilerSetDirectoriesWidget::updateIcons);
+            this, &CompilerSetDirectoriesWidget::onUpdateIcons);
 }
 
 CompilerSetDirectoriesWidget::~CompilerSetDirectoriesWidget()
@@ -103,7 +104,7 @@ void CompilerSetDirectoriesWidget::on_btnRemoveInvalid_pressed()
     setDirList(lst);
 }
 
-void CompilerSetDirectoriesWidget::updateIcons()
+void CompilerSetDirectoriesWidget::onUpdateIcons()
 {
     pIconsManager->setIcon(ui->btnAdd,IconsManager::ACTION_MISC_ADD);
     pIconsManager->setIcon(ui->btnDelete, IconsManager::ACTION_MISC_REMOVE);

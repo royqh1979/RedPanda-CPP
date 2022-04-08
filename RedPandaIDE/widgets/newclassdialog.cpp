@@ -11,7 +11,9 @@ NewClassDialog::NewClassDialog(QWidget *parent) :
     setWindowFlag(Qt::WindowContextHelpButtonHint,false);
     ui->setupUi(this);
     resize(pSettings->ui().newClassDialogWidth(),pSettings->ui().newClassDialogHeight());
-    updateIcons();
+    onUpdateIcons();
+    connect(pIconsManager,&IconsManager::actionIconsUpdated,
+            this, &NewClassDialog::onUpdateIcons);
     ui->txtClassName->setFocus();
 }
 
@@ -65,7 +67,7 @@ void NewClassDialog::on_btnCreate_clicked()
     this->accept();
 }
 
-void NewClassDialog::updateIcons()
+void NewClassDialog::onUpdateIcons()
 {
     pIconsManager->setIcon(ui->btnBrowsePath, IconsManager::ACTION_FILE_OPEN_FOLDER);
 }

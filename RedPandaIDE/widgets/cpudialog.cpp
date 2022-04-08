@@ -68,9 +68,9 @@ CPUDialog::CPUDialog(QWidget *parent) :
     sizes[1] = std::max(1,totalSize - sizes[0]);
     ui->splitter->setSizes(sizes);
 
-    updateIcons();
+    onUpdateIcons();
     connect(pIconsManager,&IconsManager::actionIconsUpdated,
-            this, &CPUDialog::updateIcons);
+            this, &CPUDialog::onUpdateIcons);
 }
 
 CPUDialog::~CPUDialog()
@@ -192,7 +192,7 @@ void CPUDialog::on_btnStepIntoInstruction_clicked()
     pMainWindow->debugger()->sendCommand("-exec-step-instruction","");
 }
 
-void CPUDialog::updateIcons()
+void CPUDialog::onUpdateIcons()
 {
     pIconsManager->setIcon(ui->btnStepIntoInstruction, IconsManager::ACTION_RUN_STEP_INTO_INSTRUCTION);
     pIconsManager->setIcon(ui->btnStepOverInstruction, IconsManager::ACTION_RUN_STEP_OVER_INSTRUCTION);

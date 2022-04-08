@@ -35,7 +35,7 @@ private:
     Ui::NewClassDialog *ui;
 
 private:
-    void updateIcons();
+    void onUpdateIcons();
 
     // QWidget interface
 protected:
