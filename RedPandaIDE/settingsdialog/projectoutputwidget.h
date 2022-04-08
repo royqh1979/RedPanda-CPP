@@ -40,11 +40,10 @@ protected:
     void doLoad() override;
     void doSave() override;
 private slots:
-    void on_btnOutputDir_triggered(QAction *arg1);
-    void on_btnObjOutputDir_triggered(QAction *arg1);
-    void on_btnCompileLog_triggered(QAction *arg1);
+    void on_btnOutputDir_clicked();
+    void on_btnObjOutputDir_clicked();
+    void on_btnCompileLog_clicked();
 
-    // SettingsWidget interface
 protected:
     void updateIcons(const QSize &size) override;
 };

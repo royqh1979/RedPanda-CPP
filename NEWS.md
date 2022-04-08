@@ -13,6 +13,9 @@ Red Panda C++ Version 1.0.3
   - enhancement: don't show folders that doesn't contain files in the project view
   - enhancement: redesigned new project unit dialog
   - fix: some dialog's icon not correctly set
+  - fix: can't build project that has source files in subfolders
+  - fix: can't build project that has custom object folder
+  - fix: buttons in the project option dialog's output page don't work
 
 Red Panda C++ Version 1.0.2
   - enhancement: press tab in column mode won't exit column mode

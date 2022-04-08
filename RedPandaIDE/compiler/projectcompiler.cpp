@@ -157,14 +157,21 @@ void ProjectCompiler::writeMakeDefines(QFile &file)
                 QString relativeObjFile = extractRelativePath(mProject->directory(), changeFileExt(fullObjFile, OBJ_EXT));
                 QString ObjFile = genMakePath2(relativeObjFile);
                 Objects += ' ' + ObjFile;
-
+#ifdef Q_OS_WIN
+                cleanObjects += ' ' + genMakePath1(relativeObjFile).replace("/",QDir::separator());
+#else
                 cleanObjects += ' ' + genMakePath1(relativeObjFile);
+#endif
                 if (unit->link()) {
                     LinkObjects += ' ' + genMakePath1(relativeObjFile);
                 }
             } else {
                 Objects += ' ' + genMakePath2(changeFileExt(RelativeName, OBJ_EXT));
+#ifdef Q_OS_WIN
+                cleanObjects += ' ' + genMakePath1(changeFileExt(RelativeName, OBJ_EXT)).replace("/",QDir::separator());
+#else
                 cleanObjects += ' ' + genMakePath1(changeFileExt(RelativeName, OBJ_EXT));
+#endif
                 if (unit->link())
                     LinkObjects = LinkObjects + ' ' + genMakePath1(changeFileExt(RelativeName, OBJ_EXT));
             }
@@ -213,11 +220,25 @@ void ProjectCompiler::writeMakeDefines(QFile &file)
       writeln(file,"RES      = " + genMakePath1(ObjResFile));
       writeln(file,"OBJ      = " + Objects + " $(RES)");
       writeln(file,"LINKOBJ  = " + LinkObjects + " $(RES)");
-      writeln(file,"CLEANOBJ  = " + cleanObjects + " $(RES)");
+#ifdef Q_OS_WIN
+      writeln(file,"CLEANOBJ  = " + cleanObjects +
+              " " + genMakePath1(ObjResFile).replace("/",QDir::separator())
+              + " " + genMakePath1(extractRelativePath(mProject->makeFileName(), mProject->executable())).replace("/",QDir::separator()) );
+#else
+      writeln(file,"CLEANOBJ  = " + cleanObjects +
+              " " + genMakePath1(ObjResFile)
+              + " " + genMakePath1(extractRelativePath(mProject->makeFileName(), mProject->executable())));
+#endif
     } else {
       writeln(file,"OBJ      = " + Objects);
       writeln(file,"LINKOBJ  = " + LinkObjects);
-      writeln(file,"CLEANOBJ  = " + cleanObjects);
+#ifdef Q_OS_WIN
+      writeln(file,"CLEANOBJ  = " + cleanObjects +
+              + " " + genMakePath1(extractRelativePath(mProject->makeFileName(), mProject->executable())).replace("/",QDir::separator()) );
+#else
+      writeln(file,"CLEANOBJ  = " + cleanObjects +
+              + " " + genMakePath1(extractRelativePath(mProject->makeFileName(), mProject->executable())));
+#endif
     };
     libraryArguments.replace('\\', '/');
     writeln(file,"LIBS     = " + libraryArguments);
@@ -249,7 +270,13 @@ void ProjectCompiler::writeMakeDefines(QFile &file)
             libOutputFile = extractRelativePath(mProject->makeFileName(), libOutputFile);
         writeln(file,"DEF      = " + genMakePath1(changeFileExt(libOutputFile, DEF_EXT)));
         writeln(file,"STATIC   = " + genMakePath1(changeFileExt(libOutputFile, LIB_EXT)));
-
+#ifdef Q_OS_WIN
+        writeln(file,"CLEAN_DEF      = " + genMakePath1(changeFileExt(libOutputFile, DEF_EXT)).replace("/",QDir::separator()));
+        writeln(file,"CLEAN_STATIC   = " + genMakePath1(changeFileExt(libOutputFile, LIB_EXT)).replace("/",QDir::separator()));
+#else
+        writeln(file,"CLEAN_DEF      = " + genMakePath1(changeFileExt(libOutputFile, DEF_EXT)));
+        writeln(file,"CLEAN_STATIC   = " + genMakePath1(changeFileExt(libOutputFile, LIB_EXT)));
+#endif
     }
     writeln(file);
 }
@@ -284,9 +311,9 @@ void ProjectCompiler::writeMakeClean(QFile &file)
 {
     writeln(file, "clean: clean-custom");
     if (mProject->options().type == ProjectType::DynamicLib)
-        writeln(file, QString("\t${RM} $(CLEANOBJ) $(BIN) $(DEF) $(STATIC) > %1 2>&1").arg(NULL_FILE));
+        writeln(file, QString("\t${RM} $(CLEANOBJ) $(CLEAN_DEF) $(CLEAN_STATIC) > %1 2>&1").arg(NULL_FILE));
     else
-        writeln(file, QString("\t${RM} $(CLEANOBJ) $(BIN) > %1 2>&1").arg(NULL_FILE));
+        writeln(file, QString("\t${RM} $(CLEANOBJ) > %1 2>&1").arg(NULL_FILE));
     writeln(file);
 }
 
@@ -333,9 +360,9 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
                     extractFileName(unit->fileName());
             ObjFileName = genMakePath2(extractRelativePath(mProject->makeFileName(), changeFileExt(ObjFileName, OBJ_EXT)));
             ObjFileName2 = genMakePath1(extractRelativePath(mProject->makeFileName(), changeFileExt(ObjFileName, OBJ_EXT)));
-            if (!extractFileDir(ObjFileName).isEmpty()) {
-                objStr = genMakePath2(includeTrailingPathDelimiter(extractFileDir(ObjFileName))) + objStr;
-            }
+//            if (!extractFileDir(ObjFileName).isEmpty()) {
+//                objStr = genMakePath2(includeTrailingPathDelimiter(extractFileDir(ObjFileName))) + objStr;
+//            }
         } else {
             ObjFileName = genMakePath2(changeFileExt(shortFileName, OBJ_EXT));
             ObjFileName2 = genMakePath1(changeFileExt(shortFileName, OBJ_EXT));

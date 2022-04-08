@@ -57,29 +57,29 @@ void ProjectOutputWidget::doSave()
     pMainWindow->project()->saveOptions();
 }
 
-void ProjectOutputWidget::on_btnOutputDir_triggered(QAction *)
+void ProjectOutputWidget::on_btnOutputDir_clicked()
 {
     QString dirName = QFileDialog::getExistingDirectory(
                 this,
                 tr("Executable output directory"),
                 pMainWindow->project()->directory());
     if (!dirName.isEmpty())
-        ui->txtOutputDir->setText(dirName);
+        ui->txtOutputDir->setText(extractRelativePath(pMainWindow->project()->folder(),dirName));
 }
 
 
-void ProjectOutputWidget::on_btnObjOutputDir_triggered(QAction *)
+void ProjectOutputWidget::on_btnObjOutputDir_clicked()
 {
     QString dirName = QFileDialog::getExistingDirectory(
                 this,
                 tr("Object files output directory"),
                 pMainWindow->project()->directory());
     if (!dirName.isEmpty())
-        ui->txtObjOutputDir->setText(dirName);
+        ui->txtObjOutputDir->setText(extractRelativePath(pMainWindow->project()->folder(),dirName));
 }
 
 
-void ProjectOutputWidget::on_btnCompileLog_triggered(QAction *)
+void ProjectOutputWidget::on_btnCompileLog_clicked()
 {
     QString fileName = QFileDialog::getOpenFileName(
                 this,
@@ -87,7 +87,7 @@ void ProjectOutputWidget::on_btnCompileLog_triggered(QAction *)
                 pMainWindow->project()->directory(),
                 tr("All files (%1)").arg(ALL_FILE_WILDCARD));
     if (!fileName.isEmpty() ) {
-        ui->txtCompileLog->setText(fileName);
+        ui->txtCompileLog->setText(extractRelativePath(pMainWindow->project()->folder(),fileName));
     }
 }
 
