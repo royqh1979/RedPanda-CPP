@@ -12,7 +12,9 @@ NewHeaderDialog::NewHeaderDialog(QWidget *parent) :
     setWindowFlag(Qt::WindowContextHelpButtonHint,false);
     ui->setupUi(this);
     resize(pSettings->ui().newHeaderDialogWidth(),pSettings->ui().newHeaderDialogHeight());
-    updateIcons();
+    onUpdateIcons();
+    connect(pIconsManager,&IconsManager::actionIconsUpdated,
+            this, &NewHeaderDialog::onUpdateIcons);
     ui->txtHeader->setFocus();
 }
 
@@ -36,7 +38,7 @@ void NewHeaderDialog::setPath(const QString &location)
     ui->txtPath->setText(location);
 }
 
-void NewHeaderDialog::updateIcons()
+void NewHeaderDialog::onUpdateIcons()
 {
     pIconsManager->setIcon(ui->btnBrowse, IconsManager::ACTION_FILE_OPEN_FOLDER);
 }

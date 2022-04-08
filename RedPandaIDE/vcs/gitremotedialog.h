@@ -17,7 +17,7 @@ public:
     QString chooseRemote();
 
 private slots:
-    void updateIcons();
+    void onUpdateIcons();
     void onRemotesSelectionChanged();
     void checkDetails();
     void refresh();

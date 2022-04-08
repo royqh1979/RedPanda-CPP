@@ -47,7 +47,7 @@ private slots:
 
     void on_lstTemplates_currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous);
     void on_btnBrowse_clicked();
-    void updateIcons();
+    void onUpdateIcons();
 
     void on_btnOk_clicked();
 

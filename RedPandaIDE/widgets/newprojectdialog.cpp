@@ -61,6 +61,10 @@ NewProjectDialog::NewProjectDialog(QWidget *parent) :
             this,
             &NewProjectDialog::updateProjectLocation);
     ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(false);
+
+    onUpdateIcons();
+    connect(pIconsManager,&IconsManager::actionIconsUpdated,
+            this, &NewProjectDialog::onUpdateIcons);
 }
 
 NewProjectDialog::~NewProjectDialog()
@@ -242,7 +246,7 @@ void NewProjectDialog::on_btnBrowse_clicked()
     }
     QString dir = QFileDialog::getExistingDirectory(
                 this,
-                "Choose directory",
+                tr("Choose directory"),
                 dirPath
                 );
     if (!dir.isEmpty()) {
@@ -254,7 +258,7 @@ void NewProjectDialog::on_btnBrowse_clicked()
     }
 }
 
-void NewProjectDialog::updateIcons()
+void NewProjectDialog::onUpdateIcons()
 {
     pIconsManager->setIcon(ui->btnBrowse, IconsManager::ACTION_FILE_OPEN_FOLDER);
 }

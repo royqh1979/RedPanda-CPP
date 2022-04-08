@@ -244,7 +244,7 @@ private:
     void checkProjectFileForUpdate(SimpleIni& ini);
     void createFolderNodes();
     void createFileSystemFolderNodes();
-    void createFileSystemFolderNode(ProjectSpecialFolderNode folderType, const QString& folderName, PProjectModelNode parent);
+    void createFileSystemFolderNode(ProjectSpecialFolderNode folderType, const QString& folderName, PProjectModelNode parent, const QSet<QString>& validFolders);
     PProjectModelNode getParentFolderNode(const QString& filename);
     PProjectModelNode findFolderNode(const QString& folderPath, ProjectSpecialFolderNode nodeType);
     PProjectModelNode folderNodeFromName(const QString& name);

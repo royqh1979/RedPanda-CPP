@@ -15,7 +15,7 @@ GitRemoteDialog::GitRemoteDialog(const QString& folder, QWidget *parent) :
     mRemotes = manager.listRemotes(folder);
     ui->lstRemotes->addItems(mRemotes);
     connect(pIconsManager, &IconsManager::actionIconsUpdated,
-            this, &GitRemoteDialog::updateIcons);
+            this, &GitRemoteDialog::onUpdateIcons);
     ui->btnRemove->setEnabled(false);
     ui->pnlProcess->setVisible(false);
     ui->grpDetail->setEnabled(false);
@@ -42,7 +42,7 @@ QString GitRemoteDialog::chooseRemote()
     return "";
 }
 
-void GitRemoteDialog::updateIcons()
+void GitRemoteDialog::onUpdateIcons()
 {
     ui->btnAdd->setIcon(pIconsManager->getIcon(IconsManager::ACTION_MISC_ADD));
     ui->btnRemove->setIcon(pIconsManager->getIcon(IconsManager::ACTION_MISC_REMOVE));
