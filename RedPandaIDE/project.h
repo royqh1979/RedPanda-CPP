@@ -237,6 +237,8 @@ public:
 
     QFileSystemWatcher *fileSystemWatcher() const;
 
+    QString fileSystemNodeFolderPath(const PProjectModelNode& node);
+
 signals:
     void nodesChanged();
     void modifyChanged(bool value);

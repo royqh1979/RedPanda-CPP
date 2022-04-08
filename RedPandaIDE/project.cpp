@@ -1695,6 +1695,18 @@ QFileSystemWatcher *Project::fileSystemWatcher() const
     return mFileSystemWatcher;
 }
 
+QString Project::fileSystemNodeFolderPath(const PProjectModelNode &node)
+{
+    QString result;
+    PProjectModelNode pNode = node;
+    while (pNode && pNode->folderNodeType == ProjectSpecialFolderNode::NonSpecial) {
+        result = node->text + "/" +result;
+        pNode = pNode->parent.lock();
+    }
+    result = folder() + "/" + result;
+    return result;
+}
+
 EditorList *Project::editorList() const
 {
     return mEditorList;

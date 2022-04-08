@@ -31,7 +31,7 @@ void NewProjectUnitDialog::setFolder(const QString &folderName)
     if (folderName!=folder()) {
         ui->txtFolder->setText(folderName);
         QDir dir(folder());
-        if (dir.exists(filename()) || filename().isEmpty()) {
+        if (filename().isEmpty() || dir.exists(filename())) {
             //todo change filename
             QString newFileName;
             QString ext;
@@ -48,6 +48,16 @@ void NewProjectUnitDialog::setFolder(const QString &folderName)
             setFilename(newFileName);
         }
     }
+}
+
+QString NewProjectUnitDialog::filename() const
+{
+    return ui->txtFilename->text();
+}
+
+void NewProjectUnitDialog::setFilename(const QString &filename)
+{
+    ui->txtFilename->setText(filename);
 }
 
 void NewProjectUnitDialog::onUpdateIcons()
@@ -90,21 +100,20 @@ void NewProjectUnitDialog::updateBtnOkStatus()
                           && QFileInfo(ui->txtFolder->text()).isDir());
 }
 
-void NewProjectUnitDialog::closeEvent(QCloseEvent *event)
-{
-    reject();
-}
-
-bool NewProjectUnitDialog::suffix() const
+const QString &NewProjectUnitDialog::suffix() const
 {
     return mSuffix;
 }
 
-void NewProjectUnitDialog::setSuffix(bool newSuffix)
+void NewProjectUnitDialog::setSuffix(const QString &newSuffix)
 {
     mSuffix = newSuffix;
 }
 
+void NewProjectUnitDialog::closeEvent(QCloseEvent */*event*/)
+{
+    reject();
+}
 
 void NewProjectUnitDialog::on_txtFolder_textChanged(const QString &/*arg1*/)
 {

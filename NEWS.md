@@ -12,6 +12,7 @@ Red Panda C++ Version 1.0.3
   - change: don't auto jump to the first syntax error location when compile
   - enhancement: don't show folders that doesn't contain files in the project view
   - enhancement: redesigned new project unit dialog
+  - fix: some dialog's icon not correctly set
 
 Red Panda C++ Version 1.0.2
   - enhancement: press tab in column mode won't exit column mode

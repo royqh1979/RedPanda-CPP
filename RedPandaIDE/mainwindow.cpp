@@ -5946,10 +5946,12 @@ void MainWindow::newProjectUnitFile()
     QString newFileName;
     PProjectUnit newUnit;
     if (mProject->modelType() == ProjectModelType::FileSystem) {
+        PProjectModelNode modelTypeNode = pNode;
+        while (modelTypeNode && modelTypeNode->folderNodeType==ProjectSpecialFolderNode::NonSpecial) {
+            modelTypeNode=modelTypeNode->parent.lock();
+        }
         NewProjectUnitDialog newProjectUnitDialog;
-        QString folder = mProject->fileSystemNodeFolderPath(pNode);
-        newProjectUnitDialog.setFolder(folder);
-        switch (pNode->folderNodeType) {
+        switch (modelTypeNode->folderNodeType) {
         case ProjectSpecialFolderNode::HEADERS:
             newProjectUnitDialog.setSuffix("h");
             break;
@@ -5962,13 +5964,23 @@ void MainWindow::newProjectUnitFile()
         default:
             newProjectUnitDialog.setSuffix("");
         }
+        QString folder = mProject->fileSystemNodeFolderPath(pNode);
+        qDebug()<<folder;
+        newProjectUnitDialog.setFolder(folder);
         if (newProjectUnitDialog.exec()!=QDialog::Accepted) {
             return;
         }
-        newFileName=newProjectUnitDialog.filename();
+        newFileName=QDir(newProjectUnitDialog.folder()).absoluteFilePath(newProjectUnitDialog.filename());
         if (newFileName.isEmpty())
             return;
     } else {
+        do {
+            newFileName = tr("untitled")+QString("%1").arg(getNewFileNumber());
+            if (mProject->options().isCpp)
+                newFileName += ".cpp";
+            else
+                newFileName += ".c";
+        } while (QDir(mProject->directory()).exists(newFileName));
         newFileName = QInputDialog::getText(
                     this,
                     tr("New Project File Name"),
@@ -5977,11 +5989,12 @@ void MainWindow::newProjectUnitFile()
                     newFileName);
         if (newFileName.isEmpty())
             return;
-        if (fileExists(QDir(mProject->directory()).absoluteFilePath(newFileName))) {
-            QMessageBox::critical(this,tr("File Already Exists!"),
-                                  tr("File '%1' already exists!").arg(newFileName));
-            return;
-        }
+        newFileName = QDir(mProject->directory()).absoluteFilePath(newFileName);
+    }
+    if (fileExists(newFileName)) {
+        QMessageBox::critical(this,tr("File Already Exists!"),
+                              tr("File '%1' already exists!").arg(newFileName));
+        return;
     }
     newUnit = mProject->newUnit(
                     pNode,newFileName);

@@ -21,8 +21,8 @@ public:
     QString filename() const;
     void setFilename(const QString& filename);
 
-    bool suffix() const;
-    void setSuffix(bool newSuffix);
+    const QString &suffix() const;
+    void setSuffix(const QString &newSuffix);
 
 private slots:
     void onUpdateIcons();
@@ -40,7 +40,7 @@ private:
 private:
     Ui::NewProjectUnitDialog *ui;
 private:
-    bool mSuffix;
+    QString mSuffix;
 
     // QWidget interface
 protected:
