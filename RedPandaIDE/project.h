@@ -204,6 +204,9 @@ public:
     void saveOptions();
     void saveUnitAs(int i, const QString& sFileName, bool syncEditor = true); // save single [UnitX]
     bool saveUnits();
+
+    void saveAsTemplate(const QString &filename, const QString &name, const QString &description,
+                        const QString &category);
     PProjectUnit findUnitByFilename(const QString& filename);
     void associateEditor(Editor* editor);
     void associateEditorToUnit(Editor* editor, PProjectUnit unit);
