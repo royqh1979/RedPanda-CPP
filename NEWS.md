@@ -16,6 +16,7 @@ Red Panda C++ Version 1.0.3
   - fix: can't build project that has source files in subfolders
   - fix: can't build project that has custom object folder
   - fix: buttons in the project option dialog's output page don't work
+  - fix: don't add non-project header files to makefile's object rules
 
 Red Panda C++ Version 1.0.2
   - enhancement: press tab in column mode won't exit column mode

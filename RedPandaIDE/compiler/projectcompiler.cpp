@@ -343,7 +343,13 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
                     continue;
                 if (!parser->isSystemHeaderFile(headerName)
                         && ! parser->isProjectHeaderFile(headerName)) {
-                    objStr = objStr + ' ' + genMakePath2(extractRelativePath(mProject->makeFileName(),headerName));
+                    for (int j = 0;j<mProject->units().count();j++) {
+                        PProjectUnit unit2 = mProject->units()[j];
+                        if (unit2->fileName()==headerName) {
+                            objStr = objStr + ' ' + genMakePath2(extractRelativePath(mProject->makeFileName(),headerName));
+                            break;
+                        }
+                    }
                 }
             }
         } else {
