@@ -1261,6 +1261,7 @@ void Editor::hideEvent(QHideEvent */*event*/)
 
 void Editor::resizeEvent(QResizeEvent *event)
 {
+    SynEdit::resizeEvent(event);
     pMainWindow->functionTip()->hide();
 }
 
