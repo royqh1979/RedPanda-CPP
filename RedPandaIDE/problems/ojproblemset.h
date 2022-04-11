@@ -63,6 +63,7 @@ using POJProblem = std::shared_ptr<OJProblem>;
 struct OJProblemSet {
     QString name;
     QVector<POJProblem> problems;
+    QString exportFilename;
 };
 
 using POJProblemSet  = std::shared_ptr<OJProblemSet>;

@@ -6653,12 +6653,20 @@ void MainWindow::on_btnRemoveProblem_clicked()
 
 void MainWindow::on_btnSaveProblemSet_clicked()
 {
-    QString fileName = QFileDialog::getSaveFileName(
-                this,
-                tr("Save Problem Set"),
-                QDir().absolutePath(),
-                tr("Problem Set Files (*.pbs)"));
-    if (!fileName.isEmpty()) {
+    QFileDialog dialog(this);
+    dialog.setWindowTitle(tr("Save Problem Set"));
+    if (!mOJProblemSetModel.exportFilename().isEmpty()) {
+        dialog.setDirectory(mOJProblemSetModel.exportFilename());
+        dialog.selectFile(mOJProblemSetModel.exportFilename());
+    } else {
+        dialog.setDirectory(QDir().absolutePath());
+    }
+    dialog.setNameFilter(tr("Problem Set Files (*.pbs)"));
+    dialog.setDefaultSuffix("pbs");
+    dialog.setFileMode(QFileDialog::AnyFile);
+    dialog.setAcceptMode(QFileDialog::AcceptSave);
+    if (dialog.exec() == QDialog::Accepted) {
+        QString fileName=dialog.selectedFiles()[0];
         QFileInfo fileInfo(fileName);
         if (fileInfo.suffix().isEmpty()) {
             fileName.append(".pbs");

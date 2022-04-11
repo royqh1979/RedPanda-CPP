@@ -63,7 +63,8 @@ public:
     int count();
     void create(const QString& name);
     void rename(const QString& newName);
-    QString name();
+    QString name() const;
+    QString exportFilename() const;
     void addProblem(POJProblem problem);
     POJProblem problem(int index);
     void removeProblem(int index);

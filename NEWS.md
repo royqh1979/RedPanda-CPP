@@ -1,6 +1,7 @@
 Red Panda C++ Version 1.0.4
   - fix: hide function tips, when move or resize the main window
   - enhancement: add help link for regular expression in search dialog
+  - enhancement: remember current problem set's filename
 
 Red Panda C++ Version 1.0.3
   - fix: when oj problem grabbed by competitive companion received,

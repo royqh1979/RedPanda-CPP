@@ -34,6 +34,7 @@ void OJProblemSetModel::clear()
 {
     beginResetModel();
     mProblemSet.problems.clear();
+    mProblemSet.exportFilename.clear();
     endResetModel();
 }
 
@@ -54,9 +55,14 @@ void OJProblemSetModel::rename(const QString &newName)
         mProblemSet.name = newName;
 }
 
-QString OJProblemSetModel::name()
+QString OJProblemSetModel::name() const
 {
     return mProblemSet.name;
+}
+
+QString OJProblemSetModel::exportFilename() const
+{
+    return mProblemSet.exportFilename;
 }
 
 void OJProblemSetModel::addProblem(POJProblem problem)
@@ -98,6 +104,7 @@ void OJProblemSetModel::saveToFile(const QString &fileName)
     QFile file(fileName);
     if (file.open(QFile::WriteOnly | QFile::Truncate)) {
         QJsonObject obj;
+        mProblemSet.exportFilename=fileName;
         obj["name"]=mProblemSet.name;
         QJsonArray problemsArray;
         foreach (const POJProblem& problem, mProblemSet.problems) {
