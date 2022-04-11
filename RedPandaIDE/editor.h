@@ -381,6 +381,10 @@ protected:
 protected:
     void showEvent(QShowEvent *event) override;
     void hideEvent(QHideEvent *event) override;
+
+    // QWidget interface
+protected:
+    void resizeEvent(QResizeEvent *event) Q_DECL_OVERRIDE;
 };
 
 QString getWordAtPosition(SynEdit* editor,

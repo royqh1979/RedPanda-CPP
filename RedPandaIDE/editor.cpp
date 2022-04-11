@@ -1259,6 +1259,11 @@ void Editor::hideEvent(QHideEvent */*event*/)
     setHideTime(QDateTime::currentDateTime());
 }
 
+void Editor::resizeEvent(QResizeEvent *event)
+{
+    pMainWindow->functionTip()->hide();
+}
+
 void Editor::copyToClipboard()
 {
     if (pSettings->editor().copySizeLimit()) {
