@@ -23,6 +23,7 @@
 #include "../qsynedit/Search.h"
 #include "../qsynedit/SearchRegex.h"
 #include "../project.h"
+#include "../settings.h"
 #include <QMessageBox>
 #include <QDebug>
 
@@ -464,6 +465,20 @@ std::shared_ptr<SearchResultTreeItem> SearchDialog::batchFindInEditor(SynEdit *e
                 blockEndBackup
                 );
     return parentItem;
+}
+
+void SearchDialog::showEvent(QShowEvent *event)
+{
+    QDialog::showEvent(event);
+    if (pSettings->environment().language()=="zh_CN") {
+        ui->txtRegExpHelp->setText(
+                    QString("<html><head/><body><p><a href=\"%1\"><span style=\" text-decoration: underline; color:#0000ff;\">(?)</span></a></p></body></html>")
+                    .arg("https://www.runoob.com/regexp/regexp-tutorial.html"));
+    } else {
+        ui->txtRegExpHelp->setText(
+                    QString("<html><head/><body><p><a href=\"%1\"><span style=\" text-decoration: underline; color:#0000ff;\">(?)</span></a></p></body></html>")
+                    .arg("https://docs.microsoft.com/en-us/dotnet/standard/base-types/regular-expression-language-quick-reference"));
+    }
 }
 
 QTabBar *SearchDialog::tabBar() const

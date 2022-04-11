@@ -72,6 +72,10 @@ private:
     PSynSearchBase mSearchEngine;
     PSynSearchBase mBasicSearchEngine;
     PSynSearchBase mRegexSearchEngine;
+
+    // QWidget interface
+protected:
+    void showEvent(QShowEvent *event) Q_DECL_OVERRIDE;
 };
 
 #endif // SEARCHDIALOG_H
