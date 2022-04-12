@@ -7256,7 +7256,7 @@ void MainWindow::on_actionGit_Restore_triggered()
 void MainWindow::on_actionWebsite_triggered()
 {
     if (pSettings->environment().language()=="zh_CN") {
-        QDesktopServices::openUrl(QUrl("https://royqh1979.gitee.io/redpandacpp/"));
+        QDesktopServices::openUrl(QUrl("https://royqh1979.gitee.io/redpandacpp/docsy/docs/"));
     } else {
         QDesktopServices::openUrl(QUrl("https://sourceforge.net/projects/redpanda-cpp/"));
     }
