@@ -3,9 +3,10 @@ Red Panda C++ Version 1.0.4
   - enhancement: add help link for regular expression in search dialog
   - enhancement: remember current problem set's filename
   - enhancement: F1 shorcut opens offcial website
-  - enhancement: don't auto complete '(', if the next non-space char is neither '(' nor ident char
+  - enhancement: don't auto complete '(', if the next non-space char is '(' or ident char
   - enhancement: if a project's unit encoding is the same with project's encoding, don't save its encoding
   - fix: files will be saved to default encoding inspite of its original encoding
+  - fix: parenthesis skip doesn't work when editing non-c/c++ files
 
 Red Panda C++ Version 1.0.3
   - fix: when oj problem grabbed by competitive companion received,
