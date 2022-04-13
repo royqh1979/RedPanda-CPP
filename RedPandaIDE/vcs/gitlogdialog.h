@@ -11,6 +11,7 @@ class GitLogDialog;
 }
 
 class GitLogModel: public QAbstractTableModel {
+    Q_OBJECT
 public:
     using CommitInfoCache=QMap<int, PGitCommitInfo>;
     using PCommitInfoCache=std::shared_ptr<CommitInfoCache>;

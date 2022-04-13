@@ -95,6 +95,7 @@ void EnvironmentAppearenceWidget::init()
         ui->cbTheme->addItem(appTheme->displayName(),appTheme->name());
     }
     ui->cbLanguage->addItem(tr("English"),"en");
+    ui->cbLanguage->addItem(tr("Portuguese"),"pt");
     ui->cbLanguage->addItem(tr("Simplified Chinese"),"zh_CN");
     QList<PIconSet> iconSets = pIconsManager->listIconSets();
     foreach(const PIconSet& iconSet, iconSets) {
