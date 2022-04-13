@@ -229,7 +229,7 @@ void Editor::loadFile(QString filename) {
 void Editor::saveFile(QString filename) {
     QFile file(filename);
     QByteArray encoding = mFileEncoding;
-    if (mFileEncoding==ENCODING_ASCII)
+    if (mEncodingOption!=ENCODING_AUTO_DETECT || mFileEncoding==ENCODING_ASCII)
         encoding = mEncodingOption;
     this->lines()->saveToFile(file,encoding,
                               pSettings->editor().defaultEncoding(),
