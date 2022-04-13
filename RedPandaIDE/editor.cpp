@@ -802,7 +802,6 @@ void Editor::keyPressEvent(QKeyEvent *event)
             return;
         case '(': {
             QChar nextCh = nextNotspaceChar(caretY()-1,caretX()-1);
-            qDebug()<<nextCh;
             if (!isIdentChar(nextCh) && nextCh!='('  ){
                 handled = handleSymbolCompletion(ch);
             }
