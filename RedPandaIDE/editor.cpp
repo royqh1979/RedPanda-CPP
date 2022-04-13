@@ -228,7 +228,10 @@ void Editor::loadFile(QString filename) {
 
 void Editor::saveFile(QString filename) {
     QFile file(filename);
-    this->lines()->saveToFile(file,mEncodingOption,
+    QByteArray encoding = mFileEncoding;
+    if (mFileEncoding==ENCODING_ASCII)
+        encoding = mEncodingOption;
+    this->lines()->saveToFile(file,encoding,
                               pSettings->editor().defaultEncoding(),
                               mFileEncoding);
     emit fileSaved(filename, mInProject);
@@ -797,13 +800,14 @@ void Editor::keyPressEvent(QKeyEvent *event)
         case '*':
             handled = handleSymbolCompletion(ch);
             return;
-        case '(':
-            if (caretX()-1>=lineText().length()
-                    || caretX()<=0
-                    || isSpaceOrRightParenthesis(lineText().at(caretX()-1))) {
+        case '(': {
+            QChar nextCh = nextNotspaceChar(caretY()-1,caretX()-1);
+            qDebug()<<nextCh;
+            if (!isIdentChar(nextCh) && nextCh!='('  ){
                 handled = handleSymbolCompletion(ch);
             }
             return;
+        }
         case '>':
             if ((caretX() <= 1) || lineText().isEmpty()
                     ||  lineText()[caretX() - 2] != '-') {

@@ -214,6 +214,7 @@ public:
     QString wordAtRowCol(const BufferCoord& XY);
 
     QChar charAt(const BufferCoord& pos);
+    QChar nextNotspaceChar(int line, int ch);
     int charColumns(QChar ch) const;
 
     bool isPointInSelection(const BufferCoord& Value) const;

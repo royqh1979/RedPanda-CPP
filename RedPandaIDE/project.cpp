@@ -608,7 +608,8 @@ bool Project::saveUnits()
         ini.SetLongValue(groupName,"OverrideBuildCmd", unit->overrideBuildCmd());
         ini.SetValue(groupName,"BuildCmd", toByteArray(unit->buildCmd()));
         ini.SetLongValue(groupName,"DetectEncoding", unit->encoding()==ENCODING_AUTO_DETECT);
-        ini.SetValue(groupName,"FileEncoding", toByteArray(unit->encoding()));
+        if (unit->encoding() != options().encoding)
+            ini.SetValue(groupName,"FileEncoding", toByteArray(unit->encoding()));
     }
     ini.SetLongValue("Project","UnitCount",count);
     ini.SaveFile(mFilename.toLocal8Bit());
@@ -927,7 +928,7 @@ PProjectUnit Project::addUnit(const QString &inFileName, PProjectModelNode paren
         newUnit->setEncoding(e->fileEncoding());
         e->setInProject(true);
     } else {
-        newUnit->setEncoding(pSettings->editor().defaultEncoding());
+        newUnit->setEncoding(options().encoding.toUtf8());
     }
     newUnit->setFolder(getFolderPath(parentNode));
     newUnit->setNode(makeNewFileNode(extractFileName(newUnit->fileName()), false, parentNode));

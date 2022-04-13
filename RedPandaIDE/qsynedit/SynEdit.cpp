@@ -1100,6 +1100,23 @@ QChar SynEdit::charAt(const BufferCoord &pos)
     return QChar(0);
 }
 
+QChar SynEdit::nextNotspaceChar(int line, int ch)
+{
+    if (ch<0)
+        return QChar();
+    QString s = mLines->getString(line);
+    if (s.isEmpty())
+        return QChar();
+    int x=ch;
+    while (x<s.length()) {
+        QChar ch = s[x];
+        if (!ch.isSpace())
+            return ch;
+        x++;
+    }
+    return QChar();
+}
+
 void SynEdit::setCaretAndSelection(const BufferCoord &ptCaret, const BufferCoord &ptBefore, const BufferCoord &ptAfter)
 {
     SynSelectionMode vOldMode = mActiveSelectionMode;
