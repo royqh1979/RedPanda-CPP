@@ -3120,7 +3120,7 @@ void Editor::completionInsert(bool appendFunc)
 
 void Editor::headerCompletionInsert()
 {
-    QString headerName = mHeaderCompletionPopup->selectedFilename();
+    QString headerName = mHeaderCompletionPopup->selectedFilename(true);
     if (headerName.isEmpty())
         return;
 

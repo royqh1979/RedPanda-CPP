@@ -2763,7 +2763,7 @@ void Settings::CompilerSets::deleteSet(int index)
     saveSets();
 }
 
-int Settings::CompilerSets::size() const
+size_t Settings::CompilerSets::size() const
 {
     return mList.size();
 }

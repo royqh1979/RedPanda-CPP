@@ -570,9 +570,13 @@ void MainWindow::updateEditorColorSchemes()
     QColor baseColor = palette().color(QPalette::Base);
     item = pColorManager->getItem(schemeName, SYNS_AttrPreprocessor);
     if (item) {
-        mHeaderCompletionPopup->setSuggestionColor(item->foreground());
+        mHeaderCompletionPopup->setSuggestionColor(item->foreground(),
+                                                   item->foreground(),
+                                                   item->foreground());
     } else  {
-        mHeaderCompletionPopup->setSuggestionColor(palette().color(QPalette::Text));
+        mHeaderCompletionPopup->setSuggestionColor(palette().color(QPalette::Text),
+                                                   palette().color(QPalette::Text),
+                                                   palette().color(QPalette::Text));
     }
     item = pColorManager->getItem(schemeName, COLOR_SCHEME_ERROR);
     if (item && haveGoodContrast(item->foreground(), baseColor)) {

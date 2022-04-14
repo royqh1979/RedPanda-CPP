@@ -7,6 +7,7 @@ Red Panda C++ Version 1.0.4
   - enhancement: if a project's unit encoding is the same with project's encoding, don't save its encoding
   - fix: files will be saved to default encoding inspite of its original encoding
   - fix: parenthesis skip doesn't work when editing non-c/c++ files
+  - enhancement: prefer local headers over system headers when complete #include header path
 
 Red Panda C++ Version 1.0.3
   - fix: when oj problem grabbed by competitive companion received,

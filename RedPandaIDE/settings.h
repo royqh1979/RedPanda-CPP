@@ -1334,7 +1334,7 @@ public:
         void saveDefaultIndex();
         void deleteSet(int index);
         void saveSet(int index);
-        int size() const;
+        size_t size() const;
         int defaultIndex() const;
         void setDefaultIndex(int value);
         PCompilerSet defaultSet();

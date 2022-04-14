@@ -17,22 +17,42 @@
 #ifndef HEADERCOMPLETIONPOPUP_H
 #define HEADERCOMPLETIONPOPUP_H
 
+#include <QDir>
 #include <QWidget>
 #include "codecompletionlistview.h"
 #include "../parser/cppparser.h"
 
+enum class HeaderCompletionListItemType {
+    LocalHeader,
+    ProjectHeader,
+    SystemHeader
+};
+
+struct HeaderCompletionListItem {
+    QString filename;
+    QString fullpath;
+    int usageCount;
+    HeaderCompletionListItemType itemType;
+};
+
+using PHeaderCompletionListItem=std::shared_ptr<HeaderCompletionListItem>;
+
 class HeaderCompletionListModel: public QAbstractListModel {
     Q_OBJECT
 public:
-    explicit HeaderCompletionListModel(const QStringList* files,QObject *parent = nullptr);
+    explicit HeaderCompletionListModel(const QList<PHeaderCompletionListItem>* files,QObject *parent = nullptr);
     int rowCount(const QModelIndex &parent) const override;
     QVariant data(const QModelIndex &index, int role) const override;
     void notifyUpdated();
-    void setColor(const QColor &newColor);
+    void setLocalColor(const QColor &newColor);
+    void setSystemColor(const QColor &newColor);
+    void setProjectColor(const QColor &newColor);
 
 private:
-    const QStringList* mFiles;
-    QColor mColor;
+    const QList<PHeaderCompletionListItem>* mFiles;
+    QColor mLocalColor;
+    QColor mSystemColor;
+    QColor mProjectColor;
 };
 
 class HeaderCompletionPopup : public QWidget
@@ -44,21 +64,24 @@ public:
     void prepareSearch(const QString& phrase, const QString& fileName);
     bool search(const QString& phrase, bool autoHideOnSingleResult);
     void setKeypressedCallback(const KeyPressedCallback &newKeypressedCallback);
-    void setSuggestionColor(const QColor& color);
-    QString selectedFilename();
+    void setSuggestionColor(const QColor& localColor,
+                            const QColor& projectColor,
+                            const QColor& systemColor);
+    QString selectedFilename(bool updateUsageCount);
 
 private:
     void filterList(const QString& member);
     void getCompletionFor(const QString& phrase);
-    void addFilesInPath(const QString& path);
-    void addFile(const QString& fileName);
-    void addFilesInSubDir(const QString& baseDirPath, const QString& subDirName);
+    void addFilesInPath(const QString& path, HeaderCompletionListItemType type);
+    void addFile(const QDir& dir,  const QString& fileName, HeaderCompletionListItemType type);
+    void addFilesInSubDir(const QString& baseDirPath, const QString& subDirName, HeaderCompletionListItemType type);
 private:
 
     CodeCompletionListView* mListView;
     HeaderCompletionListModel* mModel;
-    QSet<QString> mFullCompletionList;
-    QStringList mCompletionList;
+    QHash<QString, PHeaderCompletionListItem> mFullCompletionList;
+    QList<PHeaderCompletionListItem> mCompletionList;
+    QHash<QString,int> mHeaderUsageCounts;
     int mShowCount;
     QSet<QString> mAddedFileNames;
 
