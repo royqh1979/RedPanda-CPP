@@ -3264,17 +3264,20 @@ void MainWindow::onProblemRunCurrentCase()
 
 void MainWindow::onProblemBatchSetCases()
 {
-    if (QMessageBox::question(this,tr("Batch Set Cases"),
+    if (mOJProblemModel.count()>0 && QMessageBox::question(this,tr("Batch Set Cases"),
                               tr("This operation will remove all cases for the current problem.")
                               +"<br />"
                               +tr("Do you really want to do that?"),
                               QMessageBox::Yes| QMessageBox::No,
                               QMessageBox::No)!=QMessageBox::Yes)
         return;
+    QString folder = QDir::currentPath();
+    if (!mOJProblemSetModel.exportFilename().isEmpty())
+        folder = extractFileDir(mOJProblemSetModel.exportFilename());
     QStringList files = QFileDialog::getOpenFileNames(
                 this,
                 tr("Choose input files"),
-                QDir::currentPath(),
+                folder,
                 tr("Input data files (*.in)"));
     if (files.isEmpty())
         return;
