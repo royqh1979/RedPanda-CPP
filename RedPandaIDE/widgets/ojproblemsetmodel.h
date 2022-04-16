@@ -29,6 +29,7 @@ public:
     void setProblem(const POJProblem &newProblem);
     void addCase(POJProblemCase problemCase);
     void removeCase(int index);
+    void removeCases();
     POJProblemCase getCase(int index);
     POJProblemCase getCaseById(const QString& id);
     int getCaseIndexById(const QString& id);

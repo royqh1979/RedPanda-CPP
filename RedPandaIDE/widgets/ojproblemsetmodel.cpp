@@ -284,6 +284,13 @@ void OJProblemModel::removeCase(int index)
     endRemoveRows();
 }
 
+void OJProblemModel::removeCases()
+{
+    beginRemoveRows(QModelIndex(),0,mProblem->cases.count());
+    mProblem->cases.clear();
+    endRemoveRows();
+}
+
 POJProblemCase OJProblemModel::getCase(int index)
 {
     if (mProblem==nullptr)

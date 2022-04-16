@@ -9,6 +9,7 @@ Red Panda C++ Version 1.0.4
   - fix: parenthesis skip doesn't work when editing non-c/c++ files
   - enhancement: prefer local headers over system headers when complete #include header path
   - fix: tab/shift+tab not correctly handled in options dialog's code template page
+  - enhancement: batch set cases ( in problem case table's context menu )
 
 Red Panda C++ Version 1.0.3
   - fix: when oj problem grabbed by competitive companion received,

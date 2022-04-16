@@ -283,6 +283,7 @@ private slots:
     void onProblemCaseIndexChanged(const QModelIndex &current, const QModelIndex &previous);
     void onProblemNameChanged(int index);
     void onProblemRunCurrentCase();
+    void onProblemBatchSetCases();
     void onNewProblemConnection();
     void updateProblemTitle();
     void onEditorClosed();
@@ -793,6 +794,7 @@ private:
     //action for problem
     QAction * mProblem_RunCurrentCase;
     QAction * mProblem_RunAllCases;
+    QAction * mProblem_batchSetCases;
 
     //action for tools output
     QAction * mToolsOutput_Clear;

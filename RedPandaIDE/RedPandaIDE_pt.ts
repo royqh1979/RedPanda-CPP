@@ -4424,6 +4424,22 @@
         <source>Line %1</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Batch Set Cases</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Choose input files</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Input data files (*.in)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This operation will remove all cases for the current problem.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>NewClassDialog</name>

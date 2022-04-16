@@ -2273,6 +2273,11 @@ void MainWindow::buildContextMenus()
                 );
     connect(mProblem_RunCurrentCase, &QAction::triggered, this,
             &MainWindow::onProblemRunCurrentCase);
+    mProblem_batchSetCases = createActionFor(
+                tr("Batch Set Cases"),
+                ui->tblProblemCases);
+    connect(mProblem_batchSetCases, &QAction::triggered, this,
+            &MainWindow::onProblemBatchSetCases);
 
     //context menu signal for the Problem Set lable
     ui->lblProblemSet->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -3142,6 +3147,8 @@ void MainWindow::onLstProblemSetContextMenu(const QPoint &pos)
 void MainWindow::onTableProblemCasesContextMenu(const QPoint &pos)
 {
     QMenu menu(this);
+    menu.addAction(mProblem_batchSetCases);
+    menu.addSeparator();
     QModelIndex idx = ui->tblProblemCases->currentIndex();
     menu.addAction(mProblem_RunAllCases);
     menu.addAction(mProblem_RunCurrentCase);
@@ -3253,6 +3260,35 @@ void MainWindow::onProblemRunCurrentCase()
 {
     applyCurrentProblemCaseChanges();
     runExecutable(RunType::CurrentProblemCase);
+}
+
+void MainWindow::onProblemBatchSetCases()
+{
+    if (QMessageBox::question(this,tr("Batch Set Cases"),
+                              tr("This operation will remove all cases for the current problem.")
+                              +"<br />"
+                              +tr("Do you really want to do that?"),
+                              QMessageBox::Yes| QMessageBox::No,
+                              QMessageBox::No)!=QMessageBox::Yes)
+        return;
+    QStringList files = QFileDialog::getOpenFileNames(
+                this,
+                tr("Choose input files"),
+                QDir::currentPath(),
+                tr("Input data files (*.in)"));
+    if (files.isEmpty())
+        return;
+    mOJProblemModel.removeCases();
+    foreach (const QString& filename, files) {
+        POJProblemCase problemCase = std::make_shared<OJProblemCase>();
+        problemCase->name = QFileInfo(filename).baseName();
+        problemCase->testState = ProblemCaseTestState::NotTested;
+        problemCase->inputFileName = filename;
+        QString expectedFileName = filename.mid(0,filename.length()-2)+"out";
+        if (fileExists(expectedFileName))
+            problemCase->expectedOutputFileName = expectedFileName;
+        mOJProblemModel.addCase(problemCase);
+    }
 }
 
 void MainWindow::onNewProblemConnection()
@@ -4694,7 +4730,7 @@ void MainWindow::onOJProblemCaseNewOutputGetted(const QString &/* id */, const Q
     ui->txtProblemCaseOutput->appendPlainText(line);
 }
 
-void MainWindow::onOJProblemCaseResetOutput(const QString &id, const QString &line)
+void MainWindow::onOJProblemCaseResetOutput(const QString &/* id */, const QString &line)
 {
     ui->txtProblemCaseOutput->setPlainText(line);
 }
