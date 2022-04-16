@@ -274,5 +274,22 @@ void SynEditKeyStrokes::resetDefaults()
 //    add(SynEditorCommand::ecNormalSelect, Qt::Key_N, Qt::ControlModifier | Qt::ShiftModifier);
 //    add(SynEditorCommand::ecColumnSelect, Qt::Key_C, Qt::ControlModifier | Qt::ShiftModifier);
 //    add(SynEditorCommand::ecLineSelect, Qt::Key_L, Qt::ControlModifier | Qt::ShiftModifier);
-//    add(SynEditorCommand::ecMatchBracket, Qt::Key_B, Qt::ControlModifier | Qt::ShiftModifier);
+    //    add(SynEditorCommand::ecMatchBracket, Qt::Key_B, Qt::ControlModifier | Qt::ShiftModifier);
+}
+
+void SynEditKeyStrokes::setExtraKeyStrokes()
+{
+    add(SynEditorCommand::ecDeleteWordStart, Qt::Key_Backspace, Qt::ControlModifier);
+    add(SynEditorCommand::ecDeleteWordEnd, Qt::Key_Delete, Qt::ControlModifier);
+
+    add(SynEditorCommand::ecDuplicateLine, Qt::Key_D, Qt::ControlModifier);
+    add(SynEditorCommand::ecDeleteLine, Qt::Key_E, Qt::ControlModifier);
+
+    add(SynEditorCommand::ecSelectAll, Qt::Key_A, Qt::ControlModifier);
+    add(SynEditorCommand::ecCopy, Qt::Key_C, Qt::ControlModifier);
+    add(SynEditorCommand::ecPaste, Qt::Key_V, Qt::ControlModifier);
+    add(SynEditorCommand::ecCut, Qt::Key_X, Qt::ControlModifier);
+
+    add(SynEditorCommand::ecUndo, Qt::Key_Z, Qt::ControlModifier);
+    add(SynEditorCommand::ecRedo, Qt::Key_Y, Qt::ControlModifier);
 }

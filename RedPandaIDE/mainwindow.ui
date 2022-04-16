@@ -2843,7 +2843,7 @@
     <string>Delete Line</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+D</string>
+    <string>Ctrl+E</string>
    </property>
   </action>
   <action name="actionDuplicate_Line">
@@ -2851,7 +2851,7 @@
     <string>Duplicate Line</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+E</string>
+    <string>Ctrl+D</string>
    </property>
   </action>
   <action name="actionDelete_Word">

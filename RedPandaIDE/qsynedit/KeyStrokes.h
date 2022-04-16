@@ -244,6 +244,7 @@ public:
     PSynEditKeyStroke findKeySequence(const QKeySequence& keySeq);
     void clear();
     void resetDefaults();
+    void setExtraKeyStrokes();
 private:
     SynEditKeyStrokeList mList;
 };

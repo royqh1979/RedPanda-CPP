@@ -176,6 +176,9 @@ Editor::Editor(QWidget *parent, const QString& filename,
         mParentPageControl->addTab(this,"");
         updateCaption();
     }
+    if (mParentPageControl==nullptr) {
+        setExtraKeystrokes();
+    }
     connect(&mFunctionTipTimer, &QTimer::timeout,
             this, &Editor::onFunctionTipsTimer);
 
@@ -668,7 +671,12 @@ void Editor::keyPressEvent(QKeyEvent *event)
         pMainWindow->functionTip()->hide();
         return;
     case Qt::Key_Tab:
+        handled = true;
         tab();
+        return;
+    case Qt::Key_Backtab:
+        handled = true;
+        shifttab();
         return;
     case Qt::Key_Up:
         if (pMainWindow->functionTip()->isVisible()) {

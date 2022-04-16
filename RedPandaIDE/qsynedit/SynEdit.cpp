@@ -933,6 +933,11 @@ void SynEdit::setDefaultKeystrokes()
     mKeyStrokes.resetDefaults();
 }
 
+void SynEdit::setExtraKeystrokes()
+{
+    mKeyStrokes.setExtraKeyStrokes();
+}
+
 void SynEdit::invalidateLine(int Line)
 {
     QRect rcInval;
@@ -2425,7 +2430,6 @@ void SynEdit::doTabKey()
             Spaces = '\t';
             NewCaretX = mCaretX + 1;
         }
-
         setSelTextPrimitive(Spaces);
       // Undo is already handled in SetSelText when SelectionMode is Column
         if (mActiveSelectionMode != SynSelectionMode::smColumn) {

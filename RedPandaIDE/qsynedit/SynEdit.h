@@ -201,6 +201,7 @@ public:
     int foldRowToLine(int Row) const;
     int foldLineToRow(int Line) const;
     void setDefaultKeystrokes();
+    void setExtraKeystrokes();
     void invalidateLine(int Line);
     void invalidateLines(int FirstLine, int LastLine);
     void invalidateSelection();
