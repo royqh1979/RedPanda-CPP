@@ -404,8 +404,8 @@ private:
     void scanMethodArgs(
             const PStatement& functionStatement,
             const QString& argStr);
-    QString splitPhrase(const QString& phrase, QString& sClazz, QString &sMember,
-                QString& sOperator);
+    QString splitPhrase(const QString& phrase, QString& sClazz,
+                QString& sOperator, QString &sMember);
 
     QString removeArgNames(const QString& args);
 

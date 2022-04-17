@@ -350,6 +350,10 @@ PStatement CppParser::findStatementOf(const QString &fileName,
     QString typeName;
     PStatement typeStatement;
     while (!memberName.isEmpty()) {
+        if (statement->kind!=StatementKind::skClass
+                && operatorToken == "::") {
+            return PStatement();
+        }
         if (statement->kind == StatementKind::skVariable
                 || statement->kind ==  StatementKind::skParameter
                 || statement->kind ==  StatementKind::skFunction) {
@@ -544,6 +548,7 @@ PStatement CppParser::findTypeDefinitionOf(const QString &fileName, const QStrin
 
     if (mParsing)
         return PStatement();
+
     // Remove pointer stuff from type
     QString s = aType; // 'Type' is a keyword
     int position = s.length()-1;
@@ -4369,7 +4374,8 @@ void CppParser::scanMethodArgs(const PStatement& functionStatement, const QStrin
     }
 }
 
-QString CppParser::splitPhrase(const QString &phrase, QString &sClazz, QString &sMember, QString &sOperator)
+QString CppParser::splitPhrase(const QString &phrase, QString &sClazz,
+                               QString &sOperator, QString &sMember)
 {
     sClazz="";
     sMember="";
