@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.1" language="pt">
+<TS version="2.1" language="zh_TW">
 <context>
     <name>AboutDialog</name>
     <message>
@@ -3569,7 +3569,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Ctrl+D</source>
+        <source>Ctrl+E</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -3577,7 +3577,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Ctrl+E</source>
+        <source>Ctrl+D</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -3921,6 +3921,10 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Batch Set Cases</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Remove</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4077,6 +4081,22 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>This operation will remove all cases for the current problem.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Do you really want to do that?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Choose input files</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Input data files (*.in)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Problem Case %1</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4186,10 +4206,6 @@
     </message>
     <message>
         <source>Change the project&apos;s compiler set will lose all custom compiler set options.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Do you really want to do that?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4426,22 +4442,6 @@
     </message>
     <message>
         <source>Line %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Batch Set Cases</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Choose input files</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Input data files (*.in)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>This operation will remove all cases for the current problem.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

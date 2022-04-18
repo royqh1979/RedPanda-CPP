@@ -12,6 +12,7 @@ Red Panda C++ Version 1.0.4
   - enhancement: batch set cases ( in problem case table's context menu )
   - enhancement: add Portugese translation
   - fix: crash when eval statements like "fsm::stack fsm;"
+  - enhancement: add Traditional Chinese translation
 
 Red Panda C++ Version 1.0.3
   - fix: when oj problem grabbed by competitive companion received,
