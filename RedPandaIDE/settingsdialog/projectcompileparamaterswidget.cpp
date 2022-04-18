@@ -18,6 +18,9 @@
 #include "ui_projectcompileparamaterswidget.h"
 #include "../mainwindow.h"
 #include "../project.h"
+#include "../iconsmanager.h"
+
+#include <QFileDialog>
 
 ProjectCompileParamatersWidget::ProjectCompileParamatersWidget(const QString &name, const QString &group, QWidget *parent) :
     SettingsWidget(name,group,parent),
@@ -45,3 +48,29 @@ void ProjectCompileParamatersWidget::doSave()
     pMainWindow->project()->options().linkerCmd = ui->txtLinker->toPlainText();
     pMainWindow->project()->saveOptions();
 }
+
+void ProjectCompileParamatersWidget::on_btnChooseLib_clicked()
+{
+#ifdef Q_OS_WIN
+    QString filter = tr("Library Files (*.a *.lib)");
+#else
+    QString filter = tr("Library Files (*.a)");
+#endif
+
+    QStringList files = QFileDialog::getOpenFileNames(
+                this,
+                tr("Add Library Files"),
+                filter
+                );
+    if (!files.isEmpty()) {
+        foreach (const QString& file,files) {
+            ui->txtLinker->appendPlainText(" "+genMakePath1(file));
+        }
+    }
+}
+
+void ProjectCompileParamatersWidget::updateIcons(const QSize &size)
+{
+    pIconsManager->setIcon(ui->btnChooseLib, IconsManager::ACTION_MISC_FOLDER);
+}
+

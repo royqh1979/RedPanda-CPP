@@ -398,6 +398,8 @@ void SynEditStringList::deleteAt(int Index)
     beginUpdate();
     if (mIndexOfLongestLine == Index)
         mIndexOfLongestLine = -1;
+    else if (mIndexOfLongestLine>Index)
+        mIndexOfLongestLine -= 1;
     mList.removeAt(Index);
     emit deleted(Index,1);
     endUpdate();
@@ -426,9 +428,11 @@ void SynEditStringList::putString(int Index, const QString &s, bool notify) {
             ListIndexOutOfBounds(Index);
         }
         beginUpdate();
-        mIndexOfLongestLine = -1;
+        int oldColumns = mList[Index]->fColumns;
         mList[Index]->fString = s;
-        mList[Index]->fColumns = -1;
+        calculateLineColumns(Index);
+        if (oldColumns>mList[Index]->fColumns)
+            mIndexOfLongestLine = -1;
         if (notify)
             emit putted(Index,1);
         endUpdate();
