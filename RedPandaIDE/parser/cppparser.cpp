@@ -1158,27 +1158,30 @@ PStatement CppParser::addStatement(const PStatement& parent,
     if (kind == StatementKind::skConstructor
             || kind == StatementKind::skFunction
             || kind == StatementKind::skDestructor
-            || kind == StatementKind::skVariable) {
+            || kind == StatementKind::skVariable
+            ) {
         noNameArgs = removeArgNames(args);
         //find
-        PStatement oldStatement = findStatementInScope(command,noNameArgs,kind,parent);
-        if (oldStatement && isDefinition && !oldStatement->hasDefinition) {
-            oldStatement->hasDefinition = true;
-            if (oldStatement->fileName!=fileName) {
-                PFileIncludes fileIncludes1=mPreprocessor.includesList().value(fileName);
-                if (fileIncludes1) {
-                    fileIncludes1->statements.insert(oldStatement->fullName,
-                                                     oldStatement);
-                    fileIncludes1->dependingFiles.insert(oldStatement->fileName);
-                    PFileIncludes fileIncludes2=mPreprocessor.includesList().value(oldStatement->fileName);
-                    if (fileIncludes2) {
-                        fileIncludes2->dependedFiles.insert(fileName);
+        if (isDefinition) {
+            PStatement oldStatement = findStatementInScope(newCommand,noNameArgs,kind,parent);
+            if (oldStatement  && !oldStatement->hasDefinition) {
+                oldStatement->hasDefinition = true;
+                if (oldStatement->fileName!=fileName) {
+                    PFileIncludes fileIncludes1=mPreprocessor.includesList().value(fileName);
+                    if (fileIncludes1) {
+                        fileIncludes1->statements.insert(oldStatement->fullName,
+                                                         oldStatement);
+                        fileIncludes1->dependingFiles.insert(oldStatement->fileName);
+                        PFileIncludes fileIncludes2=mPreprocessor.includesList().value(oldStatement->fileName);
+                        if (fileIncludes2) {
+                            fileIncludes2->dependedFiles.insert(fileName);
+                        }
                     }
                 }
+                oldStatement->definitionLine = line;
+                oldStatement->definitionFileName = fileName;
+                return oldStatement;
             }
-            oldStatement->definitionLine = line;
-            oldStatement->definitionFileName = fileName;
-            return oldStatement;
         }
     }
     PStatement result = std::make_shared<Statement>();
@@ -3246,9 +3249,9 @@ void CppParser::internalParse(const QString &fileName)
         //reduce memory usage
         internalClear();
 #ifdef QT_DEBUG
-//       mTokenizer.dumpTokens("r:\\tokens.txt");
-//        mStatementList.dump("r:\\stats.txt");
-//        mStatementList.dumpAll("r:\\all-stats.txt");
+//      mTokenizer.dumpTokens("z:\\tokens.txt");
+//
+//      mStatementList.dumpAll("r:\\all-stats.txt");
 #endif
         //reduce memory usage
         mTokenizer.reset();

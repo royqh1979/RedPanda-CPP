@@ -138,12 +138,15 @@ void StatementModel::dumpStatementMap(StatementMap &map, QTextStream &out, int l
         out<<indent<<QString("%1, %2, %3, %4, %5, %6, %7, %8, %9, %10, %11, %12")
          .arg(statement->command).arg(int(statement->kind))
          .arg(statement->type,statement->fullName)
+         .arg(statement->noNameArgs)
+         .arg(statement->args)
          .arg((size_t)(statement->parentScope.lock().get()))
          .arg((int)statement->classScope)
          .arg(statement->fileName)
          .arg(statement->line)
          .arg(statement->definitionFileName)
          .arg(statement->definitionLine);
+        out<<endl;
         if (statement->children.isEmpty())
             continue;
         out<<indent<<statement->command<<" {"<<endl;
