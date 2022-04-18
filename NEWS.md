@@ -16,6 +16,7 @@ Red Panda C++ Version 1.0.4
   - fix: index of the longest line not correctly updated ( which will cause selection errors)
   - fix: scroll bar not correctly updated when collapse/uncollapse folders
   - fix: parse error for definition of functions whose return type is pointer
+  - enhancement: add library in project option dialog's compile options page
 
 Red Panda C++ Version 1.0.3
   - fix: when oj problem grabbed by competitive companion received,
