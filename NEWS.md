@@ -1,3 +1,6 @@
+Red Panda C++ Version 1.0.5
+  - enhancement: add autolink and project template for sqlite3
+  
 Red Panda C++ Version 1.0.4
   - fix: hide function tips, when move or resize the main window
   - enhancement: add help link for regular expression in search dialog

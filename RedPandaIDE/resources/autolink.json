@@ -25,18 +25,22 @@
     },
     {
         "header": "ege.h",
-        "links": "-lgraphics -luuid -lmsimg32 -lgdi32 -limm32 -lole32 -loleaut32 -lwinmm -lgdiplus"
+        "links": "-lgraphics -luuid -lmsimg32 -lgdi32 -limm32 -lole32 -loleaut32 -lwinmm -lgdiplus -mwindows"
     },
     {
         "header": "raylib.h",
         "links": "-lraylib -lopengl32 -lgdi32 -lwinmm"
     },
     {
-        "header": "winsock2.h",
-        "links": "-lws2_32"
+        "header": "sqlite3.h",
+        "links": "-lsqlite3"
     },
     {
         "header": "turtle.h",
         "links": "-lturtle"
+    },
+    {
+        "header": "winsock2.h",
+        "links": "-lws2_32"
     }
 ]
