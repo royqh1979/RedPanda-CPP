@@ -115,7 +115,14 @@
           <item>
            <widget class="QToolButton" name="btnChooseLib">
             <property name="text">
-             <string>...</string>
+             <string>Add Library Files</string>
+            </property>
+            <property name="icon">
+             <iconset resource="../icons.qrc">
+              <normaloff>:/icons/images/newlook24/035-expolr.png</normaloff>:/icons/images/newlook24/035-expolr.png</iconset>
+            </property>
+            <property name="toolButtonStyle">
+             <enum>Qt::ToolButtonTextBesideIcon</enum>
             </property>
            </widget>
           </item>
@@ -128,6 +135,8 @@
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="../icons.qrc"/>
+ </resources>
  <connections/>
 </ui>
