@@ -52,14 +52,15 @@ void ProjectCompileParamatersWidget::doSave()
 void ProjectCompileParamatersWidget::on_btnChooseLib_clicked()
 {
 #ifdef Q_OS_WIN
-    QString filter = tr("Library Files (*.a *.lib)");
+    QString filter = tr("Library Files")+" (*.a *.lib *.o)";
 #else
-    QString filter = tr("Library Files (*.a)");
+    QString filter = tr("Library Files")+" (*.a *.o)";
 #endif
 
     QStringList files = QFileDialog::getOpenFileNames(
                 this,
                 tr("Add Library Files"),
+                QDir::currentPath(),
                 filter
                 );
     if (!files.isEmpty()) {

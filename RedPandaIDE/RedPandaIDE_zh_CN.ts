@@ -6500,6 +6500,18 @@ Are you really want to continue?</oldsource>
         <source>Linker</source>
         <translation>链接器</translation>
     </message>
+    <message>
+        <location filename="settingsdialog/projectcompileparamaterswidget.ui" line="118"/>
+        <location filename="settingsdialog/projectcompileparamaterswidget.cpp" line="62"/>
+        <source>Add Library Files</source>
+        <translation>添加库文件</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/projectcompileparamaterswidget.cpp" line="55"/>
+        <location filename="settingsdialog/projectcompileparamaterswidget.cpp" line="57"/>
+        <source>Library Files</source>
+        <translation>库文件</translation>
+    </message>
 </context>
 <context>
     <name>ProjectCompiler</name>
@@ -8631,12 +8643,12 @@ Are you really want to continue?</oldsource>
 <context>
     <name>SynEditStringList</name>
     <message>
-        <location filename="qsynedit/TextBuffer.cpp" line="553"/>
+        <location filename="qsynedit/TextBuffer.cpp" line="557"/>
         <source>Can&apos;t open file &apos;%1&apos; for read!</source>
         <translation>无法读取文件&apos;%1&apos;!</translation>
     </message>
     <message>
-        <location filename="qsynedit/TextBuffer.cpp" line="680"/>
+        <location filename="qsynedit/TextBuffer.cpp" line="684"/>
         <source>Can&apos;t open file &apos;%1&apos; for save!</source>
         <translation>无法写入文件&apos;%2&apos;!</translation>
     </message>

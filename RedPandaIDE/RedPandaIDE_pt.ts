@@ -4763,6 +4763,14 @@
         <source>Linker</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Add Library Files</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Library Files</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>ProjectCompiler</name>
