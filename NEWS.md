@@ -14,6 +14,7 @@ Red Panda C++ Version 1.0.4
   - fix: crash when eval statements like "fsm::stack fsm;"
   - enhancement: add Traditional Chinese translation
   - fix: index of the longest line not correctly updated ( which will cause selection errors)
+  - fix: scroll bar not correctly updated when collapse/uncollapse folders
 
 Red Panda C++ Version 1.0.3
   - fix: when oj problem grabbed by competitive companion received,

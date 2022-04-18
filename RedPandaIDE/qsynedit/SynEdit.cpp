@@ -1142,16 +1142,20 @@ bool SynEdit::inputMethodOn()
 
 void SynEdit::collapseAll()
 {
+    incPaintLock();
     for (int i = mAllFoldRanges.count()-1;i>=0;i--){
         collapse(mAllFoldRanges[i]);
     }
+    decPaintLock();
 }
 
 void SynEdit::unCollpaseAll()
 {
+    incPaintLock();
     for (int i = mAllFoldRanges.count()-1;i>=0;i--){
         uncollapse(mAllFoldRanges[i]);
     }
+    decPaintLock();
 }
 
 void SynEdit::processGutterClick(QMouseEvent *event)
@@ -3434,6 +3438,7 @@ void SynEdit::uncollapse(PSynEditFoldRange FoldRange)
 
     // Redraw fold mark
     invalidateGutterLines(FoldRange->fromLine, INT_MAX);
+    updateScrollbars();
 }
 
 void SynEdit::collapse(PSynEditFoldRange FoldRange)
@@ -3452,6 +3457,8 @@ void SynEdit::collapse(PSynEditFoldRange FoldRange)
 
     // Redraw fold mark
     invalidateGutterLines(FoldRange->fromLine, INT_MAX);
+
+    updateScrollbars();
 }
 
 void SynEdit::foldOnListInserted(int Line, int Count)
