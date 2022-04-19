@@ -128,7 +128,7 @@ void SynEditTextPainter::paintGutter(const QRect& clip)
         BufferCoord selectionEnd = edit->blockEnd();
         for (int cRow = aFirstRow; cRow <= aLastRow; cRow++) {
             vLine = edit->rowToLine(cRow);
-            if ((vLine > edit->mLines->count()) && (edit->mLines->count() > 0 ))
+            if ((vLine > edit->mDocument->count()) && (edit->mDocument->count() > 0 ))
                 break;
             if (edit->mGutter.activeLineTextColor().isValid()) {
                 if (
@@ -164,7 +164,7 @@ void SynEditTextPainter::paintGutter(const QRect& clip)
     if (edit->mUseCodeFolding) {
       for (cRow = aLastRow; cRow>=aFirstRow; cRow--) {
         vLine = edit->rowToLine(cRow);
-        if ((vLine > edit->mLines->count()) && (edit->mLines->count() != 0))
+        if ((vLine > edit->mDocument->count()) && (edit->mDocument->count() != 0))
             continue;
 
         // Form a rectangle for the square the user can click on
@@ -229,7 +229,7 @@ void SynEditTextPainter::paintGutter(const QRect& clip)
 
     for (cRow = aFirstRow; cRow <=aLastRow; cRow++) {
         vLine = edit->rowToLine(cRow);
-        if ((vLine > edit->mLines->count()) && (edit->mLines->count() != 0))
+        if ((vLine > edit->mDocument->count()) && (edit->mDocument->count() != 0))
             break;
         edit->onGutterPaint(*painter,vLine, 0, (cRow - edit->mTopLine) * edit->mTextHeight);
     }
@@ -359,7 +359,7 @@ void SynEditTextPainter::PaintToken(const QString &Token, int TokenCols, int Col
                 int charCols=0;
                 QString textToPaint = Token[i];
                 if (Token[i] == SynTabChar) {
-                    charCols = edit->mTabWidth - ((ColumnsBefore+tokenColLen) % edit->mTabWidth);
+                    charCols = edit->tabWidth() - ((ColumnsBefore+tokenColLen) % edit->tabWidth());
                 } else {
                     charCols = edit->charColumns(Token[i]);
                 }
@@ -675,7 +675,7 @@ void SynEditTextPainter::PaintFoldAttributes()
         // Now loop through all the lines. The indices are valid for Lines.
         for (cRow = aFirstRow; cRow<=aLastRow;cRow++) {
             vLine = edit->rowToLine(cRow);
-            if (vLine > edit->mLines->count() && edit->mLines->count() > 0)
+            if (vLine > edit->mDocument->count() && edit->mDocument->count() > 0)
                 break;
             // Set vertical coord
             Y = (cRow - edit->mTopLine) * edit->mTextHeight; // limit inside clip rect
@@ -684,15 +684,15 @@ void SynEditTextPainter::PaintFoldAttributes()
             }
             // Get next nonblank line
             LastNonBlank = vLine - 1;
-            while (LastNonBlank + 1 < edit->mLines->count() && edit->mLines->getString(LastNonBlank).isEmpty())
+            while (LastNonBlank + 1 < edit->mDocument->count() && edit->mDocument->getString(LastNonBlank).isEmpty())
                 LastNonBlank++;
-            if (LastNonBlank>=edit->lines()->count())
+            if (LastNonBlank>=edit->document()->count())
                 continue;
-            LineIndent = edit->getLineIndent(edit->mLines->getString(LastNonBlank));
-            int braceLevel = edit->mLines->ranges(LastNonBlank).braceLevel;
+            LineIndent = edit->getLineIndent(edit->mDocument->getString(LastNonBlank));
+            int braceLevel = edit->mDocument->ranges(LastNonBlank).braceLevel;
             int indentLevel = braceLevel ;
-            if (edit->mTabWidth>0)
-                indentLevel = LineIndent / edit->mTabWidth;
+            if (edit->tabWidth()>0)
+                indentLevel = LineIndent / edit->tabWidth();
             int levelDiff = std::max(0,braceLevel - indentLevel);
             // Step horizontal coord
             //TabSteps = edit->mTabWidth;
@@ -701,7 +701,7 @@ void SynEditTextPainter::PaintFoldAttributes()
 
             while (TabSteps < LineIndent) {
                 X = TabSteps * edit->mCharWidth + edit->textOffset() - 2;
-                TabSteps+=edit->mTabWidth;
+                TabSteps+=edit->tabWidth();
                 indentLevel++ ;
                 if (edit->mHighlighter) {
                     if (edit->mCodeFolding.indentGuides) {
@@ -815,11 +815,11 @@ void SynEditTextPainter::PaintLines()
     BufferCoord selectionEnd= edit->blockEnd();
     for (cRow = aFirstRow; cRow<=aLastRow; cRow++) {
         vLine = edit->rowToLine(cRow);
-        if (vLine > edit->mLines->count() && edit->mLines->count() != 0)
+        if (vLine > edit->mDocument->count() && edit->mDocument->count() != 0)
             break;
 
         // Get the line.
-        sLine = edit->mLines->getString(vLine - 1);
+        sLine = edit->mDocument->getString(vLine - 1);
         // determine whether will be painted with ActiveLineColor
         if (edit->mActiveSelectionMode == SynSelectionMode::smColumn) {
             bCurrentLine = (vLine >= selectionBegin.Line && vLine <= selectionEnd.Line);
@@ -892,7 +892,7 @@ void SynEditTextPainter::PaintLines()
               if (bCurrentLine) {
                   nTokenColumnLen = edit->stringColumns(sLine,0);
               } else {
-                  nTokenColumnLen = edit->mLines->lineColumns(vLine-1);
+                  nTokenColumnLen = edit->mDocument->lineColumns(vLine-1);
               }
               if (edit->mOptions.testFlag(eoShowSpecialChars) && (!bLineSelected) && (!bSpecialLine) && (nTokenColumnLen < vLastChar)) {
                   sToken = sToken + SynLineBreakGlyph;
@@ -932,7 +932,7 @@ void SynEditTextPainter::PaintLines()
                 edit->mHighlighter->resetState();
             } else {
                 edit->mHighlighter->setState(
-                            edit->mLines->ranges(vLine-2));
+                            edit->mDocument->ranges(vLine-2));
             }
             edit->mHighlighter->setLine(sLine, vLine - 1);
             // Try to concatenate as many tokens as possible to minimize the count
@@ -1008,7 +1008,7 @@ void SynEditTextPainter::PaintLines()
             // Don't assume HL.GetTokenPos is valid after HL.GetEOL == True.
             //nTokenColumnsBefore += edit->stringColumns(sToken,nTokenColumnsBefore);
             if (edit->mHighlighter->eol() && (nTokenColumnsBefore < vLastChar)) {
-                int lineColumns = edit->mLines->lineColumns(vLine-1);
+                int lineColumns = edit->mDocument->lineColumns(vLine-1);
                 // Draw text that couldn't be parsed by the highlighter, if any.
                 if (nTokenColumnsBefore < lineColumns) {
                     if (nTokenColumnsBefore + 1 < vFirstChar)
@@ -1022,9 +1022,9 @@ void SynEditTextPainter::PaintLines()
                 }
                 // Draw LineBreak glyph.
                 if (edit->mOptions.testFlag(eoShowSpecialChars) && (!bLineSelected) &&
-                    (!bSpecialLine) && (edit->mLines->lineColumns(vLine-1) < vLastChar)) {
+                    (!bSpecialLine) && (edit->mDocument->lineColumns(vLine-1) < vLastChar)) {
                     AddHighlightToken(SynLineBreakGlyph,
-                      edit->mLines->lineColumns(vLine-1)  - (vFirstChar - FirstCol),
+                      edit->mDocument->lineColumns(vLine-1)  - (vFirstChar - FirstCol),
                       edit->charColumns(SynLineBreakGlyph),vLine, edit->mHighlighter->whitespaceAttribute());
                 }
             }
@@ -1033,10 +1033,10 @@ void SynEditTextPainter::PaintLines()
             foldRange = edit->foldStartAtLine(vLine);
             if ((foldRange) && foldRange->collapsed) {
                 sFold = " ... } ";
-                nFold = edit->stringColumns(sFold,edit->mLines->lineColumns(vLine-1));
+                nFold = edit->stringColumns(sFold,edit->mDocument->lineColumns(vLine-1));
                 attr = edit->mHighlighter->symbolAttribute();
                 GetBraceColorAttr(edit->mHighlighter->getRangeState().braceLevel,attr);
-                AddHighlightToken(sFold,edit->mLines->lineColumns(vLine-1)+1 - (vFirstChar - FirstCol)
+                AddHighlightToken(sFold,edit->mDocument->lineColumns(vLine-1)+1 - (vFirstChar - FirstCol)
                   , nFold, vLine, attr);
             }
 

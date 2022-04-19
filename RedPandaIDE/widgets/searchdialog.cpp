@@ -380,7 +380,7 @@ void SearchDialog::on_btnExecute_clicked()
                 } else if (fileExists(curFilename)) {
                     SynEdit editor;
                     QByteArray realEncoding;
-                    editor.lines()->loadFromFile(curFilename,ENCODING_AUTO_DETECT, realEncoding);
+                    editor.document()->loadFromFile(curFilename,ENCODING_AUTO_DETECT, realEncoding);
                     fileSearched++;
                     PSearchResultTreeItem parentItem = batchFindInEditor(
                                 &editor,
@@ -449,7 +449,7 @@ std::shared_ptr<SearchResultTreeItem> SearchDialog::batchFindInEditor(SynEdit *e
         item->start = ch;
         item->len = wordLen;
         item->parent = parentItem.get();
-        item->text = e->lines()->getString(Line-1);
+        item->text = e->document()->getString(Line-1);
         item->text.replace('\t',' ');
         parentItem->results.append(item);
         return SynSearchAction::Skip;

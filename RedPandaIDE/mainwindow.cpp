@@ -458,7 +458,7 @@ void MainWindow::updateEditorActions()
 
         ui->actionCopy->setEnabled(e->selAvail());
         ui->actionCut->setEnabled(e->selAvail());
-        ui->actionFoldAll->setEnabled(e->lines()->count()>0);
+        ui->actionFoldAll->setEnabled(e->document()->count()>0);
         ui->actionIndent->setEnabled(!e->readOnly());
 
         ui->actionPaste->setEnabled(!e->readOnly() && !QGuiApplication::clipboard()->text().isEmpty());
@@ -469,15 +469,15 @@ void MainWindow::updateEditorActions()
         ui->actionExport_As_HTML->setEnabled(true);
         ui->actionExport_As_RTF->setEnabled(true);
         ui->actionPrint->setEnabled(true);
-        ui->actionSelectAll->setEnabled(e->lines()->count()>0);
-        ui->actionToggleComment->setEnabled(!e->readOnly() && e->lines()->count()>0);
-        ui->actionUnIndent->setEnabled(!e->readOnly() && e->lines()->count()>0);
-        ui->actionUnfoldAll->setEnabled(e->lines()->count()>0);
-        ui->actionDelete_Line->setEnabled(!e->readOnly() && e->lines()->count()>0);
-        ui->actionDelete_Word->setEnabled(!e->readOnly() && e->lines()->count()>0);
-        ui->actionDuplicate_Line->setEnabled(!e->readOnly() && e->lines()->count()>0);
-        ui->actionDelete_to_BOL->setEnabled(!e->readOnly() && e->lines()->count()>0);
-        ui->actionDelete_to_EOL->setEnabled(!e->readOnly() && e->lines()->count()>0);
+        ui->actionSelectAll->setEnabled(e->document()->count()>0);
+        ui->actionToggleComment->setEnabled(!e->readOnly() && e->document()->count()>0);
+        ui->actionUnIndent->setEnabled(!e->readOnly() && e->document()->count()>0);
+        ui->actionUnfoldAll->setEnabled(e->document()->count()>0);
+        ui->actionDelete_Line->setEnabled(!e->readOnly() && e->document()->count()>0);
+        ui->actionDelete_Word->setEnabled(!e->readOnly() && e->document()->count()>0);
+        ui->actionDuplicate_Line->setEnabled(!e->readOnly() && e->document()->count()>0);
+        ui->actionDelete_to_BOL->setEnabled(!e->readOnly() && e->document()->count()>0);
+        ui->actionDelete_to_EOL->setEnabled(!e->readOnly() && e->document()->count()>0);
 
         ui->actionFind->setEnabled(true);
         ui->actionReplace->setEnabled(true);
@@ -491,7 +491,7 @@ void MainWindow::updateEditorActions()
         ui->actionClose_All->setEnabled(true);
 
         int line = e->caretY();
-        ui->actionAdd_bookmark->setEnabled(e->lines()->count()>0 && !e->hasBookmark(line));
+        ui->actionAdd_bookmark->setEnabled(e->document()->count()>0 && !e->hasBookmark(line));
         ui->actionRemove_Bookmark->setEnabled(e->hasBookmark(line));
         ui->actionModify_Bookmark_Description->setEnabled(e->hasBookmark(line));
 
@@ -1033,8 +1033,8 @@ void MainWindow::updateStatusbarForLineCol(bool clear)
                 .arg(e->caretY())
                 .arg(col)
                 .arg(e->selText().length())
-                .arg(e->lines()->count())
-                .arg(e->lines()->getTextLength());
+                .arg(e->document()->count())
+                .arg(e->document()->getTextLength());
         mFileInfoStatus->setText(msg);
     } else {
         mFileInfoStatus->setText("");
@@ -3941,7 +3941,7 @@ void MainWindow::onEditorContextMenu(const QPoint& pos)
     ui->actionLocate_in_Files_View->setEnabled(!editor->isNew());
     ui->actionBreakpoint_property->setEnabled(editor->hasBreakpoint(line));
     ui->actionAdd_bookmark->setEnabled(
-                line>=0 && editor->lines()->count()>0
+                line>=0 && editor->document()->count()>0
                 && !editor->hasBookmark(line)
                 );
     ui->actionRemove_Bookmark->setEnabled(editor->hasBookmark(line));
@@ -4544,11 +4544,11 @@ void MainWindow::onCompileIssue(PCompileIssue issue)
         Editor* e = mEditorList->getOpenedEditorByFilename(issue->filename);
         if (e!=nullptr && (issue->line>0)) {
             int line = issue->line;
-            if (line > e->lines()->count())
+            if (line > e->document()->count())
                 return;
-            int col = std::min(issue->column,e->lines()->getString(line-1).length()+1);
+            int col = std::min(issue->column,e->document()->getString(line-1).length()+1);
             if (col < 1)
-                col = e->lines()->getString(line-1).length()+1;
+                col = e->document()->getString(line-1).length()+1;
             e->addSyntaxIssues(line,col,issue->endColumn,issue->type,issue->description);
         }
     }
@@ -6529,11 +6529,11 @@ void MainWindow::on_actionAdd_bookmark_triggered()
     Editor* editor = mEditorList->getEditor();
     int line;
     if (editor && editor->pointToLine(mEditorContextMenuPos,line)) {
-        if (editor->lines()->count()<=0)
+        if (editor->document()->count()<=0)
             return;
         QString desc = QInputDialog::getText(editor,tr("Bookmark Description"),
                                              tr("Description:"),QLineEdit::Normal,
-                                             editor->lines()->getString(line-1).trimmed());
+                                             editor->document()->getString(line-1).trimmed());
         desc = desc.trimmed();
         editor->addBookmark(line,desc);
     }

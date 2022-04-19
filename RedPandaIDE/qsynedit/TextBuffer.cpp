@@ -25,16 +25,20 @@
 #include "../utils.h"
 #include "../platform.h"
 #include <QMessageBox>
+#include <cmath>
 
-SynEditStringList::SynEditStringList(SynEdit *pEdit, QObject *parent):
+SynDocument::SynDocument(const QFont& font, QObject *parent):
       QObject(parent),
-      mEdit(pEdit),
+      mTabWidth(4),
+      mFontMetrics(font),
       mMutex(QMutex::Recursive)
 {
+
     mAppendNewLineAtEOF = true;
     mFileEndingType = FileEndingType::Windows;
     mIndexOfLongestLine = -1;
     mUpdateCount = 0;
+    mCharWidth =  mFontMetrics.horizontalAdvance("M");
 }
 
 static void ListIndexOutOfBounds(int index) {
@@ -43,29 +47,29 @@ static void ListIndexOutOfBounds(int index) {
 
 
 
-int SynEditStringList::parenthesisLevels(int Index)
+int SynDocument::parenthesisLevels(int Index)
 {
     QMutexLocker locker(&mMutex);
-    if (Index>=0 && Index < mList.size()) {
-        return mList[Index]->fRange.parenthesisLevel;
+    if (Index>=0 && Index < mLines.size()) {
+        return mLines[Index]->fRange.parenthesisLevel;
     } else
         return 0;
 }
 
-int SynEditStringList::bracketLevels(int Index)
+int SynDocument::bracketLevels(int Index)
 {
     QMutexLocker locker(&mMutex);
-    if (Index>=0 && Index < mList.size()) {
-        return mList[Index]->fRange.bracketLevel;
+    if (Index>=0 && Index < mLines.size()) {
+        return mLines[Index]->fRange.bracketLevel;
     } else
         return 0;
 }
 
-int SynEditStringList::braceLevels(int Index)
+int SynDocument::braceLevels(int Index)
 {
     QMutexLocker locker(&mMutex);
-    if (Index>=0 && Index < mList.size()) {
-        return mList[Index]->fRange.braceLevel;
+    if (Index>=0 && Index < mLines.size()) {
+        return mLines[Index]->fRange.braceLevel;
     } else
         return 0;
 }
@@ -81,43 +85,43 @@ int SynEditStringList::braceLevels(int Index)
 //        return QString();
 //}
 
-int SynEditStringList::lineColumns(int Index)
+int SynDocument::lineColumns(int Index)
 {
     QMutexLocker locker(&mMutex);
-    if (Index>=0 && Index < mList.size()) {
-        if (mList[Index]->fColumns == -1) {
+    if (Index>=0 && Index < mLines.size()) {
+        if (mLines[Index]->fColumns == -1) {
             return calculateLineColumns(Index);
         } else
-            return mList[Index]->fColumns;
+            return mLines[Index]->fColumns;
     } else
         return 0;
 }
 
-int SynEditStringList::leftBraces(int Index)
+int SynDocument::leftBraces(int Index)
 {
     QMutexLocker locker(&mMutex);
-    if (Index>=0 && Index < mList.size()) {
-        return mList[Index]->fRange.leftBraces;
+    if (Index>=0 && Index < mLines.size()) {
+        return mLines[Index]->fRange.leftBraces;
     } else
         return 0;
 }
 
-int SynEditStringList::rightBraces(int Index)
+int SynDocument::rightBraces(int Index)
 {
     QMutexLocker locker(&mMutex);
-    if (Index>=0 && Index < mList.size()) {
-        return mList[Index]->fRange.rightBraces;
+    if (Index>=0 && Index < mLines.size()) {
+        return mLines[Index]->fRange.rightBraces;
     } else
         return 0;
 }
 
-int SynEditStringList::lengthOfLongestLine() {
+int SynDocument::lengthOfLongestLine() {
     QMutexLocker locker(&mMutex);
     if (mIndexOfLongestLine < 0) {
         int MaxLen = -1;
         mIndexOfLongestLine = -1;
-        if (mList.count() > 0 ) {
-            for (int i=0;i<mList.size();i++) {
+        if (mLines.count() > 0 ) {
+            for (int i=0;i<mLines.size();i++) {
                 int len = lineColumns(i);
                 if (len > MaxLen) {
                     MaxLen = len;
@@ -127,12 +131,12 @@ int SynEditStringList::lengthOfLongestLine() {
         }
     }
     if (mIndexOfLongestLine >= 0)
-        return mList[mIndexOfLongestLine]->fColumns;
+        return mLines[mIndexOfLongestLine]->fColumns;
     else
         return 0;
 }
 
-QString SynEditStringList::lineBreak() const
+QString SynDocument::lineBreak() const
 {
     switch(mFileEndingType) {
     case FileEndingType::Linux:
@@ -145,97 +149,97 @@ QString SynEditStringList::lineBreak() const
     return "\n";
 }
 
-SynRangeState SynEditStringList::ranges(int Index)
+SynRangeState SynDocument::ranges(int Index)
 {
     QMutexLocker locker(&mMutex);
-    if (Index>=0 && Index < mList.size()) {
-        return mList[Index]->fRange;
+    if (Index>=0 && Index < mLines.size()) {
+        return mLines[Index]->fRange;
     } else {
          ListIndexOutOfBounds(Index);
     }
     return {0};
 }
 
-void SynEditStringList::insertItem(int Index, const QString &s)
+void SynDocument::insertItem(int Index, const QString &s)
 {
     beginUpdate();
-    PSynEditStringRec line = std::make_shared<SynEditStringRec>();
+    PSynDocumentLine line = std::make_shared<SynDocumentLine>();
     line->fString = s;
     mIndexOfLongestLine = -1;
-    mList.insert(Index,line);
+    mLines.insert(Index,line);
     endUpdate();
 }
 
-void SynEditStringList::addItem(const QString &s)
+void SynDocument::addItem(const QString &s)
 {
     beginUpdate();
-    PSynEditStringRec line = std::make_shared<SynEditStringRec>();
+    PSynDocumentLine line = std::make_shared<SynDocumentLine>();
     line->fString = s;
     mIndexOfLongestLine = -1;
-    mList.append(line);
+    mLines.append(line);
     endUpdate();
 }
 
-bool SynEditStringList::getAppendNewLineAtEOF()
+bool SynDocument::getAppendNewLineAtEOF()
 {
     QMutexLocker locker(&mMutex);
     return mAppendNewLineAtEOF;
 }
 
-void SynEditStringList::setAppendNewLineAtEOF(bool appendNewLineAtEOF)
+void SynDocument::setAppendNewLineAtEOF(bool appendNewLineAtEOF)
 {
     QMutexLocker locker(&mMutex);
     mAppendNewLineAtEOF = appendNewLineAtEOF;
 }
 
-void SynEditStringList::setRange(int Index, const SynRangeState& ARange)
+void SynDocument::setRange(int Index, const SynRangeState& ARange)
 {
     QMutexLocker locker(&mMutex);
-    if (Index<0 || Index>=mList.count()) {
+    if (Index<0 || Index>=mLines.count()) {
         ListIndexOutOfBounds(Index);
     }
     beginUpdate();
-    mList[Index]->fRange = ARange;
+    mLines[Index]->fRange = ARange;
     endUpdate();
 }
 
-QString SynEditStringList::getString(int Index)
+QString SynDocument::getString(int Index)
 {
     QMutexLocker locker(&mMutex);
-    if (Index<0 || Index>=mList.count()) {
+    if (Index<0 || Index>=mLines.count()) {
         return QString();
     }
-    return mList[Index]->fString;
+    return mLines[Index]->fString;
 }
 
-int SynEditStringList::count()
+int SynDocument::count()
 {
     QMutexLocker locker(&mMutex);
-    return mList.count();
+    return mLines.count();
 }
 
-void *SynEditStringList::getObject(int Index)
+void *SynDocument::getObject(int Index)
 {
     QMutexLocker locker(&mMutex);
-    if (Index<0 || Index>=mList.count()) {
+    if (Index<0 || Index>=mLines.count()) {
         return nullptr;
     }
-    return mList[Index]->fObject;
+    return mLines[Index]->fObject;
 }
 
-QString SynEditStringList::text()
+QString SynDocument::text()
 {
     QMutexLocker locker(&mMutex);
     return getTextStr();
 }
 
-void SynEditStringList::setText(const QString &text)
+void SynDocument::setText(const QString &text)
 {
     QMutexLocker locker(&mMutex);
     putTextStr(text);
 }
 
-void SynEditStringList::setContents(const QStringList &text)
+void SynDocument::setContents(const QStringList &text)
 {
     QMutexLocker locker(&mMutex);
     beginUpdate();
@@ -245,7 +249,7 @@ void SynEditStringList::setContents(const QStringList &text)
     internalClear();
     if (text.count() > 0) {
         mIndexOfLongestLine = -1;
-        int FirstAdded = mList.count();
+        int FirstAdded = mLines.count();
 
         foreach (const QString& s,text) {
             addItem(s);
@@ -254,18 +258,18 @@ void SynEditStringList::setContents(const QStringList &text)
     }
 }
 
-QStringList SynEditStringList::contents()
+QStringList SynDocument::contents()
 {
     QMutexLocker locker(&mMutex);
     QStringList Result;
-    SynEditStringRecList list = mList;
-    foreach (const PSynEditStringRec& line, list) {
+    SynDocumentLines list = mLines;
+    foreach (const PSynDocumentLine& line, list) {
         Result.append(line->fString);
     }
     return Result;
 }
 
-void SynEditStringList::beginUpdate()
+void SynDocument::beginUpdate()
 {
     if (mUpdateCount == 0) {
         setUpdateState(true);
@@ -273,7 +277,7 @@ void SynEditStringList::beginUpdate()
     mUpdateCount++;
 }
 
-void SynEditStringList::endUpdate()
+void SynDocument::endUpdate()
 {
     mUpdateCount--;
     if (mUpdateCount == 0) {
@@ -282,18 +286,18 @@ void SynEditStringList::endUpdate()
 }
 
 
-int SynEditStringList::add(const QString &s)
+int SynDocument::add(const QString &s)
 {
     QMutexLocker locker(&mMutex);
     beginUpdate();
-    int Result = mList.count();
+    int Result = mLines.count();
     insertItem(Result, s);
     emit inserted(Result,1);
     endUpdate();
     return Result;
 }
 
-void SynEditStringList::addStrings(const QStringList &Strings)
+void SynDocument::addStrings(const QStringList &Strings)
 {
     QMutexLocker locker(&mMutex);
     if (Strings.count() > 0) {
@@ -302,7 +306,7 @@ void SynEditStringList::addStrings(const QStringList &Strings)
         auto action = finally([this]{
             endUpdate();
         });
-        int FirstAdded = mList.count();
+        int FirstAdded = mLines.count();
 
         for (const QString& s:Strings) {
             addItem(s);
@@ -311,11 +315,11 @@ void SynEditStringList::addStrings(const QStringList &Strings)
     }
 }
 
-int SynEditStringList::getTextLength()
+int SynDocument::getTextLength()
 {
     QMutexLocker locker(&mMutex);
     int Result = 0;
-    foreach (const PSynEditStringRec& line, mList ) {
+    foreach (const PSynDocumentLine& line, mLines ) {
         Result += line->fString.length();
         if (mFileEndingType == FileEndingType::Windows) {
             Result += 2;
@@ -326,18 +330,18 @@ int SynEditStringList::getTextLength()
     return Result;
 }
 
-void SynEditStringList::clear()
+void SynDocument::clear()
 {
     QMutexLocker locker(&mMutex);
     internalClear();
 }
 
-void SynEditStringList::deleteLines(int Index, int NumLines)
+void SynDocument::deleteLines(int Index, int NumLines)
 {
     QMutexLocker locker(&mMutex);
     if (NumLines<=0)
         return;
-    if ((Index < 0) || (Index >= mList.count())) {
+    if ((Index < 0) || (Index >= mLines.count())) {
         ListIndexOutOfBounds(Index);
     }
     beginUpdate();
@@ -347,27 +351,27 @@ void SynEditStringList::deleteLines(int Index, int NumLines)
     if (mIndexOfLongestLine>=Index && (mIndexOfLongestLine <Index+NumLines)) {
         mIndexOfLongestLine = - 1;
     }
-    int LinesAfter = mList.count() - (Index + NumLines);
+    int LinesAfter = mLines.count() - (Index + NumLines);
     if (LinesAfter < 0) {
-       NumLines = mList.count() - Index;
+       NumLines = mLines.count() - Index;
     }
-    mList.remove(Index,NumLines);
+    mLines.remove(Index,NumLines);
     emit deleted(Index,NumLines);
 }
 
-void SynEditStringList::exchange(int Index1, int Index2)
+void SynDocument::exchange(int Index1, int Index2)
 {
     QMutexLocker locker(&mMutex);
-    if ((Index1 < 0) || (Index1 >= mList.count())) {
+    if ((Index1 < 0) || (Index1 >= mLines.count())) {
         ListIndexOutOfBounds(Index1);
     }
-    if ((Index2 < 0) || (Index2 >= mList.count())) {
+    if ((Index2 < 0) || (Index2 >= mLines.count())) {
         ListIndexOutOfBounds(Index2);
     }
     beginUpdate();
-    PSynEditStringRec temp = mList[Index1];
-    mList[Index1]=mList[Index2];
-    mList[Index2]=temp;
+    PSynDocumentLine temp = mLines[Index1];
+    mLines[Index1]=mLines[Index2];
+    mLines[Index2]=temp;
     //mList.swapItemsAt(Index1,Index2);
     if (mIndexOfLongestLine == Index1) {
         mIndexOfLongestLine = Index2;
@@ -377,10 +381,10 @@ void SynEditStringList::exchange(int Index1, int Index2)
     endUpdate();
 }
 
-void SynEditStringList::insert(int Index, const QString &s)
+void SynDocument::insert(int Index, const QString &s)
 {
     QMutexLocker locker(&mMutex);
-    if ((Index < 0) || (Index > mList.count())) {
+    if ((Index < 0) || (Index > mLines.count())) {
         ListIndexOutOfBounds(Index);
     }
     beginUpdate();
@@ -389,10 +393,10 @@ void SynEditStringList::insert(int Index, const QString &s)
     endUpdate();
 }
 
-void SynEditStringList::deleteAt(int Index)
+void SynDocument::deleteAt(int Index)
 {
     QMutexLocker locker(&mMutex);
-    if ((Index < 0) || (Index >= mList.count())) {
+    if ((Index < 0) || (Index >= mLines.count())) {
         ListIndexOutOfBounds(Index);
     }
     beginUpdate();
@@ -400,38 +404,38 @@ void SynEditStringList::deleteAt(int Index)
         mIndexOfLongestLine = -1;
     else if (mIndexOfLongestLine>Index)
         mIndexOfLongestLine -= 1;
-    mList.removeAt(Index);
+    mLines.removeAt(Index);
     emit deleted(Index,1);
     endUpdate();
 }
 
-QString SynEditStringList::getTextStr() const
+QString SynDocument::getTextStr() const
 {
     QString result;
-    for (int i=0;i<mList.count()-1;i++) {
-        const PSynEditStringRec& line = mList[i];
+    for (int i=0;i<mLines.count()-1;i++) {
+        const PSynDocumentLine& line = mLines[i];
         result.append(line->fString);
         result.append(lineBreak());
     }
-    if (mList.length()>0) {
-        result.append(mList.back()->fString);
+    if (mLines.length()>0) {
+        result.append(mLines.back()->fString);
     }
     return result;
 }
 
-void SynEditStringList::putString(int Index, const QString &s, bool notify) {
+void SynDocument::putString(int Index, const QString &s, bool notify) {
     QMutexLocker locker(&mMutex);
-    if (Index == mList.count()) {
+    if (Index == mLines.count()) {
         add(s);
     } else {
-        if (Index<0 || Index>=mList.count()) {
+        if (Index<0 || Index>=mLines.count()) {
             ListIndexOutOfBounds(Index);
         }
         beginUpdate();
-        int oldColumns = mList[Index]->fColumns;
-        mList[Index]->fString = s;
+        int oldColumns = mLines[Index]->fColumns;
+        mLines[Index]->fString = s;
         calculateLineColumns(Index);
-        if (oldColumns>mList[Index]->fColumns)
+        if (oldColumns>mLines[Index]->fColumns)
             mIndexOfLongestLine = -1;
         if (notify)
             emit putted(Index,1);
@@ -439,18 +443,18 @@ void SynEditStringList::putString(int Index, const QString &s, bool notify) {
     }
 }
 
-void SynEditStringList::putObject(int Index, void *AObject)
+void SynDocument::putObject(int Index, void *AObject)
 {
     QMutexLocker locker(&mMutex);
-    if (Index<0 || Index>=mList.count()) {
+    if (Index<0 || Index>=mLines.count()) {
         ListIndexOutOfBounds(Index);
     }
     beginUpdate();
-    mList[Index]->fObject = AObject;
+    mLines[Index]->fObject = AObject;
     endUpdate();
 }
 
-void SynEditStringList::setUpdateState(bool Updating)
+void SynDocument::setUpdateState(bool Updating)
 {
     if (Updating)
         emit changing();
@@ -458,18 +462,18 @@ void SynEditStringList::setUpdateState(bool Updating)
         emit changed();
 }
 
-int SynEditStringList::calculateLineColumns(int Index)
+int SynDocument::calculateLineColumns(int Index)
 {
-    PSynEditStringRec line = mList[Index];
+    PSynDocumentLine line = mLines[Index];
 
-    line->fColumns = mEdit->stringColumns(line->fString,0);
+    line->fColumns = stringColumns(line->fString,0);
     return line->fColumns;
 }
 
-void SynEditStringList::insertLines(int Index, int NumLines)
+void SynDocument::insertLines(int Index, int NumLines)
 {
     QMutexLocker locker(&mMutex);
-    if (Index<0 || Index>mList.count()) {
+    if (Index<0 || Index>mLines.count()) {
         ListIndexOutOfBounds(Index);
     }
     if (NumLines<=0)
@@ -478,19 +482,19 @@ void SynEditStringList::insertLines(int Index, int NumLines)
     auto action = finally([this]{
         endUpdate();
     });
-    PSynEditStringRec line;
-    mList.insert(Index,NumLines,line);
+    PSynDocumentLine line;
+    mLines.insert(Index,NumLines,line);
     for (int i=Index;i<Index+NumLines;i++) {
-        line = std::make_shared<SynEditStringRec>();
-        mList[i]=line;
+        line = std::make_shared<SynDocumentLine>();
+        mLines[i]=line;
     }
     emit inserted(Index,NumLines);
 }
 
-void SynEditStringList::insertStrings(int Index, const QStringList &NewStrings)
+void SynDocument::insertStrings(int Index, const QStringList &NewStrings)
 {
     QMutexLocker locker(&mMutex);
-    if (Index<0 || Index>mList.count()) {
+    if (Index<0 || Index>mLines.count()) {
         ListIndexOutOfBounds(Index);
     }
     if (NewStrings.isEmpty())
@@ -499,20 +503,20 @@ void SynEditStringList::insertStrings(int Index, const QStringList &NewStrings)
     auto action = finally([this]{
         endUpdate();
     });
-    PSynEditStringRec line;
-    mList.insert(Index,NewStrings.length(),line);
+    PSynDocumentLine line;
+    mLines.insert(Index,NewStrings.length(),line);
     for (int i=0;i<NewStrings.length();i++) {
-        line = std::make_shared<SynEditStringRec>();
+        line = std::make_shared<SynDocumentLine>();
         line->fString = NewStrings[i];
-        mList[i+Index]=line;
+        mLines[i+Index]=line;
     }
     emit inserted(Index,NewStrings.length());
 }
 
-void SynEditStringList::insertText(int Index, const QString &NewText)
+void SynDocument::insertText(int Index, const QString &NewText)
 {
     QMutexLocker locker(&mMutex);
-    if (Index<0 || Index>=mList.count()) {
+    if (Index<0 || Index>=mLines.count()) {
         ListIndexOutOfBounds(Index);
     }
     if (NewText.isEmpty())
@@ -521,7 +525,7 @@ void SynEditStringList::insertText(int Index, const QString &NewText)
     insertStrings(Index,lines);
 }
 
-bool SynEditStringList::tryLoadFileByEncoding(QByteArray encodingName, QFile& file) {
+bool SynDocument::tryLoadFileByEncoding(QByteArray encodingName, QFile& file) {
     QTextCodec* codec = QTextCodec::codecForName(encodingName);
     if (!codec)
         return false;
@@ -549,7 +553,26 @@ bool SynEditStringList::tryLoadFileByEncoding(QByteArray encodingName, QFile& fi
     }
     return true;
 }
-void SynEditStringList::loadFromFile(const QString& filename, const QByteArray& encoding, QByteArray& realEncoding)
+
+const QFontMetrics &SynDocument::fontMetrics() const
+{
+    return mFontMetrics;
+}
+
+void SynDocument::setFontMetrics(const QFont &newFont)
+{
+    mFontMetrics = QFontMetrics(newFont);
+    mCharWidth =  mFontMetrics.horizontalAdvance("M");
+}
+
+void SynDocument::setTabWidth(int newTabWidth)
+{
+    if (mTabWidth!=newTabWidth) {
+        mTabWidth = newTabWidth;
+        resetColumns();
+    }
+}
+void SynDocument::loadFromFile(const QString& filename, const QByteArray& encoding, QByteArray& realEncoding)
 {
     QMutexLocker locker(&mMutex);
     QFile file(filename);
@@ -613,7 +636,7 @@ void SynEditStringList::loadFromFile(const QString& filename, const QByteArray& 
             }
             line = file.readLine();
         }
-        emit inserted(0,mList.count());
+        emit inserted(0,mLines.count());
         if (!needReread) {
             if (allAscii)
                 realEncoding = ENCODING_ASCII;
@@ -623,7 +646,7 @@ void SynEditStringList::loadFromFile(const QString& filename, const QByteArray& 
         QList<PCharsetInfo> charsets = pCharsetInfoManager->findCharsetByLocale(pCharsetInfoManager->localeName());
         if (!charsets.isEmpty()) {
             if (tryLoadFileByEncoding(realEncoding,file)) {
-                emit inserted(0,mList.count());
+                emit inserted(0,mLines.count());
                 return;
             }
 
@@ -638,7 +661,7 @@ void SynEditStringList::loadFromFile(const QString& filename, const QByteArray& 
                 if (tryLoadFileByEncoding(encodingName,file)) {
                     qDebug()<<encodingName;
                     realEncoding = encodingName;
-                    emit inserted(0,mList.count());
+                    emit inserted(0,mLines.count());
                     return;
                 }
             }
@@ -671,18 +694,18 @@ void SynEditStringList::loadFromFile(const QString& filename, const QByteArray& 
         }
         addItem(line);
     }
-    emit inserted(0,mList.count());
+    emit inserted(0,mLines.count());
 }
 
 
 
-void SynEditStringList::saveToFile(QFile &file, const QByteArray& encoding,
+void SynDocument::saveToFile(QFile &file, const QByteArray& encoding,
                                    const QByteArray& defaultEncoding, QByteArray& realEncoding)
 {
     QMutexLocker locker(&mMutex);
     if (!file.open(QFile::WriteOnly | QFile::Truncate))
         throw FileError(tr("Can't open file '%1' for save!").arg(file.fileName()));
-    if (mList.isEmpty())
+    if (mLines.isEmpty())
         return;
     bool allAscii = true;
 
@@ -702,7 +725,7 @@ void SynEditStringList::saveToFile(QFile &file, const QByteArray& encoding,
     } else {
         codec = QTextCodec::codecForName(realEncoding);
     }
-    for (PSynEditStringRec& line:mList) {
+    for (PSynDocumentLine& line:mLines) {
         if (allAscii) {
             allAscii = isTextAllAscii(line->fString);
         }
@@ -724,7 +747,31 @@ void SynEditStringList::saveToFile(QFile &file, const QByteArray& encoding,
     }
 }
 
-void SynEditStringList::putTextStr(const QString &text)
+int SynDocument::stringColumns(const QString &line, int colsBefore) const
+{
+    int columns = std::max(0,colsBefore);
+    int charCols;
+    for (int i=0;i<line.length();i++) {
+        QChar ch = line[i];
+        if (ch == '\t') {
+            charCols = mTabWidth - columns % mTabWidth;
+        } else {
+            charCols = charColumns(ch);
+        }
+        columns+=charCols;
+    }
+    return columns-colsBefore;
+}
+
+int SynDocument::charColumns(QChar ch) const
+{
+    if (ch.unicode()<=32)
+        return 1;
+    //return std::ceil((int)(fontMetrics().horizontalAdvance(ch) * dpiFactor()) / (double)mCharWidth);
+    return std::ceil((int)(fontMetrics().horizontalAdvance(ch)) / (double)mCharWidth);
+}
+
+void SynDocument::putTextStr(const QString &text)
 {
     beginUpdate();
     auto action = finally([this]{
@@ -751,57 +798,57 @@ void SynEditStringList::putTextStr(const QString &text)
     }
 }
 
-void SynEditStringList::internalClear()
+void SynDocument::internalClear()
 {
-    if (!mList.isEmpty()) {
+    if (!mLines.isEmpty()) {
         beginUpdate();
-        int oldCount = mList.count();
+        int oldCount = mLines.count();
         mIndexOfLongestLine = -1;
-        mList.clear();
+        mLines.clear();
         emit deleted(0,oldCount);
         endUpdate();
     }
 }
 
-FileEndingType SynEditStringList::getFileEndingType()
+FileEndingType SynDocument::getFileEndingType()
 {
     QMutexLocker locker(&mMutex);
     return mFileEndingType;
 }
 
-void SynEditStringList::setFileEndingType(const FileEndingType &fileEndingType)
+void SynDocument::setFileEndingType(const FileEndingType &fileEndingType)
 {
     QMutexLocker locker(&mMutex);
     mFileEndingType = fileEndingType;
 }
 
-bool SynEditStringList::empty()
+bool SynDocument::empty()
 {
     QMutexLocker locker(&mMutex);
-    return mList.count()==0;
+    return mLines.count()==0;
 }
 
-void SynEditStringList::resetColumns()
+void SynDocument::resetColumns()
 {
     QMutexLocker locker(&mMutex);
     mIndexOfLongestLine = -1;
-    if (mList.count() > 0 ) {
-        for (int i=0;i<mList.size();i++) {
-            mList[i]->fColumns = -1;
+    if (mLines.count() > 0 ) {
+        for (int i=0;i<mLines.size();i++) {
+            mLines[i]->fColumns = -1;
         }
     }
 }
 
-void SynEditStringList::invalidAllLineColumns()
+void SynDocument::invalidAllLineColumns()
 {
     QMutexLocker locker(&mMutex);
     mIndexOfLongestLine = -1;
-    for (PSynEditStringRec& line:mList) {
+    for (PSynDocumentLine& line:mLines) {
         line->fColumns = -1;
     }
 }
 
-SynEditStringRec::SynEditStringRec():
+SynDocumentLine::SynDocumentLine():
     fString(),
     fObject(nullptr),
     fRange{0,0,0,0,0},

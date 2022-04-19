@@ -19,6 +19,7 @@
 
 #include <QStringList>
 #include "highlighter/base.h"
+#include <QFontMetrics>
 #include <QMutex>
 #include <QVector>
 #include <memory>
@@ -34,36 +35,33 @@ enum SynEditStringFlag {
 
 typedef int SynEditStringFlags;
 
-struct SynEditStringRec {
+struct SynDocumentLine {
   QString fString;
   void * fObject;
   SynRangeState fRange;
   int fColumns;  //
 
 public:
-  explicit SynEditStringRec();
+  explicit SynDocumentLine();
 };
 
-typedef std::shared_ptr<SynEditStringRec> PSynEditStringRec;
+typedef std::shared_ptr<SynDocumentLine> PSynDocumentLine;
 
-typedef QVector<PSynEditStringRec> SynEditStringRecList;
+typedef QVector<PSynDocumentLine> SynDocumentLines;
 
-typedef std::shared_ptr<SynEditStringRecList> PSynEditStringRecList;
+typedef std::shared_ptr<SynDocumentLines> PSynDocumentLines;
 
-class SynEditStringList;
+class SynDocument;
 
-typedef std::shared_ptr<SynEditStringList> PSynEditStringList;
-
-using StringListChangeCallback = std::function<void(PSynEditStringList* object, int index, int count)>;
+typedef std::shared_ptr<SynDocument> PSynDocument;
 
 class QFile;
 
-class SynEdit;
-class SynEditStringList : public QObject
+class SynDocument : public QObject
 {  
     Q_OBJECT
 public:
-    explicit SynEditStringList(SynEdit* pEdit,QObject* parent=nullptr);
+    explicit SynDocument(const QFont& font, QObject* parent=nullptr);
 
     int parenthesisLevels(int Index);
     int bracketLevels(int Index);
@@ -104,6 +102,8 @@ public:
     void loadFromFile(const QString& filename, const QByteArray& encoding, QByteArray& realEncoding);
     void saveToFile(QFile& file, const QByteArray& encoding,
                     const QByteArray& defaultEncoding, QByteArray& realEncoding);
+    int stringColumns(const QString& line, int colsBefore) const;
+    int charColumns(QChar ch) const;
 
     bool getAppendNewLineAtEOF();
     void setAppendNewLineAtEOF(bool appendNewLineAtEOF);
@@ -114,6 +114,14 @@ public:
     bool empty();
 
     void resetColumns();
+    int tabWidth() const {
+        return mTabWidth;
+    }
+    void setTabWidth(int newTabWidth);
+
+    const QFontMetrics &fontMetrics() const;
+    void setFontMetrics(const QFont &newFont);
+
 public slots:
     void invalidAllLineColumns();
 
@@ -135,9 +143,13 @@ private:
     bool tryLoadFileByEncoding(QByteArray encodingName, QFile& file);
 
 private:
-    SynEditStringRecList mList;
+    SynDocumentLines mLines;
 
-    SynEdit* mEdit;
+    //SynEdit* mEdit;
+
+    QFontMetrics mFontMetrics;
+    int mTabWidth;
+    int mCharWidth;
     //int mCount;
     //int mCapacity;
     FileEndingType mFileEndingType;

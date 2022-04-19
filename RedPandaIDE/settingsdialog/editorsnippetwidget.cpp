@@ -46,12 +46,12 @@ EditorSnippetWidget::EditorSnippetWidget(const QString& name, const QString& gro
         QModelIndex index = ui->tblSnippets->currentIndex();
         if (!index.isValid()) {
             ui->editCode->setEnabled(false);
-            ui->editCode->lines()->clear();
+            ui->editCode->document()->clear();
         } else {
             mUpdatingCode = true;
             ui->editCode->setEnabled(true);
             PCodeSnippet snippet = mModel.snippets()[index.row()];
-            ui->editCode->lines()->setText(snippet->code);
+            ui->editCode->document()->setText(snippet->code);
             mUpdatingCode = false;
         }
     });
@@ -67,7 +67,7 @@ EditorSnippetWidget::~EditorSnippetWidget()
 void EditorSnippetWidget::doLoad()
 {
     mModel.updateSnippets(pMainWindow->codeSnippetManager()->snippets());
-    ui->editFileTemplate->lines()->setText(pMainWindow->codeSnippetManager()->newFileTemplate());
+    ui->editFileTemplate->document()->setText(pMainWindow->codeSnippetManager()->newFileTemplate());
 }
 
 void EditorSnippetWidget::doSave()

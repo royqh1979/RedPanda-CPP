@@ -325,7 +325,7 @@ void FormatterGeneralWidget::updateDemo()
                                             pSettings->dirs().appDir(),
                                             formatter.getArguments(),
                                             content);
-    ui->editDemo->lines()->setText(newContent);
+    ui->editDemo->document()->setText(newContent);
 }
 
 void FormatterGeneralWidget::updateCodeFormatter(Settings::CodeFormatter &format)

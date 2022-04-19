@@ -53,12 +53,12 @@ void SynExporter::CopyToClipboard()
         CopyToClipboardFormat(clipboardFormat());
 }
 
-void SynExporter::ExportAll(PSynEditStringList ALines)
+void SynExporter::ExportAll(PSynDocument ALines)
 {
     ExportRange(ALines, BufferCoord{1, 1}, BufferCoord{INT_MAX, INT_MAX});
 }
 
-void SynExporter::ExportRange(PSynEditStringList ALines, BufferCoord Start, BufferCoord Stop)
+void SynExporter::ExportRange(PSynDocument ALines, BufferCoord Start, BufferCoord Stop)
 {
     // abort if not all necessary conditions are met
     if (!ALines || !mHighlighter || (ALines->count() == 0))

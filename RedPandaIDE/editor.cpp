@@ -201,10 +201,10 @@ Editor::~Editor() {
 
 void Editor::loadFile(QString filename) {
     if (filename.isEmpty()) {
-        this->lines()->loadFromFile(mFilename,mEncodingOption,mFileEncoding);
+        this->document()->loadFromFile(mFilename,mEncodingOption,mFileEncoding);
     } else {
         filename = QFileInfo(filename).absoluteFilePath();
-        this->lines()->loadFromFile(filename,mEncodingOption,mFileEncoding);
+        this->document()->loadFromFile(filename,mEncodingOption,mFileEncoding);
     }
     //this->setModified(false);
     updateCaption();
@@ -234,7 +234,7 @@ void Editor::saveFile(QString filename) {
     QByteArray encoding = mFileEncoding;
     if (mEncodingOption!=ENCODING_AUTO_DETECT || mFileEncoding==ENCODING_ASCII)
         encoding = mEncodingOption;
-    this->lines()->saveToFile(file,encoding,
+    this->document()->saveToFile(file,encoding,
                               pSettings->editor().defaultEncoding(),
                               mFileEncoding);
     emit fileSaved(filename, mInProject);
@@ -642,16 +642,16 @@ void Editor::keyPressEvent(QKeyEvent *event)
             } else if (highlighter()
                        && caretY()>=2
                        && highlighter()->isLastLineCommentNotFinished(
-                           lines()->ranges(caretY()-2).state)) {
+                           document()->ranges(caretY()-2).state)) {
                 s=trimLeft(lineText());
                 if (s.startsWith("* ")) {
                     handled = true;
-                    int right = lines()->getString(caretY()-1).length()-caretX();
+                    int right = document()->getString(caretY()-1).length()-caretX();
                     s=lineBreak()+"* ";
                     insertString(s,false);
                     BufferCoord p = caretXY();
                     p.Line++;
-                    p.Char = lines()->getString(p.Line-1).length()+1;
+                    p.Char = document()->getString(p.Line-1).length()+1;
                     if (right>0) {
                         p.Char -=right+1;
                     }
@@ -924,7 +924,7 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
         return;
 
     if (mParser && mParser->enabled() && highlighter() && (attr == highlighter()->identifierAttribute())
-            && !mParser->isIncludeLine(lines()->getString(line-1)) ) {
+            && !mParser->isIncludeLine(document()->getString(line-1)) ) {
 
         BufferCoord p{aChar,line};
 //        BufferCoord pBeginPos,pEndPos;
@@ -943,8 +943,8 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
             QString s= getWordAtPosition(this,p, pBeginPos,pEndPos, WordPurpose::wpInformation);
             if ((pEndPos.Line>=1)
               && (pEndPos.Char>=0)
-              && (pEndPos.Char+1 < lines()->getString(pEndPos.Line-1).length())
-              && (lines()->getString(pEndPos.Line-1)[pEndPos.Char+1] == '(')) {
+              && (pEndPos.Char+1 < document()->getString(pEndPos.Line-1).length())
+              && (document()->getString(pEndPos.Line-1)[pEndPos.Char+1] == '(')) {
                 kind = StatementKind::skFunction;
             } else {
                 kind = StatementKind::skVariable;
@@ -1035,7 +1035,7 @@ bool Editor::event(QEvent *event)
         switch (reason) {
         case TipType::Preprocessor:
             // When hovering above a preprocessor line, determine if we want to show an include or a identifier hint
-            s = lines()->getString(p.Line - 1);
+            s = document()->getString(p.Line - 1);
             isIncludeLine = mParser->isIncludeLine(s);
             if (!isIncludeLine)
                 s = wordAtRowCol(p);
@@ -1165,7 +1165,7 @@ void Editor::mouseReleaseEvent(QMouseEvent *event)
 
         BufferCoord p;
         if (pointToCharLine(event->pos(),p)) {
-            QString s = lines()->getString(p.Line - 1);
+            QString s = document()->getString(p.Line - 1);
             if (mParser->isIncludeLine(s)) {
                 QString filename = mParser->getHeaderFileName(mFilename,s);
                 Editor * e = pMainWindow->editorList()->getEditorByFilename(filename);
@@ -1304,12 +1304,12 @@ void Editor::copyToClipboard()
 void Editor::cutToClipboard()
 {
     if (pSettings->editor().copySizeLimit()) {
-        if (lines()->count() > pSettings->editor().copyLineLimits()) {
+        if (document()->count() > pSettings->editor().copyLineLimits()) {
             QMessageBox::critical(pMainWindow,tr("Error"),
                                      tr("The text to be cut exceeds count limit!"));
             return;
         }
-        if (lines()->getTextLength() > pSettings->editor().copyCharLimits() * 1000) {
+        if (document()->getTextLength() > pSettings->editor().copyCharLimits() * 1000) {
             QMessageBox::critical(pMainWindow,tr("Error"),
                                      tr("The text to be cut exceeds character limit!"));
             return;
@@ -1344,7 +1344,7 @@ void Editor::copyAsHTML()
                                         ));
     exporter.setCreateHTMLFragment(true);
 
-    exporter.ExportRange(lines(),blockBegin(),blockEnd());
+    exporter.ExportRange(document(),blockBegin(),blockEnd());
 
     QMimeData * mimeData = new QMimeData;
 
@@ -1379,20 +1379,20 @@ void Editor::addSyntaxIssues(int line, int startChar, int endChar, CompileIssueT
     int tokenKind,start;
     PSynHighlighterAttribute attr;
     PSyntaxIssueList lst;
-    if ((line<1) || (line>lines()->count()))
+    if ((line<1) || (line>document()->count()))
         return;
     pError = std::make_shared<SyntaxIssue>();
     p.Char = startChar;
     p.Line = line;
-    if (startChar >= lines()->getString(line-1).length()) {
+    if (startChar >= document()->getString(line-1).length()) {
         start = 1;
-        token = lines()->getString(line-1);
+        token = document()->getString(line-1);
     } else if (endChar < 1) {
         if (!getHighlighterAttriAtRowColEx(p,token,tokenType,tokenKind,start,attr))
             return;
     } else {
         start = startChar;
-        token = lines()->getString(line-1).mid(start-1,endChar-startChar);
+        token = document()->getString(line-1).mid(start-1,endChar-startChar);
     }
     pError->startChar = start;
     pError->endChar = start + token.length();
@@ -1490,8 +1490,8 @@ void Editor::onStatusChanged(SynStatusChanges changes)
 {
     if ((!changes.testFlag(SynStatusChange::scReadOnly)
             && !changes.testFlag(SynStatusChange::scInsertMode)
-            && (lines()->count()!=mLineCount)
-            && (lines()->count()!=0) && ((mLineCount>0) || (lines()->count()>1)))
+            && (document()->count()!=mLineCount)
+            && (document()->count()!=0) && ((mLineCount>0) || (document()->count()>1)))
             ||
         (mCurrentLineModified
             && !changes.testFlag(SynStatusChange::scReadOnly)
@@ -1506,7 +1506,7 @@ void Editor::onStatusChanged(SynStatusChanges changes)
             checkSyntaxInBack();
         reparseTodo();
     }
-    mLineCount = lines()->count();
+    mLineCount = document()->count();
     if (changes.testFlag(scModifyChanged)) {
         updateCaption();
     }
@@ -1778,15 +1778,15 @@ QStringList Editor::getExpressionAtPosition(
     if (!highlighter)
         return result;
     while (true) {
-        if (line>=lines()->count() || line<0)
+        if (line>=document()->count() || line<0)
             break;
         QStringList tokens;
         if (line==0) {
             highlighter->resetState();
         } else {
-            highlighter->setState(lines()->ranges(line-1));
+            highlighter->setState(document()->ranges(line-1));
         }
-        QString sLine = lines()->getString(line);
+        QString sLine = document()->getString(line);
         highlighter->setLine(sLine,line-1);
         while (!highlighter->eol()) {
             int start = highlighter->getTokenPos();
@@ -1979,7 +1979,7 @@ QStringList Editor::getExpressionAtPosition(
 
         line--;
         if (line>=0)
-            ch = lines()->getString(line).length()+1;
+            ch = document()->getString(line).length()+1;
     }
     return result;
 }
@@ -1989,7 +1989,7 @@ QString Editor::getWordForCompletionSearch(const BufferCoord &pos,bool permitTil
     QString result = "";
     QString s;
 
-    s = lines()->getString(pos.Line - 1);
+    s = document()->getString(pos.Line - 1);
     int len = s.length();
 
     int wordBegin = pos.Char - 1 - 1; //BufferCoord::Char starts with 1
@@ -2026,9 +2026,9 @@ bool Editor::handleSymbolCompletion(QChar key)
     if (highlighter()) {
         if (caretX() <= 1) {
             if (caretY()>1) {
-                if (highlighter()->isLastLineCommentNotFinished(lines()->ranges(caretY() - 2).state))
+                if (highlighter()->isLastLineCommentNotFinished(document()->ranges(caretY() - 2).state))
                     return false;
-                if (highlighter()->isLastLineStringNotFinished(lines()->ranges(caretY() - 2).state)
+                if (highlighter()->isLastLineStringNotFinished(document()->ranges(caretY() - 2).state)
                         && (key!='\"') && (key!='\''))
                     return false;
             }
@@ -2172,10 +2172,10 @@ bool Editor::handleParentheseSkip()
       if (status != QuoteStatus::NotQuote)
           return false;
 
-      if (lines()->count()==0)
+      if (document()->count()==0)
           return false;
       if (highlighter()) {
-          SynRangeState lastLineState = lines()->ranges(lines()->count()-1);
+          SynRangeState lastLineState = document()->ranges(document()->count()-1);
           if (lastLineState.parenthesisLevel==0) {
               setCaretXY( BufferCoord{caretX() + 1, caretY()}); // skip over
               return true;
@@ -2223,10 +2223,10 @@ bool Editor::handleBracketSkip()
     if (getCurrentChar() != ']')
         return false;
 
-    if (lines()->count()==0)
+    if (document()->count()==0)
         return false;
     if (highlighter()) {
-        SynRangeState lastLineState = lines()->ranges(lines()->count()-1);
+        SynRangeState lastLineState = document()->ranges(document()->count()-1);
         if (lastLineState.bracketLevel==0) {
             setCaretXY( BufferCoord{caretX() + 1, caretY()}); // skip over
             return true;
@@ -2269,7 +2269,7 @@ bool Editor::handleBraceCompletion()
     QString s = lineText().trimmed();
     int i= caretY()-2;
     while ((s.isEmpty()) && (i>=0)) {
-        s=lines()->getString(i);
+        s=document()->getString(i);
         i--;
     }
     QString text=selText();
@@ -2309,10 +2309,10 @@ bool Editor::handleBraceSkip()
     if (getCurrentChar() != '}')
         return false;
 
-    if (lines()->count()==0)
+    if (document()->count()==0)
         return false;
     if (highlighter()) {
-        SynRangeState lastLineState = lines()->ranges(lines()->count()-1);
+        SynRangeState lastLineState = document()->ranges(document()->count()-1);
         if (lastLineState.braceLevel==0) {
             bool oldInsertMode = insertMode();
             setInsertMode(false); //set mode to overwrite
@@ -2500,10 +2500,10 @@ Editor::QuoteStatus Editor::getQuoteStatus()
     QuoteStatus Result = QuoteStatus::NotQuote;
     if (!highlighter())
         return Result;
-    if ((caretY()>1) && highlighter()->isLastLineStringNotFinished(lines()->ranges(caretY() - 2).state))
+    if ((caretY()>1) && highlighter()->isLastLineStringNotFinished(document()->ranges(caretY() - 2).state))
         Result = QuoteStatus::DoubleQuote;
 
-    QString Line = lines()->getString(caretY()-1);
+    QString Line = document()->getString(caretY()-1);
     int posX = caretX()-1;
     if (posX >= Line.length()) {
         posX = Line.length()-1;
@@ -2794,7 +2794,7 @@ void Editor::exportAsRTF(const QString &rtfFilename)
                                         std::placeholders::_4,
                                         std::placeholders::_5
                                         ));
-    exporter.ExportAll(lines());
+    exporter.ExportAll(document());
     exporter.SaveToFile(rtfFilename);
 }
 
@@ -2819,7 +2819,7 @@ void Editor::exportAsHTML(const QString &htmlFilename)
                                         std::placeholders::_4,
                                         std::placeholders::_5
                                         ));
-    exporter.ExportAll(lines());
+    exporter.ExportAll(document());
     exporter.SaveToFile(htmlFilename);
 }
 
@@ -3009,7 +3009,7 @@ void Editor::showHeaderCompletion(bool autoComplete)
 bool Editor::testInFunc(int x, int y)
 {
     bool result = false;
-    QString s = lines()->getString(y);
+    QString s = document()->getString(y);
     int posY = y;
     int posX = std::min(x,s.length()-1); // x is started from 1
     int bracketLevel=0;
@@ -3018,7 +3018,7 @@ bool Editor::testInFunc(int x, int y)
             posY--;
             if (posY < 0)
                 return false;
-            s = lines()->getString(posY);
+            s = document()->getString(posY);
             posX = s.length()-1;
         }
         if (s[posX] == '>'
@@ -3321,7 +3321,7 @@ Editor::TipType Editor::getTipType(QPoint point, BufferCoord& pos)
                     // do not allow when dragging selection
                     if (isPointInSelection(pos))
                         return TipType::Selection;
-                } else if (mParser && mParser->isIncludeLine(lines()->getString(pos.Line-1))) {
+                } else if (mParser && mParser->isIncludeLine(document()->getString(pos.Line-1))) {
                     return TipType::Preprocessor;
                 }else if (attr == highlighter()->identifierAttribute())
                     return TipType::Identifier;
@@ -3474,10 +3474,10 @@ void Editor::updateFunctionTip(bool showTip)
     int bracketLevel = 0;
     int paramsCount = 1;
     int currentParamPos = 1;
-    if (currentLine>=lines()->count())
+    if (currentLine>=document()->count())
         return;
     while (currentLine>=0) {
-        QString line = lines()->getString(currentLine);
+        QString line = document()->getString(currentLine);
         if (currentLine!=caretPos.Line-1)
             currentChar = line.length();
         QStringList tokens;
@@ -3486,7 +3486,7 @@ void Editor::updateFunctionTip(bool showTip)
             highlighter()->resetState();
         else
             highlighter()->setState(
-                            lines()->ranges(currentLine-1));
+                            document()->ranges(currentLine-1));
         highlighter()->setLine(line,currentLine);
         while(!highlighter()->eol()) {
             int start = highlighter()->getTokenPos();
@@ -3578,7 +3578,7 @@ void Editor::updateFunctionTip(bool showTip)
     QString s = getWordAtPosition(this, functionNamePos, pWordBegin,pWordEnd, WordPurpose::wpInformation);
 
     int x = pWordBegin.Char-1-1;
-    QString line = lines()->getString(pWordBegin.Line-1);
+    QString line = document()->getString(pWordBegin.Line-1);
     bool hasPreviousWord=false;
     while (x>=0) {
         QChar ch=line[x];
@@ -3678,7 +3678,7 @@ void Editor::popUserCodeInTabStops()
             tabStopBegin = mTabStopEnd + p->x;
             tabStopEnd = mTabStopEnd + p->endX;
         } else {
-            int n=countLeadingWhitespaceChars(lines()->getString(caretY()-1+p->y));
+            int n=countLeadingWhitespaceChars(document()->getString(caretY()-1+p->y));
 //            qDebug()<<line<<n<<p->x;
             tabStopBegin = n+p->x+1;
             tabStopEnd = n+p->endX+1;
@@ -3721,8 +3721,8 @@ void Editor::onExportedFormatToken(PSynHighlighter syntaxHighlighter, int Line, 
         if (kind == StatementKind::skUnknown) {
             if ((pEndPos.Line>=1)
               && (pEndPos.Char>=0)
-              && (pEndPos.Char < lines()->getString(pEndPos.Line-1).length())
-              && (lines()->getString(pEndPos.Line-1)[pEndPos.Char] == '(')) {
+              && (pEndPos.Char < document()->getString(pEndPos.Line-1).length())
+              && (document()->getString(pEndPos.Line-1)[pEndPos.Char] == '(')) {
                 kind = StatementKind::skFunction;
             } else {
                 kind = StatementKind::skVariable;
@@ -3908,13 +3908,13 @@ QString getWordAtPosition(SynEdit *editor, const BufferCoord &p, BufferCoord &pW
 {
     QString result = "";
     QString s;
-    if ((p.Line<1) || (p.Line>editor->lines()->count())) {
+    if ((p.Line<1) || (p.Line>editor->document()->count())) {
         pWordBegin = p;
         pWordEnd = p;
         return "";
     }
 
-    s = editor->lines()->getString(p.Line - 1);
+    s = editor->document()->getString(p.Line - 1);
     int len = s.length();
 
     int wordBegin = p.Char - 1 - 1; //BufferCoord::Char starts with 1
@@ -4069,7 +4069,7 @@ QString getWordAtPosition(SynEdit *editor, const BufferCoord &p, BufferCoord &pW
             if (i<0) {
                 line--;
                 if (line>=1) {
-                    s=editor->lines()->getString(line-1);
+                    s=editor->document()->getString(line-1);
                     i=s.length();
                     continue;
                 } else
@@ -4119,12 +4119,12 @@ QString getWordAtPosition(SynEdit *editor, const BufferCoord &p, BufferCoord &pW
 QString Editor::getPreviousWordAtPositionForSuggestion(const BufferCoord &p)
 {
     QString result;
-    if ((p.Line<1) || (p.Line>lines()->count())) {
+    if ((p.Line<1) || (p.Line>document()->count())) {
         return "";
     }
     bool inFunc = testInFunc(p.Char-1,p.Line-1);
 
-    QString s = lines()->getString(p.Line - 1);
+    QString s = document()->getString(p.Line - 1);
     int wordBegin;
     int wordEnd = p.Char-1;
     if (wordEnd >= s.length())
@@ -4190,7 +4190,7 @@ void Editor::reformat()
     }
 #endif
     //we must remove all breakpoints and syntax issues
-    onLinesDeleted(1,lines()->count());
+    onLinesDeleted(1,document()->count());
     QByteArray content = text().toUtf8();
     QStringList args = pSettings->codeFormatter().getArguments();
 #ifdef Q_OS_WIN

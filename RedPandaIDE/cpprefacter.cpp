@@ -202,15 +202,15 @@ PSearchResultTreeItem CppRefacter::findOccurenceInFile(
     Editor editor(nullptr);
     if (pMainWindow->editorList()->getContentFromOpenedEditor(
                 filename,buffer)){
-        editor.lines()->setContents(buffer);
+        editor.document()->setContents(buffer);
     } else {
         QByteArray encoding;
-        editor.lines()->loadFromFile(filename,ENCODING_AUTO_DETECT,encoding);
+        editor.document()->loadFromFile(filename,ENCODING_AUTO_DETECT,encoding);
     }
     editor.setHighlighter(HighlighterManager().getCppHighlighter());
     int posY = 0;
-    while (posY < editor.lines()->count()) {
-        QString line = editor.lines()->getString(posY);
+    while (posY < editor.document()->count()) {
+        QString line = editor.document()->getString(posY);
         if (line.isEmpty()) {
             posY++;
             continue;
@@ -220,7 +220,7 @@ PSearchResultTreeItem CppRefacter::findOccurenceInFile(
             editor.highlighter()->resetState();
         } else {
             editor.highlighter()->setState(
-                        editor.lines()->ranges(posY-1));
+                        editor.document()->ranges(posY-1));
         }
         editor.highlighter()->setLine(line,posY);
         while (!editor.highlighter()->eol()) {
@@ -266,22 +266,22 @@ void CppRefacter::renameSymbolInFile(const QString &filename, const PStatement &
     Editor editor(nullptr);
     if (pMainWindow->editorList()->getContentFromOpenedEditor(
                 filename,buffer)){
-        editor.lines()->setContents(buffer);
+        editor.document()->setContents(buffer);
     } else {
         QByteArray encoding;
-        editor.lines()->loadFromFile(filename,ENCODING_AUTO_DETECT,encoding);
+        editor.document()->loadFromFile(filename,ENCODING_AUTO_DETECT,encoding);
     }
     QStringList newContents;
     editor.setHighlighter(HighlighterManager().getCppHighlighter());
     int posY = 0;
-    while (posY < editor.lines()->count()) {
-        QString line = editor.lines()->getString(posY);
+    while (posY < editor.document()->count()) {
+        QString line = editor.document()->getString(posY);
 
         if (posY == 0) {
             editor.highlighter()->resetState();
         } else {
             editor.highlighter()->setState(
-                        editor.lines()->ranges(posY-1));
+                        editor.document()->ranges(posY-1));
         }
         editor.highlighter()->setLine(line,posY);
         QString newLine;
@@ -318,7 +318,7 @@ void CppRefacter::renameSymbolInFile(const QString &filename, const PStatement &
     } else {
         QByteArray realEncoding;
         QFile file(filename);
-        editor.lines()->saveToFile(file,ENCODING_AUTO_DETECT,
+        editor.document()->saveToFile(file,ENCODING_AUTO_DETECT,
                                    pSettings->editor().defaultEncoding(),
                                    realEncoding);
     }

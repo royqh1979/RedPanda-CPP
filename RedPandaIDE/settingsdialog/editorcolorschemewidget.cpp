@@ -63,7 +63,7 @@ EditorColorSchemeWidget::EditorColorSchemeWidget(const QString& name, const QStr
             this, &EditorColorSchemeWidget::onItemSelectionChanged);
     connect(this, &SettingsWidget::settingsChanged,this,
             &EditorColorSchemeWidget::onSettingChanged);
-    ui->editDemo->lines()->setText(
+    ui->editDemo->document()->setText(
             "#include <iostream>\n"
             "#include <conio.h>\n"
             "\n"

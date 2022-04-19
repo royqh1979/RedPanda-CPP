@@ -348,7 +348,7 @@ public:
     QString lineText() const;
     void setLineText(const QString s);
 
-    const PSynEditStringList& lines() const;
+    const PSynDocument& document() const;
     bool empty();
 
     SynSelectionMode selectionMode() const;
@@ -361,7 +361,7 @@ public:
     SynEditorOptions getOptions() const;
     void setOptions(const SynEditorOptions &Value);
 
-    int tabWidth() const;
+    int tabWidth() const {    return mDocument->tabWidth(); }
     void setTabWidth(int tabWidth);
 
     QColor caretColor() const;
@@ -642,8 +642,8 @@ private:
 
     bool mInserting;
     bool mPainting;
-    PSynEditStringList mLines;
-    PSynEditStringList mOrigLines;
+    PSynDocument mDocument;
+    PSynDocument mOrigLines;
     PSynEditUndoList mOrigUndoList;
     PSynEditUndoList mOrigRedoList;
     int mLinesInWindow;
@@ -690,7 +690,6 @@ private:
     bool mWantReturns;
     bool mWantTabs;
     SynGutter mGutter;
-    int mTabWidth;
     QRect mInvalidateRect;
     SynStateFlags mStateFlags;
     SynEditorOptions mOptions;
@@ -748,41 +747,41 @@ friend class SynEditTextPainter;
 
 // QWidget interface
 protected:
-void paintEvent(QPaintEvent *event) override;
-void resizeEvent(QResizeEvent *event) override;
-void timerEvent(QTimerEvent *event) override;
-bool event(QEvent *event) override;
-void focusInEvent(QFocusEvent *event) override;
-void focusOutEvent(QFocusEvent *event) override;
-void keyPressEvent(QKeyEvent *event) override;
-void mousePressEvent(QMouseEvent *event) override;
-void mouseReleaseEvent(QMouseEvent *event) override;
-void mouseMoveEvent(QMouseEvent *event) override;
-void mouseDoubleClickEvent(QMouseEvent *event) override;
-void inputMethodEvent(QInputMethodEvent *event) override;
-void leaveEvent(QEvent *event) override;
-void wheelEvent(QWheelEvent *event) override;
+    void paintEvent(QPaintEvent *event) override;
+    void resizeEvent(QResizeEvent *event) override;
+    void timerEvent(QTimerEvent *event) override;
+    bool event(QEvent *event) override;
+    void focusInEvent(QFocusEvent *event) override;
+    void focusOutEvent(QFocusEvent *event) override;
+    void keyPressEvent(QKeyEvent *event) override;
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
+    void mouseDoubleClickEvent(QMouseEvent *event) override;
+    void inputMethodEvent(QInputMethodEvent *event) override;
+    void leaveEvent(QEvent *event) override;
+    void wheelEvent(QWheelEvent *event) override;
 
 // QAbstractScrollArea interface
 protected:
-bool viewportEvent(QEvent * event) override;
+    bool viewportEvent(QEvent * event) override;
 
-// QWidget interface
-public:
-QVariant inputMethodQuery(Qt::InputMethodQuery property) const override;
+    // QWidget interface
+    public:
+    QVariant inputMethodQuery(Qt::InputMethodQuery property) const override;
 
-// QWidget interface
-const QFont &fontForNonAscii() const;
-void setFontForNonAscii(const QFont &newFontForNonAscii);
+    // QWidget interface
+    const QFont &fontForNonAscii() const;
+    void setFontForNonAscii(const QFont &newFontForNonAscii);
 
-int mouseSelectionScrollSpeed() const;
-void setMouseSelectionScrollSpeed(int newMouseSelectionScrollSpeed);
+    int mouseSelectionScrollSpeed() const;
+    void setMouseSelectionScrollSpeed(int newMouseSelectionScrollSpeed);
 
 protected:
-void dragEnterEvent(QDragEnterEvent *event) override;
-void dropEvent(QDropEvent *event) override;
-void dragMoveEvent(QDragMoveEvent *event) override;
-void dragLeaveEvent(QDragLeaveEvent *event) override;
+    void dragEnterEvent(QDragEnterEvent *event) override;
+    void dropEvent(QDropEvent *event) override;
+    void dragMoveEvent(QDragMoveEvent *event) override;
+    void dragLeaveEvent(QDragLeaveEvent *event) override;
 };
 
 #endif // SYNEDIT_H

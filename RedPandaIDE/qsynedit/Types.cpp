@@ -28,7 +28,7 @@ ContentsCoord::ContentsCoord(const SynEdit *edit, int ch, int line)
 
 void ContentsCoord::normalize()
 {
-    if (mEdit->lines()->count()==0) {
+    if (mEdit->document()->count()==0) {
         mChar = 0;
         mLine = 0;
         return;
@@ -36,9 +36,9 @@ void ContentsCoord::normalize()
     int aLine = mLine;
     int aChar = mChar;
     int line = aLine-1;
-    int lineCount = mEdit->lines()->count();
+    int lineCount = mEdit->document()->count();
     if (line>=lineCount) {
-        mChar = mEdit->lines()->getString(lineCount-1).length()+1;
+        mChar = mEdit->document()->getString(lineCount-1).length()+1;
         mLine = lineCount;
         return;
     }
@@ -55,7 +55,7 @@ void ContentsCoord::normalize()
                 mLine = 0;
                 return;
             }
-            QString s = mEdit->lines()->getString(line);
+            QString s = mEdit->document()->getString(line);
             int len = s.length();
             aChar+=len+1;
             if (aChar>=1) {
@@ -64,7 +64,7 @@ void ContentsCoord::normalize()
         }
     } else {
         while (true) {
-            QString s =mEdit->lines()->getString(line);
+            QString s =mEdit->document()->getString(line);
             int len = s.length();
             if (aChar<=len+1) {
                 break;
@@ -101,7 +101,7 @@ bool ContentsCoord::atStart()
 bool ContentsCoord::atEnd()
 {
     Q_ASSERT(mEdit!=nullptr);
-    return mLine>mEdit->lines()->count();
+    return mLine>mEdit->document()->count();
 }
 
 const SynEdit *ContentsCoord::edit() const
@@ -164,13 +164,13 @@ size_t ContentsCoord::operator-(const ContentsCoord& coord) const
     if (mLine == coord.mLine) {
         return mChar - coord.mChar;
     } else if (mLine > coord.mLine) {
-        size_t result = mEdit->lines()->getString(coord.mLine-1).length()+1-coord.mChar;
+        size_t result = mEdit->document()->getString(coord.mLine-1).length()+1-coord.mChar;
         int line = coord.mLine+1;
         while (line<=mLine-1) {
-            result += mEdit->lines()->getString(line-1).length()+1;
+            result += mEdit->document()->getString(line-1).length()+1;
             line++;
         }
-        if (mLine<=mEdit->lines()->count()) {
+        if (mLine<=mEdit->document()->count()) {
             result += mChar;
         }
         return result;
@@ -216,10 +216,10 @@ QChar ContentsCoord::operator*() const
     if (mLine < 1) {
         return QChar('\0');
     }
-    if (mLine > mEdit->lines()->count()) {
+    if (mLine > mEdit->document()->count()) {
         return QChar('\0');
     }
-    QString s = mEdit->lines()->getString(mLine-1);
+    QString s = mEdit->document()->getString(mLine-1);
     if (mChar >= s.length()+1 ) {
         return QChar('\n');
     }

@@ -44,14 +44,14 @@ void FilePropertiesDialog::calcFile(Editor *editor,
                                     int &codeLines,
                                     int &includeLines)
 {
-    totalLines = editor->lines()->count();
+    totalLines = editor->document()->count();
     codeLines = 0;
     commentLines = 0;
     emptyLines = 0;
     includeLines = 0;
     // iterate through all lines of file
-    for (int i=0;i<editor->lines()->count();i++) {
-        QString line = editor->lines()->getString(i);
+    for (int i=0;i<editor->document()->count();i++) {
+        QString line = editor->document()->getString(i);
         int j=0;
         while (j<line.length() && (line[j]=='\t' || line[j]==' '))
             j++;
@@ -132,7 +132,7 @@ void FilePropertiesDialog::on_cbFiles_currentIndexChanged(int index)
         ui->txtProject->setText("-");
         ui->txtPath->setText(editor->filename());
         ui->txtRelativeToProject->setText("_");
-        ui->txtLines->setText(QString("%1").arg(editor->lines()->count()));
+        ui->txtLines->setText(QString("%1").arg(editor->document()->count()));
 
         int totalLines, codeLines,emptyLines,commentLines,includeLines;
         calcFile(editor,totalLines,commentLines,emptyLines,codeLines,includeLines);

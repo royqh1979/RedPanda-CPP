@@ -114,13 +114,13 @@ void CPUDialog::setDisassembly(const QString& file, const QString& funcName,cons
 {
     ui->txtFunctionName->setText(QString("%1:%2").arg(file, funcName));
     int activeLine = -1;
-    ui->txtCode->lines()->clear();
+    ui->txtCode->document()->clear();
     for (int i=0;i<lines.size();i++) {
         QString line = lines[i];
         if (line.startsWith("=>")) {
             activeLine = i;
         }
-        ui->txtCode->lines()->add(line);
+        ui->txtCode->document()->add(line);
     }
     if (activeLine!=-1)
         ui->txtCode->setCaretXYEx(true,BufferCoord{1,activeLine+1});
