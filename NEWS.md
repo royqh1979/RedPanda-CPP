@@ -1,5 +1,7 @@
 Red Panda C++ Version 1.0.5
   - enhancement: add autolink and project template for sqlite3
+  - enhancement: improve the matching of function declaration and definitions
+  - fix: research button doesn't show find in files dialog
   
 Red Panda C++ Version 1.0.4
   - fix: hide function tips, when move or resize the main window

@@ -4445,6 +4445,25 @@ QString CppParser::splitPhrase(const QString &phrase, QString &sClazz,
     return result;
 }
 
+static  bool isIdentChar(const QChar& ch) {
+    return ch.isLetter()
+            || ch == '_'
+            || ch.isDigit();
+}
+
+static void appendArgWord(QString& args, const QString& word) {
+    QString s=word.trimmed();
+    if (s.isEmpty())
+        return;
+    if (args.isEmpty())
+        args.append(s);
+    else if (isIdentChar(args.back()) && isIdentChar(word.front()) ) {
+        args+=" ";
+        args+=s;
+    } else {
+        args+=s;
+    }
+}
 QString CppParser::removeArgNames(const QString &args)
 {
     QString result = "";
@@ -4463,10 +4482,10 @@ QString CppParser::removeArgNames(const QString &args)
                 word+=args[i];
             } else {
                 if (!typeGetted) {
-                    currentArg += ' ' + word;
+                    appendArgWord(currentArg,word);
                 } else {
                     if (isCppKeyword(word)) {
-                        currentArg += ' ' + word;
+                        appendArgWord(currentArg,word);
                     }
                 }
                 word = "";
@@ -4491,29 +4510,45 @@ QString CppParser::removeArgNames(const QString &args)
         case '\t':
             if ((brackLevel >0) && !isSpaceChar(args[i-1])) {
                 word+=args[i];
-            } else if (!word.trimmed().isEmpty()) {
+            } else if (!word.isEmpty()) {
                 if (!typeGetted) {
-                    currentArg += ' ' + word;
+                    appendArgWord(currentArg,word);
                     if (mCppTypeKeywords.contains(word) || !isCppKeyword(word))
                         typeGetted = true;
                 } else {
                     if (isCppKeyword(word))
-                        currentArg += ' ' + word;
+                        appendArgWord(currentArg,word);
                 }
                 word = "";
             }
             break;
+        case '&':
+        case '*':
+            if (!word.isEmpty()) {
+                if (!typeGetted) {
+                    appendArgWord(currentArg,word);
+                    if (mCppTypeKeywords.contains(word) || !isCppKeyword(word))
+                        typeGetted = true;
+                } else {
+                    if (isCppKeyword(word))
+                        appendArgWord(currentArg,word);
+                }
+                word = "";
+            }
+            currentArg+=args[i];
+            break;
         default:
-            if (isWordChar(args[i]) || isDigitChar(args[i]))
+            if (isIdentChar(args[i])) {
                 word+=args[i];
+            }
         }
         i++;
     }
     if (!typeGetted) {
-        currentArg += ' ' + word;
+        appendArgWord(currentArg,word);
     } else {
         if (isCppKeyword(word)) {
-            currentArg += ' ' + word;
+            appendArgWord(currentArg,word);
         }
     }
     result += currentArg.trimmed();

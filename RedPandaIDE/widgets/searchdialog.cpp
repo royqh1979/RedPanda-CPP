@@ -89,7 +89,7 @@ void SearchDialog::findInFiles(const QString &text)
 
 void SearchDialog::findInFiles(const QString &keyword, SearchFileScope scope, SynSearchOptions options)
 {
-    mTabBar->setCurrentIndex(1);
+    mTabBar->setCurrentIndex(2);
 
     ui->cbFind->setCurrentText(keyword);
     ui->cbFind->setFocus();
