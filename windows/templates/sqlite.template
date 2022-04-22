@@ -15,5 +15,5 @@ C=sqlite_c.txt
 UnitCount=1
 Type=1
 Compiler=
-CppCompiler=-std=gnu++11
+CppCompiler=
 Linker=-lsqlite3

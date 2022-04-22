@@ -1,7 +1,10 @@
 Red Panda C++ Version 1.0.5
   - enhancement: add autolink and project template for sqlite3
+  - enhancement: add sqlite3 lib to the gcc in distribution
   - enhancement: improve the matching of function declaration and definitions
   - fix: research button doesn't show find in files dialog
+  - enhancement: add project template for libmysqlclient(libmariadbclient)
+  - enhancement: add libmysqlclient to the x86-64 version gcc in distribution
   
 Red Panda C++ Version 1.0.4
   - fix: hide function tips, when move or resize the main window
