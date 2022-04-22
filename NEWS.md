@@ -6,6 +6,10 @@ Red Panda C++ Version 1.0.5
   - enhancement: add project template for libmysqlclient(libmariadbclient)
   - enhancement: add libmysqlclient to the x86-64 version gcc in distribution
   - enhancement: select and delete multiple watches
+  - enhancement: add project templates for tcp server / tcp client
+  - enhancement: only show function tips when cursor is after ',' or '('.
+  - enhancement: when auto complete function names, only append '(' if before identifier or "/'
+  - update highconstrast icon set
   
 Red Panda C++ Version 1.0.4
   - fix: hide function tips, when move or resize the main window

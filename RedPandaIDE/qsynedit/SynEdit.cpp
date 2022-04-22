@@ -1093,7 +1093,7 @@ QChar SynEdit::charAt(const BufferCoord &pos)
     return QChar(0);
 }
 
-QChar SynEdit::nextNotspaceChar(int line, int ch)
+QChar SynEdit::nextNonSpaceChar(int line, int ch)
 {
     if (ch<0)
         return QChar();
@@ -1106,6 +1106,28 @@ QChar SynEdit::nextNotspaceChar(int line, int ch)
         if (!ch.isSpace())
             return ch;
         x++;
+    }
+    return QChar();
+}
+
+QChar SynEdit::lastNonSpaceChar(int line, int ch)
+{
+    if (line>=mDocument->count())
+        return QChar();
+    QString s = mDocument->getString(line);
+    int x = std::min(ch-1,s.length()-1);
+    while (line>=0) {
+        while (x>=0) {
+            QChar c = s[x];
+            if (!c.isSpace())
+                return c;
+            x--;
+        }
+        line--;
+        if (line>=0) {
+            s = mDocument->getString(line);
+            x = s.length()-1;
+        }
     }
     return QChar();
 }

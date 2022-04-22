@@ -809,8 +809,9 @@ void Editor::keyPressEvent(QKeyEvent *event)
             handled = handleSymbolCompletion(ch);
             return;
         case '(': {
-            QChar nextCh = nextNotspaceChar(caretY()-1,caretX()-1);
-            if (!isIdentChar(nextCh) && nextCh!='('  ){
+            QChar nextCh = nextNonSpaceChar(caretY()-1,caretX()-1);
+            if (!isIdentChar(nextCh) && nextCh!='('
+                    && nextCh!='"' && nextCh!='\''  ){
                 handled = handleSymbolCompletion(ch);
             }
             return;
@@ -3080,10 +3081,14 @@ void Editor::completionInsert(bool appendFunc)
                 ||
                 (statement->kind == StatementKind::skPreprocessor
                   && !statement->args.isEmpty())) {
-            if ((p.Char >= lineText().length()) // it's the last char on line
-                    || (lineText().at(p.Char-1) != '(')) {  // it don't have '(' after it
-                if (statement->fullName!="std::endl")
-                    funcAddOn = "()";
+            QChar nextCh = nextNonSpaceChar(caretY()-1,p.Char-1);
+            if (nextCh=='(') {
+                funcAddOn = "";
+            } else if (isIdentChar(nextCh) || nextCh == '"'
+                       || nextCh == '\'') {
+                funcAddOn = '(';
+            } else {
+                funcAddOn = "()";
             }
         }
     }
@@ -3476,6 +3481,11 @@ void Editor::updateFunctionTip(bool showTip)
     int currentParamPos = 1;
     if (currentLine>=document()->count())
         return;
+    QChar ch=lastNonSpaceChar(currentLine,currentChar);
+    qDebug()<<ch;
+    if (ch!="(" && ch!=",")
+        return;
+
     while (currentLine>=0) {
         QString line = document()->getString(currentLine);
         if (currentLine!=caretPos.Line-1)
