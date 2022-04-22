@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-
+#include <stdbool.h>
 #include <winsock2.h>  
 #define PORT 8888
 #define SERVER_IP "127.0.0.1"
@@ -23,7 +23,7 @@ int main() {
 		return 2;
 	}
 	
-	sockaddr_in server_addr;
+	struct sockaddr_in server_addr;
 	server_addr.sin_family = AF_INET;
 	server_addr.sin_port = htons(PORT);
 	server_addr.sin_addr.S_un.S_addr = inet_addr(SERVER_IP);
@@ -52,7 +52,7 @@ int main() {
 		
 		printf("Receive data from server: \"%s\"\n",recv_data);
 		
-		if (data == kExitFlag) {
+		if (strcmp(data,kExitFlag)==0) {
 			printf("Exit!\n");
 			break;
 		}

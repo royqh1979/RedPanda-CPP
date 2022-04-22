@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-
+#include <stdbool.h>
 #include <winsock2.h> 
 
 #define PORT 8888
@@ -16,13 +16,13 @@ int main() {
 		return 1;
 	}
 	
-	SOCKET server_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	SOCKET server_socket= socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (server_socket == INVALID_SOCKET) {
 		printf("Failed to create server socket!\n");
 		return 2;
 	}
 	
-	sockaddr_in server_addr;
+	struct sockaddr_in server_addr;
 	server_addr.sin_family = AF_INET;
 	server_addr.sin_port = htons(PORT);
 	server_addr.sin_addr.S_un.S_addr = INADDR_ANY;
@@ -37,7 +37,7 @@ int main() {
 		return 4;
 	}
 	
-	sockaddr_in client_addr;
+	struct sockaddr_in client_addr;
 	int client_addr_len = sizeof(client_addr);
 	printf("Wait for connecting...\n");
 	
@@ -59,13 +59,12 @@ int main() {
 		recv_buf[ret]=0; // correctly ends received string
 		
 		printf("Receive from Client: \"%s\" \n", recv_buf);
-		if (strcmp(kExitFlag,recv_buf)==0) {
-			send(client_socket, kExitFlag, sizeof(kExitFlag), 0);			
+		if (strcmp(kExitFlag,recv_buf)==0) {		
 			printf("Exit!\n");
 			break;
 		}
 		
-		const char* send_data = "Hello, Tcp Client!\n";
+		const char* send_data = "Hello, Tcp Client!";
 		send(client_socket, send_data, strlen(send_data), 0);
 	}
 	
