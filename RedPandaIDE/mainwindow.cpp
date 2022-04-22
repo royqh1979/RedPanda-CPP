@@ -5282,17 +5282,33 @@ void MainWindow::on_btnSearchAgain_clicked()
 
 void MainWindow::on_actionRemove_Watch_triggered()
 {
-    QModelIndex index =ui->watchView->currentIndex();
-    QModelIndex parent;
-    while (true) {
-        parent = ui->watchView->model()->parent(index);
-        if (parent.isValid()) {
-            index=parent;
-        } else {
-            break;
+    QModelIndexList lst=ui->watchView->selectionModel()->selectedRows();
+    if (lst.count()<=1) {
+        QModelIndex index =ui->watchView->currentIndex();
+        QModelIndex parent;
+        while (true) {
+            parent = ui->watchView->model()->parent(index);
+            if (parent.isValid()) {
+                index=parent;
+            } else {
+                break;
+            }
         }
+        mDebugger->removeWatchVar(index);
+    } else {
+        QModelIndexList filteredList;
+        foreach(const QModelIndex& index,lst) {
+            if (!index.parent().isValid())
+                filteredList.append(index);
+        };
+        std::sort(filteredList.begin(),filteredList.end(), [](const QModelIndex& index1,
+                  const QModelIndex& index2) {
+            return index1.row()>index2.row();
+        });
+        foreach(const QModelIndex& index,filteredList) {
+            mDebugger->removeWatchVar(index);
+        };
     }
-    mDebugger->removeWatchVar(index);
 }
 
 

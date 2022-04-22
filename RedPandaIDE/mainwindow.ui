@@ -85,7 +85,7 @@
             <enum>QTabWidget::West</enum>
            </property>
            <property name="currentIndex">
-            <number>0</number>
+            <number>2</number>
            </property>
            <property name="usesScrollButtons">
             <bool>true</bool>
@@ -245,6 +245,9 @@
               <widget class="QTreeView" name="watchView">
                <property name="editTriggers">
                 <set>QAbstractItemView::DoubleClicked</set>
+               </property>
+               <property name="selectionMode">
+                <enum>QAbstractItemView::ExtendedSelection</enum>
                </property>
                <property name="textElideMode">
                 <enum>Qt::ElideNone</enum>

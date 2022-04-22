@@ -5,6 +5,7 @@ Red Panda C++ Version 1.0.5
   - fix: research button doesn't show find in files dialog
   - enhancement: add project template for libmysqlclient(libmariadbclient)
   - enhancement: add libmysqlclient to the x86-64 version gcc in distribution
+  - enhancement: select and delete multiple watches
   
 Red Panda C++ Version 1.0.4
   - fix: hide function tips, when move or resize the main window
