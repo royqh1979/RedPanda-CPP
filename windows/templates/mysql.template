@@ -4,8 +4,8 @@ Name=MySQL(MyriaDB)
 Icon=mysql.ico
 Description=A Sqlite3 API Example
 Description[zh_CN]=MySQL数据库示例程序
-Category=Utilities
-Category[zh_CN]=工具
+Category=Database
+Category[zh_CN]=数据库
 
 [Unit0]
 CName=main.c
