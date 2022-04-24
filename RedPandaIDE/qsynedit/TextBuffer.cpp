@@ -348,8 +348,12 @@ void SynDocument::deleteLines(int Index, int NumLines)
     auto action = finally([this]{
         endUpdate();
     });
-    if (mIndexOfLongestLine>=Index && (mIndexOfLongestLine <Index+NumLines)) {
-        mIndexOfLongestLine = - 1;
+    if (mIndexOfLongestLine>=Index) {
+        if (mIndexOfLongestLine <Index+NumLines) {
+            mIndexOfLongestLine = -1;
+        } else {
+            mIndexOfLongestLine -= NumLines;
+        }
     }
     int LinesAfter = mLines.count() - (Index + NumLines);
     if (LinesAfter < 0) {
@@ -482,6 +486,7 @@ void SynDocument::insertLines(int Index, int NumLines)
     auto action = finally([this]{
         endUpdate();
     });
+    mIndexOfLongestLine = -1;
     PSynDocumentLine line;
     mLines.insert(Index,NumLines,line);
     for (int i=Index;i<Index+NumLines;i++) {
@@ -503,6 +508,7 @@ void SynDocument::insertStrings(int Index, const QStringList &NewStrings)
     auto action = finally([this]{
         endUpdate();
     });
+    mIndexOfLongestLine = -1;
     PSynDocumentLine line;
     mLines.insert(Index,NewStrings.length(),line);
     for (int i=0;i<NewStrings.length();i++) {
@@ -579,9 +585,13 @@ void SynDocument::loadFromFile(const QString& filename, const QByteArray& encodi
     if (!file.open(QFile::ReadOnly ))
         throw FileError(tr("Can't open file '%1' for read!").arg(file.fileName()));
     beginUpdate();
+    internalClear();
     auto action = finally([this]{
+        if (mLines.count()>0)
+            emit inserted(0,mLines.count());
         endUpdate();
     });
+    mIndexOfLongestLine = -1;
     //test for utf8 / utf 8 bom
     if (encoding == ENCODING_AUTO_DETECT) {
         if (file.atEnd()) {
@@ -636,7 +646,6 @@ void SynDocument::loadFromFile(const QString& filename, const QByteArray& encodi
             }
             line = file.readLine();
         }
-        emit inserted(0,mLines.count());
         if (!needReread) {
             if (allAscii)
                 realEncoding = ENCODING_ASCII;
@@ -646,7 +655,6 @@ void SynDocument::loadFromFile(const QString& filename, const QByteArray& encodi
         QList<PCharsetInfo> charsets = pCharsetInfoManager->findCharsetByLocale(pCharsetInfoManager->localeName());
         if (!charsets.isEmpty()) {
             if (tryLoadFileByEncoding(realEncoding,file)) {
-                emit inserted(0,mLines.count());
                 return;
             }
 
@@ -659,9 +667,8 @@ void SynDocument::loadFromFile(const QString& filename, const QByteArray& encodi
                 if (encodingName == ENCODING_UTF8)
                     continue;
                 if (tryLoadFileByEncoding(encodingName,file)) {
-                    qDebug()<<encodingName;
+                    //qDebug()<<encodingName;
                     realEncoding = encodingName;
-                    emit inserted(0,mLines.count());
                     return;
                 }
             }
@@ -694,7 +701,6 @@ void SynDocument::loadFromFile(const QString& filename, const QByteArray& encodi
         }
         addItem(line);
     }
-    emit inserted(0,mLines.count());
 }
 
 

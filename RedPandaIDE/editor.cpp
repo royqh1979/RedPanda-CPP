@@ -3482,7 +3482,6 @@ void Editor::updateFunctionTip(bool showTip)
     if (currentLine>=document()->count())
         return;
     QChar ch=lastNonSpaceChar(currentLine,currentChar);
-    qDebug()<<ch;
     if (ch!="(" && ch!=",")
         return;
 

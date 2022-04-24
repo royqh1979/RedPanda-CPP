@@ -10,6 +10,7 @@ Red Panda C++ Version 1.0.5
   - enhancement: only show function tips when cursor is after ',' or '('.
   - enhancement: when auto complete function names, only append '(' if before identifier or "/'
   - update highconstrast icon set
+  - fix: index of the longest line not correctly updated when insert/delete multiple lines ( which will cause selection errors)
   
 Red Panda C++ Version 1.0.4
   - fix: hide function tips, when move or resize the main window
