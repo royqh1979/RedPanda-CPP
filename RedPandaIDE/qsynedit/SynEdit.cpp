@@ -56,7 +56,6 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent),
 #error "Not supported!"
 #endif
     mDocument = std::make_shared<SynDocument>(mFontDummy, this);
-    mOrigLines = mDocument;
     //fPlugins := TList.Create;
     mMouseMoved = false;
     mUndoing = false;
@@ -74,10 +73,8 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent),
 
     mUndoList = std::make_shared<SynEditUndoList>();
     mUndoList->connect(mUndoList.get(), &SynEditUndoList::addedUndo, this, &SynEdit::onUndoAdded);
-    mOrigUndoList = mUndoList;
     mRedoList = std::make_shared<SynEditUndoList>();
     mRedoList->connect(mRedoList.get(), &SynEditUndoList::addedUndo, this, &SynEdit::onRedoAdded);
-    mOrigRedoList = mRedoList;
 
     mForegroundColor=palette().color(QPalette::Text);
     mBackgroundColor=palette().color(QPalette::Base);
@@ -6590,10 +6587,6 @@ void SynEdit::onLinesPutted(int index, int count)
     int vEndLine = index + 1;
     if (mHighlighter) {
         vEndLine = std::max(vEndLine, scanFrom(index, index+count) + 1);
-        // If this editor is chained then the real owner of text buffer will probably
-        // have already parsed the changes, so ScanFrom will return immediately.
-        if (mDocument != mOrigLines)
-            vEndLine = INT_MAX;
     }
     invalidateLines(index + 1, vEndLine);
 }

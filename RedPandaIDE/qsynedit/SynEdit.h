@@ -644,9 +644,6 @@ private:
     bool mInserting;
     bool mPainting;
     PSynDocument mDocument;
-    PSynDocument mOrigLines;
-    PSynEditUndoList mOrigUndoList;
-    PSynEditUndoList mOrigRedoList;
     int mLinesInWindow;
     int mLeftChar;
     int mPaintLock; // lock counter for internal calculations
