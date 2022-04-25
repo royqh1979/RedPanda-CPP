@@ -326,6 +326,9 @@ MainWindow::MainWindow(QWidget *parent)
     mHeaderCompletionPopup = std::make_shared<HeaderCompletionPopup>();
     mFunctionTip = std::make_shared<FunctionTooltipWidget>();
 
+    mBottomPanelHeight = 0;
+    mLeftPanelWidth = 0;
+
     mClassBrowserModel.setColors(mStatementColors);
 
     connect(&mAutoSaveTimer, &QTimer::timeout,

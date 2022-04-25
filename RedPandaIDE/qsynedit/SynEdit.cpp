@@ -42,6 +42,7 @@
 SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     mDropped(false)
 {
+    mCharWidth=1;
     mLastKey = 0;
     mLastKeyModifiers = Qt::NoModifier;
     mModified = false;
@@ -66,6 +67,8 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     mDocument->connect(mDocument.get(), &SynDocument::inserted, this, &SynEdit::onLinesInserted);
     mDocument->connect(mDocument.get(), &SynDocument::putted, this, &SynEdit::onLinesPutted);
 
+    mGutterWidth = 0;
+    mScrollBars = SynScrollStyle::ssBoth;
     mFontDummy.setStyleStrategy(QFont::PreferAntialias);
     setFont(mFontDummy);
 
@@ -100,7 +103,6 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     this->setCursor(Qt::CursorShape::IBeamCursor);
     //TabStop := True;
     mInserting = true;
-    mScrollBars = SynScrollStyle::ssBoth;
     mExtraLineSpacing = 0;
 
     this->setFrameShape(QFrame::Panel);
