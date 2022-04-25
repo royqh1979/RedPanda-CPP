@@ -52,11 +52,13 @@ win32: {
         target.path = $${PREFIX}
         QMAKE_SUBSTITUTES += windows/installer-scripts/config.nsh.in
         QMAKE_SUBSTITUTES += windows/installer-scripts/config32.nsh.in
+        QMAKE_SUBSTITUTES += windows/installer-scripts/config-clang.nsh.in
 
         resources.path = $${PREFIX}
         resources.files += windows/templates
         resources.files += windows/installer-scripts/config.nsh
         resources.files += windows/installer-scripts/config32.nsh
+        resources.files += windows/installer-scripts/config-clang.nsh
         resources.files += README.md
         resources.files += NEWS.md
         resources.files += LICENSE

@@ -1,7 +1,7 @@
 ####################################################################
 # Startup
 
-!include "config.nsh"
+!include "config-clang.nsh"
 !define COMPILERFOLDER "Clang64"
 !define FINALNAME "RedPanda.C++.${DEVCPP_VERSION}.win64.${COMPILERNAME}.Setup.exe"
 !define DISPLAY_NAME "Red Panda C++ ${DEVCPP_VERSION}"
