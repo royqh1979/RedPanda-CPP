@@ -59,7 +59,7 @@ void ProjectPreCompileWidget::on_btnBrowse_clicked()
     }
 }
 
-void ProjectPreCompileWidget::updateIcons(const QSize &size)
+void ProjectPreCompileWidget::updateIcons(const QSize &/*size*/)
 {
     pIconsManager->setIcon(ui->btnBrowse, IconsManager::ACTION_FILE_OPEN_FOLDER);
 }

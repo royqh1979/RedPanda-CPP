@@ -973,7 +973,6 @@ void MainWindow::updateClassBrowserForEditor(Editor *editor)
     if (!editor) {
         mClassBrowserModel.setParser(nullptr);
         mClassBrowserModel.setCurrentFile("");
-        mClassBrowserModel.clear();
         return;
     }
     if (mQuitting)

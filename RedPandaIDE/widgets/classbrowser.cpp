@@ -188,6 +188,8 @@ void ClassBrowserModel::setParser(const PCppParser &newCppParser)
                    &CppParser::onEndParsing,
                    this,
                    &ClassBrowserModel::fillStatements);
+    } else {
+        clear();
     }
 }
 

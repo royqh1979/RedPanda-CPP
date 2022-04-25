@@ -81,7 +81,7 @@ void EnvironmentFoldersWidget::on_btnResetDefault_clicked()
     emit shouldQuitApp();
 }
 
-void EnvironmentFoldersWidget::updateIcons(const QSize &size)
+void EnvironmentFoldersWidget::updateIcons(const QSize &/*size*/)
 {
     pIconsManager->setIcon(ui->btnOpenConfigFolderInBrowser,IconsManager::ACTION_FILE_OPEN_FOLDER);
     pIconsManager->setIcon(ui->btnOpenThemeFolderInFileBrowser,IconsManager::ACTION_FILE_OPEN_FOLDER);

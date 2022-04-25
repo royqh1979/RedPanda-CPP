@@ -57,7 +57,7 @@ void ProjectDLLHostWidget::on_btnBrowse_clicked()
     }
 }
 
-void ProjectDLLHostWidget::updateIcons(const QSize &size)
+void ProjectDLLHostWidget::updateIcons(const QSize &/*size*/)
 {
     pIconsManager->setIcon(ui->btnBrowse, IconsManager::ACTION_FILE_OPEN_FOLDER);
 }

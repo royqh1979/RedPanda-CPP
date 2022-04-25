@@ -145,7 +145,7 @@ void ProjectCompilerWidget::doSave()
 void ProjectCompilerWidget::init()
 {
     ui->cbCompilerSet->clear();
-    for (int i=0;i<pSettings->compilerSets().size();i++) {
+    for (size_t i=0;i<pSettings->compilerSets().size();i++) {
         ui->cbCompilerSet->addItem(pSettings->compilerSets().getSet(i)->name());
     }
     SettingsWidget::init();
