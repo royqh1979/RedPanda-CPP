@@ -2648,6 +2648,11 @@ void Settings::CompilerSets::findSets()
         addSets(folder);
         searched.insert(folder);
     }
+    folder = includeTrailingPathDelimiter(mSettings->dirs().appDir())+"Clang64"+QDir::separator()+"bin";
+    if (!searched.contains(folder)) {
+        addSets(folder);
+        searched.insert(folder);
+    }
 #endif
 
 }

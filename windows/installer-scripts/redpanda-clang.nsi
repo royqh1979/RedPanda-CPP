@@ -2,7 +2,8 @@
 # Startup
 
 !include "config.nsh"
-!define FINALNAME "RedPanda.C++.${DEVCPP_VERSION}.win64.No.Compiler.Setup.exe"
+!define COMPILERFOLDER "Clang64"
+!define FINALNAME "RedPanda.C++.${DEVCPP_VERSION}.win64.${COMPILERNAME}.Setup.exe"
 !define DISPLAY_NAME "Red Panda C++ ${DEVCPP_VERSION}"
 
 !include "MUI2.nsh"
@@ -97,6 +98,13 @@ Section "$(SectionMainName)" SectionMain
   SetOutPath $INSTDIR\Templates
   File /nonfatal /r "Templates\*"
 
+SectionEnd
+
+Section "$(SectionMinGWName)" SectionMinGW
+  SectionIn 1 3
+  SetOutPath $INSTDIR\Clang64
+
+  File /nonfatal /r "${COMPILERFOLDER}\*"
 SectionEnd
 
 ####################################################################
@@ -253,6 +261,7 @@ SectionEnd
 
 !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
 !insertmacro MUI_DESCRIPTION_TEXT ${SectionMain}        "$(MessageSectionMain)"
+!insertmacro MUI_DESCRIPTION_TEXT ${SectionMinGW}      "$(MessageSectionMinGW)"
 !insertmacro MUI_DESCRIPTION_TEXT ${SectionShortcuts}   "$(MessageSectionShortcuts)"
 !insertmacro MUI_DESCRIPTION_TEXT ${SectionAssocs}      "$(MessageSectionAssocs)"
 !insertmacro MUI_DESCRIPTION_TEXT ${SectionConfig}      "$(MessageSectionConfig)"
