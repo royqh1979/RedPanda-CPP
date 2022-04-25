@@ -285,7 +285,7 @@ QString Compiler::getCharsetArgument(const QByteArray& encoding, bool checkSynta
 {
     QString result;
     if (compilerSet()->autoAddCharsetParams() && encoding != ENCODING_ASCII
-            && compilerSet()->compilerType()!="Clang") {
+            && compilerSet()->compilerType()!=COMPILER_CLANG) {
         QString encodingName;
         QString execEncodingName;
         QString compilerSetExecCharset = compilerSet()->execCharset();

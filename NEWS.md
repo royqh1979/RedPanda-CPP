@@ -1,3 +1,10 @@
+Red Panda C++ Version 1.0.6
+  - fix: gcc compiler set name is not correct in Linux
+  - enhancement: hide add charset option when the currect compiler set is clang
+  - enhancement: auto check the c project option in the new project dialog
+  - change: use "app.ico" as default name for the project icon file
+  - fix: c file should use CC to build in the auto generated makefile
+  
 Red Panda C++ Version 1.0.5
   - enhancement: add autolink and project template for sqlite3
   - enhancement: add sqlite3 lib to the gcc in distribution

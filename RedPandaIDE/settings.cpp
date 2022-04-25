@@ -1950,7 +1950,7 @@ void Settings::CompilerSet::setProperties(const QString &binDir)
     targetStr = "clang version ";
     delimPos1 = output.indexOf(targetStr);
     if (delimPos1>=0) {
-        mCompilerType = "Clang";
+        mCompilerType = COMPILER_CLANG;
         delimPos1+=strlen(targetStr);
         delimPos2 = delimPos1;
         while (delimPos2<output.length() && !isNonPrintableAsciiChar(output[delimPos2]))
@@ -1959,7 +1959,7 @@ void Settings::CompilerSet::setProperties(const QString &binDir)
 
         mName = "Clang " + mVersion;
     } else {
-        mCompilerType = "GCC";
+        mCompilerType = COMPILER_GCC;
         targetStr = "gcc version ";
         delimPos1 = output.indexOf(targetStr);
         if (delimPos1<0)
@@ -1987,9 +1987,17 @@ void Settings::CompilerSet::setProperties(const QString &binDir)
             } else if (mType.contains("MSYS2")) {
                 mName = "MinGW-w64 GCC " + mVersion;
             } else if (mType.contains("GCC")) {
+#ifdef Q_OS_WIN
                 mName = "MinGW GCC " + mVersion;
+#else
+                mName = "GCC " + mVersion;
+#endif
             } else {
+#ifdef Q_OS_WIN
                 mName = "MinGW GCC " + mVersion;
+#else
+                mName = "GCC " + mVersion;
+#endif
             }
         }
     }

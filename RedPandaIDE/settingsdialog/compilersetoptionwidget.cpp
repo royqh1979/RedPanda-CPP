@@ -124,6 +124,13 @@ void resetOptionTabs(Settings::PCompilerSet pSet,QTabWidget* pTab)
 }
 
 static void loadCompilerSetSettings(Settings::PCompilerSet pSet, Ui::CompilerSetOptionWidget* ui) {
+    ui->chkAutoAddCharset->setEnabled(pSet->compilerType() != COMPILER_CLANG);
+    ui->chkAutoAddCharset->setVisible(pSet->compilerType() != COMPILER_CLANG);
+    ui->cbEncoding->setEnabled(pSet->compilerType() != COMPILER_CLANG);
+    ui->cbEncoding->setVisible(pSet->compilerType() != COMPILER_CLANG);
+    ui->cbEncodingDetails->setEnabled(pSet->compilerType() != COMPILER_CLANG);
+    ui->cbEncodingDetails->setVisible(pSet->compilerType() != COMPILER_CLANG);
+
     ui->chkUseCustomCompilerParams->setChecked(pSet->useCustomCompileParams());
     ui->txtCustomCompileParams->setPlainText(pSet->customCompileParams());
     ui->txtCustomCompileParams->setEnabled(pSet->useCustomCompileParams());

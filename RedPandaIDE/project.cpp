@@ -279,7 +279,11 @@ PProjectUnit Project::newUnit(PProjectModelNode parentNode, const QString& custo
     newUnit->node()->unitIndex = count;
     //parentNode.Expand(True);
     newUnit->setCompile(true);
-    newUnit->setCompileCpp(mOptions.isCpp);
+    if (getFileType(customFileName) == FileType::CSource) {
+        newUnit->setCompileCpp(false);
+    } else {
+        newUnit->setCompileCpp(mOptions.isCpp);
+    }
     newUnit->setLink(true);
     newUnit->setPriority(1000);
     newUnit->setOverrideBuildCmd(false);
@@ -758,7 +762,7 @@ bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate, b
     if (!mOptions.icon.isEmpty()) {
         QString originIcon = QFileInfo(aTemplate->fileName()).absoluteDir().absoluteFilePath(mOptions.icon);
         if (fileExists(originIcon)) {
-            QString destIcon = changeFileExt(mFilename,ICON_EXT);
+            QString destIcon = QFileInfo(mFilename).absoluteDir().absoluteFilePath("app.ico");
             QFile::copy(originIcon,destIcon);
             mOptions.icon = destIcon;
         } else {

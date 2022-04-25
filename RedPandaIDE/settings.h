@@ -46,6 +46,8 @@
 #define SETTING_EDITOR_DEFAULT_ENCODING "default_encoding"
 #define SETTING_EDITOR_AUTO_INDENT "default_auto_indent"
 
+#define COMPILER_CLANG "Clang"
+#define COMPILER_GCC "GCC"
 
 extern const char ValueToChar[28];
 

@@ -220,6 +220,7 @@ void NewProjectDialog::on_lstTemplates_currentItemChanged(QListWidgetItem *curre
             ui->rdCppProject->setChecked(true);
         } else {
             ui->rdCProject->setEnabled(true);
+            ui->rdCProject->setChecked(true);
             if (pSettings->editor().defaultFileCpp()) {
                 ui->rdCppProject->setChecked(true);
             } else {
