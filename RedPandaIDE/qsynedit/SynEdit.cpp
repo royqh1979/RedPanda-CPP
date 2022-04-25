@@ -43,6 +43,7 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     mDropped(false)
 {
     mCharWidth=1;
+    mTextHeight = 1;
     mLastKey = 0;
     mLastKeyModifiers = Qt::NoModifier;
     mModified = false;
@@ -56,6 +57,7 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent),
 #else
 #error "Not supported!"
 #endif
+    mFontDummy.setStyleStrategy(QFont::PreferAntialias);
     mDocument = std::make_shared<SynDocument>(mFontDummy, this);
     //fPlugins := TList.Create;
     mMouseMoved = false;
@@ -69,10 +71,8 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent),
 
     mGutterWidth = 0;
     mScrollBars = SynScrollStyle::ssBoth;
-    mFontDummy.setStyleStrategy(QFont::PreferAntialias);
-    setFont(mFontDummy);
 
-    setFontForNonAscii(mFontDummy);
+
 
     mUndoList = std::make_shared<SynEditUndoList>();
     mUndoList->connect(mUndoList.get(), &SynEditUndoList::addedUndo, this, &SynEdit::onUndoAdded);
@@ -152,8 +152,6 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     m_blinkTimerId = 0;
     m_blinkStatus = 0;
 
-    synFontChanged();
-
     hideCaret();
 
     connect(horizontalScrollBar(),&QScrollBar::valueChanged,
@@ -166,6 +164,8 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     //setMouseTracking(true);
     setAcceptDrops(true);
 
+    setFont(mFontDummy);
+    setFontForNonAscii(mFontDummy);
 }
 
 int SynEdit::displayLineCount() const
