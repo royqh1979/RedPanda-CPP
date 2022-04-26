@@ -5,6 +5,7 @@ Red Panda C++ Version 1.0.6
   - change: use "app.ico" as default name for the project icon file
   - fix: c file should use CC to build in the auto generated makefile
   - enhancement: package script for msys2 clang
+  - enhancement: auto set problem case's expected output file which has "ans" as the suffix, when batch set cases
   
 Red Panda C++ Version 1.0.5
   - enhancement: add autolink and project template for sqlite3
