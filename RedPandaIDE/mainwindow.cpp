@@ -3288,9 +3288,15 @@ void MainWindow::onProblemBatchSetCases()
         problemCase->name = QFileInfo(filename).baseName();
         problemCase->testState = ProblemCaseTestState::NotTested;
         problemCase->inputFileName = filename;
-        QString expectedFileName = filename.mid(0,filename.length()-2)+"out";
-        if (fileExists(expectedFileName))
+        QString expectedFileName;
+        expectedFileName = filename.mid(0,filename.length()-2)+"ans";
+        if (fileExists(expectedFileName)) {
             problemCase->expectedOutputFileName = expectedFileName;
+        } else {
+            expectedFileName = filename.mid(0,filename.length()-2)+"out";
+            if (fileExists(expectedFileName))
+                problemCase->expectedOutputFileName = expectedFileName;
+        }
         mOJProblemModel.addCase(problemCase);
     }
 }
@@ -7545,9 +7551,15 @@ void MainWindow::on_btnProblemCaseInputFileName_clicked()
         if (problemCase->expectedOutputFileName.isEmpty()
                 && problemCase->expected.isEmpty()
                 && QFileInfo(fileName).suffix()=="in") {
-            QString expectedFileName = fileName.mid(0,fileName.length()-2)+"out";
-            if (fileExists(expectedFileName))
+            QString expectedFileName;
+            expectedFileName = fileName.mid(0,fileName.length()-2)+"ans";
+            if (fileExists(expectedFileName)) {
                 problemCase->expectedOutputFileName = expectedFileName;
+            } else {
+                expectedFileName = fileName.mid(0,fileName.length()-2)+"out";
+                if (fileExists(expectedFileName))
+                    problemCase->expectedOutputFileName = expectedFileName;
+            }
         }
         fillProblemCaseInputAndExpected(problemCase);
     }
