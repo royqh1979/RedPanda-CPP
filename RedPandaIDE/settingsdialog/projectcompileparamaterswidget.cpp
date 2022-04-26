@@ -70,7 +70,7 @@ void ProjectCompileParamatersWidget::on_btnChooseLib_clicked()
     }
 }
 
-void ProjectCompileParamatersWidget::updateIcons(const QSize &size)
+void ProjectCompileParamatersWidget::updateIcons(const QSize &/*size*/)
 {
     pIconsManager->setIcon(ui->btnChooseLib, IconsManager::ACTION_MISC_FOLDER);
 }

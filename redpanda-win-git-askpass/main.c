@@ -14,7 +14,7 @@ HWND hMainDlg = NULL;
 HWND hwndTxtPassword = NULL;
 
 int WINAPI WinMain(HINSTANCE hInstance,
-                   HINSTANCE hPrevInstance,
+                   HINSTANCE /*hPrevInstance*/,
                    LPTSTR lpCmdLine, int nCmdShow) {
     MSG msg;
 
@@ -51,7 +51,7 @@ LRESULT CALLBACK TxtPasswordWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
     return CallWindowProc(lpfnTxtPasswordWndProc, hwnd, msg, wParam, lParam);
 }
 
-LRESULT CALLBACK MainDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
+LRESULT CALLBACK MainDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM /*lParam*/) {
     switch (message) {
     case WM_INITDIALOG :
         return TRUE ;

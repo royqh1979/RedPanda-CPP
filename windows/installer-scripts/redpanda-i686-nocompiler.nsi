@@ -460,6 +460,7 @@ Section "Uninstall"
   RMDir /r "$INSTDIR\Templates"
   RMDir /r "$INSTDIR\MinGW32"
   RMDir /r "$INSTDIR\MinGW64"
+  RMDir /r "$INSTDIR\Clang64"
 
   StrCpy $0 "$INSTDIR"
   Call un.DeleteDirIfEmpty

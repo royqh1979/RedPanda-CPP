@@ -326,6 +326,9 @@ MainWindow::MainWindow(QWidget *parent)
     mHeaderCompletionPopup = std::make_shared<HeaderCompletionPopup>();
     mFunctionTip = std::make_shared<FunctionTooltipWidget>();
 
+    mBottomPanelHeight = 0;
+    mLeftPanelWidth = 0;
+
     mClassBrowserModel.setColors(mStatementColors);
 
     connect(&mAutoSaveTimer, &QTimer::timeout,
@@ -970,7 +973,6 @@ void MainWindow::updateClassBrowserForEditor(Editor *editor)
     if (!editor) {
         mClassBrowserModel.setParser(nullptr);
         mClassBrowserModel.setCurrentFile("");
-        mClassBrowserModel.clear();
         return;
     }
     if (mQuitting)
@@ -1825,7 +1827,7 @@ void MainWindow::debug()
     mDebugger->sendCommand("-gdb-set", "confirm off");
     mDebugger->sendCommand("-gdb-set", "print repeats 0"); // don't repeat elements
     mDebugger->sendCommand("-gdb-set", "print elements 0"); // don't limit elements
-    mDebugger->sendCommand("-environment-cd", QString("\"%1\"").arg(excludeTrailingPathDelimiter(filePath))); // restore working directory
+    mDebugger->sendCommand("-environment-cd", QString("\"%1\"").arg(extractFileDir(filePath))); // restore working directory
     if (pSettings->debugger().useGDBServer()) {
         mDebugger->sendCommand("-target-select",QString("remote localhost:%1").arg(pSettings->debugger().GDBServerPort()));
         if (!debugInferiorhasBreakpoint()) {

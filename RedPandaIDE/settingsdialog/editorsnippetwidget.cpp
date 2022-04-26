@@ -88,7 +88,7 @@ void EditorSnippetWidget::on_btnAdd_clicked()
     ui->tblSnippets->edit(mModel.lastSnippetCaption());
 }
 
-void EditorSnippetWidget::updateIcons(const QSize &size)
+void EditorSnippetWidget::updateIcons(const QSize &/*size*/)
 {
     pIconsManager->setIcon(ui->btnAdd,IconsManager::ACTION_MISC_ADD);
     pIconsManager->setIcon(ui->btnRemove,IconsManager::ACTION_MISC_REMOVE);

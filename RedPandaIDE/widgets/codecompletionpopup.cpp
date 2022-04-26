@@ -971,13 +971,14 @@ void CodeCompletionPopup::hideEvent(QHideEvent *event)
     QMutexLocker locker(&mMutex);
     mListView->setKeypressedCallback(nullptr);
     mCompletionStatementList.clear();
-    foreach (PStatement statement, mFullCompletionStatementList) {
-        statement->matchPositions.clear();
-    }
+//    foreach (PStatement statement, mFullCompletionStatementList) {
+//        statement->matchPositions.clear();
+//    }
     mFullCompletionStatementList.clear();
     mIncludedFiles.clear();
     mUsings.clear();
     mAddedStatements.clear();
+    mCurrentStatement = nullptr;
     mParser = nullptr;
     QWidget::hideEvent(event);
 }

@@ -108,7 +108,7 @@ void ProjectGeneralWidget::doSave()
             || !ui->lbIcon->pixmap() || ui->lbIcon->pixmap()->isNull()) {
         project->options().icon = "";
     } else {
-        QString iconPath = changeFileExt(project->filename(),"ico");
+        QString iconPath = QFileInfo(project->filename()).absoluteDir().absoluteFilePath("app.ico");
         if (iconPath!=mIconPath) {
             if (QFile(iconPath).exists()) {
                 if (!QFile::remove(iconPath)) {

@@ -132,7 +132,6 @@ struct StatementMatchPosition{
 
 using PStatementMathPosition = std::shared_ptr<StatementMatchPosition>;
 
-
 struct Statement;
 using PStatement = std::shared_ptr<Statement>;
 using StatementList = QList<PStatement>;

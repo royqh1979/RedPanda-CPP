@@ -91,7 +91,7 @@ void ProjectOutputWidget::on_btnCompileLog_clicked()
     }
 }
 
-void ProjectOutputWidget::updateIcons(const QSize &size)
+void ProjectOutputWidget::updateIcons(const QSize &/*size*/)
 {
     pIconsManager->setIcon(ui->btnCompileLog, IconsManager::ACTION_FILE_OPEN_FOLDER);
     pIconsManager->setIcon(ui->btnObjOutputDir, IconsManager::ACTION_FILE_OPEN_FOLDER);

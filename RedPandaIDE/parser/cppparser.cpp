@@ -52,6 +52,7 @@ CppParser::CppParser(QObject *parent) : QObject(parent),
 
     mCppKeywords = CppKeywords;
     mCppTypeKeywords = CppTypeKeywords;
+    mEnabled = true;
     //mNamespaces;
     //mBlockBeginSkips;
     //mBlockEndSkips;
