@@ -103,6 +103,8 @@ QString Compiler::getFileNameFromOutputLine(QString &line) {
 
         if (QFileInfo(temp).fileName() == QLatin1String("ld.exe")) { // skip ld.exe
             continue;
+        } else if (QFileInfo(temp).suffix()=="o") { // skip obj file
+                continue;
         } else {
             break;
         }
@@ -122,6 +124,10 @@ int Compiler::getLineNumberFromOutputLine(QString &line)
         result = line.midRef(0,pos).toInt();
         if (result > 0)
             line.remove(0,pos+1);
+    } else {
+        result = line.toInt();
+        if (result > 0)
+            line="";
     }
     return result;
 }
@@ -194,6 +200,18 @@ void Compiler::processOutput(QString &line)
             mLastIssue.reset();
         }
         return;
+    }
+    if (line.startsWith(">>>"))
+        line.remove(0,3);
+    QString referencePrefix = QString(" referenced by ");
+    if(mLastIssue && line.startsWith(referencePrefix)) {
+            line.remove(0,referencePrefix.length());
+            mLastIssue->filename = getFileNameFromOutputLine(line);
+            qDebug()<<line;
+            mLastIssue->line = getLineNumberFromOutputLine(line);
+            emit compileIssue(mLastIssue);
+            mLastIssue.reset();
+            return;
     }
     QString inFilePrefix = QString("In file included from ");
     QString fromPrefix = QString("from ");
@@ -270,7 +288,9 @@ void Compiler::processOutput(QString &line)
         issue->type = getIssueTypeFromOutputLine(line);
     }
     issue->description = line.trimmed();
-    if (issue->line<=0) {
+    if (issue->line<=0 && (issue->filename=="ld" || issue->filename=="lld")) {
+        mLastIssue = issue;
+    } else if (issue->line<=0) {
         emit compileIssue(issue);
     } else
         mLastIssue = issue;

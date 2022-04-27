@@ -7,6 +7,7 @@ Red Panda C++ Version 1.0.6
   - enhancement: package script for msys2 clang
   - enhancement: auto set problem case's expected output file which has "ans" as the suffix, when batch set cases
   - fix: use utf8 as the encoding for clang's error output
+  - fix: correctly parse link error message for clang
   
 Red Panda C++ Version 1.0.5
   - enhancement: add autolink and project template for sqlite3
