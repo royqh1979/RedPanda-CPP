@@ -590,10 +590,16 @@ void Compiler::runCommand(const QString &cmd, const QString  &arguments, const Q
                         errorOccurred= true;
                     });
     process.connect(&process, &QProcess::readyReadStandardError,[&process,this](){
-        this->error(QString::fromLocal8Bit( process.readAllStandardError()));
+        if (compilerSet()->compilerType() == COMPILER_CLANG)
+            this->error(QString::fromUtf8(process.readAllStandardError()));
+        else
+            this->error(QString::fromLocal8Bit( process.readAllStandardError()));
     });
     process.connect(&process, &QProcess::readyReadStandardOutput,[&process,this](){
-        this->log(QString::fromLocal8Bit( process.readAllStandardOutput()));
+        if (compilerSet()->compilerType() == COMPILER_CLANG)
+            this->log(QString::fromUtf8(process.readAllStandardOutput()));
+        else
+            this->log(QString::fromLocal8Bit( process.readAllStandardOutput()));
     });
     process.connect(&process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),[this](){
         this->error(COMPILE_PROCESS_END);

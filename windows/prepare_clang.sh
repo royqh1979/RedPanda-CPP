@@ -40,6 +40,9 @@ rm -rf lib/libclang*.a
 rm -rf lib/libLLVM*.a
 rm -rf lib/libtcl*.a
 rm -rf lib/libtk*.a
+rm -rf lib/liblldELF.a
+rm -rf lib/liblldCOFF.a
+rm -rf lib/liblldMachO.a
 rm -rf lib/libtdbc*
 rm -rf lib/tcl8
 rm -rf lib/tcl8.6

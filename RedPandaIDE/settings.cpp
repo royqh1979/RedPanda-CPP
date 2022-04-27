@@ -2066,10 +2066,10 @@ void Settings::CompilerSet::setExecutables()
             mCCompiler =  findProgramInBinDirs(GCC_PROGRAM);
         if (mCppCompiler.isEmpty())
             mCppCompiler = findProgramInBinDirs(GPP_PROGRAM);
-        if (mDebugger.isEmpty())
-            mDebugger = findProgramInBinDirs(GDB_PROGRAM);
-        if (mDebugServer.isEmpty())
-            mDebugServer = findProgramInBinDirs(GDB_SERVER_PROGRAM);
+//        if (mDebugger.isEmpty())
+//            mDebugger = findProgramInBinDirs(GDB_PROGRAM);
+//        if (mDebugServer.isEmpty())
+//            mDebugServer = findProgramInBinDirs(GDB_SERVER_PROGRAM);
     } else {
         mCCompiler =  findProgramInBinDirs(GCC_PROGRAM);
         mCppCompiler = findProgramInBinDirs(GPP_PROGRAM);
