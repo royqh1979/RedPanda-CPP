@@ -1923,12 +1923,17 @@ static void addExistingDirectory(QStringList& dirs, const QString& directory) {
 
 void Settings::CompilerSet::setProperties(const QString &binDir)
 {
-    if (!fileExists(binDir,GCC_PROGRAM))
+    QString cc_prog;
+    if (fileExists(binDir, CLANG_PROGRAM))
+        cc_prog = CLANG_PROGRAM;
+    else  if (fileExists(binDir,GCC_PROGRAM))
+        cc_prog = GCC_PROGRAM;
+    else
         return;
     // Obtain version number and compiler distro etc
     QStringList arguments;
     arguments.append("-v");
-    QByteArray output = getCompilerOutput(binDir,GCC_PROGRAM,arguments);
+    QByteArray output = getCompilerOutput(binDir,cc_prog,arguments);
 
     //Target
     QByteArray targetStr = "Target: ";
@@ -2010,7 +2015,7 @@ void Settings::CompilerSet::setProperties(const QString &binDir)
     // Obtain compiler target
     arguments.clear();
     arguments.append("-dumpmachine");
-    mDumpMachine = getCompilerOutput(binDir, GCC_PROGRAM, arguments);
+    mDumpMachine = getCompilerOutput(binDir, cc_prog, arguments);
 
     // Add the default directories
     addExistingDirectory(mBinDirs, includeTrailingPathDelimiter(folder) +  "bin");
@@ -2052,10 +2057,25 @@ void Settings::CompilerSet::setDefines() {
 
 void Settings::CompilerSet::setExecutables()
 {
-    mCCompiler = findProgramInBinDirs(GCC_PROGRAM);
-    mCppCompiler = findProgramInBinDirs(GPP_PROGRAM);
-    mDebugger = findProgramInBinDirs(GDB_PROGRAM);
-    mDebugServer = findProgramInBinDirs(GDB_SERVER_PROGRAM);
+    if (mCompilerType == COMPILER_CLANG) {
+        mCCompiler =  findProgramInBinDirs(CLANG_PROGRAM);
+        mCppCompiler = findProgramInBinDirs(CLANG_CPP_PROGRAM);
+        mDebugger = findProgramInBinDirs(GDB_PROGRAM);
+        mDebugServer = findProgramInBinDirs(GDB_SERVER_PROGRAM);
+        if (mCCompiler.isEmpty())
+            mCCompiler =  findProgramInBinDirs(GCC_PROGRAM);
+        if (mCppCompiler.isEmpty())
+            mCppCompiler = findProgramInBinDirs(GPP_PROGRAM);
+        if (mDebugger.isEmpty())
+            mDebugger = findProgramInBinDirs(GDB_PROGRAM);
+        if (mDebugServer.isEmpty())
+            mDebugServer = findProgramInBinDirs(GDB_SERVER_PROGRAM);
+    } else {
+        mCCompiler =  findProgramInBinDirs(GCC_PROGRAM);
+        mCppCompiler = findProgramInBinDirs(GPP_PROGRAM);
+        mDebugger = findProgramInBinDirs(GDB_PROGRAM);
+        mDebugServer = findProgramInBinDirs(GDB_SERVER_PROGRAM);
+    }
     mMake = findProgramInBinDirs(MAKE_PROGRAM);
     mResourceCompiler = findProgramInBinDirs(WINDRES_PROGRAM);
     mProfiler = findProgramInBinDirs(GPROF_PROGRAM);
@@ -2556,7 +2576,7 @@ bool Settings::CompilerSets::addSets(const QString &folder)
 {
     if (!directoryExists(folder))
         return false;
-    if (!fileExists(includeTrailingPathDelimiter(folder)+GCC_PROGRAM)) {
+    if (!fileExists(folder, GCC_PROGRAM) && !fileExists(folder, CLANG_PROGRAM)) {
         return false;
     }
     // Default, release profile

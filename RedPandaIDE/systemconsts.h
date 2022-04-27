@@ -32,6 +32,9 @@
 #define CLEAN_PROGRAM   "del /q /f"
 #define CPP_PROGRAM     "cpp.exe"
 #define GIT_PROGRAM     "git.exe"
+#define CLANG_PROGRAM   "clang.exe"
+#define CLANG_CPP_PROGRAM   "clang++.exe"
+#define LLDB_MI_PROGRAM   "lldb-mi.exe"
 #elif defined(Q_OS_LINUX)
 #define GCC_PROGRAM     "gcc"
 #define GPP_PROGRAM     "g++"
@@ -44,6 +47,9 @@
 #define CLEAN_PROGRAM   "rm -rf"
 #define CPP_PROGRAM     "cpp"
 #define GIT_PROGRAM     "git"
+#define CLANG_PROGRAM   "clang"
+#define CLANG_CPP_PROGRAM   "clang++"
+#define LLDB_MI_PROGRAM   "lldb-mi"
 #else
 #error "Only support windows and linux now!"
 #endif

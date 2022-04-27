@@ -28,6 +28,13 @@ rm -rf bin/llvm-bitcode-strip.exe
 rm -rf bin/llvm-install-name-tool.exe
 rm -rf bin/llvm-objcopy.exe
 rm -rf bin/llvm-strip.exe
+rm -rf bin/sqlite3_analyzer.exe
+rm -rf bin/sqldiff.exe
+rm -rf bin/dbhash.exe
+rm -rf bin/glewinfo.exe
+rm -rf bin/diagtool.exe
+rm -rf bin/FileCheck.exe
+rm -rf bin/KillTheDoctor.exe
 
 rm -rf lib/libclang*.a
 rm -rf lib/libLLVM*.a
