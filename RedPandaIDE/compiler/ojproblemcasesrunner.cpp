@@ -19,6 +19,7 @@
 #include "../settings.h"
 #include "../systemconsts.h"
 #include "../widgets/ojproblemsetmodel.h"
+#include <QElapsedTimer>
 #include <QProcess>
 
 
