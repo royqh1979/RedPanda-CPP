@@ -1,3 +1,6 @@
+Red Panda C++ Version 1.0.7
+  - change: use Shift+Enter to break line
+
 Red Panda C++ Version 1.0.6
   - fix: gcc compiler set name is not correct in Linux
   - enhancement: hide add charset option when the currect compiler set is clang
