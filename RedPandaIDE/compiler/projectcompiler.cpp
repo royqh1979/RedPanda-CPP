@@ -386,7 +386,7 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
             // Or roll our own
         } else {
             QString encodingStr;
-            if (mProject->options().addCharset) {
+            if (compilerSet()->compilerType() != COMPILER_CLANG && mProject->options().addCharset) {
                 QByteArray defaultSystemEncoding = pCharsetInfoManager->getDefaultSystemEncoding();
                 if (unit->encoding() == ENCODING_AUTO_DETECT) {
                     Editor* editor = mProject->unitEditor(unit);

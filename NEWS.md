@@ -1,5 +1,9 @@
 Red Panda C++ Version 1.0.7
   - change: use Shift+Enter to break line
+  - change: highlight whole #define statement using one color
+  - enhancement: don't highlight '\' as error
+  - enhancement: hide add charset  option in project options dialog's compiler set page, when project compiler set is clang
+  - fix: When generating project's makefile for clang, don't add -fexec-charset / -finput-charset command line options
 
 Red Panda C++ Version 1.0.6
   - fix: gcc compiler set name is not correct in Linux

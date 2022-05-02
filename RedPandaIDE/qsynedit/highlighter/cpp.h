@@ -53,7 +53,7 @@ class SynEditCppHighlighter: public SynHighlighter
         RoundClose, RoundOpen, ScopeResolution, SemiColon, ShiftLeft,
         ShiftLeftAssign, ShiftRight, ShiftRightAssign, SquareClose,
         SquareOpen, Star, Subtract, SubtractAssign, Xor,
-        XorAssign
+        XorAssign, BackSlash
     };
 
     enum RangeState {
@@ -130,6 +130,7 @@ private:
     void roundOpenProc();
     void semiColonProc();
     void slashProc();
+    void backSlashProc();
     void spaceProc();
     void squareCloseProc();
     void squareOpenProc();

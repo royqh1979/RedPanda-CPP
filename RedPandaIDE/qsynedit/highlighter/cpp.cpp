@@ -445,32 +445,36 @@ void SynEditCppHighlighter::directiveProc()
         mRun+=1;
     }
 
+    QString directive;
     while (mLine[mRun]!=0 && isIdentChar(mLine[mRun])) {
+        directive+=mLine[mRun];
         mRun+=1;
     }
-    mRange.state = RangeState::rsUnknown;
-//    do {
-//        switch(mLine[mRun].unicode()) {
-//        case '/': //comment?
-//            switch (mLine[mRun+1].unicode()) {
-//            case '/': // is end of directive as well
-//                mRange.state = RangeState::rsUnknown;
-//                return;
-//            case '*': // might be embeded only
-//                mRange.state = RangeState::rsDirectiveComment;
-//                return;
-//            }
-//            break;
-//        case '\\': // yet another line?
-//            if (mLine[mRun+1] == 0) {
-//                mRun+=1;
-//                mRange.state = RangeState::rsMultiLineDirective;
-//                return;
-//            }
-//            break;
-//        }
-//        mRun+=1;
-//    } while (mLine[mRun]!=0);
+    if (directive == "define") {
+        do {
+            switch(mLine[mRun].unicode()) {
+            case '/': //comment?
+                switch (mLine[mRun+1].unicode()) {
+                case '/': // is end of directive as well
+                    mRange.state = RangeState::rsUnknown;
+                    return;
+                case '*': // might be embeded only
+                    mRange.state = RangeState::rsDirectiveComment;
+                    return;
+                }
+                break;
+            case '\\': // yet another line?
+                if (mLine[mRun+1] == 0) {
+                    mRun+=1;
+                    mRange.state = RangeState::rsMultiLineDirective;
+                    return;
+                }
+                break;
+            }
+            mRun+=1;
+        } while (mLine[mRun]!=0);
+    } else
+        mRange.state = RangeState::rsUnknown;
 }
 
 void SynEditCppHighlighter::directiveEndProc()
@@ -972,6 +976,13 @@ void SynEditCppHighlighter::slashProc()
     }
 }
 
+void SynEditCppHighlighter::backSlashProc()
+{
+    mTokenId = TokenKind::Symbol;
+    mExtTokenId = ExtTokenKind::BackSlash;
+    mRun+=1;
+}
+
 void SynEditCppHighlighter::spaceProc()
 {
     mRun += 1;
@@ -1286,6 +1297,9 @@ void SynEditCppHighlighter::processChar()
         break;
     case '!':
         notSymbolProc();
+        break;
+    case '\\':
+        backSlashProc();
         break;
     case 0:
         nullProc();

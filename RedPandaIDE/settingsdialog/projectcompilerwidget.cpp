@@ -37,6 +37,8 @@ void ProjectCompilerWidget::refreshOptions()
     Settings::PCompilerSet pSet = pSettings->compilerSets().getSet(ui->cbCompilerSet->currentIndex());
     if (!pSet)
         return;
+    ui->chkAddCharset->setVisible(pSet->compilerType()!=COMPILER_CLANG);
+    ui->chkAddCharset->setEnabled(pSet->compilerType()!=COMPILER_CLANG);
     mOptions = pSet->iniOptions();
     QTabWidget* pTab = ui->tabOptions;
     while (pTab->count()>0) {
@@ -111,7 +113,7 @@ void ProjectCompilerWidget::doLoad()
 
 void ProjectCompilerWidget::doSave()
 {
-    Settings::PCompilerSet pSet = pSettings->compilerSets().defaultSet();
+    Settings::PCompilerSet pSet = pSettings->compilerSets().getSet(ui->cbCompilerSet->currentIndex());
     if (!pSet)
         return;
     //read values in the options widget
@@ -137,7 +139,8 @@ void ProjectCompilerWidget::doSave()
     }
     pMainWindow->project()->setCompilerSet(ui->cbCompilerSet->currentIndex());
     pMainWindow->project()->options().compilerOptions = mOptions;
-    pMainWindow->project()->options().addCharset = ui->chkAddCharset->isChecked();
+    if (pSet->compilerType()!=COMPILER_CLANG)
+        pMainWindow->project()->options().addCharset = ui->chkAddCharset->isChecked();
     pMainWindow->project()->options().staticLink = ui->chkStaticLink->isChecked();
     pMainWindow->project()->saveOptions();
 }

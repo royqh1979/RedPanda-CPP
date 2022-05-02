@@ -383,7 +383,6 @@ QString Compiler::getCCompileArguments(bool checkSyntax)
 
 QString Compiler::getCppCompileArguments(bool checkSyntax)
 {
-    return getCCompileArguments(checkSyntax);
     QString result;
     if (checkSyntax) {
         result += " -fsyntax-only";
