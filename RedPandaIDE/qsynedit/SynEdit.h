@@ -238,8 +238,8 @@ public:
     void setCaretXYEx(bool CallEnsureCursorPosVisible, BufferCoord value);
     void setCaretXYCentered(const BufferCoord& value);
     void setCaretAndSelection(const BufferCoord& ptCaret,
-                              const BufferCoord& ptBefore,
-                              const BufferCoord& ptAfter);
+                              const BufferCoord& ptSelBegin,
+                              const BufferCoord& ptSelEnd);
 
     bool inputMethodOn();
 

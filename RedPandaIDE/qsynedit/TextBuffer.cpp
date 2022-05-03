@@ -439,8 +439,12 @@ void SynDocument::putString(int Index, const QString &s, bool notify) {
         int oldColumns = mLines[Index]->fColumns;
         mLines[Index]->fString = s;
         calculateLineColumns(Index);
-        if (oldColumns>mLines[Index]->fColumns)
+        if (mIndexOfLongestLine == Index && oldColumns>mLines[Index]->fColumns )
             mIndexOfLongestLine = -1;
+        else if (mIndexOfLongestLine>=0
+                 && mIndexOfLongestLine<mLines.count()
+                 && mLines[Index]->fColumns > mLines[mIndexOfLongestLine]->fColumns)
+            mIndexOfLongestLine = Index;
         if (notify)
             emit putted(Index,1);
         endUpdate();

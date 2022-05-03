@@ -1131,7 +1131,7 @@ QChar SynEdit::lastNonSpaceChar(int line, int ch)
     return QChar();
 }
 
-void SynEdit::setCaretAndSelection(const BufferCoord &ptCaret, const BufferCoord &ptBefore, const BufferCoord &ptAfter)
+void SynEdit::setCaretAndSelection(const BufferCoord &ptCaret, const BufferCoord &ptSelBegin, const BufferCoord &ptSelEnd)
 {
     SynSelectionMode vOldMode = mActiveSelectionMode;
     incPaintLock();
@@ -1140,8 +1140,8 @@ void SynEdit::setCaretAndSelection(const BufferCoord &ptCaret, const BufferCoord
         decPaintLock();
     });
     internalSetCaretXY(ptCaret);
-    setBlockBegin(ptBefore);
-    setBlockEnd(ptAfter);
+    setBlockBegin(ptSelBegin);
+    setBlockEnd(ptSelEnd);
 }
 
 bool SynEdit::inputMethodOn()
