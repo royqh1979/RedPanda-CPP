@@ -978,8 +978,12 @@ void SynEditCppHighlighter::slashProc()
 
 void SynEditCppHighlighter::backSlashProc()
 {
-    mTokenId = TokenKind::Symbol;
-    mExtTokenId = ExtTokenKind::BackSlash;
+    if (mLine[mRun+1]==0) {
+        mTokenId = TokenKind::Symbol;
+        mExtTokenId = ExtTokenKind::BackSlash;
+    } else {
+        mTokenId = TokenKind::Unknown;
+    }
     mRun+=1;
 }
 
