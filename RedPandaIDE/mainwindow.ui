@@ -1835,7 +1835,6 @@
    <addaction name="actionRebuild"/>
    <addaction name="separator"/>
    <addaction name="actionRun_Parameters"/>
-   <addaction name="actionCompiler_Options"/>
   </widget>
   <widget class="QToolBar" name="toolbarDebug">
    <property name="windowTitle">
@@ -1879,6 +1878,7 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
+   <addaction name="actionCompiler_Options"/>
   </widget>
   <action name="actionNew">
    <property name="icon">

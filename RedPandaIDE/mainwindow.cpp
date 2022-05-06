@@ -141,7 +141,8 @@ MainWindow::MainWindow(QWidget *parent)
     mCompilerSet = new QComboBox();
     mCompilerSet->setMinimumWidth(200);
     mCompilerSet->setSizeAdjustPolicy(QComboBox::AdjustToContents);
-    ui->toolbarCompilerSet->addWidget(mCompilerSet);
+    ui->toolbarCompilerSet->insertWidget(ui->actionCompiler_Options, mCompilerSet);
+    ui->toolbarCompilerSet->insertSeparator(ui->actionCompiler_Options);
     connect(mCompilerSet,QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &MainWindow::onCompilerSetChanged);
     //updateCompilerSet();
