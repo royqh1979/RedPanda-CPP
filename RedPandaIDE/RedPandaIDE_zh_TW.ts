@@ -4444,6 +4444,10 @@
         <source>Encode in UTF-8 BOM</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Compiler Options...</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>NewClassDialog</name>

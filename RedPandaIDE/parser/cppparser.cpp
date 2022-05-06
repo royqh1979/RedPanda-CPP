@@ -2774,6 +2774,7 @@ void CppParser::handleStructs(bool isTypedef)
                 } else if ((mIndex + 2 < mTokenizer.tokenCount())
                            && (mTokenizer[mIndex + 1]->text == "final")
                            && (mTokenizer[mIndex + 2]->text.front()==','
+                               || mTokenizer[mIndex + 2]->text.front()==':'
                                || isblockChar(mTokenizer[mIndex + 2]->text.front()))) {
                     QString command = mTokenizer[mIndex]->text;
                     if (!command.isEmpty()) {
