@@ -1338,6 +1338,7 @@ void MainWindow::updateActionIcons()
     ui->actionAdd_Watch->setIcon(pIconsManager->getIcon(IconsManager::ACTION_RUN_ADD_WATCH));
     ui->actionRemove_Watch->setIcon(pIconsManager->getIcon(IconsManager::ACTION_RUN_REMOVE_WATCH));
     ui->actionRemove_All_Watches->setIcon(pIconsManager->getIcon(IconsManager::ACTION_MISC_CLEAN));
+    ui->actionCompiler_Options->setIcon(pIconsManager->getIcon(IconsManager::ACTION_RUN_COMPILE_OPTIONS));
 
     ui->actionOptions->setIcon(pIconsManager->getIcon(IconsManager::ACTION_MISC_GEAR));
 
@@ -7690,5 +7691,14 @@ void MainWindow::on_actionEncode_in_UTF_8_BOM_triggered()
     } catch(FileError e) {
         QMessageBox::critical(this,tr("Error"),e.reason());
     }
+}
+
+
+void MainWindow::on_actionCompiler_Options_triggered()
+{
+    changeOptions(
+                SettingsDialog::tr("Compiler Set"),
+                SettingsDialog::tr("Compiler")
+                );
 }
 

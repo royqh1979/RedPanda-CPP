@@ -1602,6 +1602,7 @@
     <addaction name="actionRebuild"/>
     <addaction name="separator"/>
     <addaction name="actionRun_Parameters"/>
+    <addaction name="actionCompiler_Options"/>
     <addaction name="separator"/>
     <addaction name="actionDebug"/>
     <addaction name="actionInterrupt"/>
@@ -1834,6 +1835,7 @@
    <addaction name="actionRebuild"/>
    <addaction name="separator"/>
    <addaction name="actionRun_Parameters"/>
+   <addaction name="actionCompiler_Options"/>
   </widget>
   <widget class="QToolBar" name="toolbarDebug">
    <property name="windowTitle">
@@ -3050,6 +3052,15 @@
   <action name="actionEncode_in_UTF_8_BOM">
    <property name="text">
     <string>Encode in UTF-8 BOM</string>
+   </property>
+  </action>
+  <action name="actionCompiler_Options">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/images/newlook24/084-tools.png</normaloff>:/icons/images/newlook24/084-tools.png</iconset>
+   </property>
+   <property name="text">
+    <string>Compiler Options...</string>
    </property>
   </action>
  </widget>

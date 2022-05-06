@@ -672,6 +672,8 @@ private slots:
 
     void on_actionEncode_in_UTF_8_BOM_triggered();
 
+    void on_actionCompiler_Options_triggered();
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;
