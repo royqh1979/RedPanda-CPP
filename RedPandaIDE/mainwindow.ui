@@ -545,7 +545,7 @@
         <enum>QTabWidget::South</enum>
        </property>
        <property name="currentIndex">
-        <number>3</number>
+        <number>4</number>
        </property>
        <property name="iconSize">
         <size>
@@ -3040,6 +3040,16 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+Shift+Down</string>
+   </property>
+  </action>
+  <action name="actionConvert_to_UTF_8_BOM">
+   <property name="text">
+    <string>Convert to UTF-8 BOM</string>
+   </property>
+  </action>
+  <action name="actionEncode_in_UTF_8_BOM">
+   <property name="text">
+    <string>Encode in UTF-8 BOM</string>
    </property>
   </action>
  </widget>

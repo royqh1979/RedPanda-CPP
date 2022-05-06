@@ -668,6 +668,10 @@ private slots:
 
     void on_actionMove_Selection_Down_triggered();
 
+    void on_actionConvert_to_UTF_8_BOM_triggered();
+
+    void on_actionEncode_in_UTF_8_BOM_triggered();
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;

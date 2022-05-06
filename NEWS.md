@@ -5,6 +5,7 @@ Red Panda C++ Version 1.0.7
   - enhancement: hide add charset  option in project options dialog's compiler set page, when project compiler set is clang
   - fix: When generating project's makefile for clang, don't add -fexec-charset / -finput-charset command line options
   - fix: index of the longest line not correctly updated when inputting with auto completion open
+  - enhancement: support UTF-8 BOM files
 
 Red Panda C++ Version 1.0.6
   - fix: gcc compiler set name is not correct in Linux

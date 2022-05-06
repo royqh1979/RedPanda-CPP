@@ -37,6 +37,7 @@ SystemConsts::SystemConsts(): mDefaultFileFilters()
     mCodecNames.append(ENCODING_AUTO_DETECT);
     mCodecNames.append(ENCODING_SYSTEM_DEFAULT);
     mCodecNames.append(ENCODING_UTF8);
+    mCodecNames.append(ENCODING_UTF8_BOM);
     QStringList codecNames;
     QSet<QByteArray> codecAlias;
     codecAlias.insert("system");

@@ -470,18 +470,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Encoding not support</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Clang only support utf-8 encoding.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Strings in the program might be wrongly processed.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Can&apos;t find Console Pauser</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1341,6 +1329,10 @@
     </message>
     <message>
         <source>UTF-8</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>UTF-8 BOM</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -4444,6 +4436,14 @@
         <source>Line %1</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Convert to UTF-8 BOM</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Encode in UTF-8 BOM</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>NewClassDialog</name>
@@ -6252,20 +6252,20 @@
     </message>
 </context>
 <context>
-    <name>SynEdit</name>
-    <message>
-        <source>The highlighter seems to be in an infinite loop</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>SynEditStringList</name>
+    <name>SynDocument</name>
     <message>
         <source>Can&apos;t open file &apos;%1&apos; for read!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Can&apos;t open file &apos;%1&apos; for save!</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>SynEdit</name>
+    <message>
+        <source>The highlighter seems to be in an infinite loop</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

@@ -388,11 +388,13 @@ void MainWindow::updateForEncodingInfo(bool clear) {
         ui->actionAuto_Detect->setChecked(editor->encodingOption() == ENCODING_AUTO_DETECT);
         ui->actionEncode_in_ANSI->setChecked(editor->encodingOption() == ENCODING_SYSTEM_DEFAULT);
         ui->actionEncode_in_UTF_8->setChecked(editor->encodingOption() == ENCODING_UTF8);
+        ui->actionEncode_in_UTF_8->setChecked(editor->encodingOption() == ENCODING_UTF8_BOM);
     } else {
         mFileEncodingStatus->setText("");
         ui->actionAuto_Detect->setChecked(false);
         ui->actionEncode_in_ANSI->setChecked(false);
         ui->actionEncode_in_UTF_8->setChecked(false);
+        ui->actionEncode_in_UTF_8_BOM->setChecked(false);
     }
 }
 
@@ -409,9 +411,11 @@ void MainWindow::updateEditorActions()
         ui->actionAuto_Detect->setEnabled(false);
         ui->actionEncode_in_ANSI->setEnabled(false);
         ui->actionEncode_in_UTF_8->setEnabled(false);
+        ui->actionEncode_in_UTF_8_BOM->setEnabled(false);
         mMenuEncoding->setEnabled(false);
         ui->actionConvert_to_ANSI->setEnabled(false);
         ui->actionConvert_to_UTF_8->setEnabled(false);
+        ui->actionConvert_to_UTF_8_BOM->setEnabled(false);
         ui->actionCopy->setEnabled(false);
         ui->actionCut->setEnabled(false);
         ui->actionFoldAll->setEnabled(false);
@@ -454,10 +458,12 @@ void MainWindow::updateEditorActions()
         ui->actionAuto_Detect->setEnabled(true);
         ui->actionEncode_in_ANSI->setEnabled(true);
         ui->actionEncode_in_UTF_8->setEnabled(true);
+        ui->actionEncode_in_UTF_8_BOM->setEnabled(true);
         mMenuEncoding->setEnabled(true);
         ui->actionConvert_to_ANSI->setEnabled(e->encodingOption()!=ENCODING_SYSTEM_DEFAULT
                 && e->fileEncoding()!=ENCODING_SYSTEM_DEFAULT);
         ui->actionConvert_to_UTF_8->setEnabled(e->encodingOption()!=ENCODING_UTF8 && e->fileEncoding()!=ENCODING_UTF8);
+        ui->actionConvert_to_UTF_8_BOM->setEnabled(e->encodingOption()!=ENCODING_UTF8_BOM && e->fileEncoding()!=ENCODING_UTF8_BOM);
 
         ui->actionCopy->setEnabled(e->selAvail());
         ui->actionCut->setEnabled(e->selAvail());
@@ -2671,11 +2677,13 @@ void MainWindow::buildEncodingMenu()
     mMenuEncoding->addAction(ui->actionAuto_Detect);
     mMenuEncoding->addAction(ui->actionEncode_in_ANSI);
     mMenuEncoding->addAction(ui->actionEncode_in_UTF_8);
+    mMenuEncoding->addAction(ui->actionEncode_in_UTF_8_BOM);
 
     mMenuEncoding->addMenu(menuCharsets);
     mMenuEncoding->addSeparator();
     mMenuEncoding->addAction(ui->actionConvert_to_ANSI);
     mMenuEncoding->addAction(ui->actionConvert_to_UTF_8);
+    mMenuEncoding->addAction(ui->actionConvert_to_UTF_8_BOM);
 
     QList<PCharsetInfo> charsetsForLocale = pCharsetInfoManager->findCharsetByLocale(pCharsetInfoManager->localeName());
 
@@ -2702,6 +2710,7 @@ void MainWindow::buildEncodingMenu()
     ui->actionAuto_Detect->setCheckable(true);
     ui->actionEncode_in_ANSI->setCheckable(true);
     ui->actionEncode_in_UTF_8->setCheckable(true);
+    ui->actionEncode_in_UTF_8_BOM->setCheckable(true);
 }
 
 void MainWindow::maximizeEditor()
@@ -7656,3 +7665,30 @@ void MainWindow::on_actionMove_Selection_Down_triggered()
         editor->moveSelDown();
     }
 }
+
+void MainWindow::on_actionConvert_to_UTF_8_BOM_triggered()
+{
+    Editor * editor = mEditorList->getEditor();
+    if (editor == nullptr)
+        return;
+    if (QMessageBox::warning(this,tr("Confirm Convertion"),
+                   tr("The editing file will be saved using %1 encoding. <br />This operation can't be reverted. <br />Are you sure to continue?")
+                   .arg(ENCODING_UTF8_BOM),
+                   QMessageBox::Yes, QMessageBox::No)!=QMessageBox::Yes)
+        return;
+    editor->convertToEncoding(ENCODING_UTF8_BOM);
+}
+
+
+void MainWindow::on_actionEncode_in_UTF_8_BOM_triggered()
+{
+    Editor * editor = mEditorList->getEditor();
+    if (editor == nullptr)
+        return;
+    try {
+        editor->setEncodingOption(ENCODING_UTF8_BOM);
+    } catch(FileError e) {
+        QMessageBox::critical(this,tr("Error"),e.reason());
+    }
+}
+

@@ -47,7 +47,8 @@ void EditorMiscWidget::doLoad()
     QByteArray defaultEncoding = pSettings->editor().defaultEncoding();
     if (defaultEncoding == ENCODING_AUTO_DETECT
             || defaultEncoding == ENCODING_SYSTEM_DEFAULT
-            || defaultEncoding == ENCODING_UTF8) {
+            || defaultEncoding == ENCODING_UTF8
+            || defaultEncoding == ENCODING_UTF8_BOM) {
         int index =ui->cbEncoding->findData(defaultEncoding);
         ui->cbEncoding->setCurrentIndex(index);
         ui->cbEncodingDetail->clear();
@@ -89,6 +90,7 @@ void EditorMiscWidget::init()
     ui->cbEncoding->clear();
     ui->cbEncoding->addItem(tr("ANSI"),ENCODING_SYSTEM_DEFAULT);
     ui->cbEncoding->addItem(tr("UTF-8"),ENCODING_UTF8);
+    ui->cbEncoding->addItem(tr("UTF-8 BOM"),ENCODING_UTF8_BOM);
     foreach (const QString& langName, pCharsetInfoManager->languageNames()) {
         ui->cbEncoding->addItem(langName,langName);
     }
@@ -100,7 +102,8 @@ void EditorMiscWidget::on_cbEncoding_currentTextChanged(const QString &/*arg1*/)
     QString userData = ui->cbEncoding->currentData().toString();
     if (userData == ENCODING_AUTO_DETECT
             || userData == ENCODING_SYSTEM_DEFAULT
-            || userData == ENCODING_UTF8) {
+            || userData == ENCODING_UTF8
+            || userData == ENCODING_UTF8_BOM) {
         ui->cbEncodingDetail->setVisible(false);
         ui->cbEncodingDetail->clear();
     } else {
