@@ -2597,11 +2597,11 @@ bool Settings::CompilerSets::addSets(const QString &folder)
             set64_32Options(baseSet);
             setDebugOptions(baseSet);
 
-            baseSet = addSet(folder);
-            baseSet->setName(baseName + " " + platformName + " Profiling");
-            baseSet->setCompilerSetType(CompilerSetType::CST_PROFILING);
-            set64_32Options(baseSet);
-            setProfileOptions(baseSet);
+//            baseSet = addSet(folder);
+//            baseSet->setName(baseName + " " + platformName + " Profiling");
+//            baseSet->setCompilerSetType(CompilerSetType::CST_PROFILING);
+//            set64_32Options(baseSet);
+//            setProfileOptions(baseSet);
 
             baseSet = addSet(folder);
         }
@@ -2618,10 +2618,10 @@ bool Settings::CompilerSets::addSets(const QString &folder)
     baseSet->setCompilerSetType(CompilerSetType::CST_DEBUG);
     setDebugOptions(baseSet);
 
-    baseSet = addSet(folder);
-    baseSet->setName(baseName + " " + platformName + " Profiling");
-    baseSet->setCompilerSetType(CompilerSetType::CST_PROFILING);
-    setProfileOptions(baseSet);
+//    baseSet = addSet(folder);
+//    baseSet->setName(baseName + " " + platformName + " Profiling");
+//    baseSet->setCompilerSetType(CompilerSetType::CST_PROFILING);
+//    setProfileOptions(baseSet);
 
     mDefaultIndex = mList.size() - 2;
     return true;
