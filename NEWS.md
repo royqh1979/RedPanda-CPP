@@ -8,6 +8,7 @@ Red Panda C++ Version 1.0.7
   - enhancement: support UTF-8 BOM files
   - enhancement: add new tool button for "compiler options"
   - fix: keyword 'final' in inhertid class definition is not correctly processed
+  - change: stop generating 'profile' compiler set
 
 Red Panda C++ Version 1.0.6
   - fix: gcc compiler set name is not correct in Linux
