@@ -1,3 +1,6 @@
+Red Panda C++ Version 1.0.8
+  - enhancement: auto complete '#undef'
+
 Red Panda C++ Version 1.0.7
   - change: use Shift+Enter to break line
   - change: highlight whole #define statement using one color

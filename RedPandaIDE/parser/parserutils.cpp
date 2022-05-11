@@ -294,6 +294,7 @@ void initParser()
     CppDirectives.append("#error");
     CppDirectives.append("#pragma");
     CppDirectives.append("#line");
+    CppDirectives.append("#undef");
 
     // javadoc tags
     JavadocTags.append("@author");

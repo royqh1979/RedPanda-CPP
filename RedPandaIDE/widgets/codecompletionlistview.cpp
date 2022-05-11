@@ -18,6 +18,7 @@
 #include "../mainwindow.h"
 #include "../editor.h"
 #include "../editorlist.h"
+#include <QDebug>
 
 CodeCompletionListView::CodeCompletionListView(QWidget *parent) : QListView(parent)
 {
@@ -27,6 +28,7 @@ CodeCompletionListView::CodeCompletionListView(QWidget *parent) : QListView(pare
 
 void CodeCompletionListView::keyPressEvent(QKeyEvent *event)
 {
+
     if (event->key() == Qt::Key_Up
             || event->key() == Qt::Key_Down
             || event->key() == Qt::Key_PageDown
