@@ -689,17 +689,23 @@ void Project::associateEditorToUnit(Editor *editor, PProjectUnit unit)
     }
 }
 
-void Project::setCompilerOption(const QString &optionString, char value)
+bool Project::setCompileOption(const QString &key, int valIndex)
 {
-    if (mOptions.compilerSet<0 || mOptions.compilerSet>=pSettings->compilerSets().size()) {
-        return;
+    PCompilerOption op = pSettings->compilerSets().getCompilerOption(key);
+    if (op && valIndex>=0 && valIndex < op->choices.length()) {
+        mOptions.compilerOptions.insert(key,op->choices[valIndex].second);
+        return true;
     }
-    std::shared_ptr<Settings::CompilerSet> compilerSet = pSettings->compilerSets().getSet(mOptions.compilerSet);
-    int optionIndex = compilerSet->findOptionIndex(optionString);
-    // Does the option exist?
-    if (optionIndex>=0){
-        mOptions.compilerOptions[optionIndex] = value;
-    }
+    return false;
+}
+
+bool Project::setCompileOption(const QString &key, const QString &value)
+{
+    PCompilerOption op = pSettings->compilerSets().getCompilerOption(key);
+    if (!op)
+        return false;
+    mOptions.compilerOptions.insert(key,value);
+    return true;
 }
 
 void Project::updateFolders()
@@ -858,7 +864,9 @@ void Project::saveOptions()
     ini.SetLongValue("Project","SupportXPThemes", mOptions.supportXPThemes);
     ini.SetLongValue("Project","CompilerSet", mOptions.compilerSet);
     ini.SetLongValue("Project","CompilerSetType", mOptions.compilerSetType);
-    ini.SetValue("Project","CompilerSettings", mOptions.compilerOptions);
+    foreach (const QString& key, mOptions.compilerOptions.keys()) {
+        ini.SetValue("CompilerSettings",toByteArray(key),toByteArray(mOptions.compilerOptions.value(key)));
+    }
     ini.SetLongValue("Project","StaticLink", mOptions.staticLink);
     ini.SetLongValue("Project","AddCharset", mOptions.addCharset);
     ini.SetValue("Project","Encoding",toByteArray(mOptions.encoding));
@@ -1437,19 +1445,6 @@ PProjectModelNode Project::folderNodeFromName(const QString &name)
     return mRootNode;
 }
 
-char Project::getCompilerOption(const QString &optionString)
-{
-    // Does the option exist?
-    Settings::PCompilerSet compilerSet = pSettings->compilerSets().getSet(mOptions.compilerSet);
-    if (!compilerSet)
-        return '0';
-    int index = compilerSet->findOptionIndex(optionString);
-    if (index>=0 && index<mOptions.compilerOptions.length()) {
-        return mOptions.compilerOptions[index];
-    }
-    return '0';
-}
-
 QString Project::getFolderPath(PProjectModelNode node)
 {
     QString result;
@@ -1589,7 +1584,18 @@ void Project::loadOptions(SimpleIni& ini)
                                   );
             setCompilerSet(pSettings->compilerSets().defaultIndex());
         }
-        mOptions.compilerOptions = ini.GetValue("Project", "CompilerSettings", "");
+        SimpleIni::TNamesDepend oKeys;
+        ini.GetAllKeys("CompilerSettings", oKeys);
+        for(const SimpleIni::Entry& entry:oKeys) {
+            QString key(entry.pItem);
+            PCompilerOption pOption = pSettings->compilerSets().getCompilerOption(key);
+            if (pOption) {
+                mOptions.compilerOptions.insert(
+                            key,
+                            ini.GetValue("CompilerSettings", entry.pItem, ""));
+            }
+        }
+
         mOptions.staticLink = ini.GetBoolValue("Project", "StaticLink", true);
         mOptions.addCharset = ini.GetBoolValue("Project", "AddCharset", true);
 
@@ -1727,7 +1733,7 @@ void Project::updateCompilerSetType()
     if (defaultSet) {
         mOptions.compilerSetType=defaultSet->compilerSetType();
         mOptions.staticLink = defaultSet->staticLink();
-        mOptions.compilerOptions = defaultSet->iniOptions();
+        mOptions.compilerOptions = defaultSet->compileOptions();
     } else {
         mOptions.compilerSetType=CST_DEBUG;
         mOptions.staticLink = false;

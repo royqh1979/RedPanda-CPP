@@ -17,6 +17,7 @@
 #ifndef PROJECTOPTIONS_H
 #define PROJECTOPTIONS_H
 
+#include <QMap>
 #include <QWidget>
 
 enum class ProjectModelType {
@@ -82,7 +83,7 @@ struct ProjectOptions{
     bool supportXPThemes;
     int compilerSet;
     int compilerSetType;
-    QByteArray compilerOptions;
+    QMap<QString,QString> compilerOptions;
     ProjectVersionInfo versionInfo;
     QString cmdLineArgs;
     bool staticLink;

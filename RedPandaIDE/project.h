@@ -178,7 +178,7 @@ public:
     void closeUnit(int index);
     void doAutoOpen();
     bool fileAlreadyExists(const QString& s);
-    char getCompilerOption(const QString& optionString);
+
     QString getFolderPath(PProjectModelNode node);
     int getUnitFromString(const QString& s);
     void incrementBuildNumber();
@@ -211,6 +211,9 @@ public:
     void associateEditor(Editor* editor);
     void associateEditorToUnit(Editor* editor, PProjectUnit unit);
     void setCompilerOption(const QString& optionString, char value);
+    bool setCompileOption(const QString &key, int valIndex);
+    bool setCompileOption(const QString &key, const QString &value);
+
     void updateFolders();
     void updateNodeIndexes();
     void setCompilerSet(int compilerSetIndex);

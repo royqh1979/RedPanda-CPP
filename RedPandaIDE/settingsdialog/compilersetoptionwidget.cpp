@@ -80,7 +80,7 @@ void resetOptionTabs(Settings::PCompilerSet pSet,QTabWidget* pTab)
         }
     }
 
-    for (PCompilerOption pOption: pSet->options()) {
+    foreach (PCompilerOption pOption, pSettings->compilerSets().compilerOptions().values()) {
         QWidget* pWidget = nullptr;
         for (int i=0;i<pTab->count();i++) {
             if (pOption->section == pTab->tabText(i)) {
@@ -97,19 +97,15 @@ void resetOptionTabs(Settings::PCompilerSet pSet,QTabWidget* pTab)
         int row = pLayout->rowCount();
         pLayout->addWidget(new QLabel(pOption->name),row,0);
         QComboBox* pCombo = new QComboBox();
-        if (pOption->choices.count()>0) {
-            for (int i=0;i<pOption->choices.count();i++) {
-                QString choice = pOption->choices[i];
-                QStringList valueName=choice.split("=");
-                if (valueName.length()<2) {
-                    pCombo->addItem("");
-                } else {
-                    pCombo->addItem(valueName[0]);
-                }
+        pCombo->addItem(QObject::tr(""),"");
+        foreach (auto choice, pOption->choices) {
+            pCombo->addItem("",)
+            QStringList valueName=choice.split("=");
+            if (valueName.length()<2) {
+                pCombo->addItem("");
+            } else {
+                pCombo->addItem(valueName[0]);
             }
-        } else {
-            pCombo->addItem(QObject::tr("No"));
-            pCombo->addItem(QObject::tr("Yes"));
         }
         pCombo->setCurrentIndex(pOption->value);
         pLayout->addWidget(pCombo,row,1);

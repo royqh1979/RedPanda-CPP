@@ -22,6 +22,7 @@
 #include <memory>
 #include <QColor>
 #include <QString>
+#include <QPair>
 #include "qsynedit/SynEdit.h"
 
 /**
@@ -46,8 +47,41 @@
 #define SETTING_EDITOR_DEFAULT_ENCODING "default_encoding"
 #define SETTING_EDITOR_AUTO_INDENT "default_auto_indent"
 
+
 #define COMPILER_CLANG "Clang"
 #define COMPILER_GCC "GCC"
+
+#define CC_CMD_OPT_ANSI "cc_cmd_opt_ansi"
+#define CC_CMD_OPT_NO_ASM "cc_cmd_opt_no_asm"
+#define CC_CMD_OPT_TRADITIONAL_CPP "cc_cmd_opt_traditional_cpp"
+
+#define CC_CMD_OPT_ARCH "cc_cmd_opt_arch"
+#define CC_CMD_OPT_TUNE "cc_cmd_opt_tune"
+#define CC_CMD_OPT_INSTRUCTION "cc_cmd_opt_instruction"
+#define CC_CMD_OPT_OPTIMIZE "cc_cmd_opt_optimize"
+#define CC_CMD_OPT_POINTER_SIZE "cc_cmd_opt_pointer_size"
+#define CC_CMD_OPT_STD "cc_cmd_opt_std"
+
+#define CC_CMD_OPT_INHIBIT_ALL_WARNING "cc_cmd_opt_inhibit_all_warning"
+#define CC_CMD_OPT_WARNING_ALL "cc_cmd_opt_warning_all"
+#define CC_CMD_OPT_WARNING_EXTRA "cc_cmd_opt_warning_extra"
+#define CC_CMD_OPT_CHECK_ISO_CONFORMANCE "cc_cmd_opt_check_iso_conformance"
+#define CC_CMD_OPT_SYNTAX_ONLY "cc_cmd_opt_syntax_only"
+#define CC_CMD_OPT_WARNING_AS_ERROR "cc_cmd_opt_warning_as_error"
+#define CC_CMD_OPT_ABORT_ON_ERROR "cc_cmd_opt_abort_on_error"
+
+#define CC_CMD_OPT_PROFILE_INFO "cc_cmd_opt_profile_info"
+
+#define LINK_CMD_OPT_LINK_OBJC "link_cmd_opt_link_objc"
+#define LINK_CMD_OPT_NO_LINK_STDLIB "link_cmd_opt_no_link_stdlib"
+#define LINK_CMD_OPT_NO_CONSOLE "link_cmd_opt_no_console"
+#define LINK_CMD_OPT_STRIP_EXE "link_cmd_opt_strip_exe"
+#define CC_CMD_OPT_DEBUG_INFO "cc_cmd_opt_debug_info"
+
+#define CC_CMD_OPT_VERBOSE_ASM "cc_cmd_opt_verbose_asm"
+#define CC_CMD_OPT_ONLY_GEN_ASM_CODE "cc_cmd_opt_only_gen_asm_code"
+#define CC_CMD_OPT_USE_PIPE "cc_cmd_opt_use_pipe"
+
 
 extern const char ValueToChar[28];
 
@@ -59,20 +93,22 @@ enum CompilerSetType {
     CST_PROFILING
 };
 
+using CompileOptionChoiceList = QList<QPair<QString,QString>>;
+
 typedef struct {
-    QString name; // language table index of "Generate debugging info"
-    QString section; // language table index of "C options"
+    QString key;
+    QString name; // "Generate debugging info"
+    QString section; // "C options"
     bool isC;
     bool isCpp; // True (C++ option?) - can be both C and C++ option...
     bool isLinker; // Is it a linker param
-    int value; // True
     QString setting; // "-g3"
-    QStringList choices; // replaces "Yes/No" standard choices (max 30 different choices)
+    CompileOptionChoiceList choices; // replaces "Yes/No" standard choices (max 30 different choices)
 } CompilerOption;
 
 using PCompilerOption = std::shared_ptr<CompilerOption>;
 
-using CompilerOptionList=QVector<std::shared_ptr<CompilerOption>>;
+using CompilerOptionMap=QMap<QString,std::shared_ptr<CompilerOption>>;
 
 class Settings
 {
@@ -1177,16 +1213,12 @@ public:
         CompilerSet& operator= (const CompilerSet& ) = delete;
         CompilerSet& operator= (const CompilerSet&& ) = delete;
 
+        bool setCompileOption(const QString& key, int valIndex);
+        bool setCompileOption(const QString& key, const QString& value);
+        void unsetCompileOption(const QString& key);
 
-        void addOption(const QString& name, const QString section, bool isC,
-                bool isCpp, bool isLinker,
-                int value, const QString& setting,
-                const QStringList& choices = QStringList());
-        PCompilerOption findOption(const QString& setting);
-        int findOptionIndex(const QString& setting);
-        char getOptionValue(const QString& setting);
-        void setOption(const QString& setting, char valueChar);
-        void setOption(PCompilerOption& option, char valueChar);
+        QString getCompileOptionValue(const QString& key);
+
         void setProperties(const QString& binDir);
         void setDirectories(const QString& binDir);
         int mainVersion();
@@ -1240,10 +1272,7 @@ public:
         bool autoAddCharsetParams() const;
         void setAutoAddCharsetParams(bool value);
 
-        CompilerOptionList& options();
-
         //Converts options to and from memory format
-        QByteArray iniOptions() const;
         void setIniOptions(const QByteArray& value);
 
         //load hard defines
@@ -1265,11 +1294,12 @@ public:
         const QString &execCharset() const;
         void setExecCharset(const QString &newExecCharset);
 
+        const QMap<QString, QString> &compileOptions() const;
+
     private:
         // Initialization
         void setExecutables();
         void setUserInput();
-        void setOptions();
 
         QString findProgramInBinDirs(const QString name);
 
@@ -1315,7 +1345,7 @@ public:
         bool mStaticLink;
 
         // Options
-        CompilerOptionList mOptions;
+        QMap<QString,QString> mCompileOptions;
     };
 
     typedef std::shared_ptr<CompilerSet> PCompilerSet;
@@ -1341,6 +1371,11 @@ public:
         void setDefaultIndex(int value);
         PCompilerSet defaultSet();
         PCompilerSet getSet(int index);
+        const CompilerOptionMap &compilerOptions() const;
+
+        QString getKeyFromCompilerCompatibleIndex(int idx) const;
+        PCompilerOption getCompilerOption(const QString& key) const;
+
     private:
         void savePath(const QString& name, const QString& path);
         void savePathList(const QString& name, const QStringList& pathList);
@@ -1348,9 +1383,21 @@ public:
         QString loadPath(const QString& name);
         void loadPathList(const QString& name, QStringList& list);
         PCompilerSet loadSet(int index);
+        void initOptions();
+        void addOption(const QString& key,
+                       const QString& name,
+                       const QString section,
+                       bool isC,
+                       bool isCpp,
+                       bool isLinker,
+                       const QString& setting,
+                       const CompileOptionChoiceList& choices = QStringList());
+    private:
         CompilerSetList mList;
         int mDefaultIndex;
         Settings* mSettings;
+        CompilerOptionMap mCompilerOptions;
+        QStringList mCompilerCompatibleIndex; // index for old settings compatibility
     };
 
 public:

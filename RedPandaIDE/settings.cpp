@@ -1461,7 +1461,6 @@ Settings::CompilerSet::CompilerSet(const QString& compilerFolder):
     } else {
         mFullLoaded = false;
     }
-    setOptions();
 }
 
 Settings::CompilerSet::CompilerSet(const Settings::CompilerSet &set):
@@ -1487,73 +1486,39 @@ Settings::CompilerSet::CompilerSet(const Settings::CompilerSet &set):
     mCustomCompileParams(set.mCustomCompileParams),
     mCustomLinkParams(set.mCustomLinkParams),
     mAutoAddCharsetParams(set.mAutoAddCharsetParams),
+    mCompileOptions(set.mCompileOptions),
     mFullLoaded(set.mFullLoaded)
 {
-    // Executables, most are hardcoded
-    for (PCompilerOption pOption:set.mOptions) {
-        PCompilerOption p=std::make_shared<CompilerOption>();
-        *p=*pOption;
-        mOptions.push_back(pOption);
+
+}
+
+bool Settings::CompilerSet::setCompileOption(const QString &key, int valIndex)
+{
+    PCompilerOption op = pSettings->compilerSets().getCompilerOption(key);
+    if (op && valIndex>=0 && valIndex < op->choices.length()) {
+        mCompileOptions.insert(key,op->choices[valIndex].second);
+        return true;
     }
+    return false;
 }
 
-void Settings::CompilerSet::addOption(const QString &name, const QString section, bool isC,
-    bool isCpp, bool isLinker, int value, const QString &setting, const QStringList &choices)
+bool Settings::CompilerSet::setCompileOption(const QString &key, const QString &value)
 {
-    PCompilerOption pOption = std::make_shared<CompilerOption>();
-    pOption->name = name;
-    pOption->section = section;
-    pOption->isC = isC;
-    pOption->isCpp = isCpp;
-    pOption->isLinker = isLinker;
-    pOption->value = value;
-    pOption->setting= setting;
-    pOption->choices = choices;
-    mOptions.push_back(pOption);
+    PCompilerOption op = pSettings->compilerSets().getCompilerOption(key);
+    if (!op)
+        return false;
+    mCompileOptions.insert(key,value);
+    return true;
 }
 
-PCompilerOption Settings::CompilerSet::findOption(const QString &setting)
+void Settings::CompilerSet::unsetCompileOption(const QString &key)
 {
-    for (PCompilerOption pOption : mOptions) {
-        if (pOption->setting == setting) {
-            return pOption;
-        }
-    }
-    return PCompilerOption();
+    mCompileOptions.remove(key);
 }
 
-int Settings::CompilerSet::findOptionIndex(const QString &setting)
+QString Settings::CompilerSet::getCompileOptionValue(const QString &key)
 {
-    for (int i=0;i<mOptions.size();i++) {
-         PCompilerOption pOption = mOptions[i];
-        if (pOption->setting == setting) {
-            return i;
-        }
-    }
-    return -1;
-}
-
-char Settings::CompilerSet::getOptionValue(const QString &setting)
-{
-    PCompilerOption pOption = findOption(setting);
-    if (pOption) {
-        return ValueToChar[pOption->value];
-    } else {
-        return '0';
-    }
-}
-
-void Settings::CompilerSet::setOption(const QString &setting, char valueChar)
-{
-    PCompilerOption pOption = findOption(setting);
-    if (pOption) {
-        setOption(pOption,valueChar);
-    }
-}
-
-void Settings::CompilerSet::setOption(PCompilerOption &option, char valueChar)
-{
-    option->value = charToValue(valueChar);
+    return mCompileOptions.value(key,QString());
 }
 
 static void checkDirs(const QStringList& dirlist, QString& gooddirs, QString& baddirs) {
@@ -1888,11 +1853,6 @@ bool Settings::CompilerSet::autoAddCharsetParams() const
 void Settings::CompilerSet::setAutoAddCharsetParams(bool value)
 {
     mAutoAddCharsetParams = value;
-}
-
-CompilerOptionList &Settings::CompilerSet::options()
-{
-    return mOptions;
 }
 
 int Settings::CompilerSet::charToValue(char valueChar)
@@ -2239,136 +2199,6 @@ void Settings::CompilerSet::setUserInput()
     mStaticLink = true;
 }
 
-void Settings::CompilerSet::setOptions()
-{
-    // C options
-    QString groupName = QObject::tr("C options");
-    addOption(QObject::tr("Support all ANSI standard C programs (-ansi)"), groupName, true, true, false, 0, "-ansi");
-    addOption(QObject::tr("Do not recognize asm,inline or typeof as a keyword (-fno-asm)"), groupName, true, true, false, 0, "-fno-asm");
-    addOption(QObject::tr("Imitate traditional C preprocessors (-traditional-cpp)"), groupName, true, true, false, 0, "-traditional-cpp");
-
-    // Optimization for cpu type
-    groupName = QObject::tr("Code Generation");
-    QStringList sl;
-    sl.append(""); // /!\ Must contain a starting empty value in order to do not have always to pass the parameter
-    sl.append("This CPU=native");
-    sl.append("i386=i386");
-    sl.append("i486=i486");
-    sl.append("i586=i586");
-    sl.append("i686=i686");
-    sl.append("Pentium=pentium");
-    sl.append("Pentium MMX=pentium-mmx");
-    sl.append("Pentium Pro=pentiumpro");
-    sl.append("Pentium 2=pentium2");
-    sl.append("Pentium 3=pentium3");
-    sl.append("Pentium 4=pentium4");
-    sl.append("Conroe=core2");
-    sl.append("Nehalem=corei7");
-    sl.append("Sandy=corei7-avx");
-    sl.append("K6=k6");
-    sl.append("K6-2=k6-2");
-    sl.append("K6-3=k6-3");
-    sl.append("Athlon=athlon");
-    sl.append("Athlon Tbird=athlon-tbird");
-    sl.append("Athlon 4=athlon-4");
-    sl.append("Athlon XP=athlon-xp");
-    sl.append("Athlon MP=athlon-mp");
-    sl.append("K8=k8");
-    sl.append("K8 Rev.E=k8-sse3");
-    sl.append("K10=barcelona");
-    sl.append("Bulldozer=bdver1");
-    addOption(QObject::tr("Optimize for the following machine (-march)"), groupName, true, true, false, 0, "-march=", sl);
-    addOption(QObject::tr("Optimize less, while maintaining full compatibility (-tune)"), groupName, true, true, false, 0, "-mtune=", sl);
-
-    // Enable use of the specific instructions
-    sl.clear();
-    sl.append(""); // /!\ Must contain a starting empty value in order to do not have always to pass the parameter
-    sl.append("MMX=mmx");
-    sl.append("3D Now=3dnow");
-    sl.append("SSE=sse");
-    sl.append("SSE2=sse2");
-    sl.append("SSE3=sse3");
-    sl.append("SSSE3=ssse3");
-    sl.append("SSE4=sse4");
-    sl.append("SSE4A=sse4a");
-    sl.append("SSE4.1=sse4.1");
-    sl.append("SSE4.2=sse4.2");
-    sl.append("AVX=avx");
-    sl.append("AVX2=avx2");
-    sl.append("FMA4=fma4");
-    sl.append("XOP=xop");
-    sl.append("AES=aes");
-    addOption(QObject::tr("Enable use of specific instructions (-mx)"), groupName, true, true, false, 0, "-m", sl);
-
-    // Optimization
-    sl.clear();
-    sl.append("");
-    sl.append("Low=1");
-    sl.append("Med=2");
-    sl.append("High=3");
-    sl.append("Highest (fast)=fast");
-    sl.append("Size (s)=s");
-    sl.append("Debug (g)=g");
-    addOption(QObject::tr("Optimization level (-Ox)"), groupName, true, true, false, 0, "-O", sl);
-
-    // 32bit/64bit
-    sl.clear();
-    sl.append("");
-    sl.append("32bit=m32");
-    sl.append("64bit=m64");
-    addOption(QObject::tr("Compile with the following pointer size (-mx)"), groupName, true, true, true, 0, "-", sl);
-
-    // Language Standards
-    sl.clear();
-    sl.append(""); // Passing nothing effectively lets the compiler decide
-    sl.append("ISO C90=c90");
-    sl.append("ISO C99=c99");
-    sl.append("ISO C11=c11");
-    sl.append("ISO C17=c17");
-    sl.append("ISO C++=c++98");
-    sl.append("ISO C++11=c++11");
-    sl.append("ISO C++14=c++14");
-    sl.append("ISO C++17=c++17");
-    sl.append("ISO C++20=c++2a");
-    sl.append("GNU C90=gnu90");
-    sl.append("GNU C99=gnu99");
-    sl.append("GNU C11=gnu11");
-    sl.append("GNU C17=gnu17");
-    sl.append("GNU C++=gnu++98");
-    sl.append("GNU C++11=gnu++11");
-    sl.append("GNU C++14=gnu++14");
-    sl.append("GNU C++17=gnu++17");
-    sl.append("GNU C++20=gnu++2a");
-    addOption(QObject::tr("Language standard (-std)"), groupName, true, true, false, 0, "-std=", sl);
-
-    // Warnings
-    groupName = QObject::tr("Warnings");
-    addOption(QObject::tr("Inhibit all warning messages (-w)"), groupName, true, true, false, 0, "-w");
-    addOption(QObject::tr("Show most warnings (-Wall)"), groupName, true, true, false, 0, "-Wall");
-    addOption(QObject::tr("Show some more warnings (-Wextra)"), groupName, true, true, false, 0, "-Wextra");
-    addOption(QObject::tr("Check ISO C/C++/C++0x conformance (-pedantic)"), groupName, true, true, false, 0, "-pedantic");
-    addOption(QObject::tr("Only check the code for syntax errors (-fsyntax-only)"), groupName, true, true, false, 0, "-fsyntax-only");
-    addOption(QObject::tr("Make all warnings into errors (-Werror)"), groupName, true, true, false, 0, "-Werror");
-    addOption(QObject::tr("Abort compilation on first error (-Wfatal-errors)"), groupName, true, true, false, 0, "-Wfatal-errors");
-
-    // Profile
-    groupName = QObject::tr("Profile");
-    addOption(QObject::tr("Generate profiling info for analysis (-pg)"), groupName, true, true, true, 0, "-pg");
-
-    // Linker
-    groupName = QObject::tr("Linker");
-    addOption(QObject::tr("Link an Objective C program (-lobjc)"), groupName, false, false, true, 0, "-lobjc");
-    addOption(QObject::tr("Do not use standard system libraries (-nostdlib)"), groupName, false, false, true, 0, "-nostdlib");
-    addOption(QObject::tr("Do not create a console window (-mwindows)"), groupName,false, false, true, 0, "-mwindows");
-    addOption(QObject::tr("Strip executable (-s)"), groupName, false, false, true, 0, "-s");
-    addOption(QObject::tr("Generate debugging information (-g3)"), groupName, true, true, false, 0, "-g3");
-
-    // Output
-    groupName = QObject::tr("Output");
-    addOption(QObject::tr("Put comments in generated assembly code (-fverbose-asm)"), groupName, true, true, false, 0, "-fverbose-asm");
-    addOption(QObject::tr("Do not assemble, compile and generate the assemble code (-S)"), groupName, true, true, false, 0, "-S");
-    addOption(QObject::tr("Use pipes instead of temporary files during compilation (-pipe)"), groupName, true, true, false, 0, "-pipe");
-}
 
 QString Settings::CompilerSet::findProgramInBinDirs(const QString name)
 {
@@ -2381,24 +2211,19 @@ QString Settings::CompilerSet::findProgramInBinDirs(const QString name)
     return QString();
 }
 
-QByteArray Settings::CompilerSet::iniOptions() const
-{
-    QByteArray result;
-    for (const PCompilerOption& p:mOptions) {
-        result.append(ValueToChar[p->value]);
-    }
-    return result;
-}
-
 void Settings::CompilerSet::setIniOptions(const QByteArray &value)
 {
-   int i=0;
-   for (PCompilerOption p:mOptions) {
-       if (i>=value.length()) {
-           break;
+   if (value.isEmpty())
+       return;
+   mCompileOptions.clear();
+   for (int i=0;i<value.length();i++) {
+       QString key = pSettings->compilerSets().getKeyFromCompilerCompatibleIndex(i);
+       PCompilerOption p = pSettings->compilerSets().getCompilerOption(key);
+       if (p) {
+           int v = charToValue(value[i]);
+           if (v > 0 && v<= p->choices.length())
+               mCompileOptions.insert(key,p->choices[v-1].second);
        }
-       p->value = charToValue(value[i]);
-       i++;
    }
 }
 
@@ -2414,6 +2239,11 @@ QByteArray Settings::CompilerSet::getCompilerOutput(const QString &binDir, const
                 false,
                 env);
     return result.trimmed();
+}
+
+const QMap<QString, QString> &Settings::CompilerSet::compileOptions() const
+{
+    return mCompileOptions;
 }
 
 const QString &Settings::CompilerSet::execCharset() const
@@ -2475,7 +2305,7 @@ Settings::CompilerSets::CompilerSets(Settings *settings):
     mDefaultIndex(-1),
     mSettings(settings)
 {
-
+    initOptions();
 }
 
 Settings::PCompilerSet Settings::CompilerSets::addSet(const Settings::CompilerSet& set)
@@ -2493,52 +2323,21 @@ Settings::PCompilerSet Settings::CompilerSets::addSet(const QString &folder)
 }
 
 static void set64_32Options(Settings::PCompilerSet pSet) {
-    PCompilerOption pOption = pSet->findOption("-");
-    if (pOption) {
-        pSet->setOption(pOption,'1');
-    }
+    pSet->setCompileOption(CC_CMD_OPT_POINTER_SIZE,"32");
 }
 
 static void setReleaseOptions(Settings::PCompilerSet pSet) {
-    PCompilerOption pOption = pSet->findOption("-O");
-    if (pOption) {
-        pSet->setOption(pOption,'a');
-    }
-
-    pOption = pSet->findOption("-s");
-    if (pOption) {
-        pSet->setOption(pOption,'1');
-    }
-
-    pOption = pSet->findOption("-pipe");
-    if (pOption) {
-        pSet->setOption(pOption,'1');
-    }
-
-//    pOption = pSet->findOption("-static");
-//    if (pOption) {
-//        pSet->setOption(pOption,'1');
-//    }
+    pSet->setCompileOption(CC_CMD_OPT_OPTIMIZE,"2");
+    pSet->setCompileOption(LINK_CMD_OPT_STRIP_EXE,"");
+    pSet->setCompileOption(CC_CMD_OPT_USE_PIPE, "");
     pSet->setStaticLink(true);
 }
 
 static void setDebugOptions(Settings::PCompilerSet pSet) {
-    PCompilerOption pOption = pSet->findOption("-g3");
-    if (pOption) {
-        pSet->setOption(pOption,'1');
-    }
-    pOption = pSet->findOption("-Wall");
-    if (pOption) {
-        pSet->setOption(pOption,'1');
-    }
-    pOption = pSet->findOption("-Wextra");
-    if (pOption) {
-        pSet->setOption(pOption,'1');
-    }
-    pOption = pSet->findOption("-pipe");
-    if (pOption) {
-        pSet->setOption(pOption,'1');
-    }
+    pSet->setCompileOption(CC_CMD_OPT_DEBUG_INFO,"");
+    pSet->setCompileOption(CC_CMD_OPT_WARNING_ALL,"");
+    pSet->setCompileOption(CC_CMD_OPT_WARNING_EXTRA,"");
+    pSet->setCompileOption(CC_CMD_OPT_USE_PIPE,"");
 
 #ifdef Q_OS_LINUX
     pSet->setCustomCompileParams("-fsanitize=address");
@@ -2547,28 +2346,6 @@ static void setDebugOptions(Settings::PCompilerSet pSet) {
     pSet->setUseCustomLinkParams(true);
 #endif
 
-//    pOption = pSet->findOption("-static");
-//    if (pOption) {
-//        pSet->setOption(pOption,'1');
-//    }
-    pSet->setStaticLink(false);
-}
-
-static void setProfileOptions(Settings::PCompilerSet pSet) {
-    PCompilerOption pOption = pSet->findOption("-pg");
-    if (pOption) {
-        pSet->setOption(pOption,'1');
-    }
-
-    pOption = pSet->findOption("-pipe");
-    if (pOption) {
-        pSet->setOption(pOption,'1');
-    }
-
-//    pOption = pSet->findOption("-static");
-//    if (pOption) {
-//        pSet->setOption(pOption,'1');
-//    }
     pSet->setStaticLink(false);
 }
 
@@ -2623,7 +2400,7 @@ bool Settings::CompilerSets::addSets(const QString &folder)
 //    baseSet->setCompilerSetType(CompilerSetType::CST_PROFILING);
 //    setProfileOptions(baseSet);
 
-    mDefaultIndex = mList.size() - 2;
+    mDefaultIndex = mList.size() - 1;
     return true;
 }
 
@@ -2870,7 +2647,9 @@ void Settings::CompilerSets::saveSet(int index)
     savePath("profiler", pSet->profiler());
 
     // Save option string
-    mSettings->mSettings.setValue("Options", pSet->iniOptions());
+    for (const QString& optionKey : pSet->compileOptions().keys()) {
+        mSettings->mSettings.setValue(optionKey, pSet->compileOptions().value(optionKey));
+    }
 
     // Save extra 'general' options
     mSettings->mSettings.setValue("useCustomCompileParams", pSet->useCustomCompileParams());
@@ -2936,7 +2715,14 @@ Settings::PCompilerSet Settings::CompilerSets::loadSet(int index)
     pSet->setProfiler(loadPath("profiler"));
 
     // Save option string
-    pSet->setIniOptions(mSettings->mSettings.value("Options").toByteArray());
+    QByteArray iniOptions = mSettings->mSettings.value("Options","").toByteArray();
+    if (!iniOptions.isEmpty())
+        pSet->setIniOptions(iniOptions);
+    foreach (const QString &optionKey, mSettings->mSettings.allKeys()) {
+        if (mCompilerOptions.contains(optionKey)) {
+            pSet->setCompileOption(optionKey, mSettings->mSettings.value(optionKey).toString());
+        }
+    }
 
     // Save extra 'general' options
     pSet->setUseCustomCompileParams(mSettings->mSettings.value("useCustomCompileParams", false).toBool());
@@ -2972,6 +2758,200 @@ Settings::PCompilerSet Settings::CompilerSets::loadSet(int index)
     //pSet->setDirectories(pSet->binDirs()[0]);
     //pSet->setDefines();
     return pSet;
+}
+
+void Settings::CompilerSets::initOptions()
+{
+    // C options
+    QString groupName = QObject::tr("C options");
+    addOption(CC_CMD_OPT_ANSI, QObject::tr("Support all ANSI standard C programs (-ansi)"), groupName, true, true, false, "-ansi");
+    addOption(CC_CMD_OPT_NO_ASM, QObject::tr("Do not recognize asm,inline or typeof as a keyword (-fno-asm)"), groupName, true, true, false, "-fno-asm");
+    addOption(CC_CMD_OPT_TRADITIONAL_CPP, QObject::tr("Imitate traditional C preprocessors (-traditional-cpp)"), groupName, true, true, false, "-traditional-cpp");
+
+    // Optimization for cpu type
+    groupName = QObject::tr("Code Generation");
+    QList<QPair<QString,QString>> sl;
+    sl.append(QPair<QString,QString>(QObject::tr("This CPU"),"native"));
+    sl.append(QPair<QString,QString>("i386","i386"));
+    sl.append(QPair<QString,QString>("i486","i486"));
+    sl.append(QPair<QString,QString>("i586","i586"));
+    sl.append(QPair<QString,QString>("i686","i686"));
+    sl.append(QPair<QString,QString>("Pentium","pentium"));
+    sl.append(QPair<QString,QString>("Pentium MMX","pentium-mmx"));
+    sl.append(QPair<QString,QString>("Pentium Pro","pentiumpro"));
+    sl.append(QPair<QString,QString>("Pentium 2","pentium2"));
+    sl.append(QPair<QString,QString>("Pentium 3","pentium3"));
+    sl.append(QPair<QString,QString>("Pentium 4","pentium4"));
+    sl.append(QPair<QString,QString>("Conroe","core2"));
+    sl.append(QPair<QString,QString>("Nehalem","corei7"));
+    sl.append(QPair<QString,QString>("Sandy","corei7-avx"));
+    sl.append(QPair<QString,QString>("K6","k6"));
+    sl.append(QPair<QString,QString>("K6-2","k6-2"));
+    sl.append(QPair<QString,QString>("K6-3","k6-3"));
+    sl.append(QPair<QString,QString>("Athlon","athlon"));
+    sl.append(QPair<QString,QString>("Athlon Tbird","athlon-tbird"));
+    sl.append(QPair<QString,QString>("Athlon 4","athlon-4"));
+    sl.append(QPair<QString,QString>("Athlon XP","athlon-xp"));
+    sl.append(QPair<QString,QString>("Athlon MP","athlon-mp"));
+    sl.append(QPair<QString,QString>("K8","k8"));
+    sl.append(QPair<QString,QString>("K8 Rev.E","k8-sse3"));
+    sl.append(QPair<QString,QString>("K10","barcelona"));
+    sl.append(QPair<QString,QString>("Bulldozer","bdver1"));
+    addOption("gcc_cmd_opt_arch", QObject::tr("Optimize for the following machine (-march)"), groupName, true, true, false, "-march=", sl);
+    addOption("gcc_cmd_opt_tune", QObject::tr("Optimize less, while maintaining full compatibility (-tune)"), groupName, true, true, false, "-mtune=", sl);
+
+    // Enable use of the specific instructions
+    sl.clear();
+    sl.append(QPair<QString,QString>("MMX","mmx"));
+    sl.append(QPair<QString,QString>("3D Now","3dnow"));
+    sl.append(QPair<QString,QString>("SSE","sse"));
+    sl.append(QPair<QString,QString>("SSE2","sse2"));
+    sl.append(QPair<QString,QString>("SSE3","sse3"));
+    sl.append(QPair<QString,QString>("SSSE3","ssse3"));
+    sl.append(QPair<QString,QString>("SSE4","sse4"));
+    sl.append(QPair<QString,QString>("SSE4A","sse4a"));
+    sl.append(QPair<QString,QString>("SSE4.1","sse4.1"));
+    sl.append(QPair<QString,QString>("SSE4.2","sse4.2"));
+    sl.append(QPair<QString,QString>("AVX","avx"));
+    sl.append(QPair<QString,QString>("AVX2","avx2"));
+    sl.append(QPair<QString,QString>("FMA4","fma4"));
+    sl.append(QPair<QString,QString>("XOP","xop"));
+    sl.append(QPair<QString,QString>("AES","aes"));
+    addOption("gcc_cmd_opt_instruction",QObject::tr("Enable use of specific instructions (-mx)"), groupName, true, true, false, "-m", sl);
+
+    // Optimization
+    sl.clear();
+    sl.append(QPair<QString,QString>("Low","1"));
+    sl.append(QPair<QString,QString>("Med","2"));
+    sl.append(QPair<QString,QString>("High","3"));
+    sl.append(QPair<QString,QString>("Highest (fast)","fast"));
+    sl.append(QPair<QString,QString>("Size (s)","s"));
+    sl.append(QPair<QString,QString>("Debug (g)","g"));
+    addOption("gcc_cmd_opt_optimize", QObject::tr("Optimization level (-Ox)"), groupName, true, true, false, "-O", sl);
+
+    // 32bit/64bit
+    sl.clear();
+    sl.append(QPair<QString,QString>("32bit","32"));
+    sl.append(QPair<QString,QString>("64bit","64"));
+    addOption("gcc_cmd_opt_pointer_size", QObject::tr("Compile with the following pointer size (-mx)"), groupName, true, true, true, "-m", sl);
+
+    // Language Standards
+    sl.clear();
+    sl.append(QPair<QString,QString>("ISO C90","c90"));
+    sl.append(QPair<QString,QString>("ISO C99","c99"));
+    sl.append(QPair<QString,QString>("ISO C11","c11"));
+    sl.append(QPair<QString,QString>("ISO C17","c17"));
+    sl.append(QPair<QString,QString>("ISO C++","c++98"));
+    sl.append(QPair<QString,QString>("ISO C++11","c++11"));
+    sl.append(QPair<QString,QString>("ISO C++14","c++14"));
+    sl.append(QPair<QString,QString>("ISO C++17","c++17"));
+    sl.append(QPair<QString,QString>("ISO C++20","c++2a"));
+    sl.append(QPair<QString,QString>("GNU C90","gnu90"));
+    sl.append(QPair<QString,QString>("GNU C99","gnu99"));
+    sl.append(QPair<QString,QString>("GNU C11","gnu11"));
+    sl.append(QPair<QString,QString>("GNU C17","gnu17"));
+    sl.append(QPair<QString,QString>("GNU C++","gnu++98"));
+    sl.append(QPair<QString,QString>("GNU C++11","gnu++11"));
+    sl.append(QPair<QString,QString>("GNU C++14","gnu++14"));
+    sl.append(QPair<QString,QString>("GNU C++17","gnu++17"));
+    sl.append(QPair<QString,QString>("GNU C++20","gnu++2a"));
+    addOption("gcc_cmd_opt_std", QObject::tr("Language standard (-std)"), groupName, true, true, false, "-std=", sl);
+
+    // Warnings
+    groupName = QObject::tr("Warnings");
+    addOption("gcc_cmd_opt_inhibit_all_warning", QObject::tr("Inhibit all warning messages (-w)"), groupName, true, true, false, "-w");
+    addOption("gcc_cmd_opt_warning_all",QObject::tr("Show most warnings (-Wall)"), groupName, true, true, false, "-Wall");
+    addOption("gcc_cmd_opt_warning_extra",QObject::tr("Show some more warnings (-Wextra)"), groupName, true, true, false, "-Wextra");
+    addOption("gcc_cmd_opt_check_iso_conformance", QObject::tr("Check ISO C/C++/C++0x conformance (-pedantic)"), groupName, true, true, false, "-pedantic");
+    addOption("gcc_cmd_opt_syntax_only", QObject::tr("Only check the code for syntax errors (-fsyntax-only)"), groupName, true, true, false, "-fsyntax-only");
+    addOption("gcc_cmd_opt_warning_as_error", QObject::tr("Make all warnings into errors (-Werror)"), groupName, true, true, false, "-Werror");
+    addOption("gcc_cmd_opt_abort_on_error", QObject::tr("Abort compilation on first error (-Wfatal-errors)"), groupName, true, true, false, "-Wfatal-errors");
+
+    // Profile
+    groupName = QObject::tr("Profile");
+    addOption("gcc_cmd_opt_profile_info",QObject::tr("Generate profiling info for analysis (-pg)"), groupName, true, true, true, "-pg");
+
+    // Linker
+    groupName = QObject::tr("Linker");
+    addOption("linker_cmd_opt_link_objc", QObject::tr("Link an Objective C program (-lobjc)"), groupName, false, false, true, "-lobjc");
+    addOption("linker_cmd_opt_no_link_stdlib",QObject::tr("Do not use standard system libraries (-nostdlib)"), groupName, false, false, true, "-nostdlib");
+    addOption("linker_cmd_opt_no_console", QObject::tr("Do not create a console window (-mwindows)"), groupName,false, false, true, "-mwindows");
+    addOption("linker_cmd_opt_strip_exe", QObject::tr("Strip executable (-s)"), groupName, false, false, true, "-s");
+    addOption("cc_cmd_opt_debug_info", QObject::tr("Generate debugging information (-g3)"), groupName, true, true, false, "-g3");
+
+    // Output
+    groupName = QObject::tr("Output");
+    addOption("cc_cmd_opt_verbose_asm", QObject::tr("Put comments in generated assembly code (-fverbose-asm)"), groupName, true, true, false, "-fverbose-asm");
+    addOption("cc_cmd_opt_only_gen_asm_code", QObject::tr("Do not assemble, compile and generate the assemble code (-S)"), groupName, true, true, false, "-S");
+    addOption("cc_cmd_opt_use_pipe", QObject::tr("Use pipes instead of temporary files during compilation (-pipe)"), groupName, true, true, false, "-pipe");
+
+
+    //old settings compatibility, don't reorder, add or remove items
+    mCompilerCompatibleIndex.append("gcc_cmd_opt_ansi");
+    mCompilerCompatibleIndex.append("gcc_cmd_opt_no_asm");
+    mCompilerCompatibleIndex.append("gcc_cmd_opt_traditional_cpp");
+
+    mCompilerCompatibleIndex.append("gcc_cmd_opt_arch");
+    mCompilerCompatibleIndex.append("gcc_cmd_opt_tune");
+    mCompilerCompatibleIndex.append("gcc_cmd_opt_instruction");
+    mCompilerCompatibleIndex.append("gcc_cmd_opt_optimize");
+    mCompilerCompatibleIndex.append("gcc_cmd_opt_pointer_size");
+    mCompilerCompatibleIndex.append("gcc_cmd_opt_std");
+
+    mCompilerCompatibleIndex.append("gcc_cmd_opt_inhibit_all_warning");
+    mCompilerCompatibleIndex.append("gcc_cmd_opt_warning_all");
+    mCompilerCompatibleIndex.append("gcc_cmd_opt_warning_extra");
+    mCompilerCompatibleIndex.append("gcc_cmd_opt_check_iso_conformance");
+    mCompilerCompatibleIndex.append("gcc_cmd_opt_syntax_only");
+    mCompilerCompatibleIndex.append("gcc_cmd_opt_warning_as_error");
+    mCompilerCompatibleIndex.append("gcc_cmd_opt_abort_on_error");
+
+    mCompilerCompatibleIndex.append("gcc_cmd_opt_profile_info");
+
+    mCompilerCompatibleIndex.append("linker_cmd_opt_link_objc");
+    mCompilerCompatibleIndex.append("linker_cmd_opt_no_link_stdlib");
+    mCompilerCompatibleIndex.append("linker_cmd_opt_no_console");
+    mCompilerCompatibleIndex.append("linker_cmd_opt_strip_exe");
+    mCompilerCompatibleIndex.append("cc_cmd_opt_debug_info");
+
+    mCompilerCompatibleIndex.append("cc_cmd_opt_verbose_asm");
+    mCompilerCompatibleIndex.append("cc_cmd_opt_only_gen_asm_code");
+    mCompilerCompatibleIndex.append("cc_cmd_opt_use_pipe");
+
+}
+
+void Settings::CompilerSets::addOption(const QString &key, const QString &name, const QString section, bool isC, bool isCpp, bool isLinker, const QString &setting, const CompileOptionChoiceList &choices)
+{
+    PCompilerOption pOption = std::make_shared<CompilerOption>();
+    pOption->key = key;
+    pOption->name = name;
+    pOption->section = section;
+    pOption->isC = isC;
+    pOption->isCpp = isCpp;
+    pOption->isLinker = isLinker;
+    pOption->setting= setting;
+    if (choices.isEmpty()) {
+        pOption->choices.append(QPair<QString,QString>(QObject::tr("On"),""));
+    } else
+        pOption->choices = choices;
+    mCompilerOptions.insert(key,pOption);
+}
+
+const CompilerOptionMap &Settings::CompilerSets::compilerOptions() const
+{
+    return mCompilerOptions;
+}
+
+QString Settings::CompilerSets::getKeyFromCompilerCompatibleIndex(int idx) const
+{
+    if (idx<0 || idx >= mCompilerCompatibleIndex.length())
+        return QString();
+    return mCompilerCompatibleIndex[idx];
+}
+
+PCompilerOption Settings::CompilerSets::getCompilerOption(const QString &key) const
+{
+    return mCompilerOptions.value(key,PCompilerOption());
 }
 
 Settings::Environment::Environment(Settings *settings):_Base(settings, SETTING_ENVIRONMENT)

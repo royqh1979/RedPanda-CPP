@@ -340,30 +340,16 @@ QString Compiler::getCCompileArguments(bool checkSyntax)
         result += " -fsyntax-only";
     }
 
-    for (int i=0;i<compilerSet()->options().size();i++) {
-        PCompilerOption pOption = compilerSet()->options()[i];
-        // consider project specific options for the compiler, else global compiler options
-        if (
-                (mProject && (i < mProject->options().compilerOptions.length()))
-                || (!mProject && (pOption->value > 0))) {
-            int value;
-            if (mProject) {
-                value = Settings::CompilerSet::charToValue(mProject->options().compilerOptions[i]);
-            } else {
-                value = pOption->value;
-            }
-            if (value > 0 && pOption->isC) {
-                if (checkSyntax && pOption->isLinker)
-                    continue;
-                if (pOption->choices.isEmpty()) {
-                    result += " " + pOption->setting;
-                } else if (value < pOption->choices.size()) {
-                    QStringList nameValue=pOption->choices[value].split('=');
-                    if (nameValue.count()==2) {
-                        result += " " + pOption->setting + nameValue[1];
-                    }
-                }
-            }
+    QMap<QString, QString> compileOptions;
+    if (mProject) {
+        compileOptions = mProject->options().compilerOptions;
+    } else {
+        compileOptions = compilerSet()->compileOptions();
+    }
+    foreach (const QString& key, compilerSet()->compileOptions()) {
+        PCompilerOption pOption = pSettings->compilerSets().getCompilerOption(key);
+        if (pOption && pOption->isC && !pOption->isLinker) {
+            result += " " + pOption->setting + compilerSet()->getCompileOptionValue(key);
         }
     }
 
@@ -387,31 +373,16 @@ QString Compiler::getCppCompileArguments(bool checkSyntax)
     if (checkSyntax) {
         result += " -fsyntax-only";
     }
-
-    for (int i=0;i<compilerSet()->options().size();i++) {
-        PCompilerOption pOption = compilerSet()->options()[i];
-        // consider project specific options for the compiler, else global compiler options
-        if (
-                (mProject && (i < mProject->options().compilerOptions.length()))
-                || (!mProject && (pOption->value > 0))) {
-            int value;
-            if (mProject) {
-                value = Settings::CompilerSet::charToValue(mProject->options().compilerOptions[i]);
-            } else {
-                value = pOption->value;
-            }
-            if (value > 0 && pOption->isCpp) {
-                if (checkSyntax && pOption->isLinker)
-                    continue;
-                if (pOption->choices.isEmpty()) {
-                    result += " " + pOption->setting;
-                } else if (value < pOption->choices.size()) {
-                    QStringList nameValue=pOption->choices[value].split('=');
-                    if (nameValue.count()==2) {
-                        result += " " + pOption->setting + nameValue[1];
-                    }
-                }
-            }
+    QMap<QString, QString> compileOptions;
+    if (mProject) {
+        compileOptions = mProject->options().compilerOptions;
+    } else {
+        compileOptions = compilerSet()->compileOptions();
+    }
+    foreach (const QString& key, compilerSet()->compileOptions()) {
+        PCompilerOption pOption = pSettings->compilerSets().getCompilerOption(key);
+        if (pOption && pOption->isCpp && !pOption->isLinker) {
+            result += " " + pOption->setting + compilerSet()->getCompileOptionValue(key);
         }
     }
 
@@ -506,28 +477,16 @@ QString Compiler::getLibraryArguments(FileType fileType)
 
     //add compiler set link options
     //options like "-static" must be added after "-lxxx"
-    for (int i=0;i<compilerSet()->options().size();i++) {
-        PCompilerOption pOption = compilerSet()->options()[i];
-        // consider project specific options for the compiler, else global compiler options
-        if (
-                (mProject && (i < mProject->options().compilerOptions.length()))
-                || (!mProject && (pOption->value > 0))) {
-            int value;
-            if (mProject) {
-                value = Settings::CompilerSet::charToValue(mProject->options().compilerOptions[i]);
-            } else {
-                value = pOption->value;
-            }
-            if (value > 0 && pOption->isLinker) {
-                if (pOption->choices.isEmpty()) {
-                    result += " " + pOption->setting;
-                } else if (value < pOption->choices.size()) {
-                    QStringList nameValue=pOption->choices[value].split('=');
-                    if (nameValue.count()==2) {
-                        result += " " + pOption->setting + nameValue[1];
-                    }
-                }
-            }
+    QMap<QString, QString> compileOptions;
+    if (mProject) {
+        compileOptions = mProject->options().compilerOptions;
+    } else {
+        compileOptions = compilerSet()->compileOptions();
+    }
+    foreach (const QString& key, compilerSet()->compileOptions()) {
+        PCompilerOption pOption = pSettings->compilerSets().getCompilerOption(key);
+        if (pOption->isLinker) {
+            result += " " + pOption->setting + compilerSet()->getCompileOptionValue(key);
         }
     }
 
