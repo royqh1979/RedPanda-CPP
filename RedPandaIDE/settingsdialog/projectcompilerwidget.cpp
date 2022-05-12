@@ -39,7 +39,9 @@ void ProjectCompilerWidget::refreshOptions()
         return;
     ui->chkAddCharset->setVisible(pSet->compilerType()!=COMPILER_CLANG);
     ui->chkAddCharset->setEnabled(pSet->compilerType()!=COMPILER_CLANG);
-    mOptions = pSet->iniOptions();
+    mOptions = pMainWindow->project().options().compilerOptions;
+    if (mOptions.isEmpty())
+        mOptions = pSet->compileOptions();
     QTabWidget* pTab = ui->tabOptions;
     while (pTab->count()>0) {
         QWidget* p=pTab->widget(0);

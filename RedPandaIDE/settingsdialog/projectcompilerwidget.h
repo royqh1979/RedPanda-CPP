@@ -17,6 +17,7 @@
 #ifndef PROJECTCOMPILERWIDGET_H
 #define PROJECTCOMPILERWIDGET_H
 
+#include <QMap>
 #include <QWidget>
 #include "settingswidget.h"
 
@@ -35,7 +36,7 @@ private:
     void refreshOptions();
 private:
     Ui::ProjectCompilerWidget *ui;
-    QByteArray mOptions;
+    QMap<QString,QString> mOptions;
 
     // SettingsWidget interface
 protected:

@@ -1584,15 +1584,34 @@ void Project::loadOptions(SimpleIni& ini)
                                   );
             setCompilerSet(pSettings->compilerSets().defaultIndex());
         }
-        SimpleIni::TNamesDepend oKeys;
-        ini.GetAllKeys("CompilerSettings", oKeys);
-        for(const SimpleIni::Entry& entry:oKeys) {
-            QString key(entry.pItem);
-            PCompilerOption pOption = pSettings->compilerSets().getCompilerOption(key);
-            if (pOption) {
-                mOptions.compilerOptions.insert(
-                            key,
-                            ini.GetValue("CompilerSettings", entry.pItem, ""));
+
+        QByteArray oldCompilerOptions = ini.GetValue("Project", "CompilerSettings", "");
+        if (!oldCompilerOptions.isEmpty()) {
+            for (int i=0;i<oldCompilerOptions.length();i++) {
+                QString key = pSettings->compilerSets().getKeyFromCompilerCompatibleIndex(i);
+                PCompilerOption pOption = pSettings->compilerSets().getCompilerOption(key);
+                if (pOption) {
+                    int val = Settings::CompilerSet::charToValue(oldCompilerOptions[i]);
+                    if (pOption->choices.isEmpty()) {
+                        if (val>0)
+                            mOptions.compilerOptions.insert(key,"");
+                    } else {
+                        if (val>0 && val <= pOption->choices.length())
+                            mOptions.compilerOptions.insert(key,pOption->choices[val-1].second);
+                    }
+                }
+            }
+        } else {
+            SimpleIni::TNamesDepend oKeys;
+            ini.GetAllKeys("CompilerSettings", oKeys);
+            for(const SimpleIni::Entry& entry:oKeys) {
+                QString key(entry.pItem);
+                PCompilerOption pOption = pSettings->compilerSets().getCompilerOption(key);
+                if (pOption) {
+                    mOptions.compilerOptions.insert(
+                                key,
+                                ini.GetValue("CompilerSettings", entry.pItem, ""));
+                }
             }
         }
 

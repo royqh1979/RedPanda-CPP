@@ -1495,7 +1495,13 @@ Settings::CompilerSet::CompilerSet(const Settings::CompilerSet &set):
 bool Settings::CompilerSet::setCompileOption(const QString &key, int valIndex)
 {
     PCompilerOption op = pSettings->compilerSets().getCompilerOption(key);
-    if (op && valIndex>=0 && valIndex < op->choices.length()) {
+    if (!op)
+        return false;
+    if (op->choices.isEmpty()) {
+        if (valIndex==1)
+            mCompileOptions.insert(key,"");
+        return true;
+    } else if (valIndex>0 && valIndex <= op->choices.length()) {
         mCompileOptions.insert(key,op->choices[valIndex].second);
         return true;
     }
@@ -2218,12 +2224,7 @@ void Settings::CompilerSet::setIniOptions(const QByteArray &value)
    mCompileOptions.clear();
    for (int i=0;i<value.length();i++) {
        QString key = pSettings->compilerSets().getKeyFromCompilerCompatibleIndex(i);
-       PCompilerOption p = pSettings->compilerSets().getCompilerOption(key);
-       if (p) {
-           int v = charToValue(value[i]);
-           if (v > 0 && v<= p->choices.length())
-               mCompileOptions.insert(key,p->choices[v-1].second);
-       }
+       setCompileOption(key,charToValue(value[i]));
    }
 }
 
@@ -2646,6 +2647,7 @@ void Settings::CompilerSets::saveSet(int index)
     savePath("windres", pSet->resourceCompiler());
     savePath("profiler", pSet->profiler());
 
+    mSettings->mSettings.remove("Options");
     // Save option string
     for (const QString& optionKey : pSet->compileOptions().keys()) {
         mSettings->mSettings.setValue(optionKey, pSet->compileOptions().value(optionKey));
@@ -2718,9 +2720,11 @@ Settings::PCompilerSet Settings::CompilerSets::loadSet(int index)
     QByteArray iniOptions = mSettings->mSettings.value("Options","").toByteArray();
     if (!iniOptions.isEmpty())
         pSet->setIniOptions(iniOptions);
-    foreach (const QString &optionKey, mSettings->mSettings.allKeys()) {
-        if (mCompilerOptions.contains(optionKey)) {
-            pSet->setCompileOption(optionKey, mSettings->mSettings.value(optionKey).toString());
+    else {
+        foreach (const QString &optionKey, mSettings->mSettings.allKeys()) {
+            if (mCompilerOptions.contains(optionKey)) {
+                pSet->setCompileOption(optionKey, mSettings->mSettings.value(optionKey).toString());
+            }
         }
     }
 
@@ -2930,10 +2934,7 @@ void Settings::CompilerSets::addOption(const QString &key, const QString &name, 
     pOption->isCpp = isCpp;
     pOption->isLinker = isLinker;
     pOption->setting= setting;
-    if (choices.isEmpty()) {
-        pOption->choices.append(QPair<QString,QString>(QObject::tr("On"),""));
-    } else
-        pOption->choices = choices;
+    pOption->choices = choices;
     mCompilerOptions.insert(key,pOption);
 }
 
