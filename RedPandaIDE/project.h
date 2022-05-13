@@ -210,8 +210,7 @@ public:
     PProjectUnit findUnitByFilename(const QString& filename);
     void associateEditor(Editor* editor);
     void associateEditorToUnit(Editor* editor, PProjectUnit unit);
-    void setCompilerOption(const QString& optionString, char value);
-    bool setCompileOption(const QString &key, int valIndex);
+//    bool setCompileOption(const QString &key, int valIndex);
     bool setCompileOption(const QString &key, const QString &value);
 
     void updateFolders();

@@ -347,7 +347,7 @@ QString Compiler::getCCompileArguments(bool checkSyntax)
         compileOptions = compilerSet()->compileOptions();
     }
     foreach (const QString& key, compilerSet()->compileOptions()) {
-        PCompilerOption pOption = pSettings->compilerSets().getCompilerOption(key);
+        PCompilerOption pOption = CompilerInfoManager::getCompilerOption(compilerSet()->CCompiler(), key);
         if (pOption && pOption->isC && !pOption->isLinker) {
             result += " " + pOption->setting + compilerSet()->getCompileOptionValue(key);
         }
@@ -380,7 +380,7 @@ QString Compiler::getCppCompileArguments(bool checkSyntax)
         compileOptions = compilerSet()->compileOptions();
     }
     foreach (const QString& key, compilerSet()->compileOptions()) {
-        PCompilerOption pOption = pSettings->compilerSets().getCompilerOption(key);
+        PCompilerOption pOption = CompilerInfoManager::getCompilerOption(compilerSet()->CCompiler(), key);
         if (pOption && pOption->isCpp && !pOption->isLinker) {
             result += " " + pOption->setting + compilerSet()->getCompileOptionValue(key);
         }
@@ -484,7 +484,7 @@ QString Compiler::getLibraryArguments(FileType fileType)
         compileOptions = compilerSet()->compileOptions();
     }
     foreach (const QString& key, compilerSet()->compileOptions()) {
-        PCompilerOption pOption = pSettings->compilerSets().getCompilerOption(key);
+        PCompilerOption pOption = CompilerInfoManager::getCompilerOption(compilerSet()->CCompiler(), key);
         if (pOption->isLinker) {
             result += " " + pOption->setting + compilerSet()->getCompileOptionValue(key);
         }

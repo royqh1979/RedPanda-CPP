@@ -46,6 +46,7 @@ SOURCES += \
     codeformatter.cpp \
     codesnippetsmanager.cpp \
     colorscheme.cpp \
+    compiler/compilerinfo.cpp \
     compiler/ojproblemcasesrunner.cpp \
     compiler/projectcompiler.cpp \
     compiler/runner.cpp \
@@ -157,6 +158,7 @@ SOURCES += \
     systemconsts.cpp \
     utils.cpp \
     widgets/coloredit.cpp \
+    widgets/compileargumentswidget.cpp \
     widgets/consolewidget.cpp \
     widgets/customdisablediconengine.cpp \
     widgets/customfilesystemmodel.cpp \
@@ -194,6 +196,7 @@ HEADERS += \
     codesnippetsmanager.h \
     colorscheme.h \
     compiler/compiler.h \
+    compiler/compilerinfo.h \
     compiler/compilermanager.h \
     compiler/executablerunner.h \
     compiler/filecompiler.h \
@@ -304,6 +307,7 @@ HEADERS += \
     utils.h \
     common.h \
     widgets/coloredit.h \
+    widgets/compileargumentswidget.h \
     widgets/consolewidget.h \
     widgets/customdisablediconengine.h \
     widgets/customfilesystemmodel.h \
@@ -381,6 +385,7 @@ FORMS += \
     settingsdialog/executorgeneralwidget.ui \
     settingsdialog/settingsdialog.ui \
     widgets/custommakefileinfodialog.ui \
+    widgets/compileargumentswidget.ui \
     widgets/filepropertiesdialog.ui \
     widgets/infomessagebox.ui \
     widgets/newclassdialog.ui \
@@ -393,13 +398,13 @@ FORMS += \
 
 win32: {
     FORMS +=  \
-	settingsdialog/projectversioninfowidget.ui \
+        settingsdialog/projectversioninfowidget.ui \
     settingsdialog/environmentfileassociationwidget.ui
 
     HEADERS += \
     settingsdialog/projectversioninfowidget.h \
-    settingsdialog/environmentfileassociationwidget.h  
-      
+    settingsdialog/environmentfileassociationwidget.h
+
     SOURCES += \
     settingsdialog/environmentfileassociationwidget.cpp \
     settingsdialog/projectversioninfowidget.cpp
@@ -451,40 +456,40 @@ RESOURCES += \
 RC_ICONS = images/devcpp.ico images/associations/c.ico images/associations/cpp.ico images/associations/dev.ico images/associations/c.ico images/associations/cpp.ico images/associations/h.ico images/associations/hpp.ico
 
 # fixed lrelease.prf
-qtPrepareTool(QMAKE_LRELEASE, lrelease)
+#qtPrepareTool(QMAKE_LRELEASE, lrelease)
 
-isEmpty(LRELEASE_DIR): LRELEASE_DIR = .qm
-isEmpty(QM_FILES_RESOURCE_PREFIX): QM_FILES_RESOURCE_PREFIX = i18n
+#isEmpty(LRELEASE_DIR): LRELEASE_DIR = .qm
+#isEmpty(QM_FILES_RESOURCE_PREFIX): QM_FILES_RESOURCE_PREFIX = i18n
 
-lrelease.name = lrelease
-lrelease.input = TRANSLATIONS EXTRA_TRANSLATIONS
-lrelease.output = $$LRELEASE_DIR/${QMAKE_FILE_IN_BASE}.qm
-lrelease.commands = $$QMAKE_LRELEASE ${QMAKE_FILE_IN} $$QMAKE_LRELEASE_FLAGS -qm ${QMAKE_FILE_OUT}
-silent: lrelease.commands = @echo lrelease ${QMAKE_FILE_IN} && $$lrelease.commands
-lrelease.CONFIG = no_link target_predeps
-QMAKE_EXTRA_COMPILERS += lrelease
+#lrelease.name = lrelease
+#lrelease.input = TRANSLATIONS EXTRA_TRANSLATIONS
+#lrelease.output = $$LRELEASE_DIR/${QMAKE_FILE_IN_BASE}.qm
+#lrelease.commands = $$QMAKE_LRELEASE ${QMAKE_FILE_IN} $$QMAKE_LRELEASE_FLAGS -qm ${QMAKE_FILE_OUT}
+#silent: lrelease.commands = @echo lrelease ${QMAKE_FILE_IN} && $$lrelease.commands
+#lrelease.CONFIG = no_link target_predeps
+#QMAKE_EXTRA_COMPILERS += lrelease
 
-all_translations = $$TRANSLATIONS $$EXTRA_TRANSLATIONS
-for (translation, all_translations) {
-    # mirrors $$LRELEASE_DIR/${QMAKE_FILE_IN_BASE}.qm above
-    translation = $$basename(translation)
-    QM_FILES += $$OUT_PWD/$$LRELEASE_DIR/$$replace(translation, \\..*$, .qm)
-}
+#all_translations = $$TRANSLATIONS $$EXTRA_TRANSLATIONS
+#for (translation, all_translations) {
+#    # mirrors $$LRELEASE_DIR/${QMAKE_FILE_IN_BASE}.qm above
+#    translation = $$basename(translation)
+#    QM_FILES += $$OUT_PWD/$$LRELEASE_DIR/$$replace(translation, \\..*$, .qm)
+#}
 
-qmake_qm_files.files = $$QM_FILES
-qmake_qm_files.base = $$OUT_PWD/$$LRELEASE_DIR
-qmake_qm_files.prefix = $$QM_FILES_RESOURCE_PREFIX
+#qmake_qm_files.files = $$QM_FILES
+#qmake_qm_files.base = $$OUT_PWD/$$LRELEASE_DIR
+#qmake_qm_files.prefix = $$QM_FILES_RESOURCE_PREFIX
 
-iconsets_files.files += $$files(resources/iconsets/*.svg, true)
-iconsets_files.files += $$files(resources/iconsets/*.json, true)
+#iconsets_files.files += $$files(resources/iconsets/*.svg, true)
+#iconsets_files.files += $$files(resources/iconsets/*.json, true)
 
-theme_files.files += $$files(themes/*.json, false)
-theme_files.files += $$files(themes/*.png, false)
+#theme_files.files += $$files(themes/*.json, false)
+#theme_files.files += $$files(themes/*.png, false)
 
-colorscheme_files.files += $$files(colorschemes/*.scheme, false)
-colorscheme_files.prefix = /colorschemes
+#colorscheme_files.files += $$files(colorschemes/*.scheme, false)
+#colorscheme_files.prefix = /colorschemes
 
-RESOURCES += qmake_qm_files
-RESOURCES += iconsets_files
-RESOURCES += theme_files
-RESOURCES += colorscheme_files
+#RESOURCES += qmake_qm_files
+#RESOURCES += iconsets_files
+#RESOURCES += theme_files
+#RESOURCES += colorscheme_files

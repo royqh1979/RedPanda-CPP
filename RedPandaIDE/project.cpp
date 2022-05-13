@@ -689,19 +689,37 @@ void Project::associateEditorToUnit(Editor *editor, PProjectUnit unit)
     }
 }
 
-bool Project::setCompileOption(const QString &key, int valIndex)
-{
-    PCompilerOption op = pSettings->compilerSets().getCompilerOption(key);
-    if (op && valIndex>=0 && valIndex < op->choices.length()) {
-        mOptions.compilerOptions.insert(key,op->choices[valIndex].second);
-        return true;
-    }
-    return false;
-}
+//bool Project::setCompileOption(const QString &key, int valIndex)
+//{
+//    Settings::PCompilerSet pSet = pSettings->compilerSets().getSet(mOptions.compilerSet);
+//    if (!pSet)
+//        return false;
+//    PCompilerOption op = CompilerInfoManager::getCompilerOption(
+//                pSet->compilerType(), key);
+//    if (!op)
+//        return false;
+//    if (op->choices.isEmpty()) {
+//        if (valIndex>0)
+//            mOptions.compilerOptions.insert(key,COMPILER_OPTION_ON);
+//        else
+//            mOptions.compilerOptions.insert(key,"");
+//    } else {
+//        if (valIndex>0 && valIndex <= op->choices.length()) {
+//            mOptions.compilerOptions.insert(key,op->choices[valIndex-1].second);
+//        } else {
+//            mOptions.compilerOptions.insert(key,"");
+//        }
+//    }
+//    return true;
+//}
 
 bool Project::setCompileOption(const QString &key, const QString &value)
 {
-    PCompilerOption op = pSettings->compilerSets().getCompilerOption(key);
+    Settings::PCompilerSet pSet = pSettings->compilerSets().getSet(mOptions.compilerSet);
+    if (!pSet)
+        return false;
+    PCompilerOption op = CompilerInfoManager::getCompilerOption(
+                pSet->compilerType(), key);
     if (!op)
         return false;
     mOptions.compilerOptions.insert(key,value);
@@ -1533,8 +1551,8 @@ void Project::loadOptions(SimpleIni& ini)
     }
     mOptions.version = ini.GetLongValue("Project", "Ver", 0);
     if (mOptions.version > 0) { // ver > 0 is at least a v5 project
-        if (mOptions.version < 2) {
-            mOptions.version = 2;
+        if (mOptions.version < 3) {
+            mOptions.version = 3;
             QMessageBox::information(nullptr,
                                      tr("Settings need update"),
                                      tr("The compiler settings format of Red Panda C++ has changed.")
@@ -1585,32 +1603,39 @@ void Project::loadOptions(SimpleIni& ini)
             setCompilerSet(pSettings->compilerSets().defaultIndex());
         }
 
-        QByteArray oldCompilerOptions = ini.GetValue("Project", "CompilerSettings", "");
-        if (!oldCompilerOptions.isEmpty()) {
-            for (int i=0;i<oldCompilerOptions.length();i++) {
-                QString key = pSettings->compilerSets().getKeyFromCompilerCompatibleIndex(i);
-                PCompilerOption pOption = pSettings->compilerSets().getCompilerOption(key);
-                if (pOption) {
-                    int val = Settings::CompilerSet::charToValue(oldCompilerOptions[i]);
-                    if (pOption->choices.isEmpty()) {
-                        if (val>0)
-                            mOptions.compilerOptions.insert(key,"");
-                    } else {
-                        if (val>0 && val <= pOption->choices.length())
-                            mOptions.compilerOptions.insert(key,pOption->choices[val-1].second);
+        Settings::PCompilerSet pSet = pSettings->compilerSets().getSet(mOptions.compilerSet);
+        if (pSet) {
+            QByteArray oldCompilerOptions = ini.GetValue("Project", "CompilerSettings", "");
+            if (!oldCompilerOptions.isEmpty()) {
+                //version 2 compatibility
+                for (int i=0;i<oldCompilerOptions.length();i++) {
+                    QString key = pSettings->compilerSets().getKeyFromCompilerCompatibleIndex(i);
+                    PCompilerOption pOption = CompilerInfoManager::getCompilerOption(
+                                pSet->compilerType(), key);
+                    if (pOption) {
+                        int val = Settings::CompilerSet::charToValue(oldCompilerOptions[i]);
+                        if (pOption->choices.isEmpty()) {
+                            if (val>0)
+                                mOptions.compilerOptions.insert(key,COMPILER_OPTION_ON);
+                            else
+                                mOptions.compilerOptions.insert(key,"");
+                        } else {
+                            if (val>0 && val <= pOption->choices.length())
+                                mOptions.compilerOptions.insert(key,pOption->choices[val-1].second);
+                            else
+                                mOptions.compilerOptions.insert(key,"");
+                        }
                     }
                 }
-            }
-        } else {
-            SimpleIni::TNamesDepend oKeys;
-            ini.GetAllKeys("CompilerSettings", oKeys);
-            for(const SimpleIni::Entry& entry:oKeys) {
-                QString key(entry.pItem);
-                PCompilerOption pOption = pSettings->compilerSets().getCompilerOption(key);
-                if (pOption) {
+            } else {
+                //version 3
+                SimpleIni::TNamesDepend oKeys;
+                ini.GetAllKeys("CompilerSettings", oKeys);
+                for(const SimpleIni::Entry& entry:oKeys) {
+                    QString key(entry.pItem);
                     mOptions.compilerOptions.insert(
-                                key,
-                                ini.GetValue("CompilerSettings", entry.pItem, ""));
+                                    key,
+                                    ini.GetValue("CompilerSettings", entry.pItem, ""));
                 }
             }
         }
@@ -1649,7 +1674,7 @@ void Project::loadOptions(SimpleIni& ini)
         mOptions.versionInfo.syncProduct = ini.GetBoolValue("VersionInfo", "SyncProduct", false);
 
     } else { // dev-c < 4
-        mOptions.version = 2;
+        mOptions.version = 3;
         if (!ini.GetBoolValue("VersionInfo", "NoConsole", true))
             mOptions.type = ProjectType::Console;
         else if (ini.GetBoolValue("VersionInfo", "IsDLL", false))

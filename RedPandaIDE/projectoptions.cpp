@@ -40,7 +40,7 @@ ProjectVersionInfo::ProjectVersionInfo()
 ProjectOptions::ProjectOptions()
 {
     type = ProjectType::GUI;
-    version = 2;
+    version = 3;
     isCpp = false;
     logOutputEnabled = false;
     useCustomMakefile = false;
