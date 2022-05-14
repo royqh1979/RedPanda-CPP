@@ -19,6 +19,7 @@
 #include "../mainwindow.h"
 #include "../widgets/shortcutinputedit.h"
 #include <QMenuBar>
+#include <QMessageBox>
 
 EnvironmentShortcutWidget::EnvironmentShortcutWidget(const QString& name, const QString& group, QWidget *parent) :
     SettingsWidget(name,group,parent),
@@ -119,6 +120,17 @@ bool EnvironmentShortcutModel::setData(const QModelIndex &index, const QVariant 
         PEnvironmentShortcut item = mShortcuts[index.row()];
         QString s = value.toString().trimmed();
         if (s!=item->shortcut) {
+            for (int i=0;i<mShortcuts.length();i++) {
+                if (i==index.row())
+                    continue;
+                if (s==mShortcuts[i]->shortcut)  {
+                    QMessageBox::critical(nullptr,
+                                          tr("Error"),
+                                          tr("Shortcut \"%1\" is used by \"%2\".")
+                                          .arg(s,mShortcuts[i]->fullPath));
+                    return false;
+                }
+            }
             item->shortcut = value.toString();
             emit shortcutChanged();
         }
