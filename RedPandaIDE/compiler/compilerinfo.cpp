@@ -49,16 +49,49 @@ void CompilerInfo::init()
 
 void CompilerInfo::prepareCompilerOptions()
 {
+    QList<QPair<QString,QString>> sl;
     // C options
     QString groupName = QObject::tr("C options");
     addOption(CC_CMD_OPT_ANSI, QObject::tr("Support all ANSI standard C programs (-ansi)"), groupName, true, true, false, "-ansi");
     addOption(CC_CMD_OPT_NO_ASM, QObject::tr("Do not recognize asm,inline or typeof as a keyword (-fno-asm)"), groupName, true, true, false, "-fno-asm");
     addOption(CC_CMD_OPT_TRADITIONAL_CPP, QObject::tr("Imitate traditional C preprocessors (-traditional-cpp)"), groupName, true, true, false, "-traditional-cpp");
 
-    // Optimization for cpu type
     groupName = QObject::tr("Code Generation");
     addOption(CC_CMD_OPT_DEBUG_INFO, QObject::tr("Generate debugging information (-g3)"), groupName, true, true, false, "-g3");
-    QList<QPair<QString,QString>> sl;
+    // Optimization
+    sl.clear();
+    sl.append(QPair<QString,QString>("Low","1"));
+    sl.append(QPair<QString,QString>("Med","2"));
+    sl.append(QPair<QString,QString>("High","3"));
+    sl.append(QPair<QString,QString>("Highest (fast)","fast"));
+    sl.append(QPair<QString,QString>("Size (s)","s"));
+    sl.append(QPair<QString,QString>("Debug (g)","g"));
+    addOption(CC_CMD_OPT_OPTIMIZE, QObject::tr("Optimization level (-Ox)"), groupName, true, true, false, "-O", sl);
+
+    // Language Standards
+    sl.clear();
+    sl.append(QPair<QString,QString>("ISO C90","c90"));
+    sl.append(QPair<QString,QString>("ISO C99","c99"));
+    sl.append(QPair<QString,QString>("ISO C11","c11"));
+    sl.append(QPair<QString,QString>("ISO C17","c17"));
+    sl.append(QPair<QString,QString>("ISO C++","c++98"));
+    sl.append(QPair<QString,QString>("ISO C++11","c++11"));
+    sl.append(QPair<QString,QString>("ISO C++14","c++14"));
+    sl.append(QPair<QString,QString>("ISO C++17","c++17"));
+    sl.append(QPair<QString,QString>("ISO C++20","c++2a"));
+    sl.append(QPair<QString,QString>("GNU C90","gnu90"));
+    sl.append(QPair<QString,QString>("GNU C99","gnu99"));
+    sl.append(QPair<QString,QString>("GNU C11","gnu11"));
+    sl.append(QPair<QString,QString>("GNU C17","gnu17"));
+    sl.append(QPair<QString,QString>("GNU C++","gnu++98"));
+    sl.append(QPair<QString,QString>("GNU C++11","gnu++11"));
+    sl.append(QPair<QString,QString>("GNU C++14","gnu++14"));
+    sl.append(QPair<QString,QString>("GNU C++17","gnu++17"));
+    sl.append(QPair<QString,QString>("GNU C++20","gnu++2a"));
+    addOption(CC_CMD_OPT_STD, QObject::tr("Language standard (-std)"), groupName, true, true, false, "-std=", sl);
+
+    // Optimization for cpu type
+    sl.clear();
     sl.append(QPair<QString,QString>(QObject::tr("This CPU"),"native"));
     sl.append(QPair<QString,QString>("i386","i386"));
     sl.append(QPair<QString,QString>("i486","i486"));
@@ -107,43 +140,13 @@ void CompilerInfo::prepareCompilerOptions()
     sl.append(QPair<QString,QString>("AES","aes"));
     addOption(CC_CMD_OPT_INSTRUCTION,QObject::tr("Enable use of specific instructions (-mx)"), groupName, true, true, false, "-m", sl);
 
-    // Optimization
-    sl.clear();
-    sl.append(QPair<QString,QString>("Low","1"));
-    sl.append(QPair<QString,QString>("Med","2"));
-    sl.append(QPair<QString,QString>("High","3"));
-    sl.append(QPair<QString,QString>("Highest (fast)","fast"));
-    sl.append(QPair<QString,QString>("Size (s)","s"));
-    sl.append(QPair<QString,QString>("Debug (g)","g"));
-    addOption(CC_CMD_OPT_OPTIMIZE, QObject::tr("Optimization level (-Ox)"), groupName, true, true, false, "-O", sl);
-
     // 32bit/64bit
     sl.clear();
     sl.append(QPair<QString,QString>("32bit","32"));
     sl.append(QPair<QString,QString>("64bit","64"));
     addOption(CC_CMD_OPT_POINTER_SIZE, QObject::tr("Compile with the following pointer size (-mx)"), groupName, true, true, true, "-m", sl);
 
-    // Language Standards
-    sl.clear();
-    sl.append(QPair<QString,QString>("ISO C90","c90"));
-    sl.append(QPair<QString,QString>("ISO C99","c99"));
-    sl.append(QPair<QString,QString>("ISO C11","c11"));
-    sl.append(QPair<QString,QString>("ISO C17","c17"));
-    sl.append(QPair<QString,QString>("ISO C++","c++98"));
-    sl.append(QPair<QString,QString>("ISO C++11","c++11"));
-    sl.append(QPair<QString,QString>("ISO C++14","c++14"));
-    sl.append(QPair<QString,QString>("ISO C++17","c++17"));
-    sl.append(QPair<QString,QString>("ISO C++20","c++2a"));
-    sl.append(QPair<QString,QString>("GNU C90","gnu90"));
-    sl.append(QPair<QString,QString>("GNU C99","gnu99"));
-    sl.append(QPair<QString,QString>("GNU C11","gnu11"));
-    sl.append(QPair<QString,QString>("GNU C17","gnu17"));
-    sl.append(QPair<QString,QString>("GNU C++","gnu++98"));
-    sl.append(QPair<QString,QString>("GNU C++11","gnu++11"));
-    sl.append(QPair<QString,QString>("GNU C++14","gnu++14"));
-    sl.append(QPair<QString,QString>("GNU C++17","gnu++17"));
-    sl.append(QPair<QString,QString>("GNU C++20","gnu++2a"));
-    addOption(CC_CMD_OPT_STD, QObject::tr("Language standard (-std)"), groupName, true, true, false, "-std=", sl);
+    addOption(CC_CMD_OPT_PROFILE_INFO, QObject::tr("Generate profiling info for analysis (-pg)"), groupName, true, true, true, "-pg");
 
     // Warnings
     groupName = QObject::tr("Warnings");
@@ -155,9 +158,6 @@ void CompilerInfo::prepareCompilerOptions()
     addOption(CC_CMD_OPT_WARNING_AS_ERROR, QObject::tr("Make all warnings into errors (-Werror)"), groupName, true, true, false, "-Werror");
     addOption(CC_CMD_OPT_ABORT_ON_ERROR , QObject::tr("Abort compilation on first error (-Wfatal-errors)"), groupName, true, true, false, "-Wfatal-errors");
 
-    // Profile
-    groupName = QObject::tr("Profile");
-    addOption(CC_CMD_OPT_PROFILE_INFO, QObject::tr("Generate profiling info for analysis (-pg)"), groupName, true, true, true, "-pg");
 
     // Output
     groupName = QObject::tr("Output");

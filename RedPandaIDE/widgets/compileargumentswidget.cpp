@@ -102,7 +102,7 @@ void CompileArgumentsWidget::resetUI(Settings::PCompilerSet pSet, const QMap<QSt
                 const QPair<QString,QString> &choice = pOption->choices[i];
                 pCombo->addItem(choice.first,choice.second);
                 if (options.value(pOption->key,"") == choice.second)
-                    pCombo->setCurrentIndex(i);
+                    pCombo->setCurrentIndex(i+1);
             }
             pLayout->addWidget(pCombo,row,2);
         }
