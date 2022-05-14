@@ -6625,12 +6625,18 @@ void SynEdit::setActiveSelectionMode(const SynSelectionMode &Value)
 
 BufferCoord SynEdit::blockEnd() const
 {
+    if (mActiveSelectionMode == SynSelectionMode::smColumn) {
+        return BufferCoord{
+            std::max(mBlockBegin.Char,mBlockEnd.Char),
+            std::max(mBlockBegin.Line,mBlockEnd.Line),
+        };
+    }
+
     if ((mBlockEnd.Line < mBlockBegin.Line)
       || ((mBlockEnd.Line == mBlockBegin.Line) && (mBlockEnd.Char < mBlockBegin.Char)))
         return mBlockBegin;
     else
         return mBlockEnd;
-
 }
 
 void SynEdit::setBlockEnd(BufferCoord Value)
@@ -6717,6 +6723,12 @@ void SynEdit::setSelText(const QString &text)
 
 BufferCoord SynEdit::blockBegin() const
 {
+    if (mActiveSelectionMode == SynSelectionMode::smColumn) {
+        return BufferCoord{
+            std::min(mBlockBegin.Char,mBlockEnd.Char),
+            std::min(mBlockBegin.Line,mBlockEnd.Line),
+        };
+    }
     if ((mBlockEnd.Line < mBlockBegin.Line)
       || ((mBlockEnd.Line == mBlockBegin.Line) && (mBlockEnd.Char < mBlockBegin.Char)))
         return mBlockEnd;
