@@ -56,15 +56,16 @@ typedef struct {
 
 using PCompilerOption = std::shared_ptr<CompilerOption>;
 
-using CompilerOptionMap=QMap<QString,std::shared_ptr<CompilerOption>>;
+using CompilerOptionMap=QMap<QString,PCompilerOption>;
 
 class CompilerInfo
 {
 public:
     CompilerInfo(const QString& name);
-    const CompilerOptionMap &compilerOptions() const;
+    const QList<PCompilerOption> &compilerOptions() const;
     const QString &name() const;
     PCompilerOption getCompilerOption(const QString& key) const;
+    bool hasCompilerOption(const QString& key) const;
 
     virtual bool supportConvertingCharset()=0;
 protected:
@@ -76,10 +77,11 @@ protected:
                    bool isLinker,
                    const QString& setting,
                    const CompileOptionChoiceList& choices = CompileOptionChoiceList());
-
+    void init();
     virtual void prepareCompilerOptions();
 protected:
     CompilerOptionMap mCompilerOptions;
+    QList<PCompilerOption> mCompilerOptionList;
     QString mName;
 };
 
@@ -90,15 +92,15 @@ using PCompilerInfoManager = std::shared_ptr<CompilerInfoManager>;
 
 class CompilerInfoManager {
 public:
+    CompilerInfoManager();
     static PCompilerInfo getInfo(const QString& compilerType);
     static bool hasCompilerOption(const QString& compilerType, const QString& optKey);
     static PCompilerOption getCompilerOption(const QString& compilerType, const QString& optKey);
-    static CompilerOptionMap getCompilerOptions(const QString& compilerType);
+    static QList<PCompilerOption> getCompilerOptions(const QString& compilerType);
     static bool supportCovertingCharset(const QString& compilerType);
     static PCompilerInfoManager getInstance();
     static void addInfo(const QString& name, PCompilerInfo info);
 private:
-    CompilerInfoManager();
     static PCompilerInfoManager instance;
     QMap<QString,PCompilerInfo> mInfos;
 };
@@ -108,21 +110,13 @@ extern PCompilerInfoManager pCompilerInfoManager;
 class ClangCompilerInfo: public CompilerInfo{
 public:
     ClangCompilerInfo();
-
-    // CompilerInfo interface
-protected:
-    void prepareCompilerOptions() Q_DECL_OVERRIDE;
-    bool supportConvertingCharset() Q_DECL_OVERRIDE;
+    bool supportConvertingCharset() override;
 };
 
 class GCCCompilerInfo: public CompilerInfo{
 public:
     GCCCompilerInfo();
-
-    // CompilerInfo interface
-protected:
-    void prepareCompilerOptions() Q_DECL_OVERRIDE;
-    bool supportConvertingCharset() Q_DECL_OVERRIDE;
+    bool supportConvertingCharset() override;
 };
 
 

@@ -726,6 +726,11 @@ bool Project::setCompileOption(const QString &key, const QString &value)
     return true;
 }
 
+QString Project::getCompileOption(const QString &key) const
+{
+    return mOptions.compilerOptions.value(key,"");
+}
+
 void Project::updateFolders()
 {
     mFolders.clear();

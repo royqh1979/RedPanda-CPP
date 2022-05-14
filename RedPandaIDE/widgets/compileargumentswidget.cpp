@@ -1,26 +1,24 @@
 #include "compileargumentswidget.h"
-#include "ui_compileargumentswidget.h"
 
 #include <QCheckBox>
 #include <QComboBox>
+#include <QGridLayout>
 #include <QLabel>
 
 CompileArgumentsWidget::CompileArgumentsWidget(QWidget *parent) :
-    QWidget(parent),
-    ui(new Ui::CompileArgumentsWidget)
+    QTabWidget(parent)
 {
-    ui->setupUi(this);
+
 }
 
 CompileArgumentsWidget::~CompileArgumentsWidget()
 {
-    delete ui;
 }
 
-QMap<QString, QString> CompileArgumentsWidget::options() const
+QMap<QString, QString> CompileArgumentsWidget::arguments( bool includeUnset) const
 {
-    QMap
-    QTabWidget* pTab = ui->tabArguments;
+    QMap<QString, QString> args;
+    const QTabWidget* pTab = this;
     for (int i=0;i<pTab->count();i++) {
         QString section = pTab->tabText(i);
         QWidget* pWidget = pTab->widget(i);
@@ -34,27 +32,33 @@ QMap<QString, QString> CompileArgumentsWidget::options() const
                 if (pOption->choices.isEmpty()) {
                     QCheckBox* pCheckbox = static_cast<QCheckBox *>(pLayout->itemAtPosition(j,1)->widget());
                     if (pCheckbox->isChecked()) {
-
-                        pSet->setCompileOption(key,"");
+                        args.insert(key,COMPILER_OPTION_ON);
                     } else {
-                        pSet->unsetCompileOption(key);
+                        if (includeUnset)
+                            args.insert(key,"");
+                        else
+                            args.remove(key);
                     }
                 } else {
                     QComboBox* pCombo = static_cast<QComboBox *>(pLayout->itemAtPosition(j,2)->widget());
                     if (!pCombo->currentData().toString().isEmpty()) {
-                        pSet->setCompileOption(key,pCombo->currentData().toString());
+                        args.insert(key,pCombo->currentData().toString());
                     } else {
-                        pSet->unsetCompileOption(key);
+                        if (includeUnset)
+                            args.insert(key,"");
+                        else
+                            args.remove(key);
                     }
                 }
             }
         }
     }
+    return args;
 }
 
 void CompileArgumentsWidget::resetUI(Settings::PCompilerSet pSet, const QMap<QString,QString>& options)
 {
-    QTabWidget* pTab = ui->tabArguments;
+    QTabWidget* pTab = this;
     while (pTab->count()>0) {
         QWidget* p=pTab->widget(0);
         if (p!=nullptr) {
@@ -67,7 +71,7 @@ void CompileArgumentsWidget::resetUI(Settings::PCompilerSet pSet, const QMap<QSt
         return;
     mCompilerType = pSet->compilerType();
 
-    foreach (PCompilerOption pOption, CompilerInfoManager::getCompilerOptions(mCompilerType).values()) {
+    foreach (PCompilerOption pOption, CompilerInfoManager::getCompilerOptions(mCompilerType)) {
         QWidget* pWidget = nullptr;
         for (int i=0;i<pTab->count();i++) {
             if (pOption->section == pTab->tabText(i)) {

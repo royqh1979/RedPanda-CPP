@@ -1649,8 +1649,8 @@ void MainWindow::debug()
     switch(getCompileTarget()) {
     case CompileTarget::Project:
         // Check if we enabled proper options
-        debugEnabled = mProject->getCompilerOption("-g3")!='0';
-        stripEnabled = mProject->getCompilerOption("-s")!='0';
+        debugEnabled = mProject->getCompileOption(CC_CMD_OPT_DEBUG_INFO) == COMPILER_OPTION_ON;
+        stripEnabled = mProject->getCompileOption(LINK_CMD_OPT_STRIP_EXE) == COMPILER_OPTION_ON;
         // Ask the user if he wants to enable debugging...
         if (((!debugEnabled) || stripEnabled) &&
                 (QMessageBox::question(this,
@@ -1658,8 +1658,8 @@ void MainWindow::debug()
                                       tr("You have not enabled debugging info (-g3) and/or stripped it from the executable (-s) in Compiler Options.<BR /><BR />Do you want to correct this now?")
                                       ) == QMessageBox::Yes)) {
             // Enable debugging, disable stripping
-            mProject->setCompilerOption("-g3",'1');
-            mProject->setCompilerOption("-s",'0');
+            mProject->setCompileOption(CC_CMD_OPT_DEBUG_INFO,COMPILER_OPTION_ON);
+            mProject->setCompileOption(LINK_CMD_OPT_STRIP_EXE,"");
 
             // Save changes to compiler set
             mProject->saveOptions();
@@ -1739,8 +1739,8 @@ void MainWindow::debug()
         break;
     case CompileTarget::File: {
             // Check if we enabled proper options
-            debugEnabled = compilerSet->getOptionValue("-g3")!='0';
-            stripEnabled = compilerSet->getOptionValue("-s")!='0';
+            debugEnabled = compilerSet->getCompileOptionValue(CC_CMD_OPT_DEBUG_INFO) == COMPILER_OPTION_ON;
+            stripEnabled = compilerSet->getCompileOptionValue(LINK_CMD_OPT_STRIP_EXE) == COMPILER_OPTION_ON;
             // Ask the user if he wants to enable debugging...
             if (((!debugEnabled) || stripEnabled) &&
                     (QMessageBox::question(this,
@@ -1748,8 +1748,8 @@ void MainWindow::debug()
                                           tr("You have not enabled debugging info (-g3) and/or stripped it from the executable (-s) in Compiler Options.<BR /><BR />Do you want to correct this now?")
                                           ) == QMessageBox::Yes)) {
                 // Enable debugging, disable stripping
-                compilerSet->setOption("-g3",'1');
-                compilerSet->setOption("-s",'0');
+                compilerSet->setCompileOption(CC_CMD_OPT_DEBUG_INFO,COMPILER_OPTION_ON);
+                compilerSet->unsetCompileOption(LINK_CMD_OPT_STRIP_EXE);
 
                 // Save changes to compiler set
                 pSettings->compilerSets().saveSet(pSettings->compilerSets().defaultIndex());

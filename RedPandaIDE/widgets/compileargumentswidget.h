@@ -2,14 +2,14 @@
 #define COMPILEARGUMENTSWIDGET_H
 
 #include <QMap>
-#include <QWidget>
+#include <QTabWidget>
 #include "../settings.h"
 
 namespace Ui {
 class CompileArgumentsWidget;
 }
 
-class CompileArgumentsWidget : public QWidget
+class CompileArgumentsWidget : public QTabWidget
 {
     Q_OBJECT
 
@@ -17,12 +17,11 @@ public:
     explicit CompileArgumentsWidget(QWidget *parent = nullptr);
     ~CompileArgumentsWidget();
 
-    QMap<QString, QString> options() const;
+    QMap<QString, QString> arguments(bool includeUnset) const;
 
     void resetUI(Settings::PCompilerSet pSet, const QMap<QString,QString>& options);
 
 private:
-    Ui::CompileArgumentsWidget *ui;
     QString mCompilerType;
 };
 

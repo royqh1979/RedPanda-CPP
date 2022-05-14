@@ -1164,6 +1164,7 @@ public:
         bool setCompileOption(const QString& key, int valIndex);
         bool setCompileOption(const QString& key, const QString& value);
         void unsetCompileOption(const QString& key);
+        void setCompileOptions(const QMap<QString, QString> options);
 
         QString getCompileOptionValue(const QString& key);
 
@@ -1220,7 +1221,7 @@ public:
         bool autoAddCharsetParams() const;
         void setAutoAddCharsetParams(bool value);
 
-        //Converts options to and from memory format
+        //Converts options to and from memory format ( for old settings compatibility)
         void setIniOptions(const QByteArray& value);
 
         //load hard defines

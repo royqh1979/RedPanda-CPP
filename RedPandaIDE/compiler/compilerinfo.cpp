@@ -4,12 +4,12 @@
 CompilerInfo::CompilerInfo(const QString &name):
     mName(name)
 {
-    prepareCompilerOptions();
+    init();
 }
 
-const CompilerOptionMap &CompilerInfo::compilerOptions() const
+const QList<PCompilerOption> &CompilerInfo::compilerOptions() const
 {
-    return mCompilerOptions;
+    return mCompilerOptionList;
 }
 
 const QString &CompilerInfo::name() const
@@ -20,6 +20,11 @@ const QString &CompilerInfo::name() const
 PCompilerOption CompilerInfo::getCompilerOption(const QString &key) const
 {
     return mCompilerOptions.value(key,PCompilerOption());
+}
+
+bool CompilerInfo::hasCompilerOption(const QString &key) const
+{
+    return mCompilerOptions.contains(key);
 }
 
 void CompilerInfo::addOption(const QString &key, const QString &name, const QString section, bool isC, bool isCpp, bool isLinker, const QString &setting, const CompileOptionChoiceList &choices)
@@ -34,6 +39,12 @@ void CompilerInfo::addOption(const QString &key, const QString &name, const QStr
     pOption->setting= setting;
     pOption->choices = choices;
     mCompilerOptions.insert(key,pOption);
+    mCompilerOptionList.append(pOption);
+}
+
+void CompilerInfo::init()
+{
+    prepareCompilerOptions();
 }
 
 void CompilerInfo::prepareCompilerOptions()
@@ -73,8 +84,8 @@ void CompilerInfo::prepareCompilerOptions()
     sl.append(QPair<QString,QString>("K8 Rev.E","k8-sse3"));
     sl.append(QPair<QString,QString>("K10","barcelona"));
     sl.append(QPair<QString,QString>("Bulldozer","bdver1"));
-    addOption("gcc_cmd_opt_arch", QObject::tr("Optimize for the following machine (-march)"), groupName, true, true, false, "-march=", sl);
-    addOption("gcc_cmd_opt_tune", QObject::tr("Optimize less, while maintaining full compatibility (-tune)"), groupName, true, true, false, "-mtune=", sl);
+    addOption(CC_CMD_OPT_ARCH, QObject::tr("Optimize for the following machine (-march)"), groupName, true, true, false, "-march=", sl);
+    addOption(CC_CMD_OPT_TUNE, QObject::tr("Optimize less, while maintaining full compatibility (-tune)"), groupName, true, true, false, "-mtune=", sl);
 
     // Enable use of the specific instructions
     sl.clear();
@@ -93,7 +104,7 @@ void CompilerInfo::prepareCompilerOptions()
     sl.append(QPair<QString,QString>("FMA4","fma4"));
     sl.append(QPair<QString,QString>("XOP","xop"));
     sl.append(QPair<QString,QString>("AES","aes"));
-    addOption("gcc_cmd_opt_instruction",QObject::tr("Enable use of specific instructions (-mx)"), groupName, true, true, false, "-m", sl);
+    addOption(CC_CMD_OPT_INSTRUCTION,QObject::tr("Enable use of specific instructions (-mx)"), groupName, true, true, false, "-m", sl);
 
     // Optimization
     sl.clear();
@@ -103,13 +114,13 @@ void CompilerInfo::prepareCompilerOptions()
     sl.append(QPair<QString,QString>("Highest (fast)","fast"));
     sl.append(QPair<QString,QString>("Size (s)","s"));
     sl.append(QPair<QString,QString>("Debug (g)","g"));
-    addOption("gcc_cmd_opt_optimize", QObject::tr("Optimization level (-Ox)"), groupName, true, true, false, "-O", sl);
+    addOption(CC_CMD_OPT_OPTIMIZE, QObject::tr("Optimization level (-Ox)"), groupName, true, true, false, "-O", sl);
 
     // 32bit/64bit
     sl.clear();
     sl.append(QPair<QString,QString>("32bit","32"));
     sl.append(QPair<QString,QString>("64bit","64"));
-    addOption("gcc_cmd_opt_pointer_size", QObject::tr("Compile with the following pointer size (-mx)"), groupName, true, true, true, "-m", sl);
+    addOption(CC_CMD_OPT_POINTER_SIZE, QObject::tr("Compile with the following pointer size (-mx)"), groupName, true, true, true, "-m", sl);
 
     // Language Standards
     sl.clear();
@@ -131,36 +142,42 @@ void CompilerInfo::prepareCompilerOptions()
     sl.append(QPair<QString,QString>("GNU C++14","gnu++14"));
     sl.append(QPair<QString,QString>("GNU C++17","gnu++17"));
     sl.append(QPair<QString,QString>("GNU C++20","gnu++2a"));
-    addOption("gcc_cmd_opt_std", QObject::tr("Language standard (-std)"), groupName, true, true, false, "-std=", sl);
+    addOption(CC_CMD_OPT_STD, QObject::tr("Language standard (-std)"), groupName, true, true, false, "-std=", sl);
 
     // Warnings
     groupName = QObject::tr("Warnings");
-    addOption("gcc_cmd_opt_inhibit_all_warning", QObject::tr("Inhibit all warning messages (-w)"), groupName, true, true, false, "-w");
-    addOption("gcc_cmd_opt_warning_all",QObject::tr("Show most warnings (-Wall)"), groupName, true, true, false, "-Wall");
-    addOption("gcc_cmd_opt_warning_extra",QObject::tr("Show some more warnings (-Wextra)"), groupName, true, true, false, "-Wextra");
-    addOption("gcc_cmd_opt_check_iso_conformance", QObject::tr("Check ISO C/C++/C++0x conformance (-pedantic)"), groupName, true, true, false, "-pedantic");
-    addOption("gcc_cmd_opt_syntax_only", QObject::tr("Only check the code for syntax errors (-fsyntax-only)"), groupName, true, true, false, "-fsyntax-only");
-    addOption("gcc_cmd_opt_warning_as_error", QObject::tr("Make all warnings into errors (-Werror)"), groupName, true, true, false, "-Werror");
-    addOption("gcc_cmd_opt_abort_on_error", QObject::tr("Abort compilation on first error (-Wfatal-errors)"), groupName, true, true, false, "-Wfatal-errors");
+    addOption(CC_CMD_OPT_INHIBIT_ALL_WARNING, QObject::tr("Inhibit all warning messages (-w)"), groupName, true, true, false, "-w");
+    addOption(CC_CMD_OPT_WARNING_ALL,QObject::tr("Show most warnings (-Wall)"), groupName, true, true, false, "-Wall");
+    addOption(CC_CMD_OPT_WARNING_EXTRA,QObject::tr("Show some more warnings (-Wextra)"), groupName, true, true, false, "-Wextra");
+    addOption(CC_CMD_OPT_CHECK_ISO_CONFORMANCE, QObject::tr("Check ISO C/C++/C++0x conformance (-pedantic)"), groupName, true, true, false, "-pedantic");
+    addOption(CC_CMD_OPT_SYNTAX_ONLY, QObject::tr("Only check the code for syntax errors (-fsyntax-only)"), groupName, true, true, false, "-fsyntax-only");
+    addOption(CC_CMD_OPT_WARNING_AS_ERROR, QObject::tr("Make all warnings into errors (-Werror)"), groupName, true, true, false, "-Werror");
+    addOption(CC_CMD_OPT_ABORT_ON_ERROR , QObject::tr("Abort compilation on first error (-Wfatal-errors)"), groupName, true, true, false, "-Wfatal-errors");
 
     // Profile
     groupName = QObject::tr("Profile");
-    addOption("gcc_cmd_opt_profile_info",QObject::tr("Generate profiling info for analysis (-pg)"), groupName, true, true, true, "-pg");
+    addOption(CC_CMD_OPT_PROFILE_INFO, QObject::tr("Generate profiling info for analysis (-pg)"), groupName, true, true, true, "-pg");
 
     // Linker
     groupName = QObject::tr("Linker");
-    addOption("linker_cmd_opt_link_objc", QObject::tr("Link an Objective C program (-lobjc)"), groupName, false, false, true, "-lobjc");
-    addOption("linker_cmd_opt_no_link_stdlib",QObject::tr("Do not use standard system libraries (-nostdlib)"), groupName, false, false, true, "-nostdlib");
-    addOption("linker_cmd_opt_no_console", QObject::tr("Do not create a console window (-mwindows)"), groupName,false, false, true, "-mwindows");
-    addOption("linker_cmd_opt_strip_exe", QObject::tr("Strip executable (-s)"), groupName, false, false, true, "-s");
-    addOption("cc_cmd_opt_debug_info", QObject::tr("Generate debugging information (-g3)"), groupName, true, true, false, "-g3");
+    addOption(LINK_CMD_OPT_LINK_OBJC, QObject::tr("Link an Objective C program (-lobjc)"), groupName, false, false, true, "-lobjc");
+    addOption(LINK_CMD_OPT_NO_LINK_STDLIB,QObject::tr("Do not use standard system libraries (-nostdlib)"), groupName, false, false, true, "-nostdlib");
+    addOption(LINK_CMD_OPT_NO_CONSOLE, QObject::tr("Do not create a console window (-mwindows)"), groupName,false, false, true, "-mwindows");
+    addOption(LINK_CMD_OPT_STRIP_EXE, QObject::tr("Strip executable (-s)"), groupName, false, false, true, "-s");
+    addOption(CC_CMD_OPT_DEBUG_INFO, QObject::tr("Generate debugging information (-g3)"), groupName, true, true, false, "-g3");
 
     // Output
     groupName = QObject::tr("Output");
-    addOption("cc_cmd_opt_verbose_asm", QObject::tr("Put comments in generated assembly code (-fverbose-asm)"), groupName, true, true, false, "-fverbose-asm");
-    addOption("cc_cmd_opt_only_gen_asm_code", QObject::tr("Do not assemble, compile and generate the assemble code (-S)"), groupName, true, true, false, "-S");
-    addOption("cc_cmd_opt_use_pipe", QObject::tr("Use pipes instead of temporary files during compilation (-pipe)"), groupName, true, true, false, "-pipe");
+    addOption(CC_CMD_OPT_VERBOSE_ASM, QObject::tr("Put comments in generated assembly code (-fverbose-asm)"), groupName, true, true, false, "-fverbose-asm");
+    addOption(CC_CMD_OPT_ONLY_GEN_ASM_CODE, QObject::tr("Do not assemble, compile and generate the assemble code (-S)"), groupName, true, true, false, "-S");
+    addOption(CC_CMD_OPT_USE_PIPE, QObject::tr("Use pipes instead of temporary files during compilation (-pipe)"), groupName, true, true, false, "-pipe");
 
+}
+
+CompilerInfoManager::CompilerInfoManager()
+{
+    mInfos.insert(COMPILER_CLANG, std::make_shared<ClangCompilerInfo>());
+    mInfos.insert(COMPILER_GCC, std::make_shared<GCCCompilerInfo>());
 }
 
 PCompilerInfo CompilerInfoManager::getInfo(const QString &compilerType)
@@ -173,7 +190,7 @@ bool CompilerInfoManager::hasCompilerOption(const QString &compilerType, const Q
     PCompilerInfo pInfo = getInfo(compilerType);
     if (!pInfo)
         return false;
-    return pInfo->compilerOptions().contains(optKey);
+    return pInfo->hasCompilerOption(optKey);
 }
 
 PCompilerOption CompilerInfoManager::getCompilerOption(const QString &compilerType, const QString &optKey)
@@ -181,14 +198,14 @@ PCompilerOption CompilerInfoManager::getCompilerOption(const QString &compilerTy
     PCompilerInfo pInfo = getInfo(compilerType);
     if (!pInfo)
         return PCompilerOption();
-    return pInfo->compilerOptions().value(optKey,PCompilerOption());
+    return pInfo->getCompilerOption(optKey);
 }
 
-CompilerOptionMap CompilerInfoManager::getCompilerOptions(const QString &compilerType)
+QList<PCompilerOption> CompilerInfoManager::getCompilerOptions(const QString &compilerType)
 {
     PCompilerInfo pInfo = getInfo(compilerType);
     if (!pInfo)
-        return CompilerOptionMap();
+        return QList<PCompilerOption>();
     return pInfo->compilerOptions();
 }
 
@@ -199,6 +216,8 @@ bool CompilerInfoManager::supportCovertingCharset(const QString &compilerType)
         return false;
     return pInfo->supportConvertingCharset();
 }
+
+PCompilerInfoManager CompilerInfoManager::instance;
 
 PCompilerInfoManager CompilerInfoManager::getInstance()
 {
@@ -215,7 +234,6 @@ void CompilerInfoManager::addInfo(const QString &name, PCompilerInfo info)
 
 ClangCompilerInfo::ClangCompilerInfo():CompilerInfo(COMPILER_CLANG)
 {
-
 }
 
 bool ClangCompilerInfo::supportConvertingCharset()
@@ -225,7 +243,6 @@ bool ClangCompilerInfo::supportConvertingCharset()
 
 GCCCompilerInfo::GCCCompilerInfo():CompilerInfo(COMPILER_GCC)
 {
-
 }
 
 bool GCCCompilerInfo::supportConvertingCharset()

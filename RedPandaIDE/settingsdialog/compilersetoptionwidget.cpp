@@ -69,61 +69,6 @@ void CompilerSetOptionWidget::init()
     SettingsWidget::init();
 }
 
-void resetOptionTabs(Settings::PCompilerSet pSet,QTabWidget* pTab)
-{
-    while (pTab->count()>0) {
-        QWidget* p=pTab->widget(0);
-        if (p!=nullptr) {
-            pTab->removeTab(0);
-            p->setParent(nullptr);
-            delete p;
-        }
-    }
-
-    foreach (PCompilerOption pOption, pSettings->compilerSets().compilerOptions().values()) {
-        QWidget* pWidget = nullptr;
-        for (int i=0;i<pTab->count();i++) {
-            if (pOption->section == pTab->tabText(i)) {
-                pWidget = pTab->widget(i);
-                break;
-            }
-        }
-        if (pWidget == nullptr) {
-            pWidget = new QWidget();
-            pTab->addTab(pWidget,pOption->section);
-            pWidget->setLayout(new QGridLayout());
-        }
-        QGridLayout *pLayout = static_cast<QGridLayout*>(pWidget->layout());
-        int row = pLayout->rowCount();
-        QLabel* keyLabel = new QLabel(pOption->key,pWidget);
-        keyLabel->setVisible(false);
-        pLayout->addWidget(keyLabel,row,0);
-        if (pOption->choices.isEmpty()) {
-            QCheckBox* pCheckbox = new QCheckBox(pWidget);
-            pCheckbox->setText(pOption->name);
-            pCheckbox->setChecked(!pSet->getCompileOptionValue(pOption->key).isEmpty());
-            pLayout->addWidget(pCheckbox,row,1);
-        } else {
-            pLayout->addWidget(new QLabel(pOption->name,pWidget),row,1);
-            QComboBox* pCombo = new QComboBox(pWidget);
-            pCombo->addItem("","");
-            for (int i=0;i<pOption->choices.length();i++) {
-                const QPair<QString,QString> &choice = pOption->choices[i];
-                pCombo->addItem(choice.first,choice.second);
-                if (pSet->getCompileOptionValue(pOption->key) == choice.second)
-                    pCombo->setCurrentIndex(i);
-            }
-            pLayout->addWidget(pCombo,row,2);
-        }
-    }
-    for (int i=0;i<pTab->count();i++) {
-        QWidget* pWidget = pTab->widget(i);
-        QGridLayout *pLayout = static_cast<QGridLayout*>(pWidget->layout());
-        int row = pLayout->rowCount();
-        QSpacerItem* horizontalSpacer = new QSpacerItem(10, 100, QSizePolicy::Minimum, QSizePolicy::Expanding);
-        pLayout->addItem(horizontalSpacer,row,0);
-    }
-}
 
 static void loadCompilerSetSettings(Settings::PCompilerSet pSet, Ui::CompilerSetOptionWidget* ui) {
     ui->chkAutoAddCharset->setEnabled(pSet->compilerType() != COMPILER_CLANG);
@@ -142,7 +87,8 @@ static void loadCompilerSetSettings(Settings::PCompilerSet pSet, Ui::CompilerSet
     ui->chkAutoAddCharset->setChecked(pSet->autoAddCharsetParams());
     ui->chkStaticLink->setChecked(pSet->staticLink());
     //rest tabs in the options widget
-    resetOptionTabs(pSet,ui->optionTabs);
+
+    ui->optionTabs->resetUI(pSet,pSet->compileOptions());
 
     ui->txtCCompiler->setText(pSet->CCompiler());
     ui->txtCppCompiler->setText(pSet->cppCompiler());
@@ -260,35 +206,8 @@ void CompilerSetOptionWidget::saveCurrentCompilerSet()
     }
 
     //read values in the options widget
-    QTabWidget* pTab = ui->optionTabs;
-    for (int i=0;i<pTab->count();i++) {
-        QString section = pTab->tabText(i);
-        QWidget* pWidget = pTab->widget(i);
-        QGridLayout* pLayout = static_cast<QGridLayout*>(pWidget->layout());
-        if (pLayout != nullptr) {
-            for (int j=1;j<pLayout->rowCount()-1;j++) {
-                QString key = static_cast<QLabel *>(pLayout->itemAtPosition(j,0)->widget())->text();
-                PCompilerOption pOption = pSettings->compilerSets().getCompilerOption(key);
-                if (!pOption)
-                    continue;
-                if (pOption->choices.isEmpty()) {
-                    QCheckBox* pCheckbox = static_cast<QCheckBox *>(pLayout->itemAtPosition(j,1)->widget());
-                    if (pCheckbox->isChecked()) {
-                        pSet->setCompileOption(key,"");
-                    } else {
-                        pSet->unsetCompileOption(key);
-                    }
-                } else {
-                    QComboBox* pCombo = static_cast<QComboBox *>(pLayout->itemAtPosition(j,2)->widget());
-                    if (!pCombo->currentData().toString().isEmpty()) {
-                        pSet->setCompileOption(key,pCombo->currentData().toString());
-                    } else {
-                        pSet->unsetCompileOption(key);
-                    }
-                }
-            }
-        }
-    }
+    pSet->setCompileOptions(ui->optionTabs->arguments(false));
+
 }
 
 void CompilerSetOptionWidget::on_btnFindCompilers_pressed()

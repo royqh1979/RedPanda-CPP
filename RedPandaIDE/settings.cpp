@@ -1527,6 +1527,11 @@ void Settings::CompilerSet::unsetCompileOption(const QString &key)
     mCompileOptions.remove(key);
 }
 
+void Settings::CompilerSet::setCompileOptions(const QMap<QString, QString> options)
+{
+    mCompileOptions=options;
+}
+
 QString Settings::CompilerSet::getCompileOptionValue(const QString &key)
 {
     return mCompileOptions.value(key,QString());
@@ -2721,19 +2726,15 @@ Settings::PCompilerSet Settings::CompilerSets::loadSet(int index)
     pSet->setResourceCompiler(loadPath("windres"));
     pSet->setProfiler(loadPath("profiler"));
 
-    // Save option string
-    QByteArray iniOptions = mSettings->mSettings.value("Options","").toByteArray();
-    if (!iniOptions.isEmpty())
-        pSet->setIniOptions(iniOptions);
-    else {
-        foreach (const QString &optionKey, mSettings->mSettings.allKeys()) {
-            if (CompilerInfoManager::hasCompilerOption(pSet->compilerType(),optionKey)) {
-                pSet->setCompileOption(optionKey, mSettings->mSettings.value(optionKey).toString());
-            }
-        }
-    }
+    pSet->setDumpMachine(mSettings->mSettings.value("DumpMachine").toString());
+    pSet->setVersion(mSettings->mSettings.value("Version").toString());
+    pSet->setType(mSettings->mSettings.value("Type").toString());
+    pSet->setName(mSettings->mSettings.value("Name").toString());
+    pSet->setTarget(mSettings->mSettings.value("Target").toString());
+    pSet->setCompilerType(mSettings->mSettings.value("CompilerType").toString());
+    pSet->setCompilerSetType(mSettings->mSettings.value("CompilerSetType").toInt());
 
-    // Save extra 'general' options
+    // Load extra 'general' options
     pSet->setUseCustomCompileParams(mSettings->mSettings.value("useCustomCompileParams", false).toBool());
     pSet->setCustomCompileParams(mSettings->mSettings.value("customCompileParams").toString());
     pSet->setUseCustomLinkParams(mSettings->mSettings.value("useCustomLinkParams", false).toBool());
@@ -2745,13 +2746,17 @@ Settings::PCompilerSet Settings::CompilerSets::loadSet(int index)
         pSet->setExecCharset(ENCODING_SYSTEM_DEFAULT);
     }
 
-    pSet->setDumpMachine(mSettings->mSettings.value("DumpMachine").toString());
-    pSet->setVersion(mSettings->mSettings.value("Version").toString());
-    pSet->setType(mSettings->mSettings.value("Type").toString());
-    pSet->setName(mSettings->mSettings.value("Name").toString());
-    pSet->setTarget(mSettings->mSettings.value("Target").toString());
-    pSet->setCompilerType(mSettings->mSettings.value("CompilerType").toString());
-    pSet->setCompilerSetType(mSettings->mSettings.value("CompilerSetType").toInt());
+    // Load options
+    QByteArray iniOptions = mSettings->mSettings.value("Options","").toByteArray();
+    if (!iniOptions.isEmpty())
+        pSet->setIniOptions(iniOptions);
+    else {
+        foreach (const QString &optionKey, mSettings->mSettings.allKeys()) {
+            if (CompilerInfoManager::hasCompilerOption(pSet->compilerType(),optionKey)) {
+                pSet->setCompileOption(optionKey, mSettings->mSettings.value(optionKey).toString());
+            }
+        }
+    }
 
     // Paths
     loadPathList("Bins",pSet->binDirs());
@@ -2773,37 +2778,36 @@ void Settings::CompilerSets::prepareCompatibleIndex()
 {
 
     //old settings compatibility, don't reorder, add or remove items
-    mCompilerCompatibleIndex.append("gcc_cmd_opt_ansi");
-    mCompilerCompatibleIndex.append("gcc_cmd_opt_no_asm");
-    mCompilerCompatibleIndex.append("gcc_cmd_opt_traditional_cpp");
+    mCompilerCompatibleIndex.append(CC_CMD_OPT_ANSI);
+    mCompilerCompatibleIndex.append(CC_CMD_OPT_NO_ASM "gcc_cmd_opt_no_asm");
+    mCompilerCompatibleIndex.append(CC_CMD_OPT_TRADITIONAL_CPP);
 
-    mCompilerCompatibleIndex.append("gcc_cmd_opt_arch");
-    mCompilerCompatibleIndex.append("gcc_cmd_opt_tune");
-    mCompilerCompatibleIndex.append("gcc_cmd_opt_instruction");
-    mCompilerCompatibleIndex.append("gcc_cmd_opt_optimize");
-    mCompilerCompatibleIndex.append("gcc_cmd_opt_pointer_size");
-    mCompilerCompatibleIndex.append("gcc_cmd_opt_std");
+    mCompilerCompatibleIndex.append(CC_CMD_OPT_ARCH);
+    mCompilerCompatibleIndex.append(CC_CMD_OPT_TUNE);
+    mCompilerCompatibleIndex.append(CC_CMD_OPT_INSTRUCTION);
+    mCompilerCompatibleIndex.append(CC_CMD_OPT_OPTIMIZE);
+    mCompilerCompatibleIndex.append(CC_CMD_OPT_POINTER_SIZE);
+    mCompilerCompatibleIndex.append(CC_CMD_OPT_STD);
 
-    mCompilerCompatibleIndex.append("gcc_cmd_opt_inhibit_all_warning");
-    mCompilerCompatibleIndex.append("gcc_cmd_opt_warning_all");
-    mCompilerCompatibleIndex.append("gcc_cmd_opt_warning_extra");
-    mCompilerCompatibleIndex.append("gcc_cmd_opt_check_iso_conformance");
-    mCompilerCompatibleIndex.append("gcc_cmd_opt_syntax_only");
-    mCompilerCompatibleIndex.append("gcc_cmd_opt_warning_as_error");
-    mCompilerCompatibleIndex.append("gcc_cmd_opt_abort_on_error");
+    mCompilerCompatibleIndex.append(CC_CMD_OPT_INHIBIT_ALL_WARNING);
+    mCompilerCompatibleIndex.append(CC_CMD_OPT_WARNING_ALL);
+    mCompilerCompatibleIndex.append(CC_CMD_OPT_WARNING_EXTRA);
+    mCompilerCompatibleIndex.append(CC_CMD_OPT_CHECK_ISO_CONFORMANCE);
+    mCompilerCompatibleIndex.append(CC_CMD_OPT_SYNTAX_ONLY);
+    mCompilerCompatibleIndex.append(CC_CMD_OPT_WARNING_AS_ERROR);
+    mCompilerCompatibleIndex.append(CC_CMD_OPT_ABORT_ON_ERROR);
 
-    mCompilerCompatibleIndex.append("gcc_cmd_opt_profile_info");
+    mCompilerCompatibleIndex.append(CC_CMD_OPT_PROFILE_INFO);
 
-    mCompilerCompatibleIndex.append("linker_cmd_opt_link_objc");
-    mCompilerCompatibleIndex.append("linker_cmd_opt_no_link_stdlib");
-    mCompilerCompatibleIndex.append("linker_cmd_opt_no_console");
-    mCompilerCompatibleIndex.append("linker_cmd_opt_strip_exe");
-    mCompilerCompatibleIndex.append("cc_cmd_opt_debug_info");
+    mCompilerCompatibleIndex.append(LINK_CMD_OPT_LINK_OBJC);
+    mCompilerCompatibleIndex.append(LINK_CMD_OPT_NO_LINK_STDLIB);
+    mCompilerCompatibleIndex.append(LINK_CMD_OPT_NO_CONSOLE);
+    mCompilerCompatibleIndex.append(LINK_CMD_OPT_STRIP_EXE);
+    mCompilerCompatibleIndex.append(CC_CMD_OPT_DEBUG_INFO);
 
-    mCompilerCompatibleIndex.append("cc_cmd_opt_verbose_asm");
-    mCompilerCompatibleIndex.append("cc_cmd_opt_only_gen_asm_code");
-    mCompilerCompatibleIndex.append("cc_cmd_opt_use_pipe");
-
+    mCompilerCompatibleIndex.append(CC_CMD_OPT_VERBOSE_ASM);
+    mCompilerCompatibleIndex.append(CC_CMD_OPT_ONLY_GEN_ASM_CODE);
+    mCompilerCompatibleIndex.append(CC_CMD_OPT_USE_PIPE);
 }
 
 QString Settings::CompilerSets::getKeyFromCompilerCompatibleIndex(int idx) const

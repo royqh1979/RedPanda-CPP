@@ -341,15 +341,20 @@ QString Compiler::getCCompileArguments(bool checkSyntax)
     }
 
     QMap<QString, QString> compileOptions;
-    if (mProject) {
+    if (mProject && !mProject->options().compilerOptions.isEmpty()) {
         compileOptions = mProject->options().compilerOptions;
     } else {
         compileOptions = compilerSet()->compileOptions();
     }
-    foreach (const QString& key, compilerSet()->compileOptions()) {
-        PCompilerOption pOption = CompilerInfoManager::getCompilerOption(compilerSet()->CCompiler(), key);
+    foreach (const QString& key, compileOptions.keys()) {
+        if (compileOptions[key]=="")
+            continue;
+        PCompilerOption pOption = CompilerInfoManager::getCompilerOption(compilerSet()->compilerType(), key);
         if (pOption && pOption->isC && !pOption->isLinker) {
-            result += " " + pOption->setting + compilerSet()->getCompileOptionValue(key);
+            if (pOption->choices.isEmpty())
+                result += " " + pOption->setting;
+            else
+                result += " " + pOption->setting + compilerSet()->getCompileOptionValue(key);
         }
     }
 
@@ -374,18 +379,22 @@ QString Compiler::getCppCompileArguments(bool checkSyntax)
         result += " -fsyntax-only";
     }
     QMap<QString, QString> compileOptions;
-    if (mProject) {
+    if (mProject && !mProject->options().compilerOptions.isEmpty()) {
         compileOptions = mProject->options().compilerOptions;
     } else {
         compileOptions = compilerSet()->compileOptions();
     }
-    foreach (const QString& key, compilerSet()->compileOptions()) {
-        PCompilerOption pOption = CompilerInfoManager::getCompilerOption(compilerSet()->CCompiler(), key);
+    foreach (const QString& key, compileOptions.keys()) {
+        if (compileOptions[key]=="")
+            continue;
+        PCompilerOption pOption = CompilerInfoManager::getCompilerOption(compilerSet()->compilerType(), key);
         if (pOption && pOption->isCpp && !pOption->isLinker) {
-            result += " " + pOption->setting + compilerSet()->getCompileOptionValue(key);
+            if (pOption->choices.isEmpty())
+                result += " " + pOption->setting;
+            else
+                result += " " + pOption->setting + compilerSet()->getCompileOptionValue(key);
         }
     }
-
     if (compilerSet()->useCustomCompileParams() && !compilerSet()->customCompileParams().isEmpty()) {
         result += " "+ parseMacros(compilerSet()->customCompileParams());
     }
@@ -478,17 +487,23 @@ QString Compiler::getLibraryArguments(FileType fileType)
     //add compiler set link options
     //options like "-static" must be added after "-lxxx"
     QMap<QString, QString> compileOptions;
-    if (mProject) {
+    if (mProject && !mProject->options().compilerOptions.isEmpty()) {
         compileOptions = mProject->options().compilerOptions;
     } else {
         compileOptions = compilerSet()->compileOptions();
     }
-    foreach (const QString& key, compilerSet()->compileOptions()) {
-        PCompilerOption pOption = CompilerInfoManager::getCompilerOption(compilerSet()->CCompiler(), key);
-        if (pOption->isLinker) {
-            result += " " + pOption->setting + compilerSet()->getCompileOptionValue(key);
+    foreach (const QString& key, compileOptions.keys()) {
+        if (compileOptions[key]=="")
+            continue;
+        PCompilerOption pOption = CompilerInfoManager::getCompilerOption(compilerSet()->compilerType(), key);
+        if (pOption && pOption->isLinker) {
+            if (pOption->choices.isEmpty())
+                result += " " + pOption->setting;
+            else
+                result += " " + pOption->setting + compilerSet()->getCompileOptionValue(key);
         }
     }
+
 
     // Add global compiler linker extras
     if (compilerSet()->useCustomLinkParams() && !compilerSet()->customLinkParams().isEmpty()) {

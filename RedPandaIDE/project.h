@@ -212,6 +212,7 @@ public:
     void associateEditorToUnit(Editor* editor, PProjectUnit unit);
 //    bool setCompileOption(const QString &key, int valIndex);
     bool setCompileOption(const QString &key, const QString &value);
+    QString getCompileOption(const QString &key) const;
 
     void updateFolders();
     void updateNodeIndexes();
