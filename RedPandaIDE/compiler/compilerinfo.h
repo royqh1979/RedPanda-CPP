@@ -37,6 +37,7 @@
 
 #define CC_CMD_OPT_VERBOSE_ASM "cc_cmd_opt_verbose_asm"
 #define CC_CMD_OPT_ONLY_GEN_ASM_CODE "cc_cmd_opt_only_gen_asm_code"
+#define CC_CMD_OPT_STOP_AFTER_PREPROCESSING "cc_cmd_opt_stop_after_preprocessing"
 #define CC_CMD_OPT_USE_PIPE "cc_cmd_opt_use_pipe"
 
 #define COMPILER_OPTION_ON "on"

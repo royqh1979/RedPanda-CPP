@@ -4826,14 +4826,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Tab 1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Tab 2</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Base compiler set:</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5714,14 +5706,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>No</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Yes</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>All files</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5771,6 +5755,14 @@
     </message>
     <message>
         <source>Can&apos;t parse problem set file &apos;%1&apos;:%2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This CPU</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Do not compile, stop after the preprocessing stage (-E)</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

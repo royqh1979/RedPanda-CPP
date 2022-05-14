@@ -57,6 +57,7 @@ void CompilerInfo::prepareCompilerOptions()
 
     // Optimization for cpu type
     groupName = QObject::tr("Code Generation");
+    addOption(CC_CMD_OPT_DEBUG_INFO, QObject::tr("Generate debugging information (-g3)"), groupName, true, true, false, "-g3");
     QList<QPair<QString,QString>> sl;
     sl.append(QPair<QString,QString>(QObject::tr("This CPU"),"native"));
     sl.append(QPair<QString,QString>("i386","i386"));
@@ -158,20 +159,19 @@ void CompilerInfo::prepareCompilerOptions()
     groupName = QObject::tr("Profile");
     addOption(CC_CMD_OPT_PROFILE_INFO, QObject::tr("Generate profiling info for analysis (-pg)"), groupName, true, true, true, "-pg");
 
+    // Output
+    groupName = QObject::tr("Output");
+    addOption(CC_CMD_OPT_VERBOSE_ASM, QObject::tr("Put comments in generated assembly code (-fverbose-asm)"), groupName, true, true, false, "-fverbose-asm");
+    addOption(CC_CMD_OPT_ONLY_GEN_ASM_CODE, QObject::tr("Do not assemble, compile and generate the assemble code (-S)"), groupName, true, true, false, "-S");
+    addOption(CC_CMD_OPT_STOP_AFTER_PREPROCESSING, QObject::tr("Do not compile, stop after the preprocessing stage (-E)"), groupName, true, true, false, "-E");
+    addOption(CC_CMD_OPT_USE_PIPE, QObject::tr("Use pipes instead of temporary files during compilation (-pipe)"), groupName, true, true, false, "-pipe");
+
     // Linker
     groupName = QObject::tr("Linker");
     addOption(LINK_CMD_OPT_LINK_OBJC, QObject::tr("Link an Objective C program (-lobjc)"), groupName, false, false, true, "-lobjc");
     addOption(LINK_CMD_OPT_NO_LINK_STDLIB,QObject::tr("Do not use standard system libraries (-nostdlib)"), groupName, false, false, true, "-nostdlib");
     addOption(LINK_CMD_OPT_NO_CONSOLE, QObject::tr("Do not create a console window (-mwindows)"), groupName,false, false, true, "-mwindows");
     addOption(LINK_CMD_OPT_STRIP_EXE, QObject::tr("Strip executable (-s)"), groupName, false, false, true, "-s");
-    addOption(CC_CMD_OPT_DEBUG_INFO, QObject::tr("Generate debugging information (-g3)"), groupName, true, true, false, "-g3");
-
-    // Output
-    groupName = QObject::tr("Output");
-    addOption(CC_CMD_OPT_VERBOSE_ASM, QObject::tr("Put comments in generated assembly code (-fverbose-asm)"), groupName, true, true, false, "-fverbose-asm");
-    addOption(CC_CMD_OPT_ONLY_GEN_ASM_CODE, QObject::tr("Do not assemble, compile and generate the assemble code (-S)"), groupName, true, true, false, "-S");
-    addOption(CC_CMD_OPT_USE_PIPE, QObject::tr("Use pipes instead of temporary files during compilation (-pipe)"), groupName, true, true, false, "-pipe");
-
 }
 
 CompilerInfoManager::CompilerInfoManager()

@@ -41,7 +41,12 @@ bool FileCompiler::prepareForCompile()
     FileType fileType = getFileType(mFilename);
     mArguments= QString(" \"%1\"").arg(mFilename);
     if (!mOnlyCheckSyntax) {
-        mOutputFile = getCompiledExecutableName(mFilename);
+        if (compilerSet()->getCompileOptionValue(CC_CMD_OPT_STOP_AFTER_PREPROCESSING)==COMPILER_OPTION_ON)
+            mOutputFile=changeFileExt(mFilename,"expanded.cpp");
+        else if (compilerSet()->getCompileOptionValue(CC_CMD_OPT_ONLY_GEN_ASM_CODE)==COMPILER_OPTION_ON)
+            mOutputFile=changeFileExt(mFilename,"s");
+        else
+            mOutputFile = getCompiledExecutableName(mFilename);
         mArguments+=QString(" -o \"%1\"").arg(mOutputFile);
 
         //remove the old file if it exists

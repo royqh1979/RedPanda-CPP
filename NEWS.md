@@ -2,6 +2,9 @@ Red Panda C++ Version 1.0.8
   - enhancement: auto complete '#undef'
   - enhancement: redesign components for compiler commandline arguments processing
   - fix: selection calculation error when editing in column mode
+  - enhancement: add compiler commandline argument for "-E" (only preprocessing)
+  - enhancement: auto set output suffix to ".expanded.cpp" when compiler commandline argument for "-E" is turned on
+  - enhancement: auto set output suffix to ".s" when compiler commandline argument for "-S" is turned on
 
 Red Panda C++ Version 1.0.7
   - change: use Shift+Enter to break line
