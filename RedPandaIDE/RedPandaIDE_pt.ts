@@ -1641,6 +1641,14 @@
         <source>Shortcut</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Shortcut &quot;%1&quot; is used by &quot;%2&quot;.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>EnvironmentShortcutWidget</name>

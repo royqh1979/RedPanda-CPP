@@ -2276,17 +2276,27 @@ Are you really want to continue?</oldsource>
 <context>
     <name>EnvironmentShortcutModel</name>
     <message>
-        <location filename="settingsdialog/environmentshortcutwidget.cpp" line="75"/>
+        <location filename="settingsdialog/environmentshortcutwidget.cpp" line="76"/>
         <source>action</source>
         <translation>动作</translation>
     </message>
     <message>
-        <location filename="settingsdialog/environmentshortcutwidget.cpp" line="136"/>
+        <location filename="settingsdialog/environmentshortcutwidget.cpp" line="128"/>
+        <source>Error</source>
+        <translation>错误</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/environmentshortcutwidget.cpp" line="129"/>
+        <source>Shortcut &quot;%1&quot; is used by &quot;%2&quot;.</source>
+        <translation>快捷键“%1”已经被“%2”使用了。</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog/environmentshortcutwidget.cpp" line="148"/>
         <source>Function</source>
         <translation>功能</translation>
     </message>
     <message>
-        <location filename="settingsdialog/environmentshortcutwidget.cpp" line="138"/>
+        <location filename="settingsdialog/environmentshortcutwidget.cpp" line="150"/>
         <source>Shortcut</source>
         <translation>快捷键</translation>
     </message>
@@ -7409,27 +7419,27 @@ Are you really want to continue?</oldsource>
         <translation>遇到第一个错误后立即中止编译(-Wfatal-errors)</translation>
     </message>
     <message>
-        <location filename="compiler/compilerinfo.cpp" line="163"/>
+        <location filename="compiler/compilerinfo.cpp" line="170"/>
         <source>Linker</source>
         <translation>链接器</translation>
     </message>
     <message>
-        <location filename="compiler/compilerinfo.cpp" line="164"/>
+        <location filename="compiler/compilerinfo.cpp" line="171"/>
         <source>Link an Objective C program (-lobjc)</source>
         <translation>链接Objective-C程序 (-lobjc)</translation>
     </message>
     <message>
-        <location filename="compiler/compilerinfo.cpp" line="165"/>
+        <location filename="compiler/compilerinfo.cpp" line="172"/>
         <source>Do not use standard system libraries (-nostdlib)</source>
         <translation>不使用标准库和系统启动文件(-nostdlib)</translation>
     </message>
     <message>
-        <location filename="compiler/compilerinfo.cpp" line="166"/>
+        <location filename="compiler/compilerinfo.cpp" line="173"/>
         <source>Do not create a console window (-mwindows)</source>
         <translation>不产生控制台窗口(-mwindows)</translation>
     </message>
     <message>
-        <location filename="compiler/compilerinfo.cpp" line="167"/>
+        <location filename="compiler/compilerinfo.cpp" line="174"/>
         <source>Strip executable (-s)</source>
         <translation>剥除附加信息(-s)</translation>
     </message>
@@ -7438,27 +7448,27 @@ Are you really want to continue?</oldsource>
         <translation type="vanished">链接Ojbective C程序(-lobjc)</translation>
     </message>
     <message>
-        <location filename="compiler/compilerinfo.cpp" line="170"/>
+        <location filename="compiler/compilerinfo.cpp" line="163"/>
         <source>Output</source>
         <translation>输出</translation>
     </message>
     <message>
-        <location filename="compiler/compilerinfo.cpp" line="171"/>
+        <location filename="compiler/compilerinfo.cpp" line="164"/>
         <source>Put comments in generated assembly code (-fverbose-asm)</source>
         <translation>在生成的汇编代码中加入注释(-fverbose-asm)</translation>
     </message>
     <message>
-        <location filename="compiler/compilerinfo.cpp" line="173"/>
+        <location filename="compiler/compilerinfo.cpp" line="166"/>
         <source>Do not compile, stop after the preprocessing stage (-E)</source>
         <translation>仅预处理（-E)</translation>
     </message>
     <message>
-        <location filename="compiler/compilerinfo.cpp" line="174"/>
+        <location filename="compiler/compilerinfo.cpp" line="167"/>
         <source>Use pipes instead of temporary files during compilation (-pipe)</source>
         <translation>编译时使用管道而不是临时文件(-pipe)</translation>
     </message>
     <message>
-        <location filename="compiler/compilerinfo.cpp" line="172"/>
+        <location filename="compiler/compilerinfo.cpp" line="165"/>
         <source>Do not assemble, compile and generate the assemble code (-S)</source>
         <translation>只生成汇编代码(-S)</translation>
     </message>
