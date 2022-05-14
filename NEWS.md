@@ -6,6 +6,7 @@ Red Panda C++ Version 1.0.8
   - enhancement: auto set output suffix to ".expanded.cpp" when compiler commandline argument for "-E" is turned on
   - enhancement: auto set output suffix to ".s" when compiler commandline argument for "-S" is turned on
   - enhancement: show error message when user set a shortcut that's already being used.
+  - enhancement: adjust scheme colors for "dark" and "high contrast" themes
 
 Red Panda C++ Version 1.0.7
   - change: use Shift+Enter to break line

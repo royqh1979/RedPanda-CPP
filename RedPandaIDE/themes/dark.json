@@ -10,7 +10,7 @@
         "PaletteBase":"#1E1E1E",
         "PaletteAlternateBase":"#303030",
         "PaletteButton": "#19232D",
-        "PaletteButtonDisabled": "#000000",
+        "PaletteButtonDisabled": "#19232D",
         "PaletteBrightText": "#ff0000",
         "PaletteText":"#e7e7e7",
         "PaletteButtonText":"#d3d3d3",
