@@ -1,5 +1,6 @@
 Red Panda C++ Version 1.0.8
   - enhancement: auto complete '#undef'
+  - enhancement: redesign components for compiler commandline arguments processing
 
 Red Panda C++ Version 1.0.7
   - change: use Shift+Enter to break line
