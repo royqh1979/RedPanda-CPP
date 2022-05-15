@@ -78,6 +78,7 @@ public:
         int hexValue(int defaultValue=-1) const;
 
         QString pathValue() const;
+        QString utf8PathValue() const;
         ParseValueType type() const;
         bool isValid() const;
         ParseValue& operator=(const QByteArray& value);

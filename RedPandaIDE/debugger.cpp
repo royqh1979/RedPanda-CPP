@@ -33,7 +33,8 @@
 #include <QJsonObject>
 #include "widgets/signalmessagedialog.h"
 
-Debugger::Debugger(QObject *parent) : QObject(parent)
+Debugger::Debugger(QObject *parent) : QObject(parent),
+    mForceUTF8(false)
 {
     mBreakpointModel=new BreakpointModel(this);
     mBacktraceModel=new BacktraceModel(this);
@@ -54,15 +55,20 @@ Debugger::Debugger(QObject *parent) : QObject(parent)
             this, &Debugger::fetchVarChildren);
 }
 
-bool Debugger::start(const QString& inferior)
+bool Debugger::start(int compilerSetIndex, const QString& inferior)
 {
-    Settings::PCompilerSet compilerSet = pSettings->compilerSets().defaultSet();
+
+    Settings::PCompilerSet compilerSet = pSettings->compilerSets().getSet(compilerSetIndex);
+    if (!compilerSet) {
+        compilerSet = pSettings->compilerSets().defaultSet();
+    }
     if (!compilerSet) {
         QMessageBox::critical(pMainWindow,
                               tr("No compiler set"),
                               tr("No compiler set is configured.")+tr("Can't start debugging."));
         return false;
     }
+    setForceUTF8(CompilerInfoManager::forceUTF8InDebugger(compilerSet->compilerType()));
     mExecuting = true;
     QString debuggerPath = compilerSet->debugger();
     //QFile debuggerProgram(debuggerPath);
@@ -423,6 +429,16 @@ void Debugger::fetchVarChildren(const QString &varName)
     if (mExecuting) {
         sendCommand("-var-list-children",varName);
     }
+}
+
+bool Debugger::forceUTF8() const
+{
+    return mForceUTF8;
+}
+
+void Debugger::setForceUTF8(bool newForceUTF8)
+{
+    mForceUTF8 = newForceUTF8;
 }
 
 MemoryModel *Debugger::memoryModel() const
@@ -855,7 +871,10 @@ void DebugReader::processExecAsyncRecord(const QByteArray &line)
             GDBMIResultParser::ParseObject frameObj = frame.object();
             mCurrentAddress = frameObj["addr"].hexValue();
             mCurrentLine = frameObj["line"].intValue();
-            mCurrentFile = frameObj["fullname"].pathValue();
+            if (mDebugger->forceUTF8())
+                mCurrentFile = frameObj["fullname"].utf8PathValue();
+            else
+                mCurrentFile = frameObj["fullname"].pathValue();
             mCurrentFunc = frameObj["func"].value();
         }
         if (reason == "signal-received") {
@@ -994,6 +1013,11 @@ void DebugReader::runNextCmd()
     if (!pCmd->params.isEmpty()) {
         params = pCmd->params.toLocal8Bit();
     }
+
+    //clang compatibility
+    if (pCmd->command == "-break-insert" && mDebugger->forceUTF8()) {
+        params = pCmd->params.toUtf8();
+    }
     if (pCmd->command == "-var-create") {
         //hack for variable creation,to easy remember var expression
         params = " - @ "+params;
@@ -1125,8 +1149,12 @@ bool DebugReader::outputTerminated(const QByteArray &text)
 
 void DebugReader::handleBreakpoint(const GDBMIResultParser::ParseObject& breakpoint)
 {
+    QString filename;
     // gdb use system encoding for file path
-    QString filename = breakpoint["fullname"].pathValue();
+    if (mDebugger->forceUTF8())
+        filename = breakpoint["fullname"].utf8PathValue();
+    else
+        filename = breakpoint["fullname"].pathValue();
     int line = breakpoint["line"].intValue();
     int number = breakpoint["number"].intValue();
     emit breakpointInfoGetted(filename, line , number);
@@ -1139,7 +1167,10 @@ void DebugReader::handleStack(const QList<GDBMIResultParser::ParseValue> & stack
         GDBMIResultParser::ParseObject frameObject = frameValue.object();
         PTrace trace = std::make_shared<Trace>();
         trace->funcname = frameObject["func"].value();
-        trace->filename = frameObject["fullname"].pathValue();
+        if (mDebugger->forceUTF8())
+            trace->filename = frameObject["fullname"].utf8PathValue();
+        else
+            trace->filename = frameObject["fullname"].pathValue();
         trace->line = frameObject["line"].intValue();
         trace->level = frameObject["level"].intValue(0);
         trace->address = frameObject["addr"].value();

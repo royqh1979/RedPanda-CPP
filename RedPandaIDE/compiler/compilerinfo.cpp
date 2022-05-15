@@ -217,6 +217,14 @@ bool CompilerInfoManager::supportCovertingCharset(const QString &compilerType)
     return pInfo->supportConvertingCharset();
 }
 
+bool CompilerInfoManager::forceUTF8InDebugger(const QString &compilerType)
+{
+    PCompilerInfo pInfo = getInfo(compilerType);
+    if (!pInfo)
+        return false;
+    return pInfo->forceUTF8InDebugger();
+}
+
 PCompilerInfoManager CompilerInfoManager::instance;
 
 PCompilerInfoManager CompilerInfoManager::getInstance()
@@ -241,6 +249,11 @@ bool ClangCompilerInfo::supportConvertingCharset()
     return false;
 }
 
+bool ClangCompilerInfo::forceUTF8InDebugger()
+{
+    return true;
+}
+
 GCCCompilerInfo::GCCCompilerInfo():CompilerInfo(COMPILER_GCC)
 {
 }
@@ -248,4 +261,9 @@ GCCCompilerInfo::GCCCompilerInfo():CompilerInfo(COMPILER_GCC)
 bool GCCCompilerInfo::supportConvertingCharset()
 {
     return true;
+}
+
+bool GCCCompilerInfo::forceUTF8InDebugger()
+{
+    return false;
 }

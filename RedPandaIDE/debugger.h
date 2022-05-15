@@ -259,7 +259,7 @@ class Debugger : public QObject
 public:
     explicit Debugger(QObject *parent = nullptr);
     // Play/pause
-    bool start(const QString& inferior);
+    bool start(int compilerSetIndex, const QString& inferior);
     void sendCommand(const QString& command, const QString& params,
                      DebugCommandSource source = DebugCommandSource::Other);
     bool commandRunning();
@@ -303,6 +303,9 @@ public:
 
     MemoryModel *memoryModel() const;
 
+    bool forceUTF8() const;
+    void setForceUTF8(bool newForceUTF8);
+
 signals:
     void evalValueReady(const QString& s);
     void memoryExamineReady(const QStringList& s);
@@ -341,6 +344,7 @@ private:
     MemoryModel *mMemoryModel;
     DebugReader *mReader;
     DebugTarget *mTarget;
+    bool mForceUTF8;
     int mLeftPageIndexBackup;
 };
 

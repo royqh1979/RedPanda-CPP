@@ -377,6 +377,11 @@ QString GDBMIResultParser::ParseValue::pathValue() const
     return QFileInfo(QString::fromLocal8Bit(mValue)).absoluteFilePath();
 }
 
+QString GDBMIResultParser::ParseValue::utf8PathValue() const
+{
+    return QFileInfo(QString::fromUtf8(mValue)).absoluteFilePath();
+}
+
 GDBMIResultParser::ParseValueType GDBMIResultParser::ParseValue::type() const
 {
     return mType;

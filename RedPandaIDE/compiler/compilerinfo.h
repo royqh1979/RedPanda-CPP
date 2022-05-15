@@ -69,6 +69,7 @@ public:
     bool hasCompilerOption(const QString& key) const;
 
     virtual bool supportConvertingCharset()=0;
+    virtual bool forceUTF8InDebugger()=0;
 protected:
     void addOption(const QString& key,
                    const QString& name,
@@ -99,6 +100,7 @@ public:
     static PCompilerOption getCompilerOption(const QString& compilerType, const QString& optKey);
     static QList<PCompilerOption> getCompilerOptions(const QString& compilerType);
     static bool supportCovertingCharset(const QString& compilerType);
+    static bool forceUTF8InDebugger(const QString& compilerType);
     static PCompilerInfoManager getInstance();
     static void addInfo(const QString& name, PCompilerInfo info);
 private:
@@ -112,12 +114,14 @@ class ClangCompilerInfo: public CompilerInfo{
 public:
     ClangCompilerInfo();
     bool supportConvertingCharset() override;
+    bool forceUTF8InDebugger() override;
 };
 
 class GCCCompilerInfo: public CompilerInfo{
 public:
     GCCCompilerInfo();
     bool supportConvertingCharset() override;
+    bool forceUTF8InDebugger() override;
 };
 
 

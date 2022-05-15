@@ -1721,7 +1721,7 @@ void MainWindow::debug()
 
 //        mDebugger->setUseUTF8(e->fileEncoding() == ENCODING_UTF8 || e->fileEncoding() == ENCODING_UTF8_BOM);
 
-        if (!mDebugger->start(filePath))
+        if (!mDebugger->start(mProject->options().compilerSet, filePath))
             return;
         filePath.replace('\\','/');
         mDebugger->sendCommand("-file-exec-and-symbols", '"' + filePath + '"');
@@ -1799,7 +1799,7 @@ void MainWindow::debug()
 
                 prepareDebugger();
                 QString filePath = debugFile.filePath().replace('\\','/');
-                if (!mDebugger->start(filePath))
+                if (!mDebugger->start(pSettings->compilerSets().defaultIndex(),filePath))
                     return;
                 mDebugger->sendCommand("-file-exec-and-symbols", QString("\"%1\"").arg(filePath));
             }
