@@ -859,21 +859,29 @@ void SynEditTextPainter::PaintLines()
             nLineSelEnd = LastCol + 1;
             if ((edit->mActiveSelectionMode == SynSelectionMode::smColumn) ||
                 ((edit->mActiveSelectionMode == SynSelectionMode::smNormal) && (cRow == vSelStart.Row)) ) {
-                if (vSelStart.Column > LastCol) {
+                int ch = edit->columnToChar(vLine,vSelStart.Column);
+                qDebug()<<"-1-"<<vLine<<ch;
+                ch = edit->charToColumn(vLine,ch);
+                qDebug()<<"-2-"<<vLine<<ch;
+                if (ch > LastCol) {
                     nLineSelStart = 0;
                     nLineSelEnd = 0;
-                } else if (vSelStart.Column > FirstCol) {
-                    nLineSelStart = vSelStart.Column;
+                } else if (ch > FirstCol) {
+                    nLineSelStart = ch;
                     bComplexLine = true;
                 }
             }
             if ( (edit->mActiveSelectionMode == SynSelectionMode::smColumn) ||
                 ((edit->mActiveSelectionMode == SynSelectionMode::smNormal) && (cRow == vSelEnd.Row)) ) {
-                if (vSelEnd.Column < FirstCol) {
+                int ch = edit->columnToChar(vLine,vSelEnd.Column);
+                int col = edit->charToColumn(vLine,ch);
+                if (col<vSelEnd.Column)
+                    col = edit->charToColumn(vLine,ch+1);
+                if (col < FirstCol) {
                     nLineSelStart = 0;
                     nLineSelEnd = 0;
-                } else if (vSelEnd.Column < LastCol) {
-                    nLineSelEnd = vSelEnd.Column;
+                } else if (col < LastCol) {
+                    nLineSelEnd = col;
                     bComplexLine = true;
                 }
             }
