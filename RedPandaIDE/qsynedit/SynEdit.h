@@ -320,6 +320,7 @@ public:
 
     BufferCoord blockBegin() const;
     BufferCoord blockEnd() const;
+
     void setBlockBegin(BufferCoord value);
     void setBlockEnd(BufferCoord Value);
 

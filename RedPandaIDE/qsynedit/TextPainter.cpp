@@ -827,8 +827,10 @@ void SynEditTextPainter::PaintLines()
             bCurrentLine = (edit->mCaretY == vLine);
         }
         if (bCurrentLine && !edit->mInputPreeditString.isEmpty()) {
-            sLine = sLine.left(edit->mCaretX-1) + edit->mInputPreeditString
-                    + sLine.mid(edit->mCaretX-1);
+            int col = edit->charToColumn(edit->mCaretY,edit->mCaretX);
+            int ch = edit->columnToChar(vLine,col);
+            sLine = sLine.left(ch-1) + edit->mInputPreeditString
+                    + sLine.mid(ch-1);
         }
         // Initialize the text and background colors, maybe the line should
         // use special values for them.
@@ -860,9 +862,7 @@ void SynEditTextPainter::PaintLines()
             if ((edit->mActiveSelectionMode == SynSelectionMode::smColumn) ||
                 ((edit->mActiveSelectionMode == SynSelectionMode::smNormal) && (cRow == vSelStart.Row)) ) {
                 int ch = edit->columnToChar(vLine,vSelStart.Column);
-                qDebug()<<"-1-"<<vLine<<ch;
                 ch = edit->charToColumn(vLine,ch);
-                qDebug()<<"-2-"<<vLine<<ch;
                 if (ch > LastCol) {
                     nLineSelStart = 0;
                     nLineSelEnd = 0;
@@ -925,8 +925,10 @@ void SynEditTextPainter::PaintLines()
               //Paint editingAreaBorders
               if (bCurrentLine && edit->mInputPreeditString.length()>0) {
                   PSynEditingArea area = std::make_shared<SynEditingArea>();
-                  area->beginX = edit->charToColumn(sLine,edit->mCaretX);
-                  area->endX = edit->charToColumn(sLine,edit->mCaretX + edit->mInputPreeditString.length());
+                  int col = edit->charToColumn(edit->mCaretY,edit->mCaretX);
+                  int ch = edit->columnToChar(vLine,col);
+                  area->beginX = edit->charToColumn(sLine,ch);
+                  area->endX = edit->charToColumn(sLine,ch + edit->mInputPreeditString.length());
                   area->type = SynEditingAreaType::eatUnderLine;
                   area->color = colFG;
                   areaList.append(area);
@@ -1067,8 +1069,10 @@ void SynEditTextPainter::PaintLines()
             }
             if (bCurrentLine && edit->mInputPreeditString.length()>0) {
                 PSynEditingArea area = std::make_shared<SynEditingArea>();
-                area->beginX = edit->charToColumn(sLine, edit->mCaretX);
-                area->endX = edit->charToColumn(sLine, edit->mCaretX + edit->mInputPreeditString.length());
+                int col = edit->charToColumn(edit->mCaretY,edit->mCaretX);
+                int ch = edit->columnToChar(vLine,col);
+                area->beginX = edit->charToColumn(sLine,ch);
+                area->endX = edit->charToColumn(sLine,ch + edit->mInputPreeditString.length());
                 area->type = SynEditingAreaType::eatUnderLine;
                 if (preeditAttr) {
                     area->color = preeditAttr->foreground();

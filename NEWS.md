@@ -9,7 +9,9 @@ Red Panda C++ Version 1.0.8
   - enhancement: adjust scheme colors for "dark" and "high contrast" themes
   - enhancement: can debug files that has non-ascii chars in its path and is compiled by clang
   - fix: when debugging project, default compiler set is wrongly used
-  - fix: selection in column mode not correctly drawn when has wide char in it
+  - fix: selection in column mode not correctly drawn when has wide chars in it
+  - fix: delete & insert in column mode not correctly handled
+  - fix: input with ime in column mode not correctly handled
   
 
 Red Panda C++ Version 1.0.7

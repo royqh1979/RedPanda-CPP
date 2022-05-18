@@ -1036,14 +1036,31 @@ void SynEdit::unlockPainter()
 
 bool SynEdit::selAvail() const
 {
-    return (mBlockBegin.Char != mBlockEnd.Char) ||
-            ((mBlockBegin.Line != mBlockEnd.Line) && (mActiveSelectionMode != SynSelectionMode::smColumn));
+    if (mBlockBegin.Char == mBlockEnd.Char && mBlockBegin.Line == mBlockEnd.Line)
+        return false;
+    // start line != end line  or start char != end char
+    if (mActiveSelectionMode==SynSelectionMode::smColumn) {
+        if (mBlockBegin.Line != mBlockEnd.Line) {
+            DisplayCoord coordBegin = bufferToDisplayPos(mBlockBegin);
+            DisplayCoord coordEnd = bufferToDisplayPos(mBlockEnd);
+            return coordBegin.Column!=coordEnd.Column;
+        } else
+            return true;
+    }
+    return true;
 }
 
 bool SynEdit::colSelAvail() const
 {
-    return (mActiveSelectionMode == SynSelectionMode::smColumn
-            && (mBlockBegin.Line!=mBlockEnd.Line || mBlockBegin.Char!=mBlockEnd.Char));
+    if (mActiveSelectionMode != SynSelectionMode::smColumn)
+        return false;
+    if (mBlockBegin.Char == mBlockEnd.Char && mBlockBegin.Line == mBlockEnd.Line)
+        return false;
+    if (mBlockBegin.Line == mBlockEnd.Line && mBlockBegin.Char!=mBlockBegin.Char)
+        return true;
+    DisplayCoord coordBegin = bufferToDisplayPos(mBlockBegin);
+    DisplayCoord coordEnd = bufferToDisplayPos(mBlockEnd);
+    return coordBegin.Column!=coordEnd.Column;
 }
 
 QString SynEdit::wordAtCursor()
@@ -1944,9 +1961,6 @@ void SynEdit::doDeleteLastChar()
             setBlockEnd(end);
         }
         setSelectedTextEmpty();
-        end.Char = start.Char;
-        setBlockBegin(start);
-        setBlockEnd(end);
         return;
     }
     if (selAvail()) {
@@ -2073,9 +2087,6 @@ void SynEdit::doDeleteCurrentChar()
                 setBlockEnd(end);
             }
             setSelectedTextEmpty();
-            end.Char = start.Char;
-            setBlockBegin(start);
-            setBlockEnd(end);
         } else {
             if (selAvail())
                 setSelectedTextEmpty();
@@ -2807,15 +2818,25 @@ void SynEdit::doAddChar(QChar AChar)
         return;
     //DoOnPaintTransient(ttBefore);
     //mCaretX will change after setSelLength;
-    if ((mInserting == false) && (!selAvail())) {
-        if (colSelAvail()) {
-            BufferCoord start=blockBegin();
-            BufferCoord end=blockEnd();
-            end.Char++;
+    if (mInserting == false && !selAvail()) {
+        switch(mActiveSelectionMode) {
+        case SynSelectionMode::smColumn: {
+            //we can't use blockBegin()/blockEnd()
+            BufferCoord start=mBlockBegin;
+            BufferCoord end=mBlockEnd;
+            if (start.Line > end.Line )
+                std::swap(start,end);
+            start.Char++; // make sure we select a whole char in the start line
             setBlockBegin(start);
             setBlockEnd(end);
-        } else
+        }
+            break;
+        case SynSelectionMode::smLine:
+            //do nothing;
+            break;
+        default:
             setSelLength(1);
+        }
     }
 
     if (isIdentChar(AChar)) {
@@ -2833,7 +2854,7 @@ void SynEdit::doAddChar(QChar AChar)
 //                                 BufferCoord{0, 0},
 //                                 BufferCoord{0, 0},
 //                                 "", SynSelectionMode::smNormal);
-    }else {
+    } else {
         mUndoList->BeginBlock();
         doSetSelText(AChar);
         int oldCaretX=mCaretX-1;
@@ -3003,12 +3024,13 @@ void SynEdit::doPasteFromClipboard()
         if (selAvail()) {
             mUndoList->AddChange(
                         SynChangeReason::crDelete,
-                        blockBegin(),
-                        blockEnd(),
+                        mBlockBegin,
+                        mBlockEnd,
                         selText(),
                         mActiveSelectionMode);
-        } else if (!colSelAvail())
-            setActiveSelectionMode(selectionMode());
+        }
+//        } else if (!colSelAvail())
+//            setActiveSelectionMode(selectionMode());
         BufferCoord vStartOfBlock = blockBegin();
         BufferCoord vEndOfBlock = blockEnd();
         mBlockBegin = vStartOfBlock;
@@ -4177,17 +4199,24 @@ void SynEdit::setOptions(const SynEditorOptions &Value)
 
 void SynEdit::doAddStr(const QString &s)
 {
-    if (!selAvail() && !mInserting) {
-        if (colSelAvail()) {
+    if (mInserting == false && !selAvail()) {
+        switch(mActiveSelectionMode) {
+        case SynSelectionMode::smColumn: {
+            //we can't use blockBegin()/blockEnd()
             BufferCoord start=blockBegin();
             BufferCoord end=blockEnd();
-            end.Char+=s.length();
-            setCaretAndSelection(caretXY(),start,end);
-        } else {
-            BufferCoord BB = caretXY();
-            BufferCoord BE = BB;
-            BE.Char = BB.Char + s.length();
-            setCaretAndSelection(caretXY(),BB,BE);
+            if (start.Line > end.Line )
+                std::swap(start,end);
+            start.Char+=s.length(); // make sure we select a whole char in the start line
+            setBlockBegin(start);
+            setBlockEnd(end);
+        }
+            break;
+        case SynSelectionMode::smLine:
+            //do nothing;
+            break;
+        default:
+            setSelLength(s.length());
         }
     }
     doSetSelText(s);
@@ -4353,9 +4382,15 @@ void SynEdit::doUndoItem()
             // the Caret's position manualy.
             BufferCoord TmpPos;
             if (Item->changeSelMode() == SynSelectionMode::smColumn) {
-                TmpPos = BufferCoord{
-                    std::min(Item->changeStartPos().Char, Item->changeEndPos().Char),
-                    std::min(Item->changeStartPos().Line, Item->changeEndPos().Line)};
+                BufferCoord BB = Item->changeStartPos();
+                BufferCoord BE = Item->changeEndPos();
+                int First = std::min(BB.Line,BE.Line);
+                int ColFrom = charToColumn(BB.Line, BB.Char);
+                int ColTo = charToColumn(BE.Line, BE.Char);
+                if (ColFrom > ColTo)
+                    ColFrom = ColTo;
+                TmpPos.Line = First;
+                TmpPos.Char = columnToChar(First,ColFrom);
             } else {
                 TmpPos = BufferCoord{
                         minBufferCoord(
@@ -5028,7 +5063,15 @@ void SynEdit::setSelTextPrimitiveEx(SynSelectionMode PasteMode, const QString &V
     BufferCoord BE = blockEnd();
     if (selAvail()) {
         deleteSelection(BB,BE);
-        internalSetCaretXY(BB);
+        if (mActiveSelectionMode == SynSelectionMode::smColumn) {
+            int colBegin = charToColumn(BB.Line,BB.Char);
+            int colEnd = charToColumn(BE.Line,BE.Char);
+            if (colBegin<colEnd)
+                internalSetCaretXY(BB);
+            else
+                internalSetCaretXY(BE);
+        } else
+            internalSetCaretXY(BB);
     }
     if (!Value.isEmpty()) {
         insertText(Value,PasteMode,AddToUndoList);
@@ -5050,8 +5093,9 @@ void SynEdit::doSetSelText(const QString &Value)
       mUndoList->AddChange(
                   SynChangeReason::crDelete, mBlockBegin, mBlockEnd,
                   selText(), mActiveSelectionMode);
-    } else if (!colSelAvail())
-        setActiveSelectionMode(selectionMode());
+    }
+//    } else if (!colSelAvail())
+//        setActiveSelectionMode(selectionMode());
     BufferCoord StartOfBlock = blockBegin();
     BufferCoord EndOfBlock = blockEnd();
     mBlockBegin = StartOfBlock;
@@ -5314,12 +5358,14 @@ void SynEdit::deleteSelection(const BufferCoord &BB, const BufferCoord &BE)
         break;
     case SynSelectionMode::smColumn:
     {
-        int First = BB.Line-1;
+        int First = BB.Line - 1;
         int ColFrom = charToColumn(BB.Line, BB.Char);
         int Last = BE.Line - 1;
         int ColTo = charToColumn(BE.Line, BE.Char);
         if (ColFrom > ColTo)
             std::swap(ColFrom, ColTo);
+        if (First > Last)
+            std::swap(First,Last);
         QString result;
         for (int i = First; i <= Last; i++) {
             int l = columnToChar(i+1,ColFrom);
@@ -5487,73 +5533,80 @@ int SynEdit::insertTextByColumnMode(const QString &value, bool addToUndoList)
 {
     QString str;
     QString tempString;
+    int firstLineLen = -1;
     int start;
     int p;
     int len;
     int insertCol;
+    int line;
     BufferCoord  lineBreakPos;
     int result = 0;
-    BufferCoord insertPos = blockBegin();
-    BufferCoord endPos = blockEnd();
+    DisplayCoord insertCoord = bufferToDisplayPos(caretXY());
+    int startLine = std::min(mBlockBegin.Line,mBlockEnd.Line);
+    int endLine = std::max(mBlockBegin.Line,mBlockEnd.Line);
     // Insert string at begin of the selection
-    insertCol = charToColumn(insertPos.Line,insertPos.Char);
-    mCaretY=insertPos.Line;
+    insertCol = insertCoord.Column;
     start = 0;
+    line = startLine;
     do {
         p = GetEOL(value,start);
         if (p != start) {
             str = value.mid(start,p-start);
+            if (firstLineLen<0)
+                firstLineLen = str.length();
 //          Move(Start^, Str[1], P - Start);
-            if (mCaretY > mDocument->count()) {
+            int insertPos = 0;
+            if (line > mDocument->count()) {
                 result++;
                 tempString = QString(insertCol - 1,' ') + str;
                 mDocument->add("");
                 if (addToUndoList) {
-                    lineBreakPos.Line = mCaretY - 1;
-                    lineBreakPos.Char = mDocument->getString(mCaretY - 2).length() + 1;
+                    lineBreakPos.Line = line - 1;
+                    lineBreakPos.Char = mDocument->getString(line - 2).length() + 1;
                     mUndoList->AddChange(SynChangeReason::crLineBreak,
                                      lineBreakPos,
                                      lineBreakPos,
                                      "", SynSelectionMode::smNormal);
                 }
             } else {
-                tempString = mDocument->getString(mCaretY - 1);
+                tempString = mDocument->getString(line - 1);
                 len = stringColumns(tempString,0);
                 if (len < insertCol) {
+                    insertPos = tempString.length()+1;
                     tempString = tempString + QString(insertCol - len - 1,' ') + str;
                 } else {
-                    int insertPos = columnToChar(mCaretY,insertCol);
+                    insertPos = columnToChar(line,insertCol);
                     tempString.insert(insertPos-1,str);
                 }
             }
-            properSetLine(mCaretY - 1, tempString);
+            properSetLine(line - 1, tempString);
             // Add undo change here from PasteFromClipboard
             if (addToUndoList) {
-                mUndoList->AddChange(SynChangeReason::crPaste, BufferCoord{mCaretX, mCaretY},
-                    BufferCoord{mCaretX + (p - start), mCaretY}, "", mActiveSelectionMode);
+                mUndoList->AddChange(SynChangeReason::crPaste, BufferCoord{insertPos, line},
+                    BufferCoord{insertPos + (p - start), line}, "", mActiveSelectionMode);
             }
         }
         if (p<value.length() && ((value[p]=='\r') || (value[p]=='\n'))) {
             p++;
             if (p<value.length() && value[p]=='\n')
                 p++;
-            mCaretY++;
-            mStatusChanges.setFlag(SynStatusChange::scCaretY);
+            line++;
         }
         //if we only have one inline to insert, repeat it
         if (start == 0 && p>=value.length() && p!=start) {
             p=0;
-            if (mCaretY < endPos.Line) {
-                mCaretY++;
-                mStatusChanges.setFlag(SynStatusChange::scCaretY);
+            if (line < endLine) {
+                line++;
             } else
                 break;
         } else {
             start = p;
         }
     } while (p<value.length());
-    mCaretX+=str.length();
-    mStatusChanges.setFlag(SynStatusChange::scCaretX);
+    if (firstLineLen>0) {
+        mCaretX+=firstLineLen;
+        mStatusChanges.setFlag(SynStatusChange::scCaretX);
+    }
     return result;
 }
 
@@ -6519,7 +6572,9 @@ void SynEdit::onLinesChanged()
         BufferCoord oldBlockStart = blockBegin();
         BufferCoord oldBlockEnd = blockEnd();
         oldBlockStart.Char = mCaretX;
-        oldBlockEnd.Char = mCaretX;
+        int colEnd = charToColumn(oldBlockStart.Line,oldBlockStart.Char);
+        int charEnd = columnToChar(oldBlockEnd.Line,colEnd);
+        oldBlockEnd.Char =  charEnd;
         setBlockBegin(oldBlockStart);
         setBlockEnd(oldBlockEnd);
     } else {
@@ -6625,6 +6680,8 @@ void SynEdit::setActiveSelectionMode(const SynSelectionMode &Value)
 
 BufferCoord SynEdit::blockEnd() const
 {
+    if (mActiveSelectionMode==SynSelectionMode::smColumn)
+        return mBlockEnd;
     if ((mBlockEnd.Line < mBlockBegin.Line)
       || ((mBlockEnd.Line == mBlockBegin.Line) && (mBlockEnd.Char < mBlockBegin.Char)))
         return mBlockBegin;
@@ -6716,6 +6773,8 @@ void SynEdit::setSelText(const QString &text)
 
 BufferCoord SynEdit::blockBegin() const
 {
+    if (mActiveSelectionMode==SynSelectionMode::smColumn)
+        return mBlockBegin;
     if ((mBlockEnd.Line < mBlockBegin.Line)
       || ((mBlockEnd.Line == mBlockBegin.Line) && (mBlockEnd.Char < mBlockBegin.Char)))
         return mBlockEnd;
