@@ -752,6 +752,8 @@ void Project::updateNodeIndexes()
 
 PProjectModelNode Project::pointerToNode(ProjectModelNode *p, PProjectModelNode parent)
 {
+    if (!p)
+        return PProjectModelNode();
     if (!parent) {
         parent = mRootNode;
     }
@@ -1797,10 +1799,12 @@ QFileSystemWatcher *Project::fileSystemWatcher() const
 QString Project::fileSystemNodeFolderPath(const PProjectModelNode &node)
 {
     QString result;
-    PProjectModelNode pNode = node;
-    while (pNode && pNode->folderNodeType == ProjectSpecialFolderNode::NonSpecial) {
-        result = node->text + "/" +result;
-        pNode = pNode->parent.lock();
+    if (node != mRootNode) {
+        PProjectModelNode pNode = node;
+        while (pNode && pNode->folderNodeType == ProjectSpecialFolderNode::NonSpecial) {
+            result = node->text + "/" +result;
+            pNode = pNode->parent.lock();
+        }
     }
     result = folder() + "/" + result;
     return result;

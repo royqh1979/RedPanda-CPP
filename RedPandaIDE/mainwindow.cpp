@@ -6029,22 +6029,32 @@ void MainWindow::newProjectUnitFile()
         while (modelTypeNode && modelTypeNode->folderNodeType==ProjectSpecialFolderNode::NonSpecial) {
             modelTypeNode=modelTypeNode->parent.lock();
         }
+        if (!modelTypeNode) {
+             modelTypeNode = mProject->rootNode();
+        }
         NewProjectUnitDialog newProjectUnitDialog;
-        switch (modelTypeNode->folderNodeType) {
-        case ProjectSpecialFolderNode::HEADERS:
-            newProjectUnitDialog.setSuffix("h");
-            break;
-        case ProjectSpecialFolderNode::SOURCES:
+        if (modelTypeNode == mProject->rootNode()) {
             if (mProject->options().isCpp)
                 newProjectUnitDialog.setSuffix("cpp");
             else
                 newProjectUnitDialog.setSuffix("c");
-            break;
-        default:
-            newProjectUnitDialog.setSuffix("");
+        } else {
+            switch (modelTypeNode->folderNodeType) {
+            case ProjectSpecialFolderNode::HEADERS:
+                newProjectUnitDialog.setSuffix("h");
+                break;
+            case ProjectSpecialFolderNode::SOURCES:
+                if (mProject->options().isCpp)
+                    newProjectUnitDialog.setSuffix("cpp");
+                else
+                    newProjectUnitDialog.setSuffix("c");
+                break;
+            default:
+                newProjectUnitDialog.setSuffix("");
+            }
         }
         QString folder = mProject->fileSystemNodeFolderPath(pNode);
-        qDebug()<<folder;
+//        qDebug()<<folder;
         newProjectUnitDialog.setFolder(folder);
         if (newProjectUnitDialog.exec()!=QDialog::Accepted) {
             return;
