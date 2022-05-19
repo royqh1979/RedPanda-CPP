@@ -1348,7 +1348,7 @@ void Settings::Editor::doLoad()
     else
         mDefaultEncoding = value("default_encoding", ENCODING_UTF8).toByteArray();
     mAutoDetectFileEncoding = boolValue("auto_detect_file_encoding",true);
-    mUndoLimit = intValue("undo_limit",1000);
+    mUndoLimit = intValue("undo_limit",0);
 
 
     //tooltips

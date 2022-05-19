@@ -60,13 +60,16 @@
       <item>
        <widget class="QSpinBox" name="spinMaxUndo">
         <property name="minimum">
-         <number>100</number>
+         <number>0</number>
         </property>
         <property name="maximum">
          <number>1000000000</number>
         </property>
         <property name="singleStep">
          <number>50</number>
+        </property>
+        <property name="value">
+         <number>10000</number>
         </property>
        </widget>
       </item>

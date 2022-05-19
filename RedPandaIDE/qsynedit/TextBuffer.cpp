@@ -1098,7 +1098,7 @@ bool SynEditUndoList::fullUndoImposible() const
 
 void SynEditUndoList::ensureMaxEntries()
 {
-    if (mItems.count() > mMaxUndoActions){
+    if (mMaxUndoActions>0 && mItems.count() > mMaxUndoActions){
         mFullUndoImposible = true;
         while (mItems.count() > mMaxUndoActions) {
             //remove all undo item in block
