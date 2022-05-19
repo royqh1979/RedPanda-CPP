@@ -12,6 +12,7 @@ Red Panda C++ Version 1.0.8
   - fix: selection in column mode not correctly drawn when has wide chars in it
   - fix: delete & insert in column mode not correctly handled
   - fix: input with ime in column mode not correctly handled
+  - fix: copy & paste in column mode not correctly handled
   
 
 Red Panda C++ Version 1.0.7

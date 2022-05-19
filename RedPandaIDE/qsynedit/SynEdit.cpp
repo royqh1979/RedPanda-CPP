@@ -2576,8 +2576,12 @@ QRect SynEdit::calculateCaretRect() const
                 + lineText().mid(mCaretX-1);
         coord.Column = charToColumn(sLine,mCaretX+mInputPreeditString.length());
     }
+    int rows=1;
     if (mActiveSelectionMode == SynSelectionMode::smColumn) {
-        coord.Row = lineToRow(blockBegin().Line);
+        int startRow = lineToRow(std::min(blockBegin().Line, blockEnd().Line));
+        int endRow = lineToRow(std::max(blockBegin().Line, blockEnd().Line));
+        coord.Row = startRow;
+        rows = endRow-startRow+1;
     }
     QPoint caretPos = rowColumnToPixels(coord);
     int caretWidth=mCharWidth;
@@ -2586,9 +2590,7 @@ QRect SynEdit::calculateCaretRect() const
     }
     if (mActiveSelectionMode == SynSelectionMode::smColumn) {
         return QRect(caretPos.x(),caretPos.y(),caretWidth,
-                     mTextHeight*(lineToRow(blockEnd().Line)-
-                                  lineToRow(blockBegin().Line)+1));
-
+                     mTextHeight*(rows));
     } else {
         return QRect(caretPos.x(),caretPos.y(),caretWidth,
                      mTextHeight);
@@ -3036,13 +3038,22 @@ void SynEdit::doPasteFromClipboard()
         mBlockBegin = vStartOfBlock;
         mBlockEnd = vEndOfBlock;
         setSelTextPrimitive(clipboard->text());
-        if (mActiveSelectionMode != SynSelectionMode::smColumn) {
+        if (mActiveSelectionMode == SynSelectionMode::smColumn) {
             mUndoList->AddChange(
-                        SynChangeReason::crPaste,
-                        vStartOfBlock,
-                        blockEnd(),
-                        selText(),
-                        mActiveSelectionMode);
+                            SynChangeReason::crPaste,
+                            blockBegin(),
+                            blockEnd(),
+                            selText(),
+                            mActiveSelectionMode);
+        } else {
+//            setBlockBegin(vStartOfBlock);
+//            setBlockEnd(caretXY());
+            mUndoList->AddChange(
+                            SynChangeReason::crPaste,
+                            vStartOfBlock,
+                            blockEnd(),
+                            selText(),
+                            mActiveSelectionMode);
         }
     }
 }
@@ -4779,17 +4790,19 @@ QString SynEdit::selText()
             }
         case SynSelectionMode::smColumn:
         {
-              First = blockBegin().Line-1;
+              First = blockBegin().Line;
               ColFrom = charToColumn(blockBegin().Line, blockBegin().Char);
-              Last = blockEnd().Line - 1;
+              Last = blockEnd().Line;
               ColTo = charToColumn(blockEnd().Line, blockEnd().Char);
               if (ColFrom > ColTo)
                   std::swap(ColFrom, ColTo);
+              if (First>Last)
+                  std::swap(First,Last);
               QString result;
               for (int i = First; i <= Last; i++) {
-                  int l = columnToChar(i+1,ColFrom);
-                  int r = columnToChar(i+1,ColTo-1)+1;
-                  QString s = mDocument->getString(i);
+                  int l = columnToChar(i,ColFrom);
+                  int r = columnToChar(i,ColTo-1)+1;
+                  QString s = mDocument->getString(i-1);
                   result += s.mid(l-1,r-l);
                   if (i<Last)
                       result+=lineBreak();
