@@ -4,6 +4,7 @@ Red Panda C++ Version 1.0.9
   - fix: input with ime in column mode not correctly handled
   - fix: copy & paste in column mode not correctly handled
   - fix: crash when project name is selected in the project view and try create new project file
+  - change: panels can be relocated
 
 Red Panda C++ Version 1.0.8
   - enhancement: auto complete '#undef'

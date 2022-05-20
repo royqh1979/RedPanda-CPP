@@ -33,1527 +33,80 @@
      <number>0</number>
     </property>
     <item>
-     <widget class="QSplitter" name="splitterMessages">
-      <property name="orientation">
-       <enum>Qt::Vertical</enum>
+     <widget class="QWidget" name="EditorPanel" native="true">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+        <horstretch>1</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
       </property>
-      <property name="handleWidth">
-       <number>1</number>
-      </property>
-      <property name="childrenCollapsible">
-       <bool>false</bool>
-      </property>
-      <widget class="QWidget" name="widget" native="true">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-         <horstretch>0</horstretch>
-         <verstretch>1</verstretch>
-        </sizepolicy>
-       </property>
-       <layout class="QVBoxLayout" name="verticalLayout">
-        <property name="leftMargin">
-         <number>0</number>
-        </property>
-        <property name="topMargin">
-         <number>0</number>
-        </property>
-        <property name="rightMargin">
-         <number>0</number>
-        </property>
-        <property name="bottomMargin">
-         <number>0</number>
-        </property>
-        <item>
-         <widget class="QSplitter" name="splitterInfos">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="handleWidth">
-           <number>1</number>
-          </property>
-          <property name="childrenCollapsible">
-           <bool>false</bool>
-          </property>
-          <widget class="QTabWidget" name="tabInfos">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="tabPosition">
-            <enum>QTabWidget::West</enum>
-           </property>
-           <property name="currentIndex">
-            <number>2</number>
-           </property>
-           <property name="usesScrollButtons">
-            <bool>true</bool>
-           </property>
-           <widget class="QWidget" name="tabFiles">
-            <attribute name="icon">
-             <iconset resource="icons.qrc">
-              <normaloff>:/icons/images/newlook24/018-copy.png</normaloff>:/icons/images/newlook24/018-copy.png</iconset>
-            </attribute>
-            <attribute name="title">
-             <string>Files</string>
-            </attribute>
-            <layout class="QVBoxLayout" name="verticalLayout_3">
-             <property name="spacing">
-              <number>2</number>
-             </property>
-             <property name="leftMargin">
-              <number>0</number>
-             </property>
-             <property name="topMargin">
-              <number>0</number>
-             </property>
-             <property name="rightMargin">
-              <number>0</number>
-             </property>
-             <property name="bottomMargin">
-              <number>0</number>
-             </property>
-             <item>
-              <widget class="QWidget" name="panelFiles" native="true">
-               <layout class="QHBoxLayout" name="horizontalLayout_13">
-                <property name="spacing">
-                 <number>2</number>
-                </property>
-                <property name="leftMargin">
-                 <number>0</number>
-                </property>
-                <property name="topMargin">
-                 <number>0</number>
-                </property>
-                <property name="rightMargin">
-                 <number>2</number>
-                </property>
-                <property name="bottomMargin">
-                 <number>0</number>
-                </property>
-                <item>
-                 <widget class="QComboBox" name="cbFilesPath">
-                  <property name="editable">
-                   <bool>true</bool>
-                  </property>
-                  <property name="insertPolicy">
-                   <enum>QComboBox::InsertAtTop</enum>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </widget>
-             </item>
-             <item>
-              <widget class="QTreeView" name="treeFiles">
-               <property name="editTriggers">
-                <set>QAbstractItemView::EditKeyPressed|QAbstractItemView::SelectedClicked</set>
-               </property>
-               <property name="dragEnabled">
-                <bool>true</bool>
-               </property>
-               <property name="dragDropMode">
-                <enum>QAbstractItemView::DragDrop</enum>
-               </property>
-               <property name="defaultDropAction">
-                <enum>Qt::CopyAction</enum>
-               </property>
-               <property name="selectionMode">
-                <enum>QAbstractItemView::ExtendedSelection</enum>
-               </property>
-               <attribute name="headerVisible">
-                <bool>false</bool>
-               </attribute>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-           <widget class="QWidget" name="tabProject">
-            <attribute name="icon">
-             <iconset resource="icons.qrc">
-              <normaloff>:/icons/images/newlook24/049-newproj.png</normaloff>:/icons/images/newlook24/049-newproj.png</iconset>
-            </attribute>
-            <attribute name="title">
-             <string>Project</string>
-            </attribute>
-            <layout class="QVBoxLayout" name="verticalLayout_9">
-             <property name="leftMargin">
-              <number>0</number>
-             </property>
-             <property name="topMargin">
-              <number>0</number>
-             </property>
-             <property name="rightMargin">
-              <number>0</number>
-             </property>
-             <property name="bottomMargin">
-              <number>0</number>
-             </property>
-             <item>
-              <widget class="QTreeView" name="projectView">
-               <property name="editTriggers">
-                <set>QAbstractItemView::EditKeyPressed|QAbstractItemView::SelectedClicked</set>
-               </property>
-               <property name="dragEnabled">
-                <bool>true</bool>
-               </property>
-               <property name="dragDropMode">
-                <enum>QAbstractItemView::InternalMove</enum>
-               </property>
-               <property name="defaultDropAction">
-                <enum>Qt::MoveAction</enum>
-               </property>
-               <property name="selectionMode">
-                <enum>QAbstractItemView::ExtendedSelection</enum>
-               </property>
-               <property name="selectionBehavior">
-                <enum>QAbstractItemView::SelectRows</enum>
-               </property>
-               <property name="autoExpandDelay">
-                <number>500</number>
-               </property>
-               <attribute name="headerVisible">
-                <bool>false</bool>
-               </attribute>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-           <widget class="QWidget" name="tabWatch">
-            <attribute name="icon">
-             <iconset resource="icons.qrc">
-              <normaloff>:/icons/images/newlook24/088-watch.png</normaloff>:/icons/images/newlook24/088-watch.png</iconset>
-            </attribute>
-            <attribute name="title">
-             <string>Watch</string>
-            </attribute>
-            <layout class="QHBoxLayout" name="horizontalLayout_10">
-             <property name="leftMargin">
-              <number>2</number>
-             </property>
-             <property name="topMargin">
-              <number>2</number>
-             </property>
-             <property name="rightMargin">
-              <number>2</number>
-             </property>
-             <property name="bottomMargin">
-              <number>2</number>
-             </property>
-             <item>
-              <widget class="QTreeView" name="watchView">
-               <property name="editTriggers">
-                <set>QAbstractItemView::DoubleClicked</set>
-               </property>
-               <property name="selectionMode">
-                <enum>QAbstractItemView::ExtendedSelection</enum>
-               </property>
-               <property name="textElideMode">
-                <enum>Qt::ElideNone</enum>
-               </property>
-               <property name="wordWrap">
-                <bool>false</bool>
-               </property>
-               <attribute name="headerDefaultSectionSize">
-                <number>100</number>
-               </attribute>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-           <widget class="QWidget" name="tabStructure">
-            <attribute name="icon">
-             <iconset resource="icons.qrc">
-              <normaloff>:/icons/images/newlook24/087-update.png</normaloff>:/icons/images/newlook24/087-update.png</iconset>
-            </attribute>
-            <attribute name="title">
-             <string>Structure</string>
-            </attribute>
-            <layout class="QVBoxLayout" name="verticalLayout_5">
-             <property name="spacing">
-              <number>0</number>
-             </property>
-             <property name="leftMargin">
-              <number>0</number>
-             </property>
-             <property name="topMargin">
-              <number>0</number>
-             </property>
-             <property name="rightMargin">
-              <number>0</number>
-             </property>
-             <property name="bottomMargin">
-              <number>0</number>
-             </property>
-             <item>
-              <widget class="QTreeView" name="classBrowser">
-               <property name="horizontalScrollBarPolicy">
-                <enum>Qt::ScrollBarAlwaysOn</enum>
-               </property>
-               <property name="rootIsDecorated">
-                <bool>true</bool>
-               </property>
-               <attribute name="headerVisible">
-                <bool>false</bool>
-               </attribute>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-           <widget class="QWidget" name="tabProblemSet">
-            <attribute name="icon">
-             <iconset resource="icons.qrc">
-              <normaloff>:/icons/images/newlook24/014-compopt.png</normaloff>:/icons/images/newlook24/014-compopt.png</iconset>
-            </attribute>
-            <attribute name="title">
-             <string>Problem Set</string>
-            </attribute>
-            <layout class="QVBoxLayout" name="verticalLayout_6">
-             <property name="spacing">
-              <number>3</number>
-             </property>
-             <property name="leftMargin">
-              <number>0</number>
-             </property>
-             <property name="topMargin">
-              <number>0</number>
-             </property>
-             <property name="rightMargin">
-              <number>0</number>
-             </property>
-             <property name="bottomMargin">
-              <number>0</number>
-             </property>
-             <item>
-              <widget class="QLabel" name="lblProblemSet">
-               <property name="frameShape">
-                <enum>QFrame::Panel</enum>
-               </property>
-               <property name="frameShadow">
-                <enum>QFrame::Plain</enum>
-               </property>
-               <property name="text">
-                <string>Problem Set</string>
-               </property>
-               <property name="margin">
-                <number>5</number>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QWidget" name="widget_2" native="true">
-               <layout class="QHBoxLayout" name="horizontalLayout_15">
-                <property name="leftMargin">
-                 <number>0</number>
-                </property>
-                <property name="topMargin">
-                 <number>0</number>
-                </property>
-                <property name="rightMargin">
-                 <number>0</number>
-                </property>
-                <property name="bottomMargin">
-                 <number>0</number>
-                </property>
-                <item>
-                 <widget class="QToolButton" name="btnNewProblemSet">
-                  <property name="toolTip">
-                   <string>New Problem Set</string>
-                  </property>
-                  <property name="text">
-                   <string>New Problem Set</string>
-                  </property>
-                  <property name="icon">
-                   <iconset resource="icons.qrc">
-                    <normaloff>:/icons/images/newlook24/050-newsrc.png</normaloff>:/icons/images/newlook24/050-newsrc.png</iconset>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QToolButton" name="btnAddProblem">
-                  <property name="toolTip">
-                   <string>Add Problem</string>
-                  </property>
-                  <property name="text">
-                   <string>Add Problem</string>
-                  </property>
-                  <property name="icon">
-                   <iconset resource="icons.qrc">
-                    <normaloff>:/icons/images/newlook24/002-add.png</normaloff>:/icons/images/newlook24/002-add.png</iconset>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QToolButton" name="btnRemoveProblem">
-                  <property name="toolTip">
-                   <string>Remove Problem</string>
-                  </property>
-                  <property name="text">
-                   <string>Remove Problem</string>
-                  </property>
-                  <property name="icon">
-                   <iconset resource="icons.qrc">
-                    <normaloff>:/icons/images/newlook24/008-close.png</normaloff>:/icons/images/newlook24/008-close.png</iconset>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QToolButton" name="btnSaveProblemSet">
-                  <property name="toolTip">
-                   <string>Save Problem Set</string>
-                  </property>
-                  <property name="text">
-                   <string>Save Problem Set</string>
-                  </property>
-                  <property name="icon">
-                   <iconset resource="icons.qrc">
-                    <normaloff>:/icons/images/newlook24/072-saveas.png</normaloff>:/icons/images/newlook24/072-saveas.png</iconset>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QToolButton" name="btnLoadProblemSet">
-                  <property name="toolTip">
-                   <string>Load Problem Set</string>
-                  </property>
-                  <property name="text">
-                   <string>Load Problem Set</string>
-                  </property>
-                  <property name="icon">
-                   <iconset resource="icons.qrc">
-                    <normaloff>:/icons/images/newlook24/053-open.png</normaloff>:/icons/images/newlook24/053-open.png</iconset>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <spacer name="horizontalSpacer_3">
-                  <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
-                  </property>
-                  <property name="sizeHint" stdset="0">
-                   <size>
-                    <width>40</width>
-                    <height>20</height>
-                   </size>
-                  </property>
-                 </spacer>
-                </item>
-               </layout>
-              </widget>
-             </item>
-             <item>
-              <widget class="QListView" name="lstProblemSet">
-               <property name="alternatingRowColors">
-                <bool>true</bool>
-               </property>
-               <property name="selectionBehavior">
-                <enum>QAbstractItemView::SelectRows</enum>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-          </widget>
-          <widget class="QWidget" name="EditorPanel" native="true">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-             <horstretch>1</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <layout class="QVBoxLayout" name="verticalLayout_2">
-            <property name="spacing">
-             <number>0</number>
-            </property>
-            <property name="leftMargin">
-             <number>0</number>
-            </property>
-            <property name="topMargin">
-             <number>0</number>
-            </property>
-            <property name="rightMargin">
-             <number>0</number>
-            </property>
-            <property name="bottomMargin">
-             <number>0</number>
-            </property>
-            <item>
-             <widget class="QSplitter" name="splitterEditorPanel">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="handleWidth">
-               <number>1</number>
-              </property>
-              <widget class="EditorsTabWidget" name="EditorTabsLeft">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Ignored" vsizetype="Expanding">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="currentIndex">
-                <number>-1</number>
-               </property>
-               <property name="documentMode">
-                <bool>true</bool>
-               </property>
-               <property name="tabsClosable">
-                <bool>true</bool>
-               </property>
-               <property name="movable">
-                <bool>true</bool>
-               </property>
-              </widget>
-              <widget class="EditorsTabWidget" name="EditorTabsRight">
-               <property name="enabled">
-                <bool>true</bool>
-               </property>
-               <property name="documentMode">
-                <bool>true</bool>
-               </property>
-               <property name="tabsClosable">
-                <bool>true</bool>
-               </property>
-               <property name="movable">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </widget>
-            </item>
-           </layout>
-          </widget>
-         </widget>
-        </item>
-       </layout>
-      </widget>
-      <widget class="QTabWidget" name="tabMessages">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="tabPosition">
-        <enum>QTabWidget::South</enum>
-       </property>
-       <property name="currentIndex">
+      <layout class="QVBoxLayout" name="verticalLayout_2">
+       <property name="spacing">
         <number>0</number>
        </property>
-       <property name="iconSize">
-        <size>
-         <width>16</width>
-         <height>16</height>
-        </size>
+       <property name="leftMargin">
+        <number>0</number>
        </property>
-       <widget class="QWidget" name="tabIssues">
-        <attribute name="icon">
-         <iconset>
-          <normalon>:/icons/images/newlook24/013-compile.png</normalon>
-         </iconset>
-        </attribute>
-        <attribute name="title">
-         <string>Issues</string>
-        </attribute>
-        <layout class="QHBoxLayout" name="horizontalLayout_3">
-         <property name="leftMargin">
-          <number>5</number>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QSplitter" name="splitterEditorPanel">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
          </property>
-         <property name="topMargin">
-          <number>5</number>
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
          </property>
-         <property name="rightMargin">
-          <number>5</number>
+         <property name="handleWidth">
+          <number>1</number>
          </property>
-         <property name="bottomMargin">
-          <number>5</number>
-         </property>
-         <item>
-          <widget class="IssuesTable" name="tableIssues">
-           <property name="font">
-            <font>
-             <weight>50</weight>
-             <bold>false</bold>
-            </font>
-           </property>
-           <property name="editTriggers">
-            <set>QAbstractItemView::NoEditTriggers</set>
-           </property>
-           <property name="tabKeyNavigation">
-            <bool>false</bool>
-           </property>
-           <property name="showDropIndicator" stdset="0">
-            <bool>false</bool>
-           </property>
-           <property name="alternatingRowColors">
-            <bool>true</bool>
-           </property>
-           <property name="selectionMode">
-            <enum>QAbstractItemView::SingleSelection</enum>
-           </property>
-           <property name="selectionBehavior">
-            <enum>QAbstractItemView::SelectRows</enum>
-           </property>
-           <attribute name="horizontalHeaderStretchLastSection">
-            <bool>true</bool>
-           </attribute>
-          </widget>
-         </item>
-        </layout>
-       </widget>
-       <widget class="QWidget" name="tabToolsOutput">
-        <attribute name="icon">
-         <iconset>
-          <normalon>:/icons/images/newlook24/015-compres.png</normalon>
-         </iconset>
-        </attribute>
-        <attribute name="title">
-         <string>Tools Output</string>
-        </attribute>
-        <layout class="QHBoxLayout" name="horizontalLayout_2">
-         <property name="leftMargin">
-          <number>5</number>
-         </property>
-         <property name="topMargin">
-          <number>5</number>
-         </property>
-         <property name="rightMargin">
-          <number>5</number>
-         </property>
-         <property name="bottomMargin">
-          <number>5</number>
-         </property>
-         <item>
-          <widget class="QPlainTextEdit" name="txtToolsOutput">
-           <property name="undoRedoEnabled">
-            <bool>false</bool>
-           </property>
-           <property name="lineWrapMode">
-            <enum>QPlainTextEdit::NoWrap</enum>
-           </property>
-           <property name="readOnly">
-            <bool>true</bool>
-           </property>
-           <property name="backgroundVisible">
-            <bool>false</bool>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </widget>
-       <widget class="QWidget" name="tabDebug">
-        <attribute name="icon">
-         <iconset>
-          <normalon>:/icons/images/newlook24/020-debug.png</normalon>
-         </iconset>
-        </attribute>
-        <attribute name="title">
-         <string>Debug</string>
-        </attribute>
-        <layout class="QHBoxLayout" name="horizontalLayout_4">
-         <property name="spacing">
-          <number>7</number>
-         </property>
-         <property name="leftMargin">
-          <number>0</number>
-         </property>
-         <property name="topMargin">
-          <number>0</number>
-         </property>
-         <property name="rightMargin">
-          <number>0</number>
-         </property>
-         <property name="bottomMargin">
-          <number>0</number>
-         </property>
-         <item>
-          <widget class="QSplitter" name="splitter">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="handleWidth">
-            <number>3</number>
-           </property>
-           <widget class="QFrame" name="frmEvaluate">
-            <property name="frameShape">
-             <enum>QFrame::StyledPanel</enum>
-            </property>
-            <property name="frameShadow">
-             <enum>QFrame::Raised</enum>
-            </property>
-            <layout class="QGridLayout" name="gridLayout_2">
-             <property name="leftMargin">
-              <number>11</number>
-             </property>
-             <property name="topMargin">
-              <number>11</number>
-             </property>
-             <property name="rightMargin">
-              <number>11</number>
-             </property>
-             <property name="bottomMargin">
-              <number>11</number>
-             </property>
-             <item row="0" column="0">
-              <widget class="QLabel" name="lblEvaluate">
-               <property name="text">
-                <string>Evaluate:</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="1">
-              <widget class="QComboBox" name="cbEvaluate">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="editable">
-                <bool>true</bool>
-               </property>
-               <property name="insertPolicy">
-                <enum>QComboBox::InsertAtTop</enum>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="0" colspan="2">
-              <widget class="QPlainTextEdit" name="txtEvalOutput">
-               <property name="undoRedoEnabled">
-                <bool>false</bool>
-               </property>
-               <property name="readOnly">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-           <widget class="QTabWidget" name="debugViews">
-            <property name="tabPosition">
-             <enum>QTabWidget::North</enum>
-            </property>
-            <property name="currentIndex">
-             <number>4</number>
-            </property>
-            <widget class="QWidget" name="tabDebugConsole">
-             <attribute name="title">
-              <string>Debug Console</string>
-             </attribute>
-             <layout class="QHBoxLayout" name="horizontalLayout_6">
-              <property name="leftMargin">
-               <number>2</number>
-              </property>
-              <property name="topMargin">
-               <number>2</number>
-              </property>
-              <property name="rightMargin">
-               <number>2</number>
-              </property>
-              <property name="bottomMargin">
-               <number>2</number>
-              </property>
-              <item>
-               <widget class="QConsole" name="debugConsole">
-                <property name="frameShape">
-                 <enum>QFrame::StyledPanel</enum>
-                </property>
-                <property name="frameShadow">
-                 <enum>QFrame::Raised</enum>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </widget>
-            <widget class="QWidget" name="tabStackTrace">
-             <attribute name="title">
-              <string>Call Stack</string>
-             </attribute>
-             <layout class="QHBoxLayout" name="horizontalLayout_7">
-              <property name="leftMargin">
-               <number>2</number>
-              </property>
-              <property name="topMargin">
-               <number>2</number>
-              </property>
-              <property name="rightMargin">
-               <number>2</number>
-              </property>
-              <property name="bottomMargin">
-               <number>0</number>
-              </property>
-              <item>
-               <widget class="QTableView" name="tblStackTrace">
-                <property name="alternatingRowColors">
-                 <bool>true</bool>
-                </property>
-                <property name="selectionMode">
-                 <enum>QAbstractItemView::SingleSelection</enum>
-                </property>
-                <property name="selectionBehavior">
-                 <enum>QAbstractItemView::SelectRows</enum>
-                </property>
-                <property name="textElideMode">
-                 <enum>Qt::ElideNone</enum>
-                </property>
-                <attribute name="horizontalHeaderStretchLastSection">
-                 <bool>true</bool>
-                </attribute>
-               </widget>
-              </item>
-             </layout>
-            </widget>
-            <widget class="QWidget" name="tabBreakpoints">
-             <attribute name="title">
-              <string>Breakpoints</string>
-             </attribute>
-             <layout class="QHBoxLayout" name="horizontalLayout_8">
-              <property name="leftMargin">
-               <number>2</number>
-              </property>
-              <property name="topMargin">
-               <number>2</number>
-              </property>
-              <property name="rightMargin">
-               <number>2</number>
-              </property>
-              <property name="bottomMargin">
-               <number>0</number>
-              </property>
-              <item>
-               <widget class="QTableView" name="tblBreakpoints">
-                <property name="alternatingRowColors">
-                 <bool>true</bool>
-                </property>
-                <property name="selectionMode">
-                 <enum>QAbstractItemView::SingleSelection</enum>
-                </property>
-                <property name="selectionBehavior">
-                 <enum>QAbstractItemView::SelectRows</enum>
-                </property>
-                <property name="textElideMode">
-                 <enum>Qt::ElideNone</enum>
-                </property>
-                <attribute name="horizontalHeaderStretchLastSection">
-                 <bool>true</bool>
-                </attribute>
-               </widget>
-              </item>
-             </layout>
-            </widget>
-            <widget class="QWidget" name="tabLocals">
-             <attribute name="title">
-              <string>Locals</string>
-             </attribute>
-             <layout class="QHBoxLayout" name="horizontalLayout_9">
-              <property name="leftMargin">
-               <number>2</number>
-              </property>
-              <property name="topMargin">
-               <number>2</number>
-              </property>
-              <property name="rightMargin">
-               <number>2</number>
-              </property>
-              <property name="bottomMargin">
-               <number>0</number>
-              </property>
-              <item>
-               <widget class="QPlainTextEdit" name="txtLocals">
-                <property name="undoRedoEnabled">
-                 <bool>false</bool>
-                </property>
-                <property name="readOnly">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </widget>
-            <widget class="QWidget" name="tabMemory">
-             <attribute name="title">
-              <string>Memory</string>
-             </attribute>
-             <layout class="QGridLayout" name="gridLayout">
-              <item row="0" column="0">
-               <widget class="QLabel" name="label_3">
-                <property name="text">
-                 <string>Address Expression:</string>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="0" colspan="2">
-               <widget class="QTableView" name="tblMemoryView">
-                <attribute name="horizontalHeaderVisible">
-                 <bool>false</bool>
-                </attribute>
-               </widget>
-              </item>
-              <item row="0" column="1">
-               <widget class="QComboBox" name="cbMemoryAddress">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="editable">
-                 <bool>true</bool>
-                </property>
-                <property name="insertPolicy">
-                 <enum>QComboBox::InsertAtTop</enum>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </widget>
-           </widget>
-          </widget>
-         </item>
-        </layout>
-       </widget>
-       <widget class="QWidget" name="tabSearch">
-        <attribute name="icon">
-         <iconset>
-          <normalon>:/icons/images/newlook24/074-search.png</normalon>
-         </iconset>
-        </attribute>
-        <attribute name="title">
-         <string>Search</string>
-        </attribute>
-        <layout class="QVBoxLayout" name="verticalLayout_4">
-         <item>
-          <widget class="QWidget" name="searchHistoryPanel" native="true">
-           <layout class="QHBoxLayout" name="horizontalLayout_11">
-            <property name="leftMargin">
-             <number>0</number>
-            </property>
-            <property name="topMargin">
-             <number>0</number>
-            </property>
-            <property name="rightMargin">
-             <number>0</number>
-            </property>
-            <property name="bottomMargin">
-             <number>0</number>
-            </property>
-            <item>
-             <widget class="QLabel" name="label">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="text">
-               <string>History:</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QComboBox" name="cbSearchHistory">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="minimumSize">
-               <size>
-                <width>150</width>
-                <height>0</height>
-               </size>
-              </property>
-              <property name="sizeAdjustPolicy">
-               <enum>QComboBox::AdjustToContents</enum>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="btnSearchAgain">
-              <property name="enabled">
-               <bool>false</bool>
-              </property>
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="text">
-               <string>Search Again</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <spacer name="horizontalSpacer">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-           </layout>
-          </widget>
-         </item>
-         <item>
-          <widget class="QWidget" name="replacePanel" native="true">
-           <layout class="QHBoxLayout" name="horizontalLayout_12">
-            <property name="leftMargin">
-             <number>0</number>
-            </property>
-            <property name="topMargin">
-             <number>0</number>
-            </property>
-            <property name="rightMargin">
-             <number>0</number>
-            </property>
-            <property name="bottomMargin">
-             <number>0</number>
-            </property>
-            <item>
-             <widget class="QLabel" name="label_2">
-              <property name="text">
-               <string>Replace with:</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QComboBox" name="cbReplaceInHistory">
-              <property name="minimumSize">
-               <size>
-                <width>150</width>
-                <height>0</height>
-               </size>
-              </property>
-              <property name="editable">
-               <bool>true</bool>
-              </property>
-              <property name="insertPolicy">
-               <enum>QComboBox::InsertAtTop</enum>
-              </property>
-              <property name="sizeAdjustPolicy">
-               <enum>QComboBox::AdjustToContents</enum>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="btnReplace">
-              <property name="text">
-               <string>Replace</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="btnCancelReplace">
-              <property name="text">
-               <string>Cancel</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <spacer name="horizontalSpacer_2">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-           </layout>
-          </widget>
-         </item>
-         <item>
-          <widget class="QTreeView" name="searchView">
-           <attribute name="headerVisible">
-            <bool>false</bool>
-           </attribute>
-          </widget>
-         </item>
-        </layout>
-       </widget>
-       <widget class="QWidget" name="tabTODO">
-        <attribute name="icon">
-         <iconset resource="icons.qrc">
-          <normaloff>:/icons/images/newlook24/047-makefl.png</normaloff>:/icons/images/newlook24/047-makefl.png</iconset>
-        </attribute>
-        <attribute name="title">
-         <string>TODO</string>
-        </attribute>
-        <layout class="QHBoxLayout" name="horizontalLayout_5">
-         <item>
-          <widget class="QTableView" name="tableTODO">
-           <attribute name="horizontalHeaderStretchLastSection">
-            <bool>true</bool>
-           </attribute>
-          </widget>
-         </item>
-        </layout>
-       </widget>
-       <widget class="QWidget" name="tabBookmark">
-        <attribute name="icon">
-         <iconset resource="icons.qrc">
-          <normaloff>:/icons/images/newlook24/039-gobook.png</normaloff>:/icons/images/newlook24/039-gobook.png</iconset>
-        </attribute>
-        <attribute name="title">
-         <string>Bookmark</string>
-        </attribute>
-        <layout class="QHBoxLayout" name="horizontalLayout_14">
-         <item>
-          <widget class="QTableView" name="tableBookmark">
-           <property name="alternatingRowColors">
-            <bool>true</bool>
-           </property>
-           <property name="selectionMode">
-            <enum>QAbstractItemView::SingleSelection</enum>
-           </property>
-           <property name="selectionBehavior">
-            <enum>QAbstractItemView::SelectRows</enum>
-           </property>
-           <attribute name="horizontalHeaderStretchLastSection">
-            <bool>true</bool>
-           </attribute>
-          </widget>
-         </item>
-        </layout>
-       </widget>
-       <widget class="QWidget" name="tabProblem">
-        <attribute name="icon">
-         <iconset resource="icons.qrc">
-          <normaloff>:/icons/images/newlook24/015-compres.png</normaloff>:/icons/images/newlook24/015-compres.png</iconset>
-        </attribute>
-        <attribute name="title">
-         <string>Problem</string>
-        </attribute>
-        <layout class="QVBoxLayout" name="verticalLayout_8">
-         <property name="leftMargin">
-          <number>11</number>
-         </property>
-         <property name="topMargin">
-          <number>11</number>
-         </property>
-         <property name="rightMargin">
-          <number>11</number>
-         </property>
-         <property name="bottomMargin">
-          <number>11</number>
-         </property>
-         <item>
-          <widget class="QSplitter" name="splitter_2">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <widget class="QWidget" name="widget_4" native="true">
-            <layout class="QVBoxLayout" name="verticalLayout_7">
-             <property name="spacing">
-              <number>3</number>
-             </property>
-             <property name="leftMargin">
-              <number>0</number>
-             </property>
-             <property name="topMargin">
-              <number>0</number>
-             </property>
-             <property name="rightMargin">
-              <number>0</number>
-             </property>
-             <property name="bottomMargin">
-              <number>0</number>
-             </property>
-             <item>
-              <widget class="QLabel" name="lblProblem">
-               <property name="frameShape">
-                <enum>QFrame::Box</enum>
-               </property>
-               <property name="text">
-                <string>Problem</string>
-               </property>
-               <property name="margin">
-                <number>5</number>
-               </property>
-               <property name="openExternalLinks">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QWidget" name="widget_3" native="true">
-               <property name="minimumSize">
-                <size>
-                 <width>0</width>
-                 <height>0</height>
-                </size>
-               </property>
-               <layout class="QHBoxLayout" name="horizontalLayout_16">
-                <property name="leftMargin">
-                 <number>0</number>
-                </property>
-                <property name="topMargin">
-                 <number>0</number>
-                </property>
-                <property name="rightMargin">
-                 <number>0</number>
-                </property>
-                <property name="bottomMargin">
-                 <number>0</number>
-                </property>
-               </layout>
-              </widget>
-             </item>
-             <item>
-              <widget class="QWidget" name="widget_6" native="true">
-               <layout class="QHBoxLayout" name="horizontalLayout_17">
-                <property name="leftMargin">
-                 <number>0</number>
-                </property>
-                <property name="topMargin">
-                 <number>0</number>
-                </property>
-                <property name="rightMargin">
-                 <number>0</number>
-                </property>
-                <property name="bottomMargin">
-                 <number>0</number>
-                </property>
-                <item>
-                 <widget class="QToolButton" name="btnAddProblemCase">
-                  <property name="toolTip">
-                   <string>Add Probem Case</string>
-                  </property>
-                  <property name="text">
-                   <string>Add Probem Case</string>
-                  </property>
-                  <property name="icon">
-                   <iconset resource="icons.qrc">
-                    <normaloff>:/icons/images/newlook24/002-add.png</normaloff>:/icons/images/newlook24/002-add.png</iconset>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QToolButton" name="btnRemoveProblemCase">
-                  <property name="toolTip">
-                   <string>Remove Problem Case</string>
-                  </property>
-                  <property name="text">
-                   <string>Remove Problem Case</string>
-                  </property>
-                  <property name="icon">
-                   <iconset resource="icons.qrc">
-                    <normaloff>:/icons/images/newlook24/008-close.png</normaloff>:/icons/images/newlook24/008-close.png</iconset>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QToolButton" name="btnOpenProblemAnswer">
-                  <property name="toolTip">
-                   <string>Open Anwser Source File</string>
-                  </property>
-                  <property name="text">
-                   <string>Open Anwser Source File</string>
-                  </property>
-                  <property name="icon">
-                   <iconset resource="icons.qrc">
-                    <normaloff>:/icons/images/newlook24/091-openproblemanswer.png</normaloff>:/icons/images/newlook24/091-openproblemanswer.png</iconset>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="Line" name="line">
-                  <property name="orientation">
-                   <enum>Qt::Vertical</enum>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QToolButton" name="btnRunAllProblemCases">
-                  <property name="toolTip">
-                   <string>Run All Cases</string>
-                  </property>
-                  <property name="text">
-                   <string>Run All Cases</string>
-                  </property>
-                  <property name="icon">
-                   <iconset resource="icons.qrc">
-                    <normaloff>:/icons/images/newlook24/092-runallproblemcases.png</normaloff>:/icons/images/newlook24/092-runallproblemcases.png</iconset>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QToolButton" name="btnCaseValidateOptions">
-                  <property name="text">
-                   <string>Problem Cases Validation Options</string>
-                  </property>
-                  <property name="icon">
-                   <iconset resource="icons.qrc">
-                    <normaloff>:/icons/images/newlook24/083-toolbar.png</normaloff>:/icons/images/newlook24/083-toolbar.png</iconset>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <spacer name="horizontalSpacer_4">
-                  <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
-                  </property>
-                  <property name="sizeHint" stdset="0">
-                   <size>
-                    <width>40</width>
-                    <height>20</height>
-                   </size>
-                  </property>
-                 </spacer>
-                </item>
-                <item>
-                 <widget class="QProgressBar" name="pbProblemCases">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="maximum">
-                   <number>0</number>
-                  </property>
-                  <property name="value">
-                   <number>0</number>
-                  </property>
-                  <property name="format">
-                   <string>%v/%m</string>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </widget>
-             </item>
-             <item>
-              <widget class="QTableView" name="tblProblemCases">
-               <property name="alternatingRowColors">
-                <bool>true</bool>
-               </property>
-               <property name="selectionMode">
-                <enum>QAbstractItemView::SingleSelection</enum>
-               </property>
-               <property name="selectionBehavior">
-                <enum>QAbstractItemView::SelectRows</enum>
-               </property>
-               <attribute name="horizontalHeaderDefaultSectionSize">
-                <number>200</number>
-               </attribute>
-               <attribute name="horizontalHeaderStretchLastSection">
-                <bool>true</bool>
-               </attribute>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-           <widget class="QWidget" name="widget_5" native="true">
-            <layout class="QGridLayout" name="gridLayout_3">
-             <property name="leftMargin">
-              <number>0</number>
-             </property>
-             <property name="topMargin">
-              <number>0</number>
-             </property>
-             <property name="rightMargin">
-              <number>0</number>
-             </property>
-             <property name="bottomMargin">
-              <number>0</number>
-             </property>
-             <item row="2" column="1">
-              <widget class="LineNumberTextEditor" name="txtProblemCaseOutput">
-               <property name="lineWrapMode">
-                <enum>QPlainTextEdit::NoWrap</enum>
-               </property>
-               <property name="readOnly">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="0">
-              <widget class="QWidget" name="widget_7" native="true">
-               <layout class="QGridLayout" name="gridLayout_4">
-                <property name="leftMargin">
-                 <number>0</number>
-                </property>
-                <property name="topMargin">
-                 <number>0</number>
-                </property>
-                <property name="rightMargin">
-                 <number>0</number>
-                </property>
-                <property name="bottomMargin">
-                 <number>0</number>
-                </property>
-                <item row="0" column="1">
-                 <widget class="QLineEdit" name="txtProblemCaseInputFileName">
-                  <property name="enabled">
-                   <bool>false</bool>
-                  </property>
-                  <property name="readOnly">
-                   <bool>true</bool>
-                  </property>
-                 </widget>
-                </item>
-                <item row="0" column="0">
-                 <widget class="QLabel" name="label_4">
-                  <property name="text">
-                   <string>Input</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="0" column="3">
-                 <widget class="QToolButton" name="btnProblemCaseInputFileName">
-                  <property name="toolTip">
-                   <string>Choose Input File</string>
-                  </property>
-                  <property name="text">
-                   <string>Choose Input File</string>
-                  </property>
-                  <property name="icon">
-                   <iconset resource="icons.qrc">
-                    <normaloff>:/icons/images/newlook24/053-open.png</normaloff>:/icons/images/newlook24/053-open.png</iconset>
-                  </property>
-                 </widget>
-                </item>
-                <item row="0" column="2">
-                 <widget class="QToolButton" name="btnProblemCaseClearInputFileName">
-                  <property name="text">
-                   <string>Clear</string>
-                  </property>
-                  <property name="icon">
-                   <iconset resource="icons.qrc">
-                    <normaloff>:/icons/images/newlook24/008-close.png</normaloff>:/icons/images/newlook24/008-close.png</iconset>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </widget>
-             </item>
-             <item row="0" column="1">
-              <widget class="QLabel" name="label_6">
-               <property name="text">
-                <string>Output</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="2">
-              <widget class="QWidget" name="widget_8" native="true">
-               <layout class="QHBoxLayout" name="horizontalLayout_18">
-                <property name="leftMargin">
-                 <number>0</number>
-                </property>
-                <property name="topMargin">
-                 <number>0</number>
-                </property>
-                <property name="rightMargin">
-                 <number>0</number>
-                </property>
-                <property name="bottomMargin">
-                 <number>0</number>
-                </property>
-                <item>
-                 <widget class="QLabel" name="label_5">
-                  <property name="text">
-                   <string>Expected</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLineEdit" name="txtProblemCaseExpectedOutputFileName">
-                  <property name="enabled">
-                   <bool>false</bool>
-                  </property>
-                  <property name="readOnly">
-                   <bool>true</bool>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QToolButton" name="btnProblemCaseClearExpectedOutputFileName">
-                  <property name="toolTip">
-                   <string>Clear</string>
-                  </property>
-                  <property name="text">
-                   <string>Clear</string>
-                  </property>
-                  <property name="icon">
-                   <iconset resource="icons.qrc">
-                    <normaloff>:/icons/images/newlook24/008-close.png</normaloff>:/icons/images/newlook24/008-close.png</iconset>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QToolButton" name="btnProblemCaseExpectedOutputFileName">
-                  <property name="text">
-                   <string>...</string>
-                  </property>
-                  <property name="icon">
-                   <iconset resource="icons.qrc">
-                    <normaloff>:/icons/images/newlook24/053-open.png</normaloff>:/icons/images/newlook24/053-open.png</iconset>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </widget>
-             </item>
-             <item row="2" column="2">
-              <widget class="LineNumberTextEditor" name="txtProblemCaseExpected">
-               <property name="lineWrapMode">
-                <enum>QPlainTextEdit::NoWrap</enum>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="0">
-              <widget class="LineNumberTextEditor" name="txtProblemCaseInput">
-               <property name="lineWrapMode">
-                <enum>QPlainTextEdit::NoWrap</enum>
-               </property>
-              </widget>
-             </item>
-             <item row="3" column="2">
-              <widget class="QLabel" name="lblProblemCaseExpected">
-               <property name="text">
-                <string/>
-               </property>
-              </widget>
-             </item>
-             <item row="3" column="1">
-              <widget class="QLabel" name="lblProblemCaseOutput">
-               <property name="text">
-                <string/>
-               </property>
-              </widget>
-             </item>
-             <item row="3" column="0">
-              <widget class="QLabel" name="lblProblemCaseInput">
-               <property name="text">
-                <string/>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-          </widget>
-         </item>
-        </layout>
-       </widget>
-      </widget>
+         <widget class="EditorsTabWidget" name="EditorTabsLeft">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Ignored" vsizetype="Expanding">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="currentIndex">
+           <number>-1</number>
+          </property>
+          <property name="documentMode">
+           <bool>true</bool>
+          </property>
+          <property name="tabsClosable">
+           <bool>true</bool>
+          </property>
+          <property name="movable">
+           <bool>true</bool>
+          </property>
+         </widget>
+         <widget class="EditorsTabWidget" name="EditorTabsRight">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
+          <property name="documentMode">
+           <bool>true</bool>
+          </property>
+          <property name="tabsClosable">
+           <bool>true</bool>
+          </property>
+          <property name="movable">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </widget>
+       </item>
+      </layout>
      </widget>
     </item>
    </layout>
@@ -1879,6 +432,1435 @@
     <bool>false</bool>
    </attribute>
    <addaction name="actionCompiler_Options"/>
+  </widget>
+  <widget class="QDockWidget" name="dockFiles">
+   <property name="features">
+    <set>QDockWidget::DockWidgetClosable|QDockWidget::DockWidgetMovable</set>
+   </property>
+   <property name="allowedAreas">
+    <set>Qt::BottomDockWidgetArea|Qt::LeftDockWidgetArea|Qt::RightDockWidgetArea</set>
+   </property>
+   <property name="windowTitle">
+    <string>Infos</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>1</number>
+   </attribute>
+   <widget class="QTabWidget" name="tabInfos">
+    <property name="sizePolicy">
+     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+      <horstretch>0</horstretch>
+      <verstretch>0</verstretch>
+     </sizepolicy>
+    </property>
+    <property name="tabPosition">
+     <enum>QTabWidget::West</enum>
+    </property>
+    <property name="currentIndex">
+     <number>0</number>
+    </property>
+    <property name="usesScrollButtons">
+     <bool>true</bool>
+    </property>
+    <widget class="QWidget" name="tabFiles">
+     <attribute name="icon">
+      <iconset resource="icons.qrc">
+       <normaloff>:/icons/images/newlook24/018-copy.png</normaloff>:/icons/images/newlook24/018-copy.png</iconset>
+     </attribute>
+     <attribute name="title">
+      <string>Files</string>
+     </attribute>
+     <layout class="QVBoxLayout" name="verticalLayout_3">
+      <property name="spacing">
+       <number>2</number>
+      </property>
+      <property name="leftMargin">
+       <number>0</number>
+      </property>
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="rightMargin">
+       <number>0</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
+      <item>
+       <widget class="QWidget" name="panelFiles" native="true">
+        <layout class="QHBoxLayout" name="horizontalLayout_13">
+         <property name="spacing">
+          <number>2</number>
+         </property>
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>2</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="QComboBox" name="cbFilesPath">
+           <property name="editable">
+            <bool>true</bool>
+           </property>
+           <property name="insertPolicy">
+            <enum>QComboBox::InsertAtTop</enum>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item>
+       <widget class="QTreeView" name="treeFiles">
+        <property name="editTriggers">
+         <set>QAbstractItemView::EditKeyPressed|QAbstractItemView::SelectedClicked</set>
+        </property>
+        <property name="dragEnabled">
+         <bool>true</bool>
+        </property>
+        <property name="dragDropMode">
+         <enum>QAbstractItemView::DragDrop</enum>
+        </property>
+        <property name="defaultDropAction">
+         <enum>Qt::CopyAction</enum>
+        </property>
+        <property name="selectionMode">
+         <enum>QAbstractItemView::ExtendedSelection</enum>
+        </property>
+        <attribute name="headerVisible">
+         <bool>false</bool>
+        </attribute>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+    <widget class="QWidget" name="tabProject">
+     <attribute name="icon">
+      <iconset resource="icons.qrc">
+       <normaloff>:/icons/images/newlook24/049-newproj.png</normaloff>:/icons/images/newlook24/049-newproj.png</iconset>
+     </attribute>
+     <attribute name="title">
+      <string>Project</string>
+     </attribute>
+     <layout class="QVBoxLayout" name="verticalLayout_9">
+      <property name="leftMargin">
+       <number>0</number>
+      </property>
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="rightMargin">
+       <number>0</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
+      <item>
+       <widget class="QTreeView" name="projectView">
+        <property name="editTriggers">
+         <set>QAbstractItemView::EditKeyPressed|QAbstractItemView::SelectedClicked</set>
+        </property>
+        <property name="dragEnabled">
+         <bool>true</bool>
+        </property>
+        <property name="dragDropMode">
+         <enum>QAbstractItemView::InternalMove</enum>
+        </property>
+        <property name="defaultDropAction">
+         <enum>Qt::MoveAction</enum>
+        </property>
+        <property name="selectionMode">
+         <enum>QAbstractItemView::ExtendedSelection</enum>
+        </property>
+        <property name="selectionBehavior">
+         <enum>QAbstractItemView::SelectRows</enum>
+        </property>
+        <property name="autoExpandDelay">
+         <number>500</number>
+        </property>
+        <attribute name="headerVisible">
+         <bool>false</bool>
+        </attribute>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+    <widget class="QWidget" name="tabWatch">
+     <attribute name="icon">
+      <iconset resource="icons.qrc">
+       <normaloff>:/icons/images/newlook24/088-watch.png</normaloff>:/icons/images/newlook24/088-watch.png</iconset>
+     </attribute>
+     <attribute name="title">
+      <string>Watch</string>
+     </attribute>
+     <layout class="QHBoxLayout" name="horizontalLayout_10">
+      <property name="leftMargin">
+       <number>2</number>
+      </property>
+      <property name="topMargin">
+       <number>2</number>
+      </property>
+      <property name="rightMargin">
+       <number>2</number>
+      </property>
+      <property name="bottomMargin">
+       <number>2</number>
+      </property>
+      <item>
+       <widget class="QTreeView" name="watchView">
+        <property name="editTriggers">
+         <set>QAbstractItemView::DoubleClicked</set>
+        </property>
+        <property name="selectionMode">
+         <enum>QAbstractItemView::ExtendedSelection</enum>
+        </property>
+        <property name="textElideMode">
+         <enum>Qt::ElideNone</enum>
+        </property>
+        <property name="wordWrap">
+         <bool>false</bool>
+        </property>
+        <attribute name="headerDefaultSectionSize">
+         <number>100</number>
+        </attribute>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+    <widget class="QWidget" name="tabStructure">
+     <attribute name="icon">
+      <iconset resource="icons.qrc">
+       <normaloff>:/icons/images/newlook24/087-update.png</normaloff>:/icons/images/newlook24/087-update.png</iconset>
+     </attribute>
+     <attribute name="title">
+      <string>Structure</string>
+     </attribute>
+     <layout class="QVBoxLayout" name="verticalLayout_5">
+      <property name="spacing">
+       <number>0</number>
+      </property>
+      <property name="leftMargin">
+       <number>0</number>
+      </property>
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="rightMargin">
+       <number>0</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
+      <item>
+       <widget class="QTreeView" name="classBrowser">
+        <property name="horizontalScrollBarPolicy">
+         <enum>Qt::ScrollBarAlwaysOn</enum>
+        </property>
+        <property name="rootIsDecorated">
+         <bool>true</bool>
+        </property>
+        <attribute name="headerVisible">
+         <bool>false</bool>
+        </attribute>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+    <widget class="QWidget" name="tabProblemSet">
+     <attribute name="icon">
+      <iconset resource="icons.qrc">
+       <normaloff>:/icons/images/newlook24/014-compopt.png</normaloff>:/icons/images/newlook24/014-compopt.png</iconset>
+     </attribute>
+     <attribute name="title">
+      <string>Problem Set</string>
+     </attribute>
+     <layout class="QVBoxLayout" name="verticalLayout_6">
+      <property name="spacing">
+       <number>3</number>
+      </property>
+      <property name="leftMargin">
+       <number>0</number>
+      </property>
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="rightMargin">
+       <number>0</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
+      <item>
+       <widget class="QLabel" name="lblProblemSet">
+        <property name="frameShape">
+         <enum>QFrame::Panel</enum>
+        </property>
+        <property name="frameShadow">
+         <enum>QFrame::Plain</enum>
+        </property>
+        <property name="text">
+         <string>Problem Set</string>
+        </property>
+        <property name="margin">
+         <number>5</number>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QWidget" name="widget_2" native="true">
+        <layout class="QHBoxLayout" name="horizontalLayout_15">
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="QToolButton" name="btnNewProblemSet">
+           <property name="toolTip">
+            <string>New Problem Set</string>
+           </property>
+           <property name="text">
+            <string>New Problem Set</string>
+           </property>
+           <property name="icon">
+            <iconset resource="icons.qrc">
+             <normaloff>:/icons/images/newlook24/050-newsrc.png</normaloff>:/icons/images/newlook24/050-newsrc.png</iconset>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QToolButton" name="btnAddProblem">
+           <property name="toolTip">
+            <string>Add Problem</string>
+           </property>
+           <property name="text">
+            <string>Add Problem</string>
+           </property>
+           <property name="icon">
+            <iconset resource="icons.qrc">
+             <normaloff>:/icons/images/newlook24/002-add.png</normaloff>:/icons/images/newlook24/002-add.png</iconset>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QToolButton" name="btnRemoveProblem">
+           <property name="toolTip">
+            <string>Remove Problem</string>
+           </property>
+           <property name="text">
+            <string>Remove Problem</string>
+           </property>
+           <property name="icon">
+            <iconset resource="icons.qrc">
+             <normaloff>:/icons/images/newlook24/008-close.png</normaloff>:/icons/images/newlook24/008-close.png</iconset>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QToolButton" name="btnSaveProblemSet">
+           <property name="toolTip">
+            <string>Save Problem Set</string>
+           </property>
+           <property name="text">
+            <string>Save Problem Set</string>
+           </property>
+           <property name="icon">
+            <iconset resource="icons.qrc">
+             <normaloff>:/icons/images/newlook24/072-saveas.png</normaloff>:/icons/images/newlook24/072-saveas.png</iconset>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QToolButton" name="btnLoadProblemSet">
+           <property name="toolTip">
+            <string>Load Problem Set</string>
+           </property>
+           <property name="text">
+            <string>Load Problem Set</string>
+           </property>
+           <property name="icon">
+            <iconset resource="icons.qrc">
+             <normaloff>:/icons/images/newlook24/053-open.png</normaloff>:/icons/images/newlook24/053-open.png</iconset>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_3">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item>
+       <widget class="QListView" name="lstProblemSet">
+        <property name="alternatingRowColors">
+         <bool>true</bool>
+        </property>
+        <property name="selectionBehavior">
+         <enum>QAbstractItemView::SelectRows</enum>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </widget>
+  </widget>
+  <widget class="QDockWidget" name="dockMessages">
+   <property name="features">
+    <set>QDockWidget::DockWidgetClosable|QDockWidget::DockWidgetMovable</set>
+   </property>
+   <property name="allowedAreas">
+    <set>Qt::BottomDockWidgetArea|Qt::LeftDockWidgetArea|Qt::RightDockWidgetArea</set>
+   </property>
+   <property name="windowTitle">
+    <string>Messages</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>8</number>
+   </attribute>
+   <widget class="QTabWidget" name="tabMessages">
+    <property name="sizePolicy">
+     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+      <horstretch>0</horstretch>
+      <verstretch>0</verstretch>
+     </sizepolicy>
+    </property>
+    <property name="tabPosition">
+     <enum>QTabWidget::South</enum>
+    </property>
+    <property name="currentIndex">
+     <number>6</number>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>16</width>
+      <height>16</height>
+     </size>
+    </property>
+    <widget class="QWidget" name="tabIssues">
+     <attribute name="icon">
+      <iconset>
+       <normalon>:/icons/images/newlook24/013-compile.png</normalon>
+      </iconset>
+     </attribute>
+     <attribute name="title">
+      <string>Issues</string>
+     </attribute>
+     <layout class="QHBoxLayout" name="horizontalLayout_3">
+      <property name="leftMargin">
+       <number>5</number>
+      </property>
+      <property name="topMargin">
+       <number>5</number>
+      </property>
+      <property name="rightMargin">
+       <number>5</number>
+      </property>
+      <property name="bottomMargin">
+       <number>5</number>
+      </property>
+      <item>
+       <widget class="IssuesTable" name="tableIssues">
+        <property name="font">
+         <font>
+          <weight>50</weight>
+          <bold>false</bold>
+         </font>
+        </property>
+        <property name="editTriggers">
+         <set>QAbstractItemView::NoEditTriggers</set>
+        </property>
+        <property name="tabKeyNavigation">
+         <bool>false</bool>
+        </property>
+        <property name="showDropIndicator" stdset="0">
+         <bool>false</bool>
+        </property>
+        <property name="alternatingRowColors">
+         <bool>true</bool>
+        </property>
+        <property name="selectionMode">
+         <enum>QAbstractItemView::SingleSelection</enum>
+        </property>
+        <property name="selectionBehavior">
+         <enum>QAbstractItemView::SelectRows</enum>
+        </property>
+        <attribute name="horizontalHeaderStretchLastSection">
+         <bool>true</bool>
+        </attribute>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+    <widget class="QWidget" name="tabToolsOutput">
+     <attribute name="icon">
+      <iconset>
+       <normalon>:/icons/images/newlook24/015-compres.png</normalon>
+      </iconset>
+     </attribute>
+     <attribute name="title">
+      <string>Tools Output</string>
+     </attribute>
+     <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <property name="leftMargin">
+       <number>5</number>
+      </property>
+      <property name="topMargin">
+       <number>5</number>
+      </property>
+      <property name="rightMargin">
+       <number>5</number>
+      </property>
+      <property name="bottomMargin">
+       <number>5</number>
+      </property>
+      <item>
+       <widget class="QPlainTextEdit" name="txtToolsOutput">
+        <property name="undoRedoEnabled">
+         <bool>false</bool>
+        </property>
+        <property name="lineWrapMode">
+         <enum>QPlainTextEdit::NoWrap</enum>
+        </property>
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+        <property name="backgroundVisible">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+    <widget class="QWidget" name="tabDebug">
+     <attribute name="icon">
+      <iconset>
+       <normalon>:/icons/images/newlook24/020-debug.png</normalon>
+      </iconset>
+     </attribute>
+     <attribute name="title">
+      <string>Debug</string>
+     </attribute>
+     <layout class="QHBoxLayout" name="horizontalLayout_4">
+      <property name="spacing">
+       <number>7</number>
+      </property>
+      <property name="leftMargin">
+       <number>0</number>
+      </property>
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="rightMargin">
+       <number>0</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
+      <item>
+       <widget class="QSplitter" name="splitterDebug">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="handleWidth">
+         <number>3</number>
+        </property>
+        <widget class="QFrame" name="frmEvaluate">
+         <property name="frameShape">
+          <enum>QFrame::StyledPanel</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Raised</enum>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_2">
+          <property name="leftMargin">
+           <number>11</number>
+          </property>
+          <property name="topMargin">
+           <number>11</number>
+          </property>
+          <property name="rightMargin">
+           <number>11</number>
+          </property>
+          <property name="bottomMargin">
+           <number>11</number>
+          </property>
+          <item row="0" column="0">
+           <widget class="QLabel" name="lblEvaluate">
+            <property name="text">
+             <string>Evaluate:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QComboBox" name="cbEvaluate">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="editable">
+             <bool>true</bool>
+            </property>
+            <property name="insertPolicy">
+             <enum>QComboBox::InsertAtTop</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0" colspan="2">
+           <widget class="QPlainTextEdit" name="txtEvalOutput">
+            <property name="undoRedoEnabled">
+             <bool>false</bool>
+            </property>
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QTabWidget" name="debugViews">
+         <property name="tabPosition">
+          <enum>QTabWidget::North</enum>
+         </property>
+         <property name="currentIndex">
+          <number>4</number>
+         </property>
+         <widget class="QWidget" name="tabDebugConsole">
+          <attribute name="title">
+           <string>Debug Console</string>
+          </attribute>
+          <layout class="QHBoxLayout" name="horizontalLayout_6">
+           <property name="leftMargin">
+            <number>2</number>
+           </property>
+           <property name="topMargin">
+            <number>2</number>
+           </property>
+           <property name="rightMargin">
+            <number>2</number>
+           </property>
+           <property name="bottomMargin">
+            <number>2</number>
+           </property>
+           <item>
+            <widget class="QConsole" name="debugConsole">
+             <property name="frameShape">
+              <enum>QFrame::StyledPanel</enum>
+             </property>
+             <property name="frameShadow">
+              <enum>QFrame::Raised</enum>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="tabStackTrace">
+          <attribute name="title">
+           <string>Call Stack</string>
+          </attribute>
+          <layout class="QHBoxLayout" name="horizontalLayout_7">
+           <property name="leftMargin">
+            <number>2</number>
+           </property>
+           <property name="topMargin">
+            <number>2</number>
+           </property>
+           <property name="rightMargin">
+            <number>2</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+           <item>
+            <widget class="QTableView" name="tblStackTrace">
+             <property name="alternatingRowColors">
+              <bool>true</bool>
+             </property>
+             <property name="selectionMode">
+              <enum>QAbstractItemView::SingleSelection</enum>
+             </property>
+             <property name="selectionBehavior">
+              <enum>QAbstractItemView::SelectRows</enum>
+             </property>
+             <property name="textElideMode">
+              <enum>Qt::ElideNone</enum>
+             </property>
+             <attribute name="horizontalHeaderStretchLastSection">
+              <bool>true</bool>
+             </attribute>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="tabBreakpoints">
+          <attribute name="title">
+           <string>Breakpoints</string>
+          </attribute>
+          <layout class="QHBoxLayout" name="horizontalLayout_8">
+           <property name="leftMargin">
+            <number>2</number>
+           </property>
+           <property name="topMargin">
+            <number>2</number>
+           </property>
+           <property name="rightMargin">
+            <number>2</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+           <item>
+            <widget class="QTableView" name="tblBreakpoints">
+             <property name="alternatingRowColors">
+              <bool>true</bool>
+             </property>
+             <property name="selectionMode">
+              <enum>QAbstractItemView::SingleSelection</enum>
+             </property>
+             <property name="selectionBehavior">
+              <enum>QAbstractItemView::SelectRows</enum>
+             </property>
+             <property name="textElideMode">
+              <enum>Qt::ElideNone</enum>
+             </property>
+             <attribute name="horizontalHeaderStretchLastSection">
+              <bool>true</bool>
+             </attribute>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="tabLocals">
+          <attribute name="title">
+           <string>Locals</string>
+          </attribute>
+          <layout class="QHBoxLayout" name="horizontalLayout_9">
+           <property name="leftMargin">
+            <number>2</number>
+           </property>
+           <property name="topMargin">
+            <number>2</number>
+           </property>
+           <property name="rightMargin">
+            <number>2</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+           <item>
+            <widget class="QPlainTextEdit" name="txtLocals">
+             <property name="undoRedoEnabled">
+              <bool>false</bool>
+             </property>
+             <property name="readOnly">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="tabMemory">
+          <attribute name="title">
+           <string>Memory</string>
+          </attribute>
+          <layout class="QGridLayout" name="gridLayout">
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_3">
+             <property name="text">
+              <string>Address Expression:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0" colspan="2">
+            <widget class="QTableView" name="tblMemoryView">
+             <attribute name="horizontalHeaderVisible">
+              <bool>false</bool>
+             </attribute>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QComboBox" name="cbMemoryAddress">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="editable">
+              <bool>true</bool>
+             </property>
+             <property name="insertPolicy">
+              <enum>QComboBox::InsertAtTop</enum>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </widget>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+    <widget class="QWidget" name="tabSearch">
+     <attribute name="icon">
+      <iconset>
+       <normalon>:/icons/images/newlook24/074-search.png</normalon>
+      </iconset>
+     </attribute>
+     <attribute name="title">
+      <string>Search</string>
+     </attribute>
+     <layout class="QVBoxLayout" name="verticalLayout_4">
+      <item>
+       <widget class="QWidget" name="searchHistoryPanel" native="true">
+        <layout class="QHBoxLayout" name="horizontalLayout_11">
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="QLabel" name="label">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>History:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="cbSearchHistory">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>150</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="sizeAdjustPolicy">
+            <enum>QComboBox::AdjustToContents</enum>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="btnSearchAgain">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>Search Again</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item>
+       <widget class="QWidget" name="replacePanel" native="true">
+        <layout class="QHBoxLayout" name="horizontalLayout_12">
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="QLabel" name="label_2">
+           <property name="text">
+            <string>Replace with:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="cbReplaceInHistory">
+           <property name="minimumSize">
+            <size>
+             <width>150</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="editable">
+            <bool>true</bool>
+           </property>
+           <property name="insertPolicy">
+            <enum>QComboBox::InsertAtTop</enum>
+           </property>
+           <property name="sizeAdjustPolicy">
+            <enum>QComboBox::AdjustToContents</enum>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="btnReplace">
+           <property name="text">
+            <string>Replace</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="btnCancelReplace">
+           <property name="text">
+            <string>Cancel</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_2">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item>
+       <widget class="QTreeView" name="searchView">
+        <attribute name="headerVisible">
+         <bool>false</bool>
+        </attribute>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+    <widget class="QWidget" name="tabTODO">
+     <attribute name="icon">
+      <iconset resource="icons.qrc">
+       <normaloff>:/icons/images/newlook24/047-makefl.png</normaloff>:/icons/images/newlook24/047-makefl.png</iconset>
+     </attribute>
+     <attribute name="title">
+      <string>TODO</string>
+     </attribute>
+     <layout class="QHBoxLayout" name="horizontalLayout_5">
+      <item>
+       <widget class="QTableView" name="tableTODO">
+        <attribute name="horizontalHeaderStretchLastSection">
+         <bool>true</bool>
+        </attribute>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+    <widget class="QWidget" name="tabBookmark">
+     <attribute name="icon">
+      <iconset resource="icons.qrc">
+       <normaloff>:/icons/images/newlook24/039-gobook.png</normaloff>:/icons/images/newlook24/039-gobook.png</iconset>
+     </attribute>
+     <attribute name="title">
+      <string>Bookmark</string>
+     </attribute>
+     <layout class="QHBoxLayout" name="horizontalLayout_14">
+      <item>
+       <widget class="QTableView" name="tableBookmark">
+        <property name="alternatingRowColors">
+         <bool>true</bool>
+        </property>
+        <property name="selectionMode">
+         <enum>QAbstractItemView::SingleSelection</enum>
+        </property>
+        <property name="selectionBehavior">
+         <enum>QAbstractItemView::SelectRows</enum>
+        </property>
+        <attribute name="horizontalHeaderStretchLastSection">
+         <bool>true</bool>
+        </attribute>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+    <widget class="QWidget" name="tabProblem">
+     <attribute name="icon">
+      <iconset resource="icons.qrc">
+       <normaloff>:/icons/images/newlook24/015-compres.png</normaloff>:/icons/images/newlook24/015-compres.png</iconset>
+     </attribute>
+     <attribute name="title">
+      <string>Problem</string>
+     </attribute>
+     <layout class="QVBoxLayout" name="verticalLayout_8">
+      <property name="leftMargin">
+       <number>11</number>
+      </property>
+      <property name="topMargin">
+       <number>11</number>
+      </property>
+      <property name="rightMargin">
+       <number>11</number>
+      </property>
+      <property name="bottomMargin">
+       <number>11</number>
+      </property>
+      <item>
+       <widget class="QSplitter" name="splitterProblem">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <widget class="QWidget" name="widget_4" native="true">
+         <layout class="QVBoxLayout" name="verticalLayout_7">
+          <property name="spacing">
+           <number>3</number>
+          </property>
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QLabel" name="lblProblem">
+            <property name="frameShape">
+             <enum>QFrame::Box</enum>
+            </property>
+            <property name="text">
+             <string>Problem</string>
+            </property>
+            <property name="margin">
+             <number>5</number>
+            </property>
+            <property name="openExternalLinks">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QWidget" name="widget_3" native="true">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>0</height>
+             </size>
+            </property>
+            <layout class="QHBoxLayout" name="horizontalLayout_16">
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QWidget" name="widget_6" native="true">
+            <layout class="QHBoxLayout" name="horizontalLayout_17">
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <widget class="QToolButton" name="btnAddProblemCase">
+               <property name="toolTip">
+                <string>Add Probem Case</string>
+               </property>
+               <property name="text">
+                <string>Add Probem Case</string>
+               </property>
+               <property name="icon">
+                <iconset resource="icons.qrc">
+                 <normaloff>:/icons/images/newlook24/002-add.png</normaloff>:/icons/images/newlook24/002-add.png</iconset>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QToolButton" name="btnRemoveProblemCase">
+               <property name="toolTip">
+                <string>Remove Problem Case</string>
+               </property>
+               <property name="text">
+                <string>Remove Problem Case</string>
+               </property>
+               <property name="icon">
+                <iconset resource="icons.qrc">
+                 <normaloff>:/icons/images/newlook24/008-close.png</normaloff>:/icons/images/newlook24/008-close.png</iconset>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QToolButton" name="btnOpenProblemAnswer">
+               <property name="toolTip">
+                <string>Open Anwser Source File</string>
+               </property>
+               <property name="text">
+                <string>Open Anwser Source File</string>
+               </property>
+               <property name="icon">
+                <iconset resource="icons.qrc">
+                 <normaloff>:/icons/images/newlook24/091-openproblemanswer.png</normaloff>:/icons/images/newlook24/091-openproblemanswer.png</iconset>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="Line" name="line">
+               <property name="orientation">
+                <enum>Qt::Vertical</enum>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QToolButton" name="btnRunAllProblemCases">
+               <property name="toolTip">
+                <string>Run All Cases</string>
+               </property>
+               <property name="text">
+                <string>Run All Cases</string>
+               </property>
+               <property name="icon">
+                <iconset resource="icons.qrc">
+                 <normaloff>:/icons/images/newlook24/092-runallproblemcases.png</normaloff>:/icons/images/newlook24/092-runallproblemcases.png</iconset>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QToolButton" name="btnCaseValidateOptions">
+               <property name="text">
+                <string>Problem Cases Validation Options</string>
+               </property>
+               <property name="icon">
+                <iconset resource="icons.qrc">
+                 <normaloff>:/icons/images/newlook24/083-toolbar.png</normaloff>:/icons/images/newlook24/083-toolbar.png</iconset>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_4">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <widget class="QProgressBar" name="pbProblemCases">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="maximum">
+                <number>0</number>
+               </property>
+               <property name="value">
+                <number>0</number>
+               </property>
+               <property name="format">
+                <string>%v/%m</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QTableView" name="tblProblemCases">
+            <property name="alternatingRowColors">
+             <bool>true</bool>
+            </property>
+            <property name="selectionMode">
+             <enum>QAbstractItemView::SingleSelection</enum>
+            </property>
+            <property name="selectionBehavior">
+             <enum>QAbstractItemView::SelectRows</enum>
+            </property>
+            <attribute name="horizontalHeaderDefaultSectionSize">
+             <number>200</number>
+            </attribute>
+            <attribute name="horizontalHeaderStretchLastSection">
+             <bool>true</bool>
+            </attribute>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="widget_5" native="true">
+         <layout class="QGridLayout" name="gridLayout_3">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item row="2" column="1">
+           <widget class="LineNumberTextEditor" name="txtProblemCaseOutput">
+            <property name="lineWrapMode">
+             <enum>QPlainTextEdit::NoWrap</enum>
+            </property>
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QWidget" name="widget_7" native="true">
+            <layout class="QGridLayout" name="gridLayout_4">
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item row="0" column="1">
+              <widget class="QLineEdit" name="txtProblemCaseInputFileName">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
+               <property name="readOnly">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_4">
+               <property name="text">
+                <string>Input</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="3">
+              <widget class="QToolButton" name="btnProblemCaseInputFileName">
+               <property name="toolTip">
+                <string>Choose Input File</string>
+               </property>
+               <property name="text">
+                <string>Choose Input File</string>
+               </property>
+               <property name="icon">
+                <iconset resource="icons.qrc">
+                 <normaloff>:/icons/images/newlook24/053-open.png</normaloff>:/icons/images/newlook24/053-open.png</iconset>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="2">
+              <widget class="QToolButton" name="btnProblemCaseClearInputFileName">
+               <property name="text">
+                <string>Clear</string>
+               </property>
+               <property name="icon">
+                <iconset resource="icons.qrc">
+                 <normaloff>:/icons/images/newlook24/008-close.png</normaloff>:/icons/images/newlook24/008-close.png</iconset>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLabel" name="label_6">
+            <property name="text">
+             <string>Output</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QWidget" name="widget_8" native="true">
+            <layout class="QHBoxLayout" name="horizontalLayout_18">
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <widget class="QLabel" name="label_5">
+               <property name="text">
+                <string>Expected</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLineEdit" name="txtProblemCaseExpectedOutputFileName">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
+               <property name="readOnly">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QToolButton" name="btnProblemCaseClearExpectedOutputFileName">
+               <property name="toolTip">
+                <string>Clear</string>
+               </property>
+               <property name="text">
+                <string>Clear</string>
+               </property>
+               <property name="icon">
+                <iconset resource="icons.qrc">
+                 <normaloff>:/icons/images/newlook24/008-close.png</normaloff>:/icons/images/newlook24/008-close.png</iconset>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QToolButton" name="btnProblemCaseExpectedOutputFileName">
+               <property name="text">
+                <string>...</string>
+               </property>
+               <property name="icon">
+                <iconset resource="icons.qrc">
+                 <normaloff>:/icons/images/newlook24/053-open.png</normaloff>:/icons/images/newlook24/053-open.png</iconset>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item row="2" column="2">
+           <widget class="LineNumberTextEditor" name="txtProblemCaseExpected">
+            <property name="lineWrapMode">
+             <enum>QPlainTextEdit::NoWrap</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="LineNumberTextEditor" name="txtProblemCaseInput">
+            <property name="lineWrapMode">
+             <enum>QPlainTextEdit::NoWrap</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="2">
+           <widget class="QLabel" name="lblProblemCaseExpected">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QLabel" name="lblProblemCaseOutput">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="lblProblemCaseInput">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </widget>
   </widget>
   <action name="actionNew">
    <property name="icon">

@@ -442,10 +442,6 @@ private slots:
 
     void on_tabInfos_tabBarClicked(int index);
 
-    void on_splitterInfos_splitterMoved(int pos, int index);
-
-    void on_splitterMessages_splitterMoved(int pos, int index);
-
     void on_EditorTabsLeft_tabBarDoubleClicked(int index);
     void on_EditorTabsRight_tabBarDoubleClicked(int index);
 
@@ -674,6 +670,10 @@ private slots:
 
     void on_actionCompiler_Options_triggered();
 
+    void on_dockFiles_dockLocationChanged(const Qt::DockWidgetArea &area);
+
+    void on_dockMessages_dockLocationChanged(const Qt::DockWidgetArea &area);
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;
@@ -720,12 +720,6 @@ private:
     int mOJProblemSetNameCounter;
 
     bool mCheckSyntaxInBack;
-    bool mOpenClosingBottomPanel;
-    int mBottomPanelHeight;
-    bool mBottomPanelOpenned;
-    bool mOpenClosingLeftPanel;
-    int mLeftPanelWidth;
-    bool mLeftPanelOpenned;
     bool mShouldRemoveAllSettings;
     PCompileSuccessionTask mCompileSuccessionTask;
 
