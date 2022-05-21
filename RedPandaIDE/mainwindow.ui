@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1114</width>
-    <height>627</height>
+    <width>945</width>
+    <height>619</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -116,7 +116,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1114</width>
+     <width>945</width>
      <height>26</height>
     </rect>
    </property>
@@ -829,14 +829,8 @@
    </widget>
   </widget>
   <widget class="QDockWidget" name="dockMessages">
-   <property name="minimumSize">
-    <size>
-     <width>818</width>
-     <height>235</height>
-    </size>
-   </property>
    <property name="features">
-    <set>QDockWidget::DockWidgetMovable</set>
+    <set>QDockWidget::DockWidgetMovable|QDockWidget::DockWidgetVerticalTitleBar</set>
    </property>
    <property name="allowedAreas">
     <set>Qt::BottomDockWidgetArea|Qt::LeftDockWidgetArea|Qt::RightDockWidgetArea</set>
@@ -858,7 +852,7 @@
      <enum>QTabWidget::South</enum>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>4</number>
     </property>
     <property name="iconSize">
      <size>

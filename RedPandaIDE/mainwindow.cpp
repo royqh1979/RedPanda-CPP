@@ -4935,6 +4935,9 @@ void MainWindow::on_tabMessages_tabBarClicked(int index)
 {
     if (index == ui->tabMessages->currentIndex()) {
         ui->tabMessages->toggleShrined();
+        if (!ui->tabMessages->isShrinked()) {
+            resizeDocks({ui->dockMessages},{ui->tabMessages->beforeShrinkWidthOrHeight()},ui->tabMessages->shrinkOrientation());
+        }
     }
 }
 
@@ -5366,9 +5369,10 @@ void MainWindow::on_actionForward_triggered()
 void MainWindow::on_tabInfos_tabBarClicked(int index)
 {
     if (index == ui->tabInfos->currentIndex()) {
-        int width = ui->tabInfos->tabBar()->width();
         ui->tabInfos->toggleShrined();
-//        openCloseLeftPanel(!mLeftPanelOpenned);
+        if (!ui->tabInfos->isShrinked()) {
+            resizeDocks({ui->dockInfos},{ui->tabInfos->beforeShrinkWidthOrHeight()},ui->tabInfos->shrinkOrientation());
+        }
     }
 }
 
@@ -7703,19 +7707,17 @@ void MainWindow::on_dockInfos_dockLocationChanged(const Qt::DockWidgetArea &area
 
 void MainWindow::on_dockMessages_dockLocationChanged(const Qt::DockWidgetArea &area)
 {
-    qDebug()<<"-----";
-    qDebug()<<ui->dockMessages->minimumSize();
-    qDebug()<<ui->tabMessages->minimumSize();
-    qDebug()<<ui->tabMessages->minimumSizeHint();
     switch(area) {
     case Qt::DockWidgetArea::BottomDockWidgetArea:
     case Qt::DockWidgetArea::TopDockWidgetArea:
         ui->splitterDebug->setOrientation(Qt::Orientation::Horizontal);
         ui->splitterProblem->setOrientation(Qt::Orientation::Horizontal);
+        ui->dockMessages->setFeatures( ui->dockMessages->features() | QDockWidget::DockWidgetVerticalTitleBar);
         break;
     default:
         ui->splitterDebug->setOrientation(Qt::Orientation::Vertical);
         ui->splitterProblem->setOrientation(Qt::Orientation::Vertical);
+        ui->dockMessages->setFeatures( ui->dockMessages->features() & ~QDockWidget::DockWidgetVerticalTitleBar);
     }
     switch(area) {
     case Qt::DockWidgetArea::BottomDockWidgetArea:
@@ -7734,8 +7736,5 @@ void MainWindow::on_dockMessages_dockLocationChanged(const Qt::DockWidgetArea &a
     default:
         break;
     }
-    qDebug()<<ui->dockMessages->minimumSize();
-    qDebug()<<ui->tabMessages->minimumSize();
-    qDebug()<<ui->tabMessages->minimumSizeHint();
 }
 

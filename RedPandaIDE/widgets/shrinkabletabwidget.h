@@ -26,7 +26,11 @@ public:
     ShrinkableTabWidget(QWidget* parent=nullptr);
 
     void setShrinked(bool shrinked);
+    bool isShrinked() const;
     void toggleShrined();
+    QSize beforeShrinkSize();
+    int beforeShrinkWidthOrHeight();
+    Qt::Orientation shrinkOrientation();
 
     // QWidget interface
 public:
@@ -34,7 +38,7 @@ public:
     QSize minimumSizeHint() const;
 private:
     bool mShrinked;
-    QSize mBeforeShrinkSize;
+    static QHash<const ShrinkableTabWidget*,QSize> BeforeShrinkSizes;
 };
 
 #endif // SHRINKABLETABWIDGET_H
