@@ -5,6 +5,8 @@ Red Panda C++ Version 1.0.9
   - fix: copy & paste in column mode not correctly handled
   - fix: crash when project name is selected in the project view and try create new project file
   - change: panels can be relocated
+  - fix: tab icon not correct restore when hide and show a panel
+  - fix: the hiding state of the tools output panel is not correctly saved
 
 Red Panda C++ Version 1.0.8
   - enhancement: auto complete '#undef'

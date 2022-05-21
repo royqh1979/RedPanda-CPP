@@ -1899,12 +1899,13 @@ void MainWindow::openCloseBottomPanel(bool open)
 //    }
 //    mBottomPanelOpenned = open;
 //    QSplitterHandle* handle = ui->splitterMessages->handle(1);
-//    handle->setEnabled(mBottomPanelOpenned);
+    //    handle->setEnabled(mBottomPanelOpenned);
 }
+
 
 void MainWindow::openCloseLeftPanel(bool open)
 {
-    ui->dockFiles->setVisible(open);
+    ui->dockInfos->setVisible(open);
 //    if (mOpenClosingLeftPanel)
 //        return;
 //    mOpenClosingLeftPanel = true;
@@ -2712,7 +2713,7 @@ void MainWindow::buildEncodingMenu()
 
 void MainWindow::maximizeEditor()
 {
-    if (ui->dockFiles->isVisible() || ui->dockMessages->isVisible()) {
+    if (ui->dockInfos->isVisible() || ui->dockMessages->isVisible()) {
         openCloseBottomPanel(false);
         openCloseLeftPanel(false);
     } else {
@@ -4319,6 +4320,7 @@ void MainWindow::closeEvent(QCloseEvent *event) {
         settings.setShowProblemSet(ui->actionProblem_Set->isChecked());
 
         settings.setShowIssues(ui->actionIssues->isChecked());
+        settings.setShowCompileLog(ui->actionTools_Output->isChecked());
         settings.setShowDebug(ui->actionDebug_Window->isChecked());
         settings.setShowSearch(ui->actionSearch->isChecked());
         settings.setShowTODO(ui->actionTODO->isChecked());
@@ -4932,7 +4934,7 @@ void MainWindow::on_actionConvert_to_UTF_8_triggered()
 void MainWindow::on_tabMessages_tabBarClicked(int index)
 {
     if (index == ui->tabMessages->currentIndex()) {
-//        openCloseBottomPanel(!mBottomPanelOpenned);
+        ui->tabMessages->toggleShrined();
     }
 }
 
@@ -5364,6 +5366,8 @@ void MainWindow::on_actionForward_triggered()
 void MainWindow::on_tabInfos_tabBarClicked(int index)
 {
     if (index == ui->tabInfos->currentIndex()) {
+        int width = ui->tabInfos->tabBar()->width();
+        ui->tabInfos->toggleShrined();
 //        openCloseLeftPanel(!mLeftPanelOpenned);
     }
 }
@@ -5879,6 +5883,12 @@ void MainWindow::showHideInfosTab(QWidget *widget, bool show)
     int idx = findTabIndex(ui->tabInfos,widget);
     if (idx>=0) {
         if (!show) {
+            if (mTabInfosData.contains(widget)) {
+                PTabWidgetInfo info = mTabInfosData[widget];
+                info->icon = ui->tabInfos->tabIcon(idx);
+                info->text = ui->tabInfos->tabText(idx);
+            }
+
             ui->tabInfos->removeTab(idx);
         }
     } else {
@@ -5907,6 +5917,11 @@ void MainWindow::showHideMessagesTab(QWidget *widget, bool show)
     int idx = findTabIndex(ui->tabMessages,widget);
     if (idx>=0) {
         if (!show) {
+            if (mTabMessagesData.contains(widget)) {
+                PTabWidgetInfo info = mTabMessagesData[widget];
+                info->icon = ui->tabMessages->tabIcon(idx);
+                info->text = ui->tabMessages->tabText(idx);
+            }
             ui->tabMessages->removeTab(idx);
         }
     } else {
@@ -7667,7 +7682,7 @@ void MainWindow::on_actionCompiler_Options_triggered()
 }
 
 
-void MainWindow::on_dockFiles_dockLocationChanged(const Qt::DockWidgetArea &area)
+void MainWindow::on_dockInfos_dockLocationChanged(const Qt::DockWidgetArea &area)
 {
     switch(area) {
     case Qt::DockWidgetArea::BottomDockWidgetArea:
@@ -7688,6 +7703,10 @@ void MainWindow::on_dockFiles_dockLocationChanged(const Qt::DockWidgetArea &area
 
 void MainWindow::on_dockMessages_dockLocationChanged(const Qt::DockWidgetArea &area)
 {
+    qDebug()<<"-----";
+    qDebug()<<ui->dockMessages->minimumSize();
+    qDebug()<<ui->tabMessages->minimumSize();
+    qDebug()<<ui->tabMessages->minimumSizeHint();
     switch(area) {
     case Qt::DockWidgetArea::BottomDockWidgetArea:
     case Qt::DockWidgetArea::TopDockWidgetArea:
@@ -7702,16 +7721,21 @@ void MainWindow::on_dockMessages_dockLocationChanged(const Qt::DockWidgetArea &a
     case Qt::DockWidgetArea::BottomDockWidgetArea:
     case Qt::DockWidgetArea::TopDockWidgetArea:
         ui->tabMessages->setTabPosition(QTabWidget::TabPosition::South);
+        ui->debugViews->setTabPosition(QTabWidget::TabPosition::South);
         break;
     case Qt::DockWidgetArea::LeftDockWidgetArea:
         ui->tabMessages->setTabPosition(QTabWidget::TabPosition::West);
+        ui->debugViews->setTabPosition(QTabWidget::TabPosition::West);
         break;
     case Qt::DockWidgetArea::RightDockWidgetArea:
         ui->tabMessages->setTabPosition(QTabWidget::TabPosition::East);
+        ui->debugViews->setTabPosition(QTabWidget::TabPosition::East);
         break;
     default:
         break;
     }
-
+    qDebug()<<ui->dockMessages->minimumSize();
+    qDebug()<<ui->tabMessages->minimumSize();
+    qDebug()<<ui->tabMessages->minimumSizeHint();
 }
 

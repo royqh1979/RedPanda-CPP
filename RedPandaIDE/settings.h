@@ -67,6 +67,7 @@ private:
         explicit _Base(Settings* settings, const QString& groupName);
         void beginGroup();
         void endGroup();
+        void remove(const QString &key);
         void saveValue(const QString &key, const QVariant &value);
         QVariant value(const QString &key, const QVariant& defaultValue);
         bool boolValue(const QString &key, bool defaultValue);
@@ -930,16 +931,8 @@ public:
         const QByteArray &mainWindowGeometry() const;
         void setMainWindowGeometry(const QByteArray &newMainWindowGeometry);
 
-        bool bottomPanelOpenned() const;
-        void setBottomPanelOpenned(bool newBottomPanelOpenned);
-        int bottomPanelHeight() const;
-        void setBottomPanelHeight(int newBottomPanelHeight);
         int bottomPanelIndex() const;
         void setBottomPanelIndex(int newBottomPanelIndex);
-        bool leftPanelOpenned() const;
-        void setLeftPanelOpenned(bool newLeftPanelOpenned);
-        int leftPanelWidth() const;
-        void setLeftPanelWidth(int newLeftPanelWidth);
         int leftPanelIndex() const;
         void setLeftPanelIndex(int newLeftPanelIndex);
 
@@ -1036,11 +1029,7 @@ public:
     private:
         QByteArray mMainWindowState;
         QByteArray mMainWindowGeometry;
-        bool mBottomPanelOpenned;
-        int mBottomPanelHeight;
         int mBottomPanelIndex;
-        bool mLeftPanelOpenned;
-        int mLeftPanelWidth;
         int mLeftPanelIndex;
         bool mClassBrowserSortAlpha;
         bool mClassBrowserSortType;
@@ -1348,6 +1337,7 @@ public:
     Settings& operator= (const Settings&& settings) = delete;
     void beginGroup(const QString& group);
     void endGroup();
+    void remove(const QString &key);
     void saveValue(const QString& group, const QString &key, const QVariant &value);
     void saveValue(const QString &key, const QVariant &value);
     QVariant value(const QString& group, const QString &key, const QVariant& defaultValue);

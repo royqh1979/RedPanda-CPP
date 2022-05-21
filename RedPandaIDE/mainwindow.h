@@ -670,7 +670,7 @@ private slots:
 
     void on_actionCompiler_Options_triggered();
 
-    void on_dockFiles_dockLocationChanged(const Qt::DockWidgetArea &area);
+    void on_dockInfos_dockLocationChanged(const Qt::DockWidgetArea &area);
 
     void on_dockMessages_dockLocationChanged(const Qt::DockWidgetArea &area);
 

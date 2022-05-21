@@ -408,7 +408,7 @@ QVariant OJProblemModel::data(const QModelIndex &index, int role) const
              POJProblemCase problemCase = mProblem->cases[index.row()];
              if (problemCase->testState == ProblemCaseTestState::Passed
                      || problemCase->testState == ProblemCaseTestState::Failed)
-                 return problemCase->runningTime/1000.0;
+                 return problemCase->runningTime;
              else
                  return "";
         }
@@ -456,7 +456,7 @@ QVariant OJProblemModel::headerData(int section, Qt::Orientation orientation, in
         case 0:
             return tr("Name");
         case 1:
-            return tr("Time(sec)");
+            return tr("Time(ms)");
         }
     }
     return QVariant();

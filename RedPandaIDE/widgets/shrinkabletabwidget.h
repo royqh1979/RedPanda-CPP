@@ -14,33 +14,27 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef CHOOSETHEMEDIALOG_H
-#define CHOOSETHEMEDIALOG_H
+#ifndef SHRINKABLETABWIDGET_H
+#define SHRINKABLETABWIDGET_H
 
-#include <QDialog>
+#include <QTabWidget>
 
-namespace Ui {
-class ChooseThemeDialog;
-}
-
-class ChooseThemeDialog : public QDialog
+class ShrinkableTabWidget : public QTabWidget
 {
     Q_OBJECT
-
 public:
-    enum class Theme {
-        Dark,
-        Light
-    };
-    explicit ChooseThemeDialog(QWidget *parent = nullptr);
-    ~ChooseThemeDialog();
-    Theme theme();
+    ShrinkableTabWidget(QWidget* parent=nullptr);
 
-private slots:
-    void on_btnOk_clicked();
+    void setShrinked(bool shrinked);
+    void toggleShrined();
 
+    // QWidget interface
+public:
+    QSize sizeHint() const;
+    QSize minimumSizeHint() const;
 private:
-    Ui::ChooseThemeDialog *ui;
+    bool mShrinked;
+    QSize mBeforeShrinkSize;
 };
 
-#endif // CHOOSETHEMEDIALOG_H
+#endif // SHRINKABLETABWIDGET_H

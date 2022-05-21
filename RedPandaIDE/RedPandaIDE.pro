@@ -185,6 +185,7 @@ SOURCES += \
     widgets/searchdialog.cpp \
     widgets/searchresultview.cpp \
     widgets/shortcutinputedit.cpp \
+    widgets/shrinkabletabwidget.cpp \
     widgets/signalmessagedialog.cpp
 
 HEADERS += \
@@ -334,6 +335,7 @@ HEADERS += \
     widgets/searchdialog.h \
     widgets/searchresultview.h \
     widgets/shortcutinputedit.h \
+    widgets/shrinkabletabwidget.h \
     widgets/signalmessagedialog.h
 
 FORMS += \

@@ -87,13 +87,16 @@
             <string/>
            </property>
            <property name="suffix">
-            <string>Sec</string>
+            <string>ms</string>
            </property>
            <property name="minimum">
-            <number>1</number>
+            <number>100</number>
            </property>
            <property name="maximum">
-            <number>10000</number>
+            <number>1000000</number>
+           </property>
+           <property name="singleStep">
+            <number>50</number>
            </property>
           </widget>
          </item>

@@ -67,6 +67,11 @@ void Settings::endGroup()
     mSettings.endGroup();
 }
 
+void Settings::remove(const QString &key)
+{
+    mSettings.remove(key);
+}
+
 void Settings::saveValue(const QString& group, const QString &key, const QVariant &value) {
     mSettings.beginGroup(group);
     auto act = finally([this] {
@@ -286,6 +291,11 @@ void Settings::_Base::beginGroup()
 void Settings::_Base::endGroup()
 {
     mSettings->endGroup();
+}
+
+void Settings::_Base::remove(const QString &key)
+{
+    mSettings->remove(key);
 }
 
 void Settings::_Base::saveValue(const QString &key, const QVariant &value)
@@ -3177,7 +3187,8 @@ void Settings::Executor::doSave()
     saveValue("case_editor_font_name",mCaseEditorFontName);
     saveValue("case_editor_font_size",mCaseEditorFontSize);
     saveValue("case_editor_font_only_monospaced",mCaseEditorFontOnlyMonospaced);
-    saveValue("case_timeout", mCaseTimeout);
+    saveValue("case_timeout_ms", mCaseTimeout);
+    remove("case_timeout");
     saveValue("enable_case_timeout", mEnableCaseTimeout);
 }
 
@@ -3211,7 +3222,11 @@ void Settings::Executor::doLoad()
 #endif
     mCaseEditorFontSize = intValue("case_editor_font_size",12);
     mCaseEditorFontOnlyMonospaced = boolValue("case_editor_font_only_monospaced",true);
-    mCaseTimeout = intValue("case_timeout", 2);
+    int case_timeout = intValue("case_timeout", -1);
+    if (case_timeout>0)
+        mCaseTimeout = case_timeout*1000;
+    else
+        mCaseTimeout = intValue("case_timeout_ms", 2000);
     mEnableCaseTimeout = boolValue("enable_case_timeout", true);
 }
 
@@ -4627,26 +4642,6 @@ void Settings::UI::setMainWindowGeometry(const QByteArray &newMainWindowGeometry
     mMainWindowGeometry = newMainWindowGeometry;
 }
 
-bool Settings::UI::bottomPanelOpenned() const
-{
-    return mBottomPanelOpenned;
-}
-
-void Settings::UI::setBottomPanelOpenned(bool newBottomPanelOpenned)
-{
-    mBottomPanelOpenned = newBottomPanelOpenned;
-}
-
-int Settings::UI::bottomPanelHeight() const
-{
-    return mBottomPanelHeight;
-}
-
-void Settings::UI::setBottomPanelHeight(int newBottomPanelHeight)
-{
-    mBottomPanelHeight = newBottomPanelHeight;
-}
-
 int Settings::UI::bottomPanelIndex() const
 {
     return mBottomPanelIndex;
@@ -4655,26 +4650,6 @@ int Settings::UI::bottomPanelIndex() const
 void Settings::UI::setBottomPanelIndex(int newBottomPanelIndex)
 {
     mBottomPanelIndex = newBottomPanelIndex;
-}
-
-bool Settings::UI::leftPanelOpenned() const
-{
-    return mLeftPanelOpenned;
-}
-
-void Settings::UI::setLeftPanelOpenned(bool newLeftPanelOpenned)
-{
-    mLeftPanelOpenned = newLeftPanelOpenned;
-}
-
-int Settings::UI::leftPanelWidth() const
-{
-    return mLeftPanelWidth;
-}
-
-void Settings::UI::setLeftPanelWidth(int newLeftPanelWidth)
-{
-    mLeftPanelWidth = newLeftPanelWidth;
 }
 
 int Settings::UI::leftPanelIndex() const
@@ -5001,11 +4976,7 @@ void Settings::UI::doSave()
 {
     saveValue("main_window_state",mMainWindowState);
     saveValue("main_window_geometry",mMainWindowGeometry);
-    saveValue("bottom_panel_openned",mBottomPanelOpenned);
-    saveValue("bottom_panel_height",mBottomPanelHeight);
     saveValue("bottom_panel_index",mBottomPanelIndex);
-    saveValue("left_panel_openned",mLeftPanelOpenned);
-    saveValue("left_panel_width",mLeftPanelWidth);
     saveValue("left_panel_index",mLeftPanelIndex);
     saveValue("class_browser_sort_alphabetically",mClassBrowserSortAlpha);
     saveValue("class_browser_sort_by_type",mClassBrowserSortType);
@@ -5049,11 +5020,7 @@ void Settings::UI::doLoad()
 {
     mMainWindowState = value("main_window_state",QByteArray()).toByteArray();
     mMainWindowGeometry = value("main_window_geometry",QByteArray()).toByteArray();
-    mBottomPanelOpenned = boolValue("bottom_panel_openned",false);
-    mBottomPanelHeight = intValue("bottom_panel_height",220);
     mBottomPanelIndex = intValue("bottom_panel_index",0);
-    mLeftPanelOpenned = boolValue("left_panel_openned",true);
-    mLeftPanelWidth = intValue("left_panel_width",250);
     mLeftPanelIndex = intValue("left_panel_index",0);
     mClassBrowserSortAlpha = boolValue("class_browser_sort_alphabetically",true);
     mClassBrowserSortType = boolValue("class_browser_sort_by_type",true);

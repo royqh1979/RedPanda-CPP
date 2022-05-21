@@ -433,9 +433,9 @@
    </attribute>
    <addaction name="actionCompiler_Options"/>
   </widget>
-  <widget class="QDockWidget" name="dockFiles">
+  <widget class="QDockWidget" name="dockInfos">
    <property name="features">
-    <set>QDockWidget::DockWidgetClosable|QDockWidget::DockWidgetMovable</set>
+    <set>QDockWidget::DockWidgetMovable</set>
    </property>
    <property name="allowedAreas">
     <set>Qt::BottomDockWidgetArea|Qt::LeftDockWidgetArea|Qt::RightDockWidgetArea</set>
@@ -446,7 +446,7 @@
    <attribute name="dockWidgetArea">
     <number>1</number>
    </attribute>
-   <widget class="QTabWidget" name="tabInfos">
+   <widget class="ShrinkableTabWidget" name="tabInfos">
     <property name="sizePolicy">
      <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
       <horstretch>0</horstretch>
@@ -457,7 +457,7 @@
      <enum>QTabWidget::West</enum>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>1</number>
     </property>
     <property name="usesScrollButtons">
      <bool>true</bool>
@@ -829,8 +829,14 @@
    </widget>
   </widget>
   <widget class="QDockWidget" name="dockMessages">
+   <property name="minimumSize">
+    <size>
+     <width>818</width>
+     <height>235</height>
+    </size>
+   </property>
    <property name="features">
-    <set>QDockWidget::DockWidgetClosable|QDockWidget::DockWidgetMovable</set>
+    <set>QDockWidget::DockWidgetMovable</set>
    </property>
    <property name="allowedAreas">
     <set>Qt::BottomDockWidgetArea|Qt::LeftDockWidgetArea|Qt::RightDockWidgetArea</set>
@@ -841,7 +847,7 @@
    <attribute name="dockWidgetArea">
     <number>8</number>
    </attribute>
-   <widget class="QTabWidget" name="tabMessages">
+   <widget class="ShrinkableTabWidget" name="tabMessages">
     <property name="sizePolicy">
      <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
       <horstretch>0</horstretch>
@@ -852,7 +858,7 @@
      <enum>QTabWidget::South</enum>
     </property>
     <property name="currentIndex">
-     <number>6</number>
+     <number>0</number>
     </property>
     <property name="iconSize">
      <size>
@@ -1048,7 +1054,7 @@
           <enum>QTabWidget::North</enum>
          </property>
          <property name="currentIndex">
-          <number>4</number>
+          <number>0</number>
          </property>
          <widget class="QWidget" name="tabDebugConsole">
           <attribute name="title">
@@ -3068,6 +3074,12 @@
    <class>LineNumberTextEditor</class>
    <extends>QPlainTextEdit</extends>
    <header location="global">widgets/linenumbertexteditor.h</header>
+  </customwidget>
+  <customwidget>
+   <class>ShrinkableTabWidget</class>
+   <extends>QTabWidget</extends>
+   <header location="global">widgets/shrinkabletabwidget.h</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources>

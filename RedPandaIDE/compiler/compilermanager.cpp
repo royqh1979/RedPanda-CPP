@@ -316,7 +316,7 @@ void CompilerManager::runProblem(const QString &filename, const QString &argumen
     OJProblemCasesRunner * execRunner = new OJProblemCasesRunner(filename,arguments,workDir,problemCases);
     mRunner = execRunner;
     if (pSettings->executor().enableCaseTimeout())
-        execRunner->setExecTimeout(pSettings->executor().caseTimeout()*1000);
+        execRunner->setExecTimeout(pSettings->executor().caseTimeout());
     connect(mRunner, &Runner::finished, this ,&CompilerManager::onRunnerTerminated);
     connect(mRunner, &Runner::finished, pMainWindow ,&MainWindow::onRunProblemFinished);
     connect(mRunner, &Runner::runErrorOccurred, pMainWindow ,&MainWindow::onRunErrorOccured);
