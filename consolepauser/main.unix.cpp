@@ -109,7 +109,9 @@ int ExecuteCommand(vector<string>& command,bool reInp) {
         if (result) {
             printf("Failed to start command %s %s!\n",path_to_command.c_str(), file.c_str());
             printf("errno %d: %s\n",errno,strerror(errno));
-            printf("current dir: %s",get_current_dir_name());
+            char* current_dir = getcwd(nullptr, 0);
+            printf("current dir: %s",current_dir);
+            free(current_dir);
             exit(-1);
         }
     } else {

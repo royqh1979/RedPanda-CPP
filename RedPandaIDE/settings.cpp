@@ -185,8 +185,11 @@ QString Settings::Dirs::appResourceDir() const
     return appDir();
 #elif defined(Q_OS_LINUX)
     return includeTrailingPathDelimiter(PREFIX)+"share/"+APP_NAME;
+#elif defined(Q_OS_MACOS)
+    return "";
 #endif
 }
+
 
 QString Settings::Dirs::appLibexecDir() const
 {
@@ -194,6 +197,8 @@ QString Settings::Dirs::appLibexecDir() const
     return appDir();
 #elif defined(Q_OS_LINUX)
     return includeTrailingPathDelimiter(PREFIX)+"libexec/"+APP_NAME;
+#elif defined(Q_OS_MACOS)
+    return "";
 #endif
 }
 

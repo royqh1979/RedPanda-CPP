@@ -10,7 +10,7 @@ SUBDIRS += \
     redpanda-win-git-askpass
 }
 
-linux: {
+macos,linux: {
 SUBDIRS += \
     redpanda-git-askpass
 }

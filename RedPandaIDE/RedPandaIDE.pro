@@ -13,7 +13,13 @@ isEmpty(APP_VERSION) {
     APP_VERSION=1.0.8
 }
 
+macos: {
+    # This package needs to be installed via homebrew before we can compile it
+    INCLUDEPATH += \
+        /opt/homebrew/opt/icu4c/include
 
+    QT += gui-private
+}
 
 win32: VERSION = $${APP_VERSION}.0
 else: VERSION = $${APP_VERSION}
