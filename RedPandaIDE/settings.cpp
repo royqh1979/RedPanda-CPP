@@ -313,6 +313,11 @@ bool Settings::_Base::boolValue(const QString &key, bool defaultValue)
     return value(key,defaultValue).toBool();
 }
 
+QSize Settings::_Base::sizeValue(const QString &key)
+{
+    return value(key,QSize()).toSize();
+}
+
 int Settings::_Base::intValue(const QString &key, int defaultValue)
 {
     return value(key,defaultValue).toInt();
@@ -4742,6 +4747,46 @@ void  Settings::UI::setNewHeaderDialogHeight(int newNewFileDialogHeight)
     mNewHeaderDialogHeight = newNewFileDialogHeight;
 }
 
+const QSize &Settings::UI::messagesTabsSize() const
+{
+    return mMessagesTabsSize;
+}
+
+void Settings::UI::setMessagesTabsSize(const QSize &newMessagesTabsSize)
+{
+    mMessagesTabsSize = newMessagesTabsSize;
+}
+
+const QSize &Settings::UI::explorerTabsSize() const
+{
+    return mExplorerTabsSize;
+}
+
+void Settings::UI::setExplorerTabsSize(const QSize &newExplorerTabsSize)
+{
+    mExplorerTabsSize = newExplorerTabsSize;
+}
+
+bool Settings::UI::shrinkMessagesTabs() const
+{
+    return mShrinkMessagesTabs;
+}
+
+void Settings::UI::setShrinkMessagesTabs(bool newShrinkMessagesTabs)
+{
+    mShrinkMessagesTabs = newShrinkMessagesTabs;
+}
+
+bool Settings::UI::shrinkExplorerTabs() const
+{
+    return mShrinkExplorerTabs;
+}
+
+void Settings::UI::setShrinkExplorerTabs(bool newShrinkExplorerTabs)
+{
+    mShrinkExplorerTabs = newShrinkExplorerTabs;
+}
+
 int  Settings::UI::newHeaderDialogWidth() const
 {
     return mNewHeaderDialogWidth;
@@ -4982,6 +5027,11 @@ void Settings::UI::doSave()
     saveValue("class_browser_sort_by_type",mClassBrowserSortType);
     saveValue("class_browser_show_inherited",mClassBrowserShowInherited);
 
+    saveValue("shrink_explorer_tabs",mShrinkExplorerTabs);
+    saveValue("shrink_messages_tabs",mShrinkMessagesTabs);
+    saveValue("explorer_tabs_size", mExplorerTabsSize);
+    saveValue("messages_tabs_size",mMessagesTabsSize);
+
     //view
     saveValue("show_toolbar", mShowToolbar);
     saveValue("show_statusbar", mShowStatusBar);
@@ -5025,6 +5075,11 @@ void Settings::UI::doLoad()
     mClassBrowserSortAlpha = boolValue("class_browser_sort_alphabetically",true);
     mClassBrowserSortType = boolValue("class_browser_sort_by_type",true);
     mClassBrowserShowInherited = boolValue("class_browser_show_inherited",true);
+
+    mShrinkExplorerTabs = boolValue("shrink_explorer_tabs",false);
+    mShrinkMessagesTabs = boolValue("shrink_messages_tabs",false);
+    mExplorerTabsSize = sizeValue("explorer_tabs_size");
+    mMessagesTabsSize = sizeValue("messages_tabs_size");
 
     //view
     mShowToolbar = boolValue("show_toolbar",true);

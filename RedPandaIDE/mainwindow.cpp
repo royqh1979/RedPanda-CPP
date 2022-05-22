@@ -352,6 +352,7 @@ MainWindow::MainWindow(QWidget *parent)
     updateAppTitle();
     //applySettings();
     applyUISettings();
+    initDocks();
     updateProjectView();
     updateEditorActions();
     updateCaretActions();
@@ -700,6 +701,8 @@ void MainWindow::applySettings()
 
     ui->menuGit->menuAction()->setVisible(pSettings->vcs().gitOk());
 
+    openCloseExplorerPanel(!ui->tabExplorer->isShrinked());
+    openCloseMessagesPanel(!ui->tabMessages->isShrinked());
 }
 
 void MainWindow::applyUISettings()
@@ -708,7 +711,7 @@ void MainWindow::applyUISettings()
     restoreGeometry(settings.mainWindowGeometry());
     restoreState(settings.mainWindowState());
     ui->actionTool_Window_Bars->setChecked(settings.showToolWindowBars());
-    ui->tabInfos->setVisible(settings.showToolWindowBars());
+    ui->tabExplorer->setVisible(settings.showToolWindowBars());
     ui->tabMessages->setVisible(settings.showToolWindowBars());
     ui->actionStatus_Bar->setChecked(settings.showStatusBar());
     ui->statusbar->setVisible(settings.showStatusBar());
@@ -740,12 +743,26 @@ void MainWindow::applyUISettings()
     ui->actionProblem->setChecked(settings.showProblem());
     showHideMessagesTab(ui->tabProblem,settings.showProblem()
                         && pSettings->executor().enableProblemSet());
-    //we can't show/hide left/bottom panels here, cause mainwindow layout is not calculated
+
+    ui->tabMessages->setBeforeShrinkSize(settings.messagesTabsSize());
+    ui->tabExplorer->setBeforeShrinkSize(settings.explorerTabsSize());
+    if (settings.shrinkMessagesTabs())
+        ui->tabMessages->setShrinkedFlag(true);
+    if (settings.shrinkExplorerTabs())
+        ui->tabExplorer->setShrinkedFlag(true);
 }
 
 QFileSystemWatcher *MainWindow::fileSystemWatcher()
 {
     return &mFileSystemWatcher;
+}
+
+void MainWindow::initDocks()
+{
+    ui->dockExplorer->setMinimumSize(0,0);
+    ui->dockMessages->setMinimumSize(0,0);
+    setDockExplorerToArea(dockWidgetArea(ui->dockExplorer));
+    setDockMessagesToArea(dockWidgetArea(ui->dockMessages));
 }
 
 void MainWindow::removeActiveBreakpoints()
@@ -1139,8 +1156,8 @@ void MainWindow::openProject(const QString &filename, bool openFiles)
         }
     }
     ui->tabProject->setVisible(true);
-    ui->tabInfos->setCurrentWidget(ui->tabProject);
-    openCloseLeftPanel(true);
+    ui->tabExplorer->setCurrentWidget(ui->tabProject);
+    openCloseExplorerPanel(true);
 //    {
 //    LeftPageControl.ActivePage := LeftProjectSheet;
 //    fLeftPageControlChanged := False;
@@ -1272,7 +1289,7 @@ void MainWindow::updateActionIcons()
         btn->setIconSize(iconSize);
     }
 
-    ui->tabInfos->setIconSize(iconSize);
+    ui->tabExplorer->setIconSize(iconSize);
     ui->tabMessages->setIconSize(iconSize);
     ui->EditorTabsLeft->setIconSize(iconSize);
     ui->EditorTabsRight->setIconSize(iconSize);
@@ -1404,21 +1421,21 @@ void MainWindow::updateActionIcons()
     mProblem_Properties->setIcon(pIconsManager->getIcon(IconsManager::ACTION_PROBLEM_PROPERTIES));
 
 
-    int idx = ui->tabInfos->indexOf(ui->tabWatch);
+    int idx = ui->tabExplorer->indexOf(ui->tabWatch);
     if (idx>=0)
-        ui->tabInfos->setTabIcon(idx,pIconsManager->getIcon(IconsManager::ACTION_RUN_ADD_WATCH));
-    idx = ui->tabInfos->indexOf(ui->tabProject);
+        ui->tabExplorer->setTabIcon(idx,pIconsManager->getIcon(IconsManager::ACTION_RUN_ADD_WATCH));
+    idx = ui->tabExplorer->indexOf(ui->tabProject);
     if (idx>=0)
-        ui->tabInfos->setTabIcon(idx,pIconsManager->getIcon(IconsManager::ACTION_PROJECT_NEW));
-    idx = ui->tabInfos->indexOf(ui->tabFiles);
+        ui->tabExplorer->setTabIcon(idx,pIconsManager->getIcon(IconsManager::ACTION_PROJECT_NEW));
+    idx = ui->tabExplorer->indexOf(ui->tabFiles);
     if (idx>=0)
-        ui->tabInfos->setTabIcon(idx,pIconsManager->getIcon(IconsManager::ACTION_VIEW_FILES));
-    idx = ui->tabInfos->indexOf(ui->tabStructure);
+        ui->tabExplorer->setTabIcon(idx,pIconsManager->getIcon(IconsManager::ACTION_VIEW_FILES));
+    idx = ui->tabExplorer->indexOf(ui->tabStructure);
     if (idx>=0)
-        ui->tabInfos->setTabIcon(idx,pIconsManager->getIcon(IconsManager::ACTION_VIEW_CLASSBROWSER));
-    idx = ui->tabInfos->indexOf(ui->tabProblemSet);
+        ui->tabExplorer->setTabIcon(idx,pIconsManager->getIcon(IconsManager::ACTION_VIEW_CLASSBROWSER));
+    idx = ui->tabExplorer->indexOf(ui->tabProblemSet);
     if (idx>=0)
-        ui->tabInfos->setTabIcon(idx,pIconsManager->getIcon(IconsManager::ACTION_PROBLEM_SET));
+        ui->tabExplorer->setTabIcon(idx,pIconsManager->getIcon(IconsManager::ACTION_PROBLEM_SET));
 
     idx = ui->tabMessages->indexOf(ui->tabIssues);
     if (idx>=0)
@@ -1500,7 +1517,7 @@ bool MainWindow::compile(bool rebuild)
         if (mCompileSuccessionTask) {
             mCompileSuccessionTask->filename = mProject->executable();
         }
-        openCloseBottomPanel(true);
+        openCloseMessagesPanel(true);
         ui->tabMessages->setCurrentWidget(ui->tabToolsOutput);
         mCompilerManager->compileProject(mProject,rebuild);
         updateCompileActions();
@@ -1516,7 +1533,7 @@ bool MainWindow::compile(bool rebuild)
             if (mCompileSuccessionTask) {
                 mCompileSuccessionTask->filename = getCompiledExecutableName(editor->filename());
             }
-            openCloseBottomPanel(true);
+            openCloseMessagesPanel(true);
             ui->tabMessages->setCurrentWidget(ui->tabToolsOutput);
             mCompilerManager->compile(editor->filename(),editor->fileEncoding(),rebuild);
             updateCompileActions();
@@ -1576,7 +1593,7 @@ void MainWindow::runExecutable(const QString &exeName,const QString &filename,Ru
         if (problem) {
             mCompilerManager->runProblem(exeName,params,QFileInfo(exeName).absolutePath(),
                                          problem->cases);
-            openCloseBottomPanel(true);
+            openCloseMessagesPanel(true);
             ui->tabMessages->setCurrentWidget(ui->tabProblem);
         }
     } else if (runType == RunType::CurrentProblemCase) {
@@ -1585,7 +1602,7 @@ void MainWindow::runExecutable(const QString &exeName,const QString &filename,Ru
             POJProblemCase problemCase =mOJProblemModel.getCase(index.row());
             mCompilerManager->runProblem(exeName,params,QFileInfo(exeName).absolutePath(),
                                      problemCase);
-            openCloseBottomPanel(true);
+            openCloseMessagesPanel(true);
             ui->tabMessages->setCurrentWidget(ui->tabProblem);
         }
     }
@@ -1850,7 +1867,7 @@ void MainWindow::debug()
 
 void MainWindow::showSearchPanel(bool showReplace)
 {
-    openCloseBottomPanel(true);
+    openCloseMessagesPanel(true);
     showSearchReplacePanel(showReplace);
     ui->tabMessages->setCurrentWidget(ui->tabSearch);
 }
@@ -1865,77 +1882,36 @@ void MainWindow::showCPUInfoDialog()
     mCPUDialog->show();
 }
 
-void MainWindow::openCloseBottomPanel(bool open)
+static void setDockMovable(QDockWidget* dock, bool movable) {
+    if (movable) {
+        dock->setFeatures(dock->features() | QDockWidget::DockWidgetMovable);
+    } else {
+        dock->setFeatures(dock->features() & ~QDockWidget::DockWidgetMovable);
+    }
+}
+
+void MainWindow::openCloseMessagesPanel(bool open)
 {
-    ui->dockMessages->setVisible(open);
-//    if Assigned(fReportToolWindow) then
-//      Exit;
-//    if (mOpenClosingBottomPanel)
-//        return;
-//    mOpenClosingBottomPanel = true;
-//    auto action = finally([this]{
-//        mOpenClosingBottomPanel = false;
-//    });
-//    // Switch between open and close
-//    if (open) {
-//        QList<int> sizes = ui->splitterMessages->sizes();
-//        int tabHeight = ui->tabMessages->tabBar()->height();
-//        ui->tabMessages->setMinimumHeight(tabHeight+5);
-//        if ( mBottomPanelHeight < ui->tabMessages->tabBar()->height() + 5)
-//            mBottomPanelHeight = ui->tabMessages->tabBar()->height() + 5;
-//        int totalSize = sizes[0] + sizes[1];
-//        sizes[1] = mBottomPanelHeight;
-//        sizes[0] = std::max(1,totalSize - sizes[1]);
-//        ui->splitterMessages->setSizes(sizes);
-//    } else {
-//        QList<int> sizes = ui->splitterMessages->sizes();
-//        mBottomPanelHeight = sizes[1];
-//        int totalSize = sizes[0] + sizes[1];
-//        int tabHeight = ui->tabMessages->tabBar()->height();
-//        ui->tabMessages->setMinimumHeight(tabHeight);
-//        sizes[1] = tabHeight;
-//        sizes[0] = std::max(1,totalSize - sizes[1]);
-//        ui->splitterMessages->setSizes(sizes);
-//    }
-//    mBottomPanelOpenned = open;
-//    QSplitterHandle* handle = ui->splitterMessages->handle(1);
-    //    handle->setEnabled(mBottomPanelOpenned);
+    //ui->dockMessages->setVisible(open);
+    ui->tabMessages->setShrinked(!open);
+    if (open) {
+        resizeDocks({ui->dockMessages},
+                    {ui->tabMessages->beforeShrinkWidthOrHeight()},
+                    ui->tabMessages->shrinkOrientation());
+    }
+    setDockMovable(ui->dockMessages,open);
 }
 
 
-void MainWindow::openCloseLeftPanel(bool open)
+void MainWindow::openCloseExplorerPanel(bool open)
 {
-    ui->dockInfos->setVisible(open);
-//    if (mOpenClosingLeftPanel)
-//        return;
-//    mOpenClosingLeftPanel = true;
-//    auto action = finally([this]{
-//        mOpenClosingLeftPanel = false;
-//    });
-//    // Switch between open and close
-//    if (open ) {
-//        QList<int> sizes = ui->splitterInfos->sizes();
-//        int tabWidth = ui->tabInfos->tabBar()->width();
-//        ui->tabInfos->setMinimumWidth(tabWidth+5);
-//        if (mLeftPanelWidth < ui->tabInfos->tabBar()->width() + 5)
-//            mLeftPanelWidth = ui->tabInfos->tabBar()->width() + 5;
-//        int totalSize = sizes[0] + sizes[1];
-//        sizes[0] = mLeftPanelWidth;
-//        sizes[1] = std::max(1,totalSize - sizes[0]);
-//        ui->splitterInfos->setSizes(sizes);
-//    } else {
-//        QList<int> sizes = ui->splitterInfos->sizes();
-//        mLeftPanelWidth = sizes[0];
-//        int totalSize = sizes[0] + sizes[1];
-//        int tabWidth = ui->tabInfos->tabBar()->width();
-//        ui->tabInfos->setMinimumWidth(tabWidth);
-//        sizes[0] = tabWidth;
-//        sizes[1] = std::max(1,totalSize - sizes[0]);
-//        ui->splitterInfos->setSizes(sizes);
-//    }
-//    mLeftPanelOpenned = open;
-//    QSplitterHandle* handle = ui->splitterInfos->handle(1);
-//    handle->setEnabled(mLeftPanelOpenned);
+    ui->tabExplorer->setShrinked(!open);
+    if (open) {
+        resizeDocks({ui->dockExplorer},
+                    {ui->tabExplorer->beforeShrinkWidthOrHeight()},
+                    ui->tabExplorer->shrinkOrientation());
+    }
+    setDockMovable(ui->dockExplorer,open);
 }
 
 void MainWindow::prepareDebugger()
@@ -1950,14 +1926,14 @@ void MainWindow::prepareDebugger()
     ui->txtEvalOutput->clear();
 
     // Restore when no watch vars are shown
-    mDebugger->setLeftPageIndexBackup(ui->tabInfos->currentIndex());
+    mDebugger->setLeftPageIndexBackup(ui->tabExplorer->currentIndex());
 
     // Focus on the debugging buttons
-    ui->tabInfos->setCurrentWidget(ui->tabWatch);
+    ui->tabExplorer->setCurrentWidget(ui->tabWatch);
     ui->tabMessages->setCurrentWidget(ui->tabDebug);
     ui->debugViews->setCurrentWidget(ui->tabLocals);
-    openCloseBottomPanel(true);
-    openCloseLeftPanel(true);
+    openCloseMessagesPanel(true);
+    openCloseExplorerPanel(true);
 
     // Reset watch vars
     //    mDebugger->deleteWatchVars(false);
@@ -2713,12 +2689,12 @@ void MainWindow::buildEncodingMenu()
 
 void MainWindow::maximizeEditor()
 {
-    if (ui->dockInfos->isVisible() || ui->dockMessages->isVisible()) {
-        openCloseBottomPanel(false);
-        openCloseLeftPanel(false);
+    if (ui->tabExplorer->isShrinked() && ui->tabExplorer->isShrinked()) {
+        openCloseMessagesPanel(true);
+        openCloseExplorerPanel(true);
     } else {
-        openCloseBottomPanel(true);
-        openCloseLeftPanel(true);
+        openCloseMessagesPanel(false);
+        openCloseExplorerPanel(false);
     }
 }
 
@@ -3205,7 +3181,7 @@ void MainWindow::onProblemSetIndexChanged(const QModelIndex &current, const QMod
         } else {
             onProblemCaseIndexChanged(QModelIndex(),QModelIndex());
         }
-        openCloseBottomPanel(true);
+        openCloseMessagesPanel(true);
         ui->tabMessages->setCurrentWidget(ui->tabProblem);
         ui->tabProblem->setEnabled(true);
         ui->btnOpenProblemAnswer->setEnabled(!problem->answerProgram.isEmpty());
@@ -3365,7 +3341,7 @@ void MainWindow::onNewProblemConnection()
             problem->cases.append(problemCase);
         }
         mOJProblemSetModel.addProblem(problem);
-        ui->tabInfos->setCurrentWidget(ui->tabProblemSet);
+        ui->tabExplorer->setCurrentWidget(ui->tabProblemSet);
         ui->lstProblemSet->setCurrentIndex(mOJProblemSetModel.index(
                                                mOJProblemSetModel.count()-1
                                                ,0));
@@ -4128,7 +4104,7 @@ void MainWindow::closeProject(bool refreshEditor)
 
                 if (!mQuitting && refreshEditor) {
                     //reset Class browsing
-                    ui->tabInfos->setCurrentWidget(ui->tabStructure);
+                    ui->tabExplorer->setCurrentWidget(ui->tabStructure);
                     Editor * e = mEditorList->getEditor();
                     updateClassBrowserForEditor(e);
                 } else {
@@ -4162,9 +4138,9 @@ void MainWindow::updateProjectView()
         } else
             mProjectProxyModel->invalidate();
         ui->projectView->expandAll();
-        openCloseLeftPanel(true);
+        openCloseExplorerPanel(true);
         ui->tabProject->setVisible(true);
-        ui->tabInfos->setCurrentWidget(ui->tabProject);
+        ui->tabExplorer->setCurrentWidget(ui->tabProject);
     } else {
         // Clear project browser
         mProjectProxyModel->setSourceModel(nullptr);
@@ -4308,7 +4284,7 @@ void MainWindow::closeEvent(QCloseEvent *event) {
         settings.setMainWindowState(saveState());
         settings.setMainWindowGeometry(saveGeometry());
         settings.setBottomPanelIndex(ui->tabMessages->currentIndex());
-        settings.setLeftPanelIndex(ui->tabInfos->currentIndex());
+        settings.setLeftPanelIndex(ui->tabExplorer->currentIndex());
 
         settings.setShowStatusBar(ui->actionStatus_Bar->isChecked());
         settings.setShowToolWindowBars(ui->actionTool_Window_Bars->isChecked());
@@ -4326,6 +4302,11 @@ void MainWindow::closeEvent(QCloseEvent *event) {
         settings.setShowTODO(ui->actionTODO->isChecked());
         settings.setShowBookmark(ui->actionBookmark->isChecked());
         settings.setShowProblem(ui->actionProblem->isChecked());
+
+        settings.setMessagesTabsSize(ui->tabMessages->currentSize());
+        settings.setExplorerTabsSize(ui->tabExplorer->currentSize());
+        settings.setShrinkExplorerTabs(ui->tabExplorer->isShrinked());
+        settings.setShrinkMessagesTabs(ui->tabMessages->isShrinked());
         settings.save();
 
         //save current folder ( for files view )
@@ -4406,14 +4387,14 @@ void MainWindow::showEvent(QShowEvent *)
     applySettings();
     const Settings::UI& settings = pSettings->ui();
     ui->tabMessages->setCurrentIndex(settings.bottomPanelIndex());
-    ui->tabInfos->setCurrentIndex(settings.leftPanelIndex());
+    ui->tabExplorer->setCurrentIndex(settings.leftPanelIndex());
 }
 
 void MainWindow::hideEvent(QHideEvent *)
 {
     Settings::UI& settings = pSettings->ui();
     settings.setBottomPanelIndex(ui->tabMessages->currentIndex());
-    settings.setLeftPanelIndex(ui->tabInfos->currentIndex());
+    settings.setLeftPanelIndex(ui->tabExplorer->currentIndex());
 }
 
 bool MainWindow::event(QEvent *event)
@@ -4586,12 +4567,12 @@ void MainWindow::onCompileFinished(bool isCheckSyntax)
     } else if (ui->tableIssues->count() == 0) {
         // Close it if there's nothing to show
         if (ui->tabMessages->currentIndex() == i)
-            openCloseBottomPanel(false);
+            openCloseMessagesPanel(false);
     } else {
         if (ui->tabMessages->currentIndex() != i) {
             ui->tabMessages->setCurrentIndex(i);
         }
-        openCloseBottomPanel(true);
+        openCloseMessagesPanel(true);
     }
 
     Editor * e = mEditorList->getEditor();
@@ -4933,23 +4914,13 @@ void MainWindow::on_actionConvert_to_UTF_8_triggered()
 
 void MainWindow::on_tabMessages_tabBarClicked(int index)
 {
-    if (index == ui->tabMessages->currentIndex()) {
-        ui->tabMessages->toggleShrined();
-        if (!ui->tabMessages->isShrinked()) {
-            resizeDocks({ui->dockMessages},{ui->tabMessages->beforeShrinkWidthOrHeight()},ui->tabMessages->shrinkOrientation());
-        }
+    if (index == ui->tabMessages->currentIndex() && !ui->tabMessages->isShrinked()) {
+        openCloseMessagesPanel(false);
+    } else {
+        openCloseMessagesPanel(true);
     }
 }
 
-void MainWindow::on_tabMessages_currentChanged(int)
-{
-    openCloseBottomPanel(true);
-}
-
-void MainWindow::on_tabMessages_tabBarDoubleClicked(int )
-{
-
-}
 
 void MainWindow::on_actionCompile_Run_triggered()
 {
@@ -5366,13 +5337,12 @@ void MainWindow::on_actionForward_triggered()
 }
 
 
-void MainWindow::on_tabInfos_tabBarClicked(int index)
+void MainWindow::on_tabExplorer_tabBarClicked(int index)
 {
-    if (index == ui->tabInfos->currentIndex()) {
-        ui->tabInfos->toggleShrined();
-        if (!ui->tabInfos->isShrinked()) {
-            resizeDocks({ui->dockInfos},{ui->tabInfos->beforeShrinkWidthOrHeight()},ui->tabInfos->shrinkOrientation());
-        }
+    if (index == ui->tabExplorer->currentIndex() && !ui->tabExplorer->isShrinked()) {
+        openCloseExplorerPanel(false);
+    } else {
+        openCloseExplorerPanel(true);
     }
 }
 
@@ -5884,23 +5854,23 @@ PSymbolUsageManager &MainWindow::symbolUsageManager()
 
 void MainWindow::showHideInfosTab(QWidget *widget, bool show)
 {
-    int idx = findTabIndex(ui->tabInfos,widget);
+    int idx = findTabIndex(ui->tabExplorer,widget);
     if (idx>=0) {
         if (!show) {
             if (mTabInfosData.contains(widget)) {
                 PTabWidgetInfo info = mTabInfosData[widget];
-                info->icon = ui->tabInfos->tabIcon(idx);
-                info->text = ui->tabInfos->tabText(idx);
+                info->icon = ui->tabExplorer->tabIcon(idx);
+                info->text = ui->tabExplorer->tabText(idx);
             }
 
-            ui->tabInfos->removeTab(idx);
+            ui->tabExplorer->removeTab(idx);
         }
     } else {
         if (show && mTabInfosData.contains(widget)) {
             PTabWidgetInfo info = mTabInfosData[widget];
             int insert = -1;
-            for (int i=0;i<ui->tabInfos->count();i++) {
-                QWidget * w=ui->tabInfos->widget(i);
+            for (int i=0;i<ui->tabExplorer->count();i++) {
+                QWidget * w=ui->tabExplorer->widget(i);
                 PTabWidgetInfo infoW = mTabInfosData[w];
                 if (infoW->order>info->order) {
                     insert = i;
@@ -5908,9 +5878,9 @@ void MainWindow::showHideInfosTab(QWidget *widget, bool show)
                 }
             }
             if (insert>=0) {
-                ui->tabInfos->insertTab(insert, widget, info->icon, info->text);
+                ui->tabExplorer->insertTab(insert, widget, info->icon, info->text);
             } else {
-                ui->tabInfos->addTab(widget, info->icon, info->text);
+                ui->tabExplorer->addTab(widget, info->icon, info->text);
             }
         }
     }
@@ -5952,12 +5922,12 @@ void MainWindow::showHideMessagesTab(QWidget *widget, bool show)
 
 void MainWindow::prepareTabInfosData()
 {
-    for (int i=0;i<ui->tabInfos->count();i++) {
-        QWidget* widget = ui->tabInfos->widget(i);
+    for (int i=0;i<ui->tabExplorer->count();i++) {
+        QWidget* widget = ui->tabExplorer->widget(i);
         PTabWidgetInfo info = std::make_shared<TabWidgetInfo>();
         info->order =i;
-        info->text = ui->tabInfos->tabText(i);
-        info->icon = ui->tabInfos->tabIcon(i);
+        info->text = ui->tabExplorer->tabText(i);
+        info->icon = ui->tabExplorer->tabIcon(i);
         mTabInfosData[widget]=info;
     }
 }
@@ -6127,6 +6097,70 @@ void MainWindow::doFilesViewRemoveFile(const QModelIndex &index)
     } else {
         QFile::remove(mFileSystemModel.filePath(index));
     }
+}
+
+static void setDockTitlebarLocation(QDockWidget* dock, const Qt::DockWidgetArea &area) {
+    switch(area) {
+    case Qt::DockWidgetArea::BottomDockWidgetArea:
+    case Qt::DockWidgetArea::TopDockWidgetArea:
+        dock->setFeatures(dock->features() | QDockWidget::DockWidgetVerticalTitleBar);
+        break;
+    default:
+        dock->setFeatures(dock->features() & ~QDockWidget::DockWidgetVerticalTitleBar);
+    }
+}
+
+static void setTabsInDockLocation(QTabWidget* tabs, const Qt::DockWidgetArea &area) {
+    switch(area) {
+    case Qt::DockWidgetArea::BottomDockWidgetArea:
+    case Qt::DockWidgetArea::TopDockWidgetArea:
+        tabs->setTabPosition(QTabWidget::TabPosition::South);
+        break;
+    case Qt::DockWidgetArea::LeftDockWidgetArea:
+        tabs->setTabPosition(QTabWidget::TabPosition::West);
+        break;
+    case Qt::DockWidgetArea::RightDockWidgetArea:
+        tabs->setTabPosition(QTabWidget::TabPosition::East);
+        break;
+    default:
+        break;
+    }
+}
+
+static void setSplitterInDockLocation(QSplitter* splitter, const Qt::DockWidgetArea& area) {
+    switch(area) {
+    case Qt::DockWidgetArea::BottomDockWidgetArea:
+    case Qt::DockWidgetArea::TopDockWidgetArea:
+        splitter->setOrientation(Qt::Orientation::Horizontal);
+        break;
+    default:
+        splitter->setOrientation(Qt::Orientation::Vertical);
+    }
+
+}
+void MainWindow::setDockExplorerToArea(const Qt::DockWidgetArea &area)
+{
+    setDockTitlebarLocation(ui->dockExplorer,area);
+    setTabsInDockLocation(ui->tabExplorer,area);
+    ui->dockMessages->setAllowedAreas(
+                (Qt::DockWidgetArea::LeftDockWidgetArea |
+                 Qt::DockWidgetArea::BottomDockWidgetArea |
+                 Qt::DockWidgetArea::RightDockWidgetArea)
+                & ~area);
+}
+
+void MainWindow::setDockMessagesToArea(const Qt::DockWidgetArea &area)
+{
+    setDockTitlebarLocation(ui->dockMessages,area);
+    setTabsInDockLocation(ui->tabMessages,area);
+    setSplitterInDockLocation(ui->splitterDebug,area);
+    setSplitterInDockLocation(ui->splitterProblem,area);
+    ui->dockExplorer->setAllowedAreas(
+                (Qt::DockWidgetArea::LeftDockWidgetArea |
+                 Qt::DockWidgetArea::BottomDockWidgetArea |
+                 Qt::DockWidgetArea::RightDockWidgetArea)
+                & ~area);
+
 }
 
 void MainWindow::updateVCSActions()
@@ -6434,7 +6468,7 @@ void MainWindow::on_btnReplace_clicked()
         editor->setSelText(contents.join(editor->lineBreak()));
     }
     showSearchReplacePanel(false);
-    openCloseBottomPanel(false);
+    openCloseMessagesPanel(false);
 }
 
 void MainWindow::on_btnCancelReplace_clicked()
@@ -6630,8 +6664,8 @@ void MainWindow::on_actionLocate_in_Files_View_triggered()
         QModelIndex index = mFileSystemModel.index(editor->filename());
         ui->treeFiles->setCurrentIndex(index);
         ui->treeFiles->scrollTo(index, QAbstractItemView::PositionAtCenter);
-        ui->tabInfos->setCurrentWidget(ui->tabFiles);
-        openCloseLeftPanel(true);
+        ui->tabExplorer->setCurrentWidget(ui->tabFiles);
+        openCloseExplorerPanel(true);
     }
 }
 
@@ -6825,9 +6859,9 @@ bool MainWindow::openningFiles() const
 
 void MainWindow::on_actionTool_Window_Bars_triggered()
 {
-    bool state = ui->tabInfos->isVisible();
+    bool state = ui->tabExplorer->isVisible();
     state = !state;
-    ui->tabInfos->setVisible(state);
+    ui->tabExplorer->setVisible(state);
     ui->tabMessages->setVisible(state);
     ui->actionTool_Window_Bars->setChecked(state);
 }
@@ -7685,56 +7719,14 @@ void MainWindow::on_actionCompiler_Options_triggered()
                 );
 }
 
-
-void MainWindow::on_dockInfos_dockLocationChanged(const Qt::DockWidgetArea &area)
+void MainWindow::on_dockExplorer_dockLocationChanged(const Qt::DockWidgetArea &area)
 {
-    switch(area) {
-    case Qt::DockWidgetArea::BottomDockWidgetArea:
-    case Qt::DockWidgetArea::TopDockWidgetArea:
-        ui->tabInfos->setTabPosition(QTabWidget::TabPosition::South);
-        break;
-    case Qt::DockWidgetArea::LeftDockWidgetArea:
-        ui->tabInfos->setTabPosition(QTabWidget::TabPosition::West);
-        break;
-    case Qt::DockWidgetArea::RightDockWidgetArea:
-        ui->tabInfos->setTabPosition(QTabWidget::TabPosition::East);
-        break;
-    default:
-        break;
-    }
+    setDockExplorerToArea(area);
 }
 
 
 void MainWindow::on_dockMessages_dockLocationChanged(const Qt::DockWidgetArea &area)
 {
-    switch(area) {
-    case Qt::DockWidgetArea::BottomDockWidgetArea:
-    case Qt::DockWidgetArea::TopDockWidgetArea:
-        ui->splitterDebug->setOrientation(Qt::Orientation::Horizontal);
-        ui->splitterProblem->setOrientation(Qt::Orientation::Horizontal);
-        ui->dockMessages->setFeatures( ui->dockMessages->features() | QDockWidget::DockWidgetVerticalTitleBar);
-        break;
-    default:
-        ui->splitterDebug->setOrientation(Qt::Orientation::Vertical);
-        ui->splitterProblem->setOrientation(Qt::Orientation::Vertical);
-        ui->dockMessages->setFeatures( ui->dockMessages->features() & ~QDockWidget::DockWidgetVerticalTitleBar);
-    }
-    switch(area) {
-    case Qt::DockWidgetArea::BottomDockWidgetArea:
-    case Qt::DockWidgetArea::TopDockWidgetArea:
-        ui->tabMessages->setTabPosition(QTabWidget::TabPosition::South);
-        ui->debugViews->setTabPosition(QTabWidget::TabPosition::South);
-        break;
-    case Qt::DockWidgetArea::LeftDockWidgetArea:
-        ui->tabMessages->setTabPosition(QTabWidget::TabPosition::West);
-        ui->debugViews->setTabPosition(QTabWidget::TabPosition::West);
-        break;
-    case Qt::DockWidgetArea::RightDockWidgetArea:
-        ui->tabMessages->setTabPosition(QTabWidget::TabPosition::East);
-        ui->debugViews->setTabPosition(QTabWidget::TabPosition::East);
-        break;
-    default:
-        break;
-    }
+    setDockMessagesToArea(area);
 }
 

@@ -26,10 +26,15 @@ ShrinkableTabWidget::ShrinkableTabWidget(QWidget *parent):QTabWidget(parent),
 
 }
 
+void ShrinkableTabWidget::setShrinkedFlag(bool shrinked)
+{
+    mShrinked = shrinked;
+}
+
 void ShrinkableTabWidget::setShrinked(bool shrinked)
 {
     if (!mShrinked && shrinked) {
-        BeforeShrinkSizes.insert(this, size());
+        setBeforeShrinkSize(size());
     }
     mShrinked = shrinked;
     switch(this->tabPosition()) {
@@ -61,12 +66,26 @@ void ShrinkableTabWidget::toggleShrined()
     setShrinked(!mShrinked);
 }
 
+void ShrinkableTabWidget::setBeforeShrinkSize(const QSize &size)
+{
+    BeforeShrinkSizes.insert(this,size);
+}
+
 QSize ShrinkableTabWidget::beforeShrinkSize()
 {
     QSize size = BeforeShrinkSizes.value(this,QSize());
-    if (!size.isValid())
-        size = QSize(width(),height());
+    if (!size.isValid() || size.isNull()) {
+        size = QTabWidget::size();
+    }
     return size;
+}
+
+QSize ShrinkableTabWidget::currentSize()
+{
+    if (isShrinked())
+        return beforeShrinkSize();
+    else
+        return size();
 }
 
 int ShrinkableTabWidget::beforeShrinkWidthOrHeight()
@@ -99,11 +118,17 @@ QSize ShrinkableTabWidget::minimumSizeHint() const
     switch(this->tabPosition()) {
     case QTabWidget::East:
     case QTabWidget::West:
-        size.setWidth(tabBar()->width());
+        if (isShrinked())
+            size.setWidth(tabBar()->width());
+        else
+            size.setWidth(tabBar()->width()*2);
         break;
     case QTabWidget::North:
     case QTabWidget::South:
-        size.setHeight(tabBar()->height());
+        if (isShrinked())
+            size.setHeight(tabBar()->height());
+        else
+            size.setHeight(tabBar()->height()*2);
     }
     return size;
 }

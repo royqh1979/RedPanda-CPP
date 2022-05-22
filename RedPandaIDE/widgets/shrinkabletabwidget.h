@@ -25,10 +25,13 @@ class ShrinkableTabWidget : public QTabWidget
 public:
     ShrinkableTabWidget(QWidget* parent=nullptr);
 
+    void setShrinkedFlag(bool shrinked);
     void setShrinked(bool shrinked);
     bool isShrinked() const;
     void toggleShrined();
+    void setBeforeShrinkSize(const QSize& size);
     QSize beforeShrinkSize();
+    QSize currentSize();
     int beforeShrinkWidthOrHeight();
     Qt::Orientation shrinkOrientation();
 

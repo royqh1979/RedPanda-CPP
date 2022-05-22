@@ -125,6 +125,7 @@ public:
     void applySettings();
     void applyUISettings();
     QFileSystemWatcher* fileSystemWatcher();
+    void initDocks();
 
     void removeActiveBreakpoints();
     void updateAppTitle();
@@ -231,8 +232,8 @@ private:
     void updateProjectView();
     CompileTarget getCompileTarget();
     bool debugInferiorhasBreakpoint();
-    void openCloseBottomPanel(bool open);
-    void openCloseLeftPanel(bool open);
+    void openCloseMessagesPanel(bool open);
+    void openCloseExplorerPanel(bool open);
     void prepareDebugger();
     void doAutoSave(Editor *e);
     void buildContextMenus();
@@ -259,6 +260,8 @@ private:
     void doFilesViewRemoveFile(const QModelIndex& index);
 
 private slots:
+    void setDockExplorerToArea(const Qt::DockWidgetArea &area);
+    void setDockMessagesToArea(const Qt::DockWidgetArea &area);
     void updateVCSActions();
     void invalidateProjectProxyModel();
     void onEditorRenamed(const QString& oldFilename, const QString& newFilename, bool firstSave);
@@ -387,10 +390,6 @@ private slots:
 
     void on_tabMessages_tabBarClicked(int index);
 
-    void on_tabMessages_currentChanged(int index);
-
-    void on_tabMessages_tabBarDoubleClicked(int index);
-
     void on_actionCompile_Run_triggered();
 
     void on_actionRebuild_triggered();
@@ -440,7 +439,7 @@ private slots:
 
     void on_actionForward_triggered();
 
-    void on_tabInfos_tabBarClicked(int index);
+    void on_tabExplorer_tabBarClicked(int index);
 
     void on_EditorTabsLeft_tabBarDoubleClicked(int index);
     void on_EditorTabsRight_tabBarDoubleClicked(int index);
@@ -670,7 +669,7 @@ private slots:
 
     void on_actionCompiler_Options_triggered();
 
-    void on_dockInfos_dockLocationChanged(const Qt::DockWidgetArea &area);
+    void on_dockExplorer_dockLocationChanged(const Qt::DockWidgetArea &area);
 
     void on_dockMessages_dockLocationChanged(const Qt::DockWidgetArea &area);
 

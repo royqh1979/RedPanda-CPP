@@ -1750,10 +1750,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Sec</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Case Editor Font</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1767,6 +1763,10 @@
     </message>
     <message>
         <source>Only Monospaced</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>ms</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -4456,6 +4456,14 @@
         <source>Compiler Options...</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Explorer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Messages</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>NewClassDialog</name>
@@ -4643,7 +4651,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Time(sec)</source>
+        <source>Time(ms)</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -5619,10 +5627,6 @@
     </message>
     <message>
         <source>Abort compilation on first error (-Wfatal-errors)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Profile</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

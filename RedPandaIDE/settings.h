@@ -71,6 +71,7 @@ private:
         void saveValue(const QString &key, const QVariant &value);
         QVariant value(const QString &key, const QVariant& defaultValue);
         bool boolValue(const QString &key, bool defaultValue);
+        QSize sizeValue(const QString &key);
         int intValue(const QString &key, int defaultValue);
         QStringList stringListValue(const QString &key, const QStringList& defaultValue=QStringList());
         QColor colorValue(const QString &key, const QColor& defaultValue);
@@ -1026,6 +1027,18 @@ public:
         int newHeaderDialogHeight() const;
         void setNewHeaderDialogHeight(int newNewFileDialogHeight);
 
+        bool shrinkExplorerTabs() const;
+        void setShrinkExplorerTabs(bool newShrinkExplorerTabs);
+
+        bool shrinkMessagesTabs() const;
+        void setShrinkMessagesTabs(bool newShrinkMessagesTabs);
+
+        const QSize &explorerTabsSize() const;
+        void setExplorerTabsSize(const QSize &newExplorerTabsSize);
+
+        const QSize &messagesTabsSize() const;
+        void setMessagesTabsSize(const QSize &newMessagesTabsSize);
+
     private:
         QByteArray mMainWindowState;
         QByteArray mMainWindowGeometry;
@@ -1035,6 +1048,10 @@ public:
         bool mClassBrowserSortType;
         bool mClassBrowserShowInherited;
 
+        bool mShrinkExplorerTabs;
+        bool mShrinkMessagesTabs;
+        QSize mExplorerTabsSize;
+        QSize mMessagesTabsSize;
         //view
         bool mShowToolbar;
         bool mShowStatusBar;

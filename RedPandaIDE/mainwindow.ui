@@ -18,6 +18,9 @@
     <normalon>:/icons/images/devcpp.ico</normalon>
    </iconset>
   </property>
+  <property name="dockOptions">
+   <set>QMainWindow::AnimatedDocks</set>
+  </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QHBoxLayout" name="horizontalLayout">
     <property name="leftMargin">
@@ -117,7 +120,7 @@
      <x>0</x>
      <y>0</y>
      <width>945</width>
-     <height>26</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -433,7 +436,7 @@
    </attribute>
    <addaction name="actionCompiler_Options"/>
   </widget>
-  <widget class="QDockWidget" name="dockInfos">
+  <widget class="QDockWidget" name="dockExplorer">
    <property name="features">
     <set>QDockWidget::DockWidgetMovable</set>
    </property>
@@ -441,12 +444,12 @@
     <set>Qt::BottomDockWidgetArea|Qt::LeftDockWidgetArea|Qt::RightDockWidgetArea</set>
    </property>
    <property name="windowTitle">
-    <string>Infos</string>
+    <string>Explorer</string>
    </property>
    <attribute name="dockWidgetArea">
     <number>1</number>
    </attribute>
-   <widget class="ShrinkableTabWidget" name="tabInfos">
+   <widget class="ShrinkableTabWidget" name="tabExplorer">
     <property name="sizePolicy">
      <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
       <horstretch>0</horstretch>
