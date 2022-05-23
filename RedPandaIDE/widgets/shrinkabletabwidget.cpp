@@ -17,6 +17,7 @@
 #include "shrinkabletabwidget.h"
 #include <QTabBar>
 #include <QDebug>
+#include <QResizeEvent>
 
 QHash<const ShrinkableTabWidget*,QSize> ShrinkableTabWidget::BeforeShrinkSizes;
 
@@ -131,4 +132,11 @@ QSize ShrinkableTabWidget::minimumSizeHint() const
             size.setHeight(tabBar()->height()*2);
     }
     return size;
+}
+
+void ShrinkableTabWidget::resizeEvent(QResizeEvent *event)
+{
+    QTabWidget::resizeEvent(event);
+    if (!isShrinked())
+        setBeforeShrinkSize(event->size());
 }

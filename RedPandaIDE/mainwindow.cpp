@@ -701,8 +701,8 @@ void MainWindow::applySettings()
 
     ui->menuGit->menuAction()->setVisible(pSettings->vcs().gitOk());
 
-    openCloseExplorerPanel(!ui->tabExplorer->isShrinked());
-    openCloseMessagesPanel(!ui->tabMessages->isShrinked());
+    stretchExplorerPanel(!ui->tabExplorer->isShrinked());
+    stretchMessagesPanel(!ui->tabMessages->isShrinked());
 }
 
 void MainWindow::applyUISettings()
@@ -1157,7 +1157,7 @@ void MainWindow::openProject(const QString &filename, bool openFiles)
     }
     ui->tabProject->setVisible(true);
     ui->tabExplorer->setCurrentWidget(ui->tabProject);
-    openCloseExplorerPanel(true);
+    stretchExplorerPanel(true);
 //    {
 //    LeftPageControl.ActivePage := LeftProjectSheet;
 //    fLeftPageControlChanged := False;
@@ -1517,7 +1517,7 @@ bool MainWindow::compile(bool rebuild)
         if (mCompileSuccessionTask) {
             mCompileSuccessionTask->filename = mProject->executable();
         }
-        openCloseMessagesPanel(true);
+        stretchMessagesPanel(true);
         ui->tabMessages->setCurrentWidget(ui->tabToolsOutput);
         mCompilerManager->compileProject(mProject,rebuild);
         updateCompileActions();
@@ -1533,7 +1533,7 @@ bool MainWindow::compile(bool rebuild)
             if (mCompileSuccessionTask) {
                 mCompileSuccessionTask->filename = getCompiledExecutableName(editor->filename());
             }
-            openCloseMessagesPanel(true);
+            stretchMessagesPanel(true);
             ui->tabMessages->setCurrentWidget(ui->tabToolsOutput);
             mCompilerManager->compile(editor->filename(),editor->fileEncoding(),rebuild);
             updateCompileActions();
@@ -1593,7 +1593,7 @@ void MainWindow::runExecutable(const QString &exeName,const QString &filename,Ru
         if (problem) {
             mCompilerManager->runProblem(exeName,params,QFileInfo(exeName).absolutePath(),
                                          problem->cases);
-            openCloseMessagesPanel(true);
+            stretchMessagesPanel(true);
             ui->tabMessages->setCurrentWidget(ui->tabProblem);
         }
     } else if (runType == RunType::CurrentProblemCase) {
@@ -1602,7 +1602,7 @@ void MainWindow::runExecutable(const QString &exeName,const QString &filename,Ru
             POJProblemCase problemCase =mOJProblemModel.getCase(index.row());
             mCompilerManager->runProblem(exeName,params,QFileInfo(exeName).absolutePath(),
                                      problemCase);
-            openCloseMessagesPanel(true);
+            stretchMessagesPanel(true);
             ui->tabMessages->setCurrentWidget(ui->tabProblem);
         }
     }
@@ -1867,7 +1867,7 @@ void MainWindow::debug()
 
 void MainWindow::showSearchPanel(bool showReplace)
 {
-    openCloseMessagesPanel(true);
+    stretchMessagesPanel(true);
     showSearchReplacePanel(showReplace);
     ui->tabMessages->setCurrentWidget(ui->tabSearch);
 }
@@ -1890,7 +1890,7 @@ static void setDockMovable(QDockWidget* dock, bool movable) {
     }
 }
 
-void MainWindow::openCloseMessagesPanel(bool open)
+void MainWindow::stretchMessagesPanel(bool open)
 {
     //ui->dockMessages->setVisible(open);
     ui->tabMessages->setShrinked(!open);
@@ -1903,7 +1903,7 @@ void MainWindow::openCloseMessagesPanel(bool open)
 }
 
 
-void MainWindow::openCloseExplorerPanel(bool open)
+void MainWindow::stretchExplorerPanel(bool open)
 {
     ui->tabExplorer->setShrinked(!open);
     if (open) {
@@ -1932,8 +1932,8 @@ void MainWindow::prepareDebugger()
     ui->tabExplorer->setCurrentWidget(ui->tabWatch);
     ui->tabMessages->setCurrentWidget(ui->tabDebug);
     ui->debugViews->setCurrentWidget(ui->tabLocals);
-    openCloseMessagesPanel(true);
-    openCloseExplorerPanel(true);
+    stretchMessagesPanel(true);
+    stretchExplorerPanel(true);
 
     // Reset watch vars
     //    mDebugger->deleteWatchVars(false);
@@ -2690,11 +2690,11 @@ void MainWindow::buildEncodingMenu()
 void MainWindow::maximizeEditor()
 {
     if (ui->tabExplorer->isShrinked() && ui->tabExplorer->isShrinked()) {
-        openCloseMessagesPanel(true);
-        openCloseExplorerPanel(true);
+        stretchMessagesPanel(true);
+        stretchExplorerPanel(true);
     } else {
-        openCloseMessagesPanel(false);
-        openCloseExplorerPanel(false);
+        stretchMessagesPanel(false);
+        stretchExplorerPanel(false);
     }
 }
 
@@ -3181,7 +3181,7 @@ void MainWindow::onProblemSetIndexChanged(const QModelIndex &current, const QMod
         } else {
             onProblemCaseIndexChanged(QModelIndex(),QModelIndex());
         }
-        openCloseMessagesPanel(true);
+        stretchMessagesPanel(true);
         ui->tabMessages->setCurrentWidget(ui->tabProblem);
         ui->tabProblem->setEnabled(true);
         ui->btnOpenProblemAnswer->setEnabled(!problem->answerProgram.isEmpty());
@@ -4138,7 +4138,7 @@ void MainWindow::updateProjectView()
         } else
             mProjectProxyModel->invalidate();
         ui->projectView->expandAll();
-        openCloseExplorerPanel(true);
+        stretchExplorerPanel(true);
         ui->tabProject->setVisible(true);
         ui->tabExplorer->setCurrentWidget(ui->tabProject);
     } else {
@@ -4567,12 +4567,12 @@ void MainWindow::onCompileFinished(bool isCheckSyntax)
     } else if (ui->tableIssues->count() == 0) {
         // Close it if there's nothing to show
         if (ui->tabMessages->currentIndex() == i)
-            openCloseMessagesPanel(false);
+            stretchMessagesPanel(false);
     } else {
         if (ui->tabMessages->currentIndex() != i) {
             ui->tabMessages->setCurrentIndex(i);
         }
-        openCloseMessagesPanel(true);
+        stretchMessagesPanel(true);
     }
 
     Editor * e = mEditorList->getEditor();
@@ -4915,9 +4915,9 @@ void MainWindow::on_actionConvert_to_UTF_8_triggered()
 void MainWindow::on_tabMessages_tabBarClicked(int index)
 {
     if (index == ui->tabMessages->currentIndex() && !ui->tabMessages->isShrinked()) {
-        openCloseMessagesPanel(false);
+        stretchMessagesPanel(false);
     } else {
-        openCloseMessagesPanel(true);
+        stretchMessagesPanel(true);
     }
 }
 
@@ -5340,9 +5340,9 @@ void MainWindow::on_actionForward_triggered()
 void MainWindow::on_tabExplorer_tabBarClicked(int index)
 {
     if (index == ui->tabExplorer->currentIndex() && !ui->tabExplorer->isShrinked()) {
-        openCloseExplorerPanel(false);
+        stretchExplorerPanel(false);
     } else {
-        openCloseExplorerPanel(true);
+        stretchExplorerPanel(true);
     }
 }
 
@@ -6468,7 +6468,7 @@ void MainWindow::on_btnReplace_clicked()
         editor->setSelText(contents.join(editor->lineBreak()));
     }
     showSearchReplacePanel(false);
-    openCloseMessagesPanel(false);
+    stretchMessagesPanel(false);
 }
 
 void MainWindow::on_btnCancelReplace_clicked()
@@ -6665,7 +6665,7 @@ void MainWindow::on_actionLocate_in_Files_View_triggered()
         ui->treeFiles->setCurrentIndex(index);
         ui->treeFiles->scrollTo(index, QAbstractItemView::PositionAtCenter);
         ui->tabExplorer->setCurrentWidget(ui->tabFiles);
-        openCloseExplorerPanel(true);
+        stretchExplorerPanel(true);
     }
 }
 

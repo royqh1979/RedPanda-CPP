@@ -232,8 +232,8 @@ private:
     void updateProjectView();
     CompileTarget getCompileTarget();
     bool debugInferiorhasBreakpoint();
-    void openCloseMessagesPanel(bool open);
-    void openCloseExplorerPanel(bool open);
+    void stretchMessagesPanel(bool open);
+    void stretchExplorerPanel(bool open);
     void prepareDebugger();
     void doAutoSave(Editor *e);
     void buildContextMenus();

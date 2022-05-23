@@ -42,6 +42,10 @@ public:
 private:
     bool mShrinked;
     static QHash<const ShrinkableTabWidget*,QSize> BeforeShrinkSizes;
+
+    // QWidget interface
+protected:
+    void resizeEvent(QResizeEvent *event) override;
 };
 
 #endif // SHRINKABLETABWIDGET_H
