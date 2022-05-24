@@ -855,7 +855,7 @@
      <enum>QTabWidget::South</enum>
     </property>
     <property name="currentIndex">
-     <number>4</number>
+     <number>6</number>
     </property>
     <property name="iconSize">
      <size>
@@ -1239,6 +1239,18 @@
       <string>Search</string>
      </attribute>
      <layout class="QVBoxLayout" name="verticalLayout_4">
+      <property name="leftMargin">
+       <number>5</number>
+      </property>
+      <property name="topMargin">
+       <number>5</number>
+      </property>
+      <property name="rightMargin">
+       <number>5</number>
+      </property>
+      <property name="bottomMargin">
+       <number>5</number>
+      </property>
       <item>
        <widget class="QWidget" name="searchHistoryPanel" native="true">
         <layout class="QHBoxLayout" name="horizontalLayout_11">
@@ -1407,6 +1419,18 @@
       <string>TODO</string>
      </attribute>
      <layout class="QHBoxLayout" name="horizontalLayout_5">
+      <property name="leftMargin">
+       <number>5</number>
+      </property>
+      <property name="topMargin">
+       <number>5</number>
+      </property>
+      <property name="rightMargin">
+       <number>5</number>
+      </property>
+      <property name="bottomMargin">
+       <number>5</number>
+      </property>
       <item>
        <widget class="QTableView" name="tableTODO">
         <attribute name="horizontalHeaderStretchLastSection">
@@ -1425,6 +1449,18 @@
       <string>Bookmark</string>
      </attribute>
      <layout class="QHBoxLayout" name="horizontalLayout_14">
+      <property name="leftMargin">
+       <number>5</number>
+      </property>
+      <property name="topMargin">
+       <number>5</number>
+      </property>
+      <property name="rightMargin">
+       <number>5</number>
+      </property>
+      <property name="bottomMargin">
+       <number>5</number>
+      </property>
       <item>
        <widget class="QTableView" name="tableBookmark">
         <property name="alternatingRowColors">
@@ -1453,16 +1489,16 @@
      </attribute>
      <layout class="QVBoxLayout" name="verticalLayout_8">
       <property name="leftMargin">
-       <number>11</number>
+       <number>5</number>
       </property>
       <property name="topMargin">
-       <number>11</number>
+       <number>5</number>
       </property>
       <property name="rightMargin">
-       <number>11</number>
+       <number>5</number>
       </property>
       <property name="bottomMargin">
-       <number>11</number>
+       <number>5</number>
       </property>
       <item>
        <widget class="QSplitter" name="splitterProblem">
