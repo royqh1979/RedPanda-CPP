@@ -7,6 +7,7 @@ Red Panda C++ Version 1.0.9
   - change: panels can be relocated
   - fix: tab icon not correct restore when hide and show a panel
   - fix: the hiding state of the tools output panel is not correctly saved
+  - enhancement: add "toggle explorer panel" and "toggle messages panel" in "view" menu
 
 Red Panda C++ Version 1.0.8
   - enhancement: auto complete '#undef'

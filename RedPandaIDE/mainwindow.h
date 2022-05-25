@@ -673,6 +673,10 @@ private slots:
 
     void on_dockMessages_dockLocationChanged(const Qt::DockWidgetArea &area);
 
+    void on_actionToggle_Explorer_Panel_triggered();
+
+    void on_actionToggle_Messages_Panel_triggered();
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;

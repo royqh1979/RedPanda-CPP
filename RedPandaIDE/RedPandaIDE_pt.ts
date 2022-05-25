@@ -4464,6 +4464,22 @@
         <source>Messages</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Toggle Explorer Panel</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Ctrl+F9</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Toggle Messages Panel</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Ctrl+F10</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>NewClassDialog</name>

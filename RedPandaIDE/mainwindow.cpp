@@ -7730,3 +7730,15 @@ void MainWindow::on_dockMessages_dockLocationChanged(const Qt::DockWidgetArea &a
     setDockMessagesToArea(area);
 }
 
+
+void MainWindow::on_actionToggle_Explorer_Panel_triggered()
+{
+    stretchExplorerPanel(ui->tabExplorer->isShrinked());
+}
+
+
+void MainWindow::on_actionToggle_Messages_Panel_triggered()
+{
+    stretchMessagesPanel(ui->tabMessages->isShrinked());
+}
+

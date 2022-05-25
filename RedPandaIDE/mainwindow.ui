@@ -300,6 +300,9 @@
     <addaction name="actionTool_Window_Bars"/>
     <addaction name="menuTool_Windows"/>
     <addaction name="actionStatus_Bar"/>
+    <addaction name="separator"/>
+    <addaction name="actionToggle_Explorer_Panel"/>
+    <addaction name="actionToggle_Messages_Panel"/>
    </widget>
    <widget class="QMenu" name="menuGit">
     <property name="title">
@@ -3082,6 +3085,22 @@
    </property>
    <property name="text">
     <string>Compiler Options...</string>
+   </property>
+  </action>
+  <action name="actionToggle_Explorer_Panel">
+   <property name="text">
+    <string>Toggle Explorer Panel</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+F9</string>
+   </property>
+  </action>
+  <action name="actionToggle_Messages_Panel">
+   <property name="text">
+    <string>Toggle Messages Panel</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+F10</string>
    </property>
   </action>
  </widget>
