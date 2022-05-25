@@ -2724,10 +2724,8 @@ void Editor::insertCodeSnippet(const QString &code)
 //        else if EndsStr(#10, s) then
 //          Delete(s,Length(s),1);
     setSelText(s);
-    setCaretXY(cursorPos); //restore cursor pos before insert
-//        fText.SelText := s;
-//        Text.CaretXY := CursorPos;
     if (mUserCodeInTabStops.count()>0) {
+        setCaretXY(cursorPos); //restore cursor pos before insert
         mTabStopBegin = caretX();
         mTabStopEnd = caretX();
         popUserCodeInTabStops();
