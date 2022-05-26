@@ -289,27 +289,21 @@ void CompilerManager::run(const QString &filename, const QString &arguments, con
     mRunner->start();
 }
 
+
 void CompilerManager::runProblem(const QString &filename, const QString &arguments, const QString &workDir, POJProblemCase problemCase)
 {
     QMutexLocker locker(&mRunnerMutex);
-    if (mRunner!=nullptr) {
-        return;
-    }
+    doRunProblem(filename, arguments, workDir, QVector<POJProblemCase> {problemCase});
 
-    OJProblemCasesRunner * execRunner = new OJProblemCasesRunner(filename,arguments,workDir,problemCase);
-    mRunner = execRunner;
-    connect(mRunner, &Runner::finished, this ,&CompilerManager::onRunnerTerminated);
-    connect(mRunner, &Runner::finished, mRunner ,&Runner::deleteLater);
-    connect(mRunner, &Runner::finished, pMainWindow ,&MainWindow::onRunProblemFinished);
-    connect(mRunner, &Runner::runErrorOccurred, pMainWindow ,&MainWindow::onRunErrorOccured);
-    connect(execRunner, &OJProblemCasesRunner::caseStarted, pMainWindow, &MainWindow::onOJProblemCaseStarted);
-    connect(execRunner, &OJProblemCasesRunner::caseFinished, pMainWindow, &MainWindow::onOJProblemCaseFinished);
-    mRunner->start();
 }
 
-void CompilerManager::runProblem(const QString &filename, const QString &arguments, const QString &workDir, QVector<POJProblemCase> problemCases)
+void CompilerManager::runProblem(const QString &filename, const QString &arguments, const QString &workDir, const QVector<POJProblemCase>& problemCases)
 {
     QMutexLocker locker(&mRunnerMutex);
+    doRunProblem(filename, arguments, workDir, problemCases);
+}
+void CompilerManager::doRunProblem(const QString &filename, const QString &arguments, const QString &workDir, const QVector<POJProblemCase>& problemCases)
+{
     if (mRunner!=nullptr) {
         return;
     }
@@ -318,6 +312,7 @@ void CompilerManager::runProblem(const QString &filename, const QString &argumen
     if (pSettings->executor().enableCaseTimeout())
         execRunner->setExecTimeout(pSettings->executor().caseTimeout());
     connect(mRunner, &Runner::finished, this ,&CompilerManager::onRunnerTerminated);
+    connect(mRunner, &Runner::finished, mRunner ,&Runner::deleteLater);
     connect(mRunner, &Runner::finished, pMainWindow ,&MainWindow::onRunProblemFinished);
     connect(mRunner, &Runner::runErrorOccurred, pMainWindow ,&MainWindow::onRunErrorOccured);
     connect(execRunner, &OJProblemCasesRunner::caseStarted, pMainWindow, &MainWindow::onOJProblemCaseStarted);

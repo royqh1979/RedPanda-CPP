@@ -9,6 +9,7 @@ Red Panda C++ Version 1.0.9
   - fix: the hiding state of the tools output panel is not correctly saved
   - enhancement: add "toggle explorer panel" and "toggle messages panel" in "view" menu
   - fix: cursor is wrongly positioned when insert code snippets that don't have placeholders
+  - fix: "run current cases" dosen't correctly display real output 
 
 Red Panda C++ Version 1.0.8
   - enhancement: auto complete '#undef'
