@@ -19,6 +19,8 @@ macos: {
         /opt/homebrew/opt/icu4c/include
 
     QT += gui-private
+
+    ICON = images/RedPandaIDE.icns
 }
 
 win32: VERSION = $${APP_VERSION}.0
@@ -38,7 +40,7 @@ gcc {
 }
 
 msvc {
-DEFINES += NOMINMAX
+    DEFINES += NOMINMAX
 }
 
 # You can make your code fail to compile if it uses deprecated APIs.
