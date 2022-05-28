@@ -186,6 +186,7 @@ QString Settings::Dirs::appResourceDir() const
 #elif defined(Q_OS_LINUX)
     return includeTrailingPathDelimiter(PREFIX)+"share/"+APP_NAME;
 #elif defined(Q_OS_MACOS)
+//    return QApplication::instance()->applicationDirPath();
     return "";
 #endif
 }
@@ -198,7 +199,7 @@ QString Settings::Dirs::appLibexecDir() const
 #elif defined(Q_OS_LINUX)
     return includeTrailingPathDelimiter(PREFIX)+"libexec/"+APP_NAME;
 #elif defined(Q_OS_MACOS)
-    return "";
+    return QApplication::instance()->applicationDirPath();
 #endif
 }
 
@@ -2835,7 +2836,13 @@ void Settings::Environment::doLoad()
     QString defaultLocaleName = QLocale::system().name();
     if (defaultLocaleName == "zh_CN") {
         QString fontName;
+#ifdef Q_OS_WINDOWS
         fontName = "Microsoft Yahei";
+#elif defined(Q_OS_MACOS)
+        fontName = "PingFang SC";
+#elif defined(Q_OS_LINUX)
+        fontName = "Noto Sans CJK";
+#endif
         QFont font(fontName);
         if (font.exactMatch()) {
             defaultFontName = fontName;
@@ -2863,6 +2870,10 @@ void Settings::Environment::doLoad()
         mTerminalPath = stringValue("terminal_path","/usr/bin/konsole");
     if (mTerminalPath.isEmpty())
         mTerminalPath = stringValue("terminal_path","/usr/bin/x-terminal-emulator");
+    mAStylePath = includeTrailingPathDelimiter(pSettings->dirs().appLibexecDir())+"astyle";
+#elif defined(Q_OS_MACOS)
+    mTerminalPath = stringValue("terminal_path",
+                                "/System/Applications/Utilities/Terminal.app/Contents/MacOS/Terminal");
     mAStylePath = includeTrailingPathDelimiter(pSettings->dirs().appLibexecDir())+"astyle";
 #endif
     mHideNonSupportFilesInFileView=boolValue("hide_non_support_files_file_view",true);
