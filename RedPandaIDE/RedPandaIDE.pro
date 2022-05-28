@@ -430,6 +430,7 @@ unix: {
     settingsdialog/formatterpathwidget.ui \
     settingsdialog/environmentprogramswidget.ui
 }
+
 linux: {
     LIBS+= \
     -lrt
@@ -500,3 +501,17 @@ RESOURCES += qmake_qm_files
 RESOURCES += iconsets_files
 RESOURCES += theme_files
 RESOURCES += colorscheme_files
+
+macos: {
+    message($$OUT_PWD/astyle/astyle)
+
+    # Add needed executables into the main app bundle
+    bundled_executable.files = \
+        $$OUT_PWD/../astyle/astyle \
+        $$OUT_PWD/../consolepauser/consolepauser \
+        $$OUT_PWD/../redpanda-git-askpass/redpanda-git-askpass.app/Contents/MacOS/redpanda-git-askpass
+
+    bundled_executable.path = Contents/MacOS
+
+    QMAKE_BUNDLE_DATA += bundled_executable
+}
