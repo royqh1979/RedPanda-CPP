@@ -7286,60 +7286,60 @@ Are you really want to continue?</oldsource>
         <translation>无法载入自动链接设置</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1586"/>
-        <location filename="settings.cpp" line="1605"/>
-        <location filename="settings.cpp" line="1617"/>
-        <location filename="settings.cpp" line="1629"/>
+        <location filename="settings.cpp" line="1595"/>
+        <location filename="settings.cpp" line="1614"/>
+        <location filename="settings.cpp" line="1626"/>
+        <location filename="settings.cpp" line="1638"/>
         <source>The following %1 directories don&apos;t exist:</source>
         <translation>下列%1文件夹不存在：</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1587"/>
-        <location filename="settings.cpp" line="1597"/>
+        <location filename="settings.cpp" line="1596"/>
+        <location filename="settings.cpp" line="1606"/>
         <source>binary</source>
         <translation>二进制</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1596"/>
+        <location filename="settings.cpp" line="1605"/>
         <source>No %1 directories have been specified.</source>
         <translation>未指定%1文件夹</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1606"/>
+        <location filename="settings.cpp" line="1615"/>
         <source>C include</source>
         <translation>C包含</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1618"/>
-        <location filename="settings.cpp" line="1630"/>
+        <location filename="settings.cpp" line="1627"/>
+        <location filename="settings.cpp" line="1639"/>
         <source>C++ include</source>
         <translation>C++包含</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1649"/>
-        <location filename="settings.cpp" line="1654"/>
-        <location filename="settings.cpp" line="1659"/>
-        <location filename="settings.cpp" line="1664"/>
+        <location filename="settings.cpp" line="1658"/>
+        <location filename="settings.cpp" line="1663"/>
+        <location filename="settings.cpp" line="1668"/>
+        <location filename="settings.cpp" line="1673"/>
         <source>Cannot find the %1 &quot;%2&quot;</source>
         <translation>无法找到%1程序&quot;%2&quot;</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1650"/>
+        <location filename="settings.cpp" line="1659"/>
         <source>C Compiler</source>
         <translation>C编译器</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1655"/>
+        <location filename="settings.cpp" line="1664"/>
         <source>C++ Compiler</source>
         <translation>C++编译器</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1660"/>
+        <location filename="settings.cpp" line="1669"/>
         <source>Maker</source>
         <translation>构建程序(Make)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1665"/>
+        <location filename="settings.cpp" line="1674"/>
         <source>Debugger</source>
         <translation>调试器</translation>
     </message>
@@ -7408,7 +7408,7 @@ Are you really want to continue?</oldsource>
         <translation>生成调试信息(-g3)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2559"/>
+        <location filename="settings.cpp" line="2568"/>
         <source>Would you like Red Panda C++ to search for compilers in PATH?</source>
         <translation>您同意小熊猫C++在PATH路径中寻找gcc编译器吗？</translation>
     </message>
@@ -7517,34 +7517,34 @@ Are you really want to continue?</oldsource>
         <translation>只生成汇编代码(-S)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2521"/>
-        <location filename="settings.cpp" line="2561"/>
+        <location filename="settings.cpp" line="2530"/>
+        <location filename="settings.cpp" line="2570"/>
         <source>Confirm</source>
         <translation>确认</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2522"/>
+        <location filename="settings.cpp" line="2531"/>
         <source>The following problems were found during validation of compiler set &quot;%1&quot;:</source>
         <translation>在验证编译器设置&quot;%1&quot;时遇到了下列问题：</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2526"/>
+        <location filename="settings.cpp" line="2535"/>
         <source>Would you like Red Panda C++ to remove them for you and add the default paths to the valid paths?</source>
         <translation>是否让小熊猫C++删除这些配置，并尝试重新建立配置？</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2528"/>
+        <location filename="settings.cpp" line="2537"/>
         <source>Leaving those directories will lead to problems during compilation.&lt;br /&gt;&lt;br /&gt;Unless you know exactly what you&apos;re doing, it is recommended that you click Yes.</source>
         <translation>如果仍然保留这些设置，可能会导致编译错误。&lt;br /&gt;&lt;br /&gt;请选择“是”，除非您清楚的知道选择“否”的后果，</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2551"/>
-        <location filename="settings.cpp" line="2557"/>
+        <location filename="settings.cpp" line="2560"/>
+        <location filename="settings.cpp" line="2566"/>
         <source>Compiler set not configuared.</source>
         <translation>未配置编译器设置。</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2553"/>
+        <location filename="settings.cpp" line="2562"/>
         <source>Would you like Red Panda C++ to search for compilers in the following locations: &lt;BR /&gt;&apos;%1&apos;&lt;BR /&gt;&apos;%2&apos;? </source>
         <translation>您需要小熊猫C++在下列位置搜索编译器吗：&lt;br /&gt;%1&lt;br /&gt;%2</translation>
     </message>
