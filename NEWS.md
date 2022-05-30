@@ -1,3 +1,6 @@
+Red Panda C++ Version 1.0.10
+  - fix: modify watch doesn't work
+
 Red Panda C++ Version 1.0.9
   - fix: selection in column mode not correctly drawn when has wide chars in it
   - fix: delete & insert in column mode not correctly handled

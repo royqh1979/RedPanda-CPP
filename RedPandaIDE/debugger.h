@@ -288,6 +288,7 @@ public:
     void removeWatchVar(const QModelIndex& index);
     void sendAllWatchVarsToDebugger();
     PWatchVar findWatchVar(const QString& expression);
+    PWatchVar watchVarAt(const QModelIndex& index);
 //    void notifyWatchVarUpdated(PWatchVar var);
 
     BacktraceModel* backtraceModel();

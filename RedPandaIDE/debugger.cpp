@@ -480,6 +480,11 @@ PWatchVar Debugger::findWatchVar(const QString &expression)
     return mWatchModel->findWatchVar(expression);
 }
 
+PWatchVar Debugger::watchVarAt(const QModelIndex &index)
+{
+    return mWatchModel->findWatchVar(index);
+}
+
 //void Debugger::notifyWatchVarUpdated(PWatchVar var)
 //{
 //    mWatchModel->notifyUpdated(var);

@@ -4480,6 +4480,14 @@
         <source>Ctrl+F10</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Modify Watch</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Watch Expression</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>NewClassDialog</name>

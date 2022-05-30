@@ -10,7 +10,7 @@ isEmpty(APP_NAME) {
 }
 
 isEmpty(APP_VERSION) {
-    APP_VERSION=1.0.9
+    APP_VERSION=1.1.0
 }
 
 

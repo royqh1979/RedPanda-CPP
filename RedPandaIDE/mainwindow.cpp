@@ -5282,7 +5282,27 @@ void MainWindow::on_actionRemove_All_Watches_triggered()
 
 void MainWindow::on_actionModify_Watch_triggered()
 {
-
+    QModelIndexList lst=ui->watchView->selectionModel()->selectedRows();
+    if (lst.count()<=1) {
+        QModelIndex index =ui->watchView->currentIndex();
+        QModelIndex parent;
+        parent = ui->watchView->model()->parent(index);
+        if (parent.isValid())
+            return;
+        PWatchVar var = mDebugger->watchVarAt(index);
+        if (!var)
+            return;
+        bool isOk;
+        QString newExpr = QInputDialog::getText(
+                    this,tr("Modify Watch"),
+                    tr("Watch Expression"),
+                    QLineEdit::Normal,
+                    var->expression,
+                    &isOk);
+        if (isOk) {
+            mDebugger->modifyWatchVarExpression(var->expression,newExpr);
+        }
+    }
 }
 
 
