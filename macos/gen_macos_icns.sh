@@ -1,6 +1,6 @@
 #!/bin/bash
 
-input_icon="devcpp.png"
+input_icon="../RedPandaIDE/images/devcpp.png"
 output_dir="RedPandaIDE.iconset"
 
 mkdir $output_dir
