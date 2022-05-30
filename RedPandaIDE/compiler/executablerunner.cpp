@@ -108,7 +108,7 @@ void ExecutableRunner::run()
     }
     pathAdded.append(pSettings->dirs().appDir());
     if (!path.isEmpty()) {
-        path+= PATH_SEPARATOR + pathAdded.join(PATH_SEPARATOR);
+        path= pathAdded.join(PATH_SEPARATOR) + PATH_SEPARATOR + path;
     } else {
         path = pathAdded.join(PATH_SEPARATOR);
     }
