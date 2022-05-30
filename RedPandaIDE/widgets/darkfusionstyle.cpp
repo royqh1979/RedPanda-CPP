@@ -27,6 +27,11 @@
 #include <QSvgRenderer>
 #include "../settings.h"
 
+#if defined(Q_OS_MACX)
+#include <QtGui/private/qguiapplication_p.h>
+#include <QtGui/qpa/qplatformtheme.h>
+#endif
+
 #define BEGIN_STYLE_PIXMAPCACHE(a) \
     QRect rect = option->rect; \
     QPixmap internalPixmapCache; \

@@ -13,7 +13,15 @@ isEmpty(APP_VERSION) {
     APP_VERSION=1.1.0
 }
 
+macos: {
+    # This package needs to be installed via homebrew before we can compile it
+    INCLUDEPATH += \
+        /opt/homebrew/opt/icu4c/include
 
+    QT += gui-private
+
+    ICON = ../macos/RedPandaIDE.icns
+}
 
 win32: VERSION = $${APP_VERSION}.0
 else: VERSION = $${APP_VERSION}
@@ -32,7 +40,7 @@ gcc {
 }
 
 msvc {
-DEFINES += NOMINMAX
+    DEFINES += NOMINMAX
 }
 
 # You can make your code fail to compile if it uses deprecated APIs.
@@ -424,6 +432,7 @@ unix: {
     settingsdialog/formatterpathwidget.ui \
     settingsdialog/environmentprogramswidget.ui
 }
+
 linux: {
     LIBS+= \
     -lrt
@@ -494,3 +503,16 @@ RESOURCES += qmake_qm_files
 RESOURCES += iconsets_files
 RESOURCES += theme_files
 RESOURCES += colorscheme_files
+
+macos: {
+    # Add needed executables into the main app bundle
+    bundled_executable.files = \
+        $$OUT_PWD/../astyle/astyle \
+        $$OUT_PWD/../consolepauser/consolepauser \
+        $$OUT_PWD/../redpanda-git-askpass/redpanda-git-askpass.app/Contents/MacOS/redpanda-git-askpass
+    bundled_executable.path = Contents/MacOS
+
+    # Also bundled templates
+
+    QMAKE_BUNDLE_DATA += bundled_executable
+}

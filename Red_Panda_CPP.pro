@@ -5,14 +5,20 @@ SUBDIRS += \
     astyle \
     consolepauser
 
+# Add the dependencies so that the RedPandaIDE project can add the depended programs
+# into the main app bundle
+RedPandaIDE.depends = astyle consolepauser
+
 win32: {
 SUBDIRS += \
     redpanda-win-git-askpass
+    RedPandaIDE.depends += redpanda-win-git-askpass
 }
 
-linux: {
+unix: {
 SUBDIRS += \
     redpanda-git-askpass
+    RedPandaIDE.depends += redpanda-git-askpass
 }
 
 APP_NAME = RedPandaCPP
@@ -20,7 +26,6 @@ APP_NAME = RedPandaCPP
 APP_VERSION = 1.1.0
 
 linux: {
-
     isEmpty(PREFIX) {
         PREFIX = /usr/local
     }
@@ -44,7 +49,6 @@ linux: {
     desktop.path = $${PREFIX}/share/applications
     desktop.files += linux/redpandaide.desktop
     INSTALLS += desktop
-
 }
 
 win32: {

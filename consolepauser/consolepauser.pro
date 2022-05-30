@@ -19,9 +19,14 @@ SOURCES += \
 unix: {
 SOURCES += \
     main.unix.cpp
-    LIBS+= \
-        -lrt
 }
+
+# macOS does not provide rt library, only use it for Linux
+linux: {
+LIBS+= \
+    -lrt
+}
+
 
 CONFIG += lrelease
 CONFIG += embed_translations
