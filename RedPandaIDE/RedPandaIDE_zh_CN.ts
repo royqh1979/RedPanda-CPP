@@ -183,17 +183,17 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>BacktraceModel</name>
     <message>
-        <location filename="debugger.cpp" line="1746"/>
+        <location filename="debugger.cpp" line="1715"/>
         <source>Function</source>
         <translation>函数</translation>
     </message>
     <message>
-        <location filename="debugger.cpp" line="1748"/>
+        <location filename="debugger.cpp" line="1717"/>
         <source>Filename</source>
         <translation>文件名</translation>
     </message>
     <message>
-        <location filename="debugger.cpp" line="1750"/>
+        <location filename="debugger.cpp" line="1719"/>
         <source>Line</source>
         <translation>行</translation>
     </message>
@@ -239,37 +239,37 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>BreakpointModel</name>
     <message>
-        <location filename="debugger.cpp" line="1538"/>
+        <location filename="debugger.cpp" line="1507"/>
         <source>Filename</source>
         <translation>文件名</translation>
     </message>
     <message>
-        <location filename="debugger.cpp" line="1540"/>
+        <location filename="debugger.cpp" line="1509"/>
         <source>Line</source>
         <translation>行</translation>
     </message>
     <message>
-        <location filename="debugger.cpp" line="1542"/>
+        <location filename="debugger.cpp" line="1511"/>
         <source>Condition</source>
         <translation>条件</translation>
     </message>
     <message>
-        <location filename="debugger.cpp" line="1614"/>
+        <location filename="debugger.cpp" line="1583"/>
         <source>Save file &apos;%1&apos; failed.</source>
         <translation>保存文件&apos;%1&apos;失败。</translation>
     </message>
     <message>
-        <location filename="debugger.cpp" line="1618"/>
+        <location filename="debugger.cpp" line="1587"/>
         <source>Can&apos;t open file &apos;%1&apos; for write.</source>
         <translation>无法写入文件&apos;%1&apos;.</translation>
     </message>
     <message>
-        <location filename="debugger.cpp" line="1634"/>
+        <location filename="debugger.cpp" line="1603"/>
         <source>Error in json file &apos;%1&apos;:%2 : %3</source>
         <translation>JSON文件&apos;%1&apos;:%2中存在错误：%3</translation>
     </message>
     <message>
-        <location filename="debugger.cpp" line="1653"/>
+        <location filename="debugger.cpp" line="1622"/>
         <source>Can&apos;t open file &apos;%1&apos; for read.</source>
         <translation>无法读取文件&apos;%1&apos;.</translation>
     </message>
@@ -1161,17 +1161,17 @@ Are you really want to continue?</oldsource>
 <context>
     <name>Debugger</name>
     <message>
-        <location filename="debugger.cpp" line="67"/>
+        <location filename="debugger.cpp" line="62"/>
         <source>No compiler set</source>
         <translation>无编译器设置</translation>
     </message>
     <message>
-        <location filename="debugger.cpp" line="68"/>
+        <location filename="debugger.cpp" line="63"/>
         <source>No compiler set is configured.</source>
         <translation>没有配置编译器设置。</translation>
     </message>
     <message>
-        <location filename="debugger.cpp" line="68"/>
+        <location filename="debugger.cpp" line="63"/>
         <source>Can&apos;t start debugging.</source>
         <translation>无法启动调试器</translation>
     </message>
@@ -1184,42 +1184,42 @@ Are you really want to continue?</oldsource>
         <translation type="vanished">调试器路径&quot;%1&quot;中包含非ASCII字符（如，中文字符）</translation>
     </message>
     <message>
-        <location filename="debugger.cpp" line="100"/>
+        <location filename="debugger.cpp" line="94"/>
         <source>This prevents it from executing.</source>
         <translation>这会导致调试器无法启动。</translation>
     </message>
     <message>
-        <location filename="debugger.cpp" line="88"/>
+        <location filename="debugger.cpp" line="82"/>
         <source>Debugger not exists</source>
         <translation>找不到调试器</translation>
     </message>
     <message>
-        <location filename="debugger.cpp" line="89"/>
+        <location filename="debugger.cpp" line="83"/>
         <source>Can&apos;&apos;t find debugger in : &quot;%1&quot;</source>
         <translation>找不到调试器程序&quot;%1&quot;</translation>
     </message>
     <message>
-        <location filename="debugger.cpp" line="96"/>
+        <location filename="debugger.cpp" line="90"/>
         <source>GDB Server path error</source>
         <translation>gdb server路径错误</translation>
     </message>
     <message>
-        <location filename="debugger.cpp" line="97"/>
+        <location filename="debugger.cpp" line="91"/>
         <source>GDB Server&apos;s path &quot;%1&quot; contains non-ascii characters.</source>
         <translation>gdb server的路径&quot;%1&quot;包含中文或者全角字符</translation>
     </message>
     <message>
-        <location filename="debugger.cpp" line="106"/>
+        <location filename="debugger.cpp" line="100"/>
         <source>GDB Server not exists</source>
         <translation>找不到gdb server</translation>
     </message>
     <message>
-        <location filename="debugger.cpp" line="107"/>
+        <location filename="debugger.cpp" line="101"/>
         <source>Can&apos;&apos;t find gdb server in : &quot;%1&quot;</source>
         <translation>无法在&quot;%1&quot;找到gdb server</translation>
     </message>
     <message>
-        <location filename="debugger.cpp" line="385"/>
+        <location filename="debugger.cpp" line="379"/>
         <source>Execute to evaluate</source>
         <translation>执行以求值</translation>
     </message>
@@ -1228,22 +1228,22 @@ Are you really want to continue?</oldsource>
         <translation type="vanished">不在当前语境中</translation>
     </message>
     <message>
-        <location filename="debugger.cpp" line="548"/>
+        <location filename="debugger.cpp" line="532"/>
         <source>Compile</source>
         <translation>编译</translation>
     </message>
     <message>
-        <location filename="debugger.cpp" line="549"/>
+        <location filename="debugger.cpp" line="533"/>
         <source>Source file is more recent than executable.</source>
         <translation>源文件比程序文件新。</translation>
     </message>
     <message>
-        <location filename="debugger.cpp" line="549"/>
+        <location filename="debugger.cpp" line="533"/>
         <source>Recompile?</source>
         <translation>重新编译？</translation>
     </message>
     <message>
-        <location filename="debugger.cpp" line="594"/>
+        <location filename="debugger.cpp" line="578"/>
         <source>Signal &quot;%1&quot; Received: </source>
         <translation>收到信号&quot;%1&quot;:</translation>
     </message>
@@ -7241,80 +7241,80 @@ Are you really want to continue?</oldsource>
         <translation>无法载入自动链接设置</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1577"/>
-        <location filename="settings.cpp" line="1596"/>
-        <location filename="settings.cpp" line="1608"/>
-        <location filename="settings.cpp" line="1620"/>
+        <location filename="settings.cpp" line="1571"/>
+        <location filename="settings.cpp" line="1590"/>
+        <location filename="settings.cpp" line="1602"/>
+        <location filename="settings.cpp" line="1614"/>
         <source>The following %1 directories don&apos;t exist:</source>
         <translation>下列%1文件夹不存在：</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1578"/>
-        <location filename="settings.cpp" line="1588"/>
+        <location filename="settings.cpp" line="1572"/>
+        <location filename="settings.cpp" line="1582"/>
         <source>binary</source>
         <translation>二进制</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1587"/>
+        <location filename="settings.cpp" line="1581"/>
         <source>No %1 directories have been specified.</source>
         <translation>未指定%1文件夹</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1597"/>
+        <location filename="settings.cpp" line="1591"/>
         <source>C include</source>
         <translation>C包含</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1609"/>
-        <location filename="settings.cpp" line="1621"/>
+        <location filename="settings.cpp" line="1603"/>
+        <location filename="settings.cpp" line="1615"/>
         <source>C++ include</source>
         <translation>C++包含</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1640"/>
-        <location filename="settings.cpp" line="1645"/>
-        <location filename="settings.cpp" line="1650"/>
-        <location filename="settings.cpp" line="1655"/>
+        <location filename="settings.cpp" line="1634"/>
+        <location filename="settings.cpp" line="1639"/>
+        <location filename="settings.cpp" line="1644"/>
+        <location filename="settings.cpp" line="1649"/>
         <source>Cannot find the %1 &quot;%2&quot;</source>
         <translation>无法找到%1程序&quot;%2&quot;</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1641"/>
+        <location filename="settings.cpp" line="1635"/>
         <source>C Compiler</source>
         <translation>C编译器</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1646"/>
+        <location filename="settings.cpp" line="1640"/>
         <source>C++ Compiler</source>
         <translation>C++编译器</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1651"/>
+        <location filename="settings.cpp" line="1645"/>
         <source>Maker</source>
         <translation>构建程序(Make)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="1656"/>
+        <location filename="settings.cpp" line="1650"/>
         <source>Debugger</source>
         <translation>调试器</translation>
     </message>
     <message>
-        <location filename="compiler/compilerinfo.cpp" line="54"/>
+        <location filename="compiler/compilerinfo.cpp" line="53"/>
         <source>C options</source>
         <translation>C语言选项</translation>
     </message>
     <message>
-        <location filename="compiler/compilerinfo.cpp" line="55"/>
+        <location filename="compiler/compilerinfo.cpp" line="54"/>
         <source>Support all ANSI standard C programs (-ansi)</source>
         <translation>支持所有ANSI标准C程序(-ansi)</translation>
     </message>
     <message>
-        <location filename="compiler/compilerinfo.cpp" line="56"/>
+        <location filename="compiler/compilerinfo.cpp" line="55"/>
         <source>Do not recognize asm,inline or typeof as a keyword (-fno-asm)</source>
         <translation>不支持将asm、inline和typeof作为关键字(-fno-asm)</translation>
     </message>
     <message>
-        <location filename="compiler/compilerinfo.cpp" line="57"/>
+        <location filename="compiler/compilerinfo.cpp" line="56"/>
         <source>Imitate traditional C preprocessors (-traditional-cpp)</source>
         <translation>模仿传统C预处理器行为(-traditional-cpp)</translation>
     </message>
@@ -7324,38 +7324,39 @@ Are you really want to continue?</oldsource>
         <translation>代码生成</translation>
     </message>
     <message>
-        <location filename="compiler/compilerinfo.cpp" line="121"/>
+        <location filename="compiler/compilerinfo.cpp" line="88"/>
         <source>Optimize for the following machine (-march)</source>
         <translation>生成特定机器的专用指令(-march)</translation>
     </message>
     <message>
-        <location filename="compiler/compilerinfo.cpp" line="122"/>
+        <location filename="compiler/compilerinfo.cpp" line="89"/>
         <source>Optimize less, while maintaining full compatibility (-tune)</source>
         <translation>完整兼容特定机器，较少优化(-tune)</translation>
     </message>
     <message>
-        <location filename="compiler/compilerinfo.cpp" line="141"/>
+        <location filename="compiler/compilerinfo.cpp" line="108"/>
         <source>Enable use of specific instructions (-mx)</source>
         <translation>启用特定指令集(-mx)</translation>
     </message>
     <message>
-        <location filename="compiler/compilerinfo.cpp" line="69"/>
+        <location filename="compiler/compilerinfo.cpp" line="118"/>
         <source>Optimization level (-Ox)</source>
         <translation>优化级别(-Ox)</translation>
     </message>
     <message>
-        <location filename="compiler/compilerinfo.cpp" line="147"/>
+        <location filename="compiler/compilerinfo.cpp" line="124"/>
         <source>Compile with the following pointer size (-mx)</source>
         <translation>使用下列指针大小编译(-mx)</translation>
     </message>
     <message>
-        <location filename="compiler/compilerinfo.cpp" line="91"/>
+        <location filename="compiler/compilerinfo.cpp" line="146"/>
         <source>Language standard (-std)</source>
         <translation>语言标准(-std)</translation>
     </message>
     <message>
+        <location filename="compiler/compilerinfo.cpp" line="159"/>
         <source>Profile</source>
-        <translation type="vanished">性能分析</translation>
+        <translation>性能分析</translation>
     </message>
     <message>
         <location filename="compiler/compilerinfo.cpp" line="60"/>
@@ -7363,57 +7364,57 @@ Are you really want to continue?</oldsource>
         <translation>生成调试信息(-g3)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2550"/>
+        <location filename="settings.cpp" line="2544"/>
         <source>Would you like Red Panda C++ to search for compilers in PATH?</source>
         <translation>您同意小熊猫C++在PATH路径中寻找gcc编译器吗？</translation>
     </message>
     <message>
-        <location filename="compiler/compilerinfo.cpp" line="149"/>
+        <location filename="compiler/compilerinfo.cpp" line="160"/>
         <source>Generate profiling info for analysis (-pg)</source>
         <translation>生成性能分析信息(-pg)</translation>
     </message>
     <message>
-        <location filename="compiler/compilerinfo.cpp" line="152"/>
+        <location filename="compiler/compilerinfo.cpp" line="149"/>
         <source>Warnings</source>
         <translation>代码警告</translation>
     </message>
     <message>
-        <location filename="compiler/compilerinfo.cpp" line="95"/>
+        <location filename="compiler/compilerinfo.cpp" line="62"/>
         <source>This CPU</source>
         <translation>当前CPU</translation>
     </message>
     <message>
-        <location filename="compiler/compilerinfo.cpp" line="153"/>
+        <location filename="compiler/compilerinfo.cpp" line="150"/>
         <source>Inhibit all warning messages (-w)</source>
         <translation>忽略所有警告信息(-w)</translation>
     </message>
     <message>
-        <location filename="compiler/compilerinfo.cpp" line="154"/>
+        <location filename="compiler/compilerinfo.cpp" line="151"/>
         <source>Show most warnings (-Wall)</source>
         <translation>启用常见问题警告(-Wall)</translation>
     </message>
     <message>
-        <location filename="compiler/compilerinfo.cpp" line="155"/>
+        <location filename="compiler/compilerinfo.cpp" line="152"/>
         <source>Show some more warnings (-Wextra)</source>
         <translation>启用更多问题警告(-Wextra)</translation>
     </message>
     <message>
-        <location filename="compiler/compilerinfo.cpp" line="156"/>
+        <location filename="compiler/compilerinfo.cpp" line="153"/>
         <source>Check ISO C/C++/C++0x conformance (-pedantic)</source>
         <translation>检查ISO C/C++/C++0x语法一致性(-pedantic)</translation>
     </message>
     <message>
-        <location filename="compiler/compilerinfo.cpp" line="157"/>
+        <location filename="compiler/compilerinfo.cpp" line="154"/>
         <source>Only check the code for syntax errors (-fsyntax-only)</source>
         <translation>只进行语法检查（不编译）(-fsyntax-only)</translation>
     </message>
     <message>
-        <location filename="compiler/compilerinfo.cpp" line="158"/>
+        <location filename="compiler/compilerinfo.cpp" line="155"/>
         <source>Make all warnings into errors (-Werror)</source>
         <translation>将警告作为错误处理(-Werror)</translation>
     </message>
     <message>
-        <location filename="compiler/compilerinfo.cpp" line="159"/>
+        <location filename="compiler/compilerinfo.cpp" line="156"/>
         <source>Abort compilation on first error (-Wfatal-errors)</source>
         <translation>遇到第一个错误后立即中止编译(-Wfatal-errors)</translation>
     </message>
@@ -7472,34 +7473,34 @@ Are you really want to continue?</oldsource>
         <translation>只生成汇编代码(-S)</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2512"/>
-        <location filename="settings.cpp" line="2552"/>
+        <location filename="settings.cpp" line="2506"/>
+        <location filename="settings.cpp" line="2546"/>
         <source>Confirm</source>
         <translation>确认</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2513"/>
+        <location filename="settings.cpp" line="2507"/>
         <source>The following problems were found during validation of compiler set &quot;%1&quot;:</source>
         <translation>在验证编译器设置&quot;%1&quot;时遇到了下列问题：</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2517"/>
+        <location filename="settings.cpp" line="2511"/>
         <source>Would you like Red Panda C++ to remove them for you and add the default paths to the valid paths?</source>
         <translation>是否让小熊猫C++删除这些配置，并尝试重新建立配置？</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2519"/>
+        <location filename="settings.cpp" line="2513"/>
         <source>Leaving those directories will lead to problems during compilation.&lt;br /&gt;&lt;br /&gt;Unless you know exactly what you&apos;re doing, it is recommended that you click Yes.</source>
         <translation>如果仍然保留这些设置，可能会导致编译错误。&lt;br /&gt;&lt;br /&gt;请选择“是”，除非您清楚的知道选择“否”的后果，</translation>
     </message>
     <message>
+        <location filename="settings.cpp" line="2536"/>
         <location filename="settings.cpp" line="2542"/>
-        <location filename="settings.cpp" line="2548"/>
         <source>Compiler set not configuared.</source>
         <translation>未配置编译器设置。</translation>
     </message>
     <message>
-        <location filename="settings.cpp" line="2544"/>
+        <location filename="settings.cpp" line="2538"/>
         <source>Would you like Red Panda C++ to search for compilers in the following locations: &lt;BR /&gt;&apos;%1&apos;&lt;BR /&gt;&apos;%2&apos;? </source>
         <translation>您需要小熊猫C++在下列位置搜索编译器吗：&lt;br /&gt;%1&lt;br /&gt;%2</translation>
     </message>
@@ -7884,12 +7885,12 @@ Are you really want to continue?</oldsource>
 <context>
     <name>RegisterModel</name>
     <message>
-        <location filename="debugger.cpp" line="2306"/>
+        <location filename="debugger.cpp" line="2275"/>
         <source>Register</source>
         <translation>寄存器</translation>
     </message>
     <message>
-        <location filename="debugger.cpp" line="2308"/>
+        <location filename="debugger.cpp" line="2277"/>
         <source>Value</source>
         <translation>值</translation>
     </message>
@@ -8902,49 +8903,49 @@ Are you really want to continue?</oldsource>
 <context>
     <name>WatchModel</name>
     <message>
-        <location filename="debugger.cpp" line="2113"/>
+        <location filename="debugger.cpp" line="2082"/>
         <source>Save file &apos;%1&apos; failed.</source>
         <translation>保存文件&apos;%1&apos;失败。</translation>
     </message>
     <message>
-        <location filename="debugger.cpp" line="2117"/>
+        <location filename="debugger.cpp" line="2086"/>
         <source>Can&apos;t open file &apos;%1&apos; for write.</source>
         <translation>无法写入文件&apos;%1&apos;.</translation>
     </message>
     <message>
-        <location filename="debugger.cpp" line="2133"/>
+        <location filename="debugger.cpp" line="2102"/>
         <source>Error in json file &apos;%1&apos;:%2 : %3</source>
         <translation>JSON文件&apos;%1&apos;:%2中存在错误：%3</translation>
     </message>
     <message>
-        <location filename="debugger.cpp" line="2058"/>
-        <location filename="debugger.cpp" line="2145"/>
+        <location filename="debugger.cpp" line="2027"/>
+        <location filename="debugger.cpp" line="2114"/>
         <source>Execute to evaluate</source>
         <translation>执行以求值</translation>
     </message>
     <message>
-        <location filename="debugger.cpp" line="1955"/>
-        <location filename="debugger.cpp" line="2025"/>
+        <location filename="debugger.cpp" line="1924"/>
+        <location filename="debugger.cpp" line="1994"/>
         <source>Not Valid</source>
         <translation>在当前作用域中无效</translation>
     </message>
     <message>
-        <location filename="debugger.cpp" line="2153"/>
+        <location filename="debugger.cpp" line="2122"/>
         <source>Can&apos;t open file &apos;%1&apos; for read.</source>
         <translation>无法读取文件&apos;%1&apos;.</translation>
     </message>
     <message>
-        <location filename="debugger.cpp" line="2226"/>
+        <location filename="debugger.cpp" line="2195"/>
         <source>Expression</source>
         <translation>表达式</translation>
     </message>
     <message>
-        <location filename="debugger.cpp" line="2228"/>
+        <location filename="debugger.cpp" line="2197"/>
         <source>Type</source>
         <translation>类型</translation>
     </message>
     <message>
-        <location filename="debugger.cpp" line="2230"/>
+        <location filename="debugger.cpp" line="2199"/>
         <source>Value</source>
         <translation>值</translation>
     </message>
