@@ -1265,10 +1265,13 @@ void Settings::Editor::doLoad()
     mRightEdgeWidth = intValue("right_edge_width",80);
     mRightEdgeLineColor = colorValue("right_edge_line_color",Qt::yellow);
 
-    //Font
+    //Editor font
 #ifdef Q_OS_WIN
     mFontName = stringValue("font_name","consolas");
     mNonAsciiFontName = stringValue("non_ascii_font_name","consolas");
+#elif defined(Q_OS_MACOS)
+    mFontName = stringValue("font_name","Menlo");
+    mNonAsciiFontName = stringValue("non_ascii_font_name","PingFang SC");
 #else
     mFontName = stringValue("font_name","Dejavu Sans Mono");
     mNonAsciiFontName = stringValue("non_ascii_font_name","Dejavu Sans Mono");
@@ -3222,6 +3225,8 @@ void Settings::Executor::doLoad()
     mIgnoreSpacesWhenValidatingCases = boolValue("ignore_spaces_when_validating_cases",false);
 #ifdef Q_OS_WIN
     mCaseEditorFontName = stringValue("case_editor_font_name","consolas");
+#elif defined(Q_OS_MACOS)
+    mCaseEditorFontName = stringValue("case_editor_font_name", "Menlo");
 #else
     mCaseEditorFontName = stringValue("case_editor_font_name","Dejavu Sans Mono");
 #endif
