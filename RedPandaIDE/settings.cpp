@@ -190,8 +190,12 @@ QString Settings::Dirs::appResourceDir() const
     return appDir();
 #elif defined(Q_OS_LINUX)
     return includeTrailingPathDelimiter(PREFIX)+"share/"+APP_NAME;
+#elif defined(Q_OS_MACOS)
+//    return QApplication::instance()->applicationDirPath();
+    return "";
 #endif
 }
+
 
 QString Settings::Dirs::appLibexecDir() const
 {
@@ -199,6 +203,8 @@ QString Settings::Dirs::appLibexecDir() const
     return appDir();
 #elif defined(Q_OS_LINUX)
     return includeTrailingPathDelimiter(PREFIX)+"libexec/"+APP_NAME;
+#elif defined(Q_OS_MACOS)
+    return QApplication::instance()->applicationDirPath();
 #endif
 }
 
@@ -1274,10 +1280,13 @@ void Settings::Editor::doLoad()
     mRightEdgeWidth = intValue("right_edge_width",80);
     mRightEdgeLineColor = colorValue("right_edge_line_color",Qt::yellow);
 
-    //Font
+    //Editor font
 #ifdef Q_OS_WIN
     mFontName = stringValue("font_name","consolas");
     mNonAsciiFontName = stringValue("non_ascii_font_name","consolas");
+#elif defined(Q_OS_MACOS)
+    mFontName = stringValue("font_name","Menlo");
+    mNonAsciiFontName = stringValue("non_ascii_font_name","PingFang SC");
 #else
     mFontName = stringValue("font_name","Dejavu Sans Mono");
     mNonAsciiFontName = stringValue("non_ascii_font_name","Dejavu Sans Mono");
@@ -2845,7 +2854,13 @@ void Settings::Environment::doLoad()
     QString defaultLocaleName = QLocale::system().name();
     if (defaultLocaleName == "zh_CN") {
         QString fontName;
+#ifdef Q_OS_WINDOWS
         fontName = "Microsoft Yahei";
+#elif defined(Q_OS_MACOS)
+        fontName = "PingFang SC";
+#elif defined(Q_OS_LINUX)
+        fontName = "Noto Sans CJK";
+#endif
         QFont font(fontName);
         if (font.exactMatch()) {
             defaultFontName = fontName;
@@ -2873,6 +2888,10 @@ void Settings::Environment::doLoad()
         mTerminalPath = stringValue("terminal_path","/usr/bin/konsole");
     if (mTerminalPath.isEmpty())
         mTerminalPath = stringValue("terminal_path","/usr/bin/x-terminal-emulator");
+    mAStylePath = includeTrailingPathDelimiter(pSettings->dirs().appLibexecDir())+"astyle";
+#elif defined(Q_OS_MACOS)
+    mTerminalPath = stringValue("terminal_path",
+                                "/System/Applications/Utilities/Terminal.app/Contents/MacOS/Terminal");
     mAStylePath = includeTrailingPathDelimiter(pSettings->dirs().appLibexecDir())+"astyle";
 #endif
     mHideNonSupportFilesInFileView=boolValue("hide_non_support_files_file_view",true);
@@ -3222,6 +3241,8 @@ void Settings::Executor::doLoad()
     mIgnoreSpacesWhenValidatingCases = boolValue("ignore_spaces_when_validating_cases",false);
 #ifdef Q_OS_WIN
     mCaseEditorFontName = stringValue("case_editor_font_name","consolas");
+#elif defined(Q_OS_MACOS)
+    mCaseEditorFontName = stringValue("case_editor_font_name", "Menlo");
 #else
     mCaseEditorFontName = stringValue("case_editor_font_name","Dejavu Sans Mono");
 #endif

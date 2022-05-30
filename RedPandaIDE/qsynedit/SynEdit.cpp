@@ -54,6 +54,8 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     mFontDummy = QFont("Consolas",12);
 #elif defined(Q_OS_LINUX)
     mFontDummy = QFont("terminal",14);
+#elif defined(Q_OS_MACOS)
+    mFontDummy = QFont("Menlo", 14);
 #else
 #error "Not supported!"
 #endif

@@ -50,6 +50,21 @@
 #define CLANG_PROGRAM   "clang"
 #define CLANG_CPP_PROGRAM   "clang++"
 #define LLDB_MI_PROGRAM   "lldb-mi"
+#elif defined(Q_OS_MACOS)
+#define GCC_PROGRAM     "gcc"
+#define GPP_PROGRAM     "g++"
+#define GDB_PROGRAM     "gdb"
+#define GDB_SERVER_PROGRAM     "gdbserver"
+#define GDB32_PROGRAM   "gdb32"
+#define MAKE_PROGRAM    "make"
+#define WINDRES_PROGRAM ""
+#define GPROF_PROGRAM   "gprof"
+#define CLEAN_PROGRAM   "rm -rf"
+#define CPP_PROGRAM     "cpp"
+#define GIT_PROGRAM     "git"
+#define CLANG_PROGRAM   "clang"
+#define CLANG_CPP_PROGRAM   "clang++"
+#define LLDB_MI_PROGRAM   "lldb-mi"
 #else
 #error "Only support windows and linux now!"
 #endif
@@ -85,7 +100,7 @@
 #   define DYNAMIC_LIB_EXT   "dll"
 #   define MAKEFILE_NAME    "makefile.win"
 #   define ALL_FILE_WILDCARD "*.*"
-#elif defined(Q_OS_LINUX)
+#elif defined(Q_OS_LINUX) || defined(Q_OS_MACOS)
 #   define PATH_SENSITIVITY Qt::CaseSensitive
 #   define PATH_SEPARATOR   ":"
 #   define LINE_BREAKER     "\n"
