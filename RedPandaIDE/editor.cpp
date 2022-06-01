@@ -1305,12 +1305,14 @@ void Editor::copyToClipboard()
 void Editor::cutToClipboard()
 {
     if (pSettings->editor().copySizeLimit()) {
-        if (document()->count() > pSettings->editor().copyLineLimits()) {
+        int startLine = blockBegin().Line;
+        int endLine = blockEnd().Line;
+        if ((endLine-startLine+1) > pSettings->editor().copyLineLimits()) {
             QMessageBox::critical(pMainWindow,tr("Error"),
                                      tr("The text to be cut exceeds count limit!"));
             return;
         }
-        if (document()->getTextLength() > pSettings->editor().copyCharLimits() * 1000) {
+        if ((selText().length()) > pSettings->editor().copyCharLimits() * 1000) {
             QMessageBox::critical(pMainWindow,tr("Error"),
                                      tr("The text to be cut exceeds character limit!"));
             return;
