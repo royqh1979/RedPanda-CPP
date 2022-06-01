@@ -243,6 +243,7 @@ extern QSet<QString> STLPointers;
 extern QSet<QString> STLContainers;
 extern QSet<QString> STLElementMethods;
 extern QSet<QString> MemberOperators;
+extern QSet<QString> IOManipulators;
 
 void initParser();
 

@@ -36,6 +36,7 @@ int main()
     const int numBlocks = 15;
 
     SetTargetFPS(60);
+    SetTraceLogLevel(LOG_WARNING);
     //--------------------------------------------------------------------------------------
 
     // Main game loop

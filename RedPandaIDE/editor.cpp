@@ -3073,7 +3073,8 @@ void Editor::completionInsert(bool appendFunc)
             if (newStatement)
                 statement = newStatement;
         }
-        if (statement->kind == StatementKind::skFunction
+        if ( (statement->kind == StatementKind::skFunction
+               && !IOManipulators.contains(statement->fullName))
                 || statement->kind == StatementKind::skConstructor
                 || statement->kind == StatementKind::skDestructor
                 ||

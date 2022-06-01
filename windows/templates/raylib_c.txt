@@ -45,6 +45,7 @@ int main(void)
     int framesCounter = 0;
 
     SetTargetFPS(120);
+    SetTraceLogLevel(LOG_WARNING);
     //--------------------------------------------------------------------------------------
 
     // Main game loop

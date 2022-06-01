@@ -467,6 +467,16 @@ PStatement CppParser::findStatementOf(const QString &fileName, const QStringList
         if (!ownerEvalStatement) {
             return PStatement();
         }
+        if (ownerEvalStatement->effectiveTypeStatement &&
+                ownerEvalStatement->effectiveTypeStatement->kind == StatementKind::skNamespace) {
+            PStatementList lst = findNamespace(ownerEvalStatement->effectiveTypeStatement->fullName);
+            foreach (const PStatement& namespaceStatement, *lst) {
+                PStatement statement = findMemberOfStatement(phrase,namespaceStatement);
+                if (statement)
+                    return statement;
+            }
+            return PStatement();
+        }
         return findMemberOfStatement(phrase, ownerEvalStatement->effectiveTypeStatement);
     }
 
@@ -2520,13 +2530,16 @@ void CppParser::handleOtherTypedefs()
 
 void CppParser::handlePreprocessor()
 {
-    if (mTokenizer[mIndex]->text.startsWith("#include ")) { // start of new file
+    QString text = mTokenizer[mIndex]->text.mid(1).trimmed();
+    if (text.startsWith("include")) { // start of new file
         // format: #include fullfilename:line
         // Strip keyword
-        QString s = mTokenizer[mIndex]->text.mid(QString("#include ").length());
+        QString s = text.mid(QString("include").length());
+        if (!s.startsWith(" ") && !s.startsWith("\t"))
+            goto handlePreprocessorEnd;
         int delimPos = s.lastIndexOf(':');
         if (delimPos>=0) {
-            mCurrentFile = s.mid(0,delimPos);
+            mCurrentFile = s.mid(0,delimPos).trimmed();
             mIsSystemHeader = isSystemHeaderFile(mCurrentFile) || isProjectHeaderFile(mCurrentFile);
             mIsProjectFile = mProjectFiles.contains(mCurrentFile);             mIsHeader = isHFile(mCurrentFile);
 
@@ -2539,11 +2552,13 @@ void CppParser::handlePreprocessor()
                 emit onProgress(mCurrentFile,mFilesToScanCount,mFilesScannedCount);
             }
         }
-    } else if (mTokenizer[mIndex]->text.startsWith("#define ")) {
+    } else if (text.startsWith("define") || text.startsWith("define")) {
 
       // format: #define A B, remove define keyword
-      QString s = mTokenizer[mIndex]->text.mid(QString("#define ").length());
-
+      QString s = text.mid(QString("define").length());
+      if (!s.startsWith(" ") && !s.startsWith("\t"))
+          goto handlePreprocessorEnd;
+      s = s.trimmed();
       // Ask the preprocessor to cut parts up
       QString name,args,value;
       mPreprocessor.getDefineParts(s,name,args,value);
@@ -2562,6 +2577,7 @@ void CppParser::handlePreprocessor()
         true,
         false);
     } // TODO: undef ( define has limited scope)
+handlePreprocessorEnd:
     mIndex++;
 }
 
@@ -3231,8 +3247,8 @@ void CppParser::internalParse(const QString &fileName)
         mPreprocessor.clearResult();
 #ifdef QT_DEBUG
 //        stringsToFile(mPreprocessor.result(),"r:\\preprocess.txt");
-//        mPreprocessor.dumpDefinesTo("z:\\defines.txt");
-//        mPreprocessor.dumpIncludesListTo("z:\\includes.txt");
+//        mPreprocessor.dumpDefinesTo("r:\\defines.txt");
+//        mPreprocessor.dumpIncludesListTo("r:\\includes.txt");
 #endif
 
         // Tokenize the preprocessed buffer file
@@ -3251,7 +3267,7 @@ void CppParser::internalParse(const QString &fileName)
         //reduce memory usage
         internalClear();
 #ifdef QT_DEBUG
-//      mTokenizer.dumpTokens("z:\\tokens.txt");
+//      mTokenizer.dumpTokens("r:\\tokens.txt");
 //
 //      mStatementList.dumpAll("r:\\all-stats.txt");
 #endif

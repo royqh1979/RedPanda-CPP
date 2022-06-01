@@ -1,7 +1,10 @@
 Red Panda C++ Version 1.0.10
   - fix: modify watch doesn't work
   - fix: make behavior consistent in adding compiler bindirs to Path (thanks for brokencuph@github)
-  - enhancement: basic MacOS support ( thanks for RigoLigo@github)
+  - enhancement: basic MacOS support ( thanks for RigoLigoRLC@github)
+  - fix: #define followed by tab not correctly parsed
+  - enhancement: don't auto add () when completing C++ io manipulators ( std::endl, std::fixed, etc.)
+  - fix: can't goto to definition of std::endl
 
 Red Panda C++ Version 1.0.9
   - fix: selection in column mode not correctly drawn when has wide chars in it

@@ -33,6 +33,7 @@ QSet<QString> STLPointers;
 QSet<QString> STLContainers;
 QSet<QString> STLElementMethods;
 QSet<QString> MemberOperators;
+QSet<QString> IOManipulators;
 
 Q_GLOBAL_STATIC(QSet<QString>,CppHeaderExts)
 Q_GLOBAL_STATIC(QSet<QString>,CppSourceExts)
@@ -322,6 +323,38 @@ void initParser()
     MemberOperators.insert("->");
     MemberOperators.insert("->*");
     MemberOperators.insert(".*");
+
+    IOManipulators.insert("std::boolalpha");
+    IOManipulators.insert("std::noboolalpha");
+    IOManipulators.insert("std::showbase");
+    IOManipulators.insert("std::noshowbase");
+    IOManipulators.insert("std::showpoint");
+    IOManipulators.insert("std::noshowpoint");
+    IOManipulators.insert("std::showpos");
+    IOManipulators.insert("std::noshowpos");
+    IOManipulators.insert("std::skipws");
+    IOManipulators.insert("std::noskipws");
+
+    IOManipulators.insert("std::uppercase");
+    IOManipulators.insert("std::nouppercase");
+    IOManipulators.insert("std::unitbuf");
+    IOManipulators.insert("std::nounitbuf");
+    IOManipulators.insert("std::left");
+    IOManipulators.insert("std::right");
+    IOManipulators.insert("std::internal");
+    IOManipulators.insert("std::dec");
+    IOManipulators.insert("std::hex");
+    IOManipulators.insert("std::oct");
+
+    IOManipulators.insert("std::fixed");
+    IOManipulators.insert("std::scientific");
+    IOManipulators.insert("std::hexfloat");
+    IOManipulators.insert("std::defaultfloat");
+    IOManipulators.insert("std::ws");
+    IOManipulators.insert("std::ends");
+    IOManipulators.insert("std::flush");
+    IOManipulators.insert("std::endl");
+
 }
 
 QString getHeaderFilename(const QString &relativeTo, const QString &line,
