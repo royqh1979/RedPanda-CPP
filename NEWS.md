@@ -6,6 +6,7 @@ Red Panda C++ Version 1.0.10
   - enhancement: don't auto add () when completing C++ io manipulators ( std::endl, std::fixed, etc.)
   - fix: can't goto to definition of std::endl
   - fix: errors in the calculation of cut limit
+  - enhancement: new turtle library based on raylib ( so it can be used under linux)
 
 Red Panda C++ Version 1.0.9
   - fix: selection in column mode not correctly drawn when has wide chars in it
