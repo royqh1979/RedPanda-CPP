@@ -25,15 +25,19 @@
     },
     {
         "header": "ege.h",
-        "links": "-lgraphics -luuid -lmsimg32 -lgdi32 -limm32 -lole32 -loleaut32 -lwinmm -lgdiplus -mwindows"
+        "links": "-lgraphics -luuid -lmsimg32 -lgdi32 -limm32 -lole32 -loleaut32 -lwinmm -lgdiplus"
     },
     {
         "header": "raylib.h",
         "links": "-lraylib -lopengl32 -lgdi32 -lwinmm"
     },
     {
-        "header": "sqlite3.h",
-        "links": "-lsqlite3"
+        "header": "rdrawing",
+        "links": "-lrdrawing"
+    },
+    {
+        "header": "rturtle",
+        "links": "-lrturtle"
     },
     {
         "header": "turtle.h",
