@@ -430,7 +430,7 @@ void CppPreprocessor::handleInclude(const QString &line, bool fromNext)
 
     PFileIncludes oldCurrentIncludes = mCurrentIncludes;
     openInclude(fileName);
-    oldCurrentIncludes->includeFiles.insert(fileName,true);
+    //oldCurrentIncludes->includeFiles.insert(fileName,true);
 }
 
 void CppPreprocessor::handlePreprocessor(const QString &value)
@@ -635,14 +635,13 @@ void CppPreprocessor::openInclude(const QString &fileName, QStringList bufferedT
         for (PParsedFile& parsedFile:mIncludes) {
             parsedFile->fileIncludes->includeFiles.insert(fileName,false);
         }
-    }
-    if (mIncludes.size()>0) {
         // Backup old position if we're entering a new file
         PParsedFile innerMostFile = mIncludes.back();
         innerMostFile->index = mIndex;
         innerMostFile->branches = mBranchResults.count();
 
         innerMostFile->fileIncludes->includeFiles.insert(fileName,true);
+        innerMostFile->fileIncludes->directIncludes.append(fileName);
     }
 
 //    // Add the new file to the includes of the current file

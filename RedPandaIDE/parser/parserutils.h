@@ -223,7 +223,8 @@ private:
 
 struct FileIncludes {
     QString baseFile;
-    QMap<QString,bool> includeFiles; // true means the file is directly included, false means included indirectly
+    QMap<QString, bool> includeFiles; // true means the file is directly included, false means included indirectly
+    QStringList directIncludes; //
     QSet<QString> usings; // namespaces it usings
     StatementMap statements; // but we don't save temporary statements (full name as key)
     StatementMap declaredStatements; // statements declared in this file (full name as key)

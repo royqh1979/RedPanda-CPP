@@ -93,7 +93,7 @@ public:
     bool freeze();  // Freeze/Lock (stop reparse while searching)
     bool freeze(const QString& serialId);  // Freeze/Lock (stop reparse while searching)
     QStringList getClassesList();
-    QSet<QString> getFileDirectIncludes(const QString& filename);
+    QStringList getFileDirectIncludes(const QString& filename);
     QSet<QString> getFileIncludes(const QString& filename);
     QSet<QString> getFileUsings(const QString& filename);
 

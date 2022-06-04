@@ -639,25 +639,19 @@ QStringList CppParser::getClassesList()
     return list;
 }
 
-QSet<QString> CppParser::getFileDirectIncludes(const QString &filename)
+QStringList CppParser::getFileDirectIncludes(const QString &filename)
 {
     QMutexLocker locker(&mMutex);
-    QSet<QString> list;
     if (mParsing)
-        return list;
+        return QStringList();
     if (filename.isEmpty())
-        return list;
+        return QStringList();
     PFileIncludes fileIncludes = mPreprocessor.includesList().value(filename,PFileIncludes());
 
     if (fileIncludes) {
-        QMap<QString, bool>::const_iterator iter = fileIncludes->includeFiles.cbegin();
-        while (iter != fileIncludes->includeFiles.cend()) {
-            if (iter.value())
-                list.insert(iter.key());
-            iter++;
-        }
+        return fileIncludes->directIncludes;
     }
-    return list;
+    return QStringList();
 
 }
 

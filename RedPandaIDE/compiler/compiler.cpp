@@ -543,8 +543,15 @@ QString Compiler::parseFileIncludesForAutolink(
     if (autolink) {
         result += ' '+autolink->linkOption;
     }
-    QSet<QString> includedFiles = parser->getFileDirectIncludes(filename);
-    foreach (const QString& includeFilename, includedFiles) {
+    QStringList includedFiles = parser->getFileDirectIncludes(filename);
+//    log(QString("File %1 included:").arg(filename));
+//    for (int i=includedFiles.size()-1;i>=0;i--) {
+//        QString includeFilename = includedFiles[i];
+//        log(includeFilename);
+//    }
+
+    for (int i=includedFiles.size()-1;i>=0;i--) {
+        QString includeFilename = includedFiles[i];
         result += parseFileIncludesForAutolink(
                     includeFilename,
                     parsedFiles,
