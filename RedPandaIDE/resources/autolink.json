@@ -32,11 +32,11 @@
         "links": "-lraylib -lopengl32 -lgdi32 -lwinmm"
     },
     {
-        "header": "rdrawing",
+        "header": "rdrawing.h",
         "links": "-lrdrawing"
     },
     {
-        "header": "rturtle",
+        "header": "rturtle.h",
         "links": "-lrturtle"
     },
     {

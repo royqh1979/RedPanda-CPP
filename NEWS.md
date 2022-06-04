@@ -7,6 +7,7 @@ Red Panda C++ Version 1.0.10
   - fix: can't goto to definition of std::endl
   - fix: errors in the calculation of cut limit
   - enhancement: new turtle library based on raylib ( so it can be used under linux)
+  - fix: autolink calculation not stable
 
 Red Panda C++ Version 1.0.9
   - fix: selection in column mode not correctly drawn when has wide chars in it
