@@ -63,6 +63,20 @@ void AutolinkManager::load()
         file.write(content);
         file.close();
         preFile.close();
+#elif defined(Q_OS_LINUX)
+        QFile preFile(":/config/autolink-linux.json");
+        if (!preFile.open(QFile::ReadOnly)) {
+            throw FileError(QObject::tr("Can't open file '%1' for read.")
+                            .arg(":/config/autolink-linux.json"));
+        }
+        QByteArray content=preFile.readAll();
+        if (!file.open(QFile::WriteOnly|QFile::Truncate)) {
+            throw FileError(QObject::tr("Can't open file '%1' for write.")
+                            .arg(filename));
+        }
+        file.write(content);
+        file.close();
+        preFile.close();
 #else
         return;
 #endif

@@ -2,5 +2,6 @@
     <qresource prefix="/config">
         <file alias="autolink.json">resources/autolink.json</file>
         <file alias="codesnippets.json">resources/codesnippets.json</file>
+        <file alias="autolink-linux.json">resources/autolink-linux.json</file>
     </qresource>
 </RCC>
