@@ -6,10 +6,12 @@ int main() {
 
 //  Press F2 toggle display of grids
 //  Press F3 toggle display of the turtle
+//  Press F5 capture screen
 
     setSpeed(500);
 //  setRewind(true);
 //  setImmediate(true);
+    setPenSize(1);
 
 	n=50;
 	for (int i=0;i<n;i++) {
