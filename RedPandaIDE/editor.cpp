@@ -93,7 +93,8 @@ Editor::Editor(QWidget *parent, const QString& filename,
   mCurrentTipType(TipType::None),
   mOldHighlightedWord(),
   mCurrentHighlightedWord(),
-  mSaving(false)
+  mSaving(false),
+  mHoverModifiedLine(-1)
 {
     mCurrentLineModified = false;
     mUseCppSyntax = pSettings->editor().defaultFileCpp();
@@ -924,44 +925,68 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
     if (token.isEmpty())
         return;
 
-    if (mParser && mParser->enabled() && highlighter() && (attr == highlighter()->identifierAttribute())
-            && !mParser->isIncludeLine(document()->getString(line-1)) ) {
-
-        BufferCoord p{aChar,line};
-//        BufferCoord pBeginPos,pEndPos;
-//        QString s= getWordAtPosition(this,p, pBeginPos,pEndPos, WordPurpose::wpInformation);
-//        qDebug()<<s;
-//        PStatement statement = mParser->findStatementOf(mFilename,
-//          s , p.Line);
-        QStringList expression = getExpressionAtPosition(p);
-        PStatement statement = parser()->findStatementOf(
-                    filename(),
-                    expression,
-                    p.Line);
-        StatementKind kind = getKindOfStatement(statement);
-        if (kind == StatementKind::skUnknown) {
-            BufferCoord pBeginPos,pEndPos;
-            QString s= getWordAtPosition(this,p, pBeginPos,pEndPos, WordPurpose::wpInformation);
-            if ((pEndPos.Line>=1)
-              && (pEndPos.Char>=0)
-              && (pEndPos.Char+1 < document()->getString(pEndPos.Line-1).length())
-              && (document()->getString(pEndPos.Line-1)[pEndPos.Char+1] == '(')) {
-                kind = StatementKind::skFunction;
-            } else {
-                kind = StatementKind::skVariable;
+    if (mParser && mParser->enabled() && highlighter()) {
+        QString lineText = document()->getString(line-1);
+        if (mParser->isIncludeLine(lineText)) {
+            if (cursor() == Qt::PointingHandCursor) {
+                BufferCoord p;
+                if (pointToCharLine(mapFromGlobal(QCursor::pos()),p)) {
+                    if (line==p.Line){
+                        int pos1=std::max(lineText.indexOf("<"),lineText.indexOf("\""));
+                        int pos2=std::max(lineText.lastIndexOf(">"),lineText.lastIndexOf("\""));
+                        pos1++;
+                        pos2++;
+                        if (pos1>0 && pos2>0 && pos1<aChar && aChar < pos2) {
+                            style.setFlag(SynFontStyle::fsUnderline);
+                        }
+                    }
+                }
             }
-        }
-        PColorSchemeItem item = mStatementColors->value(kind,PColorSchemeItem());
+        } else if (attr == highlighter()->identifierAttribute()) {
+            BufferCoord p{aChar,line};
+    //        BufferCoord pBeginPos,pEndPos;
+    //        QString s= getWordAtPosition(this,p, pBeginPos,pEndPos, WordPurpose::wpInformation);
+    //        qDebug()<<s;
+    //        PStatement statement = mParser->findStatementOf(mFilename,
+    //          s , p.Line);
+            QStringList expression = getExpressionAtPosition(p);
+            PStatement statement = parser()->findStatementOf(
+                        filename(),
+                        expression,
+                        p.Line);
+            StatementKind kind = getKindOfStatement(statement);
+            if (kind == StatementKind::skUnknown) {
+                BufferCoord pBeginPos,pEndPos;
+                QString s= getWordAtPosition(this,p, pBeginPos,pEndPos, WordPurpose::wpInformation);
+                if ((pEndPos.Line>=1)
+                  && (pEndPos.Char>=0)
+                  && (pEndPos.Char+1 < document()->getString(pEndPos.Line-1).length())
+                  && (document()->getString(pEndPos.Line-1)[pEndPos.Char+1] == '(')) {
+                    kind = StatementKind::skFunction;
+                } else {
+                    kind = StatementKind::skVariable;
+                }
+            }
+            PColorSchemeItem item = mStatementColors->value(kind,PColorSchemeItem());
 
-        if (item) {
-            foreground = item->foreground();
-            //background = item->background();
-            style.setFlag(SynFontStyle::fsBold,item->bold());
-            style.setFlag(SynFontStyle::fsItalic,item->italic());
-            style.setFlag(SynFontStyle::fsUnderline,item->underlined());
-            style.setFlag(SynFontStyle::fsStrikeOut,item->strikeout());
-        } else {
-            foreground = highlighter()->identifierAttribute()->foreground();
+            if (item) {
+                foreground = item->foreground();
+                //background = item->background();
+                style.setFlag(SynFontStyle::fsBold,item->bold());
+                style.setFlag(SynFontStyle::fsItalic,item->italic());
+                style.setFlag(SynFontStyle::fsUnderline,item->underlined());
+                style.setFlag(SynFontStyle::fsStrikeOut,item->strikeout());
+            } else {
+                foreground = highlighter()->identifierAttribute()->foreground();
+            }
+            if (cursor() == Qt::PointingHandCursor) {
+                BufferCoord p;
+                if (pointToCharLine(mapFromGlobal(QCursor::pos()),p)) {
+                    if (line==p.Line && (aChar<=p.Char && p.Char<aChar+token.length())) {
+                        style.setFlag(SynFontStyle::fsUnderline);
+                    }
+                }
+            }
         }
     }
 
@@ -1012,6 +1037,11 @@ bool Editor::event(QEvent *event)
             && !pMainWindow->completionPopup()->isVisible()
             && !pMainWindow->functionTip()->isVisible()
             && !pMainWindow->headerCompletionPopup()->isVisible()) {
+        if(mHoverModifiedLine!=-1) {
+            invalidateLine(mHoverModifiedLine);
+            mHoverModifiedLine=-1;
+        }
+
         QHoverEvent *helpEvent = static_cast<QHoverEvent *>(event);
         BufferCoord p;
         TipType reason = getTipType(helpEvent->pos(),p);
@@ -1067,10 +1097,16 @@ bool Editor::event(QEvent *event)
 
         s = s.trimmed();
         if ((s == mCurrentWord) && (mCurrentTipType == reason)) {
-            if (helpEvent->modifiers() == Qt::ControlModifier) {
+            if (qApp->queryKeyboardModifiers() == Qt::ControlModifier) {
+                if (!hasFocus())
+                    activate();
                 setCursor(Qt::PointingHandCursor);
             } else {
                 updateMouseCursor();
+            }
+            if (pointToLine(helpEvent->pos(),line)) {
+                invalidateLine(line);
+                mHoverModifiedLine=line;
             }
             event->ignore();
             return true; // do NOT remove hint when subject stays the same
@@ -1119,10 +1155,16 @@ bool Editor::event(QEvent *event)
         if (!hint.isEmpty()) {
             //            QApplication* app = dynamic_cast<QApplication *>(QApplication::instance());
             //            if (app->keyboardModifiers().testFlag(Qt::ControlModifier)) {
-            if (helpEvent->modifiers() == Qt::ControlModifier) {
+            if (qApp->queryKeyboardModifiers() == Qt::ControlModifier) {
+                if (!hasFocus())
+                    activate();
                 setCursor(Qt::PointingHandCursor);
             } else if (cursor() == Qt::PointingHandCursor) {
                 updateMouseCursor();
+            }
+            if (pointToLine(helpEvent->pos(),line)) {
+                invalidateLine(line);
+                mHoverModifiedLine=line;
             }
             if (pMainWindow->functionTip()->isVisible()) {
                 pMainWindow->functionTip()->hide();
@@ -1161,7 +1203,7 @@ void Editor::mouseReleaseEvent(QMouseEvent *event)
     }
 
     // if ctrl+clicked
-    if ((event->modifiers() == Qt::ControlModifier)
+    if ((cursor() == Qt::PointingHandCursor) && (event->modifiers() == Qt::ControlModifier)
             && (event->button() == Qt::LeftButton)) {
 
         BufferCoord p;
@@ -3339,6 +3381,11 @@ Editor::TipType Editor::getTipType(QPoint point, BufferCoord& pos)
 
 void Editor::cancelHint()
 {
+    if(mHoverModifiedLine!=-1) {
+        invalidateLine(mHoverModifiedLine);
+        mHoverModifiedLine=-1;
+    }
+
     //MainForm.Debugger.OnEvalReady := nil;
 
     // disable editor hint

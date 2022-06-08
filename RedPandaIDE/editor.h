@@ -332,6 +332,7 @@ private:
     BufferCoord mHighlightCharPos2;
     std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > mStatementColors;
     QTimer mFunctionTipTimer;
+    int mHoverModifiedLine;
 
     // QWidget interface
 protected:

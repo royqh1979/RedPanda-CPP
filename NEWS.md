@@ -1,3 +1,6 @@
+Red Panda C++ Version 1.1.0
+  - enhancement: when ctrl+mouse cursor hovered an identifier or header name, use underline to highlight it
+
 Red Panda C++ Version 1.0.10
   - fix: modify watch doesn't work
   - fix: make behavior consistent in adding compiler bindirs to Path (thanks for brokencuph@github)
