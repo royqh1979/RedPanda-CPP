@@ -740,6 +740,8 @@ private:
     QTcpServer mTcpServer;
     QColor mErrorColor;
 
+    QSet<QString> mFilesChangedNotifying;
+
     //actions for compile issue table
     QAction * mTableIssuesCopyAction;
     QAction * mTableIssuesCopyAllAction;

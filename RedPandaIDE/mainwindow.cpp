@@ -4151,8 +4151,12 @@ void MainWindow::updateProjectView()
 
 void MainWindow::onFileChanged(const QString &path)
 {
+    if (mFilesChangedNotifying.contains(path))
+        return;
+    mFilesChangedNotifying.insert(path);
     Editor *e = mEditorList->getOpenedEditorByFilename(path);
     if (e) {
+        e->setModified(true);
         if (fileExists(path)) {
             e->activate();
             if (QMessageBox::question(this,tr("File Changed"),
@@ -4178,6 +4182,7 @@ void MainWindow::onFileChanged(const QString &path)
             }
         }
     }
+    mFilesChangedNotifying.remove(path);
 }
 
 void MainWindow::onFilesViewPathChanged()
