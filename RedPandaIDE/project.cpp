@@ -278,13 +278,27 @@ PProjectUnit Project::newUnit(PProjectModelNode parentNode, const QString& custo
                                      false, parentNode));
     newUnit->node()->unitIndex = count;
     //parentNode.Expand(True);
-    newUnit->setCompile(true);
-    if (getFileType(customFileName) == FileType::CSource) {
+    switch(getFileType(customFileName)) {
+    case FileType::CSource:
+        newUnit->setCompile(true);
         newUnit->setCompileCpp(false);
-    } else {
+        newUnit->setLink(true);
+        break;
+    case FileType::CppSource:
+        newUnit->setCompile(true);
+        newUnit->setCompileCpp(true);
+        newUnit->setLink(true);
+        break;
+    case FileType::WindowsResourceSource:
+        newUnit->setCompile(true);
         newUnit->setCompileCpp(mOptions.isCpp);
+        newUnit->setLink(false);
+        break;
+    default:
+        newUnit->setCompile(false);
+        newUnit->setCompileCpp(false);
+        newUnit->setLink(false);
     }
-    newUnit->setLink(true);
     newUnit->setPriority(1000);
     newUnit->setOverrideBuildCmd(false);
     newUnit->setBuildCmd("");
@@ -976,7 +990,7 @@ PProjectUnit Project::addUnit(const QString &inFileName, PProjectModelNode paren
     switch(getFileType(inFileName)) {
     case FileType::CSource:
         newUnit->setCompile(true);
-        newUnit->setCompileCpp(mOptions.isCpp);
+        newUnit->setCompileCpp(false);
         newUnit->setLink(true);
         break;
     case FileType::CppSource:

@@ -466,7 +466,7 @@ QString Compiler::getLibraryArguments(FileType fileType)
                 int waitCount = 0;
                 //wait parsing ends, at most 1 second
                 while(parser->parsing()) {
-                    if (waitCount>0)
+                    if (waitCount>10)
                         break;
                     waitCount++;
                     QThread::msleep(100);
