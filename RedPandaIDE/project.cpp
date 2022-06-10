@@ -903,6 +903,8 @@ void Project::saveOptions()
     ini.SetLongValue("Project","SupportXPThemes", mOptions.supportXPThemes);
     ini.SetLongValue("Project","CompilerSet", mOptions.compilerSet);
     ini.SetLongValue("Project","CompilerSetType", mOptions.compilerSetType);
+    ini.Delete("Project","CompilerSettings"); // remove old compiler settings
+    ini.Delete("CompilerSettings",nullptr); // remove old compiler settings
     foreach (const QString& key, mOptions.compilerOptions.keys()) {
         ini.SetValue("CompilerSettings",toByteArray(key),toByteArray(mOptions.compilerOptions.value(key)));
     }

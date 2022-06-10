@@ -3,6 +3,7 @@ Red Panda C++ Version 1.1.0
   - enhancement: mark editor as modified, if the editing file is changed by other applications.
   - enhancement: When the editing files is changed by other applications, only show one notification dialog for each file.
   - fix: c files added to a project will be compiled as c++ file.
+  - enhancement: restore caret position after batch replace
 
 Red Panda C++ Version 1.0.10
   - fix: modify watch doesn't work

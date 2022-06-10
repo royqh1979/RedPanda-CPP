@@ -6489,8 +6489,14 @@ void MainWindow::on_btnReplace_clicked()
             line.insert(item->start-1, newWord);
             contents[item->line-1] = line;
         }
+        BufferCoord coord=editor->caretXY();
+        int topLine = editor->topLine();
+        int leftChar = editor->leftChar();
         editor->selectAll();
         editor->setSelText(contents.join(editor->lineBreak()));
+        editor->setCaretXY(coord);
+        editor->setTopLine(topLine);
+        editor->setLeftChar(leftChar);
     }
     showSearchReplacePanel(false);
     stretchMessagesPanel(false);
