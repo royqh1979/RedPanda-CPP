@@ -171,6 +171,7 @@ enum class SynChangeReason {crInsert, crPaste, crDragDropInsert,
   crPasteBegin, crPasteEnd, //for pasting, since it might do a lot of operations
   crSpecial1Begin, crSpecial1End,
   crSpecial2Begin, crSpecial2End,
+  crLeftTop,
   crCaret, //just restore the Caret, allowing better Undo behavior
   crSelection, //restore Selection
   crNothing,

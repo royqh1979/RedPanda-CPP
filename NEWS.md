@@ -8,6 +8,8 @@ Red Panda C++ Version 1.1.0
   - enhancement: delete in files view's context menu
   - change: drag&drop in files view default to move
   - fix: rename macro doesn't work in project
+  - fix: can't remove a shortcut
+  - enhancement: hide all menu actions in the option dialog's shortcut panel
 
 Red Panda C++ Version 1.0.10
   - fix: modify watch doesn't work

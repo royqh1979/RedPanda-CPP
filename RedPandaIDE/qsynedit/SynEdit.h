@@ -268,6 +268,8 @@ public:
 
     void beginUndoBlock();
     void endUndoBlock();
+    void addCaretToUndo();
+    void addLeftTopToUndo();
 
     //Commands
     virtual void cutToClipboard() { commandProcessor(SynEditorCommand::ecCut);}
@@ -277,7 +279,10 @@ public:
     virtual void redo()  { commandProcessor(SynEditorCommand::ecRedo);}
     virtual void zoomIn()  { commandProcessor(SynEditorCommand::ecZoomIn);}
     virtual void zoomOut()  { commandProcessor(SynEditorCommand::ecZoomOut);}
-    virtual void selectAll() {  commandProcessor(SynEditorCommand::ecSelectAll);}
+    virtual void selectAll() {
+        mUndoList->AddChange(SynChangeReason::crSelection,mBlockBegin,mBlockEnd,"", activeSelectionMode());
+        commandProcessor(SynEditorCommand::ecSelectAll);
+    }
     virtual void tab() { commandProcessor(SynEditorCommand::ecTab);}
     virtual void shifttab() { commandProcessor(SynEditorCommand::ecShiftTab);}
     virtual void toggleComment() { commandProcessor(SynEditorCommand::ecToggleComment);}

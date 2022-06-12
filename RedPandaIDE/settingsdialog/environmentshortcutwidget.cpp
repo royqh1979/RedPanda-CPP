@@ -19,6 +19,7 @@
 #include "../mainwindow.h"
 #include "../widgets/shortcutinputedit.h"
 #include <QMenuBar>
+#include <QMenu>
 #include <QMessageBox>
 
 EnvironmentShortcutWidget::EnvironmentShortcutWidget(const QString& name, const QString& group, QWidget *parent) :
@@ -62,8 +63,8 @@ void EnvironmentShortcutModel::reload()
 {
     beginResetModel();
     mShortcuts.clear();
-    QList<QAction*> actions = pMainWindow->findChildren<QAction*>(QString(), Qt::FindDirectChildrenOnly);
     QList<QMenu*> menus = pMainWindow->menuBar()->findChildren<QMenu*>();
+    QList<QAction*> actions = pMainWindow->findChildren<QAction*>(QString(), Qt::FindDirectChildrenOnly);
     foreach( const QMenu* menu, menus) {
         if (menu->title().isEmpty())
             continue;
@@ -76,6 +77,7 @@ void EnvironmentShortcutModel::reload()
             item->fullPath = QString("%1 : %2").arg(tr("action"),action->text());
             item->action = action;
             item->shortcut = action->shortcut().toString().trimmed();
+            item->isAction = true;
             mShortcuts.append(item);
         }
     }
@@ -120,18 +122,22 @@ bool EnvironmentShortcutModel::setData(const QModelIndex &index, const QVariant 
         PEnvironmentShortcut item = mShortcuts[index.row()];
         QString s = value.toString().trimmed();
         if (s!=item->shortcut) {
-            for (int i=0;i<mShortcuts.length();i++) {
-                if (i==index.row())
-                    continue;
-                if (s==mShortcuts[i]->shortcut)  {
-                    QMessageBox::critical(nullptr,
-                                          tr("Error"),
-                                          tr("Shortcut \"%1\" is used by \"%2\".")
-                                          .arg(s,mShortcuts[i]->fullPath));
-                    return false;
+            if (s.isEmpty()) {
+                item->shortcut="";
+            } else {
+                for (int i=0;i<mShortcuts.length();i++) {
+                    if (i==index.row())
+                        continue;
+                    if (s==mShortcuts[i]->shortcut)  {
+                        QMessageBox::critical(nullptr,
+                                              tr("Error"),
+                                              tr("Shortcut \"%1\" is used by \"%2\".")
+                                              .arg(s,mShortcuts[i]->fullPath));
+                        return false;
+                    }
                 }
+                item->shortcut = value.toString();
             }
-            item->shortcut = value.toString();
             emit shortcutChanged();
         }
         return true;
@@ -178,12 +184,13 @@ void EnvironmentShortcutModel::loadShortCutsOfMenu(const QMenu *menu, QList<QAct
 {
     QList<QAction*> actions = menu->actions();
     foreach (QAction* action,actions) {
-        if (!action->text().isEmpty()) {
+        if (!action->text().isEmpty() && action->menu()==nullptr) {
             PEnvironmentShortcut item = std::make_shared<EnvironmentShortcut>();
             item->name = action->objectName();
             item->fullPath = QString("%1 > %2").arg(menu->title(),action->text());
             item->action = action;
             item->shortcut = action->shortcut().toString().trimmed();
+            item->isAction = true;
             mShortcuts.append(item);
         }
         globalActions.removeAll(action);

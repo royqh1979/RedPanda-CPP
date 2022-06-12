@@ -4261,9 +4261,14 @@ void Editor::reformat()
                                             args,
                                             content);
 #endif
+    if (newContent.isEmpty())
+        return;
     int oldTopLine = topLine();
     BufferCoord mOldCaret = caretXY();
 
+    beginUndoBlock();
+    addLeftTopToUndo();
+    addCaretToUndo();
     selectAll();
     SynEditorOptions oldOptions = getOptions();
     SynEditorOptions newOptions = oldOptions;
@@ -4273,6 +4278,7 @@ void Editor::reformat()
     setCaretXY(mOldCaret);
     setTopLine(oldTopLine);
     setOptions(oldOptions);
+    endUndoBlock();
     reparse();
     checkSyntaxInBack();
     reparseTodo();

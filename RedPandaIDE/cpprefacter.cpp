@@ -313,8 +313,18 @@ void CppRefacter::renameSymbolInFile(const QString &filename, const PStatement &
 
     Editor * oldEditor = pMainWindow->editorList()->getOpenedEditorByFilename(filename);
     if (oldEditor) {
+        BufferCoord oldXY=oldEditor->caretXY();
+        int topLine = oldEditor->topLine();
+        int leftChar = oldEditor->leftChar();
+        oldEditor->beginUndoBlock();
+        oldEditor->addLeftTopToUndo();
+        oldEditor->addCaretToUndo();
         oldEditor->selectAll();
         oldEditor->setSelText(newContents.join(oldEditor->lineBreak()));
+        oldEditor->setTopLine(topLine);
+        oldEditor->setLeftChar(leftChar);
+        oldEditor->setCaretXY(oldXY);
+        oldEditor->endUndoBlock();
     } else {
         QByteArray realEncoding;
         QFile file(filename);

@@ -66,6 +66,10 @@ void ShortcutManager::load()
         if (shortcut->name.isEmpty())
             continue;
         shortcut->shortcut = object["shortcut"].toString();
+        if (object["isAction"].isNull())
+            shortcut->isAction = true;
+        else
+            shortcut->isAction = object["isAction"].toBool();
         mShortcuts.insert(shortcut->name,shortcut);
     }
 }
@@ -86,6 +90,7 @@ void ShortcutManager::save()
         QJsonObject object;
         object["name"]=shortcut->name;
         object["shortcut"]=shortcut->shortcut;
+        object["isAction"]=shortcut->isAction;
         array.append(object);
     }
     QJsonDocument doc;
@@ -119,7 +124,7 @@ void ShortcutManager::applyTo(QList<QAction *> actions)
 void ShortcutManager::applyTo(QAction *action)
 {
     PEnvironmentShortcut item = mShortcuts.value(action->objectName(), PEnvironmentShortcut());
-    if (item) {
+    if (item && item->isAction) {
         action->setShortcut(QKeySequence::fromString(item->shortcut));
     }
 }

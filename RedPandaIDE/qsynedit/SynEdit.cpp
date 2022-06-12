@@ -454,6 +454,20 @@ void SynEdit::endUndoBlock()
     mUndoList->EndBlock();
 }
 
+void SynEdit::addCaretToUndo()
+{
+    BufferCoord p=caretXY();
+    mUndoList->AddChange(SynChangeReason::crCaret,p,p,"", activeSelectionMode());
+}
+
+void SynEdit::addLeftTopToUndo()
+{
+    BufferCoord p;
+    p.Char = leftChar();
+    p.Line = topLine();
+    mUndoList->AddChange(SynChangeReason::crLeftTop,p,p,"", activeSelectionMode());
+}
+
 void SynEdit::beginUpdate()
 {
     incPaintLock();
@@ -4334,6 +4348,18 @@ void SynEdit::doUndoItem()
                         Item->changeSelMode());
             internalSetCaretXY(Item->changeStartPos());
             break;
+        case SynChangeReason::crLeftTop:
+            BufferCoord p;
+            p.Char = leftChar();
+            p.Line = topLine();
+            mRedoList->AddChange(
+                        Item->changeReason(),
+                        p,
+                        p, "",
+                        Item->changeSelMode());
+            setLeftChar(Item->changeStartPos().Char);
+            setTopLine(Item->changeStartPos().Line);
+            break;
         case SynChangeReason::crSelection:
             mRedoList->AddChange(
                         Item->changeReason(),
@@ -4608,6 +4634,18 @@ void SynEdit::doRedoItem()
                         "",
                         mActiveSelectionMode);
             internalSetCaretXY(Item->changeStartPos());
+            break;
+        case SynChangeReason::crLeftTop:
+            BufferCoord p;
+            p.Char = leftChar();
+            p.Line = topLine();
+            mUndoList->AddChange(
+                        Item->changeReason(),
+                        p,
+                        p, "",
+                        Item->changeSelMode());
+            setLeftChar(Item->changeStartPos().Char);
+            setTopLine(Item->changeStartPos().Line);
             break;
         case SynChangeReason::crSelection:
             mUndoList->AddChange(

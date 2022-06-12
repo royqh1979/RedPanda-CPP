@@ -22,12 +22,15 @@
 #include <memory>
 
 class QAction;
+class QToolButton;
 
 struct EnvironmentShortcut {
     QString name;
     QString fullPath;
     QString shortcut;
     QAction* action;
+    QToolButton* button;
+    bool isAction;
 };
 
 using PEnvironmentShortcut = std::shared_ptr<EnvironmentShortcut>;
