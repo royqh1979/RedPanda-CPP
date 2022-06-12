@@ -2533,6 +2533,12 @@ void MainWindow::buildContextMenus()
     connect(mFilesView_CreateFile, &QAction::triggered,
             this, &MainWindow::onFilesViewCreateFile);
 
+    mFilesView_Rename = createActionFor(
+                tr("Rename"),
+                ui->treeFiles);
+    connect(mFilesView_Rename, &QAction::triggered,
+            this, &MainWindow::onFilesViewRename);
+
     mFilesView_RemoveFile = createActionFor(
                 tr("Delete"),
                 ui->treeFiles);
@@ -2994,6 +3000,8 @@ void MainWindow::onFilesViewContextMenu(const QPoint &pos)
     menu.addSeparator();
     menu.addAction(mFilesView_CreateFolder);
     menu.addAction(mFilesView_CreateFile);
+    menu.addAction(mFilesView_RemoveFile);
+    menu.addAction(mFilesView_Rename);
     menu.addSeparator();
     if (pSettings->vcs().gitOk()) {
         if (hasRepository) {
@@ -3017,6 +3025,8 @@ void MainWindow::onFilesViewContextMenu(const QPoint &pos)
     mFilesView_OpenWithExternal->setEnabled(info.isFile());
     mFilesView_OpenInTerminal->setEnabled(!path.isEmpty());
     mFilesView_OpenInExplorer->setEnabled(!path.isEmpty());
+    mFilesView_Rename->setEnabled(!path.isEmpty());
+    mFilesView_RemoveFile->setEnabled(!path.isEmpty() || !ui->treeFiles->selectionModel()->selectedRows().isEmpty());
 
     if (pSettings->vcs().gitOk() && hasRepository) {
         mFileSystemModelIconProvider.update();
@@ -3497,6 +3507,13 @@ void MainWindow::onFilesViewRemoveFiles()
     }
 }
 
+void MainWindow::onFilesViewRename() {
+    QModelIndex index = ui->treeFiles->currentIndex();
+    if (!index.isValid())
+        return ;
+    ui->treeFiles->edit(index);
+}
+
 void MainWindow::onProblemProperties()
 {
     QModelIndex idx = ui->lstProblemSet->currentIndex();
@@ -3657,9 +3674,11 @@ void MainWindow::onFilesViewOpen()
 {
     QString path = mFileSystemModel.filePath(ui->treeFiles->currentIndex());
     if (!path.isEmpty() && QFileInfo(path).isFile()) {
-        Editor *editor=mEditorList->getEditorByFilename(path);
-        if (editor)
-            editor->activate();
+        if (getFileType(path)==FileType::Project) {
+            openProject(path);
+        } else {
+            openFile(path);
+        }
     }
 }
 
@@ -6703,6 +6722,8 @@ void MainWindow::on_actionLocate_in_Files_View_triggered()
 
 void MainWindow::on_treeFiles_doubleClicked(const QModelIndex &index)
 {
+    if (index!=ui->treeFiles->currentIndex())
+        return;
     QString filepath = mFileSystemModel.filePath(index);
     QFileInfo file(filepath);
     if (file.isFile()) {

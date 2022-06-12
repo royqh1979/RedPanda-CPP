@@ -4,6 +4,9 @@ Red Panda C++ Version 1.1.0
   - enhancement: When the editing files is changed by other applications, only show one notification dialog for each file.
   - fix: c files added to a project will be compiled as c++ file.
   - enhancement: restore caret position after batch replace
+  - enhancement: rename in files view's context menu
+  - enhancement: delete in files view's context menu
+  - change: drag&drop in files view default to move
 
 Red Panda C++ Version 1.0.10
   - fix: modify watch doesn't work

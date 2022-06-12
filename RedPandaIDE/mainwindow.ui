@@ -463,7 +463,7 @@
      <enum>QTabWidget::West</enum>
     </property>
     <property name="currentIndex">
-     <number>1</number>
+     <number>0</number>
     </property>
     <property name="usesScrollButtons">
      <bool>true</bool>
@@ -535,7 +535,7 @@
          <enum>QAbstractItemView::DragDrop</enum>
         </property>
         <property name="defaultDropAction">
-         <enum>Qt::CopyAction</enum>
+         <enum>Qt::MoveAction</enum>
         </property>
         <property name="selectionMode">
          <enum>QAbstractItemView::ExtendedSelection</enum>

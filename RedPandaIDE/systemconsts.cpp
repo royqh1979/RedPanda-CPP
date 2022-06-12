@@ -74,6 +74,9 @@ SystemConsts::SystemConsts(): mDefaultFileFilters()
     mDefaultFileNameFilters.append("*.vs");
     mDefaultFileNameFilters.append("*.fs");
     mDefaultFileNameFilters.append("*.txt");
+    mDefaultFileNameFilters.append("*.in");
+    mDefaultFileNameFilters.append("*.out");
+    mDefaultFileNameFilters.append("*.dat");
     mDefaultFileNameFilters.append("*.md");
     mDefaultFileNameFilters.append("*.dev");
 }

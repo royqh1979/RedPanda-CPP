@@ -299,6 +299,7 @@ private slots:
     void onFilesViewCreateFolder();
     void onFilesViewCreateFile();
     void onFilesViewRemoveFiles();
+    void onFilesViewRename();
     void onProblemProperties();
     void onProblemOpenSource();
     void onLableProblemSetContextMenuRequested();
@@ -780,6 +781,7 @@ private:
     QAction * mFilesView_CreateFolder;
     QAction * mFilesView_CreateFile;
     QAction * mFilesView_RemoveFile;
+    QAction * mFilesView_Rename;
 
     //action for debug console
     QAction * mDebugConsole_ShowDetailLog;
