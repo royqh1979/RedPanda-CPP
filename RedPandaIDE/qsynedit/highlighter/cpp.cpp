@@ -451,30 +451,48 @@ void SynEditCppHighlighter::directiveProc()
         mRun+=1;
     }
     if (directive == "define") {
-        do {
-            switch(mLine[mRun].unicode()) {
-            case '/': //comment?
-                switch (mLine[mRun+1].unicode()) {
-                case '/': // is end of directive as well
-                    mRange.state = RangeState::rsUnknown;
-                    return;
-                case '*': // might be embeded only
-                    mRange.state = RangeState::rsDirectiveComment;
-                    return;
-                }
-                break;
-            case '\\': // yet another line?
-                if (mLine[mRun+1] == 0) {
-                    mRun+=1;
-                    mRange.state = RangeState::rsMultiLineDirective;
-                    return;
-                }
-                break;
-            }
-            mRun+=1;
-        } while (mLine[mRun]!=0);
+        while(mLine[mRun]!=0 && isSpaceChar(mLine[mRun]))
+            mRun++;
+        mRange.state = RangeState::rsDefineIdentifier;
+        return;
     } else
         mRange.state = RangeState::rsUnknown;
+}
+
+void SynEditCppHighlighter::defineIdentProc()
+{
+    mTokenId = TokenKind::Identifier;
+    while(mLine[mRun]!=0 && isIdentChar(mLine[mRun]))
+        mRun++;
+    mRange.state = RangeState::rsDefineRemaining;
+}
+
+void SynEditCppHighlighter::defineRemainingProc()
+{
+    mTokenId = TokenKind::Directive;
+    do {
+        switch(mLine[mRun].unicode()) {
+        case '/': //comment?
+            switch (mLine[mRun+1].unicode()) {
+            case '/': // is end of directive as well
+                mRange.state = RangeState::rsUnknown;
+                return;
+            case '*': // might be embeded only
+                mRange.state = RangeState::rsDirectiveComment;
+                return;
+            }
+            break;
+        case '\\': // yet another line?
+            if (mLine[mRun+1] == 0) {
+                mRun+=1;
+                mRange.state = RangeState::rsMultiLineDirective;
+                return;
+            }
+            break;
+        }
+        mRun+=1;
+    } while (mLine[mRun]!=0);
+    mRange.state=RangeState::rsUnknown;
 }
 
 void SynEditCppHighlighter::directiveEndProc()
@@ -1517,6 +1535,12 @@ void SynEditCppHighlighter::next()
             } else {
                 asciiCharProc();
             }
+            break;
+        case RangeState::rsDefineIdentifier:
+            defineIdentProc();
+            break;
+        case RangeState::rsDefineRemaining:
+            defineRemainingProc();
             break;
         default:
             mRange.state = RangeState::rsUnknown;

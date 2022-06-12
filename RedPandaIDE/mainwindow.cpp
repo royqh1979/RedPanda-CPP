@@ -4175,7 +4175,6 @@ void MainWindow::onFileChanged(const QString &path)
     mFilesChangedNotifying.insert(path);
     Editor *e = mEditorList->getOpenedEditorByFilename(path);
     if (e) {
-        e->setModified(true);
         if (fileExists(path)) {
             e->activate();
             if (QMessageBox::question(this,tr("File Changed"),
@@ -4187,6 +4186,8 @@ void MainWindow::onFileChanged(const QString &path)
                 } catch(FileError e) {
                     QMessageBox::critical(this,tr("Error"),e.reason());
                 }
+            } else {
+                e->setModified(true);
             }
         } else {
             mFileSystemWatcher.removePath(path);
@@ -4197,7 +4198,6 @@ void MainWindow::onFileChanged(const QString &path)
                 mEditorList->closeEditor(e);
             } else {
                 e->setModified(true);
-                e->updateCaption();
             }
         }
     }
@@ -6317,11 +6317,11 @@ void MainWindow::on_actionRename_Symbol_triggered()
             coord.Char--;
             expression = editor->getExpressionAtPosition(coord);
         }
-        // Find it's definition
+            // Find it's definition
         PStatement oldStatement = editor->parser()->findStatementOf(
-                    editor->filename(),
-                    expression,
-                    oldCaretXY.Line);
+                        editor->filename(),
+                        expression,
+                        oldCaretXY.Line);
         // definition of the symbol not found
         if (!oldStatement)
             return;

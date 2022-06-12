@@ -62,7 +62,7 @@ class SynEditCppHighlighter: public SynHighlighter
         rsMultiLineString, rsMultiLineDirective, rsCppComment,
         rsStringEscapeSeq, rsMultiLineStringEscapeSeq,
         rsRawString, rsSpace,rsRawStringEscaping,rsRawStringNotEscaping,rsChar,
-        rsCppCommentEnded
+        rsCppCommentEnded, rsDefineStart, rsDefineIdentifier, rsDefineRemaining
     };
 
 public:
@@ -111,6 +111,8 @@ private:
     void colonProc();
     void commaProc();
     void directiveProc();
+    void defineIdentProc();
+    void defineRemainingProc();
     void directiveEndProc();
     void equalProc();
     void greaterProc();

@@ -7,6 +7,7 @@ Red Panda C++ Version 1.1.0
   - enhancement: rename in files view's context menu
   - enhancement: delete in files view's context menu
   - change: drag&drop in files view default to move
+  - fix: rename macro doesn't work in project
 
 Red Panda C++ Version 1.0.10
   - fix: modify watch doesn't work
