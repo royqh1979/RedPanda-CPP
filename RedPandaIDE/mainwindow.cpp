@@ -6916,10 +6916,6 @@ bool MainWindow::openningFiles() const
 QList<QAction *> MainWindow::listShortCutableActions()
 {
     QList<QAction*> actions = findChildren<QAction *>(QString(), Qt::FindDirectChildrenOnly);
-    actions.append(mProblem_RunAllCases);
-    actions.append(mProblem_RunCurrentCase);
-    actions.append(mProblem_batchSetCases);
-    actions.append(mProblem_Properties);
     return actions;
 }
 
