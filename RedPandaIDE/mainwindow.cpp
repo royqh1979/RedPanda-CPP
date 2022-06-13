@@ -6898,6 +6898,17 @@ bool MainWindow::openningFiles() const
     return mOpenningFiles;
 }
 
+QList<QAction *> MainWindow::listShortCutableActions()
+{
+    QList<QAction*> actions = findChildren<QAction *>(QString(), Qt::FindDirectChildrenOnly);
+    actions.append(mProblem_RunAllCases);
+    actions.append(mProblem_RunCurrentCase);
+    actions.append(mProblem_batchSetCases);
+    actions.append(mProblem_Properties);
+    return actions;
+}
+
+
 void MainWindow::on_actionTool_Window_Bars_triggered()
 {
     bool state = ui->tabExplorer->isVisible();
@@ -6907,7 +6918,6 @@ void MainWindow::on_actionTool_Window_Bars_triggered()
     ui->actionTool_Window_Bars->setChecked(state);
 }
 
-
 void MainWindow::on_actionStatus_Bar_triggered()
 {
     bool state = ui->statusbar->isVisible();
@@ -6915,7 +6925,6 @@ void MainWindow::on_actionStatus_Bar_triggered()
     ui->statusbar->setVisible(state);
     ui->actionStatus_Bar->setChecked(state);
 }
-
 
 void MainWindow::on_actionProject_triggered()
 {

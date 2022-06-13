@@ -19,7 +19,6 @@
 
 #include <QFileSystemModel>
 
-
 class GitRepository;
 class GitManager;
 class CustomFileSystemModel : public QFileSystemModel
@@ -28,9 +27,6 @@ class CustomFileSystemModel : public QFileSystemModel
 public:
     explicit CustomFileSystemModel(QObject *parent = nullptr);
 
-    // QAbstractItemModel interface
-public:
-    QVariant data(const QModelIndex &index, int role) const override;
 };
 
 #endif // CUSTOMFILESYSTEMMODEL_H

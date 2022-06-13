@@ -22,8 +22,3 @@ CustomFileSystemModel::CustomFileSystemModel(QObject *parent) : QFileSystemModel
 {
 }
 
-QVariant CustomFileSystemModel::data(const QModelIndex &index, int role) const
-{
-    return QFileSystemModel::data(index,role);
-}
-

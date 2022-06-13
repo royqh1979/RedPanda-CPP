@@ -64,7 +64,7 @@ void EnvironmentShortcutModel::reload()
     beginResetModel();
     mShortcuts.clear();
     QList<QMenu*> menus = pMainWindow->menuBar()->findChildren<QMenu*>();
-    QList<QAction*> actions = pMainWindow->findChildren<QAction*>(QString(), Qt::FindDirectChildrenOnly);
+    QList<QAction*> actions = pMainWindow->listShortCutableActions();
     foreach( const QMenu* menu, menus) {
         if (menu->title().isEmpty())
             continue;

@@ -189,6 +189,8 @@ public:
 
     bool openningFiles() const;
 
+    QList<QAction*> listShortCutableActions();
+
 public slots:
     void logToolsOutput(const QString& msg);
     void onCompileIssue(PCompileIssue issue);
