@@ -1,0 +1,48 @@
+#include <raylib.h>
+#include <rdrawing.h>
+#include <math.h>
+
+
+void paintstar(Image* pImage, double x, double y, double r, double a)
+{
+	int vx[5];
+	int vy[5];
+	for (int i = 0; i < 5; ++i)
+	{
+		vx[i] = (int)( -cos( PI * 4 / 5 * i + a ) * r + x );
+		vy[i] = (int)( sin( PI * 4 / 5 * i + a) * r + y );
+	}
+	ImageFillPolygonEx(pImage,vx,vy,5,LIGHTRED);
+	ImageDrawPolygonEx(pImage,vx,vy,5,2,DARKBROWN);
+}
+
+int main() {
+	InitWindow(640,480,"rdrawing");
+	SetTraceLogLevel(LOG_WARNING);
+	SetTargetFPS(60);
+	
+	Image img=GenImageColor(640,480,BLANK);
+	
+	double r = 0;
+	while(!WindowShouldClose()) {
+		//update datas
+		r += 0.02;
+		if (r > PI * 2) r -= PI * 2;
+		
+		//update image (in CPU)
+		ImageClearBackground(&img,BLANK);
+		paintstar(&img,320,240,200,r);
+		
+		//Drawing in GPU
+		Texture texture = LoadTextureFromImage(img);
+		BeginDrawing();
+		ClearBackground(WHITE);
+		DrawTexture(texture,0,0,WHITE);
+		EndDrawing();
+		UnloadTexture(texture);
+	}
+	
+	//Clean up
+	UnloadImage(img);
+	CloseWindow();
+}

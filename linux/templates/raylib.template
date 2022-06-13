@@ -2,9 +2,9 @@
 ver=2
 Name=raylib
 Name[zh_CN]=raylib
-Icon=raylib.ico
-Description=A simple program using raylib ( https://raylib.com )
-Description[zh_CN]=简单的raylib绘图程序 ( https://raylib.com )
+Icon=raylib-game.ico
+Description=A simple interactive animation using raylib ( https://raylib.com )
+Description[zh_CN]=简单的raylib交互动画 ( https://raylib.com )
 Category=Multimedia
 Category[zh_CN]=多媒体
 
