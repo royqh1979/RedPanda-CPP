@@ -12,6 +12,7 @@ Red Panda C++ Version 1.1.0
   - fix: can't remove a shortcut
   - enhancement: hide all menu actions in the option dialog's shortcut panel
   - enhancement: add 'run all problem cases' / 'run current problem case' / 'batch set cases' to the option dialog's shortcut panel
+  - enhancement: more templates for raylib
 
 Red Panda C++ Version 1.0.10
   - fix: modify watch doesn't work
