@@ -1030,7 +1030,7 @@ void MainWindow::updateShortcuts()
 {
     ShortcutManager manager;
     manager.load();
-    manager.applyTo(findChildren<QAction*>());
+    manager.applyTo(listShortCutableActions());
 }
 
 QPlainTextEdit *MainWindow::txtLocals()
@@ -2231,6 +2231,7 @@ void MainWindow::buildContextMenus()
                 tr("Properties..."),
                 ui->lstProblemSet
                 );
+    mProblem_Properties->setObjectName("Probelm_Properties");
     connect(mProblem_Properties, &QAction::triggered, this,
             &MainWindow::onProblemProperties);
     mProblem_OpenSource=createActionFor(
@@ -2248,17 +2249,22 @@ void MainWindow::buildContextMenus()
                 tr("Run All Cases"),
                 ui->tblProblemCases
                 );
+    mProblem_RunAllCases->setObjectName("Problem_RunAllCases");
     connect(mProblem_RunAllCases, &QAction::triggered, this,
             &MainWindow::on_btnRunAllProblemCases_clicked);
+
     mProblem_RunCurrentCase = createActionFor(
                 tr("Run Current Case"),
                 ui->tblProblemCases
                 );
+    mProblem_RunCurrentCase->setObjectName("Problem_RunCurrentCases");
     connect(mProblem_RunCurrentCase, &QAction::triggered, this,
             &MainWindow::onProblemRunCurrentCase);
+
     mProblem_batchSetCases = createActionFor(
                 tr("Batch Set Cases"),
                 ui->tblProblemCases);
+    mProblem_batchSetCases->setObjectName("Problem_BatchSetCases");
     connect(mProblem_batchSetCases, &QAction::triggered, this,
             &MainWindow::onProblemBatchSetCases);
 
