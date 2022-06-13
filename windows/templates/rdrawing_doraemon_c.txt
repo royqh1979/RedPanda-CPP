@@ -1,0 +1,246 @@
+#include <raylib.h>
+#include <rdrawing.h>
+#include <time.h>
+
+#define SHRINK_FRAMES 2
+
+Image genBodyImage();
+Image genShrinkImage0();
+Image genShrinkImage1();
+Image genShrinkImage2();
+Image genShrinkImage3();
+Image genShrinkImage4();
+
+int main() {
+	InitWindow(800,600,"Doraemon");
+	SetTraceLogLevel(LOG_WARNING);
+	SetTargetFPS(30);
+	
+	SetRandomSeed(time(NULL));
+	
+	Image img=genBodyImage();
+	Image shrinkImages[9];
+	shrinkImages[0]=genShrinkImage0();
+	shrinkImages[1]=genShrinkImage1();
+	shrinkImages[2]=genShrinkImage2();
+	shrinkImages[3]=genShrinkImage3();
+	shrinkImages[4]=genShrinkImage4();
+	shrinkImages[5]=genShrinkImage3();
+	shrinkImages[6]=genShrinkImage2();
+	shrinkImages[7]=genShrinkImage1();
+	shrinkImages[8]=genShrinkImage0();
+	
+	Texture texture = LoadTextureFromImage(img);
+	Texture shrinkTexture;
+	int stage = -1;
+	int repeats = 0;
+	
+	while(!WindowShouldClose()) {
+		if (stage==-1) {
+			int r = GetRandomValue(1,30);
+			if (r==1) {
+				stage=0;
+				repeats=0;
+			}
+		}
+		int idx=0;
+		if (stage>=0) {
+			idx=stage / SHRINK_FRAMES;
+			if (idx<9) {
+				shrinkTexture=LoadTextureFromImage(shrinkImages[idx]);	
+			} else {
+				idx=0;
+				stage=0;
+				repeats++;
+				if (repeats>=3) 
+					stage=-1;
+			}
+		}
+		if (stage>=0) {
+			stage++;
+		}
+		
+		BeginDrawing();
+		ClearBackground(WHITE);
+		DrawTexture(texture,0,0,WHITE);
+		DrawTexture(shrinkTexture,0,0,WHITE);
+		EndDrawing();
+		UnloadTexture(shrinkTexture);
+	}
+	
+	//Clean up
+	UnloadTexture(texture);
+	UnloadImage(img);
+	for (int i=0;i<9;i++) {
+		UnloadImage(shrinkImages[i]);
+	}
+	CloseWindow();
+}
+
+Image genBodyImage(){
+	Image img=GenImageColor(800,600,WHITE);
+	// 画头
+	Color fillColor = (Color){7,190,234,255};
+	Color color=BLACK;
+	ImageFillRoundRectEx(&img,265, 94, 270, 260, 124, 124,fillColor);
+	ImageDrawRoundRectEx(&img,265, 94, 270, 260, 124, 124,1,color);
+	
+	fillColor = WHITE;								// 脸
+	ImageFillEllipseEx(&img, 400, 256, 115, 95, fillColor);
+	
+	ImageFillRoundRectEx(&img,337, 131, 63, 74, 28, 28, fillColor);			// 右眼
+	ImageDrawRoundRectEx(&img,337, 131, 63, 74, 28, 28,1, color);			
+	ImageFillRoundRectEx(&img,400, 131, 63, 74, 28, 28, fillColor);			// 左眼
+	ImageDrawRoundRectEx(&img,400, 131, 63, 74, 28, 28,1, color);	
+	
+	fillColor = BLACK;
+	ImageFillCircleEx(&img,384,184,6, fillColor);							// 右眼球
+	ImageFillCircleEx(&img,416,184,6, fillColor);							// 左眼球
+	
+	fillColor = (Color){201, 62, 0, 255};						// 鼻子
+	ImageFillCircleEx(&img, 400, 208, 15, fillColor);
+	
+	ImageDrawLineEx(&img,400,223,400,296,1,color);		// 人中
+	ImageDrawArcEx(&img,400, 192, 108, 108, PI * 5 / 4, PI * 7 / 4,1,color);	// 嘴
+	
+	ImageDrawLineEx(&img,358, 227, 310, 209,1,color);							// 胡子
+	ImageDrawLineEx(&img,442, 227, 490, 209,1,color);
+	ImageDrawLineEx(&img,359, 235, 308, 235,1,color);
+	ImageDrawLineEx(&img,441, 235, 492, 235,1,color);
+	ImageDrawLineEx(&img,358, 243, 310, 261,1,color);
+	ImageDrawLineEx(&img,442, 243, 490, 261,1,color);	
+	
+	// 画身体
+	ImageDrawLineEx(&img, 319, 332, 262, 372,1,color);					// 手臂(上)
+	ImageDrawLineEx(&img, 481, 332, 538, 372,1,color);
+	ImageDrawLineEx(&img, 304, 396, 284, 410,1,color);					// 手臂(下)
+	ImageDrawLineEx(&img, 496, 396, 516, 410,1,color);
+	
+	ImageDrawLineEx(&img, 304, 385, 304, 478,1,color);					// 腿外侧
+	ImageDrawLineEx(&img, 496, 385, 496, 478,1,color);
+	ImageDrawArcEx(&img, 400, 479, 15,11,0,PI,1,color);				// 腿内侧
+	
+	fillColor=WHITE;						// 手
+	ImageFillCircleEx(&img, 260,399,27, fillColor);
+	ImageDrawCircleEx(&img, 260,399,27, 1, color);
+	ImageFillCircleEx(&img, 540,399,27, fillColor);
+	ImageDrawCircleEx(&img, 540,399,27, 1, color);
+	ImageFillRoundRectEx(&img,288,478,110,27,12,12,fillColor);			// 脚
+	ImageDrawRoundRectEx(&img,288,478,110,27,12,12,1,color);			
+	ImageFillRoundRectEx(&img,402,478,110,27,12,12,fillColor);
+	ImageDrawRoundRectEx(&img,402,478,110,27,12,12,1,color);			
+	
+	fillColor=(Color){7,190,234,255};							// 身体填充蓝色
+	ImageFloodFill(&img,400,400,BLACK,fillColor);
+	
+	fillColor=WHITE;						// 肚皮
+	ImageFillCircleEx(&img,400,381,75,fillColor);
+	ImageFillRectangleEx(&img,340,304,120,20,fillColor); // 用白色矩形擦掉多余的肚皮
+	
+	ImageDrawSectorEx(&img,400,381,58, 58,PI,2*PI,1,color); // 口袋 
+	
+	// 画铃铛
+	fillColor=(Color){169, 38, 0,255};				// 绳子
+	ImageFillRoundRectEx(&img,300,323,200,19,12,12,fillColor);
+	
+	fillColor=(Color){245, 237, 38,255};			// 铃铛外形
+	ImageFillCircleEx(&img,400,349,19,fillColor);
+	
+	fillColor=BLACK;						// 铃铛上的洞
+	ImageFillEllipseEx(&img,400,354,4,4,fillColor);
+	ImageDrawLineEx(&img,400,357,400,368,3,color);	
+	
+	ImageDrawLineEx(&img,384,340,416,340,1,color);					// 铃铛上的纹路
+	ImageDrawLineEx(&img,384,344,418,344,1,color);
+	return img;
+}
+
+Image genShrinkImage0() {
+	Image img = GenImageColor(800,600, BLANK);
+	Color fillColor=WHITE;
+	Color color=BLACK;
+	ImageFillRoundRectEx(&img,337, 131, 63, 74, 28, 28, fillColor);			// 右眼
+	ImageFillRoundRectEx(&img,400, 131, 63, 74, 28, 28, fillColor);			// 左眼
+	ImageDrawRoundRectEx(&img,337, 131, 63, 74, 28, 28,1, color);			
+	ImageDrawRoundRectEx(&img,400, 131, 63, 74, 28, 28,1, color);	
+	
+	fillColor = BLACK;
+	ImageFillCircleEx(&img,384,184,6, fillColor);							// 右眼球
+	ImageFillCircleEx(&img,416,184,6, fillColor);							// 左眼球
+	fillColor = (Color){201, 62, 0, 255};						// 鼻子
+	ImageFillCircleEx(&img, 400, 208, 15, fillColor);
+	return img;
+}
+
+Image genShrinkImage1() {
+	Image img = GenImageColor(800,600, BLANK);
+	Color fillColor=WHITE;
+	Color color=BLACK;
+	ImageFillRoundRectEx(&img,337, 131, 63, 74, 28, 28, fillColor);			// 右眼
+	ImageFillRoundRectEx(&img,400, 131, 63, 74, 28, 28, fillColor);			// 左眼
+	ImageDrawRoundRectEx(&img,337, 150, 63, 37, 28, 28, 1, color);
+	ImageDrawRoundRectEx(&img,400, 150, 63, 37, 28, 28, 1, color);
+	
+	ImageFillRectangleEx(&img,337,168,63,19,fillColor);
+	ImageFillRectangleEx(&img,400,168,63,19,fillColor);
+	
+	ImageDrawRoundRectEx(&img,337, 131, 63, 74, 28, 28,1, color);			
+	ImageDrawRoundRectEx(&img,400, 131, 63, 74, 28, 28,1, color);	
+	
+	fillColor = BLACK;
+	ImageFillCircleEx(&img,384,184,6, fillColor);							// 右眼球
+	ImageFillCircleEx(&img,416,184,6, fillColor);							// 左眼球
+	fillColor = (Color){201, 62, 0, 255};						// 鼻子
+	ImageFillCircleEx(&img, 400, 208, 15, fillColor);
+	return img;
+}
+
+Image genShrinkImage2() {
+	Image img=GenImageColor(800,600,BLANK);
+	Color fillColor=WHITE;
+	Color color=BLACK;
+	ImageFillRoundRectEx(&img,337, 131, 63, 74, 28, 28, fillColor);			// 右眼
+	ImageFillRoundRectEx(&img,400, 131, 63, 74, 28, 28, fillColor);			// 左眼
+	
+	ImageDrawLineEx(&img,337,168,399,168,1,color);
+	ImageDrawLineEx(&img,400,168,462,168,1,color);
+	
+	ImageDrawRoundRectEx(&img,337, 131, 63, 74, 28, 28,1, color);			
+	ImageDrawRoundRectEx(&img,400, 131, 63, 74, 28, 28,1, color);
+	fillColor = (Color){201, 62, 0, 255};						// 鼻子
+	ImageFillCircleEx(&img, 400, 208, 15, fillColor);
+	return img;
+}
+
+Image genShrinkImage3(){
+	Image img=GenImageColor(800,600,BLANK);
+	Color fillColor=WHITE;
+	Color color=BLACK;
+	ImageFillRoundRectEx(&img,337, 131, 63, 74, 28, 28, fillColor);			// 右眼
+	ImageFillRoundRectEx(&img,400, 131, 63, 74, 28, 28, fillColor);			// 左眼
+	ImageDrawRoundRectEx(&img,337, 150, 63, 37, 28, 28, 1, color);
+	ImageDrawRoundRectEx(&img,400, 150, 63, 37, 28, 28, 1, color);
+	
+	ImageFillRectangleEx(&img,337,150,63,19,fillColor);
+	ImageFillRectangleEx(&img,400,150,63,19,fillColor);
+	
+	ImageDrawRoundRectEx(&img,337, 131, 63, 74, 28, 28,1, color);			
+	ImageDrawRoundRectEx(&img,400, 131, 63, 74, 28, 28,1, color);
+	fillColor = (Color){201, 62, 0, 255};						// 鼻子
+	ImageFillCircleEx(&img, 400, 208, 15, fillColor);
+	return img;
+}
+
+Image genShrinkImage4() {
+	Image img=GenImageColor(800,600,BLANK);
+	Color fillColor=WHITE;
+	Color color=BLACK;
+	ImageFillRoundRectEx(&img,337, 131, 63, 74, 28, 28, fillColor);			// 右眼
+	ImageFillRoundRectEx(&img,400, 131, 63, 74, 28, 28, fillColor);			// 左眼
+	
+	ImageDrawRoundRectEx(&img,337, 131, 63, 74, 28, 28,1, color);			
+	ImageDrawRoundRectEx(&img,400, 131, 63, 74, 28, 28,1, color);	
+	fillColor = (Color){201, 62, 0, 255};						// 鼻子
+	ImageFillCircleEx(&img, 400, 208, 15, fillColor);
+	return img;
+}
