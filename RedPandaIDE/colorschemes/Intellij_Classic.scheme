@@ -107,7 +107,7 @@
     "Gutter": {
         "background": "#fff0f0f0",
         "bold": false,
-        "foreground": "#ff000000",
+        "foreground": "#ff004200",
         "italic": false,
         "strikeout": false,
         "underlined": false

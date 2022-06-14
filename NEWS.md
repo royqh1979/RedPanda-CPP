@@ -1,3 +1,6 @@
+Red Panda C++ Version 1.1.1
+  - enhancement: adjust the appearance of problem case's input/output/expected control
+
 Red Panda C++ Version 1.1.0
   - enhancement: when ctrl+mouse cursor hovered an identifier or header name, use underline to highlight it
   - enhancement: mark editor as modified, if the editing file is changed by other applications.

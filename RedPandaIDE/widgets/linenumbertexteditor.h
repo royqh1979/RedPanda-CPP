@@ -28,6 +28,18 @@ public:
     void lineNumberAreaPaintEvent(QPaintEvent *event);
     int lineNumberAreaWidth();
 
+    const QColor &lineNumberAreaForeground() const;
+    void setLineNumberAreaForeground(const QColor &newLineNumberAreaForeground);
+
+    const QColor &lineNumberAreaBackground() const;
+    void setLineNumberAreaBackground(const QColor &newLineNumberAreaBackground);
+
+    const QColor &lineNumberAreaCurrentLine() const;
+    void setLineNumberAreaCurrentLine(const QColor &newLineNumberAreaCurrentLine);
+
+signals:
+    void lineNumberAreaCurrentLineChanged();
+
 protected:
     void resizeEvent(QResizeEvent *event) override;
 
@@ -38,6 +50,9 @@ private slots:
 
 private:
     QWidget *lineNumberArea;
+    QColor mLineNumberAreaForeground;
+    QColor mLineNumberAreaBackground;
+    QColor mLineNumberAreaCurrentLine;
 };
 
 class LineNumberArea : public QWidget

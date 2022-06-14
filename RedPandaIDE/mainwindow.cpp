@@ -606,11 +606,45 @@ void MainWindow::updateEditorColorSchemes()
         mCompletionPopup->setPalette(pal);
         mHeaderCompletionPopup->setPalette(pal);
         ui->classBrowser->setPalette(pal);
+        ui->txtProblemCaseInput->setPalette(pal);
+        ui->txtProblemCaseExpected->setPalette(pal);
+        ui->txtProblemCaseOutput->setPalette(pal);
     } else {
         QPalette pal = palette();
         mCompletionPopup->setPalette(pal);
         mHeaderCompletionPopup->setPalette(pal);
         ui->classBrowser->setPalette(pal);
+        ui->txtProblemCaseInput->setPalette(pal);
+        ui->txtProblemCaseExpected->setPalette(pal);
+        ui->txtProblemCaseOutput->setPalette(pal);
+    }
+    item = pColorManager->getItem(schemeName, COLOR_SCHEME_GUTTER);
+    if (item) {
+        ui->txtProblemCaseInput->setLineNumberAreaForeground(item->foreground());
+        ui->txtProblemCaseInput->setLineNumberAreaBackground(item->background());
+        ui->txtProblemCaseOutput->setLineNumberAreaForeground(item->foreground());
+        ui->txtProblemCaseOutput->setLineNumberAreaBackground(item->background());
+        ui->txtProblemCaseExpected->setLineNumberAreaForeground(item->foreground());
+        ui->txtProblemCaseExpected->setLineNumberAreaBackground(item->background());
+    } else {
+        QPalette pal = palette();
+        ui->txtProblemCaseInput->setLineNumberAreaForeground(pal.color(QPalette::ButtonText));
+        ui->txtProblemCaseInput->setLineNumberAreaBackground(pal.color(QPalette::Button));
+        ui->txtProblemCaseOutput->setLineNumberAreaForeground(pal.color(QPalette::ButtonText));
+        ui->txtProblemCaseOutput->setLineNumberAreaBackground(pal.color(QPalette::Button));
+        ui->txtProblemCaseExpected->setLineNumberAreaForeground(pal.color(QPalette::ButtonText));
+        ui->txtProblemCaseExpected->setLineNumberAreaBackground(pal.color(QPalette::Button));
+    }
+    item = pColorManager->getItem(schemeName, COLOR_SCHEME_GUTTER_ACTIVE_LINE);
+    if (item) {
+        ui->txtProblemCaseInput->setLineNumberAreaCurrentLine(item->foreground());
+        ui->txtProblemCaseOutput->setLineNumberAreaCurrentLine(item->foreground());
+        ui->txtProblemCaseExpected->setLineNumberAreaCurrentLine(item->foreground());
+    } else {
+        QPalette pal = palette();
+        ui->txtProblemCaseInput->setLineNumberAreaCurrentLine(pal.color(QPalette::ButtonText));
+        ui->txtProblemCaseOutput->setLineNumberAreaCurrentLine(pal.color(QPalette::ButtonText));
+        ui->txtProblemCaseExpected->setLineNumberAreaCurrentLine(pal.color(QPalette::ButtonText));
     }
 }
 
