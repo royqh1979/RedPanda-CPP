@@ -1064,7 +1064,7 @@ void MainWindow::updateShortcuts()
 {
     ShortcutManager manager;
     manager.load();
-    manager.applyTo(findChildren<QAction*>());
+    manager.applyTo(listShortCutableActions());
 }
 
 QPlainTextEdit *MainWindow::txtLocals()
@@ -2263,10 +2263,12 @@ void MainWindow::buildContextMenus()
             this, &MainWindow::onLstProblemSetContextMenu);
     mProblem_Properties = createActionFor(
                 tr("Properties..."),
-                ui->lstProblemSet
+                this
                 );
+    mProblem_Properties->setObjectName("actionProbelm_Properties");
     connect(mProblem_Properties, &QAction::triggered, this,
             &MainWindow::onProblemProperties);
+
     mProblem_OpenSource=createActionFor(
                 tr("Open Source File"),
                 ui->lstProblemSet
@@ -2280,19 +2282,24 @@ void MainWindow::buildContextMenus()
             this, &MainWindow::onTableProblemCasesContextMenu);
     mProblem_RunAllCases = createActionFor(
                 tr("Run All Cases"),
-                ui->tblProblemCases
+                this
                 );
+    mProblem_RunAllCases->setObjectName("Problem_RunAllCases");
     connect(mProblem_RunAllCases, &QAction::triggered, this,
             &MainWindow::on_btnRunAllProblemCases_clicked);
+
     mProblem_RunCurrentCase = createActionFor(
                 tr("Run Current Case"),
-                ui->tblProblemCases
+                this
                 );
+    mProblem_RunCurrentCase->setObjectName("Problem_RunCurrentCases");
     connect(mProblem_RunCurrentCase, &QAction::triggered, this,
             &MainWindow::onProblemRunCurrentCase);
+
     mProblem_batchSetCases = createActionFor(
                 tr("Batch Set Cases"),
-                ui->tblProblemCases);
+                this);
+    mProblem_batchSetCases->setObjectName("Problem_BatchSetCases");
     connect(mProblem_batchSetCases, &QAction::triggered, this,
             &MainWindow::onProblemBatchSetCases);
 
@@ -3288,12 +3295,16 @@ void MainWindow::onProblemNameChanged(int index)
 
 void MainWindow::onProblemRunCurrentCase()
 {
+    if (!ui->tblProblemCases->currentIndex().isValid())
+        return;
+    showHideMessagesTab(ui->tabProblem,ui->actionProblem);
     applyCurrentProblemCaseChanges();
     runExecutable(RunType::CurrentProblemCase);
 }
 
 void MainWindow::onProblemBatchSetCases()
 {
+    showHideMessagesTab(ui->tabProblem,ui->actionProblem);
     if (mOJProblemModel.count()>0 && QMessageBox::question(this,tr("Batch Set Cases"),
                               tr("This operation will remove all cases for the current problem.")
                               +"<br />"
@@ -3550,6 +3561,7 @@ void MainWindow::onFilesViewRename() {
 
 void MainWindow::onProblemProperties()
 {
+    showHideMessagesTab(ui->tabProblem,ui->actionProblem);
     QModelIndex idx = ui->lstProblemSet->currentIndex();
     if (!idx.isValid())
         return;
@@ -6891,7 +6903,10 @@ void MainWindow::on_btnAddProblemCase_clicked()
 }
 
 void MainWindow::on_btnRunAllProblemCases_clicked()
-{
+{    
+    if (mOJProblemModel.count()<=0)
+        return;
+    showHideMessagesTab(ui->tabProblem,ui->actionProblem);
     applyCurrentProblemCaseChanges();
     runExecutable(RunType::ProblemCases);
 }
@@ -6935,10 +6950,6 @@ bool MainWindow::openningFiles() const
 QList<QAction *> MainWindow::listShortCutableActions()
 {
     QList<QAction*> actions = findChildren<QAction *>(QString(), Qt::FindDirectChildrenOnly);
-    actions.append(mProblem_RunAllCases);
-    actions.append(mProblem_RunCurrentCase);
-    actions.append(mProblem_batchSetCases);
-    actions.append(mProblem_Properties);
     return actions;
 }
 

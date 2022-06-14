@@ -2682,6 +2682,9 @@ void Settings::CompilerSets::saveSet(int index)
     savePath("profiler", pSet->profiler());
 
     mSettings->mSettings.remove("Options");
+    foreach(const PCompilerOption& option, pCompilerInfoManager->getCompilerOptions(pSet->compilerType())) {
+        mSettings->mSettings.remove(option->key);
+    }
     // Save option string
     for (const QString& optionKey : pSet->compileOptions().keys()) {
         mSettings->mSettings.setValue(optionKey, pSet->compileOptions().value(optionKey));

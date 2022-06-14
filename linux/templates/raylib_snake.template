@@ -1,0 +1,20 @@
+[Template]
+ver=2
+Name=snake
+Name[zh_CN]=吞食蛇
+Icon=raylib-snake.ico
+Description=snake game using raylib ( https://raylib.com )
+Description[zh_CN]=经典的吞食蛇游戏(基于raylib) ( https://raylib.com )
+Category=Game
+Category[zh_CN]=游戏
+
+[Unit0]
+CName=main.c
+C=raylib_snake_c.txt
+
+[Project]
+UnitCount=1
+Type=1
+IsCpp=0
+linker=-lraylib -lGL -lm -lpthread -ldl -lrt -lX11
+
