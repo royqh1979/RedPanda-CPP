@@ -2,6 +2,7 @@ Red Panda C++ Version 1.1.1
   - enhancement: adjust the appearance of problem case's input/output/expected control
   - change: swap position of problem case's output and expected input controls
   - enhancement: when problem case panel is positioned at right, problem case's input, output and expected controls is layouted vertically
+  - enhancement: add ignore spaces checkbox in problem cases panel
 
 Red Panda C++ Version 1.1.0
   - enhancement: when ctrl+mouse cursor hovered an identifier or header name, use underline to highlight it

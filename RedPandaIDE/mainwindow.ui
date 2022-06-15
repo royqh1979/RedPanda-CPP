@@ -1738,6 +1738,23 @@
             </property>
            </widget>
           </item>
+          <item row="3" column="3">
+           <widget class="QLabel" name="lblProblemCaseOutput">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="3">
+           <widget class="LineNumberTextEditor" name="txtProblemCaseOutput">
+            <property name="lineWrapMode">
+             <enum>QPlainTextEdit::NoWrap</enum>
+            </property>
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
           <item row="2" column="2">
            <widget class="LineNumberTextEditor" name="txtProblemCaseExpected">
             <property name="lineWrapMode">
@@ -1872,28 +1889,49 @@
             </property>
            </widget>
           </item>
-          <item row="2" column="3">
-           <widget class="LineNumberTextEditor" name="txtProblemCaseOutput">
-            <property name="lineWrapMode">
-             <enum>QPlainTextEdit::NoWrap</enum>
-            </property>
-            <property name="readOnly">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
           <item row="0" column="3">
-           <widget class="QLabel" name="lblProblemCaseOutputCaption">
-            <property name="text">
-             <string>Output</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="3">
-           <widget class="QLabel" name="lblProblemCaseOutput">
-            <property name="text">
-             <string/>
-            </property>
+           <widget class="QWidget" name="widgetProblemCaseOutputCaption" native="true">
+            <layout class="QHBoxLayout" name="horizontalLayout_19">
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <widget class="QLabel" name="lblProblemCaseOutputCaption">
+               <property name="text">
+                <string>Output</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_5">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="chkIgnoreSpaces">
+               <property name="text">
+                <string>Ignore Spaces</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </widget>
           </item>
          </layout>

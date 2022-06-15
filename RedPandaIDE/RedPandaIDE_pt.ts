@@ -4425,10 +4425,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Line %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Batch Set Cases</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4490,6 +4486,10 @@
     </message>
     <message>
         <source>Rename</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Ignore Spaces</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

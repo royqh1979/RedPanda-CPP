@@ -719,6 +719,7 @@ void MainWindow::applySettings()
     showHideMessagesTab(ui->tabProblem, pSettings->ui().showProblem()
                         && pSettings->executor().enableProblemSet());
 
+    ui->chkIgnoreSpaces->setChecked(pSettings->executor().ignoreSpacesWhenValidatingCases());
     ui->actionInterrupt->setVisible(pSettings->debugger().useGDBServer());
     //icon sets for editors
     updateEditorSettings();
@@ -6246,7 +6247,7 @@ void MainWindow::setDockMessagesToArea(const Qt::DockWidgetArea &area)
                 & ~area);
     QGridLayout* layout=(QGridLayout*)ui->panelProblemCase->layout();
     layout->removeWidget(ui->widgetProblemCaseInputCaption);
-    layout->removeWidget(ui->lblProblemCaseOutputCaption);
+    layout->removeWidget(ui->widgetProblemCaseOutputCaption);
     layout->removeWidget(ui->widgetProblemCaseExpectedCaption);
     layout->removeWidget(ui->txtProblemCaseInput);
     layout->removeWidget(ui->txtProblemCaseOutput);
@@ -6259,28 +6260,30 @@ void MainWindow::setDockMessagesToArea(const Qt::DockWidgetArea &area)
     case Qt::DockWidgetArea::TopDockWidgetArea:
         layout->addWidget(ui->widgetProblemCaseInputCaption, 0, 0, 1, 1);
         layout->addWidget(ui->txtProblemCaseInput, 1, 0, 1, 1);
-        layout->addWidget(ui->lblProblemCaseInput, 2, 0, 1, 1);
-
-        layout->addWidget(ui->lblProblemCaseOutputCaption, 0, 2, 1, 1);
-        layout->addWidget(ui->txtProblemCaseOutput, 1, 2, 1, 1);
-        layout->addWidget(ui->lblProblemCaseOutput, 2, 2, 1, 1);
+//        layout->addWidget(ui->lblProblemCaseInput, 2, 0, 1, 1);
 
         layout->addWidget(ui->widgetProblemCaseExpectedCaption, 0, 1, 1, 1);
         layout->addWidget(ui->txtProblemCaseExpected, 1, 1, 1, 1);
-        layout->addWidget(ui->lblProblemCaseExpected, 2, 1, 1, 1);
+//        layout->addWidget(ui->lblProblemCaseExpected, 2, 1, 1, 1);
+
+        layout->addWidget(ui->widgetProblemCaseOutputCaption, 0, 2, 1, 1);
+        layout->addWidget(ui->txtProblemCaseOutput, 1, 2, 1, 1);
+//        layout->addWidget(ui->lblProblemCaseOutput, 2, 2, 1, 1);
+
+
         break;
     default:
         layout->addWidget(ui->widgetProblemCaseInputCaption, 0, 0, 1, 1);
         layout->addWidget(ui->txtProblemCaseInput, 1, 0, 1, 1);
-        layout->addWidget(ui->lblProblemCaseInput, 2, 0, 1, 1);
+        //layout->addWidget(ui->lblProblemCaseInput, 2, 0, 1, 1);
 
         layout->addWidget(ui->widgetProblemCaseExpectedCaption, 3, 0, 1, 1);
         layout->addWidget(ui->txtProblemCaseExpected, 4, 0, 1, 1);
-        layout->addWidget(ui->lblProblemCaseExpected, 5, 0, 1, 1);
+        //layout->addWidget(ui->lblProblemCaseExpected, 5, 0, 1, 1);
 
-        layout->addWidget(ui->lblProblemCaseOutputCaption, 6, 0, 1, 1);
+        layout->addWidget(ui->widgetProblemCaseOutputCaption, 6, 0, 1, 1);
         layout->addWidget(ui->txtProblemCaseOutput, 7, 0, 1, 1);
-        layout->addWidget(ui->lblProblemCaseOutput, 8, 0, 1, 1);
+        //layout->addWidget(ui->lblProblemCaseOutput, 8, 0, 1, 1);
     }
 }
 
@@ -7774,7 +7777,7 @@ void MainWindow::on_txtProblemCaseOutput_cursorPositionChanged()
     QTextCursor cursor = ui->txtProblemCaseOutput->textCursor();
     int val = ui->txtProblemCaseOutput->verticalScrollBar()->value();
     int line = cursor.block().firstLineNumber();
-    ui->lblProblemCaseOutput->setText(tr("Line %1").arg(cursor.block().firstLineNumber()+1));
+    //ui->lblProblemCaseOutput->setText(tr("Line %1").arg(cursor.block().firstLineNumber()+1));
 
     QTextBlock block = ui->txtProblemCaseExpected->document()->findBlockByLineNumber(line);
     if (!block.isValid())
@@ -7788,14 +7791,14 @@ void MainWindow::on_txtProblemCaseOutput_cursorPositionChanged()
 void MainWindow::on_txtProblemCaseExpected_cursorPositionChanged()
 {
     QTextCursor cursor = ui->txtProblemCaseExpected->textCursor();
-    ui->lblProblemCaseExpected->setText(tr("Line %1").arg(cursor.block().firstLineNumber()+1));
+    //ui->lblProblemCaseExpected->setText(tr("Line %1").arg(cursor.block().firstLineNumber()+1));
 }
 
 
 void MainWindow::on_txtProblemCaseInput_cursorPositionChanged()
 {
     QTextCursor cursor = ui->txtProblemCaseInput->textCursor();
-    ui->lblProblemCaseInput->setText(tr("Line %1").arg(cursor.block().firstLineNumber()+1));
+    //ui->lblProblemCaseInput->setText(tr("Line %1").arg(cursor.block().firstLineNumber()+1));
 }
 
 
@@ -7872,5 +7875,11 @@ void MainWindow::on_actionToggle_Explorer_Panel_triggered()
 void MainWindow::on_actionToggle_Messages_Panel_triggered()
 {
     stretchMessagesPanel(ui->tabMessages->isShrinked());
+}
+
+
+void MainWindow::on_chkIgnoreSpaces_stateChanged(int /*arg1*/)
+{
+    pSettings->executor().setIgnoreSpacesWhenValidatingCases(ui->chkIgnoreSpaces->isChecked());
 }
 

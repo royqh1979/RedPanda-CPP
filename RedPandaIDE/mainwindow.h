@@ -680,6 +680,8 @@ private slots:
 
     void on_actionToggle_Messages_Panel_triggered();
 
+    void on_chkIgnoreSpaces_stateChanged(int arg1);
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;
