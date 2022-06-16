@@ -38,6 +38,8 @@
 #include <QDrag>
 #include <QMimeData>
 #include <QDesktopWidget>
+#include <QTextEdit>
+#include <QMimeData>
 
 SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     mDropped(false)
@@ -3016,7 +3018,8 @@ void SynEdit::doPasteFromClipboard()
     if (mReadOnly)
         return;
     QClipboard* clipboard = QGuiApplication::clipboard();
-    if (clipboard->text().isEmpty())
+    QString text = clipboard->text();
+    if (text.isEmpty())
         return;
     doOnPaintTransient(SynTransientType::ttBefore);
     mUndoList->BeginBlock();
@@ -3031,46 +3034,44 @@ void SynEdit::doPasteFromClipboard()
                       SynSelectionMode::smNormal);
         mUndoList->EndBlock();
     });
-    if (!clipboard->text().isEmpty()) {
+    mUndoList->AddChange(
+                SynChangeReason::crPasteBegin,
+                blockBegin(),
+                blockEnd(),
+                "",
+                SynSelectionMode::smNormal);
+    AddPasteEndMarker = true;
+    if (selAvail()) {
         mUndoList->AddChange(
-                    SynChangeReason::crPasteBegin,
-                    blockBegin(),
-                    blockEnd(),
-                    "",
-                    SynSelectionMode::smNormal);
-        AddPasteEndMarker = true;
-        if (selAvail()) {
-            mUndoList->AddChange(
-                        SynChangeReason::crDelete,
-                        mBlockBegin,
-                        mBlockEnd,
-                        selText(),
-                        mActiveSelectionMode);
-        }
+                    SynChangeReason::crDelete,
+                    mBlockBegin,
+                    mBlockEnd,
+                    selText(),
+                    mActiveSelectionMode);
+    }
 //        } else if (!colSelAvail())
 //            setActiveSelectionMode(selectionMode());
-        BufferCoord vStartOfBlock = blockBegin();
-        BufferCoord vEndOfBlock = blockEnd();
-        mBlockBegin = vStartOfBlock;
-        mBlockEnd = vEndOfBlock;
-        setSelTextPrimitive(clipboard->text());
-        if (mActiveSelectionMode == SynSelectionMode::smColumn) {
-            mUndoList->AddChange(
-                            SynChangeReason::crPaste,
-                            blockBegin(),
-                            blockEnd(),
-                            selText(),
-                            mActiveSelectionMode);
-        } else {
+    BufferCoord vStartOfBlock = blockBegin();
+    BufferCoord vEndOfBlock = blockEnd();
+    mBlockBegin = vStartOfBlock;
+    mBlockEnd = vEndOfBlock;
+    setSelTextPrimitive(text);
+    if (mActiveSelectionMode == SynSelectionMode::smColumn) {
+        mUndoList->AddChange(
+                        SynChangeReason::crPaste,
+                        blockBegin(),
+                        blockEnd(),
+                        selText(),
+                        mActiveSelectionMode);
+    } else {
 //            setBlockBegin(vStartOfBlock);
 //            setBlockEnd(caretXY());
-            mUndoList->AddChange(
-                            SynChangeReason::crPaste,
-                            vStartOfBlock,
-                            blockEnd(),
-                            selText(),
-                            mActiveSelectionMode);
-        }
+        mUndoList->AddChange(
+                        SynChangeReason::crPaste,
+                        vStartOfBlock,
+                        blockEnd(),
+                        selText(),
+                        mActiveSelectionMode);
     }
 }
 

@@ -4852,7 +4852,13 @@ void MainWindow::on_actionPaste_triggered()
     const QMimeData* data = clipboard->mimeData();
     if (!data)
         return;
-    if (data->hasUrls()) {
+    if (data->hasText()) {
+        Editor * editor = mEditorList->getEditor();
+        if (editor != NULL ) {
+            editor->pasteFromClipboard();
+            editor->activate();
+        }
+    } else if (data->hasUrls()) {
         QStringList filesToOpen;
         foreach (const QUrl& url, data->urls()) {
             QString s = url.toLocalFile();
@@ -4862,12 +4868,6 @@ void MainWindow::on_actionPaste_triggered()
         }
         if (!filesToOpen.isEmpty())
             openFiles(filesToOpen);
-    } else {
-        Editor * editor = mEditorList->getEditor();
-        if (editor != NULL ) {
-            editor->pasteFromClipboard();
-            editor->activate();
-        }
     }
 }
 
