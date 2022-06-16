@@ -26,6 +26,8 @@ ProjectDirectoriesWidget::ProjectDirectoriesWidget(const QString &name, const QS
 {
     ui->setupUi(this);
 
+    mBinDirWidget = new CompilerSetDirectoriesWidget();
+    ui->tabDirs->addTab(mBinDirWidget,tr("Binaries"));
     mLibDirWidget = new CompilerSetDirectoriesWidget();
     ui->tabDirs->addTab(mLibDirWidget,tr("Libraries"));
     mIncludeDirWidget = new CompilerSetDirectoriesWidget();
@@ -42,16 +44,18 @@ ProjectDirectoriesWidget::~ProjectDirectoriesWidget()
 
 void ProjectDirectoriesWidget::doLoad()
 {
-    mLibDirWidget->setDirList(pMainWindow->project()->options().libs);
-    mIncludeDirWidget->setDirList(pMainWindow->project()->options().includes);
+    mBinDirWidget->setDirList(pMainWindow->project()->options().binDirs);
+    mLibDirWidget->setDirList(pMainWindow->project()->options().libDirs);
+    mIncludeDirWidget->setDirList(pMainWindow->project()->options().includeDirs);
     mResourceDirWidget->setDirList(pMainWindow->project()->options().resourceIncludes);
 
 }
 
 void ProjectDirectoriesWidget::doSave()
 {
-    pMainWindow->project()->options().libs = mLibDirWidget->dirList();
-    pMainWindow->project()->options().includes = mIncludeDirWidget->dirList();
+    pMainWindow->project()->options().binDirs = mBinDirWidget->dirList();
+    pMainWindow->project()->options().libDirs = mLibDirWidget->dirList();
+    pMainWindow->project()->options().includeDirs = mIncludeDirWidget->dirList();
     pMainWindow->project()->options().resourceIncludes = mResourceDirWidget->dirList();
     pMainWindow->project()->saveOptions();
 }

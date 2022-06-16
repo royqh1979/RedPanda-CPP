@@ -62,6 +62,21 @@ void ExecutableRunner::setShareMemoryId(const QString &newShareMemoryId)
     mShareMemoryId = newShareMemoryId;
 }
 
+const QStringList &ExecutableRunner::binDirs() const
+{
+    return mBinDirs;
+}
+
+void ExecutableRunner::addBinDirs(const QStringList &binDirs)
+{
+    mBinDirs.append(binDirs);
+}
+
+void ExecutableRunner::addBinDir(const QString &binDir)
+{
+    mBinDirs.append(binDir);
+}
+
 bool ExecutableRunner::redirectInput() const
 {
     return mRedirectInput;
@@ -100,15 +115,9 @@ void ExecutableRunner::run()
     mProcess->setWorkingDirectory(mWorkDir);
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
     QString path = env.value("PATH");
-    QStringList pathAdded;
-    if (pSettings->compilerSets().defaultSet()) {
-        foreach(const QString& dir, pSettings->compilerSets().defaultSet()->binDirs()) {
-            pathAdded.append(dir);
-        }
-    }
-    pathAdded.append(pSettings->dirs().appDir());
+    QStringList pathAdded = mBinDirs;
     if (!path.isEmpty()) {
-        path= pathAdded.join(PATH_SEPARATOR) + PATH_SEPARATOR + path;
+        path = pathAdded.join(PATH_SEPARATOR) + PATH_SEPARATOR + path;
     } else {
         path = pathAdded.join(PATH_SEPARATOR);
     }

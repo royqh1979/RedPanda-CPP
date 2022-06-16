@@ -41,6 +41,10 @@ public:
 
     void setShareMemoryId(const QString &newShareMemoryId);
 
+    const QStringList &binDirs() const;
+    void addBinDirs(const QStringList &binDirs);
+    void addBinDir(const QString &binDir);
+
 private:
     QString mRedirectInputFilename;
     QString mShareMemoryId;
@@ -48,6 +52,7 @@ private:
     bool mStartConsole;
     std::shared_ptr<QProcess> mProcess;
     QSemaphore mQuitSemaphore;
+    QStringList mBinDirs;
 
     // QThread interface
 protected:

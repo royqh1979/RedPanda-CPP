@@ -259,7 +259,7 @@ class Debugger : public QObject
 public:
     explicit Debugger(QObject *parent = nullptr);
     // Play/pause
-    bool start(int compilerSetIndex, const QString& inferior);
+    bool start(int compilerSetIndex, const QString& inferior, const QStringList& binDirs);
     void sendCommand(const QString& command, const QString& params,
                      DebugCommandSource source = DebugCommandSource::Other);
     bool commandRunning();
@@ -428,6 +428,10 @@ public:
 
     const QString &signalMeaning() const;
 
+    const QStringList &binDirs() const;
+    void addBinDirs(const QStringList &binDirs);
+    void addBinDir(const QString &binDir);
+
 signals:
     void parseStarted();
     void invalidateAllVars();
@@ -463,6 +467,7 @@ signals:
                          const QString& newType, int newNumChildren,
                          bool hasMore);
     void varsValueUpdated();
+
 private:
     void clearCmdQueue();
 
@@ -502,6 +507,7 @@ private:
     bool mCmdRunning;
     PDebugCommand mCurrentCmd;
     std::shared_ptr<QProcess> mProcess;
+    QStringList mBinDirs;
 
     //fWatchView: TTreeView;
 

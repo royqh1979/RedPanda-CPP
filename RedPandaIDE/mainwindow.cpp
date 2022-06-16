@@ -1550,7 +1550,7 @@ bool MainWindow::compile(bool rebuild)
         }
         mProject->buildPrivateResource();
         if (mCompileSuccessionTask) {
-            mCompileSuccessionTask->filename = mProject->executable();
+            mCompileSuccessionTask->execName = mProject->executable();
         }
         stretchMessagesPanel(true);
         ui->tabMessages->setCurrentWidget(ui->tabToolsOutput);
@@ -1566,7 +1566,7 @@ bool MainWindow::compile(bool rebuild)
                     return false;
             }
             if (mCompileSuccessionTask) {
-                mCompileSuccessionTask->filename = getCompiledExecutableName(editor->filename());
+                mCompileSuccessionTask->execName = getCompiledExecutableName(editor->filename());
             }
             stretchMessagesPanel(true);
             ui->tabMessages->setCurrentWidget(ui->tabToolsOutput);
@@ -1579,7 +1579,11 @@ bool MainWindow::compile(bool rebuild)
     return false;
 }
 
-void MainWindow::runExecutable(const QString &exeName,const QString &filename,RunType runType)
+void MainWindow::runExecutable(
+        const QString &exeName,
+        const QString &filename,
+        RunType runType,
+        const QStringList& binDirs)
 {
     mCompilerManager->stopPausing();
     // Check if it exists
@@ -1622,7 +1626,7 @@ void MainWindow::runExecutable(const QString &exeName,const QString &filename,Ru
         if (pSettings->executor().minimizeOnRun()) {
             showMinimized();
         }
-        mCompilerManager->run(exeName,params,QFileInfo(exeName).absolutePath());
+        mCompilerManager->run(exeName,params,QFileInfo(exeName).absolutePath(),binDirs);
     } else if (runType == RunType::ProblemCases) {
         POJProblem problem = mOJProblemModel.problem();
         if (problem) {
@@ -1649,6 +1653,7 @@ void MainWindow::runExecutable(RunType runType)
 {
     CompileTarget target =getCompileTarget();
     if (target == CompileTarget::Project) {
+        QStringList binDirs = mProject->binDirs();
         if (mProject->modified()  &&
                 QMessageBox::question(
                     this,
@@ -1658,10 +1663,14 @@ void MainWindow::runExecutable(RunType runType)
             mProject->saveAll();
             mCompileSuccessionTask=std::make_shared<CompileSuccessionTask>();
             mCompileSuccessionTask->type = CompileSuccessionTaskType::RunNormal;
+            mCompileSuccessionTask->execName=mProject->executable();
+            mCompileSuccessionTask->binDirs=binDirs;
             compile();
             return;
         }
-        runExecutable(mProject->executable(),mProject->filename(),runType);
+
+        runExecutable(mProject->executable(),mProject->filename(),runType,
+                      binDirs);
     } else {
         Editor * editor = mEditorList->getEditor();
         if (editor != NULL ) {
@@ -1669,8 +1678,9 @@ void MainWindow::runExecutable(RunType runType)
                 if (!editor->save(false,false))
                     return;
             }
+            QStringList binDirs = getDefaultCompilerSetBinDirs();
             QString exeName= getCompiledExecutableName(editor->filename());
-            runExecutable(exeName,editor->filename(),runType);
+            runExecutable(exeName,editor->filename(),runType,binDirs);
         }
     }
 }
@@ -1691,8 +1701,10 @@ void MainWindow::debug()
     bool stripEnabled;
     QString filePath;
     QFileInfo debugFile;
+    QStringList binDirs;
     switch(getCompileTarget()) {
     case CompileTarget::Project:
+        binDirs = mProject->binDirs();
         // Check if we enabled proper options
         debugEnabled = mProject->getCompileOption(CC_CMD_OPT_DEBUG_INFO) == COMPILER_OPTION_ON;
         stripEnabled = mProject->getCompileOption(LINK_CMD_OPT_STRIP_EXE) == COMPILER_OPTION_ON;
@@ -1711,6 +1723,8 @@ void MainWindow::debug()
 
             mCompileSuccessionTask=std::make_shared<CompileSuccessionTask>();
             mCompileSuccessionTask->type = CompileSuccessionTaskType::Debug;
+            mCompileSuccessionTask->execName = mProject->executable();
+            mCompileSuccessionTask->binDirs = binDirs;
 
             compile();
             return;
@@ -1725,7 +1739,8 @@ void MainWindow::debug()
                         QMessageBox::Yes) == QMessageBox::Yes) {
                 mCompileSuccessionTask=std::make_shared<CompileSuccessionTask>();
                 mCompileSuccessionTask->type = CompileSuccessionTaskType::Debug;
-
+                mCompileSuccessionTask->execName = mProject->executable();
+                mCompileSuccessionTask->binDirs = binDirs;
                 compile();
             }
             return;
@@ -1738,6 +1753,8 @@ void MainWindow::debug()
                                                       ) == QMessageBox::Yes) {
             mCompileSuccessionTask=std::make_shared<CompileSuccessionTask>();
             mCompileSuccessionTask->type = CompileSuccessionTaskType::Debug;
+            mCompileSuccessionTask->execName = mProject->executable();
+            mCompileSuccessionTask->binDirs = binDirs;
             compile();
             return;
         }
@@ -1766,7 +1783,7 @@ void MainWindow::debug()
 
 //        mDebugger->setUseUTF8(e->fileEncoding() == ENCODING_UTF8 || e->fileEncoding() == ENCODING_UTF8_BOM);
 
-        if (!mDebugger->start(mProject->options().compilerSet, filePath))
+        if (!mDebugger->start(mProject->options().compilerSet, filePath, binDirs))
             return;
         filePath.replace('\\','/');
         mDebugger->sendCommand("-file-exec-and-symbols", '"' + filePath + '"');
@@ -1777,12 +1794,16 @@ void MainWindow::debug()
             mDebugger->sendCommand("-file-exec-file", '"' + host + '"');
         }
 
-        includeOrSkipDirs(mProject->options().includes,
+        includeOrSkipDirs(mProject->options().includeDirs,
                           pSettings->debugger().skipProjectLibraries());
-        includeOrSkipDirs(mProject->options().libs,
+        includeOrSkipDirs(mProject->options().libDirs,
                           pSettings->debugger().skipProjectLibraries());
         break;
     case CompileTarget::File: {
+        if (pSettings->compilerSets().defaultSet()) {
+            binDirs = pSettings->compilerSets().defaultSet()->binDirs();
+        }
+
             // Check if we enabled proper options
             debugEnabled = compilerSet->getCompileOptionValue(CC_CMD_OPT_DEBUG_INFO) == COMPILER_OPTION_ON;
             stripEnabled = compilerSet->getCompileOptionValue(LINK_CMD_OPT_STRIP_EXE) == COMPILER_OPTION_ON;
@@ -1801,7 +1822,7 @@ void MainWindow::debug()
 
                 mCompileSuccessionTask=std::make_shared<CompileSuccessionTask>();
                 mCompileSuccessionTask->type = CompileSuccessionTaskType::Debug;
-
+                mCompileSuccessionTask->binDirs = binDirs;
                 compile();
                 return;
             }
@@ -1825,6 +1846,7 @@ void MainWindow::debug()
                                               QMessageBox::Yes) == QMessageBox::Yes) {
                         mCompileSuccessionTask=std::make_shared<CompileSuccessionTask>();
                         mCompileSuccessionTask->type = CompileSuccessionTaskType::Debug;
+                        mCompileSuccessionTask->binDirs = binDirs;
                         compile();
                         return;
                     }
@@ -1836,6 +1858,7 @@ void MainWindow::debug()
                                                   QMessageBox::Yes) == QMessageBox::Yes) {
                             mCompileSuccessionTask=std::make_shared<CompileSuccessionTask>();
                             mCompileSuccessionTask->type = CompileSuccessionTaskType::Debug;
+                            mCompileSuccessionTask->binDirs = binDirs;
                             compile();
                             return;
                         }
@@ -1844,7 +1867,7 @@ void MainWindow::debug()
 
                 prepareDebugger();
                 QString filePath = debugFile.filePath().replace('\\','/');
-                if (!mDebugger->start(pSettings->compilerSets().defaultIndex(),filePath))
+                if (!mDebugger->start(pSettings->compilerSets().defaultIndex(),filePath, binDirs))
                     return;
                 mDebugger->sendCommand("-file-exec-and-symbols", QString("\"%1\"").arg(filePath));
             }
@@ -2746,7 +2769,29 @@ void MainWindow::maximizeEditor()
     }
 }
 
-void MainWindow::openShell(const QString &folder, const QString &shellCommand)
+QStringList MainWindow::getBinDirsForCurrentEditor()
+{
+    Editor * e=mEditorList->getEditor();
+    if (e) {
+        if (e->inProject() && mProject) {
+            return mProject->binDirs();
+        } else {
+            return getDefaultCompilerSetBinDirs();
+        }
+    } else if (mProject) {
+        return mProject->binDirs();
+    }
+    return QStringList();
+}
+
+QStringList MainWindow::getDefaultCompilerSetBinDirs()
+{
+    if (pSettings->compilerSets().defaultSet())
+        return pSettings->compilerSets().defaultSet()->binDirs();
+    return QStringList();
+}
+
+void MainWindow::openShell(const QString &folder, const QString &shellCommand, const QStringList& binDirs)
 {
     QProcess process;
     process.setWorkingDirectory(folder);
@@ -2760,11 +2805,7 @@ void MainWindow::openShell(const QString &folder, const QString &shellCommand)
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
     QString path = env.value("PATH");
     QStringList pathAdded;
-    if (pSettings->compilerSets().defaultSet()) {
-        foreach(const QString& dir, pSettings->compilerSets().defaultSet()->binDirs()) {
-            pathAdded.append(dir);
-        }
-    }
+    pathAdded.append(binDirs);
     pathAdded.append(pSettings->dirs().appDir());
     if (!path.isEmpty()) {
         path= pathAdded.join(PATH_SEPARATOR) + PATH_SEPARATOR + path;
@@ -3702,9 +3743,9 @@ void MainWindow::onFilesViewOpenInTerminal()
     if (!path.isEmpty()) {
         QFileInfo fileInfo(path);
 #ifdef Q_OS_WIN
-        openShell(fileInfo.path(),"cmd.exe");
+        openShell(fileInfo.path(),"cmd.exe",getDefaultCompilerSetBinDirs());
 #else
-        openShell(fileInfo.path(),pSettings->environment().terminalPath());
+        openShell(fileInfo.path(),pSettings->environment().terminalPath(),getDefaultCompilerSetBinDirs());
 #endif
     }
 }
@@ -4656,13 +4697,13 @@ void MainWindow::onCompileFinished(bool isCheckSyntax)
         if (mCompileSuccessionTask && mCompilerManager->compileErrorCount()==0) {
             switch (mCompileSuccessionTask->type) {
             case MainWindow::CompileSuccessionTaskType::RunNormal:
-                runExecutable(mCompileSuccessionTask->filename);
+                runExecutable(mCompileSuccessionTask->execName,QString(),RunType::Normal, mCompileSuccessionTask->binDirs);
                 break;
             case MainWindow::CompileSuccessionTaskType::RunProblemCases:
-                runExecutable(mCompileSuccessionTask->filename,QString(),RunType::ProblemCases);
+                runExecutable(mCompileSuccessionTask->execName,QString(),RunType::ProblemCases, mCompileSuccessionTask->binDirs);
                 break;
             case MainWindow::CompileSuccessionTaskType::RunCurrentProblemCase:
-                runExecutable(mCompileSuccessionTask->filename,QString(),RunType::CurrentProblemCase);
+                runExecutable(mCompileSuccessionTask->execName,QString(),RunType::CurrentProblemCase, mCompileSuccessionTask->binDirs);
                 break;
             case MainWindow::CompileSuccessionTaskType::Debug:
                 debug();
@@ -5566,9 +5607,9 @@ void MainWindow::on_actionOpen_Terminal_triggered()
         QFileInfo info(editor->filename());
         if (!info.path().isEmpty()) {
 #ifdef Q_OS_WIN
-            openShell(info.path(),"cmd.exe");
+            openShell(info.path(),"cmd.exe",getBinDirsForCurrentEditor());
 #else
-            openShell(info.path(),pSettings->environment().terminalPath());
+            openShell(info.path(),pSettings->environment().terminalPath(),getBinDirsForCurrentEditor());
 #endif
         }
     }
@@ -5889,9 +5930,9 @@ void MainWindow::on_actionProject_Open_In_Terminal_triggered()
     if (!mProject)
         return;
 #ifdef Q_OS_WIN
-    openShell(mProject->directory(),"cmd.exe");
+    openShell(mProject->directory(),"cmd.exe",mProject->binDirs());
 #else
-    openShell(mProject->directory(),pSettings->environment().terminalPath());
+    openShell(mProject->directory(),pSettings->environment().terminalPath(),mProject->binDirs());
 #endif
 }
 
@@ -6489,7 +6530,17 @@ void MainWindow::clearIssues()
 
 void MainWindow::doCompileRun(RunType runType)
 {
+    CompileTarget target =getCompileTarget();
+    QStringList binDirs;
+    QString execName;
+    if (target == CompileTarget::Project) {
+        binDirs = mProject->binDirs();
+        execName = mProject->executable();
+    } else {
+        binDirs = getDefaultCompilerSetBinDirs();
+    }
     mCompileSuccessionTask = std::make_shared<CompileSuccessionTask>();
+    mCompileSuccessionTask->binDirs=binDirs;
     switch (runType) {
     case RunType::CurrentProblemCase:
         mCompileSuccessionTask->type = CompileSuccessionTaskType::RunCurrentProblemCase;

@@ -463,7 +463,7 @@ void Project::resetParserProjectFiles()
     foreach (const PProjectUnit& unit, mUnits) {
         mParser->addFileToScan(unit->fileName());
     }
-    foreach (const QString& s, mOptions.includes) {
+    foreach (const QString& s, mOptions.includeDirs) {
         mParser->addProjectIncludePath(s);
     }
 }
@@ -876,8 +876,9 @@ void Project::saveOptions()
     ini.SetLongValue("Project","Type", static_cast<int>(mOptions.type));
     ini.SetLongValue("Project","Ver", 3); // Is 3 as of Red Panda C++.0
     ini.SetValue("Project","ObjFiles", toByteArray(mOptions.objFiles.join(";")));
-    ini.SetValue("Project","Includes", toByteArray(mOptions.includes.join(";")));
-    ini.SetValue("Project","Libs", toByteArray(mOptions.libs.join(";")));
+    ini.SetValue("Project","Includes", toByteArray(mOptions.includeDirs.join(";")));
+    ini.SetValue("Project","Libs", toByteArray(mOptions.libDirs.join(";")));
+    ini.SetValue("Project","Bins", toByteArray(mOptions.binDirs.join(";")));
     ini.SetValue("Project","PrivateResource", toByteArray(mOptions.privateResource));
     ini.SetValue("Project","ResourceIncludes", toByteArray(mOptions.resourceIncludes.join(";")));
     ini.SetValue("Project","MakeIncludes", toByteArray(mOptions.makeIncludes.join(";")));
@@ -1589,8 +1590,9 @@ void Project::loadOptions(SimpleIni& ini)
         mOptions.cppCompilerCmd = fromByteArray(ini.GetValue("Project", "CppCompiler", ""));
         mOptions.linkerCmd = fromByteArray(ini.GetValue("Project", "Linker", ""));
         mOptions.objFiles = fromByteArray(ini.GetValue("Project", "ObjFiles", "")).split(";",QString::SkipEmptyParts);
-        mOptions.libs = fromByteArray(ini.GetValue("Project", "Libs", "")).split(";",QString::SkipEmptyParts);
-        mOptions.includes = fromByteArray(ini.GetValue("Project", "Includes", "")).split(";",QString::SkipEmptyParts);
+        mOptions.binDirs = fromByteArray(ini.GetValue("Project", "Bins", "")).split(";",QString::SkipEmptyParts);
+        mOptions.libDirs = fromByteArray(ini.GetValue("Project", "Libs", "")).split(";",QString::SkipEmptyParts);
+        mOptions.includeDirs = fromByteArray(ini.GetValue("Project", "Includes", "")).split(";",QString::SkipEmptyParts);
         mOptions.privateResource = fromByteArray(ini.GetValue("Project", "PrivateResource", ""));
         mOptions.resourceIncludes = fromByteArray(ini.GetValue("Project", "ResourceIncludes", "")).split(";",QString::SkipEmptyParts);
         mOptions.makeIncludes = fromByteArray(ini.GetValue("Project", "MakeIncludes", "")).split(";",QString::SkipEmptyParts);
@@ -1708,7 +1710,7 @@ void Project::loadOptions(SimpleIni& ini)
         mOptions.privateResource = fromByteArray(ini.GetValue("Project", "PrivateResource", ""));
         mOptions.resourceIncludes = fromByteArray(ini.GetValue("Project", "ResourceIncludes", "")).split(";",QString::SkipEmptyParts);
         mOptions.objFiles = fromByteArray(ini.GetValue("Project", "ObjFiles", "")).split(";",QString::SkipEmptyParts);
-        mOptions.includes = fromByteArray(ini.GetValue("Project", "IncludeDirs", "")).split(";",QString::SkipEmptyParts);
+        mOptions.includeDirs = fromByteArray(ini.GetValue("Project", "IncludeDirs", "")).split(";",QString::SkipEmptyParts);
         mOptions.compilerCmd = fromByteArray(ini.GetValue("Project", "CompilerOptions", ""));
         mOptions.isCpp = ini.GetBoolValue("Project", "Use_GPP", false);
         mOptions.exeOutput = fromByteArray(ini.GetValue("Project", "ExeOutput", ""));
@@ -1824,6 +1826,16 @@ QString Project::fileSystemNodeFolderPath(const PProjectModelNode &node)
     }
     result = folder() + "/" + result;
     return result;
+}
+
+QStringList Project::binDirs()
+{
+    QStringList lst = options().binDirs;
+    Settings::PCompilerSet compilerSet = pSettings->compilerSets().getSet(options().compilerSet);
+    if (compilerSet) {
+        lst.append(compilerSet->binDirs());
+    }
+    return lst;
 }
 
 EditorList *Project::editorList() const

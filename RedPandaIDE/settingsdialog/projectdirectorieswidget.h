@@ -35,6 +35,7 @@ public:
 
 private:
     Ui::ProjectDirectoriesWidget *ui;
+    CompilerSetDirectoriesWidget *mBinDirWidget;
     CompilerSetDirectoriesWidget *mLibDirWidget;
     CompilerSetDirectoriesWidget *mIncludeDirWidget;
     CompilerSetDirectoriesWidget *mResourceDirWidget;

@@ -422,7 +422,7 @@ QString Compiler::getProjectIncludeArguments()
 {
     QString result;
     if (mProject) {
-        foreach (const QString& folder,mProject->options().includes) {
+        foreach (const QString& folder,mProject->options().includeDirs) {
             result += QString(" -I\"%1\"").arg(folder);
         }
 //        result +=  QString(" -I\"%1\"").arg(extractFilePath(mProject->filename()));
@@ -450,7 +450,7 @@ QString Compiler::getLibraryArguments(FileType fileType)
 
     //add libs added via project
     if (mProject) {
-        foreach (const QString& folder, mProject->options().libs){
+        foreach (const QString& folder, mProject->options().libDirs){
             result += QString(" -L\"%1\"").arg(folder);
         }
     }

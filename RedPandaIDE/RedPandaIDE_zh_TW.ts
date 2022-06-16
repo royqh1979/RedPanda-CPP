@@ -4927,6 +4927,10 @@
         <source>Resources</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Binaries</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>ProjectFilesWidget</name>

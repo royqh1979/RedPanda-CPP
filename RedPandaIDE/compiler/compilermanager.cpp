@@ -206,7 +206,11 @@ void CompilerManager::checkSyntax(const QString &filename, const QByteArray& enc
     }
 }
 
-void CompilerManager::run(const QString &filename, const QString &arguments, const QString &workDir)
+void CompilerManager::run(
+        const QString &filename,
+        const QString &arguments,
+        const QString &workDir,
+        const QStringList& binDirs)
 {
     QMutexLocker locker(&mRunnerMutex);
     if (mRunner!=nullptr && !mRunner->pausing()) {
@@ -279,7 +283,12 @@ void CompilerManager::run(const QString &filename, const QString &arguments, con
         execRunner->setRedirectInput(true);
         execRunner->setRedirectInputFilename(redirectInputFilename);
     }
+    execRunner->addBinDirs(binDirs);
+
+    execRunner->addBinDir(pSettings->dirs().appDir());
+
     mRunner = execRunner;
+
     connect(mRunner, &Runner::finished, this ,&CompilerManager::onRunnerTerminated);
     connect(mRunner, &Runner::finished, mRunner ,&Runner::deleteLater);
     connect(mRunner, &Runner::finished, pMainWindow ,&MainWindow::onRunFinished);

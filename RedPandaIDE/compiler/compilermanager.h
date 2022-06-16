@@ -42,7 +42,11 @@ public:
     void cleanProject(std::shared_ptr<Project> project);
     void buildProjectMakefile(std::shared_ptr<Project> project);
     void checkSyntax(const QString&filename, const QByteArray& encoding, const QString& content, std::shared_ptr<Project> project);
-    void run(const QString& filename, const QString& arguments, const QString& workDir);
+    void run(
+            const QString& filename,
+            const QString& arguments,
+            const QString& workDir,
+            const QStringList& extraBinDir);
     void runProblem(const QString& filename, const QString& arguments, const QString& workDir, POJProblemCase problemCase);
     void runProblem(const QString& filename, const QString& arguments, const QString& workDir, const QVector<POJProblemCase> &problemCases);
     void stopRun();

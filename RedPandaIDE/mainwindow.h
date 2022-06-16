@@ -56,6 +56,7 @@ enum class RunType {
     ProblemCases
 };
 
+
 class EditorList;
 class QLabel;
 class QComboBox;
@@ -85,8 +86,10 @@ class MainWindow : public QMainWindow
 
     struct CompileSuccessionTask {
         CompileSuccessionTaskType type;
-        QString filename;
+        QString execName;
+        QStringList binDirs;
     };
+
     using PCompileSuccessionTask = std::shared_ptr<CompileSuccessionTask>;
 
     struct TabWidgetInfo {
@@ -114,7 +117,11 @@ public:
     void updateActionIcons();
     void checkSyntaxInBack(Editor* e);
     bool compile(bool rebuild=false);
-    void runExecutable(const QString& exeName, const QString& filename=QString(),RunType runType = RunType::Normal);
+    void runExecutable(
+            const QString& exeName,
+            const QString& filename,
+            RunType runType,
+            const QStringList& binDirs);
     void runExecutable(RunType runType = RunType::Normal);
     void debug();
     void showSearchPanel(bool showReplace = false);
@@ -241,7 +248,9 @@ private:
     void buildContextMenus();
     void buildEncodingMenu();
     void maximizeEditor();
-    void openShell(const QString& folder, const QString& shellCommand);
+    QStringList getBinDirsForCurrentEditor();
+    QStringList getDefaultCompilerSetBinDirs();
+    void openShell(const QString& folder, const QString& shellCommand, const QStringList& binDirs);
     QAction* createActionFor(const QString& text,
                              QWidget* parent,
                              QKeySequence shortcut=QKeySequence());

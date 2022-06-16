@@ -55,7 +55,7 @@ Debugger::Debugger(QObject *parent) : QObject(parent),
             this, &Debugger::fetchVarChildren);
 }
 
-bool Debugger::start(int compilerSetIndex, const QString& inferior)
+bool Debugger::start(int compilerSetIndex, const QString& inferior, const QStringList& binDirs)
 {
 
     Settings::PCompilerSet compilerSet = pSettings->compilerSets().getSet(compilerSetIndex);
@@ -126,6 +126,8 @@ bool Debugger::start(int compilerSetIndex, const QString& inferior)
         mTarget->waitStart();
     }
     mReader = new DebugReader(this);
+    mReader->addBinDirs(binDirs);
+    mReader->addBinDir(pSettings->dirs().appDir());
     mReader->setDebuggerPath(debuggerPath);
     connect(mReader, &QThread::finished,this,&Debugger::cleanUpReader);
     connect(mReader, &QThread::finished,mMemoryModel,&MemoryModel::reset);
@@ -1327,6 +1329,21 @@ void DebugReader::asyncUpdate()
     mAsyncUpdated = false;
 }
 
+const QStringList &DebugReader::binDirs() const
+{
+    return mBinDirs;
+}
+
+void DebugReader::addBinDirs(const QStringList &binDirs)
+{
+    mBinDirs.append(binDirs);
+}
+
+void DebugReader::addBinDir(const QString &binDir)
+{
+    mBinDirs.append(binDir);
+}
+
 const QString &DebugReader::signalMeaning() const
 {
     return mSignalMeaning;
@@ -1420,19 +1437,22 @@ void DebugReader::run()
     mProcess->setProgram(cmd);
     mProcess->setArguments(splitProcessCommand(arguments));
     mProcess->setProcessChannelMode(QProcess::MergedChannels);
+
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    QString path = env.value("PATH");
+    QStringList pathAdded = mBinDirs;
+    if (!path.isEmpty()) {
+        path = pathAdded.join(PATH_SEPARATOR) + PATH_SEPARATOR + path;
+    } else {
+        path = pathAdded.join(PATH_SEPARATOR);
+    }
     QString cmdDir = extractFileDir(cmd);
     if (!cmdDir.isEmpty()) {
-        QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
-        QString path = env.value("PATH");
-        cmdDir.replace("/",QDir::separator());
-        if (path.isEmpty()) {
-            path = cmdDir;
-        } else {
-            path = cmdDir + PATH_SEPARATOR + path;
-        }
-        env.insert("PATH",path);
-        mProcess->setProcessEnvironment(env);
+        path = cmdDir + PATH_SEPARATOR + path;
     }
+    env.insert("PATH",path);
+    mProcess->setProcessEnvironment(env);
+
     mProcess->setWorkingDirectory(workingDir);
 
     connect(mProcess.get(), &QProcess::errorOccurred,

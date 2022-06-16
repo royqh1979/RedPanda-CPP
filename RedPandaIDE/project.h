@@ -245,6 +245,8 @@ public:
 
     QString fileSystemNodeFolderPath(const PProjectModelNode& node);
 
+    QStringList binDirs();
+
 signals:
     void nodesChanged();
     void modifyChanged(bool value);
