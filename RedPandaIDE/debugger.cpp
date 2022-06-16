@@ -122,6 +122,8 @@ bool Debugger::start(int compilerSetIndex, const QString& inferior, const QStrin
             mTarget->deleteLater();
             mTarget = nullptr;
         });
+        mTarget->addBinDirs(binDirs);
+        mTarget->addBinDir(pSettings->dirs().appDir());
         mTarget->start();
         mTarget->waitStart();
     }
@@ -2390,6 +2392,21 @@ void DebugTarget::waitStart()
     mStartSemaphore.acquire(1);
 }
 
+const QStringList &DebugTarget::binDirs() const
+{
+    return mBinDirs;
+}
+
+void DebugTarget::addBinDirs(const QStringList &binDirs)
+{
+    mBinDirs.append(binDirs);
+}
+
+void DebugTarget::addBinDir(const QString &binDir)
+{
+    mBinDirs.append(binDir);
+}
+
 void DebugTarget::run()
 {
     mStop = false;
@@ -2414,19 +2431,20 @@ void DebugTarget::run()
     mProcess->setProgram(cmd);
     mProcess->setArguments(splitProcessCommand(arguments));
     mProcess->setProcessChannelMode(QProcess::MergedChannels);
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    QString path = env.value("PATH");
+    QStringList pathAdded = mBinDirs;
+    if (!path.isEmpty()) {
+        path = pathAdded.join(PATH_SEPARATOR) + PATH_SEPARATOR + path;
+    } else {
+        path = pathAdded.join(PATH_SEPARATOR);
+    }
     QString cmdDir = extractFileDir(cmd);
     if (!cmdDir.isEmpty()) {
-        QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
-        QString path = env.value("PATH");
-        cmdDir.replace("/",QDir::separator());
-        if (path.isEmpty()) {
-            path = cmdDir;
-        } else {
-            path = cmdDir + PATH_SEPARATOR + path;
-        }
-        env.insert("PATH",path);
-        mProcess->setProcessEnvironment(env);
+        path = cmdDir + PATH_SEPARATOR + path;
     }
+    env.insert("PATH",path);
+    mProcess->setProcessEnvironment(env);
     mProcess->setWorkingDirectory(workingDir);
 
 #ifdef Q_OS_WIN

@@ -359,6 +359,9 @@ public:
     void setInputFile(const QString& inputFile);
     void stopDebug();
     void waitStart();
+    const QStringList &binDirs() const;
+    void addBinDirs(const QStringList &binDirs);
+    void addBinDir(const QString &binDir);
 signals:
     void processError(QProcess::ProcessError error);
 private:
@@ -370,6 +373,7 @@ private:
     QSemaphore mStartSemaphore;
     bool mErrorOccured;
     QString mInputFile;
+    QStringList mBinDirs;
 
     // QThread interface
 protected:

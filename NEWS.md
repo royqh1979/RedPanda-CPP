@@ -7,6 +7,7 @@ Red Panda C++ Version 1.1.1
   - fix: project don't have compiler set bin folder setting
   - fix: when run/debug the executable, add current compiler set's bin folders to path
   - fix: when open in shell, add current compiler set's bin folders to path
+  - fix: when debug the executable using gdb server, add current compiler set's bin folders to path
 
 Red Panda C++ Version 1.1.0
   - enhancement: when ctrl+mouse cursor hovered an identifier or header name, use underline to highlight it
