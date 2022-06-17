@@ -137,6 +137,8 @@ QSize ShrinkableTabWidget::minimumSizeHint() const
 void ShrinkableTabWidget::resizeEvent(QResizeEvent *event)
 {
     QTabWidget::resizeEvent(event);
+    if (!isVisible())
+        return;
     if (!isShrinked())
         setBeforeShrinkSize(event->size());
 }

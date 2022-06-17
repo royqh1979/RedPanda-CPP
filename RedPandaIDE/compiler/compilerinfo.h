@@ -108,8 +108,6 @@ private:
     QMap<QString,PCompilerInfo> mInfos;
 };
 
-extern PCompilerInfoManager pCompilerInfoManager;
-
 class ClangCompilerInfo: public CompilerInfo{
 public:
     ClangCompilerInfo();

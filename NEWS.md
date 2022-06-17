@@ -9,6 +9,7 @@ Red Panda C++ Version 1.1.1
   - fix: when open in shell, add current compiler set's bin folders to path
   - fix: when debug the executable using gdb server, add current compiler set's bin folders to path
   - fix: reduce height of the message panel when dragging from right to bottom
+  - fix: when messages panel is docked at right, its width not correctly restored when restart.
 
 Red Panda C++ Version 1.1.0
   - enhancement: when ctrl+mouse cursor hovered an identifier or header name, use underline to highlight it

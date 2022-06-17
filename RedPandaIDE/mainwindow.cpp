@@ -6266,19 +6266,24 @@ static void setSplitterInDockLocation(QSplitter* splitter, const Qt::DockWidgetA
 }
 void MainWindow::setDockExplorerToArea(const Qt::DockWidgetArea &area)
 {
-    if (area==Qt::DockWidgetArea::NoDockWidgetArea)
-        return;
-    setDockTitlebarLocation(ui->dockExplorer,area);
-    setTabsInDockLocation(ui->tabExplorer,area);
     ui->dockMessages->setAllowedAreas(
                 (Qt::DockWidgetArea::LeftDockWidgetArea |
                  Qt::DockWidgetArea::BottomDockWidgetArea |
                  Qt::DockWidgetArea::RightDockWidgetArea)
                 & ~area);
+    if (area==Qt::DockWidgetArea::NoDockWidgetArea)
+        return;
+    setDockTitlebarLocation(ui->dockExplorer,area);
+    setTabsInDockLocation(ui->tabExplorer,area);
 }
 
 void MainWindow::setDockMessagesToArea(const Qt::DockWidgetArea &area)
 {
+    ui->dockExplorer->setAllowedAreas(
+                (Qt::DockWidgetArea::LeftDockWidgetArea |
+                 Qt::DockWidgetArea::BottomDockWidgetArea |
+                 Qt::DockWidgetArea::RightDockWidgetArea)
+                & ~area);
     Qt::DockWidgetArea effectiveArea;
     if (area==Qt::DockWidgetArea::NoDockWidgetArea) {
         switch (mMessagesDockLocation) {
@@ -6300,11 +6305,6 @@ void MainWindow::setDockMessagesToArea(const Qt::DockWidgetArea &area)
     setTabsInDockLocation(ui->tabMessages,effectiveArea);
     setSplitterInDockLocation(ui->splitterDebug,effectiveArea);
     setSplitterInDockLocation(ui->splitterProblem,effectiveArea);
-    ui->dockExplorer->setAllowedAreas(
-                (Qt::DockWidgetArea::LeftDockWidgetArea |
-                 Qt::DockWidgetArea::BottomDockWidgetArea |
-                 Qt::DockWidgetArea::RightDockWidgetArea)
-                & ~effectiveArea);
     QGridLayout* layout=(QGridLayout*)ui->panelProblemCase->layout();
     layout->removeWidget(ui->widgetProblemCaseInputCaption);
     layout->removeWidget(ui->widgetProblemCaseOutputCaption);
