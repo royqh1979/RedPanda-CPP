@@ -1747,6 +1747,12 @@
           </item>
           <item row="2" column="3">
            <widget class="LineNumberTextEditor" name="txtProblemCaseOutput">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="lineWrapMode">
              <enum>QPlainTextEdit::NoWrap</enum>
             </property>
@@ -1757,6 +1763,12 @@
           </item>
           <item row="2" column="2">
            <widget class="LineNumberTextEditor" name="txtProblemCaseExpected">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="lineWrapMode">
              <enum>QPlainTextEdit::NoWrap</enum>
             </property>
@@ -1884,6 +1896,12 @@
           </item>
           <item row="2" column="0">
            <widget class="LineNumberTextEditor" name="txtProblemCaseInput">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="lineWrapMode">
              <enum>QPlainTextEdit::NoWrap</enum>
             </property>

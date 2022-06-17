@@ -6266,6 +6266,8 @@ static void setSplitterInDockLocation(QSplitter* splitter, const Qt::DockWidgetA
 }
 void MainWindow::setDockExplorerToArea(const Qt::DockWidgetArea &area)
 {
+    if (area==Qt::DockWidgetArea::NoDockWidgetArea)
+        return;
     setDockTitlebarLocation(ui->dockExplorer,area);
     setTabsInDockLocation(ui->tabExplorer,area);
     ui->dockMessages->setAllowedAreas(
@@ -6277,15 +6279,32 @@ void MainWindow::setDockExplorerToArea(const Qt::DockWidgetArea &area)
 
 void MainWindow::setDockMessagesToArea(const Qt::DockWidgetArea &area)
 {
-    setDockTitlebarLocation(ui->dockMessages,area);
-    setTabsInDockLocation(ui->tabMessages,area);
-    setSplitterInDockLocation(ui->splitterDebug,area);
-    setSplitterInDockLocation(ui->splitterProblem,area);
+    Qt::DockWidgetArea effectiveArea;
+    if (area==Qt::DockWidgetArea::NoDockWidgetArea) {
+        switch (mMessagesDockLocation) {
+        case Qt::DockWidgetArea::BottomDockWidgetArea:
+        case Qt::DockWidgetArea::TopDockWidgetArea:
+            effectiveArea = Qt::DockWidgetArea::RightDockWidgetArea;
+            break;
+        default:
+            if (dockWidgetArea(ui->dockExplorer)!=Qt::DockWidgetArea::BottomDockWidgetArea)
+                effectiveArea = Qt::DockWidgetArea::BottomDockWidgetArea;
+            else
+                effectiveArea = Qt::DockWidgetArea::LeftDockWidgetArea;
+        }
+    } else {
+        effectiveArea = area;
+        mMessagesDockLocation = area;
+        setDockTitlebarLocation(ui->dockMessages,effectiveArea);
+    }
+    setTabsInDockLocation(ui->tabMessages,effectiveArea);
+    setSplitterInDockLocation(ui->splitterDebug,effectiveArea);
+    setSplitterInDockLocation(ui->splitterProblem,effectiveArea);
     ui->dockExplorer->setAllowedAreas(
                 (Qt::DockWidgetArea::LeftDockWidgetArea |
                  Qt::DockWidgetArea::BottomDockWidgetArea |
                  Qt::DockWidgetArea::RightDockWidgetArea)
-                & ~area);
+                & ~effectiveArea);
     QGridLayout* layout=(QGridLayout*)ui->panelProblemCase->layout();
     layout->removeWidget(ui->widgetProblemCaseInputCaption);
     layout->removeWidget(ui->widgetProblemCaseOutputCaption);
@@ -6296,7 +6315,7 @@ void MainWindow::setDockMessagesToArea(const Qt::DockWidgetArea &area)
     layout->removeWidget(ui->lblProblemCaseInput);
     layout->removeWidget(ui->lblProblemCaseOutput);
     layout->removeWidget(ui->lblProblemCaseExpected);
-    switch(area) {
+    switch(effectiveArea) {
     case Qt::DockWidgetArea::BottomDockWidgetArea:
     case Qt::DockWidgetArea::TopDockWidgetArea:
         layout->addWidget(ui->widgetProblemCaseInputCaption, 0, 0, 1, 1);
@@ -7933,4 +7952,5 @@ void MainWindow::on_chkIgnoreSpaces_stateChanged(int /*arg1*/)
 {
     pSettings->executor().setIgnoreSpacesWhenValidatingCases(ui->chkIgnoreSpaces->isChecked());
 }
+
 

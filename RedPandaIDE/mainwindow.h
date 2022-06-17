@@ -713,6 +713,7 @@ private:
     QElapsedTimer mParserTimer;
     QFileSystemWatcher mFileSystemWatcher;
     std::shared_ptr<Project> mProject;
+    Qt::DockWidgetArea mMessagesDockLocation;
 
     std::shared_ptr<CodeCompletionPopup> mCompletionPopup;
     std::shared_ptr<HeaderCompletionPopup> mHeaderCompletionPopup;
