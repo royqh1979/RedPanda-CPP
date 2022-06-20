@@ -1,3 +1,7 @@
+Red Panda C++ Version 1.1.2
+  - enhancement: use different color to differenciate folder and headers in completion popup window
+  - enhancement: auto add "/" to folder when completing #include headers
+
 Red Panda C++ Version 1.1.1
   - enhancement: adjust the appearance of problem case's input/output/expected control
   - change: swap position of problem case's output and expected input controls

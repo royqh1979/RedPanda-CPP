@@ -102,11 +102,13 @@ void HeaderCompletionPopup::setKeypressedCallback(const KeyPressedCallback &newK
 
 void HeaderCompletionPopup::setSuggestionColor(const QColor& localColor,
                                                const QColor& projectColor,
-                                               const QColor& systemColor)
+                                               const QColor& systemColor,
+                                               const QColor& folderColor)
 {
     mModel->setLocalColor(localColor);
     mModel->setProjectColor(projectColor);
     mModel->setSystemColor(systemColor);
+    mModel->setFolderColor(folderColor);
 }
 
 QString HeaderCompletionPopup::selectedFilename(bool updateUsageCount)
@@ -125,6 +127,8 @@ QString HeaderCompletionPopup::selectedFilename(bool updateUsageCount)
             item->usageCount++;
             mHeaderUsageCounts.insert(item->fullpath,item->usageCount);
         }
+        if (item->isFolder)
+            return item->filename+"/";
         return item->filename;
     }
     return "";
@@ -204,15 +208,20 @@ void HeaderCompletionPopup::addFilesInPath(const QString &path, HeaderCompletion
     foreach (const QFileInfo& fileInfo, dir.entryInfoList()) {
         if (fileInfo.fileName().startsWith("."))
             continue;
+        if (fileInfo.isDir()) {
+            addFile(dir, fileInfo, type);
+            continue;
+        }
         QString suffix = fileInfo.suffix().toLower();
         if (suffix == "h" || suffix == "hpp" || suffix == "") {
-            addFile(dir, fileInfo.fileName(), type);
+            addFile(dir, fileInfo, type);
         }
     }
 }
 
-void HeaderCompletionPopup::addFile(const QDir& dir, const QString &fileName, HeaderCompletionListItemType type)
+void HeaderCompletionPopup::addFile(const QDir& dir, const QFileInfo& fileInfo, HeaderCompletionListItemType type)
 {
+    QString fileName = fileInfo.fileName();
     if (fileName.isEmpty())
         return;
     if (fileName.startsWith('.'))
@@ -222,6 +231,7 @@ void HeaderCompletionPopup::addFile(const QDir& dir, const QString &fileName, He
     item->itemType = type;
     item->fullpath = dir.absoluteFilePath(fileName);
     item->usageCount = mHeaderUsageCounts.value(item->fullpath,0);
+    item->isFolder = fileInfo.isDir();
     mFullCompletionList.insert(fileName,item);
 }
 
@@ -310,8 +320,11 @@ QVariant HeaderCompletionListModel::data(const QModelIndex &index, int role) con
     case Qt::DisplayRole: {
         return mFiles->at(index.row())->filename;
         }
-    case Qt::ForegroundRole:
-        switch(mFiles->at(index.row())->itemType) {
+    case Qt::ForegroundRole: {
+        PHeaderCompletionListItem item=mFiles->at(index.row());
+        if (item->isFolder)
+            return mFolderColor;
+        switch(item->itemType) {
         case HeaderCompletionListItemType::LocalHeader:
             return mLocalColor;
         case HeaderCompletionListItemType::ProjectHeader:
@@ -319,7 +332,7 @@ QVariant HeaderCompletionListModel::data(const QModelIndex &index, int role) con
         case HeaderCompletionListItemType::SystemHeader:
             return mSystemColor;
         }
-
+    }
         break;
     }
     return QVariant();
@@ -339,6 +352,11 @@ void HeaderCompletionListModel::setSystemColor(const QColor &newColor)
 void HeaderCompletionListModel::setProjectColor(const QColor &newColor)
 {
     mProjectColor = newColor;
+}
+
+void HeaderCompletionListModel::setFolderColor(const QColor &newFolderColor)
+{
+    mFolderColor = newFolderColor;
 }
 
 void HeaderCompletionListModel::setLocalColor(const QColor &newColor)

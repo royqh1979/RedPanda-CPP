@@ -574,16 +574,26 @@ void MainWindow::updateEditorColorSchemes()
     pColorManager->updateStatementColors(mStatementColors,schemeName);
     //color for code completion popup
     PColorSchemeItem item;
+    QColor localHeaderColor=palette().color(QPalette::Text);
+    QColor systemHeaderColor=palette().color(QPalette::Text);
+    QColor projectHeaderColor=palette().color(QPalette::Text);
+    QColor headerFolderColor=palette().color(QPalette::Text);
     QColor baseColor = palette().color(QPalette::Base);
     item = pColorManager->getItem(schemeName, SYNS_AttrPreprocessor);
     if (item) {
-        mHeaderCompletionPopup->setSuggestionColor(item->foreground(),
-                                                   item->foreground(),
-                                                   item->foreground());
-    } else  {
-        mHeaderCompletionPopup->setSuggestionColor(palette().color(QPalette::Text),
-                                                   palette().color(QPalette::Text),
-                                                   palette().color(QPalette::Text));
+        localHeaderColor = item->foreground();
+    }
+    item = pColorManager->getItem(schemeName, SYNS_AttrPreprocessor);
+    if (item) {
+        systemHeaderColor = item->foreground();
+    }
+    item = pColorManager->getItem(schemeName, SYNS_AttrString);
+    if (item) {
+        projectHeaderColor = item->foreground();
+    }
+    item = pColorManager->getItem(schemeName, SYNS_AttrStringEscapeSequences);
+    if (item) {
+        headerFolderColor = item->foreground();
     }
     item = pColorManager->getItem(schemeName, COLOR_SCHEME_ERROR);
     if (item && haveGoodContrast(item->foreground(), baseColor)) {
@@ -646,6 +656,10 @@ void MainWindow::updateEditorColorSchemes()
         ui->txtProblemCaseOutput->setLineNumberAreaCurrentLine(pal.color(QPalette::ButtonText));
         ui->txtProblemCaseExpected->setLineNumberAreaCurrentLine(pal.color(QPalette::ButtonText));
     }
+    mHeaderCompletionPopup->setSuggestionColor(localHeaderColor,
+                                               projectHeaderColor,
+                                               systemHeaderColor,
+                                               headerFolderColor);
 }
 
 void MainWindow::applySettings()

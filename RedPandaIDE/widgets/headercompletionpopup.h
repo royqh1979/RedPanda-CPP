@@ -31,6 +31,7 @@ enum class HeaderCompletionListItemType {
 struct HeaderCompletionListItem {
     QString filename;
     QString fullpath;
+    bool isFolder;
     int usageCount;
     HeaderCompletionListItemType itemType;
 };
@@ -48,11 +49,14 @@ public:
     void setSystemColor(const QColor &newColor);
     void setProjectColor(const QColor &newColor);
 
+    void setFolderColor(const QColor &newFolderColor);
+
 private:
-    const QList<PHeaderCompletionListItem>* mFiles;
+    const QList<PHeaderCompletionListItem> *mFiles;
     QColor mLocalColor;
     QColor mSystemColor;
     QColor mProjectColor;
+    QColor mFolderColor;
 };
 
 class HeaderCompletionPopup : public QWidget
@@ -66,14 +70,15 @@ public:
     void setKeypressedCallback(const KeyPressedCallback &newKeypressedCallback);
     void setSuggestionColor(const QColor& localColor,
                             const QColor& projectColor,
-                            const QColor& systemColor);
+                            const QColor& systemColor,
+                            const QColor& folderColor);
     QString selectedFilename(bool updateUsageCount);
 
 private:
     void filterList(const QString& member);
     void getCompletionFor(const QString& phrase);
     void addFilesInPath(const QString& path, HeaderCompletionListItemType type);
-    void addFile(const QDir& dir,  const QString& fileName, HeaderCompletionListItemType type);
+    void addFile(const QDir& dir,  const QFileInfo &fileInfo, HeaderCompletionListItemType type);
     void addFilesInSubDir(const QString& baseDirPath, const QString& subDirName, HeaderCompletionListItemType type);
 private:
 

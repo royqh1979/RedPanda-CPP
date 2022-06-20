@@ -2997,14 +2997,14 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete)
     }
 }
 
-void Editor::showHeaderCompletion(bool autoComplete)
+void Editor::showHeaderCompletion(bool autoComplete, bool forceShow)
 {
     if (!pSettings->codeCompletion().enabled())
         return;
 //    if not devCodeCompletion.Enabled then
 //      Exit;
 
-    if (mHeaderCompletionPopup->isVisible()) // already in search, don't do it again
+    if (!forceShow && mHeaderCompletionPopup->isVisible()) // already in search, don't do it again
         return;
 
     // Position it at the top of the next line
@@ -3028,6 +3028,7 @@ void Editor::showHeaderCompletion(bool autoComplete)
     BufferCoord pBeginPos,pEndPos;
     QString word = getWordAtPosition(this,caretXY(),pBeginPos,pEndPos,
                                      WordPurpose::wpHeaderCompletionStart);
+
     if (word.isEmpty())
         return;
 
@@ -3177,8 +3178,10 @@ void Editor::completionInsert(bool appendFunc)
 void Editor::headerCompletionInsert()
 {
     QString headerName = mHeaderCompletionPopup->selectedFilename(true);
-    if (headerName.isEmpty())
+    if (headerName.isEmpty()) {
+        mHeaderCompletionPopup->hide();
         return;
+    }
 
     // delete the part of the word that's already been typed ...
     BufferCoord p = caretXY();
@@ -3199,7 +3202,11 @@ void Editor::headerCompletionInsert()
 
     setSelText(headerName);
 
-    mCompletionPopup->hide();
+    if (headerName.endsWith("/")) {
+        showHeaderCompletion(false,true);
+    } else {
+        mHeaderCompletionPopup->hide();
+    }
 }
 
 bool Editor::onCompletionKeyPressed(QKeyEvent *event)
@@ -3302,7 +3309,7 @@ bool Editor::onHeaderCompletionKeyPressed(QKeyEvent *event)
     case Qt::Key_Enter:
     case Qt::Key_Tab:
         headerCompletionInsert();
-        mHeaderCompletionPopup->hide();
+        //mHeaderCompletionPopup->hide();
         return true;
     case Qt::Key_Shift:
         return false;

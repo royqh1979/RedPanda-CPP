@@ -257,7 +257,7 @@ private:
     QuoteStatus getQuoteStatus();
 
     void showCompletion(const QString& preWord, bool autoComplete);
-    void showHeaderCompletion(bool autoComplete);
+    void showHeaderCompletion(bool autoComplete, bool forceShow=false);
 
     bool testInFunc(int x,int y);
 
