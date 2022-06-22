@@ -911,6 +911,7 @@ void Project::saveOptions()
     }
     ini.SetLongValue("Project","StaticLink", mOptions.staticLink);
     ini.SetLongValue("Project","AddCharset", mOptions.addCharset);
+    ini.SetValue("Project","ExecEncoding", mOptions.execEncoding);
     ini.SetValue("Project","Encoding",toByteArray(mOptions.encoding));
     ini.SetLongValue("Project","ModelType", (int)mOptions.modelType);
     //for Red Panda Dev C++ 6 compatibility
@@ -1666,6 +1667,7 @@ void Project::loadOptions(SimpleIni& ini)
         }
 
         mOptions.staticLink = ini.GetBoolValue("Project", "StaticLink", true);
+        mOptions.execEncoding = ini.GetValue("Project","ExecEncoding", ENCODING_SYSTEM_DEFAULT);
         mOptions.addCharset = ini.GetBoolValue("Project", "AddCharset", true);
 
         if (mOptions.compilerSetType<0) {

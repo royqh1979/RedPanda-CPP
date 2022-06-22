@@ -359,14 +359,18 @@ QString Compiler::getCCompileArguments(bool checkSyntax)
     }
 
     if (compilerSet()->useCustomCompileParams() && !compilerSet()->customCompileParams().isEmpty()) {
-        result += " "+ parseMacros(compilerSet()->customCompileParams());
+        QStringList params = textToLines(compilerSet()->customCompileParams());
+        foreach(const QString& param, params)
+            result += " "+ parseMacros(param);
     }
 
     if (mProject) {
         QString s = mProject->options().compilerCmd;
         if (!s.isEmpty()) {
             s.replace("_@@_", " ");
-            result += " "+parseMacros(s);
+            QStringList params = textToLines(s);
+            foreach(const QString& param, params)
+                result += " "+ parseMacros(param);
         }
     }
     return result;
@@ -396,13 +400,17 @@ QString Compiler::getCppCompileArguments(bool checkSyntax)
         }
     }
     if (compilerSet()->useCustomCompileParams() && !compilerSet()->customCompileParams().isEmpty()) {
-        result += " "+ parseMacros(compilerSet()->customCompileParams());
+        QStringList params = textToLines(compilerSet()->customCompileParams());
+        foreach(const QString& param, params)
+            result += " "+ parseMacros(param);
     }
     if (mProject) {
         QString s = mProject->options().cppCompilerCmd;
         if (!s.isEmpty()) {
             s.replace("_@@_", " ");
-            result += " "+parseMacros(s);
+            QStringList params = textToLines(s);
+            foreach(const QString& param, params)
+                result += " "+ parseMacros(param);
         }
     }
     return result;
@@ -507,7 +515,11 @@ QString Compiler::getLibraryArguments(FileType fileType)
 
     // Add global compiler linker extras
     if (compilerSet()->useCustomLinkParams() && !compilerSet()->customLinkParams().isEmpty()) {
-       result += " "+compilerSet()->customLinkParams();
+       QStringList params = textToLines(compilerSet()->customLinkParams());
+       if (!params.isEmpty()) {
+            foreach(const QString& param, params)
+                result += " " + param;
+       }
     }
 
     if (mProject) {
@@ -519,7 +531,11 @@ QString Compiler::getLibraryArguments(FileType fileType)
             QString s = mProject->options().linkerCmd;
             if (!s.isEmpty()) {
                 s.replace("_@@_", " ");
-                result += " "+s;
+                QStringList params = textToLines(s);
+                if (!params.isEmpty()) {
+                     foreach(const QString& param, params)
+                         result += " " + param;
+                }
             }
         }
         if (mProject->options().staticLink)

@@ -1,6 +1,8 @@
 Red Panda C++ Version 1.1.2
   - enhancement: use different color to differenciate folder and headers in completion popup window
   - enhancement: auto add "/" to folder when completing #include headers
+  - enhancement: add the option "Set Encoding for the Executable" to project's compiler options
+  - fix: can't correctly compile when link params are seperated by line breaks
 
 Red Panda C++ Version 1.1.1
   - enhancement: adjust the appearance of problem case's input/output/expected control

@@ -89,6 +89,7 @@ struct ProjectOptions{
     QString cmdLineArgs;
     bool staticLink;
     bool addCharset;
+    QByteArray execEncoding;
     QString encoding;
     ProjectModelType modelType;
 };

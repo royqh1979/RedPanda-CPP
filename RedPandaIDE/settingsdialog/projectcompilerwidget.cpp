@@ -19,6 +19,7 @@
 #include "../settings.h"
 #include "../project.h"
 #include "../mainwindow.h"
+#include "../platform.h"
 
 ProjectCompilerWidget::ProjectCompilerWidget(const QString &name, const QString &group, QWidget *parent) :
     SettingsWidget(name,group,parent),
@@ -37,8 +38,8 @@ void ProjectCompilerWidget::refreshOptions()
     Settings::PCompilerSet pSet = pSettings->compilerSets().getSet(ui->cbCompilerSet->currentIndex());
     if (!pSet)
         return;
-    ui->chkAddCharset->setVisible(pSet->compilerType()!=COMPILER_CLANG);
-    ui->chkAddCharset->setEnabled(pSet->compilerType()!=COMPILER_CLANG);
+    ui->panelAddCharset->setVisible(pSet->compilerType()!=COMPILER_CLANG);
+    //ui->chkAddCharset->setEnabled(pSet->compilerType()!=COMPILER_CLANG);
     mOptions = pMainWindow->project()->options().compilerOptions;
     if (mOptions.isEmpty())
         mOptions = pSet->compileOptions();
@@ -46,6 +47,27 @@ void ProjectCompilerWidget::refreshOptions()
     ui->tabOptions->resetUI(pSet,mOptions);
 
     ui->chkStaticLink->setChecked(pSet->staticLink());
+
+    QByteArray execEncoding = pMainWindow->project()->options().execEncoding;
+    if (execEncoding == ENCODING_AUTO_DETECT
+            || execEncoding == ENCODING_SYSTEM_DEFAULT
+            || execEncoding == ENCODING_UTF8) {
+        int index =ui->cbEncoding->findData(execEncoding);
+        ui->cbEncoding->setCurrentIndex(index);
+        ui->cbEncodingDetails->clear();
+        ui->cbEncodingDetails->setVisible(false);
+    } else {
+        QString encoding = execEncoding;
+        QString language = pCharsetInfoManager->findLanguageByCharsetName(encoding);
+        ui->cbEncoding->setCurrentText(language);
+        ui->cbEncodingDetails->setVisible(true);
+        ui->cbEncodingDetails->clear();
+        QList<PCharsetInfo> infos = pCharsetInfoManager->findCharsetsByLanguageName(language);
+        foreach (const PCharsetInfo& info, infos) {
+            ui->cbEncodingDetails->addItem(info->name);
+        }
+        ui->cbEncodingDetails->setCurrentText(encoding);
+    }
 }
 
 void ProjectCompilerWidget::doLoad()
@@ -68,6 +90,12 @@ void ProjectCompilerWidget::doSave()
     if (pSet->compilerType()!=COMPILER_CLANG)
         pMainWindow->project()->options().addCharset = ui->chkAddCharset->isChecked();
     pMainWindow->project()->options().staticLink = ui->chkStaticLink->isChecked();
+
+    if (ui->cbEncodingDetails->isVisible()) {
+        pMainWindow->project()->options().execEncoding = ui->cbEncodingDetails->currentText().toLocal8Bit();
+    } else {
+        pMainWindow->project()->options().execEncoding = ui->cbEncoding->currentData().toString().toLocal8Bit();
+    }
     pMainWindow->project()->saveOptions();
 }
 
@@ -77,11 +105,42 @@ void ProjectCompilerWidget::init()
     for (size_t i=0;i<pSettings->compilerSets().size();i++) {
         ui->cbCompilerSet->addItem(pSettings->compilerSets().getSet(i)->name());
     }
+    ui->cbEncodingDetails->setVisible(false);
+    ui->cbEncoding->clear();
+    ui->cbEncoding->addItem(tr("ANSI"),ENCODING_SYSTEM_DEFAULT);
+    ui->cbEncoding->addItem(tr("UTF-8"),ENCODING_UTF8);
+    foreach (const QString& langName, pCharsetInfoManager->languageNames()) {
+        ui->cbEncoding->addItem(langName,langName);
+    }
     SettingsWidget::init();
 }
 
 void ProjectCompilerWidget::on_cbCompilerSet_currentIndexChanged(int)
 {
     refreshOptions();
+}
+
+void ProjectCompilerWidget::on_cbEncoding_currentTextChanged(const QString &arg1)
+{
+    QString userData = ui->cbEncoding->currentData().toString();
+    if (userData == ENCODING_AUTO_DETECT
+            || userData == ENCODING_SYSTEM_DEFAULT
+            || userData == ENCODING_UTF8) {
+        ui->cbEncodingDetails->setVisible(false);
+        ui->cbEncodingDetails->clear();
+    } else {
+        ui->cbEncodingDetails->setVisible(true);
+        ui->cbEncodingDetails->clear();
+        QList<PCharsetInfo> infos = pCharsetInfoManager->findCharsetsByLanguageName(userData);
+        foreach (const PCharsetInfo& info, infos) {
+            ui->cbEncodingDetails->addItem(info->name);
+        }
+    }
+}
+
+
+void ProjectCompilerWidget::on_cbEncodingDetails_currentTextChanged(const QString &arg1)
+{
+
 }
 

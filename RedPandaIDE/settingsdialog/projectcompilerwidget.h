@@ -48,6 +48,8 @@ public:
     void init() override;
 private slots:
     void on_cbCompilerSet_currentIndexChanged(int index);
+    void on_cbEncoding_currentTextChanged(const QString &arg1);
+    void on_cbEncodingDetails_currentTextChanged(const QString &arg1);
 };
 
 #endif // PROJECTCOMPILERWIDGET_H

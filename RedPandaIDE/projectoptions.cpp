@@ -15,6 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include "projectoptions.h"
+#include "utils.h"
 
 ProjectVersionInfo::ProjectVersionInfo()
 {
@@ -53,4 +54,5 @@ ProjectOptions::ProjectOptions()
     staticLink = true;
     addCharset = true;
     modelType = ProjectModelType::FileSystem;
+    execEncoding = ENCODING_SYSTEM_DEFAULT;
 }

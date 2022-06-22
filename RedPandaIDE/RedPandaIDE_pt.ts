@@ -4882,7 +4882,15 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Add encoding options to compiler</source>
+        <source>ANSI</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>UTF-8</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Set Encoding for the executable:</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

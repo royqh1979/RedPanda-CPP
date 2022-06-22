@@ -200,7 +200,7 @@ void ProjectCompiler::writeMakeDefines(QFile &file)
     log("");
 
     // Get list of applicable flags
-    QString  cCompileArguments = getCCompileArguments(mOnlyCheckSyntax);
+    QString cCompileArguments = getCCompileArguments(mOnlyCheckSyntax);
     QString cppCompileArguments = getCppCompileArguments(mOnlyCheckSyntax);
     QString libraryArguments = getLibraryArguments(FileType::Project);
     QString cIncludeArguments = getCIncludeArguments() + " " + getProjectIncludeArguments();
@@ -387,23 +387,37 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
         } else {
             QString encodingStr;
             if (compilerSet()->compilerType() != COMPILER_CLANG && mProject->options().addCharset) {
-                QByteArray defaultSystemEncoding = pCharsetInfoManager->getDefaultSystemEncoding();
+                QByteArray defaultSystemEncoding=pCharsetInfoManager->getDefaultSystemEncoding();
+                QByteArray encoding = mProject->options().execEncoding;
+                QByteArray targetEncoding;
+                QByteArray sourceEncoding;
+                if ( encoding == ENCODING_SYSTEM_DEFAULT || encoding.isEmpty()) {
+                    targetEncoding = defaultSystemEncoding;
+                } else if (encoding == ENCODING_UTF8_BOM) {
+                    targetEncoding = "UTF-8";
+                } else {
+                    targetEncoding = encoding;
+                }
+
                 if (unit->encoding() == ENCODING_AUTO_DETECT) {
                     Editor* editor = mProject->unitEditor(unit);
                     if (editor && editor->fileEncoding()!=ENCODING_ASCII
-                            && editor->fileEncoding()!=defaultSystemEncoding)
-                        encodingStr = QString(" -finput-charset=%1 -fexec-charset=%2")
-                                .arg(QString(editor->fileEncoding()),
-                                     QString(defaultSystemEncoding));
+                            && editor->fileEncoding()!=targetEncoding) {
+                        sourceEncoding = editor->fileEncoding();
+                    } else {
+                        sourceEncoding = targetEncoding;
+                    }
                 } else if (unit->encoding()==ENCODING_SYSTEM_DEFAULT) {
-//                    encodingStr = QString(" -finput-charset=%1 -fexec-charset=%2")
-//                          .arg(QString(defaultSystemEncoding),
-//                               QString(defaultSystemEncoding));
+                    sourceEncoding = defaultSystemEncoding;
                 } else if (unit->encoding()!=ENCODING_ASCII && !unit->encoding().isEmpty()
-                           && unit->encoding()!=defaultSystemEncoding) {
+                           && unit->encoding()!=targetEncoding) {
+                    sourceEncoding = unit->encoding();
+                }
+
+                if (sourceEncoding!=targetEncoding) {
                     encodingStr = QString(" -finput-charset=%1 -fexec-charset=%2")
-                          .arg(QString(unit->encoding()),
-                               QString(defaultSystemEncoding));
+                            .arg(QString(sourceEncoding),
+                                 QString(targetEncoding));
                 }
             }
 
