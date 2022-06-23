@@ -165,6 +165,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
         QString fileTemplate = pMainWindow->codeSnippetManager()->newFileTemplate();
         if (!fileTemplate.isEmpty()) {
             insertCodeSnippet(fileTemplate);
+            setCaretPosition(1,1);
             mCanAutoSave = true;
         }
     }
