@@ -107,15 +107,17 @@ void AutolinkManager::save()
     }
 }
 
-void AutolinkManager::setLink(const QString &header, const QString &linkOption)
+void AutolinkManager::setLink(const QString &header, const QString &linkOption, bool execUseUTF8)
 {
     PAutolink link = mLinks.value(header,PAutolink());
     if (link) {
         link->linkOption = linkOption;
+        link->execUseUTF8 = execUseUTF8;
     } else {
         link = std::make_shared<Autolink>();
         link->header = header;
         link->linkOption = linkOption;
+        link->execUseUTF8 = execUseUTF8;
         mLinks.insert(header,link);
     }
 }
@@ -137,6 +139,7 @@ QJsonArray AutolinkManager::toJson()
         QJsonObject autolink;
         autolink["header"]=header;
         autolink["links"]=mLinks[header]->linkOption;
+        autolink["execUseUTF8"]=mLinks[header]->execUseUTF8;
         result.append(autolink);
     }
     return result;
@@ -147,6 +150,6 @@ void AutolinkManager::fromJson(QJsonArray json)
     clear();
     for (int i=0;i<json.size();i++) {
         QJsonObject obj = json[i].toObject();
-        setLink(obj["header"].toString(),obj["links"].toString());
+        setLink(obj["header"].toString(),obj["links"].toString(),obj["execUseUTF8"].toBool());
     }
 }

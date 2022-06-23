@@ -59,7 +59,7 @@ bool FileCompiler::prepareForCompile()
         }
     }
 
-    mArguments += getCharsetArgument(mEncoding, mOnlyCheckSyntax);
+    mArguments += getCharsetArgument(mEncoding, fileType, mOnlyCheckSyntax);
     QString strFileType;
     switch(fileType) {
     case FileType::CSource:

@@ -41,7 +41,7 @@ bool StdinCompiler::prepareForCompile()
         fileType = FileType::CppSource;
     QString strFileType;
     if (mEncoding!=ENCODING_ASCII) {
-        mArguments += getCharsetArgument(mEncoding, mOnlyCheckSyntax);
+        mArguments += getCharsetArgument(mEncoding,fileType, mOnlyCheckSyntax);
     }
     switch(fileType) {
     case FileType::CSource:

@@ -25,4 +25,5 @@ UnitCount=3
 Type=1
 IsCpp=0
 linker=-lraylib -lopengl32 -lgdi32 -lwinmm
+ExecEncoding=UTF-8
 

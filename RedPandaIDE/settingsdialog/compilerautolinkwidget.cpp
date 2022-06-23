@@ -51,7 +51,8 @@ void CompilerAutolinkWidget::doSave()
         if (!link->header.isEmpty()) {
             pAutolinkManager->setLink(
                         link->header,
-                        link->linkOption
+                        link->linkOption,
+                        link->execUseUTF8
                         );
         }
     }
@@ -79,7 +80,7 @@ int AutolinkModel::rowCount(const QModelIndex &) const
 
 int AutolinkModel::columnCount(const QModelIndex &) const
 {
-    return 2;
+    return 3;
 }
 
 QVariant AutolinkModel::headerData(int section, Qt::Orientation orientation, int role) const
@@ -89,6 +90,8 @@ QVariant AutolinkModel::headerData(int section, Qt::Orientation orientation, int
         case 0:
             return tr("Header");
         case 1:
+            return tr("UTF-8");
+        case 2:
             return tr("Link options");
         }
     }
@@ -107,9 +110,17 @@ QVariant AutolinkModel::data(const QModelIndex &index, int role) const
         switch(index.column()) {
         case 0:
             return link->header;
-        case 1:
+        case 2:
             return link->linkOption;
         }
+    } else if (role == Qt::CheckStateRole && index.column()==1) {
+        int row = index.row();
+        if (row<0 || row>=mLinks.count())
+            return QVariant();
+        PAutolink link = mLinks[row];
+        return link->execUseUTF8 ? Qt::Checked : Qt::Unchecked;
+    } else if (role == Qt::TextAlignmentRole && index.column()==1) {
+        return Qt::AlignCenter;
     }
     return QVariant();
 }
@@ -118,7 +129,16 @@ bool AutolinkModel::setData(const QModelIndex &index, const QVariant &value, int
 {
     if (!index.isValid())
         return false;
-    if (role == Qt::EditRole) {
+    if (role == Qt::CheckStateRole && index.column()==1) {
+        int row = index.row();
+        if (row<0 || row>=mLinks.count())
+            return false;
+        PAutolink link = mLinks[row];
+        link->execUseUTF8 = (value == Qt::Checked);
+        mWidget->setSettingsChanged();
+        return true;
+    }
+    else  if (role == Qt::EditRole) {
         int row = index.row();
         if (row<0 || row>=mLinks.count())
             return false;
@@ -143,7 +163,7 @@ bool AutolinkModel::setData(const QModelIndex &index, const QVariant &value, int
             mLinks[row]=newLink;
             mWidget->setSettingsChanged();
             return true;
-        } else if (index.column() == 1) {
+        } else if (index.column() == 2) {
             //we must create a new link, becasue mList may share link pointer with the autolink manger
             PAutolink newLink = std::make_shared<Autolink>();
             newLink->header = link->header;
@@ -160,7 +180,10 @@ Qt::ItemFlags AutolinkModel::flags(const QModelIndex &index) const
 {
     Qt::ItemFlags flags = Qt::NoItemFlags;
     if (index.isValid()) {
-        flags = Qt::ItemIsEnabled | Qt::ItemIsEditable | Qt::ItemIsSelectable ;
+        if (index.column()==1)
+            flags = Qt::ItemIsEnabled | Qt::ItemIsUserCheckable;
+        else
+            flags = Qt::ItemIsEnabled | Qt::ItemIsEditable | Qt::ItemIsSelectable ;
     }
     return flags;
 }

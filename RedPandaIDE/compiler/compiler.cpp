@@ -301,10 +301,38 @@ void Compiler::stopCompile()
     mStop = true;
 }
 
-QString Compiler::getCharsetArgument(const QByteArray& encoding, bool checkSyntax)
+QString Compiler::getCharsetArgument(const QByteArray& encoding,FileType fileType, bool checkSyntax)
 {
     QString result;
-    if (compilerSet()->autoAddCharsetParams() && encoding != ENCODING_ASCII
+    bool forceExecUTF8=false;
+    // test if force utf8 from autolink infos
+    if ((fileType == FileType::CSource ||
+            fileType == FileType::CppSource) && pSettings->editor().enableAutolink() ){
+        Editor* editor = pMainWindow->editorList()->getEditor();
+        if (editor) {
+            PCppParser parser = editor->parser();
+            if (parser) {
+                int waitCount = 0;
+                //wait parsing ends, at most 1 second
+                while(parser->parsing()) {
+                    if (waitCount>10)
+                        break;
+                    waitCount++;
+                    QThread::msleep(100);
+                    QApplication *app=dynamic_cast<QApplication*>(
+                                QApplication::instance());
+                    app->processEvents();
+                }
+                QSet<QString> parsedFiles;
+                forceExecUTF8 = parseForceUTF8ForAutolink(
+                            editor->filename(),
+                            parsedFiles,
+                            parser);
+            }
+        }
+
+    }
+    if ((forceExecUTF8 || compilerSet()->autoAddCharsetParams()) && encoding != ENCODING_ASCII
             && compilerSet()->compilerType()!=COMPILER_CLANG) {
         QString encodingName;
         QString execEncodingName;
@@ -317,7 +345,9 @@ QString Compiler::getCharsetArgument(const QByteArray& encoding, bool checkSynta
         } else {
             encodingName = encoding;
         }
-        if (compilerSetExecCharset == ENCODING_SYSTEM_DEFAULT || compilerSetExecCharset.isEmpty()) {
+        if (forceExecUTF8) {
+            execEncodingName = "UTF-8";
+        } else if (compilerSetExecCharset == ENCODING_SYSTEM_DEFAULT || compilerSetExecCharset.isEmpty()) {
             execEncodingName = systemEncodingName;
         } else {
             execEncodingName = compilerSetExecCharset;
@@ -574,6 +604,35 @@ QString Compiler::parseFileIncludesForAutolink(
                     parser);
     }
     return result;
+}
+
+bool Compiler::parseForceUTF8ForAutolink(const QString &filename, QSet<QString> &parsedFiles, PCppParser &parser)
+{
+    bool result;
+    if (parsedFiles.contains(filename))
+        return false;
+    parsedFiles.insert(filename);
+    PAutolink autolink = pAutolinkManager->getLink(filename);
+    if (autolink && autolink->execUseUTF8) {
+        return true;
+    }
+    QStringList includedFiles = parser->getFileDirectIncludes(filename);
+//    log(QString("File %1 included:").arg(filename));
+//    for (int i=includedFiles.size()-1;i>=0;i--) {
+//        QString includeFilename = includedFiles[i];
+//        log(includeFilename);
+//    }
+
+    for (int i=includedFiles.size()-1;i>=0;i--) {
+        QString includeFilename = includedFiles[i];
+        result = parseForceUTF8ForAutolink(
+                    includeFilename,
+                    parsedFiles,
+                    parser);
+        if (result)
+            return true;
+    }
+    return false;
 }
 
 void Compiler::runCommand(const QString &cmd, const QString  &arguments, const QString &workingDir, const QByteArray& inputText)

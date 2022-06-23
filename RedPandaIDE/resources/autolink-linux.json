@@ -1,5 +1,6 @@
 [
     {
+        "execUseUTF8": true,
         "header": "raylib.h",
         "links": "-lraylib -lGL -lm -lpthread -ldl -lrt -lX11"
     },

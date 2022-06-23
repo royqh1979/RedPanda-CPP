@@ -646,31 +646,6 @@ void Project::saveAsTemplate(const QString &filename,
     ini.SetValue("Template", "Description", toByteArray(description));
     ini.SetValue("Project", "Icon", toByteArray(options().icon));
     //todo: save to template
-//    mOptions.type = static_cast<ProjectType>(mIni->GetLongValue("Project", "Type", 0)); // default = gui
-//    mOptions.objFiles  = fromByteArray(mIni->GetValue("Project", "ObjFiles", "")).split(";",QString::SkipEmptyParts);
-//    mOptions.includes = fromByteArray(mIni->GetValue("Project", "Includes", "")).split(";",QString::SkipEmptyParts);
-//    mOptions.libs = fromByteArray(mIni->GetValue("Project", "Libs", "")).split(";",QString::SkipEmptyParts);
-//    mOptions.resourceIncludes = fromByteArray(mIni->GetValue("Project", "ResourceIncludes", "")).split(";",QString::SkipEmptyParts);
-//    mOptions.compilerCmd = fromByteArray(mIni->GetValue("Project", "Compiler", ""));
-//    mOptions.cppCompilerCmd = fromByteArray(mIni->GetValue("Project", "CppCompiler", ""));
-//    mOptions.linkerCmd = fromByteArray(mIni->GetValue("Project", "Linker",""));
-//    mOptions.isCpp = mIni->GetBoolValue("Project", "IsCpp", false);
-//    mOptions.includeVersionInfo = mIni->GetBoolValue("Project", "IncludeVersionInfo", false);
-//    mOptions.supportXPThemes = mIni->GetBoolValue("Project", "SupportXPThemes", false);
-//    mOptions.exeOutput = fromByteArray(mIni->GetValue("Project", "ExeOutput", ""));
-//    mOptions.objectOutput = fromByteArray(mIni->GetValue("Project", "ObjectOutput", ""));
-//    mOptions.logOutput = fromByteArray(mIni->GetValue("Project", "LogOutput", ""));
-//    mOptions.staticLink  = mIni->GetBoolValue("Project", "StaticLink",true);
-//    mOptions.addCharset  = mIni->GetBoolValue("Project", "AddCharset",true);
-//    bool useUTF8 = mIni->GetBoolValue("Project", "UseUTF8", false);
-//    if (useUTF8) {
-//        mOptions.encoding = fromByteArray(mIni->GetValue("Project","Encoding", ENCODING_UTF8));
-//    } else {
-//        mOptions.encoding = fromByteArray(mIni->GetValue("Project","Encoding", ENCODING_AUTO_DETECT));
-//    }
-//    mOptions.modelType = (ProjectModelType)mIni->GetLongValue("Project", "ModelType", (int)ProjectModelType::FileSystem);
-
-
 }
 
 PProjectUnit Project::findUnitByFilename(const QString &filename)

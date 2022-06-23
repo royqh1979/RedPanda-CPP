@@ -64,7 +64,7 @@ protected:
     virtual bool prepareForCompile() = 0;
     virtual QByteArray pipedText();
     virtual bool prepareForRebuild() = 0;
-    virtual QString getCharsetArgument(const QByteArray& encoding,bool onlyCheckSyntax);
+    virtual QString getCharsetArgument(const QByteArray& encoding, FileType fileType, bool onlyCheckSyntax);
     virtual QString getCCompileArguments(bool checkSyntax);
     virtual QString getCppCompileArguments(bool checkSyntax);
     virtual QString getCIncludeArguments();
@@ -72,6 +72,10 @@ protected:
     virtual QString getCppIncludeArguments();
     virtual QString getLibraryArguments(FileType fileType);
     virtual QString parseFileIncludesForAutolink(
+            const QString& filename,
+            QSet<QString>& parsedFiles,
+            PCppParser& parser);
+    virtual bool parseForceUTF8ForAutolink(
             const QString& filename,
             QSet<QString>& parsedFiles,
             PCppParser& parser);

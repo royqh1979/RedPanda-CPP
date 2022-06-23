@@ -5,6 +5,7 @@ Red Panda C++ Version 1.1.2
   - fix: can't correctly compile when link params are seperated by line breaks
   - fix: select all shouldn't set file's modified flag
   - enhancement: add (return)type info for functions/varaibles/typedefs in the class browser panel
+  - enhancement: autolink add "force utf8" property (mainly for raylib)
 
 Red Panda C++ Version 1.1.1
   - enhancement: adjust the appearance of problem case's input/output/expected control

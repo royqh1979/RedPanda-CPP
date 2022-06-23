@@ -143,6 +143,8 @@ void ProjectTemplate::readTemplateFile(const QString &fileName)
     mOptions.exeOutput = fromByteArray(mIni->GetValue("Project", "ExeOutput", ""));
     mOptions.objectOutput = fromByteArray(mIni->GetValue("Project", "ObjectOutput", ""));
     mOptions.logOutput = fromByteArray(mIni->GetValue("Project", "LogOutput", ""));
+    mOptions.execEncoding = mIni->GetValue("Project","ExecEncoding", ENCODING_SYSTEM_DEFAULT);
+
     mOptions.staticLink  = mIni->GetBoolValue("Project", "StaticLink",true);
     mOptions.addCharset  = mIni->GetBoolValue("Project", "AddCharset",true);
     bool useUTF8 = mIni->GetBoolValue("Project", "UseUTF8", false);
