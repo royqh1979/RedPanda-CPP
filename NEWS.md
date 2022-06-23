@@ -3,6 +3,8 @@ Red Panda C++ Version 1.1.2
   - enhancement: auto add "/" to folder when completing #include headers
   - enhancement: add the option "Set Encoding for the Executable" to project's compiler options
   - fix: can't correctly compile when link params are seperated by line breaks
+  - fix: select all shouldn't set file's modified flag
+  - enhancement: add (return)type info for functions/varaibles/typedefs in the class browser panel
 
 Red Panda C++ Version 1.1.1
   - enhancement: adjust the appearance of problem case's input/output/expected control

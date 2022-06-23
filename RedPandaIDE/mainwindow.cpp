@@ -6670,8 +6670,7 @@ void MainWindow::on_btnReplace_clicked()
         BufferCoord coord=editor->caretXY();
         int topLine = editor->topLine();
         int leftChar = editor->leftChar();
-        editor->selectAll();
-        editor->setSelText(contents.join(editor->lineBreak()));
+        editor->replaceAll(contents.join(editor->lineBreak()));
         editor->setCaretXY(coord);
         editor->setTopLine(topLine);
         editor->setLeftChar(leftChar);

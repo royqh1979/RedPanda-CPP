@@ -270,6 +270,11 @@ public:
     void endUndoBlock();
     void addCaretToUndo();
     void addLeftTopToUndo();
+    void replaceAll(const QString& text) {
+        mUndoList->AddChange(SynChangeReason::crSelection,mBlockBegin,mBlockEnd,"", activeSelectionMode());
+        selectAll();
+        setSelText(text);
+    }
 
     //Commands
     virtual void cutToClipboard() { commandProcessor(SynEditorCommand::ecCut);}
@@ -280,7 +285,6 @@ public:
     virtual void zoomIn()  { commandProcessor(SynEditorCommand::ecZoomIn);}
     virtual void zoomOut()  { commandProcessor(SynEditorCommand::ecZoomOut);}
     virtual void selectAll() {
-        mUndoList->AddChange(SynChangeReason::crSelection,mBlockBegin,mBlockEnd,"", activeSelectionMode());
         commandProcessor(SynEditorCommand::ecSelectAll);
     }
     virtual void tab() { commandProcessor(SynEditorCommand::ecTab);}

@@ -4276,12 +4276,12 @@ void Editor::reformat()
     beginUndoBlock();
     addLeftTopToUndo();
     addCaretToUndo();
-    selectAll();
+
     SynEditorOptions oldOptions = getOptions();
     SynEditorOptions newOptions = oldOptions;
     newOptions.setFlag(SynEditorOption::eoAutoIndent,false);
     setOptions(newOptions);
-    setSelText(QString::fromUtf8(newContent));
+    replaceAll(QString::fromUtf8(newContent));
     setCaretXY(mOldCaret);
     setTopLine(oldTopLine);
     setOptions(oldOptions);

@@ -143,6 +143,13 @@ QVariant ClassBrowserModel::data(const QModelIndex &index, int role) const
         return QVariant();
     if (role == Qt::DisplayRole) {
         if (node->statement) {
+            if (!(node->statement->type.isEmpty()) &&
+                    ((node->statement->kind == StatementKind::skFunction)
+                     || (node->statement->kind == StatementKind::skVariable)
+                     || (node->statement->kind == StatementKind::skTypedef)
+                     )) {
+                return node->statement->command + node->statement->args + " : " + node->statement->type;
+            }
             return node->statement->command + node->statement->args;
         }
     } else if (role == Qt::ForegroundRole) {

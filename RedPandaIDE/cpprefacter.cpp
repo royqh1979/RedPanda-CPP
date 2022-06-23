@@ -319,8 +319,7 @@ void CppRefacter::renameSymbolInFile(const QString &filename, const PStatement &
         oldEditor->beginUndoBlock();
         oldEditor->addLeftTopToUndo();
         oldEditor->addCaretToUndo();
-        oldEditor->selectAll();
-        oldEditor->setSelText(newContents.join(oldEditor->lineBreak()));
+        oldEditor->replaceAll(newContents.join(oldEditor->lineBreak()));
         oldEditor->setTopLine(topLine);
         oldEditor->setLeftChar(leftChar);
         oldEditor->setCaretXY(oldXY);
