@@ -1,0 +1,20 @@
+[Template]
+ver=2
+Name=Hypotrochoid
+Name[zh_CN]=内旋轮线
+Icon=hypotrochoid.ico
+Description=A simple hypotrochoid drawing app
+Description[zh_CN]=内旋轮线绘制程序
+Category=Game
+Category[zh_CN]=游戏
+
+[Unit0]
+CName=main.c
+C=hypotrochoid_c.txt
+
+[Project]
+UnitCount=1
+Type=1
+IsCpp=0
+linker=-lrdrawing -lraylib -lopengl32 -lgdi32 -lwinmm
+ExecEncoding=UTF-8

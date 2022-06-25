@@ -1,0 +1,21 @@
+[Template]
+ver=2
+Name=raygui
+Name[zh_CN]=raygui
+Icon=raygui.ico
+Description=raygui demo
+Description[zh_CN]=Raygui演示
+Category=Multimedia
+Category[zh_CN]=多媒体
+
+[Unit0]
+CName=main.c
+C=raygui_c.txt
+
+[Project]
+UnitCount=1
+Type=1
+IsCpp=0
+linker=-lraylib -lopengl32 -lgdi32 -lwinmm
+ExecEncoding=UTF-8
+
