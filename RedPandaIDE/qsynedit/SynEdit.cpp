@@ -246,10 +246,10 @@ void SynEdit::setCaretXYEx(bool CallEnsureCursorPosVisible, BufferCoord value)
             if (!mOptions.testFlag(SynEditorOption::eoScrollPastEol)) {
                 nMaxX = 1;
             } else {
-                nMaxX = mDocument->getString(value.Line-1).length()+1;
+                nMaxX = getDisplayStringAtLine(value.Line).length()+1;
             }
         } else {
-            nMaxX = mDocument->getString(value.Line-1).length()+1;
+            nMaxX = getDisplayStringAtLine(value.Line).length()+1;
         }
         value.Char = std::min(value.Char,nMaxX);
     }
@@ -359,10 +359,13 @@ bool SynEdit::canRedo() const
 
 int SynEdit::maxScrollWidth() const
 {
+    int maxLen = mDocument->lengthOfLongestLine();
+    if (highlighter())
+        maxLen = maxLen+stringColumns(highlighter()->foldString(),maxLen);
     if (mOptions.testFlag(eoScrollPastEol))
-        return std::max(mDocument->lengthOfLongestLine(),1);
+        return std::max(maxLen ,1);
     else
-        return std::max(mDocument->lengthOfLongestLine()-mCharsInWindow+1, 1);
+        return std::max(maxLen-mCharsInWindow+1, 1);
 }
 
 bool SynEdit::getHighlighterAttriAtRowCol(const BufferCoord &XY, QString &Token, PSynHighlighterAttribute &Attri)
@@ -826,7 +829,7 @@ QString SynEdit::GetLeftSpacing(int charCount, bool wantTabs) const
 int SynEdit::charToColumn(int aLine, int aChar) const
 {
     if (aLine>=1 && aLine <= mDocument->count()) {
-        QString s = mDocument->getString(aLine - 1);
+        QString s = getDisplayStringAtLine(aLine);
         return charToColumn(s,aChar);
     }
     return aChar;
@@ -849,7 +852,7 @@ int SynEdit::columnToChar(int aLine, int aColumn) const
 {
     Q_ASSERT( (aLine <= mDocument->count()) && (aLine >= 1));
     if (aLine <= mDocument->count()) {
-        QString s = mDocument->getString(aLine - 1);
+        QString s = getDisplayStringAtLine(aLine);
         int x = 0;
         int len = s.length();
         int i;
@@ -1211,8 +1214,8 @@ void SynEdit::processGutterClick(QMouseEvent *event)
 
     // Check if we clicked on a folding thing
     if (mUseCodeFolding) {
-        PSynEditFoldRange FoldRange = foldStartAtLine(Line);
-        if (FoldRange) {
+        PSynEditFoldRange foldRange = foldStartAtLine(Line);
+        if (foldRange) {
             // See if we actually clicked on the rectangle...
             //rect.Left := Gutter.RealGutterWidth(CharWidth) - Gutter.RightOffset;
             QRect rect;
@@ -1221,10 +1224,10 @@ void SynEdit::processGutterClick(QMouseEvent *event)
             rect.setTop((RowColumn.Row - mTopLine) * mTextHeight);
             rect.setBottom(rect.top() + mTextHeight - 1);
             if (rect.contains(QPoint(X, Y))) {
-                if (FoldRange->collapsed)
-                    uncollapse(FoldRange);
+                if (foldRange->collapsed)
+                    uncollapse(foldRange);
                 else
-                    collapse(FoldRange);
+                    collapse(foldRange);
                 return;
             }
         }
@@ -1972,6 +1975,16 @@ void SynEdit::doMouseScroll(bool isDragging)
     computeScroll(isDragging);
 }
 
+QString SynEdit::getDisplayStringAtLine(int line) const
+{
+    QString s = mDocument->getString(line-1);
+    PSynEditFoldRange foldRange = foldStartAtLine(line);
+    if ((foldRange) && foldRange->collapsed) {
+        return s+highlighter()->foldString();
+    }
+    return s;
+}
+
 void SynEdit::doDeleteLastChar()
 {
     if (mReadOnly)
@@ -2369,6 +2382,20 @@ void SynEdit::insertLine(bool moveCaret)
     }
 
     QString Temp = lineText();
+    if (mCaretX>lineText().length()+1) {
+        PSynEditFoldRange foldRange = foldStartAtLine(mCaretY);
+        if ((foldRange) && foldRange->collapsed) {
+            QString s = Temp+highlighter()->foldString();
+            if (mCaretX > s.length()) {
+                mCaretY=foldRange->toLine;
+                if (mCaretY>mDocument->count()) {
+                    mCaretY=mDocument->count();
+                }
+                Temp = lineText();
+                mCaretX=Temp.length()+1;
+            }
+        }
+    }
     QString Temp2 = Temp;
     QString Temp3;
     PSynHighlighterAttribute Attr;
@@ -2615,7 +2642,7 @@ QRect SynEdit::calculateCaretRect() const
     QPoint caretPos = rowColumnToPixels(coord);
     int caretWidth=mCharWidth;
     if (mCaretY <= mDocument->count() && mCaretX <= mDocument->getString(mCaretY-1).length()) {
-        caretWidth = charColumns(mDocument->getString(mCaretY-1)[mCaretX-1])*mCharWidth;
+        caretWidth = charColumns(getDisplayStringAtLine(mCaretY)[mCaretX-1])*mCharWidth;
     }
     if (mActiveSelectionMode == SynSelectionMode::smColumn) {
         return QRect(caretPos.x(),caretPos.y(),caretWidth,
@@ -3615,19 +3642,22 @@ void SynEdit::rescanForFoldRanges()
         // Add folds to a separate list
         PSynEditFoldRanges TemporaryAllFoldRanges = std::make_shared<SynEditFoldRanges>();
         scanForFoldRanges(TemporaryAllFoldRanges);
+        SynEditFoldRanges ranges=mAllFoldRanges;
+        mAllFoldRanges.clear();
 
         // Combine new with old folds, preserve parent order
         for (int i = 0; i< TemporaryAllFoldRanges->count();i++) {
             int j=0;
-            while (j < mAllFoldRanges.count()) {
-                if (TemporaryAllFoldRanges->range(i)->fromLine < mAllFoldRanges[j]->fromLine) {
-                    mAllFoldRanges.insert(j, TemporaryAllFoldRanges->range(i));
+            while (j <ranges.count()) {
+                if (TemporaryAllFoldRanges->range(i)->fromLine == ranges[j]->fromLine
+                        && TemporaryAllFoldRanges->range(i)->toLine == ranges[j]->toLine
+                        && ranges[j]->collapsed) {
+                    mAllFoldRanges.add(ranges[j]);
                     break;
                 }
                 j++;
             }
-            // If we can't prepend #i anywhere, just dump it at the end
-            if (j >= mAllFoldRanges.count())
+            if (j>=ranges.count())
                 mAllFoldRanges.add(TemporaryAllFoldRanges->range(i));
         }
 
@@ -3806,7 +3836,7 @@ void SynEdit::initializeCaret()
     //showCaret();
 }
 
-PSynEditFoldRange SynEdit::foldStartAtLine(int Line)
+PSynEditFoldRange SynEdit::foldStartAtLine(int Line) const
 {
     for (int i = 0; i<mAllFoldRanges.count();i++) {
         PSynEditFoldRange range = mAllFoldRanges[i];
@@ -3816,6 +3846,19 @@ PSynEditFoldRange SynEdit::foldStartAtLine(int Line)
             break; // sorted by line. don't bother scanning further
     }
     return PSynEditFoldRange();
+}
+
+bool SynEdit::foldCollapsedBetween(int startLine, int endLine) const
+{
+    for (int i = 0; i<mAllFoldRanges.count();i++) {
+        PSynEditFoldRange range = mAllFoldRanges[i];
+        if (startLine >=range->fromLine && range->fromLine<=endLine
+                && (range->collapsed || range->parentCollapsed())){
+            return true;
+        } else if (range->fromLine>endLine)
+            break; // sorted by line. don't bother scanning further
+    }
+    return false;
 }
 
 QString SynEdit::substringByColumns(const QString &s, int startColumn, int &colLen)
@@ -4852,8 +4895,18 @@ QString SynEdit::selText()
         //
         int ColTo = blockEnd().Char;
         int Last = blockEnd().Line - 1;
+
         switch(mActiveSelectionMode) {
-        case SynSelectionMode::smNormal:
+        case SynSelectionMode::smNormal:{
+            PSynEditFoldRange foldRange = foldStartAtLine(blockEnd().Line);
+            QString s = mDocument->getString(Last);
+            if ((foldRange) && foldRange->collapsed && ColTo>s.length()) {
+                s=s+highlighter()->foldString();
+                if (ColTo>s.length()) {
+                    Last = foldRange->toLine-1;
+                    ColTo = mDocument->getString(Last).length()+1;
+                }
+            }
             if (First == Last)
                 return  mDocument->getString(First).mid(ColFrom-1, ColTo - ColFrom);
             else {
@@ -4866,6 +4919,7 @@ QString SynEdit::selText()
                 result += mDocument->getString(Last).leftRef(ColTo-1);
                 return result;
             }
+        }
         case SynSelectionMode::smColumn:
         {
               First = blockBegin().Line;
@@ -4928,6 +4982,19 @@ SynEditCodeFolding &SynEdit::codeFolding()
     return mCodeFolding;
 }
 
+QString SynEdit::displayLineText()
+{
+    if (mCaretY >= 1 && mCaretY <= mDocument->count()) {
+        QString s= mDocument->getString(mCaretY - 1);
+        PSynEditFoldRange foldRange = foldStartAtLine(mCaretY);
+        if ((foldRange) && foldRange->collapsed) {
+            return s+highlighter()->foldString();
+        }
+        return s;
+    }
+    return QString();
+}
+
 QString SynEdit::lineText() const
 {
     if (mCaretY >= 1 && mCaretY <= mDocument->count())
@@ -4988,19 +5055,30 @@ void SynEdit::moveCaretHorz(int DX, bool isSelection)
 {
     BufferCoord ptO = caretXY();
     BufferCoord ptDst = ptO;
-    QString s = lineText();
+    QString s = displayLineText();
     int nLineLen = s.length();
     // only moving or selecting one char can change the line
     //bool bChangeY = !mOptions.testFlag(SynEditorOption::eoScrollPastEol);
     bool bChangeY=true;
     if (bChangeY && (DX == -1) && (ptO.Char == 1) && (ptO.Line > 1)) {
         // end of previous line
-        ptDst.Line--;
-        ptDst.Char = mDocument->getString(ptDst.Line - 1).length() + 1;
+        int row = lineToRow(ptDst.Line);
+        row--;
+        int line = rowToLine(row);
+        if (line!=ptDst.Line && line>=1) {
+            ptDst.Line = line;
+            ptDst.Char = getDisplayStringAtLine(ptDst.Line).length() + 1;
+        }
     } else if (bChangeY && (DX == 1) && (ptO.Char > nLineLen) && (ptO.Line < mDocument->count())) {
         // start of next line
-        ptDst.Line++;
-        ptDst.Char=1;
+        int row = lineToRow(ptDst.Line);
+        row++;
+        int line = rowToLine(row);
+        qDebug()<<line<<ptDst.Line;
+        if (line!=ptDst.Line && line<=mDocument->count()) {
+            ptDst.Line = line;
+            ptDst.Char = 1;
+        }
     } else {
         ptDst.Char = std::max(1, ptDst.Char + DX);
         // don't go past last char when ScrollPastEol option not set
@@ -5104,7 +5182,7 @@ void SynEdit::moveCaretToLineEnd(bool isSelection)
 {
     int vNewX;
     if (mOptions.testFlag(SynEditorOption::eoEnhanceEndKey)) {
-        QString vText = lineText();
+        QString vText = displayLineText();
         int vLastNonBlank = vText.length()-1;
         int vMinX = 0;
         while ((vLastNonBlank >= vMinX) && (vText[vLastNonBlank] == ' ' || vText[vLastNonBlank] =='\t'))
@@ -5116,7 +5194,7 @@ void SynEdit::moveCaretToLineEnd(bool isSelection)
         else
             vNewX = vText.length() + 1;
     } else
-        vNewX = lineText().length() + 1;
+        vNewX = displayLineText().length() + 1;
 
     moveCaretAndSelection(caretXY(), BufferCoord{vNewX, mCaretY}, isSelection);
 }
@@ -5152,6 +5230,17 @@ void SynEdit::setSelTextPrimitiveEx(SynSelectionMode PasteMode, const QString &V
     });
     BufferCoord BB = blockBegin();
     BufferCoord BE = blockEnd();
+    if (mActiveSelectionMode==SynSelectionMode::smNormal) {
+        PSynEditFoldRange foldRange = foldStartAtLine(BE.Line);
+        QString s = mDocument->getString(BE.Line-1);
+        if ((foldRange) && foldRange->collapsed && BE.Char>s.length()) {
+            s=s+highlighter()->foldString();
+            if (BE.Char>s.length()) {
+                BE.Line = foldRange->toLine;
+                BE.Char = mDocument->getString(BE.Line-1).length()+1;
+            }
+        }
+    }
     if (selAvail()) {
         deleteSelection(BB,BE);
         if (mActiveSelectionMode == SynSelectionMode::smColumn) {
@@ -5440,11 +5529,18 @@ void SynEdit::deleteSelection(const BufferCoord &BB, const BufferCoord &BE)
             // the selection mark.
             QString TempString = mDocument->getString(BB.Line - 1).mid(0, BB.Char - 1)
                 + mDocument->getString(BE.Line - 1).mid(BE.Char-1);
+//            bool collapsed=foldCollapsedBetween(BB.Line,BE.Line);
             // Delete all lines in the selection range.
             mDocument->deleteLines(BB.Line, BE.Line - BB.Line);
             properSetLine(BB.Line-1,TempString);
             UpdateMarks = true;
             internalSetCaretXY(BB);
+//            if (collapsed) {
+//                PSynEditFoldRange foldRange = foldStartAtLine(BB.Line);
+//                if (!foldRange
+//                        || (!foldRange->collapsed))
+//                    uncollapseAroundLine(BB.Line);
+//            }
         }
         break;
     case SynSelectionMode::smColumn:
@@ -6707,10 +6803,10 @@ void SynEdit::onLinesCleared()
 
 void SynEdit::onLinesDeleted(int index, int count)
 {
-    if (mUseCodeFolding)
-        foldOnListDeleted(index + 1, count);
     if (mHighlighter && mDocument->count() > 0)
         scanFrom(index, index+1);
+    if (mUseCodeFolding)
+        foldOnListDeleted(index + 1, count);
     invalidateLines(index + 1, INT_MAX);
     invalidateGutterLines(index + 1, INT_MAX);
 }
@@ -6784,12 +6880,16 @@ void SynEdit::setBlockEnd(BufferCoord Value)
 {
     //setActiveSelectionMode(mSelectionMode);
     Value.Line = minMax(Value.Line, 1, mDocument->count());
-    Value.Char = minMax(Value.Char, 1, mDocument->lengthOfLongestLine()+1);
     if (mActiveSelectionMode == SynSelectionMode::smNormal) {
       if (Value.Line >= 1 && Value.Line <= mDocument->count())
-          Value.Char = std::min(Value.Char, mDocument->getString(Value.Line - 1).length() + 1);
+          Value.Char = std::min(Value.Char, getDisplayStringAtLine(Value.Line).length() + 1);
       else
           Value.Char = 1;
+    } else {
+        int maxLen = mDocument->lengthOfLongestLine();
+        if (highlighter())
+            maxLen = maxLen+stringColumns(highlighter()->foldString(),maxLen);
+        Value.Char = minMax(Value.Char, 1, maxLen+1);
     }
     if (Value.Char != mBlockEnd.Char || Value.Line != mBlockEnd.Line) {
         if (mActiveSelectionMode == SynSelectionMode::smColumn && Value.Char != mBlockEnd.Char) {
@@ -6878,13 +6978,17 @@ void SynEdit::setBlockBegin(BufferCoord value)
     int nInval1, nInval2;
     bool SelChanged;
     //setActiveSelectionMode(mSelectionMode);
-    value.Char = minMax(value.Char, 1, mDocument->lengthOfLongestLine()+1);
     value.Line = minMax(value.Line, 1, mDocument->count());
     if (mActiveSelectionMode == SynSelectionMode::smNormal) {
         if (value.Line >= 1 && value.Line <= mDocument->count())
-            value.Char = std::min(value.Char, mDocument->getString(value.Line - 1).length() + 1);
+            value.Char = std::min(value.Char, getDisplayStringAtLine(value.Line).length() + 1);
         else
             value.Char = 1;
+    } else {
+        int maxLen = mDocument->lengthOfLongestLine();
+        if (highlighter())
+            maxLen = maxLen+stringColumns(highlighter()->foldString(),maxLen);
+        value.Char = minMax(value.Char, 1, maxLen+1);
     }
     if (selAvail()) {
         if (mBlockBegin.Line < mBlockEnd.Line) {

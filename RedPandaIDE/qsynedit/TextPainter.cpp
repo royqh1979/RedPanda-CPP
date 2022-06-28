@@ -1046,7 +1046,7 @@ void SynEditTextPainter::PaintLines()
                 nFold = edit->stringColumns(sFold,edit->mDocument->lineColumns(vLine-1));
                 attr = edit->mHighlighter->symbolAttribute();
                 GetBraceColorAttr(edit->mHighlighter->getRangeState().braceLevel,attr);
-                AddHighlightToken(sFold,edit->mDocument->lineColumns(vLine-1)+1 - (vFirstChar - FirstCol)
+                AddHighlightToken(sFold,edit->mDocument->lineColumns(vLine-1) - (vFirstChar - FirstCol)
                   , nFold, vLine, attr);
             }
 

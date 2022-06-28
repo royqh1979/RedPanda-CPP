@@ -356,6 +356,7 @@ public:
 
     SynEditCodeFolding & codeFolding();
 
+    QString displayLineText();
     QString lineText() const;
     void setLineText(const QString s);
 
@@ -526,7 +527,8 @@ private:
     PSynEditFoldRange collapsedFoldStartAtLine(int Line);
     void doOnPaintTransientEx(SynTransientType TransientType, bool Lock);
     void initializeCaret();
-    PSynEditFoldRange foldStartAtLine(int Line);
+    PSynEditFoldRange foldStartAtLine(int Line) const;
+    bool foldCollapsedBetween(int startLine, int endLine) const;
     QString substringByColumns(const QString& s, int startColumn, int& colLen);
     PSynEditFoldRange foldAroundLine(int Line);
     PSynEditFoldRange foldAroundLineEx(int Line, bool WantCollapsed, bool AcceptFromLine, bool AcceptToLine);
@@ -614,6 +616,8 @@ private:
     void doToggleComment();
     void doToggleBlockComment();
     void doMouseScroll(bool isDragging);
+
+    QString getDisplayStringAtLine(int line) const;
 
 
 private slots:
