@@ -1623,19 +1623,30 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
                 l=0;
             } else if (mHighlighter->getClass() == SynHighlighterClass::CppHighlighter
                        && mHighlighter->isLastLineCommentNotFinished(rangePreceeding.state)
-                       && (trimmedLineText.startsWith("*"))
                        ) {
-                // last line is a not finished comment, and this line start with "*"
-                // it means this line is a docstring, should indents according to
-                // the line the comment beginning , and add 1 additional space
-                additionIndent = 1;
-                int commentStartLine = findCommentStartLine(startLine-1);
-                SynRangeState range;
-                indentSpaces = leftSpaces(mDocument->getString(commentStartLine-1));
-                range = mDocument->ranges(commentStartLine-1);
-                matchingIndents = range.matchingIndents;
-                indentAdded = true;
-                l = commentStartLine;
+                // last line is a not finished comment,
+                if  (trimmedLineText.startsWith("*")) {
+                    // this line start with "* "
+                    // it means this line is a docstring, should indents according to
+                    // the line the comment beginning , and add 1 additional space
+                    additionIndent = 1;
+                    int commentStartLine = findCommentStartLine(startLine-1);
+                    SynRangeState range;
+                    indentSpaces = leftSpaces(mDocument->getString(commentStartLine-1));
+                    range = mDocument->ranges(commentStartLine-1);
+                    matchingIndents = range.matchingIndents;
+                    indentAdded = true;
+                    l = commentStartLine;
+                } else {
+                    //add indent according to the beginning of the comment
+                    additionIndent = 0;
+                    SynRangeState range;
+                    indentSpaces = leftSpaces(startLineText);
+                    range = mDocument->ranges(startLine-1);
+                    matchingIndents = range.matchingIndents;
+                    indentAdded = true;
+                    l = startLine;
+                }
             } else if ( mHighlighter->isLastLineCommentNotFinished(statePrePre)
                         && rangePreceeding.matchingIndents.isEmpty()
                         && rangePreceeding.firstIndentThisLine>=rangePreceeding.indents.length()
@@ -2388,12 +2399,11 @@ void SynEdit::insertLine(bool moveCaret)
         rightLineText=trimLeft(rightLineText);
         indentSpaces = calcIndentSpaces(mCaretY+1,
                                         rightLineText,mOptions.testFlag(eoAutoIndent)
-                                            && notInComment);
+                                            );
     }
     QString indentSpacesForRightLineText = GetLeftSpacing(indentSpaces,true);
     mDocument->insert(mCaretY, indentSpacesForRightLineText+rightLineText);
     nLinesInserted++;
-
     mUndoList->AddChange(SynChangeReason::crLineBreak, caretXY(), caretXY(), rightLineText,
               SynSelectionMode::smNormal);
 
@@ -2402,7 +2412,7 @@ void SynEdit::insertLine(bool moveCaret)
         if (!notInComment &&
                 ( leftLineText.endsWith("/*") && rightLineText.startsWith("*/")
                  )) {
-            indentSpaces = calcIndentSpaces(mCaretY+1, "" , mOptions.testFlag(eoAutoIndent)) + tabWidth();
+            indentSpaces = calcIndentSpaces(mCaretY+1, "" , mOptions.testFlag(eoAutoIndent));
             indentSpacesForRightLineText = GetLeftSpacing(indentSpaces,true);
             mDocument->insert(mCaretY, indentSpacesForRightLineText);
             nLinesInserted++;
@@ -2891,6 +2901,32 @@ void SynEdit::doAddChar(QChar AChar)
                 QString line = mDocument->getString(oldCaretY-1);
                 if (line.length() <= oldCaretX) {
                     int indentSpaces = calcIndentSpaces(oldCaretY,line+":", true);
+                    if (indentSpaces != leftSpaces(line)) {
+                        QString newLine = GetLeftSpacing(indentSpaces,true) + trimLeft(line);
+                        mDocument->putString(oldCaretY-1,newLine);
+                        internalSetCaretXY(BufferCoord{newLine.length()+2,oldCaretY});
+                        setBlockBegin(caretXY());
+                        setBlockEnd(caretXY());
+                        mUndoList->AddChange(
+                                    SynChangeReason::crDelete,
+                                    BufferCoord{1, oldCaretY},
+                                    BufferCoord{line.length()+1, oldCaretY},
+                                    line,
+                                    SynSelectionMode::smNormal
+                                    );
+                        mUndoList->AddChange(
+                                    SynChangeReason::crInsert,
+                                    BufferCoord{1, oldCaretY},
+                                    BufferCoord{newLine.length()+1, oldCaretY},
+                                    "",
+                                    SynSelectionMode::smNormal
+                                    );
+                    }
+                }
+            } else if (AChar == '*') {
+                QString line = mDocument->getString(oldCaretY-1);
+                if (line.length() <= oldCaretX) {
+                    int indentSpaces = calcIndentSpaces(oldCaretY,line+"*", true);
                     if (indentSpaces != leftSpaces(line)) {
                         QString newLine = GetLeftSpacing(indentSpaces,true) + trimLeft(line);
                         mDocument->putString(oldCaretY-1,newLine);
@@ -5533,12 +5569,12 @@ int SynEdit::insertTextByNormalMode(const QString &Value)
     // step2: insert remaining lines of Value
     while (P < Value.length()) {
         bool notInComment = true;
-        if (mHighlighter) {
-            notInComment = !mHighlighter->isLastLineCommentNotFinished(
-                    mHighlighter->getRangeState().state)
-                && !mHighlighter->isLastLineStringNotFinished(
-                    mHighlighter->getRangeState().state);
-        }
+//        if (mHighlighter) {
+//            notInComment = !mHighlighter->isLastLineCommentNotFinished(
+//                    mHighlighter->getRangeState().state)
+//                && !mHighlighter->isLastLineStringNotFinished(
+//                    mHighlighter->getRangeState().state);
+//        }
         if (Value[P] == '\r')
             P++;
         if (Value[P] == '\n')

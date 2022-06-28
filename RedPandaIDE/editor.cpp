@@ -2709,6 +2709,8 @@ void Editor::insertCodeSnippet(const QString &code)
     auto action = finally([this]{
         endUpdate();
     });
+    if (selAvail())
+        setSelText("");
     QStringList sl = textToLines(parseMacros(code));
     int lastI=0;
 //    int spaceCount = GetLeftSpacing(

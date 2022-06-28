@@ -1,3 +1,7 @@
+Red Panda C++ Version 1.1.3
+
+  - fix: wrong auto indent calculation for comments
+
 Red Panda C++ Version 1.1.2
   - enhancement: use different color to differenciate folder and headers in completion popup window
   - enhancement: auto add "/" to folder when completing #include headers
