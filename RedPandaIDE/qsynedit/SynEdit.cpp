@@ -1638,11 +1638,12 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
                     indentAdded = true;
                     l = commentStartLine;
                 } else {
-                    //add indent according to the beginning of the comment
+                    //indents according to the beginning of the comment and 2 additional space
                     additionIndent = 0;
+                    int commentStartLine = findCommentStartLine(startLine-1);
                     SynRangeState range;
-                    indentSpaces = leftSpaces(startLineText);
-                    range = mDocument->ranges(startLine-1);
+                    indentSpaces = leftSpaces(mDocument->getString(commentStartLine-1))+2;
+                    range = mDocument->ranges(commentStartLine-1);
                     matchingIndents = range.matchingIndents;
                     indentAdded = true;
                     l = startLine;

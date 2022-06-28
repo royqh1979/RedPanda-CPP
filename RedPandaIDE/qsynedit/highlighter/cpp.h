@@ -213,6 +213,10 @@ public:
     // SynHighlighter interface
 public:
     QSet<QString> keywords() const override;
+
+    // SynHighlighter interface
+public:
+    QString foldString() override;
 };
 
 #endif // SYNEDITCPPHIGHLIGHTER_H

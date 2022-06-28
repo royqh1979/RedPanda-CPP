@@ -1042,7 +1042,7 @@ void SynEditTextPainter::PaintLines()
             // Paint folding
             foldRange = edit->foldStartAtLine(vLine);
             if ((foldRange) && foldRange->collapsed) {
-                sFold = " ... } ";
+                sFold = edit->highlighter()->foldString();
                 nFold = edit->stringColumns(sFold,edit->mDocument->lineColumns(vLine-1));
                 attr = edit->mHighlighter->symbolAttribute();
                 GetBraceColorAttr(edit->mHighlighter->getRangeState().braceLevel,attr);

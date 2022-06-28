@@ -144,6 +144,8 @@ public:
     virtual QString languageName() = 0;
     virtual SynHighlighterLanguage language() = 0;
 
+    virtual QString foldString();
+
     virtual bool isSpaceChar(const QChar& ch);
     virtual bool isWordBreakChar(const QChar& ch);
     bool enabled() const;

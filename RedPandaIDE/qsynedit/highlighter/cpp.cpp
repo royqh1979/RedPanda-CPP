@@ -1687,3 +1687,8 @@ QSet<QString> SynEditCppHighlighter::keywords() const
 {
     return Keywords;
 }
+
+QString SynEditCppHighlighter::foldString()
+{
+    return "...}";
+}

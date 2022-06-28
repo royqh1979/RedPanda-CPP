@@ -85,6 +85,11 @@ QSet<QString> SynHighlighter::keywords() const
     return QSet<QString>();
 }
 
+QString SynHighlighter::foldString()
+{
+    return " ... }";
+}
+
 bool SynHighlighter::isSpaceChar(const QChar &ch)
 {
     return ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n';
