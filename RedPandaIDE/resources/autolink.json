@@ -33,6 +33,11 @@
         "links": "-lraylib -lopengl32 -lgdi32 -lwinmm"
     },
     {
+        "execUseUTF8": false,
+        "header": "tinyfiledialogs.h",
+        "links": "-ltinyfiledialogs -lcomdlg32 -lole32"
+    },
+    {
         "header": "rdrawing.h",
         "links": "-lrdrawing"
     },
