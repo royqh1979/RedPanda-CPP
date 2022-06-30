@@ -5,6 +5,7 @@ Red Panda C++ Version 1.1.3
   - enhancement: copy the whole folded code block
   - enhancement: delete the whole folded code block
   - fix: correctly update the folding state of code block, when deleted
+  - change: just show one function hint for overloaded functions
 
 Red Panda C++ Version 1.1.2
   - enhancement: use different color to differenciate folder and headers in completion popup window

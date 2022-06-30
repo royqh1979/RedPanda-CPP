@@ -3418,6 +3418,7 @@ QString Editor::getParserHint(const QStringList& expression,const QString &/*s*/
 {
     // This piece of code changes the parser database, possibly making hints and code completion invalid...
     QString result;
+    // Exit early, don't bother creating a stream (which is slow)
     PStatement statement = mParser->findStatementOf(
                 mFilename,expression,
                 line);
@@ -3427,21 +3428,27 @@ QString Editor::getParserHint(const QStringList& expression,const QString &/*s*/
             || statement->kind == StatementKind::skConstructor
             || statement->kind == StatementKind::skDestructor) {
         PStatement parentScope = statement->parentScope.lock();
-        if (parentScope && parentScope->kind == StatementKind::skNamespace) {
-            PStatementList namespaceStatementsList =
-                    mParser->findNamespace(parentScope->command);
-            if (namespaceStatementsList) {
-                foreach (const PStatement& namespaceStatement, *namespaceStatementsList) {
-                    QString hint = getHintForFunction(statement,namespaceStatement,
-                                                      mFilename,line);
-                    if (!hint.isEmpty()) {
-                        if (!result.isEmpty())
-                            result += "<BR />";
-                        result += hint;
-                    }
-                }
-            }
-        } else
+//        if (parentScope && parentScope->kind == StatementKind::skNamespace) {
+//            PStatementList namespaceStatementsList =
+//                    mParser->findNamespace(parentScope->command);
+//            if (namespaceStatementsList) {
+//                int counts=0;
+//                foreach (const PStatement& namespaceStatement, *namespaceStatementsList) {
+//                    QString hint = getHintForFunction(statement,namespaceStatement,
+//                                                      mFilename,line);
+//                    if (!hint.isEmpty()) {
+//                        counts++;
+//                        if (!result.isEmpty())
+//                            result += "\n";
+//                        if (counts>4) {
+//                            result += "...";
+//                            break;
+//                        }
+//                        result += hint;
+//                    }
+//                }
+//            }
+//        } else
           result = getHintForFunction(statement, parentScope,
                                       mFilename,line);
     } else if (statement->line>0) {
@@ -3489,22 +3496,26 @@ QString Editor::getErrorHint(const PSyntaxIssue& issue)
 
 QString Editor::getHintForFunction(const PStatement &statement, const PStatement &scopeStatement, const QString& filename, int line)
 {
+    QFileInfo fileInfo(statement->fileName);
     QString result;
-    const StatementMap& children = mParser->statementList().childrenStatements(scopeStatement);
-    foreach (const PStatement& childStatement, children){
-        if (statement->command == childStatement->command
-                && statement->kind == childStatement->kind) {
-            if ((line < childStatement->line) &&
-                    childStatement->fileName == filename)
-                continue;
-            if (!result.isEmpty())
-                result += "<BR />";
-            QFileInfo fileInfo(childStatement->fileName);
-            result = mParser->prettyPrintStatement(childStatement,filename,line) + " - "
-                    + QString("%1(%2) ").arg(fileInfo.fileName()).arg(childStatement->line)
-                    + tr("Ctrl+click for more info");
-        }
-    }
+    result = mParser->prettyPrintStatement(statement,filename,line) + " - "
+            + QString("%1(%2) ").arg(fileInfo.fileName()).arg(statement->line)
+            + tr("Ctrl+click for more info");
+//    const StatementMap& children = mParser->statementList().childrenStatements(scopeStatement);
+//    foreach (const PStatement& childStatement, children){
+//        if (statement->command == childStatement->command
+//                && statement->kind == childStatement->kind) {
+//            if ((line < childStatement->line) &&
+//                    childStatement->fileName == filename)
+//                continue;
+//            if (!result.isEmpty())
+//                result += "\n";
+//            QFileInfo fileInfo(childStatement->fileName);
+//            result = mParser->prettyPrintStatement(childStatement,filename,line) + " - "
+//                    + QString("%1(%2) ").arg(fileInfo.fileName()).arg(childStatement->line)
+//                    + tr("Ctrl+click for more info");
+//        }
+//    }
     return result;
 }
 
