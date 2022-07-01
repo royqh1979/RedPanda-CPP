@@ -266,6 +266,7 @@
     <addaction name="actionWebsite"/>
     <addaction name="actionC_Reference"/>
     <addaction name="actionC_C_Reference"/>
+    <addaction name="actionRaylib_Manual"/>
     <addaction name="actionEGE_Manual"/>
     <addaction name="actionAbout"/>
    </widget>
@@ -3157,6 +3158,11 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+F10</string>
+   </property>
+  </action>
+  <action name="actionRaylib_Manual">
+   <property name="text">
+    <string>Raylib Manual</string>
    </property>
   </action>
  </widget>

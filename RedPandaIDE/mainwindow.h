@@ -691,6 +691,8 @@ private slots:
 
     void on_chkIgnoreSpaces_stateChanged(int arg1);
 
+    void on_actionRaylib_Manual_triggered();
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;

@@ -85,6 +85,10 @@
         <source>Header already exists.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>UTF-8</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>BacktraceModel</name>
@@ -4490,6 +4494,10 @@
     </message>
     <message>
         <source>Ignore Spaces</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Raylib Manual</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

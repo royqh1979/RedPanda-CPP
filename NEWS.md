@@ -6,6 +6,9 @@ Red Panda C++ Version 1.1.3
   - enhancement: delete the whole folded code block
   - fix: correctly update the folding state of code block, when deleted
   - change: just show one function hint for overloaded functions
+  - update raylib to 4.2-dev
+  - update raylib-drawing to 1.1
+  - add "raylib manual" in the help menu
 
 Red Panda C++ Version 1.1.2
   - enhancement: use different color to differenciate folder and headers in completion popup window

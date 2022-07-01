@@ -7967,3 +7967,13 @@ void MainWindow::on_chkIgnoreSpaces_stateChanged(int /*arg1*/)
 }
 
 
+
+void MainWindow::on_actionRaylib_Manual_triggered()
+{
+    if (pSettings->environment().language()=="zh_CN") {
+        QDesktopServices::openUrl(QUrl("https://zhuanlan.zhihu.com/p/458335134"));
+    } else {
+        QDesktopServices::openUrl(QUrl("https://www.raylib.com/"));
+    }
+}
+
