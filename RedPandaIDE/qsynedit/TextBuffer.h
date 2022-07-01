@@ -161,24 +161,29 @@ private:
     int calculateLineColumns(int Index);
 };
 
-enum class SynChangeReason {crInsert, crPaste, crDragDropInsert,
+enum class SynChangeReason {
+    crInsert,
+    crDelete,
+    crCaret, //just restore the Caret, allowing better Undo behavior
+    crSelection, //restore Selection
+    crGroupBreak,
+    crLeftTop,
+    crLineBreak,
+    crMoveSelectionUp,
+    crMoveSelectionDown
   //several undo entries can be chained together via the ChangeNumber
   //see also TCustomSynEdit.[Begin|End]UndoBlock methods
-  crDeleteAfterCursor, crDelete,
-  crLineBreak, crIndent, crUnindent,
-  crSilentDelete, crSilentDeleteAfterCursor,
-  crAutoCompleteBegin, crAutoCompleteEnd,
-  crPasteBegin, crPasteEnd, //for pasting, since it might do a lot of operations
-  crSpecial1Begin, crSpecial1End,
-  crSpecial2Begin, crSpecial2End,
-  crLeftTop,
-  crCaret, //just restore the Caret, allowing better Undo behavior
-  crSelection, //restore Selection
-  crNothing,
-  crGroupBreak,
-  crDeleteAll,
-  crMoveSelectionUp,
-  crMoveSelectionDown
+//  crDeleteAfterCursor,
+//  crLineBreak, crIndent, crUnindent,
+//  crSilentDelete, crSilentDeleteAfterCursor,
+//  crAutoCompleteBegin, crAutoCompleteEnd,
+//  crPasteBegin, crPasteEnd, //for pasting, since it might do a lot of operations
+//  crSpecial1Begin, crSpecial1End,
+//  crSpecial2Begin, crSpecial2End,
+
+//  crNothing,
+//  crDeleteAll,
+
   };
 class SynEditUndoItem {
 private:
