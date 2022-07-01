@@ -1,9 +1,0 @@
-Package: RedPanda-IDE
-Version: 0.13.2
-Section: devel
-Priority: optional
-Architecture: amd64
-Essential: no
-Maintainer: royqh1979@gmail.com
-Description: Red Panda C++. A QT-based lightweighted C/C++ editor
-Depends: gcc, g++, gdb, gdbserver, make, qterminal, libqt5gui5, libqt5widgets5, libqt5svg5
