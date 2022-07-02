@@ -1,3 +1,13 @@
+Red Panda C++ Version 1.1.4
+
+  - enhancement: prohibit move selection up/down under column mode
+  - enhancement: prohibit move selection up/down when the last line in selection is a folded code blocks
+  - enhancement: check validity of selection in column mode when moving caret by keyboard
+  - enhancement: check validity of selection in column mode when moving caret by mouse
+  - enhancement: only allow insert linebreak at the end of folded code block
+  - enhancement: only allow delete whole folded code block
+  - refactor of undo system
+
 Red Panda C++ Version 1.1.3
 
   - fix: wrong auto indent calculation for comments

@@ -653,8 +653,13 @@ QStringList splitStrings(const QString &text)
     while(i<text.length()) {
         if (text[i]=='\n' || text[i]=='\r') {
             list.append(text.mid(start,i-start));
-            i++;
-            while (i<text.length() && (text[i]=='\n' || text[i]=='\r'))                i++;
+            if (text[i]=='\r') {
+                i++;
+                if (i<text.length() && text[i]=='\n')
+                    i++;
+            } else {
+                i++;
+            }
             start=i;
         } else {
             i++;

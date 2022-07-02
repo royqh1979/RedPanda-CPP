@@ -559,7 +559,7 @@ private:
     void properSetLine(int ALine, const QString& ALineText, bool notify = true);
 
     //primitive edit operations
-    void doDeleteText(const BufferCoord& startPos, const BufferCoord& endPos, SynSelectionMode mode);
+    void doDeleteText(BufferCoord startPos, BufferCoord endPos, SynSelectionMode mode);
     void doInsertText(const BufferCoord& pos, const QStringList& text, SynSelectionMode mode, int startLine, int endLine);
     int doInsertTextByNormalMode(const BufferCoord& pos, const QStringList& text, BufferCoord &newPos);
     int doInsertTextByColumnMode(const BufferCoord& pos, const QStringList& text, BufferCoord &newPos, int startLine, int endLine);
