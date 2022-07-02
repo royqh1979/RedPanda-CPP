@@ -97,8 +97,7 @@ public:
     void exchange(int Index1, int Index2);
     void insert(int Index, const QString& s);
     void insertLines(int Index, int NumLines);
-    void insertStrings(int Index, const QStringList& NewStrings);
-    void insertText(int Index,const QString& NewText);
+
     void loadFromFile(const QString& filename, const QByteArray& encoding, QByteArray& realEncoding);
     void saveToFile(QFile& file, const QByteArray& encoding,
                     const QByteArray& defaultEncoding, QByteArray& realEncoding);

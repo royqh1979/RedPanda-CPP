@@ -500,40 +500,6 @@ void SynDocument::insertLines(int Index, int NumLines)
     emit inserted(Index,NumLines);
 }
 
-void SynDocument::insertStrings(int Index, const QStringList &NewStrings)
-{
-    QMutexLocker locker(&mMutex);
-    if (Index<0 || Index>mLines.count()) {
-        ListIndexOutOfBounds(Index);
-    }
-    if (NewStrings.isEmpty())
-        return;
-    beginUpdate();
-    auto action = finally([this]{
-        endUpdate();
-    });
-    mIndexOfLongestLine = -1;
-    PSynDocumentLine line;
-    mLines.insert(Index,NewStrings.length(),line);
-    for (int i=0;i<NewStrings.length();i++) {
-        line = std::make_shared<SynDocumentLine>();
-        line->fString = NewStrings[i];
-        mLines[i+Index]=line;
-    }
-    emit inserted(Index,NewStrings.length());
-}
-
-void SynDocument::insertText(int Index, const QString &NewText)
-{
-    QMutexLocker locker(&mMutex);
-    if (Index<0 || Index>=mLines.count()) {
-        ListIndexOutOfBounds(Index);
-    }
-    if (NewText.isEmpty())
-        return;
-    QStringList lines = textToLines(NewText);
-    insertStrings(Index,lines);
-}
 
 bool SynDocument::tryLoadFileByEncoding(QByteArray encodingName, QFile& file) {
     QTextCodec* codec = QTextCodec::codecForName(encodingName);

@@ -270,6 +270,7 @@ public:
     void endUndoBlock();
     void addCaretToUndo();
     void addLeftTopToUndo();
+    void addSelectionToUndo();
     void replaceAll(const QString& text) {
         mUndoList->AddChange(SynChangeReason::crSelection,mBlockBegin,mBlockEnd,QStringList(), activeSelectionMode());
         selectAll();

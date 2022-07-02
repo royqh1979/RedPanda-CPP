@@ -645,3 +645,22 @@ BufferCoord maxBufferCoord(const BufferCoord &P1, const BufferCoord &P2)
       return P1;
     }
 }
+
+QStringList splitStrings(const QString &text)
+{
+    QStringList list;
+    int start=0,i=0;
+    while(i<text.length()) {
+        if (text[i]=='\n' || text[i]=='\r') {
+            list.append(text.mid(start,i-start));
+            i++;
+            while (i<text.length() && (text[i]=='\n' || text[i]=='\r'))                i++;
+            start=i;
+        } else {
+            i++;
+        }
+    }
+    if (i>=start)
+        list.append(text.mid(start,i));
+    return list;
+}

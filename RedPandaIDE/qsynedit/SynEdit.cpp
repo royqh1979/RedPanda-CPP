@@ -462,7 +462,7 @@ void SynEdit::endUndoBlock()
 void SynEdit::addCaretToUndo()
 {
     BufferCoord p=caretXY();
-    mUndoList->AddChange(SynChangeReason::crCaret,p,p,QStringList(), activeSelectionMode());
+    mUndoList->AddChange(SynChangeReason::crCaret,p,p,QStringList(), mActiveSelectionMode);
 }
 
 void SynEdit::addLeftTopToUndo()
@@ -470,7 +470,13 @@ void SynEdit::addLeftTopToUndo()
     BufferCoord p;
     p.Char = leftChar();
     p.Line = topLine();
-    mUndoList->AddChange(SynChangeReason::crLeftTop,p,p,QStringList(), activeSelectionMode());
+    mUndoList->AddChange(SynChangeReason::crLeftTop,p,p,QStringList(), mActiveSelectionMode);
+}
+
+void SynEdit::addSelectionToUndo()
+{
+    mUndoList->AddChange(SynChangeReason::crSelection,mBlockBegin,
+                         mBlockEnd,QStringList(),mActiveSelectionMode);
 }
 
 void SynEdit::beginUpdate()
@@ -2165,19 +2171,41 @@ void SynEdit::doDeleteFromBOL()
 
 void SynEdit::doDeleteLine()
 {
-    if (!mReadOnly && (mDocument->count() > 0)
-            && ! ((mCaretY == mDocument->count()) && (lineText().isEmpty()))) {
+    if (!mReadOnly && (mDocument->count() > 0)) {
         doOnPaintTransient(SynTransientType::ttBefore);
+        mUndoList->BeginBlock();
+        mUndoList->AddChange(SynChangeReason::crCaret,
+                             caretXY(),
+                             caretXY(),
+                             QStringList(),
+                             mActiveSelectionMode);
+        mUndoList->AddChange(SynChangeReason::crSelection,
+                             mBlockBegin,
+                             mBlockEnd,
+                             QStringList(),
+                             mActiveSelectionMode);
         if (selAvail())
             setBlockBegin(caretXY());
-        QStringList helper;
-        helper.append(lineText());
+        QStringList helper(lineText());
         if (mCaretY == mDocument->count()) {
-            mDocument->putString(mCaretY - 1,"");
-            mUndoList->AddChange(SynChangeReason::crDelete,
-                                 BufferCoord{1, mCaretY},
-                                 BufferCoord{helper.length() + 1, mCaretY},
-                                 helper, SynSelectionMode::smNormal);
+            if (mDocument->count()==1) {
+                mDocument->putString(mCaretY - 1,"");
+                mUndoList->AddChange(SynChangeReason::crDelete,
+                                     BufferCoord{1, mCaretY},
+                                     BufferCoord{helper.length() + 1, mCaretY},
+                                     helper, SynSelectionMode::smNormal);
+            } else {
+                QString s = mDocument->getString(mCaretY-2);
+                mDocument->deleteAt(mCaretY - 1);
+                helper.insert(0,"");
+                qDebug()<<helper;
+                mUndoList->AddChange(SynChangeReason::crDelete,
+                                     BufferCoord{s.length()+1, mCaretY-1},
+                                     BufferCoord{helper.length() + 1, mCaretY},
+                                     helper, SynSelectionMode::smNormal);
+                doLinesDeleted(mCaretY, 1);
+                mCaretY--;
+            }
         } else {
             mDocument->deleteAt(mCaretY - 1);
             helper.append("");
@@ -2187,6 +2215,7 @@ void SynEdit::doDeleteLine()
                                  helper, SynSelectionMode::smNormal);
             doLinesDeleted(mCaretY, 1);
         }
+        mUndoList->EndBlock();
         internalSetCaretXY(BufferCoord{1, mCaretY}); // like seen in the Delphi editor
         doOnPaintTransient(SynTransientType::ttAfter);
     }
@@ -2212,10 +2241,11 @@ void SynEdit::doDuplicateLine()
         mUndoList->AddChange(SynChangeReason::crCaret,
                              caretXY(),caretXY(),QStringList(),SynSelectionMode::smNormal);
         mUndoList->AddChange(SynChangeReason::crLineBreak,
-                             caretXY(), caretXY(), QStringList(), SynSelectionMode::smNormal);
-        mUndoList->AddChange(SynChangeReason::crInsert,
-                             BufferCoord{1,mCaretY},
+                             BufferCoord{s.length()+1,mCaretY},
                              BufferCoord{s.length()+1,mCaretY}, QStringList(), SynSelectionMode::smNormal);
+        mUndoList->AddChange(SynChangeReason::crInsert,
+                             BufferCoord{1,mCaretY+1},
+                             BufferCoord{s.length()+1,mCaretY+1}, QStringList(), SynSelectionMode::smNormal);
         mUndoList->EndBlock();
         internalSetCaretXY(BufferCoord{1, mCaretY}); // like seen in the Delphi editor
         doOnPaintTransient(SynTransientType::ttAfter);
@@ -3006,7 +3036,8 @@ void SynEdit::doPasteFromClipboard()
     BufferCoord vEndOfBlock = blockEnd();
     mBlockBegin = vStartOfBlock;
     mBlockEnd = vEndOfBlock;
-    setSelTextPrimitive(textToLines(text));
+    qDebug()<<textToLines(text);
+    setSelTextPrimitive(splitStrings(text));
     mUndoList->EndBlock();
 }
 
@@ -4332,6 +4363,9 @@ void SynEdit::doUndoItem()
         case SynChangeReason::crDelete: {
             // If there's no selection, we have to set
             // the Caret's position manualy.
+            qDebug()<<"undo delete";
+            qDebug()<<Item->changeText();
+            qDebug()<<Item->changeStartPos().Line<<Item->changeStartPos().Char;
             doInsertText(Item->changeStartPos(),Item->changeText(),Item->changeSelMode());
             internalSetCaretXY(Item->changeEndPos());
             mRedoList->AddChange(
@@ -5094,7 +5128,7 @@ void SynEdit::doSetSelText(const QString &value)
     BufferCoord EndOfBlock = blockEnd();
     mBlockBegin = StartOfBlock;
     mBlockEnd = EndOfBlock;
-    setSelTextPrimitive(textToLines(value));
+    setSelTextPrimitive(splitStrings(value));
 }
 
 int SynEdit::searchReplace(const QString &sSearch, const QString &sReplace, SynSearchOptions sOptions, PSynSearchBase searchEngine,
@@ -5329,6 +5363,9 @@ void SynEdit::doDeleteText(const BufferCoord &startPos, const BufferCoord &endPo
     bool UpdateMarks = false;
     int MarkOffset = 0;
     QStringList deleted=getContent(startPos,endPos,mode);
+    qDebug()<<"D----";
+    qDebug()<<deleted;
+
     switch(mode) {
     case SynSelectionMode::smNormal:
         if (mDocument->count() > 0) {
@@ -5429,19 +5466,20 @@ int SynEdit::doInsertTextByNormalMode(const BufferCoord& pos, const QStringList&
 
     QString sLeftSide;
     QString sRightSide;
-    QString Str;
+    QString str;
     bool bChangeScroll;
 //    int SpaceCount;
     int result = 0;
     int startLine = pos.Line;
-    sLeftSide = lineText().mid(0, pos.Char - 1);
+    QString line=mDocument->getString(pos.Line-1);
+    sLeftSide = line.mid(0, pos.Char - 1);
     if (pos.Char - 1 > sLeftSide.length()) {
         if (stringIsBlank(sLeftSide))
             sLeftSide = GetLeftSpacing(displayX() - 1, true);
         else
             sLeftSide += QString(pos.Char - 1 - sLeftSide.length(),' ');
     }
-    sRightSide = lineText().mid(pos.Char - 1);
+    sRightSide = line.mid(pos.Char - 1);
 //    if (mUndoing) {
 //        SpaceCount = 0;
 //    } else {
@@ -5450,19 +5488,19 @@ int SynEdit::doInsertTextByNormalMode(const BufferCoord& pos, const QStringList&
     int caretY=pos.Line;
     // step1: insert the first line of Value into current line
     if (text.length()>1) {
-        if (mHighlighter && mOptions.testFlag(eoAutoIndent)) {
+        if (!mUndoing && mHighlighter && mOptions.testFlag(eoAutoIndent)) {
             QString s = trimLeft(text[0]);
             if (sLeftSide.isEmpty()) {
                 sLeftSide = GetLeftSpacing(calcIndentSpaces(caretY,s,true),true);
             }
-            Str = sLeftSide + s;
+            str = sLeftSide + s;
         } else
-            Str = sLeftSide + text[0];
-        properSetLine(caretY - 1, Str);
+            str = sLeftSide + text[0];
+        properSetLine(caretY - 1, str);
         mDocument->insertLines(caretY, text.length()-1);
     } else {
-        Str = sLeftSide + text[0] + sRightSide;
-        properSetLine(caretY - 1, Str);
+        str = sLeftSide + text[0] + sRightSide;
+        properSetLine(caretY - 1, str);
     }
     rescanRange(caretY);
     // step2: insert remaining lines of Value
@@ -5474,28 +5512,28 @@ int SynEdit::doInsertTextByNormalMode(const BufferCoord& pos, const QStringList&
 //                && !mHighlighter->isLastLineStringNotFinished(
 //                    mHighlighter->getRangeState().state);
 //        }
-//        caretY++;
+        caretY=pos.Line+i;
 //        mStatusChanges.setFlag(SynStatusChange::scCaretY);
         if (text[i].isEmpty()) {
             if (i==text.length()-1) {
-                Str = sRightSide;
+                str = sRightSide;
             } else {
-                if (mHighlighter && mOptions.testFlag(eoAutoIndent) && notInComment) {
-                    Str = GetLeftSpacing(calcIndentSpaces(caretY,"",true),true);
+                if (!mUndoing && mHighlighter && mOptions.testFlag(eoAutoIndent) && notInComment) {
+                    str = GetLeftSpacing(calcIndentSpaces(caretY,"",true),true);
                 } else {
-                    Str = "";
+                    str = "";
                 }
             }
         } else {
-            Str = text[i];
+            str = text[i];
             if (i==text.length()-1)
-                Str += sRightSide;
-            if (mHighlighter && mOptions.testFlag(eoAutoIndent) && notInComment) {
-                int indentSpaces = calcIndentSpaces(caretY,Str,true);
-                Str = GetLeftSpacing(indentSpaces,true)+trimLeft(Str);
+                str += sRightSide;
+            if (!mUndoing && mHighlighter && mOptions.testFlag(eoAutoIndent) && notInComment) {
+                int indentSpaces = calcIndentSpaces(caretY,str,true);
+                str = GetLeftSpacing(indentSpaces,true)+trimLeft(str);
             }
         }
-        properSetLine(caretY - 1, Str,false);
+        properSetLine(caretY - 1, str,false);
         rescanRange(caretY);
         result++;
     }
@@ -5506,17 +5544,16 @@ int SynEdit::doInsertTextByNormalMode(const BufferCoord& pos, const QStringList&
             mOptions.setFlag(eoScrollPastEol,false);
     });
     if (mOptions.testFlag(eoTrimTrailingSpaces) && (sRightSide == "")) {
-        newPos=BufferCoord{lineText().length()+1,caretY};
+        newPos=BufferCoord{mDocument->getString(caretY-1).length()+1,caretY};
     } else
-        newPos=BufferCoord{Str.length() - sRightSide.length()+1,caretY};
+        newPos=BufferCoord{str.length() - sRightSide.length()+1,caretY};
+    onLinesPutted(startLine-1,result+1);
     if (!mUndoing) {
         mUndoList->AddChange(
                     SynChangeReason::crInsert,
                     pos,newPos,
                     QStringList(),SynSelectionMode::smNormal);
     }
-
-    onLinesPutted(startLine-1,result+1);
     return result;
 }
 
@@ -6389,35 +6426,34 @@ void SynEdit::dropEvent(QDropEvent *event)
 
     BufferCoord coord = displayToBufferPos(pixelsToNearestRowColumn(event->pos().x(),
                                                                     event->pos().y()));
-    setCaretXY(coord);
     if (coord>=mDragSelBeginSave && coord<=mDragSelEndSave) {
         //do nothing if drag onto itself
-    } else if (event->proposedAction() == Qt::DropAction::CopyAction) {
+        event->acceptProposedAction();
+        mDropped = true;
+        return;
+    }
+    int topLine = mTopLine;
+    int leftChar = mLeftChar;
+    QStringList text=splitStrings(event->mimeData()->text());
+    mUndoList->BeginBlock();
+    addLeftTopToUndo();
+    addCaretToUndo();
+    addSelectionToUndo();
+    internalSetCaretXY(coord);
+    if (event->proposedAction() == Qt::DropAction::CopyAction) {
         //just copy it
-        setSelText(event->mimeData()->text());
+        doInsertText(coord,text,mActiveSelectionMode);
     } else if (event->proposedAction() == Qt::DropAction::MoveAction)  {
-        int topLine = mTopLine;
-        int leftChar = mLeftChar;
-        mUndoList->BeginBlock();
         if (coord < mDragSelBeginSave ) {
             //delete old
-            setBlockBegin(mDragSelBeginSave);
-            setBlockEnd(mDragSelEndSave);
-            setSelText("");
+            doDeleteText(mDragSelBeginSave,mDragSelEndSave,mActiveSelectionMode);
             //paste to new position
-            setTopLine(topLine);
-            setLeftChar(leftChar);
-            setCaretXY(coord);
-            setSelText(event->mimeData()->text());
+            doInsertText(coord,text,mActiveSelectionMode);
         } else {
             //paste to new position
-            setTopLine(topLine);
-            setLeftChar(leftChar);
-            setSelText(event->mimeData()->text());
+            doInsertText(coord,text,mActiveSelectionMode);
             //delete old
-            setBlockBegin(mDragSelBeginSave);
-            setBlockEnd(mDragSelEndSave);
-            setSelText("");
+            doDeleteText(mDragSelBeginSave,mDragSelEndSave,mActiveSelectionMode);
             //set caret to right pos
             if (mDragSelBeginSave.Line == mDragSelEndSave.Line) {
                 if (coord.Line == mDragSelEndSave.Line) {
@@ -6431,14 +6467,15 @@ void SynEdit::dropEvent(QDropEvent *event)
                     topLine -= mDragSelEndSave.Line-mDragSelBeginSave.Line;
                 }
             }
-            setTopLine(topLine);
-            setLeftChar(leftChar);
-            setCaretXY(coord);
         }
         mUndoList->EndBlock();
+
     }
     event->acceptProposedAction();
     mDropped = true;
+    setTopLine(topLine);
+    setLeftChar(leftChar);
+    internalSetCaretXY(coord);
 }
 
 void SynEdit::dragMoveEvent(QDragMoveEvent *event)

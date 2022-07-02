@@ -81,6 +81,8 @@ int StrRScanForCharInSet(const QString& Line, int Start, const QSet<QChar>&  ACh
 int GetEOL(const QString& Line, int start);
 int CountLines(const QString& Line, int start);
 
+QStringList splitStrings(const QString& text);
+
 // Remove all '/' characters from string by changing them into '\.'.
 // Change all '\' characters into '\\' to allow for unique decoding.
 QString EncodeString(const QString & s);
