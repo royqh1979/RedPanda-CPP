@@ -664,3 +664,8 @@ QStringList splitStrings(const QString &text)
         list.append(text.mid(start,i));
     return list;
 }
+
+int calSpanLines(const BufferCoord &startPos, const BufferCoord &endPos)
+{
+    return std::abs(endPos.Line - startPos.Line+1);
+}

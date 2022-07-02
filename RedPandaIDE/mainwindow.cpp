@@ -463,7 +463,7 @@ void MainWindow::updateEditorActions()
         ui->actionConvert_to_UTF_8_BOM->setEnabled(e->encodingOption()!=ENCODING_UTF8_BOM && e->fileEncoding()!=ENCODING_UTF8_BOM);
 
         ui->actionCopy->setEnabled(e->selAvail());
-        ui->actionCut->setEnabled(e->selAvail());
+        ui->actionCut->setEnabled(true);
         ui->actionFoldAll->setEnabled(e->document()->count()>0);
         ui->actionIndent->setEnabled(!e->readOnly());
 

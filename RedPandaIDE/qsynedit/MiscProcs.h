@@ -83,6 +83,8 @@ int CountLines(const QString& Line, int start);
 
 QStringList splitStrings(const QString& text);
 
+int calSpanLines(const BufferCoord& startPos, const BufferCoord& endPos);
+
 // Remove all '/' characters from string by changing them into '\.'.
 // Change all '\' characters into '\\' to allow for unique decoding.
 QString EncodeString(const QString & s);

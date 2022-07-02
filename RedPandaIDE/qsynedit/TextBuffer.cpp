@@ -874,8 +874,8 @@ void SynEditUndoList::AddGroupBreak()
 {
     //Add the GroupBreak even if ItemCount = 0. Since items are stored in
     //reverse order in TCustomSynEdit.fRedoList, a GroupBreak could be lost.
-    if (LastChangeReason() != SynChangeReason::crNothing) {
-        AddChange(SynChangeReason::crNothing, {0,0}, {0,0}, QStringList(), SynSelectionMode::smNormal);
+    if (LastChangeReason() != SynChangeReason::crGroupBreak) {
+        AddChange(SynChangeReason::crGroupBreak, {0,0}, {0,0}, QStringList(), SynSelectionMode::smNormal);
     }
 }
 
@@ -958,7 +958,7 @@ void SynEditUndoList::PushItem(PSynEditUndoItem Item)
         return;
     mItems.append(Item);
     ensureMaxEntries();
-    if (Item->changeReason()!= SynChangeReason::crNothing)
+    if (Item->changeReason()!= SynChangeReason::crGroupBreak)
         emit addedUndo();
 }
 

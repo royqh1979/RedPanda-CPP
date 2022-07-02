@@ -165,24 +165,12 @@ enum class SynChangeReason {
     crDelete,
     crCaret, //just restore the Caret, allowing better Undo behavior
     crSelection, //restore Selection
-    crNothing,
+    crGroupBreak,
     crLeftTop,
     crLineBreak,
     crMoveSelectionUp,
-    crMoveSelectionDown
-  //several undo entries can be chained together via the ChangeNumber
-  //see also TCustomSynEdit.[Begin|End]UndoBlock methods
-//  crDeleteAfterCursor,
-//  crLineBreak, crIndent, crUnindent,
-//  crSilentDelete, crSilentDeleteAfterCursor,
-//  crAutoCompleteBegin, crAutoCompleteEnd,
-//  crPasteBegin, crPasteEnd, //for pasting, since it might do a lot of operations
-//  crSpecial1Begin, crSpecial1End,
-//  crSpecial2Begin, crSpecial2End,
-
-//  crNothing,
-//  crDeleteAll,
-
+    crMoveSelectionDown,
+    crNothing
   };
 class SynEditUndoItem {
 private:

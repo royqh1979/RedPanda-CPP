@@ -560,12 +560,10 @@ private:
 
     //primitive edit operations
     void doDeleteText(const BufferCoord& startPos, const BufferCoord& endPos, SynSelectionMode mode);
-    void doInsertText(const BufferCoord& pos, const QStringList& text, SynSelectionMode mode);
+    void doInsertText(const BufferCoord& pos, const QStringList& text, SynSelectionMode mode, int startLine, int endLine);
     int doInsertTextByNormalMode(const BufferCoord& pos, const QStringList& text, BufferCoord &newPos);
-    int doInsertTextByColumnMode(const BufferCoord& pos, const QStringList& text, BufferCoord &newPos);
+    int doInsertTextByColumnMode(const BufferCoord& pos, const QStringList& text, BufferCoord &newPos, int startLine, int endLine);
     int doInsertTextByLineMode(const BufferCoord& pos, const QStringList& text, BufferCoord &newPos);
-
-
 
     void deleteFromTo(const BufferCoord& start, const BufferCoord& end);
     void setSelWord();
