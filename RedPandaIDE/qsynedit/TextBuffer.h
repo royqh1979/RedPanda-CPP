@@ -166,7 +166,7 @@ enum class SynChangeReason {
     crDelete,
     crCaret, //just restore the Caret, allowing better Undo behavior
     crSelection, //restore Selection
-    crGroupBreak,
+    crNothing,
     crLeftTop,
     crLineBreak,
     crMoveSelectionUp,
@@ -191,21 +191,21 @@ private:
     SynSelectionMode mChangeSelMode;
     BufferCoord mChangeStartPos;
     BufferCoord mChangeEndPos;
-    QString mChangeStr;
+    QStringList mChangeText;
     int mChangeNumber;
 public:
     SynEditUndoItem(SynChangeReason reason,
         SynSelectionMode selMode,
         BufferCoord startPos,
         BufferCoord endPos,
-        const QString& str,
+        const QStringList& text,
         int number);
 
     SynChangeReason changeReason() const;
     SynSelectionMode changeSelMode() const;
     BufferCoord changeStartPos() const;
     BufferCoord changeEndPos() const;
-    QString changeStr() const;
+    QStringList changeText() const;
     int changeNumber() const;
 };
 using PSynEditUndoItem = std::shared_ptr<SynEditUndoItem>;
@@ -216,7 +216,7 @@ public:
     explicit SynEditUndoList();
 
     void AddChange(SynChangeReason AReason, const BufferCoord& AStart, const BufferCoord& AEnd,
-      const QString& ChangeText, SynSelectionMode SelMode);
+      const QStringList& ChangeText, SynSelectionMode SelMode);
 
     void AddGroupBreak();
     void BeginBlock();

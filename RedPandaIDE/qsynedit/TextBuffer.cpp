@@ -881,7 +881,7 @@ SynEditUndoList::SynEditUndoList():QObject()
 }
 
 void SynEditUndoList::AddChange(SynChangeReason AReason, const BufferCoord &AStart,
-                                const BufferCoord &AEnd, const QString &ChangeText,
+                                const BufferCoord &AEnd, const QStringList& ChangeText,
                                 SynSelectionMode SelMode)
 {
     if (mLockCount != 0)
@@ -908,8 +908,8 @@ void SynEditUndoList::AddGroupBreak()
 {
     //Add the GroupBreak even if ItemCount = 0. Since items are stored in
     //reverse order in TCustomSynEdit.fRedoList, a GroupBreak could be lost.
-    if (LastChangeReason() != SynChangeReason::crGroupBreak) {
-        AddChange(SynChangeReason::crGroupBreak, {0,0}, {0,0}, "", SynSelectionMode::smNormal);
+    if (LastChangeReason() != SynChangeReason::crNothing) {
+        AddChange(SynChangeReason::crNothing, {0,0}, {0,0}, QStringList(), SynSelectionMode::smNormal);
     }
 }
 
@@ -992,7 +992,7 @@ void SynEditUndoList::PushItem(PSynEditUndoItem Item)
         return;
     mItems.append(Item);
     ensureMaxEntries();
-    if (Item->changeReason()!= SynChangeReason::crGroupBreak)
+    if (Item->changeReason()!= SynChangeReason::crNothing)
         emit addedUndo();
 }
 
@@ -1124,9 +1124,9 @@ BufferCoord SynEditUndoItem::changeEndPos() const
     return mChangeEndPos;
 }
 
-QString SynEditUndoItem::changeStr() const
+QStringList SynEditUndoItem::changeText() const
 {
-    return mChangeStr;
+    return mChangeText;
 }
 
 int SynEditUndoItem::changeNumber() const
@@ -1136,13 +1136,13 @@ int SynEditUndoItem::changeNumber() const
 
 SynEditUndoItem::SynEditUndoItem(SynChangeReason reason, SynSelectionMode selMode,
                                  BufferCoord startPos, BufferCoord endPos,
-                                 const QString &str, int number)
+                                 const QStringList& text, int number)
 {
     mChangeReason = reason;
     mChangeSelMode = selMode;
     mChangeStartPos = startPos;
     mChangeEndPos = endPos;
-    mChangeStr = str;
+    mChangeText = text;
     mChangeNumber = number;
 }
 

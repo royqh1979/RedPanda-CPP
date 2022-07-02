@@ -186,8 +186,8 @@ public:
     //normalized buffer coord operations
     ContentsCoord fromBufferCoord(const BufferCoord& p) const;
     ContentsCoord createNormalizedBufferCoord(int aChar,int aLine) const;
-    QStringList getContents(const ContentsCoord& pStart,const ContentsCoord& pEnd);
-    QString getJoinedContents(const ContentsCoord& pStart,const ContentsCoord& pEnd, const QString& joinStr);
+//    QStringList getContents(const ContentsCoord& pStart,const ContentsCoord& pEnd);
+//    QString getJoinedContents(const ContentsCoord& pStart,const ContentsCoord& pEnd, const QString& joinStr);
 
     int leftSpaces(const QString& line) const;
     QString GetLeftSpacing(int charCount,bool wantTabs) const;
@@ -271,7 +271,7 @@ public:
     void addCaretToUndo();
     void addLeftTopToUndo();
     void replaceAll(const QString& text) {
-        mUndoList->AddChange(SynChangeReason::crSelection,mBlockBegin,mBlockEnd,"", activeSelectionMode());
+        mUndoList->AddChange(SynChangeReason::crSelection,mBlockBegin,mBlockEnd,QStringList(), activeSelectionMode());
         selectAll();
         setSelText(text);
     }
@@ -367,6 +367,8 @@ public:
     void setSelectionMode(SynSelectionMode value);
 
     QString selText();
+
+    QStringList getContent(BufferCoord startPos, BufferCoord endPos, SynSelectionMode mode) const;
 
     QString lineBreak();
 
@@ -491,7 +493,7 @@ private:
     QRect clientRect();
     void synFontChanged();
     void doOnPaintTransient(SynTransientType TransientType);
-    void doSetSelText(const QString& Value);
+    void doSetSelText(const QString& value);
 
     void updateLastCaretX();
     void ensureCursorPosVisible();
@@ -503,8 +505,7 @@ private:
     void internalSetCaretY(int Value);
     void setStatusChanged(SynStatusChanges changes);
     void doOnStatusChange(SynStatusChanges changes);
-    void insertBlock(const BufferCoord& BB, const BufferCoord& BE, const QString& ChangeStr,
-                     bool AddToUndoList);
+    void insertBlock(const BufferCoord& startPos, const BufferCoord& endPos, const QStringList& blockText);
     void updateScrollbars();
     void updateCaret();
     void recalcCharExtent();
@@ -549,17 +550,22 @@ private:
     void moveCaretToLineStart(bool isSelection);
     void moveCaretToLineEnd(bool isSelection);
     void setSelectedTextEmpty();
-    void setSelTextPrimitive(const QString& aValue);
+    void setSelTextPrimitive(const QStringList& text);
     void setSelTextPrimitiveEx(SynSelectionMode PasteMode,
-                               const QString& Value, bool AddToUndoList);
+                               const QStringList& text);
     void doLinesDeleted(int FirstLine, int Count);
     void doLinesInserted(int FirstLine, int Count);
     void properSetLine(int ALine, const QString& ALineText, bool notify = true);
-    void deleteSelection(const BufferCoord& BB, const BufferCoord& BE);
-    void insertText(const QString& Value, SynSelectionMode PasteMode,bool AddToUndoList);
-    int insertTextByNormalMode(const QString& Value);
-    int insertTextByColumnMode(const QString& Value,bool AddToUndoList);
-    int insertTextByLineMode(const QString& Value);
+
+    //primitive edit operations
+    void doDeleteText(const BufferCoord& startPos, const BufferCoord& endPos, SynSelectionMode mode);
+    void doInsertText(const BufferCoord& pos, const QStringList& text, SynSelectionMode mode);
+    int doInsertTextByNormalMode(const BufferCoord& pos, const QStringList& text, BufferCoord &newPos);
+    int doInsertTextByColumnMode(const BufferCoord& pos, const QStringList& text, BufferCoord &newPos);
+    int doInsertTextByLineMode(const BufferCoord& pos, const QStringList& text, BufferCoord &newPos);
+
+
+
     void deleteFromTo(const BufferCoord& start, const BufferCoord& end);
     void setSelWord();
     void setWordBlock(BufferCoord Value);
@@ -590,8 +596,8 @@ private:
     void doDeleteLine();
     void doSelecteLine();
     void doDuplicateLine();
-    void doMoveSelUp(bool addUndo=true);
-    void doMoveSelDown(bool addUndo=true);
+    void doMoveSelUp();
+    void doMoveSelDown();
     void clearAll();
     void insertLine(bool moveCaret);
     void doTabKey();
