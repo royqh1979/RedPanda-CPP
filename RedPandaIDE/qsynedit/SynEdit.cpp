@@ -3571,6 +3571,7 @@ void SynEdit::foldOnListInserted(int Line, int Count)
     for (int i = mAllFoldRanges.count()-1;i>=0;i--) {
         PSynEditFoldRange range = mAllFoldRanges[i];
         if (range->collapsed || range->parentCollapsed()){
+            qDebug()<<range->fromLine<<Line;
             if (range->fromLine == Line - 1) // insertion starts at fold line
                 uncollapse(range);
             else if (range->fromLine >= Line) // insertion of count lines above FromLine
@@ -3585,6 +3586,7 @@ void SynEdit::foldOnListDeleted(int Line, int Count)
     for (int i = mAllFoldRanges.count()-1;i>=0;i--) {
         PSynEditFoldRange range = mAllFoldRanges[i];
         if (range->collapsed || range->parentCollapsed()){
+            qDebug()<<range->fromLine<<Line;
             if (range->fromLine == Line && Count == 1)  // open up because we are messing with the starting line
                 uncollapse(range);
             else if (range->fromLine >= Line - 1 && range->fromLine < Line + Count) // delete inside affectec area
@@ -3622,20 +3624,20 @@ void SynEdit::rescanForFoldRanges()
 
     // Did we leave any collapsed folds and are we viewing a code file?
     if (mAllFoldRanges.count() > 0) {
-
+        SynEditFoldRanges ranges=mAllFoldRanges;
+        mAllFoldRanges.clear();
         // Add folds to a separate list
         PSynEditFoldRanges TemporaryAllFoldRanges = std::make_shared<SynEditFoldRanges>();
         scanForFoldRanges(TemporaryAllFoldRanges);
-        SynEditFoldRanges ranges=mAllFoldRanges;
-        mAllFoldRanges.clear();
+
 
         // Combine new with old folds, preserve parent order
         for (int i = 0; i< TemporaryAllFoldRanges->count();i++) {
             int j=0;
             while (j <ranges.count()) {
+//                qDebug()<<TemporaryAllFoldRanges->range(i)->fromLine<<ranges[j]->fromLine;
                 if (TemporaryAllFoldRanges->range(i)->fromLine == ranges[j]->fromLine
-                        && TemporaryAllFoldRanges->range(i)->toLine == ranges[j]->toLine
-                        && ranges[j]->collapsed) {
+                        && TemporaryAllFoldRanges->range(i)->toLine == ranges[j]->toLine) {
                     mAllFoldRanges.add(ranges[j]);
                     break;
                 }
@@ -6673,10 +6675,10 @@ void SynEdit::onLinesCleared()
 
 void SynEdit::onLinesDeleted(int index, int count)
 {
-    if (mHighlighter && mDocument->count() > 0)
-        scanFrom(index, index+1);
     if (mUseCodeFolding)
         foldOnListDeleted(index + 1, count);
+    if (mHighlighter && mDocument->count() > 0)
+        scanFrom(index, index+1);
     invalidateLines(index + 1, INT_MAX);
     invalidateGutterLines(index + 1, INT_MAX);
 }
