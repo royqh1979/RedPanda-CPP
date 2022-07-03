@@ -3,7 +3,7 @@
 #include <math.h>
 
 #define RAYGUI_IMPLEMENTATION
-#include <raygui/raygui.h>
+#include <raygui.h>
 
 void updateRadius(int baseL, int innerL,int pointL, int *pBaseR, int *pInnerR, int *pPointR) {
 	int totalL=baseL;
