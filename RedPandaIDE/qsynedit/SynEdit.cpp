@@ -3570,13 +3570,11 @@ void SynEdit::foldOnListInserted(int Line, int Count)
     // Delete collapsed inside selection
     for (int i = mAllFoldRanges.count()-1;i>=0;i--) {
         PSynEditFoldRange range = mAllFoldRanges[i];
-        if (range->collapsed || range->parentCollapsed()){
-            qDebug()<<range->fromLine<<Line;
-            if (range->fromLine == Line - 1) // insertion starts at fold line
+        if (range->fromLine == Line - 1) {// insertion starts at fold line
+            if (range->collapsed)
                 uncollapse(range);
-            else if (range->fromLine >= Line) // insertion of count lines above FromLine
-                range->move(Count);
-        }
+        } else if (range->fromLine >= Line) // insertion of count lines above FromLine
+            range->move(Count);
     }
 }
 
@@ -3585,15 +3583,14 @@ void SynEdit::foldOnListDeleted(int Line, int Count)
     // Delete collapsed inside selection
     for (int i = mAllFoldRanges.count()-1;i>=0;i--) {
         PSynEditFoldRange range = mAllFoldRanges[i];
-        if (range->collapsed || range->parentCollapsed()){
-            qDebug()<<range->fromLine<<Line;
-            if (range->fromLine == Line && Count == 1)  // open up because we are messing with the starting line
+        if (range->fromLine == Line && Count == 1)  {// open up because we are messing with the starting line
+            if (range->collapsed)
                 uncollapse(range);
-            else if (range->fromLine >= Line - 1 && range->fromLine < Line + Count) // delete inside affectec area
-                mAllFoldRanges.remove(i);
-            else if (range->fromLine >= Line + Count) // Move after affected area
-                range->move(-Count);
-        }
+        } else if (range->fromLine >= Line - 1 && range->fromLine < Line + Count) // delete inside affectec area
+            mAllFoldRanges.remove(i);
+        else if (range->fromLine >= Line + Count) // Move after affected area
+            range->move(-Count);
+
     }
 
 }
@@ -3616,11 +3613,11 @@ static void null_deleter(SynEditFoldRanges *) {}
 void SynEdit::rescanForFoldRanges()
 {
     // Delete all uncollapsed folds
-    for (int i=mAllFoldRanges.count()-1;i>=0;i--) {
-        PSynEditFoldRange range =mAllFoldRanges[i];
-        if (!range->collapsed && !range->parentCollapsed())
-            mAllFoldRanges.remove(i);
-    }
+//    for (int i=mAllFoldRanges.count()-1;i>=0;i--) {
+//        PSynEditFoldRange range =mAllFoldRanges[i];
+//        if (!range->collapsed && !range->parentCollapsed())
+//            mAllFoldRanges.remove(i);
+//    }
 
     // Did we leave any collapsed folds and are we viewing a code file?
     if (mAllFoldRanges.count() > 0) {
@@ -3630,21 +3627,26 @@ void SynEdit::rescanForFoldRanges()
         PSynEditFoldRanges TemporaryAllFoldRanges = std::make_shared<SynEditFoldRanges>();
         scanForFoldRanges(TemporaryAllFoldRanges);
 
-
+        qDebug()<<" ------- ";
         // Combine new with old folds, preserve parent order
         for (int i = 0; i< TemporaryAllFoldRanges->count();i++) {
+            PSynEditFoldRange tempFoldRange=TemporaryAllFoldRanges->range(i);
             int j=0;
             while (j <ranges.count()) {
-//                qDebug()<<TemporaryAllFoldRanges->range(i)->fromLine<<ranges[j]->fromLine;
-                if (TemporaryAllFoldRanges->range(i)->fromLine == ranges[j]->fromLine
-                        && TemporaryAllFoldRanges->range(i)->toLine == ranges[j]->toLine) {
-                    mAllFoldRanges.add(ranges[j]);
+                PSynEditFoldRange foldRange = ranges[j];
+                //qDebug()<<TemporaryAllFoldRanges->range(i)->fromLine<<ranges[j]->fromLine;
+                if (tempFoldRange->fromLine == foldRange->fromLine
+                        && tempFoldRange->toLine == foldRange->toLine) {
+                    //qDebug()<<"-"<<foldRange->fromLine;
+                    mAllFoldRanges.add(foldRange);
                     break;
                 }
                 j++;
             }
-            if (j>=ranges.count())
-                mAllFoldRanges.add(TemporaryAllFoldRanges->range(i));
+            if (j>=ranges.count()) {
+                //qDebug()<<"--"<<tempFoldRange->fromLine;
+                mAllFoldRanges.add(tempFoldRange);
+            }
         }
 
     } else {
