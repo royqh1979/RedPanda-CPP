@@ -16,5 +16,5 @@ C=epitrochoid_c.txt
 UnitCount=1
 Type=1
 IsCpp=0
-linker=-lrdrawing -lraylib -lopengl32 -lgdi32 -lwinmm
+linker=-lrdrawing -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
 ExecEncoding=UTF-8

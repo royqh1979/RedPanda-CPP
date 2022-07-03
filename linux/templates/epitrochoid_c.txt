@@ -3,7 +3,7 @@
 #include <math.h>
 
 #define RAYGUI_IMPLEMENTATION
-#include <raygui/raygui.h>
+#include <raygui.h>
 
 void updateRadius(int baseL, int outerL, int pointL, int *pBaseR, int *pOuterR, int *pPointR) {
 	int totalL=baseL+outerL;
@@ -61,8 +61,8 @@ int main() {
 		trackColor= GuiColorPicker((Rectangle){ 50, 250, 196, 192 }, NULL, trackColor);
 		int doClear = GuiButton((Rectangle){ 120, 700, 80, 30 },"Clear");
 		if (newOuterL!=outerL || newBaseL!=baseL || newPointL!=pointL) {
-			if (newInnerL!=innerL) 
-				pointL=newInnerL;
+			if (newOuterL!=outerL) 
+				pointL=newOuterL;
 			else
 				pointL=newPointL;
 			outerL=newOuterL;
