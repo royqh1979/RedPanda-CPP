@@ -8,6 +8,7 @@ Red Panda C++ Version 1.1.4
   - enhancement: only allow delete whole folded code block
   - refactor of undo system
   - fix: calculation of the code block ranges when inserting/deleting
+  - fix: undo chains
 
 Red Panda C++ Version 1.1.3
 

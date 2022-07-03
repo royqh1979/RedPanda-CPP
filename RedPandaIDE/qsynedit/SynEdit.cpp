@@ -2428,11 +2428,15 @@ void SynEdit::insertLine(bool moveCaret)
     if (mReadOnly)
         return;
     int nLinesInserted=0;
-    if (!mUndoing)
+    if (!mUndoing) {
+        qDebug()<<"begin";
         mUndoList->BeginBlock();
+    }
     auto action = finally([this] {
-        if (!mUndoing)
+        if (!mUndoing) {
+            qDebug()<<"end";
             mUndoList->EndBlock();
+        }
     });
     QString helper;
     if (selAvail()) {
@@ -2448,6 +2452,7 @@ void SynEdit::insertLine(bool moveCaret)
             QString s = Temp+highlighter()->foldString();
             if (mCaretX > s.length()) {
                 if (!mUndoing) {
+                    qDebug()<<"caret";
                     addCaretToUndo();
                     addSelectionToUndo();
                 }
@@ -2497,9 +2502,11 @@ void SynEdit::insertLine(bool moveCaret)
     QString indentSpacesForRightLineText = GetLeftSpacing(indentSpaces,true);
     mDocument->insert(mCaretY, indentSpacesForRightLineText+rightLineText);
     nLinesInserted++;
-    if (!mUndoing)
+    if (!mUndoing) {
+        qDebug()<<"linebreak";
         mUndoList->AddChange(SynChangeReason::crLineBreak, caretXY(), caretXY(), QStringList(rightLineText),
               SynSelectionMode::smNormal);
+    }
 
     if (!mUndoing) {
         //insert new line in middle of "/*" and "*/"
@@ -3627,7 +3634,6 @@ void SynEdit::rescanForFoldRanges()
         PSynEditFoldRanges TemporaryAllFoldRanges = std::make_shared<SynEditFoldRanges>();
         scanForFoldRanges(TemporaryAllFoldRanges);
 
-        qDebug()<<" ------- ";
         // Combine new with old folds, preserve parent order
         for (int i = 0; i< TemporaryAllFoldRanges->count();i++) {
             PSynEditFoldRange tempFoldRange=TemporaryAllFoldRanges->range(i);
@@ -4363,6 +4369,7 @@ void SynEdit::doUndo()
                         FKeepGoing = (mOptions.testFlag(eoGroupUndo) &&
                             (FLastChange == Item->changeReason()) );
                     }
+                    OldChangeNumber=Item->changeNumber();
                     FLastChange = Item->changeReason();
                 }
             } while (FKeepGoing);
@@ -4489,7 +4496,7 @@ void SynEdit::doUndoItem()
                         Item->changeReason(),
                         Item->changeStartPos(),
                         Item->changeEndPos(),
-                        QStringList(),
+                        Item->changeText(),
                         Item->changeSelMode());
             break;
         }
@@ -4534,6 +4541,7 @@ void SynEdit::doRedo()
                 FKeepGoing = (mOptions.testFlag(eoGroupUndo) &&
                 (FLastChange == Item->changeReason()));
             }
+            OldChangeNumber=Item->changeNumber();
             FLastChange = Item->changeReason();
           }
         } while (FKeepGoing);
@@ -4652,6 +4660,9 @@ void SynEdit::doRedoItem()
         };
         case SynChangeReason::crLineBreak: {
             BufferCoord CaretPt = Item->changeStartPos();
+            mUndoList->AddChange(Item->changeReason(), Item->changeStartPos(),
+                                 Item->changeEndPos(),Item->changeText(),
+                                 Item->changeSelMode());
             setCaretAndSelection(CaretPt, CaretPt, CaretPt);
             commandProcessor(SynEditorCommand::ecLineBreak);
             break;
