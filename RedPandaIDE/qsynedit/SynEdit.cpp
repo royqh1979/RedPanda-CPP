@@ -2428,15 +2428,11 @@ void SynEdit::insertLine(bool moveCaret)
     if (mReadOnly)
         return;
     int nLinesInserted=0;
-    if (!mUndoing) {
-        qDebug()<<"begin";
+    if (!mUndoing)
         mUndoList->BeginBlock();
-    }
     auto action = finally([this] {
-        if (!mUndoing) {
-            qDebug()<<"end";
+        if (!mUndoing)
             mUndoList->EndBlock();
-        }
     });
     QString helper;
     if (selAvail()) {
@@ -2452,7 +2448,6 @@ void SynEdit::insertLine(bool moveCaret)
             QString s = Temp+highlighter()->foldString();
             if (mCaretX > s.length()) {
                 if (!mUndoing) {
-                    qDebug()<<"caret";
                     addCaretToUndo();
                     addSelectionToUndo();
                 }
@@ -2502,11 +2497,9 @@ void SynEdit::insertLine(bool moveCaret)
     QString indentSpacesForRightLineText = GetLeftSpacing(indentSpaces,true);
     mDocument->insert(mCaretY, indentSpacesForRightLineText+rightLineText);
     nLinesInserted++;
-    if (!mUndoing) {
-        qDebug()<<"linebreak";
+    if (!mUndoing)
         mUndoList->AddChange(SynChangeReason::crLineBreak, caretXY(), caretXY(), QStringList(rightLineText),
               SynSelectionMode::smNormal);
-    }
 
     if (!mUndoing) {
         //insert new line in middle of "/*" and "*/"
