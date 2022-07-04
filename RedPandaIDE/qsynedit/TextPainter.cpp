@@ -693,7 +693,6 @@ void SynEditTextPainter::PaintFoldAttributes()
             int indentLevel = braceLevel ;
             if (edit->tabWidth()>0)
                 indentLevel = LineIndent / edit->tabWidth();
-            int levelDiff = std::max(0,braceLevel - indentLevel);
             // Step horizontal coord
             //TabSteps = edit->mTabWidth;
             TabSteps = 0;

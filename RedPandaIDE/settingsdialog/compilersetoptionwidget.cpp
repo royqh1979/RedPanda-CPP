@@ -132,7 +132,7 @@ void CompilerSetOptionWidget::doLoad()
         ui->btnRemoveCompilerSet->setEnabled(true);
     }
     int index=pSettings->compilerSets().defaultIndex();
-    for (int i=0;i<pSettings->compilerSets().size();i++) {
+    for (size_t i=0;i<pSettings->compilerSets().size();i++) {
         ui->cbCompilerSet->addItem(pSettings->compilerSets().getSet(i)->name());
     }
     if (index < 0 || index>=ui->cbCompilerSet->count()) {
@@ -289,7 +289,7 @@ void CompilerSetOptionWidget::updateIcons()
     pIconsManager->setIcon(ui->btnChooseResourceCompiler, IconsManager::ACTION_FILE_OPEN_FOLDER);
 }
 
-void CompilerSetOptionWidget::on_cbEncoding_currentTextChanged(const QString &arg1)
+void CompilerSetOptionWidget::on_cbEncoding_currentTextChanged(const QString &/*arg1*/)
 {
     QString userData = ui->cbEncoding->currentData().toString();
     if (userData == ENCODING_AUTO_DETECT
@@ -308,7 +308,7 @@ void CompilerSetOptionWidget::on_cbEncoding_currentTextChanged(const QString &ar
 }
 
 
-void CompilerSetOptionWidget::on_cbEncodingDetails_currentTextChanged(const QString &arg1)
+void CompilerSetOptionWidget::on_cbEncodingDetails_currentTextChanged(const QString &/*arg1*/)
 {
 
 }

@@ -835,7 +835,7 @@ void MainWindow::setActiveBreakpoint(QString FileName, int Line, bool setFocus)
     }
 }
 
-void MainWindow::updateDPI(int oldDPI, int newDPI)
+void MainWindow::updateDPI(int oldDPI, int /*newDPI*/)
 {
     //applySettings();
     if (oldDPI<1)
@@ -6436,6 +6436,8 @@ void MainWindow::on_actionRename_Symbol_triggered()
     Editor * editor = mEditorList->getEditor();
     if (!editor)
         return;
+    if (!editor->parser())
+        return;
     editor->beginUpdate();
     BufferCoord oldCaretXY = editor->caretXY();
     //    mClassBrowserModel.beginUpdate();
@@ -6446,16 +6448,12 @@ void MainWindow::on_actionRename_Symbol_triggered()
 //        mClassBrowserModel.EndTreeUpdate;
         editor->setCursor(oldCursor);
     });
-    QString word = editor->wordAtCursor();
-    if (word.isEmpty())
-        return;
 
-//    if (!isIdentifier(word)) {
-//        return;
-//    }
-
-    if (isCppKeyword(word)) {
-        return;
+    QStringList expression = editor->getExpressionAtPosition(oldCaretXY);
+    if (expression.isEmpty() && oldCaretXY.ch>1) {
+        BufferCoord coord=oldCaretXY;
+        coord.ch--;
+        expression = editor->getExpressionAtPosition(coord);
     }
 
     if (editor->inProject() && mProject) {
@@ -6465,13 +6463,8 @@ void MainWindow::on_actionRename_Symbol_triggered()
                 mProject->cppParser()->parseFile(editor->filename(), editor->inProject(), false, false);
             }
         }
-        QStringList expression = editor->getExpressionAtPosition(oldCaretXY);
-        if (expression.isEmpty() && oldCaretXY.ch>1) {
-            BufferCoord coord=oldCaretXY;
-            coord.ch--;
-            expression = editor->getExpressionAtPosition(coord);
-        }
-            // Find it's definition
+
+        // Find it's definition
         PStatement oldStatement = editor->parser()->findStatementOf(
                         editor->filename(),
                         expression,
@@ -6496,6 +6489,19 @@ void MainWindow::on_actionRename_Symbol_triggered()
             return;
         }
     }
+    //not in project
+    PStatement oldStatement = editor->parser()->findStatementOf(
+                    editor->filename(),
+                    expression,
+                    oldCaretXY.line);
+    if (!oldStatement)
+        return;
+    QString word = oldStatement->command;
+    if (word.isEmpty())
+        return;
+    if (isCppKeyword(word)) {
+        return;
+    }
 
     bool ok;
     QString newWord = QInputDialog::getText(editor,
@@ -6515,7 +6521,7 @@ void MainWindow::on_actionRename_Symbol_triggered()
     }
     CppRefacter refactor;
 
-    refactor.renameSymbol(editor,oldCaretXY,word,newWord);
+    refactor.renameSymbol(editor,oldCaretXY,newWord);
     editor->reparse();
 
 }

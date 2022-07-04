@@ -562,10 +562,6 @@ void Editor::focusOutEvent(QFocusEvent *event)
     pMainWindow->functionTip()->hide();
 }
 
-static bool isSpaceOrRightParenthesis(const QChar& ch) {
-    return ch.isSpace() || ch==')' || ch=="]" || ch=="}";
-}
-
 void Editor::keyPressEvent(QKeyEvent *event)
 {
     bool handled = false;
@@ -3427,7 +3423,7 @@ QString Editor::getParserHint(const QStringList& expression,const QString &/*s*/
     if (statement->kind == StatementKind::skFunction
             || statement->kind == StatementKind::skConstructor
             || statement->kind == StatementKind::skDestructor) {
-        PStatement parentScope = statement->parentScope.lock();
+        //PStatement parentScope = statement->parentScope.lock();
 //        if (parentScope && parentScope->kind == StatementKind::skNamespace) {
 //            PStatementList namespaceStatementsList =
 //                    mParser->findNamespace(parentScope->command);
@@ -3449,8 +3445,7 @@ QString Editor::getParserHint(const QStringList& expression,const QString &/*s*/
 //                }
 //            }
 //        } else
-          result = getHintForFunction(statement, parentScope,
-                                      mFilename,line);
+          result = getHintForFunction(statement,mFilename,line);
     } else if (statement->line>0) {
         QFileInfo fileInfo(statement->fileName);
         result = mParser->prettyPrintStatement(statement,mFilename, line) + " - "
@@ -3494,7 +3489,7 @@ QString Editor::getErrorHint(const PSyntaxIssue& issue)
     }
 }
 
-QString Editor::getHintForFunction(const PStatement &statement, const PStatement &scopeStatement, const QString& filename, int line)
+QString Editor::getHintForFunction(const PStatement &statement, const QString& filename, int line)
 {
     QFileInfo fileInfo(statement->fileName);
     QString result;

@@ -377,19 +377,19 @@ bool SynEditASMHighlighter::getTokenFinished() const
     return true;
 }
 
-bool SynEditASMHighlighter::isLastLineCommentNotFinished(int state) const
+bool SynEditASMHighlighter::isLastLineCommentNotFinished(int /*state*/) const
 {
     return true;
 }
 
-bool SynEditASMHighlighter::isLastLineStringNotFinished(int state) const
+bool SynEditASMHighlighter::isLastLineStringNotFinished(int /*state*/) const
 {
     return true;
 }
 
 SynRangeState SynEditASMHighlighter::getRangeState() const
 {
-    return {0,0,0,0,0};
+    return SynRangeState();
 }
 
 void SynEditASMHighlighter::setState(const SynRangeState&)

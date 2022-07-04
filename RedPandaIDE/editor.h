@@ -275,7 +275,7 @@ private:
     QString getParserHint(const QStringList& expression,const QString& s, int line);
     void showDebugHint(const QString& s,int line);
     QString getErrorHint(const PSyntaxIssue& issue);
-    QString getHintForFunction(const PStatement& statement, const PStatement& scope,
+    QString getHintForFunction(const PStatement& statement,
                                const QString& filename, int line);
 
     void updateFunctionTip(bool showTip);

@@ -48,6 +48,7 @@ struct SynRangeState {
                                 (need by auto indent) */
     bool operator==(const SynRangeState& s2);
     int getLastIndent();
+    SynRangeState();
 };
 
 typedef int SynTokenKind;

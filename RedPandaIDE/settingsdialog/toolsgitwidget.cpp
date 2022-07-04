@@ -33,7 +33,7 @@ void ToolsGitWidget::doSave()
     pMainWindow->applySettings();
 }
 
-void ToolsGitWidget::updateIcons(const QSize &size)
+void ToolsGitWidget::updateIcons(const QSize &/*size*/)
 {
     pIconsManager->setIcon(ui->btnBrowseGit,IconsManager::ACTION_FILE_OPEN_FOLDER);
 }

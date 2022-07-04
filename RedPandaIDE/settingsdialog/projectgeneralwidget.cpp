@@ -105,7 +105,11 @@ void ProjectGeneralWidget::doSave()
     project->options().isCpp = ui->cbDefaultCpp->isChecked();
     project->options().supportXPThemes = ui->cbSupportXPTheme->isChecked();
     if (mIconPath.isEmpty()
+#if QT_VERSION_CHECK(5,15,0)
+            || !ui->lbIcon->pixmap(Qt::ReturnByValue).isNull()) {
+#else
             || !ui->lbIcon->pixmap() || ui->lbIcon->pixmap()->isNull()) {
+#endif
         project->options().icon = "";
     } else {
         QString iconPath = QFileInfo(project->filename()).absoluteDir().absoluteFilePath("app.ico");
@@ -120,7 +124,11 @@ void ProjectGeneralWidget::doSave()
                 }
             }
             if (!mIconPath.endsWith(".ico",PATH_SENSITIVITY) && QImageWriter::supportedImageFormats().contains("ico")) {
+#if QT_VERSION_CHECK(5,15,0)
+                ui->lbIcon->pixmap(Qt::ReturnByValue).save(iconPath,"ico");
+#else
                 ui->lbIcon->pixmap()->save(iconPath,"ico");
+#endif
             } else
                 QFile::copy(mIconPath, iconPath);
             project->options().icon = iconPath;

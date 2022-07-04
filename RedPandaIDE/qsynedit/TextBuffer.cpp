@@ -29,8 +29,8 @@
 
 SynDocument::SynDocument(const QFont& font, QObject *parent):
       QObject(parent),
-      mTabWidth(4),
       mFontMetrics(font),
+      mTabWidth(4),
       mMutex(QMutex::Recursive)
 {
 
@@ -157,7 +157,7 @@ SynRangeState SynDocument::ranges(int Index)
     } else {
          ListIndexOutOfBounds(Index);
     }
-    return {0};
+    return SynRangeState();
 }
 
 void SynDocument::insertItem(int Index, const QString &s)
@@ -827,7 +827,7 @@ void SynDocument::invalidAllLineColumns()
 SynDocumentLine::SynDocumentLine():
     fString(),
     fObject(nullptr),
-    fRange{0,0,0,0,0},
+    fRange(),
     fColumns(-1)
 {
 }

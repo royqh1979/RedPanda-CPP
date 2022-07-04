@@ -596,7 +596,12 @@ void stringsToFile(const QStringList &list, const QString &fileName)
     if (file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
         QTextStream stream(&file);
         for (QString s:list) {
-            stream<<s<<endl;
+            stream<<s
+#if QT_VERSION_CHECK(5,15,0)
+                 <<Qt::endl;
+#else
+                 <<endl;
+#endif
         }
     }
 }
@@ -703,7 +708,12 @@ void logToFile(const QString &s, const QString &filename, bool append)
     }
     if (file.open(mode)) {
         QTextStream ts(&file);
-        ts<<s<<endl;
+        ts<<s
+#if QT_VERSION_CHECK(5,15,0)
+                 <<Qt::endl;
+#else
+                 <<endl;
+#endif
     }
 }
 
@@ -1101,13 +1111,10 @@ int screenDPI()
     return defaultScreenDPI;
 }
 
-qulonglong stringToHex(const QString &str, qulonglong defaultValue)
+qulonglong stringToHex(const QString &str, bool &isOk)
 {
-    bool isOk;
     qulonglong value = str.toULongLong(&isOk,16);
-    if (isOk)
-        return value;
-    return defaultValue;
+    return value;
 }
 
 void setScreenDPI(int dpi)

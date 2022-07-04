@@ -40,12 +40,12 @@ GitLogModel::~GitLogModel()
     GitLogModel_CacheManager.remove(this);
 }
 
-int GitLogModel::rowCount(const QModelIndex &parent) const
+int GitLogModel::rowCount(const QModelIndex &/*parent*/) const
 {
     return mCount;
 }
 
-int GitLogModel::columnCount(const QModelIndex &parent) const
+int GitLogModel::columnCount(const QModelIndex &/*parent*/) const
 {
     return 3;
 }

@@ -72,7 +72,7 @@ void NewClassDialog::on_btnCancel_clicked()
     this->reject();
 }
 
-void NewClassDialog::closeEvent(QCloseEvent *event)
+void NewClassDialog::closeEvent(QCloseEvent */*event*/)
 {
     this->reject();
 }

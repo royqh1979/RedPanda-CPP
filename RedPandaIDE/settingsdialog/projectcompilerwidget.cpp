@@ -120,7 +120,7 @@ void ProjectCompilerWidget::on_cbCompilerSet_currentIndexChanged(int)
     refreshOptions();
 }
 
-void ProjectCompilerWidget::on_cbEncoding_currentTextChanged(const QString &arg1)
+void ProjectCompilerWidget::on_cbEncoding_currentTextChanged(const QString &/*arg1*/)
 {
     QString userData = ui->cbEncoding->currentData().toString();
     if (userData == ENCODING_AUTO_DETECT
@@ -139,7 +139,7 @@ void ProjectCompilerWidget::on_cbEncoding_currentTextChanged(const QString &arg1
 }
 
 
-void ProjectCompilerWidget::on_cbEncodingDetails_currentTextChanged(const QString &arg1)
+void ProjectCompilerWidget::on_cbEncodingDetails_currentTextChanged(const QString &/*arg1*/)
 {
 
 }

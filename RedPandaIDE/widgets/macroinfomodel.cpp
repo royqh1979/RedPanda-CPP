@@ -38,7 +38,7 @@ MacroInfoModel::MacroInfoModel(QObject *parent) : QAbstractListModel(parent)
     addMacroInfo("<PROJECTPATH>", tr("Path to the current project's folder"));
 }
 
-int MacroInfoModel::rowCount(const QModelIndex &parent) const
+int MacroInfoModel::rowCount(const QModelIndex &/*parent*/) const
 {
     return mMacroInfos.count();
 }

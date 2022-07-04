@@ -835,6 +835,8 @@ void DebugReader::processResult(const QByteArray &result)
     case GDBMIResultType::UpdateVarValue:
         handleUpdateVarValue(multiValues["changelist"].array());
         return;
+    default:
+        return;
     }
 
 }
@@ -2511,16 +2513,28 @@ void MemoryModel::updateMemory(const QStringList &value)
     QList<PMemoryLine> newModel;
     for (int i=0;i<value.length();i++) {
         QString line = value[i].trimmed();
+#if QT_VERSION_CHECK(5, 15, 0)
+        QStringList dataLst = line.split(delimiter,Qt::SkipEmptyParts);
+#else
         QStringList dataLst = line.split(delimiter,QString::SkipEmptyParts);
+#endif
         PMemoryLine memoryLine = std::make_shared<MemoryLine>();
         memoryLine->startAddress = -1;
         if (dataLst.length()>0) {
-            memoryLine->startAddress = stringToHex(dataLst[0],0);
-            for (int j=1;j<dataLst.length();j++) {
-                qulonglong data = stringToHex(dataLst[j],-1);
-                if (data>=0)
-                    memoryLine->datas.append((unsigned char)data);
+            bool isOk;
+            memoryLine->startAddress = stringToHex(dataLst[0],isOk);
+            if (isOk)  {
+                for (int j=1;j<dataLst.length();j++) {
+                    qulonglong data = stringToHex(dataLst[j],isOk);
+                    if (isOk)
+                        memoryLine->datas.append((unsigned char)data);
+                    else
+                        memoryLine->datas.append(0);
+                }
+            } else {
+                memoryLine->startAddress=0;
             }
+
         }
         newModel.append(memoryLine);
     }
@@ -2551,12 +2565,12 @@ void MemoryModel::updateMemory(const QStringList &value)
     }
  }
 
-int MemoryModel::rowCount(const QModelIndex &parent) const
+int MemoryModel::rowCount(const QModelIndex &/*parent*/) const
 {
     return mLines.count();
 }
 
-int MemoryModel::columnCount(const QModelIndex &parent) const
+int MemoryModel::columnCount(const QModelIndex &/*parent*/) const
 {
     return mDataPerLine;
 }
@@ -2600,7 +2614,7 @@ bool MemoryModel::setData(const QModelIndex &index, const QVariant &value, int r
     if (role == Qt::EditRole && mStartAddress>0) {
         bool ok;
         unsigned char val = ("0x"+value.toString()).toUInt(&ok,16);
-        if (!ok || val>255)
+        if (!ok)
             return false;
         emit setMemoryData(mStartAddress+mDataPerLine*index.row()+col,val);
         return true;
@@ -2608,7 +2622,7 @@ bool MemoryModel::setData(const QModelIndex &index, const QVariant &value, int r
     return false;
 }
 
-Qt::ItemFlags MemoryModel::flags(const QModelIndex &index) const
+Qt::ItemFlags MemoryModel::flags(const QModelIndex &/*index*/) const
 {
     Qt::ItemFlags flags = Qt::ItemIsEnabled | Qt::ItemIsSelectable;
     if (mStartAddress!=0)

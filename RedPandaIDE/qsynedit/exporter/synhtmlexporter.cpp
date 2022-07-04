@@ -79,7 +79,7 @@ QString SynHTMLExporter::ColorToHTML(const QColor &AColor)
 QString SynHTMLExporter::GetStyleName(PSynHighlighter Highlighter, PSynHighlighterAttribute Attri)
 {
     QString result;
-    EnumHighlighterAttris(Highlighter,false,
+    enumHighlighterAttributes(Highlighter,false,
                           std::bind(
                               &SynHTMLExporter::StyleNameCallback,this,
                               std::placeholders::_1, std::placeholders::_2,
@@ -161,7 +161,7 @@ QString SynHTMLExporter::GetHeader()
 {
     using namespace std::placeholders;
     QString Styles;
-    EnumHighlighterAttris(mHighlighter, true,
+    enumHighlighterAttributes(mHighlighter, true,
                           std::bind(&SynHTMLExporter::AttriToCSSCallback,
                                     this, _1, _2, _3, _4),
                           {&Styles});

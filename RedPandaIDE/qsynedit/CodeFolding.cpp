@@ -39,8 +39,8 @@ PSynEditFoldRegion SynEditFoldRegions::get(int index)
 }
 
 SynEditCodeFolding::SynEditCodeFolding():
-    fillIndents(false),
     indentGuides(true),
+    fillIndents(false),
     showCollapsedLine(true),
     collapsedLineColor(QColor("black")),
     folderBarLinesColor(QColor("black")),

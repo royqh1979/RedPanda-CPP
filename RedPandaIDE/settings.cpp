@@ -1487,6 +1487,7 @@ Settings::CompilerSet::CompilerSet(const QString& compilerFolder):
 }
 
 Settings::CompilerSet::CompilerSet(const Settings::CompilerSet &set):
+    mFullLoaded(set.mFullLoaded),
     mCCompiler(set.mCCompiler),
     mCppCompiler(set.mCppCompiler),
     mMake(set.mMake),
@@ -1509,8 +1510,7 @@ Settings::CompilerSet::CompilerSet(const Settings::CompilerSet &set):
     mCustomCompileParams(set.mCustomCompileParams),
     mCustomLinkParams(set.mCustomLinkParams),
     mAutoAddCharsetParams(set.mAutoAddCharsetParams),
-    mCompileOptions(set.mCompileOptions),
-    mFullLoaded(set.mFullLoaded)
+    mCompileOptions(set.mCompileOptions)
 {
 
 }
@@ -2493,7 +2493,7 @@ void Settings::CompilerSets::saveSets()
     for (size_t i=0;i<mList.size();i++) {
         saveSet(i);
     }
-    if (mDefaultIndex>=mList.size()) {
+    if (mDefaultIndex>=(int)mList.size()) {
         mDefaultIndex = mList.size()-1;
     }
     mSettings->mSettings.beginGroup(SETTING_COMPILTER_SETS);
@@ -2538,7 +2538,7 @@ void Settings::CompilerSets::loadSets()
                 return;
             }
             findSets();
-            if ( mList.size() <= mDefaultIndex)
+            if ( (int)mList.size() <= mDefaultIndex)
                 mDefaultIndex =  mList.size()-1;
             pCurrentSet = defaultSet();
             if (!pCurrentSet) {
@@ -2601,7 +2601,7 @@ void Settings::CompilerSets::deleteSet(int index)
         mSettings->mSettings.endGroup();
     }
     mList.erase(std::begin(mList)+index);
-    if (mDefaultIndex>=mList.size()) {
+    if (mDefaultIndex>=(int)mList.size()) {
         mDefaultIndex = mList.size()-1;
     }
     saveSets();
@@ -2629,7 +2629,7 @@ Settings::PCompilerSet Settings::CompilerSets::defaultSet()
 
 Settings::PCompilerSet Settings::CompilerSets::getSet(int index)
 {
-    if (index>=0 && index<mList.size()) {
+    if (index>=0 && index<(int)mList.size()) {
         return mList[index];
     }
     return PCompilerSet();

@@ -444,7 +444,7 @@ Qt::ItemFlags OJProblemModel::flags(const QModelIndex &idx) const
     return flags;
 }
 
-int OJProblemModel::columnCount(const QModelIndex &parent) const
+int OJProblemModel::columnCount(const QModelIndex &/*parent*/) const
 {
     return 2;
 }

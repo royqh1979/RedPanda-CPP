@@ -68,7 +68,7 @@ void ExecutorGeneralWidget::on_btnBrowse_clicked()
     }
 }
 
-void ExecutorGeneralWidget::updateIcons(const QSize &size)
+void ExecutorGeneralWidget::updateIcons(const QSize &/*size*/)
 {
     pIconsManager->setIcon(ui->btnBrowse,IconsManager::ACTION_FILE_OPEN_FOLDER);
 }

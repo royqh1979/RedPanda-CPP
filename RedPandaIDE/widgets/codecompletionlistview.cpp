@@ -53,7 +53,7 @@ void CodeCompletionListView::focusInEvent(QFocusEvent *)
     }
 }
 
-void CodeCompletionListView::mouseDoubleClickEvent(QMouseEvent *event)
+void CodeCompletionListView::mouseDoubleClickEvent(QMouseEvent */*event*/)
 {
     QKeyEvent keyEvent(QKeyEvent::Type::KeyPress,Qt::Key_Tab,Qt::KeyboardModifier::NoModifier,
                     "\t");

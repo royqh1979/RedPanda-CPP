@@ -1083,7 +1083,7 @@ bool SynEdit::colSelAvail() const
         return false;
     if (mBlockBegin.ch == mBlockEnd.ch && mBlockBegin.line == mBlockEnd.line)
         return false;
-    if (mBlockBegin.line == mBlockEnd.line && mBlockBegin.ch!=mBlockBegin.ch)
+    if (mBlockBegin.line == mBlockEnd.line && mBlockBegin.ch!=mBlockEnd.ch)
         return true;
     DisplayCoord coordBegin = bufferToDisplayPos(mBlockBegin);
     DisplayCoord coordEnd = bufferToDisplayPos(mBlockEnd);
@@ -1398,23 +1398,23 @@ BufferCoord SynEdit::nextWordPosEx(const BufferCoord &XY)
             if (CY < mDocument->count()) {
                 Line = mDocument->getString(CY);
                 CY++;
-                CX=StrScanForWordChar(Line,1);
+                CX=findWordChar(Line,1);
                 if (CX==0)
                     CX=1;
             }
         } else {
             // find next "whitespace" if current char is an IdentChar
             if (!Line[CX-1].isSpace())
-                CX = StrScanForNonWordChar(Line,CX);
+                CX = findNonWordChar(Line,CX);
             // if "whitespace" found, find the next IdentChar
             if (CX > 0)
-                CX = StrScanForWordChar(Line, CX);
+                CX = findWordChar(Line, CX);
             // if one of those failed position at the begin of next line
             if (CX == 0) {
                 if (CY < mDocument->count()) {
                     Line = mDocument->getString(CY);
                     CY++;
-                    CX=StrScanForWordChar(Line,1);
+                    CX=findWordChar(Line,1);
                     if (CX==0)
                         CX=1;
                 } else {
@@ -1441,7 +1441,7 @@ BufferCoord SynEdit::wordStartEx(const BufferCoord &XY)
         CX = std::min(CX, Line.length()+1);
         if (CX > 1) {
             if (isWordChar(Line[CX - 2]))
-                CX = StrRScanForNonWordChar(Line, CX - 1) + 1;
+                CX = findLastNonWordChar(Line, CX - 1) + 1;
         }
     }
     return BufferCoord{CX,CY};
@@ -1461,7 +1461,7 @@ BufferCoord SynEdit::wordEndEx(const BufferCoord &XY)
         QString Line = mDocument->getString(CY - 1);
         if (CX <= Line.length() && CX-1>=0) {
             if (isWordChar(Line[CX - 1]))
-                CX = StrScanForNonWordChar(Line, CX);
+                CX = findNonWordChar(Line, CX);
             if (CX == 0)
                 CX = Line.length() + 1;
         }
@@ -1487,20 +1487,20 @@ BufferCoord SynEdit::prevWordPosEx(const BufferCoord &XY)
             if (CY > 1) {
                 CY -- ;
                 Line = mDocument->getString(CY - 1);
-                CX = StrRScanForWordChar(Line, Line.length())+1;
+                CX = findLastWordChar(Line, Line.length())+1;
             }
         } else {
             // if previous char is a "whitespace" search for the last IdentChar
             if (!isWordChar(Line[CX - 2]))
-                CX = StrRScanForWordChar(Line, CX - 1);
+                CX = findLastWordChar(Line, CX - 1);
             if (CX > 0) // search for the first IdentChar of this "word"
-                CX = StrRScanForNonWordChar(Line, CX - 1)+1;
+                CX = findLastNonWordChar(Line, CX - 1)+1;
             if (CX == 0) {
                 // find last IdentChar in the previous line
                 if (CY > 1) {
                     CY -- ;
                     Line = mDocument->getString(CY - 1);
-                    CX = StrRScanForWordChar(Line, Line.length())+1;
+                    CX = findLastWordChar(Line, Line.length())+1;
                 } else {
                     CX = 1;
                 }
@@ -2539,15 +2539,12 @@ void SynEdit::doTabKey()
             setSelectedTextEmpty();
         }
         QString Spaces;
-        int NewCaretX = 0;
         if (mOptions.testFlag(eoTabsToSpaces)) {
             int cols = charToColumn(mCaretY,mCaretX);
             i = tabWidth() - (cols) % tabWidth();
             Spaces = QString(i,' ');
-            NewCaretX = mCaretX + i;
         } else {
             Spaces = '\t';
-            NewCaretX = mCaretX + 1;
         }
         setSelTextPrimitive(QStringList(Spaces));
     }
@@ -2701,7 +2698,6 @@ void SynEdit::computeCaret()
     int X=iMousePos.x();
     int Y=iMousePos.y();
 
-    BufferCoord oldCaret = caretXY();
     DisplayCoord vCaretNearestPos = pixelsToNearestRowColumn(X, Y);
     vCaretNearestPos.Row = minMax(vCaretNearestPos.Row, 1, displayLineCount());
     setInternalDisplayXY(vCaretNearestPos);
@@ -2806,7 +2802,7 @@ void SynEdit::doBlockIndent()
       insertionPos.ch = std::min(BB.ch, BE.ch);
     else
       insertionPos.ch = 1;
-    insertBlock(insertionPos, insertionPos, strToInsert);
+    insertBlock(insertionPos, strToInsert);
     //adjust caret and selection
     oldCaretPos.ch = x;
     if (BB.ch > 1)
@@ -3247,7 +3243,7 @@ void SynEdit::doOnStatusChange(SynStatusChanges)
     mStatusChanges = SynStatusChange::scNone;
 }
 
-void SynEdit::insertBlock(const BufferCoord& startPos, const BufferCoord& endPos, const QStringList& blockText)
+void SynEdit::insertBlock(const BufferCoord& startPos, const QStringList& blockText)
 {
     setCaretAndSelection(startPos, startPos, startPos);
     setSelTextPrimitiveEx(SynSelectionMode::Column, blockText);

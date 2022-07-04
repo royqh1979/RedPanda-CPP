@@ -249,3 +249,14 @@ int SynRangeState::getLastIndent()
         return -1;
     return indents.back();
 }
+
+SynRangeState::SynRangeState():
+    state(0),
+    braceLevel(0),
+    bracketLevel(0),
+    parenthesisLevel(0),
+    leftBraces(0),
+    rightBraces(0),
+    firstIndentThisLine(0)
+{
+}

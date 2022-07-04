@@ -78,7 +78,7 @@ void CompilerSetDirectoriesWidget::on_btnAdd_pressed()
     }
 }
 
-void CompilerSetDirectoriesWidget::selectionChanged(const QItemSelection &selected, const QItemSelection &deselected)
+void CompilerSetDirectoriesWidget::selectionChanged(const QItemSelection &selected, const QItemSelection &/*deselected*/)
 {
     ui->btnDelete->setEnabled(!selected.isEmpty());
 }

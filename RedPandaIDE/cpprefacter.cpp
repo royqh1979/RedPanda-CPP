@@ -106,7 +106,7 @@ static QString fullParentName(PStatement statement) {
         return "";
     }
 }
-void CppRefacter::renameSymbol(Editor *editor, const BufferCoord &pos, const QString &word, const QString &newWord)
+void CppRefacter::renameSymbol(Editor *editor, const BufferCoord &pos, const QString &newWord)
 {
     if (!editor->parser()->freeze())
         return;

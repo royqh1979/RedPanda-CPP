@@ -34,8 +34,8 @@
 SettingsWidget::SettingsWidget(const QString &name, const QString &group, QWidget *parent):
     QWidget(parent),
     mSettingsChanged(false),
-    mName(name),
-    mGroup(group)
+    mGroup(group),
+    mName(name)
 {
 }
 
