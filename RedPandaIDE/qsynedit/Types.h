@@ -22,61 +22,17 @@
 #include <QFlags>
 #include <memory>
 
-enum class SynSelectionMode {smNormal, smLine, smColumn};
+enum class SynSelectionMode {Normal, Line, Column};
 
 struct BufferCoord {
-    int Char;
-    int Line;
+    int ch;
+    int line;
     bool operator==(const BufferCoord& coord);
     bool operator>=(const BufferCoord& coord);
     bool operator>(const BufferCoord& coord);
     bool operator<(const BufferCoord& coord);
     bool operator<=(const BufferCoord& coord);
     bool operator!=(const BufferCoord& coord);
-};
-
-class SynEdit;
-/**
- * Nomalized buffer posistion:
- * (0,0) means at the start of the file ('\0')
- * (1,count of lines+1) means at the end of the file ('\0')
- * (length of the line+1, line) means at the line break of the line ('\n')
- */
-
-class ContentsCoord {
-public:
-    ContentsCoord();
-    ContentsCoord(const ContentsCoord& coord);
-    int ch() const;
-    void setCh(int newChar);
-
-    int line() const;
-    void setLine(int newLine);
-    bool atStart();
-    bool atEnd();
-    const SynEdit *edit() const;
-    const ContentsCoord& operator=(const ContentsCoord& coord);
-    const ContentsCoord& operator=(const ContentsCoord&& coord);
-    bool operator==(const ContentsCoord& coord) const;
-    bool operator<(const ContentsCoord& coord) const;
-    bool operator<=(const ContentsCoord& coord) const;
-    bool operator>(const ContentsCoord& coord) const;
-    bool operator>=(const ContentsCoord& coord) const;
-    size_t operator-(const ContentsCoord& coord) const;
-    const ContentsCoord& operator+=(int delta);
-    const ContentsCoord& operator-=(int delta);
-    ContentsCoord operator+(int delta) const;
-    ContentsCoord operator-(int delta) const;
-    BufferCoord toBufferCoord() const;
-    QChar operator*() const;
-private:
-    ContentsCoord(const SynEdit* edit, int ch, int line);
-    void normalize();
-private:
-    int mChar;
-    int mLine;
-    const SynEdit* mEdit;
-    friend class SynEdit;
 };
 
 struct DisplayCoord {

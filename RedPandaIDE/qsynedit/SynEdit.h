@@ -184,8 +184,8 @@ public:
     BufferCoord displayToBufferPos(const DisplayCoord& p) const;
 
     //normalized buffer coord operations
-    ContentsCoord fromBufferCoord(const BufferCoord& p) const;
-    ContentsCoord createNormalizedBufferCoord(int aChar,int aLine) const;
+//    ContentsCoord fromBufferCoord(const BufferCoord& p) const;
+//    ContentsCoord createNormalizedBufferCoord(int aChar,int aLine) const;
 //    QStringList getContents(const ContentsCoord& pStart,const ContentsCoord& pEnd);
 //    QString getJoinedContents(const ContentsCoord& pStart,const ContentsCoord& pEnd, const QString& joinStr);
 
@@ -272,7 +272,7 @@ public:
     void addLeftTopToUndo();
     void addSelectionToUndo();
     void replaceAll(const QString& text) {
-        mUndoList->AddChange(SynChangeReason::crSelection,mBlockBegin,mBlockEnd,QStringList(), activeSelectionMode());
+        mUndoList->addChange(SynChangeReason::Selection,mBlockBegin,mBlockEnd,QStringList(), activeSelectionMode());
         selectAll();
         setSelText(text);
     }

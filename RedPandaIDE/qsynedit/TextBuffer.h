@@ -161,16 +161,16 @@ private:
 };
 
 enum class SynChangeReason {
-    crInsert,
-    crDelete,
-    crCaret, //just restore the Caret, allowing better Undo behavior
-    crSelection, //restore Selection
-    crGroupBreak,
-    crLeftTop,
-    crLineBreak,
-    crMoveSelectionUp,
-    crMoveSelectionDown,
-    crNothing
+    Insert,
+    Delete,
+    Caret, //just restore the Caret, allowing better Undo behavior
+    Selection, //restore Selection
+    GroupBreak,
+    LeftTop,
+    LineBreak,
+    MoveSelectionUp,
+    MoveSelectionDown,
+    Nothing // undo list empty
   };
 class SynEditUndoItem {
 private:
@@ -202,24 +202,24 @@ class SynEditUndoList : public QObject {
 public:
     explicit SynEditUndoList();
 
-    void AddChange(SynChangeReason AReason, const BufferCoord& AStart, const BufferCoord& AEnd,
+    void addChange(SynChangeReason AReason, const BufferCoord& AStart, const BufferCoord& AEnd,
       const QStringList& ChangeText, SynSelectionMode SelMode);
 
-    void AddGroupBreak();
-    void BeginBlock();
-    void Clear();
-    void DeleteItem(int index);
-    void EndBlock();
-    SynChangeReason LastChangeReason();
+    void addGroupBreak();
+    void beginBlock();
+    void clear();
+    void deleteItem(int index);
+    void endBlock();
+    SynChangeReason lastChangeReason();
     bool isEmpty();
-    void Lock();
-    PSynEditUndoItem PeekItem();
-    PSynEditUndoItem PopItem();
-    void PushItem(PSynEditUndoItem Item);
-    void Unlock();
+    void lock();
+    PSynEditUndoItem peekItem();
+    PSynEditUndoItem popItem();
+    void pushItem(PSynEditUndoItem Item);
+    void unlock();
 
-    bool CanUndo();
-    int ItemCount();
+    bool canUndo();
+    int itemCount();
 
     int maxUndoActions() const;
     void setMaxUndoActions(int maxUndoActions);

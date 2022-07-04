@@ -9,6 +9,8 @@ Red Panda C++ Version 1.1.4
   - refactor of undo system
   - fix: calculation of the code block ranges when inserting/deleting
   - fix: undo chains
+  - enhancement: prevent group undo when caret position changed
+  - fix: undo link break may lose leading spaces
 
 Red Panda C++ Version 1.1.3
 

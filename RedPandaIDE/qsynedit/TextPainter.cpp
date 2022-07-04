@@ -133,7 +133,7 @@ void SynEditTextPainter::paintGutter(const QRect& clip)
             if (edit->mGutter.activeLineTextColor().isValid()) {
                 if (
                         (edit->mCaretY==vLine)     ||
-                        (edit->mActiveSelectionMode == SynSelectionMode::smColumn && vLine >= selectionStart.Line && vLine <= selectionEnd.Line)
+                        (edit->mActiveSelectionMode == SynSelectionMode::Column && vLine >= selectionStart.line && vLine <= selectionEnd.line)
                         )
                     painter->setPen(edit->mGutter.activeLineTextColor());
                 else
@@ -253,59 +253,59 @@ void SynEditTextPainter::ComputeSelectionInfo()
     if (!edit->mHideSelection || edit->hasFocus()) {
         bAnySelection = true;
         // Get the *real* start of the selected area.
-        if (edit->mBlockBegin.Line < edit->mBlockEnd.Line) {
+        if (edit->mBlockBegin.line < edit->mBlockEnd.line) {
             vStart = edit->mBlockBegin;
             vEnd = edit->mBlockEnd;
-        } else if (edit->mBlockBegin.Line > edit->mBlockEnd.Line) {
+        } else if (edit->mBlockBegin.line > edit->mBlockEnd.line) {
             vEnd = edit->mBlockBegin;
             vStart = edit->mBlockEnd;
-        } else if (edit->mBlockBegin.Char != edit->mBlockEnd.Char) {
+        } else if (edit->mBlockBegin.ch != edit->mBlockEnd.ch) {
             // it is only on this line.
-            vStart.Line = edit->mBlockBegin.Line;
-            vEnd.Line = vStart.Line;
-            if (edit->mBlockBegin.Char < edit->mBlockEnd.Char) {
-                vStart.Char = edit->mBlockBegin.Char;
-                vEnd.Char = edit->mBlockEnd.Char;
+            vStart.line = edit->mBlockBegin.line;
+            vEnd.line = vStart.line;
+            if (edit->mBlockBegin.ch < edit->mBlockEnd.ch) {
+                vStart.ch = edit->mBlockBegin.ch;
+                vEnd.ch = edit->mBlockEnd.ch;
             } else {
-                vStart.Char = edit->mBlockEnd.Char;
-                vEnd.Char = edit->mBlockBegin.Char;
+                vStart.ch = edit->mBlockEnd.ch;
+                vEnd.ch = edit->mBlockBegin.ch;
             }
         } else
             bAnySelection = false;
         if (edit->mInputPreeditString.length()>0) {
-            if (vStart.Line == edit->mCaretY && vStart.Char >=edit->mCaretX) {
-                vStart.Char+=edit->mInputPreeditString.length();
+            if (vStart.line == edit->mCaretY && vStart.ch >=edit->mCaretX) {
+                vStart.ch+=edit->mInputPreeditString.length();
             }
-            if (vEnd.Line == edit->mCaretY && vEnd.Char >edit->mCaretX) {
-                vEnd.Char+=edit->mInputPreeditString.length();
+            if (vEnd.line == edit->mCaretY && vEnd.ch >edit->mCaretX) {
+                vEnd.ch+=edit->mInputPreeditString.length();
             }
         }
         // If there is any visible selection so far, then test if there is an
         // intersection with the area to be painted.
         if (bAnySelection) {
             // Don't care if the selection is not visible.
-            bAnySelection = (vEnd.Line >= vFirstLine) && (vStart.Line <= vLastLine);
+            bAnySelection = (vEnd.line >= vFirstLine) && (vStart.line <= vLastLine);
             if (bAnySelection) {
                 // Transform the selection from text space into screen space
                 vSelStart = edit->bufferToDisplayPos(vStart);
                 vSelEnd = edit->bufferToDisplayPos(vEnd);
                 if (edit->mInputPreeditString.length()
-                        && vStart.Line == edit->mCaretY) {
+                        && vStart.line == edit->mCaretY) {
                     QString sLine = edit->lineText().left(edit->mCaretX-1)
                             + edit->mInputPreeditString
                             + edit->lineText().mid(edit->mCaretX-1);
-                    vSelStart.Column = edit->charToColumn(sLine,vStart.Char);
+                    vSelStart.Column = edit->charToColumn(sLine,vStart.ch);
                 }
                 if (edit->mInputPreeditString.length()
-                        && vEnd.Line == edit->mCaretY) {
+                        && vEnd.line == edit->mCaretY) {
                     QString sLine = edit->lineText().left(edit->mCaretX-1)
                             + edit->mInputPreeditString
                             + edit->lineText().mid(edit->mCaretX-1);
-                    vSelEnd.Column = edit->charToColumn(sLine,vEnd.Char);
+                    vSelEnd.Column = edit->charToColumn(sLine,vEnd.ch);
                 }
                 // In the column selection mode sort the begin and end of the selection,
                 // this makes the painting code simpler.
-                if (edit->mActiveSelectionMode == SynSelectionMode::smColumn && vSelStart.Column > vSelEnd.Column)
+                if (edit->mActiveSelectionMode == SynSelectionMode::Column && vSelStart.Column > vSelEnd.Column)
                     std::swap(vSelStart.Column, vSelEnd.Column);
             }
         }
@@ -821,8 +821,8 @@ void SynEditTextPainter::PaintLines()
         // Get the line.
         sLine = edit->mDocument->getString(vLine - 1);
         // determine whether will be painted with ActiveLineColor
-        if (edit->mActiveSelectionMode == SynSelectionMode::smColumn) {
-            bCurrentLine = (vLine >= selectionBegin.Line && vLine <= selectionEnd.Line);
+        if (edit->mActiveSelectionMode == SynSelectionMode::Column) {
+            bCurrentLine = (vLine >= selectionBegin.line && vLine <= selectionEnd.line);
         } else {
             bCurrentLine = (edit->mCaretY == vLine);
         }
@@ -859,8 +859,8 @@ void SynEditTextPainter::PaintLines()
             // selection mode and a good start for the smNormal mode.
             nLineSelStart = FirstCol;
             nLineSelEnd = LastCol + 1;
-            if ((edit->mActiveSelectionMode == SynSelectionMode::smColumn) ||
-                ((edit->mActiveSelectionMode == SynSelectionMode::smNormal) && (cRow == vSelStart.Row)) ) {
+            if ((edit->mActiveSelectionMode == SynSelectionMode::Column) ||
+                ((edit->mActiveSelectionMode == SynSelectionMode::Normal) && (cRow == vSelStart.Row)) ) {
                 int ch = edit->columnToChar(vLine,vSelStart.Column);
                 ch = edit->charToColumn(vLine,ch);
                 if (ch > LastCol) {
@@ -871,8 +871,8 @@ void SynEditTextPainter::PaintLines()
                     bComplexLine = true;
                 }
             }
-            if ( (edit->mActiveSelectionMode == SynSelectionMode::smColumn) ||
-                ((edit->mActiveSelectionMode == SynSelectionMode::smNormal) && (cRow == vSelEnd.Row)) ) {
+            if ( (edit->mActiveSelectionMode == SynSelectionMode::Column) ||
+                ((edit->mActiveSelectionMode == SynSelectionMode::Normal) && (cRow == vSelEnd.Row)) ) {
                 int ch = edit->columnToChar(vLine,vSelEnd.Column);
                 int col = edit->charToColumn(vLine,ch);
                 if (col<vSelEnd.Column)

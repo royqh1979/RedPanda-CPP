@@ -2203,8 +2203,8 @@ void MainWindow::loadLastOpens()
         if (!editor)
             continue;
         BufferCoord pos;
-        pos.Char = lastOpenIni.GetLongValue(sectionName,"CursorCol", 1);
-        pos.Line = lastOpenIni.GetLongValue(sectionName,"CursorRow", 1);
+        pos.ch = lastOpenIni.GetLongValue(sectionName,"CursorCol", 1);
+        pos.line = lastOpenIni.GetLongValue(sectionName,"CursorRow", 1);
         editor->setCaretXY(pos);
         editor->setTopLine(
                     lastOpenIni.GetLongValue(sectionName,"TopLine", 1)
@@ -4002,7 +4002,7 @@ void MainWindow::onEditorContextMenu(const QPoint& pos)
     mEditorContextMenuPos = pos;
     int line;
     if (editor->getPositionOfMouse(p)) {
-        line=p.Line;
+        line=p.line;
         //mouse on editing area
         menu.addAction(ui->actionCompile_Run);
         menu.addAction(ui->actionDebug);
@@ -6466,16 +6466,16 @@ void MainWindow::on_actionRename_Symbol_triggered()
             }
         }
         QStringList expression = editor->getExpressionAtPosition(oldCaretXY);
-        if (expression.isEmpty() && oldCaretXY.Char>1) {
+        if (expression.isEmpty() && oldCaretXY.ch>1) {
             BufferCoord coord=oldCaretXY;
-            coord.Char--;
+            coord.ch--;
             expression = editor->getExpressionAtPosition(coord);
         }
             // Find it's definition
         PStatement oldStatement = editor->parser()->findStatementOf(
                         editor->filename(),
                         expression,
-                        oldCaretXY.Line);
+                        oldCaretXY.line);
         // definition of the symbol not found
         if (!oldStatement)
             return;

@@ -1374,7 +1374,6 @@ void Settings::Editor::doLoad()
     mAutoDetectFileEncoding = boolValue("auto_detect_file_encoding",true);
     mUndoLimit = intValue("undo_limit",0);
 
-
     //tooltips
     mEnableTooltips = boolValue("enable_tooltips",true);
     mEnableDebugTooltips = boolValue("enable_debug_tooltips",true);

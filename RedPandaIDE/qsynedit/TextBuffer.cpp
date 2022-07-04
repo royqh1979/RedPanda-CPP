@@ -846,7 +846,7 @@ SynEditUndoList::SynEditUndoList():QObject()
     mInitialChangeNumber = 0;
 }
 
-void SynEditUndoList::AddChange(SynChangeReason AReason, const BufferCoord &AStart,
+void SynEditUndoList::addChange(SynChangeReason AReason, const BufferCoord &AStart,
                                 const BufferCoord &AEnd, const QStringList& ChangeText,
                                 SynSelectionMode SelMode)
 {
@@ -867,31 +867,32 @@ void SynEditUndoList::AddChange(SynChangeReason AReason, const BufferCoord &ASta
     PSynEditUndoItem  NewItem = std::make_shared<SynEditUndoItem>(AReason,
                                                                   SelMode,AStart,AEnd,ChangeText,
                                                                   changeNumber);
-    PushItem(NewItem);
+    pushItem(NewItem);
 }
 
-void SynEditUndoList::AddGroupBreak()
+void SynEditUndoList::addGroupBreak()
 {
-    //Add the GroupBreak even if ItemCount = 0. Since items are stored in
-    //reverse order in TCustomSynEdit.fRedoList, a GroupBreak could be lost.
-    if (LastChangeReason() != SynChangeReason::crGroupBreak) {
-        AddChange(SynChangeReason::crGroupBreak, {0,0}, {0,0}, QStringList(), SynSelectionMode::smNormal);
+    if (!canUndo())
+        return;
+
+    if (lastChangeReason() != SynChangeReason::GroupBreak) {
+        addChange(SynChangeReason::GroupBreak, {0,0}, {0,0}, QStringList(), SynSelectionMode::Normal);
     }
 }
 
-void SynEditUndoList::BeginBlock()
+void SynEditUndoList::beginBlock()
 {
     mBlockCount++;
     mBlockChangeNumber = mNextChangeNumber;
 }
 
-void SynEditUndoList::Clear()
+void SynEditUndoList::clear()
 {
     mItems.clear();
     mFullUndoImposible = false;
 }
 
-void SynEditUndoList::DeleteItem(int index)
+void SynEditUndoList::deleteItem(int index)
 {
     if (index <0 || index>=mItems.count()) {
         ListIndexOutOfBounds(index);
@@ -899,7 +900,7 @@ void SynEditUndoList::DeleteItem(int index)
     mItems.removeAt(index);
 }
 
-void SynEditUndoList::EndBlock()
+void SynEditUndoList::endBlock()
 {
     if (mBlockCount > 0) {
         mBlockCount--;
@@ -909,16 +910,16 @@ void SynEditUndoList::EndBlock()
             mNextChangeNumber++;
             if (mNextChangeNumber == 0)
                 mNextChangeNumber++;
-            if (mItems.count() > 0 && PeekItem()->changeNumber() == iBlockID)
+            if (mItems.count() > 0 && peekItem()->changeNumber() == iBlockID)
                 emit addedUndo();
         }
     }
 }
 
-SynChangeReason SynEditUndoList::LastChangeReason()
+SynChangeReason SynEditUndoList::lastChangeReason()
 {
     if (mItems.count() == 0)
-        return SynChangeReason::crNothing;
+        return SynChangeReason::Nothing;
     else
         return mItems.last()->changeReason();
 }
@@ -928,12 +929,12 @@ bool SynEditUndoList::isEmpty()
     return mItems.count()==0;
 }
 
-void SynEditUndoList::Lock()
+void SynEditUndoList::lock()
 {
     mLockCount++;
 }
 
-PSynEditUndoItem SynEditUndoList::PeekItem()
+PSynEditUndoItem SynEditUndoList::peekItem()
 {
     if (mItems.count() == 0)
         return PSynEditUndoItem();
@@ -941,7 +942,7 @@ PSynEditUndoItem SynEditUndoList::PeekItem()
         return mItems.last();
 }
 
-PSynEditUndoItem SynEditUndoList::PopItem()
+PSynEditUndoItem SynEditUndoList::popItem()
 {
     if (mItems.count() == 0)
         return PSynEditUndoItem();
@@ -952,28 +953,28 @@ PSynEditUndoItem SynEditUndoList::PopItem()
     }
 }
 
-void SynEditUndoList::PushItem(PSynEditUndoItem Item)
+void SynEditUndoList::pushItem(PSynEditUndoItem Item)
 {
     if (!Item)
         return;
     mItems.append(Item);
     ensureMaxEntries();
-    if (Item->changeReason()!= SynChangeReason::crGroupBreak)
+    if (Item->changeReason()!= SynChangeReason::GroupBreak)
         emit addedUndo();
 }
 
-void SynEditUndoList::Unlock()
+void SynEditUndoList::unlock()
 {
     if (mLockCount > 0)
         mLockCount--;
 }
 
-bool SynEditUndoList::CanUndo()
+bool SynEditUndoList::canUndo()
 {
     return mItems.count()>0;
 }
 
-int SynEditUndoList::ItemCount()
+int SynEditUndoList::itemCount()
 {
     return mItems.count();
 }
@@ -993,10 +994,10 @@ void SynEditUndoList::setMaxUndoActions(int maxUndoActions)
 
 bool SynEditUndoList::initialState()
 {
-    if (ItemCount() == 0) {
+    if (itemCount() == 0) {
         return mInitialChangeNumber == 0;
     } else {
-        return PeekItem()->changeNumber() == mInitialChangeNumber;
+        return peekItem()->changeNumber() == mInitialChangeNumber;
     }
 }
 
@@ -1011,15 +1012,15 @@ PSynEditUndoItem SynEditUndoList::item(int index)
 void SynEditUndoList::setInitialState(const bool Value)
 {
     if (Value) {
-        if (ItemCount() == 0)
+        if (itemCount() == 0)
             mInitialChangeNumber = 0;
         else
-            mInitialChangeNumber = PeekItem()->changeNumber();
-    } else if (ItemCount() == 0) {
+            mInitialChangeNumber = peekItem()->changeNumber();
+    } else if (itemCount() == 0) {
         if (mInitialChangeNumber == 0) {
             mInitialChangeNumber = -1;
         }
-    } else if (PeekItem()->changeNumber() == mInitialChangeNumber) {
+    } else if (peekItem()->changeNumber() == mInitialChangeNumber) {
         mInitialChangeNumber = -1;
     }
 }

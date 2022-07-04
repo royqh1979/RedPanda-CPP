@@ -45,7 +45,7 @@ bool CppRefacter::findOccurence(Editor *editor, const BufferCoord &pos)
     PStatement statement = editor->parser()->findStatementOf(
                 editor->filename(),
                 expression,
-                pos.Line);
+                pos.line);
     // definition of the symbol not found
     if (!statement)
         return false;
@@ -117,7 +117,7 @@ void CppRefacter::renameSymbol(Editor *editor, const BufferCoord &pos, const QSt
     QStringList expression;
     QChar s=editor->charAt(pos);
     if (!editor->isIdentChar(s)) {
-        expression = editor->getExpressionAtPosition(BufferCoord{pos.Char-1,pos.Line});
+        expression = editor->getExpressionAtPosition(BufferCoord{pos.ch-1,pos.line});
     } else {
         expression = editor->getExpressionAtPosition(pos);
     }
@@ -125,7 +125,7 @@ void CppRefacter::renameSymbol(Editor *editor, const BufferCoord &pos, const QSt
     PStatement oldStatement = editor->parser()->findStatementOf(
                 editor->filename(),
                 expression,
-                pos.Line);
+                pos.line);
     // definition of the symbol not found
     if (!oldStatement)
         return;
@@ -144,7 +144,7 @@ void CppRefacter::renameSymbol(Editor *editor, const BufferCoord &pos, const QSt
     PStatement newStatement = editor->parser()->findStatementOf(
                 editor->filename(),
                 newExpression,
-                pos.Line);
+                pos.line);
     if (newStatement && fullParentName(newStatement) == oldScope) {
         QMessageBox::critical(editor,
                               tr("Rename Symbol Error"),
@@ -231,19 +231,19 @@ PSearchResultTreeItem CppRefacter::findOccurenceInFile(
                 if (token == statement->command) {
                     //same name symbol , test if the same statement;
                     BufferCoord p;
-                    p.Line = posY+1;
-                    p.Char = start+1;
+                    p.line = posY+1;
+                    p.ch = start+1;
 
                     QStringList expression = editor.getExpressionAtPosition(p);
                     PStatement tokenStatement = parser->findStatementOf(
                                 filename,
-                                expression, p.Line);
+                                expression, p.line);
                     if (tokenStatement
                             && (tokenStatement->line == statement->line)
                             && (tokenStatement->fileName == statement->fileName)) {
                         PSearchResultTreeItem item = std::make_shared<SearchResultTreeItem>();
                         item->filename = filename;
-                        item->line = p.Line;
+                        item->line = p.line;
                         item->start = start;
                         item->len = token.length();
                         item->parent = parentItem.get();
@@ -291,13 +291,13 @@ void CppRefacter::renameSymbolInFile(const QString &filename, const PStatement &
             if (token == statement->command) {
                 //same name symbol , test if the same statement;
                 BufferCoord p;
-                p.Line = posY+1;
-                p.Char = start;
+                p.line = posY+1;
+                p.ch = start;
 
                 QStringList expression = editor.getExpressionAtPosition(p);
                 PStatement tokenStatement = parser->findStatementOf(
                             filename,
-                            expression, p.Line);
+                            expression, p.line);
                 if (tokenStatement
                         && (tokenStatement->line == statement->line)
                         && (tokenStatement->fileName == statement->fileName)) {

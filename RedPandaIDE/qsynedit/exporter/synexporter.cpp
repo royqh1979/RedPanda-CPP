@@ -63,24 +63,24 @@ void SynExporter::ExportRange(PSynDocument ALines, BufferCoord Start, BufferCoor
     // abort if not all necessary conditions are met
     if (!ALines || !mHighlighter || (ALines->count() == 0))
         return;
-    Stop.Line = std::max(1, std::min(Stop.Line, ALines->count()));
-    Stop.Char = std::max(1, std::min(Stop.Char, ALines->getString(Stop.Line - 1).length() + 1));
-    Start.Line = std::max(1, std::min(Start.Line, ALines->count()));
-    Start.Char = std::max(1, std::min(Start.Char, ALines->getString(Start.Line - 1).length() + 1));
-    if ( (Start.Line > ALines->count()) || (Start.Line > Stop.Line) )
+    Stop.line = std::max(1, std::min(Stop.line, ALines->count()));
+    Stop.ch = std::max(1, std::min(Stop.ch, ALines->getString(Stop.line - 1).length() + 1));
+    Start.line = std::max(1, std::min(Start.line, ALines->count()));
+    Start.ch = std::max(1, std::min(Start.ch, ALines->getString(Start.line - 1).length() + 1));
+    if ( (Start.line > ALines->count()) || (Start.line > Stop.line) )
         return;
-    if ((Start.Line == Stop.Line) && (Start.Char >= Stop.Char))
+    if ((Start.line == Stop.line) && (Start.ch >= Stop.ch))
         return;
     // initialization
     mBuffer.clear();
     // export all the lines into fBuffer
     mFirstAttribute = true;
 
-    if (Start.Line == 1)
+    if (Start.line == 1)
         mHighlighter->resetState();
     else
-        mHighlighter->setState(ALines->ranges(Start.Line-2));
-    for (int i = Start.Line; i<=Stop.Line; i++) {
+        mHighlighter->setState(ALines->ranges(Start.line-2));
+    for (int i = Start.line; i<=Stop.line; i++) {
         QString Line = ALines->getString(i-1);
         // order is important, since Start.Y might be equal to Stop.Y
 //        if (i == Stop.Line)
@@ -93,19 +93,19 @@ void SynExporter::ExportRange(PSynDocument ALines, BufferCoord Start, BufferCoor
             PSynHighlighterAttribute attri = mHighlighter->getTokenAttribute();
             int startPos = mHighlighter->getTokenPos();
             QString token = mHighlighter->getToken();
-            if (i==Start.Line && (startPos+token.length() < Start.Char)) {
+            if (i==Start.line && (startPos+token.length() < Start.ch)) {
                 mHighlighter->next();
                 continue;
             }
-            if (i==Stop.Line && (startPos >= Stop.Char-1)) {
+            if (i==Stop.line && (startPos >= Stop.ch-1)) {
                 mHighlighter->next();
                 continue;
             }
-            if (i==Stop.Line && (startPos+token.length() > Stop.Char)) {
-                token = token.remove(Stop.Char - startPos - 1);
+            if (i==Stop.line && (startPos+token.length() > Stop.ch)) {
+                token = token.remove(Stop.ch - startPos - 1);
             }
-            if (i==Start.Line && startPos < Start.Char-1) {
-                token = token.mid(Start.Char-1-startPos);
+            if (i==Start.line && startPos < Start.ch-1) {
+                token = token.mid(Start.ch-1-startPos);
             }
 
             QString Token = ReplaceReservedChars(token);
@@ -115,7 +115,7 @@ void SynExporter::ExportRange(PSynDocument ALines, BufferCoord Start, BufferCoor
             FormatToken(Token);
             mHighlighter->next();
         }
-        if (i!=Stop.Line)
+        if (i!=Stop.line)
             FormatNewLine();
     }
     if (!mFirstAttribute)

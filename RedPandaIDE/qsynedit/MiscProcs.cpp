@@ -621,16 +621,16 @@ int CountLines(const QString &Line, int start)
 
 void ensureNotAfter(BufferCoord &cord1, BufferCoord &cord2)
 {
-    if((cord1.Line > cord2.Line) || (
-                cord1.Line == cord2.Line &&
-                cord1.Char > cord2.Char)) {
+    if((cord1.line > cord2.line) || (
+                cord1.line == cord2.line &&
+                cord1.ch > cord2.ch)) {
         std::swap(cord1,cord2);
     }
 }
 
 BufferCoord minBufferCoord(const BufferCoord &P1, const BufferCoord &P2)
 {
-    if ( (P2.Line < P1.Line) || ( (P2.Line == P1.Line) && (P2.Char < P1.Char)) ) {
+    if ( (P2.line < P1.line) || ( (P2.line == P1.line) && (P2.ch < P1.ch)) ) {
       return P2;
     } else {
       return P1;
@@ -639,7 +639,7 @@ BufferCoord minBufferCoord(const BufferCoord &P1, const BufferCoord &P2)
 
 BufferCoord maxBufferCoord(const BufferCoord &P1, const BufferCoord &P2)
 {
-    if ( (P2.Line > P1.Line) || ( (P2.Line == P1.Line) && (P2.Char > P1.Char)) ) {
+    if ( (P2.line > P1.line) || ( (P2.line == P1.line) && (P2.ch > P1.ch)) ) {
       return P2;
     } else {
       return P1;
@@ -672,5 +672,5 @@ QStringList splitStrings(const QString &text)
 
 int calSpanLines(const BufferCoord &startPos, const BufferCoord &endPos)
 {
-    return std::abs(endPos.Line - startPos.Line+1);
+    return std::abs(endPos.line - startPos.line+1);
 }
