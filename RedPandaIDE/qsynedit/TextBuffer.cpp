@@ -840,9 +840,8 @@ SynEditUndoList::SynEditUndoList():QObject()
     mInsideRedo = false;
 
     mBlockChangeNumber=0;
-    mBlockCount=0;
+    mBlockLockCount=0;
     mFullUndoImposible=false;
-    mLockCount = 0;
     mInitialChangeNumber = 0;
 }
 
@@ -850,24 +849,19 @@ void SynEditUndoList::addChange(SynChangeReason AReason, const BufferCoord &ASta
                                 const BufferCoord &AEnd, const QStringList& ChangeText,
                                 SynSelectionMode SelMode)
 {
-    if (mLockCount != 0)
-        return;
     int changeNumber;
-    if (mBlockChangeNumber != 0) {
+    if (inBlock()) {
         changeNumber = mBlockChangeNumber;
     } else {
-        changeNumber = mNextChangeNumber;
-        if (mBlockCount == 0) {
-            mNextChangeNumber++;
-            if (mNextChangeNumber == 0) {
-                mNextChangeNumber++;
-            }
-        }
+        changeNumber = getNextChangeNumber();
     }
     PSynEditUndoItem  NewItem = std::make_shared<SynEditUndoItem>(AReason,
                                                                   SelMode,AStart,AEnd,ChangeText,
                                                                   changeNumber);
     pushItem(NewItem);
+    if (mBlockLockCount == 0) {
+        emit addedUndo();
+    }
 }
 
 void SynEditUndoList::addGroupBreak()
@@ -882,8 +876,8 @@ void SynEditUndoList::addGroupBreak()
 
 void SynEditUndoList::beginBlock()
 {
-    mBlockCount++;
-    mBlockChangeNumber = mNextChangeNumber;
+    mBlockLockCount++;
+    mBlockChangeNumber = getNextChangeNumber();
 }
 
 void SynEditUndoList::clear()
@@ -902,18 +896,25 @@ void SynEditUndoList::deleteItem(int index)
 
 void SynEditUndoList::endBlock()
 {
-    if (mBlockCount > 0) {
-        mBlockCount--;
-        if (mBlockCount == 0)  {
+    if (mBlockLockCount > 0) {
+        mBlockLockCount--;
+        if (mBlockLockCount == 0)  {
             int iBlockID = mBlockChangeNumber;
             mBlockChangeNumber = 0;
-            mNextChangeNumber++;
-            if (mNextChangeNumber == 0)
-                mNextChangeNumber++;
             if (mItems.count() > 0 && peekItem()->changeNumber() == iBlockID)
                 emit addedUndo();
         }
     }
+}
+
+bool SynEditUndoList::inBlock()
+{
+    return mBlockLockCount>0;
+}
+
+unsigned int SynEditUndoList::getNextChangeNumber()
+{
+    return mNextChangeNumber++;
 }
 
 SynChangeReason SynEditUndoList::lastChangeReason()
@@ -927,11 +928,6 @@ SynChangeReason SynEditUndoList::lastChangeReason()
 bool SynEditUndoList::isEmpty()
 {
     return mItems.count()==0;
-}
-
-void SynEditUndoList::lock()
-{
-    mLockCount++;
 }
 
 PSynEditUndoItem SynEditUndoList::peekItem()
@@ -959,14 +955,6 @@ void SynEditUndoList::pushItem(PSynEditUndoItem Item)
         return;
     mItems.append(Item);
     ensureMaxEntries();
-    if (Item->changeReason()!= SynChangeReason::GroupBreak)
-        emit addedUndo();
-}
-
-void SynEditUndoList::unlock()
-{
-    if (mLockCount > 0)
-        mLockCount--;
 }
 
 bool SynEditUndoList::canUndo()
@@ -992,37 +980,12 @@ void SynEditUndoList::setMaxUndoActions(int maxUndoActions)
     }
 }
 
-bool SynEditUndoList::initialState()
-{
-    if (itemCount() == 0) {
-        return mInitialChangeNumber == 0;
-    } else {
-        return peekItem()->changeNumber() == mInitialChangeNumber;
-    }
-}
-
 PSynEditUndoItem SynEditUndoList::item(int index)
 {
     if (index <0 || index>=mItems.count()) {
         ListIndexOutOfBounds(index);
     }
     return mItems[index];
-}
-
-void SynEditUndoList::setInitialState(const bool Value)
-{
-    if (Value) {
-        if (itemCount() == 0)
-            mInitialChangeNumber = 0;
-        else
-            mInitialChangeNumber = peekItem()->changeNumber();
-    } else if (itemCount() == 0) {
-        if (mInitialChangeNumber == 0) {
-            mInitialChangeNumber = -1;
-        }
-    } else if (peekItem()->changeNumber() == mInitialChangeNumber) {
-        mInitialChangeNumber = -1;
-    }
 }
 
 void SynEditUndoList::setItem(int index, PSynEditUndoItem Value)
@@ -1041,11 +1004,6 @@ int SynEditUndoList::blockChangeNumber() const
 void SynEditUndoList::setBlockChangeNumber(int blockChangeNumber)
 {
     mBlockChangeNumber = blockChangeNumber;
-}
-
-int SynEditUndoList::blockCount() const
-{
-    return mBlockCount;
 }
 
 bool SynEditUndoList::insideRedo() const

@@ -172,6 +172,7 @@ enum class SynChangeReason {
     MoveSelectionDown,
     Nothing // undo list empty
   };
+
 class SynEditUndoItem {
 private:
     SynChangeReason mChangeReason;
@@ -179,7 +180,7 @@ private:
     BufferCoord mChangeStartPos;
     BufferCoord mChangeEndPos;
     QStringList mChangeText;
-    int mChangeNumber;
+    size_t mChangeNumber;
 public:
     SynEditUndoItem(SynChangeReason reason,
         SynSelectionMode selMode,
@@ -207,31 +208,28 @@ public:
 
     void addGroupBreak();
     void beginBlock();
+    void endBlock();
+
     void clear();
     void deleteItem(int index);
-    void endBlock();
     SynChangeReason lastChangeReason();
     bool isEmpty();
-    void lock();
     PSynEditUndoItem peekItem();
     PSynEditUndoItem popItem();
     void pushItem(PSynEditUndoItem Item);
-    void unlock();
+
 
     bool canUndo();
     int itemCount();
 
     int maxUndoActions() const;
     void setMaxUndoActions(int maxUndoActions);
-    bool initialState();
+
     PSynEditUndoItem item(int index);
-    void setInitialState(const bool Value);
     void setItem(int index, PSynEditUndoItem Value);
 
     int blockChangeNumber() const;
     void setBlockChangeNumber(int blockChangeNumber);
-
-    int blockCount() const;
 
     bool insideRedo() const;
     void setInsideRedo(bool insideRedo);
@@ -242,15 +240,15 @@ signals:
     void addedUndo();
 protected:
     void ensureMaxEntries();
+    bool inBlock();
+    unsigned int getNextChangeNumber();
 protected:
-    int mBlockChangeNumber;
-    int mBlockCount;
+    size_t mBlockChangeNumber;
+    int mBlockLockCount;
     bool mFullUndoImposible;
     QVector<PSynEditUndoItem> mItems;
-    int mLockCount;
     int mMaxUndoActions;
-    int mNextChangeNumber;
-    int mInitialChangeNumber;
+    size_t mNextChangeNumber;
     bool mInsideRedo;
 };
 

@@ -3425,7 +3425,7 @@ QString SynEdit::expandAtWideGlyphs(const QString &S)
 
 void SynEdit::updateModifiedStatus()
 {
-    setModified(!mUndoList->initialState());
+    setModified(!mUndoList->isEmpty());
 }
 
 int SynEdit::scanFrom(int Index, int canStopIndex)
@@ -6689,8 +6689,6 @@ void SynEdit::onUndoAdded()
     if (! mUndoList->insideRedo() &&
             mUndoList->peekItem() && (mUndoList->peekItem()->changeReason()!=SynChangeReason::GroupBreak))
         mRedoList->clear();
-    if (mUndoList->blockCount() == 0 )
-        onChanged();
 }
 
 SynSelectionMode SynEdit::activeSelectionMode() const
@@ -6901,9 +6899,6 @@ void SynEdit::setTopLine(int Value)
 void SynEdit::onRedoAdded()
 {
     updateModifiedStatus();
-
-    if (mRedoList->blockCount() == 0 )
-        onChanged();
 }
 
 void SynEdit::onGutterChanged()
