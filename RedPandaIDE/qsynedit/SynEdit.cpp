@@ -3425,7 +3425,12 @@ QString SynEdit::expandAtWideGlyphs(const QString &S)
 
 void SynEdit::updateModifiedStatus()
 {
-    setModified(!mUndoList->isEmpty());
+    bool oldModified = mModified;
+    mModified = !mUndoList->initialState();
+    setModified(mModified);
+    qDebug()<<mModified<<oldModified;
+    if (oldModified!=mModified)
+        emit statusChanged(SynStatusChange::scModifyChanged);
 }
 
 int SynEdit::scanFrom(int Index, int canStopIndex)
@@ -4301,8 +4306,8 @@ void SynEdit::doUndo()
 
     PSynEditUndoItem item = mUndoList->peekItem();
     if (item) {
-        int oldChangeNumber = item->changeNumber();
-        int saveChangeNumber = mRedoList->blockChangeNumber();
+        size_t oldChangeNumber = item->changeNumber();
+        size_t saveChangeNumber = mRedoList->blockChangeNumber();
         mRedoList->setBlockChangeNumber(item->changeNumber());
         {
             auto action = finally([&,this] {
@@ -4473,8 +4478,8 @@ void SynEdit::doRedo()
     PSynEditUndoItem item = mRedoList->peekItem();
     if (!item)
         return;
-    int oldChangeNumber = item->changeNumber();
-    int saveChangeNumber = mUndoList->blockChangeNumber();
+    size_t oldChangeNumber = item->changeNumber();
+    size_t saveChangeNumber = mUndoList->blockChangeNumber();
     mUndoList->setBlockChangeNumber(item->changeNumber());
     {
         auto action = finally([&,this]{
@@ -6549,10 +6554,16 @@ void SynEdit::setModified(bool Value)
     }
     if (Value != mModified) {
         mModified = Value;
-        if (mOptions.testFlag(SynEditorOption::eoGroupUndo) && (!Value) ) {
-            mUndoList->addGroupBreak();
+
+        if (Value) {
+            mUndoList->clear();
+            mRedoList->clear();
+        } else {
+            if (mOptions.testFlag(SynEditorOption::eoGroupUndo)) {
+                mUndoList->addGroupBreak();
+            }
+            mUndoList->setInitialState();
         }
-        mUndoList->setInitialState(!Value);
         emit statusChanged(SynStatusChange::scModifyChanged);
     }
 }
@@ -6689,6 +6700,8 @@ void SynEdit::onUndoAdded()
     if (! mUndoList->insideRedo() &&
             mUndoList->peekItem() && (mUndoList->peekItem()->changeReason()!=SynChangeReason::GroupBreak))
         mRedoList->clear();
+
+    onChanged();
 }
 
 SynSelectionMode SynEdit::activeSelectionMode() const
@@ -6899,6 +6912,7 @@ void SynEdit::setTopLine(int Value)
 void SynEdit::onRedoAdded()
 {
     updateModifiedStatus();
+    onChanged();
 }
 
 void SynEdit::onGutterChanged()

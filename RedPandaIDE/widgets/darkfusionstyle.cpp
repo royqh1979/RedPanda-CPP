@@ -110,13 +110,13 @@ enum Direction {
 };
 
 // from windows style
-static const int windowsItemFrame        =  2; // menu item frame width
-static const int windowsItemHMargin      =  3; // menu item hor text margin
-static const int windowsItemVMargin      =  8; // menu item ver text margin
-static const int windowsRightBorder      = 15; // right border on windows
+//static const int windowsItemFrame        =  2; // menu item frame width
+//static const int windowsItemHMargin      =  3; // menu item hor text margin
+//static const int windowsItemVMargin      =  8; // menu item ver text margin
+//static const int windowsRightBorder      = 15; // right border on windows
 
-static const int groupBoxBottomMargin    =  0;  // space below the groupbox
-static const int groupBoxTopMargin       =  3;
+//static const int groupBoxBottomMargin    =  0;  // space below the groupbox
+//static const int groupBoxTopMargin       =  3;
 
 DarkFusionStyle::DarkFusionStyle():QProxyStyle("fusion")
 {
@@ -849,7 +849,7 @@ void DarkFusionStyle::drawControl(ControlElement element, const QStyleOption *op
 {
     QRect rect = option->rect;
     QColor outline = calcOutline(option->palette);
-    QColor highlightedOutline = calcHighlightedOutline(option->palette);
+    //QColor highlightedOutline = calcHighlightedOutline(option->palette);
     QColor shadow = calcDarkShade();
 
 

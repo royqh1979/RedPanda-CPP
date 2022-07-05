@@ -842,6 +842,8 @@ SynEditUndoList::SynEditUndoList():QObject()
     mBlockChangeNumber=0;
     mBlockLockCount=0;
     mFullUndoImposible=false;
+    mBlockCount=0;
+    mLastPoppedItemChangeNumber=0;
     mInitialChangeNumber = 0;
 }
 
@@ -855,11 +857,13 @@ void SynEditUndoList::addChange(SynChangeReason AReason, const BufferCoord &ASta
     } else {
         changeNumber = getNextChangeNumber();
     }
-    PSynEditUndoItem  NewItem = std::make_shared<SynEditUndoItem>(AReason,
+    PSynEditUndoItem  newItem = std::make_shared<SynEditUndoItem>(AReason,
                                                                   SelMode,AStart,AEnd,ChangeText,
                                                                   changeNumber);
-    pushItem(NewItem);
-    if (mBlockLockCount == 0) {
+    mItems.append(newItem);
+    ensureMaxEntries();
+    if (AReason!=SynChangeReason::GroupBreak && !inBlock()) {
+        mBlockCount++;
         emit addedUndo();
     }
 }
@@ -884,14 +888,10 @@ void SynEditUndoList::clear()
 {
     mItems.clear();
     mFullUndoImposible = false;
-}
-
-void SynEditUndoList::deleteItem(int index)
-{
-    if (index <0 || index>=mItems.count()) {
-        ListIndexOutOfBounds(index);
-    }
-    mItems.removeAt(index);
+    mInitialChangeNumber=0;
+    mLastPoppedItemChangeNumber=0;
+    mBlockCount=0;
+    mBlockLockCount=0;
 }
 
 void SynEditUndoList::endBlock()
@@ -899,10 +899,12 @@ void SynEditUndoList::endBlock()
     if (mBlockLockCount > 0) {
         mBlockLockCount--;
         if (mBlockLockCount == 0)  {
-            int iBlockID = mBlockChangeNumber;
+            size_t iBlockID = mBlockChangeNumber;
             mBlockChangeNumber = 0;
-            if (mItems.count() > 0 && peekItem()->changeNumber() == iBlockID)
+            if (mItems.count() > 0 && peekItem()->changeNumber() == iBlockID) {
+                mBlockCount++;
                 emit addedUndo();
+            }
         }
     }
 }
@@ -944,17 +946,17 @@ PSynEditUndoItem SynEditUndoList::popItem()
         return PSynEditUndoItem();
     else {
         PSynEditUndoItem item = mItems.last();
+        if (mLastPoppedItemChangeNumber!=item->changeNumber()) {
+            mBlockCount--;
+            if (mBlockCount<0) {
+                qDebug()<<"block count calculation error";
+                mBlockCount=0;
+            }
+        }
+        mLastPoppedItemChangeNumber =  item->changeNumber();
         mItems.removeLast();
         return item;
     }
-}
-
-void SynEditUndoList::pushItem(PSynEditUndoItem Item)
-{
-    if (!Item)
-        return;
-    mItems.append(Item);
-    ensureMaxEntries();
 }
 
 bool SynEditUndoList::canUndo()
@@ -980,20 +982,21 @@ void SynEditUndoList::setMaxUndoActions(int maxUndoActions)
     }
 }
 
-PSynEditUndoItem SynEditUndoList::item(int index)
+bool SynEditUndoList::initialState()
 {
-    if (index <0 || index>=mItems.count()) {
-        ListIndexOutOfBounds(index);
+    if (itemCount() == 0) {
+        return mInitialChangeNumber==0;
+    } else {
+        return peekItem()->changeNumber() == mInitialChangeNumber;
     }
-    return mItems[index];
 }
 
-void SynEditUndoList::setItem(int index, PSynEditUndoItem Value)
+void SynEditUndoList::setInitialState()
 {
-    if (index <0 || index>=mItems.count()) {
-        ListIndexOutOfBounds(index);
-    }
-    mItems[index]=Value;
+    if (itemCount() == 0)
+        mInitialChangeNumber = 0;
+    else
+        mInitialChangeNumber = peekItem()->changeNumber();
 }
 
 int SynEditUndoList::blockChangeNumber() const
@@ -1023,13 +1026,14 @@ bool SynEditUndoList::fullUndoImposible() const
 
 void SynEditUndoList::ensureMaxEntries()
 {
-    if (mMaxUndoActions>0 && mItems.count() > mMaxUndoActions){
+    if (mMaxUndoActions>0 && mBlockCount > mMaxUndoActions){
         mFullUndoImposible = true;
-        while (mItems.count() > mMaxUndoActions) {
+        while (mBlockCount > mMaxUndoActions && !mItems.isEmpty()) {
             //remove all undo item in block
-            int changeNumber = mItems.front()->changeNumber();
+            size_t changeNumber = mItems.front()->changeNumber();
             while (mItems.count()>0 && mItems.front()->changeNumber() == changeNumber)
                 mItems.removeFirst();
+            mBlockCount--;
       }
     }
 }
@@ -1054,7 +1058,7 @@ QStringList SynEditUndoItem::changeText() const
     return mChangeText;
 }
 
-int SynEditUndoItem::changeNumber() const
+size_t SynEditUndoItem::changeNumber() const
 {
     return mChangeNumber;
 }

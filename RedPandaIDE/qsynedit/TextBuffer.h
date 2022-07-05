@@ -194,7 +194,7 @@ public:
     BufferCoord changeStartPos() const;
     BufferCoord changeEndPos() const;
     QStringList changeText() const;
-    int changeNumber() const;
+    size_t changeNumber() const;
 };
 using PSynEditUndoItem = std::shared_ptr<SynEditUndoItem>;
 
@@ -211,22 +211,18 @@ public:
     void endBlock();
 
     void clear();
-    void deleteItem(int index);
     SynChangeReason lastChangeReason();
     bool isEmpty();
     PSynEditUndoItem peekItem();
     PSynEditUndoItem popItem();
-    void pushItem(PSynEditUndoItem Item);
-
 
     bool canUndo();
     int itemCount();
 
     int maxUndoActions() const;
     void setMaxUndoActions(int maxUndoActions);
-
-    PSynEditUndoItem item(int index);
-    void setItem(int index, PSynEditUndoItem Value);
+    bool initialState();
+    void setInitialState();
 
     int blockChangeNumber() const;
     void setBlockChangeNumber(int blockChangeNumber);
@@ -245,10 +241,13 @@ protected:
 protected:
     size_t mBlockChangeNumber;
     int mBlockLockCount;
+    int mBlockCount; // count of action blocks;
+    size_t mLastPoppedItemChangeNumber;
     bool mFullUndoImposible;
     QVector<PSynEditUndoItem> mItems;
     int mMaxUndoActions;
     size_t mNextChangeNumber;
+    size_t mInitialChangeNumber;
     bool mInsideRedo;
 };
 
