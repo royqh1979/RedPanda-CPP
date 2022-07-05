@@ -138,7 +138,6 @@ enum class SynScrollBarKind {
 using SynPaintTransientProc = std::function<void(const QPaintDevice& paintDevice,
         SynTransientType transientType)>;
         */
-using SynPlaceMarkProc = std::function<void(PSynEditMark& Mark)>;
 using SynProcessCommandProc = std::function<void(SynEditorCommand& command, QChar& AChar, void* data)>;
 using SynMouseCursorProc = std::function<void(const BufferCoord& aLineCharPos, QCursor &  aCursor)>;
 using SynPaintProc = std::function<void(const QPaintDevice& paintDevice )>;
@@ -689,9 +688,7 @@ private:
     QColor mActiveLineColor;
     PSynEditUndoList mUndoList;
     PSynEditUndoList mRedoList;
-    SynEditMarkList  mBookMarks;
     QPoint mMouseDownPos;
-    SynBookMarkOpt mBookMarkOpt;
     bool mHideSelection;
     int mMouseWheelAccumulator;
     SynEditCaretType mOverwriteCaret;
@@ -700,7 +697,6 @@ private:
     SynEditKeyStrokes mKeyStrokes;
     bool mModified;
     QDateTime mLastModifyTime;
-    SynEditMarkList mMarkList;
     int mExtraLineSpacing;
     SynSelectionMode mSelectionMode;
     SynSelectionMode mActiveSelectionMode; //mode of the active selection
@@ -729,12 +725,10 @@ private:
     int mPainterLock; // lock counter to prevent repaint while painting
     bool mUndoing;
     // event handlers
-    SynPlaceMarkProc mOnClearMark;
     SynProcessCommandProc mOnCommandProcessed;
     SynMouseCursorProc mOnMouseCursor;
     SynPaintProc mOnPaint;
 //    SynPreparePaintHighlightTokenProc mOnPaintHighlightToken;
-    SynPlaceMarkProc mOnPlaceMark;
     SynProcessCommandProc mOnProcessingCommand;
     SynProcessCommandProc mOnProcessingUserCommand;
 

@@ -91,7 +91,6 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     mSelectedBackground = palette().color(QPalette::Highlight);
     mSelectedForeground = palette().color(QPalette::HighlightedText);
 
-    mBookMarkOpt.connect(&mBookMarkOpt, &SynBookMarkOpt::changed, this, &SynEdit::onBookMarkOptionsChanged);
     //  fRightEdge has to be set before FontChanged is called for the first time
     mRightEdge = 80;
 
@@ -2399,7 +2398,6 @@ void SynEdit::doMoveSelDown()
 void SynEdit::clearAll()
 {
     mDocument->clear();
-    mMarkList.clear();
     mUndoList->clear();
     mRedoList->clear();
     setModified(false);

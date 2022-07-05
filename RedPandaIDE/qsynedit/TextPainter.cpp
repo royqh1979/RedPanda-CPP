@@ -1093,8 +1093,3 @@ void SynEditTextPainter::PaintLines()
         bCurrentLine = false;
     }
 }
-
-void SynEditTextPainter::drawMark(PSynEditMark , int &, int )
-{
-    //todo
-}

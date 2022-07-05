@@ -251,26 +251,6 @@ void SynEditKeyStrokes::resetDefaults()
 
 //    add(SynEditorCommand::ecUndo, Qt::Key_Z, Qt::ControlModifier);
 //    add(SynEditorCommand::ecRedo, Qt::Key_Z, Qt::ControlModifier|Qt::ShiftModifier);
-//    add(SynEditorCommand::ecGotoMarker0, Qt::Key_0, Qt::ControlModifier);
-//    add(SynEditorCommand::ecGotoMarker1, Qt::Key_1, Qt::ControlModifier);
-//    add(SynEditorCommand::ecGotoMarker2, Qt::Key_2, Qt::ControlModifier);
-//    add(SynEditorCommand::ecGotoMarker3, Qt::Key_3, Qt::ControlModifier);
-//    add(SynEditorCommand::ecGotoMarker4, Qt::Key_4, Qt::ControlModifier);
-//    add(SynEditorCommand::ecGotoMarker5, Qt::Key_5, Qt::ControlModifier);
-//    add(SynEditorCommand::ecGotoMarker6, Qt::Key_6, Qt::ControlModifier);
-//    add(SynEditorCommand::ecGotoMarker7, Qt::Key_7, Qt::ControlModifier);
-//    add(SynEditorCommand::ecGotoMarker8, Qt::Key_8, Qt::ControlModifier);
-//    add(SynEditorCommand::ecGotoMarker9, Qt::Key_9, Qt::ControlModifier);
-//    add(SynEditorCommand::ecSetMarker0, Qt::Key_0, Qt::ControlModifier | Qt::ShiftModifier);
-//    add(SynEditorCommand::ecSetMarker1, Qt::Key_1, Qt::ControlModifier | Qt::ShiftModifier);
-//    add(SynEditorCommand::ecSetMarker2, Qt::Key_2, Qt::ControlModifier | Qt::ShiftModifier);
-//    add(SynEditorCommand::ecSetMarker3, Qt::Key_3, Qt::ControlModifier | Qt::ShiftModifier);
-//    add(SynEditorCommand::ecSetMarker4, Qt::Key_4, Qt::ControlModifier | Qt::ShiftModifier);
-//    add(SynEditorCommand::ecSetMarker5, Qt::Key_5, Qt::ControlModifier | Qt::ShiftModifier);
-//    add(SynEditorCommand::ecSetMarker6, Qt::Key_6, Qt::ControlModifier | Qt::ShiftModifier);
-//    add(SynEditorCommand::ecSetMarker7, Qt::Key_7, Qt::ControlModifier | Qt::ShiftModifier);
-//    add(SynEditorCommand::ecSetMarker8, Qt::Key_8, Qt::ControlModifier | Qt::ShiftModifier);
-//    add(SynEditorCommand::ecSetMarker9, Qt::Key_9, Qt::ControlModifier | Qt::ShiftModifier);
 //    add(SynEditorCommand::ecNormalSelect, Qt::Key_N, Qt::ControlModifier | Qt::ShiftModifier);
 //    add(SynEditorCommand::ecColumnSelect, Qt::Key_C, Qt::ControlModifier | Qt::ShiftModifier);
 //    add(SynEditorCommand::ecLineSelect, Qt::Key_L, Qt::ControlModifier | Qt::ShiftModifier);

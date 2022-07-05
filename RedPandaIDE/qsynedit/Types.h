@@ -52,10 +52,6 @@ Q_DECLARE_FLAGS(SynFontStyles,SynFontStyle)
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(SynFontStyles)
 
-using PSynIcon = std::shared_ptr<QIcon>;
-using SynIconList = QList<PSynIcon>;
-using PSynIconList = std::shared_ptr<SynIconList>;
-
 enum class SynEditingAreaType {
   eatRectangleBorder,
   eatWaveUnderLine,

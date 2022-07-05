@@ -60,7 +60,6 @@ private:
     void PaintFoldAttributes();
     void GetBraceColorAttr(int level, PSynHighlighterAttribute &attr);
     void PaintLines();
-    void drawMark(PSynEditMark aMark,int& aGutterOff, int aMarkRow);
 
 private:
     SynEdit* edit;

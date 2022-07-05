@@ -107,30 +107,6 @@ enum class SynEditorCommand {
 
     ecMatchBracket    = 250,  // Go to matching bracket
 
-    ecGotoMarker0     = 301,  // Goto marker
-    ecGotoMarker1     = 302,  // Goto marker
-    ecGotoMarker2     = 303,  // Goto marker
-    ecGotoMarker3     = 304,  // Goto marker
-    ecGotoMarker4     = 305,  // Goto marker
-    ecGotoMarker5     = 306,  // Goto marker
-    ecGotoMarker6     = 307,  // Goto marker
-    ecGotoMarker7     = 308,  // Goto marker
-    ecGotoMarker8     = 309,  // Goto marker
-    ecGotoMarker9     = 310,  // Goto marker
-    ecSetMarker0      = 351,  // Set marker, Data = PPoint - X, Y Pos
-    ecSetMarker1      = 352,  // Set marker, Data = PPoint - X, Y Pos
-    ecSetMarker2      = 353,  // Set marker, Data = PPoint - X, Y Pos
-    ecSetMarker3      = 354,  // Set marker, Data = PPoint - X, Y Pos
-    ecSetMarker4      = 355,  // Set marker, Data = PPoint - X, Y Pos
-    ecSetMarker5      = 356,  // Set marker, Data = PPoint - X, Y Pos
-    ecSetMarker6      = 357,  // Set marker, Data = PPoint - X, Y Pos
-    ecSetMarker7      = 358,  // Set marker, Data = PPoint - X, Y Pos
-    ecSetMarker8      = 359,  // Set marker, Data = PPoint - X, Y Pos
-    ecSetMarker9      = 360,  // Set marker, Data = PPoint - X, Y Pos
-
-    ecGotFocus        = 480,
-    ecLostFocus       = 481,
-
     ecContextHelp     = 490,  // Help on Word, Data = Word
 
     ecDeleteLastChar  = 501,  // Delete last char (i.e. backspace key)
@@ -176,24 +152,22 @@ enum class SynEditorCommand {
     ecZoomOut         = 631,  //Increase Font Size
     ecZoomIn          = 632,  //Decrease Font Size
 
-    ecAutoCompletion    = 650,
     ecLineBreakAtBegin  = 651, //add a line break at the begin of the line
     ecLineBreakAtEnd    = 652,
-    ecInsertLineAtBegin = 653,
-    ecInsertLineAtEnd   = 654,
-
-    ecUserFirst       = 1001, // Start of user-defined commands
-
-
 
     //### Code Folding ###
-    ecCollapse = ecUserFirst + 100,
-    ecUncollapse = ecUserFirst + 101,
-    ecCollapseLevel = ecUserFirst + 102,
-    ecUncollapseLevel = ecUserFirst + 103,
-    ecCollapseAll = ecUserFirst + 104,
-    ecUncollapseAll = ecUserFirst + 105,
+    ecCollapse          = 700,
+    ecUncollapse        = 701,
+    ecCollapseLevel     = 702,
+    ecUncollapseLevel   = 703,
+    ecCollapseAll       = 704,
+    ecUncollapseAll     = 705,
     //### End Code Folding ###
+
+    ecUserFirst = 1001, // Start of user-defined commands
+
+
+
 };
 
 class SynKeyError: public BaseError {
