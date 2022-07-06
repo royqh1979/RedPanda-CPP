@@ -196,6 +196,7 @@ public:
     QStringList changeText() const;
     size_t changeNumber() const;
 };
+
 using PSynEditUndoItem = std::shared_ptr<SynEditUndoItem>;
 
 class SynEditUndoList : public QObject {
@@ -205,6 +206,11 @@ public:
 
     void addChange(SynChangeReason AReason, const BufferCoord& AStart, const BufferCoord& AEnd,
       const QStringList& ChangeText, SynSelectionMode SelMode);
+
+    void restoreChange(SynChangeReason AReason, const BufferCoord& AStart, const BufferCoord& AEnd,
+                       const QStringList& ChangeText, SynSelectionMode SelMode, size_t changeNumber);
+
+    void restoreChange(PSynEditUndoItem item);
 
     void addGroupBreak();
     void beginBlock();
@@ -224,9 +230,6 @@ public:
     bool initialState();
     void setInitialState();
 
-    int blockChangeNumber() const;
-    void setBlockChangeNumber(int blockChangeNumber);
-
     bool insideRedo() const;
     void setInsideRedo(bool insideRedo);
 
@@ -240,9 +243,10 @@ protected:
     unsigned int getNextChangeNumber();
 protected:
     size_t mBlockChangeNumber;
-    int mBlockLockCount;
+    int mBlockLock;
     int mBlockCount; // count of action blocks;
     size_t mLastPoppedItemChangeNumber;
+    size_t mLastRestoredItemChangeNumber;
     bool mFullUndoImposible;
     QVector<PSynEditUndoItem> mItems;
     int mMaxUndoActions;
@@ -251,6 +255,30 @@ protected:
     bool mInsideRedo;
 };
 
+class SynEditRedoList : public QObject {
+    Q_OBJECT
+public:
+    explicit SynEditRedoList();
+
+    void addRedo(SynChangeReason AReason, const BufferCoord& AStart, const BufferCoord& AEnd,
+                 const QStringList& ChangeText, SynSelectionMode SelMode, size_t changeNumber);
+    void addRedo(PSynEditUndoItem item);
+
+    void clear();
+    SynChangeReason lastChangeReason();
+    bool isEmpty();
+    PSynEditUndoItem peekItem();
+    PSynEditUndoItem popItem();
+
+    bool canRedo();
+    int itemCount();
+
+protected:
+    QVector<PSynEditUndoItem> mItems;
+};
+
+
 using PSynEditUndoList = std::shared_ptr<SynEditUndoList>;
+using PSynEditRedoList = std::shared_ptr<SynEditRedoList>;
 
 #endif // SYNEDITSTRINGLIST_H

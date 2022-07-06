@@ -840,16 +840,17 @@ SynEditUndoList::SynEditUndoList():QObject()
     mInsideRedo = false;
 
     mBlockChangeNumber=0;
-    mBlockLockCount=0;
+    mBlockLock=0;
     mFullUndoImposible=false;
     mBlockCount=0;
     mLastPoppedItemChangeNumber=0;
     mInitialChangeNumber = 0;
+    mLastRestoredItemChangeNumber=0;
 }
 
-void SynEditUndoList::addChange(SynChangeReason AReason, const BufferCoord &AStart,
-                                const BufferCoord &AEnd, const QStringList& ChangeText,
-                                SynSelectionMode SelMode)
+void SynEditUndoList::addChange(SynChangeReason reason, const BufferCoord &startPos,
+                                const BufferCoord &endPos, const QStringList& changeText,
+                                SynSelectionMode selMode)
 {
     int changeNumber;
     if (inBlock()) {
@@ -857,15 +858,41 @@ void SynEditUndoList::addChange(SynChangeReason AReason, const BufferCoord &ASta
     } else {
         changeNumber = getNextChangeNumber();
     }
+    PSynEditUndoItem  newItem = std::make_shared<SynEditUndoItem>(
+                reason,
+                selMode,startPos,endPos,changeText,
+                changeNumber);
+//    qDebug()<<"add change"<<changeNumber<<(int)reason;
+    mItems.append(newItem);
+    ensureMaxEntries();
+    if (reason!=SynChangeReason::GroupBreak && !inBlock()) {
+        mBlockCount++;
+//        qDebug()<<"add"<<mBlockCount;
+        emit addedUndo();
+    }
+}
+
+void SynEditUndoList::restoreChange(SynChangeReason AReason, const BufferCoord &AStart, const BufferCoord &AEnd, const QStringList &ChangeText, SynSelectionMode SelMode, size_t changeNumber)
+{
     PSynEditUndoItem  newItem = std::make_shared<SynEditUndoItem>(AReason,
                                                                   SelMode,AStart,AEnd,ChangeText,
                                                                   changeNumber);
-    mItems.append(newItem);
+    restoreChange(newItem);
+}
+
+void SynEditUndoList::restoreChange(PSynEditUndoItem item)
+{
+    size_t changeNumber = item->changeNumber();
+    mItems.append(item);
     ensureMaxEntries();
-    if (AReason!=SynChangeReason::GroupBreak && !inBlock()) {
+    if (changeNumber>mNextChangeNumber)
+        mNextChangeNumber=changeNumber;
+    if (changeNumber!=mLastRestoredItemChangeNumber) {
+//        qDebug()<<"restore"<<mBlockCount;
         mBlockCount++;
         emit addedUndo();
     }
+    mLastRestoredItemChangeNumber=changeNumber;
 }
 
 void SynEditUndoList::addGroupBreak()
@@ -880,8 +907,11 @@ void SynEditUndoList::addGroupBreak()
 
 void SynEditUndoList::beginBlock()
 {
-    mBlockLockCount++;
-    mBlockChangeNumber = getNextChangeNumber();
+//    qDebug()<<"begin block";
+    if (mBlockLock==0)
+        mBlockChangeNumber = getNextChangeNumber();
+    mBlockLock++;
+
 }
 
 void SynEditUndoList::clear()
@@ -890,19 +920,22 @@ void SynEditUndoList::clear()
     mFullUndoImposible = false;
     mInitialChangeNumber=0;
     mLastPoppedItemChangeNumber=0;
+    mLastRestoredItemChangeNumber=0;
     mBlockCount=0;
-    mBlockLockCount=0;
+    mBlockLock=0;
 }
 
 void SynEditUndoList::endBlock()
 {
-    if (mBlockLockCount > 0) {
-        mBlockLockCount--;
-        if (mBlockLockCount == 0)  {
+//    qDebug()<<"end block";
+    if (mBlockLock > 0) {
+        mBlockLock--;
+        if (mBlockLock == 0)  {
             size_t iBlockID = mBlockChangeNumber;
             mBlockChangeNumber = 0;
             if (mItems.count() > 0 && peekItem()->changeNumber() == iBlockID) {
                 mBlockCount++;
+//                qDebug()<<"end block"<<mBlockCount;
                 emit addedUndo();
             }
         }
@@ -911,7 +944,7 @@ void SynEditUndoList::endBlock()
 
 bool SynEditUndoList::inBlock()
 {
-    return mBlockLockCount>0;
+    return mBlockLock>0;
 }
 
 unsigned int SynEditUndoList::getNextChangeNumber()
@@ -946,10 +979,12 @@ PSynEditUndoItem SynEditUndoList::popItem()
         return PSynEditUndoItem();
     else {
         PSynEditUndoItem item = mItems.last();
-        if (mLastPoppedItemChangeNumber!=item->changeNumber()) {
+//        qDebug()<<"popped"<<item->changeNumber()<<item->changeText()<<(int)item->changeReason()<<mLastPoppedItemChangeNumber;
+        if (mLastPoppedItemChangeNumber!=item->changeNumber() && item->changeReason()!=SynChangeReason::GroupBreak) {
             mBlockCount--;
+//            qDebug()<<"pop"<<mBlockCount;
             if (mBlockCount<0) {
-                qDebug()<<"block count calculation error";
+//                qDebug()<<"block count calculation error";
                 mBlockCount=0;
             }
         }
@@ -999,16 +1034,6 @@ void SynEditUndoList::setInitialState()
         mInitialChangeNumber = peekItem()->changeNumber();
 }
 
-int SynEditUndoList::blockChangeNumber() const
-{
-    return mBlockChangeNumber;
-}
-
-void SynEditUndoList::setBlockChangeNumber(int blockChangeNumber)
-{
-    mBlockChangeNumber = blockChangeNumber;
-}
-
 bool SynEditUndoList::insideRedo() const
 {
     return mInsideRedo;
@@ -1030,10 +1055,12 @@ void SynEditUndoList::ensureMaxEntries()
         mFullUndoImposible = true;
         while (mBlockCount > mMaxUndoActions && !mItems.isEmpty()) {
             //remove all undo item in block
-            size_t changeNumber = mItems.front()->changeNumber();
+            PSynEditUndoItem item = mItems.front();
+            size_t changeNumber = item->changeNumber();
             while (mItems.count()>0 && mItems.front()->changeNumber() == changeNumber)
                 mItems.removeFirst();
-            mBlockCount--;
+            if (item->changeReason()!=SynChangeReason::GroupBreak)
+                mBlockCount--;
       }
     }
 }
@@ -1078,4 +1105,70 @@ SynEditUndoItem::SynEditUndoItem(SynChangeReason reason, SynSelectionMode selMod
 SynChangeReason SynEditUndoItem::changeReason() const
 {
     return mChangeReason;
+}
+
+SynEditRedoList::SynEditRedoList()
+{
+
+}
+
+void SynEditRedoList::addRedo(SynChangeReason AReason, const BufferCoord &AStart, const BufferCoord &AEnd, const QStringList &ChangeText, SynSelectionMode SelMode, size_t changeNumber)
+{
+    PSynEditUndoItem  newItem = std::make_shared<SynEditUndoItem>(
+                AReason,
+                SelMode,AStart,AEnd,ChangeText,
+                changeNumber);
+    mItems.append(newItem);
+}
+
+void SynEditRedoList::addRedo(PSynEditUndoItem item)
+{
+    mItems.append(item);
+}
+
+void SynEditRedoList::clear()
+{
+    mItems.clear();
+}
+
+SynChangeReason SynEditRedoList::lastChangeReason()
+{
+    if (mItems.count() == 0)
+        return SynChangeReason::Nothing;
+    else
+        return mItems.last()->changeReason();
+}
+
+bool SynEditRedoList::isEmpty()
+{
+    return mItems.isEmpty();
+}
+
+PSynEditUndoItem SynEditRedoList::peekItem()
+{
+    if (mItems.count() == 0)
+        return PSynEditUndoItem();
+    else
+        return mItems.last();
+}
+
+PSynEditUndoItem SynEditRedoList::popItem()
+{
+    if (mItems.count() == 0)
+        return PSynEditUndoItem();
+    else {
+        PSynEditUndoItem item = mItems.last();
+        mItems.removeLast();
+        return item;
+    }
+}
+
+bool SynEditRedoList::canRedo()
+{
+    return mItems.count()>0;
+}
+
+int SynEditRedoList::itemCount()
+{
+    return mItems.count();
 }

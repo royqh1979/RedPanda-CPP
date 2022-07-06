@@ -11,6 +11,7 @@ Red Panda C++ Version 1.1.4
   - fix: undo chains
   - enhancement: prevent group undo when caret position changed
   - fix: undo link break may lose leading spaces
+  - fix: correctly restore editor's modified status when undo/redo
 
 Red Panda C++ Version 1.1.3
 

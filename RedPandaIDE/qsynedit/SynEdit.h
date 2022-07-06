@@ -633,7 +633,7 @@ private slots:
     void onLinesDeleted(int index, int count);
     void onLinesInserted(int index, int count);
     void onLinesPutted(int index, int count);
-    void onRedoAdded();
+    //void onRedoAdded();
     void onScrollTimeout();
     void onDraggingScrollTimeout();
     void onUndoAdded();
@@ -687,7 +687,7 @@ private:
     bool mCaretUseTextColor;
     QColor mActiveLineColor;
     PSynEditUndoList mUndoList;
-    PSynEditUndoList mRedoList;
+    PSynEditRedoList mRedoList;
     QPoint mMouseDownPos;
     bool mHideSelection;
     int mMouseWheelAccumulator;
