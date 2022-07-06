@@ -984,7 +984,7 @@ PSynEditUndoItem SynEditUndoList::popItem()
             mBlockCount--;
 //            qDebug()<<"pop"<<mBlockCount;
             if (mBlockCount<0) {
-//                qDebug()<<"block count calculation error";
+                qDebug()<<"block count calculation error";
                 mBlockCount=0;
             }
         }
