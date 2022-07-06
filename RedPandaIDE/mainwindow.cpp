@@ -298,6 +298,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     //files view
     ui->treeFiles->setModel(&mFileSystemModel);
+    connect(&mFileSystemModel, &QFileSystemModel::layoutChanged,
+            this, &MainWindow::onFileSystemModelLayoutChanged, Qt::QueuedConnection);
     mFileSystemModel.setReadOnly(false);
     mFileSystemModel.setIconProvider(&mFileSystemModelIconProvider);
 
@@ -4389,6 +4391,11 @@ void MainWindow::on_EditorTabsRight_tabCloseRequested(int index)
 {
     Editor* editor = mEditorList->getEditor(index,ui->EditorTabsRight);
     mEditorList->closeEditor(editor);
+}
+
+void MainWindow::onFileSystemModelLayoutChanged()
+{
+    ui->treeFiles->scrollTo(ui->treeFiles->currentIndex(),QTreeView::PositionAtCenter);
 }
 
 void MainWindow::on_actionOpen_triggered()

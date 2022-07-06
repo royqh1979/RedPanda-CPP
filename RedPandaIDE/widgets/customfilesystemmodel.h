@@ -18,6 +18,7 @@
 #define CUSTOMFILESYSTEMMODEL_H
 
 #include <QFileSystemModel>
+#include <QTimer>
 
 class GitRepository;
 class GitManager;
@@ -27,6 +28,13 @@ class CustomFileSystemModel : public QFileSystemModel
 public:
     explicit CustomFileSystemModel(QObject *parent = nullptr);
 
+public slots:
+    void delaySort();
+
+protected slots:
+    void performDelayedSort();
+private:
+    QTimer mDelayedSortTimer;
 };
 
 #endif // CUSTOMFILESYSTEMMODEL_H

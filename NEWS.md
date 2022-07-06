@@ -12,7 +12,8 @@ Red Panda C++ Version 1.1.4
   - enhancement: prevent group undo when caret position changed
   - fix: undo link break may lose leading spaces
   - fix: correctly restore editor's modified status when undo/redo
-  - enhancement: set current index to the folder after new folder created in the file view
+  - enhancement: set current index to the folder after new folder created in the files view
+  - enhancement: resort files in the files view after rename
 
 Red Panda C++ Version 1.1.3
 

@@ -351,6 +351,8 @@ private slots:
     void on_EditorTabsLeft_tabCloseRequested(int index);
     void on_EditorTabsRight_tabCloseRequested(int index);
 
+    void onFileSystemModelLayoutChanged();
+
     void on_actionOpen_triggered();
 
     void on_actionSave_triggered();
