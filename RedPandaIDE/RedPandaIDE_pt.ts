@@ -4089,14 +4089,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Untitled</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Untitled %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Do you really want to delete %1?</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4498,6 +4490,10 @@
     </message>
     <message>
         <source>Raylib Manual</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>untitled%1</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

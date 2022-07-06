@@ -3535,13 +3535,17 @@ void MainWindow::onShowInsertCodeSnippetMenu()
 void MainWindow::onFilesViewCreateFolder()
 {
     QModelIndex index = ui->treeFiles->currentIndex();
+    QModelIndex parentIndex;
     QDir dir;
     if (index.isValid()
             && ui->treeFiles->selectionModel()->isSelected(index)) {
-        if (mFileSystemModel.isDir(index))
+        if (mFileSystemModel.isDir(index)) {
             dir = QDir(mFileSystemModel.fileInfo(index).absoluteFilePath());
-        else
+            parentIndex = index;
+        } else {
             dir = mFileSystemModel.fileInfo(index).absoluteDir();
+            parentIndex = mFileSystemModel.index(dir.absolutePath());
+        }
         ui->treeFiles->expand(index);
     } else {
         dir = mFileSystemModel.rootDirectory();
@@ -3552,7 +3556,8 @@ void MainWindow::onFilesViewCreateFolder()
         count++;
         folderName = tr("New Folder %1").arg(count);
     }
-    dir.mkdir(dir.filePath(folderName));
+    QModelIndex newIndex = mFileSystemModel.mkdir(parentIndex,folderName);
+    ui->treeFiles->setCurrentIndex(newIndex);
 }
 
 void MainWindow::onFilesViewCreateFile()
@@ -3574,11 +3579,11 @@ void MainWindow::onFilesViewCreateFile()
         suffix=".cpp";
     else
         suffix=".c";
-    QString fileName = tr("Untitled")+suffix;
+    QString fileName = tr("untitled")+suffix;
     int count = 0;
     while (dir.exists(fileName)) {
         count++;
-        fileName = tr("Untitled %1").arg(count)+suffix;
+        fileName = tr("untitled%1").arg(count)+suffix;
     }
     QFile file(dir.filePath(fileName));
     file.open(QFile::NewOnly);
