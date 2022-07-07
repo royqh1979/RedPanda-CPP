@@ -1,5 +1,6 @@
 #!/bin/bash
 
+TARGET_DIR="/r/"
 BUILD_DIR="${TEMP}/redpandacpp-build"
 PACKAGE_DIR="${TEMP}/RedPanda-CPP"
 GCC_DIR="/mingw32"
@@ -39,11 +40,14 @@ rm -f redpanda-i686-nocompiler.nsi
 
 SETUP_NAME=`ls *.Setup.exe`
 PORTABLE_NAME=`echo $SETUP_NAME | sed 's/Setup.exe/Portable.7z/'`
-mv "$SETUP_NAME" "${SOURCE_DIR}"
+mv "$SETUP_NAME" "${TARGET_DIR}"
 popd
 
+pushd .
+cd "${TARGET_DIR}"
 echo "Making no-compiler Portable Package..."
 7z a -mmt8 -mx9  "${PORTABLE_NAME}" "${PACKAGE_DIR}"
+popd
 
 # we need reinstall config32.nsh
 pushd .
@@ -68,12 +72,15 @@ rm -f redpanda-i686.nsi
 
 SETUP_NAME=`ls *.Setup.exe`
 PORTABLE_NAME=`echo $SETUP_NAME | sed 's/Setup.exe/Portable.7z/'`
-mv "$SETUP_NAME" "${SOURCE_DIR}"
+mv "$SETUP_NAME" "${TARGET_DIR}"
 
 popd
 
+pushd .
+cd "${TARGET_DIR}"
 echo "Making Portable Package..."
 7z a -mmt8 -mx9  "${PORTABLE_NAME}" "${PACKAGE_DIR}"
+popd
 
 echo "Clean up..."
 rm -rf "${PACKAGE_DIR}"
