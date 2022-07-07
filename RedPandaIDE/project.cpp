@@ -34,6 +34,8 @@
 #include <QTextCodec>
 #include <QMessageBox>
 #include <QDirIterator>
+#include <QMimeDatabase>
+#include <QDesktopServices>
 #include "customfileiconprovider.h"
 #include <QMimeData>
 #include "settings.h"
@@ -315,6 +317,15 @@ Editor *Project::openUnit(int index)
     PProjectUnit unit = mUnits[index];
 
     if (!unit->fileName().isEmpty() && fileExists(unit->fileName())) {
+        if (getFileType(unit->fileName())==FileType::Other) {
+            QMimeDatabase db;
+            QMimeType mimeType=db.mimeTypeForFile(unit->fileName());
+            if (!mimeType.isValid() || !mimeType.name().startsWith("text/")) {
+                QDesktopServices::openUrl(QUrl::fromLocalFile(unit->fileName()));
+            }
+            return nullptr;
+        }
+
         Editor * editor = mEditorList->getOpenedEditorByFilename(unit->fileName());
         if (editor) {//already opened in the editors
             editor->setInProject(true);

@@ -263,6 +263,18 @@ FileType getFileType(const QString &filename)
     if (filename.endsWith(".rc",PATH_SENSITIVITY)) {
         return FileType::WindowsResourceSource;
     }
+    if (filename.endsWith(".in",PATH_SENSITIVITY)) {
+        return FileType::Text;
+    }
+    if (filename.endsWith(".out",PATH_SENSITIVITY)) {
+        return FileType::Text;
+    }
+    if (filename.endsWith(".txt",PATH_SENSITIVITY)) {
+        return FileType::Text;
+    }
+    if (filename.endsWith(".dat",PATH_SENSITIVITY)) {
+        return FileType::Text;
+    }
     return FileType::Other;
 }
 

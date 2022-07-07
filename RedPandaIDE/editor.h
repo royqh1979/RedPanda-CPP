@@ -147,13 +147,14 @@ public:
     const QByteArray& encodingOption() const noexcept;
     void setEncodingOption(const QByteArray& encoding) noexcept;
     const QByteArray& fileEncoding() const noexcept;
+    void convertToEncoding(const QByteArray& encoding);
     const QString& filename() const noexcept;
+
     bool inProject() const noexcept;
     bool isNew() const noexcept;
 
     void loadFile(QString filename = "");
     void saveFile(QString filename);
-    void convertToEncoding(const QByteArray& encoding);
     bool save(bool force=false, bool reparse=true);
     bool saveAs(const QString& name="", bool fromProject = false);
     void activate();
@@ -164,9 +165,11 @@ public:
     void updateCaption(const QString& newCaption=QString());
     void applySettings();
     void applyColorScheme(const QString& schemeName);
+
     void copyToClipboard() override;
     void cutToClipboard() override;
     void copyAsHTML();
+
     void setCaretPosition(int line,int aChar);
     void setCaretPositionAndActivate(int line,int aChar);
 

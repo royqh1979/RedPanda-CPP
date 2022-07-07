@@ -83,6 +83,8 @@
 #include "widgets/searchdialog.h"
 
 #ifdef Q_OS_WIN
+#include <QMimeDatabase>
+#include <QMimeType>
 #include <windows.h>
 #endif
 
@@ -304,7 +306,7 @@ MainWindow::MainWindow(QWidget *parent)
     mFileSystemModel.setIconProvider(&mFileSystemModelIconProvider);
 
     mFileSystemModel.setNameFilters(pSystemConsts->defaultFileNameFilters());
-    mFileSystemModel.setNameFilterDisables(false);
+    mFileSystemModel.setNameFilterDisables(true);
     //setFilesViewRoot(pSettings->environment().currentFolder());
     for (int i=1;i<mFileSystemModel.columnCount();i++) {
         ui->treeFiles->hideColumn(i);
@@ -6903,9 +6905,22 @@ void MainWindow::on_treeFiles_doubleClicked(const QModelIndex &index)
     QString filepath = mFileSystemModel.filePath(index);
     QFileInfo file(filepath);
     if (file.isFile()) {
-        if (getFileType(filepath)==FileType::Project) {
+        switch (getFileType(filepath)) {
+        case FileType::Project:
             openProject(filepath);
-        } else {
+            break;
+        case FileType::Other:
+            {
+            QMimeDatabase db;
+            QMimeType mimeType=db.mimeTypeForFile(file);
+            if (mimeType.isValid() && mimeType.name().startsWith("text/")) {
+                openFile(filepath);
+            } else {
+                QDesktopServices::openUrl(QUrl::fromLocalFile(file.absoluteFilePath()));
+            }
+        }
+            break;
+        default:
             openFile(filepath);
         }
     }
@@ -7772,6 +7787,11 @@ void MainWindow::on_actionGit_Push_triggered()
 void MainWindow::on_actionFilesView_Hide_Non_Support_Files_toggled(bool /* arg1 */)
 {
     mFileSystemModel.setNameFilterDisables(!ui->actionFilesView_Hide_Non_Support_Files->isChecked());
+    if (!mFileSystemModel.nameFilterDisables()) {
+        mFileSystemModel.setNameFilters(pSystemConsts->defaultFileNameFilters());
+    } else {
+        mFileSystemModel.setNameFilters(QStringList());
+    }
     if (pSettings->environment().hideNonSupportFilesInFileView()
             != ui->actionFilesView_Hide_Non_Support_Files->isChecked()) {
         pSettings->environment().setHideNonSupportFilesInFileView(ui->actionFilesView_Hide_Non_Support_Files->isChecked());
