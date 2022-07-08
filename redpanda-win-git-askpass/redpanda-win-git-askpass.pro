@@ -18,7 +18,7 @@ isEmpty(APP_NAME) {
 }
 
 SOURCES += \
-        main.c
+        main.cpp
 
 RC_FILE += \
     redpanda-git-askpass_private.rc

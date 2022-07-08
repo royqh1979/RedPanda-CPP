@@ -18,7 +18,6 @@ int WINAPI WinMain(HINSTANCE hInstance,
                    LPTSTR lpCmdLine, int nCmdShow) {
     MSG msg;
 
-
     hMainDlg = CreateDialog(hInstance, (LPCTSTR)IDD_MAIN_DIALOG, 0,(DLGPROC)MainDlgProc);
     ShowWindow(hMainDlg, nCmdShow);
     hwndTxtPassword = GetDlgItem(hMainDlg,ID_TXT_PASSWORD);
