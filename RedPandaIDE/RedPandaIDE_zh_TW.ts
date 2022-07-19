@@ -5730,10 +5730,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Leaving those directories will lead to problems during compilation.&lt;br /&gt;&lt;br /&gt;Unless you know exactly what you&apos;re doing, it is recommended that you click Yes.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Compiler set not configuared.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5819,6 +5815,10 @@
     </message>
     <message>
         <source>Do not compile, stop after the preprocessing stage (-E)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Leaving those directories will lead to problems during compilation.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
