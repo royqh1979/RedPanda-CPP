@@ -30,6 +30,7 @@ isEmpty(PREFIX) {
     PREFIX = /usr/local
 }
 
+DEFINES += _WIN32_WINNT=0x0601
 DEFINES += PREFIX=\\\"$${PREFIX}\\\"
 DEFINES += APP_NAME=\\\"$${APP_NAME}\\\"
 DEFINES += REDPANDA_CPP_VERSION=\\\"$${APP_VERSION}\\\"
