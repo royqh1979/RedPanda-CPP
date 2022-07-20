@@ -3,6 +3,7 @@ Red Panda C++ Version 1.1.5
   - change: uncheck "hide unsupported files" in files view shouldn't gray out non-c files
   - enhancement: double clicking a non-text file in the files view, will open it with external program
   - enhancement: double clicking a non-text file in the project's view, will open it with external program
+  - fix: correctly update the start postion of selection after code completion
 
 Red Panda C++ Version 1.1.4
 

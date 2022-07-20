@@ -3169,6 +3169,8 @@ void Editor::completionInsert(bool appendFunc)
 //            fFunctionTip.FileName := fFileName;
 //            fFunctionTip.Show;
 //              end;
+        } else {
+            setCaretX(caretX());
         }
     }
     mCompletionPopup->hide();
@@ -3200,6 +3202,8 @@ void Editor::headerCompletionInsert()
     setBlockEnd(p);
 
     setSelText(headerName);
+
+    setCaretX(caretX());
 
     if (headerName.endsWith("/")) {
         showHeaderCompletion(false,true);
