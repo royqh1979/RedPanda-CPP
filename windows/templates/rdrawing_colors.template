@@ -1,0 +1,21 @@
+[Template]
+ver=2
+Name=Colors
+Name[zh_CN]=色彩常量
+Icon=rdrawing_colors.ico
+Description=Demo for raylib & rdrawing color constants, and raygui scroll panel
+Description[zh_CN]=演示raylib/rdrawing色彩常量和raygui滚动面板使用的示例程序
+Category=Multimedia
+Category[zh_CN]=多媒体
+
+[Unit0]
+CName=main.c
+C=rdrawing_colors_c.txt
+
+[Project]
+UnitCount=1
+Type=1
+IsCpp=0
+linker=-lrdrawing -lraylib -lopengl32 -lgdi32 -lwinmm
+ExecEncoding=UTF-8
+
