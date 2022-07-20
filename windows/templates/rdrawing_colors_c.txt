@@ -31,10 +31,9 @@ void drawPurpleColors(Image *pImg,Font font);
 void drawLightColors(Image *pImg,Font font);
 void drawGrayColors(Image *pImg,Font font);
 
-int ddd;
 int main() {
 	int currentPage=Red;
-	InitWindow(1000,900,"Colors");
+	InitWindow(1000,900,"Rdrawing Predefined Colors");
 	SetTraceLogLevel(LOG_WARNING);
 	SetTargetFPS(60);
 	bool fontChanged=false;
