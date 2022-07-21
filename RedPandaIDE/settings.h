@@ -1135,6 +1135,12 @@ public:
         int GDBServerPort() const;
         void setGDBServerPort(int newGDBServerPort);
 
+        int memoryViewRows() const;
+        void setMemoryViewRows(int newMemoryViewRows);
+
+        int memoryViewColumns() const;
+        void setMemoryViewColumns(int newMemoryViewColumns);
+
     private:
         bool mEnableDebugConsole;
         bool mShowDetailLog;
@@ -1151,6 +1157,8 @@ public:
         bool mOpenCPUInfoWhenSignaled;
         bool mUseGDBServer;
         int mGDBServerPort;
+        int mMemoryViewRows;
+        int mMemoryViewColumns;
 
         // _Base interface
     protected:

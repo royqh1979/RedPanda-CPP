@@ -1974,6 +1974,14 @@ void Settings::CompilerSet::setProperties(const QString &binDir)
             delimPos2++;
         mVersion = output.mid(delimPos1,delimPos2-delimPos1);
 
+//        //fix for mingw64 gcc
+//        double versionValue;
+//        bool ok;
+//        versionValue = mVersion.toDouble(&ok);
+//        if (ok && versionValue>=12) {
+//            mCompilerType=COMPILER_GCC_UTF8;
+//        }
+
         // Find compiler builder
         delimPos1 = delimPos2;
         while ((delimPos1 < output.length()) && !(output[delimPos1] == '('))
@@ -3376,6 +3384,26 @@ void Settings::Debugger::setGDBServerPort(int newGDBServerPort)
     mGDBServerPort = newGDBServerPort;
 }
 
+int Settings::Debugger::memoryViewRows() const
+{
+    return mMemoryViewRows;
+}
+
+void Settings::Debugger::setMemoryViewRows(int newMemoryViewRows)
+{
+    mMemoryViewRows = newMemoryViewRows;
+}
+
+int Settings::Debugger::memoryViewColumns() const
+{
+    return mMemoryViewColumns;
+}
+
+void Settings::Debugger::setMemoryViewColumns(int newMemoryViewColumns)
+{
+    mMemoryViewColumns = newMemoryViewColumns;
+}
+
 bool Settings::Debugger::autosaveBreakpoints() const
 {
     return mAutosaveBreakpoints;
@@ -3433,6 +3461,8 @@ void Settings::Debugger::doSave()
     saveValue("open_cpu_info_when_signaled",mOpenCPUInfoWhenSignaled);
     saveValue("use_gdb_server", mUseGDBServer);
     saveValue("gdb_server_port",mGDBServerPort);
+    saveValue("memory_view_rows",mMemoryViewRows);
+    saveValue("memory_view_columns",mMemoryViewColumns);
 
 }
 
@@ -3461,6 +3491,8 @@ void Settings::Debugger::doLoad()
     mUseGDBServer = boolValue("use_gdb_server", true);
 #endif
     mGDBServerPort = intValue("gdb_server_port",41234);
+    mMemoryViewRows = intValue("memory_view_rows",8);
+    mMemoryViewColumns = intValue("memory_view_columns",8);
 }
 
 Settings::History::History(Settings *settings):_Base(settings, SETTING_HISTORY)

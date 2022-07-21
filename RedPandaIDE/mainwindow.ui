@@ -182,7 +182,6 @@
     <addaction name="actionCut"/>
     <addaction name="actionCopy"/>
     <addaction name="actionPaste"/>
-    <addaction name="actionSelectAll"/>
     <addaction name="separator"/>
     <addaction name="actionIndent"/>
     <addaction name="actionUnIndent"/>
@@ -193,8 +192,6 @@
     <addaction name="actionFoldAll"/>
     <addaction name="actionUnfoldAll"/>
     <addaction name="separator"/>
-    <addaction name="actionMove_Selection_Up"/>
-    <addaction name="actionMove_Selection_Down"/>
     <addaction name="actionDelete_Line"/>
     <addaction name="actionDuplicate_Line"/>
     <addaction name="actionDelete_Word"/>
@@ -223,6 +220,7 @@
     <addaction name="actionForward"/>
     <addaction name="separator"/>
     <addaction name="actionMatch_Bracket"/>
+    <addaction name="actionGo_to_Line"/>
     <addaction name="separator"/>
     <addaction name="actionAdd_bookmark"/>
     <addaction name="actionRemove_Bookmark"/>
@@ -323,8 +321,19 @@
     <addaction name="actionGit_Commit"/>
     <addaction name="actionGit_Restore"/>
    </widget>
+   <widget class="QMenu" name="menuSelection">
+    <property name="title">
+     <string>Selection</string>
+    </property>
+    <addaction name="actionSelectAll"/>
+    <addaction name="actionSelect_Word"/>
+    <addaction name="separator"/>
+    <addaction name="actionMove_Selection_Up"/>
+    <addaction name="actionMove_Selection_Down"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
+   <addaction name="menuSelection"/>
    <addaction name="menuView"/>
    <addaction name="menuSearch"/>
    <addaction name="menuCode"/>
@@ -3166,6 +3175,16 @@
   <action name="actionRaylib_Manual">
    <property name="text">
     <string>Raylib Manual</string>
+   </property>
+  </action>
+  <action name="actionSelect_Word">
+   <property name="text">
+    <string>Select Word</string>
+   </property>
+  </action>
+  <action name="actionGo_to_Line">
+   <property name="text">
+    <string>Go to Line...</string>
    </property>
   </action>
  </widget>

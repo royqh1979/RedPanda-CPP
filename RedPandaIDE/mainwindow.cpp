@@ -454,6 +454,7 @@ void MainWindow::updateEditorActions()
         ui->actionRemove_Bookmark->setEnabled(false);
         ui->actionModify_Bookmark_Description->setEnabled(false);
 
+        ui->actionGo_to_Line->setEnabled(false);
         ui->actionLocate_in_Files_View->setEnabled(false);
     } else {
         ui->actionAuto_Detect->setEnabled(true);
@@ -505,6 +506,7 @@ void MainWindow::updateEditorActions()
         ui->actionRemove_Bookmark->setEnabled(e->hasBookmark(line));
         ui->actionModify_Bookmark_Description->setEnabled(e->hasBookmark(line));
 
+                ui->actionGo_to_Line->setEnabled(true);
         ui->actionLocate_in_Files_View->setEnabled(!e->isNew());
     }
 
@@ -4040,6 +4042,8 @@ void MainWindow::onEditorContextMenu(const QPoint& pos)
         menu.addAction(ui->actionRemove_Bookmark);
         menu.addAction(ui->actionModify_Bookmark_Description);
         menu.addSeparator();
+        menu.addAction(ui->actionGo_to_Line);
+        menu.addSeparator();
         menu.addAction(ui->actionFile_Properties);
 
         //these actions needs parser
@@ -4058,6 +4062,8 @@ void MainWindow::onEditorContextMenu(const QPoint& pos)
         menu.addAction(ui->actionAdd_bookmark);
         menu.addAction(ui->actionRemove_Bookmark);
         menu.addAction(ui->actionModify_Bookmark_Description);
+        menu.addSeparator();
+        menu.addAction(ui->actionGo_to_Line);
     }
     ui->actionLocate_in_Files_View->setEnabled(!editor->isNew());
     ui->actionBreakpoint_property->setEnabled(editor->hasBreakpoint(line));
@@ -5227,7 +5233,11 @@ void MainWindow::onDebugMemoryAddressInput()
     if (!s.isEmpty()) {
 //        connect(mDebugger, &Debugger::memoryExamineReady,
 //                   this, &MainWindow::onMemoryExamineReady);
-        mDebugger->sendCommand("-data-read-memory",QString("%1 x 1 8 8 ").arg(s));
+        mDebugger->sendCommand("-data-read-memory",QString("%1 x 1 %2 %3 ")
+                               .arg(s)
+                               .arg(pSettings->debugger().memoryViewRows())
+                               .arg(pSettings->debugger().memoryViewColumns())
+                               );
     }
 }
 
@@ -8012,6 +8022,31 @@ void MainWindow::on_actionRaylib_Manual_triggered()
         QDesktopServices::openUrl(QUrl("https://zhuanlan.zhihu.com/p/458335134"));
     } else {
         QDesktopServices::openUrl(QUrl("https://www.raylib.com/"));
+    }
+}
+
+
+void MainWindow::on_actionSelect_Word_triggered()
+{
+    Editor* e=mEditorList->getEditor();
+    if (e) {
+        e->selectWord();
+    }
+}
+
+
+void MainWindow::on_actionGo_to_Line_triggered()
+{
+    Editor* e=mEditorList->getEditor();
+    if (!e)
+        return;
+    bool ok;
+    int lineNo=QInputDialog::getInt(e,tr("Go to Line"),tr("Line"),
+                                    e->caretY(),1,e->document()->count(),
+                                    1,&ok);
+    if (ok && lineNo!=e->caretY()) {
+        e->setCaretPosition(lineNo,1);
+        e->setFocus();
     }
 }
 

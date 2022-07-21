@@ -91,6 +91,8 @@ enum class SynEditorCommand {
     ecCopy            = 201,  // Copy selection to clipboard
     ecSelWord         = 202,
     ecSelectAll       = 203,  // Select entire contents of editor, cursor to end
+    ecExpandSelection = 204,  // expand selection
+    ecShrinkSelection = 205,  // shrink selection
 
     ecScrollUp        = 211,  // Scroll up one line leaving cursor position unchanged.
     ecScrollDown      = 212,  // Scroll down one line leaving cursor position unchanged.

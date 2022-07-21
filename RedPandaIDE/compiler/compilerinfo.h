@@ -7,6 +7,7 @@
 #include <QMutex>
 #define COMPILER_CLANG "Clang"
 #define COMPILER_GCC "GCC"
+#define COMPILER_GCC_UTF8 "GCC_UTF8"
 
 #define CC_CMD_OPT_ANSI "cc_cmd_opt_ansi"
 #define CC_CMD_OPT_NO_ASM "cc_cmd_opt_no_asm"
@@ -118,6 +119,13 @@ public:
 class GCCCompilerInfo: public CompilerInfo{
 public:
     GCCCompilerInfo();
+    bool supportConvertingCharset() override;
+    bool forceUTF8InDebugger() override;
+};
+
+class GCCUTF8CompilerInfo: public CompilerInfo{
+public:
+    GCCUTF8CompilerInfo();
     bool supportConvertingCharset() override;
     bool forceUTF8InDebugger() override;
 };

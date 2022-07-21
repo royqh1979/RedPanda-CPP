@@ -784,6 +784,18 @@
         <source>Show disassembly code in blend mode</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Memory View</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Memory View Rows</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Memory View Columns</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>Debugger</name>
@@ -4494,6 +4506,26 @@
     </message>
     <message>
         <source>untitled%1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Selection</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Select Word</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Go to Line...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Go to Line</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Line</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

@@ -235,7 +235,11 @@ void Debugger::refreshAll()
     refreshWatchVars();
     sendCommand("-stack-list-variables", "--all-values");
     if (memoryModel()->startAddress()>0)
-        sendCommand("-data-read-memory",QString("%1 x 1 8 8 ").arg(memoryModel()->startAddress()));
+        sendCommand("-data-read-memory",QString("%1 x 1 %2 %3 ")
+                    .arg(memoryModel()->startAddress())
+                    .arg(pSettings->debugger().memoryViewRows())
+                    .arg(pSettings->debugger().memoryViewColumns())
+                    );
 }
 
 RegisterModel *Debugger::registerModel() const
@@ -2509,6 +2513,7 @@ MemoryModel::MemoryModel(int dataPerLine, QObject *parent):
 
 void MemoryModel::updateMemory(const QStringList &value)
 {
+    int maxDataPerLine=-1;
     QRegExp delimiter("(\\s+)");
     QList<PMemoryLine> newModel;
     for (int i=0;i<value.length();i++) {
@@ -2524,6 +2529,8 @@ void MemoryModel::updateMemory(const QStringList &value)
             bool isOk;
             memoryLine->startAddress = stringToHex(dataLst[0],isOk);
             if (isOk)  {
+                if (dataLst.length()-1>maxDataPerLine)
+                     maxDataPerLine = dataLst.length()-1;
                 for (int j=1;j<dataLst.length();j++) {
                     qulonglong data = stringToHex(dataLst[j],isOk);
                     if (isOk)
@@ -2539,7 +2546,8 @@ void MemoryModel::updateMemory(const QStringList &value)
         newModel.append(memoryLine);
     }
     if (newModel.count()>0 && newModel.count()== mLines.count() &&
-            newModel[0]->startAddress == mLines[0]->startAddress) {
+            newModel[0]->startAddress == mLines[0]->startAddress &&
+            maxDataPerLine==mDataPerLine) {
         for (int i=0;i<newModel.count();i++) {
             PMemoryLine newLine = newModel[i];
             PMemoryLine oldLine = mLines[i];
@@ -2555,6 +2563,8 @@ void MemoryModel::updateMemory(const QStringList &value)
                          createIndex(mLines.count()-1,mDataPerLine-1));
     } else {
         beginResetModel();
+        if (maxDataPerLine>0)
+            mDataPerLine=maxDataPerLine;
         mLines = newModel;
         endResetModel();
     }

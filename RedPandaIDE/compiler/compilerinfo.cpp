@@ -267,3 +267,17 @@ bool GCCCompilerInfo::forceUTF8InDebugger()
 {
     return false;
 }
+
+GCCUTF8CompilerInfo::GCCUTF8CompilerInfo():CompilerInfo(COMPILER_GCC_UTF8)
+{
+}
+
+bool GCCUTF8CompilerInfo::supportConvertingCharset()
+{
+    return true;
+}
+
+bool GCCUTF8CompilerInfo::forceUTF8InDebugger()
+{
+    return true;
+}

@@ -367,84 +367,84 @@ int SynEdit::maxScrollWidth() const
         return std::max(maxLen-mCharsInWindow+1, 1);
 }
 
-bool SynEdit::getHighlighterAttriAtRowCol(const BufferCoord &XY, QString &Token, PSynHighlighterAttribute &Attri)
+bool SynEdit::getHighlighterAttriAtRowCol(const BufferCoord &pos, QString &token, PSynHighlighterAttribute &attri)
 {
-    SynHighlighterTokenType TmpType;
-    int TmpKind, TmpStart;
-    return getHighlighterAttriAtRowColEx(XY, Token, TmpType, TmpKind,TmpStart, Attri);
+    SynHighlighterTokenType tmpType;
+    int tmpKind, tmpStart;
+    return getHighlighterAttriAtRowColEx(pos, token, tmpType, tmpKind,tmpStart, attri);
 }
 
-bool SynEdit::getHighlighterAttriAtRowCol(const BufferCoord &XY, QString &Token, bool &tokenFinished, SynHighlighterTokenType &TokenType, PSynHighlighterAttribute &Attri)
+bool SynEdit::getHighlighterAttriAtRowCol(const BufferCoord &pos, QString &token, bool &tokenFinished, SynHighlighterTokenType &tokenType, PSynHighlighterAttribute &attri)
 {
-    int PosX, PosY, endPos, Start;
-    QString Line;
-    PosY = XY.line - 1;
-    if (mHighlighter && (PosY >= 0) && (PosY < mDocument->count())) {
-        Line = mDocument->getString(PosY);
-        if (PosY == 0) {
+    int posX, posY, endPos, start;
+    QString line;
+    posY = pos.line - 1;
+    if (mHighlighter && (posY >= 0) && (posY < mDocument->count())) {
+        line = mDocument->getString(posY);
+        if (posY == 0) {
             mHighlighter->resetState();
         } else {
-            mHighlighter->setState(mDocument->ranges(PosY-1));
+            mHighlighter->setState(mDocument->ranges(posY-1));
         }
-        mHighlighter->setLine(Line, PosY);
-        PosX = XY.ch;
-        if ((PosX > 0) && (PosX <= Line.length())) {
+        mHighlighter->setLine(line, posY);
+        posX = pos.ch;
+        if ((posX > 0) && (posX <= line.length())) {
             while (!mHighlighter->eol()) {
-                Start = mHighlighter->getTokenPos() + 1;
-                Token = mHighlighter->getToken();
-                endPos = Start + Token.length()-1;
-                if ((PosX >= Start) && (PosX <= endPos)) {
-                    Attri = mHighlighter->getTokenAttribute();
-                    if (PosX == endPos)
+                start = mHighlighter->getTokenPos() + 1;
+                token = mHighlighter->getToken();
+                endPos = start + token.length()-1;
+                if ((posX >= start) && (posX <= endPos)) {
+                    attri = mHighlighter->getTokenAttribute();
+                    if (posX == endPos)
                         tokenFinished = mHighlighter->getTokenFinished();
                     else
                         tokenFinished = false;
-                    TokenType = mHighlighter->getTokenType();
+                    tokenType = mHighlighter->getTokenType();
                     return true;
                 }
                 mHighlighter->next();
             }
         }
     }
-    Token = "";
-    Attri = PSynHighlighterAttribute();
+    token = "";
+    attri = PSynHighlighterAttribute();
     tokenFinished = false;
     return false;
 }
 
-bool SynEdit::getHighlighterAttriAtRowColEx(const BufferCoord &XY, QString &Token, SynHighlighterTokenType &TokenType, SynTokenKind &TokenKind, int &Start, PSynHighlighterAttribute &Attri)
+bool SynEdit::getHighlighterAttriAtRowColEx(const BufferCoord &pos, QString &token, SynHighlighterTokenType &tokenType, SynTokenKind &tokenKind, int &start, PSynHighlighterAttribute &attri)
 {
-    int PosX, PosY, endPos;
-    QString Line;
-    PosY = XY.line - 1;
-    if (mHighlighter && (PosY >= 0) && (PosY < mDocument->count())) {
-        Line = mDocument->getString(PosY);
-        if (PosY == 0) {
+    int posX, posY, endPos;
+    QString line;
+    posY = pos.line - 1;
+    if (mHighlighter && (posY >= 0) && (posY < mDocument->count())) {
+        line = mDocument->getString(posY);
+        if (posY == 0) {
             mHighlighter->resetState();
         } else {
-            mHighlighter->setState(mDocument->ranges(PosY-1));
+            mHighlighter->setState(mDocument->ranges(posY-1));
         }
-        mHighlighter->setLine(Line, PosY);
-        PosX = XY.ch;
-        if ((PosX > 0) && (PosX <= Line.length())) {
+        mHighlighter->setLine(line, posY);
+        posX = pos.ch;
+        if ((posX > 0) && (posX <= line.length())) {
             while (!mHighlighter->eol()) {
-                Start = mHighlighter->getTokenPos() + 1;
-                Token = mHighlighter->getToken();
-                endPos = Start + Token.length()-1;
-                if ((PosX >= Start) && (PosX <= endPos)) {
-                    Attri = mHighlighter->getTokenAttribute();
-                    TokenKind = mHighlighter->getTokenKind();
-                    TokenType = mHighlighter->getTokenType();
+                start = mHighlighter->getTokenPos() + 1;
+                token = mHighlighter->getToken();
+                endPos = start + token.length()-1;
+                if ((posX >= start) && (posX <= endPos)) {
+                    attri = mHighlighter->getTokenAttribute();
+                    tokenKind = mHighlighter->getTokenKind();
+                    tokenType = mHighlighter->getTokenType();
                     return true;
                 }
                 mHighlighter->next();
             }
         }
     }
-    Token = "";
-    Attri = PSynHighlighterAttribute();
-    TokenKind = 0;
-    TokenType = SynHighlighterTokenType::Default;
+    token = "";
+    attri = PSynHighlighterAttribute();
+    tokenKind = 0;
+    tokenType = SynHighlighterTokenType::Default;
     return false;
 }
 
@@ -1514,24 +1514,38 @@ void SynEdit::setSelWord()
     setWordBlock(caretXY());
 }
 
-void SynEdit::setWordBlock(BufferCoord Value)
+void SynEdit::setWordBlock(BufferCoord value)
 {
 //    if (mOptions.testFlag(eoScrollPastEol))
 //        Value.Char =
 //    else
 //        Value.Char = std::max(Value.Char, 1);
-    Value.line = minMax(Value.line, 1, mDocument->count());
-    Value.ch = std::max(Value.ch, 1);
-    QString TempString = mDocument->getString(Value.line - 1); //needed for CaretX = LineLength +1
-    if (Value.ch > TempString.length()) {
-        internalSetCaretXY(BufferCoord{TempString.length()+1, Value.line});
+    value.line = minMax(value.line, 1, mDocument->count());
+    value.ch = std::max(value.ch, 1);
+    QString TempString = mDocument->getString(value.line - 1); //needed for CaretX = LineLength +1
+    if (value.ch > TempString.length()) {
+        internalSetCaretXY(BufferCoord{TempString.length()+1, value.line});
         return;
     }
 
-    BufferCoord v_WordStart = wordStartEx(Value);
-    BufferCoord v_WordEnd = wordEndEx(Value);
-    if ((v_WordStart.line == v_WordEnd.line) && (v_WordStart.ch < v_WordEnd.ch))
-        setCaretAndSelection(v_WordEnd, v_WordStart, v_WordEnd);
+    BufferCoord vWordStart = wordStartEx(value);
+    BufferCoord vWordEnd = wordEndEx(value);
+    if ((vWordStart.line == vWordEnd.line) && (vWordStart.ch < vWordEnd.ch))
+        setCaretAndSelection(vWordEnd, vWordStart, vWordEnd);
+}
+
+void SynEdit::doExpandSelection(const BufferCoord &pos)
+{
+    if (selAvail()) {
+        //todo
+    } else {
+        setWordBlock(pos);
+    }
+}
+
+void SynEdit::doShrinkSelection(const BufferCoord &pos)
+{
+    //todo
 }
 
 int SynEdit::findCommentStartLine(int searchStartLine)
@@ -5834,6 +5848,12 @@ void SynEdit::ExecuteCommand(SynEditorCommand Command, QChar AChar, void *pData)
     case SynEditorCommand::ecSelectAll:
         doSelectAll();
         break;
+    case SynEditorCommand::ecExpandSelection:
+        doExpandSelection(caretXY());
+        break;
+    case SynEditorCommand::ecShrinkSelection:
+        doShrinkSelection(caretXY());
+        break;
     case SynEditorCommand::ecDeleteLastChar:
         doDeleteLastChar();
         break;
@@ -6332,7 +6352,7 @@ void SynEdit::mouseDoubleClickEvent(QMouseEvent *event)
     QAbstractScrollArea::mouseDoubleClickEvent(event);
     QPoint ptMouse = event->pos();
     if (ptMouse.x() >= mGutterWidth + 2) {
-          setWordBlock(caretXY());
+          setSelWord();
           mStateFlags.setFlag(SynStateFlag::sfDblClicked);
     }
 }

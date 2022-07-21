@@ -5,6 +5,10 @@ Red Panda C++ Version 1.1.5
   - enhancement: double clicking a non-text file in the project's view, will open it with external program
   - fix: correctly update the start postion of selection after code completion
   - enhancement: add a demo template for raylib/rdrawing predefined colors
+  - enhancement: add select current word command in the Selection menu
+  - change: add Selection menu
+  - enhancement: add memory view rows/columns settings in the settings dialog -> debugger -> general panel
+  - enhancement: add "Go to Line..." in the Code menu
 
 Red Panda C++ Version 1.1.4
 

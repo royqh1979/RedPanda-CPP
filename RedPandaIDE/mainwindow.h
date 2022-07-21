@@ -695,6 +695,10 @@ private slots:
 
     void on_actionRaylib_Manual_triggered();
 
+    void on_actionSelect_Word_triggered();
+
+    void on_actionGo_to_Line_triggered();
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;

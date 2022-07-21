@@ -227,6 +227,7 @@ public:
     BufferCoord wordEndEx(const BufferCoord& XY);
     BufferCoord prevWordPos();
     BufferCoord prevWordPosEx(const BufferCoord& XY);
+
     void commandProcessor(SynEditorCommand Command, QChar AChar = QChar(), void * pData = nullptr);
     //Caret
     void showCaret();
@@ -256,14 +257,14 @@ public:
     int maxScrollWidth() const;
     int maxScrollHeight() const;
 
-    bool getHighlighterAttriAtRowCol(const BufferCoord& XY, QString& Token,
-      PSynHighlighterAttribute& Attri);
-    bool getHighlighterAttriAtRowCol(const BufferCoord& XY, QString& Token,
-      bool& tokenFinished, SynHighlighterTokenType& TokenType,
-      PSynHighlighterAttribute& Attri);
-    bool getHighlighterAttriAtRowColEx(const BufferCoord& XY, QString& Token,
-      SynHighlighterTokenType& TokenType, SynTokenKind &TokenKind, int &Start,
-      PSynHighlighterAttribute& Attri);
+    bool getHighlighterAttriAtRowCol(const BufferCoord& pos, QString& token,
+      PSynHighlighterAttribute& attri);
+    bool getHighlighterAttriAtRowCol(const BufferCoord& pos, QString& token,
+      bool& tokenFinished, SynHighlighterTokenType& tokenType,
+      PSynHighlighterAttribute& attri);
+    bool getHighlighterAttriAtRowColEx(const BufferCoord& pos, QString& token,
+      SynHighlighterTokenType& tokenType, SynTokenKind &tokenKind, int &start,
+      PSynHighlighterAttribute& attri);
 
     void beginUndoBlock();
     void endUndoBlock();
@@ -286,6 +287,9 @@ public:
     virtual void zoomOut()  { commandProcessor(SynEditorCommand::ecZoomOut);}
     virtual void selectAll() {
         commandProcessor(SynEditorCommand::ecSelectAll);
+    }
+    virtual void selectWord() {
+        commandProcessor(SynEditorCommand::ecSelWord);
     }
     virtual void tab() { commandProcessor(SynEditorCommand::ecTab);}
     virtual void shifttab() { commandProcessor(SynEditorCommand::ecShiftTab);}
@@ -566,7 +570,10 @@ private:
 
     void deleteFromTo(const BufferCoord& start, const BufferCoord& end);
     void setSelWord();
-    void setWordBlock(BufferCoord Value);
+    void setWordBlock(BufferCoord value);
+
+    void doExpandSelection(const BufferCoord& pos);
+    void doShrinkSelection(const BufferCoord& pos);
 
 
     int calcIndentSpaces(int line, const QString& lineText, bool addIndent);
