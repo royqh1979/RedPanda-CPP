@@ -41,7 +41,8 @@ void ExecutorProblemSetWidget::doLoad()
     ui->cbFont->setCurrentFont(QFont(pSettings->executor().caseEditorFontName()));
     ui->spinFontSize->setValue(pSettings->executor().caseEditorFontSize());
     ui->chkOnlyMonospaced->setChecked(pSettings->executor().caseEditorFontOnlyMonospaced());
-    ui->grpEnableTimeout->setEnabled(pSettings->executor().enableCaseTimeout());
+    ui->grpEnableTimeout->setChecked(pSettings->executor().enableCaseTimeout());
+
     ui->spinCaseTimeout->setValue(pSettings->executor().caseTimeout());
 }
 
