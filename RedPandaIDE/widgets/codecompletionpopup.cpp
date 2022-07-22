@@ -264,14 +264,18 @@ static bool sortByScopeComparator(PStatement statement1,PStatement statement2){
             return statement1->command < statement2->command;
     } else if (statement2->kind == StatementKind::skUserCodeSnippet) {
         return false;
-        // show keywords first
+        // show non-system defines before keyword
     } else if (statement1->kind == StatementKind::skKeyword) {
-        if (statement2->kind != StatementKind::skKeyword)
-            return true;
-        else
+        if (statement2->kind != StatementKind::skKeyword) {
+            //s1 keyword / s2 system defines, s1 < s2, should return true
+            //s1 keyword / s2 not system defines, s2 < s1, should return false;
+            return  statement2->inSystemHeader;
+        } else
             return statement1->command < statement2->command;
     } else if (statement2->kind == StatementKind::skKeyword) {
-        return false;
+        //s1 system defines / s2 keyword, s2 < s1, should return false;
+        //s1 not system defines / s2 keyword, s1 < s2, should return true;
+        return  (!statement1->inSystemHeader);
     }
     // Show stuff from local headers first
     if (statement1->inSystemHeader != statement2->inSystemHeader)
@@ -341,13 +345,18 @@ static bool sortByScopeWithUsageComparator(PStatement statement1,PStatement stat
     if (statement1->usageCount != statement2->usageCount)
         return statement1->usageCount > statement2->usageCount;
 
+        // show non-system defines before keyword
     if (statement1->kind == StatementKind::skKeyword) {
-        if (statement2->kind != StatementKind::skKeyword)
-            return true;
-        else
+        if (statement2->kind != StatementKind::skKeyword) {
+            //s1 keyword / s2 system defines, s1 < s2, should return true
+            //s1 keyword / s2 not system defines, s2 < s1, should return false;
+            return  statement2->inSystemHeader;
+        } else
             return statement1->command < statement2->command;
     } else if (statement2->kind == StatementKind::skKeyword) {
-        return false;
+        //s1 system defines / s2 keyword, s2 < s1, should return false;
+        //s1 not system defines / s2 keyword, s1 < s2, should return true;
+        return  (!statement1->inSystemHeader);
     }
     // Show stuff from local headers first
     if (statement1->inSystemHeader != statement2->inSystemHeader)
