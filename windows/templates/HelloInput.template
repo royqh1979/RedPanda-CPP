@@ -10,7 +10,7 @@ Category[zh_CN]=控制台
 
 [Unit0]
 CName=main.c
-CppName=main.c
+CppName=main.cpp
 C=HelloInput_c.txt
 Cpp=HelloInput_cpp.txt
 

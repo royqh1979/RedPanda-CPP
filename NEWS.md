@@ -10,6 +10,7 @@ Red Panda C++ Version 1.1.5
   - enhancement: add memory view rows/columns settings in the settings dialog -> debugger -> general panel
   - enhancement: add "Go to Line..." in the Code menu
   - fix: "Timeout for problem case" can't be rechecked, in the Settings Dialog -> executor -> problem set panel.
+  - fix: bug in the project template
 
 Red Panda C++ Version 1.1.4
 
