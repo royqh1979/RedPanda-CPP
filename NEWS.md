@@ -12,6 +12,7 @@ Red Panda C++ Version 1.1.5
   - fix: "Timeout for problem case" can't be rechecked, in the Settings Dialog -> executor -> problem set panel.
   - fix: bug in the project template
   - change: sort local identifiers before keywords in the auto completion popup
+  - fix: can't create folder in files view, if nothing is selected
 
 Red Panda C++ Version 1.1.4
 

@@ -3555,6 +3555,7 @@ void MainWindow::onFilesViewCreateFolder()
         ui->treeFiles->expand(index);
     } else {
         dir = mFileSystemModel.rootDirectory();
+        parentIndex=mFileSystemModel.index(dir.absolutePath());
     }
     QString folderName = tr("New Folder");
     int count = 0;
