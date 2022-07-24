@@ -175,9 +175,9 @@ void drawColor(Image* pImg, Font font, int x, int y, Color color, const char* co
 	char buffer[255];
 	ImageFillRectangleEx(pImg,x,y,200,40,color);
 	ImageDrawRectangleEx(pImg,x,y,200,40,2,BLACK);
-	ImageDrawTextEx(pImg,font,colorName,(Vector2){x+230,y+10},20,0,BLACK);	
+	ImageDrawTextEx(pImg,font,colorName,(Vector2){x+230,y+10},20,1,BLACK);	
 	sprintf(buffer,"0x%02X%02X%02X",color.r,color.g,color.b);
-	ImageDrawTextEx(pImg,font,buffer,(Vector2){x+600,y+10},20,0,BLACK);
+	ImageDrawTextEx(pImg,font,buffer,(Vector2){x+600,y+10},20,1,BLACK);
 }
 
 void drawRedColors(Image *pImg,Font font) {
