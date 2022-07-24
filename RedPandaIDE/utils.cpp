@@ -108,9 +108,10 @@ bool isTextAllAscii(const QString& text) {
     return true;
 }
 
-
+#ifdef Q_OS_WIN
 static bool gIsGreenEdition = true;
 static bool gIsGreenEditionInited = false;
+#endif
 bool isGreenEdition()
 {
 #ifdef Q_OS_WIN

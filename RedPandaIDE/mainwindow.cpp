@@ -67,6 +67,8 @@
 #include <QTextBlock>
 #include <QTranslator>
 #include <QFileIconProvider>
+#include <QMimeDatabase>
+#include <QMimeType>
 #include "mainwindow.h"
 #include <QScrollBar>
 #include <QTextDocumentFragment>
