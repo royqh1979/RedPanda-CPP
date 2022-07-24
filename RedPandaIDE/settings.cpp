@@ -1463,16 +1463,26 @@ void Settings::Editor::setTabToSpaces(bool tabToSpaces)
     mTabToSpaces = tabToSpaces;
 }
 
-Settings::CompilerSet::CompilerSet(const QString& compilerFolder):
+Settings::CompilerSet::CompilerSet():
+    mAutoAddCharsetParams(true),
+    mExecCharset(ENCODING_SYSTEM_DEFAULT),
+    mStaticLink(true),
+    mFullLoaded(false)
+{
+
+}
+
+
+Settings::CompilerSet::CompilerSet(const QString& compilerFolder, const QString& cc_prog):
     mAutoAddCharsetParams(true),
     mExecCharset(ENCODING_SYSTEM_DEFAULT),
     mStaticLink(true)
 {
-    if (!compilerFolder.isEmpty()) {
-        setProperties(compilerFolder);
+    if (QDir(compilerFolder).exists()) {
+        setProperties(compilerFolder, cc_prog);
 
         //manually set the directories
-        setDirectories(compilerFolder);
+        setDirectories(compilerFolder, cc_prog);
 
         setExecutables();
 
@@ -1763,7 +1773,7 @@ QStringList &Settings::CompilerSet::defaultCIncludeDirs()
 {
     if (!mFullLoaded && !binDirs().isEmpty()) {
         mFullLoaded=true;
-        setDirectories(binDirs()[0]);
+        setDirectories(binDirs()[0],mCCompiler);
         setDefines();
     }
     return mDefaultCIncludeDirs;
@@ -1773,7 +1783,7 @@ QStringList &Settings::CompilerSet::defaultCppIncludeDirs()
 {
     if (!mFullLoaded && !binDirs().isEmpty()) {
         mFullLoaded=true;
-        setDirectories(binDirs()[0]);
+        setDirectories(binDirs()[0],mCCompiler);
         setDefines();
     }
     return mDefaultCppIncludeDirs;
@@ -1783,7 +1793,7 @@ QStringList &Settings::CompilerSet::defaultLibDirs()
 {
     if (!mFullLoaded && !binDirs().isEmpty()) {
         mFullLoaded=true;
-        setDirectories(binDirs()[0]);
+        setDirectories(binDirs()[0],mCCompiler);
         setDefines();
     }
     return mLibDirs;
@@ -1833,7 +1843,7 @@ const QStringList& Settings::CompilerSet::defines()
 {
     if (!mFullLoaded && !binDirs().isEmpty()) {
         mFullLoaded=true;
-        setDirectories(binDirs()[0]);
+        setDirectories(binDirs()[0],mCCompiler);
         setDefines();
     }
     return mDefines;
@@ -1920,15 +1930,17 @@ static void addExistingDirectory(QStringList& dirs, const QString& directory) {
     dirs.append(dirPath);
 }
 
-void Settings::CompilerSet::setProperties(const QString &binDir)
+void Settings::CompilerSet::setProperties(const QString &binDir, const QString& cc_prog)
 {
-    QString cc_prog;
-    if (fileExists(binDir, CLANG_PROGRAM))
-        cc_prog = CLANG_PROGRAM;
-    else  if (fileExists(binDir,GCC_PROGRAM))
-        cc_prog = GCC_PROGRAM;
-    else
+    if (cc_prog.isEmpty())
         return;
+//    QString cc_prog;
+//    if (fileExists(binDir, CLANG_PROGRAM))
+//        cc_prog = CLANG_PROGRAM;
+//    else  if (fileExists(binDir,GCC_PROGRAM))
+//        cc_prog = GCC_PROGRAM;
+//    else
+//        return;
     // Obtain version number and compiler distro etc
     QStringList arguments;
     arguments.append("-v");
@@ -2088,7 +2100,7 @@ void Settings::CompilerSet::setExecutables()
     mProfiler = findProgramInBinDirs(GPROF_PROGRAM);
 }
 
-void Settings::CompilerSet::setDirectories(const QString& binDir)
+void Settings::CompilerSet::setDirectories(const QString& binDir,const QString& cc_prog)
 {
     QString folder = QFileInfo(binDir).absolutePath();
     // Find default directories
@@ -2099,7 +2111,7 @@ void Settings::CompilerSet::setDirectories(const QString& binDir)
     arguments.append("-v");
     arguments.append("-E");
     arguments.append(NULL_FILE);
-    QByteArray output = getCompilerOutput(binDir,GCC_PROGRAM,arguments);
+    QByteArray output = getCompilerOutput(binDir,cc_prog,arguments);
 
     int delimPos1 = output.indexOf("#include <...> search starts here:");
     int delimPos2 = output.indexOf("End of search list.");
@@ -2121,7 +2133,7 @@ void Settings::CompilerSet::setDirectories(const QString& binDir)
     arguments.append("-E");
     arguments.append("-v");
     arguments.append(NULL_FILE);
-    output = getCompilerOutput(binDir,GCC_PROGRAM,arguments);
+    output = getCompilerOutput(binDir,cc_prog,arguments);
     //gcc -xc++ -E -v NUL
 
     delimPos1 = output.indexOf("#include <...> search starts here:");
@@ -2141,7 +2153,7 @@ void Settings::CompilerSet::setDirectories(const QString& binDir)
     arguments.clear();
     arguments.append("-print-search-dirs");
     arguments.append(NULL_FILE);
-    output = getCompilerOutput(binDir,GCC_PROGRAM,arguments);
+    output = getCompilerOutput(binDir,cc_prog,arguments);
     // bin dirs
     QByteArray targetStr = QByteArray("programs: =");
     delimPos1 = output.indexOf(targetStr);
@@ -2350,16 +2362,18 @@ Settings::CompilerSets::CompilerSets(Settings *settings):
     prepareCompatibleIndex();
 }
 
-Settings::PCompilerSet Settings::CompilerSets::addSet(const Settings::CompilerSet& set)
+Settings::PCompilerSet Settings::CompilerSets::addSet()
 {
-    PCompilerSet p=std::make_shared<CompilerSet>(set);
+    PCompilerSet p=std::make_shared<CompilerSet>();
     mList.push_back(p);
     return p;
 }
 
-Settings::PCompilerSet Settings::CompilerSets::addSet(const QString &folder)
+Settings::PCompilerSet Settings::CompilerSets::addSet(const QString &folder, const QString& cc_prog)
 {
-    PCompilerSet p=std::make_shared<CompilerSet>(folder);
+    PCompilerSet p=std::make_shared<CompilerSet>(folder,cc_prog);
+    if (cc_prog==GCC_PROGRAM && p->compilerType()==COMPILER_CLANG)
+        return PCompilerSet();
     mList.push_back(p);
     return p;
 }
@@ -2391,15 +2405,11 @@ static void setDebugOptions(Settings::PCompilerSet pSet) {
     pSet->setStaticLink(false);
 }
 
-bool Settings::CompilerSets::addSets(const QString &folder)
-{
-    if (!directoryExists(folder))
-        return false;
-    if (!fileExists(folder, GCC_PROGRAM) && !fileExists(folder, CLANG_PROGRAM)) {
-        return false;
-    }
+bool Settings::CompilerSets::addSets(const QString &folder, const QString& cc_prog) {
     // Default, release profile
-    PCompilerSet baseSet = addSet(folder);
+    PCompilerSet baseSet = addSet(folder,cc_prog);
+    if (!baseSet)
+        return false;
     QString baseName = baseSet->name();
     QString platformName;
     if (baseSet->target() == "x86_64") {
@@ -2410,7 +2420,7 @@ bool Settings::CompilerSets::addSets(const QString &folder)
             set64_32Options(baseSet);
             setReleaseOptions(baseSet);
 
-            baseSet = addSet(folder);
+            baseSet = addSet(folder,cc_prog);
             baseSet->setName(baseName + " " + platformName + " Debug");
             baseSet->setCompilerSetType(CompilerSetType::CST_DEBUG);
             set64_32Options(baseSet);
@@ -2422,7 +2432,7 @@ bool Settings::CompilerSets::addSets(const QString &folder)
 //            set64_32Options(baseSet);
 //            setProfileOptions(baseSet);
 
-            baseSet = addSet(folder);
+            baseSet = addSet(folder,cc_prog);
         }
         platformName = "64-bit";
     } else {
@@ -2432,7 +2442,7 @@ bool Settings::CompilerSets::addSets(const QString &folder)
     baseSet->setCompilerSetType(CompilerSetType::CST_RELEASE);
     setReleaseOptions(baseSet);
 
-    baseSet = addSet(folder);
+    baseSet = addSet(folder,cc_prog);
     baseSet->setName(baseName + " " + platformName + " Debug");
     baseSet->setCompilerSetType(CompilerSetType::CST_DEBUG);
     setDebugOptions(baseSet);
@@ -2442,8 +2452,26 @@ bool Settings::CompilerSets::addSets(const QString &folder)
 //    baseSet->setCompilerSetType(CompilerSetType::CST_PROFILING);
 //    setProfileOptions(baseSet);
 
-    mDefaultIndex = mList.size() - 1;
+    mDefaultIndex = (int)mList.size() - 1;
     return true;
+
+}
+
+bool Settings::CompilerSets::addSets(const QString &folder)
+{
+    if (!directoryExists(folder))
+        return false;
+    if (!fileExists(folder, GCC_PROGRAM) && !fileExists(folder, CLANG_PROGRAM)) {
+        return false;
+    }
+    if (fileExists(folder, GCC_PROGRAM)) {
+        addSets(folder,GCC_PROGRAM);
+    }
+    if (fileExists(folder, CLANG_PROGRAM)) {
+        addSets(folder,CLANG_PROGRAM);
+    }
+    return true;
+
 }
 
 void Settings::CompilerSets::clearSets()
@@ -2559,7 +2587,7 @@ void Settings::CompilerSets::loadSets()
             }
             saveSets();
             if (pCurrentSet->binDirs().count()>0) {
-                pCurrentSet->setProperties(pCurrentSet->binDirs()[0]);
+                pCurrentSet->setProperties(pCurrentSet->binDirs()[0],pCurrentSet->CCompiler());
             }
         } else {
             return;

@@ -1169,7 +1169,8 @@ public:
 
     class CompilerSet {
     public:
-        explicit CompilerSet(const QString& compilerFolder = QString());
+        explicit CompilerSet();
+        explicit CompilerSet(const QString& compilerFolder, const QString& cc_prog);
         explicit CompilerSet(const CompilerSet& set);
 
         CompilerSet& operator= (const CompilerSet& ) = delete;
@@ -1182,8 +1183,8 @@ public:
 
         QString getCompileOptionValue(const QString& key);
 
-        void setProperties(const QString& binDir);
-        void setDirectories(const QString& binDir);
+        void setProperties(const QString& binDir, const QString& cc_prog);
+        void setDirectories(const QString& binDir, const QString& cc_prog);
         int mainVersion();
 
         bool dirsValid(QString& msg);
@@ -1317,10 +1318,7 @@ public:
     class CompilerSets {
     public:
         explicit CompilerSets(Settings* settings);
-
-        PCompilerSet addSet(const CompilerSet& set);
-        PCompilerSet addSet(const QString& folder=QString());
-
+        PCompilerSet addSet();
         bool addSets(const QString& folder);
         void clearSets();
         void findSets();
@@ -1338,6 +1336,8 @@ public:
         QString getKeyFromCompilerCompatibleIndex(int idx) const;
 
     private:
+        PCompilerSet addSet(const QString& folder, const QString& cc_prog);
+        bool addSets(const QString& folder, const QString& cc_prog);
         void savePath(const QString& name, const QString& path);
         void savePathList(const QString& name, const QStringList& pathList);
 

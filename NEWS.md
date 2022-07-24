@@ -13,6 +13,7 @@ Red Panda C++ Version 1.1.5
   - fix: bug in the project template
   - change: sort local identifiers before keywords in the auto completion popup
   - fix: can't create folder in files view, if nothing is selected
+  - fix: can't find the gcc compiler, if there are gcc and clang compilers in the same folder
 
 Red Panda C++ Version 1.1.4
 
