@@ -68,7 +68,7 @@ void CppTokenizer::dumpTokens(const QString &fileName)
         QTextStream stream(&file);
         foreach (const PToken& token,mTokenList) {
             stream<<QString("%1,%2").arg(token->line).arg(token->text)
-#if QT_VERSION_CHECK(5,15,0)
+#if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
                  <<Qt::endl;
 #else
                  <<endl;

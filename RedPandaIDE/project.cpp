@@ -1301,7 +1301,7 @@ void Project::checkProjectFileForUpdate(SimpleIni &ini)
         QFile::copy(mFilename,mFilename+".bak");
         QStringList sl;
         sl = oldRes.split(';',
-#if QT_VERSION_CHECK(5,15,0)
+#if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
             Qt::SkipEmptyParts
 #else
             QString::SkipEmptyParts
@@ -1542,7 +1542,7 @@ void Project::loadLayout()
     //TopRight := layIni.ReadInteger('Editors', 'FocusedRight', -1);
     QString temp =layIni.GetValue("Editors","Order", "");
     QStringList sl = temp.split(",",
-#if QT_VERSION_CHECK(5,15,0)
+#if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
             Qt::SkipEmptyParts
 #else
             QString::SkipEmptyParts
@@ -1589,28 +1589,28 @@ void Project::loadOptions(SimpleIni& ini)
         mOptions.cppCompilerCmd = fromByteArray(ini.GetValue("Project", "CppCompiler", ""));
         mOptions.linkerCmd = fromByteArray(ini.GetValue("Project", "Linker", ""));
         mOptions.objFiles = fromByteArray(ini.GetValue("Project", "ObjFiles", "")).split(";",
-#if QT_VERSION_CHECK(5,15,0)
+#if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
          Qt::SkipEmptyParts
 #else
          QString::SkipEmptyParts
 #endif
         );
         mOptions.binDirs = fromByteArray(ini.GetValue("Project", "Bins", "")).split(";",
-#if QT_VERSION_CHECK(5,15,0)
+#if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
             Qt::SkipEmptyParts
 #else
             QString::SkipEmptyParts
 #endif
         );
         mOptions.libDirs = fromByteArray(ini.GetValue("Project", "Libs", "")).split(";",
-#if QT_VERSION_CHECK(5,15,0)
+#if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
             Qt::SkipEmptyParts
 #else
             QString::SkipEmptyParts
 #endif
         );
         mOptions.includeDirs = fromByteArray(ini.GetValue("Project", "Includes", "")).split(";",
-#if QT_VERSION_CHECK(5,15,0)
+#if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
             Qt::SkipEmptyParts
 #else
             QString::SkipEmptyParts
@@ -1618,14 +1618,14 @@ void Project::loadOptions(SimpleIni& ini)
         );
         mOptions.privateResource = fromByteArray(ini.GetValue("Project", "PrivateResource", ""));
         mOptions.resourceIncludes = fromByteArray(ini.GetValue("Project", "ResourceIncludes", "")).split(";",
-#if QT_VERSION_CHECK(5,15,0)
+#if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
          Qt::SkipEmptyParts
 #else
          QString::SkipEmptyParts
 #endif
         );
         mOptions.makeIncludes = fromByteArray(ini.GetValue("Project", "MakeIncludes", "")).split(";",
-#if QT_VERSION_CHECK(5,15,0)
+#if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
          Qt::SkipEmptyParts
 #else
          QString::SkipEmptyParts
@@ -1645,7 +1645,7 @@ void Project::loadOptions(SimpleIni& ini)
         mOptions.precompiledHeader = fromByteArray(ini.GetValue("Project", "PrecompiledHeader", ""));
         mOptions.cmdLineArgs = fromByteArray(ini.GetValue("Project", "CommandLine", ""));
         mFolders = fromByteArray(ini.GetValue("Project", "Folders", "")).split(";",
-        #if QT_VERSION_CHECK(5,15,0)
+        #if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
                    Qt::SkipEmptyParts
         #else
                    QString::SkipEmptyParts
@@ -1751,21 +1751,21 @@ void Project::loadOptions(SimpleIni& ini)
 
         mOptions.privateResource = fromByteArray(ini.GetValue("Project", "PrivateResource", ""));
         mOptions.resourceIncludes = fromByteArray(ini.GetValue("Project", "ResourceIncludes", "")).split(";",
-#if QT_VERSION_CHECK(5,15,0)
+#if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
          Qt::SkipEmptyParts
 #else
          QString::SkipEmptyParts
 #endif
         );
         mOptions.objFiles = fromByteArray(ini.GetValue("Project", "ObjFiles", "")).split(";",
-#if QT_VERSION_CHECK(5,15,0)
+#if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
          Qt::SkipEmptyParts
 #else
          QString::SkipEmptyParts
 #endif
         );
         mOptions.includeDirs = fromByteArray(ini.GetValue("Project", "IncludeDirs", "")).split(";",
-#if QT_VERSION_CHECK(5,15,0)
+#if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
            Qt::SkipEmptyParts
 #else
            QString::SkipEmptyParts

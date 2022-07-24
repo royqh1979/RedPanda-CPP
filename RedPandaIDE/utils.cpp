@@ -610,7 +610,7 @@ void stringsToFile(const QStringList &list, const QString &fileName)
         QTextStream stream(&file);
         for (QString s:list) {
             stream<<s
-#if QT_VERSION_CHECK(5,15,0)
+#if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
                  <<Qt::endl;
 #else
                  <<endl;
@@ -722,7 +722,7 @@ void logToFile(const QString &s, const QString &filename, bool append)
     if (file.open(mode)) {
         QTextStream ts(&file);
         ts<<s
-#if QT_VERSION_CHECK(5,15,0)
+#if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
                  <<Qt::endl;
 #else
                  <<endl;

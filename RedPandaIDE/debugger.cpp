@@ -2518,7 +2518,7 @@ void MemoryModel::updateMemory(const QStringList &value)
     QList<PMemoryLine> newModel;
     for (int i=0;i<value.length();i++) {
         QString line = value[i].trimmed();
-#if QT_VERSION_CHECK(5, 15, 0)
+#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
         QStringList dataLst = line.split(delimiter,Qt::SkipEmptyParts);
 #else
         QStringList dataLst = line.split(delimiter,QString::SkipEmptyParts);

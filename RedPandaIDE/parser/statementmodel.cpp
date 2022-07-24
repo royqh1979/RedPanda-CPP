@@ -147,7 +147,7 @@ void StatementModel::dumpStatementMap(StatementMap &map, QTextStream &out, int l
          .arg(statement->definitionFileName)
          .arg(statement->definitionLine);
         out
-        #if QT_VERSION_CHECK(5,15,0)
+        #if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
                          <<Qt::endl;
         #else
                          <<endl;
@@ -155,14 +155,14 @@ void StatementModel::dumpStatementMap(StatementMap &map, QTextStream &out, int l
         if (statement->children.isEmpty())
             continue;
         out<<indent<<statement->command<<" {"
-     #if QT_VERSION_CHECK(5,15,0)
+     #if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
                       <<Qt::endl;
      #else
                       <<endl;
      #endif
         dumpStatementMap(statement->children,out,level+1);
         out<<indent<<"}"
-     #if QT_VERSION_CHECK(5,15,0)
+     #if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
                       <<Qt::endl;
      #else
                       <<endl;

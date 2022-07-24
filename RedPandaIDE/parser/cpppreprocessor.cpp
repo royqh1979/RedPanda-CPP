@@ -208,7 +208,7 @@ void CppPreprocessor::dumpDefinesTo(const QString &fileName) const
             stream<<QString("%1 %2 %3 %4 %5\n")
                     .arg(define->name,define->args,define->value)
                     .arg(define->hardCoded).arg(define->formatValue)
-#if QT_VERSION_CHECK(5,15,0)
+#if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
                  <<Qt::endl;
 #else
                  <<endl;
@@ -224,69 +224,69 @@ void CppPreprocessor::dumpIncludesListTo(const QString &fileName) const
         QTextStream stream(&file);
         for (const PFileIncludes& fileIncludes:mIncludesList) {
             stream<<fileIncludes->baseFile<<" : "
-        #if QT_VERSION_CHECK(5,15,0)
+        #if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
                          <<Qt::endl;
         #else
                          <<endl;
         #endif
             stream<<"\t**includes:**"
-        #if QT_VERSION_CHECK(5,15,0)
+        #if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
                          <<Qt::endl;
         #else
                          <<endl;
         #endif
             foreach (const QString& s,fileIncludes->includeFiles.keys()) {
                 stream<<"\t--"+s
-        #if QT_VERSION_CHECK(5,15,0)
+        #if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
                          <<Qt::endl;
         #else
                          <<endl;
         #endif
             }
             stream<<"\t**depends on:**"
-        #if QT_VERSION_CHECK(5,15,0)
+        #if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
                          <<Qt::endl;
         #else
                          <<endl;
         #endif
             foreach (const QString& s,fileIncludes->dependingFiles) {
                 stream<<"\t^^"+s
-        #if QT_VERSION_CHECK(5,15,0)
+        #if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
                          <<Qt::endl;
         #else
                          <<endl;
         #endif
             }
             stream<<"\t**depended by:**"
-        #if QT_VERSION_CHECK(5,15,0)
+        #if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
                          <<Qt::endl;
         #else
                          <<endl;
         #endif
             foreach (const QString& s,fileIncludes->dependedFiles) {
                 stream<<"\t&&"+s
-        #if QT_VERSION_CHECK(5,15,0)
+        #if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
                          <<Qt::endl;
         #else
                          <<endl;
         #endif
             }
             stream<<"\t**using:**"
-        #if QT_VERSION_CHECK(5,15,0)
+        #if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
                          <<Qt::endl;
         #else
                          <<endl;
         #endif
             foreach (const QString& s,fileIncludes->usings) {
                 stream<<"\t++"+s
-        #if QT_VERSION_CHECK(5,15,0)
+        #if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
                          <<Qt::endl;
         #else
                          <<endl;
         #endif
             }
             stream<<"\t**statements:**"
-        #if QT_VERSION_CHECK(5,15,0)
+        #if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
                          <<Qt::endl;
         #else
                          <<endl;
@@ -295,7 +295,7 @@ void CppPreprocessor::dumpIncludesListTo(const QString &fileName) const
                 if (statement) {
                     stream<<QString("\t**%1 , %2")
                             .arg(statement->command,statement->fullName)
-        #if QT_VERSION_CHECK(5,15,0)
+        #if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
                          <<Qt::endl;
         #else
                          <<endl;
