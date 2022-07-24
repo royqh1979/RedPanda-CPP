@@ -1176,6 +1176,10 @@ public:
         CompilerSet& operator= (const CompilerSet& ) = delete;
         CompilerSet& operator= (const CompilerSet&& ) = delete;
 
+        // Initialization
+        void setProperties(const QString& binDir, const QString& cc_prog);
+
+        void resetCompileOptionts();
         bool setCompileOption(const QString& key, int valIndex);
         bool setCompileOption(const QString& key, const QString& value);
         void unsetCompileOption(const QString& key);
@@ -1183,8 +1187,6 @@ public:
 
         QString getCompileOptionValue(const QString& key);
 
-        void setProperties(const QString& binDir, const QString& cc_prog);
-        void setDirectories(const QString& binDir, const QString& cc_prog);
         int mainVersion();
 
         bool dirsValid(QString& msg);
@@ -1239,9 +1241,6 @@ public:
         //Converts options to and from memory format ( for old settings compatibility)
         void setIniOptions(const QByteArray& value);
 
-        //load hard defines
-        void setDefines();
-
         bool staticLink() const;
         void setStaticLink(bool newStaticLink);
 
@@ -1261,7 +1260,9 @@ public:
         const QMap<QString, QString> &compileOptions() const;
 
     private:
-        // Initialization
+        void setDirectories(const QString& binDir, const QString& mCompilerType);
+        //load hard defines
+        void setDefines();
         void setExecutables();
         void setUserInput();
 
@@ -1337,6 +1338,7 @@ public:
 
     private:
         PCompilerSet addSet(const QString& folder, const QString& cc_prog);
+        PCompilerSet addSet(const PCompilerSet &pSet);
         bool addSets(const QString& folder, const QString& cc_prog);
         void savePath(const QString& name, const QString& path);
         void savePathList(const QString& name, const QStringList& pathList);

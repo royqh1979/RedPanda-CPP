@@ -1464,10 +1464,10 @@ void Settings::Editor::setTabToSpaces(bool tabToSpaces)
 }
 
 Settings::CompilerSet::CompilerSet():
+    mFullLoaded(false),
     mAutoAddCharsetParams(true),
     mExecCharset(ENCODING_SYSTEM_DEFAULT),
-    mStaticLink(true),
-    mFullLoaded(false)
+    mStaticLink(true)
 {
 
 }
@@ -1482,7 +1482,7 @@ Settings::CompilerSet::CompilerSet(const QString& compilerFolder, const QString&
         setProperties(compilerFolder, cc_prog);
 
         //manually set the directories
-        setDirectories(compilerFolder, cc_prog);
+        setDirectories(compilerFolder, mCompilerType);
 
         setExecutables();
 
@@ -1504,10 +1504,16 @@ Settings::CompilerSet::CompilerSet(const Settings::CompilerSet &set):
     mDebugger(set.mDebugger),
     mProfiler(set.mProfiler),
     mResourceCompiler(set.mResourceCompiler),
+    mDebugServer(set.mDebugServer),
+
     mBinDirs(set.mBinDirs),
     mCIncludeDirs(set.mCIncludeDirs),
     mCppIncludeDirs(set.mCppIncludeDirs),
     mLibDirs(set.mLibDirs),
+    mDefaultLibDirs(set.mDefaultLibDirs),
+    mDefaultCIncludeDirs(set.mDefaultCIncludeDirs),
+    mDefaultCppIncludeDirs(set.mDefaultCppIncludeDirs),
+
     mDumpMachine(set.mDumpMachine),
     mVersion(set.mVersion),
     mType(set.mType),
@@ -1515,14 +1521,23 @@ Settings::CompilerSet::CompilerSet(const Settings::CompilerSet &set):
     mDefines(set.mDefines),
     mTarget(set.mTarget),
     mCompilerType(set.mCompilerType),
+    mCompilerSetType(set.mCompilerSetType),
+
     mUseCustomCompileParams(set.mUseCustomCompileParams),
     mUseCustomLinkParams(set.mUseCustomLinkParams),
     mCustomCompileParams(set.mCustomCompileParams),
     mCustomLinkParams(set.mCustomLinkParams),
     mAutoAddCharsetParams(set.mAutoAddCharsetParams),
+    mExecCharset(set.mExecCharset),
+    mStaticLink(set.mStaticLink),
     mCompileOptions(set.mCompileOptions)
 {
 
+}
+
+void Settings::CompilerSet::resetCompileOptionts()
+{
+      mCompileOptions.clear();
 }
 
 bool Settings::CompilerSet::setCompileOption(const QString &key, int valIndex)
@@ -1773,7 +1788,7 @@ QStringList &Settings::CompilerSet::defaultCIncludeDirs()
 {
     if (!mFullLoaded && !binDirs().isEmpty()) {
         mFullLoaded=true;
-        setDirectories(binDirs()[0],mCCompiler);
+        setDirectories(binDirs()[0],mCompilerType);
         setDefines();
     }
     return mDefaultCIncludeDirs;
@@ -1783,7 +1798,7 @@ QStringList &Settings::CompilerSet::defaultCppIncludeDirs()
 {
     if (!mFullLoaded && !binDirs().isEmpty()) {
         mFullLoaded=true;
-        setDirectories(binDirs()[0],mCCompiler);
+        setDirectories(binDirs()[0],mCompilerType);
         setDefines();
     }
     return mDefaultCppIncludeDirs;
@@ -1793,7 +1808,7 @@ QStringList &Settings::CompilerSet::defaultLibDirs()
 {
     if (!mFullLoaded && !binDirs().isEmpty()) {
         mFullLoaded=true;
-        setDirectories(binDirs()[0],mCCompiler);
+        setDirectories(binDirs()[0],mCompilerType);
         setDefines();
     }
     return mLibDirs;
@@ -1843,7 +1858,7 @@ const QStringList& Settings::CompilerSet::defines()
 {
     if (!mFullLoaded && !binDirs().isEmpty()) {
         mFullLoaded=true;
-        setDirectories(binDirs()[0],mCCompiler);
+        setDirectories(binDirs()[0],mCompilerType);
         setDefines();
     }
     return mDefines;
@@ -2100,9 +2115,14 @@ void Settings::CompilerSet::setExecutables()
     mProfiler = findProgramInBinDirs(GPROF_PROGRAM);
 }
 
-void Settings::CompilerSet::setDirectories(const QString& binDir,const QString& cc_prog)
+void Settings::CompilerSet::setDirectories(const QString& binDir,const QString& compilerType)
 {
     QString folder = QFileInfo(binDir).absolutePath();
+    QString cc_prog;
+    if (compilerType==COMPILER_CLANG)
+        cc_prog = CLANG_PROGRAM;
+    else
+        cc_prog = GCC_PROGRAM;
     // Find default directories
     // C include dirs
     QStringList arguments;
@@ -2378,6 +2398,13 @@ Settings::PCompilerSet Settings::CompilerSets::addSet(const QString &folder, con
     return p;
 }
 
+Settings::PCompilerSet Settings::CompilerSets::addSet(const PCompilerSet &pSet)
+{
+    PCompilerSet p=std::make_shared<CompilerSet>(*pSet);
+    mList.push_back(p);
+    return p;
+}
+
 static void set64_32Options(Settings::PCompilerSet pSet) {
     pSet->setCompileOption(CC_CMD_OPT_POINTER_SIZE,"32");
 }
@@ -2414,38 +2441,33 @@ bool Settings::CompilerSets::addSets(const QString &folder, const QString& cc_pr
     QString platformName;
     if (baseSet->target() == "x86_64") {
         if (baseName.startsWith("TDM-GCC ")) {
+            PCompilerSet set= addSet(baseSet);
             platformName = "32-bit";
-            baseSet->setName(baseName + " " + platformName + " Release");
-            baseSet->setCompilerSetType(CompilerSetType::CST_RELEASE);
-            set64_32Options(baseSet);
-            setReleaseOptions(baseSet);
+            set->setName(baseName + " " + platformName + " Release");
+            set->setCompilerSetType(CompilerSetType::CST_RELEASE);
+            set64_32Options(set);
+            setReleaseOptions(set);
 
-            baseSet = addSet(folder,cc_prog);
-            baseSet->setName(baseName + " " + platformName + " Debug");
-            baseSet->setCompilerSetType(CompilerSetType::CST_DEBUG);
-            set64_32Options(baseSet);
-            setDebugOptions(baseSet);
-
-//            baseSet = addSet(folder);
-//            baseSet->setName(baseName + " " + platformName + " Profiling");
-//            baseSet->setCompilerSetType(CompilerSetType::CST_PROFILING);
-//            set64_32Options(baseSet);
-//            setProfileOptions(baseSet);
-
-            baseSet = addSet(folder,cc_prog);
+            set = addSet(baseSet);
+            set->setName(baseName + " " + platformName + " Debug");
+            set->setCompilerSetType(CompilerSetType::CST_DEBUG);
+            set64_32Options(set);
+            setDebugOptions(set);
         }
         platformName = "64-bit";
     } else {
         platformName = "32-bit";
     }
+
+
+    PCompilerSet set = addSet(baseSet);
+    set->setName(baseName + " " + platformName + " Debug");
+    set->setCompilerSetType(CompilerSetType::CST_DEBUG);
+    setDebugOptions(set);
+
     baseSet->setName(baseName + " " + platformName + " Release");
     baseSet->setCompilerSetType(CompilerSetType::CST_RELEASE);
     setReleaseOptions(baseSet);
-
-    baseSet = addSet(folder,cc_prog);
-    baseSet->setName(baseName + " " + platformName + " Debug");
-    baseSet->setCompilerSetType(CompilerSetType::CST_DEBUG);
-    setDebugOptions(baseSet);
 
 //    baseSet = addSet(folder);
 //    baseSet->setName(baseName + " " + platformName + " Profiling");
@@ -2833,8 +2855,6 @@ Settings::PCompilerSet Settings::CompilerSets::loadSet(int index)
     if (pSet->binDirs().isEmpty())
         return PCompilerSet();
 
-    //pSet->setDirectories(pSet->binDirs()[0]);
-    //pSet->setDefines();
     return pSet;
 }
 
