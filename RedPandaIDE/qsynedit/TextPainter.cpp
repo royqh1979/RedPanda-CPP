@@ -53,8 +53,8 @@ void SynEditTextPainter::paintTextLines(const QRect& clip)
     // necessary information about the selected area: is there any visible
     // selected area, and what are its lines / columns?
     if (vLastLine >= vFirstLine) {
-      ComputeSelectionInfo();
-      PaintLines();
+      computeSelectionInfo();
+      paintLines();
     }
     //painter->setClipping(false);
 
@@ -84,7 +84,7 @@ void SynEditTextPainter::paintTextLines(const QRect& clip)
     }
 
     // This messes with pen colors, so draw after right margin has been drawn
-    PaintFoldAttributes();
+    paintFoldAttributes();
 }
 
 void SynEditTextPainter::paintGutter(const QRect& clip)
@@ -244,7 +244,7 @@ QColor SynEditTextPainter::colEditorBG()
     }
 }
 
-void SynEditTextPainter::ComputeSelectionInfo()
+void SynEditTextPainter::computeSelectionInfo()
 {
     BufferCoord vStart;
     BufferCoord vEnd;
@@ -312,9 +312,9 @@ void SynEditTextPainter::ComputeSelectionInfo()
     }
 }
 
-void SynEditTextPainter::setDrawingColors(bool Selected)
+void SynEditTextPainter::setDrawingColors(bool selected)
 {
-    if (Selected) {
+    if (selected) {
         if (colSelFG.isValid())
             painter->setPen(colSelFG);
         else
@@ -331,69 +331,69 @@ void SynEditTextPainter::setDrawingColors(bool Selected)
     }
 }
 
-int SynEditTextPainter::ColumnToXValue(int Col)
+int SynEditTextPainter::columnToXValue(int col)
 {
-    return edit->textOffset() + (Col - 1) * edit->mCharWidth;
+    return edit->textOffset() + (col - 1) * edit->mCharWidth;
 }
 
-void SynEditTextPainter::PaintToken(const QString &Token, int TokenCols, int ColumnsBefore,
-                                    int First, int Last, bool /*isSelection*/, const QFont& font,
+void SynEditTextPainter::paintToken(const QString &token, int tokenCols, int columnsBefore,
+                                    int first, int last, bool /*isSelection*/, const QFont& font,
                                     const QFont& fontForNonAscii)
 {
     bool startPaint;
     int nX;
 
-    if (Last >= First && rcToken.right() > rcToken.left()) {
+    if (last >= first && rcToken.right() > rcToken.left()) {
 //        qDebug()<<"Paint Token"<<Token<<ColumnsBefore<<TokenCols<<First<<Last;
-        nX = ColumnToXValue(First);
-        First -= ColumnsBefore;
-        Last -= ColumnsBefore;
+        nX = columnToXValue(first);
+        first -= columnsBefore;
+        last -= columnsBefore;
         QRect rcTokenBack = rcToken;
         rcTokenBack.setWidth(rcTokenBack.width()-1);
         painter->fillRect(rcTokenBack,painter->brush());
-        if (First > TokenCols) {
+        if (first > tokenCols) {
         } else {
             int tokenColLen=0;
             startPaint = false;
-            for (int i=0;i<Token.length();i++) {
+            for (int i=0;i<token.length();i++) {
                 int charCols=0;
-                QString textToPaint = Token[i];
-                if (Token[i] == SynTabChar) {
-                    charCols = edit->tabWidth() - ((ColumnsBefore+tokenColLen) % edit->tabWidth());
+                QString textToPaint = token[i];
+                if (token[i] == SynTabChar) {
+                    charCols = edit->tabWidth() - ((columnsBefore+tokenColLen) % edit->tabWidth());
                 } else {
-                    charCols = edit->charColumns(Token[i]);
+                    charCols = edit->charColumns(token[i]);
                 }
-                if (tokenColLen+charCols>=First) {
-                    if (!startPaint && (tokenColLen+1!=First)) {
-                        nX-= (First - tokenColLen - 1) * edit->mCharWidth;
+                if (tokenColLen+charCols>=first) {
+                    if (!startPaint && (tokenColLen+1!=first)) {
+                        nX-= (first - tokenColLen - 1) * edit->mCharWidth;
                     }
                     startPaint = true;
                 }
-                if (tokenColLen+charCols > Last)
+                if (tokenColLen+charCols > last)
                     break;
                 //painter->drawText(nX,rcToken.bottom()-painter->fontMetrics().descent()*edit->dpiFactor() , Token[i]);
                 if (startPaint) {
                     bool  drawed = false;
                     if (painter->fontInfo().fixedPitch()
                              && edit->mOptions.testFlag(eoLigatureSupport)
-                             && !Token[i].isSpace()
-                             && (Token[i].unicode()<=0xFF)) {
-                        while(i+1<Token.length()) {
-                            if (Token[i+1].unicode()>0xFF || Token[i+1].isSpace())
+                             && !token[i].isSpace()
+                             && (token[i].unicode()<=0xFF)) {
+                        while(i+1<token.length()) {
+                            if (token[i+1].unicode()>0xFF || token[i+1].isSpace())
                                 break;
                             i+=1;
-                            charCols +=  edit->charColumns(Token[i]);
-                            textToPaint+=Token[i];
+                            charCols +=  edit->charColumns(token[i]);
+                            textToPaint+=token[i];
                         }
                         painter->drawText(nX,rcToken.bottom()-painter->fontMetrics().descent() , textToPaint);
                         drawed = true;
                     }
                     if (!drawed) {
-                        if (Token[i].unicode()<=0xFF)
-                            painter->drawText(nX,rcToken.bottom()-painter->fontMetrics().descent() , Token[i]);
+                        if (token[i].unicode()<=0xFF)
+                            painter->drawText(nX,rcToken.bottom()-painter->fontMetrics().descent() , token[i]);
                         else {
                             painter->setFont(fontForNonAscii);
-                            painter->drawText(nX,rcToken.bottom()-painter->fontMetrics().descent() , Token[i]);
+                            painter->drawText(nX,rcToken.bottom()-painter->fontMetrics().descent() , token[i]);
                             painter->setFont(font);
                         }
                         drawed = true;
@@ -409,7 +409,7 @@ void SynEditTextPainter::PaintToken(const QString &Token, int TokenCols, int Col
     }
 }
 
-void SynEditTextPainter::PaintEditAreas(const SynEditingAreaList &areaList)
+void SynEditTextPainter::paintEditAreas(const SynEditingAreaList &areaList)
 {
     QRect rc;
     int x1,x2;
@@ -431,8 +431,8 @@ void SynEditTextPainter::PaintEditAreas(const SynEditingAreaList &areaList)
           x2 = LastCol;
         else
           x2 = p->endX;
-        rc.setLeft(ColumnToXValue(x1));
-        rc.setRight(ColumnToXValue(x2));
+        rc.setLeft(columnToXValue(x1));
+        rc.setRight(columnToXValue(x2));
         painter->setPen(p->color);
         painter->setBrush(Qt::NoBrush);
         switch(p->type) {
@@ -461,7 +461,7 @@ void SynEditTextPainter::PaintEditAreas(const SynEditingAreaList &areaList)
     }
 }
 
-void SynEditTextPainter::PaintHighlightToken(bool bFillToEOL)
+void SynEditTextPainter::paintHighlightToken(bool bFillToEOL)
 {
     bool bComplexToken;
     int nC1, nC2, nC1Sel, nC2Sel;
@@ -512,25 +512,25 @@ void SynEditTextPainter::PaintHighlightToken(bool bFillToEOL)
             // first unselected part of the token
             if (bU1) {
                 setDrawingColors(false);
-                rcToken.setRight(ColumnToXValue(nLineSelStart));
-                PaintToken(TokenAccu.s,TokenAccu.Columns,TokenAccu.ColumnsBefore,nC1,nLineSelStart,false,font,nonAsciiFont);
+                rcToken.setRight(columnToXValue(nLineSelStart));
+                paintToken(TokenAccu.s,TokenAccu.Columns,TokenAccu.ColumnsBefore,nC1,nLineSelStart,false,font,nonAsciiFont);
             }
             // selected part of the token
             setDrawingColors(true);
             nC1Sel = std::max(nLineSelStart, nC1);
             nC2Sel = std::min(nLineSelEnd, nC2);
-            rcToken.setRight(ColumnToXValue(nC2Sel));
-            PaintToken(TokenAccu.s, TokenAccu.Columns, TokenAccu.ColumnsBefore, nC1Sel, nC2Sel,true,font,nonAsciiFont);
+            rcToken.setRight(columnToXValue(nC2Sel));
+            paintToken(TokenAccu.s, TokenAccu.Columns, TokenAccu.ColumnsBefore, nC1Sel, nC2Sel,true,font,nonAsciiFont);
             // second unselected part of the token
             if (bU2) {
                 setDrawingColors(false);
-                rcToken.setRight(ColumnToXValue(nC2));
-                PaintToken(TokenAccu.s, TokenAccu.Columns, TokenAccu.ColumnsBefore,nLineSelEnd, nC2,false,font,nonAsciiFont);
+                rcToken.setRight(columnToXValue(nC2));
+                paintToken(TokenAccu.s, TokenAccu.Columns, TokenAccu.ColumnsBefore,nLineSelEnd, nC2,false,font,nonAsciiFont);
             }
         } else {
             setDrawingColors(bSel);
-            rcToken.setRight(ColumnToXValue(nC2));
-            PaintToken(TokenAccu.s, TokenAccu.Columns, TokenAccu.ColumnsBefore, nC1, nC2,bSel,font,nonAsciiFont);
+            rcToken.setRight(columnToXValue(nC2));
+            paintToken(TokenAccu.s, TokenAccu.Columns, TokenAccu.ColumnsBefore, nC1, nC2,bSel,font,nonAsciiFont);
         }
     }
 
@@ -541,8 +541,8 @@ void SynEditTextPainter::PaintHighlightToken(bool bFillToEOL)
         else
             colBG = colEditorBG();
         if (bComplexLine) {
-            nX1 = ColumnToXValue(nLineSelStart);
-            nX2 = ColumnToXValue(nLineSelEnd);
+            nX1 = columnToXValue(nLineSelStart);
+            nX2 = columnToXValue(nLineSelEnd);
             if (rcToken.left() < nX1) {
                 setDrawingColors(false);
                 rcToken.setRight(nX1);
@@ -572,11 +572,11 @@ void SynEditTextPainter::PaintHighlightToken(bool bFillToEOL)
     }
 }
 
-bool SynEditTextPainter::TokenIsSpaces(bool &bSpacesTest, const QString& Token, bool& bIsSpaces)
+bool SynEditTextPainter::tokenIsSpaces(bool &bSpacesTest, const QString& token, bool& bIsSpaces)
 {
     if (!bSpacesTest) {
         bSpacesTest = true;
-        for (QChar ch:Token) {
+        for (QChar ch:token) {
             //todo: should include tabs?
             if (ch!= ' ') {
                 bIsSpaces = false;
@@ -591,71 +591,71 @@ bool SynEditTextPainter::TokenIsSpaces(bool &bSpacesTest, const QString& Token, 
 // Store the token chars with the attributes in the TokenAccu
 // record. This will paint any chars already stored if there is
 // a (visible) change in the attributes.
-void SynEditTextPainter::AddHighlightToken(const QString &Token, int ColumnsBefore,
-                                           int TokenColumns, int cLine, PSynHighlighterAttribute p_Attri)
+void SynEditTextPainter::addHighlightToken(const QString &Token, int columnsBefore,
+                                           int tokenColumns, int cLine, PSynHighlighterAttribute p_Attri)
 {
     bool bCanAppend;
-    QColor Foreground, Background;
-    SynFontStyles Style;
+    QColor foreground, background;
+    SynFontStyles style;
     bool bSpacesTest,bIsSpaces;
 
     if (p_Attri) {
-        Foreground = p_Attri->foreground();
-        Background = p_Attri->background();
-        Style = p_Attri->styles();
+        foreground = p_Attri->foreground();
+        background = p_Attri->background();
+        style = p_Attri->styles();
     } else {
-        Foreground = colFG;
-        Background = colBG;
-        Style = getFontStyles(edit->font());
+        foreground = colFG;
+        background = colBG;
+        style = getFontStyles(edit->font());
     }
 
 //    if (!Background.isValid() || (edit->mActiveLineColor.isValid() && bCurrentLine)) {
 //        Background = colEditorBG();
 //    }
-    if (!Background.isValid() ) {
-        Background = colEditorBG();
+    if (!background.isValid() ) {
+        background = colEditorBG();
     }
-    if (!Foreground.isValid()) {
-        Foreground = edit->mForegroundColor;
+    if (!foreground.isValid()) {
+        foreground = edit->mForegroundColor;
     }
 
     edit->onPreparePaintHighlightToken(cLine,edit->mHighlighter->getTokenPos()+1,
-        Token,p_Attri,Style,Foreground,Background);
+        Token,p_Attri,style,foreground,background);
 
     // Do we have to paint the old chars first, or can we just append?
     bCanAppend = false;
     bSpacesTest = false;
     if (TokenAccu.Columns > 0) {
         // font style must be the same or token is only spaces
-        if (TokenAccu.Style == Style ||  ( (Style & SynFontStyle::fsUnderline) == (TokenAccu.Style & fsUnderline)
-                                           && TokenIsSpaces(bSpacesTest,Token,bIsSpaces)) ) {
+        if (TokenAccu.Style == style ||  ( (style & SynFontStyle::fsUnderline) == (TokenAccu.Style & fsUnderline)
+                                           && tokenIsSpaces(bSpacesTest,Token,bIsSpaces)) ) {
             if (
               // background color must be the same and
-            ((TokenAccu.BG == Background) &&
+            ((TokenAccu.BG == background) &&
               // foreground color must be the same or token is only spaces
-              ((TokenAccu.FG == Foreground) || (TokenIsSpaces(bSpacesTest,Token,bIsSpaces) && !edit->mOptions.testFlag(eoShowSpecialChars))))) {
+              ((TokenAccu.FG == foreground) || (tokenIsSpaces(bSpacesTest,Token,bIsSpaces) && !edit->mOptions.testFlag(eoShowSpecialChars))))) {
               bCanAppend = true;
             }
         }
         // If we can't append it, then we have to paint the old token chars first.
         if (!bCanAppend)
-            PaintHighlightToken(false);
+            paintHighlightToken(false);
     }
     // Don't use AppendStr because it's more expensive.
     if (bCanAppend) {
         TokenAccu.s.append(Token);
-        TokenAccu.Columns+=TokenColumns;
+        TokenAccu.Columns+=tokenColumns;
     } else {
-        TokenAccu.Columns = TokenColumns;
+        TokenAccu.Columns = tokenColumns;
         TokenAccu.s = Token;
-        TokenAccu.ColumnsBefore = ColumnsBefore;
-        TokenAccu.FG = Foreground;
-        TokenAccu.BG = Background;
-        TokenAccu.Style = Style;
+        TokenAccu.ColumnsBefore = columnsBefore;
+        TokenAccu.FG = foreground;
+        TokenAccu.BG = background;
+        TokenAccu.Style = style;
     }
 }
 
-void SynEditTextPainter::PaintFoldAttributes()
+void SynEditTextPainter::paintFoldAttributes()
 {
     int TabSteps, LineIndent, LastNonBlank, X, Y, cRow, vLine;
     // Paint indent guides. Use folds to determine indent value of these
@@ -705,15 +705,15 @@ void SynEditTextPainter::PaintFoldAttributes()
                 if (edit->mHighlighter) {
                     if (edit->mCodeFolding.indentGuides) {
                         PSynHighlighterAttribute attr = edit->mHighlighter->symbolAttribute();
-                        GetBraceColorAttr(indentLevel,attr);
+                        getBraceColorAttr(indentLevel,attr);
                         paintColor = attr->foreground();
                     }
                     if (edit->mCodeFolding.fillIndents) {
                         PSynHighlighterAttribute attr = edit->mHighlighter->symbolAttribute();
-                        GetBraceColorAttr(indentLevel,attr);
+                        getBraceColorAttr(indentLevel,attr);
                         gradientStart=attr->foreground();
                         attr = edit->mHighlighter->symbolAttribute();
-                        GetBraceColorAttr(indentLevel+1,attr);
+                        getBraceColorAttr(indentLevel+1,attr);
                         gradientStart=attr->foreground();
                     }
                 }
@@ -762,7 +762,7 @@ void SynEditTextPainter::PaintFoldAttributes()
 
 }
 
-void SynEditTextPainter::GetBraceColorAttr(int level, PSynHighlighterAttribute &attr)
+void SynEditTextPainter::getBraceColorAttr(int level, PSynHighlighterAttribute &attr)
 {
     if (!edit->mOptions.testFlag(SynEditorOption::eoShowRainbowColor))
         return;
@@ -787,7 +787,7 @@ void SynEditTextPainter::GetBraceColorAttr(int level, PSynHighlighterAttribute &
         attr = oldAttr;
 }
 
-void SynEditTextPainter::PaintLines()
+void SynEditTextPainter::paintLines()
 {
     int cRow; // row index for the loop
     int vLine;
@@ -907,19 +907,19 @@ void SynEditTextPainter::PaintLines()
               }
               if (bComplexLine) {
                   setDrawingColors(true);
-                  rcToken.setLeft(std::max(rcLine.left(), ColumnToXValue(nLineSelStart)));
-                  rcToken.setRight(std::min(rcLine.right(), ColumnToXValue(nLineSelEnd)));
-                  PaintToken(sToken, nTokenColumnLen, 0, nLineSelStart, nLineSelEnd,false,edit->font(),edit->fontForNonAscii());
+                  rcToken.setLeft(std::max(rcLine.left(), columnToXValue(nLineSelStart)));
+                  rcToken.setRight(std::min(rcLine.right(), columnToXValue(nLineSelEnd)));
+                  paintToken(sToken, nTokenColumnLen, 0, nLineSelStart, nLineSelEnd,false,edit->font(),edit->fontForNonAscii());
                   setDrawingColors(false);
-                  rcToken.setLeft(std::max(rcLine.left(), ColumnToXValue(FirstCol)));
-                  rcToken.setRight(std::min(rcLine.right(), ColumnToXValue(nLineSelStart)));
-                  PaintToken(sToken, nTokenColumnLen, 0, FirstCol, nLineSelStart,false,edit->font(),edit->fontForNonAscii());
-                  rcToken.setLeft(std::max(rcLine.left(), ColumnToXValue(nLineSelEnd)));
-                  rcToken.setRight(std::min(rcLine.right(), ColumnToXValue(LastCol)));
-                  PaintToken(sToken, nTokenColumnLen, 0, nLineSelEnd, LastCol,true,edit->font(),edit->fontForNonAscii());
+                  rcToken.setLeft(std::max(rcLine.left(), columnToXValue(FirstCol)));
+                  rcToken.setRight(std::min(rcLine.right(), columnToXValue(nLineSelStart)));
+                  paintToken(sToken, nTokenColumnLen, 0, FirstCol, nLineSelStart,false,edit->font(),edit->fontForNonAscii());
+                  rcToken.setLeft(std::max(rcLine.left(), columnToXValue(nLineSelEnd)));
+                  rcToken.setRight(std::min(rcLine.right(), columnToXValue(LastCol)));
+                  paintToken(sToken, nTokenColumnLen, 0, nLineSelEnd, LastCol,true,edit->font(),edit->fontForNonAscii());
               } else {
                   setDrawingColors(bLineSelected);
-                  PaintToken(sToken, nTokenColumnLen, 0, FirstCol, LastCol,bLineSelected,edit->font(),edit->fontForNonAscii());
+                  paintToken(sToken, nTokenColumnLen, 0, FirstCol, LastCol,bLineSelected,edit->font(),edit->fontForNonAscii());
               }
               //Paint editingAreaBorders
               if (bCurrentLine && edit->mInputPreeditString.length()>0) {
@@ -931,7 +931,7 @@ void SynEditTextPainter::PaintLines()
                   area->type = SynEditingAreaType::eatUnderLine;
                   area->color = colFG;
                   areaList.append(area);
-                  PaintEditAreas(areaList);
+                  paintEditAreas(areaList);
               }
         } else {
             // Initialize highlighter with line text and range info. It is
@@ -980,7 +980,7 @@ void SynEditTextPainter::PaintLines()
                             || sToken == "{"
                             ) {
                         SynRangeState rangeState = edit->mHighlighter->getRangeState();
-                        GetBraceColorAttr(rangeState.bracketLevel
+                        getBraceColorAttr(rangeState.bracketLevel
                                           +rangeState.braceLevel
                                           +rangeState.parenthesisLevel
                                           ,attr);
@@ -989,7 +989,7 @@ void SynEditTextPainter::PaintLines()
                                || sToken == "}"
                                ){
                         SynRangeState rangeState = edit->mHighlighter->getRangeState();
-                        GetBraceColorAttr(rangeState.bracketLevel
+                        getBraceColorAttr(rangeState.bracketLevel
                                           +rangeState.braceLevel
                                           +rangeState.parenthesisLevel+1,
                                           attr);
@@ -1007,7 +1007,7 @@ void SynEditTextPainter::PaintLines()
                             }
                         }
                     }
-                    AddHighlightToken(sToken, nTokenColumnsBefore - (vFirstChar - FirstCol),
+                    addHighlightToken(sToken, nTokenColumnsBefore - (vFirstChar - FirstCol),
                       nTokenColumnLen, vLine,attr);
                 }
                 nTokenColumnsBefore+=nTokenColumnLen;
@@ -1025,14 +1025,14 @@ void SynEditTextPainter::PaintLines()
                     nTokenColumnLen = std::min(lineColumns, vLastChar) - (nTokenColumnsBefore + 1);
                     if (nTokenColumnLen > 0) {
                         sToken = edit->substringByColumns(sLine,nTokenColumnsBefore+1,nTokenColumnLen);
-                        AddHighlightToken(sToken, nTokenColumnsBefore - (vFirstChar - FirstCol),
+                        addHighlightToken(sToken, nTokenColumnsBefore - (vFirstChar - FirstCol),
                             nTokenColumnLen, vLine, PSynHighlighterAttribute());
                     }
                 }
                 // Draw LineBreak glyph.
                 if (edit->mOptions.testFlag(eoShowSpecialChars) && (!bLineSelected) &&
                     (!bSpecialLine) && (edit->mDocument->lineColumns(vLine-1) < vLastChar)) {
-                    AddHighlightToken(SynLineBreakGlyph,
+                    addHighlightToken(SynLineBreakGlyph,
                       edit->mDocument->lineColumns(vLine-1)  - (vFirstChar - FirstCol),
                       edit->charColumns(SynLineBreakGlyph),vLine, edit->mHighlighter->whitespaceAttribute());
                 }
@@ -1044,14 +1044,14 @@ void SynEditTextPainter::PaintLines()
                 sFold = edit->highlighter()->foldString();
                 nFold = edit->stringColumns(sFold,edit->mDocument->lineColumns(vLine-1));
                 attr = edit->mHighlighter->symbolAttribute();
-                GetBraceColorAttr(edit->mHighlighter->getRangeState().braceLevel,attr);
-                AddHighlightToken(sFold,edit->mDocument->lineColumns(vLine-1) - (vFirstChar - FirstCol)
+                getBraceColorAttr(edit->mHighlighter->getRangeState().braceLevel,attr);
+                addHighlightToken(sFold,edit->mDocument->lineColumns(vLine-1) - (vFirstChar - FirstCol)
                   , nFold, vLine, attr);
             }
 
             // Draw anything that's left in the TokenAccu record. Fill to the end
             // of the invalid area with the correct colors.
-            PaintHighlightToken(true);
+            paintHighlightToken(true);
 
             //Paint editingAreaBorders
             foreach (const PSynEditingArea& area, areaList) {
@@ -1080,7 +1080,7 @@ void SynEditTextPainter::PaintLines()
                 }
                 areaList.append(area);
             }
-            PaintEditAreas(areaList);
+            paintEditAreas(areaList);
         }
 
         // Now paint the right edge if necessary. We do it line by line to reduce

@@ -37,7 +37,6 @@ typedef int SynEditStringFlags;
 
 struct SynDocumentLine {
   QString fString;
-  void * fObject;
   SynRangeState fRange;
   int fColumns;  //
 
@@ -75,14 +74,12 @@ public:
     void setRange(int Index, const SynRangeState& ARange);
     QString getString(int Index);
     int count();
-    void* getObject(int Index);
     QString text();
     void setText(const QString& text);
     void setContents(const QStringList& text);
     QStringList contents();
 
     void putString(int Index, const QString& s, bool notify=true);
-    void putObject(int Index, void * AObject);
 
     void beginUpdate();
     void endUpdate();

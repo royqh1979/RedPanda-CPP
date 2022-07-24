@@ -59,7 +59,6 @@ PSynHighlighter HighlighterManager::copyHighlighter(PSynHighlighter highlighter)
 PSynHighlighter HighlighterManager::getCppHighlighter()
 {
     SynEditCppHighlighter* highlighter = new SynEditCppHighlighter();
-    PSynHighlighter pHighlighter(highlighter);
     highlighter->asmAttribute()->setForeground(Qt::blue);
     highlighter->charAttribute()->setForeground(Qt::black);
     highlighter->commentAttribute()->setForeground(0x8C8C8C);
@@ -81,6 +80,7 @@ PSynHighlighter HighlighterManager::getCppHighlighter()
     highlighter->stringEscapeSequenceAttribute()->setForeground(Qt::red);
     highlighter->symbolAttribute()->setForeground(0xc10000);
     highlighter->variableAttribute()->setForeground(0x400080);
+    PSynHighlighter pHighlighter=std::make_shared<SynEditCppHighlighter>();
     return pHighlighter;
 }
 

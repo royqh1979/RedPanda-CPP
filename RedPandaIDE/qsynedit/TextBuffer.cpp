@@ -218,15 +218,6 @@ int SynDocument::count()
     return mLines.count();
 }
 
-void *SynDocument::getObject(int Index)
-{
-    QMutexLocker locker(&mMutex);
-    if (Index<0 || Index>=mLines.count()) {
-        return nullptr;
-    }
-    return mLines[Index]->fObject;
-}
-
 QString SynDocument::text()
 {
     QMutexLocker locker(&mMutex);
@@ -449,17 +440,6 @@ void SynDocument::putString(int Index, const QString &s, bool notify) {
             emit putted(Index,1);
         endUpdate();
     }
-}
-
-void SynDocument::putObject(int Index, void *AObject)
-{
-    QMutexLocker locker(&mMutex);
-    if (Index<0 || Index>=mLines.count()) {
-        ListIndexOutOfBounds(Index);
-    }
-    beginUpdate();
-    mLines[Index]->fObject = AObject;
-    endUpdate();
 }
 
 void SynDocument::setUpdateState(bool Updating)
@@ -826,7 +806,6 @@ void SynDocument::invalidAllLineColumns()
 
 SynDocumentLine::SynDocumentLine():
     fString(),
-    fObject(nullptr),
     fRange(),
     fColumns(-1)
 {

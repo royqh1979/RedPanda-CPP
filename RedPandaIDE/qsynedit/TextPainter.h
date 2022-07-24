@@ -45,21 +45,21 @@ public:
 
 private:
     QColor colEditorBG();
-    void ComputeSelectionInfo();
-    void setDrawingColors(bool Selected);
-    int ColumnToXValue(int Col);
-    void PaintToken(const QString& Token, int TokenLen, int ColumnsBefore,
-                    int First, int Last, bool isSelection, const QFont& font,
+    void computeSelectionInfo();
+    void setDrawingColors(bool selected);
+    int columnToXValue(int col);
+    void paintToken(const QString& token, int tokenLen, int columnsBefore,
+                    int first, int last, bool isSelection, const QFont& font,
                     const QFont& fontForNonAscii);
-    void PaintEditAreas(const SynEditingAreaList& areaList);
-    void PaintHighlightToken(bool bFillToEOL);
-    bool TokenIsSpaces(bool& bSpacesTest, const QString& Token, bool& bIsSpaces);
-    void AddHighlightToken(const QString& Token, int ColumnsBefore, int TokenColumns,
+    void paintEditAreas(const SynEditingAreaList& areaList);
+    void paintHighlightToken(bool bFillToEOL);
+    bool tokenIsSpaces(bool& bSpacesTest, const QString& token, bool& bIsSpaces);
+    void addHighlightToken(const QString& token, int columnsBefore, int tokenColumns,
                            int cLine, PSynHighlighterAttribute p_Attri);
 
-    void PaintFoldAttributes();
-    void GetBraceColorAttr(int level, PSynHighlighterAttribute &attr);
-    void PaintLines();
+    void paintFoldAttributes();
+    void getBraceColorAttr(int level, PSynHighlighterAttribute &attr);
+    void paintLines();
 
 private:
     SynEdit* edit;

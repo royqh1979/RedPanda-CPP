@@ -107,15 +107,15 @@ void IssuesModel::clearIssues()
             issueFiles.insert(issue->filename);
         }
     }
-    if (mIssues.size()>0) {
-        beginRemoveRows(QModelIndex(),0,mIssues.size()-1);
-        mIssues.clear();
-        endRemoveRows();
-    }
     foreach (const QString& filename, issueFiles) {
         Editor *e=pMainWindow->editorList()->getOpenedEditorByFilename(filename);
         if (e)
             e->clearSyntaxIssues();
+    }
+    if (mIssues.size()>0) {
+        beginResetModel();
+        mIssues.clear();
+        endResetModel();
     }
 }
 
