@@ -1,3 +1,7 @@
+Red Panda C++ Version 1.1.6
+
+  - fix: block indent doesn't work
+
 Red Panda C++ Version 1.1.5
 
   - change: uncheck "hide unsupported files" in files view shouldn't gray out non-c files

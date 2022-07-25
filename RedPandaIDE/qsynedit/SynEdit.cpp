@@ -2774,7 +2774,6 @@ void SynEdit::doBlockIndent()
     QStringList strToInsert;
     int e,x,i;
     QString spaces;
-    BufferCoord insertionPos;
 
     oldCaretPos = caretXY();
 
@@ -2802,19 +2801,41 @@ void SynEdit::doBlockIndent()
     } else {
         spaces = "\t";
     }
-    for (i = BB.line; i<e;i++) {
-        strToInsert.append(spaces);
-    }
-    strToInsert.append(spaces);
+//    for (i = BB.line; i<e;i++) {
+//        strToInsert.append(spaces);
+//    }
+//    strToInsert.append(spaces);
     mUndoList->beginBlock();
     mUndoList->addChange(SynChangeReason::Caret, oldCaretPos, oldCaretPos,QStringList(), activeSelectionMode());
     mUndoList->addChange(SynChangeReason::Selection,mBlockBegin,mBlockEnd,QStringList(), activeSelectionMode());
-    insertionPos.line = BB.line;
+    int ch;
     if (mActiveSelectionMode == SynSelectionMode::Column)
-      insertionPos.ch = std::min(BB.ch, BE.ch);
+      ch = std::min(BB.ch, BE.ch);
     else
-      insertionPos.ch = 1;
-    insertBlock(insertionPos, strToInsert);
+      ch = 1;
+    for (i = BB.line; i<=e;i++) {
+        if (i>mDocument->count())
+            break;
+        QString line=mDocument->getString(i-1);
+        if (ch>line.length()) {
+            mUndoList->addChange(
+                        SynChangeReason::Insert,
+                        BufferCoord{line.length(), i},
+                        BufferCoord{line.length()+spaces.length(), i},
+                        QStringList(),
+                        SynSelectionMode::Normal);
+            line+=spaces;
+        } else {
+            mUndoList->addChange(
+                        SynChangeReason::Insert,
+                        BufferCoord{ch, i},
+                        BufferCoord{ch+spaces.length(), i},
+                        QStringList(),
+                        SynSelectionMode::Normal);
+            line = line.left(ch-1)+spaces+line.mid(ch-1);
+        }
+        properSetLine(i-1,line);
+    }
     //adjust caret and selection
     oldCaretPos.ch = x;
     if (BB.ch > 1)
@@ -3253,12 +3274,6 @@ void SynEdit::doOnStatusChange(SynStatusChanges)
     }
     emit statusChanged(mStatusChanges);
     mStatusChanges = SynStatusChange::scNone;
-}
-
-void SynEdit::insertBlock(const BufferCoord& startPos, const QStringList& blockText)
-{
-    setCaretAndSelection(startPos, startPos, startPos);
-    setSelTextPrimitiveEx(SynSelectionMode::Column, blockText);
 }
 
 void SynEdit::updateScrollbars()

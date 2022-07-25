@@ -509,7 +509,6 @@ private:
     void internalSetCaretY(int Value);
     void setStatusChanged(SynStatusChanges changes);
     void doOnStatusChange(SynStatusChanges changes);
-    void insertBlock(const BufferCoord& startPos, const QStringList& blockText);
     void updateScrollbars();
     void updateCaret();
     void recalcCharExtent();
