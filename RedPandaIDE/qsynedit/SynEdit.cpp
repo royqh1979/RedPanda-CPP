@@ -2541,25 +2541,20 @@ void SynEdit::doTabKey()
         doBlockIndent();
         return;
     }
-    int i = 0;
-    {
-        mUndoList->beginBlock();
-        auto action = finally([this]{
-            mUndoList->endBlock();
-        });
-        if (selAvail()) {
-            setSelectedTextEmpty();
-        }
-        QString Spaces;
-        if (mOptions.testFlag(eoTabsToSpaces)) {
-            int cols = charToColumn(mCaretY,mCaretX);
-            i = tabWidth() - (cols) % tabWidth();
-            Spaces = QString(i,' ');
-        } else {
-            Spaces = '\t';
-        }
-        setSelTextPrimitive(QStringList(Spaces));
+    mUndoList->beginBlock();
+    if (selAvail()) {
+        setSelectedTextEmpty();
     }
+    QString Spaces;
+    if (mOptions.testFlag(eoTabsToSpaces)) {
+        int cols = charToColumn(mCaretY,mCaretX);
+        int i = tabWidth() - (cols) % tabWidth();
+        Spaces = QString(i,' ');
+    } else {
+        Spaces = '\t';
+    }
+    setSelTextPrimitive(QStringList(Spaces));
+    mUndoList->endBlock();
     ensureCursorPosVisible();
 }
 
@@ -6634,10 +6629,9 @@ void SynEdit::onLinesChanged()
     if (mActiveSelectionMode == SynSelectionMode::Column) {
         BufferCoord oldBlockStart = blockBegin();
         BufferCoord oldBlockEnd = blockEnd();
-        oldBlockStart.ch = mCaretX;
-        int colEnd = charToColumn(oldBlockStart.line,oldBlockStart.ch);
-        int charEnd = columnToChar(oldBlockEnd.line,colEnd);
-        oldBlockEnd.ch =  charEnd;
+        int colEnd = charToColumn(mCaretY,mCaretX);
+        oldBlockStart.ch = columnToChar(oldBlockStart.line,colEnd);
+        oldBlockEnd.ch = columnToChar(oldBlockEnd.line,colEnd);
         setBlockBegin(oldBlockStart);
         setBlockEnd(oldBlockEnd);
     } else {

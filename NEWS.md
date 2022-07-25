@@ -1,6 +1,7 @@
 Red Panda C++ Version 1.1.6
 
   - fix: block indent doesn't work
+  - fix: selection is not correctly set after input in column mode 
 
 Red Panda C++ Version 1.1.5
 
