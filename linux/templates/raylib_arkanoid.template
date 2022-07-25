@@ -1,0 +1,20 @@
+[Template]
+ver=2
+Name=arkanoid
+Name[zh_CN]=打砖块
+Icon=raylib_arkanoid.ico
+Description=arkanoid game using raylib ( https://raylib.com )
+Description[zh_CN]=经典的打砖块游戏(基于raylib) ( https://raylib.com )
+Category=Game
+Category[zh_CN]=游戏
+
+[Unit0]
+CName=main.c
+C=raylib_arkanoid_c.txt
+
+[Project]
+UnitCount=1
+Type=1
+IsCpp=0
+linker=-lraylib -lGL -lm -lpthread -ldl -lrt -lX11
+ExecEncoding=UTF-8
