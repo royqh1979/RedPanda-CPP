@@ -344,8 +344,9 @@ bool Editor::saveAs(const QString &name, bool fromProject){
 
     clearSyntaxIssues();
     pMainWindow->fileSystemWatcher()->removePath(mFilename);
-    if (pSettings->codeCompletion().enabled() && mParser)
+    if (pSettings->codeCompletion().enabled() && mParser) {
         mParser->invalidateFile(mFilename);
+    }
     try {
         mFilename = newName;
         saveFile(mFilename);
@@ -2527,6 +2528,11 @@ bool Editor::handleCodeCompletion(QChar key)
 void Editor::initParser()
 {
     mParser = std::make_shared<CppParser>();
+    if (mUseCppSyntax) {
+        mParser->setLanguage(ParserLanguage::CPlusPlus);
+    } else {
+        mParser->setLanguage(ParserLanguage::C);
+    }
     mParser->setOnGetFileStream(
                 std::bind(
                     &EditorList::getContentFromOpenedEditor,pMainWindow->editorList(),
@@ -2667,6 +2673,11 @@ void Editor::reparse()
         return;
     if (mParser)
         mParser->setEnabled(pSettings->codeCompletion().enabled());
+    ParserLanguage language = mUseCppSyntax?ParserLanguage::CPlusPlus:ParserLanguage::C;
+    if (language!=mParser->language() && !mInProject) {
+        mParser->setLanguage(language);
+        resetCppParser(mParser);
+    }
     parseFile(mParser,mFilename,mInProject);
 }
 

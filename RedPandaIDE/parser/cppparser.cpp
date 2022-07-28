@@ -31,6 +31,7 @@ CppParser::CppParser(QObject *parent) : QObject(parent),
     mMutex(QMutex::Recursive)
 {
     mParserId = cppParserCount.fetchAndAddRelaxed(1);
+    mLanguage = ParserLanguage::CPlusPlus;
     mSerialCount = 0;
     updateSerialId();
     mUniqId = 0;
@@ -4642,6 +4643,16 @@ bool CppParser::isTypeStatement(StatementKind kind) const
 void CppParser::updateSerialId()
 {
     mSerialId = QString("%1 %2").arg(mParserId).arg(mSerialCount);
+}
+
+ParserLanguage CppParser::language() const
+{
+    return mLanguage;
+}
+
+void CppParser::setLanguage(ParserLanguage newLanguage)
+{
+    mLanguage = newLanguage;
 }
 
 

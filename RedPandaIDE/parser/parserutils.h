@@ -22,6 +22,11 @@
 #include <QVector>
 #include <memory>
 
+enum class ParserLanguage {
+    C,
+    CPlusPlus
+};
+
 struct CodeSnippet {
     QString caption; //Name
     QString prefix; //Prefix used in code suggestion

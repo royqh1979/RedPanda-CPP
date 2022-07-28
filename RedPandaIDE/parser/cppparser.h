@@ -137,6 +137,9 @@ public:
 
     const StatementModel &statementList() const;
 
+    ParserLanguage language() const;
+    void setLanguage(ParserLanguage newLanguage);
+
 signals:
     void onProgress(const QString& fileName, int total, int current);
     void onBusy();
@@ -507,6 +510,7 @@ private:
 
 private:
     int mParserId;
+    ParserLanguage mLanguage;
     int mSerialCount;
     QString mSerialId;
     int mUniqId;

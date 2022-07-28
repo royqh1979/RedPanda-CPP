@@ -1295,7 +1295,7 @@ QString CppPreprocessor::expandDefines(QString line)
                 } else {
                     //none braced argument (next word)
                     defineStart = tail;
-                    if ((tail>=line.length()) || !isMacroIdentChar(line[searchPos])) {
+                    if ((tail>=line.length()) || !isMacroIdentChar(line[defineStart])) {
                         line = ""; // broken line
                         break;
                     }

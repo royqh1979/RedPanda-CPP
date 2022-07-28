@@ -1223,7 +1223,8 @@ public:
         void setType(const QString& value);
         const QString& name() const;
         void setName(const QString& value);
-        const QStringList& defines();
+        const QStringList& CppDefines();
+        const QStringList& CDefines();
         const QString& target() const;
         void setTarget(const QString& value);
 
@@ -1295,7 +1296,8 @@ public:
         QString mVersion; // "4.7.1"
         QString mType; // "TDM-GCC", "MinGW"
         QString mName; // "TDM-GCC 4.7.1 Release"
-        QStringList mDefines; // list of predefined constants
+        QStringList mCppDefines; // list of predefined constants
+        QStringList mCDefines; // list of predefined constants
         QString mTarget; // 'X86_64' / 'i686'
         QString mCompilerType; // 'Clang' / 'GCC'
         int mCompilerSetType; // RELEASE/ DEBUG/ Profile

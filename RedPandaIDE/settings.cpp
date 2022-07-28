@@ -1518,7 +1518,8 @@ Settings::CompilerSet::CompilerSet(const Settings::CompilerSet &set):
     mVersion(set.mVersion),
     mType(set.mType),
     mName(set.mName),
-    mDefines(set.mDefines),
+    mCppDefines(set.mCppDefines),
+    mCDefines(set.mCDefines),
     mTarget(set.mTarget),
     mCompilerType(set.mCompilerType),
     mCompilerSetType(set.mCompilerSetType),
@@ -1854,14 +1855,25 @@ void Settings::CompilerSet::setName(const QString &value)
     mName = value;
 }
 
-const QStringList& Settings::CompilerSet::defines()
+const QStringList& Settings::CompilerSet::CDefines()
 {
     if (!mFullLoaded && !binDirs().isEmpty()) {
         mFullLoaded=true;
         setDirectories(binDirs()[0],mCompilerType);
         setDefines();
     }
-    return mDefines;
+    return mCDefines;
+}
+
+const QStringList &Settings::CompilerSet::CppDefines()
+{
+    if (!mFullLoaded && !binDirs().isEmpty()) {
+        mFullLoaded=true;
+        setDirectories(binDirs()[0],mCompilerType);
+        setDefines();
+    }
+    return mCppDefines;
+
 }
 
 const QString &Settings::CompilerSet::target() const
@@ -2079,14 +2091,33 @@ void Settings::CompilerSet::setDefines() {
     QByteArray output = getCompilerOutput(ccompiler.absolutePath(),ccompiler.fileName(),arguments);
     // 'cpp.exe -dM -E -x c++ -std=c++17 NUL'
 
-    mDefines.clear();
+    mCppDefines.clear();
     QList<QByteArray> lines = output.split('\n');
     for (QByteArray& line:lines) {
         QByteArray trimmedLine = line.trimmed();
         if (!trimmedLine.isEmpty()) {
-            mDefines.append(trimmedLine);
+            mCppDefines.append(trimmedLine);
         }
     }
+
+    arguments.clear();
+    arguments.append("-dM");
+    arguments.append("-E");
+    arguments.append("-x");
+    arguments.append("c");
+    arguments.append(NULL_FILE);
+    output = getCompilerOutput(ccompiler.absolutePath(),ccompiler.fileName(),arguments);
+    // 'cpp.exe -dM -E -x c NUL'
+
+    mCDefines.clear();
+    lines = output.split('\n');
+    for (QByteArray& line:lines) {
+        QByteArray trimmedLine = line.trimmed();
+        if (!trimmedLine.isEmpty()) {
+            mCDefines.append(trimmedLine);
+        }
+    }
+
 }
 
 void Settings::CompilerSet::setExecutables()
