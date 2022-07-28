@@ -2,7 +2,9 @@ Red Panda C++ Version 1.1.6
 
   - fix: block indent doesn't work
   - fix: selection is not correctly set after input in column mode 
+  - fix: in #if, defined without () not correctly processed
   - enhancement: don't show cpp defines when editing c files
+  - enhancement: choose default language when first run
 
 Red Panda C++ Version 1.1.5
 

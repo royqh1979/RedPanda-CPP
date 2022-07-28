@@ -70,6 +70,52 @@
     </widget>
    </item>
    <item>
+    <widget class="QWidget" name="widget_2" native="true">
+     <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <item>
+       <widget class="QLabel" name="label_3">
+        <property name="text">
+         <string>Default Language:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="rbC">
+        <property name="text">
+         <string>C</string>
+        </property>
+        <attribute name="buttonGroup">
+         <string notr="true">grpDefaultLanguage</string>
+        </attribute>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="rbCpp">
+        <property name="text">
+         <string>C++</string>
+        </property>
+        <attribute name="buttonGroup">
+         <string notr="true">grpDefaultLanguage</string>
+        </attribute>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer_2">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
     <spacer name="verticalSpacer">
      <property name="orientation">
       <enum>Qt::Vertical</enum>
@@ -126,4 +172,7 @@
   <include location="../icons.qrc"/>
  </resources>
  <connections/>
+ <buttongroups>
+  <buttongroup name="grpDefaultLanguage"/>
+ </buttongroups>
 </ui>

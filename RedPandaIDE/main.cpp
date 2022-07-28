@@ -337,6 +337,10 @@ int main(int argc, char *argv[])
             default:
                 setTheme("default");
             }
+
+            pSettings->editor().setDefaultFileCpp(themeDialog.language()==ChooseThemeDialog::Language::CPlusPlus);
+            pSettings->editor().save();
+
             //auto detect git in path
             pSettings->vcs().detectGitInPath();
         }

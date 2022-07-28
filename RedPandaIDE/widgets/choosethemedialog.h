@@ -32,9 +32,15 @@ public:
         Dark,
         Light
     };
+    enum class Language {
+        C,
+        CPlusPlus
+    };
+
     explicit ChooseThemeDialog(QWidget *parent = nullptr);
     ~ChooseThemeDialog();
     Theme theme();
+    Language language();
 
 private slots:
     void on_btnOk_clicked();

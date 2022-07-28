@@ -23,6 +23,7 @@ ChooseThemeDialog::ChooseThemeDialog(QWidget *parent) :
 {
     ui->setupUi(this);
     ui->rbDark->setChecked(true);
+    ui->rbCpp->setChecked(true);
 }
 
 ChooseThemeDialog::~ChooseThemeDialog()
@@ -35,6 +36,11 @@ ChooseThemeDialog::Theme ChooseThemeDialog::theme()
     if (ui->rbDark->isChecked())
         return Theme::Dark;
     return Theme::Light;
+}
+
+ChooseThemeDialog::Language ChooseThemeDialog::language()
+{
+    return ui->rbCpp->isChecked()?Language::CPlusPlus:Language::C;
 }
 
 void ChooseThemeDialog::on_btnOk_clicked()
