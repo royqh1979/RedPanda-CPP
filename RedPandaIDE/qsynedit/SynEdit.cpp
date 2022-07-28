@@ -4958,7 +4958,7 @@ void SynEdit::moveCaretHorz(int DX, bool isSelection)
     incPaintLock();
     if (mOptions.testFlag(eoAltSetsColumnMode) &&
                          (mActiveSelectionMode != SynSelectionMode::Line)) {
-        if (qApp->keyboardModifiers().testFlag(Qt::AltModifier)) {
+        if (qApp->keyboardModifiers().testFlag(Qt::AltModifier) && !mReadOnly) {
             setActiveSelectionMode(SynSelectionMode::Column);
         } else
             setActiveSelectionMode(selectionMode());
@@ -5001,7 +5001,7 @@ void SynEdit::moveCaretVert(int DY, bool isSelection)
     incPaintLock();
     if (mOptions.testFlag(eoAltSetsColumnMode) &&
                          (mActiveSelectionMode != SynSelectionMode::Line)) {
-        if (qApp->keyboardModifiers().testFlag(Qt::AltModifier))
+        if (qApp->keyboardModifiers().testFlag(Qt::AltModifier) && !mReadOnly)
             setActiveSelectionMode(SynSelectionMode::Column);
         else
             setActiveSelectionMode(selectionMode());
@@ -6285,9 +6285,8 @@ void SynEdit::mousePressEvent(QMouseEvent *event)
                 //code from above and SetBlockEnd will take care of proper invalidation
                 setBlockEnd(caretXY());
             } else if (mOptions.testFlag(eoAltSetsColumnMode) &&
-                     (mActiveSelectionMode != SynSelectionMode::Line)
-                       && !mReadOnly) {
-                if (event->modifiers() == Qt::AltModifier)
+                     (mActiveSelectionMode != SynSelectionMode::Line)) {
+                if (event->modifiers() == Qt::AltModifier && !mReadOnly)
                     setActiveSelectionMode(SynSelectionMode::Column);
                 else
                     setActiveSelectionMode(selectionMode());
@@ -6348,9 +6347,8 @@ void SynEdit::mouseMoveEvent(QMouseEvent *event)
         }
     } else if (buttons == Qt::LeftButton) {
         if (mOptions.testFlag(eoAltSetsColumnMode) &&
-                (mActiveSelectionMode != SynSelectionMode::Line)
-                && !mReadOnly) {
-                if (event->modifiers() == Qt::AltModifier)
+                (mActiveSelectionMode != SynSelectionMode::Line) ) {
+                if (event->modifiers() == Qt::AltModifier && !mReadOnly)
                     setActiveSelectionMode(SynSelectionMode::Column);
                 else
                     setActiveSelectionMode(selectionMode());

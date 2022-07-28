@@ -6,6 +6,7 @@ Red Panda C++ Version 1.1.6
   - enhancement: don't show cpp defines when editing c files
   - enhancement: choose default language when first run
   - fix: Drag&Drop no correctly disabled for readonly editors
+  - enhancement: disable column mode in readonly editors
 
 Red Panda C++ Version 1.1.5
 
