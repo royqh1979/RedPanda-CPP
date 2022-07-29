@@ -971,7 +971,7 @@ void SynEditTextPainter::paintLines()
                     if (nTokenColumnsBefore + nTokenColumnLen >= vLastChar) {
                         if (nTokenColumnsBefore >= vLastChar)
                             break; //*** BREAK ***
-                        nTokenColumnLen = vLastChar - nTokenColumnsBefore - 1;
+                        nTokenColumnLen = vLastChar - nTokenColumnsBefore;
                     }
                     // It's at least partially visible. Get the token attributes now.
                     attr = edit->mHighlighter->getTokenAttribute();

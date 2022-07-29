@@ -7,6 +7,7 @@ Red Panda C++ Version 1.1.6
   - enhancement: choose default language when first run
   - fix: Drag&Drop no correctly disabled for readonly editors
   - enhancement: disable column mode in readonly editors
+  - fix: inefficient loop when render long lines
 
 Red Panda C++ Version 1.1.5
 
