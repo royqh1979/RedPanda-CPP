@@ -1608,7 +1608,9 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
                                   &&  lineText.endsWith(':')
                                   && (
                                   firstToken == "public" || firstToken == "private"
-                                  || firstToken == "protected" || firstToken == "case")) {
+                                  || firstToken == "protected" || firstToken == "case"
+                                  || firstToken == "default"
+                        )) {
                 // public: private: protecte: case: should indents like it's parent statement
                 mHighlighter->setState(rangePreceeding);
                 mHighlighter->setLine("}",line-1);

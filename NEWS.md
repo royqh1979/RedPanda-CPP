@@ -8,6 +8,7 @@ Red Panda C++ Version 1.1.6
   - fix: Drag&Drop no correctly disabled for readonly editors
   - enhancement: disable column mode in readonly editors
   - fix: inefficient loop when render long lines
+  - fix: indents for "default" are not the same with "case"
 
 Red Panda C++ Version 1.1.5
 
