@@ -9,6 +9,7 @@ Red Panda C++ Version 1.1.6
   - enhancement: disable column mode in readonly editors
   - fix: inefficient loop when render long lines
   - fix: indents for "default" are not the same with "case"
+  - fix: (wrongly) use the default font to calculate  non-ascii characters' width
 
 Red Panda C++ Version 1.1.5
 

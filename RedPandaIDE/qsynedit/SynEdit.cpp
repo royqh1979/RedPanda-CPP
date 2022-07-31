@@ -62,7 +62,7 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent),
 #error "Not supported!"
 #endif
     mFontDummy.setStyleStrategy(QFont::PreferAntialias);
-    mDocument = std::make_shared<SynDocument>(mFontDummy, this);
+    mDocument = std::make_shared<SynDocument>(mFontDummy, mFontDummy, this);
     //fPlugins := TList.Create;
     mMouseMoved = false;
     mUndoing = false;
@@ -4068,6 +4068,8 @@ void SynEdit::setFontForNonAscii(const QFont &newFontForNonAscii)
 {
     mFontForNonAscii = newFontForNonAscii;
     mFontForNonAscii.setStyleStrategy(QFont::PreferAntialias);
+    if (mDocument)
+        mDocument->setFontMetrics(font(),mFontForNonAscii);
 }
 
 const QColor &SynEdit::backgroundColor() const
@@ -6197,7 +6199,7 @@ bool SynEdit::event(QEvent *event)
     case QEvent::FontChange:
         synFontChanged();
         if (mDocument)
-            mDocument->setFontMetrics(font());
+            mDocument->setFontMetrics(font(),mFontForNonAscii);
         break;
     case QEvent::MouseMove: {
         updateMouseCursor();

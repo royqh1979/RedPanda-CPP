@@ -27,9 +27,10 @@
 #include <QMessageBox>
 #include <cmath>
 
-SynDocument::SynDocument(const QFont& font, QObject *parent):
+SynDocument::SynDocument(const QFont& font, const QFont& nonAsciiFont, QObject *parent):
       QObject(parent),
       mFontMetrics(font),
+      mNonAsciiFontMetrics(nonAsciiFont),
       mTabWidth(4),
       mMutex(QMutex::Recursive)
 {
@@ -515,10 +516,11 @@ const QFontMetrics &SynDocument::fontMetrics() const
     return mFontMetrics;
 }
 
-void SynDocument::setFontMetrics(const QFont &newFont)
+void SynDocument::setFontMetrics(const QFont &newFont, const QFont& newNonAsciiFont)
 {
     mFontMetrics = QFontMetrics(newFont);
     mCharWidth =  mFontMetrics.horizontalAdvance("M");
+    mNonAsciiFontMetrics = QFontMetrics(newNonAsciiFont);
 }
 
 void SynDocument::setTabWidth(int newTabWidth)
@@ -723,8 +725,13 @@ int SynDocument::charColumns(QChar ch) const
 {
     if (ch.unicode()<=32)
         return 1;
+    int width;
+    if (ch.unicode()<0xFF)
+        width = mFontMetrics.horizontalAdvance(ch);
+    else
+        width = mNonAsciiFontMetrics.horizontalAdvance(ch);
     //return std::ceil((int)(fontMetrics().horizontalAdvance(ch) * dpiFactor()) / (double)mCharWidth);
-    return std::ceil((int)(fontMetrics().horizontalAdvance(ch)) / (double)mCharWidth);
+    return std::ceil(width / (double)mCharWidth);
 }
 
 void SynDocument::putTextStr(const QString &text)

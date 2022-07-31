@@ -60,7 +60,7 @@ class SynDocument : public QObject
 {  
     Q_OBJECT
 public:
-    explicit SynDocument(const QFont& font, QObject* parent=nullptr);
+    explicit SynDocument(const QFont& font, const QFont& nonAsciiFont, QObject* parent=nullptr);
 
     int parenthesisLevels(int Index);
     int bracketLevels(int Index);
@@ -116,7 +116,7 @@ public:
     void setTabWidth(int newTabWidth);
 
     const QFontMetrics &fontMetrics() const;
-    void setFontMetrics(const QFont &newFont);
+    void setFontMetrics(const QFont &newFont, const QFont& newNonAsciiFont);
 
 public slots:
     void invalidAllLineColumns();
@@ -144,6 +144,7 @@ private:
     //SynEdit* mEdit;
 
     QFontMetrics mFontMetrics;
+    QFontMetrics mNonAsciiFontMetrics;
     int mTabWidth;
     int mCharWidth;
     //int mCount;
