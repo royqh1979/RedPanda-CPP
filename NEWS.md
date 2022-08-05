@@ -1,3 +1,7 @@
+Red Panda C++ Version 1.2
+
+  - enhancement: Portuguese Translation ( Thanks for crcpucmg@github)
+
 Red Panda C++ Version 1.1.6
 
   - fix: block indent doesn't work

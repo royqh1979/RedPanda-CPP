@@ -10,7 +10,7 @@ isEmpty(APP_NAME) {
 }
 
 isEmpty(APP_VERSION) {
-    APP_VERSION=1.1.6
+    APP_VERSION=1.2
 }
 
 macos: {
@@ -444,9 +444,9 @@ linux: {
 }
 
 TRANSLATIONS += \
-    RedPandaIDE_zh_CN.ts \
-    RedPandaIDE_zh_TW.ts \
-    RedPandaIDE_pt_BR.ts
+    translations/RedPandaIDE_zh_CN.ts \
+    translations/RedPandaIDE_zh_TW.ts \
+    translations/RedPandaIDE_pt_BR.ts
 
 #CONFIG += lrelease embed_translations
 

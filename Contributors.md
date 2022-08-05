@@ -1,4 +1,10 @@
-## Contributor of Icons
+# Contributors
+
+## Translations
+
+- Portuguese : crcpucmg@github
+
+## Icons
 
 - beanflame@github
 - XiaoLoong@github
@@ -14,6 +20,8 @@ author: Alan-CRL
 ### Icon set Contrast
 
 author: Alan-CRL
+
+## Themes
 
 ### Theme Contrast
 
