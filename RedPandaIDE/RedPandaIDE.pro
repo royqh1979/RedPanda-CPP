@@ -446,7 +446,7 @@ linux: {
 TRANSLATIONS += \
     RedPandaIDE_zh_CN.ts \
     RedPandaIDE_zh_TW.ts \
-    RedPandaIDE_pt.ts
+    RedPandaIDE_pt_BR.ts
 
 #CONFIG += lrelease embed_translations
 

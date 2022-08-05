@@ -2067,10 +2067,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Insert empty lines arround unrelated blocks</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Insert empty lines around all blocks</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2204,6 +2200,10 @@
     </message>
     <message>
         <source>Place the logical conditional to the last on the previous line, when break lines</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Insert empty lines arround unrelated blocks</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -2962,10 +2962,6 @@
     </message>
     <message>
         <source>Problem</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Add Probem Case</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4538,6 +4534,10 @@
     </message>
     <message>
         <source>Line</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add Probem Case</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
