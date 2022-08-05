@@ -10,6 +10,7 @@ Red Panda C++ Version 1.1.6
   - fix: inefficient loop when render long lines
   - fix: indents for "default" are not the same with "case"
   - fix: (wrongly) use the default font to calculate  non-ascii characters' width
+  - change: switch positions of problem case output and expected output
 
 Red Panda C++ Version 1.1.5
 

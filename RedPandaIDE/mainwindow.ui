@@ -871,7 +871,7 @@
      <enum>QTabWidget::South</enum>
     </property>
     <property name="currentIndex">
-     <number>1</number>
+     <number>6</number>
     </property>
     <property name="iconSize">
      <size>
@@ -1737,56 +1737,6 @@
           <property name="bottomMargin">
            <number>0</number>
           </property>
-          <item row="3" column="2">
-           <widget class="QLabel" name="lblProblemCaseExpected">
-            <property name="text">
-             <string/>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="0">
-           <widget class="QLabel" name="lblProblemCaseInput">
-            <property name="text">
-             <string/>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="3">
-           <widget class="QLabel" name="lblProblemCaseOutput">
-            <property name="text">
-             <string/>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="3">
-           <widget class="LineNumberTextEditor" name="txtProblemCaseOutput">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="lineWrapMode">
-             <enum>QPlainTextEdit::NoWrap</enum>
-            </property>
-            <property name="readOnly">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="2">
-           <widget class="LineNumberTextEditor" name="txtProblemCaseExpected">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="lineWrapMode">
-             <enum>QPlainTextEdit::NoWrap</enum>
-            </property>
-           </widget>
-          </item>
           <item row="0" column="0">
            <widget class="QWidget" name="widgetProblemCaseInputCaption" native="true">
             <layout class="QGridLayout" name="gridLayout_4">
@@ -1847,7 +1797,56 @@
             </layout>
            </widget>
           </item>
-          <item row="0" column="2">
+          <item row="3" column="0">
+           <widget class="QLabel" name="lblProblemCaseInput">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="LineNumberTextEditor" name="txtProblemCaseInput">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="lineWrapMode">
+             <enum>QPlainTextEdit::NoWrap</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="3">
+           <widget class="LineNumberTextEditor" name="txtProblemCaseExpected">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="lineWrapMode">
+             <enum>QPlainTextEdit::NoWrap</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="2">
+           <widget class="LineNumberTextEditor" name="txtProblemCaseOutput">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="lineWrapMode">
+             <enum>QPlainTextEdit::NoWrap</enum>
+            </property>
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="3">
            <widget class="QWidget" name="widgetProblemCaseExpectedCaption" native="true">
             <layout class="QHBoxLayout" name="horizontalLayout_18">
              <property name="leftMargin">
@@ -1907,20 +1906,7 @@
             </layout>
            </widget>
           </item>
-          <item row="2" column="0">
-           <widget class="LineNumberTextEditor" name="txtProblemCaseInput">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="lineWrapMode">
-             <enum>QPlainTextEdit::NoWrap</enum>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="3">
+          <item row="0" column="2">
            <widget class="QWidget" name="widgetProblemCaseOutputCaption" native="true">
             <layout class="QHBoxLayout" name="horizontalLayout_19">
              <property name="leftMargin">
@@ -1963,6 +1949,20 @@
               </widget>
              </item>
             </layout>
+           </widget>
+          </item>
+          <item row="3" column="3">
+           <widget class="QLabel" name="lblProblemCaseExpected">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="2">
+           <widget class="QLabel" name="lblProblemCaseOutput">
+            <property name="text">
+             <string/>
+            </property>
            </widget>
           </item>
          </layout>

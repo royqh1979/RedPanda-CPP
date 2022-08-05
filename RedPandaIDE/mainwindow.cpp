@@ -6363,13 +6363,14 @@ void MainWindow::setDockMessagesToArea(const Qt::DockWidgetArea &area)
         layout->addWidget(ui->txtProblemCaseInput, 1, 0, 1, 1);
 //        layout->addWidget(ui->lblProblemCaseInput, 2, 0, 1, 1);
 
-        layout->addWidget(ui->widgetProblemCaseExpectedCaption, 0, 1, 1, 1);
-        layout->addWidget(ui->txtProblemCaseExpected, 1, 1, 1, 1);
-//        layout->addWidget(ui->lblProblemCaseExpected, 2, 1, 1, 1);
+        layout->addWidget(ui->widgetProblemCaseOutputCaption, 0, 1, 1, 1);
+        layout->addWidget(ui->txtProblemCaseOutput, 1, 1, 1, 1);
+//        layout->addWidget(ui->lblProblemCaseOutput, 2, 1, 1, 1);
 
-        layout->addWidget(ui->widgetProblemCaseOutputCaption, 0, 2, 1, 1);
-        layout->addWidget(ui->txtProblemCaseOutput, 1, 2, 1, 1);
-//        layout->addWidget(ui->lblProblemCaseOutput, 2, 2, 1, 1);
+        layout->addWidget(ui->widgetProblemCaseExpectedCaption, 0, 2, 1, 1);
+        layout->addWidget(ui->txtProblemCaseExpected, 1, 2, 1, 1);
+//        layout->addWidget(ui->lblProblemCaseExpected, 2, 2, 1, 1);
+
 
 
         break;
@@ -6378,13 +6379,14 @@ void MainWindow::setDockMessagesToArea(const Qt::DockWidgetArea &area)
         layout->addWidget(ui->txtProblemCaseInput, 1, 0, 1, 1);
         //layout->addWidget(ui->lblProblemCaseInput, 2, 0, 1, 1);
 
-        layout->addWidget(ui->widgetProblemCaseExpectedCaption, 3, 0, 1, 1);
-        layout->addWidget(ui->txtProblemCaseExpected, 4, 0, 1, 1);
-        //layout->addWidget(ui->lblProblemCaseExpected, 5, 0, 1, 1);
 
-        layout->addWidget(ui->widgetProblemCaseOutputCaption, 6, 0, 1, 1);
-        layout->addWidget(ui->txtProblemCaseOutput, 7, 0, 1, 1);
-        //layout->addWidget(ui->lblProblemCaseOutput, 8, 0, 1, 1);
+        layout->addWidget(ui->widgetProblemCaseOutputCaption, 3, 0, 1, 1);
+        layout->addWidget(ui->txtProblemCaseOutput, 4, 0, 1, 1);
+        //layout->addWidget(ui->lblProblemCaseOutput, 5, 0, 1, 1);
+
+        layout->addWidget(ui->widgetProblemCaseExpectedCaption, 6, 0, 1, 1);
+        layout->addWidget(ui->txtProblemCaseExpected, 7, 0, 1, 1);
+        //layout->addWidget(ui->lblProblemCaseExpected, 8, 0, 1, 1);
     }
 }
 
