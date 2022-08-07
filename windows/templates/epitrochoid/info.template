@@ -1,0 +1,20 @@
+[Template]
+ver=2
+Name=Epitrochoid
+Name[zh_CN]=外旋轮线
+Icon=Epitrochoid.ico
+Description=A simple epitrochoid drawing app
+Description[zh_CN]=外旋轮线绘制程序
+Category=Game
+Category[zh_CN]=游戏
+
+[Unit0]
+CName=main.c
+C=epitrochoid_c.txt
+
+[Project]
+UnitCount=1
+Type=1
+IsCpp=0
+linker=-lrdrawing -lraylib -lopengl32 -lgdi32 -lwinmm
+ExecEncoding=UTF-8

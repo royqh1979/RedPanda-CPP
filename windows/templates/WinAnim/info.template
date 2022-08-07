@@ -1,0 +1,24 @@
+[Template]
+ver=2
+Name=Animation Example
+Name[zh_CN]=动画示例
+Icon=Windows.ico
+Description=A Win32 painting example
+Description[zh_CN]=一个Win32绘图示例
+Category=Win32
+
+[Unit0]
+CName=main.c
+CppName=main.cpp
+C=WinAnim_c.txt
+Cpp=WinAnim_c.txt
+
+[Unit1]
+CName=resource.rc
+CppName=resource.rc
+C=WinAnim_rc.txt
+Cpp=WinAnim_rc.txt
+
+[Project]
+UnitCount=2
+Type=0

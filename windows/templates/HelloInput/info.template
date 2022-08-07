@@ -1,0 +1,19 @@
+[Template]
+ver=2
+Name=Input Loop
+Name[zh_CN]=输入循环
+Icon=ConsoleToo.ico
+Description=A console with an input loop
+Description[zh_CN]=一个带输入循环的控制台程序
+Category=Console
+Category[zh_CN]=控制台
+
+[Unit0]
+CName=main.c
+CppName=main.cpp
+C=HelloInput_c.txt
+Cpp=HelloInput_cpp.txt
+
+[Project]
+UnitCount=1
+Type=1

@@ -1,0 +1,19 @@
+[Template]
+ver=2
+Name=Console Application
+Name[zh_CN]=控制台程序
+Icon=ConsoleToo.ico
+Description=A console application (MS-DOS window)
+Description[zh_CN]=控制台应用程序
+Category=Basic
+Category[zh_CN]=基础
+
+[Unit0]
+CName=main.c
+CppName=main.cpp
+C=consoleapp_c.txt
+Cpp=consoleapp_cpp.txt
+
+[Project]
+UnitCount=1
+Type=1

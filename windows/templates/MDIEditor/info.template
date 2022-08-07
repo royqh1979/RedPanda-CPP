@@ -1,0 +1,30 @@
+[Template]
+ver=2
+Name=MDI Editor
+Name[zh_CN]=MDI编辑器
+Icon=Windows.ico
+Description=A Win32 MDI file editor
+Description[zh_CN]=一个Win32多文档界面(MDI)文件编辑器
+Category=Win32
+
+[Unit0]
+CName=main.c
+CppName=main.cpp
+C=MDIEditor_c.txt
+Cpp=MDIEditor_c.txt
+
+[Unit1]
+CName=main.h
+CppName=main.h
+C=MDIEditor_h.txt
+Cpp=MDIEditor_h.txt
+
+[Unit2]
+CName=resource.rc
+CppName=resource.rc
+C=MDIEditor_rc.txt
+Cpp=MDIEditor_rc.txt
+
+[Project]
+UnitCount=3
+Type=0

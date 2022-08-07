@@ -1,0 +1,28 @@
+[Template]
+ver=2
+Name=raylib 3D Shader
+Name[zh_CN]=raylib 3D 着色器
+Icon=raylib.ico
+Description=A 3D Shader program using raylib ( https://raylib.com )
+Description[zh_CN]=带着色器的raylib 3D程序 ( https://raylib.com )
+Category=3D
+Category[zh_CN]=3D
+
+[Unit0]
+CPPName=main.c
+C=raylib_3d_shader_c.txt
+
+[Unit1]
+Source=raylib_base.vs
+Target=vertices_shader.vs
+
+[Unit2]
+Source=raylib_base.fs
+Target=fragment_shader.fs
+
+[Project]
+UnitCount=3
+Type=1
+IsCpp=0
+linker=-lraylib -lopengl32 -lgdi32 -lwinmm
+ExecEncoding=UTF-8

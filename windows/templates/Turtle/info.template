@@ -1,0 +1,20 @@
+[Template]
+ver=2
+Name=Turtle Graphics
+Name[zh_CN]=海龟作图
+Icon=CL_Turtle.ico
+Description=A simple program using Turtle Graphics
+Description[zh_CN]=简单的海龟作图程序 (https://github.com/royqh1979/raylib-drawing)
+Category=Multimedia
+Category[zh_CN]=多媒体
+
+[Unit0]
+CName=main.c
+C=CL_Turtle_cpp.txt
+
+[Project]
+UnitCount=1
+Type=1
+IsCpp=0
+linker=-lrturtle -lrdrawing -lraylib -lopengl32 -lgdi32 -lwinmm
+

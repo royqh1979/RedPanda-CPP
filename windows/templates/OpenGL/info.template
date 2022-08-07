@@ -1,0 +1,19 @@
+[Template]
+ver=2
+Name=OpenGL
+Icon=Pizza.ico
+Description=A basic OpenGL program
+Description[zh_CN]=一个基本的OpenGL程序
+Category=3D
+Category[zh_CN]=3D
+
+[Unit0]
+CName=main.c
+CppName=main.cpp
+C=OpenGL.txt
+Cpp=OpenGL.txt
+
+[Project]
+UnitCount=1
+Type=0
+Linker=-lopengl32

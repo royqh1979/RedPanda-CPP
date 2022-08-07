@@ -1,0 +1,19 @@
+[Template]
+ver=2
+Name=TinyFileDialogs
+Name[zh_CN]=TinyFileDialogs
+Icon=tinyfiledialogs.ico
+Description=Demo app for tinyfiledialogs
+Description[zh_CN]=tinyfiledialogs示例程序
+Category=UI
+Category[zh_CN]=UI
+
+[Unit0]
+CName=main.c
+C=tinyfiledialogs_c.txt
+
+[Project]
+UnitCount=1
+Type=1
+IsCpp=0
+linker=-ltinyfiledialogs -lcomdlg32 -lole32

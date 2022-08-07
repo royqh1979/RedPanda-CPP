@@ -1,0 +1,33 @@
+[Template]
+ver=2
+Name=Single Dialog Application
+Name[zh_CN]=单对话框程序
+Icon=Single Dialog Application.ico
+Description=An Appliction use a dialog as the main UI
+Description[zh_CN]=使用一个对话框作为主用户界面简单程序
+Category=Win32
+
+[Unit0]
+CName=main.c
+C=Single_Dialog_Application_main.c.txt
+
+[Unit1]
+CName=resource.rc
+C=Single_Dialog_Application_resource.rc.txt
+
+[Unit2]
+CName=resource.h
+C=Single_Dialog_Application_resource.h.txt
+
+[Project]
+UnitCount=3
+Type=0
+IsCpp=0
+Compiler=
+CppCompiler=
+Linker=
+CompilerSettings=0000000000000000000000000
+CompilerSet=0
+IncludeVersionInfo=0
+SupportXPThemes=0
+Icon=Single Dialog Application.project.ico

@@ -1,0 +1,20 @@
+[Template]
+ver=2
+Name=TCP Client
+Name[zh_CN]=TCP客户端
+Icon=tcpclient.ico
+Description=A winsock2 tcp client
+Description[zh_CN]=基于Winsock2的TCP客户端程序示例
+Category=Network
+Category[zh_CN]=网络
+
+[Unit0]
+CName=main.c
+C=tcpclient_c.txt
+
+[Project]
+UnitCount=1
+Type=1
+Compiler=
+CppCompiler=
+Linker=-lws2_32

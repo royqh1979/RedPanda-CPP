@@ -1,0 +1,20 @@
+[Template]
+ver=2
+Name=Hello World
+Name[zh_CN]=世界，你好！
+Icon=Communication.ico
+Description=A classic Hello World program
+Description[zh_CN]=一个经典的“世界，你好！”程序
+Category=Console
+Category[zh_CN]=控制台
+
+[Unit0]
+CName=main.c
+CppName=main.cpp
+C=Hello_c.txt
+Cpp=Hello_cpp.txt
+
+[Project]
+UnitCount=1
+Type=1
+Icon=Communication.ico

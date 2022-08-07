@@ -1,0 +1,68 @@
+#include <raylib.h>
+#include <raymath.h>
+
+int main(void)
+{
+    // Initialization
+    //--------------------------------------------------------------------------------------
+    const int screenWidth = 800;
+    const int screenHeight = 450;
+
+    SetConfigFlags(FLAG_MSAA_4X_HINT);  // Enable Multi Sampling Anti Aliasing 4x (if available)
+    InitWindow(screenWidth, screenHeight, "raylib shader");
+
+    // Define the camera to look into our 3d world
+    Camera camera = { 0 };
+    camera.position = (Vector3){ 2.0f, 4.0f, 6.0f };    // Camera position
+    camera.target = (Vector3){ 0.0f, 0.5f, 0.0f };      // Camera looking at point
+    camera.up = (Vector3){ 0.0f, 1.0f, 0.0f };          // Camera up vector (rotation towards target)
+    camera.fovy = 45.0f;                                // Camera field-of-view Y
+    camera.projection = CAMERA_PERSPECTIVE;             // Camera mode type
+
+    // Load plane model from a generated mesh
+    Model model = LoadModelFromMesh(GenMeshCube(10.0f, 10.0f, 3.3));
+    
+    Shader shader = LoadShader("vertices_shader.vs","fragment_shader.fs");
+
+    // Assign out lighting shader to model
+    model.materials[0].shader = shader;
+
+    SetCameraMode(camera, CAMERA_ORBITAL);  // Set an orbital camera mode
+
+    SetTargetFPS(60);                       // Set our game to run at 60 frames-per-second
+    SetTraceLogLevel(LOG_WARNING);
+    //--------------------------------------------------------------------------------------
+
+    // Main game loop
+    while (!WindowShouldClose())            // Detect window close button or ESC key
+    {
+        // Update
+        //----------------------------------------------------------------------------------
+        UpdateCamera(&camera);              // Update camera
+        
+        // Draw
+        //----------------------------------------------------------------------------------
+        BeginDrawing();
+
+            ClearBackground(RAYWHITE);
+
+            BeginMode3D(camera);
+
+                DrawModel(model, Vector3Zero(), 1.0f, WHITE);
+
+                DrawGrid(10, 1.0f);
+
+            EndMode3D();
+
+        EndDrawing();
+        //----------------------------------------------------------------------------------
+    }
+
+    UnloadModel(model);     // Unload the model
+    UnloadShader(shader);   // Unload shader
+
+    CloseWindow();          // Close window and OpenGL context
+    //--------------------------------------------------------------------------------------
+
+    return 0;
+}

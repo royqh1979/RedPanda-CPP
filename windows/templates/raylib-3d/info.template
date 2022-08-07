@@ -1,0 +1,20 @@
+[Template]
+ver=2
+Name=raylib 3D
+Name[zh_CN]=raylib 3D
+Icon=raylib.ico
+Description=A simple 3D program using raylib ( https://raylib.com )
+Description[zh_CN]=简单的raylib 3D程序 ( https://raylib.com )
+Category=3D
+Category[zh_CN]=3D
+
+[Unit0]
+CName=main.c
+C=raylib_3d_c.txt
+
+[Project]
+UnitCount=1
+Type=1
+IsCpp=0
+linker=-lraylib -lopengl32 -lgdi32 -lwinmm
+ExecEncoding=UTF-8

@@ -1,0 +1,65 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdbool.h>
+#include <winsock2.h>  
+#define PORT 8888
+#define SERVER_IP "127.0.0.1"
+#define  BUFFER_SIZE 4196
+
+const char* kExitFlag = "exit";
+
+int main() {
+	// 初始化socket dll。
+	WORD winsock_version = MAKEWORD(2,2);
+	WSADATA wsa_data;
+	if (WSAStartup(winsock_version, &wsa_data) != 0) {
+		printf("Failed to init socket!\n");
+		return 1;
+	}
+	
+	SOCKET client_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if (client_socket == INVALID_SOCKET) {
+		printf("Failed to create server socket!\n");
+		return 2;
+	}
+	
+	struct sockaddr_in server_addr;
+	server_addr.sin_family = AF_INET;
+	server_addr.sin_port = htons(PORT);
+	server_addr.sin_addr.S_un.S_addr = inet_addr(SERVER_IP);
+	if (connect(client_socket, (LPSOCKADDR)&server_addr, sizeof(server_addr)) == SOCKET_ERROR) {
+		printf("Failed to connect server: %ld !\n", GetLastError());
+		return 3;
+	}
+	
+	char recv_data[BUFFER_SIZE+1];
+	
+	while (true) {
+		char data[BUFFER_SIZE+1];
+		printf("Input data: ");
+		scanf("%s",data);
+		if (send(client_socket, data, strlen(data), 0) < 0) {
+			printf("Failed to send data!\n");
+			break;
+		}
+		
+		int ret = recv(client_socket, recv_data, BUFFER_SIZE, 0);
+		if (ret < 0) {
+			printf("Failed to receive data!\n");
+			break;
+		}
+		recv_data[ret]=0; // correctly ends received string
+		
+		printf("Receive data from server: \"%s\"\n",recv_data);
+		
+		if (strcmp(data,kExitFlag)==0) {
+			printf("Exit!\n");
+			break;
+		}
+	}
+	
+	closesocket(client_socket);
+	WSACleanup();
+	
+	return 0;
+}

@@ -1,0 +1,17 @@
+[Template]
+ver=2
+Name=Static Library
+Name[zh_CN]=静态链接库
+Icon=StaticLib.ico
+Description=A static library (.a)
+Description[zh_CN]=静态链接库(.a)
+Category=Basic
+Category[zh_CN]=基础
+
+[Unit0]
+CName=
+CppName=
+
+[Project]
+UnitCount=1
+Type=2

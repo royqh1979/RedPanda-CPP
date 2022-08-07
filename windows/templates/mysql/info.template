@@ -1,0 +1,19 @@
+[Template]
+ver=2
+Name=MySQL(MyriaDB)
+Icon=mysql.ico
+Description=A Sqlite3 API Example
+Description[zh_CN]=MySQL数据库示例程序
+Category=Database
+Category[zh_CN]=数据库
+
+[Unit0]
+CName=main.c
+C=mysql_c.txt
+
+[Project]
+UnitCount=1
+Type=1
+Compiler=
+CppCompiler=
+Linker=-lmysqlclient -lws2_32 -ladvapi32 -lkernel32 -lshlwapi -lcrypt32 -lz -lsecur32

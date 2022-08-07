@@ -1,0 +1,21 @@
+[Template]
+ver=2
+Name=std::thread
+Icon=Software.ico
+Description=A C++ multithreading example
+Description[zh_CN]=一个C++多线程示例
+Category=Console
+Category[zh_CN]=控制台
+
+[Unit0]
+CName=main.c
+CppName=main.cpp
+C=StdThread_c.txt
+Cpp=StdThread_cpp.txt
+
+[Project]
+UnitCount=1
+Type=1
+Compiler=
+CppCompiler=-std=gnu++11
+Linker=

@@ -1,0 +1,20 @@
+[Template]
+ver=2
+Name=Graphics.h
+Icon=CL_Graphics.ico
+Description=A simple program use Easy Graphics Engine
+Description[zh_CN]=使用EGE库的简单绘图程序
+Category=Multimedia
+Category[zh_CN]=多媒体
+
+[Unit0]
+CppName=main.cpp
+Cpp=CL_Graphics_cpp.txt
+
+[Project]
+UnitCount=1
+Type=0
+IsCpp=1
+linker=-lgraphics -luuid -lmsimg32 -lgdi32 -limm32 -lole32 -loleaut32 -lwinmm -lgdiplus_@@__@@_
+
+

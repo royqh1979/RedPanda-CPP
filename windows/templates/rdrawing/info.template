@@ -1,0 +1,20 @@
+[Template]
+ver=2
+Name=rdrawing
+Name[zh_CN]=rdrawing
+Icon=rdrawing.ico
+Description=A simple 2d drawing app using raylib and rdrawing
+Description[zh_CN]=基于raylib和rdrawing的2维绘图程序 (https://github.com/royqh1979/raylib-drawing)
+Category=Multimedia
+Category[zh_CN]=多媒体
+
+[Unit0]
+CName=main.c
+C=rdrawing_c.txt
+
+[Project]
+UnitCount=1
+Type=1
+IsCpp=0
+linker=-lrdrawing -lraylib -lopengl32 -lgdi32 -lwinmm
+ExecEncoding=UTF-8

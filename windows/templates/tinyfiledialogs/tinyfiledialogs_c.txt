@@ -1,0 +1,235 @@
+/*_________
+  /         \ hello.c v3.8.8 [Apr 22, 2021] zlib licence
+  |tiny file| Hello World file created [November 9, 2014]
+  | dialogs | Copyright (c) 2014 - 2021 Guillaume Vareille http://ysengrin.com
+  \____  ___/ http://tinyfiledialogs.sourceforge.net
+  \|     git clone http://git.code.sf.net/p/tinyfiledialogs/code tinyfd
+  ____________________________________________
+  |                                            |
+  |   email: tinyfiledialogs at ysengrin.com   |
+  |____________________________________________|
+  _________________________________________________________________________________
+  |                                                                                 |
+  | the windows only wchar_t UTF-16 prototypes are at the bottom of the header file |
+  |_________________________________________________________________________________|
+  _________________________________________________________
+  |                                                         |
+  | on windows: - since v3.6 char is UTF-8 by default       |
+  |             - if you want MBCS set tinyfd_winUtf8 to 0  |
+  |             - functions like fopen expect MBCS          |
+  |_________________________________________________________|
+  
+  If you like tinyfiledialogs, please upvote my stackoverflow answer
+  https://stackoverflow.com/a/47651444
+  
+  - License -
+  
+  This software is provided 'as-is', without any express or implied
+  warranty.  In no event will the authors be held liable for any damages
+  arising from the use of this software.
+  
+  including commercial applications, and to alter it and redistribute it
+  freely, subject to the following restrictions:
+  
+  1. The origin of this software must not be misrepresented; you must not
+  claim that you wrote the original software.  If you use this software
+  in a product, an acknowledgment in the product documentation would be
+  appreciated but is not required.
+  2. Altered source versions must be plainly marked as such, and must not be
+  misrepresented as being the original software.
+  3. This notice may not be removed or altered from any source distribution.
+ */
+
+
+/*
+  - Here is the Hello World:
+  if a console is missing, it will use graphic dialogs
+  if a graphical display is absent, it will use console dialogs
+  (on windows the input box may take some time to open the first time)
+ */
+
+
+#include <stdio.h>
+#include <string.h>
+#include <tinyfiledialogs.h>
+
+#ifdef _MSC_VER
+#pragma warning(disable:4996) /* silences warnings about strcpy strcat fopen*/
+#endif
+
+int main( int argc , char * argv[] )
+{
+	int lIntValue;
+	char const * lPassword;
+	char const * lTheSaveFileName;
+	char const * lTheOpenFileName;
+	char const * lTheSelectFolderName;
+	char const * lTheHexColor;
+	char const * lWillBeGraphicMode;
+	unsigned char lRgbColor[3];
+	FILE * lIn;
+	char lBuffer[1024];
+	char const * lFilterPatterns[2] = { "*.txt", "*.text" };
+	
+	(void)argv; /*to silence stupid visual studio warning*/
+	
+	tinyfd_verbose = argc - 1;  /* default is 0 */
+	tinyfd_silent = 1;  /* default is 1 */
+	
+	tinyfd_forceConsole = 0; /* default is 0 */
+	tinyfd_assumeGraphicDisplay = 0; /* default is 0 */
+	
+	/*tinyfd_beep();*/
+	
+	lWillBeGraphicMode = tinyfd_inputBox("tinyfd_query", NULL, NULL);
+	
+	strcpy(lBuffer, "tinyfiledialogs\nv");
+	strcat(lBuffer, tinyfd_version);
+	if (lWillBeGraphicMode)
+	{
+		strcat(lBuffer, "\ngraphic mode: ");
+	}
+	else
+	{
+		strcat(lBuffer, "\nconsole mode: ");
+	}
+	strcat(lBuffer, tinyfd_response);
+	tinyfd_messageBox("hello", lBuffer, "ok", "info", 0);
+	
+	tinyfd_notifyPopup("the title", "the message\n\tfrom outer-space", "info");
+	
+	if ( lWillBeGraphicMode && ! tinyfd_forceConsole )
+	{
+		lIntValue = tinyfd_messageBox("Hello World", "graphic dialogs [Yes] / console mode [No]", "yesno", "question", 1);
+		tinyfd_forceConsole = ! lIntValue;
+	}
+	
+	lPassword = tinyfd_inputBox(
+		"a text input box", "your content will be save and loaded", "");
+	
+	if (!lPassword) return 1;
+	
+	tinyfd_messageBox("your content as read", lPassword, "ok", "info", 1);
+	
+	lTheSaveFileName = tinyfd_saveFileDialog(
+		"let us save this content",
+		"passwordFile.txt",
+		2,
+		lFilterPatterns,
+		NULL);
+	
+	if (! lTheSaveFileName)
+	{
+		tinyfd_messageBox(
+			"Error",
+			"Save file name is NULL",
+			"ok",
+			"error",
+			1);
+		return 1 ;
+	}
+	
+#ifdef _WIN32
+	if (tinyfd_winUtf8)
+		lIn = _wfopen(tinyfd_utf8to16(lTheSaveFileName), L"w"); /* the UTF-8 filename is converted to UTF-16 to open the file*/
+	else
+#endif
+		lIn = fopen(lTheSaveFileName, "w");
+	
+	if (!lIn)
+	{
+		tinyfd_messageBox(
+			"Error",
+			"Can not open this file in write mode",
+			"ok",
+			"error",
+			1);
+		return 1 ;
+	}
+	fputs(lPassword, lIn);
+	fclose(lIn);
+	
+	lTheOpenFileName = tinyfd_openFileDialog(
+		"let us read the content back",
+		"",
+		2,
+		lFilterPatterns,
+		NULL,
+		0);
+	
+	if (! lTheOpenFileName)
+	{
+		tinyfd_messageBox(
+			"Error",
+			"Open file name is NULL",
+			"ok",
+			"error",
+			0);
+		return 1 ;
+	}
+	
+#ifdef _WIN32
+	if (tinyfd_winUtf8)
+		lIn = _wfopen(tinyfd_utf8to16(lTheOpenFileName), L"r"); /* the UTF-8 filename is converted to UTF-16 */
+	else
+#endif
+		lIn = fopen(lTheOpenFileName, "r");
+	
+	if (!lIn)
+	{
+		tinyfd_messageBox(
+			"Error",
+			"Can not open this file in read mode",
+			"ok",
+			"error",
+			1);
+		return(1);
+	}
+	
+	lBuffer[0] = '\0';
+	fgets(lBuffer, sizeof(lBuffer), lIn);
+	fclose(lIn);
+	
+	tinyfd_messageBox("yourcontent as it was saved", lBuffer, "ok", "info", 1);
+	
+	lTheSelectFolderName = tinyfd_selectFolderDialog(
+		"let us just select a directory", NULL);
+	
+	if (!lTheSelectFolderName)
+	{
+		tinyfd_messageBox(
+			"Error",
+			"Select folder name is NULL",
+			"ok",
+			"error",
+			1);
+		return 1;
+	}
+	
+	tinyfd_messageBox("The selected folder is", lTheSelectFolderName, "ok", "info", 1);
+	
+	lTheHexColor = tinyfd_colorChooser(
+		"choose a nice color",
+		"#FF0077",
+		lRgbColor,
+		lRgbColor);
+	
+	if (!lTheHexColor)
+	{
+		tinyfd_messageBox(
+			"Error",
+			"hexcolor is NULL",
+			"ok",
+			"error",
+			1);
+		return 1;
+	}
+	
+	tinyfd_messageBox("The selected hexcolor is", lTheHexColor, "ok", "info", 1);
+	
+	tinyfd_messageBox("your read content was", lPassword, "ok", "info", 1);
+	
+	tinyfd_beep();
+	
+	return 0;
+}

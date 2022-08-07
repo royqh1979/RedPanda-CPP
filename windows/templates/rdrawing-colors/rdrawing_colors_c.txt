@@ -1,0 +1,350 @@
+#include <raylib.h>
+#include <rdrawing.h>
+#include <math.h>
+
+#define RAYGUI_IMPLEMENTATION
+#include <raygui.h>
+
+//color classification from https://www.dofactory.com/css/color-names
+
+enum ColorPage{
+	Red,
+	Pink,
+	Orange,
+	Yellow,
+	Green,
+	Blue,
+	Brown,
+	Purple,
+	Light,
+	Gray
+} ;
+
+void drawRedColors(Image *pImg,Font font);
+void drawPinkColors(Image *pImg,Font font);
+void drawOrangeColors(Image *pImg,Font font);
+void drawYellowColors(Image *pImg,Font font);
+void drawGreenColors(Image *pImg,Font font);
+void drawBlueColors(Image *pImg,Font font);
+void drawBrownColors(Image *pImg,Font font);
+void drawPurpleColors(Image *pImg,Font font);
+void drawLightColors(Image *pImg,Font font);
+void drawGrayColors(Image *pImg,Font font);
+
+int main() {
+	int currentPage=Red;
+	InitWindow(1000,900,"Rdrawing Predefined Colors");
+	SetTraceLogLevel(LOG_WARNING);
+	SetTargetFPS(60);
+	bool fontChanged=false;
+	Font font;
+	if (FileExists("C:\\windows\\fonts\\cour.ttf")) {
+		font=LoadFont("C:\\windows\\fonts\\cour.ttf");
+		fontChanged=true;
+	} else {
+		font=GetFontDefault();
+	}
+	GuiSetStyle(DEFAULT,TEXT_SIZE,20);
+	GuiSetStyle(LISTVIEW,SCROLLBAR_WIDTH,20);
+	
+	Image img=GenImageColor(830,890,WHITE);
+	Rectangle panelRec = {165,5,830,890};
+	Rectangle panelContentRec = {0,0,800,1190};
+	Vector2 panelScroll = {1,1};
+	while(!WindowShouldClose()) {
+		Texture texture;
+		BeginDrawing();
+		if (GuiToggle((Rectangle){ 10, 10, 140, 30 },"Red",currentPage==Red)) {
+			currentPage=Red;
+		} 
+		if (GuiToggle((Rectangle){ 10, 50, 140, 30 },"Pink",currentPage==Pink)) {
+			currentPage=Pink;
+		}
+		if (GuiToggle((Rectangle){ 10, 90, 140, 30 },"Orange",currentPage==Orange)) {
+			currentPage=Orange;
+		}
+		if (GuiToggle((Rectangle){ 10, 130, 140, 30 },"Yellow",currentPage==Yellow)) {
+			currentPage=Yellow;
+		}
+		if (GuiToggle((Rectangle){ 10, 170, 140, 30 },"Green",currentPage==Green)) {
+			panelContentRec = (Rectangle){0,0,
+				830- 2*GuiGetStyle(DEFAULT, BORDER_WIDTH) - GuiGetStyle(LISTVIEW, SCROLLBAR_WIDTH),
+				1170};
+			if (currentPage!=Green) {
+				panelScroll=(Vector2){1,1};
+			}
+			currentPage=Green;
+		}
+		if (GuiToggle((Rectangle){ 10, 210, 140, 30 },"Blue",currentPage==Blue)) {
+			panelContentRec = (Rectangle){0,0,
+				830- 2*GuiGetStyle(DEFAULT, BORDER_WIDTH) - GuiGetStyle(LISTVIEW, SCROLLBAR_WIDTH),
+				1220};
+			if (currentPage!=Blue) {
+				panelScroll=(Vector2){1,1};
+			}
+			currentPage=Blue;
+		}
+		if (GuiToggle((Rectangle){ 10, 250, 140, 30 },"Brown",currentPage==Brown)) {
+			currentPage=Brown;
+		}
+		if (GuiToggle((Rectangle){ 10, 290, 140, 30 },"Purple",currentPage==Purple)) {
+			currentPage=Purple;
+		}
+		if (GuiToggle((Rectangle){ 10, 330, 140, 30 },"Light",currentPage==Light)) {
+			currentPage=Light;
+		}
+		if (GuiToggle((Rectangle){ 10, 370, 140, 30 },"Gray",currentPage==Gray)) {
+			currentPage=Gray;
+		}
+		ImageClearBackground(&img,WHITE);
+		switch(currentPage) {
+		case Red:
+			drawRedColors(&img,font);
+			texture = LoadTextureFromImage(img);			
+			break;
+		case Pink:
+			drawPinkColors(&img,font);
+			texture = LoadTextureFromImage(img);			
+			break;
+		case Orange:
+			drawOrangeColors(&img,font);
+			texture = LoadTextureFromImage(img);			
+			break;
+		case Yellow:
+			drawYellowColors(&img,font);
+			texture = LoadTextureFromImage(img);			
+			break;
+		case Green: {
+			Rectangle view = GuiScrollPanel(panelRec,NULL,panelContentRec,&panelScroll);
+			Image tmpImage = GenImageColor(830,1170,WHITE);
+			Image tmpImage2 = GenImageColor(view.width,view.height,WHITE);
+			drawGreenColors(&tmpImage,font);
+			ImageDraw(&tmpImage2,tmpImage,
+				(Rectangle){view.x-panelRec.x-panelScroll.x,view.y-panelRec.y-panelScroll.y,view.width,view.height},
+				(Rectangle){0,0,view.width,view.height},WHITE);
+			texture = LoadTextureFromImage(tmpImage2);	
+			UnloadImage(tmpImage2);
+			UnloadImage(tmpImage);
+			}
+			break;
+		case Blue: {
+			Rectangle view = GuiScrollPanel(panelRec,NULL,panelContentRec,&panelScroll);
+			Image tmpImage = GenImageColor(830,1220,WHITE);
+			Image tmpImage2 = GenImageColor(view.width,view.height,WHITE);
+			drawBlueColors(&tmpImage,font);
+			ImageDraw(&tmpImage2,tmpImage,
+				(Rectangle){view.x-panelRec.x-panelScroll.x,view.y-panelRec.y-panelScroll.y,view.width,view.height},
+				(Rectangle){0,0,view.width,view.height},WHITE);
+			texture = LoadTextureFromImage(tmpImage2);	
+			UnloadImage(tmpImage2);
+			UnloadImage(tmpImage);
+			}
+			break;
+		case Brown:
+			drawBrownColors(&img,font);
+			texture = LoadTextureFromImage(img);			
+			break;			
+		case Purple:
+			drawPurpleColors(&img,font);
+			texture = LoadTextureFromImage(img);			
+			break;			
+		case Light:
+			drawLightColors(&img,font);
+			texture = LoadTextureFromImage(img);			
+			break;			
+		case Gray:
+			drawGrayColors(&img,font);
+			texture = LoadTextureFromImage(img);			
+			break;			
+		}
+		ClearBackground(LIGHTGRAY);
+		DrawTexture(texture,165,5,WHITE);
+		EndDrawing();
+		UnloadTexture(texture);
+	}
+	
+	if (fontChanged) {
+		UnloadFont(font);
+	}
+	//Clean up
+	UnloadImage(img);
+	CloseWindow();
+}
+
+void drawColor(Image* pImg, Font font, int x, int y, Color color, const char* colorName) {
+	char buffer[255];
+	ImageFillRectangleEx(pImg,x,y,200,40,color);
+	ImageDrawRectangleEx(pImg,x,y,200,40,2,BLACK);
+	ImageDrawTextEx(pImg,font,colorName,(Vector2){x+230,y+10},20,1,BLACK);	
+	sprintf(buffer,"0x%02X%02X%02X",color.r,color.g,color.b);
+	ImageDrawTextEx(pImg,font,buffer,(Vector2){x+600,y+10},20,1,BLACK);
+}
+
+void drawRedColors(Image *pImg,Font font) {
+	drawColor(pImg,font,50,20,LIGHTSALMON,"LIGHTSALMON");
+	drawColor(pImg,font,50,70,DARKSALMON,"DARKSALMON");
+	drawColor(pImg,font,50,120,SALMON,"SALMON");
+	drawColor(pImg,font,50,170,LIGHTCORAL,"LIGHTCORAL");
+	drawColor(pImg,font,50,220,INDIANRED,"INDIANRED");
+	drawColor(pImg,font,50,270,RED,"RED");
+	drawColor(pImg,font,50,320,CRIMSON,"CRIMSON");
+	drawColor(pImg,font,50,370,MAROON,"MAROON");	
+	drawColor(pImg,font,50,420,FIREBRICK,"FIREBRICK");
+	drawColor(pImg,font,50,470,DARKRED,"DARKRED");
+}
+
+void drawPinkColors(Image *pImg,Font font) {
+	drawColor(pImg,font,50,20,PINK,"PINK");	
+	drawColor(pImg,font,50,70,LIGHTPINK,"LIGHTPINK");
+	drawColor(pImg,font,50,120,HOTPINK,"HOTPINK");
+	drawColor(pImg,font,50,170,DEEPPINK,"DEEPPINK");
+	drawColor(pImg,font,50,220,PALEVIOLETRED,"PALEVIOLETRED");
+	drawColor(pImg,font,50,270,MEDIUMVIOLETRED,"MEDIUMVIOLETRED");
+}
+
+void drawOrangeColors(Image *pImg,Font font) {
+	drawColor(pImg,font,50,20,GOLD,"GOLD");
+	drawColor(pImg,font,50,70,ORANGE,"ORANGE");
+	drawColor(pImg,font,50,120,DARKORANGE,"DARKORANGE");
+	drawColor(pImg,font,50,170,LIGHTSALMON,"LIGHTSALMON");
+	drawColor(pImg,font,50,220,CORAL,"CORAL");
+	drawColor(pImg,font,50,270,TOMATO,"TOMATO");
+	drawColor(pImg,font,50,320,ORANGERED,"ORANGERED");
+}
+
+void drawYellowColors(Image* pImg, Font font) {
+	drawColor(pImg,font,50,20,LIGHTYELLOW,"LIGHTYELLOW");
+	drawColor(pImg,font,50,70,LEMONCHIFFON,"LEMONCHIFFON");
+	drawColor(pImg,font,50,120,LIGHTGOLDENRODYELLOW,"LIGHTGOLDENRODYELLOW");
+	drawColor(pImg,font,50,170,YELLOW,"YELLOW");
+	drawColor(pImg,font,50,220,PAPAYAWHIP,"PAPAYAWHIP");
+	drawColor(pImg,font,50,270,MOCCASIN,"MOCCASIN");
+	drawColor(pImg,font,50,320,PEACHPUFF,"PEACHPUFF");
+	drawColor(pImg,font,50,370,PALEGOLDENROD,"PALEGOLDENROD");
+	drawColor(pImg,font,50,420,KHAKI,"KHAKI");
+	drawColor(pImg,font,50,470,DARKKHAKI,"DARKKHAKI");	
+}
+
+void drawGreenColors(Image* pImg, Font font) {
+	drawColor(pImg,font,50,20,GREENYELLOW,"GREENYELLOW");
+	drawColor(pImg,font,50,70,CHARTREUSE,"CHARTREUSE");
+	drawColor(pImg,font,50,120,LAWNGREEN,"LAWNGREEN");
+	drawColor(pImg,font,50,170,LIME,"LIME");
+	drawColor(pImg,font,50,220,PALEGREEN,"PALEGREEN");
+	drawColor(pImg,font,50,270,LIGHTGREEN,"LIGHTGREEN");
+	drawColor(pImg,font,50,320,SPRINGGREEN,"SPRINGGREEN");
+	drawColor(pImg,font,50,370,MEDIUMSPRINGGREEN,"MEDIUMSPRINGGREEN");
+	drawColor(pImg,font,50,420,LIMEGREEN,"LIMEGREEN");
+	drawColor(pImg,font,50,470,MEDIUMSEAGREEN,"MEDIUMSEAGREEN");
+	drawColor(pImg,font,50,520,SEAGREEN,"SEAGREEN");
+	drawColor(pImg,font,50,570,FORESTGREEN,"FORESTGREEN");
+	drawColor(pImg,font,50,620,GREEN,"GREEN");
+	drawColor(pImg,font,50,670,DARKGREEN,"DARKGREEN");
+	drawColor(pImg,font,50,720,YELLOWGREEN,"YELLOWGREEN");
+	drawColor(pImg,font,50,770,OLIVEDRAB,"OLIVEDRAB");
+	drawColor(pImg,font,50,820,OLIVE,"OLIVE");
+	drawColor(pImg,font,50,870,DARKOLIVEGREEN,"DARKOLIVEGREEN");
+	drawColor(pImg,font,50,920,MEDIUMAQUAMARINE,"MEDIUMAQUAMARINE");
+	drawColor(pImg,font,50,970,DARKSEAGREEN,"DARKSEAGREEN");
+	drawColor(pImg,font,50,1020,LIGHTSEAGREEN,"LIGHTSEAGREEN");
+	drawColor(pImg,font,50,1070,DARKCYAN,"DARKCYAN");
+	drawColor(pImg,font,50,1120,TEAL,"TEAL");
+}
+
+void drawBlueColors(Image* pImg, Font font) {
+	drawColor(pImg,font,50,20,LIGHTCYAN,"LIGHTCYAN");
+	drawColor(pImg,font,50,70,CYAN,"AQUA / CYAN");
+	drawColor(pImg,font,50,120,AQUAMARINE,"AQUAMARINE");
+	drawColor(pImg,font,50,170,PALETURQUOISE,"PALETURQUOISE");
+	drawColor(pImg,font,50,220,TURQUOISE,"TURQUOISE");
+	drawColor(pImg,font,50,270,MEDIUMTURQUOISE,"MEDIUMTURQUOISE");
+	drawColor(pImg,font,50,320,DARKTURQUOISE,"DARKTURQUOISE");
+	drawColor(pImg,font,50,370,CADETBLUE,"CADETBLUE");
+	drawColor(pImg,font,50,420,STEELBLUE,"STEELBLUE");
+	drawColor(pImg,font,50,470,LIGHTSTEELBLUE,"LIGHTSTEELBLUE");
+	drawColor(pImg,font,50,520,POWDERBLUE,"POWDERBLUE");
+	drawColor(pImg,font,50,570,LIGHTBLUE,"LIGHTBLUE");
+	drawColor(pImg,font,50,620,SKYBLUE,"SKYBLUE");
+	drawColor(pImg,font,50,670,LIGHTSKYBLUE,"LIGHTSKYBLUE");
+	drawColor(pImg,font,50,720,DEEPSKYBLUE,"BEEPSKYBLUE");
+	drawColor(pImg,font,50,770,DODGERBLUE,"DODGERBLUE");
+	drawColor(pImg,font,50,820,CORNFLOWERBLUE,"CORNFLOWERBLUE");
+	drawColor(pImg,font,50,870,MEDIUMSLATEBLUE,"MEDIUMSLATEBLUE");
+	drawColor(pImg,font,50,920,ROYALBLUE,"ROYALBLUE");
+	drawColor(pImg,font,50,970,BLUE,"BLUE");
+	drawColor(pImg,font,50,1020,MEDIUMBLUE,"MEDIUMBLUE");
+	drawColor(pImg,font,50,1070,DARKBLUE,"DARKBLUE");
+	drawColor(pImg,font,50,1120,NAVY,"NAVY");
+	drawColor(pImg,font,50,1170,MIDNIGHTBLUE,"MIDNIGHTBLUE");
+}
+
+void drawBrownColors(Image *pImg,Font font) {
+	drawColor(pImg,font,50,20,CORNSILK,"CORNSILK");
+	drawColor(pImg,font,50,70,BLANCHEDALMOND,"BLANCHEDALMOND");
+	drawColor(pImg,font,50,120,BISQUE,"BISQUE");
+	drawColor(pImg,font,50,170,NAVAJOWHITE,"NAVAJOWHITE");
+	drawColor(pImg,font,50,220,WHEAT,"WHEAT");
+	drawColor(pImg,font,50,270,BURLYWOOD,"BURLYWOOD");
+	drawColor(pImg,font,50,320,TAN,"TAN");
+	drawColor(pImg,font,50,370,GOLDENROD,"GOLDENROD");
+	drawColor(pImg,font,50,420,DARKGOLDENROD,"DARKGOLDENROD");
+	drawColor(pImg,font,50,470,ROSYBROWN,"ROSYBROWN");
+	drawColor(pImg,font,50,520,SANDYBROWN,"SANDYBROWN");
+	drawColor(pImg,font,50,570,BEIGE,"BEIGE");
+	drawColor(pImg,font,50,620,PERU,"PERU");
+	drawColor(pImg,font,50,670,CHOCOLATE,"CHOCOLATE");
+	drawColor(pImg,font,50,720,SIENNA,"SIENNA");
+	drawColor(pImg,font,50,770,SADDLEBROWN,"SADDLEBROWN");
+	drawColor(pImg,font,50,820,BROWN,"BROWN");
+}
+
+void drawPurpleColors(Image *pImg,Font font) {
+	drawColor(pImg,font,50,20,LAVENDER,"LAVENDER");
+	drawColor(pImg,font,50,70,THISTLE,"THISTLE");
+	drawColor(pImg,font,50,120,PLUM,"PLUM");
+	drawColor(pImg,font,50,170,VIOLET,"VIOLET");
+	drawColor(pImg,font,50,220,ORCHID,"ORCHID");
+	drawColor(pImg,font,50,270,FUCHSIA,"FUCHSIA / MAGENTA");
+	drawColor(pImg,font,50,320,MEDIUMORCHID,"MEDIUMORCHID");
+	drawColor(pImg,font,50,370,BLUEVIOLET,"BLUEVIOLET");
+	drawColor(pImg,font,50,420,DARKVIOLET,"DARKVIOLET");
+	drawColor(pImg,font,50,470,DARKORCHID,"DARKORCHID");
+	drawColor(pImg,font,50,520,DARKMAGENTA,"DARKMAGENTA");
+	drawColor(pImg,font,50,570,PURPLE,"PURPLE");
+	drawColor(pImg,font,50,620,INDIGO,"INDIGO");
+	drawColor(pImg,font,50,670,MEDIUMSLATEBLUE,"MEDIUMSLATEBLUE");
+	drawColor(pImg,font,50,720,SLATEBLUE,"SLATEBLUE");
+	drawColor(pImg,font,50,770,DARKSLATEBLUE,"DARKSLATEBLUE");
+}
+
+void drawLightColors(Image *pImg,Font font) {
+	drawColor(pImg,font,50,20,WHITE,"WHITE");
+	drawColor(pImg,font,50,70,SNOW,"SNOW");
+	drawColor(pImg,font,50,120,FLORALWHITE,"FLORALWHITE");
+	drawColor(pImg,font,50,170,IVORY,"IVORY");
+	drawColor(pImg,font,50,220,HONEYDEW,"HONEYDEW");
+	drawColor(pImg,font,50,270,MINTCREAM,"MINTCREAM");
+	drawColor(pImg,font,50,320,AZURE,"AZURE");
+	drawColor(pImg,font,50,370,ALICEBLUE,"ALICEBLUE");
+	drawColor(pImg,font,50,420,GHOSTWHITE,"GHOSTWHITE");
+	drawColor(pImg,font,50,470,WHITESMOKE,"WHITESMOKE");
+	drawColor(pImg,font,50,520,SEASHELL,"SEASHELL");
+	drawColor(pImg,font,50,570,OLDLACE,"OLDLACE");
+	drawColor(pImg,font,50,620,ANTIQUEWHITE,"ANTIQUEWHITE");
+	drawColor(pImg,font,50,670,LINEN,"LINEN");
+	drawColor(pImg,font,50,720,LAVENDERBLUSH,"LAVENDERBLUSH");	
+	drawColor(pImg,font,50,770,MISTYROSE,"MISTYROSE");	
+}
+
+void drawGrayColors(Image *pImg,Font font) {
+	drawColor(pImg,font,50,20,GAINSBORO,"GAINSBORO");
+	drawColor(pImg,font,50,70,LIGHTGRAY,"LIGHTGRAY");
+	drawColor(pImg,font,50,120,SILVER,"SILVER");
+	drawColor(pImg,font,50,170,DARKGRAY,"DARKGRAY");
+	drawColor(pImg,font,50,220,GRAY,"GRAY");
+	drawColor(pImg,font,50,270,DIMGRAY,"DIMGRAY");
+	drawColor(pImg,font,50,320,LIGHTSLATEGRAY,"LIGHTSLATEGRAY");
+	drawColor(pImg,font,50,370,SLATEGRAY,"SLATEGRAY");
+	drawColor(pImg,font,50,420,DARKSLATEGRAY,"DARKSLATEGRAY");
+	drawColor(pImg,font,50,470,BLACK,"BLACK");
+}

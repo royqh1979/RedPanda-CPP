@@ -1,0 +1,106 @@
+/*
+An API demo of sqlite3
+author: Ady Liu
+email: imxylz@gmail.com
+web: http://www.blogjava.net/xylz/archive/2012/09/25/388519.html
+*/
+#include <stdio.h>
+#include <string.h>
+#include <sqlite3.h>
+
+int print_record(void *,int,char **,char **);
+
+int main(void){
+	const char *sql_drop_table="drop table if exists t";
+	const char *sql_create_table="create table t(id int primary key,msg varchar(128))";
+	char *errmsg = 0;
+	int ret = 0;
+	int i = 0;
+	sqlite3_stmt *stmt;
+	char ca[255];
+	
+	char **dbresult;
+	int j,nrow,ncolumn,index;
+	
+	sqlite3 *db = 0;
+	ret = sqlite3_open("./sqlite3-demo.db",&db);
+	if(ret != SQLITE_OK){
+		fprintf(stderr,"Cannot open db: %s\n",sqlite3_errmsg(db));
+		return 1;
+	}
+	printf("Open database\n");
+	
+	ret = sqlite3_exec(db,sql_drop_table,NULL,NULL,&errmsg);
+	if(ret != SQLITE_OK){
+		fprintf(stderr,"drop table fail: %s\n",errmsg);
+	}
+	ret &= sqlite3_exec(db,sql_create_table,NULL,NULL,&errmsg);
+	if(ret != SQLITE_OK){
+		fprintf(stderr,"create table fail: %s\n",errmsg);
+	}
+	
+	ret = sqlite3_exec(db,"insert into t(id,msg) values(1,'Ady Liu')",NULL,NULL,&errmsg);
+	printf("Insert a record %s\n",ret == SQLITE_OK ? "OK":"FAIL");
+	ret = sqlite3_exec(db,"insert into t(id,msg) values(2,'IMXYLZ')",NULL,NULL,&errmsg);
+	printf("Insert a record %s\n",ret == SQLITE_OK ? "OK":"FAIL");
+	ret = sqlite3_exec(db,"delete from t where id < 3",NULL,NULL,&errmsg);
+	printf("Delete records: %s\n",ret == SQLITE_OK ? "OK":"FAIL");
+	
+	
+	//prepare statement
+	sqlite3_prepare_v2(db,"insert into t(id,msg) values(?,?)",-1,&stmt,0);
+	for(i=10;i<20;i++){
+		sprintf(ca,"HELLO#%i",i);
+		sqlite3_bind_int(stmt,1,i);
+		sqlite3_bind_text(stmt,2,ca,strlen(ca),SQLITE_STATIC);
+		sqlite3_step(stmt);
+		sqlite3_reset(stmt);
+	}
+	sqlite3_finalize(stmt);
+	
+	//select data
+	ret = sqlite3_exec(db,"select * from t",print_record,NULL,&errmsg);
+	if(ret != SQLITE_OK){
+		fprintf(stderr,"query SQL error: %s\n",errmsg);
+	}
+	
+	sqlite3_exec(db,"update t set msg='MESSAGE#10' where id=10",NULL,NULL,&errmsg);
+	//select table
+	ret = sqlite3_get_table(db,"select * from t",&dbresult,&nrow,&ncolumn,&errmsg);
+	if(ret == SQLITE_OK){
+		printf("query %i records.\n",nrow);
+		index=ncolumn;
+		for(i=0;i<nrow;i++){
+			printf("[%2i]",i);
+			for(j=0;j<ncolumn;j++){
+				printf(" %s",dbresult[index]);
+				index++;
+			}
+			printf("\n");
+		}
+	}else{
+		fprintf(stderr,"query with get_table error: %s\n",errmsg);
+	}
+	sqlite3_free_table(dbresult);
+	
+	ret = sqlite3_exec(db,"delete from t",NULL,NULL,&errmsg);
+	if(ret == SQLITE_OK){
+		printf("delete records: %i\n",sqlite3_changes(db));
+	}
+	
+	sqlite3_free(errmsg);
+	sqlite3_close(db);
+	
+	printf("Close database\n");
+	
+	return 0;
+}
+
+int print_record(void * params,int n_column,char **column_value,char **column_name){
+	int i;
+	for(i=0;i<n_column;i++){
+		printf("\t%s",column_value[i]);
+	}
+	printf("\n");
+	return 0;
+}

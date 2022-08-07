@@ -1,0 +1,20 @@
+[Template]
+ver=2
+Name=Doraemon
+Name[zh_CN]=哆啦A梦
+Icon=rdrawing-doraemon.ico
+Description=A simple doraemon app using rdrawing (https://github.com/royqh1979/raylib-drawing)
+Description[zh_CN]=使用rdrawing制作的哆啦A梦 (https://github.com/royqh1979/raylib-drawing)
+Category=Game
+Category[zh_CN]=游戏
+
+[Unit0]
+CName=main.c
+C=rdrawing_doraemon_c.txt
+
+[Project]
+UnitCount=1
+Type=1
+IsCpp=0
+linker=-lrdrawing -lraylib -lopengl32 -lgdi32 -lwinmm
+ExecEncoding=UTF-8

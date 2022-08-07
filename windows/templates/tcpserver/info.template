@@ -1,0 +1,20 @@
+[Template]
+ver=2
+Name=TCP Server
+Name[zh_CN]=TCP服务器
+Icon=tcpserver.ico
+Description=A winsock2 tcp server demo
+Description[zh_CN]=基于Winsock2的TCP服务器程序示例
+Category=Network
+Category[zh_CN]=网络
+
+[Unit0]
+CName=main.c
+C=tcpserver_c.txt
+
+[Project]
+UnitCount=1
+Type=1
+Compiler=
+CppCompiler=
+Linker=-lws2_32

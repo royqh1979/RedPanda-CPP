@@ -1,0 +1,28 @@
+[Template]
+ver=2
+Name=GLUT
+Icon=CL_GLUT.ico
+Description=A simple GLUT program
+Description[zh_CN]=一个简单的GLUT程序
+Category=3D
+Category[zh_CN]=3D
+
+[Unit0]
+CName=main.c
+C=CL_GLUT_shapes.c.txt
+
+[Unit1]
+CName=glmatrix.h
+C=CL_GLUT_glmatrix.h.txt
+
+[Unit2]
+CName=glmatrix.c
+C=CL_GLUT_glmatrix.c.txt
+
+[Project]
+UnitCount=3
+Type=0
+IsCpp=0
+linker=-lm -lfreeglut.dll -lopengl32 -lwinmm -lgdi32
+
+

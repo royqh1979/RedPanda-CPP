@@ -1,0 +1,18 @@
+[Template]
+ver=2
+Name=Jackpot
+Icon=Games.ico
+Description=A number guessing game
+Description[zh_CN]=一个数字猜测游戏
+Category=Console
+Category[zh_CN]=控制台
+
+[Unit0]
+CppName=main.cpp
+Cpp=Jackpot_cpp.txt
+
+[Project]
+UnitCount=1
+IsCpp=1
+Type=1
+Icon=Games.ico

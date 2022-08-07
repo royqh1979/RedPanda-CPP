@@ -1,0 +1,19 @@
+[Template]
+ver=2
+Name=Sqlite3
+Icon=sqlite.ico
+Description=A Sqlite3 API Example
+Description[zh_CN]=Sqlite3 示例程序
+Category=Database
+Category[zh_CN]=数据库
+
+[Unit0]
+CName=main.c
+C=sqlite_c.txt
+
+[Project]
+UnitCount=1
+Type=1
+Compiler=
+CppCompiler=
+Linker=-lsqlite3
