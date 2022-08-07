@@ -1198,3 +1198,33 @@ int countLeadingWhitespaceChars(const QString &line)
     }
     return n;
 }
+
+bool copyFile(const QString &fromPath, const QString &toPath, bool overwrite)
+{
+    QFile  fromFile(fromPath);
+    QFile toFile(toPath);
+    if (!fromFile.exists())
+        return false;
+    if (toFile.exists()) {
+        if (!overwrite)
+            return false;
+        if (!toFile.remove())
+            return false;
+    }
+
+    if (!fromFile.open(QFile::ReadOnly))
+        return false;
+    if (!toFile.open(QFile::WriteOnly | QFile::Truncate))
+        return false;
+
+    int bufferSize=64*1024;
+    char buffer[bufferSize];
+
+    while (!fromFile.atEnd()) {
+        int readed = fromFile.read(buffer,bufferSize);
+        toFile.write(buffer,readed);
+    }
+    toFile.close();
+    fromFile.close();
+    return true;
+}

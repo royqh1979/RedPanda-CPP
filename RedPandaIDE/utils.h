@@ -246,6 +246,7 @@ float pointToPixel(float point, float dpi);
 float pixelToPoint(float pixel);
 
 void copyFolder(const QString &fromDir, const QString& toDir);
+bool copyFile(const QString &fromFile, const QString& toFile, bool overwrite);
 
 
 /**

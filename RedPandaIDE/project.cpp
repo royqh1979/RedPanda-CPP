@@ -864,9 +864,7 @@ bool Project::saveAsTemplate(const QString &templateFolder,
     ini->SetValue("Template", "Description", description.toUtf8());
     if (fileExists(mOptions.icon)) {
         QString iconName = extractFileName(mOptions.icon);
-        if (dir.exists(iconName))
-            dir.remove(iconName);
-        QFile::copy(mOptions.icon, dir.absoluteFilePath(iconName));
+        copyFile(mOptions.icon, dir.absoluteFilePath(iconName),true);
         if (dir.exists(iconName))
             ini->SetValue("Template", "Icon", iconName.toUtf8());
     }
@@ -915,9 +913,7 @@ bool Project::saveAsTemplate(const QString &templateFolder,
         const PProjectUnit& unit=mUnits[i];
         QString unitName = extractFileName(unit->fileName());
         QByteArray section = toByteArray(QString("Unit%1").arg(i));
-        if (dir.exists(unitName))
-            dir.remove(unitName);
-        if (!QFile::copy(unit->fileName(), dir.absoluteFilePath(unitName))) {
+        if (!copyFile(unit->fileName(), dir.absoluteFilePath(unitName),true)) {
             QMessageBox::warning(nullptr,
                                   tr("Warning"),
                                   tr("Can't save file %1").arg(dir.absoluteFilePath(unitName)),
