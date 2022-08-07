@@ -287,6 +287,18 @@
         <source>Ok</source>
         <translation>Ok</translation>
     </message>
+    <message>
+        <source>Default Language:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>C</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>C++</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>CodeSnippetsManager</name>
@@ -1041,7 +1053,7 @@
     </message>
     <message>
         <source>Enable code completion</source>
-        <translation>Habilitar complementação de código</translation>
+        <translation type="vanished">Habilitar complementação de código</translation>
     </message>
     <message>
         <source>Minimum id length to show completion </source>
@@ -1110,6 +1122,10 @@
     <message>
         <source>Completion suggestion window height:</source>
         <translation>Altura da janela com sugestão para complementação</translation>
+    </message>
+    <message>
+        <source>Enable code competion</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -1547,7 +1563,7 @@
     </message>
     <message>
         <source>Independent Red Panda C++ applications</source>
-        <translation>Aplicativos independentes do Red Panda C++</translation>
+        <translation type="vanished">Aplicativos independentes do Red Panda C++</translation>
     </message>
     <message>
         <source>The same Red Panda C++ application</source>
@@ -1560,6 +1576,10 @@
     <message>
         <source>Just check or uncheck for which file types Red Panda C++ wil be registered as the default application to open them ... </source>
         <translation>Basta marcar ou desmarcar quais tipos de arquivos o Red Panda C++ irá registrar como aplicativos padrões para abrí-los ...</translation>
+    </message>
+    <message>
+        <source>Independant Red Panda C++ applications</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -2060,7 +2080,7 @@
     </message>
     <message>
         <source>Insert empty lines around unrelated blocks</source>
-        <translation>Inserir linhas em branco em torno de blocos não relacionados</translation>
+        <translation type="vanished">Inserir linhas em branco em torno de blocos não relacionados</translation>
     </message>
     <message>
         <source>Insert empty lines around all blocks</source>
@@ -2164,7 +2184,7 @@
     </message>
     <message>
         <source>Don&apos;t break multiple statements residing on one line</source>
-        <translation>Não separar instruções múltiplas que estejam em uma mesma linha</translation>
+        <translation type="vanished">Não separar instruções múltiplas que estejam em uma mesma linha</translation>
     </message>
     <message>
         <source>Break return type from the function name in its declaration</source>
@@ -2197,6 +2217,14 @@
     <message>
         <source>Place the logical conditional to the last on the previous line, when break lines</source>
         <translation>Colocar a condição lógica por último na linha anterior, ao separar linhas</translation>
+    </message>
+    <message>
+        <source>Insert empty lines arround unrelated blocks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Don&apos;t break multimple statements residing on one line</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -2417,7 +2445,7 @@
     </message>
     <message>
         <source>Not Specified</source>
-        <translation>Não especificado</translation>
+        <translation type="vanished">Não especificado</translation>
     </message>
     <message>
         <source>Create New Branch</source>
@@ -2442,6 +2470,10 @@
     <message>
         <source>Cancel</source>
         <translation>Cancelar</translation>
+    </message>
+    <message>
+        <source>Not Specifiied</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -2703,11 +2735,15 @@
     </message>
     <message>
         <source>User name:</source>
-        <translation>User name:</translation>
+        <translation type="vanished">User name:</translation>
     </message>
     <message>
         <source>Git needs the following info to commit：</source>
         <translation>Git needs the following info to commit：</translation>
+    </message>
+    <message>
+        <source>User Name:</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -2958,7 +2994,7 @@
     </message>
     <message>
         <source>Add Problem Case</source>
-        <translation>Acrescentar caso de problema</translation>
+        <translation type="vanished">Acrescentar caso de problema</translation>
     </message>
     <message>
         <source>Remove Problem Case</source>
@@ -2966,7 +3002,7 @@
     </message>
     <message>
         <source>Open Answer Source File</source>
-        <translation>Abrir arquivo de respostas</translation>
+        <translation type="vanished">Abrir arquivo de respostas</translation>
     </message>
     <message>
         <source>Run All Cases</source>
@@ -3878,7 +3914,7 @@
     </message>
     <message>
         <source>Host application missing</source>
-        <translation>Falta aplicativo hospedeiro</translation>
+        <translation type="vanished">Falta aplicativo hospedeiro</translation>
     </message>
     <message>
         <source>DLL project needs a host application to run.</source>
@@ -4532,6 +4568,34 @@
         <source>Line</source>
         <translation>Linha</translation>
     </message>
+    <message>
+        <source>Add Probem Case</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Open Anwser Source File</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Host applcation missing</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>New Template...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>New Template from Project</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Template Exists</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Template %1 already exists. Do you want to overwrite?</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>NewClassDialog</name>
@@ -4690,6 +4754,37 @@
     </message>
 </context>
 <context>
+    <name>NewTemplateDialog</name>
+    <message>
+        <source>Dialog</source>
+        <translation type="obsolete">Diálogo</translation>
+    </message>
+    <message>
+        <source>Description</source>
+        <translation type="unfinished">Descrição</translation>
+    </message>
+    <message>
+        <source>Category</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Name</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Create</source>
+        <translation type="unfinished">Criar</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Create Template From Project</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>OJProblemCasesRunner</name>
     <message>
         <source>Case Timeout</source>
@@ -4827,6 +4922,22 @@
     <message>
         <source>Developed using the Red Panda C++ IDE</source>
         <translation>Desenvolvido com uso da IDE Red Panda C++</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation type="unfinished">Erro</translation>
+    </message>
+    <message>
+        <source>Can&apos;t create folder %1 </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Warning</source>
+        <translation type="unfinished">Aviso</translation>
+    </message>
+    <message>
+        <source>Can&apos;t save file %1</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -5289,7 +5400,7 @@
     </message>
     <message>
         <source>Release</source>
-        <translation>Release</translation>
+        <translation type="vanished">Release</translation>
     </message>
     <message>
         <source>Build</source>
@@ -5342,6 +5453,10 @@
     <message>
         <source>Legal copyright</source>
         <translation>Direitos autorais reservados</translation>
+    </message>
+    <message>
+        <source>Rlease</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -5415,7 +5530,7 @@
     </message>
     <message>
         <source>Global Variable</source>
-        <translation>Variável global</translation>
+        <translation type="vanished">Variável global</translation>
     </message>
     <message>
         <source>Hexadecimal Integer</source>
@@ -5747,7 +5862,7 @@
     </message>
     <message>
         <source>Do not assemble, compile and generate the assembly code (-S)</source>
-        <translation>Não montar, compilar e gerar código em assembly (-S)</translation>
+        <translation type="vanished">Não montar, compilar e gerar código em assembly (-S)</translation>
     </message>
     <message>
         <source>Use pipes instead of temporary files during compilation (-pipe)</source>
@@ -5767,7 +5882,7 @@
     </message>
     <message>
         <source>Compiler set not configured.</source>
-        <translation>Compilador não configurado.</translation>
+        <translation type="vanished">Compilador não configurado.</translation>
     </message>
     <message>
         <source>Would you like Red Panda C++ to search for compilers in the following locations: &lt;BR /&gt;&apos;%1&apos;&lt;BR /&gt;&apos;%2&apos;? </source>
@@ -5856,6 +5971,18 @@
     <message>
         <source>Leaving those directories will lead to problems during compilation.</source>
         <translation>Deixar essas pastas resultará em problemas durante a compilação.</translation>
+    </message>
+    <message>
+        <source>Gloabal Variable</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Do not assemble, compile and generate the assemble code (-S)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Compiler set not configuared.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -6221,7 +6348,11 @@
     </message>
     <message>
         <source>There are changes in the settings, do you want to save them before switch to other page?</source>
-        <translation>Alteradas nas configurações, quer salvá-las antes de mudar para outra página?</translation>
+        <translation type="vanished">Alteradas nas configurações, quer salvá-las antes de mudar para outra página?</translation>
+    </message>
+    <message>
+        <source>There are changes in the settings, do you want to save them before swtich to other page?</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

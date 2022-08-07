@@ -699,6 +699,8 @@ private slots:
 
     void on_actionGo_to_Line_triggered();
 
+    void on_actionNew_Template_triggered();
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;

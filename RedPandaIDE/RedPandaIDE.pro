@@ -191,6 +191,7 @@ SOURCES += \
     widgets/newheaderdialog.cpp \
     widgets/newprojectdialog.cpp \
     widgets/newprojectunitdialog.cpp \
+    widgets/newtemplatedialog.cpp \
     widgets/ojproblempropertywidget.cpp \
     widgets/ojproblemsetmodel.cpp \
     widgets/qconsole.cpp \
@@ -341,6 +342,7 @@ HEADERS += \
     widgets/newheaderdialog.h \
     widgets/newprojectdialog.h \
     widgets/newprojectunitdialog.h \
+    widgets/newtemplatedialog.h \
     widgets/ojproblempropertywidget.h \
     widgets/ojproblemsetmodel.h \
     widgets/qconsole.h \
@@ -406,6 +408,7 @@ FORMS += \
     widgets/newheaderdialog.ui \
     widgets/newprojectdialog.ui \
     widgets/newprojectunitdialog.ui \
+    widgets/newtemplatedialog.ui \
     widgets/ojproblempropertywidget.ui \
     widgets/searchdialog.ui \
     widgets/signalmessagedialog.ui

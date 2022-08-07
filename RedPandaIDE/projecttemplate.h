@@ -39,8 +39,6 @@ public:
     explicit ProjectTemplate(QObject *parent = nullptr);
     int unitCount();
     PTemplateUnit unit(int index);
-    void setUnit(int index, PTemplateUnit newUnit);
-    int addUnit();
     void readTemplateFile(const QString& fileName);
     bool save();
     const QString &category() const;
@@ -64,6 +62,8 @@ public:
     void setOptions(const ProjectOptions &newOptions);
 
     int version() const;
+
+    void setVersion(int newVersion);
 
 private:
     QString mFileName;

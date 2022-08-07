@@ -4540,6 +4540,22 @@
         <source>Line</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>New Template...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>New Template from Project</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Template Exists</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Template %1 already exists. Do you want to overwrite?</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>NewClassDialog</name>
@@ -4698,6 +4714,33 @@
     </message>
 </context>
 <context>
+    <name>NewTemplateDialog</name>
+    <message>
+        <source>Description</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Category</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Name</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Create</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Create Template From Project</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>OJProblemCasesRunner</name>
     <message>
         <source>Case Timeout</source>
@@ -4834,6 +4877,22 @@
     </message>
     <message>
         <source>Developed using the Red Panda C++ IDE</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Can&apos;t create folder %1 </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Warning</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Can&apos;t save file %1</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

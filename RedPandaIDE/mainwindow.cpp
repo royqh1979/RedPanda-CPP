@@ -47,6 +47,7 @@
 #include "vcs/gitremotedialog.h"
 #include "vcs/gituserconfigdialog.h"
 #include "widgets/infomessagebox.h"
+#include "widgets/newtemplatedialog.h"
 
 #include <QCloseEvent>
 #include <QComboBox>
@@ -185,6 +186,8 @@ MainWindow::MainWindow(QWidget *parent)
     mMenuNew->setTitle(tr("New"));
     mMenuNew->addAction(ui->actionNew);
     mMenuNew->addAction(ui->actionNew_Project);
+    mMenuNew->addSeparator();
+    mMenuNew->addAction(ui->actionNew_Template);
     mMenuNew->addSeparator();
     mMenuNew->addAction(ui->actionNew_Class);
     mMenuNew->addAction(ui->actionNew_Header);
@@ -519,6 +522,7 @@ void MainWindow::updateEditorActions()
 void MainWindow::updateProjectActions()
 {
     bool hasProject = (mProject != nullptr);
+    ui->actionNew_Template->setEnabled(hasProject);
     ui->actionView_Makefile->setEnabled(hasProject);
     ui->actionProject_New_File->setEnabled(hasProject);
     ui->actionAdd_to_project->setEnabled(hasProject);
@@ -8052,6 +8056,36 @@ void MainWindow::on_actionGo_to_Line_triggered()
     if (ok && lineNo!=e->caretY()) {
         e->setCaretPosition(lineNo,1);
         e->setFocus();
+    }
+}
+
+
+void MainWindow::on_actionNew_Template_triggered()
+{
+    if (!mProject)
+        return;
+    NewTemplateDialog dialog(this);
+    if (dialog.exec()==QDialog::Accepted) {
+        QDir folder(
+                    includeTrailingPathDelimiter(
+                        pSettings->dirs().config(Settings::Dirs::DataType::Template))
+                    +dialog.getName());
+        if (folder.exists()) {
+            if (QMessageBox::warning(this,
+                                     tr("Template Exists"),
+                                     tr("Template %1 already exists. Do you want to overwrite?").arg(dialog.getName()),
+                                     QMessageBox::Yes | QMessageBox::No,
+                                     QMessageBox::No
+                                     )!=QMessageBox::Yes)
+                return;
+        }
+
+        mProject->saveAsTemplate(
+                    folder.absolutePath(),
+                    dialog.getName(),
+                    dialog.getDescription(),
+                    dialog.getCategory()
+                    );
     }
 }
 

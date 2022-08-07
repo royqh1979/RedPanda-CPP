@@ -52,31 +52,6 @@ PTemplateUnit ProjectTemplate::unit(int index)
     return unit;
 }
 
-void ProjectTemplate::setUnit(int index, PTemplateUnit newUnit)
-{
-    if (!mIni || mVersion<=0)
-        return;
-    QByteArray section = toByteArray(QString("Unit%1").arg(index));
-    mIni->SetValue(section,"C", toByteArray(newUnit->CText));
-    mIni->SetValue(section,"Cpp", toByteArray(newUnit->CppText));
-    mIni->SetValue(section,"CName", toByteArray(newUnit->CName));
-    mIni->SetValue(section,"CppName", toByteArray(newUnit->CppName));
-    mIni->SetValue(section,"Source", toByteArray(newUnit->Source));
-    mIni->SetValue(section,"Target", toByteArray(newUnit->Target));
-}
-
-int ProjectTemplate::addUnit()
-{
-    if (!mIni || mVersion<=0)
-        return -1;
-    int count = unitCount() +1;
-    QByteArray section = toByteArray(QString("Unit%1").arg(count-1));
-    mIni->SetValue(section, "C", "");
-    mIni->SetValue(section, "Cpp", "");
-    mIni->SetLongValue("Project", "UnitCount", count);
-    return count;
-}
-
 void ProjectTemplate::readTemplateFile(const QString &fileName)
 {
     if (mIni)
@@ -265,5 +240,10 @@ void ProjectTemplate::setOptions(const ProjectOptions &newOptions)
 int ProjectTemplate::version() const
 {
     return mVersion;
+}
+
+void ProjectTemplate::setVersion(int newVersion)
+{
+    mVersion = newVersion;
 }
 

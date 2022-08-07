@@ -3187,6 +3187,14 @@
     <string>Go to Line...</string>
    </property>
   </action>
+  <action name="actionNew_Template">
+   <property name="text">
+    <string>New Template...</string>
+   </property>
+   <property name="toolTip">
+    <string>New Template from Project</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>

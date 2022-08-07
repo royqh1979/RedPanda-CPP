@@ -645,20 +645,6 @@ bool Project::saveUnits()
     return true;
 }
 
-void Project::saveAsTemplate(const QString &/*filename*/,
-                             const QString &name,
-                             const QString &description,
-                             const QString &category)
-{
-    SimpleIni ini;
-    ini.SetValue("Template", "Icon", "");
-    ini.SetValue("Template", "Category",toByteArray(category));
-    ini.SetValue("Template", "Name",toByteArray(name));
-    ini.SetValue("Template", "Description", toByteArray(description));
-    ini.SetValue("Project", "Icon", toByteArray(options().icon));
-    //todo: save to template
-}
-
 PProjectUnit Project::findUnitByFilename(const QString &filename)
 {
     foreach(PProjectUnit unit, mUnits) {
@@ -851,6 +837,121 @@ bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate, b
         }
     }
     rebuildNodes();
+    return true;
+}
+
+bool Project::saveAsTemplate(const QString &templateFolder,
+                             const QString& name,
+                             const QString& description,
+                             const QString& category)
+{
+    QDir dir(templateFolder);
+    if (!dir.mkpath(templateFolder)) {
+        QMessageBox::critical(nullptr,
+                              tr("Error"),
+                              tr("Can't create folder %1 ").arg(templateFolder),
+                              QMessageBox::Ok);
+        return false;
+    }
+
+    QString fileName = dir.absoluteFilePath(TEMPLATE_INFO_FILE);
+    PSimpleIni ini = std::make_shared<SimpleIni>();
+
+    ini->SetLongValue("Template","Ver",3);
+    // template info
+    ini->SetValue("Template", "Name", name.toUtf8());
+    ini->SetValue("Template", "Category", category.toUtf8());
+    ini->SetValue("Template", "Description", description.toUtf8());
+    if (fileExists(mOptions.icon)) {
+        QString iconName = extractFileName(mOptions.icon);
+        if (dir.exists(iconName))
+            dir.remove(iconName);
+        QFile::copy(mOptions.icon, dir.absoluteFilePath(iconName));
+        if (dir.exists(iconName))
+            ini->SetValue("Template", "Icon", iconName.toUtf8());
+    }
+
+    ini->SetLongValue("Project", "Type", static_cast<int>(mOptions.type));
+    if (!mOptions.objFiles.isEmpty())
+        ini->SetValue("Project", "ObjFiles", mOptions.objFiles.join(";").toUtf8());
+    if (!mOptions.includeDirs.isEmpty())
+        ini->SetValue("Project", "Includes", mOptions.includeDirs.join(";").toUtf8());
+    if (!mOptions.resourceIncludes.isEmpty())
+        ini->SetValue("Project", "ResourceIncludes", mOptions.resourceIncludes.join(";").toUtf8());
+    if (!mOptions.binDirs.isEmpty())
+        ini->SetValue("Project", "Bins", mOptions.binDirs.join(";").toUtf8());
+    if (!mOptions.libDirs.isEmpty())
+        ini->SetValue("Project", "Libs", mOptions.libDirs.join(";").toUtf8());
+    if (!mOptions.compilerCmd.isEmpty())
+        ini->SetValue("Project", "Compiler", mOptions.compilerCmd.toUtf8());
+    if (!mOptions.cppCompilerCmd.isEmpty())
+        ini->SetValue("Project", "CppCompiler", mOptions.cppCompilerCmd.toUtf8());
+    if (!mOptions.linkerCmd.isEmpty())
+        ini->SetValue("Project", "Linker",mOptions.linkerCmd.toUtf8());
+    ini->SetBoolValue("Project", "IsCpp", mOptions.isCpp);
+    if (mOptions.includeVersionInfo)
+        ini->SetBoolValue("Project", "IncludeVersionInfo", true);
+    if (mOptions.supportXPThemes)
+        ini->SetBoolValue("Project", "SupportXPThemes", true);
+    if (!mOptions.exeOutput.isEmpty())
+        ini->SetValue("Project", "ExeOutput", mOptions.exeOutput.toUtf8());
+    if (!mOptions.objectOutput.isEmpty())
+        ini->SetValue("Project", "ObjectOutput", mOptions.objectOutput.toUtf8());
+    if (!mOptions.logOutput.isEmpty())
+        ini->SetValue("Project", "LogOutput", mOptions.logOutput.toUtf8());
+    if (mOptions.execEncoding!=ENCODING_SYSTEM_DEFAULT)
+        ini->SetValue("Project","ExecEncoding", mOptions.execEncoding);
+
+    if (!mOptions.staticLink)
+        ini->SetBoolValue("Project", "StaticLink",false);
+    if (!mOptions.addCharset)
+        ini->SetBoolValue("Project", "AddCharset",false);
+    if (mOptions.encoding!=ENCODING_AUTO_DETECT)
+        ini->SetValue("Project","Encoding",mOptions.encoding.toUtf8());
+    if (mOptions.modelType!=ProjectModelType::FileSystem)
+        ini->SetLongValue("Project", "ModelType", (int)mOptions.modelType);
+
+    for (int i=0;i<mUnits.count();i++) {
+        const PProjectUnit& unit=mUnits[i];
+        QString unitName = extractFileName(unit->fileName());
+        QByteArray section = toByteArray(QString("Unit%1").arg(i));
+        if (dir.exists(unitName))
+            dir.remove(unitName);
+        if (!QFile::copy(unit->fileName(), dir.absoluteFilePath(unitName))) {
+            QMessageBox::warning(nullptr,
+                                  tr("Warning"),
+                                  tr("Can't save file %1").arg(dir.absoluteFilePath(unitName)),
+                                  QMessageBox::Ok);
+        }
+        switch(getFileType(unit->fileName())) {
+        case FileType::CSource:
+            ini->SetValue(section,"C", unitName.toUtf8());
+            ini->SetValue(section,"CName", unitName.toUtf8());
+            break;
+        case FileType::CppSource:
+            ini->SetValue(section,"Cpp", unitName.toUtf8());
+            ini->SetValue(section,"CppName", unitName.toUtf8());
+            break;
+        case FileType::CHeader:
+        case FileType::CppHeader:
+            ini->SetValue(section,"C", unitName.toUtf8());
+            ini->SetValue(section,"CName", unitName.toUtf8());
+            ini->SetValue(section,"Cpp", unitName.toUtf8());
+            ini->SetValue(section,"CppName", unitName.toUtf8());
+            break;
+        default:
+            ini->SetValue(section,"Source", unitName.toUtf8());
+            ini->SetValue(section,"Target", unitName.toUtf8());
+        }
+    }
+    ini->SetLongValue("Project","UnitCount",mUnits.count());
+    if (ini->SaveFile(fileName.toLocal8Bit())!=SI_OK) {
+        QMessageBox::critical(nullptr,
+                              tr("Error"),
+                              tr("Can't save file %1").arg(fileName),
+                              QMessageBox::Ok);
+        return false;
+    }
     return true;
 }
 

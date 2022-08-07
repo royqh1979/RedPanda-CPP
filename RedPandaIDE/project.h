@@ -205,12 +205,9 @@ public:
     void saveUnitAs(int i, const QString& sFileName, bool syncEditor = true); // save single [UnitX]
     bool saveUnits();
 
-    void saveAsTemplate(const QString &filename, const QString &name, const QString &description,
-                        const QString &category);
     PProjectUnit findUnitByFilename(const QString& filename);
     void associateEditor(Editor* editor);
     void associateEditorToUnit(Editor* editor, PProjectUnit unit);
-//    bool setCompileOption(const QString &key, int valIndex);
     bool setCompileOption(const QString &key, const QString &value);
     QString getCompileOption(const QString &key) const;
 
@@ -218,9 +215,11 @@ public:
     void updateNodeIndexes();
     void setCompilerSet(int compilerSetIndex);
 
-    //void showOptions();
     bool assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate, bool useCpp);
-    //void saveToLog();
+    bool saveAsTemplate(const QString& templateFolder,
+                        const QString& name,
+                        const QString& description,
+                        const QString& category);
 
     std::shared_ptr<CppParser> cppParser();
     const QString &filename() const;
