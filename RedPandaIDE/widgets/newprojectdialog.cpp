@@ -35,7 +35,8 @@ NewProjectDialog::NewProjectDialog(QWidget *parent) :
     mTemplatesTabBar->setExpanding(false);
     ui->verticalLayout->insertWidget(0,mTemplatesTabBar);
 
-    readTemplateDir();
+    readTemplateDirs();
+
     int i=0;
     QString projectName;
     QString location;
@@ -120,20 +121,34 @@ void NewProjectDialog::addTemplate(const QString &filename)
     mTemplates.append(t);
 }
 
-void NewProjectDialog::readTemplateDir()
+void NewProjectDialog::readTemplateDirs()
 {
     addTemplate(":/templates/empty.template");
+    readTemplateDir(pSettings->dirs().data(Settings::Dirs::DataType::Template));
+    readTemplateDir(pSettings->dirs().config(Settings::Dirs::DataType::Template));
+    rebuildTabs();
+    updateView();
+}
+
+void NewProjectDialog::readTemplateDir(const QString& folderPath)
+{
+
     QString templateExt(".");
     templateExt += TEMPLATE_EXT;
-    QDir dir(pSettings->dirs().templateDir());
+    QDir dir(folderPath);
+    if (!dir.exists())
+        return;
     foreach (const QFileInfo& fileInfo,dir.entryInfoList()) {
         if (fileInfo.isFile()
                 && fileInfo.fileName().endsWith(templateExt)) {
             addTemplate(fileInfo.absoluteFilePath());
+        } else if (fileInfo.isDir()) {
+            QDir subDir(fileInfo.absoluteFilePath());
+            if (subDir.exists(TEMPLATE_INFO_FILE)) {
+                addTemplate(subDir.absoluteFilePath(TEMPLATE_INFO_FILE));
+            }
         }
     }
-    rebuildTabs();
-    updateView();
 }
 
 void NewProjectDialog::rebuildTabs()

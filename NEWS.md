@@ -2,6 +2,7 @@ Red Panda C++ Version 1.2
 
   - enhancement: Portuguese Translation ( Thanks for crcpucmg@github)
   - fix: files in network drive is opened in readonly mode
+  - change: organization structure of templates
 
 Red Panda C++ Version 1.1.6
 

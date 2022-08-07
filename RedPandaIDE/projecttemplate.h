@@ -52,6 +52,8 @@ public:
     const QString &fileName() const;
     void setFileName(const QString &newFileName);
 
+    const QString folder() const;
+
     const QString &icon() const;
     void setIcon(const QString &newIcon);
 

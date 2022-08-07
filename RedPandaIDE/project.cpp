@@ -802,6 +802,7 @@ bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate, b
     }
     // Add list of files
     if (aTemplate->version() > 0) {
+        QDir dir(aTemplate->folder());
         for (int i=0;i<aTemplate->unitCount();i++) {
             // Pick file contents
             PTemplateUnit templateUnit = aTemplate->unit(i);
@@ -811,7 +812,7 @@ bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate, b
                 if (!templateUnit->Target.isEmpty())
                     target = templateUnit->Target;
                 QFile::copy(
-                            QDir(pSettings->dirs().templateDir()).absoluteFilePath(templateUnit->Source),
+                            dir.absoluteFilePath(templateUnit->Source),
                             includeTrailingPathDelimiter(this->directory())+target);
                 unit = newUnit(mRootNode, target);
             } else {
@@ -831,7 +832,7 @@ bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate, b
                             true,
                             true);
 
-                QString s2 = QDir(pSettings->dirs().templateDir()).absoluteFilePath(s);
+                QString s2 = dir.absoluteFilePath(s);
                 if (fileExists(s2) && !s.isEmpty()) {
                     try {
                         editor->loadFile(s2);

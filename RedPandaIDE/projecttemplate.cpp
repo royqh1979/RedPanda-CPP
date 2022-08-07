@@ -227,6 +227,11 @@ void ProjectTemplate::setFileName(const QString &newFileName)
     mFileName = newFileName;
 }
 
+const QString ProjectTemplate::folder() const
+{
+    return extractFileDir(mFileName);
+}
+
 const QString &ProjectTemplate::icon() const
 {
     return mIcon;

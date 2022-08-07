@@ -78,6 +78,7 @@
 #define LIB_EXT "a"
 #define GCH_EXT "gch"
 #define TEMPLATE_EXT "template"
+#define TEMPLATE_INFO_FILE "info.template"
 #define DEV_INTERNAL_OPEN "$__DEV_INTERNAL_OPEN"
 #define DEV_LASTOPENS_FILE "lastopens.ini"
 #define DEV_SYMBOLUSAGE_FILE  "symbolusage.json"

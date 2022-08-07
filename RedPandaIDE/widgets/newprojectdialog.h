@@ -55,7 +55,8 @@ private slots:
 
 private:
     void addTemplate(const QString& filename);
-    void readTemplateDir();
+    void readTemplateDirs();
+    void readTemplateDir(const QString& folderPath);
     void rebuildTabs();
 
 private:

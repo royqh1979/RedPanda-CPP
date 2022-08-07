@@ -93,13 +93,13 @@ public:
             None,
             ColorScheme,
             IconSet,
-            Theme
+            Theme,
+            Template
         };
         explicit Dirs(Settings * settings);
         QString appDir() const;
         QString appResourceDir() const;
         QString appLibexecDir() const;
-        QString templateDir() const;
         QString projectDir() const;
         QString data(DataType dataType = DataType::None) const;
         QString config(DataType dataType = DataType::None) const;

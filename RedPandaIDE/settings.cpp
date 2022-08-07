@@ -208,11 +208,6 @@ QString Settings::Dirs::appLibexecDir() const
 #endif
 }
 
-QString Settings::Dirs::templateDir() const
-{
-    return includeTrailingPathDelimiter(appResourceDir()) + "templates";
-}
-
 QString Settings::Dirs::projectDir() const
 {
     return mProjectDir;
@@ -231,6 +226,8 @@ QString Settings::Dirs::data(Settings::Dirs::DataType dataType) const
         return ":/resources/iconsets";
     case DataType::Theme:
         return ":/themes";
+    case DataType::Template:
+        return includeTrailingPathDelimiter(appResourceDir()) + "templates";
     }
     return "";
 }
@@ -249,6 +246,8 @@ QString Settings::Dirs::config(Settings::Dirs::DataType dataType) const
         return includeTrailingPathDelimiter(configDir)+"iconsets";
     case DataType::Theme:
         return includeTrailingPathDelimiter(configDir)+"themes";
+    case DataType::Template:
+        return includeTrailingPathDelimiter(configDir) + "templates";
     }
     return "";
 }
