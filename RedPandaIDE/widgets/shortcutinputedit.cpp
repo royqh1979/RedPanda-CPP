@@ -40,14 +40,33 @@ void ShortcutInputEdit::keyPressEvent(QKeyEvent *event)
             event->key()==Qt::Key_Shift ||
             event->key()==Qt::Key_Meta
             ) {
-        QKeySequence seq(event->modifiers());
-        setText("");
+        //setText("");
+        return;
+    } else if (event->modifiers()==Qt::ShiftModifier
+               && !event->text().isEmpty()
+               && event->text().at(0).unicode()>32
+               && event->text().at(0).unicode()<127){
+        //setText("");
+        return;
+    } else if (event->modifiers()==Qt::NoModifier
+               && !event->text().isEmpty()
+               && event->text().at(0).unicode()>32
+               && event->text().at(0).unicode()<127){
+        //setText("");
+        return;
     } else {
         int key = event->key();
         if (key==Qt::Key_Backtab)
             key = Qt::Key_Tab;
         QKeySequence seq(event->modifiers()|key);
-        setText(seq.toString());
+        QString s=seq.toString();
+        if (event->modifiers().testFlag(Qt::ShiftModifier)
+                && !event->text().isEmpty()
+                && event->text().at(0).unicode()>32
+                && event->text().at(0).unicode()<127) {
+            s = s.mid(0,s.lastIndexOf('+')+1) + event->text().at(0);
+        }
+        setText(s);
         if (key!=Qt::Key_Tab
                 && key!=Qt::Key_Enter
                 && key!=Qt::Key_Return)

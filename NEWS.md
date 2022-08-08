@@ -5,6 +5,7 @@ Red Panda C++ Version 1.2
   - change: reorganization templates in subfolders
   - enhancement: create template from project
   - fix: can't correctly set project icon
+  - fix: can't set shortcut that contains shift and non-alphabet characters
 
 Red Panda C++ Version 1.1.6
 
