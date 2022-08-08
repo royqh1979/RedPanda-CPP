@@ -18,5 +18,5 @@ UnitCount = 1
 
 
 [Unit0]
-C = main.c
-CName = main.c
+Cpp = main.cpp
+CppName = main.cpp
