@@ -18,46 +18,44 @@ using namespace std;
 #define ROWS 9
 #define COLUMNS 9
 
-const int empty = -1;
-const int mine = 0;
+#define EMPTY 0
+#define MINE  -1
 
-class block {
+class Block {
 public:
-	block();
-	block(int x, int y, int btype);
+	Block();
+	Block(int x, int y, int btype);
 	
 	
 	// Mutators
-	setx(int x);
-	sety(int y);
-	setrevealed(bool reveal);
-	setmarked(bool mark);
-	settype(int btype);
-	formatblock(int x, int y);
+	void setX(int x);
+	void setY(int y);
+	void setRevealed(bool reveal);
+	void setMarked(bool mark);
+	void setType(int btype);
 	
 	// Accessors
-	int getx();
-	int gety();
-	bool getrevealed();
-	bool getmarked();
-	int gettype();
+	int getX();
+	int getY();
+	bool isRevealed();
+	bool isMarked();
+	int getType();
 	
 private:
 	// Coordinates of block
-	int xcord;
-	int ycord;
+	int mX;
+	int mY;
 	
 	// States
-	bool revealed;
-	bool marked;
+	bool mRevealed;
+	bool mMarked;
 	
 	// Type
-	int type; // Ranges from -1 to 8
-	
+	int mType; // Ranges from -1 to 8	
 };
 
 // Create 2d array
-block gameboard[ROWS][COLUMNS];
+Block gameboard[ROWS][COLUMNS];
 
 
 // Generate random number
@@ -66,19 +64,15 @@ int randomnum() {
 }
 
 // Generate number blocks
-void numbergeneration(int i, int j);
+void countMinesInNeighbors(int i, int j);
 
 // Update empty spots
-void floodfill(int x, int y);
+void revealBlocks(int x, int y);
 
 // Game states
 bool gameover = false;
 bool gamewon = false;
-void restartgame();
-
-// Block counts
-int totalblocks = 0;
-
+void restartGame();
 
 int main()
 {
@@ -90,7 +84,7 @@ int main()
 	InitWindow(screenWidth, screenHeight, "Minesweeper by Matthew Zegar");
 	SetTargetFPS(60);
 	
-	restartgame();
+	restartGame();
 	
 	// Mouse setup
 	//--------------------------------------------------------------------------------------   
@@ -115,14 +109,14 @@ int main()
 				int x = floor(mouse.x/50);
 				if (y >= 0 && y < ROWS
 					&& x >=0 && x < COLUMNS ) {
-					if (gameboard[y][x].getmarked() == false) {
-						gameboard[y][x].setrevealed(true);
-						if (gameboard[y][x].gettype() == -1) { // CHECK IF 'EMPTY'
-							gameboard[y][x].setrevealed(false);
-							floodfill(y, x);
+					if (gameboard[y][x].isMarked() == false) {
+						gameboard[y][x].setRevealed(true);
+						if (gameboard[y][x].getType() == EMPTY) { // CHECK IF 'EMPTY'
+							gameboard[y][x].setRevealed(false);
+							revealBlocks(y, x);
 						}
 						
-						if (gameboard[y][x].gettype() == 0) {
+						if (gameboard[y][x].getType() == MINE) {
 							gameover = true;
 						}
 					}
@@ -138,11 +132,11 @@ int main()
 				int x = floor(mouse.x/50);
 				if (y >= 0 && y < ROWS
 					&& x >=0 && x < COLUMNS ) {
-					if (gameboard[y][x].getrevealed() == false) {
-						if (gameboard[y][x].getmarked() == false) {
-							gameboard[y][x].setmarked(true);
+					if (gameboard[y][x].isRevealed() == false) {
+						if (gameboard[y][x].isMarked() == false) {
+							gameboard[y][x].setMarked(true);
 						} else {
-							gameboard[y][x].setmarked(false);
+							gameboard[y][x].setMarked(false);
 						}
 					}
 				} 
@@ -153,36 +147,36 @@ int main()
 		//--------------------------------------------------------------------------------------
 		for (int i = 0; i < ROWS; ++i) {
 			for (int j = 0; j < COLUMNS; ++j) {
-				if (gameboard[i][j].getrevealed() == false) {
-					DrawRectangle(gameboard[i][j].gety()*50, gameboard[i][j].getx()*50, 50, 50, LIGHTGRAY);
-					DrawRectangleLines(gameboard[i][j].gety()*50, gameboard[i][j].getx()*50, 50, 50, BLACK); 
+				if (gameboard[i][j].isRevealed() == false) {
+					DrawRectangle(gameboard[i][j].getY()*50, gameboard[i][j].getX()*50, 50, 50, LIGHTGRAY);
+					DrawRectangleLines(gameboard[i][j].getY()*50, gameboard[i][j].getX()*50, 50, 50, BLACK); 
 				} else {
-					if (gameboard[i][j].gettype() == 0) {
-						DrawRectangle(gameboard[i][j].gety()*50, gameboard[i][j].getx()*50, 50, 50, RED);
-						DrawRectangleLines(gameboard[i][j].gety()*50, gameboard[i][j].getx()*50, 50, 50, BLACK); 
-					} else if (gameboard[i][j].gettype() == -1) {
-						DrawRectangle(gameboard[i][j].gety()*50, gameboard[i][j].getx()*50, 50, 50, GRAY);
-						DrawRectangleLines(gameboard[i][j].gety()*50, gameboard[i][j].getx()*50, 50, 50, BLACK); 
-					} else if (gameboard[i][j].gettype() == 1) {
-						DrawRectangle(gameboard[i][j].gety()*50, gameboard[i][j].getx()*50, 50, 50, DARKGRAY);
-						DrawRectangleLines(gameboard[i][j].gety()*50, gameboard[i][j].getx()*50, 50, 50, BLACK);
-						DrawText(TextFormat("%i", gameboard[i][j].gettype()), gameboard[i][j].gety()*50+20, gameboard[i][j].getx()*50+15, 25, SKYBLUE);
-					} else if (gameboard[i][j].gettype() == 2) {
-						DrawRectangle(gameboard[i][j].gety()*50, gameboard[i][j].getx()*50, 50, 50, DARKGRAY);
-						DrawRectangleLines(gameboard[i][j].gety()*50, gameboard[i][j].getx()*50, 50, 50, BLACK);
-						DrawText(TextFormat("%i", gameboard[i][j].gettype()), gameboard[i][j].gety()*50+20, gameboard[i][j].getx()*50+15, 25, GREEN);
-					} else if (gameboard[i][j].gettype() == 3) {
-						DrawRectangle(gameboard[i][j].gety()*50, gameboard[i][j].getx()*50, 50, 50, DARKGRAY);
-						DrawRectangleLines(gameboard[i][j].gety()*50, gameboard[i][j].getx()*50, 50, 50, BLACK);
-						DrawText(TextFormat("%i", gameboard[i][j].gettype()), gameboard[i][j].gety()*50+20, gameboard[i][j].getx()*50+15, 25, RED);
-					} else if (gameboard[i][j].gettype() == 4) {
-						DrawRectangle(gameboard[i][j].gety()*50, gameboard[i][j].getx()*50, 50, 50, DARKGRAY);
-						DrawRectangleLines(gameboard[i][j].gety()*50, gameboard[i][j].getx()*50, 50, 50, BLACK);
-						DrawText(TextFormat("%i", gameboard[i][j].gettype()), gameboard[i][j].gety()*50+20, gameboard[i][j].getx()*50+15, 25, DARKBLUE);
-					} else if (gameboard[i][j].gettype() >= 5) {
-						DrawRectangle(gameboard[i][j].gety()*50, gameboard[i][j].getx()*50, 50, 50, DARKGRAY);
-						DrawRectangleLines(gameboard[i][j].gety()*50, gameboard[i][j].getx()*50, 50, 50, BLACK);
-						DrawText(TextFormat("%i", gameboard[i][j].gettype()), gameboard[i][j].gety()*50+20, gameboard[i][j].getx()*50+15, 25, MAROON);
+					if (gameboard[i][j].getType() == MINE) {
+						DrawRectangle(gameboard[i][j].getY()*50, gameboard[i][j].getX()*50, 50, 50, RED);
+						DrawRectangleLines(gameboard[i][j].getY()*50, gameboard[i][j].getX()*50, 50, 50, BLACK); 
+					} else if (gameboard[i][j].getType() == EMPTY) {
+						DrawRectangle(gameboard[i][j].getY()*50, gameboard[i][j].getX()*50, 50, 50, GRAY);
+						DrawRectangleLines(gameboard[i][j].getY()*50, gameboard[i][j].getX()*50, 50, 50, BLACK); 
+					} else if (gameboard[i][j].getType() == 1) {
+						DrawRectangle(gameboard[i][j].getY()*50, gameboard[i][j].getX()*50, 50, 50, DARKGRAY);
+						DrawRectangleLines(gameboard[i][j].getY()*50, gameboard[i][j].getX()*50, 50, 50, BLACK);
+						DrawText(TextFormat("%i", gameboard[i][j].getType()), gameboard[i][j].getY()*50+20, gameboard[i][j].getX()*50+15, 25, SKYBLUE);
+					} else if (gameboard[i][j].getType() == 2) {
+						DrawRectangle(gameboard[i][j].getY()*50, gameboard[i][j].getX()*50, 50, 50, DARKGRAY);
+						DrawRectangleLines(gameboard[i][j].getY()*50, gameboard[i][j].getX()*50, 50, 50, BLACK);
+						DrawText(TextFormat("%i", gameboard[i][j].getType()), gameboard[i][j].getY()*50+20, gameboard[i][j].getX()*50+15, 25, GREEN);
+					} else if (gameboard[i][j].getType() == 3) {
+						DrawRectangle(gameboard[i][j].getY()*50, gameboard[i][j].getX()*50, 50, 50, DARKGRAY);
+						DrawRectangleLines(gameboard[i][j].getY()*50, gameboard[i][j].getX()*50, 50, 50, BLACK);
+						DrawText(TextFormat("%i", gameboard[i][j].getType()), gameboard[i][j].getY()*50+20, gameboard[i][j].getX()*50+15, 25, RED);
+					} else if (gameboard[i][j].getType() == 4) {
+						DrawRectangle(gameboard[i][j].getY()*50, gameboard[i][j].getX()*50, 50, 50, DARKGRAY);
+						DrawRectangleLines(gameboard[i][j].getY()*50, gameboard[i][j].getX()*50, 50, 50, BLACK);
+						DrawText(TextFormat("%i", gameboard[i][j].getType()), gameboard[i][j].getY()*50+20, gameboard[i][j].getX()*50+15, 25, DARKBLUE);
+					} else if (gameboard[i][j].getType() >= 5) {
+						DrawRectangle(gameboard[i][j].getY()*50, gameboard[i][j].getX()*50, 50, 50, DARKGRAY);
+						DrawRectangleLines(gameboard[i][j].getY()*50, gameboard[i][j].getX()*50, 50, 50, BLACK);
+						DrawText(TextFormat("%i", gameboard[i][j].getType()), gameboard[i][j].getY()*50+20, gameboard[i][j].getX()*50+15, 25, MAROON);
 					} 
 				}
 			}
@@ -192,20 +186,20 @@ int main()
 		//----------------------------------------------------------------------------------
 		for (int i = 0; i < ROWS; ++i) {
 			for (int j = 0; j < COLUMNS; ++j) {
-				if (gameboard[i][j].getmarked() == true and gameboard[i][j].getrevealed() == false) {
-					DrawRectangle(gameboard[i][j].gety()*50+15, gameboard[i][j].getx()*50+10, 10, 10, RED);
-					DrawRectangle(gameboard[i][j].gety()*50+25, gameboard[i][j].getx()*50+10, 5, 25, BLACK);
-					DrawRectangle(gameboard[i][j].gety()*50+20, gameboard[i][j].getx()*50+35, 15, 5, BLACK);
+				if (gameboard[i][j].isMarked() && !gameboard[i][j].isRevealed() ) {
+					DrawRectangle(gameboard[i][j].getY()*50+15, gameboard[i][j].getX()*50+10, 10, 10, RED);
+					DrawRectangle(gameboard[i][j].getY()*50+25, gameboard[i][j].getX()*50+10, 5, 25, BLACK);
+					DrawRectangle(gameboard[i][j].getY()*50+20, gameboard[i][j].getX()*50+35, 15, 5, BLACK);
 				}
 			}
 		}
 		
 		// Update variable to determine if won
 		//----------------------------------------------------------------------------------
-		totalblocks = 0;
+		int totalblocks = 0;
 		for (int i = 0; i < ROWS; ++i) {
 			for (int j = 0; j < COLUMNS; ++j) {                
-				if (gameboard[i][j].gettype() >= 1 and gameboard[i][j].getrevealed() == false) {
+				if (gameboard[i][j].getType() >= 1 and gameboard[i][j].isRevealed() == false) {
 					totalblocks++;
 				}
 			}
@@ -222,12 +216,12 @@ int main()
 			
 			for (int i = 0; i < ROWS; ++i) {
 				for (int j = 0; j < COLUMNS; ++j) {
-					gameboard[i][j].setrevealed(true);
+					gameboard[i][j].setRevealed(true);
 				}
 			}
 			
 			if ((IsMouseButtonReleased(MOUSE_RIGHT_BUTTON))) {
-				restartgame();
+				restartGame();
 				gamewon = false;
 			}            
 		}
@@ -240,9 +234,14 @@ int main()
 			DrawText("right click to restart", 101, 251, 25, WHITE);
 			DrawText("right click to restart", 100, 250, 25, BLACK);
 			
+			for (int i = 0; i < ROWS; ++i) {
+				for (int j = 0; j < COLUMNS; ++j) {
+					gameboard[i][j].setRevealed(true);
+				}
+			}
 			
 			if ((IsMouseButtonReleased(MOUSE_RIGHT_BUTTON))) {
-				restartgame();
+				restartGame();
 				gameover = false;
 			}
 		}
@@ -261,31 +260,33 @@ int main()
 }
 
 // Floodfill algorithm 
-void floodfill(int x, int y) {
-	if (x >= 0 and x <ROWS and y >= 0 and y < COLUMNS) {
-		if (gameboard[x][y].gettype() != -1) {
-			gameboard[x][y].setrevealed(true);
+void revealBlocks(int x, int y) {
+	if (x >= 0 && x <ROWS && y >= 0 && y < COLUMNS) {
+		if (gameboard[x][y].getType() != EMPTY) {
+			gameboard[x][y].setRevealed(true);
 		} else {
-			if (gameboard[x][y].getrevealed() == false) {
-				gameboard[x][y].setrevealed(true);
-				floodfill(x-1, y);
-				//floodfill(x-1, y-1);
-				floodfill(x, y-1);
-				//floodfill(x+1, y-1);
-				floodfill(x+1, y);
-				//floodfill(x+1, y+1);
-				floodfill(x, y+1);
-				//floodfill(x-1, y+1);
+			if (gameboard[x][y].isRevealed() == false) {
+				gameboard[x][y].setRevealed(true);
+				revealBlocks(x-1, y);
+				revealBlocks(x-1, y-1);
+				revealBlocks(x-1, y+1);
+				
+				revealBlocks(x, y-1);
+				revealBlocks(x, y+1);
+				
+				revealBlocks(x+1, y-1);
+				revealBlocks(x+1, y);
+				revealBlocks(x+1, y+1);
 			}    
 		}
 	}
 }
 
 // Restart the game
-void restartgame() {
+void restartGame() {
 	for (int i = 0; i < ROWS; ++i) {
 		for (int j = 0; j < COLUMNS; ++j) {
-			gameboard[i][j] = block(i,j,-1);
+			gameboard[i][j] = Block(i,j,EMPTY);
 		}
 	}
 	
@@ -295,7 +296,7 @@ void restartgame() {
 	for (int i = 0; i < ROWS; ++i) {
 		for (int j = 0; j < COLUMNS; ++j) {
 			if (randomnum() == 1) {
-				gameboard[i][j].settype(0);
+				gameboard[i][j].setType(MINE);
 			}
 		}
 	}
@@ -304,29 +305,29 @@ void restartgame() {
 	//--------------------------------------------------------------------------------------
 	for (int i = 0; i < 9; ++i) {
 		for (int j = 0; j < 9; ++j) {
-			if (gameboard[i][j].gettype() != 0) {
-				numbergeneration(i,j);
+			if (gameboard[i][j].getType() != MINE) {
+				countMinesInNeighbors(i,j);
 			}
 		}
 	}
 }
 
 // Generates the numbered blocks based on mines
-void numbergeneration(int i, int j) {
+void countMinesInNeighbors(int i, int j) {
 	int count = 0;
 	
 	// Check left hand side
 	if ((j-1)>=0) {
 		if ((i-1) >= 0) {
-			if (gameboard[i-1][j-1].gettype() == 0) {
+			if (gameboard[i-1][j-1].getType() == MINE) {
 				count++;
 			}
 		}
-		if (gameboard[i][j-1].gettype() == 0) {
+		if (gameboard[i][j-1].getType() == MINE) {
 			count++;
 		}
 		if ((i+1) < ROWS) {
-			if (gameboard[i+1][j-1].gettype() == 0) {
+			if (gameboard[i+1][j-1].getType() == MINE) {
 				count++;
 			}
 		}
@@ -335,13 +336,13 @@ void numbergeneration(int i, int j) {
 	
 	// Check middle
 	if ((i-1) >= 0) {
-		if (gameboard[i-1][j].gettype() == 0) {
+		if (gameboard[i-1][j].getType() == MINE) {
 			count++;
 		}
 	}
 	
 	if ((i+1) < ROWS) {
-		if (gameboard[i+1][j].gettype() == 0) {
+		if (gameboard[i+1][j].getType() == MINE) {
 			count++;
 		}
 	} 
@@ -349,89 +350,86 @@ void numbergeneration(int i, int j) {
 	// Check right
 	if ((j+1)<COLUMNS) {
 		if ((i-1) >= 0) {
-			if (gameboard[i-1][j+1].gettype() == 0) {
+			if (gameboard[i-1][j+1].getType() == MINE) {
 				count++;
 			}
 		}
-		if (gameboard[i][j+1].gettype() == 0) {
+		if (gameboard[i][j+1].getType() == MINE) {
 			count++;
 		}
 		if ((i+1) <= ROWS) {
-			if (gameboard[i+1][j+1].gettype() == 0) {
+			if (gameboard[i+1][j+1].getType() == MINE) {
 				count++;
 			}
 		} 		
 	}
 	
 	if (count>0)
-		gameboard[i][j].settype(count);
+		gameboard[i][j].setType(count);
 	
 }
 
-block::block() {
-	xcord = 0;
-	ycord = 0;
-	revealed = false;
-	marked = false;
-	type = 0;
+Block::Block() {
+	mX = 0;
+	mY = 0;
+	mRevealed = false;
+	mMarked = false;
+	mType = 0;
 }
 
-block::block(int x, int y, int btype) {
-	xcord = x;
-	ycord = y;
-	revealed = false;
-	marked = false;
-	type = btype;
+Block::Block(int x, int y, int btype) {
+	mX = x;
+	mY = y;
+	mRevealed = false;
+	mMarked = false;
+	mType = btype;
 }
 
 ///////////////////////
 // Mutators
 ///////////////////////
 
-block::setx(int x) {
-	xcord = x;
+void Block::setX(int x) {
+	mX = x;
 }
 
-block::sety(int y) {
-	ycord = y;
+void Block::setY(int y) {
+	mY = y;
 }
 
-block::setrevealed(bool reveal) {
-	revealed = reveal;
+void Block::setRevealed(bool reveal) {
+	mRevealed = reveal;
 }
 
-block::setmarked(bool mark) {
-	marked = mark;
+void Block::setMarked(bool mark) {
+	mMarked = mark;
 }
 
-block::settype(int btype) {
-	type = btype;
-}
-
-block::formatblock(int x, int y) {
+void Block::setType(int btype) {
+	mType = btype;
 }
 
 ///////////////////////
 // Accessors
 ///////////////////////
 
-int block::getx() {
-	return xcord;
+int Block::getX() {
+	return mX;
 }
 
-int block::gety() {
-	return ycord;
+int Block::getY() {
+	return mY;
 }
 
-bool block::getrevealed() {
-	return revealed;
+bool Block::isRevealed() {
+	return mRevealed;
 }
 
-bool block::getmarked() {
-	return marked;
+bool Block::isMarked() {
+	return mMarked;
 }
 
-int block::gettype() {
-	return type;
+int Block::getType() {
+	return mType;
 }
 
