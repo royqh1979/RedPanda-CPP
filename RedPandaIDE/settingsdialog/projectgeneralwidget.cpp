@@ -104,9 +104,10 @@ void ProjectGeneralWidget::doSave()
 
     project->options().isCpp = ui->cbDefaultCpp->isChecked();
     project->options().supportXPThemes = ui->cbSupportXPTheme->isChecked();
+    qDebug()<<"iconpath"<<mIconPath;
     if (mIconPath.isEmpty()
 #if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
-            || !ui->lbIcon->pixmap(Qt::ReturnByValue).isNull()) {
+            || ui->lbIcon->pixmap(Qt::ReturnByValue).isNull()) {
 #else
             || !ui->lbIcon->pixmap() || ui->lbIcon->pixmap()->isNull()) {
 #endif
@@ -130,7 +131,7 @@ void ProjectGeneralWidget::doSave()
                 ui->lbIcon->pixmap()->save(iconPath,"ico");
 #endif
             } else
-                QFile::copy(mIconPath, iconPath);
+                copyFile(mIconPath, iconPath,true);
             project->options().icon = iconPath;
             mIconPath = iconPath;
             refreshIcon();
@@ -148,7 +149,6 @@ void ProjectGeneralWidget::on_btnBrowse_clicked()
                                                     tr("Image Files (*.ico *.png *.jpg)"));
     if (!fileName.isEmpty()) {
         mIconPath = fileName;
-        QPixmap icon(mIconPath);
         refreshIcon();
         setSettingsChanged();
     }

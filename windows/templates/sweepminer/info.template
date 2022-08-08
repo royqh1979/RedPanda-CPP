@@ -1,0 +1,22 @@
+[Template]
+Ver = 3
+Name = Sweepminer
+Name[zh_CN] = 扫雷
+Category = Game
+Category[zh_CN] = 游戏
+Description = Classic sweepminer game by raylib
+Description[zh_CN] = 使用raylib编写的经典扫雷游戏
+Icon = app.ico
+
+
+[Project]
+Type = 1
+Linker = -lraylib -lopengl32 -lgdi32 -lwinmm
+IsCpp = true
+ExecEncoding = UTF-8
+UnitCount = 1
+
+
+[Unit0]
+C = main.c
+CName = main.c

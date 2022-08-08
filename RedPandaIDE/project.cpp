@@ -900,8 +900,8 @@ bool Project::saveAsTemplate(const QString &templateFolder,
     if (mOptions.execEncoding!=ENCODING_SYSTEM_DEFAULT)
         ini->SetValue("Project","ExecEncoding", mOptions.execEncoding);
 
-    if (!mOptions.staticLink)
-        ini->SetBoolValue("Project", "StaticLink",false);
+//    if (!mOptions.staticLink)
+//        ini->SetBoolValue("Project", "StaticLink",false);
     if (!mOptions.addCharset)
         ini->SetBoolValue("Project", "AddCharset",false);
     if (mOptions.encoding!=ENCODING_AUTO_DETECT)
