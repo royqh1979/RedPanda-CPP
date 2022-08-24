@@ -31,21 +31,14 @@ EditorsTabWidget::EditorsTabWidget(QWidget* parent):QTabWidget(parent)
 void EditorsTabWidget::dropEvent(QDropEvent *event)
 {
     if (event->mimeData()->hasUrls()) {
+        QStringList files;
         foreach(const QUrl& url, event->mimeData()->urls()){
             if (!url.isLocalFile())
                 continue;
             QString file = url.toLocalFile();
-            if (getFileType(file)==FileType::Project) {
-                pMainWindow->openProject(file);
-                return;
-            }
+            files.append(file);
         }
-        foreach(const QUrl& url, event->mimeData()->urls()){
-            if (!url.isLocalFile())
-                continue;
-            QString file = url.toLocalFile();
-            pMainWindow->openFile(file,this);
-        }
+        pMainWindow->openFiles(files);
     }
 }
 

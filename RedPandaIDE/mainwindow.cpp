@@ -110,6 +110,7 @@ MainWindow::MainWindow(QWidget *parent)
       mCheckSyntaxInBack(false),
       mShouldRemoveAllSettings(false),
       mClosing(false),
+      mClosingAll(false),
       mOpenningFiles(false),
       mSystemTurnedOff(false)
 {
@@ -877,7 +878,7 @@ void MainWindow::onFileSaved(const QString &path, bool inProject)
             ui->treeFiles->update(index);
         }
     }
-    pMainWindow->updateForEncodingInfo();
+    //updateForEncodingInfo();
 }
 
 void MainWindow::updateAppTitle()
@@ -1160,17 +1161,25 @@ void MainWindow::openFiles(const QStringList &files)
         }
     }
     //Didn't find a project? Open all files
-    for (const QString& file:files) {
-        openFile(file);
+    for (int i=0;i<files.length()-1;i++) {
+        openFile(files[i],false);
+    }
+    if (files.length()>0) {
+        openFile(files.last(),true);
     }
     mEditorList->endUpdate();
+    Editor* e=mEditorList->getEditor();
+    if (e)
+        e->activate();
 }
 
-void MainWindow::openFile(const QString &filename, QTabWidget* page)
+void MainWindow::openFile(const QString &filename, bool activate, QTabWidget* page)
 {
     Editor* editor = mEditorList->getOpenedEditorByFilename(filename);
     if (editor!=nullptr) {
-        editor->activate();
+        if (activate) {
+            editor->activate();
+        }
         return;
     }
     try {
@@ -1187,8 +1196,10 @@ void MainWindow::openFile(const QString &filename, QTabWidget* page)
 //        if (mProject) {
 //            mProject->associateEditorToUnit(editor,unit);
 //        }
-        editor->activate();
-        this->updateForEncodingInfo();
+        if (activate) {
+            editor->activate();
+        }
+//        editor->activate();
     } catch (FileError e) {
         QMessageBox::critical(this,tr("Error"),e.reason());
     }
@@ -1263,7 +1274,7 @@ void MainWindow::openProject(const QString &filename, bool openFiles)
         updateCompilerSet();
         updateClassBrowserForEditor(e);
     }
-    updateForEncodingInfo();
+    //updateForEncodingInfo();
 }
 
 void MainWindow::changeOptions(const QString &widgetName, const QString &groupName)
@@ -2230,7 +2241,7 @@ void MainWindow::loadLastOpens()
     }
     if (count>0) {
         updateEditorActions();
-        updateForEncodingInfo();
+        //updateForEncodingInfo();
     }
     if (focusedEditor)
         focusedEditor->activate();
@@ -2298,7 +2309,7 @@ void MainWindow::newEditor()
                                                pSettings->editor().defaultEncoding(),
                                                false,true);
         editor->activate();
-        updateForEncodingInfo();
+        //updateForEncodingInfo();
     }  catch (FileError e) {
         QMessageBox::critical(this,tr("Error"),e.reason());
     }
@@ -4510,11 +4521,14 @@ void MainWindow::closeEvent(QCloseEvent *event) {
         }
     }
 
+    mClosingAll=true;
     if (!mEditorList->closeAll(false)) {
+        mClosingAll=false;
         mQuitting = false;
         event->ignore();
         return ;
     }
+    mClosingAll=false;
 
     if (!mShouldRemoveAllSettings && pSettings->editor().autoLoadLastFiles()) {
         if (mProject) {
@@ -5542,9 +5556,11 @@ void MainWindow::on_actionClose_triggered()
 
 void MainWindow::on_actionClose_All_triggered()
 {
+    mClosingAll=true;
     mClosing = true;
     mEditorList->closeAll(mSystemTurnedOff);
     mClosing = false;
+    mClosingAll=false;
 }
 
 
@@ -8087,5 +8103,15 @@ void MainWindow::on_actionNew_Template_triggered()
                     dialog.getCategory()
                     );
     }
+}
+
+bool MainWindow::isQuitting() const
+{
+    return mQuitting;
+}
+
+bool MainWindow::isClosingAll() const
+{
+    return mClosingAll;
 }
 

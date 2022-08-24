@@ -959,6 +959,11 @@ QSet<QString> CppParser::scannedFiles()
     return mPreprocessor.scannedFiles();
 }
 
+bool CppParser::isFileParsed(const QString &filename)
+{
+    return mPreprocessor.scannedFiles().contains(filename);
+}
+
 QString CppParser::getScopePrefix(const PStatement& statement){
     switch (statement->classScope) {
     case StatementClassScope::scsPublic:

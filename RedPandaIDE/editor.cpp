@@ -1283,16 +1283,21 @@ void Editor::showEvent(QShowEvent */*event*/)
             && !inProject()) {
         initParser();
     }
-    if (mParser) {
+    if (mParser && !pMainWindow->isClosingAll()
+            && !pMainWindow->isQuitting()
+            && !mParser->isFileParsed(mFilename)
+            ) {
         connect(mParser.get(),
                 &CppParser::onEndParsing,
                 this,
                 &SynEdit::invalidate);
-    }
-    if (pSettings->codeCompletion().clearWhenEditorHidden()
-            && !inProject()) {
         reparse();
     }
+
+//    if (pSettings->codeCompletion().clearWhenEditorHidden()
+//            && !inProject()) {
+//        reparse();
+//    }
     reparseTodo();
     setHideTime(QDateTime());
 }
@@ -1540,11 +1545,13 @@ void Editor::onStatusChanged(SynStatusChanges changes)
             && !changes.testFlag(SynStatusChange::scReadOnly)
             && changes.testFlag(SynStatusChange::scCaretY))) {
         mCurrentLineModified = false;
-        if (pSettings->codeCompletion().clearWhenEditorHidden()
-                && changes.testFlag(SynStatusChange::scOpenFile)) {
-        } else{
+        if (!changes.testFlag(SynStatusChange::scOpenFile))
             reparse();
-        }
+//        if (pSettings->codeCompletion().clearWhenEditorHidden()
+//                && changes.testFlag(SynStatusChange::scOpenFile)) {
+//        } else{
+//            reparse();
+//        }
         if (pSettings->editor().syntaxCheckWhenLineChanged())
             checkSyntaxInBack();
         reparseTodo();

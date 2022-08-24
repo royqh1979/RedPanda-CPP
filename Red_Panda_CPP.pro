@@ -23,7 +23,7 @@ SUBDIRS += \
 
 APP_NAME = RedPandaCPP
 
-APP_VERSION = 1.2
+APP_VERSION = 1.3
 
 linux: {
     isEmpty(PREFIX) {

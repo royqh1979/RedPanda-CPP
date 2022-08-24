@@ -1,3 +1,8 @@
+Red Panda C++ Version 1.3
+
+  - enhancement: don't parse all openned files when start up
+  - enhancement: don't parse files when close all and exit
+
 Red Panda C++ Version 1.2
 
   - enhancement: Portuguese Translation ( Thanks for crcpucmg@github)
