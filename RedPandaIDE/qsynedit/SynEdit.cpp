@@ -2005,7 +2005,13 @@ void SynEdit::doMouseScroll(bool isDragging)
         if (mOptions.testFlag(SynEditorOption::eoGroupUndo))
             mUndoList->addGroupBreak();
     }
-    computeScroll(isDragging);
+    if (isDragging) {
+        mScrollTimer->singleShot(20,this,&SynEdit::onDraggingScrollTimeout);
+    } else  {
+        mScrollTimer->singleShot(20,this,&SynEdit::onScrollTimeout);
+    }
+
+//    computeScroll(isDragging);
 }
 
 QString SynEdit::getDisplayStringAtLine(int line) const
@@ -2756,11 +2762,7 @@ void SynEdit::computeScroll(bool isDragging)
 
 
 //    if (mScrollDeltaX!=0 || mScrollDeltaY!=0) {
-    if (isDragging) {
-        mScrollTimer->singleShot(100,this,&SynEdit::onDraggingScrollTimeout);
-    } else  {
-        mScrollTimer->singleShot(100,this,&SynEdit::onScrollTimeout);
-    }
+    doMouseScroll(isDragging);
 //    }
 }
 
@@ -6947,10 +6949,12 @@ void SynEdit::onGutterChanged()
 
 void SynEdit::onScrollTimeout()
 {
-    doMouseScroll(false);
+    computeScroll(false);
+    //doMouseScroll(false);
 }
 
 void SynEdit::onDraggingScrollTimeout()
 {
-    doMouseScroll(true);
+    computeScroll(true);
+    //doMouseScroll(true);
 }

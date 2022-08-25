@@ -2,6 +2,7 @@ Red Panda C++ Version 1.3
 
   - enhancement: don't parse all openned files when start up
   - enhancement: don't parse files when close all and exit
+  - change: reduce time intervals for selection by mouse
 
 Red Panda C++ Version 1.2
 
