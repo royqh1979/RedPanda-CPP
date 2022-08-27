@@ -3886,7 +3886,7 @@ void Settings::CodeCompletion::doLoad()
     statex.dwLength = sizeof (statex);
 
     GlobalMemoryStatusEx (&statex);
-    if (statex.ullAvailPhys > (long long int)3*1024*1024*1024) {
+    if (statex.ullAvailPhys > (long long int)10*1024*1024*1024) {
         doClear = false;
     }
 #endif

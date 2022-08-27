@@ -1279,10 +1279,10 @@ void Editor::closeEvent(QCloseEvent *)
 
 void Editor::showEvent(QShowEvent */*event*/)
 {
-    if (pSettings->codeCompletion().clearWhenEditorHidden()
-            && !inProject()) {
-        initParser();
-    }
+//    if (pSettings->codeCompletion().clearWhenEditorHidden()
+//            && !inProject()) {
+////        initParser();
+//    }
     if (mParser && !pMainWindow->isClosingAll()
             && !pMainWindow->isQuitting()
             && !mParser->isFileParsed(mFilename)
@@ -1311,8 +1311,10 @@ void Editor::hideEvent(QHideEvent */*event*/)
                 &SynEdit::invalidate);
     }
     if (pSettings->codeCompletion().clearWhenEditorHidden()
-            && !inProject() && mParser)
+            && !inProject() && mParser
+            && !pMainWindow->isMinimized()) {
         mParser->reset();
+    }
     setHideTime(QDateTime::currentDateTime());
 }
 
