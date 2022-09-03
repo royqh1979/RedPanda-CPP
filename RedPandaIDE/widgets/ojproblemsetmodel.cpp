@@ -21,6 +21,7 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QMimeData>
 #include "../utils.h"
 #include "../iconsmanager.h"
 #include "../systemconsts.h"
@@ -241,9 +242,45 @@ bool OJProblemSetModel::setData(const QModelIndex &index, const QVariant &value,
     return false;
 }
 
-Qt::ItemFlags OJProblemSetModel::flags(const QModelIndex &) const
+Qt::ItemFlags OJProblemSetModel::flags(const QModelIndex &index) const
 {
-    return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable;
+    Qt::ItemFlags flags = Qt::NoItemFlags;
+    if (index.isValid()) {
+        flags = Qt::ItemIsEnabled | Qt::ItemIsDragEnabled | Qt::ItemIsEditable | Qt::ItemIsSelectable | Qt::ItemIsDropEnabled;
+    } else if (index.row() == -1) {
+        // -1 means it's a drop target?
+        flags = Qt::ItemIsDropEnabled;
+    }
+    return flags ;
+}
+
+Qt::DropActions OJProblemSetModel::supportedDropActions() const
+{
+    return Qt::DropAction::MoveAction;
+}
+
+bool OJProblemSetModel::moveRows(const QModelIndex &sourceParent, int sourceRow, int count, const QModelIndex &destinationParent, int destinationChild)
+{
+    if (sourceRow < 0
+        || sourceRow + count - 1 >= mProblemSet.problems.count()
+        || destinationChild < 0
+        || destinationChild > mProblemSet.problems.count()
+        || sourceRow == destinationChild
+        || count <= 0) {
+        return false;
+    }
+    if (!beginMoveRows(QModelIndex(), sourceRow, sourceRow + count - 1, QModelIndex(), destinationChild))
+        return false;
+
+    int fromRow = sourceRow;
+    if (destinationChild < sourceRow)
+        fromRow += count - 1;
+    else
+        destinationChild--;
+    while (count--)
+        mProblemSet.problems.move(fromRow, destinationChild);
+    endMoveRows();
+    return true;
 }
 
 OJProblemModel::OJProblemModel(QObject *parent): QAbstractTableModel(parent)
@@ -441,6 +478,9 @@ Qt::ItemFlags OJProblemModel::flags(const QModelIndex &idx) const
     Qt::ItemFlags flags=Qt::ItemIsEnabled | Qt::ItemIsSelectable;
     if (idx.column()==0)
         flags |= Qt::ItemIsEditable ;
+    if (idx.isValid())
+        flags |= Qt::ItemIsDragEnabled;
+    flags |= Qt::ItemIsDropEnabled;
     return flags;
 }
 
@@ -461,3 +501,47 @@ QVariant OJProblemModel::headerData(int section, Qt::Orientation orientation, in
     }
     return QVariant();
 }
+
+Qt::DropActions OJProblemModel::supportedDropActions() const
+{
+    return Qt::DropAction::MoveAction;
+}
+
+bool OJProblemModel::dropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent)
+{
+    mMoveTargetRow=row;
+    return  QAbstractTableModel::dropMimeData(data,action,row,0,parent);
+}
+
+bool OJProblemModel::insertRows(int row, int count, const QModelIndex &parent)
+{
+    return true;
+}
+
+bool OJProblemModel::removeRows(int row, int count, const QModelIndex &parent)
+{
+    int sourceRow = row;
+    int destinationChild = mMoveTargetRow;
+    mMoveTargetRow=-1;
+    if (sourceRow < 0
+        || sourceRow + count - 1 >= mProblem->cases.count()
+        || destinationChild < 0
+        || destinationChild > mProblem->cases.count()
+        || sourceRow == destinationChild
+        || count <= 0) {
+        return false;
+    }
+    if (!beginMoveRows(QModelIndex(), sourceRow, sourceRow + count - 1, QModelIndex(), destinationChild))
+        return false;
+
+    int fromRow = sourceRow;
+    if (destinationChild < sourceRow)
+        fromRow += count - 1;
+    else
+        destinationChild--;
+    while (count--)
+        mProblem->cases.move(fromRow, destinationChild);
+    endMoveRows();
+    return true;
+}
+
