@@ -510,6 +510,8 @@ Qt::DropActions OJProblemModel::supportedDropActions() const
 bool OJProblemModel::dropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent)
 {
     mMoveTargetRow=row;
+    if (mMoveTargetRow==-1)
+        mMoveTargetRow=mProblem->cases.length();
     return  QAbstractTableModel::dropMimeData(data,action,row,0,parent);
 }
 
