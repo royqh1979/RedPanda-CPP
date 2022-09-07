@@ -5,6 +5,7 @@ Red Panda C++ Version 1.3
   - change: reduce time intervals for selection by mouse
   - enhancement: change orders of the problems in the problem set panel by drag&drop
   - enhancement: change orders of the problem cases in the problem panel by drag&drop
+  - fix: the size of horizontal caret is wrong
 
 Red Panda C++ Version 1.2
 

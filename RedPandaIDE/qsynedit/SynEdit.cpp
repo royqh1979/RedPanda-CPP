@@ -3971,7 +3971,7 @@ void SynEdit::paintCaret(QPainter &painter, const QRect rcClip)
         QRect caretRC;
         int size = std::max(1,mTextHeight/15);
         caretRC.setLeft(rcClip.left());
-        caretRC.setTop(rcClip.bottom()-1+size);
+        caretRC.setTop(rcClip.bottom()-1-size);
         caretRC.setBottom(rcClip.bottom()-1);
         caretRC.setRight(rcClip.right());
         painter.fillRect(caretRC,caretColor);
