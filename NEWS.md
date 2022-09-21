@@ -1,3 +1,7 @@
+Red Panda C++ Version 1.4
+
+  - fix: "Encode in UTF-8" is not correctly checked, when the editor is openned using UTF-8 encoding.
+
 Red Panda C++ Version 1.3
 
   - enhancement: don't parse all openned files when start up

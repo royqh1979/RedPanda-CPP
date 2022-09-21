@@ -395,7 +395,7 @@ void MainWindow::updateForEncodingInfo(bool clear) {
         ui->actionAuto_Detect->setChecked(editor->encodingOption() == ENCODING_AUTO_DETECT);
         ui->actionEncode_in_ANSI->setChecked(editor->encodingOption() == ENCODING_SYSTEM_DEFAULT);
         ui->actionEncode_in_UTF_8->setChecked(editor->encodingOption() == ENCODING_UTF8);
-        ui->actionEncode_in_UTF_8->setChecked(editor->encodingOption() == ENCODING_UTF8_BOM);
+        ui->actionEncode_in_UTF_8_BOM->setChecked(editor->encodingOption() == ENCODING_UTF8_BOM);
     } else {
         mFileEncodingStatus->setText("");
         ui->actionAuto_Detect->setChecked(false);
