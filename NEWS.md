@@ -1,6 +1,9 @@
 Red Panda C++ Version 1.4
 
   - fix: "Encode in UTF-8" is not correctly checked, when the editor is openned using UTF-8 encoding.
+  - fix: crash when create non C/C++ source file in project
+  - fix: can't open text project file in the editor
+  - change: when create non-text project file, don't auto open it
 
 Red Panda C++ Version 1.3
 

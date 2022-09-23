@@ -6179,7 +6179,7 @@ void MainWindow::newProjectUnitFile()
                     newProjectUnitDialog.setSuffix("c");
                 break;
             default:
-                newProjectUnitDialog.setSuffix("");
+                newProjectUnitDialog.setSuffix("txt");
             }
         }
         QString folder = mProject->fileSystemNodeFolderPath(pNode);
@@ -6221,10 +6221,11 @@ void MainWindow::newProjectUnitFile()
     mProject->saveAll();
         updateProjectView();
     idx = mProject->units().count()-1;
-    Editor * editor = mProject->openUnit(idx);
+    Editor * editor = mProject->openUnit(idx, false);
     //editor->setUseCppSyntax(mProject->options().useGPP);
     //editor->setModified(true);
-    editor->activate();
+    if (editor)
+        editor->activate();
     QString branch;
     if (pSettings->vcs().gitOk() && mProject->model()->iconProvider()->VCSRepository()->hasRepository(branch)) {
         QString output;

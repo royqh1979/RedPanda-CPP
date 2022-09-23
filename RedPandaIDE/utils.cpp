@@ -40,6 +40,7 @@
 #include "project.h"
 #include "compiler/executablerunner.h"
 #ifdef Q_OS_WIN
+#include <QMimeDatabase>
 #include <windows.h>
 #endif
 
@@ -274,6 +275,11 @@ FileType getFileType(const QString &filename)
         return FileType::Text;
     }
     if (filename.endsWith(".dat",PATH_SENSITIVITY)) {
+        return FileType::Text;
+    }
+    QMimeDatabase db;
+    QMimeType mimeType=db.mimeTypeForFile(filename);
+    if (mimeType.isValid() && mimeType.name().startsWith("text/")) {
         return FileType::Text;
     }
     return FileType::Other;

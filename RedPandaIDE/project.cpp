@@ -309,7 +309,7 @@ PProjectUnit Project::newUnit(PProjectModelNode parentNode, const QString& custo
     return newUnit;
 }
 
-Editor *Project::openUnit(int index)
+Editor *Project::openUnit(int index, bool forceOpen)
 {
     if ((index < 0) || (index >= mUnits.count()))
         return nullptr;
@@ -318,11 +318,8 @@ Editor *Project::openUnit(int index)
 
     if (!unit->fileName().isEmpty() && fileExists(unit->fileName())) {
         if (getFileType(unit->fileName())==FileType::Other) {
-            QMimeDatabase db;
-            QMimeType mimeType=db.mimeTypeForFile(unit->fileName());
-            if (!mimeType.isValid() || !mimeType.name().startsWith("text/")) {
+            if (forceOpen)
                 QDesktopServices::openUrl(QUrl::fromLocalFile(unit->fileName()));
-            }
             return nullptr;
         }
 
