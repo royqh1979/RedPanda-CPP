@@ -1769,6 +1769,28 @@ void Project::loadOptions(SimpleIni& ini)
             QByteArray oldCompilerOptions = ini.GetValue("Project", "CompilerSettings", "");
             if (!oldCompilerOptions.isEmpty()) {
                 //version 2 compatibility
+                // test if it is created by old dev-c++
+                SimpleIni::TNamesDepend oKeys;
+                ini.GetAllKeys("Project", oKeys);
+                bool isNewDev=false;
+                for(const SimpleIni::Entry& entry:oKeys) {
+                    QString key(entry.pItem);
+                    if (key=="UsePrecompiledHeader"
+                            || key == "CompilerSetType"
+                            || key == "StaticLink"
+                            || key == "AddCharset"
+                            || key == "ExecEncoding"
+                            || key == "Encoding"
+                            || key == "UseUTF8") {
+                        isNewDev = true;
+                        break;
+                    }
+                }
+                if (!isNewDev && oldCompilerOptions.length()>=25) {
+                    char t = oldCompilerOptions[18];
+                    oldCompilerOptions[18]=oldCompilerOptions[21];
+                    oldCompilerOptions[21]=t;
+                }
                 for (int i=0;i<oldCompilerOptions.length();i++) {
                     QString key = pSettings->compilerSets().getKeyFromCompilerCompatibleIndex(i);
                     PCompilerOption pOption = CompilerInfoManager::getCompilerOption(

@@ -4,6 +4,7 @@ Red Panda C++ Version 1.4
   - fix: crash when create non C/C++ source file in project
   - fix: can't open text project file in the editor
   - change: when create non-text project file, don't auto open it
+  - fix: the project compiler options is not correctly read  when open old dev-c++ project 
 
 Red Panda C++ Version 1.3
 

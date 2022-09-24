@@ -2893,7 +2893,7 @@ void Settings::CompilerSets::prepareCompatibleIndex()
 
     //old settings compatibility, don't reorder, add or remove items
     mCompilerCompatibleIndex.append(CC_CMD_OPT_ANSI);
-    mCompilerCompatibleIndex.append(CC_CMD_OPT_NO_ASM "gcc_cmd_opt_no_asm");
+    mCompilerCompatibleIndex.append(CC_CMD_OPT_NO_ASM);
     mCompilerCompatibleIndex.append(CC_CMD_OPT_TRADITIONAL_CPP);
 
     mCompilerCompatibleIndex.append(CC_CMD_OPT_ARCH);
