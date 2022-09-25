@@ -20,7 +20,7 @@
 #include <QObject>
 #include <utils.h>
 #include <QTabWidget>
-#include "qsynedit/SynEdit.h"
+#include "SynEdit.h"
 #include "colorscheme.h"
 #include "common.h"
 #include "parser/cppparser.h"

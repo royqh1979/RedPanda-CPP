@@ -59,3 +59,6 @@ HEADERS += Search.h \
     highlighter/composition.h \
     highlighter/cpp.h \
     highlighter/glsl.h \
+
+INCLUDEPATH += ../redpanda_qt_utils
+LIBS += -lredpand_qt_utils

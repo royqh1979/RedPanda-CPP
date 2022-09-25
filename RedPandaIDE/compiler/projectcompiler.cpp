@@ -18,7 +18,7 @@
 #include "../project.h"
 #include "compilermanager.h"
 #include "../systemconsts.h"
-#include "../platform.h"
+#include "charsetinfo.h"
 #include "../editor.h"
 
 #include <QDir>

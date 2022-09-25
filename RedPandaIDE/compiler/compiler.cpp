@@ -30,7 +30,7 @@
 #include "../editorlist.h"
 #include "../parser/cppparser.h"
 #include "../autolinkmanager.h"
-#include "../platform.h"
+#include "charsetinfo.h"
 #include "../project.h"
 
 #define COMPILE_PROCESS_END "---//END//----"

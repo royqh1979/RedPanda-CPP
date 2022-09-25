@@ -17,10 +17,10 @@
 #include "HighlighterManager.h"
 #include <QFileInfo>
 #include <QObject>
-#include "qsynedit/highlighter/cpp.h"
-#include "qsynedit/highlighter/asm.h"
-#include "qsynedit/highlighter/glsl.h"
-#include "qsynedit/Constants.h"
+#include "highlighter/cpp.h"
+#include "highlighter/asm.h"
+#include "highlighter/glsl.h"
+#include "Constants.h"
 #include "colorscheme.h"
 
 HighlighterManager highlighterManager;

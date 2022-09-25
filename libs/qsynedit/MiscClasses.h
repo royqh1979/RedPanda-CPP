@@ -24,25 +24,6 @@
 
 namespace QSynedit {
 
-class BaseError{
-public:
-    explicit BaseError(const QString& reason) ;
-    QString reason() const;
-
-protected:
-    QString mReason;
-};
-
-class IndexOutOfRange:public BaseError {
-public:
-    explicit IndexOutOfRange(int Index);
-};
-
-class FileError: public BaseError {
-public:
-    explicit FileError(const QString& reason);
-};
-
 enum class SynGutterBorderStyle {
     None,
     Middle,

@@ -14,8 +14,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef QT_UTILS_UTILS_H
-#define QT_UTILS_UTILS_H
+#ifndef REDPANDA_UTILS_H
+#define REDPANDA_UTILS_H
 #include <type_traits>
 #include <utility>
 #include <functional>
@@ -25,14 +25,10 @@
 #include <memory>
 #include <QThread>
 #include <QProcessEnvironment>
-#include "SimpleIni.h"
 
 class QByteArray;
 class QTextStream;
 class QTextCodec;
-
-using SimpleIni = CSimpleIniA;
-using PSimpleIni = std::shared_ptr<SimpleIni>;
 
 #define ENCODING_AUTO_DETECT "AUTO"
 #define ENCODING_UTF8   "UTF-8"
@@ -40,72 +36,11 @@ using PSimpleIni = std::shared_ptr<SimpleIni>;
 #define ENCODING_SYSTEM_DEFAULT   "SYSTEM"
 #define ENCODING_ASCII  "ASCII"
 
-enum class FileType{
-    CSource, // c source file (.c)
-    CppSource, // c++ source file (.cpp)
-    CHeader, // c header (.h)
-    CppHeader, // c++ header (.hpp)
-    WindowsResourceSource, // resource source (.res)
-    Project, //Red Panda C++ Project (.dev)
-    Text, // text file
-    Other // any others
-};
-
 enum class FileEndingType {
     Windows,
     Linux,
     Mac
 };// Windows: CRLF, UNIX: LF, Mac: CR
-
-enum class SearchFileScope {
-    currentFile,
-    wholeProject,
-    openedFiles
-};
-
-enum AutoSaveTarget {
-    astCurrentFile,
-    astAllOpennedFiles,
-    astAllProjectFiles
-};
-
-enum AutoSaveStrategy {
-    assOverwrite,
-    assAppendUnixTimestamp,
-    assAppendFormatedTimeStamp
-};
-
-enum FormatterBraceStyle {
-    fbsDefault,
-    fbsAllman,
-    fbsJava,
-    fbsKR,
-    fbsStroustrup,
-    fbsWitesmith,
-    fbsVtk,
-    fbsRatliff,
-    fbsGNU,
-    fbsLinux,
-    fbsHorstmann,
-    fbs1TBS,
-    fbsGoogle,
-    fbsMozilla,
-    fbsWebkit,
-    fbsPico,
-    fbsLisp
-};
-
-enum FormatterOperatorAlign {
-    foaNone,
-    foaType,
-    foaMiddle,
-    foaName
-};
-
-enum FormatterIndentType {
-    fitSpace,
-    fitTab
-};
 
 class BaseError{
 public:
@@ -126,54 +61,36 @@ public:
     explicit FileError(const QString& reason);
 };
 
-typedef void (*LineOutputFunc) (const QString& line);
-typedef bool (*CheckAbortFunc) ();
-bool isGreenEdition();
-
-const QByteArray GuessTextEncoding(const QByteArray& text);
+/* text processing utils */
+const QByteArray guessTextEncoding(const QByteArray& text);
 
 bool isTextAllAscii(const QByteArray& text);
 bool isTextAllAscii(const QString& text);
 
-QByteArray runAndGetOutput(const QString& cmd, const QString& workingDir, const QStringList& arguments,
-                           const QByteArray& inputContent = QByteArray(),
-                           bool inheritEnvironment = false,
-                           const QProcessEnvironment& env = QProcessEnvironment() );
-
-void executeFile(const QString& fileName,
-                 const QString& params,
-                 const QString& workingDir,
-                 const QString& tempFile);
-
 bool isNonPrintableAsciiChar(char ch);
 
-bool fileExists(const QString& file);
-bool fileExists(const QString& dir, const QString& fileName);
-bool directoryExists(const QString& file);
-bool removeFile(const QString& filename);
-QString includeTrailingPathDelimiter(const QString& path);
-QString excludeTrailingPathDelimiter(const QString& path);
-FileType getFileType(const QString& filename);
-QString changeFileExt(const QString& filename, QString ext);
-QString extractRelativePath(const QString& base, const QString& dest);
-QString genMakePath(const QString& fileName,bool escapeSpaces, bool encloseInQuotes);
-QString genMakePath1(const QString& fileName);
-QString genMakePath2(const QString& fileName);
-QString getCompiledExecutableName(const QString& filename);
-void splitStringArguments(const QString& arguments, QStringList& argumentList);
-bool programHasConsole(const QString& filename);
 using LineProcessFunc =  std::function<void(const QString&)>;
-
-QStringList readStreamToLines(QTextStream* stream);
-void readStreamToLines(QTextStream* stream, LineProcessFunc lineFunc);
 
 QStringList textToLines(const QString& text);
 void textToLines(const QString& text, LineProcessFunc lineFunc);
-QString linesToText(const QStringList& lines);
+QString linesToText(const QStringList& lines, const QString& lineBreak="\n");
 
 QList<QByteArray> splitByteArrayToLines(const QByteArray& content);
 
-QString parseMacros(const QString& s);
+QString trimRight(const QString& s);
+QString trimLeft(const QString& s);
+
+int countLeadingWhitespaceChars(const QString& line);
+
+bool stringIsBlank(const QString& s);
+
+QByteArray toByteArray(const QString& s);
+QString fromByteArray(const QByteArray& s);
+
+/* text I/O utils */
+
+QStringList readStreamToLines(QTextStream* stream);
+void readStreamToLines(QTextStream* stream, LineProcessFunc lineFunc);
 
 /**
  * @brief readFileToLines
@@ -183,61 +100,40 @@ QString parseMacros(const QString& s);
  */
 QStringList readFileToLines(const QString& fileName, QTextCodec* codec);
 QStringList readFileToLines(const QString& fileName);
-QByteArray readFileToByteArray(const QString& fileName);
 void readFileToLines(const QString& fileName, QTextCodec* codec, LineProcessFunc lineFunc);
+
+QByteArray readFileToByteArray(const QString& fileName);
+
 void stringsToFile(const QStringList& list, const QString& fileName);
 void stringToFile(const QString& str, const QString& fileName);
-int countLeadingWhitespaceChars(const QString& line);
 
-void decodeKey(int combinedKey, int& key, Qt::KeyboardModifiers& modifiers);
-void inflateRect(QRect& rect, int delta);
-void inflateRect(QRect& rect, int dx, int dy);
-QString trimRight(const QString& s);
-QString trimLeft(const QString& s);
-bool stringIsBlank(const QString& s);
-int compareFileModifiedTime(const QString& filename1, const QString& filename2);
-QByteArray getHTTPBody(const QByteArray& content);
-bool haveGoodContrast(const QColor& c1, const QColor &c2);
-qulonglong stringToHex(const QString& str, bool &isOk);
+/* File I/O utils */
+bool fileExists(const QString& file);
+bool fileExists(const QString& dir, const QString& fileName);
+bool directoryExists(const QString& file);
+bool removeFile(const QString& filename);
+void copyFolder(const QString &fromDir, const QString& toDir);
+bool copyFile(const QString &fromFile, const QString& toFile, bool overwrite);
 
-//void changeTheme(const QString& themeName);
-
-bool findComplement(const QString& s,
-                       const QChar& fromToken,
-                       const QChar& toToken,
-                       int& curPos,
-                       int increment);
-void logToFile(const QString& s, const QString& filename, bool append=true);
+QString includeTrailingPathDelimiter(const QString& path);
+QString excludeTrailingPathDelimiter(const QString& path);
+QString changeFileExt(const QString& filename, QString ext);
 
 QString localizePath(const QString& path);
+
+QString extractRelativePath(const QString& base, const QString& dest);
 QString extractFileName(const QString& fileName);
 QString extractFileDir(const QString& fileName);
 QString extractFilePath(const QString& filePath);
 QString extractAbsoluteFilePath(const QString& filePath);
-QString getSizeString(int size);
+
 bool isReadOnly(const QString& filename);
 
+int compareFileModifiedTime(const QString& filename1, const QString& filename2);
 
-QByteArray toByteArray(const QString& s);
-QString fromByteArray(const QByteArray& s);
-
-int getNewFileNumber();
-
-enum class SplitProcessCommandQuoteType {
-    None,
-    Single,
-    Double
-};
-
-QStringList splitProcessCommand(const QString& cmd);
-
-
-#ifdef Q_OS_WIN
-bool readRegistry(HKEY key,const QByteArray& subKey, const QByteArray& name, QString& value);
-#endif
-
-class CppParser;
-void resetCppParser(std::shared_ptr<CppParser> parser, int compilerSetIndex=-1);
+/* UI utils */
+void inflateRect(QRect& rect, int delta);
+void inflateRect(QRect& rect, int dx, int dy);
 
 int screenDPI();
 void setScreenDPI(int dpi);
@@ -245,8 +141,7 @@ float pointToPixel(float point);
 float pointToPixel(float point, float dpi);
 float pixelToPoint(float pixel);
 
-void copyFolder(const QString &fromDir, const QString& toDir);
-bool copyFile(const QString &fromFile, const QString& toFile, bool overwrite);
+void decodeKey(int combinedKey, int& key, Qt::KeyboardModifiers& modifiers);
 
 
 /**

@@ -5,6 +5,7 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 CONFIG += c++17
 CONFIG += nokey
+CONFIG += staticlib
 
 win32: {
 DEFINES += _WIN32_WINNT=0x0601

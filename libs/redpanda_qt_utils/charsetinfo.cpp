@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#include "platform.h"
+#include "charsetinfo.h"
 #include <QObject>
 #include <memory>
 #include <QMap>

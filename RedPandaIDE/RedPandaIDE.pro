@@ -52,6 +52,8 @@ msvc {
 # In order to do so, uncomment the following line.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
+INCLUDEPATH += ../libs/qsynedit ../libs/redpanda_qt_utils
+
 SOURCES += \
     HighlighterManager.cpp \
     autolinkmanager.cpp \
@@ -65,7 +67,6 @@ SOURCES += \
     compiler/runner.cpp \
     customfileiconprovider.cpp \
     gdbmiresultparser.cpp \
-    platform.cpp \
     compiler/compiler.cpp \
     compiler/compilermanager.cpp \
     compiler/executablerunner.cpp \
@@ -207,7 +208,6 @@ HEADERS += \
     parser/cpptokenizer.h \
     parser/parserutils.h \
     parser/statementmodel.h \
-    platform.h \
     problems/ojproblemset.h \
     problems/problemcasevalidator.h \
     project.h \

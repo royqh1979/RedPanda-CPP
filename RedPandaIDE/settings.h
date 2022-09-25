@@ -23,8 +23,9 @@
 #include <QColor>
 #include <QString>
 #include <QPair>
-#include "qsynedit/SynEdit.h"
+#include "SynEdit.h"
 #include "compiler/compilerinfo.h"
+#include "utils.h"
 
 /**
  * use the following command to get gcc's default bin/library folders:

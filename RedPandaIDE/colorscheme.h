@@ -18,7 +18,7 @@
 #define COLORSCHEME_H
 
 #include <QColor>
-#include "qsynedit/highlighter/base.h"
+#include "highlighter/base.h"
 #include "parser/statementmodel.h"
 
 #define EXT_COLOR_SCHEME ".scheme"
