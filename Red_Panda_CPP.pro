@@ -2,23 +2,23 @@ TEMPLATE = subdirs
 
 SUBDIRS += \
     RedPandaIDE \
-    astyle \
-    consolepauser
+    tools\astyle \
+    tools\consolepauser
 
 # Add the dependencies so that the RedPandaIDE project can add the depended programs
 # into the main app bundle
-RedPandaIDE.depends = astyle consolepauser
+RedPandaIDE.depends = tools\astyle tools\consolepauser
 
 win32: {
 SUBDIRS += \
-    redpanda-win-git-askpass
-    RedPandaIDE.depends += redpanda-win-git-askpass
+    tools\redpanda-win-git-askpass
+    RedPandaIDE.depends += tools\redpanda-win-git-askpass
 }
 
 unix: {
 SUBDIRS += \
-    redpanda-git-askpass
-    RedPandaIDE.depends += redpanda-git-askpass
+    tools\redpanda-git-askpass
+    RedPandaIDE.depends += tools\redpanda-git-askpass
 }
 
 APP_NAME = RedPandaCPP
@@ -30,10 +30,10 @@ linux: {
         PREFIX = /usr/local
     }
 
-    QMAKE_SUBSTITUTES += linux/redpandaide.desktop.in
+    QMAKE_SUBSTITUTES += platform/linux/redpandaide.desktop.in
 
     resources.path = $${PREFIX}/share/$${APP_NAME}
-    resources.files += linux/templates
+    resources.files += platform/linux/templates
     INSTALLS += resources
 
     docs.path = $${PREFIX}/share/doc/$${APP_NAME}
@@ -43,26 +43,26 @@ linux: {
     INSTALLS += docs
 
     pixmaps.path = $${PREFIX}/share/pixmaps
-    pixmaps.files += linux/redpandaide.png
+    pixmaps.files += platform/linux/redpandaide.png
     INSTALLS += pixmaps
 
     desktop.path = $${PREFIX}/share/applications
-    desktop.files += linux/redpandaide.desktop
+    desktop.files += platform/linux/redpandaide.desktop
     INSTALLS += desktop
 }
 
 win32: {
     !isEmpty(PREFIX) {
         target.path = $${PREFIX}
-        QMAKE_SUBSTITUTES += windows/installer-scripts/config.nsh.in
-        QMAKE_SUBSTITUTES += windows/installer-scripts/config32.nsh.in
-        QMAKE_SUBSTITUTES += windows/installer-scripts/config-clang.nsh.in
+        QMAKE_SUBSTITUTES += platform/windows/installer-scripts/config.nsh.in
+        QMAKE_SUBSTITUTES += platform/windows/installer-scripts/config32.nsh.in
+        QMAKE_SUBSTITUTES += platform/windows/installer-scripts/config-clang.nsh.in
 
         resources.path = $${PREFIX}
-        resources.files += windows/templates
-        resources.files += windows/installer-scripts/config.nsh
-        resources.files += windows/installer-scripts/config32.nsh
-        resources.files += windows/installer-scripts/config-clang.nsh
+        resources.files += platform/windows/templates
+        resources.files += platform/windows/installer-scripts/config.nsh
+        resources.files += platform/windows/installer-scripts/config32.nsh
+        resources.files += platform/windows/installer-scripts/config-clang.nsh
         resources.files += README.md
         resources.files += NEWS.md
         resources.files += LICENSE
