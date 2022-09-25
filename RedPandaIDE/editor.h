@@ -53,7 +53,7 @@ private:
     QByteArray mReasonBuffer;
 };
 
-class Editor : public SynEdit
+class Editor : public QSynedit::SynEdit
 {
     Q_OBJECT
 public:
@@ -180,7 +180,7 @@ public:
     bool hasPrevSyntaxIssue() const;
     bool hasNextSyntaxIssue() const;
     PSyntaxIssueList getSyntaxIssuesAtLine(int line);
-    PSyntaxIssue getSyntaxIssueAtPosition(const BufferCoord& pos);
+    PSyntaxIssue getSyntaxIssueAtPosition(const QSynedit::BufferCoord& pos);
     int gutterClickedLine() const;
     void toggleBreakpoint(int line);
     void clearBreakpoints();
@@ -192,11 +192,11 @@ public:
     void removeBreakpointFocus();
     void modifyBreakpointProperty(int line);
     void setActiveBreakpointFocus(int Line, bool setFocus=true);
-    QString getPreviousWordAtPositionForSuggestion(const BufferCoord& p);
+    QString getPreviousWordAtPositionForSuggestion(const QSynedit::BufferCoord& p);
     void reformat();
     void checkSyntaxInBack();
-    void gotoDeclaration(const BufferCoord& pos);
-    void gotoDefinition(const BufferCoord& pos);
+    void gotoDeclaration(const QSynedit::BufferCoord& pos);
+    void gotoDefinition(const QSynedit::BufferCoord& pos);
     void reparse();
     void reparseTodo();
     void insertString(const QString& value, bool moveCursor);
@@ -216,12 +216,12 @@ public:
     void deleteToBOL();
 
     QStringList getOwnerExpressionAndMemberAtPositionForCompletion(
-            const BufferCoord& pos,
+            const QSynedit::BufferCoord& pos,
             QString& memberOperator,
             QStringList& memberExpression);
-    QString getWordForCompletionSearch(const BufferCoord& pos,bool permitTilde);
+    QString getWordForCompletionSearch(const QSynedit::BufferCoord& pos,bool permitTilde);
     QStringList getExpressionAtPosition(
-            const BufferCoord& pos);
+            const QSynedit::BufferCoord& pos);
 
     const PCppParser &parser();
 
@@ -230,7 +230,7 @@ signals:
     void renamed(const QString& oldName, const QString& newName, bool firstSave);
     void fileSaved(const QString& filename, bool inProject);
 private slots:
-    void onStatusChanged(SynStatusChanges changes);
+    void onStatusChanged(QSynedit::SynStatusChanges changes);
     void onGutterClicked(Qt::MouseButton button, int x, int y, int line);
     void onTipEvalValueReady(const QString& value);
     void onLinesDeleted(int first,int count);
@@ -272,7 +272,7 @@ private:
     bool onHeaderCompletionKeyPressed(QKeyEvent* event);
     bool onCompletionInputMethod(QInputMethodEvent *event);
 
-    TipType getTipType(QPoint point, BufferCoord& pos);
+    TipType getTipType(QPoint point, QSynedit::BufferCoord& pos);
     void cancelHint();
     QString getFileHint(const QString& s);
     QString getParserHint(const QStringList& expression,const QString& s, int line);
@@ -284,8 +284,8 @@ private:
     void updateFunctionTip(bool showTip);
     void clearUserCodeInTabStops();
     void popUserCodeInTabStops();
-    void onExportedFormatToken(PSynHighlighter syntaxHighlighter, int Line, int column, const QString& token,
-        PSynHighlighterAttribute &attr);
+    void onExportedFormatToken(QSynedit::PSynHighlighter syntaxHighlighter, int Line, int column, const QString& token,
+        QSynedit::PSynHighlighterAttribute &attr);
     void onScrollBarValueChanged();
 private:
     QByteArray mEncodingOption; // the encoding type set by the user
@@ -331,8 +331,8 @@ private:
     QString mLineBeforeTabStop;
     QString mLineAfterTabStop;
     QList<PTabStop> mUserCodeInTabStops;
-    BufferCoord mHighlightCharPos1;
-    BufferCoord mHighlightCharPos2;
+    QSynedit::BufferCoord mHighlightCharPos1;
+    QSynedit::BufferCoord mHighlightCharPos2;
     std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > mStatementColors;
     QTimer mFunctionTipTimer;
     int mHoverModifiedLine;
@@ -347,7 +347,7 @@ protected:
     // SynEdit interface
 protected:
     void onGutterPaint(QPainter &painter, int aLine, int X, int Y) override;
-    void onGetEditingAreas(int Line, SynEditingAreaList &areaList) override;
+    void onGetEditingAreas(int Line, QSynedit::SynEditingAreaList &areaList) override;
 
     // SynEdit interface
 protected:
@@ -355,7 +355,7 @@ protected:
 
     // SynEdit interface
 protected:
-    void onPreparePaintHighlightToken(int line, int aChar, const QString &token, PSynHighlighterAttribute attr, SynFontStyles &style, QColor &foreground, QColor &background) override;
+    void onPreparePaintHighlightToken(int line, int aChar, const QString &token, QSynedit::PSynHighlighterAttribute attr, QSynedit::SynFontStyles &style, QColor &foreground, QColor &background) override;
 
     // QObject interface
 public:
@@ -391,10 +391,10 @@ protected:
     void resizeEvent(QResizeEvent *event) Q_DECL_OVERRIDE;
 };
 
-QString getWordAtPosition(SynEdit* editor,
-                          const BufferCoord& p,
-                          BufferCoord& pWordBegin,
-                          BufferCoord& pWordEnd,
+QString getWordAtPosition(QSynedit::SynEdit* editor,
+                          const QSynedit::BufferCoord& p,
+                          QSynedit::BufferCoord& pWordBegin,
+                          QSynedit::BufferCoord& pWordEnd,
                           Editor::WordPurpose purpose);
 
 

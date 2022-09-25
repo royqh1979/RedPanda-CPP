@@ -20,6 +20,8 @@
 #include <cmath>
 #include <QDebug>
 
+namespace QSynedit {
+
 SynEditTextPainter::SynEditTextPainter(SynEdit *edit, QPainter *painter, int FirstRow, int LastRow, int FirstCol, int LastCol)
 {
     this->edit = edit;
@@ -1092,4 +1094,5 @@ void SynEditTextPainter::paintLines()
         }
         bCurrentLine = false;
     }
+}
 }

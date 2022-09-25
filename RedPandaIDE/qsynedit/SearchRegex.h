@@ -20,6 +20,7 @@
 
 #include <QRegularExpression>
 
+namespace QSynedit {
 class SynSearchRegex : public SynSearchBase
 {
     Q_OBJECT
@@ -42,5 +43,7 @@ private:
     QList<int> mLengths;
     QList<int> mResults;
 };
+
+}
 
 #endif // SYNSEARCHREGEX_H

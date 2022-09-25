@@ -20,8 +20,7 @@
 #include <QString>
 #include "../SynEdit.h"
 
-
-
+namespace QSynedit {
 using FormatTokenHandler = std::function<void(PSynHighlighter syntaxHighlighter, int Line, int column, const QString& token,
     PSynHighlighterAttribute& attr)>;
 class SynExporter
@@ -246,5 +245,6 @@ private:
     FormatTokenHandler mOnFormatToken;
 
 };
+}
 
 #endif // SYNEXPORTER_H

@@ -16,6 +16,8 @@
  */
 #include "Search.h"
 
+namespace QSynedit {
+
 SynSearch::SynSearch(QObject *parent):SynSearchBase(parent)
 {
 
@@ -80,4 +82,5 @@ QString SynSearch::replace(const QString &, const QString &aReplacement)
 bool SynSearch::isDelimitChar(QChar ch)
 {
     return !(ch == '_' || ch.isLetterOrNumber());
+}
 }

@@ -17,6 +17,8 @@
 #include "composition.h"
 #include "../Constants.h"
 
+namespace QSynedit {
+
 SynHighlightComposition::SynHighlightComposition()
 {
 
@@ -106,4 +108,6 @@ QString SynScheme::ConvertExpression(const QString &Value)
 }
 
 void SynScheme::MarkerAttriChanged() {
+}
+
 }

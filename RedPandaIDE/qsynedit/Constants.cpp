@@ -15,6 +15,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include "Constants.h"
+
+namespace QSynedit {
 const QSet<QChar> SynWordBreakChars{'.', ',', ';', ':',
       '"', '\'', '!', '?', '[', ']', '(', ')', '{', '}', '^', '-', '=', '+',
       '-', '*', '/', '\\', '|'};
@@ -23,3 +25,4 @@ const QChar SynTabGlyph(0x2192);
 const QChar SynSpaceGlyph('.');
 const QChar SynLineBreakGlyph(0x2193);
 const QChar SynSoftBreakGlyph(0x2193);
+}

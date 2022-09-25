@@ -19,6 +19,7 @@
 
 #include "base.h"
 
+namespace QSynedit {
 
 class SynEditASMHighlighter : public SynHighlighter
 {
@@ -98,5 +99,7 @@ public:
 public:
     QSet<QString> keywords() const override;
 };
+
+}
 
 #endif // SYNEDITASMHIGHLIGHTER_H

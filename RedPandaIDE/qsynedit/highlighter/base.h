@@ -26,6 +26,7 @@
 #include <QVector>
 #include "../Types.h"
 
+namespace QSynedit {
 enum SynIndentType {
     sitBrace = 0,
     sitParenthesis = 1,
@@ -174,4 +175,5 @@ private:
 using PSynHighlighter = std::shared_ptr<SynHighlighter>;
 using SynHighlighterList = QVector<PSynHighlighter>;
 
+}
 #endif // SYNHIGHLIGTERBASE_H

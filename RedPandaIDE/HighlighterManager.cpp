@@ -30,7 +30,7 @@ HighlighterManager::HighlighterManager()
 
 }
 
-PSynHighlighter HighlighterManager::getHighlighter(const QString &filename)
+QSynedit::PSynHighlighter HighlighterManager::getHighlighter(const QString &filename)
 {
     QFileInfo info(filename);
     QString suffix = info.suffix();
@@ -43,26 +43,30 @@ PSynHighlighter HighlighterManager::getHighlighter(const QString &filename)
     } else if (suffix == "vs" || suffix == "fs" || suffix == "frag") {
         return getGLSLHighlighter();
     }
-    return PSynHighlighter();
+    return QSynedit::PSynHighlighter();
 }
 
-PSynHighlighter HighlighterManager::copyHighlighter(PSynHighlighter highlighter)
+QSynedit::PSynHighlighter HighlighterManager::copyHighlighter(QSynedit::PSynHighlighter highlighter)
 {
     if (!highlighter)
-        return PSynHighlighter();
+        return QSynedit::PSynHighlighter();
     if (highlighter->getName() == SYN_HIGHLIGHTER_CPP)
         return getCppHighlighter();
+    else if (highlighter->getName() == SYN_HIGHLIGHTER_ASM)
+        return getAsmHighlighter();
+    else if (highlighter->getName() == SYN_HIGHLIGHTER_GLSL)
+        return getGLSLHighlighter();
     //todo
-    return PSynHighlighter();
+    return QSynedit::PSynHighlighter();
 }
 
-PSynHighlighter HighlighterManager::getCppHighlighter()
+QSynedit::PSynHighlighter HighlighterManager::getCppHighlighter()
 {
-    SynEditCppHighlighter* highlighter = new SynEditCppHighlighter();
+    QSynedit::SynEditCppHighlighter* highlighter = new QSynedit::SynEditCppHighlighter();
     highlighter->asmAttribute()->setForeground(Qt::blue);
     highlighter->charAttribute()->setForeground(Qt::black);
     highlighter->commentAttribute()->setForeground(0x8C8C8C);
-    highlighter->commentAttribute()->setStyles(SynFontStyle::fsItalic);
+    highlighter->commentAttribute()->setStyles(QSynedit::SynFontStyle::fsItalic);
     highlighter->classAttribute()->setForeground(0x008080);
     highlighter->floatAttribute()->setForeground(Qt::darkMagenta);
     highlighter->functionAttribute()->setForeground(0x00627A);
@@ -80,16 +84,16 @@ PSynHighlighter HighlighterManager::getCppHighlighter()
     highlighter->stringEscapeSequenceAttribute()->setForeground(Qt::red);
     highlighter->symbolAttribute()->setForeground(0xc10000);
     highlighter->variableAttribute()->setForeground(0x400080);
-    PSynHighlighter pHighlighter=std::make_shared<SynEditCppHighlighter>();
+    QSynedit::PSynHighlighter pHighlighter=std::make_shared<QSynedit::SynEditCppHighlighter>();
     return pHighlighter;
 }
 
-PSynHighlighter HighlighterManager::getAsmHighlighter()
+QSynedit::PSynHighlighter HighlighterManager::getAsmHighlighter()
 {
-    SynEditASMHighlighter* highlighter = new SynEditASMHighlighter();
-    PSynHighlighter pHighlighter(highlighter);
+    QSynedit::SynEditASMHighlighter* highlighter = new QSynedit::SynEditASMHighlighter();
+    QSynedit::PSynHighlighter pHighlighter(highlighter);
     highlighter->commentAttribute()->setForeground(0x8C8C8C);
-    highlighter->commentAttribute()->setStyles(SynFontStyle::fsItalic);
+    highlighter->commentAttribute()->setStyles(QSynedit::SynFontStyle::fsItalic);
     highlighter->identifierAttribute()->setForeground(0x080808);
     highlighter->keywordAttribute()->setForeground(0x0033b3);
     highlighter->numberAttribute()->setForeground(0x1750EB);
@@ -99,14 +103,14 @@ PSynHighlighter HighlighterManager::getAsmHighlighter()
     return pHighlighter;
 }
 
-PSynHighlighter HighlighterManager::getGLSLHighlighter()
+QSynedit::PSynHighlighter HighlighterManager::getGLSLHighlighter()
 {
-    SynEditGLSLHighlighter* highlighter = new SynEditGLSLHighlighter();
-    PSynHighlighter pHighlighter(highlighter);
+    QSynedit::SynEditGLSLHighlighter* highlighter = new QSynedit::SynEditGLSLHighlighter();
+    QSynedit::PSynHighlighter pHighlighter(highlighter);
     highlighter->asmAttribute()->setForeground(Qt::blue);
     highlighter->charAttribute()->setForeground(Qt::black);
     highlighter->commentAttribute()->setForeground(0x8C8C8C);
-    highlighter->commentAttribute()->setStyles(SynFontStyle::fsItalic);
+    highlighter->commentAttribute()->setStyles(QSynedit::SynFontStyle::fsItalic);
     highlighter->classAttribute()->setForeground(0x008080);
     highlighter->floatAttribute()->setForeground(Qt::darkMagenta);
     highlighter->functionAttribute()->setForeground(0x00627A);
@@ -127,7 +131,7 @@ PSynHighlighter HighlighterManager::getGLSLHighlighter()
     return pHighlighter;
 }
 
-void HighlighterManager::applyColorScheme(PSynHighlighter highlighter, const QString &schemeName)
+void HighlighterManager::applyColorScheme(QSynedit::PSynHighlighter highlighter, const QString &schemeName)
 {
     if (!highlighter)
         return;
@@ -137,14 +141,14 @@ void HighlighterManager::applyColorScheme(PSynHighlighter highlighter, const QSt
         for (QString name: highlighter->attributes().keys()) {
             PColorSchemeItem item = pColorManager->getItem(schemeName,name);
             if (item) {
-                PSynHighlighterAttribute attr = highlighter->attributes()[name];
+                QSynedit::PSynHighlighterAttribute attr = highlighter->attributes()[name];
                 attr->setBackground(item->background());
                 attr->setForeground(item->foreground());
-                SynFontStyles styles = SynFontStyle::fsNone;
-                styles.setFlag(SynFontStyle::fsBold, item->bold());
-                styles.setFlag(SynFontStyle::fsItalic, item->italic());
-                styles.setFlag(SynFontStyle::fsUnderline, item->underlined());
-                styles.setFlag(SynFontStyle::fsStrikeOut, item->strikeout());
+                QSynedit::SynFontStyles styles = QSynedit::SynFontStyle::fsNone;
+                styles.setFlag(QSynedit::SynFontStyle::fsBold, item->bold());
+                styles.setFlag(QSynedit::SynFontStyle::fsItalic, item->italic());
+                styles.setFlag(QSynedit::SynFontStyle::fsUnderline, item->underlined());
+                styles.setFlag(QSynedit::SynFontStyle::fsStrikeOut, item->strikeout());
                 attr->setStyles(styles);
             }
         }

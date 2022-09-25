@@ -16,7 +16,7 @@
  */
 #include "MiscClasses.h"
 #include "algorithm"
-
+namespace QSynedit {
 SynGutter::SynGutter(QObject *parent):
     QObject(parent)
 {
@@ -332,4 +332,6 @@ void SynGutter::setBorderColor(const QColor &value)
         mBorderColor = value;
         setChanged();
     }
+}
+
 }

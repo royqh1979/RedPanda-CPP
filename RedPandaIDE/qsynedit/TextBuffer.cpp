@@ -27,6 +27,8 @@
 #include <QMessageBox>
 #include <cmath>
 
+namespace QSynedit {
+
 SynDocument::SynDocument(const QFont& font, const QFont& nonAsciiFont, QObject *parent):
       QObject(parent),
       mFontMetrics(font),
@@ -1157,4 +1159,6 @@ bool SynEditRedoList::canRedo()
 int SynEditRedoList::itemCount()
 {
     return mItems.count();
+}
+
 }

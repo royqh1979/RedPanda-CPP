@@ -30,7 +30,7 @@ CppRefacter::CppRefacter(QObject *parent) : QObject(parent)
 
 }
 
-bool CppRefacter::findOccurence(Editor *editor, const BufferCoord &pos)
+bool CppRefacter::findOccurence(Editor *editor, const QSynedit::BufferCoord &pos)
 {
     if (!editor->parser())
         return false;
@@ -106,7 +106,7 @@ static QString fullParentName(PStatement statement) {
         return "";
     }
 }
-void CppRefacter::renameSymbol(Editor *editor, const BufferCoord &pos, const QString &newWord)
+void CppRefacter::renameSymbol(Editor *editor, const QSynedit::BufferCoord &pos, const QString &newWord)
 {
     if (!editor->parser()->freeze())
         return;
@@ -117,7 +117,7 @@ void CppRefacter::renameSymbol(Editor *editor, const BufferCoord &pos, const QSt
     QStringList expression;
     QChar s=editor->charAt(pos);
     if (!editor->isIdentChar(s)) {
-        expression = editor->getExpressionAtPosition(BufferCoord{pos.ch-1,pos.line});
+        expression = editor->getExpressionAtPosition(QSynedit::BufferCoord{pos.ch-1,pos.line});
     } else {
         expression = editor->getExpressionAtPosition(pos);
     }
@@ -226,11 +226,11 @@ PSearchResultTreeItem CppRefacter::findOccurenceInFile(
         while (!editor.highlighter()->eol()) {
             int start = editor.highlighter()->getTokenPos() + 1;
             QString token = editor.highlighter()->getToken();
-            PSynHighlighterAttribute attr = editor.highlighter()->getTokenAttribute();
+            QSynedit::PSynHighlighterAttribute attr = editor.highlighter()->getTokenAttribute();
             if (!attr || attr!=editor.highlighter()->commentAttribute()) {
                 if (token == statement->command) {
                     //same name symbol , test if the same statement;
-                    BufferCoord p;
+                    QSynedit::BufferCoord p;
                     p.line = posY+1;
                     p.ch = start+1;
 
@@ -290,7 +290,7 @@ void CppRefacter::renameSymbolInFile(const QString &filename, const PStatement &
             QString token = editor.highlighter()->getToken();
             if (token == statement->command) {
                 //same name symbol , test if the same statement;
-                BufferCoord p;
+                QSynedit::BufferCoord p;
                 p.line = posY+1;
                 p.ch = start;
 
@@ -313,7 +313,7 @@ void CppRefacter::renameSymbolInFile(const QString &filename, const PStatement &
 
     Editor * oldEditor = pMainWindow->editorList()->getOpenedEditorByFilename(filename);
     if (oldEditor) {
-        BufferCoord oldXY=oldEditor->caretXY();
+        QSynedit::BufferCoord oldXY=oldEditor->caretXY();
         int topLine = oldEditor->topLine();
         int leftChar = oldEditor->leftChar();
         oldEditor->beginUndoBlock();

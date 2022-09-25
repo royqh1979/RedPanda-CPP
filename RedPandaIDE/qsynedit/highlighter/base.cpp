@@ -17,6 +17,7 @@
 #include "base.h"
 #include "../Constants.h"
 
+namespace QSynedit {
 SynHighlighter::SynHighlighter() :
     mEnabled(true),
     mWordBreakChars{ SynWordBreakChars }
@@ -259,4 +260,5 @@ SynRangeState::SynRangeState():
     rightBraces(0),
     firstIndentThisLine(0)
 {
+}
 }

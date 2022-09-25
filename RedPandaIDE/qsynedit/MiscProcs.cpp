@@ -20,6 +20,7 @@
 #include <QTextStream>
 #include <algorithm>
 
+namespace QSynedit {
 int minMax(int x, int mi, int ma)
 {
     x = std::min(x, ma );
@@ -225,4 +226,6 @@ QStringList splitStrings(const QString &text)
 int calSpanLines(const BufferCoord &startPos, const BufferCoord &endPos)
 {
     return std::abs(endPos.line - startPos.line+1);
+}
+
 }

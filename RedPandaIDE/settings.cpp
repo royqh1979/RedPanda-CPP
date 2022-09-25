@@ -1255,8 +1255,8 @@ void Settings::Editor::doLoad()
     mEnhanceHomeKey = boolValue("enhance_home_key", true);
     mEnhanceEndKey = boolValue("enhance_end_key",true);
     mKeepCaretX = boolValue("keep_caret_x",true);
-    mCaretForInsert = static_cast<SynEditCaretType>( intValue("caret_for_insert",static_cast<int>(SynEditCaretType::ctVerticalLine)));
-    mCaretForOverwrite = static_cast<SynEditCaretType>( intValue("caret_for_overwrite",static_cast<int>(SynEditCaretType::ctBlock)));
+    mCaretForInsert = static_cast<QSynedit::SynEditCaretType>( intValue("caret_for_insert",static_cast<int>(QSynedit::SynEditCaretType::ctVerticalLine)));
+    mCaretForOverwrite = static_cast<QSynedit::SynEditCaretType>( intValue("caret_for_overwrite",static_cast<int>(QSynedit::SynEditCaretType::ctBlock)));
     mCaretUseTextColor = boolValue("caret_use_text_color",true);
     mCaretColor = colorValue("caret_color",Qt::yellow);
 
@@ -1382,22 +1382,22 @@ void Settings::Editor::doLoad()
     mShowFunctionTips = boolValue("show_function_tips",true);
 }
 
-SynEditCaretType Settings::Editor::caretForOverwrite() const
+QSynedit::SynEditCaretType Settings::Editor::caretForOverwrite() const
 {
     return mCaretForOverwrite;
 }
 
-void Settings::Editor::setCaretForOverwrite(const SynEditCaretType &caretForOverwrite)
+void Settings::Editor::setCaretForOverwrite(const QSynedit::SynEditCaretType &caretForOverwrite)
 {
     mCaretForOverwrite = caretForOverwrite;
 }
 
-SynEditCaretType Settings::Editor::caretForInsert() const
+QSynedit::SynEditCaretType Settings::Editor::caretForInsert() const
 {
     return mCaretForInsert;
 }
 
-void Settings::Editor::setCaretForInsert(const SynEditCaretType &caretForInsert)
+void Settings::Editor::setCaretForInsert(const QSynedit::SynEditCaretType &caretForInsert)
 {
     mCaretForInsert = caretForInsert;
 }

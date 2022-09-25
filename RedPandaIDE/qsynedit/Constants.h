@@ -19,6 +19,8 @@
 #include <QSet>
 #include <QChar>
 
+namespace  QSynedit {
+
 extern const QSet<QChar> SynWordBreakChars;
 extern const QChar SynTabChar;
 extern const QChar SynSpaceGlyph;
@@ -183,4 +185,8 @@ extern const QChar SynSoftBreakGlyph;
 
 #define SYN_HIGHLIGHTER_CPP "SynCppHighlighter"
 #define SYN_HIGHLIGHTER_ASM "SynASMHighlighter"
+#define SYN_HIGHLIGHTER_GLSL "SynGLSLHighlighter"
+
+}
+
 #endif // CONSTANTS_H

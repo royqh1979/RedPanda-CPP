@@ -21,6 +21,8 @@
 #include <QKeySequence>
 #include <QList>
 #include <memory>
+
+namespace QSynedit {
 //****************************************************************************
 // NOTE!  If you add an editor command, you must also update the
 //    EditorCommandStrs constant array in implementation section below, or the
@@ -224,5 +226,7 @@ public:
 private:
     SynEditKeyStrokeList mList;
 };
+
+}
 
 #endif // SYNEDITKEYSTROKE_H

@@ -2225,7 +2225,7 @@ void MainWindow::loadLastOpens()
 //        }
         if (!editor)
             continue;
-        BufferCoord pos;
+        QSynedit::BufferCoord pos;
         pos.ch = lastOpenIni.GetLongValue(sectionName,"CursorCol", 1);
         pos.line = lastOpenIni.GetLongValue(sectionName,"CursorRow", 1);
         editor->setCaretXY(pos);
@@ -4027,7 +4027,7 @@ void MainWindow::onEditorContextMenu(const QPoint& pos)
     if (!editor)
         return;
     QMenu menu(this);
-    BufferCoord p;
+    QSynedit::BufferCoord p;
     mEditorContextMenuPos = pos;
     int line;
     if (editor->getPositionOfMouse(p)) {
@@ -5638,7 +5638,7 @@ void MainWindow::on_actionGoto_Definition_triggered()
 void MainWindow::on_actionFind_references_triggered()
 {
     Editor * editor = mEditorList->getEditor();
-    BufferCoord pos;
+    QSynedit::BufferCoord pos;
     if (editor && editor->pointToCharLine(mEditorContextMenuPos,pos)) {
         CppRefacter refactor;
         refactor.findOccurence(editor,pos);
@@ -6489,7 +6489,7 @@ void MainWindow::on_actionRename_Symbol_triggered()
     if (!editor->parser())
         return;
     editor->beginUpdate();
-    BufferCoord oldCaretXY = editor->caretXY();
+    QSynedit::BufferCoord oldCaretXY = editor->caretXY();
     //    mClassBrowserModel.beginUpdate();
     QCursor oldCursor = editor->cursor();
     editor->setCursor(Qt::CursorShape::WaitCursor);
@@ -6501,7 +6501,7 @@ void MainWindow::on_actionRename_Symbol_triggered()
 
     QStringList expression = editor->getExpressionAtPosition(oldCaretXY);
     if (expression.isEmpty() && oldCaretXY.ch>1) {
-        BufferCoord coord=oldCaretXY;
+        QSynedit::BufferCoord coord=oldCaretXY;
         coord.ch--;
         expression = editor->getExpressionAtPosition(coord);
     }
@@ -6723,7 +6723,7 @@ void MainWindow::on_btnReplace_clicked()
             line.insert(item->start-1, newWord);
             contents[item->line-1] = line;
         }
-        BufferCoord coord=editor->caretXY();
+        QSynedit::BufferCoord coord=editor->caretXY();
         int topLine = editor->topLine();
         int leftChar = editor->leftChar();
         editor->replaceAll(contents.join(editor->lineBreak()));

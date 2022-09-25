@@ -22,6 +22,8 @@
 #include <QObject>
 #include "Types.h"
 
+namespace QSynedit {
+
 enum class SynGutterBorderStyle {
     None,
     Middle,
@@ -123,5 +125,7 @@ private:
 };
 
 using PSynGutter = std::shared_ptr<SynGutter>;
+
+}
 
 #endif // MISCCLASSES_H

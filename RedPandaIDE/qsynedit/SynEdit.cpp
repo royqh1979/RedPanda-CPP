@@ -41,6 +41,7 @@
 #include <QTextEdit>
 #include <QMimeData>
 
+namespace QSynedit {
 SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     mDropped(false)
 {
@@ -6957,4 +6958,5 @@ void SynEdit::onDraggingScrollTimeout()
 {
     computeScroll(true);
     //doMouseScroll(true);
+}
 }

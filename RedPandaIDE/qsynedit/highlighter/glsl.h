@@ -19,6 +19,8 @@
 #include "base.h"
 #include <QSet>
 
+namespace QSynedit {
+
 class SynEditGLSLHighlighter: public SynHighlighter
 {
     enum TokenKind {
@@ -212,4 +214,5 @@ public:
     QSet<QString> keywords() const override;
 };
 
+}
 #endif // SYNEDITGLSLHIGHLIGHTER_H

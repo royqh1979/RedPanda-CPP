@@ -19,6 +19,7 @@
 
 #include <QFont>
 
+namespace QSynedit {
 static const QSet<QString> GLSLStatementKeyWords {
     "if",
     "for",
@@ -1560,7 +1561,7 @@ SynHighlighterClass SynEditGLSLHighlighter::getClass() const
 
 QString SynEditGLSLHighlighter::getName() const
 {
-    return SYN_HIGHLIGHTER_CPP;
+    return SYN_HIGHLIGHTER_GLSL;
 }
 
 QString SynEditGLSLHighlighter::languageName()
@@ -1586,4 +1587,5 @@ bool SynEditGLSLHighlighter::isIdentChar(const QChar &ch) const
 QSet<QString> SynEditGLSLHighlighter::keywords() const
 {
     return Keywords;
+}
 }

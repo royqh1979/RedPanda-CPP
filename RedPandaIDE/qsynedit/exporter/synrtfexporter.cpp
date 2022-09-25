@@ -15,6 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include "synrtfexporter.h"
+namespace QSynedit {
 
 SynRTFExporter::SynRTFExporter():SynExporter()
 {
@@ -163,4 +164,5 @@ QString SynRTFExporter::GetHeader()
                 .arg(GetColorIndex(mBackgroundColor))
                 .arg(GetColorIndex(mBackgroundColor));
     return Result;
+}
 }

@@ -19,6 +19,8 @@
 #include "base.h"
 #include <QSet>
 
+namespace QSynedit {
+
 class SynEditCppHighlighter: public SynHighlighter
 {
     enum TokenKind {
@@ -218,5 +220,7 @@ public:
 public:
     QString foldString() override;
 };
+
+}
 
 #endif // SYNEDITCPPHIGHLIGHTER_H

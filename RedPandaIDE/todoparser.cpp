@@ -63,7 +63,7 @@ TodoThread::TodoThread(const QString& filename, QObject *parent): QThread(parent
 
 void TodoThread::run()
 {
-    PSynHighlighter highlighter = highlighterManager.getCppHighlighter();
+    QSynedit::PSynHighlighter highlighter = highlighterManager.getCppHighlighter();
     emit parseStarted(mFilename);
     auto action = finally([this]{
         emit parseFinished();
@@ -72,13 +72,13 @@ void TodoThread::run()
     if (!pMainWindow->editorList()->getContentFromOpenedEditor(mFilename,lines)) {
         return;
     }
-    PSynHighlighterAttribute commentAttr = highlighter->getAttribute(SYNS_AttrComment);
+    QSynedit::PSynHighlighterAttribute commentAttr = highlighter->getAttribute(SYNS_AttrComment);
 
     highlighter->resetState();
     for (int i =0;i<lines.count();i++) {
         highlighter->setLine(lines[i],i);
         while (!highlighter->eol()) {
-            PSynHighlighterAttribute attr;
+            QSynedit::PSynHighlighterAttribute attr;
             attr = highlighter->getTokenAttribute();
             if (attr == commentAttr) {
                 QString token = highlighter->getToken();

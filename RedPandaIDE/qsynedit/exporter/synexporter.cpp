@@ -23,6 +23,8 @@
 #include <QTextCodec>
 #include "../../platform.h"
 
+namespace QSynedit {
+
 SynExporter::SynExporter()
 {
     mClipboardFormat = "text/plain";
@@ -397,4 +399,6 @@ QString SynExporter::lineBreak()
         return "\r";
     }
     return "\n";
+}
+
 }

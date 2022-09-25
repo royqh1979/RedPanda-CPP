@@ -31,6 +31,8 @@
 #include "KeyStrokes.h"
 #include "SearchBase.h"
 
+namespace QSynedit {
+
 enum class SynFontSmoothMethod {
     None, AntiAlias, ClearType
 };
@@ -801,4 +803,5 @@ protected:
     void dragLeaveEvent(QDragLeaveEvent *event) override;
 };
 
+}
 #endif // SYNEDIT_H

@@ -25,6 +25,7 @@
 #include "../utils.h"
 #include "MiscClasses.h"
 
+namespace QSynedit {
 class SynEdit;
 class SynEditTextPainter
 {
@@ -86,5 +87,7 @@ private:
     int aFirstRow, aLastRow, FirstCol, LastCol;
     SynTokenAccu TokenAccu;
 };
+
+}
 
 #endif // TEXTPAINTER_H

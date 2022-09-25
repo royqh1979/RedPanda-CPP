@@ -17,6 +17,9 @@
 #include "CodeFolding.h"
 #include "Constants.h"
 
+
+namespace QSynedit {
+
 int SynEditFoldRegions::count()
 {
     return fRegions.size();
@@ -135,4 +138,6 @@ void SynEditFoldRanges::add(PSynEditFoldRange foldRange)
 PSynEditFoldRange SynEditFoldRanges::operator[](int index) const
 {
     return mRanges[index];
+}
+
 }

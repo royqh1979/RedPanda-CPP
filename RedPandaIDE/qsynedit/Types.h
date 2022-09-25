@@ -22,6 +22,8 @@
 #include <QFlags>
 #include <memory>
 
+namespace QSynedit {
+
 enum class SynSelectionMode {Normal, Line, Column};
 
 struct BufferCoord {
@@ -70,5 +72,6 @@ using PSynEditingArea = std::shared_ptr<SynEditingArea>;
 using SynEditingAreaList = QList<PSynEditingArea>;
 using PSynEditingAreaList = std::shared_ptr<SynEditingAreaList>;
 
+}
 
 #endif // TYPES_H

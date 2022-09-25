@@ -16,6 +16,7 @@
  */
 #include "KeyStrokes.h"
 
+namespace QSynedit {
 SynEditKeyStroke::SynEditKeyStroke()
 {
     mKey = 0;
@@ -273,4 +274,6 @@ void SynEditKeyStrokes::setExtraKeyStrokes()
 
     add(SynEditorCommand::ecUndo, Qt::Key_Z, Qt::ControlModifier);
     add(SynEditorCommand::ecRedo, Qt::Key_Y, Qt::ControlModifier);
+}
+
 }

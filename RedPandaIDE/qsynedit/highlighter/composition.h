@@ -20,6 +20,7 @@
 #include <memory>
 #include <QObject>
 
+namespace QSynedit {
 class SynSchema;
 using PSynSchema = std::shared_ptr<SynSchema>;
 
@@ -74,4 +75,5 @@ public:
     QString getName() const override;
 };
 
+}
 #endif // SYNHIGHLIGHTCOMPOSITION_H

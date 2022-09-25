@@ -16,6 +16,7 @@
  */
 #include "SearchBase.h"
 
+namespace QSynedit {
 SynSearchBase::SynSearchBase(QObject *parent) : QObject(parent)
 {
 
@@ -39,4 +40,5 @@ SynSearchOptions SynSearchBase::options() const
 void SynSearchBase::setOptions(const SynSearchOptions &options)
 {
     mOptions = options;
+}
 }

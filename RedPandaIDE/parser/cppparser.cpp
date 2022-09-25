@@ -4138,7 +4138,7 @@ PStatement CppParser::doParseEvalTypeInfo(
     QString s = type;
 //    qDebug()<<"eval type info"<<type;
     int position = s.length()-1;
-    SynEditCppHighlighter highlighter;
+    QSynedit::SynEditCppHighlighter highlighter;
     highlighter.resetState();
     highlighter.setLine(type,0);
     int bracketLevel = 0;

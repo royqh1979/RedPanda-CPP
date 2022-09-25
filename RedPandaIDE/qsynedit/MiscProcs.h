@@ -33,6 +33,8 @@ class QPainter;
 class QRect;
 class QColor;
 
+namespace QSynedit {
+
 int minMax(int x, int mi, int ma);
 int mulDiv(int a, int b, int c);
 BufferCoord maxBufferCoord(const BufferCoord& P1, const BufferCoord& P2);
@@ -88,5 +90,7 @@ int findLastNonWordChar(const QString& s, int startPos);
 void ensureNotAfter(BufferCoord& cord1, BufferCoord& cord2);
 
 bool isWordChar(const QChar& ch);
+
+}
 
 #endif // MISCPROCS_H

@@ -20,6 +20,8 @@
 #include <QObject>
 #include <memory>
 
+namespace QSynedit {
+
 enum SynSearchOption {
     ssoMatchCase    = 0x0001,
     ssoWholeWord    = 0x0002,
@@ -54,5 +56,7 @@ private:
 };
 
 using PSynSearchBase = std::shared_ptr<SynSearchBase>;
+
+}
 
 #endif // SYNSEARCHBASE_H

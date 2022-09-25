@@ -18,6 +18,8 @@
 #include "../MiscProcs.h"
 #include <functional>
 
+namespace QSynedit {
+
 SynHTMLExporter::SynHTMLExporter(int tabSize)
 {
     mClipboardFormat = "text/html";
@@ -223,4 +225,5 @@ void SynHTMLExporter::SetTokenAttribute(PSynHighlighterAttribute Attri)
 {
     mLastAttri = Attri;
     SynExporter::SetTokenAttribute(Attri);
+}
 }

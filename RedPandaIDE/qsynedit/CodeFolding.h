@@ -21,6 +21,7 @@
 #include <memory>
 #include <QVector>
 
+namespace QSynedit {
 struct SynEditFoldRegion;
 typedef std::shared_ptr<SynEditFoldRegion> PSynEditFoldRegion;
 
@@ -94,4 +95,5 @@ public:
                       int aFromLine, PSynEditFoldRegion aFoldRegion, int aToLine);
 };
 
+}
 #endif // CODEFOLDING_H

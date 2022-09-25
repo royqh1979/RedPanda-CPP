@@ -23,10 +23,12 @@
 #include <QMutex>
 #include <QVector>
 #include <memory>
+#include <QFile>
 #include "MiscProcs.h"
 #include "../utils.h"
 #include "Types.h"
 
+namespace QSynedit {
 enum SynEditStringFlag {
     sfHasTabs = 0x0001,
     sfHasNoTabs = 0x0002,
@@ -53,8 +55,6 @@ typedef std::shared_ptr<SynDocumentLines> PSynDocumentLines;
 class SynDocument;
 
 typedef std::shared_ptr<SynDocument> PSynDocument;
-
-class QFile;
 
 class SynDocument : public QObject
 {  
@@ -278,5 +278,7 @@ protected:
 
 using PSynEditUndoList = std::shared_ptr<SynEditUndoList>;
 using PSynEditRedoList = std::shared_ptr<SynEditRedoList>;
+
+}
 
 #endif // SYNEDITSTRINGLIST_H

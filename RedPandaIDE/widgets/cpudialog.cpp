@@ -123,7 +123,7 @@ void CPUDialog::setDisassembly(const QString& file, const QString& funcName,cons
         ui->txtCode->document()->add(line);
     }
     if (activeLine!=-1)
-        ui->txtCode->setCaretXYEx(true,BufferCoord{1,activeLine+1});
+        ui->txtCode->setCaretXYEx(true,QSynedit::BufferCoord{1,activeLine+1});
 }
 
 void CPUDialog::resetEditorFont(float dpi)

@@ -17,6 +17,8 @@
 #include "asm.h"
 #include "../Constants.h"
 
+namespace  QSynedit {
+
 const QSet<QString> SynEditASMHighlighter::Keywords {
     "aaa","aad","aam","adc","add","and","arpl","bound","bsf","bsr","bswap","bt","btc","btr","bts",
     "call","cbw","cdq","clc","cld","cli","clts","cmc","cmp","cmps","cmpsb","cmpsd","cmpsw",
@@ -405,4 +407,5 @@ void SynEditASMHighlighter::resetState()
 QSet<QString> SynEditASMHighlighter::keywords() const
 {
     return Keywords;
+}
 }

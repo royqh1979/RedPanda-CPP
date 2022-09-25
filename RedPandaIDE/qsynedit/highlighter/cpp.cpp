@@ -19,6 +19,8 @@
 
 #include <QFont>
 
+namespace QSynedit {
+
 static const QSet<QString> CppStatementKeyWords {
     "if",
     "for",
@@ -1691,4 +1693,6 @@ QSet<QString> SynEditCppHighlighter::keywords() const
 QString SynEditCppHighlighter::foldString()
 {
     return "...}";
+}
+
 }

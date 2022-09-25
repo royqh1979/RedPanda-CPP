@@ -19,6 +19,8 @@
 
 #include "synexporter.h"
 
+namespace QSynedit {
+
 class SynRTFExporter : public SynExporter
 {
 public:
@@ -42,4 +44,5 @@ protected:
     QString GetHeader() override;
 };
 
+}
 #endif // SYNRTFEXPORTER_H

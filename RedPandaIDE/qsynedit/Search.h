@@ -18,6 +18,7 @@
 #define SYNSEARCH_H
 #include "SearchBase.h"
 
+namespace  QSynedit {
 
 class SynSearch : public SynSearchBase
 {
@@ -37,5 +38,6 @@ private:
 private:
     QList<int> mResults;
 };
+}
 
 #endif // SYNSEARCH_H

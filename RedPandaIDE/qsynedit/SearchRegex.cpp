@@ -18,6 +18,8 @@
 
 #include <QRegExp>
 
+namespace QSynedit {
+
 SynSearchRegex::SynSearchRegex(QObject* parent):SynSearchBase(parent)
 {
 
@@ -87,4 +89,6 @@ void SynSearchRegex::updateRegexOptions()
                     mRegex.patternOptions() |
                     QRegularExpression::CaseInsensitiveOption);
     }
+}
+
 }

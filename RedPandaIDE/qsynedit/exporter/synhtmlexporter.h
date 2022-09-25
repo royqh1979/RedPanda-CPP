@@ -19,6 +19,7 @@
 
 #include "synexporter.h"
 
+namespace QSynedit {
 class SynHTMLExporter : public SynExporter
 {
 public:
@@ -52,5 +53,5 @@ protected:
     QString GetHeader();
     void SetTokenAttribute(PSynHighlighterAttribute Attri);
 };
-
+}
 #endif // SYNHTMLEXPORTER_H

@@ -142,11 +142,11 @@ public:
         bool enhanceEndKey() const;
         void setEnhanceEndKey(bool enhanceEndKey);
 
-        SynEditCaretType caretForInsert() const;
-        void setCaretForInsert(const SynEditCaretType &caretForInsert);
+        QSynedit::SynEditCaretType caretForInsert() const;
+        void setCaretForInsert(const QSynedit::SynEditCaretType &caretForInsert);
 
-        SynEditCaretType caretForOverwrite() const;
-        void setCaretForOverwrite(const SynEditCaretType &caretForOverwrite);
+        QSynedit::SynEditCaretType caretForOverwrite() const;
+        void setCaretForOverwrite(const QSynedit::SynEditCaretType &caretForOverwrite);
 
         QColor caretColor() const;
         void setCaretColor(const QColor &caretColor);
@@ -379,8 +379,8 @@ public:
         bool mEnhanceHomeKey;
         bool mEnhanceEndKey;
         bool mKeepCaretX;
-        SynEditCaretType mCaretForInsert;
-        SynEditCaretType mCaretForOverwrite;
+        QSynedit::SynEditCaretType mCaretForInsert;
+        QSynedit::SynEditCaretType mCaretForOverwrite;
         bool mCaretUseTextColor;
         QColor mCaretColor;
 

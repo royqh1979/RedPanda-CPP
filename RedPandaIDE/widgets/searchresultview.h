@@ -46,7 +46,7 @@ struct SearchResultTreeItem {
 };
 
 struct SearchResults{
-    SynSearchOptions options;
+    QSynedit::SynSearchOptions options;
     QString keyword;
     QString statementFullname;
     SearchFileScope scope;
@@ -61,7 +61,7 @@ class SearchResultModel : public QObject {
     Q_OBJECT
 public:
     explicit SearchResultModel(QObject* parent=nullptr);
-    PSearchResults addSearchResults(const QString& keyword,SynSearchOptions options,
+    PSearchResults addSearchResults(const QString& keyword,QSynedit::SynSearchOptions options,
                                     SearchFileScope scope);
     PSearchResults addSearchResults(
             const QString& keyword,
