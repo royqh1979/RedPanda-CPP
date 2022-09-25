@@ -20,7 +20,8 @@
 
 namespace QSynedit {
 
-SynHTMLExporter::SynHTMLExporter(int tabSize)
+SynHTMLExporter::SynHTMLExporter(int tabSize,const QByteArray charset):
+    SynExporter(charset)
 {
     mClipboardFormat = "text/html";
     mDefaultFilter = "HTML Documents (*.htm;*.html)|*.htm;*.html";

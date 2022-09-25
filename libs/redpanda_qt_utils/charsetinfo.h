@@ -14,8 +14,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef PLATFORM_H
-#define PLATFORM_H
+#ifndef QT_UTILS_CHARSETINFO_H
+#define QT_UTILS_CHARSETINFO_H
 #include <QByteArray>
 #include <QString>
 #include <memory>

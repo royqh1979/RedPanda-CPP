@@ -22,8 +22,6 @@
 #include <QMutexLocker>
 #include <stdexcept>
 #include "SynEdit.h"
-#include "../utils.h"
-#include "../platform.h"
 #include <QMessageBox>
 #include <cmath>
 
@@ -605,7 +603,7 @@ void SynDocument::loadFromFile(const QString& filename, const QByteArray& encodi
                 realEncoding = ENCODING_ASCII;
             return;
         }
-        realEncoding = pCharsetInfoManager->getDefaultSystemEncoding();
+         realEncoding = pCharsetInfoManager->getDefaultSystemEncoding();
         QList<PCharsetInfo> charsets = pCharsetInfoManager->findCharsetByLocale(pCharsetInfoManager->localeName());
         if (!charsets.isEmpty()) {
             if (tryLoadFileByEncoding(realEncoding,file)) {

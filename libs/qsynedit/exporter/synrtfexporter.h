@@ -24,7 +24,7 @@ namespace QSynedit {
 class SynRTFExporter : public SynExporter
 {
 public:
-    explicit SynRTFExporter();
+    explicit SynRTFExporter(const QByteArray charset);
 private:
     bool mAttributesChanged;
     QList<QColor> mListColors;

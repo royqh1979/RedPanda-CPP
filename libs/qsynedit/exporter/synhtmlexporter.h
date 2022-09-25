@@ -23,7 +23,7 @@ namespace QSynedit {
 class SynHTMLExporter : public SynExporter
 {
 public:
-    SynHTMLExporter(int tabSize);
+    SynHTMLExporter(int tabSize,const QByteArray charset);
     bool createHTMLFragment() const;
     void setCreateHTMLFragment(bool createHTMLFragment);
 

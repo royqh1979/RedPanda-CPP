@@ -25,7 +25,6 @@
 #include <memory>
 #include <QFile>
 #include "MiscProcs.h"
-#include "../utils.h"
 #include "Types.h"
 
 namespace QSynedit {

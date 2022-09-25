@@ -14,8 +14,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef UTILS_H
-#define UTILS_H
+#ifndef QT_UTILS_UTILS_H
+#define QT_UTILS_UTILS_H
 #include <type_traits>
 #include <utility>
 #include <functional>
@@ -27,12 +27,12 @@
 #include <QProcessEnvironment>
 #include "SimpleIni.h"
 
-using SimpleIni = CSimpleIniA;
-using PSimpleIni = std::shared_ptr<SimpleIni>;
-
 class QByteArray;
 class QTextStream;
 class QTextCodec;
+
+using SimpleIni = CSimpleIniA;
+using PSimpleIni = std::shared_ptr<SimpleIni>;
 
 #define ENCODING_AUTO_DETECT "AUTO"
 #define ENCODING_UTF8   "UTF-8"

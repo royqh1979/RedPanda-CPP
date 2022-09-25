@@ -21,11 +21,10 @@
 #include <QGuiApplication>
 #include <QMimeData>
 #include <QTextCodec>
-#include "../../platform.h"
 
 namespace QSynedit {
 
-SynExporter::SynExporter()
+SynExporter::SynExporter(const QByteArray charset):mCharset(charset)
 {
     mClipboardFormat = "text/plain";
     mFont = QGuiApplication::font();
@@ -33,7 +32,6 @@ SynExporter::SynExporter()
     mForegroundColor = QGuiApplication::palette().color(QPalette::Text);
     mUseBackground = false;
     mExportAsText = false;
-    mCharset = pCharsetInfoManager->getDefaultSystemEncoding();
     mFileEndingType = FileEndingType::Windows;
     clear();
     setTitle("");

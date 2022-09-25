@@ -22,7 +22,6 @@
 #include <QString>
 #include "Types.h"
 #include "highlighter/base.h"
-#include "../utils.h"
 #include "MiscClasses.h"
 
 namespace QSynedit {

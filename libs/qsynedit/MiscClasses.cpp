@@ -16,7 +16,9 @@
  */
 #include "MiscClasses.h"
 #include "algorithm"
+
 namespace QSynedit {
+
 SynGutter::SynGutter(QObject *parent):
     QObject(parent)
 {
@@ -333,5 +335,27 @@ void SynGutter::setBorderColor(const QColor &value)
         setChanged();
     }
 }
+
+BaseError::BaseError(const QString &reason):
+mReason(reason)
+{
+
+}
+
+QString BaseError::reason() const
+{
+    return mReason;
+}
+
+IndexOutOfRange::IndexOutOfRange(int Index):
+BaseError(QObject::tr("Index %1 out of range").arg(Index))
+{
+
+}
+
+FileError::FileError(const QString &reason): BaseError(reason)
+{
+}
+
 
 }

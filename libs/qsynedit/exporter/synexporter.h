@@ -27,7 +27,7 @@ class SynExporter
 {
 
 public:
-    explicit SynExporter();
+    explicit SynExporter(const QByteArray charset);
 
     /**
      * @brief Clears the output buffer and any internal data that relates to the last

@@ -91,6 +91,58 @@ void ensureNotAfter(BufferCoord& cord1, BufferCoord& cord2);
 
 bool isWordChar(const QChar& ch);
 
+void decodeKey(int combinedKey, int& key, Qt::KeyboardModifiers& modifiers);
+
+int screenDPI();
+void setScreenDPI(int dpi);
+float pointToPixel(float point);
+float pointToPixel(float point, float dpi);
+float pixelToPoint(float pixel);
+
+void inflateRect(QRect& rect, int delta);
+void inflateRect(QRect& rect, int dx, int dy);
+
+
+
+/**
+ * from https://github.com/Microsoft/GSL
+ **/
+
+template <class F>
+class final_action
+{
+public:
+    static_assert(!std::is_reference<F>::value && !std::is_const<F>::value &&
+                      !std::is_volatile<F>::value,
+                  "Final_action should store its callable by value");
+
+    explicit final_action(F f) noexcept : f_(std::move(f)) {}
+
+    final_action(final_action&& other) noexcept
+        : f_(std::move(other.f_)), invoke_(std::exchange(other.invoke_, false))
+    {}
+
+    final_action(const final_action&) = delete;
+    final_action& operator=(const final_action&) = delete;
+    final_action& operator=(final_action&&) = delete;
+
+    ~final_action() noexcept
+    {
+        if (invoke_) f_();
+    }
+
+private:
+    F f_;
+    bool invoke_{true};
+};
+
+template <class F> final_action<typename std::remove_cv<typename std::remove_reference<F>::type>::type>
+finally(F&& f) noexcept
+{
+    return final_action<typename std::remove_cv<typename std::remove_reference<F>::type>::type>(
+        std::forward<F>(f));
+}
+
 }
 
 #endif // MISCPROCS_H

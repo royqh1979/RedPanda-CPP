@@ -17,7 +17,7 @@
 #include "synrtfexporter.h"
 namespace QSynedit {
 
-SynRTFExporter::SynRTFExporter():SynExporter()
+SynRTFExporter::SynRTFExporter(const QByteArray charset):SynExporter(charset)
 {
     mDefaultFilter = "Rich Text Format Documents (*.rtf)|*.rtf";
     mClipboardFormat = "application/x-qt-windows-mime;value=\"Rich Format Text\"";

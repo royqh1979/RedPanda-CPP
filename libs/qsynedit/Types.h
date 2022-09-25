@@ -24,6 +24,19 @@
 
 namespace QSynedit {
 
+
+#define ENCODING_AUTO_DETECT "AUTO"
+#define ENCODING_UTF8   "UTF-8"
+#define ENCODING_UTF8_BOM "UTF-8 BOM"
+#define ENCODING_SYSTEM_DEFAULT   "SYSTEM"
+#define ENCODING_ASCII  "ASCII"
+
+enum class FileEndingType {
+    Windows,
+    Linux,
+    Mac
+};// Windows: CRLF, UNIX: LF, Mac: CR
+
 enum class SynSelectionMode {Normal, Line, Column};
 
 struct BufferCoord {

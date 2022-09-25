@@ -19,41 +19,14 @@
 #include <QPainter>
 #include <QTextStream>
 #include <algorithm>
+#include <QApplication>
+#include <QScreen>
 
 namespace QSynedit {
 int minMax(int x, int mi, int ma)
 {
     x = std::min(x, ma );
     return std::max( x, mi );
-}
-
-bool IsPowerOfTwo(int TabWidth) {
-    if (TabWidth<2)
-        return false;
-    int nW = 2;
-    do {
-        if (nW >= TabWidth)
-            break;
-        nW <<= 1;
-    } while (nW<0x10000);
-    return (nW == TabWidth);
-}
-
-
-bool GetHasTabs(const QString &line, int &CharsBefore)
-{
-    bool result = false;
-    CharsBefore = 0;
-    if (!line.isEmpty()) {
-        for (const QChar& ch:line) {
-            if (ch == '\t') {
-                result = true;
-                break;
-            }
-            CharsBefore ++;
-        }
-    }
-    return result;
 }
 
 int getEOL(const QString &Line, int start)
@@ -69,7 +42,7 @@ int getEOL(const QString &Line, int start)
     return Line.size();
 }
 
-bool InternalEnumHighlighterAttris(PSynHighlighter Highlighter,
+bool internalEnumHighlighterAttris(PSynHighlighter Highlighter,
                                    bool SkipDuplicates,
                                    HighlighterAttriProc highlighterAttriProc,
                                    std::initializer_list<void *>& Params,
@@ -106,7 +79,7 @@ bool enumHighlighterAttributes(PSynHighlighter Highlighter, bool SkipDuplicates,
     }
 
     SynHighlighterList HighlighterList;
-    return InternalEnumHighlighterAttris(Highlighter, SkipDuplicates,
+    return internalEnumHighlighterAttris(Highlighter, SkipDuplicates,
         highlighterAttriProc, Params, HighlighterList);
 }
 
@@ -226,6 +199,70 @@ QStringList splitStrings(const QString &text)
 int calSpanLines(const BufferCoord &startPos, const BufferCoord &endPos)
 {
     return std::abs(endPos.line - startPos.line+1);
+}
+
+void decodeKey(const int combinedKey, int &key, Qt::KeyboardModifiers &modifiers)
+{
+    modifiers = Qt::NoModifier;
+    if (combinedKey & Qt::ShiftModifier) {
+        modifiers|=Qt::ShiftModifier;
+    }
+    if (combinedKey & Qt::ControlModifier) {
+        modifiers|=Qt::ControlModifier;
+    }
+    if (combinedKey & Qt::AltModifier) {
+        modifiers|=Qt::AltModifier;
+    }
+    if (combinedKey & Qt::MetaModifier) {
+        modifiers|=Qt::MetaModifier;
+    }
+    if (combinedKey & Qt::KeypadModifier) {
+        modifiers|= Qt::KeypadModifier;
+    }
+    key = combinedKey & ~(Qt::ShiftModifier | Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier | Qt::KeypadModifier);
+}
+
+float pointToPixel(float point)
+{
+    return point * screenDPI() / 72;
+}
+
+float pixelToPoint(float pixel)
+{
+    return pixel * 72 / screenDPI();
+}
+
+float pointToPixel(float point, float dpi)
+{
+     return point * dpi / 72;
+}
+
+static int defaultScreenDPI = -1;
+
+int screenDPI()
+{
+    if (defaultScreenDPI<1) {
+        defaultScreenDPI = qApp->primaryScreen()->logicalDotsPerInch();
+    }
+    return defaultScreenDPI;
+}
+
+void setScreenDPI(int dpi)
+{
+    defaultScreenDPI = dpi;
+}
+
+void inflateRect(QRect &rect, int delta)
+{
+    inflateRect(rect,delta,delta);
+}
+
+void inflateRect(QRect &rect, int dx, int dy)
+{
+    rect.setLeft(rect.left()-dx);
+    rect.setRight(rect.right()+dx);
+    rect.setTop(rect.top()-dy);
+    rect.setBottom(rect.bottom()+dy);
 }
 
 }

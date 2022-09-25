@@ -17,10 +17,10 @@
 #ifndef SYNEDITKEYSTROKE_H
 #define SYNEDITKEYSTROKE_H
 
-#include "../utils.h"
 #include <QKeySequence>
 #include <QList>
 #include <memory>
+#include "MiscClasses.h"
 
 namespace QSynedit {
 //****************************************************************************

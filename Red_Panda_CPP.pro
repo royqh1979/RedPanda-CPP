@@ -2,23 +2,24 @@ TEMPLATE = subdirs
 
 SUBDIRS += \
     RedPandaIDE \
-    tools\astyle \
-    tools\consolepauser
+    tools/astyle \
+    tools/consolepauser
+    libs/qsynedit
 
 # Add the dependencies so that the RedPandaIDE project can add the depended programs
 # into the main app bundle
-RedPandaIDE.depends = tools\astyle tools\consolepauser
+RedPandaIDE.depends = tools/astyle tools/consolepauser libs/qsynedit
 
 win32: {
 SUBDIRS += \
-    tools\redpanda-win-git-askpass
-    RedPandaIDE.depends += tools\redpanda-win-git-askpass
+    tools/redpanda-win-git-askpass
+    RedPandaIDE.depends += tools/redpanda-win-git-askpass
 }
 
 unix: {
 SUBDIRS += \
-    tools\redpanda-git-askpass
-    RedPandaIDE.depends += tools\redpanda-git-askpass
+    tools/redpanda-git-askpass
+    RedPandaIDE.depends += tools/redpanda-git-askpass
 }
 
 APP_NAME = RedPandaCPP
