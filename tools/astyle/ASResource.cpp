@@ -714,8 +714,10 @@ bool ASBase::isLegalNameChar(char ch) const
 {
 	if (isWhiteSpace(ch))
 		return false;
-	if ((unsigned char) ch > 127)
-		return false;
+//	if ((unsigned char) ch > 127)
+//		return false;
+    if ((unsigned char) ch > 127)
+            return true;
 	return (isalnum((unsigned char) ch)
 	        || ch == '.' || ch == '_'
 	        || (isJavaStyle() && ch == '$')

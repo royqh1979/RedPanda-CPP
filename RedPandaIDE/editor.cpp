@@ -4291,6 +4291,7 @@ void Editor::reformat()
     onLinesDeleted(1,document()->count());
     QByteArray content = text().toUtf8();
     QStringList args = pSettings->codeFormatter().getArguments();
+    qDebug()<<args;
 #ifdef Q_OS_WIN
     QByteArray newContent = runAndGetOutput("astyle.exe",
                                             pSettings->dirs().appDir(),
