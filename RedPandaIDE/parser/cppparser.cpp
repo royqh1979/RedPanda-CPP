@@ -17,7 +17,7 @@
 #include "cppparser.h"
 #include "parserutils.h"
 #include "../utils.h"
-#include "../qsynedit/highlighter/cpp.h"
+#include "qsynedit/highlighter/cpp.h"
 
 #include <QApplication>
 #include <QDate>

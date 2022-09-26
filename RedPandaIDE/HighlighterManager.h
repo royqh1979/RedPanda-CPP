@@ -16,7 +16,7 @@
  */
 #ifndef HIGHLIGHTERMANAGER_H
 #define HIGHLIGHTERMANAGER_H
-#include "highlighter/base.h"
+#include "qsynedit/highlighter/base.h"
 
 class HighlighterManager
 {

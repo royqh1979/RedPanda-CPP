@@ -21,7 +21,7 @@
 #include "editorlist.h"
 #include <parser/cppparser.h>
 #include "utils.h"
-#include "charsetinfo.h"
+#include "qt_utils/charsetinfo.h"
 #include "projecttemplate.h"
 #include "systemconsts.h"
 #include "iconsmanager.h"

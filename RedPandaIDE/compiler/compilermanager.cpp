@@ -25,7 +25,7 @@
 #include <QMessageBox>
 #include <QUuid>
 #include "projectcompiler.h"
-#include "charsetinfo.h"
+#include "qt_utils/charsetinfo.h"
 
 enum RunProgramFlag {
     RPF_PAUSE_CONSOLE =     0x0001,

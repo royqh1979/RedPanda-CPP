@@ -17,7 +17,7 @@
 #include "editormiscwidget.h"
 #include "ui_editormiscwidget.h"
 #include "../settings.h"
-#include "../platform.h"
+#include "qt_utils/charsetinfo.h"
 #include "../mainwindow.h"
 
 EditorMiscWidget::EditorMiscWidget(const QString& name, const QString& group,

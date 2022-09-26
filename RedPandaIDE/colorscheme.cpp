@@ -22,7 +22,7 @@
 #include <QJsonObject>
 #include "utils.h"
 #include "settings.h"
-#include "Constants.h"
+#include "qsynedit/Constants.h"
 
 
 ColorManager * pColorManager;

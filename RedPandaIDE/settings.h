@@ -25,7 +25,7 @@
 #include <QPair>
 #include "qsynedit/SynEdit.h"
 #include "compiler/compilerinfo.h"
-#include "qt_utils/utils.h"
+#include "utils.h"
 
 /**
  * use the following command to get gcc's default bin/library folders:
