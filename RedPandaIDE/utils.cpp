@@ -10,8 +10,8 @@
 #include "project.h"
 #include "parser/cppparser.h"
 #include "compiler/executablerunner.h"
-#ifdef Q_OS_WIN
 #include <QMimeDatabase>
+#ifdef Q_OS_WIN
 #include <windows.h>
 #endif
 

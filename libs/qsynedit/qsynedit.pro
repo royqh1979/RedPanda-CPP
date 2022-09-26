@@ -61,4 +61,3 @@ HEADERS += qsynedit/Search.h \
     qsynedit/highlighter/glsl.h \
 
 INCLUDEPATH += ../redpanda_qt_utils
-LIBS += -lredpand_qt_utils

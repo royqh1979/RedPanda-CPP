@@ -31,6 +31,7 @@
 #include <QColor>
 #include <QWindow>
 #include <QScreen>
+#include <QDirIterator>
 #ifdef Q_OS_WIN
 #include <QDirIterator>
 #include <QMimeDatabase>
