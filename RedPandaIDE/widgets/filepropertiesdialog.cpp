@@ -19,7 +19,7 @@
 #include "../mainwindow.h"
 #include "../editorlist.h"
 #include "../editor.h"
-#include "../qsynedit/Constants.h"
+#include <qsynedit/Constants.h>
 
 #include <QFileInfo>
 

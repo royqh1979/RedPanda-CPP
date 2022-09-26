@@ -114,4 +114,34 @@ void resetCppParser(std::shared_ptr<CppParser> parser, int compilerSetIndex=-1);
 
 int getNewFileNumber();
 
+QByteArray runAndGetOutput(const QString& cmd, const QString& workingDir, const QStringList& arguments,
+                           const QByteArray& inputContent = QByteArray(),
+                           bool inheritEnvironment = false,
+                           const QProcessEnvironment& env = QProcessEnvironment() );
+
+void executeFile(const QString& fileName,
+                 const QString& params,
+                 const QString& workingDir,
+                 const QString& tempFile);
+
+bool isGreenEdition();
+
+#ifdef Q_OS_WIN
+bool readRegistry(HKEY key,const QByteArray& subKey, const QByteArray& name, QString& value);
+#endif
+
+qulonglong stringToHex(const QString& str, bool &isOk);
+
+bool findComplement(const QString& s,
+                       const QChar& fromToken,
+                       const QChar& toToken,
+                       int& curPos,
+                       int increment);
+
+bool haveGoodContrast(const QColor& c1, const QColor &c2);
+
+QByteArray getHTTPBody(const QByteArray& content);
+
+QString getSizeString(int size);
+
 #endif // UTILS_H

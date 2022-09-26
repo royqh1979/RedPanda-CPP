@@ -52,7 +52,19 @@ msvc {
 # In order to do so, uncomment the following line.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
+
+CONFIG(debug_and_release_target): {
+    CONFIG(debug): {
+        OBJ_OUT_PWD = debug
+    }
+    CONFIG(release): {
+        OBJ_OUT_PWD = release
+    }
+}
 INCLUDEPATH += ../libs/qsynedit ../libs/redpanda_qt_utils
+LIBS += -L$$OUT_PWD/../libs/redpanda_qt_utils/$$OBJ_OUT_PWD \
+    -L$$OUT_PWD/../libs/qsynedit/$$OBJ_OUT_PWD \
+    -lqsynedit -lredpanda_qt_utils
 
 SOURCES += \
     HighlighterManager.cpp \

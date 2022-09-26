@@ -20,8 +20,8 @@
 #include "../editor.h"
 #include "../mainwindow.h"
 #include "../editorlist.h"
-#include "../qsynedit/Search.h"
-#include "../qsynedit/SearchRegex.h"
+#include <qsynedit/Search.h>
+#include <qsynedit/SearchRegex.h>
 #include "../project.h"
 #include "../settings.h"
 #include <QMessageBox>

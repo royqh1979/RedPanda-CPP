@@ -18,7 +18,7 @@
 #define SEARCHDIALOG_H
 
 #include <QDialog>
-#include "../qsynedit/SynEdit.h"
+#include <qsynedit/SynEdit.h>
 #include "../utils.h"
 
 namespace Ui {

@@ -27,7 +27,7 @@
 #include "project.h"
 #include "projecttemplate.h"
 #include "widgets/newprojectdialog.h"
-#include "platform.h"
+#include <qt_utils/charsetinfo.h>
 #include "widgets/aboutdialog.h"
 #include "shortcutmanager.h"
 #include "colorscheme.h"

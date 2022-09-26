@@ -50,6 +50,7 @@
 #include "editorlist.h"
 #include <QDebug>
 #include "project.h"
+#include <qt_utils/charsetinfo.h>
 
 using namespace std;
 
@@ -1372,7 +1373,7 @@ void Editor::copyAsHTML()
 {
     if (!selAvail())
         return;
-    QSynedit::SynHTMLExporter exporter(tabWidth());
+    QSynedit::SynHTMLExporter exporter(tabWidth(), pCharsetInfoManager->getDefaultSystemEncoding());
 
     exporter.setTitle(QFileInfo(mFilename).fileName());
     exporter.setExportAsText(false);
@@ -2837,7 +2838,7 @@ void Editor::print()
 
 void Editor::exportAsRTF(const QString &rtfFilename)
 {
-    QSynedit::SynRTFExporter exporter;
+    QSynedit::SynRTFExporter exporter(pCharsetInfoManager->getDefaultSystemEncoding());
     exporter.setTitle(extractFileName(rtfFilename));
     exporter.setExportAsText(true);
     exporter.setUseBackground(pSettings->editor().copyRTFUseBackground());
@@ -2862,7 +2863,7 @@ void Editor::exportAsRTF(const QString &rtfFilename)
 
 void Editor::exportAsHTML(const QString &htmlFilename)
 {
-    QSynedit::SynHTMLExporter exporter(tabWidth());
+    QSynedit::SynHTMLExporter exporter(tabWidth(), pCharsetInfoManager->getDefaultSystemEncoding());
     exporter.setTitle(extractFileName(htmlFilename));
     exporter.setExportAsText(false);
     exporter.setUseBackground(pSettings->editor().copyHTMLUseBackground());

@@ -2,12 +2,14 @@
 #include "systemconsts.h"
 #include <QDate>
 #include <QDateTime>
+#include <QApplication>
 #include "editor.h"
 #include "editorlist.h"
 #include "settings.h"
 #include "mainwindow.h"
 #include "project.h"
 #include "parser/cppparser.h"
+#include "compiler/executablerunner.h"
 #ifdef Q_OS_WIN
 #include <QMimeDatabase>
 #include <windows.h>
@@ -354,4 +356,168 @@ int getNewFileNumber()
     static int count = 0;
     count++;
     return count;
+}
+
+#ifdef Q_OS_WIN
+static bool gIsGreenEdition = true;
+static bool gIsGreenEditionInited = false;
+#endif
+bool isGreenEdition()
+{
+#ifdef Q_OS_WIN
+    if (!gIsGreenEditionInited) {
+        QString keyString = QString("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\RedPanda-C++");
+        QString value;
+        if (!readRegistry(HKEY_LOCAL_MACHINE,keyString.toLocal8Bit(),"UninstallString",value)) {
+            keyString = "SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\RedPanda-C++";
+            if (!readRegistry(HKEY_LOCAL_MACHINE,keyString.toLocal8Bit(),"UninstallString",value)) {
+                value="";
+            }
+        }
+        if (!value.isEmpty()) {
+            QString regPath = extractFileDir(value);
+
+            QString appPath = QApplication::instance()->applicationDirPath();
+            gIsGreenEdition = excludeTrailingPathDelimiter(regPath).compare(excludeTrailingPathDelimiter(appPath),
+                                                                            Qt::CaseInsensitive)!=0;
+        }
+        gIsGreenEditionInited = true;
+    }
+    return gIsGreenEdition;
+#else
+    return false;
+#endif
+}
+
+QByteArray runAndGetOutput(const QString &cmd, const QString& workingDir, const QStringList& arguments,
+                           const QByteArray &inputContent, bool inheritEnvironment,
+                           const QProcessEnvironment& env)
+{
+    QProcess process;
+    QByteArray result;
+    if (env.isEmpty()) {
+        if (inheritEnvironment) {
+            process.setProcessEnvironment(QProcessEnvironment::systemEnvironment());
+        } else {
+            process.setProcessEnvironment(QProcessEnvironment());
+        }
+    } else {
+        process.setProcessEnvironment(env);
+    }
+    process.setWorkingDirectory(workingDir);
+    process.connect(&process,&QProcess::readyReadStandardError,
+                    [&](){
+        result.append(process.readAllStandardError());
+    });
+    process.connect(&process,&QProcess::readyReadStandardOutput,
+                    [&](){
+        result.append(process.readAllStandardOutput());
+    });
+    process.start(cmd,arguments);
+    if (!inputContent.isEmpty()) {
+        process.write(inputContent);
+    }
+    process.closeWriteChannel();
+    process.waitForFinished();
+    return result;
+}
+
+void executeFile(const QString &fileName, const QString &params, const QString &workingDir, const QString &tempFile)
+{
+    ExecutableRunner* runner=new ExecutableRunner(
+                fileName,
+                params,
+                workingDir);
+    runner->connect(runner, &QThread::finished,
+                    [runner,tempFile](){
+        if (!tempFile.isEmpty()) {
+            QFile::remove(tempFile);
+        }
+        runner->deleteLater();
+    });
+    runner->connect(runner, &Runner::runErrorOccurred,
+            [](const QString&){
+        //todo
+    });
+    runner->setStartConsole(true);
+    runner->start();
+}
+
+#ifdef Q_OS_WIN
+bool readRegistry(HKEY key,const QByteArray& subKey, const QByteArray& name, QString& value) {
+    DWORD dataSize;
+    LONG result;
+    result = RegGetValueA(key,subKey,
+                 name, RRF_RT_REG_SZ | RRF_RT_REG_MULTI_SZ,
+                 NULL,
+                 NULL,
+                 &dataSize);
+    if (result!=ERROR_SUCCESS)
+        return false;
+    char * buffer = new char[dataSize+10];
+    result = RegGetValueA(key,subKey,
+                 name, RRF_RT_REG_SZ | RRF_RT_REG_MULTI_SZ,
+                 NULL,
+                 buffer,
+                 &dataSize);
+    if (result!=ERROR_SUCCESS) {
+        delete[] buffer;
+        return false;
+    }
+    value=QString::fromLocal8Bit(buffer);
+    delete [] buffer;
+    return true;
+}
+#endif
+
+qulonglong stringToHex(const QString &str, bool &isOk)
+{
+    qulonglong value = str.toULongLong(&isOk,16);
+    return value;
+}
+
+bool findComplement(const QString &s, const QChar &fromToken, const QChar &toToken, int &curPos, int increment)
+{
+    int curPosBackup = curPos;
+    int level = 0;
+    //todo: skip comment, char and strings
+    while ((curPos < s.length()) && (curPos >= 0)) {
+        if (s[curPos] == fromToken) {
+            level++;
+        } else if (s[curPos] == toToken) {
+            level--;
+            if (level == 0)
+                return true;
+        }
+        curPos += increment;
+    }
+    curPos = curPosBackup;
+    return false;
+}
+
+bool haveGoodContrast(const QColor& c1, const QColor &c2) {
+    int lightness1 = qGray(c1.rgb());
+    int lightness2 = qGray(c2.rgb());
+    return std::abs(lightness1 - lightness2)>=120;
+}
+
+QByteArray getHTTPBody(const QByteArray& content) {
+    int i= content.indexOf("\r\n\r\n");
+    if (i>=0) {
+        return content.mid(i+4);
+    }
+    return "";
+}
+
+QString getSizeString(int size)
+{
+    if (size < 1024) {
+        return QString("%1 ").arg(size)+QObject::tr("bytes");
+    } else if (size < 1024 * 1024) {
+        return QString("%1 ").arg(size / 1024.0)+QObject::tr("KB");
+    } else if (size < 1024 * 1024 * 1024) {
+        return QString("%1 ").arg(size / 1024.0 / 1024.0)+QObject::tr("MB");
+    } else {
+        return QString("%1 ").arg(size / 1024.0 / 1024.0 / 1024.0)+QObject::tr("GB");
+    }
 }
