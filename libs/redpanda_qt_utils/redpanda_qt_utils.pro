@@ -20,8 +20,8 @@ msvc {
     DEFINES += NOMINMAX
 }
 
-SOURCES += redpanda_utils.cpp \
-	charsetinfo.cpp
+SOURCES += qt_utils/utils.cpp \
+	qt_utils/charsetinfo.cpp
 
-HEADERS += redpanda_utils.h \
-	charsetinfo.h
+HEADERS += qt_utils/utils.h \
+	qt_utils/charsetinfo.h

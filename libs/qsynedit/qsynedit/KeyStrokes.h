@@ -21,7 +21,7 @@
 #include <QList>
 #include <memory>
 #include "MiscClasses.h"
-#include "redpanda_utils.h"
+#include "qt_utils/utils.h"
 
 namespace QSynedit {
 //****************************************************************************

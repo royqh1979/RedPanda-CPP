@@ -26,7 +26,7 @@
 #include <QFile>
 #include "MiscProcs.h"
 #include "Types.h"
-#include "redpanda_utils.h"
+#include "qt_utils/utils.h"
 
 namespace QSynedit {
 enum SynEditStringFlag {

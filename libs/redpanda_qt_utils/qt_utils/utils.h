@@ -14,8 +14,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef REDPANDA_UTILS_H
-#define REDPANDA_UTILS_H
+#ifndef REDPANDA_QT_UTILS_H
+#define REDPANDA_QT_UTILS_H
 #include <type_traits>
 #include <utility>
 #include <functional>

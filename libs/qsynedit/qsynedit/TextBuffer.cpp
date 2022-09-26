@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include "TextBuffer.h"
-#include "redpanda_utils.h"
+#include "qt_utils/utils.h"
 #include <QDataStream>
 #include <QFile>
 #include <QTextCodec>
@@ -25,7 +25,7 @@
 #include "SynEdit.h"
 #include <QMessageBox>
 #include <cmath>
-#include "charsetinfo.h"
+#include "qt_utils/charsetinfo.h"
 #include <QDebug>
 
 namespace QSynedit {

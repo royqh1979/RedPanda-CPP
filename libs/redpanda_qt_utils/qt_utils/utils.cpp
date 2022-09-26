@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#include "redpanda_utils.h"
+#include "qt_utils/utils.h"
 #include <QApplication>
 #include <QByteArray>
 #include <QDir>

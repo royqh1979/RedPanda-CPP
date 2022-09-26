@@ -18,47 +18,47 @@ msvc {
     DEFINES += NOMINMAX
 }
 
-SOURCES += CodeFolding.cpp \
-    Constants.cpp \
-    KeyStrokes.cpp \
-    MiscClasses.cpp \
-    MiscProcs.cpp \
-    SynEdit.cpp \
-    TextBuffer.cpp \
-    TextPainter.cpp \
-    exporter/synexporter.cpp \
-    exporter/synhtmlexporter.cpp \
-    exporter/synrtfexporter.cpp \
-    highlighter/asm.cpp \
-    highlighter/base.cpp \
-    highlighter/composition.cpp \
-    highlighter/cpp.cpp \
-    highlighter/glsl.cpp \
-    Search.cpp \
-    SearchBase.cpp \
-    SearchRegex.cpp \
-    Types.cpp
+SOURCES += qsynedit/CodeFolding.cpp \
+    qsynedit/Constants.cpp \
+    qsynedit/KeyStrokes.cpp \
+    qsynedit/MiscClasses.cpp \
+    qsynedit/MiscProcs.cpp \
+    qsynedit/SynEdit.cpp \
+    qsynedit/TextBuffer.cpp \
+    qsynedit/TextPainter.cpp \
+    qsynedit/exporter/synexporter.cpp \
+    qsynedit/exporter/synhtmlexporter.cpp \
+    qsynedit/exporter/synrtfexporter.cpp \
+    qsynedit/highlighter/asm.cpp \
+    qsynedit/highlighter/base.cpp \
+    qsynedit/highlighter/composition.cpp \
+    qsynedit/highlighter/cpp.cpp \
+    qsynedit/highlighter/glsl.cpp \
+    qsynedit/Search.cpp \
+    qsynedit/SearchBase.cpp \
+    qsynedit/SearchRegex.cpp \
+    qsynedit/Types.cpp
 
-HEADERS += Search.h \
-    SearchBase.h \
-    SearchRegex.h \
-    CodeFolding.h \
-    Constants.h \
-    KeyStrokes.h \
-    MiscClasses.h \
-    MiscProcs.h \
-    SynEdit.h \
-    TextBuffer.h \
-    TextPainter.h \
-    Types.h \
-    exporter/synexporter.h \
-    exporter/synhtmlexporter.h \
-    exporter/synrtfexporter.h \
-    highlighter/asm.h \
-    highlighter/base.h \
-    highlighter/composition.h \
-    highlighter/cpp.h \
-    highlighter/glsl.h \
+HEADERS += qsynedit/Search.h \
+    qsynedit/SearchBase.h \
+    qsynedit/SearchRegex.h \
+    qsynedit/CodeFolding.h \
+    qsynedit/Constants.h \
+    qsynedit/KeyStrokes.h \
+    qsynedit/MiscClasses.h \
+    qsynedit/MiscProcs.h \
+    qsynedit/SynEdit.h \
+    qsynedit/TextBuffer.h \
+    qsynedit/TextPainter.h \
+    qsynedit/Types.h \
+    qsynedit/exporter/synexporter.h \
+    qsynedit/exporter/synhtmlexporter.h \
+    qsynedit/exporter/synrtfexporter.h \
+    qsynedit/highlighter/asm.h \
+    qsynedit/highlighter/base.h \
+    qsynedit/highlighter/composition.h \
+    qsynedit/highlighter/cpp.h \
+    qsynedit/highlighter/glsl.h \
 
 INCLUDEPATH += ../redpanda_qt_utils
 LIBS += -lredpand_qt_utils
