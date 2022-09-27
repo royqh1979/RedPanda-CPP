@@ -38,7 +38,7 @@ namespace QSynedit {
 // valid, while the ecEditXXX commands are ignored when the editor is in
 // read-only mode
 
-enum class SynEditorCommand {
+enum class EditCommand {
     ecNone             =    0, // Nothing. Useful for user event to handle command
     ecViewCommandFirst =    0,
     ecViewCommandLast  =  500,
@@ -175,15 +175,15 @@ enum class SynEditorCommand {
 
 };
 
-class SynKeyError: public BaseError {
+class KeyError: public BaseError {
 public:
-    explicit SynKeyError(const QString& reason);
+    explicit KeyError(const QString& reason);
 };
 
-class SynEditKeyStroke
+class EditKeyStroke
 {
 public:
-    explicit SynEditKeyStroke();
+    explicit EditKeyStroke();
     QKeySequence keySequence() const;
     void setKeySequence(QKeySequence& keySequence);
     int key() const;
@@ -198,34 +198,34 @@ public:
     Qt::KeyboardModifiers keyModifiers2() const;
     void setKeyModifiers2(const Qt::KeyboardModifiers &keyModifiers2);
 
-    SynEditorCommand command() const;
-    void setCommand(const SynEditorCommand &command);
+    EditCommand command() const;
+    void setCommand(const EditCommand &command);
 
 private:
     int mKey; // Virtual keycode, i.e. VK_xxx
     Qt::KeyboardModifiers mKeyModifiers;
     int mKey2;
     Qt::KeyboardModifiers mKeyModifiers2;
-    SynEditorCommand mCommand;
+    EditCommand mCommand;
 
 };
 
-using PSynEditKeyStroke = std::shared_ptr<SynEditKeyStroke>;
-using SynEditKeyStrokeList = QList<PSynEditKeyStroke>;
+using PEditKeyStroke = std::shared_ptr<EditKeyStroke>;
+using EditKeyStrokeList = QList<PEditKeyStroke>;
 
-class SynEditKeyStrokes {
+class EditKeyStrokes {
 public:
-    PSynEditKeyStroke add(SynEditorCommand command, int key, Qt::KeyboardModifiers modifiers);
-    PSynEditKeyStroke findCommand(SynEditorCommand command);
-    PSynEditKeyStroke findKeycode(int key, Qt::KeyboardModifiers modifiers);
-    PSynEditKeyStroke findKeycode2(int key, Qt::KeyboardModifiers modifiers,
+    PEditKeyStroke add(EditCommand command, int key, Qt::KeyboardModifiers modifiers);
+    PEditKeyStroke findCommand(EditCommand command);
+    PEditKeyStroke findKeycode(int key, Qt::KeyboardModifiers modifiers);
+    PEditKeyStroke findKeycode2(int key, Qt::KeyboardModifiers modifiers,
                                    int key2, Qt::KeyboardModifiers modifiers2);
-    PSynEditKeyStroke findKeySequence(const QKeySequence& keySeq);
+    PEditKeyStroke findKeySequence(const QKeySequence& keySeq);
     void clear();
     void resetDefaults();
     void setExtraKeyStrokes();
 private:
-    SynEditKeyStrokeList mList;
+    EditKeyStrokeList mList;
 };
 
 }

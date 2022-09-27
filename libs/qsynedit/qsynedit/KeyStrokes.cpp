@@ -18,16 +18,16 @@
 #include "MiscProcs.h"
 
 namespace QSynedit {
-SynEditKeyStroke::SynEditKeyStroke()
+EditKeyStroke::EditKeyStroke()
 {
     mKey = 0;
     mKeyModifiers = Qt::NoModifier;
     mKey2 = 0;
     mKeyModifiers2 = Qt::NoModifier;
-    mCommand = SynEditorCommand::ecNone;
+    mCommand = EditCommand::ecNone;
 }
 
-QKeySequence SynEditKeyStroke::keySequence() const
+QKeySequence EditKeyStroke::keySequence() const
 {
     if (mKey2 == 0) {
         return QKeySequence(mKey + mKeyModifiers);
@@ -36,7 +36,7 @@ QKeySequence SynEditKeyStroke::keySequence() const
     }
 }
 
-void SynEditKeyStroke::setKeySequence(QKeySequence &keySequence)
+void EditKeyStroke::setKeySequence(QKeySequence &keySequence)
 {
     if (keySequence.isEmpty())
         return;
@@ -49,64 +49,64 @@ void SynEditKeyStroke::setKeySequence(QKeySequence &keySequence)
     }
 }
 
-int SynEditKeyStroke::key() const
+int EditKeyStroke::key() const
 {
     return mKey;
 }
 
-void SynEditKeyStroke::setKey(int key)
+void EditKeyStroke::setKey(int key)
 {
     mKey = key;
 }
 
-Qt::KeyboardModifiers SynEditKeyStroke::keyModifiers() const
+Qt::KeyboardModifiers EditKeyStroke::keyModifiers() const
 {
     return mKeyModifiers;
 }
 
-void SynEditKeyStroke::setKeyModifiers(const Qt::KeyboardModifiers &keyModifiers)
+void EditKeyStroke::setKeyModifiers(const Qt::KeyboardModifiers &keyModifiers)
 {
     mKeyModifiers = keyModifiers;
 }
 
-int SynEditKeyStroke::key2() const
+int EditKeyStroke::key2() const
 {
     return mKey2;
 }
 
-void SynEditKeyStroke::setKey2(int key2)
+void EditKeyStroke::setKey2(int key2)
 {
     mKey2 = key2;
 }
 
-Qt::KeyboardModifiers SynEditKeyStroke::keyModifiers2() const
+Qt::KeyboardModifiers EditKeyStroke::keyModifiers2() const
 {
     return mKeyModifiers2;
 }
 
-void SynEditKeyStroke::setKeyModifiers2(const Qt::KeyboardModifiers &keyModifiers2)
+void EditKeyStroke::setKeyModifiers2(const Qt::KeyboardModifiers &keyModifiers2)
 {
     mKeyModifiers2 = keyModifiers2;
 }
 
-SynEditorCommand SynEditKeyStroke::command() const
+EditCommand EditKeyStroke::command() const
 {
     return mCommand;
 }
 
-void SynEditKeyStroke::setCommand(const SynEditorCommand &command)
+void EditKeyStroke::setCommand(const EditCommand &command)
 {
     mCommand = command;
 }
 
-SynKeyError::SynKeyError(const QString &reason):BaseError(reason)
+KeyError::KeyError(const QString &reason):BaseError(reason)
 {
 
 }
 
-PSynEditKeyStroke SynEditKeyStrokes::add(SynEditorCommand command, int key, Qt::KeyboardModifiers modifiers)
+PEditKeyStroke EditKeyStrokes::add(EditCommand command, int key, Qt::KeyboardModifiers modifiers)
 {
-    PSynEditKeyStroke keyStroke = std::make_shared<SynEditKeyStroke>();
+    PEditKeyStroke keyStroke = std::make_shared<EditKeyStroke>();
     keyStroke->setKey(key);
     keyStroke->setKeyModifiers(modifiers);
     keyStroke->setCommand(command);
@@ -114,40 +114,40 @@ PSynEditKeyStroke SynEditKeyStrokes::add(SynEditorCommand command, int key, Qt::
     return keyStroke;
 }
 
-PSynEditKeyStroke SynEditKeyStrokes::findCommand(SynEditorCommand command)
+PEditKeyStroke EditKeyStrokes::findCommand(EditCommand command)
 {
-    for (PSynEditKeyStroke& keyStroke:mList) {
+    for (PEditKeyStroke& keyStroke:mList) {
         if (keyStroke->command() == command)
             return keyStroke;
     }
-    return PSynEditKeyStroke();
+    return PEditKeyStroke();
 }
 
-PSynEditKeyStroke SynEditKeyStrokes::findKeycode(int key, Qt::KeyboardModifiers modifiers)
+PEditKeyStroke EditKeyStrokes::findKeycode(int key, Qt::KeyboardModifiers modifiers)
 {
-    for (PSynEditKeyStroke& keyStroke:mList) {
+    for (PEditKeyStroke& keyStroke:mList) {
         if (keyStroke->key() == key
                 && keyStroke->keyModifiers()  == (modifiers & ~ Qt::KeypadModifier)
                 && keyStroke->key2()==0)
             return keyStroke;
     }
-    return PSynEditKeyStroke();
+    return PEditKeyStroke();
 }
 
-PSynEditKeyStroke SynEditKeyStrokes::findKeycode2(int key, Qt::KeyboardModifiers modifiers,
+PEditKeyStroke EditKeyStrokes::findKeycode2(int key, Qt::KeyboardModifiers modifiers,
                                                   int key2, Qt::KeyboardModifiers modifiers2)
 {
-    for (PSynEditKeyStroke& keyStroke:mList) {
+    for (PEditKeyStroke& keyStroke:mList) {
         if (keyStroke->key() == key
                 && keyStroke->keyModifiers()==(modifiers & ~ Qt::KeypadModifier)
                 && keyStroke->key2()==key2
                 && keyStroke->keyModifiers2()== (modifiers2 & ~ Qt::KeypadModifier))
             return keyStroke;
     }
-    return PSynEditKeyStroke();
+    return PEditKeyStroke();
 }
 
-PSynEditKeyStroke SynEditKeyStrokes::findKeySequence(const QKeySequence &keySeq)
+PEditKeyStroke EditKeyStrokes::findKeySequence(const QKeySequence &keySeq)
 {
     switch (keySeq.count()) {
     case 1: {
@@ -169,75 +169,75 @@ PSynEditKeyStroke SynEditKeyStrokes::findKeySequence(const QKeySequence &keySeq)
             return findKeycode2(key,modifiers,key2,modifiers2);
         }
     default:
-        return PSynEditKeyStroke();
+        return PEditKeyStroke();
     }
 }
 
-void SynEditKeyStrokes::clear()
+void EditKeyStrokes::clear()
 {
     return mList.clear();
 }
 
-void SynEditKeyStrokes::resetDefaults()
+void EditKeyStrokes::resetDefaults()
 {
     clear();
-    add(SynEditorCommand::ecUp, Qt::Key_Up, Qt::NoModifier);
-    add(SynEditorCommand::ecSelUp, Qt::Key_Up, Qt::ShiftModifier);
-    add(SynEditorCommand::ecSelUp, Qt::Key_Up, Qt::ShiftModifier | Qt::AltModifier);
-    add(SynEditorCommand::ecScrollUp, Qt::Key_Up, Qt::ControlModifier);
-    add(SynEditorCommand::ecDown, Qt::Key_Down, Qt::NoModifier);
-    add(SynEditorCommand::ecSelDown, Qt::Key_Down, Qt::ShiftModifier);
-    add(SynEditorCommand::ecSelDown, Qt::Key_Down, Qt::ShiftModifier | Qt::AltModifier);
-    add(SynEditorCommand::ecScrollDown, Qt::Key_Down, Qt::ControlModifier);
-    add(SynEditorCommand::ecLeft, Qt::Key_Left, Qt::NoModifier);
-    add(SynEditorCommand::ecSelLeft, Qt::Key_Left, Qt::ShiftModifier);
-    add(SynEditorCommand::ecWordLeft, Qt::Key_Left, Qt::ControlModifier);
-    add(SynEditorCommand::ecSelWordLeft, Qt::Key_Left, Qt::ShiftModifier|Qt::ControlModifier);
-    add(SynEditorCommand::ecRight, Qt::Key_Right, Qt::NoModifier);
-    add(SynEditorCommand::ecSelRight, Qt::Key_Right, Qt::ShiftModifier);
-    add(SynEditorCommand::ecWordRight, Qt::Key_Right, Qt::ControlModifier);
-    add(SynEditorCommand::ecSelWordRight, Qt::Key_Right, Qt::ShiftModifier|Qt::ControlModifier);
+    add(EditCommand::ecUp, Qt::Key_Up, Qt::NoModifier);
+    add(EditCommand::ecSelUp, Qt::Key_Up, Qt::ShiftModifier);
+    add(EditCommand::ecSelUp, Qt::Key_Up, Qt::ShiftModifier | Qt::AltModifier);
+    add(EditCommand::ecScrollUp, Qt::Key_Up, Qt::ControlModifier);
+    add(EditCommand::ecDown, Qt::Key_Down, Qt::NoModifier);
+    add(EditCommand::ecSelDown, Qt::Key_Down, Qt::ShiftModifier);
+    add(EditCommand::ecSelDown, Qt::Key_Down, Qt::ShiftModifier | Qt::AltModifier);
+    add(EditCommand::ecScrollDown, Qt::Key_Down, Qt::ControlModifier);
+    add(EditCommand::ecLeft, Qt::Key_Left, Qt::NoModifier);
+    add(EditCommand::ecSelLeft, Qt::Key_Left, Qt::ShiftModifier);
+    add(EditCommand::ecWordLeft, Qt::Key_Left, Qt::ControlModifier);
+    add(EditCommand::ecSelWordLeft, Qt::Key_Left, Qt::ShiftModifier|Qt::ControlModifier);
+    add(EditCommand::ecRight, Qt::Key_Right, Qt::NoModifier);
+    add(EditCommand::ecSelRight, Qt::Key_Right, Qt::ShiftModifier);
+    add(EditCommand::ecWordRight, Qt::Key_Right, Qt::ControlModifier);
+    add(EditCommand::ecSelWordRight, Qt::Key_Right, Qt::ShiftModifier|Qt::ControlModifier);
 
 //    add(SynEditorCommand::ecExpandSelection, Qt::Key_Right, Qt::ShiftModifier|Qt::AltModifier);
 //    add(SynEditorCommand::ecShrinkSelection, Qt::Key_Left, Qt::ShiftModifier | Qt::AltModifier);
 
-    add(SynEditorCommand::ecPageDown, Qt::Key_PageDown, Qt::NoModifier);
-    add(SynEditorCommand::ecSelPageDown, Qt::Key_PageDown, Qt::ShiftModifier);
-    add(SynEditorCommand::ecPageBottom, Qt::Key_PageDown, Qt::ControlModifier);
-    add(SynEditorCommand::ecSelPageBottom, Qt::Key_PageDown, Qt::ShiftModifier|Qt::ControlModifier);
-    add(SynEditorCommand::ecPageUp, Qt::Key_PageUp, Qt::NoModifier);
-    add(SynEditorCommand::ecSelPageUp, Qt::Key_PageUp, Qt::ShiftModifier);
-    add(SynEditorCommand::ecPageTop, Qt::Key_PageUp, Qt::ControlModifier);
-    add(SynEditorCommand::ecSelPageTop, Qt::Key_PageUp, Qt::ShiftModifier|Qt::ControlModifier);
-    add(SynEditorCommand::ecLineStart, Qt::Key_Home, Qt::NoModifier);
-    add(SynEditorCommand::ecSelLineStart, Qt::Key_Home, Qt::ShiftModifier);
-    add(SynEditorCommand::ecEditorStart, Qt::Key_Home, Qt::ControlModifier);
-    add(SynEditorCommand::ecSelEditorStart, Qt::Key_Home, Qt::ShiftModifier|Qt::ControlModifier);
-    add(SynEditorCommand::ecLineEnd, Qt::Key_End, Qt::NoModifier);
-    add(SynEditorCommand::ecSelLineEnd, Qt::Key_End, Qt::ShiftModifier);
-    add(SynEditorCommand::ecEditorEnd, Qt::Key_End, Qt::ControlModifier);
-    add(SynEditorCommand::ecSelEditorEnd, Qt::Key_End, Qt::ShiftModifier|Qt::ControlModifier);
-    add(SynEditorCommand::ecToggleMode, Qt::Key_Insert, Qt::NoModifier);
+    add(EditCommand::ecPageDown, Qt::Key_PageDown, Qt::NoModifier);
+    add(EditCommand::ecSelPageDown, Qt::Key_PageDown, Qt::ShiftModifier);
+    add(EditCommand::ecPageBottom, Qt::Key_PageDown, Qt::ControlModifier);
+    add(EditCommand::ecSelPageBottom, Qt::Key_PageDown, Qt::ShiftModifier|Qt::ControlModifier);
+    add(EditCommand::ecPageUp, Qt::Key_PageUp, Qt::NoModifier);
+    add(EditCommand::ecSelPageUp, Qt::Key_PageUp, Qt::ShiftModifier);
+    add(EditCommand::ecPageTop, Qt::Key_PageUp, Qt::ControlModifier);
+    add(EditCommand::ecSelPageTop, Qt::Key_PageUp, Qt::ShiftModifier|Qt::ControlModifier);
+    add(EditCommand::ecLineStart, Qt::Key_Home, Qt::NoModifier);
+    add(EditCommand::ecSelLineStart, Qt::Key_Home, Qt::ShiftModifier);
+    add(EditCommand::ecEditorStart, Qt::Key_Home, Qt::ControlModifier);
+    add(EditCommand::ecSelEditorStart, Qt::Key_Home, Qt::ShiftModifier|Qt::ControlModifier);
+    add(EditCommand::ecLineEnd, Qt::Key_End, Qt::NoModifier);
+    add(EditCommand::ecSelLineEnd, Qt::Key_End, Qt::ShiftModifier);
+    add(EditCommand::ecEditorEnd, Qt::Key_End, Qt::ControlModifier);
+    add(EditCommand::ecSelEditorEnd, Qt::Key_End, Qt::ShiftModifier|Qt::ControlModifier);
+    add(EditCommand::ecToggleMode, Qt::Key_Insert, Qt::NoModifier);
 //    add(SynEditorCommand::ecCopy, Qt::Key_Insert, Qt::ControlModifier);
 //    add(SynEditorCommand::ecCut, Qt::Key_Delete, Qt::ShiftModifier);
 //    add(SynEditorCommand::ecPaste, Qt::Key_Insert, Qt::ShiftModifier);
-    add(SynEditorCommand::ecDeleteChar, Qt::Key_Delete, Qt::NoModifier);
-    add(SynEditorCommand::ecDeleteLastChar, Qt::Key_Backspace, Qt::NoModifier);
+    add(EditCommand::ecDeleteChar, Qt::Key_Delete, Qt::NoModifier);
+    add(EditCommand::ecDeleteLastChar, Qt::Key_Backspace, Qt::NoModifier);
 //    add(SynEditorCommand::ecDeleteLastChar, Qt::Key_Backspace, Qt::ShiftModifier);
 //    add(SynEditorCommand::ecDeleteWordStart, Qt::Key_Backspace, Qt::ControlModifier);
 //    add(SynEditorCommand::ecDeleteWordEnd, Qt::Key_Delete, Qt::ControlModifier);
 //    add(SynEditorCommand::ecUndo, Qt::Key_Backspace, Qt::AltModifier);
 //    add(SynEditorCommand::ecRedo, Qt::Key_Backspace, Qt::AltModifier|Qt::ShiftModifier);
-    add(SynEditorCommand::ecLineBreak, Qt::Key_Return, Qt::NoModifier);
-    add(SynEditorCommand::ecLineBreak, Qt::Key_Return, Qt::ShiftModifier);
-    add(SynEditorCommand::ecLineBreakAtEnd, Qt::Key_Return, Qt::ControlModifier);
-    add(SynEditorCommand::ecLineBreak, Qt::Key_Enter, Qt::NoModifier);
-    add(SynEditorCommand::ecLineBreak, Qt::Key_Enter, Qt::ShiftModifier);
-    add(SynEditorCommand::ecLineBreakAtEnd, Qt::Key_Enter, Qt::ControlModifier);
+    add(EditCommand::ecLineBreak, Qt::Key_Return, Qt::NoModifier);
+    add(EditCommand::ecLineBreak, Qt::Key_Return, Qt::ShiftModifier);
+    add(EditCommand::ecLineBreakAtEnd, Qt::Key_Return, Qt::ControlModifier);
+    add(EditCommand::ecLineBreak, Qt::Key_Enter, Qt::NoModifier);
+    add(EditCommand::ecLineBreak, Qt::Key_Enter, Qt::ShiftModifier);
+    add(EditCommand::ecLineBreakAtEnd, Qt::Key_Enter, Qt::ControlModifier);
 //    add(SynEditorCommand::ecTab, Qt::Key_Tab, Qt::NoModifier);
 //    add(SynEditorCommand::ecShiftTab, Qt::Key_Backtab, Qt::ShiftModifier);
 //    add(SynEditorCommand::ecShiftTab, Qt::Key_Tab, Qt::ShiftModifier);
-    add(SynEditorCommand::ecContextHelp, Qt::Key_F1, Qt::NoModifier);
+    add(EditCommand::ecContextHelp, Qt::Key_F1, Qt::NoModifier);
 
 //    add(SynEditorCommand::ecSelectAll, Qt::Key_A, Qt::ControlModifier);
 //    add(SynEditorCommand::ecCopy, Qt::Key_C, Qt::ControlModifier);
@@ -260,21 +260,21 @@ void SynEditKeyStrokes::resetDefaults()
     //    add(SynEditorCommand::ecMatchBracket, Qt::Key_B, Qt::ControlModifier | Qt::ShiftModifier);
 }
 
-void SynEditKeyStrokes::setExtraKeyStrokes()
+void EditKeyStrokes::setExtraKeyStrokes()
 {
-    add(SynEditorCommand::ecDeleteWordStart, Qt::Key_Backspace, Qt::ControlModifier);
-    add(SynEditorCommand::ecDeleteWordEnd, Qt::Key_Delete, Qt::ControlModifier);
+    add(EditCommand::ecDeleteWordStart, Qt::Key_Backspace, Qt::ControlModifier);
+    add(EditCommand::ecDeleteWordEnd, Qt::Key_Delete, Qt::ControlModifier);
 
-    add(SynEditorCommand::ecDuplicateLine, Qt::Key_D, Qt::ControlModifier);
-    add(SynEditorCommand::ecDeleteLine, Qt::Key_E, Qt::ControlModifier);
+    add(EditCommand::ecDuplicateLine, Qt::Key_D, Qt::ControlModifier);
+    add(EditCommand::ecDeleteLine, Qt::Key_E, Qt::ControlModifier);
 
-    add(SynEditorCommand::ecSelectAll, Qt::Key_A, Qt::ControlModifier);
-    add(SynEditorCommand::ecCopy, Qt::Key_C, Qt::ControlModifier);
-    add(SynEditorCommand::ecPaste, Qt::Key_V, Qt::ControlModifier);
-    add(SynEditorCommand::ecCut, Qt::Key_X, Qt::ControlModifier);
+    add(EditCommand::ecSelectAll, Qt::Key_A, Qt::ControlModifier);
+    add(EditCommand::ecCopy, Qt::Key_C, Qt::ControlModifier);
+    add(EditCommand::ecPaste, Qt::Key_V, Qt::ControlModifier);
+    add(EditCommand::ecCut, Qt::Key_X, Qt::ControlModifier);
 
-    add(SynEditorCommand::ecUndo, Qt::Key_Z, Qt::ControlModifier);
-    add(SynEditorCommand::ecRedo, Qt::Key_Y, Qt::ControlModifier);
+    add(EditCommand::ecUndo, Qt::Key_Z, Qt::ControlModifier);
+    add(EditCommand::ecRedo, Qt::Key_Y, Qt::ControlModifier);
 }
 
 }

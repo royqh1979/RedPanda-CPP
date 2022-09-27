@@ -30,28 +30,28 @@ public:
 protected:
     bool mCreateHTMLFragment;
 private:
-    PSynHighlighterAttribute mLastAttri;
-    QString AttriToCSS(PSynHighlighterAttribute Attri, const QString& UniqueAttriName);
-    bool AttriToCSSCallback(PSynHighlighter Highlighter, PSynHighlighterAttribute  Attri,
+    PHighlighterAttribute mLastAttri;
+    QString AttriToCSS(PHighlighterAttribute Attri, const QString& UniqueAttriName);
+    bool AttriToCSSCallback(PHighlighter Highlighter, PHighlighterAttribute  Attri,
                             const QString& UniqueAttriName,  QList<void *> params);
     QString ColorToHTML(const QColor &AColor);
-    QString GetStyleName(PSynHighlighter Highlighter,
-                         PSynHighlighterAttribute Attri);
+    QString GetStyleName(PHighlighter Highlighter,
+                         PHighlighterAttribute Attri);
     QString MakeValidName(const QString &Name);
-    bool StyleNameCallback(PSynHighlighter Highlighter, PSynHighlighterAttribute  Attri,
+    bool StyleNameCallback(PHighlighter Highlighter, PHighlighterAttribute  Attri,
                            const QString& UniqueAttriName,  QList<void *> params);
 
     // SynExporter interface
 protected:
-    void FormatAttributeDone(bool BackgroundChanged, bool ForegroundChanged, SynFontStyles FontStylesChanged);
-    void FormatAttributeInit(bool BackgroundChanged, bool ForegroundChanged, SynFontStyles FontStylesChanged);
+    void FormatAttributeDone(bool BackgroundChanged, bool ForegroundChanged, FontStyles FontStylesChanged);
+    void FormatAttributeInit(bool BackgroundChanged, bool ForegroundChanged, FontStyles FontStylesChanged);
     void FormatAfterLastAttribute();
-    void FormatBeforeFirstAttribute(bool BackgroundChanged, bool ForegroundChanged, SynFontStyles FontStylesChanged);
+    void FormatBeforeFirstAttribute(bool BackgroundChanged, bool ForegroundChanged, FontStyles FontStylesChanged);
     void FormatNewLine();
     QString GetFooter();
     QString GetFormatName();
     QString GetHeader();
-    void SetTokenAttribute(PSynHighlighterAttribute Attri);
+    void SetTokenAttribute(PHighlighterAttribute Attri);
 };
 }
 #endif // SYNHTMLEXPORTER_H

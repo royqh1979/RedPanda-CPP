@@ -18,85 +18,85 @@
 #include "../Constants.h"
 
 namespace QSynedit {
-SynHighlighter::SynHighlighter() :
+Highlighter::Highlighter() :
     mEnabled(true),
-    mWordBreakChars{ SynWordBreakChars }
+    mWordBreakChars{ WordBreakChars }
 {
 
 }
 
-const QMap<QString, PSynHighlighterAttribute>& SynHighlighter::attributes() const
+const QMap<QString, PHighlighterAttribute>& Highlighter::attributes() const
 {
     return mAttributes;
 }
 
-const QSet<QChar>& SynHighlighter::wordBreakChars() const
+const QSet<QChar>& Highlighter::wordBreakChars() const
 {
     return mWordBreakChars;
 }
 
-PSynHighlighterAttribute SynHighlighter::commentAttribute() const
+PHighlighterAttribute Highlighter::commentAttribute() const
 {
     return mCommentAttribute;
 }
 
-PSynHighlighterAttribute SynHighlighter::identifierAttribute() const
+PHighlighterAttribute Highlighter::identifierAttribute() const
 {
     return mIdentifierAttribute;
 }
 
-PSynHighlighterAttribute SynHighlighter::keywordAttribute() const
+PHighlighterAttribute Highlighter::keywordAttribute() const
 {
     return mKeywordAttribute;
 }
 
-PSynHighlighterAttribute SynHighlighter::stringAttribute() const
+PHighlighterAttribute Highlighter::stringAttribute() const
 {
     return mStringAttribute;
 }
 
-PSynHighlighterAttribute SynHighlighter::whitespaceAttribute() const
+PHighlighterAttribute Highlighter::whitespaceAttribute() const
 {
     return mWhitespaceAttribute;
 }
 
-PSynHighlighterAttribute SynHighlighter::symbolAttribute() const
+PHighlighterAttribute Highlighter::symbolAttribute() const
 {
     return mSymbolAttribute;
 }
 
-SynHighlighterTokenType SynHighlighter::getTokenType()
+TokenType Highlighter::getTokenType()
 {
-    return SynHighlighterTokenType::Default;
+    return TokenType::Default;
 }
 
-bool SynHighlighter::isKeyword(const QString &)
+bool Highlighter::isKeyword(const QString &)
 {
     return false;
 }
 
-void SynHighlighter::nextToEol()
+void Highlighter::nextToEol()
 {
     while (!eol())
         next();
 }
 
-QSet<QString> SynHighlighter::keywords() const
+QSet<QString> Highlighter::keywords() const
 {
     return QSet<QString>();
 }
 
-QString SynHighlighter::foldString()
+QString Highlighter::foldString()
 {
     return " ... }";
 }
 
-bool SynHighlighter::isSpaceChar(const QChar &ch)
+bool Highlighter::isSpaceChar(const QChar &ch)
 {
     return ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n';
 }
 
-bool SynHighlighter::isWordBreakChar(const QChar &ch)
+bool Highlighter::isWordBreakChar(const QChar &ch)
 {
     switch (ch.unicode()) {
     case '.':
@@ -130,7 +130,7 @@ bool SynHighlighter::isWordBreakChar(const QChar &ch)
     }
 }
 
-bool SynHighlighter::isIdentChar(const QChar &ch) const
+bool Highlighter::isIdentChar(const QChar &ch) const
 {
     if (ch == '_') {
         return true;
@@ -147,96 +147,96 @@ bool SynHighlighter::isIdentChar(const QChar &ch) const
     return false;
 }
 
-void SynHighlighter::addAttribute(PSynHighlighterAttribute attribute)
+void Highlighter::addAttribute(PHighlighterAttribute attribute)
 {
     mAttributes[attribute->name()]=attribute;
 }
 
-void SynHighlighter::clearAttributes()
+void Highlighter::clearAttributes()
 {
     mAttributes.clear();
 }
 
-int SynHighlighter::attributesCount() const
+int Highlighter::attributesCount() const
 {
     return mAttributes.size();
 }
 
-PSynHighlighterAttribute SynHighlighter::getAttribute(const QString &name) const
+PHighlighterAttribute Highlighter::getAttribute(const QString &name) const
 {
     auto search = mAttributes.find(name);
     if (search!=mAttributes.end()) {
         return search.value();
     }
-    return PSynHighlighterAttribute();
+    return PHighlighterAttribute();
 }
 
-bool SynHighlighter::enabled() const
+bool Highlighter::enabled() const
 {
     return mEnabled;
 }
 
-void SynHighlighter::setEnabled(bool value)
+void Highlighter::setEnabled(bool value)
 {
     if (value != mEnabled) {
         mEnabled = value;
     }
 }
 
-SynFontStyles SynHighlighterAttribute::styles() const
+FontStyles HighlighterAttribute::styles() const
 {
     return mStyles;
 }
 
-void SynHighlighterAttribute::setStyles(const SynFontStyles &styles)
+void HighlighterAttribute::setStyles(const FontStyles &styles)
 {
     if (mStyles!=styles) {
         mStyles = styles;
     }
 }
 
-QColor SynHighlighterAttribute::foreground() const
+QColor HighlighterAttribute::foreground() const
 {
     return mForeground;
 }
 
-void SynHighlighterAttribute::setForeground(const QColor &color)
+void HighlighterAttribute::setForeground(const QColor &color)
 {
     mForeground = color;
 }
 
-QColor SynHighlighterAttribute::background() const
+QColor HighlighterAttribute::background() const
 {
     return mBackground;
 }
 
-void SynHighlighterAttribute::setBackground(const QColor &background)
+void HighlighterAttribute::setBackground(const QColor &background)
 {
     mBackground = background;
 }
 
-QString SynHighlighterAttribute::name() const
+QString HighlighterAttribute::name() const
 {
     return mName;
 }
 
-void SynHighlighterAttribute::setName(const QString &name)
+void HighlighterAttribute::setName(const QString &name)
 {
     if (mName!=name) {
         mName = name;
     }
 }
 
-SynHighlighterAttribute::SynHighlighterAttribute(const QString &name):
+HighlighterAttribute::HighlighterAttribute(const QString &name):
     mForeground(QColor()),
     mBackground(QColor()),
     mName(name),
-    mStyles(SynFontStyle::fsNone)
+    mStyles(FontStyle::fsNone)
 {
 
 }
 
-bool SynRangeState::operator==(const SynRangeState &s2)
+bool HighlighterState::operator==(const HighlighterState &s2)
 {
     // indents contains the information of brace/parenthesis/brackets embedded levels
     return (state == s2.state)
@@ -244,14 +244,14 @@ bool SynRangeState::operator==(const SynRangeState &s2)
             ;
 }
 
-int SynRangeState::getLastIndent()
+int HighlighterState::getLastIndent()
 {
     if (indents.isEmpty())
         return -1;
     return indents.back();
 }
 
-SynRangeState::SynRangeState():
+HighlighterState::HighlighterState():
     state(0),
     braceLevel(0),
     bracketLevel(0),

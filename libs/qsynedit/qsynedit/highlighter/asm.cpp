@@ -19,7 +19,7 @@
 
 namespace  QSynedit {
 
-const QSet<QString> SynEditASMHighlighter::Keywords {
+const QSet<QString> ASMHighlighter::Keywords {
     "aaa","aad","aam","adc","add","and","arpl","bound","bsf","bsr","bswap","bt","btc","btr","bts",
     "call","cbw","cdq","clc","cld","cli","clts","cmc","cmp","cmps","cmpsb","cmpsd","cmpsw",
     "cmpxchg","cwd","cwde","daa","das","dec","div","emms","enter","f2xm1","fabs","fadd","faddp","fbld",
@@ -55,56 +55,56 @@ const QSet<QString> SynEditASMHighlighter::Keywords {
 
 
 
-SynEditASMHighlighter::SynEditASMHighlighter()
+ASMHighlighter::ASMHighlighter()
 {
-    mCommentAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrComment);
-    mCommentAttribute->setStyles(SynFontStyle::fsItalic);
+    mCommentAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrComment);
+    mCommentAttribute->setStyles(FontStyle::fsItalic);
     addAttribute(mCommentAttribute);
-    mIdentifierAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrIdentifier);
+    mIdentifierAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrIdentifier);
     addAttribute(mIdentifierAttribute);
-    mKeywordAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrReservedWord);
-    mKeywordAttribute->setStyles(SynFontStyle::fsBold);
+    mKeywordAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrReservedWord);
+    mKeywordAttribute->setStyles(FontStyle::fsBold);
     addAttribute(mKeywordAttribute);
-    mNumberAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrNumber);
+    mNumberAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrNumber);
     addAttribute(mNumberAttribute);
-    mWhitespaceAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrSpace);
+    mWhitespaceAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrSpace);
     addAttribute(mWhitespaceAttribute);
-    mStringAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrString);
+    mStringAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrString);
     addAttribute(mStringAttribute);
-    mSymbolAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrSymbol);
+    mSymbolAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrSymbol);
     addAttribute(mSymbolAttribute);
 }
 
-PSynHighlighterAttribute SynEditASMHighlighter::numberAttribute()
+PHighlighterAttribute ASMHighlighter::numberAttribute()
 {
     return mNumberAttribute;
 }
 
-void SynEditASMHighlighter::CommentProc()
+void ASMHighlighter::CommentProc()
 {
-    mTokenID = TokenKind::Comment;
+    mTokenID = TokenId::Comment;
     do {
         mRun++;
     } while (! (mLine[mRun]==0 || mLine[mRun] == '\r' || mLine[mRun]=='\n'));
 }
 
-void SynEditASMHighlighter::CRProc()
+void ASMHighlighter::CRProc()
 {
-    mTokenID = TokenKind::Space;
+    mTokenID = TokenId::Space;
     mRun++;
     if (mLine[mRun] == '\n')
         mRun++;
 }
 
-void SynEditASMHighlighter::GreaterProc()
+void ASMHighlighter::GreaterProc()
 {
     mRun++;
-    mTokenID = TokenKind::Symbol;
+    mTokenID = TokenId::Symbol;
     if (mLine[mRun] == '=')
         mRun++;
 }
 
-void SynEditASMHighlighter::IdentProc()
+void ASMHighlighter::IdentProc()
 {
     int start = mRun;
     while (isIdentChar(mLine[mRun])) {
@@ -112,35 +112,35 @@ void SynEditASMHighlighter::IdentProc()
     }
     QString s = mLineString.mid(start,mRun-start);
     if (Keywords.contains(s)) {
-        mTokenID = TokenKind::Key;
+        mTokenID = TokenId::Key;
     } else {
-        mTokenID = TokenKind::Identifier;
+        mTokenID = TokenId::Identifier;
     }
 }
 
-void SynEditASMHighlighter::LFProc()
+void ASMHighlighter::LFProc()
 {
-    mTokenID = TokenKind::Space;
+    mTokenID = TokenId::Space;
     mRun++;
 }
 
-void SynEditASMHighlighter::LowerProc()
+void ASMHighlighter::LowerProc()
 {
     mRun++;
-    mTokenID = TokenKind::Symbol;
+    mTokenID = TokenId::Symbol;
     if (mLine[mRun]=='=' || mLine[mRun]== '>')
         mRun++;
 }
 
-void SynEditASMHighlighter::NullProc()
+void ASMHighlighter::NullProc()
 {
-    mTokenID = TokenKind::Null;
+    mTokenID = TokenId::Null;
 }
 
-void SynEditASMHighlighter::NumberProc()
+void ASMHighlighter::NumberProc()
 {
     mRun++;
-    mTokenID = TokenKind::Number;
+    mTokenID = TokenId::Number;
     while (true) {
         QChar ch = mLine[mRun];
         if (!((ch>='0' && ch<='9') || (ch=='.') || (ch >= 'a' && ch<='f')
@@ -150,9 +150,9 @@ void SynEditASMHighlighter::NumberProc()
     }
 }
 
-void SynEditASMHighlighter::SingleQuoteStringProc()
+void ASMHighlighter::SingleQuoteStringProc()
 {
-    mTokenID = TokenKind::String;
+    mTokenID = TokenId::String;
     if ((mRun+2 < mLineString.size()) && (mLine[mRun + 1] == '\'') && (mLine[mRun + 2] == '\''))
         mRun += 2;
     while (true) {
@@ -164,23 +164,23 @@ void SynEditASMHighlighter::SingleQuoteStringProc()
         mRun++;
 }
 
-void SynEditASMHighlighter::SlashProc()
+void ASMHighlighter::SlashProc()
 {
     mRun++;
     if (mLine[mRun] == '/') {
-      mTokenID = TokenKind::Comment;
+      mTokenID = TokenId::Comment;
       while (true) {
         mRun++;
         if (mLine[mRun] == 0 || mLine[mRun] == '\r' || mLine[mRun] == '\n')
             break;
       }
     } else
-        mTokenID = TokenKind::Symbol;
+        mTokenID = TokenId::Symbol;
 }
 
-void SynEditASMHighlighter::SpaceProc()
+void ASMHighlighter::SpaceProc()
 {
-    mTokenID = TokenKind::Space;
+    mTokenID = TokenId::Space;
     while (true) {
         mRun++;
         if (mLine[mRun] == 0 || mLine[mRun] == '\r' || mLine[mRun] == '\n')
@@ -190,9 +190,9 @@ void SynEditASMHighlighter::SpaceProc()
     }
 }
 
-void SynEditASMHighlighter::StringProc()
+void ASMHighlighter::StringProc()
 {
-    mTokenID = TokenKind::String;
+    mTokenID = TokenId::String;
     if ((mRun+2 < mLineString.size()) && (mLine[mRun + 1] == '\"') && (mLine[mRun + 2] == '\"'))
         mRun += 2;
     while (true) {
@@ -206,95 +206,95 @@ void SynEditASMHighlighter::StringProc()
         mRun++;
 }
 
-void SynEditASMHighlighter::SymbolProc()
+void ASMHighlighter::SymbolProc()
 {
     mRun++;
-    mTokenID = TokenKind::Symbol;
+    mTokenID = TokenId::Symbol;
 }
 
-void SynEditASMHighlighter::UnknownProc()
+void ASMHighlighter::UnknownProc()
 {
     mRun++;
-    mTokenID = TokenKind::Unknown;
+    mTokenID = TokenId::Unknown;
 }
 
-bool SynEditASMHighlighter::eol() const
+bool ASMHighlighter::eol() const
 {
-    return mTokenID == TokenKind::Null;
+    return mTokenID == TokenId::Null;
 }
 
-QString SynEditASMHighlighter::languageName()
+QString ASMHighlighter::languageName()
 {
     return "asm";
 }
 
-SynHighlighterLanguage SynEditASMHighlighter::language()
+HighlighterLanguage ASMHighlighter::language()
 {
-    return SynHighlighterLanguage::Asssembly;
+    return HighlighterLanguage::Asssembly;
 }
 
-QString SynEditASMHighlighter::getToken() const
+QString ASMHighlighter::getToken() const
 {
     return mLineString.mid(mTokenPos,mRun-mTokenPos);
 }
 
-PSynHighlighterAttribute SynEditASMHighlighter::getTokenAttribute() const
+PHighlighterAttribute ASMHighlighter::getTokenAttribute() const
 {
     switch(mTokenID) {
-    case TokenKind::Comment:
+    case TokenId::Comment:
         return mCommentAttribute;
-    case TokenKind::Identifier:
+    case TokenId::Identifier:
         return mIdentifierAttribute;
-    case TokenKind::Key:
+    case TokenId::Key:
         return mKeywordAttribute;
-    case TokenKind::Number:
+    case TokenId::Number:
         return mNumberAttribute;
-    case TokenKind::Space:
+    case TokenId::Space:
         return mWhitespaceAttribute;
-    case TokenKind::String:
+    case TokenId::String:
         return mStringAttribute;
-    case TokenKind::Symbol:
+    case TokenId::Symbol:
         return mSymbolAttribute;
-    case TokenKind::Unknown:
+    case TokenId::Unknown:
         return mIdentifierAttribute;
     }
-    return PSynHighlighterAttribute();
+    return PHighlighterAttribute();
 }
 
-SynTokenKind SynEditASMHighlighter::getTokenKind()
+TokenKind ASMHighlighter::getTokenKind()
 {
     return mTokenID;
 }
 
-SynHighlighterTokenType SynEditASMHighlighter::getTokenType()
+TokenType ASMHighlighter::getTokenType()
 {
     switch(mTokenID) {
-    case TokenKind::Comment:
-        return SynHighlighterTokenType::Comment;
-    case TokenKind::Identifier:
-        return SynHighlighterTokenType::Identifier;
-    case TokenKind::Key:
-        return SynHighlighterTokenType::Keyword;
-    case TokenKind::Number:
-        return SynHighlighterTokenType::Number;
-    case TokenKind::Space:
-        return SynHighlighterTokenType::Space;
-    case TokenKind::String:
-        return SynHighlighterTokenType::String;
-    case TokenKind::Symbol:
-        return SynHighlighterTokenType::Symbol;
-    case TokenKind::Unknown:
-        return SynHighlighterTokenType::Default;
+    case TokenId::Comment:
+        return TokenType::Comment;
+    case TokenId::Identifier:
+        return TokenType::Identifier;
+    case TokenId::Key:
+        return TokenType::Keyword;
+    case TokenId::Number:
+        return TokenType::Number;
+    case TokenId::Space:
+        return TokenType::Space;
+    case TokenId::String:
+        return TokenType::String;
+    case TokenId::Symbol:
+        return TokenType::Symbol;
+    case TokenId::Unknown:
+        return TokenType::Default;
     }
-    return SynHighlighterTokenType::Default;
+    return TokenType::Default;
 }
 
-int SynEditASMHighlighter::getTokenPos()
+int ASMHighlighter::getTokenPos()
 {
     return mTokenPos;
 }
 
-void SynEditASMHighlighter::next()
+void ASMHighlighter::next()
 {
     mTokenPos = mRun;
     switch(mLine[mRun].unicode()) {
@@ -355,7 +355,7 @@ void SynEditASMHighlighter::next()
     }
 }
 
-void SynEditASMHighlighter::setLine(const QString &newLine, int lineNumber)
+void ASMHighlighter::setLine(const QString &newLine, int lineNumber)
 {
     mLineString = newLine;
     mLine = mLineString.data();
@@ -364,47 +364,47 @@ void SynEditASMHighlighter::setLine(const QString &newLine, int lineNumber)
     next();
 }
 
-SynHighlighterClass SynEditASMHighlighter::getClass() const
+HighlighterClass ASMHighlighter::getClass() const
 {
-    return SynHighlighterClass::CppHighlighter;
+    return HighlighterClass::CppHighlighter;
 }
 
-QString SynEditASMHighlighter::getName() const
+QString ASMHighlighter::getName() const
 {
     return SYN_HIGHLIGHTER_CPP;
 }
 
-bool SynEditASMHighlighter::getTokenFinished() const
+bool ASMHighlighter::getTokenFinished() const
 {
     return true;
 }
 
-bool SynEditASMHighlighter::isLastLineCommentNotFinished(int /*state*/) const
+bool ASMHighlighter::isLastLineCommentNotFinished(int /*state*/) const
 {
     return true;
 }
 
-bool SynEditASMHighlighter::isLastLineStringNotFinished(int /*state*/) const
+bool ASMHighlighter::isLastLineStringNotFinished(int /*state*/) const
 {
     return true;
 }
 
-SynRangeState SynEditASMHighlighter::getRangeState() const
+HighlighterState ASMHighlighter::getState() const
 {
-    return SynRangeState();
+    return HighlighterState();
 }
 
-void SynEditASMHighlighter::setState(const SynRangeState&)
-{
-
-}
-
-void SynEditASMHighlighter::resetState()
+void ASMHighlighter::setState(const HighlighterState&)
 {
 
 }
 
-QSet<QString> SynEditASMHighlighter::keywords() const
+void ASMHighlighter::resetState()
+{
+
+}
+
+QSet<QString> ASMHighlighter::keywords() const
 {
     return Keywords;
 }

@@ -55,28 +55,28 @@ QString SynRTFExporter::GetFontTable()
     return Result;
 }
 
-void SynRTFExporter::FormatAttributeDone(bool , bool , SynFontStyles FontStylesChanged)
+void SynRTFExporter::FormatAttributeDone(bool , bool , FontStyles FontStylesChanged)
 {
     // nothing to do about the color, but reset the font style
-    if (FontStylesChanged.testFlag(SynFontStyle::fsBold)) {
+    if (FontStylesChanged.testFlag(FontStyle::fsBold)) {
         mAttributesChanged = true;
         AddData("\\b0");
     }
-    if (FontStylesChanged.testFlag(SynFontStyle::fsItalic)) {
+    if (FontStylesChanged.testFlag(FontStyle::fsItalic)) {
         mAttributesChanged = true;
         AddData("\\i0");
     }
-    if (FontStylesChanged.testFlag(SynFontStyle::fsUnderline)) {
+    if (FontStylesChanged.testFlag(FontStyle::fsUnderline)) {
         mAttributesChanged = true;
         AddData("\\ul0");
     }
-    if (FontStylesChanged.testFlag(SynFontStyle::fsStrikeOut)) {
+    if (FontStylesChanged.testFlag(FontStyle::fsStrikeOut)) {
         mAttributesChanged = true;
         AddData("\\strike0");
     }
 }
 
-void SynRTFExporter::FormatAttributeInit(bool BackgroundChanged, bool ForegroundChanged, SynFontStyles FontStylesChanged)
+void SynRTFExporter::FormatAttributeInit(bool BackgroundChanged, bool ForegroundChanged, FontStyles FontStylesChanged)
 {
     // background color
     if (BackgroundChanged) {
@@ -93,19 +93,19 @@ void SynRTFExporter::FormatAttributeInit(bool BackgroundChanged, bool Foreground
     }
     // font styles
     // nothing to do about the color, but reset the font style
-    if (FontStylesChanged.testFlag(SynFontStyle::fsBold)) {
+    if (FontStylesChanged.testFlag(FontStyle::fsBold)) {
         mAttributesChanged = true;
         AddData("\\b0");
     }
-    if (FontStylesChanged.testFlag(SynFontStyle::fsItalic)) {
+    if (FontStylesChanged.testFlag(FontStyle::fsItalic)) {
         mAttributesChanged = true;
         AddData("\\i0");
     }
-    if (FontStylesChanged.testFlag(SynFontStyle::fsUnderline)) {
+    if (FontStylesChanged.testFlag(FontStyle::fsUnderline)) {
         mAttributesChanged = true;
         AddData("\\ul0");
     }
-    if (FontStylesChanged.testFlag(SynFontStyle::fsStrikeOut)) {
+    if (FontStylesChanged.testFlag(FontStyle::fsStrikeOut)) {
         mAttributesChanged = true;
         AddData("\\strike0");
     }
@@ -120,7 +120,7 @@ void SynRTFExporter::FormatAfterLastAttribute()
     // no need to reset the font style here...
 }
 
-void SynRTFExporter::FormatBeforeFirstAttribute(bool BackgroundChanged, bool ForegroundChanged, SynFontStyles FontStylesChanged)
+void SynRTFExporter::FormatBeforeFirstAttribute(bool BackgroundChanged, bool ForegroundChanged, FontStyles FontStylesChanged)
 {
     FormatAttributeInit(BackgroundChanged, ForegroundChanged, FontStylesChanged);
 }

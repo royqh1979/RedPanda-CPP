@@ -44,8 +44,8 @@ SearchDialog::SearchDialog(QWidget *parent) :
     ui->dialogLayout->insertWidget(0,mTabBar);
     connect(mTabBar,&QTabBar::currentChanged,this, &SearchDialog::onTabChanged);
     mSearchOptions&=0;
-    mBasicSearchEngine= QSynedit::PSynSearchBase(new QSynedit::SynSearch());
-    mRegexSearchEngine= QSynedit::PSynSearchBase(new QSynedit::SynSearchRegex());
+    mBasicSearchEngine= QSynedit::PSynSearchBase(new QSynedit::BasicSearcher());
+    mRegexSearchEngine= QSynedit::PSynSearchBase(new QSynedit::RegexSearcher());
 }
 
 SearchDialog::~SearchDialog()
@@ -87,7 +87,7 @@ void SearchDialog::findInFiles(const QString &text)
     show();
 }
 
-void SearchDialog::findInFiles(const QString &keyword, SearchFileScope scope, QSynedit::SynSearchOptions options)
+void SearchDialog::findInFiles(const QString &keyword, SearchFileScope scope, QSynedit::SearchOptions options)
 {
     mTabBar->setCurrentIndex(2);
 
@@ -283,18 +283,18 @@ void SearchDialog::on_btnExecute_clicked()
                                           QMessageBox::Yes|QMessageBox::YesAll|QMessageBox::No|QMessageBox::Cancel,
                                           QMessageBox::Yes)) {
                     case QMessageBox::Yes:
-                        return QSynedit::SynSearchAction::Replace;
+                        return QSynedit::SearchAction::Replace;
                     case QMessageBox::YesAll:
-                        return QSynedit::SynSearchAction::ReplaceAll;
+                        return QSynedit::SearchAction::ReplaceAll;
                     case QMessageBox::No:
-                        return QSynedit::SynSearchAction::Skip;
+                        return QSynedit::SearchAction::Skip;
                     case QMessageBox::Cancel:
-                        return QSynedit::SynSearchAction::Exit;
+                        return QSynedit::SearchAction::Exit;
                     default:
-                        return QSynedit::SynSearchAction::Exit;
+                        return QSynedit::SearchAction::Exit;
                     }
                 } else {
-                    return QSynedit::SynSearchAction::ReplaceAll;
+                    return QSynedit::SearchAction::ReplaceAll;
                 }
             },
             [](){
@@ -402,8 +402,8 @@ void SearchDialog::on_btnExecute_clicked()
 }
 
 int SearchDialog::execute(QSynedit::SynEdit *editor, const QString &sSearch, const QString &sReplace,
-                          QSynedit::SynSearchMathedProc matchCallback,
-                          QSynedit::SynSearchConfirmAroundProc confirmAroundCallback)
+                          QSynedit::SearchMathedProc matchCallback,
+                          QSynedit::SearchConfirmAroundProc confirmAroundCallback)
 {
     if (editor==nullptr)
         return 0;
@@ -452,7 +452,7 @@ std::shared_ptr<SearchResultTreeItem> SearchDialog::batchFindInEditor(QSynedit::
         item->text = e->document()->getString(Line-1);
         item->text.replace('\t',' ');
         parentItem->results.append(item);
-        return QSynedit::SynSearchAction::Skip;
+        return QSynedit::SearchAction::Skip;
     });
 
     // restore

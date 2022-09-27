@@ -21,26 +21,26 @@
 #include <QObject>
 
 namespace QSynedit {
-class SynSchema;
-using PSynSchema = std::shared_ptr<SynSchema>;
+class HighlighterSchema;
+using PHighlighterSchema = std::shared_ptr<HighlighterSchema>;
 
-using OnCheckMarker = std::function<void(PSynSchema Sender,int &StartPos, int &MarkerLen,
-  std::shared_ptr<QString>& MarkerText , int Line)>;
+//using OnCheckMarker = std::function<void(PHighlighterSchema Sender,int &StartPos, int &MarkerLen,
+//  std::shared_ptr<QString>& MarkerText , int Line)>;
 
-class SynScheme : public QObject {
+class HighlighterSchema : public QObject {
     Q_OBJECT
 public:
-    explicit SynScheme(QObject* parent=nullptr);
+    explicit HighlighterSchema(QObject* parent=nullptr);
     QString endExpr() const;
     void setEndExpr(const QString &endExpr);
 
     QString getStartExpr() const;
     void setStartExpr(const QString &value);
 
-    PSynHighlighter getHighlighter() const;
-    void setHighlighter(const PSynHighlighter &highlighter);
+    PHighlighter getHighlighter() const;
+    void setHighlighter(const PHighlighter &highlighter);
 
-    PSynHighlighterAttribute getMarkerAttribute() const;
+    PHighlighterAttribute getMarkerAttribute() const;
 
     QString getSchemeName() const;
     void setSchemeName(const QString &schemeName);
@@ -51,12 +51,12 @@ public:
 private:
     QString mEndExpr;
     QString StartExpr;
-    PSynHighlighter mHighlighter;
-    PSynHighlighterAttribute mMarkerAttribute;
+    PHighlighter mHighlighter;
+    PHighlighterAttribute mMarkerAttribute;
     QString mSchemeName;
     int mCaseSensitive;
-    OnCheckMarker mOnCheckStartMarker;
-    OnCheckMarker mOnCheckEndMarker;
+//    OnCheckMarker mOnCheckStartMarker;
+//    OnCheckMarker mOnCheckEndMarker;
     QString ConvertExpression(const QString& Value);
 private slots:
     void MarkerAttriChanged();
@@ -64,14 +64,14 @@ private slots:
 
 
 
-class SynHighlightComposition : public SynHighlighter
+class CompositedHighlighter : public Highlighter
 {
 public:
-    explicit SynHighlightComposition();
+    explicit CompositedHighlighter();
 
     // SynHighligterBase interface
 public:
-    SynHighlighterClass getClass() const override;
+    HighlighterClass getClass() const override;
     QString getName() const override;
 };
 

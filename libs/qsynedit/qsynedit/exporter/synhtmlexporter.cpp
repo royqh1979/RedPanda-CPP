@@ -45,7 +45,7 @@ void SynHTMLExporter::setCreateHTMLFragment(bool createHTMLFragment)
     mCreateHTMLFragment = createHTMLFragment;
 }
 
-QString SynHTMLExporter::AttriToCSS(PSynHighlighterAttribute Attri, const QString &UniqueAttriName)
+QString SynHTMLExporter::AttriToCSS(PHighlighterAttribute Attri, const QString &UniqueAttriName)
 {
     QString StyleName = MakeValidName(UniqueAttriName);
 
@@ -55,19 +55,19 @@ QString SynHTMLExporter::AttriToCSS(PSynHighlighterAttribute Attri, const QStrin
     if (Attri->foreground().isValid())
         Result += "color: " + ColorToHTML(Attri->foreground()) + "; ";
 
-    if (Attri->styles().testFlag(SynFontStyle::fsBold))
+    if (Attri->styles().testFlag(FontStyle::fsBold))
         Result += "font-weight: bold; ";
-    if (Attri->styles().testFlag(SynFontStyle::fsItalic))
+    if (Attri->styles().testFlag(FontStyle::fsItalic))
         Result += "font-style: italic; ";
-    if (Attri->styles().testFlag(SynFontStyle::fsUnderline))
+    if (Attri->styles().testFlag(FontStyle::fsUnderline))
         Result += "text-decoration: underline; ";
-    if (Attri->styles().testFlag(SynFontStyle::fsStrikeOut))
+    if (Attri->styles().testFlag(FontStyle::fsStrikeOut))
         Result += "text-decoration: line-through; ";
     Result += "}";
     return Result;
 }
 
-bool SynHTMLExporter::AttriToCSSCallback(PSynHighlighter , PSynHighlighterAttribute Attri, const QString& UniqueAttriName, QList<void *> params)
+bool SynHTMLExporter::AttriToCSSCallback(PHighlighter , PHighlighterAttribute Attri, const QString& UniqueAttriName, QList<void *> params)
 {
     QString& styles = *static_cast<QString *>(params[0]);
     styles.append(AttriToCSS(Attri,UniqueAttriName) + lineBreak());
@@ -79,7 +79,7 @@ QString SynHTMLExporter::ColorToHTML(const QColor &AColor)
     return AColor.name();
 }
 
-QString SynHTMLExporter::GetStyleName(PSynHighlighter Highlighter, PSynHighlighterAttribute Attri)
+QString SynHTMLExporter::GetStyleName(PHighlighter Highlighter, PHighlighterAttribute Attri)
 {
     QString result;
     enumHighlighterAttributes(Highlighter,false,
@@ -104,9 +104,9 @@ QString SynHTMLExporter::MakeValidName(const QString &Name)
     return Result;
 }
 
-bool SynHTMLExporter::StyleNameCallback(PSynHighlighter /*Highlighter*/, PSynHighlighterAttribute Attri, const QString& UniqueAttriName, QList<void *> params)
+bool SynHTMLExporter::StyleNameCallback(PHighlighter /*Highlighter*/, PHighlighterAttribute Attri, const QString& UniqueAttriName, QList<void *> params)
 {
-    PSynHighlighterAttribute& AttriToFind = *static_cast<PSynHighlighterAttribute*>(params[0]);
+    PHighlighterAttribute& AttriToFind = *static_cast<PHighlighterAttribute*>(params[0]);
     QString& StyleName = *static_cast<QString *>(params[1]);
 
     if (Attri == AttriToFind) {
@@ -117,12 +117,12 @@ bool SynHTMLExporter::StyleNameCallback(PSynHighlighter /*Highlighter*/, PSynHig
     return true;
 }
 
-void SynHTMLExporter::FormatAttributeDone(bool , bool , SynFontStyles )
+void SynHTMLExporter::FormatAttributeDone(bool , bool , FontStyles )
 {
     AddData("</span>");
 }
 
-void SynHTMLExporter::FormatAttributeInit(bool , bool , SynFontStyles )
+void SynHTMLExporter::FormatAttributeInit(bool , bool , FontStyles )
 {
     QString StyleName = GetStyleName(mHighlighter, mLastAttri);
     AddData(QString("<span class=\"%1\">").arg(StyleName));
@@ -133,7 +133,7 @@ void SynHTMLExporter::FormatAfterLastAttribute()
     AddData("</span>");
 }
 
-void SynHTMLExporter::FormatBeforeFirstAttribute(bool, bool, SynFontStyles)
+void SynHTMLExporter::FormatBeforeFirstAttribute(bool, bool, FontStyles)
 {
     QString StyleName = GetStyleName(mHighlighter, mLastAttri);
     AddData(QString("<span class=\"%1\">").arg(StyleName));
@@ -222,7 +222,7 @@ QString SynHTMLExporter::GetHeader()
     return Result;
 }
 
-void SynHTMLExporter::SetTokenAttribute(PSynHighlighterAttribute Attri)
+void SynHTMLExporter::SetTokenAttribute(PHighlighterAttribute Attri)
 {
     mLastAttri = Attri;
     SynExporter::SetTokenAttribute(Attri);

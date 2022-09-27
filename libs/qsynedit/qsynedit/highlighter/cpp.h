@@ -21,9 +21,9 @@
 
 namespace QSynedit {
 
-class SynEditCppHighlighter: public SynHighlighter
+class CppHighlighter: public Highlighter
 {
-    enum TokenKind {
+    enum TokenId {
         Asm = 1,
         Comment,
         Directive,
@@ -44,7 +44,7 @@ class SynEditCppHighlighter: public SynHighlighter
         RawString
     };
 
-    enum class ExtTokenKind {
+    enum class ExtTokenId {
         Add, AddAssign, And, AndAssign, Arrow, Assign,
         BitComplement, BraceClose, BraceOpen, Colon, Comma,
         Decrement, Divide, DivideAssign, Ellipse, GreaterThan,
@@ -68,40 +68,40 @@ class SynEditCppHighlighter: public SynHighlighter
     };
 
 public:
-    explicit SynEditCppHighlighter();
+    explicit CppHighlighter();
 
-    PSynHighlighterAttribute asmAttribute() const;
+    PHighlighterAttribute asmAttribute() const;
 
-    PSynHighlighterAttribute preprocessorAttribute() const;
+    PHighlighterAttribute preprocessorAttribute() const;
 
-    PSynHighlighterAttribute invalidAttribute() const;
+    PHighlighterAttribute invalidAttribute() const;
 
-    PSynHighlighterAttribute numberAttribute() const;
+    PHighlighterAttribute numberAttribute() const;
 
-    PSynHighlighterAttribute floatAttribute() const;
+    PHighlighterAttribute floatAttribute() const;
 
-    PSynHighlighterAttribute hexAttribute() const;
+    PHighlighterAttribute hexAttribute() const;
 
-    PSynHighlighterAttribute octAttribute() const;
+    PHighlighterAttribute octAttribute() const;
 
-    PSynHighlighterAttribute stringEscapeSequenceAttribute() const;
+    PHighlighterAttribute stringEscapeSequenceAttribute() const;
 
-    PSynHighlighterAttribute charAttribute() const;
+    PHighlighterAttribute charAttribute() const;
 
-    PSynHighlighterAttribute variableAttribute() const;
+    PHighlighterAttribute variableAttribute() const;
 
-    PSynHighlighterAttribute functionAttribute() const;
+    PHighlighterAttribute functionAttribute() const;
 
-    PSynHighlighterAttribute classAttribute() const;
+    PHighlighterAttribute classAttribute() const;
 
-    PSynHighlighterAttribute globalVarAttribute() const;
+    PHighlighterAttribute globalVarAttribute() const;
 
-    PSynHighlighterAttribute localVarAttribute() const;
+    PHighlighterAttribute localVarAttribute() const;
 
     static const QSet<QString> Keywords;
 
-    ExtTokenKind getExtTokenId();
-    SynTokenKind getTokenId();
+    ExtTokenId getExtTokenId();
+    TokenKind getTokenId();
 private:
     void andSymbolProc();
     void ansiCppProc();
@@ -152,7 +152,7 @@ private:
 
 private:
     bool mAsmStart;
-    SynRangeState mRange;
+    HighlighterState mRange;
 //    SynRangeState mSpaceRange;
     QString mLineString;
     QChar* mLine;
@@ -162,25 +162,25 @@ private:
     int mToIdent;
     int mTokenPos;
     int mTokenId;
-    ExtTokenKind mExtTokenId;
+    ExtTokenId mExtTokenId;
     int mLineNumber;
     int mLeftBraces;
     int mRightBraces;
 
-    PSynHighlighterAttribute mAsmAttribute;
-    PSynHighlighterAttribute mPreprocessorAttribute;
-    PSynHighlighterAttribute mInvalidAttribute;
-    PSynHighlighterAttribute mNumberAttribute;
-    PSynHighlighterAttribute mFloatAttribute;
-    PSynHighlighterAttribute mHexAttribute;
-    PSynHighlighterAttribute mOctAttribute;
-    PSynHighlighterAttribute mStringEscapeSequenceAttribute;
-    PSynHighlighterAttribute mCharAttribute;
-    PSynHighlighterAttribute mVariableAttribute;
-    PSynHighlighterAttribute mFunctionAttribute;
-    PSynHighlighterAttribute mClassAttribute;
-    PSynHighlighterAttribute mGlobalVarAttribute;
-    PSynHighlighterAttribute mLocalVarAttribute;
+    PHighlighterAttribute mAsmAttribute;
+    PHighlighterAttribute mPreprocessorAttribute;
+    PHighlighterAttribute mInvalidAttribute;
+    PHighlighterAttribute mNumberAttribute;
+    PHighlighterAttribute mFloatAttribute;
+    PHighlighterAttribute mHexAttribute;
+    PHighlighterAttribute mOctAttribute;
+    PHighlighterAttribute mStringEscapeSequenceAttribute;
+    PHighlighterAttribute mCharAttribute;
+    PHighlighterAttribute mVariableAttribute;
+    PHighlighterAttribute mFunctionAttribute;
+    PHighlighterAttribute mClassAttribute;
+    PHighlighterAttribute mGlobalVarAttribute;
+    PHighlighterAttribute mLocalVarAttribute;
 
     // SynHighligterBase interface
 public:
@@ -189,24 +189,24 @@ public:
     bool isLastLineStringNotFinished(int state) const override;
     bool eol() const override;
     QString getToken() const override;
-    PSynHighlighterAttribute getTokenAttribute() const override;
-    SynTokenKind getTokenKind() override;
+    PHighlighterAttribute getTokenAttribute() const override;
+    TokenKind getTokenKind() override;
     int getTokenPos() override;
     void next() override;
     void setLine(const QString &newLine, int lineNumber) override;
     bool isKeyword(const QString &word) override;
-    SynHighlighterTokenType getTokenType() override;
-    void setState(const SynRangeState& rangeState) override;
+    TokenType getTokenType() override;
+    void setState(const HighlighterState& rangeState) override;
     void resetState() override;
-    SynHighlighterClass getClass() const override;
+    HighlighterClass getClass() const override;
     QString getName() const override;
 
     QString languageName() override;
-    SynHighlighterLanguage language() override;
+    HighlighterLanguage language() override;
 
     // SynHighlighter interface
 public:
-    SynRangeState getRangeState() const override;
+    HighlighterState getState() const override;
 
     // SynHighlighter interface
 public:

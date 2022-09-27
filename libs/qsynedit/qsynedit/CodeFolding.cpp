@@ -20,14 +20,14 @@
 
 namespace QSynedit {
 
-int SynEditFoldRegions::count()
+int CodeFoldingDefines::count()
 {
     return fRegions.size();
 }
 
-PSynEditFoldRegion SynEditFoldRegions::add(bool addEnding, const QChar &openSymbol, const QChar &closeSymbol, const QString &highlight)
+PCodeFoldingDefine CodeFoldingDefines::add(bool addEnding, const QChar &openSymbol, const QChar &closeSymbol, const QString &highlight)
 {
-    PSynEditFoldRegion region = std::make_shared<SynEditFoldRegion>();
+    PCodeFoldingDefine region = std::make_shared<CodeFoldingDefine>();
     region->addEnding = addEnding;
     region->openSymbol = openSymbol;
     region->closeSymbol = closeSymbol;
@@ -36,12 +36,12 @@ PSynEditFoldRegion SynEditFoldRegions::add(bool addEnding, const QChar &openSymb
     return region;
 }
 
-PSynEditFoldRegion SynEditFoldRegions::get(int index)
+PCodeFoldingDefine CodeFoldingDefines::get(int index)
 {
     return fRegions.at(index);
 }
 
-SynEditCodeFolding::SynEditCodeFolding():
+CodeFoldingOptions::CodeFoldingOptions():
     indentGuides(true),
     fillIndents(false),
     showCollapsedLine(true),
@@ -53,9 +53,9 @@ SynEditCodeFolding::SynEditCodeFolding():
 }
 
 
-bool SynEditFoldRange::parentCollapsed()
+bool CodeFoldingRange::parentCollapsed()
 {
-    PSynEditFoldRange parentFold = parent;
+    PCodeFoldingRange parentFold = parent;
     // Find first parent that is collapsed
     while (parentFold) {
         if (parentFold->collapsed) {
@@ -66,13 +66,16 @@ bool SynEditFoldRange::parentCollapsed()
     return false;
 }
 
-void SynEditFoldRange::move(int count)
+void CodeFoldingRange::move(int count)
 {
     fromLine += count;
     toLine += count;
 }
 
-SynEditFoldRange::SynEditFoldRange(PSynEditFoldRange aParent, PSynEditFoldRanges aAllFold, int aFromLine, PSynEditFoldRegion aFoldRegion, int aToLine):
+CodeFoldingRange::CodeFoldingRange(PCodeFoldingRange aParent,
+                                   PCodeFoldingRanges aAllFold,
+                                   int aFromLine,
+                                   PCodeFoldingDefine aFoldRegion, int aToLine):
     fromLine(aFromLine),
     toLine(aToLine),
     linesCollapsed(0),
@@ -82,37 +85,37 @@ SynEditFoldRange::SynEditFoldRange(PSynEditFoldRange aParent, PSynEditFoldRanges
     hintMarkLeft(0),
     parent(aParent)
 {
-    subFoldRanges = std::make_shared<SynEditFoldRanges>();
+    subFoldRanges = std::make_shared<CodeFoldingRanges>();
 }
 
 
-PSynEditFoldRange SynEditFoldRanges::range(int index)
+PCodeFoldingRange CodeFoldingRanges::range(int index)
 {
     return mRanges[index];
 }
 
-void SynEditFoldRanges::clear()
+void CodeFoldingRanges::clear()
 {
     mRanges.clear();
 }
 
-int SynEditFoldRanges::count() const
+int CodeFoldingRanges::count() const
 {
     return mRanges.size();
 }
 
-SynEditFoldRanges::SynEditFoldRanges()
+CodeFoldingRanges::CodeFoldingRanges()
 {
 
 }
 
-PSynEditFoldRange SynEditFoldRanges::addByParts(PSynEditFoldRange aParent,
-                                                PSynEditFoldRanges aAllFold,
+PCodeFoldingRange CodeFoldingRanges::addByParts(PCodeFoldingRange aParent,
+                                                PCodeFoldingRanges aAllFold,
                                                 int aFromLine,
-                                                PSynEditFoldRegion aFoldRegion,
+                                                PCodeFoldingDefine aFoldRegion,
                                                 int aToLine)
 {
-    PSynEditFoldRange range=std::make_shared<SynEditFoldRange>(aParent,aAllFold, aFromLine,aFoldRegion,aToLine);
+    PCodeFoldingRange range=std::make_shared<CodeFoldingRange>(aParent,aAllFold, aFromLine,aFoldRegion,aToLine);
     mRanges.append(range);
     if (aAllFold && aAllFold.get()!=this) {
         aAllFold->add(range);
@@ -120,22 +123,22 @@ PSynEditFoldRange SynEditFoldRanges::addByParts(PSynEditFoldRange aParent,
     return range;
 }
 
-void SynEditFoldRanges::insert(int index, PSynEditFoldRange range)
+void CodeFoldingRanges::insert(int index, PCodeFoldingRange range)
 {
     mRanges.insert(index,range);
 }
 
-void SynEditFoldRanges::remove(int index)
+void CodeFoldingRanges::remove(int index)
 {
     mRanges.remove(index);
 }
 
-void SynEditFoldRanges::add(PSynEditFoldRange foldRange)
+void CodeFoldingRanges::add(PCodeFoldingRange foldRange)
 {
     mRanges.push_back(foldRange);
 }
 
-PSynEditFoldRange SynEditFoldRanges::operator[](int index) const
+PCodeFoldingRange CodeFoldingRanges::operator[](int index) const
 {
     return mRanges[index];
 }

@@ -42,11 +42,11 @@ int getEOL(const QString &Line, int start)
     return Line.size();
 }
 
-bool internalEnumHighlighterAttris(PSynHighlighter Highlighter,
+bool internalEnumHighlighterAttris(PHighlighter Highlighter,
                                    bool SkipDuplicates,
                                    HighlighterAttriProc highlighterAttriProc,
                                    std::initializer_list<void *>& Params,
-                                   SynHighlighterList& HighlighterList) {
+                                   HighlighterList& HighlighterList) {
     bool Result = true;
     if (HighlighterList.indexOf(Highlighter)>0) {
         if (SkipDuplicates)
@@ -54,10 +54,10 @@ bool internalEnumHighlighterAttris(PSynHighlighter Highlighter,
     } else {
         HighlighterList.append(Highlighter);
     }
-    if (Highlighter->getClass() == SynHighlighterClass::Composition) {
+    if (Highlighter->getClass() == HighlighterClass::Composition) {
         //todo: handle composition highlighter
     } else if (Highlighter) {
-        for (PSynHighlighterAttribute pAttr: Highlighter->attributes()){
+        for (PHighlighterAttribute pAttr: Highlighter->attributes()){
             QString UniqueAttriName = Highlighter->getName()
                     +  QString("%1").arg(HighlighterList.indexOf(Highlighter)) + '.'
                     + pAttr->name();
@@ -70,7 +70,7 @@ bool internalEnumHighlighterAttris(PSynHighlighter Highlighter,
     return Result;
 }
 
-bool enumHighlighterAttributes(PSynHighlighter Highlighter, bool SkipDuplicates,
+bool enumHighlighterAttributes(PHighlighter Highlighter, bool SkipDuplicates,
                            HighlighterAttriProc highlighterAttriProc,
                            std::initializer_list<void *> Params)
 {
@@ -78,7 +78,7 @@ bool enumHighlighterAttributes(PSynHighlighter Highlighter, bool SkipDuplicates,
         return false;
     }
 
-    SynHighlighterList HighlighterList;
+    HighlighterList HighlighterList;
     return internalEnumHighlighterAttris(Highlighter, SkipDuplicates,
         highlighterAttriProc, Params, HighlighterList);
 }
@@ -89,13 +89,13 @@ int mulDiv(int a, int b, int c)
     return a*b/c;
 }
 
-SynFontStyles getFontStyles(const QFont &font)
+FontStyles getFontStyles(const QFont &font)
 {
-    SynFontStyles styles;
-    styles.setFlag(SynFontStyle::fsBold, font.bold());
-    styles.setFlag(SynFontStyle::fsItalic, font.italic());
-    styles.setFlag(SynFontStyle::fsUnderline, font.underline());
-    styles.setFlag(SynFontStyle::fsStrikeOut, font.strikeOut());
+    FontStyles styles;
+    styles.setFlag(FontStyle::fsBold, font.bold());
+    styles.setFlag(FontStyle::fsItalic, font.italic());
+    styles.setFlag(FontStyle::fsUnderline, font.underline());
+    styles.setFlag(FontStyle::fsStrikeOut, font.strikeOut());
     return styles;
 }
 

@@ -40,7 +40,7 @@ SynExporter::SynExporter(const QByteArray charset):mCharset(charset)
 void SynExporter::clear()
 {
     mBuffer.clear();
-    mLastStyle = SynFontStyle::fsNone;
+    mLastStyle = FontStyle::fsNone;
     mLastBG = QGuiApplication::palette().color(QPalette::Base);
     mLastFG = QGuiApplication::palette().color(QPalette::Text);
 }
@@ -90,7 +90,7 @@ void SynExporter::ExportRange(PSynDocument ALines, BufferCoord Start, BufferCoor
         // export the line
         mHighlighter->setLine(Line, i);
         while (!mHighlighter->eol()) {
-            PSynHighlighterAttribute attri = mHighlighter->getTokenAttribute();
+            PHighlighterAttribute attri = mHighlighter->getTokenAttribute();
             int startPos = mHighlighter->getTokenPos();
             QString token = mHighlighter->getToken();
             if (i==Start.line && (startPos+token.length() < Start.ch)) {
@@ -166,12 +166,12 @@ void SynExporter::setFont(const QFont &font)
     mFont = font;
 }
 
-PSynHighlighter SynExporter::highlighter() const
+PHighlighter SynExporter::highlighter() const
 {
     return mHighlighter;
 }
 
-void SynExporter::setHighlighter(PSynHighlighter Value)
+void SynExporter::setHighlighter(PHighlighter Value)
 {
     if (mHighlighter != Value) {
         mHighlighter = Value;
@@ -338,7 +338,7 @@ static QColor ValidatedColor(const QColor& color, const QColor& defaultColor) {
     else
         return defaultColor;
 }
-void SynExporter::SetTokenAttribute(PSynHighlighterAttribute Attri)
+void SynExporter::SetTokenAttribute(PHighlighterAttribute Attri)
 {
     if (mFirstAttribute) {
         mFirstAttribute = false;
@@ -354,7 +354,7 @@ void SynExporter::SetTokenAttribute(PSynHighlighterAttribute Attri)
         bool ChangedFG = (mLastFG != ValidatedColor(Attri->foreground(), mForegroundColor));
         if (ChangedBG || ChangedFG ||  (mLastStyle != Attri->styles())) {
             // which font style bits are to reset?
-            SynFontStyles ChangedStyles = mLastStyle & ~(Attri->styles());
+            FontStyles ChangedStyles = mLastStyle & ~(Attri->styles());
             FormatAttributeDone(ChangedBG, ChangedFG, ChangedStyles);
             // which font style bits are to set?
             ChangedStyles = Attri->styles() & ~(mLastStyle);

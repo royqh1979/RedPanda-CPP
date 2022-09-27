@@ -22,7 +22,7 @@
 
 namespace QSynedit {
 
-enum SynSearchOption {
+enum SearchOption {
     ssoMatchCase    = 0x0001,
     ssoWholeWord    = 0x0002,
     ssoBackwards    = 0x0004,
@@ -32,14 +32,14 @@ enum SynSearchOption {
     ssoRegExp       = 0x0080
 };
 
-Q_DECLARE_FLAGS(SynSearchOptions, SynSearchOption)
-Q_DECLARE_OPERATORS_FOR_FLAGS(SynSearchOptions)
+Q_DECLARE_FLAGS(SearchOptions, SearchOption)
+Q_DECLARE_OPERATORS_FOR_FLAGS(SearchOptions)
 
-class SynSearchBase : public QObject
+class BaseSearcher : public QObject
 {
     Q_OBJECT
 public:
-    explicit SynSearchBase(QObject *parent = nullptr);
+    explicit BaseSearcher(QObject *parent = nullptr);
     QString pattern();
     virtual void setPattern(const QString& value);
     virtual int length(int aIndex) = 0;
@@ -47,15 +47,15 @@ public:
     virtual int resultCount() = 0;
     virtual int findAll(const QString& text) = 0;
     virtual QString replace(const QString& aOccurrence, const QString& aReplacement) = 0;
-    SynSearchOptions options() const;
-    virtual void setOptions(const SynSearchOptions &options);
+    SearchOptions options() const;
+    virtual void setOptions(const SearchOptions &options);
 
 private:
     QString mPattern;
-    SynSearchOptions mOptions;
+    SearchOptions mOptions;
 };
 
-using PSynSearchBase = std::shared_ptr<SynSearchBase>;
+using PSynSearchBase = std::shared_ptr<BaseSearcher>;
 
 }
 

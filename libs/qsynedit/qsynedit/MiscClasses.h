@@ -24,16 +24,16 @@
 
 namespace QSynedit {
 
-enum class SynGutterBorderStyle {
+enum class GutterBorderStyle {
     None,
     Middle,
     Right
 };
 
-class SynGutter : public QObject {
+class Gutter : public QObject {
     Q_OBJECT
 public:
-    explicit SynGutter(QObject* parent = nullptr);
+    explicit Gutter(QObject* parent = nullptr);
     QFont font() const;
     void setFont(const QFont &value);
 
@@ -49,8 +49,8 @@ public:
     int digitCount() const;
     void setDigitCount(int value);
 
-    SynGutterBorderStyle borderStyle() const;
-    void setBorderStyle(const SynGutterBorderStyle &value);
+    GutterBorderStyle borderStyle() const;
+    void setBorderStyle(const GutterBorderStyle &value);
 
     bool gradient() const;
     void setGradient(bool value);
@@ -118,13 +118,13 @@ private:
     int mLineNumberStart;
     int mRightOffset;
     bool mShowLineNumbers;
-    SynGutterBorderStyle mBorderStyle;
+    GutterBorderStyle mBorderStyle;
     bool mUseFontStyle;
     bool mVisible;
     int mAutoSizeDigitCount;
 };
 
-using PSynGutter = std::shared_ptr<SynGutter>;
+using PSynGutter = std::shared_ptr<Gutter>;
 
 }
 

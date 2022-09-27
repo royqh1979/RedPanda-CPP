@@ -39,7 +39,7 @@ typedef int SynEditStringFlags;
 
 struct SynDocumentLine {
   QString fString;
-  SynRangeState fRange;
+  HighlighterState fRange;
   int fColumns;  //
 
 public:
@@ -70,8 +70,8 @@ public:
     int rightBraces(int Index);
     int lengthOfLongestLine();
     QString lineBreak() const;
-    SynRangeState ranges(int Index);
-    void setRange(int Index, const SynRangeState& ARange);
+    HighlighterState ranges(int Index);
+    void setRange(int Index, const HighlighterState& ARange);
     QString getString(int Index);
     int count();
     QString text();
@@ -174,21 +174,21 @@ enum class SynChangeReason {
 class SynEditUndoItem {
 private:
     SynChangeReason mChangeReason;
-    SynSelectionMode mChangeSelMode;
+    SelectionMode mChangeSelMode;
     BufferCoord mChangeStartPos;
     BufferCoord mChangeEndPos;
     QStringList mChangeText;
     size_t mChangeNumber;
 public:
     SynEditUndoItem(SynChangeReason reason,
-        SynSelectionMode selMode,
+        SelectionMode selMode,
         BufferCoord startPos,
         BufferCoord endPos,
         const QStringList& text,
         int number);
 
     SynChangeReason changeReason() const;
-    SynSelectionMode changeSelMode() const;
+    SelectionMode changeSelMode() const;
     BufferCoord changeStartPos() const;
     BufferCoord changeEndPos() const;
     QStringList changeText() const;
@@ -203,10 +203,10 @@ public:
     explicit SynEditUndoList();
 
     void addChange(SynChangeReason AReason, const BufferCoord& AStart, const BufferCoord& AEnd,
-      const QStringList& ChangeText, SynSelectionMode SelMode);
+      const QStringList& ChangeText, SelectionMode SelMode);
 
     void restoreChange(SynChangeReason AReason, const BufferCoord& AStart, const BufferCoord& AEnd,
-                       const QStringList& ChangeText, SynSelectionMode SelMode, size_t changeNumber);
+                       const QStringList& ChangeText, SelectionMode SelMode, size_t changeNumber);
 
     void restoreChange(PSynEditUndoItem item);
 
@@ -259,7 +259,7 @@ public:
     explicit SynEditRedoList();
 
     void addRedo(SynChangeReason AReason, const BufferCoord& AStart, const BufferCoord& AEnd,
-                 const QStringList& ChangeText, SynSelectionMode SelMode, size_t changeNumber);
+                 const QStringList& ChangeText, SelectionMode SelMode, size_t changeNumber);
     void addRedo(PSynEditUndoItem item);
 
     void clear();

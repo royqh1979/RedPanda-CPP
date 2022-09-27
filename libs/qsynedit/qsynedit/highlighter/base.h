@@ -34,7 +34,7 @@ enum SynIndentType {
     sitStatement = 3,
 };
 
-struct SynRangeState {
+struct HighlighterState {
     int state;  // current syntax parsing state
     int braceLevel; // current braces embedding level (needed by rainbow color)
     int bracketLevel; // current brackets embedding level (needed by rainbow color)
@@ -47,41 +47,41 @@ struct SynRangeState {
     QVector<int> matchingIndents; /* the indent matched ( and removed )
                               but not started at this line
                                 (need by auto indent) */
-    bool operator==(const SynRangeState& s2);
+    bool operator==(const HighlighterState& s2);
     int getLastIndent();
-    SynRangeState();
+    HighlighterState();
 };
 
-typedef int SynTokenKind;
+typedef int TokenKind;
 
-enum class SynHighlighterTokenType {
+enum class TokenType {
     Default, Space, Comment,
     PreprocessDirective, String, StringEscapeSequence,
     Identifier, Symbol,
     Character, Keyword, Number};
 
-enum class SynHighlighterClass {
+enum class HighlighterClass {
     Composition,
     CppHighlighter,
     AsmHighlighter,
     GLSLHighlighter
 };
 
-enum class SynHighlighterLanguage {
+enum class HighlighterLanguage {
     Asssembly,
     Cpp,
     GLSL
 };
 
-class SynHighlighterAttribute {
+class HighlighterAttribute {
 public:
-    explicit SynHighlighterAttribute(const QString& name);
+    explicit HighlighterAttribute(const QString& name);
 
     QString name() const;
     void setName(const QString &name);
 
-    SynFontStyles styles() const;
-    void setStyles(const SynFontStyles &styles);
+    FontStyles styles() const;
+    void setStyles(const FontStyles &styles);
 
     QColor foreground() const;
     void setForeground(const QColor &color);
@@ -93,58 +93,58 @@ private:
     QColor mForeground;
     QColor mBackground;
     QString mName;
-    SynFontStyles mStyles;
+    FontStyles mStyles;
 };
 
-typedef std::shared_ptr<SynHighlighterAttribute> PSynHighlighterAttribute;
-using SynHighlighterAttributeList = QVector<PSynHighlighterAttribute>;
+typedef std::shared_ptr<HighlighterAttribute> PHighlighterAttribute;
+using HighlighterAttributeList = QVector<PHighlighterAttribute>;
 
-class SynHighlighter {
+class Highlighter {
 public:
-    explicit SynHighlighter();
+    explicit Highlighter();
 
-    const QMap<QString, PSynHighlighterAttribute>& attributes() const;
+    const QMap<QString, PHighlighterAttribute>& attributes() const;
 
     const QSet<QChar>& wordBreakChars() const;
 
 
-    PSynHighlighterAttribute commentAttribute() const;
+    PHighlighterAttribute commentAttribute() const;
 
-    PSynHighlighterAttribute identifierAttribute() const;
+    PHighlighterAttribute identifierAttribute() const;
 
-    PSynHighlighterAttribute keywordAttribute() const;
+    PHighlighterAttribute keywordAttribute() const;
 
-    PSynHighlighterAttribute stringAttribute() const;
+    PHighlighterAttribute stringAttribute() const;
 
-    PSynHighlighterAttribute whitespaceAttribute() const;
+    PHighlighterAttribute whitespaceAttribute() const;
 
-    PSynHighlighterAttribute symbolAttribute() const;
+    PHighlighterAttribute symbolAttribute() const;
 
     virtual bool isIdentChar(const QChar& ch) const;
 
-    virtual SynHighlighterClass getClass() const = 0;
+    virtual HighlighterClass getClass() const = 0;
     virtual QString getName() const = 0;
 
     virtual bool getTokenFinished() const = 0;
     virtual bool isLastLineCommentNotFinished(int state) const = 0;
     virtual bool isLastLineStringNotFinished(int state) const = 0;
     virtual bool eol() const = 0;
-    virtual SynRangeState getRangeState() const = 0;
+    virtual HighlighterState getState() const = 0;
     virtual QString getToken() const=0;
-    virtual PSynHighlighterAttribute getTokenAttribute() const=0;
-    virtual SynHighlighterTokenType getTokenType();
-    virtual SynTokenKind getTokenKind() = 0;
+    virtual PHighlighterAttribute getTokenAttribute() const=0;
+    virtual TokenType getTokenType();
+    virtual TokenKind getTokenKind() = 0;
     virtual int getTokenPos() = 0;
     virtual bool isKeyword(const QString& word);
     virtual void next() = 0;
     virtual void nextToEol();
-    virtual void setState(const SynRangeState& rangeState) = 0;
+    virtual void setState(const HighlighterState& rangeState) = 0;
     virtual void setLine(const QString& newLine, int lineNumber) = 0;
     virtual void resetState() = 0;
     virtual QSet<QString> keywords() const;
 
     virtual QString languageName() = 0;
-    virtual SynHighlighterLanguage language() = 0;
+    virtual HighlighterLanguage language() = 0;
 
     virtual QString foldString();
 
@@ -152,28 +152,28 @@ public:
     virtual bool isWordBreakChar(const QChar& ch);
     bool enabled() const;
     void setEnabled(bool value);
-    virtual PSynHighlighterAttribute getAttribute(const QString& name) const;
+    virtual PHighlighterAttribute getAttribute(const QString& name) const;
 
 protected:
-    PSynHighlighterAttribute mCommentAttribute;
-    PSynHighlighterAttribute mIdentifierAttribute;
-    PSynHighlighterAttribute mKeywordAttribute;
-    PSynHighlighterAttribute mStringAttribute;
-    PSynHighlighterAttribute mWhitespaceAttribute;
-    PSynHighlighterAttribute mSymbolAttribute;
+    PHighlighterAttribute mCommentAttribute;
+    PHighlighterAttribute mIdentifierAttribute;
+    PHighlighterAttribute mKeywordAttribute;
+    PHighlighterAttribute mStringAttribute;
+    PHighlighterAttribute mWhitespaceAttribute;
+    PHighlighterAttribute mSymbolAttribute;
 
-    void addAttribute(PSynHighlighterAttribute attribute);
+    void addAttribute(PHighlighterAttribute attribute);
     void clearAttributes();
     virtual int attributesCount() const;
 
 private:
-    QMap<QString,PSynHighlighterAttribute> mAttributes;
+    QMap<QString,PHighlighterAttribute> mAttributes;
     bool mEnabled;
     QSet<QChar> mWordBreakChars;
 };
 
-using PSynHighlighter = std::shared_ptr<SynHighlighter>;
-using SynHighlighterList = QVector<PSynHighlighter>;
+using PHighlighter = std::shared_ptr<Highlighter>;
+using HighlighterList = QVector<PHighlighter>;
 
 }
 #endif // SYNHIGHLIGTERBASE_H

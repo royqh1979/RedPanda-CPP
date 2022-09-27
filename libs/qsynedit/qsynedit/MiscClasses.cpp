@@ -19,7 +19,7 @@
 
 namespace QSynedit {
 
-SynGutter::SynGutter(QObject *parent):
+Gutter::Gutter(QObject *parent):
     QObject(parent)
 {
     mFont = QFont("Courier New",10);
@@ -35,7 +35,7 @@ SynGutter::SynGutter(QObject *parent):
     mUseFontStyle = true;
     mAutoSize = true;
     mAutoSizeDigitCount = mDigitCount;
-    mBorderStyle = SynGutterBorderStyle::Middle;
+    mBorderStyle = GutterBorderStyle::Middle;
     mLineNumberStart = 1;
     mGradient = false;
     mGradientStartColor = Qt::transparent;
@@ -43,12 +43,12 @@ SynGutter::SynGutter(QObject *parent):
     mGradientSteps = 48;
 }
 
-QFont SynGutter::font() const
+QFont Gutter::font() const
 {
     return mFont;
 }
 
-void SynGutter::setFont(const QFont &font)
+void Gutter::setFont(const QFont &font)
 {
     if (mFont != font) {
         mFont = font;
@@ -56,12 +56,12 @@ void SynGutter::setFont(const QFont &font)
     }
 }
 
-bool SynGutter::autoSize() const
+bool Gutter::autoSize() const
 {
     return mAutoSize;
 }
 
-void SynGutter::setAutoSize(bool value)
+void Gutter::setAutoSize(bool value)
 {
     if (mAutoSize != value) {
         mAutoSize = value;
@@ -69,27 +69,27 @@ void SynGutter::setAutoSize(bool value)
     }
 }
 
-void SynGutter::setChanged()
+void Gutter::setChanged()
 {
     emit changed();
 }
 
-const QColor &SynGutter::activeLineTextColor() const
+const QColor &Gutter::activeLineTextColor() const
 {
     return mActiveLineTextColor;
 }
 
-void SynGutter::setActiveLineTextColor(const QColor &newActiveLineTextColor)
+void Gutter::setActiveLineTextColor(const QColor &newActiveLineTextColor)
 {
     mActiveLineTextColor = newActiveLineTextColor;
 }
 
-QColor SynGutter::textColor() const
+QColor Gutter::textColor() const
 {
     return mTextColor;
 }
 
-void SynGutter::setTextColor(const QColor &value)
+void Gutter::setTextColor(const QColor &value)
 {
     if (mTextColor!=value) {
         mTextColor = value;
@@ -97,7 +97,7 @@ void SynGutter::setTextColor(const QColor &value)
     }
 }
 
-void SynGutter::autoSizeDigitCount(int linesCount)
+void Gutter::autoSizeDigitCount(int linesCount)
 {
     if (mVisible && mAutoSize && mShowLineNumbers) {
         linesCount += (mLineNumberStart - 1);
@@ -109,7 +109,7 @@ void SynGutter::autoSizeDigitCount(int linesCount)
     }
 }
 
-QString SynGutter::formatLineNumber(int line)
+QString Gutter::formatLineNumber(int line)
 {
     line += (mLineNumberStart - 1);
     QString result = QString::number(line);
@@ -120,7 +120,7 @@ QString SynGutter::formatLineNumber(int line)
     }
 }
 
-int SynGutter::realGutterWidth(int charWidth)
+int Gutter::realGutterWidth(int charWidth)
 {
     if (!mVisible) {
         return 0;
@@ -131,12 +131,12 @@ int SynGutter::realGutterWidth(int charWidth)
     return mLeftOffset + mRightOffset;
 }
 
-bool SynGutter::visible() const
+bool Gutter::visible() const
 {
     return mVisible;
 }
 
-void SynGutter::setVisible(bool visible)
+void Gutter::setVisible(bool visible)
 {
     if (mVisible!=visible) {
         mVisible = visible;
@@ -144,12 +144,12 @@ void SynGutter::setVisible(bool visible)
     }
 }
 
-bool SynGutter::useFontStyle() const
+bool Gutter::useFontStyle() const
 {
     return mUseFontStyle;
 }
 
-void SynGutter::setUseFontStyle(bool useFontStyle)
+void Gutter::setUseFontStyle(bool useFontStyle)
 {
     if (mUseFontStyle!=useFontStyle) {
         mUseFontStyle = useFontStyle;
@@ -157,12 +157,12 @@ void SynGutter::setUseFontStyle(bool useFontStyle)
     }
 }
 
-bool SynGutter::showLineNumbers() const
+bool Gutter::showLineNumbers() const
 {
     return mShowLineNumbers;
 }
 
-void SynGutter::setShowLineNumbers(bool showLineNumbers)
+void Gutter::setShowLineNumbers(bool showLineNumbers)
 {
     if (mShowLineNumbers!=showLineNumbers) {
         mShowLineNumbers = showLineNumbers;
@@ -170,12 +170,12 @@ void SynGutter::setShowLineNumbers(bool showLineNumbers)
     }
 }
 
-int SynGutter::rightOffset() const
+int Gutter::rightOffset() const
 {
     return mRightOffset;
 }
 
-void SynGutter::setRightOffset(int rightOffset)
+void Gutter::setRightOffset(int rightOffset)
 {
     int value = std::max(0, rightOffset);
     if (mRightOffset != value) {
@@ -184,12 +184,12 @@ void SynGutter::setRightOffset(int rightOffset)
     }
 }
 
-int SynGutter::lineNumberStart() const
+int Gutter::lineNumberStart() const
 {
     return mLineNumberStart;
 }
 
-void SynGutter::setLineNumberStart(int lineNumberStart)
+void Gutter::setLineNumberStart(int lineNumberStart)
 {
     int value = std::max(0,lineNumberStart);
     if (mLineNumberStart!=value) {
@@ -198,17 +198,17 @@ void SynGutter::setLineNumberStart(int lineNumberStart)
     }
 }
 
-bool SynGutter::zeroStart()
+bool Gutter::zeroStart()
 {
     return mLineNumberStart == 0;
 }
 
-int SynGutter::leftOffset() const
+int Gutter::leftOffset() const
 {
     return mLeftOffset;
 }
 
-void SynGutter::setLeftOffset(int leftOffset)
+void Gutter::setLeftOffset(int leftOffset)
 {
     int value = std::max(0,leftOffset);
     if (mLeftOffset != value) {
@@ -217,12 +217,12 @@ void SynGutter::setLeftOffset(int leftOffset)
     }
 }
 
-bool SynGutter::leadingZeros() const
+bool Gutter::leadingZeros() const
 {
     return mLeadingZeros;
 }
 
-void SynGutter::setLeadingZeros(bool value)
+void Gutter::setLeadingZeros(bool value)
 {
     if (mLeadingZeros!=value) {
         mLeadingZeros = value;
@@ -230,12 +230,12 @@ void SynGutter::setLeadingZeros(bool value)
     }
 }
 
-int SynGutter::gradientSteps() const
+int Gutter::gradientSteps() const
 {
     return mGradientSteps;
 }
 
-void SynGutter::setGradientSteps(int value)
+void Gutter::setGradientSteps(int value)
 {
     if (mGradientSteps!=value) {
         mGradientSteps = value;
@@ -245,12 +245,12 @@ void SynGutter::setGradientSteps(int value)
     }
 }
 
-QColor SynGutter::gradientEndColor() const
+QColor Gutter::gradientEndColor() const
 {
     return mGradientEndColor;
 }
 
-void SynGutter::setGradientEndColor(const QColor &value)
+void Gutter::setGradientEndColor(const QColor &value)
 {
     if (mGradientEndColor!=value) {
         mGradientEndColor = value;
@@ -258,12 +258,12 @@ void SynGutter::setGradientEndColor(const QColor &value)
     }
 }
 
-QColor SynGutter::gradientStartColor() const
+QColor Gutter::gradientStartColor() const
 {
     return mGradientStartColor;
 }
 
-void SynGutter::setGradientStartColor(const QColor &value)
+void Gutter::setGradientStartColor(const QColor &value)
 {
     if (mGradientStartColor!=value) {
         mGradientStartColor = value;
@@ -271,12 +271,12 @@ void SynGutter::setGradientStartColor(const QColor &value)
     }
 }
 
-bool SynGutter::gradient() const
+bool Gutter::gradient() const
 {
     return mGradient;
 }
 
-void SynGutter::setGradient(bool value)
+void Gutter::setGradient(bool value)
 {
     if (mGradient!=value){
         mGradient = value;
@@ -284,12 +284,12 @@ void SynGutter::setGradient(bool value)
     }
 }
 
-SynGutterBorderStyle SynGutter::borderStyle() const
+GutterBorderStyle Gutter::borderStyle() const
 {
     return mBorderStyle;
 }
 
-void SynGutter::setBorderStyle(const SynGutterBorderStyle &value)
+void Gutter::setBorderStyle(const GutterBorderStyle &value)
 {
     if (mBorderStyle!=value) {
         mBorderStyle = value;
@@ -297,12 +297,12 @@ void SynGutter::setBorderStyle(const SynGutterBorderStyle &value)
     }
 }
 
-int SynGutter::digitCount() const
+int Gutter::digitCount() const
 {
     return mDigitCount;
 }
 
-void SynGutter::setDigitCount(int value)
+void Gutter::setDigitCount(int value)
 {
     if (mDigitCount != value ) {
         mDigitCount = value;
@@ -310,12 +310,12 @@ void SynGutter::setDigitCount(int value)
     }
 }
 
-QColor SynGutter::color() const
+QColor Gutter::color() const
 {
     return mColor;
 }
 
-void SynGutter::setColor(const QColor &value)
+void Gutter::setColor(const QColor &value)
 {
     if (mColor!=value) {
         mColor = value;
@@ -323,12 +323,12 @@ void SynGutter::setColor(const QColor &value)
     }
 }
 
-QColor SynGutter::borderColor() const
+QColor Gutter::borderColor() const
 {
     return mBorderColor;
 }
 
-void SynGutter::setBorderColor(const QColor &value)
+void Gutter::setBorderColor(const QColor &value)
 {
     if (mBorderColor!=value) {
         mBorderColor = value;

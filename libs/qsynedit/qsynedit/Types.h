@@ -24,7 +24,7 @@
 
 namespace QSynedit {
 
-enum class SynSelectionMode {Normal, Line, Column};
+enum class SelectionMode {Normal, Line, Column};
 
 struct BufferCoord {
     int ch;
@@ -42,7 +42,7 @@ struct DisplayCoord {
     int Row;
 };
 
-enum SynFontStyle {
+enum FontStyle {
     fsNone = 0,
     fsBold = 0x0001,
     fsItalic = 0x0002,
@@ -50,27 +50,27 @@ enum SynFontStyle {
     fsStrikeOut = 0x0008
 };
 
-Q_DECLARE_FLAGS(SynFontStyles,SynFontStyle)
+Q_DECLARE_FLAGS(FontStyles,FontStyle)
 
-Q_DECLARE_OPERATORS_FOR_FLAGS(SynFontStyles)
+Q_DECLARE_OPERATORS_FOR_FLAGS(FontStyles)
 
-enum class SynEditingAreaType {
+enum class EditingAreaType {
   eatRectangleBorder,
   eatWaveUnderLine,
   eatUnderLine
 };
 
-struct SynEditingArea {
+struct EditingArea {
     int beginX;
     int endX;
     QColor color;
-    SynEditingAreaType type;
+    EditingAreaType type;
 };
 
 
-using PSynEditingArea = std::shared_ptr<SynEditingArea>;
-using SynEditingAreaList = QList<PSynEditingArea>;
-using PSynEditingAreaList = std::shared_ptr<SynEditingAreaList>;
+using PEditingArea = std::shared_ptr<EditingArea>;
+using EditingAreaList = QList<PEditingArea>;
+using PEditingAreaList = std::shared_ptr<EditingAreaList>;
 
 }
 

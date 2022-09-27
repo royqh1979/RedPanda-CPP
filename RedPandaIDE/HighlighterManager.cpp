@@ -30,7 +30,7 @@ HighlighterManager::HighlighterManager()
 
 }
 
-QSynedit::PSynHighlighter HighlighterManager::getHighlighter(const QString &filename)
+QSynedit::PHighlighter HighlighterManager::getHighlighter(const QString &filename)
 {
     QFileInfo info(filename);
     QString suffix = info.suffix();
@@ -43,13 +43,13 @@ QSynedit::PSynHighlighter HighlighterManager::getHighlighter(const QString &file
     } else if (suffix == "vs" || suffix == "fs" || suffix == "frag") {
         return getGLSLHighlighter();
     }
-    return QSynedit::PSynHighlighter();
+    return QSynedit::PHighlighter();
 }
 
-QSynedit::PSynHighlighter HighlighterManager::copyHighlighter(QSynedit::PSynHighlighter highlighter)
+QSynedit::PHighlighter HighlighterManager::copyHighlighter(QSynedit::PHighlighter highlighter)
 {
     if (!highlighter)
-        return QSynedit::PSynHighlighter();
+        return QSynedit::PHighlighter();
     if (highlighter->getName() == SYN_HIGHLIGHTER_CPP)
         return getCppHighlighter();
     else if (highlighter->getName() == SYN_HIGHLIGHTER_ASM)
@@ -57,16 +57,16 @@ QSynedit::PSynHighlighter HighlighterManager::copyHighlighter(QSynedit::PSynHigh
     else if (highlighter->getName() == SYN_HIGHLIGHTER_GLSL)
         return getGLSLHighlighter();
     //todo
-    return QSynedit::PSynHighlighter();
+    return QSynedit::PHighlighter();
 }
 
-QSynedit::PSynHighlighter HighlighterManager::getCppHighlighter()
+QSynedit::PHighlighter HighlighterManager::getCppHighlighter()
 {
-    QSynedit::SynEditCppHighlighter* highlighter = new QSynedit::SynEditCppHighlighter();
+    QSynedit::CppHighlighter* highlighter = new QSynedit::CppHighlighter();
     highlighter->asmAttribute()->setForeground(Qt::blue);
     highlighter->charAttribute()->setForeground(Qt::black);
     highlighter->commentAttribute()->setForeground(0x8C8C8C);
-    highlighter->commentAttribute()->setStyles(QSynedit::SynFontStyle::fsItalic);
+    highlighter->commentAttribute()->setStyles(QSynedit::FontStyle::fsItalic);
     highlighter->classAttribute()->setForeground(0x008080);
     highlighter->floatAttribute()->setForeground(Qt::darkMagenta);
     highlighter->functionAttribute()->setForeground(0x00627A);
@@ -84,16 +84,16 @@ QSynedit::PSynHighlighter HighlighterManager::getCppHighlighter()
     highlighter->stringEscapeSequenceAttribute()->setForeground(Qt::red);
     highlighter->symbolAttribute()->setForeground(0xc10000);
     highlighter->variableAttribute()->setForeground(0x400080);
-    QSynedit::PSynHighlighter pHighlighter=std::make_shared<QSynedit::SynEditCppHighlighter>();
+    QSynedit::PHighlighter pHighlighter=std::make_shared<QSynedit::CppHighlighter>();
     return pHighlighter;
 }
 
-QSynedit::PSynHighlighter HighlighterManager::getAsmHighlighter()
+QSynedit::PHighlighter HighlighterManager::getAsmHighlighter()
 {
-    QSynedit::SynEditASMHighlighter* highlighter = new QSynedit::SynEditASMHighlighter();
-    QSynedit::PSynHighlighter pHighlighter(highlighter);
+    QSynedit::ASMHighlighter* highlighter = new QSynedit::ASMHighlighter();
+    QSynedit::PHighlighter pHighlighter(highlighter);
     highlighter->commentAttribute()->setForeground(0x8C8C8C);
-    highlighter->commentAttribute()->setStyles(QSynedit::SynFontStyle::fsItalic);
+    highlighter->commentAttribute()->setStyles(QSynedit::FontStyle::fsItalic);
     highlighter->identifierAttribute()->setForeground(0x080808);
     highlighter->keywordAttribute()->setForeground(0x0033b3);
     highlighter->numberAttribute()->setForeground(0x1750EB);
@@ -103,14 +103,14 @@ QSynedit::PSynHighlighter HighlighterManager::getAsmHighlighter()
     return pHighlighter;
 }
 
-QSynedit::PSynHighlighter HighlighterManager::getGLSLHighlighter()
+QSynedit::PHighlighter HighlighterManager::getGLSLHighlighter()
 {
-    QSynedit::SynEditGLSLHighlighter* highlighter = new QSynedit::SynEditGLSLHighlighter();
-    QSynedit::PSynHighlighter pHighlighter(highlighter);
+    QSynedit::GLSLHighlighter* highlighter = new QSynedit::GLSLHighlighter();
+    QSynedit::PHighlighter pHighlighter(highlighter);
     highlighter->asmAttribute()->setForeground(Qt::blue);
     highlighter->charAttribute()->setForeground(Qt::black);
     highlighter->commentAttribute()->setForeground(0x8C8C8C);
-    highlighter->commentAttribute()->setStyles(QSynedit::SynFontStyle::fsItalic);
+    highlighter->commentAttribute()->setStyles(QSynedit::FontStyle::fsItalic);
     highlighter->classAttribute()->setForeground(0x008080);
     highlighter->floatAttribute()->setForeground(Qt::darkMagenta);
     highlighter->functionAttribute()->setForeground(0x00627A);
@@ -131,7 +131,7 @@ QSynedit::PSynHighlighter HighlighterManager::getGLSLHighlighter()
     return pHighlighter;
 }
 
-void HighlighterManager::applyColorScheme(QSynedit::PSynHighlighter highlighter, const QString &schemeName)
+void HighlighterManager::applyColorScheme(QSynedit::PHighlighter highlighter, const QString &schemeName)
 {
     if (!highlighter)
         return;
@@ -141,14 +141,14 @@ void HighlighterManager::applyColorScheme(QSynedit::PSynHighlighter highlighter,
         for (QString name: highlighter->attributes().keys()) {
             PColorSchemeItem item = pColorManager->getItem(schemeName,name);
             if (item) {
-                QSynedit::PSynHighlighterAttribute attr = highlighter->attributes()[name];
+                QSynedit::PHighlighterAttribute attr = highlighter->attributes()[name];
                 attr->setBackground(item->background());
                 attr->setForeground(item->foreground());
-                QSynedit::SynFontStyles styles = QSynedit::SynFontStyle::fsNone;
-                styles.setFlag(QSynedit::SynFontStyle::fsBold, item->bold());
-                styles.setFlag(QSynedit::SynFontStyle::fsItalic, item->italic());
-                styles.setFlag(QSynedit::SynFontStyle::fsUnderline, item->underlined());
-                styles.setFlag(QSynedit::SynFontStyle::fsStrikeOut, item->strikeout());
+                QSynedit::FontStyles styles = QSynedit::FontStyle::fsNone;
+                styles.setFlag(QSynedit::FontStyle::fsBold, item->bold());
+                styles.setFlag(QSynedit::FontStyle::fsItalic, item->italic());
+                styles.setFlag(QSynedit::FontStyle::fsUnderline, item->underlined());
+                styles.setFlag(QSynedit::FontStyle::fsStrikeOut, item->strikeout());
                 attr->setStyles(styles);
             }
         }

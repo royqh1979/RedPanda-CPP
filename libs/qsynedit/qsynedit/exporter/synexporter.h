@@ -21,8 +21,8 @@
 #include "../SynEdit.h"
 
 namespace QSynedit {
-using FormatTokenHandler = std::function<void(PSynHighlighter syntaxHighlighter, int Line, int column, const QString& token,
-    PSynHighlighterAttribute& attr)>;
+using FormatTokenHandler = std::function<void(PHighlighter syntaxHighlighter, int Line, int column, const QString& token,
+    PHighlighterAttribute& attr)>;
 class SynExporter
 {
 
@@ -69,8 +69,8 @@ public:
     QFont font() const;
     void setFont(const QFont &font);
 
-    PSynHighlighter highlighter() const;
-    void setHighlighter(PSynHighlighter Value);
+    PHighlighter highlighter() const;
+    void setHighlighter(PHighlighter Value);
 
     QString title() const;
     void setTitle(const QString &Value);
@@ -112,10 +112,10 @@ protected:
     QString mDefaultFilter;
     bool mExportAsText;
     QFont mFont;
-    PSynHighlighter mHighlighter;
+    PHighlighter mHighlighter;
     QColor mLastBG;
     QColor mLastFG;
-    SynFontStyles mLastStyle;
+    FontStyles mLastStyle;
     QMap<QChar,QString> mReplaceReserved;
     QString mTitle;
     bool mUseBackground;
@@ -156,7 +156,7 @@ protected:
      * @param FontStylesChanged
      */
     virtual void FormatAttributeDone(bool BackgroundChanged, bool ForegroundChanged,
-                             SynFontStyles  FontStylesChanged) = 0;
+                             FontStyles  FontStylesChanged) = 0;
 
     /**
      * @brief Has to be overridden in descendant classes to add the opening format
@@ -167,7 +167,7 @@ protected:
      * @param FontStylesChanged
      */
     virtual void FormatAttributeInit(bool BackgroundChanged, bool ForegroundChanged,
-                                     SynFontStyles  FontStylesChanged) = 0;
+                                     FontStyles  FontStylesChanged) = 0;
     /**
      * @brief Has to be overridden in descendant classes to add the closing format
      *   strings to the output buffer after the last token has been written.
@@ -182,7 +182,7 @@ protected:
      * @param FontStylesChanged
      */
     virtual void FormatBeforeFirstAttribute(bool BackgroundChanged, bool ForegroundChanged,
-                                            SynFontStyles  FontStylesChanged) = 0;
+                                            FontStyles  FontStylesChanged) = 0;
     /**
      * @brief Can be overridden in descendant classes to add the formatted text of
      *   the actual token text to the output buffer.
@@ -236,7 +236,7 @@ protected:
      *     added to the output buffer.
      * @param Attri
      */
-    virtual void SetTokenAttribute(PSynHighlighterAttribute Attri);
+    virtual void SetTokenAttribute(PHighlighterAttribute Attri);
 
     QTextCodec *getCodec();
 private:

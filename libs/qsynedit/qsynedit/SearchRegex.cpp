@@ -20,31 +20,31 @@
 
 namespace QSynedit {
 
-SynSearchRegex::SynSearchRegex(QObject* parent):SynSearchBase(parent)
+RegexSearcher::RegexSearcher(QObject* parent):BaseSearcher(parent)
 {
 
 }
 
-int SynSearchRegex::length(int aIndex)
+int RegexSearcher::length(int aIndex)
 {
     if (aIndex<0 || aIndex >= mResults.length())
         return -1;
     return mLengths[aIndex];
 }
 
-int SynSearchRegex::result(int aIndex)
+int RegexSearcher::result(int aIndex)
 {
     if (aIndex<0 || aIndex >= mResults.length())
         return -1;
     return mResults[aIndex];
 }
 
-int SynSearchRegex::resultCount()
+int RegexSearcher::resultCount()
 {
     return mResults.size();
 }
 
-int SynSearchRegex::findAll(const QString &text)
+int RegexSearcher::findAll(const QString &text)
 {
     if (pattern().isEmpty())
         return 0;
@@ -59,28 +59,28 @@ int SynSearchRegex::findAll(const QString &text)
     return mResults.size();
 }
 
-QString SynSearchRegex::replace(const QString &aOccurrence, const QString &aReplacement)
+QString RegexSearcher::replace(const QString &aOccurrence, const QString &aReplacement)
 {
     QString s=aOccurrence;
     return s.replace(mRegex,aReplacement);
 }
 
-void SynSearchRegex::setPattern(const QString &value)
+void RegexSearcher::setPattern(const QString &value)
 {
-    SynSearchBase::setPattern(value);
+    BaseSearcher::setPattern(value);
     mRegex.setPattern(value);
     updateRegexOptions();
 }
 
-void SynSearchRegex::setOptions(const SynSearchOptions &options)
+void RegexSearcher::setOptions(const SearchOptions &options)
 {
-    SynSearchBase::setOptions(options);
+    BaseSearcher::setOptions(options);
     updateRegexOptions();
 }
 
-void SynSearchRegex::updateRegexOptions()
+void RegexSearcher::updateRegexOptions()
 {
-    if (options().testFlag(SynSearchOption::ssoMatchCase)) {
+    if (options().testFlag(SearchOption::ssoMatchCase)) {
         mRegex.setPatternOptions(
                     mRegex.patternOptions() &
                     ~QRegularExpression::CaseInsensitiveOption);

@@ -20,11 +20,11 @@
 
 namespace  QSynedit {
 
-class SynSearch : public SynSearchBase
+class BasicSearcher : public BaseSearcher
 {
     Q_OBJECT
 public:
-    explicit SynSearch(QObject* parent = nullptr);
+    explicit BasicSearcher(QObject* parent = nullptr);
 
     // SynSearchBase interface
 public:

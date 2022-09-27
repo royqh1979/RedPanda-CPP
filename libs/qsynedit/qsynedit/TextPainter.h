@@ -34,7 +34,7 @@ class SynEditTextPainter
         QString s;
         QColor FG;
         QColor BG;
-        SynFontStyles Style;
+        FontStyles Style;
     };
 
 public:
@@ -51,14 +51,14 @@ private:
     void paintToken(const QString& token, int tokenLen, int columnsBefore,
                     int first, int last, bool isSelection, const QFont& font,
                     const QFont& fontForNonAscii);
-    void paintEditAreas(const SynEditingAreaList& areaList);
+    void paintEditAreas(const EditingAreaList& areaList);
     void paintHighlightToken(bool bFillToEOL);
     bool tokenIsSpaces(bool& bSpacesTest, const QString& token, bool& bIsSpaces);
     void addHighlightToken(const QString& token, int columnsBefore, int tokenColumns,
-                           int cLine, PSynHighlighterAttribute p_Attri);
+                           int cLine, PHighlighterAttribute p_Attri);
 
     void paintFoldAttributes();
-    void getBraceColorAttr(int level, PSynHighlighterAttribute &attr);
+    void getBraceColorAttr(int level, PHighlighterAttribute &attr);
     void paintLines();
 
 private:

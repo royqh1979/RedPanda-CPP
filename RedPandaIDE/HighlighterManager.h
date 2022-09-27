@@ -23,12 +23,12 @@ class HighlighterManager
 public:
     HighlighterManager();
 
-    QSynedit::PSynHighlighter getHighlighter(const QString& filename);
-    QSynedit::PSynHighlighter copyHighlighter(QSynedit::PSynHighlighter highlighter);
-    QSynedit::PSynHighlighter getCppHighlighter();
-    QSynedit::PSynHighlighter getAsmHighlighter();
-    QSynedit::PSynHighlighter getGLSLHighlighter();
-    void applyColorScheme(QSynedit::PSynHighlighter highlighter, const QString& schemeName);
+    QSynedit::PHighlighter getHighlighter(const QString& filename);
+    QSynedit::PHighlighter copyHighlighter(QSynedit::PHighlighter highlighter);
+    QSynedit::PHighlighter getCppHighlighter();
+    QSynedit::PHighlighter getAsmHighlighter();
+    QSynedit::PHighlighter getGLSLHighlighter();
+    void applyColorScheme(QSynedit::PHighlighter highlighter, const QString& schemeName);
 };
 
 extern HighlighterManager highlighterManager;

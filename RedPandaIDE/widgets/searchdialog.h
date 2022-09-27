@@ -46,7 +46,7 @@ public:
     void findNext();
     void findPrevious();
     void findInFiles(const QString& text);
-    void findInFiles(const QString& keyword, SearchFileScope scope, QSynedit::SynSearchOptions options);
+    void findInFiles(const QString& keyword, SearchFileScope scope, QSynedit::SearchOptions options);
     void replace(const QString& sFind, const QString& sReplace);
     QSynedit::PSynSearchBase searchEngine() const;
 
@@ -62,13 +62,13 @@ private slots:
 private:
    int execute(QSynedit::SynEdit* editor, const QString& sSearch,
                const QString& sReplace,
-               QSynedit::SynSearchMathedProc matchCallback = nullptr,
-               QSynedit::SynSearchConfirmAroundProc confirmAroundCallback = nullptr);
+               QSynedit::SearchMathedProc matchCallback = nullptr,
+               QSynedit::SearchConfirmAroundProc confirmAroundCallback = nullptr);
    std::shared_ptr<SearchResultTreeItem> batchFindInEditor(QSynedit::SynEdit * editor,const QString& filename, const QString& keyword);
 private:
     Ui::SearchDialog *ui;
     QTabBar *mTabBar;
-    QSynedit::SynSearchOptions mSearchOptions;
+    QSynedit::SearchOptions mSearchOptions;
     QSynedit::PSynSearchBase mSearchEngine;
     QSynedit::PSynSearchBase mBasicSearchEngine;
     QSynedit::PSynSearchBase mRegexSearchEngine;

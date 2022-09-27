@@ -21,12 +21,11 @@
 
 namespace  QSynedit {
 
-extern const QSet<QChar> SynWordBreakChars;
-extern const QChar SynTabChar;
-extern const QChar SynSpaceGlyph;
-extern const QChar SynTabGlyph;
-extern const QChar SynLineBreakGlyph;
-extern const QChar SynSoftBreakGlyph;
+extern const QSet<QChar> WordBreakChars;
+extern const QChar SpaceGlyph;
+extern const QChar TabGlyph;
+extern const QChar LineBreakGlyph;
+extern const QChar SoftBreakGlyph;
 
 
 #define MAX_SCROLL 65535

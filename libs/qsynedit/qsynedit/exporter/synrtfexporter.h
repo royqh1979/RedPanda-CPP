@@ -34,10 +34,10 @@ private:
 
     // SynExporter interface
 protected:
-    void FormatAttributeDone(bool BackgroundChanged, bool ForegroundChanged, SynFontStyles FontStylesChanged) override;
-    void FormatAttributeInit(bool BackgroundChanged, bool ForegroundChanged, SynFontStyles FontStylesChanged) override;
+    void FormatAttributeDone(bool BackgroundChanged, bool ForegroundChanged, FontStyles FontStylesChanged) override;
+    void FormatAttributeInit(bool BackgroundChanged, bool ForegroundChanged, FontStyles FontStylesChanged) override;
     void FormatAfterLastAttribute() override;
-    void FormatBeforeFirstAttribute(bool BackgroundChanged, bool ForegroundChanged, SynFontStyles FontStylesChanged) override;
+    void FormatBeforeFirstAttribute(bool BackgroundChanged, bool ForegroundChanged, FontStyles FontStylesChanged) override;
     void FormatNewLine() override;
     QString GetFooter() override;
     QString GetFormatName() override;

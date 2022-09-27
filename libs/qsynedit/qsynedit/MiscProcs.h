@@ -46,18 +46,18 @@ QStringList splitStrings(const QString& text);
 
 int calSpanLines(const BufferCoord& startPos, const BufferCoord& endPos);
 
-using  HighlighterAttriProc = std::function<bool(PSynHighlighter Highlighter,
-    PSynHighlighterAttribute Attri, const QString& UniqueAttriName,
+using  HighlighterAttriProc = std::function<bool(PHighlighter Highlighter,
+    PHighlighterAttribute Attri, const QString& UniqueAttriName,
     QList<void *> Params)>;
 
 // Enums all child highlighters and their attributes of a TSynMultiSyn through a
 // callback function.
 // This function also handles nested TSynMultiSyns including their MarkerAttri.
-bool enumHighlighterAttributes(PSynHighlighter Highlighter,
+bool enumHighlighterAttributes(PHighlighter Highlighter,
                            bool SkipDuplicates, HighlighterAttriProc highlighterAttriProc,
                            std::initializer_list<void *> Params);
 
-SynFontStyles getFontStyles(const QFont& font);
+FontStyles getFontStyles(const QFont& font);
 
 /**
  * Find the first occurency of word char in s, starting from startPos

@@ -19,86 +19,86 @@
 
 namespace QSynedit {
 
-SynHighlightComposition::SynHighlightComposition()
+CompositedHighlighter::CompositedHighlighter()
 {
 
 }
 
-SynHighlighterClass SynHighlightComposition::getClass() const
+HighlighterClass CompositedHighlighter::getClass() const
 {
-    return SynHighlighterClass::Composition;
+    return HighlighterClass::Composition;
 }
 
-QString SynHighlightComposition::getName() const
+QString CompositedHighlighter::getName() const
 {
     return "SynHighlightComposition";
 }
 
-SynScheme::SynScheme(QObject *parent):
+HighlighterSchema::HighlighterSchema(QObject *parent):
     QObject(parent),
     mCaseSensitive(true)
 {
-    mMarkerAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrMarker);
+    mMarkerAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrMarker);
     mMarkerAttribute->setForeground(Qt::yellow);
-    mMarkerAttribute->setStyles(SynFontStyle::fsBold);
+    mMarkerAttribute->setStyles(FontStyle::fsBold);
 }
 
-QString SynScheme::endExpr() const
+QString HighlighterSchema::endExpr() const
 {
     return mEndExpr;
 }
 
-void SynScheme::setEndExpr(const QString &endExpr)
+void HighlighterSchema::setEndExpr(const QString &endExpr)
 {
     mEndExpr = endExpr;
 }
 
-QString SynScheme::getStartExpr() const
+QString HighlighterSchema::getStartExpr() const
 {
     return StartExpr;
 }
 
-void SynScheme::setStartExpr(const QString &value)
+void HighlighterSchema::setStartExpr(const QString &value)
 {
     StartExpr = value;
 }
 
-PSynHighlighter SynScheme::getHighlighter() const
+PHighlighter HighlighterSchema::getHighlighter() const
 {
     return mHighlighter;
 }
 
-void SynScheme::setHighlighter(const PSynHighlighter &highlighter)
+void HighlighterSchema::setHighlighter(const PHighlighter &highlighter)
 {
     mHighlighter = highlighter;
 }
 
-PSynHighlighterAttribute SynScheme::getMarkerAttribute() const
+PHighlighterAttribute HighlighterSchema::getMarkerAttribute() const
 {
     return mMarkerAttribute;
 }
 
-QString SynScheme::getSchemeName() const
+QString HighlighterSchema::getSchemeName() const
 {
     return mSchemeName;
 }
 
-void SynScheme::setSchemeName(const QString &schemeName)
+void HighlighterSchema::setSchemeName(const QString &schemeName)
 {
     mSchemeName = schemeName;
 }
 
-int SynScheme::getCaseSensitive() const
+int HighlighterSchema::getCaseSensitive() const
 {
     return mCaseSensitive;
 }
 
-void SynScheme::setCaseSensitive(int caseSensitive)
+void HighlighterSchema::setCaseSensitive(int caseSensitive)
 {
     mCaseSensitive = caseSensitive;
 }
 
-QString SynScheme::ConvertExpression(const QString &Value)
+QString HighlighterSchema::ConvertExpression(const QString &Value)
 {
     if (!mCaseSensitive) {
         return Value.toUpper();
@@ -107,7 +107,7 @@ QString SynScheme::ConvertExpression(const QString &Value)
     }
 }
 
-void SynScheme::MarkerAttriChanged() {
+void HighlighterSchema::MarkerAttriChanged() {
 }
 
 }

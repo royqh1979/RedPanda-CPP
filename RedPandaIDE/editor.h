@@ -230,7 +230,7 @@ signals:
     void renamed(const QString& oldName, const QString& newName, bool firstSave);
     void fileSaved(const QString& filename, bool inProject);
 private slots:
-    void onStatusChanged(QSynedit::SynStatusChanges changes);
+    void onStatusChanged(QSynedit::StatusChanges changes);
     void onGutterClicked(Qt::MouseButton button, int x, int y, int line);
     void onTipEvalValueReady(const QString& value);
     void onLinesDeleted(int first,int count);
@@ -284,8 +284,8 @@ private:
     void updateFunctionTip(bool showTip);
     void clearUserCodeInTabStops();
     void popUserCodeInTabStops();
-    void onExportedFormatToken(QSynedit::PSynHighlighter syntaxHighlighter, int Line, int column, const QString& token,
-        QSynedit::PSynHighlighterAttribute &attr);
+    void onExportedFormatToken(QSynedit::PHighlighter syntaxHighlighter, int Line, int column, const QString& token,
+        QSynedit::PHighlighterAttribute &attr);
     void onScrollBarValueChanged();
 private:
     QByteArray mEncodingOption; // the encoding type set by the user
@@ -347,7 +347,7 @@ protected:
     // SynEdit interface
 protected:
     void onGutterPaint(QPainter &painter, int aLine, int X, int Y) override;
-    void onGetEditingAreas(int Line, QSynedit::SynEditingAreaList &areaList) override;
+    void onGetEditingAreas(int Line, QSynedit::EditingAreaList &areaList) override;
 
     // SynEdit interface
 protected:
@@ -355,7 +355,7 @@ protected:
 
     // SynEdit interface
 protected:
-    void onPreparePaintHighlightToken(int line, int aChar, const QString &token, QSynedit::PSynHighlighterAttribute attr, QSynedit::SynFontStyles &style, QColor &foreground, QColor &background) override;
+    void onPreparePaintHighlightToken(int line, int aChar, const QString &token, QSynedit::PHighlighterAttribute attr, QSynedit::FontStyles &style, QColor &foreground, QColor &background) override;
 
     // QObject interface
 public:

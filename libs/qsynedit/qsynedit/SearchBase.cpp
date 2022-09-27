@@ -17,27 +17,27 @@
 #include "SearchBase.h"
 
 namespace QSynedit {
-SynSearchBase::SynSearchBase(QObject *parent) : QObject(parent)
+BaseSearcher::BaseSearcher(QObject *parent) : QObject(parent)
 {
 
 }
 
-QString SynSearchBase::pattern()
+QString BaseSearcher::pattern()
 {
     return mPattern;
 }
 
-void SynSearchBase::setPattern(const QString &value)
+void BaseSearcher::setPattern(const QString &value)
 {
     mPattern = value;
 }
 
-SynSearchOptions SynSearchBase::options() const
+SearchOptions BaseSearcher::options() const
 {
     return mOptions;
 }
 
-void SynSearchBase::setOptions(const SynSearchOptions &options)
+void BaseSearcher::setOptions(const SearchOptions &options)
 {
     mOptions = options;
 }

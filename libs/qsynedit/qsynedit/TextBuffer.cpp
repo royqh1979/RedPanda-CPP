@@ -153,7 +153,7 @@ QString SynDocument::lineBreak() const
     return "\n";
 }
 
-SynRangeState SynDocument::ranges(int Index)
+HighlighterState SynDocument::ranges(int Index)
 {
     QMutexLocker locker(&mMutex);
     if (Index>=0 && Index < mLines.size()) {
@@ -161,7 +161,7 @@ SynRangeState SynDocument::ranges(int Index)
     } else {
          ListIndexOutOfBounds(Index);
     }
-    return SynRangeState();
+    return HighlighterState();
 }
 
 void SynDocument::insertItem(int Index, const QString &s)
@@ -196,7 +196,7 @@ void SynDocument::setAppendNewLineAtEOF(bool appendNewLineAtEOF)
     mAppendNewLineAtEOF = appendNewLineAtEOF;
 }
 
-void SynDocument::setRange(int Index, const SynRangeState& ARange)
+void SynDocument::setRange(int Index, const HighlighterState& ARange)
 {
     QMutexLocker locker(&mMutex);
     if (Index<0 || Index>=mLines.count()) {
@@ -839,7 +839,7 @@ SynEditUndoList::SynEditUndoList():QObject()
 
 void SynEditUndoList::addChange(SynChangeReason reason, const BufferCoord &startPos,
                                 const BufferCoord &endPos, const QStringList& changeText,
-                                SynSelectionMode selMode)
+                                SelectionMode selMode)
 {
     int changeNumber;
     if (inBlock()) {
@@ -861,7 +861,7 @@ void SynEditUndoList::addChange(SynChangeReason reason, const BufferCoord &start
     }
 }
 
-void SynEditUndoList::restoreChange(SynChangeReason AReason, const BufferCoord &AStart, const BufferCoord &AEnd, const QStringList &ChangeText, SynSelectionMode SelMode, size_t changeNumber)
+void SynEditUndoList::restoreChange(SynChangeReason AReason, const BufferCoord &AStart, const BufferCoord &AEnd, const QStringList &ChangeText, SelectionMode SelMode, size_t changeNumber)
 {
     PSynEditUndoItem  newItem = std::make_shared<SynEditUndoItem>(AReason,
                                                                   SelMode,AStart,AEnd,ChangeText,
@@ -890,7 +890,7 @@ void SynEditUndoList::addGroupBreak()
         return;
 
     if (lastChangeReason() != SynChangeReason::GroupBreak) {
-        addChange(SynChangeReason::GroupBreak, {0,0}, {0,0}, QStringList(), SynSelectionMode::Normal);
+        addChange(SynChangeReason::GroupBreak, {0,0}, {0,0}, QStringList(), SelectionMode::Normal);
     }
 }
 
@@ -1054,7 +1054,7 @@ void SynEditUndoList::ensureMaxEntries()
     }
 }
 
-SynSelectionMode SynEditUndoItem::changeSelMode() const
+SelectionMode SynEditUndoItem::changeSelMode() const
 {
     return mChangeSelMode;
 }
@@ -1079,7 +1079,7 @@ size_t SynEditUndoItem::changeNumber() const
     return mChangeNumber;
 }
 
-SynEditUndoItem::SynEditUndoItem(SynChangeReason reason, SynSelectionMode selMode,
+SynEditUndoItem::SynEditUndoItem(SynChangeReason reason, SelectionMode selMode,
                                  BufferCoord startPos, BufferCoord endPos,
                                  const QStringList& text, int number)
 {
@@ -1101,7 +1101,7 @@ SynEditRedoList::SynEditRedoList()
 
 }
 
-void SynEditRedoList::addRedo(SynChangeReason AReason, const BufferCoord &AStart, const BufferCoord &AEnd, const QStringList &ChangeText, SynSelectionMode SelMode, size_t changeNumber)
+void SynEditRedoList::addRedo(SynChangeReason AReason, const BufferCoord &AStart, const BufferCoord &AEnd, const QStringList &ChangeText, SelectionMode SelMode, size_t changeNumber)
 {
     PSynEditUndoItem  newItem = std::make_shared<SynEditUndoItem>(
                 AReason,

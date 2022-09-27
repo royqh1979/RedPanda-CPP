@@ -21,9 +21,9 @@
 
 namespace QSynedit {
 
-class SynEditASMHighlighter : public SynHighlighter
+class ASMHighlighter : public Highlighter
 {
-    enum TokenKind {
+    enum TokenId {
         Comment,
         Identifier,
         Key,
@@ -35,8 +35,8 @@ class SynEditASMHighlighter : public SynHighlighter
         Unknown
     };
 public:
-    explicit SynEditASMHighlighter();
-    PSynHighlighterAttribute numberAttribute();
+    explicit ASMHighlighter();
+    PHighlighterAttribute numberAttribute();
 
     static const QSet<QString> Keywords;
 private:
@@ -47,8 +47,8 @@ private:
     int mStringLen;
     QChar mToIdent;
     int mTokenPos;
-    SynTokenKind mTokenID;
-    PSynHighlighterAttribute mNumberAttribute;
+    TokenKind mTokenID;
+    PHighlighterAttribute mNumberAttribute;
 
 private:
     void CommentProc();
@@ -72,18 +72,18 @@ public:
     bool eol() const override;
 
     QString languageName() override;
-    SynHighlighterLanguage language() override;
+    HighlighterLanguage language() override;
     QString getToken() const override;
-    PSynHighlighterAttribute getTokenAttribute() const override;
-    SynTokenKind getTokenKind() override;
-    SynHighlighterTokenType getTokenType() override;
+    PHighlighterAttribute getTokenAttribute() const override;
+    TokenKind getTokenKind() override;
+    TokenType getTokenType() override;
     int getTokenPos() override;
     void next() override;
     void setLine(const QString &newLine, int lineNumber) override;
 
     // SynHighlighter interface
 public:
-    SynHighlighterClass getClass() const override;
+    HighlighterClass getClass() const override;
     QString getName() const override;
 
     // SynHighlighter interface
@@ -91,8 +91,8 @@ public:
     bool getTokenFinished() const override;
     bool isLastLineCommentNotFinished(int state) const override;
     bool isLastLineStringNotFinished(int state) const override;
-    SynRangeState getRangeState() const override;
-    void setState(const SynRangeState& rangeState) override;
+    HighlighterState getState() const override;
+    void setState(const HighlighterState& rangeState) override;
     void resetState() override;
 
     // SynHighlighter interface

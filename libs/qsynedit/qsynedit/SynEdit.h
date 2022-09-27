@@ -33,24 +33,15 @@
 
 namespace QSynedit {
 
-enum class SynFontSmoothMethod {
-    None, AntiAlias, ClearType
-};
-
-
-enum class SynScrollHintFormat {
-    shfTopLineOnly, shfTopToBottom
-};
-
-enum class SynScrollStyle {
+enum class ScrollStyle {
     ssNone, ssHorizontal, ssVertical, ssBoth
 };
 
-enum class SynEditCaretType {
+enum class EditCaretType {
     ctVerticalLine=0, ctHorizontalLine=1, ctHalfBlock=2, ctBlock=3
 };
 
-enum SynStatusChange {
+enum StatusChange {
     scNone = 0,
     scAll = 0x0001,
     scCaretX = 0x0002,
@@ -65,10 +56,10 @@ enum SynStatusChange {
     scModified = 0x0400
 };
 
-Q_DECLARE_FLAGS(SynStatusChanges, SynStatusChange)
-Q_DECLARE_OPERATORS_FOR_FLAGS(SynStatusChanges)
+Q_DECLARE_FLAGS(StatusChanges, StatusChange)
+Q_DECLARE_OPERATORS_FOR_FLAGS(StatusChanges)
 
-enum class SynStateFlag  {
+enum class StateFlag  {
     sfCaretChanged = 0x0001,
     sfScrollbarChanged = 0x0002,
     sfLinesChanging = 0x0004,
@@ -78,11 +69,11 @@ enum class SynStateFlag  {
     sfWaitForDragging = 0x0040
 };
 
-Q_DECLARE_FLAGS(SynStateFlags,SynStateFlag)
+Q_DECLARE_FLAGS(StateFlags,StateFlag)
 
-Q_DECLARE_OPERATORS_FOR_FLAGS(SynStateFlags)
+Q_DECLARE_OPERATORS_FOR_FLAGS(StateFlags)
 
-enum SynEditorOption {
+enum EditorOption {
   eoAltSetsColumnMode = 0x00000001, //Holding down the Alt Key will put the selection mode into columnar format
   eoAutoIndent =        0x00000002, //Will auto calculate the indent when input
   eoLigatureSupport =   0x00000004, //Support ligaures in fonts like fira code
@@ -115,11 +106,11 @@ enum SynEditorOption {
     // eoNoCaret =           0x00000800, //Makes it so the caret is never visible
 };
 
-Q_DECLARE_FLAGS(SynEditorOptions, SynEditorOption)
+Q_DECLARE_FLAGS(EditorOptions, EditorOption)
 
-Q_DECLARE_OPERATORS_FOR_FLAGS(SynEditorOptions)
+Q_DECLARE_OPERATORS_FOR_FLAGS(EditorOptions)
 
-enum class SynSearchAction {
+enum class SearchAction {
     Replace,
     ReplaceAll,
     Skip,
@@ -128,27 +119,23 @@ enum class SynSearchAction {
 
 
 
-enum class SynTransientType {
+enum class TransientType {
     ttBefore, ttAfter
-};
-
-enum class SynScrollBarKind {
-    sbHorizontal, sbVertical
 };
 
 /*
 using SynPaintTransientProc = std::function<void(const QPaintDevice& paintDevice,
         SynTransientType transientType)>;
         */
-using SynProcessCommandProc = std::function<void(SynEditorCommand& command, QChar& AChar, void* data)>;
-using SynMouseCursorProc = std::function<void(const BufferCoord& aLineCharPos, QCursor &  aCursor)>;
-using SynPaintProc = std::function<void(const QPaintDevice& paintDevice )>;
+using ProcessCommandProc = std::function<void(EditCommand& command, QChar& AChar, void* data)>;
+using MouseCursorProc = std::function<void(const BufferCoord& aLineCharPos, QCursor &  aCursor)>;
+using PaintProc = std::function<void(const QPaintDevice& paintDevice )>;
 //using SynPreparePaintHighlightTokenProc = std::function<void(int row,
 //        int column, const QString& token, PSynHighlighterAttribute attr,
-//        SynFontStyles& style, QColor& foreground, QColor& background)>;
-using SynSearchMathedProc = std::function<SynSearchAction(const QString& sSearch,
+//        FontStyles& style, QColor& foreground, QColor& background)>;
+using SearchMathedProc = std::function<SearchAction(const QString& sSearch,
     const QString& sReplace, int Line, int ch, int wordLen)>;
-using SynSearchConfirmAroundProc = std::function<bool ()>;
+using SearchConfirmAroundProc = std::function<bool ()>;
 
 class SynEdit;
 using PSynEdit = std::shared_ptr<SynEdit>;
@@ -230,7 +217,7 @@ public:
     BufferCoord prevWordPos();
     BufferCoord prevWordPosEx(const BufferCoord& XY);
 
-    void commandProcessor(SynEditorCommand Command, QChar AChar = QChar(), void * pData = nullptr);
+    void commandProcessor(EditCommand Command, QChar AChar = QChar(), void * pData = nullptr);
     //Caret
     void showCaret();
     void hideCaret();
@@ -248,25 +235,25 @@ public:
     void collapseAll();
     void unCollpaseAll();
     void uncollapseAroundLine(int line);
-    PSynEditFoldRange foldHidesLine(int line);
+    PCodeFoldingRange foldHidesLine(int line);
     void setSelLength(int Value);
     void setSelText(const QString& text);
 
-    int searchReplace(const QString& sSearch, const QString& sReplace, SynSearchOptions options,
-               PSynSearchBase searchEngine,  SynSearchMathedProc matchedCallback = nullptr,
-                      SynSearchConfirmAroundProc confirmAroundCallback = nullptr);
+    int searchReplace(const QString& sSearch, const QString& sReplace, SearchOptions options,
+               PSynSearchBase searchEngine,  SearchMathedProc matchedCallback = nullptr,
+                      SearchConfirmAroundProc confirmAroundCallback = nullptr);
 
     int maxScrollWidth() const;
     int maxScrollHeight() const;
 
     bool getHighlighterAttriAtRowCol(const BufferCoord& pos, QString& token,
-      PSynHighlighterAttribute& attri);
+      PHighlighterAttribute& attri);
     bool getHighlighterAttriAtRowCol(const BufferCoord& pos, QString& token,
-      bool& tokenFinished, SynHighlighterTokenType& tokenType,
-      PSynHighlighterAttribute& attri);
+      bool& tokenFinished, TokenType& tokenType,
+      PHighlighterAttribute& attri);
     bool getHighlighterAttriAtRowColEx(const BufferCoord& pos, QString& token,
-      SynHighlighterTokenType& tokenType, SynTokenKind &tokenKind, int &start,
-      PSynHighlighterAttribute& attri);
+      TokenType& tokenType, TokenKind &tokenKind, int &start,
+      PHighlighterAttribute& attri);
 
     void beginUndoBlock();
     void endUndoBlock();
@@ -280,26 +267,26 @@ public:
     }
 
     //Commands
-    virtual void cutToClipboard() { commandProcessor(SynEditorCommand::ecCut);}
-    virtual void copyToClipboard() { commandProcessor(SynEditorCommand::ecCopy);}
-    virtual void pasteFromClipboard() { commandProcessor(SynEditorCommand::ecPaste);}
-    virtual void undo()  { commandProcessor(SynEditorCommand::ecUndo);}
-    virtual void redo()  { commandProcessor(SynEditorCommand::ecRedo);}
-    virtual void zoomIn()  { commandProcessor(SynEditorCommand::ecZoomIn);}
-    virtual void zoomOut()  { commandProcessor(SynEditorCommand::ecZoomOut);}
+    virtual void cutToClipboard() { commandProcessor(EditCommand::ecCut);}
+    virtual void copyToClipboard() { commandProcessor(EditCommand::ecCopy);}
+    virtual void pasteFromClipboard() { commandProcessor(EditCommand::ecPaste);}
+    virtual void undo()  { commandProcessor(EditCommand::ecUndo);}
+    virtual void redo()  { commandProcessor(EditCommand::ecRedo);}
+    virtual void zoomIn()  { commandProcessor(EditCommand::ecZoomIn);}
+    virtual void zoomOut()  { commandProcessor(EditCommand::ecZoomOut);}
     virtual void selectAll() {
-        commandProcessor(SynEditorCommand::ecSelectAll);
+        commandProcessor(EditCommand::ecSelectAll);
     }
     virtual void selectWord() {
-        commandProcessor(SynEditorCommand::ecSelWord);
+        commandProcessor(EditCommand::ecSelWord);
     }
-    virtual void tab() { commandProcessor(SynEditorCommand::ecTab);}
-    virtual void shifttab() { commandProcessor(SynEditorCommand::ecShiftTab);}
-    virtual void toggleComment() { commandProcessor(SynEditorCommand::ecToggleComment);}
-    virtual void toggleBlockComment() { commandProcessor(SynEditorCommand::ecToggleBlockComment);}
-    virtual void matchBracket() { commandProcessor(SynEditorCommand::ecMatchBracket);}
-    virtual void moveSelUp(){ commandProcessor(SynEditorCommand::ecMoveSelUp);}
-    virtual void moveSelDown(){ commandProcessor(SynEditorCommand::ecMoveSelDown);}
+    virtual void tab() { commandProcessor(EditCommand::ecTab);}
+    virtual void shifttab() { commandProcessor(EditCommand::ecShiftTab);}
+    virtual void toggleComment() { commandProcessor(EditCommand::ecToggleComment);}
+    virtual void toggleBlockComment() { commandProcessor(EditCommand::ecToggleBlockComment);}
+    virtual void matchBracket() { commandProcessor(EditCommand::ecMatchBracket);}
+    virtual void moveSelUp(){ commandProcessor(EditCommand::ecMoveSelUp);}
+    virtual void moveSelDown(){ commandProcessor(EditCommand::ecMoveSelDown);}
 
     virtual void beginUpdate();
     virtual void endUpdate();
@@ -315,10 +302,10 @@ public:
     bool pointToLine(const QPoint& point, int& line);
     bool isIdentChar(const QChar& ch);
 
-    void setRainbowAttrs(const PSynHighlighterAttribute &attr0,
-                         const PSynHighlighterAttribute &attr1,
-                         const PSynHighlighterAttribute &attr2,
-                         const PSynHighlighterAttribute &attr3);
+    void setRainbowAttrs(const PHighlighterAttribute &attr0,
+                         const PHighlighterAttribute &attr1,
+                         const PHighlighterAttribute &attr2,
+                         const PHighlighterAttribute &attr3);
 
     void updateMouseCursor();
 
@@ -339,8 +326,8 @@ public:
     void setBlockBegin(BufferCoord value);
     void setBlockEnd(BufferCoord Value);
 
-    SynSelectionMode activeSelectionMode() const;
-    void setActiveSelectionMode(const SynSelectionMode &Value);
+    SelectionMode activeSelectionMode() const;
+    void setActiveSelectionMode(const SelectionMode &Value);
 
     int charsInWindow() const;
 
@@ -354,13 +341,13 @@ public:
     bool modified() const;
     void setModified(bool Value);
 
-    PSynHighlighter highlighter() const;
-    void setHighlighter(const PSynHighlighter &highlighter);
+    PHighlighter highlighter() const;
+    void setHighlighter(const PHighlighter &highlighter);
 
     bool useCodeFolding() const;
     void setUseCodeFolding(bool value);
 
-    SynEditCodeFolding & codeFolding();
+    CodeFoldingOptions & codeFolding();
 
     QString displayLineText();
     QString lineText() const;
@@ -369,17 +356,17 @@ public:
     const PSynDocument& document() const;
     bool empty();
 
-    SynSelectionMode selectionMode() const;
-    void setSelectionMode(SynSelectionMode value);
+    SelectionMode selectionMode() const;
+    void setSelectionMode(SelectionMode value);
 
     QString selText();
 
-    QStringList getContent(BufferCoord startPos, BufferCoord endPos, SynSelectionMode mode) const;
+    QStringList getContent(BufferCoord startPos, BufferCoord endPos, SelectionMode mode) const;
 
     QString lineBreak();
 
-    SynEditorOptions getOptions() const;
-    void setOptions(const SynEditorOptions &Value);
+    EditorOptions getOptions() const;
+    void setOptions(const EditorOptions &Value);
 
     int tabWidth() const {    return mDocument->tabWidth(); }
     void setTabWidth(int tabWidth);
@@ -390,13 +377,13 @@ public:
     QColor activeLineColor() const;
     void setActiveLineColor(const QColor &activeLineColor);
 
-    SynEditCaretType overwriteCaret() const;
-    void setOverwriteCaret(const SynEditCaretType &overwriteCaret);
+    EditCaretType overwriteCaret() const;
+    void setOverwriteCaret(const EditCaretType &overwriteCaret);
 
-    SynEditCaretType insertCaret() const;
-    void setInsertCaret(const SynEditCaretType &insertCaret);
+    EditCaretType insertCaret() const;
+    void setInsertCaret(const EditCaretType &insertCaret);
 
-    SynGutter& gutter();
+    Gutter& gutter();
 
     bool readOnly() const;
     void setReadOnly(bool readOnly);
@@ -424,13 +411,13 @@ public:
     bool caretUseTextColor() const;
     void setCaretUseTextColor(bool newCaretUseTextColor);
 
-    const PSynHighlighterAttribute &rainbowAttr0() const;
+    const PHighlighterAttribute &rainbowAttr0() const;
 
-    const PSynHighlighterAttribute &rainbowAttr1() const;
+    const PHighlighterAttribute &rainbowAttr1() const;
 
-    const PSynHighlighterAttribute &rainbowAttr2() const;
+    const PHighlighterAttribute &rainbowAttr2() const;
 
-    const PSynHighlighterAttribute &rainbowAttr3() const;
+    const PHighlighterAttribute &rainbowAttr3() const;
 
     int mouseWheelScrollSpeed() const;
     void setMouseWheelScrollSpeed(int newMouseWheelScrollSpeed);
@@ -463,8 +450,7 @@ signals:
 
 //    void contextHelp(const QString& word);
 
-//    void scrolled(SynScrollBarKind ScrollBar);
-    void statusChanged(SynStatusChanges changes);
+    void statusChanged(StatusChanges changes);
 
     void fontChanged();
     void tabSizeChanged();
@@ -472,21 +458,21 @@ signals:
 protected:
     virtual bool onGetSpecialLineColors(int Line,
          QColor& foreground, QColor& backgroundColor) ;
-    virtual void onGetEditingAreas(int Line, SynEditingAreaList& areaList);
+    virtual void onGetEditingAreas(int Line, EditingAreaList& areaList);
     virtual void onGutterGetText(int aLine, QString& aText);
     virtual void onGutterPaint(QPainter& painter, int aLine, int X, int Y);
     virtual void onPaint(QPainter& painter);
     virtual void onPreparePaintHighlightToken(int line,
-            int aChar, const QString& token, PSynHighlighterAttribute attr,
-            SynFontStyles& style, QColor& foreground, QColor& background);
-    virtual void onProcessCommand(SynEditorCommand Command, QChar AChar, void * pData);
-    virtual void onCommandProcessed(SynEditorCommand Command, QChar AChar, void * pData);
-    virtual void ExecuteCommand(SynEditorCommand Command, QChar AChar, void * pData);
+            int aChar, const QString& token, PHighlighterAttribute attr,
+            FontStyles& style, QColor& foreground, QColor& background);
+    virtual void onProcessCommand(EditCommand Command, QChar AChar, void * pData);
+    virtual void onCommandProcessed(EditCommand Command, QChar AChar, void * pData);
+    virtual void ExecuteCommand(EditCommand Command, QChar AChar, void * pData);
     virtual void onEndFirstPaintLock();
     virtual void onBeginFirstPaintLock();
 
 private:
-    void clearAreaList(SynEditingAreaList areaList);
+    void clearAreaList(EditingAreaList areaList);
     void computeCaret();
     void computeScroll(bool isDragging);
 
@@ -498,7 +484,7 @@ private:
     int clientLeft();
     QRect clientRect();
     void synFontChanged();
-    void doOnPaintTransient(SynTransientType TransientType);
+
     void doSetSelText(const QString& value);
 
     void updateLastCaretX();
@@ -509,8 +495,8 @@ private:
     void internalSetCaretXY(const BufferCoord& Value);
     void internalSetCaretX(int Value);
     void internalSetCaretY(int Value);
-    void setStatusChanged(SynStatusChanges changes);
-    void doOnStatusChange(SynStatusChanges changes);
+    void setStatusChanged(StatusChanges changes);
+    void doOnStatusChange(StatusChanges changes);
     void updateScrollbars();
     void updateCaret();
     void recalcCharExtent();
@@ -519,30 +505,29 @@ private:
     int scanFrom(int Index, int canStopIndex);
     void rescanRange(int line);
     void rescanRanges();
-    void uncollapse(PSynEditFoldRange FoldRange);
-    void collapse(PSynEditFoldRange FoldRange);
+    void uncollapse(PCodeFoldingRange FoldRange);
+    void collapse(PCodeFoldingRange FoldRange);
 
     void foldOnListInserted(int Line, int Count);
     void foldOnListDeleted(int Line, int Count);
     void foldOnListCleared();
     void rescanFolds(); // rescan for folds
     void rescanForFoldRanges();
-    void scanForFoldRanges(PSynEditFoldRanges TopFoldRanges);
+    void scanForFoldRanges(PCodeFoldingRanges TopFoldRanges);
     int lineHasChar(int Line, int startChar, QChar character, const QString& highlighterAttrName);
-    void findSubFoldRange(PSynEditFoldRanges TopFoldRanges,int FoldIndex,PSynEditFoldRanges& parentFoldRanges, PSynEditFoldRange Parent);
-    PSynEditFoldRange collapsedFoldStartAtLine(int Line);
-    void doOnPaintTransientEx(SynTransientType TransientType, bool Lock);
+    void findSubFoldRange(PCodeFoldingRanges TopFoldRanges,int FoldIndex,PCodeFoldingRanges& parentFoldRanges, PCodeFoldingRange Parent);
+    PCodeFoldingRange collapsedFoldStartAtLine(int Line);
     void initializeCaret();
-    PSynEditFoldRange foldStartAtLine(int Line) const;
+    PCodeFoldingRange foldStartAtLine(int Line) const;
     bool foldCollapsedBetween(int startLine, int endLine) const;
     QString substringByColumns(const QString& s, int startColumn, int& colLen);
-    PSynEditFoldRange foldAroundLine(int Line);
-    PSynEditFoldRange foldAroundLineEx(int Line, bool WantCollapsed, bool AcceptFromLine, bool AcceptToLine);
-    PSynEditFoldRange checkFoldRange(SynEditFoldRanges* FoldRangeToCheck,int Line, bool WantCollapsed, bool AcceptFromLine, bool AcceptToLine);
-    PSynEditFoldRange foldEndAtLine(int Line);
+    PCodeFoldingRange foldAroundLine(int Line);
+    PCodeFoldingRange foldAroundLineEx(int Line, bool WantCollapsed, bool AcceptFromLine, bool AcceptToLine);
+    PCodeFoldingRange checkFoldRange(CodeFoldingRanges* FoldRangeToCheck,int Line, bool WantCollapsed, bool AcceptFromLine, bool AcceptToLine);
+    PCodeFoldingRange foldEndAtLine(int Line);
     void paintCaret(QPainter& painter, const QRect rcClip);
     int textOffset() const;
-    SynEditorCommand TranslateKeyCode(int key, Qt::KeyboardModifiers modifiers);
+    EditCommand TranslateKeyCode(int key, Qt::KeyboardModifiers modifiers);
     /**
      * Move the caret to right DX columns
      * @param DX
@@ -556,15 +541,15 @@ private:
     void moveCaretToLineEnd(bool isSelection);
     void setSelectedTextEmpty();
     void setSelTextPrimitive(const QStringList& text);
-    void setSelTextPrimitiveEx(SynSelectionMode PasteMode,
+    void setSelTextPrimitiveEx(SelectionMode PasteMode,
                                const QStringList& text);
     void doLinesDeleted(int FirstLine, int Count);
     void doLinesInserted(int FirstLine, int Count);
     void properSetLine(int ALine, const QString& ALineText, bool notify = true);
 
     //primitive edit operations
-    void doDeleteText(BufferCoord startPos, BufferCoord endPos, SynSelectionMode mode);
-    void doInsertText(const BufferCoord& pos, const QStringList& text, SynSelectionMode mode, int startLine, int endLine);
+    void doDeleteText(BufferCoord startPos, BufferCoord endPos, SelectionMode mode);
+    void doInsertText(const BufferCoord& pos, const QStringList& text, SelectionMode mode, int startLine, int endLine);
     int doInsertTextByNormalMode(const BufferCoord& pos, const QStringList& text, BufferCoord &newPos);
     int doInsertTextByColumnMode(const BufferCoord& pos, const QStringList& text, BufferCoord &newPos, int startLine, int endLine);
     int doInsertTextByLineMode(const BufferCoord& pos, const QStringList& text, BufferCoord &newPos);
@@ -651,8 +636,8 @@ private slots:
 
 private:
     std::shared_ptr<QImage> mContentImage;
-    SynEditFoldRanges mAllFoldRanges;
-    SynEditCodeFolding mCodeFolding;
+    CodeFoldingRanges mAllFoldRanges;
+    CodeFoldingOptions mCodeFolding;
     bool mUseCodeFolding;
     bool  mAlwaysShowCaret;
     BufferCoord mBlockBegin;
@@ -664,7 +649,6 @@ private:
     int mCharWidth;
     QFont mFontDummy;
     QFont mFontForNonAscii;
-    SynFontSmoothMethod mFontSmoothing;
     bool mMouseMoved;
 
     bool mInserting;
@@ -676,21 +660,19 @@ private:
     bool mReadOnly;
     int mRightEdge;
     QColor mRightEdgeColor;
-    QColor mScrollHintColor;
-    SynScrollHintFormat mScrollHintFormat;
-    SynScrollStyle mScrollBars;
+    ScrollStyle mScrollBars;
     int mTextHeight;
     int mTopLine;
-    PSynHighlighter mHighlighter;
+    PHighlighter mHighlighter;
     QColor mSelectedForeground;
     QColor mSelectedBackground;
     QColor mForegroundColor;
     QColor mBackgroundColor;
     QColor mCaretColor;
-    PSynHighlighterAttribute mRainbowAttr0;
-    PSynHighlighterAttribute mRainbowAttr1;
-    PSynHighlighterAttribute mRainbowAttr2;
-    PSynHighlighterAttribute mRainbowAttr3;
+    PHighlighterAttribute mRainbowAttr0;
+    PHighlighterAttribute mRainbowAttr1;
+    PHighlighterAttribute mRainbowAttr2;
+    PHighlighterAttribute mRainbowAttr3;
 
     bool mCaretUseTextColor;
     QColor mActiveLineColor;
@@ -699,22 +681,22 @@ private:
     QPoint mMouseDownPos;
     bool mHideSelection;
     int mMouseWheelAccumulator;
-    SynEditCaretType mOverwriteCaret;
-    SynEditCaretType  mInsertCaret;
+    EditCaretType mOverwriteCaret;
+    EditCaretType  mInsertCaret;
     QPoint mCaretOffset;
-    SynEditKeyStrokes mKeyStrokes;
+    EditKeyStrokes mKeyStrokes;
     bool mModified;
     QDateTime mLastModifyTime;
     int mExtraLineSpacing;
-    SynSelectionMode mSelectionMode;
-    SynSelectionMode mActiveSelectionMode; //mode of the active selection
+    SelectionMode mSelectionMode;
+    SelectionMode mActiveSelectionMode; //mode of the active selection
     bool mWantReturns;
     bool mWantTabs;
-    SynGutter mGutter;
+    Gutter mGutter;
     QRect mInvalidateRect;
-    SynStateFlags mStateFlags;
-    SynEditorOptions mOptions;
-    SynStatusChanges  mStatusChanges;
+    StateFlags mStateFlags;
+    EditorOptions mOptions;
+    StatusChanges  mStatusChanges;
     int mLastKey;
     Qt::KeyboardModifiers mLastKeyModifiers;
     //fSearchEngine: TSynEditSearchCustom;
@@ -733,12 +715,12 @@ private:
     int mPainterLock; // lock counter to prevent repaint while painting
     bool mUndoing;
     // event handlers
-    SynProcessCommandProc mOnCommandProcessed;
-    SynMouseCursorProc mOnMouseCursor;
-    SynPaintProc mOnPaint;
+    ProcessCommandProc mOnCommandProcessed;
+    MouseCursorProc mOnMouseCursor;
+    PaintProc mOnPaint;
 //    SynPreparePaintHighlightTokenProc mOnPaintHighlightToken;
-    SynProcessCommandProc mOnProcessingCommand;
-    SynProcessCommandProc mOnProcessingUserCommand;
+    ProcessCommandProc mOnProcessingCommand;
+    ProcessCommandProc mOnProcessingUserCommand;
 
 //    SynSpecialLineColorsProc mOnSpecialLineColors;
 //    SynEditingAreasProc mOnEditingAreas;
@@ -795,6 +777,9 @@ protected:
 
     int mouseSelectionScrollSpeed() const;
     void setMouseSelectionScrollSpeed(int newMouseSelectionScrollSpeed);
+
+    ScrollStyle scrollBars() const;
+    void setScrollBars(ScrollStyle newScrollBars);
 
 protected:
     void dragEnterEvent(QDragEnterEvent *event) override;

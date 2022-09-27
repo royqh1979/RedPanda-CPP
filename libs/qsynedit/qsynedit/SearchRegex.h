@@ -21,11 +21,11 @@
 #include <QRegularExpression>
 
 namespace QSynedit {
-class SynSearchRegex : public SynSearchBase
+class RegexSearcher : public BaseSearcher
 {
     Q_OBJECT
 public:
-    explicit SynSearchRegex(QObject* parent=nullptr);
+    explicit RegexSearcher(QObject* parent=nullptr);
 
     // SynSearchBase interface
 public:
@@ -35,7 +35,7 @@ public:
     int findAll(const QString &text) override;
     QString replace(const QString &aOccurrence, const QString &aReplacement) override;
     void setPattern(const QString &value) override;
-    void setOptions(const SynSearchOptions &options) override;
+    void setOptions(const SearchOptions &options) override;
 private:
     void updateRegexOptions();
 private:

@@ -75,9 +75,7 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     mDocument->connect(mDocument.get(), &SynDocument::putted, this, &SynEdit::onLinesPutted);
 
     mGutterWidth = 0;
-    mScrollBars = SynScrollStyle::ssBoth;
-
-
+    mScrollBars = ScrollStyle::ssBoth;
 
     mUndoList = std::make_shared<SynEditUndoList>();
     mUndoList->connect(mUndoList.get(), &SynEditUndoList::addedUndo, this, &SynEdit::onUndoAdded);
@@ -99,7 +97,7 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     mMouseSelectionScrollSpeed = 1;
 
     mGutter.setRightOffset(21);
-    mGutter.connect(&mGutter, &SynGutter::changed, this, &SynEdit::onGutterChanged);
+    mGutter.connect(&mGutter, &Gutter::changed, this, &SynEdit::onGutterChanged);
     mGutterWidth = mGutter.realGutterWidth(charWidth());
     //ControlStyle := ControlStyle + [csOpaque, csSetCaption, csNeedsBorderPaint];
     //Height := 150;
@@ -112,10 +110,10 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     this->setFrameShape(QFrame::Panel);
     this->setFrameShadow(QFrame::Sunken);
     this->setLineWidth(1);
-    mInsertCaret = SynEditCaretType::ctVerticalLine;
-    mOverwriteCaret = SynEditCaretType::ctBlock;
-    mSelectionMode = SynSelectionMode::Normal;
-    mActiveSelectionMode = SynSelectionMode::Normal;
+    mInsertCaret = EditCaretType::ctVerticalLine;
+    mOverwriteCaret = EditCaretType::ctBlock;
+    mSelectionMode = SelectionMode::Normal;
+    mActiveSelectionMode = SelectionMode::Normal;
     mReadOnly = false;
 
     //stop qt to auto fill background
@@ -144,9 +142,6 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     mScrollTimer = new QTimer(this);
     //mScrollTimer->setInterval(100);
     connect(mScrollTimer, &QTimer::timeout,this, &SynEdit::onScrollTimeout);
-
-    mScrollHintColor = Qt::yellow;
-    mScrollHintFormat = SynScrollHintFormat::shfTopLineOnly;
 
     qreal dpr=devicePixelRatioF();
     mContentImage = std::make_shared<QImage>(clientWidth()*dpr,clientHeight()*dpr,QImage::Format_ARGB32);
@@ -232,18 +227,14 @@ void SynEdit::setCaretXY(const BufferCoord &value)
 
 void SynEdit::setCaretXYEx(bool CallEnsureCursorPosVisible, BufferCoord value)
 {
-    bool vTriggerPaint=true; //how to test it?
-
-    if (vTriggerPaint)
-        doOnPaintTransient(SynTransientType::ttBefore);
     int nMaxX;
     if (value.line > mDocument->count())
         value.line = mDocument->count();
-    if (mActiveSelectionMode!=SynSelectionMode::Column) {
+    if (mActiveSelectionMode!=SelectionMode::Column) {
         if (value.line < 1) {
             // this is just to make sure if Lines stringlist should be empty
             value.line = 1;
-            if (!mOptions.testFlag(SynEditorOption::eoScrollPastEol)) {
+            if (!mOptions.testFlag(EditorOption::eoScrollPastEol)) {
                 nMaxX = 1;
             } else {
                 nMaxX = getDisplayStringAtLine(value.line).length()+1;
@@ -266,7 +257,7 @@ void SynEdit::setCaretXYEx(bool CallEnsureCursorPosVisible, BufferCoord value)
         // simply include the flags, fPaintLock is > 0
         if (mCaretX != value.ch) {
             mCaretX = value.ch;
-            mStatusChanges.setFlag(SynStatusChange::scCaretX);
+            mStatusChanges.setFlag(StatusChange::scCaretX);
             invalidateLine(mCaretY);
         }
         if (mCaretY != value.line) {
@@ -276,7 +267,7 @@ void SynEdit::setCaretXYEx(bool CallEnsureCursorPosVisible, BufferCoord value)
             invalidateGutterLine(mCaretY);
             invalidateLine(oldCaretY);
             invalidateGutterLine(oldCaretY);
-            mStatusChanges.setFlag(SynStatusChange::scCaretY);
+            mStatusChanges.setFlag(StatusChange::scCaretY);
         }
         // Call UpdateLastCaretX before DecPaintLock because the event handler it
         // calls could raise an exception, and we don't want fLastCaretX to be
@@ -284,8 +275,8 @@ void SynEdit::setCaretXYEx(bool CallEnsureCursorPosVisible, BufferCoord value)
         updateLastCaretX();
         if (CallEnsureCursorPosVisible)
             ensureCursorPosVisible();
-        mStateFlags.setFlag(SynStateFlag::sfCaretChanged);
-        mStateFlags.setFlag(SynStateFlag::sfScrollbarChanged);
+        mStateFlags.setFlag(StateFlag::sfCaretChanged);
+        mStateFlags.setFlag(StateFlag::sfScrollbarChanged);
     } else {
       // Also call UpdateLastCaretX if the caret didn't move. Apps don't know
       // anything about fLastCaretX and they shouldn't need to. So, to avoid any
@@ -296,8 +287,6 @@ void SynEdit::setCaretXYEx(bool CallEnsureCursorPosVisible, BufferCoord value)
       // restore it afterward as appropriate.
       updateLastCaretX();
     }
-    if (vTriggerPaint)
-      doOnPaintTransient(SynTransientType::ttAfter);
 
 }
 
@@ -307,7 +296,7 @@ void SynEdit::setCaretXYCentered(const BufferCoord &value)
     auto action = finally([this] {
         decPaintLock();
     });
-    mStatusChanges.setFlag(SynStatusChange::scSelection);
+    mStatusChanges.setFlag(StatusChange::scSelection);
     setCaretXYEx(false,value);
     if (selAvail())
         invalidateSelection();
@@ -320,7 +309,7 @@ void SynEdit::setCaretXYCentered(const BufferCoord &value)
 void SynEdit::uncollapseAroundLine(int line)
 {
     while (true) { // Open up the closed folds around the focused line until we can see the line we're looking for
-      PSynEditFoldRange fold = foldHidesLine(line);
+      PCodeFoldingRange fold = foldHidesLine(line);
       if (fold)
           uncollapse(fold);
       else
@@ -328,7 +317,7 @@ void SynEdit::uncollapseAroundLine(int line)
     }
 }
 
-PSynEditFoldRange SynEdit::foldHidesLine(int line)
+PCodeFoldingRange SynEdit::foldHidesLine(int line)
 {
     return foldAroundLineEx(line, true, false, true);
 }
@@ -368,14 +357,14 @@ int SynEdit::maxScrollWidth() const
         return std::max(maxLen-mCharsInWindow+1, 1);
 }
 
-bool SynEdit::getHighlighterAttriAtRowCol(const BufferCoord &pos, QString &token, PSynHighlighterAttribute &attri)
+bool SynEdit::getHighlighterAttriAtRowCol(const BufferCoord &pos, QString &token, PHighlighterAttribute &attri)
 {
-    SynHighlighterTokenType tmpType;
+    TokenType tmpType;
     int tmpKind, tmpStart;
     return getHighlighterAttriAtRowColEx(pos, token, tmpType, tmpKind,tmpStart, attri);
 }
 
-bool SynEdit::getHighlighterAttriAtRowCol(const BufferCoord &pos, QString &token, bool &tokenFinished, SynHighlighterTokenType &tokenType, PSynHighlighterAttribute &attri)
+bool SynEdit::getHighlighterAttriAtRowCol(const BufferCoord &pos, QString &token, bool &tokenFinished, TokenType &tokenType, PHighlighterAttribute &attri)
 {
     int posX, posY, endPos, start;
     QString line;
@@ -408,12 +397,12 @@ bool SynEdit::getHighlighterAttriAtRowCol(const BufferCoord &pos, QString &token
         }
     }
     token = "";
-    attri = PSynHighlighterAttribute();
+    attri = PHighlighterAttribute();
     tokenFinished = false;
     return false;
 }
 
-bool SynEdit::getHighlighterAttriAtRowColEx(const BufferCoord &pos, QString &token, SynHighlighterTokenType &tokenType, SynTokenKind &tokenKind, int &start, PSynHighlighterAttribute &attri)
+bool SynEdit::getHighlighterAttriAtRowColEx(const BufferCoord &pos, QString &token, TokenType &tokenType, TokenKind &tokenKind, int &start, PHighlighterAttribute &attri)
 {
     int posX, posY, endPos;
     QString line;
@@ -443,9 +432,9 @@ bool SynEdit::getHighlighterAttriAtRowColEx(const BufferCoord &pos, QString &tok
         }
     }
     token = "";
-    attri = PSynHighlighterAttribute();
+    attri = PHighlighterAttribute();
     tokenKind = 0;
-    tokenType = SynHighlighterTokenType::Default;
+    tokenType = TokenType::Default;
     return false;
 }
 
@@ -502,7 +491,7 @@ BufferCoord SynEdit::getMatchingBracketEx(BufferCoord APoint)
     QChar Test, BracketInc, BracketDec;
     int NumBrackets;
     QString vDummy;
-    PSynHighlighterAttribute attr;
+    PHighlighterAttribute attr;
     BufferCoord p;
     bool isCommentOrStringOrChar;
     int nBrackets = sizeof(Brackets) / sizeof(QChar);
@@ -674,7 +663,7 @@ void SynEdit::invalidateGutterLines(int FirstLine, int LastLine)
         return;
     if (FirstLine == -1 && LastLine == -1) {
         rcInval = QRect(0, 0, mGutterWidth, clientHeight());
-        if (mStateFlags.testFlag(SynStateFlag::sfLinesChanging))
+        if (mStateFlags.testFlag(StateFlag::sfLinesChanging))
             mInvalidateRect = mInvalidateRect.united(rcInval);
         else
             invalidateRect(rcInval);
@@ -695,7 +684,7 @@ void SynEdit::invalidateGutterLines(int FirstLine, int LastLine)
         if (LastLine >= FirstLine) {
             rcInval = {0, mTextHeight * (FirstLine - mTopLine),
                        mGutterWidth, mTextHeight * (LastLine - mTopLine + 1)};
-            if (mStateFlags.testFlag(SynStateFlag::sfLinesChanging)) {
+            if (mStateFlags.testFlag(StateFlag::sfLinesChanging)) {
                 mInvalidateRect =  mInvalidateRect.united(rcInval);
             } else {
                 invalidateRect(rcInval);
@@ -917,7 +906,7 @@ int SynEdit::foldRowToLine(int Row) const
 {
     int result = Row;
     for (int i=0;i<mAllFoldRanges.count();i++) {
-        PSynEditFoldRange range = mAllFoldRanges[i];
+        PCodeFoldingRange range = mAllFoldRanges[i];
         if (range->collapsed && !range->parentCollapsed() && range->fromLine < result) {
             result += range->linesCollapsed;
         }
@@ -929,7 +918,7 @@ int SynEdit::foldLineToRow(int Line) const
 {
     int result = Line;
     for (int i=mAllFoldRanges.count()-1;i>=0;i--) {
-        PSynEditFoldRange range =mAllFoldRanges[i];
+        PCodeFoldingRange range =mAllFoldRanges[i];
         if (range->collapsed && !range->parentCollapsed()) {
             // Line is found after fold
             if (range->toLine < Line)
@@ -969,7 +958,7 @@ void SynEdit::invalidateLine(int Line)
                     mTextHeight * (Line - mTopLine),
                     clientWidth(),
                     mTextHeight};
-        if (mStateFlags.testFlag(SynStateFlag::sfLinesChanging))
+        if (mStateFlags.testFlag(StateFlag::sfLinesChanging))
             mInvalidateRect = mInvalidateRect.united(rcInval);
         else
             invalidateRect(rcInval);
@@ -986,7 +975,7 @@ void SynEdit::invalidateLines(int FirstLine, int LastLine)
     if (FirstLine == -1 && LastLine == -1) {
         QRect rcInval = clientRect();
         rcInval.setLeft(rcInval.left()+mGutterWidth);
-        if (mStateFlags.testFlag(SynStateFlag::sfLinesChanging)) {
+        if (mStateFlags.testFlag(StateFlag::sfLinesChanging)) {
             mInvalidateRect = mInvalidateRect.united(rcInval);
         } else {
             invalidateRect(rcInval);
@@ -1021,7 +1010,7 @@ void SynEdit::invalidateLines(int FirstLine, int LastLine)
                 mTextHeight * (FirstLine - mTopLine),
                 clientWidth(), mTextHeight * (LastLine - mTopLine + 1)
             };
-            if (mStateFlags.testFlag(SynStateFlag::sfLinesChanging))
+            if (mStateFlags.testFlag(StateFlag::sfLinesChanging))
                 mInvalidateRect = mInvalidateRect.united(rcInval);
             else
                 invalidateRect(rcInval);
@@ -1066,7 +1055,7 @@ bool SynEdit::selAvail() const
     if (mBlockBegin.ch == mBlockEnd.ch && mBlockBegin.line == mBlockEnd.line)
         return false;
     // start line != end line  or start char != end char
-    if (mActiveSelectionMode==SynSelectionMode::Column) {
+    if (mActiveSelectionMode==SelectionMode::Column) {
         if (mBlockBegin.line != mBlockEnd.line) {
             DisplayCoord coordBegin = bufferToDisplayPos(mBlockBegin);
             DisplayCoord coordEnd = bufferToDisplayPos(mBlockEnd);
@@ -1079,7 +1068,7 @@ bool SynEdit::selAvail() const
 
 bool SynEdit::colSelAvail() const
 {
-    if (mActiveSelectionMode != SynSelectionMode::Column)
+    if (mActiveSelectionMode != SelectionMode::Column)
         return false;
     if (mBlockBegin.ch == mBlockEnd.ch && mBlockBegin.line == mBlockEnd.line)
         return false;
@@ -1216,7 +1205,7 @@ void SynEdit::processGutterClick(QMouseEvent *event)
 
     // Check if we clicked on a folding thing
     if (mUseCodeFolding) {
-        PSynEditFoldRange foldRange = foldStartAtLine(Line);
+        PCodeFoldingRange foldRange = foldStartAtLine(Line);
         if (foldRange) {
             // See if we actually clicked on the rectangle...
             //rect.Left := Gutter.RealGutterWidth(CharWidth) - Gutter.RightOffset;
@@ -1253,7 +1242,7 @@ int SynEdit::findIndentsStartLine(int line, QVector<int> indents)
     if (line<0 || line>=mDocument->count())
         return -1;
     while (line>=1) {
-        SynRangeState range = mDocument->ranges(line);
+        HighlighterState range = mDocument->ranges(line);
         QVector<int> newIndents = range.indents.mid(range.firstIndentThisLine);
         int i = 0;
         int len = indents.length();
@@ -1281,7 +1270,7 @@ BufferCoord SynEdit::getPreviousLeftBrace(int x, int y)
 {
     QChar Test;
     QString vDummy;
-    PSynHighlighterAttribute attr;
+    PHighlighterAttribute attr;
     BufferCoord p;
     bool isCommentOrStringOrChar;
     BufferCoord Result{0,0};
@@ -1364,9 +1353,9 @@ bool SynEdit::isPointInSelection(const BufferCoord &Value) const
     BufferCoord ptEnd = blockEnd();
     if ((Value.line >= ptBegin.line) && (Value.line <= ptEnd.line) &&
             ((ptBegin.line != ptEnd.line) || (ptBegin.ch != ptEnd.ch))) {
-        if (mActiveSelectionMode == SynSelectionMode::Line)
+        if (mActiveSelectionMode == SelectionMode::Line)
             return true;
-        else if (mActiveSelectionMode == SynSelectionMode::Column) {
+        else if (mActiveSelectionMode == SelectionMode::Column) {
             if (ptBegin.ch > ptEnd.ch)
                 return (Value.ch >= ptEnd.ch) && (Value.ch < ptBegin.ch);
             else if (ptBegin.ch < ptEnd.ch)
@@ -1552,7 +1541,7 @@ void SynEdit::doShrinkSelection(const BufferCoord &pos)
 int SynEdit::findCommentStartLine(int searchStartLine)
 {
     int commentStartLine = searchStartLine;
-    SynRangeState range;
+    HighlighterState range;
     while (commentStartLine>=1) {
         range = mDocument->ranges(commentStartLine-1);
         if (!mHighlighter->isLastLineCommentNotFinished(range.state)){
@@ -1590,7 +1579,7 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
     if (startLine>=1) {
         //calculate the indents of last statement;
         indentSpaces = leftSpaces(startLineText);
-        SynRangeState rangePreceeding = mDocument->ranges(startLine-1);
+        HighlighterState rangePreceeding = mDocument->ranges(startLine-1);
         mHighlighter->setState(rangePreceeding);
         if (addIndent) {
 //            QString trimmedS = s.trimmed();
@@ -1602,9 +1591,9 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
             } else {
                 statePrePre = 0;
             }
-            SynRangeState rangeAfterFirstToken = mHighlighter->getRangeState();
+            HighlighterState rangeAfterFirstToken = mHighlighter->getState();
             QString firstToken = mHighlighter->getToken();
-            PSynHighlighterAttribute attr = mHighlighter->getTokenAttribute();
+            PHighlighterAttribute attr = mHighlighter->getTokenAttribute();
             if (attr == mHighlighter->keywordAttribute()
                                   &&  lineText.endsWith(':')
                                   && (
@@ -1615,7 +1604,7 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
                 // public: private: protecte: case: should indents like it's parent statement
                 mHighlighter->setState(rangePreceeding);
                 mHighlighter->setLine("}",line-1);
-                rangeAfterFirstToken = mHighlighter->getRangeState();
+                rangeAfterFirstToken = mHighlighter->getState();
                 firstToken = mHighlighter->getToken();
                 attr = mHighlighter->getTokenAttribute();
             }
@@ -1636,13 +1625,13 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
                 matchingIndents = rangeAfterFirstToken.matchingIndents;
                 indentAdded = true;
                 l = startLine;
-            } else if (mHighlighter->getClass() == SynHighlighterClass::CppHighlighter
+            } else if (mHighlighter->getClass() == HighlighterClass::CppHighlighter
                        && trimmedLineText.startsWith('#')
-                       && attr == ((SynEditCppHighlighter *)mHighlighter.get())->preprocessorAttribute()) {
+                       && attr == ((CppHighlighter *)mHighlighter.get())->preprocessorAttribute()) {
                 indentAdded = true;
                 indentSpaces=0;
                 l=0;
-            } else if (mHighlighter->getClass() == SynHighlighterClass::CppHighlighter
+            } else if (mHighlighter->getClass() == HighlighterClass::CppHighlighter
                        && mHighlighter->isLastLineCommentNotFinished(rangePreceeding.state)
                        ) {
                 // last line is a not finished comment,
@@ -1652,7 +1641,7 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
                     // the line the comment beginning , and add 1 additional space
                     additionIndent = 1;
                     int commentStartLine = findCommentStartLine(startLine-1);
-                    SynRangeState range;
+                    HighlighterState range;
                     indentSpaces = leftSpaces(mDocument->getString(commentStartLine-1));
                     range = mDocument->ranges(commentStartLine-1);
                     matchingIndents = range.matchingIndents;
@@ -1662,7 +1651,7 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
                     //indents according to the beginning of the comment and 2 additional space
                     additionIndent = 0;
                     int commentStartLine = findCommentStartLine(startLine-1);
-                    SynRangeState range;
+                    HighlighterState range;
                     indentSpaces = leftSpaces(mDocument->getString(commentStartLine-1))+2;
                     range = mDocument->ranges(commentStartLine-1);
                     matchingIndents = range.matchingIndents;
@@ -1676,7 +1665,7 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
                 // the preceeding line is the end of comment
                 // we should use the indents of the start line of the comment
                 int commentStartLine = findCommentStartLine(startLine-2);
-                SynRangeState range;
+                HighlighterState range;
                 indentSpaces = leftSpaces(mDocument->getString(commentStartLine-1));
                 range = mDocument->ranges(commentStartLine-1);
                 matchingIndents = range.matchingIndents;
@@ -1692,7 +1681,7 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
                     ) {
                 // find the indent's start line, and use it's indent as the default indent;
                 while (l>=1) {
-                    SynRangeState range = mDocument->ranges(l-1);
+                    HighlighterState range = mDocument->ranges(l-1);
                     QVector<int> newIndents = range.indents.mid(range.firstIndentThisLine);
                     int i = 0;
                     int len = matchingIndents.length();
@@ -1737,7 +1726,7 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
             if (!indentAdded && !startLineText.isEmpty()) {
                 BufferCoord coord;
                 QString token;
-                PSynHighlighterAttribute attr;
+                PHighlighterAttribute attr;
                 coord.line = startLine;
                 coord.ch = document()->getString(startLine-1).length();
                 if (getHighlighterAttriAtRowCol(coord,token,attr)
@@ -1765,7 +1754,7 @@ void SynEdit::doSelectAll()
     }
     setCaretAndSelection(caretXY(), BufferCoord{1, 1}, LastPt);
     // Selection should have changed...
-    emit statusChanged(SynStatusChange::scSelection);
+    emit statusChanged(StatusChange::scSelection);
 }
 
 void SynEdit::doComment()
@@ -1774,7 +1763,6 @@ void SynEdit::doComment()
     int endLine;
     if (mReadOnly)
         return;
-    doOnPaintTransient(SynTransientType::ttBefore);
     mUndoList->beginBlock();
     auto action = finally([this]{
         mUndoList->endBlock();
@@ -1792,7 +1780,7 @@ void SynEdit::doComment()
         mUndoList->addChange(SynChangeReason::Insert,
               BufferCoord{1, i + 1},
               BufferCoord{3, i + 1},
-              QStringList(), SynSelectionMode::Normal);
+              QStringList(), SelectionMode::Normal);
     }
     // When grouping similar commands, process one comment action per undo/redo
     mUndoList->addGroupBreak();
@@ -1817,7 +1805,6 @@ void SynEdit::doUncomment()
     changeText.append("//");
     if (mReadOnly)
         return;
-    doOnPaintTransient(SynTransientType::ttBefore);
     mUndoList->beginBlock();
     auto action = finally([this]{
         mUndoList->endBlock();
@@ -1842,7 +1829,7 @@ void SynEdit::doUncomment()
             mUndoList->addChange(SynChangeReason::Delete,
                                  BufferCoord{j+1, i + 1},
                                  BufferCoord{j + 3, i + 1},
-                                 changeText, SynSelectionMode::Normal);
+                                 changeText, SelectionMode::Normal);
             // Move begin of selection
             if ((i == origBlockBegin.line - 1) && (origBlockBegin.ch > 1))
                 origBlockBegin.ch-=2;
@@ -1867,7 +1854,6 @@ void SynEdit::doToggleComment()
     bool allCommented = true;
     if (mReadOnly)
         return;
-    doOnPaintTransient(SynTransientType::ttBefore);
     mUndoList->beginBlock();
     auto action = finally([this]{
         mUndoList->endBlock();
@@ -1912,7 +1898,6 @@ void SynEdit::doToggleBlockComment()
     QString s;
     if (mReadOnly)
         return;
-    doOnPaintTransient(SynTransientType::ttBefore);
 
     QString text=selText().trimmed();
     if (text.length()>4 && text.startsWith("/*") && text.endsWith("*/")) {
@@ -1972,7 +1957,7 @@ void SynEdit::doMouseScroll(bool isDragging)
     }
     BufferCoord vCaret = displayToBufferPos(C);
     if ((caretX() != vCaret.ch) || (caretY() != vCaret.line)) {
-        if (mActiveSelectionMode == SynSelectionMode::Column) {
+        if (mActiveSelectionMode == SelectionMode::Column) {
             int startLine=std::min(mBlockBegin.line,mBlockEnd.line);
             startLine = std::min(startLine,vCaret.line);
             int endLine=std::max(mBlockBegin.line,mBlockEnd.line);
@@ -2003,7 +1988,7 @@ void SynEdit::doMouseScroll(bool isDragging)
         } else
             setBlockEnd(caretXY());
 
-        if (mOptions.testFlag(SynEditorOption::eoGroupUndo))
+        if (mOptions.testFlag(EditorOption::eoGroupUndo))
             mUndoList->addGroupBreak();
     }
     if (isDragging) {
@@ -2018,7 +2003,7 @@ void SynEdit::doMouseScroll(bool isDragging)
 QString SynEdit::getDisplayStringAtLine(int line) const
 {
     QString s = mDocument->getString(line-1);
-    PSynEditFoldRange foldRange = foldStartAtLine(line);
+    PCodeFoldingRange foldRange = foldStartAtLine(line);
     if ((foldRange) && foldRange->collapsed) {
         return s+highlighter()->foldString();
     }
@@ -2029,13 +2014,11 @@ void SynEdit::doDeleteLastChar()
 {
     if (mReadOnly)
         return ;
-    doOnPaintTransientEx(SynTransientType::ttBefore, true);
     auto action = finally([this]{
         ensureCursorPosVisible();
-        doOnPaintTransientEx(SynTransientType::ttAfter, true);
     });
 
-    if (mActiveSelectionMode==SynSelectionMode::Column) {
+    if (mActiveSelectionMode==SelectionMode::Column) {
         BufferCoord start=blockBegin();
         BufferCoord end=blockEnd();
         if (!selAvail()) {
@@ -2116,13 +2099,11 @@ void SynEdit::doDeleteCurrentChar()
     if (mReadOnly) {
         return;
     }
-    doOnPaintTransient(SynTransientType::ttBefore);
     auto action = finally([this]{
         ensureCursorPosVisible();
-        doOnPaintTransient(SynTransientType::ttAfter);
     });
 
-    if (mActiveSelectionMode==SynSelectionMode::Column) {
+    if (mActiveSelectionMode==SelectionMode::Column) {
         BufferCoord start=blockBegin();
         BufferCoord end=blockEnd();
         if (!selAvail()) {
@@ -2244,10 +2225,9 @@ void SynEdit::doDeleteFromBOL()
 void SynEdit::doDeleteLine()
 {
     if (!mReadOnly && (mDocument->count() > 0)) {
-        PSynEditFoldRange foldRange=foldStartAtLine(mCaretY);
+        PCodeFoldingRange foldRange=foldStartAtLine(mCaretY);
         if (foldRange && foldRange->collapsed)
             return;
-        doOnPaintTransient(SynTransientType::ttBefore);
         mUndoList->beginBlock();
         addCaretToUndo();
         addSelectionToUndo();
@@ -2260,7 +2240,7 @@ void SynEdit::doDeleteLine()
                 mUndoList->addChange(SynChangeReason::Delete,
                                      BufferCoord{1, mCaretY},
                                      BufferCoord{helper.length() + 1, mCaretY},
-                                     helper, SynSelectionMode::Normal);
+                                     helper, SelectionMode::Normal);
             } else {
                 QString s = mDocument->getString(mCaretY-2);
                 mDocument->deleteAt(mCaretY - 1);
@@ -2268,7 +2248,7 @@ void SynEdit::doDeleteLine()
                 mUndoList->addChange(SynChangeReason::Delete,
                                      BufferCoord{s.length()+1, mCaretY-1},
                                      BufferCoord{helper.length() + 1, mCaretY},
-                                     helper, SynSelectionMode::Normal);
+                                     helper, SelectionMode::Normal);
                 doLinesDeleted(mCaretY, 1);
                 mCaretY--;
             }
@@ -2278,12 +2258,11 @@ void SynEdit::doDeleteLine()
             mUndoList->addChange(SynChangeReason::Delete,
                                  BufferCoord{1, mCaretY},
                                  BufferCoord{helper.length() + 1, mCaretY},
-                                 helper, SynSelectionMode::Normal);
+                                 helper, SelectionMode::Normal);
             doLinesDeleted(mCaretY, 1);
         }
         mUndoList->endBlock();
         internalSetCaretXY(BufferCoord{1, mCaretY}); // like seen in the Delphi editor
-        doOnPaintTransient(SynTransientType::ttAfter);
     }
 }
 
@@ -2299,30 +2278,28 @@ void SynEdit::doSelecteLine()
 void SynEdit::doDuplicateLine()
 {
     if (!mReadOnly && (mDocument->count() > 0)) {
-        PSynEditFoldRange foldRange=foldStartAtLine(mCaretY);
+        PCodeFoldingRange foldRange=foldStartAtLine(mCaretY);
         if (foldRange && foldRange->collapsed)
             return;
         QString s = lineText();
-        doOnPaintTransient(SynTransientType::ttBefore);
         mDocument->insert(mCaretY, lineText());
         doLinesInserted(mCaretY + 1, 1);
         mUndoList->beginBlock();
         addCaretToUndo();
         mUndoList->addChange(SynChangeReason::LineBreak,
                              BufferCoord{s.length()+1,mCaretY},
-                             BufferCoord{s.length()+1,mCaretY}, QStringList(), SynSelectionMode::Normal);
+                             BufferCoord{s.length()+1,mCaretY}, QStringList(), SelectionMode::Normal);
         mUndoList->addChange(SynChangeReason::Insert,
                              BufferCoord{1,mCaretY+1},
-                             BufferCoord{s.length()+1,mCaretY+1}, QStringList(), SynSelectionMode::Normal);
+                             BufferCoord{s.length()+1,mCaretY+1}, QStringList(), SelectionMode::Normal);
         mUndoList->endBlock();
         internalSetCaretXY(BufferCoord{1, mCaretY}); // like seen in the Delphi editor
-        doOnPaintTransient(SynTransientType::ttAfter);
     }
 }
 
 void SynEdit::doMoveSelUp()
 {
-    if (mActiveSelectionMode == SynSelectionMode::Column)
+    if (mActiveSelectionMode == SelectionMode::Column)
         return;
     if (!mReadOnly && (mDocument->count() > 0) && (blockBegin().line > 1)) {
         if (!mUndoing) {
@@ -2332,7 +2309,7 @@ void SynEdit::doMoveSelUp()
         }
         BufferCoord origBlockBegin = blockBegin();
         BufferCoord origBlockEnd = blockEnd();
-        PSynEditFoldRange foldRange=foldStartAtLine(origBlockEnd.line);
+        PCodeFoldingRange foldRange=foldStartAtLine(origBlockEnd.line);
         if (foldRange && foldRange->collapsed)
             return;
 //        for (int line=origBlockBegin.Line;line<=origBlockEnd.Line;line++) {
@@ -2340,8 +2317,6 @@ void SynEdit::doMoveSelUp()
 //            if (foldRange && foldRange->collapsed)
 //                return;
 //        }
-
-        doOnPaintTransient(SynTransientType::ttBefore);
 
         // Delete line above selection
         QString s = mDocument->getString(origBlockBegin.line - 2); // before start, 0 based
@@ -2362,17 +2337,15 @@ void SynEdit::doMoveSelUp()
                     origBlockBegin,
                     origBlockEnd,
                     QStringList(),
-                    SynSelectionMode::Normal);
+                    SelectionMode::Normal);
             mUndoList->endBlock();
         }
-
-        doOnPaintTransient(SynTransientType::ttAfter);
     }
 }
 
 void SynEdit::doMoveSelDown()
 {
-    if (mActiveSelectionMode == SynSelectionMode::Column)
+    if (mActiveSelectionMode == SelectionMode::Column)
         return;
     if (!mReadOnly && (mDocument->count() > 0) && (blockEnd().line < mDocument->count())) {
         if (!mUndoing) {
@@ -2383,11 +2356,9 @@ void SynEdit::doMoveSelDown()
         BufferCoord origBlockBegin = blockBegin();
         BufferCoord origBlockEnd = blockEnd();
 
-        PSynEditFoldRange foldRange=foldStartAtLine(origBlockEnd.line);
+        PCodeFoldingRange foldRange=foldStartAtLine(origBlockEnd.line);
         if (foldRange && foldRange->collapsed)
             return;
-
-        doOnPaintTransient(SynTransientType::ttBefore);
 
         // Delete line below selection
         QString s = mDocument->getString(origBlockEnd.line); // after end, 0 based
@@ -2410,11 +2381,10 @@ void SynEdit::doMoveSelDown()
                     origBlockBegin,
                     origBlockEnd,
                     QStringList(),
-                    SynSelectionMode::Normal);
+                    SelectionMode::Normal);
             mUndoList->endBlock();
         }
 
-        doOnPaintTransient(SynTransientType::ttAfter);
     }
 }
 
@@ -2446,7 +2416,7 @@ void SynEdit::insertLine(bool moveCaret)
     QString Temp = lineText();
 
     if (mCaretX>lineText().length()+1) {
-        PSynEditFoldRange foldRange = foldStartAtLine(mCaretY);
+        PCodeFoldingRange foldRange = foldStartAtLine(mCaretY);
         if ((foldRange) && foldRange->collapsed) {
             QString s = Temp+highlighter()->foldString();
             if (mCaretX > s.length()) {
@@ -2466,7 +2436,7 @@ void SynEdit::insertLine(bool moveCaret)
 
     QString Temp2 = Temp;
     QString Temp3;
-    PSynHighlighterAttribute Attr;
+    PHighlighterAttribute Attr;
 
     // This is sloppy, but the Right Thing would be to track the column of markers
     // too, so they could be moved depending on whether they are after the caret...
@@ -2475,7 +2445,7 @@ void SynEdit::insertLine(bool moveCaret)
     QString rightLineText = lineText().mid(mCaretX-1);
     if (!mUndoing)
         mUndoList->addChange(SynChangeReason::LineBreak, caretXY(), caretXY(), QStringList(rightLineText),
-              SynSelectionMode::Normal);
+              SelectionMode::Normal);
     bool notInComment=true;
     properSetLine(mCaretY-1,leftLineText);
     //update range stated for line mCaretY
@@ -2487,11 +2457,11 @@ void SynEdit::insertLine(bool moveCaret)
         }
         mHighlighter->setLine(leftLineText, mCaretY-1);
         mHighlighter->nextToEol();
-        mDocument->setRange(mCaretY-1,mHighlighter->getRangeState());
+        mDocument->setRange(mCaretY-1,mHighlighter->getState());
         notInComment = !mHighlighter->isLastLineCommentNotFinished(
-                    mHighlighter->getRangeState().state)
+                    mHighlighter->getState().state)
                 && !mHighlighter->isLastLineStringNotFinished(
-                    mHighlighter->getRangeState().state);
+                    mHighlighter->getState().state);
     }
     int indentSpaces = 0;
     if (mOptions.testFlag(eoAutoIndent)) {
@@ -2514,7 +2484,7 @@ void SynEdit::insertLine(bool moveCaret)
             mDocument->insert(mCaretY, indentSpacesForRightLineText);
             nLinesInserted++;
             mUndoList->addChange(SynChangeReason::LineBreak, caretXY(), caretXY(), QStringList(),
-                    SynSelectionMode::Normal);
+                    SelectionMode::Normal);
         }
         //insert new line in middle of "{" and "}"
         if (notInComment &&
@@ -2526,7 +2496,7 @@ void SynEdit::insertLine(bool moveCaret)
             mDocument->insert(mCaretY, indentSpacesForRightLineText);
             nLinesInserted++;
             mUndoList->addChange(SynChangeReason::LineBreak, caretXY(), caretXY(), QStringList(),
-                    SynSelectionMode::Normal);
+                    SelectionMode::Normal);
         }
     }
     if (moveCaret)
@@ -2541,7 +2511,7 @@ void SynEdit::insertLine(bool moveCaret)
 
 void SynEdit::doTabKey()
 {
-    if (mActiveSelectionMode == SynSelectionMode::Column) {
+    if (mActiveSelectionMode == SelectionMode::Column) {
         doAddChar('\t');
         return;
     }
@@ -2630,7 +2600,7 @@ bool SynEdit::canDoBlockIndent()
         return false;
     }
 
-    if (mActiveSelectionMode == SynSelectionMode::Normal) {
+    if (mActiveSelectionMode == SelectionMode::Normal) {
         QString s = mDocument->getString(BB.line-1).mid(0,BB.ch-1);
         if (!s.trimmed().isEmpty())
             return false;
@@ -2641,7 +2611,7 @@ bool SynEdit::canDoBlockIndent()
                 return false;
         }
     }
-    if (mActiveSelectionMode == SynSelectionMode::Column) {
+    if (mActiveSelectionMode == SelectionMode::Column) {
         int startCol = charToColumn(BB.line,BB.ch);
         int endCol = charToColumn(BE.line,BE.ch);
         for (int i = BB.line; i<=BE.line;i++) {
@@ -2670,7 +2640,7 @@ QRect SynEdit::calculateCaretRect() const
         coord.Column = charToColumn(sLine,mCaretX+mInputPreeditString.length());
     }
     int rows=1;
-    if (mActiveSelectionMode == SynSelectionMode::Column) {
+    if (mActiveSelectionMode == SelectionMode::Column) {
         int startRow = lineToRow(std::min(blockBegin().line, blockEnd().line));
         int endRow = lineToRow(std::max(blockBegin().line, blockEnd().line));
         coord.Row = startRow;
@@ -2681,7 +2651,7 @@ QRect SynEdit::calculateCaretRect() const
     if (mCaretY <= mDocument->count() && mCaretX <= mDocument->getString(mCaretY-1).length()) {
         caretWidth = charColumns(getDisplayStringAtLine(mCaretY)[mCaretX-1])*mCharWidth;
     }
-    if (mActiveSelectionMode == SynSelectionMode::Column) {
+    if (mActiveSelectionMode == SelectionMode::Column) {
         return QRect(caretPos.x(),caretPos.y(),caretWidth,
                      mTextHeight*(rows));
     } else {
@@ -2702,7 +2672,7 @@ QRect SynEdit::calculateInputCaretRect() const
                  mTextHeight);
 }
 
-void SynEdit::clearAreaList(SynEditingAreaList areaList)
+void SynEdit::clearAreaList(EditingAreaList areaList)
 {
     areaList.clear();
 }
@@ -2791,7 +2761,7 @@ void SynEdit::doBlockIndent()
         x = 1;
     } else {
         e = BE.line;
-        if (mOptions.testFlag(SynEditorOption::eoTabsToSpaces))
+        if (mOptions.testFlag(EditorOption::eoTabsToSpaces))
           x = caretX() + tabWidth();
         else
           x = caretX() + 1;
@@ -2809,7 +2779,7 @@ void SynEdit::doBlockIndent()
     mUndoList->addChange(SynChangeReason::Caret, oldCaretPos, oldCaretPos,QStringList(), activeSelectionMode());
     mUndoList->addChange(SynChangeReason::Selection,mBlockBegin,mBlockEnd,QStringList(), activeSelectionMode());
     int ch;
-    if (mActiveSelectionMode == SynSelectionMode::Column)
+    if (mActiveSelectionMode == SelectionMode::Column)
       ch = std::min(BB.ch, BE.ch);
     else
       ch = 1;
@@ -2823,7 +2793,7 @@ void SynEdit::doBlockIndent()
                         BufferCoord{line.length(), i},
                         BufferCoord{line.length()+spaces.length(), i},
                         QStringList(),
-                        SynSelectionMode::Normal);
+                        SelectionMode::Normal);
             line+=spaces;
         } else {
             mUndoList->addChange(
@@ -2831,7 +2801,7 @@ void SynEdit::doBlockIndent()
                         BufferCoord{ch, i},
                         BufferCoord{ch+spaces.length(), i},
                         QStringList(),
-                        SynSelectionMode::Normal);
+                        SelectionMode::Normal);
             line = line.left(ch-1)+spaces+line.mid(ch-1);
         }
         properSetLine(i-1,line);
@@ -2897,7 +2867,7 @@ void SynEdit::doBlockUnindent()
                              BufferCoord{1,i},
                              BufferCoord{charsToDelete+1,i},
                              QStringList(line.left(charsToDelete)),
-                             SynSelectionMode::Normal);
+                             SelectionMode::Normal);
     }
   // restore selection
   //adjust the x position of orgcaretpos appropriately
@@ -2919,7 +2889,7 @@ void SynEdit::doAddChar(QChar AChar)
     //mCaretX will change after setSelLength;
     if (mInserting == false && !selAvail()) {
         switch(mActiveSelectionMode) {
-        case SynSelectionMode::Column: {
+        case SelectionMode::Column: {
             //we can't use blockBegin()/blockEnd()
             BufferCoord start=mBlockBegin;
             BufferCoord end=mBlockEnd;
@@ -2930,7 +2900,7 @@ void SynEdit::doAddChar(QChar AChar)
             setBlockEnd(end);
         }
             break;
-        case SynSelectionMode::Line:
+        case SelectionMode::Line:
             //do nothing;
             break;
         default:
@@ -2956,10 +2926,10 @@ void SynEdit::doAddChar(QChar AChar)
         int oldCaretX=mCaretX-1;
         int oldCaretY=mCaretY;
         // auto
-        if (mActiveSelectionMode==SynSelectionMode::Normal
+        if (mActiveSelectionMode==SelectionMode::Normal
                 && mOptions.testFlag(eoAutoIndent)
                 && mHighlighter
-                && mHighlighter->getClass()==SynHighlighterClass::CppHighlighter
+                && mHighlighter->getClass()==HighlighterClass::CppHighlighter
                 && (oldCaretY<=mDocument->count()) ) {
 
             //unindent if ':' at end of the line
@@ -2978,14 +2948,14 @@ void SynEdit::doAddChar(QChar AChar)
                                     BufferCoord{1, oldCaretY},
                                     BufferCoord{line.length()+1, oldCaretY},
                                     QStringList(line),
-                                    SynSelectionMode::Normal
+                                    SelectionMode::Normal
                                     );
                         mUndoList->addChange(
                                     SynChangeReason::Insert,
                                     BufferCoord{1, oldCaretY},
                                     BufferCoord{newLine.length()+1, oldCaretY},
                                     QStringList(),
-                                    SynSelectionMode::Normal
+                                    SelectionMode::Normal
                                     );
                     }
                 }
@@ -3004,14 +2974,14 @@ void SynEdit::doAddChar(QChar AChar)
                                     BufferCoord{1, oldCaretY},
                                     BufferCoord{line.length()+1, oldCaretY},
                                     QStringList(line),
-                                    SynSelectionMode::Normal
+                                    SelectionMode::Normal
                                     );
                         mUndoList->addChange(
                                     SynChangeReason::Insert,
                                     BufferCoord{1, oldCaretY},
                                     BufferCoord{newLine.length()+1, oldCaretY},
                                     QStringList(),
-                                    SynSelectionMode::Normal
+                                    SelectionMode::Normal
                                     );
                     }
                 }
@@ -3034,14 +3004,14 @@ void SynEdit::doAddChar(QChar AChar)
                                     BufferCoord{1, oldCaretY},
                                     BufferCoord{left.length()+1, oldCaretY},
                                     QStringList(left),
-                                    SynSelectionMode::Normal
+                                    SelectionMode::Normal
                                     );
                         mUndoList->addChange(
                                     SynChangeReason::Insert,
                                     BufferCoord{1, oldCaretY},
                                     BufferCoord{newLeft.length()+1, oldCaretY},
                                     QStringList(""),
-                                    SynSelectionMode::Normal
+                                    SelectionMode::Normal
                                     );
 
                     }
@@ -3074,7 +3044,7 @@ void SynEdit::doCopyToClipboard()
     bool selected=selAvail();
     if (!selected)
         doSelecteLine();
-    bool ChangeTrim = (mActiveSelectionMode == SynSelectionMode::Column) &&
+    bool ChangeTrim = (mActiveSelectionMode == SelectionMode::Column) &&
             mOptions.testFlag(eoTrimTrailingSpaces);
     QString sText;
     {
@@ -3108,7 +3078,6 @@ void SynEdit::doPasteFromClipboard()
     QString text = clipboard->text();
     if (text.isEmpty())
         return;
-    doOnPaintTransient(SynTransientType::ttBefore);
     mUndoList->beginBlock();
 //    if (selAvail()) {
 //        mUndoList->AddChange(
@@ -3142,11 +3111,11 @@ void SynEdit::decPaintLock()
     Q_ASSERT(mPaintLock > 0);
     mPaintLock--;
     if (mPaintLock == 0 ) {
-        if (mStateFlags.testFlag(SynStateFlag::sfScrollbarChanged)) {
+        if (mStateFlags.testFlag(StateFlag::sfScrollbarChanged)) {
             updateScrollbars();
             ensureCursorPosVisible();
         }
-        if (mStateFlags.testFlag(SynStateFlag::sfCaretChanged))
+        if (mStateFlags.testFlag(StateFlag::sfCaretChanged))
             updateCaret();
         if (mStatusChanges!=0)
             doOnStatusChange(mStatusChanges);
@@ -3185,10 +3154,6 @@ void SynEdit::synFontChanged()
     onSizeOrFontChanged(true);
 }
 
-void SynEdit::doOnPaintTransient(SynTransientType TransientType)
-{
-    doOnPaintTransientEx(TransientType, false);
-}
 
 void SynEdit::updateLastCaretX()
 {
@@ -3259,21 +3224,21 @@ void SynEdit::internalSetCaretY(int Value)
     internalSetCaretXY(BufferCoord{mCaretX,Value});
 }
 
-void SynEdit::setStatusChanged(SynStatusChanges changes)
+void SynEdit::setStatusChanged(StatusChanges changes)
 {
     mStatusChanges = mStatusChanges | changes;
     if (mPaintLock == 0)
         doOnStatusChange(mStatusChanges);
 }
 
-void SynEdit::doOnStatusChange(SynStatusChanges)
+void SynEdit::doOnStatusChange(StatusChanges)
 {
-    if (mStatusChanges.testFlag(SynStatusChange::scCaretX)
-            || mStatusChanges.testFlag(SynStatusChange::scCaretY)) {
+    if (mStatusChanges.testFlag(StatusChange::scCaretX)
+            || mStatusChanges.testFlag(StatusChange::scCaretY)) {
         qApp->inputMethod()->update(Qt::ImCursorPosition);
     }
     emit statusChanged(mStatusChanges);
-    mStatusChanges = SynStatusChange::scNone;
+    mStatusChanges = StatusChange::scNone;
 }
 
 void SynEdit::updateScrollbars()
@@ -3281,10 +3246,10 @@ void SynEdit::updateScrollbars()
     int nMaxScroll;
     int nMin,nMax,nPage,nPos;
     if (mPaintLock!=0) {
-        mStateFlags.setFlag(SynStateFlag::sfScrollbarChanged);
+        mStateFlags.setFlag(StateFlag::sfScrollbarChanged);
     } else {
-        mStateFlags.setFlag(SynStateFlag::sfScrollbarChanged,false);
-        if (mScrollBars != SynScrollStyle::ssNone) {
+        mStateFlags.setFlag(StateFlag::sfScrollbarChanged,false);
+        if (mScrollBars != ScrollStyle::ssNone) {
             if (mOptions.testFlag(eoHideShowScrollbars)) {
                 setHorizontalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAsNeeded);
                 setVerticalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAsNeeded);
@@ -3292,7 +3257,7 @@ void SynEdit::updateScrollbars()
                 setHorizontalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOn);
                 setVerticalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOn);
             }
-            if (mScrollBars == SynScrollStyle::ssBoth ||  mScrollBars == SynScrollStyle::ssHorizontal) {
+            if (mScrollBars == ScrollStyle::ssBoth ||  mScrollBars == ScrollStyle::ssHorizontal) {
                 nMaxScroll = maxScrollWidth();
                 if (nMaxScroll <= MAX_SCROLL) {
                     nMin = 1;
@@ -3313,7 +3278,7 @@ void SynEdit::updateScrollbars()
             } else
                 setHorizontalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOn);
 
-            if (mScrollBars == SynScrollStyle::ssBoth ||  mScrollBars == SynScrollStyle::ssVertical) {
+            if (mScrollBars == ScrollStyle::ssBoth ||  mScrollBars == ScrollStyle::ssVertical) {
                 nMaxScroll = maxScrollHeight();
                 if (nMaxScroll <= MAX_SCROLL) {
                     nMin = 1;
@@ -3342,17 +3307,17 @@ void SynEdit::updateScrollbars()
 
 void SynEdit::updateCaret()
 {
-    mStateFlags.setFlag(SynStateFlag::sfCaretChanged,false);
+    mStateFlags.setFlag(StateFlag::sfCaretChanged,false);
     invalidateRect(calculateCaretRect());
 }
 
 void SynEdit::recalcCharExtent()
 {
-    SynFontStyle styles[] = {SynFontStyle::fsBold, SynFontStyle::fsItalic, SynFontStyle::fsStrikeOut, SynFontStyle::fsUnderline};
+    FontStyle styles[] = {FontStyle::fsBold, FontStyle::fsItalic, FontStyle::fsStrikeOut, FontStyle::fsUnderline};
     bool hasStyles[] = {false,false,false,false};
     int size = 4;
     if (mHighlighter && mHighlighter->attributes().count()>0) {
-        for (const PSynHighlighterAttribute& attribute: mHighlighter->attributes()) {
+        for (const PHighlighterAttribute& attribute: mHighlighter->attributes()) {
             for (int i=0;i<size;i++) {
                 if (attribute->styles().testFlag(styles[i]))
                     hasStyles[i] = true;
@@ -3459,12 +3424,12 @@ void SynEdit::updateModifiedStatus()
     setModified(mModified);
 //    qDebug()<<mModified<<oldModified;
     if (oldModified!=mModified)
-        emit statusChanged(SynStatusChange::scModifyChanged);
+        emit statusChanged(StatusChange::scModifyChanged);
 }
 
 int SynEdit::scanFrom(int Index, int canStopIndex)
 {
-    SynRangeState iRange;
+    HighlighterState iRange;
     int Result = std::max(0,Index);
     if (Result >= mDocument->count())
         return Result;
@@ -3477,7 +3442,7 @@ int SynEdit::scanFrom(int Index, int canStopIndex)
     do {
         mHighlighter->setLine(mDocument->getString(Result), Result);
         mHighlighter->nextToEol();
-        iRange = mHighlighter->getRangeState();
+        iRange = mHighlighter->getState();
         if (Result > canStopIndex){
             if (mDocument->ranges(Result).state == iRange.state
                     && mDocument->ranges(Result).braceLevel == iRange.braceLevel
@@ -3514,7 +3479,7 @@ void SynEdit::rescanRange(int line)
     }
     mHighlighter->setLine(mDocument->getString(line), line);
     mHighlighter->nextToEol();
-    SynRangeState iRange = mHighlighter->getRangeState();
+    HighlighterState iRange = mHighlighter->getState();
     mDocument->setRange(line,iRange);
 }
 
@@ -3525,14 +3490,14 @@ void SynEdit::rescanRanges()
         for (int i =0;i<mDocument->count();i++) {
             mHighlighter->setLine(mDocument->getString(i), i);
             mHighlighter->nextToEol();
-            mDocument->setRange(i, mHighlighter->getRangeState());
+            mDocument->setRange(i, mHighlighter->getState());
         }
     }
     if (mUseCodeFolding)
         rescanFolds();
 }
 
-void SynEdit::uncollapse(PSynEditFoldRange FoldRange)
+void SynEdit::uncollapse(PCodeFoldingRange FoldRange)
 {
     FoldRange->linesCollapsed = 0;
     FoldRange->collapsed = false;
@@ -3545,7 +3510,7 @@ void SynEdit::uncollapse(PSynEditFoldRange FoldRange)
     updateScrollbars();
 }
 
-void SynEdit::collapse(PSynEditFoldRange FoldRange)
+void SynEdit::collapse(PCodeFoldingRange FoldRange)
 {
     FoldRange->linesCollapsed = FoldRange->toLine - FoldRange->fromLine;
     FoldRange->collapsed = true;
@@ -3569,7 +3534,7 @@ void SynEdit::foldOnListInserted(int Line, int Count)
 {
     // Delete collapsed inside selection
     for (int i = mAllFoldRanges.count()-1;i>=0;i--) {
-        PSynEditFoldRange range = mAllFoldRanges[i];
+        PCodeFoldingRange range = mAllFoldRanges[i];
         if (range->fromLine == Line - 1) {// insertion starts at fold line
             if (range->collapsed)
                 uncollapse(range);
@@ -3582,7 +3547,7 @@ void SynEdit::foldOnListDeleted(int Line, int Count)
 {
     // Delete collapsed inside selection
     for (int i = mAllFoldRanges.count()-1;i>=0;i--) {
-        PSynEditFoldRange range = mAllFoldRanges[i];
+        PCodeFoldingRange range = mAllFoldRanges[i];
         if (range->fromLine == Line && Count == 1)  {// open up because we are messing with the starting line
             if (range->collapsed)
                 uncollapse(range);
@@ -3608,7 +3573,7 @@ void SynEdit::rescanFolds()
     invalidateGutter();
 }
 
-static void null_deleter(SynEditFoldRanges *) {}
+static void null_deleter(CodeFoldingRanges *) {}
 
 void SynEdit::rescanForFoldRanges()
 {
@@ -3621,18 +3586,18 @@ void SynEdit::rescanForFoldRanges()
 
     // Did we leave any collapsed folds and are we viewing a code file?
     if (mAllFoldRanges.count() > 0) {
-        SynEditFoldRanges ranges=mAllFoldRanges;
+        CodeFoldingRanges ranges=mAllFoldRanges;
         mAllFoldRanges.clear();
         // Add folds to a separate list
-        PSynEditFoldRanges TemporaryAllFoldRanges = std::make_shared<SynEditFoldRanges>();
+        PCodeFoldingRanges TemporaryAllFoldRanges = std::make_shared<CodeFoldingRanges>();
         scanForFoldRanges(TemporaryAllFoldRanges);
 
         // Combine new with old folds, preserve parent order
         for (int i = 0; i< TemporaryAllFoldRanges->count();i++) {
-            PSynEditFoldRange tempFoldRange=TemporaryAllFoldRanges->range(i);
+            PCodeFoldingRange tempFoldRange=TemporaryAllFoldRanges->range(i);
             int j=0;
             while (j <ranges.count()) {
-                PSynEditFoldRange foldRange = ranges[j];
+                PCodeFoldingRange foldRange = ranges[j];
                 //qDebug()<<TemporaryAllFoldRanges->range(i)->fromLine<<ranges[j]->fromLine;
                 if (tempFoldRange->fromLine == foldRange->fromLine
                         && tempFoldRange->toLine == foldRange->toLine) {
@@ -3651,17 +3616,17 @@ void SynEdit::rescanForFoldRanges()
     } else {
 
         // We ended up with no folds after deleting, just pass standard data...
-        PSynEditFoldRanges temp(&mAllFoldRanges, null_deleter);
+        PCodeFoldingRanges temp(&mAllFoldRanges, null_deleter);
         scanForFoldRanges(temp);
     }
 }
 
-void SynEdit::scanForFoldRanges(PSynEditFoldRanges TopFoldRanges)
+void SynEdit::scanForFoldRanges(PCodeFoldingRanges TopFoldRanges)
 {
-    PSynEditFoldRanges parentFoldRanges = TopFoldRanges;
+    PCodeFoldingRanges parentFoldRanges = TopFoldRanges;
     // Recursively scan for folds (all types)
     for (int i= 0 ; i< mCodeFolding.foldRegions.count() ; i++ ) {
-        findSubFoldRange(TopFoldRanges, i,parentFoldRanges,PSynEditFoldRange());
+        findSubFoldRange(TopFoldRanges, i,parentFoldRanges,PCodeFoldingRange());
     }
 }
 
@@ -3686,7 +3651,7 @@ int SynEdit::lineHasChar(int Line, int startChar, QChar character, const QString
         QString token;
         while (!mHighlighter->eol()) {
             token = mHighlighter->getToken();
-            PSynHighlighterAttribute attr = mHighlighter->getTokenAttribute();
+            PHighlighterAttribute attr = mHighlighter->getTokenAttribute();
             if (token == character && attr->name()==highlighterAttrName)
                 return mHighlighter->getTokenPos();
             mHighlighter->next();
@@ -3695,9 +3660,9 @@ int SynEdit::lineHasChar(int Line, int startChar, QChar character, const QString
     return -1;
 }
 
-void SynEdit::findSubFoldRange(PSynEditFoldRanges TopFoldRanges, int FoldIndex,PSynEditFoldRanges& parentFoldRanges, PSynEditFoldRange Parent)
+void SynEdit::findSubFoldRange(PCodeFoldingRanges TopFoldRanges, int FoldIndex,PCodeFoldingRanges& parentFoldRanges, PCodeFoldingRange Parent)
 {
-    PSynEditFoldRange  CollapsedFold;
+    PCodeFoldingRange  CollapsedFold;
     int Line = 0;
     QString CurLine;
     if (!mHighlighter)
@@ -3756,7 +3721,7 @@ void SynEdit::findSubFoldRange(PSynEditFoldRanges TopFoldRanges, int FoldIndex,P
             while (!mHighlighter->eol()) {
                 token = mHighlighter->getToken();
                 pos = mHighlighter->getTokenPos()+token.length();
-                PSynHighlighterAttribute attr = mHighlighter->getTokenAttribute();
+                PHighlighterAttribute attr = mHighlighter->getTokenAttribute();
                 // We've found a starting character and it have proper highlighting (ignore stuff inside comments...)
                 if (token == mCodeFolding.foldRegions.get(FoldIndex)->openSymbol && attr->name()==mCodeFolding.foldRegions.get(FoldIndex)->highlight) {
                     // And ignore lines with both opening and closing chars in them
@@ -3801,7 +3766,7 @@ void SynEdit::findSubFoldRange(PSynEditFoldRanges TopFoldRanges, int FoldIndex,P
     }
 }
 
-PSynEditFoldRange SynEdit::collapsedFoldStartAtLine(int Line)
+PCodeFoldingRange SynEdit::collapsedFoldStartAtLine(int Line)
 {
     for (int i = 0; i< mAllFoldRanges.count() - 1; i++ ) {
         if (mAllFoldRanges[i]->fromLine == Line && mAllFoldRanges[i]->collapsed) {
@@ -3810,12 +3775,7 @@ PSynEditFoldRange SynEdit::collapsedFoldStartAtLine(int Line)
             break; // sorted by line. don't bother scanning further
         }
     }
-    return PSynEditFoldRange();
-}
-
-void SynEdit::doOnPaintTransientEx(SynTransientType , bool )
-{
-    //todo: we can't draw to canvas outside paintEvent
+    return PCodeFoldingRange();
 }
 
 void SynEdit::initializeCaret()
@@ -3823,22 +3783,22 @@ void SynEdit::initializeCaret()
     //showCaret();
 }
 
-PSynEditFoldRange SynEdit::foldStartAtLine(int Line) const
+PCodeFoldingRange SynEdit::foldStartAtLine(int Line) const
 {
     for (int i = 0; i<mAllFoldRanges.count();i++) {
-        PSynEditFoldRange range = mAllFoldRanges[i];
+        PCodeFoldingRange range = mAllFoldRanges[i];
         if (range->fromLine == Line ){
             return range;
         } else if (range->fromLine>Line)
             break; // sorted by line. don't bother scanning further
     }
-    return PSynEditFoldRange();
+    return PCodeFoldingRange();
 }
 
 bool SynEdit::foldCollapsedBetween(int startLine, int endLine) const
 {
     for (int i = 0; i<mAllFoldRanges.count();i++) {
-        PSynEditFoldRange range = mAllFoldRanges[i];
+        PCodeFoldingRange range = mAllFoldRanges[i];
         if (startLine >=range->fromLine && range->fromLine<=endLine
                 && (range->collapsed || range->parentCollapsed())){
             return true;
@@ -3892,20 +3852,20 @@ QString SynEdit::substringByColumns(const QString &s, int startColumn, int &colL
     return result;
 }
 
-PSynEditFoldRange SynEdit::foldAroundLine(int Line)
+PCodeFoldingRange SynEdit::foldAroundLine(int Line)
 {
     return foldAroundLineEx(Line,false,false,false);
 }
 
-PSynEditFoldRange SynEdit::foldAroundLineEx(int Line, bool WantCollapsed, bool AcceptFromLine, bool AcceptToLine)
+PCodeFoldingRange SynEdit::foldAroundLineEx(int Line, bool WantCollapsed, bool AcceptFromLine, bool AcceptToLine)
 {
     // Check global list
-    PSynEditFoldRange Result = checkFoldRange(&mAllFoldRanges, Line, WantCollapsed, AcceptFromLine, AcceptToLine);
+    PCodeFoldingRange Result = checkFoldRange(&mAllFoldRanges, Line, WantCollapsed, AcceptFromLine, AcceptToLine);
 
     // Found an item in the top level list?
     if (Result) {
         while (true) {
-            PSynEditFoldRange ResultChild = checkFoldRange(Result->subFoldRanges.get(), Line, WantCollapsed, AcceptFromLine, AcceptToLine);
+            PCodeFoldingRange ResultChild = checkFoldRange(Result->subFoldRanges.get(), Line, WantCollapsed, AcceptFromLine, AcceptToLine);
             if (!ResultChild)
                 break;
             Result = ResultChild; // repeat for this one
@@ -3914,10 +3874,10 @@ PSynEditFoldRange SynEdit::foldAroundLineEx(int Line, bool WantCollapsed, bool A
     return Result;
 }
 
-PSynEditFoldRange SynEdit::checkFoldRange(SynEditFoldRanges *FoldRangeToCheck, int Line, bool WantCollapsed, bool AcceptFromLine, bool AcceptToLine)
+PCodeFoldingRange SynEdit::checkFoldRange(CodeFoldingRanges *FoldRangeToCheck, int Line, bool WantCollapsed, bool AcceptFromLine, bool AcceptToLine)
 {
     for (int i = 0; i< FoldRangeToCheck->count(); i++) {
-        PSynEditFoldRange range = (*FoldRangeToCheck)[i];
+        PCodeFoldingRange range = (*FoldRangeToCheck)[i];
         if (((range->fromLine < Line) || ((range->fromLine <= Line) && AcceptFromLine)) &&
           ((range->toLine > Line) || ((range->toLine >= Line) && AcceptToLine))) {
             if (range->collapsed == WantCollapsed) {
@@ -3925,19 +3885,19 @@ PSynEditFoldRange SynEdit::checkFoldRange(SynEditFoldRanges *FoldRangeToCheck, i
             }
         }
     }
-    return PSynEditFoldRange();
+    return PCodeFoldingRange();
 }
 
-PSynEditFoldRange SynEdit::foldEndAtLine(int Line)
+PCodeFoldingRange SynEdit::foldEndAtLine(int Line)
 {
     for (int i = 0; i<mAllFoldRanges.count();i++) {
-        PSynEditFoldRange range = mAllFoldRanges[i];
+        PCodeFoldingRange range = mAllFoldRanges[i];
         if (range->toLine == Line ){
             return range;
         } else if (range->fromLine>Line)
             break; // sorted by line. don't bother scanning further
     }
-    return PSynEditFoldRange();
+    return PCodeFoldingRange();
 }
 
 void SynEdit::paintCaret(QPainter &painter, const QRect rcClip)
@@ -3945,7 +3905,7 @@ void SynEdit::paintCaret(QPainter &painter, const QRect rcClip)
     if (m_blinkStatus!=1)
         return;
     painter.setClipRect(rcClip);
-    SynEditCaretType ct;
+    EditCaretType ct;
     if (this->mInserting) {
         ct = mInsertCaret;
     } else {
@@ -3958,7 +3918,7 @@ void SynEdit::paintCaret(QPainter &painter, const QRect rcClip)
         caretColor = mCaretColor;
     }
     switch(ct) {
-    case SynEditCaretType::ctVerticalLine: {
+    case EditCaretType::ctVerticalLine: {
         QRect caretRC;
         int size = std::max(1, mTextHeight/15);
         caretRC.setLeft(rcClip.left()+1);
@@ -3968,7 +3928,7 @@ void SynEdit::paintCaret(QPainter &painter, const QRect rcClip)
         painter.fillRect(caretRC,caretColor);
         break;
     }
-    case SynEditCaretType::ctHorizontalLine: {
+    case EditCaretType::ctHorizontalLine: {
         QRect caretRC;
         int size = std::max(1,mTextHeight/15);
         caretRC.setLeft(rcClip.left());
@@ -3978,10 +3938,10 @@ void SynEdit::paintCaret(QPainter &painter, const QRect rcClip)
         painter.fillRect(caretRC,caretColor);
         break;
     }
-    case SynEditCaretType::ctBlock:
+    case EditCaretType::ctBlock:
         painter.fillRect(rcClip, caretColor);
         break;
-    case SynEditCaretType::ctHalfBlock:
+    case EditCaretType::ctHalfBlock:
         QRect rc=rcClip;
         rc.setTop(rcClip.top()+rcClip.height() / 2);
         painter.fillRect(rcClip, caretColor);
@@ -3994,11 +3954,11 @@ int SynEdit::textOffset() const
     return mGutterWidth + 2 - (mLeftChar-1)*mCharWidth;
 }
 
-SynEditorCommand SynEdit::TranslateKeyCode(int key, Qt::KeyboardModifiers modifiers)
+EditCommand SynEdit::TranslateKeyCode(int key, Qt::KeyboardModifiers modifiers)
 {
-    PSynEditKeyStroke keyStroke = mKeyStrokes.findKeycode2(mLastKey,mLastKeyModifiers,
+    PEditKeyStroke keyStroke = mKeyStrokes.findKeycode2(mLastKey,mLastKeyModifiers,
                                                            key, modifiers);
-    SynEditorCommand cmd=SynEditorCommand::ecNone;
+    EditCommand cmd=EditCommand::ecNone;
     if (keyStroke)
         cmd = keyStroke->command();
     else {
@@ -4006,7 +3966,7 @@ SynEditorCommand SynEdit::TranslateKeyCode(int key, Qt::KeyboardModifiers modifi
         if (keyStroke)
             cmd = keyStroke->command();
     }
-    if (cmd == SynEditorCommand::ecNone) {
+    if (cmd == EditCommand::ecNone) {
         mLastKey = key;
         mLastKeyModifiers = modifiers;
     } else {
@@ -4022,17 +3982,17 @@ void SynEdit::onSizeOrFontChanged(bool bFont)
     if (mCharWidth != 0) {
         mCharsInWindow = std::max(clientWidth() - mGutterWidth - 2, 0) / mCharWidth;
         mLinesInWindow = clientHeight() / mTextHeight;
-        bool scrollBarChangedSettings = mStateFlags.testFlag(SynStateFlag::sfScrollbarChanged);
+        bool scrollBarChangedSettings = mStateFlags.testFlag(StateFlag::sfScrollbarChanged);
         if (bFont) {
             if (mGutter.showLineNumbers())
                 onGutterChanged();
             else
                 updateScrollbars();
-            mStateFlags.setFlag(SynStateFlag::sfCaretChanged,false);
+            mStateFlags.setFlag(StateFlag::sfCaretChanged,false);
             invalidate();
         } else
             updateScrollbars();
-        mStateFlags.setFlag(SynStateFlag::sfScrollbarChanged,scrollBarChangedSettings);
+        mStateFlags.setFlag(StateFlag::sfScrollbarChanged,scrollBarChangedSettings);
         //if (!mOptions.testFlag(SynEditorOption::eoScrollPastEol))
         setLeftChar(mLeftChar);
         //if (!mOptions.testFlag(SynEditorOption::eoScrollPastEof))
@@ -4050,6 +4010,16 @@ void SynEdit::onScrolled(int)
     mLeftChar = horizontalScrollBar()->value();
     mTopLine = verticalScrollBar()->value();
     invalidate();
+}
+
+ScrollStyle SynEdit::scrollBars() const
+{
+    return mScrollBars;
+}
+
+void SynEdit::setScrollBars(ScrollStyle newScrollBars)
+{
+    mScrollBars = newScrollBars;
 }
 
 int SynEdit::mouseSelectionScrollSpeed() const
@@ -4105,22 +4075,22 @@ void SynEdit::setMouseWheelScrollSpeed(int newMouseWheelScrollSpeed)
     mMouseWheelScrollSpeed = newMouseWheelScrollSpeed;
 }
 
-const PSynHighlighterAttribute &SynEdit::rainbowAttr3() const
+const PHighlighterAttribute &SynEdit::rainbowAttr3() const
 {
     return mRainbowAttr3;
 }
 
-const PSynHighlighterAttribute &SynEdit::rainbowAttr2() const
+const PHighlighterAttribute &SynEdit::rainbowAttr2() const
 {
     return mRainbowAttr2;
 }
 
-const PSynHighlighterAttribute &SynEdit::rainbowAttr1() const
+const PHighlighterAttribute &SynEdit::rainbowAttr1() const
 {
     return mRainbowAttr1;
 }
 
-const PSynHighlighterAttribute &SynEdit::rainbowAttr0() const
+const PHighlighterAttribute &SynEdit::rainbowAttr0() const
 {
     return mRainbowAttr0;
 }
@@ -4198,27 +4168,27 @@ void SynEdit::setReadOnly(bool readOnly)
     }
 }
 
-SynGutter& SynEdit::gutter()
+Gutter& SynEdit::gutter()
 {
     return mGutter;
 }
 
-SynEditCaretType SynEdit::insertCaret() const
+EditCaretType SynEdit::insertCaret() const
 {
     return mInsertCaret;
 }
 
-void SynEdit::setInsertCaret(const SynEditCaretType &insertCaret)
+void SynEdit::setInsertCaret(const EditCaretType &insertCaret)
 {
     mInsertCaret = insertCaret;
 }
 
-SynEditCaretType SynEdit::overwriteCaret() const
+EditCaretType SynEdit::overwriteCaret() const
 {
     return mOverwriteCaret;
 }
 
-void SynEdit::setOverwriteCaret(const SynEditCaretType &overwriteCaret)
+void SynEdit::setOverwriteCaret(const EditCaretType &overwriteCaret)
 {
     mOverwriteCaret = overwriteCaret;
 }
@@ -4254,12 +4224,12 @@ void SynEdit::setTabWidth(int newTabWidth)
     }
 }
 
-SynEditorOptions SynEdit::getOptions() const
+EditorOptions SynEdit::getOptions() const
 {
     return mOptions;
 }
 
-void SynEdit::setOptions(const SynEditorOptions &Value)
+void SynEdit::setOptions(const EditorOptions &Value)
 {
     if (Value != mOptions) {
         //bool bSetDrag = mOptions.testFlag(eoDropFiles) != Value.testFlag(eoDropFiles);
@@ -4298,7 +4268,7 @@ void SynEdit::doAddStr(const QString &s)
 {
     if (mInserting == false && !selAvail()) {
         switch(mActiveSelectionMode) {
-        case SynSelectionMode::Column: {
+        case SelectionMode::Column: {
             //we can't use blockBegin()/blockEnd()
             BufferCoord start=blockBegin();
             BufferCoord end=blockEnd();
@@ -4309,7 +4279,7 @@ void SynEdit::doAddStr(const QString &s)
             setBlockEnd(end);
         }
             break;
-        case SynSelectionMode::Line:
+        case SelectionMode::Line:
             //do nothing;
             break;
         default:
@@ -4646,7 +4616,7 @@ void SynEdit::doRedoItem()
                                  item->changeEndPos(),item->changeText(),
                                  item->changeSelMode(),item->changeNumber());
             setCaretAndSelection(CaretPt, CaretPt, CaretPt);
-            commandProcessor(SynEditorCommand::ecLineBreak);
+            commandProcessor(EditCommand::ecLineBreak);
             break;
         }
         default:
@@ -4675,12 +4645,12 @@ void SynEdit::doZoomOut()
     setFont(newFont);
 }
 
-SynSelectionMode SynEdit::selectionMode() const
+SelectionMode SynEdit::selectionMode() const
 {
     return mSelectionMode;
 }
 
-void SynEdit::setSelectionMode(SynSelectionMode value)
+void SynEdit::setSelectionMode(SelectionMode value)
 {
     if (mSelectionMode!=value) {
         mSelectionMode = value;
@@ -4700,8 +4670,8 @@ QString SynEdit::selText()
         int Last = blockEnd().line - 1;
 
         switch(mActiveSelectionMode) {
-        case SynSelectionMode::Normal:{
-            PSynEditFoldRange foldRange = foldStartAtLine(blockEnd().line);
+        case SelectionMode::Normal:{
+            PCodeFoldingRange foldRange = foldStartAtLine(blockEnd().line);
             QString s = mDocument->getString(Last);
             if ((foldRange) && foldRange->collapsed && ColTo>s.length()) {
                 s=s+highlighter()->foldString();
@@ -4723,7 +4693,7 @@ QString SynEdit::selText()
                 return result;
             }
         }
-        case SynSelectionMode::Column:
+        case SelectionMode::Column:
         {
               First = blockBegin().line;
               ColFrom = charToColumn(blockBegin().line, blockBegin().ch);
@@ -4744,7 +4714,7 @@ QString SynEdit::selText()
               }
               return result;
         }
-        case SynSelectionMode::Line:
+        case SelectionMode::Line:
         {
             QString result;
             // If block selection includes LastLine,
@@ -4763,7 +4733,7 @@ QString SynEdit::selText()
     return "";
 }
 
-QStringList SynEdit::getContent(BufferCoord startPos, BufferCoord endPos, SynSelectionMode mode) const
+QStringList SynEdit::getContent(BufferCoord startPos, BufferCoord endPos, SelectionMode mode) const
 {
     QStringList result;
     if (startPos==endPos) {
@@ -4779,8 +4749,8 @@ QStringList SynEdit::getContent(BufferCoord startPos, BufferCoord endPos, SynSel
     int Last = endPos.line - 1;
 
     switch(mode) {
-    case SynSelectionMode::Normal:{
-        PSynEditFoldRange foldRange = foldStartAtLine(endPos.line);
+    case SelectionMode::Normal:{
+        PCodeFoldingRange foldRange = foldStartAtLine(endPos.line);
         QString s = mDocument->getString(Last);
         if ((foldRange) && foldRange->collapsed && ColTo>s.length()) {
             s=s+highlighter()->foldString();
@@ -4800,7 +4770,7 @@ QStringList SynEdit::getContent(BufferCoord startPos, BufferCoord endPos, SynSel
             result.append(mDocument->getString(Last).left(ColTo-1));
         }
         break;
-    case SynSelectionMode::Column:
+    case SelectionMode::Column:
           First = blockBegin().line;
           ColFrom = charToColumn(blockBegin().line, blockBegin().ch);
           Last = blockEnd().line;
@@ -4816,7 +4786,7 @@ QStringList SynEdit::getContent(BufferCoord startPos, BufferCoord endPos, SynSel
               result.append(s.mid(l-1,r-l));
           }
           break;
-    case SynSelectionMode::Line:
+    case SelectionMode::Line:
         // If block selection includes LastLine,
         // line break code(s) of the last line will not be added.
         for (int i= First; i<=Last - 1;i++) {
@@ -4847,7 +4817,7 @@ void SynEdit::setUseCodeFolding(bool value)
     }
 }
 
-SynEditCodeFolding &SynEdit::codeFolding()
+CodeFoldingOptions &SynEdit::codeFolding()
 {
     return mCodeFolding;
 }
@@ -4856,7 +4826,7 @@ QString SynEdit::displayLineText()
 {
     if (mCaretY >= 1 && mCaretY <= mDocument->count()) {
         QString s= mDocument->getString(mCaretY - 1);
-        PSynEditFoldRange foldRange = foldStartAtLine(mCaretY);
+        PCodeFoldingRange foldRange = foldStartAtLine(mCaretY);
         if ((foldRange) && foldRange->collapsed) {
             return s+highlighter()->foldString();
         }
@@ -4879,14 +4849,14 @@ void SynEdit::setLineText(const QString s)
         mDocument->putString(mCaretY-1,s);
 }
 
-PSynHighlighter SynEdit::highlighter() const
+PHighlighter SynEdit::highlighter() const
 {
     return mHighlighter;
 }
 
-void SynEdit::setHighlighter(const PSynHighlighter &highlighter)
+void SynEdit::setHighlighter(const PHighlighter &highlighter)
 {
-    PSynHighlighter oldHighlighter= mHighlighter;
+    PHighlighter oldHighlighter= mHighlighter;
     mHighlighter = highlighter;
     if (oldHighlighter && mHighlighter &&
             oldHighlighter->language() == highlighter->language()) {
@@ -4912,11 +4882,11 @@ bool SynEdit::empty()
     return mDocument->empty();
 }
 
-void SynEdit::commandProcessor(SynEditorCommand Command, QChar AChar, void *pData)
+void SynEdit::commandProcessor(EditCommand Command, QChar AChar, void *pData)
 {
     // first the program event handler gets a chance to process the command
     onProcessCommand(Command, AChar, pData);
-    if (Command != SynEditorCommand::ecNone)
+    if (Command != EditCommand::ecNone)
         ExecuteCommand(Command, AChar, pData);
     onCommandProcessed(Command, AChar, pData);
 }
@@ -4932,7 +4902,7 @@ void SynEdit::moveCaretHorz(int DX, bool isSelection)
     bool bChangeY=true;
     if (bChangeY && (DX == -1) && (ptO.ch == 1) && (ptO.line > 1)) {
         // end of previous line
-        if (mActiveSelectionMode==SynSelectionMode::Column) {
+        if (mActiveSelectionMode==SelectionMode::Column) {
             return;
         }
         int row = lineToRow(ptDst.line);
@@ -4944,7 +4914,7 @@ void SynEdit::moveCaretHorz(int DX, bool isSelection)
         }
     } else if (bChangeY && (DX == 1) && (ptO.ch > nLineLen) && (ptO.line < mDocument->count())) {
         // start of next line
-        if (mActiveSelectionMode==SynSelectionMode::Column) {
+        if (mActiveSelectionMode==SelectionMode::Column) {
             return;
         }
         int row = lineToRow(ptDst.line);
@@ -4964,9 +4934,9 @@ void SynEdit::moveCaretHorz(int DX, bool isSelection)
     // set caret and block begin / end
     incPaintLock();
     if (mOptions.testFlag(eoAltSetsColumnMode) &&
-                         (mActiveSelectionMode != SynSelectionMode::Line)) {
+                         (mActiveSelectionMode != SelectionMode::Line)) {
         if (qApp->keyboardModifiers().testFlag(Qt::AltModifier) && !mReadOnly) {
-            setActiveSelectionMode(SynSelectionMode::Column);
+            setActiveSelectionMode(SelectionMode::Column);
         } else
             setActiveSelectionMode(selectionMode());
     }
@@ -4995,7 +4965,7 @@ void SynEdit::moveCaretVert(int DY, bool isSelection)
     }
     BufferCoord vDstLineChar = displayToBufferPos(ptDst);
 
-    if (mActiveSelectionMode==SynSelectionMode::Column) {
+    if (mActiveSelectionMode==SelectionMode::Column) {
         QString s=mDocument->getString(vDstLineChar.line-1);
         int cols=stringColumns(s,0);
         if (cols+1<ptO.Column)
@@ -5007,9 +4977,9 @@ void SynEdit::moveCaretVert(int DY, bool isSelection)
     // set caret and block begin / end
     incPaintLock();
     if (mOptions.testFlag(eoAltSetsColumnMode) &&
-                         (mActiveSelectionMode != SynSelectionMode::Line)) {
+                         (mActiveSelectionMode != SelectionMode::Line)) {
         if (qApp->keyboardModifiers().testFlag(Qt::AltModifier) && !mReadOnly)
-            setActiveSelectionMode(SynSelectionMode::Column);
+            setActiveSelectionMode(SelectionMode::Column);
         else
             setActiveSelectionMode(selectionMode());
     }
@@ -5024,7 +4994,7 @@ void SynEdit::moveCaretVert(int DY, bool isSelection)
 
 void SynEdit::moveCaretAndSelection(const BufferCoord &ptBefore, const BufferCoord &ptAfter, bool isSelection)
 {
-    if (mOptions.testFlag(SynEditorOption::eoGroupUndo)) {
+    if (mOptions.testFlag(EditorOption::eoGroupUndo)) {
         mUndoList->addGroupBreak();
     }
 
@@ -5043,7 +5013,7 @@ void SynEdit::moveCaretToLineStart(bool isSelection)
 {
     int newX;
     // home key enhancement
-    if (mOptions.testFlag(SynEditorOption::eoEnhanceHomeKey)) {
+    if (mOptions.testFlag(EditorOption::eoEnhanceHomeKey)) {
         QString s = mDocument->getString(mCaretY - 1);
 
         int first_nonblank = 0;
@@ -5066,7 +5036,7 @@ void SynEdit::moveCaretToLineStart(bool isSelection)
 void SynEdit::moveCaretToLineEnd(bool isSelection)
 {
     int vNewX;
-    if (mOptions.testFlag(SynEditorOption::eoEnhanceEndKey)) {
+    if (mOptions.testFlag(EditorOption::eoEnhanceEndKey)) {
         QString vText = displayLineText();
         int vLastNonBlank = vText.length()-1;
         int vMinX = 0;
@@ -5097,7 +5067,7 @@ void SynEdit::setSelTextPrimitive(const QStringList &text)
     setSelTextPrimitiveEx(mActiveSelectionMode, text);
 }
 
-void SynEdit::setSelTextPrimitiveEx(SynSelectionMode mode, const QStringList &text)
+void SynEdit::setSelTextPrimitiveEx(SelectionMode mode, const QStringList &text)
 {
     incPaintLock();
     bool groupUndo=false;
@@ -5109,7 +5079,7 @@ void SynEdit::setSelTextPrimitiveEx(SynSelectionMode mode, const QStringList &te
             groupUndo=true;
         }
         doDeleteText(startPos,endPos,activeSelectionMode());
-        if (mode == SynSelectionMode::Column) {
+        if (mode == SelectionMode::Column) {
             int colBegin = charToColumn(startPos.line,startPos.ch);
             int colEnd = charToColumn(endPos.line,endPos.ch);
             if (colBegin<colEnd)
@@ -5126,7 +5096,7 @@ void SynEdit::setSelTextPrimitiveEx(SynSelectionMode mode, const QStringList &te
         mUndoList->endBlock();
     }
     decPaintLock();
-    setStatusChanged(SynStatusChange::scSelection);
+    setStatusChanged(StatusChange::scSelection);
 }
 
 void SynEdit::doSetSelText(const QString &value)
@@ -5152,8 +5122,8 @@ void SynEdit::doSetSelText(const QString &value)
     setSelTextPrimitive(splitStrings(value));
 }
 
-int SynEdit::searchReplace(const QString &sSearch, const QString &sReplace, SynSearchOptions sOptions, PSynSearchBase searchEngine,
-                    SynSearchMathedProc matchedCallback, SynSearchConfirmAroundProc confirmAroundCallback)
+int SynEdit::searchReplace(const QString &sSearch, const QString &sReplace, SearchOptions sOptions, PSynSearchBase searchEngine,
+                    SearchMathedProc matchedCallback, SearchConfirmAroundProc confirmAroundCallback)
 {
     if (!searchEngine)
         return 0;
@@ -5176,10 +5146,10 @@ int SynEdit::searchReplace(const QString &sSearch, const QString &sReplace, SynS
         ptStart = blockBegin();
         ptEnd = blockEnd();
         // search the whole line in the line selection mode
-        if (mActiveSelectionMode == SynSelectionMode::Line) {
+        if (mActiveSelectionMode == SelectionMode::Line) {
             ptStart.ch = 1;
             ptEnd.ch = mDocument->getString(ptEnd.line - 1).length();
-        } else if (mActiveSelectionMode == SynSelectionMode::Column) {
+        } else if (mActiveSelectionMode == SelectionMode::Column) {
             // make sure the start column is smaller than the end column
             if (ptStart.ch > ptEnd.ch)
                 std::swap(ptStart.ch,ptEnd.ch);
@@ -5212,18 +5182,16 @@ int SynEdit::searchReplace(const QString &sSearch, const QString &sReplace, SynS
     searchEngine->setPattern(sSearch);
     // search while the current search position is inside of the search range
     bool dobatchReplace = false;
-    doOnPaintTransient(SynTransientType::ttBefore);
     {
         auto action = finally([&,this]{
             if (dobatchReplace) {
                 decPaintLock();
                 mUndoList->endBlock();
             }
-            doOnPaintTransient(SynTransientType::ttAfter);
         });
         int i;
         // If it's a search only we can leave the procedure now.
-        SynSearchAction searchAction = SynSearchAction::Exit;
+        SearchAction searchAction = SearchAction::Exit;
         while ((ptCurrent.line >= ptStart.line) && (ptCurrent.line <= ptEnd.line)) {
             int nInLine = searchEngine->findAll(mDocument->getString(ptCurrent.line - 1));
             int iResultOffset = 0;
@@ -5246,12 +5214,12 @@ int SynEdit::searchReplace(const QString &sSearch, const QString &sReplace, SynS
                 bool isInValidSearchRange = true;
                 int first = nFound;
                 int last = nFound + nSearchLen;
-                if ((mActiveSelectionMode == SynSelectionMode::Normal)
+                if ((mActiveSelectionMode == SelectionMode::Normal)
                         || !sOptions.testFlag(ssoSelectedOnly)) {
                     if (((ptCurrent.line == ptStart.line) && (first < ptStart.ch)) ||
                             ((ptCurrent.line == ptEnd.line) && (last > ptEnd.ch)))
                         isInValidSearchRange = false;
-                } else if (mActiveSelectionMode == SynSelectionMode::Column) {
+                } else if (mActiveSelectionMode == SelectionMode::Column) {
                     // solves bug in search/replace when smColumn mode active and no selection
                     isInValidSearchRange = ((first >= ptStart.ch) && (last <= ptEnd.ch))
                             || (ptEnd.ch - ptStart.ch < 1);
@@ -5280,20 +5248,20 @@ int SynEdit::searchReplace(const QString &sSearch, const QString &sReplace, SynS
                     searchAction = matchedCallback(sSearch,replaceText,ptCurrent.line,
                                     nFound,nSearchLen);
                 }
-                if (searchAction==SynSearchAction::Exit) {
+                if (searchAction==SearchAction::Exit) {
                     return result;
-                } else if (searchAction == SynSearchAction::Skip) {
+                } else if (searchAction == SearchAction::Skip) {
                     continue;
-                } else if (searchAction == SynSearchAction::Replace
-                           || searchAction == SynSearchAction::ReplaceAll) {
+                } else if (searchAction == SearchAction::Replace
+                           || searchAction == SearchAction::ReplaceAll) {
                     if (!dobatchReplace &&
-                            (searchAction == SynSearchAction::ReplaceAll) ){
+                            (searchAction == SearchAction::ReplaceAll) ){
                         incPaintLock();
                         mUndoList->beginBlock();
                         dobatchReplace = true;
                     }
-                    bool oldAutoIndent = mOptions.testFlag(SynEditorOption::eoAutoIndent);
-                    mOptions.setFlag(SynEditorOption::eoAutoIndent,false);
+                    bool oldAutoIndent = mOptions.testFlag(EditorOption::eoAutoIndent);
+                    mOptions.setFlag(EditorOption::eoAutoIndent,false);
                     doSetSelText(replaceText);
                     nReplaceLen = caretX() - nFound;
                     // fix the caret position and the remaining results
@@ -5301,13 +5269,13 @@ int SynEdit::searchReplace(const QString &sSearch, const QString &sReplace, SynS
                         internalSetCaretX(nFound + nReplaceLen);
                         if ((nSearchLen != nReplaceLen)) {
                             iResultOffset += nReplaceLen - nSearchLen;
-                            if ((mActiveSelectionMode != SynSelectionMode::Column) && (caretY() == ptEnd.line)) {
+                            if ((mActiveSelectionMode != SelectionMode::Column) && (caretY() == ptEnd.line)) {
                                 ptEnd.ch+=nReplaceLen - nSearchLen;
                                 setBlockEnd(ptEnd);
                             }
                         }
                     }
-                    mOptions.setFlag(SynEditorOption::eoAutoIndent,oldAutoIndent);
+                    mOptions.setFlag(EditorOption::eoAutoIndent,oldAutoIndent);
                 }
             }
             // search next / previous line
@@ -5379,12 +5347,12 @@ void SynEdit::properSetLine(int ALine, const QString &ALineText, bool notify)
     }
 }
 
-void SynEdit::doDeleteText(BufferCoord startPos, BufferCoord endPos, SynSelectionMode mode)
+void SynEdit::doDeleteText(BufferCoord startPos, BufferCoord endPos, SelectionMode mode)
 {
     bool UpdateMarks = false;
     int MarkOffset = 0;
-    if (mode == SynSelectionMode::Normal) {
-        PSynEditFoldRange foldRange = foldStartAtLine(endPos.line);
+    if (mode == SelectionMode::Normal) {
+        PCodeFoldingRange foldRange = foldStartAtLine(endPos.line);
         QString s = mDocument->getString(endPos.line-1);
         if ((foldRange) && foldRange->collapsed && endPos.ch>s.length()) {
             QString newS=s+highlighter()->foldString();
@@ -5400,7 +5368,7 @@ void SynEdit::doDeleteText(BufferCoord startPos, BufferCoord endPos, SynSelectio
     }
     QStringList deleted=getContent(startPos,endPos,mode);
     switch(mode) {
-    case SynSelectionMode::Normal:
+    case SelectionMode::Normal:
         if (mDocument->count() > 0) {
             // Create a string that contains everything on the first line up
             // to the selection mark, and everything on the last line after
@@ -5421,7 +5389,7 @@ void SynEdit::doDeleteText(BufferCoord startPos, BufferCoord endPos, SynSelectio
 //            }
         }
         break;
-    case SynSelectionMode::Column:
+    case SelectionMode::Column:
     {
         int First = startPos.line - 1;
         int ColFrom = charToColumn(startPos.line, startPos.ch);
@@ -5445,7 +5413,7 @@ void SynEdit::doDeleteText(BufferCoord startPos, BufferCoord endPos, SynSelectio
         // updating is needed here.
         break;
     }
-    case SynSelectionMode::Line:
+    case SelectionMode::Line:
         if (endPos.line == mDocument->count()) {
             mDocument->putString(endPos.line - 1,"");
             mDocument->deleteLines(startPos.line-1,endPos.line-startPos.line);
@@ -5472,14 +5440,14 @@ void SynEdit::doDeleteText(BufferCoord startPos, BufferCoord endPos, SynSelectio
 
 void SynEdit::doInsertText(const BufferCoord& pos,
                            const QStringList& text,
-                           SynSelectionMode mode, int startLine, int endLine) {
+                           SelectionMode mode, int startLine, int endLine) {
     if (text.isEmpty())
         return;
     if (startLine>endLine)
         std::swap(startLine,endLine);
 
-    if (mode == SynSelectionMode::Normal) {
-        PSynEditFoldRange foldRange = foldStartAtLine(pos.line);
+    if (mode == SelectionMode::Normal) {
+        PCodeFoldingRange foldRange = foldStartAtLine(pos.line);
         QString s = mDocument->getString(pos.line-1);
         if ((foldRange) && foldRange->collapsed && pos.ch>s.length()+1)
             return;
@@ -5487,15 +5455,15 @@ void SynEdit::doInsertText(const BufferCoord& pos,
     int insertedLines = 0;
     BufferCoord newPos;
     switch(mode){
-    case SynSelectionMode::Normal:
+    case SelectionMode::Normal:
         insertedLines = doInsertTextByNormalMode(pos,text, newPos);
         doLinesInserted(pos.line+1, insertedLines);
         break;
-    case SynSelectionMode::Column:
+    case SelectionMode::Column:
         insertedLines = doInsertTextByColumnMode(pos,text, newPos, startLine,endLine);
         doLinesInserted(endLine-insertedLines+1,insertedLines);
         break;
-    case SynSelectionMode::Line:
+    case SelectionMode::Line:
         insertedLines = doInsertTextByLineMode(pos,text, newPos);
         doLinesInserted(pos.line, insertedLines);
         break;
@@ -5594,7 +5562,7 @@ int SynEdit::doInsertTextByNormalMode(const BufferCoord& pos, const QStringList&
         mUndoList->addChange(
                     SynChangeReason::Insert,
                     pos,newPos,
-                    QStringList(),SynSelectionMode::Normal);
+                    QStringList(),SelectionMode::Normal);
     }
     return result;
 }
@@ -5628,7 +5596,7 @@ int SynEdit::doInsertTextByColumnMode(const BufferCoord& pos, const QStringList&
                 mUndoList->addChange(SynChangeReason::LineBreak,
                                  lineBreakPos,
                                  lineBreakPos,
-                                 QStringList(), SynSelectionMode::Normal);
+                                 QStringList(), SelectionMode::Normal);
             }
         } else {
             tempString = mDocument->getString(line - 1);
@@ -5649,7 +5617,7 @@ int SynEdit::doInsertTextByColumnMode(const BufferCoord& pos, const QStringList&
                         BufferCoord{insertPos, line},
                         BufferCoord{insertPos+str.length(), line},
                         QStringList(),
-                        SynSelectionMode::Normal);
+                        SelectionMode::Normal);
         }
         if (i<text.length()-1) {
             i++;
@@ -5691,7 +5659,7 @@ int SynEdit::doInsertTextByLineMode(const BufferCoord& pos, const QStringList& t
         mUndoList->addChange(
                     SynChangeReason::Insert,
                     BufferCoord{1,pos.line},newPos,
-                    QStringList(),SynSelectionMode::Line);
+                    QStringList(),SelectionMode::Line);
     }
     return Result;
 }
@@ -5700,18 +5668,16 @@ void SynEdit::deleteFromTo(const BufferCoord &start, const BufferCoord &end)
 {
     if (mReadOnly)
         return;
-    doOnPaintTransient(SynTransientType::ttBefore);
     if ((start.ch != end.ch) || (start.line != end.line)) {
         mUndoList->beginBlock();
         addCaretToUndo();
         addSelectionToUndo();
         setBlockBegin(start);
         setBlockEnd(end);
-        doDeleteText(start,end,SynSelectionMode::Normal);
+        doDeleteText(start,end,SelectionMode::Normal);
         mUndoList->endBlock();
         internalSetCaretXY(start);
     }
-    doOnPaintTransient(SynTransientType::ttAfter);
 }
 
 bool SynEdit::onGetSpecialLineColors(int, QColor &, QColor &)
@@ -5719,7 +5685,7 @@ bool SynEdit::onGetSpecialLineColors(int, QColor &, QColor &)
     return false;
 }
 
-void SynEdit::onGetEditingAreas(int, SynEditingAreaList &)
+void SynEdit::onGetEditingAreas(int, EditingAreaList &)
 {
 
 }
@@ -5740,22 +5706,22 @@ void SynEdit::onPaint(QPainter &)
 }
 
 void SynEdit::onPreparePaintHighlightToken(int , int , const QString &,
-                                           PSynHighlighterAttribute , SynFontStyles &, QColor &, QColor &)
+                                           PHighlighterAttribute , FontStyles &, QColor &, QColor &)
 {
 
 }
 
-void SynEdit::onProcessCommand(SynEditorCommand , QChar , void *)
+void SynEdit::onProcessCommand(EditCommand , QChar , void *)
 {
 
 }
 
-void SynEdit::onCommandProcessed(SynEditorCommand , QChar , void *)
+void SynEdit::onCommandProcessed(EditCommand , QChar , void *)
 {
 
 }
 
-void SynEdit::ExecuteCommand(SynEditorCommand Command, QChar AChar, void *pData)
+void SynEdit::ExecuteCommand(EditCommand Command, QChar AChar, void *pData)
 {
     hideCaret();
     incPaintLock();
@@ -5766,43 +5732,43 @@ void SynEdit::ExecuteCommand(SynEditorCommand Command, QChar AChar, void *pData)
     });
     switch(Command) {
     //horizontal caret movement or selection
-    case SynEditorCommand::ecLeft:
-    case SynEditorCommand::ecSelLeft:
-        moveCaretHorz(-1, Command == SynEditorCommand::ecSelLeft);
+    case EditCommand::ecLeft:
+    case EditCommand::ecSelLeft:
+        moveCaretHorz(-1, Command == EditCommand::ecSelLeft);
         break;
-    case SynEditorCommand::ecRight:
-    case SynEditorCommand::ecSelRight:
-        moveCaretHorz(1, Command == SynEditorCommand::ecSelRight);
+    case EditCommand::ecRight:
+    case EditCommand::ecSelRight:
+        moveCaretHorz(1, Command == EditCommand::ecSelRight);
         break;
-    case SynEditorCommand::ecPageLeft:
-    case SynEditorCommand::ecSelPageLeft:
-        moveCaretHorz(-mCharsInWindow, Command == SynEditorCommand::ecSelPageLeft);
+    case EditCommand::ecPageLeft:
+    case EditCommand::ecSelPageLeft:
+        moveCaretHorz(-mCharsInWindow, Command == EditCommand::ecSelPageLeft);
         break;
-    case SynEditorCommand::ecPageRight:
-    case SynEditorCommand::ecSelPageRight:
-        moveCaretHorz(mCharsInWindow, Command == SynEditorCommand::ecSelPageRight);
+    case EditCommand::ecPageRight:
+    case EditCommand::ecSelPageRight:
+        moveCaretHorz(mCharsInWindow, Command == EditCommand::ecSelPageRight);
         break;
-    case SynEditorCommand::ecLineStart:
-    case SynEditorCommand::ecSelLineStart:
-        moveCaretToLineStart(Command == SynEditorCommand::ecSelLineStart);
+    case EditCommand::ecLineStart:
+    case EditCommand::ecSelLineStart:
+        moveCaretToLineStart(Command == EditCommand::ecSelLineStart);
         break;
-    case SynEditorCommand::ecLineEnd:
-    case SynEditorCommand::ecSelLineEnd:
-        moveCaretToLineEnd(Command == SynEditorCommand::ecSelLineEnd);
+    case EditCommand::ecLineEnd:
+    case EditCommand::ecSelLineEnd:
+        moveCaretToLineEnd(Command == EditCommand::ecSelLineEnd);
         break;
     // vertical caret movement or selection
-    case SynEditorCommand::ecUp:
-    case SynEditorCommand::ecSelUp:
-        moveCaretVert(-1, Command == SynEditorCommand::ecSelUp);
+    case EditCommand::ecUp:
+    case EditCommand::ecSelUp:
+        moveCaretVert(-1, Command == EditCommand::ecSelUp);
         break;
-    case SynEditorCommand::ecDown:
-    case SynEditorCommand::ecSelDown:
-        moveCaretVert(1, Command == SynEditorCommand::ecSelDown);
+    case EditCommand::ecDown:
+    case EditCommand::ecSelDown:
+        moveCaretVert(1, Command == EditCommand::ecSelDown);
         break;
-    case SynEditorCommand::ecPageUp:
-    case SynEditorCommand::ecSelPageUp:
-    case SynEditorCommand::ecPageDown:
-    case SynEditorCommand::ecSelPageDown:
+    case EditCommand::ecPageUp:
+    case EditCommand::ecSelPageUp:
+    case EditCommand::ecPageDown:
+    case EditCommand::ecSelPageDown:
     {
         int counter = mLinesInWindow;
         if (mOptions.testFlag(eoHalfPageScroll))
@@ -5812,108 +5778,108 @@ void SynEdit::ExecuteCommand(SynEditorCommand Command, QChar AChar, void *pData)
         }
         if (counter<0)
             break;
-        if (Command == SynEditorCommand::ecPageUp || Command == SynEditorCommand::ecSelPageUp) {
+        if (Command == EditCommand::ecPageUp || Command == EditCommand::ecSelPageUp) {
             counter = -counter;
         }
-        moveCaretVert(counter, Command == SynEditorCommand::ecSelPageUp || Command == SynEditorCommand::ecSelPageDown);
+        moveCaretVert(counter, Command == EditCommand::ecSelPageUp || Command == EditCommand::ecSelPageDown);
         break;
     }
-    case SynEditorCommand::ecPageTop:
-    case SynEditorCommand::ecSelPageTop:
-        moveCaretVert(mTopLine-mCaretY, Command == SynEditorCommand::ecSelPageTop);
+    case EditCommand::ecPageTop:
+    case EditCommand::ecSelPageTop:
+        moveCaretVert(mTopLine-mCaretY, Command == EditCommand::ecSelPageTop);
         break;
-    case SynEditorCommand::ecPageBottom:
-    case SynEditorCommand::ecSelPageBottom:
-        moveCaretVert(mTopLine+mLinesInWindow-1-mCaretY, Command == SynEditorCommand::ecSelPageBottom);
+    case EditCommand::ecPageBottom:
+    case EditCommand::ecSelPageBottom:
+        moveCaretVert(mTopLine+mLinesInWindow-1-mCaretY, Command == EditCommand::ecSelPageBottom);
         break;
-    case SynEditorCommand::ecEditorStart:
-    case SynEditorCommand::ecSelEditorStart:
-        moveCaretVert(1-mCaretY, Command == SynEditorCommand::ecSelEditorStart);
-        moveCaretToLineStart(Command == SynEditorCommand::ecSelEditorStart);
+    case EditCommand::ecEditorStart:
+    case EditCommand::ecSelEditorStart:
+        moveCaretVert(1-mCaretY, Command == EditCommand::ecSelEditorStart);
+        moveCaretToLineStart(Command == EditCommand::ecSelEditorStart);
         break;
-    case SynEditorCommand::ecEditorEnd:
-    case SynEditorCommand::ecSelEditorEnd:
+    case EditCommand::ecEditorEnd:
+    case EditCommand::ecSelEditorEnd:
         if (!mDocument->empty()) {
-            moveCaretVert(mDocument->count()-mCaretY, Command == SynEditorCommand::ecSelEditorEnd);
-            moveCaretToLineEnd(Command == SynEditorCommand::ecSelEditorEnd);
+            moveCaretVert(mDocument->count()-mCaretY, Command == EditCommand::ecSelEditorEnd);
+            moveCaretToLineEnd(Command == EditCommand::ecSelEditorEnd);
         }
         break;
     // goto special line / column position
-    case SynEditorCommand::ecGotoXY:
-    case SynEditorCommand::ecSelGotoXY:
+    case EditCommand::ecGotoXY:
+    case EditCommand::ecSelGotoXY:
         if (pData)
-            moveCaretAndSelection(caretXY(), *((BufferCoord *)(pData)), Command == SynEditorCommand::ecSelGotoXY);
+            moveCaretAndSelection(caretXY(), *((BufferCoord *)(pData)), Command == EditCommand::ecSelGotoXY);
         break;
     // word selection
-    case SynEditorCommand::ecWordLeft:
-    case SynEditorCommand::ecSelWordLeft:
+    case EditCommand::ecWordLeft:
+    case EditCommand::ecSelWordLeft:
     {
         BufferCoord CaretNew = prevWordPos();
-        moveCaretAndSelection(caretXY(), CaretNew, Command == SynEditorCommand::ecSelWordLeft);
+        moveCaretAndSelection(caretXY(), CaretNew, Command == EditCommand::ecSelWordLeft);
         break;
     }
-    case SynEditorCommand::ecWordRight:
-    case SynEditorCommand::ecSelWordRight:
+    case EditCommand::ecWordRight:
+    case EditCommand::ecSelWordRight:
     {
         BufferCoord CaretNew = nextWordPos();
-        moveCaretAndSelection(caretXY(), CaretNew, Command == SynEditorCommand::ecSelWordRight);
+        moveCaretAndSelection(caretXY(), CaretNew, Command == EditCommand::ecSelWordRight);
         break;
     }
-    case SynEditorCommand::ecSelWord:
+    case EditCommand::ecSelWord:
         setSelWord();
         break;
-    case SynEditorCommand::ecSelectAll:
+    case EditCommand::ecSelectAll:
         doSelectAll();
         break;
-    case SynEditorCommand::ecExpandSelection:
+    case EditCommand::ecExpandSelection:
         doExpandSelection(caretXY());
         break;
-    case SynEditorCommand::ecShrinkSelection:
+    case EditCommand::ecShrinkSelection:
         doShrinkSelection(caretXY());
         break;
-    case SynEditorCommand::ecDeleteLastChar:
+    case EditCommand::ecDeleteLastChar:
         doDeleteLastChar();
         break;
-    case SynEditorCommand::ecDeleteChar:
+    case EditCommand::ecDeleteChar:
         doDeleteCurrentChar();
         break;
-    case SynEditorCommand::ecDeleteWord:
+    case EditCommand::ecDeleteWord:
         doDeleteWord();
         break;
-    case SynEditorCommand::ecDeleteEOL:
+    case EditCommand::ecDeleteEOL:
         doDeleteToEOL();
         break;
-    case SynEditorCommand::ecDeleteWordStart:
+    case EditCommand::ecDeleteWordStart:
         doDeleteToWordStart();
         break;
-    case SynEditorCommand::ecDeleteWordEnd:
+    case EditCommand::ecDeleteWordEnd:
         doDeleteToWordEnd();
         break;
-    case SynEditorCommand::ecDeleteBOL:
+    case EditCommand::ecDeleteBOL:
         doDeleteFromBOL();
         break;
-    case SynEditorCommand::ecDeleteLine:
+    case EditCommand::ecDeleteLine:
         doDeleteLine();
         break;
-    case SynEditorCommand::ecDuplicateLine:
+    case EditCommand::ecDuplicateLine:
         doDuplicateLine();
         break;
-    case SynEditorCommand::ecMoveSelUp:
+    case EditCommand::ecMoveSelUp:
         doMoveSelUp();
         break;
-    case SynEditorCommand::ecMoveSelDown:
+    case EditCommand::ecMoveSelDown:
         doMoveSelDown();
         break;
-    case SynEditorCommand::ecClearAll:
+    case EditCommand::ecClearAll:
         clearAll();
         break;
-    case SynEditorCommand::ecInsertLine:
+    case EditCommand::ecInsertLine:
         insertLine(false);
         break;
-    case SynEditorCommand::ecLineBreak:
+    case EditCommand::ecLineBreak:
         insertLine(true);
         break;
-    case SynEditorCommand::ecLineBreakAtEnd:
+    case EditCommand::ecLineBreakAtEnd:
         mUndoList->beginBlock();
         addCaretToUndo();
         addSelectionToUndo();
@@ -5921,92 +5887,92 @@ void SynEdit::ExecuteCommand(SynEditorCommand Command, QChar AChar, void *pData)
         insertLine(true);
         mUndoList->endBlock();
         break;
-    case SynEditorCommand::ecTab:
+    case EditCommand::ecTab:
         doTabKey();
         break;
-    case SynEditorCommand::ecShiftTab:
+    case EditCommand::ecShiftTab:
         doShiftTabKey();
         break;
-    case SynEditorCommand::ecChar:
+    case EditCommand::ecChar:
         doAddChar(AChar);
         break;
-    case SynEditorCommand::ecInsertMode:
+    case EditCommand::ecInsertMode:
         if (!mReadOnly)
             setInsertMode(true);
         break;
-    case SynEditorCommand::ecOverwriteMode:
+    case EditCommand::ecOverwriteMode:
         if (!mReadOnly)
             setInsertMode(false);
         break;
-    case SynEditorCommand::ecToggleMode:
+    case EditCommand::ecToggleMode:
         if (!mReadOnly) {
             setInsertMode(!mInserting);
         }
         break;
-    case SynEditorCommand::ecCut:
+    case EditCommand::ecCut:
         if (!mReadOnly)
             doCutToClipboard();
         break;
-    case SynEditorCommand::ecCopy:
+    case EditCommand::ecCopy:
         doCopyToClipboard();
         break;
-    case SynEditorCommand::ecPaste:
+    case EditCommand::ecPaste:
         if (!mReadOnly)
             doPasteFromClipboard();
         break;
-    case SynEditorCommand::ecImeStr:
-    case SynEditorCommand::ecString:
+    case EditCommand::ecImeStr:
+    case EditCommand::ecString:
         if (!mReadOnly)
             doAddStr(*((QString*)pData));
         break;
-    case SynEditorCommand::ecUndo:
+    case EditCommand::ecUndo:
         if (!mReadOnly)
             doUndo();
         break;
-    case SynEditorCommand::ecRedo:
+    case EditCommand::ecRedo:
         if (!mReadOnly)
             doRedo();
         break;
-    case SynEditorCommand::ecZoomIn:
+    case EditCommand::ecZoomIn:
         doZoomIn();
         break;
-    case SynEditorCommand::ecZoomOut:
+    case EditCommand::ecZoomOut:
         doZoomOut();
         break;
-    case SynEditorCommand::ecComment:
+    case EditCommand::ecComment:
         doComment();
         break;
-    case SynEditorCommand::ecUncomment:
+    case EditCommand::ecUncomment:
         doUncomment();
         break;
-    case SynEditorCommand::ecToggleComment:
+    case EditCommand::ecToggleComment:
         doToggleComment();
         break;
-    case SynEditorCommand::ecToggleBlockComment:
+    case EditCommand::ecToggleBlockComment:
         doToggleBlockComment();
         break;
-    case SynEditorCommand::ecNormalSelect:
-        setSelectionMode(SynSelectionMode::Normal);
+    case EditCommand::ecNormalSelect:
+        setSelectionMode(SelectionMode::Normal);
         break;
-    case SynEditorCommand::ecLineSelect:
-        setSelectionMode(SynSelectionMode::Line);
+    case EditCommand::ecLineSelect:
+        setSelectionMode(SelectionMode::Line);
         break;
-    case SynEditorCommand::ecColumnSelect:
-        setSelectionMode(SynSelectionMode::Column);
+    case EditCommand::ecColumnSelect:
+        setSelectionMode(SelectionMode::Column);
         break;
-    case SynEditorCommand::ecScrollLeft:
+    case EditCommand::ecScrollLeft:
         horizontalScrollBar()->setValue(horizontalScrollBar()->value()-mMouseWheelScrollSpeed);
         break;
-    case SynEditorCommand::ecScrollRight:
+    case EditCommand::ecScrollRight:
         horizontalScrollBar()->setValue(horizontalScrollBar()->value()+mMouseWheelScrollSpeed);
         break;
-    case SynEditorCommand::ecScrollUp:
+    case EditCommand::ecScrollUp:
         verticalScrollBar()->setValue(verticalScrollBar()->value()-mMouseWheelScrollSpeed);
         break;
-    case SynEditorCommand::ecScrollDown:
+    case EditCommand::ecScrollDown:
         verticalScrollBar()->setValue(verticalScrollBar()->value()+mMouseWheelScrollSpeed);
         break;
-    case SynEditorCommand::ecMatchBracket:
+    case EditCommand::ecMatchBracket:
         {
         BufferCoord coord = getMatchingBracket();
         if (coord.ch!=0 && coord.line!=0)
@@ -6051,7 +6017,7 @@ bool SynEdit::isIdentChar(const QChar &ch)
     }
 }
 
-void SynEdit::setRainbowAttrs(const PSynHighlighterAttribute &attr0, const PSynHighlighterAttribute &attr1, const PSynHighlighterAttribute &attr2, const PSynHighlighterAttribute &attr3)
+void SynEdit::setRainbowAttrs(const PHighlighterAttribute &attr0, const PHighlighterAttribute &attr1, const PHighlighterAttribute &attr2, const PHighlighterAttribute &attr3)
 {
     mRainbowAttr0 = attr0;
     mRainbowAttr1 = attr1;
@@ -6148,7 +6114,6 @@ void SynEdit::paintEvent(QPaintEvent *event)
         //PluginsAfterPaint(Canvas, rcClip, nL1, nL2);
         // If there is a custom paint handler call it.
         onPaint(painter);
-        doOnPaintTransient(SynTransientType::ttAfter);
         QRectF cacheRC;
         qreal dpr = mContentImage->devicePixelRatioF();
         cacheRC.setLeft(rcClip.left()*dpr);
@@ -6232,14 +6197,14 @@ void SynEdit::keyPressEvent(QKeyEvent *event)
         setBlockEnd(caretXY());
         event->accept();
     } else {
-        SynEditorCommand cmd=TranslateKeyCode(event->key(),event->modifiers());
-        if (cmd!=SynEditorCommand::ecNone) {
+        EditCommand cmd=TranslateKeyCode(event->key(),event->modifiers());
+        if (cmd!=EditCommand::ecNone) {
             commandProcessor(cmd,QChar(),nullptr);
             event->accept();
         } else if (!event->text().isEmpty()) {
             QChar c = event->text().at(0);
             if (c=='\t' || c.isPrint()) {
-                commandProcessor(SynEditorCommand::ecChar,c,nullptr);
+                commandProcessor(EditCommand::ecChar,c,nullptr);
                 event->accept();
             }
         }
@@ -6279,22 +6244,22 @@ void SynEdit::mousePressEvent(QMouseEvent *event)
             mMouseDownPos = event->pos();
         }
         computeCaret();
-        mStateFlags.setFlag(SynStateFlag::sfWaitForDragging,false);
+        mStateFlags.setFlag(StateFlag::sfWaitForDragging,false);
         if (bWasSel && mOptions.testFlag(eoDragDropEditing) && (X >= mGutterWidth + 2)
-                && (mSelectionMode == SynSelectionMode::Normal) && isPointInSelection(displayToBufferPos(pixelsToRowColumn(X, Y))) ) {
+                && (mSelectionMode == SelectionMode::Normal) && isPointInSelection(displayToBufferPos(pixelsToRowColumn(X, Y))) ) {
             bStartDrag = true;
         }
         if (bStartDrag && !mReadOnly) {
-            mStateFlags.setFlag(SynStateFlag::sfWaitForDragging);
+            mStateFlags.setFlag(StateFlag::sfWaitForDragging);
         } else {
             if (event->modifiers() == Qt::ShiftModifier) {
                 //BlockBegin and BlockEnd are restored to their original position in the
                 //code from above and SetBlockEnd will take care of proper invalidation
                 setBlockEnd(caretXY());
             } else if (mOptions.testFlag(eoAltSetsColumnMode) &&
-                     (mActiveSelectionMode != SynSelectionMode::Line)) {
+                     (mActiveSelectionMode != SelectionMode::Line)) {
                 if (event->modifiers() == Qt::AltModifier && !mReadOnly)
-                    setActiveSelectionMode(SynSelectionMode::Column);
+                    setActiveSelectionMode(SelectionMode::Column);
                 else
                     setActiveSelectionMode(selectionMode());
                 //Selection mode must be set before calling SetBlockBegin
@@ -6304,7 +6269,7 @@ void SynEdit::mousePressEvent(QMouseEvent *event)
         }
     }
     if (oldCaret!=caretXY()) {
-        if (mOptions.testFlag(SynEditorOption::eoGroupUndo))
+        if (mOptions.testFlag(EditorOption::eoGroupUndo))
             mUndoList->addGroupBreak();
     }
 }
@@ -6320,17 +6285,17 @@ void SynEdit::mouseReleaseEvent(QMouseEvent *event)
     }
 
     BufferCoord oldCaret=caretXY();
-    if (mStateFlags.testFlag(SynStateFlag::sfWaitForDragging) &&
-            !mStateFlags.testFlag(SynStateFlag::sfDblClicked)) {
+    if (mStateFlags.testFlag(StateFlag::sfWaitForDragging) &&
+            !mStateFlags.testFlag(StateFlag::sfDblClicked)) {
         computeCaret();
         if (! (event->modifiers() & Qt::ShiftModifier))
             setBlockBegin(caretXY());
         setBlockEnd(caretXY());
-        mStateFlags.setFlag(SynStateFlag::sfWaitForDragging, false);
+        mStateFlags.setFlag(StateFlag::sfWaitForDragging, false);
     }
-    mStateFlags.setFlag(SynStateFlag::sfDblClicked,false);
+    mStateFlags.setFlag(StateFlag::sfDblClicked,false);
     if (oldCaret!=caretXY()) {
-        if (mOptions.testFlag(SynEditorOption::eoGroupUndo))
+        if (mOptions.testFlag(EditorOption::eoGroupUndo))
             mUndoList->addGroupBreak();
     }
 }
@@ -6340,10 +6305,10 @@ void SynEdit::mouseMoveEvent(QMouseEvent *event)
     QAbstractScrollArea::mouseMoveEvent(event);
     mMouseMoved = true;
     Qt::MouseButtons buttons = event->buttons();
-    if (mStateFlags.testFlag(SynStateFlag::sfWaitForDragging)
+    if (mStateFlags.testFlag(StateFlag::sfWaitForDragging)
             && !mReadOnly) {
         if ( ( event->pos() - mMouseDownPos).manhattanLength()>=QApplication::startDragDistance()) {
-            mStateFlags.setFlag(SynStateFlag::sfWaitForDragging,false);
+            mStateFlags.setFlag(StateFlag::sfWaitForDragging,false);
             QDrag *drag = new QDrag(this);
             QMimeData *mimeData = new QMimeData;
 
@@ -6354,9 +6319,9 @@ void SynEdit::mouseMoveEvent(QMouseEvent *event)
         }
     } else if (buttons == Qt::LeftButton) {
         if (mOptions.testFlag(eoAltSetsColumnMode) &&
-                (mActiveSelectionMode != SynSelectionMode::Line) ) {
+                (mActiveSelectionMode != SelectionMode::Line) ) {
                 if (event->modifiers() == Qt::AltModifier && !mReadOnly)
-                    setActiveSelectionMode(SynSelectionMode::Column);
+                    setActiveSelectionMode(SelectionMode::Column);
                 else
                     setActiveSelectionMode(selectionMode());
         }
@@ -6371,7 +6336,7 @@ void SynEdit::mouseDoubleClickEvent(QMouseEvent *event)
     QPoint ptMouse = event->pos();
     if (ptMouse.x() >= mGutterWidth + 2) {
           setSelWord();
-          mStateFlags.setFlag(SynStateFlag::sfDblClicked);
+          mStateFlags.setFlag(StateFlag::sfDblClicked);
     }
 }
 
@@ -6383,7 +6348,7 @@ void SynEdit::inputMethodEvent(QInputMethodEvent *event)
     QString oldString = mInputPreeditString;
     mInputPreeditString = event->preeditString();
     if (oldString!=mInputPreeditString) {
-        if (mActiveSelectionMode==SynSelectionMode::Column) {
+        if (mActiveSelectionMode==SelectionMode::Column) {
             BufferCoord selBegin = blockBegin();
             BufferCoord selEnd = blockEnd();
             invalidateLines(selBegin.line,selEnd.line);
@@ -6392,7 +6357,7 @@ void SynEdit::inputMethodEvent(QInputMethodEvent *event)
     }
     QString s = event->commitString();
     if (!s.isEmpty()) {
-        commandProcessor(SynEditorCommand::ecImeStr,QChar(),&s);
+        commandProcessor(EditCommand::ecImeStr,QChar(),&s);
 //        for (QChar ch:s) {
 //            CommandProcessor(SynEditorCommand::ecChar,ch);
 //        }
@@ -6575,7 +6540,7 @@ void SynEdit::setModified(bool Value)
 {
     if (Value) {
         mLastModifyTime = QDateTime::currentDateTime();
-        emit statusChanged(SynStatusChange::scModified);
+        emit statusChanged(StatusChange::scModified);
     }
     if (Value != mModified) {
         mModified = Value;
@@ -6584,12 +6549,12 @@ void SynEdit::setModified(bool Value)
             mUndoList->clear();
             mRedoList->clear();
         } else {
-            if (mOptions.testFlag(SynEditorOption::eoGroupUndo)) {
+            if (mOptions.testFlag(EditorOption::eoGroupUndo)) {
                 mUndoList->addGroupBreak();
             }
             mUndoList->setInitialState();
         }
-        emit statusChanged(SynStatusChange::scModifyChanged);
+        emit statusChanged(StatusChange::scModifyChanged);
     }
 }
 
@@ -6630,11 +6595,11 @@ void SynEdit::onBookMarkOptionsChanged()
 
 void SynEdit::onLinesChanged()
 {
-    SynSelectionMode vOldMode;
-    mStateFlags.setFlag(SynStateFlag::sfLinesChanging, false);
+    SelectionMode vOldMode;
+    mStateFlags.setFlag(StateFlag::sfLinesChanging, false);
 
     updateScrollbars();
-    if (mActiveSelectionMode == SynSelectionMode::Column) {
+    if (mActiveSelectionMode == SelectionMode::Column) {
         BufferCoord oldBlockStart = blockBegin();
         BufferCoord oldBlockEnd = blockEnd();
         int colEnd = charToColumn(mCaretY,mCaretX);
@@ -6660,7 +6625,7 @@ void SynEdit::onLinesChanged()
 
 void SynEdit::onLinesChanging()
 {
-    mStateFlags.setFlag(SynStateFlag::sfLinesChanging);
+    mStateFlags.setFlag(StateFlag::sfLinesChanging);
 }
 
 void SynEdit::onLinesCleared()
@@ -6676,7 +6641,7 @@ void SynEdit::onLinesCleared()
     // scroll to start of text
     setTopLine(1);
     setLeftChar(1);
-    mStatusChanges.setFlag(SynStatusChange::scAll);
+    mStatusChanges.setFlag(StatusChange::scAll);
 }
 
 void SynEdit::onLinesDeleted(int index, int count)
@@ -6726,12 +6691,12 @@ void SynEdit::onUndoAdded()
     onChanged();
 }
 
-SynSelectionMode SynEdit::activeSelectionMode() const
+SelectionMode SynEdit::activeSelectionMode() const
 {
     return mActiveSelectionMode;
 }
 
-void SynEdit::setActiveSelectionMode(const SynSelectionMode &Value)
+void SynEdit::setActiveSelectionMode(const SelectionMode &Value)
 {
     if (mActiveSelectionMode != Value) {
         if (selAvail())
@@ -6739,13 +6704,13 @@ void SynEdit::setActiveSelectionMode(const SynSelectionMode &Value)
         mActiveSelectionMode = Value;
         if (selAvail())
             invalidateSelection();
-        setStatusChanged(SynStatusChange::scSelection);
+        setStatusChanged(StatusChange::scSelection);
     }
 }
 
 BufferCoord SynEdit::blockEnd() const
 {
-    if (mActiveSelectionMode==SynSelectionMode::Column)
+    if (mActiveSelectionMode==SelectionMode::Column)
         return mBlockEnd;
     if ((mBlockEnd.line < mBlockBegin.line)
       || ((mBlockEnd.line == mBlockBegin.line) && (mBlockEnd.ch < mBlockBegin.ch)))
@@ -6758,7 +6723,7 @@ void SynEdit::setBlockEnd(BufferCoord Value)
 {
     //setActiveSelectionMode(mSelectionMode);
     Value.line = minMax(Value.line, 1, mDocument->count());
-    if (mActiveSelectionMode == SynSelectionMode::Normal) {
+    if (mActiveSelectionMode == SelectionMode::Normal) {
       if (Value.line >= 1 && Value.line <= mDocument->count())
           Value.ch = std::min(Value.ch, getDisplayStringAtLine(Value.line).length() + 1);
       else
@@ -6770,7 +6735,7 @@ void SynEdit::setBlockEnd(BufferCoord Value)
         Value.ch = minMax(Value.ch, 1, maxLen+1);
     }
     if (Value.ch != mBlockEnd.ch || Value.line != mBlockEnd.line) {
-        if (mActiveSelectionMode == SynSelectionMode::Column && Value.ch != mBlockEnd.ch) {
+        if (mActiveSelectionMode == SelectionMode::Column && Value.ch != mBlockEnd.ch) {
             invalidateLines(
                         std::min(mBlockBegin.line, std::min(mBlockEnd.line, Value.line)),
                         std::max(mBlockBegin.line, std::max(mBlockEnd.line, Value.line)));
@@ -6778,10 +6743,10 @@ void SynEdit::setBlockEnd(BufferCoord Value)
         } else {
             int nLine = mBlockEnd.line;
             mBlockEnd = Value;
-            if (mActiveSelectionMode != SynSelectionMode::Column || mBlockBegin.ch != mBlockEnd.ch)
+            if (mActiveSelectionMode != SelectionMode::Column || mBlockBegin.ch != mBlockEnd.ch)
                 invalidateLines(nLine, mBlockEnd.line);
         }
-        setStatusChanged(SynStatusChange::scSelection);
+        setStatusChanged(StatusChange::scSelection);
     }
 }
 
@@ -6842,7 +6807,7 @@ void SynEdit::setSelText(const QString &text)
 
 BufferCoord SynEdit::blockBegin() const
 {
-    if (mActiveSelectionMode==SynSelectionMode::Column)
+    if (mActiveSelectionMode==SelectionMode::Column)
         return mBlockBegin;
     if ((mBlockEnd.line < mBlockBegin.line)
       || ((mBlockEnd.line == mBlockBegin.line) && (mBlockEnd.ch < mBlockBegin.ch)))
@@ -6857,7 +6822,7 @@ void SynEdit::setBlockBegin(BufferCoord value)
     bool SelChanged;
     //setActiveSelectionMode(mSelectionMode);
     value.line = minMax(value.line, 1, mDocument->count());
-    if (mActiveSelectionMode == SynSelectionMode::Normal) {
+    if (mActiveSelectionMode == SelectionMode::Normal) {
         if (value.line >= 1 && value.line <= mDocument->count())
             value.ch = std::min(value.ch, getDisplayStringAtLine(value.line).length() + 1);
         else
@@ -6888,7 +6853,7 @@ void SynEdit::setBlockBegin(BufferCoord value)
         mBlockEnd = value;
     }
     if (SelChanged)
-        setStatusChanged(SynStatusChange::scSelection);
+        setStatusChanged(StatusChange::scSelection);
 }
 
 int SynEdit::leftChar() const
@@ -6903,7 +6868,7 @@ void SynEdit::setLeftChar(int Value)
     Value = std::min(Value,maxScrollWidth());
     if (Value != mLeftChar) {
         horizontalScrollBar()->setValue(Value);
-        setStatusChanged(SynStatusChange::scLeftChar);
+        setStatusChanged(StatusChange::scLeftChar);
     }
 }
 
@@ -6927,7 +6892,7 @@ void SynEdit::setTopLine(int Value)
     Value = std::max(Value, 1);
     if (Value != mTopLine) {
         verticalScrollBar()->setValue(Value);
-        setStatusChanged(SynStatusChange::scTopLine);
+        setStatusChanged(StatusChange::scTopLine);
     }
 }
 

@@ -18,31 +18,31 @@
 
 namespace QSynedit {
 
-SynSearch::SynSearch(QObject *parent):SynSearchBase(parent)
+BasicSearcher::BasicSearcher(QObject *parent):BaseSearcher(parent)
 {
 
 }
 
-int SynSearch::length(int aIndex)
+int BasicSearcher::length(int aIndex)
 {
     if (aIndex<0 || aIndex >= mResults.length())
         return 0;
     return pattern().length();
 }
 
-int SynSearch::result(int aIndex)
+int BasicSearcher::result(int aIndex)
 {
     if (aIndex<0 || aIndex >= mResults.length())
         return -1;
     return mResults[aIndex];
 }
 
-int SynSearch::resultCount()
+int BasicSearcher::resultCount()
 {
     return mResults.count();
 }
 
-int SynSearch::findAll(const QString &text)
+int BasicSearcher::findAll(const QString &text)
 {
     mResults.clear();
     if (pattern().isEmpty())
@@ -74,12 +74,12 @@ int SynSearch::findAll(const QString &text)
     return mResults.size();
 }
 
-QString SynSearch::replace(const QString &, const QString &aReplacement)
+QString BasicSearcher::replace(const QString &, const QString &aReplacement)
 {
     return aReplacement;
 }
 
-bool SynSearch::isDelimitChar(QChar ch)
+bool BasicSearcher::isDelimitChar(QChar ch)
 {
     return !(ch == '_' || ch.isLetterOrNumber());
 }

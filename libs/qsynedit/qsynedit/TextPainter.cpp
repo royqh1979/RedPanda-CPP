@@ -135,7 +135,7 @@ void SynEditTextPainter::paintGutter(const QRect& clip)
             if (edit->mGutter.activeLineTextColor().isValid()) {
                 if (
                         (edit->mCaretY==vLine)     ||
-                        (edit->mActiveSelectionMode == SynSelectionMode::Column && vLine >= selectionStart.line && vLine <= selectionEnd.line)
+                        (edit->mActiveSelectionMode == SelectionMode::Column && vLine >= selectionStart.line && vLine <= selectionEnd.line)
                         )
                     painter->setPen(edit->mGutter.activeLineTextColor());
                 else
@@ -195,7 +195,7 @@ void SynEditTextPainter::paintGutter(const QRect& clip)
                               rcFold.top() + rcFold.height() / 2);
         }
         // Any fold ranges beginning on this line?
-        PSynEditFoldRange FoldRange = edit->foldStartAtLine(vLine);
+        PCodeFoldingRange FoldRange = edit->foldStartAtLine(vLine);
         if (FoldRange) {
             // Draw the bottom part of a line
             if (!FoldRange->collapsed) {
@@ -307,7 +307,7 @@ void SynEditTextPainter::computeSelectionInfo()
                 }
                 // In the column selection mode sort the begin and end of the selection,
                 // this makes the painting code simpler.
-                if (edit->mActiveSelectionMode == SynSelectionMode::Column && vSelStart.Column > vSelEnd.Column)
+                if (edit->mActiveSelectionMode == SelectionMode::Column && vSelStart.Column > vSelEnd.Column)
                     std::swap(vSelStart.Column, vSelEnd.Column);
             }
         }
@@ -360,7 +360,7 @@ void SynEditTextPainter::paintToken(const QString &token, int tokenCols, int col
             for (int i=0;i<token.length();i++) {
                 int charCols=0;
                 QString textToPaint = token[i];
-                if (token[i] == SynTabChar) {
+                if (token[i] == '\t') {
                     charCols = edit->tabWidth() - ((columnsBefore+tokenColLen) % edit->tabWidth());
                 } else {
                     charCols = edit->charColumns(token[i]);
@@ -411,7 +411,7 @@ void SynEditTextPainter::paintToken(const QString &token, int tokenCols, int col
     }
 }
 
-void SynEditTextPainter::paintEditAreas(const SynEditingAreaList &areaList)
+void SynEditTextPainter::paintEditAreas(const EditingAreaList &areaList)
 {
     QRect rc;
     int x1,x2;
@@ -420,7 +420,7 @@ void SynEditTextPainter::paintEditAreas(const SynEditingAreaList &areaList)
     rc=rcLine;
     rc.setBottom(rc.bottom()-1);
     setDrawingColors(false);
-    for (const PSynEditingArea& p:areaList) {
+    for (const PEditingArea& p:areaList) {
         if (p->beginX > LastCol)
           continue;
         if (p->endX < FirstCol)
@@ -438,13 +438,13 @@ void SynEditTextPainter::paintEditAreas(const SynEditingAreaList &areaList)
         painter->setPen(p->color);
         painter->setBrush(Qt::NoBrush);
         switch(p->type) {
-        case SynEditingAreaType::eatRectangleBorder:
+        case EditingAreaType::eatRectangleBorder:
             painter->drawRect(rc);
             break;
-        case SynEditingAreaType::eatUnderLine:
+        case EditingAreaType::eatUnderLine:
             painter->drawLine(rc.left(),rc.bottom(),rc.right(),rc.bottom());
             break;
-        case SynEditingAreaType::eatWaveUnderLine:
+        case EditingAreaType::eatWaveUnderLine:
             offset=3;
             int lastX=rc.left();
             int lastY=rc.bottom()-offset;
@@ -498,16 +498,16 @@ void SynEditTextPainter::paintHighlightToken(bool bFillToEOL)
 //        if (bSpecialLine && edit->mOptions.testFlag(eoSpecialLineDefaultFg))
 //            colFG = TokenAccu.FG;
         QFont font = edit->font();
-        font.setBold(TokenAccu.Style & SynFontStyle::fsBold);
-        font.setItalic(TokenAccu.Style & SynFontStyle::fsItalic);
-        font.setStrikeOut(TokenAccu.Style & SynFontStyle::fsStrikeOut);
-        font.setUnderline(TokenAccu.Style & SynFontStyle::fsUnderline);
+        font.setBold(TokenAccu.Style & FontStyle::fsBold);
+        font.setItalic(TokenAccu.Style & FontStyle::fsItalic);
+        font.setStrikeOut(TokenAccu.Style & FontStyle::fsStrikeOut);
+        font.setUnderline(TokenAccu.Style & FontStyle::fsUnderline);
         painter->setFont(font);
         QFont nonAsciiFont = edit->fontForNonAscii();
-        nonAsciiFont.setBold(TokenAccu.Style & SynFontStyle::fsBold);
-        nonAsciiFont.setItalic(TokenAccu.Style & SynFontStyle::fsItalic);
-        nonAsciiFont.setStrikeOut(TokenAccu.Style & SynFontStyle::fsStrikeOut);
-        nonAsciiFont.setUnderline(TokenAccu.Style & SynFontStyle::fsUnderline);
+        nonAsciiFont.setBold(TokenAccu.Style & FontStyle::fsBold);
+        nonAsciiFont.setItalic(TokenAccu.Style & FontStyle::fsItalic);
+        nonAsciiFont.setStrikeOut(TokenAccu.Style & FontStyle::fsStrikeOut);
+        nonAsciiFont.setUnderline(TokenAccu.Style & FontStyle::fsUnderline);
 
         // Paint the chars
         if (bComplexToken) {
@@ -548,7 +548,7 @@ void SynEditTextPainter::paintHighlightToken(bool bFillToEOL)
             if (rcToken.left() < nX1) {
                 setDrawingColors(false);
                 rcToken.setRight(nX1);
-//                if (TokenAccu.Len != 0 && TokenAccu.Style != SynFontStyle::fsNone)
+//                if (TokenAccu.Len != 0 && TokenAccu.Style != FontStyle::fsNone)
 //                    AdjustEndRect();
                 painter->fillRect(rcToken,painter->brush());
                 rcToken.setLeft(nX1);
@@ -567,7 +567,7 @@ void SynEditTextPainter::paintHighlightToken(bool bFillToEOL)
         }  else {
             setDrawingColors(bLineSelected);
             rcToken.setRight(rcLine.right());
-//            if (TokenAccu.Len != 0 && TokenAccu.Style != SynFontStyle::fsNone)
+//            if (TokenAccu.Len != 0 && TokenAccu.Style != FontStyle::fsNone)
 //                AdjustEndRect();
             painter->fillRect(rcToken,painter->brush());
         }
@@ -594,11 +594,11 @@ bool SynEditTextPainter::tokenIsSpaces(bool &bSpacesTest, const QString& token, 
 // record. This will paint any chars already stored if there is
 // a (visible) change in the attributes.
 void SynEditTextPainter::addHighlightToken(const QString &Token, int columnsBefore,
-                                           int tokenColumns, int cLine, PSynHighlighterAttribute p_Attri)
+                                           int tokenColumns, int cLine, PHighlighterAttribute p_Attri)
 {
     bool bCanAppend;
     QColor foreground, background;
-    SynFontStyles style;
+    FontStyles style;
     bool bSpacesTest,bIsSpaces;
 
     if (p_Attri) {
@@ -629,7 +629,7 @@ void SynEditTextPainter::addHighlightToken(const QString &Token, int columnsBefo
     bSpacesTest = false;
     if (TokenAccu.Columns > 0) {
         // font style must be the same or token is only spaces
-        if (TokenAccu.Style == style ||  ( (style & SynFontStyle::fsUnderline) == (TokenAccu.Style & fsUnderline)
+        if (TokenAccu.Style == style ||  ( (style & FontStyle::fsUnderline) == (TokenAccu.Style & fsUnderline)
                                            && tokenIsSpaces(bSpacesTest,Token,bIsSpaces)) ) {
             if (
               // background color must be the same and
@@ -706,12 +706,12 @@ void SynEditTextPainter::paintFoldAttributes()
                 indentLevel++ ;
                 if (edit->mHighlighter) {
                     if (edit->mCodeFolding.indentGuides) {
-                        PSynHighlighterAttribute attr = edit->mHighlighter->symbolAttribute();
+                        PHighlighterAttribute attr = edit->mHighlighter->symbolAttribute();
                         getBraceColorAttr(indentLevel,attr);
                         paintColor = attr->foreground();
                     }
                     if (edit->mCodeFolding.fillIndents) {
-                        PSynHighlighterAttribute attr = edit->mHighlighter->symbolAttribute();
+                        PHighlighterAttribute attr = edit->mHighlighter->symbolAttribute();
                         getBraceColorAttr(indentLevel,attr);
                         gradientStart=attr->foreground();
                         attr = edit->mHighlighter->symbolAttribute();
@@ -752,7 +752,7 @@ void SynEditTextPainter::paintFoldAttributes()
     if (edit->mCodeFolding.showCollapsedLine) {
         painter->setPen(edit->mCodeFolding.collapsedLineColor);
         for (int i=0; i< edit->mAllFoldRanges.count();i++) {
-            PSynEditFoldRange range = edit->mAllFoldRanges[i];
+            PCodeFoldingRange range = edit->mAllFoldRanges[i];
             if (range->collapsed && !range->parentCollapsed() &&
                     (range->fromLine <= vLastLine) && (range->fromLine >= vFirstLine) ) {
                 // Get starting and end points
@@ -764,13 +764,13 @@ void SynEditTextPainter::paintFoldAttributes()
 
 }
 
-void SynEditTextPainter::getBraceColorAttr(int level, PSynHighlighterAttribute &attr)
+void SynEditTextPainter::getBraceColorAttr(int level, PHighlighterAttribute &attr)
 {
-    if (!edit->mOptions.testFlag(SynEditorOption::eoShowRainbowColor))
+    if (!edit->mOptions.testFlag(EditorOption::eoShowRainbowColor))
         return;
     if (attr != edit->mHighlighter->symbolAttribute())
         return;
-    PSynHighlighterAttribute oldAttr = attr;
+    PHighlighterAttribute oldAttr = attr;
     switch(level % 4) {
     case 0:
         attr = edit->mRainbowAttr0;
@@ -796,12 +796,12 @@ void SynEditTextPainter::paintLines()
     QString sLine; // the current line
     QString sToken; // highlighter token info
     int nTokenColumnsBefore, nTokenColumnLen;
-    PSynHighlighterAttribute attr;
+    PHighlighterAttribute attr;
     int vFirstChar;
     int vLastChar;
-    SynEditingAreaList  areaList;
-    PSynEditFoldRange foldRange;
-    PSynHighlighterAttribute preeditAttr;
+    EditingAreaList  areaList;
+    PCodeFoldingRange foldRange;
+    PHighlighterAttribute preeditAttr;
     int nFold;
     QString sFold;
 
@@ -822,7 +822,7 @@ void SynEditTextPainter::paintLines()
         // Get the line.
         sLine = edit->mDocument->getString(vLine - 1);
         // determine whether will be painted with ActiveLineColor
-        if (edit->mActiveSelectionMode == SynSelectionMode::Column) {
+        if (edit->mActiveSelectionMode == SelectionMode::Column) {
             bCurrentLine = (vLine >= selectionBegin.line && vLine <= selectionEnd.line);
         } else {
             bCurrentLine = (edit->mCaretY == vLine);
@@ -860,8 +860,8 @@ void SynEditTextPainter::paintLines()
             // selection mode and a good start for the smNormal mode.
             nLineSelStart = FirstCol;
             nLineSelEnd = LastCol + 1;
-            if ((edit->mActiveSelectionMode == SynSelectionMode::Column) ||
-                ((edit->mActiveSelectionMode == SynSelectionMode::Normal) && (cRow == vSelStart.Row)) ) {
+            if ((edit->mActiveSelectionMode == SelectionMode::Column) ||
+                ((edit->mActiveSelectionMode == SelectionMode::Normal) && (cRow == vSelStart.Row)) ) {
                 int ch = edit->columnToChar(vLine,vSelStart.Column);
                 ch = edit->charToColumn(vLine,ch);
                 if (ch > LastCol) {
@@ -872,8 +872,8 @@ void SynEditTextPainter::paintLines()
                     bComplexLine = true;
                 }
             }
-            if ( (edit->mActiveSelectionMode == SynSelectionMode::Column) ||
-                ((edit->mActiveSelectionMode == SynSelectionMode::Normal) && (cRow == vSelEnd.Row)) ) {
+            if ( (edit->mActiveSelectionMode == SelectionMode::Column) ||
+                ((edit->mActiveSelectionMode == SelectionMode::Normal) && (cRow == vSelEnd.Row)) ) {
                 int ch = edit->columnToChar(vLine,vSelEnd.Column);
                 int col = edit->charToColumn(vLine,ch);
                 if (col<vSelEnd.Column)
@@ -904,8 +904,8 @@ void SynEditTextPainter::paintLines()
                   nTokenColumnLen = edit->mDocument->lineColumns(vLine-1);
               }
               if (edit->mOptions.testFlag(eoShowSpecialChars) && (!bLineSelected) && (!bSpecialLine) && (nTokenColumnLen < vLastChar)) {
-                  sToken = sToken + SynLineBreakGlyph;
-                  nTokenColumnLen += edit->charColumns(SynLineBreakGlyph);
+                  sToken = sToken + LineBreakGlyph;
+                  nTokenColumnLen += edit->charColumns(LineBreakGlyph);
               }
               if (bComplexLine) {
                   setDrawingColors(true);
@@ -925,12 +925,12 @@ void SynEditTextPainter::paintLines()
               }
               //Paint editingAreaBorders
               if (bCurrentLine && edit->mInputPreeditString.length()>0) {
-                  PSynEditingArea area = std::make_shared<SynEditingArea>();
+                  PEditingArea area = std::make_shared<EditingArea>();
                   int col = edit->charToColumn(edit->mCaretY,edit->mCaretX);
                   int ch = edit->columnToChar(vLine,col);
                   area->beginX = edit->charToColumn(sLine,ch);
                   area->endX = edit->charToColumn(sLine,ch + edit->mInputPreeditString.length());
-                  area->type = SynEditingAreaType::eatUnderLine;
+                  area->type = EditingAreaType::eatUnderLine;
                   area->color = colFG;
                   areaList.append(area);
                   paintEditAreas(areaList);
@@ -981,7 +981,7 @@ void SynEditTextPainter::paintLines()
                             || sToken == "("
                             || sToken == "{"
                             ) {
-                        SynRangeState rangeState = edit->mHighlighter->getRangeState();
+                        HighlighterState rangeState = edit->mHighlighter->getState();
                         getBraceColorAttr(rangeState.bracketLevel
                                           +rangeState.braceLevel
                                           +rangeState.parenthesisLevel
@@ -990,7 +990,7 @@ void SynEditTextPainter::paintLines()
                                || sToken == ")"
                                || sToken == "}"
                                ){
-                        SynRangeState rangeState = edit->mHighlighter->getRangeState();
+                        HighlighterState rangeState = edit->mHighlighter->getState();
                         getBraceColorAttr(rangeState.bracketLevel
                                           +rangeState.braceLevel
                                           +rangeState.parenthesisLevel+1,
@@ -1028,15 +1028,15 @@ void SynEditTextPainter::paintLines()
                     if (nTokenColumnLen > 0) {
                         sToken = edit->substringByColumns(sLine,nTokenColumnsBefore+1,nTokenColumnLen);
                         addHighlightToken(sToken, nTokenColumnsBefore - (vFirstChar - FirstCol),
-                            nTokenColumnLen, vLine, PSynHighlighterAttribute());
+                            nTokenColumnLen, vLine, PHighlighterAttribute());
                     }
                 }
                 // Draw LineBreak glyph.
                 if (edit->mOptions.testFlag(eoShowSpecialChars) && (!bLineSelected) &&
                     (!bSpecialLine) && (edit->mDocument->lineColumns(vLine-1) < vLastChar)) {
-                    addHighlightToken(SynLineBreakGlyph,
+                    addHighlightToken(LineBreakGlyph,
                       edit->mDocument->lineColumns(vLine-1)  - (vFirstChar - FirstCol),
-                      edit->charColumns(SynLineBreakGlyph),vLine, edit->mHighlighter->whitespaceAttribute());
+                      edit->charColumns(LineBreakGlyph),vLine, edit->mHighlighter->whitespaceAttribute());
                 }
             }
 
@@ -1046,7 +1046,7 @@ void SynEditTextPainter::paintLines()
                 sFold = edit->highlighter()->foldString();
                 nFold = edit->stringColumns(sFold,edit->mDocument->lineColumns(vLine-1));
                 attr = edit->mHighlighter->symbolAttribute();
-                getBraceColorAttr(edit->mHighlighter->getRangeState().braceLevel,attr);
+                getBraceColorAttr(edit->mHighlighter->getState().braceLevel,attr);
                 addHighlightToken(sFold,edit->mDocument->lineColumns(vLine-1) - (vFirstChar - FirstCol)
                   , nFold, vLine, attr);
             }
@@ -1056,7 +1056,7 @@ void SynEditTextPainter::paintLines()
             paintHighlightToken(true);
 
             //Paint editingAreaBorders
-            foreach (const PSynEditingArea& area, areaList) {
+            foreach (const PEditingArea& area, areaList) {
                 if (bCurrentLine && edit->mInputPreeditString.length()>0) {
                     if (area->beginX > edit->mCaretX) {
                         area->beginX+=edit->mInputPreeditString.length();
@@ -1069,12 +1069,12 @@ void SynEditTextPainter::paintLines()
                 area->endX = edit->charToColumn(sLine,area->endX);
             }
             if (bCurrentLine && edit->mInputPreeditString.length()>0) {
-                PSynEditingArea area = std::make_shared<SynEditingArea>();
+                PEditingArea area = std::make_shared<EditingArea>();
                 int col = edit->charToColumn(edit->mCaretY,edit->mCaretX);
                 int ch = edit->columnToChar(vLine,col);
                 area->beginX = edit->charToColumn(sLine,ch);
                 area->endX = edit->charToColumn(sLine,ch + edit->mInputPreeditString.length());
-                area->type = SynEditingAreaType::eatUnderLine;
+                area->type = EditingAreaType::eatUnderLine;
                 if (preeditAttr) {
                     area->color = preeditAttr->foreground();
                 } else {

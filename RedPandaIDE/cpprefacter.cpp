@@ -226,7 +226,7 @@ PSearchResultTreeItem CppRefacter::findOccurenceInFile(
         while (!editor.highlighter()->eol()) {
             int start = editor.highlighter()->getTokenPos() + 1;
             QString token = editor.highlighter()->getToken();
-            QSynedit::PSynHighlighterAttribute attr = editor.highlighter()->getTokenAttribute();
+            QSynedit::PHighlighterAttribute attr = editor.highlighter()->getTokenAttribute();
             if (!attr || attr!=editor.highlighter()->commentAttribute()) {
                 if (token == statement->command) {
                     //same name symbol , test if the same statement;

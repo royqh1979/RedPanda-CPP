@@ -103,7 +103,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
         mFilename = tr("untitled")+QString("%1").arg(getNewFileNumber());
     }
     QFileInfo fileInfo(mFilename);
-    QSynedit::PSynHighlighter highlighter;
+    QSynedit::PHighlighter highlighter;
     if (!isNew) {
         loadFile();
         highlighter = highlighterManager.getHighlighter(mFilename);
@@ -148,7 +148,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
     connect(this,&SynEdit::statusChanged,this,&Editor::onStatusChanged);
     connect(this,&SynEdit::gutterClicked,this,&Editor::onGutterClicked);
 
-    onStatusChanged(QSynedit::SynStatusChange::scOpenFile);
+    onStatusChanged(QSynedit::StatusChange::scOpenFile);
 
     setAttribute(Qt::WA_Hover,true);
 
@@ -375,7 +375,7 @@ bool Editor::saveAs(const QString &name, bool fromProject){
     }
 
     //update (reassign highlighter)
-    QSynedit::PSynHighlighter newHighlighter = HighlighterManager().getHighlighter(mFilename);
+    QSynedit::PHighlighter newHighlighter = HighlighterManager().getHighlighter(mFilename);
     if (newHighlighter) {
         setUseCodeFolding(true);
     } else {
@@ -474,10 +474,10 @@ void Editor::setPageControl(QTabWidget *newPageControl)
 
 void Editor::undoSymbolCompletion(int pos)
 {
-    QSynedit::PSynHighlighterAttribute Attr;
+    QSynedit::PHighlighterAttribute Attr;
     QString Token;
     bool tokenFinished;
-    QSynedit::SynHighlighterTokenType tokenType;
+    QSynedit::TokenType tokenType;
 
     if (!highlighter())
         return;
@@ -485,7 +485,7 @@ void Editor::undoSymbolCompletion(int pos)
         return;
     if (!getHighlighterAttriAtRowCol(caretXY(), Token, tokenFinished, tokenType, Attr))
         return;
-    if ((tokenType == QSynedit::SynHighlighterTokenType::Comment) && (!tokenFinished))
+    if ((tokenType == QSynedit::TokenType::Comment) && (!tokenFinished))
         return ;
     //convert caret x to string index;
     pos--;
@@ -494,11 +494,11 @@ void Editor::undoSymbolCompletion(int pos)
         return;
     QChar DeletedChar = lineText().at(pos);
     QChar NextChar = lineText().at(pos+1);
-    if ((tokenType == QSynedit::SynHighlighterTokenType::Character) && (DeletedChar != '\''))
+    if ((tokenType == QSynedit::TokenType::Character) && (DeletedChar != '\''))
         return;
-    if (tokenType == QSynedit::SynHighlighterTokenType::StringEscapeSequence)
+    if (tokenType == QSynedit::TokenType::StringEscapeSequence)
         return;
-    if (tokenType == QSynedit::SynHighlighterTokenType::String) {
+    if (tokenType == QSynedit::TokenType::String) {
         if ((DeletedChar!='"') && (DeletedChar!='('))
             return;
         if ((DeletedChar=='"') && (Token!="\"\""))
@@ -506,7 +506,7 @@ void Editor::undoSymbolCompletion(int pos)
         if ((DeletedChar=='(') && (!Token.startsWith("R\"")))
             return;
     }
-    if ((DeletedChar == '\'') && (tokenType == QSynedit::SynHighlighterTokenType::Number))
+    if ((DeletedChar == '\'') && (tokenType == QSynedit::TokenType::Number))
         return;
     if ((DeletedChar == '<') &&
             !(mParser && mParser->isIncludeLine(lineText())))
@@ -517,7 +517,7 @@ void Editor::undoSymbolCompletion(int pos)
          (pSettings->editor().completeBrace() && (DeletedChar == '{') && (NextChar == '}')) ||
          (pSettings->editor().completeSingleQuote() && (DeletedChar == '\'') && (NextChar == '\'')) ||
          (pSettings->editor().completeDoubleQuote() && (DeletedChar == '\"') && (NextChar == '\"'))) {
-         commandProcessor(QSynedit::SynEditorCommand::ecDeleteChar);
+         commandProcessor(QSynedit::EditCommand::ecDeleteChar);
     }
 }
 
@@ -716,7 +716,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
     if (t.isEmpty())
         return;
 
-    if (activeSelectionMode()==QSynedit::SynSelectionMode::Column)
+    if (activeSelectionMode()==QSynedit::SelectionMode::Column)
         return;
 
     QChar ch = t[0];
@@ -865,12 +865,12 @@ void Editor::onGutterPaint(QPainter &painter, int aLine, int X, int Y)
     }
 }
 
-void Editor::onGetEditingAreas(int Line, QSynedit::SynEditingAreaList &areaList)
+void Editor::onGetEditingAreas(int Line, QSynedit::EditingAreaList &areaList)
 {
     areaList.clear();
     if (mTabStopBegin>=0 && mTabStopY == Line) {
-        QSynedit::PSynEditingArea p = make_shared<QSynedit::SynEditingArea>();
-        p->type = QSynedit::SynEditingAreaType::eatRectangleBorder;
+        QSynedit::PEditingArea p = make_shared<QSynedit::EditingArea>();
+        p->type = QSynedit::EditingAreaType::eatRectangleBorder;
 //        int spaceCount = leftSpaces(mLineBeforeTabStop);
 //        int spaceBefore = mLineBeforeTabStop.length()-TrimLeft(mLineBeforeTabStop).length();
         p->beginX = mTabStopBegin;
@@ -881,7 +881,7 @@ void Editor::onGetEditingAreas(int Line, QSynedit::SynEditingAreaList &areaList)
     PSyntaxIssueList lst = getSyntaxIssuesAtLine(Line);
     if (lst) {
         for (const PSyntaxIssue& issue: *lst) {
-            QSynedit::PSynEditingArea p=std::make_shared<QSynedit::SynEditingArea>();
+            QSynedit::PEditingArea p=std::make_shared<QSynedit::EditingArea>();
             p->beginX = issue->col;
             p->endX = issue->endCol;
             if (issue->issueType == CompileIssueType::Error) {
@@ -889,7 +889,7 @@ void Editor::onGetEditingAreas(int Line, QSynedit::SynEditingAreaList &areaList)
             } else {
                 p->color = mSyntaxWarningColor;
             }
-            p->type = QSynedit::SynEditingAreaType::eatWaveUnderLine;
+            p->type = QSynedit::EditingAreaType::eatWaveUnderLine;
             areaList.append(p);
         }
     }
@@ -919,7 +919,7 @@ bool Editor::onGetSpecialLineColors(int Line, QColor &foreground, QColor &backgr
     return false;
 }
 
-void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &token, QSynedit::PSynHighlighterAttribute attr, QSynedit::SynFontStyles &style, QColor &foreground, QColor &background)
+void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &token, QSynedit::PHighlighterAttribute attr, QSynedit::FontStyles &style, QColor &foreground, QColor &background)
 {
     if (token.isEmpty())
         return;
@@ -936,7 +936,7 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
                         pos1++;
                         pos2++;
                         if (pos1>0 && pos2>0 && pos1<aChar && aChar < pos2) {
-                            style.setFlag(QSynedit::SynFontStyle::fsUnderline);
+                            style.setFlag(QSynedit::FontStyle::fsUnderline);
                         }
                     }
                 }
@@ -971,10 +971,10 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
             if (item) {
                 foreground = item->foreground();
                 //background = item->background();
-                style.setFlag(QSynedit::SynFontStyle::fsBold,item->bold());
-                style.setFlag(QSynedit::SynFontStyle::fsItalic,item->italic());
-                style.setFlag(QSynedit::SynFontStyle::fsUnderline,item->underlined());
-                style.setFlag(QSynedit::SynFontStyle::fsStrikeOut,item->strikeout());
+                style.setFlag(QSynedit::FontStyle::fsBold,item->bold());
+                style.setFlag(QSynedit::FontStyle::fsItalic,item->italic());
+                style.setFlag(QSynedit::FontStyle::fsUnderline,item->underlined());
+                style.setFlag(QSynedit::FontStyle::fsStrikeOut,item->strikeout());
             } else {
                 foreground = highlighter()->identifierAttribute()->foreground();
             }
@@ -982,7 +982,7 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
                 QSynedit::BufferCoord p;
                 if (pointToCharLine(mapFromGlobal(QCursor::pos()),p)) {
                     if (line==p.line && (aChar<=p.ch && p.ch<aChar+token.length())) {
-                        style.setFlag(QSynedit::SynFontStyle::fsUnderline);
+                        style.setFlag(QSynedit::FontStyle::fsUnderline);
                     }
                 }
             }
@@ -1379,7 +1379,7 @@ void Editor::copyAsHTML()
     exporter.setExportAsText(false);
     exporter.setUseBackground(pSettings->editor().copyHTMLUseBackground());
     exporter.setFont(font());
-    QSynedit::PSynHighlighter hl = highlighter();
+    QSynedit::PHighlighter hl = highlighter();
     if (!pSettings->editor().copyHTMLUseEditorColor()) {
         hl = highlighterManager.copyHighlighter(highlighter());
         highlighterManager.applyColorScheme(hl,pSettings->editor().copyHTMLColorScheme());
@@ -1426,9 +1426,9 @@ void Editor::addSyntaxIssues(int line, int startChar, int endChar, CompileIssueT
     PSyntaxIssue pError;
     QSynedit::BufferCoord p;
     QString token;
-    QSynedit::SynHighlighterTokenType tokenType;
+    QSynedit::TokenType tokenType;
     int tokenKind,start;
-    QSynedit::PSynHighlighterAttribute attr;
+    QSynedit::PHighlighterAttribute attr;
     PSyntaxIssueList lst;
     if ((line<1) || (line>document()->count()))
         return;
@@ -1537,18 +1537,18 @@ Editor::PSyntaxIssue Editor::getSyntaxIssueAtPosition(const QSynedit::BufferCoor
     return PSyntaxIssue();
 }
 
-void Editor::onStatusChanged(QSynedit::SynStatusChanges changes)
+void Editor::onStatusChanged(QSynedit::StatusChanges changes)
 {
-    if ((!changes.testFlag(QSynedit::SynStatusChange::scReadOnly)
-            && !changes.testFlag(QSynedit::SynStatusChange::scInsertMode)
+    if ((!changes.testFlag(QSynedit::StatusChange::scReadOnly)
+            && !changes.testFlag(QSynedit::StatusChange::scInsertMode)
             && (document()->count()!=mLineCount)
             && (document()->count()!=0) && ((mLineCount>0) || (document()->count()>1)))
             ||
         (mCurrentLineModified
-            && !changes.testFlag(QSynedit::SynStatusChange::scReadOnly)
-            && changes.testFlag(QSynedit::SynStatusChange::scCaretY))) {
+            && !changes.testFlag(QSynedit::StatusChange::scReadOnly)
+            && changes.testFlag(QSynedit::StatusChange::scCaretY))) {
         mCurrentLineModified = false;
-        if (!changes.testFlag(QSynedit::SynStatusChange::scOpenFile))
+        if (!changes.testFlag(QSynedit::StatusChange::scOpenFile))
             reparse();
 //        if (pSettings->codeCompletion().clearWhenEditorHidden()
 //                && changes.testFlag(SynStatusChange::scOpenFile)) {
@@ -1569,8 +1569,8 @@ void Editor::onStatusChanged(QSynedit::SynStatusChanges changes)
             mCanAutoSave = true;
     }
 
-    if (changes.testFlag(QSynedit::SynStatusChange::scCaretX)
-            || changes.testFlag(QSynedit::SynStatusChange::scCaretY)) {
+    if (changes.testFlag(QSynedit::StatusChange::scCaretX)
+            || changes.testFlag(QSynedit::StatusChange::scCaretY)) {
         if (mTabStopBegin >=0) {
             if (mTabStopY==caretY()) {
                 if (mLineAfterTabStop.isEmpty()) {
@@ -1615,7 +1615,7 @@ void Editor::onStatusChanged(QSynedit::SynStatusChanges changes)
                 coord.ch = ch+1;
                 coord.line = caretY();
             }
-            QSynedit::PSynHighlighterAttribute attr;
+            QSynedit::PHighlighterAttribute attr;
             QString token;
             if (getHighlighterAttriAtRowCol(coord,token,attr)
                     && attr == highlighter()->symbolAttribute()) {
@@ -1633,7 +1633,7 @@ void Editor::onStatusChanged(QSynedit::SynStatusChanges changes)
     }
 
     // scSelection includes anything caret related
-    if (changes.testFlag(QSynedit::SynStatusChange::scSelection)) {
+    if (changes.testFlag(QSynedit::StatusChange::scSelection)) {
         if (!selAvail() && pSettings->editor().highlightCurrentWord()) {
             mCurrentHighlightedWord = wordAtCursor();
         } else if (selAvail() && blockBegin() == wordStart()
@@ -1665,7 +1665,7 @@ void Editor::onStatusChanged(QSynedit::SynStatusChanges changes)
 
     pMainWindow->updateEditorActions();
 
-    if (changes.testFlag(QSynedit::SynStatusChange::scCaretY) && mParentPageControl) {
+    if (changes.testFlag(QSynedit::StatusChange::scCaretY) && mParentPageControl) {
         pMainWindow->caretList().addCaret(this,caretY(),caretX());
         pMainWindow->updateCaretActions();
     }
@@ -1766,42 +1766,42 @@ bool Editor::notParsed()
 
 void Editor::insertLine()
 {
-    ExecuteCommand(QSynedit::SynEditorCommand::ecInsertLine,QChar(),nullptr);
+    ExecuteCommand(QSynedit::EditCommand::ecInsertLine,QChar(),nullptr);
 }
 
 void Editor::deleteWord()
 {
-    ExecuteCommand(QSynedit::SynEditorCommand::ecDeleteWord,QChar(),nullptr);
+    ExecuteCommand(QSynedit::EditCommand::ecDeleteWord,QChar(),nullptr);
 }
 
 void Editor::deleteToWordStart()
 {
-    ExecuteCommand(QSynedit::SynEditorCommand::ecDeleteWordStart,QChar(),nullptr);
+    ExecuteCommand(QSynedit::EditCommand::ecDeleteWordStart,QChar(),nullptr);
 }
 
 void Editor::deleteToWordEnd()
 {
-    ExecuteCommand(QSynedit::SynEditorCommand::ecDeleteWordEnd,QChar(),nullptr);
+    ExecuteCommand(QSynedit::EditCommand::ecDeleteWordEnd,QChar(),nullptr);
 }
 
 void Editor::deleteLine()
 {
-    ExecuteCommand(QSynedit::SynEditorCommand::ecDeleteLine,QChar(),nullptr);
+    ExecuteCommand(QSynedit::EditCommand::ecDeleteLine,QChar(),nullptr);
 }
 
 void Editor::duplicateLine()
 {
-    ExecuteCommand(QSynedit::SynEditorCommand::ecDuplicateLine,QChar(),nullptr);
+    ExecuteCommand(QSynedit::EditCommand::ecDuplicateLine,QChar(),nullptr);
 }
 
 void Editor::deleteToEOL()
 {
-    ExecuteCommand(QSynedit::SynEditorCommand::ecDeleteEOL,QChar(),nullptr);
+    ExecuteCommand(QSynedit::EditCommand::ecDeleteEOL,QChar(),nullptr);
 }
 
 void Editor::deleteToBOL()
 {
-    ExecuteCommand(QSynedit::SynEditorCommand::ecDeleteBOL,QChar(),nullptr);
+    ExecuteCommand(QSynedit::EditCommand::ecDeleteBOL,QChar(),nullptr);
 }
 
 QStringList Editor::getOwnerExpressionAndMemberAtPositionForCompletion(
@@ -1823,7 +1823,7 @@ QStringList Editor::getExpressionAtPosition(
     int ch = pos.ch-1;
     int symbolMatchingLevel = 0;
     LastSymbolType lastSymbolType=LastSymbolType::None;
-    QSynedit::PSynHighlighter highlighter;
+    QSynedit::PHighlighter highlighter;
     if (isNew())
         highlighter = highlighterManager.getCppHighlighter();
     else
@@ -1848,7 +1848,7 @@ QStringList Editor::getExpressionAtPosition(
             if (start>ch) {
                 break;
             }
-            QSynedit::PSynHighlighterAttribute attr = highlighter->getTokenAttribute();
+            QSynedit::PHighlighterAttribute attr = highlighter->getTokenAttribute();
             if ( (line == pos.line-1)
                  && (start<=ch) && (ch<=endPos)) {
                 if (attr==highlighter->commentAttribute() || attr == highlighter->stringAttribute()) {
@@ -2088,14 +2088,14 @@ bool Editor::handleSymbolCompletion(QChar key)
         } else {
             QSynedit::BufferCoord  HighlightPos = QSynedit::BufferCoord{caretX()-1, caretY()};
             // Check if that line is highlighted as  comment
-            QSynedit::PSynHighlighterAttribute Attr;
+            QSynedit::PHighlighterAttribute Attr;
             QString Token;
             bool tokenFinished;
-            QSynedit::SynHighlighterTokenType tokenType;
+            QSynedit::TokenType tokenType;
             if (getHighlighterAttriAtRowCol(HighlightPos, Token, tokenFinished, tokenType,Attr)) {
-                if ((tokenType == QSynedit::SynHighlighterTokenType::Comment) && (!tokenFinished))
+                if ((tokenType == QSynedit::TokenType::Comment) && (!tokenFinished))
                     return false;
-                if ((tokenType == QSynedit::SynHighlighterTokenType::String) && (!tokenFinished)
+                if ((tokenType == QSynedit::TokenType::String) && (!tokenFinished)
                         && (key!='\'') && (key!='\"') && (key!='(') && (key!=')'))
                     return false;
                 if (( key=='<' || key =='>') && (mParser && !mParser->isIncludeLine(lineText())))
@@ -2191,17 +2191,17 @@ bool Editor::handleParentheseCompletion()
             QString text=selText();
             beginUpdate();
             beginUndoBlock();
-            commandProcessor(QSynedit::SynEditorCommand::ecChar,'(');
+            commandProcessor(QSynedit::EditCommand::ecChar,'(');
             setSelText(text);
-            commandProcessor(QSynedit::SynEditorCommand::ecChar,')');
+            commandProcessor(QSynedit::EditCommand::ecChar,')');
             endUndoBlock();
             endUpdate();
         } else {
             beginUpdate();
             beginUndoBlock();
-            commandProcessor(QSynedit::SynEditorCommand::ecChar,'(');
+            commandProcessor(QSynedit::EditCommand::ecChar,'(');
             QSynedit::BufferCoord oldCaret = caretXY();
-            commandProcessor(QSynedit::SynEditorCommand::ecChar,')');
+            commandProcessor(QSynedit::EditCommand::ecChar,')');
             setCaretXY(oldCaret);
             endUndoBlock();
             endUpdate();
@@ -2228,7 +2228,7 @@ bool Editor::handleParentheseSkip()
       if (document()->count()==0)
           return false;
       if (highlighter()) {
-          QSynedit::SynRangeState lastLineState = document()->ranges(document()->count()-1);
+          QSynedit::HighlighterState lastLineState = document()->ranges(document()->count()-1);
           if (lastLineState.parenthesisLevel==0) {
               setCaretXY( QSynedit::BufferCoord{caretX() + 1, caretY()}); // skip over
               return true;
@@ -2252,17 +2252,17 @@ bool Editor::handleBracketCompletion()
         QString text=selText();
         beginUpdate();
         beginUndoBlock();
-        commandProcessor(QSynedit::SynEditorCommand::ecChar,'[');
+        commandProcessor(QSynedit::EditCommand::ecChar,'[');
         setSelText(text);
-        commandProcessor(QSynedit::SynEditorCommand::ecChar,']');
+        commandProcessor(QSynedit::EditCommand::ecChar,']');
         endUndoBlock();
         endUpdate();
     } else {
         beginUpdate();
         beginUndoBlock();
-        commandProcessor(QSynedit::SynEditorCommand::ecChar,'[');
+        commandProcessor(QSynedit::EditCommand::ecChar,'[');
         QSynedit::BufferCoord oldCaret = caretXY();
-        commandProcessor(QSynedit::SynEditorCommand::ecChar,']');
+        commandProcessor(QSynedit::EditCommand::ecChar,']');
         setCaretXY(oldCaret);
         endUndoBlock();
         endUpdate();
@@ -2279,7 +2279,7 @@ bool Editor::handleBracketSkip()
     if (document()->count()==0)
         return false;
     if (highlighter()) {
-        QSynedit::SynRangeState lastLineState = document()->ranges(document()->count()-1);
+        QSynedit::HighlighterState lastLineState = document()->ranges(document()->count()-1);
         if (lastLineState.bracketLevel==0) {
             setCaretXY( QSynedit::BufferCoord{caretX() + 1, caretY()}); // skip over
             return true;
@@ -2300,14 +2300,14 @@ bool Editor::handleMultilineCommentCompletion()
         QString text=selText();
         beginUpdate();
         beginUndoBlock();
-        commandProcessor(QSynedit::SynEditorCommand::ecChar,'*');
+        commandProcessor(QSynedit::EditCommand::ecChar,'*');
         QSynedit::BufferCoord oldCaret;
         if (text.isEmpty())
             oldCaret = caretXY();
         else
             setSelText(text);
-        commandProcessor(QSynedit::SynEditorCommand::ecChar,'*');
-        commandProcessor(QSynedit::SynEditorCommand::ecChar,'/');
+        commandProcessor(QSynedit::EditCommand::ecChar,'*');
+        commandProcessor(QSynedit::EditCommand::ecChar,'/');
         if (text.isEmpty())
             setCaretXY(oldCaret);
         endUndoBlock();
@@ -2328,16 +2328,16 @@ bool Editor::handleBraceCompletion()
     QString text=selText();
     beginUpdate();
     beginUndoBlock();
-    commandProcessor(QSynedit::SynEditorCommand::ecChar,'{');
+    commandProcessor(QSynedit::EditCommand::ecChar,'{');
     QSynedit::BufferCoord oldCaret;
     if (text.isEmpty()) {
         oldCaret = caretXY();
     } else {
-        commandProcessor(QSynedit::SynEditorCommand::ecInsertLine);
+        commandProcessor(QSynedit::EditCommand::ecInsertLine);
         setSelText(text);
-        commandProcessor(QSynedit::SynEditorCommand::ecInsertLine);
+        commandProcessor(QSynedit::EditCommand::ecInsertLine);
     }
-    commandProcessor(QSynedit::SynEditorCommand::ecChar,'}');
+    commandProcessor(QSynedit::EditCommand::ecChar,'}');
     if (
         ( (s.startsWith("struct")
           || s.startsWith("class")
@@ -2348,7 +2348,7 @@ bool Editor::handleBraceCompletion()
           || s.startsWith("enum") )
           && !s.contains(';')
         ) || s.endsWith('=')) {
-        commandProcessor(QSynedit::SynEditorCommand::ecChar,';');
+        commandProcessor(QSynedit::EditCommand::ecChar,';');
     }
     if (text.isEmpty())
         setCaretXY(oldCaret);
@@ -2365,11 +2365,11 @@ bool Editor::handleBraceSkip()
     if (document()->count()==0)
         return false;
     if (highlighter()) {
-        QSynedit::SynRangeState lastLineState = document()->ranges(document()->count()-1);
+        QSynedit::HighlighterState lastLineState = document()->ranges(document()->count()-1);
         if (lastLineState.braceLevel==0) {
             bool oldInsertMode = insertMode();
             setInsertMode(false); //set mode to overwrite
-            commandProcessor(QSynedit::SynEditorCommand::ecChar,'}');
+            commandProcessor(QSynedit::EditCommand::ecChar,'}');
             setInsertMode(oldInsertMode);
             return true;
         }
@@ -2378,7 +2378,7 @@ bool Editor::handleBraceSkip()
         if (pos.line != 0) {
             bool oldInsertMode = insertMode();
             setInsertMode(false); //set mode to overwrite
-            commandProcessor(QSynedit::SynEditorCommand::ecChar,'}');
+            commandProcessor(QSynedit::EditCommand::ecChar,'}');
             setInsertMode(oldInsertMode);
             return true;
         }
@@ -2401,9 +2401,9 @@ bool Editor::handleSingleQuoteCompletion()
                 QString text=selText();
                 beginUpdate();
                 beginUndoBlock();
-                commandProcessor(QSynedit::SynEditorCommand::ecChar,'\'');
+                commandProcessor(QSynedit::EditCommand::ecChar,'\'');
                 setSelText(text);
-                commandProcessor(QSynedit::SynEditorCommand::ecChar,'\'');
+                commandProcessor(QSynedit::EditCommand::ecChar,'\'');
                 endUndoBlock();
                 endUpdate();
                 return true;
@@ -2412,9 +2412,9 @@ bool Editor::handleSingleQuoteCompletion()
                 // insert ''
                 beginUpdate();
                 beginUndoBlock();
-                commandProcessor(QSynedit::SynEditorCommand::ecChar,'\'');
+                commandProcessor(QSynedit::EditCommand::ecChar,'\'');
                 QSynedit::BufferCoord oldCaret = caretXY();
-                commandProcessor(QSynedit::SynEditorCommand::ecChar,'\'');
+                commandProcessor(QSynedit::EditCommand::ecChar,'\'');
                 setCaretXY(oldCaret);
                 endUndoBlock();
                 endUpdate();
@@ -2441,9 +2441,9 @@ bool Editor::handleDoubleQuoteCompletion()
                 QString text=selText();
                 beginUpdate();
                 beginUndoBlock();
-                commandProcessor(QSynedit::SynEditorCommand::ecChar,'"');
+                commandProcessor(QSynedit::EditCommand::ecChar,'"');
                 setSelText(text);
-                commandProcessor(QSynedit::SynEditorCommand::ecChar,'"');
+                commandProcessor(QSynedit::EditCommand::ecChar,'"');
                 endUndoBlock();
                 endUpdate();
                 return true;
@@ -2452,9 +2452,9 @@ bool Editor::handleDoubleQuoteCompletion()
                 // insert ""
                 beginUpdate();
                 beginUndoBlock();
-                commandProcessor(QSynedit::SynEditorCommand::ecChar,'"');
+                commandProcessor(QSynedit::EditCommand::ecChar,'"');
                 QSynedit::BufferCoord oldCaret = caretXY();
-                commandProcessor(QSynedit::SynEditorCommand::ecChar,'"');
+                commandProcessor(QSynedit::EditCommand::ecChar,'"');
                 setCaretXY(oldCaret);
                 endUndoBlock();
                 endUpdate();
@@ -2474,9 +2474,9 @@ bool Editor::handleGlobalIncludeCompletion()
         return false;
     beginUpdate();
     beginUndoBlock();
-    commandProcessor(QSynedit::SynEditorCommand::ecChar,'<');
+    commandProcessor(QSynedit::EditCommand::ecChar,'<');
     QSynedit::BufferCoord oldCaret = caretXY();
-    commandProcessor(QSynedit::SynEditorCommand::ecChar,'>');
+    commandProcessor(QSynedit::EditCommand::ecChar,'>');
     setCaretXY(oldCaret);
     endUpdate();
     endUndoBlock();
@@ -2515,7 +2515,7 @@ bool Editor::handleCodeCompletion(QChar key)
                 showCompletion("",false);
             return true;
         case ':':
-            ExecuteCommand(QSynedit::SynEditorCommand::ecChar,':',nullptr);
+            ExecuteCommand(QSynedit::EditCommand::ecChar,':',nullptr);
             //setSelText(key);
             if ((caretX() > 2) && (lineText().length() >= 2) &&
                     (lineText()[caretX() - 3] == ':'))
@@ -2550,7 +2550,7 @@ void Editor::initParser()
     resetCppParser(mParser);
     mParser->setEnabled(
                 pSettings->codeCompletion().enabled() &&
-                (highlighter() && highlighter()->getClass() == QSynedit::SynHighlighterClass::CppHighlighter));
+                (highlighter() && highlighter()->getClass() == QSynedit::HighlighterClass::CppHighlighter));
 }
 
 Editor::QuoteStatus Editor::getQuoteStatus()
@@ -2678,8 +2678,8 @@ void Editor::reparse()
 {
     if (!highlighter())
         return;
-    if (highlighter()->language() != QSynedit::SynHighlighterLanguage::Cpp
-             && highlighter()->language() != QSynedit::SynHighlighterLanguage::GLSL)
+    if (highlighter()->language() != QSynedit::HighlighterLanguage::Cpp
+             && highlighter()->language() != QSynedit::HighlighterLanguage::GLSL)
         return;
     if (mParser)
         mParser->setEnabled(pSettings->codeCompletion().enabled());
@@ -2843,7 +2843,7 @@ void Editor::exportAsRTF(const QString &rtfFilename)
     exporter.setExportAsText(true);
     exporter.setUseBackground(pSettings->editor().copyRTFUseBackground());
     exporter.setFont(font());
-    QSynedit::PSynHighlighter hl = highlighter();
+    QSynedit::PHighlighter hl = highlighter();
     if (!pSettings->editor().copyRTFUseEditorColor()) {
         hl = highlighterManager.copyHighlighter(highlighter());
         highlighterManager.applyColorScheme(hl,pSettings->editor().copyRTFColorScheme());
@@ -2868,7 +2868,7 @@ void Editor::exportAsHTML(const QString &htmlFilename)
     exporter.setExportAsText(false);
     exporter.setUseBackground(pSettings->editor().copyHTMLUseBackground());
     exporter.setFont(font());
-    QSynedit::PSynHighlighter hl = highlighter();
+    QSynedit::PHighlighter hl = highlighter();
     if (!pSettings->editor().copyHTMLUseEditorColor()) {
         hl = highlighterManager.copyHighlighter(highlighter());
         highlighterManager.applyColorScheme(hl,pSettings->editor().copyHTMLColorScheme());
@@ -2905,28 +2905,28 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete)
     QString word="";
 
     QString s;
-    QSynedit::PSynHighlighterAttribute attr;
+    QSynedit::PHighlighterAttribute attr;
     bool tokenFinished;
-    QSynedit::SynHighlighterTokenType tokenType;
+    QSynedit::TokenType tokenType;
     QSynedit::BufferCoord pBeginPos, pEndPos;
     if (getHighlighterAttriAtRowCol(
                 QSynedit::BufferCoord{caretX() - 1,
                 caretY()}, s, tokenFinished,tokenType, attr)) {
-        if (tokenType == QSynedit::SynHighlighterTokenType::PreprocessDirective) {//Preprocessor
+        if (tokenType == QSynedit::TokenType::PreprocessDirective) {//Preprocessor
             word = getWordAtPosition(this,caretXY(),pBeginPos,pEndPos, WordPurpose::wpDirective);
             if (!word.startsWith('#')) {
                 word = "";
             }
-        } else if (tokenType == QSynedit::SynHighlighterTokenType::Comment) { //Comment, javadoc tag
+        } else if (tokenType == QSynedit::TokenType::Comment) { //Comment, javadoc tag
             word = getWordAtPosition(this,caretXY(),pBeginPos,pEndPos, WordPurpose::wpJavadoc);
             if (!word.startsWith('@')) {
                     return;
             }
         } else if (
-                   (tokenType != QSynedit::SynHighlighterTokenType::Symbol) &&
-                   (tokenType != QSynedit::SynHighlighterTokenType::Space) &&
-                   (tokenType != QSynedit::SynHighlighterTokenType::Keyword) &&
-                   (tokenType != QSynedit::SynHighlighterTokenType::Identifier)
+                   (tokenType != QSynedit::TokenType::Symbol) &&
+                   (tokenType != QSynedit::TokenType::Space) &&
+                   (tokenType != QSynedit::TokenType::Keyword) &&
+                   (tokenType != QSynedit::TokenType::Identifier)
                    ) {
             return;
         }
@@ -2971,7 +2971,7 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete)
 
     QSet<QString> keywords;
     if (highlighter()) {
-        if (highlighter()->language() != QSynedit::SynHighlighterLanguage::Cpp ) {
+        if (highlighter()->language() != QSynedit::HighlighterLanguage::Cpp ) {
             keywords = highlighter()->keywords();
         } else if (mUseCppSyntax) {
             foreach (const QString& keyword, CppKeywords.keys()) {
@@ -3256,7 +3256,7 @@ bool Editor::onCompletionKeyPressed(QKeyEvent *event)
         return true;
     case Qt::Key_Backspace:
         ExecuteCommand(
-                    QSynedit::SynEditorCommand::ecDeleteLastChar,
+                    QSynedit::EditCommand::ecDeleteLastChar,
                     QChar(), nullptr); // Simulate backspace in editor
         if (purpose == WordPurpose::wpCompletion) {
             phrase = getWordForCompletionSearch(caretXY(), mCompletionPopup->memberOperator()=="::");
@@ -3318,7 +3318,7 @@ bool Editor::onHeaderCompletionKeyPressed(QKeyEvent *event)
     switch (event->key()) {
     case Qt::Key_Backspace:
         ExecuteCommand(
-                    QSynedit::SynEditorCommand::ecDeleteLastChar,
+                    QSynedit::EditCommand::ecDeleteLastChar,
                     QChar(), nullptr); // Simulate backspace in editor
         phrase = getWordAtPosition(this,caretXY(),
                                    pBeginPos,pEndPos,
@@ -3389,7 +3389,7 @@ Editor::TipType Editor::getTipType(QPoint point, QSynedit::BufferCoord& pos)
             return TipType::Error;
         }
 
-        QSynedit::PSynHighlighterAttribute attr;
+        QSynedit::PHighlighterAttribute attr;
         QString s;
 
         // Only allow hand tips in highlighted areas
@@ -3589,7 +3589,7 @@ void Editor::updateFunctionTip(bool showTip)
         while(!highlighter()->eol()) {
             int start = highlighter()->getTokenPos();
             QString token = highlighter()->getToken();
-            QSynedit::PSynHighlighterAttribute attr = highlighter()->getTokenAttribute();
+            QSynedit::PHighlighterAttribute attr = highlighter()->getTokenAttribute();
             if (start>=currentChar)
                 break;
 
@@ -3798,7 +3798,7 @@ void Editor::popUserCodeInTabStops()
     }
 }
 
-void Editor::onExportedFormatToken(QSynedit::PSynHighlighter syntaxHighlighter, int Line, int column, const QString &token, QSynedit::PSynHighlighterAttribute& attr)
+void Editor::onExportedFormatToken(QSynedit::PHighlighter syntaxHighlighter, int Line, int column, const QString &token, QSynedit::PHighlighterAttribute& attr)
 {
     if (!syntaxHighlighter)
         return;
@@ -3826,7 +3826,7 @@ void Editor::onExportedFormatToken(QSynedit::PSynHighlighter syntaxHighlighter, 
                 kind = StatementKind::skVariable;
             }
         }
-        QSynedit::SynEditCppHighlighter* cppHighlighter = dynamic_cast<QSynedit::SynEditCppHighlighter*>(syntaxHighlighter.get());
+        QSynedit::CppHighlighter* cppHighlighter = dynamic_cast<QSynedit::CppHighlighter*>(syntaxHighlighter.get());
         switch(kind) {
         case StatementKind::skFunction:
         case StatementKind::skConstructor:
@@ -4312,9 +4312,9 @@ void Editor::reformat()
     addLeftTopToUndo();
     addCaretToUndo();
 
-    QSynedit::SynEditorOptions oldOptions = getOptions();
-    QSynedit::SynEditorOptions newOptions = oldOptions;
-    newOptions.setFlag(QSynedit::SynEditorOption::eoAutoIndent,false);
+    QSynedit::EditorOptions oldOptions = getOptions();
+    QSynedit::EditorOptions newOptions = oldOptions;
+    newOptions.setFlag(QSynedit::EditorOption::eoAutoIndent,false);
     setOptions(newOptions);
     replaceAll(QString::fromUtf8(newContent));
     setCaretXY(mOldCaret);
@@ -4333,7 +4333,7 @@ void Editor::checkSyntaxInBack()
         return;
     if (!highlighter())
         return;
-    if (highlighter()->language()!=QSynedit::SynHighlighterLanguage::Cpp)
+    if (highlighter()->language()!=QSynedit::HighlighterLanguage::Cpp)
         return;
     if(pSettings->editor().syntaxCheck())
         pMainWindow->checkSyntaxInBack(this);
@@ -4470,7 +4470,7 @@ void Editor::setActiveBreakpointFocus(int Line, bool setFocus)
 
 void Editor::applySettings()
 {
-    QSynedit::SynEditorOptions options = QSynedit::eoAltSetsColumnMode |
+    QSynedit::EditorOptions options = QSynedit::eoAltSetsColumnMode |
             QSynedit::eoDragDropEditing | QSynedit::eoDropFiles |  QSynedit::eoKeepCaretX | QSynedit::eoTabsToSpaces |
             QSynedit::eoRightMouseMovesCursor | QSynedit::eoScrollByOneLess | QSynedit::eoTabIndent | QSynedit::eoHideShowScrollbars | QSynedit::eoGroupUndo;
 
@@ -4515,7 +4515,7 @@ void Editor::applySettings()
     // Set gutter properties
     gutter().setLeftOffset(pointToPixel(pSettings->editor().fontSize()) + pSettings->editor().gutterLeftOffset());
     gutter().setRightOffset(pSettings->editor().gutterRightOffset());
-    gutter().setBorderStyle(QSynedit::SynGutterBorderStyle::None);
+    gutter().setBorderStyle(QSynedit::GutterBorderStyle::None);
     gutter().setUseFontStyle(pSettings->editor().gutterUseCustomFont());
     if (pSettings->editor().gutterUseCustomFont()) {
         f=QFont(pSettings->editor().gutterFontName());
@@ -4551,30 +4551,30 @@ void Editor::applySettings()
     invalidate();
 }
 
-static QSynedit::PSynHighlighterAttribute createRainbowAttribute(const QString& attrName, const QString& schemeName, const QString& schemeItemName) {
+static QSynedit::PHighlighterAttribute createRainbowAttribute(const QString& attrName, const QString& schemeName, const QString& schemeItemName) {
     PColorSchemeItem item = pColorManager->getItem(schemeName,schemeItemName);
     if (item) {
-        QSynedit::PSynHighlighterAttribute attr = std::make_shared<QSynedit::SynHighlighterAttribute>(attrName);
+        QSynedit::PHighlighterAttribute attr = std::make_shared<QSynedit::HighlighterAttribute>(attrName);
         attr->setForeground(item->foreground());
         attr->setBackground(item->background());
         return attr;
     }
-    return QSynedit::PSynHighlighterAttribute();
+    return QSynedit::PHighlighterAttribute();
 }
 void Editor::applyColorScheme(const QString& schemeName)
 {
-    QSynedit::SynEditorOptions options = getOptions();
-    options.setFlag(QSynedit::SynEditorOption::eoShowRainbowColor, pSettings->editor().rainbowParenthesis());
+    QSynedit::EditorOptions options = getOptions();
+    options.setFlag(QSynedit::EditorOption::eoShowRainbowColor, pSettings->editor().rainbowParenthesis());
     setOptions(options);
     highlighterManager.applyColorScheme(highlighter(),schemeName);
     if (pSettings->editor().rainbowParenthesis()) {
-        QSynedit::PSynHighlighterAttribute attr0 =createRainbowAttribute(SYNS_AttrSymbol,
+        QSynedit::PHighlighterAttribute attr0 =createRainbowAttribute(SYNS_AttrSymbol,
                                                                schemeName,COLOR_SCHEME_BRACE_1);
-        QSynedit::PSynHighlighterAttribute attr1 =createRainbowAttribute(SYNS_AttrSymbol,
+        QSynedit::PHighlighterAttribute attr1 =createRainbowAttribute(SYNS_AttrSymbol,
                                                                schemeName,COLOR_SCHEME_BRACE_2);
-        QSynedit::PSynHighlighterAttribute attr2 =createRainbowAttribute(SYNS_AttrSymbol,
+        QSynedit::PHighlighterAttribute attr2 =createRainbowAttribute(SYNS_AttrSymbol,
                                                                schemeName,COLOR_SCHEME_BRACE_3);
-        QSynedit::PSynHighlighterAttribute attr3 =createRainbowAttribute(SYNS_AttrSymbol,
+        QSynedit::PHighlighterAttribute attr3 =createRainbowAttribute(SYNS_AttrSymbol,
                                                                schemeName,COLOR_SCHEME_BRACE_4);
         setRainbowAttrs(attr0,attr1,attr2,attr3);
     }

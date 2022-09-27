@@ -33,7 +33,7 @@ static const QSet<QString> CppStatementKeyWords {
 
 
 
-const QSet<QString> SynEditCppHighlighter::Keywords {
+const QSet<QString> CppHighlighter::Keywords {
     "and",
     "and_eq",
     "bitand",
@@ -140,159 +140,159 @@ const QSet<QString> SynEditCppHighlighter::Keywords {
 
     "nullptr",
 };
-SynEditCppHighlighter::SynEditCppHighlighter(): SynHighlighter()
+CppHighlighter::CppHighlighter(): Highlighter()
 {
-    mAsmAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrAssembler);
+    mAsmAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrAssembler);
     addAttribute(mAsmAttribute);
-    mCharAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrCharacter);
+    mCharAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrCharacter);
     addAttribute(mCharAttribute);
-    mCommentAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrComment);
+    mCommentAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrComment);
     addAttribute(mCommentAttribute);
-    mClassAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrClass);
+    mClassAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrClass);
     addAttribute(mClassAttribute);
-    mFloatAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrFloat);
+    mFloatAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrFloat);
     addAttribute(mFloatAttribute);
-    mFunctionAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrFunction);
+    mFunctionAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrFunction);
     addAttribute(mFunctionAttribute);
-    mGlobalVarAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrGlobalVariable);
+    mGlobalVarAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrGlobalVariable);
     addAttribute(mGlobalVarAttribute);
-    mHexAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrHexadecimal);
+    mHexAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrHexadecimal);
     addAttribute(mHexAttribute);
-    mIdentifierAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrIdentifier);
+    mIdentifierAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrIdentifier);
     addAttribute(mIdentifierAttribute);
-    mInvalidAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrIllegalChar);
+    mInvalidAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrIllegalChar);
     addAttribute(mInvalidAttribute);
-    mLocalVarAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrLocalVariable);
+    mLocalVarAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrLocalVariable);
     addAttribute(mLocalVarAttribute);
-    mNumberAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrNumber);
+    mNumberAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrNumber);
     addAttribute(mNumberAttribute);
-    mOctAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrOctal);
+    mOctAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrOctal);
     addAttribute(mOctAttribute);
-    mPreprocessorAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrPreprocessor);
+    mPreprocessorAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrPreprocessor);
     addAttribute(mPreprocessorAttribute);
-    mKeywordAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrReservedWord);
+    mKeywordAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrReservedWord);
     addAttribute(mKeywordAttribute);
-    mWhitespaceAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrSpace);
+    mWhitespaceAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrSpace);
     addAttribute(mWhitespaceAttribute);
-    mStringAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrString);
+    mStringAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrString);
     addAttribute(mStringAttribute);
-    mStringEscapeSequenceAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrStringEscapeSequences);
+    mStringEscapeSequenceAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrStringEscapeSequences);
     addAttribute(mStringEscapeSequenceAttribute);
-    mSymbolAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrSymbol);
+    mSymbolAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrSymbol);
     addAttribute(mSymbolAttribute);
-    mVariableAttribute = std::make_shared<SynHighlighterAttribute>(SYNS_AttrVariable);
+    mVariableAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrVariable);
     addAttribute(mVariableAttribute);
 
     resetState();
 }
 
-PSynHighlighterAttribute SynEditCppHighlighter::asmAttribute() const
+PHighlighterAttribute CppHighlighter::asmAttribute() const
 {
     return mAsmAttribute;
 }
 
-PSynHighlighterAttribute SynEditCppHighlighter::preprocessorAttribute() const
+PHighlighterAttribute CppHighlighter::preprocessorAttribute() const
 {
     return mPreprocessorAttribute;
 }
 
-PSynHighlighterAttribute SynEditCppHighlighter::invalidAttribute() const
+PHighlighterAttribute CppHighlighter::invalidAttribute() const
 {
     return mInvalidAttribute;
 }
 
-PSynHighlighterAttribute SynEditCppHighlighter::numberAttribute() const
+PHighlighterAttribute CppHighlighter::numberAttribute() const
 {
     return mNumberAttribute;
 }
 
-PSynHighlighterAttribute SynEditCppHighlighter::floatAttribute() const
+PHighlighterAttribute CppHighlighter::floatAttribute() const
 {
     return mFloatAttribute;
 }
 
-PSynHighlighterAttribute SynEditCppHighlighter::hexAttribute() const
+PHighlighterAttribute CppHighlighter::hexAttribute() const
 {
     return mHexAttribute;
 }
 
-PSynHighlighterAttribute SynEditCppHighlighter::octAttribute() const
+PHighlighterAttribute CppHighlighter::octAttribute() const
 {
     return mOctAttribute;
 }
 
-PSynHighlighterAttribute SynEditCppHighlighter::stringEscapeSequenceAttribute() const
+PHighlighterAttribute CppHighlighter::stringEscapeSequenceAttribute() const
 {
     return mStringEscapeSequenceAttribute;
 }
 
-PSynHighlighterAttribute SynEditCppHighlighter::charAttribute() const
+PHighlighterAttribute CppHighlighter::charAttribute() const
 {
     return mCharAttribute;
 }
 
-PSynHighlighterAttribute SynEditCppHighlighter::variableAttribute() const
+PHighlighterAttribute CppHighlighter::variableAttribute() const
 {
     return mVariableAttribute;
 }
 
-PSynHighlighterAttribute SynEditCppHighlighter::functionAttribute() const
+PHighlighterAttribute CppHighlighter::functionAttribute() const
 {
     return mFunctionAttribute;
 }
 
-PSynHighlighterAttribute SynEditCppHighlighter::classAttribute() const
+PHighlighterAttribute CppHighlighter::classAttribute() const
 {
     return mClassAttribute;
 }
 
-PSynHighlighterAttribute SynEditCppHighlighter::globalVarAttribute() const
+PHighlighterAttribute CppHighlighter::globalVarAttribute() const
 {
     return mGlobalVarAttribute;
 }
 
-PSynHighlighterAttribute SynEditCppHighlighter::localVarAttribute() const
+PHighlighterAttribute CppHighlighter::localVarAttribute() const
 {
     return mLocalVarAttribute;
 }
 
-SynEditCppHighlighter::ExtTokenKind SynEditCppHighlighter::getExtTokenId()
+CppHighlighter::ExtTokenId CppHighlighter::getExtTokenId()
 {
     return mExtTokenId;
 }
 
-SynTokenKind SynEditCppHighlighter::getTokenId()
+TokenKind CppHighlighter::getTokenId()
 {
     if ((mRange.state == RangeState::rsAsm || mRange.state == RangeState::rsAsmBlock)
-            && !mAsmStart && !(mTokenId == TokenKind::Comment || mTokenId == TokenKind::Space
-                               || mTokenId == TokenKind::Null)) {
-        return TokenKind::Asm;
+            && !mAsmStart && !(mTokenId == TokenId::Comment || mTokenId == TokenId::Space
+                               || mTokenId == TokenId::Null)) {
+        return TokenId::Asm;
     } else {
         return mTokenId;
     }
 }
 
-void SynEditCppHighlighter::andSymbolProc()
+void CppHighlighter::andSymbolProc()
 {
-    mTokenId = TokenKind::Symbol;
+    mTokenId = TokenId::Symbol;
     switch (mLine[mRun+1].unicode()) {
     case '=':
         mRun+=2;
-        mExtTokenId = ExtTokenKind::AndAssign;
+        mExtTokenId = ExtTokenId::AndAssign;
         break;
     case '&':
         mRun+=2;
-        mExtTokenId = ExtTokenKind::LogAnd;
+        mExtTokenId = ExtTokenId::LogAnd;
         break;
     default:
         mRun+=1;
-        mExtTokenId = ExtTokenKind::And;
+        mExtTokenId = ExtTokenId::And;
     }
 }
 
-void SynEditCppHighlighter::ansiCppProc()
+void CppHighlighter::ansiCppProc()
 {
-    mTokenId = TokenKind::Comment;
+    mTokenId = TokenId::Comment;
     if (mLine[mRun]==0) {
         nullProc();
         if  ( (mRun<1)  || (mLine[mRun-1]!='\\')) {
@@ -309,10 +309,10 @@ void SynEditCppHighlighter::ansiCppProc()
     }
 }
 
-void SynEditCppHighlighter::ansiCProc()
+void CppHighlighter::ansiCProc()
 {
     bool finishProcess = false;
-    mTokenId = TokenKind::Comment;
+    mTokenId = TokenId::Comment;
     if (mLine[mRun].unicode() == 0) {
         nullProc();
         return;
@@ -344,9 +344,9 @@ void SynEditCppHighlighter::ansiCProc()
     }
 }
 
-void SynEditCppHighlighter::asciiCharProc()
+void CppHighlighter::asciiCharProc()
 {
-    mTokenId = TokenKind::Char;
+    mTokenId = TokenId::Char;
     do {
         if (mLine[mRun] == '\\') {
             if (mLine[mRun+1] == '\'' || mLine[mRun+1] == '\\') {
@@ -360,17 +360,17 @@ void SynEditCppHighlighter::asciiCharProc()
     mRange.state = RangeState::rsUnknown;
 }
 
-void SynEditCppHighlighter::atSymbolProc()
+void CppHighlighter::atSymbolProc()
 {
-    mTokenId = TokenKind::Unknown;
+    mTokenId = TokenId::Unknown;
     mRun+=1;
 }
 
-void SynEditCppHighlighter::braceCloseProc()
+void CppHighlighter::braceCloseProc()
 {
     mRun += 1;
-    mTokenId = TokenKind::Symbol;
-    mExtTokenId = ExtTokenKind::BraceClose;
+    mTokenId = TokenId::Symbol;
+    mExtTokenId = ExtTokenId::BraceClose;
     if (mRange.state == RangeState::rsAsmBlock) {
         mRange.state = rsUnknown;
     }
@@ -386,11 +386,11 @@ void SynEditCppHighlighter::braceCloseProc()
     popIndents(sitBrace);
 }
 
-void SynEditCppHighlighter::braceOpenProc()
+void CppHighlighter::braceOpenProc()
 {
     mRun += 1;
-    mTokenId = TokenKind::Symbol;
-    mExtTokenId = ExtTokenKind::BraceOpen;
+    mTokenId = TokenId::Symbol;
+    mExtTokenId = ExtTokenId::BraceOpen;
     if (mRange.state == RangeState::rsAsm) {
         mRange.state = RangeState::rsAsmBlock;
         mAsmStart = true;
@@ -413,34 +413,34 @@ void SynEditCppHighlighter::braceOpenProc()
     }
 }
 
-void SynEditCppHighlighter::colonProc()
+void CppHighlighter::colonProc()
 {
-    mTokenId = TokenKind::Symbol;
+    mTokenId = TokenId::Symbol;
     if (mLine[mRun+1]==':') {
         mRun+=2;
-        mExtTokenId = ExtTokenKind::ScopeResolution;
+        mExtTokenId = ExtTokenId::ScopeResolution;
     } else {
         mRun+=1;
-        mExtTokenId = ExtTokenKind::Colon;
+        mExtTokenId = ExtTokenId::Colon;
     }
 }
 
-void SynEditCppHighlighter::commaProc()
+void CppHighlighter::commaProc()
 {
     mRun+=1;
-    mTokenId = TokenKind::Symbol;
-    mExtTokenId = ExtTokenKind::Comma;
+    mTokenId = TokenId::Symbol;
+    mExtTokenId = ExtTokenId::Comma;
 }
 
-void SynEditCppHighlighter::directiveProc()
+void CppHighlighter::directiveProc()
 {
     QString preContents = mLineString.left(mRun).trimmed();
     if (!preContents.isEmpty()) { // '#' is not first non-space char on the line, treat it as an invalid char
-       mTokenId = TokenKind::Unknown;
+       mTokenId = TokenId::Unknown;
        mRun+=1;
        return;
     }
-    mTokenId = TokenKind::Directive;
+    mTokenId = TokenId::Directive;
     mRun+=1;
     //skip spaces
     while (mLine[mRun]!=0 && isSpaceChar(mLine[mRun])) {
@@ -461,17 +461,17 @@ void SynEditCppHighlighter::directiveProc()
         mRange.state = RangeState::rsUnknown;
 }
 
-void SynEditCppHighlighter::defineIdentProc()
+void CppHighlighter::defineIdentProc()
 {
-    mTokenId = TokenKind::Identifier;
+    mTokenId = TokenId::Identifier;
     while(mLine[mRun]!=0 && isIdentChar(mLine[mRun]))
         mRun++;
     mRange.state = RangeState::rsDefineRemaining;
 }
 
-void SynEditCppHighlighter::defineRemainingProc()
+void CppHighlighter::defineRemainingProc()
 {
-    mTokenId = TokenKind::Directive;
+    mTokenId = TokenId::Directive;
     do {
         switch(mLine[mRun].unicode()) {
         case '/': //comment?
@@ -497,9 +497,9 @@ void SynEditCppHighlighter::defineRemainingProc()
     mRange.state=RangeState::rsUnknown;
 }
 
-void SynEditCppHighlighter::directiveEndProc()
+void CppHighlighter::directiveEndProc()
 {
-    mTokenId = TokenKind::Directive;
+    mTokenId = TokenId::Directive;
     if (mLine[mRun] == 0) {
         nullProc();
         return;
@@ -529,42 +529,42 @@ void SynEditCppHighlighter::directiveEndProc()
     } while (mLine[mRun]!=0);
 }
 
-void SynEditCppHighlighter::equalProc()
+void CppHighlighter::equalProc()
 {
-    mTokenId = TokenKind::Symbol;
+    mTokenId = TokenId::Symbol;
     if (mLine[mRun+1] == '=') {
         mRun += 2;
-        mExtTokenId = ExtTokenKind::LogEqual;
+        mExtTokenId = ExtTokenId::LogEqual;
     } else {
         mRun += 1;
-        mExtTokenId = ExtTokenKind::Assign;
+        mExtTokenId = ExtTokenId::Assign;
     }
 }
 
-void SynEditCppHighlighter::greaterProc()
+void CppHighlighter::greaterProc()
 {
-    mTokenId = TokenKind::Symbol;
+    mTokenId = TokenId::Symbol;
     switch (mLine[mRun + 1].unicode()) {
     case '=':
         mRun += 2;
-        mExtTokenId = ExtTokenKind::GreaterThanEqual;
+        mExtTokenId = ExtTokenId::GreaterThanEqual;
         break;
     case '>':
         if (mLine[mRun+2] == '=') {
             mRun+=3;
-            mExtTokenId = ExtTokenKind::ShiftRightAssign;
+            mExtTokenId = ExtTokenId::ShiftRightAssign;
         } else {
             mRun += 2;
-            mExtTokenId = ExtTokenKind::ShiftRight;
+            mExtTokenId = ExtTokenId::ShiftRight;
         }
         break;
     default:
         mRun+=1;
-        mExtTokenId = ExtTokenKind::GreaterThan;
+        mExtTokenId = ExtTokenId::GreaterThan;
     }
 }
 
-void SynEditCppHighlighter::identProc()
+void CppHighlighter::identProc()
 {
     int wordEnd = mRun;
     while (isIdentChar(mLine[wordEnd])) {
@@ -573,94 +573,94 @@ void SynEditCppHighlighter::identProc()
     QString word = mLineString.mid(mRun,wordEnd-mRun);
     mRun=wordEnd;
     if (isKeyword(word)) {
-        mTokenId = TokenKind::Key;
+        mTokenId = TokenId::Key;
         if (CppStatementKeyWords.contains(word)) {
             pushIndents(sitStatement);
         }
     } else {
-        mTokenId = TokenKind::Identifier;
+        mTokenId = TokenId::Identifier;
     }
 }
 
-void SynEditCppHighlighter::lowerProc()
+void CppHighlighter::lowerProc()
 {
-    mTokenId = TokenKind::Symbol;
+    mTokenId = TokenId::Symbol;
     switch(mLine[mRun+1].unicode()) {
     case '=':
         mRun+=2;
-        mExtTokenId = ExtTokenKind::LessThanEqual;
+        mExtTokenId = ExtTokenId::LessThanEqual;
         break;
     case '<':
         if (mLine[mRun+2] == '=') {
             mRun+=3;
-            mExtTokenId = ExtTokenKind::ShiftLeftAssign;
+            mExtTokenId = ExtTokenId::ShiftLeftAssign;
         } else {
             mRun+=2;
-            mExtTokenId = ExtTokenKind::ShiftLeft;
+            mExtTokenId = ExtTokenId::ShiftLeft;
         }
         break;
     default:
         mRun+=1;
-        mExtTokenId = ExtTokenKind::LessThan;
+        mExtTokenId = ExtTokenId::LessThan;
     }
 }
 
-void SynEditCppHighlighter::minusProc()
+void CppHighlighter::minusProc()
 {
-    mTokenId = TokenKind::Symbol;
+    mTokenId = TokenId::Symbol;
     switch(mLine[mRun+1].unicode()) {
     case '=':
         mRun += 2;
-        mExtTokenId = ExtTokenKind::SubtractAssign;
+        mExtTokenId = ExtTokenId::SubtractAssign;
         break;
     case '-':
         mRun += 2;
-        mExtTokenId = ExtTokenKind::Decrement;
+        mExtTokenId = ExtTokenId::Decrement;
         break;
     case '>':
         if (mLine[mRun+2]=='*') {
             mRun += 3;
-            mExtTokenId = ExtTokenKind::PointerToMemberOfPointer;
+            mExtTokenId = ExtTokenId::PointerToMemberOfPointer;
         } else {
             mRun += 2;
-            mExtTokenId = ExtTokenKind::Arrow;
+            mExtTokenId = ExtTokenId::Arrow;
         }
         break;
     default:
         mRun += 1;
-        mExtTokenId = ExtTokenKind::Subtract;
+        mExtTokenId = ExtTokenId::Subtract;
     }
 }
 
-void SynEditCppHighlighter::modSymbolProc()
+void CppHighlighter::modSymbolProc()
 {
-    mTokenId = TokenKind::Symbol;
+    mTokenId = TokenId::Symbol;
     switch(mLine[mRun + 1].unicode()) {
     case '=':
         mRun += 2;
-        mExtTokenId = ExtTokenKind::ModAssign;
+        mExtTokenId = ExtTokenId::ModAssign;
         break;
     default:
         mRun += 1;
-        mExtTokenId = ExtTokenKind::Mod;
+        mExtTokenId = ExtTokenId::Mod;
     }
 }
 
-void SynEditCppHighlighter::notSymbolProc()
+void CppHighlighter::notSymbolProc()
 {
-    mTokenId = TokenKind::Symbol;
+    mTokenId = TokenId::Symbol;
     switch(mLine[mRun + 1].unicode()) {
     case '=':
         mRun+=2;
-        mExtTokenId = ExtTokenKind::NotEqual;
+        mExtTokenId = ExtTokenId::NotEqual;
         break;
     default:
         mRun+=1;
-        mExtTokenId = ExtTokenKind::LogComplement;
+        mExtTokenId = ExtTokenId::LogComplement;
     }
 }
 
-void SynEditCppHighlighter::nullProc()
+void CppHighlighter::nullProc()
 {
     if ((mRun-1>=0) && isSpaceChar(mLine[mRun-1]) &&
     (mRange.state == RangeState::rsCppComment
@@ -670,45 +670,45 @@ void SynEditCppHighlighter::nullProc()
      || mRange.state == RangeState::rsMultiLineDirective) ) {
         mRange.state = RangeState::rsUnknown;
     } else
-        mTokenId = TokenKind::Null;
+        mTokenId = TokenId::Null;
 }
 
-void SynEditCppHighlighter::numberProc()
+void CppHighlighter::numberProc()
 {
     int idx1; // token[1]
     idx1 = mRun;
     mRun+=1;
-    mTokenId = TokenKind::Number;
+    mTokenId = TokenId::Number;
     bool shouldExit = false;
     while (mLine[mRun]!=0) {
         switch(mLine[mRun].unicode()) {
         case '\'':
-            if (mTokenId != TokenKind::Number) {
-                mTokenId = TokenKind::Symbol;
+            if (mTokenId != TokenId::Number) {
+                mTokenId = TokenId::Symbol;
                 return;
             }
             break;
         case '.':
             if (mLine[mRun+1] == '.') {
                 mRun+=2;
-                mTokenId = TokenKind::Unknown;
+                mTokenId = TokenId::Unknown;
                 return;
-            } else if (mTokenId != TokenKind::Hex) {
-                mTokenId = TokenKind::Float;
+            } else if (mTokenId != TokenId::Hex) {
+                mTokenId = TokenId::Float;
             } else {
-                mTokenId = TokenKind::Unknown;
+                mTokenId = TokenId::Unknown;
                 return;
             }
             break;
         case '-':
         case '+':
-            if (mTokenId != TokenKind::Float) // number <> float. an arithmetic operator
+            if (mTokenId != TokenId::Float) // number <> float. an arithmetic operator
                 return;
             if (mLine[mRun-1]!= 'e' && mLine[mRun-1]!='E')  // number = float, but no exponent. an arithmetic operator
                 return;
             if (mLine[mRun+1]<'0' || mLine[mRun+1]>'9')  {// invalid
                 mRun+=1;
-                mTokenId = TokenKind::Unknown;
+                mTokenId = TokenId::Unknown;
                 return;
             }
             break;
@@ -721,13 +721,13 @@ void SynEditCppHighlighter::numberProc()
         case '6':
         case '7':
             if ((mRun == idx1+1) && (mLine[idx1] == '0')) { // octal number
-                mTokenId = TokenKind::Octal;
+                mTokenId = TokenId::Octal;
             }
             break;
         case '8':
         case '9':
-            if ( (mLine[idx1]=='0') && (mTokenId != TokenKind::Hex)  && (mTokenId != TokenKind::Float) ) // invalid octal char
-                mTokenId = TokenKind::Unknown; // we must continue parse, it may be an float number
+            if ( (mLine[idx1]=='0') && (mTokenId != TokenId::Hex)  && (mTokenId != TokenId::Float) ) // invalid octal char
+                mTokenId = TokenId::Unknown; // we must continue parse, it may be an float number
             break;
         case 'a':
         case 'b':
@@ -737,52 +737,52 @@ void SynEditCppHighlighter::numberProc()
         case 'B':
         case 'C':
         case 'D':
-            if (mTokenId!=TokenKind::Hex) { //invalid
-                mTokenId = TokenKind::Unknown;
+            if (mTokenId!=TokenId::Hex) { //invalid
+                mTokenId = TokenId::Unknown;
                 return;
             }
             break;
         case 'e':
         case 'E':
-            if (mTokenId!=TokenKind::Hex) {
+            if (mTokenId!=TokenId::Hex) {
                 if (mLine[mRun-1]>='0' || mLine[mRun-1]<='9' ) {//exponent
                     for (int i=idx1;i<mRun;i++) {
                         if (mLine[i] == 'e' || mLine[i]=='E') { // too many exponents
                             mRun+=1;
-                            mTokenId = TokenKind::Unknown;
+                            mTokenId = TokenId::Unknown;
                             return;
                         }
                     }
                     if (mLine[mRun+1]!='+' && mLine[mRun+1]!='-' && !(mLine[mRun+1]>='0' && mLine[mRun+1]<='9')) {
                         return;
                     } else {
-                        mTokenId = TokenKind::Float;
+                        mTokenId = TokenId::Float;
                     }
                 } else {
                     mRun+=1;
-                    mTokenId = TokenKind::Unknown;
+                    mTokenId = TokenId::Unknown;
                     return;
                 }
             }
             break;
         case 'f':
         case 'F':
-            if (mTokenId!=TokenKind::Hex) {
+            if (mTokenId!=TokenId::Hex) {
                 for (int i=idx1;i<mRun;i++) {
                     if (mLine[i] == 'f' || mLine[i]=='F') {
                         mRun+=1;
-                        mTokenId = TokenKind::Unknown;
+                        mTokenId = TokenId::Unknown;
                         return;
                     }
                 }
-                if (mTokenId == TokenKind::Float) {
+                if (mTokenId == TokenId::Float) {
                     if (mLine[mRun-1]=='l' || mLine[mRun-1]=='L') {
                         mRun+=1;
-                        mTokenId = TokenKind::Unknown;
+                        mTokenId = TokenId::Unknown;
                         return;
                     }
                 } else {
-                    mTokenId = TokenKind::Float;
+                    mTokenId = TokenId::Float;
                 }
             }
             break;
@@ -791,27 +791,27 @@ void SynEditCppHighlighter::numberProc()
             for (int i=idx1;i<=mRun-2;i++) {
                 if (mLine[i] == 'l' && mLine[i]=='L') {
                     mRun+=1;
-                    mTokenId = TokenKind::Unknown;
+                    mTokenId = TokenId::Unknown;
                     return;
                 }
             }
-            if (mTokenId == TokenKind::Float && (mLine[mRun-1]=='f' || mLine[mRun-1]=='F')) {
+            if (mTokenId == TokenId::Float && (mLine[mRun-1]=='f' || mLine[mRun-1]=='F')) {
                 mRun+=1;
-                mTokenId = TokenKind::Unknown;
+                mTokenId = TokenId::Unknown;
                 return;
             }
             break;
         case 'u':
         case 'U':
-            if (mTokenId == TokenKind::Float) {
+            if (mTokenId == TokenId::Float) {
                 mRun+=1;
-                mTokenId = TokenKind::Unknown;
+                mTokenId = TokenId::Unknown;
                 return;
             } else {
                 for (int i=idx1;i<mRun;i++) {
                     if (mLine[i] == 'u' || mLine[i]=='U') {
                         mRun+=1;
-                        mTokenId = TokenKind::Unknown;
+                        mTokenId = TokenId::Unknown;
                         return;
                     }
                 }
@@ -823,10 +823,10 @@ void SynEditCppHighlighter::numberProc()
                     ((mLine[mRun+1]>='0' && mLine[mRun+1]<='9')
                      || (mLine[mRun+1]>='a' && mLine[mRun+1]<='f')
                      || (mLine[mRun+1]>='A' && mLine[mRun+1]<='F')) ) {
-                mTokenId = TokenKind::Hex;
+                mTokenId = TokenId::Hex;
             } else {
                 mRun+=1;
-                mTokenId = TokenKind::Unknown;
+                mTokenId = TokenId::Unknown;
                 return;
             }
             break;
@@ -839,76 +839,76 @@ void SynEditCppHighlighter::numberProc()
         mRun+=1;        
     }
     if (mLine[mRun-1] == '\'') {
-        mTokenId = TokenKind::Unknown;
+        mTokenId = TokenId::Unknown;
     }
 }
 
-void SynEditCppHighlighter::orSymbolProc()
+void CppHighlighter::orSymbolProc()
 {
-    mTokenId = TokenKind::Symbol;
+    mTokenId = TokenId::Symbol;
     switch ( mLine[mRun+1].unicode()) {
     case '=':
         mRun+=2;
-        mExtTokenId = ExtTokenKind::IncOrAssign;
+        mExtTokenId = ExtTokenId::IncOrAssign;
         break;
     case '|':
         mRun+=2;
-        mExtTokenId = ExtTokenKind::LogOr;
+        mExtTokenId = ExtTokenId::LogOr;
         break;
     default:
         mRun+=1;
-        mExtTokenId = ExtTokenKind::IncOr;
+        mExtTokenId = ExtTokenId::IncOr;
     }
 }
 
-void SynEditCppHighlighter::plusProc()
+void CppHighlighter::plusProc()
 {
-    mTokenId = TokenKind::Symbol;
+    mTokenId = TokenId::Symbol;
     switch(mLine[mRun+1].unicode()){
     case '=':
         mRun+=2;
-        mExtTokenId = ExtTokenKind::AddAssign;
+        mExtTokenId = ExtTokenId::AddAssign;
         break;
     case '+':
         mRun+=2;
-        mExtTokenId = ExtTokenKind::Increment;
+        mExtTokenId = ExtTokenId::Increment;
         break;
     default:
         mRun+=1;
-        mExtTokenId = ExtTokenKind::Add;
+        mExtTokenId = ExtTokenId::Add;
     }
 }
 
-void SynEditCppHighlighter::pointProc()
+void CppHighlighter::pointProc()
 {
-    mTokenId = TokenKind::Symbol;
+    mTokenId = TokenId::Symbol;
     if (mLine[mRun+1] == '*' ) {
         mRun+=2;
-        mExtTokenId = ExtTokenKind::PointerToMemberOfObject;
+        mExtTokenId = ExtTokenId::PointerToMemberOfObject;
     } else if (mLine[mRun+1] == '.' && mLine[mRun+2] == '.') {
         mRun+=3;
-        mExtTokenId = ExtTokenKind::Ellipse;
+        mExtTokenId = ExtTokenId::Ellipse;
     } else if (mLine[mRun+1]>='0' && mLine[mRun+1]<='9') {
         numberProc();
     } else {
         mRun+=1;
-        mExtTokenId = ExtTokenKind::Point;
+        mExtTokenId = ExtTokenId::Point;
     }
 }
 
-void SynEditCppHighlighter::questionProc()
+void CppHighlighter::questionProc()
 {
-    mTokenId = TokenKind::Symbol;
-    mExtTokenId = ExtTokenKind::Question;
+    mTokenId = TokenId::Symbol;
+    mExtTokenId = ExtTokenId::Question;
     mRun+=1;
 }
 
-void SynEditCppHighlighter::rawStringProc()
+void CppHighlighter::rawStringProc()
 {
     bool noEscaping = false;
     if (mRange.state == RangeState::rsRawStringNotEscaping)
         noEscaping = true;
-    mTokenId = TokenKind::RawString;
+    mTokenId = TokenId::RawString;
     mRange.state = RangeState::rsRawString;
 
     while (mLine[mRun]!=0) {
@@ -929,31 +929,31 @@ void SynEditCppHighlighter::rawStringProc()
     mRange.state = RangeState::rsUnknown;
 }
 
-void SynEditCppHighlighter::roundCloseProc()
+void CppHighlighter::roundCloseProc()
 {
     mRun += 1;
-    mTokenId = TokenKind::Symbol;
-    mExtTokenId = ExtTokenKind::RoundClose;
+    mTokenId = TokenId::Symbol;
+    mExtTokenId = ExtTokenId::RoundClose;
     mRange.parenthesisLevel--;
     if (mRange.parenthesisLevel<0)
         mRange.parenthesisLevel=0;
     popIndents(sitParenthesis);
 }
 
-void SynEditCppHighlighter::roundOpenProc()
+void CppHighlighter::roundOpenProc()
 {
     mRun += 1;
-    mTokenId = TokenKind::Symbol;
-    mExtTokenId = ExtTokenKind::RoundOpen;
+    mTokenId = TokenId::Symbol;
+    mExtTokenId = ExtTokenId::RoundOpen;
     mRange.parenthesisLevel++;
     pushIndents(sitParenthesis);
 }
 
-void SynEditCppHighlighter::semiColonProc()
+void CppHighlighter::semiColonProc()
 {
     mRun += 1;
-    mTokenId = TokenKind::Symbol;
-    mExtTokenId = ExtTokenKind::SemiColon;
+    mTokenId = TokenId::Symbol;
+    mExtTokenId = ExtTokenId::SemiColon;
     if (mRange.state == RangeState::rsAsm)
         mRange.state = RangeState::rsUnknown;
     while (mRange.getLastIndent() == sitStatement) {
@@ -961,16 +961,16 @@ void SynEditCppHighlighter::semiColonProc()
     }
 }
 
-void SynEditCppHighlighter::slashProc()
+void CppHighlighter::slashProc()
 {
     switch(mLine[mRun+1].unicode()) {
     case '/': // Cpp style comment
-        mTokenId = TokenKind::Comment;
+        mTokenId = TokenId::Comment;
         mRun+=2;
         mRange.state = RangeState::rsCppComment;
         return;
     case '*': // C style comment
-        mTokenId = TokenKind::Comment;
+        mTokenId = TokenId::Comment;
         if (mRange.state == RangeState::rsAsm) {
             mRange.state = RangeState::rsAnsiCAsm;
         } else if (mRange.state == RangeState::rsAsmBlock) {
@@ -986,71 +986,71 @@ void SynEditCppHighlighter::slashProc()
         break;
     case '=':
         mRun+=2;
-        mTokenId = TokenKind::Symbol;
-        mExtTokenId = ExtTokenKind::DivideAssign;
+        mTokenId = TokenId::Symbol;
+        mExtTokenId = ExtTokenId::DivideAssign;
         break;
     default:
         mRun += 1;
-        mTokenId = TokenKind::Symbol;
-        mExtTokenId = ExtTokenKind::Divide;
+        mTokenId = TokenId::Symbol;
+        mExtTokenId = ExtTokenId::Divide;
     }
 }
 
-void SynEditCppHighlighter::backSlashProc()
+void CppHighlighter::backSlashProc()
 {
     if (mLine[mRun+1]==0) {
-        mTokenId = TokenKind::Symbol;
-        mExtTokenId = ExtTokenKind::BackSlash;
+        mTokenId = TokenId::Symbol;
+        mExtTokenId = ExtTokenId::BackSlash;
     } else {
-        mTokenId = TokenKind::Unknown;
+        mTokenId = TokenId::Unknown;
     }
     mRun+=1;
 }
 
-void SynEditCppHighlighter::spaceProc()
+void CppHighlighter::spaceProc()
 {
     mRun += 1;
-    mTokenId = TokenKind::Space;
+    mTokenId = TokenId::Space;
     while (mLine[mRun]>=1 && mLine[mRun]<=32)
         mRun+=1;
     mRange.state = RangeState::rsUnknown;
 }
 
-void SynEditCppHighlighter::squareCloseProc()
+void CppHighlighter::squareCloseProc()
 {
     mRun+=1;
-    mTokenId = TokenKind::Symbol;
-    mExtTokenId = ExtTokenKind::SquareClose;
+    mTokenId = TokenId::Symbol;
+    mExtTokenId = ExtTokenId::SquareClose;
     mRange.bracketLevel--;
     if (mRange.bracketLevel<0)
         mRange.bracketLevel=0;
     popIndents(sitBracket);
 }
 
-void SynEditCppHighlighter::squareOpenProc()
+void CppHighlighter::squareOpenProc()
 {
     mRun+=1;
-    mTokenId = TokenKind::Symbol;
-    mExtTokenId = ExtTokenKind::SquareOpen;
+    mTokenId = TokenId::Symbol;
+    mExtTokenId = ExtTokenId::SquareOpen;
     mRange.bracketLevel++;
     pushIndents(sitBracket);
 }
 
-void SynEditCppHighlighter::starProc()
+void CppHighlighter::starProc()
 {
-    mTokenId = TokenKind::Symbol;
+    mTokenId = TokenId::Symbol;
     if (mLine[mRun+1] == '=') {
         mRun += 2;
-        mExtTokenId = ExtTokenKind::MultiplyAssign;
+        mExtTokenId = ExtTokenId::MultiplyAssign;
     } else {
         mRun += 1;
-        mExtTokenId = ExtTokenKind::Star;
+        mExtTokenId = ExtTokenId::Star;
     }
 }
 
-void SynEditCppHighlighter::stringEndProc()
+void CppHighlighter::stringEndProc()
 {
-    mTokenId = TokenKind::String;
+    mTokenId = TokenId::String;
     if (mLine[mRun]==0) {
         nullProc();
         return;
@@ -1100,9 +1100,9 @@ void SynEditCppHighlighter::stringEndProc()
     }
 }
 
-void SynEditCppHighlighter::stringEscapeSeqProc()
+void CppHighlighter::stringEscapeSeqProc()
 {
-    mTokenId = TokenKind::StringEscapeSeq;
+    mTokenId = TokenId::StringEscapeSeq;
     mRun+=1;
     switch(mLine[mRun].unicode()) {
     case '\'':
@@ -1134,7 +1134,7 @@ void SynEditCppHighlighter::stringEscapeSeqProc()
         break;
     case '8':
     case '9':
-        mTokenId = TokenKind::Unknown;
+        mTokenId = TokenId::Unknown;
         mRun+=1;
         break;
     case 'x':
@@ -1144,7 +1144,7 @@ void SynEditCppHighlighter::stringEscapeSeqProc()
                ||  (mLine[mRun]>='a' && mLine[mRun]<='f')
                ||  (mLine[mRun]>='A' && mLine[mRun]<='F')
                 )) {
-            mTokenId = TokenKind::Unknown;
+            mTokenId = TokenId::Unknown;
         } else {
             while (
                    (mLine[mRun]>='0' && mLine[mRun]<='9')
@@ -1159,7 +1159,7 @@ void SynEditCppHighlighter::stringEscapeSeqProc()
         mRun+=1;
         for (int i=0;i<4;i++) {
             if (mLine[mRun]<'0' || mLine[mRun]>'7') {
-                mTokenId = TokenKind::Unknown;
+                mTokenId = TokenId::Unknown;
                 return;
             }
             mRun+=1;
@@ -1169,7 +1169,7 @@ void SynEditCppHighlighter::stringEscapeSeqProc()
         mRun+=1;
         for (int i=0;i<8;i++) {
             if (mLine[mRun]<'0' || mLine[mRun]>'7') {
-                mTokenId = TokenKind::Unknown;
+                mTokenId = TokenId::Unknown;
                 return;
             }
             mRun+=1;
@@ -1182,13 +1182,13 @@ void SynEditCppHighlighter::stringEscapeSeqProc()
         mRange.state = RangeState::rsString;
 }
 
-void SynEditCppHighlighter::stringProc()
+void CppHighlighter::stringProc()
 {
     if (mLine[mRun] == 0) {
         mRange.state = RangeState::rsUnknown;
         return;
     }
-    mTokenId = TokenKind::String;
+    mTokenId = TokenId::String;
     mRange.state = RangeState::rsString;
     while (mLine[mRun]!=0) {
         if (mLine[mRun]=='"') {
@@ -1234,9 +1234,9 @@ void SynEditCppHighlighter::stringProc()
     mRange.state = RangeState::rsUnknown;
 }
 
-void SynEditCppHighlighter::stringStartProc()
+void CppHighlighter::stringStartProc()
 {
-    mTokenId = TokenKind::String;
+    mTokenId = TokenId::String;
     mRun += 1;
     if (mLine[mRun]==0) {
         mRange.state = RangeState::rsUnknown;
@@ -1245,32 +1245,32 @@ void SynEditCppHighlighter::stringStartProc()
     stringProc();
 }
 
-void SynEditCppHighlighter::tildeProc()
+void CppHighlighter::tildeProc()
 {
     mRun+=1;
-    mTokenId = TokenKind::Symbol;
-    mExtTokenId = ExtTokenKind::BitComplement;
+    mTokenId = TokenId::Symbol;
+    mExtTokenId = ExtTokenId::BitComplement;
 }
 
-void SynEditCppHighlighter::unknownProc()
+void CppHighlighter::unknownProc()
 {
     mRun+=1;
-    mTokenId = TokenKind::Unknown;
+    mTokenId = TokenId::Unknown;
 }
 
-void SynEditCppHighlighter::xorSymbolProc()
+void CppHighlighter::xorSymbolProc()
 {
-    mTokenId = TokenKind::Symbol;
+    mTokenId = TokenId::Symbol;
     if (mLine[mRun+1]=='=') {
         mRun+=2;
-        mExtTokenId = ExtTokenKind::XorAssign;
+        mExtTokenId = ExtTokenId::XorAssign;
     } else {
         mRun+=1;
-        mExtTokenId = ExtTokenKind::Xor;
+        mExtTokenId = ExtTokenId::Xor;
     }
 }
 
-void SynEditCppHighlighter::processChar()
+void CppHighlighter::processChar()
 {
     switch(mLine[mRun].unicode()) {
     case '&':
@@ -1390,7 +1390,7 @@ void SynEditCppHighlighter::processChar()
     }
 }
 
-void SynEditCppHighlighter::popIndents(int indentType)
+void CppHighlighter::popIndents(int indentType)
 {
     while (!mRange.indents.isEmpty() && mRange.indents.back()!=indentType) {
         mRange.indents.pop_back();
@@ -1404,7 +1404,7 @@ void SynEditCppHighlighter::popIndents(int indentType)
     }
 }
 
-void SynEditCppHighlighter::pushIndents(int indentType)
+void CppHighlighter::pushIndents(int indentType)
 {
     int idx = mRange.indents.length();
     if (idx<mRange.firstIndentThisLine)
@@ -1412,17 +1412,17 @@ void SynEditCppHighlighter::pushIndents(int indentType)
     mRange.indents.push_back(indentType);
 }
 
-bool SynEditCppHighlighter::getTokenFinished() const
+bool CppHighlighter::getTokenFinished() const
 {
-    if (mTokenId == TokenKind::Comment
-            || mTokenId == TokenKind::String
-            || mTokenId == TokenKind::RawString) {
+    if (mTokenId == TokenId::Comment
+            || mTokenId == TokenId::String
+            || mTokenId == TokenId::RawString) {
         return mRange.state == RangeState::rsUnknown;
     }
     return true;
 }
 
-bool SynEditCppHighlighter::isLastLineCommentNotFinished(int state) const
+bool CppHighlighter::isLastLineCommentNotFinished(int state) const
 {
     return (state == RangeState::rsAnsiC ||
             state == RangeState::rsAnsiCAsm ||
@@ -1431,73 +1431,73 @@ bool SynEditCppHighlighter::isLastLineCommentNotFinished(int state) const
             state == RangeState::rsCppComment);
 }
 
-bool SynEditCppHighlighter::isLastLineStringNotFinished(int state) const
+bool CppHighlighter::isLastLineStringNotFinished(int state) const
 {
     return state == RangeState::rsMultiLineString;
 }
 
-bool SynEditCppHighlighter::eol() const
+bool CppHighlighter::eol() const
 {
-    return mTokenId == TokenKind::Null;
+    return mTokenId == TokenId::Null;
 }
 
-QString SynEditCppHighlighter::getToken() const
+QString CppHighlighter::getToken() const
 {
     return mLineString.mid(mTokenPos,mRun-mTokenPos);
 }
 
-PSynHighlighterAttribute SynEditCppHighlighter::getTokenAttribute() const
+PHighlighterAttribute CppHighlighter::getTokenAttribute() const
 {
     switch (mTokenId) {
-    case TokenKind::Asm:
+    case TokenId::Asm:
         return mAsmAttribute;
-    case TokenKind::Comment:
+    case TokenId::Comment:
         return mCommentAttribute;
-    case TokenKind::Directive:
+    case TokenId::Directive:
         return mPreprocessorAttribute;
-    case TokenKind::Identifier:
+    case TokenId::Identifier:
         return mIdentifierAttribute;
-    case TokenKind::Key:
+    case TokenId::Key:
         return mKeywordAttribute;
-    case TokenKind::Number:
+    case TokenId::Number:
         return mNumberAttribute;
-    case TokenKind::Float:
-    case TokenKind::HexFloat:
+    case TokenId::Float:
+    case TokenId::HexFloat:
         return mFloatAttribute;
-    case TokenKind::Hex:
+    case TokenId::Hex:
         return mHexAttribute;
-    case TokenKind::Octal:
+    case TokenId::Octal:
         return mOctAttribute;
-    case TokenKind::Space:
+    case TokenId::Space:
         return mWhitespaceAttribute;
-    case TokenKind::String:
+    case TokenId::String:
         return mStringAttribute;
-    case TokenKind::StringEscapeSeq:
+    case TokenId::StringEscapeSeq:
         return mStringEscapeSequenceAttribute;
-    case TokenKind::RawString:
+    case TokenId::RawString:
         return mStringAttribute;
-    case TokenKind::Char:
+    case TokenId::Char:
         return mCharAttribute;
-    case TokenKind::Symbol:
+    case TokenId::Symbol:
         return mSymbolAttribute;
-    case TokenKind::Unknown:
+    case TokenId::Unknown:
         return mInvalidAttribute;
     default:
         return mInvalidAttribute;
     }
 }
 
-SynTokenKind SynEditCppHighlighter::getTokenKind()
+TokenKind CppHighlighter::getTokenKind()
 {
     return mTokenId;
 }
 
-int SynEditCppHighlighter::getTokenPos()
+int CppHighlighter::getTokenPos()
 {
     return mTokenPos;
 }
 
-void SynEditCppHighlighter::next()
+void CppHighlighter::next()
 {
     mAsmStart = false;
     mTokenPos = mRun;
@@ -1532,7 +1532,7 @@ void SynEditCppHighlighter::next()
         case RangeState::rsChar:
             if (mLine[mRun]=='\'') {
                 mRange.state = rsUnknown;
-                mTokenId = TokenKind::Char;
+                mTokenId = TokenId::Char;
                 mRun+=1;
             } else {
                 asciiCharProc();
@@ -1558,10 +1558,10 @@ void SynEditCppHighlighter::next()
             } else
                 processChar();
         }
-    } while (mTokenId!=TokenKind::Null && mRun<=mTokenPos);
+    } while (mTokenId!=TokenId::Null && mRun<=mTokenPos);
 }
 
-void SynEditCppHighlighter::setLine(const QString &newLine, int lineNumber)
+void CppHighlighter::setLine(const QString &newLine, int lineNumber)
 {
     mLineString = newLine;
     mLine = mLineString.data();
@@ -1574,23 +1574,23 @@ void SynEditCppHighlighter::setLine(const QString &newLine, int lineNumber)
     next();
 }
 
-bool SynEditCppHighlighter::isKeyword(const QString &word)
+bool CppHighlighter::isKeyword(const QString &word)
 {
     return Keywords.contains(word);
 }
 
-SynHighlighterTokenType SynEditCppHighlighter::getTokenType()
+TokenType CppHighlighter::getTokenType()
 {
     switch(mTokenId) {
-    case TokenKind::Comment:
-        return SynHighlighterTokenType::Comment;
-    case TokenKind::Directive:
-        return SynHighlighterTokenType::PreprocessDirective;
-    case TokenKind::Identifier:
-        return SynHighlighterTokenType::Identifier;
-    case TokenKind::Key:
-        return SynHighlighterTokenType::Keyword;
-    case TokenKind::Space:
+    case TokenId::Comment:
+        return TokenType::Comment;
+    case TokenId::Directive:
+        return TokenType::PreprocessDirective;
+    case TokenId::Identifier:
+        return TokenType::Identifier;
+    case TokenId::Key:
+        return TokenType::Keyword;
+    case TokenId::Space:
         switch (mRange.state) {
         case RangeState::rsAnsiC:
         case RangeState::rsAnsiCAsm:
@@ -1599,39 +1599,39 @@ SynHighlighterTokenType SynEditCppHighlighter::getTokenType()
         case RangeState::rsAsmBlock:
         case RangeState::rsDirectiveComment:
         case RangeState::rsCppComment:
-            return SynHighlighterTokenType::Comment;
+            return TokenType::Comment;
         case RangeState::rsDirective:
         case RangeState::rsMultiLineDirective:
-            return SynHighlighterTokenType::PreprocessDirective;
+            return TokenType::PreprocessDirective;
         case RangeState::rsString:
         case RangeState::rsMultiLineString:
         case RangeState::rsStringEscapeSeq:
         case RangeState::rsMultiLineStringEscapeSeq:
         case RangeState::rsRawString:
-            return SynHighlighterTokenType::String;
+            return TokenType::String;
         case RangeState::rsChar :
-            return SynHighlighterTokenType::Character;
+            return TokenType::Character;
         default:
-            return SynHighlighterTokenType::Space;
+            return TokenType::Space;
         }
-    case TokenKind::String:
-        return SynHighlighterTokenType::String;
-    case TokenKind::StringEscapeSeq:
-        return SynHighlighterTokenType::StringEscapeSequence;
-    case TokenKind::RawString:
-        return SynHighlighterTokenType::String;
-    case TokenKind::Char:
-        return SynHighlighterTokenType::Character;
-    case TokenKind::Symbol:
-        return SynHighlighterTokenType::Symbol;
-    case TokenKind::Number:
-        return SynHighlighterTokenType::Number;
+    case TokenId::String:
+        return TokenType::String;
+    case TokenId::StringEscapeSeq:
+        return TokenType::StringEscapeSequence;
+    case TokenId::RawString:
+        return TokenType::String;
+    case TokenId::Char:
+        return TokenType::Character;
+    case TokenId::Symbol:
+        return TokenType::Symbol;
+    case TokenId::Number:
+        return TokenType::Number;
     default:
-        return SynHighlighterTokenType::Default;
+        return TokenType::Default;
     }
 }
 
-void SynEditCppHighlighter::setState(const SynRangeState& rangeState)
+void CppHighlighter::setState(const HighlighterState& rangeState)
 {
     mRange = rangeState;
     // current line's left / right parenthesis count should be reset before parsing each line
@@ -1641,7 +1641,7 @@ void SynEditCppHighlighter::setState(const SynRangeState& rangeState)
     mRange.matchingIndents.clear();
 }
 
-void SynEditCppHighlighter::resetState()
+void CppHighlighter::resetState()
 {
     mRange.state = RangeState::rsUnknown;
     mRange.braceLevel = 0;
@@ -1655,42 +1655,42 @@ void SynEditCppHighlighter::resetState()
     mAsmStart = false;
 }
 
-SynHighlighterClass SynEditCppHighlighter::getClass() const
+HighlighterClass CppHighlighter::getClass() const
 {
-    return SynHighlighterClass::CppHighlighter;
+    return HighlighterClass::CppHighlighter;
 }
 
-QString SynEditCppHighlighter::getName() const
+QString CppHighlighter::getName() const
 {
     return SYN_HIGHLIGHTER_CPP;
 }
 
-QString SynEditCppHighlighter::languageName()
+QString CppHighlighter::languageName()
 {
     return "cpp";
 }
 
-SynHighlighterLanguage SynEditCppHighlighter::language()
+HighlighterLanguage CppHighlighter::language()
 {
-    return SynHighlighterLanguage::Cpp;
+    return HighlighterLanguage::Cpp;
 }
 
-SynRangeState SynEditCppHighlighter::getRangeState() const
+HighlighterState CppHighlighter::getState() const
 {
     return mRange;
 }
 
-bool SynEditCppHighlighter::isIdentChar(const QChar &ch) const
+bool CppHighlighter::isIdentChar(const QChar &ch) const
 {
     return ch=='_' || ch.isDigit() || ch.isLetter();
 }
 
-QSet<QString> SynEditCppHighlighter::keywords() const
+QSet<QString> CppHighlighter::keywords() const
 {
     return Keywords;
 }
 
-QString SynEditCppHighlighter::foldString()
+QString CppHighlighter::foldString()
 {
     return "...}";
 }
