@@ -352,6 +352,7 @@ QString Compiler::getCharsetArgument(const QByteArray& encoding,FileType fileTyp
         } else {
             execEncodingName = compilerSetExecCharset;
         }
+        qDebug()<<encodingName<<execEncodingName;
         if (checkSyntax) {
             result += QString(" -finput-charset=%1")
                     .arg(encodingName);

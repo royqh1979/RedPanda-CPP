@@ -1292,6 +1292,7 @@ void Editor::showEvent(QShowEvent */*event*/)
                 &CppParser::onEndParsing,
                 this,
                 &QSynedit::SynEdit::invalidate);
+        resetCppParser(mParser);
         reparse();
     }
 

@@ -6,6 +6,7 @@ Red Panda C++ Version 1.4
   - change: when create non-text project file, don't auto open it
   - fix: the project compiler options is not correctly read  when open old dev-c++ project 
   - fix: astyle.exe can't correctly format files that using non-ascii identifier
+  - fix: when "cleary symbol table of hidden editors" is turned on, content in the editor reshown is not correctly parsed
 
 Red Panda C++ Version 1.3
 

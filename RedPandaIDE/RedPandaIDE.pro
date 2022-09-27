@@ -53,14 +53,15 @@ msvc {
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 
-CONFIG(debug_and_release_target): {
-    CONFIG(debug): {
+CONFIG(debug_and_release_target) {
+    CONFIG(debug, debug|release) {
         OBJ_OUT_PWD = debug
     }
-    CONFIG(release): {
+    CONFIG(release, debug|release) {
         OBJ_OUT_PWD = release
     }
 }
+
 INCLUDEPATH += ../libs/qsynedit ../libs/redpanda_qt_utils
 LIBS += -L$$OUT_PWD/../libs/redpanda_qt_utils/$$OBJ_OUT_PWD \
     -L$$OUT_PWD/../libs/qsynedit/$$OBJ_OUT_PWD \
