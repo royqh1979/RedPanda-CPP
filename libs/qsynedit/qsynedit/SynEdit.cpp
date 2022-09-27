@@ -3078,6 +3078,8 @@ void SynEdit::doPasteFromClipboard()
     QString text = clipboard->text();
     if (text.isEmpty())
         return;
+    //correctly handle spaces copied from wechat
+//    text.replace(QChar(0x00A0),QChar(0x0020));
     mUndoList->beginBlock();
 //    if (selAvail()) {
 //        mUndoList->AddChange(
