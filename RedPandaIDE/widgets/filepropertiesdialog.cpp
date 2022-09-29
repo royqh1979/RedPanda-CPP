@@ -19,7 +19,7 @@
 #include "../mainwindow.h"
 #include "../editorlist.h"
 #include "../editor.h"
-#include "../qsynedit/Constants.h"
+#include <qsynedit/Constants.h>
 
 #include <QFileInfo>
 
@@ -56,8 +56,8 @@ void FilePropertiesDialog::calcFile(Editor *editor,
         while (j<line.length() && (line[j]=='\t' || line[j]==' '))
             j++;
         QString token;
-        PSynHighlighterAttribute attr;
-        if (editor->getHighlighterAttriAtRowCol(BufferCoord{j+1,i+1},
+        QSynedit::PHighlighterAttribute attr;
+        if (editor->getHighlighterAttriAtRowCol(QSynedit::BufferCoord{j+1,i+1},
                                                 token,attr)) {
             // if it is preprocessor...
             if (attr->name() == SYNS_AttrPreprocessor) {

@@ -10,7 +10,7 @@ isEmpty(APP_NAME) {
 }
 
 isEmpty(APP_VERSION) {
-    APP_VERSION=1.2
+    APP_VERSION=1.4
 }
 
 macos: {
@@ -52,6 +52,21 @@ msvc {
 # In order to do so, uncomment the following line.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
+
+CONFIG(debug_and_release_target) {
+    CONFIG(debug, debug|release) {
+        OBJ_OUT_PWD = debug
+    }
+    CONFIG(release, debug|release) {
+        OBJ_OUT_PWD = release
+    }
+}
+
+INCLUDEPATH += ../libs/qsynedit ../libs/redpanda_qt_utils
+LIBS += -L$$OUT_PWD/../libs/redpanda_qt_utils/$$OBJ_OUT_PWD \
+    -L$$OUT_PWD/../libs/qsynedit/$$OBJ_OUT_PWD \
+    -lqsynedit -lredpanda_qt_utils
+
 SOURCES += \
     HighlighterManager.cpp \
     autolinkmanager.cpp \
@@ -65,7 +80,6 @@ SOURCES += \
     compiler/runner.cpp \
     customfileiconprovider.cpp \
     gdbmiresultparser.cpp \
-    platform.cpp \
     compiler/compiler.cpp \
     compiler/compilermanager.cpp \
     compiler/executablerunner.cpp \
@@ -82,10 +96,6 @@ SOURCES += \
     project.cpp \
     projectoptions.cpp \
     projecttemplate.cpp \
-    qsynedit/Search.cpp \
-    qsynedit/SearchBase.cpp \
-    qsynedit/SearchRegex.cpp \
-    qsynedit/Types.cpp \
     settingsdialog/compilerautolinkwidget.cpp \
     settingsdialog/debuggeneralwidget.cpp \
     settingsdialog/editorautosavewidget.cpp \
@@ -139,22 +149,6 @@ SOURCES += \
     iconsmanager.cpp \
     main.cpp \
     mainwindow.cpp \
-    qsynedit/CodeFolding.cpp \
-    qsynedit/Constants.cpp \
-    qsynedit/KeyStrokes.cpp \
-    qsynedit/MiscClasses.cpp \
-    qsynedit/MiscProcs.cpp \
-    qsynedit/SynEdit.cpp \
-    qsynedit/TextBuffer.cpp \
-    qsynedit/TextPainter.cpp \
-    qsynedit/exporter/synexporter.cpp \
-    qsynedit/exporter/synhtmlexporter.cpp \
-    qsynedit/exporter/synrtfexporter.cpp \
-    qsynedit/highlighter/asm.cpp \
-    qsynedit/highlighter/base.cpp \
-    qsynedit/highlighter/composition.cpp \
-    qsynedit/highlighter/cpp.cpp \
-    qsynedit/highlighter/glsl.cpp \
     settingsdialog/compilersetdirectorieswidget.cpp \
     settingsdialog/compilersetoptionwidget.cpp \
     settings.cpp \
@@ -227,15 +221,11 @@ HEADERS += \
     parser/cpptokenizer.h \
     parser/parserutils.h \
     parser/statementmodel.h \
-    platform.h \
     problems/ojproblemset.h \
     problems/problemcasevalidator.h \
     project.h \
     projectoptions.h \
     projecttemplate.h \
-    qsynedit/Search.h \
-    qsynedit/SearchBase.h \
-    qsynedit/SearchRegex.h \
     settingsdialog/compilerautolinkwidget.h \
     settingsdialog/debuggeneralwidget.h \
     settingsdialog/editorautosavewidget.h \
@@ -288,23 +278,6 @@ HEADERS += \
     editorlist.h \
     iconsmanager.h \
     mainwindow.h \
-    qsynedit/CodeFolding.h \
-    qsynedit/Constants.h \
-    qsynedit/KeyStrokes.h \
-    qsynedit/MiscClasses.h \
-    qsynedit/MiscProcs.h \
-    qsynedit/SynEdit.h \
-    qsynedit/TextBuffer.h \
-    qsynedit/TextPainter.h \
-    qsynedit/Types.h \
-    qsynedit/exporter/synexporter.h \
-    qsynedit/exporter/synhtmlexporter.h \
-    qsynedit/exporter/synrtfexporter.h \
-    qsynedit/highlighter/asm.h \
-    qsynedit/highlighter/base.h \
-    qsynedit/highlighter/composition.h \
-    qsynedit/highlighter/cpp.h \
-    qsynedit/highlighter/glsl.h \
     settingsdialog/compilersetdirectorieswidget.h \
     settingsdialog/compilersetoptionwidget.h \
     settings.h \
@@ -515,9 +488,9 @@ RESOURCES += colorscheme_files
 macos: {
     # Add needed executables into the main app bundle
     bundled_executable.files = \
-        $$OUT_PWD/../astyle/astyle \
-        $$OUT_PWD/../consolepauser/consolepauser \
-        $$OUT_PWD/../redpanda-git-askpass/redpanda-git-askpass.app/Contents/MacOS/redpanda-git-askpass
+        $$OUT_PWD/../tools/astyle/astyle \
+        $$OUT_PWD/../tools/consolepauser/consolepauser \
+        $$OUT_PWD/../tools/redpanda-git-askpass/redpanda-git-askpass.app/Contents/MacOS/redpanda-git-askpass
     bundled_executable.path = Contents/MacOS
 
     # Also bundled templates

@@ -25,6 +25,7 @@
 #include <QPair>
 #include "qsynedit/SynEdit.h"
 #include "compiler/compilerinfo.h"
+#include "utils.h"
 
 /**
  * use the following command to get gcc's default bin/library folders:
@@ -142,11 +143,11 @@ public:
         bool enhanceEndKey() const;
         void setEnhanceEndKey(bool enhanceEndKey);
 
-        SynEditCaretType caretForInsert() const;
-        void setCaretForInsert(const SynEditCaretType &caretForInsert);
+        QSynedit::EditCaretType caretForInsert() const;
+        void setCaretForInsert(const QSynedit::EditCaretType &caretForInsert);
 
-        SynEditCaretType caretForOverwrite() const;
-        void setCaretForOverwrite(const SynEditCaretType &caretForOverwrite);
+        QSynedit::EditCaretType caretForOverwrite() const;
+        void setCaretForOverwrite(const QSynedit::EditCaretType &caretForOverwrite);
 
         QColor caretColor() const;
         void setCaretColor(const QColor &caretColor);
@@ -379,8 +380,8 @@ public:
         bool mEnhanceHomeKey;
         bool mEnhanceEndKey;
         bool mKeepCaretX;
-        SynEditCaretType mCaretForInsert;
-        SynEditCaretType mCaretForOverwrite;
+        QSynedit::EditCaretType mCaretForInsert;
+        QSynedit::EditCaretType mCaretForOverwrite;
         bool mCaretUseTextColor;
         QColor mCaretColor;
 

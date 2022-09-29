@@ -18,7 +18,7 @@
 #include "ui_projectfileswidget.h"
 #include "../mainwindow.h"
 #include "../systemconsts.h"
-#include "../platform.h"
+#include <qt_utils/charsetinfo.h>
 
 ProjectFilesWidget::ProjectFilesWidget(const QString &name, const QString &group, QWidget *parent) :
     SettingsWidget(name,group,parent),

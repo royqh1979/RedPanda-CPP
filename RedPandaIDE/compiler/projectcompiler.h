@@ -19,6 +19,7 @@
 
 #include "compiler.h"
 #include <QObject>
+#include <QFile>
 
 class Project;
 class ProjectCompiler : public Compiler

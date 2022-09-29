@@ -22,7 +22,7 @@
 #include <QMessageBox>
 #include "../utils.h"
 #include "../iconsmanager.h"
-#include "../platform.h"
+#include <qt_utils/charsetinfo.h>
 #include <QDebug>
 #include <QFileDialog>
 #include <QInputDialog>

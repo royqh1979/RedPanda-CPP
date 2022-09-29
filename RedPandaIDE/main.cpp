@@ -32,7 +32,7 @@
 #include "colorscheme.h"
 #include "iconsmanager.h"
 #include "autolinkmanager.h"
-#include "platform.h"
+#include <qt_utils/charsetinfo.h>
 #include "parser/parserutils.h"
 #include "editorlist.h"
 #include "widgets/choosethemedialog.h"

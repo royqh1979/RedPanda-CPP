@@ -21,7 +21,7 @@
 #include "editorlist.h"
 #include <parser/cppparser.h>
 #include "utils.h"
-#include "platform.h"
+#include "qt_utils/charsetinfo.h"
 #include "projecttemplate.h"
 #include "systemconsts.h"
 #include "iconsmanager.h"
@@ -309,7 +309,7 @@ PProjectUnit Project::newUnit(PProjectModelNode parentNode, const QString& custo
     return newUnit;
 }
 
-Editor *Project::openUnit(int index)
+Editor *Project::openUnit(int index, bool forceOpen)
 {
     if ((index < 0) || (index >= mUnits.count()))
         return nullptr;
@@ -318,11 +318,8 @@ Editor *Project::openUnit(int index)
 
     if (!unit->fileName().isEmpty() && fileExists(unit->fileName())) {
         if (getFileType(unit->fileName())==FileType::Other) {
-            QMimeDatabase db;
-            QMimeType mimeType=db.mimeTypeForFile(unit->fileName());
-            if (!mimeType.isValid() || !mimeType.name().startsWith("text/")) {
+            if (forceOpen)
                 QDesktopServices::openUrl(QUrl::fromLocalFile(unit->fileName()));
-            }
             return nullptr;
         }
 
@@ -1772,6 +1769,28 @@ void Project::loadOptions(SimpleIni& ini)
             QByteArray oldCompilerOptions = ini.GetValue("Project", "CompilerSettings", "");
             if (!oldCompilerOptions.isEmpty()) {
                 //version 2 compatibility
+                // test if it is created by old dev-c++
+                SimpleIni::TNamesDepend oKeys;
+                ini.GetAllKeys("Project", oKeys);
+                bool isNewDev=false;
+                for(const SimpleIni::Entry& entry:oKeys) {
+                    QString key(entry.pItem);
+                    if (key=="UsePrecompiledHeader"
+                            || key == "CompilerSetType"
+                            || key == "StaticLink"
+                            || key == "AddCharset"
+                            || key == "ExecEncoding"
+                            || key == "Encoding"
+                            || key == "UseUTF8") {
+                        isNewDev = true;
+                        break;
+                    }
+                }
+                if (!isNewDev && oldCompilerOptions.length()>=25) {
+                    char t = oldCompilerOptions[18];
+                    oldCompilerOptions[18]=oldCompilerOptions[21];
+                    oldCompilerOptions[21]=t;
+                }
                 for (int i=0;i<oldCompilerOptions.length();i++) {
                     QString key = pSettings->compilerSets().getKeyFromCompilerCompatibleIndex(i);
                     PCompilerOption pOption = CompilerInfoManager::getCompilerOption(

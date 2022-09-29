@@ -166,6 +166,7 @@ struct Statement {
     QString fullName; // fullname(including class and namespace), ClassA::foo
     QSet<QString> usingList; // using namespaces
     QString noNameArgs;// Args without name
+
     // fields for code completion
     int usageCount; //Usage Count
     int matchPosTotal; // total of matched positions

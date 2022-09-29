@@ -19,7 +19,7 @@
 #include "../settings.h"
 #include "../project.h"
 #include "../mainwindow.h"
-#include "../platform.h"
+#include <qt_utils/charsetinfo.h>
 
 ProjectCompilerWidget::ProjectCompilerWidget(const QString &name, const QString &group, QWidget *parent) :
     SettingsWidget(name,group,parent),

@@ -1,3 +1,22 @@
+Red Panda C++ Version 1.4
+
+  - fix: "Encode in UTF-8" is not correctly checked, when the editor is openned using UTF-8 encoding.
+  - fix: crash when create non C/C++ source file in project
+  - fix: can't open text project file in the editor
+  - change: when create non-text project file, don't auto open it
+  - fix: the project compiler options is not correctly read  when open old dev-c++ project 
+  - fix: astyle.exe can't correctly format files that using non-ascii identifier
+  - fix: when "cleary symbol table of hidden editors" is turned on, content in the editor reshown is not correctly parsed
+
+Red Panda C++ Version 1.3
+
+  - enhancement: don't parse all openned files when start up
+  - enhancement: don't parse files when close all and exit
+  - change: reduce time intervals for selection by mouse
+  - enhancement: change orders of the problems in the problem set panel by drag&drop
+  - enhancement: change orders of the problem cases in the problem panel by drag&drop
+  - fix: the size of horizontal caret is wrong
+
 Red Panda C++ Version 1.2
 
   - enhancement: Portuguese Translation ( Thanks for crcpucmg@github)

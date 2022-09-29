@@ -29,8 +29,8 @@ echo "Making no-compiler installer ..."
 pushd .
 cd "${PACKAGE_DIR}"
 
-cp "${SOURCE_DIR}/windows/installer-scripts/lang.nsh" .
-cp "${SOURCE_DIR}/windows/installer-scripts/redpanda-i686-nocompiler.nsi" .
+cp "${SOURCE_DIR}/platform/windows/installer-scripts/lang.nsh" .
+cp "${SOURCE_DIR}/platform/windows/installer-scripts/redpanda-i686-nocompiler.nsi" .
 
 "${NSIS}" redpanda-i686-nocompiler.nsi
 rm -f lang.nsh
@@ -61,8 +61,8 @@ pushd .
 cd "${PACKAGE_DIR}"
 ln -s "${MINGW}" $MinGW_NAME
 
-cp "${SOURCE_DIR}/windows/installer-scripts/lang.nsh" .
-cp "${SOURCE_DIR}/windows/installer-scripts/redpanda-i686.nsi" .
+cp "${SOURCE_DIR}/platform/windows/installer-scripts/lang.nsh" .
+cp "${SOURCE_DIR}/platform/windows/installer-scripts/redpanda-i686.nsi" .
 
 "${NSIS}" redpanda-i686.nsi
 rm -f lang.nsh

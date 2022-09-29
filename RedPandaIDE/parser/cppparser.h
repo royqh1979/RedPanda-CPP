@@ -112,6 +112,8 @@ public:
     void unFreeze(); // UnFree/UnLock (reparse while searching)
     QSet<QString> scannedFiles();
 
+    bool isFileParsed(const QString& filename);
+
     QString prettyPrintStatement(const PStatement& statement, const QString& filename, int line = -1);
 
     bool enabled() const;

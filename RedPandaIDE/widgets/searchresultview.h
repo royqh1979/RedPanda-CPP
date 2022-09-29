@@ -20,7 +20,7 @@
 #include <QTreeView>
 #include <QMap>
 #include <QStyledItemDelegate>
-#include "../qsynedit/SearchBase.h"
+#include "qsynedit/SearchBase.h"
 #include "utils.h"
 
 #define MAX_SEARCH_RESULTS 20
@@ -46,7 +46,7 @@ struct SearchResultTreeItem {
 };
 
 struct SearchResults{
-    SynSearchOptions options;
+    QSynedit::SearchOptions options;
     QString keyword;
     QString statementFullname;
     SearchFileScope scope;
@@ -61,7 +61,7 @@ class SearchResultModel : public QObject {
     Q_OBJECT
 public:
     explicit SearchResultModel(QObject* parent=nullptr);
-    PSearchResults addSearchResults(const QString& keyword,SynSearchOptions options,
+    PSearchResults addSearchResults(const QString& keyword,QSynedit::SearchOptions options,
                                     SearchFileScope scope);
     PSearchResults addSearchResults(
             const QString& keyword,

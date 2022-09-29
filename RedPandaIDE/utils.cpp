@@ -1,220 +1,84 @@
-/*
- * Copyright (C) 2020-2022 Roy Qu (royqh1979@gmail.com)
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
 #include "utils.h"
 #include "systemconsts.h"
-#include <QApplication>
-#include <QByteArray>
-#include <QDir>
-#include <QFile>
-#include <QFileInfo>
-#include <QProcess>
-#include <QProcessEnvironment>
-#include <QString>
-#include <QTextCodec>
-#include <QtGlobal>
-#include <QDebug>
-#include <QStyleFactory>
+#include <QDate>
 #include <QDateTime>
-#include <QColor>
-#include <QWindow>
-#include <QScreen>
-#include "parser/cppparser.h"
+#include <QApplication>
+#include "editor.h"
+#include "editorlist.h"
 #include "settings.h"
 #include "mainwindow.h"
-#include "editorlist.h"
-#include "editor.h"
 #include "project.h"
+#include "parser/cppparser.h"
 #include "compiler/executablerunner.h"
+#include <QMimeDatabase>
 #ifdef Q_OS_WIN
 #include <windows.h>
 #endif
 
-const QByteArray GuessTextEncoding(const QByteArray& text){
-    bool allAscii;
-    int ii;
-    int size;
-    const QByteArray& s=text;
-    size = s.length();
-    if ( (size >= 3) && ((unsigned char)s[0]==0xEF) && ((unsigned char)s[1]==0xBB) && ((unsigned char)s[2]==0xBF)) {
-        return ENCODING_UTF8_BOM;
-    }
-    allAscii = true;
-    ii = 0;
-    while (ii < size) {
-        unsigned char ch = s[ii];
-        if (ch < 0x80 ) {
-            ii++; // is an ascii char
-        } else if (ch < 0xC0) { // value between 0x80 and 0xC0 is an invalid UTF-8 char
-            return ENCODING_SYSTEM_DEFAULT;
-        } else if (ch < 0xE0) { // should be an 2-byte UTF-8 char
-            if (ii>=size-1) {
-                return ENCODING_SYSTEM_DEFAULT;
-            }
-            unsigned char ch2=s[ii+1];
-            if ((ch2 & 0xC0) !=0x80)  {
-                return ENCODING_SYSTEM_DEFAULT;
-            }
-            allAscii = false;
-            ii+=2;
-        } else if (ch < 0xF0) { // should be an 3-byte UTF-8 char
-            if (ii>=size-2) {
-                return ENCODING_SYSTEM_DEFAULT;
-            }
-            unsigned char ch2=s[ii+1];
-            unsigned char ch3=s[ii+2];
-            if (((ch2 & 0xC0)!=0x80) ||  ((ch3 & 0xC0)!=0x80)) {
-                return ENCODING_SYSTEM_DEFAULT;
-            }
-            allAscii = false;
-            ii+=3;
-        } else { // invalid UTF-8 char
-            return ENCODING_SYSTEM_DEFAULT;
-        }
-    }
-    if (allAscii)
-        return ENCODING_ASCII;
-    return ENCODING_UTF8;
-}
-
-bool isTextAllAscii(const QByteArray& text) {
-    for (char c:text) {
-        if (c<0) {
-            return false;
-        }
-    }
-    return true;
-}
-
-bool isTextAllAscii(const QString& text) {
-    for (QChar c:text) {
-        if (c.unicode()>127) {
-            return false;
-        }
-    }
-    return true;
-}
-
-#ifdef Q_OS_WIN
-static bool gIsGreenEdition = true;
-static bool gIsGreenEditionInited = false;
-#endif
-bool isGreenEdition()
+QStringList splitProcessCommand(const QString &cmd)
 {
-#ifdef Q_OS_WIN
-    if (!gIsGreenEditionInited) {
-        QString keyString = QString("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\RedPanda-C++");
-        QString value;
-        if (!readRegistry(HKEY_LOCAL_MACHINE,keyString.toLocal8Bit(),"UninstallString",value)) {
-            keyString = "SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\RedPanda-C++";
-            if (!readRegistry(HKEY_LOCAL_MACHINE,keyString.toLocal8Bit(),"UninstallString",value)) {
-                value="";
+    QStringList result;
+    SplitProcessCommandQuoteType quoteType = SplitProcessCommandQuoteType::None;
+    int i=0;
+    QString current;
+    while (i<cmd.length()) {
+        switch (cmd[i].unicode()) {
+        case ' ':
+        case '\t':
+        case '\r':
+        case '\n':
+            if (quoteType == SplitProcessCommandQuoteType::None) {
+                if (!current.isEmpty()) {
+                    result.append(current);
+                }
+                current = "";
+            } else {
+                current += cmd[i];
             }
+            i++;
+            break;
+        case '\"':
+            switch(quoteType) {
+            case SplitProcessCommandQuoteType::None:
+                quoteType = SplitProcessCommandQuoteType::Double;
+                break;
+            case SplitProcessCommandQuoteType::Double:
+                quoteType = SplitProcessCommandQuoteType::None;
+                break;
+            default:
+                current+=cmd[i];
+            }
+            i++;
+            break;
+        case '\'':
+            switch(quoteType) {
+            case SplitProcessCommandQuoteType::None:
+                quoteType = SplitProcessCommandQuoteType::Single;
+                break;
+            case SplitProcessCommandQuoteType::Single:
+                quoteType = SplitProcessCommandQuoteType::None;
+                break;
+            default:
+                current+=cmd[i];
+            }
+            i++;
+            break;
+        case '\\':
+            current += cmd[i];
+            i++;
+            if  (i<cmd.length()) {
+                current += cmd[i];
+                i++;
+            }
+            break;
+        default:
+            current += cmd[i];
+            i++;
         }
-        if (!value.isEmpty()) {
-            QString regPath = extractFileDir(value);
-
-            QString appPath = QApplication::instance()->applicationDirPath();
-            gIsGreenEdition = excludeTrailingPathDelimiter(regPath).compare(excludeTrailingPathDelimiter(appPath),
-                                                                            Qt::CaseInsensitive)!=0;
-        }
-        gIsGreenEditionInited = true;
     }
-    return gIsGreenEdition;
-#else
-    return false;
-#endif
-}
-
-QByteArray runAndGetOutput(const QString &cmd, const QString& workingDir, const QStringList& arguments,
-                           const QByteArray &inputContent, bool inheritEnvironment,
-                           const QProcessEnvironment& env)
-{
-    QProcess process;
-    QByteArray result;
-    if (env.isEmpty()) {
-        if (inheritEnvironment) {
-            process.setProcessEnvironment(QProcessEnvironment::systemEnvironment());
-        } else {
-            process.setProcessEnvironment(QProcessEnvironment());
-        }
-    } else {
-        process.setProcessEnvironment(env);
-    }
-    process.setWorkingDirectory(workingDir);
-    process.connect(&process,&QProcess::readyReadStandardError,
-                    [&](){
-        result.append(process.readAllStandardError());
-    });
-    process.connect(&process,&QProcess::readyReadStandardOutput,
-                    [&](){
-        result.append(process.readAllStandardOutput());
-    });
-    process.start(cmd,arguments);
-    if (!inputContent.isEmpty()) {
-        process.write(inputContent);
-    }
-    process.closeWriteChannel();
-    process.waitForFinished();
+    if (!current.isEmpty())
+        result.append(current);
     return result;
-}
-
-bool isNonPrintableAsciiChar(char ch)
-{
-    return (ch<=32) && (ch>=0);
-}
-
-bool fileExists(const QString &file)
-{
-    if (file.isEmpty())
-        return false;
-    return QFile(file).exists();
-}
-
-bool fileExists(const QString &dir, const QString &fileName)
-{
-    if (dir.isEmpty() || fileName.isEmpty())
-        return false;
-    QDir dirInfo(dir);
-    return dirInfo.exists(fileName);
-}
-
-bool directoryExists(const QString &file)
-{
-    if (file.isEmpty())
-        return false;
-   QFileInfo dir(file);
-   return dir.exists() && dir.isDir();
-}
-
-QString includeTrailingPathDelimiter(const QString &path)
-{
-    if (path.endsWith('/') || path.endsWith(QDir::separator())) {
-        return path;
-    } else {
-        return path + "/";
-    }
-}
-
-QString excludeTrailingPathDelimiter(const QString &path)
-{
-    int pos = path.length()-1;
-    while (pos>=0 && (path[pos]=='/' || path[pos]==QDir::separator()))
-        pos--;
-    return path.mid(0,pos+1);
 }
 
 FileType getFileType(const QString &filename)
@@ -276,41 +140,42 @@ FileType getFileType(const QString &filename)
     if (filename.endsWith(".dat",PATH_SENSITIVITY)) {
         return FileType::Text;
     }
+    QMimeDatabase db;
+    QMimeType mimeType=db.mimeTypeForFile(filename);
+    if (mimeType.isValid() && mimeType.name().startsWith("text/")) {
+        return FileType::Text;
+    }
     return FileType::Other;
 }
 
+QString genMakePath(const QString &fileName, bool escapeSpaces, bool encloseInQuotes)
+{
+    QString result = fileName;
+
+    // Convert backslashes to slashes
+    result.replace('\\','/');
+    if (escapeSpaces) {
+        result.replace(' ',"\\ ");
+    }
+    if (encloseInQuotes)
+        if (result.contains(' '))
+            result = '"'+result+'"';
+    return result;
+}
+
+QString genMakePath1(const QString &fileName)
+{
+    return genMakePath(fileName, false, true);
+}
+
+QString genMakePath2(const QString &fileName)
+{
+    return genMakePath(fileName, true, false);
+}
 
 QString getCompiledExecutableName(const QString& filename)
 {
     return changeFileExt(filename,EXECUTABLE_EXT);
-}
-
-void splitStringArguments(const QString &arguments, QStringList &argumentList)
-{
-    QString word;
-    bool inQuota;
-    inQuota = false;
-    for (QChar ch:arguments) {
-        if (ch == '"') {
-            inQuota = !inQuota;
-        } else if (ch == '\n' || ch == ' ' || ch == '\t' || ch == '\r') {
-            if (!inQuota) {
-                word = word.trimmed();
-                if (!word.isEmpty()) {
-                    argumentList.append(word);
-                }
-                word = "";
-            } else {
-                word.append(ch);
-            }
-        } else {
-            word.append(ch);
-        }
-    }
-    word = word.trimmed();
-    if (!word.isEmpty()) {
-        argumentList.append(word);
-    }
 }
 
 bool programHasConsole(const QString & filename)
@@ -340,283 +205,72 @@ bool programHasConsole(const QString & filename)
 #endif
 }
 
-QStringList textToLines(const QString &text)
+QString parseMacros(const QString &s)
 {
-    QTextStream stream(&((QString&)text),QIODevice::ReadOnly);
-    return readStreamToLines(&stream);
-}
+    QString result = s;
+    Editor *e = pMainWindow->editorList()->getEditor();
 
-QStringList readFileToLines(const QString& fileName, QTextCodec* codec)
-{
-    QFile file(fileName);
-    if (file.open(QFile::ReadOnly)) {
-        QTextStream stream(&file);
-        stream.setCodec(codec);
-        stream.setAutoDetectUnicode(false);
-        return readStreamToLines(&stream);
+    result.replace("<DEFAULT>", localizePath(QDir::currentPath()));
+    result.replace("<DEVCPP>", localizePath(pSettings->dirs().executable()));
+    result.replace("<DEVCPPVERSION>", REDPANDA_CPP_VERSION);
+    result.replace("<EXECPATH>", localizePath(pSettings->dirs().appDir()));
+    QDate today = QDate::currentDate();
+    QDateTime now = QDateTime::currentDateTime();
+
+    result.replace("<DATE>", today.toString("yyyy-MM-dd"));
+    result.replace("<DATETIME>", now.toString("yyyy-MM-dd hh:mm:ss"));
+
+    Settings::PCompilerSet compilerSet = pSettings->compilerSets().defaultSet();
+    if (compilerSet) {
+        // Only provide the first cpp include dir
+        if (compilerSet->defaultCppIncludeDirs().count()>0)
+            result.replace("<INCLUDE>", localizePath(compilerSet->defaultCppIncludeDirs().front()));
+        else
+            result.replace("<INCLUDE>","");
+
+        // Only provide the first lib dir
+        if (compilerSet->defaultLibDirs().count()>0)
+            result.replace("<LIB>", localizePath(compilerSet->defaultLibDirs().front()));
+        else
+            result.replace("<LIB>","");
     }
-    return QStringList();
-}
 
-QStringList readStreamToLines(QTextStream *stream)
-{
-    QStringList list;
-    QString s;
-    while (stream->readLineInto(&s)) {
-        list.append(s);
-    }
-    return list;
-}
-
-void readStreamToLines(QTextStream *stream,
-                              LineProcessFunc lineFunc)
-{
-    QString s;
-    while (stream->readLineInto(&s)) {
-        lineFunc(s);
-    }
-}
-
-void textToLines(const QString &text, LineProcessFunc lineFunc)
-{
-    QTextStream stream(&((QString&)text),QIODevice::ReadOnly);
-    readStreamToLines(&stream,lineFunc);
-}
-
-void readFileToLines(const QString &fileName, QTextCodec *codec, LineProcessFunc lineFunc)
-{
-    QFile file(fileName);
-    if (file.open(QFile::ReadOnly)) {
-        QTextStream stream(&file);
-        stream.setCodec(codec);
-        stream.setAutoDetectUnicode(false);
-        readStreamToLines(&stream, lineFunc);
-    }
-}
-
-BaseError::BaseError(const QString &reason):
-mReason(reason)
-{
-
-}
-
-QString BaseError::reason() const
-{
-    return mReason;
-}
-
-IndexOutOfRange::IndexOutOfRange(int Index):
-BaseError(QObject::tr("Index %1 out of range").arg(Index))
-{
-
-}
-
-FileError::FileError(const QString &reason): BaseError(reason)
-{
-
-}
-
-void decodeKey(const int combinedKey, int &key, Qt::KeyboardModifiers &modifiers)
-{
-    modifiers = Qt::NoModifier;
-    if (combinedKey & Qt::ShiftModifier) {
-        modifiers|=Qt::ShiftModifier;
-    }
-    if (combinedKey & Qt::ControlModifier) {
-        modifiers|=Qt::ControlModifier;
-    }
-    if (combinedKey & Qt::AltModifier) {
-        modifiers|=Qt::AltModifier;
-    }
-    if (combinedKey & Qt::MetaModifier) {
-        modifiers|=Qt::MetaModifier;
-    }
-    if (combinedKey & Qt::KeypadModifier) {
-        modifiers|= Qt::KeypadModifier;
-    }
-    key = combinedKey & ~(Qt::ShiftModifier | Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier | Qt::KeypadModifier);
-}
-
-void inflateRect(QRect &rect, int delta)
-{
-    inflateRect(rect,delta,delta);
-}
-
-void inflateRect(QRect &rect, int dx, int dy)
-{
-    rect.setLeft(rect.left()-dx);
-    rect.setRight(rect.right()+dx);
-    rect.setTop(rect.top()-dy);
-    rect.setBottom(rect.bottom()+dy);
-}
-
-QString trimRight(const QString &s)
-{
-    if (s.isEmpty())
-        return s;
-    int i = s.length()-1;
-//   while ((i>=0) && ((s[i] == '\r') || (s[i]=='\n') || (s[i] == '\t') || (s[i]==' ')))  {
-    while ((i>=0) && (s[i]<=32)) {
-        i--;
-    };
-    if (i>=0) {
-        return s.left(i+1);
+    if (e!=nullptr && !e->inProject()) { // Non-project editor macros
+            result.replace("<EXENAME>", extractFileName(changeFileExt(e->filename(),EXECUTABLE_EXT)));
+            result.replace("<EXEFILE>", localizePath(changeFileExt(e->filename(),EXECUTABLE_EXT)));
+            result.replace("<PROJECTNAME>", extractFileName(e->filename()));
+            result.replace("<PROJECTFILE>", localizePath(e->filename()));
+            result.replace("<PROJECTFILENAME>", extractFileName(e->filename()));
+            result.replace("<PROJECTPATH>", localizePath(extractFileDir(e->filename())));
+    } else if (pMainWindow->project()) {
+        result.replace("<EXENAME>", extractFileName(pMainWindow->project()->executable()));
+        result.replace("<EXEFILE>", localizePath(pMainWindow->project()->executable()));
+        result.replace("<PROJECTNAME>", pMainWindow->project()->name());
+        result.replace("<PROJECTFILE>", localizePath(pMainWindow->project()->filename()));
+        result.replace("<PROJECTFILENAME>", extractFileName(pMainWindow->project()->filename()));
+        result.replace("<PROJECTPATH>", localizePath(pMainWindow->project()->directory()));
     } else {
-        return QString();
+        result.replace("<EXENAME>", "");
+        result.replace("<EXEFILE>", "");
+        result.replace("<PROJECTNAME>", "");
+        result.replace("<PROJECTFILE>", "");
+        result.replace("<PROJECTFILENAME>", "");
+        result.replace("<PROJECTPATH>", "");
     }
-}
 
-bool stringIsBlank(const QString &s)
-{
-    for (QChar ch:s) {
-        if (ch != ' ' && ch != '\t')
-            return false;
-    }
-    return true;
-}
-
-QString trimLeft(const QString &s)
-{
-    if (s.isEmpty())
-        return s;
-    int i=0;
-//    while ((i<s.length()) && ((s[i] == '\r') || (s[i]=='\n') || (s[i] == '\t') || (s[i]==' ')))  {
-//        i++;
-//    };
-    while ((i<s.length()) && (s[i]<=32))  {
-        i++;
-    };
-    if (i<s.length()) {
-        return s.mid(i);
+    // Editor macros
+    if (e!=nullptr) {
+        result.replace("<SOURCENAME>", extractFileName(e->filename()));
+        result.replace("<SOURCEFILE>", localizePath(e->filename()));
+        result.replace("<SOURCEPATH>", localizePath(extractFileDir(e->filename())));
+        result.replace("<WORDXY>", e->wordAtCursor());
     } else {
-        return QString();
-    }
-}
-
-//void changeTheme(const QString &themeName)
-//{
-//    if (themeName.isEmpty() || themeName == "default") {
-//        QApplication::setStyle("Fusion");
-//        QApplication* app = dynamic_cast<QApplication*>(QApplication::instance());
-//        //app->setStyleSheet("");
-//        return ;
-//    }
-//    QStyleFactory styleFactory;
-//    if (styleFactory.keys().contains(themeName)) {
-//        QApplication::setStyle(themeName);
-//        QApplication* app = dynamic_cast<QApplication*>(QApplication::instance());
-//        app->setStyleSheet("");
-//        return;
-//    }
-//    QFile f(QString(":/themes/%1/style.qss").arg(themeName));
-
-//    if (!f.exists())   {
-//        qDebug()<<"Unable to set stylesheet, file not found\n";
-//    } else {
-//        QApplication::setStyle("Fusion");
-//        f.open(QFile::ReadOnly | QFile::Text);
-//        QTextStream ts(&f);
-//        dynamic_cast<QApplication*>(QApplication::instance())->setStyleSheet(ts.readAll());
-//    }
-//}
-
-int compareFileModifiedTime(const QString &filename1, const QString &filename2)
-{
-    QFileInfo fileInfo1(filename1);
-    QFileInfo fileInfo2(filename2);
-    qint64 time1=fileInfo1.lastModified().toMSecsSinceEpoch();
-    qint64 time2=fileInfo2.lastModified().toMSecsSinceEpoch();
-    if (time1 > time2)
-        return 1;
-    if (time1 < time2)
-        return -1;
-    return 0;
-}
-
-QString changeFileExt(const QString& filename, QString ext)
-{
-    QFileInfo fileInfo(filename);
-    QString suffix = fileInfo.suffix();
-    QString name  = fileInfo.fileName();
-    QString path;
-    if (!ext.isEmpty() && !ext.startsWith(".")) {
-        ext = "."+ext;
-    }
-    if (fileInfo.path() != ".") {
-        path = includeTrailingPathDelimiter(fileInfo.path());
-    }
-    if (suffix.isEmpty()) {
-        return path+filename+ext;
-    } else {
-        return path+fileInfo.completeBaseName()+ext;
-    }
-}
-
-QStringList readFileToLines(const QString &fileName)
-{
-    QFile file(fileName);
-    if (file.size()<=0)
-        return QStringList();
-    QTextCodec* codec = QTextCodec::codecForLocale();
-    QStringList result;
-    QTextCodec::ConverterState state;
-    bool ok = true;
-    if (file.open(QFile::ReadOnly)) {
-        while (!file.atEnd()) {
-            QByteArray array = file.readLine();
-            QString s = codec->toUnicode(array,array.length(),&state);
-            if (state.invalidChars>0) {
-                ok=false;
-                break;
-            }
-            if (s.endsWith("\r\n")) {
-                s.remove(s.length()-2,2);
-            } else if (s.endsWith("\r")) {
-                s.remove(s.length()-1,1);
-            } else if (s.endsWith("\n")){
-                s.remove(s.length()-1,1);
-            }
-            result.append(s);
-        }
-        if (!ok) {
-            file.seek(0);
-            result.clear();
-            codec = QTextCodec::codecForName("UTF-8");
-            while (!file.atEnd()) {
-                QByteArray array = file.readLine();
-                QString s = codec->toUnicode(array,array.length(),&state);
-                if (state.invalidChars>0) {
-                    result.clear();
-                    break;
-                }
-                if (s.endsWith("\r\n")) {
-                    s.remove(s.length()-2,2);
-                } else if (s.endsWith("\r")) {
-                    s.remove(s.length()-1,1);
-                } else if (s.endsWith("\n")){
-                    s.remove(s.length()-1,1);
-                }
-                result.append(s);
-            }
-        }
+        result.replace("<SOURCENAME>", "");
+        result.replace("<SOURCEFILE>", "");
+        result.replace("<SOURCEPATH>", "");
+        result.replace("<WORDXY>", "");
     }
     return result;
-}
-
-void stringsToFile(const QStringList &list, const QString &fileName)
-{
-    QFile file(fileName);
-    if (file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-        QTextStream stream(&file);
-        for (QString s:list) {
-            stream<<s
-#if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
-                 <<Qt::endl;
-#else
-                 <<endl;
-#endif
-        }
-    }
 }
 
 void resetCppParser(std::shared_ptr<CppParser> parser, int compilerSetIndex)
@@ -697,101 +351,6 @@ void resetCppParser(std::shared_ptr<CppParser> parser, int compilerSetIndex)
                             &MainWindow::onEndParsing);
 }
 
-bool findComplement(const QString &s, const QChar &fromToken, const QChar &toToken, int &curPos, int increment)
-{
-    int curPosBackup = curPos;
-    int level = 0;
-    //todo: skip comment, char and strings
-    while ((curPos < s.length()) && (curPos >= 0)) {
-        if (s[curPos] == fromToken) {
-            level++;
-        } else if (s[curPos] == toToken) {
-            level--;
-            if (level == 0)
-                return true;
-        }
-        curPos += increment;
-    }
-    curPos = curPosBackup;
-    return false;
-}
-
-void logToFile(const QString &s, const QString &filename, bool append)
-{
-    QFile file(filename);
-    QFile::OpenMode mode = QFile::WriteOnly;
-    if (append) {
-        mode |= QFile::Append;
-    } else {
-        mode |= QFile::Truncate;
-    }
-    if (file.open(mode)) {
-        QTextStream ts(&file);
-        ts<<s
-#if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
-                 <<Qt::endl;
-#else
-                 <<endl;
-#endif
-    }
-}
-
-QString extractFileName(const QString &fileName)
-{
-    QFileInfo fileInfo(fileName);
-    return fileInfo.fileName();
-}
-
-QString extractRelativePath(const QString &base, const QString &dest)
-{
-    QFileInfo baseInfo(base);
-    QDir baseDir;
-    if (baseInfo.isDir()) {
-        baseDir = QDir(baseInfo.absoluteFilePath());
-    } else {
-        baseDir = baseInfo.absoluteDir();
-    }
-    return baseDir.relativeFilePath(dest);
-}
-
-QString genMakePath(const QString &fileName, bool escapeSpaces, bool encloseInQuotes)
-{
-    QString result = fileName;
-
-    // Convert backslashes to slashes
-    result.replace('\\','/');
-    if (escapeSpaces) {
-        result.replace(' ',"\\ ");
-    }
-    if (encloseInQuotes)
-        if (result.contains(' '))
-            result = '"'+result+'"';
-    return result;
-}
-
-QString genMakePath1(const QString &fileName)
-{
-    return genMakePath(fileName, false, true);
-}
-
-QString genMakePath2(const QString &fileName)
-{
-    return genMakePath(fileName, true, false);
-}
-
-QString getSizeString(int size)
-{
-    if (size < 1024) {
-        return QString("%1 ").arg(size)+QObject::tr("bytes");
-    } else if (size < 1024 * 1024) {
-        return QString("%1 ").arg(size / 1024.0)+QObject::tr("KB");
-    } else if (size < 1024 * 1024 * 1024) {
-        return QString("%1 ").arg(size / 1024.0 / 1024.0)+QObject::tr("MB");
-    } else {
-        return QString("%1 ").arg(size / 1024.0 / 1024.0 / 1024.0)+QObject::tr("GB");
-    }
-}
-
 int getNewFileNumber()
 {
     static int count = 0;
@@ -799,116 +358,67 @@ int getNewFileNumber()
     return count;
 }
 
-QString extractFilePath(const QString &filePath)
+#ifdef Q_OS_WIN
+static bool gIsGreenEdition = true;
+static bool gIsGreenEditionInited = false;
+#endif
+bool isGreenEdition()
 {
-    QFileInfo info(filePath);
-    return info.path();
-}
+#ifdef Q_OS_WIN
+    if (!gIsGreenEditionInited) {
+        QString keyString = QString("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\RedPanda-C++");
+        QString value;
+        if (!readRegistry(HKEY_LOCAL_MACHINE,keyString.toLocal8Bit(),"UninstallString",value)) {
+            keyString = "SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\RedPanda-C++";
+            if (!readRegistry(HKEY_LOCAL_MACHINE,keyString.toLocal8Bit(),"UninstallString",value)) {
+                value="";
+            }
+        }
+        if (!value.isEmpty()) {
+            QString regPath = extractFileDir(value);
 
-QString extractAbsoluteFilePath(const QString &filePath)
-{
-    QFileInfo info(filePath);
-    return info.absoluteFilePath();
-}
-
-bool isReadOnly(const QString &filename)
-{
-    return QFile(filename).isWritable();
-}
-
-QString extractFileDir(const QString &fileName)
-{
-    return extractFilePath(fileName);
-}
-
-QByteArray toByteArray(const QString &s)
-{
-    //return s.toLocal8Bit();
-    return s.toUtf8();
-}
-
-QString fromByteArray(const QByteArray &s)
-{
-    QTextCodec* codec = QTextCodec::codecForName(ENCODING_UTF8);
-    QTextCodec::ConverterState state;
-    if (!codec)
-        return QString(s);
-    QString tmp = codec->toUnicode(s,s.length(),&state);
-    if (state.invalidChars>0)
-        tmp = QString::fromLocal8Bit(s);
-    return tmp;
-}
-
-QString linesToText(const QStringList &lines)
-{
-    return lines.join("\n");
-}
-
-QString parseMacros(const QString &s)
-{
-    QString result = s;
-    Editor *e = pMainWindow->editorList()->getEditor();
-
-    result.replace("<DEFAULT>", localizePath(QDir::currentPath()));
-    result.replace("<DEVCPP>", localizePath(pSettings->dirs().executable()));
-    result.replace("<DEVCPPVERSION>", REDPANDA_CPP_VERSION);
-    result.replace("<EXECPATH>", localizePath(pSettings->dirs().appDir()));
-    QDate today = QDate::currentDate();
-    QDateTime now = QDateTime::currentDateTime();
-
-    result.replace("<DATE>", today.toString("yyyy-MM-dd"));
-    result.replace("<DATETIME>", now.toString("yyyy-MM-dd hh:mm:ss"));
-
-    Settings::PCompilerSet compilerSet = pSettings->compilerSets().defaultSet();
-    if (compilerSet) {
-        // Only provide the first cpp include dir
-        if (compilerSet->defaultCppIncludeDirs().count()>0)
-            result.replace("<INCLUDE>", localizePath(compilerSet->defaultCppIncludeDirs().front()));
-        else
-            result.replace("<INCLUDE>","");
-
-        // Only provide the first lib dir
-        if (compilerSet->defaultLibDirs().count()>0)
-            result.replace("<LIB>", localizePath(compilerSet->defaultLibDirs().front()));
-        else
-            result.replace("<LIB>","");
+            QString appPath = QApplication::instance()->applicationDirPath();
+            gIsGreenEdition = excludeTrailingPathDelimiter(regPath).compare(excludeTrailingPathDelimiter(appPath),
+                                                                            Qt::CaseInsensitive)!=0;
+        }
+        gIsGreenEditionInited = true;
     }
+    return gIsGreenEdition;
+#else
+    return false;
+#endif
+}
 
-    if (e!=nullptr && !e->inProject()) { // Non-project editor macros
-            result.replace("<EXENAME>", extractFileName(changeFileExt(e->filename(),EXECUTABLE_EXT)));
-            result.replace("<EXEFILE>", localizePath(changeFileExt(e->filename(),EXECUTABLE_EXT)));
-            result.replace("<PROJECTNAME>", extractFileName(e->filename()));
-            result.replace("<PROJECTFILE>", localizePath(e->filename()));
-            result.replace("<PROJECTFILENAME>", extractFileName(e->filename()));
-            result.replace("<PROJECTPATH>", localizePath(extractFileDir(e->filename())));
-    } else if (pMainWindow->project()) {
-        result.replace("<EXENAME>", extractFileName(pMainWindow->project()->executable()));
-        result.replace("<EXEFILE>", localizePath(pMainWindow->project()->executable()));
-        result.replace("<PROJECTNAME>", pMainWindow->project()->name());
-        result.replace("<PROJECTFILE>", localizePath(pMainWindow->project()->filename()));
-        result.replace("<PROJECTFILENAME>", extractFileName(pMainWindow->project()->filename()));
-        result.replace("<PROJECTPATH>", localizePath(pMainWindow->project()->directory()));
+QByteArray runAndGetOutput(const QString &cmd, const QString& workingDir, const QStringList& arguments,
+                           const QByteArray &inputContent, bool inheritEnvironment,
+                           const QProcessEnvironment& env)
+{
+    QProcess process;
+    QByteArray result;
+    if (env.isEmpty()) {
+        if (inheritEnvironment) {
+            process.setProcessEnvironment(QProcessEnvironment::systemEnvironment());
+        } else {
+            process.setProcessEnvironment(QProcessEnvironment());
+        }
     } else {
-        result.replace("<EXENAME>", "");
-        result.replace("<EXEFILE>", "");
-        result.replace("<PROJECTNAME>", "");
-        result.replace("<PROJECTFILE>", "");
-        result.replace("<PROJECTFILENAME>", "");
-        result.replace("<PROJECTPATH>", "");
+        process.setProcessEnvironment(env);
     }
-
-    // Editor macros
-    if (e!=nullptr) {
-        result.replace("<SOURCENAME>", extractFileName(e->filename()));
-        result.replace("<SOURCEFILE>", localizePath(e->filename()));
-        result.replace("<SOURCEPATH>", localizePath(extractFileDir(e->filename())));
-        result.replace("<WORDXY>", e->wordAtCursor());
-    } else {
-        result.replace("<SOURCENAME>", "");
-        result.replace("<SOURCEFILE>", "");
-        result.replace("<SOURCEPATH>", "");
-        result.replace("<WORDXY>", "");
+    process.setWorkingDirectory(workingDir);
+    process.connect(&process,&QProcess::readyReadStandardError,
+                    [&](){
+        result.append(process.readAllStandardError());
+    });
+    process.connect(&process,&QProcess::readyReadStandardOutput,
+                    [&](){
+        result.append(process.readAllStandardOutput());
+    });
+    process.start(cmd,arguments);
+    if (!inputContent.isEmpty()) {
+        process.write(inputContent);
     }
+    process.closeWriteChannel();
+    process.waitForFinished();
     return result;
 }
 
@@ -932,45 +442,6 @@ void executeFile(const QString &fileName, const QString &params, const QString &
     runner->setStartConsole(true);
     runner->start();
 }
-
-void stringToFile(const QString &str, const QString &fileName)
-{
-    QFile file(fileName);
-    if (file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-        QTextStream stream(&file);
-        stream<<str;
-    }
-}
-
-bool removeFile(const QString &filename)
-{
-    QFile file(filename);
-    return file.remove();
-}
-
-QByteArray readFileToByteArray(const QString &fileName)
-{
-    QFile file(fileName);
-    if (file.open(QFile::ReadOnly)) {
-        return file.readAll();
-    }
-    return QByteArray();
-}
-
-QByteArray getHTTPBody(const QByteArray& content) {
-    int i= content.indexOf("\r\n\r\n");
-    if (i>=0) {
-        return content.mid(i+4);
-    }
-    return "";
-}
-
-bool haveGoodContrast(const QColor& c1, const QColor &c2) {
-    int lightness1 = qGray(c1.rgb());
-    int lightness2 = qGray(c2.rgb());
-    return std::abs(lightness1 - lightness2)>=120;
-}
-
 
 #ifdef Q_OS_WIN
 bool readRegistry(HKEY key,const QByteArray& subKey, const QByteArray& name, QString& value) {
@@ -999,232 +470,54 @@ bool readRegistry(HKEY key,const QByteArray& subKey, const QByteArray& name, QSt
 }
 #endif
 
-QList<QByteArray> splitByteArrayToLines(const QByteArray &content)
-{
-    QList<QByteArray> lines;
-    const char* p =content.constData();
-    const char* end = p+content.length();
-    const char* lineStart = p;
-    QByteArray line;
-    while (p<=end) {
-        char ch=*p;
-        switch(ch) {
-        case '\r':
-            line = QByteArray(lineStart, p-lineStart);
-            lines.append(line);
-            p++;
-            if (*p=='\n')
-                p++;
-            lineStart = p;
-            break;
-        case '\n':
-            line = QByteArray(lineStart, p-lineStart);
-            lines.append(line);
-            p++;
-            lineStart = p;
-            break;
-        default:
-            p++;
-        }
-    }
-    if (lineStart>end) {
-        lines.append("");
-    } else {
-        line = QByteArray(lineStart, end-lineStart+1);
-        lines.append(line);
-    }
-    return lines;
-}
-
-QString localizePath(const QString &path)
-{
-    QString result = path;
-    result.replace("/",QDir::separator());
-    return result;
-}
-
-float pointToPixel(float point)
-{
-    return point * screenDPI() / 72;
-}
-
-float pixelToPoint(float pixel)
-{
-    return pixel * 72 / screenDPI();
-}
-
-
-QStringList splitProcessCommand(const QString &cmd)
-{
-    QStringList result;
-    SplitProcessCommandQuoteType quoteType = SplitProcessCommandQuoteType::None;
-    int i=0;
-    QString current;
-    while (i<cmd.length()) {
-        switch (cmd[i].unicode()) {
-        case ' ':
-        case '\t':
-        case '\r':
-        case '\n':
-            if (quoteType == SplitProcessCommandQuoteType::None) {
-                if (!current.isEmpty()) {
-                    result.append(current);
-                }
-                current = "";
-            } else {
-                current += cmd[i];
-            }
-            i++;
-            break;
-        case '\"':
-            switch(quoteType) {
-            case SplitProcessCommandQuoteType::None:
-                quoteType = SplitProcessCommandQuoteType::Double;
-                break;
-            case SplitProcessCommandQuoteType::Double:
-                quoteType = SplitProcessCommandQuoteType::None;
-                break;
-            default:
-                current+=cmd[i];
-            }
-            i++;
-            break;
-        case '\'':
-            switch(quoteType) {
-            case SplitProcessCommandQuoteType::None:
-                quoteType = SplitProcessCommandQuoteType::Single;
-                break;
-            case SplitProcessCommandQuoteType::Single:
-                quoteType = SplitProcessCommandQuoteType::None;
-                break;
-            default:
-                current+=cmd[i];
-            }
-            i++;
-            break;
-        case '\\':
-            current += cmd[i];
-            i++;
-            if  (i<cmd.length()) {
-                current += cmd[i];
-                i++;
-            }
-            break;
-        default:
-            current += cmd[i];
-            i++;
-        }
-    }
-    if (!current.isEmpty())
-        result.append(current);
-    return result;
-}
-
-static int defaultScreenDPI = -1;
-
-int screenDPI()
-{
-    if (defaultScreenDPI<1) {
-        defaultScreenDPI = qApp->primaryScreen()->logicalDotsPerInch();
-    }
-    return defaultScreenDPI;
-}
-
 qulonglong stringToHex(const QString &str, bool &isOk)
 {
     qulonglong value = str.toULongLong(&isOk,16);
     return value;
 }
 
-void setScreenDPI(int dpi)
+bool findComplement(const QString &s, const QChar &fromToken, const QChar &toToken, int &curPos, int increment)
 {
-    defaultScreenDPI = dpi;
-}
-
-void copyFolder(const QString &fromDir, const QString &toDir)
-{
-    QDirIterator it(fromDir);
-    QDir dir(fromDir);
-    QDir targetDir(toDir);
-    const int absSourcePathLength = dir.absolutePath().length();
-
-
-    if (targetDir.exists())
-        return;
-    targetDir.mkpath(targetDir.absolutePath());
-
-    while (it.hasNext()){
-        it.next();
-        const auto fileInfo = it.fileInfo();
-        if(!fileInfo.isHidden() && !fileInfo.fileName().startsWith('.')) { //filters dot and dotdot
-            const QString subPathStructure = fileInfo.absoluteFilePath().mid(absSourcePathLength);
-            const QString constructedAbsolutePath = targetDir.absolutePath() + subPathStructure;
-            if(fileInfo.isDir()){
-                //Create directory in target folder
-                dir.mkpath(constructedAbsolutePath);
-                copyFolder(fileInfo.absoluteFilePath(), constructedAbsolutePath);
-            } else if(fileInfo.isFile()) {
-                //Copy File to target directory
-
-                //Remove file at target location, if it exists, or QFile::copy will fail
-                QFile::remove(constructedAbsolutePath);
-                QFile::copy(fileInfo.absoluteFilePath(), constructedAbsolutePath);
-                QFile newFile(constructedAbsolutePath);
-                QFile::Permissions permissions = newFile.permissions();
-                permissions |= (QFile::Permission::WriteOwner
-                                | QFile::Permission::WriteUser
-                                | QFile::Permission::WriteGroup
-                                | QFile::Permission::WriteOther);
-                newFile.setPermissions(permissions);
-            }
+    int curPosBackup = curPos;
+    int level = 0;
+    //todo: skip comment, char and strings
+    while ((curPos < s.length()) && (curPos >= 0)) {
+        if (s[curPos] == fromToken) {
+            level++;
+        } else if (s[curPos] == toToken) {
+            level--;
+            if (level == 0)
+                return true;
         }
+        curPos += increment;
     }
+    curPos = curPosBackup;
+    return false;
 }
 
-
-
-float pointToPixel(float point, float dpi)
-{
-     return point * dpi / 72;
+bool haveGoodContrast(const QColor& c1, const QColor &c2) {
+    int lightness1 = qGray(c1.rgb());
+    int lightness2 = qGray(c2.rgb());
+    return std::abs(lightness1 - lightness2)>=120;
 }
 
-int countLeadingWhitespaceChars(const QString &line)
-{
-    int n=0;
-    while (n<line.length()) {
-        if (line[n].unicode()>32)
-            break;
-        n++;
+QByteArray getHTTPBody(const QByteArray& content) {
+    int i= content.indexOf("\r\n\r\n");
+    if (i>=0) {
+        return content.mid(i+4);
     }
-    return n;
+    return "";
 }
 
-bool copyFile(const QString &fromPath, const QString &toPath, bool overwrite)
+QString getSizeString(int size)
 {
-    QFile  fromFile(fromPath);
-    QFile toFile(toPath);
-    if (!fromFile.exists())
-        return false;
-    if (toFile.exists()) {
-        if (!overwrite)
-            return false;
-        if (!toFile.remove())
-            return false;
+    if (size < 1024) {
+        return QString("%1 ").arg(size)+QObject::tr("bytes");
+    } else if (size < 1024 * 1024) {
+        return QString("%1 ").arg(size / 1024.0)+QObject::tr("KB");
+    } else if (size < 1024 * 1024 * 1024) {
+        return QString("%1 ").arg(size / 1024.0 / 1024.0)+QObject::tr("MB");
+    } else {
+        return QString("%1 ").arg(size / 1024.0 / 1024.0 / 1024.0)+QObject::tr("GB");
     }
-
-    if (!fromFile.open(QFile::ReadOnly))
-        return false;
-    if (!toFile.open(QFile::WriteOnly | QFile::Truncate))
-        return false;
-
-    int bufferSize=64*1024;
-    char buffer[bufferSize];
-
-    while (!fromFile.atEnd()) {
-        int readed = fromFile.read(buffer,bufferSize);
-        toFile.write(buffer,readed);
-    }
-    toFile.close();
-    fromFile.close();
-    return true;
 }

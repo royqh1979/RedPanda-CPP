@@ -164,10 +164,6 @@ bool EditorList::closeEditor(Editor* editor, bool transferFocus, bool force) {
     }
 
     beginUpdate();
-    auto end = finally([this] {
-        this->endUpdate();
-    });
-
 //    if (transferFocus && (editor->pageControl()->currentWidget()==editor)) {
 //        //todo: activate & focus the previous editor
 //    }
@@ -184,14 +180,17 @@ bool EditorList::closeEditor(Editor* editor, bool transferFocus, bool force) {
         delete editor;
     }
     updateLayout();
-    if (!force) {
+    if (!force && transferFocus) {
         editor = getEditor();
-        if (transferFocus && editor)
+        if (editor) {
             editor->activate();
-        else
             pMainWindow->updateClassBrowserForEditor(editor);
+        } else {
+            pMainWindow->updateClassBrowserForEditor(nullptr);
+        }
     }
     emit editorClosed();
+    endUpdate();
     return true;
 }
 

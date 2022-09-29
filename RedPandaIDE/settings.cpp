@@ -1255,8 +1255,8 @@ void Settings::Editor::doLoad()
     mEnhanceHomeKey = boolValue("enhance_home_key", true);
     mEnhanceEndKey = boolValue("enhance_end_key",true);
     mKeepCaretX = boolValue("keep_caret_x",true);
-    mCaretForInsert = static_cast<SynEditCaretType>( intValue("caret_for_insert",static_cast<int>(SynEditCaretType::ctVerticalLine)));
-    mCaretForOverwrite = static_cast<SynEditCaretType>( intValue("caret_for_overwrite",static_cast<int>(SynEditCaretType::ctBlock)));
+    mCaretForInsert = static_cast<QSynedit::EditCaretType>( intValue("caret_for_insert",static_cast<int>(QSynedit::EditCaretType::ctVerticalLine)));
+    mCaretForOverwrite = static_cast<QSynedit::EditCaretType>( intValue("caret_for_overwrite",static_cast<int>(QSynedit::EditCaretType::ctBlock)));
     mCaretUseTextColor = boolValue("caret_use_text_color",true);
     mCaretColor = colorValue("caret_color",Qt::yellow);
 
@@ -1382,22 +1382,22 @@ void Settings::Editor::doLoad()
     mShowFunctionTips = boolValue("show_function_tips",true);
 }
 
-SynEditCaretType Settings::Editor::caretForOverwrite() const
+QSynedit::EditCaretType Settings::Editor::caretForOverwrite() const
 {
     return mCaretForOverwrite;
 }
 
-void Settings::Editor::setCaretForOverwrite(const SynEditCaretType &caretForOverwrite)
+void Settings::Editor::setCaretForOverwrite(const QSynedit::EditCaretType &caretForOverwrite)
 {
     mCaretForOverwrite = caretForOverwrite;
 }
 
-SynEditCaretType Settings::Editor::caretForInsert() const
+QSynedit::EditCaretType Settings::Editor::caretForInsert() const
 {
     return mCaretForInsert;
 }
 
-void Settings::Editor::setCaretForInsert(const SynEditCaretType &caretForInsert)
+void Settings::Editor::setCaretForInsert(const QSynedit::EditCaretType &caretForInsert)
 {
     mCaretForInsert = caretForInsert;
 }
@@ -2893,7 +2893,7 @@ void Settings::CompilerSets::prepareCompatibleIndex()
 
     //old settings compatibility, don't reorder, add or remove items
     mCompilerCompatibleIndex.append(CC_CMD_OPT_ANSI);
-    mCompilerCompatibleIndex.append(CC_CMD_OPT_NO_ASM "gcc_cmd_opt_no_asm");
+    mCompilerCompatibleIndex.append(CC_CMD_OPT_NO_ASM);
     mCompilerCompatibleIndex.append(CC_CMD_OPT_TRADITIONAL_CPP);
 
     mCompilerCompatibleIndex.append(CC_CMD_OPT_ARCH);
@@ -3886,7 +3886,7 @@ void Settings::CodeCompletion::doLoad()
     statex.dwLength = sizeof (statex);
 
     GlobalMemoryStatusEx (&statex);
-    if (statex.ullAvailPhys > (long long int)3*1024*1024*1024) {
+    if (statex.ullAvailPhys > (long long int)10*1024*1024*1024) {
         doClear = false;
     }
 #endif

@@ -20,7 +20,7 @@
 #include <QStyledItemDelegate>
 #include "mainwindow.h"
 
-PSearchResults SearchResultModel::addSearchResults(const QString &keyword, SynSearchOptions options, SearchFileScope scope)
+PSearchResults SearchResultModel::addSearchResults(const QString &keyword, QSynedit::SearchOptions options, SearchFileScope scope)
 {
     int index=-1;
     for (int i=0;i<mSearchResults.size();i++) {

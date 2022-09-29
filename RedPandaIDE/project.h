@@ -186,7 +186,7 @@ public:
     int indexInUnits(const Editor* editor) const;
     PProjectUnit  newUnit(PProjectModelNode parentNode,
                  const QString& customFileName="");
-    Editor* openUnit(int index);
+    Editor* openUnit(int index, bool forceOpen=true);
     Editor* unitEditor(const PProjectUnit& unit) const;
     Editor* unitEditor(const ProjectUnit* unit) const;
     Editor* unitEditor(int index) const {

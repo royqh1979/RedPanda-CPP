@@ -27,7 +27,7 @@
 #include "project.h"
 #include "projecttemplate.h"
 #include "widgets/newprojectdialog.h"
-#include "platform.h"
+#include <qt_utils/charsetinfo.h>
 #include "widgets/aboutdialog.h"
 #include "shortcutmanager.h"
 #include "colorscheme.h"
@@ -110,6 +110,7 @@ MainWindow::MainWindow(QWidget *parent)
       mCheckSyntaxInBack(false),
       mShouldRemoveAllSettings(false),
       mClosing(false),
+      mClosingAll(false),
       mOpenningFiles(false),
       mSystemTurnedOff(false)
 {
@@ -394,7 +395,7 @@ void MainWindow::updateForEncodingInfo(bool clear) {
         ui->actionAuto_Detect->setChecked(editor->encodingOption() == ENCODING_AUTO_DETECT);
         ui->actionEncode_in_ANSI->setChecked(editor->encodingOption() == ENCODING_SYSTEM_DEFAULT);
         ui->actionEncode_in_UTF_8->setChecked(editor->encodingOption() == ENCODING_UTF8);
-        ui->actionEncode_in_UTF_8->setChecked(editor->encodingOption() == ENCODING_UTF8_BOM);
+        ui->actionEncode_in_UTF_8_BOM->setChecked(editor->encodingOption() == ENCODING_UTF8_BOM);
     } else {
         mFileEncodingStatus->setText("");
         ui->actionAuto_Detect->setChecked(false);
@@ -877,7 +878,7 @@ void MainWindow::onFileSaved(const QString &path, bool inProject)
             ui->treeFiles->update(index);
         }
     }
-    pMainWindow->updateForEncodingInfo();
+    //updateForEncodingInfo();
 }
 
 void MainWindow::updateAppTitle()
@@ -1160,17 +1161,25 @@ void MainWindow::openFiles(const QStringList &files)
         }
     }
     //Didn't find a project? Open all files
-    for (const QString& file:files) {
-        openFile(file);
+    for (int i=0;i<files.length()-1;i++) {
+        openFile(files[i],false);
+    }
+    if (files.length()>0) {
+        openFile(files.last(),true);
     }
     mEditorList->endUpdate();
+    Editor* e=mEditorList->getEditor();
+    if (e)
+        e->activate();
 }
 
-void MainWindow::openFile(const QString &filename, QTabWidget* page)
+void MainWindow::openFile(const QString &filename, bool activate, QTabWidget* page)
 {
     Editor* editor = mEditorList->getOpenedEditorByFilename(filename);
     if (editor!=nullptr) {
-        editor->activate();
+        if (activate) {
+            editor->activate();
+        }
         return;
     }
     try {
@@ -1187,8 +1196,10 @@ void MainWindow::openFile(const QString &filename, QTabWidget* page)
 //        if (mProject) {
 //            mProject->associateEditorToUnit(editor,unit);
 //        }
-        editor->activate();
-        this->updateForEncodingInfo();
+        if (activate) {
+            editor->activate();
+        }
+//        editor->activate();
     } catch (FileError e) {
         QMessageBox::critical(this,tr("Error"),e.reason());
     }
@@ -1263,7 +1274,7 @@ void MainWindow::openProject(const QString &filename, bool openFiles)
         updateCompilerSet();
         updateClassBrowserForEditor(e);
     }
-    updateForEncodingInfo();
+    //updateForEncodingInfo();
 }
 
 void MainWindow::changeOptions(const QString &widgetName, const QString &groupName)
@@ -2214,7 +2225,7 @@ void MainWindow::loadLastOpens()
 //        }
         if (!editor)
             continue;
-        BufferCoord pos;
+        QSynedit::BufferCoord pos;
         pos.ch = lastOpenIni.GetLongValue(sectionName,"CursorCol", 1);
         pos.line = lastOpenIni.GetLongValue(sectionName,"CursorRow", 1);
         editor->setCaretXY(pos);
@@ -2230,7 +2241,7 @@ void MainWindow::loadLastOpens()
     }
     if (count>0) {
         updateEditorActions();
-        updateForEncodingInfo();
+        //updateForEncodingInfo();
     }
     if (focusedEditor)
         focusedEditor->activate();
@@ -2298,7 +2309,7 @@ void MainWindow::newEditor()
                                                pSettings->editor().defaultEncoding(),
                                                false,true);
         editor->activate();
-        updateForEncodingInfo();
+        //updateForEncodingInfo();
     }  catch (FileError e) {
         QMessageBox::critical(this,tr("Error"),e.reason());
     }
@@ -4016,7 +4027,7 @@ void MainWindow::onEditorContextMenu(const QPoint& pos)
     if (!editor)
         return;
     QMenu menu(this);
-    BufferCoord p;
+    QSynedit::BufferCoord p;
     mEditorContextMenuPos = pos;
     int line;
     if (editor->getPositionOfMouse(p)) {
@@ -4510,11 +4521,14 @@ void MainWindow::closeEvent(QCloseEvent *event) {
         }
     }
 
+    mClosingAll=true;
     if (!mEditorList->closeAll(false)) {
+        mClosingAll=false;
         mQuitting = false;
         event->ignore();
         return ;
     }
+    mClosingAll=false;
 
     if (!mShouldRemoveAllSettings && pSettings->editor().autoLoadLastFiles()) {
         if (mProject) {
@@ -5542,9 +5556,11 @@ void MainWindow::on_actionClose_triggered()
 
 void MainWindow::on_actionClose_All_triggered()
 {
+    mClosingAll=true;
     mClosing = true;
     mEditorList->closeAll(mSystemTurnedOff);
     mClosing = false;
+    mClosingAll=false;
 }
 
 
@@ -5622,7 +5638,7 @@ void MainWindow::on_actionGoto_Definition_triggered()
 void MainWindow::on_actionFind_references_triggered()
 {
     Editor * editor = mEditorList->getEditor();
-    BufferCoord pos;
+    QSynedit::BufferCoord pos;
     if (editor && editor->pointToCharLine(mEditorContextMenuPos,pos)) {
         CppRefacter refactor;
         refactor.findOccurence(editor,pos);
@@ -6163,7 +6179,7 @@ void MainWindow::newProjectUnitFile()
                     newProjectUnitDialog.setSuffix("c");
                 break;
             default:
-                newProjectUnitDialog.setSuffix("");
+                newProjectUnitDialog.setSuffix("txt");
             }
         }
         QString folder = mProject->fileSystemNodeFolderPath(pNode);
@@ -6205,10 +6221,11 @@ void MainWindow::newProjectUnitFile()
     mProject->saveAll();
         updateProjectView();
     idx = mProject->units().count()-1;
-    Editor * editor = mProject->openUnit(idx);
+    Editor * editor = mProject->openUnit(idx, false);
     //editor->setUseCppSyntax(mProject->options().useGPP);
     //editor->setModified(true);
-    editor->activate();
+    if (editor)
+        editor->activate();
     QString branch;
     if (pSettings->vcs().gitOk() && mProject->model()->iconProvider()->VCSRepository()->hasRepository(branch)) {
         QString output;
@@ -6472,7 +6489,7 @@ void MainWindow::on_actionRename_Symbol_triggered()
     if (!editor->parser())
         return;
     editor->beginUpdate();
-    BufferCoord oldCaretXY = editor->caretXY();
+    QSynedit::BufferCoord oldCaretXY = editor->caretXY();
     //    mClassBrowserModel.beginUpdate();
     QCursor oldCursor = editor->cursor();
     editor->setCursor(Qt::CursorShape::WaitCursor);
@@ -6484,7 +6501,7 @@ void MainWindow::on_actionRename_Symbol_triggered()
 
     QStringList expression = editor->getExpressionAtPosition(oldCaretXY);
     if (expression.isEmpty() && oldCaretXY.ch>1) {
-        BufferCoord coord=oldCaretXY;
+        QSynedit::BufferCoord coord=oldCaretXY;
         coord.ch--;
         expression = editor->getExpressionAtPosition(coord);
     }
@@ -6706,7 +6723,7 @@ void MainWindow::on_btnReplace_clicked()
             line.insert(item->start-1, newWord);
             contents[item->line-1] = line;
         }
-        BufferCoord coord=editor->caretXY();
+        QSynedit::BufferCoord coord=editor->caretXY();
         int topLine = editor->topLine();
         int leftChar = editor->leftChar();
         editor->replaceAll(contents.join(editor->lineBreak()));
@@ -8087,5 +8104,15 @@ void MainWindow::on_actionNew_Template_triggered()
                     dialog.getCategory()
                     );
     }
+}
+
+bool MainWindow::isQuitting() const
+{
+    return mQuitting;
+}
+
+bool MainWindow::isClosingAll() const
+{
+    return mClosingAll;
 }
 

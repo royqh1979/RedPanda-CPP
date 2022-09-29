@@ -40,15 +40,15 @@ EditorGeneralWidget::~EditorGeneralWidget()
     delete ui;
 }
 
-static void setCaretTypeIndex(QComboBox* combo, SynEditCaretType caretType) {
+static void setCaretTypeIndex(QComboBox* combo, QSynedit::EditCaretType caretType) {
     int t = static_cast<int>(caretType);
     combo->setCurrentIndex(t);
 }
 
-static SynEditCaretType getCaretTypeIndex(QComboBox* combo) {
+static QSynedit::EditCaretType getCaretTypeIndex(QComboBox* combo) {
     if (combo->currentIndex()<0)
-        return SynEditCaretType::ctVerticalLine;
-    return static_cast<SynEditCaretType>(combo->currentIndex());
+        return QSynedit::EditCaretType::ctVerticalLine;
+    return static_cast<QSynedit::EditCaretType>(combo->currentIndex());
 }
 void EditorGeneralWidget::doLoad()
 {

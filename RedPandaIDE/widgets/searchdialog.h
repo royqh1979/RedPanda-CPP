@@ -18,7 +18,7 @@
 #define SEARCHDIALOG_H
 
 #include <QDialog>
-#include "../qsynedit/SynEdit.h"
+#include <qsynedit/SynEdit.h>
 #include "../utils.h"
 
 namespace Ui {
@@ -46,9 +46,9 @@ public:
     void findNext();
     void findPrevious();
     void findInFiles(const QString& text);
-    void findInFiles(const QString& keyword, SearchFileScope scope, SynSearchOptions options);
+    void findInFiles(const QString& keyword, SearchFileScope scope, QSynedit::SearchOptions options);
     void replace(const QString& sFind, const QString& sReplace);
-    PSynSearchBase searchEngine() const;
+    QSynedit::PSynSearchBase searchEngine() const;
 
     QTabBar *tabBar() const;
 
@@ -60,18 +60,18 @@ private slots:
 
    void on_btnExecute_clicked();
 private:
-   int execute(SynEdit* editor, const QString& sSearch,
+   int execute(QSynedit::SynEdit* editor, const QString& sSearch,
                const QString& sReplace,
-               SynSearchMathedProc matchCallback = nullptr,
-               SynSearchConfirmAroundProc confirmAroundCallback = nullptr);
-   std::shared_ptr<SearchResultTreeItem> batchFindInEditor(SynEdit * editor,const QString& filename, const QString& keyword);
+               QSynedit::SearchMathedProc matchCallback = nullptr,
+               QSynedit::SearchConfirmAroundProc confirmAroundCallback = nullptr);
+   std::shared_ptr<SearchResultTreeItem> batchFindInEditor(QSynedit::SynEdit * editor,const QString& filename, const QString& keyword);
 private:
     Ui::SearchDialog *ui;
     QTabBar *mTabBar;
-    SynSearchOptions mSearchOptions;
-    PSynSearchBase mSearchEngine;
-    PSynSearchBase mBasicSearchEngine;
-    PSynSearchBase mRegexSearchEngine;
+    QSynedit::SearchOptions mSearchOptions;
+    QSynedit::PSynSearchBase mSearchEngine;
+    QSynedit::PSynSearchBase mBasicSearchEngine;
+    QSynedit::PSynSearchBase mRegexSearchEngine;
 
     // QWidget interface
 protected:

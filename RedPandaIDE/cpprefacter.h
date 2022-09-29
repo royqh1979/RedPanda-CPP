@@ -23,7 +23,9 @@
 #include "parser/cppparser.h"
 
 class Editor;
-struct BufferCoord;
+namespace QSynedit {
+    struct BufferCoord;
+}
 class Project;
 class CppRefacter : public QObject
 {
@@ -31,10 +33,10 @@ class CppRefacter : public QObject
 public:
     explicit CppRefacter(QObject *parent = nullptr);
 
-    bool findOccurence(Editor * editor, const BufferCoord& pos);
+    bool findOccurence(Editor * editor, const QSynedit::BufferCoord& pos);
     bool findOccurence(const QString& statementFullname, SearchFileScope scope);
 
-    void renameSymbol(Editor* editor, const BufferCoord& pos, const QString& newWord);
+    void renameSymbol(Editor* editor, const QSynedit::BufferCoord& pos, const QString& newWord);
 private:
     void doFindOccurenceInEditor(PStatement statement, Editor* editor, const PCppParser& parser);
     void doFindOccurenceInProject(PStatement statement, std::shared_ptr<Project> project, const PCppParser& parser);

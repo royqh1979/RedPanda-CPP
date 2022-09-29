@@ -41,6 +41,7 @@ public:
 
 private:
     POJProblem mProblem;
+    int mMoveTargetRow;
 
     // QAbstractItemModel interface
 public:
@@ -53,6 +54,19 @@ public:
 public:
     int columnCount(const QModelIndex &parent) const override;
     QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
+
+    // QAbstractItemModel interface
+public:
+    Qt::DropActions supportedDropActions() const override;
+
+    // QAbstractItemModel interface
+public:
+    bool dropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent) override;
+
+    // QAbstractItemModel interface
+public:
+    bool insertRows(int row, int count, const QModelIndex &parent) override;
+    bool removeRows(int row, int count, const QModelIndex &parent) override;
 };
 
 class OJProblemSetModel : public QAbstractListModel
@@ -87,6 +101,11 @@ public:
     QVariant data(const QModelIndex &index, int role) const override;
     bool setData(const QModelIndex &index, const QVariant &value, int role) override;
     Qt::ItemFlags flags(const QModelIndex &index) const override;
+
+    // QAbstractItemModel interface
+public:
+    Qt::DropActions supportedDropActions() const override;
+    bool moveRows(const QModelIndex &sourceParent, int sourceRow, int count, const QModelIndex &destinationParent, int destinationChild) override;
 };
 
 #endif // OJPROBLEMSETMODEL_H

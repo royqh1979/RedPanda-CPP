@@ -190,7 +190,7 @@ public:
 
     const PBookmarkModel &bookmarkModel() const;
 
-    void openFile(const QString& filename, QTabWidget* page=nullptr);
+    void openFile(const QString& filename, bool activate=true, QTabWidget* page=nullptr);
     void openProject(const QString& filename, bool openFiles = true);
     void changeOptions(const QString& widgetName=QString(), const QString& groupName=QString());
 
@@ -759,6 +759,7 @@ private:
     CaretList mCaretList;
 
     bool mClosing;
+    bool mClosingAll;
     bool mOpenningFiles;
     bool mSystemTurnedOff;
     QPoint mEditorContextMenuPos;
@@ -844,6 +845,8 @@ protected:
     // QObject interface
 public:
     bool event(QEvent *event) override;
+    bool isClosingAll() const;
+    bool isQuitting() const;
 };
 
 extern MainWindow* pMainWindow;

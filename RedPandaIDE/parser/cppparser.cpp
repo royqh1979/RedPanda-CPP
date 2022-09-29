@@ -17,7 +17,7 @@
 #include "cppparser.h"
 #include "parserutils.h"
 #include "../utils.h"
-#include "../qsynedit/highlighter/cpp.h"
+#include "qsynedit/highlighter/cpp.h"
 
 #include <QApplication>
 #include <QDate>
@@ -957,6 +957,11 @@ void CppParser::unFreeze()
 QSet<QString> CppParser::scannedFiles()
 {
     return mPreprocessor.scannedFiles();
+}
+
+bool CppParser::isFileParsed(const QString &filename)
+{
+    return mPreprocessor.scannedFiles().contains(filename);
 }
 
 QString CppParser::getScopePrefix(const PStatement& statement){
@@ -4133,7 +4138,7 @@ PStatement CppParser::doParseEvalTypeInfo(
     QString s = type;
 //    qDebug()<<"eval type info"<<type;
     int position = s.length()-1;
-    SynEditCppHighlighter highlighter;
+    QSynedit::CppHighlighter highlighter;
     highlighter.resetState();
     highlighter.setLine(type,0);
     int bracketLevel = 0;
