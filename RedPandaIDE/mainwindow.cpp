@@ -6155,7 +6155,7 @@ void MainWindow::newProjectUnitFile()
     PProjectUnit newUnit;
     if (mProject->modelType() == ProjectModelType::FileSystem) {
         PProjectModelNode modelTypeNode = pNode;
-        while (modelTypeNode && modelTypeNode->folderNodeType==ProjectSpecialFolderNode::NonSpecial) {
+        while (modelTypeNode && modelTypeNode->folderNodeType==ProjectModelNodeType::Folder) {
             modelTypeNode=modelTypeNode->parent.lock();
         }
         if (!modelTypeNode) {
@@ -6169,10 +6169,10 @@ void MainWindow::newProjectUnitFile()
                 newProjectUnitDialog.setSuffix("c");
         } else {
             switch (modelTypeNode->folderNodeType) {
-            case ProjectSpecialFolderNode::HEADERS:
+            case ProjectModelNodeType::DUMMY_HEADERS_FOLDER:
                 newProjectUnitDialog.setSuffix("h");
                 break;
-            case ProjectSpecialFolderNode::SOURCES:
+            case ProjectModelNodeType::DUMMY_SOURCES_FOLDER:
                 if (mProject->options().isCpp)
                     newProjectUnitDialog.setSuffix("cpp");
                 else

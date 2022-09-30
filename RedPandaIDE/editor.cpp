@@ -125,8 +125,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
         initParser();
     }
 
-    if (pSettings->editor().readOnlySytemHeader()
-            && mParser && (mParser->isSystemHeaderFile(mFilename) || mParser->isProjectHeaderFile(mFilename))) {
+    if (shouldOpenInReadonly()) {
         this->setModified(false);
         setReadOnly(true);
     }
@@ -394,8 +393,7 @@ bool Editor::saveAs(const QString &name, bool fromProject){
     reparseTodo();
 
 
-    if (pSettings->editor().readOnlySytemHeader()
-            && (!mParser->isSystemHeaderFile(mFilename) && !mParser->isProjectHeaderFile(mFilename))) {
+    if (!shouldOpenInReadonly()) {
         setReadOnly(false);
         updateCaption();
     }
@@ -1738,6 +1736,14 @@ bool Editor::isBraceChar(QChar ch)
     default:
         return false;
     }
+}
+
+bool Editor::shouldOpenInReadonly()
+{
+    if (pMainWindow->project() && pMainWindow->project()->findUnitByFilename(mFilename))
+        return false;
+    return pSettings->editor().readOnlySytemHeader()
+                && mParser && (mParser->isSystemHeaderFile(mFilename) || mParser->isProjectHeaderFile(mFilename));
 }
 
 void Editor::resetBookmarks()

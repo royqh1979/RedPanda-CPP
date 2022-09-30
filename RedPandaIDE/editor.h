@@ -239,6 +239,7 @@ private slots:
 
 private:
     bool isBraceChar(QChar ch);
+    bool shouldOpenInReadonly();
     void resetBookmarks();
     QChar getCurrentChar();
     bool handleSymbolCompletion(QChar key);

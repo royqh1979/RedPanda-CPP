@@ -114,6 +114,7 @@ bool directoryExists(const QString& file);
 bool removeFile(const QString& filename);
 void copyFolder(const QString &fromDir, const QString& toDir);
 bool copyFile(const QString &fromFile, const QString& toFile, bool overwrite);
+bool isInFolder(const QString& folderpath, const QString& filepath);
 
 QString includeTrailingPathDelimiter(const QString& path);
 QString excludeTrailingPathDelimiter(const QString& path);

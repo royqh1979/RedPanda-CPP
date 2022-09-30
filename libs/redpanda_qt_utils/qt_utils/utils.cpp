@@ -649,3 +649,10 @@ void decodeKey(const int combinedKey, int &key, Qt::KeyboardModifiers &modifiers
     }
     key = combinedKey & ~(Qt::ShiftModifier | Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier | Qt::KeypadModifier);
 }
+
+bool isInFolder(const QString &folderpath, const QString &filepath)
+{
+    QDir folder(folderpath);
+    QFileInfo fileInfo(filepath);
+    return fileInfo.absoluteFilePath().startsWith(includeTrailingPathDelimiter(folder.absolutePath()));
+}

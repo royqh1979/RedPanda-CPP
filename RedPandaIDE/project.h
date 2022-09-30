@@ -29,13 +29,12 @@ class CppParser;
 class EditorList;
 class QFileSystemWatcher;
 
-
-enum ProjectSpecialFolderNode {
-    HEADERS,
-    SOURCES,
-    OTHERS,
-    NonSpecial,
-    NotFolder
+enum ProjectModelNodeType {
+    DUMMY_HEADERS_FOLDER,
+    DUMMY_SOURCES_FOLDER,
+    DUMMY_OTHERS_FOLDER,
+    Folder,
+    File
 };
 
 struct ProjectModelNode;
@@ -46,7 +45,7 @@ struct ProjectModelNode {
     int unitIndex;
     int priority;
     QList<PProjectModelNode>  children;
-    ProjectSpecialFolderNode folderNodeType;
+    ProjectModelNodeType folderNodeType;
     int level;
 };
 
@@ -129,8 +128,11 @@ public:
     Qt::ItemFlags flags(const QModelIndex &index) const override;
     bool setData(const QModelIndex &index, const QVariant &value, int role) override;
 
+    QModelIndex getNodeIndex(ProjectModelNode *node) const;
+
 private:
     QModelIndex getParentIndex(ProjectModelNode * node) const;
+
     // QAbstractItemModel interface
 public:
     bool canDropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent) const override;
@@ -253,9 +255,9 @@ private:
     void checkProjectFileForUpdate(SimpleIni& ini);
     void createFolderNodes();
     void createFileSystemFolderNodes();
-    void createFileSystemFolderNode(ProjectSpecialFolderNode folderType, const QString& folderName, PProjectModelNode parent, const QSet<QString>& validFolders);
+    void createFileSystemFolderNode(ProjectModelNodeType folderType, const QString& folderName, PProjectModelNode parent, const QSet<QString>& validFolders);
     PProjectModelNode getParentFolderNode(const QString& filename);
-    PProjectModelNode findFolderNode(const QString& folderPath, ProjectSpecialFolderNode nodeType);
+    PProjectModelNode findFolderNode(const QString& folderPath, ProjectModelNodeType nodeType);
     PProjectModelNode folderNodeFromName(const QString& name);
     void loadOptions(SimpleIni& ini);
     void loadLayout(); // load all [UnitX]
@@ -279,7 +281,7 @@ private:
     std::shared_ptr<CppParser> mParser;
     QList<PProjectModelNode> mFolderNodes;
     PProjectModelNode mRootNode;
-    QHash<ProjectSpecialFolderNode, PProjectModelNode> mSpecialNodes;
+    QHash<ProjectModelNodeType, PProjectModelNode> mSpecialNodes;
     QHash<QString, PProjectModelNode> mFileSystemFolderNodes;
     ProjectModel mModel;
     EditorList *mEditorList;

@@ -230,9 +230,9 @@ PProjectModelNode Project::makeNewFileNode(const QString &s, bool isFolder, PPro
     if (isFolder) {
         node->unitIndex = -1;
         node->priority = 0;
-        node->folderNodeType = ProjectSpecialFolderNode::NonSpecial;
+        node->folderNodeType = ProjectModelNodeType::Folder;
     } else {
-        node->folderNodeType = ProjectSpecialFolderNode::NotFolder;
+        node->folderNodeType = ProjectModelNodeType::File;
     }
     return node;
 }
@@ -243,7 +243,7 @@ PProjectModelNode Project::makeProjectNode()
     node->text = mName;
     node->level = 0;
     node->unitIndex = -1;
-    node->folderNodeType = ProjectSpecialFolderNode::NonSpecial;
+    node->folderNodeType = ProjectModelNodeType::Folder;
     return node;
 }
 
@@ -1499,29 +1499,29 @@ void Project::createFileSystemFolderNodes()
         }
     }
     PProjectModelNode node = makeNewFileNode(tr("Headers"),true,mRootNode);
-    node->folderNodeType = ProjectSpecialFolderNode::HEADERS;
+    node->folderNodeType = ProjectModelNodeType::DUMMY_HEADERS_FOLDER;
     node->priority = 1000;
-    createFileSystemFolderNode(ProjectSpecialFolderNode::HEADERS,folder(),node, headerFolders);
+    createFileSystemFolderNode(ProjectModelNodeType::DUMMY_HEADERS_FOLDER,folder(),node, headerFolders);
     mFolderNodes.append(node);
-    mSpecialNodes.insert(ProjectSpecialFolderNode::HEADERS,node);
+    mSpecialNodes.insert(ProjectModelNodeType::DUMMY_HEADERS_FOLDER,node);
 
     node = makeNewFileNode(tr("Sources"),true,mRootNode);
-    node->folderNodeType = ProjectSpecialFolderNode::SOURCES;
+    node->folderNodeType = ProjectModelNodeType::DUMMY_SOURCES_FOLDER;
     node->priority = 900;
-    createFileSystemFolderNode(ProjectSpecialFolderNode::SOURCES,folder(),node, sourceFolders);
+    createFileSystemFolderNode(ProjectModelNodeType::DUMMY_SOURCES_FOLDER,folder(),node, sourceFolders);
     mFolderNodes.append(node);
-    mSpecialNodes.insert(ProjectSpecialFolderNode::SOURCES,node);
+    mSpecialNodes.insert(ProjectModelNodeType::DUMMY_SOURCES_FOLDER,node);
 
     node = makeNewFileNode(tr("Others"),true,mRootNode);
-    node->folderNodeType = ProjectSpecialFolderNode::OTHERS;
+    node->folderNodeType = ProjectModelNodeType::DUMMY_OTHERS_FOLDER;
     node->priority = 800;
-    createFileSystemFolderNode(ProjectSpecialFolderNode::OTHERS,folder(),node, otherFolders);
+    createFileSystemFolderNode(ProjectModelNodeType::DUMMY_OTHERS_FOLDER,folder(),node, otherFolders);
     mFolderNodes.append(node);
-    mSpecialNodes.insert(ProjectSpecialFolderNode::OTHERS,node);
+    mSpecialNodes.insert(ProjectModelNodeType::DUMMY_OTHERS_FOLDER,node);
 }
 
 void Project::createFileSystemFolderNode(
-        ProjectSpecialFolderNode folderType,
+        ProjectModelNodeType folderType,
         const QString &folderName,
         PProjectModelNode parent,
         const QSet<QString>& validFolders)
@@ -1554,7 +1554,7 @@ bool Project::fileAlreadyExists(const QString &s)
     return false;
 }
 
-PProjectModelNode Project::findFolderNode(const QString &folderPath, ProjectSpecialFolderNode nodeType)
+PProjectModelNode Project::findFolderNode(const QString &folderPath, ProjectModelNodeType nodeType)
 {
     PProjectModelNode node = mFileSystemFolderNodes.value(QString("%1/%2").arg((int)nodeType).arg(folderPath),
                                                           PProjectModelNode());
@@ -1603,13 +1603,13 @@ int Project::getUnitFromString(const QString &s)
 PProjectModelNode Project::getParentFolderNode(const QString &filename)
 {
     QFileInfo fileInfo(filename);
-    ProjectSpecialFolderNode folderNodeType;
+    ProjectModelNodeType folderNodeType;
     if (isHFile(fileInfo.fileName())) {
-        folderNodeType = ProjectSpecialFolderNode::HEADERS;
+        folderNodeType = ProjectModelNodeType::DUMMY_HEADERS_FOLDER;
     } else if (isCFile(fileInfo.fileName())) {
-        folderNodeType = ProjectSpecialFolderNode::SOURCES;
+        folderNodeType = ProjectModelNodeType::DUMMY_SOURCES_FOLDER;
     } else {
-        folderNodeType = ProjectSpecialFolderNode::OTHERS;
+        folderNodeType = ProjectModelNodeType::DUMMY_OTHERS_FOLDER;
     }
     return findFolderNode(fileInfo.absolutePath(),folderNodeType);
 }
@@ -1996,7 +1996,7 @@ QString Project::fileSystemNodeFolderPath(const PProjectModelNode &node)
     QString result;
     if (node != mRootNode) {
         PProjectModelNode pNode = node;
-        while (pNode && pNode->folderNodeType == ProjectSpecialFolderNode::NonSpecial) {
+        while (pNode && pNode->folderNodeType == ProjectModelNodeType::Folder) {
             result = node->text + "/" +result;
             pNode = pNode->parent.lock();
         }
@@ -2378,10 +2378,10 @@ QVariant ProjectModel::data(const QModelIndex &index, int role) const
                     icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_GIT);
             } else {
                 switch(p->folderNodeType) {
-                case ProjectSpecialFolderNode::HEADERS:
+                case ProjectModelNodeType::DUMMY_HEADERS_FOLDER:
                     icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_HEADERS_FOLDER);
                     break;
-                case ProjectSpecialFolderNode::SOURCES:
+                case ProjectModelNodeType::DUMMY_SOURCES_FOLDER:
                     icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_SOURCES_FOLDER);
                     break;
                 default:
@@ -2524,6 +2524,23 @@ bool ProjectModel::setData(const QModelIndex &index, const QVariant &value, int 
 
     }
     return false;
+}
+
+QModelIndex ProjectModel::getNodeIndex(ProjectModelNode *node) const
+{
+    PProjectModelNode parent = node->parent.lock();
+    if (!parent) // root node
+        return QModelIndex();
+    int row = -1;
+    for (int i=0;i<parent->children.count();i++) {
+        const PProjectModelNode& pNode=parent->children[i];
+        if (pNode.get()==node) {
+            row = i;
+        }
+    }
+    if (row<0)
+        return QModelIndex();
+    return createIndex(row,0,node);
 }
 
 QModelIndex ProjectModel::getParentIndex(ProjectModelNode * node) const

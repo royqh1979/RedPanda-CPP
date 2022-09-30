@@ -1,3 +1,8 @@
+Red Panda C++ Version 1.5
+
+  - fix: project files that lies in project include folder is wrongly openned in Read-only mode
+
+
 Red Panda C++ Version 1.4
 
   - fix: "Encode in UTF-8" is not correctly checked, when the editor is openned using UTF-8 encoding.
