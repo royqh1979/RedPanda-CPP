@@ -47,7 +47,7 @@ void ProjectFilesWidget::doSave()
 {
     for (int i=0;i<mUnits.count();i++) {
         PProjectUnit unitCopy = mUnits[i];
-        PProjectUnit unit = pMainWindow->project()->units()[i];
+        PProjectUnit unit = pMainWindow->project()->findUnitById(unitCopy->id());
         unit->setPriority(unitCopy->priority());
         unit->setCompile(unitCopy->compile());
         unit->setLink(unitCopy->link());
@@ -70,11 +70,14 @@ PProjectUnit ProjectFilesWidget::currentUnit()
     ProjectModelNode* node = static_cast<ProjectModelNode*>(index.internalPointer());
     if (!node)
         return PProjectUnit();
-    int i = node->unitIndex;
-    if (i>=0) {
-        return mUnits[i];
-    } else
-        return PProjectUnit();
+    int idx = node->unitIndex;
+    if (idx>=0) {
+        foreach (PProjectUnit unit, mUnits) {
+            if (unit->id() == idx)
+                return unit;
+        }
+    }
+    return PProjectUnit();
 }
 
 void ProjectFilesWidget::copyUnits()
@@ -83,8 +86,9 @@ void ProjectFilesWidget::copyUnits()
     if (!project)
         return;
     mUnits.clear();
-    foreach (const PProjectUnit& unit, project->units()) {
+    foreach (const PProjectUnit& unit, project->unitList()) {
         PProjectUnit unitCopy = std::make_shared<ProjectUnit>(project.get());
+        unitCopy->setId(unit->id());
         unitCopy->setPriority(unit->priority());
         unitCopy->setCompile(unit->compile());
         unitCopy->setLink(unit->link());

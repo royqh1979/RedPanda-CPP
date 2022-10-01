@@ -141,8 +141,7 @@ void ProjectCompiler::writeMakeDefines(QFile &file)
     QString cleanObjects;
 
     // Create a list of object files
-    for (int i=0;i<mProject->units().count();i++) {
-        PProjectUnit unit = mProject->units()[i];
+    foreach(const PProjectUnit &unit, mProject->unitList()) {
         if (!unit->compile() && !unit->link())
             continue;
 
@@ -324,8 +323,8 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
     if (mProject->options().usePrecompiledHeader)
         precompileStr = " $(PCH) ";
 
-    for (int i = 0;i<mProject->units().count();i++) {
-        PProjectUnit unit = mProject->units()[i];
+    QList<PProjectUnit> projectUnits;
+    foreach(const PProjectUnit &unit, projectUnits) {
         FileType fileType = getFileType(unit->fileName());
         // Only process source files
         if (fileType!=FileType::CSource && fileType!=FileType::CppSource)
@@ -343,8 +342,7 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
                     continue;
                 if (!parser->isSystemHeaderFile(headerName)
                         && ! parser->isProjectHeaderFile(headerName)) {
-                    for (int j = 0;j<mProject->units().count();j++) {
-                        PProjectUnit unit2 = mProject->units()[j];
+                    foreach(const PProjectUnit &unit2, projectUnits) {
                         if (unit2->fileName()==headerName) {
                             objStr = objStr + ' ' + genMakePath2(extractRelativePath(mProject->makeFileName(),headerName));
                             break;
@@ -353,10 +351,10 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
                 }
             }
         } else {
-            foreach (const PProjectUnit& u, mProject->units()) {
-                FileType fileType = getFileType(u->fileName());
+            foreach(const PProjectUnit &unit2, projectUnits) {
+                FileType fileType = getFileType(unit2->fileName());
                 if (fileType == FileType::CHeader || fileType==FileType::CppHeader)
-                    objStr = objStr + ' ' + genMakePath2(extractRelativePath(mProject->makeFileName(),u->fileName()));
+                    objStr = objStr + ' ' + genMakePath2(extractRelativePath(mProject->makeFileName(),unit2->fileName()));
             }
         }
         QString ObjFileName;
@@ -449,7 +447,7 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
         QString ResFiles;
         // Concatenate all resource filenames (not created when syntax checking)
         if (!mOnlyCheckSyntax) {
-            foreach(const PProjectUnit& unit, mProject->units()) {
+            foreach(const PProjectUnit& unit, mProject->unitList()) {
                 if (getFileType(unit->fileName())!=FileType::WindowsResourceSource)
                     continue;
                 if (fileExists(unit->fileName())) {

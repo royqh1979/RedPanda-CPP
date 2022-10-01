@@ -57,7 +57,7 @@ void ProjectGeneralWidget::doLoad()
     ui->txtOutputFile->setText(project->executable());
 
     int srcCount=0,headerCount=0,resCount=0,otherCount=0, totalCount=0;
-    foreach (const PProjectUnit& unit, project->units()) {
+    foreach (const PProjectUnit& unit, project->unitList()) {
         switch(getFileType(unit->fileName())) {
         case FileType::CSource:
         case FileType::CppSource:

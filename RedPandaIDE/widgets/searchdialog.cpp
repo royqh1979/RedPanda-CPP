@@ -362,9 +362,9 @@ void SearchDialog::on_btnExecute_clicked()
                         mSearchOptions,
                         SearchFileScope::wholeProject
                         );
-            for (int i=0;i<pMainWindow->project()->units().count();i++) {
-                Editor * e = pMainWindow->project()->unitEditor(i);
-                QString curFilename =  pMainWindow->project()->units()[i]->fileName();
+            foreach (PProjectUnit unit, pMainWindow->project()->unitList()) {
+                Editor * e = pMainWindow->project()->unitEditor(unit);
+                QString curFilename =  unit->fileName();
                 if (e) {
                     fileSearched++;
                     PSearchResultTreeItem parentItem = batchFindInEditor(

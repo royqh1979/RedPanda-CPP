@@ -1186,7 +1186,7 @@ void MainWindow::openFile(const QString &filename, bool activate, QTabWidget* pa
         pSettings->history().removeFile(filename);
         PProjectUnit unit;
         if (mProject) {
-            unit = mProject->findUnitByFilename(filename);
+            unit = mProject->findUnit(filename);
         }
         bool inProject = (mProject && unit);
         QByteArray encoding = unit ? unit->encoding() :
@@ -1260,8 +1260,7 @@ void MainWindow::openProject(const QString &filename, bool openFiles)
             mProject->doAutoOpen();
 
         //update editor's inproject flag
-        for (int i=0;i<mProject->units().count();i++) {
-            PProjectUnit unit = mProject->units()[i];
+        foreach (PProjectUnit unit, mProject->unitList()) {
             Editor* e = mEditorList->getOpenedEditorByFilename(unit->fileName());
             mProject->associateEditorToUnit(e,unit);
         }
@@ -2214,7 +2213,7 @@ void MainWindow::loadLastOpens()
             page = mEditorList->rightPageWidget();
         PProjectUnit unit;
         if (mProject) {
-            unit = mProject->findUnitByFilename(editorFilename);
+            unit = mProject->findUnit(editorFilename);
         }
         bool inProject = (mProject && unit);
         QByteArray encoding = unit ? unit->encoding() :
@@ -3022,7 +3021,7 @@ void MainWindow::onProjectViewContextMenu(const QPoint &pos)
                     shouldAdd=false;
                     break;
                 }
-                PProjectUnit pUnit=mProject->units()[node->unitIndex];
+                PProjectUnit pUnit=mProject->findUnitById(node->unitIndex);
                 if (mProject->model()->iconProvider()->VCSRepository()->isFileInRepository(
                             pUnit->fileName()
                             )
@@ -3919,7 +3918,7 @@ void MainWindow::onProjectAddFolder()
                           QLineEdit::Normal, s,
                           &ok).trimmed();
     if (ok && !s.isEmpty()) {
-        QString path = mProject->getFolderPath(folderNode);
+        QString path = mProject->getNodePath(folderNode);
         if (path.isEmpty()) {
             mProject->addFolder(s);
         } else {
@@ -5915,10 +5914,9 @@ void MainWindow::on_actionAdd_to_project_triggered()
                             );
             }
         }
-        mProject->rebuildNodes();
         mProject->saveUnits();
+        updateProjectActions();
         parseFileList(mProject->cppParser());
-        updateProjectView();
     }
 }
 
@@ -5929,8 +5927,11 @@ void MainWindow::on_actionRemove_from_project_triggered()
         return;
     if (!ui->projectView->selectionModel()->hasSelection())
         return;
-    mProject->model()->beginUpdate();
-    QSet<int> selected;
+
+    bool removeFile = (QMessageBox::question(this,tr("Remove file"),
+                              tr("Remove the file from disk?"),
+                              QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes);
+
     foreach (const QModelIndex& index, ui->projectView->selectionModel()->selectedIndexes()){
         if (!index.isValid())
             continue;
@@ -5939,22 +5940,10 @@ void MainWindow::on_actionRemove_from_project_triggered()
         PProjectModelNode folderNode =  mProject->pointerToNode(node);
         if (!folderNode)
             continue;
-        selected.insert(folderNode->unitIndex);
+        mProject->removeUnit(folderNode->unitIndex, true, removeFile);
     };
-
-    bool removeFile = (QMessageBox::question(this,tr("Remove file"),
-                              tr("Remove the file from disk?"),
-                              QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes);
-
-    for (int i=mProject->units().count()-1;i>=0;i--) {
-        if (selected.contains(i)) {
-            mProject->removeUnit(i,true,removeFile);
-        }
-    }
-
     mProject->saveUnits();
-    mProject->model()->endUpdate();
-    updateProjectView();
+    updateProjectActions();
 }
 
 
@@ -6135,7 +6124,6 @@ void MainWindow::newProjectUnitFile()
 {
     if (!mProject)
         return;
-    int idx = -1;
     QModelIndex current = mProjectProxyModel->mapToSource(ui->projectView->currentIndex());
     ProjectModelNode * node = nullptr;
     if (current.isValid()) {
@@ -6217,11 +6205,11 @@ void MainWindow::newProjectUnitFile()
     newUnit = mProject->newUnit(
                     pNode,newFileName);
 
-    mProject->rebuildNodes();
+//    mProject->rebuildNodes();
     mProject->saveAll();
-        updateProjectView();
-    idx = mProject->units().count()-1;
-    Editor * editor = mProject->openUnit(idx, false);
+//        updateProjectView();
+//    idx = newUnit->id;
+    Editor * editor = mProject->openUnit(newUnit->id(), false);
     //editor->setUseCppSyntax(mProject->options().useGPP);
     //editor->setModified(true);
     if (editor)
@@ -6233,7 +6221,7 @@ void MainWindow::newProjectUnitFile()
         mProject->model()->beginUpdate();
         mProject->model()->endUpdate();
     }
-    updateProjectView();
+    updateProjectActions();
 }
 
 void MainWindow::fillProblemCaseInputAndExpected(const POJProblemCase &problemCase)
@@ -7484,7 +7472,7 @@ void MainWindow::on_actionGit_Create_Repository_triggered()
         QString output;
         vcsManager.add(mProject->folder(), extractFileName(mProject->filename()), output);
         vcsManager.add(mProject->folder(), extractFileName(mProject->options().icon), output);
-        foreach (PProjectUnit pUnit, mProject->units()) {
+        foreach (PProjectUnit pUnit, mProject->unitList()) {
             vcsManager.add(mProject->folder(),extractRelativePath(mProject->folder(),pUnit->fileName()),output);
         }
         //update project view
@@ -7528,7 +7516,7 @@ void MainWindow::on_actionGit_Add_Files_triggered()
             if (!folderNode)
                 continue;
             if (folderNode->unitIndex>=0) {
-                PProjectUnit unit = mProject->units()[folderNode->unitIndex];
+                PProjectUnit unit = mProject->findUnitById(folderNode->unitIndex);
                 QFileInfo info(unit->fileName());
                 QString output;
                 vcsManager.add(info.absolutePath(),info.fileName(),output);

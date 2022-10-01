@@ -336,8 +336,8 @@ bool Editor::saveAs(const QString &name, bool fromProject){
     }
     // Update project information
     if (mInProject && pMainWindow->project() && !fromProject) {
-        int unitIndex = pMainWindow->project()->indexInUnits(newName);
-        if (unitIndex<0) {
+        int unitId = pMainWindow->project()->findUnitId(newName);
+        if (unitId<0) {
             mInProject = false;
         }
     }
@@ -423,9 +423,8 @@ void Editor::setEncodingOption(const QByteArray& encoding) noexcept{
     if (mInProject) {
         std::shared_ptr<Project> project = pMainWindow->project();
         if (project) {
-            int index = project->indexInUnits(this);
-            if (index>=0) {
-                PProjectUnit unit = project->units()[index];
+            PProjectUnit unit = project->findUnit(this);
+            if (unit) {
                 unit->setEncoding(mEncodingOption);
             }
         }
@@ -1740,7 +1739,7 @@ bool Editor::isBraceChar(QChar ch)
 
 bool Editor::shouldOpenInReadonly()
 {
-    if (pMainWindow->project() && pMainWindow->project()->findUnitByFilename(mFilename))
+    if (pMainWindow->project() && pMainWindow->project()->findUnit(mFilename))
         return false;
     return pSettings->editor().readOnlySytemHeader()
                 && mParser && (mParser->isSystemHeaderFile(mFilename) || mParser->isProjectHeaderFile(mFilename));

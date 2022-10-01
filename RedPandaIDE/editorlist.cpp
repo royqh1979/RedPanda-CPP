@@ -56,7 +56,7 @@ Editor* EditorList::newEditor(const QString& filename, const QByteArray& encodin
     connect(e, &Editor::renamed, this, &EditorList::onEditorRenamed);
     updateLayout();
     if (pMainWindow->project()){
-        PProjectUnit unit = pMainWindow->project()->findUnitByFilename(filename);
+        PProjectUnit unit = pMainWindow->project()->findUnit(filename);
         if (unit) {
             pMainWindow->project()->associateEditorToUnit(e,unit);
             e->setInProject(true);
@@ -169,9 +169,9 @@ bool EditorList::closeEditor(Editor* editor, bool transferFocus, bool force) {
 //    }
 
     if (editor->inProject() && pMainWindow->project()) {
-        int projIndex = pMainWindow->project()->indexInUnits(editor);
-        if (projIndex>=0) {
-            pMainWindow->project()->closeUnit(projIndex);
+        int unitId = pMainWindow->project()->findUnitId(editor);
+        if (unitId>=0) {
+            pMainWindow->project()->closeUnit(unitId);
         }
     } else {
         if (pSettings->history().addToOpenedFiles(editor->filename())) {
