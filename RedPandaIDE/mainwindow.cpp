@@ -4290,7 +4290,7 @@ void MainWindow::updateProjectView()
                     ui->projectView,&QTreeView::expandAll);
         } else
             mProjectProxyModel->invalidate();
-        ui->projectView->expandAll();
+        //ui->projectView->expandAll();
         stretchExplorerPanel(true);
         ui->tabProject->setVisible(true);
         ui->tabExplorer->setCurrentWidget(ui->tabProject);
@@ -5903,7 +5903,7 @@ void MainWindow::on_actionAdd_to_project_triggered()
         }
         PProjectModelNode folderNode =  mProject->pointerToNode(node);
         foreach (const QString& filename, dialog.selectedFiles()) {
-            mProject->addUnit(filename,folderNode,false);
+            PProjectUnit newUnit = mProject->addUnit(filename,folderNode);
             mProject->cppParser()->addFileToScan(filename);
             QString branch;
             if (pSettings->vcs().gitOk() && mProject->model()->iconProvider()->VCSRepository()->hasRepository(branch)) {
@@ -5913,8 +5913,20 @@ void MainWindow::on_actionAdd_to_project_triggered()
                             output
                             );
             }
+            if (newUnit) {
+                QModelIndex index = mProject->model()->getNodeIndex(newUnit->node().get());
+                index = mProjectProxyModel->mapFromSource(index);
+                QModelIndex parentIndex = mProject->model()->getParentIndex(newUnit->node().get());
+                parentIndex = mProjectProxyModel->mapFromSource(parentIndex);
+                if (parentIndex.isValid()) {
+                    ui->projectView->expandRecursively(index);
+                }
+                if (index.isValid()) {
+                    ui->projectView->setCurrentIndex(index);
+                }
+            }
         }
-        mProject->saveUnits();
+        mProject->saveAll();
         updateProjectActions();
         parseFileList(mProject->cppParser());
     }
@@ -7331,6 +7343,14 @@ void MainWindow::on_actionNew_Header_triggered()
         return;
     NewHeaderDialog dialog;
     dialog.setPath(mProject->folder());
+    QString newFileName;
+    int i=0;
+    do {
+        newFileName = tr("untitled")+QString("%1").arg(i);
+        newFileName += ".h";
+        i++;
+    } while (QDir(mProject->directory()).exists(newFileName));
+    dialog.setHeaderName(newFileName);
     if (dialog.exec()==QDialog::Accepted) {
         QDir dir(dialog.path());
         if (dialog.headerName().isEmpty()
@@ -7357,12 +7377,11 @@ void MainWindow::on_actionNew_Header_triggered()
         header.append("#endif");
         stringsToFile(header, headerFilename);
 
-        mProject->addUnit(headerFilename,mProject->rootNode(),false);
+        mProject->addUnit(headerFilename,mProject->rootNode());
         mProject->cppParser()->addFileToScan(headerFilename);
-        mProject->rebuildNodes();
         mProject->saveUnits();
         parseFileList(mProject->cppParser());
-        updateProjectView();
+        updateProjectActions();
 
         Editor * editor = mEditorList->getEditorByFilename(headerFilename);
         if (editor){
@@ -7427,14 +7446,13 @@ void MainWindow::on_actionNew_Class_triggered()
         source.append("");
         stringsToFile(source, sourceFilename);
 
-        mProject->addUnit(headerFilename,mProject->rootNode(),false);
+        mProject->addUnit(headerFilename,mProject->rootNode());
         mProject->cppParser()->addFileToScan(headerFilename);
-        mProject->addUnit(sourceFilename,mProject->rootNode(),false);
+        mProject->addUnit(sourceFilename,mProject->rootNode());
         mProject->cppParser()->addFileToScan(sourceFilename);
-        mProject->rebuildNodes();
         mProject->saveUnits();
         parseFileList(mProject->cppParser());
-        updateProjectView();
+        updateProjectActions();
 
         Editor * editor = mEditorList->getEditorByFilename(headerFilename);
         if (editor){
@@ -7461,7 +7479,7 @@ void MainWindow::on_actionGit_Create_Repository_triggered()
         mFileSystemModel.setIconProvider(&mFileSystemModelIconProvider);
         //update project view
         if (mProject && mProject->folder() == mFileSystemModel.rootPath()) {
-            mProject->addUnit(includeTrailingPathDelimiter(mProject->folder())+".gitignore", mProject->rootNode(), true);
+            mProject->addUnit(includeTrailingPathDelimiter(mProject->folder())+".gitignore", mProject->rootNode());
         } else if (mProject && mFileSystemModel.index(mProject->folder()).isValid()) {
             mProject->model()->beginUpdate();
             mProject->model()->endUpdate();
@@ -7476,7 +7494,7 @@ void MainWindow::on_actionGit_Create_Repository_triggered()
             vcsManager.add(mProject->folder(),extractRelativePath(mProject->folder(),pUnit->fileName()),output);
         }
         //update project view
-        mProject->addUnit(includeTrailingPathDelimiter(mProject->folder())+".gitignore", mProject->rootNode(), true);
+        mProject->addUnit(includeTrailingPathDelimiter(mProject->folder())+".gitignore", mProject->rootNode());
         mProject->saveAll();
         if (mProject->folder() == mFileSystemModel.rootPath()
                 || mFileSystemModel.rootPath().startsWith(includeTrailingPathDelimiter(mProject->folder()), PATH_SENSITIVITY)) {

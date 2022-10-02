@@ -57,6 +57,7 @@ class WindowLogoutEventFilter : public QAbstractNativeEventFilter {
 public:
     bool nativeEventFilter(const QByteArray &eventType, void *message, long *result) override;
 };
+
 #define WM_USER_OPEN_FILE (WM_USER+1)
 HWND prevAppInstance = NULL;
 BOOL CALLBACK GetPreviousInstanceCallback(HWND hwnd, LPARAM param){

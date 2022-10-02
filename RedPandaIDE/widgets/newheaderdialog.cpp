@@ -49,6 +49,12 @@ QString NewHeaderDialog::path() const
     return ui->txtPath->text();
 }
 
+void NewHeaderDialog::setHeaderName(const QString &name)
+{
+    ui->txtHeader->setText(name);
+    ui->txtHeader->selectAll();
+}
+
 void NewHeaderDialog::setPath(const QString &location)
 {
     ui->txtPath->setText(location);

@@ -32,6 +32,7 @@ public:
     ~NewHeaderDialog();
     QString headerName() const;
     QString path() const;
+    void setHeaderName(const QString& name);
     void setPath(const QString& location);
 
 private:
