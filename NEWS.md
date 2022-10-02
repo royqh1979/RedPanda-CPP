@@ -1,7 +1,7 @@
 Red Panda C++ Version 1.5
 
   - fix: project files that lies in project include folder is wrongly openned in Read-only mode
-
+  - enhancement: add/new/remove project files won't rebuild project tree
 
 Red Panda C++ Version 1.4
 
