@@ -56,6 +56,16 @@ struct ProjectModelNode {
     int level;
 };
 
+struct ProjectEditorLayout {
+    QString filename;
+    int topLine;
+    int leftChar;
+    int caretX;
+    int caretY;
+};
+
+using PProjectEditorLayout = std::shared_ptr<ProjectEditorLayout>;
+
 class ProjectUnit {
 
 public:
@@ -144,6 +154,8 @@ public:
     QModelIndex getNodeIndex(ProjectModelNode *node) const;
     QModelIndex getParentIndex(ProjectModelNode * node) const;
 
+    QModelIndex rootIndex() const;
+
 private:
 
     // QAbstractItemModel interface
@@ -189,7 +201,7 @@ public:
     void setFileName(QString value);
     void setModified(bool value);
 
-    void addFolder(const QString& s);
+    PProjectModelNode addFolder(PProjectModelNode parentFolder, const QString& s);
     PProjectUnit addUnit(const QString& inFileName,
                 PProjectModelNode parentNode);
     QString folder();
@@ -205,6 +217,7 @@ public:
     PProjectUnit  newUnit(PProjectModelNode parentNode,
                  const QString& customFileName="");
     Editor* openUnit(int index, bool forceOpen=true);
+    Editor* openUnit(PProjectEditorLayout editorLayout);
     Editor* unitEditor(const PProjectUnit& unit) const;
     Editor* unitEditor(const ProjectUnit* unit) const;
     Editor* unitEditor(int id) const {
@@ -282,8 +295,8 @@ private:
     PProjectModelNode findFileSystemFolderNode(const QString& folderPath, ProjectModelNodeType nodeType);
     PProjectModelNode getCustomeFolderNodeFromName(const QString& name);
     void loadOptions(SimpleIni& ini);
-    PProjectUnit loadLayout(); // load all [UnitX]
-    void loadUnitLayout(Editor *e, int index); // load single [UnitX] cursor positions
+    PProjectUnit loadLayout();
+    void loadUnitLayout(Editor *e);
 
     PProjectModelNode makeNewFolderNode(
             const QString& folderName,

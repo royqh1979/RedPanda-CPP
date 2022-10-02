@@ -376,11 +376,48 @@ Editor *Project::openUnit(int index, bool forceOpen)
             editor->setInProject(true);
             //unit->setEncoding(encoding);
             editor->activate();
-            loadUnitLayout(editor,index);
+            loadUnitLayout(editor);
             return editor;
         }
     }
     return nullptr;
+}
+
+Editor *Project::openUnit(PProjectEditorLayout editorLayout)
+{
+    if (!editorLayout)
+        return nullptr;
+    PProjectUnit unit = findUnit(editorLayout->filename);
+    if (!unit)
+        return nullptr;
+
+    if (!unit->fileName().isEmpty() && fileExists(unit->fileName())) {
+        if (getFileType(unit->fileName())==FileType::Other) {
+            return nullptr;
+        }
+
+        Editor * editor = mEditorList->getOpenedEditorByFilename(unit->fileName());
+        if (editor) {//already opened in the editors
+            editor->setInProject(true);
+            editor->activate();
+            return editor;
+        }
+        QByteArray encoding;
+        encoding = unit->encoding();
+        editor = mEditorList->newEditor(unit->fileName(), encoding, true, unit->isNew());
+        if (editor) {
+            editor->setInProject(true);
+            //unit->setEncoding(encoding);
+            editor->activate();
+            editor->setTopLine(editorLayout->topLine);
+            editor->setLeftChar(editorLayout->leftChar);
+            editor->setCaretX(editorLayout->caretX);
+            editor->setCaretY(editorLayout->caretY);
+            return editor;
+        }
+    }
+    return nullptr;
+
 }
 
 Editor *Project::unitEditor(const PProjectUnit &unit) const
@@ -558,29 +595,36 @@ void Project::saveAll()
 void Project::saveLayout()
 {
     SimpleIni layIni;
-    QStringList sl;
+    QHash<QString,int> editorOrderSet;
     // Write list of open project files
+    int order=0;
     for (int i=0;i<mEditorList->pageCount();i++) {
-        Editor* e= (*mEditorList)[i];
-        if (e && e->inProject())
-            sl.append(QString("%1").arg(findUnitId(e)));
+        Editor* e=(*mEditorList)[i];
+        if (e && e->inProject() && !editorOrderSet.contains(e->filename())) {
+            editorOrderSet.insert(e->filename(),order);
+            order++;
+        }
     }
-    layIni.SetValue("Editors","Order",sl.join(",").toUtf8());
+//    layIni.SetValue("Editors","Order",sl.join(",").toUtf8());
 
     Editor *e, *e2;
     // Remember what files were visible
     mEditorList->getVisibleEditors(e, e2);
     if (e)
-        layIni.SetLongValue("Editors","Focused", findUnitId(e));
+        layIni.SetValue("Editors","Focused", e->filename().toUtf8());
     // save editor info
     foreach (const PProjectUnit& unit,mUnits) {
-        QByteArray groupName = QString("Editor_%1").arg(unit->id()).toUtf8();
         Editor* editor = unitEditor(unit);
         if (editor) {
+            QByteArray groupName = QString("E_%1").arg(editor->filename()).toUtf8();
             layIni.SetLongValue(groupName,"CursorCol", editor->caretX());
             layIni.SetLongValue(groupName,"CursorRow", editor->caretY());
             layIni.SetLongValue(groupName,"TopLine", editor->topLine());
             layIni.SetLongValue(groupName,"LeftChar", editor->leftChar());
+            int order=editorOrderSet.value(editor->filename(),-1);
+            if (order>=0) {
+                layIni.SetLongValue(groupName,"Order",order);
+            }
         }
         // remove old data from project file
 //        SimpleIni ini;
@@ -1073,19 +1117,26 @@ void Project::saveOptions()
     ini.SaveFile(mFilename.toLocal8Bit());
 }
 
-void Project::addFolder(const QString &s)
+PProjectModelNode Project::addFolder(PProjectModelNode parentFolder,const QString &s)
 {
-    if (mFolders.indexOf(s)<0) {
+    QString fullPath;
+    QString path = getNodePath(parentFolder);
+    if (path.isEmpty()) {
+        fullPath = s;
+    } else {
+        fullPath = path + '/' +s;
+    }
+    if (mFolders.indexOf(fullPath)<0) {
         mModel.beginUpdate();
         auto action = finally([this]{
             mModel.endUpdate();
         });
-        mFolders.append(s);
-        rebuildNodes();
-        //todo: MainForm.ProjectView.Select(FolderNodeFromName(s));
-        //folderNodeFromName(s)->makeVisible();
+        mFolders.append(fullPath);
+        PProjectModelNode node = makeNewFolderNode(s,parentFolder);
         setModified(true);
+        return node;
     }
+    return PProjectModelNode();
 }
 
 PProjectUnit Project::addUnit(const QString &inFileName, PProjectModelNode parentNode)
@@ -1716,25 +1767,37 @@ PProjectUnit Project::loadLayout()
     SI_Error error = layIni.LoadFile(changeFileExt(filename(), "layout").toLocal8Bit());
     if (error!=SI_OK)
         return PProjectUnit();
-    int topLeft = layIni.GetLongValue("Editors","Focused",1);
+    QString focusedFilename = fromByteArray(layIni.GetValue("Editors","Focused"));
     //TopRight := layIni.ReadInteger('Editors', 'FocusedRight', -1);
-    QString temp =layIni.GetValue("Editors","Order", "");
-    QStringList sl = temp.split(",",
-#if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
-            Qt::SkipEmptyParts
-#else
-            QString::SkipEmptyParts
-#endif
-                                );
-
-    foreach (const QString& s,sl) {
-        bool ok;
-        int currIdx = s.toInt(&ok);
-        if (ok) {
-            openUnit(currIdx);
+    QHash<int,PProjectEditorLayout> opennedMap;
+    SimpleIni::TNamesDepend sections;
+    layIni.GetAllSections(sections);
+    QSet<QString> sectionNames;
+    for(const SimpleIni::Entry& entry:sections) {
+        QString key(entry.pItem);
+        sectionNames.insert(key);
+    }
+    foreach (PProjectUnit unit,mUnits) {
+        QByteArray groupName = QString("E_%1").arg(unit->fileName()).toUtf8();
+        if (sectionNames.contains(groupName)) {
+            PProjectEditorLayout editorLayout = std::make_shared<ProjectEditorLayout>();
+            editorLayout->filename=unit->fileName();
+            editorLayout->topLine=layIni.GetLongValue(groupName,"TopLine");
+            editorLayout->leftChar=layIni.GetLongValue(groupName,"LeftChar");
+            editorLayout->caretX=layIni.GetLongValue(groupName,"CursorCol");
+            editorLayout->caretY=layIni.GetLongValue(groupName,"CursorRow");
+            int order = layIni.GetLongValue(groupName,"Order",-1);
+            if (order>=0)
+                opennedMap.insert(order,editorLayout);
         }
     }
-    PProjectUnit unit = findUnitById(topLeft);
+    for (int i=0;i<mUnits.count();i++) {
+        PProjectEditorLayout editorLayout = opennedMap.value(i,PProjectEditorLayout());
+        if (editorLayout) {
+            openUnit(editorLayout);
+        }
+    }
+    PProjectUnit unit = findUnit(focusedFilename);
     if (unit) {
         Editor * editor = unitEditor(unit);
         if (editor)
@@ -1983,7 +2046,7 @@ void Project::loadOptions(SimpleIni& ini)
     }
 }
 
-void Project::loadUnitLayout(Editor *e, int index)
+void Project::loadUnitLayout(Editor *e)
 {
     if (!e)
         return;
@@ -1992,7 +2055,7 @@ void Project::loadUnitLayout(Editor *e, int index)
     error = layIni.LoadFile(changeFileExt(filename(), "layout").toLocal8Bit());
     if (error != SI_Error::SI_OK)
         return;
-    QByteArray groupName = (QString("Editor_%1").arg(index)).toUtf8();
+    QByteArray groupName = (QString("E_%1").arg(e->filename())).toUtf8();
     e->setCaretY(layIni.GetLongValue(groupName,"CursorRow",1));
     e->setCaretX(layIni.GetLongValue(groupName,"CursorCol",1));
     e->setTopLine(layIni.GetLongValue(groupName,"TopLine",1));
@@ -2674,6 +2737,11 @@ QModelIndex ProjectModel::getParentIndex(ProjectModelNode * node) const
     if (row<0)
         return QModelIndex();
     return createIndex(row,0,parent.get());
+}
+
+QModelIndex ProjectModel::rootIndex() const
+{
+    return getNodeIndex(mProject->rootNode().get());
 }
 
 bool ProjectModel::canDropMimeData(const QMimeData * data, Qt::DropAction action, int /*row*/, int /*column*/, const QModelIndex &parent) const

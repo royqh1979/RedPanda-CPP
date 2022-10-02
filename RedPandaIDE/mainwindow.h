@@ -67,6 +67,7 @@ class CPUDialog;
 class QPlainTextEdit;
 class SearchDialog;
 class Project;
+class ProjectModelNode;
 class ProjectUnit;
 class ColorSchemeItem;
 
@@ -271,6 +272,7 @@ private:
 
     void doFilesViewRemoveFile(const QModelIndex& index);
 
+    void setProjectViewCurrentNode(std::shared_ptr<ProjectModelNode> node);
     void setProjectViewCurrentUnit(std::shared_ptr<ProjectUnit> unit);
 
 private slots:

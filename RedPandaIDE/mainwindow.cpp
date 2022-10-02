@@ -1246,6 +1246,9 @@ void MainWindow::openProject(const QString &filename, bool openFiles)
                                              mEditorList,
                                              &mFileSystemWatcher);
         updateProjectView();
+        ui->projectView->expand(
+                    mProjectProxyModel->mapFromSource(
+                        mProject->model()->rootIndex()));
         pSettings->history().removeProject(filename);
 
     //  // if project manager isn't open then open it
@@ -3865,11 +3868,17 @@ void MainWindow::onClassBrowserSortByName()
 void MainWindow::onProjectSwitchCustomViewMode()
 {
     mProject->setModelType(ProjectModelType::Custom);
+    ui->projectView->expand(
+                mProjectProxyModel->mapFromSource(
+                    mProject->model()->rootIndex()));
 }
 
 void MainWindow::onProjectSwitchFileSystemViewMode()
 {
     mProject->setModelType(ProjectModelType::FileSystem);
+    ui->projectView->expand(
+                mProjectProxyModel->mapFromSource(
+                    mProject->model()->rootIndex()));
 }
 
 void MainWindow::onProjectRemoveFolder()
@@ -3913,6 +3922,11 @@ void MainWindow::onProjectAddFolder()
     if (folderNode->unitIndex>=0)
         return;
     QString s=tr("New folder");
+    int i=1;
+    while (fileExists(s)) {
+        s=tr("New folder")+QString("%1").arg(i);
+        i++;
+    }
     bool ok;
     s = QInputDialog::getText(ui->projectView,
                           tr("Add Folder"),
@@ -3920,13 +3934,11 @@ void MainWindow::onProjectAddFolder()
                           QLineEdit::Normal, s,
                           &ok).trimmed();
     if (ok && !s.isEmpty()) {
-        QString path = mProject->getNodePath(folderNode);
-        if (path.isEmpty()) {
-            mProject->addFolder(s);
-        } else {
-            mProject->addFolder(path + '/' +s);
-        }
-        mProject->saveOptions();
+        PProjectModelNode node = mProject->addFolder(folderNode,s);
+
+        mProject->saveAll();
+        setProjectViewCurrentNode(node);
+        updateProjectView();
     }
 }
 
@@ -4515,11 +4527,12 @@ void MainWindow::closeEvent(QCloseEvent *event) {
 
     if (!mShouldRemoveAllSettings && pSettings->editor().autoLoadLastFiles()) {
         saveLastOpens();
-    } else {
+    } /*else {
         //if don't save last open files, close project before editors, to save project openned editors;
-        if (mProject) {
-            closeProject(false);
-        }
+
+    }*/
+    if (mProject) {
+        closeProject(false);
     }
 
     mClosingAll=true;
@@ -4531,11 +4544,11 @@ void MainWindow::closeEvent(QCloseEvent *event) {
     }
     mClosingAll=false;
 
-    if (!mShouldRemoveAllSettings && pSettings->editor().autoLoadLastFiles()) {
-        if (mProject) {
-            closeProject(false);
-        }
-    }
+//    if (!mShouldRemoveAllSettings && pSettings->editor().autoLoadLastFiles()) {
+//        if (mProject) {
+//            closeProject(false);
+//        }
+//    }
 
     mTcpServer.close();
     mCompilerManager->stopAllRunners();
@@ -6292,15 +6305,21 @@ void MainWindow::doFilesViewRemoveFile(const QModelIndex &index)
     }
 }
 
-void MainWindow::setProjectViewCurrentUnit(std::shared_ptr<ProjectUnit> unit)
-{
+void MainWindow::setProjectViewCurrentUnit(std::shared_ptr<ProjectUnit> unit) {
     if (unit) {
-        QModelIndex parentIndex = mProject->model()->getParentIndex(unit->node().get());
+        setProjectViewCurrentNode(unit->node());
+    }
+}
+
+void MainWindow::setProjectViewCurrentNode(PProjectModelNode node)
+{
+    if (node) {
+        QModelIndex parentIndex = mProject->model()->getParentIndex(node.get());
         parentIndex = mProjectProxyModel->mapFromSource(parentIndex);
         if (parentIndex.isValid()) {
             ui->projectView->expandRecursively(parentIndex);
         }
-        QModelIndex index = mProject->model()->getNodeIndex(unit->node().get());
+        QModelIndex index = mProject->model()->getNodeIndex(node.get());
         index = mProjectProxyModel->mapFromSource(index);
         if (index.isValid()) {
             ui->projectView->setCurrentIndex(index);
