@@ -1256,8 +1256,10 @@ void MainWindow::openProject(const QString &filename, bool openFiles)
         //parse the project
         //  UpdateClassBrowsing;
         scanActiveProject(true);
-        if (openFiles)
-            mProject->doAutoOpen();
+        if (openFiles) {
+            PProjectUnit unit = mProject->doAutoOpen();
+            setProjectViewCurrentUnit(unit);
+        }
 
         //update editor's inproject flag
         foreach (PProjectUnit unit, mProject->unitList()) {
@@ -4280,14 +4282,14 @@ void MainWindow::updateProjectView()
         if (mProjectProxyModel->sourceModel()!=mProject->model()) {
             mProjectProxyModel->setSourceModel(mProject->model());
             mProjectProxyModel->sort(0);
-            connect(mProject->model(), &ProjectModel::dataChanged,
-                    this, &MainWindow::invalidateProjectProxyModel);
-            connect(mProject->model(), &ProjectModel::rowsRemoved,
-                    this, &MainWindow::invalidateProjectProxyModel);
-            connect(mProject->model(), &ProjectModel::rowsInserted,
-                    this, &MainWindow::invalidateProjectProxyModel);
-            connect(mProject->model(), &QAbstractItemModel::modelReset,
-                    ui->projectView,&QTreeView::expandAll);
+//            connect(mProject->model(), &ProjectModel::dataChanged,
+//                    this, &MainWindow::invalidateProjectProxyModel);
+//            connect(mProject->model(), &ProjectModel::rowsRemoved,
+//                    this, &MainWindow::invalidateProjectProxyModel);
+//            connect(mProject->model(), &ProjectModel::rowsInserted,
+//                    this, &MainWindow::invalidateProjectProxyModel);
+//            connect(mProject->model(), &QAbstractItemModel::modelReset,
+//                    ui->projectView,&QTreeView::expandAll);
         } else
             mProjectProxyModel->invalidate();
         //ui->projectView->expandAll();
@@ -5927,7 +5929,7 @@ void MainWindow::on_actionAdd_to_project_triggered()
             }
         }
         mProject->saveAll();
-        updateProjectActions();
+        updateProjectView();
         parseFileList(mProject->cppParser());
     }
 }
@@ -5954,8 +5956,9 @@ void MainWindow::on_actionRemove_from_project_triggered()
             continue;
         mProject->removeUnit(folderNode->unitIndex, true, removeFile);
     };
-    mProject->saveUnits();
-    updateProjectActions();
+    ui->projectView->selectionModel()->clearSelection();
+    mProject->saveAll();
+    updateProjectView();
 }
 
 
@@ -6217,6 +6220,8 @@ void MainWindow::newProjectUnitFile()
     newUnit = mProject->newUnit(
                     pNode,newFileName);
 
+    setProjectViewCurrentUnit(newUnit);
+
 //    mProject->rebuildNodes();
     mProject->saveAll();
 //        updateProjectView();
@@ -6233,7 +6238,7 @@ void MainWindow::newProjectUnitFile()
         mProject->model()->beginUpdate();
         mProject->model()->endUpdate();
     }
-    updateProjectActions();
+    updateProjectView();
 }
 
 void MainWindow::fillProblemCaseInputAndExpected(const POJProblemCase &problemCase)
@@ -6284,6 +6289,22 @@ void MainWindow::doFilesViewRemoveFile(const QModelIndex &index)
         dir.removeRecursively();
     } else {
         QFile::remove(mFileSystemModel.filePath(index));
+    }
+}
+
+void MainWindow::setProjectViewCurrentUnit(std::shared_ptr<ProjectUnit> unit)
+{
+    if (unit) {
+        QModelIndex parentIndex = mProject->model()->getParentIndex(unit->node().get());
+        parentIndex = mProjectProxyModel->mapFromSource(parentIndex);
+        if (parentIndex.isValid()) {
+            ui->projectView->expandRecursively(parentIndex);
+        }
+        QModelIndex index = mProject->model()->getNodeIndex(unit->node().get());
+        index = mProjectProxyModel->mapFromSource(index);
+        if (index.isValid()) {
+            ui->projectView->setCurrentIndex(index);
+        }
     }
 }
 
@@ -7344,7 +7365,7 @@ void MainWindow::on_actionNew_Header_triggered()
     NewHeaderDialog dialog;
     dialog.setPath(mProject->folder());
     QString newFileName;
-    int i=0;
+    int i=1;
     do {
         newFileName = tr("untitled")+QString("%1").arg(i);
         newFileName += ".h";
@@ -7377,11 +7398,12 @@ void MainWindow::on_actionNew_Header_triggered()
         header.append("#endif");
         stringsToFile(header, headerFilename);
 
-        mProject->addUnit(headerFilename,mProject->rootNode());
+        PProjectUnit newUnit=mProject->addUnit(headerFilename,mProject->rootNode());
         mProject->cppParser()->addFileToScan(headerFilename);
-        mProject->saveUnits();
+        mProject->saveAll();
         parseFileList(mProject->cppParser());
-        updateProjectActions();
+        setProjectViewCurrentUnit(newUnit);
+        updateProjectView();
 
         Editor * editor = mEditorList->getEditorByFilename(headerFilename);
         if (editor){
@@ -7446,13 +7468,15 @@ void MainWindow::on_actionNew_Class_triggered()
         source.append("");
         stringsToFile(source, sourceFilename);
 
-        mProject->addUnit(headerFilename,mProject->rootNode());
+        PProjectUnit newUnit=mProject->addUnit(headerFilename,mProject->rootNode());
         mProject->cppParser()->addFileToScan(headerFilename);
-        mProject->addUnit(sourceFilename,mProject->rootNode());
+        setProjectViewCurrentUnit(newUnit);
+        newUnit=mProject->addUnit(sourceFilename,mProject->rootNode());
         mProject->cppParser()->addFileToScan(sourceFilename);
-        mProject->saveUnits();
+        setProjectViewCurrentUnit(newUnit);
+        mProject->saveAll();
         parseFileList(mProject->cppParser());
-        updateProjectActions();
+        updateProjectView();
 
         Editor * editor = mEditorList->getEditorByFilename(headerFilename);
         if (editor){

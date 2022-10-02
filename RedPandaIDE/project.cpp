@@ -1596,9 +1596,9 @@ void Project::createFileSystemFolderNode(
     }
 }
 
-void Project::doAutoOpen()
+PProjectUnit Project::doAutoOpen()
 {
-    loadLayout();
+    return loadLayout();
 }
 
 bool Project::fileAlreadyExists(const QString &s)
@@ -1710,12 +1710,12 @@ void Project::incrementBuildNumber()
     setModified(true);
 }
 
-void Project::loadLayout()
+PProjectUnit Project::loadLayout()
 {
     SimpleIni layIni;
     SI_Error error = layIni.LoadFile(changeFileExt(filename(), "layout").toLocal8Bit());
     if (error!=SI_OK)
-        return;
+        return PProjectUnit();
     int topLeft = layIni.GetLongValue("Editors","Focused",1);
     //TopRight := layIni.ReadInteger('Editors', 'FocusedRight', -1);
     QString temp =layIni.GetValue("Editors","Order", "");
@@ -1740,6 +1740,7 @@ void Project::loadLayout()
         if (editor)
             editor->activate();
     }
+    return unit;
 }
 
 void Project::loadOptions(SimpleIni& ini)
@@ -2399,8 +2400,6 @@ CustomFileIconProvider *ProjectModel::iconProvider() const
 
 bool ProjectModel::insertRows(int row, int count, const QModelIndex &parent)
 {
-    qDebug()<<"insert rows";
-    qDebug()<<rowCount(parent);
     beginInsertRows(parent,row,row+count-1);
     endInsertRows();
     return true;

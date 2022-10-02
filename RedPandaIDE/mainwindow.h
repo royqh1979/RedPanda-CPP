@@ -67,6 +67,7 @@ class CPUDialog;
 class QPlainTextEdit;
 class SearchDialog;
 class Project;
+class ProjectUnit;
 class ColorSchemeItem;
 
 #define DPI_CHANGED_EVENT ((QEvent::Type)(QEvent::User+1))
@@ -269,6 +270,8 @@ private:
     void fillProblemCaseInputAndExpected(const POJProblemCase &problemCase);
 
     void doFilesViewRemoveFile(const QModelIndex& index);
+
+    void setProjectViewCurrentUnit(std::shared_ptr<ProjectUnit> unit);
 
 private slots:
     void setDockExplorerToArea(const Qt::DockWidgetArea &area);

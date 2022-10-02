@@ -195,7 +195,7 @@ public:
     QString folder();
     void buildPrivateResource(bool forceSave=false);
     void closeUnit(int id);
-    void doAutoOpen();
+    PProjectUnit doAutoOpen();
     bool fileAlreadyExists(const QString& s);
 
     QString getNodePath(PProjectModelNode node);
@@ -282,7 +282,7 @@ private:
     PProjectModelNode findFileSystemFolderNode(const QString& folderPath, ProjectModelNodeType nodeType);
     PProjectModelNode getCustomeFolderNodeFromName(const QString& name);
     void loadOptions(SimpleIni& ini);
-    void loadLayout(); // load all [UnitX]
+    PProjectUnit loadLayout(); // load all [UnitX]
     void loadUnitLayout(Editor *e, int index); // load single [UnitX] cursor positions
 
     PProjectModelNode makeNewFolderNode(
