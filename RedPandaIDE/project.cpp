@@ -492,6 +492,20 @@ bool Project::removeUnit(int id, bool doClose , bool removeFile)
     mModel.removeRow(row,parentIndex);
     mUnits.remove(unit->id());
 
+    //remove empty parent node
+    PProjectModelNode currentNode = parentNode;
+    while (currentNode && currentNode->folderNodeType == ProjectModelNodeType::Folder && currentNode->children.isEmpty()) {
+        parentNode = currentNode->parent.lock();
+        if (!parentNode)
+            break;
+        row = parentNode->children.indexOf(currentNode);
+        if (row<0)
+            break;
+        parentIndex = mModel.getNodeIndex(parentNode.get());
+        mModel.removeRow(row,parentIndex);
+        currentNode = parentNode;
+    }
+
     setModified(true);
     return true;
 }
