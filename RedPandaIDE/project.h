@@ -44,12 +44,15 @@ struct ProjectModelItemRecord {
     QString fullPath;
 };
 
+class ProjectUnit;
+
 struct ProjectModelNode;
 using PProjectModelNode = std::shared_ptr<ProjectModelNode>;
 struct ProjectModelNode {
     QString text;
     std::weak_ptr<ProjectModelNode> parent;
-    int unitIndex;
+    bool isUnit;
+    std::weak_ptr<ProjectUnit> pUnit;
     int priority;
     QList<PProjectModelNode>  children;
     ProjectModelNodeType folderNodeType;
@@ -71,7 +74,6 @@ class ProjectUnit {
 public:
     explicit ProjectUnit(Project* parent);
     Project* parent() const;
-    void setParent(Project* newParent);
     const QString &fileName() const;
     void setFileName(QString newFileName);
     bool isNew() const;
@@ -102,10 +104,6 @@ public:
     bool FileMissing() const;
     void setFileMissing(bool newDontSave);
 
-    int id() const;
-
-    void setId(int newId);
-
 private:
     Project* mParent;
     QString mFileName;
@@ -120,8 +118,6 @@ private:
     QByteArray mEncoding;
     PProjectModelNode mNode;
     bool mFileMissing;
-    int mId;
-    static int mIdGenerator;
 };
 
 using PProjectUnit = std::shared_ptr<ProjectUnit>;
@@ -206,46 +202,37 @@ public:
                 PProjectModelNode parentNode);
     QString folder();
     void buildPrivateResource(bool forceSave=false);
-    void closeUnit(int id);
+    void closeAllUnits();
+    void closeUnit(PProjectUnit& unit);
     PProjectUnit doAutoOpen();
     bool fileAlreadyExists(const QString& s);
 
     QString getNodePath(PProjectModelNode node);
-    int getUnitFromString(const QString& s);
     void incrementBuildNumber();
 
     PProjectUnit  newUnit(PProjectModelNode parentNode,
                  const QString& customFileName="");
-    Editor* openUnit(int index, bool forceOpen=true);
-    Editor* openUnit(PProjectEditorLayout editorLayout);
+    Editor* openUnit(PProjectUnit& unit, bool forceOpen=true);
+    Editor* openUnit(PProjectUnit& unit, const PProjectEditorLayout& layout);
     Editor* unitEditor(const PProjectUnit& unit) const;
     Editor* unitEditor(const ProjectUnit* unit) const;
-    Editor* unitEditor(int id) const {
-        PProjectUnit unit=mUnits.value(id,PProjectUnit());
-        if (!unit)
-            return nullptr;
-        return unitEditor(unit);
-    }
 
     QList<PProjectUnit> unitList();
 
     PProjectModelNode pointerToNode(ProjectModelNode * p, PProjectModelNode parent=PProjectModelNode());
     void rebuildNodes();
-    bool removeUnit(int id, bool doClose, bool removeFile = false);
+    bool removeUnit(PProjectUnit& unit, bool doClose, bool removeFile = false);
     bool removeFolder(PProjectModelNode node);
     void resetParserProjectFiles();
     void saveAll(); // save [Project] and  all [UnitX]
     void saveLayout(); // save all [UnitX]
     void saveOptions();
-    void renameUnit(int idx, const QString& sFileName);
+    void renameUnit(PProjectUnit& unit, const QString& sFileName);
     bool saveUnits();
 
-    PProjectUnit findUnitById(int id);
     PProjectUnit findUnit(const QString& filename);
     PProjectUnit findUnit(const Editor* editor);
 
-    int findUnitId(const QString& fileName) const;
-    int findUnitId(const Editor* editor) const;
     void associateEditor(Editor* editor);
     void associateEditorToUnit(Editor* editor, PProjectUnit unit);
     bool setCompileOption(const QString &key, const QString &value);
@@ -283,9 +270,12 @@ public:
 
     QStringList binDirs();
 
+    void renameFolderNode(PProjectModelNode node, const QString newName);
+    void loadUnitLayout(Editor *e);
 signals:
-    void nodesChanged();
+    void nodeRenamed();
     void modifyChanged(bool value);
+
 private:
     void checkProjectFileForUpdate(SimpleIni& ini);
     void createFolderNodes();
@@ -296,7 +286,6 @@ private:
     PProjectModelNode getCustomeFolderNodeFromName(const QString& name);
     void loadOptions(SimpleIni& ini);
     PProjectUnit loadLayout();
-    void loadUnitLayout(Editor *e);
 
     PProjectModelNode makeNewFolderNode(
             const QString& folderName,
@@ -304,8 +293,8 @@ private:
             ProjectModelNodeType nodeType=ProjectModelNodeType::Folder,
             int priority=0);
     PProjectModelNode makeNewFileNode(
-            const QString& fileName,
-            int unitId,
+            //const QString& fileName,
+            PProjectUnit unit,
             int priority,
             PProjectModelNode newParent);
     PProjectModelNode makeProjectNode();
@@ -315,7 +304,7 @@ private:
     void updateCompilerSetType();
 
 private:
-    QHash<int,PProjectUnit> mUnits;
+    QHash<QString,PProjectUnit> mUnits;
     ProjectOptions mOptions;
     QString mFilename;
     QString mName;

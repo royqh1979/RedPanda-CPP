@@ -169,10 +169,8 @@ bool EditorList::closeEditor(Editor* editor, bool transferFocus, bool force) {
 //    }
 
     if (editor->inProject() && pMainWindow->project()) {
-        int unitId = pMainWindow->project()->findUnitId(editor);
-        if (unitId>=0) {
-            pMainWindow->project()->closeUnit(unitId);
-        }
+        PProjectUnit unit = pMainWindow->project()->findUnit(editor);
+        pMainWindow->project()->closeUnit(unit);
     } else {
         if (pSettings->history().addToOpenedFiles(editor->filename())) {
             pMainWindow->rebuildOpenedFileHisotryMenu();

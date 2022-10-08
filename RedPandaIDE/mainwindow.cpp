@@ -2224,6 +2224,10 @@ void MainWindow::loadLastOpens()
         QByteArray encoding = unit ? unit->encoding() :
                                      (pSettings->editor().autoDetectFileEncoding()? ENCODING_AUTO_DETECT : pSettings->editor().defaultEncoding());
         Editor * editor = mEditorList->newEditor(editorFilename, encoding, inProject,false,page);
+
+        if (inProject && editor) {
+            mProject->loadUnitLayout(editor);
+        }
 //        if (mProject) {
 //            mProject->associateEditorToUnit(editor,unit);
 //        }
@@ -2943,15 +2947,13 @@ void MainWindow::onProjectViewContextMenu(const QPoint &pos)
     bool onRoot = false;
     bool folderEmpty = false;
     bool multiSelection = ui->projectView->selectionModel()->selectedRows().count()>1;
-    int unitIndex = -1;
     QModelIndex current = mProjectProxyModel->mapToSource(ui->projectView->selectionModel()->currentIndex());
     if (current.isValid() && mProject) {
         ProjectModelNode * node = static_cast<ProjectModelNode*>(current.internalPointer());
         PProjectModelNode pNode = mProject->pointerToNode(node);
         if (pNode) {
-            unitIndex = pNode->unitIndex;
-            onFolder = (unitIndex<0);
-            onUnit = (unitIndex >= 0);
+            onFolder = (!pNode->isUnit);
+            onUnit = (pNode->isUnit);
             onRoot = false;
             if (onFolder && !onRoot) {
                 folderEmpty = pNode->children.isEmpty();
@@ -3022,11 +3024,11 @@ void MainWindow::onProjectViewContextMenu(const QPoint &pos)
                 }
                 QModelIndex realIndex = mProjectProxyModel->mapToSource(index);
                 ProjectModelNode * node = static_cast<ProjectModelNode*>(realIndex.internalPointer());
-                if (!node || node->unitIndex<0) {
+                if (!node || !node->isUnit) {
                     shouldAdd=false;
                     break;
                 }
-                PProjectUnit pUnit=mProject->findUnitById(node->unitIndex);
+                PProjectUnit pUnit=node->pUnit.lock();
                 if (mProject->model()->iconProvider()->VCSRepository()->isFileInRepository(
                             pUnit->fileName()
                             )
@@ -3893,7 +3895,7 @@ void MainWindow::onProjectRemoveFolder()
     PProjectModelNode folderNode =  mProject->pointerToNode(node);
     if (!folderNode)
         return;
-    if (folderNode->unitIndex>=0)
+    if (folderNode->isUnit)
         return;
     mProject->removeFolder(folderNode);
     mProject->saveOptions();
@@ -3919,7 +3921,7 @@ void MainWindow::onProjectAddFolder()
     PProjectModelNode folderNode =  mProject->pointerToNode(node);
     if (!folderNode)
         folderNode = mProject->rootNode();
-    if (folderNode->unitIndex>=0)
+    if (folderNode->isUnit)
         return;
     QString s=tr("New folder");
     int i=1;
@@ -4267,6 +4269,7 @@ void MainWindow::closeProject(bool refreshEditor)
                 auto action3 = finally([this]{
                     mEditorList->endUpdate();
                 });
+                mProject->closeAllUnits();
                 mProject.reset();
 
                 if (!mQuitting && refreshEditor) {
@@ -4294,9 +4297,8 @@ void MainWindow::updateProjectView()
         if (mProjectProxyModel->sourceModel()!=mProject->model()) {
             mProjectProxyModel->setSourceModel(mProject->model());
             mProjectProxyModel->sort(0);
-//            connect(mProject->model(), &ProjectModel::dataChanged,
-//                    this, &MainWindow::invalidateProjectProxyModel);
-//            connect(mProject->model(), &ProjectModel::rowsRemoved,
+            connect(mProject.get(), &Project::nodeRenamed,
+                    this, &MainWindow::onProjectViewNodeRenamed);
 //                    this, &MainWindow::invalidateProjectProxyModel);
 //            connect(mProject->model(), &ProjectModel::rowsInserted,
 //                    this, &MainWindow::invalidateProjectProxyModel);
@@ -5760,8 +5762,9 @@ void MainWindow::on_projectView_doubleClicked(const QModelIndex &index)
     ProjectModelNode * node = static_cast<ProjectModelNode*>(sourceIndex.internalPointer());
     if (!node)
         return;
-    if (node->unitIndex>=0) {
-        mProject->openUnit(node->unitIndex);
+    if (node->isUnit) {
+        PProjectUnit unit = node->pUnit.lock();
+        mProject->openUnit(unit);
     }
 }
 
@@ -5967,7 +5970,8 @@ void MainWindow::on_actionRemove_from_project_triggered()
         PProjectModelNode folderNode =  mProject->pointerToNode(node);
         if (!folderNode)
             continue;
-        mProject->removeUnit(folderNode->unitIndex, true, removeFile);
+        PProjectUnit unit = folderNode->pUnit.lock();
+        mProject->removeUnit(unit, true, removeFile);
     };
     ui->projectView->selectionModel()->clearSelection();
     mProject->saveAll();
@@ -6159,7 +6163,7 @@ void MainWindow::newProjectUnitFile()
     }
     PProjectModelNode pNode = mProject->pointerToNode(node);
 
-    while (pNode && pNode->unitIndex>0) {
+    while (pNode && pNode->isUnit) {
         pNode = pNode->parent.lock();
     }
 
@@ -6235,13 +6239,8 @@ void MainWindow::newProjectUnitFile()
 
     setProjectViewCurrentUnit(newUnit);
 
-//    mProject->rebuildNodes();
     mProject->saveAll();
-//        updateProjectView();
-//    idx = newUnit->id;
-    Editor * editor = mProject->openUnit(newUnit->id(), false);
-    //editor->setUseCppSyntax(mProject->options().useGPP);
-    //editor->setModified(true);
+    Editor * editor = mProject->openUnit(newUnit, false);
     if (editor)
         editor->activate();
     QString branch;
@@ -6309,6 +6308,11 @@ void MainWindow::setProjectViewCurrentUnit(std::shared_ptr<ProjectUnit> unit) {
     if (unit) {
         setProjectViewCurrentNode(unit->node());
     }
+}
+
+void MainWindow::onProjectViewNodeRenamed()
+{
+    updateProjectView();
 }
 
 void MainWindow::setProjectViewCurrentNode(PProjectModelNode node)
@@ -7576,8 +7580,8 @@ void MainWindow::on_actionGit_Add_Files_triggered()
             PProjectModelNode folderNode =  mProject->pointerToNode(node);
             if (!folderNode)
                 continue;
-            if (folderNode->unitIndex>=0) {
-                PProjectUnit unit = mProject->findUnitById(folderNode->unitIndex);
+            if (folderNode->isUnit) {
+                PProjectUnit unit = folderNode->pUnit.lock();
                 QFileInfo info(unit->fileName());
                 QString output;
                 vcsManager.add(info.absolutePath(),info.fileName(),output);

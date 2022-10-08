@@ -276,6 +276,7 @@ private:
     void setProjectViewCurrentUnit(std::shared_ptr<ProjectUnit> unit);
 
 private slots:
+    void onProjectViewNodeRenamed();
     void setDockExplorerToArea(const Qt::DockWidgetArea &area);
     void setDockMessagesToArea(const Qt::DockWidgetArea &area);
     void updateVCSActions();

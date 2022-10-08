@@ -336,8 +336,8 @@ bool Editor::saveAs(const QString &name, bool fromProject){
     }
     // Update project information
     if (mInProject && pMainWindow->project() && !fromProject) {
-        int unitId = pMainWindow->project()->findUnitId(newName);
-        if (unitId<0) {
+        PProjectUnit unit = pMainWindow->project()->findUnit(newName);
+        if (!unit) {
             mInProject = false;
         }
     }

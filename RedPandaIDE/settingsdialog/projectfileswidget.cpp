@@ -47,7 +47,7 @@ void ProjectFilesWidget::doSave()
 {
     for (int i=0;i<mUnits.count();i++) {
         PProjectUnit unitCopy = mUnits[i];
-        PProjectUnit unit = pMainWindow->project()->findUnitById(unitCopy->id());
+        PProjectUnit unit = pMainWindow->project()->findUnit(unitCopy->fileName());
         unit->setPriority(unitCopy->priority());
         unit->setCompile(unitCopy->compile());
         unit->setLink(unitCopy->link());
@@ -70,11 +70,13 @@ PProjectUnit ProjectFilesWidget::currentUnit()
     ProjectModelNode* node = static_cast<ProjectModelNode*>(index.internalPointer());
     if (!node)
         return PProjectUnit();
-    int idx = node->unitIndex;
-    if (idx>=0) {
-        foreach (PProjectUnit unit, mUnits) {
-            if (unit->id() == idx)
-                return unit;
+    if (!node->isUnit)
+        return PProjectUnit();
+    PProjectUnit unit=node->pUnit.lock();
+    if (unit) {
+        foreach (PProjectUnit tmpUnit, mUnits) {
+            if (tmpUnit->fileName() == unit->fileName())
+                return tmpUnit;
         }
     }
     return PProjectUnit();
@@ -88,7 +90,6 @@ void ProjectFilesWidget::copyUnits()
     mUnits.clear();
     foreach (const PProjectUnit& unit, project->unitList()) {
         PProjectUnit unitCopy = std::make_shared<ProjectUnit>(project.get());
-        unitCopy->setId(unit->id());
         unitCopy->setPriority(unit->priority());
         unitCopy->setCompile(unit->compile());
         unitCopy->setLink(unit->link());
@@ -145,9 +146,8 @@ void ProjectFilesWidget::on_treeProject_doubleClicked(const QModelIndex &index)
         disableFileOptions();
         return;
     }
-    int i = node->unitIndex;
-    if (i>=0) {
-        PProjectUnit unit = mUnits[i];
+    PProjectUnit unit = node->pUnit.lock();
+    if (unit) {
         ui->grpFileOptions->setEnabled(true);
         ui->spinPriority->setValue(unit->priority());
         ui->chkCompile->setChecked(unit->compile());
