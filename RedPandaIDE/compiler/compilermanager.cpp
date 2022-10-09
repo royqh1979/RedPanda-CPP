@@ -87,6 +87,7 @@ void CompilerManager::compile(const QString& filename, const QByteArray& encodin
         connect(mCompiler, &Compiler::compileFinished, this, &CompilerManager::onCompileFinished);
         connect(mCompiler, &Compiler::compileIssue, this, &CompilerManager::onCompileIssue);
         connect(mCompiler, &Compiler::compileStarted, pMainWindow, &MainWindow::onCompileStarted);
+        connect(mCompiler, &Compiler::compileStarted, pMainWindow, &MainWindow::clearToolsOutput);
 
         connect(mCompiler, &Compiler::compileOutput, pMainWindow, &MainWindow::logToolsOutput);
         connect(mCompiler, &Compiler::compileIssue, pMainWindow, &MainWindow::onCompileIssue);
@@ -117,6 +118,7 @@ void CompilerManager::compileProject(std::shared_ptr<Project> project, bool rebu
 
         connect(mCompiler, &Compiler::compileIssue, this, &CompilerManager::onCompileIssue);
         connect(mCompiler, &Compiler::compileStarted, pMainWindow, &MainWindow::onCompileStarted);
+        connect(mCompiler, &Compiler::compileStarted, pMainWindow, &MainWindow::clearToolsOutput);
 
         connect(mCompiler, &Compiler::compileOutput, pMainWindow, &MainWindow::logToolsOutput);
         connect(mCompiler, &Compiler::compileIssue, pMainWindow, &MainWindow::onCompileIssue);
@@ -149,6 +151,7 @@ void CompilerManager::cleanProject(std::shared_ptr<Project> project)
 
         connect(mCompiler, &Compiler::compileIssue, this, &CompilerManager::onCompileIssue);
         connect(mCompiler, &Compiler::compileStarted, pMainWindow, &MainWindow::onCompileStarted);
+        connect(mCompiler, &Compiler::compileStarted, pMainWindow, &MainWindow::clearToolsOutput);
 
         connect(mCompiler, &Compiler::compileOutput, pMainWindow, &MainWindow::logToolsOutput);
         connect(mCompiler, &Compiler::compileIssue, pMainWindow, &MainWindow::onCompileIssue);
@@ -199,7 +202,7 @@ void CompilerManager::checkSyntax(const QString &filename, const QByteArray& enc
         connect(mBackgroundSyntaxChecker, &Compiler::compileIssue, this, &CompilerManager::onSyntaxCheckIssue);
         connect(mBackgroundSyntaxChecker, &Compiler::compileStarted, pMainWindow, &MainWindow::onCompileStarted);
         connect(mBackgroundSyntaxChecker, &Compiler::compileFinished, this, &CompilerManager::onSyntaxCheckFinished);
-        connect(mBackgroundSyntaxChecker, &Compiler::compileOutput, pMainWindow, &MainWindow::logToolsOutput);
+        //connect(mBackgroundSyntaxChecker, &Compiler::compileOutput, pMainWindow, &MainWindow::logToolsOutput);
         connect(mBackgroundSyntaxChecker, &Compiler::compileIssue, pMainWindow, &MainWindow::onCompileIssue);
         connect(mBackgroundSyntaxChecker, &Compiler::compileErrorOccured, pMainWindow, &MainWindow::onCompileErrorOccured);
         mBackgroundSyntaxChecker->start();

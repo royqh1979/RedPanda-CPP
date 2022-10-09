@@ -207,7 +207,7 @@ void Compiler::processOutput(QString &line)
     if(mLastIssue && line.startsWith(referencePrefix)) {
             line.remove(0,referencePrefix.length());
             mLastIssue->filename = getFileNameFromOutputLine(line);
-            qDebug()<<line;
+            //qDebug()<<line;
             mLastIssue->line = getLineNumberFromOutputLine(line);
             emit compileIssue(mLastIssue);
             mLastIssue.reset();
@@ -352,7 +352,7 @@ QString Compiler::getCharsetArgument(const QByteArray& encoding,FileType fileTyp
         } else {
             execEncodingName = compilerSetExecCharset;
         }
-        qDebug()<<encodingName<<execEncodingName;
+        //qDebug()<<encodingName<<execEncodingName;
         if (checkSyntax) {
             result += QString(" -finput-charset=%1")
                     .arg(encodingName);

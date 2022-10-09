@@ -4,6 +4,8 @@ Red Panda C++ Version 1.5
   - enhancement: add/new/remove/rename project files won't rebuild project tree
   - fix: gliches in UI's left panel in some OS
   - fix: correctly restore project layout when reopen it
+  - change: clear tools output panel when start to compile
+  - change: don't show syntax check messages in the tools output panel
 
 Red Panda C++ Version 1.4
 
