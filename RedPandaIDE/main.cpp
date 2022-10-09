@@ -375,7 +375,7 @@ int main(int argc, char *argv[])
         } else {
             if (pSettings->editor().autoLoadLastFiles())
                 pMainWindow->loadLastOpens();
-            if (pMainWindow->editorList()->pageCount()==0) {
+            if (pMainWindow->editorList()->pageCount()==0 && !pMainWindow->project()) {
                 pMainWindow->newEditor();
             }
         }

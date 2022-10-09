@@ -49,6 +49,7 @@ Project::Project(const QString &filename, const QString &name,
                  QFileSystemWatcher* fileSystemWatcher,
                  QObject *parent) :
     QObject(parent),
+    mName(name),
     mModel(this),
     mEditorList(editorList),
     mFileSystemWatcher(fileSystemWatcher)
@@ -59,18 +60,44 @@ Project::Project(const QString &filename, const QString &name,
                 std::bind(
                     &EditorList::getContentFromOpenedEditor,mEditorList,
                     std::placeholders::_1, std::placeholders::_2));
-    if (name == DEV_INTERNAL_OPEN) {
-        mModified = false;
-        open();
-    } else {
-        mName = name;
-        SimpleIni ini;
-        ini.SetValue("Project","filename", toByteArray(extractRelativePath(directory(),mFilename)));
-        ini.SetValue("Project","name", toByteArray(mName));
-        ini.SaveFile(mFilename.toLocal8Bit());
-        mRootNode = makeProjectNode();
-    }
-    resetCppParser(mParser,mOptions.compilerSet);
+}
+
+std::shared_ptr<Project> Project::load(const QString &filename, EditorList *editorList, QFileSystemWatcher *fileSystemWatcher, QObject *parent)
+{
+    std::shared_ptr<Project> project=std::make_shared<Project>(filename,
+                                                               "",
+                                                               editorList,
+                                                               fileSystemWatcher,
+                                                               parent);
+    project->open();
+    project->mModified = false;
+    resetCppParser(project->mParser,project->mOptions.compilerSet);
+    return project;
+}
+
+std::shared_ptr<Project> Project::create(
+        const QString &filename, const QString &name,
+        EditorList *editorList, QFileSystemWatcher *fileSystemWatcher,
+        const std::shared_ptr<ProjectTemplate> pTemplate,
+        bool useCpp,  QObject *parent)
+{
+    std::shared_ptr<Project> project=std::make_shared<Project>(filename,
+                                                               name,
+                                                               editorList,
+                                                               fileSystemWatcher,
+                                                               parent);
+    SimpleIni ini;
+    ini.SetValue("Project","filename", toByteArray(extractRelativePath(project->directory(),
+                                                                       project->mFilename)));
+    ini.SetValue("Project","name", toByteArray(project->mName));
+    ini.SaveFile(project->mFilename.toLocal8Bit());
+    project->mParser->setEnabled(false);
+    if (!project->assignTemplate(pTemplate,useCpp))
+        return std::shared_ptr<Project>();
+    resetCppParser(project->mParser,project->mOptions.compilerSet);
+
+    project->mModified = true;
+    return project;
 }
 
 Project::~Project()
@@ -79,6 +106,7 @@ Project::~Project()
     foreach (const PProjectUnit& unit, mUnits) {
         Editor * editor = unitEditor(unit);
         if (editor) {
+            editor->setProject(nullptr);
             mEditorList->forceCloseEditor(editor);
         }
     }
@@ -359,15 +387,15 @@ Editor* Project::openUnit(PProjectUnit& unit, bool forceOpen) {
 
         Editor * editor = mEditorList->getOpenedEditorByFilename(unit->fileName());
         if (editor) {//already opened in the editors
-            editor->setInProject(true);
+            editor->setProject(this);
             editor->activate();
             return editor;
         }
         QByteArray encoding;
         encoding = unit->encoding();
-        editor = mEditorList->newEditor(unit->fileName(), encoding, true, unit->isNew());
+        editor = mEditorList->newEditor(unit->fileName(), encoding, this, unit->isNew());
         if (editor) {
-            editor->setInProject(true);
+            //editor->setProject(this);
             //unit->setEncoding(encoding);
             loadUnitLayout(editor);
             editor->activate();
@@ -386,15 +414,15 @@ Editor *Project::openUnit(PProjectUnit &unit, const PProjectEditorLayout &layout
 
         Editor * editor = mEditorList->getOpenedEditorByFilename(unit->fileName());
         if (editor) {//already opened in the editors
-            editor->setInProject(true);
+            editor->setProject(this);
             editor->activate();
             return editor;
         }
         QByteArray encoding;
         encoding = unit->encoding();
-        editor = mEditorList->newEditor(unit->fileName(), encoding, true, unit->isNew());
+        editor = mEditorList->newEditor(unit->fileName(), encoding, this, unit->isNew());
         if (editor) {
-            editor->setInProject(true);
+            //editor->setInProject(true);
             editor->setCaretY(layout->caretY);
             editor->setCaretX(layout->caretX);
             editor->setTopLine(layout->topLine);
@@ -485,7 +513,7 @@ bool Project::removeUnit(PProjectUnit& unit, bool doClose , bool removeFile)
     if (doClose) {
         Editor* editor = unitEditor(unit);
         if (editor) {
-            editor->setInProject(false);
+            editor->setProject(nullptr);
             mEditorList->closeEditor(editor);
         }
     }
@@ -578,7 +606,8 @@ void Project::saveAll()
 
 void Project::saveLayout()
 {
-    QJsonObject jsonRoot;
+    QHash<QString, PProjectEditorLayout> oldLayouts = loadLayout();
+
     QHash<QString,int> editorOrderSet;
     // Write list of open project files
     int order=0;
@@ -594,8 +623,6 @@ void Project::saveLayout()
     Editor *e, *e2;
     // Remember what files were visible
     mEditorList->getVisibleEditors(e, e2);
-    if (e)
-        jsonRoot["focused"]=e->filename();
 
     QJsonArray jsonLayouts;
     // save editor info
@@ -608,18 +635,33 @@ void Project::saveLayout()
             jsonLayout["caretY"]=editor->caretY();
             jsonLayout["topLine"]=editor->topLine();
             jsonLayout["leftChar"]=editor->leftChar();
+            jsonLayout["isOpen"]=true;
+            jsonLayout["focused"]=(editor==e);
             int order=editorOrderSet.value(editor->filename(),-1);
             if (order>=0) {
                 jsonLayout["order"]=order;
             }
             jsonLayouts.append(jsonLayout);
+        } else {
+            PProjectEditorLayout oldLayout = oldLayouts.value(unit->fileName(),PProjectEditorLayout());
+            if (oldLayout) {
+                QJsonObject jsonLayout;
+                jsonLayout["filename"]=unit->fileName();
+                jsonLayout["caretX"]=oldLayout->caretX;
+                jsonLayout["caretY"]=oldLayout->caretY;
+                jsonLayout["topLine"]=oldLayout->topLine;
+                jsonLayout["leftChar"]=oldLayout->leftChar;
+                jsonLayout["isOpen"]=false;
+                jsonLayout["focused"]=false;
+                jsonLayouts.append(jsonLayout);
+            }
         }
     }
-    jsonRoot["editorLayouts"]=jsonLayouts;
-    QString jsonFilename=changeFileExt(filename(), "layout");
+
+    QString jsonFilename = changeFileExt(filename(), "layout");
     QFile file(jsonFilename);
     if (file.open(QFile::WriteOnly|QFile::Truncate)) {
-        QJsonDocument doc(jsonRoot);
+        QJsonDocument doc(jsonLayouts);
         file.write(doc.toJson(QJsonDocument::Indented));
         file.close();
     } else {
@@ -740,12 +782,12 @@ void Project::associateEditorToUnit(Editor *editor, PProjectUnit unit)
 {
     if (!unit) {
         if (editor)
-            editor->setInProject(false);
+            editor->setProject(nullptr);
         return;
     }
     if (editor) {
         unit->setEncoding(editor->encodingOption());
-        editor->setInProject(true);
+        editor->setProject(this);
     }
 }
 
@@ -840,7 +882,7 @@ bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate, b
     }
     mModel.beginUpdate();
     mRootNode = makeProjectNode();
-
+    rebuildNodes();
     mOptions = aTemplate->options();
     mOptions.compilerSet = pSettings->compilerSets().defaultIndex();
     mOptions.isCpp = useCpp;
@@ -887,7 +929,7 @@ bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate, b
                 Editor * editor = mEditorList->newEditor(
                             unit->fileName(),
                             unit->encoding(),
-                            true,
+                            this,
                             true);
 
                 QString s2 = dir.absoluteFilePath(s);
@@ -1148,7 +1190,7 @@ PProjectUnit Project::addUnit(const QString &inFileName, PProjectModelNode paren
     Editor * e= unitEditor(newUnit);
     if (e) {
         newUnit->setEncoding(e->fileEncoding());
-        e->setInProject(true);
+        e->setProject(this);
     } else {
         newUnit->setEncoding(options().encoding.toUtf8());
     }
@@ -1473,17 +1515,6 @@ void Project::buildPrivateResource(bool forceSave)
     stringsToFile(contents,hFile);
 }
 
-void Project::closeAllUnits()
-{
-    foreach (PProjectUnit unit, mUnits) {
-        Editor * editor = unitEditor(unit);
-        if (editor) {
-            editor->setInProject(false);
-            mEditorList->forceCloseEditor(editor);
-        }
-    }
-}
-
 void Project::checkProjectFileForUpdate(SimpleIni &ini)
 {
     bool cnvt = false;
@@ -1539,7 +1570,7 @@ void Project::closeUnit(PProjectUnit& unit)
     saveLayout();
     Editor * editor = unitEditor(unit);
     if (editor) {
-        editor->setInProject(false);
+        editor->setProject(nullptr);
         mEditorList->forceCloseEditor(editor);
     }
 }
@@ -1648,7 +1679,37 @@ void Project::createFileSystemFolderNode(
 
 PProjectUnit Project::doAutoOpen()
 {
-    return loadLayout();
+    QHash<QString,PProjectEditorLayout> layouts = loadLayout();
+
+    QHash<int,PProjectEditorLayout> opennedMap;
+
+    QString focusedFilename;
+    foreach (const PProjectEditorLayout &layout,layouts) {
+        if (layout->isOpen && layout->order>=0) {
+            if (layout->isFocused)
+                focusedFilename = layout->filename;
+            opennedMap.insert(layout->order,layout);
+        }
+    }
+
+    for (int i=0;i<mUnits.count();i++) {
+        PProjectEditorLayout editorLayout = opennedMap.value(i,PProjectEditorLayout());
+        if (editorLayout) {
+            PProjectUnit unit = findUnit(editorLayout->filename);
+            openUnit(unit,editorLayout);
+        }
+    }
+
+    if (!focusedFilename.isEmpty()) {
+        PProjectUnit unit = findUnit(focusedFilename);
+        if (unit) {
+            Editor * editor = unitEditor(unit);
+            if (editor)
+                editor->activate();
+        }
+        return unit;
+    }
+    return PProjectUnit();
 }
 
 bool Project::fileAlreadyExists(const QString &s)
@@ -1755,25 +1816,22 @@ void Project::incrementBuildNumber()
     setModified(true);
 }
 
-PProjectUnit Project::loadLayout()
+QHash<QString, PProjectEditorLayout> Project::loadLayout()
 {
+    QHash<QString,PProjectEditorLayout> layouts;
     QString jsonFilename = changeFileExt(filename(), "layout");
-    qDebug()<<"read file"<<jsonFilename;
     QFile file(jsonFilename);
     if (!file.open(QIODevice::ReadOnly))
-        return PProjectUnit();
+        return layouts;
     QByteArray content = file.readAll();
     QJsonParseError parseError;
     QJsonDocument doc(QJsonDocument::fromJson(content,&parseError));
     file.close();
-    if (parseError.error!=QJsonParseError::NoError)
-        return PProjectUnit();
+    if (parseError.error!=QJsonParseError::NoError || !doc.isArray())
+        return layouts;
 
-    QJsonObject jsonRoot=doc.object();
+    QJsonArray jsonLayouts=doc.array();
 
-    QJsonArray jsonLayouts=jsonRoot["editorLayouts"].toArray();
-
-    QHash<int,PProjectEditorLayout> opennedMap;
     for (int i=0;i<jsonLayouts.size();i++) {
         QJsonObject jsonLayout = jsonLayouts[i].toObject();
         QString unitFilename = jsonLayout["filename"].toString();
@@ -1784,32 +1842,14 @@ PProjectUnit Project::loadLayout()
             editorLayout->leftChar=jsonLayout["leftChar"].toInt();
             editorLayout->caretX=jsonLayout["caretX"].toInt();
             editorLayout->caretY=jsonLayout["caretY"].toInt();
-            int order = jsonLayout["order"].toInt(-1);
-            if (order>=0)
-                opennedMap.insert(order,editorLayout);
+            editorLayout->order=jsonLayout["order"].toInt(-1);
+            editorLayout->isFocused=jsonLayout["focused"].toBool();
+            editorLayout->isOpen=jsonLayout["isOpen"].toBool();
+            layouts.insert(unitFilename,editorLayout);
         }
     }
 
-    for (int i=0;i<mUnits.count();i++) {
-        PProjectEditorLayout editorLayout = opennedMap.value(i,PProjectEditorLayout());
-        if (editorLayout) {
-            PProjectUnit unit = findUnit(editorLayout->filename);
-            openUnit(unit,editorLayout);
-        }
-    }
-
-    QString focusedFilename = jsonRoot["focused"].toString();
-
-    if (!focusedFilename.isEmpty()) {
-        PProjectUnit unit = findUnit(focusedFilename);
-        if (unit) {
-            Editor * editor = unitEditor(unit);
-            if (editor)
-                editor->activate();
-        }
-        return unit;
-    }
-    return PProjectUnit();
+    return layouts;
 }
 
 void Project::loadOptions(SimpleIni& ini)
@@ -2057,36 +2097,15 @@ void Project::loadUnitLayout(Editor *e)
     if (!e)
         return;
 
-    QString jsonFilename = changeFileExt(filename(), "layout");
-    QFile file(jsonFilename);
-    if (!file.open(QIODevice::ReadOnly))
-        return;
-    QByteArray content = file.readAll();
-    QJsonParseError parseError;
-    QJsonDocument doc{QJsonDocument::fromJson(content,&parseError)};
-    file.close();
-    if (parseError.error!=QJsonParseError::NoError)
-        return;
+    QHash<QString, PProjectEditorLayout> layouts = loadLayout();
 
-    QJsonObject jsonRoot=doc.object();
-
-    QJsonArray jsonLayouts=jsonRoot["editorLayouts"].toArray();
-
-    QHash<int,PProjectEditorLayout> opennedMap;
-    for (int i=0;i<jsonLayouts.size();i++) {
-        QJsonObject jsonLayout = jsonLayouts[i].toObject();
-        QString unitFilename = jsonLayout["filename"].toString();
-        if (unitFilename.compare(e->filename(),PATH_SENSITIVITY)==0) {
-            qDebug()<<i<<unitFilename<<e->filename();
-            e->setCaretY(jsonLayout["caretY"].toInt());
-            e->setCaretX(jsonLayout["caretX"].toInt());
-            e->setTopLine(jsonLayout["topLine"].toInt());
-            e->setLeftChar(jsonLayout["leftChar"].toInt());
-            return;
-        }
+    PProjectEditorLayout layout = layouts.value(e->filename(),PProjectEditorLayout());
+    if (layout) {
+        e->setCaretY(layout->caretY);
+        e->setCaretX(layout->caretX);
+        e->setTopLine(layout->topLine);
+        e->setLeftChar(layout->leftChar);
     }
-
-
 }
 
 PCppParser Project::cppParser()

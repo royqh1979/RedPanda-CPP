@@ -1191,8 +1191,9 @@ void MainWindow::openFile(const QString &filename, bool activate, QTabWidget* pa
         bool inProject = (mProject && unit);
         QByteArray encoding = unit ? unit->encoding() :
                                      (pSettings->editor().autoDetectFileEncoding()? ENCODING_AUTO_DETECT : pSettings->editor().defaultEncoding());
+        Project * pProject = (inProject?mProject.get():nullptr);
         editor = mEditorList->newEditor(filename,encoding,
-                                    inProject, false, page);
+                                    pProject, false, page);
 //        if (mProject) {
 //            mProject->associateEditorToUnit(editor,unit);
 //        }
@@ -1242,9 +1243,7 @@ void MainWindow::openProject(const QString &filename, bool openFiles)
         auto action = finally([this]{
             mClassBrowserModel.endUpdate();
         });
-        mProject = std::make_shared<Project>(filename,DEV_INTERNAL_OPEN,
-                                             mEditorList,
-                                             &mFileSystemWatcher);
+        mProject = Project::load(filename,mEditorList,&mFileSystemWatcher);
         updateProjectView();
         ui->projectView->expand(
                     mProjectProxyModel->mapFromSource(
@@ -1258,6 +1257,7 @@ void MainWindow::openProject(const QString &filename, bool openFiles)
 
         //parse the project
         //  UpdateClassBrowsing;
+
         scanActiveProject(true);
         if (openFiles) {
             PProjectUnit unit = mProject->doAutoOpen();
@@ -2105,7 +2105,10 @@ void MainWindow::scanActiveProject(bool parse)
 {
     if (!mProject)
         return;
-    mProject->cppParser()->setEnabled(pSettings->codeCompletion().enabled());
+    if (!pSettings->codeCompletion().enabled())
+        return;
+    if (!mProject->cppParser()->enabled())
+        return;
 
     //UpdateClassBrowsing;
     if (parse) {
@@ -2223,7 +2226,8 @@ void MainWindow::loadLastOpens()
         bool inProject = (mProject && unit);
         QByteArray encoding = unit ? unit->encoding() :
                                      (pSettings->editor().autoDetectFileEncoding()? ENCODING_AUTO_DETECT : pSettings->editor().defaultEncoding());
-        Editor * editor = mEditorList->newEditor(editorFilename, encoding, inProject,false,page);
+        Project* pProject = (inProject?mProject.get():nullptr);
+        Editor * editor = mEditorList->newEditor(editorFilename, encoding, pProject,false,page);
 
         if (inProject && editor) {
             mProject->loadUnitLayout(editor);
@@ -2247,6 +2251,8 @@ void MainWindow::loadLastOpens()
             focusedEditor = editor;
         pSettings->history().removeFile(editorFilename);
     }
+    if (mProject && mEditorList->pageCount()==0)
+        mProject->doAutoOpen();
     if (count>0) {
         updateEditorActions();
         //updateForEncodingInfo();
@@ -2315,7 +2321,7 @@ void MainWindow::newEditor()
     try {
         Editor * editor=mEditorList->newEditor("",
                                                pSettings->editor().defaultEncoding(),
-                                               false,true);
+                                               nullptr,true);
         editor->activate();
         //updateForEncodingInfo();
     }  catch (FileError e) {
@@ -4269,7 +4275,6 @@ void MainWindow::closeProject(bool refreshEditor)
                 auto action3 = finally([this]{
                     mEditorList->endUpdate();
                 });
-                mProject->closeAllUnits();
                 mProject.reset();
 
                 if (!mQuitting && refreshEditor) {
@@ -5856,12 +5861,11 @@ void MainWindow::on_actionNew_Project_triggered()
             }
         }
 
-        // Create an empty project
-        mProject = std::make_shared<Project>(s,dialog.getProjectName(),
+        mProject = Project::create(s,dialog.getProjectName(),
                                              mEditorList,
-                                             &mFileSystemWatcher);
-        if (!mProject->assignTemplate(dialog.getTemplate(),dialog.isCppProject())) {
-            mProject = nullptr;
+                                             &mFileSystemWatcher,
+                                   dialog.getTemplate(),dialog.isCppProject());
+        if (!mProject) {
             QMessageBox::critical(this,
                                   tr("New project fail"),
                                   tr("Can't assign project template"),
@@ -5869,6 +5873,7 @@ void MainWindow::on_actionNew_Project_triggered()
         }
         mProject->saveAll();
         updateProjectView();
+        scanActiveProject(true);
     }
     pSettings->ui().setNewProjectDialogWidth(dialog.width());
     pSettings->ui().setNewProjectDialogHeight(dialog.height());

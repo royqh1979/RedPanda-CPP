@@ -65,6 +65,9 @@ struct ProjectEditorLayout {
     int leftChar;
     int caretX;
     int caretY;
+    int order;
+    bool isFocused;
+    bool isOpen;
 };
 
 using PProjectEditorLayout = std::shared_ptr<ProjectEditorLayout>;
@@ -189,6 +192,19 @@ public:
                      EditorList* editorList,
                      QFileSystemWatcher* fileSystemWatcher,
                      QObject *parent = nullptr);
+
+    static std::shared_ptr<Project> load(const QString& filename,
+                                    EditorList* editorList,
+                                    QFileSystemWatcher* fileSystemWatcher,
+                                    QObject *parent = nullptr);
+    static std::shared_ptr<Project> create(const QString& filename,
+                                           const QString& name,
+                                           EditorList* editorList,
+                                           QFileSystemWatcher* fileSystemWatcher,
+                                           const std::shared_ptr<ProjectTemplate> pTemplate,
+                                           bool useCpp,
+                                           QObject *parent = nullptr);
+
     ~Project();
     QString directory() const;
     QString executable() const;
@@ -202,7 +218,6 @@ public:
                 PProjectModelNode parentNode);
     QString folder();
     void buildPrivateResource(bool forceSave=false);
-    void closeAllUnits();
     void closeUnit(PProjectUnit& unit);
     PProjectUnit doAutoOpen();
     bool fileAlreadyExists(const QString& s);
@@ -241,7 +256,6 @@ public:
     void updateFolders();
     void setCompilerSet(int compilerSetIndex);
 
-    bool assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate, bool useCpp);
     bool saveAsTemplate(const QString& templateFolder,
                         const QString& name,
                         const QString& description,
@@ -277,6 +291,7 @@ signals:
     void modifyChanged(bool value);
 
 private:
+    bool assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate, bool useCpp);
     void checkProjectFileForUpdate(SimpleIni& ini);
     void createFolderNodes();
     void createFileSystemFolderNodes();
@@ -285,7 +300,8 @@ private:
     PProjectModelNode findFileSystemFolderNode(const QString& folderPath, ProjectModelNodeType nodeType);
     PProjectModelNode getCustomeFolderNodeFromName(const QString& name);
     void loadOptions(SimpleIni& ini);
-    PProjectUnit loadLayout();
+    //PProjectUnit
+    QHash<QString, PProjectEditorLayout> loadLayout();
 
     PProjectModelNode makeNewFolderNode(
             const QString& folderName,

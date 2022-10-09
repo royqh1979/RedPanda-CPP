@@ -42,7 +42,7 @@ EditorList::EditorList(QTabWidget* leftPageWidget,
 }
 
 Editor* EditorList::newEditor(const QString& filename, const QByteArray& encoding,
-                 bool inProject, bool newFile,
+                 Project *pProject, bool newFile,
                  QTabWidget* page) {
     QTabWidget * parentPageControl = nullptr;
     if (page == nullptr)
@@ -52,16 +52,16 @@ Editor* EditorList::newEditor(const QString& filename, const QByteArray& encodin
     if (fileExists(filename)) {
         pMainWindow->fileSystemWatcher()->addPath(filename);
     }
-    Editor * e = new Editor(parentPageControl,filename,encoding,inProject,newFile,parentPageControl);
+    Editor * e = new Editor(parentPageControl,filename,encoding,pProject,newFile,parentPageControl);
     connect(e, &Editor::renamed, this, &EditorList::onEditorRenamed);
     updateLayout();
-    if (pMainWindow->project()){
-        PProjectUnit unit = pMainWindow->project()->findUnit(filename);
-        if (unit) {
-            pMainWindow->project()->associateEditorToUnit(e,unit);
-            e->setInProject(true);
-        }
-    }
+//    if (pMainWindow->project()){
+//        PProjectUnit unit = pMainWindow->project()->findUnit(filename);
+//        if (unit) {
+//            pMainWindow->project()->associateEditorToUnit(e,unit);
+//            e->setInProject(true);
+//        }
+//    }
     connect(e,&Editor::fileSaved,
             pMainWindow, &MainWindow::onFileSaved);
     return e;
@@ -368,7 +368,7 @@ Editor *EditorList::getEditorByFilename(QString filename)
     QFileInfo fileInfo(filename);
     QString fullname = fileInfo.absoluteFilePath();
     if (fileInfo.exists() && fileInfo.isFile())
-        return newEditor(fullname,pSettings->editor().autoDetectFileEncoding()?ENCODING_AUTO_DETECT:pSettings->editor().defaultEncoding(),false,false);
+        return newEditor(fullname,pSettings->editor().autoDetectFileEncoding()?ENCODING_AUTO_DETECT:pSettings->editor().defaultEncoding(),nullptr,false);
     return nullptr;
 }
 

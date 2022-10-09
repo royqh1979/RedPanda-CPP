@@ -31,6 +31,8 @@
 #define USER_CODE_IN_REPL_POS_BEGIN "%REPL_BEGIN%"
 #define USER_CODE_IN_REPL_POS_END "%REPL_END%"
 
+
+class Project;
 struct TabStop {
     int x;
     int endX;
@@ -134,7 +136,7 @@ public:
 
     explicit Editor(QWidget *parent, const QString& filename,
                     const QByteArray& encoding,
-                    bool inProject, bool isNew,QTabWidget* parentPageControl);
+                    Project* pProject, bool isNew,QTabWidget* parentPageControl);
 
     ~Editor();
 
@@ -293,7 +295,7 @@ private:
     QByteArray mFileEncoding; // the real encoding of the file (auto detected)
     QString mFilename;
     QTabWidget* mParentPageControl;
-    bool mInProject;
+    Project* mProject;
     bool mIsNew;
     QMap<int,PSyntaxIssueList> mSyntaxIssues;
     QColor mSyntaxErrorColor;
@@ -363,7 +365,7 @@ public:
     bool event(QEvent *event) override;
 
     // QWidget interface
-    void setInProject(bool newInProject);
+    void setProject(Project* pProject);
 
     bool useCppSyntax() const;
     void setUseCppSyntax(bool newUseCppSyntax);

@@ -4780,6 +4780,8 @@ void parseFile(PCppParser parser, const QString& fileName, bool inProject, bool 
 {
     if (!parser)
         return;
+    if (!parser->enabled())
+        return;
     CppFileParserThread* thread = new CppFileParserThread(parser,fileName,inProject,onlyIfNotParsed,updateView);
     thread->connect(thread,
                     &QThread::finished,
@@ -4791,6 +4793,8 @@ void parseFile(PCppParser parser, const QString& fileName, bool inProject, bool 
 void parseFileList(PCppParser parser, bool updateView)
 {
     if (!parser)
+        return;
+    if (!parser->enabled())
         return;
     CppFileListParserThread *thread = new CppFileListParserThread(parser,updateView);
     thread->connect(thread,

@@ -70,19 +70,19 @@ const char* SaveException::what() const noexcept {
 }
 
 Editor::Editor(QWidget *parent):
-    Editor(parent,QObject::tr("untitled"),ENCODING_AUTO_DETECT,false,true,nullptr)
+    Editor(parent,QObject::tr("untitled"),ENCODING_AUTO_DETECT,nullptr,true,nullptr)
 {
 }
 
 Editor::Editor(QWidget *parent, const QString& filename,
                   const QByteArray& encoding,
-                  bool inProject, bool isNew,
+                  Project* pProject, bool isNew,
                   QTabWidget* parentPageControl):
   SynEdit(parent),
   mEncodingOption(encoding),
   mFilename(QFileInfo(filename).absoluteFilePath()),
   mParentPageControl(parentPageControl),
-  mInProject(inProject),
+  mProject(pProject),
   mIsNew(isNew),
   mSyntaxIssues(),
   mSyntaxErrorColor(Qt::red),
@@ -119,8 +119,8 @@ Editor::Editor(QWidget *parent, const QString& filename,
         setUseCodeFolding(false);
     }
 
-    if (inProject) {
-        mParser = pMainWindow->project()->cppParser();
+    if (mProject) {
+        mParser = mProject->cppParser();
     } else {
         initParser();
     }
@@ -239,7 +239,7 @@ void Editor::saveFile(QString filename) {
     this->document()->saveToFile(file,encoding,
                               pSettings->editor().defaultEncoding(),
                               mFileEncoding);
-    emit fileSaved(filename, mInProject);
+    emit fileSaved(filename, inProject());
 }
 
 void Editor::convertToEncoding(const QByteArray &encoding)
@@ -335,10 +335,10 @@ bool Editor::saveAs(const QString &name, bool fromProject){
         return false;
     }
     // Update project information
-    if (mInProject && pMainWindow->project() && !fromProject) {
-        PProjectUnit unit = pMainWindow->project()->findUnit(newName);
+    if (mProject && !fromProject) {
+        PProjectUnit unit = mProject->findUnit(newName);
         if (!unit) {
-            mInProject = false;
+            setProject(nullptr);
         }
     }
 
@@ -358,8 +358,8 @@ bool Editor::saveAs(const QString &name, bool fromProject){
                                  exception.reason());
         return false;
     }
-    if (pMainWindow->project() && !fromProject) {
-        pMainWindow->project()->associateEditor(this);
+    if (mProject && !fromProject) {
+        mProject->associateEditor(this);
     }
     pMainWindow->fileSystemWatcher()->addPath(mFilename);
     switch(getFileType(mFilename)) {
@@ -420,13 +420,10 @@ void Editor::setEncodingOption(const QByteArray& encoding) noexcept{
         loadFile();
     else
         pMainWindow->updateForEncodingInfo();
-    if (mInProject) {
-        std::shared_ptr<Project> project = pMainWindow->project();
-        if (project) {
-            PProjectUnit unit = project->findUnit(this);
-            if (unit) {
-                unit->setEncoding(mEncodingOption);
-            }
+    if (mProject) {
+        PProjectUnit unit = mProject->findUnit(this);
+        if (unit) {
+            unit->setEncoding(mEncodingOption);
         }
     }
 }
@@ -437,7 +434,7 @@ const QString& Editor::filename() const noexcept{
     return mFilename;
 }
 bool Editor::inProject() const noexcept{
-    return mInProject;
+    return mProject!=nullptr;
 }
 bool Editor::isNew() const noexcept {
     return mIsNew;
@@ -1739,7 +1736,7 @@ bool Editor::isBraceChar(QChar ch)
 
 bool Editor::shouldOpenInReadonly()
 {
-    if (pMainWindow->project() && pMainWindow->project()->findUnit(mFilename))
+    if (mProject && mProject->findUnit(mFilename))
         return false;
     return pSettings->editor().readOnlySytemHeader()
                 && mParser && (mParser->isSystemHeaderFile(mFilename) || mParser->isProjectHeaderFile(mFilename));
@@ -2682,19 +2679,22 @@ Editor::QuoteStatus Editor::getQuoteStatus()
 
 void Editor::reparse()
 {
+    if (!pSettings->codeCompletion().enabled())
+        return;
     if (!highlighter())
         return;
     if (highlighter()->language() != QSynedit::HighlighterLanguage::Cpp
              && highlighter()->language() != QSynedit::HighlighterLanguage::GLSL)
         return;
     if (mParser)
-        mParser->setEnabled(pSettings->codeCompletion().enabled());
+        return;
+    //mParser->setEnabled(pSettings->codeCompletion().enabled());
     ParserLanguage language = mUseCppSyntax?ParserLanguage::CPlusPlus:ParserLanguage::C;
-    if (language!=mParser->language() && !mInProject) {
+    if (language!=mParser->language() && !inProject()) {
         mParser->setLanguage(language);
         resetCppParser(mParser);
     }
-    parseFile(mParser,mFilename,mInProject);
+    parseFile(mParser,mFilename, inProject());
 }
 
 void Editor::reparseTodo()
@@ -3919,13 +3919,13 @@ void Editor::setUseCppSyntax(bool newUseCppSyntax)
     mUseCppSyntax = newUseCppSyntax;
 }
 
-void Editor::setInProject(bool newInProject)
+void Editor::setProject(Project *pProject)
 {
-    if (mInProject == newInProject)
+    if (mProject == pProject)
         return;
-    mInProject = newInProject;
-    if (mInProject) {
-        mParser = pMainWindow->project()->cppParser();
+    mProject = pProject;
+    if (mProject) {
+        mParser = mProject->cppParser();
         if (isVisible()) {
             if (mParser && mParser->parsing()) {
                 connect(mParser.get(),
