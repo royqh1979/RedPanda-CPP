@@ -69,7 +69,9 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     setWindowFlag(Qt::WindowContextHelpButtonHint,false);
     ui->setupUi(this);
 
+    QItemSelectionModel *m=ui->widgetsView->selectionModel();
     ui->widgetsView->setModel(&model);
+    delete m;
 
     model.setHorizontalHeaderLabels(QStringList());
 

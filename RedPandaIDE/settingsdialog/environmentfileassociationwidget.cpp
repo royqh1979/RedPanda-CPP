@@ -35,7 +35,9 @@ EnvironmentFileAssociationWidget::EnvironmentFileAssociationWidget(const QString
     mModel.addItem("C++ Header File","hpp",4);
     mModel.addItem("C++ Header File","hxx",4);
     mModel.addItem("Red Panda C++ Project File","dev",5);
+    QItemSelectionModel* m = ui->lstFileTypes->selectionModel();
     ui->lstFileTypes->setModel(&mModel);
+    delete m;
     connect(&mModel, &FileAssociationModel::associationChanged,
             [this](){
         setSettingsChanged();

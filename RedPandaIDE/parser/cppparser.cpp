@@ -75,6 +75,7 @@ CppParser::~CppParser()
         QCoreApplication* app = QApplication::instance();
         app->processEvents();
     }
+    //qDebug()<<"-------- parser deleted ------------";
 }
 
 void CppParser::addHardDefineByLine(const QString &line)
@@ -4750,7 +4751,8 @@ CppFileParserThread::CppFileParserThread(
     mOnlyIfNotParsed(onlyIfNotParsed),
     mUpdateView(updateView)
 {
-
+    connect(this,&QThread::finished,
+            this,&QObject::deleteLater);
 }
 
 void CppFileParserThread::run()
@@ -4766,7 +4768,8 @@ CppFileListParserThread::CppFileListParserThread(PCppParser parser,
     mParser(parser),
     mUpdateView(updateView)
 {
-
+    connect(this,&QThread::finished,
+            this,&QObject::deleteLater);
 }
 
 void CppFileListParserThread::run()
@@ -4782,6 +4785,7 @@ void parseFile(PCppParser parser, const QString& fileName, bool inProject, bool 
         return;
     if (!parser->enabled())
         return;
+    //delete when finished
     CppFileParserThread* thread = new CppFileParserThread(parser,fileName,inProject,onlyIfNotParsed,updateView);
     thread->connect(thread,
                     &QThread::finished,
@@ -4796,6 +4800,7 @@ void parseFileList(PCppParser parser, bool updateView)
         return;
     if (!parser->enabled())
         return;
+    //delete when finished
     CppFileListParserThread *thread = new CppFileListParserThread(parser,updateView);
     thread->connect(thread,
                     &QThread::finished,

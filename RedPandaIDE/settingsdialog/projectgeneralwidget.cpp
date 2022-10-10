@@ -104,7 +104,6 @@ void ProjectGeneralWidget::doSave()
 
     project->options().isCpp = ui->cbDefaultCpp->isChecked();
     project->options().supportXPThemes = ui->cbSupportXPTheme->isChecked();
-    qDebug()<<"iconpath"<<mIconPath;
     if (mIconPath.isEmpty()
 #if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
             || ui->lbIcon->pixmap(Qt::ReturnByValue).isNull()) {

@@ -46,7 +46,9 @@ EditorColorSchemeWidget::EditorColorSchemeWidget(const QString& name, const QStr
             ui->cbScheme->setItemData(schemeCount,mModifiedSchemeComboFont,Qt::FontRole);
         schemeCount++;
     }
+    QItemSelectionModel *m = ui->treeItems->selectionModel();
     ui->treeItems->setModel(&mDefinesModel);
+    delete m;
     mDefinesModel.setHorizontalHeaderLabels(QStringList());
     for (QString defineName : pColorManager->getDefines()) {
         addDefine(defineName, pColorManager->getDefine(defineName));
@@ -93,12 +95,14 @@ void EditorColorSchemeWidget::addDefine(const QString& name, PColorSchemeItemDef
     QList<QStandardItem*> items = mDefinesModel.findItems(define->group());
     QStandardItem* pGroupItem;
     if (items.count() == 0 ) {
+        //delete in the destructor
         pGroupItem = new QStandardItem(define->group());
         pGroupItem->setData("", NameRole);
         mDefinesModel.appendRow(pGroupItem);
     } else {
         pGroupItem = items[0];
     }
+    //delete in the destructor
     QStandardItem* pWidgetItem = new QStandardItem(define->displayName());
     pWidgetItem->setData(name, NameRole);
     pGroupItem->appendRow(pWidgetItem);
@@ -178,6 +182,7 @@ void EditorColorSchemeWidget::setCurrentSchemeModified()
 EditorColorSchemeWidget::~EditorColorSchemeWidget()
 {
     delete ui;
+    mDefinesModel.clear();
 }
 
 static void setColorProp(ColorEdit* ce, QCheckBox* cb, const QColor& color) {

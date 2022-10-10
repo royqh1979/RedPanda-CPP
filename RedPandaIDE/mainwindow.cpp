@@ -117,9 +117,12 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
     addActions( this->findChildren<QAction *>(QString(), Qt::FindChildrenRecursively));
     // status bar
+
+    //statusBar takes the owner ships
     mFileInfoStatus=new QLabel();
     mFileEncodingStatus = new LabelWithMenu();
     mFileModeStatus = new QLabel();
+
     mFileInfoStatus->setStyleSheet("margin-left:10px; margin-right:10px");
     mFileEncodingStatus->setStyleSheet("margin-left:10px; margin-right:10px");
     mFileModeStatus->setStyleSheet("margin-left:10px; margin-right:10px");
@@ -128,6 +131,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->statusbar->insertPermanentWidget(0,mFileModeStatus);
     ui->statusbar->insertPermanentWidget(0,mFileEncodingStatus);
     ui->statusbar->insertPermanentWidget(0,mFileInfoStatus);
+    //delete in the destructor
     mEditorList = new EditorList(ui->EditorTabsLeft,
                                  ui->EditorTabsRight,
                                  ui->splitterEditorPanel,
@@ -137,11 +141,15 @@ MainWindow::MainWindow(QWidget *parent)
     connect(mEditorList, &EditorList::editorClosed,
                this, &MainWindow::onEditorClosed);
     mProject = nullptr;
-    mProjectProxyModel = new ProjectModelSortFilterProxy(this);
+    //delete in the destructor
+    mProjectProxyModel = new ProjectModelSortFilterProxy();
+    QItemSelectionModel *m=ui->projectView->selectionModel();
     ui->projectView->setModel(mProjectProxyModel);
+    delete m;
     mProjectProxyModel->setDynamicSortFilter(false);
     ui->EditorTabsRight->setVisible(false);
 
+    //toolbar takes the owner
     mCompilerSet = new QComboBox();
     mCompilerSet->setMinimumWidth(200);
     mCompilerSet->setSizeAdjustPolicy(QComboBox::AdjustToContents);
@@ -151,16 +159,26 @@ MainWindow::MainWindow(QWidget *parent)
             this, &MainWindow::onCompilerSetChanged);
     //updateCompilerSet();
 
-    mCompilerManager = new CompilerManager(this);
-    mDebugger = new Debugger(this);
+    mCompilerManager = std::make_shared<CompilerManager>();
+    mDebugger = std::make_shared<Debugger>();
 
+    m=ui->tblBreakpoints->selectionModel();
     ui->tblBreakpoints->setModel(mDebugger->breakpointModel());
+    delete m;
+
+    m=ui->tblStackTrace->selectionModel();
     ui->tblStackTrace->setModel(mDebugger->backtraceModel());
+    delete m;
+
+    m=ui->watchView->selectionModel();
     ui->watchView->setModel(mDebugger->watchModel());
+    delete m;
+
+    m=ui->tblMemoryView->selectionModel();
     ui->tblMemoryView->setModel(mDebugger->memoryModel());
+    delete m;
 
     ui->tblMemoryView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
-
 
     try {
         mDebugger->breakpointModel()->load(includeTrailingPathDelimiter(pSettings->dirs().config())
@@ -183,6 +201,7 @@ MainWindow::MainWindow(QWidget *parent)
 //    ui->actionIndent->setShortcut(Qt::Key_Tab);
 //    ui->actionUnIndent->setShortcut(Qt::Key_Tab | Qt::ShiftModifier);
 
+    //mainmenu takes the owner
     mMenuNew = new QMenu();
     mMenuNew->setTitle(tr("New"));
     mMenuNew->addAction(ui->actionNew);
@@ -269,14 +288,24 @@ MainWindow::MainWindow(QWidget *parent)
                              tr("Error"),
                              e.reason());
     }
+
+    m=ui->tableBookmark->selectionModel();
     ui->tableBookmark->setModel(mBookmarkModel.get());
+    delete m;
+
     mSearchResultTreeModel = std::make_shared<SearchResultTreeModel>(&mSearchResultModel);
     mSearchResultListModel = std::make_shared<SearchResultListModel>(&mSearchResultModel);
     mSearchViewDelegate = std::make_shared<SearchResultTreeViewDelegate>(mSearchResultTreeModel);
+
     ui->cbSearchHistory->setModel(mSearchResultListModel.get());
+
+    m=ui->searchView->selectionModel();
     ui->searchView->setModel(mSearchResultTreeModel.get());
+    delete m;
     ui->searchView->setItemDelegate(mSearchViewDelegate.get());
+    m=ui->tableTODO->selectionModel();
     ui->tableTODO->setModel(&mTodoModel);
+    delete m;
     connect(mSearchResultTreeModel.get() , &QAbstractItemModel::modelReset,
             ui->searchView,&QTreeView::expandAll);
     ui->replacePanel->setVisible(false);
@@ -287,8 +316,12 @@ MainWindow::MainWindow(QWidget *parent)
     //problem set
     mOJProblemSetNameCounter=1;
     mOJProblemSetModel.rename(tr("Problem Set %1").arg(mOJProblemSetNameCounter));
+    m=ui->lstProblemSet->selectionModel();
     ui->lstProblemSet->setModel(&mOJProblemSetModel);
+    delete m;
+    m=ui->tblProblemCases->selectionModel();
     ui->tblProblemCases->setModel(&mOJProblemModel);
+    delete m;
     connect(ui->lstProblemSet->selectionModel(),
             &QItemSelectionModel::currentRowChanged,
             this, &MainWindow::onProblemSetIndexChanged);
@@ -305,7 +338,9 @@ MainWindow::MainWindow(QWidget *parent)
             this, &MainWindow::updateProblemTitle);
 
     //files view
+    m=ui->treeFiles->selectionModel();
     ui->treeFiles->setModel(&mFileSystemModel);
+    delete m;
     connect(&mFileSystemModel, &QFileSystemModel::layoutChanged,
             this, &MainWindow::onFileSystemModelLayoutChanged, Qt::QueuedConnection);
     mFileSystemModel.setReadOnly(false);
@@ -324,7 +359,9 @@ MainWindow::MainWindow(QWidget *parent)
 
     //class browser
     ui->classBrowser->setUniformRowHeights(true);
+    m=ui->classBrowser->selectionModel();
     ui->classBrowser->setModel(&mClassBrowserModel);
+    delete m;
 
     connect(&mFileSystemWatcher,&QFileSystemWatcher::fileChanged,
             this, &MainWindow::onFileChanged);
@@ -374,6 +411,7 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
+    delete mProjectProxyModel;
     delete mEditorList;
     delete ui;
 }
@@ -685,9 +723,9 @@ void MainWindow::applySettings()
     try {
         PAppTheme appTheme = themeManager.theme(pSettings->environment().theme());
         if (appTheme->isDark())
-            QApplication::setStyle(new DarkFusionStyle());
+            QApplication::setStyle(new DarkFusionStyle());//app takes the onwership
         else
-            QApplication::setStyle(new LightFusionStyle());
+            QApplication::setStyle(new LightFusionStyle());//app takes the onwership
         qApp->setPalette(appTheme->palette());
         //fix for qstatusbar bug
         mFileEncodingStatus->setPalette(appTheme->palette());
@@ -1012,6 +1050,7 @@ void MainWindow::rebuildOpenedFileHisotryMenu()
     } else {
         mMenuRecentFiles->setEnabled(true);
         for (const QString& filename: pSettings->history().opennedFiles()) {
+            //menu takes the ownership
             QAction* action = new QAction(filename,mMenuRecentFiles);
             connect(action, &QAction::triggered, [&filename,this](bool){
                 openFile(filename);
@@ -1019,6 +1058,7 @@ void MainWindow::rebuildOpenedFileHisotryMenu()
             mMenuRecentFiles->addAction(action);
         }
         mMenuRecentFiles->addSeparator();
+        //menu takes the ownership
         QAction *action = new QAction(tr("Clear History"),mMenuRecentFiles);
         connect(action, &QAction::triggered, [](bool){
             pSettings->history().clearOpennedFiles();
@@ -1031,6 +1071,7 @@ void MainWindow::rebuildOpenedFileHisotryMenu()
     } else {
         mMenuRecentProjects->setEnabled(true);
         for (const QString& filename: pSettings->history().opennedProjects()) {
+            //menu takes the ownership
             QAction* action = new QAction(filename,mMenuRecentProjects);
             connect(action, &QAction::triggered, [&filename,this](bool){
                 this->openProject(filename);
@@ -1038,6 +1079,7 @@ void MainWindow::rebuildOpenedFileHisotryMenu()
             mMenuRecentProjects->addAction(action);
         }
         mMenuRecentProjects->addSeparator();
+        //menu takes the ownership
         QAction *action = new QAction(tr("Clear History"),mMenuRecentProjects);
         connect(action, &QAction::triggered, [](bool){
             pSettings->history().clearOpennedProjects();
@@ -1974,7 +2016,8 @@ void MainWindow::showSearchPanel(bool showReplace)
 void MainWindow::showCPUInfoDialog()
 {
     if (mCPUDialog==nullptr) {
-        mCPUDialog = new CPUDialog();
+        //main window takes the owner
+        mCPUDialog = new CPUDialog(this);
         connect(mCPUDialog, &CPUDialog::closed, this, &MainWindow::cleanUpCPUDialog);
         updateCompileActions();
     }
@@ -4404,7 +4447,7 @@ EditorList *MainWindow::editorList() const
 
 Debugger *MainWindow::debugger() const
 {
-    return mDebugger;
+    return mDebugger.get();
 }
 
 CPUDialog *MainWindow::cpuDialog() const
@@ -5262,7 +5305,7 @@ void MainWindow::onDebugEvaluateInput()
 {
     QString s=ui->cbEvaluate->currentText().trimmed();
     if (!s.isEmpty()) {
-        connect(mDebugger, &Debugger::evalValueReady,
+        connect(mDebugger.get(), &Debugger::evalValueReady,
                    this, &MainWindow::onEvalValueReady);
         mDebugger->sendCommand("-data-evaluate-expression",s);
         pMainWindow->debugger()->refreshAll();
@@ -5330,7 +5373,7 @@ void MainWindow::onEndParsing(int total, int)
 void MainWindow::onEvalValueReady(const QString& value)
 {
     updateDebugEval(value);
-    disconnect(mDebugger, &Debugger::evalValueReady,
+    disconnect(mDebugger.get(), &Debugger::evalValueReady,
                this, &MainWindow::onEvalValueReady);
 }
 
@@ -6950,8 +6993,8 @@ void MainWindow::on_actionLocate_in_Files_View_triggered()
     Editor * editor = mEditorList->getEditor();
     if (editor) {
         QFileInfo fileInfo(editor->filename());
-        qDebug()<<fileInfo.absoluteFilePath();
-        qDebug()<<includeTrailingPathDelimiter(mFileSystemModel.rootDirectory().absolutePath());
+        //qDebug()<<fileInfo.absoluteFilePath();
+        //qDebug()<<includeTrailingPathDelimiter(mFileSystemModel.rootDirectory().absolutePath());
         if (!fileInfo.absoluteFilePath().startsWith(
                     includeTrailingPathDelimiter(mFileSystemModel.rootDirectory().absolutePath()),
                     PATH_SENSITIVITY
@@ -7761,7 +7804,6 @@ void MainWindow::on_actionGit_Log_triggered()
         return;
     GitLogDialog dialog(folder);
     if (dialog.exec()==QDialog::Accepted) {
-        qDebug()<<"yes";
         //update project view
         if (mProject) {
             mProject->model()->beginUpdate();

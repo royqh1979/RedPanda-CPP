@@ -228,7 +228,8 @@ QIcon IconsManager:: getIcon(IconName iconName) const
     if (pixmap == mDefaultIconPixmap)
         return QIcon();
     if (mMakeDisabledIconDarker) {
-        QIcon icon(new CustomDisabledIconEngine());
+        //QIcon takes the owner ship
+        QIcon icon(new CustomDisabledIconEngine);
         icon.addPixmap(*pixmap);
         return icon;
     } else

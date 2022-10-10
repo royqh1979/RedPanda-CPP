@@ -37,7 +37,9 @@ CodeCompletionPopup::CodeCompletionPopup(QWidget *parent) :
     mListView = new CodeCompletionListView(this);
     mModel=new CodeCompletionListModel(&mCompletionStatementList);
     mDelegate = new CodeCompletionListItemDelegate(mModel,this);
+    QItemSelectionModel *m=mListView->selectionModel();
     mListView->setModel(mModel);
+    delete m;
     mListView->setItemDelegate(mDelegate);
     setLayout(new QVBoxLayout());
     layout()->addWidget(mListView);

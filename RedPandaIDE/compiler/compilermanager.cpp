@@ -81,6 +81,7 @@ void CompilerManager::compile(const QString& filename, const QByteArray& encodin
         }
         mCompileErrorCount = 0;
         mCompileIssueCount = 0;
+        //deleted when thread finished
         mCompiler = new FileCompiler(filename,encoding,silent,onlyCheckSyntax);
         mCompiler->setRebuild(rebuild);
         connect(mCompiler, &Compiler::finished, mCompiler, &QObject::deleteLater);
@@ -111,6 +112,7 @@ void CompilerManager::compileProject(std::shared_ptr<Project> project, bool rebu
         }
         mCompileErrorCount = 0;
         mCompileIssueCount = 0;
+        //deleted when thread finished
         mCompiler = new ProjectCompiler(project,silent,onlyCheckSyntax);
         mCompiler->setRebuild(rebuild);
         connect(mCompiler, &Compiler::finished, mCompiler, &QObject::deleteLater);
@@ -142,6 +144,7 @@ void CompilerManager::cleanProject(std::shared_ptr<Project> project)
         }
         mCompileErrorCount = 0;
         mCompileIssueCount = 0;
+        //deleted when thread finished
         ProjectCompiler* compiler = new ProjectCompiler(project,false,false);
         compiler->setOnlyClean(true);
         mCompiler = compiler;
@@ -195,6 +198,8 @@ void CompilerManager::checkSyntax(const QString &filename, const QByteArray& enc
 
         mSyntaxCheckErrorCount = 0;
         mSyntaxCheckIssueCount = 0;
+
+        //deleted when thread finished
         StdinCompiler *pStdinCompiler = new StdinCompiler(filename,encoding, content,true,true);
         mBackgroundSyntaxChecker = pStdinCompiler;
         mBackgroundSyntaxChecker->setProject(project);
@@ -239,9 +244,12 @@ void CompilerManager::run(
             QString newArguments = QString(" %1 %2 \"%3\" %4")
                     .arg(consoleFlag)
                     .arg(sharedMemoryId,localizePath(filename)).arg(arguments);
+
+            //delete when thread finished
             execRunner = new ExecutableRunner(includeTrailingPathDelimiter(pSettings->dirs().appDir())+"ConsolePauser.exe",newArguments,workDir);
             execRunner->setShareMemoryId(sharedMemoryId);
         } else {
+            //delete when thread finished
             execRunner = new ExecutableRunner(filename,arguments,workDir);
         }
 #else
@@ -280,6 +288,7 @@ void CompilerManager::run(
 #endif
         execRunner->setStartConsole(true);
     } else {
+        //delete when thread finished
         execRunner = new ExecutableRunner(filename,arguments,workDir);
     }    
     if (redirectInput) {

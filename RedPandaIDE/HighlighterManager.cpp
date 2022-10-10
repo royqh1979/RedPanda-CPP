@@ -62,7 +62,7 @@ QSynedit::PHighlighter HighlighterManager::copyHighlighter(QSynedit::PHighlighte
 
 QSynedit::PHighlighter HighlighterManager::getCppHighlighter()
 {
-    QSynedit::CppHighlighter* highlighter = new QSynedit::CppHighlighter();
+    std::shared_ptr<QSynedit::CppHighlighter> highlighter = std::make_shared<QSynedit::CppHighlighter>();
     highlighter->asmAttribute()->setForeground(Qt::blue);
     highlighter->charAttribute()->setForeground(Qt::black);
     highlighter->commentAttribute()->setForeground(0x8C8C8C);
@@ -84,14 +84,12 @@ QSynedit::PHighlighter HighlighterManager::getCppHighlighter()
     highlighter->stringEscapeSequenceAttribute()->setForeground(Qt::red);
     highlighter->symbolAttribute()->setForeground(0xc10000);
     highlighter->variableAttribute()->setForeground(0x400080);
-    QSynedit::PHighlighter pHighlighter=std::make_shared<QSynedit::CppHighlighter>();
-    return pHighlighter;
+    return highlighter;
 }
 
 QSynedit::PHighlighter HighlighterManager::getAsmHighlighter()
 {
-    QSynedit::ASMHighlighter* highlighter = new QSynedit::ASMHighlighter();
-    QSynedit::PHighlighter pHighlighter(highlighter);
+    std::shared_ptr<QSynedit::ASMHighlighter> highlighter=std::make_shared<QSynedit::ASMHighlighter>();
     highlighter->commentAttribute()->setForeground(0x8C8C8C);
     highlighter->commentAttribute()->setStyles(QSynedit::FontStyle::fsItalic);
     highlighter->identifierAttribute()->setForeground(0x080808);
@@ -100,13 +98,12 @@ QSynedit::PHighlighter HighlighterManager::getAsmHighlighter()
     highlighter->whitespaceAttribute()->setForeground(Qt::lightGray);
     highlighter->stringAttribute()->setForeground(0x007d17);
     highlighter->symbolAttribute()->setForeground(0xc10000);
-    return pHighlighter;
+    return highlighter;
 }
 
 QSynedit::PHighlighter HighlighterManager::getGLSLHighlighter()
 {
-    QSynedit::GLSLHighlighter* highlighter = new QSynedit::GLSLHighlighter();
-    QSynedit::PHighlighter pHighlighter(highlighter);
+    std::shared_ptr<QSynedit::GLSLHighlighter> highlighter=std::make_shared<QSynedit::GLSLHighlighter>();
     highlighter->asmAttribute()->setForeground(Qt::blue);
     highlighter->charAttribute()->setForeground(Qt::black);
     highlighter->commentAttribute()->setForeground(0x8C8C8C);
@@ -128,7 +125,7 @@ QSynedit::PHighlighter HighlighterManager::getGLSLHighlighter()
     highlighter->stringEscapeSequenceAttribute()->setForeground(Qt::red);
     highlighter->symbolAttribute()->setForeground(0xc10000);
     highlighter->variableAttribute()->setForeground(0x400080);
-    return pHighlighter;
+    return highlighter;
 }
 
 void HighlighterManager::applyColorScheme(QSynedit::PHighlighter highlighter, const QString &schemeName)

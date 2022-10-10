@@ -28,7 +28,9 @@ CompilerAutolinkWidget::CompilerAutolinkWidget(const QString& name, const QStrin
     ui(new Ui::CompilerAutolinkWidget)
 {
     ui->setupUi(this);
+    QItemSelectionModel* m=ui->tblAutolinks->selectionModel();
     ui->tblAutolinks->setModel(&mModel);
+    delete m;
 }
 
 CompilerAutolinkWidget::~CompilerAutolinkWidget()

@@ -131,6 +131,7 @@ bool WindowLogoutEventFilter::nativeEventFilter(const QByteArray & /*eventType*/
     case WM_DPICHANGED:{
         if (pMsg->hwnd == (HWND)pMainWindow->winId()) {
             int oldDPI = screenDPI();
+            //postEvent takes the owner ship
             QEvent * dpiEvent = new QEvent(DPI_CHANGED_EVENT);
             qApp->postEvent(pMainWindow,dpiEvent);
             setScreenDPI(HIWORD(pMsg->wParam));
@@ -318,10 +319,14 @@ int main(int argc, char *argv[])
 
         SystemConsts systemConsts;
         pSystemConsts = &systemConsts;
-        pCharsetInfoManager = new CharsetInfoManager(language);
-        auto charsetInfoManager = std::unique_ptr<CharsetInfoManager>(pCharsetInfoManager);
+        CharsetInfoManager charsetInfoManager(language);
+        pCharsetInfoManager=&charsetInfoManager;
+
+        //We must use smarter point here, to manually control it's lifetime:
+        // when restore default settings, it must be destoyed before we remove all setting files.
+        auto settings = std::make_unique<Settings>(settingFilename);
         //load settings
-        pSettings = new Settings(settingFilename);
+        pSettings = settings.get();
         if (firstRun) {
             pSettings->compilerSets().findSets();
             pSettings->compilerSets().saveSets();
@@ -345,11 +350,13 @@ int main(int argc, char *argv[])
             //auto detect git in path
             pSettings->vcs().detectGitInPath();
         }
-        auto settings = std::unique_ptr<Settings>(pSettings);
         //Color scheme settings must be loaded after translation
-        pColorManager = new ColorManager();
-        pIconsManager = new IconsManager();
-        pAutolinkManager = new AutolinkManager();
+        ColorManager colorManager;
+        pColorManager = &colorManager;
+        IconsManager iconsManager;
+        pIconsManager = &iconsManager;
+        AutolinkManager autolinkManager;
+        pAutolinkManager = &autolinkManager;
         try {
             pAutolinkManager->load();
         } catch (FileError e) {

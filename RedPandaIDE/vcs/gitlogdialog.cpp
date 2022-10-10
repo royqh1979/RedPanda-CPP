@@ -15,7 +15,9 @@ GitLogDialog::GitLogDialog(const QString& folder, QWidget *parent) :
     mModel(folder)
 {
     ui->setupUi(this);
+    QItemSelectionModel* m=ui->tblLogs->selectionModel();
     ui->tblLogs->setModel(&mModel);
+    delete m;
     ui->tblLogs->setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
     connect(ui->tblLogs,&QTableView::customContextMenuRequested,
             this, &GitLogDialog::onLogsContextMenu);

@@ -36,11 +36,13 @@
 Debugger::Debugger(QObject *parent) : QObject(parent),
     mForceUTF8(false)
 {
+    //models deleted in the destructor
     mBreakpointModel=new BreakpointModel(this);
     mBacktraceModel=new BacktraceModel(this);
     mWatchModel = new WatchModel(this);
     mRegisterModel = new RegisterModel(this);
     mMemoryModel = new MemoryModel(8,this);
+
     connect(mMemoryModel,&MemoryModel::setMemoryData,
             this, &Debugger::setMemoryData);
     connect(mWatchModel, &WatchModel::setWatchVarValue,
@@ -53,6 +55,15 @@ Debugger::Debugger(QObject *parent) : QObject(parent),
 
     connect(mWatchModel, &WatchModel::fetchChildren,
             this, &Debugger::fetchVarChildren);
+}
+
+Debugger::~Debugger()
+{
+    delete mBreakpointModel;
+    delete mBacktraceModel;
+    delete mWatchModel;
+    delete mRegisterModel;
+    delete mMemoryModel;
 }
 
 bool Debugger::start(int compilerSetIndex, const QString& inferior, const QStringList& binDirs)
@@ -112,6 +123,7 @@ bool Debugger::start(int compilerSetIndex, const QString& inferior, const QStrin
     mMemoryModel->reset();
     mWatchModel->resetAllVarInfos();
     if (pSettings->debugger().useGDBServer()) {
+        //deleted when thread finished
         mTarget = new DebugTarget(inferior,compilerSet->debugServer(),pSettings->debugger().GDBServerPort());
         if (pSettings->executor().redirectInput())
             mTarget->setInputFile(pSettings->executor().inputFilename());
@@ -127,6 +139,7 @@ bool Debugger::start(int compilerSetIndex, const QString& inferior, const QStrin
         mTarget->start();
         mTarget->waitStart();
     }
+    //delete when thread finished
     mReader = new DebugReader(this);
     mReader->addBinDirs(binDirs);
     mReader->addBinDir(pSettings->dirs().appDir());

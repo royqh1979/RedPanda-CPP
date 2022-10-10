@@ -52,6 +52,8 @@ Editor* EditorList::newEditor(const QString& filename, const QByteArray& encodin
     if (fileExists(filename)) {
         pMainWindow->fileSystemWatcher()->addPath(filename);
     }
+
+    // parentPageControl takes the owner ship
     Editor * e = new Editor(parentPageControl,filename,encoding,pProject,newFile,parentPageControl);
     connect(e, &Editor::renamed, this, &EditorList::onEditorRenamed);
     updateLayout();

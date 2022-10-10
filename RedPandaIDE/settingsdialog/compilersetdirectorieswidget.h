@@ -31,6 +31,7 @@ class CompilerSetDirectoriesWidget : public QWidget
     Q_OBJECT
     class ListModel: public QStringListModel {
     public:
+       //~ListModel();
        Qt::ItemFlags flags(const QModelIndex &index) const;
     };
 
@@ -54,7 +55,7 @@ private slots:
 
 private:
     Ui::CompilerSetDirectoriesWidget *ui;
-    ListModel* mModel;
+    ListModel mModel;
 };
 
 #endif // COMPILERSETDIRECTORIESWIDGET_H

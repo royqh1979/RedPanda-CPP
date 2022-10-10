@@ -26,7 +26,9 @@ HeaderCompletionPopup::HeaderCompletionPopup(QWidget* parent):QWidget(parent)
     setWindowFlags(Qt::Popup);
     mListView = new CodeCompletionListView(this);
     mModel=new HeaderCompletionListModel(&mCompletionList);
+    QItemSelectionModel *m=mListView->selectionModel();
     mListView->setModel(mModel);
+    delete m;
     setLayout(new QVBoxLayout());
     layout()->addWidget(mListView);
     layout()->setMargin(0);

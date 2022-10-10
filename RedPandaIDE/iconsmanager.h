@@ -226,6 +226,7 @@ private:
     QSize mActionIconSize;
     QString mIconSetTemplate;
     QString mIconSetsFolder;
+
     bool mMakeDisabledIconDarker;
 };
 

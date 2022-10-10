@@ -258,6 +258,7 @@ class Debugger : public QObject
     Q_OBJECT
 public:
     explicit Debugger(QObject *parent = nullptr);
+    ~Debugger();
     // Play/pause
     bool start(int compilerSetIndex, const QString& inferior, const QStringList& binDirs);
     void sendCommand(const QString& command, const QString& params,

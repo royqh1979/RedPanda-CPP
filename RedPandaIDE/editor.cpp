@@ -191,6 +191,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
 }
 
 Editor::~Editor() {
+    //qDebug()<<"editor "<<mFilename<<" deleted";
     if (mParentPageControl) {
         pMainWindow->fileSystemWatcher()->removePath(mFilename);
         pMainWindow->caretList().removeEditor(this);
@@ -221,7 +222,7 @@ void Editor::loadFile(QString filename) {
     default:
         mUseCppSyntax = pSettings->editor().defaultFileCpp();
     }
-    if (highlighter() && mParser) {
+    if (highlighter()) {
         reparse();
         if (pSettings->editor().syntaxCheckWhenLineChanged()) {
             checkSyntaxInBack();
@@ -1177,6 +1178,7 @@ bool Editor::event(QEvent *event)
             QKeyEvent* keyEvent = dynamic_cast<QKeyEvent*>(event);
             if (keyEvent->key() == Qt::Key_Control) {
                 QApplication* app = dynamic_cast<QApplication *>(QApplication::instance());
+                //postEvent takes the owner ship
                 QHoverEvent* hoverEvent=new QHoverEvent(QEvent::HoverMove,
                                                         mapFromGlobal(QCursor::pos()),
                                                         mapFromGlobal(QCursor::pos()),
@@ -1392,6 +1394,7 @@ void Editor::copyAsHTML()
 
     exporter.ExportRange(document(),blockBegin(),blockEnd());
 
+    //clipboard takes the owner ship
     QMimeData * mimeData = new QMimeData;
 
     //sethtml will convert buffer to QString , which will cause encoding trouble
@@ -2686,7 +2689,9 @@ void Editor::reparse()
     if (highlighter()->language() != QSynedit::HighlighterLanguage::Cpp
              && highlighter()->language() != QSynedit::HighlighterLanguage::GLSL)
         return;
-    if (mParser)
+    if (!mParser)
+        return;
+    if (!mParser->enabled())
         return;
     //mParser->setEnabled(pSettings->codeCompletion().enabled());
     ParserLanguage language = mUseCppSyntax?ParserLanguage::CPlusPlus:ParserLanguage::C;
@@ -4297,7 +4302,7 @@ void Editor::reformat()
     onLinesDeleted(1,document()->count());
     QByteArray content = text().toUtf8();
     QStringList args = pSettings->codeFormatter().getArguments();
-    qDebug()<<args;
+    //qDebug()<<args;
 #ifdef Q_OS_WIN
     QByteArray newContent = runAndGetOutput("astyle.exe",
                                             pSettings->dirs().appDir(),

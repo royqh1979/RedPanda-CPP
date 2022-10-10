@@ -29,7 +29,9 @@ ToolsGeneralWidget::ToolsGeneralWidget(const QString &name, const QString &group
 {
     ui->setupUi(this);
     ui->cbMacros->setModel(&mMacroInfoModel);
+    QItemSelectionModel *m=ui->lstTools->selectionModel();
     ui->lstTools->setModel(&mToolsModel);
+    delete m;
     mEditType = EditType::None;
     finishEditing(false);
     connect(ui->lstTools->selectionModel(), &QItemSelectionModel::currentRowChanged,

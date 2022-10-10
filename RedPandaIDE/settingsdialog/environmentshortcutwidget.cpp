@@ -28,7 +28,9 @@ EnvironmentShortcutWidget::EnvironmentShortcutWidget(const QString& name, const 
 {
     ui->setupUi(this);
     mDelegate =new EnvironmentShortcutDelegate(this);
+    QItemSelectionModel* m=ui->tblShortcut->selectionModel();
     ui->tblShortcut->setModel(&mModel);
+    delete m;
     ui->tblShortcut->setItemDelegate(mDelegate);
     connect(&mModel, &EnvironmentShortcutModel::shortcutChanged,
             this, &SettingsWidget::setSettingsChanged);

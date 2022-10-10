@@ -29,7 +29,9 @@ EditorSnippetWidget::EditorSnippetWidget(const QString& name, const QString& gro
 {
     mUpdatingCode = false;
     ui->setupUi(this);
+    QItemSelectionModel* m=ui->tblSnippets->selectionModel();
     ui->tblSnippets->setModel(&mModel);
+    delete m;
     connect(ui->editCode, &Editor::changed,
             [this] {
         if (mUpdatingCode)

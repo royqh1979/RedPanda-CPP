@@ -721,8 +721,8 @@ private:
     QMenu *mMenuNew;
     QMenu *mMenuInsertCodeSnippet;
     QComboBox *mCompilerSet;
-    CompilerManager *mCompilerManager;
-    Debugger *mDebugger;
+    std::shared_ptr<CompilerManager> mCompilerManager;
+    std::shared_ptr<Debugger> mDebugger;
     CPUDialog *mCPUDialog;
     SearchDialog *mSearchDialog;
     bool mQuitting;
@@ -839,7 +839,7 @@ private:
     QAction * mToolsOutput_SelectAll;
     QAction * mToolsOutput_Copy;
 
-    QSortFilterProxyModel* mProjectProxyModel;
+    QSortFilterProxyModel *mProjectProxyModel;
 
    // QWidget interface
 protected:

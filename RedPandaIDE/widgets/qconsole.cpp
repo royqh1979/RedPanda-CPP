@@ -488,8 +488,6 @@ void QConsole::scrollTimerHandler()
     RowColumn mousePosRC = pixelsToNearestRowColumn(iMousePos.x(),iMousePos.y());
 
     if (mScrollDeltaY != 0) {
-        qDebug()<<"scroll timer"<<mScrollDeltaY;
-        qDebug()<<mousePosRC.row<<mousePosRC.column;
         if (QApplication::queryKeyboardModifiers().testFlag(Qt::ShiftModifier))
           setTopRow(mTopRow + mScrollDeltaY * mRowsInWindow);
         else
@@ -498,7 +496,6 @@ void QConsole::scrollTimerHandler()
         if (mScrollDeltaY > 0)  // scrolling down?
             row+=mRowsInWindow - 1;
         mousePosRC.row = row - 1;
-        qDebug()<<row;
         int oldStartRow = mContents.lineCharToRowColumn(selectionBegin()).row+1;
         int oldEndRow = mContents.lineCharToRowColumn(selectionEnd()).row+1;
         invalidateRows(oldStartRow,oldEndRow);

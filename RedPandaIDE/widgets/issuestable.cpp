@@ -27,7 +27,9 @@ IssuesTable::IssuesTable(QWidget *parent):
     QTableView(parent)
 {
     mModel = new IssuesModel(this);
+    QItemSelectionModel *m=this->selectionModel();
     this->setModel(mModel);
+    delete m;
     this->setColumnWidth(0,200);
     this->setColumnWidth(1,45);
     this->setColumnWidth(2,45);

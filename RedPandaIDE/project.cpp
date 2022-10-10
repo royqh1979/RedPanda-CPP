@@ -1570,7 +1570,6 @@ void Project::closeUnit(PProjectUnit& unit)
     saveLayout();
     Editor * editor = unitEditor(unit);
     if (editor) {
-        editor->setProject(nullptr);
         mEditorList->forceCloseEditor(editor);
     }
 }
@@ -2454,6 +2453,7 @@ ProjectModel::ProjectModel(Project *project, QObject *parent):
     mProject(project)
 {
     mUpdateCount = 0;
+    //delete in the destructor
     mIconProvider = new CustomFileIconProvider();
 }
 

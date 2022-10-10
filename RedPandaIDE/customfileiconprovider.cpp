@@ -20,6 +20,7 @@
 
 CustomFileIconProvider::CustomFileIconProvider()
 {
+    //provider delete it in the destructor
     mVCSRepository = new GitRepository("");
 }
 

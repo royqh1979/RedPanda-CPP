@@ -38,7 +38,9 @@ void ProjectFilesWidget::doLoad()
     if (!project)
         return;
     copyUnits();
+    QItemSelectionModel *m=ui->treeProject->selectionModel();
     ui->treeProject->setModel(project->model());
+    delete m;
     ui->treeProject->expandAll();
     ui->grpFileOptions->setEnabled(false);
 }

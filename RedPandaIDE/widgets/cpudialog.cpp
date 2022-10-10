@@ -55,7 +55,9 @@ CPUDialog::CPUDialog(QWidget *parent) :
         ui->txtCode->setBackgroundColor(palette().color(QPalette::Base));
     }
     resetEditorFont(screenDPI());
+    QItemSelectionModel *m=ui->lstRegister->selectionModel();
     ui->lstRegister->setModel(pMainWindow->debugger()->registerModel());
+    delete m;
 
     ui->rdIntel->setChecked(pSettings->debugger().useIntelStyle());
     ui->chkBlendMode->setChecked(pSettings->debugger().blendMode());

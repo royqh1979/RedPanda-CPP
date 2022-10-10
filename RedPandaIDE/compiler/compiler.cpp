@@ -42,7 +42,6 @@ Compiler::Compiler(const QString &filename, bool silent, bool onlyCheckSyntax):
     mFilename(filename),
     mRebuild(false)
 {
-
 }
 
 void Compiler::run()
