@@ -652,6 +652,16 @@ void Settings::Editor::setUndoLimit(int newUndoLimit)
     mUndoLimit = newUndoLimit;
 }
 
+int Settings::Editor::undoMemoryUsage() const
+{
+    return mUndoMemoryUsage;
+}
+
+void Settings::Editor::setUndoMemoryUsage(int newUndoMemoryUsage)
+{
+    mUndoMemoryUsage = newUndoMemoryUsage;
+}
+
 bool Settings::Editor::highlightCurrentWord() const
 {
     return mHighlightCurrentWord;
@@ -1231,6 +1241,7 @@ void Settings::Editor::doSave()
     saveValue("default_file_cpp",mDefaultFileCpp);
     saveValue("auto_detect_file_encoding",mAutoDetectFileEncoding);
     saveValue("undo_limit",mUndoLimit);
+    saveValue("undo_memory_usage", mUndoMemoryUsage);
 
     //tooltips
     saveValue("enable_tooltips",mEnableTooltips);
@@ -1371,7 +1382,8 @@ void Settings::Editor::doLoad()
     else
         mDefaultEncoding = value("default_encoding", ENCODING_UTF8).toByteArray();
     mAutoDetectFileEncoding = boolValue("auto_detect_file_encoding",true);
-    mUndoLimit = intValue("undo_limit",0);
+    mUndoLimit = intValue("undo_limit",5000);
+    mUndoMemoryUsage = intValue("undo_memory_usage", 50);
 
     //tooltips
     mEnableTooltips = boolValue("enable_tooltips",true);

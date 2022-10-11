@@ -367,6 +367,9 @@ public:
         int undoLimit() const;
         void setUndoLimit(int newUndoLimit);
 
+        int undoMemoryUsage() const;
+        void setUndoMemoryUsage(int newUndoMemoryUsage);
+
     private:
         //General
         // indents
@@ -474,6 +477,7 @@ public:
         bool mAutoLoadLastFiles;
         bool mDefaultFileCpp;
         int mUndoLimit;
+        int mUndoMemoryUsage;
 
 
         //hints tooltip

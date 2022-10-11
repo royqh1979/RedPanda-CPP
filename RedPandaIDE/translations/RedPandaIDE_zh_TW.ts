@@ -199,73 +199,6 @@
     </message>
 </context>
 <context>
-    <name>CharsetInfoManager</name>
-    <message>
-        <source>Arabic</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Greek</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Baltic</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Western Europe</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Central Europe</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Cyrillic</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Turkish</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Northern Europe</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Hebrew</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Thai</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Japanese</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Chinese</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Korean</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Vietnamese</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Eastern Europe</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Celtic</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>ChooseThemeDialog</name>
     <message>
         <source>Choose Theme</source>
@@ -1361,6 +1294,14 @@
     </message>
     <message>
         <source>UTF-8 BOM</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Max Undo Memory Usage</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>MB</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -5649,18 +5590,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Can&apos;t open file &apos;%1&apos; to write!</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Failed to write data.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Untitled</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>The following %1 directories don&apos;t exist:</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5882,10 +5811,6 @@
     </message>
     <message>
         <source>Icon files</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Index %1 out of range</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -6403,24 +6328,6 @@
     </message>
     <message>
         <source>Write to symbol usage file &apos;%1&apos; failed.</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>SynDocument</name>
-    <message>
-        <source>Can&apos;t open file &apos;%1&apos; for read!</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Can&apos;t open file &apos;%1&apos; for save!</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>SynEdit</name>
-    <message>
-        <source>The highlighter seems to be in an infinite loop</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

@@ -65,6 +65,7 @@ void EditorMiscWidget::doLoad()
         ui->cbEncodingDetail->setCurrentText(defaultEncoding);
     }
     ui->spinMaxUndo->setValue(pSettings->editor().undoLimit());
+    ui->spinMaxUndoMemory->setValue(pSettings->editor().undoMemoryUsage());
 }
 
 void EditorMiscWidget::doSave()
@@ -80,6 +81,7 @@ void EditorMiscWidget::doSave()
         pSettings->editor().setDefaultEncoding(ui->cbEncoding->currentData().toByteArray());
     }
     pSettings->editor().setUndoLimit(ui->spinMaxUndo->value());
+    pSettings->editor().setUndoMemoryUsage(ui->spinMaxUndoMemory->value());
     pSettings->editor().save();
     pMainWindow->updateEditorSettings();
 }

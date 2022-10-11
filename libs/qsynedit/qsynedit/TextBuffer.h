@@ -233,21 +233,28 @@ public:
 
     bool fullUndoImposible() const;
 
+    int maxMemoryUsage() const;
+    void setMaxMemoryUsage(int newMaxMemoryUsage);
+
 signals:
     void addedUndo();
 protected:
     void ensureMaxEntries();
     bool inBlock();
     unsigned int getNextChangeNumber();
+    void addMemoryUsage(PSynEditUndoItem item);
+    void reduceMemoryUsage(PSynEditUndoItem item);
 protected:
     size_t mBlockChangeNumber;
     int mBlockLock;
     int mBlockCount; // count of action blocks;
+    int mMemoryUsage;
     size_t mLastPoppedItemChangeNumber;
     size_t mLastRestoredItemChangeNumber;
     bool mFullUndoImposible;
     QVector<PSynEditUndoItem> mItems;
     int mMaxUndoActions;
+    int mMaxMemoryUsage;
     size_t mNextChangeNumber;
     size_t mInitialChangeNumber;
     bool mInsideRedo;

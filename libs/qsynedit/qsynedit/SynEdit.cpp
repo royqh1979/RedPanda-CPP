@@ -6585,6 +6585,11 @@ void SynEdit::setUndoLimit(int size)
     mUndoList->setMaxUndoActions(size);
 }
 
+void SynEdit::setUndoMemoryUsage(int size)
+{
+    mUndoList->setMaxMemoryUsage(size*1024*1024);
+}
+
 int SynEdit::charsInWindow() const
 {
     return mCharsInWindow;

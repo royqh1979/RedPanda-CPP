@@ -825,6 +825,7 @@ SynDocumentLine::SynDocumentLine():
 SynEditUndoList::SynEditUndoList():QObject()
 {
     mMaxUndoActions = 1024;
+    mMaxMemoryUsage = 50 * 1024 * 1024;
     mNextChangeNumber = 1;
     mInsideRedo = false;
 
@@ -832,6 +833,7 @@ SynEditUndoList::SynEditUndoList():QObject()
     mBlockLock=0;
     mFullUndoImposible=false;
     mBlockCount=0;
+    mMemoryUsage=0;
     mLastPoppedItemChangeNumber=0;
     mInitialChangeNumber = 0;
     mLastRestoredItemChangeNumber=0;
@@ -853,7 +855,9 @@ void SynEditUndoList::addChange(SynChangeReason reason, const BufferCoord &start
                 changeNumber);
 //    qDebug()<<"add change"<<changeNumber<<(int)reason;
     mItems.append(newItem);
+    addMemoryUsage(newItem);
     ensureMaxEntries();
+
     if (reason!=SynChangeReason::GroupBreak && !inBlock()) {
         mBlockCount++;
 //        qDebug()<<"add"<<mBlockCount;
@@ -873,6 +877,7 @@ void SynEditUndoList::restoreChange(PSynEditUndoItem item)
 {
     size_t changeNumber = item->changeNumber();
     mItems.append(item);
+    addMemoryUsage(item);
     ensureMaxEntries();
     if (changeNumber>mNextChangeNumber)
         mNextChangeNumber=changeNumber;
@@ -912,6 +917,7 @@ void SynEditUndoList::clear()
     mLastRestoredItemChangeNumber=0;
     mBlockCount=0;
     mBlockLock=0;
+    mMemoryUsage=0;
 }
 
 void SynEditUndoList::endBlock()
@@ -939,6 +945,38 @@ bool SynEditUndoList::inBlock()
 unsigned int SynEditUndoList::getNextChangeNumber()
 {
     return mNextChangeNumber++;
+}
+
+void SynEditUndoList::addMemoryUsage(PSynEditUndoItem item)
+{
+    if (!item)
+        return;
+    int length=0;
+    foreach (const QString& s, item->changeText()) {
+        length+=s.length()+2;
+    }
+    mMemoryUsage +=  length * sizeof(QChar) ;
+}
+
+void SynEditUndoList::reduceMemoryUsage(PSynEditUndoItem item)
+{
+    if (!item)
+        return;
+    int length=0;
+    foreach (const QString& s, item->changeText()) {
+        length+=s.length()+2;
+    }
+    mMemoryUsage -=  length * sizeof(QChar) ;
+}
+
+int SynEditUndoList::maxMemoryUsage() const
+{
+    return mMaxMemoryUsage;
+}
+
+void SynEditUndoList::setMaxMemoryUsage(int newMaxMemoryUsage)
+{
+    mMaxMemoryUsage = newMaxMemoryUsage;
 }
 
 SynChangeReason SynEditUndoList::lastChangeReason()
@@ -978,6 +1016,7 @@ PSynEditUndoItem SynEditUndoList::popItem()
             }
         }
         mLastPoppedItemChangeNumber =  item->changeNumber();
+        reduceMemoryUsage(item);
         mItems.removeLast();
         return item;
     }
@@ -1040,14 +1079,20 @@ bool SynEditUndoList::fullUndoImposible() const
 
 void SynEditUndoList::ensureMaxEntries()
 {
-    if (mMaxUndoActions>0 && mBlockCount > mMaxUndoActions){
+    if (mMaxUndoActions>0 && (mBlockCount > mMaxUndoActions || mMemoryUsage>mMaxMemoryUsage)){
         mFullUndoImposible = true;
-        while (mBlockCount > mMaxUndoActions && !mItems.isEmpty()) {
+        while ((mBlockCount > mMaxUndoActions || mMemoryUsage>mMaxMemoryUsage)
+               && !mItems.isEmpty()) {
             //remove all undo item in block
             PSynEditUndoItem item = mItems.front();
             size_t changeNumber = item->changeNumber();
-            while (mItems.count()>0 && mItems.front()->changeNumber() == changeNumber)
+            while (mItems.count()>0) {
+                item = mItems.front();
+                if (item->changeNumber()!=changeNumber)
+                    break;
+                reduceMemoryUsage(item);
                 mItems.removeFirst();
+            }
             if (item->changeReason()!=SynChangeReason::GroupBreak)
                 mBlockCount--;
       }

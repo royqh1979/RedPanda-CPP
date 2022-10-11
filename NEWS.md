@@ -12,6 +12,7 @@ Red Panda C++ Version 1.5
   - enhancement: save project's bookmark in it's own bookmark file
   - enhancement: project and non-project files use different bookmark view (auto switch when switch editors)
   - enhancement: auto merge when save bookmarks.
+  - enhancement: add option "max undo memory usage" in the options / editor / misc page
 
 Red Panda C++ Version 1.4
 

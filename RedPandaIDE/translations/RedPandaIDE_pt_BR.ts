@@ -206,67 +206,67 @@
     <name>CharsetInfoManager</name>
     <message>
         <source>Arabic</source>
-        <translation>Árabe</translation>
+        <translation type="vanished">Árabe</translation>
     </message>
     <message>
         <source>Greek</source>
-        <translation>Grego</translation>
+        <translation type="vanished">Grego</translation>
     </message>
     <message>
         <source>Baltic</source>
-        <translation>Báltico</translation>
+        <translation type="vanished">Báltico</translation>
     </message>
     <message>
         <source>Western Europe</source>
-        <translation>Europa Ocidental</translation>
+        <translation type="vanished">Europa Ocidental</translation>
     </message>
     <message>
         <source>Central Europe</source>
-        <translation>Europa Central</translation>
+        <translation type="vanished">Europa Central</translation>
     </message>
     <message>
         <source>Cyrillic</source>
-        <translation>Cirílico</translation>
+        <translation type="vanished">Cirílico</translation>
     </message>
     <message>
         <source>Turkish</source>
-        <translation>Turco</translation>
+        <translation type="vanished">Turco</translation>
     </message>
     <message>
         <source>Northern Europe</source>
-        <translation>Europa setentrional</translation>
+        <translation type="vanished">Europa setentrional</translation>
     </message>
     <message>
         <source>Hebrew</source>
-        <translation>Hebraico</translation>
+        <translation type="vanished">Hebraico</translation>
     </message>
     <message>
         <source>Thai</source>
-        <translation>Tailandês</translation>
+        <translation type="vanished">Tailandês</translation>
     </message>
     <message>
         <source>Japanese</source>
-        <translation>Japonês</translation>
+        <translation type="vanished">Japonês</translation>
     </message>
     <message>
         <source>Chinese</source>
-        <translation>Chinês</translation>
+        <translation type="vanished">Chinês</translation>
     </message>
     <message>
         <source>Korean</source>
-        <translation>Coreano</translation>
+        <translation type="vanished">Coreano</translation>
     </message>
     <message>
         <source>Vietnamese</source>
-        <translation>Vietnamês</translation>
+        <translation type="vanished">Vietnamês</translation>
     </message>
     <message>
         <source>Eastern Europe</source>
-        <translation>Europa Oriental</translation>
+        <translation type="vanished">Europa Oriental</translation>
     </message>
     <message>
         <source>Celtic</source>
-        <translation>Celta</translation>
+        <translation type="vanished">Celta</translation>
     </message>
 </context>
 <context>
@@ -1370,6 +1370,14 @@
     <message>
         <source>UTF-8 BOM</source>
         <translation>UTF-8 BOM</translation>
+    </message>
+    <message>
+        <source>Max Undo Memory Usage</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>MB</source>
+        <translation type="unfinished">MB</translation>
     </message>
 </context>
 <context>
@@ -5698,15 +5706,15 @@
     </message>
     <message>
         <source>Can&apos;t open file &apos;%1&apos; to write!</source>
-        <translation>Impossível gravar no arquivo &apos;%1&apos;!</translation>
+        <translation type="vanished">Impossível gravar no arquivo &apos;%1&apos;!</translation>
     </message>
     <message>
         <source>Failed to write data.</source>
-        <translation>Falha ao gravar dados.</translation>
+        <translation type="vanished">Falha ao gravar dados.</translation>
     </message>
     <message>
         <source>Untitled</source>
-        <translation>Sem nome</translation>
+        <translation type="vanished">Sem nome</translation>
     </message>
     <message>
         <source>The following %1 directories don&apos;t exist:</source>
@@ -5934,7 +5942,7 @@
     </message>
     <message>
         <source>Index %1 out of range</source>
-        <translation>Índice %1 fora dos limites</translation>
+        <translation type="vanished">Índice %1 fora dos limites</translation>
     </message>
     <message>
         <source>bytes</source>
@@ -6474,18 +6482,18 @@
     <name>SynDocument</name>
     <message>
         <source>Can&apos;t open file &apos;%1&apos; for read!</source>
-        <translation>Impossível ler o arquivo &apos;%1&apos;!</translation>
+        <translation type="vanished">Impossível ler o arquivo &apos;%1&apos;!</translation>
     </message>
     <message>
         <source>Can&apos;t open file &apos;%1&apos; for save!</source>
-        <translation>Impossível gravar no arquivo &apos;%1&apos;!</translation>
+        <translation type="vanished">Impossível gravar no arquivo &apos;%1&apos;!</translation>
     </message>
 </context>
 <context>
     <name>SynEdit</name>
     <message>
         <source>The highlighter seems to be in an infinite loop</source>
-        <translation>A colocação de destaques parece estar em repetição infinita</translation>
+        <translation type="vanished">A colocação de destaques parece estar em repetição infinita</translation>
     </message>
 </context>
 <context>

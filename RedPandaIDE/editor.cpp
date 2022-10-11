@@ -4554,6 +4554,7 @@ void Editor::applySettings()
     }
 
     this->setUndoLimit(pSettings->editor().undoLimit());
+    this->setUndoMemoryUsage(pSettings->editor().undoMemoryUsage());
 
     setMouseWheelScrollSpeed(pSettings->editor().mouseWheelScrollSpeed());
     setMouseSelectionScrollSpeed(pSettings->editor().mouseSelectionScrollSpeed());
