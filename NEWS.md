@@ -9,7 +9,9 @@ Red Panda C++ Version 1.5
   - change: don't show syntax check messages in the tools output panel (to reduce longtime memory usage)
   - fix: minor memory leaks when set itemmodels
   - fix: thread for parsing doesn't correctly released when parsing finished ( so and the parser)
-  
+  - enhancement: save project's bookmark in it's own bookmark file
+  - enhancement: project and non-project files use different bookmark view (auto switch when switch editors)
+  - enhancement: auto merge when save bookmarks.
 
 Red Panda C++ Version 1.4
 

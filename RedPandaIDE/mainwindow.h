@@ -110,6 +110,7 @@ public:
     void updateForStatusbarModeInfo(bool clear=false);
     void updateStatusbarMessage(const QString& s);
     void updateEditorSettings();
+    void updateEditorBookmarks();
     void updateEditorActions();
     void updateProjectActions();
     void updateCompileActions();

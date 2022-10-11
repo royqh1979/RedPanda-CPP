@@ -187,7 +187,7 @@ public:
     void toggleBreakpoint(int line);
     void clearBreakpoints();
     bool hasBreakpoint(int line);
-    void addBookmark(int line,const QString& description);
+    void addBookmark(int line);
     void removeBookmark(int line);
     bool hasBookmark(int line);
     void clearBookmarks();
@@ -224,6 +224,7 @@ public:
     QString getWordForCompletionSearch(const QSynedit::BufferCoord& pos,bool permitTilde);
     QStringList getExpressionAtPosition(
             const QSynedit::BufferCoord& pos);
+    void resetBookmarks();
 
     const PCppParser &parser();
 
@@ -242,7 +243,6 @@ private slots:
 private:
     bool isBraceChar(QChar ch);
     bool shouldOpenInReadonly();
-    void resetBookmarks();
     QChar getCurrentChar();
     bool handleSymbolCompletion(QChar key);
     bool handleParentheseCompletion();

@@ -1292,6 +1292,7 @@ void Editor::showEvent(QShowEvent */*event*/)
         reparse();
     }
 
+    pMainWindow->bookmarkModel()->setIsForProject(inProject());
 //    if (pSettings->codeCompletion().clearWhenEditorHidden()
 //            && !inProject()) {
 //        reparse();
@@ -1696,7 +1697,7 @@ void Editor::onLinesDeleted(int first, int count)
 {
     pMainWindow->caretList().linesDeleted(this,first,count);
     pMainWindow->debugger()->breakpointModel()->onFileDeleteLines(mFilename,first,count);
-    pMainWindow->bookmarkModel()->onFileDeleteLines(mFilename,first,count);
+    pMainWindow->bookmarkModel()->onFileDeleteLines(mFilename,first,count, inProject());
     resetBreakpoints();
     resetBookmarks();
     if (!pSettings->editor().syntaxCheckWhenLineChanged()) {
@@ -1708,7 +1709,7 @@ void Editor::onLinesInserted(int first, int count)
 {
     pMainWindow->caretList().linesInserted(this,first,count);
     pMainWindow->debugger()->breakpointModel()->onFileInsertLines(mFilename,first,count);
-    pMainWindow->bookmarkModel()->onFileInsertLines(mFilename,first,count);
+    pMainWindow->bookmarkModel()->onFileInsertLines(mFilename,first,count, inProject());
     resetBreakpoints();
     resetBookmarks();
     if (!pSettings->editor().syntaxCheckWhenLineChanged()) {
@@ -1747,7 +1748,7 @@ bool Editor::shouldOpenInReadonly()
 
 void Editor::resetBookmarks()
 {
-    mBookmarkLines=pMainWindow->bookmarkModel()->bookmarksInFile(mFilename);
+    mBookmarkLines=pMainWindow->bookmarkModel()->bookmarksInFile(mFilename,inProject());
     invalidate();
 }
 
@@ -4407,17 +4408,15 @@ bool Editor::hasBreakpoint(int line)
     return mBreakpointLines.contains(line);
 }
 
-void Editor::addBookmark(int line, const QString& description)
+void Editor::addBookmark(int line)
 {
     mBookmarkLines.insert(line);
-    pMainWindow->bookmarkModel()->addBookmark(mFilename,line,description);
     invalidateGutterLine(line);
 }
 
 void Editor::removeBookmark(int line)
 {
     mBookmarkLines.remove(line);
-    pMainWindow->bookmarkModel()->removeBookmark(mFilename,line);
     invalidateGutterLine(line);
 }
 
@@ -4429,7 +4428,6 @@ bool Editor::hasBookmark(int line)
 void Editor::clearBookmarks()
 {
     mBookmarkLines.clear();
-    pMainWindow->bookmarkModel()->removeBookmarks(mFilename);
     invalidateGutter();
 }
 

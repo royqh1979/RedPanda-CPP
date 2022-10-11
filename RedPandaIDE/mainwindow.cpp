@@ -281,7 +281,7 @@ MainWindow::MainWindow(QWidget *parent)
     }
     mBookmarkModel = std::make_shared<BookmarkModel>();
     try {
-        mBookmarkModel->load(includeTrailingPathDelimiter(pSettings->dirs().config())
+        mBookmarkModel->loadBookmarks(includeTrailingPathDelimiter(pSettings->dirs().config())
                          +DEV_BOOKMARK_FILE);
     } catch (FileError &e) {
         QMessageBox::warning(nullptr,
@@ -407,6 +407,7 @@ MainWindow::MainWindow(QWidget *parent)
     updateShortcuts();
     updateTools();
     updateEditorSettings();
+    //updateEditorBookmarks();
 }
 
 MainWindow::~MainWindow()
@@ -447,6 +448,14 @@ void MainWindow::updateEditorSettings()
 {
     pIconsManager->updateEditorGuttorIcons(pSettings->environment().iconSet(),pointToPixel(pSettings->editor().fontSize()));
     mEditorList->applySettings();
+}
+
+void MainWindow::updateEditorBookmarks()
+{
+    for (int i=0;i<mEditorList->pageCount();i++) {
+        Editor * e=(*mEditorList)[i];
+        e->resetBookmarks();
+    }
 }
 
 void MainWindow::updateEditorActions()
@@ -1281,45 +1290,50 @@ void MainWindow::openProject(const QString &filename, bool openFiles)
 
     // Only update class browser once
     mClassBrowserModel.beginUpdate();
-    {
-        auto action = finally([this]{
-            mClassBrowserModel.endUpdate();
-        });
-        mProject = Project::load(filename,mEditorList,&mFileSystemWatcher);
-        updateProjectView();
-        ui->projectView->expand(
-                    mProjectProxyModel->mapFromSource(
-                        mProject->model()->rootIndex()));
-        pSettings->history().removeProject(filename);
+    mProject = Project::load(filename,mEditorList,&mFileSystemWatcher);
+    updateProjectView();
+    ui->projectView->expand(
+                mProjectProxyModel->mapFromSource(
+                    mProject->model()->rootIndex()));
+    pSettings->history().removeProject(filename);
 
-    //  // if project manager isn't open then open it
-    //  if not devData.ShowLeftPages then
-    //    actProjectManager.Execute;
-            //checkForDllProfiling();
+//  // if project manager isn't open then open it
+//  if not devData.ShowLeftPages then
+//    actProjectManager.Execute;
+        //checkForDllProfiling();
 
-        //parse the project
-        //  UpdateClassBrowsing;
+    //parse the project
+    //  UpdateClassBrowsing;
 
-        scanActiveProject(true);
-        if (openFiles) {
-            PProjectUnit unit = mProject->doAutoOpen();
-            setProjectViewCurrentUnit(unit);
-        }
+    scanActiveProject(true);
 
-        //update editor's inproject flag
-        foreach (PProjectUnit unit, mProject->unitList()) {
-            Editor* e = mEditorList->getOpenedEditorByFilename(unit->fileName());
-            mProject->associateEditorToUnit(e,unit);
-        }
+    mBookmarkModel->setIsForProject(true);
+    mBookmarkModel->loadProjectBookmarks(
+                changeFileExt(mProject->filename(), PROJECT_BOOKMARKS_EXT),
+                mProject->directory());
 
-        Editor * e = mEditorList->getEditor();
-        if (e) {
-            checkSyntaxInBack(e);
-        }
-        updateAppTitle();
-        updateCompilerSet();
-        updateClassBrowserForEditor(e);
+    if (openFiles) {
+        PProjectUnit unit = mProject->doAutoOpen();
+        setProjectViewCurrentUnit(unit);
     }
+
+    //update editor's inproject flag
+    foreach (PProjectUnit unit, mProject->unitList()) {
+        Editor* e = mEditorList->getOpenedEditorByFilename(unit->fileName());
+        mProject->associateEditorToUnit(e,unit);
+        if (e)
+            e->resetBookmarks();
+    }
+
+    Editor * e = mEditorList->getEditor();
+    if (e) {
+        checkSyntaxInBack(e);
+    }
+    updateAppTitle();
+    updateCompilerSet();
+    updateClassBrowserForEditor(e);
+    mClassBrowserModel.endUpdate();
+
     //updateForEncodingInfo();
 }
 
@@ -2294,8 +2308,10 @@ void MainWindow::loadLastOpens()
             focusedEditor = editor;
         pSettings->history().removeFile(editorFilename);
     }
-    if (mProject && mEditorList->pageCount()==0)
+    if (mProject && mEditorList->pageCount()==0) {
         mProject->doAutoOpen();
+        updateEditorBookmarks();
+    }
     if (count>0) {
         updateEditorActions();
         //updateForEncodingInfo();
@@ -3759,21 +3775,21 @@ void MainWindow::onBookmarkRemove()
         PBookmark bookmark = mBookmarkModel->bookmark(index.row());
         if (bookmark) {
             Editor * editor = mEditorList->getOpenedEditorByFilename(bookmark->filename);
-            if (editor) {
+            if (editor && editor->inProject() == mBookmarkModel->isForProject()) {
                 editor->removeBookmark(bookmark->line);
-            } else {
-                mBookmarkModel->removeBookmarkAt(index.row());
             }
+            mBookmarkModel->removeBookmarkAt(index.row());
         }
     }
 }
 
 void MainWindow::onBookmarkRemoveAll()
 {
-    mBookmarkModel->clear();
+    mBookmarkModel->clear(mBookmarkModel->isForProject());
     for (int i=0;i<mEditorList->pageCount();i++) {
         Editor * editor = (*mEditorList)[i];
-        editor->clearBookmarks();
+        if (editor->inProject() == mBookmarkModel->isForProject())
+            editor->clearBookmarks();
     }
 }
 
@@ -4305,33 +4321,31 @@ void MainWindow::closeProject(bool refreshEditor)
         } else
             mProject->saveLayout(); // always save layout, but not when SaveAll has been called
 
+        mBookmarkModel->saveProjectBookmarks(
+                    changeFileExt(mProject->filename(), PROJECT_BOOKMARKS_EXT),
+                    mProject->directory());
+
         mClassBrowserModel.beginUpdate();
-        {
-            auto action2 = finally([this]{
-                mClassBrowserModel.endUpdate();
-            });
-            // Remember it
-            pSettings->history().addToOpenedProjects(mProject->filename());
+        // Remember it
+        pSettings->history().addToOpenedProjects(mProject->filename());
 
-            mEditorList->beginUpdate();
-            {
-                auto action3 = finally([this]{
-                    mEditorList->endUpdate();
-                });
-                mProject.reset();
+        mEditorList->beginUpdate();
+        mProject.reset();
 
-                if (!mQuitting && refreshEditor) {
-                    //reset Class browsing
-                    ui->tabExplorer->setCurrentWidget(ui->tabStructure);
-                    Editor * e = mEditorList->getEditor();
-                    updateClassBrowserForEditor(e);
-                } else {
-                    mClassBrowserModel.setParser(nullptr);
-                    mClassBrowserModel.setCurrentFile("");
-                }
-            }
+        if (!mQuitting && refreshEditor) {
+            //reset Class browsing
+            ui->tabExplorer->setCurrentWidget(ui->tabStructure);
+            Editor * e = mEditorList->getEditor();
+            updateClassBrowserForEditor(e);
+        } else {
+            mClassBrowserModel.setParser(nullptr);
+            mClassBrowserModel.setCurrentFile("");
         }
+        mEditorList->endUpdate();
+        mClassBrowserModel.endUpdate();
+
         if (!mQuitting) {
+            mBookmarkModel->setIsForProject(false);
             // Clear error browser
             clearIssues();
             updateProjectView();
@@ -4540,7 +4554,7 @@ void MainWindow::closeEvent(QCloseEvent *event) {
         pSettings->environment().setDefaultOpenFolder(QDir::currentPath());
         pSettings->environment().save();
         try {
-            mBookmarkModel->save(includeTrailingPathDelimiter(pSettings->dirs().config())
+            mBookmarkModel->saveBookmarks(includeTrailingPathDelimiter(pSettings->dirs().config())
                              +DEV_BOOKMARK_FILE);
         } catch (FileError& e) {
             QMessageBox::warning(nullptr,
@@ -4672,8 +4686,8 @@ void MainWindow::on_actionSave_triggered()
     if (editor != NULL) {
         try {
             editor->save();
-            if (editor->inProject() && (mProject))
-                mProject->saveAll();
+//            if (editor->inProject() && (mProject))
+//                mProject->saveAll();
         } catch(FileError e) {
             QMessageBox::critical(editor,tr("Error"),e.reason());
         }
@@ -6942,7 +6956,8 @@ void MainWindow::on_actionAdd_bookmark_triggered()
                                              tr("Description:"),QLineEdit::Normal,
                                              editor->document()->getString(line-1).trimmed());
         desc = desc.trimmed();
-        editor->addBookmark(line,desc);
+        editor->addBookmark(line);
+        mBookmarkModel->addBookmark(editor->filename(),line,desc,editor->inProject());
     }
 }
 
@@ -6953,6 +6968,7 @@ void MainWindow::on_actionRemove_Bookmark_triggered()
     int line;
     if (editor && editor->pointToLine(mEditorContextMenuPos,line)) {
         editor->removeBookmark(line);
+        mBookmarkModel->removeBookmark(editor->filename(),line,editor->inProject());
     }
 }
 

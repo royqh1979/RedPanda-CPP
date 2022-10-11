@@ -17,6 +17,7 @@
 #include "bookmarkmodel.h"
 #include "../systemconsts.h"
 
+#include <QDir>
 #include <QFile>
 #include <QFileInfo>
 #include <QJsonArray>
@@ -26,15 +27,21 @@
 #include <QSet>
 #include "../utils.h"
 
-BookmarkModel::BookmarkModel(QObject* parent):QAbstractTableModel(parent)
+BookmarkModel::BookmarkModel(QObject* parent):QAbstractTableModel(parent),
+    mIsForProject(false)
 {
 
 }
 
-QSet<int> BookmarkModel::bookmarksInFile(const QString &filename)
+QSet<int> BookmarkModel::bookmarksInFile(const QString &filename, bool forProject)
 {
     QSet<int> lines;
-    foreach (const PBookmark& bookmark, mBookmarks) {
+    QList<PBookmark> bookmarks;
+    if (forProject)
+        bookmarks = mProjectBookmarks;
+    else
+        bookmarks = mBookmarks;
+    foreach (const PBookmark& bookmark, bookmarks) {
         if (bookmark->filename.compare(filename, PATH_SENSITIVITY) == 0) {
             lines.insert(bookmark->line);
         }
@@ -42,27 +49,48 @@ QSet<int> BookmarkModel::bookmarksInFile(const QString &filename)
     return lines;
 }
 
-void BookmarkModel::addBookmark(const QString &filename, int line, const QString &description)
+void BookmarkModel::addBookmark(const QString &filename, int line, const QString &description, bool forProject)
 {
-    Q_ASSERT(!isBookmarkExists(filename,line));
+    Q_ASSERT(!isBookmarkExists(filename,line,forProject));
     PBookmark bookmark = std::make_shared<Bookmark>();
     bookmark->filename = filename;
     bookmark->line = line;
     bookmark->description = description;
-    beginInsertRows(QModelIndex(),mBookmarks.count(),mBookmarks.count());
-    mBookmarks.append(bookmark);
-    endInsertRows();
+    bookmark->timestamp = QDateTime::currentMSecsSinceEpoch();
+    if (forProject) {
+        if (forProject==mIsForProject)
+            beginInsertRows(QModelIndex(),mProjectBookmarks.count(),mProjectBookmarks.count());
+        mProjectBookmarks.append(bookmark);
+    } else {
+        if (forProject==mIsForProject)
+            beginInsertRows(QModelIndex(),mBookmarks.count(),mBookmarks.count());
+        mBookmarks.append(bookmark);
+    }
+    if (forProject==mIsForProject)
+        endInsertRows();
+}
+
+PBookmark BookmarkModel::bookmark(int i, bool forProject)
+{
+    if (forProject)
+        return mProjectBookmarks[i];
+    else
+        return mBookmarks[i];
 }
 
 PBookmark BookmarkModel::bookmark(int i)
 {
-    return mBookmarks[i];
+    return bookmark(i,isForProject());
 }
 
-PBookmark BookmarkModel::bookmark(const QString &filename, int line)
+PBookmark BookmarkModel::bookmark(const QString &filename, int line, bool forProject)
 {
-    for (int i=0;i<mBookmarks.count();i++) {
-        PBookmark bookmark = mBookmarks[i];
+    QList<PBookmark> bookmarks;
+    if (forProject)
+        bookmarks = mProjectBookmarks;
+    else
+        bookmarks = mBookmarks;
+    foreach (PBookmark bookmark, bookmarks) {
         if (bookmark->filename.compare(filename, PATH_SENSITIVITY) == 0
                 && bookmark->line == line) {
             return bookmark;
@@ -71,40 +99,65 @@ PBookmark BookmarkModel::bookmark(const QString &filename, int line)
     return PBookmark();
 }
 
-bool BookmarkModel::removeBookmark(const QString &filename, int line)
+PBookmark BookmarkModel::bookmark(const QString &filename, int line)
 {
-    for (int i=0;i<mBookmarks.count();i++) {
-        PBookmark bookmark = mBookmarks[i];
+    return bookmark(filename,line,isForProject());
+}
+
+bool BookmarkModel::removeBookmark(const QString &filename, int line, bool forProject)
+{
+    QList<PBookmark> bookmarks;
+    if (forProject)
+        bookmarks = mProjectBookmarks;
+    else
+        bookmarks = mBookmarks;
+    for (int i=0;i<bookmarks.count();i++) {
+        PBookmark bookmark = bookmarks[i];
         if (bookmark->filename.compare(filename, PATH_SENSITIVITY) == 0
                 && bookmark->line == line) {
-            removeBookmarkAt(i);
+            removeBookmarkAt(i, forProject);
             return true;
         }
     }
     return false;
 }
 
-void BookmarkModel::removeBookmarks(const QString &filename)
+void BookmarkModel::removeBookmarks(const QString &filename, bool forProject)
 {
-    for (int i=mBookmarks.count()-1;i>=0;i--) {
-        PBookmark bookmark = mBookmarks[i];
+    QList<PBookmark> bookmarks;
+    if (forProject)
+        bookmarks = mProjectBookmarks;
+    else
+        bookmarks = mBookmarks;
+    for (int i=bookmarks.count()-1;i>=0;i--) {
+        PBookmark bookmark = bookmarks[i];
         if (bookmark->filename.compare(filename, PATH_SENSITIVITY) == 0) {
-            removeBookmarkAt(i);
+            removeBookmarkAt(i, forProject);
         }
     }
 }
 
-void BookmarkModel::clear()
+void BookmarkModel::clear(bool forProject)
 {
-    beginResetModel();
-    mBookmarks.clear();
-    endResetModel();
+    if (forProject==mIsForProject)
+        beginResetModel();
+    if (forProject)
+        mProjectBookmarks.clear();
+    else
+        mBookmarks.clear();
+    if (forProject==mIsForProject)
+        endResetModel();
 }
 
-bool BookmarkModel::updateDescription(const QString &filename, int line, const QString &description)
+bool BookmarkModel::updateDescription(const QString &filename, int line, const QString &description, bool forProject)
 {
-    for (int i=0;i<mBookmarks.count();i++) {
-        PBookmark bookmark = mBookmarks[i];
+    QList<PBookmark> bookmarks;
+    if (forProject)
+        bookmarks = mProjectBookmarks;
+    else
+        bookmarks = mBookmarks;
+    for (int i=0;i<bookmarks.count();i++) {
+        PBookmark bookmark = bookmarks[i];
         if (bookmark->filename.compare(filename, PATH_SENSITIVITY) == 0
                 && bookmark->line == line) {
             bookmark->description = description;
@@ -115,16 +168,90 @@ bool BookmarkModel::updateDescription(const QString &filename, int line, const Q
     return false;
 }
 
-void BookmarkModel::save(const QString &filename)
+bool BookmarkModel::updateDescription(const QString &filename, int line, const QString &description)
 {
+    return updateDescription(filename,line,description,mIsForProject);
+}
+
+void BookmarkModel::saveBookmarks(const QString &filename)
+{
+    save(filename,QString());
+}
+
+void BookmarkModel::loadBookmarks(const QString &filename)
+{
+    if (!mIsForProject)
+        beginResetModel();
+    mBookmarks = load(filename,0,&mLastLoadBookmarksTimestamp);
+    if (!mIsForProject)
+        endResetModel();
+}
+
+void BookmarkModel::save(const QString &filename, const QString& projectFolder)
+{
+    bool forProject = !projectFolder.isEmpty();
+    qint64 t,fileTimestamp;
+    QList<PBookmark> bookmarks;
+    if (forProject) {
+        t=mLastLoadProjectBookmarksTimestamp;
+        foreach (const PBookmark& bookmark, mProjectBookmarks) {
+            PBookmark newBookmark=std::make_shared<Bookmark>();
+            newBookmark->description = bookmark->description;
+            newBookmark->filename = extractRelativePath(projectFolder, bookmark->filename);
+            newBookmark->line = bookmark->line;
+            newBookmark->timestamp = bookmark->timestamp;
+            bookmarks.append(newBookmark);
+        }
+    } else {
+        t=mLastLoadBookmarksTimestamp;
+        bookmarks = mBookmarks;
+    }
+    QList<PBookmark> fileBookmarks=load(filename, t,&fileTimestamp);
     QFile file(filename);
-    if (file.open(QFile::WriteOnly | QFile::Truncate)) {
+    int saveOrderCount=0;
+    if (file.open(QFile::WriteOnly | QFile::Truncate)) {        
+        QHash<QString,PBookmark> compareHash;
+        QList<PBookmark> saveBookmarks;
+        foreach (const PBookmark& bookmark, bookmarks) {
+            QString key = QString("%1-%2").arg(bookmark->filename).arg(bookmark->line);
+            bookmark->saveOrder=saveOrderCount++;
+            compareHash.insert(key,bookmark);
+        }
+        foreach (const PBookmark& bookmark, fileBookmarks) {
+            QString key = QString("%1-%2").arg(bookmark->filename).arg(bookmark->line);
+            bookmark->saveOrder=saveOrderCount++;
+            if (!compareHash.contains(key))
+                compareHash.insert(key,bookmark);
+            else {
+                PBookmark pTemp=compareHash.value(key);
+                if (pTemp->timestamp<=bookmark->timestamp)
+                    compareHash.insert(key,bookmark);
+            }
+            compareHash.insert(key,bookmark);
+        }
+        QList<PBookmark> saveList;
+        foreach (const PBookmark& bookmark, compareHash) {
+            saveList.append(bookmark);
+        }
+        std::sort(saveList.begin(),saveList.end(), [](PBookmark b1,PBookmark b2) {
+                      return b1->saveOrder - b2->saveOrder;
+                  });
+
+        if (forProject) {
+            mProjectBookmarks=saveList;
+            mLastLoadProjectBookmarksTimestamp = QDateTime::currentMSecsSinceEpoch();
+        } else {
+            mBookmarks=saveList;
+            mLastLoadBookmarksTimestamp = QDateTime::currentMSecsSinceEpoch();
+        }
+
         QJsonArray array;
-        foreach (const PBookmark& bookmark, mBookmarks) {
+        foreach (const PBookmark& bookmark, saveList) {
             QJsonObject obj;
             obj["filename"]=bookmark->filename;
             obj["line"]=bookmark->line;
             obj["description"]=bookmark->description;
+            obj["timestamp"]=QString("%1").arg(bookmark->timestamp);
             array.append(obj);
         }
         QJsonDocument doc;
@@ -139,12 +266,18 @@ void BookmarkModel::save(const QString &filename)
     }
 }
 
-void BookmarkModel::load(const QString& filename)
+QList<PBookmark> BookmarkModel::load(const QString& filename, qint64 criteriaTimestamp, qint64* pFileTimestamp)
 {
-    clear();
+    //clear(forProject);
+    QList<PBookmark> bookmarks;
+    QFileInfo fileInfo(filename);
+    qint64 timestamp=fileInfo.fileTime(QFile::FileModificationTime).toMSecsSinceEpoch();
+    *pFileTimestamp=timestamp;
+    if (timestamp<=criteriaTimestamp)
+        return bookmarks;
     QFile file(filename);
     if (!file.exists())
-        return;
+        return bookmarks;
     if (file.open(QFile::ReadOnly)) {
         QByteArray content = file.readAll();
         QJsonParseError error;
@@ -156,58 +289,111 @@ void BookmarkModel::load(const QString& filename)
                             .arg(error.errorString()));
         }
         QJsonArray array = doc.array();
+        qint64 bookmarkTimestamp;
+        bool ok;
         for  (int i=0;i<array.count();i++) {
             QJsonValue value = array[i];
             QJsonObject obj=value.toObject();
-            addBookmark( QFileInfo(obj["filename"].toString()).absoluteFilePath(),
-                    obj["line"].toInt(),
-                    obj["description"].toString());
-
+            bookmarkTimestamp = obj["timestamp"].toString().toULongLong(&ok);
+            if (ok && bookmarkTimestamp>criteriaTimestamp) {
+                PBookmark bookmark = std::make_shared<Bookmark>();
+                bookmark->filename = obj["filename"].toString();
+                bookmark->line = obj["line"].toInt();
+                bookmark->description = obj["description"].toString();
+                bookmark->timestamp=obj["timestamp"].toString().toULongLong();
+                bookmarks.append(bookmark);
+            }
         }
     } else {
         throw FileError(tr("Can't open file '%1' for read.")
                         .arg(filename));
     }
+    return bookmarks;
 }
 
-void BookmarkModel::onFileDeleteLines(const QString &filename, int startLine, int count)
+void BookmarkModel::saveProjectBookmarks(const QString &filename, const QString& projectFolder)
 {
-    for (int i = mBookmarks.count()-1;i>=0;i--){
-        PBookmark bookmark = mBookmarks[i];
+    save(filename,projectFolder);
+}
+
+void BookmarkModel::loadProjectBookmarks(const QString &filename, const QString& projectFolder)
+{
+    if (mIsForProject)
+        beginResetModel();
+    mProjectBookmarks = load(filename,0,&mLastLoadProjectBookmarksTimestamp);
+    QDir folder(projectFolder);
+    foreach (PBookmark bookmark, mProjectBookmarks) {
+        bookmark->filename=folder.absoluteFilePath(bookmark->filename);
+    }
+    if (mIsForProject)
+        endResetModel();
+}
+
+void BookmarkModel::onFileDeleteLines(const QString &filename, int startLine, int count, bool forProject)
+{
+    QList<PBookmark> bookmarks;
+    if (forProject)
+        bookmarks = mProjectBookmarks;
+    else
+        bookmarks = mBookmarks;
+    for (int i = bookmarks.count()-1;i>=0;i--){
+        PBookmark bookmark = bookmarks[i];
         if  (bookmark->filename == filename
              && bookmark->line>=startLine) {
             if (bookmark->line >= startLine+count) {
                 bookmark->line -= count;
-                emit dataChanged(createIndex(i,0),createIndex(i,2));
+                if (forProject == mIsForProject)
+                    emit dataChanged(createIndex(i,0),createIndex(i,2));
             } else {
-                removeBookmarkAt(i);
+                removeBookmarkAt(i,forProject);
             }
         }
     }
 }
 
-void BookmarkModel::onFileInsertLines(const QString &filename, int startLine, int count)
+void BookmarkModel::onFileInsertLines(const QString &filename, int startLine, int count, bool forProject)
 {
-    for (int i = mBookmarks.count()-1;i>=0;i--){
-        PBookmark bookmark = mBookmarks[i];
+    QList<PBookmark> bookmarks;
+    if (forProject)
+        bookmarks = mProjectBookmarks;
+    else
+        bookmarks = mBookmarks;
+    for (int i = bookmarks.count()-1;i>=0;i--){
+        PBookmark bookmark = bookmarks[i];
         if  (bookmark->filename == filename
              && bookmark->line>=startLine) {
             bookmark->line+=count;
-            emit dataChanged(createIndex(i,0),createIndex(i,2));
+            if (forProject == mIsForProject)
+                emit dataChanged(createIndex(i,0),createIndex(i,2));
         }
     }
 }
 
-void BookmarkModel::removeBookmarkAt(int i)
+void BookmarkModel::removeBookmarkAt(int i, bool forProject)
 {
-    beginRemoveRows(QModelIndex(), i,i);
-    mBookmarks.removeAt(i);
-    endRemoveRows();
+    if (forProject == mIsForProject)
+        beginRemoveRows(QModelIndex(), i,i);
+    if (forProject)
+        mProjectBookmarks.removeAt(i);
+    else
+        mBookmarks.removeAt(i);
+    if (forProject == mIsForProject)
+        endRemoveRows();
 }
 
-bool BookmarkModel::isBookmarkExists(const QString &filename, int line)
+void BookmarkModel::removeBookmarkAt(int i)
 {
-    foreach (const PBookmark& bookmark, mBookmarks) {
+    return removeBookmarkAt(i,isForProject());
+}
+
+bool BookmarkModel::isBookmarkExists(const QString &filename, int line, bool forProject)
+{
+    QList<PBookmark> bookmarks;
+    if (forProject)
+        bookmarks = mProjectBookmarks;
+    else
+        bookmarks = mBookmarks;
+    foreach (const PBookmark& bookmark, bookmarks) {
         if (bookmark->filename.compare(filename, PATH_SENSITIVITY) == 0
                 && bookmark->line == line) {
             return true;
@@ -216,9 +402,77 @@ bool BookmarkModel::isBookmarkExists(const QString &filename, int line)
     return false;
 }
 
+bool BookmarkModel::isForProject() const
+{
+    return mIsForProject;
+}
+
+void BookmarkModel::setIsForProject(bool newIsForProject)
+{
+    if (newIsForProject!=mIsForProject) {
+        mIsForProject = newIsForProject;
+        beginResetModel();
+        endResetModel();
+    }
+}
+
+void BookmarkModel::sort(int column, Qt::SortOrder order)
+{
+    switch(column) {
+    case 0:
+        if (order == Qt::SortOrder::AscendingOrder) {
+            auto sorter=[](PBookmark b1,PBookmark b2) {
+                return QString::compare(b1->description,b2->description);
+            };
+            std::sort(mBookmarks.begin(),mBookmarks.end(),sorter);
+            std::sort(mProjectBookmarks.begin(),mProjectBookmarks.end(),sorter);
+        } else {
+            auto sorter=[](PBookmark b1,PBookmark b2) {
+                return QString::compare(b2->description,b1->description);
+            };
+            std::sort(mBookmarks.begin(),mBookmarks.end(),sorter);
+            std::sort(mProjectBookmarks.begin(),mProjectBookmarks.end(),sorter);
+        }
+        break;
+    case 1:
+        if (order == Qt::SortOrder::AscendingOrder) {
+            auto sorter=[](PBookmark b1,PBookmark b2) {
+                return QString::compare(b1->filename,b2->filename);
+            };
+            std::sort(mBookmarks.begin(),mBookmarks.end(),sorter);
+            std::sort(mProjectBookmarks.begin(),mProjectBookmarks.end(),sorter);
+        } else {
+            auto sorter=[](PBookmark b1,PBookmark b2) {
+                return QString::compare(b2->filename,b1->filename);
+            };
+            std::sort(mBookmarks.begin(),mBookmarks.end(),sorter);
+            std::sort(mProjectBookmarks.begin(),mProjectBookmarks.end(),sorter);
+        }
+        break;
+    case 2:
+        if (order == Qt::SortOrder::AscendingOrder) {
+            auto sorter=[](PBookmark b1,PBookmark b2) {
+                return b1->line-b2->line;
+            };
+            std::sort(mBookmarks.begin(),mBookmarks.end(),sorter);
+            std::sort(mProjectBookmarks.begin(),mProjectBookmarks.end(),sorter);
+        } else {
+            auto sorter=[](PBookmark b1,PBookmark b2) {
+                return b2->line-b1->line;
+            };
+            std::sort(mBookmarks.begin(),mBookmarks.end(),sorter);
+            std::sort(mProjectBookmarks.begin(),mProjectBookmarks.end(),sorter);
+        }
+        break;
+    }
+}
+
 int BookmarkModel::rowCount(const QModelIndex &) const
 {
-    return mBookmarks.count();
+    if (mIsForProject)
+        return mProjectBookmarks.count();
+    else
+        return mBookmarks.count();
 }
 
 QVariant BookmarkModel::data(const QModelIndex &index, int role) const
@@ -226,7 +480,11 @@ QVariant BookmarkModel::data(const QModelIndex &index, int role) const
     if (!index.isValid())
         return QVariant();
     int row = index.row();
-    PBookmark bookmark = mBookmarks[row];
+    PBookmark bookmark;
+    if (mIsForProject)
+        bookmark = mProjectBookmarks[row];
+    else
+        bookmark = mBookmarks[row];
     if (role == Qt::DisplayRole) {
         switch(index.column()) {
         case 0:

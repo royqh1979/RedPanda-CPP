@@ -70,6 +70,7 @@
 #endif
 
 #define DEV_PROJECT_EXT "dev"
+#define PROJECT_BOOKMARKS_EXT "bookmarks"
 #define RC_EXT "rc"
 #define RES_EXT "res"
 #define H_EXT "h"
