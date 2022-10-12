@@ -41,12 +41,23 @@ bool FileCompiler::prepareForCompile()
     FileType fileType = getFileType(mFilename);
     mArguments= QString(" \"%1\"").arg(mFilename);
     if (!mOnlyCheckSyntax) {
-        if (compilerSet()->getCompileOptionValue(CC_CMD_OPT_STOP_AFTER_PREPROCESSING)==COMPILER_OPTION_ON)
-            mOutputFile=changeFileExt(mFilename,"expanded.cpp");
-        else if (compilerSet()->getCompileOptionValue(CC_CMD_OPT_ONLY_GEN_ASM_CODE)==COMPILER_OPTION_ON)
-            mOutputFile=changeFileExt(mFilename,"s");
-        else
-            mOutputFile = getCompiledExecutableName(mFilename);
+        switch(compilerSet()->compilationStage()) {
+        case Settings::CompilerSet::CompilationStage::PreprocessingOnly:
+            mOutputFile=changeFileExt(mFilename,compilerSet()->preprocessingSuffix());
+            mArguments+=" -E";
+            break;
+        case Settings::CompilerSet::CompilationStage::CompilationProperOnly:
+            mOutputFile=changeFileExt(mFilename,compilerSet()->compilationProperSuffix());
+            mArguments+=" -S -fverbose-asm";
+            break;
+        case Settings::CompilerSet::CompilationStage::AssemblingOnly:
+            mOutputFile=changeFileExt(mFilename,compilerSet()->assemblingSuffix());
+            mArguments+=" -c";
+            break;
+        case Settings::CompilerSet::CompilationStage::GenerateExecutable:
+            mOutputFile = changeFileExt(mFilename,compilerSet()->executableSuffix());
+        }
+
         mArguments+=QString(" -o \"%1\"").arg(mOutputFile);
 
         //remove the old file if it exists
@@ -97,7 +108,8 @@ bool FileCompiler::prepareForCompile()
 
 bool FileCompiler::prepareForRebuild()
 {
-    QString exeName = getCompiledExecutableName(mFilename);
+    QString exeName=compilerSet()->getCompileOptionValue(mFilename);
+
     QFile file(exeName);
 
     if (file.exists() && !file.remove()) {

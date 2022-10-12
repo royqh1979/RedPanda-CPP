@@ -513,10 +513,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>TextLabel</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Choose make</source>
         <translation type="unfinished"></translation>
     </message>
@@ -614,6 +610,46 @@
     </message>
     <message>
         <source>New name</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Output</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Compilation Stages</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Stop after the preprocessing stage</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Stop after the compilation proper stage</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Stop after the assembling stage</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Link and generate the executable </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Preprocessing output suffix</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Assembling output suffix</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Compiling output suffix</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Executable suffix</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -4497,6 +4533,22 @@
         <source>Template %1 already exists. Do you want to overwrite?</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Wrong Compiler Settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Compiler is set not to generate executable.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>We need the executabe to run problem case.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Please correct this before start debugging</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>NewClassDialog</name>
@@ -5714,10 +5766,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Link an Objective C program (-lobjc)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Do not use standard system libraries (-nostdlib)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5731,18 +5779,6 @@
     </message>
     <message>
         <source>Generate debugging information (-g3)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Output</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Put comments in generated assembly code (-fverbose-asm)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Do not assemble, compile and generate the assemble code (-S)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5839,10 +5875,6 @@
     </message>
     <message>
         <source>This CPU</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Do not compile, stop after the preprocessing stage (-E)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

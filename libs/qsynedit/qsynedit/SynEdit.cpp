@@ -63,23 +63,23 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent),
 #error "Not supported!"
 #endif
     mFontDummy.setStyleStrategy(QFont::PreferAntialias);
-    mDocument = std::make_shared<SynDocument>(mFontDummy, mFontDummy, this);
+    mDocument = std::make_shared<Document>(mFontDummy, mFontDummy, this);
     //fPlugins := TList.Create;
     mMouseMoved = false;
     mUndoing = false;
-    mDocument->connect(mDocument.get(), &SynDocument::changed, this, &SynEdit::onLinesChanged);
-    mDocument->connect(mDocument.get(), &SynDocument::changing, this, &SynEdit::onLinesChanging);
-    mDocument->connect(mDocument.get(), &SynDocument::cleared, this, &SynEdit::onLinesCleared);
-    mDocument->connect(mDocument.get(), &SynDocument::deleted, this, &SynEdit::onLinesDeleted);
-    mDocument->connect(mDocument.get(), &SynDocument::inserted, this, &SynEdit::onLinesInserted);
-    mDocument->connect(mDocument.get(), &SynDocument::putted, this, &SynEdit::onLinesPutted);
+    mDocument->connect(mDocument.get(), &Document::changed, this, &SynEdit::onLinesChanged);
+    mDocument->connect(mDocument.get(), &Document::changing, this, &SynEdit::onLinesChanging);
+    mDocument->connect(mDocument.get(), &Document::cleared, this, &SynEdit::onLinesCleared);
+    mDocument->connect(mDocument.get(), &Document::deleted, this, &SynEdit::onLinesDeleted);
+    mDocument->connect(mDocument.get(), &Document::inserted, this, &SynEdit::onLinesInserted);
+    mDocument->connect(mDocument.get(), &Document::putted, this, &SynEdit::onLinesPutted);
 
     mGutterWidth = 0;
     mScrollBars = ScrollStyle::ssBoth;
 
-    mUndoList = std::make_shared<SynEditUndoList>();
-    mUndoList->connect(mUndoList.get(), &SynEditUndoList::addedUndo, this, &SynEdit::onUndoAdded);
-    mRedoList = std::make_shared<SynEditRedoList>();
+    mUndoList = std::make_shared<UndoList>();
+    mUndoList->connect(mUndoList.get(), &UndoList::addedUndo, this, &SynEdit::onUndoAdded);
+    mRedoList = std::make_shared<RedoList>();
 //    mRedoList->connect(mRedoList.get(), &SynEditUndoList::addedUndo, this, &SynEdit::onRedoAdded);
 
     mForegroundColor=palette().color(QPalette::Text);
@@ -451,7 +451,7 @@ void SynEdit::endUndoBlock()
 void SynEdit::addCaretToUndo()
 {
     BufferCoord p=caretXY();
-    mUndoList->addChange(SynChangeReason::Caret,p,p,QStringList(), mActiveSelectionMode);
+    mUndoList->addChange(ChangeReason::Caret,p,p,QStringList(), mActiveSelectionMode);
 }
 
 void SynEdit::addLeftTopToUndo()
@@ -459,12 +459,12 @@ void SynEdit::addLeftTopToUndo()
     BufferCoord p;
     p.ch = leftChar();
     p.line = topLine();
-    mUndoList->addChange(SynChangeReason::LeftTop,p,p,QStringList(), mActiveSelectionMode);
+    mUndoList->addChange(ChangeReason::LeftTop,p,p,QStringList(), mActiveSelectionMode);
 }
 
 void SynEdit::addSelectionToUndo()
 {
-    mUndoList->addChange(SynChangeReason::Selection,mBlockBegin,
+    mUndoList->addChange(ChangeReason::Selection,mBlockBegin,
                          mBlockEnd,QStringList(),mActiveSelectionMode);
 }
 
@@ -1777,7 +1777,7 @@ void SynEdit::doComment()
         endLine = origBlockEnd.line - 1;
     for (int i = origBlockBegin.line - 1; i<=endLine; i++) {
         mDocument->putString(i, "//" + mDocument->getString(i));
-        mUndoList->addChange(SynChangeReason::Insert,
+        mUndoList->addChange(ChangeReason::Insert,
               BufferCoord{1, i + 1},
               BufferCoord{3, i + 1},
               QStringList(), SelectionMode::Normal);
@@ -1826,7 +1826,7 @@ void SynEdit::doUncomment()
         if ((j + 1 < s.length()) && (s[j] == '/') && (s[j + 1] == '/')) {
             s.remove(j,2);
             mDocument->putString(i,s);
-            mUndoList->addChange(SynChangeReason::Delete,
+            mUndoList->addChange(ChangeReason::Delete,
                                  BufferCoord{j+1, i + 1},
                                  BufferCoord{j + 3, i + 1},
                                  changeText, SelectionMode::Normal);
@@ -2085,7 +2085,7 @@ void SynEdit::doDeleteLastChar()
         }
     }
     if ((Caret.ch != mCaretX) || (Caret.line != mCaretY)) {
-        mUndoList->addChange(SynChangeReason::Delete, caretXY(), Caret, helper,
+        mUndoList->addChange(ChangeReason::Delete, caretXY(), Caret, helper,
                         mActiveSelectionMode);
         if (shouldAddGroupBreak)
             mUndoList->addGroupBreak();
@@ -2152,7 +2152,7 @@ void SynEdit::doDeleteCurrentChar()
             }
         }
         if ((Caret.ch != mCaretX) || (Caret.line != mCaretY)) {
-            mUndoList->addChange(SynChangeReason::Delete, caretXY(), Caret,
+            mUndoList->addChange(ChangeReason::Delete, caretXY(), Caret,
                   helper, mActiveSelectionMode);
             if (shouldAddGroupBreak)
                 mUndoList->addGroupBreak();
@@ -2237,7 +2237,7 @@ void SynEdit::doDeleteLine()
         if (mCaretY == mDocument->count()) {
             if (mDocument->count()==1) {
                 mDocument->putString(mCaretY - 1,"");
-                mUndoList->addChange(SynChangeReason::Delete,
+                mUndoList->addChange(ChangeReason::Delete,
                                      BufferCoord{1, mCaretY},
                                      BufferCoord{helper.length() + 1, mCaretY},
                                      helper, SelectionMode::Normal);
@@ -2245,7 +2245,7 @@ void SynEdit::doDeleteLine()
                 QString s = mDocument->getString(mCaretY-2);
                 mDocument->deleteAt(mCaretY - 1);
                 helper.insert(0,"");
-                mUndoList->addChange(SynChangeReason::Delete,
+                mUndoList->addChange(ChangeReason::Delete,
                                      BufferCoord{s.length()+1, mCaretY-1},
                                      BufferCoord{helper.length() + 1, mCaretY},
                                      helper, SelectionMode::Normal);
@@ -2255,7 +2255,7 @@ void SynEdit::doDeleteLine()
         } else {
             mDocument->deleteAt(mCaretY - 1);
             helper.append("");
-            mUndoList->addChange(SynChangeReason::Delete,
+            mUndoList->addChange(ChangeReason::Delete,
                                  BufferCoord{1, mCaretY},
                                  BufferCoord{helper.length() + 1, mCaretY},
                                  helper, SelectionMode::Normal);
@@ -2286,10 +2286,10 @@ void SynEdit::doDuplicateLine()
         doLinesInserted(mCaretY + 1, 1);
         mUndoList->beginBlock();
         addCaretToUndo();
-        mUndoList->addChange(SynChangeReason::LineBreak,
+        mUndoList->addChange(ChangeReason::LineBreak,
                              BufferCoord{s.length()+1,mCaretY},
                              BufferCoord{s.length()+1,mCaretY}, QStringList(), SelectionMode::Normal);
-        mUndoList->addChange(SynChangeReason::Insert,
+        mUndoList->addChange(ChangeReason::Insert,
                              BufferCoord{1,mCaretY+1},
                              BufferCoord{s.length()+1,mCaretY+1}, QStringList(), SelectionMode::Normal);
         mUndoList->endBlock();
@@ -2333,7 +2333,7 @@ void SynEdit::doMoveSelUp()
                   BufferCoord{origBlockEnd.ch, origBlockEnd.line - 1}
         );
         if (!mUndoing) {
-            mUndoList->addChange(SynChangeReason::MoveSelectionUp,
+            mUndoList->addChange(ChangeReason::MoveSelectionUp,
                     origBlockBegin,
                     origBlockEnd,
                     QStringList(),
@@ -2377,7 +2377,7 @@ void SynEdit::doMoveSelDown()
                     );
 
         if (!mUndoing) {
-            mUndoList->addChange(SynChangeReason::MoveSelectionDown,
+            mUndoList->addChange(ChangeReason::MoveSelectionDown,
                     origBlockBegin,
                     origBlockEnd,
                     QStringList(),
@@ -2444,7 +2444,7 @@ void SynEdit::insertLine(bool moveCaret)
     QString leftLineText = lineText().mid(0, mCaretX - 1);
     QString rightLineText = lineText().mid(mCaretX-1);
     if (!mUndoing)
-        mUndoList->addChange(SynChangeReason::LineBreak, caretXY(), caretXY(), QStringList(rightLineText),
+        mUndoList->addChange(ChangeReason::LineBreak, caretXY(), caretXY(), QStringList(rightLineText),
               SelectionMode::Normal);
     bool notInComment=true;
     properSetLine(mCaretY-1,leftLineText);
@@ -2483,7 +2483,7 @@ void SynEdit::insertLine(bool moveCaret)
             indentSpacesForRightLineText = GetLeftSpacing(indentSpaces,true);
             mDocument->insert(mCaretY, indentSpacesForRightLineText);
             nLinesInserted++;
-            mUndoList->addChange(SynChangeReason::LineBreak, caretXY(), caretXY(), QStringList(),
+            mUndoList->addChange(ChangeReason::LineBreak, caretXY(), caretXY(), QStringList(),
                     SelectionMode::Normal);
         }
         //insert new line in middle of "{" and "}"
@@ -2495,7 +2495,7 @@ void SynEdit::insertLine(bool moveCaret)
             indentSpacesForRightLineText = GetLeftSpacing(indentSpaces,true);
             mDocument->insert(mCaretY, indentSpacesForRightLineText);
             nLinesInserted++;
-            mUndoList->addChange(SynChangeReason::LineBreak, caretXY(), caretXY(), QStringList(),
+            mUndoList->addChange(ChangeReason::LineBreak, caretXY(), caretXY(), QStringList(),
                     SelectionMode::Normal);
         }
     }
@@ -2776,8 +2776,8 @@ void SynEdit::doBlockIndent()
 //    }
 //    strToInsert.append(spaces);
     mUndoList->beginBlock();
-    mUndoList->addChange(SynChangeReason::Caret, oldCaretPos, oldCaretPos,QStringList(), activeSelectionMode());
-    mUndoList->addChange(SynChangeReason::Selection,mBlockBegin,mBlockEnd,QStringList(), activeSelectionMode());
+    mUndoList->addChange(ChangeReason::Caret, oldCaretPos, oldCaretPos,QStringList(), activeSelectionMode());
+    mUndoList->addChange(ChangeReason::Selection,mBlockBegin,mBlockEnd,QStringList(), activeSelectionMode());
     int ch;
     if (mActiveSelectionMode == SelectionMode::Column)
       ch = std::min(BB.ch, BE.ch);
@@ -2789,7 +2789,7 @@ void SynEdit::doBlockIndent()
         QString line=mDocument->getString(i-1);
         if (ch>line.length()) {
             mUndoList->addChange(
-                        SynChangeReason::Insert,
+                        ChangeReason::Insert,
                         BufferCoord{line.length(), i},
                         BufferCoord{line.length()+spaces.length(), i},
                         QStringList(),
@@ -2797,7 +2797,7 @@ void SynEdit::doBlockIndent()
             line+=spaces;
         } else {
             mUndoList->addChange(
-                        SynChangeReason::Insert,
+                        ChangeReason::Insert,
                         BufferCoord{ch, i},
                         BufferCoord{ch+spaces.length(), i},
                         QStringList(),
@@ -2834,8 +2834,8 @@ void SynEdit::doBlockUnindent()
     BufferCoord oldCaretPos = caretXY();
     int x = 0;
     mUndoList->beginBlock();
-    mUndoList->addChange(SynChangeReason::Caret, oldCaretPos, oldCaretPos,QStringList(), activeSelectionMode());
-    mUndoList->addChange(SynChangeReason::Selection,mBlockBegin,mBlockEnd,QStringList(), activeSelectionMode());
+    mUndoList->addChange(ChangeReason::Caret, oldCaretPos, oldCaretPos,QStringList(), activeSelectionMode());
+    mUndoList->addChange(ChangeReason::Selection,mBlockBegin,mBlockEnd,QStringList(), activeSelectionMode());
 
     int e = BE.line;
     // convert selection to complete lines
@@ -2863,7 +2863,7 @@ void SynEdit::doBlockUnindent()
             x = charsToDelete;
         QString tempString = line.mid(charsToDelete);
         mDocument->putString(i-1,tempString);
-        mUndoList->addChange(SynChangeReason::Delete,
+        mUndoList->addChange(ChangeReason::Delete,
                              BufferCoord{1,i},
                              BufferCoord{charsToDelete+1,i},
                              QStringList(line.left(charsToDelete)),
@@ -2944,14 +2944,14 @@ void SynEdit::doAddChar(QChar AChar)
                         setBlockBegin(caretXY());
                         setBlockEnd(caretXY());
                         mUndoList->addChange(
-                                    SynChangeReason::Delete,
+                                    ChangeReason::Delete,
                                     BufferCoord{1, oldCaretY},
                                     BufferCoord{line.length()+1, oldCaretY},
                                     QStringList(line),
                                     SelectionMode::Normal
                                     );
                         mUndoList->addChange(
-                                    SynChangeReason::Insert,
+                                    ChangeReason::Insert,
                                     BufferCoord{1, oldCaretY},
                                     BufferCoord{newLine.length()+1, oldCaretY},
                                     QStringList(),
@@ -2970,14 +2970,14 @@ void SynEdit::doAddChar(QChar AChar)
                         setBlockBegin(caretXY());
                         setBlockEnd(caretXY());
                         mUndoList->addChange(
-                                    SynChangeReason::Delete,
+                                    ChangeReason::Delete,
                                     BufferCoord{1, oldCaretY},
                                     BufferCoord{line.length()+1, oldCaretY},
                                     QStringList(line),
                                     SelectionMode::Normal
                                     );
                         mUndoList->addChange(
-                                    SynChangeReason::Insert,
+                                    ChangeReason::Insert,
                                     BufferCoord{1, oldCaretY},
                                     BufferCoord{newLine.length()+1, oldCaretY},
                                     QStringList(),
@@ -3000,14 +3000,14 @@ void SynEdit::doAddChar(QChar AChar)
                         setBlockBegin(caretXY());
                         setBlockEnd(caretXY());
                         mUndoList->addChange(
-                                    SynChangeReason::Delete,
+                                    ChangeReason::Delete,
                                     BufferCoord{1, oldCaretY},
                                     BufferCoord{left.length()+1, oldCaretY},
                                     QStringList(left),
                                     SelectionMode::Normal
                                     );
                         mUndoList->addChange(
-                                    SynChangeReason::Insert,
+                                    ChangeReason::Insert,
                                     BufferCoord{1, oldCaretY},
                                     BufferCoord{newLeft.length()+1, oldCaretY},
                                     QStringList(""),
@@ -4297,16 +4297,16 @@ void SynEdit::doUndo()
         return;
 
     //Remove Group Break;
-    while (mUndoList->lastChangeReason() ==  SynChangeReason::GroupBreak) {
-        PSynEditUndoItem item = mUndoList->popItem();
+    while (mUndoList->lastChangeReason() ==  ChangeReason::GroupBreak) {
+        PUndoItem item = mUndoList->popItem();
         mRedoList->addRedo(item);
     }
 
-    PSynEditUndoItem item = mUndoList->peekItem();
+    PUndoItem item = mUndoList->peekItem();
     if (item) {
         size_t oldChangeNumber = item->changeNumber();
         {
-            SynChangeReason  lastChange = mUndoList->lastChangeReason();
+            ChangeReason  lastChange = mUndoList->lastChangeReason();
             bool keepGoing;
             do {
                 doUndoItem();
@@ -4335,7 +4335,7 @@ void SynEdit::doUndoItem()
     mUndoing = true;
     bool ChangeScrollPastEol = ! mOptions.testFlag(eoScrollPastEol);
 
-    PSynEditUndoItem item = mUndoList->popItem();
+    PUndoItem item = mUndoList->popItem();
     if (item) {
         setActiveSelectionMode(item->changeSelMode());
         incPaintLock();
@@ -4347,7 +4347,7 @@ void SynEdit::doUndoItem()
         });
         mOptions.setFlag(eoScrollPastEol);
         switch(item->changeReason()) {
-        case SynChangeReason::Caret:
+        case ChangeReason::Caret:
             mRedoList->addRedo(
                         item->changeReason(),
                         caretXY(),
@@ -4356,7 +4356,7 @@ void SynEdit::doUndoItem()
                         item->changeNumber());
             internalSetCaretXY(item->changeStartPos());
             break;
-        case SynChangeReason::LeftTop:
+        case ChangeReason::LeftTop:
             BufferCoord p;
             p.ch = leftChar();
             p.line = topLine();
@@ -4369,7 +4369,7 @@ void SynEdit::doUndoItem()
             setLeftChar(item->changeStartPos().ch);
             setTopLine(item->changeStartPos().line);
             break;
-        case SynChangeReason::Selection:
+        case ChangeReason::Selection:
             mRedoList->addRedo(
                         item->changeReason(),
                         mBlockBegin,
@@ -4379,7 +4379,7 @@ void SynEdit::doUndoItem()
                         item->changeNumber());
             setCaretAndSelection(caretXY(), item->changeStartPos(), item->changeEndPos());
             break;
-        case SynChangeReason::Insert: {
+        case ChangeReason::Insert: {
             QStringList tmpText = getContent(item->changeStartPos(),item->changeEndPos(),item->changeSelMode());
             doDeleteText(item->changeStartPos(),item->changeEndPos(),item->changeSelMode());
             mRedoList->addRedo(
@@ -4392,7 +4392,7 @@ void SynEdit::doUndoItem()
             internalSetCaretXY(item->changeStartPos());
             break;
         }
-        case SynChangeReason::MoveSelectionUp:
+        case ChangeReason::MoveSelectionUp:
             setBlockBegin(BufferCoord{item->changeStartPos().ch, item->changeStartPos().line-1});
             setBlockEnd(BufferCoord{item->changeEndPos().ch, item->changeEndPos().line-1});
             doMoveSelDown();
@@ -4404,7 +4404,7 @@ void SynEdit::doUndoItem()
                         item->changeSelMode(),
                         item->changeNumber());
             break;
-        case SynChangeReason::MoveSelectionDown:
+        case ChangeReason::MoveSelectionDown:
             setBlockBegin(BufferCoord{item->changeStartPos().ch, item->changeStartPos().line+1});
             setBlockEnd(BufferCoord{item->changeEndPos().ch, item->changeEndPos().line+1});
             doMoveSelUp();
@@ -4416,7 +4416,7 @@ void SynEdit::doUndoItem()
                         item->changeSelMode(),
                         item->changeNumber());
             break;
-        case SynChangeReason::Delete: {
+        case ChangeReason::Delete: {
             // If there's no selection, we have to set
             // the Caret's position manualy.
 //            qDebug()<<"undo delete";
@@ -4436,7 +4436,7 @@ void SynEdit::doUndoItem()
             ensureCursorPosVisible();
             break;
         }
-        case SynChangeReason::LineBreak:{
+        case ChangeReason::LineBreak:{
             QString s;
             if (!item->changeText().isEmpty()) {
                 s=item->changeText()[0];
@@ -4472,17 +4472,17 @@ void SynEdit::doRedo()
     if (mReadOnly)
         return;
 
-    PSynEditUndoItem item = mRedoList->peekItem();
+    PUndoItem item = mRedoList->peekItem();
     if (!item)
         return;
     size_t oldChangeNumber = item->changeNumber();
 
     //skip group chain breakers
-    while (mRedoList->lastChangeReason()==SynChangeReason::GroupBreak) {
-        PSynEditUndoItem item = mRedoList->popItem();
+    while (mRedoList->lastChangeReason()==ChangeReason::GroupBreak) {
+        PUndoItem item = mRedoList->popItem();
         mUndoList->restoreChange(item);
     }
-    SynChangeReason lastChange = mRedoList->lastChangeReason();
+    ChangeReason lastChange = mRedoList->lastChangeReason();
     bool keepGoing;
     do {
       doRedoItem();
@@ -4502,8 +4502,8 @@ void SynEdit::doRedo()
     } while (keepGoing);
 
     //restore Group Break
-    while (mRedoList->lastChangeReason()==SynChangeReason::GroupBreak) {
-        PSynEditUndoItem item = mRedoList->popItem();
+    while (mRedoList->lastChangeReason()==ChangeReason::GroupBreak) {
+        PUndoItem item = mRedoList->popItem();
         mUndoList->restoreChange(item);
     }
     updateModifiedStatus();
@@ -4514,7 +4514,7 @@ void SynEdit::doRedoItem()
 {
     mUndoing = true;
     bool ChangeScrollPastEol = ! mOptions.testFlag(eoScrollPastEol);
-    PSynEditUndoItem item = mRedoList->popItem();
+    PUndoItem item = mRedoList->popItem();
     if (item) {
         setActiveSelectionMode(item->changeSelMode());
         incPaintLock();
@@ -4528,7 +4528,7 @@ void SynEdit::doRedoItem()
             decPaintLock();
         });
         switch(item->changeReason()) {
-        case SynChangeReason::Caret:
+        case ChangeReason::Caret:
             mUndoList->restoreChange(
                         item->changeReason(),
                         caretXY(),
@@ -4538,7 +4538,7 @@ void SynEdit::doRedoItem()
                         item->changeNumber());
             internalSetCaretXY(item->changeStartPos());
             break;
-        case SynChangeReason::LeftTop:
+        case ChangeReason::LeftTop:
             BufferCoord p;
             p.ch = leftChar();
             p.line = topLine();
@@ -4551,7 +4551,7 @@ void SynEdit::doRedoItem()
             setLeftChar(item->changeStartPos().ch);
             setTopLine(item->changeStartPos().line);
             break;
-        case SynChangeReason::Selection:
+        case ChangeReason::Selection:
             mUndoList->restoreChange(
                         item->changeReason(),
                         mBlockBegin,
@@ -4564,7 +4564,7 @@ void SynEdit::doRedoItem()
                         item->changeStartPos(),
                         item->changeEndPos());
             break;
-        case SynChangeReason::MoveSelectionUp:
+        case ChangeReason::MoveSelectionUp:
             setBlockBegin(BufferCoord{item->changeStartPos().ch, item->changeStartPos().line});
             setBlockEnd(BufferCoord{item->changeEndPos().ch, item->changeEndPos().line});
             doMoveSelUp();
@@ -4576,7 +4576,7 @@ void SynEdit::doRedoItem()
                         item->changeSelMode(),
                         item->changeNumber());
             break;
-        case SynChangeReason::MoveSelectionDown:
+        case ChangeReason::MoveSelectionDown:
             setBlockBegin(BufferCoord{item->changeStartPos().ch, item->changeStartPos().line});
             setBlockEnd(BufferCoord{item->changeEndPos().ch, item->changeEndPos().line});
             doMoveSelDown();
@@ -4588,7 +4588,7 @@ void SynEdit::doRedoItem()
                         item->changeSelMode(),
                         item->changeNumber());
             break;
-        case SynChangeReason::Insert:
+        case ChangeReason::Insert:
             setCaretAndSelection(
                         item->changeStartPos(),
                         item->changeStartPos(),
@@ -4604,7 +4604,7 @@ void SynEdit::doRedoItem()
                                  item->changeSelMode(),
                                  item->changeNumber());
             break;
-        case SynChangeReason::Delete: {
+        case ChangeReason::Delete: {
             doDeleteText(item->changeStartPos(),item->changeEndPos(),item->changeSelMode());
             mUndoList->restoreChange(item->changeReason(), item->changeStartPos(),
                                  item->changeEndPos(),item->changeText(),
@@ -4612,7 +4612,7 @@ void SynEdit::doRedoItem()
             internalSetCaretXY(item->changeStartPos());
             break;
         };
-        case SynChangeReason::LineBreak: {
+        case ChangeReason::LineBreak: {
             BufferCoord CaretPt = item->changeStartPos();
             mUndoList->restoreChange(item->changeReason(), item->changeStartPos(),
                                  item->changeEndPos(),item->changeText(),
@@ -4874,7 +4874,7 @@ void SynEdit::setHighlighter(const PHighlighter &highlighter)
     invalidate();
 }
 
-const PSynDocument& SynEdit::document() const
+const PDocument& SynEdit::document() const
 {
     return mDocument;
 }
@@ -5432,7 +5432,7 @@ void SynEdit::doDeleteText(BufferCoord startPos, BufferCoord endPos, SelectionMo
     if (UpdateMarks)
         doLinesDeleted(startPos.line, endPos.line - startPos.line + MarkOffset);
     if (!mUndoing) {
-        mUndoList->addChange(SynChangeReason::Delete,
+        mUndoList->addChange(ChangeReason::Delete,
                              startPos,
                              endPos,
                              deleted,
@@ -5562,7 +5562,7 @@ int SynEdit::doInsertTextByNormalMode(const BufferCoord& pos, const QStringList&
     onLinesPutted(startLine-1,result+1);
     if (!mUndoing) {
         mUndoList->addChange(
-                    SynChangeReason::Insert,
+                    ChangeReason::Insert,
                     pos,newPos,
                     QStringList(),SelectionMode::Normal);
     }
@@ -5595,7 +5595,7 @@ int SynEdit::doInsertTextByColumnMode(const BufferCoord& pos, const QStringList&
                 result++;
                 lineBreakPos.line = line - 1;
                 lineBreakPos.ch = mDocument->getString(line - 2).length() + 1;
-                mUndoList->addChange(SynChangeReason::LineBreak,
+                mUndoList->addChange(ChangeReason::LineBreak,
                                  lineBreakPos,
                                  lineBreakPos,
                                  QStringList(), SelectionMode::Normal);
@@ -5615,7 +5615,7 @@ int SynEdit::doInsertTextByColumnMode(const BufferCoord& pos, const QStringList&
         // Add undo change here from PasteFromClipboard
         if (!mUndoing) {
             mUndoList->addChange(
-                        SynChangeReason::Insert,
+                        ChangeReason::Insert,
                         BufferCoord{insertPos, line},
                         BufferCoord{insertPos+str.length(), line},
                         QStringList(),
@@ -5659,7 +5659,7 @@ int SynEdit::doInsertTextByLineMode(const BufferCoord& pos, const QStringList& t
     }
     if (!mUndoing) {
         mUndoList->addChange(
-                    SynChangeReason::Insert,
+                    ChangeReason::Insert,
                     BufferCoord{1,pos.line},newPos,
                     QStringList(),SelectionMode::Line);
     }
@@ -6692,7 +6692,7 @@ void SynEdit::onUndoAdded()
     // we have to clear the redo information, since adding undo info removes
     // the necessary context to undo earlier edit actions
     if (! mUndoList->insideRedo() &&
-            mUndoList->peekItem() && (mUndoList->peekItem()->changeReason()!=SynChangeReason::GroupBreak))
+            mUndoList->peekItem() && (mUndoList->peekItem()->changeReason()!=ChangeReason::GroupBreak))
         mRedoList->clear();
 
     onChanged();

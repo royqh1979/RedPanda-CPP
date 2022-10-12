@@ -47,6 +47,7 @@ public:
 protected:
     void doLoad() override;
     void doSave() override;
+    void updateIcons(const QSize& size) override;
 
 private:
     void reloadCurrentCompilerSet();
@@ -59,7 +60,6 @@ private slots:
     void on_btnAddCompilerSetByFolder_pressed();
     void on_btnRenameCompilerSet_pressed();
     void on_btnRemoveCompilerSet_pressed();
-    void updateIcons();
 
     void on_cbEncoding_currentTextChanged(const QString &arg1);
     void on_cbEncodingDetails_currentTextChanged(const QString &arg1);

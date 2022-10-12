@@ -8,11 +8,15 @@ Red Panda C++ Version 1.5
   - change: clear tools output panel when start to compile
   - change: don't show syntax check messages in the tools output panel (to reduce longtime memory usage)
   - fix: minor memory leaks when set itemmodels
-  - fix: thread for parsing doesn't correctly released when parsing finished ( so and the parser)
+  - fix: threads for code parsing doesn't correctly released when parsing finished ( so and the parsers they use)
   - enhancement: save project's bookmark in it's own bookmark file
   - enhancement: project and non-project files use different bookmark view (auto switch when switch editors)
   - enhancement: auto merge when save bookmarks.
   - enhancement: add option "max undo memory usage" in the options / editor / misc page
+  - fix: icons in options dialogs  not correctly updated when change icon set
+  - enhancement: set compilation stage in the options / compiler set pages
+  - enhancement: set custom compilation output suffix in the options / compiler set pages
+
 
 Red Panda C++ Version 1.4
 

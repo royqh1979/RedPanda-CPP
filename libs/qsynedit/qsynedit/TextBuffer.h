@@ -29,38 +29,31 @@
 #include "qt_utils/utils.h"
 
 namespace QSynedit {
-enum SynEditStringFlag {
-    sfHasTabs = 0x0001,
-    sfHasNoTabs = 0x0002,
-    sfExpandedLengthUnknown = 0x0004
-};
 
-typedef int SynEditStringFlags;
-
-struct SynDocumentLine {
+struct DocumentLine {
   QString fString;
   HighlighterState fRange;
   int fColumns;  //
 
 public:
-  explicit SynDocumentLine();
+  explicit DocumentLine();
 };
 
-typedef std::shared_ptr<SynDocumentLine> PSynDocumentLine;
+typedef std::shared_ptr<DocumentLine> PDocumentLine;
 
-typedef QVector<PSynDocumentLine> SynDocumentLines;
+typedef QVector<PDocumentLine> DocumentLines;
 
-typedef std::shared_ptr<SynDocumentLines> PSynDocumentLines;
+typedef std::shared_ptr<DocumentLines> PDocumentLines;
 
-class SynDocument;
+class Document;
 
-typedef std::shared_ptr<SynDocument> PSynDocument;
+typedef std::shared_ptr<Document> PDocument;
 
-class SynDocument : public QObject
+class Document : public QObject
 {  
     Q_OBJECT
 public:
-    explicit SynDocument(const QFont& font, const QFont& nonAsciiFont, QObject* parent=nullptr);
+    explicit Document(const QFont& font, const QFont& nonAsciiFont, QObject* parent=nullptr);
 
     int parenthesisLevels(int Index);
     int bracketLevels(int Index);
@@ -139,7 +132,7 @@ private:
     bool tryLoadFileByEncoding(QByteArray encodingName, QFile& file);
 
 private:
-    SynDocumentLines mLines;
+    DocumentLines mLines;
 
     //SynEdit* mEdit;
 
@@ -158,7 +151,7 @@ private:
     int calculateLineColumns(int Index);
 };
 
-enum class SynChangeReason {
+enum class ChangeReason {
     Insert,
     Delete,
     Caret, //just restore the Caret, allowing better Undo behavior
@@ -171,54 +164,56 @@ enum class SynChangeReason {
     Nothing // undo list empty
   };
 
-class SynEditUndoItem {
+class UndoItem {
 private:
-    SynChangeReason mChangeReason;
+    ChangeReason mChangeReason;
     SelectionMode mChangeSelMode;
     BufferCoord mChangeStartPos;
     BufferCoord mChangeEndPos;
     QStringList mChangeText;
     size_t mChangeNumber;
+    unsigned int mMemoryUsage;
 public:
-    SynEditUndoItem(SynChangeReason reason,
+    UndoItem(ChangeReason reason,
         SelectionMode selMode,
         BufferCoord startPos,
         BufferCoord endPos,
         const QStringList& text,
         int number);
 
-    SynChangeReason changeReason() const;
+    ChangeReason changeReason() const;
     SelectionMode changeSelMode() const;
     BufferCoord changeStartPos() const;
     BufferCoord changeEndPos() const;
     QStringList changeText() const;
     size_t changeNumber() const;
+    unsigned int memoryUsage() const;
 };
 
-using PSynEditUndoItem = std::shared_ptr<SynEditUndoItem>;
+using PUndoItem = std::shared_ptr<UndoItem>;
 
-class SynEditUndoList : public QObject {
+class UndoList : public QObject {
     Q_OBJECT
 public:
-    explicit SynEditUndoList();
+    explicit UndoList();
 
-    void addChange(SynChangeReason AReason, const BufferCoord& AStart, const BufferCoord& AEnd,
-      const QStringList& ChangeText, SelectionMode SelMode);
+    void addChange(ChangeReason reason, const BufferCoord& start, const BufferCoord& end,
+      const QStringList& changeText, SelectionMode selMode);
 
-    void restoreChange(SynChangeReason AReason, const BufferCoord& AStart, const BufferCoord& AEnd,
-                       const QStringList& ChangeText, SelectionMode SelMode, size_t changeNumber);
+    void restoreChange(ChangeReason reason, const BufferCoord& start, const BufferCoord& end,
+                       const QStringList& changeText, SelectionMode selMode, size_t changeNumber);
 
-    void restoreChange(PSynEditUndoItem item);
+    void restoreChange(PUndoItem item);
 
     void addGroupBreak();
     void beginBlock();
     void endBlock();
 
     void clear();
-    SynChangeReason lastChangeReason();
+    ChangeReason lastChangeReason();
     bool isEmpty();
-    PSynEditUndoItem peekItem();
-    PSynEditUndoItem popItem();
+    PUndoItem peekItem();
+    PUndoItem popItem();
 
     bool canUndo();
     int itemCount();
@@ -242,8 +237,8 @@ protected:
     void ensureMaxEntries();
     bool inBlock();
     unsigned int getNextChangeNumber();
-    void addMemoryUsage(PSynEditUndoItem item);
-    void reduceMemoryUsage(PSynEditUndoItem item);
+    void addMemoryUsage(PUndoItem item);
+    void reduceMemoryUsage(PUndoItem item);
 protected:
     size_t mBlockChangeNumber;
     int mBlockLock;
@@ -252,7 +247,7 @@ protected:
     size_t mLastPoppedItemChangeNumber;
     size_t mLastRestoredItemChangeNumber;
     bool mFullUndoImposible;
-    QVector<PSynEditUndoItem> mItems;
+    QVector<PUndoItem> mItems;
     int mMaxUndoActions;
     int mMaxMemoryUsage;
     size_t mNextChangeNumber;
@@ -260,31 +255,31 @@ protected:
     bool mInsideRedo;
 };
 
-class SynEditRedoList : public QObject {
+class RedoList : public QObject {
     Q_OBJECT
 public:
-    explicit SynEditRedoList();
+    explicit RedoList();
 
-    void addRedo(SynChangeReason AReason, const BufferCoord& AStart, const BufferCoord& AEnd,
+    void addRedo(ChangeReason AReason, const BufferCoord& AStart, const BufferCoord& AEnd,
                  const QStringList& ChangeText, SelectionMode SelMode, size_t changeNumber);
-    void addRedo(PSynEditUndoItem item);
+    void addRedo(PUndoItem item);
 
     void clear();
-    SynChangeReason lastChangeReason();
+    ChangeReason lastChangeReason();
     bool isEmpty();
-    PSynEditUndoItem peekItem();
-    PSynEditUndoItem popItem();
+    PUndoItem peekItem();
+    PUndoItem popItem();
 
     bool canRedo();
     int itemCount();
 
 protected:
-    QVector<PSynEditUndoItem> mItems;
+    QVector<PUndoItem> mItems;
 };
 
 
-using PSynEditUndoList = std::shared_ptr<SynEditUndoList>;
-using PSynEditRedoList = std::shared_ptr<SynEditRedoList>;
+using PUndoList = std::shared_ptr<UndoList>;
+using PRedoList = std::shared_ptr<RedoList>;
 
 }
 

@@ -91,7 +91,7 @@ void SettingsWidget::disconnectAbstractItemView(QAbstractItemView *pView)
 
 }
 
-void SettingsWidget::updateIcons(const QSize &)
+void SettingsWidget::updateIcons(const QSize & /*size*/)
 {
 
 }

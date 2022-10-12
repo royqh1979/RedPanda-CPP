@@ -182,7 +182,7 @@ void EditorColorSchemeWidget::setCurrentSchemeModified()
 EditorColorSchemeWidget::~EditorColorSchemeWidget()
 {
     delete ui;
-    mDefinesModel.clear();
+    //mDefinesModel.clear();
 }
 
 static void setColorProp(ColorEdit* ce, QCheckBox* cb, const QColor& color) {

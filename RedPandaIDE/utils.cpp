@@ -173,11 +173,6 @@ QString genMakePath2(const QString &fileName)
     return genMakePath(fileName, true, false);
 }
 
-QString getCompiledExecutableName(const QString& filename)
-{
-    return changeFileExt(filename,EXECUTABLE_EXT);
-}
-
 bool programHasConsole(const QString & filename)
 {
 #ifdef Q_OS_WIN
@@ -236,12 +231,19 @@ QString parseMacros(const QString &s)
     }
 
     if (e!=nullptr && !e->inProject()) { // Non-project editor macros
-            result.replace("<EXENAME>", extractFileName(changeFileExt(e->filename(),EXECUTABLE_EXT)));
-            result.replace("<EXEFILE>", localizePath(changeFileExt(e->filename(),EXECUTABLE_EXT)));
-            result.replace("<PROJECTNAME>", extractFileName(e->filename()));
-            result.replace("<PROJECTFILE>", localizePath(e->filename()));
-            result.replace("<PROJECTFILENAME>", extractFileName(e->filename()));
-            result.replace("<PROJECTPATH>", localizePath(extractFileDir(e->filename())));
+        QString exeSuffix;
+        Settings::PCompilerSet compilerSet = pSettings->compilerSets().defaultSet();
+        if (compilerSet) {
+            exeSuffix = compilerSet->executableSuffix();
+        } else {
+            exeSuffix = DEFAULT_EXECUTABLE_SUFFIX;
+        }
+        result.replace("<EXENAME>", extractFileName(changeFileExt(e->filename(), exeSuffix)));
+        result.replace("<EXEFILE>", localizePath(changeFileExt(e->filename(), exeSuffix)));
+        result.replace("<PROJECTNAME>", extractFileName(e->filename()));
+        result.replace("<PROJECTFILE>", localizePath(e->filename()));
+        result.replace("<PROJECTFILENAME>", extractFileName(e->filename()));
+        result.replace("<PROJECTPATH>", localizePath(extractFileDir(e->filename())));
     } else if (pMainWindow->project()) {
         result.replace("<EXENAME>", extractFileName(pMainWindow->project()->executable()));
         result.replace("<EXEFILE>", localizePath(pMainWindow->project()->executable()));

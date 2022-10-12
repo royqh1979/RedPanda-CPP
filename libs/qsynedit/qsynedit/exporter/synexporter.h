@@ -43,7 +43,7 @@ public:
      * @brief Exports everything in the strings parameter to the output buffer.
      * @param ALines
      */
-    void ExportAll(PSynDocument ALines);
+    void ExportAll(PDocument ALines);
 
     /**
      * @brief Exports the given range of the strings parameter to the output buffer.
@@ -51,7 +51,7 @@ public:
      * @param Start
      * @param Stop
      */
-    void ExportRange(PSynDocument ALines,
+    void ExportRange(PDocument ALines,
                      BufferCoord Start, BufferCoord Stop);
     /**
      * @brief Saves the contents of the output buffer to a file.

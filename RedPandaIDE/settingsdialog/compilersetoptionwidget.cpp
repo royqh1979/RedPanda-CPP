@@ -47,9 +47,10 @@ CompilerSetOptionWidget::CompilerSetOptionWidget(const QString& name, const QStr
     connect(ui->chkUseCustomLinkParams, &QCheckBox::stateChanged,
              ui->txtCustomLinkParams, &QPlainTextEdit::setEnabled);
 
-    connect(pIconsManager, &IconsManager::actionIconsUpdated,
-            this, &CompilerSetOptionWidget::updateIcons);
-    updateIcons();
+    updateIcons(pIconsManager->actionIconSize());
+#ifdef Q_OS_WIN
+    ui->txtExecutableSuffix->setReadOnly(true);
+#endif
 }
 
 CompilerSetOptionWidget::~CompilerSetOptionWidget()
@@ -116,6 +117,20 @@ static void loadCompilerSetSettings(Settings::PCompilerSet pSet, Ui::CompilerSet
             ui->cbEncodingDetails->addItem(info->name);
         }
         ui->cbEncodingDetails->setCurrentText(encoding);
+    }
+
+    ui->txtPreprocessingSuffix->setText(pSet->preprocessingSuffix());
+    ui->txtCompilationSuffix->setText(pSet->compilationProperSuffix());
+    ui->txtExecutableSuffix->setText(pSet->executableSuffix());
+    switch(pSet->compilationStage()) {
+    case Settings::CompilerSet::CompilationStage::PreprocessingOnly:
+        ui->rbPreprocessingOnly->setChecked(true);
+        break;
+    case Settings::CompilerSet::CompilationStage::CompilationProperOnly:
+        ui->rbCompilationProperOnly->setChecked(true);
+        break;
+    default:
+        ui->rbGenerateExecutable->setChecked(true);
     }
 }
 
@@ -208,6 +223,16 @@ void CompilerSetOptionWidget::saveCurrentCompilerSet()
     //read values in the options widget
     pSet->setCompileOptions(ui->optionTabs->arguments(false));
 
+    if (ui->rbPreprocessingOnly->isChecked()) {
+        pSet->setCompilationStage(Settings::CompilerSet::CompilationStage::PreprocessingOnly);
+    } else if (ui->rbCompilationProperOnly->isChecked()) {
+        pSet->setCompilationStage(Settings::CompilerSet::CompilationStage::CompilationProperOnly);
+    } else if (ui->rbGenerateExecutable->isChecked()) {
+        pSet->setCompilationStage(Settings::CompilerSet::CompilationStage::GenerateExecutable);
+    }
+    pSet->setPreprocessingSuffix(ui->txtPreprocessingSuffix->text());
+    pSet->setCompilationProperSuffix(ui->txtCompilationSuffix->text());
+    pSet->setExecutableSuffix(ui->txtExecutableSuffix->text());
 }
 
 void CompilerSetOptionWidget::on_btnFindCompilers_pressed()
@@ -272,7 +297,7 @@ void CompilerSetOptionWidget::on_btnRemoveCompilerSet_pressed()
     doLoad();
 }
 
-void CompilerSetOptionWidget::updateIcons()
+void CompilerSetOptionWidget::updateIcons(const QSize& /*size*/)
 {
     pIconsManager->setIcon(ui->btnFindCompilers, IconsManager::ACTION_EDIT_SEARCH);
     pIconsManager->setIcon(ui->btnAddCompilerSetByFolder, IconsManager::ACTION_FILE_OPEN_FOLDER);

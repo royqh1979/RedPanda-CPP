@@ -30,7 +30,7 @@
 
 namespace QSynedit {
 
-SynDocument::SynDocument(const QFont& font, const QFont& nonAsciiFont, QObject *parent):
+Document::Document(const QFont& font, const QFont& nonAsciiFont, QObject *parent):
       QObject(parent),
       mFontMetrics(font),
       mNonAsciiFontMetrics(nonAsciiFont),
@@ -51,7 +51,7 @@ static void ListIndexOutOfBounds(int index) {
 
 
 
-int SynDocument::parenthesisLevels(int Index)
+int Document::parenthesisLevels(int Index)
 {
     QMutexLocker locker(&mMutex);
     if (Index>=0 && Index < mLines.size()) {
@@ -60,7 +60,7 @@ int SynDocument::parenthesisLevels(int Index)
         return 0;
 }
 
-int SynDocument::bracketLevels(int Index)
+int Document::bracketLevels(int Index)
 {
     QMutexLocker locker(&mMutex);
     if (Index>=0 && Index < mLines.size()) {
@@ -69,7 +69,7 @@ int SynDocument::bracketLevels(int Index)
         return 0;
 }
 
-int SynDocument::braceLevels(int Index)
+int Document::braceLevels(int Index)
 {
     QMutexLocker locker(&mMutex);
     if (Index>=0 && Index < mLines.size()) {
@@ -78,18 +78,7 @@ int SynDocument::braceLevels(int Index)
         return 0;
 }
 
-//QString SynEditStringList::expandedStrings(int Index)
-//{
-//    if (Index>=0 && Index < mList.size()) {
-//        if (mList[Index]->fFlags & SynEditStringFlag::sfHasNoTabs)
-//            return mList[Index]->fString;
-//        else
-//            return ExpandString(Index);
-//    } else
-//        return QString();
-//}
-
-int SynDocument::lineColumns(int Index)
+int Document::lineColumns(int Index)
 {
     QMutexLocker locker(&mMutex);
     if (Index>=0 && Index < mLines.size()) {
@@ -101,7 +90,7 @@ int SynDocument::lineColumns(int Index)
         return 0;
 }
 
-int SynDocument::leftBraces(int Index)
+int Document::leftBraces(int Index)
 {
     QMutexLocker locker(&mMutex);
     if (Index>=0 && Index < mLines.size()) {
@@ -110,7 +99,7 @@ int SynDocument::leftBraces(int Index)
         return 0;
 }
 
-int SynDocument::rightBraces(int Index)
+int Document::rightBraces(int Index)
 {
     QMutexLocker locker(&mMutex);
     if (Index>=0 && Index < mLines.size()) {
@@ -119,7 +108,7 @@ int SynDocument::rightBraces(int Index)
         return 0;
 }
 
-int SynDocument::lengthOfLongestLine() {
+int Document::lengthOfLongestLine() {
     QMutexLocker locker(&mMutex);
     if (mIndexOfLongestLine < 0) {
         int MaxLen = -1;
@@ -140,7 +129,7 @@ int SynDocument::lengthOfLongestLine() {
         return 0;
 }
 
-QString SynDocument::lineBreak() const
+QString Document::lineBreak() const
 {
     switch(mFileEndingType) {
     case FileEndingType::Linux:
@@ -153,7 +142,7 @@ QString SynDocument::lineBreak() const
     return "\n";
 }
 
-HighlighterState SynDocument::ranges(int Index)
+HighlighterState Document::ranges(int Index)
 {
     QMutexLocker locker(&mMutex);
     if (Index>=0 && Index < mLines.size()) {
@@ -164,39 +153,39 @@ HighlighterState SynDocument::ranges(int Index)
     return HighlighterState();
 }
 
-void SynDocument::insertItem(int Index, const QString &s)
+void Document::insertItem(int Index, const QString &s)
 {
     beginUpdate();
-    PSynDocumentLine line = std::make_shared<SynDocumentLine>();
+    PDocumentLine line = std::make_shared<DocumentLine>();
     line->fString = s;
     mIndexOfLongestLine = -1;
     mLines.insert(Index,line);
     endUpdate();
 }
 
-void SynDocument::addItem(const QString &s)
+void Document::addItem(const QString &s)
 {
     beginUpdate();
-    PSynDocumentLine line = std::make_shared<SynDocumentLine>();
+    PDocumentLine line = std::make_shared<DocumentLine>();
     line->fString = s;
     mIndexOfLongestLine = -1;
     mLines.append(line);
     endUpdate();
 }
 
-bool SynDocument::getAppendNewLineAtEOF()
+bool Document::getAppendNewLineAtEOF()
 {
     QMutexLocker locker(&mMutex);
     return mAppendNewLineAtEOF;
 }
 
-void SynDocument::setAppendNewLineAtEOF(bool appendNewLineAtEOF)
+void Document::setAppendNewLineAtEOF(bool appendNewLineAtEOF)
 {
     QMutexLocker locker(&mMutex);
     mAppendNewLineAtEOF = appendNewLineAtEOF;
 }
 
-void SynDocument::setRange(int Index, const HighlighterState& ARange)
+void Document::setRange(int Index, const HighlighterState& ARange)
 {
     QMutexLocker locker(&mMutex);
     if (Index<0 || Index>=mLines.count()) {
@@ -207,7 +196,7 @@ void SynDocument::setRange(int Index, const HighlighterState& ARange)
     endUpdate();
 }
 
-QString SynDocument::getString(int Index)
+QString Document::getString(int Index)
 {
     QMutexLocker locker(&mMutex);
     if (Index<0 || Index>=mLines.count()) {
@@ -216,25 +205,25 @@ QString SynDocument::getString(int Index)
     return mLines[Index]->fString;
 }
 
-int SynDocument::count()
+int Document::count()
 {
     QMutexLocker locker(&mMutex);
     return mLines.count();
 }
 
-QString SynDocument::text()
+QString Document::text()
 {
     QMutexLocker locker(&mMutex);
     return getTextStr();
 }
 
-void SynDocument::setText(const QString &text)
+void Document::setText(const QString &text)
 {
     QMutexLocker locker(&mMutex);
     putTextStr(text);
 }
 
-void SynDocument::setContents(const QStringList &text)
+void Document::setContents(const QStringList &text)
 {
     QMutexLocker locker(&mMutex);
     beginUpdate();
@@ -253,18 +242,18 @@ void SynDocument::setContents(const QStringList &text)
     }
 }
 
-QStringList SynDocument::contents()
+QStringList Document::contents()
 {
     QMutexLocker locker(&mMutex);
     QStringList Result;
-    SynDocumentLines list = mLines;
-    foreach (const PSynDocumentLine& line, list) {
+    DocumentLines list = mLines;
+    foreach (const PDocumentLine& line, list) {
         Result.append(line->fString);
     }
     return Result;
 }
 
-void SynDocument::beginUpdate()
+void Document::beginUpdate()
 {
     if (mUpdateCount == 0) {
         setUpdateState(true);
@@ -272,7 +261,7 @@ void SynDocument::beginUpdate()
     mUpdateCount++;
 }
 
-void SynDocument::endUpdate()
+void Document::endUpdate()
 {
     mUpdateCount--;
     if (mUpdateCount == 0) {
@@ -281,7 +270,7 @@ void SynDocument::endUpdate()
 }
 
 
-int SynDocument::add(const QString &s)
+int Document::add(const QString &s)
 {
     QMutexLocker locker(&mMutex);
     beginUpdate();
@@ -292,7 +281,7 @@ int SynDocument::add(const QString &s)
     return Result;
 }
 
-void SynDocument::addStrings(const QStringList &Strings)
+void Document::addStrings(const QStringList &Strings)
 {
     QMutexLocker locker(&mMutex);
     if (Strings.count() > 0) {
@@ -310,11 +299,11 @@ void SynDocument::addStrings(const QStringList &Strings)
     }
 }
 
-int SynDocument::getTextLength()
+int Document::getTextLength()
 {
     QMutexLocker locker(&mMutex);
     int Result = 0;
-    foreach (const PSynDocumentLine& line, mLines ) {
+    foreach (const PDocumentLine& line, mLines ) {
         Result += line->fString.length();
         if (mFileEndingType == FileEndingType::Windows) {
             Result += 2;
@@ -325,13 +314,13 @@ int SynDocument::getTextLength()
     return Result;
 }
 
-void SynDocument::clear()
+void Document::clear()
 {
     QMutexLocker locker(&mMutex);
     internalClear();
 }
 
-void SynDocument::deleteLines(int Index, int NumLines)
+void Document::deleteLines(int Index, int NumLines)
 {
     QMutexLocker locker(&mMutex);
     if (NumLines<=0)
@@ -358,7 +347,7 @@ void SynDocument::deleteLines(int Index, int NumLines)
     emit deleted(Index,NumLines);
 }
 
-void SynDocument::exchange(int Index1, int Index2)
+void Document::exchange(int Index1, int Index2)
 {
     QMutexLocker locker(&mMutex);
     if ((Index1 < 0) || (Index1 >= mLines.count())) {
@@ -368,7 +357,7 @@ void SynDocument::exchange(int Index1, int Index2)
         ListIndexOutOfBounds(Index2);
     }
     beginUpdate();
-    PSynDocumentLine temp = mLines[Index1];
+    PDocumentLine temp = mLines[Index1];
     mLines[Index1]=mLines[Index2];
     mLines[Index2]=temp;
     //mList.swapItemsAt(Index1,Index2);
@@ -380,7 +369,7 @@ void SynDocument::exchange(int Index1, int Index2)
     endUpdate();
 }
 
-void SynDocument::insert(int Index, const QString &s)
+void Document::insert(int Index, const QString &s)
 {
     QMutexLocker locker(&mMutex);
     if ((Index < 0) || (Index > mLines.count())) {
@@ -392,7 +381,7 @@ void SynDocument::insert(int Index, const QString &s)
     endUpdate();
 }
 
-void SynDocument::deleteAt(int Index)
+void Document::deleteAt(int Index)
 {
     QMutexLocker locker(&mMutex);
     if ((Index < 0) || (Index >= mLines.count())) {
@@ -408,11 +397,11 @@ void SynDocument::deleteAt(int Index)
     endUpdate();
 }
 
-QString SynDocument::getTextStr() const
+QString Document::getTextStr() const
 {
     QString result;
     for (int i=0;i<mLines.count()-1;i++) {
-        const PSynDocumentLine& line = mLines[i];
+        const PDocumentLine& line = mLines[i];
         result.append(line->fString);
         result.append(lineBreak());
     }
@@ -422,7 +411,7 @@ QString SynDocument::getTextStr() const
     return result;
 }
 
-void SynDocument::putString(int Index, const QString &s, bool notify) {
+void Document::putString(int Index, const QString &s, bool notify) {
     QMutexLocker locker(&mMutex);
     if (Index == mLines.count()) {
         add(s);
@@ -446,7 +435,7 @@ void SynDocument::putString(int Index, const QString &s, bool notify) {
     }
 }
 
-void SynDocument::setUpdateState(bool Updating)
+void Document::setUpdateState(bool Updating)
 {
     if (Updating)
         emit changing();
@@ -454,15 +443,15 @@ void SynDocument::setUpdateState(bool Updating)
         emit changed();
 }
 
-int SynDocument::calculateLineColumns(int Index)
+int Document::calculateLineColumns(int Index)
 {
-    PSynDocumentLine line = mLines[Index];
+    PDocumentLine line = mLines[Index];
 
     line->fColumns = stringColumns(line->fString,0);
     return line->fColumns;
 }
 
-void SynDocument::insertLines(int Index, int NumLines)
+void Document::insertLines(int Index, int NumLines)
 {
     QMutexLocker locker(&mMutex);
     if (Index<0 || Index>mLines.count()) {
@@ -475,17 +464,17 @@ void SynDocument::insertLines(int Index, int NumLines)
         endUpdate();
     });
     mIndexOfLongestLine = -1;
-    PSynDocumentLine line;
+    PDocumentLine line;
     mLines.insert(Index,NumLines,line);
     for (int i=Index;i<Index+NumLines;i++) {
-        line = std::make_shared<SynDocumentLine>();
+        line = std::make_shared<DocumentLine>();
         mLines[i]=line;
     }
     emit inserted(Index,NumLines);
 }
 
 
-bool SynDocument::tryLoadFileByEncoding(QByteArray encodingName, QFile& file) {
+bool Document::tryLoadFileByEncoding(QByteArray encodingName, QFile& file) {
     QTextCodec* codec = QTextCodec::codecForName(encodingName);
     if (!codec)
         return false;
@@ -514,26 +503,26 @@ bool SynDocument::tryLoadFileByEncoding(QByteArray encodingName, QFile& file) {
     return true;
 }
 
-const QFontMetrics &SynDocument::fontMetrics() const
+const QFontMetrics &Document::fontMetrics() const
 {
     return mFontMetrics;
 }
 
-void SynDocument::setFontMetrics(const QFont &newFont, const QFont& newNonAsciiFont)
+void Document::setFontMetrics(const QFont &newFont, const QFont& newNonAsciiFont)
 {
     mFontMetrics = QFontMetrics(newFont);
     mCharWidth =  mFontMetrics.horizontalAdvance("M");
     mNonAsciiFontMetrics = QFontMetrics(newNonAsciiFont);
 }
 
-void SynDocument::setTabWidth(int newTabWidth)
+void Document::setTabWidth(int newTabWidth)
 {
     if (mTabWidth!=newTabWidth) {
         mTabWidth = newTabWidth;
         resetColumns();
     }
 }
-void SynDocument::loadFromFile(const QString& filename, const QByteArray& encoding, QByteArray& realEncoding)
+void Document::loadFromFile(const QString& filename, const QByteArray& encoding, QByteArray& realEncoding)
 {
     QMutexLocker locker(&mMutex);
     QFile file(filename);
@@ -660,7 +649,7 @@ void SynDocument::loadFromFile(const QString& filename, const QByteArray& encodi
 
 
 
-void SynDocument::saveToFile(QFile &file, const QByteArray& encoding,
+void Document::saveToFile(QFile &file, const QByteArray& encoding,
                                    const QByteArray& defaultEncoding, QByteArray& realEncoding)
 {
     QMutexLocker locker(&mMutex);
@@ -686,7 +675,7 @@ void SynDocument::saveToFile(QFile &file, const QByteArray& encoding,
     } else {
         codec = QTextCodec::codecForName(realEncoding);
     }
-    for (PSynDocumentLine& line:mLines) {
+    for (PDocumentLine& line:mLines) {
         if (allAscii) {
             allAscii = isTextAllAscii(line->fString);
         }
@@ -708,7 +697,7 @@ void SynDocument::saveToFile(QFile &file, const QByteArray& encoding,
     }
 }
 
-int SynDocument::stringColumns(const QString &line, int colsBefore) const
+int Document::stringColumns(const QString &line, int colsBefore) const
 {
     int columns = std::max(0,colsBefore);
     int charCols;
@@ -724,7 +713,7 @@ int SynDocument::stringColumns(const QString &line, int colsBefore) const
     return columns-colsBefore;
 }
 
-int SynDocument::charColumns(QChar ch) const
+int Document::charColumns(QChar ch) const
 {
     if (ch.unicode()<=32)
         return 1;
@@ -737,7 +726,7 @@ int SynDocument::charColumns(QChar ch) const
     return std::ceil(width / (double)mCharWidth);
 }
 
-void SynDocument::putTextStr(const QString &text)
+void Document::putTextStr(const QString &text)
 {
     beginUpdate();
     auto action = finally([this]{
@@ -764,7 +753,7 @@ void SynDocument::putTextStr(const QString &text)
     }
 }
 
-void SynDocument::internalClear()
+void Document::internalClear()
 {
     if (!mLines.isEmpty()) {
         beginUpdate();
@@ -776,25 +765,25 @@ void SynDocument::internalClear()
     }
 }
 
-FileEndingType SynDocument::getFileEndingType()
+FileEndingType Document::getFileEndingType()
 {
     QMutexLocker locker(&mMutex);
     return mFileEndingType;
 }
 
-void SynDocument::setFileEndingType(const FileEndingType &fileEndingType)
+void Document::setFileEndingType(const FileEndingType &fileEndingType)
 {
     QMutexLocker locker(&mMutex);
     mFileEndingType = fileEndingType;
 }
 
-bool SynDocument::empty()
+bool Document::empty()
 {
     QMutexLocker locker(&mMutex);
     return mLines.count()==0;
 }
 
-void SynDocument::resetColumns()
+void Document::resetColumns()
 {
     QMutexLocker locker(&mMutex);
     mIndexOfLongestLine = -1;
@@ -805,16 +794,16 @@ void SynDocument::resetColumns()
     }
 }
 
-void SynDocument::invalidAllLineColumns()
+void Document::invalidAllLineColumns()
 {
     QMutexLocker locker(&mMutex);
     mIndexOfLongestLine = -1;
-    for (PSynDocumentLine& line:mLines) {
+    for (PDocumentLine& line:mLines) {
         line->fColumns = -1;
     }
 }
 
-SynDocumentLine::SynDocumentLine():
+DocumentLine::DocumentLine():
     fString(),
     fRange(),
     fColumns(-1)
@@ -822,7 +811,7 @@ SynDocumentLine::SynDocumentLine():
 }
 
 
-SynEditUndoList::SynEditUndoList():QObject()
+UndoList::UndoList():QObject()
 {
     mMaxUndoActions = 1024;
     mMaxMemoryUsage = 50 * 1024 * 1024;
@@ -839,7 +828,7 @@ SynEditUndoList::SynEditUndoList():QObject()
     mLastRestoredItemChangeNumber=0;
 }
 
-void SynEditUndoList::addChange(SynChangeReason reason, const BufferCoord &startPos,
+void UndoList::addChange(ChangeReason reason, const BufferCoord &startPos,
                                 const BufferCoord &endPos, const QStringList& changeText,
                                 SelectionMode selMode)
 {
@@ -849,7 +838,7 @@ void SynEditUndoList::addChange(SynChangeReason reason, const BufferCoord &start
     } else {
         changeNumber = getNextChangeNumber();
     }
-    PSynEditUndoItem  newItem = std::make_shared<SynEditUndoItem>(
+    PUndoItem  newItem = std::make_shared<UndoItem>(
                 reason,
                 selMode,startPos,endPos,changeText,
                 changeNumber);
@@ -858,22 +847,22 @@ void SynEditUndoList::addChange(SynChangeReason reason, const BufferCoord &start
     addMemoryUsage(newItem);
     ensureMaxEntries();
 
-    if (reason!=SynChangeReason::GroupBreak && !inBlock()) {
+    if (reason!=ChangeReason::GroupBreak && !inBlock()) {
         mBlockCount++;
 //        qDebug()<<"add"<<mBlockCount;
         emit addedUndo();
     }
 }
 
-void SynEditUndoList::restoreChange(SynChangeReason AReason, const BufferCoord &AStart, const BufferCoord &AEnd, const QStringList &ChangeText, SelectionMode SelMode, size_t changeNumber)
+void UndoList::restoreChange(ChangeReason AReason, const BufferCoord &AStart, const BufferCoord &AEnd, const QStringList &ChangeText, SelectionMode SelMode, size_t changeNumber)
 {
-    PSynEditUndoItem  newItem = std::make_shared<SynEditUndoItem>(AReason,
+    PUndoItem  newItem = std::make_shared<UndoItem>(AReason,
                                                                   SelMode,AStart,AEnd,ChangeText,
                                                                   changeNumber);
     restoreChange(newItem);
 }
 
-void SynEditUndoList::restoreChange(PSynEditUndoItem item)
+void UndoList::restoreChange(PUndoItem item)
 {
     size_t changeNumber = item->changeNumber();
     mItems.append(item);
@@ -889,17 +878,17 @@ void SynEditUndoList::restoreChange(PSynEditUndoItem item)
     mLastRestoredItemChangeNumber=changeNumber;
 }
 
-void SynEditUndoList::addGroupBreak()
+void UndoList::addGroupBreak()
 {
     if (!canUndo())
         return;
 
-    if (lastChangeReason() != SynChangeReason::GroupBreak) {
-        addChange(SynChangeReason::GroupBreak, {0,0}, {0,0}, QStringList(), SelectionMode::Normal);
+    if (lastChangeReason() != ChangeReason::GroupBreak) {
+        addChange(ChangeReason::GroupBreak, {0,0}, {0,0}, QStringList(), SelectionMode::Normal);
     }
 }
 
-void SynEditUndoList::beginBlock()
+void UndoList::beginBlock()
 {
 //    qDebug()<<"begin block";
     if (mBlockLock==0)
@@ -908,7 +897,7 @@ void SynEditUndoList::beginBlock()
 
 }
 
-void SynEditUndoList::clear()
+void UndoList::clear()
 {
     mItems.clear();
     mFullUndoImposible = false;
@@ -920,7 +909,7 @@ void SynEditUndoList::clear()
     mMemoryUsage=0;
 }
 
-void SynEditUndoList::endBlock()
+void UndoList::endBlock()
 {
 //    qDebug()<<"end block";
     if (mBlockLock > 0) {
@@ -937,77 +926,69 @@ void SynEditUndoList::endBlock()
     }
 }
 
-bool SynEditUndoList::inBlock()
+bool UndoList::inBlock()
 {
     return mBlockLock>0;
 }
 
-unsigned int SynEditUndoList::getNextChangeNumber()
+unsigned int UndoList::getNextChangeNumber()
 {
     return mNextChangeNumber++;
 }
 
-void SynEditUndoList::addMemoryUsage(PSynEditUndoItem item)
+void UndoList::addMemoryUsage(PUndoItem item)
 {
     if (!item)
         return;
-    int length=0;
-    foreach (const QString& s, item->changeText()) {
-        length+=s.length()+2;
-    }
-    mMemoryUsage +=  length * sizeof(QChar) ;
+    mMemoryUsage += item->memoryUsage();
 }
 
-void SynEditUndoList::reduceMemoryUsage(PSynEditUndoItem item)
+void UndoList::reduceMemoryUsage(PUndoItem item)
 {
     if (!item)
         return;
-    int length=0;
-    foreach (const QString& s, item->changeText()) {
-        length+=s.length()+2;
-    }
-    mMemoryUsage -=  length * sizeof(QChar) ;
+    mMemoryUsage -= item->memoryUsage();
 }
 
-int SynEditUndoList::maxMemoryUsage() const
+int UndoList::maxMemoryUsage() const
 {
     return mMaxMemoryUsage;
 }
 
-void SynEditUndoList::setMaxMemoryUsage(int newMaxMemoryUsage)
+void UndoList::setMaxMemoryUsage(int newMaxMemoryUsage)
 {
     mMaxMemoryUsage = newMaxMemoryUsage;
 }
 
-SynChangeReason SynEditUndoList::lastChangeReason()
+ChangeReason UndoList::lastChangeReason()
 {
     if (mItems.count() == 0)
-        return SynChangeReason::Nothing;
+        return ChangeReason::Nothing;
     else
         return mItems.last()->changeReason();
 }
 
-bool SynEditUndoList::isEmpty()
+bool UndoList::isEmpty()
 {
     return mItems.count()==0;
 }
 
-PSynEditUndoItem SynEditUndoList::peekItem()
+PUndoItem UndoList::peekItem()
 {
     if (mItems.count() == 0)
-        return PSynEditUndoItem();
+        return PUndoItem();
     else
         return mItems.last();
 }
 
-PSynEditUndoItem SynEditUndoList::popItem()
+PUndoItem UndoList::popItem()
 {
     if (mItems.count() == 0)
-        return PSynEditUndoItem();
+        return PUndoItem();
     else {
-        PSynEditUndoItem item = mItems.last();
+        PUndoItem item = mItems.last();
 //        qDebug()<<"popped"<<item->changeNumber()<<item->changeText()<<(int)item->changeReason()<<mLastPoppedItemChangeNumber;
-        if (mLastPoppedItemChangeNumber!=item->changeNumber() && item->changeReason()!=SynChangeReason::GroupBreak) {
+        if (mLastPoppedItemChangeNumber!=item->changeNumber() && item->changeReason()!=ChangeReason::GroupBreak) {
             mBlockCount--;
 //            qDebug()<<"pop"<<mBlockCount;
             if (mBlockCount<0) {
@@ -1022,22 +1003,22 @@ PSynEditUndoItem SynEditUndoList::popItem()
     }
 }
 
-bool SynEditUndoList::canUndo()
+bool UndoList::canUndo()
 {
     return mItems.count()>0;
 }
 
-int SynEditUndoList::itemCount()
+int UndoList::itemCount()
 {
     return mItems.count();
 }
 
-int SynEditUndoList::maxUndoActions() const
+int UndoList::maxUndoActions() const
 {
     return mMaxUndoActions;
 }
 
-void SynEditUndoList::setMaxUndoActions(int maxUndoActions)
+void UndoList::setMaxUndoActions(int maxUndoActions)
 {
     if (maxUndoActions!=mMaxUndoActions) {
         mMaxUndoActions = maxUndoActions;
@@ -1045,7 +1026,7 @@ void SynEditUndoList::setMaxUndoActions(int maxUndoActions)
     }
 }
 
-bool SynEditUndoList::initialState()
+bool UndoList::initialState()
 {
     if (itemCount() == 0) {
         return mInitialChangeNumber==0;
@@ -1054,7 +1035,7 @@ bool SynEditUndoList::initialState()
     }
 }
 
-void SynEditUndoList::setInitialState()
+void UndoList::setInitialState()
 {
     if (itemCount() == 0)
         mInitialChangeNumber = 0;
@@ -1062,29 +1043,29 @@ void SynEditUndoList::setInitialState()
         mInitialChangeNumber = peekItem()->changeNumber();
 }
 
-bool SynEditUndoList::insideRedo() const
+bool UndoList::insideRedo() const
 {
     return mInsideRedo;
 }
 
-void SynEditUndoList::setInsideRedo(bool insideRedo)
+void UndoList::setInsideRedo(bool insideRedo)
 {
     mInsideRedo = insideRedo;
 }
 
-bool SynEditUndoList::fullUndoImposible() const
+bool UndoList::fullUndoImposible() const
 {
     return mFullUndoImposible;
 }
 
-void SynEditUndoList::ensureMaxEntries()
+void UndoList::ensureMaxEntries()
 {
     if (mMaxUndoActions>0 && (mBlockCount > mMaxUndoActions || mMemoryUsage>mMaxMemoryUsage)){
         mFullUndoImposible = true;
         while ((mBlockCount > mMaxUndoActions || mMemoryUsage>mMaxMemoryUsage)
                && !mItems.isEmpty()) {
             //remove all undo item in block
-            PSynEditUndoItem item = mItems.front();
+            PUndoItem item = mItems.front();
             size_t changeNumber = item->changeNumber();
             while (mItems.count()>0) {
                 item = mItems.front();
@@ -1093,38 +1074,43 @@ void SynEditUndoList::ensureMaxEntries()
                 reduceMemoryUsage(item);
                 mItems.removeFirst();
             }
-            if (item->changeReason()!=SynChangeReason::GroupBreak)
+            if (item->changeReason()!=ChangeReason::GroupBreak)
                 mBlockCount--;
       }
     }
 }
 
-SelectionMode SynEditUndoItem::changeSelMode() const
+SelectionMode UndoItem::changeSelMode() const
 {
     return mChangeSelMode;
 }
 
-BufferCoord SynEditUndoItem::changeStartPos() const
+BufferCoord UndoItem::changeStartPos() const
 {
     return mChangeStartPos;
 }
 
-BufferCoord SynEditUndoItem::changeEndPos() const
+BufferCoord UndoItem::changeEndPos() const
 {
     return mChangeEndPos;
 }
 
-QStringList SynEditUndoItem::changeText() const
+QStringList UndoItem::changeText() const
 {
     return mChangeText;
 }
 
-size_t SynEditUndoItem::changeNumber() const
+size_t UndoItem::changeNumber() const
 {
     return mChangeNumber;
 }
 
-SynEditUndoItem::SynEditUndoItem(SynChangeReason reason, SelectionMode selMode,
+unsigned int UndoItem::memoryUsage() const
+{
+    return mMemoryUsage;
+}
+
+UndoItem::UndoItem(ChangeReason reason, SelectionMode selMode,
                                  BufferCoord startPos, BufferCoord endPos,
                                  const QStringList& text, int number)
 {
@@ -1134,75 +1120,81 @@ SynEditUndoItem::SynEditUndoItem(SynChangeReason reason, SelectionMode selMode,
     mChangeEndPos = endPos;
     mChangeText = text;
     mChangeNumber = number;
+    int length=0;
+    foreach (const QString& s, text) {
+        length+=s.length();
+    }
+    mMemoryUsage -=  length * sizeof(QChar) + text.length() * sizeof(QString)
+            + sizeof(UndoItem);
 }
 
-SynChangeReason SynEditUndoItem::changeReason() const
+ChangeReason UndoItem::changeReason() const
 {
     return mChangeReason;
 }
 
-SynEditRedoList::SynEditRedoList()
+RedoList::RedoList()
 {
 
 }
 
-void SynEditRedoList::addRedo(SynChangeReason AReason, const BufferCoord &AStart, const BufferCoord &AEnd, const QStringList &ChangeText, SelectionMode SelMode, size_t changeNumber)
+void RedoList::addRedo(ChangeReason AReason, const BufferCoord &AStart, const BufferCoord &AEnd, const QStringList &ChangeText, SelectionMode SelMode, size_t changeNumber)
 {
-    PSynEditUndoItem  newItem = std::make_shared<SynEditUndoItem>(
+    PUndoItem  newItem = std::make_shared<UndoItem>(
                 AReason,
                 SelMode,AStart,AEnd,ChangeText,
                 changeNumber);
     mItems.append(newItem);
 }
 
-void SynEditRedoList::addRedo(PSynEditUndoItem item)
+void RedoList::addRedo(PUndoItem item)
 {
     mItems.append(item);
 }
 
-void SynEditRedoList::clear()
+void RedoList::clear()
 {
     mItems.clear();
 }
 
-SynChangeReason SynEditRedoList::lastChangeReason()
+ChangeReason RedoList::lastChangeReason()
 {
     if (mItems.count() == 0)
-        return SynChangeReason::Nothing;
+        return ChangeReason::Nothing;
     else
         return mItems.last()->changeReason();
 }
 
-bool SynEditRedoList::isEmpty()
+bool RedoList::isEmpty()
 {
     return mItems.isEmpty();
 }
 
-PSynEditUndoItem SynEditRedoList::peekItem()
+PUndoItem RedoList::peekItem()
 {
     if (mItems.count() == 0)
-        return PSynEditUndoItem();
+        return PUndoItem();
     else
         return mItems.last();
 }
 
-PSynEditUndoItem SynEditRedoList::popItem()
+PUndoItem RedoList::popItem()
 {
     if (mItems.count() == 0)
-        return PSynEditUndoItem();
+        return PUndoItem();
     else {
-        PSynEditUndoItem item = mItems.last();
+        PUndoItem item = mItems.last();
         mItems.removeLast();
         return item;
     }
 }
 
-bool SynEditRedoList::canRedo()
+bool RedoList::canRedo()
 {
     return mItems.count()>0;
 }
 
-int SynEditRedoList::itemCount()
+int RedoList::itemCount()
 {
     return mItems.count();
 }

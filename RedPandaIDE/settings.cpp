@@ -1382,8 +1382,8 @@ void Settings::Editor::doLoad()
     else
         mDefaultEncoding = value("default_encoding", ENCODING_UTF8).toByteArray();
     mAutoDetectFileEncoding = boolValue("auto_detect_file_encoding",true);
-    mUndoLimit = intValue("undo_limit",5000);
-    mUndoMemoryUsage = intValue("undo_memory_usage", 50);
+    mUndoLimit = intValue("undo_limit",0);
+    mUndoMemoryUsage = intValue("undo_memory_usage", 10);
 
     //tooltips
     mEnableTooltips = boolValue("enable_tooltips",true);
@@ -1478,7 +1478,12 @@ Settings::CompilerSet::CompilerSet():
     mFullLoaded(false),
     mAutoAddCharsetParams(true),
     mExecCharset(ENCODING_SYSTEM_DEFAULT),
-    mStaticLink(true)
+    mStaticLink(true),
+    mPreprocessingSuffix(DEFAULT_PREPROCESSING_SUFFIX),
+    mCompilationProperSuffix(DEFAULT_COMPILATION_SUFFIX),
+    mAssemblingSuffix(DEFAULT_ASSEMBLING_SUFFIX),
+    mExecutableSuffix(DEFAULT_EXECUTABLE_SUFFIX),
+    mCompilationStage(Settings::CompilerSet::CompilationStage::GenerateExecutable)
 {
 
 }
@@ -1487,7 +1492,12 @@ Settings::CompilerSet::CompilerSet():
 Settings::CompilerSet::CompilerSet(const QString& compilerFolder, const QString& cc_prog):
     mAutoAddCharsetParams(true),
     mExecCharset(ENCODING_SYSTEM_DEFAULT),
-    mStaticLink(true)
+    mStaticLink(true),
+    mPreprocessingSuffix(DEFAULT_PREPROCESSING_SUFFIX),
+    mCompilationProperSuffix(DEFAULT_COMPILATION_SUFFIX),
+    mAssemblingSuffix(DEFAULT_ASSEMBLING_SUFFIX),
+    mExecutableSuffix(DEFAULT_EXECUTABLE_SUFFIX),
+    mCompilationStage(Settings::CompilerSet::CompilationStage::GenerateExecutable)
 {
     if (QDir(compilerFolder).exists()) {
         setProperties(compilerFolder, cc_prog);
@@ -1542,6 +1552,11 @@ Settings::CompilerSet::CompilerSet(const Settings::CompilerSet &set):
     mAutoAddCharsetParams(set.mAutoAddCharsetParams),
     mExecCharset(set.mExecCharset),
     mStaticLink(set.mStaticLink),
+    mPreprocessingSuffix(set.mPreprocessingSuffix),
+    mCompilationProperSuffix(set.mCompilationProperSuffix),
+    mAssemblingSuffix(set.mAssemblingSuffix),
+    mExecutableSuffix(set.mExecutableSuffix),
+    mCompilationStage(set.mCompilationStage),
     mCompileOptions(set.mCompileOptions)
 {
 
@@ -2357,6 +2372,76 @@ QByteArray Settings::CompilerSet::getCompilerOutput(const QString &binDir, const
     return result.trimmed();
 }
 
+Settings::CompilerSet::CompilationStage Settings::CompilerSet::compilationStage() const
+{
+    return mCompilationStage;
+}
+
+void Settings::CompilerSet::setCompilationStage(CompilationStage newCompilationStage)
+{
+    mCompilationStage = newCompilationStage;
+}
+
+QString Settings::CompilerSet::getOutputFilename(const QString &sourceFilename)
+{
+    switch(compilationStage()) {
+    case Settings::CompilerSet::CompilationStage::PreprocessingOnly:
+        return changeFileExt(sourceFilename, preprocessingSuffix());
+    case Settings::CompilerSet::CompilationStage::CompilationProperOnly:
+        return changeFileExt(sourceFilename, compilationProperSuffix());
+    case Settings::CompilerSet::CompilationStage::AssemblingOnly:
+        return changeFileExt(sourceFilename, assemblingSuffix());
+    case Settings::CompilerSet::CompilationStage::GenerateExecutable:
+        return changeFileExt(sourceFilename, executableSuffix());
+    }
+    return changeFileExt(sourceFilename,DEFAULT_EXECUTABLE_SUFFIX);
+}
+
+bool Settings::CompilerSet::isOutputExecutable()
+{
+    return mCompilationStage == CompilationStage::GenerateExecutable;
+}
+
+const QString &Settings::CompilerSet::assemblingSuffix() const
+{
+    return mAssemblingSuffix;
+}
+
+void Settings::CompilerSet::setAssemblingSuffix(const QString &newAssemblingSuffix)
+{
+    mAssemblingSuffix = newAssemblingSuffix;
+}
+
+const QString &Settings::CompilerSet::compilationProperSuffix() const
+{
+    return mCompilationProperSuffix;
+}
+
+void Settings::CompilerSet::setCompilationProperSuffix(const QString &newCompilationProperSuffix)
+{
+    mCompilationProperSuffix = newCompilationProperSuffix;
+}
+
+const QString &Settings::CompilerSet::preprocessingSuffix() const
+{
+    return mPreprocessingSuffix;
+}
+
+void Settings::CompilerSet::setPreprocessingSuffix(const QString &newPreprocessingSuffix)
+{
+    mPreprocessingSuffix = newPreprocessingSuffix;
+}
+
+const QString &Settings::CompilerSet::executableSuffix() const
+{
+    return mExecutableSuffix;
+}
+
+void Settings::CompilerSet::setExecutableSuffix(const QString &newExecutableSuffix)
+{
+    mExecutableSuffix = newExecutableSuffix;
+}
+
 const QMap<QString, QString> &Settings::CompilerSet::compileOptions() const
 {
     return mCompileOptions;
@@ -2800,6 +2885,12 @@ void Settings::CompilerSets::saveSet(int index)
     mSettings->mSettings.setValue("StaticLink", pSet->staticLink());
     mSettings->mSettings.setValue("ExecCharset", pSet->execCharset());
 
+    mSettings->mSettings.setValue("preprocessingSuffix", pSet->preprocessingSuffix());
+    mSettings->mSettings.setValue("compilationProperSuffix", pSet->compilationProperSuffix());
+    mSettings->mSettings.setValue("assemblingSuffix", pSet->assemblingSuffix());
+    mSettings->mSettings.setValue("executableSuffix", pSet->executableSuffix());
+    mSettings->mSettings.setValue("compilationStage", (int)pSet->compilationStage());
+
     // Misc. properties
     mSettings->mSettings.setValue("DumpMachine", pSet->dumpMachine());
     mSettings->mSettings.setValue("Version", pSet->version());
@@ -2873,6 +2964,13 @@ Settings::PCompilerSet Settings::CompilerSets::loadSet(int index)
     if (pSet->execCharset().isEmpty()) {
         pSet->setExecCharset(ENCODING_SYSTEM_DEFAULT);
     }
+    pSet->setPreprocessingSuffix(mSettings->mSettings.value("preprocessingSuffix", DEFAULT_PREPROCESSING_SUFFIX).toString());
+    pSet->setCompilationProperSuffix(mSettings->mSettings.value("compilationProperSuffix",DEFAULT_COMPILATION_SUFFIX).toString());
+    pSet->setAssemblingSuffix(mSettings->mSettings.value("assemblingSuffix", DEFAULT_ASSEMBLING_SUFFIX).toString());
+    pSet->setExecutableSuffix(mSettings->mSettings.value("executableSuffix", DEFAULT_EXECUTABLE_SUFFIX).toString());
+    pSet->setCompilationStage((Settings::CompilerSet::CompilationStage)mSettings->mSettings.value(
+                                  "compilationStage",
+                                  (int)Settings::CompilerSet::CompilationStage::GenerateExecutable).toInt());
 
     // Load options
     QByteArray iniOptions = mSettings->mSettings.value("Options","").toByteArray();

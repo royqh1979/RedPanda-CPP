@@ -261,7 +261,7 @@ public:
     void addLeftTopToUndo();
     void addSelectionToUndo();
     void replaceAll(const QString& text) {
-        mUndoList->addChange(SynChangeReason::Selection,mBlockBegin,mBlockEnd,QStringList(), activeSelectionMode());
+        mUndoList->addChange(ChangeReason::Selection,mBlockBegin,mBlockEnd,QStringList(), activeSelectionMode());
         selectAll();
         setSelText(text);
     }
@@ -354,7 +354,7 @@ public:
     QString lineText() const;
     void setLineText(const QString s);
 
-    const PSynDocument& document() const;
+    const PDocument& document() const;
     bool empty();
 
     SelectionMode selectionMode() const;
@@ -654,7 +654,7 @@ private:
 
     bool mInserting;
     bool mPainting;
-    PSynDocument mDocument;
+    PDocument mDocument;
     int mLinesInWindow;
     int mLeftChar;
     int mPaintLock; // lock counter for internal calculations
@@ -677,8 +677,8 @@ private:
 
     bool mCaretUseTextColor;
     QColor mActiveLineColor;
-    PSynEditUndoList mUndoList;
-    PSynEditRedoList mRedoList;
+    PUndoList mUndoList;
+    PRedoList mRedoList;
     QPoint mMouseDownPos;
     bool mHideSelection;
     int mMouseWheelAccumulator;

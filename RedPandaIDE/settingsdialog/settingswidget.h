@@ -32,13 +32,15 @@ public:
     void save();
 signals:
     void settingsChanged(bool changed);
+public slots:
+    void onUpdateIcons();
 
 protected:
     virtual void doLoad() = 0;
     virtual void doSave() = 0;
     void connectAbstractItemView(QAbstractItemView* pView);
     void disconnectAbstractItemView(QAbstractItemView* pView);
-    virtual void updateIcons(const QSize& size);
+    virtual void updateIcons(const QSize &size) ;
 public:
     const QString& group();
     const QString& name();
@@ -49,8 +51,6 @@ public slots:
     void setSettingsChanged();
     void clearSettingsChanged();
 private:
-private slots:
-    void onUpdateIcons();
 
 private:
     bool mSettingsChanged;

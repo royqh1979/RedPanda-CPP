@@ -37,6 +37,8 @@ public:
 
     void resetUI(Settings::PCompilerSet pSet, const QMap<QString,QString>& options);
 
+    void setBoolArgument(const QString &argKey, bool checked);
+
 private:
     QString mCompilerType;
 };

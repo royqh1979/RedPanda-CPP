@@ -104,7 +104,6 @@ QStringList splitProcessCommand(const QString& cmd);
 QString genMakePath(const QString& fileName,bool escapeSpaces, bool encloseInQuotes);
 QString genMakePath1(const QString& fileName);
 QString genMakePath2(const QString& fileName);
-QString getCompiledExecutableName(const QString& filename);
 bool programHasConsole(const QString& filename);
 
 QString parseMacros(const QString& s);

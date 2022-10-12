@@ -133,7 +133,7 @@ QString Project::executable() const
             exeFileName = changeFileExt(extractFileName(mFilename),DYNAMIC_LIB_EXT);
             break;
         default:
-            exeFileName = changeFileExt(extractFileName(mFilename),EXECUTABLE_EXT);
+            exeFileName = changeFileExt(extractFileName(mFilename),DEFAULT_EXECUTABLE_SUFFIX);
         }
     }
     QString exePath;

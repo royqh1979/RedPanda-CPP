@@ -1174,6 +1174,13 @@ public:
 
     class CompilerSet {
     public:
+        enum class CompilationStage {
+            PreprocessingOnly,
+            CompilationProperOnly,
+            AssemblingOnly,
+            GenerateExecutable
+        };
+
         explicit CompilerSet();
         explicit CompilerSet(const QString& compilerFolder, const QString& cc_prog);
         explicit CompilerSet(const CompilerSet& set);
@@ -1265,6 +1272,24 @@ public:
 
         const QMap<QString, QString> &compileOptions() const;
 
+        const QString &executableSuffix() const;
+        void setExecutableSuffix(const QString &newExecutableSuffix);
+
+        const QString &preprocessingSuffix() const;
+        void setPreprocessingSuffix(const QString &newPreprocessingSuffix);
+
+        const QString &compilationProperSuffix() const;
+        void setCompilationProperSuffix(const QString &newCompilationProperSuffix);
+
+        const QString &assemblingSuffix() const;
+        void setAssemblingSuffix(const QString &newAssemblingSuffix);
+
+        CompilationStage compilationStage() const;
+        void setCompilationStage(CompilationStage newCompilationStage);
+
+        QString getOutputFilename(const QString& sourceFilename);
+        bool isOutputExecutable();
+
     private:
         void setDirectories(const QString& binDir, const QString& mCompilerType);
         //load hard defines
@@ -1315,6 +1340,13 @@ public:
         bool mAutoAddCharsetParams;
         QString mExecCharset;
         bool mStaticLink;
+
+        QString mPreprocessingSuffix;
+        QString mCompilationProperSuffix;
+        QString mAssemblingSuffix;
+        QString mExecutableSuffix;
+
+        CompilationStage mCompilationStage;
 
         // Options
         QMap<QString,QString> mCompileOptions;

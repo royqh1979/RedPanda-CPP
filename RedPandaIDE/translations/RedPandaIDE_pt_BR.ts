@@ -585,7 +585,7 @@
     </message>
     <message>
         <source>TextLabel</source>
-        <translation>Label</translation>
+        <translation type="vanished">Label</translation>
     </message>
     <message>
         <source>Choose make</source>
@@ -686,6 +686,46 @@
     <message>
         <source>New name</source>
         <translation>Novo nome</translation>
+    </message>
+    <message>
+        <source>Output</source>
+        <translation type="unfinished">Saída</translation>
+    </message>
+    <message>
+        <source>Compilation Stages</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Stop after the preprocessing stage</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Stop after the compilation proper stage</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Stop after the assembling stage</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Link and generate the executable </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Preprocessing output suffix</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Assembling output suffix</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Compiling output suffix</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Executable suffix</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -4604,6 +4644,22 @@
         <source>Template %1 already exists. Do you want to overwrite?</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Wrong Compiler Settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Compiler is set not to generate executable.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>We need the executabe to run problem case.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Please correct this before start debugging</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>NewClassDialog</name>
@@ -5842,7 +5898,7 @@
     </message>
     <message>
         <source>Link an Objective C program (-lobjc)</source>
-        <translation>Link para um programa Objective C (-lobjc)</translation>
+        <translation type="vanished">Link para um programa Objective C (-lobjc)</translation>
     </message>
     <message>
         <source>Do not use standard system libraries (-nostdlib)</source>
@@ -5862,11 +5918,11 @@
     </message>
     <message>
         <source>Output</source>
-        <translation>Saída</translation>
+        <translation type="vanished">Saída</translation>
     </message>
     <message>
         <source>Put comments in generated assembly code (-fverbose-asm)</source>
-        <translation>Colocar comentários no código gerado em assembly (-fverbose-asm)</translation>
+        <translation type="vanished">Colocar comentários no código gerado em assembly (-fverbose-asm)</translation>
     </message>
     <message>
         <source>Do not assemble, compile and generate the assembly code (-S)</source>
@@ -5974,7 +6030,7 @@
     </message>
     <message>
         <source>Do not compile, stop after the preprocessing stage (-E)</source>
-        <translation>Não compilar, parar após o estágio de preprocessamento (-E)</translation>
+        <translation type="vanished">Não compilar, parar após o estágio de preprocessamento (-E)</translation>
     </message>
     <message>
         <source>Leaving those directories will lead to problems during compilation.</source>
@@ -5982,10 +6038,6 @@
     </message>
     <message>
         <source>Gloabal Variable</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Do not assemble, compile and generate the assemble code (-S)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

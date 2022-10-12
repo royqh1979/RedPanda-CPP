@@ -35,8 +35,6 @@ CompilerSetDirectoriesWidget::CompilerSetDirectoriesWidget(QWidget *parent) :
             this, &CompilerSetDirectoriesWidget::selectionChanged);
     ui->listView->setSelectionMode(QAbstractItemView::SingleSelection);
     onUpdateIcons();
-    connect(pIconsManager, &IconsManager::actionIconsUpdated,
-            this, &CompilerSetDirectoriesWidget::onUpdateIcons);
 }
 
 CompilerSetDirectoriesWidget::~CompilerSetDirectoriesWidget()

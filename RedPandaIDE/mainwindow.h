@@ -90,6 +90,7 @@ class MainWindow : public QMainWindow
         CompileSuccessionTaskType type;
         QString execName;
         QStringList binDirs;
+        bool isExecutable;
     };
 
     using PCompileSuccessionTask = std::shared_ptr<CompileSuccessionTask>;

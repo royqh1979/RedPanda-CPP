@@ -1648,6 +1648,7 @@ bool MainWindow::compile(bool rebuild)
         mProject->buildPrivateResource();
         if (mCompileSuccessionTask) {
             mCompileSuccessionTask->execName = mProject->executable();
+            mCompileSuccessionTask->isExecutable = true;
         }
         stretchMessagesPanel(true);
         ui->tabMessages->setCurrentWidget(ui->tabToolsOutput);
@@ -1663,7 +1664,14 @@ bool MainWindow::compile(bool rebuild)
                     return false;
             }
             if (mCompileSuccessionTask) {
-                mCompileSuccessionTask->execName = getCompiledExecutableName(editor->filename());
+                Settings::PCompilerSet compilerSet =pSettings->compilerSets().defaultSet();
+                if (compilerSet)  {
+                    mCompileSuccessionTask->execName = compilerSet->getOutputFilename(editor->filename());
+                    mCompileSuccessionTask->isExecutable = compilerSet->isOutputExecutable();
+                } else {
+                    mCompileSuccessionTask->execName = changeFileExt(editor->filename(),DEFAULT_EXECUTABLE_SUFFIX);
+                    mCompileSuccessionTask->isExecutable = true;
+                }
             }
             stretchMessagesPanel(true);
             ui->tabMessages->setCurrentWidget(ui->tabToolsOutput);
@@ -1761,6 +1769,7 @@ void MainWindow::runExecutable(RunType runType)
             mCompileSuccessionTask=std::make_shared<CompileSuccessionTask>();
             mCompileSuccessionTask->type = CompileSuccessionTaskType::RunNormal;
             mCompileSuccessionTask->execName=mProject->executable();
+            mCompileSuccessionTask->isExecutable=true;
             mCompileSuccessionTask->binDirs=binDirs;
             compile();
             return;
@@ -1776,8 +1785,27 @@ void MainWindow::runExecutable(RunType runType)
                     return;
             }
             QStringList binDirs = getDefaultCompilerSetBinDirs();
-            QString exeName= getCompiledExecutableName(editor->filename());
-            runExecutable(exeName,editor->filename(),runType,binDirs);
+            QString exeName;
+            Settings::PCompilerSet compilerSet =pSettings->compilerSets().defaultSet();
+            bool isExecutable;
+            if (compilerSet) {
+                exeName = compilerSet->getOutputFilename(editor->filename());
+                isExecutable = compilerSet->compilationStage()==Settings::CompilerSet::CompilationStage::GenerateExecutable;
+            } else {
+                exeName = changeFileExt(editor->filename(), DEFAULT_EXECUTABLE_SUFFIX);
+                isExecutable = true;
+            }
+            if (isExecutable)
+                runExecutable(exeName,editor->filename(),runType,binDirs);
+            else if (runType==RunType::Normal) {
+                if (fileExists(exeName))
+                    openFile(exeName);
+            } else {
+                QMessageBox::critical(this,tr("Wrong Compiler Settings"),
+                                      tr("Compiler is set not to generate executable.")+"<BR/><BR/>"
+                                      +tr("We need the executabe to run problem case."));
+                return;
+            }
         }
     }
 }
@@ -1821,6 +1849,7 @@ void MainWindow::debug()
             mCompileSuccessionTask=std::make_shared<CompileSuccessionTask>();
             mCompileSuccessionTask->type = CompileSuccessionTaskType::Debug;
             mCompileSuccessionTask->execName = mProject->executable();
+            mCompileSuccessionTask->isExecutable = true;
             mCompileSuccessionTask->binDirs = binDirs;
 
             compile();
@@ -1837,6 +1866,7 @@ void MainWindow::debug()
                 mCompileSuccessionTask=std::make_shared<CompileSuccessionTask>();
                 mCompileSuccessionTask->type = CompileSuccessionTaskType::Debug;
                 mCompileSuccessionTask->execName = mProject->executable();
+                mCompileSuccessionTask->isExecutable = true;
                 mCompileSuccessionTask->binDirs = binDirs;
                 compile();
             }
@@ -1851,6 +1881,7 @@ void MainWindow::debug()
             mCompileSuccessionTask=std::make_shared<CompileSuccessionTask>();
             mCompileSuccessionTask->type = CompileSuccessionTaskType::Debug;
             mCompileSuccessionTask->execName = mProject->executable();
+            mCompileSuccessionTask->isExecutable = true;
             mCompileSuccessionTask->binDirs = binDirs;
             compile();
             return;
@@ -1897,9 +1928,7 @@ void MainWindow::debug()
                           pSettings->debugger().skipProjectLibraries());
         break;
     case CompileTarget::File: {
-        if (pSettings->compilerSets().defaultSet()) {
-            binDirs = pSettings->compilerSets().defaultSet()->binDirs();
-        }
+            binDirs = compilerSet->binDirs();
 
             // Check if we enabled proper options
             debugEnabled = compilerSet->getCompileOptionValue(CC_CMD_OPT_DEBUG_INFO) == COMPILER_OPTION_ON;
@@ -1934,7 +1963,25 @@ void MainWindow::debug()
                 }
 
                 // Did we compiled?
-                filePath = getCompiledExecutableName(e->filename());
+                Settings::PCompilerSet compilerSet =pSettings->compilerSets().defaultSet();
+                bool isExecutable;
+                if (compilerSet) {
+                    filePath = compilerSet->getOutputFilename(e->filename());
+                    isExecutable = compilerSet->compilationStage()==Settings::CompilerSet::CompilationStage::GenerateExecutable;
+                } else {
+                    filePath = changeFileExt(e->filename(), DEFAULT_EXECUTABLE_SUFFIX);
+                    isExecutable = true;
+                }
+                if (!isExecutable) {
+                    QMessageBox::warning(
+                                this,
+                                tr("Wrong Compiler Settings"),
+                                tr("Compiler is set not to generate executable.")+"<BR /><BR />"
+                                +tr("Please correct this before start debugging"));
+                    compile();
+                    return;
+                }
+
                 debugFile.setFile(filePath);
                 if (!debugFile.exists()) {
                     if (QMessageBox::question(this,tr("Compile"),
@@ -3449,6 +3496,7 @@ void MainWindow::onProblemRunCurrentCase()
         return;
     showHideMessagesTab(ui->tabProblem,ui->actionProblem);
     applyCurrentProblemCaseChanges();
+
     runExecutable(RunType::CurrentProblemCase);
 }
 
@@ -4828,21 +4876,47 @@ void MainWindow::onCompileFinished(bool isCheckSyntax)
     if (!isCheckSyntax) {
         //run succession task if there aren't any errors
         if (mCompileSuccessionTask && mCompilerManager->compileErrorCount()==0) {
-            switch (mCompileSuccessionTask->type) {
-            case MainWindow::CompileSuccessionTaskType::RunNormal:
-                runExecutable(mCompileSuccessionTask->execName,QString(),RunType::Normal, mCompileSuccessionTask->binDirs);
-                break;
-            case MainWindow::CompileSuccessionTaskType::RunProblemCases:
-                runExecutable(mCompileSuccessionTask->execName,QString(),RunType::ProblemCases, mCompileSuccessionTask->binDirs);
-                break;
-            case MainWindow::CompileSuccessionTaskType::RunCurrentProblemCase:
-                runExecutable(mCompileSuccessionTask->execName,QString(),RunType::CurrentProblemCase, mCompileSuccessionTask->binDirs);
-                break;
-            case MainWindow::CompileSuccessionTaskType::Debug:
-                debug();
-                break;
-            default:
-                break;
+            if (!mCompileSuccessionTask->isExecutable) {
+                switch (mCompileSuccessionTask->type) {
+                case MainWindow::CompileSuccessionTaskType::RunNormal:
+                    if (fileExists(mCompileSuccessionTask->execName))
+                        openFile(mCompileSuccessionTask->execName);
+                    break;
+                case MainWindow::CompileSuccessionTaskType::RunProblemCases:
+                case MainWindow::CompileSuccessionTaskType::RunCurrentProblemCase:
+                    QMessageBox::critical(this,tr("Wrong Compiler Settings"),
+                                          tr("Compiler is set not to generate executable.")+"<BR/><BR/>"
+                                          +tr("We need the executabe to run problem case."));
+                    break;
+                case MainWindow::CompileSuccessionTaskType::Debug:
+                    QMessageBox::critical(
+                                this,
+                                tr("Wrong Compiler Settings"),
+                                tr("Compiler is set not to generate executable.")+"<BR /><BR />"
+                                +tr("Please correct this before start debugging"));
+                    compile();
+                    return;
+                    break;
+                default:
+                    break;
+                }
+            } else {
+                switch (mCompileSuccessionTask->type) {
+                case MainWindow::CompileSuccessionTaskType::RunNormal:
+                    runExecutable(mCompileSuccessionTask->execName,QString(),RunType::Normal, mCompileSuccessionTask->binDirs);
+                    break;
+                case MainWindow::CompileSuccessionTaskType::RunProblemCases:
+                    runExecutable(mCompileSuccessionTask->execName,QString(),RunType::ProblemCases, mCompileSuccessionTask->binDirs);
+                    break;
+                case MainWindow::CompileSuccessionTaskType::RunCurrentProblemCase:
+                    runExecutable(mCompileSuccessionTask->execName,QString(),RunType::CurrentProblemCase, mCompileSuccessionTask->binDirs);
+                    break;
+                case MainWindow::CompileSuccessionTaskType::Debug:
+                    debug();
+                    break;
+                default:
+                    break;
+                }
             }
             mCompileSuccessionTask.reset();
             // Jump to problem location, sorted by significance

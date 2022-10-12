@@ -44,7 +44,7 @@ private slots:
 
     // SettingsWidget interface
 protected:
-    void updateIcons(const QSize &size) Q_DECL_OVERRIDE;
+    void updateIcons(const QSize &size) override;
 };
 
 #endif // PROJECTCOMPILEPARAMATERSWIDGET_H
