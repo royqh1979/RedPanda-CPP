@@ -3532,16 +3532,6 @@ void Settings::Debugger::setSkipCustomLibraries(bool newSkipCustomLibraries)
     mSkipCustomLibraries = newSkipCustomLibraries;
 }
 
-bool Settings::Debugger::autosaveWatches() const
-{
-    return mAutosaveWatches;
-}
-
-void Settings::Debugger::setAutosaveWatches(bool newAutosaveWatches)
-{
-    mAutosaveWatches = newAutosaveWatches;
-}
-
 bool Settings::Debugger::openCPUInfoWhenSignaled() const
 {
     return mOpenCPUInfoWhenSignaled;
@@ -3592,14 +3582,14 @@ void Settings::Debugger::setMemoryViewColumns(int newMemoryViewColumns)
     mMemoryViewColumns = newMemoryViewColumns;
 }
 
-bool Settings::Debugger::autosaveBreakpoints() const
+bool Settings::Debugger::autosave() const
 {
-    return mAutosaveBreakpoints;
+    return mAutosave;
 }
 
-void Settings::Debugger::setAutosaveBreakpoints(bool newAutosaveBreakpoints)
+void Settings::Debugger::setAutosave(bool newAutosave)
 {
-    mAutosaveBreakpoints = newAutosaveBreakpoints;
+    mAutosave = newAutosave;
 }
 
 bool Settings::Debugger::useIntelStyle() const
@@ -3644,8 +3634,7 @@ void Settings::Debugger::doSave()
     saveValue("skip_system_lib", mSkipSystemLibraries);
     saveValue("skip_project_lib", mSkipProjectLibraries);
     saveValue("skip_custom_lib", mSkipCustomLibraries);
-    saveValue("autosave_breakpoints",mAutosaveBreakpoints);
-    saveValue("autosave_watches",mAutosaveWatches);
+    saveValue("autosave",mAutosave);
     saveValue("open_cpu_info_when_signaled",mOpenCPUInfoWhenSignaled);
     saveValue("use_gdb_server", mUseGDBServer);
     saveValue("gdb_server_port",mGDBServerPort);
@@ -3670,8 +3659,7 @@ void Settings::Debugger::doLoad()
     mSkipSystemLibraries = boolValue("skip_system_lib",true);
     mSkipProjectLibraries = boolValue("skip_project_lib",true);
     mSkipCustomLibraries = boolValue("skip_custom_lib",false);
-    mAutosaveBreakpoints = boolValue("autosave_breakpoints",true);
-    mAutosaveWatches = boolValue("autosave_watches",true);
+    mAutosave = boolValue("autosave",true);
     mOpenCPUInfoWhenSignaled = boolValue("open_cpu_info_when_signaled",true);
 #ifdef Q_OS_WIN
     mUseGDBServer = boolValue("use_gdb_server", false);

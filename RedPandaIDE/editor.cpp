@@ -1291,7 +1291,7 @@ void Editor::showEvent(QShowEvent */*event*/)
         resetCppParser(mParser);
         reparse();
     }
-
+    pMainWindow->debugger()->setIsForProject(inProject());
     pMainWindow->bookmarkModel()->setIsForProject(inProject());
 //    if (pSettings->codeCompletion().clearWhenEditorHidden()
 //            && !inProject()) {
@@ -1696,7 +1696,7 @@ void Editor::onTipEvalValueReady(const QString& value)
 void Editor::onLinesDeleted(int first, int count)
 {
     pMainWindow->caretList().linesDeleted(this,first,count);
-    pMainWindow->debugger()->breakpointModel()->onFileDeleteLines(mFilename,first,count);
+    pMainWindow->debugger()->breakpointModel()->onFileDeleteLines(mFilename,first,count,inProject());
     pMainWindow->bookmarkModel()->onFileDeleteLines(mFilename,first,count, inProject());
     resetBreakpoints();
     resetBookmarks();
@@ -1708,7 +1708,7 @@ void Editor::onLinesDeleted(int first, int count)
 void Editor::onLinesInserted(int first, int count)
 {
     pMainWindow->caretList().linesInserted(this,first,count);
-    pMainWindow->debugger()->breakpointModel()->onFileInsertLines(mFilename,first,count);
+    pMainWindow->debugger()->breakpointModel()->onFileInsertLines(mFilename,first,count, inProject());
     pMainWindow->bookmarkModel()->onFileInsertLines(mFilename,first,count, inProject());
     resetBreakpoints();
     resetBookmarks();
@@ -1756,7 +1756,7 @@ void Editor::resetBreakpoints()
 {
     mBreakpointLines.clear();
     foreach (const PBreakpoint& breakpoint,
-             pMainWindow->debugger()->breakpointModel()->breakpoints()) {
+             pMainWindow->debugger()->breakpointModel()->breakpoints(inProject())) {
         if (breakpoint->filename == mFilename) {
             mBreakpointLines.insert(breakpoint->line);
         }
@@ -4444,7 +4444,7 @@ void Editor::removeBreakpointFocus()
 void Editor::modifyBreakpointProperty(int line)
 {
     int index;
-    PBreakpoint breakpoint = pMainWindow->debugger()->breakpointAt(line,this,index);
+    PBreakpoint breakpoint = pMainWindow->debugger()->breakpointAt(line,this,&index);
     if (!breakpoint)
         return;
     bool isOk;
@@ -4454,7 +4454,7 @@ void Editor::modifyBreakpointProperty(int line)
                             QLineEdit::Normal,
                             breakpoint->condition,&isOk);
     if (isOk) {
-        pMainWindow->debugger()->setBreakPointCondition(index,s);
+        pMainWindow->debugger()->setBreakPointCondition(index,s,inProject());
     }
 }
 

@@ -56,7 +56,8 @@ struct WatchVar {
     QString type;
     int numChild;
     QList<PWatchVar> children;
-    WatchVar * parent; //use raw point to prevent circular-reference
+    std::weak_ptr<WatchVar> parent; //use raw point to prevent circular-reference
+    qint64 timestamp;
 };
 
 enum class BreakpointType {
@@ -75,9 +76,19 @@ struct Breakpoint {
     QString condition;
     bool enabled;
     BreakpointType breakpointType;
+    qint64 timestamp;
 };
 
 using PBreakpoint = std::shared_ptr<Breakpoint>;
+
+struct DebugConfig {
+    QList<PBreakpoint> breakpoints;
+    QList<PWatchVar> watchVars;
+    qint64 timestamp;
+};
+
+
+using PDebugConfig=std::shared_ptr<DebugConfig>;
 
 struct Trace {
     QString funcname;
@@ -105,6 +116,8 @@ private:
     QHash<int,QString> mRegisterValues;
 };
 
+class Debugger;
+
 class BreakpointModel: public QAbstractTableModel {
     Q_OBJECT
     // QAbstractItemModel interface
@@ -114,21 +127,34 @@ public:
     int columnCount(const QModelIndex &parent) const override;
     QVariant data(const QModelIndex &index, int role) const override;
     QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
-    void addBreakpoint(PBreakpoint p);
-    void clear();
-    void removeBreakpoint(int index);
-    PBreakpoint setBreakPointCondition(int index, const QString& condition);
-    const QList<PBreakpoint>& breakpoints() const;
-    PBreakpoint breakpoint(int index) const;
-    void save(const QString& filename);
-    void load(const QString& filename);
+    void addBreakpoint(PBreakpoint p, bool forProject);
+    void clear(bool forProject);
+    void removeBreakpoint(int index, bool forProject);
+    PBreakpoint setBreakPointCondition(int index, const QString& condition, bool forProject);
+    const QList<PBreakpoint>& breakpoints(bool forProject) const {
+        return forProject?mProjectBreakpoints:mBreakpoints;
+    }
+
+    PBreakpoint breakpoint(int index, bool forProject) const;
+
 public slots:
     void updateBreakpointNumber(const QString& filename, int line, int number);
     void invalidateAllBreakpointNumbers(); // call this when gdb is stopped
-    void onFileDeleteLines(const QString& filename, int startLine, int count);
-    void onFileInsertLines(const QString& filename, int startLine, int count);
+    void onFileDeleteLines(const QString& filename, int startLine, int count, bool forProject);
+    void onFileInsertLines(const QString& filename, int startLine, int count, bool forProject);
 private:
-    QList<PBreakpoint> mList;
+    bool isForProject() const;
+    void setIsForProject(bool newIsForProject);
+    QList<PBreakpoint> loadJson(const QJsonArray& jsonArray, qint64 criteriaTime);
+    QJsonArray toJson(const QString& projectFolder);
+    void setBreakpoints(const QList<PBreakpoint>& list, bool forProject);
+
+private:
+    QList<PBreakpoint> mBreakpoints;
+    QList<PBreakpoint> mProjectBreakpoints;
+    bool mIsForProject;
+
+    friend class Debugger;
 };
 
 class BacktraceModel : public QAbstractTableModel {
@@ -164,11 +190,12 @@ public:
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
     bool hasChildren(const QModelIndex &parent) const override;
-    void addWatchVar(PWatchVar watchVar);
+    QModelIndex index(PWatchVar var) const;
+    QModelIndex index(WatchVar* pVar) const;
+
     void removeWatchVar(const QString& expression);
     void removeWatchVar(const QModelIndex& index);
     void clear();
-    const QList<PWatchVar>& watchVars();
     PWatchVar findWatchVar(const QModelIndex& index);
     PWatchVar findWatchVar(const QString& expr);
     void resetAllVarInfos();
@@ -176,8 +203,6 @@ public:
     void beginUpdate();
     void endUpdate();
     void notifyUpdated(PWatchVar var);
-    void save(const QString& filename);
-    void load(const QString& filename);
 signals:
     void setWatchVarValue(const QString& name, const QString& value);
 public  slots:
@@ -200,17 +225,30 @@ public  slots:
 signals:
     void fetchChildren(const QString& name);
 private:
-    QModelIndex index(PWatchVar var) const;
-    QModelIndex index(WatchVar* pVar) const;
+    bool isForProject() const;
+    void setIsForProject(bool newIsForProject);
+    const QList<PWatchVar> &watchVars(bool forProject) const;
+    QJsonArray toJson(bool forProject);
+    QList<PWatchVar> loadJson(const QJsonArray &jsonArray, qint64 criteriaTimestamp);
+    const QList<PWatchVar> &watchVars() const;
+    void addWatchVar(PWatchVar watchVar);
+    void setWatchVars(const QList<PWatchVar> list, bool forProject);
+
 private:
     QList<PWatchVar> mWatchVars;
-    QHash<QString,PWatchVar> mVarIndex;
+    QList<PWatchVar> mProjectWatchVars;
+
+    QHash<QString,PWatchVar> mVarIndex; //var index is only valid for the current debugging session
+
     int mUpdateCount;
+    bool mIsForProject;
 
     // QAbstractItemModel interface
 public:
     bool setData(const QModelIndex &index, const QVariant &value, int role) override;
     Qt::ItemFlags flags(const QModelIndex &index) const override;
+
+    friend class Debugger;
 };
 
 struct MemoryLine {
@@ -267,19 +305,28 @@ public:
     bool inferiorRunning();
     void interrupt();
 
+    bool isForProject() const;
+    void setIsForProject(bool newIsForProject);
+
     //breakpoints
     void addBreakpoint(int line, const Editor* editor);
-    void addBreakpoint(int line, const QString& filename);
-    void deleteBreakpoints(const QString& filename);
+    void addBreakpoint(int line, const QString& filename, bool forProject);
+    void deleteBreakpoints(const QString& filename, bool forProject);
     void deleteBreakpoints(const Editor* editor);
-    void deleteBreakpoints();
+    void deleteBreakpoints(bool forProject);
     void removeBreakpoint(int line, const Editor* editor);
-    void removeBreakpoint(int line, const QString& filename);
-    void removeBreakpoint(int index);
-    PBreakpoint breakpointAt(int line, const QString& filename, int &index);
-    PBreakpoint breakpointAt(int line, const Editor* editor, int &index);
-    void setBreakPointCondition(int index, const QString& condition);
+    void removeBreakpoint(int line, const QString& filename, bool forProject);
+    void removeBreakpoint(int index, bool forProject);
+    PBreakpoint breakpointAt(int line, const QString &filename, int *index, bool forProject);
+    PBreakpoint breakpointAt(int line, const Editor *editor, int *index);
+    void setBreakPointCondition(int index, const QString& condition, bool forProject);
     void sendAllBreakpointsToDebugger();
+
+    void saveForNonproject(const QString &filename);
+    void saveForProject(const QString &filename, const QString &projectFolder);
+
+    void loadForNonproject(const QString &filename);
+    void loadForProject(const QString& filename, const QString& projectFolder);
 
     //watch vars
     void addWatchVar(const QString& expression);
@@ -292,18 +339,18 @@ public:
     PWatchVar watchVarAt(const QModelIndex& index);
 //    void notifyWatchVarUpdated(PWatchVar var);
 
-    BacktraceModel* backtraceModel();
-    BreakpointModel* breakpointModel();
+    std::shared_ptr<BacktraceModel> backtraceModel();
+    std::shared_ptr<BreakpointModel> breakpointModel();
     bool executing() const;
 
     int leftPageIndexBackup() const;
     void setLeftPageIndexBackup(int leftPageIndexBackup);
 
-    WatchModel *watchModel() const;
+    std::shared_ptr<WatchModel> watchModel() const;
 
-    RegisterModel *registerModel() const;
+    std::shared_ptr<RegisterModel> registerModel() const;
 
-    MemoryModel *memoryModel() const;
+    std::shared_ptr<MemoryModel> memoryModel() const;
 
     bool forceUTF8() const;
     void setForceUTF8(bool newForceUTF8);
@@ -320,8 +367,10 @@ private:
     void sendWatchCommand(PWatchVar var);
     void sendRemoveWatchCommand(PWatchVar var);
     void sendBreakpointCommand(PBreakpoint breakpoint);
-    void sendClearBreakpointCommand(int index);
+    void sendClearBreakpointCommand(int index, bool forProject);
     void sendClearBreakpointCommand(PBreakpoint breakpoint);
+    void save(const QString& filename, const QString& projectFolder);
+    PDebugConfig load(const QString& filename, bool forProject);
 
 private slots:
     void syncFinishedParsing();
@@ -339,15 +388,17 @@ private slots:
 private:
     bool mExecuting;
     bool mCommandChanged;
-    BreakpointModel *mBreakpointModel;
-    BacktraceModel *mBacktraceModel;
-    WatchModel *mWatchModel;
-    RegisterModel *mRegisterModel;
-    MemoryModel *mMemoryModel;
+    std::shared_ptr<BreakpointModel> mBreakpointModel;
+    std::shared_ptr<BacktraceModel> mBacktraceModel;
+    std::shared_ptr<WatchModel> mWatchModel;
+    std::shared_ptr<RegisterModel> mRegisterModel;
+    std::shared_ptr<MemoryModel> mMemoryModel;
     DebugReader *mReader;
     DebugTarget *mTarget;
     bool mForceUTF8;
     int mLeftPageIndexBackup;
+    qint64 mLastLoadtime;
+    qint64 mProjectLastLoadtime;
 };
 
 class DebugTarget: public QThread {

@@ -34,18 +34,20 @@
 #include "widgets/signalmessagedialog.h"
 
 Debugger::Debugger(QObject *parent) : QObject(parent),
-    mForceUTF8(false)
+    mForceUTF8(false),
+    mLastLoadtime(0),
+    mProjectLastLoadtime(0)
 {
     //models deleted in the destructor
-    mBreakpointModel=new BreakpointModel(this);
-    mBacktraceModel=new BacktraceModel(this);
-    mWatchModel = new WatchModel(this);
-    mRegisterModel = new RegisterModel(this);
-    mMemoryModel = new MemoryModel(8,this);
+    mBreakpointModel= std::make_shared<BreakpointModel>(this);
+    mBacktraceModel = std::make_shared<BacktraceModel>(this);
+    mWatchModel = std::make_shared<WatchModel>(this);
+    mRegisterModel = std::make_shared<RegisterModel>(this);
+    mMemoryModel = std::make_shared<MemoryModel>(8,this);
 
-    connect(mMemoryModel,&MemoryModel::setMemoryData,
+    connect(mMemoryModel.get(),&MemoryModel::setMemoryData,
             this, &Debugger::setMemoryData);
-    connect(mWatchModel, &WatchModel::setWatchVarValue,
+    connect(mWatchModel.get(), &WatchModel::setWatchVarValue,
             this, &Debugger::setWatchVarValue);
     mExecuting = false;
     mReader = nullptr;
@@ -53,17 +55,19 @@ Debugger::Debugger(QObject *parent) : QObject(parent),
     mCommandChanged = false;
     mLeftPageIndexBackup = -1;
 
-    connect(mWatchModel, &WatchModel::fetchChildren,
+    connect(mWatchModel.get(), &WatchModel::fetchChildren,
             this, &Debugger::fetchVarChildren);
+
+    setIsForProject(false);
 }
 
 Debugger::~Debugger()
 {
-    delete mBreakpointModel;
-    delete mBacktraceModel;
-    delete mWatchModel;
-    delete mRegisterModel;
-    delete mMemoryModel;
+//    delete mBreakpointModel;
+//    delete mBacktraceModel;
+//    delete mWatchModel;
+//    delete mRegisterModel;
+//    delete mMemoryModel;
 }
 
 bool Debugger::start(int compilerSetIndex, const QString& inferior, const QStringList& binDirs)
@@ -145,14 +149,14 @@ bool Debugger::start(int compilerSetIndex, const QString& inferior, const QStrin
     mReader->addBinDir(pSettings->dirs().appDir());
     mReader->setDebuggerPath(debuggerPath);
     connect(mReader, &QThread::finished,this,&Debugger::cleanUpReader);
-    connect(mReader, &QThread::finished,mMemoryModel,&MemoryModel::reset);
+    connect(mReader, &QThread::finished,mMemoryModel.get(),&MemoryModel::reset);
     connect(mReader, &DebugReader::parseFinished,this,&Debugger::syncFinishedParsing,Qt::BlockingQueuedConnection);
     connect(mReader, &DebugReader::changeDebugConsoleLastLine,this,&Debugger::onChangeDebugConsoleLastline);
     connect(mReader, &DebugReader::cmdStarted,pMainWindow, &MainWindow::disableDebugActions);
     connect(mReader, &DebugReader::cmdFinished,pMainWindow, &MainWindow::enableDebugActions);
     connect(mReader, &DebugReader::inferiorStopped, pMainWindow, &MainWindow::enableDebugActions);
 
-    connect(mReader, &DebugReader::breakpointInfoGetted, mBreakpointModel,
+    connect(mReader, &DebugReader::breakpointInfoGetted, mBreakpointModel.get(),
             &BreakpointModel::updateBreakpointNumber);
     connect(mReader, &DebugReader::localsUpdated, pMainWindow,
             &MainWindow::onLocalsReady);
@@ -166,15 +170,15 @@ bool Debugger::start(int compilerSetIndex, const QString& inferior, const QStrin
             &Debugger::updateRegisterNames);
     connect(mReader, &DebugReader::registerValuesUpdated, this,
             &Debugger::updateRegisterValues);
-    connect(mReader, &DebugReader::varCreated,mWatchModel,
+    connect(mReader, &DebugReader::varCreated,mWatchModel.get(),
             &WatchModel::updateVarInfo);
-    connect(mReader, &DebugReader::prepareVarChildren,mWatchModel,
+    connect(mReader, &DebugReader::prepareVarChildren,mWatchModel.get(),
             &WatchModel::prepareVarChildren);
-    connect(mReader, &DebugReader::addVarChild,mWatchModel,
+    connect(mReader, &DebugReader::addVarChild,mWatchModel.get(),
             &WatchModel::addVarChild);
-    connect(mReader, &DebugReader::varValueUpdated,mWatchModel,
+    connect(mReader, &DebugReader::varValueUpdated,mWatchModel.get(),
             &WatchModel::updateVarValue);
-    connect(mReader, &DebugReader::varsValueUpdated,mWatchModel,
+    connect(mReader, &DebugReader::varsValueUpdated,mWatchModel.get(),
             &WatchModel::updateAllHasMoreVars);
     connect(mReader, &DebugReader::inferiorContinued,pMainWindow,
             &MainWindow::removeActiveBreakpoints);
@@ -255,12 +259,12 @@ void Debugger::refreshAll()
                     );
 }
 
-RegisterModel *Debugger::registerModel() const
+std::shared_ptr<RegisterModel> Debugger::registerModel() const
 {
     return mRegisterModel;
 }
 
-WatchModel *Debugger::watchModel() const
+std::shared_ptr<WatchModel> Debugger::watchModel() const
 {
     return mWatchModel;
 }
@@ -293,12 +297,25 @@ void Debugger::interrupt()
     sendCommand("-exec-interrupt", "");
 }
 
-void Debugger::addBreakpoint(int line, const Editor* editor)
+bool Debugger::isForProject() const
 {
-    addBreakpoint(line,editor->filename());
+    return mBreakpointModel->isForProject();
 }
 
-void Debugger::addBreakpoint(int line, const QString &filename)
+void Debugger::setIsForProject(bool newIsForProject)
+{
+    if (!executing()) {
+        mBreakpointModel->setIsForProject(newIsForProject);
+        mWatchModel->setIsForProject(newIsForProject);
+    }
+}
+
+void Debugger::addBreakpoint(int line, const Editor* editor)
+{
+    addBreakpoint(line,editor->filename(), editor->inProject());
+}
+
+void Debugger::addBreakpoint(int line, const QString &filename, bool forProject)
 {
     PBreakpoint bp=std::make_shared<Breakpoint>();
     bp->number = -1;
@@ -307,76 +324,80 @@ void Debugger::addBreakpoint(int line, const QString &filename)
     bp->condition = "";
     bp->enabled = true;
     bp->breakpointType = BreakpointType::Breakpoint;
-    mBreakpointModel->addBreakpoint(bp);
+    bp->timestamp = QDateTime::currentMSecsSinceEpoch();
+    mBreakpointModel->addBreakpoint(bp,forProject);
     if (mExecuting) {
         sendBreakpointCommand(bp);
     }
 }
 
-void Debugger::deleteBreakpoints(const QString &filename)
+void Debugger::deleteBreakpoints(const QString &filename, bool forProject)
 {
-    for (int i=mBreakpointModel->breakpoints().size()-1;i>=0;i--) {
-        PBreakpoint bp = mBreakpointModel->breakpoints()[i];
+    const QList<PBreakpoint>& list=mBreakpointModel->breakpoints(forProject);
+    for (int i=list.size()-1;i>=0;i--) {
+        PBreakpoint bp = list[i];
         if (bp->filename == filename) {
-            mBreakpointModel->removeBreakpoint(i);
+            mBreakpointModel->removeBreakpoint(i,forProject);
         }
     }
 }
 
 void Debugger::deleteBreakpoints(const Editor *editor)
 {
-    deleteBreakpoints(editor->filename());
+    deleteBreakpoints(editor->filename(),editor->inProject());
 }
 
-void Debugger::deleteBreakpoints()
+void Debugger::deleteBreakpoints(bool forProject)
 {
-    for (int i=mBreakpointModel->breakpoints().size()-1;i>=0;i--) {
-        removeBreakpoint(i);
-    }
+    mBreakpointModel->clear(forProject);
+//    for (int i=mBreakpointModel->breakpoints().size()-1;i>=0;i--) {
+//        removeBreakpoint(i);
+//    }
 }
 
 void Debugger::removeBreakpoint(int line, const Editor *editor)
 {
-    removeBreakpoint(line,editor->filename());
+    removeBreakpoint(line,editor->filename(),editor->inProject());
 }
 
-void Debugger::removeBreakpoint(int line, const QString &filename)
+void Debugger::removeBreakpoint(int line, const QString &filename, bool forProject)
 {
-    for (int i=mBreakpointModel->breakpoints().size()-1;i>=0;i--) {
-        PBreakpoint bp = mBreakpointModel->breakpoints()[i];
+    const QList<PBreakpoint>& breakpoints=mBreakpointModel->breakpoints(forProject);
+    for (int i=breakpoints.size()-1;i>=0;i--) {
+        PBreakpoint bp = breakpoints[i];
         if (bp->filename == filename && bp->line == line) {
-            removeBreakpoint(i);
+            removeBreakpoint(i, forProject);
         }
     }
 }
 
-void Debugger::removeBreakpoint(int index)
+void Debugger::removeBreakpoint(int index, bool forProject)
 {
-    sendClearBreakpointCommand(index);
-    mBreakpointModel->removeBreakpoint(index);
+    sendClearBreakpointCommand(index, forProject);
+    mBreakpointModel->removeBreakpoint(index, forProject);
 }
 
-PBreakpoint Debugger::breakpointAt(int line, const QString& filename, int &index)
+PBreakpoint Debugger::breakpointAt(int line, const QString& filename, int *index , bool forProject)
 {
-    const QList<PBreakpoint>& breakpoints=mBreakpointModel->breakpoints();
-    for (index=0;index<breakpoints.count();index++){
-        PBreakpoint breakpoint = breakpoints[index];
+    const QList<PBreakpoint>& breakpoints=mBreakpointModel->breakpoints(forProject);
+    for (*index=0;*index<breakpoints.count();(*index)++){
+        PBreakpoint breakpoint = breakpoints[*index];
         if (breakpoint->line == line
                 && breakpoint->filename == filename)
             return breakpoint;
     }
-    index=-1;
+    *index=-1;
     return PBreakpoint();
 }
 
-PBreakpoint Debugger::breakpointAt(int line, const Editor *editor, int &index)
+PBreakpoint Debugger::breakpointAt(int line, const Editor *editor, int *index)
 {
-    return breakpointAt(line,editor->filename(),index);
+    return breakpointAt(line,editor->filename(),index, editor->inProject());
 }
 
-void Debugger::setBreakPointCondition(int index, const QString &condition)
+void Debugger::setBreakPointCondition(int index, const QString &condition, bool forProject)
 {
-    PBreakpoint breakpoint=mBreakpointModel->setBreakPointCondition(index,condition);
+    PBreakpoint breakpoint=mBreakpointModel->setBreakPointCondition(index,condition, forProject);
     if (condition.isEmpty()) {
         sendCommand("-break-condition",
                     QString("%1").arg(breakpoint->number));
@@ -388,8 +409,42 @@ void Debugger::setBreakPointCondition(int index, const QString &condition)
 
 void Debugger::sendAllBreakpointsToDebugger()
 {
-    for (PBreakpoint breakpoint:mBreakpointModel->breakpoints()) {
+    for (PBreakpoint breakpoint:mBreakpointModel->breakpoints(mBreakpointModel->isForProject())) {
         sendBreakpointCommand(breakpoint);
+    }
+}
+
+void Debugger::saveForNonproject(const QString &filename)
+{
+    save(filename,QString());
+}
+
+void Debugger::saveForProject(const QString &filename, const QString &projectFolder)
+{
+    save(filename,projectFolder);
+}
+
+void Debugger::loadForNonproject(const QString &filename)
+{
+    bool forProject = false;
+    PDebugConfig pConfig = load(filename, forProject);
+    if (pConfig->timestamp>0) {
+        mBreakpointModel->setBreakpoints(pConfig->breakpoints,forProject);
+        mWatchModel->setWatchVars(pConfig->watchVars,forProject);
+    }
+}
+
+void Debugger::loadForProject(const QString &filename, const QString &projectFolder)
+{
+    bool forProject = false;
+    PDebugConfig pConfig = load(filename, forProject);
+    if (pConfig->timestamp>0) {
+        QDir dir(projectFolder);
+        foreach (const PBreakpoint& breakpoint, pConfig->breakpoints) {
+            breakpoint->filename = dir.absoluteFilePath(breakpoint->filename);
+        }
+        mBreakpointModel->setBreakpoints(pConfig->breakpoints,forProject);
+        mWatchModel->setWatchVars(pConfig->watchVars,forProject);
     }
 }
 
@@ -401,12 +456,12 @@ void Debugger::addWatchVar(const QString &expression)
         return;
 
     PWatchVar var = std::make_shared<WatchVar>();
-    var->parent= nullptr;
+    var->parent= PWatchVar();
     var->expression = expression;
     var->value = tr("Execute to evaluate");
     var->numChild = 0;
     var->hasMore = false;
-    var->parent = nullptr;
+    var->timestamp = QDateTime::currentMSecsSinceEpoch();
 
     mWatchModel->addWatchVar(var);
     sendWatchCommand(var);
@@ -462,7 +517,7 @@ void Debugger::setForceUTF8(bool newForceUTF8)
     mForceUTF8 = newForceUTF8;
 }
 
-MemoryModel *Debugger::memoryModel() const
+std::shared_ptr<MemoryModel> Debugger::memoryModel() const
 {
     return mMemoryModel;
 }
@@ -510,12 +565,12 @@ PWatchVar Debugger::watchVarAt(const QModelIndex &index)
 //{
 //    mWatchModel->notifyUpdated(var);
 //}
-BacktraceModel* Debugger::backtraceModel()
+std::shared_ptr<BacktraceModel> Debugger::backtraceModel()
 {
     return mBacktraceModel;
 }
 
-BreakpointModel *Debugger::breakpointModel()
+std::shared_ptr<BreakpointModel> Debugger::breakpointModel()
 {
     return mBreakpointModel;
 }
@@ -547,9 +602,9 @@ void Debugger::sendBreakpointCommand(PBreakpoint breakpoint)
     }
 }
 
-void Debugger::sendClearBreakpointCommand(int index)
+void Debugger::sendClearBreakpointCommand(int index, bool forProject)
 {
-    sendClearBreakpointCommand(mBreakpointModel->breakpoints()[index]);
+    sendClearBreakpointCommand(mBreakpointModel->breakpoints(forProject)[index]);
 }
 
 void Debugger::sendClearBreakpointCommand(PBreakpoint breakpoint)
@@ -562,6 +617,148 @@ void Debugger::sendClearBreakpointCommand(PBreakpoint breakpoint)
         sendCommand("-break-delete",
                 QString("%1").arg(breakpoint->number));
     }
+}
+
+QJsonArray BreakpointModel::toJson(const QString& projectFolder)
+{
+    bool forProject = !projectFolder.isEmpty();
+    QJsonArray array;
+    foreach (const PBreakpoint& breakpoint, breakpoints(forProject)) {
+        QJsonObject obj;
+        if (forProject)
+            obj["filename"]=extractRelativePath(projectFolder, breakpoint->filename);
+        else
+            obj["filename"]=breakpoint->filename;
+        obj["line"]=breakpoint->line;
+        obj["condition"]=breakpoint->condition;
+        obj["enabled"]=breakpoint->enabled;
+        obj["breakpoint_type"] = static_cast<int>(breakpoint->breakpointType);
+        obj["timestamp"]=QString("%1").arg(breakpoint->timestamp);
+        array.append(obj);
+    }
+    return array;
+}
+
+void BreakpointModel::setBreakpoints(const QList<PBreakpoint> &list, bool forProject)
+{
+    if (mIsForProject == forProject)
+        beginResetModel();
+    if (forProject) {
+        mProjectBreakpoints = list;
+    } else {
+        mBreakpoints = list;
+    }
+    if (mIsForProject == forProject)
+        endResetModel();
+}
+
+void Debugger::save(const QString &filename, const QString& projectFolder)
+{
+    bool forProject=!projectFolder.isEmpty();
+    QList<PBreakpoint> breakpoints;
+    QList<PWatchVar> watchVars=mWatchModel->watchVars(forProject);
+    QSet<QString> breakpointCompareSet;
+    QSet<QString> watchVarCompareSet;
+    if (forProject) {
+        //convert project file's absolute path to relative path
+        foreach (const PBreakpoint& breakpoint, mBreakpointModel->breakpoints(forProject)) {
+            QString filename = extractRelativePath(projectFolder, breakpoint->filename);
+            QString key = QString("%1-%2").arg(filename).arg(breakpoint->line);
+            breakpointCompareSet.insert(key);
+        }
+    } else {
+        foreach (const PBreakpoint& breakpoint, mBreakpointModel->breakpoints(forProject)) {
+            QString key = QString("%1-%2").arg(breakpoint->filename).arg(breakpoint->line);
+            breakpointCompareSet.insert(key);
+        }
+    }
+    foreach (const PWatchVar& watchVar, watchVars) {
+        watchVarCompareSet.insert(watchVar->expression);
+    }
+    std::shared_ptr<DebugConfig> pConfig = load(filename, forProject);
+    QFile file(filename);
+    if (file.open(QFile::WriteOnly | QFile::Truncate)) {
+        QDir folder(projectFolder);
+        foreach (const PBreakpoint& breakpoint, pConfig->breakpoints) {
+            QString key = QString("%1-%2").arg(breakpoint->filename).arg(breakpoint->line);
+            if (!breakpointCompareSet.contains(key)) {
+                breakpointCompareSet.insert(key);
+                if (forProject)
+                    breakpoint->filename=folder.absoluteFilePath(breakpoint->filename);
+                mBreakpointModel->addBreakpoint(breakpoint,forProject);
+            }
+        }
+        foreach (const PWatchVar& watchVar, pConfig->watchVars) {
+            QString key = watchVar->expression;
+            if (!watchVarCompareSet.contains(key)) {
+                watchVarCompareSet.insert(key);
+                addWatchVar(key);
+            }
+        }
+        qint64 saveTimestamp = QDateTime::currentMSecsSinceEpoch();;
+        if (forProject) {
+            mProjectLastLoadtime = saveTimestamp;
+        } else {
+            mLastLoadtime = saveTimestamp;
+        }
+        QJsonObject rootObj;
+        rootObj["timestamp"] = QString("%1").arg(saveTimestamp);
+
+        rootObj["breakpoints"] = mBreakpointModel->toJson(projectFolder);
+        rootObj["watchvars"] = mWatchModel->toJson(forProject);
+        QJsonDocument doc;
+        doc.setObject(rootObj);
+        if (file.write(doc.toJson())<0) {
+            throw FileError(tr("Save file '%1' failed.")
+                            .arg(filename));
+        }
+    } else {
+        throw FileError(tr("Can't open file '%1' for write.")
+                        .arg(filename));
+    }
+}
+
+PDebugConfig Debugger::load(const QString &filename, bool forProject)
+{
+    qint64 criteriaTimestamp;
+    if (forProject) {
+        criteriaTimestamp = mProjectLastLoadtime;
+    } else {
+        criteriaTimestamp = mLastLoadtime;
+    }
+    std::shared_ptr<DebugConfig> pConfig=std::make_shared<DebugConfig>();
+    pConfig->timestamp=0;
+    QFile file(filename);
+    if (!file.exists())
+        return pConfig;
+    if (file.open(QFile::ReadOnly)) {
+        QByteArray content = file.readAll();
+        QJsonParseError error;
+        QJsonDocument doc(QJsonDocument::fromJson(content,&error));
+        if (error.error  != QJsonParseError::NoError) {
+            throw FileError(tr("Error in json file '%1':%2 : %3")
+                            .arg(filename)
+                            .arg(error.offset)
+                            .arg(error.errorString()));
+        }
+        QJsonObject rootObject = doc.object();
+        qint64 timestamp = rootObject["timestamp"].toString().toLongLong();
+        if (timestamp <= criteriaTimestamp)
+            return pConfig;
+        pConfig->timestamp = timestamp;
+
+        pConfig->breakpoints = mBreakpointModel->loadJson(rootObject["breakpoints"].toArray(),criteriaTimestamp);
+        pConfig->watchVars = mWatchModel->loadJson(rootObject["watchvars"].toArray(), criteriaTimestamp);
+        if (forProject) {
+            mProjectLastLoadtime = QDateTime::currentMSecsSinceEpoch();
+        } else {
+            mLastLoadtime = QDateTime::currentMSecsSinceEpoch();
+        }
+    } else {
+        throw FileError(tr("Can't open file '%1' for read.")
+                        .arg(filename));
+    }
+    return pConfig;
 }
 
 void Debugger::syncFinishedParsing()
@@ -1524,7 +1721,7 @@ BreakpointModel::BreakpointModel(QObject *parent):QAbstractTableModel(parent)
 
 int BreakpointModel::rowCount(const QModelIndex &) const
 {
-    return mList.size();
+    return breakpoints(mIsForProject).size();
 }
 
 int BreakpointModel::columnCount(const QModelIndex &) const
@@ -1536,9 +1733,11 @@ QVariant BreakpointModel::data(const QModelIndex &index, int role) const
 {
     if (!index.isValid())
         return QVariant();
-    if (index.row()<0 || index.row() >= static_cast<int>(mList.size()))
+    const QList<PBreakpoint> &list=breakpoints(mIsForProject);
+    if (index.row()<0 || index.row() >= static_cast<int>(list.size()))
         return QVariant();
-    PBreakpoint breakpoint = mList[index.row()];
+
+    PBreakpoint breakpoint = list[index.row()];
     if (!breakpoint)
         return QVariant();
     switch (role) {
@@ -1591,119 +1790,78 @@ QVariant BreakpointModel::headerData(int section, Qt::Orientation orientation, i
     return QVariant();
 }
 
-void BreakpointModel::addBreakpoint(PBreakpoint p)
+void BreakpointModel::addBreakpoint(PBreakpoint p, bool forProject)
 {
-    beginInsertRows(QModelIndex(),mList.size(),mList.size());
-    mList.push_back(p);
-    endInsertRows();
+
+    if (forProject) {
+        if (forProject==mIsForProject)
+            beginInsertRows(QModelIndex(),mProjectBreakpoints.count(),mProjectBreakpoints.count());
+        mProjectBreakpoints.push_back(p);
+    } else {
+        if (forProject==mIsForProject)
+            beginInsertRows(QModelIndex(),mBreakpoints.count(),mBreakpoints.count());
+        mBreakpoints.push_back(p);
+    }
+    if (forProject==mIsForProject)
+        endInsertRows();
 }
 
-void BreakpointModel::clear()
+void BreakpointModel::clear(bool forProject)
 {
-    beginResetModel();
-    mList.clear();
-    endResetModel();
+    if (forProject == mIsForProject)
+        beginResetModel();
+    if (forProject)
+        mProjectBreakpoints.clear();
+    else
+        mBreakpoints.clear();
+    if (forProject == mIsForProject)
+        endResetModel();
 }
 
-void BreakpointModel::removeBreakpoint(int row)
+void BreakpointModel::removeBreakpoint(int row, bool forProject)
 {
-    beginRemoveRows(QModelIndex(),row,row);
-    mList.removeAt(row);
-    endRemoveRows();
+    if (forProject==mIsForProject)
+        beginRemoveRows(QModelIndex(),row,row);
+    if (forProject)
+        mProjectBreakpoints.removeAt(row);
+    else
+        mBreakpoints.removeAt(row);
+    if (forProject==mIsForProject)
+        endRemoveRows();
 }
 
 void BreakpointModel::invalidateAllBreakpointNumbers()
 {
-    foreach (PBreakpoint bp,mList) {
+    foreach (PBreakpoint bp,mBreakpoints) {
+        bp->number = -1;
+    }
+    foreach (PBreakpoint bp,mProjectBreakpoints) {
         bp->number = -1;
     }
     //emit dateChanged(createIndex(0,0),)
 }
 
-PBreakpoint BreakpointModel::setBreakPointCondition(int index, const QString &condition)
+PBreakpoint BreakpointModel::setBreakPointCondition(int index, const QString &condition,bool forProject)
 {
-    PBreakpoint breakpoint = mList[index];
+    PBreakpoint breakpoint = breakpoints(forProject)[index];
     breakpoint->condition = condition;
-    emit dataChanged(createIndex(index,0),createIndex(index,2));
+    if (forProject==mIsForProject)
+        emit dataChanged(createIndex(index,0),createIndex(index,2));
     return breakpoint;
 }
 
-const QList<PBreakpoint> &BreakpointModel::breakpoints() const
+PBreakpoint BreakpointModel::breakpoint(int index, bool forProject) const
 {
-    return mList;
-}
-
-PBreakpoint BreakpointModel::breakpoint(int index) const
-{
-    if (index<0 && index>=mList.count())
+    const QList<PBreakpoint> list=breakpoints(forProject);
+    if (index<0 && index>=list.count())
         return PBreakpoint();
-    return mList[index];
+    return list[index];
 }
 
-void BreakpointModel::save(const QString &filename)
-{
-    QFile file(filename);
-    if (file.open(QFile::WriteOnly | QFile::Truncate)) {
-        QJsonArray array;
-        foreach (const PBreakpoint& breakpoint, mList) {
-            QJsonObject obj;
-            obj["filename"]=breakpoint->filename;
-            obj["line"]=breakpoint->line;
-            obj["condition"]=breakpoint->condition;
-            obj["enabled"]=breakpoint->enabled;
-            obj["breakpoint_type"] = static_cast<int>(breakpoint->breakpointType);
-            array.append(obj);
-        }
-        QJsonDocument doc;
-        doc.setArray(array);
-        if (file.write(doc.toJson())<0) {
-            throw FileError(tr("Save file '%1' failed.")
-                            .arg(filename));
-        }
-    } else {
-        throw FileError(tr("Can't open file '%1' for write.")
-                        .arg(filename));
-    }
-}
-
-void BreakpointModel::load(const QString &filename)
-{
-    clear();
-    QFile file(filename);
-    if (!file.exists())
-        return;
-    if (file.open(QFile::ReadOnly)) {
-        QByteArray content = file.readAll();
-        QJsonParseError error;
-        QJsonDocument doc(QJsonDocument::fromJson(content,&error));
-        if (error.error  != QJsonParseError::NoError) {
-            throw FileError(tr("Error in json file '%1':%2 : %3")
-                            .arg(filename)
-                            .arg(error.offset)
-                            .arg(error.errorString()));
-        }
-        QJsonArray array = doc.array();
-        for  (int i=0;i<array.count();i++) {
-            QJsonValue value = array[i];
-            QJsonObject obj=value.toObject();
-            PBreakpoint breakpoint = std::make_shared<Breakpoint>();
-            breakpoint->filename = QFileInfo(obj["filename"].toString()).absoluteFilePath();
-            breakpoint->line = obj["line"].toInt();
-            breakpoint->condition = obj["condition"].toString();
-            breakpoint->enabled = obj["enabled"].toBool();
-            breakpoint->breakpointType = static_cast<BreakpointType>(obj["breakpoint_type"].toInt());
-
-            addBreakpoint(breakpoint);
-        }
-    } else {
-        throw FileError(tr("Can't open file '%1' for read.")
-                        .arg(filename));
-    }
-}
 
 void BreakpointModel::updateBreakpointNumber(const QString& filename, int line, int number)
 {
-    foreach (PBreakpoint bp, mList) {
+    foreach (PBreakpoint bp, breakpoints(mIsForProject)) {
         if (bp->filename == filename && bp->line == line) {
             bp->number = number;
             return;
@@ -1711,34 +1869,76 @@ void BreakpointModel::updateBreakpointNumber(const QString& filename, int line, 
     }
 }
 
-void BreakpointModel::onFileDeleteLines(const QString& filename, int startLine, int count)
+void BreakpointModel::onFileDeleteLines(const QString& filename, int startLine, int count, bool forProject)
 {
-    for (int i = mList.count()-1;i>=0;i--){
-        PBreakpoint breakpoint = mList[i];
+    const QList<PBreakpoint> &list=breakpoints(forProject);
+    for (int i = list.count()-1;i>=0;i--){
+        PBreakpoint breakpoint = list[i];
         if  (breakpoint->filename == filename
              && breakpoint->line>=startLine) {
             if (breakpoint->line >= startLine+count) {
                 breakpoint->line -= count;
-                emit dataChanged(createIndex(i,0),createIndex(i,2));
+                if (forProject==mIsForProject)
+                    emit dataChanged(createIndex(i,0),createIndex(i,2));
             } else {
-                removeBreakpoint(i);
+                removeBreakpoint(i,forProject);
             }
         }
     }
 }
 
-void BreakpointModel::onFileInsertLines(const QString& filename, int startLine, int count)
+void BreakpointModel::onFileInsertLines(const QString& filename, int startLine, int count, bool forProject)
 {
-    for (int i = mList.count()-1;i>=0;i--){
-        PBreakpoint breakpoint = mList[i];
+    const QList<PBreakpoint> &list=breakpoints(forProject);
+    for (int i = list.count()-1;i>=0;i--){
+        PBreakpoint breakpoint = list[i];
         if  (breakpoint->filename == filename
              && breakpoint->line>=startLine) {
             breakpoint->line+=count;
-            emit dataChanged(createIndex(i,0),createIndex(i,2));
+            if (forProject == mIsForProject)
+                emit dataChanged(createIndex(i,0),createIndex(i,2));
         }
     }
 }
 
+bool BreakpointModel::isForProject() const
+{
+    return mIsForProject;
+}
+
+void BreakpointModel::setIsForProject(bool newIsForProject)
+{
+    if (mIsForProject!=newIsForProject) {
+        beginResetModel();
+        mIsForProject = newIsForProject;
+        endResetModel();
+    }
+}
+
+QList<PBreakpoint> BreakpointModel::loadJson(const QJsonArray& jsonArray, qint64 criteriaTime)
+{
+    QList<PBreakpoint> result;
+
+    for  (int i=0;i<jsonArray.count();i++) {
+        QJsonValue value = jsonArray[i];
+        QJsonObject obj=value.toObject();
+        bool ok;
+        qint64 timestamp = obj["timestamp"].toString().toLongLong(&ok);
+
+        if (ok && timestamp > criteriaTime) {
+            PBreakpoint breakpoint = std::make_shared<Breakpoint>();
+            breakpoint->filename = QFileInfo(obj["filename"].toString()).absoluteFilePath();
+            breakpoint->line = obj["line"].toInt();
+            breakpoint->condition = obj["condition"].toString();
+            breakpoint->enabled = obj["enabled"].toBool();
+            breakpoint->breakpointType = static_cast<BreakpointType>(obj["breakpoint_type"].toInt());
+            breakpoint->timestamp = timestamp;
+            result.append(breakpoint);
+        }
+    }
+
+    return result;
+}
 
 BacktraceModel::BacktraceModel(QObject *parent):QAbstractTableModel(parent)
 {
@@ -1836,6 +2036,7 @@ PTrace BacktraceModel::backtrace(int index) const
 WatchModel::WatchModel(QObject *parent):QAbstractItemModel(parent)
 {
     mUpdateCount = 0;
+    mIsForProject = false;
 }
 
 QVariant WatchModel::data(const QModelIndex &index, int role) const
@@ -1866,7 +2067,7 @@ QModelIndex WatchModel::index(int row, int column, const QModelIndex &parent) co
     PWatchVar pChild;
     if (!parent.isValid()) {
         parentItem = nullptr;
-        pChild = mWatchVars[row];
+        pChild = watchVars(mIsForProject)[row];
     } else {
         parentItem = static_cast<WatchVar*>(parent.internalPointer());
         pChild = parentItem->children[row];
@@ -1877,7 +2078,7 @@ QModelIndex WatchModel::index(int row, int column, const QModelIndex &parent) co
     return QModelIndex();
 }
 
-static int getWatchIndex(WatchVar* var, const QList<PWatchVar> list) {
+static int getWatchIndex(WatchVar* var, const QList<PWatchVar> &list) {
     for (int i=0;i<list.size();i++) {
         PWatchVar v = list[i];
         if (v.get() == var) {
@@ -1893,26 +2094,25 @@ QModelIndex WatchModel::parent(const QModelIndex &index) const
         return QModelIndex();
     }
     WatchVar* childItem = static_cast<WatchVar*>(index.internalPointer());
-    WatchVar* parentItem = childItem->parent;
-
+    PWatchVar parentItem = childItem->parent.lock();
     //parent is root
     if (parentItem == nullptr) {
         return QModelIndex();
     }
     int row;
-    WatchVar* grandItem = parentItem->parent;
+    PWatchVar grandItem = parentItem->parent.lock();
     if (grandItem == nullptr) {
-        row = getWatchIndex(parentItem,mWatchVars);
+        row = getWatchIndex(parentItem.get(), watchVars(mIsForProject));
     } else {
-        row = getWatchIndex(parentItem,grandItem->children);
+        row = getWatchIndex(parentItem.get(), grandItem->children);
     }
-    return createIndex(row,0,parentItem);
+    return createIndex(row,0,parentItem.get());
 }
 
 int WatchModel::rowCount(const QModelIndex &parent) const
 {
     if (!parent.isValid()) {
-        return mWatchVars.count();
+        return watchVars(mIsForProject).count();
     } else {
         WatchVar* parentItem = static_cast<WatchVar*>(parent.internalPointer());
         return parentItem->children.count();
@@ -1926,28 +2126,42 @@ int WatchModel::columnCount(const QModelIndex&) const
 
 void WatchModel::addWatchVar(PWatchVar watchVar)
 {
-    for (PWatchVar var:mWatchVars) {
+    QList<PWatchVar> &vars=(mIsForProject?mProjectWatchVars:mWatchVars);
+    for (PWatchVar var:vars) {
         if (watchVar->expression == var->expression) {
             return;
         }
     }
-    beginInsertRows(QModelIndex(),mWatchVars.count(),mWatchVars.count());
-    mWatchVars.append(watchVar);
+    beginInsertRows(QModelIndex(),vars.count(),vars.count());
+    vars.append(watchVar);
     endInsertRows();
+}
+
+void WatchModel::setWatchVars(const QList<PWatchVar> list, bool forProject)
+{
+    if (mIsForProject == forProject)
+        beginResetModel();
+    if (forProject) {
+        mProjectWatchVars = list;
+    } else {
+        mWatchVars = list;
+    }
+    if (mIsForProject == forProject)
+        endResetModel();
 }
 
 void WatchModel::removeWatchVar(const QString &express)
 {
-    for (int i=mWatchVars.size()-1;i>=0;i--) {
-        PWatchVar var = mWatchVars[i];
+    QList<PWatchVar> &vars=(mIsForProject?mProjectWatchVars:mWatchVars);
+    for (int i=vars.size()-1;i>=0;i--) {
+        PWatchVar var = vars[i];
         if (express == var->expression) {
-            this->beginResetModel();
-            //this->beginRemoveRows(QModelIndex(),i,i);
+            QModelIndex  parentIndex = index(var->parent.lock());
+            beginRemoveRows(parentIndex,i,i);
             if (mVarIndex.contains(var->name))
                 mVarIndex.remove(var->name);
-            mWatchVars.removeAt(i);
-            //this->endRemoveRows();
-            this->endResetModel();
+            vars.removeAt(i);
+            endRemoveRows();
         }
     }
 }
@@ -1955,24 +2169,26 @@ void WatchModel::removeWatchVar(const QString &express)
 void WatchModel::removeWatchVar(const QModelIndex &index)
 {
     int r=index.row();
-    this->beginRemoveRows(QModelIndex(),r,r);
-    PWatchVar var = mWatchVars[r];
+    beginRemoveRows(QModelIndex(),r,r);
+    QList<PWatchVar> &vars=(mIsForProject?mProjectWatchVars:mWatchVars);
+    PWatchVar var = vars[r];
     if (mVarIndex.contains(var->name))
         mVarIndex.remove(var->name);
-    mWatchVars.removeAt(r);
-    this->endRemoveRows();
+    vars.removeAt(r);
+    endRemoveRows();
 }
 
 void WatchModel::clear()
 {
-    this->beginResetModel();
-    mWatchVars.clear();
-    this->endResetModel();
+    beginResetModel();
+    QList<PWatchVar> &vars=(mIsForProject?mProjectWatchVars:mWatchVars);
+    vars.clear();
+    endResetModel();
 }
 
-const QList<PWatchVar> &WatchModel::watchVars()
+const QList<PWatchVar> &WatchModel::watchVars() const
 {
-    return mWatchVars;
+    return watchVars(mIsForProject);
 }
 
 PWatchVar WatchModel::findWatchVar(const QModelIndex &index)
@@ -1980,12 +2196,12 @@ PWatchVar WatchModel::findWatchVar(const QModelIndex &index)
     if (!index.isValid())
         return PWatchVar();
     int r=index.row();
-    return mWatchVars[r];
+    return watchVars(mIsForProject)[r];
 }
 
 PWatchVar WatchModel::findWatchVar(const QString &expr)
 {
-    for (PWatchVar var:mWatchVars) {
+    foreach (const PWatchVar &var, watchVars(mIsForProject)) {
         if (expr == var->expression) {
             return var;
         }
@@ -1996,7 +2212,7 @@ PWatchVar WatchModel::findWatchVar(const QString &expr)
 void WatchModel::resetAllVarInfos()
 {
     beginResetModel();
-    foreach (PWatchVar var, mWatchVars) {
+    foreach (PWatchVar var, watchVars(mIsForProject)) {
         var->name.clear();
         var->value = tr("Not Valid");
         var->numChild = 0;
@@ -2054,7 +2270,8 @@ void WatchModel::addVarChild(const QString &parentName, const QString &name,
     child->value = value;
     child->type = type;
     child->hasMore = hasMore;
-    child->parent = var.get();
+    child->parent = var;
+    child->timestamp = QDateTime::currentMSecsSinceEpoch();
     var->children.append(child);
     endInsertRows();
     mVarIndex.insert(name,child);
@@ -2096,10 +2313,30 @@ void WatchModel::updateAllHasMoreVars()
     }
 }
 
+bool WatchModel::isForProject() const
+{
+    return mIsForProject;
+}
+
+void WatchModel::setIsForProject(bool newIsForProject)
+{
+    if (newIsForProject!=mIsForProject) {
+        beginResetModel();
+        mVarIndex.clear();
+        mIsForProject=newIsForProject;
+        endResetModel();
+    }
+}
+
+const QList<PWatchVar> &WatchModel::watchVars(bool forProject) const
+{
+    return forProject?mProjectWatchVars:mWatchVars;
+}
+
 void WatchModel::clearAllVarInfos()
 {
     beginResetModel();
-    foreach (PWatchVar var, mWatchVars) {
+    foreach (PWatchVar var, watchVars(mIsForProject)) {
         var->name.clear();
         var->value = tr("Execute to evaluate");
         var->numChild = 0;
@@ -2132,10 +2369,11 @@ void WatchModel::notifyUpdated(PWatchVar var)
     if (!var)
         return;
     int row;
-    if (var->parent==nullptr) {
-        row = mWatchVars.indexOf(var);
+    PWatchVar parent = var->parent.lock();
+    if (parent==nullptr) {
+        row = watchVars(mIsForProject).indexOf(var);
     } else {
-        row = var->parent->children.indexOf(var);
+        row = parent->children.indexOf(var);
     }
     if (row<0)
         return;
@@ -2143,62 +2381,16 @@ void WatchModel::notifyUpdated(PWatchVar var)
     emit dataChanged(createIndex(row,0,var.get()),createIndex(row,0,var.get()));
 }
 
-void WatchModel::save(const QString &filename)
+QJsonArray WatchModel::toJson(bool forProject)
 {
-    QFile file(filename);
-    if (file.open(QFile::WriteOnly | QFile::Truncate)) {
-        QJsonArray array;
-        foreach (const PWatchVar& watchVar, mWatchVars) {
-            QJsonObject obj;
-            obj["expression"]=watchVar->expression;
-            array.append(obj);
-        }
-        QJsonDocument doc;
-        doc.setArray(array);
-        if (file.write(doc.toJson())<0) {
-            throw FileError(tr("Save file '%1' failed.")
-                            .arg(filename));
-        }
-    } else {
-        throw FileError(tr("Can't open file '%1' for write.")
-                        .arg(filename));
+    QJsonArray array;
+    foreach (const PWatchVar& watchVar, watchVars(forProject)) {
+        QJsonObject obj;
+        obj["expression"]=watchVar->expression;
+        obj["timestamp"]=QString("%1").arg(watchVar->timestamp);
+        array.append(obj);
     }
-}
-
-void WatchModel::load(const QString &filename)
-{
-    clear();
-    QFile file(filename);
-    if (!file.exists())
-        return;
-    if (file.open(QFile::ReadOnly)) {
-        QByteArray content = file.readAll();
-        QJsonParseError error;
-        QJsonDocument doc(QJsonDocument::fromJson(content,&error));
-        if (error.error  != QJsonParseError::NoError) {
-            throw FileError(tr("Error in json file '%1':%2 : %3")
-                            .arg(filename)
-                            .arg(error.offset)
-                            .arg(error.errorString()));
-        }
-        QJsonArray array = doc.array();
-        for  (int i=0;i<array.count();i++) {
-            QJsonValue value = array[i];
-            QJsonObject obj=value.toObject();
-            PWatchVar var = std::make_shared<WatchVar>();
-            var->parent= nullptr;
-            var->expression = obj["expression"].toString();
-            var->value = tr("Execute to evaluate");
-            var->numChild = 0;
-            var->hasMore=false;
-            var->parent = nullptr;
-
-            addWatchVar(var);
-        }
-    } else {
-        throw FileError(tr("Can't open file '%1' for read.")
-                        .arg(filename));
-    }
+    return array;
 }
 
 QModelIndex WatchModel::index(PWatchVar var) const
@@ -2211,10 +2403,11 @@ QModelIndex WatchModel::index(PWatchVar var) const
 QModelIndex WatchModel::index(WatchVar* pVar) const {
     if (pVar==nullptr)
         return QModelIndex();
-    if (pVar->parent) {
+    PWatchVar parent=pVar->parent.lock();
+    if (parent) {
         int row=-1;
-        for (int i=0;i<pVar->parent->children.count();i++) {
-            if (pVar->parent->children[i].get() == pVar) {
+        for (int i=0;i<parent->children.count();i++) {
+            if (parent->children[i].get() == pVar) {
                 row = i;
                 break;
             }
@@ -2223,9 +2416,10 @@ QModelIndex WatchModel::index(WatchVar* pVar) const {
             return QModelIndex();
         return createIndex(row,0,pVar);
     } else {
+        const QList<PWatchVar> &vars=watchVars(mIsForProject);
         int row=-1;
-        for (int i=0;i<mWatchVars.count();i++) {
-            if (mWatchVars[i].get() == pVar) {
+        for (int i=0;i<vars.count();i++) {
+            if (vars[i].get() == pVar) {
                 row = i;
                 break;
             }
@@ -2234,6 +2428,30 @@ QModelIndex WatchModel::index(WatchVar* pVar) const {
             return QModelIndex();
         return createIndex(row,0,pVar);
     }
+}
+
+QList<PWatchVar> WatchModel::loadJson(const QJsonArray &jsonArray, qint64 criteriaTimestamp)
+{
+
+    QList<PWatchVar> result;
+    QJsonArray array = jsonArray;
+    for  (int i=0;i<jsonArray.count();i++) {
+        QJsonValue value = array[i];
+        QJsonObject obj=value.toObject();
+        bool ok;
+        qint64 timestamp = obj["timestamp"].toString().toLongLong(&ok);
+        if (ok && timestamp>criteriaTimestamp) {
+            PWatchVar var = std::make_shared<WatchVar>();
+            var->parent= PWatchVar();
+            var->expression = obj["expression"].toString();
+            var->value = tr("Execute to evaluate");
+            var->numChild = 0;
+            var->hasMore=false;
+            var->timestamp = timestamp;
+            result.append(var);
+        }
+    }
+    return result;
 }
 
 bool WatchModel::setData(const QModelIndex &index, const QVariant &value, int role)

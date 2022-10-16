@@ -71,6 +71,7 @@
 
 #define DEV_PROJECT_EXT "dev"
 #define PROJECT_BOOKMARKS_EXT "bookmarks"
+#define PROJECT_DEBUG_EXT "debug"
 #define RC_EXT "rc"
 #define RES_EXT "res"
 #define H_EXT "h"
@@ -89,8 +90,7 @@
 #define DEV_SHORTCUT_FILE "shortcuts.json"
 #define DEV_TOOLS_FILE "tools.json"
 #define DEV_BOOKMARK_FILE "bookmarks.json"
-#define DEV_BREAKPOINTS_FILE "breakpoints.json"
-#define DEV_WATCH_FILE "watch.json"
+#define DEV_DEBUGGER_FILE "debugger.json"
 
 #ifdef Q_OS_WIN
 #   define PATH_SENSITIVITY Qt::CaseInsensitive

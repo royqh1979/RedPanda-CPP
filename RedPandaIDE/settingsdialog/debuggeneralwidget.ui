@@ -318,16 +318,9 @@
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_3">
       <item>
-       <widget class="QCheckBox" name="chkAutosaveBreakpoints">
+       <widget class="QCheckBox" name="chkAutosave">
         <property name="text">
-         <string>Autosave breakpoints</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QCheckBox" name="chkAutosaveWatches">
-        <property name="text">
-         <string>Autosave watches</string>
+         <string>Autosave breakpoints and watches</string>
         </property>
        </widget>
       </item>

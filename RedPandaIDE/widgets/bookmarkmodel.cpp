@@ -182,7 +182,9 @@ void BookmarkModel::loadBookmarks(const QString &filename)
 {
     if (!mIsForProject)
         beginResetModel();
-    mBookmarks = load(filename,0,&mLastLoadBookmarksTimestamp);
+    qint64 t;
+    mLastLoadBookmarksTimestamp = QDateTime::currentMSecsSinceEpoch();
+    mBookmarks = load(filename,0,&t);
     if (!mIsForProject)
         endResetModel();
 }
@@ -227,7 +229,6 @@ void BookmarkModel::save(const QString &filename, const QString& projectFolder)
                 if (pTemp->timestamp<=bookmark->timestamp)
                     compareHash.insert(key,bookmark);
             }
-            compareHash.insert(key,bookmark);
         }
         QList<PBookmark> saveList;
         foreach (const PBookmark& bookmark, compareHash) {
@@ -320,7 +321,9 @@ void BookmarkModel::loadProjectBookmarks(const QString &filename, const QString&
 {
     if (mIsForProject)
         beginResetModel();
-    mProjectBookmarks = load(filename,0,&mLastLoadProjectBookmarksTimestamp);
+    qint64 t;
+    mLastLoadProjectBookmarksTimestamp = QDateTime::currentMSecsSinceEpoch();
+    mProjectBookmarks = load(filename,0,&t);
     QDir folder(projectFolder);
     foreach (PBookmark bookmark, mProjectBookmarks) {
         bookmark->filename=folder.absoluteFilePath(bookmark->filename);

@@ -1126,12 +1126,6 @@ public:
         bool skipCustomLibraries() const;
         void setSkipCustomLibraries(bool newSkipCustomLibraries);
 
-        bool autosaveBreakpoints() const;
-        void setAutosaveBreakpoints(bool newAutosaveBreakpoints);
-
-        bool autosaveWatches() const;
-        void setAutosaveWatches(bool newAutosaveWatches);
-
         bool openCPUInfoWhenSignaled() const;
         void setOpenCPUInfoWhenSignaled(bool newOpenCPUInfoWhenSignaled);
 
@@ -1146,6 +1140,9 @@ public:
         int memoryViewColumns() const;
         void setMemoryViewColumns(int newMemoryViewColumns);
 
+        bool autosave() const;
+        void setAutosave(bool newAutosave);
+
     private:
         bool mEnableDebugConsole;
         bool mShowDetailLog;
@@ -1157,8 +1154,7 @@ public:
         bool mSkipSystemLibraries;
         bool mSkipProjectLibraries;
         bool mSkipCustomLibraries;
-        bool mAutosaveBreakpoints;
-        bool mAutosaveWatches;
+        bool mAutosave;
         bool mOpenCPUInfoWhenSignaled;
         bool mUseGDBServer;
         int mGDBServerPort;

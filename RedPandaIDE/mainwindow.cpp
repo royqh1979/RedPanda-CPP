@@ -163,34 +163,26 @@ MainWindow::MainWindow(QWidget *parent)
     mDebugger = std::make_shared<Debugger>();
 
     m=ui->tblBreakpoints->selectionModel();
-    ui->tblBreakpoints->setModel(mDebugger->breakpointModel());
+    ui->tblBreakpoints->setModel(mDebugger->breakpointModel().get());
     delete m;
 
     m=ui->tblStackTrace->selectionModel();
-    ui->tblStackTrace->setModel(mDebugger->backtraceModel());
+    ui->tblStackTrace->setModel(mDebugger->backtraceModel().get());
     delete m;
 
     m=ui->watchView->selectionModel();
-    ui->watchView->setModel(mDebugger->watchModel());
+    ui->watchView->setModel(mDebugger->watchModel().get());
     delete m;
 
     m=ui->tblMemoryView->selectionModel();
-    ui->tblMemoryView->setModel(mDebugger->memoryModel());
+    ui->tblMemoryView->setModel(mDebugger->memoryModel().get());
     delete m;
 
     ui->tblMemoryView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
 
     try {
-        mDebugger->breakpointModel()->load(includeTrailingPathDelimiter(pSettings->dirs().config())
-                                           +DEV_BREAKPOINTS_FILE);
-    } catch (FileError &e) {
-        QMessageBox::warning(nullptr,
-                             tr("Error"),
-                             e.reason());
-    }
-    try {
-        mDebugger->watchModel()->load(includeTrailingPathDelimiter(pSettings->dirs().config())
-                                       +DEV_WATCH_FILE);
+        mDebugger->loadForNonproject(includeTrailingPathDelimiter(pSettings->dirs().config())
+                                           +DEV_DEBUGGER_FILE);
     } catch (FileError &e) {
         QMessageBox::warning(nullptr,
                              tr("Error"),
@@ -1310,6 +1302,10 @@ void MainWindow::openProject(const QString &filename, bool openFiles)
     mBookmarkModel->setIsForProject(true);
     mBookmarkModel->loadProjectBookmarks(
                 changeFileExt(mProject->filename(), PROJECT_BOOKMARKS_EXT),
+                mProject->directory());
+    mDebugger->setIsForProject(true);
+    mDebugger->loadForProject(
+                changeFileExt(mProject->filename(), PROJECT_DEBUG_EXT),
                 mProject->directory());
 
     if (openFiles) {
@@ -4068,21 +4064,21 @@ void MainWindow::onBreakpointRemove()
 {
     int index =ui->tblBreakpoints->selectionModel()->currentIndex().row();
 
-    PBreakpoint breakpoint = debugger()->breakpointModel()->breakpoint(index);
+    PBreakpoint breakpoint = debugger()->breakpointModel()->breakpoint(index, debugger()->isForProject());
     if (breakpoint) {
         Editor * e = mEditorList->getOpenedEditorByFilename(breakpoint->filename);
         if (e) {
             if (e->hasBreakpoint(breakpoint->line))
                 e->toggleBreakpoint(breakpoint->line);
         } else {
-            debugger()->breakpointModel()->removeBreakpoint(index);
+            debugger()->breakpointModel()->removeBreakpoint(index,debugger()->isForProject());
         }
     }
 }
 
 void MainWindow::onBreakpointViewRemoveAll()
 {
-    pMainWindow->debugger()->deleteBreakpoints();
+    debugger()->deleteBreakpoints(debugger()->isForProject());
     for (int i=0;i<mEditorList->pageCount();i++) {
         Editor * e = (*(mEditorList))[i];
         if (e) {
@@ -4096,7 +4092,8 @@ void MainWindow::onBreakpointViewProperty()
     int index =ui->tblBreakpoints->selectionModel()->currentIndex().row();
 
     PBreakpoint breakpoint = debugger()->breakpointModel()->breakpoint(
-                index
+                index,
+                debugger()->isForProject()
                 );
     if (breakpoint) {
         bool isOk;
@@ -4106,7 +4103,7 @@ void MainWindow::onBreakpointViewProperty()
                                 QLineEdit::Normal,
                                 breakpoint->condition,&isOk);
         if (isOk) {
-            pMainWindow->debugger()->setBreakPointCondition(index,s);
+            pMainWindow->debugger()->setBreakPointCondition(index,s,debugger()->isForProject());
         }
     }
 }
@@ -4373,6 +4370,10 @@ void MainWindow::closeProject(bool refreshEditor)
                     changeFileExt(mProject->filename(), PROJECT_BOOKMARKS_EXT),
                     mProject->directory());
 
+        mDebugger->saveForProject(
+                    changeFileExt(mProject->filename(), PROJECT_DEBUG_EXT),
+                    mProject->directory());
+
         mClassBrowserModel.beginUpdate();
         // Remember it
         pSettings->history().addToOpenedProjects(mProject->filename());
@@ -4394,6 +4395,7 @@ void MainWindow::closeProject(bool refreshEditor)
 
         if (!mQuitting) {
             mBookmarkModel->setIsForProject(false);
+            mDebugger->setIsForProject(false);
             // Clear error browser
             clearIssues();
             updateProjectView();
@@ -4610,10 +4612,10 @@ void MainWindow::closeEvent(QCloseEvent *event) {
                              e.reason());
         }
 
-        if (pSettings->debugger().autosaveBreakpoints()) {
+        if (pSettings->debugger().autosave()) {
             try {
-                mDebugger->breakpointModel()->save(includeTrailingPathDelimiter(pSettings->dirs().config())
-                                               +DEV_BREAKPOINTS_FILE);
+                mDebugger->saveForNonproject(includeTrailingPathDelimiter(pSettings->dirs().config())
+                                               +DEV_DEBUGGER_FILE);
             } catch (FileError& e) {
                 QMessageBox::warning(nullptr,
                                  tr("Save Error"),
@@ -4621,20 +4623,7 @@ void MainWindow::closeEvent(QCloseEvent *event) {
             }
         } else
             removeFile(includeTrailingPathDelimiter(pSettings->dirs().config())
-                          +DEV_BREAKPOINTS_FILE);
-        if (pSettings->debugger().autosaveWatches()) {
-            try {
-                mDebugger->watchModel()->save(includeTrailingPathDelimiter(pSettings->dirs().config())
-                                               +DEV_WATCH_FILE);
-            } catch (FileError& e) {
-                QMessageBox::warning(nullptr,
-                                 tr("Save Error"),
-                                 e.reason());
-            }
-        } else
-            removeFile(includeTrailingPathDelimiter(pSettings->dirs().config())
-                          +DEV_WATCH_FILE);
-
+                          +DEV_DEBUGGER_FILE);
     }
 
     if (!mShouldRemoveAllSettings && pSettings->editor().autoLoadLastFiles()) {
@@ -5289,20 +5278,21 @@ bool MainWindow::debugInferiorhasBreakpoint()
     Editor * e = mEditorList->getEditor();
     if (e==nullptr)
         return false;
-    if (!e->inProject()) {
-        for (const PBreakpoint& breakpoint:mDebugger->breakpointModel()->breakpoints()) {
-            if (e->filename() == breakpoint->filename) {
-                return true;
-            }
-        }
-    } else {
-        for (const PBreakpoint& breakpoint:mDebugger->breakpointModel()->breakpoints()) {
-            Editor* e1 = mEditorList->getOpenedEditorByFilename(breakpoint->filename);
-            if (e1 && e1->inProject()) {
-                return true;
-            }
+    for (const PBreakpoint& breakpoint:mDebugger->breakpointModel()->breakpoints(e->inProject())) {
+        if (e->filename() == breakpoint->filename) {
+            return true;
         }
     }
+//    if (!e->inProject()) {
+
+//    } else {
+//        for (const PBreakpoint& breakpoint:mDebugger->breakpointModel()->breakpoints(e->inProject())) {
+//            Editor* e1 = mEditorList->getOpenedEditorByFilename(breakpoint->filename);
+//            if (e1 && e1->inProject()) {
+//                return true;
+//            }
+//        }
+//    }
     return false;
 }
 
@@ -5875,7 +5865,9 @@ void MainWindow::on_tblStackTrace_doubleClicked(const QModelIndex &index)
 
 void MainWindow::on_tblBreakpoints_doubleClicked(const QModelIndex &index)
 {
-    PBreakpoint breakpoint = mDebugger->breakpointModel()->breakpoint(index.row());
+    PBreakpoint breakpoint = mDebugger->breakpointModel()->breakpoint(
+                index.row(),
+                mDebugger->isForProject());
     if (breakpoint) {
         Editor * e = mEditorList->getEditorByFilename(breakpoint->filename);
         if (e) {

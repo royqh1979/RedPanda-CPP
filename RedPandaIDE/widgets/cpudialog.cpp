@@ -56,7 +56,7 @@ CPUDialog::CPUDialog(QWidget *parent) :
     }
     resetEditorFont(screenDPI());
     QItemSelectionModel *m=ui->lstRegister->selectionModel();
-    ui->lstRegister->setModel(pMainWindow->debugger()->registerModel());
+    ui->lstRegister->setModel(pMainWindow->debugger()->registerModel().get());
     delete m;
 
     ui->rdIntel->setChecked(pSettings->debugger().useIntelStyle());

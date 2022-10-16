@@ -16,7 +16,9 @@ Red Panda C++ Version 1.5
   - fix: icons in options dialogs  not correctly updated when change icon set
   - enhancement: set compilation stage in the options / compiler set pages
   - enhancement: set custom compilation output suffix in the options / compiler set pages
-
+  - enhancement: project and non-project files use different breakpoint and watchvar view (auto switch when not debugging and editor switched)
+  - enhancement: save project's breakpoint and watchvar in it's own debug file.
+  - enhancement: delete a watch expression don't reload who watch var view
 
 Red Panda C++ Version 1.4
 
