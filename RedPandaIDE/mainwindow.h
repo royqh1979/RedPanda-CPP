@@ -70,6 +70,7 @@ class Project;
 class ProjectModelNode;
 class ProjectUnit;
 class ColorSchemeItem;
+class VisitHistoryManager;
 
 #define DPI_CHANGED_EVENT ((QEvent::Type)(QEvent::User+1))
 
@@ -112,6 +113,7 @@ public:
     void updateStatusbarMessage(const QString& s);
     void updateEditorSettings();
     void updateEditorBookmarks();
+    void updateEditorBreakpoints();
     void updateEditorActions();
     void updateProjectActions();
     void updateCompileActions();
@@ -194,7 +196,7 @@ public:
 
     const PBookmarkModel &bookmarkModel() const;
 
-    void openFile(const QString& filename, bool activate=true, QTabWidget* page=nullptr);
+    Editor* openFile(const QString& filename, bool activate=true, QTabWidget* page=nullptr);
     void openProject(const QString& filename, bool openFiles = true);
     void changeOptions(const QString& widgetName=QString(), const QString& groupName=QString());
 
@@ -737,6 +739,8 @@ private:
     std::shared_ptr<HeaderCompletionPopup> mHeaderCompletionPopup;
     std::shared_ptr<FunctionTooltipWidget> mFunctionTip;
 
+    std::shared_ptr<VisitHistoryManager> mVisitHistoryManager;
+
     TodoModel mTodoModel;
     SearchResultModel mSearchResultModel;
     PBookmarkModel mBookmarkModel;
@@ -855,6 +859,7 @@ public:
     bool event(QEvent *event) override;
     bool isClosingAll() const;
     bool isQuitting() const;
+    const std::shared_ptr<VisitHistoryManager> &visitHistoryManager() const;
 };
 
 extern MainWindow* pMainWindow;

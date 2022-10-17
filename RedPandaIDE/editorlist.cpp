@@ -23,6 +23,7 @@
 #include "settings.h"
 #include "project.h"
 #include "systemconsts.h"
+#include "visithistorymanager.h"
 #include <QApplication>
 
 EditorList::EditorList(QTabWidget* leftPageWidget,
@@ -174,7 +175,7 @@ bool EditorList::closeEditor(Editor* editor, bool transferFocus, bool force) {
         PProjectUnit unit = pMainWindow->project()->findUnit(editor);
         pMainWindow->project()->closeUnit(unit);
     } else {
-        if (pSettings->history().addToOpenedFiles(editor->filename())) {
+        if (pMainWindow->visitHistoryManager()->addFile(editor->filename())) {
             pMainWindow->rebuildOpenedFileHisotryMenu();
         }
         delete editor;
@@ -358,20 +359,7 @@ Editor* EditorList::getOpenedEditorByFilename(QString filename)
 
 Editor *EditorList::getEditorByFilename(QString filename)
 {
-    if (filename.isEmpty())
-        return nullptr;
-    //check if an editor is already openned
-    Editor* e=getOpenedEditorByFilename(filename);
-    if (e!=nullptr)
-        return e;
-    //Todo: check if is in the project
-
-    //Create a new editor
-    QFileInfo fileInfo(filename);
-    QString fullname = fileInfo.absoluteFilePath();
-    if (fileInfo.exists() && fileInfo.isFile())
-        return newEditor(fullname,pSettings->editor().autoDetectFileEncoding()?ENCODING_AUTO_DETECT:pSettings->editor().defaultEncoding(),nullptr,false);
-    return nullptr;
+    return pMainWindow->openFile(filename,false);
 }
 
 bool EditorList::getContentFromOpenedEditor(const QString &filename, QStringList &buffer)

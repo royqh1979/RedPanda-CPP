@@ -156,19 +156,19 @@
     </message>
     <message>
         <source>Save file &apos;%1&apos; failed.</source>
-        <translation>Falha ao salvar arquivo &apos;%1&apos;.</translation>
+        <translation type="vanished">Falha ao salvar arquivo &apos;%1&apos;.</translation>
     </message>
     <message>
         <source>Can&apos;t open file &apos;%1&apos; for write.</source>
-        <translation>Impossível gravar arquivo &apos;%1&apos;.</translation>
+        <translation type="vanished">Impossível gravar arquivo &apos;%1&apos;.</translation>
     </message>
     <message>
         <source>Error in json file &apos;%1&apos;:%2 : %3</source>
-        <translation>Erro no arquivo json &apos;%1&apos;:%2 : %3</translation>
+        <translation type="vanished">Erro no arquivo json &apos;%1&apos;:%2 : %3</translation>
     </message>
     <message>
         <source>Can&apos;t open file &apos;%1&apos; for read.</source>
-        <translation>Impossível ler o arquivo &apos;%1&apos;.</translation>
+        <translation type="vanished">Impossível ler o arquivo &apos;%1&apos;.</translation>
     </message>
 </context>
 <context>
@@ -704,19 +704,11 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Stop after the assembling stage</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Link and generate the executable </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Preprocessing output suffix</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Assembling output suffix</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -810,11 +802,11 @@
     </message>
     <message>
         <source>Autosave breakpoints</source>
-        <translation>Salvar breakpoints automaticamente</translation>
+        <translation type="vanished">Salvar breakpoints automaticamente</translation>
     </message>
     <message>
         <source>Autosave watches</source>
-        <translation>Salvar automaticamente as observações</translation>
+        <translation type="vanished">Salvar automaticamente as observações</translation>
     </message>
     <message>
         <source>Show CPU Window when signal received</source>
@@ -851,6 +843,10 @@
     <message>
         <source>Memory View Columns</source>
         <translation>Colunas da memória</translation>
+    </message>
+    <message>
+        <source>Autosave breakpoints and watches</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -914,6 +910,22 @@
     <message>
         <source>Signal &quot;%1&quot; Received: </source>
         <translation>Recebido sinal &quot;%1&quot;: </translation>
+    </message>
+    <message>
+        <source>Save file &apos;%1&apos; failed.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Can&apos;t open file &apos;%1&apos; for write.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error in json file &apos;%1&apos;:%2 : %3</source>
+        <translation type="unfinished">Erro no arquivo json &apos;%1&apos;:%2 : %3</translation>
+    </message>
+    <message>
+        <source>Can&apos;t open file &apos;%1&apos; for read.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -3898,11 +3910,11 @@
     </message>
     <message>
         <source>Close project</source>
-        <translation>Fechar projeto</translation>
+        <translation type="vanished">Fechar projeto</translation>
     </message>
     <message>
         <source>Are you sure you want to close %1?</source>
-        <translation>Quer mesmo fechar %1?</translation>
+        <translation type="vanished">Quer mesmo fechar %1?</translation>
     </message>
     <message>
         <source>Confirm</source>
@@ -3998,7 +4010,7 @@
     </message>
     <message>
         <source>Can&apos;t remove old last open information file &apos;%1&apos;</source>
-        <translation>Impossível remover o arquivo aberto com a última informação &apos;%1&apos; </translation>
+        <translation type="vanished">Impossível remover o arquivo aberto com a última informação &apos;%1&apos; </translation>
     </message>
     <message>
         <source>Can&apos;t save last open info file &apos;%1&apos;</source>
@@ -4660,6 +4672,10 @@
         <source>Please correct this before start debugging</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Can&apos;t open last open information file &apos;%1&apos; for write!</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>NewClassDialog</name>
@@ -5001,6 +5017,33 @@
     </message>
     <message>
         <source>Can&apos;t save file %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>ProjectAlreadyOpenDialog</name>
+    <message>
+        <source>Dialog</source>
+        <translation type="obsolete">Diálogo</translation>
+    </message>
+    <message>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Projects can either be opened in a new window or replace the project in the existing window or be attached to the already opened projects. How would you like to open the project?&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;This Window</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>New &amp;Window</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Open Project</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -6716,19 +6759,19 @@
     </message>
     <message>
         <source>Save file &apos;%1&apos; failed.</source>
-        <translation>Falha ao gravar o arquivo &apos;%1&apos;.</translation>
+        <translation type="vanished">Falha ao gravar o arquivo &apos;%1&apos;.</translation>
     </message>
     <message>
         <source>Can&apos;t open file &apos;%1&apos; for write.</source>
-        <translation>Impossível gravar no arquivo &apos;%1&apos;.</translation>
+        <translation type="vanished">Impossível gravar no arquivo &apos;%1&apos;.</translation>
     </message>
     <message>
         <source>Error in json file &apos;%1&apos;:%2 : %3</source>
-        <translation>Erro no arquivo json &apos;%1&apos;:%2 : %3</translation>
+        <translation type="vanished">Erro no arquivo json &apos;%1&apos;:%2 : %3</translation>
     </message>
     <message>
         <source>Can&apos;t open file &apos;%1&apos; for read.</source>
-        <translation>Impossível ler o arquivo &apos;%1&apos;</translation>
+        <translation type="vanished">Impossível ler o arquivo &apos;%1&apos;</translation>
     </message>
     <message>
         <source>Expression</source>

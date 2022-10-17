@@ -26,7 +26,6 @@ struct Bookmark {
     int line;
     QString description;
     qint64 timestamp;
-    int saveOrder;
 };
 
 using PBookmark=std::shared_ptr<Bookmark>;

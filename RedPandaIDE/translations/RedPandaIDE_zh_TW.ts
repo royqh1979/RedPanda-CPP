@@ -150,22 +150,6 @@
         <source>Condition</source>
         <translation type="unfinished"></translation>
     </message>
-    <message>
-        <source>Save file &apos;%1&apos; failed.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Can&apos;t open file &apos;%1&apos; for write.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Error in json file &apos;%1&apos;:%2 : %3</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Can&apos;t open file &apos;%1&apos; for read.</source>
-        <translation type="unfinished"></translation>
-    </message>
 </context>
 <context>
     <name>CPUDialog</name>
@@ -629,19 +613,11 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Stop after the assembling stage</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Link and generate the executable </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Preprocessing output suffix</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Assembling output suffix</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -734,14 +710,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Autosave breakpoints</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Autosave watches</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Show CPU Window when signal received</source>
         <translation type="unfinished"></translation>
     </message>
@@ -775,6 +743,10 @@
     </message>
     <message>
         <source>Memory View Columns</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Autosave breakpoints and watches</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -838,6 +810,22 @@
     </message>
     <message>
         <source>Signal &quot;%1&quot; Received: </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Save file &apos;%1&apos; failed.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Can&apos;t open file &apos;%1&apos; for write.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error in json file &apos;%1&apos;:%2 : %3</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Can&apos;t open file &apos;%1&apos; for read.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -3798,14 +3786,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Close project</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Are you sure you want to close %1?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Confirm</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3895,10 +3875,6 @@
     </message>
     <message>
         <source>Save last open info error</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Can&apos;t remove old last open information file &apos;%1&apos;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4549,6 +4525,10 @@
         <source>Please correct this before start debugging</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Can&apos;t open last open information file &apos;%1&apos; for write!</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>NewClassDialog</name>
@@ -4886,6 +4866,29 @@
     </message>
     <message>
         <source>Can&apos;t save file %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>ProjectAlreadyOpenDialog</name>
+    <message>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Projects can either be opened in a new window or replace the project in the existing window or be attached to the already opened projects. How would you like to open the project?&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;This Window</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>New &amp;Window</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Open Project</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -6527,22 +6530,6 @@
     </message>
     <message>
         <source>Execute to evaluate</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Save file &apos;%1&apos; failed.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Can&apos;t open file &apos;%1&apos; for write.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Error in json file &apos;%1&apos;:%2 : %3</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Can&apos;t open file &apos;%1&apos; for read.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

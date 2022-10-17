@@ -45,7 +45,6 @@ Settings::Settings(const QString &filename):
     mDebugger(this),
     mCodeCompletion(this),
     mCodeFormatter(this),
-    mHistory(this),
     mUI(this),
     mVCS(this)
 {
@@ -106,7 +105,6 @@ void Settings::load()
     mEditor.load();
     mExecutor.load();
     mDebugger.load();
-    mHistory.load();
     mCodeCompletion.load();
     mCodeFormatter.load();
     mUI.load();
@@ -162,11 +160,6 @@ Settings::UI &Settings::ui()
 Settings::VCS &Settings::vcs()
 {
     return mVCS;
-}
-
-Settings::History& Settings::history()
-{
-    return mHistory;
 }
 
 Settings::Debugger& Settings::debugger()
@@ -3671,106 +3664,6 @@ void Settings::Debugger::doLoad()
     mMemoryViewColumns = intValue("memory_view_columns",8);
 }
 
-Settings::History::History(Settings *settings):_Base(settings, SETTING_HISTORY)
-{
-
-}
-
-const QStringList &Settings::History::opennedFiles() const
-{
-    return mOpenedFiles;
-}
-
-const QStringList &Settings::History::opennedProjects() const
-{
-    return mOpenedProjects;
-}
-
-void Settings::History::clearOpennedFiles()
-{
-    mOpenedFiles.clear();
-}
-
-void Settings::History::clearOpennedProjects()
-{
-    mOpenedProjects.clear();
-}
-
-bool Settings::History::addToOpenedFiles(const QString &filename)
-{
-    if (!QFile(filename).exists())
-        return false;
-    int index = mOpenedFiles.indexOf(filename);
-    if (index>=0) {
-        mOpenedFiles.removeAt(index);
-    }
-    if (mOpenedFiles.size()>=15) {
-        mOpenedFiles.pop_back();
-    }
-    mOpenedFiles.push_front(filename);
-    save();
-    return true;
-
-}
-
-void Settings::History::removeFile(const QString &filename)
-{
-    int index = mOpenedFiles.indexOf(filename);
-    if (index>=0) {
-        mOpenedFiles.removeAt(index);
-    }
-    save();
-    return;
-}
-
-bool Settings::History::addToOpenedProjects(const QString &filename)
-{
-    if (!QFile(filename).exists())
-        return false;
-    int index = mOpenedProjects.indexOf(filename);
-    if (index>=0) {
-        mOpenedProjects.removeAt(index);
-    }
-    if (mOpenedProjects.size()>=15) {
-        mOpenedProjects.pop_back();
-    }
-    mOpenedProjects.push_front(filename);
-    save();
-    return true;
-}
-
-void Settings::History::removeProject(const QString &filename)
-{
-    int index = mOpenedProjects.indexOf(filename);
-    if (index>=0) {
-        mOpenedProjects.removeAt(index);
-    }
-    save();
-    return;
-}
-
-void Settings::History::doSave()
-{
-    saveValue("opened_files", mOpenedFiles);
-    saveValue("opened_projects", mOpenedProjects);
-}
-
-static QStringList filterValidPathes(const QStringList& files) {
-    QStringList lst;
-    foreach (const QString& filePath, files) {
-        if (fileExists(filePath)) {
-            lst.append(QFileInfo(filePath).absoluteFilePath());
-        }
-    }
-    return lst;
-}
-
-void Settings::History::doLoad()
-{
-    mOpenedFiles = filterValidPathes(stringListValue("opened_files"));
-    mOpenedProjects = filterValidPathes(stringListValue("opened_projects"));
-}
-
 Settings::CodeCompletion::CodeCompletion(Settings *settings):_Base(settings, SETTING_CODE_COMPLETION)
 {
 
@@ -4990,6 +4883,16 @@ void Settings::UI::setMessagesTabsSize(const QSize &newMessagesTabsSize)
     mMessagesTabsSize = newMessagesTabsSize;
 }
 
+int Settings::UI::debugPanelIndex() const
+{
+    return mDebugPanelIndex;
+}
+
+void Settings::UI::setDebugPanelIndex(int newDebugPanelIndex)
+{
+    mDebugPanelIndex = newDebugPanelIndex;
+}
+
 const QSize &Settings::UI::explorerTabsSize() const
 {
     return mExplorerTabsSize;
@@ -5256,6 +5159,7 @@ void Settings::UI::doSave()
     saveValue("main_window_geometry",mMainWindowGeometry);
     saveValue("bottom_panel_index",mBottomPanelIndex);
     saveValue("left_panel_index",mLeftPanelIndex);
+    saveValue("debug_panel_index",mDebugPanelIndex);
     saveValue("class_browser_sort_alphabetically",mClassBrowserSortAlpha);
     saveValue("class_browser_sort_by_type",mClassBrowserSortType);
     saveValue("class_browser_show_inherited",mClassBrowserShowInherited);
@@ -5305,6 +5209,8 @@ void Settings::UI::doLoad()
     mMainWindowGeometry = value("main_window_geometry",QByteArray()).toByteArray();
     mBottomPanelIndex = intValue("bottom_panel_index",0);
     mLeftPanelIndex = intValue("left_panel_index",0);
+    mDebugPanelIndex = intValue("debug_panel_index",0);
+
     mClassBrowserSortAlpha = boolValue("class_browser_sort_alphabetically",true);
     mClassBrowserSortType = boolValue("class_browser_sort_by_type",true);
     mClassBrowserShowInherited = boolValue("class_browser_show_inherited",true);

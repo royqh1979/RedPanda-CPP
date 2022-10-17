@@ -817,28 +817,6 @@ public:
         void doLoad() override;
     };
 
-    class History: public _Base {
-    public:
-        explicit History(Settings *settings);
-
-        const QStringList& opennedFiles() const;
-        const QStringList& opennedProjects() const;
-        void clearOpennedFiles();
-        void clearOpennedProjects();
-        bool addToOpenedFiles(const QString& filename);
-        void removeFile(const QString& filename);
-        bool addToOpenedProjects(const QString& filename);
-        void removeProject(const QString& filename);
-    private:
-        QStringList mOpenedFiles;
-        QStringList mOpenedProjects;
-
-        // _Base interface
-    protected:
-        void doSave() override;
-        void doLoad() override;
-    };
-
     class Executor: public _Base {
     public:
         explicit Executor(Settings * settings);
@@ -1044,11 +1022,15 @@ public:
         const QSize &messagesTabsSize() const;
         void setMessagesTabsSize(const QSize &newMessagesTabsSize);
 
+        int debugPanelIndex() const;
+        void setDebugPanelIndex(int newDebugPanelIndex);
+
     private:
         QByteArray mMainWindowState;
         QByteArray mMainWindowGeometry;
         int mBottomPanelIndex;
         int mLeftPanelIndex;
+        int mDebugPanelIndex;
         bool mClassBrowserSortAlpha;
         bool mClassBrowserSortType;
         bool mClassBrowserShowInherited;
@@ -1412,7 +1394,6 @@ public:
     Environment& environment();
     Executor& executor();
     Debugger& debugger();
-    History& history();
     CodeCompletion &codeCompletion();
     CodeFormatter &codeFormatter();
     UI &ui();
@@ -1430,7 +1411,6 @@ private:
     Debugger mDebugger;
     CodeCompletion mCodeCompletion;
     CodeFormatter mCodeFormatter;
-    History mHistory;
     UI mUI;
     VCS mVCS;
 };

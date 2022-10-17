@@ -19,6 +19,12 @@ Red Panda C++ Version 1.5
   - enhancement: project and non-project files use different breakpoint and watchvar view (auto switch when not debugging and editor switched)
   - enhancement: save project's breakpoint and watchvar in it's own debug file.
   - enhancement: delete a watch expression don't reload who watch var view
+  - enhancement: auto save/restore debug panel's current tab
+  - fix: correctly restore left(explorer) panel's current tab
+  - enhancement: auto close non-modified new editor after file/project openned;
+  - fix: project files openned by double click in bookmark/breakpoint panel may cause app crash when closed.
+  - fix: When open a project that's already openned, shouldn't close it.
+  - enhancement: When open a project, let user choose weither open it in new window or replace the already openned project
 
 Red Panda C++ Version 1.4
 

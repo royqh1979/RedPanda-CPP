@@ -48,6 +48,8 @@
 #include "vcs/gituserconfigdialog.h"
 #include "widgets/infomessagebox.h"
 #include "widgets/newtemplatedialog.h"
+#include "visithistorymanager.h"
+#include "widgets/projectalreadyopendialog.h"
 
 #include <QCloseEvent>
 #include <QComboBox>
@@ -148,6 +150,11 @@ MainWindow::MainWindow(QWidget *parent)
     delete m;
     mProjectProxyModel->setDynamicSortFilter(false);
     ui->EditorTabsRight->setVisible(false);
+
+    mVisitHistoryManager = std::make_shared<VisitHistoryManager>(
+                includeTrailingPathDelimiter(pSettings->dirs().config())
+                                                                 +DEV_HISTORY_FILE);
+    mVisitHistoryManager->load();
 
     //toolbar takes the owner
     mCompilerSet = new QComboBox();
@@ -447,6 +454,14 @@ void MainWindow::updateEditorBookmarks()
     for (int i=0;i<mEditorList->pageCount();i++) {
         Editor * e=(*mEditorList)[i];
         e->resetBookmarks();
+    }
+}
+
+void MainWindow::updateEditorBreakpoints()
+{
+    for (int i=0;i<mEditorList->pageCount();i++) {
+        Editor * e=(*mEditorList)[i];
+        e->resetBreakpoints();
     }
 }
 
@@ -1046,14 +1061,15 @@ void MainWindow::rebuildOpenedFileHisotryMenu()
 {
     mMenuRecentFiles->clear();
     mMenuRecentProjects->clear();
-    if (pSettings->history().opennedFiles().size()==0) {
+    if (mVisitHistoryManager->files().count()==0) {
         mMenuRecentFiles->setEnabled(false);
     } else {
         mMenuRecentFiles->setEnabled(true);
-        for (const QString& filename: pSettings->history().opennedFiles()) {
+        foreach (const PVisitRecord& record, mVisitHistoryManager->files()) {
+            QString filename = record->filename;
             //menu takes the ownership
             QAction* action = new QAction(filename,mMenuRecentFiles);
-            connect(action, &QAction::triggered, [&filename,this](bool){
+            connect(action, &QAction::triggered, [filename,this](bool){
                 openFile(filename);
             });
             mMenuRecentFiles->addAction(action);
@@ -1061,20 +1077,21 @@ void MainWindow::rebuildOpenedFileHisotryMenu()
         mMenuRecentFiles->addSeparator();
         //menu takes the ownership
         QAction *action = new QAction(tr("Clear History"),mMenuRecentFiles);
-        connect(action, &QAction::triggered, [](bool){
-            pSettings->history().clearOpennedFiles();
+        connect(action, &QAction::triggered, [this](bool){
+            mVisitHistoryManager->clearFiles();
         });
         mMenuRecentFiles->addAction(action);
     }
 
-    if (pSettings->history().opennedProjects().size()==0) {
+    if (mVisitHistoryManager->projects().count()==0) {
         mMenuRecentProjects->setEnabled(false);
     } else {
         mMenuRecentProjects->setEnabled(true);
-        for (const QString& filename: pSettings->history().opennedProjects()) {
+        foreach (const PVisitRecord& record, mVisitHistoryManager->projects()) {
+            QString filename = record->filename;
             //menu takes the ownership
             QAction* action = new QAction(filename,mMenuRecentProjects);
-            connect(action, &QAction::triggered, [&filename,this](bool){
+            connect(action, &QAction::triggered, [filename,this](bool){
                 this->openProject(filename);
             });
             mMenuRecentProjects->addAction(action);
@@ -1082,8 +1099,8 @@ void MainWindow::rebuildOpenedFileHisotryMenu()
         mMenuRecentProjects->addSeparator();
         //menu takes the ownership
         QAction *action = new QAction(tr("Clear History"),mMenuRecentProjects);
-        connect(action, &QAction::triggered, [](bool){
-            pSettings->history().clearOpennedProjects();
+        connect(action, &QAction::triggered, [this](bool){
+            mVisitHistoryManager->clearProjects();
         });
         mMenuRecentProjects->addAction(action);
     }
@@ -1216,17 +1233,24 @@ void MainWindow::openFiles(const QStringList &files)
         e->activate();
 }
 
-void MainWindow::openFile(const QString &filename, bool activate, QTabWidget* page)
+Editor* MainWindow::openFile(const QString &filename, bool activate, QTabWidget* page)
 {
     Editor* editor = mEditorList->getOpenedEditorByFilename(filename);
     if (editor!=nullptr) {
         if (activate) {
             editor->activate();
         }
-        return;
+        return editor;
     }
     try {
-        pSettings->history().removeFile(filename);
+        Editor* oldEditor=nullptr;
+        if (mEditorList->pageCount()==1) {
+            oldEditor = mEditorList->getEditor(0);
+            if (!oldEditor->isNew() || oldEditor->modified()) {
+                oldEditor = nullptr;
+            }
+        }
+        //mVisitHistoryManager->removeFile(filename);
         PProjectUnit unit;
         if (mProject) {
             unit = mProject->findUnit(filename);
@@ -1243,10 +1267,14 @@ void MainWindow::openFile(const QString &filename, bool activate, QTabWidget* pa
         if (activate) {
             editor->activate();
         }
+        if (mEditorList->pageCount()>1 && oldEditor)
+            mEditorList->closeEditor(oldEditor);
 //        editor->activate();
+        return editor;
     } catch (FileError e) {
         QMessageBox::critical(this,tr("Error"),e.reason());
     }
+    return nullptr;
 }
 
 void MainWindow::openProject(const QString &filename, bool openFiles)
@@ -1254,26 +1282,39 @@ void MainWindow::openProject(const QString &filename, bool openFiles)
     if (!fileExists(filename)) {
         return;
     }
+    Editor* oldEditor=nullptr;
     if (mProject) {
-        QString s;
-        if (mProject->name().isEmpty())
-            s = mProject->filename();
-        else
-            s = mProject->name();
-        if (QMessageBox::question(this,
-                                  tr("Close project"),
-                                  tr("Are you sure you want to close %1?")
-                                  .arg(s),
-                                  QMessageBox::Yes | QMessageBox::No,
-                                  QMessageBox::Yes) == QMessageBox::Yes) {
+        if (mProject->filename() == filename)
+            return;
+        ProjectAlreadyOpenDialog dlg;
+        if (dlg.exec()!=QDialog::Accepted)
+            return;
+        if (dlg.openType()==ProjectAlreadyOpenDialog::OpenType::ThisWindow) {
             closeProject(false);
         } else {
+            QProcess process;
+            process.setProgram(QApplication::instance()->applicationFilePath());
+            process.setWorkingDirectory(QDir::currentPath());
+            QStringList args;
+            args.append("-ns");
+            args.append(filename);
+            process.setArguments(args);
+            process.startDetached();
             return;
         }
+
+    } else {
+        if (mEditorList->pageCount()==1) {
+            oldEditor = mEditorList->getEditor(0);
+            if (!oldEditor->isNew() || oldEditor->modified()) {
+                oldEditor = nullptr;
+            }
+        }
     }
-    ui->tabProject->setVisible(true);
-    ui->tabExplorer->setCurrentWidget(ui->tabProject);
-    stretchExplorerPanel(true);
+    //ui->tabProject->setVisible(true);
+    //stretchExplorerPanel(true);
+    if (openFiles)
+        ui->tabExplorer->setCurrentWidget(ui->tabProject);
 //    {
 //    LeftPageControl.ActivePage := LeftProjectSheet;
 //    fLeftPageControlChanged := False;
@@ -1287,7 +1328,7 @@ void MainWindow::openProject(const QString &filename, bool openFiles)
     ui->projectView->expand(
                 mProjectProxyModel->mapFromSource(
                     mProject->model()->rootIndex()));
-    pSettings->history().removeProject(filename);
+    //mVisitHistoryManager->removeProject(filename);
 
 //  // if project manager isn't open then open it
 //  if not devData.ShowLeftPages then
@@ -1329,7 +1370,8 @@ void MainWindow::openProject(const QString &filename, bool openFiles)
     updateCompilerSet();
     updateClassBrowserForEditor(e);
     mClassBrowserModel.endUpdate();
-
+    if (oldEditor)
+        mEditorList->closeEditor(oldEditor);
     //updateForEncodingInfo();
 }
 
@@ -2250,34 +2292,38 @@ void MainWindow::onBookmarkContextMenu(const QPoint &pos)
 void MainWindow::saveLastOpens()
 {
     QString filename = includeTrailingPathDelimiter(pSettings->dirs().config()) + DEV_LASTOPENS_FILE;
-    if (fileExists(filename)) {
-        if (!QFile::remove(filename)) {
-            QMessageBox::critical(this,
-                                  tr("Save last open info error"),
-                                  tr("Can't remove old last open information file '%1'")
-                                  .arg(filename),
-                                  QMessageBox::Ok);
-            return;
-        }
+    QFile file(filename);
 
+    if (!file.open(QFile::WriteOnly | QFile::Truncate)) {
+        QMessageBox::critical(this,
+                              tr("Save last open info error"),
+                              tr("Can't open last open information file '%1' for write!")
+                              .arg(filename),
+                              QMessageBox::Ok);
+        return;
     }
-    SimpleIni lastOpenIni;
-    lastOpenIni.SetLongValue("LastOpens","Count", mEditorList->pageCount());
+    QJsonObject rootObj;
     if (mProject) {
-        lastOpenIni.SetValue("LastOpens","Project",mProject->filename().toLocal8Bit());
+        rootObj["lastProject"]=mProject->filename();
     }
+    QJsonArray filesArray;
     for (int i=0;i<mEditorList->pageCount();i++) {
       Editor * editor = (*mEditorList)[i];
-      QByteArray sectionName = QString("Editor_%1").arg(i).toLocal8Bit();
-      lastOpenIni.SetValue(sectionName,"FileName", editor->filename().toLocal8Bit());
-      lastOpenIni.SetBoolValue(sectionName, "OnLeft",editor->pageControl() != mEditorList->rightPageWidget());
-      lastOpenIni.SetBoolValue(sectionName, "Focused",editor->hasFocus());
-      lastOpenIni.SetLongValue(sectionName, "CursorCol", editor->caretX());
-      lastOpenIni.SetLongValue(sectionName, "CursorRow", editor->caretY());
-      lastOpenIni.SetLongValue(sectionName, "TopLine", editor->topLine());
-      lastOpenIni.SetLongValue(sectionName, "LeftChar", editor->leftChar());
+      QJsonObject fileObj;
+      fileObj["filename"] = editor->filename();
+      fileObj["onLeft"] = (editor->pageControl() != mEditorList->rightPageWidget());
+      fileObj["focused"] = editor->hasFocus();
+      fileObj["caretX"] = editor->caretX();
+      fileObj["caretY"] = editor->caretY();
+      fileObj["topLine"] = editor->topLine();
+      fileObj["leftChar"] = editor->leftChar();
+      filesArray.append(fileObj);
     }
-    if (lastOpenIni.SaveFile(filename.toLocal8Bit())!=SI_Error::SI_OK) {
+    rootObj["files"]=filesArray;
+    QJsonDocument doc;
+    doc.setObject(rootObj);
+    QByteArray json = doc.toJson();
+    if (file.write(doc.toJson())!=json.count()) {
         QMessageBox::critical(this,
                               tr("Save last open info error"),
                               tr("Can't save last open info file '%1'")
@@ -2285,6 +2331,7 @@ void MainWindow::saveLastOpens()
                               QMessageBox::Ok);
         return;
     }
+    file.close();
 }
 
 void MainWindow::loadLastOpens()
@@ -2292,8 +2339,8 @@ void MainWindow::loadLastOpens()
     QString filename = includeTrailingPathDelimiter(pSettings->dirs().config()) + DEV_LASTOPENS_FILE;
     if (!fileExists(filename))
         return;
-    SimpleIni lastOpenIni;
-    if (lastOpenIni.LoadFile(filename.toLocal8Bit())!=SI_Error::SI_OK) {
+    QFile file(filename);
+    if (!file.open(QFile::ReadOnly)) {
         QMessageBox::critical(this,
                               tr("Load last open info error"),
                               tr("Can't load last open info file '%1'")
@@ -2301,19 +2348,31 @@ void MainWindow::loadLastOpens()
                               QMessageBox::Ok);
         return;
     }
-    QString projectFilename = QString::fromLocal8Bit((lastOpenIni.GetValue("LastOpens", "Project","")));
-    int count = lastOpenIni.GetLongValue("LastOpens","Count",0);
-    if (fileExists(projectFilename)) {
+    QJsonParseError error;
+    QJsonDocument doc=QJsonDocument::fromJson(file.readAll(),&error);
+    if (error.error != QJsonParseError::NoError) {
+        QMessageBox::critical(this,
+                              tr("Load last open info error"),
+                              tr("Can't load last open info file '%1'")
+                              .arg(filename)+" : <BR/>"
+                              +QString("%1").arg(error.errorString()),
+                              QMessageBox::Ok);
+        return;
+
+    }
+    QJsonObject rootObj = doc.object();
+    QString projectFilename = rootObj["lastProject"].toString();
+    if (!projectFilename.isEmpty()) {
         openProject(projectFilename, false);
     }
+    QJsonArray filesArray = rootObj["files"].toArray();
     Editor *  focusedEditor = nullptr;
-    for (int i=0;i<count;i++) {
-        QByteArray sectionName = QString("Editor_%1").arg(i).toLocal8Bit();
-        QString editorFilename = QString::fromLocal8Bit(lastOpenIni.GetValue(sectionName,"FileName",""));
+    for (int i=0;i<filesArray.count();i++) {
+        QJsonObject fileObj = filesArray[i].toObject();
+        QString editorFilename = fileObj["filename"].toString("");
         if (!fileExists(editorFilename))
             continue;
-        editorFilename = QFileInfo(editorFilename).absoluteFilePath();
-        bool onLeft = lastOpenIni.GetBoolValue(sectionName,"OnLeft",true);
+        bool onLeft = fileObj["onLeft"].toBool();
         QTabWidget* page;
         if (onLeft)
             page = mEditorList->leftPageWidget();
@@ -2338,24 +2397,26 @@ void MainWindow::loadLastOpens()
         if (!editor)
             continue;
         QSynedit::BufferCoord pos;
-        pos.ch = lastOpenIni.GetLongValue(sectionName,"CursorCol", 1);
-        pos.line = lastOpenIni.GetLongValue(sectionName,"CursorRow", 1);
+        pos.ch = fileObj["caretX"].toInt(1);
+        pos.line = fileObj["caretY"].toInt(1);
         editor->setCaretXY(pos);
         editor->setTopLine(
-                    lastOpenIni.GetLongValue(sectionName,"TopLine", 1)
+                    fileObj["topLine"].toInt(1)
                     );
         editor->setLeftChar(
-                    lastOpenIni.GetLongValue(sectionName,"LeftChar", 1)
+                    fileObj["leftChar"].toInt(1)
                     );
-        if (lastOpenIni.GetBoolValue(sectionName,"Focused",false))
+        if (fileObj["focused"].toBool(false))
             focusedEditor = editor;
-        pSettings->history().removeFile(editorFilename);
+        //mVisitHistoryManager->removeFile(editorFilename);
     }
     if (mProject && mEditorList->pageCount()==0) {
         mProject->doAutoOpen();
         updateEditorBookmarks();
+        updateEditorBreakpoints();
     }
-    if (count>0) {
+
+    if (mEditorList->pageCount()>0) {
         updateEditorActions();
         //updateForEncodingInfo();
     }
@@ -4376,7 +4437,7 @@ void MainWindow::closeProject(bool refreshEditor)
 
         mClassBrowserModel.beginUpdate();
         // Remember it
-        pSettings->history().addToOpenedProjects(mProject->filename());
+        mVisitHistoryManager->addProject(mProject->filename());
 
         mEditorList->beginUpdate();
         mProject.reset();
@@ -4421,7 +4482,7 @@ void MainWindow::updateProjectView()
         //ui->projectView->expandAll();
         stretchExplorerPanel(true);
         ui->tabProject->setVisible(true);
-        ui->tabExplorer->setCurrentWidget(ui->tabProject);
+        //ui->tabExplorer->setCurrentWidget(ui->tabProject);
     } else {
         // Clear project browser
         mProjectProxyModel->setSourceModel(nullptr);
@@ -4576,6 +4637,7 @@ void MainWindow::closeEvent(QCloseEvent *event) {
         settings.setMainWindowGeometry(saveGeometry());
         settings.setBottomPanelIndex(ui->tabMessages->currentIndex());
         settings.setLeftPanelIndex(ui->tabExplorer->currentIndex());
+        settings.setDebugPanelIndex(ui->debugViews->currentIndex());
 
         settings.setShowStatusBar(ui->actionStatus_Bar->isChecked());
         settings.setShowToolWindowBars(ui->actionTool_Window_Bars->isChecked());
@@ -4670,13 +4732,14 @@ void MainWindow::showEvent(QShowEvent *)
     const Settings::UI& settings = pSettings->ui();
     ui->tabMessages->setCurrentIndex(settings.bottomPanelIndex());
     ui->tabExplorer->setCurrentIndex(settings.leftPanelIndex());
+    ui->debugViews->setCurrentIndex(settings.debugPanelIndex());
 }
 
 void MainWindow::hideEvent(QHideEvent *)
 {
-    Settings::UI& settings = pSettings->ui();
-    settings.setBottomPanelIndex(ui->tabMessages->currentIndex());
-    settings.setLeftPanelIndex(ui->tabExplorer->currentIndex());
+//    Settings::UI& settings = pSettings->ui();
+//    settings.setBottomPanelIndex(ui->tabMessages->currentIndex());
+//    settings.setLeftPanelIndex(ui->tabExplorer->currentIndex());
 }
 
 bool MainWindow::event(QEvent *event)
@@ -8286,6 +8349,11 @@ void MainWindow::on_actionNew_Template_triggered()
                     dialog.getCategory()
                     );
     }
+}
+
+const std::shared_ptr<VisitHistoryManager> &MainWindow::visitHistoryManager() const
+{
+    return mVisitHistoryManager;
 }
 
 bool MainWindow::isQuitting() const

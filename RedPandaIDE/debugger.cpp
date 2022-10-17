@@ -427,6 +427,7 @@ void Debugger::saveForProject(const QString &filename, const QString &projectFol
 void Debugger::loadForNonproject(const QString &filename)
 {
     bool forProject = false;
+    mLastLoadtime = 0;
     PDebugConfig pConfig = load(filename, forProject);
     if (pConfig->timestamp>0) {
         mBreakpointModel->setBreakpoints(pConfig->breakpoints,forProject);
@@ -436,7 +437,8 @@ void Debugger::loadForNonproject(const QString &filename)
 
 void Debugger::loadForProject(const QString &filename, const QString &projectFolder)
 {
-    bool forProject = false;
+    bool forProject = true;
+    mProjectLastLoadtime = 0;
     PDebugConfig pConfig = load(filename, forProject);
     if (pConfig->timestamp>0) {
         QDir dir(projectFolder);
@@ -463,8 +465,7 @@ void Debugger::addWatchVar(const QString &expression)
     var->hasMore = false;
     var->timestamp = QDateTime::currentMSecsSinceEpoch();
 
-    mWatchModel->addWatchVar(var);
-    sendWatchCommand(var);
+    addWatchVar(var,isForProject());
 }
 
 void Debugger::modifyWatchVarExpression(const QString &oldExpr, const QString &newExpr)
@@ -692,7 +693,7 @@ void Debugger::save(const QString &filename, const QString& projectFolder)
             QString key = watchVar->expression;
             if (!watchVarCompareSet.contains(key)) {
                 watchVarCompareSet.insert(key);
-                addWatchVar(key);
+                addWatchVar(watchVar,forProject);
             }
         }
         qint64 saveTimestamp = QDateTime::currentMSecsSinceEpoch();;
@@ -759,6 +760,13 @@ PDebugConfig Debugger::load(const QString &filename, bool forProject)
                         .arg(filename));
     }
     return pConfig;
+}
+
+void Debugger::addWatchVar(const PWatchVar &watchVar, bool forProject)
+{
+    mWatchModel->addWatchVar(watchVar,forProject);
+    if (forProject == isForProject())
+        sendWatchCommand(watchVar);
 }
 
 void Debugger::syncFinishedParsing()
@@ -1927,7 +1935,7 @@ QList<PBreakpoint> BreakpointModel::loadJson(const QJsonArray& jsonArray, qint64
 
         if (ok && timestamp > criteriaTime) {
             PBreakpoint breakpoint = std::make_shared<Breakpoint>();
-            breakpoint->filename = QFileInfo(obj["filename"].toString()).absoluteFilePath();
+            breakpoint->filename = obj["filename"].toString();
             breakpoint->line = obj["line"].toInt();
             breakpoint->condition = obj["condition"].toString();
             breakpoint->enabled = obj["enabled"].toBool();
@@ -2124,17 +2132,19 @@ int WatchModel::columnCount(const QModelIndex&) const
     return 3;
 }
 
-void WatchModel::addWatchVar(PWatchVar watchVar)
+void WatchModel::addWatchVar(PWatchVar watchVar, bool forProject)
 {
-    QList<PWatchVar> &vars=(mIsForProject?mProjectWatchVars:mWatchVars);
+    QList<PWatchVar> &vars=(forProject?mProjectWatchVars:mWatchVars);
     for (PWatchVar var:vars) {
         if (watchVar->expression == var->expression) {
             return;
         }
     }
-    beginInsertRows(QModelIndex(),vars.count(),vars.count());
+    if (forProject==mIsForProject)
+        beginInsertRows(QModelIndex(),vars.count(),vars.count());
     vars.append(watchVar);
-    endInsertRows();
+    if (forProject==mIsForProject)
+        endInsertRows();
 }
 
 void WatchModel::setWatchVars(const QList<PWatchVar> list, bool forProject)

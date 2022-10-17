@@ -136,6 +136,7 @@ SOURCES += \
     vcs/gitresetdialog.cpp \
     vcs/gituserconfigdialog.cpp \
     vcs/gitutils.cpp \
+    visithistorymanager.cpp \
     widgets/aboutdialog.cpp \
     widgets/bookmarkmodel.cpp \
     widgets/choosethemedialog.cpp \
@@ -188,6 +189,7 @@ SOURCES += \
     widgets/newtemplatedialog.cpp \
     widgets/ojproblempropertywidget.cpp \
     widgets/ojproblemsetmodel.cpp \
+    widgets/projectalreadyopendialog.cpp \
     widgets/qconsole.cpp \
     widgets/qpatchedcombobox.cpp \
     widgets/searchdialog.cpp \
@@ -266,6 +268,7 @@ HEADERS += \
     vcs/gitresetdialog.h \
     vcs/gituserconfigdialog.h \
     vcs/gitutils.h \
+    visithistorymanager.h \
     widgets/aboutdialog.h \
     widgets/bookmarkmodel.h \
     widgets/choosethemedialog.h \
@@ -318,6 +321,7 @@ HEADERS += \
     widgets/newtemplatedialog.h \
     widgets/ojproblempropertywidget.h \
     widgets/ojproblemsetmodel.h \
+    widgets/projectalreadyopendialog.h \
     widgets/qconsole.h \
     widgets/qpatchedcombobox.h \
     widgets/searchdialog.h \
@@ -383,6 +387,7 @@ FORMS += \
     widgets/newprojectunitdialog.ui \
     widgets/newtemplatedialog.ui \
     widgets/ojproblempropertywidget.ui \
+    widgets/projectalreadyopendialog.ui \
     widgets/searchdialog.ui \
     widgets/signalmessagedialog.ui
 

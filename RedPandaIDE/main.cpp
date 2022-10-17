@@ -263,6 +263,10 @@ int main(int argc, char *argv[])
             openInSingleInstance = envSetting.value("open_files_in_single_instance",false).toBool();
         } else if (!settingFilename.isEmpty() && firstRun)
             openInSingleInstance = false;
+        if (app.arguments().contains("-ns")) {
+            openInSingleInstance = false;
+        } else if (app.arguments().contains("-s"))
+            openInSingleInstance = true;
         if (openInSingleInstance) {
             int openCount = 0;
             while (true) {

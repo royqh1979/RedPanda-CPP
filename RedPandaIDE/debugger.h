@@ -231,7 +231,7 @@ private:
     QJsonArray toJson(bool forProject);
     QList<PWatchVar> loadJson(const QJsonArray &jsonArray, qint64 criteriaTimestamp);
     const QList<PWatchVar> &watchVars() const;
-    void addWatchVar(PWatchVar watchVar);
+    void addWatchVar(PWatchVar watchVar, bool forProject);
     void setWatchVars(const QList<PWatchVar> list, bool forProject);
 
 private:
@@ -371,6 +371,7 @@ private:
     void sendClearBreakpointCommand(PBreakpoint breakpoint);
     void save(const QString& filename, const QString& projectFolder);
     PDebugConfig load(const QString& filename, bool forProject);
+    void addWatchVar(const PWatchVar &watchVar, bool forProject);
 
 private slots:
     void syncFinishedParsing();

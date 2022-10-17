@@ -94,9 +94,6 @@ private:
     QSplitter *mSplitter;
     QWidget *mPanel;
     int mUpdateCount;
-
-
-
 };
 
 #endif // EDITORLIST_H

@@ -82,7 +82,7 @@
 #define TEMPLATE_EXT "template"
 #define TEMPLATE_INFO_FILE "info.template"
 #define DEV_INTERNAL_OPEN "$__DEV_INTERNAL_OPEN"
-#define DEV_LASTOPENS_FILE "lastopens.ini"
+#define DEV_LASTOPENS_FILE "lastopens.json"
 #define DEV_SYMBOLUSAGE_FILE  "symbolusage.json"
 #define DEV_CODESNIPPET_FILE  "codesnippets.json"
 #define DEV_NEWFILETEMPLATES_FILE "newfiletemplate.txt"
@@ -91,6 +91,7 @@
 #define DEV_TOOLS_FILE "tools.json"
 #define DEV_BOOKMARK_FILE "bookmarks.json"
 #define DEV_DEBUGGER_FILE "debugger.json"
+#define DEV_HISTORY_FILE "history.json"
 
 #ifdef Q_OS_WIN
 #   define PATH_SENSITIVITY Qt::CaseInsensitive
