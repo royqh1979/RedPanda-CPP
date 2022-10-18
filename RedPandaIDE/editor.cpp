@@ -1209,10 +1209,10 @@ void Editor::mouseReleaseEvent(QMouseEvent *event)
             QString s = document()->getString(p.line - 1);
             if (mParser->isIncludeNextLine(s)) {
                 QString filename = mParser->getHeaderFileName(mFilename,s, true);
-                pMainWindow->openFile(filename,true);
+                pMainWindow->openFile(filename);
             } if (mParser->isIncludeLine(s)) {
                 QString filename = mParser->getHeaderFileName(mFilename,s);
-                pMainWindow->openFile(filename,true);
+                pMainWindow->openFile(filename);
             } else {
                 gotoDefinition(p);
                 return;
@@ -3983,7 +3983,10 @@ void Editor::gotoDeclaration(const QSynedit::BufferCoord &pos)
         filename = statement->fileName;
         line = statement->line;
     }
-    pMainWindow->openFile(filename);
+    Editor *e = pMainWindow->openFile(filename);
+    if (e) {
+        e->setCaretPositionAndActivate(line,1);
+    }
 }
 
 void Editor::gotoDefinition(const QSynedit::BufferCoord &pos)
@@ -4009,7 +4012,10 @@ void Editor::gotoDefinition(const QSynedit::BufferCoord &pos)
         filename = statement->definitionFileName;
         line = statement->definitionLine;
     }
-    pMainWindow->openFile(filename);
+    Editor *e = pMainWindow->openFile(filename);
+    if (e) {
+        e->setCaretPositionAndActivate(line,1);
+    }
 }
 
 QString getWordAtPosition(QSynedit::SynEdit *editor, const QSynedit::BufferCoord &p, QSynedit::BufferCoord &pWordBegin, QSynedit::BufferCoord &pWordEnd, Editor::WordPurpose purpose)

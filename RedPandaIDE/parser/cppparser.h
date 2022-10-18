@@ -536,7 +536,6 @@ private:
 
     CppTokenizer mTokenizer;
     PCppPreprocessor mPreprocessor;
-    //{ List of current project's file }
     QSet<QString> mProjectFiles;
     QVector<int> mBlockBeginSkips; //list of for/catch block begin token index;
     QVector<int> mBlockEndSkips; //list of for/catch block end token index;
@@ -547,12 +546,10 @@ private:
     bool mParseLocalHeaders;
     bool mParseGlobalHeaders;
     bool mIsProjectFile;
-    //fMacroDefines : TList;
     int mLockCount; // lock(don't reparse) when we need to find statements in a batch
     bool mParsing;
-    QHash<QString,PStatementList> mNamespaces;  //TStringList<String,List<Statement>> namespace and the statements in its scope
+    QHash<QString,PStatementList> mNamespaces;  // namespace and the statements in its scope
     QSet<QString> mInlineNamespaces;
-    //fRemovedStatements: THashedStringList; //THashedStringList<String,PRemovedStatements>
 
     QMutex mMutex;
     GetFileStreamCallBack mOnGetFileStream;

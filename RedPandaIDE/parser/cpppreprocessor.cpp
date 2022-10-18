@@ -371,12 +371,6 @@ QString CppPreprocessor::getNextPreprocessor()
     return result;
 }
 
-void CppPreprocessor::simplify(QString &output)
-{
-    // Remove #
-    output = output.mid(1).trimmed();
-}
-
 void CppPreprocessor::handleBranch(const QString &line)
 {
     if (line.startsWith("ifdef")) {
@@ -1143,7 +1137,7 @@ void CppPreprocessor::preprocessBuffer()
         do {
             s = getNextPreprocessor();
             if (s.startsWith('#')) {
-                simplify(s);
+                s = s.mid(1).trimmed(); // remove #
                 if (!s.isEmpty()) {
                     handlePreprocessor(s);
                 }

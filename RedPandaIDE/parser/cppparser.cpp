@@ -974,10 +974,9 @@ void CppParser::resetParser()
         mBlockEndSkips.clear(); //list of for/catch block end token index;
         mInlineNamespaceEndSkips.clear(); // list for inline namespace end token index;
         mFilesToScan.clear(); // list of base files to scan
-        mNamespaces.clear();  //TStringList<String,List<Statement>> namespace and the statements in its scope
+        mNamespaces.clear();  // namespace and the statements in its scope
         mInlineNamespaces.clear();
 
-        // We haven't scanned anything anymore
         mPreprocessor = std::make_shared<CppPreprocessor>();
         mTokenizer.reset();
 

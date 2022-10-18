@@ -28,7 +28,7 @@ Red Panda C++ Version 1.5
   - fix: editor tooltip for #include_next is not correctly calculated
   - fix: ctrl+click on #include_next header name doesn't open the right file
   - enhancement: parser used for non-project C files won't find header files in C++ include folders.
-  - fix: when physical memory is less than 16G or "Auto clearn
+  - fix: toggle block comment/delete to word begin/delete to word end are not correctly disabled when editor not open
 
 Red Panda C++ Version 1.4
 

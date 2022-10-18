@@ -490,6 +490,7 @@ void MainWindow::updateEditorActions()
         ui->actionPrint->setEnabled(false);
         ui->actionSelectAll->setEnabled(false);
         ui->actionToggleComment->setEnabled(false);
+        ui->actionToggle_Block_Comment->setEnabled(false);
         ui->actionUnIndent->setEnabled(false);
         ui->actionUndo->setEnabled(false);
         ui->actionUnfoldAll->setEnabled(false);
@@ -498,6 +499,9 @@ void MainWindow::updateEditorActions()
         ui->actionDuplicate_Line->setEnabled(false);
         ui->actionDelete_to_BOL->setEnabled(false);
         ui->actionDelete_to_EOL->setEnabled(false);
+        ui->actionDelete_to_Word_End->setEnabled(false);
+        ui->actionDelete_Last_Word->setEnabled(false);
+
 
         ui->actionFind->setEnabled(false);
         ui->actionReplace->setEnabled(false);
@@ -542,6 +546,7 @@ void MainWindow::updateEditorActions()
         ui->actionPrint->setEnabled(true);
         ui->actionSelectAll->setEnabled(e->document()->count()>0);
         ui->actionToggleComment->setEnabled(!e->readOnly() && e->document()->count()>0);
+        ui->actionToggle_Block_Comment->setEnabled(!e->readOnly() && e->selAvail());
         ui->actionUnIndent->setEnabled(!e->readOnly() && e->document()->count()>0);
         ui->actionUnfoldAll->setEnabled(e->document()->count()>0);
         ui->actionDelete_Line->setEnabled(!e->readOnly() && e->document()->count()>0);
@@ -549,6 +554,9 @@ void MainWindow::updateEditorActions()
         ui->actionDuplicate_Line->setEnabled(!e->readOnly() && e->document()->count()>0);
         ui->actionDelete_to_BOL->setEnabled(!e->readOnly() && e->document()->count()>0);
         ui->actionDelete_to_EOL->setEnabled(!e->readOnly() && e->document()->count()>0);
+        ui->actionDelete_to_Word_End->setEnabled(!e->readOnly() && e->document()->count()>0);
+        ui->actionDelete_Last_Word->setEnabled(!e->readOnly() && e->document()->count()>0);
+
 
         ui->actionFind->setEnabled(true);
         ui->actionReplace->setEnabled(true);
